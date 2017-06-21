@@ -1,0 +1,825 @@
+Training set: file.train, Dimensions: 1, Categories: 2
+
+
+Root Hyperplane: Left = [145,12673], Right = [202,926]
+1.000000 x[1] + -1.327875 = 0
+
+l Hyperplane: Left = [71,10870], Right = [74,1803]
+1.000000 x[1] + +0.010969 = 0
+
+ll Hyperplane: Left = [35,8331], Right = [36,2539]
+1.000000 x[1] + +1.208845 = 0
+
+lll Hyperplane: Left = [18,6510], Right = [17,1821]
+1.000000 x[1] + +1.941186 = 0
+
+llll Hyperplane: Left = [9,5360], Right = [9,1150]
+1.000000 x[1] + +2.401328 = 0
+
+lllll Hyperplane: Left = [5,3313], Right = [4,2047]
+1.000000 x[1] + +3.297692 = 0
+
+llllll Hyperplane: Left = [3,2328], Right = [2,985]
+1.000000 x[1] + +3.838823 = 0
+
+lllllll Hyperplane: Left = [1,2289], Right = [2,39]
+1.000000 x[1] + +3.858288 = 0
+
+llllllll Hyperplane: Left = [0,2201], Right = [1,88]
+1.000000 x[1] + +3.910439 = 0
+
+llllllr Hyperplane: Left = [1,151], Right = [1,834]
+1.000000 x[1] + +3.751600 = 0
+
+lllllr Hyperplane: Left = [2,1346], Right = [2,701]
+1.000000 x[1] + +2.694152 = 0
+
+lllllrl Hyperplane: Left = [1,759], Right = [1,587]
+1.000000 x[1] + +2.949637 = 0
+
+lllllrr Hyperplane: Left = [1,55], Right = [1,646]
+1.000000 x[1] + +2.676553 = 0
+
+llllr Hyperplane: Left = [5,802], Right = [4,348]
+1.000000 x[1] + +2.077201 = 0
+
+llllrl Hyperplane: Left = [3,745], Right = [2,57]
+1.000000 x[1] + +2.104528 = 0
+
+llllrll Hyperplane: Left = [2,338], Right = [1,407]
+1.000000 x[1] + +2.259229 = 0
+
+llllrlll Hyperplane: Left = [1,93], Right = [1,245]
+1.000000 x[1] + +2.362781 = 0
+
+llllrlr Hyperplane: Left = [1,18], Right = [1,39]
+1.000000 x[1] + +2.096499 = 0
+
+llllrr Hyperplane: Left = [2,266], Right = [2,82]
+1.000000 x[1] + +1.972680 = 0
+
+llllrrl Hyperplane: Left = [1,141], Right = [1,125]
+1.000000 x[1] + +2.021499 = 0
+
+llllrrr Hyperplane: Left = [1,17], Right = [1,65]
+1.000000 x[1] + +1.963858 = 0
+
+lllr Hyperplane: Left = [9,1036], Right = [8,785]
+1.000000 x[1] + +1.522319 = 0
+
+lllrl Hyperplane: Left = [5,714], Right = [4,322]
+1.000000 x[1] + +1.651081 = 0
+
+lllrll Hyperplane: Left = [3,641], Right = [2,73]
+1.000000 x[1] + +1.683249 = 0
+
+lllrlll Hyperplane: Left = [2,363], Right = [1,278]
+1.000000 x[1] + +1.802978 = 0
+
+lllrllll Hyperplane: Left = [1,186], Right = [1,177]
+1.000000 x[1] + +1.864052 = 0
+
+lllrllr Hyperplane: Left = [1,22], Right = [1,51]
+1.000000 x[1] + +1.669738 = 0
+
+lllrlr Hyperplane: Left = [2,160], Right = [2,162]
+1.000000 x[1] + +1.586284 = 0
+
+lllrlrl Hyperplane: Left = [1,6], Right = [1,154]
+1.000000 x[1] + +1.647737 = 0
+
+lllrlrr Hyperplane: Left = [1,119], Right = [1,43]
+1.000000 x[1] + +1.539587 = 0
+
+lllrr Hyperplane: Left = [4,474], Right = [4,311]
+1.000000 x[1] + +1.337685 = 0
+
+lllrrl Hyperplane: Left = [2,257], Right = [2,217]
+1.000000 x[1] + +1.417577 = 0
+
+lllrrll Hyperplane: Left = [1,13], Right = [1,244]
+1.000000 x[1] + +1.517243 = 0
+
+lllrrlr Hyperplane: Left = [1,189], Right = [1,28]
+1.000000 x[1] + +1.347398 = 0
+
+lllrrr Hyperplane: Left = [2,164], Right = [2,147]
+1.000000 x[1] + +1.276263 = 0
+
+lllrrrl Hyperplane: Left = [1,91], Right = [1,73]
+1.000000 x[1] + +1.304454 = 0
+
+lllrrrr Hyperplane: Left = [1,51], Right = [1,96]
+1.000000 x[1] + +1.256019 = 0
+
+llr Hyperplane: Left = [18,1262], Right = [18,1277]
+1.000000 x[1] + +0.664013 = 0
+
+llrl Hyperplane: Left = [9,868], Right = [9,394]
+1.000000 x[1] + +0.843902 = 0
+
+llrll Hyperplane: Left = [5,324], Right = [4,544]
+1.000000 x[1] + +1.077666 = 0
+
+llrlll Hyperplane: Left = [3,280], Right = [2,44]
+1.000000 x[1] + +1.090812 = 0
+
+llrllll Hyperplane: Left = [2,119], Right = [1,161]
+1.000000 x[1] + +1.155358 = 0
+
+llrlllll Hyperplane: Left = [1,20], Right = [1,99]
+1.000000 x[1] + +1.199354 = 0
+
+llrlllr Hyperplane: Left = [1,9], Right = [1,35]
+1.000000 x[1] + +1.087560 = 0
+
+llrllr Hyperplane: Left = [2,110], Right = [2,434]
+1.000000 x[1] + +1.027692 = 0
+
+llrllrl Hyperplane: Left = [1,51], Right = [1,59]
+1.000000 x[1] + +1.053983 = 0
+
+llrllrr Hyperplane: Left = [1,143], Right = [1,291]
+1.000000 x[1] + +0.968195 = 0
+
+llrlr Hyperplane: Left = [4,222], Right = [5,172]
+1.000000 x[1] + +0.747733 = 0
+
+llrlrl Hyperplane: Left = [2,118], Right = [2,104]
+1.000000 x[1] + +0.791328 = 0
+
+llrlrll Hyperplane: Left = [1,73], Right = [1,45]
+1.000000 x[1] + +0.811983 = 0
+
+llrlrlr Hyperplane: Left = [1,68], Right = [1,36]
+1.000000 x[1] + +0.766025 = 0
+
+llrlrr Hyperplane: Left = [3,93], Right = [2,79]
+1.000000 x[1] + +0.704424 = 0
+
+llrlrrl Hyperplane: Left = [1,10], Right = [2,83]
+1.000000 x[1] + +0.744521 = 0
+
+llrlrrr Hyperplane: Left = [1,53], Right = [1,26]
+1.000000 x[1] + +0.679074 = 0
+
+llrr Hyperplane: Left = [9,821], Right = [9,456]
+1.000000 x[1] + +0.252172 = 0
+
+llrrl Hyperplane: Left = [5,441], Right = [4,380]
+1.000000 x[1] + +0.459757 = 0
+
+llrrll Hyperplane: Left = [3,230], Right = [2,211]
+1.000000 x[1] + +0.558668 = 0
+
+llrrlll Hyperplane: Left = [2,182], Right = [1,48]
+1.000000 x[1] + +0.584136 = 0
+
+llrrllll Hyperplane: Left = [1,104], Right = [1,78]
+1.000000 x[1] + +0.621160 = 0
+
+llrrllr Hyperplane: Left = [1,162], Right = [1,49]
+1.000000 x[1] + +0.481989 = 0
+
+llrrlr Hyperplane: Left = [2,30], Right = [2,350]
+1.000000 x[1] + +0.439838 = 0
+
+llrrlrl Hyperplane: Left = [1,17], Right = [1,13]
+1.000000 x[1] + +0.449803 = 0
+
+llrrlrr Hyperplane: Left = [1,296], Right = [1,54]
+1.000000 x[1] + +0.281958 = 0
+
+llrrr Hyperplane: Left = [4,268], Right = [5,188]
+1.000000 x[1] + +0.118917 = 0
+
+llrrrl Hyperplane: Left = [2,159], Right = [2,109]
+1.000000 x[1] + +0.168640 = 0
+
+llrrrll Hyperplane: Left = [1,90], Right = [1,69]
+1.000000 x[1] + +0.204494 = 0
+
+llrrrlr Hyperplane: Left = [1,51], Right = [1,58]
+1.000000 x[1] + +0.145917 = 0
+
+llrrrr Hyperplane: Left = [3,47], Right = [2,141]
+1.000000 x[1] + +0.090729 = 0
+
+llrrrrl Hyperplane: Left = [1,15], Right = [2,32]
+1.000000 x[1] + +0.111385 = 0
+
+llrrrrr Hyperplane: Left = [1,25], Right = [1,116]
+1.000000 x[1] + +0.080316 = 0
+
+lr Hyperplane: Left = [36,1294], Right = [38,509]
+1.000000 x[1] + -0.800994 = 0
+
+lrl Hyperplane: Left = [18,881], Right = [18,413]
+1.000000 x[1] + -0.503397 = 0
+
+lrll Hyperplane: Left = [9,385], Right = [9,496]
+1.000000 x[1] + -0.192825 = 0
+
+lrlll Hyperplane: Left = [5,284], Right = [4,101]
+1.000000 x[1] + -0.135498 = 0
+
+lrllll Hyperplane: Left = [3,236], Right = [2,48]
+1.000000 x[1] + -0.112619 = 0
+
+lrlllll Hyperplane: Left = [2,194], Right = [1,42]
+1.000000 x[1] + -0.086637 = 0
+
+lrllllll Hyperplane: Left = [1,159], Right = [1,35]
+1.000000 x[1] + -0.069934 = 0
+
+lrllllr Hyperplane: Left = [1,42], Right = [1,6]
+1.000000 x[1] + -0.132749 = 0
+
+lrlllr Hyperplane: Left = [2,72], Right = [2,29]
+1.000000 x[1] + -0.178012 = 0
+
+lrlllrl Hyperplane: Left = [1,64], Right = [1,8]
+1.000000 x[1] + -0.172611 = 0
+
+lrlllrr Hyperplane: Left = [1,12], Right = [1,17]
+1.000000 x[1] + -0.182632 = 0
+
+lrllr Hyperplane: Left = [5,257], Right = [4,239]
+1.000000 x[1] + -0.348339 = 0
+
+lrllrl Hyperplane: Left = [3,146], Right = [2,111]
+1.000000 x[1] + -0.267262 = 0
+
+lrllrll Hyperplane: Left = [2,94], Right = [1,52]
+1.000000 x[1] + -0.243022 = 0
+
+lrllrlll Hyperplane: Left = [1,89], Right = [1,5]
+1.000000 x[1] + -0.241474 = 0
+
+lrllrlr Hyperplane: Left = [1,39], Right = [1,72]
+1.000000 x[1] + -0.300451 = 0
+
+lrllrr Hyperplane: Left = [2,210], Right = [2,29]
+1.000000 x[1] + -0.48352 = 0
+
+lrllrrl Hyperplane: Left = [1,14], Right = [1,196]
+1.000000 x[1] + -0.354811 = 0
+
+lrllrrr Hyperplane: Left = [1,8], Right = [1,21]
+1.000000 x[1] + -0.488846 = 0
+
+lrlr Hyperplane: Left = [9,244], Right = [9,169]
+1.000000 x[1] + -0.667302 = 0
+
+lrlrl Hyperplane: Left = [5,128], Right = [4,116]
+1.000000 x[1] + -0.585121 = 0
+
+lrlrll Hyperplane: Left = [3,62], Right = [2,66]
+1.000000 x[1] + -0.545624 = 0
+
+lrlrlll Hyperplane: Left = [2,22], Right = [1,40]
+1.000000 x[1] + -0.521233 = 0
+
+lrlrllll Hyperplane: Left = [1,9], Right = [1,13]
+1.000000 x[1] + -0.510894 = 0
+
+lrlrllr Hyperplane: Left = [1,45], Right = [1,21]
+1.000000 x[1] + -0.576037 = 0
+
+lrlrlr Hyperplane: Left = [2,78], Right = [2,38]
+1.000000 x[1] + -0.639651 = 0
+
+lrlrlrl Hyperplane: Left = [1,21], Right = [1,57]
+1.000000 x[1] + -0.598961 = 0
+
+lrlrlrr Hyperplane: Left = [1,12], Right = [1,26]
+1.000000 x[1] + -0.648306 = 0
+
+lrlrr Hyperplane: Left = [4,88], Right = [5,81]
+1.000000 x[1] + -0.735257 = 0
+
+lrlrrl Hyperplane: Left = [2,51], Right = [2,37]
+1.000000 x[1] + -0.701865 = 0
+
+lrlrrll Hyperplane: Left = [1,31], Right = [1,20]
+1.000000 x[1] + -0.688516 = 0
+
+lrlrrlr Hyperplane: Left = [1,5], Right = [1,32]
+1.000000 x[1] + -0.706799 = 0
+
+lrlrrr Hyperplane: Left = [2,35], Right = [3,46]
+1.000000 x[1] + -0.760563 = 0
+
+lrlrrrl Hyperplane: Left = [1,32], Right = [1,3]
+1.000000 x[1] + -0.757338 = 0
+
+lrlrrrr Hyperplane: Left = [1,28], Right = [2,18]
+1.000000 x[1] + -0.782164 = 0
+
+lrr Hyperplane: Left = [19,286], Right = [19,223]
+1.000000 x[1] + -1.062513 = 0
+
+lrrl Hyperplane: Left = [10,183], Right = [9,103]
+1.000000 x[1] + -0.976342 = 0
+
+lrrll Hyperplane: Left = [5,52], Right = [5,131]
+1.000000 x[1] + -0.854025 = 0
+
+lrrlll Hyperplane: Left = [3,9], Right = [2,43]
+1.000000 x[1] + -0.810749 = 0
+
+lrrllll Hyperplane: Left = [2,8], Right = [1,1]
+1.000000 x[1] + -0.810405 = 0
+
+lrrlllll Hyperplane: Left = [1,5], Right = [1,3]
+1.000000 x[1] + -0.806836 = 0
+
+lrrlllr Hyperplane: Left = [1,21], Right = [1,22]
+1.000000 x[1] + -0.826355 = 0
+
+lrrllr Hyperplane: Left = [2,92], Right = [3,39]
+1.000000 x[1] + -0.941804 = 0
+
+lrrllrl Hyperplane: Left = [1,13], Right = [1,79]
+1.000000 x[1] + -0.868071 = 0
+
+lrrllrr Hyperplane: Left = [1,34], Right = [2,5]
+1.000000 x[1] + -0.971181 = 0
+
+lrrlr Hyperplane: Left = [5,52], Right = [4,51]
+1.000000 x[1] + -1.023449 = 0
+
+lrrlrl Hyperplane: Left = [2,34], Right = [3,18]
+1.000000 x[1] + -1.009922 = 0
+
+lrrlrll Hyperplane: Left = [1,12], Right = [1,22]
+1.000000 x[1] + -0.993229 = 0
+
+lrrlrlr Hyperplane: Left = [2,1], Right = [1,17]
+1.000000 x[1] + -1.010577 = 0
+
+lrrlrr Hyperplane: Left = [2,40], Right = [2,11]
+1.000000 x[1] + -1.053762 = 0
+
+lrrlrrl Hyperplane: Left = [1,22], Right = [1,18]
+1.000000 x[1] + -1.043818 = 0
+
+lrrlrrr Hyperplane: Left = [1,10], Right = [1,1]
+1.000000 x[1] + -1.060575 = 0
+
+lrrr Hyperplane: Left = [9,91], Right = [10,132]
+1.000000 x[1] + -1.173865 = 0
+
+lrrrl Hyperplane: Left = [5,71], Right = [4,20]
+1.000000 x[1] + -1.13045 = 0
+
+lrrrll Hyperplane: Left = [3,34], Right = [2,37]
+1.000000 x[1] + -1.095619 = 0
+
+lrrrlll Hyperplane: Left = [2,19], Right = [1,15]
+1.000000 x[1] + -1.080754 = 0
+
+lrrrllll Hyperplane: Left = [1,4], Right = [1,15]
+1.000000 x[1] + -1.068153 = 0
+
+lrrrllr Hyperplane: Left = [1,17], Right = [1,20]
+1.000000 x[1] + -1.121813 = 0
+
+lrrrlr Hyperplane: Left = [2,2], Right = [2,18]
+1.000000 x[1] + -1.141098 = 0
+
+lrrrlrl Hyperplane: Left = [1,1], Right = [1,1]
+1.000000 x[1] + -1.13334 = 0
+
+lrrrlrr Hyperplane: Left = [1,17], Right = [1,1]
+1.000000 x[1] + -1.172485 = 0
+
+lrrrr Hyperplane: Left = [6,76], Right = [4,56]
+1.000000 x[1] + -1.257596 = 0
+
+lrrrrl Hyperplane: Left = [2,36], Right = [4,40]
+1.000000 x[1] + -1.21726 = 0
+
+lrrrrll Hyperplane: Left = [1,29], Right = [1,7]
+1.000000 x[1] + -1.207627 = 0
+
+lrrrrlr Hyperplane: Left = [2,39], Right = [2,1]
+1.000000 x[1] + -1.255027 = 0
+
+lrrrrr Hyperplane: Left = [2,22], Right = [2,34]
+1.000000 x[1] + -1.284239 = 0
+
+lrrrrrl Hyperplane: Left = [1,4], Right = [1,18]
+1.000000 x[1] + -1.267682 = 0
+
+lrrrrrr Hyperplane: Left = [1,11], Right = [1,23]
+1.000000 x[1] + -1.294276 = 0
+
+r Hyperplane: Left = [81,733], Right = [121,193]
+1.000000 x[1] + -2.648711 = 0
+
+rl Hyperplane: Left = [40,522], Right = [41,211]
+1.000000 x[1] + -2.043695 = 0
+
+rll Hyperplane: Left = [20,284], Right = [20,238]
+1.000000 x[1] + -1.665395 = 0
+
+rlll Hyperplane: Left = [11,140], Right = [9,144]
+1.000000 x[1] + -1.479832 = 0
+
+rllll Hyperplane: Left = [5,104], Right = [6,36]
+1.000000 x[1] + -1.435619 = 0
+
+rlllll Hyperplane: Left = [3,90], Right = [2,14]
+1.000000 x[1] + -1.418951 = 0
+
+rllllll Hyperplane: Left = [2,63], Right = [1,27]
+1.000000 x[1] + -1.385169 = 0
+
+rlllllll Hyperplane: Left = [1,34], Right = [1,29]
+1.000000 x[1] + -1.358679 = 0
+
+rlllllr Hyperplane: Left = [1,1], Right = [1,13]
+1.000000 x[1] + -1.421397 = 0
+
+rllllr Hyperplane: Left = [2,28], Right = [4,8]
+1.000000 x[1] + -1.4682 = 0
+
+rllllrl Hyperplane: Left = [1,11], Right = [1,17]
+1.000000 x[1] + -1.454462 = 0
+
+rllllrr Hyperplane: Left = [1,2], Right = [3,6]
+1.000000 x[1] + -1.470291 = 0
+
+rlllr Hyperplane: Left = [5,93], Right = [4,51]
+1.000000 x[1] + -1.596747 = 0
+
+rlllrl Hyperplane: Left = [3,70], Right = [2,23]
+1.000000 x[1] + -1.562632 = 0
+
+rlllrll Hyperplane: Left = [2,67], Right = [1,3]
+1.000000 x[1] + -1.558361 = 0
+
+rlllrlll Hyperplane: Left = [1,50], Right = [1,17]
+1.000000 x[1] + -1.539852 = 0
+
+rlllrlr Hyperplane: Left = [1,21], Right = [1,2]
+1.000000 x[1] + -1.594917 = 0
+
+rlllrr Hyperplane: Left = [2,32], Right = [2,19]
+1.000000 x[1] + -1.632066 = 0
+
+rlllrrl Hyperplane: Left = [1,19], Right = [1,13]
+1.000000 x[1] + -1.615677 = 0
+
+rlllrrr Hyperplane: Left = [1,8], Right = [1,11]
+1.000000 x[1] + -1.645144 = 0
+
+rllr Hyperplane: Left = [11,168], Right = [9,70]
+1.000000 x[1] + -1.930307 = 0
+
+rllrl Hyperplane: Left = [5,91], Right = [6,77]
+1.000000 x[1] + -1.810347 = 0
+
+rllrll Hyperplane: Left = [3,9], Right = [2,82]
+1.000000 x[1] + -1.683014 = 0
+
+rllrlll Hyperplane: Left = [2,8], Right = [1,1]
+1.000000 x[1] + -1.679752 = 0
+
+rllrllll Hyperplane: Left = [1,3], Right = [1,5]
+1.000000 x[1] + -1.672362 = 0
+
+rllrllr Hyperplane: Left = [1,49], Right = [1,33]
+1.000000 x[1] + -1.763714 = 0
+
+rllrlr Hyperplane: Left = [3,51], Right = [3,26]
+1.000000 x[1] + -1.890493 = 0
+
+rllrlrl Hyperplane: Left = [2,1], Right = [1,50]
+1.000000 x[1] + -1.816054 = 0
+
+rllrlrr Hyperplane: Left = [1,17], Right = [2,9]
+1.000000 x[1] + -1.917579 = 0
+
+rllrr Hyperplane: Left = [4,33], Right = [5,37]
+1.000000 x[1] + -1.98213 = 0
+
+rllrrl Hyperplane: Left = [2,24], Right = [2,9]
+1.000000 x[1] + -1.960715 = 0
+
+rllrrll Hyperplane: Left = [1,1], Right = [1,23]
+1.000000 x[1] + -1.933502 = 0
+
+rllrrlr Hyperplane: Left = [1,7], Right = [1,2]
+1.000000 x[1] + -1.974266 = 0
+
+rllrrr Hyperplane: Left = [3,16], Right = [2,21]
+1.000000 x[1] + -2.008263 = 0
+
+rllrrrl Hyperplane: Left = [2,9], Right = [1,7]
+1.000000 x[1] + -1.99495 = 0
+
+rllrrrr Hyperplane: Left = [1,19], Right = [1,2]
+1.000000 x[1] + -2.036681 = 0
+
+rlr Hyperplane: Left = [21,100], Right = [20,111]
+1.000000 x[1] + -2.282153 = 0
+
+rlrl Hyperplane: Left = [11,44], Right = [10,56]
+1.000000 x[1] + -2.134724 = 0
+
+rlrll Hyperplane: Left = [6,19], Right = [5,25]
+1.000000 x[1] + -2.085556 = 0
+
+rlrlll Hyperplane: Left = [4,15], Right = [2,4]
+1.000000 x[1] + -2.077982 = 0
+
+rlrllll Hyperplane: Left = [3,5], Right = [1,10]
+1.000000 x[1] + -2.059572 = 0
+
+rlrlllll Hyperplane: Left = [1,1], Right = [2,4]
+1.000000 x[1] + -2.047565 = 0
+
+rlrlllr Hyperplane: Left = [1,2], Right = [1,2]
+1.000000 x[1] + -2.084619 = 0
+
+rlrllr Hyperplane: Left = [2,17], Right = [3,8]
+1.000000 x[1] + -2.119853 = 0
+
+rlrllrl Hyperplane: Left = [1,13], Right = [1,4]
+1.000000 x[1] + -2.110224 = 0
+
+rlrllrr Hyperplane: Left = [1,5], Right = [2,3]
+1.000000 x[1] + -2.126977 = 0
+
+rlrlr Hyperplane: Left = [5,23], Right = [5,33]
+1.000000 x[1] + -2.209363 = 0
+
+rlrlrl Hyperplane: Left = [2,5], Right = [3,18]
+1.000000 x[1] + -2.140755 = 0
+
+rlrlrll Hyperplane: Left = [1,3], Right = [1,2]
+1.000000 x[1] + -2.138535 = 0
+
+rlrlrlr Hyperplane: Left = [1,10], Right = [2,8]
+1.000000 x[1] + -2.18474 = 0
+
+rlrlrr Hyperplane: Left = [3,12], Right = [2,21]
+1.000000 x[1] + -2.234447 = 0
+
+rlrlrrl Hyperplane: Left = [2,10], Right = [1,2]
+1.000000 x[1] + -2.227873 = 0
+
+rlrlrrr Hyperplane: Left = [1,18], Right = [1,3]
+1.000000 x[1] + -2.276451 = 0
+
+rlrr Hyperplane: Left = [10,85], Right = [10,26]
+1.000000 x[1] + -2.560966 = 0
+
+rlrrl Hyperplane: Left = [6,42], Right = [4,43]
+1.000000 x[1] + -2.397659 = 0
+
+rlrrll Hyperplane: Left = [4,32], Right = [2,10]
+1.000000 x[1] + -2.37766 = 0
+
+rlrrlll Hyperplane: Left = [3,25], Right = [1,7]
+1.000000 x[1] + -2.359598 = 0
+
+rlrrllll Hyperplane: Left = [2,10], Right = [1,15]
+1.000000 x[1] + -2.30996 = 0
+
+rlrrllr Hyperplane: Left = [1,2], Right = [1,8]
+1.000000 x[1] + -2.381821 = 0
+
+rlrrlr Hyperplane: Left = [2,10], Right = [2,33]
+1.000000 x[1] + -2.428712 = 0
+
+rlrrlrl Hyperplane: Left = [1,4], Right = [1,6]
+1.000000 x[1] + -2.417794 = 0
+
+rlrrlrr Hyperplane: Left = [1,10], Right = [1,23]
+1.000000 x[1] + -2.462774 = 0
+
+rlrrr Hyperplane: Left = [6,14], Right = [4,12]
+1.000000 x[1] + -2.602392 = 0
+
+rlrrrl Hyperplane: Left = [2,7], Right = [4,7]
+1.000000 x[1] + -2.575245 = 0
+
+rlrrrll Hyperplane: Left = [1,5], Right = [1,2]
+1.000000 x[1] + -2.572229 = 0
+
+rlrrrlr Hyperplane: Left = [1,6], Right = [3,1]
+1.000000 x[1] + -2.593772 = 0
+
+rlrrrr Hyperplane: Left = [2,5], Right = [2,7]
+1.000000 x[1] + -2.621229 = 0
+
+rlrrrrl Hyperplane: Left = [1,4], Right = [1,1]
+1.000000 x[1] + -2.617362 = 0
+
+rlrrrrr Hyperplane: Left = [1,1], Right = [1,6]
+1.000000 x[1] + -2.623275 = 0
+
+rr Hyperplane: Left = [51,128], Right = [70,65]
+1.000000 x[1] + -3.352162 = 0
+
+rrl Hyperplane: Left = [26,88], Right = [25,40]
+1.000000 x[1] + -3.087289 = 0
+
+rrll Hyperplane: Left = [12,45], Right = [14,43]
+1.000000 x[1] + -2.85609 = 0
+
+rrlll Hyperplane: Left = [5,22], Right = [7,23]
+1.000000 x[1] + -2.741922 = 0
+
+rrllll Hyperplane: Left = [3,18], Right = [2,4]
+1.000000 x[1] + -2.720093 = 0
+
+rrlllll Hyperplane: Left = [2,17], Right = [1,1]
+1.000000 x[1] + -2.717925 = 0
+
+rrllllll Hyperplane: Left = [1,13], Right = [1,4]
+1.000000 x[1] + -2.691182 = 0
+
+rrllllr Hyperplane: Left = [1,1], Right = [1,3]
+1.000000 x[1] + -2.730046 = 0
+
+rrlllr Hyperplane: Left = [4,11], Right = [3,12]
+1.000000 x[1] + -2.803876 = 0
+
+rrlllrl Hyperplane: Left = [2,5], Right = [2,6]
+1.000000 x[1] + -2.778956 = 0
+
+rrlllrr Hyperplane: Left = [1,1], Right = [2,11]
+1.000000 x[1] + -2.816264 = 0
+
+rrllr Hyperplane: Left = [9,20], Right = [5,23]
+1.000000 x[1] + -2.970347 = 0
+
+rrllrl Hyperplane: Left = [2,7], Right = [7,13]
+1.000000 x[1] + -2.891179 = 0
+
+rrllrll Hyperplane: Left = [1,3], Right = [1,4]
+1.000000 x[1] + -2.870203 = 0
+
+rrllrlr Hyperplane: Left = [1,8], Right = [6,5]
+1.000000 x[1] + -2.918925 = 0
+
+rrllrr Hyperplane: Left = [2,2], Right = [3,21]
+1.000000 x[1] + -2.984714 = 0
+
+rrllrrl Hyperplane: Left = [1,1], Right = [1,1]
+1.000000 x[1] + -2.982321 = 0
+
+rrllrrr Hyperplane: Left = [1,13], Right = [2,8]
+1.000000 x[1] + -3.03517 = 0
+
+rrlr Hyperplane: Left = [11,28], Right = [14,12]
+1.000000 x[1] + -3.217351 = 0
+
+rrlrl Hyperplane: Left = [6,18], Right = [5,10]
+1.000000 x[1] + -3.158713 = 0
+
+rrlrll Hyperplane: Left = [3,12], Right = [3,6]
+1.000000 x[1] + -3.127258 = 0
+
+rrlrlll Hyperplane: Left = [2,11], Right = [1,1]
+1.000000 x[1] + -3.125753 = 0
+
+rrlrllll Hyperplane: Left = [1,6], Right = [1,5]
+1.000000 x[1] + -3.111365 = 0
+
+rrlrllr Hyperplane: Left = [1,1], Right = [2,5]
+1.000000 x[1] + -3.133321 = 0
+
+rrlrlr Hyperplane: Left = [2,4], Right = [3,6]
+1.000000 x[1] + -3.177018 = 0
+
+rrlrlrl Hyperplane: Left = [1,3], Right = [1,1]
+1.000000 x[1] + -3.176559 = 0
+
+rrlrlrr Hyperplane: Left = [1,1], Right = [2,5]
+1.000000 x[1] + -3.183769 = 0
+
+rrlrr Hyperplane: Left = [6,7], Right = [8,5]
+1.000000 x[1] + -3.290997 = 0
+
+rrlrrl Hyperplane: Left = [4,2], Right = [2,5]
+1.000000 x[1] + -3.246823 = 0
+
+rrlrrll Hyperplane: Left = [2,1], Right = [2,1]
+1.000000 x[1] + -3.236833 = 0
+
+rrlrrlr Hyperplane: Left = [1,1], Right = [1,4]
+1.000000 x[1] + -3.249109 = 0
+
+rrlrrr Hyperplane: Left = [3,2], Right = [5,3]
+1.000000 x[1] + -3.302914 = 0
+
+rrlrrrl Hyperplane: Left = [2,1], Right = [1,1]
+1.000000 x[1] + -3.300359 = 0
+
+rrlrrrr Hyperplane: Left = [4,1], Right = [1,2]
+1.000000 x[1] + -3.33854 = 0
+
+rrr Hyperplane: Left = [31,43], Right = [39,22]
+1.000000 x[1] + -3.895985 = 0
+
+rrrl Hyperplane: Left = [18,23], Right = [13,20]
+1.000000 x[1] + -3.614433 = 0
+
+rrrll Hyperplane: Left = [9,15], Right = [9,8]
+1.000000 x[1] + -3.499264 = 0
+
+rrrlll Hyperplane: Left = [7,10], Right = [2,5]
+1.000000 x[1] + -3.470758 = 0
+
+rrrllll Hyperplane: Left = [6,9], Right = [1,1]
+1.000000 x[1] + -3.441867 = 0
+
+rrrlllll Hyperplane: Left = [3,2], Right = [3,7]
+1.000000 x[1] + -3.391731 = 0
+
+rrrlllr Hyperplane: Left = [1,1], Right = [1,4]
+1.000000 x[1] + -3.483874 = 0
+
+rrrllr Hyperplane: Left = [3,2], Right = [6,6]
+1.000000 x[1] + -3.517159 = 0
+
+rrrllrl Hyperplane: Left = [1,1], Right = [2,1]
+1.000000 x[1] + -3.507194 = 0
+
+rrrllrr Hyperplane: Left = [5,4], Right = [1,2]
+1.000000 x[1] + -3.599158 = 0
+
+rrrlr Hyperplane: Left = [6,11], Right = [7,9]
+1.000000 x[1] + -3.737447 = 0
+
+rrrlrl Hyperplane: Left = [4,7], Right = [2,4]
+1.000000 x[1] + -3.660707 = 0
+
+rrrlrll Hyperplane: Left = [3,1], Right = [1,6]
+1.000000 x[1] + -3.621552 = 0
+
+rrrlrlr Hyperplane: Left = [1,2], Right = [1,2]
+1.000000 x[1] + -3.692729 = 0
+
+rrrlrr Hyperplane: Left = [3,6], Right = [4,3]
+1.000000 x[1] + -3.798872 = 0
+
+rrrlrrl Hyperplane: Left = [2,5], Right = [1,1]
+1.000000 x[1] + -3.787295 = 0
+
+rrrlrrr Hyperplane: Left = [3,1], Right = [1,2]
+1.000000 x[1] + -3.866161 = 0
+
+rrrr Hyperplane: Left = [16,14], Right = [23,8]
+1.000000 x[1] + -4.429034 = 0
+
+rrrrl Hyperplane: Left = [8,8], Right = [8,6]
+1.000000 x[1] + -4.119146 = 0
+
+rrrrll Hyperplane: Left = [4,5], Right = [4,3]
+1.000000 x[1] + -4.059913 = 0
+
+rrrrlll Hyperplane: Left = [3,3], Right = [1,2]
+1.000000 x[1] + -4.022976 = 0
+
+rrrrllll Hyperplane: Left = [1,2], Right = [2,1]
+1.000000 x[1] + -3.970177 = 0
+
+rrrrllr Hyperplane: Left = [1,1], Right = [3,2]
+1.000000 x[1] + -4.095157 = 0
+
+rrrrlr Hyperplane: Left = [5,4], Right = [3,2]
+1.000000 x[1] + -4.312224 = 0
+
+rrrrlrl Hyperplane: Left = [1,1], Right = [4,3]
+1.000000 x[1] + -4.163863 = 0
+
+rrrrlrr Hyperplane: Left = [1,1], Right = [2,1]
+1.000000 x[1] + -4.378795 = 0
+
+rrrrr Hyperplane: Left = [9,5], Right = [14,3]
+1.000000 x[1] + -4.655544 = 0
+
+rrrrrl Hyperplane: Left = [6,2], Right = [3,3]
+1.000000 x[1] + -4.521258 = 0
+
+rrrrrll Hyperplane: Left = [1,1], Right = [5,1]
+1.000000 x[1] + -4.453136 = 0
+
+rrrrrlr Hyperplane: Left = [1,2], Right = [2,1]
+1.000000 x[1] + -4.598602 = 0
+
+rrrrrr Hyperplane: Left = [6,2], Right = [8,1]
+1.000000 x[1] + -4.802119 = 0
+
+rrrrrrl Hyperplane: Left = [2,1], Right = [4,1]
+1.000000 x[1] + -4.694518 = 0
+
+rrrrrrr Hyperplane: Left = [3,1], Right = [5,0]
+1.000000 x[1] + -4.945125 = 0
+

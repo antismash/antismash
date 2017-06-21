@@ -1,0 +1,10 @@
+##gff-version3
+CONTIG_1	maker	gene	1123	1871	.	+	.	ID=CRO_000001;Name=CRO_000001
+CONTIG_1	maker	mRNA	1123	1871	.	+	.	ID=CRO_T000001;Name=CRO_T000001;Parent=CRO_000001
+CONTIG_1	maker	exon	1123	1291	.	+	.	Parent=CRO_T000001
+CONTIG_1	maker	exon	1397	1450	.	+	.	Parent=CRO_T000001
+CONTIG_1	maker	exon	1754	1871	.	+	.	Parent=CRO_T000001
+CONTIG_1	maker	five_prime_UTR	1123	1124	.	+	.	Parent=CRO_T000001
+CONTIG_1	maker	CDS	1125	1291	.	+	0	Parent=CRO_T000001
+CONTIG_1	maker	CDS	1397	1450	.	+	1	Parent=CRO_T000001
+CONTIG_1	maker	CDS	1754	1871	.	+	1	Parent=CRO_T000001
