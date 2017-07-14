@@ -9,7 +9,7 @@ import antismash.common.deprecated as utils
 from antismash.common.deprecated import FeatureLocation, SeqFeature
 from antismash.common.subprocessing import run_hmmsearch
 from antismash.modules.hmm_detection import rule_parser
-from antismash.modules.hmm_detection.signatures import get_signature_profiles
+from antismash.modules.hmm_detection.signatures import get_signature_profiles, get_signature_names
 
 cluster_number = 1
 
@@ -109,6 +109,10 @@ def filter_results(results, results_by_id):
     for line in open(path.get_full_path(__file__, "filterhmmdetails.txt"),"r"):
         line = line.strip()
         equivalence_group = set(line.split(","))
+        unknown = equivalence_group - set(get_signature_names())
+        if unknown:
+            raise ValueError("Equivalence group contains unknown identifiers: %s" % (
+                    unknown))
         for cds, cdsresults in results_by_id.items():
             #Check if multiple competing HMM hits are present
             hits = set(hit.query_id for hit in cdsresults)
