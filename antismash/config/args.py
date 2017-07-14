@@ -429,7 +429,7 @@ class Config():
                 self.__dict__.update(indict)
 
         def next_record_index(self):
-            next_index = self.__dict__['record_idx'] + 1
+            next_index = self.__dict__.get('record_idx', 0) + 1
             self.__dict__['record_idx'] = next_index
             return next_index
 

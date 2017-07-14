@@ -1,14 +1,3 @@
-# vim: set fileencoding=utf-8 :
-#
-# Copyright (C) 2010-2014 Marnix H. Medema
-# Max Planck Institute for Marine Microbiology
-# Microbial Genomics and Bioinformatics Research Group
-#
-# Copyright (C) 2011-2014 Kai Blin
-# University of Tuebingen
-# Interfaculty Institute of Microbiology and Infection Medicine
-# Div. of Microbiology/Biotechnology
-#
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
