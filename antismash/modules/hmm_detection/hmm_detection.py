@@ -206,8 +206,6 @@ def filter_result_overlapping_genes(results, results_by_id, overlaps, feature_by
             for hit in to_delete:
                 del results[results.index(hit)]
                 del results_by_id[cds][results_by_id[cds].index(hit)]
-                if hit == "MGT2":
-                    print("removing MGT2 from", cds)
                 if len(results_by_id[cds]) < 1:
                     del results_by_id[cds]
     return results, results_by_id
