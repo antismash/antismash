@@ -21,10 +21,12 @@ mostly for fungi/eukaryotes
 import logging
 from helperlibs.wrappers.io import TemporaryDirectory
 from helperlibs.bio import seqio
+from io import StringIO
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 
 from antismash.common import deprecated as utils
 from antismash.common import path
+from antismash.common.gff_parser import get_features_from_file
 from antismash.common.subprocessing import execute
 
 
@@ -50,93 +52,12 @@ def run_external(fasta_filename):
     return run_result.stdout
 
 def run_glimmerhmm(seq_record, options):
+    utils.fix_record_name_id(seq_record, options)
     with TemporaryDirectory(change=True):
-
-        utils.fix_record_name_id(seq_record, options)
-        #Write FASTA file and run GlimmerHMM
+        # Write FASTA file and run GlimmerHMM
         fasta_file = write_search_fasta(seq_record)
-        resultstext = run_external(fasta_file)
+        results_text = run_external(fasta_file)
 
-        #Parse GlimmerHMM predictions
-        resultstext = resultstext.replace("\r", " ")
-        lines = resultstext.split("\n")[2:-1]
-        orfnames = []
-        positions = []
-        strands = []
-        x = 0
-        orfnr = 0
-        starts = []
-        ends = []
-        for x, line in enumerate(lines):
-            columns = line.split("\t")
-            if len(columns) < 7:
-                raise ValueError("GlimmerHMM result line too short: %s" % line)
-
-            if x == 0:
-                if columns[6] == "+":
-                    bpy_strand = 1
-                else:
-                    bpy_strand = -1
-                if "mRNA" not in line:
-                    starts.append(int(columns[3]))
-                    ends.append(int(columns[4]))
-            elif x == (len(lines) - 1) or "mRNA" in lines[x + 1]:
-                if columns[6] == "+":
-                    bpy_strand = 1
-                else:
-                    bpy_strand = -1
-                strands.append(bpy_strand)
-                starts.append(int(columns[3]))
-                ends.append(int(columns[4]))
-                orfnames.append("orf" + (5 - orfnr) * "0" + str(orfnr))
-                orfnr += 1
-                if len(starts) == 1:
-                    if starts[0] == 0:
-                        starts[0] = 1
-                    if ends[0] == 0:
-                        ends[0] = 1
-                    positions.append([[starts[0] - 1, ends[0]]])
-                else:
-                    pos = []
-                    if bpy_strand == -1:
-                        starts.reverse()
-                        ends.reverse()
-                    for i in starts:
-                        if i == 0:
-                            i = 1
-                        if ends[starts.index(i)] == 0:
-                            ends[starts.index(i)] = 1
-                        pos.append([i - 1, ends[starts.index(i)]])
-                    positions.append(pos)
-                starts = []
-                ends = []
-            elif "mRNA" not in line:
-                starts.append(int(columns[3]))
-                ends.append(int(columns[4]))
-        if not orfnames:
-            logging.error("GlimmerHMM gene prediction failed. Please check the " \
-                "format of your input FASTA file.")
-        #Create seq_record features for identified genes
-        idx = 0
-        for orfname in orfnames:
-            bpy_strand = strands[idx]
-            genepositions = positions[idx]
-            #For genes with only one CDS
-            if len(genepositions) == 1:
-                gstart, gend = genepositions[0]
-                loc = FeatureLocation(gstart, gend, strand=bpy_strand)
-                feature = SeqFeature(location=loc, id=orfname, type="CDS",
-                            qualifiers={'locus_tag': ['ctg%s_%s' % (options.record_idx, orfname)]})
-                seq_record.features.append(feature)
-            #For genes with multiple exons
-            else:
-                gstart, gend = min(genepositions[0]), max(genepositions[-1])
-                sublocations = []
-                for exonstart, exonend in genepositions:
-                    exonloc = FeatureLocation(exonstart, exonend, strand=bpy_strand)
-                    sublocations.append(exonloc)
-                loc = CompoundLocation(sublocations)
-                feature = SeqFeature(location=loc, id=orfname, type="CDS",
-                            qualifiers={'locus_tag': ['ctg%s_%s' % (options.record_idx, orfname)]})
-                seq_record.features.append(feature)
-            idx += 1
+    handle = StringIO(results_text)
+    features = get_features_from_file(seq_record, handle)
+    seq_record.features.extend(features)
