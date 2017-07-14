@@ -163,7 +163,7 @@ def parse_input_sequence(filename, options, genefinding):
                 sequence.name = sequence.name.replace(char, "_")
         #Iterate through sequence objects
         if len(get_cds_features(sequence)) < 1:
-            if options.gff3:
+            if options.genefinding_gff3:
                 logging.info("No CDS features found in record %r but GFF3 file provided, running GFF parser.", sequence.id)
                 gff_parser.run(sequence, options)
                 check_duplicate_gene_ids(sequences)
