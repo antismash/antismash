@@ -18,21 +18,20 @@
 
 import logging
 from os import path
-from antismash.common import deprecated as utils
+from Bio.SeqFeature import SeqFeature, FeatureLocation
 from helperlibs.wrappers.io import TemporaryDirectory
 from helperlibs.bio import seqio
+
+from antismash.common import deprecated as utils
 from antismash.common.subprocessing import execute
-from Bio.SeqFeature import SeqFeature, FeatureLocation
 
 def run_glimmer(seq_record, options):
     "Run glimmer3 to annotate prokaryotic sequences"
     basedir = options.get('glimmer', {}).get('basedir', '')
     with TemporaryDirectory(change=True):
         utils.fix_record_name_id(seq_record, options)
-        name = seq_record.id
-        while len(name) > 0 and name[0] == '-':
-            name = name[1:]
-        if name == "":
+        name = seq_record.id.lstrip('-')
+        if not name:
             name = "unknown"
         fasta_file = '%s.fasta' % name
         longorfs_file = '%s.longorfs' % name
@@ -43,11 +42,8 @@ def run_glimmer(seq_record, options):
         with open(fasta_file, 'w') as handle:
             seqio.write([seq_record], handle, 'fasta')
         long_orfs = [path.join(basedir, 'long-orfs')]
-        long_orfs.extend(['-l', '-n', '-t', '1.15',
-                          '--trans_table', '11',
-                          fasta_file,
-                          longorfs_file
-                         ])
+        long_orfs.extend(['-l', '-n', '-t', '1.15', '--trans_table', '11',
+                          fasta_file, longorfs_file])
         run_result = execute(long_orfs)
         if run_result.stderr.find('ERROR') > -1:
             logging.error("Locating long orfs failed: %r", run_result.stderr)
@@ -70,7 +66,7 @@ def run_glimmer(seq_record, options):
         # run glimmer3
         glimmer = [path.join(basedir, 'glimmer3')]
         glimmer.extend(['-l', '-o', '50', '-g', '90', '-q', '3000', '-t', '30',
-                        '--trans_table', '11', fasta_file, icm_file, name ])
+                        '--trans_table', '11', fasta_file, icm_file, name])
 
         run_result = execute(glimmer)
         if run_result.stderr.find('ERROR') > -1:

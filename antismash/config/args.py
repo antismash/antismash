@@ -2,7 +2,6 @@
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
 import argparse
-import logging
 import multiprocessing
 import threading
 from collections import defaultdict
@@ -10,7 +9,7 @@ from collections import defaultdict
 class AntiSmashParser(argparse.ArgumentParser):
     """Custom argument parser for antiSMASH
     """
-    _showAll = False
+    _show_all = False
     _displayGroup = {}
 
     def __init__(self, *args, **kwargs):
@@ -38,8 +37,8 @@ class AntiSmashParser(argparse.ArgumentParser):
             del kwargs["param"]
         return super(AntiSmashParser, self).add_argument_group(*args, **kwargs)
 
-    def print_help(self, file=None, showAll=False):
-        self._showAll = showAll
+    def print_help(self, file=None, show_all=False):
+        self._show_all = show_all
         super(AntiSmashParser, self).print_help(file)
 
     def write_to_config_file(self, filename):
@@ -53,21 +52,20 @@ class AntiSmashParser(argparse.ArgumentParser):
             dests.add(arg.dest)
             flag = sorted(arg.option_strings, key=len, reverse=True)[0].lstrip('-')
             if "%(default)" in arg.help:
-                help = arg.help % {"default": arg.default}
+                help_text = arg.help % {"default": arg.default}
             else:
-                help = arg.help
-            lines.append("## {}".format(help))
+                help_text = arg.help
+            lines.append("## {}".format(help_text))
             if arg.choices:
                 lines.append("## Possible choices: {}".format(",".join(arg.choices)))
             if arg.default is not None:
-                if arg.default == False:
+                if not arg.default:
                     lines.append("#{}".format(flag))
                 else:
                     lines.append("{} {}".format(flag, arg.default))
             else:
                 lines.append("{}".format(flag))
             return ["\n".join(lines), "\n"]
-                
 
         outfile = open(filename, 'w')
         dests = set()
@@ -108,7 +106,7 @@ Options
         return help_text
 
     def format_usage(self):
-        if self._showAll:
+        if self._show_all:
             formatter = self._get_formatter()
             formatter.add_usage(self.usage, self._actions, self._mutually_exclusive_groups)
             return formatter.format_help()
@@ -133,8 +131,8 @@ Options
                 formatter.add_arguments(action_group._group_actions)
         for action_group in self._action_groups:
             if action_group.title not in ["optional arguments", "positional arguments"]:
-                show_opt = self._showAll
-                if (not show_opt):
+                show_opt = self._show_all
+                if not show_opt:
                     if "basic" in self._displayGroup[action_group.title]:
                         show_opt = True
 #                    elif len(list(set(sys.argv) & set(self._displayGroup[action_group.title]))) > 0:
@@ -153,7 +151,7 @@ Options
         line = line.strip()
         if not line:
             return []
-        if line[0] in ["#",'[']:
+        if line[0] in ["#", '[']:
             return []
         args = line.split()
         args[0] = "--" + args[0]
@@ -164,7 +162,7 @@ class ModuleArgs(object):
     def __init__(self, title, prefix, **kwargs):
         self.title = title
         self.parser = AntiSmashParser(add_help=False)
-        if len(kwargs) > 0 and list(kwargs) != ["override_safeties"]:
+        if kwargs and list(kwargs) != ["override_safeties"]:
             raise ValueError("Unknown keyword arguments: %s" % list(kwargs))
         self.override = kwargs.get("override_safeties")
         self.group = self.parser.add_argument_group(title=title, basic=self.override)
@@ -187,7 +185,7 @@ class ModuleArgs(object):
             if "action" in kwargs: # most actions make types optional
                 self.skip_type_check = True
                 argtype = None
-            else:    
+            else:
                 raise ValueError("Arguments must have a type, (type=)")
         else:
             argtype = kwargs["type"]
@@ -214,11 +212,11 @@ class ModuleArgs(object):
 
         if declared_type is None:
             raise ValueError("Arguments must have a type declared")
-        if type(default) is not declared_type:
+        if not isinstance(default, declared_type):
             raise TypeError("Argument default doesn't match chosen type")
 
     def process_names(self, name, dest):
-        if type(name) is list:
+        if isinstance(name, list):
             raise TypeError("Module arguments may not have short-forms")
         try:
             name = str(name)
@@ -246,7 +244,7 @@ class ModuleArgs(object):
                 raise ValueError("Destination must include more information than the prefix")
         elif not dest.startswith(self.prefix + "_"):
             dest = "{}_{}".format(self.prefix, dest)
-        
+
         return name, dest
 
 
@@ -408,8 +406,8 @@ def specific_debugging(modules):
                                const=module.NAME,
                                default=False,
                                help="Enable %s (default: enabled, unless --minimal is specified)" % module.SHORT_DESCRIPTION)
-        except AttributeError as e:
-            errors.append(str(e).replace("'module' object", module.__name__))
+        except AttributeError as err:
+            errors.append(str(err).replace("'module' object", module.__name__))
     if errors:
         raise AttributeError("\n\t".join([''] + errors))
     return group
@@ -423,7 +421,7 @@ def simple_options(module, args):
 class Config():
     __singleton = None
     __lock = threading.Lock()
-    class __Config():
+    class _Config():
         def __init__(self, indict):
             if not indict.get('record_idx'):
                 indict['record_idx'] = 1
@@ -431,24 +429,33 @@ class Config():
                 self.__dict__.update(indict)
 
         def next_record_index(self):
-            next = self.__dict__['record_idx'] + 1
-            self.__dict__['record_idx'] = next
-            return next
+            next_index = self.__dict__['record_idx'] + 1
+            self.__dict__['record_idx'] = next_index
+            return next_index
 
         def get(self, key, default=None):
             return self.__dict__.get(key, default)
 
         def __getattr__(self, attr):
-            if attr not in self.__dict__:
-                print("Current config:")
-                for k,v in self.__dict__.items():
-                    print("", k, ":", v)
             return self.__dict__[attr]
 
         def __setattr__(self, attr, value):
             raise RuntimeError("Config options can't be set directly")
 
-    def __new__(self, namespace=None):
+        def __iter__(self):
+            for i in self.__dict__.items():
+                yield i
+
+        def __repr__(self):
+            return str(self)
+
+        def __str__(self):
+            return str(dict(self))
+
+        def __len__(self):
+            return len(self.__dict__)
+
+    def __new__(cls, namespace=None):
         if namespace is None:
             values = {}
         elif isinstance(namespace, dict):
@@ -457,9 +464,8 @@ class Config():
             values = namespace.__dict__
         Config.__lock.acquire()
         if Config.__singleton is None:
-            Config.__singleton = Config.__Config(values)
+            Config.__singleton = Config._Config(values)
         else:
             Config.__singleton.__dict__.update(values)
         Config.__lock.release()
         return Config.__singleton
-

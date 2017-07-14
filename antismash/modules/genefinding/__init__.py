@@ -7,7 +7,7 @@ import os
 from antismash.config.args import Config
 from antismash.common.path import locate_executable
 from antismash.config.args import ModuleArgs
-from antismash.modules.genefinding.genefinding import run_on_record    
+from antismash.modules.genefinding.genefinding import run_on_record
 
 NAME = "genefinding"
 SHORT_DESCRIPTION = NAME.capitalize()
@@ -15,23 +15,22 @@ SHORT_DESCRIPTION = NAME.capitalize()
 def get_arguments():
     args = ModuleArgs('Gene finding options (ignored when ORFs are annotated)', 'genefinding')
     args.add_argument('tool',
-                       dest='tool',
-                       default='prodigal',
-                       choices=['glimmer', 'prodigal', 'prodigal-m', 'none'],
-                       type=str,
-                       help="Specify algorithm used for gene finding: Glimmer, "
-                            "Prodigal, Prodigal Metagenomic/Anonymous mode or none. (default: %(default)s).")
+                      dest='tool',
+                      default='prodigal',
+                      choices=['glimmer', 'prodigal', 'prodigal-m', 'none'],
+                      type=str,
+                      help="Specify algorithm used for gene finding: Glimmer, "
+                           "Prodigal, Prodigal Metagenomic/Anonymous mode or none. (default: %(default)s).")
     args.add_argument('all-orfs',
-                       dest='all_orfs',
-                       action='store_true',
-                       default=False,
-                       help="Use all ORFs > 60 nucleotides instead of running genefinding or using a GFF.")
+                      dest='all_orfs',
+                      action='store_true',
+                      default=False,
+                      help="Use all ORFs > 60 nucleotides instead of running genefinding or using a GFF.")
     args.add_argument('gff3',
-                       dest='gff3',
-                       default=False,
-                       type=bool,
-                       help="Specify GFF3 file to extract features from.")
-
+                      dest='gff3',
+                      default=False,
+                      type=bool,
+                      help="Specify GFF3 file to extract features from.")
     return args
 
 def check_prereqs():
@@ -58,4 +57,3 @@ def check_options(options):
 
 def is_enabled(options):
     return options.genefinding_tool != "none" or options.genefinding_gff3
-    

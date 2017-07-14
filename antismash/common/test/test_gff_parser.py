@@ -57,4 +57,5 @@ class GffParserTest(unittest2.TestCase):
         len_cds_2 = len(deprecated.get_cds_features(self.sequences[1]))
         detected_result = (len_cds_1, len_cds_2)
         expected_result = (1, 0)
-        self.assertEqual(detected_result, expected_result, msg = "\nResult : %s\nExpected : %s" % (detected_result, expected_result))
+        self.assertEqual(detected_result, expected_result,
+                         msg="\nResult : %s\nExpected : %s" % (detected_result, expected_result))

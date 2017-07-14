@@ -19,12 +19,14 @@ mostly for fungi/eukaryotes
 """
 
 import logging
-from antismash.common import deprecated as utils
-from antismash.common import path
 from helperlibs.wrappers.io import TemporaryDirectory
 from helperlibs.bio import seqio
-from antismash.common.subprocessing import execute
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
+
+from antismash.common import deprecated as utils
+from antismash.common import path
+from antismash.common.subprocessing import execute
+
 
 def write_search_fasta(seq_record):
     name = seq_record.id.lstrip('-')
@@ -56,7 +58,7 @@ def run_glimmerhmm(seq_record, options):
         resultstext = run_external(fasta_file)
 
         #Parse GlimmerHMM predictions
-        resultstext = resultstext.replace("\r"," ")
+        resultstext = resultstext.replace("\r", " ")
         lines = resultstext.split("\n")[2:-1]
         orfnames = []
         positions = []
@@ -111,7 +113,7 @@ def run_glimmerhmm(seq_record, options):
             elif "mRNA" not in line:
                 starts.append(int(columns[3]))
                 ends.append(int(columns[4]))
-        if len(orfnames) == 0:
+        if not orfnames:
             logging.error("GlimmerHMM gene prediction failed. Please check the " \
                 "format of your input FASTA file.")
         #Create seq_record features for identified genes

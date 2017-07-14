@@ -19,7 +19,7 @@ def gather_modules(with_genefinding=False):
 
 def setup_logging(logfile=None, verbose=False, debug=False):
     "Set up the logging output"
-    
+
     def new_critical(*args): #TODO: temporary to make alpha issues more obvious
         msg = "\033[1;33m{}\033[0m".format(args[0])
         print(msg%args[1:])
@@ -91,9 +91,9 @@ def analyse_record(record, options, modules):
 
     # resort in case new features were added
     deprecated.sort_features(record)
-    
+
     return True
-    
+
 
 def run_antismash(sequence_file, options, modules=None):
     setup_logging(logfile=options.get('logfile', None), verbose=options.verbose,

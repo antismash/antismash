@@ -4,7 +4,6 @@
 import unittest
 from argparse import Namespace
 
-from antismash.config.args import ModuleArgs
 from antismash.modules.genefinding import check_options, is_enabled
 
 class TestCore(unittest.TestCase):
@@ -15,7 +14,7 @@ class TestCore(unittest.TestCase):
         options.genefinding_gff3 = '/nonexistant/path/to.gff'
         assert len(check_options(options)) == 1
         options.genefinding_gff3 = '/dev/null'
-        assert len(check_options(options)) == 0 
+        assert not check_options(options)
 
     def test_is_enabled(self):
         options = Namespace()
@@ -28,7 +27,6 @@ class TestCore(unittest.TestCase):
 
         options.genefinding_gff3 = '/some/path'
         assert is_enabled(options)
-        
+
         options.genefinding_tool = 'none'
         assert is_enabled(options)
-    

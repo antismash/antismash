@@ -147,7 +147,7 @@ def check_sub(feature, sequence):
             else:
                 new_loc = CompoundLocation(list(reversed(locations)))
                 trans_locations = reversed(trans_locations)
-        elif len(locations) == 0:
+        elif not locations:
             return new_features
         else:
             new_loc = locations[0]

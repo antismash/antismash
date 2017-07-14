@@ -98,16 +98,8 @@ Condition examples:
 Complete examples:
     t1pks 20 20 cds(PKS_AT and (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS))
 
-and priority before or
-single id is in cluster
-cluster() is in cluster
-(&) is in CDS
-no recursive CDS
-make everything cluster by default
-
 """
 
-import logging
 import string
 from enum import IntEnum
 
@@ -290,8 +282,8 @@ class Conditions():
             operands = self.sub_conditions[::2]
             assert all(isinstance(sub, Conditions) for sub in operands)
             assert all(isinstance(sub, TokenTypes) for sub in self.sub_conditions[1::2])
-            for op in self.sub_conditions[1::2]:
-                assert op in [TokenTypes.AND, TokenTypes.OR]
+            for operator in self.sub_conditions[1::2]:
+                assert operator in [TokenTypes.AND, TokenTypes.OR]
             unique_operands = set()
             for operand in map(str, operands):
                 if operand in unique_operands:
@@ -299,29 +291,29 @@ class Conditions():
                 unique_operands.add(operand)
 
 
-    def are_subconditions_satisfied(self, details, any_in_CDS=False, local_only=False):
+    def are_subconditions_satisfied(self, details, any_in_cds=False, local_only=False):
         """
             details : a Details instance
-            any_in_CDS : bool
+            any_in_cds : bool
             local_only : bool
 
-            any_in_CDS is for determining if the CDS being classified contains
+            any_in_cds is for determining if the CDS being classified contains
                  any hits at all. Effectively changes all conditions to OR, but
                  without looking past CDS being classified
 
             local_only limits the search to the single CDS in details
         """
         if len(self.sub_conditions) == 1:
-            return self.negated ^ self.sub_conditions[0].is_satisfied(details, any_in_CDS, local_only)
+            return self.negated ^ self.sub_conditions[0].is_satisfied(details, any_in_cds, local_only)
 
         # since ANDs are bound together, all subconditions we have here are ORs
         # which means a simple any() will cover us
-        sub_results = [sub.is_satisfied(details, any_in_CDS, local_only) for sub in self.sub_conditions[::2]]
+        sub_results = [sub.is_satisfied(details, any_in_cds, local_only) for sub in self.sub_conditions[::2]]
         return any(sub_results)
 
-    def is_satisfied(self, details, any_in_CDS=False, local_only=False):
+    def is_satisfied(self, details, any_in_cds=False, local_only=False):
         return self.negated ^ self.are_subconditions_satisfied(details,
-                any_in_CDS, local_only)
+                any_in_cds, local_only)
 
     def __repr__(self):
         return self.__str__()
@@ -329,7 +321,7 @@ class Conditions():
     def __str__(self):
         prefix = "not " if self.negated else ""
         if len(self.sub_conditions) == 1 \
-                and type(self.sub_conditions[0]) is not AndCondition:
+                and not isinstance(self.sub_conditions[0], AndCondition):
             return "{}{}".format(prefix, self.sub_conditions[0])
         return "{}({})".format(prefix, " ".join(str(sub) for sub in self.sub_conditions))
 
@@ -338,9 +330,9 @@ class AndCondition(Conditions):
         self.operands = subconditions[::2]
         super().__init__(False, subconditions)
 
-    def is_satisfied(self, details, any_in_CDS=False, local_only=False):
-        results = [sub.is_satisfied(details, any_in_CDS, local_only) for sub in self.operands]
-        if any_in_CDS:
+    def is_satisfied(self, details, any_in_cds=False, local_only=False):
+        results = [sub.is_satisfied(details, any_in_cds, local_only) for sub in self.operands]
+        if any_in_cds:
             return any(results)
         return all(results)
 
@@ -357,12 +349,12 @@ class MinimumCondition(Conditions):
             raise ValueError("Minimum conditions must have a required count > 0")
         super().__init__(negated)
 
-    def is_satisfied(self, details, any_in_CDS=False, local_only=False):
+    def is_satisfied(self, details, any_in_cds=False, local_only=False):
         hit_count = len(self.options.intersection(set(details.possibilities)))
         if hit_count >= self.count:
             return not self.negated
             # and if we're just checking that one is satisfied, return early too
-        if not self.negated and any_in_CDS:
+        if not self.negated and any_in_cds:
             return hit_count > 0
         if local_only:
             return self.negated ^ hit_count >= self.count
@@ -385,13 +377,13 @@ class MinimumCondition(Conditions):
                 self.count, ", ".join(sorted(list(self.options))))
 
 class CDSCondition(Conditions):
-    def is_satisfied(self, details, any_in_CDS=False, local_only=False):
+    def is_satisfied(self, details, any_in_cds=False, local_only=False):
         # all child conditions have to be within a single CDS
         # so we force local_only to True
         satisfied_internally = super().is_satisfied(details.just_cds(details.cds),
-                any_in_CDS=False, local_only=True)
+                any_in_cds=False, local_only=True)
         # start with the current cds (and end if local_only)
-        if any_in_CDS or local_only:
+        if any_in_cds or local_only:
             return satisfied_internally
 
         # positive matches can return
@@ -405,7 +397,7 @@ class CDSCondition(Conditions):
                 continue
             if not details.in_range(start_feature.location, feature.location):
                 continue
-            if super().is_satisfied(details.just_cds(cds), any_in_CDS=False, local_only=True):
+            if super().is_satisfied(details.just_cds(cds), any_in_cds=False, local_only=True):
                 # again, early return if positive match
                 return not self.negated #True
 
@@ -420,7 +412,7 @@ class SingleCondition(Conditions):
         self.name = name
         super().__init__(negated)
 
-    def is_satisfied(self, details, any_in_CDS=False, local_only=False):
+    def is_satisfied(self, details, any_in_cds=False, local_only=False):
         # do we only care about this CDS? then use the smaller set
         if local_only:
             return self.negated ^ (self.name in details.possibilities)
@@ -428,7 +420,7 @@ class SingleCondition(Conditions):
         found_in_cds = self.name in details.possibilities
 
         # we found all we were looking for, or we aren't allowed to look further
-        if any_in_CDS or found_in_cds:
+        if any_in_cds or found_in_cds:
             return self.negated ^ found_in_cds
 
         cds_feature = details.features_by_id[details.cds]
@@ -457,9 +449,9 @@ class ScoreCondition(Conditions):
         self.score = score
         super().__init__(negated)
 
-    def is_satisfied(self, details, any_in_CDS=False, local_only=False):
+    def is_satisfied(self, details, any_in_cds=False, local_only=False):
         # do we only care about this CDS? then use the smaller set
-        if local_only or any_in_CDS:
+        if local_only or any_in_cds:
             if self.name in details.possibilities:
                 for result in details.results_by_id[details.cds]:
                     if result.query_id == self.name:
@@ -494,9 +486,9 @@ class DetectionRule():
 
     def detect(self, cds, feature_by_id, results_by_id):
         details = Details(cds, feature_by_id, results_by_id, self.cutoff)
-        if not self.conditions.is_satisfied(details, any_in_CDS=True):
+        if not self.conditions.is_satisfied(details, any_in_cds=True):
             return False #at least one positive match required
-        return self.conditions.is_satisfied(details, any_in_CDS=False)
+        return self.conditions.is_satisfied(details, any_in_cds=False)
 
     def __repr__(self):
         return self.__str__()
@@ -577,35 +569,35 @@ class Parser():
             self._consume(TokenTypes.NOT)
         return negated
 
-    def _parse_ands(self, lvalue, allow_CDS):
+    def _parse_ands(self, lvalue, allow_cds):
         """ CONDITION and CONDITION { and CONDITION}
             ^ lvalue being passed in
         """
         and_conditions = [lvalue]
         and_conditions.append(self._consume(TokenTypes.AND))
-        and_conditions.append(self._parse_single_condition(allow_CDS))
+        and_conditions.append(self._parse_single_condition(allow_cds))
         while self.current_token and self.current_token.type == TokenTypes.AND:
             and_conditions.append(self._consume(TokenTypes.AND))
-            next_condition = self._parse_single_condition(allow_CDS)
+            next_condition = self._parse_single_condition(allow_cds)
             and_conditions.append(next_condition)
         return AndCondition(and_conditions)
 
-    def _parse_conditions(self, allow_CDS=True, is_group=False):
+    def _parse_conditions(self, allow_cds=True, is_group=False):
         """    CONDITIONS = CONDITION {BINARY_OP CONDITIONS}*;
         """
         conditions = []
-        lvalue = self._parse_single_condition(allow_CDS)
+        lvalue = self._parse_single_condition(allow_cds)
         append_lvalue = True # capture the lvalue if it's the only thing
         while self.current_token and self.current_token.type in [TokenTypes.AND,
                 TokenTypes.OR]:
             if self.current_token.type == TokenTypes.AND:
-                conditions.append(self._parse_ands(lvalue, allow_CDS))
+                conditions.append(self._parse_ands(lvalue, allow_cds))
                 append_lvalue = False
             else:
                 if append_lvalue:
                     conditions.append(lvalue)
                 conditions.append(self._consume(TokenTypes.OR))
-                lvalue = self._parse_single_condition(allow_CDS)
+                lvalue = self._parse_single_condition(allow_cds)
                 append_lvalue = True
         if append_lvalue:
             conditions.append(lvalue)
@@ -627,10 +619,10 @@ class Parser():
         return conditions
 
 
-    def _parse_single_condition(self, allow_CDS):
+    def _parse_single_condition(self, allow_cds):
         """
             CONDITION = [UNARY_OP] ( ID | CONDITION_GROUP | MINIMUM | CDS );
-            or we're in a CDS (i.e. allow_CDS == False)
+            or we're in a CDS (i.e. allow_cds == False)
             CDS_CONDITION = [UNARY_OP] ID {BINARY_OP CDS_CONDITION}*;
 
         """
@@ -638,10 +630,10 @@ class Parser():
         if self.current_token is None:
             raise RuleSyntaxError("Rules cannot end in not")
         if self.current_token.type == TokenTypes.GROUP_OPEN:
-            return Conditions(negated, self._parse_group(allow_CDS))
-        elif allow_CDS and self.current_token.type == TokenTypes.MINIMUM:
+            return Conditions(negated, self._parse_group(allow_cds))
+        elif allow_cds and self.current_token.type == TokenTypes.MINIMUM:
             return self._parse_minimum(negated=negated)
-        elif allow_CDS and self.current_token.type == TokenTypes.CDS:
+        elif allow_cds and self.current_token.type == TokenTypes.CDS:
             return CDSCondition(negated, self._parse_cds())
         elif self.current_token.type == TokenTypes.SCORE:
             return self._parse_score(negated=negated)
@@ -667,7 +659,7 @@ class Parser():
         cds_token = self.current_token
         self._consume(TokenTypes.CDS)
         self._consume(TokenTypes.GROUP_OPEN)
-        conditions = self._parse_conditions(allow_CDS=False, is_group=True)
+        conditions = self._parse_conditions(allow_cds=False, is_group=True)
         if not conditions:
             raise RuleSyntaxError("cds conditions must have contents:\n%s\n%s^" % (
                     self.lines[self.current_line - 1],
@@ -675,12 +667,12 @@ class Parser():
         self._consume(TokenTypes.GROUP_CLOSE)
         return conditions
 
-    def _parse_group(self, allow_CDS):
+    def _parse_group(self, allow_cds):
         """
             CONDITION_GROUP = GROUP_OPEN CONDITIONS GROUP_CLOSE;
         """
         self._consume(TokenTypes.GROUP_OPEN)
-        conditions = self._parse_conditions(allow_CDS, is_group=True)
+        conditions = self._parse_conditions(allow_cds, is_group=True)
         self._consume(TokenTypes.GROUP_CLOSE)
         return conditions
 
@@ -715,4 +707,3 @@ class Parser():
             contents.append(self._consume(TokenTypes.IDENTIFIER))
         self._consume(TokenTypes.LIST_CLOSE)
         return contents
-

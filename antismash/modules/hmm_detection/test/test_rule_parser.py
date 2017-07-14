@@ -47,7 +47,7 @@ class DetectionTest(unittest.TestCase):
         rules = [rule for rule in rules if rule.name in enabled_clustertypes]
 
         detected_types = {}
-        cds_with_hits = sorted(self.results_by_id, key = lambda gene_id: self.feature_by_id[gene_id].location.start)
+        cds_with_hits = sorted(self.results_by_id, key=lambda gene_id: self.feature_by_id[gene_id].location.start)
         for cds in cds_with_hits:
             detected_type = detected_types.get(cds)
             if detected_type:
