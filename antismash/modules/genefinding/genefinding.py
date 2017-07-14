@@ -11,7 +11,7 @@ def run_on_record(record, options):
     if options.genefinding_tool == 'none':
         raise ValueError("Called find_genes, but genefinding disabled")
     if options.taxon == 'fungi':
-        if options.all_orfs:
+        if options.genefinding_all_orfs:
             find_all_orfs(record, options)
         run_glimmerhmm(record, options)
         return

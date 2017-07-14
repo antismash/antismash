@@ -53,6 +53,9 @@ def check_options(options):
         if not os.path.exists(options.genefinding_gff3):
             errors.append("Specified gff file does not exist: %s" % (
                     options.genefinding_gff3))
+    if options.taxon == "fungi" and options.genefinding_tool != "prodigal": #default
+        logging.warning("Fungi taxon uses glimmerhmm for genefinding, ignoring genefinding_tool option: %s",
+                options.genefinding_tool)
     return errors
 
 def is_enabled(options):

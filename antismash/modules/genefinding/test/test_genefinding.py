@@ -9,6 +9,7 @@ from antismash.modules.genefinding import check_options, is_enabled
 class TestCore(unittest.TestCase):
     def test_check_options(self):
         options = Namespace()
+        options.taxon = 'bacteria'
         with self.assertRaises(AttributeError):
             check_options(options)
         options.genefinding_gff3 = '/nonexistant/path/to.gff'
@@ -18,6 +19,7 @@ class TestCore(unittest.TestCase):
 
     def test_is_enabled(self):
         options = Namespace()
+        options.taxon = 'bacteria'
         options.genefinding_tool = 'none'
         options.genefinding_gff3 = False
         assert not is_enabled(options)
