@@ -128,9 +128,9 @@ class HmmDetectionTest(unittest.TestCase):
             for case in [types, ",".join(types), ";".join(types)]:
                 options = Config({'enabled_cluster_types' : case})
                 if should_be_empty:
-                    assert len(core.check_options(options)) == 0
+                    assert not core.check_options(options)
                 else:
-                    assert len(core.check_options(options))
+                    assert core.check_options(options)
                 options.__dict__.clear()
 
         # should be no failing prerequisites
@@ -200,7 +200,7 @@ class HmmDetectionTest(unittest.TestCase):
         profiles = signatures.get_signature_profiles()
         assert len(profiles) == 220
 
-    def test_store_detection_details(self):
+    def test_store_detection(self):
         features = [FakeFeature("cluster", location=FeatureLocation(0, 10)),
                     FakeFeature("not-cluster", location=FeatureLocation(10, 20)),
                     FakeFeature("cluster", location=FeatureLocation(20, 30))]
@@ -215,7 +215,7 @@ class HmmDetectionTest(unittest.TestCase):
         assert 'note' not in features[1].qualifiers
         assert features[2].qualifiers['note'] == dummy_text
 
-    def test_store_detection_details_multitype(self):
+    def test_store_detection_multitype(self):
         feature = FakeFeature("cluster")
         feature.qualifiers['product'] = ["a-b"]
         dummy_rule_a = rule_parser.DetectionRule("a", 10, 20, "c")
@@ -229,15 +229,15 @@ class HmmDetectionTest(unittest.TestCase):
         # fake HSPs all in one CDS with overlap > 20 and query_ids from the same equivalence group
 
         # not overlapping by > 20
-        first  = FakeHSP("AMP-binding", "A", 50,  90, 0.1, None)
-        second = FakeHSP("A-OX",        "A", 70, 100, 0.5, None)
+        first = FakeHSP("AMP-binding", "A", 50, 90, 0.1, None)
+        second = FakeHSP("A-OX", "A", 70, 100, 0.5, None)
         new, by_id = hmm_detection.filter_results([first, second], {"A":[first, second]})
         assert new == [first, second]
         assert by_id == {"A":[first, second]}
 
         # overlapping, in same group
         first.hit_end = 91
-        assert hmm_detection.HSP_overlap_size(first, second) == 21
+        assert hmm_detection.hsp_overlap_size(first, second) == 21
         new, by_id = hmm_detection.filter_results([first, second], {"A":[first, second]})
         assert new == [second]
         assert by_id == {"A":[second]}
@@ -260,8 +260,8 @@ class HmmDetectionTest(unittest.TestCase):
         # all in one CDS no overlap and the same query_ids -> cull all but the best score
 
         # not overlapping, not same query_id
-        first  = FakeHSP("AMP-binding", "A", 50,  60, 0.1, None)
-        second = FakeHSP("A-OX",        "A", 70, 100, 0.5, None)
+        first = FakeHSP("AMP-binding", "A", 50, 60, 0.1, None)
+        second = FakeHSP("A-OX", "A", 70, 100, 0.5, None)
         both = [first, second]
         by_id = {"A":[first, second]}
         new, by_id = hmm_detection.filter_result_multiple(list(both), dict(by_id))
@@ -303,8 +303,8 @@ class HmmDetectionTest(unittest.TestCase):
 
 
         # with overlap
-        first =  FakeHSP("AMP-binding", "A", 50,  71, 0.1, None)
-        second = FakeHSP("A-OX",        "B", 68, 100, 0.5, None)
+        first = FakeHSP("AMP-binding", "A", 50, 71, 0.1, None)
+        second = FakeHSP("A-OX", "B", 68, 100, 0.5, None)
         new_results, new_by_id = setup_and_run([first, second])
         assert new_results == [second]
         assert new_by_id == {"B": [second]}
@@ -330,13 +330,13 @@ class HmmDetectionTest(unittest.TestCase):
         assert all(len(s) > 1 for s in sets)
 
         # ensure that the groups are disjoint
-        for i, s in enumerate(sets):
+        for i, group in enumerate(sets):
             for j in range(i + 1, len(sets)):
-                assert s.isdisjoint(sets[j])
+                assert group.isdisjoint(sets[j])
 
-    def test_HSP_overlap_size(self):
-        overlap_size = hmm_detection.HSP_overlap_size
-        first  = FakeHSP("A", "A", 50,  60, 0., None)
+    def test_hsp_overlap_size(self):
+        overlap_size = hmm_detection.hsp_overlap_size
+        first = FakeHSP("A", "A", 50, 60, 0., None)
         second = FakeHSP("B", "B", 70, 100, 0., None)
         # no overlap
         assert overlap_size(first, second) == 0

@@ -23,5 +23,3 @@ class TestAntismash(unittest.TestCase):
         # and just to be sure the above isn't just because tta
         options.input_type = 'nucl'
         assert verify_options(options)
-
-

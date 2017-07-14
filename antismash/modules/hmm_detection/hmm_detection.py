@@ -14,7 +14,7 @@ from antismash.modules.hmm_detection.signatures import get_signature_profiles, g
 cluster_number = 1
 
 def find_clusters(seq_record, rules):
-    #Functions that detects the gene clusters based on the identified core genes
+    """ Detects gene clusters based on the identified core genes """
     features = utils.get_cds_features(seq_record)
     clusters = []
 
@@ -40,7 +40,7 @@ def find_clusters(seq_record, rules):
             feature_extension = max(feature_extension, rule.extent)
         cluster = None
 
-        if len(clusters) > 0:
+        if clusters:
             cluster = clusters[-1]
             cluster_end = cluster.location.end
             # Check cutoff
@@ -50,7 +50,7 @@ def find_clusters(seq_record, rules):
 
         # start a new cluster if this is too far from the previous
         if not within_cutoff:
-            if len(clusters) > 0:
+            if clusters:
                 # Finalize the last extended cluster
                 cluster = clusters[-1]
                 extension = cluster.qualifiers['extension'][0]
@@ -69,12 +69,12 @@ def find_clusters(seq_record, rules):
         # Update cluster
         cluster.location = FeatureLocation(min(cluster.location.start, feature_start), max(cluster.location.end, feature_end))
         cluster.qualifiers['cutoff'] = [max(cluster.qualifiers['cutoff'][0], feature_cutoff)]
-        cluster.qualifiers['extension']  = [max(cluster.qualifiers['extension'][0], feature_extension)]
-        cluster.qualifiers['product'] =  ["-".join(list(set(cluster.qualifiers['product'][0].split('-')) | set(feature_type.split('-'))))]
+        cluster.qualifiers['extension'] = [max(cluster.qualifiers['extension'][0], feature_extension)]
+        cluster.qualifiers['product'] = ["-".join(list(set(cluster.qualifiers['product'][0].split('-')) | set(feature_type.split('-'))))]
         if "-" in cluster.qualifiers['product'][0]:
             cluster.qualifiers['product'] = ["-".join([ct for ct in cluster.qualifiers['product'][0].split('-') if ct != "other"])]
 
-    if len(clusters) > 0:
+    if clusters:
         # Finalize the last extended cluster
         cluster = clusters[-1]
         extension = cluster.qualifiers['extension'][0]
@@ -88,7 +88,7 @@ def find_clusters(seq_record, rules):
 
     seq_record.features.extend(clusters)
 
-def HSP_overlap_size(first, second):
+def hsp_overlap_size(first, second):
     """ Find the size of an overlapping region of two HSPs.
 
         Args:
@@ -105,8 +105,8 @@ def HSP_overlap_size(first, second):
     return max(0, segment_end - segment_start)
 
 def filter_results(results, results_by_id):
-    #Filter results by comparing scores of different models (for PKS systems)
-    for line in open(path.get_full_path(__file__, "filterhmmdetails.txt"),"r"):
+    """ Filter results by comparing scores of different models """
+    for line in open(path.get_full_path(__file__, "filterhmmdetails.txt"), "r"):
         line = line.strip()
         equivalence_group = set(line.split(","))
         unknown = equivalence_group - set(get_signature_names())
@@ -122,7 +122,7 @@ def filter_results(results, results_by_id):
             overlapping_groups = []
             for hit in cdsresults:
                 for otherhit in cdsresults:
-                    if hit == otherhit or HSP_overlap_size(hit, otherhit) <= 20:
+                    if hit == otherhit or hsp_overlap_size(hit, otherhit) <= 20:
                         continue
                     new_group_needed = True
                     pairing = {hit, otherhit}
@@ -148,12 +148,12 @@ def filter_results(results, results_by_id):
     return results, results_by_id
 
 def filter_result_multiple(results, results_by_id):
-    #Filter multiple results of the same model within a gene
+    """ Filter multiple results of the same model within a gene """
     for cds, hits in results_by_id.items():
         query_scores = {}
-        for n, hit in enumerate(hits):
+        for i, hit in enumerate(hits):
             if query_scores.get(hit.query_id, (0, 0, -1))[2] < hit.bitscore:
-                query_scores[hit.query_id] = (n, hit, hit.bitscore)
+                query_scores[hit.query_id] = (i, hit, hit.bitscore)
         best_hits = set(info[:2] for info in query_scores.values())
         results_by_id[cds] = [i[1] for i in sorted(best_hits)]
     results.clear()
@@ -163,11 +163,13 @@ def filter_result_multiple(results, results_by_id):
     return results, results_by_id
 
 def filter_result_overlapping_genes(results, results_by_id, overlaps, feature_by_id):
-    # filter results of overlapping genes (only gene with the best score can retain its result)
+    """ Filter results of overlapping genes
+        (only gene with the best score can retain its result)
+    """
     assert all(feature.type == "CDS" for feature in feature_by_id.values())
     filterhmm_list = []
     overlap_id_with_result = {}
-    for line in open(path.get_full_path(__file__, "filterhmmdetails.txt"),"r").read().split("\n"):
+    for line in open(path.get_full_path(__file__, "filterhmmdetails.txt"), "r").read().split("\n"):
         filterhmms = line.split(",")
         if filterhmms not in filterhmm_list:
             filterhmm_list.append(filterhmms)
@@ -181,13 +183,15 @@ def filter_result_overlapping_genes(results, results_by_id, overlaps, feature_by
         for cds in overlap_id_with_result[overlap_id]:
             for hit in results_by_id[cds]:
                 feature = feature_by_id[hit.hit_id]
-                if (hit.query_id not in best_hit_scores) or (best_hit_scores[hit.query_id] < abs(feature.location.end - feature.location.start)):
-                    best_hit_scores[hit.query_id] = abs(feature.location.end - feature.location.start)
+                dist = abs(feature.location.end - feature.location.start)
+                if hit.query_id not in best_hit_scores or best_hit_scores[hit.query_id] < dist:
+                    best_hit_scores[hit.query_id] = dist
         for cds in overlap_id_with_result[overlap_id]:
             to_delete = []
             for hit in results_by_id[cds]:
                 feature = feature_by_id[hit.hit_id]
-                if (abs(feature.location.end - feature.location.start) < best_hit_scores[hit.query_id]):
+                dist = abs(feature.location.end - feature.location.start)
+                if dist < best_hit_scores[hit.query_id]:
                     to_delete.append(hit)
                 else: # filter for filterhmmdetails.txt
                     for filterhmms in filterhmm_list:
@@ -196,7 +200,7 @@ def filter_result_overlapping_genes(results, results_by_id, overlaps, feature_by
                         for similar_hit in filterhmms:
                             if similar_hit not in best_hit_scores:
                                 continue
-                            if (abs(feature.location.end - feature.location.start) < best_hit_scores[similar_hit]):
+                            if dist < best_hit_scores[similar_hit]:
                                 to_delete.append(hit)
                                 break
             for hit in to_delete:
@@ -285,7 +289,7 @@ def apply_cluster_rules(results_by_id, feature_by_id, rules):
         return defaultdict(lambda: "none")
 
     type_results = {}
-    cds_with_hits = sorted(results_by_id, key = lambda gene_id: feature_by_id[gene_id].location.start)
+    cds_with_hits = sorted(results_by_id, key=lambda gene_id: feature_by_id[gene_id].location.start)
     def calculate_distance(first, second):
         first_start, first_end = sorted([first.start, first.end])
         second_start, second_end = sorted([second.start, second.end])
@@ -295,12 +299,13 @@ def apply_cluster_rules(results_by_id, feature_by_id, rules):
     first_cds = feature_by_id[cds_with_hits[0]]
     distances = [calculate_distance(first_cds.location, feature_by_id[cds].location) for cds in cds_with_hits]
 
-    for n, cds in enumerate(cds_with_hits):
+    for i, cds in enumerate(cds_with_hits):
         results = []
         info_by_range = {}
         for rule in rules:
             if rule.cutoff not in info_by_range:
-                info_by_range[rule.cutoff] = calculate_nearby_features(cds_with_hits, n, rule.cutoff, distances, feature_by_id, results_by_id)
+                info_by_range[rule.cutoff] = calculate_nearby_features(cds_with_hits,
+                        i, rule.cutoff, distances, feature_by_id, results_by_id)
             nearby_features, nearby_results = info_by_range[rule.cutoff]
             if rule.detect(cds, nearby_features, nearby_results):
                 results.append(rule.name)
@@ -345,26 +350,26 @@ def detect_signature_genes(seq_record, options):
                 else:
                     results_by_id[hsp.hit_id].append(hsp)
 
-    #Get overlap tables (for overlap filtering etc)
+    # Get overlap tables (for overlap filtering etc)
     overlaps = get_overlaps_table(seq_record)
 
-    #Filter results by comparing scores of different models (for PKS systems)
+    # Filter results by comparing scores of different models (for PKS systems)
     results, results_by_id = filter_results(results, results_by_id)
 
     # Filter results of overlapping genes (only for plants)
     if options.taxon == 'plants':
         results, results_by_id = filter_result_overlapping_genes(results, results_by_id, overlaps, feature_by_id)
 
-    #Filter multiple results of the same model in one gene
+    # Filter multiple results of the same model in one gene
     results, results_by_id = filter_result_multiple(results, results_by_id)
 
-    #Use rules to determine gene clusters
+    # Use rules to determine gene clusters
     typedict = apply_cluster_rules(results_by_id, feature_by_id, rules)
 
-    #Find number of sequences on which each pHMM is based
+    # Find number of sequences on which each pHMM is based
     nseqdict = get_nseq()
 
-    #Save final results to seq_record
+    # Save final results to seq_record
     for cds in results_by_id:
         feature = feature_by_id[cds]
         _update_sec_met_entry(feature, results_by_id[cds], typedict[cds], nseqdict)
@@ -372,11 +377,11 @@ def detect_signature_genes(seq_record, options):
     rules = {rule.name : rule for rule in rules}
     find_clusters(seq_record, rules)
 
-    #Find additional NRPS/PKS genes in gene clusters
+    # Find additional NRPS/PKS genes in gene clusters
     add_additional_nrpspks_genes(typedict, results_by_id, seq_record, nseqdict)
-    #Add details of gene cluster detection to cluster features
+    # Add details of gene cluster detection to cluster features
     store_detection_details(rules, seq_record)
-    #If all-orfs option on, remove irrelevant short orfs
+    # If all-orfs option on, remove irrelevant short orfs
     if options.genefinding_all_orfs:
         remove_irrelevant_allorfs(seq_record)
 
@@ -414,7 +419,7 @@ def remove_irrelevant_allorfs(seq_record):
             if features_overlap(autofeature, otherfeature) and "sec_met" in otherfeature.qualifiers:
                 to_delete.append(autofeature)
                 glimmer_has_sec_met = True
-        if glimmer_has_sec_met == False:
+        if not glimmer_has_sec_met:
             for otherfeature in other_features:
                 if features_overlap(autofeature, otherfeature) and "sec_met" not in otherfeature.qualifiers:
                     to_delete.append(otherfeature)
@@ -532,7 +537,7 @@ def get_overlaps_table(seq_record):
     while i <= j < len(features):
         cds = features[i]
         ncds = features[j]
-        if (cds.location.end <= ncds.location.start + 1):
+        if cds.location.end <= ncds.location.start + 1:
             overlaps.append([])
             cds_queue.append(cds)
             for cds in cds_queue:
@@ -541,7 +546,7 @@ def get_overlaps_table(seq_record):
             cds_queue = []
             i = j
         else:
-            if (cds.location.end < ncds.location.end):
+            if cds.location.end < ncds.location.end:
                 cds_queue.append(cds)
                 i = j
             else:
@@ -553,4 +558,3 @@ def get_overlaps_table(seq_record):
         overlap_by_id[utils.get_gene_id(cds)] = len(overlaps) - 1
         overlaps[-1].append(cds)
     return overlap_by_id
-

@@ -48,7 +48,7 @@ def scan_orfs(seq, direction, offset=0):
     """Scan for open reading frames on a given sequence"""
     seq = seq.upper()
     START_CODONS = ('ATG', 'GTG', 'TTG')
-    STOP_CODONS  = ('TAA', 'TAG', 'TGA')
+    STOP_CODONS = ('TAA', 'TAG', 'TGA')
     matches = []
     # Remember the last stop codon found per frame, so we can take some
     # shortcuts later
@@ -56,7 +56,7 @@ def scan_orfs(seq, direction, offset=0):
     last_orf = [None, None, None]
     # cache the sequence length
     seq_len = len(seq)
-    for i in range(0, seq_len - 2 ):
+    for i in range(0, seq_len - 2):
         if seq[i:i+3] in START_CODONS or i == 0:
             # If the last stop codon found is in the frame of this start codon
             # and the start codon is upstream of the stop codon, we have

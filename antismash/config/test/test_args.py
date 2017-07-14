@@ -56,6 +56,6 @@ class TestConfig(unittest.TestCase):
         # check attribute and get are the same
         assert config.a == config.get('a')
         # check default values function
-        assert config.get('b', 3) == None # since b exists
+        assert config.get('b', 3) is None # since b exists
         assert config.get('c') is None # since c doesn't
         assert config.get('c', 3) == 3 # now with default as 3

@@ -54,10 +54,10 @@ def check_options(options):
     if isinstance(enabled, list):
         requested = set(enabled)
     else:
-        requested = set(enabled.replace(";",",").split(","))
-    
+        requested = set(enabled.replace(";", ",").split(","))
+
     unavailable = requested - available
-    
+
     errors = []
     if unavailable:
         errors.append("The following cluster types are unavailable:")

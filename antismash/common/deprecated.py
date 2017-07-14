@@ -5,17 +5,17 @@
 This file will be removed as soon as the new abstraction layer is completed.
 """
 
-import Bio
 import logging
 import os
 import re
 import sys
-
 from argparse import Namespace
+from collections import defaultdict
+
+import Bio
 from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation # for others importing
 from Bio.SeqRecord import SeqRecord
-from collections import defaultdict
 from helperlibs.bio import seqio
 
 from antismash.common import gff_parser
@@ -41,9 +41,9 @@ def get_all_features_of_type(seq_record, types):
         # force into a tuple
         types = (types, )
     features = []
-    for f in seq_record.features:
-        if f.type in types:
-            features.append(f)
+    for feature in seq_record.features:
+        if feature.type in types:
+            features.append(feature)
     return features
 
 def get_cds_features(seq_record):
@@ -62,8 +62,8 @@ def get_withincluster_cds_features(seq_record):
             if feature not in withinclusterfeatures:
                 withinclusterfeatures.append(feature)
     return withinclusterfeatures
-    
-    
+
+
 def parse_input_sequence(filename, options, genefinding):
     "Parse the input sequences from given filename"
     logging.info('Parsing input sequence %r', filename)
@@ -76,17 +76,17 @@ def parse_input_sequence(filename, options, genefinding):
 
     try:
         record_list = list(seqio.parse(filename))
-        if len(record_list) == 0:
+        if not record_list:
             logging.error('No sequence in file %r', filename)
         sequences.extend([rec for rec in record_list if len(rec.seq) > options.minlength or \
             ('contig' in rec.annotations or 'wgs_scafld' in rec.annotations or \
             'wgs' in rec.annotations)])
-    except (ValueError, AssertionError) as e:
-        logging.error('Parsing %r failed: %s', filename, e)
-        sys.exit(1)
-    except Exception as e:
+    except (ValueError, AssertionError) as err:
+        logging.error('Parsing %r failed: %s', filename, err)
+        raise
+    except Exception as err:
         logging.error('Parsing %r failed with unhandled exception: %s',
-                      filename, e)
+                      filename, err)
         raise
     #Check if seq_records have appropriate content
     i = 0
@@ -96,9 +96,9 @@ def parse_input_sequence(filename, options, genefinding):
         #Check if seq_record has either a sequence or has at least 80% of CDS features with 'translation' qualifier
         cdsfeatures = get_cds_features(sequence)
         cdsfeatures_with_translations = sum([1 for cdsfeature in cdsfeatures if 'translation' in cdsfeature.qualifiers])
-        if len(sequence.seq) == 0 or (
+        if not sequence.seq or (
                 options.input_type == 'nucl' and \
-                len(str(sequence.seq).replace("N","")) == 0 and \
+                not str(sequence.seq).replace("N", "") and \
                 cdsfeatures_with_translations < 0.8 * len(cdsfeatures)):
             logging.error("Record %s has no sequence, skipping.", sequence.id)
             sequences.pop(i)
@@ -157,7 +157,7 @@ def parse_input_sequence(filename, options, genefinding):
     while i < len(sequences):
         sequence = sequences[i]
         #Fix sequence name (will be ID) if it contains illegal chars
-        illegal_chars  = '''!"#$%&()*+,:; \r\n\t=>?@[]^`'{|}/ '''
+        illegal_chars = '''!"#$%&()*+,:; \r\n\t=>?@[]^`'{|}/ '''
         for char in sequence.name:
             if char in illegal_chars:
                 sequence.name = sequence.name.replace(char, "_")
@@ -260,9 +260,9 @@ def is_nucl_seq(sequence):
 
 def generate_nucl_seq_record(sequences):
     "Generate nucleotide seq_record"
-    if len(sequences) == 0:
+    if not sequences:
         return []
-    seq_record = SeqRecord(Seq(""),id="Protein_Input", name="ProteinInput",
+    seq_record = SeqRecord(Seq(""), id="Protein_Input", name="ProteinInput",
                    description="antiSMASH protein input")
     position = 0
     cds_features = []
@@ -274,7 +274,7 @@ def generate_nucl_seq_record(sequences):
         location = FeatureLocation(startpos, endpos)
         cdsfeature = SeqFeature(location, type="CDS")
         cdsfeature.strand = 1
-        sequence_id = sequence.id[:15].replace(" ","_")
+        sequence_id = sequence.id[:15].replace(" ", "_")
         if sequence_id not in cdsnames:
             cdsfeature.qualifiers['product'] = [sequence_id]
             cdsfeature.qualifiers['locus_tag'] = [sequence_id]
@@ -293,7 +293,7 @@ def generate_nucl_seq_record(sequences):
 
 def check_duplicate_gene_ids(sequences):
     "Fix duplicate locus tags so that they are different"
-    NO_TAG = "no_tag_found"
+    no_tag = "no_tag_found"
     high_water_mark = 0
     all_ids = defaultdict(lambda: False)
     for sequence in sequences:
@@ -303,19 +303,19 @@ def check_duplicate_gene_ids(sequences):
             if not all_ids[gene_id]:
                 all_ids[gene_id] = True
             else:
-                if gene_id == NO_TAG:
+                if gene_id == no_tag:
                     x = high_water_mark + 1
                 else:
                     x = 1
-                id_str = "%s_%s" % ( gene_id[:8], x)
+                id_str = "%s_%s" % (gene_id[:8], x)
                 while all_ids[id_str]:
                     x += 1
-                    id_str = "%s_%s" % ( gene_id[:8], x)
+                    id_str = "%s_%s" % (gene_id[:8], x)
                 logging.debug("generated id %r", id_str)
                 cdsfeature.qualifiers['product'] = [id_str]
                 cdsfeature.qualifiers['locus_tag'] = [id_str]
                 all_ids[id_str] = True
-                if gene_id == NO_TAG:
+                if gene_id == no_tag:
                     high_water_mark = x
 
 
@@ -329,7 +329,7 @@ def fix_locus_tags(seq_record):
             feature.qualifiers['locus_tag'] = ['AUTOORF_%05d' % next_locus_tag]
             next_locus_tag += 1
         #Fix locus tags, gene names or protein IDs if they contain illegal chars
-        illegal_chars  = '''!"#$%&()*+,:; \r\n\t=>?@[]^`'{|}/ '''
+        illegal_chars = '''!"#$%&()*+,:; \r\n\t=>?@[]^`'{|}/ '''
         if 'locus_tag' in feature.qualifiers:
             for char in feature.qualifiers['locus_tag'][0]:
                 if char in illegal_chars:
@@ -342,7 +342,8 @@ def fix_locus_tags(seq_record):
             for char in feature.qualifiers['protein_id'][0]:
                 if char in illegal_chars:
                     feature.qualifiers['protein_id'][0] = feature.qualifiers['protein_id'][0].replace(char, "_")
-                    
+
+
 def add_translations(seq_records):
     "Add a translation qualifier to all CDS features"
     for seq_record in seq_records:
@@ -351,7 +352,7 @@ def add_translations(seq_records):
         for cdsfeature in cdsfeatures:
             if cdsfeature.qualifiers.get('translation'):
                 continue
-            if len(seq_record.seq) == 0:
+            if not seq_record.seq:
                 logging.error('No amino acid sequence in input entry for CDS %r, ' \
                         'and no nucleotide sequence provided to translate it from.', cdsfeature.id)
                 raise ValueError("Missing sequence info for CDS %r" % cdsfeature.id)
@@ -375,20 +376,20 @@ def get_gene_id(feature):
 
 def add_seq_record_seq(seq_records):
     for seq_record in seq_records:
-        if len(seq_record.seq) == 0:
+        if not seq_record.seq:
             seqmax = max([cds.location.start for cds in get_cds_features(seq_record)] + [cds.location.end for cds in get_cds_features(seq_record)])
             seq_record.seq = Seq(seqmax * "n")
 
 def get_aa_translation(seq_record, feature):
     """Obtain content for translation qualifier for specific CDS feature in sequence record"""
     fasta_seq = feature.extract(seq_record.seq).ungap('-').translate(to_stop=True)
-    if len(fasta_seq) == 0:
+    if not fasta_seq:
         logging.debug("Retranslating %s with stop codons", feature.id)
         fasta_seq = feature.extract(seq_record.seq).ungap('-').translate()
     if "*" in str(fasta_seq):
-        fasta_seq = Seq(str(fasta_seq).replace("*","X"), Bio.Alphabet.generic_protein)
+        fasta_seq = Seq(str(fasta_seq).replace("*", "X"), Bio.Alphabet.generic_protein)
     if "-" in str(fasta_seq):
-        fasta_seq = Seq(str(fasta_seq).replace("-",""), Bio.Alphabet.generic_protein)
+        fasta_seq = Seq(str(fasta_seq).replace("-", ""), Bio.Alphabet.generic_protein)
 
     return fasta_seq
 
@@ -419,10 +420,10 @@ def get_multifasta(seq_record):
         gene_id = get_gene_id(feature)
         fasta_seq = feature.qualifiers.get('translation', [''])[0]
         if "-" in str(fasta_seq):
-            fasta_seq = Seq(str(fasta_seq).replace("-",""), Bio.Alphabet.generic_protein)
+            fasta_seq = Seq(str(fasta_seq).replace("-", ""), Bio.Alphabet.generic_protein)
 
         # Never write empty fasta entries
-        if len(fasta_seq) == 0:
+        if not fasta_seq:
             logging.debug("No translation for %s, skipping", gene_id)
             assert feature.type.lower() != "cds"
             continue
@@ -502,11 +503,11 @@ def fix_record_name_id(seq_record, options):
 
     if seq_record.id == "unknown.1":
         seq_record.id = "unk_seq_{ctg:05d}".format(ctg=options.orig_record_idx)
-        logging.warn('Invalid sequence id "unknown.1", replaced by %s', seq_record.id)
+        logging.warning('Invalid sequence id "unknown.1", replaced by %s', seq_record.id)
 
     if seq_record.name == "unknown":
         seq_record.name = "unk_seq_{ctg:05d}".format(ctg=options.orig_record_idx)
-        logging.warn('Invalid sequence name "unknown", replaced by %s', seq_record.name)
+        logging.warning('Invalid sequence name "unknown", replaced by %s', seq_record.name)
 
     if len(seq_record.id) > 16:
         oldid = seq_record.id
@@ -529,7 +530,7 @@ def fix_record_name_id(seq_record, options):
                 seq_record.id = "%s_%i" % (seq_record.id[:16][:-4], x)
                 options.all_record_ids.add(seq_record.id)
 
-        logging.warn('Fasta header too long: renamed "%s" to "%s"', oldid, seq_record.id)
+        logging.warning('Fasta header too long: renamed "%s" to "%s"', oldid, seq_record.id)
         if seq_record.id not in options.extrarecord:
             options.extrarecord[seq_record.id] = Namespace()
         if "extradata" not in options.extrarecord[seq_record.id]:
@@ -548,11 +549,10 @@ def fix_record_name_id(seq_record, options):
         seq_record.annotations['accession'] = _shorten_ids(acc, options)
 
     # Remove illegal characters from name: otherwise, file cannot be written
-    illegal_chars  = '''!"#$%&()*+,:;=>?@[]^`'{|}/ '''
+    illegal_chars = '''!"#$%&()*+,:;=>?@[]^`'{|}/ '''
     for char in seq_record.id:
         if char in illegal_chars:
-            seq_record.id = seq_record.id.replace(char,"")
+            seq_record.id = seq_record.id.replace(char, "")
     for char in seq_record.name:
         if char in illegal_chars:
-            seq_record.id = seq_record.name.replace(char,"")
-
+            seq_record.id = seq_record.name.replace(char, "")

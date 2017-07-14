@@ -35,5 +35,3 @@ def is_enabled(options):
 
 def run_on_record(seq_record, options):
     return detect(seq_record, options)
-
-

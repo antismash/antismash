@@ -12,12 +12,11 @@ from os import path
 
 from antismash.config.args import Config
 
-_config = None
-_basedir = path.dirname(path.abspath(__file__))
-_default_name = 'default.cfg'
-_sys_name = sys.platform + '.cfg'
-_user_file_name = path.expanduser('~/.antismash.cfg')
-_instance_file_name = 'instance.cfg'
+_DEFAULT_NAME = 'default.cfg'
+_SYS_NAME = sys.platform + '.cfg'
+_USER_FILE_NAME = path.expanduser('~/.antismash.cfg')
+_INSTANCE_FILE_NAME = 'instance.cfg'
+_BASEDIR = path.dirname(path.abspath(__file__))
 
 def update_config_from_file(namespace=None):
     """Load config from a default and system-specific config file and
@@ -25,32 +24,33 @@ def update_config_from_file(namespace=None):
     """
     if namespace is None:
         namespace = Namespace()
-    default_file = path.join(_basedir, _default_name)
-    sys_file = path.join(_basedir, _sys_name)
-    instance_file = path.join(_basedir, _instance_file_name)
+    basedir = path.dirname(path.abspath(__file__))
+    default_file = path.join(_BASEDIR, _DEFAULT_NAME)
+    sys_file = path.join(_BASEDIR, _SYS_NAME)
+    instance_file = path.join(_BASEDIR, _INSTANCE_FILE_NAME)
 
     # load generic configuration settins
     config = configparser.ConfigParser()
-    with open(default_file, 'r') as fp:
-        config.read_file(fp)
+    with open(default_file, 'r') as handle:
+        config.read_file(handle)
 
     # load system-specific config file if available
     # also load .antismash.cfg from the user's home dir
     # and last, overriding all the other settings, instance.cfg
-    config.read([sys_file, _user_file_name, instance_file])
+    config.read([sys_file, _USER_FILE_NAME, instance_file])
 
-    for s in config.sections():
-        if s not in namespace:
-            namespace.__dict__[s] = Namespace()
-        for key, value in config.items(s):
+    for section in config.sections():
+        if section not in namespace:
+            namespace.__dict__[section] = Namespace()
+        for key, value in config.items(section):
             key = key.replace('-', '_')
-            if key not in namespace.__dict__[s]:
+            if key not in namespace.__dict__[section]:
                 try:
-                    namespace.__dict__[s].__dict__[key] = config.getboolean(s, key)
+                    namespace.__dict__[section].__dict__[key] = config.getboolean(section, key)
                     continue
                 except ValueError:
                     pass
-                namespace.__dict__[s].__dict__[key] = value
+                namespace.__dict__[section].__dict__[key] = value
 
     # settings from the [DEFAULT] section go to the global namespace
     for key, value in config.items('DEFAULT'):

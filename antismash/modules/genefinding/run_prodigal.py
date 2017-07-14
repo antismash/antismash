@@ -18,24 +18,25 @@
 
 import logging
 from os import path
-from antismash.common import deprecated as utils
 from helperlibs.wrappers.io import TemporaryDirectory
 from helperlibs.bio import seqio
-from antismash.common.subprocessing import execute
 from Bio.SeqFeature import SeqFeature, FeatureLocation
 
+from antismash.common import deprecated as utils
+from antismash.common.subprocessing import execute
+
 def run_prodigal(seq_record, options):
-    "Run progidal to annotate prokaryotic sequences"
-    if "basedir" in options.get('prodigal',''):
+    """
+        Run progidal to annotate prokaryotic sequences
+    """
+    if "basedir" in options.get('prodigal', ''):
         basedir = options.prodigal.basedir
     else:
         basedir = ""
     with TemporaryDirectory(change=True):
         utils.fix_record_name_id(seq_record, options)
-        name = seq_record.id
-        while len(name) > 0 and name[0] == '-':
-            name = name[1:]
-        if name == "":
+        name = seq_record.id.lstrip('-')
+        if not name:
             name = "unknown"
         fasta_file = '%s.fasta' % name
         result_file = '%s.predict' % name
@@ -56,12 +57,12 @@ def run_prodigal(seq_record, options):
             # skip first line
             if not line.startswith('>'):
                 continue
-            name, start, end, prodigalStrand = line[1:].rstrip().split("_")
+            name, start, end, prodigal_strand = line[1:].rstrip().split("_")
 
             try:
                 start = int(start)
                 end = int(end)
-                if prodigalStrand == "+":
+                if prodigal_strand == "+":
                     strand = 1
                 else:
                     strand = -1

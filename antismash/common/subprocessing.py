@@ -9,8 +9,8 @@ import warnings
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     from Bio import SearchIO
-from helperlibs.wrappers.io import TemporaryDirectory
 from subprocess import PIPE, Popen
+from helperlibs.wrappers.io import TemporaryDirectory
 
 from antismash.config.args import Config
 
@@ -49,9 +49,9 @@ def execute(commands, stdin=None, stdout=PIPE, stderr=PIPE):
         out, err = proc.communicate(input=stdin)
         return RunResult(commands, out, err, proc.returncode,
                          stdout == PIPE, stderr == PIPE)
-    except OSError as e:
+    except OSError as err:
         logging.debug("%r %r returned %r", commands,
-                      stdin[:40] if stdin is not None else None, e)
+                      stdin[:40] if stdin is not None else None, err)
         raise
 
 def run_hmmsearch(query_hmmfile, target_sequence, use_tempfile=False):
@@ -94,9 +94,8 @@ def run_hmmpress(hmmfile):
         out = run_result.stdout
         err = run_result.stderr
         retcode = run_result.return_code
-    except OSError as e:
+    except OSError as excep:
         retcode = 1
-        err = str(e)
+        err = str(excep)
         out = None
     return out, err, retcode
-

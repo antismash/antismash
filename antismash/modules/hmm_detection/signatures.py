@@ -51,4 +51,3 @@ def get_signature_profiles():
     get_signature_profiles.existing = profiles
 
     return profiles
-
