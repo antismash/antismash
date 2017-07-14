@@ -52,22 +52,14 @@ def check_gff_suitability(options, sequences):
         logging.error('Parsing %r failed: %s', options.gff3, e)
         raise
 
-
-def run(sequence, options):
-    logging.critical("gff_parser module not validated")
-    handle = open(options.gff3)
-    # If there's only one sequence in both, read all, otherwise, read only appropriate part of GFF3.
-    if options.single_entries:
-        limit_info = False
-    else:
-        limit_info = dict(gff_id=[sequence.id])
-
-    for record in GFF.parse(handle, limit_info=limit_info):
+def get_features_from_file(seq_record, handle, limit_to_seq_id=False):
+    features = []
+    for record in GFF.parse(handle, limit_info=limit_to_seq_id):
         for feature in record.features:
             if feature.type == 'CDS':
                 new_features = [feature]
             else:
-                new_features = check_sub(feature, sequence)
+                new_features = check_sub(feature, seq_record)
                 if not new_features:
                     continue
 
@@ -92,11 +84,22 @@ def run(sequence, options):
                 n.qualifiers['gene'] = [variant]
                 if locus_tag is not None:
                     n.qualifiers["locus_tag"] = locus_tag
-                sequence.features.append(n)
+                features.append(n)
+    return features
+
+def run(sequence, options):
+    handle = open(options.gff3)
+    # If there's only one sequence in both, read all, otherwise, read only appropriate part of GFF3.
+    if options.single_entries:
+        limit_info = False
+    else:
+        limit_info = dict(gff_id=[sequence.id])
+
+    features = get_features_from_file(sequence, handle, limit_info)
+    sequence.features.extend(features)
 
 
 def check_sub(feature, sequence):
-    logging.critical("gff_parser module not validated")
     new_features = []
     locations = []
     trans_locations = []
@@ -151,7 +154,7 @@ def check_sub(feature, sequence):
             return new_features
         else:
             new_loc = locations[0]
-        logging.critical("gff_parser:directly creating new SeqFeature as CDS")
+        # TODO: use new secmet features
         new_feature = SeqFeature(new_loc)
         new_feature.qualifiers = qualifiers
         new_feature.type = 'CDS'
