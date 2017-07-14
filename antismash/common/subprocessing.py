@@ -17,8 +17,8 @@ from antismash.config.args import Config
 class RunResult():
     def __init__(self, command, stdout, stderr, return_code, piped_out, piped_err):
         self.command = command
-        self.stdout = str(stdout)
-        self.stderr = str(stderr)
+        self.stdout = stdout.decode()
+        self.stderr = stderr.decode()
         self.return_code = return_code
         self.stdout_piped = piped_out
         self.stderr_piped = piped_err
