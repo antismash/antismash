@@ -1,6 +1,8 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+from Bio.Seq import Seq
+
 class FakeSeq(object):
     "class for generating a Seq like datastructure"
     def __init__(self, seq):
@@ -14,11 +16,14 @@ class FakeSeq(object):
 
 class FakeRecord(object):
     "class for generating a seq_record like data structure"
-    def __init__(self, features=None, seq='FAKESEQ'):
+    def __init__(self, features=None, seq='FAKESEQ', real_seq=False):
         if features is None:
             features = []
         self.features = features
-        self.seq = FakeSeq(seq)
+        if real_seq:
+            self.seq = Seq(seq)
+        else:
+            self.seq = FakeSeq(seq)
 
     def __len__(self):
         """ returns the largest location of all features, so as to not break

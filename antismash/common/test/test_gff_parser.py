@@ -3,50 +3,23 @@
 
 "Test suite for gff_parser module"
 
-try:
-    import unittest2
-except ImportError:
-    import unittest as unittest2
-import antismash
-
-from antismash.common import deprecated, gff_parser, path
+import os
+from unittest import TestCase
 from Bio.Seq import Seq
+from Bio.SeqFeature import CompoundLocation
 
+import antismash
+from antismash.common import deprecated, gff_parser, path
+from antismash.common.test.helpers import FakeRecord, FakeFeature
 
-class FakeRecord(object):
-    "class for generating a seq_record like data structure"
-    def __init__(self, features=None, seq='AAAAAA'):
-        if features is None:
-            features = []
-        self.features = features
-        self.seq = Seq(seq)
-    def __len__(self):
-        return len(self.seq)
-
-
-class FakeFeature(object):
-    "class for generating a SeqFeature like datastructure"
-    def __init__(self, feature_type, location=None, qualifiers=None):
-        self.type = feature_type
-        self.qualifiers = {} if qualifiers is None else qualifiers
-        self.location = location
-
-    def extract(self, seq):
-        return seq
-
-    def __repr__(self):
-        return "FakeFeature(%r, %r, %r)" % (self.location, self.type,
-                                            self.qualifiers)
-
-
-class GffParserTest(unittest2.TestCase):
+class GffParserTest(TestCase):
     def setUp(self):
         self.config = antismash.config.args.simple_options(None, [])
         self.config.gff3 = path.get_full_path(__file__, "data/test_gff.gff")
         self.config.single_entries = False
-        contig1 = FakeRecord(seq="A"*2000)
+        contig1 = FakeRecord(seq="A"*2000, real_seq=True)
         contig1.id = "CONTIG_1"
-        contig2 = FakeRecord(seq="A"*2000)
+        contig2 = FakeRecord(seq="A"*2000, real_seq=True)
         contig2.id = "CONTIG_2"
         self.sequences = [contig1, contig2]
 
@@ -59,3 +32,28 @@ class GffParserTest(unittest2.TestCase):
         expected_result = (1, 0)
         self.assertEqual(detected_result, expected_result,
                          msg="\nResult : %s\nExpected : %s" % (detected_result, expected_result))
+
+    def test_top_level_cds(self):
+        self.config.gff3 = path.get_full_path(__file__, "data/single_cds.gff")
+        gff_parser.run(self.sequences[0], self.config)
+        assert len(deprecated.get_cds_features(self.sequences[0])) == 1
+
+    def test_features_from_file(self):
+        filename = path.get_full_path(__file__, 'data/fumigatus.cluster1.gff')
+        record = FakeRecord(real_seq=True)
+        features = gff_parser.get_features_from_file(record, open(filename))
+        assert len(features) == 11
+        for feature in features:
+            assert feature.type == 'CDS'
+            assert isinstance(feature.location, CompoundLocation)
+
+    def test_suitability(self):
+        self.config.all_record_ids = []
+        with self.assertRaises(ValueError) as err:
+            gff_parser.check_gff_suitability(self.config, self.sequences)
+        assert "GFF3 record IDs don't match sequence file record IDs" in str(err.exception)
+
+        # doesn't test very much
+        gff_parser.run(self.sequences[0], self.config) # insert the features
+        self.config.all_record_ids = ['CRO_000001']
+        gff_parser.check_gff_suitability(self.config, self.sequences)
