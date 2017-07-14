@@ -6,52 +6,12 @@ import unittest
 from minimock import mock, restore
 
 from antismash.common.deprecated import FeatureLocation
+from antismash.common.test.helpers import FakeRecord, FakeSeq, FakeFeature
 import antismash.common.deprecated as utils
 import antismash.common.path as path
 from antismash.config.args import Config
 import antismash.modules.hmm_detection as core
 from antismash.modules.hmm_detection import hmm_detection, rule_parser, signatures
-
-class FakeRecord(object):
-    "class for generating a seq_record like data structure"
-    def __init__(self, features=None, seq='FAKESEQ'):
-        if features is None:
-            features = []
-        self.features = features
-        self.seq = FakeSeq(seq)
-
-    def __len__(self):
-        """ returns the largest location of all features, so as to not break
-            when new features are added to tests that extend past a hardcoded
-            value
-        """
-        return max(max(feature.location.end, feature.location.start) for feature in self.features)
-
-class FakeFeature(object):
-    "class for generating a SeqFeature like datastructure"
-    def __init__(self, feature_type, location=None, qualifiers=None):
-        self.type = feature_type
-        self.qualifiers = {} if qualifiers is None else qualifiers
-        self.location = location
-
-    def extract(self, seq):
-        return seq
-
-    def __repr__(self):
-        return "FakeFeature(%r, %r, %r)" % (self.location, self.type,
-                                            self.qualifiers)
-
-class FakeSeq(object):
-    "class for generating a Seq like datastructure"
-    def __init__(self, seq):
-        self.seq = seq
-
-    def translate(self, to_stop):
-        return self.seq
-
-    def __str__(self):
-        return self.seq
-
 
 class FakeHSP(object):
     "class for generating a HSP like datastructure"
