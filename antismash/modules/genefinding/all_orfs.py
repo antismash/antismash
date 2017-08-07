@@ -17,6 +17,7 @@
 """
 
 import logging
+import math
 from Bio.SeqFeature import SeqFeature, FeatureLocation
 
 class Orf:
@@ -134,15 +135,18 @@ def find_all_orfs(seq_record, options):
             "format of your input FASTA file.")
     orfnr = 0
     for orf in sort_orfs(all_orfs):
+        # ensure the location isn't negative to start with
         if orf.start < 0:
             orf.start = 0
         if orf.stop < 0:
             orf.stop = 0
         seqlength = len(str(seq_record.seq))
-        while orf.start > seqlength:
-            orf.start = orf.start - 3
-        while orf.stop > seqlength:
-            orf.stop = orf.stop - 3
+        # make sure we don't create a negative location if we adjust them
+        assert seqlength >= 3 or orf.start < 3 and orf.stop < 3
+        if orf.start > seqlength:
+            orf.start -= math.ceil((orf.start - seqlength) / 3) * 3
+        if orf.stop > seqlength:
+            orf.stop -= math.ceil((orf.stop - seqlength) / 3) * 3
         loc = FeatureLocation(orf.start, orf.stop, strand=orf.direction)
         feature = SeqFeature(location=loc, id=str(orf), type="CDS",
                     qualifiers={'locus_tag': ['ctg%s_allorf%s%s' % (options.record_idx, "0" * (6 - len(str(orfnr))), str(orfnr))]})
