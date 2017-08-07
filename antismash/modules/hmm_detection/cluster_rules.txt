@@ -17,11 +17,10 @@ linaridin	20	10	cypemycin or cypI
 cyanobactin	20	10	cyanobactin_synth
 glycocin	20	10	glycocin or sublancin
 LAP	20	10	goadsporin_like
-lassopeptide	10	10	PF13471 and PF00733
+lassopeptide	10	10	PF13471 and PF00733 or micJ25 or mcjC
 sactipeptide	20	10	subtilosin or thuricin or TIGR04404 or TIGR03973
 bottromycin	20	10	botH
 head_to_tail	20	10	Subtilosin_A or skfc
-microcin	20	10	micJ25 or mcjC
 microviridin	20	10	mvd or mvnA
 proteusin	20	10	PoyD
 blactam	20	10	BLS or CAS or tabtoxin
