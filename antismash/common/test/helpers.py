@@ -17,6 +17,7 @@ class FakeSeq(object):
 class FakeRecord(object):
     "class for generating a seq_record like data structure"
     def __init__(self, features=None, seq='FAKESEQ', real_seq=False):
+        self.record_index = 0
         if features is None:
             features = []
         self.features = features
