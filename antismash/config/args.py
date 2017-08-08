@@ -394,7 +394,7 @@ def specific_debugging(modules):
                        dest='minimal',
                        action='store_true',
                        default=False,
-                       help="Only run minimal analysis, no cluster_specific modules unless explicitly enabled")
+                       help="Only run detection modules, no analysis modules unless explicitly enabled")
     if not modules:
         return group
     errors = []
@@ -423,15 +423,8 @@ class Config():
     __lock = threading.Lock()
     class _Config():
         def __init__(self, indict):
-            if not indict.get('record_idx'):
-                indict['record_idx'] = 1
             if indict:
                 self.__dict__.update(indict)
-
-        def next_record_index(self):
-            next_index = self.__dict__.get('record_idx', 0) + 1
-            self.__dict__['record_idx'] = next_index
-            return next_index
 
         def get(self, key, default=None):
             return self.__dict__.get(key, default)

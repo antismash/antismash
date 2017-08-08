@@ -9,7 +9,6 @@ import logging
 import os
 import re
 import sys
-from argparse import Namespace
 from collections import defaultdict
 
 import Bio
@@ -90,9 +89,9 @@ def parse_input_sequence(filename, options, genefinding):
                       filename, err)
         raise
     #Check if seq_records have appropriate content
-    i = 0
-    while i < len(sequences):
-        sequence = sequences[i]
+    for i, sequence in enumerate(sequences):
+        sequence.skip = False
+        sequence.record_index = i
         sequence.seq = Seq(str(sequence.seq).replace("-", "").replace(":", ""))
         #Check if seq_record has either a sequence or has at least 80% of CDS features with 'translation' qualifier
         cdsfeatures = get_cds_features(sequence)
@@ -102,22 +101,20 @@ def parse_input_sequence(filename, options, genefinding):
                 not str(sequence.seq).replace("N", "") and \
                 cdsfeatures_with_translations < 0.8 * len(cdsfeatures)):
             logging.error("Record %s has no sequence, skipping.", sequence.id)
-            sequences.pop(i)
+            sequence.skip = "contains no sequence"
             continue
 
         if options.input_type == 'prot':
             if is_nucl_seq(sequence.seq):
                 logging.error("Record %s is a nucleotide record, skipping.", sequence.id)
-                sequences.pop(i)
+                sequence.skip = "nucleotide record in protein mode"
                 continue
         elif options.input_type == 'nucl':
             if not isinstance(sequence.seq.alphabet, Bio.Alphabet.NucleotideAlphabet) and not is_nucl_seq(sequence.seq):
                 logging.error("Record %s is a protein record, skipping.", sequence.id)
-                sequences.pop(i)
+                sequence.skip = "protein record in nucleotide mode"
                 continue
             sequence.seq.alphabet = Bio.Alphabet.generic_dna
-
-        i += 1
 
     #If protein input, convert all protein seq_records to one nucleotide seq_record
     if options.input_type == 'prot':
@@ -127,36 +124,40 @@ def parse_input_sequence(filename, options, genefinding):
     check_for_wgs_scaffolds(sequences)
 
     #Now remove small contigs < minimum length again
-    sequences = [rec for rec in sequences if len(rec.seq) > options.minlength]
+    for sequence in sequences:
+        if len(sequence.seq) < options.minlength:
+            sequence.skip = "smaller than minimum length (%d)" % options.minlength
 
     # Make sure we don't waste weeks of runtime on huge records, unless requested by the user
-    old_len = len(sequences)
+    warned = False
     if options.limit > -1:
-        sequences = sequences[:options.limit]
+        meaningful = 0
+        for sequence in sequences:
+            if sequence.skip:
+                continue
+            meaningful += 1
+            if meaningful > options.limit:
+                if not warned:
+                    logging.warning("Only analysing the first %d records (increase via --limit)", options.limit)
+                sequence.skip = "skipping all but first {0} meaningful records (--limit {0}) ".format(options.limit)
 
-    new_len = len(sequences)
-    if new_len < old_len:
+    if warned:
         options.triggered_limit = True
-        logging.warning("Only analysing the first %d records (increase via --limit)", options.limit)
 
     #Check if no duplicate locus tags / gene IDs are found
     check_duplicate_gene_ids(sequences)
-
-    #Store IDs for all entries
-    CODE_SKIP_WARNING()
-#    options.all_record_ids = {seq.id for seq in sequences}
-
-    # For retaining the correct contig numbers, a second counter is required also including removed sequences without genes
-    CODE_SKIP_WARNING()
-#    options.orig_record_idx = 1
 
     # Check GFF suitability
     if options.genefinding_gff3:
         gff_parser.check_gff_suitability(options, sequences)
 
-    i = 0
-    while i < len(sequences):
-        sequence = sequences[i]
+    # Ensure all records have valid names
+    for seq_record in sequences:
+        fix_record_name_id(seq_record, {seq.id for seq in sequences}, options)
+
+    for sequence in sequences:
+        if sequence.skip:
+            continue
         #Fix sequence name (will be ID) if it contains illegal chars
         illegal_chars = '''!"#$%&()*+,:; \r\n\t=>?@[]^`'{|}/ '''
         for char in sequence.name:
@@ -173,16 +174,10 @@ def parse_input_sequence(filename, options, genefinding):
                 genefinding.run_on_record(sequence, options)
             if len(get_cds_features(sequence)) < 1:
                 logging.info("No genes found, skipping record")
-                sequences.pop(i)
-                CODE_SKIP_WARNING()
-#                options.orig_record_idx += 1
+                sequence.skip = "No genes found"
                 continue
         #Fix locus tags
         fix_locus_tags(sequence)
-        options.next_record_index()
-        CODE_SKIP_WARNING()
-#        options.orig_record_idx += 1
-        i += 1
 
     #Make sure that all CDS entries in all seq_records have translation tags, otherwise add them
     add_translations(sequences)
@@ -195,10 +190,7 @@ def parse_input_sequence(filename, options, genefinding):
         options.end = -1
         logging.info("Discarding --start and --end options, as multiple entries are used.")
 
-    i = 0
-    while i < len(sequences):
-        sequence = sequences[i]
-
+    for i, sequence in enumerate(sequences):
         if options.start > 1:
             if options.start > len(sequence):
                 logging.error('Specified analysis start point is at %r, which is larger ' \
@@ -218,19 +210,17 @@ def parse_input_sequence(filename, options, genefinding):
             sequences[i] = sequence
 
         # Some programs write gaps as - not N, but translate() hates that
-        if sequence.seq.find('-') > -1:
+        if '-' in sequence.seq:
             sequence.seq = Seq(str(sequence.seq).replace('-', 'N'),
                                alphabet=sequence.seq.alphabet)
 
         # Some programs like to write gaps as X, translate() hates that
-        if sequence.seq.find('X') > -1:
+        if 'X' in sequence.seq:
             sequence.seq = Seq(str(sequence.seq).replace('X', 'N'),
                                alphabet=sequence.seq.alphabet)
-        if sequence.seq.find('x') > -1:
+        if 'x' in sequence.seq:
             sequence.seq = Seq(str(sequence.seq).replace('x', 'N'),
                                alphabet=sequence.seq.alphabet)
-
-        i += 1
 
     #Fix sequence record IDs to be unique
     ids_used = []
@@ -250,7 +240,6 @@ def parse_input_sequence(filename, options, genefinding):
                     x += 1
                 sequence.id = "%s_%i" % (seq_id[:-4], x)
             ids_used.append(sequence.id)
-            options.all_record_ids.add(sequence.id) #Update all_record_ids with new record
     return sequences
 
 def is_nucl_seq(sequence):
@@ -483,10 +472,10 @@ def sort_features(seq_record):
     #Sort features by location
     seq_record.features.sort(key=lambda x: (x.location.start, x.location.end))
 
-def fix_record_name_id(seq_record, options):
+def fix_record_name_id(seq_record, all_record_ids, options):
     "Fix a seq record's name and id to be <= 16 characters, the GenBank limit; if record name is too long, add c000X prefix"
 
-    def _shorten_ids(idstring, options):
+    def _shorten_ids(idstring):
         contigstrmatch = re.search(r"onti?g?(\d+)\b", idstring)
         if not contigstrmatch:
             # if there is a substring "[Ss]caf(fold)XXX" use this number
@@ -498,16 +487,16 @@ def fix_record_name_id(seq_record, options):
             contig_no = int(contigstrmatch.group(1))
         else:
             # if the contig number cannot be parsed out, just count the contigs from 1 to n
-            contig_no = options.orig_record_idx
+            contig_no = seq_record.record_index
 
         return "c{ctg:05d}_{origid}..".format(ctg=contig_no, origid=idstring[:7])
 
     if seq_record.id == "unknown.1":
-        seq_record.id = "unk_seq_{ctg:05d}".format(ctg=options.orig_record_idx)
+        seq_record.id = "unk_seq_{ctg:05d}".format(ctg=seq_record.record_index)
         logging.warning('Invalid sequence id "unknown.1", replaced by %s', seq_record.id)
 
     if seq_record.name == "unknown":
-        seq_record.name = "unk_seq_{ctg:05d}".format(ctg=options.orig_record_idx)
+        seq_record.name = "unk_seq_{ctg:05d}".format(ctg=options.record_index)
         logging.warning('Invalid sequence name "unknown", replaced by %s', seq_record.name)
 
     if len(seq_record.id) > 16:
@@ -517,37 +506,31 @@ def fix_record_name_id(seq_record, options):
         if (seq_record.id[-2] == "." and
                 seq_record.id.count(".") == 1 and
                 len(seq_record.id.partition(".")[0]) <= 16 and
-                seq_record.id.partition(".")[0] not in options.all_record_ids):
+                seq_record.id.partition(".")[0] not in all_record_ids):
             seq_record.id = seq_record.id.partition(".")[0]
-            options.all_record_ids.add(seq_record.id)
+            all_record_ids.add(seq_record.id)
         else: #Check if the ID suggested by _shorten_ids is unique
-            if _shorten_ids(oldid, options) not in options.all_record_ids:
-                seq_record.id = _shorten_ids(oldid, options)
-                options.all_record_ids.add(seq_record.id)
+            if _shorten_ids(oldid) not in all_record_ids:
+                seq_record.id = _shorten_ids(oldid)
+                all_record_ids.add(seq_record.id)
             else:
                 x = 0
-                while "%s_%i" % (seq_record.id[:16][:-4], x) in options.all_record_ids:
+                while "%s_%i" % (seq_record.id[:16][:-4], x) in all_record_ids:
                     x += 1
                 seq_record.id = "%s_%i" % (seq_record.id[:16][:-4], x)
-                options.all_record_ids.add(seq_record.id)
+                all_record_ids.add(seq_record.id)
 
         logging.warning('Fasta header too long: renamed "%s" to "%s"', oldid, seq_record.id)
-        if seq_record.id not in options.extrarecord:
-            options.extrarecord[seq_record.id] = Namespace()
-        if "extradata" not in options.extrarecord[seq_record.id]:
-            options.extrarecord[seq_record.id].extradata = {}
-        if "orig_id" not in options.extrarecord[seq_record.id].extradata:
-            options.extrarecord[seq_record.id].extradata["orig_id"] = oldid
 
     if len(seq_record.name) > 16:
 
-        seq_record.name = _shorten_ids(seq_record.name, options)
+        seq_record.name = _shorten_ids(seq_record.name)
 
     if 'accession' in seq_record.annotations and \
        len(seq_record.annotations['accession']) > 16:
         acc = seq_record.annotations['accession']
 
-        seq_record.annotations['accession'] = _shorten_ids(acc, options)
+        seq_record.annotations['accession'] = _shorten_ids(acc)
 
     # Remove illegal characters from name: otherwise, file cannot be written
     illegal_chars = '''!"#$%&()*+,:;=>?@[]^`'{|}/ '''

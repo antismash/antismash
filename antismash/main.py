@@ -77,8 +77,6 @@ def analyse_record(record, options, modules):
     deprecated.sort_features(record)
     # strip any existing antismash results
     deprecated.strip_record(record)
-    # correct ids
-    deprecated.fix_record_name_id(record, options)
 
     # run the given modules over the record
     for module in modules:
@@ -123,6 +121,8 @@ def run_antismash(sequence_file, options, modules=None):
     analysed_records = []
     for seq_record in seq_records:
         # skip if we're not interested in it
+        if seq_record.skip:
+            continue
         if options.limit_to_record and options.limit_to_record != seq_record.id:
             logging.info("Record does not match filter, skipping %s", seq_record.id)
             continue

@@ -87,12 +87,13 @@ def scan_orfs(seq, direction, offset=0):
 def sort_orfs(orfs):
     if not orfs:
         return orfs
-    startpositions = [min([orf.start, orf.stop]) for orf in orfs]
-    positions_and_orfs = sorted(zip(startpositions, orfs))
+    startpositions = [min([orf.start, orf.end]) for orf in orfs]
+    positions_and_orfs = sorted(zip(startpositions, orfs), key=lambda x: x[0])
     startpositions, orfs = zip(*positions_and_orfs)
     return orfs
 
 def find_all_orfs(seq_record, options):
+    logging.debug("Finding all ORFs")
     #Get sequence
     fasta_seq = str(seq_record.seq)
     #Find orfs
@@ -108,19 +109,20 @@ def find_all_orfs(seq_record, options):
         # ensure the location isn't negative to start with
         if orf.start < 0:
             orf.start = 0
-        if orf.stop < 0:
-            orf.stop = 0
+        if orf.end < 0:
+            orf.end = 0
         seqlength = len(str(seq_record.seq))
         # make sure we don't create a negative location if we adjust them
-        assert seqlength >= 3 or orf.start < 3 and orf.stop < 3
+        assert seqlength >= 3 or orf.start < 3 and orf.end < 3
         if orf.start > seqlength:
             orf.start -= math.ceil((orf.start - seqlength) / 3) * 3
-        if orf.stop > seqlength:
-            orf.stop -= math.ceil((orf.stop - seqlength) / 3) * 3
-        loc = FeatureLocation(orf.start, orf.stop, strand=orf.direction)
-        locus_tag = 'ctg%s_allorf%06d' % (options.record_idx, orfnr)
+        if orf.end > seqlength:
+            orf.end -= math.ceil((orf.end - seqlength) / 3) * 3
+        loc = FeatureLocation(orf.start, orf.end, strand=orf.strand)
+        locus_tag = 'ctg%d_allorf%06d' % (seq_record.record_index, orfnr)
         feature = SeqFeature(location=loc, id=str(orf), type="CDS",
                     qualifiers={'locus_tag': [locus_tag]})
         feature.qualifiers['note'] = ["auto-all-orf"]
         seq_record.features.append(feature)
         orfnr += 1
+    logging.info("Found %d ORFs", orfnr)

@@ -23,7 +23,6 @@ def run_prodigal(seq_record, options):
     else:
         basedir = ""
     with TemporaryDirectory(change=True):
-        utils.fix_record_name_id(seq_record, options)
         name = seq_record.id.lstrip('-')
         if not name:
             name = "unknown"
@@ -65,5 +64,5 @@ def run_prodigal(seq_record, options):
 
             loc = FeatureLocation(start-1, end, strand=strand)
             feature = SeqFeature(location=loc, id=name, type="CDS",
-                        qualifiers={'locus_tag': ['ctg%s_%s' % (options.record_idx, name)]})
+                        qualifiers={'locus_tag': ['ctg%s_%s' % (seq_record.record_index, name)]})
             seq_record.features.append(feature)
