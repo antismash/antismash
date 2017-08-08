@@ -27,7 +27,8 @@ import linecache
 
 def CODE_SKIP_WARNING():
     prev = inspect.currentframe().f_back
-    logging.critical("skipping code:" + prev.f_code.co_name +"():"+ linecache.getline(prev.f_code.co_filename, prev.f_lineno + 1))
+    logging.critical("skipping code:" + prev.f_code.co_name +"():" \
+            + linecache.getline(prev.f_code.co_filename, prev.f_lineno + 1).replace('%', '%%'))
 # end temp
 
 
