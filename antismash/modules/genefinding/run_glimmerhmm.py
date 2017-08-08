@@ -40,7 +40,6 @@ def run_external(fasta_filename):
     return run_result.stdout
 
 def run_glimmerhmm(seq_record, options):
-    utils.fix_record_name_id(seq_record, options)
     with TemporaryDirectory(change=True):
         # Write FASTA file and run GlimmerHMM
         fasta_file = write_search_fasta(seq_record)
