@@ -81,7 +81,7 @@ def main(args):
     # if not supplied, set the output directory to be the sequence name
     # can't be done in argparse because parsing interacting args is a bad idea
     if not options.output_dir:
-        options.output_dir = os.path.splitext(os.path.basename(sequence))[0]
+        options.output_dir = os.path.abspath(os.path.splitext(os.path.basename(sequence))[0])
 
     config = antismash.config.args.Config(options)
 

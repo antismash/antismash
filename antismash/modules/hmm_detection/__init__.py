@@ -72,7 +72,7 @@ def is_enabled(options):
     # in this case, yes, always
     return True
 
-def check_previous_results(results, options):
+def check_previous_results(results, record, options):
     # always rerun hmmdetection
     return None
 

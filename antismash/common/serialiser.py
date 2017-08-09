@@ -20,13 +20,16 @@ def write_records(records, results, handle):
     for record, result in zip(records, results):
         json_record = record_to_json(record)
         modules = {}
+        logging.debug("Record %s has results for modules: %s", record.id,
+                      ", ".join([mod for mod, resultv in result.get("modules", {}).items() if resultv]))
         for module, m_results in result.get("modules", {}).items():
+            logging.debug("Converting %s results to json", module)
             if not m_results:
                 continue
             if isinstance(m_results, ModuleResults):
                 modules[module] = m_results.to_json()
             elif isinstance(m_results, dict): # TODO :preferably no branching here
-                logging.critical("module results was dict, not ModuleResults")
+                logging.critical("module results was a dict, not ModuleResults")
                 modules[module] = m_results
             else:
                 raise TypeError("Module results for module %s are of invalid type: %s" % (module, type(m_results)))

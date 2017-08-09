@@ -282,6 +282,7 @@ class AntismashDomain(Domain):
 class CDSFeature(Feature):
     __slots__ = ["_translation", "protein_id", "locus_tag", "gene", "product",
                  "transl_table", "sec_met", "aSProdPred", "cluster"]
+    _counter = 0
     def __init__(self, location, translation, locus_tag=None, protein_id=None,
                  product=None, gene=None):
         super().__init__(location, feature_type="CDS")
@@ -297,6 +298,8 @@ class CDSFeature(Feature):
 
         # optional
         self.product = product
+        if self.product:
+            assert product[0] == "N"
         self.transl_table = None
         self.sec_met = None #SecMetQualifier()
         self.aSProdPred = [] # TODO: shift into nrps sub section?
@@ -320,6 +323,18 @@ class CDSFeature(Feature):
     @translation.setter
     def translation(self, translation):
         self._translation = str(translation)
+
+    def get_accession(self):
+        for val in [self.protein_id, self.gene, self.locus_tag]:
+            if val:
+                return val
+        raise ValueError("%s altered to contain no identifiers" % self)
+
+    def get_name(self):
+        for val in [self.locus_tag, self.gene, self.protein_id]:
+            if val:
+                return val
+        raise ValueError("%s altered to contain no identifiers" % self)
 
     @staticmethod
     def from_biopython(bio_feature, feature=None, leftovers=None):
