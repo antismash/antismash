@@ -335,11 +335,6 @@ def advanced_options():
                        default=argparse.SUPPRESS,
                        type=str,
                        help="Directory the Pfam-A.hmm file is located in.")
-    group.add_argument('--skip-cleanup',
-                       dest='skip_cleanup',
-                       action='store_true',
-                       default=False,
-                       help="Don't clean up temporary result files")
     return group
 
 def debug_options():
@@ -381,6 +376,11 @@ def debug_options():
                        metavar="record_id",
                        type=str,
                        help="Limit analysis to the record with ID record_id")
+    group.add_argument('--skip-cleanup',
+                       dest='skip_cleanup',
+                       action='store_true',
+                       default=False,
+                       help="Don't clean up temporary result files")
     group.add_argument('-V', '--version',
                        dest='version',
                        action='store_true',

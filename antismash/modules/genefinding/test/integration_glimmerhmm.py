@@ -12,7 +12,8 @@ from antismash.modules.genefinding import run_glimmerhmm as glimmerhmm
 
 class TestGlimmerHMM(TestCase):
     def setUp(self):
-        self.options = Config(simple_options(genefinding, ['--taxon', 'fungi']))
+        self.options = Config(simple_options(genefinding, ['--taxon', 'fungi',
+                '--genefinding-tool', 'glimmerhmm']))
         self.data_location = get_full_path(__file__, "data")
 
     def tearDown(self):
