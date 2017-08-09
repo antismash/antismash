@@ -380,7 +380,7 @@ def detect_signature_genes(seq_record, options):
     # Add details of gene cluster detection to cluster features
     store_detection_details(rules, seq_record)
     # If all-orfs option on, remove irrelevant short orfs
-    if options.genefinding_all_orfs:
+    if options.genefinding_tool == "all-orfs":
         remove_irrelevant_allorfs(seq_record)
 
 def get_nseq(): # TODO: document as number of seeds

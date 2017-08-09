@@ -10,6 +10,7 @@ class TestCore(unittest.TestCase):
     def test_check_options(self):
         options = Namespace()
         options.taxon = 'bacteria'
+        options.genefinding_tool = "none"
         with self.assertRaises(AttributeError):
             check_options(options)
         options.genefinding_gff3 = '/nonexistant/path/to.gff'
