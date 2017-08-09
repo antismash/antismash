@@ -5,7 +5,7 @@ integration_coverage = .coverage_integration
 sanity_run = echo "sanity TTA run" && ./run_antismash.py --minimal ../inputs/nisin.gbk --tta
 
 unit:
-	echo "sanity TTA run" && ./run_antismash.py ../inputs/nisin.gbk --tta
+	echo "sanity TTA run" && ./run_antismash.py --minimal --tta antismash/test/integration/data/nisin.gbk
 	pytest antismash
 
 integration:
