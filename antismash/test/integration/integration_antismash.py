@@ -10,15 +10,13 @@ from antismash.config.args import build_parser, Config
 
 class TestAntismash(unittest.TestCase):
     def setUp(self):
-        self.old_argv = sys.argv
-        sys.argv = ["run_antismash.py"]
+        args = ["run_antismash.py"]
         self.parser = build_parser(modules=gather_modules(with_genefinding=True))
-        self.default_options = self.parser.parse_args(sys.argv)
+        self.default_options = self.parser.parse_args(args)
         Config(self.default_options)
 
     def tearDown(self):
         Config().__dict__.clear()
-        sys.argv = self.old_argv
 
     def test_nisin_minimal(self):
         path = os.path.join(os.path.dirname(__file__), "data", "nisin.gbk")
