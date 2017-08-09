@@ -158,6 +158,10 @@ Options
         args[0] = "--" + args[0]
         return args
 
+class FullPathAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        print("FullPathAction:", namespace, values, self.dest)
+        setattr(namespace, self.dest, os.path.abspath(values))
 
 class ModuleArgs(object):
     def __init__(self, title, prefix, **kwargs):
@@ -250,8 +254,8 @@ class ModuleArgs(object):
 
 
 def build_parser(from_config_file=False, modules=None):
-    parents = [basic_options(), advanced_options(), debug_options(),
-               specific_debugging(modules)]
+    parents = [basic_options(), output_options(), advanced_options(),
+               debug_options(), specific_debugging(modules)]
     if modules is not None:
         parents.extend(module.get_arguments() for module in modules)
 
@@ -305,6 +309,16 @@ def basic_options():
                        choices=['nucl', 'prot'],
                        type=str,
                        help="Determine input type: amino acid sequence(s) or nucleotide sequence(s). (default: %(default)s)")
+    return group
+
+def output_options():
+    group = ModuleArgs("Output options", 'output')
+    group.add_argument('--output-dir',
+                       dest='output_dir',
+                       default="",
+                       type=str,
+                       action=FullPathAction,
+                       help="Directory to write results to.")
     return group
 
 def advanced_options():
