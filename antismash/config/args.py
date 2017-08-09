@@ -3,6 +3,7 @@
 
 import argparse
 import multiprocessing
+import os
 import threading
 from collections import defaultdict
 
@@ -330,11 +331,11 @@ def advanced_options():
                        type=int,
                        default=-1,
                        help="End analysis at nucleotide specified")
-    group.add_argument('--pfamdir',
-                       dest='pfamdir',
-                       default=argparse.SUPPRESS,
+    group.add_argument('--databases',
+                       dest='database_dir',
+                       default=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'databases'),
                        type=str,
-                       help="Directory the Pfam-A.hmm file is located in.")
+                       help="Root directory of the databases.")
     return group
 
 def debug_options():

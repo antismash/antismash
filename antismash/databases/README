@@ -1,0 +1,9 @@
+This directory should contain or refer to the large databases antiSMASH
+expects to use. Symlinks, mountpoints, etc are fine, as long as a path
+like antismash/databases/clusterblast/geneclusterprots.dmnd functions
+correctly.
+
+The databases themselves are not included in the source due to their size.
+
+A different location can be specified by use of the commandline option
+--databases PATH, however it must have the same expected structure.
