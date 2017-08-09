@@ -11,11 +11,11 @@ from antismash.config import loader
 from antismash.common import deprecated, serialiser
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record
-from antismash.modules import tta, genefinding, hmm_detection
+from antismash.modules import tta, genefinding, hmm_detection, clusterblast
 
 def gather_modules(with_genefinding=False):
     #TODO: make this cleverer
-    base = [hmm_detection, tta]
+    base = [hmm_detection, tta, clusterblast]
     if with_genefinding:
         base.append(genefinding)
     return base
@@ -48,6 +48,7 @@ def setup_logging(logfile=None, verbose=False, debug=False):
     fh.setFormatter(logging.Formatter(fmt=log_format, datefmt="%d/%m %H:%M:%S"))
     logging.getLogger('').addHandler(fh)
 
+
 def verify_options(options, modules=None):
     errors = []
     if not modules:
@@ -76,19 +77,19 @@ def analyse_record(record, options, modules, previous_result):
         return False
     logging.info("Analysing record: %s", record.id)
 
-    # ensure record features sorted by location
-#    deprecated.sort_features(record)
     # strip any existing antismash results
     deprecated.strip_record(record)
 
     if not previous_result:
-        previous_result = {"record_id" : record.id, "modules" : {}}
+        previous_result["record_id"] = record.id
+        previous_result["modules"] = {}
 
     # try to run the given modules over the record
 
     for module in modules:
         logging.debug("Checking if %s should be run", module.__name__)
-        results = module.check_previous_results(previous_result.get("modules", {}).get(module.__name__), options)
+        section =previous_result.get("modules", {}).get(module.__name__)
+        results = module.check_previous_results(section, record, options)
         assert results is None or isinstance(results, ModuleResults)
         if results:
             if module.is_enabled(options):
@@ -98,13 +99,22 @@ def analyse_record(record, options, modules, previous_result):
             # we've checked before, but make sure the options make sense
             assert not module.check_options(options) # TODO: change to return truthy if good
             results = module.run_on_record(record, options)
-        assert results is None or isinstance(results, ModuleResults)
+            if "hmm_detection" not in module.__name__: # TODO: work out if we can keep these
+                assert isinstance(results, ModuleResults)
         previous_result["modules"][module.__name__] = results
 
-    # TODO: ensure new features aren't interacted with by a later module
-    # TODO: otherwise problems with order could happen
-    # resort in case new features were added
-#    deprecated.sort_features(record)
+
+def prepare_output_directory(name):
+    if not name:
+        return
+    if os.path.exists(name):
+        if not os.path.isdir(name):
+            raise RuntimeError("Output directory %s exists and is not a directory" % name)
+        logging.debug("Reusing output directory: %s", name)
+    else:
+        logging.debug("Creating output directory: %s", name)
+        os.mkdir(name)
+
 
 def run_antismash(sequence_file, options, modules=None):
     setup_logging(logfile=options.get('logfile', None), verbose=options.verbose,
@@ -126,6 +136,8 @@ def run_antismash(sequence_file, options, modules=None):
         modules = gather_modules()
 
     start_time = datetime.now()
+
+    prepare_output_directory(options.output_dir)
 
     if sequence_file:
         seq_records = deprecated.parse_input_sequence(sequence_file, options)
@@ -158,7 +170,7 @@ def run_antismash(sequence_file, options, modules=None):
     serialiser.write_records(seq_records, results, "temp.json")
 
     end_time = datetime.now()
-    running_time = end_time-start_time
+    running_time = end_time - start_time
 
     logging.debug("antiSMASH calculation finished at %s; runtime: %s", str(end_time), str(running_time))
 

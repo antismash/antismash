@@ -28,6 +28,7 @@ class Record:
         self._record = SeqRecord(seq, **kwargs)
         self.skip = False #TODO: move to yet another abstraction layer?
         self._cds_features = []
+        self._cds_mapping = {} # maps CDS accession to CDS feature
         self._clusters = []
         self._cluster_borders = []
         self._cds_motifs = []
@@ -69,6 +70,10 @@ class Record:
         """A list of secondary metabolite clusters present in the record"""
         return tuple(self._clusters)
 
+    def get_cluster(self, index):
+        """ Get the cluster with the given cluster number """
+        return self._clusters[index - 1] # change from 1-indexed to 0-indexed
+
     def clear_clusters(self):
         "Remove all Cluster features and reset CDS linking"
         self._clusters.clear()
@@ -86,6 +91,10 @@ class Record:
     def get_cds_features(self):
         """A list of secondary metabolite clusters present in the record"""
         return tuple(self._cds_features)
+
+    def get_cds_mapping(self):
+        """A dictionary of CDS accession to CDS feature"""
+        return dict(self._cds_mapping)
 
     def get_cds_motifs(self):
         """A list of secondary metabolite CDS_motifs present in the record"""
@@ -138,7 +147,7 @@ class Record:
                          letter_annotations=self._record.letter_annotations)
 
     def get_cluster_number(self, cluster):
-        """Returns cluster number of a cluster feature
+        """Returns cluster number of a cluster feature (1-indexed)
             param cluster : A ClusterFeature instance
         """
         number = self._cluster_numbering.get(cluster)
@@ -170,7 +179,7 @@ class Record:
         cluster.parent_record = self
         # update numbering
         for i in range(index, len(self._clusters)):
-            self._cluster_numbering[self._clusters[i]] = i
+            self._cluster_numbering[self._clusters[i]] = i + 1 # 1-indexed
         # link any relevant CDS features
         self._link_cluster_to_cds_features(cluster)
 
@@ -185,6 +194,9 @@ class Record:
         index = bisect.bisect_left(self._cds_features, cds_feature)
         self._cds_features.insert(index, cds_feature)
         self._link_cds_to_parent(cds_feature)
+        if cds_feature.get_accession() in self._cds_mapping:
+            logging.critical("Multiple CDS features have the same accession for mapping")
+        self._cds_mapping[cds_feature.get_accession()] = cds_feature
 
     def add_cds_motif(self, motif):
         """ Add the given cluster to the record """

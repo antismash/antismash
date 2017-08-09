@@ -90,12 +90,15 @@ class TestFeature(unittest.TestCase):
 # pylint: disable=assigning-non-slot
     def test_membership(self):
         location = FeatureLocation(0, 1)
+        # Features don't have locus tags
         with self.assertRaises(AttributeError):
             Feature(location, feature_type="none").locus_tag = "something"
+        # CDSFeatures don't have an 'other_value'
         with self.assertRaises(AttributeError):
             CDSFeature(location, translation="none", gene="a").other_value = 1
         cluster = Cluster(location, 0, 0, products=["a", "b"])
         assert cluster.products == ["a", "b"]
+        # Clusters have products, not product
         with self.assertRaises(AttributeError):
             cluster.product = ["c", "d"]
 # pylint: enable=assigning-non-slot

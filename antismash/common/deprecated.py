@@ -311,7 +311,8 @@ def check_duplicate_gene_ids(sequences):
                                                 start=high_water_mark + 1)
             elif name in all_ids:
                 name, _ = generate_unique_id(name[:8], all_ids, start=1)
-            cdsfeature.product = name
+            if cdsfeature.product is None:
+                cdsfeature.product = name
             cdsfeature.locus_tag = name
             all_ids.add(name)
 
@@ -322,7 +323,7 @@ def fix_locus_tags(seq_record):
 
     for feature in seq_record.get_cds_features():
         if get_gene_id(feature) == "no_tag_found":
-            feature.locus_tag = 'AUTOORF_%05d' % next_locus_tag
+            feature.locus_tag = '%s_%05d' % (seq_record.id, next_locus_tag)
             next_locus_tag += 1
         #Fix locus tags, gene names or protein IDs if they contain illegal chars
         illegal_chars = '''!"#$%&()*+,:; \r\n\t=>?@[]^`'{|}/ '''
@@ -428,6 +429,20 @@ def get_multifasta(seq_record):
     full_fasta = "\n".join(all_fastas)
     return full_fasta
 
+def writefasta(names, seqs, filename):
+    "Write sequence to a file"
+    e = 0
+    f = len(names) - 1
+    out_file = open(filename,"w")
+    while e <= f:
+        out_file.write(">")
+        out_file.write(names[e])
+        out_file.write("\n")
+        out_file.write(seqs[e])
+        out_file.write("\n")
+        e += 1
+    out_file.close()
+
 def get_cluster_type(cluster):
     "Get product type of a gene cluster"
     logging.critical("utils.get_cluster_type() called")
@@ -518,3 +533,20 @@ def fix_record_name_id(seq_record, all_record_ids, options):
     for char in seq_record.name:
         if char in illegal_chars:
             seq_record.name = seq_record.name.replace(char, "")
+
+def get_feature_dict_protein_id(record):
+    logging.critical("get_feature_dict_protein_id(record) called, did you mean record.get_cds_mapping()?")
+    return record.get_cds_mapping()
+
+def get_aa_sequence(feature, to_stop=False):
+    """Extract sequence from specific CDS feature in sequence record"""
+    #TODO what is to_stop meant to be doing? (maps to to_stop in Bio.Seq.Seq), mutations supress the codon sometimes... so...
+    fasta_seq = str(feature.translation)
+    if "*" in fasta_seq:
+        logging.critical("found a sequence containing a stop codon: %s", str(feature))
+        if to_stop:
+            fasta_seq = fasta_seq.split('*')[0]
+        else:
+            fasta_seq = fasta_seq.replace("*","X")
+    fasta_seq = fasta_seq.replace("-","")
+    return fasta_seq

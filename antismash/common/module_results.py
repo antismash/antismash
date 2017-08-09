@@ -13,8 +13,18 @@ class ModuleResults:
         """
             Converts the contained results into a json structure of simple types
 
-            Returns as a string that should be parsable to recreate
+            Returns a dict that should be parsable to recreate
              the ModuleResults instance
+        """
+        raise NotImplementedError()
+
+    @staticmethod
+    def from_json(json):
+        """
+            Converts the json structure back to a ModuleResults instance
+
+            The ModuleResults instance returned should be able to regenerate the
+            provided json by use of .to_json()
         """
         raise NotImplementedError()
 

@@ -102,3 +102,9 @@ def get_path_to_nisin_genbank():
     for i in range(3):
         path = os.path.dirname(path)
     return os.path.join(path, 'test/integration/data/nisin.gbk')
+
+def get_path_to_balhymicin_genbank():
+    path = __file__
+    for i in range(3):
+        path = os.path.dirname(path)
+    return os.path.join(path, 'test/integration/data/Y16952.gbk')
