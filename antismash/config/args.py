@@ -160,7 +160,6 @@ Options
 
 class FullPathAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
-        print("FullPathAction:", namespace, values, self.dest)
         setattr(namespace, self.dest, os.path.abspath(values))
 
 class ModuleArgs(object):
@@ -324,7 +323,13 @@ def output_options():
 def advanced_options():
 #    parser = AntiSmashParser(add_help=False)
     group = ModuleArgs("Advanced options", '', override_safeties=True)
-#    group = parser.add_argument_group('Advanced options')
+    group.add_argument('--reuse-results',
+                       dest='reuse_results',
+                       type=str,
+                       action=FullPathAction,
+                       default="",
+                       metavar="PATH",
+                       help="Use the previous results from the specified json datafile")
     group.add_argument('--limit',
                        dest="limit",
                        type=int,

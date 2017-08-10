@@ -64,7 +64,7 @@ def get_withincluster_cds_features(seq_record):
     return withinclusterfeatures
 
 
-def parse_input_sequence(filename, options, genefinding):
+def parse_input_sequence(filename, options):
     "Parse the input sequences from given filename"
     logging.info('Parsing input sequence %r', filename)
 
@@ -88,6 +88,9 @@ def parse_input_sequence(filename, options, genefinding):
         logging.error('Parsing %r failed with unhandled exception: %s',
                       filename, err)
         raise
+    return sequences
+
+def pre_process_sequences(sequences, options, genefinding):
     #Check if seq_records have appropriate content
     for i, sequence in enumerate(sequences):
         sequence.skip = False

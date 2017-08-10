@@ -1,6 +1,8 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+import os
+
 from Bio.Seq import Seq
 
 class FakeSeq(object):
@@ -46,3 +48,10 @@ class FakeFeature(object):
     def __repr__(self):
         return "FakeFeature(%r, %r, %r)" % (self.location, self.type,
                                             self.qualifiers)
+
+
+def get_path_to_nisin_genbank():
+    path = __file__
+    for i in range(3):
+        path = os.path.dirname(path)
+    return os.path.join(path, 'test/integration/data/nisin.gbk')

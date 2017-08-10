@@ -67,20 +67,21 @@ def main(args):
         return 0
 
     if len(options.sequences) > 1:
-        print(options.sequences)
-        print("error: only one sequence file should be provided", file=sys.stderr)
+        parser.error("Only one sequence file should be provided")
         return 1
-    if len(options.sequences) < 1:
-        print("error: please specify a sequence file", file=sys.stderr)
+    if len(options.sequences) < 1 and not options.reuse_results:
+        parser.error("One of an input file or --reuse-results must be specified")
         return 1
-    sequence = options.sequences[0]
-    del options.sequences
+    if options.sequences:
+        sequence = options.sequences[0]
+        del options.sequences
+    else:
+        sequence = ""
 
     # if not supplied, set the output directory to be the sequence name
     # can't be done in argparse because parsing interacting args is a bad idea
     if not options.output_dir:
         options.output_dir = os.path.splitext(os.path.basename(sequence))[0]
-    print("OUTPUT DIR:", options.output_dir)
 
     config = antismash.config.args.Config(options)
 
