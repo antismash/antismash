@@ -52,18 +52,18 @@ class TtaTest(unittest.TestCase):
         self.assertEqual(rv_tta.location.end, 18)
         self.assertEqual(rv_tta.strand, -1)
 
-    def test__create_tta_feature(self):
-        """Test tta._create_tta_feature()"""
+    def test_feature_creation(self):
         fw_loc = FeatureLocation(210, 300, strand=1)
         fw_feature = SeqFeature(fw_loc, type='CDS')
-        ret = tta.tta._create_tta_feature(fw_feature, 12)
+        results = tta.tta.TTAResults('dummy')
+        ret = results.new_feature_from_other(fw_feature, 12)
         self.assertEqual(ret.strand, 1)
         self.assertEqual(ret.location.start, 222)
         self.assertEqual(ret.location.end, 225)
 
         rv_loc = FeatureLocation(210, 300, strand=-1)
         rv_feature = SeqFeature(rv_loc, type='CDS')
-        ret = tta.tta._create_tta_feature(rv_feature, 12)
+        ret = results.new_feature_from_other(rv_feature, 12)
         self.assertEqual(ret.strand, -1)
         self.assertEqual(ret.location.start, 285)
         self.assertEqual(ret.location.end, 288)

@@ -4,7 +4,7 @@
 """Identify TTA codons in BGCs"""
 
 from antismash.config.args import ModuleArgs
-from antismash.modules.tta.tta import detect
+from antismash.modules.tta.tta import detect, TTAResults
 
 NAME = "tta"
 SHORT_DESCRIPTION = "TTA detection"
@@ -32,6 +32,11 @@ def check_prereqs():
 def is_enabled(options):
     """ Should the module be run with these options """
     return options.tta
+
+def check_previous_results(previous, options):
+    if not previous:
+        return None
+    return TTAResults.from_json(previous)
 
 def run_on_record(seq_record, options):
     return detect(seq_record, options)

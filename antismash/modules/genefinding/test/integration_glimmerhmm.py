@@ -5,7 +5,7 @@ import os
 from unittest import TestCase
 
 from antismash.config.args import Config, simple_options
-from antismash.common.deprecated import parse_input_sequence
+from antismash.common.deprecated import parse_input_sequence, pre_process_sequences
 from antismash.common.path import get_full_path
 import antismash.modules.genefinding as genefinding
 from antismash.modules.genefinding import run_glimmerhmm as glimmerhmm
@@ -24,7 +24,8 @@ class TestGlimmerHMM(TestCase):
 
     def test_fumigatus_cluster(self):
         record = parse_input_sequence(self.data_file('fumigatus.cluster1.fna'),
-                self.options, genefinding)[0]
+                self.options)[0]
+        pre_process_sequences([record], self.options, genefinding)
         assert len(record.features) == 11
         for feature in record.features:
             assert feature.type == 'CDS'
