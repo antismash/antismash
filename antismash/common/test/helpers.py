@@ -32,7 +32,11 @@ class FakeRecord(object):
         """ returns the largest location of all features, so as to not break
             when new features are added to tests that extend past a hardcoded
             value
+
+            if no features exist yet, returns the length of the sequence
         """
+        if not self.features:
+            return len(self.seq)
         return max(max(feature.location.end, feature.location.start) for feature in self.features)
 
 class FakeFeature(object):
