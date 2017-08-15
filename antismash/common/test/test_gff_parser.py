@@ -56,5 +56,8 @@ class GffParserTest(TestCase):
         # doesn't test very much
         self.sequences[0].id = "CONTIG_1"
         gff_parser.run(self.sequences[0], self.single_entry, self.config) # insert the features
-        self.config.all_record_ids = ['CRO_000001']
-        gff_parser.check_gff_suitability(self.config, self.sequences)
+        assert not gff_parser.check_gff_suitability(self.config, self.sequences)
+
+        # test force correlation
+        self.sequences = self.sequences[1:] # CONTIG_2
+        assert gff_parser.check_gff_suitability(self.config, self.sequences)
