@@ -15,8 +15,8 @@ from antismash.common.test.helpers import FakeRecord, FakeFeature
 class GffParserTest(TestCase):
     def setUp(self):
         self.config = antismash.config.args.simple_options(None, [])
-        self.config.gff3 = path.get_full_path(__file__, "data/test_gff.gff")
-        self.config.single_entries = False
+        self.config.genefinding_gff3 = path.get_full_path(__file__, "data/test_gff.gff")
+        self.single_entry = False
         contig1 = FakeRecord(seq="A"*2000, real_seq=True)
         contig1.id = "CONTIG_1"
         contig2 = FakeRecord(seq="A"*2000, real_seq=True)
@@ -25,7 +25,7 @@ class GffParserTest(TestCase):
 
     def test_run(self):
         for sequence in self.sequences:
-            gff_parser.run(sequence, self.config)
+            gff_parser.run(sequence, self.single_entry, self.config)
         len_cds_1 = len(deprecated.get_cds_features(self.sequences[0]))
         len_cds_2 = len(deprecated.get_cds_features(self.sequences[1]))
         detected_result = (len_cds_1, len_cds_2)
@@ -34,8 +34,8 @@ class GffParserTest(TestCase):
                          msg="\nResult : %s\nExpected : %s" % (detected_result, expected_result))
 
     def test_top_level_cds(self):
-        self.config.gff3 = path.get_full_path(__file__, "data/single_cds.gff")
-        gff_parser.run(self.sequences[0], self.config)
+        self.config.genefinding_gff3 = path.get_full_path(__file__, "data/single_cds.gff")
+        gff_parser.run(self.sequences[0], self.single_entry, self.config)
         assert len(deprecated.get_cds_features(self.sequences[0])) == 1
 
     def test_features_from_file(self):
@@ -48,12 +48,13 @@ class GffParserTest(TestCase):
             assert isinstance(feature.location, CompoundLocation)
 
     def test_suitability(self):
-        self.config.all_record_ids = []
+        self.sequences[0].id = "NOT_CONTIG_1"
         with self.assertRaises(ValueError) as err:
             gff_parser.check_gff_suitability(self.config, self.sequences)
         assert "GFF3 record IDs don't match sequence file record IDs" in str(err.exception)
 
         # doesn't test very much
-        gff_parser.run(self.sequences[0], self.config) # insert the features
+        self.sequences[0].id = "CONTIG_1"
+        gff_parser.run(self.sequences[0], self.single_entry, self.config) # insert the features
         self.config.all_record_ids = ['CRO_000001']
         gff_parser.check_gff_suitability(self.config, self.sequences)
