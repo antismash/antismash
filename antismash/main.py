@@ -143,11 +143,10 @@ def run_antismash(sequence_file, options, modules=None):
         # skip if we're not interested in it
         if seq_record.skip:
             continue
-        if options.limit_to_record and options.limit_to_record != seq_record.id:
-            logging.info("Record does not match filter, skipping %s", seq_record.id)
-            seq_record.skip = "Did not match filter"
-            continue
-        analyse_record(seq_record, options, modules, previous_result)
+
+        if analyse_record(seq_record, options, modules):
+            analysed_records.append(seq_record)
+
 
     # Write results
     # TODO: include status logging, zipping, etc

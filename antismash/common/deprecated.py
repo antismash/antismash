@@ -92,11 +92,17 @@ def parse_input_sequence(filename, options):
 
 def pre_process_sequences(sequences, options, genefinding):
     #Check if seq_records have appropriate content
+==== BASE ====
     for i, sequence in enumerate(sequences):
         sequence.skip = False
+        if options.limit_to_record and options.limit_to_record != sequence.id:
+            sequence.skip = "did not match filter: %s" % options.limit_to_record
+        else:
+            matching_filter += 1
+
         sequence.record_index = i
         sequence.seq = Seq(str(sequence.seq).replace("-", "").replace(":", ""))
-        #Check if seq_record has either a sequence or has at least 80% of CDS features with 'translation' qualifier
+        # Check if seq_record has either a sequence or has at least 80% of CDS features with 'translation' qualifier
         cdsfeatures = get_cds_features(sequence)
         cdsfeatures_with_translations = sum([1 for cdsfeature in cdsfeatures if 'translation' in cdsfeature.qualifiers])
         if not sequence.seq or (
@@ -118,6 +124,15 @@ def pre_process_sequences(sequences, options, genefinding):
                 sequence.skip = "protein record in nucleotide mode"
                 continue
             sequence.seq.alphabet = Bio.Alphabet.generic_dna
+
+    if options.limit_to_record:
+        limit = options.limit_to_record
+        if matching_filter == 0:
+            logging.error("No sequences matched filter: %s", limit)
+            raise ValueError("No sequences matched filter: %s" % limit)
+        elif matching_filter != len(sequences):
+            logging.info("Skipped %d sequences not matching filter: %s",
+                         len(sequences) - matching_filter, limit)
 
     #If protein input, convert all protein seq_records to one nucleotide seq_record
     if options.input_type == 'prot':
@@ -152,7 +167,7 @@ def pre_process_sequences(sequences, options, genefinding):
 
     # Check GFF suitability
     if options.genefinding_gff3:
-        gff_parser.check_gff_suitability(options, sequences)
+        single_entry = gff_parser.check_gff_suitability(options, sequences)
 
     # Ensure all records have valid names
     for seq_record in sequences:
@@ -170,7 +185,7 @@ def pre_process_sequences(sequences, options, genefinding):
         if len(get_cds_features(sequence)) < 1:
             if options.genefinding_gff3:
                 logging.info("No CDS features found in record %r but GFF3 file provided, running GFF parser.", sequence.id)
-                gff_parser.run(sequence, options)
+                gff_parser.run(sequence, single_entry, options)
                 check_duplicate_gene_ids(sequences)
             elif options.genefinding_tool != "none":
                 logging.info("No CDS features found in record %r, running gene finding.", sequence.id)
@@ -188,7 +203,7 @@ def pre_process_sequences(sequences, options, genefinding):
     #Make sure that all seq_records have a sequence
     add_seq_record_seq(sequences)
 
-    if len(sequences) > 1:
+    if len(sequences) > 1 and (options.start != -1 or options.end != -1):
         options.start = -1
         options.end = -1
         logging.info("Discarding --start and --end options, as multiple entries are used.")
@@ -340,6 +355,8 @@ def fix_locus_tags(seq_record):
 def add_translations(seq_records):
     "Add a translation qualifier to all CDS features"
     for seq_record in seq_records:
+        if seq_record.skip:
+            continue
         logging.debug("Adding translations to record: %s", seq_record.id)
         cdsfeatures = get_cds_features(seq_record)
         for cdsfeature in cdsfeatures:

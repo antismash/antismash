@@ -4,24 +4,33 @@ from BCBio import GFF
 
 
 def check_gff_suitability(options, sequences):
-    logging.critical("gff_parser module not validated")
-    if not options.gff3:
+    """
+        Checks that the provided GFF3 file is acceptable
+
+        If only a single record is contained in both sequences and GFF, they
+        are assumed to be the same.
+
+        Returns:
+            bool - True if only a single entry is contained by both inputs and
+                    their sequence coordinates match
+    """
+    if not options.genefinding_gff3:
         return
 
     try:
         examiner = GFF.GFFExaminer()
-        gff_data = examiner.available_limits(open(options.gff3))
-
+        # file handle is automatically closed by GFF lib
+        gff_data = examiner.available_limits(open(options.genefinding_gff3))
         # Check if at least one GFF locus appears in sequence
         gff_ids = set([n[0] for n in gff_data['gff_id']])
 
-        if len(gff_ids) == 1 and len(options.all_record_ids) == 1:
+        if len(gff_ids) == 1 and len(sequences) == 1:
             # If both inputs only have one record, assume is the same, but first check coordinate compatibility
             logging.info("GFF3 and sequence have only one record. Assuming is "
                          "the same as long as coordinates are compatible.")
             limit_info = dict(gff_type=['CDS'])
 
-            record_iter = GFF.parse(open(options.gff3), limit_info=limit_info)
+            record_iter = GFF.parse(open(options.genefinding_gff3), limit_info=limit_info)
             record = next(record_iter)
 
             coord_max = max([n.location.end.real for n in record.features])
@@ -29,14 +38,14 @@ def check_gff_suitability(options, sequences):
                 logging.error('GFF3 record and sequence coordinates are not compatible.')
                 raise ValueError('Incompatible GFF record and sequence coordinates')
             else:
-                options.single_entries = True
+                single_entries = True
 
-        elif len(gff_ids.intersection(options.all_record_ids)) == 0:
+        elif len(gff_ids.intersection({seq.id for seq in sequences})) == 0:
             logging.error('No GFF3 record IDs match any sequence record IDs.')
             raise ValueError("GFF3 record IDs don't match sequence file record IDs.")
 
         else:
-            options.single_entries = False
+            single_entries = False
 
         # Check GFF contains CDSs
         if not ('CDS',) in gff_data['gff_type']:
@@ -44,13 +53,14 @@ def check_gff_suitability(options, sequences):
             raise ValueError("No CDS features in GFF3 file.")
 
         # Check CDS are childless but not parentless
-        if 'CDS' in set([n for key in examiner.parent_child_map(open(options.gff3)) for n in key]):
+        if 'CDS' in set([n for key in examiner.parent_child_map(open(options.genefinding_gff3)) for n in key]):
             logging.error('GFF3 structure is not suitable. CDS features must be childless but not parentless.')
             raise ValueError('GFF3 structure is not suitable.')
 
     except AssertionError as e:
-        logging.error('Parsing %r failed: %s', options.gff3, e)
+        logging.error('Parsing %r failed: %s', options.genefinding_gff3, e)
         raise
+    return single_entries
 
 def get_features_from_file(seq_record, handle, limit_to_seq_id=False):
     features = []
@@ -87,10 +97,10 @@ def get_features_from_file(seq_record, handle, limit_to_seq_id=False):
                 features.append(n)
     return features
 
-def run(sequence, options):
-    handle = open(options.gff3)
+def run(sequence, single_entry, options):
+    handle = open(options.genefinding_gff3)
     # If there's only one sequence in both, read all, otherwise, read only appropriate part of GFF3.
-    if options.single_entries:
+    if single_entry:
         limit_info = False
     else:
         limit_info = dict(gff_id=[sequence.id])
