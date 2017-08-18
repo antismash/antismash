@@ -4,6 +4,27 @@
 import os
 
 from Bio.Seq import Seq
+from Bio.SeqFeature import FeatureLocation
+from antismash.common.secmet import Record, Cluster, CDSFeature, Feature
+
+class DummyFeature(Feature):
+    def __init__(self, start, end, strand=1):
+        super().__init__(FeatureLocation(start, end, strand), feature_type="none")
+
+class DummyCDS(CDSFeature):
+    def __init__(self, start, end, strand=1):
+        trans = "dummy_translation"
+        locus_tag = "dummy_locus_tag"
+        super().__init__(FeatureLocation(start, end, strand), translation=trans,
+                         locus_tag=locus_tag)
+
+class DummyCluster(Cluster):
+    def __init__(self, start, end, strand=1):
+        cutoff = 10
+        extent = 10
+        product = ["dummy"]
+        super().__init__(FeatureLocation(start, end, strand), cutoff, extent,
+                         product)
 
 class FakeSeq(object):
     "class for generating a Seq like datastructure"
@@ -39,12 +60,34 @@ class FakeRecord(object):
             return len(self.seq)
         return max(max(feature.location.end, feature.location.start) for feature in self.features)
 
+    def get_cds_features(self):
+        res = []
+        for feature in self.features:
+            if feature.type == "CDS":
+                res.append(feature)
+        return res
+
+    def add_cluster(self, cluster):
+        self.features.append(cluster)
+
+    def get_clusters(self):
+        res = []
+        for feature in self.features:
+            if feature.type == "cluster":
+                res.append(feature)
+        return res
+
 class FakeFeature(object):
     "class for generating a SeqFeature like datastructure"
     def __init__(self, feature_type, location=None, qualifiers=None):
         self.type = feature_type
-        self.qualifiers = {} if qualifiers is None else qualifiers
+        self.qualifiers = { "translation" : ["trans"]}
+        if qualifiers:
+            self.qualifiers.update(qualifiers)
         self.location = location
+
+    def __getattr__(self, attr):
+        return self.__dict__.get(attr, [])
 
     def extract(self, seq):
         return seq

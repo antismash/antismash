@@ -82,6 +82,7 @@ def run_hmmsearch(query_hmmfile, target_sequence, use_tempfile=False):
         if not run_result.successful():
             logging.error('hmmsearch returned %d: %s while searching %s',
                           run_result.return_code, run_result.stderr, query_hmmfile)
+            raise RuntimeError("Running hmmsearch failed.")
             return []
         results = list(SearchIO.parse("result.domtab", 'hmmsearch3-domtab'))
         return results

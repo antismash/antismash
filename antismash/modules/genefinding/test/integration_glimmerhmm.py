@@ -26,6 +26,6 @@ class TestGlimmerHMM(TestCase):
         record = parse_input_sequence(self.data_file('fumigatus.cluster1.fna'),
                 self.options)[0]
         pre_process_sequences([record], self.options, genefinding)
-        assert len(record.features) == 11
-        for feature in record.features:
-            assert feature.type == 'CDS'
+        assert record.get_feature_count() == 11
+        # and make sure they're all CDS features
+        assert len(record.get_cds_features()) == 11

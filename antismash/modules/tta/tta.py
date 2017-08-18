@@ -4,6 +4,7 @@
 import json
 import logging
 
+from antismash.common.secmet.feature import Feature
 from antismash.common import deprecated
 import antismash.common.module_results
 
@@ -21,7 +22,8 @@ class TTAResults(antismash.common.module_results.ModuleResults):
             "note": ["tta leucine codon, possible target for bldA regulation"],
             "tool": ["antiSMASH"]
         }
-        tta_feature = deprecated.SeqFeature(loc, type="misc_feature", qualifiers=qualifiers)
+        #TODO change to using a Feature directly
+        tta_feature = Feature.from_biopython(deprecated.SeqFeature(loc, type="misc_feature", qualifiers=qualifiers))
 
         self.codon_starts.append((start, strand))
         self.features.append(tta_feature)
@@ -46,7 +48,8 @@ class TTAResults(antismash.common.module_results.ModuleResults):
     def add_to_record(self, record):
         if record.id != self.record_id:
             raise ValueError("Record to store in and record analysed don't match")
-        record.features.extend(self.features)
+        for feature in self.features:
+            record.add_feature(feature)
 
     def __len__(self):
         return len(self.features)
@@ -80,9 +83,7 @@ def detect(seq_record, options):
     assert options.tta
     logging.info("Detecting TTA codons")
     results = TTAResults(seq_record.id)
-     #TODO: change to new secmet structures
-    cds_features = deprecated.get_withincluster_cds_features(seq_record)
-    for feature in cds_features:
+    for feature in deprecated.get_cds_features_within_clusters(seq_record):
         sequence = feature.extract(seq_record.seq)
         for i in range(0, len(sequence), 3):
             codon = sequence[i:i+3].lower()

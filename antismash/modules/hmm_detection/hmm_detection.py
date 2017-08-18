@@ -6,30 +6,23 @@ from collections import defaultdict
 
 from antismash.common import path
 import antismash.common.deprecated as utils
-from antismash.common.deprecated import FeatureLocation, SeqFeature
+from antismash.common.secmet.feature import Cluster
+from antismash.common.deprecated import FeatureLocation
 from antismash.common.subprocessing import run_hmmsearch
 from antismash.modules.hmm_detection import rule_parser
 from antismash.modules.hmm_detection.signatures import get_signature_profiles, get_signature_names
 
-cluster_number = 1
-
 def find_clusters(seq_record, rules):
     """ Detects gene clusters based on the identified core genes """
-    features = utils.get_cds_features(seq_record)
     clusters = []
 
-    logging.critical("awful global in hmm_detection:find_clusters(), better secmet lib required")
-    global cluster_number
-    logging.debug("current cluster_number: %d", cluster_number)
-
-    for feature in features:
+    for feature in seq_record.get_cds_features():
         within_cutoff = False
-        types = [feat for feat in feature.qualifiers.get('sec_met', []) if "Type: " in feat]
-        if not types:
+        if not feature.sec_met:
             continue
+        feature_type = feature.sec_met.clustertype
         feature_start = min(feature.location.start, feature.location.end)
         feature_end = max(feature.location.start, feature.location.end)
-        feature_type = types[0].partition("Type: ")[2]
         if feature_type == "none":
             continue
         feature_cutoff = -1
@@ -44,8 +37,8 @@ def find_clusters(seq_record, rules):
             cluster = clusters[-1]
             cluster_end = cluster.location.end
             # Check cutoff
-            cutoff = max(cluster.qualifiers['cutoff'][0], feature_cutoff)
-            cutoff = max(cutoff, cluster.qualifiers['extension'][0] + feature_extension)
+            cutoff = max(cluster.cutoff, feature_cutoff)
+            cutoff = max(cutoff, cluster.extent + feature_extension)
             within_cutoff = feature_start <= cluster_end + cutoff
 
         # start a new cluster if this is too far from the previous
@@ -53,40 +46,33 @@ def find_clusters(seq_record, rules):
             if clusters:
                 # Finalize the last extended cluster
                 cluster = clusters[-1]
-                extension = cluster.qualifiers['extension'][0]
-                cluster.location = FeatureLocation(max(0, cluster.location.start - extension),
-                                                   min(len(seq_record), cluster.location.end + extension))
+                cluster.location = FeatureLocation(max(0, cluster.location.start - cluster.extent),
+                                                   min(len(seq_record), cluster.location.end + cluster.extent))
             # Create new cluster
-            new_cluster = SeqFeature(FeatureLocation(feature_start, feature_end), type="cluster")
-            new_cluster.qualifiers['note'] = ["Cluster number: " + str(cluster_number)]
-            new_cluster.qualifiers['cutoff'] = [feature_cutoff]
-            new_cluster.qualifiers['extension'] = [feature_extension]
-            new_cluster.qualifiers['product'] = [feature_type]
+            new_cluster = Cluster(FeatureLocation(feature_start, feature_end), feature_cutoff, feature_extension, feature_type.split("-"))
             clusters.append(new_cluster)
             cluster = clusters[-1]
-            cluster_number += 1
 
         # Update cluster
         cluster.location = FeatureLocation(min(cluster.location.start, feature_start), max(cluster.location.end, feature_end))
-        cluster.qualifiers['cutoff'] = [max(cluster.qualifiers['cutoff'][0], feature_cutoff)]
-        cluster.qualifiers['extension'] = [max(cluster.qualifiers['extension'][0], feature_extension)]
-        cluster.qualifiers['product'] = ["-".join(list(set(cluster.qualifiers['product'][0].split('-')) | set(feature_type.split('-'))))]
-        if "-" in cluster.qualifiers['product'][0]:
-            cluster.qualifiers['product'] = ["-".join([ct for ct in cluster.qualifiers['product'][0].split('-') if ct != "other"])]
+        cluster.cutoff = max(cluster.cutoff, feature_cutoff)
+        cluster.extent = max(cluster.extent, feature_extension)
+        cluster.products = list(set(cluster.products) | set(feature_type.split('-')))
+        if len(cluster.products) > 1:
+            cluster.products = list(filter(lambda prod: prod != "other", cluster.products))
 
     if clusters:
         # Finalize the last extended cluster
         cluster = clusters[-1]
-        extension = cluster.qualifiers['extension'][0]
+        extension = cluster.extent
         cluster.location = FeatureLocation(max(0, cluster.location.start - extension),
                                            min(len(seq_record), cluster.location.end + extension))
 
     # Add a note to specify whether a cluster lies on the contig/scaffold edge or not
     for cluster in clusters:
         edge = cluster.location.start == 0 or cluster.location.end == len(seq_record)
-        cluster.qualifiers['contig_edge'] = str(edge)
-
-    seq_record.features.extend(clusters)
+        cluster.contig_edge = edge
+        seq_record.add_cluster(cluster)
 
 def hsp_overlap_size(first, second):
     """ Find the size of an overlapping region of two HSPs.
@@ -311,7 +297,6 @@ def apply_cluster_rules(results_by_id, feature_by_id, rules):
             results.remove("other")
         if results:
             type_results[cds] = "-".join(results)
-            print(cds, "-".join(results))
         else:
             type_results[cds] = "none"
     return type_results
@@ -402,7 +387,7 @@ def remove_irrelevant_allorfs(seq_record):
         return feature2.location.start <= feature1.location.start <= feature2.location.end \
                 or feature2.location.start <= feature1.location.end <= feature2.location.end
     # Get features
-    allfeatures = utils.get_cds_features(seq_record)
+    allfeatures = seq_record.get_cds_features()
     # Remove auto-orf features without unique sec_met qualifiers;
     # remove glimmer ORFs overlapping with sec_met auto-orfs not caught by Glimmer
     auto_orf_features = [feature for feature in allfeatures if 'auto-all-orf' in feature.qualifiers.get('note', [])]
@@ -434,7 +419,7 @@ def remove_irrelevant_allorfs(seq_record):
 def add_additional_nrpspks_genes(typedict, results_by_id, seq_record, nseqdict):
     nrpspksdomains = ["PKS_KS", "PKS_AT", "ATd", "ene_KS", "mod_KS", "hyb_KS",
                       "itr_KS", "tra_KS", "Condensation", "AMP-binding", "A-OX"]
-    clustercdsfeatures = utils.get_withincluster_cds_features(seq_record)
+    clustercdsfeatures = utils.get_cds_features_within_clusters(seq_record)
     othercds_with_results = []
     for cds in clustercdsfeatures:
         gene_id = utils.get_gene_id(cds)
@@ -457,21 +442,9 @@ def store_detection_details(rules, seq_record):
         Returns:
             None. All changes are made in place.
     """
-    clusters = utils.get_cluster_features(seq_record)
-    for cluster in clusters:
-        type_combo = utils.get_cluster_type(cluster)
-        if '-' in type_combo:
-            clustertypes = type_combo.split('-')
-        else:
-            clustertypes = [type_combo]
-
-        if not 'note' in cluster.qualifiers:
-            cluster.qualifiers['note'] = []
-        rule_text = ["Detection rule(s) for this cluster type:"]
-        for clustertype in clustertypes:
-            rule_text.append("%s: (%s);" % (clustertype, rules[clustertype].conditions))
-
-        cluster.qualifiers['note'].append(" ".join(rule_text))
+    for cluster in seq_record.get_clusters():
+        assert cluster.type == "cluster"
+        cluster.detection_rules = [str(rules[product].conditions) for product in cluster.products]
 
 
 def _update_sec_met_entry(feature, results, clustertype, nseqdict):
@@ -506,10 +479,7 @@ def _update_sec_met_entry(feature, results, clustertype, nseqdict):
 
     domains = [SecMetResult(res, nseqdict.get(res.query_id, "?")) for res in results]
 
-    if 'sec_met' not in feature.qualifiers:
-        feature.qualifiers['sec_met'] = SecMetQualifier(clustertype, domains)
-    else:
-        feature.qualifiers['sec_met'].domains = domains
+    feature.sec_met = SecMetQualifier(clustertype, domains)
 
 def get_overlaps_table(seq_record):
     """
@@ -525,10 +495,10 @@ def get_overlaps_table(seq_record):
     """
     overlaps = []
     overlap_by_id = {}
-    features = utils.get_cds_features(seq_record)
+    features = seq_record.get_cds_features()
     if len(features) < 1:
         return overlap_by_id
-    features.sort(key=lambda feature: feature.location.start)
+    features = sorted(features, key=lambda feature: feature.location.start)
     i = 0
     j = i + 1
     cds_queue = []

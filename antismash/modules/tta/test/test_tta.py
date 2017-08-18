@@ -5,25 +5,30 @@ from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation
 from Bio.SeqRecord import SeqRecord
 from antismash.common import deprecated
+from antismash.common.secmet.record import Record
+from antismash.common.secmet.feature import CDSFeature, Cluster
+from antismash.common.test.helpers import DummyCDS
 from antismash.config import args
 from antismash.modules import tta
 
 class TtaTest(unittest.TestCase):
     def setUp(self):
-        sequence = Seq("ATGTTATGAGGGTCATAACAT", generic_dna)
-        record = SeqRecord(seq=sequence, id="test", name="test")
+        # locations:            VVV         VVV
+        record = Record(Seq("ATGTTATGAGGGTCATAACAT", generic_dna))
 
-        fw_loc = FeatureLocation(0, 9, strand=1)
-        fw_feature = SeqFeature(fw_loc, type="CDS")
-        record.features.append(fw_feature)
-
-        rv_loc = FeatureLocation(12, 21, strand=-1)
-        rv_feature = SeqFeature(rv_loc, type="CDS")
-        record.features.append(rv_feature)
+        record.add_cds_feature(DummyCDS(0, 9, strand=1))
+        record.add_cds_feature(DummyCDS(12, 21, strand=-1))
 
         cluster_loc = FeatureLocation(0, 21)
-        cluster_feature = SeqFeature(cluster_loc, type="cluster")
-        record.features.append(cluster_feature)
+        cluster = Cluster(cluster_loc, 0, 0, [])
+        record.add_cluster(cluster)
+        # if these aren't correct, the tests will fail
+        assert len(cluster.cds_children) == 2
+        for cds in record.get_cds_features():
+            assert cds.overlaps_with(cluster)
+            assert cds.cluster == cluster, str(cds.location)
+            assert cds.extract(record.seq) == "ATGTTATGA", str(cds.location)
+
         self.record = record
 
 
@@ -34,14 +39,14 @@ class TtaTest(unittest.TestCase):
 
     def test_detect(self):
         """Test tta.detect()"""
-        self.assertEqual(len(self.record.features), 3)
+        self.assertEqual(len(self.record.get_cds_features()) + len(self.record.get_clusters()), 3)
         options = args.simple_options(tta, ["--tta"])
         detected = tta.detect(self.record, options)
         self.assertEqual(len(detected), 2)
-        self.assertEqual(len(self.record.features), 5)
-
-        features = deprecated.get_all_features_of_type(self.record, 'misc_feature')
+        features = self.record.get_generics()
         self.assertEqual(len(features), 2)
+        for feature in features:
+            assert feature.type == "misc_feature"
 
         fw_tta, rv_tta = features[0], features[1]
         self.assertEqual(fw_tta.location.start, 3)
