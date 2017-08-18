@@ -10,6 +10,7 @@ from datetime import datetime
 from antismash.config import loader
 from antismash.common import deprecated, serialiser
 from antismash.common.module_results import ModuleResults
+from antismash.common.secmet import Record
 from antismash.modules import tta, genefinding, hmm_detection
 
 def gather_modules(with_genefinding=False):
@@ -76,7 +77,7 @@ def analyse_record(record, options, modules, previous_result):
     logging.info("Analysing record: %s", record.id)
 
     # ensure record features sorted by location
-    deprecated.sort_features(record)
+#    deprecated.sort_features(record)
     # strip any existing antismash results
     deprecated.strip_record(record)
 
@@ -103,7 +104,7 @@ def analyse_record(record, options, modules, previous_result):
     # TODO: ensure new features aren't interacted with by a later module
     # TODO: otherwise problems with order could happen
     # resort in case new features were added
-    deprecated.sort_features(record)
+#    deprecated.sort_features(record)
 
 def run_antismash(sequence_file, options, modules=None):
     setup_logging(logfile=options.get('logfile', None), verbose=options.verbose,
@@ -137,6 +138,7 @@ def run_antismash(sequence_file, options, modules=None):
                 raise ValueError("No results contained in file: %s" % options.reuse_results)
         results = json.loads(contents) #TODO clean up
         seq_records = serialiser.read_records(options.reuse_results)
+        seq_records = [Record.from_biopython(record) for record in seq_records]
 
     seq_records = deprecated.pre_process_sequences(seq_records, options, genefinding)
     for seq_record, previous_result in zip(seq_records, results):
@@ -144,12 +146,12 @@ def run_antismash(sequence_file, options, modules=None):
         if seq_record.skip:
             continue
 
-        if analyse_record(seq_record, options, modules):
-            analysed_records.append(seq_record)
+        analyse_record(seq_record, options, modules, previous_result)
 
 
     # Write results
     # TODO: include status logging, zipping, etc
+    seq_records = [record.to_biopython() for record in seq_records]
     logging.debug("Writing genbank file to 'temp.gbk'")
     SeqIO.write(seq_records, "temp.gbk", "genbank")
     logging.debug("Writing json results to 'temp.json'")

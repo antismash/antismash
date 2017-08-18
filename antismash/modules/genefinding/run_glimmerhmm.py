@@ -24,7 +24,7 @@ def write_search_fasta(seq_record):
         name = "unknown"
     filename = "{}.fasta".format(name)
     with open(filename, 'w') as handle:
-        seqio.write([seq_record], handle, 'fasta')
+        seqio.write([seq_record.to_biopython()], handle, 'fasta')
     return filename
 
 def run_external(fasta_filename):
@@ -47,4 +47,5 @@ def run_glimmerhmm(seq_record, options):
 
     handle = StringIO(results_text)
     features = get_features_from_file(seq_record, handle)
-    seq_record.features.extend(features)
+    for feature in features:
+        seq_record.add_biopython_feature(feature)

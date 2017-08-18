@@ -9,7 +9,6 @@ import logging
 import os
 import re
 import sys
-from collections import defaultdict
 
 import Bio
 from Bio.Seq import Seq
@@ -18,7 +17,7 @@ from Bio.SeqRecord import SeqRecord
 from helperlibs.bio import seqio
 
 from antismash.common import gff_parser
-
+from antismash.common.secmet import Record, CDSFeature
 
 # temporary code skip logging # TODO
 import inspect
@@ -31,38 +30,20 @@ def CODE_SKIP_WARNING():
 # end temp
 
 
-def get_cluster_features(seq_record):
-    "Return all cluster features for a seq_record"
-    return get_all_features_of_type(seq_record, "cluster")
-
 def get_all_features_of_type(seq_record, types):
     "Return all features of the specified types for a seq_record"
-    if isinstance(types, str):
-        # force into a tuple
-        types = (types, )
-    features = []
-    for feature in seq_record.features:
-        if feature.type in types:
-            features.append(feature)
-    return features
+    logging.critical("utils.get_all_features_of_type() called")
+    raise RuntimeError("get_all_features_of_type(record, types) called, did you mean record.get_*()")
 
-def get_cds_features(seq_record):
-    "Return all CDS features for a seq_record"
-    return get_all_features_of_type(seq_record, "CDS")
+def get_cds_features_within_clusters(seq_record):
+    cds_features = []
+    for cluster in seq_record.get_clusters():
+        cds_features.extend(cluster.cds_children)
+    return cds_features
 
 def get_withincluster_cds_features(seq_record):
-    features = get_cds_features(seq_record)
-    clusters = get_cluster_features(seq_record)
-    withinclusterfeatures = []
-    for feature in features:
-        for cluster in clusters:
-            if not (cluster.location.start <= feature.location.start <= cluster.location.end or \
-               cluster.location.start <= feature.location.end <= cluster.location.end):
-                continue
-            if feature not in withinclusterfeatures:
-                withinclusterfeatures.append(feature)
-    return withinclusterfeatures
-
+    logging.critical("get_withincluster_cds_features() deprecated, use get_cds_features_within_clusters()")
+    return get_cds_features_within_clusters(seq_record)
 
 def parse_input_sequence(filename, options):
     "Parse the input sequences from given filename"
@@ -88,13 +69,14 @@ def parse_input_sequence(filename, options):
         logging.error('Parsing %r failed with unhandled exception: %s',
                       filename, err)
         raise
-    return sequences
+    return [Record.from_biopython(sequence) for sequence in sequences]
 
 def pre_process_sequences(sequences, options, genefinding):
-    #Check if seq_records have appropriate content
-==== BASE ====
+    # keep count of how many records matched filter
+    matching_filter = 0
+
+    # Check if seq_records have appropriate content
     for i, sequence in enumerate(sequences):
-        sequence.skip = False
         if options.limit_to_record and options.limit_to_record != sequence.id:
             sequence.skip = "did not match filter: %s" % options.limit_to_record
         else:
@@ -103,8 +85,8 @@ def pre_process_sequences(sequences, options, genefinding):
         sequence.record_index = i
         sequence.seq = Seq(str(sequence.seq).replace("-", "").replace(":", ""))
         # Check if seq_record has either a sequence or has at least 80% of CDS features with 'translation' qualifier
-        cdsfeatures = get_cds_features(sequence)
-        cdsfeatures_with_translations = sum([1 for cdsfeature in cdsfeatures if 'translation' in cdsfeature.qualifiers])
+        cdsfeatures = sequence.get_cds_features()
+        cdsfeatures_with_translations = sum([1 for cdsfeature in cdsfeatures if cdsfeature.translation])
         if not sequence.seq or (
                 options.input_type == 'nucl' and \
                 not str(sequence.seq).replace("N", "") and \
@@ -182,7 +164,7 @@ def pre_process_sequences(sequences, options, genefinding):
             if char in illegal_chars:
                 sequence.name = sequence.name.replace(char, "_")
         #Iterate through sequence objects
-        if len(get_cds_features(sequence)) < 1:
+        if len(sequence.get_cds_features()) < 1:
             if options.genefinding_gff3:
                 logging.info("No CDS features found in record %r but GFF3 file provided, running GFF parser.", sequence.id)
                 gff_parser.run(sequence, single_entry, options)
@@ -190,7 +172,7 @@ def pre_process_sequences(sequences, options, genefinding):
             elif options.genefinding_tool != "none":
                 logging.info("No CDS features found in record %r, running gene finding.", sequence.id)
                 genefinding.run_on_record(sequence, options)
-            if len(get_cds_features(sequence)) < 1:
+            if len(sequence.get_cds_features()) < 1:
                 logging.info("No genes found, skipping record")
                 sequence.skip = "No genes found"
                 continue
@@ -227,18 +209,12 @@ def pre_process_sequences(sequences, options, genefinding):
             sequence = sequence[:options.end]
             sequences[i] = sequence
 
-        # Some programs write gaps as - not N, but translate() hates that
-        if '-' in sequence.seq:
-            sequence.seq = Seq(str(sequence.seq).replace('-', 'N'),
+        # Some programs write gaps as - or X or x, translate requires N
+        for char in ['-', 'X', 'x']:
+            sequence.seq = Seq(str(sequence.seq).replace(char, 'N'),
                                alphabet=sequence.seq.alphabet)
 
-        # Some programs like to write gaps as X, translate() hates that
-        if 'X' in sequence.seq:
-            sequence.seq = Seq(str(sequence.seq).replace('X', 'N'),
-                               alphabet=sequence.seq.alphabet)
-        if 'x' in sequence.seq:
-            sequence.seq = Seq(str(sequence.seq).replace('x', 'N'),
-                               alphabet=sequence.seq.alphabet)
+
 
     #Fix sequence record IDs to be unique
     ids_used = []
@@ -246,19 +222,51 @@ def pre_process_sequences(sequences, options, genefinding):
         seq_id = sequence.id
         if seq_id not in ids_used:
             ids_used.append(seq_id)
+            continue
+        prefix = seq_id
+        if len(prefix) > 11:
+            prefix = prefix[:11]
+
+
+        suffix = 0
+        #Make sure the length of the ID does not exceed 16
+        if len(seq_id) <= 11:
+            while "%s_%i" % (seq_id, suffix) in ids_used:
+                suffix += 1
+            sequence.id = "%s_%i" % (seq_id, suffix)
         else:
-            x = 0
-            #Make sure the length of the ID does not exceed 16
-            if len(seq_id) <= 12:
-                while "%s_%i" % (seq_id, x) in ids_used:
-                    x += 1
-                sequence.id = "%s_%i" % (seq_id, x)
-            else:
-                while "%s_%i" % (seq_id[:-4], x) in ids_used:
-                    x += 1
-                sequence.id = "%s_%i" % (seq_id[:-4], x)
-            ids_used.append(sequence.id)
+            while "%s_%i" % (seq_id[:-4], suffix) in ids_used:
+                suffix += 1
+            sequence.id = "%s_%i" % (seq_id[:-4], suffix)
+        ids_used.append(sequence.id)
     return sequences
+
+def generate_unique_id(prefix, existing_ids, start=0, max_length=-1):
+    """ Generate a identifier of the form prefix_num, e.g. seq_15.
+
+        Args:
+            prefix: The text portion of the name.
+            existing_ids: The current identifiers to avoid collision with.
+            start: An integer to start counting at (default: 0)
+            max_length: The maximum length allowed for the identifier,
+                        values less than 1 are considerd to be no limit.
+
+        Returns:
+            A tuple of the identifier generated and the value of the counter
+                at the time the identifier was generated, e.g. ("seq_15", 15)
+
+    """
+    counter = int(start)
+    existing_ids = set(existing_ids)
+
+    format_string = "{}_{}".format(prefix, counter)
+    name = format_string % counter
+    while name in existing_ids:
+        counter += 1
+        name = format_string % counter
+    if max_length > 0 and len(name) > max_length:
+        raise RuntimeError("Could not generate unique id for %s after %d iterations" % (prefix, counter - start))
+    return name, counter
 
 def is_nucl_seq(sequence):
     other = str(sequence).lower()
@@ -267,90 +275,65 @@ def is_nucl_seq(sequence):
     return len(other) < 0.2 * len(sequence)
 
 def generate_nucl_seq_record(sequences):
-    "Generate nucleotide seq_record"
+    "Generate single nucleotide seq_record from supplied sequences"
     if not sequences:
-        return []
-    seq_record = SeqRecord(Seq(""), id="Protein_Input", name="ProteinInput",
+        raise ValueError("Cannot generate nucleotide records of empty input")
+    record = Record(Seq(""), id="Protein_Input", name="ProteinInput",
                    description="antiSMASH protein input")
     position = 0
-    cds_features = []
-    cdsnames = []
+    cdsnames = set()
     for sequence in sequences:
         startpos = position
         endpos = position + len(sequence) * 3
         position += len(sequence) * 3 + 1000
-        location = FeatureLocation(startpos, endpos)
-        cdsfeature = SeqFeature(location, type="CDS")
-        cdsfeature.strand = 1
-        sequence_id = sequence.id[:15].replace(" ", "_")
-        if sequence_id not in cdsnames:
-            cdsfeature.qualifiers['product'] = [sequence_id]
-            cdsfeature.qualifiers['locus_tag'] = [sequence_id]
-            cdsnames.append(sequence_id)
-        else:
-            x = 1
-            while sequence_id[:8] + "_" + str(x) in cdsnames:
-                x += 1
-            cdsfeature.qualifiers['product'] = [sequence_id[:8] + "_" + str(x)]
-            cdsfeature.qualifiers['locus_tag'] = [sequence_id[:8] + "_" + str(x)]
-            cdsnames.append(sequence_id[:8] + "_" + str(x))
-        cdsfeature.qualifiers['translation'] = [str(sequence.seq).replace('.', 'X')]
-        cds_features.append(cdsfeature)
-    seq_record.features.extend(cds_features)
-    return [seq_record]
+        location = FeatureLocation(startpos, endpos, strand=1)
+        name = sequence.id[:15].replace(" ", "_")
+        if name in cdsnames:
+            name, _ = generate_unique_id(name[:8], cdsnames)
+        cdsnames.add(name)
+        translation = str(sequence.seq).replace('.', 'X')
+        cdsfeature = CDSFeature(location, translation, product=name, locus_tag=name)
+        record.add_cds_feature(cdsfeature)
+    return record
 
 def check_duplicate_gene_ids(sequences):
     "Fix duplicate locus tags so that they are different"
     no_tag = "no_tag_found"
     high_water_mark = 0
-    all_ids = defaultdict(lambda: False)
+    all_ids = set()
     for sequence in sequences:
-        seq_ids = get_cds_features(sequence)
-        for cdsfeature in seq_ids:
-            gene_id = get_gene_id(cdsfeature)
-            if not all_ids[gene_id]:
-                all_ids[gene_id] = True
-            else:
-                if gene_id == no_tag:
-                    x = high_water_mark + 1
-                else:
-                    x = 1
-                id_str = "%s_%s" % (gene_id[:8], x)
-                while all_ids[id_str]:
-                    x += 1
-                    id_str = "%s_%s" % (gene_id[:8], x)
-                logging.debug("generated id %r", id_str)
-                cdsfeature.qualifiers['product'] = [id_str]
-                cdsfeature.qualifiers['locus_tag'] = [id_str]
-                all_ids[id_str] = True
-                if gene_id == no_tag:
-                    high_water_mark = x
+        for cdsfeature in sequence.get_cds_features():
+            name = get_gene_id(cdsfeature)
+            if not name:
+                name = no_tag
+            if name == no_tag:
+                name, high_water_mark = generate_unique_id(name[:8], all_ids,
+                                                start=high_water_mark + 1)
+            elif name in all_ids:
+                name, _ = generate_unique_id(name[:8], all_ids, start=1)
+            cdsfeature.product = name
+            cdsfeature.locus_tag = name
+            all_ids.add(name)
 
 
 def fix_locus_tags(seq_record):
     "Fix CDS feature that don't have a locus_tag, gene name or protein id"
     next_locus_tag = 1
 
-    cds_list = get_cds_features(seq_record)
-    for feature in cds_list:
+    for feature in seq_record.get_cds_features():
         if get_gene_id(feature) == "no_tag_found":
-            feature.qualifiers['locus_tag'] = ['AUTOORF_%05d' % next_locus_tag]
+            feature.locus_tag = 'AUTOORF_%05d' % next_locus_tag
             next_locus_tag += 1
         #Fix locus tags, gene names or protein IDs if they contain illegal chars
         illegal_chars = '''!"#$%&()*+,:; \r\n\t=>?@[]^`'{|}/ '''
-        if 'locus_tag' in feature.qualifiers:
-            for char in feature.qualifiers['locus_tag'][0]:
+        for attr in ["locus_tag", "gene", "protein_id"]:
+            val = getattr(feature, attr)
+            if not val:
+                continue
+            for char in val:
                 if char in illegal_chars:
-                    feature.qualifiers['locus_tag'][0] = feature.qualifiers['locus_tag'][0].replace(char, "_")
-        if 'gene' in feature.qualifiers:
-            for char in feature.qualifiers['gene'][0]:
-                if char in illegal_chars:
-                    feature.qualifiers['gene'][0] = feature.qualifiers['gene'][0].replace(char, "_")
-        if 'protein_id' in feature.qualifiers:
-            for char in feature.qualifiers['protein_id'][0]:
-                if char in illegal_chars:
-                    feature.qualifiers['protein_id'][0] = feature.qualifiers['protein_id'][0].replace(char, "_")
-
+                    val = val.replace(char, "_")
+            setattr(feature, attr, val)
 
 def add_translations(seq_records):
     "Add a translation qualifier to all CDS features"
@@ -358,9 +341,9 @@ def add_translations(seq_records):
         if seq_record.skip:
             continue
         logging.debug("Adding translations to record: %s", seq_record.id)
-        cdsfeatures = get_cds_features(seq_record)
+        cdsfeatures = seq_record.get_cds_features()
         for cdsfeature in cdsfeatures:
-            if cdsfeature.qualifiers.get('translation'):
+            if cdsfeature.translation:
                 continue
             if not seq_record.seq:
                 logging.error('No amino acid sequence in input entry for CDS %r, ' \
@@ -368,27 +351,31 @@ def add_translations(seq_records):
                 raise ValueError("Missing sequence info for CDS %r" % cdsfeature.id)
             try:
                 translation = str(get_aa_translation(seq_record, cdsfeature))
-            except Bio.Data.CodonTable.TranslationError as e:
+            except Bio.Data.CodonTable.TranslationError as err:
                 logging.error('Getting amino acid sequences from %s, CDS %r failed: %s',
-                        seq_record.name, cdsfeature.id, e)
+                        seq_record.name, cdsfeature.id, err)
                 raise
-            cdsfeature.qualifiers['translation'] = [translation]
+            cdsfeature.translation = translation
 
 def get_gene_id(feature):
     "Get the gene ID from locus_tag, gene name or protein id, in that order"
-    if 'locus_tag' in feature.qualifiers:
-        return feature.qualifiers['locus_tag'][0]
-    if 'gene' in feature.qualifiers:
-        return feature.qualifiers['gene'][0]
-    if 'protein_id' in feature.qualifiers:
-        return feature.qualifiers['protein_id'][0]
-    return "no_tag_found"
+    gene_id = "no_tag_found"
+    for label in ['locus_tag', 'gene', 'protein_id']:
+        if hasattr(feature, label):
+            value = getattr(feature, label)
+            if value:
+                gene_id = value
+                break
+    assert isinstance(gene_id, str), type(gene_id)
+    return gene_id
 
 def add_seq_record_seq(seq_records):
     for seq_record in seq_records:
         if not seq_record.seq:
-            seqmax = max([cds.location.start for cds in get_cds_features(seq_record)] + [cds.location.end for cds in get_cds_features(seq_record)])
-            seq_record.seq = Seq(seqmax * "n")
+            cds_features = seq_record.get_cds_features()
+            start_max = max([cds.location.start for cds in cds_features])
+            end_max = max([cds.location.end for cds in cds_features])
+            seq_record.seq = Seq(max([start_max, end_max]) * "n")
 
 def get_aa_translation(seq_record, feature):
     """Obtain content for translation qualifier for specific CDS feature in sequence record"""
@@ -414,7 +401,7 @@ def check_for_wgs_scaffolds(seq_records):
 
 def get_feature_dict(seq_record):
     """Get a dictionary mapping features to their IDs"""
-    features = get_cds_features(seq_record)
+    features = seq_record.get_cds_features()
     feature_by_id = {}
     for feature in features:
         gene_id = get_gene_id(feature)
@@ -424,19 +411,18 @@ def get_feature_dict(seq_record):
 
 def get_multifasta(seq_record):
     """Extract multi-protein FASTA from all CDS features in sequence record"""
-    features = get_cds_features(seq_record)
+    features = seq_record.get_cds_features()
     all_fastas = []
     for feature in features:
         gene_id = get_gene_id(feature)
-        fasta_seq = feature.qualifiers.get('translation', [''])[0]
+        fasta_seq = feature.translation
         if "-" in str(fasta_seq):
             fasta_seq = Seq(str(fasta_seq).replace("-", ""), Bio.Alphabet.generic_protein)
 
         # Never write empty fasta entries
         if not fasta_seq:
-            logging.debug("No translation for %s, skipping", gene_id)
-            assert feature.type.lower() != "cds"
-            continue
+            logging.error("No translation for CDS %s", gene_id)
+            raise ValueError("No translation for CDS %s" % gene_id)
 
         all_fastas.append(">%s\n%s" % (gene_id, fasta_seq))
     full_fasta = "\n".join(all_fastas)
@@ -444,53 +430,28 @@ def get_multifasta(seq_record):
 
 def get_cluster_type(cluster):
     "Get product type of a gene cluster"
-    return cluster.qualifiers['product'][0]
+    logging.critical("utils.get_cluster_type() called")
+    raise RuntimeError("utils.get_cluster_type(cluster) called, did you mean cluster.product?")
 
 def get_cluster_cds_features(cluster, seq_record):
-    clustercdsfeatures = []
-    for feature in seq_record.features:
-        if feature.type != 'CDS':
-            continue
-        if cluster.location.start <= feature.location.start <= cluster.location.end or \
-           cluster.location.start <= feature.location.end <= cluster.location.end:
-            clustercdsfeatures.append(feature)
-    return clustercdsfeatures
+    logging.critical("utils.get_cluster_cds_features() called")
+    raise RuntimeError("utils.get_cluster_cds_features(cluster) called, did you mean cluster.cds_children?")
 
 def strip_record(seq_record):
+    """ Discard antismash specific features and feature qualifiers """
+    seq_record.clear_clusters()
+    seq_record.clear_cluster_borders()
+    seq_record.clear_cds_motifs()
+    seq_record.clear_antismash_domains()
 
-    new_features = []
-
-    for feature in seq_record.features:
-
-        # Discard features added by antiSMASH
-        if feature.type in ('cluster', 'cluster_border', 'CDS_motif', 'aSDomain'):
-            continue
-
-        # clean up antiSMASH annotations in CDS features
-        if feature.type == 'CDS':
-            if 'sec_met' in feature.qualifiers:
-                del feature.qualifiers['sec_met']
-
-        new_features.append(feature)
-
-    seq_record.features = new_features
-
+    # clean up antiSMASH annotations in CDS features
+    for feature in seq_record.get_cds_features():
+        feature.sec_met = None
 
 def sort_features(seq_record):
     "Sort features in a seq_record by their position"
-
-    #Check if all features have a proper location assigned
-    for feature in seq_record.features:
-        if feature.location is None:
-            if feature.id != "<unknown id>":
-                logging.error("Feature '%s' has no proper location assigned", feature.id)
-            elif "locus_tag" in feature.qualifiers:
-                logging.error("Feature '%s' has no proper location assigned", feature.qualifiers["locus_tag"][0])
-            else:
-                logging.error("File contains feature without proper location assignment")
-            raise ValueError("File contains feature without proper location assignment")
-    #Sort features by location
-    seq_record.features.sort(key=lambda x: (x.location.start, x.location.end))
+    logging.critical("utils.sort_features() called")
+    raise RuntimeError("utils.sort_features(seq_record) called, did you mean sorted(seq_record.get_all_features())?")
 
 def fix_record_name_id(seq_record, all_record_ids, options):
     "Fix a seq record's name and id to be <= 16 characters, the GenBank limit; if record name is too long, add c000X prefix"
@@ -531,14 +492,11 @@ def fix_record_name_id(seq_record, all_record_ids, options):
             all_record_ids.add(seq_record.id)
         else: #Check if the ID suggested by _shorten_ids is unique
             if _shorten_ids(oldid) not in all_record_ids:
-                seq_record.id = _shorten_ids(oldid)
-                all_record_ids.add(seq_record.id)
+                name = _shorten_ids(oldid)
             else:
-                x = 0
-                while "%s_%i" % (seq_record.id[:16][:-4], x) in all_record_ids:
-                    x += 1
-                seq_record.id = "%s_%i" % (seq_record.id[:16][:-4], x)
-                all_record_ids.add(seq_record.id)
+                name, _ = generate_unique_id(seq_record.id[:12], all_record_ids, max_length=16)
+            seq_record.id = name
+            all_record_ids.add(name)
 
         logging.warning('Fasta header too long: renamed "%s" to "%s"', oldid, seq_record.id)
 
@@ -559,4 +517,4 @@ def fix_record_name_id(seq_record, all_record_ids, options):
             seq_record.id = seq_record.id.replace(char, "")
     for char in seq_record.name:
         if char in illegal_chars:
-            seq_record.id = seq_record.name.replace(char, "")
+            seq_record.name = seq_record.name.replace(char, "")

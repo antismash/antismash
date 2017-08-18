@@ -26,8 +26,8 @@ class GffParserTest(TestCase):
     def test_run(self):
         for sequence in self.sequences:
             gff_parser.run(sequence, self.single_entry, self.config)
-        len_cds_1 = len(deprecated.get_cds_features(self.sequences[0]))
-        len_cds_2 = len(deprecated.get_cds_features(self.sequences[1]))
+        len_cds_1 = len(self.sequences[0].get_cds_features())
+        len_cds_2 = len(self.sequences[1].get_cds_features())
         detected_result = (len_cds_1, len_cds_2)
         expected_result = (1, 0)
         self.assertEqual(detected_result, expected_result,
@@ -36,7 +36,7 @@ class GffParserTest(TestCase):
     def test_top_level_cds(self):
         self.config.genefinding_gff3 = path.get_full_path(__file__, "data/single_cds.gff")
         gff_parser.run(self.sequences[0], self.single_entry, self.config)
-        assert len(deprecated.get_cds_features(self.sequences[0])) == 1
+        assert len(self.sequences[0].get_cds_features()) == 1
 
     def test_features_from_file(self):
         filename = path.get_full_path(__file__, 'data/fumigatus.cluster1.gff')
