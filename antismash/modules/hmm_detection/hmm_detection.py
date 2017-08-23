@@ -474,6 +474,12 @@ def _update_sec_met_entry(feature, results, clustertype, nseqdict):
             yield "; ".join(map(str, self.domains))
             yield "Kind: %s" % self.kind
 
+        def append(self):
+            raise NotImplementedError("Appending to this list won't work")
+
+        def extend(self):
+            raise NotImplementedError("Extending this list won't work")
+
         def __len__(self):
             return 3
 
