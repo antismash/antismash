@@ -6,9 +6,10 @@ import os
 
 import antismash.common.deprecated as utils
 from helperlibs.wrappers.io import TemporaryDirectory
+
 from .core import create_blast_inputs, run_diamond, write_raw_clusterblastoutput, \
-                  ClusterResult, GeneralResults, parse_all_clusters, \
-                  score_clusterblast_output
+                  parse_all_clusters, score_clusterblast_output
+from .results import ClusterResult, GeneralResults
 
 def perform_clusterblast(options, seq_record, db_clusters, db_proteins):
     #Run BLAST on gene cluster proteins of each cluster and parse output
@@ -49,8 +50,8 @@ def perform_clusterblast(options, seq_record, db_clusters, db_proteins):
             ranking = score_clusterblast_output(db_clusters, allcoregenes, cluster_names_to_queries)
 
             # store the results
-            result = ClusterResult(genecluster, ranking)
+            result = ClusterResult(genecluster, ranking, db_proteins)
             results.add_cluster_result(result, db_clusters, db_proteins)
 
-        results.write_to_file(seq_record, db_clusters, options)
+        results.write_to_file(seq_record, options)
     return results

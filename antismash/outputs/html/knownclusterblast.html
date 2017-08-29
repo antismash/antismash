@@ -1,0 +1,19 @@
+<div class = "knownclusterblast">
+  <h3>Homologous known gene clusters</h3>
+  <div>
+    <select id="knownclusterblast-{{cluster.idx}}-select" class="clusterblast-selector">
+      <option value="svg/knownclusterblast{{cluster.idx}}_all.svg">
+        All hits
+      </option>
+      {% for opt_text, svg_file in cluster.knowncluster_blast %}
+      <option value = "{{svg_file}}">
+        {{opt_text}}
+      </option>
+      {% endfor %}
+    </select>
+    {% if cluster.knowncluster_blast %}
+    <button id="knownclusterblast-{{cluster.idx}}-download">Download graphic</button>
+    {% endif %}
+  </div>
+  <div id="knownclusterblast-{{cluster.idx}}-svg"></div>
+</div>

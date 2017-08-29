@@ -248,6 +248,8 @@ class ModuleArgs(object):
                 raise ValueError("Destination must include more information than the prefix")
         elif not dest.startswith(self.prefix + "_"):
             dest = "{}_{}".format(self.prefix, dest)
+        if "-" in dest:
+            raise ValueError("Destination for option cannot contain hyphens")
 
         return name, dest
 

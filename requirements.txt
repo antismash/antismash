@@ -4,13 +4,13 @@ pyquery==1.2.9
 numpy
 biopython>=1.65
 helperlibs
-pysvg
+pysvg-py3
 pyExcelerator
 backports.lzma
 bcbio-gff
-ete2
 networkx
 pandas
 matplotlib
 scipy
 scikit-learn
+jinja2

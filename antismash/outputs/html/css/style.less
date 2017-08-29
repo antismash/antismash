@@ -1,0 +1,751 @@
+@medium-gray: #444;
+@light-gray: #eee;
+@light-red: orangered;
+@tooltip-border: slategray;
+@tooltip-background: #ddd;
+// svgene genetype colors
+@gene-type-other: gray;
+@gene-type-biosynthetic: #810e15;
+@gene-type-biosynthetic-additional: #f16d75;
+@gene-type-regulatory: seagreen;
+@gene-type-transport: cornflowerblue;
+@feature-tta-codon: magenta;
+@tool-cassis: wheat;
+@tool-clusterfinder: teal;
+
+body {
+    font-family: Verdana, Tahoma, Sans-Serif;
+    color: @antismash-main;
+    background-color: white;
+    text-align: left;
+    margin: 0;
+    padding: 0;
+}
+
+a {
+    text-decoration: none;
+    &:active {
+        color: @antismash-main
+    }
+    &:hover {
+        text-decoration: underline
+    }
+    &:link {
+        color: @antismash-gray
+    }
+    &:visited {
+        color: @antismash-gray
+    }
+}
+
+.bold {
+    font-weight: bold;
+}
+
+.white {
+    color: white;
+}
+
+.icons {
+    margin-top: 1em;
+}
+
+.as-icon-active {
+    box-shadow: 0 3px 6px fadeout(white, 40%), inset 0 -3px 3px fadeout(white, 60%);
+}
+
+.left-padding(@width: 0.5em) {
+    margin-left: @width;
+}
+
+.line-bottom(@width: 2px) {
+    padding-bottom: 0.25em;
+    border-bottom: @width solid @antismash-light;
+}
+
+.line-top(@width: 2px) {
+    padding-top: 0.25em;
+    border-top: @width solid @antismash-light;
+}
+
+.top-header {
+    display: block;
+    overflow: hidden;
+    background-color: @medium-gray;
+    .line-bottom;
+}
+
+.footer {
+    .line-top(1px);
+}
+
+.antismash-logo {
+    float: left;
+}
+
+.antismash-title {
+    margin: 1em 1em 0px 1em;
+    float: left;
+    a {
+        color: white;
+        font-size: 120%;
+        font-weight: bold;
+        &:hover { text-decoration: none; }
+    }
+}
+
+.arrow-left {
+    width: 0;
+    height: 0;
+    cursor: pointer;
+    border-top: 0.75em solid transparent;
+    border-bottom: 0.75em solid transparent;
+    border-right: 0.75em solid @antismash-main;
+    &:hover {
+        border-right-color: screen(@antismash-main, #666666);
+    }
+}
+
+.arrow-right {
+    width: 0;
+    height: 0;
+    cursor: pointer;
+    border-top: 0.75em solid transparent;
+    border-bottom: 0.75em solid transparent;
+    border-left: 0.75em solid @antismash-main;
+    &:hover {
+        border-left-color: screen(@antismash-main, #666666);
+    }
+}
+
+#header {
+    margin: 0px auto;
+    display: block;
+    border-bottom: 2px solid @antismash-main;
+    img {
+        border: 0px;
+        padding-left: 0.5em;
+    }
+}
+
+#icons {
+    margin-top: 2em;
+    float: left;
+    font-size: 0.9em;
+    min-height: 1.1em;
+    overflow: visible;
+}
+
+#downloadmenu {
+    border: 1px solid black;
+    background-color: white;
+    display: none;
+    position: absolute;
+    width: 20%;
+}
+
+#downloadoptions {
+    list-style-type: none;
+    padding: 0 0 0 0.2em;
+    li {
+        margin: 0;
+    }
+}
+
+#buttons {
+    padding-top: 0.2em;
+    padding-bottom: 0.2em;
+    margin: 0;
+    overflow: hidden;
+}
+
+#cluster-type {
+    .left-padding;
+    text-transform: capitalize;
+}
+
+.page {
+    overflow: hidden;
+    h3 {
+        font-size: 90%;
+        background-color: @antismash-main;
+        color: white;
+        margin: 0.1em 0 0.4em 0.1em;
+        padding-left: 0.5em;
+    }
+}
+
+.sidepanel {
+    display: block;
+    float: right;
+    border-left: 2px solid @antismash-main;
+    width: 20%;
+}
+
+.structure img {
+    display: inline-block;
+    width:80%;
+    height: auto;
+}
+
+.structure-link {
+    display: inline-block;
+    text-align: center;
+    width:100%;
+}
+
+.as-structure-warning {
+    font-size: 60%;
+}
+
+.prediction-text {
+    font-size: 75%;
+    .left-padding;
+}
+
+.content {
+    display: block;
+    max-width: 79%;
+}
+
+
+.cluster-type {
+    margin: 0 0 0 0.5em;
+    padding: 0;
+}
+
+#clusterbuttons {
+    margin: 0 0 0 0.5em;
+    padding: 0;
+    list-style-type: none;
+    min-height: 1.1em;
+    min-height: 2em;
+    a:hover {
+        text-decoration: none;
+    }
+
+    li {
+        float: left;
+        margin: 0;
+        margin-right: 0.2em;
+        border-radius: 50%;
+        padding: 0.25em;
+        min-width: 1.25em;
+        min-height: 1.25em;
+        text-align: center;
+        vertical-align: middle;
+    }
+    li.active {
+        padding: 0.14em;
+    }
+}
+
+/* start colour definitions for secondary metabolite types */
+
+.secmet (@fg: black, @bg: white, @highlight: @light-red) {
+    background-color: @bg;
+    a {
+        color: @fg;
+    }
+    &.active {
+        border-color: @highlight;
+        border-width: 2px;
+        border-style: solid;
+    }
+    &:hover {
+        background-color: screen(@bg, #666666);
+    }
+}
+
+.pks {
+    .secmet(purple, sandybrown, purple);
+}
+
+.pigment {
+    .secmet(white, peru);
+}
+
+.hydrocarbon {
+    .secmet(white, purple);
+}
+
+.ripp {
+    .secmet(white, royalblue);
+}
+
+.putative {
+    .secmet(black, #f2f2f2, black);
+}
+
+.t1pks {
+    .pks;
+}
+
+.transatpks {
+    .pks;
+}
+
+.t2pks {
+    .pks;
+}
+
+.t3pks {
+    .pks;
+}
+
+.otherks {
+    .pks;
+}
+
+.arylpolyene {
+    .pigment;
+}
+
+.resorcinol {
+    .hydrocarbon;
+}
+
+.ladderane {
+    .hydrocarbon;
+}
+
+.pufa {
+    .hydrocarbon;
+}
+
+.nrps {
+    .secmet(white, seagreen);
+}
+
+.terpene {
+    .hydrocarbon;
+}
+
+.lantibiotic {
+    .secmet(blue, #ffff77, blue);
+}
+
+.lantipeptide {
+    .lantibiotic
+}
+
+.bacteriocin {
+    .ripp;
+}
+
+.thiopeptide {
+    .secmet(black, gold, black);
+}
+
+.linaridin {
+    .ripp;
+}
+
+.cyanobactin {
+    .ripp;
+}
+
+.glycocin {
+    .ripp;
+}
+
+.lap {
+    .ripp;
+}
+
+.lassopeptide {
+    .ripp;
+}
+
+.sactipeptide {
+    .ripp;
+}
+
+.bottromycin {
+    .ripp;
+}
+
+.head_to_tail {
+    .ripp;
+}
+
+.microcin {
+    .ripp;
+}
+
+.microviridin {
+    .ripp;
+}
+
+.proteusin {
+    .ripp;
+}
+
+.blactam {
+    .secmet(black, aliceblue, black);
+}
+
+.amglyccycl {
+    .secmet(black, yellowgreen, black);
+}
+
+.amimocoumarin {
+    .secmet(black, yellowgreen, black);
+}
+
+.siderophore {
+    .secmet(white, crimson, blue);
+}
+
+.ectoine {
+    .secmet(firebrick, yellowgreen, firebrick);
+}
+
+.butyrolactone {
+    .secmet(white, mediumpurple);
+}
+
+.indole {
+    .secmet(black, peachpuff, black);
+}
+
+.nucleoside {
+    .secmet(black, antiquewhite, black);
+}
+
+.phosphoglycolipid {
+    .secmet(black, yellowgreen, black);
+}
+
+.melanin {
+    .pigment;
+}
+
+.oligosaccharide {
+    .secmet(black, burlywood, black);
+}
+
+.furan {
+    .hydrocarbon;
+}
+
+.hserlactone{
+    .secmet(black, tan, black);
+}
+
+.phenazine {
+    .secmet(black, plum, black);
+}
+
+.phosphonate {
+    .secmet(black, mediumaquamarine, black);
+}
+
+.fused {
+    .ripp;
+}
+
+.other {
+    .secmet(lightsteelblue, midnightblue);
+}
+
+.cf_saccharide {
+    .putative;
+}
+
+.cf_fatty_acid {
+    .putative;
+}
+
+.hybrid {
+    .secmet(midnightblue, lightsteelblue, midnightblue);
+}
+
+/* done with sec met types */
+
+.dha {
+    font-weight: bold;
+    color: mediumseagreen;
+}
+
+.dhb {
+    font-weight: bold;
+    color: mediumorchid;
+}
+
+.cys {
+    font-weight: bold;
+    color: royalblue;
+}
+
+.macrolactam {
+    font-weight: bold;
+    color: red;
+}
+
+.cut {
+    font-weight: bold;
+    color: grey;
+}
+
+.separator-text {
+    font-size: 80%;
+    padding-top: 1em;
+}
+
+.description-text, .cluster-rules-header {
+    font-size: 70%;
+}
+
+.alt-weight-desc {
+    .description-text;
+    color: @antismash-gray;
+}
+
+.alt-weight-n {
+    .alt-weight-desc;
+    padding-left: 2.5em;
+}
+
+.cluster-download {
+    font-size: 70%;
+    float: right;
+}
+
+.cluster-rules {
+    font-size: 70%;
+    display: none;
+    border: 1px solid @tooltip-border;
+    background-color: @tooltip-background;
+}
+
+.description-container {
+    padding-bottom: 1em;
+    .left-padding;
+}
+
+table {
+    border-collapse: collapse;
+}
+#cluster-overview {
+    padding: 0;
+    .left-padding;
+    th {
+        margin: 0.2em 0.5em;
+        padding: 0 0.5em;
+    }
+
+
+    .separator-row {
+        background-color: #ddd;
+        td {
+            padding-top: 1em;
+        }
+    }
+    .even {
+        background-color: #f1f1f1;
+    }
+
+    td {
+        margin: 0.2em 0.5em;
+        padding: 0.2em 0.5em;
+    }
+
+    .digits {
+        text-align: right;
+    }
+}
+
+.tooltip {
+    border: 2px solid @tooltip-border;
+    background-color: @tooltip-background;
+    display: none;
+    position: absolute;
+    font-size: 80%;
+    padding: 0.5em;
+    color: @antismash-main;
+}
+
+.svgene-type-other {
+    fill: @gene-type-other;
+    stroke: black;
+}
+.svgene-type-biosynthetic {
+    fill: @gene-type-biosynthetic;
+    stroke: black;
+}
+.svgene-type-biosynthetic-additional {
+    fill: @gene-type-biosynthetic-additional;
+    stroke: black;
+}
+.svgene-type-transport {
+    fill: @gene-type-transport;
+    stroke: black;
+}
+.svgene-type-regulatory {
+    fill: @gene-type-regulatory;
+    stroke: black;
+}
+.svgene-tta-codon {
+    fill: @feature-tta-codon;
+}
+.svgene-line {
+    stroke-width: 1px;
+    stroke: #888;
+}
+.svgene-locustag {
+    fill: @antismash-main;
+    display: none;
+    font-size: 80%;
+}
+.svgene-tooltip {
+    .tooltip;
+}
+
+.svgene-tooltip-bold {
+    font-weight: bold;
+    font-size: 120%;
+}
+
+.svgene-border-cassis {
+    stroke: black;
+    stroke-width: 1px;
+    fill: @tool-cassis;
+}
+
+.svgene-border-clusterfinder {
+    stroke-width: 0px;
+    fill: @tool-clusterfinder;
+}
+
+.legend-type-other {
+    background-color: @gene-type-other;
+}
+.legend-type-biosynthetic {
+    background-color: @gene-type-biosynthetic;
+}
+.legend-type-biosynthetic-additional {
+    background-color: @gene-type-biosynthetic-additional;
+}
+.legend-type-transport {
+    background-color: @gene-type-transport;
+}
+.legend-type-regulatory {
+    background-color: @gene-type-regulatory;
+}
+
+.legend-border-cassis {
+    background-color: @tool-cassis;
+}
+
+.legend-border-clusterfinder {
+    background-color: @tool-clusterfinder;
+}
+
+.legend-tta-codon {
+    background-color: @feature-tta-codon;
+}
+
+.legend {
+    h4 {
+        margin-bottom: 0.5em;
+    }
+    font-size: 80%;
+    overflow: hidden;
+    margin-bottom: 0.5em;
+    .left-padding;
+}
+
+.legend-field {
+    float: left;
+    width: 1em;
+    height: 1em;
+    margin-left: 1em;
+    margin-right: 0.25em;
+    border: 1px solid black;
+}
+
+.legend-label {
+    float: left;
+}
+
+.details, .clusterblast, .subclusterblast {
+    .left-padding;
+}
+
+.jsdomain-line {
+    stroke-width: 1px;
+    stroke: #888;
+}
+.jsdomain-orflabel {
+    fill: @antismash-main;
+}
+.jsdomain-tooltip {
+    .tooltip
+}
+
+.clusterblast-locustag {
+    fill: @antismash-main;
+    display: none;
+    font-size: 80%;
+    position: absolute;
+}
+.clusterblast-tooltip {
+    .tooltip
+}
+.clusterblast-acc {
+  fill: @antismash-main;
+  font-size: 80%;
+  font-family: Verdana, Tahoma, Sans-Serif;
+}
+.clusterblast-desc {
+    .clusterblast-acc;
+    font-size: 75%;
+}
+
+.domainalign-locustag {
+    fill: @antismash-main;
+    display: none;
+    font-size: 80%;
+    position: absolute;
+}
+.domainalign-tooltip {
+    .tooltip
+}
+.domainalign-acc {
+  fill: #810e15;
+  font-size: 80%;
+  font-family: Verdana, Tahoma, Sans-Serif;
+}
+.domainalign-desc {
+    .domainalign-acc;
+    font-size: 75%;
+}
+
+#footer {
+    border-top: 2px solid @antismash-main;
+}
+
+#logos {
+    float: left;
+    padding-left: 0.5em;
+    margin-top: 5px;
+    img {
+        padding-right: 25px;
+    }
+}
+
+#logo-table {
+    tr td {
+        height: 50px;
+        padding: 5px;
+    }
+}
+
+#copyright {
+    font-size: 60%;
+    float: right;
+    width: 40%;
+    margin-right: 1.5em;
+    padding: 0.5em;
+}

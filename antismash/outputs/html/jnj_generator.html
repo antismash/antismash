@@ -1,0 +1,78 @@
+{% import 'legend_entry_macro.html' as le %}
+
+{% for record in records %}
+{% for cluster in record.clusters %}
+<div class= "page" id='cluster-{{cluster.idx}}'>
+  <h3> {{record.seq_record.name}} - Cluster {{cluster.idx}} - {{cluster.type | capitalize }} </h3>
+  {% if cluster.has_sidepanel %}
+  <div class="sidepanel">
+    {% for handler in cluster.handlers %}
+      {% if handler.generate_sidepanel is defined %}
+        {{handler.generate_sidepanel(cluster, record, options) | safe }}
+      {% endif %}
+    {% endfor %}
+  </div>
+  {% endif %}
+  <div class = "content">
+    <div class ="description-container">
+      <h3> Gene cluster description </h3>
+      <div class = "cluster-download">
+        <a href = {{ '%s.cluster%03d.gbk' % (record.seq_id, cluster.idx) }}>Download cluster GenBank file</a>
+      </div>
+      <div class = 'description-text'>
+        {{cluster.description_text()}}
+      </div>
+      <a class="cluster-rules-header" id="cluster-{{cluster.idx}}-rules-header" href="#cluster-{{cluster.idx}}">Show pHMM detection rules used</a>
+      <div class = "cluster-rules" id= "cluster-{{cluster.idx}}-rules">
+        {{- cluster.detection_rules|join('<br>'|safe) -}}
+      </div>
+      <div id= 'cluster-{{cluster.idx}}-svg'>
+      </div>
+    </div>
+    {% if options.input_type == 'nucl' %}
+    <div class="legend">
+      <h4>Legend:</h4>
+      <div>
+        {%- if not options.smcogs %}
+        Only available when smCOG analysis was run
+        {% endif -%}
+        {{le.legend('legend-type-biosynthetic', 'core biosynthetic genes')}}
+        {{le.legend('legend-type-biosynthetic-additional', 'additional biosynthetic genes')}}
+        {{le.legend('legend-type-transport', 'transport-related genes')}}
+        {{le.legend('legend-type-regulatory', 'regulatory genes')}}
+        {{le.legend('legend-type-other', 'other genes')}}
+        {% if options.tta %}
+            {{le.legend('legend-tta-codon', 'TTA codon')}}
+        {% endif %}
+        {% if options.cassis %}
+            {{le.legend('legend-border-cassis', 'cluster extent as predicted by CASSIS')}}
+        {% endif %}
+        {% if options.borderpredict %}
+            {{le.legend('legend-border-clusterfinder', 'cluster extent as predicted by ClusterFinder')}}
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+    {% for handler in cluster.handlers %}
+      {% if handler.generate_details_div is defined %}
+        {{handler.generate_details_div(cluster, record, options) | safe}}
+      {% endif %}
+    {% endfor %}
+
+
+    {%  if options.cb_general %}
+      {% include 'clusterblast.html' %}
+    {% endif %}
+    {%  if options.cb_subclusters %}
+      {% include 'subclusterblast.html' %}
+    {% endif %}
+    {%  if options.cb_knownclusters %}
+      {% include 'knownclusterblast.html' %}
+    {% endif %}
+  </div>
+
+
+</div>
+</div>
+{% endfor %}
+{% endfor %}

@@ -3,6 +3,8 @@
 
 import unittest
 
+from helperlibs.wrappers.io import TemporaryDirectory
+
 from antismash.main import gather_modules, detect_signature_genes
 from antismash.common import deprecated
 from antismash.common.module_results import ModuleResults
@@ -49,25 +51,27 @@ class Base(unittest.TestCase):
         self.fail() # wasn't overriden
 
     def check_nisin(self, expected):
-        self.build_record(helpers.get_path_to_nisin_genbank())
-        results = self.get_results()
-        assert len(results.cluster_results) == 1
-        cluster = results.cluster_results[0]
-        if expected > clusterblast.get_result_limit():
-            assert cluster.total_hits == expected
-            expected = clusterblast.get_result_limit()
-        assert len(cluster.ranking) == expected # will change if database does
+        with TemporaryDirectory(change=True):
+            self.build_record(helpers.get_path_to_nisin_genbank())
+            results = self.get_results()
+            assert len(results.cluster_results) == 1
+            cluster = results.cluster_results[0]
+            if expected > clusterblast.get_result_limit():
+                assert cluster.total_hits == expected
+                expected = clusterblast.get_result_limit()
+            assert len(cluster.ranking) == expected # will change if database does
         return results
 
     def check_balhymicin(self, expected):
-        self.build_record(helpers.get_path_to_balhymicin_genbank())
-        results = self.get_results()
-        assert len(results.cluster_results) == 1
-        cluster = results.cluster_results[0]
-        if expected > clusterblast.get_result_limit():
-            assert cluster.total_hits == expected
-            expected = clusterblast.get_result_limit()
-        assert len(cluster.ranking) == expected # will change if database does
+        with TemporaryDirectory(change=True):
+            self.build_record(helpers.get_path_to_balhymicin_genbank())
+            results = self.get_results()
+            assert len(results.cluster_results) == 1
+            cluster = results.cluster_results[0]
+            if expected > clusterblast.get_result_limit():
+                assert cluster.total_hits == expected
+                expected = clusterblast.get_result_limit()
+            assert len(cluster.ranking) == expected # will change if database does
         return results
 
 # TODO: test with a small sequence instead (grab a CDS that hit and take it's translation)
