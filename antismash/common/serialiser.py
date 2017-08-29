@@ -54,7 +54,7 @@ def record_to_json(record):
     def annotations_to_json(annotations):
         res = dict(annotations)
         res["references"] = []
-        for reference in annotations["references"]:
+        for reference in annotations.get("references", []):
             ref = dict(reference.__dict__)
             ref["location"] = [location_to_json(loc) for loc in ref["location"]]
             res["references"].append(ref)

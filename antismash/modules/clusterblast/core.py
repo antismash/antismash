@@ -5,133 +5,14 @@ import logging
 import os
 from collections import OrderedDict
 
+from helperlibs.wrappers.io import TemporaryDirectory
+
 import antismash.common.deprecated as utils
-from antismash.common.module_results import ModuleResults
 import antismash.common.path as path
 import antismash.common.subprocessing as subprocessing
 from antismash.config.args import Config
-from helperlibs.wrappers.io import TemporaryDirectory
 
-_CLUSTER_LIMIT = 50
-
-def get_result_limit():
-    return _CLUSTER_LIMIT
-
-class ClusterResult:
-    __slots__ = ["cluster", "ranking", "total_hits"]
-    def __init__(self, cluster, ranking):
-        self.cluster = cluster # Cluster
-        self.ranking = ranking[:get_result_limit()] # [(str, Score),...]
-        self.total_hits = len(ranking)
-
-    def jsonify(self):
-        result = {}
-        result["cluster_number"] = self.cluster.get_cluster_number()
-        result["total_hits"] = self.total_hits
-        ranking = []
-        for cluster_name, score in self.ranking:
-            scoring = {key : getattr(score, key) for key in score.__slots__ if key != "scored_pairings"}
-            scoring["pairings"] = [(query.entry, query.index, vars(subject)) for query, subject in score.scored_pairings]
-            ranking.append((cluster_name, scoring))
-        result["ranking"] = ranking
-        return result
-
-    @staticmethod
-    def from_json(json, record):
-        ranking = []
-        for cluster_name, details in json["ranking"]:
-            score = Score()
-            pairings = details["pairings"]
-            for key, val in details.items():
-                if key == "pairings":
-                    continue
-                setattr(score, key, val)
-            for pairing in pairings: # entry, index, dict of subject
-                query = Query(pairing[0], pairing[1])
-                subject = Subject.from_dict(pairing[2])
-                score.scored_pairings.append((query, subject))
-            ranking.append((cluster_name, score))
-
-        cluster = record.get_cluster(json["cluster_number"])
-        result = ClusterResult(cluster, ranking)
-        result.total_hits = json["total_hits"]
-        return result
-
-
-class GeneralResults(ModuleResults):
-    schema_version = 1
-    def __init__(self, record_id, search_type="clusterblast"):
-        super().__init__(record_id)
-        self.cluster_results = []
-        self.search_type = search_type
-        # keep here instead of duplicating in clusters
-        # and only keep those that are relevant instead of 7 million
-        self.proteins_of_interest = {}
-
-    def add_cluster_result(self, result, reference_clusters, reference_proteins):
-        assert isinstance(result, ClusterResult)
-        self.cluster_results.append(result)
-        # keep data on proteins relevant to this cluster
-        for cluster_label, _ in result.ranking:
-            for protein_name in reference_clusters[cluster_label][0]:
-                self.proteins_of_interest[protein_name] = reference_proteins.get(protein_name)
-
-    def write_to_file(self, record, reference_clusters, options):
-        for cluster in self.cluster_results:
-            write_clusterblast_output(options, record, cluster,
-                    reference_clusters, self.proteins_of_interest,
-                    searchtype=self.search_type)
-
-    def to_json(self):
-        if not self.cluster_results:
-            return None
-        return {"record_id" : self.record_id,
-                "schema_version" : self.schema_version,
-                "results" : [res.jsonify() for res in self.cluster_results]}
-
-    @staticmethod
-    def from_json(json, record):
-        if json["schema_version"] != GeneralResults.schema_version:
-            raise ValueError("Incompatible results schema version, expected %d" \
-                    % GeneralResults.schema_version)
-        result = GeneralResults(json["record_id"])
-        for cluster_result in json["results"]:
-            result.cluster_results.append(ClusterResult.from_json(cluster_result, record))
-        return result
-
-class ClusterBlastResults(ModuleResults):
-    schema_version = 1
-    def __init__(self, record_id):
-        super().__init__(record_id)
-        self.general = None
-        self.subcluster = None
-        self.knowncluster = None
-
-    def to_json(self):
-        assert self.general or self.subcluster or self.knowncluster
-        result = {"schema_version" : self.schema_version,
-                  "record_id" : self.record_id}
-        for attr in ["general", "subcluster", "knowncluster"]:
-            val = getattr(self, attr)
-            if val and val.cluster_results:
-                result[attr] = val.to_json()
-        return result
-
-    @staticmethod
-    def from_json(json, record):
-        if json["schema_version"] != ClusterBlastResults.schema_version:
-            raise ValueError("Incompatible results schema version, expected %d" \
-                    % ClusterBlastResults.schema_version)
-        results = ClusterBlastResults(json["record_id"])
-        for attr in ["general", "subcluster", "knowncluster"]:
-            if attr in json:
-                setattr(results, attr, GeneralResults.from_json(json[attr], record))
-        assert results.general or results.subcluster or results.knowncluster
-        return results
-
-    def add_to_record(self, record):
-        for result in [self.general, self.subcluster, self.knowncluster]:
-            result.add_to_record(record)
+from .data_structures import Subject, Query, Protein, ReferenceCluster, Score
 
 def runblast(query, target):
     command = ["blastp", "-db", target, "-query", query, "-outfmt", "6",
@@ -162,6 +43,7 @@ def make_blastdb(inputfile, dbname):
     command = ["makeblastdb", "-in", inputfile, "-out", dbname, "-dbtype", "prot"]
     subprocessing.execute(command)
 
+
 def load_geneclusters(searchtype):
     #Load gene cluster database into memory
     options = Config()
@@ -185,39 +67,17 @@ def load_geneclusters(searchtype):
     for i in lines:
         tabs = i.split("\t")
         accession = tabs[0]
-        clusterdescription = tabs[1]
-        clusternr = tabs[2]
-        clustertype = tabs[3]
-        clustername = accession + "_" + clusternr
-        clustertags = tabs[4].split(";")
-        clusterprots = tabs[5].split(";")
-        clusters[clustername] = [clusterprots, clusterdescription, clustertype, clustertags]
+        description = tabs[1]
+        cluster_number = tabs[2]
+        cluster_type = tabs[3]
+        tags = tabs[4].split(";")
+        proteins = tabs[5].split(";")
+        if not proteins[-1]:
+            proteins.pop(-1)
+        cluster = ReferenceCluster(accession, cluster_number, proteins,
+                                   description, cluster_type, tags)
+        clusters[cluster.get_name()] = cluster
     return clusters
-
-class Protein(object):
-    """ Holds details of a protein. Members cannot be added dynamically.
-    """
-    # At time of writing this class will be instantiated ~7 million times per
-    # clusterblast invocation.
-    # With those numbers, the memory use of the class without slots: 2.3 Gb
-    #                                                and with slots: 0.4 Gb
-    __slots__ = ("name", "locus_tag", "location", "strand", "annotations")
-    def __init__(self, name, locus_tag, location, strand, annotations):
-        self.name = name
-        self.locus_tag = locus_tag
-        self.location = location
-        self.strand = strand
-        self.annotations = annotations
-
-    def __str__(self):
-        if len(self.location.split("-")) != 2:
-            raise ValueError("Invalid location in Protein: %s"%self.location)
-        tag = self.locus_tag
-        if tag == "no_locus_tag":
-            tag = self.name
-        locations = self.location.replace("-", "\t")
-        return "{}\t{}\t{}\t{}\t{}\n".format(tag, self.name, locations,
-                                                 self.strand, self.annotations)
 
 def load_geneclusterproteins(accessions, searchtype):
     options = Config()
@@ -248,6 +108,7 @@ def load_geneclusterproteins(accessions, searchtype):
             tabs = line.split("|")
             locustag = tabs[4]
             if locustag in accessions:
+                raise "awooga"
                 locustag = "h_" + locustag
             location = tabs[2]
             strand = tabs[3]
@@ -305,58 +166,6 @@ def uniqueblasthitfilter(blastlines):
             query_subject_combinations.add(query_subject_combination)
             blastlines2.append(tabs)
     return blastlines2
-
-class Subject:
-    def __init__(self, name, genecluster, start, end, strand, annotation,
-                 perc_ident, blastscore, perc_coverage, evalue, locus_tag):
-        self.name = name
-        self.genecluster = genecluster
-        self.start = start
-        self.end = end
-        self.strand = strand
-        self.annotation = annotation
-        self.perc_ident = int(perc_ident)
-        self.blastscore = int(blastscore)
-        self.perc_coverage = float(perc_coverage)
-        self.evalue = float(evalue)
-        self.locus_tag = locus_tag
-
-    def get_table_string(self):
-        return "\t".join([str(i) for i in [self.name, self.perc_ident,
-                                           self.blastscore, self.perc_coverage,
-                                           self.evalue]])
-
-    @staticmethod
-    def from_dict(data):
-        args = []
-        for key in ["name", "genecluster", "start", "end", "strand",
-                    "annotation", "perc_ident", "blastscore", "perc_coverage",
-                    "evalue", "locus_tag"]:
-            args.append(data[key])
-# stop pylint throwing errors because it can't work out the splat operator
-# pylint: disable=no-value-for-parameter
-        return Subject(*args)
-# pylint: enable=no-value-for-parameter
-
-
-class Query:
-    def __init__(self, entry, index):
-        parts = entry.split("|")
-        self.cluster_number = int(parts[1][1:]) # c1 -> 1
-        self.id = parts[4]
-        self.entry = entry
-        self.subjects = OrderedDict()
-        self.cluster_name_to_subjects = {}
-        self.index = index
-
-    def add_subject(self, subject):
-        self.subjects[subject.name] = subject
-        if subject.genecluster not in self.cluster_name_to_subjects:
-            self.cluster_name_to_subjects[subject.genecluster] = []
-        self.cluster_name_to_subjects[subject.genecluster].append(subject)
-
-    def get_subjects_by_cluster(self, cluster_name):
-        return self.cluster_name_to_subjects.get(cluster_name, [])
 
 def parse_subject(tabs, seqlengths, geneclustergenes, seq_record):
     if len(tabs) < 12:
@@ -553,27 +362,6 @@ def write_raw_clusterblastoutput(output_dir, blast_output, search_type="clusterb
     with open(os.path.join(output_dir, filename), "w") as handle:
         handle.write(blast_output)
 
-class Score:
-    __slots__ = ("hits", "core_gene_hits", "blast_score", "synteny_score",
-                 "core_bonus", "scored_pairings")
-    def __init__(self):
-        self.hits = 0
-        self.core_gene_hits = 0
-        self.blast_score = 0
-        self.synteny_score = 0
-        self.core_bonus = 0
-        self.scored_pairings = []
-
-    def sort_score(self):
-        """ the pre-existing, unexplained sort weighting """
-        if self.core_gene_hits:
-            self.core_bonus = 3
-        return (self.hits
-                + self.core_bonus
-                + self.core_gene_hits / 100.
-                + self.blast_score / 10e7
-                + self.synteny_score)
-
 def parse_clusterblast_dict(queries, clusters, cluster_name, allcoregenes):
     result = Score()
     hitpositions = []
@@ -590,7 +378,7 @@ def parse_clusterblast_dict(queries, clusters, cluster_name, allcoregenes):
                 continue
             querynrhits += 1
             result.blast_score += subject.blastscore
-            result.scored_pairings.append([query, subject])
+            result.scored_pairings.append((query, subject))
             hitpositions.append(index_pair)
         if querynrhits:
             result.hits += 1
@@ -647,70 +435,7 @@ def score_clusterblast_output(clusters, allcoregenes, cluster_names_to_queries):
         initial = hitpositions[0][1]
         for _, subject in hitpositions[1:]:
             if subject != initial:
-                results[cluster_name] = result
+                results[clusters[cluster_name]] = result
                 break
     #Sort gene clusters by score
     return sorted(results.items(), reverse=True, key=lambda x: x[1].sort_score())
-
-def _get_output_dir(options, searchtype):
-    assert searchtype in ["clusterblast", "subclusterblast", "knownclusterblast"]
-    output_dir = os.path.join(options.output_dir, searchtype)
-
-    if not os.path.exists(output_dir):
-        os.mkdir(output_dir)
-    if not os.path.isdir(output_dir):
-        raise RuntimeError("%s exists as a file, but required as a directory" % output_dir)
-    return output_dir
-
-
-def write_clusterblast_output(options, seq_record, cluster_result, clusters,
-                              proteins, searchtype="clusterblast"):
-    assert isinstance(proteins, dict)
-
-    cluster_number = cluster_result.cluster.get_cluster_number()
-    ranking = cluster_result.ranking
-
-    #Output for each hit: table of genes and locations of input cluster, table of genes and locations of hit cluster, table of hits between the clusters
-    currentdir = os.getcwd()
-    os.chdir(_get_output_dir(options, searchtype))
-
-    out_file = open("cluster" + str(cluster_number) + ".txt", "w")
-    out_file.write("ClusterBlast scores for " + seq_record.id + "\n")
-    out_file.write("\nTable of genes, locations, strands and annotations of query cluster:\n")
-    for i, cds in enumerate(cluster_result.cluster.cds_children):
-        if cds.strand == 1:
-            strand = "+"
-        else:
-            strand = "-"
-        out_file.write("\t".join([cds.get_accession(), str(int(cds.location.start)), str(int(cds.location.end)), strand, cds.product]) + "\t\n")
-    out_file.write("\n\nSignificant hits: \n")
-    top_hits = ranking[:100]
-    for i, cluster_and_result in enumerate(top_hits):
-        cluster = cluster_and_result[0]
-        out_file.write("{}. {}\t{}\n".format(i + 1, cluster, clusters[cluster][1]))
-
-    out_file.write("\n\nDetails:")
-    for i, cluster_and_result in enumerate(top_hits):
-        cluster, result = cluster_and_result
-        nrhits = result.hits
-        out_file.write("\n\n>>\n")
-        out_file.write("{}. {}\n".format(i + 1, cluster))
-        out_file.write("Source: {}\n".format(clusters[cluster][1]))
-        out_file.write("Type: {}\n".format(clusters[cluster][2]))
-        out_file.write("Number of proteins with BLAST hits to this cluster: %d\n" % nrhits)
-        out_file.write("Cumulative BLAST score: %d\n\n" % result.blast_score)
-        out_file.write("Table of genes, locations, strands and annotations of subject cluster:\n")
-        clusterproteins = clusters[cluster][0]
-        for protein_name in clusterproteins:
-            protein = proteins.get(protein_name)
-            if protein:
-                out_file.write(str(protein))
-        out_file.write("\nTable of Blast hits (query gene, subject gene, %identity, blast score, %coverage, e-value):\n")
-        if result.scored_pairings:
-            for query, subject in result.scored_pairings:
-                out_file.write("{}\t{}\n".format(query.id, subject.get_table_string()))
-        else:
-            out_file.write("data not found\n")
-        out_file.write("\n")
-    out_file.close()
-    os.chdir(currentdir)

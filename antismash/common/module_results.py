@@ -21,7 +21,7 @@ class ModuleResults:
     @staticmethod
     def from_json(json):
         """
-            Converts the json structure back to a ModuleResults instance
+            Converts a json structure back to a ModuleResults instance
 
             The ModuleResults instance returned should be able to regenerate the
             provided json by use of .to_json()
@@ -33,3 +33,9 @@ class ModuleResults:
             Stores relevant information from the results in the given record
         """
         raise NotImplementedError()
+
+    def generate_images(self, image_dir):
+        """
+            Generates svgs and saves them to the output image directory
+        """
+        pass

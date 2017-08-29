@@ -23,6 +23,12 @@ class Feature:
     def extract(self, sequence):
         return self.location.extract(sequence)
 
+    def get_qualifier(self, key):
+        qualifier = self._qualifiers.get(key)
+        if qualifier:
+            return tuple(qualifier)
+        return None
+
     def overlaps_with(self, other):
         assert isinstance(other, Feature)
         return self.location.start in other.location \
@@ -78,12 +84,15 @@ class Feature:
         return qualifiers
 
 class ClusterBorder(Feature):
-    __slots__ = ["tool", "probability"]
+    __slots__ = ["tool", "probability", "parent_cluster"]
     def __init__(self, location, tool, probability):
         super().__init__(location, feature_type="cluster_border")
         self.notes.append("best prediction")
         self.tool = str(tool)
         self.probability = float(probability)
+
+        # runtime only
+        self.parent_cluster = None
 
     def to_biopython(self, qualifiers=None):
         mine = OrderedDict()
@@ -388,7 +397,7 @@ class Cluster(Feature):
     __slots__ = ["_extent", "_cutoff", "products", "contig_edge",
                  "detection_rules", "smiles_structure", "probability",
                  "clusterblast", "knownclusterblast", "subclusterblast",
-                 "parent_record", "cds_children"]
+                 "parent_record", "cds_children", "borders"]
     def __init__(self, location, cutoff, extent, products):
         super().__init__(location, feature_type="cluster")
 
@@ -409,6 +418,7 @@ class Cluster(Feature):
         # for runtime management
         self.parent_record = None
         self.cds_children = []
+        self.borders = []
 
     def get_cluster_number(self):
         if not self.parent_record:
@@ -439,6 +449,9 @@ class Cluster(Feature):
     def extent(self, extent):
         if extent is not None:
             self._extent = int(extent)
+
+    def get_product_string(self):
+        return "-".join(self.products)
 
     @staticmethod
     def from_biopython(bio_feature, feature=None, leftovers=None):
@@ -494,7 +507,7 @@ class Cluster(Feature):
         if self.contig_edge is not None:
             mine["contig_edge"] = [str(self.contig_edge)]
         assert isinstance(self.products, list), type(self.products)
-        mine["product"] = ["-".join(self.products)]
+        mine["product"] = [self.get_product_string()]
         rule_text = ["Detection rule(s) for this cluster type:"]
         assert isinstance(self.detection_rules, list), type(self.detection_rules)
         for product, rule in zip(self.products, self.detection_rules):

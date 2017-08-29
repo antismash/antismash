@@ -11,11 +11,12 @@ from antismash.config import loader
 from antismash.common import deprecated, serialiser
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record
-from antismash.modules import tta, genefinding, hmm_detection, clusterblast
+from antismash.modules import tta, genefinding, hmm_detection, clusterblast, dummy
+from antismash.outputs import html, svg
 
 def gather_modules(with_genefinding=False):
     #TODO: make this cleverer
-    base = [hmm_detection, tta, clusterblast]
+    base = [hmm_detection, tta, clusterblast, dummy]
     if with_genefinding:
         base.append(genefinding)
     return base
@@ -162,12 +163,17 @@ def run_antismash(sequence_file, options, modules=None):
 
 
     # Write results
+    logging.debug("Creating results page")
+    html.write(seq_records, results, options)
+    logging.debug("Creating results SVGs")
+    svg.write(seq_records, options, results)
     # TODO: include status logging, zipping, etc
     seq_records = [record.to_biopython() for record in seq_records]
     logging.debug("Writing genbank file to 'temp.gbk'")
     SeqIO.write(seq_records, "temp.gbk", "genbank")
     logging.debug("Writing json results to 'temp.json'")
     serialiser.write_records(seq_records, results, "temp.json")
+
 
     end_time = datetime.now()
     running_time = end_time - start_time

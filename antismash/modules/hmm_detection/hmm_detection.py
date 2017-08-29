@@ -422,7 +422,7 @@ def add_additional_nrpspks_genes(typedict, results_by_id, seq_record, nseqdict):
     clustercdsfeatures = utils.get_cds_features_within_clusters(seq_record)
     othercds_with_results = []
     for cds in clustercdsfeatures:
-        gene_id = utils.get_gene_id(cds)
+        gene_id = cds.get_name()
         if gene_id in results_by_id and typedict[gene_id] == "none":
             othercds_with_results.append((cds, gene_id))
     for cds, gene_id in othercds_with_results:
@@ -515,7 +515,7 @@ def get_overlaps_table(seq_record):
             overlaps.append([])
             cds_queue.append(cds)
             for cds in cds_queue:
-                overlap_by_id[utils.get_gene_id(cds)] = len(overlaps) - 1
+                overlap_by_id[cds.get_name()] = len(overlaps) - 1
                 overlaps[-1].append(cds)
             cds_queue = []
             i = j
@@ -529,6 +529,6 @@ def get_overlaps_table(seq_record):
     overlaps.append([])
     cds_queue.append(features[i])
     for cds in cds_queue:
-        overlap_by_id[utils.get_gene_id(cds)] = len(overlaps) - 1
+        overlap_by_id[cds.get_name()] = len(overlaps) - 1
         overlaps[-1].append(cds)
     return overlap_by_id

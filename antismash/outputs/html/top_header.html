@@ -1,0 +1,29 @@
+<div class="top-header">
+  <img class="antismash-logo" src="images/{{options.taxon}}_logo.png" alt="antiSMASH">
+  <span class="antismash-title"><a class="main-link" href="{{options.base_url}}">antibiotics & Secondary Metabolite Analysis SHell</a><br>
+    <span class="white">Version <span id="antismash-version">{{utils.get_version()}}</span></span>
+  </span>
+  <div id="icons">
+    <a class="main-link" href="{{options.base_url}}"><img src="images/{{options.taxon}}_home.png" alt="home" title="Go to start page"></a>
+    <a class="help-link" href="{{options.base_url}}#!/help"><img src="images/{{options.taxon}}_help.png" alt="help" title="Get help using antiSMASH"></a>
+    <a class="about-link" href="{{options.base_url}}#!/about"><img src="images/{{options.taxon}}_about.png" alt="about" title="About antiSMASH"></a>
+    <a href="#" id="download"><img src="images/{{options.taxon}}_download.png" alt="download" title="Download results"></a>
+    <div id="downloadmenu">
+      <ul id="downloadoptions">
+        {% for record in records %}
+        <li><a href={{record.seq_id}}.zip>Download all results</li>
+          {% if config.input_type == 'nucl' %}
+            <li><a href={{record.seq_id}}.geneclusters.xls> Download XLS overview file</a></li>
+            <li><a href={{record.seq_id}}.final.embl> Download EMBL summary file</a></li>
+            <li><a href={{record.seq_id}}.final.gbk> Download GenBank summary file</a></li>
+          {% else %}
+            <li><a href={{record.seq_id}}.final.gp> Download GenPept summary file</a></li>
+          {% endif %}
+          {% if options.logfile and options.download_logfile() != None %}
+            <li><a href={{options.download_logfile()}}> Download log file</a></li>
+          {% endif %}
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>

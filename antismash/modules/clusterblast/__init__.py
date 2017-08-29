@@ -5,17 +5,16 @@
 
 import logging
 import os
+
 import antismash.common.deprecated as utils
-from antismash.common.deprecated import CODE_SKIP_WARNING
 import antismash.common.path as path
 from antismash.config.args import ModuleArgs, Config
-from .core import load_clusterblast_database, internal_homology_blast, \
-                    get_result_limit, ClusterBlastResults
+
+from .core import load_clusterblast_database, internal_homology_blast
 from .clusterblast import perform_clusterblast
 from .known import run_knownclusterblast_on_record, check_known_prereqs
+from .results import ClusterBlastResults, get_result_limit
 from .sub import run_subclusterblast_on_record, check_sub_prereqs
-#TODO data_loading
-#from .data_loading import prepare_data, generate_Storage_for_cb
 
 NAME = "clusterblast"
 SHORT_DESCRIPTION = NAME.capitalize()
@@ -43,19 +42,14 @@ def get_arguments():
                        type=int,
                        default=10,
                        help="Number of clusters from ClusterBlast to display, cannot be greater than %d." % get_result_limit())
-    args.add_argument('seed',
-                       dest='seed',
-                       type=int,
-                       default=0,
-                       help="Random number seed for ClusterBlast coloring.")
-    args.add_argument('homologyscalelimit',
-                       dest='homologyscalelimit',
+    args.add_argument('min-homology-scale',
+                       dest='min_homology_scale',
                        metavar="LIMIT",
                        type=float,
                        default=0.0,
-                       help="If positive float number greater than 1, limit horizontal shrinkage " # TODO: fix wording
-                            "of the graphical display of the query BGC in ClusterBlast results to "
-                            "this ratio. Warning: some homologous genes may no longer be visible!")
+                       help="A minimum scaling factor for the query BGC in ClusterBlast results."
+                            " Valid range: 0.0 - 1.0.   "
+                            " Warning: some homologous genes may no longer be visible!")
     return args
 
 def is_enabled(options):
@@ -108,16 +102,11 @@ def check_prereqs():
 
 def run_on_record(seq_record, options):
     results = ClusterBlastResults(seq_record.id)
+    results.internal_homology_groups = internal_homology_blast(seq_record)
     if options.cb_general:
         logging.info('Running ClusterBlast')
         clusters, proteins = load_clusterblast_database(seq_record)
-        logging.critical("Record being modified to add 'internalhomologygroupsdict'")
-        seq_record.internalhomologygroupsdict = internal_homology_blast(seq_record)
         results.general = perform_clusterblast(options, seq_record, clusters, proteins)
-        CODE_SKIP_WARNING()
-    #    prepare_data(seq_record, options, searchtype="general")
-        CODE_SKIP_WARNING()
-    #    generate_Storage_for_cb(options, seq_record)
     if options.cb_subclusters:
         results.subcluster = run_subclusterblast_on_record(seq_record, options)
     if options.cb_knownclusters:

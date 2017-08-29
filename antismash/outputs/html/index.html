@@ -1,0 +1,118 @@
+<!doctype html>
+<html>
+<head>
+  <script src="js/jquery.js"></script>
+  <script src="js/purl.js"></script>
+  <script src="js/d3.v2.js"></script>
+  <script src="js/svgene.js"></script>
+  <script src="js/jsdomain.js"></script>
+  <script src="js/clusterblast.js"></script>
+  <script src="js/domainalign.js"></script>
+  <script src="geneclusters.js"></script>
+  <script src="js/jnj.js"></script>
+
+  {% for record in records %}
+  <title>{{record.seq_id}} - {{record.number_clusters}} cluster(s) - antiSMASH results</title>
+  <link rel="stylesheet" type="text/css" href="css/{{options.taxon}}.css">
+  <meta charset="utf-8" />
+  {% endfor %}
+</head>
+<body>
+  <div id="header">
+    {% include 'top_header.html' %}
+    <div id="buttons">
+      <span id="cluster-type">Select Gene Cluster:</span>
+      <ul id="clusterbuttons">
+        <li><div class="arrow-left" id="prev-cluster"></div></li>
+        <li class="clbutton"><a href="#">Overview</a></li>
+        {% for record in records %}
+          {% for cluster in record.clusters %}
+            {% if cluster.hybrid %}
+              <li class="clbutton {{cluster.type}} hybrid cluster-{{cluster.idx}}">
+                <a href="#cluster-{{cluster.idx}}">
+                  {{cluster.idx}}
+                </a>
+              </li>
+            {% else %}
+              <li class="clbutton {{cluster.type}} cluster-{{cluster.idx}}">
+                <a href="#cluster-{{cluster.idx}}">
+                  {{cluster.idx}}
+                </a>
+              </li>
+            {% endif %}
+          {% endfor %}
+        {% endfor %}
+        <li id="last-clbutton"><div class="arrow-right" id="next-cluster"></div></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- overview page -->
+  <div class="page" id="overview">
+    {% if options.triggered_limit %}
+      <h3>Identified secondary metabolite clusters (truncated to the first {{options.limit}} record(s)) <span id="truncated"></span></h3>
+    {% else %}
+      <h3>Identified secondary metabolite clusters<span id="truncated"></span></h3>
+    {% endif %}
+    <table id="cluster-overview">
+      <thead>
+
+        <tr>
+          <th>Cluster</th>
+          <th>Type</th>
+          <th>From</th>
+          <th>To</th>
+          <th>Most similar known cluster</th>
+          <th>MIBiG BGC-ID</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for record in records -%}
+          {% if records_written == 0 %}
+            <td></td><td>{{record.no_result_note()}}</td>
+          {% else %}
+            <tr class = 'separator-row'>
+              <td class = 'separator-text' colspan = 2)>{{record.get_from_record()}}</td>
+            </tr>
+            {% for cluster in record.clusters -%}
+              <tr class = '{{loop.cycle('odd', 'even')}}'>
+                {% if cluster.hybrid -%}
+                  <td class="clbutton {{cluster.type}} hybrid {{cluster.idx}}">
+                    <a href="#cluster-{{cluster.idx}}">Cluster {{cluster.idx}}</a>
+                  </td>
+                {%- else -%}
+                  <td class="clbutton {{cluster.type}} {{cluster.idx}}">
+                    <a href="#cluster-{{cluster.idx}}">Cluster {{cluster.idx}}</a>
+                  </td>
+                {%- endif %}
+                <td>
+                  {% set cluster_subtypes = cluster.type.split('-') %}
+                  {% set dash = joiner("-") %}
+                  {% for subtype in  cluster_subtypes -%}
+                    {{dash()}}<a href="http://antismash.secondarymetabolites.org/help#{{subtype}}" target="_blank">{{subtype | title}}</a>
+                  {%- endfor %}
+
+                </td>
+                <td class="digits">{{cluster.start}}</td>
+                <td class="digits">{{cluster.end}}</td>
+                <td>{{cluster.knowncluster[0][0] if cluster.knowncluster else "-"}}</td>
+                  {% if cluster.BGCid != "-"  -%}
+                  <td><a href="http://mibig.secondarymetabolites.org/repository/{{cluster.BGCid}}/index.html" target="_blank">{{cluster.BGCid}}</a></td>
+                  {%- else -%}
+                    <td>{{cluster.BGCid}}</td>
+                  {%- endif %}
+              </tr>
+              {%- endfor %}
+          {%- endif %}
+      {%- endfor %}
+    </tbody>
+  </table>
+
+</div>
+
+{% include 'jnj_generator.html' %}
+{% include 'footer.html' %}
+
+</body>
+</html>

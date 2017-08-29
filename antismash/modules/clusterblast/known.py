@@ -7,10 +7,11 @@ from helperlibs.wrappers.io import TemporaryDirectory
 
 import antismash.common.deprecated as utils
 import antismash.common.path as path
-from .core import ClusterResult, GeneralResults, parse_all_clusters, \
-                  load_clusterblast_database, internal_homology_blast, \
-                  create_blast_inputs, run_diamond, \
+
+from .core import parse_all_clusters, \
+                  load_clusterblast_database, create_blast_inputs, run_diamond, \
                   write_raw_clusterblastoutput, score_clusterblast_output
+from .results import ClusterResult, GeneralResults, write_clusterblast_output
 
 # Tuple is ( binary_name, optional)
 _required_binaries = [
@@ -45,14 +46,7 @@ def check_known_prereqs(options):
 def run_knownclusterblast_on_record(seq_record, options):
     logging.info('Running known cluster search')
     clusters, proteins = load_clusterblast_database(seq_record, searchtype="knownclusterblast")
-    if not options.cb_general:
-        seq_record.internalhomologygroupsdict = internal_homology_blast(seq_record)
-    results = perform_knownclusterblast(options, seq_record, clusters, proteins)
-    utils.CODE_SKIP_WARNING()
-    #prepare_data(seq_record, options, searchtype="knownclusters")
-    utils.CODE_SKIP_WARNING()
-    #generate_Storage_for_cb(options, seq_record, searchtype="KnownClusterBlastData")
-    return results
+    return perform_knownclusterblast(options, seq_record, clusters, proteins)
 
 def perform_knownclusterblast(options, seq_record, clusters, proteins):
     # Run BLAST on gene cluster proteins of each cluster and parse output
@@ -70,8 +64,8 @@ def perform_knownclusterblast(options, seq_record, clusters, proteins):
                          all_seqs, "input.fasta")
         run_diamond("input.fasta", _get_datafile_path('knownclusterprots'),
                     tempdir, options)
-        with open("input.out", 'r') as fh:
-            blastoutput = fh.read()
+        with open("input.out", 'r') as handle:
+            blastoutput = handle.read()
         write_raw_clusterblastoutput(options.output_dir, blastoutput,
                                      search_type="knownclusterblast")
     minseqcoverage = 40
@@ -85,47 +79,62 @@ def perform_knownclusterblast(options, seq_record, clusters, proteins):
         cluster_names_to_queries = clusters_by_number.get(clusternumber, {})
         ranking = score_clusterblast_output(clusters, allcoregenes, cluster_names_to_queries)
         # store results
-        cluster_result = ClusterResult(genecluster, ranking)
+        cluster_result = ClusterResult(genecluster, ranking, proteins)
         results.add_cluster_result(cluster_result, clusters, proteins)
 
-        utils.CODE_SKIP_WARNING()
-#        write_clusterblast_output(options, seq_record, knownclusterblastStorage, searchtype="knownclusters")
-    utils.CODE_SKIP_WARNING()
-#    mibig_protein_homology(blastoutput, seq_record, clusters, options)
-#    logging.critical("mibig homology results discarded")
+        write_clusterblast_output(options, seq_record, cluster_result, proteins,
+                                  searchtype="knownclusterblast")
+    results.mibig_entries = mibig_protein_homology(blastoutput, seq_record, clusters, options)
     return results
 
+class MibigEntry:
+    def __init__(self, gene_id, gene_description, mibig_cluster,
+                mibig_product, percent_id, blast_score, coverage, evalue):
+        self.gene_id = gene_id
+        self.gene_description = gene_description
+        self.mibig_id = mibig_cluster.split("_c")[0]
+        self.mibig_product = mibig_product
+        self.percent_id = float(percent_id)
+        self.blast_score = float(blast_score)
+        self.coverage = float(coverage)
+        self.evalue = float(evalue)
+
+    @property
+    def values(self):
+        return [self.gene_id, self.gene_description, self.mibig_id,
+                self.mibig_product, self.percent_id, self.blast_score,
+                self.coverage, self.evalue]
+
+    def __str__(self):
+        return "%s\n" % "\t".join(str(val) for val in self.values)
 
 def mibig_protein_homology(blastoutput, seq_record, clusters, options):
-    logging.critical("mibig homology still only writing to file")
+    """ Constructs a mapping of gene to MiBiG hits
+        Returns a dict of dicts of lists, accessed by:
+            mibig_entries[cluster_number][gene_accession] = list of MibigEntry
+    """
     minseqcoverage = 20
     minpercidentity = 20
     _, queries_by_cluster = parse_all_clusters(blastoutput, minseqcoverage,
                                                minpercidentity, seq_record)
-    for genecluster in seq_record.get_clusters():
-        cluster_number = genecluster.get_cluster_number()
-        queries = queries_by_cluster.get(cluster_number, {})
+    mibig_entries = {}
 
-        # Since the BLAST query was only for proteins in the cluster just need to iterate through the keys and generate
-        # a file for each of the keys
-        outputfolder = os.path.join(options.output_dir, 'knownclusterblast',
-                                    "cluster{}".format(cluster_number))
-        if not os.path.exists(outputfolder):
-            os.mkdir(outputfolder)
+    for cluster in seq_record.get_clusters():
+        cluster_number = cluster.get_cluster_number()
+        queries = queries_by_cluster.get(cluster_number, {})
+        cluster_entries = {}
+        # Since the BLAST query was only for proteins in the cluster just need to iterate through the keys
         for cluster_protein in queries.values():
             protein_name = cluster_protein.id
-            with open(outputfolder + os.sep + protein_name + '_mibig_hits.txt', 'w') as outfile:
-                outfile.write('#Protein\tDescription\tMiBIG Cluster\tMiBIG Product'
-                              '\tPercent ID\tPercent Coverage\tBLAST Score\t Evalue\n')
-                for subject in cluster_protein.subjects.values():
-                    gene_id = subject.locus_tag
-                    gene_descr = subject.annotation
-                    mibig_cluster = subject.genecluster
-                    mibig_product = clusters[mibig_cluster][1]
-                    percent_id = str(subject.perc_ident)
-                    blast_score = str(subject.blastscore)
-                    percent_cvg = str(subject.perc_coverage)
-                    e_value = str(subject.evalue)
-                    outfile.write(gene_id + '\t' + gene_descr + '\t' + mibig_cluster
-                                  + '\t' + mibig_product + '\t' + percent_id + '\t' + percent_cvg
-                                  + '\t' + blast_score + '\t' + e_value + '\n')
+            protein_entries = []
+            for subject in cluster_protein.subjects.values():
+                entry = MibigEntry(subject.locus_tag, subject.annotation,
+                                   subject.genecluster,
+                                   clusters[subject.genecluster].cluster_type,
+                                   subject.perc_ident, subject.blastscore,
+                                   subject.perc_coverage, subject.evalue)
+                protein_entries.append(entry)
+            cluster_entries[protein_name] = protein_entries
+        if cluster_entries:
+            mibig_entries[cluster_number] = cluster_entries
+    return mibig_entries

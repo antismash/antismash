@@ -134,7 +134,7 @@ class HmmDetectionTest(unittest.TestCase):
         hmm_detection.find_clusters(self.record, rules)
         result_clusters = []
         for cluster in self.record.get_clusters():
-            result_clusters.append(sorted(utils.get_gene_id(cds) for cds in cluster.cds_children))
+            result_clusters.append(sorted(cds.get_name() for cds in cluster.cds_children))
 
         expected_clusters = [
             ["GENE_1", "GENE_2"],

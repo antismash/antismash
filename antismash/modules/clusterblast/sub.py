@@ -3,18 +3,19 @@
 
 import functools
 import logging
-from multiprocessing import Process, Pool
+from multiprocessing import Pool
 import os
 
 from helperlibs.wrappers.io import TemporaryDirectory
 
-from antismash.common.deprecated import CODE_SKIP_WARNING, writefasta
+from antismash.common.deprecated import writefasta
 import antismash.common.path as path
+
 from .core import write_raw_clusterblastoutput, \
                   create_blast_inputs, blastparse, score_clusterblast_output, \
-                  write_clusterblast_output, read_clusterblast_output, runblast, \
-                  load_clusterblast_database, internal_homology_blast, \
-                  ClusterResult, GeneralResults
+                  read_clusterblast_output, runblast, \
+                  load_clusterblast_database, internal_homology_blast
+from .results import ClusterResult, GeneralResults
 
 def _get_datafile_path(filename):
     data_dir = path.get_full_path(__file__, 'data')
@@ -49,14 +50,7 @@ def check_sub_prereqs(options):
 def run_subclusterblast_on_record(seq_record, options):
     logging.info('Running subcluster search')
     clusters, proteins = load_clusterblast_database(seq_record, "subclusterblast")
-    if not options.cb_general:
-        seq_record.internalhomologygroupsdict = internal_homology_blast(seq_record)
-    results = perform_subclusterblast(options, seq_record, clusters, proteins)
-    CODE_SKIP_WARNING()
-    #prepare_data(seq_record, options, searchtype="subclusterblast")
-    CODE_SKIP_WARNING()
-    #generate_Storage_for_cb(options, seq_record, searchtype="SubClusterBlastData")
-    return results
+    return perform_subclusterblast(options, seq_record, clusters, proteins)
 
 
 def write_clusterblast_inputfiles(options, queryclusternames, queryclusterseqs):
@@ -93,8 +87,7 @@ def perform_subclusterblast(options, seq_record, clusters, proteins):
     with TemporaryDirectory(change=True):
         allcoregenes = [cds.get_accession() for cds in seq_record.get_cds_features()]
         for cluster in seq_record.get_clusters():
-            clusternumber = cluster.get_cluster_number()
-            logging.info("   Gene cluster " + str(clusternumber))
+            logging.info("   Gene cluster " + str(cluster.get_cluster_number()))
             # prepare and run diamond
             queryclusternames, queryclusterseqs = create_blast_inputs(cluster)
             write_clusterblast_inputfiles(options, queryclusternames, queryclusterseqs)
@@ -102,16 +95,13 @@ def perform_subclusterblast(options, seq_record, clusters, proteins):
             blastoutput = read_clusterblast_output(options)
             write_raw_clusterblastoutput(options.output_dir, blastoutput, search_type="subclusterblast")
             logging.info("   Blast search finished. Parsing results...")
-
             # parse and score diamond results
             minseqcoverage = 40
             minpercidentity = 45
             _, cluster_names_to_queries = blastparse(blastoutput, minseqcoverage, minpercidentity, seq_record)
             ranking = score_clusterblast_output(clusters, allcoregenes, cluster_names_to_queries)
-            logging.critical("cluster %s has %d subclusterblast results", cluster.location, len(ranking))
+            logging.debug("Cluster at %s has %d subclusterblast results", cluster.location, len(ranking))
             # store results
-            cluster_result = ClusterResult(cluster, ranking)
+            cluster_result = ClusterResult(cluster, ranking, proteins)
             results.add_cluster_result(cluster_result, clusters, proteins)
-            CODE_SKIP_WARNING()
-            #write_clusterblast_output(options, seq_record, subclusterblastStorage, searchtype="subclusterblast")
     return results

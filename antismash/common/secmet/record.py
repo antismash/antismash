@@ -21,11 +21,15 @@ class _BisectHelper:
         loc = self.features[index].location
         return (loc.start, loc.end)
 
-class Record:
+class Record():
     """A record containing secondary metabolite clusters"""
-
+    # slots not for space, but to stop use as a horrible global
+    __slots__ = ["_record", "_seq", "skip", "_cds_features", "_cds_mapping", "_clusters",
+                 "_cluster_borders", "_cds_motifs", "_pfam_domains", "_antismash_domains",
+                 "_cluster_numbering", "_nonspecific_features", "record_index"]
     def __init__(self, seq=None, **kwargs):
         self._record = SeqRecord(seq, **kwargs)
+        self.record_index = None
         self.skip = False #TODO: move to yet another abstraction layer?
         self._cds_features = []
         self._cds_mapping = {} # maps CDS accession to CDS feature
@@ -41,21 +45,25 @@ class Record:
         # passthroughs to the original SeqRecord
         if attr in ["id", "seq", "description", "name", "annotations"]:
             return getattr(self._record, attr)
-        if attr not in self.__dict__:
-            raise AttributeError("Record has no attribute: %s" % attr)
-        # something of ours
-        return self.__dict__[attr]
+        if attr in Record.__slots__:
+            return getattr(self, attr)
+        raise AttributeError("Record has no attribute '%s'" % attr)
+
 
     def __setattr__(self, attr, value):
         # passthroughs to the original SeqRecord
         if attr in ["id", "seq", "description", "name"]:
-            setattr(self._record, attr, value)
+            return setattr(self._record, attr, value)
         if attr in ["annotations"]:
             assert isinstance(value, dict)
             for key, val in value.items():
                 self.add_annotation(key, val)
-        else:
+            return
+        # something Record owns or shouldn't have
+        try:
             super().__setattr__(attr, value)
+        except AttributeError:
+            raise AttributeError("Record does not support dynamically adding attributes")
 
     def add_annotation(self, key, value):
         """Adding annotations in Record"""
@@ -87,6 +95,8 @@ class Record:
     def clear_cluster_borders(self):
         "Remove all ClusterBorder features"
         self._cluster_borders.clear()
+        for cluster in self._clusters:
+            cluster.borders = []
 
     def get_cds_features(self):
         """A list of secondary metabolite clusters present in the record"""
@@ -119,6 +129,13 @@ class Record:
     def get_generics(self):
         """A list of secondary metabolite generics present in the record"""
         return tuple(self._nonspecific_features)
+
+    def get_misc_feature_by_type(self, label):
+        """Returns a tuple of all generic features with a type matching label"""
+        if label in ["cluster", "cluster_border", "CDS", "CDSmotif",
+                     "PFAM_domain", "aSDomain", "aSProdPred"]:
+            raise ValueError("Use the appropriate get_* type instead for %s" % label)
+        return tuple(i for i in self.get_generics() if i.type == label)
 
     def get_all_features(self):
         """ Returns all features
@@ -182,10 +199,23 @@ class Record:
             self._cluster_numbering[self._clusters[i]] = i + 1 # 1-indexed
         # link any relevant CDS features
         self._link_cluster_to_cds_features(cluster)
+        for cluster_border in self._cluster_borders:
+            if cluster.overlaps_with(cluster_border):
+                if cluster_border.parent is not None:
+                    raise ValueError("A cluster border is overlapping with two clusters")
+                cluster.borders.append(cluster_border)
+                cluster_border.parent = cluster
+                break
 
     def add_cluster_border(self, cluster_border):
         assert isinstance(cluster_border, ClusterBorder)
         self._cluster_borders.append(cluster_border)
+        # TODO fix performance
+        for cluster in self._clusters:
+            if cluster.overlaps_with(cluster_border):
+                cluster.borders.append(cluster_border)
+                cluster_border.parent = cluster
+                break
 
     def add_cds_feature(self, cds_feature):
         """ Add the given cluster to the record,
