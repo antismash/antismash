@@ -14,12 +14,14 @@ from antismash.common.secmet import Record
 from antismash.modules import tta, genefinding, hmm_detection, clusterblast, dummy
 from antismash.outputs import html, svg
 
-def gather_modules(with_genefinding=False):
-    #TODO: make this cleverer
-    base = [hmm_detection, tta, clusterblast, dummy]
-    if with_genefinding:
-        base.append(genefinding)
-    return base
+def get_detection_modules():
+    return [hmm_detection, genefinding]
+
+def get_analysis_modules():
+    return [tta, clusterblast, dummy]
+
+def get_output_modules():
+    return [html]
 
 def setup_logging(logfile=None, verbose=False, debug=False):
     "Set up the logging output"
@@ -50,10 +52,8 @@ def setup_logging(logfile=None, verbose=False, debug=False):
     logging.getLogger('').addHandler(fh)
 
 
-def verify_options(options, modules=None):
+def verify_options(options, modules):
     errors = []
-    if not modules:
-        modules = gather_modules(with_genefinding=True)
     for module in modules:
         try:
             logging.debug("Checking options for %s", module.__name__)
@@ -72,14 +72,21 @@ def detect_signature_genes(seq_record, options):
     logging.info('Looking for secondary metabolite cluster signatures')
     hmm_detection.detect_signature_genes(seq_record, options)
 
+def run_detection_stage(record, options, detection_modules):
+    # strip any existing antismash results first
+    deprecated.strip_record(record)
+
+    detection_results = {}
+    for module in detection_modules:
+        if module.is_enabled(options):
+            detection_results[module.NAME] = module.run_on_record(record, options)
+    return detection_results
+
 def analyse_record(record, options, modules, previous_result):
     if not any(module.is_enabled(options) for module in modules):
         logging.info("Skipping record, no modules enabled for: %s", record.id)
         return False
     logging.info("Analysing record: %s", record.id)
-
-    # strip any existing antismash results
-    deprecated.strip_record(record)
 
     if not previous_result:
         previous_result["record_id"] = record.id
@@ -89,7 +96,7 @@ def analyse_record(record, options, modules, previous_result):
 
     for module in modules:
         logging.debug("Checking if %s should be run", module.__name__)
-        section =previous_result.get("modules", {}).get(module.__name__)
+        section = previous_result.get("modules", {}).get(module.__name__)
         results = module.check_previous_results(section, record, options)
         assert results is None or isinstance(results, ModuleResults)
         if results:
@@ -117,24 +124,27 @@ def prepare_output_directory(name):
         os.mkdir(name)
 
 
-def run_antismash(sequence_file, options, modules=None):
+def run_antismash(sequence_file, options, detection_modules=None,
+                  analysis_modules=None):
     setup_logging(logfile=options.get('logfile', None), verbose=options.verbose,
                   debug=options.debug)
     loader.update_config_from_file()
 
+    if detection_modules is None:
+        detection_modules = get_detection_modules()
+    if analysis_modules is None:
+        analysis_modules = get_analysis_modules()
+
     # ensure the provided options are valid
-    if not verify_options(options):
+    if not verify_options(options, analysis_modules + detection_modules):
         return 1
 
-    for module in modules or gather_modules(with_genefinding=True):
+    for module in detection_modules + analysis_modules:
         logging.debug("Checking prerequisites for %s", module.__name__)
         res = module.check_prereqs()
         if res:
             raise RuntimeError("Module failing prerequisite check: %s %s" %(
                             module.__name__, res))
-
-    if not modules:
-        modules = gather_modules()
 
     start_time = datetime.now()
 
@@ -158,8 +168,8 @@ def run_antismash(sequence_file, options, modules=None):
         # skip if we're not interested in it
         if seq_record.skip:
             continue
-
-        analyse_record(seq_record, options, modules, previous_result)
+        run_detection_stage(seq_record, options, detection_modules)
+        analyse_record(seq_record, options, analysis_modules, previous_result)
 
 
     # Write results

@@ -35,9 +35,10 @@ def get_supported_cluster_types():
 def get_arguments():
     """ Constructs commandline arguments and options for this module
     """
-    args = ModuleArgs('Advanced options', '', override_safeties=True)
+    args = ModuleArgs('Advanced options', '', always_on=True,
+                      override_safeties=True)
     cluster_types = get_supported_cluster_types()
-    args.add_argument('--enable',
+    args.add_option('--enable',
                        metavar="TYPES",
                        dest='enabled_cluster_types',
                        type=str,

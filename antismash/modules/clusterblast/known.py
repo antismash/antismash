@@ -58,7 +58,8 @@ def perform_knownclusterblast(options, seq_record, clusters, proteins):
         names, seqs = create_blast_inputs(cluster)
         all_names.extend(names)
         all_seqs.extend(seqs)
-
+    if not (all_names and all_seqs):
+        raise RuntimeError("Diamond search space contains no sequences")
     with TemporaryDirectory(change=True) as tempdir:
         utils.writefasta([qcname.replace(" ", "_") for qcname in all_names],
                          all_seqs, "input.fasta")

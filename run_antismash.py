@@ -9,16 +9,7 @@ import logging
 import sys
 import os
 
-if sys.platform ==  ('win32') or sys.platform == ('darwin'):
-    os.environ['EXEC'] = os.getcwd() + os.sep + "exec"
-    os.environ['PYTHON'] = os.getcwd() + os.sep + "python"
-    sys.path.append(os.sep.join([os.getcwd(), "python", "Lib", "site-packages"]))
-    os.environ['PATH'] = os.pathsep + os.environ['PYTHON'] + os.pathsep + os.environ['PATH']
-    os.environ['PATH'] = os.pathsep + os.environ['EXEC'] + os.pathsep + os.environ['PATH']
-
-
 import antismash
-from antismash.main import gather_modules
 from antismash.common.subprocessing import execute
 
 
@@ -42,8 +33,8 @@ def get_version():
     return version
 
 def main(args):
-    parser = antismash.config.args.build_parser(from_config_file=True,
-                                 modules=gather_modules(with_genefinding=True))
+    all_modules = antismash.get_detection_modules() + antismash.get_analysis_modules()
+    parser = antismash.config.args.build_parser(from_config_file=True, modules=all_modules)
 
     #if --help, show help texts and exit
     if (list(set(["-h", "--help", "--help-showall"]) & set(args))):

@@ -12,7 +12,7 @@ PRIORITY = 1
 
 def get_arguments():
     args = ModuleArgs('Additional analysis', 'tta')
-    args.add_argument('--tta',
+    args.add_analysis_toggle('--tta',
                       dest='tta',
                       action='store_true',
                       default=False,

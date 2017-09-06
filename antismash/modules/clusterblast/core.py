@@ -36,8 +36,9 @@ def run_diamond(query, target, tempdir, options):
         "--outfmt", "6",  # 6 is blast tabular format, just as in blastp
         "--tmpdir", tempdir
     ]
-    return subprocessing.execute(command)
-
+    result = subprocessing.execute(command)
+    if result.return_code:
+        raise RuntimeError("diamond failed to run: %s -> %s" % (command, result.stderr[-100:]))
 
 def make_blastdb(inputfile, dbname):
     command = ["makeblastdb", "-in", inputfile, "-out", dbname, "-dbtype", "prot"]

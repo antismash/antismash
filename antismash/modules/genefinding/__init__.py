@@ -14,7 +14,7 @@ SHORT_DESCRIPTION = NAME.capitalize()
 
 def get_arguments():
     args = ModuleArgs('Gene finding options (ignored when ORFs are annotated)', 'genefinding')
-    args.add_argument('tool',
+    args.add_option('tool',
                       dest='tool',
                       default='none',
                       choices=['glimmerhmm', 'prodigal', 'prodigal-m', 'all-orfs', 'none'],
@@ -23,7 +23,7 @@ def get_arguments():
                            "Prodigal, Prodigal Metagenomic/Anonymous mode, use"
                            " all ORFs > 60 nucleotides, or none."
                            " (default: %(default)s).")
-    args.add_argument('gff3',
+    args.add_option('gff3',
                       dest='gff3',
                       default="",
                       type=str,
