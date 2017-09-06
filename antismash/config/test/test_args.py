@@ -4,13 +4,14 @@
 import unittest
 from argparse import Namespace
 
-from antismash import gather_modules
+from antismash import get_detection_modules, get_analysis_modules
 import antismash.config.args as args
 
 class TestConfig(unittest.TestCase):
     def setUp(self):
         self.core_parser = args.build_parser()
-        self.default_parser = args.build_parser(modules=gather_modules())
+        modules = get_detection_modules() + get_analysis_modules()
+        self.default_parser = args.build_parser(modules=modules)
 
     def tearDown(self):
         args.Config().__dict__.clear()

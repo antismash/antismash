@@ -44,8 +44,8 @@ def generate_webpage(seq_records, results, options):
     for i, record in enumerate(records):
         record['seq_id'] = utils.ascii_string(record['seq_id'])
         for cluster in record['clusters']:
-            from antismash import gather_modules #TODO break circular dependency
-            handlers = find_plugins_for_cluster(gather_modules(), cluster)
+            from antismash import get_analysis_modules #TODO break circular dependency
+            handlers = find_plugins_for_cluster(get_analysis_modules(), cluster)
             for handler in handlers:
                 if "generate_js_domains" in dir(handler):
                     handler.generate_js_domains(cluster, seq_records[i], options,

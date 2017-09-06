@@ -20,29 +20,29 @@ NAME = "clusterblast"
 SHORT_DESCRIPTION = NAME.capitalize()
 
 def get_arguments():
-    args = ModuleArgs('Additional analysis', 'cb')
-    args.add_argument('general',
+    args = ModuleArgs('ClusterBlast options', 'cb')
+    args.add_analysis_toggle('general',
                        dest='general',
                        action='store_true',
                        default=False,
                        help="Compare identified clusters against a database of antiSMASH-predicted clusters.")
-    args.add_argument('subclusters',
+    args.add_analysis_toggle('subclusters',
                        dest='subclusters',
                        action='store_true',
                        default=False,
                        help="Compare identified clusters against known subclusters responsible for synthesising precursors.")
-    args.add_argument('knownclusters',
+    args.add_analysis_toggle('knownclusters',
                        dest='knownclusters',
                        action='store_true',
                        default=False,
                        help="Compare identified clusters against known gene clusters from the MIBiG database.")
-    args.add_argument('nclusters',
+    args.add_option('nclusters',
                        dest='nclusters',
                        metavar="count",
                        type=int,
                        default=10,
                        help="Number of clusters from ClusterBlast to display, cannot be greater than %d." % get_result_limit())
-    args.add_argument('min-homology-scale',
+    args.add_option('min-homology-scale',
                        dest='min_homology_scale',
                        metavar="LIMIT",
                        type=float,

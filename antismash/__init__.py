@@ -1,2 +1,2 @@
 __version__ = "5.0.0alpha"
-from antismash.main import run_antismash, gather_modules
+from antismash.main import run_antismash, get_detection_modules, get_analysis_modules

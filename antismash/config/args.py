@@ -19,7 +19,7 @@ class AntiSmashParser(argparse.ArgumentParser):
         if self.parents:
             kwargs["parents"] = [parent.parser for parent in self.parents]
         kwargs["add_help"] = False
-        super(AntiSmashParser, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def add_argument_group(self, *args, **kwargs):
         basic = kwargs.get("basic", True) # True unless deliberately set False
@@ -36,7 +36,7 @@ class AntiSmashParser(argparse.ArgumentParser):
         if "param" in kwargs:
             self._displayGroup[group].extend(kwargs["param"])
             del kwargs["param"]
-        return super(AntiSmashParser, self).add_argument_group(*args, **kwargs)
+        return super().add_argument_group(*args, **kwargs)
 
     def print_help(self, file=None, show_all=False):
         self._show_all = show_all
@@ -136,6 +136,7 @@ Options
                 if not show_opt:
                     if "basic" in self._displayGroup[action_group.title]:
                         show_opt = True
+# TODO: keep lines or not?
 #                    elif len(list(set(sys.argv) & set(self._displayGroup[action_group.title]))) > 0:
 #                        show_opt = True
                 if show_opt:
@@ -162,25 +163,35 @@ class FullPathAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         setattr(namespace, self.dest, os.path.abspath(values))
 
-class ModuleArgs(object):
-    def __init__(self, title, prefix, **kwargs):
+class ModuleArgs:
+    def __init__(self, title, prefix, override_safeties=False, always_on=True, # TODO: remove always_on when hmm_detection becomes core
+                     enabled_by_default=False):
         self.title = title
         self.parser = AntiSmashParser(add_help=False)
-        if kwargs and list(kwargs) != ["override_safeties"]:
-            raise ValueError("Unknown keyword arguments: %s" % list(kwargs))
-        self.override = kwargs.get("override_safeties")
-        self.group = self.parser.add_argument_group(title=title, basic=self.override)
-        try:
-            self.prefix = str(prefix)
-        except:
+# TODO: keep lines or not?
+#        if kwargs and set(kwargs) not in {"override_safeties", "enabled_by_default"}:
+#            raise ValueError("Unknown keyword arguments: %s" % list(kwargs))
+        self.override = override_safeties #kwargs.get("override_safeties")
+        self.enabled_by_default = enabled_by_default #kwargs.get("enabled_by_default")
+        self.always_enabled = always_on
+        self.group = self.parser.add_argument_group(title="Additional analysis", basic=self.override) # TODO
+        self.options = self.parser.add_argument_group(title=title, basic=False)
+        if not isinstance(prefix, str):
             raise TypeError("Argument prefix must be a string")
+        self.prefix = prefix
         if len(self.prefix) < 2 and not self.override:
             raise ValueError("Argument prefixes must be at least 2 chars")
         self.skip_type_check = self.override
         self.single_arg = False
         self.args = []
 
-    def add_argument(self, name, *args, **kwargs):
+    def add_option(self, name, *args, **kwargs):
+        self._add_argument(self.options, name, *args, **kwargs)
+
+    def add_analysis_toggle(self, name, *args, **kwargs):
+        self._add_argument(self.group, name, *args, **kwargs)
+
+    def _add_argument(self, group, name, *args, **kwargs):
         if self.single_arg:
             raise ValueError("Cannot add more arguments after an argument that is just the prefix name")
         if "default" not in kwargs:
@@ -203,7 +214,7 @@ class ModuleArgs(object):
 
         name, dest = self.process_names(name, dest)
         kwargs["dest"] = dest
-        self.args.append(self.group.add_argument(name, *args, **kwargs))
+        self.args.append(group.add_argument(name, *args, **kwargs))
 
     def verify_required(self, default, declared_type, description):
         if default is None:
@@ -256,7 +267,10 @@ class ModuleArgs(object):
 
 def build_parser(from_config_file=False, modules=None):
     parents = [basic_options(), output_options(), advanced_options(),
-               debug_options(), specific_debugging(modules)]
+               debug_options()]
+    minimal = specific_debugging(modules)
+    if minimal:
+        parents.extend(minimal)
     if modules is not None:
         parents.extend(module.get_arguments() for module in modules)
 
@@ -297,14 +311,14 @@ def basic_options():
     group = ModuleArgs("Basic analysis options", '', override_safeties=True)
 #    group = parser.add_argument_group('Basic analysis options', '', basic=True)
 
-    group.add_argument('--taxon',
+    group.add_option('--taxon',
                        dest='taxon',
                        default='bacteria',
                        choices=['bacteria', 'fungi'],
                        type=str,
                        help="Taxonomic classification of input sequence. (default: %(default)s)")
 
-    group.add_argument('--input-type',
+    group.add_option('--input-type',
                        dest='input_type',
                        default='nucl',
                        choices=['nucl', 'prot'],
@@ -314,7 +328,7 @@ def basic_options():
 
 def output_options():
     group = ModuleArgs("Output options", 'output')
-    group.add_argument('--output-dir',
+    group.add_option('--output-dir',
                        dest='output_dir',
                        default="",
                        type=str,
@@ -325,34 +339,34 @@ def output_options():
 def advanced_options():
 #    parser = AntiSmashParser(add_help=False)
     group = ModuleArgs("Advanced options", '', override_safeties=True)
-    group.add_argument('--reuse-results',
+    group.add_option('--reuse-results',
                        dest='reuse_results',
                        type=str,
                        action=FullPathAction,
                        default="",
                        metavar="PATH",
                        help="Use the previous results from the specified json datafile")
-    group.add_argument('--limit',
+    group.add_option('--limit',
                        dest="limit",
                        type=int,
                        default=-1,
                        help="Only process the first <limit> records (default: %(default)s). -1 to disable")
-    group.add_argument('--minlength',
+    group.add_option('--minlength',
                        dest="minlength",
                        type=int,
                        default=1000,
                        help="Only process sequences larger than <minlength> (default: 1000).")
-    group.add_argument('--start',
+    group.add_option('--start',
                        dest='start',
                        type=int,
                        default=-1,
                        help="Start analysis at nucleotide specified.")
-    group.add_argument('--end',
+    group.add_option('--end',
                        dest='end',
                        type=int,
                        default=-1,
                        help="End analysis at nucleotide specified")
-    group.add_argument('--databases',
+    group.add_option('--databases',
                        dest='database_dir',
                        default=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'databases'),
                        type=str,
@@ -362,48 +376,48 @@ def advanced_options():
 def debug_options():
     group = ModuleArgs("Debugging & Logging options", '', override_safeties=True)
 #    group = parser.add_argument_group("Debugging & Logging options", '', basic=True)
-    group.add_argument('-v', '--verbose',
+    group.add_option('-v', '--verbose',
                        dest='verbose',
                        action='store_true',
                        default=False,
                        help="Print verbose status information to stderr.")
-    group.add_argument('-d', '--debug',
+    group.add_option('-d', '--debug',
                        dest='debug',
                        action='store_true',
                        default=False,
                        help="Print debugging information to stderr.")
-    group.add_argument('--logfile',
+    group.add_option('--logfile',
                        dest='logfile',
                        default=argparse.SUPPRESS,
                        type=str,
                        help="Also write logging output to a file.")
-    group.add_argument('--statusfile',
+    group.add_option('--statusfile',
                        dest='statusfile',
                        default=argparse.SUPPRESS,
                        type=str,
                        help="Write the current status to a file.")
-    group.add_argument('--list-plugins',
+    group.add_option('--list-plugins',
                        dest='list_plugins',
                        action='store_true',
                        default=False,
                        help="List all available sec. met. detection modules.")
-    group.add_argument('--check-prereqs',
+    group.add_option('--check-prereqs',
                        dest='check_prereqs_only',
                        action='store_true',
                        default=False,
                        help="Just check if all prerequisites are met.")
-    group.add_argument('--limit-to-record',
+    group.add_option('--limit-to-record',
                        dest='limit_to_record',
                        default="",
                        metavar="record_id",
                        type=str,
                        help="Limit analysis to the record with ID record_id")
-    group.add_argument('--skip-cleanup',
+    group.add_option('--skip-cleanup',
                        dest='skip_cleanup',
                        action='store_true',
                        default=False,
                        help="Don't clean up temporary result files")
-    group.add_argument('-V', '--version',
+    group.add_option('-V', '--version',
                        dest='version',
                        action='store_true',
                        default=False,
@@ -411,18 +425,28 @@ def debug_options():
     return group
 
 def specific_debugging(modules):
+    if not modules:
+        return None
+    # only relevant for modules that are disabled by --minimal
+    relevant_modules = []
+    for module in modules:
+        args = module.get_arguments()
+        if args.always_enabled or not args.enabled_by_default:
+            continue
+        relevant_modules.append(module)
+    if not relevant_modules:
+        return None
+
     group = ModuleArgs('Debugging options for cluster-specific analyses', '', override_safeties=True)
-    group.add_argument('--minimal',
+    group.add_option('--minimal',
                        dest='minimal',
                        action='store_true',
                        default=False,
-                       help="Only run detection modules, no analysis modules unless explicitly enabled")
-    if not modules:
-        return group
+                       help="Only run core detection modules, no analysis modules unless explicitly enabled")
     errors = []
-    for module in modules:
+    for module in relevant_modules:
         try:
-            group.add_argument('--enable-%s' % module.NAME,
+            group.add_option('--enable-%s' % (module.NAME),
                                dest='enabled_specific_plugins',
                                action='append_const',
                                const=module.NAME,

@@ -73,6 +73,7 @@ def find_clusters(seq_record, rules):
         edge = cluster.location.start == 0 or cluster.location.end == len(seq_record)
         cluster.contig_edge = edge
         seq_record.add_cluster(cluster)
+    logging.info("%d cluster(s) found in record" % len(clusters))
 
 def hsp_overlap_size(first, second):
     """ Find the size of an overlapping region of two HSPs.

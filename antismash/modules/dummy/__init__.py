@@ -12,17 +12,17 @@ SHORT_DESCRIPTION = "options placeholders"
 
 def get_arguments():
     args = ModuleArgs('Dummy options', '', override_safeties=True)
-    args.add_argument('--dummy-smcogs',
+    args.add_option('--dummy-smcogs',
                       dest='smcogs',
                       action='store_true',
                       default=False,
                       help="Dummy only.")
-    args.add_argument('--dummy-cassis',
+    args.add_option('--dummy-cassis',
                       dest='cassis',
                       action='store_true',
                       default=False,
                       help="Dummy only.")
-    args.add_argument('--dummy-borderpredict',
+    args.add_option('--dummy-borderpredict',
                       dest='borderpredict',
                       action='store_true',
                       default=False,
