@@ -11,7 +11,7 @@ class AntiSmashParser(argparse.ArgumentParser):
     """Custom argument parser for antiSMASH
     """
     _show_all = False
-    _displayGroup = {}
+    _display_group = {}
 
     def __init__(self, *args, **kwargs):
         """Initialisation method for the parser class"""
@@ -22,19 +22,19 @@ class AntiSmashParser(argparse.ArgumentParser):
         super().__init__(*args, **kwargs)
 
     def add_argument_group(self, *args, **kwargs):
-        basic = kwargs.get("basic", True) # True unless deliberately set False
+        basic = kwargs.get("basic", False)
         if not args:
             group = kwargs["title"]
         else:
             group = args[0]
-        if group not in self._displayGroup:
-            self._displayGroup[group] = []
+        if group not in self._display_group:
+            self._display_group[group] = []
         if "basic" in kwargs:
             del kwargs["basic"]
         if basic:
-            self._displayGroup[group].extend(["basic"])
+            self._display_group[group].extend(["basic"])
         if "param" in kwargs:
-            self._displayGroup[group].extend(kwargs["param"])
+            self._display_group[group].extend(kwargs["param"])
             del kwargs["param"]
         return super().add_argument_group(*args, **kwargs)
 
@@ -133,11 +133,14 @@ Options
         for action_group in self._action_groups:
             if action_group.title not in ["optional arguments", "positional arguments"]:
                 show_opt = self._show_all
+                print("action_group %s shown = %s" % ( action_group.title, show_opt))
                 if not show_opt:
-                    if "basic" in self._displayGroup[action_group.title]:
+                    if "basic" in self._display_group[action_group.title]:
                         show_opt = True
+                        print("action_group %s had basic, now shown = %s" % ( action_group.title, show_opt))
+                        print("found in", self._display_group[action_group.title])
 # TODO: keep lines or not?
-#                    elif len(list(set(sys.argv) & set(self._displayGroup[action_group.title]))) > 0:
+#                    elif len(list(set(sys.argv) & set(self._display_group[action_group.title]))) > 0:
 #                        show_opt = True
                 if show_opt:
                     formatter.start_section(action_group.title)
@@ -165,7 +168,7 @@ class FullPathAction(argparse.Action):
 
 class ModuleArgs:
     def __init__(self, title, prefix, override_safeties=False, always_on=True, # TODO: remove always_on when hmm_detection becomes core
-                     enabled_by_default=False):
+                     enabled_by_default=False, basic_help=False):
         self.title = title
         self.parser = AntiSmashParser(add_help=False)
 # TODO: keep lines or not?
@@ -174,8 +177,8 @@ class ModuleArgs:
         self.override = override_safeties #kwargs.get("override_safeties")
         self.enabled_by_default = enabled_by_default #kwargs.get("enabled_by_default")
         self.always_enabled = always_on
-        self.group = self.parser.add_argument_group(title="Additional analysis", basic=self.override) # TODO
-        self.options = self.parser.add_argument_group(title=title, basic=False)
+        self.group = self.parser.add_argument_group(title="Additional analysis", basic=basic_help or self.override) # TODO override or just True?
+        self.options = self.parser.add_argument_group(title=title, basic=basic_help)
         if not isinstance(prefix, str):
             raise TypeError("Argument prefix must be a string")
         self.prefix = prefix
@@ -184,6 +187,7 @@ class ModuleArgs:
         self.skip_type_check = self.override
         self.single_arg = False
         self.args = []
+        self.basic = basic_help
 
     def add_option(self, name, *args, **kwargs):
         self._add_argument(self.options, name, *args, **kwargs)
@@ -308,7 +312,7 @@ def build_parser(from_config_file=False, modules=None):
 
 def basic_options():
 #    parser = AntiSmashParser(add_help=False)
-    group = ModuleArgs("Basic analysis options", '', override_safeties=True)
+    group = ModuleArgs("Basic analysis options", '', override_safeties=True, basic_help=True)
 #    group = parser.add_argument_group('Basic analysis options', '', basic=True)
 
     group.add_option('--taxon',
