@@ -6,7 +6,7 @@ from collections import defaultdict
 
 from antismash.common import path
 import antismash.common.deprecated as utils
-from antismash.common.secmet.feature import Cluster
+from antismash.common.secmet.feature import Cluster, SecMetQualifier
 from antismash.common.deprecated import FeatureLocation
 from antismash.common.subprocessing import run_hmmsearch
 from antismash.modules.hmm_detection import rule_parser
@@ -462,27 +462,6 @@ def _update_sec_met_entry(feature, results, clustertype, nseqdict):
         def __str__(self):
             return "{} (E-value: {}, bitscore: {}, seeds: {})".format(
                     self.query_id, self.evalue, self.bitscore, self.nseeds)
-
-    class SecMetQualifier(list):
-        def __init__(self, clustertype, domains):
-            self.domains = domains
-            self.clustertype = clustertype
-            self.kind = "biosynthetic"
-            super().__init__()
-
-        def __iter__(self):
-            yield "Type: %s" % self.clustertype
-            yield "; ".join(map(str, self.domains))
-            yield "Kind: %s" % self.kind
-
-        def append(self):
-            raise NotImplementedError("Appending to this list won't work")
-
-        def extend(self):
-            raise NotImplementedError("Extending this list won't work")
-
-        def __len__(self):
-            return 3
 
     domains = [SecMetResult(res, nseqdict.get(res.query_id, "?")) for res in results]
 

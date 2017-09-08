@@ -290,17 +290,19 @@ class AntismashDomain(Domain):
 
 class CDSFeature(Feature):
     __slots__ = ["_translation", "protein_id", "locus_tag", "gene", "product",
-                 "transl_table", "sec_met", "aSProdPred", "cluster"]
+                 "transl_table", "_sec_met", "aSProdPred", "cluster"]
     _counter = 0
-    def __init__(self, location, translation, locus_tag=None, protein_id=None,
+    def __init__(self, location, translation=None, locus_tag=None, protein_id=None,
                  product=None, gene=None):
         super().__init__(location, feature_type="CDS")
         # mandatory
         #  codon_start
         #  db_xref
-        self._translation = str(translation)
 
         # semi-optional
+        self._translation = None
+        if translation is not None:
+            self.translation = translation
         self.protein_id = protein_id
         self.locus_tag = locus_tag
         self.gene = gene
@@ -310,7 +312,7 @@ class CDSFeature(Feature):
         if self.product:
             assert product[0] == "N"
         self.transl_table = None
-        self.sec_met = None #SecMetQualifier()
+        self._sec_met = None #SecMetQualifier()
         self.aSProdPred = [] # TODO: shift into nrps sub section?
 
         if not (protein_id or locus_tag or gene):
@@ -324,6 +326,16 @@ class CDSFeature(Feature):
 
         # runtime-only data
         self.cluster = None
+
+    @property
+    def sec_met(self):
+        return self._sec_met
+
+    @sec_met.setter
+    def sec_met(self, sec_met):
+        if sec_met is not None and not isinstance(sec_met, SecMetQualifier):
+            raise TypeError("CDSFeature.sec_met can only be set to an instance of SecMetQualifier")
+        self._sec_met = sec_met
 
     @property
     def translation(self):
@@ -350,9 +362,9 @@ class CDSFeature(Feature):
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
         # grab mandatory qualifiers and create the class
-        translation = leftovers.pop("translation")[0]
 
         # semi-optional qualifiers
+        translation = leftovers.pop("translation", [None])[0]
         protein_id = leftovers.pop("protein_id", [None])[0]
         locus_tag = leftovers.pop("locus_tag", [None])[0]
         gene = leftovers.pop("gene", [None])[0]
@@ -367,7 +379,9 @@ class CDSFeature(Feature):
         # grab optional qualifiers
         feature.product = leftovers.pop("product", [None])[0]
         feature.transl_table = leftovers.pop("transl_table", [None])[0]
-        feature.sec_met = leftovers.pop("sec_met", None)
+        sec_met = leftovers.pop("sec_met", None)
+        if sec_met:
+            feature.sec_met = SecMetQualifier.from_biopython(sec_met)
 
         # grab parent optional qualifiers
         super(CDSFeature, feature).from_biopython(bio_feature, feature=feature, leftovers=leftovers)
@@ -519,3 +533,43 @@ class Cluster(Feature):
             mine["note"] = []
         mine["note"].append(rule_text)
         return super().to_biopython(mine)
+
+class SecMetQualifier(list):
+    def __init__(self, clustertype, domains):
+        self.domains = domains
+        self.clustertype = clustertype
+        self.kind = "biosynthetic"
+        super().__init__()
+
+    def __iter__(self):
+        yield "Type: %s" % self.clustertype
+        yield "; ".join(map(str, self.domains))
+        yield "Kind: %s" % self.kind
+
+    def append(self):
+        raise NotImplementedError("Appending to this list won't work")
+
+    def extend(self):
+        raise NotImplementedError("Extending this list won't work")
+
+    @staticmethod
+    def from_biopython(qualifier):
+        domains = None
+        clustertype = None
+        kind = None
+        if len(qualifier) != 3:
+            raise ValueError("Cannot parse qualifier: %s" % qualifier)
+        for value in qualifier:
+            if value.startswith("Type: "):
+                clustertype = value.split("Type: ", 1)[0]
+            elif value.startswith("Kind: "):
+                kind = value.split("Kind: ", 1)[0]
+                assert kind == "biosynthetic" # since it's the only kind we have
+            else:
+                domains = "; ".split(value)
+        if not domains and clustertype and kind:
+            raise ValueError("Cannot parse qualifier: %s" % qualifier)
+        return SecMetQualifier(clustertype, domains)
+
+    def __len__(self):
+        return 3
