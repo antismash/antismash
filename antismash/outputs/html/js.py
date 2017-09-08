@@ -39,7 +39,7 @@ def convert_clusters(record, annotations, options, result=None):
     js_clusters = []
     mibig_results = {}
     if result:
-        clusterblast_results = result["modules"]["antismash.modules.clusterblast"]
+        clusterblast_results = result["modules"].get("antismash.modules.clusterblast")
         if clusterblast_results and clusterblast_results.knowncluster:
             mibig_results = clusterblast_results.knowncluster.mibig_entries
     for cluster in record.get_clusters():
