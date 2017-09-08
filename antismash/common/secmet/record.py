@@ -4,6 +4,7 @@
 import bisect
 import logging
 
+import Bio.Alphabet
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
@@ -221,6 +222,10 @@ class Record():
         """ Add the given cluster to the record,
             causes cluster-CDS pairing to be recalculated """
         assert isinstance(cds_feature, CDSFeature)
+
+        # ensure it has a translation
+        if not cds_feature.translation:
+            cds_feature.translation = self.get_aa_translation_of_feature(cds_feature)
         index = bisect.bisect_left(self._cds_features, cds_feature)
         self._cds_features.insert(index, cds_feature)
         self._link_cds_to_parent(cds_feature)
@@ -304,7 +309,7 @@ class Record():
         index = bisect.bisect_left(self._cds_features, cluster)
         # move backwards until we find one that doesn't overlap
         cluster_start = cluster.location.start
-        while 1 <= index and self._cds_features[index - 1].location.end > cluster_start:
+        while index >= 1 and self._cds_features[index - 1].location.end > cluster_start:
             index -= 1
         # move forwards, adding to the cluster until a cds doesn't overlap
         while index < len(self._cds_features):
@@ -314,3 +319,14 @@ class Record():
             cluster.cds_children.append(cds)
             cds.cluster = cluster # TODO: allow for multiple parent clusters
             index += 1
+
+    def get_aa_translation_of_feature(self, feature):
+        """Obtain content for translation qualifier for specific CDS feature in sequence record"""
+        seq = feature.extract(self.seq).ungap('-').translate(to_stop=True)
+        if not seq:
+            seq = feature.extract(self.seq).ungap('-').translate()
+        if "*" in str(seq):
+            seq = Seq(str(seq).replace("*", "X"), Bio.Alphabet.generic_protein)
+        if "-" in str(seq):
+            seq = Seq(str(seq).replace("-", ""), Bio.Alphabet.generic_protein)
+        return seq
