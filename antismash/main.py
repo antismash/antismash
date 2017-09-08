@@ -83,17 +83,18 @@ def run_detection_stage(record, options, detection_modules):
     return detection_results
 
 def analyse_record(record, options, modules, previous_result):
-    if not any(module.is_enabled(options) for module in modules):
-        logging.info("Skipping record, no modules enabled for: %s", record.id)
-        return False
-    logging.info("Analysing record: %s", record.id)
-
+    # ensure a minimum level of result format
     if not previous_result:
         previous_result["record_id"] = record.id
         previous_result["modules"] = {}
 
-    # try to run the given modules over the record
+    # check that at leats one module will run
+    if not any(module.is_enabled(options) for module in modules):
+        logging.info("Skipping record, no modules enabled for: %s", record.id)
+        return False
 
+    # try to run the given modules over the record
+    logging.info("Analysing record: %s", record.id)
     for module in modules:
         logging.debug("Checking if %s should be run", module.__name__)
         section = previous_result.get("modules", {}).get(module.__name__)
