@@ -2,7 +2,12 @@
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
 from collections import OrderedDict
+from enum import Enum, unique
 import logging
+import os
+import warnings
+
+from helperlibs.bio import seqio
 
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 
@@ -35,6 +40,10 @@ class Feature:
                or self.location.end in other.location \
                or other.location.start in self.location \
                or other.location.end in self.location
+
+    def is_contained_by(self, other):
+        assert isinstance(other, Feature)
+        return self.location.start in other.location and self.location.end in other.location
 
     def to_biopython(self, qualifiers=None):
         feature = SeqFeature(self.location, type=self.type)
@@ -183,7 +192,6 @@ class Domain(AntismashFeature):
         super().__init__(location, feature_type)
         self.tool = None
         self.domain = None
-        self.domain_id = None
 
     def to_biopython(self, qualifiers=None):
         mine = OrderedDict()
@@ -197,11 +205,11 @@ class Domain(AntismashFeature):
             mine.update(qualifiers)
         return super().to_biopython(mine)
 
-class CDSMotif(Domain):
+class CDSMotif(Feature):
     __slots__ = ["motif"]
     def __init__(self, location):
         super().__init__(location, feature_type="CDS_motif")
-        self.motif = None # keep
+        self.motif = None
 
     @staticmethod
     def from_biopython(bio_feature, feature=None, leftovers=None):
@@ -288,9 +296,20 @@ class AntismashDomain(Domain):
 
         return feature
 
+@unique
+class GeneFunction(Enum):
+    OTHER = 0
+    CORE = 1
+    ADDITIONAL = 2
+    TRANSPORT = 3
+    REGULATORY = 4
+
+    def __str__(self):
+        return str(self.name).lower()
+
 class CDSFeature(Feature):
     __slots__ = ["_translation", "protein_id", "locus_tag", "gene", "product",
-                 "transl_table", "_sec_met", "aSProdPred", "cluster"]
+                 "transl_table", "_sec_met", "aSProdPred", "cluster", "_gene_function"]
     _counter = 0
     def __init__(self, location, translation=None, locus_tag=None, protein_id=None,
                  product=None, gene=None):
@@ -298,6 +317,7 @@ class CDSFeature(Feature):
         # mandatory
         #  codon_start
         #  db_xref
+        self._gene_function = GeneFunction.OTHER
 
         # semi-optional
         self._translation = None
@@ -328,6 +348,17 @@ class CDSFeature(Feature):
         self.cluster = None
 
     @property
+    def gene_function(self):
+        return self._gene_function
+
+    @gene_function.setter
+    def gene_function(self, value):
+        assert isinstance(value, GeneFunction)
+        if self._gene_function != GeneFunction.OTHER:
+            logging.debug("CDS %s already has a function of %s, ignoring change to %s", self.get_name(), self._gene_function, value)
+        self._gene_function = value
+
+    @property
     def sec_met(self):
         return self._sec_met
 
@@ -336,6 +367,8 @@ class CDSFeature(Feature):
         if sec_met is not None and not isinstance(sec_met, SecMetQualifier):
             raise TypeError("CDSFeature.sec_met can only be set to an instance of SecMetQualifier")
         self._sec_met = sec_met
+        if sec_met and sec_met.kind == "biosynthetic":
+            self.gene_function = GeneFunction.CORE
 
     @property
     def translation(self):
@@ -406,6 +439,42 @@ class CDSFeature(Feature):
             mine.update(qualifiers)
         return super().to_biopython(mine)
 
+class Prepeptide(CDSFeature):
+    def __init__(self, peptide_type, core, locus_tag, peptide_class=None, leader=None,
+                 leader_seq=None, tail=None, **kwargs):
+        assert isinstance(peptide_type, str)
+        if leader is not None:
+            assert isinstance(leader, FeatureLocation)
+            assert isinstance(leader_seq, str)
+        if tail is not None:
+            assert isinstance(tail, FeatureLocation)
+        super().__init__(core, locus_tag=locus_tag, **kwargs)
+        self.type = "CDS_motif"
+        self.peptide_type = peptide_type
+        self.peptide_class = peptide_class.replace("-", " ") # "Type-II" > "Type II"
+        self.leader = leader
+        self.leader_seq = leader_seq
+        self.core = core
+        self.tail = tail
+
+    def to_biopython(self, qualifiers=None):
+        features = []
+        if self.leader:
+            leader = SeqFeature(self.leader, type="CDS_motif")
+            leader.qualifiers['locus_tag'] = self.locus_tag
+            leader.qualifiers['note'] = ['leader peptide', self.peptide_type]
+            leader.qualifiers['note'].append('predicted leader seq: %s' % self.leader_seq)
+            features.append(leader)
+        # TODO core
+        core = OrderedDict()
+        core['note'] = ['core peptide', self.peptide_type, 'predicted class: %s' % self.peptide_class]
+        features.extend(super().to_biopython(core))
+        if self.tail:
+            tail = SeqFeature(self.tail, type="CDS_motif")
+            tail.qualifiers['locus_tag'] = self.locus_tag
+            tail.qualifiers['note'] = ['tail peptide', self.peptide_type]
+            features.append(tail)
+        return features
 
 class Cluster(Feature):
     __slots__ = ["_extent", "_cutoff", "products", "contig_edge",
@@ -534,9 +603,33 @@ class Cluster(Feature):
         mine["note"].append(rule_text)
         return super().to_biopython(mine)
 
+    def write_to_genbank(self, filename=None, directory=None):
+        if not filename:
+            filename = "%s.cluster%03d.gbk" % (self.parent_record.id, self.get_cluster_number())
+        if directory:
+            filename = os.path.join(directory, filename)
+
+        record = self.parent_record
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            cluster_record = record.to_biopython()[self.location.start:self.location.end] # TODO poor efficiency if doing all
+        cluster_record.annotations["date"] = record.annotations.get("date", '')
+        cluster_record.annotations["source"] = record.annotations.get("source", '')
+        cluster_record.annotations["organism"] = record.annotations.get("organism", '')
+        cluster_record.annotations["taxonomy"] = record.annotations.get("taxonomy", [])
+        cluster_record.annotations["data_file_division"] = record.annotations.get("data_file_division", 'UNK')
+        # our cut-out clusters are always linear
+        cluster_record.annotations["topology"] = "linear"
+
+        seqio.write([cluster_record], filename, 'genbank')
+
 class SecMetQualifier(list):
     def __init__(self, clustertype, domains):
-        self.domains = domains
+        self.domains = domains # SecMetResult instance or str
+        if domains and not isinstance(domains[0], str): # SecMetResult
+            self.domain_ids = [domain.query_id for domain in self.domains]
+        else: # str
+            self.domain_ids = [domain.split()[0] for domain in self.domains]
         self.clustertype = clustertype
         self.kind = "biosynthetic"
         super().__init__()
@@ -563,10 +656,10 @@ class SecMetQualifier(list):
             if value.startswith("Type: "):
                 clustertype = value.split("Type: ", 1)[0]
             elif value.startswith("Kind: "):
-                kind = value.split("Kind: ", 1)[0]
-                assert kind == "biosynthetic" # since it's the only kind we have
+                kind = value.split("Kind: ", 1)[1]
+                assert kind == "biosynthetic", kind # since it's the only kind we have
             else:
-                domains = "; ".split(value)
+                domains = value.split("; ")
         if not domains and clustertype and kind:
             raise ValueError("Cannot parse qualifier: %s" % qualifier)
         return SecMetQualifier(clustertype, domains)

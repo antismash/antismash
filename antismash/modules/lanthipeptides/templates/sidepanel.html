@@ -1,0 +1,43 @@
+{% if cluster.motifs | length != 0 %}
+  <div class="more-details">
+    <h3> Prediction details </h3>
+    <dl class ="prediction-text">
+    {%- for (gene_id, mass, mol_weight, bridges, pred_class, score, rodeo_score, alt_weights, mods) in cluster.core_peptides_predictions -%}
+      <dt>{{gene_id}}</dt>
+        <dd>Putative {{pred_class}}</dd>
+        <dd>Cleavage pHMM score: {{'%0.2f' | format(score)}}</dd>
+        <dd>RODEO score: {{rodeo_score}}</dd>
+        <dd>Monoisotopic mass: {{mass}} Da</dd>
+        <dd>Molecular weight: {{mol_weight}} Da</dd>
+        <dd>Number of bridges: {{bridges}}</dd>
+        {% if mods | length != 0 %}
+          {%- for mod in mods %}
+            <br>Additional modifications:
+              {{mod}}
+          {% endfor -%}
+        {% endif %}
+        {% if alt_weights %}
+          <dd>
+            <dl>
+              <dt>Alternative weights</dt>
+                <dd class="alt-weight-desc">(assuming N unmodified Ser/Thr residues)</dd>
+                {% for weight in alt_weights %}
+                  <dd>
+                    <span class="alt-weight"> {{ '%0.1f' | format(weight) }} Da
+                    <span class="alt-weight-n"> N = {{loop.index}}
+                  </dd>
+                {% endfor %}
+            </dl>
+          </dd>
+        {% endif %}
+
+    {%- endfor -%}
+  </dl>
+</div>
+<div>
+  <h3>Database cross-links</h3>
+  <div class="prediction-text">
+    <a href="http://bioinfo.lifl.fr/norine/form2.jsp" target="_new">Look up in NORINE database</a>
+  </div>
+</div>
+{% endif %}

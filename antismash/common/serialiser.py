@@ -36,7 +36,11 @@ def write_records(records, results, handle):
         json_record["modules"] = modules
         data.append(json_record)
     # only wipe existing data if we have a valid file afterwards
-    new_contents = json.dumps(data)
+    try:
+        new_contents = json.dumps(data)
+    except TypeError:
+        logging.error("Error converting json data: %s", data)
+        raise
     if isinstance(handle, str):
         handle = open(handle, "w")
     handle.write(new_contents)

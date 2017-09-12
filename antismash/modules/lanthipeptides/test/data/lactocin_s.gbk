@@ -1,0 +1,832 @@
+LOCUS       Z54312                 15996 bp    DNA     linear   BCT 14-JUL-2016
+DEFINITION  Lactobacillus sakei ORF78 (partial), ORF116, ORF130 (partial), ORF84
+            (partial), tnp1519L gene, tnp1516delC gene, tnp1516delN gene
+            (partial), lasY gene, lasX gene, lasA gene, lasM gene, lasN gene,
+            lasT gene, lasU gene, lasV gene, lasP gene, lasJ gene, lasW gene and
+            tnp1519R gene.
+ACCESSION   Z54312
+VERSION     Z54312.2
+KEYWORDS    ABC transporter; lasA gene; lasJ gene; lasM gene; lasN gene; lasp
+            gene; lasT gene; lasU gene; lasV gene; lasW gene; lasX gene; lasY
+            gene; ORF116; orf130; ORF78; ORF84; pre-lactocin S; protein; serine
+            protease; tnp1516delC gene; tnp1516delN gene; tnp1519L gene;
+            tnp1519R gene.
+SOURCE      Lactobacillus sakei
+  ORGANISM  Lactobacillus sakei
+            Bacteria; Firmicutes; Bacilli; Lactobacillales; Lactobacillaceae;
+            Lactobacillus.
+REFERENCE   1
+  AUTHORS   Skaugen,M. and Nes,I.F.
+  TITLE     Transposition in Lactobacillus sake and its abolition of lactocin S
+            production by insertion of IS1163, a new member of the IS3 family
+  JOURNAL   Appl. Environ. Microbiol. 60 (8), 2818-2825 (1994)
+   PUBMED   7521995
+REFERENCE   2
+  AUTHORS   Skaugen,M., Nissen-Meyer,J., Jung,G., Stevanovic,S., Sletten,K.,
+            Inger,C., Abildgaard,M. and Nes,I.F.
+  TITLE     In vivo conversion of L-serine to D-alanine in a ribosomally
+            synthesized polypeptide
+  JOURNAL   J. Biol. Chem. 269 (44), 27183-27185 (1994)
+   PUBMED   7961627
+REFERENCE   3
+  AUTHORS   Skaugen,M., Abildgaard,C.I. and Nes,I.F.
+  TITLE     Organization and expression of a gene cluster involved in the
+            biosynthesis of the lantibiotic lactocin S
+  JOURNAL   Mol. Gen. Genet. 253 (6), 674-686 (1997)
+   PUBMED   9079878
+REFERENCE   4
+  AUTHORS   Skaugen,M.
+  TITLE     Transposition in Lactobacillus sakei: inactivation of a second
+            lactocin S operon by the insertion of IS1520, a new member of the
+            IS3 family of insertion sequences
+  JOURNAL   Microbiology (Reading, Engl.) 146, 1151-1156 (2000)
+   PUBMED   10832642
+REFERENCE   5
+  AUTHORS   Skaugen,M., Andersen,E.L., Christie,V.H. and Nes,I.F.
+  TITLE     Identification, characterization, and expression of a second,
+            bicistronic, operon involved in the production of lactocin S in
+            Lactobacillus sakei L45
+  JOURNAL   Appl. Environ. Microbiol. 68 (2), 720-727 (2002)
+   PUBMED   11823212
+REFERENCE   6
+  AUTHORS   Skaugen,M.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (02-OCT-1995) Morten Skaugen, IBF/LMG, Agricultural
+            University of Norway, Aas, N-1432, Norway
+  REMARK    Revised by [7]
+REFERENCE   7  (bases 1 to 15996)
+  AUTHORS   Skaugen,M.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (21-FEB-2001) Morten Skaugen, Agricultural University of
+            Norway, Chemistry and Biotechnology, P.O.Box 5051, N-1432 As, Norway
+COMMENT     On Mar 11, 2001 this sequence version replaced gi:1150478.
+FEATURES             Location/Qualifiers
+     CDS             <1..237
+                     /db_xref="UniProtKB/TrEMBL:Q9AED5"
+                     /codon_start=1
+                     /note="ORF78"
+                     /translation="LPVLLKNGAPVDNSTLEVAKELFGSENIFDITIKNMERLKRYDVT
+                     GVMFKDQFDHAVQNVYEKVTTEMISRIGAIENG"
+                     /transl_table=11
+                     /locus_tag="CAC33833.1"
+                     /protein_id="CAC33833.1"
+                     /product="hypothetical protein"
+     source          1..15996
+                     /strain="L45"
+                     /db_xref="taxon:1599"
+                     /organism="Lactobacillus sakei"
+                     /mol_type="genomic DNA"
+                     /country="Norway"
+     cluster         1..15996
+                     /cutoff="20000"
+                     /extension="10000"
+                     /contig_edge="True"
+                     /product="lanthipeptide"
+                     /note="Detection rule(s) for this cluster type:
+                     lanthipeptide: ((LANC_like and (Flavoprotein or
+                     Trp_halogenase or p450 or Lant_dehyd_N or Lant_dehyd_C or
+                     adh_short or adh_short_C2) or cds(LANC_like and (Pkinase or
+                     DUF4135)) or TIGR03731 or Antimicr18 or Gallidermin or
+                     L_biotic_A or leader_d or leader_eh or leader_abc or
+                     mature_d or mature_ab or mature_a or mature_b or mature_ha
+                     or mature_h_beta or lacticin_l or lacticin_mat or
+                     LD_lanti_pre or strep_PEQAXS));"
+     regulatory      217..222
+                     /regulatory_class="ribosome_binding_site"
+                     /note="ORF116"
+     CDS             230..580
+                     /db_xref="UniProtKB/TrEMBL:Q9AED4"
+                     /codon_start=1
+                     /note="ORF116"
+                     /translation="MGSLLNSNRVKSNSLDRGKRIEPENSMSIKDLSNPGEQSKSSKIE
+                     SVTYYANVRINNHIKNKAEALSIIGVAKSQKDAIDRALDSFVEQLSDDEKRSFKNQLAT
+                     LEAKDVKMKSEK"
+                     /transl_table=11
+                     /locus_tag="CAC33834.1"
+                     /protein_id="CAC33834.1"
+                     /product="hypothetical protein"
+     CDS             complement(799..>1200)
+                     /db_xref="UniProtKB/TrEMBL:Q9AED3"
+                     /codon_start=1
+                     /note="ORF130; N-terminally truncated gene product;coding
+                     sequence interrupted by insertion sequence"
+                     /translation="FAIKYIANSNNPFSIEESNGNVINVYFYPLGIALCERGNHSQLSA
+                     KLKGVGETSIERIMNIEHVYDHVNYDGIYFYHIFSENEETNPYRFKAQNRTEFLAGIIF
+                     EIGRLLKNYPELFPEEIKFAINNKEKIKQ"
+                     /transl_table=11
+                     /locus_tag="CAC33835.1"
+                     /protein_id="CAC33835.1"
+                     /product="hypothetical protein"
+     misc_feature    <1195..>1461
+                     /note="insertion sequence IS1517"
+     CDS             complement(1209..>1460)
+                     /db_xref="GOA:Q9AED2"
+                     /db_xref="InterPro:IPR001584"
+                     /db_xref="InterPro:IPR012337"
+                     /db_xref="UniProtKB/TrEMBL:Q9AED2"
+                     /codon_start=1
+                     /note="ORF84; Putative, N-terminally truncated
+                     transposase;coding sequence interrupted by insertion
+                     sequence"
+                     /translation="VANYQALEQDYQIKVYFCHPYSPWERGSNEYFNRRLRWFFPKKTN
+                     FSQVTTDEILAALELINQRPLKIHHQQTAIERFRACSD"
+                     /transl_table=11
+                     /locus_tag="CAC33836.1"
+                     /protein_id="CAC33836.1"
+                     /product="hypothetical protein"
+     repeat_region   1462..1484
+                     /rpt_type=INVERTED
+                     /note="IS1519L left inverted repeat"
+     misc_feature    1462..2270
+                     /note="insertion sequence IS1519L"
+     regulatory      1524..1529
+                     /gene="tnp1519L"
+                     /regulatory_class="ribosome_binding_site"
+     gene            1524..2216
+                     /gene="tnp1519L"
+     CDS             1536..2216
+                     /db_xref="GOA:Q9AED1"
+                     /db_xref="InterPro:IPR001584"
+                     /db_xref="InterPro:IPR012337"
+                     /db_xref="UniProtKB/TrEMBL:Q9AED1"
+                     /codon_start=1
+                     /translation="MNHFKGKQFQQDVIIVAVGYYLRYNLSYREVQEILYDRGINVSHT
+                     TIYRWVQEYDKLLYQIWKKKNKKSFYSWKMDETYIKIKGKWHYLYRAIDADGLTLDIWL
+                     RKKRDTQAAYAFLKRLVKQFDEPKVVVTDKAPSITSAFKKLKEYGFYQGTEHRTIKYLN
+                     NLIEQDHRPVKRSNKFYRSLRTASTTIKGMEAIRGLYKKTRKEGTLFGFSVCTEIKVLL
+                     GIPA"
+                     /gene="tnp1519L"
+                     /transl_table=11
+                     /locus_tag="tnp1519L"
+                     /protein_id="CAC33837.1"
+                     /product="putative IS1519L transposase"
+     repeat_region   complement(2248..2270)
+                     /rpt_type=INVERTED
+                     /note="IS1519L right inverted repeat"
+     repeat_region   2744..2770
+                     /rpt_type=INVERTED
+                     /note="IS1516 left inverted repeat"
+     misc_feature    2744..4217
+                     /note="insertion sequence IS1516"
+     regulatory      2883..2888
+                     /regulatory_class="ribosome_binding_site"
+     gene            2897..3352
+                     /gene="tnp1516delC"
+     CDS             2897..3352
+                     /db_xref="UniProtKB/TrEMBL:Q9AED0"
+                     /codon_start=1
+                     /note="N-terminal part of IS1516 transposase. Coding
+                     sequence probably interrupted by nonsense mutation in codon
+                     152 of original sequence."
+                     /translation="MCHDTTKLLLGIADENLKITDGETGEDGVIRLTGHLDYTPKACPK
+                     CGIINDQKIINYGWRNTTIRFSKVLSNTVILALKRRYFHCKECHGNFLAQTVAVPKHCT
+                     ISNTSRKECLEKLGEPVSLKHIANEVSASDSFVGRQLMRAERDFQTN"
+                     /gene="tnp1516delC"
+                     /transl_table=11
+                     /locus_tag="tnp1516delC"
+                     /protein_id="CAC33838.1"
+                     /product="hypothetical protein"
+     gene            <3353..4168
+                     /gene="tnp1516delN"
+     CDS             <3353..4168
+                     /db_xref="GOA:Q9AEC9"
+                     /db_xref="InterPro:IPR002560"
+                     /db_xref="UniProtKB/TrEMBL:Q9AEC9"
+                     /codon_start=1
+                     /note="C-terminal part of IS1516 transposase. Coding
+                     sequence probably interrupted by nonsense mutation in codon
+                     152 of original sequence."
+                     /translation="HYLPEIILMDEVKSTKSATGAMSFEFMNGETHELIDLLPYRTINK
+                     LEKYFYRFDQAARENVKIIVTDMNYTYPKLVQTVFPNAMVVMDKFHIINALNRAFNKTR
+                     IKVMKKCTSSSREFHALKRYWKLLLVPTEQLNFEQFKKWTNFPYWMAATDVVHQLLSLD
+                     SELEQTYQVLNSVRSAVQHQDWHNYNAAFWNNKTYSEEMKNTIKTLESHHDEIRNTFTT
+                     HYSNGPLEGSNNKIKAIKRASFAYRSFWRFRTRVLYVFKIKTKRALITK"
+                     /gene="tnp1516delN"
+                     /transl_table=11
+                     /locus_tag="tnp1516delN"
+                     /protein_id="CAC33839.1"
+                     /product="putative protein"
+     repeat_region   complement(4191..4217)
+                     /rpt_type=INVERTED
+                     /note="IS1516 right inverted repeat"
+     CDS             complement(4573..5475)
+                     /db_xref="GOA:Q9AEC8"
+                     /db_xref="InterPro:IPR003439"
+                     /db_xref="InterPro:IPR003593"
+                     /db_xref="InterPro:IPR017871"
+                     /db_xref="UniProtKB/TrEMBL:Q9AEC8"
+                     /codon_start=1
+                     /translation="MLEIIDLNKSFKNRKVISHENFSVNNGEILGLIGQNGAGKTTTFK
+                     MILDLLKPDSGTILWNKKPLTQKEHNIIGFLPEDRGLYPNLTVEQQIVFFAELRGQSPK
+                     VTKLKIQRWMDRFDVKGKPSDKVKLLSKGNQQKVQLISTLIHDPKFIILDEPFSGLDPV
+                     NAGLLKKGIKDMKDAGATIIYSSHDMANVEQISDKIIMLKNGRIVLNGTADDIKNSYSK
+                     NKIIIQSALTKNDLENINGVMSVKKVADKFHVEIKNDLIGNKIASQAISKGALIEFIKD
+                     RSTLEEIFQIKTTEPKTNE"
+                     /gene="lasY"
+                     /transl_table=11
+                     /locus_tag="lasY"
+                     /protein_id="CAC33840.1"
+                     /product="hypothetical protein"
+     gene            complement(4573..5487)
+                     /gene="lasY"
+     regulatory      complement(5482..5487)
+                     /gene="lasY"
+                     /regulatory_class="ribosome_binding_site"
+     CDS             complement(5546..6403)
+                     /db_xref="GOA:Q9AEC7"
+                     /db_xref="InterPro:IPR010057"
+                     /db_xref="InterPro:IPR010982"
+                     /db_xref="UniProtKB/TrEMBL:Q9AEC7"
+                     /citation=[5]
+                     /codon_start=1
+                     /note="essential for normal lactocin S production"
+                     /translation="MRVGELVHLIRESKNIPAINVYNSVMSKNMFYKFEKGNFDTTSEK
+                     FMKIMSRLNISLKEFEFLLSEKKCLEYDTEFLKLTNAFYSKDISALQQIHNETKLMYQR
+                     TLEIRFNHLSALSQIYYDMCSHNTTDQTNTNIIRNYLLNVENWTYYEWTLFNNSLSIFN
+                     IEDVQFLINKSLQSLSIYETHNNFGNENILVLGNIAAMYIKSYNFEKIPSLVNRMETIH
+                     LSEIAVFERLIFSFFEGVSLYVLGTDTSLKKSLDVIKVMDNMHLVHLSKDHQELLNIVQ
+                     KNIV"
+                     /gene="lasX"
+                     /transl_table=11
+                     /locus_tag="lasX"
+                     /protein_id="CAC33841.1"
+                     /product="putative Rgg-type transcriptional regulator"
+     gene            complement(5546..6476)
+                     /gene="lasX"
+     repeat_region   6405..6411
+                     /rpt_type=DIRECT
+                     /citation=[5]
+     regulatory      complement(6408..6413)
+                     /gene="lasX"
+                     /regulatory_class="ribosome_binding_site"
+     repeat_region   6429..6435
+                     /rpt_type=DIRECT
+                     /citation=[5]
+     regulatory      6437..6442
+                     /gene="lasA"
+                     /citation=[3]
+                     /regulatory_class="minus_35_signal"
+     gene            6437..6792
+                     /gene="lasA"
+     regulatory      complement(6446..6451)
+                     /experiment="experimental evidence, no additional details
+                     recorded"
+                     /gene="lasX"
+                     /citation=[5]
+                     /regulatory_class="minus_10_signal"
+     repeat_region   6461..6467
+                     /rpt_type=DIRECT
+                     /gene="lasA"
+                     /citation=[5]
+     regulatory      6463..6468
+                     /experiment="experimental evidence, no additional details
+                     recorded"
+                     /gene="lasA"
+                     /citation=[3]
+                     /regulatory_class="minus_10_signal"
+     regulatory      complement(6471..6476)
+                     /gene="lasX"
+                     /citation=[5]
+                     /regulatory_class="minus_35_signal"
+     regulatory      6572..6577
+                     /gene="lasA"
+                     /regulatory_class="ribosome_binding_site"
+     sig_peptide     6586..6678
+                     /gene="lasA"
+                     /citation=[2]
+                     /citation=[3]
+     CDS             6586..6792
+                     /db_xref="GOA:P23826"
+                     /db_xref="UniProtKB/Swiss-Prot:P23826"
+                     /citation=[2]
+                     /citation=[3]
+                     /codon_start=1
+                     /translation="MKTEKKVLDELSLHASAKMGARDVESSMNADSTPVLASVAVSMEL
+                     LPTASVLYSDVAGCFKYSAKHHC"
+                     /gene="lasA"
+                     /transl_table=11
+                     /locus_tag="lasA"
+                     /protein_id="CAA91109.1"
+                     /product="pre-lactocin S"
+     mat_peptide     6679..6789
+                     /experiment="experimental evidence, no additional details
+                     recorded"
+                     /gene="lasA"
+                     /citation=[2]
+                     /citation=[3]
+                     /product="lactocin S"
+     stem_loop       6811..6843
+                     /citation=[3]
+                     /note="probably involved in modulating expression of
+                     downstream genes transcribed from the lasA promoter"
+     regulatory      6871..6876
+                     /gene="lasM"
+                     /regulatory_class="ribosome_binding_site"
+     gene            order(6871..6876,6885..9662)
+                     /gene="lasM"
+     CDS             6885..9662
+                     /db_xref="InterPro:IPR007822"
+                     /db_xref="InterPro:IPR017146"
+                     /db_xref="UniProtKB/TrEMBL:Q48849"
+                     /citation=[1]
+                     /citation=[3]
+                     /codon_start=1
+                     /note="essential for lactocin S production; probably
+                     involved in post-translational peptide modification"
+                     /translation="MNEFEKKINELCFHYTLNLIFKDNLINLKKELNKFNNKNEIKMNL
+                     YFSISQSIIYPFTDILLDLYHTELKTNSMLGNNSSERLKSFVSEFEQDHWEKINLTYPV
+                     FFSTSELIVNDTTEYVSKILSNLINDNAELLSKFKIDYQKLLDIRLGKGDTHSGKSVAK
+                     LMFRSPDEKKFDELLYKPRSNKTDITLKRCTDFISEGLNINFKFPKSLCNRNYSWYENI
+                     EHVTTDDQVSINHYYYRSGCLLGLFWILGTTDIHSENIITNAGYPIVIDIETLSKGLSD
+                     SEDKDVNFRLITSSVLSSCLLPVGKTFKGDSNFDFNGLFPKAQIGETAFEYRIVTDQDL
+                     DWAYEMYPASIKNQKSKVTTNYIYPEEAFRPLKSGFFDTLSFIQKNSTYFLKIIKNNYV
+                     SRQLLRDTQVYADFVHALQLPDNLKSVQNQQHILNILKDEFKPSKFGLSRLKNEVQSIS
+                     KWDIPSFYTTNTSKNLLNFNGNTVIKNFWALSPEEAITKRVNSINLKSIKYQLRIIDLS
+                     LATFYKSDDLFNVSNNNNNPVDIPIFTQQIKEEYFNQLDAIFNPSFGTSKIEDLYTLEF
+                     GNDVTITTLQPGLYNSVGFLLSLWRYTQTKNVTEEERISIQRHVIFMYSQLVSPLKRYK
+                     DLNIDDINVSVFSGLGGLLYCSCYLYLSTNEFEYVKDIKLLVQIICSRVLNTEIEELNF
+                     EYLNGISGLLLLFQNLYKNVKLSNIVGGPFKKIIAHLSNIPFNQIINEDDVGIGHGISG
+                     KLIGMSVLKLHGVNISNDVEKKCLSKVLNSISRSLEFNSSWCRGTLGILDMLLINNKLN
+                     NSLYTSSMTNKFLKKYSYGINRSLECQKNISMCHGLGGIINFITSVNETKHNEIVPENK
+                     FFSKLPNLRDTRVIRSSDFHPVSYMLSTTGLVDSILRYKNNMPNMVHLDIPNNV"
+                     /gene="lasM"
+                     /transl_table=11
+                     /locus_tag="lasM"
+                     /protein_id="CAA91110.1"
+                     /product="hypothetical protein"
+                     /sec_met="Type: lanthipeptide"
+                     /sec_met="LANC_like (E-value: 1.2e-24, bitscore: 77.0,
+                     seeds: 47); DUF4135 (E-value: 2.5e-62, bitscore: 201.5,
+                     seeds: 79)"
+                     /sec_met="Kind: biosynthetic"
+     regulatory      9662..9667
+                     /gene="lasN"
+                     /citation=[3]
+                     /regulatory_class="ribosome_binding_site"
+     gene            order(9662..9667,9677..10396)
+                     /gene="lasN"
+     CDS             9677..10396
+                     /db_xref="InterPro:IPR005025"
+                     /db_xref="UniProtKB/TrEMBL:Q48850"
+                     /citation=[3]
+                     /codon_start=1
+                     /note="essential for lactocin S production; probably
+                     involved in post-translational peptide modification"
+                     /translation="MKIFAFSGAHHIGGLTNTIIERLVSGLKSGNDSLFFRNPTELSIK
+                     YVESTEMFTSGIDTINDDIQMIRDEIASSDVIILGTPVYIRHISGSMKTFLDRLGAWTH
+                     TYGLAGKRAIVFAVSSSTGEDTACEYLSYVSQQMGLAVDSELLINTSYQTTEDIFDQVD
+                     FSIDKLKRHIADKEYIITDMQRKKFALSQTQLRNNQLFPHEIDVLSEKKLLEFGDFDAF
+                     FRHMDNINREQSHYGDD"
+                     /gene="lasN"
+                     /transl_table=11
+                     /locus_tag="lasN"
+                     /protein_id="CAA91111.1"
+                     /product="hypothetical protein"
+     gene            10385..10390
+                     /gene="lasT"
+     regulatory      10385..10390
+                     /gene="lasT"
+                     /citation=[3]
+                     /regulatory_class="ribosome_binding_site"
+     gene            10399..12006
+                     /gene="lasT"
+     CDS             10399..12006
+                     /db_xref="GOA:Q48851"
+                     /db_xref="InterPro:IPR001140"
+                     /db_xref="InterPro:IPR003439"
+                     /db_xref="InterPro:IPR003593"
+                     /db_xref="InterPro:IPR011527"
+                     /db_xref="InterPro:IPR017940"
+                     /db_xref="UniProtKB/TrEMBL:Q48851"
+                     /citation=[3]
+                     /codon_start=1
+                     /note="probable exporter of mature lactocin S; essential
+                     for lactocin S production"
+                     /translation="MHIQNLFGRKKLILIIFFLTILAVSVNAIYPYITKIVIDNVLIGK
+                     NVLLMRNIILGLGLIIIIQVLVDFFLSYLSSVWVQKNISDIRNLIFDRFLKIDPFSTNK
+                     NGQTLIISDAEVIAANVQSILLTSLNSGLSIIVFGVIAFTISPLLTLVILSALPIFVLA
+                     NIKLSSISKDKFFETQHSKDELLSKLTDFLSGKIFIKIYHAELYAKSELVNLNKQLKNN
+                     SISLSTVMIMVKDVLAILTSVTPFIVLSIGMGLSLNHQISTGGLIAIYTYAGMIFSPVS
+                     NLVNLMPAYQQIIVALERINNYLVLEPEGAAITTKLHDNSNKKVTLVNNINLVKNDVPI
+                     LKNMTLNMDNEHIYMLTGPNGSGKSMLGKILTGLIFPSSGNIYNKNINTCLYVPADNYL
+                     FDGSLKFNLTIGLDSYSNCELNTLVTKLNLVGNKLSFNSRLDNSKHTLSTGQIQKIKFI
+                     RAILEHPDFLVLDEILENMDLNSRNIAIEIIKENSDETIFLVISHNLFTNLLTNKTKLI
+                     EIQNSESGSVIRKEGRII"
+                     /gene="lasT"
+                     /transl_table=11
+                     /locus_tag="lasT"
+                     /protein_id="CAA91112.1"
+                     /product="ABC transporter"
+     gene            11989..11994
+                     /gene="lasU"
+     regulatory      11989..11994
+                     /gene="lasU"
+                     /citation=[3]
+                     /regulatory_class="ribosome_binding_site"
+     gene            12003..12284
+                     /gene="lasU"
+     CDS             12003..12284
+                     /db_xref="UniProtKB/TrEMBL:Q48852"
+                     /citation=[3]
+                     /codon_start=1
+                     /translation="MRRTIAILPTFILITVFMYSLYLKAIHGIWINMFVFSLAGLGVYT
+                     PIILFIDSLTLAFRGEKGNDIRSKLFYSYFIIILVAIILLSLYLMTHN"
+                     /gene="lasU"
+                     /transl_table=11
+                     /locus_tag="lasU"
+                     /protein_id="CAA91113.1"
+                     /product="hypothetical protein"
+     regulatory      12284..12289
+                     /gene="lasV"
+                     /citation=[3]
+                     /regulatory_class="ribosome_binding_site"
+     gene            order(12284..12289,12297..12674)
+                     /gene="lasV"
+     CDS             12297..12674
+                     /db_xref="InterPro:IPR007556"
+                     /db_xref="UniProtKB/TrEMBL:Q48853"
+                     /citation=[3]
+                     /codon_start=1
+                     /translation="MEEQDFIKRQIKSFAQGIGSIINVGHANNGVEIMLPAEQGQNLPF
+                     QDTLLRYLNMKHYKEGFIHLLKLESKMSQFDFNQLGIWYVYELNKIPSQLLIKDGLTEN
+                     DISTLIHRLNQTPSDNKEMGK"
+                     /gene="lasV"
+                     /transl_table=11
+                     /locus_tag="lasV"
+                     /protein_id="CAA91114.1"
+                     /product="hypothetical protein"
+     gene            12659..12664
+                     /gene="lasP"
+     regulatory      12659..12664
+                     /gene="lasP"
+                     /citation=[3]
+                     /regulatory_class="ribosome_binding_site"
+     gene            12671..13471
+                     /gene="lasP"
+     CDS             12671..13471
+                     /db_xref="GOA:Q48854"
+                     /db_xref="InterPro:IPR000209"
+                     /db_xref="InterPro:IPR015500"
+                     /db_xref="UniProtKB/TrEMBL:Q48854"
+                     /citation=[3]
+                     /codon_start=1
+                     /note="probably involved in pre-lactocin S processing"
+                     /translation="MTVLLRDINSAILTEYRLHMYSSRYTSSIALLDENINTTHSYLQK
+                     HFSSISGHNNTASIHGTAMAGVLSIASLSKQKLTVFNTLDKYHQRTRKSVISALKMAII
+                     NNFKLIIFPMSIILPKASNSTQKWVSDFNDVVALAKLNNATILSSAGNDGLNLDTLHPD
+                     YIALPQMISSIITIGALGTDWRIASYSNFGKCIDYFFPGGETTSEIITTIGTDAKNIDF
+                     QFIENVPRGFIKMIGTSLATGLFAGYALTVGIGSLQRFKSANFY"
+                     /gene="lasP"
+                     /transl_table=11
+                     /locus_tag="lasP"
+                     /protein_id="CAA91115.1"
+                     /product="serine protease"
+                     /sec_met="Type: none"
+                     /sec_met="Peptidase_S8 (E-value: 3.3e-15, bitscore: 46.3,
+                     seeds: ?)"
+                     /sec_met="Kind: biosynthetic"
+     regulatory      13480..13485
+                     /gene="lasJ"
+                     /citation=[3]
+                     /regulatory_class="ribosome_binding_site"
+     gene            13480..13664
+                     /gene="lasJ"
+     CDS             13491..13664
+                     /db_xref="UniProtKB/TrEMBL:Q48855"
+                     /citation=[3]
+                     /codon_start=1
+                     /note="probably involved in lactocin S immunity"
+                     /translation="MKYSNKSVMLTMLFVSVLGTVMSFSFSGMLKAYELILATFFLIVA
+                     VIYFFKFRNEKK"
+                     /gene="lasJ"
+                     /transl_table=11
+                     /locus_tag="lasJ"
+                     /protein_id="CAA91116.1"
+                     /product="hypothetical protein"
+     regulatory      13689..13694
+                     /gene="lasW"
+                     /citation=[3]
+                     /regulatory_class="ribosome_binding_site"
+     gene            13689..14946
+                     /gene="lasW"
+     CDS             13702..14946
+                     /db_xref="UniProtKB/TrEMBL:Q48856"
+                     /citation=[3]
+                     /codon_start=1
+                     /translation="MRTLVIIIKQVYKKKIFSLGYLLMVFSPVVLVAMGILVFSQINTN
+                     KNVPSIAIISNNKVTQQIIYKSSKESTFHINNKLRTNGQAQAALKHNKIKGIFDVRINS
+                     NATTVNFTGNRKNLKDQWSLITSFLNRINYSTRINESPLNATYKESLYKSIKINVYSKN
+                     DTNYLSQRSNRISFITNILCIFFSMLLIFYCQMISQEVVSEKGTHILEIILSSITPTTH
+                     FLGKISGVILLLLTQVIFYILLSPILYFTLNKTSLLGNSELIQNTHIFSLFISKPVIYT
+                     IIFGFLGIYIYIVVSAVIASAVSRQEQVGEAITPVLMLALVSYYGGVLVMSHNTLHFLT
+                     VSSYIPLISQNVMPIRFASATASNSEAIISIMISLVFSIILTHFAIYIYKRTVFIYNDN
+                     GILQTFKTGLLKMKY"
+                     /gene="lasW"
+                     /transl_table=11
+                     /locus_tag="lasW"
+                     /protein_id="CAA91117.1"
+                     /product="hypothetical protein"
+     regulatory      14956..14987
+                     /citation=[3]
+                     /regulatory_class="terminator"
+                     /note="putative terminator of transcription initiated from
+                     lasA promoter"
+     misc_feature    14999..15808
+                     /note="insertion sequence IS1519R"
+     repeat_region   15000..15022
+                     /rpt_type=INVERTED
+                     /citation=[5]
+                     /note="IS1519R left inverted repeat"
+     regulatory      15059..15064
+                     /gene="tnp1519R"
+                     /regulatory_class="ribosome_binding_site"
+     gene            15059..15754
+                     /gene="tnp1519R"
+     CDS             15068..15754
+                     /db_xref="GOA:Q9AEC6"
+                     /db_xref="InterPro:IPR001584"
+                     /db_xref="InterPro:IPR012337"
+                     /db_xref="UniProtKB/TrEMBL:Q9AEC6"
+                     /codon_start=1
+                     /translation="MTMSHFKGKQFQQDVIIVAVGYYLRYNLSYREVQEILCDRGINVS
+                     HTTIYRWVQEYGKLLYQIWKKKNKKSFYSWKMDETYIKIKGKWHYLYRAIDADGLTLDI
+                     WLRKKRDTQAAYAFLKRLVKQFDEPKVVVTDKAPPITSAFKKLKEYGFYQGTEHRTIKY
+                     LNNLIEQDHRPVKRRNKFYRSLRTASTTIKGMEAIRGLYKKTRKEGTLFGFSVCTEIKV
+                     LLGIPA"
+                     /gene="tnp1519R"
+                     /transl_table=11
+                     /locus_tag="tnp1519R"
+                     /protein_id="CAC33842.1"
+                     /product="putative IS1519R transposase"
+     repeat_region   complement(15786..15808)
+                     /rpt_type=INVERTED
+                     /note="IS1519R right inverted repeat"
+ORIGIN
+        1 cttccagtcc ttttaaaaaa tggggctcca gttgacaaca gtactttaga ggttgcaaaa
+       61 gagttatttg gtagtgaaaa tatttttgat attacaatta aaaatatgga acggcttaaa
+      121 cggtatgatg tgactggtgt aatgtttaaa gatcagtttg atcatgcagt acagaatgta
+      181 tatgaaaaag ttacgactga aatgattagt agaatagggg ctattgaaaa tgggtagttt
+      241 attaaattca aatagagtaa aatcaaatag tttagaccgt ggaaagcgta ttgaaccaga
+      301 gaactctatg agcataaaag atttaagtaa tccaggcgaa caaagtaaga gcagtaagat
+      361 tgagagcgtg acttattacg cgaatgtaag aattaataac catataaaaa ataaagcgga
+      421 ggctctttca atcattggtg ttgccaagtc acaaaaggac gcaattgatc gtgctttgga
+      481 ttcttttgta gagcagttaa gcgatgatga gaaaagaagt tttaaaaatc aattagcaac
+      541 gctggaagca aaagatgtaa aaatgaaatc tgaaaagtaa aaaaatacta atgtatacat
+      601 tagtattttt ttgtagatat actgatgaat aaacacctag tatctgttca catgtaaaaa
+      661 tgtatataat tttatatgtg agtcgcttga ttagtatgga agtgcaataa acttaaacaa
+      721 aaaaagcaag gtgtttgtac accctgctaa aagtagaaat attataattt cctgtttggc
+      781 tgctaaatag cagtattttt attgctttat tttttcttta ttgttgatag caaattttat
+      841 ttcttcaggg aaaagctcgg gatagttctt tagaagtcta ccaatttcaa atataattcc
+      901 cgctaaaaac tcagttctat tttgggcttt aaatctatat ggattagttt cttcattctc
+      961 ggaaaatatg tggtaaaagt aaataccatc ataattcaca tgatcgtaca cgtgttcaat
+     1021 attcataata cgctcgattg aagtctctcc cacaccttta agtttagctg atagttgtga
+     1081 gtgatttcct ctttcacata aagcaatacc tagtggatag aaatatacat ttataacatt
+     1141 gccattactt tcttcgattg aaaaaggatt atttgaattg gcaatatatt taatggcaaa
+     1201 ttacaagttt aatccgaaca agcccggaat ctttcaatgg cagtctgttg atgatgtatt
+     1261 tttaatggtc gttgattaat tagttcaagt gctgctagga tctcatcagt cgttacttgg
+     1321 ctaaaattgg tctttttcgg gaagaaccag cgtaaccgtc tattaaaata ttcattggaa
+     1381 cctcgctccc atggtgaata tggatggcaa aaataaactt tgatctgata atcctgttct
+     1441 aaggcctgat aattggcaac aggttctgtt gcaaagtttt aaatctacta tcaaataagg
+     1501 taggataata gaaaaagata gcaggaggaa tgacgatgaa tcattttaaa ggaaagcaat
+     1561 ttcagcagga tgtgattatt gtagccgtag gctactatct tcgttataac cttagctatc
+     1621 gtgaagttca agaaatctta tatgatcgtg gcattaacgt ttctcatacg acgatttatc
+     1681 gttgggtgca agaatatgac aaactactct atcaaatttg gaaaaagaaa aataaaaaat
+     1741 ccttttattc atggaaaatg gatgaaacgt acatcaaaat taaaggaaaa tggcattatt
+     1801 tgtatcgagc catcgatgca gatggtttaa ccttggatat ttggttacgt aaaaaacggg
+     1861 acacacaagc agcctatgct tttcttaagc ggttagtgaa gcagtttgat gaaccgaagg
+     1921 ttgtagtcac agataaagcc ccttctatta caagtgcctt taagaaacta aaagaatacg
+     1981 gcttttatca agggacagaa catcgtacca ttaaatacct gaataatttg attgaacaag
+     2041 accatcgtcc agtaaagaga agcaataaat tctatcgaag tttacgcact gcctctacca
+     2101 cgattaaagg catggaagcc atccgaggat tatataagaa aacccgaaaa gaaggcactc
+     2161 tcttcgggtt ttcggtctgt actgaaatca aggtattatt gggaatccca gcttaaatca
+     2221 tagatatcgt aagggatttt attctttatt taaaactttg caacagaacc agttaatgaa
+     2281 agaacagcta aagaaaaaag atgaacagct agcaacaaaa gacgaacagc tagcaacaaa
+     2341 agacgagcaa ttaagcaagg tttataagtt gctcgatcaa cagcaacaat tagagctagg
+     2401 aacgcaaaag agattaaaaa cagtgggaac agggaacgat ttgagcaaga ataaagcaga
+     2461 aaatgtagag gaagagttaa ggaaggagca taaaacggct gaaaagcccc aaaaacggca
+     2521 ctggcggcaa agaagacaat agagcagtgc ctatccaaac tgcaatagtt gggaagtgtg
+     2581 ttaactgttt agctcgtttt ttgctccgtt tgtagtgctt ggtttactga ttgactagat
+     2641 cagagacacc aaaagtaaaa tagacaacat ctagttcgct aaaaaagccc ctaacgattt
+     2701 gtggtcgtta ggggctttgg tgtgcttact gtttactcat ttttttggtt ctacaatatc
+     2761 tgttgttggt aatagatttt catctattac tgatgacaga ttttttattt atggctagaa
+     2821 taaaaaagcg gacatttcct gtccgttcat ccaagtcaac caccacgaag atttttcaga
+     2881 aagaaggaaa tgccctatgt gtcatgatac tacaaaatta ttattaggaa tagctgacga
+     2941 gaacctaaaa attactgacg gtgaaactgg agaagacggg gttattcgct taactggcca
+     3001 cttggattac acgccgaagg cttgtcccaa gtgcgggatt atcaatgatc aaaagattat
+     3061 taactacggc tggcgcaata ccactatcag attctcgaag gttctgagca acaccgtcat
+     3121 cttagcctta aagcgccgct atttccactg taaagaatgt cacggcaact ttcttgcaca
+     3181 aacagtggca gttccgaaac actgtacaat ttcaaacacc agccgcaaag aatgcctaga
+     3241 gaagctcggt gaaccggtct ctttgaagca cattgccaat gaagtatcgg catcagattc
+     3301 atttgtgggc cgccagttaa tgcgcgctga acgagacttt caaaccaatt agcactattt
+     3361 accagagatc atcttaatgg atgaggtgaa gagtaccaag agcgctactg gtgccatgag
+     3421 ctttgagttc atgaatggcg aaacccatga attaatcgac ttactccctt atcgaaccat
+     3481 caataaacta gagaagtatt tttaccgctt cgatcaagct gcccgagaaa acgtcaaaat
+     3541 tattgtgact gatatgaatt atacctaccc caagcttgtg cagaccgtgt tccccaatgc
+     3601 catggtggtc atggacaagt ttcatattat caacgcccta aatcgggcgt ttaacaaaac
+     3661 cagaatcaag gtgatgaaga agtgtacctc gtcttctcgc gaatttcacg cccttaagcg
+     3721 ctactggaag ctgttgttag taccaactga acagcttaac tttgaacaat tcaaaaagtg
+     3781 gactaatttt ccttactgga tggctgccac cgatgttgtc catcagctgt tatcgttgga
+     3841 ttcagaacta gaacaaactt atcaagtctt aaacagcgtc cggtcagctg tccaacatca
+     3901 agattggcat aactacaatg cggcattttg gaataacaaa acgtattctg aagaaatgaa
+     3961 gaacacgatt aaaacacttg aaagccatca tgatgagatt cgtaacacct ttaccacaca
+     4021 ctattcaaat ggtcctttgg aaggttctaa taataaaatc aaggcgatca aacgagccag
+     4081 ttttgcgtat cgcagcttct ggaggtttag aactcgagta ctatacgttt tcaaaatcaa
+     4141 aacaaaaaga gccctaatca cgaagtgatt agaactcgaa atatggattc accaacaaca
+     4201 gttgacgaag agccaaatca aagaacaatt ttcgctaatc tcttctattt tgaaggagtt
+     4261 atggcacagc ccgttctttt catatttctg tcgctattta aatttttcaa gttgtatagc
+     4321 taagtattgt tcaattaatt atggcacaaa tgtctaaata tttatgtatc aaatactagg
+     4381 ataggagcag cacaattcca cttgtcaacg aaaaaatgca aaccaaacat taaaactatc
+     4441 tttttcaatg tataagcagc attaggtttt aaatatacac attcgcacct gttcaaatat
+     4501 tagcaaactt ttcttgacat atctttcaat gcctttttat tttgattctg taaaaagtta
+     4561 aaacgctaac ttttattcat ttgtttttgg ctcagttgtt ttaatttgaa atatttcttc
+     4621 caaagtagag cggtctttta taaactctat gagtgccccc ttgctgatag cctgagaagc
+     4681 tattttgttg ccaatcaaat catttttaat ttctacatga aatttgtcag caactttttt
+     4741 tacagacata acaccgttga tgttctctaa atcatttttt gtgagagcag attgtataat
+     4801 aatcttattt ttagagtagc tattcttaat gtcatcagca gtaccattaa gaactatacg
+     4861 tccattttta agcatgataa ttttgtcact aatttgttct acgtttgcca tatcatgaga
+     4921 tgaataaata attgttgctc cagcatcttt catatcctta atgcccttct taagaagacc
+     4981 tgcatttact ggatctaaac cactaaatgg ctcatcaagt attataaact ttggatcatg
+     5041 aattaatgta gatattagtt gaactttttg ctgattacct tttgagagta acttgacttt
+     5101 gtcagaaggc ttccccttaa cgtcgaatct gtccatccaa cgttgtattt ttaatttggt
+     5161 taccttaggt gattgtccac gcaactcggc aaaaaaaaca atttgctgtt caacagtcaa
+     5221 attaggatat agtcctctat cctctggtaa aaatccgata atattatgtt ctttttgggt
+     5281 aagaggcttt ttattccata aaatggttcc tgaatctggt ttaagcaaat ctaaaatcat
+     5341 cttgaacgtt gtagtttttc ctgcaccgtt ttgacctatc agtcccaata tttcaccgtt
+     5401 attaacacta aaattttcgt gggaaattac ttttctattt ttgaagcttt tatttaaatc
+     5461 aataatttct aacaagattt caccttcctc cacactagat tagcacagaa gatttgaaat
+     5521 taaaacaaca tactacattc atattttaaa caatattttt ttgaacaatg tttaaaagct
+     5581 cttgatggtc ttttgataaa tgaactaaat gcatattatc cattactttt ataacatcca
+     5641 aacttttctt taaagaagta tctgttccta aaacgtatag tgacactccc tcaaaaaatg
+     5701 aaaatatcaa tctttcaaaa acagctattt cagaaagatg tattgtttcc attcgattta
+     5761 ctaaagaggg aattttttca aagttataac tttttatata cattgcagca atatttccta
+     5821 aaaccaaaat attttcgtta ccaaaattgt tatgtgtttc atatatcgaa agactttgta
+     5881 aggacttatt tataagaaat tgtacatctt ctatattaaa aatggataaa gagttattaa
+     5941 ataaagtcca ttcataataa gtccaatttt cgacattcaa tagataattc ctaattatat
+     6001 tggtgtttgt ttgatcagta gtattatggg aacacatatc atagtaaatt tgtgatagtg
+     6061 ctgataaatg gttgaaccta atctctagtg ttctttgata cattaatttt gtttcattat
+     6121 gaatttgttg taaagcagat atatcttttg aataaaatgc gtttgttaat tttaaaaact
+     6181 cagtatcata ctctaagcat ttcttttcac ttaataaaaa ttcaaattct ttcaaactaa
+     6241 tatttagtct agacattatt ttcatgaatt tttcagatgt tgtatcaaag tttccctttt
+     6301 caaacttata aaacatattt tttgacatca cactattata cacatttatc gcaggtatat
+     6361 ttttagattc tctaataaga tgtactagtt ctcctactct cattttatcc cccctaaaat
+     6421 ttaatatatt atccctttgc actcaatatt aacatataaa tttaccctta agtcataaat
+     6481 gattgatcga aagggtgagt ctatgtatct tattgggtta tttctattat aataataaaa
+     6541 aagtttattt aaaaaaaaca aggcacggaa gggaggtgga acagtatgaa aacagaaaaa
+     6601 aaggttttag atgaactgag cttacacgct tctgcaaaaa tgggagcacg tgatgttgaa
+     6661 tccagcatga atgcagactc aacaccagtt ttagcatcag tcgctgtatc catggaatta
+     6721 ttgccaactg cgtctgttct ttattcggat gttgcaggtt gcttcaaata ttctgcaaaa
+     6781 catcattgtt agatagattg cttttattga agctggtaaa tcatcttctg gtgatatcca
+     6841 gcttttttaa tttatcaata gcttgaagca ggaggtaatg ctacttgaat gaatttgaaa
+     6901 aaaaaataaa tgaattgtgt tttcattaca cattaaacct tatatttaaa gacaatttaa
+     6961 taaacctaaa aaaagaatta aacaaattta acaataaaaa cgagattaag atgaatttat
+     7021 atttctccat ctcgcaaagt ataatatatc ctttcacaga catactgcta gatctatacc
+     7081 atacggaatt aaaaacaaat agcatgcttg gaaataatag ctctgagaga ttaaaaagtt
+     7141 tcgtttctga atttgaacaa gatcattggg aaaaaataaa tttaacctat ccagttttct
+     7201 tctccacatc tgaactaatc gttaatgata caacggaata tgtttcaaaa atattgagca
+     7261 acttaataaa tgataatgct gaattattga gtaaatttaa aattgattac caaaaattac
+     7321 tagatattag actaggcaaa ggggacactc attctggtaa aagtgtcgcc aaattgatgt
+     7381 ttagatcccc tgatgaaaaa aaatttgatg aactactata caaacccaga agtaataaaa
+     7441 cagatataac tcttaaaaga tgtacagact ttatttctga gggtctaaat attaatttta
+     7501 agtttcctaa atccctatgt aaccgtaatt atagttggta cgaaaatatt gaacatgtta
+     7561 ccactgatga tcaggtatca atcaatcatt attattatcg atcagggtgt ctacttggat
+     7621 tattttggat attaggaacc acagatatac acagcgaaaa cattattact aatgcaggct
+     7681 accctattgt tattgatata gaaaccttgt caaaaggtct gagtgatagt gaagataaag
+     7741 atgtgaattt tcgattaatt acatccagcg tactttcgtc atgcttactt ccagtaggta
+     7801 aaacatttaa aggtgatagt aactttgatt tcaatggact atttcctaaa gcacaaattg
+     7861 gagaaactgc atttgaatat agaatagtca cagaccaaga tctagactgg gcatatgaaa
+     7921 tgtatccagc tagtatcaaa aatcaaaaat ctaaagtaac aactaattat atttaccccg
+     7981 aagaagcctt caggccactc aaatccggtt ttttcgatac attatctttt attcaaaaaa
+     8041 attcaactta ttttttaaaa attattaaaa acaactatgt atcaagacag cttctcagag
+     8101 atacgcaggt gtatgcagat tttgttcatg ctttgcagtt accagacaat cttaagtcag
+     8161 ttcaaaatca acagcatatt ttaaatattt taaaagacga atttaagcct tctaaatttg
+     8221 gattatcaag attaaagaac gaagtacaat ctatatctaa gtgggatatc ccatcgtttt
+     8281 atactaccaa tacaagtaaa aatctattga attttaatgg gaatactgtc attaaaaact
+     8341 tttgggcact ttctcctgaa gaagccatta caaaaagggt aaattcaata aatttaaaaa
+     8401 gcattaaata ccagctaaga ataatcgacc tatcacttgc aacattttat aagagcgatg
+     8461 atctcttcaa cgttagcaat aataataata acccagttga tattccaata ttcactcaac
+     8521 aaattaaaga agaatatttt aaccaattag atgctatatt caatccatcg tttggtacca
+     8581 gtaaaatcga agacctgtat actctagaat tcggaaatga tgtaacaatt accacgttac
+     8641 agccgggttt atacaactca gtgggatttc tacttagctt atggcgatat acacaaacca
+     8701 aaaatgtaac ggaagaagaa agaatttcta ttcaaagaca tgtaattttt atgtatagtc
+     8761 aattagttag tcctttaaaa aggtataaag atttaaatat tgacgatatt aatgtatcgg
+     8821 tattttctgg actaggtgga ttactatatt gtagctgcta tttgtattta tctacaaatg
+     8881 agtttgaata cgtcaaagac attaagctgt tagttcaaat tatttgcagt agagtcctaa
+     8941 acacagaaat cgaagaactt aattttgaat atttgaatgg gatttcagga ttgttactat
+     9001 tatttcagaa cttatacaag aatgttaaac tatctaatat tgtaggtggt ccttttaaaa
+     9061 aaataatagc acatttatca aatatcccat tcaatcaaat tattaatgaa gacgatgttg
+     9121 gtataggaca tgggatttca ggaaagttaa ttggtatgtc tgtattaaaa ttgcatggtg
+     9181 taaacataag taacgatgta gaaaaaaaat gcctaagtaa agtacttaac tcaattagtc
+     9241 gtagtttaga gtttaatagc agctggtgca gaggaacact cggtatttta gatatgctgc
+     9301 ttataaataa caaattaaac aattcgcttt atacatcttc aatgactaat aagtttttaa
+     9361 aaaaatatag ctatggaata aataggtctc tcgaatgcca gaaaaatatt agtatgtgcc
+     9421 atggtctagg aggtatcatt aactttatta cctctgttaa tgagaccaaa cataatgaaa
+     9481 ttgtacctga gaataaattt ttttcaaaat taccaaattt aagggatact agagtgatta
+     9541 gatccagtga ttttcatcca gtttcatata tgttatccac tacaggattg gtggactcca
+     9601 ttttgcgata caaaaataat atgccaaaca tggttcatct cgatatacca aataatgttt
+     9661 aggaagtgat tgagttatga aaatctttgc cttttcaggc gctcaccata ttggagggct
+     9721 cacaaataca ataatagaga gactagtaag tggtttaaaa agtggtaatg atagtttgtt
+     9781 cttcagaaac cctacagagt tatctatcaa atatgtagag agcacagaaa tgtttaccag
+     9841 tggtattgac acaattaacg atgatattca aatgataaga gacgaaatag caagttcaga
+     9901 tgttatcatc ttaggaacac cggtttatat tagacatata tcaggtagta tgaaaacatt
+     9961 cttagataga ttgggagcat ggacacatac ttatggatta gcggggaaaa gagcaattgt
+    10021 atttgcagtt tctagttcta caggtgaaga taccgcgtgt gagtacctaa gctatgtttc
+    10081 ccagcaaatg gggttagccg tagattctga attattaata aacacatcat atcaaactac
+    10141 tgaagatata tttgatcaag ttgatttttc tattgacaaa ttaaaaagac atatagcgga
+    10201 taaggaatat attataacgg atatgcagag aaaaaaattt gccttatcac aaacccagct
+    10261 tcgtaacaac cagcttttcc cacatgaaat tgatgtacta tctgaaaaaa aacttttaga
+    10321 atttggtgat tttgatgcct tcttccgcca tatggacaat ataaatagag agcaaagcca
+    10381 ctatggagac gactaagtat gcatattcaa aatttatttg gcagaaaaaa gttaatattg
+    10441 attatctttt ttctaactat tttggctgta agtgttaatg caatttatcc atatataact
+    10501 aagatcgtaa tagataatgt gttaataggt aaaaatgtgc tcctcatgag aaatataatt
+    10561 ttgggactgg gcttaataat tatcattcaa gtccttgttg atttcttctt gagttatttg
+    10621 tcctctgtat gggtacaaaa aaatattagt gacatcagaa acttaatttt tgatagattt
+    10681 ttaaaaattg atcctttttc aacaaataag aacggtcaaa ctctaataat ttcagatgcg
+    10741 gaagtcatag ctgctaatgt acaatcaata cttctaacaa gccttaacag cgggttgtct
+    10801 ataatagttt ttggggtaat tgcatttact ataagtcctc tcctaacttt ggttatctta
+    10861 tctgctctac cgatatttgt tcttgcaaat atcaaactaa gtagtatttc taaagacaaa
+    10921 ttttttgaaa cacaacattc taaggatgaa ttattatcca aattaacaga tttcttgagt
+    10981 ggaaagattt ttataaaaat ataccatgcc gaattatatg caaaaagtga attggtaaat
+    11041 ttgaataagc aactaaaaaa taatagtata tctttaagta cagttatgat aatggttaag
+    11101 gatgtattag caattttaac ttcagtaact ccatttattg ttttaagtat tggtatgggg
+    11161 ctatctttga atcatcaaat ttccaccgga ggactcattg ctatttatac gtacgcgggt
+    11221 atgatatttt ctccagtaag taacttagta aatttaatgc cggcgtatca acaaattata
+    11281 gtcgcacttg agcgtattaa taattatttg gtactagaac cagaaggagc tgctataact
+    11341 actaaattac atgataattc taataaaaaa gtaacattag ttaataatat aaacctggtt
+    11401 aagaatgatg tacccatatt aaaaaatatg accttgaata tggataatga gcatatatat
+    11461 atgctcacag gacctaatgg gtctggaaaa tctatgcttg gaaaaatatt aactggcctt
+    11521 atttttccaa gttcgggtaa tatttataat aaaaacataa atacttgcct atatgtacct
+    11581 gcagataatt acttgtttga tggctcctta aaatttaatt taacaatagg attagattca
+    11641 tactctaatt gtgaattaaa cactcttgtt actaagttaa acttagtagg aaataagtta
+    11701 tcatttaact ctagattaga taactcaaaa cataccctaa gtacaggaca aattcaaaag
+    11761 ataaagttca tacgcgcaat actagaacat cctgattttt tagttttaga tgaaatatta
+    11821 gaaaatatgg atttaaattc aagaaatata gccattgaaa taattaaaga aaactctgat
+    11881 gaaactatat ttttagttat ctcacataac ttatttacaa atttactaac taataaaact
+    11941 aaacttattg aaattcaaaa ttcagaaagt ggctctgtta tcaggaaaga gggtaggata
+    12001 atttgagaag aactatagca atattaccaa catttatttt aataacagtc tttatgtata
+    12061 gcctttattt aaaagctata catggtattt ggataaatat gtttgtattt agtctagcgg
+    12121 gattaggagt atacactcct atcattctat ttattgatag tttaacattg gcatttagag
+    12181 gagaaaaagg taacgacata agatctaaac ttttttattc atattttatt attatactag
+    12241 tcgctatcat tttactttcg ttatatttaa tgacacataa ttaagaggta ttacaaatgg
+    12301 aagaacaaga tttcataaaa cgacaaatca aatcttttgc acaaggaatt ggaagtatta
+    12361 ttaatgtggg ccatgctaat aatggggtag aaattatgct tccagctgaa cagggtcaaa
+    12421 atttaccatt ccaagatacc cttcttagat atttaaatat gaaacattac aaggaaggtt
+    12481 ttatccatct actcaagtta gaaagcaaaa tgtctcagtt tgatttcaac caattaggta
+    12541 tttggtatgt atatgaatta aataaaatac cgtctcagtt attaattaaa gatggcctaa
+    12601 cagaaaacga tatatcaacg ctaatccata gattaaatca gaccccttcg gataataagg
+    12661 aaatgggcaa atgaccgtgc ttttaagaga cataaattca gctattttaa cagaatatag
+    12721 gctacacatg tacagctcga gatatacatc atcaattgct ttactggacg aaaatattaa
+    12781 tacgacacac tcttatttgc agaagcattt tagtagtata tcaggtcata ataataccgc
+    12841 gagtattcat ggaacagcta tggctggtgt acttagtata gcaagcttga gtaaacaaaa
+    12901 attaacagtc tttaatactc tagataaata ccatcaaaga actcggaaaa gtgtgatatc
+    12961 agcgctcaaa atggccataa taaacaattt taaattaatc atatttccta tgagtatcat
+    13021 tttacccaaa gcaagtaata gcactcagaa atgggtatct gatttcaatg atgttgtagc
+    13081 attagccaaa cttaataatg ctactatact cagctcagcg ggaaatgatg gcctaaatct
+    13141 tgacacttta caccccgatt atattgcact acctcaaatg atttcaagca ttataacaat
+    13201 tggtgcatta ggaacagatt ggagaattgc aagttattct aattttggaa aatgtataga
+    13261 ttatttcttt cctggagggg aaaccacaag tgaaattatt acaactatag gaacagatgc
+    13321 aaagaatatt gattttcaat ttattgagaa tgtacctaga ggatttataa aaatgattgg
+    13381 gaccagtttg gccactggac tttttgcagg atatgcactt actgtgggaa taggatccct
+    13441 tcagaggttt aaatctgcta acttttacta aaattaagga gaggtttatt atgaaatatt
+    13501 caaataaatc agtaatgttg accatgttat ttgtttcagt gctaggaaca gttatgtctt
+    13561 tttcattttc aggaatgtta aaagcatacg aattaatact cgctacattt tttttaatag
+    13621 ttgctgtaat ttactttttc aaatttagaa atgaaaaaaa atgaagtttc acacatttta
+    13681 tagaaagagt gggtagctta catgcgtacg ttagtgataa ttataaaaca ggtatacaaa
+    13741 aaaaaaatct ttagtttagg ttacttgctg atggtttttt cccctgtagt gcttgttgct
+    13801 atgggaattc tagtcttttc ccaaattaac accaataaaa acgtaccttc tattgctata
+    13861 ataagtaata ataaggttac tcagcaaata atatataaat ccagtaagga aagtactttc
+    13921 cacataaata acaagcttcg aaccaatggt caagcccaag cagcgttaaa acacaataaa
+    13981 ataaagggta tctttgacgt taggattaat tccaatgcaa caactgttaa ttttactgga
+    14041 aacaggaaaa acttaaaaga ccaatggtct ttaataacga gctttttaaa tagaataaat
+    14101 tattctacca gaattaatga gagtccatta aatgccactt acaaagaatc attatataaa
+    14161 tctattaaaa taaacgtata tagtaaaaat gacacaaact atttgtcaca aaggtcaaac
+    14221 agaatttcat tcattacaaa tatcttatgt atattttttt cgatgctgtt gatattttac
+    14281 tgtcaaatga tatcgcaaga agtagtttct gaaaaaggaa cacatatact agaaattatt
+    14341 ttgtctagca ttactccaac cactcatttt ttaggtaaaa tttccggagt tattttgctg
+    14401 ttattgacac aagttatttt ttatatcctt ttatctccaa tattatattt cacgttaaat
+    14461 aaaacctctt tgctaggaaa ttcagaattg attcaaaata cccatatatt tagtcttttt
+    14521 atatcaaaac ctgttatata taccattata tttggctttt tgggtatata tatatatatt
+    14581 gtagtatccg ctgtaatagc ttctgccgtt tcccgacagg aacaggttgg agaggccatc
+    14641 acacctgtat taatgctagc actagtgagt tattatggtg gagtcttagt aatgtcacat
+    14701 aacacgctgc attttttaac agtatcttca tacattccct taatttctca gaacgtaatg
+    14761 cccatcaggt tcgcaagtgc tactgcttct aactcagaag ccataatcag tataatgata
+    14821 tcattggtat tttcaataat actaacgcat tttgccatat atatctataa acgaactgtt
+    14881 ttcatttaca atgataatgg tatattacaa acctttaaaa caggacttct aaaaatgaaa
+    14941 tactaataag tattctcagt agaagtggag ttcaccactt ctactgatgt ttctagaaag
+    15001 gttctgttgc aaagttttaa atctactatc agataaggta gaataataga aaaagatagc
+    15061 aggaggaatg acgatgagtc attttaaagg aaagcaattt cagcaggatg tgattattgt
+    15121 agccgtgggc tactatcttc gttataacct tagctatcgt gaagttcaag aaatcttatg
+    15181 tgatcgtggc attaacgttt ctcatacgac gatttatcgt tgggtgcaag aatatggcaa
+    15241 actactctat caaatttgga aaaagaaaaa taaaaaatcc ttttattcat ggaaaatgga
+    15301 tgaaacgtac atcaaaatta aaggaaaatg gcattatttg tatcgagcca tcgatgcaga
+    15361 tggtttaacc ttggatattt ggttacgtaa aaaacgggac acacaagcag cctatgcttt
+    15421 tcttaagcgg ttagtgaagc agtttgatga accgaaggtt gtagtcacag ataaagcccc
+    15481 tcccattaca agtgccttta agaaactaaa agaatacggc ttttatcaag ggacagaaca
+    15541 tcgtaccatt aaatacctga ataatttgat tgaacaagac catcgtccag taaagagacg
+    15601 caataaattc tatcgaagtt tacgcactgc ctctaccacg attaaaggca tggaagccat
+    15661 tcgaggatta tataagaaaa cccgaaaaga aggcactctc ttcgggtttt cggtctgtac
+    15721 tgaaatcaag gtattattgg gaatcccagc ttaaatcata gataccgtaa gggattttat
+    15781 tctttattta aaactttgca acagaaccag tctccaaaag tactatcttc atctgaatcc
+    15841 cttgttccat taattaacct actactccaa aaagatgttt tcccgacaac taaaacatta
+    15901 ttattttcta aaatacttat aaaaacaaat tgataatttt cttgtgcctt atcttttcct
+    15961 tgagcatata cagcaccttt gtttttgaat tttagt
+//

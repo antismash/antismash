@@ -1,6 +1,7 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+from io import StringIO
 import logging
 import os
 
@@ -10,6 +11,7 @@ with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     from Bio import SearchIO
 from subprocess import PIPE, Popen
+
 from helperlibs.wrappers.io import TemporaryDirectory
 
 from antismash.config.args import Config
@@ -41,12 +43,14 @@ def execute(commands, stdin=None, stdout=PIPE, stderr=PIPE):
 
     if stdin is not None:
         stdin_redir = PIPE
+        input_bytes = stdin.encode("utf-8")
     else:
         stdin_redir = None
+        input_bytes = None
 
     try:
         proc = Popen(commands, stdin=stdin_redir, stdout=stdout, stderr=stdout)
-        out, err = proc.communicate(input=stdin)
+        out, err = proc.communicate(input=input_bytes)
         return RunResult(commands, out, err, proc.returncode,
                          stdout == PIPE, stderr == PIPE)
     except OSError as err:
@@ -84,8 +88,7 @@ def run_hmmsearch(query_hmmfile, target_sequence, use_tempfile=False):
                           run_result.return_code, run_result.stderr, query_hmmfile)
             raise RuntimeError("Running hmmsearch failed.")
             return []
-        results = list(SearchIO.parse("result.domtab", 'hmmsearch3-domtab'))
-        return results
+        return list(SearchIO.parse("result.domtab", 'hmmsearch3-domtab'))
 
 def run_hmmpress(hmmfile):
     "Run hmmpress"
@@ -100,3 +103,33 @@ def run_hmmpress(hmmfile):
         err = str(excep)
         out = None
     return out, err, retcode
+
+def run_hmmpfam2(query_hmmfile, target_sequence): # TODO cleanup
+    "Run hmmpfam2"
+    config = Config()
+    command = ["hmmpfam2", "--cpu", str(config.cpus),
+               query_hmmfile, '-']
+
+    # Allow to disable multithreading for HMMer2 calls in the command line #TODO fix options for this
+    if config.get('hmmer2') and 'multithreading' in config.hmmer2 and \
+            not config.hmmer2.multithreading:
+        command = command[0:1] + command[3:]
+
+    result = execute(command, stdin=target_sequence)
+    if result.return_code != 0:
+        logging.debug('hmmpfam2 returned %d: %r while searching %r', result.return_code,
+                        result.stderr, query_hmmfile)
+        raise RuntimeError("hmmpfam2 problem while running %s", command)
+    res_stream = StringIO(result.stdout)
+    results = list(SearchIO.parse(res_stream, 'hmmer2-text'))
+    return results
+
+def run_fimo_simple(query_motif_file, target_sequence): # TODO cleanup
+    "Run FIMO"
+    command = ["fimo", "--text", "--verbosity", "1", query_motif_file, target_sequence]
+    result = execute(command)
+    if result.return_code != 0:
+        logging.debug('FIMO returned %d: %r while searching %r', result.return_code,
+                        result.stderr, query_motif_file)
+        raise RuntimeError("FIMO problem while running %s... %s", command, result.stderr[-100:])
+    return result.stdout

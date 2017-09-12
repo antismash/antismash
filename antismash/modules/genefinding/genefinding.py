@@ -3,9 +3,9 @@
 
 import logging
 
-from .all_orfs import find_all_orfs
+from antismash.common.all_orfs import find_all_orfs
+
 from .run_prodigal import run_prodigal
-from .run_glimmer import run_glimmer
 from .run_glimmerhmm import run_glimmerhmm
 
 def run_on_record(record, options):

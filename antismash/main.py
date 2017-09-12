@@ -11,14 +11,18 @@ from antismash.config import loader
 from antismash.common import deprecated, serialiser
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record
-from antismash.modules import tta, genefinding, hmm_detection, clusterblast, dummy
+from antismash.modules import tta, genefinding, hmm_detection, clusterblast, \
+                              dummy, lanthipeptides, smcogs
 from antismash.outputs import html, svg
+
+def get_all_modules():
+    return get_detection_modules() + get_analysis_modules() + get_output_modules()
 
 def get_detection_modules():
     return [hmm_detection, genefinding]
 
 def get_analysis_modules():
-    return [tta, clusterblast, dummy]
+    return [smcogs, tta, clusterblast, lanthipeptides, dummy]
 
 def get_output_modules():
     return [html]
@@ -179,8 +183,12 @@ def run_antismash(sequence_file, options, detection_modules=None,
     logging.debug("Creating results SVGs")
     svg.write(seq_records, options, results)
     # TODO: include status logging, zipping, etc
-    seq_records = [record.to_biopython() for record in seq_records]
+    logging.debug("Writing cluster-specific genbank files")
+    for record in seq_records:
+        for cluster in record.get_clusters():
+            cluster.write_to_genbank(directory=options.output_dir)
     logging.debug("Writing genbank file to 'temp.gbk'")
+    seq_records = [record.to_biopython() for record in seq_records]
     SeqIO.write(seq_records, "temp.gbk", "genbank")
     logging.debug("Writing json results to 'temp.json'")
     serialiser.write_records(seq_records, results, "temp.json")

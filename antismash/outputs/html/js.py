@@ -228,7 +228,6 @@ def get_description(record, feature, type_, options, mibig_result):
               "sequence=sequence%%0A%s" % sequence
         transport_blast_line = '<a href="%s" target="_new">TransportDB BLAST on this gene<br>' % url
         replacements['transport_blast_line'] = transport_blast_line
-
     key = record.id + "_" + feature.get_name()
     if key in searchgtr_links:
         url = searchgtr_links[key]
@@ -247,14 +246,16 @@ def get_biosynthetic_type(feature, annotations):
     for note in feature.notes:
         if not note.startswith('smCOG:'):
             continue
-
+        logging.critical('smCOG note annotations being ignored')
         smcog = note[7:].split(':')[0]
         ann = annotations.get(smcog, 'other')
 
-    if not feature.sec_met:
-        return ann
-
-    return feature.sec_met.kind
+    function = str(feature.gene_function) # TODO: change the rest of js to suit this so conversion not required
+    if function == 'additional':
+        function = 'biosynthetic-additional'
+    elif function == 'core':
+        function = 'biosynthetic'
+    return function
 
 def get_model_details(feature):
     if feature.sec_met:

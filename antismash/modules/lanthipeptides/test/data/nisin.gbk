@@ -1,0 +1,603 @@
+LOCUS       HM219853               15016 bp    DNA              BCT 05-OCT-2011
+DEFINITION  Lactococcus lactis subsp. lactis nisin biosynthetic gene cluster,
+            complete sequence.
+ACCESSION   HM219853
+VERSION     HM219853.1  GI:299832736
+KEYWORDS    .
+SOURCE      Lactococcus lactis subsp. lactis
+  ORGANISM  Lactococcus lactis subsp. lactis
+            Bacteria; Firmicutes; Lactobacillales; Streptococcaceae;
+            Lactococcus.
+REFERENCE   1  (bases 1 to 15016)
+  AUTHORS   Trmcic,A., Samelis,J., Monnet,C., Rogelj,I. and Bogovic Matijasic,B.
+  TITLE     Complete nisin A gene cluster from Lactococcus lactis M78 (HM219853)
+            - obtaining the nucleic acid sequence and comparing it to other
+            published nisin sequences
+  JOURNAL   Genes Genomics 33 (3), 217-221 (2011)
+REFERENCE   2  (bases 1 to 15016)
+  AUTHORS   Trmcic,A., Monnet,C., Rogelj,I. and Bogovic Matijasic,B.
+  TITLE     Expression of nisin genes in cheese--a quantitative real-time
+            polymerase chain reaction approach
+  JOURNAL   J. Dairy Sci. 94 (1), 77-85 (2011)
+   PUBMED   21183019
+REFERENCE   3  (bases 1 to 15016)
+  AUTHORS   Trmcic,A., Samelis,J., Monnet,C., Rogelj,I. and Bogovic-Matijasic,B.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (12-MAY-2010) Department of Animal Science - Chair of
+            Dairy Science, Biotechnical Faculty, Groblje 3, Domzale 1230,
+            Slovenia
+FEATURES             Location/Qualifiers
+     source          1..15016
+                     /sub_species="lactis"
+                     /mol_type="genomic DNA"
+                     /db_xref="taxon:1360"
+                     /country="Greece"
+                     /collected_by="John Samelis"
+                     /isolation_source="raw milk"
+                     /strain="M78"
+                     /organism="Lactococcus lactis subsp. lactis"
+     cluster         1..15016
+                     /note="Cluster number: 1"
+                     /note="Detection rule(s) for this cluster type:
+                     lantipeptide: (LANC_like or (Lant_dehyd_N & Lant_dehyd_C)
+                     or TIGR03731 or Antimicr18 or Gallidermin or L_biotic_A or
+                     TIGR03731 or leader_d or leader_eh or leader_abc or
+                     mature_d or mature_ab or mature_a or mature_b or mature_ha
+                     or mature_h_beta or lacticin_l or lacticin_mat or
+                     LD_lanti_pre or strep_PEQAXS);"
+                     /product="lantipeptide"
+     gene            828..1001
+                     /gene="nisA"
+     CDS             828..1001
+                     /product="NisA"
+                     /codon_start=1
+                     /transl_table=11
+                     /note="prenisin; nisin A structural protein"
+                     /db_xref="GI:299832737"
+                     /sec_met="Type: lantipeptide"
+                     /sec_met="Domains detected: TIGR03731 (E-value: 1.3e-24,
+                     bitscore: 75.6, seeds: 23); mature_a (E-value: 6.5e-08,
+                     bitscore: 21.5, seeds: 5)"
+                     /sec_met="Kind: biosynthetic"
+                     /translation="MSTKDFNLDLVSVSKKDSGASPRITSISLCTPGCKTGALMGCNMK
+                     TATCHCSIHVSK"
+                     /gene="nisA"
+                     /protein_id="ADJ56352.1"
+     misc_feature    828..14152
+                     /note="nisin biosynthetic gene cluster"
+     CDS_motif       840..940
+                     /note="Gallidermin"
+                     /note="Pfam-A.hmm-Hit: Gallidermin. Score: 33.4. E-value:
+                     2.7e-08. Domain range: 10..46."
+                     /note="PFAM-Id: PF02052"
+                     /label="nisA"
+     gene            1109..4090
+                     /gene="nisB"
+     CDS             1109..4090
+                     /function="dehydration of serine and threonine"
+                     /product="NisB"
+                     /codon_start=1
+                     /transl_table=11
+                     /note="nisin biosynthesis protein"
+                     /db_xref="GI:299832738"
+                     /sec_met="Type: lantipeptide"
+                     /sec_met="Domains detected: Lant_dehyd_N (E-value: 4.5e-25,
+                     bitscore: 77.4, seeds: 38); Lant_dehyd_C (E-value:
+                     6.8e-120, bitscore: 390.3, seeds: 37)"
+                     /sec_met="Kind: biosynthetic"
+                     /translation="MIKSSFKAQPFLVRNTILSPNDKRSFTEYTQVIETVSKNKVFLEQ
+                     LLLANPKLYDVMQKYNAGLLKKKRVKKLFESIYKYYKRSYLRSTPFGLFSETSIGVFSK
+                     SSQYKLMGKTTKGIRLDTQWLIRLVHKMEVDFSKKLSFTRNNANYKFGDRVFQVYTINS
+                     SELEEVNIKYTNVYQIISEFCENDYQKYEDICETVTLCYGDEYRELSEQYLGSLIVNHY
+                     LISNLQKDLLSDFSWNTFLTKVEAIDEDKKYIIPLKKVQKFIQEYSEIEIGEGIEKLKE
+                     IYQEMSQILENDNYIQIDLISDSEINFDVKQKQQLEHLAEFLGNTTKSVRRTYLDDYKD
+                     KFIEKYGVDQEVQITELFDSTFGIGAPYNYNHPRNDFYESEPSTLYYSEEEREKYLSMY
+                     VEAVKNHNVINLDDLESHYQKMDLEKKSELQGLELFLNLAKEYEKDIFILGDIVGNNNL
+                     GGASGRFSALSPELTSYHRTIVDSVERENENKEITSCEIVFLPENIRHANVMHTSIMRR
+                     KVLPFFTSTSHNEVLLTNIYIGIDEKEKFYARDISTQEVLKFYITSMYNKTLFSNELRF
+                     LYEISLDDKFGNLPWELIYRDFDYIPRLVFDEIVISPAKWKIWGRDVNSKMTIRELIQS
+                     KEIPKEFYIVNGDNKVYLSQENPLDMEILESAIKKSSKRKDFIELQEYFEDENIINKGE
+                     KGRVADVVVPFIRTRALGNEGRAFIREKRVSVERREKLPFNEWLYLKLYISINRQNEFL
+                     LSYLPDIQKIVANLGGNLFFLRYTDPKPHIRLRIKCSDLFLAYGSILEILKRSRKNRIM
+                     STFDISIYDQEVERYGGFDTLELSEAIFCADSKIIPNLLTLIKDTNNDWKVDDVSILVN
+                     YLYLKCFFENDNKKILNFLNLVSPKKVKENVNEKIEHYLKLLKVNNLGDQIFYDKNFKE
+                     LKHAIKNLFLKMIAQDFELQKVYSIIDSIIHVHNNRLIGIERDKEKLIYYTLQRLFVSE
+                     EYMK"
+                     /gene="nisB"
+                     /protein_id="ADJ56353.1"
+     CDS_motif       1229..1506
+                     /note="Lantibiotic dehydratase, N terminus"
+                     /note="Pfam-A.hmm-Hit: Lant_dehyd_N. Score: 77.4. E-value:
+                     4.8e-22. Domain range: 0..96."
+                     /note="PFAM-Id: PF04737"
+                     /label="nisB"
+     CDS_motif       1673..3126
+                     /note="Lantibiotic dehydratase, C terminus"
+                     /note="Pfam-A.hmm-Hit: Lant_dehyd_C. Score: 390.3. E-value:
+                     7.3e-117. Domain range: 1..497."
+                     /note="PFAM-Id: PF04738"
+                     /label="nisB"
+     gene            4101..5903
+                     /gene="nisT"
+     CDS             4101..5903
+                     /function="secretion of prenisin"
+                     /product="NisT"
+                     /codon_start=1
+                     /transl_table=11
+                     /note="nisin transport ATP-binding protein"
+                     /db_xref="GI:299832739"
+                     /translation="MDEVKEFTSKQFFNTLLTLPSTLKLIFQLEKRYAIYLIVLNAITA
+                     FVPLASLFIYQDLINSVLGSGRHLINIIIIYFIVQVITTVLGQLESYVSGKFDMRLSYS
+                     INMRLMRTTSSLELSDYEQADMYNIIEKVTQDSTYKPFQLFNAIIVVLSSFISLLSSLF
+                     FIGTWNIGVAILLLIVPVLSLVLFLRVGQLEFLIQWQRASSERETWYIVYLLTHDFSFK
+                     EIKLNNISNYFIHKFGKLKKGFINQDLAIARKKTYFNIFLDFILNLINILTIFAMILSV
+                     RAGKLLIGNLVSLIQAISKINTYSQTMIQNIYIIYNTSLFMEQLFEFLKRESVVHKKIE
+                     DTEICNQHIGTVKVINLSYVYPNSNAFALKNINLSFEKGELTAIVGKNGSGKSTLVKII
+                     SGLYQPTMGIIQYDKMRSSLMPEEFYQKNISVLFQDFVKYELTIRENIGLSDLSSQWED
+                     EKIIKVLDNLGLDFLKTNNQYVLDTQLGNWFQEGHQLSGGQWQKIALARTFFKKASIYI
+                     LDEPSAALDPVAEKEIFDYFVALSENNISIFISHSLNAARKANKIVVMKDGQVEDVGSH
+                     DVLLRRCQYYQELYYSEQYEDNDE"
+                     /gene="nisT"
+                     /protein_id="ADJ56354.1"
+     CDS_motif       5196..5797
+                     /note="RecF/RecN/SMC N terminal domain"
+                     /note="Pfam-A.hmm-Hit: SMC_N. Score: 41.6. E-value:
+                     6.1e-11. Domain range: 12..212."
+                     /note="PFAM-Id: PF02463"
+                     /label="nisT"
+     CDS_motif       5274..5665
+                     /note="ABC transporter"
+                     /note="Pfam-A.hmm-Hit: ABC_tran. Score: 86.4. E-value:
+                     1.4e-24. Domain range: 0..117."
+                     /note="PFAM-Id: PF00005"
+                     /label="nisT"
+     gene            5896..7140
+                     /gene="nisC"
+     CDS             5896..7140
+                     /function="cyclization, formation of (methyl)lantionines"
+                     /product="NisC"
+                     /codon_start=1
+                     /transl_table=11
+                     /note="nisin biosynthesis protein"
+                     /db_xref="GI:299832740"
+                     /sec_met="Type: lantipeptide"
+                     /sec_met="Domains detected: LANC_like (E-value: 8.3e-76,
+                     bitscore: 244.5, seeds: 47)"
+                     /sec_met="Kind: biosynthetic"
+                     /translation="MNKKNIKRNVEKIIAQWDERTRKNKENFDFGELTLSTGLPGIILM
+                     LAELKNKDNSKIYQKKIDNYIEYIVSKLSTYGLLTGSLYSGAAGIALSILHLREDDEKY
+                     KNLLDSLNRYIEYFVREKIEGFNLENITPPDYDVIEGLSGILSYLLLINDEQYDDLKIL
+                     IINFLSNLTKENKGLISLYIKSENQMSQSESEMYPLGCLNMGLAHGLAGVGCILAYAHI
+                     KGYSNEASLSALQKIIFIYEKFELERKKQFLWKDGLVADELKKEKVIREASFIRDAWCY
+                     GGPGISLLYLYGGLALDNDYFVDKAEKILESAMQRKLGIDSYMICHGYSGLIEICSLFK
+                     RLLNTKKFDSYMEEFNVNSEQILEEYGDESGTGFLEGISGCILVLSKFEYSINFTYWRQ
+                     ALLLFDDFLKGGKRK"
+                     /gene="nisC"
+                     /protein_id="ADJ56355.1"
+     CDS_motif       5980..7076
+                     /note="Lanthionine synthetase C-like protein"
+                     /note="Pfam-A.hmm-Hit: LANC_like. Score: 244.5. E-value:
+                     9e-73. Domain range: 1..341."
+                     /note="PFAM-Id: PF05147"
+                     /label="nisC"
+     gene            7137..7874
+                     /gene="nisI"
+     CDS             7137..7874
+                     /product="NisI"
+                     /codon_start=1
+                     /transl_table=11
+                     /note="nisin immunity protein; nisin-binding lipoprotein"
+                     /db_xref="GI:299832741"
+                     /translation="MRRYLILIVALIGITGLSGCYQTSHKKVRFDEGSYTNFIYDNKSY
+                     FVTDKEIPQENVNNSKVKFYKLLIVDMKSEKLLSSSNKNSVTLVLNNIYEASDKSLCMG
+                     INDRYYKILPESDKGAVKALRLQNFDVTSDISDDNFVIDKNDSRKIDYMGNIYSISDTT
+                     VSDEELGEYQDVLAEVRVFDSVSGKSIPRSEWGRIDKDGSNSKQSRTEWDYGEIHSIRG
+                     KSLTEAFAVEINDDFKLATKVGN"
+                     /gene="nisI"
+                     /protein_id="ADJ56356.1"
+     gene            7876..9924
+                     /gene="nisP"
+     CDS             7876..9924
+                     /function="cleavage of leader peptide from prenisin and
+                     activation of nisin"
+                     /product="NisP"
+                     /codon_start=1
+                     /transl_table=11
+                     /note="nisin leader peptide-processing serine protease"
+                     /db_xref="GI:299832742"
+                     /translation="MKKILGFLFIVCSLGLSATVHGETTNSQQLLSNNINTELINHNSN
+                     AILSSTEGSTTDSINLGAQSPAVKSTTRTELDVTGAAKTLLQTSAVQKEMKVSLQETQV
+                     SSEFSKRDSVTNKEAVPVSKDELLEQSEVVVSTSSIQKNKILDNKKNRANFVTSSPLIK
+                     EKPSNSKDASGVIDNSASPLSYRKAKEVVSLRQPLKNQKVEAQPLLISNSSEKKASVYT
+                     NSHDFWDYQWDMKYVTNNGESYALYQPSKKISVGIIDSGIMEEHPDLSNSLGNYFKNLV
+                     PKGGFDNEEPDETGNPSDIVDKMGHGTEVAGQITANGNILGVAPGITVNIYRVFGENLS
+                     KSEWVARAIRRAADDGNKVINISAGQYLMISGSYDDGTNDYQEYLNYKSAINYATAKGS
+                     IVVAALGNDSLNIQDNQTMINFLKRFRSIKVPGKVVDAPSVFEDVIAVGGIDGYGNISD
+                     FSNIGADAIYAPAGTTANFKKYGQDKFVSQGYYLKDWLFTTTNTGWYQYVYGNSFATPK
+                     VSGALALVVDKYGIKNPNQLKRFLLMNSPEVNGNRVLNIVDLLNGKNKAFSLDTDKGQD
+                     DAINHKSMENLKESRDTMKQEQDKEIQRNTNNNFSIKNDFHNISKEVISVDYNINQKMA
+                     NNRNSRGAVSVRSQEILPVTGDGEDFLPALGIVCISILGILKRKTKN"
+                     /gene="nisP"
+                     /protein_id="ADJ56357.1"
+     CDS_motif       8575..9485
+                     /note="Subtilase family"
+                     /note="Pfam-A.hmm-Hit: Peptidase_S8. Score: 188.0. E-value:
+                     1.7e-55. Domain range: 2..284."
+                     /note="PFAM-Id: PF00082"
+                     /label="nisP"
+     gene            9993..10679
+                     /gene="nisR"
+     CDS             9993..10679
+                     /function="transcriptional activator/response regulator in
+                     two-component regulatory system"
+                     /product="NisR"
+                     /codon_start=1
+                     /transl_table=11
+                     /note="nisin biosynthesis regulatory protein"
+                     /db_xref="GI:299832743"
+                     /translation="MYKILIVDDDQEILKLMKTALEMRNYEVAMHQNISLPLDITDFQG
+                     FDLILLDIMMSNIEGTEICKRIRREISTPIIFVSAKDTEEDIINGLGIGGDDYITKPFS
+                     LKQLVAKVEANIKREERNKHAVHVFSEIRRDLGPITFYLEERRVCVNGQTIPLTCREYD
+                     ILELLSQRTSKVYTREDIYDDVYDEYSNALFRSISEYIYQIRSKFAPYDINPIKTVRGL
+                     GYQWHG"
+                     /gene="nisR"
+                     /protein_id="ADJ56358.1"
+     CDS_motif       9999..10327
+                     /note="Response regulator receiver domain"
+                     /note="Pfam-A.hmm-Hit: Response_reg. Score: 97.9. E-value:
+                     2.6e-28. Domain range: 0..111."
+                     /note="PFAM-Id: PF00072"
+                     /label="nisR"
+     CDS_motif       10443..10666
+                     /note="Transcriptional regulatory protein, C terminal"
+                     /note="Pfam-A.hmm-Hit: Trans_reg_C. Score: 58.0. E-value:
+                     5e-16. Domain range: 0..76."
+                     /note="PFAM-Id: PF00486"
+                     /label="nisR"
+     gene            10672..12015
+                     /gene="nisK"
+     CDS             10672..12015
+                     /function="sensor protein in two-component regulatory
+                     system"
+                     /product="NisK"
+                     /codon_start=1
+                     /transl_table=11
+                     /note="nisin biosynthesis sensor protein"
+                     /db_xref="GI:299832744"
+                     /translation="MGKKYSMRRRIWQAVIEIIIGTCLLILLLLGLTFFLRQIGQISGS
+                     ETIRLSLDSDNLTISDIERDMKHYPYDYIIFDNDTSKILGGHYVKSDVPSFVASKQSSH
+                     NITEGEITYTYSSNKHFSVVLRQNSMPEFTNHTLRSISYNQFTYLFFFLGEIILIIFSV
+                     YHLIREFSKNFQAVQKIALKMGEITTFPEQEESKIIEFDQVLNNLYSKSKELAFLIEAE
+                     RHEKHDLSFQVAALSHDVKTPLTVLKGNIELLEMTEVNEQQADFIESMKNSLTVFDKYF
+                     NTMISYTKLLNDENDYKATISLEDFLIDLSVELEELSTTYQVDYQLVKKTDLTTFYGNT
+                     LALSRALINIFVNACQYAKEGEKIVSLSIYDDEKYLYFEIWNNGHPFSEQAKKNAGKLF
+                     FTEDTGRSGKHYGIGLSFAQGVALKHQGNLILSNPQKGGAEVILKIKK"
+                     /gene="nisK"
+                     /protein_id="ADJ56359.1"
+     CDS_motif       11362..11537
+                     /note="His Kinase A (phosphoacceptor) domain"
+                     /note="Pfam-A.hmm-Hit: HisKA. Score: 35.7. E-value:
+                     4.9e-09. Domain range: 4..64."
+                     /note="PFAM-Id: PF00512"
+                     /label="nisK"
+     CDS_motif       11689..12008
+                     /note="Histidine kinase-, DNA gyrase B-, and HSP90-like A"
+                     /note="Pfam-A.hmm-Hit: HATPase_c. Score: 45.6. E-value:
+                     3.6e-12. Domain range: 3..109."
+                     /note="PFAM-Id: PF02518"
+                     /label="nisK"
+     gene            12114..12791
+                     /gene="nisF"
+     CDS             12114..12791
+                     /function="secretion of cell-associated nisin"
+                     /product="NisF"
+                     /codon_start=1
+                     /transl_table=11
+                     /note="nisin transport/immunity protein; component of
+                     ABC-transporter"
+                     /db_xref="GI:299832745"
+                     /translation="MQVKIQNLSKTYKEKQVLQDISFDIKSGTVCGLLGVNGAGKSTLM
+                     KILFGLISADTGKIFFDGQEKTNNQLGALIEAPAIYMNLSAFDNLKTKALLFGISDKRI
+                     HETLEVIGLAETGKKRAGKFSLGMKQRLGIGMAILTEPQFLILDEPTNGLDPDGIAELL
+                     NLILKLKAKGVTILISSHQLHEISKVASQIIILNKGKIRYNHANNKEDDIEQLFFKIVH
+                     GGM"
+                     /gene="nisF"
+                     /protein_id="ADJ56360.1"
+     CDS_motif       12120..12289
+                     /note="Protein of unknown function, DUF258"
+                     /note="Pfam-A.hmm-Hit: DUF258. Score: 17.9. E-value: 0.001.
+                     Domain range: 11..66."
+                     /note="PFAM-Id: PF03193"
+                     /label="nisF"
+     CDS_motif       12234..12568
+                     /note="ABC transporter"
+                     /note="Pfam-A.hmm-Hit: ABC_tran. Score: 63.0. E-value:
+                     2.4e-17. Domain range: 0..118."
+                     /note="PFAM-Id: PF00005"
+                     /label="nisF"
+     gene            12793..13521
+                     /gene="nisE"
+     CDS             12793..13521
+                     /function="secretion of cell-associated nisin"
+                     /product="NisE"
+                     /codon_start=1
+                     /transl_table=11
+                     /note="nisin transport/immunity protein; component of
+                     ABC-transporter"
+                     /db_xref="GI:299832746"
+                     /translation="MKRIIASEAIKLKKSGTLRLVLIIPFVTLFIAFLMGGIQIFSVFS
+                     IYWWETGFLFLLMSLLFLYDIKSEEQAGNFQNVKWKKLSWKIHLAKMLLIWLRGILASI
+                     VLIILLYLVAFVFQGIVVVDFMKVSVALIAILLAASWNLPFIYLIFKWINTYVLLAANT
+                     LICLIVAPFVAQTPVWFLLPYTYHYKVTESLLNIKPSGDLLTGKINFSIWEVLLPFGLS
+                     IVVTIGVSYLLKGVIEHDKK"
+                     /gene="nisE"
+                     /protein_id="ADJ56361.1"
+     gene            13508..14152
+                     /gene="nisG"
+     CDS             13508..14152
+                     /function="secretion of cell-associated nisin"
+                     /product="NisG"
+                     /codon_start=1
+                     /transl_table=11
+                     /note="nisin transport/immunity protein; component of
+                     ABC-transporter"
+                     /db_xref="GI:299832747"
+                     /translation="MIRSECLKLKNSLGFYLVFLFTLLELLTVPIYLAFGRSHVSMTDL
+                     SLMIFLFFPLLVTILSILIFEQESLANRFQEINVNKKSSRIWLSKLIVVDFLLFFPSAM
+                     IWIITGVSQAVGQQGMMIATASWLMAIFLNHFHLLLTFIINRGGSMIIAIIEILLIIFA
+                     SNKVLLAAYWCPIALPVNFMITGRCAYLIAAVGWIVLSTIILVALSKKKIR"
+                     /gene="nisG"
+                     /protein_id="ADJ56362.1"
+ORIGIN
+        1 tctcttaact ccgtgtctag tttttcgttg actttccatt atgcttggat tttttattgt
+       61 ttaattccct ttttttgtat acaagctcgt attcttaaca aataattggc atatcgggtt
+      121 taaaaatact atgtgtttta aagaatctct catgagtttg acgccaataa cttagattaa
+      181 aatcaccgtc accttatttt taggcacgtt cggcagtaac cttatcaaag gtatctcagt
+      241 cattaagttt catgatagta tttactattt tgatggttct tgttattatc caatcgttaa
+      301 aatgacaaaa acaaatagat aaatagataa atatttatgg ggaggacaag tgaacttatc
+      361 atgattaatt gtaaacgatt gagttctgaa tgtttcaaat tatgaggaac aacaggagtt
+      421 ggactattct ttaaacgcct cgacgatacc atcactcttc attagcctaa aattaacaag
+      481 ttaaaatcat tagaataatc tcttttacaa aaaatattta tttaagttat agttgacgaa
+      541 tatttaataa ttttattaat atcttgattt tctagttcct gaataatata gagataggtt
+      601 tattgagtct taaacatact tgaatgacct agtcttataa ctatactgac aatagaaaca
+      661 ttaacaaatc taaaacagtc ttaattctat cttgagaaag tattggtaat aatattattg
+      721 tcgataacgc gagcataata aacggctctg attaaattct gaagtttgtt agatacaatg
+      781 atttcgttcg aaggaactac aaaataaatt ataaggaggc actcaaaatg agtacaaaag
+      841 attttaactt ggatttggta tctgtttcga agaaagattc aggtgcatca ccacgcatta
+      901 caagtatttc gctatgtaca cccggttgta aaacaggagc tctgatgggt tgtaacatga
+      961 aaacagcaac ttgtcattgt agtattcacg taagcaaata accaaatcaa aggatagtat
+     1021 tttgttagtt cagacatgga tactatccta tttttataag ttatttaggg ttgctaaata
+     1081 gcttataaaa ataaagagag gaaaaaacat gataaaaagt tcatttaaag ctcaaccgtt
+     1141 tttagtaaga aatacaattt tatctccaaa cgataaacgg agttttactg aatatactca
+     1201 agtcattgag actgtaagta aaaataaagt ttttttggaa cagttactac tagctaatcc
+     1261 taaactctat gatgttatgc agaaatataa tgctggtctg ttaaagaaga aaagggttaa
+     1321 aaaattattt gaatctattt acaagtatta taagagaagt tatttacgat caactccatt
+     1381 tggattattt agtgaaactt caattggtgt tttttcgaaa agttcacagt acaagttaat
+     1441 gggaaagact acaaagggta taagattgga tactcagtgg ttgattcgcc tagttcataa
+     1501 aatggaagta gatttctcaa aaaagttatc atttactaga aataatgcaa attataagtt
+     1561 tggagatcga gtttttcaag tttataccat aaatagtagt gagcttgaag aagtaaatat
+     1621 taaatatacg aatgtttatc aaattatttc tgaattttgt gagaatgact atcaaaaata
+     1681 tgaagatatt tgtgaaactg taacgctttg ctatggagac gaatatagag aactatcgga
+     1741 acaatatctt ggcagtctga tagttaatca ttatttgatc tctaatttac aaaaagattt
+     1801 gttgtcagat ttttcttgga acactttttt gactaaagtt gaagcaatag atgaagataa
+     1861 aaaatatata attcctctga aaaaagttca aaagtttatt caagaatact cagaaataga
+     1921 aattggtgaa ggtattgaga aactgaaaga aatatatcag gaaatgtcac aaattcttga
+     1981 gaatgataat tatattcaaa ttgatttaat tagtgatagt gaaataaatt ttgatgttaa
+     2041 acaaaagcaa caattagaac atttagctga gtttttagga aatacgacaa aatctgtaag
+     2101 aagaacatat ttggatgact ataaggataa atttatcgaa aaatatggtg tagatcaaga
+     2161 agtacaaata acagaattat ttgattctac atttggcata ggagctccat ataattataa
+     2221 tcatcctcga aatgactttt atgagtccga accgagtact ctatactatt cagaagagga
+     2281 gagagaaaag tacctcagca tgtatgtaga agccgttaaa aatcataatg taattaatct
+     2341 tgacgactta gagtctcatt atcaaaaaat ggacttagaa aagaaaagtg aacttcaagg
+     2401 gttagaatta tttttgaatt tggcaaagga gtatgaaaaa gatattttta ttttagggga
+     2461 tatcgttgga aataataatt tgggaggggc atcaggtaga ttttctgcac tctctccgga
+     2521 gttaacaagt tatcatagaa cgatagtaga ttctgtcgaa agagaaaatg agaataaaga
+     2581 aattacatcg tgtgaaatag tatttcttcc agaaaatatc agacatgcta acgttatgca
+     2641 tacatcaatt atgaggagga aagtacttcc attttttaca agtacaagtc acaatgaagt
+     2701 tctgttaact aatatctata ttggaataga cgaaaaagaa aaattttatg cacgagacat
+     2761 ttcaactcaa gaggtattga aattctacat tacaagcatg tacaataaaa cgttattcag
+     2821 taatgagcta agatttcttt acgaaatttc attagatgac aagtttggta atttaccttg
+     2881 ggaacttatt tacagagact ttgattatat tccacgttta gtatttgacg aaatagtaat
+     2941 atctcctgct aaatggaaaa tttggggaag ggatgtaaat agtaagatga caataagaga
+     3001 acttattcaa agcaaagaaa ttcccaaaga gttttatatt gtcaatggag ataataaagt
+     3061 ttatttatca caggaaaacc cattggatat ggaaatttta gagtcggcga taaagaagag
+     3121 ctcaaaaaga aaagatttta tagagctaca agaatatttt gaagatgaaa atatcataaa
+     3181 taaaggagaa aaggggagag ttgccgatgt tgtagtgcct tttattagaa cgagagcatt
+     3241 aggtaatgaa gggagagcat ttataagaga gaaaagagtt tcggttgaac ggcgtgaaaa
+     3301 attgcccttt aacgagtggc tttatctaaa gttgtacatt tctataaatc gtcaaaatga
+     3361 atttttactg tcgtatcttc cagatattca gaaaatagta gcaaacctgg gtggaaatct
+     3421 attcttccta agatatactg atcctaaacc acatattaga ttgcgtataa aatgttcaga
+     3481 tttattttta gcttacggat ctattcttga aatcttaaaa aggagtcgga aaaataggat
+     3541 aatgtcaact tttgatattt ctatttatga tcaagaagta gaaagatatg gtggatttga
+     3601 tactttagag ttatccgaag caatattttg tgccgattct aaaattattc caaatttgct
+     3661 tacattgata aaagatacta ataatgattg gaaagtcgat gatgtatcaa tcttggtgaa
+     3721 ttatttatat ctgaaatgct tctttgagaa tgataacaaa aagattctta attttttgaa
+     3781 tttagttagt cctaaaaagg ttaaagaaaa tgtcaatgaa aagattgaac attatcttaa
+     3841 gcttctgaaa gttaataatc taggtgacca aattttttat gacaagaatt ttaaagaatt
+     3901 aaagcatgcc ataaaaaatt tatttttaaa aatgatagct caagattttg aacttcagaa
+     3961 agtttattca attattgaca gtatcattca tgtccataat aaccgactaa ttggtattga
+     4021 acgagataaa gagaaattaa tttattacac acttcaaagg ttgtttgttt cggaagaata
+     4081 catgaaatga ggactaatag atggatgaag tgaaagaatt cacatcaaaa caatttttta
+     4141 atactttact tactcttcca agcaccttga agttaatttt tcagttggaa aaacgttatg
+     4201 caatttattt aattgtgcta aatgctatca cagcttttgt tccgttggct agtcttttta
+     4261 tttatcaaga tttaataaac tctgtgctag gttcagggag acatcttatc aatattatta
+     4321 tcatctattt tattgttcaa gtgataacaa cagttctggg acagctggaa agttatgtta
+     4381 gtggaaaatt tgatatgcga ctttcttaca gtatcaatat gcgcctcatg aggactacct
+     4441 catctcttga attaagtgat tatgagcagg ctgatatgta taatatcata gaaaaagtta
+     4501 ctcaagacag cacttacaag ccttttcagc tatttaatgc tatcattgtt gtgctttcat
+     4561 cgtttatctc attgttatct agtctatttt ttattggaac atggaacatt ggggtagcaa
+     4621 ttttactcct tattgttcca gtattatctt tggtactttt tctcagagtg ggacaattag
+     4681 agtttttaat ccagtggcag agagcaagtt ctgaaagaga aacatggtat attgtatatt
+     4741 tattgactca tgatttttca tttaaagaaa tcaagttaaa taatattagc aattacttca
+     4801 ttcataaatt tggaaaatta aagaaaggat ttatcaacca agatttagct attgctcgta
+     4861 agaagacata tttcaatatt tttcttgatt tcattttgaa tttgataaat attcttacga
+     4921 tatttgctat gatcctttcg gtaagagcag gaaaacttct tataggtaat ttggtaagtc
+     4981 tcatacaagc tatttctaaa atcaatactt attctcaaac aatgattcaa aatatttaca
+     5041 tcatttataa tactagtttg tttatggaac aactttttga gtttttaaag agagaaagtg
+     5101 tagttcacaa aaaaatagaa gatactgaaa tatgcaatca acatatagga actgttaaag
+     5161 taattaattt atcatatgtt taccctaatt cgaatgcctt tgcactaaag aatatcaatt
+     5221 tatcctttga aaaaggagaa ttaactgcta ttgtaggaaa aaatggttca gggaaaagta
+     5281 cactagtaaa gataatttca ggattatatc aaccaactat gggaataatc caatacgaca
+     5341 aaatgagaag tagtttgatg cctgaggagt tttatcagaa aaacatatcg gtgctgttcc
+     5401 aagattttgt gaagtatgag ttaacgataa gagagaatat aggattgagt gatttgtctt
+     5461 ctcaatggga agatgagaaa attattaaag tactagataa tttaggactc gattttttga
+     5521 aaactaataa tcaatatgta cttgatacgc agttaggaaa ttggtttcaa gaagggcatc
+     5581 aactttcagg aggtcagtgg caaaaaattg cattagcaag gacattcttt aagaaagctt
+     5641 caatttatat tttagatgaa ccaagtgctg cactcgatcc tgtagctgaa aaagaaatat
+     5701 ttgattattt tgttgctctt tcggaaaata atatttcaat tttcatttct catagtttga
+     5761 atgctgccag aaaagcaaat aaaatcgtgg ttatgaaaga tggacaggtc gaagatgttg
+     5821 gaagtcatga tgtccttctg agaagatgtc aatactatca agaactttat tattcagagc
+     5881 aatatgagga taatgatgaa taaaaaaaat ataaaaagaa atgttgaaaa aattattgct
+     5941 caatgggatg agagaactag aaaaaataaa gaaaacttcg atttcggaga gttgactctc
+     6001 tctacaggat tgcctggtat aattttaatg ttagcggagt taaaaaataa agataactca
+     6061 aagatatatc agaaaaagat agacaattat attgaatata ttgttagcaa actttcaaca
+     6121 tatgggcttt taacaggatc actttattcg ggagcagctg gcattgcatt aagtatccta
+     6181 catttacgag aagatgacga aaaatataag aatcttcttg atagcctaaa tagatatatc
+     6241 gaatatttcg tcagagaaaa aattgaagga tttaatttgg aaaacattac tcctcctgat
+     6301 tatgacgtga ttgaaggttt atctgggata ctttcctatc tattattaat caacgacgag
+     6361 caatatgatg atttgaaaat actcattatc aattttttat caaatctgac taaagaaaac
+     6421 aaaggactaa tatcgcttta catcaaatcg gagaatcaga tgtctcaatc agaaagtgag
+     6481 atgtatccac taggctgttt gaatatggga ttagcacatg gacttgctgg agtgggctgt
+     6541 atcttagctt atgcccacat aaaaggatat agtaatgaag cctcgttgtc agctttgcaa
+     6601 aaaattattt ttatttatga aaagtttgaa cttgaaagga aaaaacagtt tctatggaaa
+     6661 gatggacttg tagcagatga attaaaaaaa gagaaagtaa ttagggaagc aagtttcatt
+     6721 agagatgcat ggtgctatgg aggtccaggt attagtctgc tatacttata cggaggatta
+     6781 gcactggata atgactattt tgtagataaa gcagaaaaaa tattagagtc agctatgcaa
+     6841 aggaaacttg gtattgattc atatatgatt tgccatggct attctggttt aatagaaatt
+     6901 tgttctttat ttaagcggct attaaataca aaaaagtttg attcatacat ggaagaattt
+     6961 aatgttaata gtgagcaaat tcttgaagaa tacggagatg aaagtggcac gggttttctt
+     7021 gaaggaataa gtggctgtat actggtatta tcgaaatttg aatattcaat caattttact
+     7081 tattggagac aagcactgtt actttttgac gattttttga aaggagggaa gaggaaatga
+     7141 gaagatattt aatacttatt gtggccttaa tagggataac aggtttatca gggtgttatc
+     7201 aaacaagtca taaaaaggtg aggtttgacg aaggaagtta tactaatttt atttatgata
+     7261 ataaatcgta tttcgtaact gataaggaga ttcctcagga gaacgttaac aattccaaag
+     7321 taaaatttta taagctgttg attgttgaca tgaaaagtga gaaactttta tcaagtagca
+     7381 acaaaaatag tgtgactttg gtcttaaata atatttatga ggcttctgac aagtcgctat
+     7441 gtatgggtat taacgacaga tactataaga tacttccaga aagtgataag ggggcggtca
+     7501 aagctttgag attacaaaac tttgatgtga caagcgatat ttctgatgat aattttgtta
+     7561 ttgataaaaa tgattcacga aaaattgact atatgggaaa tatttacagt atatcggaca
+     7621 ccaccgtatc tgatgaagaa ttgggagaat atcaggatgt tttagctgaa gtacgtgtgt
+     7681 ttgattcagt tagtggcaaa agtatcccga ggtctgaatg ggggagaatt gataaggatg
+     7741 gttcaaattc caaacagagt aggacggaat gggattatgg cgaaatccat tctattagag
+     7801 gaaaatctct tactgaagca tttgccgttg agataaatga tgattttaag cttgcaacga
+     7861 aggtaggaaa ctagagtgaa aaaaatacta ggtttccttt ttatcgtttg ttcgttgggt
+     7921 ttatcagcaa ctgtgcatgg ggagacaaca aattcacaac agttactctc aaataatatt
+     7981 aatacggaat taattaatca taattctaat gcaattttat cttcaacaga gggatcaacg
+     8041 actgattcga ttaatctagg ggcgcagtca cctgcagtaa aatcgacaac aaggactgaa
+     8101 ttggatgtaa ctggtgctgc taaaacttta ttacagacat cagctgttca aaaagaaatg
+     8161 aaagtttcgt tgcaagaaac tcaagttagt tctgaattca gtaagagaga tagcgttaca
+     8221 aataaagaag cagttccagt atctaaggat gagctacttg agcaaagtga agtagtcgtt
+     8281 tcaacatcat cgattcaaaa aaataaaatc ctcgataata agaagaatag agctaacttc
+     8341 gttacttcct ctccgcttat taaggaaaaa ccatcaaatt ctaaagatgc atctggtgta
+     8401 attgataatt ctgcttctcc tctatcttat cgtaaagcta aggaagtggt atctcttaga
+     8461 caacctttaa aaaatcaaaa agtagaggca caacctctat tgataagtaa ttcttctgaa
+     8521 aagaaagcaa gtgtttatac aaattcacat gatttttggg attatcagtg ggatatgaaa
+     8581 tatgtgacaa ataatggaga aagctatgcg ctctaccagc cctcaaagaa aatttctgtt
+     8641 ggaattattg attcaggaat catggaagaa catcctgatt tgtcaaatag tttaggaaat
+     8701 tattttaaaa atcttgttcc taagggaggg tttgataatg aagaacctga tgaaactgga
+     8761 aatccaagtg atattgtcga caaaatggga cacgggacgg aagtcgcagg tcagattaca
+     8821 gcaaatggta atattttagg agtagcacca gggattactg taaatatata cagagtattt
+     8881 ggtgaaaatc tttcgaaatc ggaatgggta gctagagcaa taagaagagc tgcggatgat
+     8941 gggaacaagg tcatcaatat aagtgctgga cagtatctta tgatttcagg atcgtatgat
+     9001 gatggaacaa atgattatca agagtatctt aattataagt cagcaataaa ttatgcaaca
+     9061 gcaaaaggaa gtattgttgt cgcagctctt ggtaatgata gtttaaacat acaagataac
+     9121 caaacaatga taaactttct taagcgtttc agaagtataa aggttcctgg aaaagttgta
+     9181 gatgcaccga gtgtatttga ggatgtaata gccgtaggtg gaatagatgg ttatggtaat
+     9241 atttctgatt ttagtaatat tggagcggat gcaatttatg ctcctgctgg cacaacggcc
+     9301 aattttaaaa aatatgggca agataaattt gtcagtcagg gttattattt gaaagattgg
+     9361 ctttttacaa ctactaatac tggctggtac caatatgttt atggcaactc atttgctact
+     9421 cctaaagtat ctggggcact ggcattagta gttgataaat atggaataaa gaatcctaac
+     9481 caactaaaaa ggtttcttct aatgaattct ccagaagtta atgggaatag agtattgaat
+     9541 attgttgatt tattgaatgg gaaaaataaa gcttttagct tagatacaga taaaggtcag
+     9601 gatgatgcta ttaaccataa atcgatggag aatcttaaag agtctaggga tacaatgaaa
+     9661 caggaacaag ataaagaaat tcaaagaaat acaaataaca atttttctat caaaaatgat
+     9721 tttcataaca tttcaaaaga agtaatttca gttgattata atattaatca aaaaatggct
+     9781 aataatcgaa attcgagagg tgctgtttct gtacgaagtc aagaaatttt acctgttact
+     9841 ggagatggag aagatttttt accggcttta ggtatagtgt gtatctcaat ccttggtata
+     9901 ttgaaaagaa agactaaaaa ttgatagatt atatttcttc agaatgaatg gtataatgaa
+     9961 gtaatgagta ctaaacaatc ggaggtaaag tggtgtataa aattttaata gttgatgatg
+    10021 atcaggaaat tttaaaatta atgaagacag cattagaaat gagaaactat gaagttgcga
+    10081 tgcatcaaaa catttcactt cccttggata ttactgattt tcagggattt gatttgattt
+    10141 tgttagatat catgatgtca aatattgaag ggacagaaat ttgtaaaagg attcgcagag
+    10201 aaatatcaac tccaattatc tttgttagtg cgaaagatac agaagaggat attataaacg
+    10261 gcttaggtat tggtggggat gactatatta ctaagccttt tagccttaaa cagttggttg
+    10321 caaaagtgga agcaaatata aagcgagagg aacgcaataa acatgcagtt catgtttttt
+    10381 cagagattcg tagagattta ggaccaatta cattttattt agaagaaagg cgagtctgtg
+    10441 tcaatggtca aacaattcca ctgacttgtc gtgaatacga tattcttgaa ttactatcac
+    10501 aacgaacttc taaagtttat acgagagagg atatttatga tgacgtatat gatgaatatt
+    10561 ctaatgcact ttttcggtca atctcggaat atatttatca gattaggagt aagtttgcac
+    10621 catacgatat taatccgata aaaacggttc ggggacttgg gtatcagtgg catgggtaaa
+    10681 aaatattcaa tgcgtcgacg gatatggcaa gctgtcattg aaattatcat aggtacttgt
+    10741 ctacttatcc tgttgttact gggcttgact ttctttctac gacaaattgg acaaatcagt
+    10801 ggttcagaaa ctattcgttt atctttagat tcagataatt taactatttc tgatatcgaa
+    10861 cgtgatatga aacactaccc atatgattat attatttttg acaatgatac aagtaaaatt
+    10921 ttgggaggac attatgtcaa gtcggatgta cctagttttg tagcttcaaa acagtcttca
+    10981 cataatatta cagaaggaga aattacttat acttattcaa gcaataagca tttttcagtt
+    11041 gttttaagac aaaacagtat gcctgaattt acaaatcata cgcttcgttc aatttcttat
+    11101 aatcaattta cttacctttt cttttttctt ggtgaaataa tactcattat tttttctgtc
+    11161 tatcatctca ttagagaatt ttctaagaat tttcaagccg ttcaaaagat tgcattgaag
+    11221 atgggggaaa taactacttt tcctgaacaa gaggaatcaa aaattattga atttgatcag
+    11281 gttctgaata acttatattc gaaaagtaag gagttagctt tccttattga agcggagcgt
+    11341 catgaaaaac atgatttatc cttccaggtt gctgcacttt cacatgatgt taagacacct
+    11401 ttaacagtat taaaaggaaa tattgaactg ctagagatga ctgaagtaaa tgaacaacaa
+    11461 gctgatttta ttgagtcaat gaaaaatagt ttgactgttt ttgacaagta ttttaacaca
+    11521 atgattagtt atacaaaact tttgaatgat gaaaatgatt acaaagcgac aatctccctg
+    11581 gaggattttt tgatagattt atcagttgag ttggaagagt tgtcaacaac ttatcaagtg
+    11641 gattatcagc tagttaaaaa aacagattta accacttttt acggaaatac attagcttta
+    11701 agtcgagcac ttatcaatat ctttgttaat gcctgtcagt atgctaaaga gggtgaaaaa
+    11761 atagtcagtt tgagtattta tgatgatgaa aaatatctct attttgaaat ctggaataat
+    11821 ggtcatcctt tttctgaaca agcaaaaaaa aatgctggaa aactattttt cacagaagat
+    11881 actggacgta gtgggaaaca ctatgggatt ggactatctt ttgctcaagg tgtagcttta
+    11941 aaacatcaag gaaacttaat tctcagtaat cctcaaaaag gtggggcaga agttatccta
+    12001 aaaataaaaa agtaatttag taatctctaa ggattacttt ttttgtttct gaatagattc
+    12061 tgaaaattgt tttatatact ttttttaaac ataaaataaa gtgaggaaat ataatgcagg
+    12121 taaaaattca aaatctttct aaaacatata aagaaaagca ggtgctacaa gatatcagtt
+    12181 ttgatattaa atctggaaca gtctgtggtt tattaggagt taacggtgca ggaaaatcaa
+    12241 ctttgatgaa aattttgttt ggtttaattt ctgcagatac tggaaaaatt ttttttgatg
+    12301 gacaagaaaa gacaaataat caacttggag ccttaatcga ggctccagca atatatatga
+    12361 atttatctgc tttcgataat cttaaaacta aggctttgct ttttggaatt tcagataaga
+    12421 gaattcatga aactctagaa gtgattggtt tggcagaaac aggaaagaaa agagcaggaa
+    12481 aattctcttt agggatgaaa caacgtttgg gaattggtat ggctattctt acagaacctc
+    12541 aatttttaat tcttgatgaa cctactaatg gtttggatcc tgatggtatt gcggagttgt
+    12601 taaacttaat cttaaaactt aaagctaaag gtgtgacaat cttgatttct agtcatcagt
+    12661 tgcacgaaat aagtaaagta gctagtcaaa ttattatttt gaacaaaggt aagattcgtt
+    12721 ataatcatgc gaacaataaa gaagacgaca ttgaacagtt attctttaag attgtgcatg
+    12781 gaggaatgtg atatgaaaag aataatagca tcagaagcaa taaaattaaa aaaatcagga
+    12841 actcttagat tggtattaat tatccctttt gtgactctat ttatagcatt tcttatgggt
+    12901 ggaatacaga tttttagtgt tttttcaatt tattggtggg aaactggttt tttattcctt
+    12961 ttgatgagtt tgctttttct ttatgatata aaatcagagg agcaagctgg aaattttcaa
+    13021 aatgtgaaat ggaaaaagct gagttggaaa attcatttgg ccaaaatgtt gttgatttgg
+    13081 ctaagaggta tactagcgag catagtcttg attattttgc tttatttggt tgcttttgtg
+    13141 tttcaaggta ttgtagtggt ggattttatg aaagtaagtg tggcattgat tgctatatta
+    13201 ctagcagctt cttggaattt accctttata tacttgattt tcaagtggat taatacttac
+    13261 gtattgttag ctgcgaatac cttgatttgt ttaattgttg ccccttttgt tgcacaaact
+    13321 ccagtatggt tcttgctacc atacacttat cactataaag ttacagaaag tttgttaaat
+    13381 atcaaaccat caggagattt gttaacaggg aagataaatt tcagtatttg ggaagtttta
+    13441 ttaccatttg gactttccat agttgtaacg ataggagttt cgtatttact taaaggagtg
+    13501 atagaacatg ataagaagtg aatgtctcaa attaaaaaat agcttagggt tttatttagt
+    13561 ttttctcttt actttattag agcttttaac ggttcctatt tatttagctt ttggaagaag
+    13621 tcatgtttca atgactgatt tatcgctcat gatttttttg ttttttccgt tactggttac
+    13681 aattttgtct attctaatct ttgaacagga gagtctggcc aatcgtttcc aagaaataaa
+    13741 tgtaaataaa aaaagtagca gaatttggtt atcaaagcta atagtagtgg atttcctttt
+    13801 gttctttcca tcagcaatga tctggataat tacgggagtt tcacaggcag tagggcaaca
+    13861 aggaatgatg atcgcaacag ctagctggtt gatggcaatt tttcttaatc attttcatct
+    13921 tttattgacc tttataatca atcgaggagg gagcatgatt atcgcgatta ttgaaatatt
+    13981 actcattatt tttgccagta ataaagtttt attagcagct tattggtgtc ccattgcttt
+    14041 acctgttaat tttatgataa ctgggcggtg tgcttatctg atagctgccg tagggtggat
+    14101 tgttttatcc acaataattc ttgtagcatt atctaaaaaa aagattagat aaagtatttt
+    14161 ttcttatggt aattcgacct aatatgtttt tgctatttat ctcttatttc tgtctatagt
+    14221 aatttattca aagtaccttt agactcataa gtttgaataa aatttccatc aatatgtgac
+    14281 agttcttact ctaagaataa tgtttccgtc gttagttttc ttttctcagt aattttttat
+    14341 aaagtggttt cctatcgact tacacttttt cttttggagt tattggtgtc aagctcatga
+    14401 gagattcttt aaagcatata acatttttaa actgatatgc cagttatttg tgaagaatat
+    14461 gagtttctat ataaaagaga aaattaaaca atgaaaaatc caagtataaa tacttggatt
+    14521 tttcattatt tttgatagac atataaagtg cattttaacc tagaattaaa agatgtatcg
+    14581 ttgataataa taaaatgaac caaagcaaaa ctgacgttaa gtcaatttat tagagtcaaa
+    14641 aacgtataat tttaatgtat ttattttaag tgatttcttt ttcaaattga ttaggcgtaa
+    14701 gataccctaa actttgatgg attcgttttg aattataaaa ggcttcaata taccagaaaa
+    14761 tactctgata ggcttcttca aagttcttat atttaaattg atagacccac tctcttttta
+    14821 aatgtccatg ccaagattca agactggcat tatgataagg atagccctta cgactgaagg
+    14881 agtgagtcat tccagagttt tttattgtct cttcatactc atgactcgta tactgacttc
+    14941 cttggtcaga atgaagcatc acagcttctg gataattttg tgattccatt gccttattca
+    15001 aagtcctttg cactaa
+//

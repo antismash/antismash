@@ -133,12 +133,9 @@ Options
         for action_group in self._action_groups:
             if action_group.title not in ["optional arguments", "positional arguments"]:
                 show_opt = self._show_all
-                print("action_group %s shown = %s" % ( action_group.title, show_opt))
                 if not show_opt:
                     if "basic" in self._display_group[action_group.title]:
                         show_opt = True
-                        print("action_group %s had basic, now shown = %s" % ( action_group.title, show_opt))
-                        print("found in", self._display_group[action_group.title])
 # TODO: keep lines or not?
 #                    elif len(list(set(sys.argv) & set(self._display_group[action_group.title]))) > 0:
 #                        show_opt = True
@@ -167,7 +164,7 @@ class FullPathAction(argparse.Action):
         setattr(namespace, self.dest, os.path.abspath(values))
 
 class ModuleArgs:
-    def __init__(self, title, prefix, override_safeties=False, always_on=True, # TODO: remove always_on when hmm_detection becomes core
+    def __init__(self, title, prefix, override_safeties=False, always_on=False, # TODO: remove always_on when hmm_detection becomes core
                      enabled_by_default=False, basic_help=False):
         self.title = title
         self.parser = AntiSmashParser(add_help=False)
@@ -259,7 +256,6 @@ class ModuleArgs:
             dest = name.lstrip("--").replace("-", "_")
         elif dest == self.prefix:
             if not self.single_arg:
-                print(name, dest, self.prefix)
                 raise ValueError("Destination must include more information than the prefix")
         elif not dest.startswith(self.prefix + "_"):
             dest = "{}_{}".format(self.prefix, dest)
@@ -274,7 +270,7 @@ def build_parser(from_config_file=False, modules=None):
                debug_options()]
     minimal = specific_debugging(modules)
     if minimal:
-        parents.extend(minimal)
+        parents.append(minimal)
     if modules is not None:
         parents.extend(module.get_arguments() for module in modules)
 
@@ -451,9 +447,8 @@ def specific_debugging(modules):
     for module in relevant_modules:
         try:
             group.add_option('--enable-%s' % (module.NAME),
-                               dest='enabled_specific_plugins',
-                               action='append_const',
-                               const=module.NAME,
+                               dest='%s_enabled' % (module.NAME),
+                               action='store_true',
                                default=False,
                                help="Enable %s (default: enabled, unless --minimal is specified)" % module.SHORT_DESCRIPTION)
         except AttributeError as err:
@@ -461,12 +456,6 @@ def specific_debugging(modules):
     if errors:
         raise AttributeError("\n\t".join([''] + errors))
     return group
-
-def simple_options(module, args):
-    modules = []
-    if module is not None:
-        modules = [module]
-    return build_parser(from_config_file=False, modules=modules).parse_args(args)
 
 class Config():
     __singleton = None

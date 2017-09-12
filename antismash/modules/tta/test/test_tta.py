@@ -7,8 +7,7 @@ from Bio.SeqRecord import SeqRecord
 from antismash.common import deprecated
 from antismash.common.secmet.record import Record
 from antismash.common.secmet.feature import CDSFeature, Cluster
-from antismash.common.test.helpers import DummyCDS
-from antismash.config import args
+from antismash.common.test.helpers import DummyCDS, get_simple_options
 from antismash.modules import tta
 
 class TtaTest(unittest.TestCase):
@@ -40,7 +39,7 @@ class TtaTest(unittest.TestCase):
     def test_detect(self):
         """Test tta.detect()"""
         self.assertEqual(len(self.record.get_cds_features()) + len(self.record.get_clusters()), 3)
-        options = args.simple_options(tta, ["--tta"])
+        options = get_simple_options(tta, ["--tta"])
         detected = tta.detect(self.record, options)
         self.assertEqual(len(detected), 2)
         features = self.record.get_generics()

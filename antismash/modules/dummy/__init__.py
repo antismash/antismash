@@ -27,6 +27,11 @@ def get_arguments():
                       action='store_true',
                       default=False,
                       help="Dummy only.")
+    args.add_option('--dummy-without-fimo',
+                      dest='without_fimo',
+                      action='store_true',
+                      default=False,
+                      help="Dummy only.")
 
 
     return args

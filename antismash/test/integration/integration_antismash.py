@@ -5,14 +5,16 @@ import os
 import sys
 import unittest
 
-from antismash.main import run_antismash, gather_modules
+from antismash.main import run_antismash, get_all_modules
 from antismash.config.args import build_parser, Config
 
 class TestAntismash(unittest.TestCase):
     def setUp(self):
         args = ["run_antismash.py"]
-        self.parser = build_parser(modules=gather_modules(with_genefinding=True))
+        self.parser = build_parser(modules=get_all_modules())
         self.default_options = self.parser.parse_args(args)
+        self.default_options.minimal = True
+        self.default_options.all_enabled_modules = []
         Config(self.default_options)
 
     def tearDown(self):
@@ -20,4 +22,5 @@ class TestAntismash(unittest.TestCase):
 
     def test_nisin_minimal(self):
         path = os.path.join(os.path.dirname(__file__), "data", "nisin.gbk")
-        run_antismash(path, Config({"minimal": True}))
+        assert Config().minimal
+        run_antismash(path, Config())

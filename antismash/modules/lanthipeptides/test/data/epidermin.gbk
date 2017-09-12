@@ -1,0 +1,393 @@
+LOCUS       X62386                  8700 bp    DNA     linear   BCT 26-JUL-2016
+DEFINITION  S.epidermidis genes epiY', epiY, epiA, epiB, epiC, epiD, epiQ, epiP.
+ACCESSION   X62386
+VERSION     X62386.1
+KEYWORDS    epiA ORF; epiB ORF; epiC ORF; epiD ORF; epidermin; epiP ORF; epiQ
+            ORF; epiY ORF; epiY' ORF; serine protease.
+SOURCE      Staphylococcus epidermidis
+  ORGANISM  Staphylococcus epidermidis
+            Bacteria; Firmicutes; Bacilli; Bacillales; Staphylococcaceae;
+            Staphylococcus.
+REFERENCE   1  (bases 1 to 8700)
+  AUTHORS   Schnell,N., Engelke,G., Augustin,J., Rosenstein,R., Ungermann,V.,
+            Gotz,F. and Entian,K.D.
+  TITLE     Analysis of genes involved in the biosynthesis of lantibiotic
+            epidermin
+  JOURNAL   Eur. J. Biochem. 204 (1), 57-68 (1992)
+   PUBMED   1740156
+REFERENCE   2  (bases 1 to 8700)
+  AUTHORS   Peschel,A., Augustin,J., Kupke,T., Stevanovic,S. and Gotz,F.
+  TITLE     Regulation of epidermin biosynthetic genes by EpiQ
+  JOURNAL   Mol. Microbiol. 9 (1), 31-39 (1993)
+   PUBMED   8412669
+REFERENCE   3  (bases 1 to 8700)
+  AUTHORS   Engelke,G.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (18-DEC-1991) G. Engelke, Institut f. Mikrobiologie,
+            Theodor-Stern Kai 7, Haus 75a, 6Frankfurt 70, FRG
+COMMENT     On Jun 21, 2005 this sequence version replaced gi:245669.
+FEATURES             Location/Qualifiers
+     gene            complement(<1..827)
+                     /gene="epiY'"
+     CDS             complement(<1..827)
+                     /note="Protein sequence is in conflict with the conceptual
+                     translation; none of previously described start codons for
+                     Staphylococci (ATG,TTg,GTG) is present"
+                     /codon_start=1
+                     /db_xref="GOA:P30193"
+                     /db_xref="InterPro:IPR001140"
+                     /db_xref="InterPro:IPR004881"
+                     /db_xref="InterPro:IPR011527"
+                     /db_xref="InterPro:IPR017940"
+                     /db_xref="UniProtKB/Swiss-Prot:P30193"
+                     /translation="NLFSVIVSLIFLYIINKTLTLYLVCTLPILIIVILPIGNIMKRVS
+                     SKSQEATAKLSSYYSNRLSTIKLIKTLSTYNIEKIKNYTLLKNIFDIELHKIKVLSFFE
+                     PIMNLILFINIFGILFLGYYLMENNMMKSGDMFAYVLYLFQIINPIVSITSYWTEVQRA
+                     IGSSDRILKINKEPEEVLTIKTTYNNFVQKMEINDLNFTKDNKQIINSISLDLHKGYIY
+                     NIIGESGCGKSTLLNILAGLNTEYTGNIYLDKLDKSQFSKYEWRNLFSYITQDL"
+                     /gene="epiY_"
+                     /transl_table=11
+                     /locus_tag="epiY_"
+                     /protein_id="CAA44250.1"
+                     /product="epiY'"
+     source          1..8700
+                     /mol_type="genomic DNA"
+                     /clone="pTepi14"
+                     /db_xref="taxon:1282"
+                     /organism="Staphylococcus epidermidis"
+                     /strain="Tu 3298"
+     cluster         1..8700
+                     /cutoff="20000"
+                     /extension="10000"
+                     /contig_edge="True"
+                     /product="lanthipeptide"
+                     /note="Detection rule(s) for this cluster type:
+                     lanthipeptide: ((LANC_like and (Flavoprotein or
+                     Trp_halogenase or p450 or Lant_dehyd_N or Lant_dehyd_C or
+                     adh_short or adh_short_C2) or cds(LANC_like and (Pkinase or
+                     DUF4135)) or TIGR03731 or Antimicr18 or Gallidermin or
+                     L_biotic_A or leader_d or leader_eh or leader_abc or
+                     mature_d or mature_ab or mature_a or mature_b or mature_ha
+                     or mature_h_beta or lacticin_l or lacticin_mat or
+                     LD_lanti_pre or strep_PEQAXS));"
+     gene            complement(781..1227)
+                     /gene="epiY"
+     CDS             complement(781..1227)
+                     /note="Protein sequence is in conflict with the conceptual
+                     translation; none of previously described start codons for
+                     Staphylococci (ATG,TTg,GTG) is present"
+                     /codon_start=1
+                     /db_xref="GOA:P30194"
+                     /db_xref="InterPro:IPR001140"
+                     /db_xref="InterPro:IPR011527"
+                     /db_xref="InterPro:IPR017940"
+                     /db_xref="UniProtKB/Swiss-Prot:P30194"
+                     /translation="SLKGDDIIKGLYDLWKITKPNTLLLSIGLIFSLIGTSFSLYIPLI
+                     IRNALNKSSLSTDKIVIIIICFGLTLIFSGVSTYILGYIGQKIIQNIRSVTWNKVIKLP
+                     YSFHLKNSASNLTSRLVNDTMNITRVFSVEFIFSYSITNIFIYN"
+                     /gene="epiY"
+                     /transl_table=11
+                     /locus_tag="epiY"
+                     /protein_id="CAA44251.1"
+                     /product="epiY"
+     gene            1381..1539
+                     /gene="epiA"
+     CDS             1381..1539
+                     /codon_start=1
+                     /db_xref="GOA:P08136"
+                     /db_xref="InterPro:IPR006078"
+                     /db_xref="InterPro:IPR006079"
+                     /db_xref="PDB:1G5Q"
+                     /db_xref="UniProtKB/Swiss-Prot:P08136"
+                     /translation="MEAVKEKNDLFNLDVKVNAKESNDSGAEPRIASKFICTPGCAKTG
+                     SFNSYCC"
+                     /gene="epiA"
+                     /transl_table=11
+                     /locus_tag="epiA"
+                     /protein_id="CAA44252.1"
+                     /product="Epidermin prepeptide"
+                     /sec_met="Type: lanthipeptide"
+                     /sec_met="Gallidermin (E-value: 4.7e-40, bitscore: 125.0,
+                     seeds: 3); mature_b (E-value: 7.5e-16, bitscore: 46.8,
+                     seeds: 5)"
+                     /sec_met="Kind: biosynthetic"
+     gene            1605..4565
+                     /gene="epiB"
+     CDS             1605..4565
+                     /codon_start=1
+                     /db_xref="GOA:P30195"
+                     /db_xref="InterPro:IPR006826"
+                     /db_xref="InterPro:IPR006827"
+                     /db_xref="UniProtKB/Swiss-Prot:P30195"
+                     /function="modifying enzyme"
+                     /translation="MDNIFVPSNIYMVRTPIFSIELYNQFLKSDNIDYDLILQNDIFKE
+                     SIMTTTYNLYQSIGKIDWEKDNKKTRNVKESLLKYLIRMSTRSTPYGMLSGVALGEFSE
+                     NNNIKIKDSSFHKKDVKIDGQWLYKLVHYLESDYTYYKDSFVIWNQQNYIYNNRLYLDN
+                     NSSITENKRNDVLSVKYNSILVFIHENSKKNITYEELVQLISSKYSIENKEEVKVFVQE
+                     LINKEIIFSDLRPTLENKNPLDYIINSLNPKNSLVGTLINISNEITKYSKMPLGKGEYK
+                     YLDIVNLMSQLFVSKNYLQIDTYIDYSRNELKQSLADNISEAAYILWLLSPNHFGTKTI
+                     RNYHEFFMDKYGFEQLVNLKQLLSDINGFGYPKKDSYSFSNNIAFLKEKYLLAIQNNSH
+                     IEITENDVKNLEKNNTVSKINAPVSTEIYSEIYFGNSIKGYEDFAVISPILGSFNAGAT
+                     FGRFTGNFNIKKKNQLQKEIVHHYNNYMNENGLEISQLNEGPLNSRNVNILNNNRIYNT
+                     CLNLNLPKSDIDINDIFIGATFNKLYLYSEKHDSRIVFVSNSMFNYEFGSELYKFLREI
+                     SFEKTKFIQPITEEGIDSLPFCPRIIYKNIILKPATWKINSEMFSETENWLNRFATIRE
+                     KWHIPKDVIIAFGDNRLLLNLLNDKHLIILKKELKKHGRIRILESFINESNNERMLEIV
+                     TPLYKKTSLKEQSFIIPKNRNKHFNNLKDWFSIHLSIPKTYQDNFIQDYLLPFITELKV
+                     NNFINKFFYIKFKEDEDFIKLRLLREDEDYSQIYSFIKNWKDYCLLNSELYDYSIVDYV
+                     PEVYRYGGPHVIEDIENFFMYDSLLSINIIQSEFKIPKEFIVAISIDFLLDYLEINKSE
+                     KEEILINNAEDLYRSNDIREYKNLLAKLTNPKNDYEILKKEFPNLHEFLFNKISILENL
+                     KKTLQKSLYTSRSRIIGSFIHMRCNRIFGINPEKEKFVLSIFNEITKTKKYWDGCD"
+                     /gene="epiB"
+                     /transl_table=11
+                     /locus_tag="epiB"
+                     /protein_id="CAA44253.1"
+                     /product="epiB"
+                     /sec_met="Type: lanthipeptide"
+                     /sec_met="Lant_dehyd_N (E-value: 1.9e-28, bitscore: 87.8,
+                     seeds: 38); Lant_dehyd_C (E-value: 2.2e-130, bitscore:
+                     424.4, seeds: 37); Lant_dehydr_C (E-value: 3.9e-19,
+                     bitscore: 58.3, seeds: ?)"
+                     /sec_met="Kind: biosynthetic"
+     gene            4441..5808
+                     /gene="epiC"
+     CDS             4441..5808
+                     /codon_start=1
+                     /db_xref="InterPro:IPR007822"
+                     /db_xref="InterPro:IPR020406"
+                     /db_xref="UniProtKB/Swiss-Prot:P30196"
+                     /function="modifying enzyme"
+                     /translation="MAVLYTCVVIEYSVLILKKKNLFYLFLMKLQKLKNIGMVVININN
+                     IKKILENKITFLSDIEKATYIIENQSEYWDPYTLSHGYPGIILFLSASEKVFHKDLEKV
+                     IHQYIRKLGPYLESGIDGFSLFSGLSGIGFALDIASDKQYSYQSILEQIDNLLVQYVFD
+                     FLNNDALEVTPTNYDIIQGFSGIGRYLLNRISYNYNAKKALKHILNYFKTIHYSKDNWL
+                     VSNEHQFLDIDKQNFPSGNINLGLAHGILGPLSLTALSKMNGIEIEGHEEFLQDFTSFL
+                     LKPEFKNNNEWFDRYDILENYIPNYSVRNGWCYGDTGIMNTLLLSGKALNNEGLIKMSK
+                     NILINIIDKNNDDLISPTFCHGLASHLTIIHQANKFFNLSQVSTYIDTIVRKIISHYSE
+                     ESSFMFQDIEYSYGQKIYKNKVGILEGELGVLLALLDYIDTQNQSRKNWKNMFLIT"
+                     /gene="epiC"
+                     /transl_table=11
+                     /locus_tag="epiC"
+                     /protein_id="CAA44254.1"
+                     /product="epiC"
+                     /sec_met="Type: lanthipeptide"
+                     /sec_met="LANC_like (E-value: 1.5e-85, bitscore: 276.1,
+                     seeds: 47)"
+                     /sec_met="Kind: biosynthetic"
+     gene            5824..6369
+                     /gene="epiD"
+     CDS             5824..6369
+                     /codon_start=1
+                     /db_xref="GOA:P30197"
+                     /db_xref="InterPro:IPR003382"
+                     /db_xref="PDB:1G5Q"
+                     /db_xref="PDB:1G63"
+                     /db_xref="UniProtKB/Swiss-Prot:P30197"
+                     /function="modifying enzyme"
+                     /translation="MYGKLLICATASINVININHYIVELKQHFDEVNILFSPSSKNFIN
+                     TDVLKLFCDNLYDEIKDPLLNHINIVENHEYILVLPASANTINKIANGICDNLLTTVCL
+                     TGYQKLFIFPNMNIRMWGNPFLQKNIDLLKNNDVKVYSPDMNKSFEISSGRYKNNITMP
+                     NIENVLNFVLNNEKRPLD"
+                     /gene="epiD"
+                     /transl_table=11
+                     /locus_tag="epiD"
+                     /protein_id="CAA44255.1"
+                     /product="epiD"
+                     /sec_met="Type: lanthipeptide"
+                     /sec_met="Flavoprotein (E-value: 3.8e-28, bitscore: 87.1,
+                     seeds: 143)"
+                     /sec_met="Kind: biosynthetic"
+     gene            complement(6366..6983)
+                     /gene="epiQ"
+     CDS             complement(6366..6983)
+                     /codon_start=1
+                     /db_xref="GOA:P30198"
+                     /db_xref="InterPro:IPR001867"
+                     /db_xref="InterPro:IPR011991"
+                     /db_xref="InterPro:IPR016032"
+                     /db_xref="UniProtKB/Swiss-Prot:P30198"
+                     /function="response regulator"
+                     /translation="MISINIVGEVDSILIESILELDRRITINSSNIDPNFIIVYEKFDE
+                     YYTFLKEFIGKIPIVIITGNTSYSRKCYFYSLGIDLYIIKNNESKSLILCRILNEIKKY
+                     IKYVNDDFIDFENHQFVFNNYLVNLSNIELKILRCLYINLGRYVSKEELKKGVWDTEDF
+                     VDSNTINVYIHRLRDSLKNCKEIEIINERKLGYKILIRKDLC"
+                     /gene="epiQ"
+                     /transl_table=11
+                     /locus_tag="epiQ"
+                     /protein_id="CAA44256.1"
+                     /product="epiQ"
+     gene            complement(6994..8379)
+                     /gene="epiP"
+     CDS             complement(6994..8379)
+                     /codon_start=1
+                     /db_xref="GOA:P30199"
+                     /db_xref="InterPro:IPR000209"
+                     /db_xref="InterPro:IPR008357"
+                     /db_xref="InterPro:IPR015500"
+                     /db_xref="InterPro:IPR022398"
+                     /db_xref="UniProtKB/Swiss-Prot:P30199"
+                     /function="serine protease"
+                     /translation="MNKFKFFIVFLILSLVFLQNEYAFGSSLNEELSYYSVEYDNAKTF
+                     KESIKQKNIELTYKIPELHTAQIKTSKSKLNSLIKSNKNVKFVNPTCSTCVVEKSVKTG
+                     KNLNNKKNGSHDLFDRQWDMRKITNEGKSYKLSPDRKKAKVALVDSGVNSSHTDLKSIN
+                     KIVNEVPKNGFRGSENDESGNKNFEEDKLNHGTLVAGQIGANGNLKGVNPGVEMNVYRV
+                     FGSKKSEMLWVSKGIIDAANDDNDVINVSLGNYLIKDNQNKKKLRDDEKVDYDALQKAI
+                     NYAQKKGSIVVAAVGNDGINVKKVKEINKKRNLNSKTSKKVYDSPANLNNVMTVGSIDD
+                     NDYISEFSNYGNNFIDLMTIGGSYKLLDKYGKDAWLEKGYMQKQSVLSTSSNGRYIYQS
+                     GTSLAAPKVSGALALEIDKYQLKDQPETAIELFKKKGIEKEKYMDKKHYGNGKLDVYKL
+                     LKE"
+                     /gene="epiP"
+                     /transl_table=11
+                     /locus_tag="epiP"
+                     /protein_id="CAA44257.1"
+                     /product="epiP"
+                     /sec_met="Type: none"
+                     /sec_met="Peptidase_S8 (E-value: 5.1e-50, bitscore: 159.4,
+                     seeds: ?)"
+                     /sec_met="Kind: biosynthetic"
+ORIGIN
+        1 agatcttgtg ttatataact aaacaaattt ctccattcgt atttagaaaa ttgactttta
+       61 tcaagtttat ccaaatatat atttccagta tattctgtat ttaacccagc taatatattt
+      121 aataatgtac tttttccaca cccactttca cctataatat tgtagatata acctttatga
+      181 agatccaaac ttatagaatt tattatttgt ttattgtctt ttgtgaagtt caaatcattt
+      241 atttccattt tttgaacaaa gttattgtaa gttgttttaa tagttaatac ctcttctggt
+      301 tctttattta tttttaaaat tctatctgaa gatccaattg ctcgttgtac ttccgtccaa
+      361 taagatgtaa tagatactat tggattaata atttgaaata aatataaaac ataagcaaac
+      421 atatctccgc ttttcatcat attattttcc attaagtaat aacccaaaaa taaaatacca
+      481 aaaatgttaa taaatagaat taagttcata attggttcga aaaaagataa tactttgatc
+      541 ttatgtaact ctatatcgaa tatatttttt aatagggtat agttttttat tttttcgata
+      601 ttatatgtac ttaaagtttt tattaatttt attgtagata atctattact ataataagaa
+      661 gataatttag cagtagcttc ttgagattta cttgatactc ttttcattat atttcctata
+      721 ggtagtatta caattatcaa tataggtaat gtacacacta aatataatgt caaggttttg
+      781 ttaattatat ataaaaatat tagtgatact ataactgaaa ataaattcta cagaaaaaac
+      841 tctagttatg ttcatagtat cgtttactaa cctactagtt aagttacttg ctgagttttt
+      901 taagtgaaaa ctataaggta actttatcac tttattccat gtaacacttc taatgttttg
+      961 tattattttt tgacctatat atccaagaat ataagtagaa acaccagaaa atattaaagt
+     1021 cagaccaaaa catataataa tgattacaat tttatctgtt gataagctag atttgtttaa
+     1081 ggcatttcta attattaaag gaatgtataa tgaaaaacta gttccaatca aactaaatat
+     1141 tagtccaata cttaaaagta gagtgttagg tttggttatt ttccataaat catatagacc
+     1201 tttgataata tcatcacctt ttaaacttta tatcattaat ataatgttta ggaaaagtag
+     1261 aagaaaatta cacttttgta attttctgaa tatacatagt atttattttg ggggagtact
+     1321 aaaataataa ttgaaaaggg ttttataatc ctttttaata aatttttagg agtgtttaaa
+     1381 atggaagcag taaaagaaaa aaatgatctt tttaatcttg atgttaaagt taatgcaaaa
+     1441 gaatctaacg attcaggagc tgaaccaaga attgctagta aatttatatg tactcctgga
+     1501 tgtgcaaaaa caggtagttt taacagttat tgttgttaat tcagaagaat tagattggca
+     1561 gggcttcaat agaggctctg tcttaatttt gaggtgaaat agaattggat aatatatttg
+     1621 ttccatcgaa tatatatatg gtaagaactc ctatattttc aattgaatta tataatcaat
+     1681 tcttaaaatc tgacaatata gattatgact taattttaca aaacgatatt tttaaagaat
+     1741 ctataatgac aacgacatat aatctttatc aaagtattgg caaaatagac tgggaaaagg
+     1801 ataataaaaa aaccagaaat gtaaaagaaa gtttattaaa atatctcata agaatgagta
+     1861 ctagaagtac accatatgga atgctaagcg gtgtagcttt aggggaattt agtgaaaata
+     1921 ataatattaa aattaaggac tcttcgtttc ataaaaaaga tgtaaaaata gatgggcaat
+     1981 ggttatataa attagtccat tatttagaaa gcgattacac atattataaa gacagttttg
+     2041 tcatatggaa tcaacaaaat tatatttata acaatcgttt atatttagat aataattcat
+     2101 caatcactga aaataaaaga aatgatgtat tatctgtcaa atacaattct atattagtgt
+     2161 ttatacatga gaattctaaa aaaaatatta cttatgaaga acttgtacaa ttgatatcta
+     2221 gtaagtacag tatagaaaat aaagaagaag taaaagtatt tgttcaagaa ctcataaata
+     2281 aagaaattat attttctgat ttgagaccta cattagagaa taaaaatcct ttagattaca
+     2341 ttattaatag tttaaatcca aaaaatagtt tagttggaac acttattaat atttctaatg
+     2401 aaattacaaa atattctaaa atgcctttag gaaaaggaga atataaatat ttagatattg
+     2461 ttaatttaat gtcacaatta tttgtttcta aaaactattt gcaaatagat acctatatag
+     2521 attattcaag aaatgaatta aaacaaagtt tagctgataa tattagtgaa gcagcatata
+     2581 ttctctggtt attatctcct aatcattttg gtacaaaaac tattaggaat tatcacgaat
+     2641 tttttatgga taaatatgga tttgaacaac tagtaaattt aaagcaattg ctctcagata
+     2701 taaatggatt tggctatccc aaaaaagaca gttatagttt ttctaataac attgcatttt
+     2761 taaaagaaaa gtatttgctt gcaattcaaa ataacagcca tattgaaata acagaaaacg
+     2821 acgttaaaaa tttagaaaag aataatacag tttctaaaat caatgcgcct gtttcaactg
+     2881 aaatatatag tgagatatat tttggaaatt caataaaagg ttatgaggat tttgccgtga
+     2941 taagtccaat attaggatct tttaatgccg gtgcaacttt tggaaggttt acgggaaatt
+     3001 tcaatataaa gaaaaaaaat caattacaaa aagaaatagt gcatcattac aataattaca
+     3061 tgaatgaaaa tggtttagaa ataagccaat taaatgaagg tcctcttaac tcaagaaatg
+     3121 taaatatttt gaataataat agaatatata atacttgttt aaatttaaat ttacctaaaa
+     3181 gtgatataga tataaatgac atatttattg gagctacatt taacaaactt tatctatatt
+     3241 ctgaaaaaca tgattcaaga attgtattcg tatctaattc aatgtttaat tatgagtttg
+     3301 gatctgaatt atacaaattt ttaagagaaa tttcatttga aaaaacaaaa tttatacaac
+     3361 ctataactga agaaggcatt gactcattac ctttttgtcc aagaattatt tataaaaata
+     3421 ttattttaaa accagctact tggaaaataa attcagaaat gttttctgaa actgaaaatt
+     3481 ggttaaatag gttcgcaact attagagaaa aatggcatat tccaaaagat gtaattattg
+     3541 cttttggaga taatcgattg ctattaaatt tattaaatga caagcatctc attatactaa
+     3601 aaaaagaact aaaaaaacat ggtaggattc gaatattaga aagctttatc aatgaatcta
+     3661 ataatgagag aatgttagaa attgttacgc cattatataa aaaaactagt ttaaaagaac
+     3721 aatctttcat tatacctaaa aatagaaata agcacttcaa taatcttaaa gattggtttt
+     3781 caattcattt aagtattcct aaaacatacc aagataattt tattcaagat tatctattac
+     3841 catttataac ggaattaaaa gttaataatt ttattaataa atttttttac ataaaattta
+     3901 aagaagatga agattttata aaattaagat tattaagaga agatgaagat tattctcaaa
+     3961 tttattcttt cataaaaaat tggaaagatt attgcttatt aaatagtgaa ttatatgact
+     4021 attctatagt tgattatgtt cctgaagtat atagatatgg tggtccacac gtaattgaag
+     4081 atattgagaa tttttttatg tatgatagtc tattatcaat aaatataata caatcagagt
+     4141 tcaaaattcc aaaagaattt atcgttgcta tatcaataga ttttttatta gattatttag
+     4201 aaattaataa aagtgagaaa gaagaaattt taattaataa tgcggaagat ttatatcgta
+     4261 gtaatgacat aagagaatat aaaaatttat tagctaaact taccaatcct aaaaatgact
+     4321 atgaaatttt aaaaaaagaa tttccgaatc ttcatgaatt tctatttaat aaaattagta
+     4381 ttttagaaaa tcttaaaaag acactacaaa aaagcttata tacttcacgt tctaggataa
+     4441 ttggcagttt tatacacatg cgttgtaata gaatattcgg tattaatcct gaaaaagaaa
+     4501 aatttgtttt atctattttt aatgaaatta caaaaactaa aaaatattgg gatggttgtg
+     4561 attaatatta ataacattaa aaaaatttta gaaaataaaa tcaccttttt gtctgacatt
+     4621 gaaaaagcta catatattat agaaaatcaa agtgagtatt gggatcctta tactctatct
+     4681 catggttatc caggtataat acttttttta agcgcatcag aaaaagtatt tcataaagat
+     4741 ttagaaaaag taatacatca atatattaga aaactaggcc cttatttaga aagtggtatt
+     4801 gatggatttt cactttttag tggtctttcc ggaattggat ttgcgctaga cattgcgtct
+     4861 gataaacagt actcttatca aagtatctta gaacaaattg ataatttact tgttcaatat
+     4921 gtttttgatt ttttaaataa cgatgcattg gaagtaaccc ctactaacta tgatataata
+     4981 caaggatttt ctggtatagg aaggtacttg ttaaatagaa tatcgtataa ttataatgca
+     5041 aaaaaagcat taaagcatat acttaattac ttcaaaacaa ttcattactc taaagacaat
+     5101 tggttagttt caaatgaaca tcaattttta gatatagata agcaaaattt tccgtcagga
+     5161 aatataaatt taggattagc gcatggtatt ttaggtcctc tatcattaac agctttgagt
+     5221 aaaatgaatg ggattgaaat cgaaggccat gaagagtttt tacaagactt cacttcattt
+     5281 ttgctcaaac ctgaattcaa aaataataat gaatggttcg atcgctatga tatattagaa
+     5341 aattatatac ctaattattc cgtcagaaac ggttggtgtt acggtgatac agggattatg
+     5401 aatacattac ttttgtctgg taaagcctta aataatgaag gcttaattaa aatgtctaaa
+     5461 aatattttaa ttaacataat agataagaat aatgatgatt taatcagtcc aaccttctgt
+     5521 cacggactag catcgcactt aaccattatt catcaagcga ataaattctt taatctatct
+     5581 caagtaagca catatatcga taccattgtc agaaaaatta ttagtcatta ttctgaagaa
+     5641 agtagtttta tgttccaaga catagagtac tcatacggac aaaaaattta taaaaacaaa
+     5701 gtgggaattc tagagggtga attaggtgtt cttttagctt tactagatta tattgataca
+     5761 caaaaccaat caaggaaaaa ttggaaaaat atgtttttaa taacataata ggaggaataa
+     5821 gatatgtatg gaaaattatt gatatgcgct acagcatcga taaatgtaat taatattaat
+     5881 cactacatag ttgagttaaa gcaacatttt gatgaagtta atatattatt tagtcctagt
+     5941 agtaaaaatt ttataaatac tgatgttctc aagttatttt gtgataactt gtacgatgaa
+     6001 attaaagatc ctcttttaaa tcatatcaat attgtagaaa atcatgaata tattttagta
+     6061 ttacctgcat cagcaaatac tattaataaa atagctaatg gtatatgtga taatctttta
+     6121 actactgtat gtttaaccgg atatcaaaaa ttatttatat ttccaaatat gaacataaga
+     6181 atgtggggaa atccattttt acaaaaaaat attgatttac ttaaaaataa tgatgtgaaa
+     6241 gtgtattccc ctgatatgaa taaatcattc gaaatatcta gtggccgtta caaaaacaat
+     6301 atcacaatgc ctaatattga aaatgtacta aattttgtat taaataacga aaaaagacct
+     6361 ttggattaac aaaggtcttt tctaattaaa attttatatc cgagtttacg ttcattaata
+     6421 atttctatct ctttacaatt ttttaaacta tcccttaatc gatggatata tacatttatt
+     6481 gtattagaat caacaaagtc ttctgtatcc cacactccct tttttaattc ctcttttgat
+     6541 acatatcttc caagattaat atataagcac cgtagaattt ttaattctat attagaaaga
+     6601 ttaactaagt aattattaaa cacaaattga tggttttcaa agtctataaa atcatcatta
+     6661 acatatttaa tatacttttt tatttcattt aaaattctac ataatattaa acttttgctt
+     6721 tcattatttt ttataatata taaatctatg cctaaactat aaaaataaca cttcctacta
+     6781 tagctagtat tacctgttat tataactatt ggaatttttc ctataaattc ttttaaaaac
+     6841 gtataatact catcaaactt ttcatacaca attataaaat ttgggtctat atttgaagaa
+     6901 ttaattgtaa ttcttctatc taattctaaa atactttcaa taagaataga atctacctca
+     6961 ccgacaatat taatagaaat cattttattc ccttcattct ttaagtaatt tgtatacgtc
+     7021 tagttttcca ttaccataat gttttttatc catatatttt tctttttcta tccctttttt
+     7081 cttaaataac tctatagctg tttcgggttg gtcttttaat tgatacttat caatttctag
+     7141 tgctaaagct ccagaaacct tgggtgcagc aagtgatgtc cctgattgat atatgtatct
+     7201 tccattagaa gaagtactta aaacactttg tttttgcata tatccttttt ctaaccaagc
+     7261 atcttttcca tacttatcta aaagtttata agaacctcct atcgtcatta aatctataaa
+     7321 attatttcca taattagaaa actcagaaat ataatcatta tcatcgatgg atcctacagt
+     7381 cataacatta tttagatttg ctgggctatc atataccttt tttgatgttt tagaatttag
+     7441 atttcttttt ttatttattt cttttacttt ttttacattg ataccgtcat tacccacagc
+     7501 tgcaacaaca atactacctt ttttttgagc atagtttata gctttctgta gtgcatcgta
+     7561 atcaactttt tcatcatctc ttaatttttt tttattttga ttatctttaa ttaaataatt
+     7621 tcctaaacta acgttgatta catcattgtc atcatttgct gcatcaataa ttcctttaga
+     7681 tacccaaagc atttcacttt tctttgagcc aaatactcgg tatacattca tctctactcc
+     7741 agggtttaca ccttttaaat taccgtttgc tcctatttgt cctgctacta atgtaccatg
+     7801 attcaattta tcttcttcaa aatttttatt tcctgattca tcgttttcgc tacctctaaa
+     7861 accattttta ggcacttcat taactatctt atttatactc tttaaatctg tatgactact
+     7921 attcacacca gaatctacta aagcaacttt tgcttttttt ctatctggac ttagcttata
+     7981 acttttacct tcatttgtta tttttcgcat atcccattgt ctgtcaaata aatcatggct
+     8041 gccatttttt ttattattta aattttttcc tgtctttaca gatttttcaa ctacacaagt
+     8101 ggaacaggta ggatttacaa acttgacgtt tttattactc tttattagtg aatttaattt
+     8161 tgatttgcta gttttaattt gtgctgtatg tagttcagga attttataag ttaactcgat
+     8221 atttttttgt ttaatggatt ctttaaaagt ttttgcatta tcatattcaa cactataata
+     8281 acttaattct tcatttagtg aacttccaaa agcatactca ttttgcaaaa aaactaatga
+     8341 caatattaaa aaaacaatga aaaatttaaa tttgttcata tagcacctct aacatattat
+     8401 ttatattaaa cattaattta acacttatgt ttttactttt ttatttatat tatctttaat
+     8461 aatgttctgt tgcaagatga aaaatacgag gtatcaaagt accgatacag cgagtattac
+     8521 actcaattaa ttaaaaataa aatatgttgt gattaaaatt tattttataa aagtatgggc
+     8581 aatttattat tattcaagtt aaaacaaaga gtccgggaca taaagtttca gcctcttcgt
+     8641 cctaattacc aaaaaactta ctccaaaatc cttttttaga ttggtttttt ctaatttttt
+//

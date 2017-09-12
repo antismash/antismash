@@ -9,7 +9,7 @@ from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
 from .feature import Feature, CDSFeature, CDSMotif, AntismashDomain, Cluster, \
-                     PFAMDomain, ClusterBorder
+                     PFAMDomain, ClusterBorder, Prepeptide
 
 class _BisectHelper:
     def __init__(self, features):
@@ -235,7 +235,7 @@ class Record():
 
     def add_cds_motif(self, motif):
         """ Add the given cluster to the record """
-        assert isinstance(motif, CDSMotif), "%s, %s" %(type(motif), motif.type)
+        assert isinstance(motif, (CDSMotif, Prepeptide)), "%s, %s" %(type(motif), motif.type)
         self._cds_motifs.append(motif)
 
     def add_pfam_domain(self, pfam_domain):
@@ -255,7 +255,7 @@ class Record():
             self.add_cluster(feature)
         elif isinstance(feature, CDSFeature):
             self.add_cds_feature(feature)
-        elif isinstance(feature, CDSMotif):
+        elif isinstance(feature, (CDSMotif, Prepeptide)):
             self.add_cds_motif(feature)
         elif isinstance(feature, PFAMDomain):
             self.add_pfam_domain(feature)

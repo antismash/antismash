@@ -8,13 +8,12 @@ from unittest import TestCase
 from Bio.Seq import Seq
 from Bio.SeqFeature import CompoundLocation
 
-import antismash
 from antismash.common import deprecated, gff_parser, path
-from antismash.common.test.helpers import FakeRecord, FakeFeature
+from antismash.common.test.helpers import FakeRecord, FakeFeature, get_simple_options
 
 class GffParserTest(TestCase):
     def setUp(self):
-        self.config = antismash.config.args.simple_options(None, [])
+        self.config = get_simple_options(None, [])
         self.config.genefinding_gff3 = path.get_full_path(__file__, "data/test_gff.gff")
         self.single_entry = False
         contig1 = FakeRecord(seq="A"*2000, real_seq=True)
