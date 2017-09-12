@@ -1,0 +1,1 @@
+PF00005	ABC transporter	20	PF00005.hmm

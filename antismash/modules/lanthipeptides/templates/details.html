@@ -1,0 +1,40 @@
+<div class="details">
+  <h3>Detailed annotation</h3>
+  {% if cluster.motifs | length == 0 %}
+    <div class="details-text">
+      No core peptides found.
+    </div>
+  {% else %}
+  <h4>Lantipeptide(s)</h4>
+  <hr>
+  <dl class="details-text">
+    {% for leader_seq, core_seq, pred_class, gene_id in cluster.core_peptides_data %}
+      <dt>
+        {{gene_id}} leader / core peptide, putative {{pred_class}}
+      </dt>
+      <dd>
+        {{ leader_seq }}
+        -
+        {% for aa in core_seq -%}
+          {%- if aa == 'S' -%}
+            <span class="dha">Dha</span>
+          {%- elif aa == 'T' -%}
+            <span class="dhb">Dhb</span>
+          {%- elif aa == 'C' -%}
+            <span class="cys">C</span>
+          {%- else -%}
+            {{ aa }}
+          {%- endif -%}
+      {% endfor -%}
+    {% endfor %}
+    </dd>
+  </dl>
+  <div class="legend">
+    <h4> Legend: </h4>
+    <div>
+      <span class="dha">Dha</span>: Didehydroalanine<br>
+      <span class="dhb">Dhb</span>: Didehydrobutyrine<br>
+    </div>
+  </div>
+  {% endif %}
+</div>

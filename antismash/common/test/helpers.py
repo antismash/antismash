@@ -5,7 +5,10 @@ import os
 
 from Bio.Seq import Seq
 from Bio.SeqFeature import FeatureLocation
+
 from antismash.common.secmet import Record, Cluster, CDSFeature, Feature
+from antismash.config.args import build_parser
+from antismash.main import get_analysis_modules, get_detection_modules
 
 class DummyFeature(Feature):
     def __init__(self, start, end, strand=1):
@@ -25,6 +28,12 @@ class DummyCluster(Cluster):
         product = ["dummy"]
         super().__init__(FeatureLocation(start, end, strand), cutoff, extent,
                          product)
+
+def get_simple_options(module, args):
+    modules = get_detection_modules() + get_analysis_modules()
+    if module is not None:
+        modules = [module]
+    return build_parser(from_config_file=False, modules=modules).parse_args(args)
 
 class FakeSeq(object):
     "class for generating a Seq like datastructure"
@@ -101,7 +110,10 @@ def get_path_to_nisin_genbank():
     path = __file__
     for i in range(3):
         path = os.path.dirname(path)
-    return os.path.join(path, 'test/integration/data/nisin.gbk')
+    return os.path.join(path, 'test', 'integration', 'data', 'nisin.gbk')
+
+def get_path_to_nisin_with_detection():
+    return get_path_to_nisin_genbank().replace('nisin', 'nisin_postdetection')
 
 def get_path_to_balhymicin_genbank():
     path = __file__

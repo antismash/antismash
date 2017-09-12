@@ -5,7 +5,7 @@ import unittest
 
 from helperlibs.wrappers.io import TemporaryDirectory
 
-from antismash.main import gather_modules, detect_signature_genes
+from antismash.main import get_all_modules, detect_signature_genes
 from antismash.common import deprecated
 from antismash.common.module_results import ModuleResults
 import antismash.common.test.helpers as helpers
@@ -14,7 +14,7 @@ from antismash.modules import clusterblast
 
 class Base(unittest.TestCase):
     def setUp(self):
-        options = args.build_parser(modules=gather_modules(with_genefinding=True)).parse_args(self.get_args())
+        options = args.build_parser(modules=get_all_modules()).parse_args(self.get_args())
         self.old_config = args.Config().__dict__
         self.options = args.Config(options)
 

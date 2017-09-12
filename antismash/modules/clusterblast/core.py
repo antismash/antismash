@@ -39,6 +39,7 @@ def run_diamond(query, target, tempdir, options):
     result = subprocessing.execute(command)
     if result.return_code:
         raise RuntimeError("diamond failed to run: %s -> %s" % (command, result.stderr[-100:]))
+    return result
 
 def make_blastdb(inputfile, dbname):
     command = ["makeblastdb", "-in", inputfile, "-out", dbname, "-dbtype", "prot"]

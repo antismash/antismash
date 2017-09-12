@@ -5,7 +5,7 @@ import functools
 import logging
 import os
 
-class RecordLayer():
+class RecordLayer:
     def __init__(self, seq_record, options):
         from antismash.outputs.html.js import convert_record, load_cog_annotations # TODO break this circular dependency
         self.seq_record = seq_record
@@ -69,7 +69,7 @@ class RecordLayer():
         return no_result_note
 
 
-class ClusterLayer():
+class ClusterLayer:
     def __init__(self, cluster, record, cluster_rec):
         self.record = record
         self.cluster = cluster
@@ -111,7 +111,7 @@ class ClusterLayer():
 
     @property
     def start(self):
-        return int(self.cluster_rec.location.start)
+        return int(self.cluster_rec.location.start) + 1
 
     @property
     def end(self):
@@ -181,9 +181,10 @@ class ClusterLayer():
         "Find a specific plugin responsible for a given gene cluster type"
         product = self.type
         for plugin in self.record.options.plugins:
+            if not hasattr(plugin, 'will_handle'):
+                continue
             if plugin.will_handle(product):
                 self.handlers.append(plugin)
-
         return self.handlers
 
     def determine_has_details(self):
@@ -214,8 +215,7 @@ class OptionsLayer():
 
     @property
     def plugins(self):
-        logging.critical("OptionsLayer.plugins always forced to empty list")
-        return [] #self.options.plugins
+        return self.options.all_enabled_modules
 
     @property
     def input_type(self):

@@ -11,13 +11,16 @@ import re
 import sys
 
 import Bio
+from Bio.Data.IUPACData import protein_letters
 from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation # for others importing
 from Bio.SeqRecord import SeqRecord
+from Bio.SeqUtils.ProtParam import ProteinAnalysis
 from helperlibs.bio import seqio
 
 from antismash.common import gff_parser
-from antismash.common.secmet import Record, CDSFeature
+from antismash.common.all_orfs import scan_orfs, sort_orfs
+from antismash.common.secmet import Record, CDSFeature, Feature
 
 # temporary code skip logging # TODO
 import inspect
@@ -382,10 +385,13 @@ def add_seq_record_seq(seq_records):
 
 def get_aa_translation(seq_record, feature):
     """Obtain content for translation qualifier for specific CDS feature in sequence record"""
-    fasta_seq = feature.extract(seq_record.seq).ungap('-').translate(to_stop=True)
+    extracted = feature.extract(seq_record.seq).ungap('-')
+    if len(extracted) % 3 != 0:
+        extracted = extracted[:-(len(extracted) % 3)]
+    fasta_seq = extracted.translate(to_stop=True)
     if not fasta_seq:
-        logging.debug("Retranslating %s with stop codons", feature.id)
-        fasta_seq = feature.extract(seq_record.seq).ungap('-').translate()
+        logging.debug("Retranslating feature at %s with stop codons", feature.location)
+        fasta_seq = extracted.translate()
     if "*" in str(fasta_seq):
         fasta_seq = Seq(str(fasta_seq).replace("*", "X"), Bio.Alphabet.generic_protein)
     if "-" in str(fasta_seq):
@@ -678,3 +684,96 @@ def get_structure_pred(cluster):
 def get_version():
     logging.critical("dummy get_version() being called")
     return "antismash-5.alpha"
+
+class RobustProteinAnalysis(ProteinAnalysis):
+    PROTEIN_LETTERS = set(protein_letters)
+    def __init__(self, prot_sequence, monoisotopic=False, invalid="ignore"):
+        if invalid not in ("ignore", "average"):
+            raise ValueError("Invalid needs to be 'ignore' or 'average', not {!r}".format(invalid))
+        self._invalid = invalid
+
+        prot_sequence = prot_sequence.upper()
+
+        self.original_sequence = prot_sequence
+        # replace all invalids with ' '
+        prot_sequence = []
+        for i in self.original_sequence:
+            if i in RobustProteinAnalysis.PROTEIN_LETTERS:
+                prot_sequence.append(i)
+        prot_sequence = "".join(prot_sequence)
+        super(RobustProteinAnalysis, self).__init__(prot_sequence, monoisotopic)
+
+    def molecular_weight(self):
+        mw = super(RobustProteinAnalysis, self).molecular_weight()
+        if self._invalid == "average":
+            aa_difference = len(self.original_sequence) - len(self.sequence)
+            mw += 110 * aa_difference
+
+        return mw
+
+def find_all_orfs(seq_record, cluster): # the old lassopeptides.find_all_orfs
+    """Find all ORFs in gene cluster outside annotated CDS features"""
+    # Get sequence just for the gene cluster
+    fasta_seq = seq_record.seq[cluster.location.start:cluster.location.end]
+
+    # Find orfs throughout the cluster
+    forward_matches = scan_orfs(fasta_seq, 1, cluster.location.start)
+    reverse_matches = scan_orfs(fasta_seq.complement(), -1, cluster.location.start)
+    all_orfs = forward_matches + reverse_matches
+
+    orfnr = 1
+    new_features = []
+
+    for orf in sort_orfs(all_orfs):
+        # Remove if overlaps with existing CDSs
+        skip = False
+        for cds in cluster.cds_children:
+            if orf.start in cds.location or orf.end in cds.location or cds.location.start in orf or cds.location.end in orf:
+                skip = True
+                break
+        if skip:
+            continue
+        loc = orf
+#        feature = SeqFeature(location=loc, id=str(orf), type="CDS",
+#                    qualifiers={'locus_tag': ['cluster_%s_allorf%s%s' % (cluster.get_cluster_number(), "0" * (3 - len(str(orfnr))), str(orfnr))]})
+#        feature.qualifiers['note'] = ["auto-all-orf"]
+#        feature.qualifiers['translation'] = [str(utils.get_aa_translation(seq_record, feature))]
+        dummy_feature = Feature(loc, feature_type="dummy")
+        feature = CDSFeature(loc, str(get_aa_translation(seq_record, dummy_feature)),
+                             locus_tag='cluster_%s_allorf%03d' % (cluster.get_cluster_number(), orfnr))
+        new_features.append(feature)
+        orfnr += 1
+
+    return new_features
+
+def distance_to_pfam(seq_record, query, hmmer_profiles): #also from lassopeptides
+    """Function to check how many nt a gene is away from a gene with one of a list of given Pfams"""
+    nt = 40000 #maximum number of nucleotides distance to search
+    #Get all CDS features in seq_record
+    cds_features = seq_record.get_cds_features()
+    #Get all CDS features within <X nt distances
+    close_cds_features = []
+    distance = {}
+    for cds in cds_features:
+        if query.location.start - nt <= cds.location.start <= query.location.end + nt or \
+           query.location.start - nt <= cds.location.end <= query.location.end + nt:
+            close_cds_features.append(cds)
+            distance[cds.get_name()] = min([abs(cds.location.start - query.location.end), \
+             abs(cds.location.end - query.location.start), abs(cds.location.start - query.location.start), \
+             abs(cds.location.end - query.location.end)])
+    #For nearby CDS features, check if they have hits to the pHMM
+    closest_distance = -1
+    for cds in close_cds_features:
+        if cds.sec_met:
+            for profile in hmmer_profiles:
+                if profile in cds.sec_met.domains:
+                    if closest_distance == -1 or distance[cds.get_name()] < closest_distance:
+                        closest_distance = distance[cds.get_name()]
+    return closest_distance
+
+def get_specific_multifasta(features):
+    """Extract multi-protein FASTA from provided features"""
+    all_fastas = []
+    for feature in features:
+        all_fastas.append(">%s\n%s" % (feature.get_name(), feature.translation))
+    return "\n".join(all_fastas)

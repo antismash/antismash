@@ -25,10 +25,6 @@ def perform_clusterblast(options, seq_record, db_clusters, db_proteins):
         diamond_result = run_diamond("input.fasta",
                  os.path.join(options.database_dir, 'clusterblast', 'geneclusterprots'),
                  tempdir, options)
-        if diamond_result.return_code != 0:
-            logging.error("Running diamond failed: returned %s, stderr: %r, stdout: %r",
-                    diamond_result.return_code, diamond_result.err, diamond_result.out)
-            raise RuntimeError("Diamond did not complete successfully")
         logging.info("   DIAMOND search finished. Parsing results...")
 
         with open("input.out", 'r') as handle:

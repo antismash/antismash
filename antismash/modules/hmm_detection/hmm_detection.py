@@ -384,9 +384,6 @@ def get_nseq(): # TODO: document as number of seeds
 
 
 def remove_irrelevant_allorfs(seq_record):
-    def features_overlap(feature1, feature2):
-        return feature2.location.start <= feature1.location.start <= feature2.location.end \
-                or feature2.location.start <= feature1.location.end <= feature2.location.end
     # Get features
     allfeatures = seq_record.get_cds_features()
     # Remove auto-orf features without unique sec_met qualifiers;
@@ -400,12 +397,12 @@ def remove_irrelevant_allorfs(seq_record):
             continue
         glimmer_has_sec_met = False
         for otherfeature in other_features:
-            if features_overlap(autofeature, otherfeature) and "sec_met" in otherfeature.qualifiers:
+            if autofeature.overlaps_with(otherfeature) and "sec_met" in otherfeature.qualifiers:
                 to_delete.append(autofeature)
                 glimmer_has_sec_met = True
         if not glimmer_has_sec_met:
             for otherfeature in other_features:
-                if features_overlap(autofeature, otherfeature) and "sec_met" not in otherfeature.qualifiers:
+                if autofeature.overlaps_with(otherfeature) and "sec_met" not in otherfeature.qualifiers:
                     to_delete.append(otherfeature)
     featurenrs = []
     idx = 0

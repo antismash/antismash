@@ -7,14 +7,21 @@
 import logging
 from os import path
 import shutil
+
 from antismash.outputs.html.generator import generate_webpage
 import antismash.common.deprecated as utils
+from antismash.config.args import ModuleArgs
 from antismash.outputs.html.structure_drawer import generate_chemical_structure_preds
 
 NAME = "html"
 SHORT_DESCRIPTION = "HTML output"
 ENABLED = True
 
+def get_arguments():
+    return ModuleArgs("Output options", "html", enabled_by_default=True)
+
+def is_enabled(options):
+    return True #TODO: add an arg to disable
 
 def write(seq_records, results, options):
     output_dir = options.output_dir

@@ -63,6 +63,9 @@ def main(args):
     if len(options.sequences) < 1 and not options.reuse_results:
         parser.error("One of an input file or --reuse-results must be specified")
         return 1
+    if options.sequences and options.reuse_results:
+        parser.error("Provide a sequence file or results to reuse, not both.")
+        return 1
     if options.sequences:
         sequence = options.sequences[0]
         del options.sequences
@@ -74,6 +77,7 @@ def main(args):
     if not options.output_dir:
         options.output_dir = os.path.abspath(os.path.splitext(os.path.basename(sequence))[0])
 
+    options.all_enabled_modules = [module for module in antismash.get_all_modules() if module.is_enabled(options)] #TODO: shift elsewhere
     config = antismash.config.args.Config(options)
 
     sequence = sequence.replace("< > HYPHEN < >","-")

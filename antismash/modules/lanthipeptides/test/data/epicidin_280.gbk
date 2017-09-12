@@ -1,0 +1,329 @@
+LOCUS       Y14023                  7358 bp    DNA     linear   BCT 24-JUL-2016
+DEFINITION  Staphyloccus epidermidis epicidin 280 gene cluster on pCH01.
+ACCESSION   Y14023
+VERSION     Y14023.1
+KEYWORDS    eciA gene; eciB gene; eciC gene; eciI gene; eciO gene; eciP gene;
+            epicidin; lantibiotic; tnp1 gene.
+SOURCE      Staphylococcus epidermidis
+  ORGANISM  Staphylococcus epidermidis
+            Bacteria; Firmicutes; Bacilli; Bacillales; Staphylococcaceae;
+            Staphylococcus.
+REFERENCE   1
+  AUTHORS   Heidrich,C., Pag,U., Josten,M., Metzger,J., Jack,R.W., Bierbaum,G.,
+            Jung,G. and Sahl,H.G.
+  TITLE     Isolation, characterization, and heterologous expression of the
+            novel lantibiotic epicidin 280 and analysis of its biosynthetic gene
+            cluster
+  JOURNAL   Appl. Environ. Microbiol. 64 (9), 3140-3146 (1998)
+   PUBMED   9726851
+REFERENCE   2  (bases 1 to 7358)
+  AUTHORS   Heidrich,C.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (21-JUN-1997) Heidrich C., Abteilung Prof. Sahl, Institut
+            fuer Medizinische Mikrobiologie und Immunologie, Sigmund-Freud-Str.
+            25; 53105 Bonn 53105, GERMANY
+FEATURES             Location/Qualifiers
+     gene            complement(<1..30)
+                     /gene="tnp1"
+     CDS             complement(<1..30)
+                     /codon_start=1
+                     /db_xref="UniProtKB/TrEMBL:O54217"
+                     /translation="MNYFRYKQFR"
+                     /gene="tnp1"
+                     /transl_table=11
+                     /locus_tag="tnp1"
+                     /protein_id="CAA74345.1"
+                     /product="transposase"
+     source          1..7358
+                     /plasmid="pCH01"
+                     /mol_type="genomic DNA"
+                     /organism="Staphylococcus epidermidis"
+                     /strain="BN 280"
+                     /db_xref="taxon:1282"
+     cluster         1..7358
+                     /cutoff="20000"
+                     /extension="10000"
+                     /contig_edge="True"
+                     /product="lanthipeptide"
+                     /note="Detection rule(s) for this cluster type:
+                     lanthipeptide: ((LANC_like and (Flavoprotein or
+                     Trp_halogenase or p450 or Lant_dehyd_N or Lant_dehyd_C or
+                     adh_short or adh_short_C2) or cds(LANC_like and (Pkinase or
+                     DUF4135)) or TIGR03731 or Antimicr18 or Gallidermin or
+                     L_biotic_A or leader_d or leader_eh or leader_abc or
+                     mature_d or mature_ab or mature_a or mature_b or mature_ha
+                     or mature_h_beta or lacticin_l or lacticin_mat or
+                     LD_lanti_pre or strep_PEQAXS));"
+     repeat_region   60..87
+                     /rpt_type=INVERTED
+     gene            874..1617
+                     /gene="eciO"
+     CDS             874..1617
+                     /codon_start=1
+                     /db_xref="GOA:O54218"
+                     /db_xref="HSSP:1Q7B"
+                     /db_xref="InterPro:IPR002198"
+                     /db_xref="InterPro:IPR002347"
+                     /db_xref="InterPro:IPR016040"
+                     /db_xref="InterPro:IPR020904"
+                     /db_xref="UniProtKB/TrEMBL:O54218"
+                     /translation="MGRTVLITGGCKNIGKQIAQVFAENNYNVIVTSRNNNNKSIITYF
+                     KKKNLKVFFYTLNVENEDEVVNVFKEINNDIGKIDILINNAGISQGNTLLEDSKTEDFK
+                     SMINTNILGSYYCMKHVIPYMKRNRYGVIINIVSIAALRGIPYSILYGSTKNAVIALTK
+                     GAAIENANNGIRVNAIAPGIIKTESLNTEIQNSEDELNEQTIAAIHPMQILGEEKDVAN
+                     TAYFIANSSFMTGSIVNLDGGYTAQ"
+                     /gene="eciO"
+                     /transl_table=11
+                     /locus_tag="eciO"
+                     /protein_id="CAA74346.1"
+                     /product="oxidoreductase"
+                     /sec_met="Type: lanthipeptide"
+                     /sec_met="adh_short_C2 (E-value: 3.8e-35, bitscore: 110.9,
+                     seeds: 47)"
+                     /sec_met="Kind: biosynthetic"
+     gene            1690..1878
+                     /gene="eciI"
+     CDS             1690..1878
+                     /function="producer-self-protection"
+                     /codon_start=1
+                     /db_xref="UniProtKB/TrEMBL:O54219"
+                     /translation="MNIYLKIVITALFFSSIIFTVTYVSSKNLGMSLLFGLLSFIANLV
+                     YDYVMGASERKSKKDNK"
+                     /gene="eciI"
+                     /transl_table=11
+                     /locus_tag="eciI"
+                     /protein_id="CAA74347.1"
+                     /product="EciI protein"
+     CDS             1940..2110
+                     /function="antimicrobial"
+                     /codon_start=1
+                     /db_xref="InterPro:IPR012519"
+                     /db_xref="UniProtKB/TrEMBL:O54220"
+                     /translation="MENKKDLFDLEIKKDNMENNNELEAQSLGPAIKATRQVCPKATRF
+                     VTVSCKKSDCQ"
+                     /gene="eciA"
+                     /transl_table=11
+                     /locus_tag="eciA"
+                     /protein_id="CAA74348.1"
+                     /product="epicidin 280"
+                     /sec_met="Type: lanthipeptide"
+                     /sec_met="Antimicr18 (E-value: 6.6e-40, bitscore: 124.1,
+                     seeds: 2)"
+                     /sec_met="Kind: biosynthetic"
+     gene            1940..2178
+                     /gene="eciA"
+     mat_peptide     2018..2107
+                     /product="epicidin 280"
+                     /function="antimicrobial"
+                     /gene="eciA"
+     stem_loop       2134..2178
+                     /gene="eciA"
+     gene            2194..3096
+                     /gene="eciP"
+     CDS             2194..3096
+                     /note="subtilisin-like leader peptidase"
+                     /codon_start=1
+                     /db_xref="GOA:O54221"
+                     /db_xref="InterPro:IPR000209"
+                     /db_xref="InterPro:IPR015500"
+                     /db_xref="UniProtKB/TrEMBL:O54221"
+                     /translation="MTNSDYINYTYDDRDFFEKILFIDSGCDYNHSELKNNIDLKNCKS
+                     FVDNNLNDYTGHGTQIISVLTGKIYLRGLIPNASIVVYKVTDYRGKTSIEKIYKALSQG
+                     VKKGFKVINVSFSGAIDSIFYTKKFQEIIDEARIKNIIICWSPMNNDNRLNNHKNNTNL
+                     IPNDFKNLFQIGSINRLNQISNLVCNENEIDFFAPGGDLVSETIPIEESFILLANTQLL
+                     CKLSDYYIGIPKGYTINMGNSIATSYASGCFMIIISKFKRKYKYYPSINEVLKLISKYS
+                     NSEINLIKITRSVVENALI"
+                     /gene="eciP"
+                     /transl_table=11
+                     /locus_tag="eciP"
+                     /protein_id="CAA74349.1"
+                     /product="protease"
+                     /sec_met="Type: none"
+                     /sec_met="Peptidase_S8 (E-value: 5.2e-20, bitscore: 60.7,
+                     seeds: ?)"
+                     /sec_met="Kind: biosynthetic"
+     gene            3083..6013
+                     /gene="eciB"
+     CDS             3083..6013
+                     /codon_start=1
+                     /db_xref="InterPro:IPR006826"
+                     /db_xref="InterPro:IPR006827"
+                     /db_xref="UniProtKB/TrEMBL:O54222"
+                     /translation="MHLFKWYMIREPILEINKLEDIQERRDNNEDKYLNKLIDFIFDNE
+                     LALPLYHANSNLFNMINNYKRKELSKKKKKNLILSLYNYITRMIFRATPFGFMSSINIG
+                     SIKPNEMTVWNNDTQKYNLDLDNRVLYPLLKNLNKDIKNKIYLRKNYYIYKDYTHYYIP
+                     YQLNFDKLIVNANNNINIERNELSDFIFSNLDSILYVDLVDLIKTKFNVDSKTVENYLD
+                     KLIQENFIISELEEVINHKNKDIYLINFLEKKGVSPTNKYYQMLKSVYQFRVSLKNNYN
+                     NKSLNQLMKINETFKKTLGFDSSNIFKVDFVNKYSEINFKEKDIQNIKKVINMLLHLPE
+                     NYADYLTNYKSEFSEIYGQDEYKNILELLNKNLGIEYTIDNKDNEKFKENIQKSKKNIY
+                     SLFSEWEYKAISENQDIVLTDEKIQSIKSLGEPPVDASVDMIFTVTQNENSEYIYHLND
+                     ELTSAKVTDMYGRFRYLMNEDFEKALNKFPHDIGIQKVNSNYKHPNPLIQNVKNSDYLS
+                     SYSSDFKNYFVFLGNDLNFYLKNKKDETIFIPKISDMHNTDYSPYIIDFLSKIEKQFIK
+                     EYWSIENYKSSFVFSPRIVYKNIVISPKKWKLTNFDKMDNYENFKKLFFEKKVELSIPD
+                     QFYIINADLKIYIDTQNTWCLELLFKEFKKNEHLNIIEVESNLLNNKKIKEVVFSAKSD
+                     ICQSINIYEENKNNINLPKEILYITDGWLSVNLYYNENNISKLIGDFFYRKLFENEIFK
+                     NSIKYFIRYIDDKKHIRLRIKINIDEINKVAKILKEMVDINYIKSYKIVPYYRETARYG
+                     GKEIIDIVEECFEKDSKIVSKYYADKNFSSDDALYFNITNIVDILSYLTNSIDAQIDIL
+                     SDISHKKENKKIYRKYKNNLMKIVEGDVNKYNIYLNLRKYAYSKLKFVLSDKKINDKKD
+                     IILSIVHMFNNRFIGTDRKYEEFVMELLSRTLIDYKNKKEHICNNS"
+                     /gene="eciB"
+                     /transl_table=11
+                     /locus_tag="eciB"
+                     /protein_id="CAA74350.1"
+                     /product="EciB protein"
+                     /sec_met="Type: lanthipeptide"
+                     /sec_met="Lant_dehyd_N (E-value: 3.6e-25, bitscore: 77.1,
+                     seeds: 38); Lant_dehyd_C (E-value: 1.2e-108, bitscore:
+                     352.5, seeds: 37); Lant_dehydr_C (E-value: 9.3e-20,
+                     bitscore: 60.2, seeds: ?)"
+                     /sec_met="Kind: biosynthetic"
+     CDS             5998..7191
+                     /codon_start=1
+                     /db_xref="InterPro:IPR007822"
+                     /db_xref="InterPro:IPR020434"
+                     /db_xref="UniProtKB/TrEMBL:O54223"
+                     /translation="MQQFLEAYIKKVENIDIVDDYIHRAYGKEPIYKVSLITGYPGIAM
+                     TLFSIYQHTKNFKYYKLANKYLEKTIDLISSVPIYSTSLFEGAFGVIFSLLICSDLGNN
+                     YSEIIKSLLSEYKKIASDEIRDLKKNIKEGKVESQDYDIVSGCSGTLSVLLLATDIYPS
+                     LYDYLNIEISQLSSILEKLVYEYNEIDNEQNTLFSDLGYAHGMPGVINILCNSYKRGYK
+                     TSKTKDILINSISKLNRSLKIDNGTIYIPTDTNNTNNFRDAWCYGMPSVAYTIYNIAKT
+                     FQISSLLELSQNLLYQTWLRKEYETKLISPTLCHGFSGIVIISLIMNNEDLANKYIDKI
+                     NNTDVDDKDMLFFDINSNSSIMKDIGLLNGNSGILLTMLSFNNKDIQLNHWSKFLIF"
+                     /gene="eciC"
+                     /transl_table=11
+                     /locus_tag="eciC"
+                     /protein_id="CAA74351.1"
+                     /product="EciC protein"
+                     /sec_met="Type: lanthipeptide"
+                     /sec_met="LANC_like (E-value: 1e-82, bitscore: 266.6,
+                     seeds: 47)"
+                     /sec_met="Kind: biosynthetic"
+     gene            order(5998..7191,7217..7245)
+                     /gene="eciC"
+     stem_loop       7217..7245
+                     /gene="eciC"
+ORIGIN
+        1 acgaaattgt ttatatctga aatagttcat acagaagact cctttttgtt aaaattatac
+       61 tataaattca actttgcaac agaaccttta atgttaactt taccatcaaa tgatgcgtaa
+      121 atactctcat tcatttgttt atcatatttt gataattgtt gttgtgcttc attgagtcca
+      181 ctttgatctt gtgtcagttt agactgtaat tgattattgt tcggactttg attaatcttt
+      241 tgataatcgt cattcacttg ttgttgtgct tgatcaactt tattcgcaag ttgttgacgc
+      301 ttactattat tcgtatcgta acttagaaga cggtcacctt gtttaacctt ttgaccatcg
+      361 tctacagcag gactttggaa tgtgccaatt tggctattat tgttatatgt tttgactgat
+      421 ttgggagatg atttaccttc caaactaatc ggtgtttctt ttttaactgt atatgtatca
+      481 taacctttac tatccttatc atcagaatca gttgtttgtt ttacggtgaa tgctgcaacg
+      541 ataagtagta atataattgc cacgccaata atactccata gtagtttctt attcatatct
+      601 tatactcctt ataatatagt tgattttaat ttattactaa tataaaatac tataattttt
+      661 acacaatagc taaaagtaat cgtagcacat taatttcatt tatatttata cacttttttt
+      721 acccaatcat acacttttag taatagtttg tctctgttga ctagttaagt ataaaaaatt
+      781 atcattataa taacgaatat actagataat aattacattt ataactttaa ttagtatgta
+      841 ttctcattat aatcagaaaa aaggagatac aatatgggta gaacggtttt gataacaggt
+      901 ggatgtaaga atattggaaa acaaattgct caagtgtttg ctgaaaataa ttataatgta
+      961 atagttacta gtagaaataa taataataaa tctattataa cttattttaa aaaaaagaat
+     1021 ttaaaagtgt ttttttacac cttaaatgta gaaaatgaag atgaagttgt gaacgttttc
+     1081 aaggaaatta ataatgatat tggaaaaata gatatattaa ttaataatgc tggtatttcc
+     1141 caaggaaata ctttgttaga agacagtaaa acagaagatt tcaaatcaat gattaacacc
+     1201 aatatattag gtagttatta ttgtatgaaa cacgttatac cttatatgaa aagaaataga
+     1261 tatggtgtta ttataaatat agtatccatt gctgctttaa gaggtattcc ttattcaata
+     1321 ttatatggaa gtactaaaaa tgctgttatt gcattaacaa aaggtgcggc tatcgaaaat
+     1381 gctaacaatg gtattcgtgt taatgctatt gcgccaggaa taattaaaac agagtcatta
+     1441 aatacagaaa ttcaaaactc agaagatgag ttaaatgaac aaacgattgc agctatacat
+     1501 cctatgcaga ttttaggaga agaaaaagat gtcgctaata ctgcatactt tatagcgaac
+     1561 agttccttca tgacaggaag tatagtaaat ttagatggag gttatactgc tcaataatta
+     1621 cttttctttt attcatctga ataaaggcaa agaatattct caaaataaat aagaaaagag
+     1681 gtaaaatata tgaatatata ccttaagata gttataactg ctttattttt ttcaagtata
+     1741 atttttacag taacttatgt atcatctaaa aatttaggta tgtctttatt gtttggacta
+     1801 ttatcattta tagccaacct tgtttatgat tatgtaatgg gggcaagtga aaggaaatca
+     1861 aaaaaagata ataaataaag gaaaagcgct tacttttcac gtatattgtg ttattataaa
+     1921 tttacaggag ggatatatta tggaaaacaa aaaagattta tttgatttag aaatcaaaaa
+     1981 agataatatg gaaaataata atgaattaga agctcaatct cttggtcctg caattaaggc
+     2041 aactagacag gtatgtccta aagcaacacg ttttgttaca gtttcttgta aaaaaagtga
+     2101 ttgtcaatag tagtgattgt aaatagtata gagaaaaacc accctcattt aatcttagat
+     2161 gaaggtggtt ttctctatgt ttaggagaaa ataatgacca attcagatta tataaattat
+     2221 acatatgacg atcgagattt ttttgaaaaa atattgttta tagatagcgg atgtgattat
+     2281 aatcactctg aattaaaaaa taacatagat ttaaaaaact gcaaaagttt tgtagataat
+     2341 aatttaaatg attatacagg acatggcact cagattatta gtgttttaac aggtaaaata
+     2401 tatctaagag gattgattcc aaatgcctcc attgtggtat ataaagttac agactatcga
+     2461 gggaaaacta gtatagaaaa aatatataaa gcgttatctc aaggggttaa gaaaggtttt
+     2521 aaagttataa atgtaagttt ttctggagca attgattcta ttttttatac aaaaaaattc
+     2581 caagaaatta tagatgaagc tagaattaaa aatattataa tttgttggag ccccatgaat
+     2641 aatgataata gattgaacaa tcataaaaat aatacaaatt taatacctaa cgatttcaaa
+     2701 aatctttttc aaattggatc aataaacagg ttaaaccaaa tatccaattt agtatgtaat
+     2761 gaaaatgaaa tagacttttt cgcacctggt ggagatttag tcagcgaaac tattcctatt
+     2821 gaagaatcat ttattttgtt agcaaacaca caattattat gtaagttatc tgattattat
+     2881 ataggtattc ctaaaggata tactattaat atgggaaata gtatagctac ttcatatgca
+     2941 tcagggtgtt ttatgataat aataagtaaa ttcaaaagaa aatataaata ttatcctagt
+     3001 ataaatgaag tcttaaagtt gatatctaaa tatagtaata gtgaaatcaa tttaataaaa
+     3061 attacaagga gcgttgttga aaatgcactt atttaagtgg tatatgataa gagaacctat
+     3121 tttagaaata aataagctag aggatataca agaacgacga gacaacaatg aagataaata
+     3181 tctcaataaa cttatagatt ttatttttga taatgaattg gcattacctt tatatcatgc
+     3241 gaatagtaat ctgtttaata tgattaataa ttataaaaga aaagaattat ctaaaaagaa
+     3301 aaagaaaaac ttaattttaa gtttgtataa ttatataaca cgaatgattt ttagagcaac
+     3361 tccattcggt tttatgtcat ctataaatat aggttctata aaacccaatg aaatgacagt
+     3421 atggaataat gacactcaaa aatataatct agatttagat aacagagtac tgtatccact
+     3481 tttaaaaaat ttaaataaag acattaaaaa taaaatatac ctaagaaaaa attattatat
+     3541 atataaagat tacacacatt attatatacc atatcaatta aattttgata aattaatagt
+     3601 aaatgctaat aataatatta atatagaaag aaatgaacta tctgatttta tattcagtaa
+     3661 cttagatagt attttatatg tagatttagt tgatttgata aaaacgaagt ttaatgtaga
+     3721 ctctaaaacc gttgaaaatt atttagataa attaatccaa gaaaatttta ttatttctga
+     3781 attagaagaa gtaataaatc ataaaaataa agatatttac ttaataaatt ttttagaaaa
+     3841 aaagggggta tctccaacaa ataaatatta tcaaatgtta aaaagcgtgt accaatttcg
+     3901 ggtttctttg aaaaataact ataataataa atctttaaat caattaatga aaataaatga
+     3961 aacttttaaa aaaacattag gtttcgattc ttctaacatt tttaaagtag attttgtaaa
+     4021 taagtatagc gaaattaatt ttaaagaaaa agatattcaa aatattaaaa aagttattaa
+     4081 tatgctactt catttaccag aaaattatgc agattattta actaattata agagtgaatt
+     4141 ttcagaaata tatggacaag acgaatataa aaatatttta gagttgctaa ataaaaattt
+     4201 aggtattgaa tatacgattg ataataaaga taatgaaaaa ttcaaagaga atatacaaaa
+     4261 aagcaagaaa aatatctatt ctcttttttc agaatgggag tataaagcta taagtgaaaa
+     4321 tcaagatata gtacttaccg atgaaaaaat tcaatcaata aaatcattgg gtgaacctcc
+     4381 tgttgatgca tcggttgata tgattttcac tgttacacaa aatgaaaata gcgaatatat
+     4441 atatcattta aatgacgaac ttacttcagc taaagttaca gatatgtatg gtcgttttcg
+     4501 atatctaatg aatgaagatt tcgaaaaagc tttaaataaa tttccacatg atattggtat
+     4561 tcaaaaagtt aattcaaatt ataaacaccc taatccatta attcaaaatg tgaaaaatag
+     4621 tgactattta agtagctatt caagtgattt taaaaactat tttgtttttt taggtaacga
+     4681 tttaaatttt tatttaaaaa ataaaaagga tgaaacaata tttataccta aaatatctga
+     4741 tatgcataac acagactatt ctccctacat aattgacttt ctttctaaaa tagaaaagca
+     4801 gtttattaaa gaatattgga gcatagaaaa ttataaaagc agttttgttt tttctcctag
+     4861 aattgtttat aaaaacatag taataagtcc taaaaaatgg aagttaacta atttcgataa
+     4921 aatggataat tatgaaaatt tcaagaaact tttttttgaa aaaaaagttg aattatcaat
+     4981 acctgatcaa ttttatataa taaatgcaga tttaaaaatt tatattgata ctcaaaacac
+     5041 atggtgttta gagttattat tcaaagaatt taaaaaaaat gagcatctca atataattga
+     5101 agttgaaagt aacttattaa ataataagaa aattaaagaa gtggtttttt cagcaaaatc
+     5161 agatatatgc cagagtatta atatttatga agaaaataaa aacaatatta atttaccaaa
+     5221 agaaatttta tatataacag atggttggtt aagtgttaac ttatattata atgaaaataa
+     5281 tataagtaaa cttatcggtg atttctttta tagaaaatta ttcgaaaacg aaatctttaa
+     5341 aaatagcata aaatatttca ttaggtatat tgatgataaa aaacatataa gattaagaat
+     5401 aaaaataaat attgatgaaa taaataaagt ggcaaaaatt ttaaaagaaa tggtagatat
+     5461 aaactatata aaaagttaca aaattgtacc ctattataga gaaacagcaa gatatggtgg
+     5521 caaagaaatt attgatatag tggaagagtg ttttgaaaaa gattcaaaaa tagtatctaa
+     5581 gtattatgct gataaaaatt tttcttcaga tgatgcttta tattttaata taacaaacat
+     5641 tgtagatatc ttatcttacc ttacaaattc tatagatgct caaattgata ttttatctga
+     5701 catttctcac aaaaaagaaa acaaaaaaat atatagaaaa tataaaaata atttaatgaa
+     5761 aatagtggaa ggcgacgtta ataagtacaa catatattta aatttacgaa agtatgcata
+     5821 tagcaagttg aaattcgttt tgagtgacaa aaaaattaat gataaaaaag atattatatt
+     5881 gagtatagtc catatgttta ataatagatt tatagggaca gatagaaaat atgaagaatt
+     5941 tgttatggaa ctactctcac gaacattaat agactataaa aataaaaagg agcatatatg
+     6001 caacaattct tagaagctta tataaaaaaa gttgaaaata ttgatatagt agatgactat
+     6061 attcatagag cttatggtaa agaaccaata tataaagtta gtttaattac aggatatcca
+     6121 ggtattgcaa tgactctttt ctccatctat caacatacta aaaactttaa atattataaa
+     6181 ctagcaaata aatatttaga gaaaactata gatttaatta gttctgttcc tatatattct
+     6241 actagtttat ttgaaggagc ttttggtgtt attttttctt tattaatttg ttcagatcta
+     6301 ggaaataact atagtgagat tattaaaagc ctattatcag agtataaaaa aatagcttct
+     6361 gatgagataa gagatttgaa gaaaaatatc aaagaaggta aggtagaatc tcaagattac
+     6421 gatatagtat caggatgctc tggaactctt tcagtattac ttcttgctac ggacatctat
+     6481 cctagtttat atgattactt aaatattgaa atatcacaat tgagcagtat tttagagaaa
+     6541 ctggtatatg aatataatga aatagataat gaacaaaaca ccttattcag tgatctaggt
+     6601 tatgctcacg gaatgcccgg tgtaataaat attttatgca actcttataa aagaggatat
+     6661 aaaacttcaa aaactaaaga tattttaatt aatagtattt cgaaacttaa tagaagttta
+     6721 aaaatcgaca atggaacaat ttatattcca acagatacta ataatactaa taatttcaga
+     6781 gatgcttggt gctatggtat gccatctgtt gcatatacta tttataacat tgcaaagaca
+     6841 ttccaaatta gtagtttgct tgaactaagc caaaatttac tatatcaaac atggttaaga
+     6901 aaagaatatg aaaccaagtt gatttctcca acactgtgtc acggtttttc tggaatagta
+     6961 atcatatcat taataatgaa caatgaagat ttagctaata aatatattga taaaattaat
+     7021 aatacagatg ttgatgataa agatatgtta ttttttgata taaatagtaa ttcttctatt
+     7081 atgaaagaca taggtttatt aaacggaaac tcagggatat tattaactat gctttccttc
+     7141 aataataaag acattcaact aaatcattgg tcaaaattcc tcatatttta aagtatataa
+     7201 atggaacgtt aatgataaaa agagagcgta tttgcgctct ctttttttgt ctcattatta
+     7261 aaaattcata ataaattgtt atcataagtt ttaggacgct gtgagaatct ttcatttgca
+     7321 tccaaaaata gtttactaaa ccaaatcctt ttgaattc
+//
