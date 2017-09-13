@@ -1,14 +1,18 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+from collections import OrderedDict
 from io import StringIO
 import unittest
-import antismash.common.serialiser as serialiser
-from antismash.common.test.helpers import get_path_to_nisin_genbank
+
 import Bio.SeqIO as seqio #helperlibs.bio.seqio as seqio
 from Bio.SeqFeature import ExactPosition, BeforePosition, AfterPosition, \
                            UnknownPosition, FeatureLocation, CompoundLocation, \
                            SeqFeature
+
+import antismash.common.serialiser as serialiser
+from antismash.common.secmet import Record
+from antismash.common.test.helpers import get_path_to_nisin_genbank
 
 class TestLocationSerialiser(unittest.TestCase):
     # TODO: test invalid inputs
@@ -77,23 +81,53 @@ class TestLocationSerialiser(unittest.TestCase):
             new_location = self.convert(location)
             assert new_location.strand == strand
 
-class TestGenbank(unittest.TestCase):
+class TestResultsJSON(unittest.TestCase):
     def create_data_stream(self, data):
+        def force_source_ordering(records):
+            for record in records:
+                source = None
+                for feature in record.features:
+                    if feature.type == "source":
+                        source = feature
+                        break
+                new = OrderedDict()
+                for qual in sorted(list(source.qualifiers)):
+                    new[qual] = source.qualifiers[qual]
+                source.qualifiers = new
+
         stream = StringIO()
-        seqio.write(data, stream, "genbank")
+        biopython = [rec.to_biopython() for rec in data]
+
+        # because otherwise there's a nondeterministic ordering mismatch
+        force_source_ordering(biopython)
+
+        seqio.write(biopython, stream, "genbank")
         stream.seek(0)
         return stream
 
-    def test_to_json_and_back(self):
-        nisin = list(seqio.parse(open(get_path_to_nisin_genbank()), "genbank"))
+    def test_record_to_json_and_back(self):
+        filename = get_path_to_nisin_genbank()
+        records = list(seqio.parse(open(filename), "genbank"))
+        records = [Record.from_biopython(rec) for rec in records]
+        results = serialiser.AntismashResults(filename, records, [{}, {}, {}], "dummy")
         json_handle = StringIO()
-        serialiser.write_records(nisin, [{} for rec in nisin], json_handle)
+        results.write_to_file(json_handle)
         json_handle.seek(0)
-        new_records = serialiser.read_records(json_handle)
-        assert len(new_records) == len(nisin)
-        original = self.create_data_stream(nisin)
-        new = self.create_data_stream(new_records)
-        assert original.getvalue() == new.getvalue()
+        new_results = serialiser.AntismashResults.from_file(json_handle)
+        # check no records were lost
+        assert len(new_results.records) == len(results.records)
+        # check that the contents of the records is the same
+        #  by converting to biopython and writing to genbanks
+        original = self.create_data_stream(results.records)
+        new = self.create_data_stream(new_results.records)
+        oldvalue = original.getvalue()
+        newvalue = new.getvalue()
+        open("old.json", "w").write(oldvalue)
+        open("new.json", "w").write(newvalue)
+        for oldline, newline in zip(oldvalue.split('\n'), newvalue.split('\n')):
+            assert oldline == newline
+        return
+
 
 class TestFeatureSerialiser(unittest.TestCase):
     def test_simple_feature(self):
@@ -115,4 +149,3 @@ class TestFeatureSerialiser(unittest.TestCase):
         assert new_feature.id == feature.id
         assert new_feature.type == feature.type
         assert str(new_feature.location) == str(new_feature.location)
-

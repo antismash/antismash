@@ -23,33 +23,6 @@ class LanthipeptideLayer(ClusterLayer):
                 continue
             if motif.peptide_type == "lanthipeptide":
                 self.motifs.append(motif)
-        self.core_peptides_predictions = generate_core_predictions(self.motifs)
-        self.core_peptides_data = generate_core_data(self.motifs)
-
-def generate_core_data(motifs):
-    data = []
-    for peptide in motifs:
-        leader_seq = peptide.leader_seq
-        core_seq = peptide.core_seq
-        pred_class = peptide.peptide_class
-        gene_id = peptide.get_name()
-        data.append((leader_seq, core_seq, pred_class, gene_id))
-    return data
-
-def generate_core_predictions(motifs):
-    predictions = []
-    for core in motifs:
-        gene_id = core.get_name()
-        mass = "%.1f" % core.monoisotopic_mass
-        mol_weight = "%.1f" % core.molecular_weight
-        bridges = core.lan_bridges
-        pred_class = core.peptide_class
-        score = core.score
-        rodeo_score = core.rodeo_score
-        mods = core.get_modifications()
-        alt_weights = core.alternative_weights
-        predictions.append((gene_id, mass, mol_weight, bridges, pred_class, score, rodeo_score, alt_weights, mods))
-    return predictions
 
 def generate_details_div(cluster_layer, record_layer, options_layer):
     env = Environment(
@@ -68,10 +41,10 @@ def generate_sidepanel(cluster_layer, record_layer, options_layer):
         autoescape=True, undefined=StrictUndefined)
     template = env.get_template('sidepanel.html')
     cluster = LanthipeptideLayer(cluster_layer.cluster, record_layer, cluster_layer.cluster_rec)
+    if not cluster.motifs:
+        return ""
     record = record_layer
     sidepanel = template.render(record=record,
                                 cluster=cluster,
                                 options=options_layer)
-    if cluster.motifs:
-        return sidepanel
-    return ""
+    return sidepanel

@@ -110,8 +110,7 @@ def load_geneclusterproteins(accessions, searchtype):
             tabs = line.split("|")
             locustag = tabs[4]
             if locustag in accessions:
-                raise "awooga"
-                locustag = "h_" + locustag
+                locustag = "h_" + locustag # TODO: needs to be actually unique
             location = tabs[2]
             strand = tabs[3]
             annotations = tabs[5]

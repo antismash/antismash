@@ -77,12 +77,9 @@ def main(args):
     if not options.output_dir:
         options.output_dir = os.path.abspath(os.path.splitext(os.path.basename(sequence))[0])
 
-    options.all_enabled_modules = [module for module in antismash.get_all_modules() if module.is_enabled(options)] #TODO: shift elsewhere
-    config = antismash.config.args.Config(options)
+    sequence = sequence.replace("< > HYPHEN < >", "-")
 
-    sequence = sequence.replace("< > HYPHEN < >","-")
-
-    return antismash.run_antismash(sequence, config)
+    return antismash.run_antismash(sequence, options)
 
 
 if __name__ == "__main__":

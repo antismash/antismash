@@ -444,22 +444,21 @@ def store_detection_details(rules, seq_record):
         assert cluster.type == "cluster"
         cluster.detection_rules = [str(rules[product].conditions) for product in cluster.products]
 
+class SecMetResult():
+    def __init__(self, res, nseeds):
+        self.query_id = res.query_id
+        self.evalue = res.evalue
+        self.bitscore = res.bitscore
+        self.nseeds = nseeds
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        return "{} (E-value: {}, bitscore: {}, seeds: {})".format(
+                self.query_id, self.evalue, self.bitscore, self.nseeds)
 
 def _update_sec_met_entry(feature, results, clustertype, nseqdict):
-    class SecMetResult():
-        def __init__(self, res, nseeds):
-            self.query_id = res.query_id
-            self.evalue = res.evalue
-            self.bitscore = res.bitscore
-            self.nseeds = nseeds
-
-        def __repr__(self):
-            return self.__str__()
-
-        def __str__(self):
-            return "{} (E-value: {}, bitscore: {}, seeds: {})".format(
-                    self.query_id, self.evalue, self.bitscore, self.nseeds)
-
     domains = [SecMetResult(res, nseqdict.get(res.query_id, "?")) for res in results]
 
     feature.sec_met = SecMetQualifier(clustertype, domains)

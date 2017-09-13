@@ -15,7 +15,6 @@ from antismash.outputs.html.structure_drawer import generate_chemical_structure_
 
 NAME = "html"
 SHORT_DESCRIPTION = "HTML output"
-ENABLED = True
 
 def get_arguments():
     return ModuleArgs("Output options", "html", enabled_by_default=True)

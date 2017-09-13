@@ -4,16 +4,19 @@
 import json
 import logging
 import os
-from Bio import SeqIO
 from datetime import datetime
+from Bio import SeqIO
 
 from antismash.config import loader
 from antismash.common import deprecated, serialiser
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record
+from antismash.config.args import Config
 from antismash.modules import tta, genefinding, hmm_detection, clusterblast, \
                               dummy, lanthipeptides, smcogs
 from antismash.outputs import html, svg
+
+__version__ = "5.0.0alpha"
 
 def get_all_modules():
     return get_detection_modules() + get_analysis_modules() + get_output_modules()
@@ -86,35 +89,37 @@ def run_detection_stage(record, options, detection_modules):
             detection_results[module.NAME] = module.run_on_record(record, options)
     return detection_results
 
-def analyse_record(record, options, modules, previous_result):
-    # ensure a minimum level of result format
-    if not previous_result:
-        previous_result["record_id"] = record.id
-        previous_result["modules"] = {}
+def regenerate_results_for_record(record, options, modules, previous_result):
+    for module in modules:
+        section = previous_result.pop(module.__name__, None)
+        results = None
+        if section:
+            logging.debug("Regenerating results for %s", module.__name__)
+            results = module.check_previous_results(section, record, options)
+            if not results:
+                logging.debug("Results could not be generated for %s", module.__name__)
+            else:
+                assert isinstance(results, ModuleResults)
+                previous_result[module.__name__] = results
+    return previous_result
 
-    # check that at leats one module will run
-    if not any(module.is_enabled(options) for module in modules):
-        logging.info("Skipping record, no modules enabled for: %s", record.id)
-        return False
+def analyse_record(record, options, modules, previous_result):
+    module_results = regenerate_results_for_record(record, options, modules, previous_result)
 
     # try to run the given modules over the record
     logging.info("Analysing record: %s", record.id)
     for module in modules:
         logging.debug("Checking if %s should be run", module.__name__)
-        section = previous_result.get("modules", {}).get(module.__name__)
-        results = module.check_previous_results(section, record, options)
-        assert results is None or isinstance(results, ModuleResults)
-        if results:
-            if module.is_enabled(options):
-                logging.info("Skipping %s, reusing previous results", module.__name__)
-        elif module.is_enabled(options):
-            logging.info("Running %s", module.__name__)
-            # we've checked before, but make sure the options make sense
-            assert not module.check_options(options) # TODO: change to return truthy if good
-            results = module.run_on_record(record, options)
-            if "hmm_detection" not in module.__name__: # TODO: work out if we can keep these
-                assert isinstance(results, ModuleResults)
-        previous_result["modules"][module.__name__] = results
+        if not module.is_enabled(options):
+            continue
+        results = module_results.get(module.__name__)
+        if results and isinstance(results, ModuleResults):
+            logging.info("Skipping %s, reusing previous results", module.__name__)
+            continue
+        logging.info("Running %s", module.__name__)
+        results = module.run_on_record(record, options)
+        assert isinstance(results, ModuleResults)
+        module_results[module.__name__] = results
 
 
 def prepare_output_directory(name):
@@ -131,14 +136,19 @@ def prepare_output_directory(name):
 
 def run_antismash(sequence_file, options, detection_modules=None,
                   analysis_modules=None):
-    setup_logging(logfile=options.get('logfile', None), verbose=options.verbose,
+    logfile = options.logfile if 'logfile' in options else None
+    setup_logging(logfile=logfile, verbose=options.verbose,
                   debug=options.debug)
-    loader.update_config_from_file()
+
 
     if detection_modules is None:
         detection_modules = get_detection_modules()
     if analysis_modules is None:
         analysis_modules = get_analysis_modules()
+
+    options.all_enabled_modules = [module for module in detection_modules + analysis_modules if module.is_enabled(options)]
+    options = Config(options)
+    loader.update_config_from_file() # TODO move earlier to run_antismash?
 
     # ensure the provided options are valid
     if not verify_options(options, analysis_modules + detection_modules):
@@ -151,25 +161,33 @@ def run_antismash(sequence_file, options, detection_modules=None,
             raise RuntimeError("Module failing prerequisite check: %s %s" %(
                             module.__name__, res))
 
+    # check that at least one module will run
+    if not any(module.is_enabled(options) for module in detection_modules + analysis_modules):
+        raise ValueError("No detection or analysis modules enabled")
+
     start_time = datetime.now()
 
     prepare_output_directory(options.output_dir)
 
     if sequence_file:
         seq_records = deprecated.parse_input_sequence(sequence_file, options)
-        results = [{}] * len(seq_records)
+        results = serialiser.AntismashResults(sequence_file.rsplit(os.sep, 1)[-1],
+                                              seq_records,
+                                              [{}] * len(seq_records),
+                                              __version__)
     else:
         logging.debug("Attempting to reuse previous results in: %s", options.reuse_results)
         with open(options.reuse_results) as handle:
             contents = handle.read()
             if not contents:
                 raise ValueError("No results contained in file: %s" % options.reuse_results)
-        results = json.loads(contents) #TODO clean up
-        seq_records = serialiser.read_records(options.reuse_results)
-        seq_records = [Record.from_biopython(record) for record in seq_records]
+        results = serialiser.AntismashResults.from_file(options.reuse_results)
+        seq_records = results.records
+        # hacky bypass to set output dir #TODO work out alternate method
+        options.__dict__["output_dir"] = os.path.abspath(os.path.splitext(results.input_file)[0])
 
     seq_records = deprecated.pre_process_sequences(seq_records, options, genefinding)
-    for seq_record, previous_result in zip(seq_records, results):
+    for seq_record, previous_result in zip(seq_records, results.results):
         # skip if we're not interested in it
         if seq_record.skip:
             continue
@@ -178,21 +196,42 @@ def run_antismash(sequence_file, options, detection_modules=None,
 
 
     # Write results
-    logging.debug("Creating results page")
-    html.write(seq_records, results, options)
-    logging.debug("Creating results SVGs")
-    svg.write(seq_records, options, results)
     # TODO: include status logging, zipping, etc
-    logging.debug("Writing cluster-specific genbank files")
+    json_filename = "temp.json"
+    logging.debug("Writing json results to '%s'", json_filename)
+    results.write_to_file(json_filename)
+
+    # now that the json is out of the way, annotate the record
+    # otherwise we could double annotate some areas
+    for seq_record, record_results in zip(seq_records, results.results):
+        logging.debug("Annotating record %s with results from: %s",
+                      seq_record.id,
+                      ", ".join([name.split()[0].split('.')[-1] for name in record_results]))
+        logging.critical("cds motifs before annotation: %d", len(seq_record.get_cds_motifs()))
+        for module, result in record_results.items():
+            logging.debug(" Adding results from %s", module)
+            assert isinstance(result, ModuleResults), type(result)
+            result.add_to_record(seq_record)
+            logging.critical("cds motifs after annotation: %d", len(seq_record.get_cds_motifs()))
+
+    logging.debug("Creating results page")
+    html.write(seq_records, results.results, options)
+
+    logging.debug("Creating results SVGs")
+    svg.write(seq_records, options, results.results)
+
+    logging.debug("Writing cluster-specific genbank files") # TODO: make more efficient
     for record in seq_records:
         for cluster in record.get_clusters():
             cluster.write_to_genbank(directory=options.output_dir)
-    logging.debug("Writing genbank file to 'temp.gbk'")
-    seq_records = [record.to_biopython() for record in seq_records]
-    SeqIO.write(seq_records, "temp.gbk", "genbank")
-    logging.debug("Writing json results to 'temp.json'")
-    serialiser.write_records(seq_records, results, "temp.json")
 
+
+    # convert records to biopython
+    seq_records = [record.to_biopython() for record in seq_records]  # TODO avoid the second conversion if possible
+    # write them to an aggregate output
+    combined_filename = "temp.gbk"
+    logging.debug("Writing final genbank file to '%s'", combined_filename)
+    SeqIO.write(seq_records, combined_filename, "genbank")
 
     end_time = datetime.now()
     running_time = end_time - start_time

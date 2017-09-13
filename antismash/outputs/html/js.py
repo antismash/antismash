@@ -14,12 +14,11 @@ searchgtr_links = {}
 
 def convert_records(seq_records, results, options):
     records = []
-    annotations = load_cog_annotations()
     for srec, result in zip(seq_records, results):
-        records.append(convert_record(srec, annotations, options, result))
+        records.append(convert_record(srec, options, result))
     return records
 
-def convert_record(record, annotations, options, result=None):
+def convert_record(record, options, result=None):
     """Convert a SeqRecord to JSON"""
     js_rec = {}
     js_rec['seq_id'] = record.id
@@ -30,16 +29,16 @@ def convert_record(record, annotations, options, result=None):
                     js_rec['orig_id'] = options.extrarecord[record.id].extradata["orig_id"]
     if 'orig_id' not in js_rec:
         js_rec['orig_id'] = ""
-    js_rec['clusters'] = convert_clusters(record, annotations, options, result)
+    js_rec['clusters'] = convert_clusters(record, options, result)
 
     return js_rec
 
-def convert_clusters(record, annotations, options, result=None):
+def convert_clusters(record, options, result=None):
     """Convert cluster SeqFeatures to JSON"""
     js_clusters = []
     mibig_results = {}
     if result:
-        clusterblast_results = result["modules"].get("antismash.modules.clusterblast")
+        clusterblast_results = result.get("antismash.modules.clusterblast")
         if clusterblast_results and clusterblast_results.knowncluster:
             mibig_results = clusterblast_results.knowncluster.mibig_entries
     for cluster in record.get_clusters():
@@ -58,7 +57,7 @@ def convert_clusters(record, annotations, options, result=None):
         js_cluster['end'] = int(cluster.location.end)
         js_cluster['idx'] = cluster.get_cluster_number()
         mibig_entries = mibig_results.get(js_cluster['idx'], {})
-        js_cluster['orfs'] = convert_cds_features(record, cluster.cds_children, annotations, options, mibig_entries)
+        js_cluster['orfs'] = convert_cds_features(record, cluster.cds_children, options, mibig_entries)
         js_cluster['borders'] = convert_cluster_border_features(cluster.borders)
         js_cluster['tta_codons'] = convert_tta_codons(tta_codons)
         js_cluster['type'] = cluster.get_product_string()
@@ -73,14 +72,11 @@ def convert_clusters(record, annotations, options, result=None):
             bestcluster = cluster.knownclusterblast[0]
             js_cluster['knowncluster'] = bestcluster[0]
             js_cluster['BGCid'] = bestcluster[1]
-            logging.debug('Found closest cluster "%s" for cluster no. %s',
-                          js_cluster['knowncluster'],
-                          cluster.get_cluster_number())
         js_clusters.append(js_cluster)
 
     return js_clusters
 
-def convert_cds_features(record, features, annotations, options, mibig_entries):
+def convert_cds_features(record, features, options, mibig_entries):
     """Convert CDS SeqFeatures to JSON"""
     js_orfs = []
     for feature in features:
@@ -92,7 +88,7 @@ def convert_cds_features(record, features, annotations, options, mibig_entries):
             js_orf['end'], js_orf['start'] = js_orf['start'], js_orf['end']
         js_orf['strand'] = feature.strand if feature.strand is not None else 1
         js_orf['locus_tag'] = feature.get_name()
-        js_orf['type'] = get_biosynthetic_type(feature, annotations)
+        js_orf['type'] = get_biosynthetic_type(feature)
         js_orf['description'] = utils.ascii_string(get_description(record, feature, js_orf['type'], options, mibig_entries.get(feature.protein_id, {})))
         js_orfs.append(js_orf)
     return js_orfs
@@ -144,6 +140,8 @@ def get_description(record, feature, type_, options, mibig_result):
         'asf': ''
     }
 
+    smcogs = not options.minimal or options.smcogs_enabled or options.smcogs_trees #TODO make simpler in args
+
     blastp_url = "http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE=Proteins&" \
                  "PROGRAM=blastp&BLAST_PROGRAMS=blastp&QUERY=%s&" \
                  "LINK_LOC=protein&PAGE_TYPE=BlastSearch"
@@ -154,7 +152,7 @@ def get_description(record, feature, type_, options, mibig_result):
     template += 'Locus-tag: %(locus_tag)s; Protein-ID: %(protein_id)s<br>\n'
     if feature.get_qualifier('EC_number'):
         template += "EC-number(s): %(ecnumber)s<br>\n"
-    if options.smcogs:
+    if smcogs:
         template += "smCOG: %(smcog)s<br>\n"
     if options.input_type == 'nucl':
         template += "Location: %(start)s - %(end)s<br><br>\n"
@@ -180,7 +178,7 @@ def get_description(record, feature, type_, options, mibig_result):
     template += """AA sequence: <a href="javascript:copyToClipboard('%(sequence)s')">Copy to clipboard</a><br>"""
     template += """Nucleotide sequence: <a href="javascript:copyToClipboard('%(dna_sequence)s')">Copy to clipboard</a><br>"""
 
-    if not options.smcogs:
+    if not smcogs:
         del replacements['smcog']
     if options.input_type == 'prot':
         del replacements['start']
@@ -210,14 +208,16 @@ def get_description(record, feature, type_, options, mibig_result):
     else:
         del replacements['ecnumber']
 
-    if options.smcogs:
-        for note in feature.qualifiers.get('note', []):
+    if smcogs:
+        for note in feature.notes:
             if note.startswith('smCOG:') and '(' in note:
                 text = note[6:].split('(', 1)[0]
                 smcog, desc = text.split(':', 1)
                 desc = desc.replace('_', ' ')
                 replacements['smcog'] = '%s (%s)' % (smcog, desc)
-            elif note.startswith('smCOG tree PNG image:'):
+    if options.smcogs_trees:
+        for note in feature.notes:
+            if note.startswith('smCOG tree PNG image:'):
                 entry = '<a href="%s" target="_new">View smCOG seed phylogenetic tree with this gene</a>'
                 url = note.split(':')[-1]
                 replacements['smcog_tree_line'] = entry % url
@@ -240,15 +240,8 @@ def get_description(record, feature, type_, options, mibig_result):
     return template % replacements
 
 
-def get_biosynthetic_type(feature, annotations):
+def get_biosynthetic_type(feature):
     "Get the biosythetic type of a CDS feature"
-    ann = 'other'
-    for note in feature.notes:
-        if not note.startswith('smCOG:'):
-            continue
-        logging.critical('smCOG note annotations being ignored')
-        smcog = note[7:].split(':')[0]
-        ann = annotations.get(smcog, 'other')
 
     function = str(feature.gene_function) # TODO: change the rest of js to suit this so conversion not required
     if function == 'additional':
@@ -278,18 +271,3 @@ def get_ASF_predictions(feature):
 
 #    return result
 
-def load_cog_annotations():
-    "Load the smCOG type annotations from a file"
-    type_keys = {
-        'B': 'biosynthetic-additional',
-        'T': 'transport',
-        'R': 'regulatory',
-        'O': 'other'
-    }
-    annotations = {}
-    for line in open(path.get_full_path(__file__, 'cog_annotations.txt'), 'r'):
-        line = line.strip()
-        cog, _, type_ = line.split('\t', 3)
-        annotations[cog] = type_keys.get(type_, 'other')
-
-    return annotations

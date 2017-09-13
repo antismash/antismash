@@ -22,7 +22,7 @@ class _BisectHelper:
         loc = self.features[index].location
         return (loc.start, loc.end)
 
-class Record():
+class Record:
     """A record containing secondary metabolite clusters"""
     # slots not for space, but to stop use as a horrible global
     __slots__ = ["_record", "_seq", "skip", "_cds_features", "_cds_mapping", "_clusters",
@@ -44,10 +44,10 @@ class Record():
 
     def __getattr__(self, attr):
         # passthroughs to the original SeqRecord
-        if attr in ["id", "seq", "description", "name", "annotations"]:
+        if attr in ["id", "seq", "description", "name", "annotations", "dbxrefs"]:
             return getattr(self._record, attr)
         if attr in Record.__slots__:
-            return getattr(self, attr)
+            return self.__getattribute__(attr)
         raise AttributeError("Record has no attribute '%s'" % attr)
 
 
@@ -160,7 +160,7 @@ class Record():
             bio_features.extend(feature.to_biopython())
         return SeqRecord(self.seq, id=self._record.id, name=self._record.name,
                          description=self._record.description,
-                         dbxrefs=self._record.dbxrefs, features=bio_features,
+                         dbxrefs=self.dbxrefs, features=bio_features,
                          annotations=self._record.annotations,
                          letter_annotations=self._record.letter_annotations)
 

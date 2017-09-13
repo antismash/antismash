@@ -29,8 +29,10 @@ class IntegrationLantipeptides(unittest.TestCase):
         rec = Record.from_biopython(seqio.read(helpers.get_path_to_nisin_with_detection()))
         assert not rec.get_cds_motifs()
         result = specific_analysis(rec)
-        assert len(result.motifs) == 1
         assert len(result.clusters_with_motifs) == 1
+        assert len(result.motifs) == 1
+        assert len(rec.get_cds_motifs()) == 0
+        result.add_to_record(rec)
         assert len(rec.get_cds_motifs()) == 1
         prepeptide = result.motifs[0]
         # real monoisotopic mass is 3351.51, but we overpredict a Dha
@@ -58,7 +60,7 @@ class IntegrationLantipeptides(unittest.TestCase):
             parser = build_parser(modules=antismash.get_all_modules())
             options = parser.parse_args(args)
             options.all_enabled_modules = [module for module in antismash.get_all_modules() if module.is_enabled(options)] #TODO: shift elsewhere
-            antismash.run_antismash(helpers.get_path_to_nisin_genbank(), Config(options))
+            antismash.run_antismash(helpers.get_path_to_nisin_genbank(), options)
 
             # make sure the html_output section was tested
             with open(os.path.join(output_dir, "index.html")) as handle:
@@ -71,8 +73,10 @@ class IntegrationLantipeptides(unittest.TestCase):
         rec = Record.from_biopython(seqio.read(path.get_full_path(__file__, 'data/epidermin.gbk')))
         assert not rec.get_cds_motifs()
         result = specific_analysis(rec)
-        assert len(rec.get_cds_motifs()) == 1
         assert len(result.motifs) == 1
+        assert len(rec.get_cds_motifs()) == 0
+        result.add_to_record(rec)
+        assert len(rec.get_cds_motifs()) == 1
         prepeptide = result.motifs[0]
         self.assertAlmostEqual(2164, prepeptide.monoisotopic_mass, delta=0.5)
         self.assertAlmostEqual(2165.6, prepeptide.molecular_weight, delta=0.5)
@@ -88,6 +92,8 @@ class IntegrationLantipeptides(unittest.TestCase):
         assert not rec.get_cds_motifs()
         result = specific_analysis(rec)
         assert len(result.motifs) == 1
+        assert len(rec.get_cds_motifs()) == 0
+        result.add_to_record(rec)
         assert len(rec.get_cds_motifs()) == 1
 
         prepeptide = result.motifs[0]
@@ -107,6 +113,8 @@ class IntegrationLantipeptides(unittest.TestCase):
         assert not rec.get_cds_motifs()
         result = specific_analysis(rec)
         assert len(result.motifs) == 1
+        assert len(rec.get_cds_motifs()) == 0
+        result.add_to_record(rec)
         assert len(rec.get_cds_motifs()) == 1
 
         prepeptide = result.motifs[0]
@@ -127,6 +135,8 @@ class IntegrationLantipeptides(unittest.TestCase):
         assert not rec.get_cds_motifs()
         result = specific_analysis(rec)
         assert len(result.motifs) == 2
+        assert len(rec.get_cds_motifs()) == 0
+        result.add_to_record(rec)
         assert len(rec.get_cds_motifs()) == 2
 
     def test_sco_cluster3(self):
@@ -135,6 +145,8 @@ class IntegrationLantipeptides(unittest.TestCase):
         assert not rec.get_cds_motifs()
         result = specific_analysis(rec)
         assert len(result.motifs) == 1
+        assert len(rec.get_cds_motifs()) == 0
+        result.add_to_record(rec)
         assert len(rec.get_cds_motifs()) == 1
         self.assertEqual('Class I', result.motifs[0].peptide_class)
 
@@ -144,5 +156,7 @@ class IntegrationLantipeptides(unittest.TestCase):
         assert not rec.get_cds_motifs()
         result = specific_analysis(rec)
         assert len(result.motifs) == 1
+        assert len(rec.get_cds_motifs()) == 0
+        result.add_to_record(rec)
         assert len(rec.get_cds_motifs()) == 1
         self.assertEqual('Class II', result.motifs[0].peptide_class)

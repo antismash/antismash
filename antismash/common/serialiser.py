@@ -14,27 +14,74 @@ from Bio.SeqFeature import ExactPosition, BeforePosition, AfterPosition, \
 from Bio.SeqRecord import SeqRecord
 
 from antismash.common.module_results import ModuleResults
+from antismash.common.secmet import Record
 
-def write_records(records, results, handle):
+class AntismashResults:
+    def __init__(self, input_file, records, results, version):
+        self.input_file = input_file
+        self.records = records
+        self.results = results
+        self.version = version
+
+    @staticmethod
+    def from_file(handle):
+        if isinstance(handle, str):
+            handle = open(handle, "r")
+        data = json.loads(handle.read())
+        version = data["version"]
+        input_file = data["input_file"]
+        records = [Record.from_biopython(record_from_json(rec)) for rec in data["records"]]
+        results = [rec["modules"] for rec in data["records"]]
+        return AntismashResults(input_file, records, results, version)
+
+    def to_json(self):
+        res = OrderedDict()
+        res["version"] = self.version
+        res["input_file"] = self.input_file
+        biopython = [rec.to_biopython() for rec in self.records]
+        res["records"] = dump_records(biopython, self.results)
+        return res
+
+    def write_to_file(self, handle):
+        if isinstance(handle, str):
+            handle = open(handle, "w")
+        handle.write(json.dumps(self.to_json()))
+
+def write_results(records, results, handle):
+    copy = OrderedDict(results)
+    copy["records"] = dump_records(records, results["record_results"])
+    if isinstance(handle, str):
+        handle = open(handle, "w")
+    handle.write(json.dumps(copy))
+
+def dump_records(records, results, handle=None):
     data = []
+    assert isinstance(results, list)
     for record, result in zip(records, results):
         json_record = record_to_json(record)
-        modules = {}
+        modules = OrderedDict()
         logging.debug("Record %s has results for modules: %s", record.id,
                       ", ".join([mod for mod, resultv in result.get("modules", {}).items() if resultv]))
         for module, m_results in result.get("modules", {}).items():
             logging.debug("Converting %s results to json", module)
-            if not m_results:
+            if m_results is None:
+                logging.debug("%s results didn't exist", module)
                 continue
             if isinstance(m_results, ModuleResults):
                 modules[module] = m_results.to_json()
-            elif isinstance(m_results, dict): # TODO :preferably no branching here
-                logging.critical("module results was a dict, not ModuleResults")
+            elif isinstance(m_results, dict):
+                logging.critical("module %s has dict results", module)
+                # only occurs if the module wasn't run but prior results exist
+                # in which case no conversion required
                 modules[module] = m_results
             else:
                 raise TypeError("Module results for module %s are of invalid type: %s" % (module, type(m_results)))
         json_record["modules"] = modules
         data.append(json_record)
+
+    if handle is None:
+        return data
+
     # only wipe existing data if we have a valid file afterwards
     try:
         new_contents = json.dumps(data)
@@ -45,14 +92,15 @@ def write_records(records, results, handle):
         handle = open(handle, "w")
     handle.write(new_contents)
 
-def read_records(handle):
+def read_results(handle):
     if isinstance(handle, str):
         handle = open(handle, "r")
     contents = handle.read()
     if not contents:
         raise ValueError("Results file contains no information")
     data = json.loads(contents, object_pairs_hook=OrderedDict)
-    return list(map(record_from_json, data))
+    data["records"] = list(map(record_from_json, data["records"]))
+    return data
 
 def record_to_json(record):
     def annotations_to_json(annotations):
@@ -64,7 +112,7 @@ def record_to_json(record):
             res["references"].append(ref)
         return res
 
-    result = {}
+    result = OrderedDict()
     result["id"] = record.id
     result["seq"] = sequence_to_json(record.seq)
     result["features"] = list(map(feature_to_json, record.features))

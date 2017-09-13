@@ -8,14 +8,14 @@
   <h4>Lantipeptide(s)</h4>
   <hr>
   <dl class="details-text">
-    {% for leader_seq, core_seq, pred_class, gene_id in cluster.core_peptides_data %}
+    {% for motif in cluster.motifs %}
       <dt>
-        {{gene_id}} leader / core peptide, putative {{pred_class}}
+        {{motif.get_name()}} leader / core peptide, putative {{motif.peptide_class}}
       </dt>
       <dd>
-        {{ leader_seq }}
+        {{ motif.leader_seq }}
         -
-        {% for aa in core_seq -%}
+        {% for aa in motif.core_seq -%}
           {%- if aa == 'S' -%}
             <span class="dha">Dha</span>
           {%- elif aa == 'T' -%}

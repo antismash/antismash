@@ -3,14 +3,15 @@
 
 from io import StringIO
 import logging
+from multiprocessing import Process, Pool, TimeoutError
 import os
+from subprocess import PIPE, Popen, TimeoutExpired
 
 import warnings
 # Don't display the SearchIO experimental warning, we know this.
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     from Bio import SearchIO
-from subprocess import PIPE, Popen
 
 from helperlibs.wrappers.io import TemporaryDirectory
 
@@ -19,11 +20,15 @@ from antismash.config.args import Config
 class RunResult:
     def __init__(self, command, stdout, stderr, return_code, piped_out, piped_err):
         self.command = command
-        self.stdout = stdout.decode()
-        self.stderr = stderr.decode()
-        self.return_code = return_code
         self.stdout_piped = piped_out
         self.stderr_piped = piped_err
+        self.stdout = ""
+        self.stderr = ""
+        if piped_out:
+            self.stdout = stdout.decode()
+        if piped_err:
+            self.stderr = stderr.decode()
+        self.return_code = return_code
 
     def __getattr__(self, attr):
         if attr == 'stdout' and not self.stdout_piped:
@@ -32,13 +37,13 @@ class RunResult:
             raise ValueError("stdout was redirected to file, unable to access")
         return self.__dict__[attr]
 
-    def successful(self):
+    def successful(self) -> int:
         return not self.return_code
 
-    def get_command_string(self):
+    def get_command_string(self) -> str:
         return " ".join(self.command)
 
-def execute(commands, stdin=None, stdout=PIPE, stderr=PIPE):
+def execute(commands, stdin=None, stdout=PIPE, stderr=PIPE, timeout=None) -> RunResult:
     "Execute commands in a system-independent manner"
 
     if stdin is not None:
@@ -49,14 +54,132 @@ def execute(commands, stdin=None, stdout=PIPE, stderr=PIPE):
         input_bytes = None
 
     try:
-        proc = Popen(commands, stdin=stdin_redir, stdout=stdout, stderr=stdout)
-        out, err = proc.communicate(input=input_bytes)
-        return RunResult(commands, out, err, proc.returncode,
-                         stdout == PIPE, stderr == PIPE)
-    except OSError as err:
-        logging.debug("%r %r returned %r", commands,
-                      stdin[:40] if stdin is not None else None, err)
+        proc = Popen(commands, stdin=stdin_redir, stdout=stdout, stderr=stderr)
+        out, err = proc.communicate(input=input_bytes, timeout=timeout)
+    except TimeoutExpired:
+        proc.kill()
+        raise RuntimeError("Child process '%s' timed out after %d seconds" % (
+                commands, timeout))
+
+    return RunResult(commands, out, err, proc.returncode, stdout == PIPE,
+                     stderr == PIPE)
+
+def parallel_function_prechunked(function, args_list, timeout=None) -> None:
+    """ Runs the given function in parallel, using as many cores as there are
+        sublists in args_list.
+
+        Work should already be divided into equal chunks.
+
+        Uses separate processes so all args are effectively immutable.
+
+        Returns None
+    """
+    # ensure our args are sane
+    try:
+        assert isinstance(args_list, list)
+        for args in args_list:
+            assert args is None or isinstance(args, list)
+    except AssertionError:
+        raise TypeError("args_list must be given as a list of lists of args")
+
+    # create the children
+    children = []
+    for args in args_list:
+        child = Process(target=function, args=args)
+        child.start()
+        children.append(child)
+
+    # wait for them to die or kill them if they timeout
+    timeouts = False
+    errors = False
+
+    for child in children:
+        child.join(timeout)
+        if timeout and child.exitcode is None:
+            child.terminate()
+            child.join(1)
+            timeouts = True
+        elif child.exitcode:
+            errors = True
+        else:
+            child.terminate()
+            child.join(1)
+
+    # report any problems
+    if timeouts:
+        raise RuntimeError("Timeout in parallel function:", function)
+    elif errors:
+        raise RuntimeError("Errors in parallel function:", function)
+
+def _helper(args):
+    return args[0](*args[1:])
+
+def parallel_function(function, args, cpus=None, timeout=None) -> list:
+    """ Runs the given function in parallel on `cpus` cores at a time.
+        Uses separate processes so all args are effectively immutable.
+
+        Both function and args must be picklable
+
+        Arguments:
+            function: the function to run, cannot be a lambda
+            args: the arguments for each function call
+            cpus: the number of processes to start (defaults to Config.cpus)
+            timeout: the maximum time to wait in seconds
+
+        Returns:
+            A list of return values of the target function.
+
+        e.g. pool_parallel_function(len, ["a", "aa", "aaa"]) -> [1, 2, 3]
+    """
+
+    if not cpus:
+        cpus = Config().cpus
+    p = Pool(cpus)
+    jobs = p.map_async(_helper, ([function] + arglist for arglist in args))
+
+    timeouts = False
+
+    try:
+        results = jobs.get(timeout=timeout)
+    except TimeoutError:
+        timeouts = True
+    finally:
+        p.terminate()
+        p.join()
+    if timeouts:
+        raise RuntimeError("Timeout in parallel function:", function)
+    return results
+
+
+def parallel_execute(commands, cpus=None):
+    """ Limited return vals, only returns return codes
+    """
+    def child_process(command):
+        """Called by multiprocessing's map or map_async method"""
+        try:
+            logging.debug("Calling %s", " ".join(command))
+            return execute(command).return_code
+        except KeyboardInterrupt:
+            #  Need to raise some runtime error that is not KeyboardInterrupt, because Python has a bug there
+            raise RuntimeError("Killed by keyboard interrupt")
+        return -1
+
+    os.setpgid(0, 0)
+    if not cpus:
+        cpus = Config().cpus
+    p = Pool(cpus)
+    jobs = p.map_async(child_process, commands)
+
+    try:
+        errors = jobs.get()
+    except KeyboardInterrupt:
+        logging.error("Interrupted by user")
+#        os.killpg(os.getpid(), signal.SIGTERM)
         raise
+
+    p.close()
+
+    return errors
 
 def run_hmmsearch(query_hmmfile, target_sequence, use_tempfile=False):
     "Run hmmsearch"
@@ -87,7 +210,6 @@ def run_hmmsearch(query_hmmfile, target_sequence, use_tempfile=False):
             logging.error('hmmsearch returned %d: %s while searching %s',
                           run_result.return_code, run_result.stderr, query_hmmfile)
             raise RuntimeError("Running hmmsearch failed.")
-            return []
         return list(SearchIO.parse("result.domtab", 'hmmsearch3-domtab'))
 
 def run_hmmpress(hmmfile):
@@ -133,3 +255,27 @@ def run_fimo_simple(query_motif_file, target_sequence): # TODO cleanup
                         result.stderr, query_motif_file)
         raise RuntimeError("FIMO problem while running %s... %s", command, result.stderr[-100:])
     return result.stdout
+
+def run_hmmscan(target_hmmfile, query_sequence, opts=None, results_file=None):
+    "Run hmmscan on the inputs and return a list of QueryResults"
+    config = Config()
+    command = ["hmmscan", "--cpu", str(config.cpus), "--nobias"]
+
+    # Allow to disable multithreading for HMMer3 calls in the command line
+    if config.get('hmmer3') and 'multithreading' in config.hmmer3 and \
+            not config.hmmer3.multithreading: # TODO: ensure working
+        command = command[0:1] + command[3:]
+
+    if opts is not None:
+        command.extend(opts)
+    command.extend([target_hmmfile, '-'])
+    result = execute(command, stdin=query_sequence)
+    if result.return_code:
+        raise RuntimeError('hmmscan returned %d: %r while scanning %r',
+                           result.return_code, result.stderr[-100:],
+                           query_sequence[:100])
+    if results_file is not None:
+        with open(results_file, 'w') as fh:
+            fh.write(result.stdout)
+
+    return list(SearchIO.parse(StringIO(result.stdout), 'hmmer3-text'))
