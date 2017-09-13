@@ -12,11 +12,6 @@ SHORT_DESCRIPTION = "options placeholders"
 
 def get_arguments():
     args = ModuleArgs('Dummy options', '', override_safeties=True)
-    args.add_option('--dummy-smcogs',
-                      dest='smcogs',
-                      action='store_true',
-                      default=False,
-                      help="Dummy only.")
     args.add_option('--dummy-cassis',
                       dest='cassis',
                       action='store_true',
@@ -37,7 +32,7 @@ def get_arguments():
     return args
 
 def check_options(options):
-    if options.smcogs:
+    if options.without_fimo or options.borderpredict:
         raise ValueError("Dummy options can't be enabled")
     return []
 

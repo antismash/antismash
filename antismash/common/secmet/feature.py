@@ -19,7 +19,7 @@ class Feature:
         self.notes = []
         assert feature_type
         self.type = str(feature_type)
-        self._qualifiers = {}
+        self._qualifiers = OrderedDict()
 
     @property
     def strand(self):
@@ -355,7 +355,7 @@ class CDSFeature(Feature):
     def gene_function(self, value):
         assert isinstance(value, GeneFunction)
         if self._gene_function != GeneFunction.OTHER:
-            logging.debug("CDS %s already has a function of %s, ignoring change to %s", self.get_name(), self._gene_function, value)
+            return # don't override if it's already been set
         self._gene_function = value
 
     @property
@@ -446,20 +446,39 @@ class Prepeptide(CDSFeature):
         if leader is not None:
             assert isinstance(leader, FeatureLocation)
             assert isinstance(leader_seq, str)
+        self._leader = leader
         if tail is not None:
             assert isinstance(tail, FeatureLocation)
+        self._tail = tail
         super().__init__(core, locus_tag=locus_tag, **kwargs)
         self.type = "CDS_motif"
         self.peptide_type = peptide_type
         self.peptide_class = peptide_class.replace("-", " ") # "Type-II" > "Type II"
-        self.leader = leader
         self.leader_seq = leader_seq
         self.core = core
-        self.tail = tail
+
+    @property
+    def leader(self):
+        return self._leader
+
+    @leader.setter
+    def leader(self, leader):
+        assert isinstance(leader, FeatureLocation)
+        self._leader = leader
+
+    @property
+    def tail(self):
+        return self._tail
+
+    @tail.setter
+    def tail(self, tail):
+        assert isinstance(tail, FeatureLocation)
+        self._tail = tail
 
     def to_biopython(self, qualifiers=None):
         features = []
         if self.leader:
+            assert isinstance(self._leader, FeatureLocation)
             leader = SeqFeature(self.leader, type="CDS_motif")
             leader.qualifiers['locus_tag'] = self.locus_tag
             leader.qualifiers['note'] = ['leader peptide', self.peptide_type]

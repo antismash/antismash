@@ -777,3 +777,17 @@ def get_specific_multifasta(features):
     for feature in features:
         all_fastas.append(">%s\n%s" % (feature.get_name(), feature.translation))
     return "\n".join(all_fastas)
+
+def hmmlengths(hmmfile):
+    lengths = {}
+    with open(hmmfile,"r") as handle:
+        contents = handle.read()
+    contents = contents.replace("\r", "\n")
+    hmms = contents.split("//")[:-1]
+    for hmm in hmms:
+        namepart = hmm.split("NAME  ")[1]
+        name = namepart.split("\n")[0]
+        lengthpart = hmm.split("LENG  ")[1]
+        length = lengthpart.split("\n")[0]
+        lengths[name] = int(length)
+    return lengths

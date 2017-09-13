@@ -73,6 +73,10 @@ class LanthiResults(module_results.ModuleResults):
             results.clusters_with_motifs.add(record.get_cluster(cluster))
         return results
 
+    def add_to_record(self, record):
+        for motif in self.motifs:
+            record.add_cds_motif(motif)
+
 class PrepeptideBase:
     def __init__(self, start, end, score, rodeo_score=None):
         self.start = start # same as CDS
@@ -1008,7 +1012,7 @@ class LanthipeptideMotif(secmet.Prepeptide):
                  lan_bridges, lanthi_class, score, rodeo_score, aminovinyl,
                  chlorinated, oxygenated, lactonated):
         super().__init__("lanthipeptide", core_location, locus_tag, lanthi_class,
-                         leader_location, leader_seq)
+                         leader=leader_location, leader_seq=leader_seq)
         self.core_seq = core_seq
         self.monoisotopic_mass = monoisotopic_mass
         self.molecular_weight = molecular_weight
@@ -1035,6 +1039,7 @@ class LanthipeptideMotif(secmet.Prepeptide):
         return mods
 
     def to_biopython(self):
+        logging.critical("%s already converted: %s, leader type %s", self.location, self._notes_appended, type(self._leader))
         if self._notes_appended: # TODO: could be more clever
             return super().to_biopython()
         self._notes_appended = True
@@ -1058,9 +1063,9 @@ class LanthipeptideMotif(secmet.Prepeptide):
         return super().to_biopython()
 
     def to_json(self):
-        json = vars(self) # TODO: use a better system that doesn't break encapsulation
+        json = dict(vars(self)) # TODO: use a better system that doesn't break encapsulation
         json["core"] = serialiser.location_to_json(self.location)
-        json["leader"] = serialiser.location_to_json(self.leader)
+        json["_leader"] = serialiser.location_to_json(self._leader)
         json["locus_tag"] = self.locus_tag # not in vars() due to __slots__
         try:
             assert json["locus_tag"]
@@ -1073,7 +1078,7 @@ class LanthipeptideMotif(secmet.Prepeptide):
         args = []
         args.append(serialiser.location_from_json(data["core"]))
         args.append(data["core_seq"])
-        args.append(serialiser.location_from_json(data["leader"]))
+        args.append(serialiser.location_from_json(data["_leader"]))
         for arg_name in ["leader_seq", "locus_tag", "monoisotopic_mass",
                          "molecular_weight", "alternative_weights", "lan_bridges",
                          "peptide_class", "score", "rodeo_score", "aminovinyl_group",
@@ -1136,10 +1141,9 @@ def specific_analysis(seq_record):
             motif = result_vec_to_feature(lan_a, result_vec)
             results.motifs.append(motif)
             results.clusters_with_motifs.add(cluster)
-            seq_record.add_cds_motif(motif)
             lan_a.gene_function = secmet.GeneFunction.ADDITIONAL
             if "allorf" in lan_a.get_name():
-                seq_record.add_cds_feature(lan_a)
+                seq_record.add_cds_feature(lan_a) #TODO shift to add_to_record?
                 if lan_a.location.start < cluster.location.start:
                     logging.critical("Cluster location being altered in lanthipeptides")
                     cluster.location = FeatureLocation(lan_a.location.start, cluster.location.end)

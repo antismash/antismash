@@ -12,7 +12,6 @@ import antismash.common.deprecated as utils
 
 NAME = "svg"
 SHORT_DESCRIPTION = "SVG output"
-ENABLED = True
 
 def write(seq_records, options, results):
     svgdir = os.path.join(options.output_dir, "svg")
@@ -20,7 +19,7 @@ def write(seq_records, options, results):
     if not os.path.exists(svgdir):
         os.mkdir(svgdir)
     for seq_record, record_result in zip(seq_records, results):
-        result = record_result["modules"].get("antismash.modules.clusterblast")
+        result = record_result.get("antismash.modules.clusterblast")
         if not result:
             continue
         result.write_svg_files(svgdir)

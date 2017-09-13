@@ -3,7 +3,9 @@
 
 import os
 import sys
+from tempfile import TemporaryDirectory
 import unittest
+
 
 from antismash.main import run_antismash, get_all_modules
 from antismash.config.args import build_parser, Config
@@ -15,12 +17,13 @@ class TestAntismash(unittest.TestCase):
         self.default_options = self.parser.parse_args(args)
         self.default_options.minimal = True
         self.default_options.all_enabled_modules = []
-        Config(self.default_options)
+        self.temp_dir = TemporaryDirectory()
+        self.default_options.output_dir = self.temp_dir.name
 
     def tearDown(self):
         Config().__dict__.clear()
+        self.temp_dir.cleanup()
 
     def test_nisin_minimal(self):
-        path = os.path.join(os.path.dirname(__file__), "data", "nisin.gbk")
-        assert Config().minimal
-        run_antismash(path, Config())
+        path = os.path.abspath(os.path.join(os.path.dirname(__file__), "data", "nisin.gbk"))
+        run_antismash(path, self.default_options)

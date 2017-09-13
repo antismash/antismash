@@ -7,10 +7,10 @@ import os
 
 class RecordLayer:
     def __init__(self, seq_record, options):
-        from antismash.outputs.html.js import convert_record, load_cog_annotations # TODO break this circular dependency
+        from antismash.outputs.html.js import convert_record # TODO break this circular dependency
         self.seq_record = seq_record
         self.options = options
-        self.record = convert_record(self.seq_record, load_cog_annotations(), self.options.options) #TODO stop this from being called again
+        self.record = convert_record(self.seq_record, self.options.options) #TODO stop this from being called again
         self.clusters = []
         for cluster in self.record['clusters']:
             self.clusters.append(ClusterLayer(cluster, self, self.seq_record.get_cluster(cluster['idx'])))
@@ -257,7 +257,7 @@ class OptionsLayer():
 
     @property
     def smcogs(self):
-        return self.options.smcogs
+        return not self.options.minimal or self.options.smcogs_enabled or self.options.smcogs_trees # TODO work out a better way of doing this
 
     @property
     def tta(self):

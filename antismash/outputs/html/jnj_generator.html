@@ -3,7 +3,7 @@
 {% for record in records %}
 {% for cluster in record.clusters %}
 <div class= "page" id='cluster-{{cluster.idx}}'>
-  <h3> {{record.seq_record.name}} - Cluster {{cluster.idx}} - {{cluster.type | capitalize }} </h3>
+  <h3> {{record.seq_record.name}} - Cluster {{cluster.idx}} - {{cluster.type | capitalize }}</h3>
   {% if cluster.has_sidepanel %}
   <div class="sidepanel">
     {% for handler in cluster.handlers %}

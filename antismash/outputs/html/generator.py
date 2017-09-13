@@ -113,9 +113,9 @@ def generate_searchgtr_htmls(seq_records, options):
             smcog = smcogdict[gene_id]
             if smcog not in gtrcoglist:
                 continue
-            if not os.path.exists(options.full_outputfolder_path + os.sep + "html"):
-                os.mkdir(options.full_outputfolder_path + os.sep + "html")
-            formfileloc = options.full_outputfolder_path + os.sep + "html" + os.sep + feature.get_name() + "_searchgtr.html"
+            if not os.path.exists(options.output_dir + os.sep + "html"):
+                os.mkdir(options.output_dir + os.sep + "html")
+            formfileloc = options.output_dir + os.sep + "html" + os.sep + feature.get_name() + "_searchgtr.html"
             link_loc = "html" + os.sep + feature.get_name() + "_searchgtr.html"
             js.searchgtr_links[seq_record.id + "_" + gene_id] = link_loc
             with open(formfileloc, "w") as formfile:
