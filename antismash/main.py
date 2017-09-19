@@ -1,10 +1,14 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+import cProfile
+from io import StringIO
 import json
 import logging
+import pstats
 import os
 from datetime import datetime
+
 from Bio import SeqIO
 
 from antismash.config import loader
@@ -134,6 +138,25 @@ def prepare_output_directory(name):
         os.mkdir(name)
 
 
+def write_profiling_results(pr, target):
+    s = StringIO()
+    sortby = 'tottime'
+    ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+    ps.dump_stats(target + ".bin")
+    ps.print_stats(.25) # limit to the more meaningful first 25%
+    ps.print_callers(.25)
+    try:
+        path_to_remove = os.path.dirname(os.path.realpath(__file__)) + os.path.sep
+        open(target, "w").write(s.getvalue().replace(path_to_remove, ""))
+        logging.info("Profiling report written to %s", target)
+    except IOError:
+        #if can't save to file, print to terminal, but only the head
+        logging.debug("Couldn't open file to store profiling output")
+        s.truncate(0)
+        ps.print_stats(20) #first 20 lines only
+        print(s.getvalue())
+
+
 def run_antismash(sequence_file, options, detection_modules=None,
                   analysis_modules=None):
     logfile = options.logfile if 'logfile' in options else None
@@ -149,6 +172,11 @@ def run_antismash(sequence_file, options, detection_modules=None,
     options.all_enabled_modules = [module for module in detection_modules + analysis_modules if module.is_enabled(options)]
     options = Config(options)
     loader.update_config_from_file() # TODO move earlier to run_antismash?
+
+    # start up profiling if relevant
+    if options.profile:
+        pr = cProfile.Profile()
+        pr.enable()
 
     # ensure the provided options are valid
     if not verify_options(options, analysis_modules + detection_modules):
@@ -232,6 +260,11 @@ def run_antismash(sequence_file, options, detection_modules=None,
     combined_filename = "temp.gbk"
     logging.debug("Writing final genbank file to '%s'", combined_filename)
     SeqIO.write(seq_records, combined_filename, "genbank")
+
+    # end profiling
+    if options.profile:
+        pr.disable()
+        write_profiling_results(pr, os.path.join(options.output_dir, "profiling_results"))
 
     end_time = datetime.now()
     running_time = end_time - start_time
