@@ -570,7 +570,8 @@ def get_smcog_annotations(seq_record):
 def ascii_string(inputstring):
     # TODO only used in html output module, so move there
     import string
-    return "".join([char for char in inputstring if char in (string.ascii_letters + string.digits + string.punctuation + string.whitespace)])
+    allowable = string.ascii_letters + string.digits + string.punctuation + string.whitespace
+    return "".join([char for char in inputstring if char in allowable])
 
 def get_cluster_type(cluster):
     "Get product type of a gene cluster"
