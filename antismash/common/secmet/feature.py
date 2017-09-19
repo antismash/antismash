@@ -10,6 +10,7 @@ import warnings
 from helperlibs.bio import seqio
 
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
+from Bio.SeqRecord import SeqRecord
 
 class Feature:
     __slots__ = ["location", "notes", "type", "_qualifiers"]
@@ -622,16 +623,19 @@ class Cluster(Feature):
         mine["note"].append(rule_text)
         return super().to_biopython(mine)
 
-    def write_to_genbank(self, filename=None, directory=None):
+    def write_to_genbank(self, filename=None, directory=None, record=None):
         if not filename:
             filename = "%s.cluster%03d.gbk" % (self.parent_record.id, self.get_cluster_number())
         if directory:
             filename = os.path.join(directory, filename)
 
-        record = self.parent_record
+        if record is None:
+            record = self.parent_record.to_biopython
+        assert isinstance(record, SeqRecord)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            cluster_record = record.to_biopython()[self.location.start:self.location.end] # TODO poor efficiency if doing all
+            cluster_record = record[self.location.start:self.location.end]
+
         cluster_record.annotations["date"] = record.annotations.get("date", '')
         cluster_record.annotations["source"] = record.annotations.get("source", '')
         cluster_record.annotations["organism"] = record.annotations.get("organism", '')
