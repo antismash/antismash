@@ -90,7 +90,8 @@ class PrepeptideBase:
         self._weight = -1
         self._monoisotopic_weight = -1
         self._alt_weights = None
-
+        self.core_analysis_monoisotopic = None
+        self.core_analysis = None
 
     @property
     def core(self):
@@ -327,12 +328,12 @@ def get_detected_domains(cluster):
 
 def run_non_biosynthetic_phmms(fasta):
     """Try to identify cleavage site using pHMM"""
-    with open(path.get_full_path(__file__, os.path.join("data", "non_biosyn_hmms", "hmmdetails.txt")), "r") as handle:
+    with open(path.get_full_path(__file__, "data", "non_biosyn_hmms", "hmmdetails.txt"), "r") as handle:
         hmmdetails = [line.strip().split("\t") for line in handle if line.count("\t") == 3]
     _signature_profiles = [HmmSignature(details[0], details[1], int(details[2]), details[3]) for details in hmmdetails]
     non_biosynthetic_hmms_by_id = defaultdict(list)
     for sig in _signature_profiles:
-        sig.path = path.get_full_path(__file__, os.path.join("data", "non_biosyn_hmms", sig.path.rpartition(os.sep)[2]))
+        sig.path = path.get_full_path(__file__, "data", "non_biosyn_hmms", sig.path.rpartition(os.sep)[2])
         runresults = subprocessing.run_hmmsearch(sig.path, fasta)
         for runresult in runresults:
             #Store result if it is above cut-off
@@ -393,7 +394,7 @@ def run_cleavage_site_phmm(fasta, hmmer_profile, threshold):
 
 def identify_lanthi_motifs(leader, core):
     """Run FIMO to identify lanthipeptide-specific motifs"""
-    motifs_file = path.get_full_path(__file__, os.path.join("data", "lanthi_motifs_meme.txt"))
+    motifs_file = path.get_full_path(__file__, "data", "lanthi_motifs_meme.txt")
     with TemporaryFile() as tempfile:
         out_file = open(tempfile.name, "w")
         out_file.write(">query\n%s%s" % (leader, core))
@@ -422,8 +423,8 @@ def run_cleavage_site_regex(fasta):
 
 def run_rodeo_svm(csv_columns):
     """Run RODEO SVM"""
-    classifier_path = path.get_full_path(__file__, "data/lanthipeptide.classifier.pkl")
-    scaler_path = path.get_full_path(__file__, "data/lanthipeptide.scaler.pkl")
+    classifier_path = path.get_full_path(__file__, "data", "lanthipeptide.classifier.pkl")
+    scaler_path = path.get_full_path(__file__, "data", "lanthipeptide.scaler.pkl")
     if os.path.exists(classifier_path) and os.path.exists(scaler_path):
         classifier = joblib.load(classifier_path)
         scaler = joblib.load(scaler_path)
@@ -433,7 +434,7 @@ def run_rodeo_svm(csv_columns):
             return 10
         return 0
 
-    input_training_file = path.get_full_path(__file__, 'svm_lanthi' + os.sep + 'training_set.csv')         # the CSV containing the training set
+    input_training_file = path.get_full_path(__file__, 'svm_lanthi', 'training_set.csv')         # the CSV containing the training set
     with TemporaryFile() as input_fitting_file:
         out_file = open(input_fitting_file.name, "w")
         out_file.write('PK,Classification,F?LD,S????C,T????C,S?????C,T?????C,Within 500 nt?,Cluster contains PF04738,Cluster contains PF05147,Cluster LACKS PF04738,Cluster LACKS PF05147,Cluster contains PF14028,Cluster contains PF00082,Cluster contains PF03412,Cluster contains PF00005,Cluster contains PF02624,Cluster contains PF00899,Cluster contains PF02052,Cluster contains PF08130,Precursor mass < 4000,Core mass < 2000,Peptide hits cl03420 (Gallidermin),Peptide hits TIGR03731 (lantibio_gallid),Peptide hits cl22812 (lanti_SCO0268),Peptide hits TIGR04363 (LD_lanti_pre),Peptide hits cl06940 (Antimicrobial18),Peptide hits PF02052 (Gallidermin),Peptide hits PF08130 (Antimicrobial18),Precursor peptide mass (unmodified),Leader peptide mass (unmodified),Core peptide mass (unmodified),Length of Leader,Length of Core,Length of precursor,Leader / core ratio,Core >= 35,Has repeating C motifs (not in last 3 residues),Leader > 4 neg charge motifs,Leader net neg charge,Leader FxLD,C-terminal CC,core DGCGxTC motif,core SFNS motif,core SxxLC motif,core CTxGC motif,core TPGC motif,core SFNS?C,Core Cys <3,Core Cys <2,No Core Cys residues,No Core Ser residues,No Core Thr residues,LS max >4,LS max <3,LS 4-membered ring >2,LS 5-membered ring >2,LS 6-membered ring,LS 7-membered ring,LS 8-membered ring,MEME/FIMO motif,LS max ring number,LS lan4,LS lan5,LS lan6,LS lan7,LS lan8,Ratio of Cys to sum of Ser/Thr,Ratio of Cys/Ser/Thr to len of core,Log10 MEME/FIMO score,log10 MEME motif 1,MEME motif 2,MEME motif 3,MEME motif 4,MEME motif 5,A,R,D,N,C,Q,E,G,H,I,L,K,M,F,P,S,T,W,Y,V,Aromatics,Neg charged,Pos charged,Charged,Aliphatic,Hydroxyl,A,R,D,N,C,Q,E,G,H,I,L,K,M,F,P,S,T,W,Y,V,Aromatics,Neg charged,Pos charged,Charged,Aliphatic,Hydroxyl,A,R,D,N,C,Q,E,G,H,I,L,K,M,F,P,S,T,W,Y,V,Aromatics,Neg charged,Pos charged,Charged,Aliphatic,Hydroxyl\n')

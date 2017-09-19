@@ -1,8 +1,6 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
-import os
-
 from antismash.common import path
 from antismash.common.signature import Signature
 
@@ -10,8 +8,7 @@ from antismash.common.signature import Signature
 class HmmSignature(Signature):
     """HMM signature"""
     def __init__(self, name, description, cutoff, hmm_filename):
-        hmm_file = os.path.join("data", hmm_filename)
-        self.hmm_file = path.get_full_path(__file__, hmm_file)
+        self.hmm_file = path.get_full_path(__file__, "data", hmm_filename)
         self.name = name
         if cutoff < 0:
             raise ValueError("Signature cutoffs cannot be negative: %s" % cutoff)

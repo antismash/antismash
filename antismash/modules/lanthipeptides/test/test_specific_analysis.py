@@ -39,19 +39,19 @@ class TestLanthipeptide(unittest.TestCase):
         "Test Lanthipeptide.core"
         lant = Lanthipeptide(23, 42, 17, 23, 'Class-I')
         self.assertEqual('', lant.core)
-        self.assertFalse(hasattr(lant, 'core_analysis'))
+        assert lant.core_analysis is None
         lant.core = "MAGICHAT"
         self.assertEqual('MAGICHAT', lant.core)
-        self.assertTrue(hasattr(lant, 'core_analysis'))
+        assert lant.core_analysis
 
     def test_core_ignore_invalid(self):
         "Test Lanthipeptide.core ignores invalid amino acids"
         lant = Lanthipeptide(23, 42, 17, 23, 'Class-I')
         self.assertEqual('', lant.core)
-        self.assertFalse(hasattr(lant, 'core_analysis'))
+        assert lant.core_analysis is None
         lant.core = "MAGICXHAT"
         self.assertEqual('MAGICXHAT', lant.core)
-        self.assertTrue(hasattr(lant, 'core_analysis'))
+        assert lant.core_analysis
 
     def test_number_of_lan_bridges(self):
         "Test Lanthipeptide.number_of_lan_bridges"

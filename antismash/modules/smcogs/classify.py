@@ -10,7 +10,7 @@ from antismash.common.secmet import GeneFunction
 def classify_genes(cds_features):
     smcogs_fasta = deprecated.get_specific_multifasta(cds_features)
     smcogs_opts = ["-E", "1E-6"]
-    hmm_file = path.get_full_path(__file__, "data/smcogs.hmm")
+    hmm_file = path.get_full_path(__file__, "data", "smcogs.hmm")
     smcogs_results = subprocessing.run_hmmscan(hmm_file, smcogs_fasta, smcogs_opts)
     hmm_lengths = deprecated.hmmlengths(hmm_file)
     return refine_hmmscan_results(smcogs_results, hmm_lengths)
@@ -24,7 +24,7 @@ def load_cog_annotations():
         'R': GeneFunction.REGULATORY, #'regulatory',
     }
     annotations = {}
-    for line in open(path.get_full_path(__file__, 'data/cog_annotations.txt'), 'r'):
+    for line in open(path.get_full_path(__file__, 'data', 'cog_annotations.txt'), 'r'):
         cog, _, key = line.strip().split('\t', 3)
         annotations[cog] = mapping.get(key, GeneFunction.OTHER)
 

@@ -4,9 +4,11 @@
 import logging
 import os
 
-def get_full_path(current_file, file_to_add):
+def get_full_path(current_file, *args):
     "Get the full path of file_to_add in the same directory as current_file"
-    return os.path.join(os.path.dirname(os.path.abspath(current_file)), file_to_add)
+    base = os.path.dirname(os.path.abspath(current_file))
+    extra = os.path.join(*args)
+    return os.path.join(base, extra)
 
 
 def locate_executable(name):

@@ -83,7 +83,7 @@ def smcog_tree_analysis(cds, inputnr, smcog, output_dir):
 
 def alignsmcogs(smcog, inputnr):
     #Align to multiple sequence alignment, output as fasta file
-    reference = path.get_full_path(__file__, "data/%s_muscle.fasta" % str(smcog).lower())
+    reference = path.get_full_path(__file__, "data", "%s_muscle.fasta" % str(smcog).lower())
     output_filename = "muscle%d.fasta" % inputnr
     musclecommand = ["muscle", "-quiet", "-profile", "-in1", reference,
                      "-in2", "input" + str(inputnr) + ".fasta",
@@ -148,7 +148,7 @@ def drawtree(inputnr):
 
 def converttree(inputnr, smcog_dir, tag):
      #Convert tree to XTG and draw PNG image using TreeGraph
-     core_command = ['java', '-Djava.awt.headless=true', '-jar', path.get_full_path(__file__, 'external/TreeGraph.jar')]
+     core_command = ['java', '-Djava.awt.headless=true', '-jar', path.get_full_path(__file__, 'external', 'TreeGraph.jar')]
 
      command = core_command + ['-convert', 'tree%s.nwk'% inputnr, '-xtg', 'tree%s.xtg' % inputnr]
      run_result = subprocessing.execute(command, timeout=60*20)
