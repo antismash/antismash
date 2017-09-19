@@ -31,6 +31,7 @@ class TtaIntegrationTest(unittest.TestCase):
         assert tta.check_prereqs() == []
         assert tta.check_options(self.options) == []
         assert tta.is_enabled(self.options)
-        results = tta.run_on_record(record, self.options)
+        prior_results = None
+        results = tta.run_on_record(record, prior_results, self.options)
         assert isinstance(results, ModuleResults)
         assert len(results.features) == 174

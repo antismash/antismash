@@ -38,5 +38,7 @@ def check_previous_results(previous, record, options):
         return None
     return TTAResults.from_json(previous)
 
-def run_on_record(seq_record, options):
+def run_on_record(seq_record, results, options):
+    if isinstance(results, TTAResults) and results.record_id == seq_record.id:
+        return results
     return detect(seq_record, options)

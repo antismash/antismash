@@ -78,11 +78,11 @@ class ClusterLayer:
         self.cluster_blast = []
         self.knowncluster_blast = []
         self.subcluster_blast = []
-        if self.record.options.cb_knownclusters:
+        if self.cluster_rec.knownclusterblast:
             self.knowncluster_blast_generator()
-        if self.record.options.cb_subclusters:
+        if self.cluster_rec.subclusterblast:
             self.subcluster_blast_generator()
-        if self.record.options.cb_general:
+        if self.cluster_rec.clusterblast:
             self.cluster_blast_generator()
 
         self.find_plugins_for_cluster()
@@ -147,8 +147,7 @@ class ClusterLayer:
         return description_text
 
     def cluster_blast_generator(self): # TODO: deduplicate
-        if self.record.options.cb_general:
-            top_hits = self.cluster_rec.clusterblast[:self.record.options.nclusters]
+        top_hits = self.cluster_rec.clusterblast[:self.record.options.nclusters]
         for i, label in enumerate(top_hits):
             i += 1 # 1-indexed
             svg_file = os.path.join('svg', 'clusterblast%s_%s.svg' % (self.idx, i))
@@ -157,25 +156,24 @@ class ClusterLayer:
 
 
     def knowncluster_blast_generator(self):
-        if self.record.options.cb_knownclusters:
-            top_hits = self.cluster_rec.knownclusterblast[:self.record.options.nclusters]
+        top_hits = self.cluster_rec.knownclusterblast[:self.record.options.nclusters]
         for i, label_pair in enumerate(top_hits):
             i += 1 # 1-indexed
-            label, bgc_id = label_pair
+            label = label_pair[0]
             svg_file = os.path.join('svg', 'knownclusterblast%s_%s.svg' % (self.idx, i))
             opt_text = 'Cluster %s hit %s %s' % (self.idx, i, label)
             self.knowncluster_blast.append((opt_text, svg_file))
 
 
     def subcluster_blast_generator(self):
-        if self.record.options.cb_subclusters:
-            assert self.cluster_rec.subclusterblast is not None, self.cluster_rec.location
-            top_hits = self.cluster_rec.subclusterblast[:self.record.options.nclusters]
+        assert self.cluster_rec.subclusterblast is not None, self.cluster_rec.location
+        top_hits = self.cluster_rec.subclusterblast[:self.record.options.nclusters]
         for i, label in enumerate(top_hits):
             i += 1 # since one-indexed
             svg_file = os.path.join('svg', 'subclusterblast%s_%s.svg' % (self.idx, i))
             opt_text = 'Cluster %s hit %s %s' % (self.idx, i, label)
             self.subcluster_blast.append((opt_text, svg_file))
+        logging.critical("subcluster_blast_generator() found %d hits", len(self.subcluster_blast))
 
     def find_plugins_for_cluster(self):
         "Find a specific plugin responsible for a given gene cluster type"
@@ -209,13 +207,19 @@ class ClusterLayer:
         return self.has_domain_alignment
 
 
-class OptionsLayer():
+class OptionsLayer:
     def __init__(self, options):
         self.options = options
 
+    def __getattr__(self, attr):
+        if attr in self.__dict__:
+            return super().__getattribute__(attr)
+        return getattr(self.options, attr)
+
     @property
     def plugins(self):
-        return self.options.all_enabled_modules
+        from antismash.main import get_all_modules
+        return get_all_modules()
 
     @property
     def input_type(self):

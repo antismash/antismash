@@ -81,7 +81,8 @@ class GeneralIntegrationTest(Base):
         return ["--cb-general"]
 
     def get_results(self):
-        results = clusterblast.run_on_record(self.record, self.options)
+        prior_results = clusterblast.ClusterBlastResults(self.record.id)
+        results = clusterblast.run_on_record(self.record, prior_results, self.options)
         assert isinstance(results, ModuleResults)
         assert results.general
         assert results.general.search_type == "clusterblast"
@@ -101,7 +102,8 @@ class KnownIntegrationTest(Base):
         return ["--cb-knowncluster"]
 
     def get_results(self):
-        results = clusterblast.run_on_record(self.record, self.options)
+        prior_results = clusterblast.ClusterBlastResults(self.record.id)
+        results = clusterblast.run_on_record(self.record, prior_results, self.options)
         assert isinstance(results, ModuleResults)
         assert results.general is None
         assert results.knowncluster
@@ -124,7 +126,8 @@ class SubIntegrationTest(Base):
         return ["--cb-subcluster"]
 
     def get_results(self):
-        results = clusterblast.run_on_record(self.record, self.options)
+        prior_results = clusterblast.ClusterBlastResults(self.record.id)
+        results = clusterblast.run_on_record(self.record, prior_results, self.options)
         assert isinstance(results, ModuleResults)
         assert results.general is None
         assert results.knowncluster is None

@@ -51,5 +51,7 @@ def check_prereqs():
 
     return failure_messages
 
-def run_on_record(record, options):
+def run_on_record(record, results, options):
+    if isinstance(results, LanthiResults) and results.record_id == record.id:
+        return results
     return specific_analysis(record)

@@ -110,19 +110,20 @@ class SMCOGResults(ModuleResults):
             if gene_id in self.tree_images:
                 feature.notes.append("smCOG tree PNG image: smcogs/%s"  % self.tree_images[gene_id])
 
-def run_on_record(record, options):
-    results = SMCOGResults(record.id)
+def run_on_record(record, results, options):
+    if not results:
+        results = SMCOGResults(record.id)
 
-    genes = deprecated.get_cds_features_within_clusters(record)
-    hmm_results = classify_genes(genes)
-    for gene in genes:
-        gene_name = gene.get_name()
-        hits = hmm_results.get(gene_name)
-        if not hits:
-            continue
-        results.best_hits[gene.get_name()] = hits[0]
+        genes = deprecated.get_cds_features_within_clusters(record)
+        hmm_results = classify_genes(genes)
+        for gene in genes:
+            gene_name = gene.get_name()
+            hits = hmm_results.get(gene_name)
+            if not hits:
+                continue
+            results.best_hits[gene.get_name()] = hits[0]
 
-    if options.smcogs_trees:
+    if not results.tree_images and options.smcogs_trees:
         # create the smcogs output directory if required
         results.relative_tree_path = os.path.join(options.output_dir, "smcogs")
 

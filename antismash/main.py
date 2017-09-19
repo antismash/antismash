@@ -3,7 +3,6 @@
 
 import cProfile
 from io import StringIO
-import json
 import logging
 import pstats
 import os
@@ -14,7 +13,6 @@ from Bio import SeqIO
 from antismash.config import loader
 from antismash.common import deprecated, serialiser
 from antismash.common.module_results import ModuleResults
-from antismash.common.secmet import Record
 from antismash.config.args import Config
 from antismash.modules import tta, genefinding, hmm_detection, clusterblast, \
                               dummy, lanthipeptides, smcogs
@@ -29,7 +27,7 @@ def get_detection_modules():
     return [hmm_detection, genefinding]
 
 def get_analysis_modules():
-    return [smcogs, tta, clusterblast, lanthipeptides, dummy]
+    return [smcogs, tta, lanthipeptides, clusterblast, dummy]
 
 def get_output_modules():
     return [html]
@@ -117,11 +115,8 @@ def analyse_record(record, options, modules, previous_result):
         if not module.is_enabled(options):
             continue
         results = module_results.get(module.__name__)
-        if results and isinstance(results, ModuleResults):
-            logging.info("Skipping %s, reusing previous results", module.__name__)
-            continue
         logging.info("Running %s", module.__name__)
-        results = module.run_on_record(record, options)
+        results = module.run_on_record(record, results, options)
         assert isinstance(results, ModuleResults)
         module_results[module.__name__] = results
 
@@ -156,6 +151,50 @@ def write_profiling_results(pr, target):
         ps.print_stats(20) #first 20 lines only
         print(s.getvalue())
 
+
+def write_outputs(results, options):
+    logging.debug("Creating results page")
+    html.write(results.records, results.results, options)
+
+    logging.debug("Creating results SVGs")
+    svg.write(results.records, options, results.results)
+
+    logging.debug("Writing cluster-specific genbank files") # TODO: make more efficient
+    for record in results.records:
+        record.write_cluster_specific_genbanks(options.output_dir)
+
+    # convert records to biopython
+    bio_records = [record.to_biopython() for record in results.records]  # TODO avoid the second conversion if possible
+    # write them to an aggregate output
+    combined_filename = os.path.join(options.output_dir, results.input_file)
+    logging.debug("Writing final genbank file to '%s'", combined_filename)
+    SeqIO.write(bio_records, combined_filename, "genbank")
+
+
+def annotate_records(results):
+    for record, record_results in zip(results.records, results.results):
+        logging.debug("Annotating record %s with results from: %s", record.id,
+                      ", ".join([name.split()[0].split('.')[-1] for name in record_results]))
+        for module, result in record_results.items():
+            logging.debug(" Adding results from %s", module)
+            assert isinstance(result, ModuleResults), type(result)
+            result.add_to_record(record)
+
+def read_data(sequence_file, options):
+    if sequence_file:
+        records = deprecated.parse_input_sequence(sequence_file, options)
+        return serialiser.AntismashResults(sequence_file.rsplit(os.sep, 1)[-1],
+                              records, [{}] * len(records), __version__)
+
+    logging.debug("Attempting to reuse previous results in: %s", options.reuse_results)
+    with open(options.reuse_results) as handle:
+        contents = handle.read()
+        if not contents:
+            raise ValueError("No results contained in file: %s" % options.reuse_results)
+    results = serialiser.AntismashResults.from_file(options.reuse_results)
+    # hacky bypass to set output dir #TODO work out alternate method
+    options.__dict__["output_dir"] = os.path.abspath(os.path.splitext(results.input_file)[0])
+    return results
 
 def run_antismash(sequence_file, options, detection_modules=None,
                   analysis_modules=None):
@@ -197,25 +236,10 @@ def run_antismash(sequence_file, options, detection_modules=None,
 
     prepare_output_directory(options.output_dir)
 
-    if sequence_file:
-        seq_records = deprecated.parse_input_sequence(sequence_file, options)
-        results = serialiser.AntismashResults(sequence_file.rsplit(os.sep, 1)[-1],
-                                              seq_records,
-                                              [{}] * len(seq_records),
-                                              __version__)
-    else:
-        logging.debug("Attempting to reuse previous results in: %s", options.reuse_results)
-        with open(options.reuse_results) as handle:
-            contents = handle.read()
-            if not contents:
-                raise ValueError("No results contained in file: %s" % options.reuse_results)
-        results = serialiser.AntismashResults.from_file(options.reuse_results)
-        seq_records = results.records
-        # hacky bypass to set output dir #TODO work out alternate method
-        options.__dict__["output_dir"] = os.path.abspath(os.path.splitext(results.input_file)[0])
+    results = read_data(sequence_file, options)
 
-    seq_records = deprecated.pre_process_sequences(seq_records, options, genefinding)
-    for seq_record, previous_result in zip(seq_records, results.results):
+    results.records = deprecated.pre_process_sequences(results.records, options, genefinding)
+    for seq_record, previous_result in zip(results.records, results.results):
         # skip if we're not interested in it
         if seq_record.skip:
             continue
@@ -231,35 +255,12 @@ def run_antismash(sequence_file, options, detection_modules=None,
 
     # now that the json is out of the way, annotate the record
     # otherwise we could double annotate some areas
-    for seq_record, record_results in zip(seq_records, results.results):
-        logging.debug("Annotating record %s with results from: %s",
-                      seq_record.id,
-                      ", ".join([name.split()[0].split('.')[-1] for name in record_results]))
-        logging.critical("cds motifs before annotation: %d", len(seq_record.get_cds_motifs()))
-        for module, result in record_results.items():
-            logging.debug(" Adding results from %s", module)
-            assert isinstance(result, ModuleResults), type(result)
-            result.add_to_record(seq_record)
-            logging.critical("cds motifs after annotation: %d", len(seq_record.get_cds_motifs()))
+    annotate_records(results)
 
-    logging.debug("Creating results page")
-    html.write(seq_records, results.results, options)
+    # create relevant output files
+    write_outputs(results, options)
 
-    logging.debug("Creating results SVGs")
-    svg.write(seq_records, options, results.results)
-
-    logging.debug("Writing cluster-specific genbank files") # TODO: make more efficient
-    for record in seq_records:
-        record.write_cluster_specific_genbanks(options.output_dir)
-
-    # convert records to biopython
-    seq_records = [record.to_biopython() for record in seq_records]  # TODO avoid the second conversion if possible
-    # write them to an aggregate output
-    combined_filename = "temp.gbk"
-    logging.debug("Writing final genbank file to '%s'", combined_filename)
-    SeqIO.write(seq_records, combined_filename, "genbank")
-
-    # end profiling
+    # save profiling data
     if options.profile:
         pr.disable()
         write_profiling_results(pr, os.path.join(options.output_dir, "profiling_results"))

@@ -47,5 +47,5 @@ def is_enabled(options):
 def check_previous_results(previous, record, options):
     return None
 
-def run_on_record(seq_record, options):
+def run_on_record(seq_record, results, options):
     raise NotImplementedError("Dummy module should never be run")
