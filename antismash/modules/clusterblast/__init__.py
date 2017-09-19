@@ -15,9 +15,12 @@ from .clusterblast import perform_clusterblast
 from .known import run_knownclusterblast_on_record, check_known_prereqs
 from .results import ClusterBlastResults, get_result_limit
 from .sub import run_subclusterblast_on_record, check_sub_prereqs
+from .html_output import will_handle, generate_details_div
 
 NAME = "clusterblast"
 SHORT_DESCRIPTION = NAME.capitalize()
+
+
 
 def get_arguments():
     args = ModuleArgs('ClusterBlast options', 'cb')
@@ -100,15 +103,16 @@ def check_prereqs():
     failure_messages.extend(check_sub_prereqs(options))
     return failure_messages
 
-def run_on_record(seq_record, options):
-    results = ClusterBlastResults(seq_record.id)
-    results.internal_homology_groups = internal_homology_blast(seq_record)
-    if options.cb_general:
+def run_on_record(seq_record, results, options):
+    if not results:
+        results = ClusterBlastResults(seq_record.id)
+        results.internal_homology_groups = internal_homology_blast(seq_record)
+    if options.cb_general and not results.general:
         logging.info('Running ClusterBlast')
         clusters, proteins = load_clusterblast_database(seq_record)
         results.general = perform_clusterblast(options, seq_record, clusters, proteins)
-    if options.cb_subclusters:
+    if options.cb_subclusters and not results.subcluster:
         results.subcluster = run_subclusterblast_on_record(seq_record, options)
-    if options.cb_knownclusters:
+    if options.cb_knownclusters and not results.knowncluster:
         results.knowncluster = run_knownclusterblast_on_record(seq_record, options)
     return results

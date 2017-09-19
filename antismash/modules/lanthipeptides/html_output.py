@@ -25,12 +25,16 @@ class LanthipeptideLayer(ClusterLayer):
                 self.motifs.append(motif)
 
 def generate_details_div(cluster_layer, record_layer, options_layer):
+    lanthi_layer = LanthipeptideLayer(cluster_layer.cluster, record_layer, cluster_layer.cluster_rec)
+    if not (not options_layer.minimal or options_layer.lanthipeptides_enabled \
+            or lanthi_layer.motifs):
+        return ""
     env = Environment(
         loader=FileSystemLoader(['antismash/modules/lanthipeptides/templates']),
         autoescape=True, undefined=StrictUndefined)
     template = env.get_template('details.html')
     details_div = template.render(record=record_layer,
-                           cluster=LanthipeptideLayer(cluster_layer.cluster, record_layer, cluster_layer.cluster_rec),
+                           cluster=lanthi_layer,
                            options=options_layer)
     return details_div
 

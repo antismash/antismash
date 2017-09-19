@@ -61,8 +61,8 @@ def dump_records(records, results, handle=None):
         json_record = record_to_json(record)
         modules = OrderedDict()
         logging.debug("Record %s has results for modules: %s", record.id,
-                      ", ".join([mod for mod, resultv in result.get("modules", {}).items() if resultv]))
-        for module, m_results in result.get("modules", {}).items():
+                      ", ".join([mod.rsplit('.', 1)[-1] for mod, resultv in result.items() if resultv]))
+        for module, m_results in result.items():
             logging.debug("Converting %s results to json", module)
             if m_results is None:
                 logging.debug("%s results didn't exist", module)

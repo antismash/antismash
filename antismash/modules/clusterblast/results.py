@@ -2,11 +2,12 @@
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
 from collections import OrderedDict
+import logging
 import os
 
 from antismash.common.module_results import ModuleResults
 
-from .data_structures import Score, Query, Subject, ReferenceCluster, Protein
+from .data_structures import Score, Query, Subject, ReferenceCluster, Protein, MibigEntry
 from .svg_builder import ClusterSVGBuilder
 
 _CLUSTER_LIMIT = 50
@@ -90,6 +91,7 @@ class GeneralResults(ModuleResults):
         # and only keep those that are relevant instead of 7 million
         self.proteins_of_interest = OrderedDict() # protein name -> Protein
         self.clusters_of_interest = OrderedDict() # cluster name -> ReferenceCluster
+        self.mibig_entries = None
 
     def add_cluster_result(self, result, reference_clusters, reference_proteins):
         assert isinstance(result, ClusterResult)
@@ -115,10 +117,20 @@ class GeneralResults(ModuleResults):
     def to_json(self):
         if not self.cluster_results:
             return None
-        return {"record_id" : self.record_id,
+        data = {"record_id" : self.record_id,
                 "schema_version" : self.schema_version,
                 "results" : [res.jsonify() for res in self.cluster_results],
-                "proteins" : [{key : getattr(protein, key) for key in protein.__slots__} for protein in self.proteins_of_interest.values()]}
+                "proteins" : [{key : getattr(protein, key) for key in protein.__slots__} for protein in self.proteins_of_interest.values()],
+                "search_type" : self.search_type}
+        if self.mibig_entries is not None:
+            entries = {}
+            for cluster_number, proteins in self.mibig_entries.items():
+                cluster = {}
+                for protein, protein_entries in proteins.items():
+                    cluster[protein] = [protein_entry.values for protein_entry in protein_entries]
+                entries[cluster_number] = cluster
+            data["mibig_entries"] = entries
+        return data
 
     def add_to_record(self):
         for cluster_result in self.cluster_results:
@@ -130,7 +142,7 @@ class GeneralResults(ModuleResults):
             raise ValueError("Incompatible results schema version, expected %d" \
                     % GeneralResults.schema_version)
         assert record.id == json["record_id"]
-        result = GeneralResults(json["record_id"])
+        result = GeneralResults(json["record_id"], search_type=json["search_type"])
         for prot in json["proteins"]:
             protein = Protein(prot["name"], prot["locus_tag"], prot["location"],
                               prot["strand"], prot["annotations"])
@@ -138,6 +150,13 @@ class GeneralResults(ModuleResults):
         for cluster_result in json["results"]:
             result.cluster_results.append(ClusterResult.from_json(cluster_result,
                                            record, result.proteins_of_interest))
+        if "mibig_entries" in json:
+            entries = {}
+            for cluster_number, proteins in json["mibig_entries"].items():
+                entries[cluster_number] = {}
+                for protein, protein_entries in proteins.items():
+                    entries[cluster_number][protein] = [MibigEntry(*entry) for entry in protein_entries]
+            result.mibig_entries = entries
         return result
 
 class ClusterBlastResults(ModuleResults):

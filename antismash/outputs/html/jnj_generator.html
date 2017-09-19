@@ -58,17 +58,6 @@
         {{handler.generate_details_div(cluster, record, options) | safe}}
       {% endif %}
     {% endfor %}
-
-
-    {%  if options.cb_general %}
-      {% include 'clusterblast.html' %}
-    {% endif %}
-    {%  if options.cb_subclusters %}
-      {% include 'subclusterblast.html' %}
-    {% endif %}
-    {%  if options.cb_knownclusters %}
-      {% include 'knownclusterblast.html' %}
-    {% endif %}
   </div>
 
 

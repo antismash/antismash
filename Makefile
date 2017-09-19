@@ -26,7 +26,7 @@ combined-coverage: coverage
 coverage:
 	$(sanity_run)
 	rm -rf cover .coverage $(integration_coverage)
-	$(coverage) antismash
+	coverage run $(omit),'*integration_*.py' --source antismash -m pytest antismash
 	coverage html -d cover
 	coverage report 
 

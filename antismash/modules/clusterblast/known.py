@@ -11,6 +11,7 @@ from .core import parse_all_clusters, \
                   load_clusterblast_database, create_blast_inputs, run_diamond, \
                   write_raw_clusterblastoutput, score_clusterblast_output
 from .results import ClusterResult, GeneralResults, write_clusterblast_output
+from .data_structures import MibigEntry
 
 # Tuple is ( binary_name, optional)
 _required_binaries = [
@@ -86,26 +87,6 @@ def perform_knownclusterblast(options, seq_record, clusters, proteins):
     results.mibig_entries = mibig_protein_homology(blastoutput, seq_record, clusters, options)
     return results
 
-class MibigEntry:
-    def __init__(self, gene_id, gene_description, mibig_cluster,
-                mibig_product, percent_id, blast_score, coverage, evalue):
-        self.gene_id = gene_id
-        self.gene_description = gene_description
-        self.mibig_id = mibig_cluster.split("_c")[0]
-        self.mibig_product = mibig_product
-        self.percent_id = float(percent_id)
-        self.blast_score = float(blast_score)
-        self.coverage = float(coverage)
-        self.evalue = float(evalue)
-
-    @property
-    def values(self):
-        return [self.gene_id, self.gene_description, self.mibig_id,
-                self.mibig_product, self.percent_id, self.blast_score,
-                self.coverage, self.evalue]
-
-    def __str__(self):
-        return "%s\n" % "\t".join(str(val) for val in self.values)
 
 def mibig_protein_homology(blastoutput, seq_record, clusters, options):
     """ Constructs a mapping of gene to MiBiG hits

@@ -128,3 +128,25 @@ class Score:
                 + self.core_gene_hits / 100.
                 + self.blast_score / 10e7
                 + self.synteny_score)
+
+class MibigEntry:
+    def __init__(self, gene_id, gene_description, mibig_cluster,
+                mibig_product, percent_id, blast_score, coverage, evalue):
+        self.gene_id = gene_id
+        self.gene_description = gene_description
+        self.mibig_id = mibig_cluster.split("_c")[0]
+        self.mibig_product = mibig_product
+        self.percent_id = float(percent_id)
+        self.blast_score = float(blast_score)
+        self.coverage = float(coverage)
+        self.evalue = float(evalue)
+
+    @property
+    def values(self):
+        return [self.gene_id, self.gene_description, self.mibig_id,
+                self.mibig_product, self.percent_id, self.blast_score,
+                self.coverage, self.evalue]
+
+    def __str__(self):
+        return "%s\n" % "\t".join(str(val) for val in self.values)
+
