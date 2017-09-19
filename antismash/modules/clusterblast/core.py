@@ -50,8 +50,8 @@ def load_geneclusters(searchtype):
     #Load gene cluster database into memory
     options = Config()
     clusterblastdir = os.path.join(options.database_dir, 'clusterblast')
-    subclusterblastdir = os.path.join(path.get_full_path(__file__, "data"), "sub")
-    knownclusterblastdir = os.path.join(path.get_full_path(__file__, "data"), "known")
+    subclusterblastdir = path.get_full_path(__file__, "data", "sub")
+    knownclusterblastdir = path.get_full_path(__file__, "data", "known")
 
     if searchtype == "clusterblast":
         logging.info("ClusterBlast: Loading gene clusters database into memory...")
@@ -84,8 +84,8 @@ def load_geneclusters(searchtype):
 def load_geneclusterproteins(accessions, searchtype):
     options = Config()
     clusterblastdir = os.path.join(options.database_dir, 'clusterblast')
-    subclusterblastdir = os.path.join(path.get_full_path(__file__, "data"), "sub")
-    knownclusterblastdir = os.path.join(path.get_full_path(__file__, "data"), "known")
+    subclusterblastdir = path.get_full_path(__file__, "data", "sub")
+    knownclusterblastdir = path.get_full_path(__file__, "data", "known")
     #Load gene cluster database proteins info into memory
     if searchtype == "clusterblast":
         logging.info("ClusterBlast: Loading gene cluster database proteins into " \

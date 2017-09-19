@@ -97,7 +97,7 @@ def check_prereqs():
 
 
     # the path to the markov model
-    hmm = path.get_full_path(__file__, 'data/bgc_seeds.hmm')
+    hmm = path.get_full_path(__file__, 'data', 'bgc_seeds.hmm')
     hmm_files = [os.path.join("data", sig.hmm_file) for sig in profiles]
     if path.locate_file(hmm) is None:
         # try to generate file from all specified profiles in hmmdetails

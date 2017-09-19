@@ -18,8 +18,7 @@ from .core import write_raw_clusterblastoutput, \
 from .results import ClusterResult, GeneralResults
 
 def _get_datafile_path(filename):
-    data_dir = path.get_full_path(__file__, 'data')
-    return os.path.join(data_dir, 'sub', filename)
+    return path.get_full_path(__file__, 'data', 'sub', filename)
 
 def check_sub_prereqs(options):
     "Check if all required applications and datafiles are around"

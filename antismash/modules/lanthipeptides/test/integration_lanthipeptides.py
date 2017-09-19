@@ -31,7 +31,7 @@ class IntegrationLantipeptides(unittest.TestCase):
         result = specific_analysis(rec)
         assert len(result.clusters_with_motifs) == 1
         assert len(result.motifs) == 1
-        assert len(rec.get_cds_motifs()) == 0
+        assert not rec.get_cds_motifs()
         result.add_to_record(rec)
         assert len(rec.get_cds_motifs()) == 1
         prepeptide = result.motifs[0]
@@ -70,11 +70,11 @@ class IntegrationLantipeptides(unittest.TestCase):
 
     def test_epidermin(self):
         "Test lanthipeptide prediction for epidermin"
-        rec = Record.from_biopython(seqio.read(path.get_full_path(__file__, 'data/epidermin.gbk')))
+        rec = Record.from_biopython(seqio.read(path.get_full_path(__file__, 'data', 'epidermin.gbk')))
         assert not rec.get_cds_motifs()
         result = specific_analysis(rec)
         assert len(result.motifs) == 1
-        assert len(rec.get_cds_motifs()) == 0
+        assert not rec.get_cds_motifs()
         result.add_to_record(rec)
         assert len(rec.get_cds_motifs()) == 1
         prepeptide = result.motifs[0]
@@ -88,11 +88,11 @@ class IntegrationLantipeptides(unittest.TestCase):
 
     def test_microbisporicin(self):
         "Test lanthipeptide prediction for microbisporicin"
-        rec = Record.from_biopython(seqio.read(path.get_full_path(__file__, 'data/microbisporicin.gbk')))
+        rec = Record.from_biopython(seqio.read(path.get_full_path(__file__, 'data', 'microbisporicin.gbk')))
         assert not rec.get_cds_motifs()
         result = specific_analysis(rec)
         assert len(result.motifs) == 1
-        assert len(rec.get_cds_motifs()) == 0
+        assert not rec.get_cds_motifs()
         result.add_to_record(rec)
         assert len(rec.get_cds_motifs()) == 1
 
@@ -109,11 +109,11 @@ class IntegrationLantipeptides(unittest.TestCase):
 
     def test_epicidin(self):
         "Test lanthipeptide prediction for epicidin 280"
-        rec = Record.from_biopython(seqio.read(path.get_full_path(__file__, 'data/epicidin_280.gbk')))
+        rec = Record.from_biopython(seqio.read(path.get_full_path(__file__, 'data', 'epicidin_280.gbk')))
         assert not rec.get_cds_motifs()
         result = specific_analysis(rec)
         assert len(result.motifs) == 1
-        assert len(rec.get_cds_motifs()) == 0
+        assert not rec.get_cds_motifs()
         result.add_to_record(rec)
         assert len(rec.get_cds_motifs()) == 1
 
@@ -131,32 +131,32 @@ class IntegrationLantipeptides(unittest.TestCase):
 
     def test_labyrinthopeptin(self):
         "Test lanthipeptide prediction for labyrinthopeptin"
-        rec = Record.from_biopython(seqio.read(path.get_full_path(__file__, 'data/labyrinthopeptin.gbk')))
+        rec = Record.from_biopython(seqio.read(path.get_full_path(__file__, 'data', 'labyrinthopeptin.gbk')))
         assert not rec.get_cds_motifs()
         result = specific_analysis(rec)
         assert len(result.motifs) == 2
-        assert len(rec.get_cds_motifs()) == 0
+        assert not rec.get_cds_motifs()
         result.add_to_record(rec)
         assert len(rec.get_cds_motifs()) == 2
 
     def test_sco_cluster3(self):
         "Test lanthipeptide prediction for SCO cluster #3"
-        rec = Record.from_biopython(seqio.read(path.get_full_path(__file__, 'data/sco_cluster3.gbk')))
+        rec = Record.from_biopython(seqio.read(path.get_full_path(__file__, 'data', 'sco_cluster3.gbk')))
         assert not rec.get_cds_motifs()
         result = specific_analysis(rec)
         assert len(result.motifs) == 1
-        assert len(rec.get_cds_motifs()) == 0
+        assert not rec.get_cds_motifs()
         result.add_to_record(rec)
         assert len(rec.get_cds_motifs()) == 1
         self.assertEqual('Class I', result.motifs[0].peptide_class)
 
     def test_lactocin_s(self):
         """Test lanthipeptide prediction for lactocin S"""
-        rec = Record.from_biopython(seqio.read(path.get_full_path(__file__, 'data/lactocin_s.gbk')))
+        rec = Record.from_biopython(seqio.read(path.get_full_path(__file__, 'data', 'lactocin_s.gbk')))
         assert not rec.get_cds_motifs()
         result = specific_analysis(rec)
         assert len(result.motifs) == 1
-        assert len(rec.get_cds_motifs()) == 0
+        assert not rec.get_cds_motifs()
         result.add_to_record(rec)
         assert len(rec.get_cds_motifs()) == 1
         self.assertEqual('Class II', result.motifs[0].peptide_class)

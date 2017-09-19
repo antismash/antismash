@@ -54,8 +54,8 @@ def check_prereqs():
         if path.locate_executable(binary_name) is None:
             failure_messages.append("Failed to locate file: %r" % binary_name)
 
-    for hmm in [os.path.join('data', 'smcogs.hmm')]:
-        hmm = path.get_full_path(__file__, hmm)
+    for hmm in ['smcogs.hmm']:
+        hmm = path.get_full_path(__file__, 'data', hmm)
         if path.locate_file(hmm) is None:
             failure_messages.append("Failed to locate file %r" % hmm)
             continue

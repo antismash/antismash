@@ -2,7 +2,6 @@
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
 import logging
-import os
 from helperlibs.wrappers.io import TemporaryDirectory
 
 import antismash.common.deprecated as utils
@@ -27,8 +26,7 @@ _required_files = [
 ]
 
 def _get_datafile_path(filename):
-    data_dir = path.get_full_path(__file__, 'data')
-    return os.path.join(data_dir, 'known', filename)
+    return path.get_full_path(__file__, 'data', 'known', filename)
 
 def check_known_prereqs(options):
     "Check if all required applications are around"
