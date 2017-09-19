@@ -422,6 +422,11 @@ def debug_options():
                        action='store_true',
                        default=False,
                        help="Display the version number and exit.")
+    group.add_option('--profiling',
+                       dest='profile',
+                       action='store_true',
+                       default=False,
+                       help="Generate a profiling report, disables multiprocess python.")
     return group
 
 def specific_debugging(modules):
