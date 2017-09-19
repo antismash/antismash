@@ -330,3 +330,8 @@ class Record:
         if "-" in str(seq):
             seq = Seq(str(seq).replace("-", ""), Bio.Alphabet.generic_protein)
         return seq
+
+    def write_cluster_specific_genbanks(self, output_dir=None):
+        bio_record = self.to_biopython()
+        for cluster in self._clusters:
+            cluster.write_to_genbank(directory=output_dir, record=bio_record)

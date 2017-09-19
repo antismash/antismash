@@ -250,9 +250,7 @@ def run_antismash(sequence_file, options, detection_modules=None,
 
     logging.debug("Writing cluster-specific genbank files") # TODO: make more efficient
     for record in seq_records:
-        for cluster in record.get_clusters():
-            cluster.write_to_genbank(directory=options.output_dir)
-
+        record.write_cluster_specific_genbanks(options.output_dir)
 
     # convert records to biopython
     seq_records = [record.to_biopython() for record in seq_records]  # TODO avoid the second conversion if possible
