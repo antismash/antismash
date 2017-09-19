@@ -36,8 +36,7 @@ def get_antismash_db_accessions():
 
 
 def generate_distinct_colours(count):
-    # include white
-    count += 1
+    count += 1 # include white
     rgbs = [colorsys.hsv_to_rgb(i/count, .9, .85) for i in range(count)]
     colours = []
     for rgb in rgbs:
@@ -77,11 +76,13 @@ def make_neighbours_distinct(groups):
         Returns a new list containing the members of the original
     """
     # if there's only 2 groups, we can't fix that, so just return it as is
-    if len(groups) < 3:
+    if len(groups) < 2:
         return list(groups)
+    elif len(groups) < 4: # to avoid removing all groups with division below
+        spaced_groups = list(groups)[::2] + list(groups)[1::2]
 
     spaced_groups = []
-    step_size = len(groups) // 3
+    step_size = len(groups) // 4
     for i in range(step_size):
         for group in groups[i::step_size]:
             spaced_groups.append(group)
@@ -135,7 +136,7 @@ class Gene:
         self.name = name
         self.protein = protein
         self.product = product
-        self.label = self._get_label()
+        self.label = self._get_label().replace("_", " ")
         self.pairings = []
         self.reversed = False
 

@@ -94,7 +94,6 @@ class GeneralResults(ModuleResults):
     def add_cluster_result(self, result, reference_clusters, reference_proteins):
         assert isinstance(result, ClusterResult)
         assert reference_clusters and reference_proteins # {str:ReferenceCluster}, {str:Protein}
-        result.update_cluster_descriptions(self.search_type)
         self.cluster_results.append(result)
         # keep data on proteins relevant to this cluster
         for cluster, _ in result.ranking:
@@ -120,6 +119,10 @@ class GeneralResults(ModuleResults):
                 "schema_version" : self.schema_version,
                 "results" : [res.jsonify() for res in self.cluster_results],
                 "proteins" : [{key : getattr(protein, key) for key in protein.__slots__} for protein in self.proteins_of_interest.values()]}
+
+    def add_to_record(self):
+        for cluster_result in self.cluster_results:
+            cluster_result.update_cluster_descriptions(self.search_type)
 
     @staticmethod
     def from_json(json, record):
@@ -169,7 +172,8 @@ class ClusterBlastResults(ModuleResults):
 
     def add_to_record(self, record):
         for result in [self.general, self.subcluster, self.knowncluster]:
-            result.add_to_record(record)
+            if result is not None:
+                result.add_to_record()
 
     def write_svg_files(self, svg_dir):
         for result in [self.general, self.subcluster, self.knowncluster]:
