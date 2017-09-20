@@ -25,7 +25,7 @@ def check_options(options):
     return []
 
 def is_enabled(options):
-    return not (options.minimal and not options.lanthipeptides_enabled) # TODO: use --minimal and relevant --enable instead
+    return not (options.minimal and not options.lanthipeptides_enabled)
 
 def check_previous_results(results, record, options):
     if not results:
