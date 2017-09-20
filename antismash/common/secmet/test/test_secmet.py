@@ -6,9 +6,9 @@ import unittest
 
 import Bio.SeqIO
 from Bio.Seq import Seq
-from Bio.SeqFeature import FeatureLocation
+from Bio.SeqFeature import SeqFeature, FeatureLocation
 from antismash.common.test import helpers
-from antismash.common.secmet import Record, Cluster, CDSFeature, Feature
+from antismash.common.secmet import Record, Cluster, CDSFeature, Feature, GeneFunction
 
 class TestConversion(unittest.TestCase):
     def test_conversion(self):
@@ -56,7 +56,9 @@ class TestRecord(unittest.TestCase):
         record = Record()
         record.add_cluster(Cluster(FeatureLocation(10, 40), 0, 0, []))
         with self.assertRaises(ValueError):
-            record.add_cluster(Cluster(FeatureLocation(0, 10), 0, 0, []))
+            record.add_cluster(Cluster(FeatureLocation(0, 11), 0, 0, []))
+        # ok, since ends aren't inclusive
+        record.add_cluster(Cluster(FeatureLocation(0, 10), 0, 0, []))
 
     def test_cds_cluster_linkage(self):
         record = Record()
@@ -73,18 +75,68 @@ class TestRecord(unittest.TestCase):
 class TestFeature(unittest.TestCase):
     def test_overlaps_with(self):
         # no overlap
-        a = Feature(FeatureLocation(5, 10), feature_type="test")
-        b = Feature(FeatureLocation(100, 110), feature_type="test")
+        a = helpers.DummyFeature(5, 10)
+        assert isinstance(a, Feature) # just to be sure it works the way we want
+        b = helpers.DummyFeature(100, 110)
         assert not a.overlaps_with(b) and not b.overlaps_with(a)
         # completely within
-        b = Feature(FeatureLocation(0, 20), feature_type="test")
+        b = helpers.DummyFeature(0, 20)
         assert a.overlaps_with(b) and b.overlaps_with(a)
         # partially within
-        b = Feature(FeatureLocation(0, 8), feature_type="test")
+        b = helpers.DummyFeature(0, 8)
         assert a.overlaps_with(b) and b.overlaps_with(a)
         # borders touching
-        b = Feature(FeatureLocation(0, 5), feature_type="test")
-        assert a.overlaps_with(b) and b.overlaps_with(a)
+        b = helpers.DummyFeature(0, 5)
+        assert not (a.overlaps_with(b) or b.overlaps_with(a))
+
+    def test_is_contained_by(self):
+        # same location is considered to be contained
+        a = helpers.DummyFeature(5, 10)
+        assert a.is_contained_by(a)
+        for strand in (-1, 1):
+            # no overlap
+            b = helpers.DummyFeature(15, 25, strand)
+            assert not a.is_contained_by(b)
+            assert not b.is_contained_by(a)
+            # b is contained
+            b = helpers.DummyFeature(6, 9, strand)
+            assert not a.is_contained_by(b)
+            assert b.is_contained_by(a)
+            # only partial overlap
+            b = helpers.DummyFeature(6, 19, strand)
+            assert not a.is_contained_by(b)
+            assert not b.is_contained_by(a)
+            b = helpers.DummyFeature(1, 7, strand)
+            assert not a.is_contained_by(b)
+            assert not b.is_contained_by(a)
+            # edge cases
+            b = helpers.DummyFeature(5, 7, strand)
+            assert not a.is_contained_by(b)
+            assert b.is_contained_by(a)
+            b = helpers.DummyFeature(7, 10, strand)
+            assert not a.is_contained_by(b)
+            assert b.is_contained_by(a)
+
+    def test_biopython_conversion(self):
+        bio = SeqFeature(FeatureLocation(1, 5))
+        bio.qualifiers["foo"] = ["bar"]
+        # check that features without types are caught
+        with self.assertRaises(AssertionError):
+            sec = Feature.from_biopython(bio)
+        bio.type = "test"
+        sec = Feature.from_biopython(bio)
+        assert sec.get_qualifier("foo") == tuple(["bar"])
+        assert sec.get_qualifier("bar") is None
+
+    def test_string_conversion(self):
+        for feature_type in ["cluster", "cds_motif", "test"]:
+            for start, end in [(1, 5), (3, 8), (10, 15)]:
+                feature = Feature(FeatureLocation(start, end, strand=1),
+                                  feature_type=feature_type)
+                assert str(feature) == "%s([%d:%d](+))" % (feature_type, start, end)
+                feature = Feature(FeatureLocation(start, end, strand=-1),
+                                  feature_type=feature_type)
+                assert str(feature) == "%s([%d:%d](-))" % (feature_type, start, end)
 
 # since we're about to test assigning to non-slots, shut pylint up
 # pylint: disable=assigning-non-slot
@@ -102,3 +154,43 @@ class TestFeature(unittest.TestCase):
         with self.assertRaises(AttributeError):
             cluster.product = ["c", "d"]
 # pylint: enable=assigning-non-slot
+
+class TestCDSFeature(unittest.TestCase):
+    def test_required_identifiers(self):
+        with self.assertRaises(ValueError):
+            dummy = CDSFeature(FeatureLocation(1, 5))
+        dummy = CDSFeature(FeatureLocation(1, 5), locus_tag="foo")
+        dummy = CDSFeature(FeatureLocation(1, 5), protein_id="foo")
+        dummy = CDSFeature(FeatureLocation(1, 5), gene="foo")
+
+class TestGeneFunction(unittest.TestCase):
+    def test_membership(self):
+        dummy = GeneFunction.OTHER
+        with self.assertRaises(AttributeError):
+            dummy = GeneFunction.non_existant
+
+    def test_equality(self):
+        assert GeneFunction.OTHER == GeneFunction.OTHER
+        assert GeneFunction.CORE != GeneFunction.OTHER
+
+    def test_string_conversion(self):
+        assert str(GeneFunction.OTHER) == "other"
+        for member in dir(GeneFunction):
+            if member.isupper():
+                assert str(getattr(GeneFunction, member)) == member.lower()
+
+    def test_CDS_function(self):
+        cds = CDSFeature(FeatureLocation(1, 5), locus_tag="foo")
+        # default value
+        assert cds.gene_function == GeneFunction.OTHER
+        # check bad values can't be assigned
+        with self.assertRaises(AssertionError):
+            cds.gene_function = "other"
+        with self.assertRaises(AssertionError):
+            cds.gene_function = 0
+        # check overriding OTHER works
+        cds.gene_function = GeneFunction.CORE
+        assert cds.gene_function == GeneFunction.CORE
+        # test that overriding non-other doesn't work
+        cds.gene_function = GeneFunction.ADDITIONAL
+        assert cds.gene_function == GeneFunction.CORE

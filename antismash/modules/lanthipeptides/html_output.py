@@ -18,8 +18,7 @@ class LanthipeptideLayer(ClusterLayer):
         for motif in self.record.seq_record.get_cds_motifs():
             if not isinstance(motif, Prepeptide):
                 continue
-            if motif.location.start < self.start or \
-               motif.location.end > self.end: #TODO cleanup repeated cases
+            if not motif.is_contained_by(self.cluster_rec):
                 continue
             if motif.peptide_type == "lanthipeptide":
                 self.motifs.append(motif)
