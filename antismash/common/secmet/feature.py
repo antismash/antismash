@@ -38,13 +38,14 @@ class Feature:
     def overlaps_with(self, other):
         assert isinstance(other, Feature)
         return self.location.start in other.location \
-               or self.location.end in other.location \
+               or self.location.end - 1 in other.location \
                or other.location.start in self.location \
-               or other.location.end in self.location
+               or other.location.end - 1 in self.location
 
     def is_contained_by(self, other):
         assert isinstance(other, Feature)
-        return self.location.start in other.location and self.location.end in other.location
+        end = self.location.end - 1 # to account for the non-inclusive end
+        return self.location.start in other.location and end in other.location
 
     def to_biopython(self, qualifiers=None):
         feature = SeqFeature(self.location, type=self.type)
@@ -75,8 +76,6 @@ class Feature:
 
     @staticmethod
     def from_biopython(bio_feature, feature=None, leftovers=None):
-        if bio_feature.type == "STS" and 2090040 in bio_feature.location:
-            assert "db_xref" in bio_feature.qualifiers, bio_feature.location
         if feature is None:
             feature = Feature(bio_feature.location, bio_feature.type)
             if not leftovers:

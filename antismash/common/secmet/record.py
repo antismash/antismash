@@ -11,17 +11,6 @@ from Bio.SeqRecord import SeqRecord
 from .feature import Feature, CDSFeature, CDSMotif, AntismashDomain, Cluster, \
                      PFAMDomain, ClusterBorder, Prepeptide
 
-class _BisectHelper:
-    def __init__(self, features):
-        self.features = features
-
-    def __len__(self):
-        return len(self.features)
-
-    def __getitem__(self, index):
-        loc = self.features[index].location
-        return (loc.start, loc.end)
-
 class Record:
     """A record containing secondary metabolite clusters"""
     # slots not for space, but to stop use as a horrible global
