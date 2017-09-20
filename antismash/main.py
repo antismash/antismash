@@ -169,6 +169,7 @@ def write_outputs(results, options):
 
     # write records to an aggregate output
     combined_filename = os.path.join(options.output_dir, results.input_file)
+    combined_filename = os.path.splitext(combined_filename)[0] + ".gbk"
     logging.debug("Writing final genbank file to '%s'", combined_filename)
     SeqIO.write(bio_records, combined_filename, "genbank")
 
