@@ -159,13 +159,15 @@ def write_outputs(results, options):
     logging.debug("Creating results SVGs")
     svg.write(results.records, options, results.results)
 
-    logging.debug("Writing cluster-specific genbank files") # TODO: make more efficient
-    for record in results.records:
-        record.write_cluster_specific_genbanks(options.output_dir)
-
     # convert records to biopython
-    bio_records = [record.to_biopython() for record in results.records]  # TODO avoid the second conversion if possible
-    # write them to an aggregate output
+    bio_records = [record.to_biopython() for record in results.records]
+
+    logging.debug("Writing cluster-specific genbank files")
+    for record, bio_record in zip(results.records, bio_records):
+        for cluster in record.get_clusters():
+            cluster.write_to_genbank(directory=options.output_dir, record=bio_record)
+
+    # write records to an aggregate output
     combined_filename = os.path.join(options.output_dir, results.input_file)
     logging.debug("Writing final genbank file to '%s'", combined_filename)
     SeqIO.write(bio_records, combined_filename, "genbank")
