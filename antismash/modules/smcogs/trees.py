@@ -1,7 +1,7 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 import glob
 import logging
 import shutil
@@ -39,8 +39,7 @@ def read_fasta(filename):
         raise ValueError("Fasta files contains different counts of sequences and ids")
     if not ids:
         logging.debug("Fasta file %s contains no sequences", filename)
-        # TODO: refactor code using this func to deal with this ValueError instead
-        # raise ValueError("Fasta file contains no sequences")
+        raise ValueError("Fasta file contains no sequences")
     return OrderedDict(zip(ids, sequence_info))
 
 def generate_trees(smcogs_dir, hmm_results, geneclustergenes, nrpspks_genes, options):
@@ -77,9 +76,12 @@ def smcog_tree_analysis(cds, inputnr, smcog, output_dir):
     #Generate trimmed alignment
     trim_alignment(inputnr, alignment_file)
     #Draw phylogenetic tree
-    drawtree(inputnr)
+    draw_tree(inputnr)
     #Convert tree to draw PNG image
-    converttree(inputnr, output_dir, gene_id)
+    try:
+        convert_tree(inputnr, output_dir, gene_id)
+    except RuntimeError:
+        logging.critical("Error during image generation for %s", gene_id) #TODO fix
 
 def alignsmcogs(smcog, inputnr):
     #Align to multiple sequence alignment, output as fasta file
@@ -94,73 +96,83 @@ def alignsmcogs(smcog, inputnr):
     return output_filename
 
 def trim_alignment(inputnr, alignment_file):
-    #edit muscle fasta file: remove all positions before the first and after the last position shared by >33% of all sequences
-    contents = read_fasta(alignment_file)
-    names = list(contents)
-    seqs = list(contents.values())
-    #Find first and last amino acids shared conserved >33%
-    #Create list system to store conservation of residues
-    conservationlist = []
-    lenseqs = len(seqs[0])
-    nrseqs = len(seqs)
-    for i in range(lenseqs):
-        conservationlist.append({i : 0 for i in "ABCDEFGHIJKLMNOPQRSTUVWXYZ-"})
-    for seq in seqs:
-        for a, j in enumerate(seq):
-            conservationlist[a][j] += 1
-    firstsharedaa = 0
-    lastsharedaa = lenseqs
-    #Find first amino acid shared
-    first = True
-    nr = 0
-    for i in conservationlist:
-        aa = sorted(i.items(), key=lambda x: (x[1], x[0]), reverse=True)
-        if aa[0][0] != "-" and i[aa[1][0]] > (nrseqs // 3) and first:
-            firstsharedaa = nr
-            first = False
-        nr += 1
-    #Find last amino acid shared
-    conservationlist.reverse()
-    first = True
-    nr = 0
-    for i in conservationlist:
-        aa = sorted(i.items(), key=lambda x: (x[1], x[0]), reverse=True)
-        if aa[0][0] != "-" and i[aa[1][0]] > (nrseqs // 3) and first:
-            lastsharedaa = lenseqs - nr
-            first = False
-        nr += 1
-    #Shorten sequences to detected conserved regions
-    seqs = [seq[firstsharedaa:lastsharedaa] for seq in seqs]
-    seq_len = len(seqs[0])
-    for name, seq in zip(names, seqs):
-        assert seq_len == len(seq), "%s has longer sequence" %name
-    seedfastaname = "trimmed_alignment" + str(inputnr) + ".fasta"
-    deprecated.writefasta(names, seqs, seedfastaname)
+    """ remove all positions before the first and after the last position shared
+        by at least a third of all sequences
+    """
 
-def drawtree(inputnr):
-    #Draw phylogenetic tree with fasttree 2.1.1
+    def find_first_aa_position(conservations, sequence_count):
+        for position, conservation in enumerate(conservations):
+            aa = sorted(conservation.items(), key=lambda x: (x[1], x[0]), reverse=True)
+            base, count = aa[0]
+            # skip best hits that are gaps
+            if base == "-":
+                continue
+            # check that the count is greater than required
+            if count >= sequence_count / 3:
+                return position
+        return 0 # can't be earlier than the start
+
+    contents = read_fasta(alignment_file)
+    # check all sequences are the same length
+    sequence_length = len(list(contents.values())[0])
+    for name, seq in contents.items():
+        assert sequence_length == len(seq), "%s has different sequence length" %name
+    # stripping [ and ] because it breaks TreeGraph later on
+    # stripping ( and ) because it breaks newick tree parsing
+    names = [name.replace("[", "").replace("]", "").replace("(", "_").replace(")", "_") for name in list(contents)]
+    seqs = list(contents.values())
+
+    # store conservation of residues
+    conservations = [defaultdict(lambda: 0) for i in range(sequence_length)]
+    for seq in seqs:
+        for position, base in enumerate(seq):
+            conservations[position][base] += 1
+
+    # Find first and last amino acids shared
+    first_shared_amino = find_first_aa_position(conservations, len(seqs))
+
+    conservations.reverse()
+    last_shared_amino = sequence_length - find_first_aa_position(conservations, len(seqs))
+
+    #Shorten sequences to detected conserved regions
+    seqs = [seq[first_shared_amino:last_shared_amino] for seq in seqs]
+    seed_fasta_name = "trimmed_alignment" + str(inputnr) + ".fasta"
+    deprecated.writefasta(names, seqs, seed_fasta_name)
+
+def draw_tree(inputnr):
+    """ Draw phylogenetic tree with fasttree
+    """
     tree_filename = "tree%d.nwk" % inputnr
     command = ["fasttree", "-quiet", "-fastest", "-noml", "trimmed_alignment%d.fasta" % inputnr]
     run_result = subprocessing.execute(command, stdout=open(tree_filename, "w"))
     if not run_result.successful():
-        raise RuntimeError("Fasttree failed to run successfully:", run_result.stdout)
+        raise RuntimeError("Fasttree failed to run successfully:", run_result.stderr)
     return tree_filename
 
-def converttree(inputnr, smcog_dir, tag):
-     #Convert tree to XTG and draw PNG image using TreeGraph
-     core_command = ['java', '-Djava.awt.headless=true', '-jar', path.get_full_path(__file__, 'external', 'TreeGraph.jar')]
+def convert_tree(inputnr, smcog_dir, tag):
+    """ Convert tree to XTG and draw PNG image using TreeGraph
+    """
+    core_command = ['java', '-Djava.awt.headless=true', '-jar',
+                    path.get_full_path(__file__, 'external', 'TreeGraph.jar')]
 
-     command = core_command + ['-convert', 'tree%s.nwk'% inputnr, '-xtg', 'tree%s.xtg' % inputnr]
-     run_result = subprocessing.execute(command, timeout=60*20)
-     if run_result.return_code or "exception" in run_result.stderr or "Exception" in run_result.stderr:
-        raise RuntimeError("Tree conversion failed in external command: %s" % command)
+    if not os.path.exists("tree%s.nwk" % inputnr):
+        raise RuntimeError("No newick tree file exists for section %d" % inputnr)
 
-     command = core_command + ['-image', 'tree%s.xtg'% inputnr, "%s.png" % tag.split('.')[0]]
-     run_result = subprocessing.execute(command, timeout=60*20)
-     if run_result.return_code or "exception" in run_result.stderr or "Exception" in run_result.stderr:
-        raise RuntimeError("Tree image creation failed in external command: %s" % command)
 
-     shutil.copy(tag.split(".")[0] + '.png', smcog_dir)
-     os.remove(tag.split(".")[0] + ".png")
-     os.remove("tree%d.xtg" % inputnr)
-     os.remove("trimmed_alignment%d.fasta" % inputnr)
+    xtg_file = "tree%s.xtg" % inputnr
+    tree_png = "%s.png" % tag.split('.')[0]
+
+    command = core_command + ['-convert', 'tree%s.nwk'% inputnr, '-xtg', xtg_file]
+    run_result = subprocessing.execute(command, timeout=60*20)
+    if run_result.return_code or "exception" in run_result.stdout or "Exception" in run_result.stdout or not os.path.exists(xtg_file):
+        raise RuntimeError("Tree conversion failed in external command attempting to create %s: %s\n%s\n%s:" % (tree_png, command, run_result.stdout, run_result.stderr))
+
+    command = core_command + ['-image', xtg_file, tree_png]
+    run_result = subprocessing.execute(command, timeout=60*20)
+    if run_result.return_code or "exception" in run_result.stdout or "Exception" in run_result.stdout or not os.path.exists(tree_png):
+        raise RuntimeError("Tree image creation failed in external command attempting to create %s: %s" % (tree_png, command))
+
+    shutil.copy(tag.split(".")[0] + '.png', smcog_dir)
+    os.remove(tag.split(".")[0] + ".png")
+    os.remove("tree%d.xtg" % inputnr)
+    os.remove("trimmed_alignment%d.fasta" % inputnr)

@@ -8,12 +8,12 @@ from multiprocessing import Process
 import os
 import time
 
-from antismash.common import deprecated, path, subprocessing, hmmscan_parser
+from antismash.common import deprecated, path, subprocessing, hmmscan_refinement
 from antismash.common.module_results import ModuleResults
 from antismash.config.args import ModuleArgs
 
 from .trees import smcog_tree_analysis, generate_trees
-from .classify import classify_genes, load_cog_annotations
+from .classify import classify_genes, load_cog_annotations, write_smcogs_file
 
 NAME = "smcogs"
 SHORT_DESCRIPTION = NAME.capitalize()
@@ -90,7 +90,7 @@ class SMCOGResults(ModuleResults):
             return None
         results = SMCOGResults(json["record_id"])
         for hit, parts in json["best_hits"].items():
-            results.best_hits[hit] = hmmscan_parser.HMMResult(*parts)
+            results.best_hits[hit] = hmmscan_refinement.HMMResult(*parts)
 
         if json.get("image_dir"):
             results.relative_tree_path = json["image_dir"]
@@ -122,6 +122,7 @@ def run_on_record(record, results, options):
             if not hits:
                 continue
             results.best_hits[gene.get_name()] = hits[0]
+        write_smcogs_file(hmm_results, genes, deprecated.get_pksnrps_cds_features(record), options)
 
     if not results.tree_images and options.smcogs_trees:
         # create the smcogs output directory if required
@@ -133,8 +134,7 @@ def run_on_record(record, results, options):
 
         original_dir = os.getcwd()
         os.chdir(smcogs_dir)  #TODO make a context manager
-        deprecated.CODE_SKIP_WARNING()
-#        nrpspks_genes = utils.get_pksnrps_cds_features(record)
+        nrpspks_genes = deprecated.get_pksnrps_cds_features(record)
         nrpspks_genes = []
         results.tree_images = generate_trees(smcogs_dir, hmm_results, genes, nrpspks_genes, options)
 

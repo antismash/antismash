@@ -4,7 +4,7 @@
 import os
 
 from antismash.common import subprocessing, path, deprecated
-from antismash.common.hmmscan_parser import refine_hmmscan_results
+from antismash.common.hmmscan_refinement import refine_hmmscan_results
 from antismash.common.secmet import GeneFunction
 
 def classify_genes(cds_features):
@@ -34,14 +34,17 @@ def write_smcogs_file(hmm_results, cds_features, nrpspks_genes, options):
     nrpspks_names = set([feature.get_name() for feature in nrpspks_genes])
     smcogfile = open(os.path.join(options.output_dir, "smcogs", "smcogs.txt"), "w")
     for feature in cds_features:
-        k = feature.get_name()
-        if k not in nrpspks_names:
-            if k in hmm_results:
-                l = hmm_results[k]
-                smcogfile.write(">> " + k + "\n")
-                smcogfile.write("name\tstart\tend\te-value\tscore\n") # TODO: convert to results
-                smcogfile.write("** smCOG hits **\n")
-                for i in l:
-                    smcogfile.write(str(i[0]) + "\t" + str(i[1]) + "\t" + str(i[2]) + "\t" + str(i[3]) + "\t" + str(i[4]) + "\n")
-                smcogfile.write("\n\n")
+        gene_id = feature.get_name()
+        if gene_id in nrpspks_names:
+            continue
+        if gene_id in hmm_results:
+            hits = hmm_results[gene_id]
+            smcogfile.write(">> %s\n" % gene_id)
+            smcogfile.write("name\tstart\tend\te-value\tscore\n")
+            smcogfile.write("** smCOG hits **\n")
+            for hit in hits:
+                smcogfile.write("\t".join([hit.hit_id, str(hit.query_start),
+                                           str(hit.query_end), str(hit.evalue),
+                                           str(hit.bitscore)]) + "\n")
+            smcogfile.write("\n\n")
     smcogfile.close()
