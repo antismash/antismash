@@ -1,0 +1,102 @@
+# hmmscan :: search sequence(s) against a profile database
+# HMMER 3.1b2 (February 2015); http://hmmer.org/
+# Copyright (C) 2015 Howard Hughes Medical Institute.
+# Freely distributed under the GNU General Public License (GPLv3).
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# query sequence file:             SCO1217.fasta
+# target HMM database:             antismash/modules/smcogs/data/smcogs.hmm
+# biased composition HMM filter:   off
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Query:       SCO1217  [L=405]
+Scores for complete sequence (score includes all domains):
+   --- full sequence ---   --- best 1 domain ---    -#dom-
+    E-value  score  bias    E-value  score  bias    exp  N  Model                             Description
+    ------- ------ -----    ------- ------ -----   ---- --  --------                          -----------
+    3.6e-13   43.5   0.8    3.6e-13   43.5   0.8    2.0  2  SMCOG1048:sensor_histidine_kinase  
+    5.1e-07   23.3   0.5    1.1e-06   22.2   0.1    1.7  2  SMCOG1003:sensor_histidine_kinase  
+     0.0022   11.5   0.1     0.0036   10.8   0.1    1.3  1  SMCOG1237:transposase              
+
+
+Domain annotation for each model (and alignments):
+>> SMCOG1048:sensor_histidine_kinase  
+   #    score  bias  c-Evalue  i-Evalue hmmfrom  hmm to    alifrom  ali to    envfrom  env to     acc
+ ---   ------ ----- --------- --------- ------- -------    ------- -------    ------- -------    ----
+   1 ?   -0.3   1.3      0.07         7     126     205 ..      92     190 ..       7     205 .. 0.43
+   2 !   43.5   0.8   3.6e-15   3.6e-13     292     416 ..     255     390 ..     217     391 .. 0.86
+
+  Alignments for each domain:
+  == domain 1  score: -0.3 bits;  conditional E-value: 0.07
+  SMCOG1048:sensor_histidine_kinase 126 pelkvwrlqgwqtr...t.ilpgadlgtlgaglhry......gllwigae.................prlknpllr 174
+                                         e+ vw+ +g ++r   + +l+g + ++ g + ++        ++w+  +                 p        
+                            SCO1217  92 EEVLVWDGVGNHHRaeiMeRLAGPLSTGRGEAFRLScdtpdcTVRWAV-VapltvddrvhgalvacaP-------- 158
+                                        444444444433332122222222222222111111333333444444.1233333333333333331........ PP
+
+  SMCOG1048:sensor_histidine_kinase 175 gpsvileqvmldrallvsl...irelekskvqer 205
+                                          s++l++++ ++a++vs    +++l++   ++r
+                            SCO1217 159 RESAVLVRAAGEVARWVSVqleLADLDQ--SRTR 190
+                                        2233333333444555544333344444..3333 PP
+
+  == domain 2  score: 43.5 bits;  conditional E-value: 3.6e-15
+  SMCOG1048:sensor_histidine_kinase 292 aalaelagelrnddgvrvelrldgtlpaslppevetalyrivqEALtNalKHA...aAtevcVtveatv..nslel 362
+                                         a+++  + +r++ g r  ++l+ + p+ lp ++    ++  q ++ Na+KH+   +A++++++++a++   +  +
+                            SCO1217 255 HAIDHYLALVRARFGDRLAVTLQVA-PEVLPVALP---FLCLQPLVENAVKHGlegKADRCRIQITAQDagAEALV 326
+                                        6888888888888899988888888.665665553...9999**********88779************8888889 PP
+
+  SMCOG1048:sensor_histidine_kinase 363 lvrDdGrGfdpensqg..vre.....gnGLggmreRaeslgGt...lviesapggGttvratlp 416
+                                         ++DdG G+dp+  +   +re     g+GL +  +R++++ G+   lvie+a g G +++++lp
+                            SCO1217 327 VIEDDGAGMDPDLLRRilAREvspsgGIGLSNVDDRLRQVYGDahgLVIETAVGAGMKITVRLP 390
+                                        99*********987652234488899****************877799***************9 PP
+
+>> SMCOG1003:sensor_histidine_kinase  
+   #    score  bias  c-Evalue  i-Evalue hmmfrom  hmm to    alifrom  ali to    envfrom  env to     acc
+ ---   ------ ----- --------- --------- ------- -------    ------- -------    ------- -------    ----
+   1 ?   -1.3   0.0      0.14        14     259     288 ..     162     191 ..      43     271 .. 0.71
+   2 !   22.2   0.1     1e-08   1.1e-06     471     570 .]     295     390 ..     293     390 .. 0.85
+
+  Alignments for each domain:
+  == domain 1  score: -1.3 bits;  conditional E-value: 0.14
+  SMCOG1003:sensor_histidine_kinase 259 asvtdeiaplaraialasllvrleeltaal 288
+                                        a++ ++ +++ar++ ++  l +l +++ +l
+                            SCO1217 162 AVLVRAAGEVARWVSVQLELADLDQSRTRL 191
+                                        444444444444444444444444444442 PP
+
+  == domain 2  score: 22.2 bits;  conditional E-value: 1e-08
+  SMCOG1003:sensor_histidine_kinase 471 LlsNAikftgpeg...grvtlrleqaardyvaitVeDtGiGIpeddlsriFepFfqadgtgsrkagGtGLGLsIvk 543
+                                        L+ NA+k+  +++    r+ ++  +a ++++ + +eD+G G+++d l ri  + +   +         G+GLs v 
+                            SCO1217 295 LVENAVKHGLEGKadrCRIQITAQDA-GAEALVVIEDDGAGMDPDLLRRILAREVS--P-------SGGIGLSNVD 360
+                                        899******9888999**********.***********************999888..3.......3478888888 PP
+
+  SMCOG1003:sensor_histidine_kinase 544 slvelhgGsit...vsSepGeGttFtlyLP 570
+                                        +  ++  G+ +   +++++G G  +t++LP
+                            SCO1217 361 DRLRQVYGDAHglvIETAVGAGMKITVRLP 390
+                                        888888888654436777788888888887 PP
+
+>> SMCOG1237:transposase  
+   #    score  bias  c-Evalue  i-Evalue hmmfrom  hmm to    alifrom  ali to    envfrom  env to     acc
+ ---   ------ ----- --------- --------- ------- -------    ------- -------    ------- -------    ----
+   1 !   10.8   0.1   3.5e-05    0.0036     227     290 ..     177     240 ..     141     245 .. 0.79
+
+  Alignments for each domain:
+  == domain 1  score: 10.8 bits;  conditional E-value: 3.5e-05
+  SMCOG1237:transposase 227 aaallrslaaqiraL.eeeikaldkeieellrehpdaeiltsipGiGpitaariLaeigdrerfr 290
+                             + +l++l ++ ++L e+eikal+++i  ++      +++ s+ +  p  a ++L+e+ d++r++
+                SCO1217 177 VQLELADLDQSRTRLiEAEIKALRAQISPHFIFNS-LAVIASFVRTDPERARELLLEFADFTRYS 240
+                            5666777776555442789**********999874.79*************************97 PP
+
+
+
+Internal pipeline statistics summary:
+-------------------------------------
+Query sequence(s):                         1  (405 residues searched)
+Target model(s):                         301  (108718 nodes)
+Passed MSV filter:                        19  (0.0631229); expected 6.0 (0.02)
+Passed bias filter:                       19  (0.0631229); expected 6.0 (0.02)
+Passed Vit filter:                         4  (0.013289); expected 0.3 (0.001)
+Passed Fwd filter:                         3  (0.00996678); expected 0.0 (1e-05)
+Initial search space (Z):                301  [actual number of targets]
+Domain search space  (domZ):               3  [number of targets reported over threshold]
+# CPU time: 0.04u 0.01s 00:00:00.05 Elapsed: 00:00:00.06
+# Mc/sec: 733.85
+//
+[ok]

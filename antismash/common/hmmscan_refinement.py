@@ -2,8 +2,9 @@
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
 from collections import defaultdict
+import logging
 
-def _strip_overlapping(results, hmm_lengths):
+def _remove_overlapping(results, hmm_lengths):
     """ Strip domain list of overlapping domains,
         only keeping those with the highest scores
 
@@ -22,25 +23,47 @@ def _strip_overlapping(results, hmm_lengths):
             non_overlapping.append(result)
     return non_overlapping
 
-def _remove_incomplete(domainlist, hmm_lengths):
+def _remove_incomplete(domains, hmm_lengths, threshold=0.5, fallback=1./3.):
     complete = []
-    for i in domainlist:
+    for i in domains:
         domainlength = hmm_lengths[i.hit_id]
         if len(i) > (0.5 * domainlength):
             complete.append(i)
-    return complete
+    if complete:
+        return complete
 
-def _merge_domain_list(domainlist, hmm_lengths):
-    merged = [domainlist[0]]
-    for current in domainlist[1:]:
-        previous = merged[-1]
-        domainlength = hmm_lengths[current.hit_id]
-        if current.hit_id == previous.hit_id \
-                and len(previous) + len(current) < 1.5 * domainlength:
-            merged[-1] = previous.merge(current)
-        else:
-            merged.append(current)
-    return merged
+    # if none matched, just take the longest hit over the fallback size
+    longest = 0.
+    longest_index = 0
+    for i, domain in enumerate(domains):
+        domain_length = hmm_lengths[domain.hit_id]
+        proportional_length = len(domain) / domain_length
+        if proportional_length > longest:
+            longest = proportional_length
+            longest_index = i
+
+    if longest > fallback:
+        return [domains[longest_index]]
+
+    # if still none, take a regulator if one exists
+    for domain in domains:
+        if "regulator" in domain.hit_id:
+            return [domain]
+    # ran out of fallbacks, return nothing
+    return []
+
+def _merge_domain_list(domainlist):
+    categories = defaultdict(list)
+    for domain in domainlist:
+        categories[domain.hit_id].append(domain)
+    remaining = []
+    for category in categories.values():
+        merged = category[0]
+        for other in category[1:]:
+            merged = merged.merge(other)
+        remaining.append(merged)
+    return sorted(remaining, key=lambda result: result.query_start)
+
 
 class HMMResult:
     __slots__ = ["hit_id", "query_start", "query_end", "evalue", "bitscore"]
@@ -61,36 +84,45 @@ class HMMResult:
         else:
             start, end = other.query_start, self.query_end
         return HMMResult(self.hit_id, start, end,
-                         self.evalue * other.evalue,
-                         self.bitscore + other.bitscore)
+                         min(self.evalue, other.evalue),
+                         max(self.bitscore, other.bitscore))
 
     def to_json(self):
-        return {key : getattr(key) for key in self.__slots__}
+        return {key : getattr(self, key) for key in self.__slots__}
+
+    def __str__(self):
+        return "HMMResult(%s, %d, %d, evalue=%g, bitscore=%g)" % (self.hit_id,
+                   self.query_start, self.query_end, self.evalue, self.bitscore)
+
+def gather_by_query(results):
+    results_by_id = defaultdict(set)
+    for result in results:
+        for hsp in result.hsps:
+            results_by_id[hsp.query_id].add(HMMResult(hsp.hit_id, hsp.query_start,
+                                                      hsp.query_end, hsp.evalue,
+                                                      hsp.bitscore))
+    return results_by_id
+
 
 def refine_hmmscan_results(hmmscan_results, hmm_lengths):
     """ Processes a list of QueryResult objects (from SearchIO.parse(..., 'hmmer3-text'))
-            - keeps only best hits from overlaps
             - merges domain fragments of the same ID
+            - keeps only best hits from overlaps
             - removes incomplete domains
 
         Returns a mapping of gene name to HMMResult
     """
-    results_by_id = defaultdict(set)
-    for results in hmmscan_results:
-        for hsp in results.hsps:
-            results_by_id[hsp.query_id].add(HMMResult(hsp.hit_id, hsp.query_start,
-                                                      hsp.query_end, hsp.evalue,
-                                                      hsp.bitscore))
+    results_by_id = gather_by_query(hmmscan_results)
     refined_results = {}
     for cds, results in results_by_id.items():
         refined = sorted(list(results), key=lambda result: result.query_start)
-        #Only keep best hits for overlapping domains
-        refined = _strip_overlapping(refined, hmm_lengths)
         #Merge domain fragments which are really one domain
-        refined = _merge_domain_list(refined, hmm_lengths)
+        refined = _merge_domain_list(refined)
+        #Only keep best hits for overlapping domains
+        refined = _remove_overlapping(refined, hmm_lengths)
         #Remove incomplete domains (covering less than 60% of total domain hmm length)
         refined = _remove_incomplete(refined, hmm_lengths)
-
-        refined_results[cds] = refined
+        if refined:
+            refined_results[cds] = refined
 
     return refined_results
