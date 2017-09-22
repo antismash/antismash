@@ -309,7 +309,8 @@ class GeneFunction(Enum):
 
 class CDSFeature(Feature):
     __slots__ = ["_translation", "protein_id", "locus_tag", "gene", "product",
-                 "transl_table", "_sec_met", "aSProdPred", "cluster", "_gene_function"]
+                 "transl_table", "_sec_met", "aSProdPred", "cluster", "_gene_function",
+                 "unique_id"]
     _counter = 0
     def __init__(self, location, translation=None, locus_tag=None, protein_id=None,
                  product=None, gene=None):
@@ -346,6 +347,7 @@ class CDSFeature(Feature):
 
         # runtime-only data
         self.cluster = None
+        self.unique_id = None # set only when added to a record
 
     @property
     def gene_function(self):
