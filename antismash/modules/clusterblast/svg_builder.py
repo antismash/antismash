@@ -168,30 +168,10 @@ class Gene:
         self.strand *= -1
 
     def get_start(self):
-        if self.reversed:
-            return max([self.start, self.end])
         return min([self.start, self.end])
 
     def get_end(self):
-        if self.reversed:
-            return min([self.start, self.end])
         return max([self.start, self.end])
-
-    def get_block_polygon(self, start, end, base=35, height=10, colour="white"):
-        builder = ShapeBuilder()
-        points = []
-        for x in [start, end]:
-            for y in [base, base + height]:
-                points.append((x, y))
-        block = builder.createPolygon(strokewidth=1, stroke='black', fill=colour,
-                            points=builder.convertTupleArrayToPoints(points))
-        locus_tag = self.name
-        if self.protein:
-            locus_tag = self.protein.get_id()
-        block.setAttribute('description', self._get_description())
-        block.setAttribute('locus_tag', locus_tag)
-        block.set_class('clusterblast-orf')
-        return block
 
     def _get_description(self):
         description = ['%s[br]Location: %s - %s' % (self.label, self.start, self.end)]
@@ -200,14 +180,13 @@ class Gene:
         return "".join(description)
 
     def get_arrow_polygon(self, scaling=1., offset=0, base=35, height=10, colour="white"):
-        start = int((self.get_start() + offset) * scaling)
-        end = int((self.get_end() + offset) * scaling)
         if self.reversed:
             start = int((offset - self.get_start()) * scaling)
             end = int((offset - self.get_end()) * scaling)
-
-        if not self.strand:
-            return self.get_block_polygon(start, end, height)
+        else:
+            start = int((self.get_start() + offset) * scaling)
+            end = int((self.get_end() + offset) * scaling)
+        start, end = sorted([start, end])
 
         builder = ShapeBuilder()
         arrow_size = height // 2
@@ -279,7 +258,7 @@ class Cluster:
         desc = self.description
         if len(desc) > 80:
             desc = desc[77] + "..."
-        #return desc + " %d/%d genes hit" % (self.num_hits, len(self.genes))
+        #return desc + " %d/%d genes hit" % (self.num_hits, len(self.genes)) #TODO
         return "%s (%d%% of genes show similarity)" % (desc, self.unique_hit_count * 100 / len(self.genes))
 
     def reverse_strand(self):
@@ -287,6 +266,7 @@ class Cluster:
         self.overall_strand *= -1
         for gene in self.genes:
             gene.reverse()
+        self.genes.reverse() # to ensure always drawing from left to right
 
     def __len__(self):
         return abs(self.start - self.end)
@@ -317,11 +297,11 @@ class Cluster:
                                                    10 + (screenwidth * 0.75), line_y,
                                                    strokewidth=1, stroke="grey"))
         groups.append(group)
-        #Add gene arrows
+        # Add gene arrows
         arrow_y = line_y + 5
         offset = h_offset - self.start
         if self.reversed:
-            offset = h_offset + self.end + self.start
+            offset = h_offset + self.end
         for i, gene in enumerate(self.genes):
             group = Group()
             arrow = gene.get_arrow_polygon(scaling=scaling, offset=offset,
@@ -388,15 +368,18 @@ class ClusterSVGBuilder:
         self.hits = []
         record_prefix = cluster_feature.parent_record.id.split(".", 1)[0]
         num_added = 0
-        limit = Config().cb_nclusters
+        cluster_limit = Config().cb_nclusters
+        queries = set()
         for cluster, score in ranking:
             if record_prefix == cluster.accession.split("_", 1)[0]:
                 continue
+            # determine overall strand direction of hits
             hit_genes = set()
             strand = 0
-            for _, subject in score.scored_pairings:
+            for query, subject in score.scored_pairings:
                 if subject.name in hit_genes:
                     continue
+                queries.add(query.id)
                 hit_genes.add(subject.name)
                 if subject.strand == "+":
                     strand += 1
@@ -409,8 +392,18 @@ class ClusterSVGBuilder:
             cluster = Cluster.from_reference_cluster(cluster, query_cluster_number, score, reference_proteins, num_added + 1, len(hit_genes), strand)
             self.hits.append(cluster)
             num_added += 1
-            if num_added >= limit:
+            # obey the cluster display limit from options
+            if num_added >= cluster_limit:
                 break
+        # update the query strand overall direction now that we know which
+        # genes were hit, defaults to 1
+        overall_query_strand = 0
+        for cds in cluster_feature.cds_children:
+            if cds.get_accession() in queries:
+                overall_query_strand += cds.location.strand
+        if overall_query_strand < 0:
+            self.query_cluster.overall_strand = -1
+
         self.max_length = self._size_of_largest_cluster()
         self._organise_strands()
 
