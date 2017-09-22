@@ -259,6 +259,7 @@ class Cluster:
         self.ref_cluster_number = ref_cluster_number
         self.accession = accession
         self.description = description.replace("_", " ")
+        genes = list(genes)
         if isinstance(genes[0], Feature):
             genes = [Gene.from_feature(gene) for gene in genes]
         elif isinstance(genes[0], Protein):

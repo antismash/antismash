@@ -521,7 +521,7 @@ class Cluster(Feature):
 
         # for runtime management
         self.parent_record = None
-        self.cds_children = []
+        self.cds_children = set()
         self.borders = []
 
     def get_cluster_number(self):
@@ -531,9 +531,8 @@ class Cluster(Feature):
 
     def add_cds(self, cds):
         assert isinstance(cds, CDSFeature)
-        assert cds.location.start in self.location \
-            or cds.location.end in self.location
-        self.cds_children.append(cds)
+        assert cds.is_contained_by(self), "cds %s outside cluster %s" % (cds, self)
+        self.cds_children.add(cds)
 
     @property
     def cutoff(self):

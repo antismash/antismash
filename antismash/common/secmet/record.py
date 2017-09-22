@@ -288,9 +288,8 @@ class Record:
         left = bisect.bisect_left(self._clusters, cds)
         right = bisect.bisect_right(self._clusters, cds, lo=left)
         for cluster in self._clusters[left - 1:right + 1]:
-            if cds.overlaps_with(cluster):
-                if cds not in cluster.cds_children: # TODO: fix performance
-                    cluster.cds_children.append(cds)
+            if cds.is_contained_by(cluster):
+                cluster.add_cds(cds)
                 cds.cluster = cluster
 
     def _link_cluster_to_cds_features(self, cluster):
@@ -299,14 +298,14 @@ class Record:
         index = bisect.bisect_left(self._cds_features, cluster)
         # move backwards until we find one that doesn't overlap
         cluster_start = cluster.location.start
-        while index >= 1 and self._cds_features[index - 1].location.end > cluster_start:
+        while index >= 1 and self._cds_features[index - 1].is_contained_by(cluster):
             index -= 1
         # move forwards, adding to the cluster until a cds doesn't overlap
         while index < len(self._cds_features):
             cds = self._cds_features[index]
-            if not cds.overlaps_with(cluster):
+            if not cds.is_contained_by(cluster):
                 break
-            cluster.cds_children.append(cds)
+            cluster.add_cds(cds)
             cds.cluster = cluster # TODO: allow for multiple parent clusters
             index += 1
 
