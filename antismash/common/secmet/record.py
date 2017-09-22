@@ -221,6 +221,7 @@ class Record:
         if cds_feature.get_accession() in self._cds_mapping:
             logging.critical("Multiple CDS features have the same accession for mapping")
         self._cds_mapping[cds_feature.get_accession()] = cds_feature
+        cds_feature.unique_id = self.id + str(cds_feature.location)
 
     def add_cds_motif(self, motif):
         """ Add the given cluster to the record """
