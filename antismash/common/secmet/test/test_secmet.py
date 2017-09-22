@@ -64,7 +64,7 @@ class TestRecord(unittest.TestCase):
         record = Record()
         for start, end in [(50, 100), (10, 90), (0, 9), (150, 200)]:
             record.add_cds_feature(helpers.DummyCDS(start, end))
-        for start, end in [(25, 120), (10, 90), (10, 140), (80, 140), (95, 190)]:
+        for start, end in [(10, 120), (5, 110), (10, 160), (45, 200)]:
             record.clear_clusters()
             cluster = helpers.DummyCluster(start, end)
             record.add_cluster(cluster)
