@@ -9,6 +9,7 @@ import Bio.SeqIO as seqio #helperlibs.bio.seqio as seqio
 from Bio.SeqFeature import ExactPosition, BeforePosition, AfterPosition, \
                            UnknownPosition, FeatureLocation, CompoundLocation, \
                            SeqFeature
+from helperlibs.wrappers.io import TemporaryDirectory
 
 import antismash.common.serialiser as serialiser
 from antismash.common.secmet import Record
@@ -122,11 +123,11 @@ class TestResultsJSON(unittest.TestCase):
         new = self.create_data_stream(new_results.records)
         oldvalue = original.getvalue()
         newvalue = new.getvalue()
-        open("old.json", "w").write(oldvalue)
-        open("new.json", "w").write(newvalue)
-        for oldline, newline in zip(oldvalue.split('\n'), newvalue.split('\n')):
-            assert oldline == newline
-        return
+        with TemporaryDirectory(change=True):
+            open("old.json", "w").write(oldvalue)
+            open("new.json", "w").write(newvalue)
+            for oldline, newline in zip(oldvalue.split('\n'), newvalue.split('\n')):
+                assert oldline == newline
 
 
 class TestFeatureSerialiser(unittest.TestCase):
