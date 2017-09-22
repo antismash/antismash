@@ -111,6 +111,11 @@ class SMCOGResults(ModuleResults):
                 feature.notes.append("smCOG tree PNG image: smcogs/%s"  % self.tree_images[gene_id])
 
 def run_on_record(record, results, options):
+    relative_output_dir = os.path.join(options.output_dir, "smcogs")
+    smcogs_dir = os.path.abspath(relative_output_dir)
+    if not os.path.exists(smcogs_dir):
+        os.mkdir(smcogs_dir)
+
     if not results:
         results = SMCOGResults(record.id)
 
@@ -126,12 +131,7 @@ def run_on_record(record, results, options):
 
     if not results.tree_images and options.smcogs_trees:
         # create the smcogs output directory if required
-        results.relative_tree_path = os.path.join(options.output_dir, "smcogs")
-
-        smcogs_dir = os.path.abspath(results.relative_tree_path)
-        if not os.path.exists(smcogs_dir):
-            os.mkdir(smcogs_dir)
-
+        results.relative_tree_path = relative_output_dir
         original_dir = os.getcwd()
         os.chdir(smcogs_dir)  #TODO make a context manager
         nrpspks_genes = deprecated.get_pksnrps_cds_features(record)
