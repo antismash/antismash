@@ -274,7 +274,8 @@ def run_antismash(sequence_file, options, detection_modules=None,
 
     # Write results
     # TODO: include status logging, zipping, etc
-    json_filename = "temp.json"
+    json_filename = os.path.join(options.output_dir, results.input_file)
+    json_filename = os.path.splitext(json_filename)[0] + ".json"
     logging.debug("Writing json results to '%s'", json_filename)
     results.write_to_file(json_filename)
 
