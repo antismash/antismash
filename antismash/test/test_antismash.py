@@ -9,7 +9,7 @@ from antismash.config.args import build_parser
 class TestAntismash(unittest.TestCase):
     def setUp(self):
         self.all_modules = get_detection_modules() + get_analysis_modules()
-        self.default_options = build_parser(modules=self.all_modules).parse_args()
+        self.default_options = build_parser(modules=self.all_modules).parse_args([])
 
     def test_default_options(self):
         # default options should work with all normal modules
