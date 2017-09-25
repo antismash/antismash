@@ -199,6 +199,23 @@ def read_data(sequence_file, options):
     options.__dict__["output_dir"] = os.path.abspath(os.path.splitext(results.input_file)[0])
     return results
 
+def check_prerequisites(modules):
+    for module in modules:
+        logging.debug("Checking prerequisites for %s", module.__name__)
+        res = module.check_prereqs()
+        if res:
+            raise RuntimeError("Module failing prerequisite check: %s %s" %(
+                            module.__name__, res))
+
+def list_plugins(modules):
+    print("Available plugins")
+    max_name = 0
+    for module in modules:
+        max_name = max(max_name, len(module.NAME))
+    format_string = " %-{}s:  %s".format(max_name)
+    for module in modules:
+        print(format_string % (module.NAME, module.SHORT_DESCRIPTION))
+
 def run_antismash(sequence_file, options, detection_modules=None,
                   analysis_modules=None):
     logfile = options.logfile if 'logfile' in options else None
@@ -211,9 +228,20 @@ def run_antismash(sequence_file, options, detection_modules=None,
     if analysis_modules is None:
         analysis_modules = get_analysis_modules()
 
-    options.all_enabled_modules = [module for module in detection_modules + analysis_modules if module.is_enabled(options)]
+    modules = detection_modules + analysis_modules
+
+    if options.list_plugins:
+        list_plugins(modules)
+        return 0
+
+    options.all_enabled_modules = [module for module in modules if module.is_enabled(options)]
     options = Config(options)
     loader.update_config_from_file() # TODO move earlier to run_antismash?
+
+    check_prerequisites(modules)
+    if options.check_prereqs_only:
+        print("All prerequisites satisfied")
+        return 0
 
     # start up profiling if relevant
     if options.profile:
@@ -224,12 +252,6 @@ def run_antismash(sequence_file, options, detection_modules=None,
     if not verify_options(options, analysis_modules + detection_modules):
         return 1
 
-    for module in detection_modules + analysis_modules:
-        logging.debug("Checking prerequisites for %s", module.__name__)
-        res = module.check_prereqs()
-        if res:
-            raise RuntimeError("Module failing prerequisite check: %s %s" %(
-                            module.__name__, res))
 
     # check that at least one module will run
     if not any(module.is_enabled(options) for module in detection_modules + analysis_modules):

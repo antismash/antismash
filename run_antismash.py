@@ -60,7 +60,8 @@ def main(args):
     if len(options.sequences) > 1:
         parser.error("Only one sequence file should be provided")
         return 1
-    if len(options.sequences) < 1 and not options.reuse_results:
+    if len(options.sequences) < 1 and not options.reuse_results \
+            and not options.check_prereqs_only and not options.list_plugins:
         parser.error("One of an input file or --reuse-results must be specified")
         return 1
     if options.sequences and options.reuse_results:

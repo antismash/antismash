@@ -19,6 +19,9 @@ SHORT_DESCRIPTION = "HTML output"
 def get_arguments():
     return ModuleArgs("Output options", "html", enabled_by_default=True)
 
+def check_options(options):
+    return []
+
 def is_enabled(options):
     return True #TODO: add an arg to disable
 
