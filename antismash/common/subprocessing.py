@@ -3,7 +3,7 @@
 
 from io import StringIO
 import logging
-from multiprocessing import Process, Pool, TimeoutError
+from multiprocessing import Pool, TimeoutError
 import os
 from subprocess import PIPE, Popen, TimeoutExpired
 
@@ -22,20 +22,18 @@ class RunResult:
         self.command = command
         self.stdout_piped = piped_out
         self.stderr_piped = piped_err
-        self.stdout = ""
-        self.stderr = ""
         if piped_out:
             self.stdout = stdout.decode()
         if piped_err:
             self.stderr = stderr.decode()
         self.return_code = return_code
 
-    def __getattr__(self, attr):
+    def __getattribute__(self, attr):
         if attr == 'stdout' and not self.stdout_piped:
             raise ValueError("stdout was redirected to file, unable to access")
         if attr == 'stderr' and not self.stderr_piped:
-            raise ValueError("stdout was redirected to file, unable to access")
-        return self.__dict__[attr]
+            raise ValueError("stderr was redirected to file, unable to access")
+        return super().__getattribute__(attr)
 
     def successful(self) -> int:
         return not self.return_code
@@ -64,54 +62,12 @@ def execute(commands, stdin=None, stdout=PIPE, stderr=PIPE, timeout=None) -> Run
     return RunResult(commands, out, err, proc.returncode, stdout == PIPE,
                      stderr == PIPE)
 
-def parallel_function_prechunked(function, args_list, timeout=None) -> None:
-    """ Runs the given function in parallel, using as many cores as there are
-        sublists in args_list.
-
-        Work should already be divided into equal chunks.
-
-        Uses separate processes so all args are effectively immutable.
-
-        Returns None
-    """
-    # ensure our args are sane
-    try:
-        assert isinstance(args_list, list)
-        for args in args_list:
-            assert args is None or isinstance(args, list)
-    except AssertionError:
-        raise TypeError("args_list must be given as a list of lists of args")
-
-    # create the children
-    children = []
-    for args in args_list:
-        child = Process(target=function, args=args)
-        child.start()
-        children.append(child)
-
-    # wait for them to die or kill them if they timeout
-    timeouts = False
-    errors = False
-
-    for child in children:
-        child.join(timeout)
-        if timeout and child.exitcode is None:
-            child.terminate()
-            child.join(1)
-            timeouts = True
-        elif child.exitcode:
-            errors = True
-        else:
-            child.terminate()
-            child.join(1)
-
-    # report any problems
-    if timeouts:
-        raise RuntimeError("Timeout in parallel function:", function)
-    elif errors:
-        raise RuntimeError("Errors in parallel function:", function)
-
 def _helper(args):
+    """ Needed for parallel_function to split function to call and args.
+
+        Since functions passed to parallel_function can't be locally defined,
+        this has to be declared here
+    """
     return args[0](*args[1:])
 
 def parallel_function(function, args, cpus=None, timeout=None) -> list:
@@ -151,19 +107,20 @@ def parallel_function(function, args, cpus=None, timeout=None) -> list:
     return results
 
 
-def parallel_execute(commands, cpus=None):
+def child_process(command):
+    """ Called by multiprocessing's map or map_async method, cannot be locally
+        defined """
+    try:
+        logging.debug("Calling %s", " ".join(command))
+        return execute(command).return_code
+    except KeyboardInterrupt:
+        #  Need to raise some runtime error that is not KeyboardInterrupt, because Python has a bug there
+        raise RuntimeError("Killed by keyboard interrupt")
+    return -1
+
+def parallel_execute(commands, cpus=None, timeout=None):
     """ Limited return vals, only returns return codes
     """
-    def child_process(command):
-        """Called by multiprocessing's map or map_async method"""
-        try:
-            logging.debug("Calling %s", " ".join(command))
-            return execute(command).return_code
-        except KeyboardInterrupt:
-            #  Need to raise some runtime error that is not KeyboardInterrupt, because Python has a bug there
-            raise RuntimeError("Killed by keyboard interrupt")
-        return -1
-
     os.setpgid(0, 0)
     if not cpus:
         cpus = Config().cpus
@@ -171,10 +128,13 @@ def parallel_execute(commands, cpus=None):
     jobs = p.map_async(child_process, commands)
 
     try:
-        errors = jobs.get()
+        errors = jobs.get(timeout=timeout)
+    except TimeoutError:
+        raise RuntimeError("One of %d child processes timed out after %d seconds" % (
+                cpus, timeout))
     except KeyboardInterrupt:
         logging.error("Interrupted by user")
-#        os.killpg(os.getpid(), signal.SIGTERM)
+        p.terminate()
         raise
 
     p.close()
