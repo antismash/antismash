@@ -31,9 +31,10 @@ def load_cog_annotations():
     return annotations
 
 def write_smcogs_file(hmm_results, cds_features, nrpspks_genes, options):
-    nrpspks_names = set([feature.get_name() for feature in nrpspks_genes])
+    nrpspks_names = set(feature.get_name() for feature in nrpspks_genes)
+    #TODO don't overwrite with multiple records
     smcogfile = open(os.path.join(options.output_dir, "smcogs", "smcogs.txt"), "w")
-    for feature in cds_features:
+    for feature in sorted(cds_features, key=lambda feat: feat.location.start):
         gene_id = feature.get_name()
         if gene_id in nrpspks_names:
             continue
