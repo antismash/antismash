@@ -15,9 +15,11 @@ class DummyFeature(Feature):
         super().__init__(FeatureLocation(start, end, strand), feature_type="none")
 
 class DummyCDS(CDSFeature):
+    counter = 0
     def __init__(self, start, end, strand=1):
         trans = "dummy_translation"
-        locus_tag = "dummy_locus_tag"
+        locus_tag = "dummy_locus_tag_%d" % DummyCDS.counter
+        DummyCDS.counter += 1
         super().__init__(FeatureLocation(start, end, strand), translation=trans,
                          locus_tag=locus_tag)
 

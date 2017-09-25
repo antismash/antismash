@@ -1,0 +1,42 @@
+>> nisB
+name	start	end	e-value	score
+** smCOG hits **
+SMCOG1155:Lantibiotic_dehydratase_domain_protein	13	991	3.6e-260	859.9
+
+
+>> nisT
+name	start	end	e-value	score
+** smCOG hits **
+SMCOG1000:ABC_transporter_ATP-binding_protein	352	577	9.5e-50	163.7
+
+
+>> nisC
+name	start	end	e-value	score
+** smCOG hits **
+SMCOG1140:Lanthionine_synthetase_C_family_protein	11	403	2.6e-102	337.0
+
+
+>> nisP
+name	start	end	e-value	score
+** smCOG hits **
+SMCOG1075:alkaline_serine_protease,_subtilase_family	62	555	1.2e-75	249.7
+
+
+>> nisR
+name	start	end	e-value	score
+** smCOG hits **
+SMCOG1008:response_regulator	3	226	6.6e-55	180.3
+
+
+>> nisK
+name	start	end	e-value	score
+** smCOG hits **
+SMCOG1003:sensor_histidine_kinase	228	445	5e-31	102.5
+
+
+>> nisF
+name	start	end	e-value	score
+** smCOG hits **
+SMCOG1000:ABC_transporter_ATP-binding_protein	3	202	8.2e-53	173.7
+
+
