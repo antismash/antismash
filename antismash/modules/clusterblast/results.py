@@ -153,9 +153,9 @@ class GeneralResults(ModuleResults):
         if "mibig_entries" in json:
             entries = {}
             for cluster_number, proteins in json["mibig_entries"].items():
-                entries[cluster_number] = {}
+                entries[int(cluster_number)] = {}
                 for protein, protein_entries in proteins.items():
-                    entries[cluster_number][protein] = [MibigEntry(*entry) for entry in protein_entries]
+                    entries[int(cluster_number)][protein] = [MibigEntry(*entry) for entry in protein_entries]
             result.mibig_entries = entries
         return result
 

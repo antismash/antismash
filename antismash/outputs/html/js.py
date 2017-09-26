@@ -159,7 +159,7 @@ def get_description(record, feature, type_, options, mibig_result):
     if feature.sec_met:
         template += '<span class="bold">Signature pHMM hits:</span><br>\n%(model_details)s<br>\n'
 
-    if options.cb_knownclusters and mibig_result:
+    if mibig_result:
         cluster_number = feature.cluster.get_cluster_number()
         mibig_homology_file = os.path.join(options.output_dir, "knownclusterblast",
                                          "cluster%d" % cluster_number,
