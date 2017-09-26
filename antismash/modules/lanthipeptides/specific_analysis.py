@@ -20,7 +20,6 @@ from antismash.modules.hmm_detection.signatures import HmmSignature #TODO shift 
 from antismash.common import deprecated, path, subprocessing, secmet, module_results, serialiser
 from antismash.config import get_config as get_global_config
 
-from .svm_lanthi import svm_classify
 from .config import get_config as get_lanthi_config
 
 KNOWN_PRECURSOR_DOMAINS = set([
@@ -425,27 +424,14 @@ def run_rodeo_svm(csv_columns):
     """Run RODEO SVM"""
     classifier_path = path.get_full_path(__file__, "data", "lanthipeptide.classifier.pkl")
     scaler_path = path.get_full_path(__file__, "data", "lanthipeptide.scaler.pkl")
-    if os.path.exists(classifier_path) and os.path.exists(scaler_path):
-        classifier = joblib.load(classifier_path)
-        scaler = joblib.load(scaler_path)
-        csv_cols = [[float(i) for i in csv_columns[2:]]]
-        scaled = scaler.transform(csv_cols)
-        if int(classifier.predict(scaled)[0]) == 1:
-            return 10
-        return 0
-
-    input_training_file = path.get_full_path(__file__, 'svm_lanthi', 'training_set.csv')         # the CSV containing the training set
-    with TemporaryFile() as input_fitting_file:
-        out_file = open(input_fitting_file.name, "w")
-        out_file.write('PK,Classification,F?LD,S????C,T????C,S?????C,T?????C,Within 500 nt?,Cluster contains PF04738,Cluster contains PF05147,Cluster LACKS PF04738,Cluster LACKS PF05147,Cluster contains PF14028,Cluster contains PF00082,Cluster contains PF03412,Cluster contains PF00005,Cluster contains PF02624,Cluster contains PF00899,Cluster contains PF02052,Cluster contains PF08130,Precursor mass < 4000,Core mass < 2000,Peptide hits cl03420 (Gallidermin),Peptide hits TIGR03731 (lantibio_gallid),Peptide hits cl22812 (lanti_SCO0268),Peptide hits TIGR04363 (LD_lanti_pre),Peptide hits cl06940 (Antimicrobial18),Peptide hits PF02052 (Gallidermin),Peptide hits PF08130 (Antimicrobial18),Precursor peptide mass (unmodified),Leader peptide mass (unmodified),Core peptide mass (unmodified),Length of Leader,Length of Core,Length of precursor,Leader / core ratio,Core >= 35,Has repeating C motifs (not in last 3 residues),Leader > 4 neg charge motifs,Leader net neg charge,Leader FxLD,C-terminal CC,core DGCGxTC motif,core SFNS motif,core SxxLC motif,core CTxGC motif,core TPGC motif,core SFNS?C,Core Cys <3,Core Cys <2,No Core Cys residues,No Core Ser residues,No Core Thr residues,LS max >4,LS max <3,LS 4-membered ring >2,LS 5-membered ring >2,LS 6-membered ring,LS 7-membered ring,LS 8-membered ring,MEME/FIMO motif,LS max ring number,LS lan4,LS lan5,LS lan6,LS lan7,LS lan8,Ratio of Cys to sum of Ser/Thr,Ratio of Cys/Ser/Thr to len of core,Log10 MEME/FIMO score,log10 MEME motif 1,MEME motif 2,MEME motif 3,MEME motif 4,MEME motif 5,A,R,D,N,C,Q,E,G,H,I,L,K,M,F,P,S,T,W,Y,V,Aromatics,Neg charged,Pos charged,Charged,Aliphatic,Hydroxyl,A,R,D,N,C,Q,E,G,H,I,L,K,M,F,P,S,T,W,Y,V,Aromatics,Neg charged,Pos charged,Charged,Aliphatic,Hydroxyl,A,R,D,N,C,Q,E,G,H,I,L,K,M,F,P,S,T,W,Y,V,Aromatics,Neg charged,Pos charged,Charged,Aliphatic,Hydroxyl\n')
-        out_file.write(",".join([str(item) for item in csv_columns]))
-        out_file.close()
-        with TemporaryFile() as output_filename:
-            svm_classify.classify_peptide(input_training_file, input_fitting_file.name, output_filename.name)
-            output = open(output_filename.name, "r").read()
-            if output.strip().partition(",")[2] == "1":
-                return 10
-            return 0
+    assert os.path.exists(classifier_path) and os.path.exists(scaler_path)
+    classifier = joblib.load(classifier_path)
+    scaler = joblib.load(scaler_path)
+    csv_cols = [[float(i) for i in csv_columns[2:]]]
+    scaled = scaler.transform(csv_cols)
+    if int(classifier.predict(scaled)[0]) == 1:
+        return 10
+    return 0
 
 def run_rodeo(seq_record, query, leader, core, domains):
     """Run RODEO heuristics + SVM to assess precursor peptide candidate"""

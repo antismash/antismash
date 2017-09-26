@@ -77,7 +77,6 @@ sklearn_int_versions = list(map(int, sklearn.__version__.split('.')))
 if sklearn_int_versions[0] == 0 and sklearn_int_versions[1] < 17:
     class_weight_option = 'auto'
 
-
 def parse_CSV_to_dataset(csv_filename, dataset_type):
     '''Parse an input CSV into a data set
 
@@ -119,10 +118,40 @@ def write_to_csv(list_of_primary_keys, list_of_classifications, output_filename)
         csv_write.writerow(temp_row)
     return
 
-def classify_peptide(input_training_file, input_fitting_file, output_filename, save_classifier=True):
+def save_classifier(training_file, save_prefix,
+                     kernel=kernel_option,
+                     C=C_option, gamma=gamma_option):
+    # parse data
+    training_data_unrefined = parse_CSV_to_dataset(training_file, 'training')
+
+    training_data_just_features = []
+    training_data_classifications = []
+
+    for entry in training_data_unrefined:
+        training_data_classifications.append(entry.pop(1))
+        entry.pop(0)
+        training_data_just_features.append(entry)
+
+    # Scaling -- this ensures standardization of model and target data
+    training_data_refined = preprocessing.scale(training_data_just_features)
+    scaler = preprocessing.StandardScaler().fit(training_data_refined)
+    training_data_refined = scaler.transform(training_data_just_features)
+    # This creates the classifier and learns using the model data
+    clf = svm.SVC(kernel=kernel, class_weight=class_weight_option, C=C, gamma=gamma)
+
+    clf.fit(training_data_refined, training_data_classifications)
+
+    joblib.dump(scaler, "%s.scaler.pkl" % save_prefix)
+    joblib.dump(clf, "%s.classifier.pkl" % save_prefix)
+
+    # read back with: scaler = joblib.load("%s.scaler.pkl" % save_prefix)
+    # and: clf = joblib.load("%s.classifier.pkl" % save_prefix)
+
+
+
+def classify_peptide(input_training_file, input_fitting_file, output_filename):
 
     # parse data
-
     training_data_unrefined = parse_CSV_to_dataset(input_training_file, 'training')
     fitting_data_unrefined = parse_CSV_to_dataset(input_fitting_file, 'fitting')
 
@@ -145,24 +174,12 @@ def classify_peptide(input_training_file, input_fitting_file, output_filename, s
     scaler = preprocessing.StandardScaler().fit(training_data_refined)
     training_data_refined = scaler.transform(training_data_just_features)
     fitting_data_refined = scaler.transform(fitting_data_just_features)
-    import time
-    start = time.time()
     # This creates the classifier and learns using the model data
     clf = svm.SVC(kernel=kernel_option,class_weight=class_weight_option,C=C_option,gamma=gamma_option)
     clf.fit(training_data_refined, training_data_classifications)
-    if save_classifier:
-        joblib.dump(scaler, "lanthipeptide.scaler.pkl")
-        joblib.dump(clf, "lanthipeptide.classifier.pkl")
 
     # This classifies the input data as a list
     classification_list = clf.predict(fitting_data_refined)
-
-    if save_classifier:
-        start = time.time()
-        scaler2 = joblib.load("lanthipeptide.scaler.pkl")
-        clf2 = joblib.load("lanthipeptide.classifier.pkl")
-        refined = scaler2.transform(fitting_data_unrefined)
-        assert list(classification_list) == list(clf2.predict(refined))
 
     # Output results to file
     write_to_csv(primary_key_list, classification_list, output_filename)
