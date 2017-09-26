@@ -3,7 +3,7 @@
 
 from io import StringIO
 import logging
-from multiprocessing import Pool, TimeoutError
+import multiprocessing
 import os
 from subprocess import PIPE, Popen, TimeoutExpired
 
@@ -90,14 +90,14 @@ def parallel_function(function, args, cpus=None, timeout=None) -> list:
 
     if not cpus:
         cpus = Config().cpus
-    p = Pool(cpus)
+    p = multiprocessing.Pool(cpus)
     jobs = p.map_async(_helper, ([function] + arglist for arglist in args))
 
     timeouts = False
 
     try:
         results = jobs.get(timeout=timeout)
-    except TimeoutError:
+    except multiprocessing.TimeoutError:
         timeouts = True
     finally:
         p.terminate()
@@ -124,12 +124,12 @@ def parallel_execute(commands, cpus=None, timeout=None):
     os.setpgid(0, 0)
     if not cpus:
         cpus = Config().cpus
-    p = Pool(cpus)
+    p = multiprocessing.Pool(cpus)
     jobs = p.map_async(child_process, commands)
 
     try:
         errors = jobs.get(timeout=timeout)
-    except TimeoutError:
+    except multiprocessing.TimeoutError:
         raise RuntimeError("One of %d child processes timed out after %d seconds" % (
                 cpus, timeout))
     except KeyboardInterrupt:
@@ -198,7 +198,7 @@ def run_hmmpfam2(query_hmmfile, target_sequence): # TODO cleanup
         command = command[0:1] + command[3:]
 
     result = execute(command, stdin=target_sequence)
-    if result.return_code != 0:
+    if not result.successful():
         logging.debug('hmmpfam2 returned %d: %r while searching %r', result.return_code,
                         result.stderr, query_hmmfile)
         raise RuntimeError("hmmpfam2 problem while running %s", command)
@@ -210,7 +210,7 @@ def run_fimo_simple(query_motif_file, target_sequence): # TODO cleanup
     "Run FIMO"
     command = ["fimo", "--text", "--verbosity", "1", query_motif_file, target_sequence]
     result = execute(command)
-    if result.return_code != 0:
+    if not result.successful():
         logging.debug('FIMO returned %d: %r while searching %r', result.return_code,
                         result.stderr, query_motif_file)
         raise RuntimeError("FIMO problem while running %s... %s", command, result.stderr[-100:])
@@ -230,7 +230,7 @@ def run_hmmscan(target_hmmfile, query_sequence, opts=None, results_file=None):
         command.extend(opts)
     command.extend([target_hmmfile, '-'])
     result = execute(command, stdin=query_sequence)
-    if result.return_code:
+    if not result.successful():
         raise RuntimeError('hmmscan returned %d: %r while scanning %r',
                            result.return_code, result.stderr[-100:],
                            query_sequence[:100])
