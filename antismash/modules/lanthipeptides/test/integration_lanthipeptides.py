@@ -15,7 +15,7 @@ from antismash.config.args import Config, build_parser
 from antismash.modules import lanthipeptides
 from antismash.modules.lanthipeptides import specific_analysis, LanthiResults
 
-class IntegrationLantipeptides(unittest.TestCase):
+class IntegrationLanthipeptides(unittest.TestCase):
     def setUp(self):
         options = helpers.get_simple_options(lanthipeptides, [])
         options.without_fimo = False
