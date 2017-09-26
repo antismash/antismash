@@ -4,13 +4,13 @@
 import logging
 import os
 
-from antismash.config.args import Config
 from antismash.common.path import locate_executable
+from antismash.config import get_config
 from antismash.config.args import ModuleArgs
 from antismash.modules.genefinding.genefinding import run_on_record
 
 NAME = "genefinding"
-SHORT_DESCRIPTION = NAME.capitalize()
+SHORT_DESCRIPTION = "Genefinding with GlimmerHMM or Prodigal"
 
 def get_arguments():
     args = ModuleArgs('Gene finding options (ignored when ORFs are annotated)', 'genefinding')
@@ -32,7 +32,7 @@ def get_arguments():
 
 def check_prereqs():
     failure_messages = []
-    options = Config()
+    options = get_config()
     if options.genefinding_tool in ['none', 'all-orfs']:
         return failure_messages
     binaries = []

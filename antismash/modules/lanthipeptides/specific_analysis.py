@@ -18,7 +18,7 @@ from sklearn.externals import joblib
 
 from antismash.modules.hmm_detection.signatures import HmmSignature #TODO shift into common
 from antismash.common import deprecated, path, subprocessing, secmet, module_results, serialiser
-from antismash.config.args import Config as get_global_config #TODO better import naming
+from antismash.config import get_config as get_global_config
 
 from .svm_lanthi import svm_classify
 from .config import get_config as get_lanthi_config

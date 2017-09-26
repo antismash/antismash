@@ -10,7 +10,7 @@ from helperlibs.wrappers.io import TemporaryDirectory
 import antismash.common.deprecated as utils
 import antismash.common.path as path
 import antismash.common.subprocessing as subprocessing
-from antismash.config.args import Config
+from antismash.config import get_config
 
 from .data_structures import Subject, Query, Protein, ReferenceCluster, Score
 
@@ -48,7 +48,7 @@ def make_blastdb(inputfile, dbname):
 
 def load_geneclusters(searchtype):
     #Load gene cluster database into memory
-    options = Config()
+    options = get_config()
     clusterblastdir = os.path.join(options.database_dir, 'clusterblast')
     subclusterblastdir = path.get_full_path(__file__, "data", "sub")
     knownclusterblastdir = path.get_full_path(__file__, "data", "known")
@@ -82,7 +82,7 @@ def load_geneclusters(searchtype):
     return clusters
 
 def load_geneclusterproteins(accessions, searchtype):
-    options = Config()
+    options = get_config()
     clusterblastdir = os.path.join(options.database_dir, 'clusterblast')
     subclusterblastdir = path.get_full_path(__file__, "data", "sub")
     knownclusterblastdir = path.get_full_path(__file__, "data", "known")

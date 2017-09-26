@@ -5,7 +5,7 @@ import os
 import unittest
 
 from antismash.config import loader
-from antismash.config.args import Config
+from antismash.config import update_config, get_config
 
 class TestLoader(unittest.TestCase):
     def setUp(self):
@@ -23,25 +23,25 @@ class TestLoader(unittest.TestCase):
         loader._BASEDIR = self.orig_basedir
         loader._USER_FILE_NAME = self.orig_user
         loader._INSTANCE_FILE_NAME = self.orig_instance
-        Config().__dict__.clear()
+        get_config().__dict__.clear()
 # pylint: enable=protected-access
 
     def test_simple(self):
-        assert not Config()
+        assert not get_config()
         loader.update_config_from_file()
-        assert len(Config()) == 2
-        assert Config().base == 'base_value'
-        assert Config().child.base == 'child_base_value'
-        assert Config().child.bool is False
+        assert len(get_config()) == 2
+        assert get_config().base == 'base_value'
+        assert get_config().child.base == 'child_base_value'
+        assert get_config().child.bool is False
 
     def test_override(self):
-        Config({'base' : 'other'})
-        assert Config().base == 'other'
+        update_config({'base' : 'other'})
+        assert get_config().base == 'other'
         loader.update_config_from_file()
-        assert Config().base == 'base_value'
+        assert get_config().base == 'base_value'
 
     def test_retaining(self):
-        Config({'other' : 'value'})
-        assert Config().other == 'value'
+        update_config({'other' : 'value'})
+        assert get_config().other == 'value'
         loader.update_config_from_file()
-        assert Config().other == 'value'
+        assert get_config().other == 'value'

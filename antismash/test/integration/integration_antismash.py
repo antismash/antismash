@@ -2,13 +2,13 @@
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
 import os
-import sys
 from tempfile import TemporaryDirectory
 import unittest
 
 
 from antismash.main import run_antismash, get_all_modules
-from antismash.config.args import build_parser, Config
+from antismash.config import get_config
+from antismash.config.args import build_parser
 
 class TestAntismash(unittest.TestCase):
     def setUp(self):
@@ -21,7 +21,7 @@ class TestAntismash(unittest.TestCase):
         self.default_options.output_dir = self.temp_dir.name
 
     def tearDown(self):
-        Config().__dict__.clear()
+        get_config().__dict__.clear()
         self.temp_dir.cleanup()
 
     def test_nisin_minimal(self):

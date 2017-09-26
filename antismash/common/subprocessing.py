@@ -15,7 +15,7 @@ with warnings.catch_warnings():
 
 from helperlibs.wrappers.io import TemporaryDirectory
 
-from antismash.config.args import Config
+from antismash.config import get_config
 
 class RunResult:
     def __init__(self, command, stdout, stderr, return_code, piped_out, piped_err):
@@ -89,7 +89,7 @@ def parallel_function(function, args, cpus=None, timeout=None) -> list:
     """
 
     if not cpus:
-        cpus = Config().cpus
+        cpus = get_config().cpus
     p = multiprocessing.Pool(cpus)
     jobs = p.map_async(_helper, ([function] + arglist for arglist in args))
 
@@ -123,7 +123,7 @@ def parallel_execute(commands, cpus=None, timeout=None):
     """
     os.setpgid(0, 0)
     if not cpus:
-        cpus = Config().cpus
+        cpus = get_config().cpus
     p = multiprocessing.Pool(cpus)
     jobs = p.map_async(child_process, commands)
 
@@ -143,7 +143,7 @@ def parallel_execute(commands, cpus=None, timeout=None):
 
 def run_hmmsearch(query_hmmfile, target_sequence, use_tempfile=False):
     "Run hmmsearch"
-    config = Config()
+    config = get_config()
     command = ["hmmsearch", "--cpu", str(config.cpus),
                "-o", os.devnull, # throw away the verbose output
                "--domtblout", "result.domtab",
@@ -188,7 +188,7 @@ def run_hmmpress(hmmfile):
 
 def run_hmmpfam2(query_hmmfile, target_sequence): # TODO cleanup
     "Run hmmpfam2"
-    config = Config()
+    config = get_config()
     command = ["hmmpfam2", "--cpu", str(config.cpus),
                query_hmmfile, '-']
 
@@ -218,7 +218,7 @@ def run_fimo_simple(query_motif_file, target_sequence): # TODO cleanup
 
 def run_hmmscan(target_hmmfile, query_sequence, opts=None, results_file=None):
     "Run hmmscan on the inputs and return a list of QueryResults"
-    config = Config()
+    config = get_config()
     command = ["hmmscan", "--cpu", str(config.cpus), "--nobias"]
 
     # Allow to disable multithreading for HMMer3 calls in the command line

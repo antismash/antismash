@@ -8,7 +8,8 @@ import os
 
 import antismash.common.deprecated as utils
 import antismash.common.path as path
-from antismash.config.args import ModuleArgs, Config
+from antismash.config import get_config
+from antismash.config.args import ModuleArgs
 
 from .core import load_clusterblast_database, internal_homology_blast
 from .clusterblast import perform_clusterblast
@@ -74,7 +75,7 @@ def check_previous_results(previous, record, options):
 
 def check_prereqs():
     "Check if all required applications are around"
-    options = Config()
+    options = get_config()
     # Tuple is ( binary_name, optional)
     _required_binaries = [
         ('blastp', False),
