@@ -310,9 +310,13 @@ class Record:
 
     def get_aa_translation_of_feature(self, feature):
         """Obtain content for translation qualifier for specific CDS feature in sequence record"""
-        seq = feature.extract(self.seq).ungap('-').translate(to_stop=True)
+        extracted = feature.extract(self.seq).ungap('-')
+        if len(extracted) % 3 != 0:
+            extracted = extracted[:-(len(extracted) % 3)]
+        seq = extracted.translate(to_stop=True)
         if not seq:
-            seq = feature.extract(self.seq).ungap('-').translate()
+            # go past stop codons and hope for something to work with
+            seq = extracted.translate()
         if "*" in str(seq):
             seq = Seq(str(seq).replace("*", "X"), Bio.Alphabet.generic_protein)
         if "-" in str(seq):

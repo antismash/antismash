@@ -381,12 +381,14 @@ class CDSFeature(Feature):
         self._translation = str(translation)
 
     def get_accession(self):
+        "Get the gene ID from protein id, gene name or locus_tag, in that order"
         for val in [self.protein_id, self.gene, self.locus_tag]:
             if val:
                 return val
         raise ValueError("%s altered to contain no identifiers" % self)
 
     def get_name(self):
+        "Get the gene ID from locus_tag, gene name or protein id, in that order"
         for val in [self.locus_tag, self.gene, self.protein_id]:
             if val:
                 return val

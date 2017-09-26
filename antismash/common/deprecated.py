@@ -33,16 +33,6 @@ def CODE_SKIP_WARNING():
             + linecache.getline(prev.f_code.co_filename, prev.f_lineno + 1).replace('%', '%%'))
 # end temp
 
-def get_all_features_of_type(seq_record, types):
-    "Return all features of the specified types for a seq_record"
-    logging.critical("utils.get_all_features_of_type() called")
-    raise RuntimeError("get_all_features_of_type(record, types) called, did you mean record.get_*()")
-
-def get_cds_features_within_clusters(seq_record):
-    raise RuntimeError("get_withincluster_cds_features(record) called, use record.get_cds_features_within_clusters()")
-
-def get_withincluster_cds_features(seq_record):
-    raise RuntimeError("get_withincluster_cds_features(record) called, use record.get_cds_features_within_clusters()")
 
 def parse_input_sequence(filename, options):
     "Parse the input sequences from given filename"
@@ -350,26 +340,12 @@ def add_translations(seq_records):
                         'and no nucleotide sequence provided to translate it from.', cdsfeature.id)
                 raise ValueError("Missing sequence info for CDS %r" % cdsfeature.id)
             try:
-                translation = str(get_aa_translation(seq_record, cdsfeature))
+                translation = str(seq_record.get_aa_translation_of_feature(cdsfeature))
             except Bio.Data.CodonTable.TranslationError as err:
                 logging.error('Getting amino acid sequences from %s, CDS %r failed: %s',
                         seq_record.name, cdsfeature.id, err)
                 raise
             cdsfeature.translation = translation
-
-def get_gene_id(feature):
-    "Get the gene ID from locus_tag, gene name or protein id, in that order"
-    logging.critical("using get_gene_id(feature), did you mean feature.get_name() or feature.unique_id")
-    return feature.get_name()
-#    gene_id = "no_tag_found"
-#    for label in ['locus_tag', 'gene', 'protein_id']:
-#        if hasattr(feature, label):
-#            value = getattr(feature, label)
-#            if value:
-#                gene_id = value
-#                break
-#    assert isinstance(gene_id, str), type(gene_id)
-#    return gene_id
 
 def add_seq_record_seq(seq_records):
     for seq_record in seq_records:
@@ -378,23 +354,6 @@ def add_seq_record_seq(seq_records):
             start_max = max([cds.location.start for cds in cds_features])
             end_max = max([cds.location.end for cds in cds_features])
             seq_record.seq = Seq(max([start_max, end_max]) * "n")
-
-def get_aa_translation(seq_record, feature):
-    """Obtain content for translation qualifier for specific CDS feature in sequence record"""
-    extracted = feature.extract(seq_record.seq).ungap('-')
-    if len(extracted) % 3 != 0:
-        extracted = extracted[:-(len(extracted) % 3)]
-    fasta_seq = extracted.translate(to_stop=True)
-    if not fasta_seq:
-        logging.debug("Retranslating feature at %s with stop codons", feature.location)
-        fasta_seq = extracted.translate()
-    if "*" in str(fasta_seq):
-        fasta_seq = Seq(str(fasta_seq).replace("*", "X"), Bio.Alphabet.generic_protein)
-    if "-" in str(fasta_seq):
-        fasta_seq = Seq(str(fasta_seq).replace("-", ""), Bio.Alphabet.generic_protein)
-
-    return fasta_seq
-
 
 def check_for_wgs_scaffolds(seq_records):
     for seq_record in seq_records:
@@ -447,10 +406,6 @@ def writefasta(names, seqs, filename):
         e += 1
     out_file.close()
 
-def get_cluster_cds_features(cluster, seq_record):
-    logging.critical("utils.get_cluster_cds_features() called")
-    raise RuntimeError("utils.get_cluster_cds_features(cluster) called, did you mean cluster.cds_children?")
-
 def strip_record(seq_record):
     """ Discard antismash specific features and feature qualifiers """
     seq_record.clear_clusters()
@@ -461,11 +416,6 @@ def strip_record(seq_record):
     # clean up antiSMASH annotations in CDS features
     for feature in seq_record.get_cds_features():
         feature.sec_met = None
-
-def sort_features(seq_record):
-    "Sort features in a seq_record by their position"
-    logging.critical("utils.sort_features() called")
-    raise RuntimeError("utils.sort_features(seq_record) called, did you mean sorted(seq_record.get_all_features())?")
 
 def fix_record_name_id(seq_record, all_record_ids, options):
     "Fix a seq record's name and id to be <= 16 characters, the GenBank limit; if record name is too long, add c000X prefix"
@@ -568,13 +518,6 @@ def ascii_string(inputstring):
     import string
     allowable = string.ascii_letters + string.digits + string.punctuation + string.whitespace
     return "".join([char for char in inputstring if char in allowable])
-
-def get_cluster_type(cluster):
-    "Get product type of a gene cluster"
-    raise RuntimeError("get_cluster_type(cluster) called, did you mean cluster.get_product_string() or cluster.products?")
-
-def get_cluster_by_nr(seq_record, queryclusternr):
-    raise RuntimeError("get_cluster_type(seq_record, cluster_num) called, did you mean seq_record.get_cluster(cluster_num)")
 
 def get_pksnrps_cds_features(seq_record):
     logging.critical("skipping get_pksnrps_cds_features(), missing PKSNRPS module")
@@ -731,12 +674,8 @@ def find_all_orfs(seq_record, cluster): # the old lassopeptides.find_all_orfs
         if skip:
             continue
         loc = orf
-#        feature = SeqFeature(location=loc, id=str(orf), type="CDS",
-#                    qualifiers={'locus_tag': ['cluster_%s_allorf%s%s' % (cluster.get_cluster_number(), "0" * (3 - len(str(orfnr))), str(orfnr))]})
-#        feature.qualifiers['note'] = ["auto-all-orf"]
-#        feature.qualifiers['translation'] = [str(utils.get_aa_translation(seq_record, feature))]
         dummy_feature = Feature(loc, feature_type="dummy")
-        feature = CDSFeature(loc, str(get_aa_translation(seq_record, dummy_feature)),
+        feature = CDSFeature(loc, str(seq_record.get_aa_translation_of_feature(dummy_feature)),
                              locus_tag='cluster_%s_allorf%03d' % (cluster.get_cluster_number(), orfnr))
         new_features.append(feature)
         orfnr += 1
@@ -755,9 +694,11 @@ def distance_to_pfam(seq_record, query, hmmer_profiles): #also from lassopeptide
         if query.location.start - nt <= cds.location.start <= query.location.end + nt or \
            query.location.start - nt <= cds.location.end <= query.location.end + nt:
             close_cds_features.append(cds)
-            distance[cds.get_name()] = min([abs(cds.location.start - query.location.end), \
-             abs(cds.location.end - query.location.start), abs(cds.location.start - query.location.start), \
-             abs(cds.location.end - query.location.end)])
+            distance[cds.get_name()] = min([
+                                abs(cds.location.start - query.location.end),
+                                abs(cds.location.end - query.location.start),
+                                abs(cds.location.start - query.location.start),
+                                abs(cds.location.end - query.location.end)])
     #For nearby CDS features, check if they have hits to the pHMM
     closest_distance = -1
     for cds in close_cds_features:
@@ -788,3 +729,32 @@ def hmmlengths(hmmfile):
         length = lengthpart.split("\n")[0]
         lengths[name] = int(length)
     return lengths
+
+# DEAD FUNCTIONS
+# these only exist so that the mapping to new functions is easier to do
+def get_all_features_of_type(_seq_record, _types):
+    raise RuntimeError("get_all_features_of_type(record, types) called, did you mean record.get_*()")
+
+def get_cds_features_within_clusters(_seq_record):
+    raise RuntimeError("get_withincluster_cds_features(record) called, use record.get_cds_features_within_clusters()")
+
+def get_withincluster_cds_features(_seq_record):
+    raise RuntimeError("get_withincluster_cds_features(record) called, use record.get_cds_features_within_clusters()")
+
+def get_gene_id(_feature):
+    raise RuntimeError("using get_gene_id(feature), did you mean feature.get_name() or feature.unique_id")
+
+def get_aa_translation(_seq_record, _feature):
+    raise RuntimeError("get_aa_translation(record, feature) called, use record.get_aa_translation(feature)")
+
+def get_cluster_type(_cluster):
+    raise RuntimeError("get_cluster_type(cluster) called, did you mean cluster.get_product_string() or cluster.products?")
+
+def get_cluster_by_nr(_seq_record, _queryclusternr):
+    raise RuntimeError("get_cluster_type(seq_record, cluster_num) called, did you mean seq_record.get_cluster(cluster_num)")
+
+def sort_features(_seq_record):
+    raise RuntimeError("utils.sort_features(seq_record) called, did you mean sorted(seq_record.get_all_features())?")
+
+def get_cluster_cds_features(_cluster, _seq_record):
+    raise RuntimeError("utils.get_cluster_cds_features(cluster) called, did you mean cluster.cds_children?")
