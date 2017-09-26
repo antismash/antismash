@@ -3,13 +3,11 @@
 
 "Test suite for gff_parser module"
 
-import os
 from unittest import TestCase
-from Bio.Seq import Seq
 from Bio.SeqFeature import CompoundLocation
 
-from antismash.common import deprecated, gff_parser, path
-from antismash.common.test.helpers import FakeRecord, FakeFeature, get_simple_options
+from antismash.common import gff_parser, path
+from antismash.common.test.helpers import FakeRecord, get_simple_options
 
 class GffParserTest(TestCase):
     def setUp(self):

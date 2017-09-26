@@ -68,10 +68,9 @@ def perform_knownclusterblast(options, seq_record, clusters, proteins):
             blastoutput = handle.read()
         write_raw_clusterblastoutput(options.output_dir, blastoutput,
                                      search_type="knownclusterblast")
-    minseqcoverage = 40
-    minpercidentity = 45
-    clusters_by_number, _ = parse_all_clusters(blastoutput, minseqcoverage,
-                                              minpercidentity, seq_record)
+    clusters_by_number, _ = parse_all_clusters(blastoutput, seq_record,
+                                               minseqcoverage=40,
+                                               minpercidentity=45)
 
     allcoregenes = seq_record.get_cds_features()
     for genecluster in seq_record.get_clusters():
@@ -84,19 +83,18 @@ def perform_knownclusterblast(options, seq_record, clusters, proteins):
 
         write_clusterblast_output(options, seq_record, cluster_result, proteins,
                                   searchtype="knownclusterblast")
-    results.mibig_entries = mibig_protein_homology(blastoutput, seq_record, clusters, options)
+    results.mibig_entries = mibig_protein_homology(blastoutput, seq_record, clusters)
     return results
 
 
-def mibig_protein_homology(blastoutput, seq_record, clusters, options):
+def mibig_protein_homology(blastoutput, seq_record, clusters):
     """ Constructs a mapping of gene to MiBiG hits
         Returns a dict of dicts of lists, accessed by:
             mibig_entries[cluster_number][gene_accession] = list of MibigEntry
     """
-    minseqcoverage = 20
-    minpercidentity = 20
-    _, queries_by_cluster = parse_all_clusters(blastoutput, minseqcoverage,
-                                               minpercidentity, seq_record)
+    _, queries_by_cluster = parse_all_clusters(blastoutput, seq_record,
+                                               minseqcoverage=20,
+                                               minpercidentity=20)
     mibig_entries = {}
 
     for cluster in seq_record.get_clusters():

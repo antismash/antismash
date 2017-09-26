@@ -6,13 +6,12 @@
    mostly for fungi/eukaryotes
 """
 
+from io import StringIO
 import logging
+
 from helperlibs.wrappers.io import TemporaryDirectory
 from helperlibs.bio import seqio
-from io import StringIO
-from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 
-from antismash.common import deprecated as utils
 from antismash.common import path
 from antismash.common.gff_parser import get_features_from_file
 from antismash.common.subprocessing import execute

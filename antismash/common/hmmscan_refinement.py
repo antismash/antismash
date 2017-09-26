@@ -27,7 +27,7 @@ def _remove_incomplete(domains, hmm_lengths, threshold=0.5, fallback=1./3.):
     complete = []
     for i in domains:
         domainlength = hmm_lengths[i.hit_id]
-        if len(i) > (0.5 * domainlength):
+        if len(i) > (threshold * domainlength):
             complete.append(i)
     if complete:
         return complete

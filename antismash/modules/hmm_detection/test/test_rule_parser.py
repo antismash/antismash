@@ -5,7 +5,9 @@ import unittest
 from minimock import mock, restore
 
 import antismash.modules.hmm_detection.rule_parser as rule_parser
+# pylint: disable=unused-import
 from antismash.modules.hmm_detection import signatures  # for mocking
+# pylint: enable=unused-import
 from antismash.modules.hmm_detection.test.test_hmm_detection import FakeFeature, FakeHSP, FakeRecord, FeatureLocation
 
 class DetectionTest(unittest.TestCase):

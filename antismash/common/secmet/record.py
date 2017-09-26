@@ -297,7 +297,6 @@ class Record:
         # quickly find the first cds with equal start
         index = bisect.bisect_left(self._cds_features, cluster)
         # move backwards until we find one that doesn't overlap
-        cluster_start = cluster.location.start
         while index >= 1 and self._cds_features[index - 1].is_contained_by(cluster):
             index -= 1
         # move forwards, adding to the cluster until a cds doesn't overlap

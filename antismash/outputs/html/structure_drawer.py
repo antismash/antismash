@@ -11,8 +11,8 @@ from helperlibs.wrappers.io import TemporaryDirectory
 import antismash.common.deprecated as utils
 import antismash.common.path as path
 
-from .indigo import Indigo
-from .indigo_renderer import IndigoRenderer
+from .external.indigo import Indigo
+from .external.indigo_renderer import IndigoRenderer
 
 def _update_sec_met_entry(clusterfeature, smiles_string):
     clusterfeature.qualifiers['structure'] = [smiles_string]

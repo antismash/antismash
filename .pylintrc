@@ -1,0 +1,12 @@
+[MASTER]
+ignore=external
+
+[TYPECHECK]
+ignored-classes=Config
+
+[FORMAT]
+max-line-length=120
+
+[VARIABLES]
+# unused imports in __init__.py are fine
+init-import=no

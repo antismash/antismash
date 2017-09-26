@@ -61,7 +61,7 @@ class TestBlastParsing(unittest.TestCase):
         self.assertEqual(sorted(subject_clusters), sorted(cluster_name_to_queries.keys()))
 
     def test_blastparse(self):
-        queries, clusters = core.blastparse(self.sample_data, 0, 0, Record())
+        queries, clusters = core.blastparse(self.sample_data, Record(), 0, 0)
 
         # check we process the right number of queries
         self.assertEqual(len(queries), len(set([i[0] for i in self.sample_data_as_lists])))
@@ -72,27 +72,27 @@ class TestBlastParsing(unittest.TestCase):
 
         # test perc_coverage threshold (value arbitrary due to mocking)
         coverage_threshold = 650
-        queries, clusters = core.blastparse(self.sample_data, coverage_threshold, 0, Record())
+        queries, clusters = core.blastparse(self.sample_data, Record(), coverage_threshold, 0)
         new_subjects = [s for s in subjects if s.perc_coverage > coverage_threshold]
         assert 0 < len(new_subjects) < len(subjects), "coverage test has become meaningless"
         self.verify_subjects_and_clusters_represented(new_subjects, clusters)
 
         # test perc_identity threshold
         ident_threshold = 35
-        queries, clusters = core.blastparse(self.sample_data, 0, ident_threshold, Record())
+        queries, clusters = core.blastparse(self.sample_data, Record(), 0, ident_threshold)
         new_subjects = [s for s in subjects if s.perc_ident > ident_threshold]
         assert 0 < len(new_subjects) < len(subjects), "identity% test has become meaningless"
         self.verify_subjects_and_clusters_represented(new_subjects, clusters)
 
         # test combo threshold
-        queries, clusters = core.blastparse(self.sample_data, coverage_threshold, ident_threshold, Record())
+        queries, clusters = core.blastparse(self.sample_data, Record(), coverage_threshold, ident_threshold)
         new_subjects = [s for s in subjects if s.perc_ident > ident_threshold and s.perc_coverage > coverage_threshold]
         assert 0 < len(new_subjects) < len(subjects), "combo test has become meaningless"
         self.verify_subjects_and_clusters_represented(new_subjects, clusters)
 
     def test_blastparse_on_empty(self):
         for blast in ["", "\n", "\r\n", "\n\n"]:
-            queries, clusters = core.blastparse(blast, 0, 0, Record())
+            queries, clusters = core.blastparse(blast, Record(), 0, 0)
             self.assertEqual(len(queries), 0)
             self.assertEqual(len(clusters), 0)
 
@@ -100,7 +100,7 @@ class TestBlastParsing(unittest.TestCase):
         # single cluster to test the thresholds and content
         def parse_all_wrapper(coverage_threshold, ident_threshold):
             clusters_by_number, queries_by_number = core.parse_all_clusters(self.sample_data,
-                                coverage_threshold, ident_threshold, Record())
+                                Record(), coverage_threshold, ident_threshold)
             # make sure we only found one cluster number
             self.assertEqual(len(clusters_by_number), 1)
             self.assertEqual(list(clusters_by_number.keys()), [24])
@@ -144,7 +144,7 @@ class TestBlastParsing(unittest.TestCase):
     def test_parse_all_multi_cluster(self):
         # test we partition correctly by cluster number
         sample_data = self.read_sample_data("data/diamond_output_sample_multicluster.txt")
-        clusters_by_number, queries_by_number = core.parse_all_clusters(sample_data, 0, 0, Record())
+        clusters_by_number, queries_by_number = core.parse_all_clusters(sample_data, Record(), 0, 0)
         self.assertEqual(len(clusters_by_number), 3)
         self.assertEqual(sorted(clusters_by_number.keys()), [1, 2, 4])
         self.assertEqual(len(queries_by_number), 3)
@@ -155,7 +155,7 @@ class TestBlastParsing(unittest.TestCase):
 
     def test_parse_all_empty(self):
         for sample_data in ["", "\n", "\r\n", "\n\n"]:
-            clusters, queries = core.parse_all_clusters(sample_data, 0, 0, Record())
+            clusters, queries = core.parse_all_clusters(sample_data, Record(), 0, 0)
         self.assertEqual(len(clusters), 0)
         self.assertEqual(len(queries), 0)
 

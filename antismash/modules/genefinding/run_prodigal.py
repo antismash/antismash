@@ -11,7 +11,6 @@ from helperlibs.wrappers.io import TemporaryDirectory
 from helperlibs.bio import seqio
 from Bio.SeqFeature import SeqFeature, FeatureLocation
 
-from antismash.common import deprecated as utils
 from antismash.common.subprocessing import execute
 
 def run_prodigal(seq_record, options):
