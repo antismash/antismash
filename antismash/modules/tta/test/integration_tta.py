@@ -26,7 +26,7 @@ class TtaIntegrationTest(unittest.TestCase):
         assert clusters
         for cluster in clusters:
             assert cluster.cds_children
-        assert deprecated.get_cds_features_within_clusters(record)
+        assert record.get_cds_features_within_clusters()
 
         assert tta.check_prereqs() == []
         assert tta.check_options(self.options) == []

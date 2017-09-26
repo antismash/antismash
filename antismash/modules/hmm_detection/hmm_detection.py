@@ -73,7 +73,7 @@ def find_clusters(seq_record, rules):
         edge = cluster.location.start == 0 or cluster.location.end == len(seq_record)
         cluster.contig_edge = edge
         seq_record.add_cluster(cluster)
-    logging.info("%d cluster(s) found in record" % len(clusters))
+    logging.info("%d cluster(s) found in record", len(clusters))
 
 def hsp_overlap_size(first, second):
     """ Find the size of an overlapping region of two HSPs.
@@ -417,7 +417,7 @@ def remove_irrelevant_allorfs(seq_record):
 def add_additional_nrpspks_genes(typedict, results_by_id, seq_record, nseqdict):
     nrpspksdomains = ["PKS_KS", "PKS_AT", "ATd", "ene_KS", "mod_KS", "hyb_KS",
                       "itr_KS", "tra_KS", "Condensation", "AMP-binding", "A-OX"]
-    clustercdsfeatures = utils.get_cds_features_within_clusters(seq_record)
+    clustercdsfeatures = seq_record.get_cds_features_within_clusters()
     othercds_with_results = []
     for cds in clustercdsfeatures:
         gene_id = cds.get_name()

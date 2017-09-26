@@ -209,7 +209,7 @@ def parse_all_clusters(blasttext, seq_record, minseqcoverage, minpercidentity):
                 backup to fetch sequence length if missing from seqlengths
     """
     seqlengths = get_cds_lengths(seq_record)
-    geneclustergenes = [cds.get_accession() for cds in utils.get_cds_features_within_clusters(seq_record)]
+    geneclustergenes = [cds.get_accession() for cds in seq_record.get_cds_features_within_clusters()]
     queries = OrderedDict()
     clusters = OrderedDict()
     blastlines = uniqueblasthitfilter([line.split("\t") for line in blasttext.rstrip().split("\n")])
@@ -260,7 +260,7 @@ def blastparse(blasttext, seq_record, minseqcoverage, minpercidentity):
                 backup to fetch sequence length if missing from seqlengths
     """
     seqlengths = get_cds_lengths(seq_record)
-    geneclustergenes = [cds.get_accession() for cds in utils.get_cds_features_within_clusters(seq_record)]
+    geneclustergenes = [cds.get_accession() for cds in seq_record.get_cds_features_within_clusters()]
     queries = OrderedDict()
     clusters = OrderedDict()
     blastlines = uniqueblasthitfilter([line.split("\t") for line in blasttext.rstrip().split("\n")])

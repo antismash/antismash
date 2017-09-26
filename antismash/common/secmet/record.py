@@ -319,6 +319,15 @@ class Record:
             seq = Seq(str(seq).replace("-", ""), Bio.Alphabet.generic_protein)
         return seq
 
+    def get_cds_features_within_clusters(self):
+        """ Returns all CDS features in the record that are located within a
+            cluster
+        """
+        features = []
+        for cluster in self._clusters:
+            features.extend(cluster.cds_children)
+        return features
+
     def write_cluster_specific_genbanks(self, output_dir=None):
         bio_record = self.to_biopython()
         for cluster in self._clusters:
