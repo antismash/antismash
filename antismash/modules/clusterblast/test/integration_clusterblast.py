@@ -39,7 +39,7 @@ class Base(unittest.TestCase):
         assert clusters
         for cluster in clusters:
             assert cluster.cds_children
-        assert deprecated.get_cds_features_within_clusters(self.record)
+        assert self.record.get_cds_features_within_clusters()
 
     def tearDown(self):
         update_config({})

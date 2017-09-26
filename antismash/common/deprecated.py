@@ -2,7 +2,8 @@
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
 """
-This file will be removed as soon as the new abstraction layer is completed.
+This file will be removed as soon as all modules from antiSMASH 4 have been
+converted
 """
 
 import logging
@@ -32,21 +33,16 @@ def CODE_SKIP_WARNING():
             + linecache.getline(prev.f_code.co_filename, prev.f_lineno + 1).replace('%', '%%'))
 # end temp
 
-
 def get_all_features_of_type(seq_record, types):
     "Return all features of the specified types for a seq_record"
     logging.critical("utils.get_all_features_of_type() called")
     raise RuntimeError("get_all_features_of_type(record, types) called, did you mean record.get_*()")
 
 def get_cds_features_within_clusters(seq_record):
-    cds_features = []
-    for cluster in seq_record.get_clusters():
-        cds_features.extend(cluster.cds_children)
-    return cds_features
+    raise RuntimeError("get_withincluster_cds_features(record) called, use record.get_cds_features_within_clusters()")
 
 def get_withincluster_cds_features(seq_record):
-    logging.critical("get_withincluster_cds_features() deprecated, use get_cds_features_within_clusters()")
-    return get_cds_features_within_clusters(seq_record)
+    raise RuntimeError("get_withincluster_cds_features(record) called, use record.get_cds_features_within_clusters()")
 
 def parse_input_sequence(filename, options):
     "Parse the input sequences from given filename"
@@ -363,7 +359,7 @@ def add_translations(seq_records):
 
 def get_gene_id(feature):
     "Get the gene ID from locus_tag, gene name or protein id, in that order"
-    logging.critical("using get_gene_id(feature), did you mean feature.get_name()")
+    logging.critical("using get_gene_id(feature), did you mean feature.get_name() or feature.unique_id")
     return feature.get_name()
 #    gene_id = "no_tag_found"
 #    for label in ['locus_tag', 'gene', 'protein_id']:

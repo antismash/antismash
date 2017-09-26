@@ -101,7 +101,7 @@ class SMCOGResults(ModuleResults):
         functions = load_cog_annotations()
         logging.critical("annotating genes with SMCOGS info: %d genes", len(self.best_hits))
         #Annotate smCOGS in CDS features
-        for feature in deprecated.get_cds_features_within_clusters(record):
+        for feature in record.get_cds_features_within_clusters():
             gene_id = feature.get_name()
             result = self.best_hits.get(gene_id)
             if result: # TODO convert to qualifier like SecMetQualifier
@@ -119,7 +119,7 @@ def run_on_record(record, results, options):
     if not results:
         results = SMCOGResults(record.id)
 
-        genes = deprecated.get_cds_features_within_clusters(record)
+        genes = record.get_cds_features_within_clusters()
         hmm_results = classify_genes(genes)
         for gene in genes:
             gene_name = gene.get_name()

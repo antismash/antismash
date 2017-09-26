@@ -83,7 +83,7 @@ def detect(seq_record, options):
     assert options.tta
     logging.info("Detecting TTA codons")
     results = TTAResults(seq_record.id)
-    for feature in deprecated.get_cds_features_within_clusters(seq_record):
+    for feature in seq_record.get_cds_features_within_clusters():
         sequence = feature.extract(seq_record.seq)
         for i in range(0, len(sequence), 3):
             codon = sequence[i:i+3].lower()
