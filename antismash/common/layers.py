@@ -132,7 +132,7 @@ class ClusterLayer:
 
     @property
     def detection_rules(self):
-        return self.cluster_rec.detection_rules
+        return ["%s: %s" % (product, rules) for product, rules in zip(self.cluster_rec.products, self.cluster_rec.detection_rules)]
 
     def description_text(self):
         " returns the gene cluster description "
