@@ -199,7 +199,7 @@ def parse_subject(tabs, seqlengths, geneclustergenes, seq_record):
     return Subject(subject, genecluster, start, end, strand, annotation,
                    perc_ident, blastscore, perc_coverage, evalue, locustag)
 
-def parse_all_clusters(blasttext, minseqcoverage, minpercidentity, seq_record):
+def parse_all_clusters(blasttext, seq_record, minseqcoverage, minpercidentity):
     """ Parses blast results, groups into results by cluster number
 
         blasttext: the output from diamond in blast format
@@ -252,7 +252,7 @@ def parse_all_clusters(blasttext, minseqcoverage, minpercidentity, seq_record):
 
     return clusters_by_query_cluster_number, queries_by_cluster_number
 
-def blastparse(blasttext, minseqcoverage, minpercidentity, seq_record):
+def blastparse(blasttext, seq_record, minseqcoverage, minpercidentity):
     """ blasttext: the output from diamond in blast format
         minseqcoverage: the exclusive lower bound of sequence coverage for a match
         minpercidentity: the exclusive lower bound of identity similarity for a match
@@ -340,7 +340,8 @@ def internal_homology_blast(seq_record):
             iqueryclusternames, iqueryclusterseqs = create_blast_inputs(genecluster)
             utils.writefasta(iqueryclusternames, iqueryclusterseqs, "internal_input.fasta")
             blastoutput = run_internal_blastsearch()
-            queries, _ = blastparse(blastoutput, 25, 30, seq_record)
+            queries, _ = blastparse(blastoutput, seq_record, minseqcoverage=25,
+                                    minpercidentity=30)
             groups = find_internal_orthologous_groups(queries, iqueryclusternames)
             internalhomologygroups[cluster_number] = groups
     return internalhomologygroups

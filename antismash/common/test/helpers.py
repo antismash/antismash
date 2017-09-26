@@ -6,7 +6,7 @@ import os
 from Bio.Seq import Seq
 from Bio.SeqFeature import FeatureLocation
 
-from antismash.common.secmet import Record, Cluster, CDSFeature, Feature
+from antismash.common.secmet import Cluster, CDSFeature, Feature
 from antismash.config.args import build_parser
 from antismash.main import get_analysis_modules, get_detection_modules
 
@@ -42,7 +42,7 @@ class FakeSeq(object):
     def __init__(self, seq):
         self.seq = seq
 
-    def translate(self, dummy):
+    def translate(self, _dummy):
         return self.seq
 
     def __str__(self):
@@ -92,7 +92,7 @@ class FakeFeature(object):
     "class for generating a SeqFeature like datastructure"
     def __init__(self, feature_type, location=None, qualifiers=None):
         self.type = feature_type
-        self.qualifiers = { "translation" : ["trans"]}
+        self.qualifiers = {"translation" : ["trans"]}
         if qualifiers:
             self.qualifiers.update(qualifiers)
         self.location = location
@@ -110,7 +110,7 @@ class FakeFeature(object):
 
 def get_path_to_nisin_genbank():
     path = __file__
-    for i in range(3):
+    for _i in range(3):
         path = os.path.dirname(path)
     return os.path.join(path, 'test', 'integration', 'data', 'nisin.gbk')
 
@@ -119,6 +119,6 @@ def get_path_to_nisin_with_detection():
 
 def get_path_to_balhymicin_genbank():
     path = __file__
-    for i in range(3):
+    for _i in range(3):
         path = os.path.dirname(path)
     return os.path.join(path, 'test/integration/data/Y16952.gbk')

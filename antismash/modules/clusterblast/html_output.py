@@ -3,7 +3,7 @@
 
 from jinja2 import FileSystemLoader, Environment, StrictUndefined
 
-def will_handle(product):
+def will_handle(_product):
     return True
 
 def generate_details_div(cluster_layer, record_layer, options_layer):

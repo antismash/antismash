@@ -1,13 +1,10 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
-from glob import glob
 import logging
-import re
 import os
 
 import antismash.common.deprecated as utils
-import antismash.common.path as path
 from antismash.outputs.html.generate_html_table import generate_html_table
 
 searchgtr_links = {}
@@ -270,4 +267,3 @@ def get_ASF_predictions(feature):
 #    result = "<br>\n".join(ASFsec_met_quals)
 
 #    return result
-

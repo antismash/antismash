@@ -1,3 +1,6 @@
+# License: GNU Affero General Public License v3 or later
+# A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
+
 "Test suite for hmm_detection module"
 
 import os
@@ -7,9 +10,8 @@ from Bio.Seq import Seq
 from minimock import mock, restore
 
 from antismash.common.deprecated import FeatureLocation
-from antismash.common.test.helpers import FakeRecord, FakeSeq, FakeFeature, DummyFeature
+from antismash.common.test.helpers import FakeRecord, FakeFeature, DummyFeature
 from antismash.common.secmet import Record, CDSFeature, Feature
-import antismash.common.deprecated as utils
 import antismash.common.path as path
 from antismash.config import get_config, update_config
 import antismash.modules.hmm_detection as core

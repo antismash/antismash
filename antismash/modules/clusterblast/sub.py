@@ -4,7 +4,6 @@
 import functools
 import logging
 from multiprocessing import Pool
-import os
 
 from helperlibs.wrappers.io import TemporaryDirectory
 
@@ -14,7 +13,7 @@ import antismash.common.path as path
 from .core import write_raw_clusterblastoutput, \
                   create_blast_inputs, blastparse, score_clusterblast_output, \
                   read_clusterblast_output, runblast, \
-                  load_clusterblast_database, internal_homology_blast
+                  load_clusterblast_database
 from .results import ClusterResult, GeneralResults
 
 def _get_datafile_path(filename):
@@ -95,9 +94,7 @@ def perform_subclusterblast(options, seq_record, clusters, proteins):
             write_raw_clusterblastoutput(options.output_dir, blastoutput, search_type="subclusterblast")
             logging.info("   Blast search finished. Parsing results...")
             # parse and score diamond results
-            minseqcoverage = 40
-            minpercidentity = 45
-            _, cluster_names_to_queries = blastparse(blastoutput, minseqcoverage, minpercidentity, seq_record)
+            _, cluster_names_to_queries = blastparse(blastoutput, seq_record, minseqcoverage=40, minpercidentity=45)
             ranking = score_clusterblast_output(clusters, allcoregenes, cluster_names_to_queries)
             logging.debug("Cluster at %s has %d subclusterblast results", cluster.location, len(ranking))
             # store results

@@ -24,7 +24,6 @@ def update_config_from_file(namespace=None):
     """
     if namespace is None:
         namespace = Namespace()
-    basedir = path.dirname(path.abspath(__file__))
     default_file = path.join(_BASEDIR, _DEFAULT_NAME)
     sys_file = path.join(_BASEDIR, _SYS_NAME)
     instance_file = path.join(_BASEDIR, _INSTANCE_FILE_NAME)

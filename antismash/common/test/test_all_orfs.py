@@ -5,8 +5,9 @@ import unittest
 
 from Bio.SeqFeature import BeforePosition, AfterPosition, ExactPosition
 
-from .helpers import FakeRecord
 from antismash.common.all_orfs import find_all_orfs, scan_orfs
+
+from .helpers import FakeRecord
 
 class TestOrfCounts(unittest.TestCase):
     def run_both_dirs(self, expected, seq):

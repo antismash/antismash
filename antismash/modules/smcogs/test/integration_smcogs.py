@@ -24,8 +24,8 @@ class Base(unittest.TestCase):
 
         self.record = self.build_record(helpers.get_path_to_nisin_with_detection())
 
-        def serial_run_func(function, args, timeout=None):
-            for arg_set in args:
+        def serial_run_func(function, arg_sets, _timeout=None):
+            for arg_set in arg_sets:
                 function(*arg_set)
         self.old_parallel = subprocessing.parallel_function
         subprocessing.parallel_function = serial_run_func

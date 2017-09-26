@@ -156,7 +156,7 @@ def write_outputs(results, options):
     html.write(results.records, results.results, options)
 
     logging.debug("Creating results SVGs")
-    svg.write(results.records, options, results.results)
+    svg.write(options, results.results)
 
     # convert records to biopython
     bio_records = [record.to_biopython() for record in results.records]

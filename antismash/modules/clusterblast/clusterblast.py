@@ -11,32 +11,31 @@ from .core import create_blast_inputs, run_diamond, write_raw_clusterblastoutput
                   parse_all_clusters, score_clusterblast_output
 from .results import ClusterResult, GeneralResults
 
+def write_fasta_with_all_genes(clusters, filename):
+    all_names, all_seqs = [], []
+    for cluster in clusters:
+        names, seqs = create_blast_inputs(cluster)
+        all_names.extend(names)
+        all_seqs.extend(seqs)
+    utils.writefasta(all_names, all_seqs, filename)
+
 def perform_clusterblast(options, seq_record, db_clusters, db_proteins):
     #Run BLAST on gene cluster proteins of each cluster and parse output
     geneclusters = seq_record.get_clusters()
     with TemporaryDirectory(change=True) as tempdir:
-        all_names, all_seqs = [], []
-        for genecluster in geneclusters:
-            names, seqs = create_blast_inputs(genecluster)
-            all_names.extend(names)
-            all_seqs.extend(seqs)
-        logging.info("Running DIAMOND gene cluster search..")
-        utils.writefasta(all_names, all_seqs, "input.fasta")
-        diamond_result = run_diamond("input.fasta",
-                 os.path.join(options.database_dir, 'clusterblast', 'geneclusterprots'),
-                 tempdir, options)
-        logging.info("   DIAMOND search finished. Parsing results...")
+        write_fasta_with_all_genes(geneclusters, "input.fasta")
+        run_diamond("input.fasta",
+                    os.path.join(options.database_dir, 'clusterblast', 'geneclusterprots'),
+                    tempdir, options)
 
         with open("input.out", 'r') as handle:
             blastoutput = handle.read()
 
         write_raw_clusterblastoutput(options.output_dir, blastoutput)
 
-
-        minseqcoverage = 10
-        minpercidentity = 30
-        clusters_by_number, _ = parse_all_clusters(blastoutput, minseqcoverage,
-                                                   minpercidentity, seq_record)
+        clusters_by_number, _ = parse_all_clusters(blastoutput, seq_record,
+                                                   minseqcoverage=10,
+                                                   minpercidentity=30)
         results = GeneralResults(seq_record.id)
 
         for genecluster in geneclusters:
