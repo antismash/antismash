@@ -11,7 +11,7 @@ from antismash.common.test.helpers import FakeRecord, FakeSeq, FakeFeature, Dumm
 from antismash.common.secmet import Record, CDSFeature, Feature
 import antismash.common.deprecated as utils
 import antismash.common.path as path
-from antismash.config.args import Config
+from antismash.config import get_config, update_config
 import antismash.modules.hmm_detection as core
 from antismash.modules.hmm_detection import hmm_detection, rule_parser, signatures
 
@@ -83,7 +83,7 @@ class HmmDetectionTest(unittest.TestCase):
 
     def tearDown(self):
         # clear out any leftover config adjustments
-        Config().__dict__.clear()
+        get_config().__dict__.clear()
         restore()
 
     def test_core(self):
@@ -91,7 +91,7 @@ class HmmDetectionTest(unittest.TestCase):
         def as_list_and_string(types, should_be_empty):
             " both list in options and ',' or ';' separated strings are fine "
             for case in [types, ",".join(types), ";".join(types)]:
-                options = Config({'enabled_cluster_types' : case})
+                options = update_config({'enabled_cluster_types' : case})
                 if should_be_empty:
                     assert not core.check_options(options)
                 else:

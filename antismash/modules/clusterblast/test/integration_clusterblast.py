@@ -9,14 +9,14 @@ from antismash.main import get_all_modules, detect_signature_genes
 from antismash.common import deprecated
 from antismash.common.module_results import ModuleResults
 import antismash.common.test.helpers as helpers
-from antismash.config import args
+from antismash.config import args, get_config, update_config
 from antismash.modules import clusterblast
 
 class Base(unittest.TestCase):
     def setUp(self):
         options = args.build_parser(modules=get_all_modules()).parse_args(self.get_args())
-        self.old_config = args.Config().__dict__
-        self.options = args.Config(options)
+        self.old_config = get_config().__dict__
+        self.options = update_config(options)
 
         assert clusterblast.check_prereqs() == []
         assert clusterblast.check_options(self.options) == []
@@ -42,7 +42,7 @@ class Base(unittest.TestCase):
         assert deprecated.get_cds_features_within_clusters(self.record)
 
     def tearDown(self):
-        args.Config({})
+        update_config({})
 
     def get_results(self):
         """ override with a function that runs *blast, verifies basics and

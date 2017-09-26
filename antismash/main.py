@@ -10,10 +10,9 @@ from datetime import datetime
 
 from Bio import SeqIO
 
-from antismash.config import loader
+from antismash.config import loader, update_config
 from antismash.common import deprecated, serialiser
 from antismash.common.module_results import ModuleResults
-from antismash.config.args import Config
 from antismash.modules import tta, genefinding, hmm_detection, clusterblast, \
                               dummy, lanthipeptides, smcogs
 from antismash.outputs import html, svg
@@ -53,12 +52,12 @@ def setup_logging(logfile=None, verbose=False, debug=False):
 
     if not (os.path.dirname(logfile) == "" or os.path.exists(os.path.dirname(logfile))):
         os.mkdir(os.path.dirname(logfile))
-    fh = logging.FileHandler(logfile)
+    handler = logging.FileHandler(logfile)
     if log_level == logging.WARNING:
         log_level = logging.INFO
-    fh.setLevel(log_level)
-    fh.setFormatter(logging.Formatter(fmt=log_format, datefmt="%d/%m %H:%M:%S"))
-    logging.getLogger('').addHandler(fh)
+    handler.setLevel(log_level)
+    handler.setFormatter(logging.Formatter(fmt=log_format, datefmt="%d/%m %H:%M:%S"))
+    logging.getLogger('').addHandler(handler)
 
 
 def verify_options(options, modules):
@@ -133,23 +132,23 @@ def prepare_output_directory(name):
         os.mkdir(name)
 
 
-def write_profiling_results(pr, target):
-    s = StringIO()
+def write_profiling_results(profiler, target):
+    stream = StringIO()
     sortby = 'tottime'
-    ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-    ps.dump_stats(target + ".bin")
-    ps.print_stats(.25) # limit to the more meaningful first 25%
-    ps.print_callers(.25)
+    stats = pstats.Stats(profiler, stream=stream).sort_stats(sortby)
+    stats.dump_stats(target + ".bin")
+    stats.print_stats(.25) # limit to the more meaningful first 25%
+    stats.print_callers(.25)
     try:
         path_to_remove = os.path.dirname(os.path.realpath(__file__)) + os.path.sep
-        open(target, "w").write(s.getvalue().replace(path_to_remove, ""))
+        open(target, "w").write(stream.getvalue().replace(path_to_remove, ""))
         logging.info("Profiling report written to %s", target)
     except IOError:
         #if can't save to file, print to terminal, but only the head
         logging.debug("Couldn't open file to store profiling output")
-        s.truncate(0)
-        ps.print_stats(20) #first 20 lines only
-        print(s.getvalue())
+        stream.truncate(0)
+        stats.print_stats(20) #first 20 lines only
+        print(stream.getvalue())
 
 
 def write_outputs(results, options):
@@ -235,7 +234,7 @@ def run_antismash(sequence_file, options, detection_modules=None,
         return 0
 
     options.all_enabled_modules = [module for module in modules if module.is_enabled(options)]
-    options = Config(options)
+    options = update_config(options)
     loader.update_config_from_file() # TODO move earlier to run_antismash?
 
     check_prerequisites(modules)
@@ -245,8 +244,8 @@ def run_antismash(sequence_file, options, detection_modules=None,
 
     # start up profiling if relevant
     if options.profile:
-        pr = cProfile.Profile()
-        pr.enable()
+        profiler = cProfile.Profile()
+        profiler.enable()
 
     # ensure the provided options are valid
     if not verify_options(options, analysis_modules + detection_modules):
@@ -288,8 +287,9 @@ def run_antismash(sequence_file, options, detection_modules=None,
 
     # save profiling data
     if options.profile:
-        pr.disable()
-        write_profiling_results(pr, os.path.join(options.output_dir, "profiling_results"))
+        profiler.disable()
+        write_profiling_results(profiler,
+                        os.path.join(options.output_dir, "profiling_results"))
 
     end_time = datetime.now()
     running_time = end_time - start_time

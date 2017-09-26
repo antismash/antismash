@@ -11,7 +11,7 @@ from pysvg.builders import ShapeBuilder
 
 from antismash.common.secmet import Feature
 from antismash.common.path import get_full_path
-from antismash.config.args import Config
+from antismash.config import get_config
 
 from .data_structures import Protein
 
@@ -368,7 +368,7 @@ class ClusterSVGBuilder:
         self.hits = []
         record_prefix = cluster_feature.parent_record.id.split(".", 1)[0]
         num_added = 0
-        cluster_limit = Config().cb_nclusters
+        cluster_limit = get_config().cb_nclusters
         queries = set()
         for cluster, score in ranking:
             if record_prefix == cluster.accession.split("_", 1)[0]:
@@ -425,9 +425,10 @@ class ClusterSVGBuilder:
         for cluster in self.hits:
             if len(cluster) > length:
                 length = len(cluster)
+        config = get_config()
         # if this would shrink the query too much, use the minimum allowed
-        if query_length / length < Config().cb_min_homology_scale:
-            length = query_length / Config().cb_min_homology_scale
+        if query_length / length < config.cb_min_homology_scale:
+            length = query_length / config.cb_min_homology_scale
         return length
 
     def get_overview_contents(self, width, height):

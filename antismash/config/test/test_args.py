@@ -5,6 +5,7 @@ import unittest
 from argparse import Namespace
 
 from antismash import get_detection_modules, get_analysis_modules
+from antismash.config import get_config, update_config
 import antismash.config.args as args
 
 class TestConfig(unittest.TestCase):
@@ -14,7 +15,7 @@ class TestConfig(unittest.TestCase):
         self.default_parser = args.build_parser(modules=modules)
 
     def tearDown(self):
-        args.Config().__dict__.clear()
+        get_config().__dict__.clear()
 
     def test_invalid_args(self):
         with self.assertRaises(SystemExit):
@@ -25,26 +26,26 @@ class TestConfig(unittest.TestCase):
         options = self.core_parser.parse_args(['--taxon', 'fungi'])
         assert options.taxon == 'fungi'
         # make sure they propagate to the Config singleton
-        config = args.Config(options)
+        config = update_config(options)
         assert config.taxon == 'fungi'
 
     def test_namespace_initialisation(self):
         # test intialisation from namespace
         namespace = Namespace()
         namespace.taxon = 'fungi'
-        config = args.Config(namespace)
+        config = update_config(namespace)
         assert config.taxon == 'fungi'
         # a new constructor should keep the value
-        assert args.Config().taxon == 'fungi'
+        assert get_config().taxon == 'fungi'
 
     def test_dict_initialisation(self):
-        config = args.Config({'taxon': 'fungi'})
+        config = update_config({'taxon': 'fungi'})
         assert config.taxon == 'fungi'
         # a new constructor should keep the value
-        assert args.Config().taxon == 'fungi'
+        assert get_config().taxon == 'fungi'
 
     def test_assignment_proofing(self):
-        config = args.Config({'taxon': 'fungi'})
+        config = update_config({'taxon': 'fungi'})
         assert config.taxon == 'fungi'
         # changing values in a Config object is invalid
         with self.assertRaises(RuntimeError):
@@ -53,7 +54,7 @@ class TestConfig(unittest.TestCase):
         assert config.taxon == 'fungi'
 
     def test_get(self):
-        config = args.Config({'a' : 1, 'b' : None})
+        config = update_config({'a' : 1, 'b' : None})
         # check attribute and get are the same
         assert config.a == config.get('a')
         # check default values function

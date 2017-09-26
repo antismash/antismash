@@ -4,7 +4,7 @@
 import os
 from unittest import TestCase
 
-from antismash.config.args import Config
+from antismash.config import get_config, update_config
 from antismash.common.deprecated import parse_input_sequence, pre_process_sequences
 from antismash.common.path import get_full_path
 from antismash.common.test.helpers import get_simple_options
@@ -13,12 +13,12 @@ from antismash.modules.genefinding import run_glimmerhmm as glimmerhmm
 
 class TestGlimmerHMM(TestCase):
     def setUp(self):
-        self.options = Config(get_simple_options(genefinding, ['--taxon', 'fungi',
-                '--genefinding-tool', 'glimmerhmm']))
+        self.options = update_config(get_simple_options(genefinding, ['--taxon',
+                                  'fungi', '--genefinding-tool', 'glimmerhmm']))
         self.data_location = get_full_path(__file__, "data")
 
     def tearDown(self):
-        Config().__dict__.clear()
+        get_config().__dict__.clear()
 
     def data_file(self, filename):
         return os.path.join(self.data_location, filename)
