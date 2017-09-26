@@ -1,4 +1,4 @@
-omit = --omit '*indigo*'
+omit = --omit '*indigo*','*/external/*'
 coverage = coverage run $(omit) --source antismash -m pytest
 integration_flags = --override-ini=python_files=integration_*.py
 integration_coverage = .coverage_integration
