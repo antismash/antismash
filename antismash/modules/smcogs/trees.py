@@ -71,7 +71,7 @@ def smcog_tree_analysis(cds, inputnr, smcog, output_dir):
     "run smCOG search on all gene cluster CDS features"
     logging.critical("smcog_tree_analysis on %d", inputnr)
     gene_id = cds.get_name()
-    seq = str(deprecated.get_aa_sequence(cds))
+    seq = cds.get_aa_sequence()
     #create input.fasta file with single query sequence to be used as input for MSA
     deprecated.writefasta([gene_id], [seq], "input" + str(inputnr) + ".fasta")
     alignment_file = alignsmcogs(smcog, inputnr)

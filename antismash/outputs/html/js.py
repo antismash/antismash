@@ -145,7 +145,17 @@ def get_description(record, feature, type_, options, mibig_result):
     if feature.get_qualifier('EC_number'):
         template += "EC-number(s): {ecnumber}<br>\n"
     if smcogs:
-        template += "smCOG: {smcog}<br>\n"
+        for note in feature.notes: #TODO move to secmet attribute
+            if note.startswith('smCOG:') and '(' in note:
+                text = note[6:].split('(', 1)[0]
+                smcog, desc = text.split(':', 1)
+                desc = desc.replace('_', ' ')
+                replacements['smcog'] = '%s (%s)' % (smcog, desc)
+                template += "smCOG: {smcog}<br>\n"
+            elif note.startswith('smCOG tree PNG image:'):
+                entry = '<a href="%s" target="_new">View smCOG seed phylogenetic tree with this gene</a>'
+                url = note.split(':')[-1]
+                replacements['smcog_tree_line'] = entry % url
     if options.input_type == 'nucl':
         replacements["start"] = int(feature.location.start) + 1 # 1-indexed
         replacements["end"] = int(feature.location.end)
@@ -174,9 +184,6 @@ def get_description(record, feature, type_, options, mibig_result):
     template += """AA sequence: <a href="javascript:copyToClipboard('{sequence}')">Copy to clipboard</a><br>"""
     template += """Nucleotide sequence: <a href="javascript:copyToClipboard('{dna_sequence}')">Copy to clipboard</a><br>"""
 
-    if not smcogs:
-        del replacements['smcog']
-
     replacements['product'] = feature.product
     sequence = feature.translation
     dna_sequence = feature.extract(record.seq)
@@ -190,22 +197,6 @@ def get_description(record, feature, type_, options, mibig_result):
     ecnumber = feature.get_qualifier('EC_number')
     if ecnumber:
         replacements['ecnumber'] = ", ".join(ecnumber)
-
-    if smcogs:
-        for note in feature.notes: #TODO move to secmet attribute
-            if note.startswith('smCOG:') and '(' in note:
-                text = note[6:].split('(', 1)[0]
-                smcog, desc = text.split(':', 1)
-                desc = desc.replace('_', ' ')
-                replacements['smcog'] = '%s (%s)' % (smcog, desc)
-                break
-
-        for note in feature.notes: #TODO move to secmet attribute
-            if note.startswith('smCOG tree PNG image:'):
-                entry = '<a href="%s" target="_new">View smCOG seed phylogenetic tree with this gene</a>'
-                url = note.split(':')[-1]
-                replacements['smcog_tree_line'] = entry % url
-                break
 
     if type_ == 'transport':
         url = "http://blast.jcvi.org/er-blast/index.cgi?project=transporter;" \
