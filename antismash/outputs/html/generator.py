@@ -121,5 +121,5 @@ def generate_searchgtr_htmls(seq_records, options):
             with open(formfileloc, "w") as formfile:
                 specificformtemplate = searchgtrformtemplateparts[0].replace("GlycTr", gene_id)
                 formfile.write(specificformtemplate)
-                formfile.write("%s\n%s" % (gene_id, utils.get_aa_sequence(feature)))
+                formfile.write("%s\n%s" % (gene_id, feature.get_aa_sequence()))
                 formfile.write(searchgtrformtemplateparts[1])

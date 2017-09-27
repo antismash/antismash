@@ -373,12 +373,28 @@ class CDSFeature(Feature):
             self.gene_function = GeneFunction.CORE
 
     @property
-    def translation(self):
+    def translation(self) -> str:
         return self._translation
 
     @translation.setter
-    def translation(self, translation):
+    def translation(self, translation) -> None:
         self._translation = str(translation)
+
+    def get_aa_sequence(self, to_stop=False) -> str:
+        """ Extract the sequence of the CDS feature
+            Args:
+                to_stop: A boolean value indicating whether to limit the
+                         sequence to the first stop codon within the feature
+            Returns:
+                A string containing the ungapped sequence
+        """
+        sequence = self.translation
+        if "*" in sequence:
+            if to_stop:
+                sequence = sequence.split('*')[0]
+            else:
+                sequence = sequence.replace("*", "X")
+        return sequence.replace("-", "")
 
     def get_accession(self):
         "Get the gene ID from protein id, gene name or locus_tag, in that order"
@@ -488,7 +504,6 @@ class Prepeptide(CDSFeature):
             leader.qualifiers['note'] = ['leader peptide', self.peptide_type]
             leader.qualifiers['note'].append('predicted leader seq: %s' % self.leader_seq)
             features.append(leader)
-        # TODO core
         core = OrderedDict()
         core['note'] = ['core peptide', self.peptide_type, 'predicted class: %s' % self.peptide_class]
         features.extend(super().to_biopython(core))

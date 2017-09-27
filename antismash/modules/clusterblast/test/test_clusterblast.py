@@ -10,6 +10,7 @@ from minimock import mock, restore
 
 import antismash.common.deprecated as utils # used in mocking
 from antismash.common.secmet import CDSFeature, Record # CDSFeature mocked
+from antismash.common.test.helpers import DummyCDS
 import antismash.modules.clusterblast.core as core
 
 class TestBlastParsing(unittest.TestCase):
@@ -18,8 +19,7 @@ class TestBlastParsing(unittest.TestCase):
         mock('utils.get_withincluster_cds_features', returns=[])
         mock('CDSFeature.get_accession', returns=None)
         #used by parse_subject, every sequence will be 100 long
-        mock('utils.get_feature_dict_protein_id', returns=defaultdict(lambda: 1))
-        mock('utils.get_aa_sequence', returns="A"*100)
+        mock('utils.get_feature_dict_protein_id', returns=defaultdict(lambda: DummyCDS(1, 101)))
         mock('core.get_cds_lengths', returns={})
         self.sample_data = self.read_sample_data()
         self.sample_data_as_lists = self.file_data_to_lists(self.sample_data)
@@ -269,9 +269,8 @@ class TestSubjectParsing(unittest.TestCase):
         self.seq_record = "seq_record"
         self.seqlengths = {"CAG25751.1" : 253}
         #used by parse_subject, but only if locus tag not in seqlengths
-        mock('utils.get_feature_dict_protein_id', returns={"TEST":""})
-        mock('utils.get_aa_sequence', returns="A"*300)
         mock('core.get_cds_lengths', returns=self.seqlengths)
+        mock('utils.get_feature_dict_protein_id', returns={"TEST" : DummyCDS(1, 301)})
 
     def tearDown(self):
         restore()

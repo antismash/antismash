@@ -141,7 +141,7 @@ def create_blast_inputs(cluster):
                              str(int(cds.location.end)), \
                              strand, cds.get_accession(), cds.product])
         names.append(fullname)
-        seqs.append(str(utils.get_aa_sequence(cds)))
+        seqs.append(cds.get_aa_sequence())
 
     return names, seqs
 
@@ -194,7 +194,8 @@ def parse_subject(tabs, seqlengths, geneclustergenes, seq_record):
         perc_coverage = (float(tabs[3]) / seqlengths[query_key]) * 100
     else:
         feature_by_id = utils.get_feature_dict_protein_id(seq_record)
-        seqlength = len(utils.get_aa_sequence(feature_by_id[query_key]))
+        print("feature id", query_key, "end res", feature_by_id[query_key])
+        seqlength = len(feature_by_id[query_key].get_aa_sequence())
         perc_coverage = (float(tabs[3]) / seqlength) * 100
     return Subject(subject, genecluster, start, end, strand, annotation,
                    perc_ident, blastscore, perc_coverage, evalue, locustag)
@@ -294,7 +295,7 @@ def blastparse(blasttext, seq_record, minseqcoverage, minpercidentity):
 def get_cds_lengths(seq_record):
     seqlengths = {}
     for cds in seq_record.get_cds_features():
-        seqlength = len(str(utils.get_aa_sequence(cds)))
+        seqlength = len(cds.get_aa_sequence())
         seqlengths[cds.get_accession()] = seqlength
     return seqlengths
 

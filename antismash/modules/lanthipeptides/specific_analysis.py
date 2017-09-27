@@ -895,7 +895,7 @@ def run_lanthipred(seq_record, query, lant_class, domains):
     hmmer_profiles = {'Class-I': 'data/class1.hmm',
                       'Class-II':'data/class2.hmm',
                       'Class-III': 'data/class3.hmm', }
-    query_sequence = deprecated.get_aa_sequence(query, to_stop=True)
+    query_sequence = query.get_aa_sequence(to_stop=True)
     lan_a_fasta = ">%s\n%s" % (query.get_name(), query_sequence)
 
     if lant_class in ("Class-II", "Class-III"):
@@ -940,7 +940,7 @@ def find_lan_a_features(cluster):
         if not feature.is_contained_by(cluster):
             continue
 
-        aa_seq = deprecated.get_aa_sequence(feature)
+        aa_seq = feature.get_aa_sequence()
         if len(aa_seq) < 80:
             lan_a_features.append(feature)
             continue
@@ -1104,7 +1104,7 @@ def specific_analysis(seq_record):
 
         #Find candidate ORFs that are not yet annotated
         for orf in deprecated.find_all_orfs(seq_record, cluster):
-            aa_seq = deprecated.get_aa_sequence(orf)
+            aa_seq = orf.get_aa_sequence()
             if len(aa_seq) < 80:
                 lan_as.append(orf)
 

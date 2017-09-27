@@ -487,18 +487,6 @@ def get_feature_dict_protein_id(record):
     logging.critical("get_feature_dict_protein_id(record) called, did you mean record.get_cds_mapping()?")
     return record.get_cds_mapping()
 
-def get_aa_sequence(feature, to_stop=False):
-    """Extract sequence from specific CDS feature in sequence record"""
-    #TODO what is to_stop meant to be doing? (maps to to_stop in Bio.Seq.Seq), mutations supress the codon sometimes... so...
-    fasta_seq = str(feature.translation)
-    if "*" in fasta_seq:
-        logging.critical("found a sequence containing a stop codon: %s", str(feature))
-        if to_stop:
-            fasta_seq = fasta_seq.split('*')[0]
-        else:
-            fasta_seq = fasta_seq.replace("*","X")
-    fasta_seq = fasta_seq.replace("-","")
-    return fasta_seq
 
 def get_smcog_annotations(seq_record):
     logging.critical("get_smcog_annotations(): should use secmet for smCOG note")
@@ -758,3 +746,7 @@ def sort_features(_seq_record):
 
 def get_cluster_cds_features(_cluster, _seq_record):
     raise RuntimeError("utils.get_cluster_cds_features(cluster) called, did you mean cluster.cds_children?")
+
+def get_aa_sequence(feature, to_stop=False):
+    raise RuntimeError("get_aa_sequence(cds) called, did you mean cds.get_aa_sequence()?")
+
