@@ -34,7 +34,7 @@ def CODE_SKIP_WARNING():
 # end temp
 
 
-def parse_input_sequence(filename, options):
+def parse_input_sequence(filename, options) -> list:
     "Parse the input sequences from given filename"
     logging.info('Parsing input sequence %r', filename)
 
@@ -254,13 +254,13 @@ def generate_unique_id(prefix, existing_ids, start=0, max_length=-1):
         raise RuntimeError("Could not generate unique id for %s after %d iterations" % (prefix, counter - start))
     return name, counter
 
-def is_nucl_seq(sequence):
+def is_nucl_seq(sequence) -> bool:
     other = str(sequence).lower()
     for char in "acgtn":
         other = other.replace(char, "")
     return len(other) < 0.2 * len(sequence)
 
-def generate_nucl_seq_record(sequences):
+def generate_nucl_seq_record(sequences) -> Record:
     "Generate single nucleotide seq_record from supplied sequences"
     if not sequences:
         raise ValueError("Cannot generate nucleotide records of empty input")
@@ -282,7 +282,7 @@ def generate_nucl_seq_record(sequences):
         record.add_cds_feature(cdsfeature)
     return record
 
-def check_duplicate_gene_ids(sequences):
+def check_duplicate_gene_ids(sequences) -> None:
     "Fix duplicate locus tags so that they are different"
     no_tag = "no_tag_found"
     high_water_mark = 0
@@ -303,7 +303,7 @@ def check_duplicate_gene_ids(sequences):
             all_ids.add(name)
 
 
-def fix_locus_tags(seq_record):
+def fix_locus_tags(seq_record) -> None:
     "Fix CDS feature that don't have a locus_tag, gene name or protein id"
     next_locus_tag = 1
 
@@ -322,7 +322,7 @@ def fix_locus_tags(seq_record):
                     val = val.replace(char, "_")
             setattr(feature, attr, val)
 
-def add_seq_record_seq(seq_records):
+def add_seq_record_seq(seq_records) -> None:
     for seq_record in seq_records:
         if not seq_record.seq:
             cds_features = seq_record.get_cds_features()
@@ -330,15 +330,15 @@ def add_seq_record_seq(seq_records):
             end_max = max([cds.location.end for cds in cds_features])
             seq_record.seq = Seq(max([start_max, end_max]) * "n")
 
-def check_for_wgs_scaffolds(seq_records):
+def check_for_wgs_scaffolds(seq_records) -> None:
     for seq_record in seq_records:
         #Check if seq_record is a WGS master record or a supercontig record
         if 'wgs_scafld' in seq_record.annotations \
                 or 'wgs' in seq_record.annotations \
                 or 'contig' in seq_record.annotations:
-            raise RuntimeError("Incomplete whole genome shotgun records not supported")
+            raise RuntimeError("Incomplete whole genome shotgun records are not supported")
 
-def get_feature_dict(seq_record):
+def get_feature_dict(seq_record) -> dict:
     """Get a dictionary mapping features to their IDs"""
     features = seq_record.get_cds_features()
     feature_by_id = {}
@@ -348,7 +348,7 @@ def get_feature_dict(seq_record):
     return feature_by_id
 
 
-def get_multifasta(seq_record):
+def get_multifasta(seq_record) -> str:
     """Extract multi-protein FASTA from all CDS features in sequence record"""
     features = seq_record.get_cds_features()
     all_fastas = []
@@ -367,7 +367,7 @@ def get_multifasta(seq_record):
     full_fasta = "\n".join(all_fastas)
     return full_fasta
 
-def writefasta(names, seqs, filename):
+def writefasta(names, seqs, filename) -> None:
     "Write sequence to a file"
     e = 0
     f = len(names) - 1
@@ -381,7 +381,7 @@ def writefasta(names, seqs, filename):
         e += 1
     out_file.close()
 
-def strip_record(seq_record):
+def strip_record(seq_record) -> None:
     """ Discard antismash specific features and feature qualifiers """
     seq_record.clear_clusters()
     seq_record.clear_cluster_borders()
@@ -392,7 +392,7 @@ def strip_record(seq_record):
     for feature in seq_record.get_cds_features():
         feature.sec_met = None
 
-def fix_record_name_id(seq_record, all_record_ids, options):
+def fix_record_name_id(seq_record, all_record_ids, options) -> None:
     "Fix a seq record's name and id to be <= 16 characters, the GenBank limit; if record name is too long, add c000X prefix"
 
     def _shorten_ids(idstring):
@@ -472,7 +472,7 @@ def get_smcog_annotations(seq_record):
                 smcogdescriptions[smcogid] = smcog_descr
     return smcogdict, smcogdescriptions
 
-def get_pksnrps_cds_features(seq_record):
+def get_pksnrps_cds_features(seq_record) -> list:
     logging.critical("skipping get_pksnrps_cds_features(), missing PKSNRPS module")
     return []
 #    features = get_cds_features(seq_record)
@@ -485,7 +485,7 @@ def get_pksnrps_cds_features(seq_record):
 #                    break
 #    return pksnrpscoregenes
 
-def get_nrpspks_domain_dict(seq_record):
+def get_nrpspks_domain_dict(seq_record) -> dict:
     logging.critical("skipping get_pksnrps_domain_dict(), missing PKSNRPS module")
     return {}
 #    domaindict = {}
@@ -565,16 +565,16 @@ def get_nrpspks_substr_spec_preds(seq_record):
 #                    substr_spec_preds.kr_stereo_preds[domainname] = stereoprediction
 #    return substr_spec_preds
 
-def get_structure_pred(cluster):
+def get_structure_pred(cluster) -> str:
     "Return all a structure prediction for a cluster feature"
     for note in cluster.notes:
         if "Monomers prediction: " in note:
             return note.partition("Monomers prediction: ")[2]
-    if cluster.get_product_string() == 'ectoine': # TODO: wat
+    if cluster.get_product_string() == 'ectoine':
         return 'ectoine'
     return "N/A"
 
-def get_version():
+def get_version() -> str:
     logging.critical("dummy get_version() being called")
     return "antismash-5.alpha"
 
@@ -596,7 +596,7 @@ class RobustProteinAnalysis(ProteinAnalysis):
         prot_sequence = "".join(prot_sequence)
         super(RobustProteinAnalysis, self).__init__(prot_sequence, monoisotopic)
 
-    def molecular_weight(self):
+    def molecular_weight(self) -> float:
         mw = super(RobustProteinAnalysis, self).molecular_weight()
         if self._invalid == "average":
             aa_difference = len(self.original_sequence) - len(self.sequence)
@@ -604,7 +604,7 @@ class RobustProteinAnalysis(ProteinAnalysis):
 
         return mw
 
-def find_all_orfs(seq_record, cluster): # the old lassopeptides.find_all_orfs
+def find_all_orfs(seq_record, cluster) -> list: # the old lassopeptides.find_all_orfs
     """Find all ORFs in gene cluster outside annotated CDS features"""
     # Get sequence just for the gene cluster
     fasta_seq = seq_record.seq[cluster.location.start:cluster.location.end]
@@ -635,7 +635,7 @@ def find_all_orfs(seq_record, cluster): # the old lassopeptides.find_all_orfs
 
     return new_features
 
-def distance_to_pfam(seq_record, query, hmmer_profiles): #also from lassopeptides
+def distance_to_pfam(seq_record, query, hmmer_profiles) -> int: #also from lassopeptides
     """Function to check how many nt a gene is away from a gene with one of a list of given Pfams"""
     nt = 40000 #maximum number of nucleotides distance to search
     #Get all CDS features in seq_record
@@ -662,14 +662,14 @@ def distance_to_pfam(seq_record, query, hmmer_profiles): #also from lassopeptide
                         closest_distance = distance[cds.get_name()]
     return closest_distance
 
-def get_specific_multifasta(features):
+def get_specific_multifasta(features) -> str:
     """Extract multi-protein FASTA from provided features"""
     all_fastas = []
     for feature in features:
         all_fastas.append(">%s\n%s" % (feature.get_name(), feature.translation))
     return "\n".join(all_fastas)
 
-def hmmlengths(hmmfile):
+def hmmlengths(hmmfile) -> dict:
     lengths = {}
     with open(hmmfile,"r") as handle:
         contents = handle.read()
