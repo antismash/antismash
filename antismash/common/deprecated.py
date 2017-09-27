@@ -168,9 +168,6 @@ def pre_process_sequences(sequences, options, genefinding):
         #Fix locus tags
         fix_locus_tags(sequence)
 
-    #Make sure that all CDS entries in all seq_records have translation tags, otherwise add them
-    add_translations(sequences)
-
     #Make sure that all seq_records have a sequence
     add_seq_record_seq(sequences)
 
@@ -324,28 +321,6 @@ def fix_locus_tags(seq_record):
                 if char in illegal_chars:
                     val = val.replace(char, "_")
             setattr(feature, attr, val)
-
-def add_translations(seq_records):
-    "Add a translation qualifier to all CDS features"
-    for seq_record in seq_records:
-        if seq_record.skip:
-            continue
-        logging.debug("Adding translations to record: %s", seq_record.id)
-        cdsfeatures = seq_record.get_cds_features()
-        for cdsfeature in cdsfeatures:
-            if cdsfeature.translation:
-                continue
-            if not seq_record.seq:
-                logging.error('No amino acid sequence in input entry for CDS %r, ' \
-                        'and no nucleotide sequence provided to translate it from.', cdsfeature.id)
-                raise ValueError("Missing sequence info for CDS %r" % cdsfeature.id)
-            try:
-                translation = str(seq_record.get_aa_translation_of_feature(cdsfeature))
-            except Bio.Data.CodonTable.TranslationError as err:
-                logging.error('Getting amino acid sequences from %s, CDS %r failed: %s',
-                        seq_record.name, cdsfeature.id, err)
-                raise
-            cdsfeature.translation = translation
 
 def add_seq_record_seq(seq_records):
     for seq_record in seq_records:
