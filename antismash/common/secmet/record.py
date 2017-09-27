@@ -211,9 +211,15 @@ class Record:
         """ Add the given cluster to the record,
             causes cluster-CDS pairing to be recalculated """
         assert isinstance(cds_feature, CDSFeature)
-
+        # provide a unique id over all records
+        cds_feature.unique_id = "%s.%d-%d" % (self.id, cds_feature.location.start,
+                                              cds_feature.location.end)
         # ensure it has a translation
         if not cds_feature.translation:
+            if not self.seq:
+                logging.error('No amino acid sequence in input entry for CDS %s, ' \
+                        'and no nucleotide sequence provided to translate it from.', cds_feature.unique_id)
+                raise ValueError("Missing sequence info for CDS %s" % cds_feature.unique_id)
             cds_feature.translation = self.get_aa_translation_of_feature(cds_feature)
         index = bisect.bisect_left(self._cds_features, cds_feature)
         self._cds_features.insert(index, cds_feature)
@@ -221,7 +227,6 @@ class Record:
         if cds_feature.get_accession() in self._cds_mapping:
             logging.critical("Multiple CDS features have the same accession for mapping")
         self._cds_mapping[cds_feature.get_accession()] = cds_feature
-        cds_feature.unique_id = self.id + str(cds_feature.location)
 
     def add_cds_motif(self, motif):
         """ Add the given cluster to the record """
