@@ -37,7 +37,7 @@ def get_arguments():
 def is_enabled(options):
     return not options.minimal or options.smcogs_enabled or options.smcogs_trees
 
-def check_previous_results(results, record, options):
+def regenerate_previous_results(results, record, options):
     if not results or record.id != results["record_id"]:
         return None
     if options.smcogs_trees and not results["tree_paths"]:
