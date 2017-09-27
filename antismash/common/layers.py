@@ -151,8 +151,7 @@ class ClusterLayer:
         for i, label in enumerate(top_hits):
             i += 1 # 1-indexed
             svg_file = os.path.join('svg', 'clusterblast%s_%s.svg' % (self.idx, i))
-            opt_text = 'Cluster %s hit %s %s' % (self.idx, i, label)
-            self.cluster_blast.append((opt_text, svg_file))
+            self.cluster_blast.append((label, svg_file))
 
 
     def knowncluster_blast_generator(self):
@@ -161,8 +160,7 @@ class ClusterLayer:
             i += 1 # 1-indexed
             label = label_pair[0]
             svg_file = os.path.join('svg', 'knownclusterblast%s_%s.svg' % (self.idx, i))
-            opt_text = 'Cluster %s hit %s %s' % (self.idx, i, label)
-            self.knowncluster_blast.append((opt_text, svg_file))
+            self.knowncluster_blast.append((label, svg_file))
 
 
     def subcluster_blast_generator(self):
@@ -171,8 +169,7 @@ class ClusterLayer:
         for i, label in enumerate(top_hits):
             i += 1 # since one-indexed
             svg_file = os.path.join('svg', 'subclusterblast%s_%s.svg' % (self.idx, i))
-            opt_text = 'Cluster %s hit %s %s' % (self.idx, i, label)
-            self.subcluster_blast.append((opt_text, svg_file))
+            self.subcluster_blast.append((label, svg_file))
         logging.critical("subcluster_blast_generator() found %d hits", len(self.subcluster_blast))
 
     def find_plugins_for_cluster(self):
