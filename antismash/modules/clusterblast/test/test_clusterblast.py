@@ -8,8 +8,10 @@ import os
 from collections import defaultdict
 from minimock import mock, restore
 
+from helperlibs.wrappers.io import TemporaryDirectory
+
 from antismash.common.secmet import CDSFeature, Record # CDSFeature mocked
-from antismash.common.test.helpers import DummyCDS
+from antismash.common.test.helpers import DummyCDS, DummyCluster
 import antismash.modules.clusterblast.core as core
 
 class TestBlastParsing(unittest.TestCase):
@@ -375,3 +377,72 @@ class TestSubjectParsing(unittest.TestCase):
         subject_line[1] = "Y16956|c1|1|-|no_locus_tag|putative_two-component_system_sensor_kinase|CAG25751"
         with self.assertRaises(ValueError):
             self.parse_subject_wrapper(subject_line)
+
+class TestInputGeneration(unittest.TestCase):
+    def setUp(self):
+        self.index = 0
+        self.old_blast_inputs = core.create_blast_inputs
+        core.create_blast_inputs = self.dummy_blast_inputs
+        self.dummy_cluster = DummyCluster(1, 100)
+        self.clusters = [self.dummy_cluster, self.dummy_cluster]
+
+    def tearDown(self):
+        core.create_blast_inputs = self.old_blast_inputs
+
+    def dummy_blast_inputs(self, cluster):
+        names = []
+        seqs = []
+        for child in cluster.cds_children:
+            index = self.index
+            self.index += 1
+            names.append("L%d" % index)
+            seqs.append("S%d" % index)
+        return names, seqs
+
+    def test_empty(self):
+        with TemporaryDirectory(change=True):
+            with self.assertRaisesRegex(ValueError, "Diamond search space contains no sequences"):
+                core.write_fastas_with_all_genes(self.clusters, "test")
+
+    def test_bad_partitions(self):
+        with TemporaryDirectory(change=True):
+            for i in [-10, -1, 0]:
+                with self.assertRaisesRegex(ValueError, "Partitions must be greater than 0"):
+                    core.write_fastas_with_all_genes(self.clusters, "test", partitions=i)
+            for i in ["str", None, 1.5]:
+                with self.assertRaisesRegex(TypeError, "Partitions must be an int greater than 0"):
+                    core.write_fastas_with_all_genes(self.clusters, "test", partitions=i)
+
+    def test_single_file(self):
+        self.dummy_cluster.cds_children = [DummyCDS(1, 3)] * 3
+        with TemporaryDirectory(change=True):
+            files = core.write_fastas_with_all_genes(self.clusters, "test.fasta")
+            assert files == ["test.fasta"]
+            assert os.path.exists("test.fasta")
+            expected = "".join(">L{0}\nS{0}\n".format(i) for i in range(len(self.clusters)*3))
+            assert open("test.fasta").read() == expected
+
+    def test_single_partition(self):
+        self.dummy_cluster.cds_children = [DummyCDS(1, 3)] * 3
+        with TemporaryDirectory(change=True):
+            files = core.write_fastas_with_all_genes(self.clusters, "test.fasta", partitions=1)
+            assert files == ["test.fasta"]
+            assert os.path.exists("test.fasta")
+            expected = "".join(">L{0}\nS{0}\n".format(i) for i in range(len(self.clusters)*3))
+            assert open("test.fasta").read() == expected
+
+    def test_multiple_files(self):
+        self.dummy_cluster.cds_children = [DummyCDS(1, 3)] * 3
+        for partitions in [2, 3]:
+            with TemporaryDirectory(change=True):
+                self.index = 0
+                chunk_size = (len(self.clusters) * 3) // partitions
+                files = core.write_fastas_with_all_genes(self.clusters, "test.fasta", partitions=partitions)
+                assert files == ["test%d.fasta" % i for i in range(partitions)]
+                for index in range(partitions):
+                    assert os.path.exists("test%d.fasta" % index)
+                    print(index, chunk_size)
+                    contents = open("test%d.fasta" % index).read()
+                    assert contents.count(">") == chunk_size
+                    expected = "".join(">L{0}\nS{0}\n".format(i + index * chunk_size) for i in range(chunk_size))
+                    assert contents == expected

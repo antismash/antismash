@@ -4,26 +4,17 @@
 import logging
 import os
 
-import antismash.common.deprecated as utils
 from helperlibs.wrappers.io import TemporaryDirectory
 
-from .core import create_blast_inputs, run_diamond, write_raw_clusterblastoutput, \
+from .core import write_fastas_with_all_genes, run_diamond, write_raw_clusterblastoutput, \
                   parse_all_clusters, score_clusterblast_output
 from .results import ClusterResult, GeneralResults
-
-def write_fasta_with_all_genes(clusters, filename):
-    all_names, all_seqs = [], []
-    for cluster in clusters:
-        names, seqs = create_blast_inputs(cluster)
-        all_names.extend(names)
-        all_seqs.extend(seqs)
-    utils.writefasta(all_names, all_seqs, filename)
 
 def perform_clusterblast(options, seq_record, db_clusters, db_proteins):
     #Run BLAST on gene cluster proteins of each cluster and parse output
     geneclusters = seq_record.get_clusters()
     with TemporaryDirectory(change=True) as tempdir:
-        write_fasta_with_all_genes(geneclusters, "input.fasta")
+        write_fastas_with_all_genes(geneclusters, "input.fasta")
         run_diamond("input.fasta",
                     os.path.join(options.database_dir, 'clusterblast', 'geneclusterprots'),
                     tempdir, options)

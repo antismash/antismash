@@ -4,11 +4,10 @@
 import logging
 from helperlibs.wrappers.io import TemporaryDirectory
 
-import antismash.common.deprecated as utils
 import antismash.common.path as path
 
-from .core import parse_all_clusters, \
-                  load_clusterblast_database, create_blast_inputs, run_diamond, \
+from .core import parse_all_clusters, write_fastas_with_all_genes, \
+                  load_clusterblast_database, run_diamond, \
                   write_raw_clusterblastoutput, score_clusterblast_output
 from .results import ClusterResult, GeneralResults, write_clusterblast_output
 from .data_structures import MibigEntry
@@ -52,16 +51,10 @@ def perform_knownclusterblast(options, seq_record, clusters, proteins):
     logging.info("Running DIAMOND knowncluster searches..")
     results = GeneralResults(seq_record.id, search_type="knownclusterblast")
 
-    all_names, all_seqs = [], []
-    for cluster in seq_record.get_clusters():
-        names, seqs = create_blast_inputs(cluster)
-        all_names.extend(names)
-        all_seqs.extend(seqs)
-    if not (all_names and all_seqs):
-        raise RuntimeError("Diamond search space contains no sequences")
     with TemporaryDirectory(change=True) as tempdir:
-        utils.writefasta([qcname.replace(" ", "_") for qcname in all_names],
-                         all_seqs, "input.fasta")
+        write_fastas_with_all_genes(seq_record.get_clusters(), "input.fasta")
+#        utils.writefasta([qcname.replace(" ", "_") for qcname in all_names],
+#                         all_seqs, "input.fasta")
         run_diamond("input.fasta", _get_datafile_path('knownclusterprots'),
                     tempdir, options)
         with open("input.out", 'r') as handle:
