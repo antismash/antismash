@@ -22,6 +22,7 @@ from helperlibs.bio import seqio
 from antismash.common import gff_parser
 from antismash.common.all_orfs import scan_orfs, sort_orfs
 from antismash.common.secmet import Record, CDSFeature, Feature
+from antismash.config import update_config
 
 # temporary code skip logging # TODO
 import inspect
@@ -128,10 +129,10 @@ def pre_process_sequences(sequences, options, genefinding):
             if meaningful > options.limit:
                 if not warned:
                     logging.warning("Only analysing the first %d records (increase via --limit)", options.limit)
+                    warned = True
                 sequence.skip = "skipping all but first {0} meaningful records (--limit {0}) ".format(options.limit)
 
-    if warned:
-        options.triggered_limit = True
+    options = update_config({"triggered_limit" : warned}) # TODO is there a better way
 
     #Check if no duplicate locus tags / gene IDs are found
     check_duplicate_gene_ids(sequences)
