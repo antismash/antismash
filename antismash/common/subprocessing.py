@@ -130,6 +130,7 @@ def parallel_execute(commands, cpus=None, timeout=None):
     try:
         errors = jobs.get(timeout=timeout)
     except multiprocessing.TimeoutError:
+        p.terminate()
         raise RuntimeError("One of %d child processes timed out after %d seconds" % (
                 cpus, timeout))
     except KeyboardInterrupt:
