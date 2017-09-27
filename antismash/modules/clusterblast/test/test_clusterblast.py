@@ -8,7 +8,6 @@ import os
 from collections import defaultdict
 from minimock import mock, restore
 
-import antismash.common.deprecated as utils # used in mocking
 from antismash.common.secmet import CDSFeature, Record # CDSFeature mocked
 from antismash.common.test.helpers import DummyCDS
 import antismash.modules.clusterblast.core as core
@@ -16,10 +15,9 @@ import antismash.modules.clusterblast.core as core
 class TestBlastParsing(unittest.TestCase):
     def setUp(self):
         #this means geneclustergenes inside blastparse will be empty
-        mock('utils.get_withincluster_cds_features', returns=[])
         mock('CDSFeature.get_accession', returns=None)
         #used by parse_subject, every sequence will be 100 long
-        mock('utils.get_feature_dict_protein_id', returns=defaultdict(lambda: DummyCDS(1, 101)))
+        mock('Record.get_cds_mapping', returns=defaultdict(lambda: DummyCDS(1, 101)))
         mock('core.get_cds_lengths', returns={})
         self.sample_data = self.read_sample_data()
         self.sample_data_as_lists = self.file_data_to_lists(self.sample_data)
@@ -29,7 +27,7 @@ class TestBlastParsing(unittest.TestCase):
 
     def parse_subject_wrapper(self, subject_line):
         geneclustergenes = {}
-        seq_record = "seq_record"
+        seq_record = Record("dummy")
         seqlengths = {}
         return core.parse_subject(subject_line, seqlengths,
                                   geneclustergenes, seq_record)
@@ -266,11 +264,11 @@ class TestProtein(unittest.TestCase):
 class TestSubjectParsing(unittest.TestCase):
     def setUp(self):
         self.geneclustergenes = {"CAG25752":""}
-        self.seq_record = "seq_record"
+        self.seq_record = Record("dummy")
         self.seqlengths = {"CAG25751.1" : 253}
         #used by parse_subject, but only if locus tag not in seqlengths
         mock('core.get_cds_lengths', returns=self.seqlengths)
-        mock('utils.get_feature_dict_protein_id', returns={"TEST" : DummyCDS(1, 301)})
+        mock('Record.get_cds_mapping', returns={"TEST" : DummyCDS(1, 301)})
 
     def tearDown(self):
         restore()
