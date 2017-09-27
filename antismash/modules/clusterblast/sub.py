@@ -7,11 +7,10 @@ from multiprocessing import Pool
 
 from helperlibs.wrappers.io import TemporaryDirectory
 
-from antismash.common.deprecated import writefasta
 import antismash.common.path as path
 
-from .core import write_raw_clusterblastoutput, \
-                  create_blast_inputs, blastparse, score_clusterblast_output, \
+from .core import write_raw_clusterblastoutput, write_fastas_with_all_genes, \
+                  blastparse, score_clusterblast_output, \
                   read_clusterblast_output, runblast, \
                   load_clusterblast_database
 from .results import ClusterResult, GeneralResults
@@ -50,21 +49,6 @@ def run_subclusterblast_on_record(seq_record, options):
     clusters, proteins = load_clusterblast_database(seq_record, "subclusterblast")
     return perform_subclusterblast(options, seq_record, clusters, proteins)
 
-
-def write_clusterblast_inputfiles(options, queryclusternames, queryclusterseqs):
-    size = int(len(queryclusternames) / options.cpus)
-    for i in range(options.cpus):
-        if i == 0:
-            setnames = queryclusternames[:size]
-            setseqs = queryclusterseqs[:size]
-        elif i == (options.cpus - 1):
-            setnames = queryclusternames[i * size:]
-            setseqs = queryclusterseqs[i * size:]
-        else:
-            setnames = queryclusternames[i * size:(i + 1) * size]
-            setseqs = queryclusterseqs[i * size:(i + 1) * size]
-        writefasta(setnames, setseqs, "input" + str(i) + ".fasta")
-
 def _run_blast_helper(database, index):
     """A wrapper of runblast() just to reverse args for functools.partial use"""
     # note: can't be nested because it must be picklable for Pool's use
@@ -87,8 +71,8 @@ def perform_subclusterblast(options, seq_record, clusters, proteins):
         for cluster in seq_record.get_clusters():
             logging.info("   Gene cluster " + str(cluster.get_cluster_number()))
             # prepare and run diamond
-            queryclusternames, queryclusterseqs = create_blast_inputs(cluster)
-            write_clusterblast_inputfiles(options, queryclusternames, queryclusterseqs)
+            write_fastas_with_all_genes([cluster], "input.fasta",
+                                        partitions=options.cpus)
             run_clusterblast_processes(options)
             blastoutput = read_clusterblast_output(options)
             write_raw_clusterblastoutput(options.output_dir, blastoutput, search_type="subclusterblast")

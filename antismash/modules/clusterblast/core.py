@@ -441,3 +441,45 @@ def score_clusterblast_output(clusters, allcoregenes, cluster_names_to_queries):
                 break
     #Sort gene clusters by score
     return sorted(results.items(), reverse=True, key=lambda x: x[1].sort_score())
+
+def write_fastas_with_all_genes(clusters, filename, partitions=1):
+    """ Write fasta files containing all genes in all clusters in a
+        blast friendly form.
+
+        If partitioning the data into multiple files, the index of the partition
+        will be included in the filename before the extension, e.g.
+        input.fasta -> input0.fasta, input1.fasta, ...
+
+        Arguments:
+            clusters - a list of clusters to find genes in
+            filename - the filename to use for the file
+            partitions - the number of files to create (approx. equally sized)
+
+        Returns:
+            a list containing filenames of the written files
+    """
+    if not isinstance(partitions, int):
+        raise TypeError("Partitions must be an int greater than 0")
+    elif partitions < 1:
+        raise ValueError("Partitions must be greater than 0")
+    all_names, all_seqs = [], []
+    for cluster in clusters:
+        names, seqs = create_blast_inputs(cluster)
+        all_names.extend(names)
+        all_seqs.extend(seqs)
+    if not (all_names and all_seqs):
+        raise ValueError("Diamond search space contains no sequences")
+    if partitions == 1:
+        utils.writefasta(all_names, all_seqs, filename)
+        return [filename]
+
+    chunk_filename = "%d".join(os.path.splitext(filename))
+    size = len(all_names) // partitions
+    for i in range(partitions):
+        chunk_names = all_names[i * size:(i + 1) * size]
+        chunk_seqs = all_seqs[i * size:(i + 1) * size]
+        if i == partitions - 1:
+            chunk_names = all_names[i * size:]
+            chunk_seqs = all_seqs[i * size:]
+        utils.writefasta(chunk_names, chunk_seqs, chunk_filename % i)
+    return [chunk_filename % i for i in range(partitions)]
