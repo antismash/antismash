@@ -9,7 +9,7 @@ from helperlibs.wrappers.io import TemporaryDirectory
 
 from antismash.common import secmet, path, subprocessing
 import antismash.common.test.helpers as helpers
-from antismash.config import args, get_config, update_config
+from antismash.config import args, get_config, update_config, destroy_config
 from antismash.modules import smcogs
 
 class Base(unittest.TestCase):
@@ -32,7 +32,8 @@ class Base(unittest.TestCase):
 
     def tearDown(self):
         subprocessing.parallel_function = self.old_parallel
-        update_config({})
+        destroy_config()
+        update_config(self.old_config)
 
     def get_args(self):
         return ["--minimal", "--enable-smcogs"]

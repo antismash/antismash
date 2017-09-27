@@ -7,7 +7,7 @@ from antismash.main import get_all_modules, detect_signature_genes
 from antismash.common import deprecated
 from antismash.common.module_results import ModuleResults
 import antismash.common.test.helpers as helpers
-from antismash.config import args, get_config, update_config
+from antismash.config import args, get_config, update_config, destroy_config
 from antismash.modules import tta
 
 class TtaIntegrationTest(unittest.TestCase):
@@ -17,7 +17,8 @@ class TtaIntegrationTest(unittest.TestCase):
         self.options = update_config(options)
 
     def tearDown(self):
-        update_config({})
+        destroy_config()
+        update_config(self.old_config)
 
     def test_nisin(self):
         record = deprecated.parse_input_sequence(helpers.get_path_to_nisin_genbank(), self.options)[0]

@@ -5,7 +5,7 @@ import unittest
 from argparse import Namespace
 
 from antismash import get_detection_modules, get_analysis_modules
-from antismash.config import get_config, update_config
+from antismash.config import get_config, update_config, destroy_config
 import antismash.config.args as args
 
 class TestConfig(unittest.TestCase):
@@ -15,7 +15,7 @@ class TestConfig(unittest.TestCase):
         self.default_parser = args.build_parser(modules=modules)
 
     def tearDown(self):
-        get_config().__dict__.clear()
+        destroy_config()
 
     def test_invalid_args(self):
         with self.assertRaises(SystemExit):
