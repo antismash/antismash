@@ -712,8 +712,14 @@ def sort_features(_seq_record):
 def get_cluster_cds_features(_cluster, _seq_record):
     raise RuntimeError("utils.get_cluster_cds_features(cluster) called, did you mean cluster.cds_children?")
 
-def get_aa_sequence(feature, to_stop=False):
+def get_aa_sequence(_feature, **_kwargs):
     raise RuntimeError("get_aa_sequence(cds) called, did you mean cds.get_aa_sequence()?")
 
-def get_feature_dict_protein_id(record):
-    RuntimeError("get_feature_dict_protein_id(record) called, did you mean record.get_cds_mapping()?")
+def get_feature_dict_protein_id(_record):
+    raise RuntimeError("get_feature_dict_protein_id(record) called, did you mean record.get_cds_mapping()?")
+
+def sortdictkeysbyvaluesrev(_data):
+    raise RuntimeError("sortdictkeysbyvaluesrev(data) called, did you mean [i[0] for i in sorted(data.items(), key=lambda x: (x[1], x[0]), reverse=True)]?")
+
+def features_overlap(_a, _b):
+    raise RuntimeError("features_overlap(a, b) called, did you mean a.overlaps_with(b)?")
