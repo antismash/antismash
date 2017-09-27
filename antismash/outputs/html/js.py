@@ -121,20 +121,15 @@ def convert_tta_codons(tta_codons):
     return js_codons
 
 def get_description(record, feature, type_, options, mibig_result):
-    "Get the description text of a feature"
+    "Get the description text of a CDS feature"
 
     replacements = {
         'locus_tag': feature.locus_tag,
         'protein_id': feature.protein_id,
-        'smcog': '-',
-        'ecnumber': '-',
         'transport_blast_line': '',
         'smcog_tree_line': '',
         'searchgtr_line': '',
-        'start': int(feature.location.start) + 1,
-        'end': int(feature.location.end),
         'model_details': get_model_details(feature),
-        'asf': ''
     }
 
     smcogs = not options.minimal or options.smcogs_enabled or options.smcogs_trees #TODO make simpler in args
@@ -145,16 +140,19 @@ def get_description(record, feature, type_, options, mibig_result):
     genomic_context_url = "http://www.ncbi.nlm.nih.gov/projects/sviewer/?" \
                           "Db=gene&DbFrom=protein&Cmd=Link&noslider=1&"\
                           "id=%s&from=%s&to=%s"
-    template = '<span class="svgene-tooltip-bold">%(product)s</span><br>\n'
-    template += 'Locus-tag: %(locus_tag)s; Protein-ID: %(protein_id)s<br>\n'
+    template = '<span class="svgene-tooltip-bold">{product}</span><br>\n'
+    template += 'Locus-tag: {locus_tag}; Protein-ID: {protein_id}<br>\n'
     if feature.get_qualifier('EC_number'):
-        template += "EC-number(s): %(ecnumber)s<br>\n"
+        template += "EC-number(s): {ecnumber}<br>\n"
     if smcogs:
-        template += "smCOG: %(smcog)s<br>\n"
+        template += "smCOG: {smcog}<br>\n"
     if options.input_type == 'nucl':
-        template += "Location: %(start)s - %(end)s<br><br>\n"
+        replacements["start"] = int(feature.location.start) + 1 # 1-indexed
+        replacements["end"] = int(feature.location.end)
+        template += "Location: {start} - {end}<br><br>\n"
+
     if feature.sec_met:
-        template += '<span class="bold">Signature pHMM hits:</span><br>\n%(model_details)s<br>\n'
+        template += '<span class="bold">Signature pHMM hits:</span><br>\n{model_details}<br>\n'
 
     if mibig_result:
         cluster_number = feature.cluster.get_cluster_number()
@@ -163,38 +161,28 @@ def get_description(record, feature, type_, options, mibig_result):
                                          feature.get_accession() + '_mibig_hits.html')
         generate_html_table(mibig_homology_file, mibig_result)
         replacements['mibig_homology_path'] = mibig_homology_file[len(options.output_dir) + 1:]
-        template += '<br><a href="%(mibig_homology_path)s" target="_new">MiBIG Hits</a><br>\n'
+        template += '<br><a href="{mibig_homology_path}" target="_new">MiBIG Hits</a><br>\n'
     template += """
-%(transport_blast_line)s
-%(searchgtr_line)s
-<a href="%(blastp_url)s" target="_new">NCBI BlastP on this gene</a><br>
-<a href="%(genomic_context_url)s" target="_new">View genomic context</a><br>
-%(smcog_tree_line)s<br>"""
+{transport_blast_line}
+{searchgtr_line}
+<a href="{blastp_url}" target="_new">NCBI BlastP on this gene</a><br>
+<a href="{genomic_context_url}" target="_new">View genomic context</a><br>
+{smcog_tree_line}<br>"""
     if get_ASF_predictions(feature):
-        template += '<span class="bold">Active Site Finder results:</span><br>\n%(asf)s<br><br>\n'
-    template += """AA sequence: <a href="javascript:copyToClipboard('%(sequence)s')">Copy to clipboard</a><br>"""
-    template += """Nucleotide sequence: <a href="javascript:copyToClipboard('%(dna_sequence)s')">Copy to clipboard</a><br>"""
+        replacements['asf'] = get_ASF_predictions(feature)
+        template += '<span class="bold">Active Site Finder results:</span><br>\n{asf}<br><br>\n'
+    template += """AA sequence: <a href="javascript:copyToClipboard('{sequence}')">Copy to clipboard</a><br>"""
+    template += """Nucleotide sequence: <a href="javascript:copyToClipboard('{dna_sequence}')">Copy to clipboard</a><br>"""
 
     if not smcogs:
         del replacements['smcog']
-    if options.input_type == 'prot':
-        del replacements['start']
-        del replacements['end']
 
     replacements['product'] = feature.product
-    if feature.translation:
-        sequence = feature.translation
-    else:
-        sequence = str(utils.get_aa_sequence(feature))
+    sequence = feature.translation
     dna_sequence = feature.extract(record.seq)
     replacements['blastp_url'] = blastp_url % sequence
     replacements['sequence'] = sequence
     replacements['dna_sequence'] = dna_sequence
-    if len(sequence) > 2000:
-        len_seq = 30
-    else:
-        len_seq = (len(sequence) / 80) + 1
-    replacements['len_seq'] = len_seq
     replacements['genomic_context_url'] = genomic_context_url % \
                     (record.id,
                      max(feature.location.start - 9999, 0),
@@ -202,22 +190,22 @@ def get_description(record, feature, type_, options, mibig_result):
     ecnumber = feature.get_qualifier('EC_number')
     if ecnumber:
         replacements['ecnumber'] = ", ".join(ecnumber)
-    else:
-        del replacements['ecnumber']
 
     if smcogs:
-        for note in feature.notes:
+        for note in feature.notes: #TODO move to secmet attribute
             if note.startswith('smCOG:') and '(' in note:
                 text = note[6:].split('(', 1)[0]
                 smcog, desc = text.split(':', 1)
                 desc = desc.replace('_', ' ')
                 replacements['smcog'] = '%s (%s)' % (smcog, desc)
-    if options.smcogs_trees:
-        for note in feature.notes:
+                break
+
+        for note in feature.notes: #TODO move to secmet attribute
             if note.startswith('smCOG tree PNG image:'):
                 entry = '<a href="%s" target="_new">View smCOG seed phylogenetic tree with this gene</a>'
                 url = note.split(':')[-1]
                 replacements['smcog_tree_line'] = entry % url
+                break
 
     if type_ == 'transport':
         url = "http://blast.jcvi.org/er-blast/index.cgi?project=transporter;" \
@@ -225,16 +213,14 @@ def get_description(record, feature, type_, options, mibig_result):
               "sequence=sequence%%0A%s" % sequence
         transport_blast_line = '<a href="%s" target="_new">TransportDB BLAST on this gene<br>' % url
         replacements['transport_blast_line'] = transport_blast_line
+
     key = record.id + "_" + feature.get_name()
     if key in searchgtr_links:
         url = searchgtr_links[key]
         searchgtr_line = '<a href="%s" target="_new">SEARCHGTr on this gene<br>' % url
         replacements['searchgtr_line'] = searchgtr_line
-    replacements['asf'] = get_ASF_predictions(feature)
-    if replacements['asf'] == "":
-        del replacements['asf']
 
-    return template % replacements
+    return template.format(**replacements)
 
 
 def get_biosynthetic_type(feature):
@@ -251,17 +237,12 @@ def get_model_details(feature):
     if feature.sec_met:
         return "<br>".join(map(str, feature.sec_met.domains))
     return ""
-#    result = ""
-#    for note in feature.qualifiers.get('sec_met', []):
-#        if not note.startswith('Domains detected'):
-#            continue
-#        note = note[18:]
-#        result += note.replace(';', '<br>')
-
-#    return result
 
 def get_ASF_predictions(feature):
     "check whether predictions from the active site finder module are annotated"
+    if not hasattr(get_ASF_predictions, "logged"):
+        logging.critical("ASF_predictions being skipped in js.py")
+        get_ASF_predictions.logged = True
     return "" #TODO
 #    ASFsec_met_quals = [sec_met_qual[16:] for sec_met_qual in feature.qualifiers.get('sec_met', [""]) if sec_met_qual.startswith("ASF-prediction")]
 #    result = "<br>\n".join(ASFsec_met_quals)
