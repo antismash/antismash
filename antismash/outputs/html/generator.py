@@ -3,6 +3,7 @@
 
 import json
 import logging
+import string
 import os
 
 import jinja2
@@ -42,7 +43,7 @@ def generate_webpage(seq_records, results, options):
 
 
     for i, record in enumerate(records):
-        record['seq_id'] = utils.ascii_string(record['seq_id'])
+        record['seq_id'] = "".join(char for char in record['seq_id'] if char in string.printable)
         for cluster in record['clusters']:
             from antismash import get_analysis_modules #TODO break circular dependency
             handlers = find_plugins_for_cluster(get_analysis_modules(), cluster)

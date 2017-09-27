@@ -501,12 +501,6 @@ def get_smcog_annotations(seq_record):
                 smcogdescriptions[smcogid] = smcog_descr
     return smcogdict, smcogdescriptions
 
-def ascii_string(inputstring):
-    # TODO only used in html output module, so move there
-    import string
-    allowable = string.ascii_letters + string.digits + string.punctuation + string.whitespace
-    return "".join([char for char in inputstring if char in allowable])
-
 def get_pksnrps_cds_features(seq_record):
     logging.critical("skipping get_pksnrps_cds_features(), missing PKSNRPS module")
     return []
