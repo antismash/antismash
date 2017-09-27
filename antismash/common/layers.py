@@ -278,8 +278,7 @@ class OptionsLayer:
 
     @property
     def triggered_limit(self):
-        logging.critical("OptionsLayer.triggered_limit will always be False")
-        return False #self.options.triggered_limit
+        return self.options.triggered_limit
 
     @property
     def transatpks_da(self):
