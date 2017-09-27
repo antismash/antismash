@@ -193,8 +193,7 @@ def parse_subject(tabs, seqlengths, geneclustergenes, seq_record):
     if query_key in seqlengths:
         perc_coverage = (float(tabs[3]) / seqlengths[query_key]) * 100
     else:
-        feature_by_id = utils.get_feature_dict_protein_id(seq_record)
-        print("feature id", query_key, "end res", feature_by_id[query_key])
+        feature_by_id = seq_record.get_cds_mapping()
         seqlength = len(feature_by_id[query_key].get_aa_sequence())
         perc_coverage = (float(tabs[3]) / seqlength) * 100
     return Subject(subject, genecluster, start, end, strand, annotation,

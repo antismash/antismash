@@ -458,10 +458,6 @@ def fix_record_name_id(seq_record, all_record_ids, options):
         if char in illegal_chars:
             seq_record.name = seq_record.name.replace(char, "")
 
-def get_feature_dict_protein_id(record):
-    logging.critical("get_feature_dict_protein_id(record) called, did you mean record.get_cds_mapping()?")
-    return record.get_cds_mapping()
-
 
 def get_smcog_annotations(seq_record):
     logging.critical("get_smcog_annotations(): should use secmet for smCOG note")
@@ -719,3 +715,5 @@ def get_cluster_cds_features(_cluster, _seq_record):
 def get_aa_sequence(feature, to_stop=False):
     raise RuntimeError("get_aa_sequence(cds) called, did you mean cds.get_aa_sequence()?")
 
+def get_feature_dict_protein_id(record):
+    RuntimeError("get_feature_dict_protein_id(record) called, did you mean record.get_cds_mapping()?")
