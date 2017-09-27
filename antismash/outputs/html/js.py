@@ -2,9 +2,9 @@
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
 import logging
+import string
 import os
 
-import antismash.common.deprecated as utils
 from antismash.outputs.html.generate_html_table import generate_html_table
 
 searchgtr_links = {}
@@ -86,7 +86,7 @@ def convert_cds_features(record, features, options, mibig_entries):
         js_orf['strand'] = feature.strand if feature.strand is not None else 1
         js_orf['locus_tag'] = feature.get_name()
         js_orf['type'] = get_biosynthetic_type(feature)
-        js_orf['description'] = utils.ascii_string(get_description(record, feature, js_orf['type'], options, mibig_entries.get(feature.protein_id, {})))
+        js_orf['description'] = get_description(record, feature, js_orf['type'], options, mibig_entries.get(feature.protein_id, {}))
         js_orfs.append(js_orf)
     return js_orfs
 
@@ -211,7 +211,8 @@ def get_description(record, feature, type_, options, mibig_result):
         searchgtr_line = '<a href="%s" target="_new">SEARCHGTr on this gene<br>' % url
         replacements['searchgtr_line'] = searchgtr_line
 
-    return template.format(**replacements)
+    completed = template.format(**replacements)
+    return "".join(char for char in completed if char in string.printable)
 
 
 def get_biosynthetic_type(feature):
