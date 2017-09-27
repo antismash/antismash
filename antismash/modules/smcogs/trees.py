@@ -57,7 +57,6 @@ def generate_trees(smcogs_dir, hmm_results, geneclustergenes, nrpspks_genes, opt
         for index, cds in enumerate(cds_features):
             smcog = hmm_results[cds.get_name()][0].hit_id.split(":")[0]
             args.append([cds, index, smcog, smcogs_dir])
-        logging.critical("calling parallel_func: smcog_tree_analysis, %s", args)
         subprocessing.parallel_function(smcog_tree_analysis, args)
 
     files = glob.glob("*.png")
@@ -69,7 +68,6 @@ def generate_trees(smcogs_dir, hmm_results, geneclustergenes, nrpspks_genes, opt
 
 def smcog_tree_analysis(cds, inputnr, smcog, output_dir):
     "run smCOG search on all gene cluster CDS features"
-    logging.critical("smcog_tree_analysis on %d", inputnr)
     gene_id = cds.get_name()
     seq = cds.get_aa_sequence()
     #create input.fasta file with single query sequence to be used as input for MSA
