@@ -39,13 +39,17 @@ def is_enabled(options):
 
 def check_previous_results(results, record, options):
     if not results or record.id != results["record_id"]:
-        logging.critical("empty results or missing id")
         return None
     if options.smcogs_trees and not results["tree_paths"]:
         # trees have to be regenerated, so don't reuse
         logging.debug("Trees require recalculation")
         return None
-    return SMCOGResults.from_json(results)
+    parsed = SMCOGResults.from_json(results)
+    for tree_filename in parsed.tree_images.values():
+        if not os.path.exists(os.path.join(parsed.relative_tree_path, tree_filename)):
+            logging.debug("Tree image files missing and must be regenerated")
+            return None
+    return parsed
 
 def check_prereqs():
     "Check if all required applications are around"
@@ -99,7 +103,7 @@ class SMCOGResults(ModuleResults):
 
     def add_to_record(self, record):
         functions = load_cog_annotations()
-        logging.critical("annotating genes with SMCOGS info: %d genes", len(self.best_hits))
+        logging.debug("annotating genes with SMCOGS info: %d genes", len(self.best_hits))
         #Annotate smCOGS in CDS features
         for feature in record.get_cds_features_within_clusters():
             gene_id = feature.get_name()
