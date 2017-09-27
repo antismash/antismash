@@ -44,7 +44,7 @@ def check_prereqs():
 def is_enabled(options):
     return False
 
-def check_previous_results(previous, record, options):
+def regenerate_previous_results(previous, record, options):
     return None
 
 def run_on_record(seq_record, results, options):

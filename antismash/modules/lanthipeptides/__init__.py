@@ -27,7 +27,7 @@ def check_options(options):
 def is_enabled(options):
     return not (options.minimal and not options.lanthipeptides_enabled)
 
-def check_previous_results(results, record, options):
+def regenerate_previous_results(results, record, options):
     if not results:
         return None
     results = LanthiResults.from_json(results, record)

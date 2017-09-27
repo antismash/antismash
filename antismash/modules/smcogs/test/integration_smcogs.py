@@ -71,7 +71,7 @@ class TestTreeGeneration(Base):
             # test the results function properly
             json = results.to_json()
             assert smcogs.SMCOGResults.from_json(json).to_json() == json
-            assert smcogs.check_previous_results(json, self.record, self.options).to_json() == json
+            assert smcogs.regenerate_previous_results(json, self.record, self.options).to_json() == json
 
             for cds in self.record.get_cluster(0).cds_children:
                 hit = results.best_hits.get(cds.get_name())

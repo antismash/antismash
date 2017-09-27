@@ -96,7 +96,7 @@ def regenerate_results_for_record(record, options, modules, previous_result):
         results = None
         if section:
             logging.debug("Regenerating results for %s", module.__name__)
-            results = module.check_previous_results(section, record, options)
+            results = module.regenerate_previous_results(section, record, options)
             if not results:
                 logging.debug("Results could not be generated for %s", module.__name__)
             else:

@@ -33,7 +33,7 @@ def is_enabled(options):
     """ Should the module be run with these options """
     return options.tta
 
-def check_previous_results(previous, record, options):
+def regenerate_previous_results(previous, record, options):
     if not previous:
         return None
     return TTAResults.from_json(previous)

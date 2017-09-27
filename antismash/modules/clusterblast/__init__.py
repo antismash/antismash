@@ -72,7 +72,7 @@ def check_options(options):
                     options.cb_nclusters, get_result_limit())]
     return []
 
-def check_previous_results(previous, record, options):
+def regenerate_previous_results(previous, record, options):
     if not previous:
         logging.debug("No previous clusterblast results to reuse")
         return None
