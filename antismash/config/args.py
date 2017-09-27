@@ -136,9 +136,6 @@ Options
                 if not show_opt:
                     if "basic" in self._display_group[action_group.title]:
                         show_opt = True
-# TODO: keep lines or not?
-#                    elif len(list(set(sys.argv) & set(self._display_group[action_group.title]))) > 0:
-#                        show_opt = True
                 if show_opt:
                     formatter.start_section(action_group.title)
                     if action_group.description is None:
@@ -168,9 +165,6 @@ class ModuleArgs:
                      enabled_by_default=False, basic_help=False):
         self.title = title
         self.parser = AntiSmashParser(add_help=False)
-# TODO: keep lines or not?
-#        if kwargs and set(kwargs) not in {"override_safeties", "enabled_by_default"}:
-#            raise ValueError("Unknown keyword arguments: %s" % list(kwargs))
         self.override = override_safeties #kwargs.get("override_safeties")
         self.enabled_by_default = enabled_by_default #kwargs.get("enabled_by_default")
         self.always_enabled = always_on
