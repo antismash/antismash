@@ -9,3 +9,6 @@ def update_config(values=None):
 
 def get_config():
     return antismash.config.args.Config()
+
+def destroy_config():
+    antismash.config.args.Config().__dict__.clear()

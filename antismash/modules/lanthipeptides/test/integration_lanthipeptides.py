@@ -11,7 +11,7 @@ import antismash
 from antismash.common import path
 from antismash.common.test import helpers
 from antismash.common.secmet import Record
-from antismash.config import update_config
+from antismash.config import update_config, destroy_config
 from antismash.config.args import build_parser
 from antismash.modules import lanthipeptides
 from antismash.modules.lanthipeptides import specific_analysis, LanthiResults
@@ -23,7 +23,7 @@ class IntegrationLanthipeptides(unittest.TestCase):
         update_config(options)
 
     def tearDown(self):
-        update_config({})
+        destroy_config()
 
     def test_nisin(self):
         "Test lanthipeptide prediction for nisin A"

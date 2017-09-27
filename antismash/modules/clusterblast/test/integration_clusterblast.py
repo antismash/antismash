@@ -9,7 +9,7 @@ from antismash.main import get_all_modules, detect_signature_genes
 from antismash.common import deprecated
 from antismash.common.module_results import ModuleResults
 import antismash.common.test.helpers as helpers
-from antismash.config import args, get_config, update_config
+from antismash.config import args, get_config, update_config, destroy_config
 from antismash.modules import clusterblast
 
 class Base(unittest.TestCase):
@@ -42,7 +42,8 @@ class Base(unittest.TestCase):
         assert self.record.get_cds_features_within_clusters()
 
     def tearDown(self):
-        update_config({})
+        destroy_config()
+        update_config(self.old_config)
 
     def get_results(self):
         """ override with a function that runs *blast, verifies basics and
