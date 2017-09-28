@@ -7,6 +7,7 @@ from helperlibs.wrappers.io import TemporaryDirectory
 
 from antismash.main import get_all_modules, detect_signature_genes
 from antismash.common import deprecated
+from antismash.common.record_processing import parse_input_sequence
 from antismash.common.module_results import ModuleResults
 import antismash.common.test.helpers as helpers
 from antismash.config import args, get_config, update_config, destroy_config
@@ -32,7 +33,7 @@ class Base(unittest.TestCase):
 
     def build_record(self, genbank):
         # construct a working record
-        self.record = deprecated.parse_input_sequence(genbank, self.options)[0]
+        self.record = parse_input_sequence(genbank)[0]
         detect_signature_genes(self.record, self.options)
         clusters = self.record.get_clusters()
         # make sure it's worth using

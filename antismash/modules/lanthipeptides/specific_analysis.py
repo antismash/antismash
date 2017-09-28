@@ -593,14 +593,16 @@ def acquire_rodeo_heuristics(seq_record, query, leader, core, domains):
     else:
         tabs.append(0)
     #Precursor peptide mass < 4000 Da
-    precursor_analysis = deprecated.RobustProteinAnalysis(precursor, monoisotopic=True, invalid='average')
+    precursor_analysis = deprecated.RobustProteinAnalysis(precursor,
+                                         monoisotopic=True, ignore_invalid=True)
     if precursor_analysis.molecular_weight() < 4000:
         score -= 3
         tabs.append(1)
     else:
         tabs.append(0)
     #Core peptide mass < 2000 Da
-    core_analysis = deprecated.RobustProteinAnalysis(core, monoisotopic=True, invalid='average')
+    core_analysis = deprecated.RobustProteinAnalysis(core, monoisotopic=True,
+                                                     ignore_invalid=True)
     if core_analysis.molecular_weight() < 2000:
         score -= 3
         tabs.append(1)
@@ -655,15 +657,15 @@ def acquire_rodeo_heuristics(seq_record, query, leader, core, domains):
         score += 3
 
     # Precursor peptide mass (unmodified)
-    precursor_analysis = deprecated.RobustProteinAnalysis(precursor, monoisotopic=True, invalid='average')
+    precursor_analysis = deprecated.RobustProteinAnalysis(precursor, monoisotopic=True, ignore_invalid=False)
     tabs.append(float(precursor_analysis.molecular_weight()))
 
     # Unmodified leader peptide mass
-    leader_analysis = deprecated.RobustProteinAnalysis(leader, monoisotopic=True, invalid='average')
+    leader_analysis = deprecated.RobustProteinAnalysis(leader, monoisotopic=True, ignore_invalid=False)
     tabs.append(float(leader_analysis.molecular_weight()))
 
     # Unmodified core peptide mass
-    core_analysis = deprecated.RobustProteinAnalysis(core, monoisotopic=True, invalid='average')
+    core_analysis = deprecated.RobustProteinAnalysis(core, monoisotopic=True, ignore_invalid=False)
     tabs.append(float(core_analysis.molecular_weight()))
 
     #Length of leader peptide

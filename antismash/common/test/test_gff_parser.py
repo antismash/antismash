@@ -7,16 +7,16 @@ from unittest import TestCase
 from Bio.SeqFeature import CompoundLocation
 
 from antismash.common import gff_parser, path
-from antismash.common.test.helpers import FakeRecord, get_simple_options
+from antismash.common.test.helpers import get_simple_options, DummyRecord
 
 class GffParserTest(TestCase):
     def setUp(self):
         self.config = get_simple_options(None, [])
         self.config.genefinding_gff3 = path.get_full_path(__file__, "data", "test_gff.gff")
         self.single_entry = False
-        contig1 = FakeRecord(seq="A"*2000, real_seq=True)
+        contig1 = DummyRecord(seq="A"*2000, real_seq=True)
         contig1.id = "CONTIG_1"
-        contig2 = FakeRecord(seq="A"*2000, real_seq=True)
+        contig2 = DummyRecord(seq="A"*2000, real_seq=True)
         contig2.id = "CONTIG_2"
         self.sequences = [contig1, contig2]
 
@@ -37,7 +37,7 @@ class GffParserTest(TestCase):
 
     def test_features_from_file(self):
         filename = path.get_full_path(__file__, 'data', 'fumigatus.cluster1.gff')
-        record = FakeRecord(real_seq=True)
+        record = DummyRecord(real_seq=True)
         features = gff_parser.get_features_from_file(record, open(filename))
         assert len(features) == 11
         for feature in features:

@@ -10,7 +10,7 @@ from Bio.Seq import Seq
 from minimock import mock, restore
 
 from antismash.common.deprecated import FeatureLocation
-from antismash.common.test.helpers import FakeRecord, FakeFeature, DummyFeature
+from antismash.common.test.helpers import DummyRecord, DummyCDS, DummyFeature, DummyCluster
 from antismash.common.secmet import Record, CDSFeature, Feature
 import antismash.common.path as path
 from antismash.config import get_config, update_config
@@ -56,12 +56,12 @@ class HmmDetectionTest(unittest.TestCase):
             ]
         }
         self.feature_by_id = {
-            "GENE_1" : CDSFeature(FeatureLocation(0, 30000), "dummytrans", locus_tag="GENE_1"), #A1 B1 C1 D1        A,B,C,D1
-            "GENE_2" : CDSFeature(FeatureLocation(30000, 50000), "dummytrans", locus_tag="GENE_2"),# A1 B1 C1 D1    A,B,C,D1
-            "GENE_3" : CDSFeature(FeatureLocation(70000, 90000), "dummytrans", locus_tag="GENE_3"), #A2 B2 C2 D1    A,B,C,D1 #because largest distance
-            "GENE_X" : CDSFeature(FeatureLocation(95000, 100000), "dummytrans", locus_tag="GENE_X"),
-            "GENE_4" : CDSFeature(FeatureLocation(125000, 140000), "dummytrans", locus_tag="GENE_4"), #A3 B3 C3 D2  A,B,C,D2
-            "GENE_5" : CDSFeature(FeatureLocation(130000, 150000), "dummytrans", locus_tag="GENE_5")# A3 B3 C3 D2   A,B,C,D2
+            "GENE_1" : DummyCDS(0, 30000, translation="dummytrans", locus_tag="GENE_1"), #A1 B1 C1 D1        A,B,C,D1
+            "GENE_2" : DummyCDS(30000, 50000, translation="dummytrans", locus_tag="GENE_2"),# A1 B1 C1 D1    A,B,C,D1
+            "GENE_3" : DummyCDS(70000, 90000, translation="dummytrans", locus_tag="GENE_3"), #A2 B2 C2 D1    A,B,C,D1 #because largest distance
+            "GENE_X" : DummyCDS(95000, 100000, translation="dummytrans", locus_tag="GENE_X"),
+            "GENE_4" : DummyCDS(125000, 140000, translation="dummytrans", locus_tag="GENE_4"), #A3 B3 C3 D2  A,B,C,D2
+            "GENE_5" : DummyCDS(130000, 150000, translation="dummytrans", locus_tag="GENE_5")# A3 B3 C3 D2   A,B,C,D2
         }
 
         test_names = set(["modelA", "modelB", "modelC", "modelF", "modelG"])
@@ -158,7 +158,7 @@ class HmmDetectionTest(unittest.TestCase):
 
     def test_get_overlaps_table(self):
         get_overlaps_table = hmm_detection.get_overlaps_table
-        assert get_overlaps_table(FakeRecord()) == {}
+        assert get_overlaps_table(DummyRecord()) == {}
         assert len(self.record.get_cds_features()) == 6
         assert get_overlaps_table(self.record) == {'GENE_1': 0, 'GENE_2': 1,
                     'GENE_3': 2, 'GENE_4': 4, 'GENE_5': 4, 'GENE_X': 3}
@@ -168,31 +168,26 @@ class HmmDetectionTest(unittest.TestCase):
         assert len(profiles) == 220
 
     def test_store_detection(self):
-        features = [FakeFeature("cluster", location=FeatureLocation(0, 10)),
-                    FakeFeature("not-cluster", location=FeatureLocation(10, 20)),
-                    FakeFeature("cluster", location=FeatureLocation(20, 30))]
-        for feature in features:
-            if feature.type == "cluster":
-                feature.products = ['dummy']
-            assert not feature.detection_rules
-        record = FakeRecord(features)
+        features = [DummyCluster(0, 10),
+                    DummyFeature(10, 20),
+                    DummyCluster(20, 30)]
+        record = DummyRecord(features)
+        assert len(record.get_clusters()) == 2
+        for cluster in record.get_clusters():
+            assert not cluster.detection_rules
         dummy_rule = rule_parser.DetectionRule("dummy", 10, 20, "a")
         hmm_detection.store_detection_details({"dummy" : dummy_rule}, record)
-        for feature in features:
-            if feature.type == "cluster":
-                assert feature.products == ['dummy']
-                assert feature.detection_rules == ['a']
-            else:
-                assert feature.products == []
-                assert feature.detection_rules == []
+        for feature in record.get_clusters():
+            assert feature.products == ['dummy']
+            assert feature.detection_rules == ['a']
 
     def test_store_detection_multitype(self):
-        feature = FakeFeature("cluster")
+        feature = DummyCluster(0, 50)
         feature.products = ["a", "b"]
         dummy_rule_a = rule_parser.DetectionRule("a", 10, 20, "c")
         dummy_rule_b = rule_parser.DetectionRule("b", 10, 20, "d")
         hmm_detection.store_detection_details({"a":dummy_rule_a, "b":dummy_rule_b},
-                                              FakeRecord(features=[feature]))
+                                              DummyRecord(features=[feature]))
         assert feature.detection_rules == ['c', 'd']
         assert feature.products == ['a', 'b']
 
@@ -264,7 +259,7 @@ class HmmDetectionTest(unittest.TestCase):
                     else:
                         features.append(Feature(loc, feature_type="not_CDS"))
                         features[-1].locus_tag = hsp.hit_id[0]
-            record = FakeRecord(features)
+            record = DummyRecord(features)
             overlaps = hmm_detection.get_overlaps_table(record)
             features_by_id = {i.locus_tag : i for i in features}
             results_by_id = {}

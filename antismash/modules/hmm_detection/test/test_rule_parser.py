@@ -5,26 +5,27 @@ import unittest
 from minimock import mock, restore
 
 import antismash.modules.hmm_detection.rule_parser as rule_parser
+from antismash.common.test.helpers import DummyCDS, DummyRecord
 # pylint: disable=unused-import
 from antismash.modules.hmm_detection import signatures  # for mocking
 # pylint: enable=unused-import
-from antismash.modules.hmm_detection.test.test_hmm_detection import FakeFeature, FakeHSP, FakeRecord, FeatureLocation
+from antismash.modules.hmm_detection.test.test_hmm_detection import FakeHSP
 
 class DetectionTest(unittest.TestCase):
     def setUp(self):
         self.feature_by_id = {
-            "GENE_1" : FakeFeature("CDS", FeatureLocation(0, 30000), {"locus_tag": ["GENE_1"]}),
-            "GENE_2" : FakeFeature("CDS", FeatureLocation(30000, 50000), {"locus_tag": ["GENE_2"]}),
-            "GENE_3" : FakeFeature("CDS", FeatureLocation(70000, 90000), {"locus_tag": ["GENE_3"]}),
-            "GENE_X" : FakeFeature("CDS", FeatureLocation(95000, 100000), {"locus_tag": ["GENE_X"]}),
-            "GENE_4" : FakeFeature("CDS", FeatureLocation(125000, 140000), {"locus_tag": ["GENE_4"]}),
-            "GENE_5" : FakeFeature("CDS", FeatureLocation(145000, 150000), {"locus_tag": ["GENE_5"]})
+            "GENE_1" : DummyCDS(0, 30000, locus_tag="GENE_1"),
+            "GENE_2" : DummyCDS(30000, 50000, locus_tag="GENE_2"),
+            "GENE_3" : DummyCDS(70000, 90000, locus_tag="GENE_3"),
+            "GENE_X" : DummyCDS(95000, 100000, locus_tag="GENE_X"),
+            "GENE_4" : DummyCDS(125000, 140000, locus_tag="GENE_4"),
+            "GENE_5" : DummyCDS(145000, 150000, locus_tag="GENE_5")
         }
         self.features = []
         for gene_id in self.feature_by_id:
             self.features.append(self.feature_by_id[gene_id])
         self.features.sort(key=lambda x: x.location.start) # vital for py3 < 3.5
-        self.record = FakeRecord(self.features)
+        self.record = DummyRecord(self.features)
 
         self.results_by_id = {
             "GENE_1" : [FakeHSP("a", "GENE_1", 0, 10, 50, 0),
@@ -124,7 +125,7 @@ class DetectionTest(unittest.TestCase):
                 FakeHSP("modelB", "GENE_1", 0, 10, 50, 0)
             ]}
         self.feature_by_id = {
-            "GENE_1" : FakeFeature("CDS", FeatureLocation(0, 30000), {"locus_tag": ["GENE_1"]})
+            "GENE_1" : DummyCDS(0, 30000, locus_tag="GENE_1")
         }
 
         results = self.run_test(["A 10 20 minimum(2, [modelA,modelB])"])

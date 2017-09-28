@@ -1,4 +1,8 @@
+# License: GNU Affero General Public License v3 or later
+# A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
+
 import logging
+
 from Bio.SeqFeature import FeatureLocation, CompoundLocation, SeqFeature
 from BCBio import GFF
 
@@ -92,15 +96,17 @@ def get_features_from_file(seq_record, handle, limit_to_seq_id=False):
                 features.append(new_feature)
     return features
 
-def run(sequence, single_entry, options):
+def run(record, single_entry, options):
     # If there's only one sequence in both, read all, otherwise, read only appropriate part of GFF3.
     limit_info = False
     if not single_entry:
-        limit_info = dict(gff_id=[sequence.id])
+        limit_info = dict(gff_id=[record.id])
 
     handle = open(options.genefinding_gff3)
-    features = get_features_from_file(sequence, handle, limit_info)
-    sequence.features.extend(features)
+    features = get_features_from_file(record, handle, limit_info)
+    logging.critical("gff parsing still generating SeqFeatures") # TODO
+    for feature in features:
+        record.add_biopython_feature(feature)
 
 
 def check_sub(feature, sequence):

@@ -1,0 +1,52 @@
+LOCUS       ABYB01000000             371 rc    DNA     linear   BCT 07-FEB-2014
+DEFINITION  Streptomyces roseosporus NRRL 15998, whole genome shotgun
+            sequencing project.
+ACCESSION   ABYB00000000
+VERSION     ABYB00000000.1
+DBLINK      BioProject: PRJNA32147
+            BioSample: SAMN02595234
+KEYWORDS    WGS.
+SOURCE      Streptomyces roseosporus NRRL 15998
+  ORGANISM  Streptomyces roseosporus NRRL 15998
+            Bacteria; Actinobacteria; Streptomycetales; Streptomycetaceae;
+            Streptomyces.
+REFERENCE   1  (bases 1 to 371)
+  AUTHORS   Fischbach,M., Ward,D., Young,S., Kodira,C.D., Zeng,Q., Koehrsen,M.,
+            Godfrey,P., Alvarado,L., Berlin,A.M., Borenstein,D., Chen,Z.,
+            Engels,R., Freedman,E., Gellesch,M., Goldberg,J., Griggs,A.,
+            Gujja,S., Heiman,D.I., Hepburn,T.A., Howarth,C., Jen,D., Larson,L.,
+            Lewis,B., Mehta,T., Park,D., Pearson,M., Roberts,A., Saif,S.,
+            Shea,T.D., Shenoy,N., Sisk,P., Stolte,C., Sykes,S.N., Walk,T.,
+            White,J., Yandava,C., Straight,P., Clardy,J., Hung,D., Kolter,R.,
+            Mekalanos,J., Walker,S., Walsh,C.T., Wieland,B.L.C., Ilzarbe,M.,
+            Galagan,J., Nusbaum,C. and Birren,B.
+  CONSRTM   The Broad Institute Genome Sequencing Platform, Broad Institute
+            Microbial Sequencing Center
+  TITLE     Annotation of Streptomyces roseosporus strain NRRL 15998
+  JOURNAL   Unpublished
+REFERENCE   2  (bases 1 to 371)
+  AUTHORS   Fischbach,M., Ward,D., Young,S., Jaffe,D., Gnerre,S., Berlin,A.,
+            Heiman,D., Hepburn,T., Sykes,S., Godfrey,P., Alvarado,L.,
+            Kodira,C.D., Straight,P., Clardy,J., Hung,D., Kolter,R.,
+            Mekalanos,J., Walker,S., Walsh,C.T., Lander,E., Galagan,J.,
+            Nusbaum,C. and Birren,B.
+  CONSRTM   The Broad Institute Genome Sequencing Platform
+  TITLE     Direct Submission
+  JOURNAL   Submitted (30-OCT-2008) Broad Institute of MIT and Harvard, 7
+            Cambridge Center, Cambridge, MA 02142, USA
+COMMENT     The Streptomyces roseosporus NRRL 15998 whole genome shotgun (WGS)
+            project has the project accession ABYB00000000.  This version of
+            the project (01) has the accession number ABYB01000000, and
+            consists of sequences ABYB01000001-ABYB01000371.
+            Genome Coverage: 11.9X (11.4X Q>20)
+            Annotation was added to the scaffold in March 2010.
+FEATURES             Location/Qualifiers
+     source          1..371
+                     /organism="Streptomyces roseosporus NRRL 15998"
+                     /mol_type="genomic DNA"
+                     /strain="NRRL 15998"
+                     /db_xref="taxon:457431"
+WGS         ABYB01000001-ABYB01000371
+WGS_SCAFLD  DS999644
+//
+
