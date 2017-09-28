@@ -2,8 +2,9 @@
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
 import logging
-from Bio.SeqFeature import SeqFeature, FeatureLocation, \
-                           BeforePosition, AfterPosition
+from Bio.SeqFeature import FeatureLocation, BeforePosition, AfterPosition
+
+from antismash.common.secmet import CDSFeature
 
 def scan_orfs(seq, direction, offset=0):
     """ Scan for open reading frames on a given sequence
@@ -92,9 +93,8 @@ def find_all_orfs(seq_record):
     orfs = sort_orfs(all_orfs)
     for orfnr, orf in enumerate(orfs):
         locus_tag = 'ctg%d_allorf%06d' % (seq_record.record_index, orfnr)
-        feature = SeqFeature(location=orf, id=locus_tag, type="CDS",
-                    qualifiers={'locus_tag': [locus_tag]})
-        feature.qualifiers['note'] = ["auto-all-orf"]
-        seq_record.features.append(feature)
+        feature = CDSFeature(orf, locus_tag=locus_tag)
+        feature.notes.append("auto-all-orf")
+        seq_record.add_cds_feature(feature)
     logging.info("Found %d ORFs", len(orfs))
     return len(orfs)

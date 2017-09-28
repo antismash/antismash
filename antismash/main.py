@@ -11,7 +11,7 @@ from datetime import datetime
 from Bio import SeqIO
 
 from antismash.config import loader, update_config
-from antismash.common import deprecated, serialiser
+from antismash.common import deprecated, serialiser, record_processing
 from antismash.common.module_results import ModuleResults
 from antismash.modules import tta, genefinding, hmm_detection, clusterblast, \
                               dummy, lanthipeptides, smcogs
@@ -91,11 +91,12 @@ def run_detection_stage(record, options, detection_modules):
     return detection_results
 
 def regenerate_results_for_record(record, options, modules, previous_result):
+    logging.debug("Regenerating results for record %s", record.id)
     for module in modules:
         section = previous_result.pop(module.__name__, None)
         results = None
         if section:
-            logging.debug("Regenerating results for %s", module.__name__)
+            logging.debug("Regenerating results for module %s", module.__name__)
             results = module.regenerate_previous_results(section, record, options)
             if not results:
                 logging.debug("Results could not be generated for %s", module.__name__)
@@ -175,6 +176,9 @@ def write_outputs(results, options):
 
 def annotate_records(results):
     for record, record_results in zip(results.records, results.results):
+        if record.skip:
+            logging.debug("Not annotating skipped record %s: %s", record.id, record.skip)
+            continue
         logging.debug("Annotating record %s with results from: %s", record.id,
                       ", ".join([name.split()[0].split('.')[-1] for name in record_results]))
         for module, result in record_results.items():
@@ -184,7 +188,8 @@ def annotate_records(results):
 
 def read_data(sequence_file, options):
     if sequence_file:
-        records = deprecated.parse_input_sequence(sequence_file, options)
+        records = record_processing.parse_input_sequence(sequence_file,
+                                options.minlength, options.start, options.end)
         return serialiser.AntismashResults(sequence_file.rsplit(os.sep, 1)[-1],
                               records, [{}] * len(records), __version__)
 
@@ -262,7 +267,7 @@ def run_antismash(sequence_file, options, detection_modules=None,
 
     results = read_data(sequence_file, options)
 
-    results.records = deprecated.pre_process_sequences(results.records, options, genefinding)
+    results.records = record_processing.pre_process_sequences(results.records, options, genefinding)
     for seq_record, previous_result in zip(results.records, results.results):
         # skip if we're not interested in it
         if seq_record.skip:

@@ -6,20 +6,23 @@ import os
 from Bio.Seq import Seq
 from Bio.SeqFeature import FeatureLocation
 
-from antismash.common.secmet import Cluster, CDSFeature, Feature
+from antismash.common.secmet import Cluster, CDSFeature, Feature, Record
 from antismash.config.args import build_parser
-from antismash.main import get_analysis_modules, get_detection_modules
+from antismash.main import get_all_modules
 
 class DummyFeature(Feature):
-    def __init__(self, start, end, strand=1):
-        super().__init__(FeatureLocation(start, end, strand), feature_type="none")
+    def __init__(self, start, end, strand=1, feature_type="none"):
+        super().__init__(FeatureLocation(start, end, strand), feature_type=feature_type)
 
 class DummyCDS(CDSFeature):
     counter = 0
-    def __init__(self, start, end, strand=1):
+    def __init__(self, start, end, strand=1, locus_tag=None, translation=None):
         trans = "A"*(abs(start-end))
-        locus_tag = "dummy_locus_tag_%d" % DummyCDS.counter
-        DummyCDS.counter += 1
+        if not locus_tag:
+            locus_tag = "dummy_locus_tag_%d" % DummyCDS.counter
+            DummyCDS.counter += 1
+        if translation:
+            self._translation = translation
         super().__init__(FeatureLocation(start, end, strand), translation=trans,
                          locus_tag=locus_tag)
 
@@ -32,7 +35,7 @@ class DummyCluster(Cluster):
                          product)
 
 def get_simple_options(module, args):
-    modules = get_detection_modules() + get_analysis_modules()
+    modules = get_all_modules()
     if module is not None:
         modules = [module]
     return build_parser(from_config_file=False, modules=modules).parse_args(args)
@@ -48,45 +51,14 @@ class FakeSeq(object):
     def __str__(self):
         return self.seq
 
-class FakeRecord(object):
-    "class for generating a seq_record like data structure"
+class DummyRecord(Record):
+    "class for generating a SeqRecord like data structure"
     def __init__(self, features=None, seq='FAKESEQ', real_seq=False):
+        super().__init__(Seq(seq))
+        if features:
+            for feature in features:
+                self.add_feature(feature)
         self.record_index = 0
-        if features is None:
-            features = []
-        self.features = features
-        if real_seq:
-            self.seq = Seq(seq)
-        else:
-            self.seq = FakeSeq(seq)
-
-    def __len__(self):
-        """ returns the largest location of all features, so as to not break
-            when new features are added to tests that extend past a hardcoded
-            value
-
-            if no features exist yet, returns the length of the sequence
-        """
-        if not self.features:
-            return len(self.seq)
-        return max(max(feature.location.end, feature.location.start) for feature in self.features)
-
-    def get_cds_features(self):
-        res = []
-        for feature in self.features:
-            if feature.type == "CDS":
-                res.append(feature)
-        return res
-
-    def add_cluster(self, cluster):
-        self.features.append(cluster)
-
-    def get_clusters(self):
-        res = []
-        for feature in self.features:
-            if feature.type == "cluster":
-                res.append(feature)
-        return res
 
 class FakeFeature(object):
     "class for generating a SeqFeature like datastructure"
