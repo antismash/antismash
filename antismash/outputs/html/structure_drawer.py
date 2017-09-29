@@ -1,96 +1,76 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
-
 import shutil
 import os
 import logging
 
 from helperlibs.wrappers.io import TemporaryDirectory
 
-import antismash.common.deprecated as utils
 import antismash.common.path as path
 
 from .external.indigo import Indigo
 from .external.indigo_renderer import IndigoRenderer
 
-def _update_sec_met_entry(clusterfeature, smiles_string):
-    clusterfeature.qualifiers['structure'] = [smiles_string]
+def gen_smiles_from_pksnrps(compound_pred, cluster_number):
+    smiles = ""
+    residues = compound_pred.replace("(", "").replace(")", "").replace(" + ", " ").replace("-", " ").split(" ")
 
+    # Counts the number of malonate and its derivatives in polyketides
+    mal_count = 0
+    for i in residues:
+        if "mal" in i:
+            mal_count += 1
 
-def generate_chemical_structure_preds(pksnrpsvars, seq_record, options):
+    # Reflecting reduction states of ketide groups starting at beta carbon of type 1 polyketide
+    if "pk" in residues and "mal" in residues[-1]:
+        residues.pop(residues.index('pk')+1)
+        residues.append('pks-end1')
+    elif mal_count == len(residues):
+        if residues[0] == "mal":
+            residues[0] = "pks-start1" # TODO why replace and not insert?
+        if residues[-1] == "ccmal":
+            residues.append('pks-end2')
+
+    if len(residues) > 1:
+        # Conventionally aaSMILES was used;
+        # chirality expressed with "@@" causes indigo error
+        aa_smiles = load_smiles()
+
+        for monomer in residues:
+            if monomer in aa_smiles:
+                smiles += aa_smiles[monomer]
+            elif '|' in monomer:
+                logging.debug("Substituting 'nrp' for combined monomer %r", monomer)
+                smiles += aa_smiles['nrp']
+            else:
+                logging.debug("No SMILES mapping for unknown monomer %r", monomer)
+        logging.debug("Cluster %s: smiles: %s", cluster_number, smiles)
+    return smiles
+
+def generate_chemical_structure_preds(pksnrpsvars, record, options):
     #Create directory to store structures
-    options.structuresfolder = os.path.abspath(os.path.join(options.output_dir, "structures"))
-    if not os.path.exists(options.structuresfolder):
-        os.mkdir(options.structuresfolder)
+    structures_dir = os.path.abspath(os.path.join(options.output_dir, "structures"))
+    if not os.path.exists(structures_dir):
+        os.mkdir(structures_dir)
 
-    #Combine predictions into a prediction of the final chemical structure and generate images
-    for genecluster in seq_record.get_clusters():
-        geneclusternr = genecluster.get_cluster_number()
+    # Combine predictions into a prediction of the final chemical structure and generate images
+    for cluster in record.get_clusters():
+        cluster_number = cluster.get_cluster_number()
         smiles_string = ""
-        if pksnrpsvars.compound_pred_dict.has_key(geneclusternr):
-
-            #print "output_modules/html/pksnrpsvars.compound_pred_dict:"
-            #print pksnrpsvars.compound_pred_dict
-
-            residues = pksnrpsvars.compound_pred_dict[geneclusternr].replace("(", "").replace(")", "").replace(" + ", " ").replace("-", " ")
-
-            #Now generates SMILES of predicted secondary metabolites without NP.searcher
-            residuesList = residues.split(" ")
-
-            #Counts the number of malonate and its derivatives in polyketides
-            mal_count = 0
-            for i in residuesList:
-                if "mal" in i:
-                    mal_count += 1
-
-            nrresidues = len(residuesList)
-
-            #Reflecting reduction states of ketide groups starting at beta carbon of type 1 polyketide
-            if "pk" in residuesList and "mal" in residuesList[-1]:
-                residuesList.pop(residuesList.index('pk')+1)
-                residuesList.append('pks-end1')
-            elif mal_count == len(residuesList):
-                if residuesList[0] == "mal":
-                    residuesList[0] = "pks-start1"
-                if residuesList[-1] == "ccmal":
-                    residuesList.append('pks-end2')
-
-            if nrresidues > 1:
-                #Conventionally used aaSMILES was used;
-                #chirality expressed with "@@" causes indigo error
-                aa_smiles = load_smiles()
-
-                for monomer in residuesList:
-                    if monomer in aa_smiles:
-                        smiles_string += aa_smiles[monomer]
-                    elif '|' in monomer:
-                        logging.debug("Substituting 'nrp' for combined monomer %r", monomer)
-                        smiles_string += aa_smiles['nrp']
-                    else:
-                        logging.debug("No SMILES mapping for unknown monomer %r", monomer)
-                logging.debug("Cluster %s: smiles_string: %s", geneclusternr, smiles_string)
-                with TemporaryDirectory(change=True):
-                    smilesfile = open("genecluster" + str(geneclusternr) + ".smi", "w")
-                    smilesfile.write(smiles_string)
-                    smilesfile.close()
-                    depictstatus = depict_smile(geneclusternr, options.structuresfolder)
-                if depictstatus == "failed":
-                    pksnrpsvars.failedstructures.append(geneclusternr)
-        elif utils.get_cluster_type(genecluster) == "ectoine":
+        is_ectoine = cluster.products == ["ectoine"]
+        if cluster_number in pksnrpsvars.compound_pred_dict:
+            smiles_string = gen_smiles_from_pksnrps(pksnrpsvars.compound_pred_dict[cluster_number], cluster_number)
+        elif is_ectoine:
             smiles_string = "CC1=NCCC(N1)C(=O)O"
-            with TemporaryDirectory(change=True):
-                smilesfile = open("genecluster" + str(geneclusternr) + ".smi", "w")
-                smilesfile.write(smiles_string)
-                smilesfile.close()
-                depictstatus = depict_smile(geneclusternr, options.structuresfolder)
-            if depictstatus == "failed":
-                pksnrpsvars.failedstructures.append(geneclusternr)
-            elif genecluster in pksnrpsvars.failedstructures:
-                del pksnrpsvars.failedstructures[pksnrpsvars.failedstructures.index(geneclusternr)]
-            pksnrpsvars.compound_pred_dict[geneclusternr] = "ectoine"
-        _update_sec_met_entry(genecluster, smiles_string)
+            pksnrpsvars.compound_pred_dict[cluster_number] = "ectoine"
 
+        if not depict_smile(cluster_number, smiles_string, structures_dir):
+            pksnrpsvars.failedstructures.append(cluster_number)
+        elif is_ectoine and cluster in pksnrpsvars.failedstructures: #TODO not sure this is possible to hit
+            del pksnrpsvars.failedstructures[pksnrpsvars.failedstructures.index(cluster_number)]
+
+        cluster.smiles_structure = smiles_string
 
 def load_smiles():
     """Load smiles from a dictionary mapping residues to SMILES string"""
@@ -111,27 +91,38 @@ def load_smiles():
     return aa_smiles
 
 
-def depict_smile(genecluster, structuresfolder):
-    indigo = Indigo()
-    renderer = IndigoRenderer(indigo)
-    query = indigo.loadMoleculeFromFile("genecluster" + str(genecluster) + ".smi")
-    indigo.setOption("render-coloring", True)
-    renderer.renderToFile(query, "genecluster" + str(genecluster) + ".png")
+def depict_smile(cluster_number, smiles, structures_dir):
+    filename = "genecluster%d" % cluster_number
+    png = filename + ".png"
+    smi = filename + ".smi"
+    icon = filename + "_icon.png"
 
-    indigo.setOption("render-image-size", 200, 150)
-    renderer.renderToFile(query, "genecluster" + str(genecluster) + "_icon.png")
-    dircontents = os.listdir(os.getcwd())
-    geneclusterstring = "genecluster" + str(genecluster) + ".png"
-    if geneclusterstring in dircontents:
-        shutil.copy("genecluster" + str(genecluster) + ".png", structuresfolder)
-        shutil.copy("genecluster" + str(genecluster) + "_icon.png", structuresfolder)
-        shutil.copy("genecluster" + str(genecluster) + ".smi", structuresfolder)
-        os.remove("genecluster" + str(genecluster) + ".png")
-        os.remove("genecluster" + str(genecluster) + "_icon.png")
-        os.remove("genecluster" + str(genecluster) + ".smi")
+    with TemporaryDirectory(change=True):
+        with open(smi, "w") as handler:
+            handler.write(smiles)
+
+        indigo = Indigo()
+        query = indigo.loadMoleculeFromFile(smi)
+        renderer = IndigoRenderer(indigo)
+        # now that the renderer exists, so does the render-coloring option
+        indigo.setOption("render-coloring", True)
+        renderer.renderToFile(query, png)
+
+        indigo.setOption("render-image-size", 200, 150)
+        renderer.renderToFile(query, icon)
+
+        # cleanup, though unsure whether this dir/file ever created
         smiles_input = os.path.join('SMILES', 'input')
         if os.path.exists(smiles_input):
             os.remove(smiles_input)
-        return "success"
-    else:
-        return "failed"
+
+        # was it successful
+        dircontents = os.listdir(os.getcwd())
+        # an exception should be raised by indigo, but just in case
+        if png not in dircontents:
+            return False
+        # if so, move the files to the output dir
+        for filename in [png, icon, smi]:
+            shutil.copy(filename, structures_dir)
+            os.remove(filename)
+    return True
