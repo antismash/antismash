@@ -60,8 +60,9 @@ def dump_records(records, results, handle=None):
     for record, result in zip(records, results):
         json_record = record_to_json(record)
         modules = OrderedDict()
-        logging.debug("Record %s has results for modules: %s", record.id,
-                      ", ".join([mod.rsplit('.', 1)[-1] for mod, resultv in result.items() if resultv]))
+        if result:
+            logging.debug("Record %s has results for modules: %s", record.id,
+                          ", ".join([mod.rsplit('.', 1)[-1] for mod, resultv in result.items() if resultv]))
         for module, m_results in result.items():
             logging.debug("Converting %s results to json", module)
             if m_results is None:
