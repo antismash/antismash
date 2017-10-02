@@ -1,12 +1,13 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+import glob
+import os
 import unittest
 
 from helperlibs.wrappers.io import TemporaryDirectory
 
 from antismash.main import get_all_modules, detect_signature_genes
-from antismash.common import deprecated
 from antismash.common.record_processing import parse_input_sequence
 from antismash.common.module_results import ModuleResults
 import antismash.common.test.helpers as helpers
@@ -48,32 +49,43 @@ class Base(unittest.TestCase):
 
     def get_results(self):
         """ override with a function that runs *blast, verifies basics and
-            returns results instance for further testing
+            returns results instance for further testing as a tuple of
+            (specific_results, global_results)
         """
         self.fail() # wasn't overriden
 
+    def check_svgs(self, results, expected, svg_dir):
+        # make sure no svgs created yet
+        assert not glob.glob(os.path.join(svg_dir, "*.svg"))
+        results.write_svg_files(svg_dir)
+        # check there's an svg for each result (up to the limit) + 1 combined
+        num_svgs = len(glob.glob(os.path.join(svg_dir, "*.svg")))
+        assert num_svgs == min(self.options.cb_nclusters, expected) + 1
+
     def check_nisin(self, expected):
-        with TemporaryDirectory(change=True):
+        with TemporaryDirectory(change=True) as temp_dir:
             self.build_record(helpers.get_path_to_nisin_genbank())
-            results = self.get_results()
+            results, global_results = self.get_results()
             assert len(results.cluster_results) == 1
             cluster = results.cluster_results[0]
             if expected > clusterblast.get_result_limit():
                 assert cluster.total_hits == expected
                 expected = clusterblast.get_result_limit()
             assert len(cluster.ranking) == expected # will change if database does
+            self.check_svgs(global_results, expected, temp_dir)
         return results
 
     def check_balhymicin(self, expected):
-        with TemporaryDirectory(change=True):
+        with TemporaryDirectory(change=True) as temp_dir:
             self.build_record(helpers.get_path_to_balhymicin_genbank())
-            results = self.get_results()
+            results, global_results = self.get_results()
             assert len(results.cluster_results) == 1
             cluster = results.cluster_results[0]
             if expected > clusterblast.get_result_limit():
                 assert cluster.total_hits == expected
                 expected = clusterblast.get_result_limit()
             assert len(cluster.ranking) == expected # will change if database does
+            self.check_svgs(global_results, expected, temp_dir)
         return results
 
 # TODO: test with a small sequence instead (grab a CDS that hit and take it's translation)
@@ -94,7 +106,7 @@ class GeneralIntegrationTest(Base):
         assert json
         new = clusterblast.ClusterBlastResults.from_json(json, self.record)
         assert json == new.to_json()
-        return results.general
+        return results.general, results
 
     def test_nisin(self):
         self.check_nisin(2452)
@@ -115,7 +127,7 @@ class KnownIntegrationTest(Base):
         assert json
         new = clusterblast.ClusterBlastResults.from_json(json, self.record)
         assert json == new.to_json()
-        return results.knowncluster
+        return results.knowncluster, results
 
     def test_nisin(self):
         self.check_nisin(7)
@@ -139,7 +151,7 @@ class SubIntegrationTest(Base):
         assert json
         new = clusterblast.ClusterBlastResults.from_json(json, self.record)
         assert json == new.to_json()
-        return results.subcluster
+        return results.subcluster, results
 
     def test_nisin(self):
         self.check_nisin(0)
