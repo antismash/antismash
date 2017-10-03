@@ -1,6 +1,8 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+from antismash.common import path
+
 from jinja2 import FileSystemLoader, Environment, StrictUndefined
 
 def will_handle(_product):
@@ -18,11 +20,12 @@ def generate_details_div(cluster_layer, record_layer, options_layer):
     return "\n".join(divs)
 
 def generate_div(cluster_layer, record_layer, options_layer, search_type):
+    template_path = path.get_full_path(__file__, "templates")
     env = Environment(
-        loader=FileSystemLoader(['antismash/modules/clusterblast/templates']),
-        autoescape=True, undefined=StrictUndefined)
+        loader=FileSystemLoader([template_path]), autoescape=True,
+                                undefined=StrictUndefined)
     template = env.get_template('%s.html' % search_type)
     details_div = template.render(record=record_layer,
-                           cluster=cluster_layer,
-                           options=options_layer)
+                                  cluster=cluster_layer,
+                                  options=options_layer)
     return details_div
