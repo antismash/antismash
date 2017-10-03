@@ -9,8 +9,7 @@ import os
 import jinja2
 from jinja2 import FileSystemLoader, Environment
 
-import antismash.common.deprecated as utils
-import antismash.common.path as path
+from antismash.common import path, deprecated as utils
 from antismash.common.layers import RecordLayer, OptionsLayer
 from antismash.outputs.html import js
 
@@ -57,7 +56,7 @@ def generate_webpage(seq_records, results, options):
     with open(os.path.join(options.output_dir, 'index.html'), 'w') as result:
         env = Environment(autoescape=True, trim_blocks=True, lstrip_blocks=True,
                           undefined=jinja2.StrictUndefined,
-                          loader=FileSystemLoader(['antismash/outputs/html']))
+                          loader=FileSystemLoader(path.get_full_path(__file__)))
         template = env.get_template('index.html')
         options_layered = OptionsLayer(options)
         records = [RecordLayer(record, options_layered) for record in seq_records]

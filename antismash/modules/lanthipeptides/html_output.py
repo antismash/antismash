@@ -5,6 +5,7 @@ import logging
 
 from jinja2 import FileSystemLoader, Environment, StrictUndefined
 
+from antismash.common import path
 from antismash.common.layers import ClusterLayer
 from antismash.common.secmet import Prepeptide
 
@@ -29,7 +30,7 @@ def generate_details_div(cluster_layer, record_layer, options_layer):
             or lanthi_layer.motifs):
         return ""
     env = Environment(
-        loader=FileSystemLoader(['antismash/modules/lanthipeptides/templates']),
+        loader=FileSystemLoader(path.get_full_path(__file__, "templates")),
         autoescape=True, undefined=StrictUndefined)
     template = env.get_template('details.html')
     details_div = template.render(record=record_layer,
@@ -40,7 +41,7 @@ def generate_details_div(cluster_layer, record_layer, options_layer):
 
 def generate_sidepanel(cluster_layer, record_layer, options_layer):
     env = Environment(
-        loader=FileSystemLoader(['antismash/modules/lanthipeptides/templates']),
+        loader=FileSystemLoader(path.get_full_path(__file__, "templates")),
         autoescape=True, undefined=StrictUndefined)
     template = env.get_template('sidepanel.html')
     cluster = LanthipeptideLayer(cluster_layer.cluster, record_layer, cluster_layer.cluster_rec)
