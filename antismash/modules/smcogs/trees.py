@@ -6,16 +6,16 @@ import glob
 import logging
 import shutil
 import os
+from typing import Dict
 
 from helperlibs.wrappers.io import TemporaryDirectory
 
 from antismash.common import path, deprecated, subprocessing
 
-def read_fasta(filename):
-    # type: (str) -> Dict[str, str]
+def read_fasta(filename) -> Dict[str, str]:
     """ reads a fasta file into a dict: id -> sequence, returns the dict """
     ids = []
-    sequence_info = [] # type: List[str]
+    sequence_info = []
     with open(filename, "r") as fasta:
         current_seq = []
         for line in fasta:
@@ -42,7 +42,7 @@ def read_fasta(filename):
         raise ValueError("Fasta file contains no sequences")
     return OrderedDict(zip(ids, sequence_info))
 
-def generate_trees(smcogs_dir, hmm_results, geneclustergenes, nrpspks_genes, options):
+def generate_trees(smcogs_dir, hmm_results, geneclustergenes, nrpspks_genes, options) -> Dict[str, str]:
     pksnrpscoregenenames = set([feature.get_name() for feature in nrpspks_genes])
     #smCOG phylogenetic tree construction
     logging.info("Calculating and drawing phylogenetic trees of cluster genes "
@@ -66,7 +66,7 @@ def generate_trees(smcogs_dir, hmm_results, geneclustergenes, nrpspks_genes, opt
         tree_filenames[tag] = filename
     return tree_filenames
 
-def smcog_tree_analysis(cds, inputnr, smcog, output_dir):
+def smcog_tree_analysis(cds, inputnr, smcog, output_dir) -> None:
     "run smCOG search on all gene cluster CDS features"
     gene_id = cds.get_name()
     seq = cds.get_aa_sequence()
@@ -83,7 +83,7 @@ def smcog_tree_analysis(cds, inputnr, smcog, output_dir):
     except RuntimeError:
         logging.critical("Error during image generation for %s", gene_id) #TODO fix
 
-def alignsmcogs(smcog, inputnr):
+def alignsmcogs(smcog, inputnr) -> str:
     #Align to multiple sequence alignment, output as fasta file
     reference = path.get_full_path(__file__, "data", "%s_muscle.fasta" % str(smcog).lower())
     output_filename = "muscle%d.fasta" % inputnr
@@ -95,7 +95,7 @@ def alignsmcogs(smcog, inputnr):
         raise RuntimeError("Muscle failed to run: %s, %s", musclecommand, result.stderr[-100:])
     return output_filename
 
-def trim_alignment(inputnr, alignment_file):
+def trim_alignment(inputnr, alignment_file) -> None:
     """ remove all positions before the first and after the last position shared
         by at least a third of all sequences
     """
@@ -139,8 +139,11 @@ def trim_alignment(inputnr, alignment_file):
     seed_fasta_name = "trimmed_alignment" + str(inputnr) + ".fasta"
     deprecated.writefasta(names, seqs, seed_fasta_name)
 
-def draw_tree(inputnr):
-    """ Draw phylogenetic tree with fasttree
+def draw_tree(inputnr) -> str:
+    """ Construct phylogenetic tree with fasttree
+
+        Returns:
+            the filename of the newick tree generated
     """
     tree_filename = "tree%d.nwk" % inputnr
     command = ["fasttree", "-quiet", "-fastest", "-noml", "trimmed_alignment%d.fasta" % inputnr]
@@ -149,7 +152,7 @@ def draw_tree(inputnr):
         raise RuntimeError("Fasttree failed to run successfully:", run_result.stderr)
     return tree_filename
 
-def convert_tree(inputnr, smcog_dir, tag):
+def convert_tree(inputnr, smcog_dir, tag) -> None:
     """ Convert tree to XTG and draw PNG image using TreeGraph
     """
     core_command = ['java', '-Djava.awt.headless=true', '-jar',
@@ -172,7 +175,6 @@ def convert_tree(inputnr, smcog_dir, tag):
     if run_result.return_code or "exception" in run_result.stdout or "Exception" in run_result.stdout or not os.path.exists(tree_png):
         raise RuntimeError("Tree image creation failed in external command attempting to create %s: %s" % (tree_png, command))
 
-    shutil.copy(tag.split(".")[0] + '.png', smcog_dir)
-    os.remove(tag.split(".")[0] + ".png")
+    shutil.move(tag.split(".")[0] + '.png', smcog_dir)
     os.remove("tree%d.xtg" % inputnr)
     os.remove("trimmed_alignment%d.fasta" % inputnr)
