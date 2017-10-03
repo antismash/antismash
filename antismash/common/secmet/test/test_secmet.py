@@ -52,8 +52,9 @@ class TestRecord(unittest.TestCase):
         record = Record(Seq("A"*1000))
         for start, end in [(50, 100), (10, 40), (700, 1000), (0, 9)]:
             cluster = helpers.DummyCluster(start, end)
+            record.add_cluster(cluster)
         for i, cluster in enumerate(sorted(list(record.get_clusters()))):
-            assert cluster.get_cluster_number() == i
+            assert cluster.get_cluster_number() == i + 1
 
     def test_overlapping_clusters(self):
         record = Record()
