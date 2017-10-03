@@ -25,7 +25,7 @@ def check_options(options):
 def is_enabled(options):
     return True #TODO: add an arg to disable
 
-def write(seq_records, results, options):
+def write(records, results, options):
     output_dir = options.output_dir
 
     copy_template_dir('css', output_dir)
@@ -33,8 +33,8 @@ def write(seq_records, results, options):
     copy_template_dir('images', output_dir)
 
     # Generate structure images for records obtained from BioSQL
-    generate_structure_images(seq_records, options)
-    generate_webpage(seq_records, results, options)
+    generate_structure_images(records, options)
+    generate_webpage(records, results, options)
 
 def copy_template_dir(template, output_dir):
     "Copy files from a template directory to the output directory"
@@ -45,23 +45,21 @@ def copy_template_dir(template, output_dir):
         shutil.rmtree(target_dir)
     shutil.copytree(path.join(basedir, template), target_dir)
 
-def generate_structure_images(seq_records, options):
+def generate_structure_images(records, options):
     "Generate the structure images based on Monomers prediction in cluster feature"
 
     logging.critical("pksnrps results would be added here, but shouldn't be")
     return
 
-#    for seq_record in seq_records:
+#    for record in records:
 #        # Ugly temporary solution:
-#        # At first we have to regenerate the relevant information for the pksnrpsvars dictionary from the seq_record file
+#        # At first we have to regenerate the relevant information for the pksnrpsvars dictionary from the record file
 #        pksnrpsvars = utils.Storage()
 #        pksnrpsvars.compound_pred_dict = {}
 #        pksnrpsvars.failedstructures = []
 
-#        geneclusters = utils.get_cluster_features(seq_record)
-
-#        for genecluster in geneclusters:
-#            geneclusternr = utils.get_cluster_number(genecluster)
-#            pksnrpsvars.compound_pred_dict[geneclusternr] = utils.get_structure_pred(genecluster)
-#        if len(pksnrpsvars.compound_pred_dict) > 0:
-#            generate_chemical_structure_preds(pksnrpsvars, seq_record, options)
+#        for cluster in record.get_clusters():
+#            cluster_number = cluster.get_cluster_number()
+#            pksnrpsvars.compound_pred_dict[cluster_number] = utils.get_structure_pred(cluster)
+#        if pksnrpsvars.compound_pred_dict:
+#            generate_chemical_structure_preds(pksnrpsvars, record, options)

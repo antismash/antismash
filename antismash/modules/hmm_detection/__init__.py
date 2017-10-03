@@ -41,7 +41,7 @@ def get_arguments():
     args.add_option('--enable',
                        metavar="TYPES",
                        dest='enabled_cluster_types',
-                       type=str,
+                       type=lambda x: x.split(","),
                        default=cluster_types,
                        help="Select sec. met. cluster types to search for. E.g. --enable t1pks,nrps,other")
     return args

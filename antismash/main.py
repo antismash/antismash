@@ -2,11 +2,13 @@
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
 import cProfile
+from datetime import datetime
 from io import StringIO
 import logging
 import pstats
 import os
-from datetime import datetime
+from types import ModuleType
+from typing import Dict, Optional, List
 
 from Bio import SeqIO
 
@@ -19,22 +21,64 @@ from antismash.outputs import html, svg
 
 __version__ = "5.0.0alpha"
 
-def get_all_modules():
+def get_all_modules() -> List[ModuleType]:
+    """ Return a list of default modules
+
+        Arguments:
+            None
+
+        Returns:
+            a list of modules
+    """
     return get_detection_modules() + get_analysis_modules() + get_output_modules()
 
-def get_detection_modules():
+def get_detection_modules() -> List[ModuleType]:
+    """ Return a list of default detection modules
+
+        Arguments:
+            None
+
+        Returns:
+            a list of modules
+    """
     return [hmm_detection, genefinding]
 
-def get_analysis_modules():
+def get_analysis_modules() -> List[ModuleType]:
+    """ Return a list of default analysis modules
+
+        Arguments:
+            None
+
+        Returns:
+            a list of modules
+    """
     return [smcogs, tta, lanthipeptides, clusterblast, dummy]
 
-def get_output_modules():
+def get_output_modules() -> List[ModuleType]:
+    """ Return a list of default output modules
+
+        Arguments:
+            None
+
+        Returns:
+            a list of modules
+    """
     return [html]
 
-def setup_logging(logfile=None, verbose=False, debug=False):
-    "Set up the logging output"
+def setup_logging(logfile=None, verbose=False, debug=False) -> None:
+    """ Define the logging format, levels and outputs
+
+        Arguments:
+            logfile: None or the path to a file to write logging messages to
+            verbose: whether to show INFO level messages and above
+            debug: whether to show DEBUG level messages and above
+
+        Returns:
+            None
+    """
 
     def new_critical(*args): #TODO: temporary to make alpha issues more obvious
+        """ make critical messages yellow and without the normal timestamp """
         msg = "\033[1;33m{}\033[0m".format(args[0])
         print(msg%args[1:])
     logging.critical = new_critical
@@ -60,7 +104,16 @@ def setup_logging(logfile=None, verbose=False, debug=False):
     logging.getLogger('').addHandler(handler)
 
 
-def verify_options(options, modules):
+def verify_options(options, modules) -> bool:
+    """ Find and display any incompatibilities in provided options
+
+        Arguments:
+            options: the options to check
+            modules: the modules to check the options of
+
+        Returns:
+            True if no problems detected, otherwise False
+    """
     errors = []
     for module in modules:
         try:
@@ -75,12 +128,23 @@ def verify_options(options, modules):
         print(error) # still commandline args, so don't use logging
     return False
 
-def detect_signature_genes(seq_record, options):
-    "Detect different secondary metabolite clusters based on HMM signatures"
+def detect_signature_genes(seq_record, options): # TODO: pick one of this or run_detection_stage()
+    """ Detect different secondary metabolite clusters based on HMM signatures """
     logging.info('Looking for secondary metabolite cluster signatures')
     hmm_detection.detect_signature_genes(seq_record, options)
 
-def run_detection_stage(record, options, detection_modules):
+def run_detection_stage(record, options, detection_modules) -> Dict[str, Optional[ModuleResults]]:
+    """ Runs detection modules on a record
+
+        Arguments:
+            record: the record to run detection on
+            options: antismash Config
+            detection_modules: the modules to use for detection
+
+        Returns:
+            a dict mapping module name to either ModuleResults (if appplicable)
+                or None
+    """
     # strip any existing antismash results first
     deprecated.strip_record(record)
 
@@ -90,7 +154,22 @@ def run_detection_stage(record, options, detection_modules):
             detection_results[module.NAME] = module.run_on_record(record, options)
     return detection_results
 
-def regenerate_results_for_record(record, options, modules, previous_result):
+def regenerate_results_for_record(record, options, modules, previous_result
+                                        ) -> Dict[str, Optional[ModuleResults]]:
+    """ Converts a record's JSON results to ModuleResults per module
+
+        Arguments:
+            record: the record to regenerate results for
+            options: antismash Config
+            modules: the modules to regenerate results of
+            previous_result: a dict of the json results to convert, in the form:
+                    {modulename : {module details}}
+
+        Returns:
+            the previous_result dict, with the values of all modules provided
+            as an instance of ModuleResults or None if results don't apply or
+            could not be regenerated
+    """
     logging.debug("Regenerating results for record %s", record.id)
     for module in modules:
         section = previous_result.pop(module.__name__, None)
@@ -105,7 +184,22 @@ def regenerate_results_for_record(record, options, modules, previous_result):
                 previous_result[module.__name__] = results
     return previous_result
 
-def analyse_record(record, options, modules, previous_result):
+def analyse_record(record, options, modules, previous_result) -> None:
+    """ Run analysis modules on a record
+
+        Arguments:
+            record: the record to run the analysis on
+            options: antismash Config
+            modules: the modules to analyse with
+                        each module will run only if enabled and not reusing all
+                        results
+            previous_result: a dictionary of module name to json results,
+                                json results will be replaced by ModuleResults
+                                instances
+
+        Returns:
+            None
+    """
     module_results = regenerate_results_for_record(record, options, modules, previous_result)
 
     # try to run the given modules over the record
@@ -121,7 +215,17 @@ def analyse_record(record, options, modules, previous_result):
         module_results[module.__name__] = results
 
 
-def prepare_output_directory(name):
+def prepare_output_directory(name) -> None:
+    """ Ensure the ouptut directory exists and is usable
+
+        Raises an exception if the directory is unusable
+
+        Arguments:
+            name: the path of the directory
+
+        Returns:
+            None
+    """
     if not name:
         return
     if os.path.exists(name):
@@ -133,7 +237,20 @@ def prepare_output_directory(name):
         os.mkdir(name)
 
 
-def write_profiling_results(profiler, target):
+def write_profiling_results(profiler, target) -> None:
+    """ Write profiling files to file in human readable form and as a binary
+        blob for external tool use (with the extra extension '.bin').
+
+        If the file cannot be opened or written to, a shortened form will be
+        written to stdout to avoid losing the data.
+
+        Arguments:
+            profiler: the profiler instance to log results of
+            target: the path of the file to store reuslts in
+
+        Returns:
+            None
+    """
     stream = StringIO()
     sortby = 'tottime'
     stats = pstats.Stats(profiler, stream=stream).sort_stats(sortby)
@@ -152,7 +269,16 @@ def write_profiling_results(profiler, target):
         print(stream.getvalue())
 
 
-def write_outputs(results, options):
+def write_outputs(results, options) -> None:
+    """ Write output files (webpage, genbank files, etc) to the output directory
+
+        Arguments:
+            results: a serialiser.AntismashResults instance
+            options: an antismash Config instance
+
+        Returns:
+            None
+    """
     logging.debug("Creating results page")
     html.write(results.records, results.results, options)
 
@@ -174,7 +300,15 @@ def write_outputs(results, options):
     SeqIO.write(bio_records, combined_filename, "genbank")
 
 
-def annotate_records(results):
+def annotate_records(results) -> None:
+    """ Annotates all analysed records with the results generated from them
+
+        Arguments:
+            results: a serialiser.AntismashResults instance
+
+        Returns:
+            None
+    """
     for record, record_results in zip(results.records, results.results):
         if record.skip:
             logging.debug("Not annotating skipped record %s: %s", record.id, record.skip)
@@ -186,7 +320,21 @@ def annotate_records(results):
             assert isinstance(result, ModuleResults), type(result)
             result.add_to_record(record)
 
-def read_data(sequence_file, options):
+def read_data(sequence_file, options) -> serialiser.AntismashResults:
+    """ Reads in the data to be used in the analysis run. Can be provided as
+        as a sequence file (fasta/genbank) or as file of prior results
+
+        Arguments:
+            sequence_file: A fasta/genbank file to read (or None)
+            options: An antismash Config instance
+
+        Returns:
+            a AntismashResults instance, populated only if reusing results
+
+    """
+    if not sequence_file or options.reuse_results:
+        raise ValueError("No sequence file or prior results to read")
+
     if sequence_file:
         records = record_processing.parse_input_sequence(sequence_file,
                                 options.minlength, options.start, options.end)
@@ -200,10 +348,19 @@ def read_data(sequence_file, options):
             raise ValueError("No results contained in file: %s" % options.reuse_results)
     results = serialiser.AntismashResults.from_file(options.reuse_results)
     # hacky bypass to set output dir #TODO work out alternate method
-    options.__dict__["output_dir"] = os.path.abspath(os.path.splitext(results.input_file)[0])
+    update_config({"output_dir" : os.path.abspath(os.path.splitext(results.input_file)[0])})
     return results
 
-def check_prerequisites(modules):
+def check_prerequisites(modules) -> None:
+    """ Checks that each module's prerequisites are satisfied. If not satisfied,
+        a RuntimeError is raised.
+
+        Arguments:
+            modules: the modules to check
+
+        Returns:
+            None
+    """
     for module in modules:
         logging.debug("Checking prerequisites for %s", module.__name__)
         res = module.check_prereqs()
@@ -211,7 +368,15 @@ def check_prerequisites(modules):
             raise RuntimeError("Module failing prerequisite check: %s %s" %(
                             module.__name__, res))
 
-def list_plugins(modules):
+def list_plugins(modules) -> None:
+    """ Prints the name and short description of the given modules
+
+        Arguments:
+            modules: the modules to display info of
+
+        Returns:
+            None
+    """
     print("Available plugins")
     max_name = 0
     for module in modules:
@@ -221,7 +386,24 @@ def list_plugins(modules):
         print(format_string % (module.NAME, module.SHORT_DESCRIPTION))
 
 def run_antismash(sequence_file, options, detection_modules=None,
-                  analysis_modules=None):
+                  analysis_modules=None) -> int:
+    """ The complete antismash pipeline. Reads in data, runs detection and
+        analysis modules over any records found, then outputs the results to
+        file.
+
+        Arguments:
+            sequence_file: the sequence file to read in records from, can be
+                            None if reusing results
+            options: command line options as an argparse.Namespace
+            detection_modules: None or a list of modules to use for detection,
+                                if None defaults will be used
+            analysis_modules: None or a list of modules to use for analysis,
+                                if None defaults will be used
+
+        Returns:
+            0 if requested operations completed succesfully, otherwise 1
+            Exceptions may also be raised
+    """
     logfile = options.logfile if 'logfile' in options else None
     setup_logging(logfile=logfile, verbose=options.verbose,
                   debug=options.debug)
@@ -254,7 +436,7 @@ def run_antismash(sequence_file, options, detection_modules=None,
 
     # ensure the provided options are valid
     if not verify_options(options, analysis_modules + detection_modules):
-        return 1
+        return 1 # TODO: change to a raise?
 
 
     # check that at least one module will run
@@ -301,6 +483,5 @@ def run_antismash(sequence_file, options, detection_modules=None,
 
     logging.debug("antiSMASH calculation finished at %s; runtime: %s", str(end_time), str(running_time))
 
-    # TODO: utils.log_status("antiSMASH status: SUCCESS")
-    logging.debug("antiSMASH status: SUCCESS")
+    logging.info("antiSMASH status: SUCCESS")
     return 0

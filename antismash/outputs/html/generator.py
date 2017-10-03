@@ -15,21 +15,19 @@ from antismash.common.layers import RecordLayer, OptionsLayer
 from antismash.outputs.html import js
 
 def write_geneclusters_js(records, output_dir, extra_data):
-    with open(os.path.join(output_dir, 'geneclusters.js'), 'w') as h:
+    with open(os.path.join(output_dir, 'geneclusters.js'), 'w') as result:
         geneclusters = {}
         for record in records:
             for cluster in record['clusters']:
                 idx = cluster['idx']
                 geneclusters['cluster-%s' % idx] = cluster
-        h.write('var geneclusters = %s;\n' %
-                json.dumps(geneclusters, indent=4))
+        result.write('var geneclusters = %s;\n' % json.dumps(geneclusters, indent=4))
 
         js_domains = {}
         for domain in extra_data['js_domains']:
             idx = domain['id'].split('-')[1]
             js_domains['cluster-%s' % idx] = domain
-        h.write('var details_data = %s;\n' %
-                json.dumps(js_domains, indent=4))
+        result.write('var details_data = %s;\n' % json.dumps(js_domains, indent=4))
 
 
 def generate_webpage(seq_records, results, options):
@@ -50,16 +48,16 @@ def generate_webpage(seq_records, results, options):
             for handler in handlers:
                 if "generate_js_domains" in dir(handler):
                     handler.generate_js_domains(cluster, seq_records[i], options,
-                                                          extra_data['js_domains'])
+                                                extra_data['js_domains'])
 
 
     write_geneclusters_js(records, options.output_dir, extra_data)
 
     # jinja
-    with open(os.path.join(options.output_dir, 'index.html'), 'w') as t:
+    with open(os.path.join(options.output_dir, 'index.html'), 'w') as result:
         env = Environment(autoescape=True, trim_blocks=True, lstrip_blocks=True,
-                undefined=jinja2.StrictUndefined,
-                loader=FileSystemLoader(['antismash/outputs/html']))
+                          undefined=jinja2.StrictUndefined,
+                          loader=FileSystemLoader(['antismash/outputs/html']))
         template = env.get_template('index.html')
         options_layered = OptionsLayer(options)
         records = [RecordLayer(record, options_layered) for record in seq_records]
@@ -69,7 +67,7 @@ def generate_webpage(seq_records, results, options):
                               utils=utils, extra_data=extra_data,
                               records_written=records_written,
                               config=options)
-        t.write(aux)
+        result.write(aux)
 
 def find_plugins_for_cluster(plugins, cluster):
     "Find a specific plugin responsible for a given gene cluster type"

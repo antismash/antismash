@@ -1,7 +1,6 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
-import functools
 import logging
 import os
 
@@ -17,7 +16,7 @@ class RecordLayer:
 
     @property
     def seq_name(self):
-         return self.seq_record.name
+        return self.seq_record.name
 
     @property
     def number_clusters(self):
@@ -34,7 +33,7 @@ class RecordLayer:
 
     @property
     def name(self):
-      pass
+        pass
 
     @property
     def input_type(self):
@@ -42,8 +41,7 @@ class RecordLayer:
 
     @property
     def has_details(self):
-        return functools.reduce((lambda x, y: x or y),
-                    map(lambda cluster: cluster.has_details(), self.clusters))
+        return any(cluster.has_details() for cluster in self.clusters)
 
     def get_from_record(self):
         " returns the text to be displayed in the overview table > separator-text "
@@ -88,7 +86,7 @@ class ClusterLayer:
         self.find_plugins_for_cluster()
         self.has_details = self.determine_has_details()
         self.has_sidepanel = self.determine_has_sidepanel()
-        self.probability = "BROKEN" #TODO
+        self.probability = "BROKEN" #TODO when clusterfinder returns
         self.has_domain_alignment = self.determine_has_domain_alignment()
 
     @property
@@ -187,6 +185,7 @@ class ClusterLayer:
         for handler in self.handlers:
             if "generate_details_div" in dir(handler):
                 self.has_details = True
+                break
         return self.has_details
 
     def determine_has_sidepanel(self):
@@ -194,6 +193,7 @@ class ClusterLayer:
         for handler in self.handlers:
             if "generate_sidepanel" in dir(handler):
                 self.has_sidepanel = True
+                break
         return self.has_sidepanel
 
     def determine_has_domain_alignment(self):
@@ -251,10 +251,7 @@ class OptionsLayer:
 
     @property
     def has_docking(self):
-        docking = False
-        if "docking" in self.options:
-            docking = True
-        return docking
+        return "docking" in self.options
 
     @property
     def smcogs(self):

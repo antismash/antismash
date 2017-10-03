@@ -7,26 +7,25 @@ converted
 """
 
 import logging
-import os
-import re
-import sys
-
-import Bio
-
-from Bio.Seq import Seq
-from Bio.SeqFeature import SeqFeature, FeatureLocation # for others importing
-from Bio.SeqRecord import SeqRecord
-from helperlibs.bio import seqio
-
-from antismash.common import gff_parser
-from antismash.common.all_orfs import scan_orfs, sort_orfs
-from antismash.common.secmet import Record, CDSFeature, Feature
-
-from .utils import generate_unique_id, RobustProteinAnalysis
 
 # temporary code skip logging # TODO
 import inspect
 import linecache
+
+import Bio
+from Bio.Seq import Seq
+# pylint: disable=unused-import
+from Bio.SeqFeature import SeqFeature, FeatureLocation # for others importing
+from Bio.SeqRecord import SeqRecord
+# pylint: enable=unused-import
+
+from antismash.common.all_orfs import scan_orfs, sort_orfs
+from antismash.common.secmet import CDSFeature, Feature
+
+# pylint: disable=unused-import
+from .utils import generate_unique_id, RobustProteinAnalysis
+# pylint: enable=unused-import
+
 
 def CODE_SKIP_WARNING():
     prev = inspect.currentframe().f_back
@@ -68,7 +67,7 @@ def writefasta(names, seqs, filename) -> None:
     "Write sequence to a file"
     e = 0
     f = len(names) - 1
-    out_file = open(filename,"w")
+    out_file = open(filename, "w")
     while e <= f:
         out_file.write(">")
         out_file.write(names[e])
@@ -276,7 +275,7 @@ def get_specific_multifasta(features) -> str:
 
 def hmmlengths(hmmfile) -> dict:
     lengths = {}
-    with open(hmmfile,"r") as handle:
+    with open(hmmfile, "r") as handle:
         contents = handle.read()
     contents = contents.replace("\r", "\n")
     hmms = contents.split("//")[:-1]

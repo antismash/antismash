@@ -1,6 +1,9 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+# for test files, silence irrelevant and noisy pylint warnings
+# pylint: disable=no-self-use,protected-access,missing-docstring
+
 import unittest
 
 from Bio.SeqFeature import BeforePosition, AfterPosition, ExactPosition
@@ -11,14 +14,14 @@ from .helpers import DummyRecord
 
 class TestOrfCounts(unittest.TestCase):
     def run_both_dirs(self, expected, seq):
-        assert expected == find_all_orfs(DummyRecord(seq=seq, real_seq=True))
+        assert expected == find_all_orfs(DummyRecord(seq=seq))
 
         # replace for reverse direction testing
         for start, comp in [('ATG', 'TAC'), ('GTG', 'CAC'), ('TTG', 'AAC')]:
             seq = seq.replace(start, comp)
         for stop, comp in [('TAA', 'ATT'), ('TAG', 'ATC'), ('TGA', 'ACT')]:
             seq = seq.replace(stop, comp)
-        assert expected == find_all_orfs(DummyRecord(seq=seq, real_seq=True))
+        assert expected == find_all_orfs(DummyRecord(seq=seq))
 
     def test_empty_sequence(self):
         self.run_both_dirs(0, "")

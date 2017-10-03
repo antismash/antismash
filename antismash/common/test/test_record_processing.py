@@ -1,6 +1,9 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+# for test files, silence irrelevant and noisy pylint warnings
+# pylint: disable=no-self-use,protected-access,missing-docstring
+
 from tempfile import NamedTemporaryFile
 import unittest
 
@@ -15,22 +18,25 @@ from antismash.common.test import helpers
 
 class TestParseRecords(unittest.TestCase):
     def test_nisin(self):
-        path = helpers.get_path_to_nisin_genbank()
-        records = record_processing.parse_input_sequence(path)
+        nisin_path = helpers.get_path_to_nisin_genbank()
+        records = record_processing.parse_input_sequence(nisin_path)
         assert len(records) == 1
         assert isinstance(records[0], Record)
         assert len(records[0].get_cds_features()) == 11
         assert len(records[0].seq) == 15016
 
     def test_minimum_length(self):
-        path = helpers.get_path_to_nisin_genbank()
-        records = record_processing.parse_input_sequence(path, minimum_length=-16)
+        nisin_path = helpers.get_path_to_nisin_genbank()
+        records = record_processing.parse_input_sequence(nisin_path,
+                                                         minimum_length=-16)
         assert len(records) == 1
 
-        records = record_processing.parse_input_sequence(path, minimum_length=15016)
+        records = record_processing.parse_input_sequence(nisin_path,
+                                                         minimum_length=15016)
         assert len(records) == 1
 
-        records = record_processing.parse_input_sequence(path, minimum_length=15017)
+        records = record_processing.parse_input_sequence(nisin_path,
+                                                         minimum_length=15017)
         assert not records
 
         for bad_len in [5.6, None, "5"]:
@@ -167,7 +173,7 @@ class TestPreprocessRecords(unittest.TestCase):
         filepath = path.get_full_path(__file__, "data", "nisin.fasta")
         records = record_processing.parse_input_sequence(filepath)
         assert len(records) == 1
-        assert len(records[0].get_cds_features()) == 0
+        assert not records[0].get_cds_features()
         # make sure genefinding wasn't run with default options
         record_processing.pre_process_sequences(records, self.options, self.genefinding)
         assert not self.genefinding.was_run
@@ -206,17 +212,17 @@ class TestPreprocessRecords(unittest.TestCase):
 
     def test_limit(self):
         records = self.read_double_nisin()
-        assert all(rec.skip == False for rec in records)
+        assert all(rec.skip is False for rec in records)
         assert not self.options.triggered_limit
         config.update_config({"limit" : 1})
         record_processing.pre_process_sequences(records, self.options, None)
-        assert records[0].skip == False
+        assert records[0].skip is False
         assert records[1].skip.startswith("skipping all but first 1")
         assert self.options.triggered_limit
 
     def test_limit_to_record_partial(self):
         records = self.read_double_nisin()
-        assert all(rec.skip == False for rec in records)
+        assert all(rec.skip is False for rec in records)
         config.update_config({"limit_to_record" : records[0].id})
         records[0].id += "_changed"
         record_processing.pre_process_sequences(records, self.options, None)
