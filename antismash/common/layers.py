@@ -116,10 +116,6 @@ class ClusterLayer:
         return int(self.cluster_rec.location.end)
 
     @property
-    def cluster_rec_qualifiers(self):
-        return self.cluster_rec.to_biopython()[0].qualifiers
-
-    @property
     def knowncluster(self):
         return self.cluster_rec.knownclusterblast
 
