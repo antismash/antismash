@@ -1,7 +1,8 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
-"Test suite for hmm_detection module"
+# for test files, silence irrelevant and noisy pylint warnings
+# pylint: disable=no-self-use,protected-access,missing-docstring
 
 import os
 import unittest
@@ -13,7 +14,7 @@ from antismash.common.deprecated import FeatureLocation
 from antismash.common.test.helpers import DummyRecord, DummyCDS, DummyFeature, DummyCluster
 from antismash.common.secmet import Record, CDSFeature, Feature
 import antismash.common.path as path
-from antismash.config import get_config, update_config
+from antismash.config import get_config, update_config, destroy_config, args
 import antismash.modules.hmm_detection as core
 from antismash.modules.hmm_detection import hmm_detection, rule_parser, signatures
 
@@ -30,6 +31,26 @@ class FakeHSP(object):
     def __repr__(self):
         return "FakeHSP({})".format(str(vars(self)))
 
+class TestArgs(unittest.TestCase):
+    def setUp(self):
+        self.parser = args.build_parser(modules=[core])
+
+    def tearDown(self):
+        destroy_config()
+
+    def build_options(self, args):
+        destroy_config()
+        options = self.parser.parse_args(args)
+        return update_config(options)
+
+    def test_args(self):
+        # argparse raises SystemExit, because it's missing the following option
+        with self.assertRaises(SystemExit):
+            self.build_options(["--enable"])
+        options = self.build_options(["--enable", "t1pks,other"])
+        assert options.enabled_cluster_types == ["t1pks", "other"]
+        options = self.build_options(["--enable", "t1pks"])
+        assert options.enabled_cluster_types == ["t1pks"]
 
 class HmmDetectionTest(unittest.TestCase):
     def setUp(self):

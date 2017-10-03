@@ -1,7 +1,8 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
-from __future__ import print_function, division
+# for test files, silence irrelevant and noisy pylint warnings
+# pylint: disable=no-self-use,protected-access,missing-docstring
 
 import unittest
 import os
@@ -74,20 +75,20 @@ class TestBlastParsing(unittest.TestCase):
         coverage_threshold = 650
         queries, clusters = core.blastparse(self.sample_data, Record(), coverage_threshold, 0)
         new_subjects = [s for s in subjects if s.perc_coverage > coverage_threshold]
-        assert 0 < len(new_subjects) < len(subjects), "coverage test has become meaningless"
+        assert new_subjects and len(new_subjects) < len(subjects), "coverage test has become meaningless"
         self.verify_subjects_and_clusters_represented(new_subjects, clusters)
 
         # test perc_identity threshold
         ident_threshold = 35
         queries, clusters = core.blastparse(self.sample_data, Record(), 0, ident_threshold)
         new_subjects = [s for s in subjects if s.perc_ident > ident_threshold]
-        assert 0 < len(new_subjects) < len(subjects), "identity% test has become meaningless"
+        assert new_subjects and len(new_subjects) < len(subjects), "identity% test has become meaningless"
         self.verify_subjects_and_clusters_represented(new_subjects, clusters)
 
         # test combo threshold
         queries, clusters = core.blastparse(self.sample_data, Record(), coverage_threshold, ident_threshold)
         new_subjects = [s for s in subjects if s.perc_ident > ident_threshold and s.perc_coverage > coverage_threshold]
-        assert 0 < len(new_subjects) < len(subjects), "combo test has become meaningless"
+        assert new_subjects and len(new_subjects) < len(subjects), "combo test has become meaningless"
         self.verify_subjects_and_clusters_represented(new_subjects, clusters)
 
     def test_blastparse_on_empty(self):
@@ -125,20 +126,20 @@ class TestBlastParsing(unittest.TestCase):
         coverage_threshold = 650
         queries, clusters = parse_all_wrapper(coverage_threshold, 0)
         new_subjects = [s for s in subjects if s.perc_coverage > coverage_threshold]
-        assert 0 < len(new_subjects) < len(subjects), "coverage test has become meaningless"
+        assert new_subjects and len(new_subjects) < len(subjects), "coverage test has become meaningless"
         self.verify_subjects_and_clusters_represented(new_subjects, clusters)
 
         # test perc_identity threshold
         ident_threshold = 35
         queries, clusters = parse_all_wrapper(0, ident_threshold)
         new_subjects = [s for s in subjects if s.perc_ident > ident_threshold]
-        assert 0 < len(new_subjects) < len(subjects), "identity% test has become meaningless"
+        assert new_subjects and len(new_subjects) < len(subjects), "identity% test has become meaningless"
         self.verify_subjects_and_clusters_represented(new_subjects, clusters)
 
         # test combo threshold
         queries, clusters = parse_all_wrapper(coverage_threshold, ident_threshold)
         new_subjects = [s for s in subjects if s.perc_ident > ident_threshold and s.perc_coverage > coverage_threshold]
-        assert 0 < len(new_subjects) < len(subjects), "combo test has become meaningless"
+        assert new_subjects and len(new_subjects) < len(subjects), "combo test has become meaningless"
         self.verify_subjects_and_clusters_represented(new_subjects, clusters)
 
     def test_parse_all_multi_cluster(self):
@@ -171,45 +172,45 @@ class TestSubject(unittest.TestCase):
 class TestQuery(unittest.TestCase):
     def test_init(self):
         query_line = "input|c1|0-759|-|CAG25751.1|putative"
-        q = core.Query(query_line, 0)
-        self.assertEqual(q.entry, query_line)
-        self.assertEqual(q.cluster_number, 1)
-        self.assertEqual(q.id, "CAG25751.1")
-        self.assertEqual(q.index, 0)
-        for container in [q.cluster_name_to_subjects, q.subjects]:
+        query = core.Query(query_line, 0)
+        self.assertEqual(query.entry, query_line)
+        self.assertEqual(query.cluster_number, 1)
+        self.assertEqual(query.id, "CAG25751.1")
+        self.assertEqual(query.index, 0)
+        for container in [query.cluster_name_to_subjects, query.subjects]:
             self.assertEqual(len(container), 0)
 
     def test_subject_tracking(self):
-        q = core.Query("input|c1|0-759|-|CAG25751.1|putative", 0)
-        s1 = core.Subject("a1", "a", 1, 2, "+", "c", 0.5, 1, 0.5, 1e-8, "loc")
-        q.add_subject(s1)
-        containers = [q.cluster_name_to_subjects, q.subjects]
+        query = core.Query("input|c1|0-759|-|CAG25751.1|putative", 0)
+        sub1 = core.Subject("a1", "a", 1, 2, "+", "c", 0.5, 1, 0.5, 1e-8, "loc")
+        query.add_subject(sub1)
+        containers = [query.cluster_name_to_subjects, query.subjects]
         #check it was properly added to the various containers
         for container in containers:
             self.assertEqual(len(container), 1)
-        self.assertEqual(q.cluster_name_to_subjects["a"], [s1])
-        assert list(q.subjects.keys()) == ["a1"]
-        s2 = core.Subject("a2", "b", 1, 2, "+", "c", 0.5, 1, 0.5, 1e-8, "loc")
-        q.add_subject(s2)
+        self.assertEqual(query.cluster_name_to_subjects["a"], [sub1])
+        assert list(query.subjects.keys()) == ["a1"]
+        sub2 = core.Subject("a2", "b", 1, 2, "+", "c", 0.5, 1, 0.5, 1e-8, "loc")
+        query.add_subject(sub2)
         for container in containers:
             self.assertEqual(len(container), 2)
-        self.assertEqual(q.cluster_name_to_subjects["a"], [s1])
-        self.assertEqual(q.cluster_name_to_subjects["b"], [s2])
+        self.assertEqual(query.cluster_name_to_subjects["a"], [sub1])
+        self.assertEqual(query.cluster_name_to_subjects["b"], [sub2])
 
         # check we don't override when cluster names overlap
-        s3 = core.Subject("a3", "a", 1, 2, "+", "c", 0.5, 1, 0.5, 1e-8, "loc")
-        q.add_subject(s3)
-        self.assertEqual(len(q.subjects), 3)
+        sub3 = core.Subject("a3", "a", 1, 2, "+", "c", 0.5, 1, 0.5, 1e-8, "loc")
+        query.add_subject(sub3)
+        self.assertEqual(len(query.subjects), 3)
         # check the new subject was properly added to the old list
-        self.assertEqual(q.cluster_name_to_subjects["a"], [s1, s3])
-        self.assertEqual(q.cluster_name_to_subjects["b"], [s2])
+        self.assertEqual(query.cluster_name_to_subjects["a"], [sub1, sub3])
+        self.assertEqual(query.cluster_name_to_subjects["b"], [sub2])
         # check ordering preserved on subject names
-        self.assertEqual(list(q.subjects.keys()), ["a1", "a2", "a3"])
+        self.assertEqual(list(query.subjects.keys()), ["a1", "a2", "a3"])
 
         # check the getter has the same results as direct access
-        self.assertEqual(q.get_subjects_by_cluster("a"), [s1, s3])
+        self.assertEqual(query.get_subjects_by_cluster("a"), [sub1, sub3])
         # check that an empty iterable is returned if cluster not known
-        self.assertEqual(q.get_subjects_by_cluster("new_name"), [])
+        self.assertEqual(query.get_subjects_by_cluster("new_name"), [])
 
 # pylint: disable=assigning-non-slot
 class TestScore(unittest.TestCase):
@@ -392,7 +393,7 @@ class TestInputGeneration(unittest.TestCase):
     def dummy_blast_inputs(self, cluster):
         names = []
         seqs = []
-        for child in cluster.cds_children:
+        for _ in cluster.cds_children:
             index = self.index
             self.index += 1
             names.append("L%d" % index)

@@ -42,15 +42,18 @@ class AntiSmashParser(argparse.ArgumentParser):
         self._show_all = show_all
         super(AntiSmashParser, self).print_help(file)
 
-    def write_to_config_file(self, filename):
-        def construct_arg_text(arg, dests):
-            if arg.dest in ["help", "help_showall"] or arg.dest in dests:
+    def write_to_config_file(self, filename) -> None:
+        """ Write the default options to file in a form that can be parsed again
+        """
+        def construct_arg_text(arg, processed_destinations):
+            """ Only construct if not already processed"""
+            if arg.dest in ["help", "help_showall"] or arg.dest in processed_destinations:
                 return []
             # skip postional args
             if not arg.option_strings:
                 return []
             lines = []
-            dests.add(arg.dest)
+            processed_destinations.add(arg.dest)
             flag = sorted(arg.option_strings, key=len, reverse=True)[0].lstrip('-')
             if "%(default)" in arg.help:
                 help_text = arg.help % {"default": arg.default}
@@ -60,24 +63,27 @@ class AntiSmashParser(argparse.ArgumentParser):
             if arg.choices:
                 lines.append("## Possible choices: {}".format(",".join(arg.choices)))
             if arg.default is not None:
-                if not arg.default:
+                value = arg.default
+                if value and isinstance(value, list):
+                    value = ",".join(value)
+                if not value:
                     lines.append("#{}".format(flag))
                 else:
-                    lines.append("{} {}".format(flag, arg.default))
+                    lines.append("{} {}".format(flag, value))
             else:
                 lines.append("{}".format(flag))
             return ["\n".join(lines), "\n"]
 
         outfile = open(filename, 'w')
-        dests = set()
-        titles = defaultdict(lambda: defaultdict(lambda: []))
+        dests = set() # set of processed destinations
+        titles = defaultdict(lambda: defaultdict(list))
         for parent in self.parents:
             if getattr(parent, 'parser'):
                 for arg in parent.parser._actions:
                     titles[parent.title][parent.prefix].extend(construct_arg_text(arg, dests))
 
         for arg in self._actions:
-            titles["Core options"]["DUMMY"].extend(construct_arg_text(arg, dests))
+            titles["Core options"]["DUMMY"].extend(construct_arg_text(arg, dests)) #TODO why DUMMY?
 
         for title, prefixes in titles.items():
             banner = "#"*10 + "\n"
@@ -150,9 +156,11 @@ Options
         line = line.strip()
         if not line:
             return []
+        # skip comments and section labels
         if line[0] in ["#", '[']:
             return []
         args = line.split()
+        # prepend -- so the parser recognises it properly
         args[0] = "--" + args[0]
         return args
 
@@ -163,6 +171,8 @@ class FullPathAction(argparse.Action):
 class ModuleArgs:
     def __init__(self, title, prefix, override_safeties=False, always_on=False, # TODO: remove always_on when hmm_detection becomes core
                      enabled_by_default=False, basic_help=False):
+        if not title:
+            raise ValueError("Argument group must have a title")
         self.title = title
         self.parser = AntiSmashParser(add_help=False)
         self.override = override_safeties #kwargs.get("override_safeties")
@@ -175,12 +185,16 @@ class ModuleArgs:
         self.prefix = prefix
         if len(self.prefix) < 2 and not self.override:
             raise ValueError("Argument prefixes must be at least 2 chars")
+        if self.prefix and not self.prefix.isalpha():
+            raise ValueError("Argument prefixes must only be alphabetic")
         self.skip_type_check = self.override
         self.single_arg = False
         self.args = []
         self.basic = basic_help
 
     def add_option(self, name, *args, **kwargs):
+        if not name:
+            raise ValueError("Options must have a name")
         self._add_argument(self.options, name, *args, **kwargs)
 
     def add_analysis_toggle(self, name, *args, **kwargs):
@@ -189,6 +203,9 @@ class ModuleArgs:
     def _add_argument(self, group, name, *args, **kwargs):
         if self.single_arg:
             raise ValueError("Cannot add more arguments after an argument that is just the prefix name")
+        # prevent the option name being considered destination by argparse
+        if not name.startswith("-"):
+            name = "-%s%s" % ("-" if len(name) > 1 else "", name)
         if "default" not in kwargs:
             raise ValueError("Arguments must have a default, (default=)")
         if "type" not in kwargs:
@@ -239,7 +256,7 @@ class ModuleArgs:
         if name.lstrip("-") == self.prefix:
             # not having anything else is ok if it's the only arg
             if self.args:
-                raise ValueError("Arg name must not be just prefix with multiple args")
+                raise ValueError("Arg name must not be just prefix if supporting multiple args")
             self.single_arg = True
             if not dest:
                 dest = self.prefix
@@ -301,126 +318,122 @@ def build_parser(from_config_file=False, modules=None):
     return parser
 
 def basic_options():
-#    parser = AntiSmashParser(add_help=False)
     group = ModuleArgs("Basic analysis options", '', override_safeties=True, basic_help=True)
-#    group = parser.add_argument_group('Basic analysis options', '', basic=True)
 
     group.add_option('--taxon',
-                       dest='taxon',
-                       default='bacteria',
-                       choices=['bacteria', 'fungi'],
-                       type=str,
-                       help="Taxonomic classification of input sequence. (default: %(default)s)")
+                     dest='taxon',
+                     default='bacteria',
+                     choices=['bacteria', 'fungi'],
+                     type=str,
+                     help="Taxonomic classification of input sequence. (default: %(default)s)")
 
     group.add_option('--input-type',
-                       dest='input_type',
-                       default='nucl',
-                       choices=['nucl', 'prot'],
-                       type=str,
-                       help="Determine input type: amino acid sequence(s) or nucleotide sequence(s). (default: %(default)s)")
+                     dest='input_type',
+                     default='nucl',
+                     choices=['nucl', 'prot'],
+                     type=str,
+                     help="Determine input type: amino acid sequence(s) or nucleotide sequence(s). (default: %(default)s)")
     return group
 
 def output_options():
     group = ModuleArgs("Output options", 'output')
     group.add_option('--output-dir',
-                       dest='output_dir',
-                       default="",
-                       type=str,
-                       action=FullPathAction,
-                       help="Directory to write results to.")
+                     dest='output_dir',
+                     default="",
+                     type=str,
+                     action=FullPathAction,
+                     help="Directory to write results to.")
     return group
 
 def advanced_options():
-#    parser = AntiSmashParser(add_help=False)
     group = ModuleArgs("Advanced options", '', override_safeties=True)
     group.add_option('--reuse-results',
-                       dest='reuse_results',
-                       type=str,
-                       action=FullPathAction,
-                       default="",
-                       metavar="PATH",
-                       help="Use the previous results from the specified json datafile")
+                     dest='reuse_results',
+                     type=str,
+                     action=FullPathAction,
+                     default="",
+                     metavar="PATH",
+                     help="Use the previous results from the specified json datafile")
     group.add_option('--limit',
-                       dest="limit",
-                       type=int,
-                       default=-1,
-                       help="Only process the first <limit> records (default: %(default)s). -1 to disable")
+                     dest="limit",
+                     type=int,
+                     default=-1,
+                     help="Only process the first <limit> records (default: %(default)s). -1 to disable")
     group.add_option('--minlength',
-                       dest="minlength",
-                       type=int,
-                       default=1000,
-                       help="Only process sequences larger than <minlength> (default: 1000).")
+                     dest="minlength",
+                     type=int,
+                     default=1000,
+                     help="Only process sequences larger than <minlength> (default: 1000).")
     group.add_option('--start',
-                       dest='start',
-                       type=int,
-                       default=-1,
-                       help="Start analysis at nucleotide specified.")
+                     dest='start',
+                     type=int,
+                     default=-1,
+                     help="Start analysis at nucleotide specified.")
     group.add_option('--end',
-                       dest='end',
-                       type=int,
-                       default=-1,
-                       help="End analysis at nucleotide specified")
+                     dest='end',
+                     type=int,
+                     default=-1,
+                     help="End analysis at nucleotide specified")
     group.add_option('--databases',
-                       dest='database_dir',
-                       default=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'databases'),
-                       type=str,
-                       help="Root directory of the databases.")
+                     dest='database_dir',
+                     default=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'databases'),
+                     type=str,
+                     help="Root directory of the databases.")
     return group
 
 def debug_options():
     group = ModuleArgs("Debugging & Logging options", '', override_safeties=True)
-#    group = parser.add_argument_group("Debugging & Logging options", '', basic=True)
     group.add_option('-v', '--verbose',
-                       dest='verbose',
-                       action='store_true',
-                       default=False,
-                       help="Print verbose status information to stderr.")
+                     dest='verbose',
+                     action='store_true',
+                     default=False,
+                     help="Print verbose status information to stderr.")
     group.add_option('-d', '--debug',
-                       dest='debug',
-                       action='store_true',
-                       default=False,
-                       help="Print debugging information to stderr.")
+                     dest='debug',
+                     action='store_true',
+                     default=False,
+                     help="Print debugging information to stderr.")
     group.add_option('--logfile',
-                       dest='logfile',
-                       default=argparse.SUPPRESS,
-                       type=str,
-                       help="Also write logging output to a file.")
+                     dest='logfile',
+                     default="",
+                     type=str,
+                     help="Also write logging output to a file.")
     group.add_option('--statusfile',
-                       dest='statusfile',
-                       default=argparse.SUPPRESS,
-                       type=str,
-                       help="Write the current status to a file.")
+                     dest='statusfile',
+                     default="",
+                     type=str,
+                     help="Write the current status to a file.")
     group.add_option('--list-plugins',
-                       dest='list_plugins',
-                       action='store_true',
-                       default=False,
-                       help="List all available sec. met. detection modules.")
+                     dest='list_plugins',
+                     action='store_true',
+                     default=False,
+                     help="List all available sec. met. detection modules.")
     group.add_option('--check-prereqs',
-                       dest='check_prereqs_only',
-                       action='store_true',
-                       default=False,
-                       help="Just check if all prerequisites are met.")
+                     dest='check_prereqs_only',
+                     action='store_true',
+                     default=False,
+                     help="Just check if all prerequisites are met.")
     group.add_option('--limit-to-record',
-                       dest='limit_to_record',
-                       default="",
-                       metavar="record_id",
-                       type=str,
-                       help="Limit analysis to the record with ID record_id")
+                     dest='limit_to_record',
+                     default="",
+                     metavar="record_id",
+                     type=str,
+                     help="Limit analysis to the record with ID record_id")
     group.add_option('--skip-cleanup',
-                       dest='skip_cleanup',
-                       action='store_true',
-                       default=False,
-                       help="Don't clean up temporary result files")
+                     dest='skip_cleanup',
+                     action='store_true',
+                     default=False,
+                     help="Don't clean up temporary result files")
     group.add_option('-V', '--version',
-                       dest='version',
-                       action='store_true',
-                       default=False,
-                       help="Display the version number and exit.")
+                     dest='version',
+                     action='store_true',
+                     default=False,
+                     help="Display the version number and exit.")
     group.add_option('--profiling',
-                       dest='profile',
-                       action='store_true',
-                       default=False,
-                       help="Generate a profiling report, disables multiprocess python.")
+                     dest='profile',
+                     action='store_true',
+                     default=False,
+                     help="Generate a profiling report, disables multiprocess python.")
     return group
 
 def specific_debugging(modules):
@@ -438,18 +451,18 @@ def specific_debugging(modules):
 
     group = ModuleArgs('Debugging options for cluster-specific analyses', '', override_safeties=True)
     group.add_option('--minimal',
-                       dest='minimal',
-                       action='store_true',
-                       default=False,
-                       help="Only run core detection modules, no analysis modules unless explicitly enabled")
+                     dest='minimal',
+                     action='store_true',
+                     default=False,
+                     help="Only run core detection modules, no analysis modules unless explicitly enabled")
     errors = []
     for module in relevant_modules:
         try:
             group.add_option('--enable-%s' % (module.NAME),
-                               dest='%s_enabled' % (module.NAME),
-                               action='store_true',
-                               default=False,
-                               help="Enable %s (default: enabled, unless --minimal is specified)" % module.SHORT_DESCRIPTION)
+                             dest='%s_enabled' % (module.NAME),
+                             action='store_true',
+                             default=False,
+                             help="Enable %s (default: enabled, unless --minimal is specified)" % module.SHORT_DESCRIPTION)
         except AttributeError as err:
             errors.append(str(err).replace("'module' object", module.__name__))
     if errors:

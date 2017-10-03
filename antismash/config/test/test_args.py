@@ -1,17 +1,23 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
-import unittest
-from argparse import Namespace
+# for test files, silence irrelevant and noisy pylint warnings
+# pylint: disable=no-self-use,protected-access,missing-docstring
 
-from antismash import get_detection_modules, get_analysis_modules
+from argparse import Namespace
+import os
+import unittest
+
+from helperlibs.wrappers.io import TemporaryDirectory
+
+from antismash import get_all_modules
 from antismash.config import get_config, update_config, destroy_config
-import antismash.config.args as args
+from antismash.config import args
 
 class TestConfig(unittest.TestCase):
     def setUp(self):
         self.core_parser = args.build_parser()
-        modules = get_detection_modules() + get_analysis_modules()
+        modules = get_all_modules()
         self.default_parser = args.build_parser(modules=modules)
 
     def tearDown(self):
@@ -61,3 +67,94 @@ class TestConfig(unittest.TestCase):
         assert config.get('b', 3) is None # since b exists
         assert config.get('c') is None # since c doesn't
         assert config.get('c', 3) == 3 # now with default as 3
+
+    def test_config_files(self):
+        # TODO change some values in the file generated and check they're kept
+        with TemporaryDirectory(change=True):
+            args.build_parser()
+            parser = args.build_parser(modules=get_all_modules())
+            default_options = parser.parse_args([])
+            parser.write_to_config_file("default_options.cfg")
+
+            parser = args.build_parser(modules=get_all_modules(), from_config_file=True)
+            from_file = parser.parse_args(["@default_options.cfg"])
+            assert isinstance(from_file.enabled_cluster_types, list)
+            assert vars(default_options) == vars(from_file)
+
+    def test_paths(self):
+        options = self.core_parser.parse_args(["--reuse-results", "local"])
+        assert os.sep in options.reuse_results
+
+class TestModuleArgs(unittest.TestCase):
+    def test_bad_values(self):
+        with self.assertRaisesRegex(ValueError, "Argument prefixes must only be alphabetic"):
+            mod_args = args.ModuleArgs('test options', 'prefix-has-dash')
+        with self.assertRaisesRegex(TypeError, "Argument prefix must be a string"):
+            mod_args = args.ModuleArgs('test options', 7)
+        with self.assertRaisesRegex(ValueError, "Argument prefixes must be at least 2 chars"):
+            args.ModuleArgs('test options', '')
+        with self.assertRaisesRegex(ValueError, "Argument group must have a title"):
+            args.ModuleArgs('', 'prefix')
+        mod_args = args.ModuleArgs('test args', 'test')
+        with self.assertRaisesRegex(ValueError, "Options must have a name"):
+            mod_args.add_option('',
+                                dest='some_place',
+                                type=int,
+                                default=0,
+                                help="help")
+
+        with self.assertRaisesRegex(ValueError, "Destination for option cannot contain hyphens"):
+            mod_args.add_option('name',
+                                dest='some-place',
+                                type=int,
+                                default=0,
+                                help="help")
+        with self.assertRaisesRegex(ValueError, "Arguments must have a default"):
+            mod_args.add_option('name',
+                                dest='some-place',
+                                type=int,
+                                help="help")
+        with self.assertRaisesRegex(ValueError, "Arguments must have a type"):
+            mod_args.add_option('name',
+                                dest='some-place',
+                                default="",
+                                help="help")
+        with self.assertRaisesRegex(ValueError, "Arguments must have a description"):
+            mod_args.add_option('name',
+                                dest='some-place',
+                                default="",
+                                type=str)
+        with self.assertRaisesRegex(ValueError, "Arguments must have a destination"):
+            mod_args.add_option('name',
+                                help='help',
+                                default="",
+                                type=str)
+
+    def test_bad_option_names(self):
+        mod_args = args.ModuleArgs('test args', 'test')
+        mod_args.add_option('--test', default="", type=str, help="no", dest="test")
+        with self.assertRaisesRegex(ValueError, "Cannot add more arguments after"):
+            mod_args.add_option("other", default="", type=str, help="no", dest="test_thing")
+
+    def test_good_options(self):
+        mod_args = args.ModuleArgs('test args', 'test')
+        mod_args.add_option('test', default="", type=str, help="no", dest="test")
+        parser = args.AntiSmashParser(parents=[mod_args])
+        options = parser.parse_args(["--test", "thing"])
+        assert options.test == "thing"
+        options = parser.parse_args(["--test", "1"])
+        assert options.test == "1"
+
+
+# pytest only here for simple output capturing
+def test_help(capsys):
+    args.build_parser(modules=get_all_modules()).print_help()
+    out, err = capsys.readouterr()
+    assert "--minimal" not in out
+
+    args.build_parser(modules=get_all_modules()).print_help(show_all=True)
+    out_all, err_all = capsys.readouterr()
+    assert err == err_all and not err
+    # make sure show_all does something
+    assert out != out_all
+    assert "--minimal" in out_all

@@ -1,6 +1,16 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+"""
+    Helper objects for testing antismash
+"""
+
+# for test files, silence irrelevant and noisy pylint warnings
+# pylint: disable=no-self-use,protected-access,missing-docstring
+
+# and some extra silencing because most of these classes are simple stubs
+# pylint: disable=too-few-public-methods
+
 import os
 
 from Bio.Seq import Seq
@@ -53,7 +63,7 @@ class FakeSeq(object):
 
 class DummyRecord(Record):
     "class for generating a SeqRecord like data structure"
-    def __init__(self, features=None, seq='FAKESEQ', real_seq=False):
+    def __init__(self, features=None, seq='FAKESEQ'):
         super().__init__(Seq(seq))
         if features:
             for feature in features:

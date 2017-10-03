@@ -1,30 +1,29 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+# for test files, silence irrelevant and noisy pylint warnings
+# pylint: disable=no-self-use,protected-access,missing-docstring
+
 import os
 import unittest
 
-from antismash.config import loader
-from antismash.config import update_config, get_config
+from antismash.config import args, loader
+from antismash.config import update_config, get_config, destroy_config
 
 class TestLoader(unittest.TestCase):
     def setUp(self):
-# pylint: disable=protected-access
         self.orig_basedir = loader._BASEDIR
         self.orig_user = loader._USER_FILE_NAME
         self.orig_instance = loader._INSTANCE_FILE_NAME
         loader._BASEDIR = os.path.join(os.path.dirname(__file__), 'data')
         loader._USER_FILE_NAME = os.devnull
         loader._INSTANCE_FILE_NAME = 'dummy_instance.cfg'
-# pylint: enable=protected-access
 
     def tearDown(self):
-# pylint: disable=protected-access
         loader._BASEDIR = self.orig_basedir
         loader._USER_FILE_NAME = self.orig_user
         loader._INSTANCE_FILE_NAME = self.orig_instance
-        get_config().__dict__.clear()
-# pylint: enable=protected-access
+        destroy_config()
 
     def test_simple(self):
         assert not get_config()

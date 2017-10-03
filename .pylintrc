@@ -1,8 +1,9 @@
 [MASTER]
 ignore=external
+reports=y
 
 [TYPECHECK]
-ignored-classes=Config
+ignored-classes=Config,TestCase
 
 [FORMAT]
 max-line-length=120

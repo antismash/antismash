@@ -219,6 +219,9 @@ def run_fimo_simple(query_motif_file, target_sequence): # TODO cleanup
 
 def run_hmmscan(target_hmmfile, query_sequence, opts=None, results_file=None):
     "Run hmmscan on the inputs and return a list of QueryResults"
+    if not query_sequence:
+        raise ValueError("Cannot run hmmscan on empty sequence")
+
     config = get_config()
     command = ["hmmscan", "--cpu", str(config.cpus), "--nobias"]
 
@@ -232,9 +235,9 @@ def run_hmmscan(target_hmmfile, query_sequence, opts=None, results_file=None):
     command.extend([target_hmmfile, '-'])
     result = execute(command, stdin=query_sequence)
     if not result.successful():
-        raise RuntimeError('hmmscan returned %d: %r while scanning %r',
-                           result.return_code, result.stderr[-100:],
-                           query_sequence[:100])
+        raise RuntimeError('hmmscan returned %d: %r while scanning %r' % (
+                           result.return_code, result.stderr[-100:].replace("\n", ""),
+                           query_sequence[:100]))
     if results_file is not None:
         with open(results_file, 'w') as fh:
             fh.write(result.stdout)
