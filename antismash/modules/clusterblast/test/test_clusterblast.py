@@ -44,13 +44,13 @@ class TestBlastParsing(unittest.TestCase):
 
     def test_unique_pairings_filter(self):
         data = self.file_data_to_lists(self.sample_data)
-        sample = core.uniqueblasthitfilter(data)
+        sample = core.remove_duplicate_hits(data)
         self.assertEqual(len(sample), len(data))
-        self.assertEqual(sample, core.uniqueblasthitfilter(data*2))
+        self.assertEqual(sample, core.remove_duplicate_hits(data*2))
 
         # test empty
         data = [[], ["a"], ["abc"]]
-        results = core.uniqueblasthitfilter(data)
+        results = core.remove_duplicate_hits(data)
         self.assertEqual(results, [])
 
     def verify_subjects_and_clusters_represented(self, subjects,
