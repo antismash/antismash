@@ -26,6 +26,8 @@ def get_full_path(current_file, *args) -> str:
             A string containing the fully generated path
     """
     base = os.path.dirname(os.path.abspath(current_file))
+    if not args:
+        return base
     extra = os.path.join(*args)
     return os.path.join(base, extra)
 
