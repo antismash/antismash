@@ -2,9 +2,11 @@
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
 import logging
+from typing import Dict, List
+
 from helperlibs.wrappers.io import TemporaryDirectory
 
-import antismash.common.path as path
+from antismash.common import path
 
 from .core import parse_all_clusters, write_fastas_with_all_genes, \
                   load_clusterblast_database, run_diamond, \
@@ -12,89 +14,125 @@ from .core import parse_all_clusters, write_fastas_with_all_genes, \
 from .results import ClusterResult, GeneralResults, write_clusterblast_output
 from .data_structures import MibigEntry
 
-# Tuple is ( binary_name, optional)
-_required_binaries = [
-    ('blastp', False),
-    ('makeblastdb', False),
-    ('diamond', False),
-]
+def _get_datafile_path(filename) -> str:
+    """ A helper to construct absolute paths to files in the knownclusterblast
+        data directory.
 
-_required_files = [
-    ('knownclusterprots.fasta', False),
-    ('knownclusterprots.dmnd', False),
-    ('knownclusters.txt', False)
-]
+        Arguments:
+            filename: the name only of the file
 
-def _get_datafile_path(filename):
+        Returns:
+            the absolute path of the file
+    """
     return path.get_full_path(__file__, 'data', 'known', filename)
 
-def check_known_prereqs(options):
-    "Check if all required applications are around"
+def check_known_prereqs(options) -> List[str]:
+    """ Determines if any prerequisite data files or executables are missing
+
+        Arguments:
+            options: antismash Config
+
+        Returns:
+            a list of error messages, one for each failing prequisite check
+    """
     failure_messages = []
-    for binary_name, optional in _required_binaries:
+    for binary_name, optional in [('blastp', False),
+                                  ('makeblastdb', False),
+                                  ('diamond', False)]:
         if path.locate_executable(binary_name) is None and not optional:
             failure_messages.append("Failed to locate file: %r" % binary_name)
 
-    for file_name, optional in _required_files:
+    for file_name, optional in [('knownclusterprots.fasta', False),
+                                ('knownclusterprots.dmnd', False),
+                                ('knownclusters.txt', False)]:
         if path.locate_file(_get_datafile_path(file_name)) is None and not optional:
             failure_messages.append("Failed to locate file: %r" % file_name)
 
     return failure_messages
 
-def run_knownclusterblast_on_record(seq_record, options):
-    logging.info('Running known cluster search')
-    clusters, proteins = load_clusterblast_database(seq_record, searchtype="knownclusterblast")
-    return perform_knownclusterblast(options, seq_record, clusters, proteins)
+def run_knownclusterblast_on_record(record, options) -> GeneralResults:
+    """ Run knownclusterblast on the given record
 
-def perform_knownclusterblast(options, seq_record, clusters, proteins):
-    # Run BLAST on gene cluster proteins of each cluster and parse output
-    logging.info("Running DIAMOND knowncluster searches..")
-    results = GeneralResults(seq_record.id, search_type="knownclusterblast")
+        Arguments:
+            record: the record to analyse
+            options: antismash Config
+
+        Returns:
+            an instance of GeneralResults with a result for each cluster in the record
+    """
+    logging.info('Running known cluster search')
+    clusters, proteins = load_clusterblast_database(record, searchtype="knownclusterblast")
+    return perform_knownclusterblast(options, record, clusters, proteins)
+
+def perform_knownclusterblast(options, record, reference_clusters, proteins) -> GeneralResults:
+    """ Run BLAST on gene cluster proteins of each cluster, parse output and
+        return result rankings for each cluster
+
+        Only compares clusters to known clusters from the MIBiG database
+
+        Arguments:
+            options: antismash Config
+            record: the Record to analyse
+            clusters: a dictionary mapping reference cluster name to ReferenceCluster
+            proteins: a dictionary mapping reference protein name to Protein
+
+        Returns:
+            a GeneralResults instance storing results for all clusters in the
+            record
+    """
+    logging.debug("Running DIAMOND knowncluster searches..")
+    results = GeneralResults(record.id, search_type="knownclusterblast")
 
     with TemporaryDirectory(change=True) as tempdir:
-        write_fastas_with_all_genes(seq_record.get_clusters(), "input.fasta")
-#        utils.writefasta([qcname.replace(" ", "_") for qcname in all_names],
-#                         all_seqs, "input.fasta")
+        write_fastas_with_all_genes(record.get_clusters(), "input.fasta")
         run_diamond("input.fasta", _get_datafile_path('knownclusterprots'),
                     tempdir, options)
         with open("input.out", 'r') as handle:
             blastoutput = handle.read()
         write_raw_clusterblastoutput(options.output_dir, blastoutput,
-                                     search_type="knownclusterblast")
-    clusters_by_number, _ = parse_all_clusters(blastoutput, seq_record,
-                                               minseqcoverage=40,
-                                               minpercidentity=45)
+                                     prefix="knownclusterblast")
+    clusters_by_number, _ = parse_all_clusters(blastoutput, record,
+                                               min_seq_coverage=40,
+                                               min_perc_identity=45)
 
-    allcoregenes = seq_record.get_cds_features()
-    for genecluster in seq_record.get_clusters():
-        clusternumber = genecluster.get_cluster_number()
+    accessions = record.get_cds_features()
+    for cluster in record.get_clusters():
+        clusternumber = cluster.get_cluster_number()
         cluster_names_to_queries = clusters_by_number.get(clusternumber, {})
-        ranking = score_clusterblast_output(clusters, allcoregenes, cluster_names_to_queries)
+        ranking = score_clusterblast_output(reference_clusters, accessions,
+                                            cluster_names_to_queries)
         # store results
-        cluster_result = ClusterResult(genecluster, ranking, proteins)
-        results.add_cluster_result(cluster_result, clusters, proteins)
+        cluster_result = ClusterResult(cluster, ranking, proteins)
+        results.add_cluster_result(cluster_result, reference_clusters, proteins)
 
-        write_clusterblast_output(options, seq_record, cluster_result, proteins,
+        write_clusterblast_output(options, record, cluster_result, proteins,
                                   searchtype="knownclusterblast")
-    results.mibig_entries = mibig_protein_homology(blastoutput, seq_record, clusters)
+    results.mibig_entries = mibig_protein_homology(blastoutput, record,
+                                                   reference_clusters)
     return results
 
 
-def mibig_protein_homology(blastoutput, seq_record, clusters):
-    """ Constructs a mapping of gene to MiBiG hits
-        Returns a dict of dicts of lists, accessed by:
-            mibig_entries[cluster_number][gene_accession] = list of MibigEntry
+def mibig_protein_homology(blastoutput, record, clusters) -> Dict[int, Dict[str, List[MibigEntry]]]:
+    """ Constructs a mapping of clusters and genes to MiBiG hits
+
+        Arguments:
+            blastoutput: a string containing blast-formatted results
+            record: the record to analyse
+            clusters: a dictionary mapping reference cluster name to ReferenceCluster
+
+        Returns:
+            a dict of dicts of lists, accessed by:
+                mibig_entries[cluster_number][gene_accession] = list of MibigEntry
     """
-    _, queries_by_cluster = parse_all_clusters(blastoutput, seq_record,
-                                               minseqcoverage=20,
-                                               minpercidentity=20)
+    _, queries_by_cluster = parse_all_clusters(blastoutput, record,
+                                               min_seq_coverage=20,
+                                               min_perc_identity=20)
     mibig_entries = {}
 
-    for cluster in seq_record.get_clusters():
+    for cluster in record.get_clusters():
         cluster_number = cluster.get_cluster_number()
         queries = queries_by_cluster.get(cluster_number, {})
         cluster_entries = {}
-        # Since the BLAST query was only for proteins in the cluster just need to iterate through the keys
         for cluster_protein in queries.values():
             protein_name = cluster_protein.id
             protein_entries = []

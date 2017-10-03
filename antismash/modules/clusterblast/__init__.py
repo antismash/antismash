@@ -19,9 +19,7 @@ from .sub import run_subclusterblast_on_record, check_sub_prereqs
 from .html_output import will_handle, generate_details_div
 
 NAME = "clusterblast"
-SHORT_DESCRIPTION = NAME.capitalize()
-
-
+SHORT_DESCRIPTION = "comparative gene cluster analysis"
 
 def get_arguments():
     args = ModuleArgs('ClusterBlast options', 'cb')

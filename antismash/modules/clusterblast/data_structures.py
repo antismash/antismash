@@ -83,7 +83,7 @@ class Subject:
                     "annotation", "perc_ident", "blastscore", "perc_coverage",
                     "evalue", "locus_tag"]:
             args.append(data[key])
-# stop pylint throwing errors because it can't work out the splat operator
+# stop pylint showing errors because it can't work out the splat operator
 # pylint: disable=no-value-for-parameter
         return Subject(*args)
 # pylint: enable=no-value-for-parameter
@@ -93,7 +93,7 @@ class Query:
     def __init__(self, entry, index):
         parts = entry.split("|")
         self.cluster_number = int(parts[1][1:]) # c1 -> 1
-        self.id = parts[4]
+        self.id = parts[4] # accession
         self.entry = entry
         self.subjects = OrderedDict()
         self.cluster_name_to_subjects = {}
@@ -119,8 +119,8 @@ class Score:
         self.core_bonus = 0
         self.scored_pairings = []
 
-    def sort_score(self):
-        """ the pre-existing, unexplained sort weighting """
+    def sort_score(self) -> float:
+        """ the pre-existing, unexplained sort weighting """ # TODO figure out what it should be
         if self.core_gene_hits:
             self.core_bonus = 3
         return (self.hits
@@ -149,4 +149,3 @@ class MibigEntry:
 
     def __str__(self):
         return "%s\n" % "\t".join(str(val) for val in self.values)
-

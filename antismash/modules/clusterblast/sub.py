@@ -7,12 +7,11 @@ from multiprocessing import Pool
 
 from helperlibs.wrappers.io import TemporaryDirectory
 
-import antismash.common.path as path
+from antismash.common import path, subprocessing
 
 from .core import write_raw_clusterblastoutput, write_fastas_with_all_genes, \
                   blastparse, score_clusterblast_output, \
-                  read_clusterblast_output, runblast, \
-                  load_clusterblast_database
+                  runblast, load_clusterblast_database
 from .results import ClusterResult, GeneralResults
 
 def _get_datafile_path(filename):
@@ -44,14 +43,26 @@ def check_sub_prereqs(options):
 
     return failure_messages
 
-def run_subclusterblast_on_record(seq_record, options):
+def run_subclusterblast_on_record(record, options):
     logging.info('Running subcluster search')
-    clusters, proteins = load_clusterblast_database(seq_record, "subclusterblast")
-    return perform_subclusterblast(options, seq_record, clusters, proteins)
+    clusters, proteins = load_clusterblast_database(record, "subclusterblast")
+    return perform_subclusterblast(options, record, clusters, proteins)
 
-def _run_blast_helper(database, index):
-    """A wrapper of runblast() just to reverse args for functools.partial use"""
-    # note: can't be nested because it must be picklable for Pool's use
+def _run_blast_helper(database, index) -> str:
+    """ A simple wrapper of runblast() to reverse arg order to allow for
+        functools.partial to simplify run_clusterblast_processes()
+
+        Cannot be a locally defined function because Pool requires it to be
+        pickable.
+
+        Arguments:
+            database: the database to search in
+            index: the index of the current process, used to generate the
+                    filename to use
+
+        Returns:
+            the name of the output file created by runblast()
+    """
     return runblast("input%d.fasta" % index, database)
 
 def run_clusterblast_processes(options):
@@ -59,26 +70,47 @@ def run_clusterblast_processes(options):
     # set the first arg to always be database
     partial = functools.partial(_run_blast_helper, database)
     # then run over each file in parallel
-    with Pool(options.cpus) as pool:
+    with Pool(options.cpus) as pool: # TODO: use subprocessing instead
         pool.map(partial, range(options.cpus))
 
-def perform_subclusterblast(options, seq_record, clusters, proteins):
-    #Run BLAST on gene cluster proteins of each cluster and parse output
-    logging.info("Running NCBI BLAST+ subcluster searches..")
-    results = GeneralResults(seq_record.id, search_type="subclusterblast")
+def read_clusterblast_output(options):
+    blastoutput = []
+    for i in range(options.cpus):
+        with open("input%d.out" % i, "r") as handle:
+            output = handle.read()
+        blastoutput.append(output)
+    return "".join(blastoutput)
+
+def perform_subclusterblast(options, record, clusters, proteins) -> GeneralResults:
+    """ Run BLAST on gene cluster proteins of each cluster, parse output and
+        return result rankings for each cluster
+
+        Arguments:
+            options: antismash Config
+            record: the Record to analyse
+            clusters: a dictionary mapping reference cluster name to ReferenceCluster
+            proteins: a dictionary mapping reference protein name to Protein
+
+        Returns:
+            a GeneralResults instance storing results for all clusters in the
+            record
+    """
+    logging.info("Running NCBI BLAST+ subcluster searches...")
+    results = GeneralResults(record.id, search_type="subclusterblast")
     with TemporaryDirectory(change=True):
-        allcoregenes = [cds.get_accession() for cds in seq_record.get_cds_features()]
-        for cluster in seq_record.get_clusters():
-            logging.info("   Gene cluster " + str(cluster.get_cluster_number()))
+        allcoregenes = [cds.get_accession() for cds in record.get_cds_features()]
+        for cluster in record.get_clusters():
+            logging.debug("   Gene cluster " + str(cluster.get_cluster_number()))
             # prepare and run diamond
             write_fastas_with_all_genes([cluster], "input.fasta",
                                         partitions=options.cpus)
             run_clusterblast_processes(options)
             blastoutput = read_clusterblast_output(options)
-            write_raw_clusterblastoutput(options.output_dir, blastoutput, search_type="subclusterblast")
-            logging.info("   Blast search finished. Parsing results...")
+            write_raw_clusterblastoutput(options.output_dir, blastoutput, prefix="subclusterblast")
+            logging.debug("   Blast search finished. Parsing results...")
             # parse and score diamond results
-            _, cluster_names_to_queries = blastparse(blastoutput, seq_record, minseqcoverage=40, minpercidentity=45)
+            _, cluster_names_to_queries = blastparse(blastoutput, record,
+                                      min_seq_coverage=40, min_perc_identity=45)
             ranking = score_clusterblast_output(clusters, allcoregenes, cluster_names_to_queries)
             logging.debug("Cluster at %s has %d subclusterblast results", cluster.location, len(ranking))
             # store results
