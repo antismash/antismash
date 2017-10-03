@@ -50,45 +50,14 @@ def get_simple_options(module, args):
         modules = [module]
     return build_parser(from_config_file=False, modules=modules).parse_args(args)
 
-class FakeSeq(object):
-    "class for generating a Seq like datastructure"
-    def __init__(self, seq):
-        self.seq = seq
-
-    def translate(self, _dummy):
-        return self.seq
-
-    def __str__(self):
-        return self.seq
-
 class DummyRecord(Record):
-    "class for generating a SeqRecord like data structure"
+    "class for generating a Record like data structure"
     def __init__(self, features=None, seq='FAKESEQ'):
         super().__init__(Seq(seq))
         if features:
             for feature in features:
                 self.add_feature(feature)
         self.record_index = 0
-
-class FakeFeature(object):
-    "class for generating a SeqFeature like datastructure"
-    def __init__(self, feature_type, location=None, qualifiers=None):
-        self.type = feature_type
-        self.qualifiers = {"translation" : ["trans"]}
-        if qualifiers:
-            self.qualifiers.update(qualifiers)
-        self.location = location
-
-    def __getattr__(self, attr):
-        return self.__dict__.get(attr, [])
-
-    def extract(self, seq):
-        return seq
-
-    def __repr__(self):
-        return "FakeFeature(%r, %r, %r)" % (self.location, self.type,
-                                            self.qualifiers)
-
 
 def get_path_to_nisin_genbank():
     path = __file__
