@@ -16,12 +16,13 @@ def get_result_limit():
     return _CLUSTER_LIMIT
 
 class ClusterResult:
-    __slots__ = ["cluster", "ranking", "total_hits", "svg_builder"]
-    def __init__(self, cluster, ranking, reference_proteins):
+    __slots__ = ["cluster", "ranking", "total_hits", "svg_builder", "prefix"]
+    def __init__(self, cluster, ranking, reference_proteins, prefix):
         self.cluster = cluster # Cluster
         self.ranking = ranking[:get_result_limit()] # [(ReferenceCluster, Score),...]
         self.total_hits = len(ranking)
-        self.svg_builder = ClusterSVGBuilder(cluster, ranking, reference_proteins)
+        self.svg_builder = ClusterSVGBuilder(cluster, ranking, reference_proteins, prefix)
+        self.prefix = prefix
 
     def update_cluster_descriptions(self, search_type):
         if search_type != "knownclusterblast": #TODO clean this up
@@ -41,6 +42,7 @@ class ClusterResult:
             scoring["pairings"] = [(query.entry, query.index, vars(subject)) for query, subject in score.scored_pairings]
             ranking.append((json_cluster, scoring))
         result["ranking"] = ranking
+        result["prefix"] = self.prefix
         return result
 
     @staticmethod
@@ -63,7 +65,7 @@ class ClusterResult:
             ranking.append((ref_cluster, score))
 
         cluster = record.get_cluster(json["cluster_number"])
-        result = ClusterResult(cluster, ranking, reference_proteins)
+        result = ClusterResult(cluster, ranking, reference_proteins, json["prefix"])
         result.total_hits = json["total_hits"]
         return result
 
@@ -185,6 +187,7 @@ class ClusterBlastResults(ModuleResults):
         results = ClusterBlastResults(json["record_id"])
         for attr in ["general", "subcluster", "knowncluster"]:
             if attr in json:
+                logging.debug("Regenerating clusterblast subresults: %s", attr)
                 setattr(results, attr, GeneralResults.from_json(json[attr], record))
         assert results.general or results.subcluster or results.knowncluster
         return results
