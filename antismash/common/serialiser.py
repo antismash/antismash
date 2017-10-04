@@ -93,16 +93,6 @@ def dump_records(records, results, handle=None):
         handle = open(handle, "w")
     handle.write(new_contents)
 
-def read_results(handle):
-    if isinstance(handle, str):
-        handle = open(handle, "r")
-    contents = handle.read()
-    if not contents:
-        raise ValueError("Results file contains no information")
-    data = json.loads(contents, object_pairs_hook=OrderedDict)
-    data["records"] = list(map(record_from_json, data["records"]))
-    return data
-
 def record_to_json(record):
     def annotations_to_json(annotations):
         res = dict(annotations)
