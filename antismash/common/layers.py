@@ -164,7 +164,6 @@ class ClusterLayer:
             i += 1 # since one-indexed
             svg_file = os.path.join('svg', 'subclusterblast%s_%s.svg' % (self.idx, i))
             self.subcluster_blast.append((label, svg_file))
-        logging.critical("subcluster_blast_generator() found %d hits", len(self.subcluster_blast))
 
     def find_plugins_for_cluster(self):
         "Find a specific plugin responsible for a given gene cluster type"
