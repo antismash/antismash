@@ -332,7 +332,7 @@ def read_data(sequence_file, options) -> serialiser.AntismashResults:
             a AntismashResults instance, populated only if reusing results
 
     """
-    if not sequence_file or options.reuse_results:
+    if not sequence_file and not options.reuse_results:
         raise ValueError("No sequence file or prior results to read")
 
     if sequence_file:
@@ -445,9 +445,9 @@ def run_antismash(sequence_file, options, detection_modules=None,
 
     start_time = datetime.now()
 
-    prepare_output_directory(options.output_dir)
-
     results = read_data(sequence_file, options)
+
+    prepare_output_directory(options.output_dir)
 
     results.records = record_processing.pre_process_sequences(results.records, options, genefinding)
     for seq_record, previous_result in zip(results.records, results.results):
