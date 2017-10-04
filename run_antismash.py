@@ -20,14 +20,13 @@ def get_git_version():
         return execute(args).stdout.strip()
     except OSError:
         pass
-
     return ""
 
 def get_version():
     """Get the current version string"""
     version = antismash.__version__
     git_version = get_git_version()
-    if git_version != '':
+    if git_version:
         version += "-%s" % git_version
 
     return version
@@ -79,6 +78,8 @@ def main(args):
         options.output_dir = os.path.abspath(os.path.splitext(os.path.basename(sequence))[0])
 
     sequence = sequence.replace("< > HYPHEN < >", "-")
+
+    options.version = get_version()
 
     return antismash.run_antismash(sequence, options)
 
