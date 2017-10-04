@@ -19,6 +19,7 @@ from Bio.SeqFeature import SeqFeature, FeatureLocation # for others importing
 from Bio.SeqRecord import SeqRecord
 # pylint: enable=unused-import
 
+from antismash.config import get_config
 from antismash.common.all_orfs import scan_orfs, sort_orfs
 from antismash.common.secmet import CDSFeature, Feature
 
@@ -205,8 +206,7 @@ def get_structure_pred(cluster) -> str:
     return "N/A"
 
 def get_version() -> str:
-    logging.critical("dummy get_version() being called")
-    return "antismash-5.alpha"
+    return get_config().version
 
 def find_all_orfs(seq_record, cluster) -> list: # the old lassopeptides.find_all_orfs
     """Find all ORFs in gene cluster outside annotated CDS features"""
