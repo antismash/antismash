@@ -8,12 +8,26 @@ from typing import Dict, List, Set, Tuple # pylint: disable=unused-import
 
 from helperlibs.wrappers.io import TemporaryDirectory
 
-import antismash.common.deprecated as utils
-import antismash.common.path as path
-import antismash.common.subprocessing as subprocessing
+from antismash.common import path, subprocessing, deprecated as utils, secmet
 from antismash.config import get_config
 
 from .data_structures import Subject, Query, Protein, ReferenceCluster, Score
+
+def get_core_gene_ids(record) -> Set[str]: #TODO: consider moving into secmet
+    """ Fetches all gene accessions of genes with CORE gene function from all
+        clusters in a record
+
+        Arguments:
+            record: the record to gather gene ids from
+
+        Returns:
+            a set containing all core gene names
+    """
+    cores = []
+    for gene in record.get_cds_features_within_clusters():
+        if gene.gene_function == secmet.GeneFunction.CORE:
+            cores.append(gene.get_accession())
+    return cores
 
 def runblast(query, database) -> str:
     """ Runs blastp, comparing the given query with the given database
@@ -49,6 +63,7 @@ def run_diamond(query, database, tempdir, options) -> str:
         Returns:
             the name of the output file created
     """
+    logging.debug("Running external command: diamond")
     command = [
         "diamond", "blastp",
         "--db", database,
@@ -473,7 +488,7 @@ def internal_homology_blast(record) -> Dict[int, List[List[str]]]:
                     lists of query ids
     """
     with TemporaryDirectory(change=True):
-        logging.info("Finding internal homologs in each gene cluster..")
+        logging.info("Finding internal homologs in each gene cluster...")
         internalhomologygroups = {}
         for cluster in record.get_clusters():
             cluster_number = cluster.get_cluster_number()

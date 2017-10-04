@@ -10,7 +10,8 @@ from antismash.common import path
 
 from .core import parse_all_clusters, write_fastas_with_all_genes, \
                   load_clusterblast_database, run_diamond, \
-                  write_raw_clusterblastoutput, score_clusterblast_output
+                  write_raw_clusterblastoutput, score_clusterblast_output, \
+                  get_core_gene_ids
 from .results import ClusterResult, GeneralResults, write_clusterblast_output
 from .data_structures import MibigEntry
 
@@ -95,14 +96,15 @@ def perform_knownclusterblast(options, record, reference_clusters, proteins) -> 
                                                min_seq_coverage=40,
                                                min_perc_identity=45)
 
-    accessions = record.get_cds_features()
+    core_gene_accessions = get_core_gene_ids(record)
     for cluster in record.get_clusters():
         clusternumber = cluster.get_cluster_number()
         cluster_names_to_queries = clusters_by_number.get(clusternumber, {})
-        ranking = score_clusterblast_output(reference_clusters, accessions,
+        ranking = score_clusterblast_output(reference_clusters,
+                                            core_gene_accessions,
                                             cluster_names_to_queries)
         # store results
-        cluster_result = ClusterResult(cluster, ranking, proteins)
+        cluster_result = ClusterResult(cluster, ranking, proteins, "knownclusterblast")
         results.add_cluster_result(cluster_result, reference_clusters, proteins)
 
         write_clusterblast_output(options, record, cluster_result, proteins,

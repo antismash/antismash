@@ -7,7 +7,7 @@ import os
 from helperlibs.wrappers.io import TemporaryDirectory
 
 from .core import write_fastas_with_all_genes, run_diamond, write_raw_clusterblastoutput, \
-                  parse_all_clusters, score_clusterblast_output
+                  parse_all_clusters, score_clusterblast_output, get_core_gene_ids
 from .results import ClusterResult, GeneralResults
 
 def perform_clusterblast(options, record, db_clusters, db_proteins) -> GeneralResults:
@@ -40,14 +40,17 @@ def perform_clusterblast(options, record, db_clusters, db_proteins) -> GeneralRe
                                                    min_perc_identity=30)
         results = GeneralResults(record.id)
 
+        core_gene_accessions = get_core_gene_ids(record)
+
         for cluster in clusters:
             cluster_number = cluster.get_cluster_number()
             cluster_names_to_queries = clusters_by_number.get(cluster_number, {})
             allcoregenes = [cds.get_accession() for cds in record.get_cds_features()]
-            ranking = score_clusterblast_output(db_clusters, allcoregenes, cluster_names_to_queries)
+            ranking = score_clusterblast_output(db_clusters, core_gene_accessions,
+                                                cluster_names_to_queries)
 
             # store the results
-            result = ClusterResult(cluster, ranking, db_proteins)
+            result = ClusterResult(cluster, ranking, db_proteins, "general")
             results.add_cluster_result(result, db_clusters, db_proteins)
 
         results.write_to_file(record, options)

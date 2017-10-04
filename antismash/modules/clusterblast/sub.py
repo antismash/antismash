@@ -11,7 +11,7 @@ from antismash.common import path, subprocessing
 
 from .core import write_raw_clusterblastoutput, write_fastas_with_all_genes, \
                   blastparse, score_clusterblast_output, \
-                  runblast, load_clusterblast_database
+                  runblast, load_clusterblast_database, get_core_gene_ids
 from .results import ClusterResult, GeneralResults
 
 def _get_datafile_path(filename):
@@ -98,22 +98,20 @@ def perform_subclusterblast(options, record, clusters, proteins) -> GeneralResul
     logging.info("Running NCBI BLAST+ subcluster searches...")
     results = GeneralResults(record.id, search_type="subclusterblast")
     with TemporaryDirectory(change=True):
-        allcoregenes = [cds.get_accession() for cds in record.get_cds_features()]
+        allcoregenes = get_core_gene_ids(record)
         for cluster in record.get_clusters():
-            logging.debug("   Gene cluster " + str(cluster.get_cluster_number()))
             # prepare and run diamond
             write_fastas_with_all_genes([cluster], "input.fasta",
                                         partitions=options.cpus)
             run_clusterblast_processes(options)
             blastoutput = read_clusterblast_output(options)
             write_raw_clusterblastoutput(options.output_dir, blastoutput, prefix="subclusterblast")
-            logging.debug("   Blast search finished. Parsing results...")
             # parse and score diamond results
             _, cluster_names_to_queries = blastparse(blastoutput, record,
                                       min_seq_coverage=40, min_perc_identity=45)
             ranking = score_clusterblast_output(clusters, allcoregenes, cluster_names_to_queries)
             logging.debug("Cluster at %s has %d subclusterblast results", cluster.location, len(ranking))
             # store results
-            cluster_result = ClusterResult(cluster, ranking, proteins)
+            cluster_result = ClusterResult(cluster, ranking, proteins, "subclusterblast")
             results.add_cluster_result(cluster_result, clusters, proteins)
     return results
