@@ -221,22 +221,29 @@ class TestScore(unittest.TestCase):
         self.assertEqual(score.blast_score, 0)
         self.assertEqual(score.synteny_score, 0)
         self.assertEqual(score.core_bonus, 0)
-        self.assertEqual(score.sort_score(), 0)
+        self.assertEqual(score.sort_score(), (0, 0))
         with self.assertRaises(AttributeError):
             score.other = 0
 
         score.hits = 1
-        self.assertEqual(score.sort_score(), 1)
+        assert score.score == 1
+        assert score.sort_score() == (1, 0)
 
         score.synteny_score = 1
-        self.assertEqual(score.sort_score(), 2)
+        assert score.score == 2
+        assert score.sort_score() == (2, 0)
 
         score.core_gene_hits = 1
-        self.assertAlmostEqual(score.sort_score(), 5.01)
-        self.assertEqual(score.core_bonus, 3)
+        assert score.score == 6
+        assert score.sort_score() == (6, 0)
 
         score.blast_score = 225
-        self.assertAlmostEqual(score.sort_score(), 5.01000225)
+        assert score.score == 6
+        assert score.sort_score() == (6, 225)
+
+        score.blast_score = 1225
+        assert score.score == 6
+        assert score.sort_score() == (6, 1225)
 
 class TestProtein(unittest.TestCase):
     def test_string_conversion(self):
