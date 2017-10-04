@@ -119,7 +119,7 @@ class TestModuleArgs(unittest.TestCase):
                                 dest='some-place',
                                 default="",
                                 help="help")
-        with self.assertRaisesRegex(ValueError, "Arguments must have a description"):
+        with self.assertRaisesRegex(ValueError, "Arguments must have a help"):
             mod_args.add_option('name',
                                 dest='some-place',
                                 default="",

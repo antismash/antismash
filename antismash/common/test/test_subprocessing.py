@@ -8,7 +8,7 @@ import os
 import time
 import unittest
 
-from antismash.config.args import Config
+from antismash.config import update_config, destroy_config, get_config
 from antismash.common import subprocessing
 
 def dummy(value=None):
@@ -23,10 +23,11 @@ def dummy(value=None):
 class TestParallelPython(unittest.TestCase):
     def setUp(self):
         self.config_cpus = 2
-        Config({"cpus" : self.config_cpus})
+        update_config({"cpus" : self.config_cpus})
+        assert get_config().cpus == 2
 
     def tearDown(self):
-        Config({})
+        destroy_config()
 
     def test_actually_parallel(self):
         results = subprocessing.parallel_function(dummy, [[0]]*2)
@@ -93,6 +94,14 @@ class TestExecute(unittest.TestCase):
         assert elapsed < 1.5
 
 class TestParallelExecute(unittest.TestCase):
+    def setUp(self):
+        self.config_cpus = 2
+        update_config({"cpus" : self.config_cpus})
+        assert get_config().cpus == 2
+
+    def tearDown(self):
+        destroy_config()
+
     def test_actually_parallel(self):
         start = time.time()
         subprocessing.parallel_execute([["sleep", "1"]]*2)
