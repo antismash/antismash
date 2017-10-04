@@ -35,15 +35,15 @@ def get_supported_cluster_types():
 def get_arguments():
     """ Constructs commandline arguments and options for this module
     """
-    args = ModuleArgs('Advanced options', '', always_on=True,
-                      override_safeties=True)
+    args = ModuleArgs('Advanced options', '', override_safeties=True)
     cluster_types = get_supported_cluster_types()
     args.add_option('--enable',
-                       metavar="TYPES",
-                       dest='enabled_cluster_types',
-                       type=lambda x: x.split(","),
-                       default=cluster_types,
-                       help="Select sec. met. cluster types to search for. E.g. --enable t1pks,nrps,other")
+                    metavar="TYPES",
+                    dest='enabled_cluster_types',
+                    type=lambda x: x.split(","),
+                    default=cluster_types,
+                    help=("Select sec. met. cluster types to search for. "
+                          " E.g. --enable t1pks,nrps,other"))
     return args
 
 def check_options(options):
@@ -92,8 +92,8 @@ def check_prereqs():
     # Check that hmmdetails.txt is readable and well-formatted
     try:
         profiles = get_signature_profiles()
-    except ValueError as e:
-        failure_messages.append(str(e))
+    except ValueError as err:
+        failure_messages.append(str(err))
 
 
     # the path to the markov model
@@ -109,7 +109,7 @@ def check_prereqs():
         except OSError:
             failure_messages.append('Failed to generate file {!r}'.format(hmm))
 
-    # if previous steps have failed, the remaineder will too, so don't try
+    # if previous steps have failed, the remainder will too, so don't try
     if failure_messages:
         return failure_messages
 
@@ -119,8 +119,8 @@ def check_prereqs():
             parser = Parser(rules.readlines())
         if not parser.rules:
             failure_messages.append("No rules contained in cluster_rules.txt")
-    except ValueError as e:
-        failure_messages.append(str(e))
+    except ValueError as err:
+        failure_messages.append(str(err))
 
 
     binary_extensions = ['.h3f', '.h3i', '.h3m', '.h3p']

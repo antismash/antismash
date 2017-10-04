@@ -10,7 +10,7 @@ import sys
 from argparse import Namespace
 from os import path
 
-from antismash.config.args import Config
+from antismash.config import update_config
 
 _DEFAULT_NAME = 'default.cfg'
 _SYS_NAME = sys.platform + '.cfg'
@@ -57,14 +57,4 @@ def update_config_from_file(namespace=None):
         if key not in namespace:
             namespace.__dict__[key] = value
     # store it in the singleton
-    Config(namespace)
-
-def set_config(namespace):
-    """Set a namespace object to be the global configuration"""
-    logging.critical("old style set_config() used")
-    Config(namespace)
-
-def get_config():
-    """Get the global configuration"""
-    logging.critical("old style get_config() used")
-    return Config()
+    update_config(namespace)

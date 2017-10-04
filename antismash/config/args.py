@@ -2,51 +2,74 @@
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
 import argparse
+from collections import defaultdict
 import multiprocessing
 import os
-import threading
-from collections import defaultdict
 
 class AntiSmashParser(argparse.ArgumentParser):
-    """Custom argument parser for antiSMASH
-    """
-    _show_all = False
-    _display_group = {}
+    """ Custom argument parser for antiSMASH to override default help output
 
+        Also helps with module level arguments
+
+        Important changes
+            parents argument: A list of ModuleArgs instead of other parsers
+            add_help argument: Always overridden to False
+    """
     def __init__(self, *args, **kwargs):
-        """Initialisation method for the parser class"""
+        # while keeping parents as ModuleArg instances is important
+        # ArgumentParser itself expects parsers, so modify kwargs accordingly
         self.parents = kwargs.get("parents", [])
         if self.parents:
             kwargs["parents"] = [parent.parser for parent in self.parents]
+        # ensure default -h/--help is disabled, since help is more complex here
         kwargs["add_help"] = False
+        self._show_all = False
+        # include in basic help any parent requesting it
+        self._basic_help_groups = set(parent.title for parent in self.parents if parent.basic)
+        # and since the additional analysis group doesn't propagate while empty
+        self._basic_help_groups.add("Additional analysis")
         super().__init__(*args, **kwargs)
 
-    def add_argument_group(self, *args, **kwargs):
-        basic = kwargs.get("basic", False)
-        if not args:
-            group = kwargs["title"]
-        else:
-            group = args[0]
-        if group not in self._display_group:
-            self._display_group[group] = []
-        if "basic" in kwargs:
-            del kwargs["basic"]
-        if basic:
-            self._display_group[group].extend(["basic"])
-        if "param" in kwargs:
-            self._display_group[group].extend(kwargs["param"])
-            del kwargs["param"]
-        return super().add_argument_group(*args, **kwargs)
+    def add_argument_group(self, title, description=None, basic=False, **kwargs):
+        """ Overrides original to enable tracking of which help category a group
+            is in.
 
-    def print_help(self, file=None, show_all=False):
+            Arguments:
+                title: the group label for showing help
+                description: text with further information about the group
+                basic: whether or not the group should be shown with just --help
+                **kwargs: catches any argparse specific args that we don't use
+
+            Returns:
+                the group added
+        """
+        if not title:
+            raise ValueError("Argument groups must have a group label/title")
+        # if one group is added with a label and shows basic help, show for all
+        # with the same label
+        if basic:
+            self._basic_help_groups.add(title)
+        return super().add_argument_group(title, description, **kwargs)
+
+    def print_help(self, file=None, show_all=False) -> None: # arg added, so pylint: disable=arguments-differ
+        """ Overrides parent print_help() to be able to pass through whether all
+            help should be shown or not.
+
+            Arguments:
+                file: the file to write the help to, defaults to stdout
+                show_all: True if all help should be shown, otherwise only basic
+
+            Returns:
+                None
+        """
         self._show_all = show_all
-        super(AntiSmashParser, self).print_help(file)
+        super().print_help(file)
 
     def write_to_config_file(self, filename) -> None:
         """ Write the default options to file in a form that can be parsed again
         """
         def construct_arg_text(arg, processed_destinations):
-            """ Only construct if not already processed"""
+            """ Only construct if not already processed and not a help arg"""
             if arg.dest in ["help", "help_showall"] or arg.dest in processed_destinations:
                 return []
             # skip postional args
@@ -55,23 +78,23 @@ class AntiSmashParser(argparse.ArgumentParser):
             lines = []
             processed_destinations.add(arg.dest)
             flag = sorted(arg.option_strings, key=len, reverse=True)[0].lstrip('-')
+            # fill in the current default if relevant
             if "%(default)" in arg.help:
                 help_text = arg.help % {"default": arg.default}
             else:
                 help_text = arg.help
             lines.append("## {}".format(help_text))
+            # add the set of possible choices, if relevant
             if arg.choices:
                 lines.append("## Possible choices: {}".format(",".join(arg.choices)))
-            if arg.default is not None:
-                value = arg.default
-                if value and isinstance(value, list):
-                    value = ",".join(value)
-                if not value:
-                    lines.append("#{}".format(flag))
-                else:
-                    lines.append("{} {}".format(flag, value))
+            # convert options with list values to strings
+            value = arg.default
+            if value and isinstance(value, list):
+                value = ",".join(value)
+            if not value:
+                lines.append("#{}".format(flag))
             else:
-                lines.append("{}".format(flag))
+                lines.append("{} {}".format(flag, value))
             return ["\n".join(lines), "\n"]
 
         outfile = open(filename, 'w')
@@ -79,26 +102,24 @@ class AntiSmashParser(argparse.ArgumentParser):
         titles = defaultdict(lambda: defaultdict(list))
         for parent in self.parents:
             if getattr(parent, 'parser'):
-                for arg in parent.parser._actions:
+                for arg in parent.parser.get_actions():
                     titles[parent.title][parent.prefix].extend(construct_arg_text(arg, dests))
 
         for arg in self._actions:
-            titles["Core options"]["DUMMY"].extend(construct_arg_text(arg, dests)) #TODO why DUMMY?
+            titles["Core options"][""].extend(construct_arg_text(arg, dests))
 
         for title, prefixes in titles.items():
             banner = "#"*10 + "\n"
-            outfile.writelines([banner,
-                                "#\t{}\n".format(title),
-                               banner, "\n"])
+            outfile.writelines([banner, "#\t{}\n".format(title), banner, "\n"])
             for prefix, lines in prefixes.items():
-                if prefix != "DUMMY":
+                if prefix:
                     outfile.write("[{}]\n".format(prefix))
                 outfile.write("\n".join(lines))
             outfile.write("\n\n\n")
         outfile.close()
 
-    def format_help(self):
-        """Custom help format"""
+    def format_help(self) -> str:
+        """Custom help formatter"""
         help_text = """
 ########### antiSMASH ver. {version} #############
 
@@ -112,7 +133,8 @@ Options
 """.format(version="5 alpha", usage=self.format_usage(), args=self._get_args_text(), opts=self._get_opts_text())
         return help_text
 
-    def format_usage(self):
+    def format_usage(self) -> str:
+        """ Custom usage generator """
         if self._show_all:
             formatter = self._get_formatter()
             formatter.add_usage(self.usage, self._actions, self._mutually_exclusive_groups)
@@ -140,7 +162,7 @@ Options
             if action_group.title not in ["optional arguments", "positional arguments"]:
                 show_opt = self._show_all
                 if not show_opt:
-                    if "basic" in self._display_group[action_group.title]:
+                    if action_group.title in self._basic_help_groups:
                         show_opt = True
                 if show_opt:
                     formatter.start_section(action_group.title)
@@ -151,9 +173,9 @@ Options
                     formatter.end_section()
         return formatter.format_help()
 
-    def convert_arg_line_to_args(self, line):
+    def convert_arg_line_to_args(self, arg_line):
         """ overrides original to properly parse config files """
-        line = line.strip()
+        line = arg_line.strip()
         if not line:
             return []
         # skip comments and section labels
@@ -164,22 +186,55 @@ Options
         args[0] = "--" + args[0]
         return args
 
-class FullPathAction(argparse.Action):
+    def get_actions(self):
+        """ a getter for _actions operated on by ArgumentParser, which may
+            change behaviour """
+        return tuple(self._actions)
+
+
+class FullPathAction(argparse.Action): # pylint: disable=too-few-public-methods
+    """ An argparse.Action to ensure provided paths are absolute. """
     def __call__(self, parser, namespace, values, option_string=None):
         setattr(namespace, self.dest, os.path.abspath(values))
 
 class ModuleArgs:
-    def __init__(self, title, prefix, override_safeties=False, always_on=False, # TODO: remove always_on when hmm_detection becomes core
-                     enabled_by_default=False, basic_help=False):
+    """ The vehicle for adding module specific arguments in sane groupings.
+        Each module should have a unique prefix for their arguments, for clarity
+        and safety. The prefix only has to be supplied when constructing a
+        ModuleArgs instance, it will be automatically applied to each argument
+        added.
+
+        To add arguments, use the following:
+            for an analysis option (e.g. --pref-general):
+                ModuleArgs.add_analysis_toggle('general', ...)
+            for a module config option (e.g. --pref-max-size):
+                ModuleArgs.add_option('max-size', ...)
+
+        Arguments:
+            title: The label shown on the help screen
+            prefix: A prefix to use for all options used by the module
+            override_safeties: If True, overrides many safety and consistency
+                    checks, only exists to help placeholders and will be removed
+            enabled_by_default: whether the module's analysis will be on by
+                    default or whether it has to be specifically enabled,
+                    if True, it will create a --enable-* arg to be used if
+                    --minimal is provided.
+            basic_help: Whether help for module options (not analysis toggles)
+                    should be shown in the basic --help output.
+    """
+    def __init__(self, title, prefix, override_safeties=False,
+                 enabled_by_default=False, basic_help=False):
         if not title:
             raise ValueError("Argument group must have a title")
         self.title = title
-        self.parser = AntiSmashParser(add_help=False)
-        self.override = override_safeties #kwargs.get("override_safeties")
-        self.enabled_by_default = enabled_by_default #kwargs.get("enabled_by_default")
-        self.always_enabled = always_on
-        self.group = self.parser.add_argument_group(title="Additional analysis", basic=basic_help or self.override) # TODO override or just True?
+        self.parser = AntiSmashParser()
+        self.override = override_safeties
+        self.enabled_by_default = enabled_by_default
+        # options for the module
         self.options = self.parser.add_argument_group(title=title, basic=basic_help)
+        # the main analysis toggle(s)
+        self.group = self.parser.add_argument_group(title="Additional analysis",
+                                                    basic=True)
         if not isinstance(prefix, str):
             raise TypeError("Argument prefix must be a string")
         self.prefix = prefix
@@ -192,66 +247,73 @@ class ModuleArgs:
         self.args = []
         self.basic = basic_help
 
-    def add_option(self, name, *args, **kwargs):
+    def add_option(self, name, *args, **kwargs) -> None:
         if not name:
             raise ValueError("Options must have a name")
         self._add_argument(self.options, name, *args, **kwargs)
 
-    def add_analysis_toggle(self, name, *args, **kwargs):
+    def add_analysis_toggle(self, name, *args, **kwargs) -> None:
+        """ Add a simple on-off option to appear in the "Additional analysis"
+            section. Every module that isn't running by default must have one
+            of these arguments.
+        """
         self._add_argument(self.group, name, *args, **kwargs)
 
-    def _add_argument(self, group, name, *args, **kwargs):
+    def _add_argument(self, group, name, *args, **kwargs) -> None:
         if self.single_arg:
             raise ValueError("Cannot add more arguments after an argument that is just the prefix name")
         # prevent the option name being considered destination by argparse
         if not name.startswith("-"):
             name = "-%s%s" % ("-" if len(name) > 1 else "", name)
-        if "default" not in kwargs:
-            raise ValueError("Arguments must have a default, (default=)")
-        if "type" not in kwargs:
-            if "action" in kwargs: # most actions make types optional
-                self.skip_type_check = True
-                argtype = None
-            else:
-                raise ValueError("Arguments must have a type, (type=)")
-        else:
-            argtype = kwargs["type"]
-        if "help" not in kwargs:
-            raise ValueError("Arguments must have a description, (help=)")
-        if "dest" not in kwargs:
-            raise ValueError("Arguments must have a destination, (dest=)")
-        default = kwargs["default"]
-        dest = kwargs["dest"]
-        self.verify_required(default, argtype, kwargs["help"])
+        # most actions make types optional, so handle that
+        if "type" not in kwargs and "action" in kwargs:
+            self.skip_type_check = True
+        self.verify_required(kwargs)
 
-        name, dest = self.process_names(name, dest)
-        kwargs["dest"] = dest
+        name, kwargs["dest"] = self.process_names(name, kwargs["dest"])
         self.args.append(group.add_argument(name, *args, **kwargs))
 
-    def verify_required(self, default, declared_type, description):
-        if default is None:
-            raise ValueError("Argument defaults may not be None")
-        if not description:
-            raise ValueError("Arguments must have a help string")
+    def verify_required(self, kwargs) -> None:
+        """ Checks that all the important sections have arguments provided.
+
+            If self.skip_type_check is truthy, extra checks on default types
+            will be ignored.
+
+            Raises relevant exceptions for any problems.
+
+            Arguments:
+                kwargs: the keyword args to check
+
+            Returns:
+                None
+        """
+        if kwargs.get("default") is None:
+            raise ValueError("Arguments must have a default, (default=)")
+        if not kwargs.get("help"):
+            raise ValueError("Arguments must have a help string, (help=)")
+        if not kwargs.get("dest"):
+            raise ValueError("Arguments must have a destination, (dest=)")
 
         if self.skip_type_check:
             return
 
+        declared_type = kwargs.get("type")
         if declared_type is None:
-            raise ValueError("Arguments must have a type declared")
-        if not isinstance(default, declared_type):
+            raise ValueError("Arguments must have a type declared, (type=)")
+        if not isinstance(kwargs["default"], declared_type):
             raise TypeError("Argument default doesn't match chosen type")
 
     def process_names(self, name, dest):
         if isinstance(name, list):
             raise TypeError("Module arguments may not have short-forms")
-        try:
-            name = str(name)
-            dest = str(dest)
-        except:
+        if not isinstance(name, str) or not isinstance(dest, str):
             raise TypeError("Argument name and dest must be strings")
+
+        # skip the remaining safety checks if set up
+        # required for some core options only
         if self.override:
             return name, dest
+
         # ensure all destinations and flags start with the prefix
         if name.lstrip("-") == self.prefix:
             # not having anything else is ok if it's the only arg
@@ -276,7 +338,20 @@ class ModuleArgs:
         return name, dest
 
 
-def build_parser(from_config_file=False, modules=None):
+def build_parser(from_config_file=False, modules=None) -> AntiSmashParser:
+    """ Constructs an AntiSmashParser with all the default options antismash
+        requires for proper operation, along with any added by the provided
+        modules.
+
+        Arguments:
+            from_config_file: whether to allow loading from file with args like
+                                @file
+            modules: a list of modules/objects implementing get_arguments() for
+                        construction of the arguments themselves
+
+        Returns:
+            an AntiSmashParser instance with options for all provided modules
+    """
     parents = [basic_options(), output_options(), advanced_options(),
                debug_options()]
     minimal = specific_debugging(modules)
@@ -312,9 +387,6 @@ def build_parser(from_config_file=False, modules=None):
                         type=int,
                         default=multiprocessing.cpu_count(),
                         help="How many CPUs to use in parallel. (default: %(default)s)")
-
-    ## grouped arguments
-
     return parser
 
 def basic_options():
@@ -336,7 +408,7 @@ def basic_options():
     return group
 
 def output_options():
-    group = ModuleArgs("Output options", 'output')
+    group = ModuleArgs("Output options", 'output', basic_help=True)
     group.add_option('--output-dir',
                      dest='output_dir',
                      default="",
@@ -398,11 +470,6 @@ def debug_options():
                      default="",
                      type=str,
                      help="Also write logging output to a file.")
-    group.add_option('--statusfile',
-                     dest='statusfile',
-                     default="",
-                     type=str,
-                     help="Write the current status to a file.")
     group.add_option('--list-plugins',
                      dest='list_plugins',
                      action='store_true',
@@ -419,11 +486,6 @@ def debug_options():
                      metavar="record_id",
                      type=str,
                      help="Limit analysis to the record with ID record_id")
-    group.add_option('--skip-cleanup',
-                     dest='skip_cleanup',
-                     action='store_true',
-                     default=False,
-                     help="Don't clean up temporary result files")
     group.add_option('-V', '--version',
                      dest='version',
                      action='store_true',
@@ -443,7 +505,7 @@ def specific_debugging(modules):
     relevant_modules = []
     for module in modules:
         args = module.get_arguments()
-        if args.always_enabled or not args.enabled_by_default:
+        if not args.enabled_by_default:
             continue
         relevant_modules.append(module)
     if not relevant_modules:
@@ -468,48 +530,3 @@ def specific_debugging(modules):
     if errors:
         raise AttributeError("\n\t".join([''] + errors))
     return group
-
-class Config():
-    __singleton = None
-    __lock = threading.Lock()
-    class _Config():
-        def __init__(self, indict):
-            if indict:
-                self.__dict__.update(indict)
-
-        def get(self, key, default=None):
-            return self.__dict__.get(key, default)
-
-        def __getattr__(self, attr):
-            return self.__dict__[attr]
-
-        def __setattr__(self, attr, value):
-            raise RuntimeError("Config options can't be set directly")
-
-        def __iter__(self):
-            for i in self.__dict__.items():
-                yield i
-
-        def __repr__(self):
-            return str(self)
-
-        def __str__(self):
-            return str(dict(self))
-
-        def __len__(self):
-            return len(self.__dict__)
-
-    def __new__(cls, namespace=None):
-        if namespace is None:
-            values = {}
-        elif isinstance(namespace, dict):
-            values = namespace
-        else:
-            values = namespace.__dict__
-        Config.__lock.acquire()
-        if Config.__singleton is None:
-            Config.__singleton = Config._Config(values)
-        else:
-            Config.__singleton.__dict__.update(values)
-        Config.__lock.release()
-        return Config.__singleton
