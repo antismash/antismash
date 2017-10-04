@@ -313,12 +313,17 @@ class Cluster:
         self.rank = rank
 
     @property
+    def similarity(self):
+        perc_sim = self.unique_hit_count * 100 / len(self.genes)
+        return "%d%% of genes show similarity" % perc_sim
+
+    @property
     def full_description(self):
-        desc = self.description
+        desc = "%s_%s: %s" % (self.accession, self.ref_cluster_number, self.description)
         if len(desc) > 80:
-            desc = desc[77] + "..."
+            desc = desc[:77] + "..."
         #return desc + " %d/%d genes hit" % (self.num_hits, len(self.genes)) #TODO do we want this?
-        return "%s (%d%% of genes show similarity)" % (desc, self.unique_hit_count * 100 / len(self.genes))
+        return "%s (%s)" % (desc, self.similarity)
 
     def reverse_strand(self):
         """ Reverses the entire cluster's directionality """
@@ -332,13 +337,14 @@ class Cluster:
         return abs(self.start - self.end)
 
     def _add_label(self, group, v_offset):
-        acc = Text(self.accession + '_' + self.ref_cluster_number + ": " + self.full_description, 5, 20 + v_offset)
+        acc = Text(self.full_description, 5, 20 + v_offset)
         if self.accession.startswith('BGC'):
             acc = Text('<a xlink:href="http://mibig.secondarymetabolites.org/repository/' + self.accession + '/index.html#cluster-1" target="_blank">'
-                       + self.accession + '</a>: ' + self.full_description, 5, 20 + v_offset)
+                       + self.accession + '</a>: ' + "%80s (%s)" % (self.description, self.similarity), 5, 20 + v_offset)
         elif self.accession.split("_")[0] in get_antismash_db_accessions():
-            acc = Text('<a xlink:href="http://antismash-db.secondarymetabolites.org/output/' + self.accession + '/index.html#cluster-' + self.ref_cluster_number[1:] + '" target="_blank">'
-                       + self.accession + '_' + self.ref_cluster_number + '</a>: ' + self.full_description, 5, 20 + v_offset)
+            acc = Text('<a xlink:href="http://antismash-db.secondarymetabolites.org/output/'
+                       + self.accession + '/index.html#cluster-' + self.ref_cluster_number[1:] + '" target="_blank">'
+                       + self.full_description.replace(":", "</a>:"), 5, 20 + v_offset)
         acc.set_class("clusterblast-acc")
         group.addElement(acc)
         group.setAttribute('label', self.accession)
