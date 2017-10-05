@@ -18,15 +18,20 @@ from antismash.config import update_config, destroy_config
 from antismash.config.args import build_parser
 from antismash.modules import lanthipeptides
 from antismash.modules.lanthipeptides import specific_analysis, LanthiResults
+import antismash.modules.lanthipeptides.config as lanthi_config
 
 class IntegrationLanthipeptides(unittest.TestCase):
     def setUp(self):
-        options = helpers.get_simple_options(lanthipeptides, [])
-        options.without_fimo = False
-        update_config(options)
+        self.options = helpers.get_simple_options(lanthipeptides, [])
+        self.set_fimo_enabled(True)
 
     def tearDown(self):
         destroy_config()
+
+    def set_fimo_enabled(self, val):
+        self.options.without_fimo = not val
+        update_config(self.options)
+        lanthi_config.get_config().fimo_present = val
 
     def test_nisin(self):
         "Test lanthipeptide prediction for nisin A"
@@ -164,3 +169,10 @@ class IntegrationLanthipeptides(unittest.TestCase):
         result.add_to_record(rec)
         assert len(rec.get_cds_motifs()) == 1
         self.assertEqual('Class II', result.motifs[0].peptide_class)
+
+
+class IntegrationLanthipeptidesWithoutFimo(IntegrationLanthipeptides):
+    def setUp(self):
+        self.options = helpers.get_simple_options(lanthipeptides, [])
+        self.set_fimo_enabled(False)
+        assert lanthi_config.get_config().fimo_present == False
