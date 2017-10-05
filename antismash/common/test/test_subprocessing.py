@@ -51,9 +51,25 @@ class TestParallelPython(unittest.TestCase):
         elapsed = time.time() - start
         assert elapsed < 1.5
 
+    def test_results(self):
+        # test single-arg functions
+        res = subprocessing.parallel_function(len, [["a"], ["aa"], ["aaa"]])
+        assert res == [1, 2, 3]
+
+        # test multi-arg functions
+        res = subprocessing.parallel_function(zip, [["%d" % i, "b"] for i in range(3)])
+        assert [list(i) for i in res] == [[(str(i), "b")] for i in range(3)]
+
     def test_errors_propagated(self):
         with self.assertRaisesRegex(ValueError, "Lucky number"):
             subprocessing.parallel_function(dummy, [[i] for i in range(5)])
+
+    def test_local_funcs(self):
+        def local(value):
+            return value + 1
+        # this test is mostly to let us know if something changes in pool/pickle
+        with self.assertRaisesRegex(AttributeError, "Can't pickle local object"):
+            subprocessing.parallel_function(local, [[i] for i in range(3)])
 
 class TestExecute(unittest.TestCase):
     def test_piping(self):

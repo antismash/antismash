@@ -62,36 +62,30 @@ def execute(commands, stdin=None, stdout=PIPE, stderr=PIPE, timeout=None) -> Run
     return RunResult(commands, out, err, proc.returncode, stdout == PIPE,
                      stderr == PIPE)
 
-def _helper(args):
-    """ Needed for parallel_function to split function to call and args.
-
-        Since functions passed to parallel_function can't be locally defined,
-        this has to be declared here
-    """
-    return args[0](*args[1:])
 
 def parallel_function(function, args, cpus=None, timeout=None) -> list:
     """ Runs the given function in parallel on `cpus` cores at a time.
         Uses separate processes so all args are effectively immutable.
 
-        Both function and args must be picklable
+        Both function and args must be picklable (i.e. the function can't be
+        declared in a local scope)
+
+        e.g. parallel_function(len, [["a"], ["aa"], ["aaa"]]) -> [1, 2, 3]
 
         Arguments:
             function: the function to run, cannot be a lambda
-            args: the arguments for each function call
+            args: a list of lists, containing the arguments for each function call
             cpus: the number of processes to start (defaults to Config.cpus)
             timeout: the maximum time to wait in seconds
 
         Returns:
             A list of return values of the target function.
-
-        e.g. pool_parallel_function(len, ["a", "aa", "aaa"]) -> [1, 2, 3]
     """
 
     if not cpus:
         cpus = get_config().cpus
-    p = multiprocessing.Pool(cpus)
-    jobs = p.map_async(_helper, ([function] + arglist for arglist in args))
+    pool = multiprocessing.Pool(cpus)
+    jobs = pool.starmap_async(function, args)
 
     timeouts = False
 
@@ -100,8 +94,8 @@ def parallel_function(function, args, cpus=None, timeout=None) -> list:
     except multiprocessing.TimeoutError:
         timeouts = True
     finally:
-        p.terminate()
-        p.join()
+        pool.terminate()
+        pool.join()
     if timeouts:
         raise RuntimeError("Timeout in parallel function:", function)
     return results
