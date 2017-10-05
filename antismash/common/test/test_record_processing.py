@@ -49,8 +49,9 @@ class TestParseRecords(unittest.TestCase):
 
     def test_empty(self):
         with NamedTemporaryFile(suffix=".gbk") as temp:
-            records = record_processing.parse_input_sequence(temp.name)
-            assert not records
+            with self.assertRaisesRegex(RuntimeError, "No records could be read from file"):
+                records = record_processing.parse_input_sequence(temp.name)
+
 
 
 class TestGapNotation(unittest.TestCase):
