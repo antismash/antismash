@@ -42,7 +42,7 @@ def parse_input_sequence(filename, minimum_length=-1, start=-1, end=-1) -> List[
     try:
         record_list = list(seqio.parse(filename))
         if not record_list:
-            logging.error('No sequence in file %r', filename)
+            raise RuntimeError('No records could be read from file %r' % filename)
         for record in record_list:
             if minimum_length < 1 \
                     or len(record.seq) >= minimum_length \
