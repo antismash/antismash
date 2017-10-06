@@ -87,6 +87,13 @@ def pre_process_sequences(sequences, options, genefinding) -> List[Record]:
     # keep count of how many records matched filter
     matching_filter = 0
 
+    # keep sequences as clean as possible
+    if options.input_type == "nucl":
+        sanitise_sequences(sequences)
+    elif options.input_type == "prot":
+        for record in sequences:
+            record.seq = Seq(str(record.seq).replace("-", ""))
+
     # Check if seq_records have appropriate content
     for i, sequence in enumerate(sequences):
         if options.limit_to_record and options.limit_to_record != sequence.id:
@@ -95,10 +102,9 @@ def pre_process_sequences(sequences, options, genefinding) -> List[Record]:
             matching_filter += 1
 
         sequence.record_index = i
-        sequence.seq = Seq(str(sequence.seq).replace("-", "").replace(":", ""))
-        # Check if seq_record has either a sequence or has at least 80% of CDS features with 'translation' qualifier
+
         cdsfeatures = sequence.get_cds_features()
-        cdsfeatures_with_translations = sum([1 for cdsfeature in cdsfeatures if cdsfeature.translation])
+        cdsfeatures_with_translations = len([cds for cds in cdsfeatures if cds.translation])
         assert cdsfeatures_with_translations == len(cdsfeatures)
         if not sequence.seq or (options.input_type == 'nucl' and \
                                 not str(sequence.seq).replace("N", "")):
@@ -112,7 +118,8 @@ def pre_process_sequences(sequences, options, genefinding) -> List[Record]:
                 sequence.skip = "nucleotide record in protein mode"
                 continue
         elif options.input_type == 'nucl':
-            if not isinstance(sequence.seq.alphabet, Bio.Alphabet.NucleotideAlphabet) and not is_nucl_seq(sequence.seq):
+            if not isinstance(sequence.seq.alphabet, Bio.Alphabet.NucleotideAlphabet)\
+                    and not is_nucl_seq(sequence.seq):
                 logging.error("Record %s is a protein record, skipping.", sequence.id)
                 sequence.skip = "protein record in nucleotide mode"
                 continue
@@ -195,13 +202,12 @@ def pre_process_sequences(sequences, options, genefinding) -> List[Record]:
         #Fix locus tags
         fix_locus_tags(sequence)
 
-    ensure_gap_notation_consistent(sequences)
-
     return sequences
 
 
-def ensure_gap_notation_consistent(records) -> None:
-    """ Ensures all sequences use N for gaps instead of -, X, or x
+def sanitise_sequences(records) -> None:
+    """ Ensures all sequences use N for gaps instead of -, and that all other
+        characters are A, C, G, T, or N
 
         Arguments:
             records: the secmet.Records to alter
@@ -210,9 +216,15 @@ def ensure_gap_notation_consistent(records) -> None:
             None
     """
     for record in records:
-        for char in "-Xx":
-            new_seq = str(record.seq).replace(char, "N")
-            record.seq = Seq(new_seq, alphabet=record.seq.alphabet)
+        sanitised = []
+        for char in record.seq.upper():
+            if char == "-":
+                continue
+            elif char in "ACGT":
+                sanitised.append(char)
+            else:
+                sanitised.append("N")
+        record.seq = Seq("".join(sanitised), alphabet=record.seq.alphabet)
 
 
 def trim_sequence(record, start, end) -> SeqRecord:
