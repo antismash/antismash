@@ -1,6 +1,16 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+""" Implements a more readable and efficient version of biopython's SeqRecord.
+
+    Most attributes are wrapped, with the record features being secmet features
+    and accessible and already paritioned so accessing specific types of feature
+    is more efficient.
+
+    Does not, and will not, subclass SeqRecord to avoid mixing code types.
+"""
+
+
 import bisect
 import logging
 
@@ -14,7 +24,8 @@ from .feature import Feature, CDSFeature, CDSMotif, AntismashDomain, Cluster, \
 class Record:
     """A record containing secondary metabolite clusters"""
     # slots not for space, but to stop use as a horrible global
-    __slots__ = ["_record", "_seq", "skip", "_cds_features", "_cds_mapping", "_clusters",
+    __slots__ = ["_record", "_seq", "skip", "_cds_features", "_cds_by_name",
+                 "_clusters", "_cds_by_accession",
                  "_cluster_borders", "_cds_motifs", "_pfam_domains", "_antismash_domains",
                  "_cluster_numbering", "_nonspecific_features", "record_index"]
     def __init__(self, seq=None, **kwargs):
@@ -22,7 +33,8 @@ class Record:
         self.record_index = None
         self.skip = False #TODO: move to yet another abstraction layer?
         self._cds_features = []
-        self._cds_mapping = {} # maps CDS accession to CDS feature
+        self._cds_by_accession = {}
+        self._cds_by_name = {}
         self._clusters = []
         self._cluster_borders = []
         self._cds_motifs = []
@@ -92,9 +104,13 @@ class Record:
         """A list of secondary metabolite clusters present in the record"""
         return tuple(self._cds_features)
 
-    def get_cds_mapping(self):
-        """A dictionary of CDS accession to CDS feature"""
-        return dict(self._cds_mapping)
+    def get_cds_accession_mapping(self):
+        """A dictionary mapping CDS accession to CDS feature"""
+        return dict(self._cds_by_accession)
+
+    def get_cds_name_mapping(self):
+        """A dictionary mapping CDS name to CDS feature"""
+        return dict(self._cds_by_name)
 
     def get_cds_motifs(self):
         """A list of secondary metabolite CDS_motifs present in the record"""
@@ -198,6 +214,7 @@ class Record:
                 break
 
     def add_cluster_border(self, cluster_border):
+        """ Add the given cluster_border to the feature """ #TODO and to a cluster?
         assert isinstance(cluster_border, ClusterBorder)
         self._cluster_borders.append(cluster_border)
         # TODO fix performance
@@ -224,9 +241,14 @@ class Record:
         index = bisect.bisect_left(self._cds_features, cds_feature)
         self._cds_features.insert(index, cds_feature)
         self._link_cds_to_parent(cds_feature)
-        if cds_feature.get_accession() in self._cds_mapping:
-            logging.critical("Multiple CDS features have the same accession for mapping")
-        self._cds_mapping[cds_feature.get_accession()] = cds_feature
+        if cds_feature.get_accession() in self._cds_by_accession:
+            raise ValueError("Multiple CDS features have the same accession for mapping: %s" %
+                             cds_feature.get_accession())
+        if cds_feature.get_name() in self._cds_by_name:
+            raise ValueError("Multiple CDS features have the same name for mapping: %s" %
+                             cds_feature.get_name())
+        self._cds_by_accession[cds_feature.get_accession()] = cds_feature
+        self._cds_by_name[cds_feature.get_name()] = cds_feature
 
     def add_cds_motif(self, motif):
         """ Add the given cluster to the record """
@@ -259,7 +281,10 @@ class Record:
         else:
             self._nonspecific_features.append(feature)
 
-    def add_biopython_feature(self, feature):
+    def add_biopython_feature(self, feature) -> None:
+        """ Convert a biopython feature to SecMet feature, then add it to the
+            record.
+        """
         if feature.type == 'CDS':
             # TODO: check insertion order of clusters
             self.add_cds_feature(CDSFeature.from_biopython(feature))
@@ -277,7 +302,7 @@ class Record:
             self.add_feature(Feature.from_biopython(feature))
 
     @staticmethod
-    def from_biopython(seq_record):
+    def from_biopython(seq_record) -> "Record": # string because forward decl
         """ Constructs a new Record instance from a biopython SeqRecord,
             also replaces biopython SeqFeatures with Feature subclasses
         """
@@ -289,6 +314,7 @@ class Record:
         return record
 
     def _link_cds_to_parent(self, cds):
+        """ connect the given CDS to the cluster that contains it, if any """
         assert isinstance(cds, CDSFeature)
         left = bisect.bisect_left(self._clusters, cds)
         right = bisect.bisect_right(self._clusters, cds, lo=left)
@@ -298,6 +324,7 @@ class Record:
                 cds.cluster = cluster
 
     def _link_cluster_to_cds_features(self, cluster):
+        """ connect the given cluster to every CDS feature within it's range """
         assert isinstance(cluster, Cluster)
         # quickly find the first cds with equal start
         index = bisect.bisect_left(self._cds_features, cluster)
@@ -314,7 +341,7 @@ class Record:
             index += 1
 
     def get_aa_translation_of_feature(self, feature):
-        """Obtain content for translation qualifier for specific CDS feature in sequence record"""
+        """ Obtain content for translation qualifier for specific CDS feature in sequence record"""
         extracted = feature.extract(self.seq).ungap('-')
         if len(extracted) % 3 != 0:
             extracted = extracted[:-(len(extracted) % 3)]
@@ -338,6 +365,12 @@ class Record:
         return features
 
     def write_cluster_specific_genbanks(self, output_dir=None):
+        """ Write out a set genbank files, each containing a single cluster
+
+            Arguments:
+                output_dir: the directory to place the files, if None the
+                            current working directory is used
+        """
         bio_record = self.to_biopython()
         for cluster in self._clusters:
             cluster.write_to_genbank(directory=output_dir, record=bio_record)

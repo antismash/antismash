@@ -1,9 +1,11 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+""" Compares subsets of clusters to a reference data set of other subclusters
+"""
+
 import functools
 import logging
-from multiprocessing import Pool
 
 from helperlibs.wrappers.io import TemporaryDirectory
 
@@ -15,10 +17,11 @@ from .core import write_raw_clusterblastoutput, write_fastas_with_all_genes, \
 from .results import ClusterResult, GeneralResults
 
 def _get_datafile_path(filename):
+    """ A simple helper to get the full path of subclusterblast datafile """
     return path.get_full_path(__file__, 'data', 'sub', filename)
 
 def check_sub_prereqs(options):
-    "Check if all required applications and datafiles are around"
+    "Check if all required applications and datafiles are present"
     # Tuple is ( binary_name, optional)
     _required_binaries = [
         ('blastp', False),
@@ -43,7 +46,16 @@ def check_sub_prereqs(options):
 
     return failure_messages
 
-def run_subclusterblast_on_record(record, options):
+def run_subclusterblast_on_record(record, options) -> GeneralResults:
+    """ Loads reference databases and performs subclusterblast analysis
+
+        Arguments:
+            record: the Record to analyse
+            options: antismash Config
+
+        Returns:
+            a GeneralResults with results for each cluster in the record
+    """
     logging.info('Running subcluster search')
     clusters, proteins = load_clusterblast_database(record, "subclusterblast")
     return perform_subclusterblast(options, record, clusters, proteins)
@@ -65,15 +77,32 @@ def _run_blast_helper(database, index) -> str:
     """
     return runblast("input%d.fasta" % index, database)
 
-def run_clusterblast_processes(options):
+def run_clusterblast_processes(options) -> None:
+    """ Run blast in parallel, creates `options.cpu` number of files with
+        the name format "inputN.fasta"
+
+        Arguments:
+            options: antismash Config
+
+        Returns:
+            None
+    """
     database = _get_datafile_path('subclusterprots.fasta')
     # set the first arg to always be database
     partial = functools.partial(_run_blast_helper, database)
-    # then run over each file in parallel
-    with Pool(options.cpus) as pool: # TODO: use subprocessing instead
-        pool.map(partial, range(options.cpus))
+    # run in parallel
+    subprocessing.parallel_function(partial, [[i] for i in range(options.cpus)],
+                                    cpus=options.cpus)
 
 def read_clusterblast_output(options):
+    """ Builds a single output from the results from the distributed blast run
+
+        Arguments:
+            options: antismash Config
+
+        Returns:
+            a string containing all blast run output
+    """
     blastoutput = []
     for i in range(options.cpus):
         with open("input%d.out" % i, "r") as handle:
@@ -95,7 +124,6 @@ def perform_subclusterblast(options, record, clusters, proteins) -> GeneralResul
             a GeneralResults instance storing results for all clusters in the
             record
     """
-    logging.info("Running NCBI BLAST+ subcluster searches...")
     results = GeneralResults(record.id, search_type="subclusterblast")
     with TemporaryDirectory(change=True):
         allcoregenes = get_core_gene_ids(record)

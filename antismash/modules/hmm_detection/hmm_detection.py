@@ -3,20 +3,22 @@
 
 import logging
 from collections import defaultdict
+from typing import Dict, Tuple, TypeVar
 
-from antismash.common import path
-import antismash.common.deprecated as utils
-from antismash.common.secmet.feature import Cluster, SecMetQualifier
+from antismash.common import path, deprecated
+from antismash.common.secmet.feature import Cluster, SecMetQualifier, CDSFeature
 from antismash.common.deprecated import FeatureLocation
 from antismash.common.subprocessing import run_hmmsearch
 from antismash.modules.hmm_detection import rule_parser
 from antismash.modules.hmm_detection.signatures import get_signature_profiles, get_signature_names
 
-def find_clusters(seq_record, rules):
+T = TypeVar("T")
+
+def find_clusters(record, rules):
     """ Detects gene clusters based on the identified core genes """
     clusters = []
 
-    for feature in seq_record.get_cds_features():
+    for feature in record.get_cds_features():
         within_cutoff = False
         if not feature.sec_met:
             continue
@@ -47,7 +49,7 @@ def find_clusters(seq_record, rules):
                 # Finalize the last extended cluster
                 cluster = clusters[-1]
                 cluster.location = FeatureLocation(max(0, cluster.location.start - cluster.extent),
-                                                   min(len(seq_record), cluster.location.end + cluster.extent))
+                                                   min(len(record), cluster.location.end + cluster.extent))
             # Create new cluster
             new_cluster = Cluster(FeatureLocation(feature_start, feature_end), feature_cutoff, feature_extension, feature_type.split("-"))
             clusters.append(new_cluster)
@@ -66,13 +68,13 @@ def find_clusters(seq_record, rules):
         cluster = clusters[-1]
         extension = cluster.extent
         cluster.location = FeatureLocation(max(0, cluster.location.start - extension),
-                                           min(len(seq_record), cluster.location.end + extension))
+                                           min(len(record), cluster.location.end + extension))
 
     # Add a note to specify whether a cluster lies on the contig/scaffold edge or not
     for cluster in clusters:
-        edge = cluster.location.start == 0 or cluster.location.end == len(seq_record)
+        edge = cluster.location.start == 0 or cluster.location.end == len(record)
         cluster.contig_edge = edge
-        seq_record.add_cluster(cluster)
+        record.add_cluster(cluster)
     logging.info("%d cluster(s) found in record", len(clusters))
 
 def hsp_overlap_size(first, second):
@@ -218,7 +220,8 @@ def create_rules(enabled_cluster_types):
             rules.append(rule)
     return rules
 
-def calculate_nearby_features(names, position, cutoff, distances, features, results):
+def calculate_nearby_features(names, position, cutoff, distances, features,
+                              results: Dict[str, T]) -> Tuple[Dict[str, CDSFeature], Dict[str, T]]:
     """ Find features within a specific distance
 
         Args:
@@ -253,7 +256,7 @@ def calculate_nearby_features(names, position, cutoff, distances, features, resu
 
     return nearby_features, nearby_results
 
-def apply_cluster_rules(results_by_id, feature_by_id, rules):
+def apply_cluster_rules(results_by_id, feature_by_id, rules) -> Dict[str, str]:
     """
         Run detection rules over each CDS and classify them if relevant.
         A CDS can satisfy multiple rules. If so, all rules satisfied
@@ -276,6 +279,7 @@ def apply_cluster_rules(results_by_id, feature_by_id, rules):
     type_results = {}
     cds_with_hits = sorted(results_by_id, key=lambda gene_id: feature_by_id[gene_id].location.start)
     def calculate_distance(first, second):
+        """ Calculate the distance between two FeatureLocations """
         first_start, first_end = sorted([first.start, first.end])
         second_start, second_end = sorted([second.start, second.end])
         return min(abs(first_end - second_start), abs(second_end - first_start),
@@ -303,11 +307,18 @@ def apply_cluster_rules(results_by_id, feature_by_id, rules):
     return type_results
 
 
-def detect_signature_genes(seq_record, options):
-    logging.info('Detecting gene clusters using HMM library')
+def detect_signature_genes(record, options) -> None:
+    """ Compares all CDS features in a record with HMM signatures and generates
+        Cluster features based on those hits and the current cluster detection
+        rules
+
+        Arguments:
+            record: the record to analyse
+            options: antismash Config
+    """
     enabled_cluster_types = options.enabled_cluster_types
-    feature_by_id = utils.get_feature_dict(seq_record)
-    full_fasta = utils.get_multifasta(seq_record)
+    feature_by_id = record.get_cds_name_mapping()
+    full_fasta = deprecated.get_multifasta(record)
     rules = create_rules(enabled_cluster_types)
     results = []
     sig_by_name = {}
@@ -326,7 +337,8 @@ def detect_signature_genes(seq_record, options):
             elif acc in sig_by_name:
                 sig = sig_by_name[acc]
             else:
-                raise ValueError('Failed to find signature for ID %s / ACC %s', hsp.query_id, acc)
+                raise ValueError('Failed to find signature for ID %s / ACC %s' % (
+                                                    hsp.query_id, acc))
             if hsp.bitscore > sig.cutoff:
                 results.append(hsp)
                 if hsp.hit_id not in results_by_id:
@@ -335,14 +347,15 @@ def detect_signature_genes(seq_record, options):
                     results_by_id[hsp.hit_id].append(hsp)
 
     # Get overlap tables (for overlap filtering etc)
-    overlaps = get_overlaps_table(seq_record)
+    overlaps = get_overlaps_table(record)
 
     # Filter results by comparing scores of different models (for PKS systems)
     results, results_by_id = filter_results(results, results_by_id)
 
     # Filter results of overlapping genes (only for plants)
     if options.taxon == 'plants':
-        results, results_by_id = filter_result_overlapping_genes(results, results_by_id, overlaps, feature_by_id)
+        results, results_by_id = filter_result_overlapping_genes(results,
+                                         results_by_id, overlaps, feature_by_id)
 
     # Filter multiple results of the same model in one gene
     results, results_by_id = filter_result_multiple(results, results_by_id)
@@ -351,45 +364,60 @@ def detect_signature_genes(seq_record, options):
     typedict = apply_cluster_rules(results_by_id, feature_by_id, rules)
 
     # Find number of sequences on which each pHMM is based
-    nseqdict = get_nseq()
+    nseqdict = get_sequence_counts()
 
-    # Save final results to seq_record
+    # Save final results to record
     for cds in results_by_id:
         feature = feature_by_id[cds]
         _update_sec_met_entry(feature, results_by_id[cds], typedict[cds], nseqdict)
 
     rules = {rule.name : rule for rule in rules}
-    find_clusters(seq_record, rules)
+    find_clusters(record, rules)
 
     # Find additional NRPS/PKS genes in gene clusters
-    add_additional_nrpspks_genes(typedict, results_by_id, seq_record, nseqdict)
+    add_additional_nrpspks_genes(typedict, results_by_id, record, nseqdict)
     # Add details of gene cluster detection to cluster features
-    store_detection_details(rules, seq_record)
+    store_detection_details(rules, record)
     # If all-orfs option on, remove irrelevant short orfs
     if options.genefinding_tool == "all-orfs":
-        remove_irrelevant_allorfs(seq_record)
+        remove_irrelevant_allorfs(record)
 
-def get_nseq(): # TODO: document as number of seeds
-    nseqdict = {}
+def get_sequence_counts() -> Dict[str, int]:
+    """ Gets the number of sequences/seeds used to generate each HMM signature
+
+        Arguments:
+            None
+
+        Returns:
+            a dictionary mapping HMM name to the number of sequences used to
+                generate it
+    """
+    result = {}
     for hmm in get_signature_profiles():
         hmmfile = hmm.hmm_file
         for line in open(hmmfile, 'r'):
             if line.startswith('NSEQ '):
-                nseqdict[hmm.name] = line[6:].strip()
+                result[hmm.name] = line[6:].strip()
                 break
-        if not hmm.name in nseqdict:
-            nseqdict[hmm.name] = "?"
+        # TODO: ideally this shouldn't ever happen
+        if not hmm.name in result:
+            result[hmm.name] = "?"
 
-    return nseqdict
+    return result
 
 
-def remove_irrelevant_allorfs(seq_record):
-    # Get features
-    allfeatures = seq_record.get_cds_features()
-    # Remove auto-orf features without unique sec_met qualifiers;
-    # remove glimmer ORFs overlapping with sec_met auto-orfs not caught by Glimmer
-    auto_orf_features = [feature for feature in allfeatures if 'auto-all-orf' in feature.qualifiers.get('note', [])]
-    other_features = [feature for feature in allfeatures if not 'auto-all-orf' in feature.qualifiers.get('note', [])]
+def remove_irrelevant_allorfs(record):
+    """ Remove auto-orf features without unique sec_met qualifiers;
+        remove glimmer ORFs overlapping with sec_met auto-orfs not caught by Glimmer
+    """
+    logging.critical("remove_irrelevant_allorfs() not yet tested")
+    auto_orf_features = []
+    other_features = []
+    for feature in record.get_cds_features():
+        if 'auto-all-orf' in feature.notes:
+            auto_orf_features.append(feature)
+        else:
+            other_features.append(feature)
     to_delete = []
     for autofeature in auto_orf_features:
         if "sec_met" not in autofeature.qualifiers:
@@ -397,27 +425,29 @@ def remove_irrelevant_allorfs(seq_record):
             continue
         glimmer_has_sec_met = False
         for otherfeature in other_features:
-            if autofeature.overlaps_with(otherfeature) and "sec_met" in otherfeature.qualifiers:
+            if autofeature.overlaps_with(otherfeature) and otherfeature.sec_met:
                 to_delete.append(autofeature)
                 glimmer_has_sec_met = True
         if not glimmer_has_sec_met:
             for otherfeature in other_features:
-                if autofeature.overlaps_with(otherfeature) and "sec_met" not in otherfeature.qualifiers:
+                if autofeature.overlaps_with(otherfeature) and not otherfeature.secmet:
                     to_delete.append(otherfeature)
+    logging.critical("attempting to remove features in remove_irrelevant_allorfs")
     featurenrs = []
     idx = 0
-    for feature in seq_record.features:
+    for feature in record.features:
         if feature in to_delete:
             featurenrs.append(idx)
         idx += 1
     featurenrs.reverse()
     for featurenr in featurenrs:
-        del seq_record.features[featurenr]
+        del record.features[featurenr]
 
-def add_additional_nrpspks_genes(typedict, results_by_id, seq_record, nseqdict):
+def add_additional_nrpspks_genes(typedict, results_by_id, record, nseqdict):
+    logging.critical("add_additional_nrpspks_genes() overriding existing sec_met")
     nrpspksdomains = ["PKS_KS", "PKS_AT", "ATd", "ene_KS", "mod_KS", "hyb_KS",
                       "itr_KS", "tra_KS", "Condensation", "AMP-binding", "A-OX"]
-    clustercdsfeatures = seq_record.get_cds_features_within_clusters()
+    clustercdsfeatures = record.get_cds_features_within_clusters()
     othercds_with_results = []
     for cds in clustercdsfeatures:
         gene_id = cds.get_name()
@@ -429,22 +459,23 @@ def add_additional_nrpspks_genes(typedict, results_by_id, seq_record, nseqdict):
             _update_sec_met_entry(cds, results_by_id[gene_id], "other", nseqdict)
 
 
-def store_detection_details(rules, seq_record):
+def store_detection_details(rules, record) -> None:
     """ Add a note qualifier to every Cluster feature containing the detection
         type and the detection rule used to determine that type.
 
         Args:
             rules: A dictionary of the detection rules.
-            seq_record: The SeqRecord to modify the features of
+            record: The SeqRecord to modify the features of
 
         Returns:
             None. All changes are made in place.
     """
-    for cluster in seq_record.get_clusters():
+    for cluster in record.get_clusters():
         assert cluster.type == "cluster"
         cluster.detection_rules = [str(rules[product].conditions) for product in cluster.products]
 
 class SecMetResult():
+    """ A simple container for the information needed to create a domain """
     def __init__(self, res, nseeds):
         self.query_id = res.query_id
         self.evalue = res.evalue
@@ -458,18 +489,31 @@ class SecMetResult():
         return "{} (E-value: {}, bitscore: {}, seeds: {})".format(
                 self.query_id, self.evalue, self.bitscore, self.nseeds)
 
-def _update_sec_met_entry(feature, results, clustertype, nseqdict):
-    domains = [SecMetResult(res, nseqdict.get(res.query_id, "?")) for res in results]
+def _update_sec_met_entry(feature, results, clustertype, num_seeds) -> None:
+    """ Add or updates the secondary metabolite information of a feature
+
+        Arguments:
+            feature: the feature to update
+            results: a dictionary mapping gene id to HSP results
+            clustertype: a string containing cluster types separated by -
+            num_seeds: a dictionary mapping signature ids to number of seeds
+                        generating the signature
+
+        Returns:
+            None
+    """
+    domains = [SecMetResult(res, num_seeds.get(res.query_id, "?")) for res in results]
 
     feature.sec_met = SecMetQualifier(clustertype, domains)
 
-def get_overlaps_table(seq_record):
+
+def get_overlaps_table(record) -> Dict[str, int]:
     """
         Identify overlapping genes by overlap group.
         Genes with no overlap will have their own group.
 
         Args:
-            seq_record: The record to search.
+            record: The record to search.
 
         Returns:
             A dictionary of gene id to int representing overlap group
@@ -477,7 +521,7 @@ def get_overlaps_table(seq_record):
     """
     overlaps = []
     overlap_by_id = {}
-    features = seq_record.get_cds_features()
+    features = record.get_cds_features()
     if len(features) < 1:
         return overlap_by_id
     features = sorted(features, key=lambda feature: feature.location.start)
@@ -487,6 +531,7 @@ def get_overlaps_table(seq_record):
     while i <= j < len(features):
         cds = features[i]
         ncds = features[j]
+         # TODO: ensure this works with opposite strands of genes
         if cds.location.end <= ncds.location.start + 1:
             overlaps.append([])
             cds_queue.append(cds)

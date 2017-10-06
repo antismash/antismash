@@ -1,6 +1,7 @@
 [MASTER]
 ignore=external
 reports=y
+disable=bad-continuation
 
 [TYPECHECK]
 ignored-classes=Config,TestCase

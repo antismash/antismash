@@ -17,10 +17,8 @@ import antismash.modules.clusterblast.core as core
 
 class TestBlastParsing(unittest.TestCase):
     def setUp(self):
-        #this means geneclustergenes inside blastparse will be empty
-        mock('CDSFeature.get_accession', returns=None)
         #used by parse_subject, every sequence will be 100 long
-        mock('Record.get_cds_mapping', returns=defaultdict(lambda: DummyCDS(1, 101)))
+        mock('Record.get_cds_accession_mapping', returns=defaultdict(lambda: DummyCDS(1, 101)))
         mock('core.get_cds_lengths', returns={})
         self.sample_data = self.read_sample_data()
         self.sample_data_as_lists = self.file_data_to_lists(self.sample_data)
@@ -278,7 +276,7 @@ class TestSubjectParsing(unittest.TestCase):
         self.seqlengths = {"CAG25751.1" : 253}
         #used by parse_subject, but only if locus tag not in seqlengths
         mock('core.get_cds_lengths', returns=self.seqlengths)
-        mock('Record.get_cds_mapping', returns={"TEST" : DummyCDS(1, 301)})
+        mock('Record.get_cds_accession_mapping', returns={"TEST" : DummyCDS(1, 301)})
 
     def tearDown(self):
         restore()

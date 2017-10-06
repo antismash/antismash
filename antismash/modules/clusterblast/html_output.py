@@ -6,9 +6,14 @@ from antismash.common import path
 from jinja2 import FileSystemLoader, Environment, StrictUndefined
 
 def will_handle(_product):
+    """ Clusterblast is relevant to every cluster, so return True for every
+        product """
     return True
 
-def generate_details_div(cluster_layer, record_layer, options_layer):
+def generate_details_div(cluster_layer, record_layer, options_layer) -> str:
+    """ Generates the HTML sections of the body details for all variants
+        of clusterblast
+    """
     cluster = cluster_layer.cluster_rec
     divs = []
     if options_layer.cb_general or cluster.clusterblast is not None:
@@ -19,7 +24,10 @@ def generate_details_div(cluster_layer, record_layer, options_layer):
         divs.append(generate_div(cluster_layer, record_layer, options_layer, "subclusterblast"))
     return "\n".join(divs)
 
-def generate_div(cluster_layer, record_layer, options_layer, search_type):
+def generate_div(cluster_layer, record_layer, options_layer, search_type) -> str:
+    """ Generates the specific HTML section of the body for a given variant of
+        clusterblast
+    """
     template_path = path.get_full_path(__file__, "templates")
     env = Environment(
         loader=FileSystemLoader([template_path]), autoescape=True,

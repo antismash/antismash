@@ -100,10 +100,8 @@ def pre_process_sequences(sequences, options, genefinding) -> List[Record]:
         cdsfeatures = sequence.get_cds_features()
         cdsfeatures_with_translations = sum([1 for cdsfeature in cdsfeatures if cdsfeature.translation])
         assert cdsfeatures_with_translations == len(cdsfeatures)
-        if not sequence.seq or (
-                options.input_type == 'nucl' and \
-                not str(sequence.seq).replace("N", "") and \
-                cdsfeatures_with_translations < 0.8 * len(cdsfeatures)):
+        if not sequence.seq or (options.input_type == 'nucl' and \
+                                not str(sequence.seq).replace("N", "")):
             logging.error("Record %s has no sequence, skipping.", sequence.id)
             sequence.skip = "contains no sequence"
             continue
@@ -182,21 +180,15 @@ def pre_process_sequences(sequences, options, genefinding) -> List[Record]:
         if sequence.skip:
             continue
         if len(sequence.get_cds_features()) < 1:
-            print("seq has no cds features")
             if options.genefinding_gff3:
-                print("gff3 used")
                 logging.info("No CDS features found in record %r but GFF3 file provided, running GFF parser.", sequence.id)
                 gff_parser.run(sequence, single_entry, options)
                 # since gff_parser adds features, make sure they don't share ids
                 ensure_no_duplicate_gene_ids(sequences)
             elif options.genefinding_tool != "none":
                 logging.info("No CDS features found in record %r, running gene finding.", sequence.id)
-                print("genefinding not none, running %s", genefinding)
                 genefinding.run_on_record(sequence, options)
-            else:
-                print("genefinding not running")
             if len(sequence.get_cds_features()) < 1:
-                print("still no cds features")
                 logging.info("No genes found, skipping record")
                 sequence.skip = "No genes found"
                 continue

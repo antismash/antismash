@@ -155,7 +155,7 @@ def run_detection_stage(record, options, detection_modules) -> Dict[str, Optiona
     return detection_results
 
 def regenerate_results_for_record(record, options, modules, previous_result
-                                        ) -> Dict[str, Optional[ModuleResults]]:
+                                 ) -> Dict[str, Optional[ModuleResults]]:
     """ Converts a record's JSON results to ModuleResults per module
 
         Arguments:
@@ -366,7 +366,7 @@ def check_prerequisites(modules) -> None:
         res = module.check_prereqs()
         if res:
             raise RuntimeError("Module failing prerequisite check: %s %s" %(
-                            module.__name__, "\n".join(res)))
+                               module.__name__, "\n".join(res)))
 
 def list_plugins(modules) -> None:
     """ Prints the name and short description of the given modules
@@ -449,7 +449,8 @@ def run_antismash(sequence_file, options, detection_modules=None,
 
     prepare_output_directory(options.output_dir)
 
-    results.records = record_processing.pre_process_sequences(results.records, options, genefinding)
+    results.records = record_processing.pre_process_sequences(results.records,
+                                                           options, genefinding)
     for seq_record, previous_result in zip(results.records, results.results):
         # skip if we're not interested in it
         if seq_record.skip:
@@ -459,7 +460,7 @@ def run_antismash(sequence_file, options, detection_modules=None,
 
 
     # Write results
-    # TODO: include status logging, zipping, etc
+    # TODO: zipping, etc
     json_filename = os.path.join(options.output_dir, results.input_file)
     json_filename = os.path.splitext(json_filename)[0] + ".json"
     logging.debug("Writing json results to '%s'", json_filename)
@@ -475,13 +476,14 @@ def run_antismash(sequence_file, options, detection_modules=None,
     # save profiling data
     if options.profile:
         profiler.disable()
-        write_profiling_results(profiler,
-                        os.path.join(options.output_dir, "profiling_results"))
+        write_profiling_results(profiler, os.path.join(options.output_dir,
+                                                       "profiling_results"))
 
     end_time = datetime.now()
     running_time = end_time - start_time
 
-    logging.debug("antiSMASH calculation finished at %s; runtime: %s", str(end_time), str(running_time))
+    logging.debug("antiSMASH calculation finished at %s; runtime: %s",
+                  str(end_time), str(running_time))
 
     logging.info("antiSMASH status: SUCCESS")
     return 0
