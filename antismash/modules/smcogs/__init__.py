@@ -66,10 +66,11 @@ def check_prereqs():
         for ext in ['.h3f', '.h3i', '.h3m', '.h3p']:
             binary = "%s%s" % (hmm, ext)
             if path.locate_file(binary) is None:
-                command = ['hmmpress', hmm]
-                result = subprocessing.execute(command)
-                if result.return_code:
-                    failure_messages.append("Failed to hmmpress %r: %r" % (hmm, result.stderr[-100:]))
+                # regenerate them
+                result = subprocessing.run_hmmpress(hmm)
+                if not result.successful():
+                    failure_messages.append("Failed to hmmpress %s: %s" % (hmm, result.stderr.rstrip()))
+                break
     return failure_messages
 
 class SMCOGResults(ModuleResults):
