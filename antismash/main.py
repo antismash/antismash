@@ -366,7 +366,7 @@ def check_prerequisites(modules) -> None:
         res = module.check_prereqs()
         if res:
             raise RuntimeError("Module failing prerequisite check: %s %s" %(
-                            module.__name__, res))
+                            module.__name__, "\n".join(res)))
 
 def list_plugins(modules) -> None:
     """ Prints the name and short description of the given modules

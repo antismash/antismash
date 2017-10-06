@@ -170,16 +170,10 @@ def run_hmmsearch(query_hmmfile, target_sequence, use_tempfile=False):
 def run_hmmpress(hmmfile):
     "Run hmmpress"
     command = ['hmmpress', hmmfile]
-    try:
-        run_result = execute(command)
-        out = run_result.stdout
-        err = run_result.stderr
-        retcode = run_result.return_code
-    except OSError as excep:
-        retcode = 1
-        err = str(excep)
-        out = None
-    return out, err, retcode
+    run_result = execute(command)
+    if not run_result.successful():
+        logging.error("hmmpress failed for file: %s", hmmfile)
+    return run_result
 
 def run_hmmpfam2(query_hmmfile, target_sequence): # TODO cleanup
     "Run hmmpfam2"
