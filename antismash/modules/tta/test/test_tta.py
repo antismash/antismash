@@ -34,11 +34,9 @@ class TtaTest(unittest.TestCase):
 
         self.record = record
 
-
     def test_check_prereqs(self):
         """Test tta.check_prereqs()"""
         assert not tta.check_prereqs()
-
 
     def test_detect(self):
         """Test tta.detect()"""
@@ -47,8 +45,14 @@ class TtaTest(unittest.TestCase):
 
         detected = tta.detect(self.record, options)
         self.assertEqual(len(detected), 2)
+        # make sure features not added yet
+        features = self.record.get_generics()
+        self.assertEqual(len(features), 0)
+        # add to record and make sure they're there
+        detected.add_to_record(self.record)
         features = self.record.get_generics()
         self.assertEqual(len(features), 2)
+
         for feature in features:
             assert feature.type == "misc_feature"
 

@@ -92,6 +92,4 @@ def detect(seq_record, options):
 
     logging.debug("Detected %d TTA codons", len(results.features))
 
-    results.add_to_record(seq_record)
-
     return results
