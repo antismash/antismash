@@ -59,16 +59,27 @@ class TestGapNotation(unittest.TestCase):
         gaps = "acgtNacgtN"
         no_gaps = "acgtacgt"
         records = [Record(Seq(gaps)), Record(Seq(no_gaps))]
-        record_processing.ensure_gap_notation_consistent(records)
+        record_processing.sanitise_sequences(records)
         assert len(records) == 2
-        assert records[0].seq == gaps
-        assert records[1].seq == no_gaps
+        assert records[0].seq == gaps.upper()
+        assert records[1].seq == no_gaps.upper()
 
     def test_conversion(self):
-        for seq in ("acgtXacgtX", "acgtxacgtx", "acgt-acgt-"):
+        for seq in ("acgtZacgtX", "acgtxacgtz", "acgtoacgtf"):
             record = Record(Seq(seq))
-            record_processing.ensure_gap_notation_consistent([record])
-            assert record.seq == "acgtNacgtN"
+            record_processing.sanitise_sequences([record])
+            assert record.seq == "ACGTNACGTN"
+
+    def test_removal(self):
+        record = Record(Seq("acg-ta--"))
+        record_processing.sanitise_sequences([record])
+        assert record.seq == "ACGTA"
+
+    def test_mix(self):
+        record = Record(Seq("acg-ta-F-x"))
+        record_processing.sanitise_sequences([record])
+        assert record.seq == "ACGTANN"
+
 
 class TestTrimSequence(unittest.TestCase):
     def setUp(self):
