@@ -12,6 +12,7 @@ class TestSVGHelpers(unittest.TestCase):
     def test_make_neighbours_distinct(self):
         def run(values):
             res = svg_builder.make_neighbours_distinct(values)
+            # ensure that we haven't dropped or gained any values
             assert len(res) == len(values)
             return res
         assert run([1]) == [1]

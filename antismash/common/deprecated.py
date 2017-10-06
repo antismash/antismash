@@ -35,14 +35,7 @@ def CODE_SKIP_WARNING():
 # end temp
 
 
-def get_feature_dict(seq_record) -> dict:
-    """Get a dictionary mapping features to their IDs"""
-    features = seq_record.get_cds_features()
-    feature_by_id = {}
-    for feature in features:
-        gene_id = feature.get_name()
-        feature_by_id[gene_id] = feature
-    return feature_by_id
+
 
 
 def get_multifasta(seq_record) -> str:
@@ -320,7 +313,10 @@ def get_aa_sequence(_feature, **_kwargs):
     raise RuntimeError("get_aa_sequence(cds) called, did you mean cds.get_aa_sequence()?")
 
 def get_feature_dict_protein_id(_record):
-    raise RuntimeError("get_feature_dict_protein_id(record) called, did you mean record.get_cds_mapping()?")
+    raise RuntimeError("get_feature_dict_protein_id(record) called, did you mean record.get_cds_accession_mapping()?")
+
+def get_feature_dict(_seq_record):
+    raise RuntimeError("get_feature_dict(record) called, did you mean record.get_cds_name_mapping()?")
 
 def sortdictkeysbyvaluesrev(_data):
     raise RuntimeError("sortdictkeysbyvaluesrev(data) called, did you mean [i[0] for i in sorted(data.items(), key=lambda x: (x[1], x[0]), reverse=True)]?")

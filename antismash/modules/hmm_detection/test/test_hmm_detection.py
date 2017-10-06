@@ -18,7 +18,7 @@ from antismash.config import get_config, update_config, destroy_config, args
 import antismash.modules.hmm_detection as core
 from antismash.modules.hmm_detection import hmm_detection, rule_parser, signatures
 
-class FakeHSP(object):
+class FakeHSP(object): # pylint: disable=too-few-public-methods
     "class for generating a HSP like datastructure"
     def __init__(self, query_id, hit_id, hit_start, hit_end, bitscore, evalue):
         self.query_id = query_id
@@ -38,9 +38,9 @@ class TestArgs(unittest.TestCase):
     def tearDown(self):
         destroy_config()
 
-    def build_options(self, args):
+    def build_options(self, options):
         destroy_config()
-        options = self.parser.parse_args(args)
+        options = self.parser.parse_args(options)
         return update_config(options)
 
     def test_args(self):
@@ -77,12 +77,12 @@ class HmmDetectionTest(unittest.TestCase):
             ]
         }
         self.feature_by_id = {
-            "GENE_1" : DummyCDS(0, 30000, translation="dummytrans", locus_tag="GENE_1"), #A1 B1 C1 D1        A,B,C,D1
-            "GENE_2" : DummyCDS(30000, 50000, translation="dummytrans", locus_tag="GENE_2"),# A1 B1 C1 D1    A,B,C,D1
-            "GENE_3" : DummyCDS(70000, 90000, translation="dummytrans", locus_tag="GENE_3"), #A2 B2 C2 D1    A,B,C,D1 #because largest distance
-            "GENE_X" : DummyCDS(95000, 100000, translation="dummytrans", locus_tag="GENE_X"),
-            "GENE_4" : DummyCDS(125000, 140000, translation="dummytrans", locus_tag="GENE_4"), #A3 B3 C3 D2  A,B,C,D2
-            "GENE_5" : DummyCDS(130000, 150000, translation="dummytrans", locus_tag="GENE_5")# A3 B3 C3 D2   A,B,C,D2
+            "GENE_1" : DummyCDS(0, 30000, locus_tag="GENE_1"),
+            "GENE_2" : DummyCDS(30000, 50000, locus_tag="GENE_2"),
+            "GENE_3" : DummyCDS(70000, 90000, locus_tag="GENE_3"),
+            "GENE_X" : DummyCDS(95000, 100000, locus_tag="GENE_X"), # no hits
+            "GENE_4" : DummyCDS(125000, 140000, locus_tag="GENE_4"),
+            "GENE_5" : DummyCDS(130000, 150000, locus_tag="GENE_5")
         }
 
         test_names = set(["modelA", "modelB", "modelC", "modelF", "modelG"])
@@ -150,9 +150,11 @@ class HmmDetectionTest(unittest.TestCase):
     def test_find_clusters(self):
         nseqdict = {"Metabolite0" : "?", "Metabolite1" : "?"}
         for i, gene_id in enumerate(self.feature_by_id):
-            if gene_id != "GENE_X":
-                clustertype = "Metabolite%d" % (i % 2)
-                hmm_detection._update_sec_met_entry(self.feature_by_id[gene_id], self.results_by_id[gene_id], clustertype, nseqdict)
+            if gene_id == "GENE_X":
+                continue
+            clustertype = "Metabolite%d" % (i % 2)
+            hmm_detection._update_sec_met_entry(self.feature_by_id[gene_id],
+                             self.results_by_id[gene_id], clustertype, nseqdict)
         rules = {rule.name : rule for rule in self.rules}
         hmm_detection.find_clusters(self.record, rules)
         result_clusters = []
@@ -322,8 +324,8 @@ class HmmDetectionTest(unittest.TestCase):
 
         # ensure that the groups are disjoint
         for i, group in enumerate(sets):
-            for j in range(i + 1, len(sets)):
-                assert group.isdisjoint(sets[j])
+            for other in sets[i + 1:]:
+                assert group.isdisjoint(other)
 
     def test_hsp_overlap_size(self):
         overlap_size = hmm_detection.hsp_overlap_size

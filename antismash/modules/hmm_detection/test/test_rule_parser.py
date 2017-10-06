@@ -24,9 +24,7 @@ class DetectionTest(unittest.TestCase):
             "GENE_4" : DummyCDS(125000, 140000, locus_tag="GENE_4"),
             "GENE_5" : DummyCDS(145000, 150000, locus_tag="GENE_5")
         }
-        self.features = []
-        for gene_id in self.feature_by_id:
-            self.features.append(self.feature_by_id[gene_id])
+        self.features = list(self.feature_by_id.values())
         self.features.sort(key=lambda x: x.location.start) # vital for py3 < 3.5
         self.record = DummyRecord(self.features)
 

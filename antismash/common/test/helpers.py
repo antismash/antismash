@@ -35,6 +35,7 @@ class DummyCDS(CDSFeature):
             self._translation = translation
         super().__init__(FeatureLocation(start, end, strand), translation=trans,
                          locus_tag=locus_tag)
+        assert self.get_accession() == locus_tag, self.get_accession()
 
 class DummyCluster(Cluster):
     def __init__(self, start, end, strand=1):

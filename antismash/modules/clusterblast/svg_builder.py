@@ -1,6 +1,28 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+""" Responsible for the construction of Clusterblast related SVGs.
+
+    Cluster query genes that were matched to any of the genes in a reference
+    cluster will be coloured along with the reference genes that matched.
+    If a gene would be given two colours, all genes sharing that colour are
+    given a single grouped colour, so multiple query genes and reference genes
+    may have the same colour.
+
+    Colours are generated to be consistent across multiple runs, however if the
+    number of distinct groups changes, the colours will also change.
+
+    Colours for neighbouring genes in the query should be as distant as
+    possible, but with enough hits the distance may end up small anyway.
+
+    Information is stored for tooltips, including details of the gene itself
+    and, for reference genes, which genes in the query resulted in the hit.
+
+
+    In order to construct all SVGs, only one instance of ClusterSVGBuilder is
+    required for each group of related clusters.
+"""
+
 import colorsys
 import logging
 import os
@@ -84,7 +106,7 @@ def sort_groups(query_ids, groups: Iterable[Iterable]) -> List[Iterable]:
             if query_id in group:
                 if id(group) not in found_groups:
                     ordered_groups.append(group)
-                    found_groups.add(id(group)) #since sets are unhashable
+                    found_groups.add(id(group)) # id since sets are unhashable
     return ordered_groups
 
 
@@ -135,9 +157,8 @@ def arrange_colour_groups(query_genes, groups: Iterable[Iterable]) -> List[Itera
 def build_colour_groups(query_genes, ranking) -> Dict[str, str]:
     """ Generate a colour for each distinct group of genes.
 
-        A group of genes
-        is distinct if there are no links between any of the queries or hits in
-        one group to queries or hits in another group.
+        A group of genes is distinct if there are no links between any of the
+        queries or hits in one group to queries or hits in another group.
 
         Arguments:
             query_genes: the CDS features from a cluster
@@ -152,6 +173,7 @@ def build_colour_groups(query_genes, ranking) -> Dict[str, str]:
     # populate the sets with the id of any hits matching a query gene
     for _, score in ranking:
         for query, subject in score.scored_pairings:
+            groups[query.id].add(query.id)
             groups[query.id].add(subject.name)
     # merge intersecting sets so only disjoint sets remain
     keys = list(groups.keys())
@@ -162,18 +184,20 @@ def build_colour_groups(query_genes, ranking) -> Dict[str, str]:
                 groups[other].update(groups[accession]) # merge into later hit
                 groups[accession] = groups[other] # point to merged version
 
-    # generate a colour for each set, as distinct as possible
-    disjoints = set(tuple(group) for group in groups.values() if len(group) > 1) # no match, no colour
-    colours = generate_distinct_colours(len(disjoints))
+    # only track unique groups with more than one hit, since no match, no colour
+    disjoints = set(tuple(group) for group in groups.values() if len(group) > 1)
     # build a reverse lookup from id to group_number
     lookup = {}
-    for group, colour in zip(arrange_colour_groups(query_genes, disjoints), colours):
+    for group, colour in zip(arrange_colour_groups(query_genes, disjoints),
+                             generate_distinct_colours(len(disjoints))):
         for name in sorted(group): # sort to ensure cross-run consistency
             lookup[name] = colour
     return lookup
 
 
 class Gene:
+    """ For constructing the SVG components requried to display a single gene
+    """
     def __init__(self, start, end, strand, name, protein=None, product=None):
         self.start = start
         self.end = end
@@ -295,7 +319,10 @@ class Gene:
         return arrow
 
 class Cluster:
-    def __init__(self, query_cluster_number, ref_cluster_number, accession, description, genes, rank, hits=0, strand=1):
+    """ For constructing all SVG components required to represent a cluster
+    """
+    def __init__(self, query_cluster_number, ref_cluster_number, accession,
+                 description, genes, rank, hits=0, strand=1):
         self.query_cluster_number = query_cluster_number
         self.ref_cluster_number = ref_cluster_number
         self.accession = accession
@@ -316,20 +343,25 @@ class Cluster:
         self.rank = rank
 
     @property
-    def similarity(self):
+    def similarity(self) -> str:
+        """ Return a string representing percentage similarity to the query
+            cluster
+        """
         perc_sim = self.unique_hit_count * 100 / len(self.genes)
         return "%d%% of genes show similarity" % perc_sim
 
     @property
-    def full_description(self):
+    def full_description(self) -> str:
+        """ Returns a string formatted with accession, cluster number and
+            similarity score """
         desc = "%s_%s: %s" % (self.accession, self.ref_cluster_number, self.description)
         if len(desc) > 80:
             desc = desc[:77] + "..."
-        #return desc + " %d/%d genes hit" % (self.num_hits, len(self.genes)) #TODO do we want this?
         return "%s (%s)" % (desc, self.similarity)
 
-    def reverse_strand(self):
-        """ Reverses the entire cluster's directionality """
+    def reverse_strand(self) -> None:
+        """ Reverses the entire cluster's directionality, useful when the
+            query strand is the opposite direction """
         self.reversed = not self.reversed
         self.overall_strand *= -1
         for gene in self.genes:
@@ -342,11 +374,13 @@ class Cluster:
     def _add_label(self, group, v_offset):
         acc = Text(self.full_description, 5, 20 + v_offset)
         if self.accession.startswith('BGC'):
-            acc = Text('<a xlink:href="http://mibig.secondarymetabolites.org/repository/' + self.accession + '/index.html#cluster-1" target="_blank">'
-                       + self.accession + '</a>: ' + "%80s (%s)" % (self.description, self.similarity), 5, 20 + v_offset)
+            acc = Text('<a xlink:href="http://mibig.secondarymetabolites.org/repository/'
+                       + self.accession + '/index.html#cluster-1" target="_blank">'
+                       + self.accession + '</a>: '
+                       + "%80s (%s)" % (self.description, self.similarity), 5, 20 + v_offset)
         elif self.accession.split("_")[0] in get_antismash_db_accessions():
             acc = Text('<a xlink:href="http://antismash-db.secondarymetabolites.org/output/'
-                       + self.accession + '/index.html#cluster-' + self.ref_cluster_number[1:] + '" target="_blank">'
+                       + self.accession  + '/index.html#cluster-%s" target="_blank">' % self.ref_cluster_number[1:]
                        + self.full_description.replace(":", "</a>:"), 5, 20 + v_offset)
         acc.set_class("clusterblast-acc")
         group.addElement(acc)
@@ -378,9 +412,11 @@ class Cluster:
             arrow = gene.get_arrow_polygon(scaling=scaling, offset=offset,
                                base=arrow_y, colour=colours.get(gene.name, "white"))
             if overview:
-                arrow.set_id("%s-%d_all_%d_%d_%s" % (prefix, self.query_cluster_number, self.query_cluster_number, self.rank, i))
+                label = "all_"
             else:
-                arrow.set_id("%s-%d_h%d_%s_%s" % (prefix, self.query_cluster_number, self.query_cluster_number, self.rank, i))
+                label = "h"
+            arrow.set_id("%s-%d_%s%d_%s_%s" % (prefix, self.query_cluster_number, label,
+                                              self.query_cluster_number, self.rank, i))
             group.addElement(arrow)
             #Can be used for domains
             group.set_id("a%s_00%s" % (self.query_cluster_number, i))
@@ -403,6 +439,9 @@ class Cluster:
 
 
 class QueryCluster(Cluster):
+    """ A special case of Cluster for the query, with slightly different info
+        in the SVG components
+    """
     def __init__(self, cluster_feature):
         cluster_number = cluster_feature.get_cluster_number()
         super().__init__(cluster_number, cluster_number,
@@ -437,6 +476,9 @@ class QueryCluster(Cluster):
         return groups
 
 class ClusterSVGBuilder:
+    """ Constructs SVGs for both query cluster and matching clusters, in both
+        pairwise and combined forms
+    """
     def __init__(self, cluster_feature, ranking, reference_proteins, prefix):
         if ranking:
             assert reference_proteins
@@ -489,31 +531,43 @@ class ClusterSVGBuilder:
         self.max_length = self._size_of_largest_cluster()
         self._organise_strands()
 
-    def get_cluster_descriptions(self):
+    def get_cluster_descriptions(self) -> List[str]:
+        """ Returns all hit cluster descriptions """
         return [cluster.full_description for cluster in self.hits]
 
-    def get_cluster_accessions(self):
+    def get_cluster_accessions(self) -> List[str]:
+        """ Returns all hit cluster accessions """
         return [cluster.accession for cluster in self.hits]
 
-    def _organise_strands(self):
+    def _organise_strands(self) -> None:
+        """ Attempt to make all hits have a uniform overall direction """
         query_strand = self.query_cluster.overall_strand
         for cluster in self.hits:
             if cluster.overall_strand != query_strand:
                 cluster.reverse_strand()
 
-    def _size_of_largest_cluster(self):
+    def _size_of_largest_cluster(self) -> int:
         query_length = len(self.query_cluster)
         length = query_length
         for cluster in self.hits:
             if len(cluster) > length:
                 length = len(cluster)
-        config = get_config()
+        min_scale = get_config().cb_min_homology_scale
         # if this would shrink the query too much, use the minimum allowed
-        if query_length / length < config.cb_min_homology_scale:
-            length = query_length / config.cb_min_homology_scale
+        if query_length / length < min_scale:
+            length = int(query_length / min_scale)
         return length
 
     def get_overview_contents(self, width, height):
+        """ Generate an SVG comparing the query to all hit cluster
+
+            Arguments:
+                width: the width of the SVG
+                height: the height of the SVG
+
+            Returns:
+                a string containing the SVG XML
+        """
         svg = Svg(x=0, y=0, width=width, height=height)
         viewbox = "0 0 %d %d" % (width, height)
         svg.set_viewBox(viewbox)
@@ -532,7 +586,17 @@ class ClusterSVGBuilder:
                 svg.addElement(group)
         return svg.getXML()
 
-    def get_pairing_contents(self, index, width, height):
+    def get_pairing_contents(self, index, width, height) -> str:
+        """ Generate an SVG comparing the query to a single hit cluster
+
+            Arguments:
+                index: the index of the hit
+                width: the width of the SVG
+                height: the height of the SVG
+
+            Returns:
+                a string containing the SVG XML
+        """
         svg = Svg(x=0, y=0, width=width, height=height)
         viewbox = "0 0 %d %d" % (width, height)
         svg.set_viewBox(viewbox)

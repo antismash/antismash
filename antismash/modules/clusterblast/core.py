@@ -303,7 +303,7 @@ def parse_subject(tabs, seqlengths, accessions, record) -> Subject:
     if cds_accession in seqlengths:
         perc_coverage = (float(tabs[3]) / seqlengths[cds_accession]) * 100
     else:
-        feature_by_id = record.get_cds_mapping()
+        feature_by_id = record.get_cds_accession_mapping()
         seqlength = len(feature_by_id[cds_accession].get_aa_sequence())
         perc_coverage = (float(tabs[3]) / seqlength) * 100
     return Subject(subject, genecluster, start, end, strand, annotation,

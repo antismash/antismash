@@ -2,6 +2,7 @@
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
 from collections import OrderedDict
+from typing import Tuple
 
 class ReferenceCluster:
     __slots__ = ["accession", "cluster_label", "proteins", "description",
@@ -122,7 +123,7 @@ class Score:
             self.core_bonus = 3
         return self.hits + self.core_bonus + self.core_gene_hits + self.synteny_score
 
-    def sort_score(self) -> float:
+    def sort_score(self) -> Tuple[int, float]:
         """ For sorting purposes, sort first by score and solve any ties by
             cumulative blast score
         """

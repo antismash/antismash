@@ -36,19 +36,18 @@ def main(args):
     parser = antismash.config.args.build_parser(from_config_file=True, modules=all_modules)
 
     #if --help, show help texts and exit
-    if (list(set(["-h", "--help", "--help-showall"]) & set(args))):
+    if set(args).intersection({"-h", "--help", "--help-showall"}):
         parser.print_help(None, "--help-showall" in args)
         return 0
 
     #Parse arguments, removing hyphens from the beginning of file names to avoid conflicts with argparse
     infile_extensions = ('.fasta', '.fas', '.fa', '.gb', '.gbk', '.emb', '.embl')
-    args = [arg.replace("-","< > HYPHEN < >") if (arg.endswith(infile_extensions) and arg[0] == "-") else arg for arg in args]
 
     try:
-        options = parser.parse_args(["@config_test"] + sys.argv[1:])
-    except SystemExit:
+        options = parser.parse_args(["@config_test"] + args) #TODO use config loader here instead
+    except SystemExit as err:
         # note: logging isn't set up as usual here because it relies on config
-        logging.error("option generation exited early")
+        logging.error("option generation exited early %s", str(err))
         raise
 
     #if -V, show version text and exit
@@ -77,12 +76,10 @@ def main(args):
     if not options.output_dir:
         options.output_dir = os.path.abspath(os.path.splitext(os.path.basename(sequence))[0])
 
-    sequence = sequence.replace("< > HYPHEN < >", "-")
-
     options.version = get_version()
 
     return antismash.run_antismash(sequence, options)
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv))
+    sys.exit(main(sys.argv[1:]))

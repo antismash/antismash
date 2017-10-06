@@ -4,6 +4,7 @@
 from collections import OrderedDict
 import logging
 import os
+from typing import Dict, List
 
 from antismash.common.module_results import ModuleResults
 
@@ -16,8 +17,20 @@ def get_result_limit():
     return _CLUSTER_LIMIT
 
 class ClusterResult:
+    """ Stores results for a specific cluster in a record, for a particular
+        flavour of clusterblast.
+    """
     __slots__ = ["cluster", "ranking", "total_hits", "svg_builder", "prefix"]
     def __init__(self, cluster, ranking, reference_proteins, prefix):
+        """ Arguments:
+                cluster: the cluster feature
+                ranking: a list of tuples in the form (ReferenceCluster, Score)
+                reference_proteins: used to generate details for SVG output,
+                                    only relevant portions are stored
+                prefix: an identifier for use in marking SVGs such that
+                        javascript on the results page can differentiate between
+                        types of clusterblast
+        """
         self.cluster = cluster # Cluster
         self.ranking = ranking[:get_result_limit()] # [(ReferenceCluster, Score),...]
         self.total_hits = len(ranking)
@@ -31,7 +44,16 @@ class ClusterResult:
         self.cluster.knownclusterblast = list(zip(self.svg_builder.get_cluster_descriptions(),
                                  self.svg_builder.get_cluster_accessions()))
 
-    def jsonify(self):
+    def jsonify(self) -> Dict:
+        """ Convert the object into a simple dictionary for use in storing
+            results.
+
+            The function from_json() should reconstruct a new and equal
+            ClusterResult from the results of this function.
+
+            Returns:
+                a dict containing the object data in basic types
+        """
         result = {}
         result["cluster_number"] = self.cluster.get_cluster_number()
         result["total_hits"] = self.total_hits
@@ -47,6 +69,21 @@ class ClusterResult:
 
     @staticmethod
     def from_json(json, record, reference_proteins):
+        """ Convert a simple dictionary into a new ClusterResult object.
+
+            The function ClusterResult.jsonify() should reconstruct the data
+            provided here.
+
+            Arguments:
+                json: the dict of data to construct with
+                record: the record used to create the data
+                reference_proteins: a dict mapping protein name to Protein,
+                                    used instead of duplicated storing of
+                                    many Protiens
+
+            Returns:
+                a dict containing the object data in basic types
+        """
         ranking = []
         for cluster, details in json["ranking"]:
             ref_cluster = ReferenceCluster(cluster["accession"], cluster["cluster_label"],
@@ -69,17 +106,31 @@ class ClusterResult:
         result.total_hits = json["total_hits"]
         return result
 
-    def write_svg_files(self, svg_dir, prefix):
+    def write_svg_files(self, svg_dir, prefix) -> List[str]:
+        """ Write all generated SVG files, one overview SVG and one for each
+            ReferenceCluster pairing. The overview SVG will have _all in
+            the filename and the individual pairings will have a counter.
+
+            Arguments:
+                svg_dir: the directory to save the files in
+                prefix: the file prefix to use (e.g. 'knownclusterblast')
+
+            Returns:
+                a list of filenames created
+        """
         cluster_num = self.cluster.get_cluster_number()
 
         filename = "%s%d_all.svg" % (prefix, cluster_num)
         with open(os.path.join(svg_dir, filename), "w") as handle:
             handle.write(self.svg_builder.get_overview_contents(width=800, height=50 + 50 * len(self.svg_builder.hits)))
 
+        files = []
         for i in range(len(self.svg_builder.hits)):
             filename = "%s%d_%d.svg" % (prefix, cluster_num, i + 1) # 1-index
             with open(os.path.join(svg_dir, filename), "w") as handle:
                 handle.write(self.svg_builder.get_pairing_contents(i, width=800, height=230))
+            files.append(filename)
+        return files
 
 class GeneralResults(ModuleResults):
     schema_version = 1
