@@ -14,6 +14,7 @@ from antismash import get_all_modules
 from antismash.config import get_config, update_config, destroy_config
 from antismash.config import args
 
+
 class TestConfig(unittest.TestCase):
     def setUp(self):
         self.core_parser = args.build_parser()
@@ -60,13 +61,13 @@ class TestConfig(unittest.TestCase):
         assert config.taxon == 'fungi'
 
     def test_get(self):
-        config = update_config({'a' : 1, 'b' : None})
+        config = update_config({'a': 1, 'b': None})
         # check attribute and get are the same
         assert config.a == config.get('a')
         # check default values function
-        assert config.get('b', 3) is None # since b exists
-        assert config.get('c') is None # since c doesn't
-        assert config.get('c', 3) == 3 # now with default as 3
+        assert config.get('b', 3) is None  # since b exists
+        assert config.get('c') is None  # since c doesn't
+        assert config.get('c', 3) == 3  # now with default as 3
 
     def test_config_files(self):
         # TODO change some values in the file generated and check they're kept
@@ -84,6 +85,7 @@ class TestConfig(unittest.TestCase):
     def test_paths(self):
         options = self.core_parser.parse_args(["--reuse-results", "local"])
         assert os.sep in options.reuse_results
+
 
 class TestModuleArgs(unittest.TestCase):
     def test_bad_values(self):

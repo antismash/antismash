@@ -12,6 +12,7 @@ from antismash.common.all_orfs import find_all_orfs, scan_orfs
 
 from .helpers import DummyRecord
 
+
 class TestOrfCounts(unittest.TestCase):
     def run_both_dirs(self, expected, seq):
         assert expected == find_all_orfs(DummyRecord(seq=seq))
@@ -32,7 +33,7 @@ class TestOrfCounts(unittest.TestCase):
 
         # nothing > 60
         self.run_both_dirs(0, "ATGNNNTGA")
-        self.run_both_dirs(0, "ATG"+ "N"*54 +"TGA")
+        self.run_both_dirs(0, "ATG" + "N"*54 + "TGA")
 
     def test_all_combos(self):
         for start in ('ATG', 'GTG', 'TTG'):
@@ -69,6 +70,7 @@ class TestOrfCounts(unittest.TestCase):
     def test_interleaved(self):
         self.run_both_dirs(2, "ATGNATGNN"+"N"*60+"TAGNTAG")
 
+
 class TestOrfLocations(unittest.TestCase):
     def test_contained(self):
         seq = "ATG"+"X"*60+"TAG"
@@ -83,7 +85,6 @@ class TestOrfLocations(unittest.TestCase):
             assert isinstance(orf.end, ExactPosition)
             assert orf.start == 0 + offset
             assert orf.end == 65 + offset
-
 
     def test_start_without_end(self):
         seq = "NNNATGNNN"

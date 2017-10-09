@@ -3,11 +3,14 @@
 
 import threading
 
+
 def update_config(values):
     return Config(values)
 
+
 def get_config():
     return Config()
+
 
 def destroy_config() -> None:
     Config().__dict__.clear()
@@ -16,6 +19,7 @@ def destroy_config() -> None:
 class Config:  # since it's a glorified namespace, pylint: disable=too-few-public-methods
     __singleton = None
     __lock = threading.Lock()
+
     class _Config():
         def __init__(self, indict):
             if indict:

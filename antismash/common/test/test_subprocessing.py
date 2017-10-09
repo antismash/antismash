@@ -11,6 +11,7 @@ import unittest
 from antismash.config import update_config, destroy_config, get_config
 from antismash.common import subprocessing
 
+
 def dummy(value=None):
     """ Since functions passed to parallel_function can't be locally defined,
         this has to be declared here
@@ -20,10 +21,11 @@ def dummy(value=None):
         raise ValueError("Lucky number")
     return os.getpid()
 
+
 class TestParallelPython(unittest.TestCase):
     def setUp(self):
         self.config_cpus = 2
-        update_config({"cpus" : self.config_cpus})
+        update_config({"cpus": self.config_cpus})
         assert get_config().cpus == 2
 
     def tearDown(self):
@@ -71,6 +73,7 @@ class TestParallelPython(unittest.TestCase):
         with self.assertRaisesRegex(AttributeError, "Can't pickle local object"):
             subprocessing.parallel_function(local, [[i] for i in range(3)])
 
+
 class TestExecute(unittest.TestCase):
     def test_piping(self):
         result = subprocessing.execute(["pwd"])
@@ -109,10 +112,11 @@ class TestExecute(unittest.TestCase):
         elapsed = time.time() - start
         assert elapsed < 1.5
 
+
 class TestParallelExecute(unittest.TestCase):
     def setUp(self):
         self.config_cpus = 2
-        update_config({"cpus" : self.config_cpus})
+        update_config({"cpus": self.config_cpus})
         assert get_config().cpus == 2
 
     def tearDown(self):

@@ -14,8 +14,10 @@ class HmmSignature(Signature):
             raise ValueError("Signature cutoffs cannot be negative: %s" % cutoff)
         super().__init__(name, 'model', description, cutoff, self.hmm_file)
 
+
 def get_signature_names():
     return set(prof.name for prof in get_signature_profiles())
+
 
 def get_signature_profiles():
     """ Generates the HMM signature profiles from hmmdetails.txt

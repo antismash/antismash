@@ -9,21 +9,24 @@ from os import path
 import shutil
 
 from antismash.outputs.html.generator import generate_webpage
-import antismash.common.deprecated as utils
 from antismash.config.args import ModuleArgs
 from antismash.outputs.html.structure_drawer import generate_chemical_structure_preds
 
 NAME = "html"
 SHORT_DESCRIPTION = "HTML output"
 
+
 def get_arguments():
     return ModuleArgs("Output options", "html", enabled_by_default=True)
+
 
 def check_options(options):
     return []
 
+
 def is_enabled(options):
-    return True #TODO: add an arg to disable
+    return True  # TODO: add an arg to disable
+
 
 def write(records, results, options):
     output_dir = options.output_dir
@@ -36,6 +39,7 @@ def write(records, results, options):
     generate_structure_images(records, options)
     generate_webpage(records, results, options)
 
+
 def copy_template_dir(template, output_dir):
     "Copy files from a template directory to the output directory"
     basedir = path.dirname(__file__)
@@ -44,6 +48,7 @@ def copy_template_dir(template, output_dir):
     if path.exists(target_dir):
         shutil.rmtree(target_dir)
     shutil.copytree(path.join(basedir, template), target_dir)
+
 
 def generate_structure_images(records, options):
     "Generate the structure images based on Monomers prediction in cluster feature"

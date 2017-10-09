@@ -13,6 +13,7 @@ from Bio.SeqFeature import SeqFeature, FeatureLocation
 from antismash.common.test import helpers
 from antismash.common.secmet import Record, Cluster, CDSFeature, Feature, GeneFunction
 
+
 class TestConversion(unittest.TestCase):
     def test_conversion(self):
         before = list(Bio.SeqIO.parse(helpers.get_path_to_nisin_genbank(), "genbank"))[0]
@@ -76,11 +77,12 @@ class TestRecord(unittest.TestCase):
             for cds in cluster.cds_children:
                 assert cds.overlaps_with(cluster)
 
+
 class TestFeature(unittest.TestCase):
     def test_overlaps_with(self):
         # no overlap
         a = helpers.DummyFeature(5, 10)
-        assert isinstance(a, Feature) # just to be sure it works the way we want
+        assert isinstance(a, Feature)  # just to be sure it works the way we want
         b = helpers.DummyFeature(100, 110)
         assert not a.overlaps_with(b) and not b.overlaps_with(a)
         # completely within
@@ -159,19 +161,21 @@ class TestFeature(unittest.TestCase):
             cluster.product = ["c", "d"]
 # pylint: enable=assigning-non-slot
 
+
 class TestCDSFeature(unittest.TestCase):
     def test_required_identifiers(self):
         with self.assertRaises(ValueError):
-            dummy = CDSFeature(FeatureLocation(1, 5))
-        dummy = CDSFeature(FeatureLocation(1, 5), locus_tag="foo")
-        dummy = CDSFeature(FeatureLocation(1, 5), protein_id="foo")
-        dummy = CDSFeature(FeatureLocation(1, 5), gene="foo")
+            CDSFeature(FeatureLocation(1, 5))
+        assert CDSFeature(FeatureLocation(1, 5), locus_tag="foo")
+        assert CDSFeature(FeatureLocation(1, 5), protein_id="foo")
+        assert CDSFeature(FeatureLocation(1, 5), gene="foo")
+
 
 class TestGeneFunction(unittest.TestCase):
     def test_membership(self):
-        dummy = GeneFunction.OTHER
+        assert GeneFunction.OTHER
         with self.assertRaises(AttributeError):
-            dummy = GeneFunction.non_existant
+            GeneFunction.non_existant
 
     def test_equality(self):
         assert GeneFunction.OTHER == GeneFunction.OTHER

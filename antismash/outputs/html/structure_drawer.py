@@ -12,6 +12,7 @@ import antismash.common.path as path
 from .external.indigo import Indigo
 from .external.indigo_renderer import IndigoRenderer
 
+
 def gen_smiles_from_pksnrps(compound_pred, cluster_number):
     smiles = ""
     residues = compound_pred.replace("(", "").replace(")", "").replace(" + ", " ").replace("-", " ").split(" ")
@@ -28,7 +29,7 @@ def gen_smiles_from_pksnrps(compound_pred, cluster_number):
         residues.append('pks-end1')
     elif mal_count == len(residues):
         if residues[0] == "mal":
-            residues[0] = "pks-start1" # TODO why replace and not insert?
+            residues[0] = "pks-start1"  # TODO why replace and not insert?
         if residues[-1] == "ccmal":
             residues.append('pks-end2')
 
@@ -48,8 +49,9 @@ def gen_smiles_from_pksnrps(compound_pred, cluster_number):
         logging.debug("Cluster %s: smiles: %s", cluster_number, smiles)
     return smiles
 
+
 def generate_chemical_structure_preds(pksnrpsvars, record, options):
-    #Create directory to store structures
+    # Create directory to store structures
     structures_dir = os.path.abspath(os.path.join(options.output_dir, "structures"))
     if not os.path.exists(structures_dir):
         os.mkdir(structures_dir)
@@ -67,10 +69,11 @@ def generate_chemical_structure_preds(pksnrpsvars, record, options):
 
         if not depict_smile(cluster_number, smiles_string, structures_dir):
             pksnrpsvars.failedstructures.append(cluster_number)
-        elif is_ectoine and cluster in pksnrpsvars.failedstructures: #TODO not sure this is possible to hit
+        elif is_ectoine and cluster in pksnrpsvars.failedstructures:  # TODO not sure this is possible to hit
             del pksnrpsvars.failedstructures[pksnrpsvars.failedstructures.index(cluster_number)]
 
         cluster.smiles_structure = smiles_string
+
 
 def load_smiles():
     """Load smiles from a dictionary mapping residues to SMILES string"""

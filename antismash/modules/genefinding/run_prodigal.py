@@ -13,6 +13,7 @@ from Bio.SeqFeature import SeqFeature, FeatureLocation
 
 from antismash.common.subprocessing import execute
 
+
 def run_prodigal(seq_record, options):
     """
         Run progidal to annotate prokaryotic sequences
@@ -63,5 +64,5 @@ def run_prodigal(seq_record, options):
 
             loc = FeatureLocation(start-1, end, strand=strand)
             feature = SeqFeature(location=loc, id=name, type="CDS",
-                        qualifiers={'locus_tag': ['ctg%s_%s' % (seq_record.record_index, name)]})
+                    qualifiers={'locus_tag': ['ctg%s_%s' % (seq_record.record_index, name)]})
             seq_record.features.append(feature)

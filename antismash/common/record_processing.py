@@ -18,6 +18,7 @@ from antismash.config import update_config
 
 from .utils import generate_unique_id
 
+
 def parse_input_sequence(filename, minimum_length=-1, start=-1, end=-1) -> List[Record]:
     """ Parse input records contained in a file
 
@@ -66,6 +67,7 @@ def parse_input_sequence(filename, minimum_length=-1, start=-1, end=-1) -> List[
 
     return [Record.from_biopython(record) for record in records]
 
+
 def pre_process_sequences(sequences, options, genefinding) -> List[Record]:
     """ hmm
 
@@ -106,7 +108,7 @@ def pre_process_sequences(sequences, options, genefinding) -> List[Record]:
         cdsfeatures = sequence.get_cds_features()
         cdsfeatures_with_translations = len([cds for cds in cdsfeatures if cds.translation])
         assert cdsfeatures_with_translations == len(cdsfeatures)
-        if not sequence.seq or (options.input_type == 'nucl' and \
+        if not sequence.seq or (options.input_type == 'nucl' and
                                 not str(sequence.seq).replace("N", "")):
             logging.error("Record %s has no sequence, skipping.", sequence.id)
             sequence.skip = "contains no sequence"
@@ -134,7 +136,7 @@ def pre_process_sequences(sequences, options, genefinding) -> List[Record]:
             logging.info("Skipped %d sequences not matching filter: %s",
                          len(sequences) - matching_filter, limit)
 
-    #If protein input, convert all protein seq_records to one nucleotide seq_record
+    # If protein input, convert all protein seq_records to one nucleotide seq_record
     if options.input_type == 'prot':
         sequences = generate_nucl_seq_record(sequences)
 
@@ -161,7 +163,7 @@ def pre_process_sequences(sequences, options, genefinding) -> List[Record]:
                     warned = True
                 sequence.skip = "skipping all but first {0} meaningful records (--limit {0}) ".format(options.limit)
 
-    options = update_config({"triggered_limit" : warned}) # TODO is there a better way
+    options = update_config({"triggered_limit": warned})  # TODO is there a better way
 
     # Check if no duplicate locus tags / gene IDs are found
     ensure_no_duplicate_gene_ids(sequences)
@@ -199,7 +201,6 @@ def pre_process_sequences(sequences, options, genefinding) -> List[Record]:
                 logging.info("No genes found, skipping record")
                 sequence.skip = "No genes found"
                 continue
-        #Fix locus tags
         fix_locus_tags(sequence)
 
     return sequences
@@ -279,8 +280,9 @@ def generate_nucl_seq_record(records) -> Record:
     if not records:
         raise ValueError("Cannot generate nucleotide records of empty input")
 
-    record = Record(Seq(""), id="Protein_Input", name="ProteinInput", # TODO: surely we can use a better base id/name/description
-                   description="antiSMASH protein input")
+    # TODO: surely we can use a better base id/name/description
+    record = Record(Seq(""), id="Protein_Input", name="ProteinInput",
+                    description="antiSMASH protein input")
     position = 0
     cds_names = set()
     for record in records:
@@ -376,7 +378,7 @@ def fix_record_name_id(record, all_record_ids) -> None:
 
     old_id = record.id
 
-    if record.id in ["unknown", "unknown.1"]:  #TODO oddly specific
+    if record.id in ["unknown", "unknown.1"]:  # TODO oddly specific
         old_id = record.id
         record.id = "unk_seq_{ctg:05d}".format(ctg=record.record_index)
         logging.warning('Invalid sequence id "%s", replaced by %s', old_id, record.id)
@@ -390,7 +392,7 @@ def fix_record_name_id(record, all_record_ids) -> None:
                 record.id.partition(".")[0] not in all_record_ids):
             record.id = record.id.partition(".")[0]
             all_record_ids.add(record.id)
-        else: #Check if the ID suggested by _shorten_ids is unique
+        else:  # Check if the ID suggested by _shorten_ids is unique
             if _shorten_ids(old_id) not in all_record_ids:
                 name = _shorten_ids(old_id)
             else:
@@ -418,7 +420,8 @@ def fix_record_name_id(record, all_record_ids) -> None:
         if char in illegal_chars:
             record.name = record.name.replace(char, "")
 
-def fix_locus_tags(seq_record) -> None: # TODO should be part of secmet
+
+def fix_locus_tags(seq_record) -> None:  # TODO should be part of secmet
     "Fix CDS feature that don't have a locus_tag, gene name or protein id"
     next_locus_tag = 1
 
@@ -427,7 +430,7 @@ def fix_locus_tags(seq_record) -> None: # TODO should be part of secmet
             logging.critical("fix_locus_tags overwriting tag 'no_tag_found' at %s", feature.location)
             feature.locus_tag = '%s_%05d' % (seq_record.id, next_locus_tag)
             next_locus_tag += 1
-        #Fix locus tags, gene names or protein IDs if they contain illegal chars
+        # Fix locus tags, gene names or protein IDs if they contain illegal chars
         illegal_chars = set('''!"#$%&()*+,:; \r\n\t=>?@[]^`'{|}/ ''')
         for attr in ["locus_tag", "gene", "protein_id"]:
             val = getattr(feature, attr)

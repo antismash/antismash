@@ -14,6 +14,7 @@ from antismash.modules.hmm_detection.signatures import get_signature_profiles, g
 
 T = TypeVar("T")
 
+
 def find_clusters(record, rules):
     """ Detects gene clusters based on the identified core genes """
     clusters = []
@@ -77,6 +78,7 @@ def find_clusters(record, rules):
         record.add_cluster(cluster)
     logging.info("%d cluster(s) found in record", len(clusters))
 
+
 def hsp_overlap_size(first, second):
     """ Find the size of an overlapping region of two HSPs.
 
@@ -93,6 +95,7 @@ def hsp_overlap_size(first, second):
     segment_end = min(first.hit_end, second.hit_end)
     return max(0, segment_end - segment_start)
 
+
 def filter_results(results, results_by_id):
     """ Filter results by comparing scores of different models """
     for line in open(path.get_full_path(__file__, "filterhmmdetails.txt"), "r"):
@@ -103,11 +106,11 @@ def filter_results(results, results_by_id):
             raise ValueError("Equivalence group contains unknown identifiers: %s" % (
                     unknown))
         for cds, cdsresults in results_by_id.items():
-            #Check if multiple competing HMM hits are present
+            # Check if multiple competing HMM hits are present
             hits = set(hit.query_id for hit in cdsresults)
             if len(hits & equivalence_group) < 2:
                 continue
-            #Identify overlapping hits
+            # Identify overlapping hits
             overlapping_groups = []
             for hit in cdsresults:
                 for otherhit in cdsresults:
@@ -133,8 +136,9 @@ def filter_results(results, results_by_id):
                     if hit != best:
                         del results[results.index(hit)]
                         del results_by_id[cds][results_by_id[cds].index(hit)]
-            assert results_by_id[cds] # should always have one remaining
+            assert results_by_id[cds]  # should always have one remaining
     return results, results_by_id
+
 
 def filter_result_multiple(results, results_by_id):
     """ Filter multiple results of the same model within a gene """
@@ -150,6 +154,7 @@ def filter_result_multiple(results, results_by_id):
         results.extend(results_by_id[cds])
     results.sort(key=lambda hit: hit.hit_start)
     return results, results_by_id
+
 
 def filter_result_overlapping_genes(results, results_by_id, overlaps, feature_by_id):
     """ Filter results of overlapping genes
@@ -182,7 +187,7 @@ def filter_result_overlapping_genes(results, results_by_id, overlaps, feature_by
                 dist = abs(feature.location.end - feature.location.start)
                 if dist < best_hit_scores[hit.query_id]:
                     to_delete.append(hit)
-                else: # filter for filterhmmdetails.txt
+                else:  # filter for filterhmmdetails.txt
                     for filterhmms in filterhmm_list:
                         if hit.query_id not in filterhmms:
                             continue
@@ -220,6 +225,7 @@ def create_rules(enabled_cluster_types):
             rules.append(rule)
     return rules
 
+
 def calculate_nearby_features(names, position, cutoff, distances, features,
                               results: Dict[str, T]) -> Tuple[Dict[str, CDSFeature], Dict[str, T]]:
     """ Find features within a specific distance
@@ -236,7 +242,7 @@ def calculate_nearby_features(names, position, cutoff, distances, features,
             A tuple of dictionaries. The dictionaries are strictly subsets of
             the features and results args.
     """
-    nearby_features = {names[position] : features[names[position]]}
+    nearby_features = {names[position]: features[names[position]]}
 
     center = distances[position]
 
@@ -252,9 +258,10 @@ def calculate_nearby_features(names, position, cutoff, distances, features,
         nearby_features[neighbour] = features[neighbour]
         after += 1
 
-    nearby_results = {name : results[name] for name in nearby_features}
+    nearby_results = {name: results[name] for name in nearby_features}
 
     return nearby_features, nearby_results
+
 
 def apply_cluster_rules(results_by_id, feature_by_id, rules) -> Dict[str, str]:
     """
@@ -278,6 +285,7 @@ def apply_cluster_rules(results_by_id, feature_by_id, rules) -> Dict[str, str]:
 
     type_results = {}
     cds_with_hits = sorted(results_by_id, key=lambda gene_id: feature_by_id[gene_id].location.start)
+
     def calculate_distance(first, second):
         """ Calculate the distance between two FeatureLocations """
         first_start, first_end = sorted([first.start, first.end])
@@ -371,7 +379,7 @@ def detect_signature_genes(record, options) -> None:
         feature = feature_by_id[cds]
         _update_sec_met_entry(feature, results_by_id[cds], typedict[cds], nseqdict)
 
-    rules = {rule.name : rule for rule in rules}
+    rules = {rule.name: rule for rule in rules}
     find_clusters(record, rules)
 
     # Find additional NRPS/PKS genes in gene clusters
@@ -381,6 +389,7 @@ def detect_signature_genes(record, options) -> None:
     # If all-orfs option on, remove irrelevant short orfs
     if options.genefinding_tool == "all-orfs":
         remove_irrelevant_allorfs(record)
+
 
 def get_sequence_counts() -> Dict[str, int]:
     """ Gets the number of sequences/seeds used to generate each HMM signature
@@ -400,7 +409,7 @@ def get_sequence_counts() -> Dict[str, int]:
                 result[hmm.name] = line[6:].strip()
                 break
         # TODO: ideally this shouldn't ever happen
-        if not hmm.name in result:
+        if hmm.name not in result:
             result[hmm.name] = "?"
 
     return result
@@ -443,6 +452,7 @@ def remove_irrelevant_allorfs(record):
     for featurenr in featurenrs:
         del record.features[featurenr]
 
+
 def add_additional_nrpspks_genes(typedict, results_by_id, record, nseqdict):
     logging.critical("add_additional_nrpspks_genes() overriding existing sec_met")
     nrpspksdomains = ["PKS_KS", "PKS_AT", "ATd", "ene_KS", "mod_KS", "hyb_KS",
@@ -474,6 +484,7 @@ def store_detection_details(rules, record) -> None:
         assert cluster.type == "cluster"
         cluster.detection_rules = [str(rules[product].conditions) for product in cluster.products]
 
+
 class SecMetResult():
     """ A simple container for the information needed to create a domain """
     def __init__(self, res, nseeds):
@@ -488,6 +499,7 @@ class SecMetResult():
     def __str__(self):
         return "{} (E-value: {}, bitscore: {}, seeds: {})".format(
                 self.query_id, self.evalue, self.bitscore, self.nseeds)
+
 
 def _update_sec_met_entry(feature, results, clustertype, num_seeds) -> None:
     """ Add or updates the secondary metabolite information of a feature
@@ -531,7 +543,7 @@ def get_overlaps_table(record) -> Dict[str, int]:
     while i <= j < len(features):
         cds = features[i]
         ncds = features[j]
-         # TODO: ensure this works with opposite strands of genes
+        # TODO: ensure this works with opposite strands of genes
         if cds.location.end <= ncds.location.start + 1:
             overlaps.append([])
             cds_queue.append(cds)

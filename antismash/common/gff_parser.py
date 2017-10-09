@@ -63,6 +63,7 @@ def check_gff_suitability(options, sequences):
         raise
     return single_entries
 
+
 def get_features_from_file(seq_record, handle, limit_to_seq_id=False):
     features = []
     for record in GFF.parse(handle, limit_info=limit_to_seq_id):
@@ -96,6 +97,7 @@ def get_features_from_file(seq_record, handle, limit_to_seq_id=False):
                 features.append(new_feature)
     return features
 
+
 def run(record, single_entry, options):
     # If there's only one sequence in both, read all, otherwise, read only appropriate part of GFF3.
     limit_info = False
@@ -104,7 +106,7 @@ def run(record, single_entry, options):
 
     handle = open(options.genefinding_gff3)
     features = get_features_from_file(record, handle, limit_info)
-    logging.critical("gff parsing still generating SeqFeatures") # TODO
+    logging.critical("gff parsing still generating SeqFeatures")  # TODO
     for feature in features:
         record.add_biopython_feature(feature)
 

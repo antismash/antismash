@@ -13,6 +13,7 @@ from antismash.common import path, deprecated as utils
 from antismash.common.layers import RecordLayer, OptionsLayer
 from antismash.outputs.html import js
 
+
 def write_geneclusters_js(records, output_dir, extra_data):
     with open(os.path.join(output_dir, 'geneclusters.js'), 'w') as result:
         geneclusters = {}
@@ -38,17 +39,15 @@ def generate_webpage(seq_records, results, options):
     extra_data = dict(js_domains=[], clusterblast_clusters=[],
                       subclusterblast_clusters=[], knownclusterblast_clusters=[])
 
-
     for i, record in enumerate(records):
         record['seq_id'] = "".join(char for char in record['seq_id'] if char in string.printable)
         for cluster in record['clusters']:
-            from antismash import get_analysis_modules #TODO break circular dependency
+            from antismash import get_analysis_modules  # TODO break circular dependency
             handlers = find_plugins_for_cluster(get_analysis_modules(), cluster)
             for handler in handlers:
                 if "generate_js_domains" in dir(handler):
                     handler.generate_js_domains(cluster, seq_records[i], options,
                                                 extra_data['js_domains'])
-
 
     write_geneclusters_js(records, options.output_dir, extra_data)
 
@@ -67,6 +66,7 @@ def generate_webpage(seq_records, results, options):
                               records_written=records_written,
                               config=options)
         result.write(aux)
+
 
 def find_plugins_for_cluster(plugins, cluster):
     "Find a specific plugin responsible for a given gene cluster type"
@@ -88,19 +88,21 @@ def get_detection_rules(cluster_rec):
 
     return rules
 
+
 def load_searchgtr_search_form_template():
-    #Create folder for SEARCHGTR HTML files, load search form template
-    searchgtrformtemplate = open(path.get_full_path(__file__, "searchgtr_form.html"), "r")
-    searchgtrformtemplate = searchgtrformtemplate.read()
-    searchgtrformtemplate = searchgtrformtemplate.replace("\r", "\n")
-    searchgtrformtemplateparts = searchgtrformtemplate.split("FASTASEQUENCE")
-    return searchgtrformtemplateparts
+    """Create folder for SEARCHGTR HTML files, load search form template """
+    template = open(path.get_full_path(__file__, "searchgtr_form.html"), "r")
+    template = template.read()
+    template = template.replace("\r", "\n")
+    template_parts = template.split("FASTASEQUENCE")
+    return template_parts
+
 
 def generate_searchgtr_htmls(seq_records, options):
-    #Generate lists of COGs that are glycosyltransferases or transporters
+    """ Generate lists of COGs that are glycosyltransferases or transporters """
     gtrcoglist = ['SMCOG1045', 'SMCOG1062', 'SMCOG1102']
     searchgtrformtemplateparts = load_searchgtr_search_form_template()
-    #TODO store somewhere sane
+    # TODO store somewhere sane
     js.searchgtr_links = {}
     for seq_record in seq_records:
         smcogdict, _ = utils.get_smcog_annotations(seq_record)

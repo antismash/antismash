@@ -4,15 +4,11 @@
 """General HMM detection module
 
 """
-import argparse
 import logging
 import os
 
-import antismash.common.deprecated as utils
 import antismash.common.path as path
-from antismash import config
-from antismash.common.deprecated import SeqFeature, FeatureLocation
-from antismash.common.subprocessing import run_hmmsearch, run_hmmpress
+from antismash.common.subprocessing import run_hmmpress
 
 from antismash.config.args import ModuleArgs
 
@@ -21,8 +17,9 @@ from antismash.modules.hmm_detection.hmm_detection import detect_signature_genes
 from antismash.modules.hmm_detection.rule_parser import Parser
 from antismash.modules.hmm_detection.signatures import get_signature_profiles
 
-NAME = "hmmdetection" # used when building commandline args for dis-/enabling
+NAME = "hmmdetection"
 SHORT_DESCRIPTION = "Cluster detection with HMM"
+
 
 def get_supported_cluster_types():
     """ Returns a list of all cluster types for which there are rules
@@ -31,6 +28,7 @@ def get_supported_cluster_types():
         rules = rule_parser.Parser(rulefile).rules
         clustertypes = [rule.name for rule in rules]
     return clustertypes
+
 
 def get_arguments():
     """ Constructs commandline arguments and options for this module
@@ -45,6 +43,7 @@ def get_arguments():
                     help=("Select sec. met. cluster types to search for. "
                           " E.g. --enable t1pks,nrps,other"))
     return args
+
 
 def check_options(options):
     """ Checks the options to see if there are any issues before
@@ -67,15 +66,18 @@ def check_options(options):
         errors.extend(" "+cluster for cluster in sorted(available))
     return errors
 
+
 def is_enabled(options):
     """  Uses the supplied options to determine if the module should be run
     """
     # in this case, yes, always
     return True
 
+
 def regenerate_previous_results(results, record, options):
     # always rerun hmmdetection
     return None
+
 
 def run_on_record(seq_record, options):
     return detect_signature_genes(seq_record, options)
@@ -94,7 +96,6 @@ def check_prereqs():
         profiles = get_signature_profiles()
     except ValueError as err:
         failure_messages.append(str(err))
-
 
     # the path to the markov model
     hmm = path.get_full_path(__file__, 'data', 'bgc_seeds.hmm')
@@ -122,16 +123,13 @@ def check_prereqs():
     except ValueError as err:
         failure_messages.append(str(err))
 
-
     binary_extensions = ['.h3f', '.h3i', '.h3m', '.h3p']
     for ext in binary_extensions:
         binary = "{}{}".format(hmm, ext)
         if path.locate_file(binary) is None:
-            _, err, retcode = run_hmmpress(hmm)
-            if retcode != 0:
-                failure_messages.append('Failed to hmmpress {!r}: {!r}'.format(hmm, err))
+            result = run_hmmpress(hmm)
+            if not result.succesful():
+                failure_messages.append('Failed to hmmpress {!r}: {}'.format(hmm, result.stderr))
             break
 
     return failure_messages
-
-__all__ = ["check_prereqs", "detect_signature_genes"]

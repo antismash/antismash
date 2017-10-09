@@ -7,8 +7,9 @@
 import os
 import unittest
 
-from antismash.config import args, loader
+from antismash.config import loader
 from antismash.config import update_config, get_config, destroy_config
+
 
 class TestLoader(unittest.TestCase):
     def setUp(self):
@@ -34,13 +35,13 @@ class TestLoader(unittest.TestCase):
         assert get_config().child.bool is False
 
     def test_override(self):
-        update_config({'base' : 'other'})
+        update_config({'base': 'other'})
         assert get_config().base == 'other'
         loader.update_config_from_file()
         assert get_config().base == 'base_value'
 
     def test_retaining(self):
-        update_config({'other' : 'value'})
+        update_config({'other': 'value'})
         assert get_config().other == 'value'
         loader.update_config_from_file()
         assert get_config().other == 'value'

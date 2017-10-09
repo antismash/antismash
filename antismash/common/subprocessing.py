@@ -17,6 +17,7 @@ from helperlibs.wrappers.io import TemporaryDirectory
 
 from antismash.config import get_config
 
+
 class RunResult:
     def __init__(self, command, stdout, stderr, return_code, piped_out, piped_err):
         self.command = command
@@ -35,11 +36,12 @@ class RunResult:
             raise ValueError("stderr was redirected to file, unable to access")
         return super().__getattribute__(attr)
 
-    def successful(self) -> int:
+    def successful(self) -> bool:
         return not self.return_code
 
     def get_command_string(self) -> str:
         return " ".join(self.command)
+
 
 def execute(commands, stdin=None, stdout=PIPE, stderr=PIPE, timeout=None) -> RunResult:
     "Execute commands in a system-independent manner"
@@ -112,6 +114,7 @@ def child_process(command):
         raise RuntimeError("Killed by keyboard interrupt")
     return -1
 
+
 def parallel_execute(commands, cpus=None, timeout=None):
     """ Limited return vals, only returns return codes
     """
@@ -136,11 +139,12 @@ def parallel_execute(commands, cpus=None, timeout=None):
 
     return errors
 
+
 def run_hmmsearch(query_hmmfile, target_sequence, use_tempfile=False):
     "Run hmmsearch"
     config = get_config()
     command = ["hmmsearch", "--cpu", str(config.cpus),
-               "-o", os.devnull, # throw away the verbose output
+               "-o", os.devnull,  # throw away the verbose output
                "--domtblout", "result.domtab",
                query_hmmfile]
 
@@ -167,6 +171,7 @@ def run_hmmsearch(query_hmmfile, target_sequence, use_tempfile=False):
             raise RuntimeError("Running hmmsearch failed.")
         return list(SearchIO.parse("result.domtab", 'hmmsearch3-domtab'))
 
+
 def run_hmmpress(hmmfile):
     "Run hmmpress"
     command = ['hmmpress', hmmfile]
@@ -175,7 +180,8 @@ def run_hmmpress(hmmfile):
         logging.error("hmmpress failed for file: %s", hmmfile)
     return run_result
 
-def run_hmmpfam2(query_hmmfile, target_sequence): # TODO cleanup
+
+def run_hmmpfam2(query_hmmfile, target_sequence):  # TODO cleanup
     "Run hmmpfam2"
     config = get_config()
     command = ["hmmpfam2", "--cpu", str(config.cpus),
@@ -189,21 +195,23 @@ def run_hmmpfam2(query_hmmfile, target_sequence): # TODO cleanup
     result = execute(command, stdin=target_sequence)
     if not result.successful():
         logging.debug('hmmpfam2 returned %d: %r while searching %r', result.return_code,
-                        result.stderr, query_hmmfile)
+                      result.stderr, query_hmmfile)
         raise RuntimeError("hmmpfam2 problem while running %s", command)
     res_stream = StringIO(result.stdout)
     results = list(SearchIO.parse(res_stream, 'hmmer2-text'))
     return results
 
-def run_fimo_simple(query_motif_file, target_sequence): # TODO cleanup
+
+def run_fimo_simple(query_motif_file, target_sequence):  # TODO cleanup
     "Run FIMO"
     command = ["fimo", "--text", "--verbosity", "1", query_motif_file, target_sequence]
     result = execute(command)
     if not result.successful():
         logging.debug('FIMO returned %d: %r while searching %r', result.return_code,
-                        result.stderr, query_motif_file)
+                      result.stderr, query_motif_file)
         raise RuntimeError("FIMO problem while running %s... %s", command, result.stderr[-100:])
     return result.stdout
+
 
 def run_hmmscan(target_hmmfile, query_sequence, opts=None, results_file=None):
     "Run hmmscan on the inputs and return a list of QueryResults"
@@ -215,7 +223,7 @@ def run_hmmscan(target_hmmfile, query_sequence, opts=None, results_file=None):
 
     # Allow to disable multithreading for HMMer3 calls in the command line
     if config.get('hmmer3') and 'multithreading' in config.hmmer3 and \
-            not config.hmmer3.multithreading: # TODO: ensure working
+            not config.hmmer3.multithreading:  # TODO: ensure working
         command = command[0:1] + command[3:]
 
     if opts is not None:

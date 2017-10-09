@@ -9,6 +9,7 @@ import unittest
 from antismash import main
 from antismash.config.args import build_parser
 
+
 class TestAntismash(unittest.TestCase):
     def setUp(self):
         self.all_modules = main.get_all_modules()

@@ -14,6 +14,7 @@ from antismash.common.secmet.feature import Cluster
 from antismash.common.test.helpers import DummyCDS, get_simple_options
 from antismash.modules import tta
 
+
 class TtaTest(unittest.TestCase):
     def setUp(self):
         # locations:            VVV         VVV

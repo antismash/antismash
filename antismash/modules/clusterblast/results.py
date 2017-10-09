@@ -13,14 +13,17 @@ from .svg_builder import ClusterSVGBuilder
 
 _CLUSTER_LIMIT = 50
 
+
 def get_result_limit():
     return _CLUSTER_LIMIT
+
 
 class ClusterResult:
     """ Stores results for a specific cluster in a record, for a particular
         flavour of clusterblast.
     """
     __slots__ = ["cluster", "ranking", "total_hits", "svg_builder", "prefix"]
+
     def __init__(self, cluster, ranking, reference_proteins, prefix):
         """ Arguments:
                 cluster: the cluster feature
@@ -31,18 +34,18 @@ class ClusterResult:
                         javascript on the results page can differentiate between
                         types of clusterblast
         """
-        self.cluster = cluster # Cluster
-        self.ranking = ranking[:get_result_limit()] # [(ReferenceCluster, Score),...]
+        self.cluster = cluster  # Cluster
+        self.ranking = ranking[:get_result_limit()]  # [(ReferenceCluster, Score),...]
         self.total_hits = len(ranking)
         self.svg_builder = ClusterSVGBuilder(cluster, ranking, reference_proteins, prefix)
         self.prefix = prefix
 
     def update_cluster_descriptions(self, search_type):
-        if search_type != "knownclusterblast": #TODO clean this up
+        if search_type != "knownclusterblast":  # TODO clean this up
             setattr(self.cluster, search_type, self.svg_builder.get_cluster_descriptions())
             return
         self.cluster.knownclusterblast = list(zip(self.svg_builder.get_cluster_descriptions(),
-                                 self.svg_builder.get_cluster_accessions()))
+                                                  self.svg_builder.get_cluster_accessions()))
 
     def jsonify(self) -> Dict:
         """ Convert the object into a simple dictionary for use in storing
@@ -59,8 +62,8 @@ class ClusterResult:
         result["total_hits"] = self.total_hits
         ranking = []
         for cluster, score in self.ranking:
-            scoring = {key : getattr(score, key) for key in score.__slots__ if key != "scored_pairings"}
-            json_cluster = {key : getattr(cluster, key) for key in cluster.__slots__}
+            scoring = {key: getattr(score, key) for key in score.__slots__ if key != "scored_pairings"}
+            json_cluster = {key: getattr(cluster, key) for key in cluster.__slots__}
             scoring["pairings"] = [(query.entry, query.index, vars(subject)) for query, subject in score.scored_pairings]
             ranking.append((json_cluster, scoring))
         result["ranking"] = ranking
@@ -95,7 +98,7 @@ class ClusterResult:
                 if key == "pairings":
                     continue
                 setattr(score, key, val)
-            for pairing in pairings: # entry, index, dict of subject
+            for pairing in pairings:  # entry, index, dict of subject
                 query = Query(pairing[0], pairing[1])
                 subject = Subject.from_dict(pairing[2])
                 score.scored_pairings.append((query, subject))
@@ -126,29 +129,31 @@ class ClusterResult:
 
         files = []
         for i in range(len(self.svg_builder.hits)):
-            filename = "%s%d_%d.svg" % (prefix, cluster_num, i + 1) # 1-index
+            filename = "%s%d_%d.svg" % (prefix, cluster_num, i + 1)  # 1-index
             with open(os.path.join(svg_dir, filename), "w") as handle:
                 handle.write(self.svg_builder.get_pairing_contents(i, width=800, height=230))
             files.append(filename)
         return files
 
+
 class GeneralResults(ModuleResults):
     schema_version = 1
+
     def __init__(self, record_id, search_type="clusterblast") -> None:
         assert record_id and isinstance(record_id, str)
         assert search_type and isinstance(search_type, str)
         super().__init__(record_id)
-        self.cluster_results = [] # [ClusterResult, ...]
+        self.cluster_results = []  # [ClusterResult, ...]
         self.search_type = search_type
         # keep here instead of duplicating in clusters
         # and only keep those that are relevant instead of 7 million
-        self.proteins_of_interest = OrderedDict() # protein name -> Protein
-        self.clusters_of_interest = OrderedDict() # cluster name -> ReferenceCluster
+        self.proteins_of_interest = OrderedDict()  # protein name -> Protein
+        self.clusters_of_interest = OrderedDict()  # cluster name -> ReferenceCluster
         self.mibig_entries = None
 
     def add_cluster_result(self, result, reference_clusters, reference_proteins):
         assert isinstance(result, ClusterResult)
-        assert reference_clusters and reference_proteins # {str:ReferenceCluster}, {str:Protein}
+        assert reference_clusters and reference_proteins  # {str:ReferenceCluster}, {str:Protein}
         self.cluster_results.append(result)
         # keep data on proteins relevant to this cluster
         for cluster, _ in result.ranking:
@@ -161,7 +166,8 @@ class GeneralResults(ModuleResults):
     def write_to_file(self, record, options):
         for cluster in self.cluster_results:
             write_clusterblast_output(options, record, cluster,
-                    self.proteins_of_interest, searchtype=self.search_type)
+                                      self.proteins_of_interest,
+                                      searchtype=self.search_type)
 
     def write_svg_files(self, svg_dir):
         for cluster_result in self.cluster_results:
@@ -170,11 +176,12 @@ class GeneralResults(ModuleResults):
     def to_json(self):
         if not self.cluster_results:
             return None
-        data = {"record_id" : self.record_id,
-                "schema_version" : self.schema_version,
-                "results" : [res.jsonify() for res in self.cluster_results],
-                "proteins" : [{key : getattr(protein, key) for key in protein.__slots__} for protein in self.proteins_of_interest.values()],
-                "search_type" : self.search_type}
+        data = {"record_id": self.record_id,
+                "schema_version": self.schema_version,
+                "results": [res.jsonify() for res in self.cluster_results],
+                "proteins": [{key: getattr(protein, key) for key in protein.__slots__}
+                             for protein in self.proteins_of_interest.values()],
+                "search_type": self.search_type}
         if self.mibig_entries is not None:
             entries = {}
             for cluster_number, proteins in self.mibig_entries.items():
@@ -192,8 +199,8 @@ class GeneralResults(ModuleResults):
     @staticmethod
     def from_json(json, record):
         if json["schema_version"] != GeneralResults.schema_version:
-            raise ValueError("Incompatible results schema version, expected %d" \
-                    % GeneralResults.schema_version)
+            raise ValueError("Incompatible results schema version, expected %d"
+                             % GeneralResults.schema_version)
         assert record.id == json["record_id"]
         result = GeneralResults(json["record_id"], search_type=json["search_type"])
         for prot in json["proteins"]:
@@ -202,7 +209,7 @@ class GeneralResults(ModuleResults):
             result.proteins_of_interest[protein.name] = protein
         for cluster_result in json["results"]:
             result.cluster_results.append(ClusterResult.from_json(cluster_result,
-                                           record, result.proteins_of_interest))
+                                          record, result.proteins_of_interest))
         if "mibig_entries" in json:
             entries = {}
             for cluster_number, proteins in json["mibig_entries"].items():
@@ -212,8 +219,10 @@ class GeneralResults(ModuleResults):
             result.mibig_entries = entries
         return result
 
+
 class ClusterBlastResults(ModuleResults):
     schema_version = 1
+
     def __init__(self, record_id):
         super().__init__(record_id)
         self.general = None
@@ -222,8 +231,8 @@ class ClusterBlastResults(ModuleResults):
 
     def to_json(self):
         assert self.general or self.subcluster or self.knowncluster
-        result = {"schema_version" : self.schema_version,
-                  "record_id" : self.record_id}
+        result = {"schema_version": self.schema_version,
+                  "record_id": self.record_id}
         for attr in ["general", "subcluster", "knowncluster"]:
             val = getattr(self, attr)
             if val and val.cluster_results:
@@ -233,8 +242,8 @@ class ClusterBlastResults(ModuleResults):
     @staticmethod
     def from_json(json, record):
         if json["schema_version"] != ClusterBlastResults.schema_version:
-            raise ValueError("Incompatible results schema version, expected %d" \
-                    % ClusterBlastResults.schema_version)
+            raise ValueError("Incompatible results schema version, expected %d"
+                             % ClusterBlastResults.schema_version)
         results = ClusterBlastResults(json["record_id"])
         for attr in ["general", "subcluster", "knowncluster"]:
             if attr in json:
@@ -253,6 +262,7 @@ class ClusterBlastResults(ModuleResults):
             if result:
                 result.write_svg_files(svg_dir)
 
+
 def write_clusterblast_output(options, seq_record, cluster_result, proteins,
                               searchtype="clusterblast"):
     assert isinstance(proteins, dict)
@@ -260,7 +270,8 @@ def write_clusterblast_output(options, seq_record, cluster_result, proteins,
     cluster_number = cluster_result.cluster.get_cluster_number()
     ranking = cluster_result.ranking
 
-    #Output for each hit: table of genes and locations of input cluster, table of genes and locations of hit cluster, table of hits between the clusters
+    # Output for each hit: table of genes and locations of input cluster,
+    # table of genes and locations of hit cluster, table of hits between the clusters
     currentdir = os.getcwd()
     os.chdir(_get_output_dir(options, searchtype))
 
@@ -302,6 +313,7 @@ def write_clusterblast_output(options, seq_record, cluster_result, proteins,
         out_file.write("\n")
     out_file.close()
     os.chdir(currentdir)
+
 
 def _get_output_dir(options, searchtype):
     assert searchtype in ["clusterblast", "subclusterblast", "knownclusterblast"], searchtype

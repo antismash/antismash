@@ -4,9 +4,11 @@
 from collections import OrderedDict
 from typing import Tuple
 
+
 class ReferenceCluster:
     __slots__ = ["accession", "cluster_label", "proteins", "description",
                  "cluster_type", "tags"]
+
     def __init__(self, accession, cluster_label, proteins, description,
                  cluster_type, tags):
         self.accession = accession
@@ -34,6 +36,7 @@ class Protein:
     # With those numbers, the memory use of the class without slots: 2.3 Gb
     #                                                and with slots: 0.4 Gb
     __slots__ = ("name", "locus_tag", "location", "strand", "annotations")
+
     def __init__(self, name, locus_tag, location, strand, annotations):
         self.name = name
         self.locus_tag = locus_tag
@@ -48,13 +51,13 @@ class Protein:
 
     def __str__(self):
         if len(self.location.split("-")) != 2:
-            raise ValueError("Invalid location in Protein: %s"%self.location)
+            raise ValueError("Invalid location in Protein: %s" % self.location)
         tag = self.locus_tag
         if tag == "no_locus_tag":
             tag = self.name
         locations = self.location.replace("-", "\t")
         return "{}\t{}\t{}\t{}\t{}\n".format(tag, self.name, locations,
-                                                 self.strand, self.annotations)
+                                             self.strand, self.annotations)
 
 
 class Subject:
@@ -84,14 +87,14 @@ class Subject:
                     "annotation", "perc_ident", "blastscore", "perc_coverage",
                     "evalue", "locus_tag"]:
             args.append(data[key])
-        return Subject(*args) # pylint: disable=no-value-for-parameter
+        return Subject(*args)  # pylint: disable=no-value-for-parameter
 
 
 class Query:
     def __init__(self, entry, index):
         parts = entry.split("|")
-        self.cluster_number = int(parts[1][1:]) # c1 -> 1
-        self.id = parts[4] # accession
+        self.cluster_number = int(parts[1][1:])  # c1 -> 1
+        self.id = parts[4]  # accession
         self.entry = entry
         self.subjects = OrderedDict()
         self.cluster_name_to_subjects = {}
@@ -106,9 +109,11 @@ class Query:
     def get_subjects_by_cluster(self, cluster_name):
         return self.cluster_name_to_subjects.get(cluster_name, [])
 
+
 class Score:
     __slots__ = ("hits", "core_gene_hits", "blast_score", "synteny_score",
                  "core_bonus", "scored_pairings")
+
     def __init__(self):
         self.hits = 0
         self.core_gene_hits = 0
@@ -129,9 +134,10 @@ class Score:
         """
         return (self.score, self.blast_score)
 
+
 class MibigEntry:
     def __init__(self, gene_id, gene_description, mibig_cluster,
-                mibig_product, percent_id, blast_score, coverage, evalue):
+                 mibig_product, percent_id, blast_score, coverage, evalue):
         self.gene_id = gene_id
         self.gene_description = gene_description
         self.mibig_id = mibig_cluster.split("_c")[0]

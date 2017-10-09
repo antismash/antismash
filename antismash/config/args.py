@@ -6,6 +6,7 @@ from collections import defaultdict
 import multiprocessing
 import os
 
+
 class AntiSmashParser(argparse.ArgumentParser):
     """ Custom argument parser for antiSMASH to override default help output
 
@@ -51,7 +52,7 @@ class AntiSmashParser(argparse.ArgumentParser):
             self._basic_help_groups.add(title)
         return super().add_argument_group(title, description, **kwargs)
 
-    def print_help(self, file=None, show_all=False) -> None: # arg added, so pylint: disable=arguments-differ
+    def print_help(self, file=None, show_all=False) -> None:  # arg added, so pylint: disable=arguments-differ
         """ Overrides parent print_help() to be able to pass through whether all
             help should be shown or not.
 
@@ -98,7 +99,7 @@ class AntiSmashParser(argparse.ArgumentParser):
             return ["\n".join(lines), "\n"]
 
         outfile = open(filename, 'w')
-        dests = set() # set of processed destinations
+        dests = set()  # set of processed destinations
         titles = defaultdict(lambda: defaultdict(list))
         for parent in self.parents:
             if getattr(parent, 'parser'):
@@ -192,10 +193,11 @@ Options
         return tuple(self._actions)
 
 
-class FullPathAction(argparse.Action): # pylint: disable=too-few-public-methods
+class FullPathAction(argparse.Action):  # pylint: disable=too-few-public-methods
     """ An argparse.Action to ensure provided paths are absolute. """
     def __call__(self, parser, namespace, values, option_string=None):
         setattr(namespace, self.dest, os.path.abspath(values))
+
 
 class ModuleArgs:
     """ The vehicle for adding module specific arguments in sane groupings.
@@ -365,13 +367,13 @@ def build_parser(from_config_file=False, modules=None) -> AntiSmashParser:
     else:
         parser = AntiSmashParser(parents=parents)
 
-    #positional arguments
+    # positional arguments
     parser.add_argument('sequences',
                         metavar='sequence',
                         nargs="*",
                         help="GenBank/EMBL/FASTA file(s) containing DNA.")
 
-    #optional non-grouped arguments
+    # optional non-grouped arguments
     parser.add_argument('-h', '--help',
                         dest='help',
                         action='store_true',
@@ -388,6 +390,7 @@ def build_parser(from_config_file=False, modules=None) -> AntiSmashParser:
                         default=multiprocessing.cpu_count(),
                         help="How many CPUs to use in parallel. (default: %(default)s)")
     return parser
+
 
 def basic_options():
     group = ModuleArgs("Basic analysis options", '', override_safeties=True, basic_help=True)
@@ -407,6 +410,7 @@ def basic_options():
                      help="Determine input type: amino acid sequence(s) or nucleotide sequence(s). (default: %(default)s)")
     return group
 
+
 def output_options():
     group = ModuleArgs("Output options", 'output', basic_help=True)
     group.add_option('--output-dir',
@@ -416,6 +420,7 @@ def output_options():
                      action=FullPathAction,
                      help="Directory to write results to.")
     return group
+
 
 def advanced_options():
     group = ModuleArgs("Advanced options", '', override_safeties=True)
@@ -452,6 +457,7 @@ def advanced_options():
                      type=str,
                      help="Root directory of the databases.")
     return group
+
 
 def debug_options():
     group = ModuleArgs("Debugging & Logging options", '', override_safeties=True)
@@ -497,6 +503,7 @@ def debug_options():
                      default=False,
                      help="Generate a profiling report, disables multiprocess python.")
     return group
+
 
 def specific_debugging(modules):
     if not modules:

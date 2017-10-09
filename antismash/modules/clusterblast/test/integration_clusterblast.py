@@ -17,6 +17,7 @@ import antismash.common.test.helpers as helpers
 from antismash.config import args, get_config, update_config, destroy_config
 from antismash.modules import clusterblast
 
+
 class Base(unittest.TestCase):
     def setUp(self):
         options = args.build_parser(modules=get_all_modules()).parse_args(self.get_args())
@@ -27,13 +28,13 @@ class Base(unittest.TestCase):
         assert clusterblast.check_options(self.options) == []
         assert clusterblast.is_enabled(self.options)
 
-        self.record = None # set it or build it with build_record(genbank)
+        self.record = None  # set it or build it with build_record(genbank)
 
     def get_args(self):
         """ override with the args you'll need to use in setUp(),
             format is as on the commandline, e.g. ["--tta", "--minimal"]
         """
-        self.fail() # not overridden
+        self.fail()  # not overridden
 
     def build_record(self, genbank):
         # construct a working record
@@ -55,7 +56,7 @@ class Base(unittest.TestCase):
             returns results instance for further testing as a tuple of
             (specific_results, global_results)
         """
-        self.fail() # wasn't overriden
+        self.fail()  # wasn't overriden
 
     def check_svgs(self, results, expected, svg_dir):
         # make sure no svgs created yet
@@ -74,7 +75,7 @@ class Base(unittest.TestCase):
             if expected > clusterblast.get_result_limit():
                 assert cluster.total_hits == expected
                 expected = clusterblast.get_result_limit()
-            assert len(cluster.ranking) == expected # will change if database does
+            assert len(cluster.ranking) == expected  # will change if database does
             self.check_svgs(global_results, expected, temp_dir)
         return results
 
@@ -87,13 +88,13 @@ class Base(unittest.TestCase):
             if expected > clusterblast.get_result_limit():
                 assert cluster.total_hits == expected
                 expected = clusterblast.get_result_limit()
-            assert len(cluster.ranking) == expected # will change if database does
+            assert len(cluster.ranking) == expected  # will change if database does
             self.check_svgs(global_results, expected, temp_dir)
         return results
 
-# TODO: test with a small sequence instead (grab a CDS that hit and take it's translation)
 
 class GeneralIntegrationTest(Base):
+    # TODO: test with a small sequence instead (grab a CDS that hit and take it's translation)
     def get_args(self):
         return ["--cb-general"]
 
@@ -113,6 +114,7 @@ class GeneralIntegrationTest(Base):
 
     def test_nisin(self):
         self.check_nisin(2452)
+
 
 class KnownIntegrationTest(Base):
     def get_args(self):
@@ -137,6 +139,7 @@ class KnownIntegrationTest(Base):
 
     def test_balhymicin(self):
         self.check_balhymicin(102)
+
 
 class SubIntegrationTest(Base):
     def get_args(self):

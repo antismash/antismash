@@ -9,6 +9,7 @@ from argparse import Namespace
 
 from antismash.modules.genefinding import check_options, is_enabled
 
+
 class TestCore(unittest.TestCase):
     def test_check_options(self):
         options = Namespace()

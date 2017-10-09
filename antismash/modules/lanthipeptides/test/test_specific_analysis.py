@@ -9,15 +9,14 @@ import unittest
 from Bio.SeqUtils.ProtParam import ProteinAnalysis
 from minimock import mock, restore, TraceTracker
 
-# pylint: disable=unused-import
-from antismash.common import subprocessing # used in mocks
-# pylint: enable=unused-import
+from antismash.common import subprocessing  # used in mocks # pylint: disable=unused-import
 from antismash.common.test.helpers import DummyCDS
 from antismash.modules.lanthipeptides.specific_analysis import (
     Lanthipeptide,
     predict_cleavage_site,
     result_vec_to_feature,
 )
+
 
 class TestLanthipeptide(unittest.TestCase):
     def test_init(self):
@@ -30,7 +29,7 @@ class TestLanthipeptide(unittest.TestCase):
         self.assertEqual('Class-I', lant.lantype)
         self.assertEqual('', lant.core)
         with self.assertRaises(ValueError):
-            dummy = lant.molecular_weight
+            lant.molecular_weight
 
     def test_repr(self):
         "Test Lanthipeptide representation"
@@ -104,8 +103,8 @@ class TestLanthipeptide(unittest.TestCase):
 
 
 class TestSpecificAnalysis(unittest.TestCase):
-    class FakeHit(object): # TODO: see antismash.common.test.helpers
-        class FakeHsp(object): # TODO: see antismash.common.test.helpers
+    class FakeHit(object):  # TODO: see antismash.common.test.helpers
+        class FakeHsp(object):  # TODO: see antismash.common.test.helpers
             def __init__(self, start, end, score):
                 self.query_start = start
                 self.query_end = end
@@ -172,7 +171,6 @@ class TestSpecificAnalysis(unittest.TestCase):
                     'predicted core seq: TAILTAILTAILTAILTAILTAILTAILTAILTAILCC',
                     'predicted class: Class I',
                     'score: 42.00',
-                    'RODEO score: 23',
-                   ]
+                    'RODEO score: 23']
         self.assertEqual(set(expected), set(core.qualifiers['note']))
         self.assertEqual(orig_feature.locus_tag, core.qualifiers['locus_tag'][0])

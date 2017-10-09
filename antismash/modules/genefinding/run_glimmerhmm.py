@@ -26,6 +26,7 @@ def write_search_fasta(seq_record):
         seqio.write([seq_record.to_biopython()], handle, 'fasta')
     return filename
 
+
 def run_external(fasta_filename):
     glimmerhmm = ['glimmerhmm', fasta_filename,
                   path.get_full_path(__file__, "data/train_crypto"), "-g"]
@@ -37,6 +38,7 @@ def run_external(fasta_filename):
         logging.error("GlimmerHMM gene prediction failed: no genes found.")
         raise RuntimeError("GlimmerHMM found no genes")
     return run_result.stdout
+
 
 def run_glimmerhmm(seq_record, options):
     with TemporaryDirectory(change=True):

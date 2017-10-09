@@ -15,6 +15,7 @@ import antismash.common.test.helpers as helpers
 from antismash.config import args, get_config, update_config, destroy_config
 from antismash.modules import smcogs
 
+
 class Base(unittest.TestCase):
     def setUp(self):
         options = args.build_parser(modules=[smcogs]).parse_args(self.get_args())
@@ -60,6 +61,7 @@ class TestClassification(Base):
             assert contents == expected
             json = results.to_json()
             assert smcogs.SMCOGResults.from_json(json).to_json() == json
+
 
 class TestTreeGeneration(Base):
     def get_args(self):

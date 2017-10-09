@@ -6,10 +6,10 @@
 
 import unittest
 from minimock import Mock, mock, restore, TraceTracker, assert_same_trace
-# pylint: disable=unused-import
-import antismash # used in mocking
-# pylint: enable=unused-import
+
+import antismash  # used in mocking # pylint: disable=unused-import
 from antismash.modules.lanthipeptides import check_prereqs, get_config
+
 
 class TestCheckPrereqs(unittest.TestCase):
     def setUp(self):

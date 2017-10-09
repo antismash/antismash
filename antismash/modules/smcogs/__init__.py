@@ -1,22 +1,19 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
-"""Full genome PFAM anotation"""
-
 import logging
-from multiprocessing import Process
 import os
-import time
 
 from antismash.common import deprecated, path, subprocessing, hmmscan_refinement
 from antismash.common.module_results import ModuleResults
 from antismash.config.args import ModuleArgs
 
-from .trees import smcog_tree_analysis, generate_trees
+from .trees import generate_trees
 from .classify import classify_genes, load_cog_annotations, write_smcogs_file
 
 NAME = "smcogs"
 SHORT_DESCRIPTION = NAME.capitalize()
+
 
 def check_options(options):
     errors = []
@@ -24,18 +21,22 @@ def check_options(options):
         logging.debug("SMCOG trees enabled, but not classifications, running both anyway")
     return errors
 
+
 def get_arguments():
     group = ModuleArgs("Basic analysis options", "smcogs", basic_help=True,
                        enabled_by_default=True)
     group.add_analysis_toggle('--smcogs-trees',
-                   dest='smcogs_trees',
-                   action='store_true',
-                   default=False,
-                   help="Generate phylogenetic trees of sec. met. cluster orthologous groups.")
+                              dest='smcogs_trees',
+                              action='store_true',
+                              default=False,
+                              help="Generate phylogenetic trees of sec. "
+                                   "met. cluster orthologous groups.")
     return group
+
 
 def is_enabled(options):
     return not options.minimal or options.smcogs_enabled or options.smcogs_trees
+
 
 def regenerate_previous_results(results, record, options):
     if not results or record.id != results["record_id"]:
@@ -50,6 +51,7 @@ def regenerate_previous_results(results, record, options):
             logging.debug("Tree image files missing and must be regenerated")
             return None
     return parsed
+
 
 def check_prereqs():
     "Check if all required applications are around"
@@ -73,21 +75,22 @@ def check_prereqs():
                 break
     return failure_messages
 
+
 class SMCOGResults(ModuleResults):
     schema_version = 1
+
     def __init__(self, record_id):
         super().__init__(record_id)
-        self.tree_images = {} # gene_id -> tree filename
-        self.best_hits = {} # gene_id -> best HMM result
-        self.relative_tree_path = None # path where tree images are saved
+        self.tree_images = {}  # gene_id -> tree filename
+        self.best_hits = {}  # gene_id -> best HMM result
+        self.relative_tree_path = None  # path where tree images are saved
 
     def to_json(self):
-        return {"schema_version" : self.schema_version,
-                "record_id" : self.record_id,
-                "tree_paths" : self.tree_images,
-                "best_hits" : {key : [getattr(val, attr) for attr in val.__slots__] for key, val in self.best_hits.items()},
-                "image_dir" : self.relative_tree_path
-               }
+        return {"schema_version": self.schema_version,
+                "record_id": self.record_id,
+                "tree_paths": self.tree_images,
+                "best_hits": {key: [getattr(val, attr) for attr in val.__slots__] for key, val in self.best_hits.items()},
+                "image_dir": self.relative_tree_path}
 
     @staticmethod
     def from_json(json):
@@ -103,17 +106,18 @@ class SMCOGResults(ModuleResults):
         return results
 
     def add_to_record(self, record):
+        """ Annotate smCOGS in CDS features """
         functions = load_cog_annotations()
         logging.debug("annotating genes with SMCOGS info: %d genes", len(self.best_hits))
-        #Annotate smCOGS in CDS features
         for feature in record.get_cds_features_within_clusters():
             gene_id = feature.get_name()
             result = self.best_hits.get(gene_id)
-            if result: # TODO convert to qualifier like SecMetQualifier
+            if result:  # TODO convert to qualifier like SecMetQualifier
                 feature.gene_function = functions[result.hit_id.split(':')[0]]
                 feature.notes.append("smCOG: %s (Score: %g; E-value: %g);" % (result.hit_id, result.bitscore, result.evalue))
             if gene_id in self.tree_images:
-                feature.notes.append("smCOG tree PNG image: smcogs/%s"  % self.tree_images[gene_id])
+                feature.notes.append("smCOG tree PNG image: smcogs/%s" % self.tree_images[gene_id])
+
 
 def run_on_record(record, results, options):
     relative_output_dir = os.path.join(options.output_dir, "smcogs")
@@ -138,7 +142,7 @@ def run_on_record(record, results, options):
         # create the smcogs output directory if required
         results.relative_tree_path = relative_output_dir
         original_dir = os.getcwd()
-        os.chdir(smcogs_dir)  #TODO make a context manager
+        os.chdir(smcogs_dir)  # TODO make a context manager
         nrpspks_genes = deprecated.get_pksnrps_cds_features(record)
         nrpspks_genes = []
         results.tree_images = generate_trees(smcogs_dir, hmm_results, genes, nrpspks_genes, options)

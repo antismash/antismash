@@ -6,12 +6,10 @@
 """
 import logging
 import os
-import shutil
-
-import antismash.common.deprecated as utils
 
 NAME = "svg"
 SHORT_DESCRIPTION = "SVG output"
+
 
 def write(options, results):
     svgdir = os.path.join(options.output_dir, "svg")

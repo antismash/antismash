@@ -6,6 +6,7 @@ from typing import Tuple
 import Bio.Data.IUPACData
 from Bio.SeqUtils.ProtParam import ProteinAnalysis
 
+
 def generate_unique_id(prefix, existing_ids, start=0, max_length=-1) -> Tuple[str, int]:
     """ Generate a identifier of the form prefix_num, e.g. seq_15.
 
@@ -36,6 +37,7 @@ def generate_unique_id(prefix, existing_ids, start=0, max_length=-1) -> Tuple[st
         raise RuntimeError("Could not generate unique id for %s after %d iterations" % (prefix, counter - start))
     return name, counter
 
+
 class RobustProteinAnalysis(ProteinAnalysis):
     """ A simple subclass of ProteinAnalysis that can deal with
         a protein sequence containing invalid characters.
@@ -44,6 +46,7 @@ class RobustProteinAnalysis(ProteinAnalysis):
         the average weight of an amino-acid (i.e. 110) for each invalid case.
     """
     PROTEIN_LETTERS = set(Bio.Data.IUPACData.protein_letters)
+
     def __init__(self, prot_sequence, monoisotopic=False, ignore_invalid=True) -> None:
         if not isinstance(ignore_invalid, bool):
             raise TypeError("ignore_invalid must be a boolean")

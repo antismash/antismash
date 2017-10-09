@@ -16,7 +16,7 @@ from Bio.SeqFeature import FeatureLocation
 from helperlibs.wrappers.io import TemporaryFile
 from sklearn.externals import joblib
 
-from antismash.modules.hmm_detection.signatures import HmmSignature #TODO shift into common
+from antismash.modules.hmm_detection.signatures import HmmSignature  # TODO shift into common
 from antismash.common import deprecated, path, subprocessing, secmet, module_results, serialiser
 from antismash.config import get_config as get_global_config
 
@@ -41,24 +41,24 @@ KNOWN_PRECURSOR_DOMAINS = set([
     'strep_PEQAXS',
 ])
 
-THRESH_DICT = {'Class-I' : -15,
-               'Class-II' : -7.3,
-               'Class-III' : 3.5,
-              }
+THRESH_DICT = {'Class-I': -15,
+               'Class-II': -7.3,
+               'Class-III': 3.5}
+
 
 class LanthiResults(module_results.ModuleResults):
     schema_version = 1
+
     def __init__(self, record_id, *args):
         super().__init__(record_id, *args)
         self.clusters_with_motifs = set()
         self.motifs = []
 
     def to_json(self):
-        return {"record_id" : self.record_id,
-                "schema_version" : LanthiResults.schema_version,
-                "clusters with motifs" : [cluster.get_cluster_number() for cluster in self.clusters_with_motifs],
-                "motifs" : [motif.to_json() for motif in self.motifs]
-               }
+        return {"record_id": self.record_id,
+                "schema_version": LanthiResults.schema_version,
+                "clusters with motifs": [cluster.get_cluster_number() for cluster in self.clusters_with_motifs],
+                "motifs": [motif.to_json() for motif in self.motifs]}
 
     @staticmethod
     def from_json(data, record):
@@ -76,11 +76,12 @@ class LanthiResults(module_results.ModuleResults):
         for motif in self.motifs:
             record.add_cds_motif(motif)
 
+
 class PrepeptideBase:
     def __init__(self, start, end, score, rodeo_score=None):
-        self.start = start # same as CDS
-        self.end = end # same as CDS
-        self.score = score # of cleavage site
+        self.start = start  # same as CDS
+        self.end = end  # same as CDS
+        self.score = score  # of cleavage site
         self.rodeo_score = rodeo_score
         self._leader = None
         self._core = ''
@@ -156,6 +157,7 @@ class PrepeptideBase:
         if self._alt_weights is None:
             raise ValueError("No core to calculate weight of")
         return self._alt_weights
+
 
 class Lanthipeptide(PrepeptideBase):
     '''
@@ -295,6 +297,7 @@ class Lanthipeptide(PrepeptideBase):
         if self._core:
             self._calculate_mw()
 
+
 class CleavageSiteHit(object):
     def __init__(self, start, end, score, lantype):
         self.start = start
@@ -305,13 +308,13 @@ class CleavageSiteHit(object):
 
 def get_detected_domains(cluster):
     found_domains = []
-    #Gather biosynthetic domains
+    # Gather biosynthetic domains
     for feature in cluster.cds_children:
         if not feature.sec_met:
             continue
         found_domains.extend(feature.sec_met.domain_ids)
 
-    #Gather non-biosynthetic domains
+    # Gather non-biosynthetic domains
     cluster_features = cluster.cds_children
     cluster_fasta = deprecated.get_specific_multifasta(cluster_features)
     non_biosynthetic_hmms_by_id = run_non_biosynthetic_phmms(cluster_fasta)
@@ -325,6 +328,7 @@ def get_detected_domains(cluster):
 
     return found_domains
 
+
 def run_non_biosynthetic_phmms(fasta):
     """Try to identify cleavage site using pHMM"""
     with open(path.get_full_path(__file__, "data", "non_biosyn_hmms", "hmmdetails.txt"), "r") as handle:
@@ -335,15 +339,17 @@ def run_non_biosynthetic_phmms(fasta):
         sig.path = path.get_full_path(__file__, "data", "non_biosyn_hmms", sig.path.rpartition(os.sep)[2])
         runresults = subprocessing.run_hmmsearch(sig.path, fasta)
         for runresult in runresults:
-            #Store result if it is above cut-off
+            # Store result if it is above cut-off
             for hsp in runresult.hsps:
                 if hsp.bitscore > sig.cutoff:
                     non_biosynthetic_hmms_by_id[hsp.hit_id].append(hsp)
     return non_biosynthetic_hmms_by_id
 
+
 def cds_has_domain(cds, domain):
     """Function to test whether a cds has a certain domain"""
     return cds.sec_met and domain in cds.sec_met.domain_ids
+
 
 def predict_cleavage_site(query_hmmfile, target_sequence, threshold=-100):
     '''
@@ -386,10 +392,12 @@ def predict_class_from_gene_cluster(cluster):
 
     return None
 
+
 def run_cleavage_site_phmm(fasta, hmmer_profile, threshold):
     """Try to identify cleavage site using pHMM"""
     profile = path.get_full_path(__file__, hmmer_profile)
     return predict_cleavage_site(profile, fasta, threshold)
+
 
 def identify_lanthi_motifs(leader, core):
     """Run FIMO to identify lanthipeptide-specific motifs"""
@@ -403,13 +411,14 @@ def identify_lanthi_motifs(leader, core):
     fimo_scores = {int(line.split("\t")[0]): float(line.split("\t")[5]) for line in fimo_output.split("\n") if "\t" in line and line.partition("\t")[0].isdigit()}
     return fimo_motifs, fimo_scores
 
+
 def run_cleavage_site_regex(fasta):
     """Try to identify cleavage site using regular expressions"""
-    #Regular expressions; try 1 first, then 2, etc.
+    # Regular expressions; try 1 first, then 2, etc.
     rex1 = re.compile('F?LD')
     rex2 = re.compile('[LF]?LQ')
 
-    #For regular expression, check if there is a match that is <10 AA from the end
+    # For regular expression, check if there is a match that is <10 AA from the end
     if re.search(rex1, fasta) and len(re.split(rex1, fasta)[-1]) > 10:
         start, end = [m.span() for m in rex1.finditer(fasta)][-1]
         end += 16
@@ -419,6 +428,7 @@ def run_cleavage_site_regex(fasta):
     else:
         return [None, None, None]
     return start, end, 0
+
 
 def run_rodeo_svm(csv_columns):
     """Run RODEO SVM"""
@@ -433,11 +443,12 @@ def run_rodeo_svm(csv_columns):
         return 10
     return 0
 
+
 def run_rodeo(seq_record, query, leader, core, domains):
     """Run RODEO heuristics + SVM to assess precursor peptide candidate"""
     rodeo_score = 0
 
-    #Incorporate heuristic scores
+    # Incorporate heuristic scores
     heuristic_score, gathered_tabs_for_csv = acquire_rodeo_heuristics(seq_record, query, leader, core, domains)
     rodeo_score += heuristic_score
 
@@ -448,14 +459,15 @@ def run_rodeo(seq_record, query, leader, core, domains):
         # Find motifs
         fimo_motifs, fimo_scores = identify_lanthi_motifs(leader, core)
 
-    #Incorporate SVM scores
+    # Incorporate SVM scores
     csv_columns = generate_rodeo_svm_csv(leader, core, gathered_tabs_for_csv, fimo_motifs, fimo_scores)
     svm_score = run_rodeo_svm(csv_columns)
     rodeo_score += svm_score
     return rodeo_score >= 14, rodeo_score
 
+
 def lanscout(seq):
-    #define lanthionine ring with a c-terminal Cys
+    """ define lanthionine ring with a c-terminal Cys """
     lanlower = 2
     lanupper = 6
     lan = '(?=([T|S].{%d,%d}C))' % (lanlower, lanupper)
@@ -483,38 +495,39 @@ def lanscout(seq):
         profile[i] = str(profile[i]).strip('[]')
     return numringlist, profile
 
+
 def acquire_rodeo_heuristics(seq_record, query, leader, core, domains):
     """Calculate heuristic scores for RODEO"""
     tabs = []
     score = 0
     precursor = leader + core
-    #Leader peptide contains FxLD motif
-    if re.search('F[ARNDBCEQZGHILKMFPSTWYV]LD', leader) != None:
+    # Leader peptide contains FxLD motif
+    if re.search('F[ARNDBCEQZGHILKMFPSTWYV]LD', leader):
         score += 2
         tabs.append(1)
     else:
         tabs.append(0)
-    #Core residue position of Sx4C motif
-    if re.search('S[ARNDBCEQZGHILKMFPSTWYV]{4}C', core) != None:
+    # Core residue position of Sx4C motif
+    if re.search('S[ARNDBCEQZGHILKMFPSTWYV]{4}C', core):
         tabs.append(re.search('S[ARNDBCEQZGHILKMFPSTWYV]{4}C', core).span()[0])
     else:
         tabs.append(0)
-    #Core residue position of Tx4C motif
-    if re.search('T[ARNDBCEQZGHILKMFPSTWYV]{4}C', core) != None:
+    # Core residue position of Tx4C motif
+    if re.search('T[ARNDBCEQZGHILKMFPSTWYV]{4}C', core):
         tabs.append(re.search('T[ARNDBCEQZGHILKMFPSTWYV]{4}C', core).span()[0])
     else:
         tabs.append(0)
-    #Core residue position of Sx5C motif
-    if re.search('S[ARNDBCEQZGHILKMFPSTWYV]{5}C', core) != None:
+    # Core residue position of Sx5C motif
+    if re.search('S[ARNDBCEQZGHILKMFPSTWYV]{5}C', core):
         tabs.append(re.search('S[ARNDBCEQZGHILKMFPSTWYV]{5}C', core).span()[0])
     else:
         tabs.append(0)
-    #Core residue position of Tx5C motif
-    if re.search('T[ARNDBCEQZGHILKMFPSTWYV]{5}C', core) != None:
+    # Core residue position of Tx5C motif
+    if re.search('T[ARNDBCEQZGHILKMFPSTWYV]{5}C', core):
         tabs.append(re.search('T[ARNDBCEQZGHILKMFPSTWYV]{5}C', core).span()[0])
     else:
         tabs.append(0)
-    #Precursor is within 500 nt?
+    # Precursor is within 500 nt?
     hmmer_profiles = ['LANC_like', 'Lant_dehyd_C']
     distance = deprecated.distance_to_pfam(seq_record, query, hmmer_profiles)
     if distance < 500:
@@ -522,85 +535,86 @@ def acquire_rodeo_heuristics(seq_record, query, leader, core, domains):
         tabs.append(1)
     else:
         tabs.append(0)
-    #Cluster contains LanB dehydratase domain (PF04738)
+    # Cluster contains LanB dehydratase domain (PF04738)
     if "Lant_dehyd_C" in domains:
         score += 2
         tabs.append(1)
     else:
         tabs.append(0)
-    #Cluster contains Lan C cyclase domain (PF05147)
+    # Cluster contains Lan C cyclase domain (PF05147)
     if "LANC_like" in domains:
         score += 2
         tabs.append(1)
     else:
         tabs.append(0)
-    #Cluster LACKS LanB dehydratase domain (PF04738)
+    # Cluster LACKS LanB dehydratase domain (PF04738)
     if "Lant_dehyd_C" not in domains:
         score -= 2
         tabs.append(1)
     else:
         tabs.append(0)
-    #Cluster LACKS Lan C cyclase domain (PF05147)
+    # Cluster LACKS Lan C cyclase domain (PF05147)
     if "LANC_like" not in domains:
         score -= 2
         tabs.append(1)
     else:
         tabs.append(0)
-    #Cluster contains LanB dehydratase elimination C-terminal domain (PF14028)
+    # Cluster contains LanB dehydratase elimination C-terminal domain (PF14028)
     if "PF14028" in domains:
         score += 2
         tabs.append(1)
     else:
         tabs.append(0)
-    #Cluster contains S8 peptidase subtilase (PF00082)
+    # Cluster contains S8 peptidase subtilase (PF00082)
     if "Peptidase_S8" in domains:
         score += 1
         tabs.append(1)
     else:
         tabs.append(0)
-    #Cluster contains C39 peptidase (PF03412)
+    # Cluster contains C39 peptidase (PF03412)
     if "Peptidase_C39" in domains:
         score += 1
         tabs.append(1)
     else:
         tabs.append(0)
-    #Cluster contains ABC transporter (PF00005)
+    # Cluster contains ABC transporter (PF00005)
     if "PF00005" in domains:
         score += 1
         tabs.append(1)
     else:
         tabs.append(0)
-    #Cluster contains YcaO-like protein (PF02624)
+    # Cluster contains YcaO-like protein (PF02624)
     if "YcaO" in domains:
         score -= 4
         tabs.append(1)
     else:
         tabs.append(0)
-    #Cluster contains ThiF-like protein (PF00899)
+    # Cluster contains ThiF-like protein (PF00899)
     if "ThiF" in domains:
         score -= 4
         tabs.append(1)
     else:
         tabs.append(0)
-    #Cluster contains PF02052 (Gallidermin)
+    # Cluster contains PF02052 (Gallidermin)
     if "Gallidermin" in domains or "mature_a" in domains or "mature_b" in domains or "matura_ab" in domains:
         tabs.append(1)
     else:
         tabs.append(0)
-    #Cluster contains PF8130
+    # Cluster contains PF8130
     if "Antimicr18" in domains:
         tabs.append(1)
     else:
         tabs.append(0)
-    #Precursor peptide mass < 4000 Da
+    # Precursor peptide mass < 4000 Da
     precursor_analysis = deprecated.RobustProteinAnalysis(precursor,
-                                         monoisotopic=True, ignore_invalid=True)
+                                                          monoisotopic=True,
+                                                          ignore_invalid=True)
     if precursor_analysis.molecular_weight() < 4000:
         score -= 3
         tabs.append(1)
     else:
         tabs.append(0)
-    #Core peptide mass < 2000 Da
+    # Core peptide mass < 2000 Da
     core_analysis = deprecated.RobustProteinAnalysis(core, monoisotopic=True,
                                                      ignore_invalid=True)
     if core_analysis.molecular_weight() < 2000:
@@ -610,43 +624,43 @@ def acquire_rodeo_heuristics(seq_record, query, leader, core, domains):
         tabs.append(0)
     # Precursor peptide pHMMs below:
     precursor_hit = False
-    #Precursor peptide hits gallidermin superfamily (cl03420) HMM
+    # Precursor peptide hits gallidermin superfamily (cl03420) HMM
     if cds_has_domain(query, "TIGR03731") or cds_has_domain(query, "Gallidermin"):
         precursor_hit = True
         tabs.append(1)
     else:
         tabs.append(0)
-    #Precursor peptide hits lantibio_gallid (TIGR03731) HMM
+    # Precursor peptide hits lantibio_gallid (TIGR03731) HMM
     if cds_has_domain(query, "TIGR03731"):
         precursor_hit = True
         tabs.append(1)
     else:
         tabs.append(0)
-    #Precursor peptide hits lanti_SCO0268 superfamily (cl22812) HMM
+    # Precursor peptide hits lanti_SCO0268 superfamily (cl22812) HMM
     if cds_has_domain(query, "TIGR04451") or cds_has_domain(query, "strep_PEQAXS"):
         precursor_hit = True
         tabs.append(1)
     else:
         tabs.append(0)
-    #Precursor peptide hits LD_lanti_pre (TIGR04363) HMM
+    # Precursor peptide hits LD_lanti_pre (TIGR04363) HMM
     if cds_has_domain(query, "LD_lanti_pre"):
         precursor_hit = True
         tabs.append(1)
     else:
         tabs.append(0)
-    #Precursor peptide hits Antimicrobial18 (cl06940) HMM
+    # Precursor peptide hits Antimicrobial18 (cl06940) HMM
     if cds_has_domain(query, "Antimicr18"):
         precursor_hit = True
         tabs.append(1)
     else:
         tabs.append(0)
-    #Precursor peptide hits gallidermin (PF02052) HMM
+    # Precursor peptide hits gallidermin (PF02052) HMM
     if cds_has_domain(query, "Gallidermin") or cds_has_domain(query, "mature_a") or cds_has_domain(query, "mature_ab") or cds_has_domain(query, "mature_b"):
         precursor_hit = True
         tabs.append(1)
     else:
         tabs.append(0)
-    #; precursor peptide hits Antimicrobial18 (PF08130) HMM
+    # precursor peptide hits Antimicrobial18 (PF08130) HMM
     if cds_has_domain(query, "Antimicr18"):
         precursor_hit = True
         tabs.append(1)
@@ -668,61 +682,61 @@ def acquire_rodeo_heuristics(seq_record, query, leader, core, domains):
     core_analysis = deprecated.RobustProteinAnalysis(core, monoisotopic=True, ignore_invalid=False)
     tabs.append(float(core_analysis.molecular_weight()))
 
-    #Length of leader peptide
+    # Length of leader peptide
     tabs.append(len(leader))
-    #Length of core peptide
+    # Length of core peptide
     tabs.append(len(core))
-    #Length of precursor peptide
+    # Length of precursor peptide
     tabs.append(len(precursor))
-    #Ratio of length of leader peptide / length of core peptide
+    # Ratio of length of leader peptide / length of core peptide
     tabs.append(float(len(leader) / float(len(core))))
-    #Core peptide ≥ 35 residues
+    # Core peptide ≥ 35 residues
     if len(core) >= 35:
         score += 1
         tabs.append(1)
     else:
         tabs.append(0)
-    #Core peptide contains CC motif (not in last 3 residues)
-    if re.search('CC', core[:-3]) != None:
+    # Core peptide contains CC motif (not in last 3 residues)
+    if re.search('CC', core[:-3]):
         score -= 3
         tabs.append(1)
     else:
         tabs.append(0)
-    #Leader peptide has > 4 negatively charge motifs
+    # Leader peptide has > 4 negatively charge motifs
     if sum([leader.count(aa) for aa in "DE"]) > 4:
         score += 1
         tabs.append(1)
     else:
         tabs.append(0)
-    #Leader peptide has net negative charge
+    # Leader peptide has net negative charge
     charge_dict = {"E": -1, "D": -1, "K": 1, "R": 1}
     if sum([charge_dict[aa] for aa in leader if aa in charge_dict]) < 0:
         score += 1
         tabs.append(1)
     else:
         tabs.append(0)
-    #Leader residue position of FxLD motif
-    if re.search('F[ARNDBCEQZGHILKMFPSTWYV]LD', leader) != None:
+    # Leader residue position of FxLD motif
+    if re.search('F[ARNDBCEQZGHILKMFPSTWYV]LD', leader):
         tabs.append(re.search('F[ARNDBCEQZGHILKMFPSTWYV]LD', leader).span()[0])
     else:
         tabs.append(0)
-    #Core peptide contains C-terminal CC (within last 3 residues)
-    if re.search('CC', core[-3:]) != None:
+    # Core peptide contains C-terminal CC (within last 3 residues)
+    if re.search('CC', core[-3:]):
         score += 2
         tabs.append(1)
     else:
         tabs.append(0)
-    #Core peptide contains DGCGxTC / SFNS / SxxLC / CTxGC / TPGC / SFNSxC motifs
-    motifs = (('DGCG[ARNDBCEQZGHILKMFPSTWYV]TC', 2), ('SFNS', 2), \
-       ('S[ARNDBCEQZGHILKMFPSTWYV]{2}LC', 2), ('CT[ARNDBCEQZGHILKMFPSTWYV]{1}GC', 1), \
-       ('TPGC', 1), ('SFNS[ARNDBCEQZGHILKMFPSTWYV]C', 1))
+    # Core peptide contains DGCGxTC / SFNS / SxxLC / CTxGC / TPGC / SFNSxC motifs
+    motifs = (('DGCG[ARNDBCEQZGHILKMFPSTWYV]TC', 2), ('SFNS', 2),
+              ('S[ARNDBCEQZGHILKMFPSTWYV]{2}LC', 2), ('CT[ARNDBCEQZGHILKMFPSTWYV]{1}GC', 1),
+              ('TPGC', 1), ('SFNS[ARNDBCEQZGHILKMFPSTWYV]C', 1))
     for motif, motif_score in motifs:
-        if re.search(motif, core) != None:
+        if re.search(motif, core):
             score += motif_score
             tabs.append(1)
         else:
             tabs.append(0)
-    #Core peptide contains < 2 or < 3 Cys
+    # Core peptide contains < 2 or < 3 Cys
     if core.count("C") < 2:
         score -= 6
         tabs += [1, 1]
@@ -731,27 +745,27 @@ def acquire_rodeo_heuristics(seq_record, query, leader, core, domains):
         tabs += [1, 0]
     else:
         tabs += [0, 0]
-    #No Cys/Ser/Thr in core peptide
+    # No Cys/Ser/Thr in core peptide
     for aa, penalty in [("C", -10), ("S", -4), ("T", -4)]:
         if aa not in core:
             score += penalty
             tabs.append(1)
         else:
             tabs.append(0)
-    #Lanthionine regex maximum ring number > 4
+    # Lanthionine regex maximum ring number > 4
     numringlist, profile = lanscout([[core]])
     if numringlist[0] > 4:
         score += 2
         tabs.append(1)
     else:
         tabs.append(0)
-    #Lanthionine regex maximum ring number < 3
+    # Lanthionine regex maximum ring number < 3
     if numringlist[0] < 3:
         score -= 2
         tabs.append(1)
     else:
         tabs.append(0)
-    #Lanthionine regex 4-membered ring/5-membered ring/6-membered ring/7-membered ring/8-membered ring
+    # Lanthionine regex 4-membered ring/5-membered ring/6-membered ring/7-membered ring/8-membered ring
     scores = [2, 2, 2, 2, 1]
     scorepos = 0
     for ringsize in profile[0].split(", ")[:2]:
@@ -770,81 +784,82 @@ def acquire_rodeo_heuristics(seq_record, query, leader, core, domains):
         scorepos += 1
     return score, tabs
 
+
 def generate_rodeo_svm_csv(leader, core, previously_gathered_tabs, fimo_motifs, fimo_scores):
     """Generates all the items for one candidate precursor peptide"""
     precursor = leader + core
     columns = []
-    #Precursor Index
+    # Precursor Index
     columns.append(1)
-    #classification
+    # classification
     columns.append(0)
     columns += previously_gathered_tabs
-    #Lanthionine regex maximum ring number
+    # Lanthionine regex maximum ring number
     numringlist, profile = lanscout([[core]])
     columns.append(numringlist[0])
-    #Lanthionine regex 4-membered ring count
+    # Lanthionine regex 4-membered ring count
     columns.append(int(profile[0].split(", ")[0]))
-    #Lanthionine regex 5-membered ring count
+    # Lanthionine regex 5-membered ring count
     columns.append(int(profile[0].split(", ")[1]))
-    #Lanthionine regex 6-membered ring count
+    # Lanthionine regex 6-membered ring count
     columns.append(int(profile[0].split(", ")[2]))
-    #Lanthionine regex 7-membered ring count
+    # Lanthionine regex 7-membered ring count
     columns.append(int(profile[0].split(", ")[3]))
-    #Lanthionine regex 8-membered ring count
+    # Lanthionine regex 8-membered ring count
     columns.append(int(profile[0].split(", ")[4]))
-    #Ratio of number of Cys in core peptide to sum of Ser/Thr in core peptide
+    # Ratio of number of Cys in core peptide to sum of Ser/Thr in core peptide
     if "S" in core or "T" in core:
         columns.append(core.count("C") / float(core.count("S") + core.count("T")))
     else:
         columns.append(1.0)
-    #Ratio of number of Cys/Ser/Thr to length of core peptide
+    # Ratio of number of Cys/Ser/Thr to length of core peptide
     columns.append(float(core.count("S") + core.count("T") + core.count("C")) / len(core))
-    #log10 p-value MEME motif 1
+    # log10 p-value MEME motif 1
     if 1 in fimo_motifs:
         columns.append(fimo_scores[1])
     else:
         columns.append(0)
-    #log10 p-value MEME motif 2
+    # log10 p-value MEME motif 2
     if 2 in fimo_motifs:
         columns.append(fimo_scores[2])
     else:
         columns.append(0)
-    #log10 p-value MEME motif 3
+    # log10 p-value MEME motif 3
     if 3 in fimo_motifs:
         columns.append(fimo_scores[3])
     else:
         columns.append(0)
-    #log10 p-value MEME motif 4
+    # log10 p-value MEME motif 4
     if 4 in fimo_motifs:
         columns.append(fimo_scores[4])
     else:
         columns.append(0)
-    #log10 p-value MEME motif 5
+    # log10 p-value MEME motif 5
     if 5 in fimo_motifs:
         columns.append(fimo_scores[5])
     else:
         columns.append(0)
-    #Number in leader of each amino acid
+    # Number in leader of each amino acid
     columns += [leader.count(aa) for aa in "ARDNCQEGHILKMFPSTWYV"]
-    #Number in leader of each amino acid type (aromatic, aliphatic, hydroxyl, basic, acidic)
+    # Number in leader of each amino acid type (aromatic, aliphatic, hydroxyl, basic, acidic)
     columns.append(sum([leader.count(aa) for aa in "FWY"]))
     columns.append(sum([leader.count(aa) for aa in "DE"]))
     columns.append(sum([leader.count(aa) for aa in "RK"]))
     columns.append(sum([leader.count(aa) for aa in "RKDE"]))
     columns.append(sum([leader.count(aa) for aa in "GAVLMI"]))
     columns.append(sum([leader.count(aa) for aa in "ST"]))
-    #Number in core of each amino acid
+    # Number in core of each amino acid
     columns += [core.count(aa) for aa in "ARDNCQEGHILKMFPSTWYV"]
-    #Number in core of each amino acid type (aromatic, aliphatic, hydroxyl, basic, acidic)
+    # Number in core of each amino acid type (aromatic, aliphatic, hydroxyl, basic, acidic)
     columns.append(sum([core.count(aa) for aa in "FWY"]))
     columns.append(sum([core.count(aa) for aa in "DE"]))
     columns.append(sum([core.count(aa) for aa in "RK"]))
     columns.append(sum([core.count(aa) for aa in "RKDE"]))
     columns.append(sum([core.count(aa) for aa in "GAVLMI"]))
     columns.append(sum([core.count(aa) for aa in "ST"]))
-    #Number in entire precursor of each amino acid
+    # Number in entire precursor of each amino acid
     columns += [precursor.count(aa) for aa in "ARDNCQEGHILKMFPSTWYV"]
-    #Number in entire precursor of each amino acid type (aromatic, aliphatic, hydroxyl, basic, acidic)
+    # Number in entire precursor of each amino acid type (aromatic, aliphatic, hydroxyl, basic, acidic)
     columns.append(sum([precursor.count(aa) for aa in "FWY"]))
     columns.append(sum([precursor.count(aa) for aa in "DE"]))
     columns.append(sum([precursor.count(aa) for aa in "RK"]))
@@ -853,19 +868,20 @@ def generate_rodeo_svm_csv(leader, core, previously_gathered_tabs, fimo_motifs, 
     columns.append(sum([precursor.count(aa) for aa in "ST"]))
     return columns
 
+
 def determine_precursor_peptide_candidate(seq_record, query, query_sequence, domains, hmmer_profile):
     """ Identify precursor peptide candidates and split into two,
         only valid for Class-I lanthipeptides
     """
 
-    #Skip sequences with >200 AA
+    # Skip sequences with >200 AA
     if len(query_sequence) > 200 or len(query_sequence) < 20:
         return
 
-    #Create FASTA sequence for feature under study
+    # Create FASTA sequence for feature under study
     lan_a_fasta = ">%s\n%s" % (query.get_name(), query_sequence)
 
-    #Run sequence against pHMM; if positive, parse into a vector containing START, END and SCORE
+    # Run sequence against pHMM; if positive, parse into a vector containing START, END and SCORE
     cleavage_result = run_cleavage_site_phmm(lan_a_fasta, hmmer_profile, THRESH_DICT["Class-I"])
 
     if cleavage_result is not None and cleavage_result.end <= len(query_sequence) - 8:
@@ -880,22 +896,23 @@ def determine_precursor_peptide_candidate(seq_record, query, query_sequence, dom
             start, end, score = 0, int(len(query_sequence)*0.50), 0
         lanthi_type = "lanthipeptide"
 
-    #Run RODEO to assess whether candidate precursor peptide is judged real
+    # Run RODEO to assess whether candidate precursor peptide is judged real
     rodeo_result = run_rodeo(seq_record, query, query_sequence[:end], query_sequence[end:], domains)
     if rodeo_result[0] is False:
         return
     else:
         lanthipeptide = Lanthipeptide(start, end, score, rodeo_result[1], lanthi_type)
 
-    #Determine the leader and core peptide
+    # Determine the leader and core peptide
     lanthipeptide.leader = query_sequence[:end]
     lanthipeptide.core = query_sequence[end:]
 
     return lanthipeptide
 
+
 def run_lanthipred(seq_record, query, lant_class, domains):
     hmmer_profiles = {'Class-I': 'data/class1.hmm',
-                      'Class-II':'data/class2.hmm',
+                      'Class-II': 'data/class2.hmm',
                       'Class-III': 'data/class3.hmm', }
     query_sequence = query.get_aa_sequence(to_stop=True)
     lan_a_fasta = ">%s\n%s" % (query.get_name(), query_sequence)
@@ -905,13 +922,13 @@ def run_lanthipred(seq_record, query, lant_class, domains):
         cleavage_result = predict_cleavage_site(profile, lan_a_fasta)
 
         if cleavage_result is None:
-#            logging.debug('%s: No cleavage site predicted.', query.get_name())
+            #logging.debug('%s: No cleavage site predicted.', query.get_name())
             return None
 
         if THRESH_DICT[lant_class] > cleavage_result.score:
-#            logging.debug('%r: Score %0.2f below threshold %0.2f for class %r',
-#                          query.get_name(), cleavage_result.score,
-#                           THRESH_DICT[lant_class], lant_class)
+            #logging.debug('%r: Score %0.2f below threshold %0.2f for class %r',
+            #              query.get_name(), cleavage_result.score,
+            #              THRESH_DICT[lant_class], lant_class)
             return None
 
         result = Lanthipeptide(cleavage_result.start, cleavage_result.end, cleavage_result.score, "N/A", lant_class)
@@ -923,11 +940,10 @@ def run_lanthipred(seq_record, query, lant_class, domains):
         if result is None:
             return None
 
-
-    #extract now (that class is known and thus the END component) the core peptide
+    # extract now (that class is known and thus the END component) the core peptide
     if result.core.find('C') < 0:
-#        logging.debug('%r: No Cysteine residues found in core, false positive' %
-#                      utils.get_gene_id(query))
+        #logging.debug('%r: No Cysteine residues found in core, false positive',
+        #              utils.get_gene_id(query))
         return None
 
     if not query.gene_function:
@@ -954,6 +970,7 @@ def find_lan_a_features(cluster):
 
 def has_only_domain(feature, domain):
     return feature.sec_met and feature.sec_met.domain_ids == [domain]
+
 
 def find_flavoprotein(cluster):
     "Look for an epiD-like flavoprotein responsible for aminovinylcystein"
@@ -1005,14 +1022,14 @@ class LanthipeptideMotif(secmet.Prepeptide):
         self.core_seq = core_seq
         self.monoisotopic_mass = monoisotopic_mass
         self.molecular_weight = molecular_weight
-        self.alternative_weights = alternative_weights # list of floats
+        self.alternative_weights = alternative_weights  # list of floats
         self.lan_bridges = lan_bridges
         self.score = score
         self.rodeo_score = rodeo_score
-        self.aminovinyl_group = aminovinyl # bool
-        self.chlorinated = chlorinated # bool
-        self.oxygenated = oxygenated # bool
-        self.lactonated = lactonated # bool
+        self.aminovinyl_group = aminovinyl  # bool
+        self.chlorinated = chlorinated  # bool
+        self.oxygenated = oxygenated  # bool
+        self.lactonated = lactonated  # bool
         self._notes_appended = False
 
     def get_modifications(self):
@@ -1029,7 +1046,7 @@ class LanthipeptideMotif(secmet.Prepeptide):
 
     def to_biopython(self):
         logging.critical("%s already converted: %s, leader type %s", self.location, self._notes_appended, type(self._leader))
-        if self._notes_appended: # TODO: could be more clever
+        if self._notes_appended:  # TODO: could be more clever
             return super().to_biopython()
         self._notes_appended = True
         self.notes.append('monoisotopic mass: %0.1f' % self.monoisotopic_mass)
@@ -1052,10 +1069,10 @@ class LanthipeptideMotif(secmet.Prepeptide):
         return super().to_biopython()
 
     def to_json(self):
-        json = dict(vars(self)) # TODO: use a better system that doesn't break encapsulation
+        json = dict(vars(self))  # TODO: use a better system that doesn't break encapsulation
         json["core"] = serialiser.location_to_json(self.location)
         json["_leader"] = serialiser.location_to_json(self._leader)
-        json["locus_tag"] = self.locus_tag # not in vars() due to __slots__
+        json["locus_tag"] = self.locus_tag  # not in vars() due to __slots__
         try:
             assert json["locus_tag"]
         except KeyError:
@@ -1078,6 +1095,7 @@ class LanthipeptideMotif(secmet.Prepeptide):
         return LanthipeptideMotif(*args)
 # pylint: enable=no-value-for-parameter
 
+
 def result_vec_to_feature(orig_feature, res_vec):
     start = orig_feature.location.start
     end = orig_feature.location.start + (res_vec.end * 3)
@@ -1088,11 +1106,11 @@ def result_vec_to_feature(orig_feature, res_vec):
     end = orig_feature.location.end
     core_loc = FeatureLocation(start, end, strand=strand)
     feature = LanthipeptideMotif(core_loc, res_vec.core, leader_loc, res_vec.leader,
-                                orig_feature.get_name(), res_vec.monoisotopic_mass,
-                                res_vec.molecular_weight, res_vec.alternative_weights,
-                                res_vec.number_of_lan_bridges, res_vec.lantype,
-                                res_vec.score, res_vec.rodeo_score, res_vec.aminovinyl_group,
-                                res_vec.chlorinated, res_vec.oxygenated, res_vec.lactonated)
+                                 orig_feature.get_name(), res_vec.monoisotopic_mass,
+                                 res_vec.molecular_weight, res_vec.alternative_weights,
+                                 res_vec.number_of_lan_bridges, res_vec.lantype,
+                                 res_vec.score, res_vec.rodeo_score, res_vec.aminovinyl_group,
+                                 res_vec.chlorinated, res_vec.oxygenated, res_vec.lactonated)
     return feature
 
 
@@ -1104,7 +1122,7 @@ def specific_analysis(seq_record):
 
         lan_as = find_lan_a_features(cluster)
 
-        #Find candidate ORFs that are not yet annotated
+        # Find candidate ORFs that are not yet annotated
         for orf in deprecated.find_all_orfs(seq_record, cluster):
             aa_seq = orf.get_aa_sequence()
             if len(aa_seq) < 80:
@@ -1132,7 +1150,7 @@ def specific_analysis(seq_record):
             results.clusters_with_motifs.add(cluster)
             lan_a.gene_function = secmet.GeneFunction.ADDITIONAL
             if "allorf" in lan_a.get_name():
-                seq_record.add_cds_feature(lan_a) #TODO shift to add_to_record?
+                seq_record.add_cds_feature(lan_a)  # TODO shift to add_to_record?
                 if lan_a.location.start < cluster.location.start:
                     logging.critical("Cluster location being altered in lanthipeptides")
                     cluster.location = FeatureLocation(lan_a.location.start, cluster.location.end)

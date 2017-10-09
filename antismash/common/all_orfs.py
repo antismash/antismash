@@ -6,6 +6,7 @@ from Bio.SeqFeature import FeatureLocation, BeforePosition, AfterPosition
 
 from antismash.common.secmet import CDSFeature
 
+
 def scan_orfs(seq, direction, offset=0):
     """ Scan for open reading frames on a given sequence
         skips all ORFs with a size less than 60 bases
@@ -32,7 +33,7 @@ def scan_orfs(seq, direction, offset=0):
                 new_orf = FeatureLocation(BeforePosition(offset), offset + i + 2, direction)
             else:
                 new_orf = FeatureLocation(seq_len + offset - (i + 2),
-                              AfterPosition(seq_len + offset), direction)
+                                          AfterPosition(seq_len + offset), direction)
             matches.append(new_orf)
         if seq[i:i+3] not in start_codons:
             continue
@@ -42,7 +43,7 @@ def scan_orfs(seq, direction, offset=0):
                 last_stop[j % 3] = j
                 # Skip Orfs that are shorter than 20 AA / 60 bases
                 if j - i <= 60:
-                    break # since no ORFs will be bigger before the stop
+                    break  # since no ORFs will be bigger before the stop
                 start = i
                 end = j + 2
                 if direction == 1:
@@ -71,24 +72,26 @@ def scan_orfs(seq, direction, offset=0):
         break
     return matches
 
+
 def sort_orfs(orfs):
     startpositions = [min([orf.start, orf.end]) for orf in orfs]
     positions_and_orfs = sorted(zip(startpositions, orfs), key=lambda x: x[0])
     startpositions, orfs = zip(*positions_and_orfs)
     return orfs
 
+
 def find_all_orfs(seq_record):
     logging.debug("Finding all ORFs")
-    #Get sequence
+    # Get sequence
     fasta_seq = str(seq_record.seq)
-    #Find orfs
+    # Find orfs
     forward_matches = scan_orfs(fasta_seq, 1)
     reverse_matches = scan_orfs(str(seq_record.seq.complement()), -1)
     all_orfs = forward_matches + reverse_matches
-    #Create seq_record features for identified genes
+    # Create seq_record features for identified genes
     if not all_orfs:
-        logging.error("No ORFs found. Please check the " \
-            "format of your input FASTA file.")
+        logging.error("No ORFs found. Please check the "
+                      "format of your input FASTA file.")
         return len(all_orfs)
     orfs = sort_orfs(all_orfs)
     for orfnr, orf in enumerate(orfs):

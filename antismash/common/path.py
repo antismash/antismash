@@ -9,6 +9,7 @@ import logging
 from typing import Optional
 import os
 
+
 def get_full_path(current_file, *args) -> str:
     """ Generate the absolute path of the directory containing a file
         e.g. __file__ == os.path.join(get_full_path(__file__), filename)
