@@ -193,7 +193,7 @@ class HmmDetectionTest(unittest.TestCase):
 
     def test_profiles_parsing(self):
         profiles = signatures.get_signature_profiles()
-        assert len(profiles) == 220
+        assert len(profiles) == 222  # ensures we don't delete any by accident
 
     def test_store_detection(self):
         features = [DummyCluster(0, 10),

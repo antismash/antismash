@@ -41,5 +41,7 @@ phosphonate	20	20	phosphonates
 fused	20	10	pgm1 and pgm_amidino
 other	20	20	cds(PP-binding and AMP-binding) or cds(PP-binding and A-OX) or cds(NAD_binding_4 and A-OX) or cds(NAD_binding_4 and AMP-binding) or LmbU or Neocarzinostat or cycdipepsynth or fom1 or bcpB or frbD or mitE or vlmB or prnB or CaiA or bacilysin or orf2_PTase
 acyl_amino_acids	30	30	NasY
+#polybrominated diphenyl ethers (PBDEs) such as KX588877
+pbde	10	10	FMO-like and p450 and DUF98
 #cf_saccharide	20	10	minimum(2,[Glycos_transf_1,Glycos_transf_2,Glyco_transf_28,PF02922,PF01041,PF00128,PF00908,PF02719,PF04321,PF01943,PF02806,PF02350,PF02397,PF04932,PF01075,PF00953,PF01050,PF01501,PF05159,PF04101,PF02563,PF08437,PF02585])
 #cf_fatty_acid	20	10 	bt1fas or ft1fas or t2fas or fabH
