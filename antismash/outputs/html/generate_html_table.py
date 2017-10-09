@@ -5,6 +5,7 @@ import os
 
 from jinja2 import FileSystemLoader, Environment, StrictUndefined
 
+
 def generate_html_table(outfile_name, mibig_entries):
     if not os.path.exists(os.path.dirname(outfile_name)):
         os.mkdir(os.path.dirname(outfile_name))

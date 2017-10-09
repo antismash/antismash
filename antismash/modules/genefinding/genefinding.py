@@ -8,6 +8,7 @@ from antismash.common.all_orfs import find_all_orfs
 from .run_prodigal import run_prodigal
 from .run_glimmerhmm import run_glimmerhmm
 
+
 def run_on_record(record, options):
     "Find genes in a seq_record"
     if options.genefinding_tool == 'none':

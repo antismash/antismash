@@ -13,6 +13,7 @@ import antismash.common.test.helpers as helpers
 from antismash.config import args, get_config, update_config, destroy_config
 from antismash.modules import tta
 
+
 class TtaIntegrationTest(unittest.TestCase):
     def setUp(self):
         options = args.build_parser(modules=get_all_modules()).parse_args(["--tta"])

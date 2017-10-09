@@ -9,8 +9,10 @@ from antismash.common import path
 from antismash.common.layers import ClusterLayer
 from antismash.common.secmet import Prepeptide
 
+
 def will_handle(product):
     return product.find('lanthipeptide') > -1
+
 
 class LanthipeptideLayer(ClusterLayer):
     def __init__(self, cluster, record, cluster_feature):
@@ -24,18 +26,18 @@ class LanthipeptideLayer(ClusterLayer):
             if motif.peptide_type == "lanthipeptide":
                 self.motifs.append(motif)
 
+
 def generate_details_div(cluster_layer, record_layer, options_layer):
     lanthi_layer = LanthipeptideLayer(cluster_layer.cluster, record_layer, cluster_layer.cluster_rec)
-    if not (not options_layer.minimal or options_layer.lanthipeptides_enabled \
+    if not (not options_layer.minimal or options_layer.lanthipeptides_enabled
             or lanthi_layer.motifs):
         return ""
-    env = Environment(
-        loader=FileSystemLoader(path.get_full_path(__file__, "templates")),
-        autoescape=True, undefined=StrictUndefined)
+    env = Environment(loader=FileSystemLoader(path.get_full_path(__file__, "templates")),
+                      autoescape=True, undefined=StrictUndefined)
     template = env.get_template('details.html')
     details_div = template.render(record=record_layer,
-                           cluster=lanthi_layer,
-                           options=options_layer)
+                                  cluster=lanthi_layer,
+                                  options=options_layer)
     return details_div
 
 

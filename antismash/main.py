@@ -21,6 +21,7 @@ from antismash.outputs import html, svg
 
 __version__ = "5.0.0alpha"
 
+
 def get_all_modules() -> List[ModuleType]:
     """ Return a list of default modules
 
@@ -31,6 +32,7 @@ def get_all_modules() -> List[ModuleType]:
             a list of modules
     """
     return get_detection_modules() + get_analysis_modules() + get_output_modules()
+
 
 def get_detection_modules() -> List[ModuleType]:
     """ Return a list of default detection modules
@@ -43,6 +45,7 @@ def get_detection_modules() -> List[ModuleType]:
     """
     return [hmm_detection, genefinding]
 
+
 def get_analysis_modules() -> List[ModuleType]:
     """ Return a list of default analysis modules
 
@@ -54,6 +57,7 @@ def get_analysis_modules() -> List[ModuleType]:
     """
     return [smcogs, tta, lanthipeptides, clusterblast, dummy]
 
+
 def get_output_modules() -> List[ModuleType]:
     """ Return a list of default output modules
 
@@ -64,6 +68,7 @@ def get_output_modules() -> List[ModuleType]:
             a list of modules
     """
     return [html]
+
 
 def setup_logging(logfile=None, verbose=False, debug=False) -> None:
     """ Define the logging format, levels and outputs
@@ -77,10 +82,10 @@ def setup_logging(logfile=None, verbose=False, debug=False) -> None:
             None
     """
 
-    def new_critical(*args): #TODO: temporary to make alpha issues more obvious
+    def new_critical(*args):  # TODO: temporary to make alpha issues more obvious
         """ make critical messages yellow and without the normal timestamp """
         msg = "\033[1;33m{}\033[0m".format(args[0])
-        print(msg%args[1:])
+        print(msg % args[1:])
     logging.critical = new_critical
 
     log_level = logging.WARNING
@@ -125,13 +130,15 @@ def verify_options(options, modules) -> bool:
         return True
     logging.error("Incompatible options detected:")
     for error in errors:
-        print(error) # still commandline args, so don't use logging
+        print(error)  # still commandline args, so don't use logging
     return False
 
-def detect_signature_genes(seq_record, options): # TODO: pick one of this or run_detection_stage()
+
+def detect_signature_genes(record, options):  # TODO: pick one of this or run_detection_stage()
     """ Detect different secondary metabolite clusters based on HMM signatures """
     logging.info('Looking for secondary metabolite cluster signatures')
-    hmm_detection.detect_signature_genes(seq_record, options)
+    hmm_detection.detect_signature_genes(record, options)
+
 
 def run_detection_stage(record, options, detection_modules) -> Dict[str, Optional[ModuleResults]]:
     """ Runs detection modules on a record
@@ -153,6 +160,7 @@ def run_detection_stage(record, options, detection_modules) -> Dict[str, Optiona
         if module.is_enabled(options):
             detection_results[module.NAME] = module.run_on_record(record, options)
     return detection_results
+
 
 def regenerate_results_for_record(record, options, modules, previous_result
                                  ) -> Dict[str, Optional[ModuleResults]]:
@@ -183,6 +191,7 @@ def regenerate_results_for_record(record, options, modules, previous_result
                 assert isinstance(results, ModuleResults)
                 previous_result[module.__name__] = results
     return previous_result
+
 
 def analyse_record(record, options, modules, previous_result) -> None:
     """ Run analysis modules on a record
@@ -255,17 +264,17 @@ def write_profiling_results(profiler, target) -> None:
     sortby = 'tottime'
     stats = pstats.Stats(profiler, stream=stream).sort_stats(sortby)
     stats.dump_stats(target + ".bin")
-    stats.print_stats(.25) # limit to the more meaningful first 25%
+    stats.print_stats(.25)  # limit to the more meaningful first 25%
     stats.print_callers(.25)
     try:
         path_to_remove = os.path.dirname(os.path.realpath(__file__)) + os.path.sep
         open(target, "w").write(stream.getvalue().replace(path_to_remove, ""))
         logging.info("Profiling report written to %s", target)
     except IOError:
-        #if can't save to file, print to terminal, but only the head
+        # if can't save to file, print to terminal, but only the head
         logging.debug("Couldn't open file to store profiling output")
         stream.truncate(0)
-        stats.print_stats(20) #first 20 lines only
+        stats.print_stats(20)  # first 20 lines only
         print(stream.getvalue())
 
 
@@ -320,6 +329,7 @@ def annotate_records(results) -> None:
             assert isinstance(result, ModuleResults), type(result)
             result.add_to_record(record)
 
+
 def read_data(sequence_file, options) -> serialiser.AntismashResults:
     """ Reads in the data to be used in the analysis run. Can be provided as
         as a sequence file (fasta/genbank) or as file of prior results
@@ -339,7 +349,8 @@ def read_data(sequence_file, options) -> serialiser.AntismashResults:
         records = record_processing.parse_input_sequence(sequence_file,
                                 options.minlength, options.start, options.end)
         return serialiser.AntismashResults(sequence_file.rsplit(os.sep, 1)[-1],
-                              records, [{}] * len(records), __version__)
+                                           records, [{}] * len(records),
+                                           __version__)
 
     logging.debug("Attempting to reuse previous results in: %s", options.reuse_results)
     with open(options.reuse_results) as handle:
@@ -348,8 +359,9 @@ def read_data(sequence_file, options) -> serialiser.AntismashResults:
             raise ValueError("No results contained in file: %s" % options.reuse_results)
     results = serialiser.AntismashResults.from_file(options.reuse_results)
     # hacky bypass to set output dir #TODO work out alternate method
-    update_config({"output_dir" : os.path.abspath(os.path.splitext(results.input_file)[0])})
+    update_config({"output_dir": os.path.abspath(os.path.splitext(results.input_file)[0])})
     return results
+
 
 def check_prerequisites(modules) -> None:
     """ Checks that each module's prerequisites are satisfied. If not satisfied,
@@ -365,8 +377,9 @@ def check_prerequisites(modules) -> None:
         logging.debug("Checking prerequisites for %s", module.__name__)
         res = module.check_prereqs()
         if res:
-            raise RuntimeError("Module failing prerequisite check: %s %s" %(
+            raise RuntimeError("Module failing prerequisite check: %s %s" % (
                                module.__name__, "\n".join(res)))
+
 
 def list_plugins(modules) -> None:
     """ Prints the name and short description of the given modules
@@ -384,6 +397,7 @@ def list_plugins(modules) -> None:
     format_string = " %-{}s:  %s".format(max_name)
     for module in modules:
         print(format_string % (module.NAME, module.SHORT_DESCRIPTION))
+
 
 def run_antismash(sequence_file, options, detection_modules=None,
                   analysis_modules=None) -> int:
@@ -408,7 +422,6 @@ def run_antismash(sequence_file, options, detection_modules=None,
     setup_logging(logfile=logfile, verbose=options.verbose,
                   debug=options.debug)
 
-
     if detection_modules is None:
         detection_modules = get_detection_modules()
     if analysis_modules is None:
@@ -422,7 +435,7 @@ def run_antismash(sequence_file, options, detection_modules=None,
 
     options.all_enabled_modules = [module for module in modules if module.is_enabled(options)]
     options = update_config(options)
-    loader.update_config_from_file() # TODO move earlier to run_antismash?
+    loader.update_config_from_file()  # TODO move earlier to run_antismash?
 
     check_prerequisites(modules)
     if options.check_prereqs_only:
@@ -436,8 +449,7 @@ def run_antismash(sequence_file, options, detection_modules=None,
 
     # ensure the provided options are valid
     if not verify_options(options, analysis_modules + detection_modules):
-        return 1 # TODO: change to a raise?
-
+        return 1  # TODO: change to a raise?
 
     # check that at least one module will run
     if not any(module.is_enabled(options) for module in detection_modules + analysis_modules):
@@ -450,14 +462,13 @@ def run_antismash(sequence_file, options, detection_modules=None,
     prepare_output_directory(options.output_dir)
 
     results.records = record_processing.pre_process_sequences(results.records,
-                                                           options, genefinding)
+                                                              options, genefinding)
     for seq_record, previous_result in zip(results.records, results.results):
         # skip if we're not interested in it
         if seq_record.skip:
             continue
         run_detection_stage(seq_record, options, detection_modules)
         analyse_record(seq_record, options, analysis_modules, previous_result)
-
 
     # Write results
     # TODO: zipping, etc

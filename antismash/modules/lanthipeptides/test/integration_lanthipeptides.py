@@ -20,6 +20,7 @@ from antismash.modules import lanthipeptides
 from antismash.modules.lanthipeptides import specific_analysis, LanthiResults
 import antismash.modules.lanthipeptides.config as lanthi_config
 
+
 class IntegrationLanthipeptides(unittest.TestCase):
     def setUp(self):
         self.options = helpers.get_simple_options(lanthipeptides, [])
@@ -68,14 +69,13 @@ class IntegrationLanthipeptides(unittest.TestCase):
             args = ["run_antismash.py", "--minimal", "--enable-lanthipeptides", "--output-dir", output_dir]
             parser = build_parser(modules=antismash.get_all_modules())
             options = parser.parse_args(args)
-            options.all_enabled_modules = [module for module in antismash.get_all_modules() if module.is_enabled(options)] #TODO: shift elsewhere
+            options.all_enabled_modules = [module for module in antismash.get_all_modules() if module.is_enabled(options)]  # TODO: shift elsewhere
             antismash.run_antismash(helpers.get_path_to_nisin_genbank(), options)
 
             # make sure the html_output section was tested
             with open(os.path.join(output_dir, "index.html")) as handle:
                 content = handle.read()
                 assert "nisA leader / core peptide, putative Class I" in content
-
 
     def test_epidermin(self):
         "Test lanthipeptide prediction for epidermin"
@@ -175,4 +175,4 @@ class IntegrationLanthipeptidesWithoutFimo(IntegrationLanthipeptides):
     def setUp(self):
         self.options = helpers.get_simple_options(lanthipeptides, [])
         self.set_fimo_enabled(False)
-        assert lanthi_config.get_config().fimo_present == False
+        assert lanthi_config.get_config().fimo_present is False

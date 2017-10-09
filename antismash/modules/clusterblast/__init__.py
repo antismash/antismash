@@ -6,7 +6,6 @@
 import logging
 import os
 
-import antismash.common.deprecated as utils
 import antismash.common.path as path
 from antismash.config import get_config
 from antismash.config.args import ModuleArgs
@@ -20,6 +19,7 @@ from .html_output import will_handle, generate_details_div
 
 NAME = "clusterblast"
 SHORT_DESCRIPTION = "comparative gene cluster analysis"
+
 
 def get_arguments():
     args = ModuleArgs('ClusterBlast options', 'cb')
@@ -59,10 +59,12 @@ def get_arguments():
                          " Warning: some homologous genes may no longer be visible!")
     return args
 
+
 def is_enabled(options):
     """  Uses the supplied options to determine if the module should be run
     """
     return options.cb_general or options.cb_knownclusters or options.cb_subclusters
+
 
 def check_options(options):
     if options.cb_nclusters > get_result_limit():
@@ -70,11 +72,13 @@ def check_options(options):
                     options.cb_nclusters, get_result_limit())]
     return []
 
+
 def regenerate_previous_results(previous, record, options):
     if not previous:
         logging.debug("No previous clusterblast results to reuse")
         return None
     return ClusterBlastResults.from_json(previous, record)
+
 
 def check_prereqs():
     "Check if all required applications are around"
@@ -106,6 +110,7 @@ def check_prereqs():
     failure_messages.extend(check_known_prereqs(options))
     failure_messages.extend(check_sub_prereqs(options))
     return failure_messages
+
 
 def run_on_record(seq_record, results, options):
     if not results:

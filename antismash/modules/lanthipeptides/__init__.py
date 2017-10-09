@@ -10,22 +10,26 @@ import logging
 import antismash.common.path as path
 from antismash.config.args import ModuleArgs
 
-from .config import get_config # TODO: what is this
+from .config import get_config  # TODO: what is this
 from .specific_analysis import specific_analysis, LanthiResults
 from .html_output import generate_details_div, generate_sidepanel, will_handle
 
 NAME = "lanthipeptides"
 SHORT_DESCRIPTION = NAME.capitalize()
 
+
 def get_arguments():
     args = ModuleArgs('Advanced options', 'lanthi', enabled_by_default=True)
     return args
 
+
 def check_options(options):
     return []
 
+
 def is_enabled(options):
     return not (options.minimal and not options.lanthipeptides_enabled)
+
 
 def regenerate_previous_results(results, record, options):
     if not results:
@@ -34,6 +38,7 @@ def regenerate_previous_results(results, record, options):
     logging.debug("Reusing Lanthipeptide results: %d clusters contained %d total motifs",
                   len(results.clusters_with_motifs), len(results.motifs))
     return results
+
 
 def check_prereqs():
     failure_messages = []
@@ -50,6 +55,7 @@ def check_prereqs():
             setattr(conf, slot, present)
 
     return failure_messages
+
 
 def run_on_record(record, results, options):
     if isinstance(results, LanthiResults) and results.record_id == record.id:

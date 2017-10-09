@@ -10,33 +10,39 @@ NAME = "tta"
 SHORT_DESCRIPTION = "TTA detection"
 PRIORITY = 1
 
+
 def get_arguments():
     args = ModuleArgs('Additional analysis', 'tta')
     args.add_analysis_toggle('--tta',
-                      dest='tta',
-                      action='store_true',
-                      default=False,
-                      help="Run TTA codon detection module.")
+                             dest='tta',
+                             action='store_true',
+                             default=False,
+                             help="Run TTA codon detection module.")
     return args
+
 
 def check_options(options):
     if options.tta and options.input_type == "prot":
         raise ValueError("TTA detection and protein input sequences are incompatible")
     return []
 
+
 def check_prereqs():
     """Check for prerequisites"""
     # No external dependencies
     return []
 
+
 def is_enabled(options):
     """ Should the module be run with these options """
     return options.tta
+
 
 def regenerate_previous_results(previous, record, options):
     if not previous:
         return None
     return TTAResults.from_json(previous)
+
 
 def run_on_record(seq_record, results, options):
     if isinstance(results, TTAResults) and results.record_id == seq_record.id:

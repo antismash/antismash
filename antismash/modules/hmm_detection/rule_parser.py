@@ -105,8 +105,10 @@ from enum import IntEnum
 
 from antismash.modules.hmm_detection import signatures
 
+
 class RuleSyntaxError(SyntaxError):
     pass
+
 
 def is_legal_identifier(identifier):
     """ Returns true if the identifier matches the form:
@@ -124,6 +126,7 @@ def is_legal_identifier(identifier):
     if identifier == "score":
         return False
     return True
+
 
 class TokenTypes(IntEnum):
     GROUP_OPEN = 1
@@ -144,7 +147,7 @@ class TokenTypes(IntEnum):
         return self.__str__()
 
     def __str__(self):
-        return str(self.name).lower() # the str() is for pylint's sake
+        return str(self.name).lower()  # the str() is for pylint's sake
 
     @classmethod
     def classify(cls, text):
@@ -159,15 +162,16 @@ class TokenTypes(IntEnum):
         return classification
 
     def is_multichar(self):
-        return self.value > 5 # the last single char terminal is 5
+        return self.value > 5  # the last single char terminal is 5
+
 
 class Tokeniser():
-    mapping = {"(" : TokenTypes.GROUP_OPEN, ")" : TokenTypes.GROUP_CLOSE,
-               "[" : TokenTypes.LIST_OPEN, "]" : TokenTypes.LIST_CLOSE,
-               "and" : TokenTypes.AND, "or" : TokenTypes.OR,
-               "not" : TokenTypes.NOT, "," : TokenTypes.COMMA,
-               "minimum" : TokenTypes.MINIMUM, "cds" : TokenTypes.CDS,
-               "minscore" : TokenTypes.SCORE}
+    mapping = {"(": TokenTypes.GROUP_OPEN, ")": TokenTypes.GROUP_CLOSE,
+               "[": TokenTypes.LIST_OPEN, "]": TokenTypes.LIST_CLOSE,
+               "and": TokenTypes.AND, "or": TokenTypes.OR,
+               "not": TokenTypes.NOT, ",": TokenTypes.COMMA,
+               "minimum": TokenTypes.MINIMUM, "cds": TokenTypes.CDS,
+               "minscore": TokenTypes.SCORE}
 
     def __init__(self, text):
         """ Processes the given text into a list of tokens """
@@ -203,8 +207,8 @@ class Tokeniser():
                     # no newline after #, so we're finished
                     return
             else:
-                raise RuleSyntaxError("Unexpected character in rule: %s\n%s\n%s^" %(
-                        char, self.text, " "*position))
+                raise RuleSyntaxError("Unexpected character in rule: %s\n%s\n%s^"
+                                      % (char, self.text, " "*position))
             position += 1
         self._finalise(len(self.text))
 
@@ -214,6 +218,7 @@ class Tokeniser():
             return
         self.tokens.append(Token("".join(self.current_symbol), position))
         self.current_symbol.clear()
+
 
 class Token():
     def __init__(self, token_text, position):
@@ -241,13 +246,14 @@ class Token():
             return self.token_text
         return str(self.type)
 
+
 class Details():
     def __init__(self, cds, feats, results, cutoff):
-        self.cds = cds # str, name of cds that is being classified
-        self.features_by_id = feats # { id : feature }
-        self.results_by_id = results # { id : HSP list }
+        self.cds = cds  # str, name of cds that is being classified
+        self.features_by_id = feats  # { id : feature }
+        self.results_by_id = results  # { id : HSP list }
         self.possibilities = set(res.query_id for res in results.get(cds, []))
-        self.cutoff = cutoff # int
+        self.cutoff = cutoff  # int
 
     def in_range(self, cds, other):
         """ returns True if the two Locations are within cutoff distance
@@ -269,6 +275,7 @@ class Details():
         return Details(cds_of_interest, self.features_by_id, self.results_by_id,
                        self.cutoff)
 
+
 class Conditions():
     def __init__(self, negated, sub_conditions=None):
         self.negated = negated
@@ -287,9 +294,9 @@ class Conditions():
             unique_operands = set()
             for operand in map(str, operands):
                 if operand in unique_operands:
-                    raise ValueError("Rule contains repeated condition: %s\nfrom rule %s" %(operand, self))
+                    raise ValueError("Rule contains repeated condition: %s\nfrom rule %s"
+                                     % (operand, self))
                 unique_operands.add(operand)
-
 
     def are_subconditions_satisfied(self, details, any_in_cds=False, local_only=False):
         """
@@ -325,6 +332,7 @@ class Conditions():
             return "{}{}".format(prefix, self.sub_conditions[0])
         return "{}({})".format(prefix, " ".join(str(sub) for sub in self.sub_conditions))
 
+
 class AndCondition(Conditions):
     def __init__(self, subconditions):
         self.operands = subconditions[::2]
@@ -338,6 +346,7 @@ class AndCondition(Conditions):
 
     def __str__(self):
         return " and ".join(map(str, self.operands))
+
 
 class MinimumCondition(Conditions):
     def __init__(self, negated, count, options):
@@ -376,6 +385,7 @@ class MinimumCondition(Conditions):
         return "{}minimum({}, [{}])".format("not " if self.negated else "",
                 self.count, ", ".join(sorted(list(self.options))))
 
+
 class CDSCondition(Conditions):
     def is_satisfied(self, details, any_in_cds=False, local_only=False):
         # all child conditions have to be within a single CDS
@@ -399,13 +409,14 @@ class CDSCondition(Conditions):
                 continue
             if super().is_satisfied(details.just_cds(cds), any_in_cds=False, local_only=True):
                 # again, early return if positive match
-                return not self.negated #True
+                return not self.negated  # True
 
-        return self.negated # failed to find a match either way
+        return self.negated  # failed to find a match either way
 
     def __str__(self):
         prefix = "not " if self.negated else ""
         return "{}cds({})".format(prefix, " ".join(map(str, self.sub_conditions)))
+
 
 class SingleCondition(Conditions):
     def __init__(self, negated, name):
@@ -443,6 +454,7 @@ class SingleCondition(Conditions):
     def __str__(self):
         return "{}{}".format("not " if self.negated else "", self.name)
 
+
 class ScoreCondition(Conditions):
     def __init__(self, negated, name, score):
         self.name = name
@@ -477,6 +489,7 @@ class ScoreCondition(Conditions):
     def __str__(self):
         return "{}minscore({}, {})".format("not " if self.negated else "", self.name, self.score)
 
+
 class DetectionRule():
     def __init__(self, name, cutoff, extent, conditions):
         self.name = name
@@ -487,7 +500,7 @@ class DetectionRule():
     def detect(self, cds, feature_by_id, results_by_id):
         details = Details(cds, feature_by_id, results_by_id, self.cutoff)
         if not self.conditions.is_satisfied(details, any_in_cds=True):
-            return False #at least one positive match required
+            return False  # at least one positive match required
         return self.conditions.is_satisfied(details, any_in_cds=False)
 
     def __repr__(self):
@@ -499,6 +512,7 @@ class DetectionRule():
         if condition_text[0] == "(" and condition_text[-1] == ')':
             condition_text = condition_text[1:-1]
         return "{}\t{}\t{}\t{}".format(self.name, self.cutoff // 1000, self.extent // 1000, condition_text)
+
 
 class Parser():
     def __init__(self, lines):
@@ -551,7 +565,7 @@ class Parser():
         """ RULE = classification:ID cutoff:INT extension:INT conditions:CONDITIONS
         """
         classification = self._consume(TokenTypes.IDENTIFIER)
-        cutoff = self._consume(TokenTypes.INT) * 1000 # convert from kilobases
+        cutoff = self._consume(TokenTypes.INT) * 1000  # convert from kilobases
         extent = self._consume(TokenTypes.INT) * 1000
         conditions = Conditions(False, self._parse_conditions())
         if self.current_token is not None:
@@ -587,9 +601,9 @@ class Parser():
         """
         conditions = []
         lvalue = self._parse_single_condition(allow_cds)
-        append_lvalue = True # capture the lvalue if it's the only thing
+        append_lvalue = True  # capture the lvalue if it's the only thing
         while self.current_token and self.current_token.type in [TokenTypes.AND,
-                TokenTypes.OR]:
+                                                                 TokenTypes.OR]:
             if self.current_token.type == TokenTypes.AND:
                 conditions.append(self._parse_ands(lvalue, allow_cds))
                 append_lvalue = False
@@ -617,7 +631,6 @@ class Parser():
                     self.lines[self.current_line - 1],
                     " " * self.current_token.position))
         return conditions
-
 
     def _parse_single_condition(self, allow_cds):
         """

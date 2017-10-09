@@ -13,6 +13,7 @@ from antismash.common.path import get_full_path
 from antismash.common.test.helpers import get_simple_options
 import antismash.modules.genefinding as genefinding
 
+
 class TestGlimmerHMM(TestCase):
     def setUp(self):
         self.options = update_config(get_simple_options(genefinding, ['--taxon',

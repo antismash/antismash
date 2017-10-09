@@ -8,10 +8,10 @@ import os
 from tempfile import TemporaryDirectory
 import unittest
 
-
 from antismash.main import run_antismash, get_all_modules
 from antismash.config import get_config
 from antismash.config.args import build_parser
+
 
 class TestAntismash(unittest.TestCase):
     def setUp(self):

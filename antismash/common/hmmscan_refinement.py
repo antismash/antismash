@@ -4,6 +4,7 @@
 from collections import defaultdict
 import logging
 
+
 def _remove_overlapping(results, hmm_lengths):
     """ Strip domain list of overlapping domains,
         only keeping those with the highest scores
@@ -22,6 +23,7 @@ def _remove_overlapping(results, hmm_lengths):
         else:
             non_overlapping.append(result)
     return non_overlapping
+
 
 def _remove_incomplete(domains, hmm_lengths, threshold=0.5, fallback=1./3.):
     complete = []
@@ -52,6 +54,7 @@ def _remove_incomplete(domains, hmm_lengths, threshold=0.5, fallback=1./3.):
     # ran out of fallbacks, return nothing
     return []
 
+
 def _merge_domain_list(domainlist):
     categories = defaultdict(list)
     for domain in domainlist:
@@ -67,6 +70,7 @@ def _merge_domain_list(domainlist):
 
 class HMMResult:
     __slots__ = ["hit_id", "query_start", "query_end", "evalue", "bitscore"]
+
     def __init__(self, hit_id, start, end, evalue, bitscore):
         self.hit_id = hit_id
         self.query_start = int(start)
@@ -88,11 +92,12 @@ class HMMResult:
                          max(self.bitscore, other.bitscore))
 
     def to_json(self):
-        return {key : getattr(self, key) for key in self.__slots__}
+        return {key: getattr(self, key) for key in self.__slots__}
 
     def __str__(self):
         return "HMMResult(%s, %d, %d, evalue=%g, bitscore=%g)" % (self.hit_id,
                    self.query_start, self.query_end, self.evalue, self.bitscore)
+
 
 def gather_by_query(results):
     results_by_id = defaultdict(set)
@@ -116,11 +121,11 @@ def refine_hmmscan_results(hmmscan_results, hmm_lengths):
     refined_results = {}
     for cds, results in results_by_id.items():
         refined = sorted(list(results), key=lambda result: result.query_start)
-        #Merge domain fragments which are really one domain
+        # Merge domain fragments which are really one domain
         refined = _merge_domain_list(refined)
-        #Only keep best hits for overlapping domains
+        # Only keep best hits for overlapping domains
         refined = _remove_overlapping(refined, hmm_lengths)
-        #Remove incomplete domains (covering less than 60% of total domain hmm length)
+        # Remove incomplete domains (covering less than 60% of total domain hmm length)
         refined = _remove_incomplete(refined, hmm_lengths)
         if refined:
             refined_results[cds] = refined

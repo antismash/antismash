@@ -7,6 +7,7 @@ from antismash.common import subprocessing, path, deprecated
 from antismash.common.hmmscan_refinement import refine_hmmscan_results
 from antismash.common.secmet import GeneFunction
 
+
 def classify_genes(cds_features):
     smcogs_fasta = deprecated.get_specific_multifasta(cds_features)
     smcogs_opts = ["-E", "1E-6"]
@@ -19,9 +20,9 @@ def classify_genes(cds_features):
 def load_cog_annotations():
     "Load the smCOG type annotations from a file"
     mapping = {
-        'B': GeneFunction.ADDITIONAL, #'biosynthetic-additional',
-        'T': GeneFunction.TRANSPORT, #'transport',
-        'R': GeneFunction.REGULATORY, #'regulatory',
+        'B': GeneFunction.ADDITIONAL,  # 'biosynthetic-additional',
+        'T': GeneFunction.TRANSPORT,  # 'transport',
+        'R': GeneFunction.REGULATORY,  # 'regulatory',
     }
     annotations = {}
     for line in open(path.get_full_path(__file__, 'data', 'cog_annotations.txt'), 'r'):
@@ -30,9 +31,10 @@ def load_cog_annotations():
 
     return annotations
 
+
 def write_smcogs_file(hmm_results, cds_features, nrpspks_genes, options):
     nrpspks_names = set(feature.get_name() for feature in nrpspks_genes)
-    #TODO don't overwrite with multiple records
+    # TODO don't overwrite with multiple records
     smcogfile = open(os.path.join(options.output_dir, "smcogs", "smcogs.txt"), "w")
     for feature in sorted(cds_features, key=lambda feat: feat.location.start):
         gene_id = feature.get_name()

@@ -9,6 +9,7 @@ import unittest
 from antismash.common.secmet import GeneFunction
 from antismash.modules.smcogs import classify
 
+
 class TestSMCOGLoad(unittest.TestCase):
     def test_load(self):
         # this mostly just tests that the cog annotation file isn't corrupted

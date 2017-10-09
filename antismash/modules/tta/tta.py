@@ -8,8 +8,10 @@ from antismash.common.secmet.feature import Feature
 from antismash.common import deprecated
 import antismash.common.module_results
 
+
 class TTAResults(antismash.common.module_results.ModuleResults):
     schema_version = 1
+
     def __init__(self, record_id):
         super().__init__(record_id)
         self.codon_starts = []
@@ -22,7 +24,7 @@ class TTAResults(antismash.common.module_results.ModuleResults):
             "note": ["tta leucine codon, possible target for bldA regulation"],
             "tool": ["antiSMASH"]
         }
-        #TODO change to using a Feature directly
+        # TODO change to using a Feature directly
         tta_feature = Feature.from_biopython(deprecated.SeqFeature(loc, type="misc_feature", qualifiers=qualifiers))
 
         self.codon_starts.append((start, strand))
@@ -40,10 +42,10 @@ class TTAResults(antismash.common.module_results.ModuleResults):
         return self.new_feature_from_basics(start, feature.strand)
 
     def to_json(self):
-        starts = [{"start" : start, "strand" : strand} for start, strand in self.codon_starts]
-        return {"TTA codons" : starts,
-                "schema_version" : TTAResults.schema_version,
-                "record_id" : self.record_id}
+        starts = [{"start": start, "strand": strand} for start, strand in self.codon_starts]
+        return {"TTA codons": starts,
+                "schema_version": TTAResults.schema_version,
+                "record_id": self.record_id}
 
     def add_to_record(self, record):
         if record.id != self.record_id:
@@ -67,8 +69,9 @@ class TTAResults(antismash.common.module_results.ModuleResults):
             results.new_feature_from_basics(start, strand)
         return results
 
+
 def create_results_from_json(data):
-    if data["schema_version"] != TTAResults.schema_version: # or <, whatever is possible
+    if data["schema_version"] != TTAResults.schema_version:  # or <, whatever is possible
         raise ValueError("Result schema version mismatch, cannot parse")
     results = TTAResults(data["record_id"])
 
@@ -77,6 +80,7 @@ def create_results_from_json(data):
         strand = codon["strand"]
         results.new_feature_from_basics(start, strand)
     return results
+
 
 def detect(seq_record, options):
     """Detect TTA codons"""

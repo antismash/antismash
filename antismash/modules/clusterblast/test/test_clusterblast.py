@@ -11,13 +11,14 @@ from minimock import mock, restore
 
 from helperlibs.wrappers.io import TemporaryDirectory
 
-from antismash.common.secmet import CDSFeature, Record # CDSFeature mocked
+from antismash.common.secmet import CDSFeature, Record  # CDSFeature mocked
 from antismash.common.test.helpers import DummyCDS, DummyCluster
 import antismash.modules.clusterblast.core as core
 
+
 class TestBlastParsing(unittest.TestCase):
     def setUp(self):
-        #used by parse_subject, every sequence will be 100 long
+        # used by parse_subject, every sequence will be 100 long
         mock('Record.get_cds_accession_mapping', returns=defaultdict(lambda: DummyCDS(1, 101)))
         mock('core.get_cds_lengths', returns={})
         self.sample_data = self.read_sample_data()
@@ -158,6 +159,7 @@ class TestBlastParsing(unittest.TestCase):
         self.assertEqual(len(clusters), 0)
         self.assertEqual(len(queries), 0)
 
+
 class TestSubject(unittest.TestCase):
     def test_init(self):
         expected = ["a", "b", 1, 2, "+", "c", 5., 1, 5., 1e-8, "loc"]
@@ -166,6 +168,7 @@ class TestSubject(unittest.TestCase):
                s.perc_ident, s.blastscore, s.perc_coverage, s.evalue, s.locus_tag]
         for exp, val in zip(expected, got):
             self.assertEqual(exp, val)
+
 
 class TestQuery(unittest.TestCase):
     def test_init(self):
@@ -183,7 +186,7 @@ class TestQuery(unittest.TestCase):
         sub1 = core.Subject("a1", "a", 1, 2, "+", "c", 0.5, 1, 0.5, 1e-8, "loc")
         query.add_subject(sub1)
         containers = [query.cluster_name_to_subjects, query.subjects]
-        #check it was properly added to the various containers
+        # check it was properly added to the various containers
         for container in containers:
             self.assertEqual(len(container), 1)
         self.assertEqual(query.cluster_name_to_subjects["a"], [sub1])
@@ -243,6 +246,7 @@ class TestScore(unittest.TestCase):
         assert score.score == 6
         assert score.sort_score() == (6, 1225)
 
+
 class TestProtein(unittest.TestCase):
     def test_string_conversion(self):
         protein = core.Protein("n", "l", "a-b", "+", "anno")
@@ -264,26 +268,27 @@ class TestProtein(unittest.TestCase):
     def test_members(self):
         protein = core.Protein("n", "no_locus_tag", "a-b", "+", "anno")
         protein.locus_tag = "l"
-        #if this doesn't raise an exception, __slots__ was removed from Protein
+        # if this doesn't raise an exception, __slots__ was removed from Protein
         with self.assertRaises(AttributeError):
             protein.something = 1
 # pylint: enable=assigning-non-slot
 
+
 class TestSubjectParsing(unittest.TestCase):
     def setUp(self):
-        self.geneclustergenes = {"CAG25752":""}
+        self.geneclustergenes = {"CAG25752": ""}
         self.seq_record = Record("dummy")
-        self.seqlengths = {"CAG25751.1" : 253}
-        #used by parse_subject, but only if locus tag not in seqlengths
+        self.seqlengths = {"CAG25751.1": 253}
+        # used by parse_subject, but only if locus tag not in seqlengths
         mock('core.get_cds_lengths', returns=self.seqlengths)
-        mock('Record.get_cds_accession_mapping', returns={"TEST" : DummyCDS(1, 301)})
+        mock('Record.get_cds_accession_mapping', returns={"TEST": DummyCDS(1, 301)})
 
     def tearDown(self):
         restore()
 
     def parse_subject_wrapper(self, subject_line):
         return core.parse_subject(subject_line, self.seqlengths,
-                                          self.geneclustergenes, self.seq_record)
+                                  self.geneclustergenes, self.seq_record)
 
     def test_all_parsing(self):
         # test known good input
@@ -330,10 +335,10 @@ class TestSubjectParsing(unittest.TestCase):
         # check the value rounding, this may not be desired, but this test
         # will at least detect change
         subject_line = ["input|c1|0-759|-|CAG25751.1|putative",
-                "Y16952|c1|1-759|-|no_locus_tag"
-                "|putative_two-component_system_sensor_kinase|CAG25751",
-                "99.5", "253", "0", "0", "1", "253", "1", "253",
-                "7.2e-129", "464.9"]
+                        "Y16952|c1|1-759|-|no_locus_tag"
+                        "|putative_two-component_system_sensor_kinase|CAG25751",
+                        "99.5", "253", "0", "0", "1", "253", "1", "253",
+                        "7.2e-129", "464.9"]
         sub = self.parse_subject_wrapper(subject_line)
         self.assertEqual(sub.blastscore, 465)
         self.assertEqual(sub.perc_ident, 100)
@@ -345,12 +350,11 @@ class TestSubjectParsing(unittest.TestCase):
         self.assertEqual(sub.blastscore, 465)
 
     def test_short_locus(self):
-        # if the
         subject_line = ["input|c1|0-759|-|CAG25751.1|putative",
-                "Y16952|c1|1-759|-|some_locus_tag"
-                "|putative_two-component_system_sensor_kinase",
-                "100.0", "253", "0", "0", "1", "253", "1", "253",
-                "7.2e-129", "464.9"]
+                        "Y16952|c1|1-759|-|some_locus_tag"
+                        "|putative_two-component_system_sensor_kinase",
+                        "100.0", "253", "0", "0", "1", "253", "1", "253",
+                        "7.2e-129", "464.9"]
         sub = self.parse_subject_wrapper(subject_line)
         self.assertEqual(sub.locus_tag, "")
 
@@ -361,7 +365,7 @@ class TestSubjectParsing(unittest.TestCase):
                     "100.0", "253", "0", "0", "1", "253", "1", "253",
                     "7.2e-129", "465.0"]
         # test for invalid input
-        for i in [2, 3, 11]: #pid, length, blastscore
+        for i in [2, 3, 11]:  # pid, length, blastscore
             subject_line = original[:]
             subject_line[i] = "text"
             with self.assertRaises(ValueError):
@@ -379,10 +383,11 @@ class TestSubjectParsing(unittest.TestCase):
         subject_line[1] = "Y16956|1-759|+|no_locus_tag|putative_two-component_system_sensor_kinase|CAG25751"
         with self.assertRaises(ValueError):
             self.parse_subject_wrapper(subject_line)
-        #start missing end
+        # start missing end
         subject_line[1] = "Y16956|c1|1|-|no_locus_tag|putative_two-component_system_sensor_kinase|CAG25751"
         with self.assertRaises(ValueError):
             self.parse_subject_wrapper(subject_line)
+
 
 class TestInputGeneration(unittest.TestCase):
     def setUp(self):

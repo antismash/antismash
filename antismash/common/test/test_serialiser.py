@@ -8,7 +8,7 @@ from collections import OrderedDict
 from io import StringIO
 import unittest
 
-import Bio.SeqIO as seqio #helperlibs.bio.seqio as seqio
+import Bio.SeqIO as seqio
 from Bio.SeqFeature import ExactPosition, BeforePosition, AfterPosition, \
                            UnknownPosition, FeatureLocation, CompoundLocation, \
                            SeqFeature
@@ -18,13 +18,14 @@ import antismash.common.serialiser as serialiser
 from antismash.common.secmet import Record
 from antismash.common.test.helpers import get_path_to_nisin_genbank
 
+
 class TestLocationSerialiser(unittest.TestCase):
     # TODO: test invalid inputs
     def convert(self, location, expected_type=FeatureLocation):
         assert isinstance(location, expected_type)
 
         before_string = str(location)
-        print(before_string) # just for help when debugging a failing test
+        print(before_string)  # just for help when debugging a failing test
         after_string = serialiser.location_to_json(location)
         assert isinstance(after_string, str)
         assert before_string == after_string
@@ -85,6 +86,7 @@ class TestLocationSerialiser(unittest.TestCase):
             new_location = self.convert(location)
             assert new_location.strand == strand
 
+
 class TestResultsJSON(unittest.TestCase):
     def create_data_stream(self, data):
         def force_source_ordering(records):
@@ -137,7 +139,7 @@ class TestFeatureSerialiser(unittest.TestCase):
     def test_simple_feature(self):
         location = FeatureLocation(1, 6, strand=1)
         f_type = "test type"
-        qualifiers = {"a" : ["1", "2"], "b" : ["3", "4"]}
+        qualifiers = {"a": ["1", "2"], "b": ["3", "4"]}
         f_id = "dummy id"
         # skipping biopython deprecated members: ref, ref_db, strand, location_operator
 
@@ -146,7 +148,7 @@ class TestFeatureSerialiser(unittest.TestCase):
         print(str(feature))
 
         json = serialiser.feature_to_json(feature)
-        print(json) # for debugging failures
+        print(json)  # for debugging failures
         new_feature = serialiser.feature_from_json(json)
         print(str(new_feature))
         assert new_feature.qualifiers == feature.qualifiers

@@ -9,11 +9,13 @@ from antismash.outputs.html.generate_html_table import generate_html_table
 
 searchgtr_links = {}
 
+
 def convert_records(seq_records, results, options):
     records = []
     for srec, result in zip(seq_records, results):
         records.append(convert_record(srec, options, result))
     return records
+
 
 def convert_record(record, options, result=None):
     """Convert a SeqRecord to JSON"""
@@ -29,6 +31,7 @@ def convert_record(record, options, result=None):
     js_rec['clusters'] = convert_clusters(record, options, result)
 
     return js_rec
+
 
 def convert_clusters(record, options, result=None):
     """Convert cluster SeqFeatures to JSON"""
@@ -72,6 +75,7 @@ def convert_clusters(record, options, result=None):
         js_clusters.append(js_cluster)
 
     return js_clusters
+
 
 def convert_cds_features(record, features, options, mibig_entries):
     """Convert CDS SeqFeatures to JSON"""
@@ -120,6 +124,7 @@ def convert_tta_codons(tta_codons):
 
     return js_codons
 
+
 def get_description(record, feature, type_, options, mibig_result):
     "Get the description text of a CDS feature"
 
@@ -132,7 +137,7 @@ def get_description(record, feature, type_, options, mibig_result):
         'model_details': get_model_details(feature),
     }
 
-    smcogs = not options.minimal or options.smcogs_enabled or options.smcogs_trees #TODO make simpler in args
+    smcogs = not options.minimal or options.smcogs_enabled or options.smcogs_trees  # TODO make simpler in args
 
     blastp_url = "http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE=Proteins&" \
                  "PROGRAM=blastp&BLAST_PROGRAMS=blastp&QUERY=%s&" \
@@ -145,7 +150,7 @@ def get_description(record, feature, type_, options, mibig_result):
     if feature.get_qualifier('EC_number'):
         template += "EC-number(s): {ecnumber}<br>\n"
     if smcogs:
-        for note in feature.notes: #TODO move to secmet attribute
+        for note in feature.notes:  # TODO move to secmet attribute
             if note.startswith('smCOG:') and '(' in note:
                 text = note[6:].split('(', 1)[0]
                 smcog, desc = text.split(':', 1)
@@ -157,7 +162,7 @@ def get_description(record, feature, type_, options, mibig_result):
                 url = note.split(':')[-1]
                 replacements['smcog_tree_line'] = entry % url
     if options.input_type == 'nucl':
-        replacements["start"] = int(feature.location.start) + 1 # 1-indexed
+        replacements["start"] = int(feature.location.start) + 1  # 1-indexed
         replacements["end"] = int(feature.location.end)
         template += "Location: {start} - {end}<br><br>\n"
 
@@ -190,10 +195,9 @@ def get_description(record, feature, type_, options, mibig_result):
     replacements['blastp_url'] = blastp_url % sequence
     replacements['sequence'] = sequence
     replacements['dna_sequence'] = dna_sequence
-    replacements['genomic_context_url'] = genomic_context_url % \
-                    (record.id,
-                     max(feature.location.start - 9999, 0),
-                     min(feature.location.end + 10000, len(record)))
+    replacements['genomic_context_url'] = genomic_context_url % (record.id,
+                                 max(feature.location.start - 9999, 0),
+                                 min(feature.location.end + 10000, len(record)))
     ecnumber = feature.get_qualifier('EC_number')
     if ecnumber:
         replacements['ecnumber'] = ", ".join(ecnumber)
@@ -218,24 +222,26 @@ def get_description(record, feature, type_, options, mibig_result):
 def get_biosynthetic_type(feature):
     "Get the biosythetic type of a CDS feature"
 
-    function = str(feature.gene_function) # TODO: change the rest of js to suit this so conversion not required
+    function = str(feature.gene_function)  # TODO: change the rest of js to suit this so conversion not required
     if function == 'additional':
         function = 'biosynthetic-additional'
     elif function == 'core':
         function = 'biosynthetic'
     return function
 
+
 def get_model_details(feature):
     if feature.sec_met:
         return "<br>".join(map(str, feature.sec_met.domains))
     return ""
+
 
 def get_ASF_predictions(feature):
     "check whether predictions from the active site finder module are annotated"
     if not hasattr(get_ASF_predictions, "logged"):
         logging.critical("ASF_predictions being skipped in js.py")
         get_ASF_predictions.logged = True
-    return "" #TODO
+    return ""  # TODO
 #    ASFsec_met_quals = [sec_met_qual[16:] for sec_met_qual in feature.qualifiers.get('sec_met', [""]) if sec_met_qual.startswith("ASF-prediction")]
 #    result = "<br>\n".join(ASFsec_met_quals)
 

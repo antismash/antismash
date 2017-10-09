@@ -18,7 +18,8 @@ from antismash.config import get_config, update_config, destroy_config, args
 import antismash.modules.hmm_detection as core
 from antismash.modules.hmm_detection import hmm_detection, rule_parser, signatures
 
-class FakeHSP(object): # pylint: disable=too-few-public-methods
+
+class FakeHSP(object):  # pylint: disable=too-few-public-methods
     "class for generating a HSP like datastructure"
     def __init__(self, query_id, hit_id, hit_start, hit_end, bitscore, evalue):
         self.query_id = query_id
@@ -30,6 +31,7 @@ class FakeHSP(object): # pylint: disable=too-few-public-methods
 
     def __repr__(self):
         return "FakeHSP({})".format(str(vars(self)))
+
 
 class TestArgs(unittest.TestCase):
     def setUp(self):
@@ -52,37 +54,38 @@ class TestArgs(unittest.TestCase):
         options = self.build_options(["--enable", "t1pks"])
         assert options.enabled_cluster_types == ["t1pks"]
 
+
 class HmmDetectionTest(unittest.TestCase):
     def setUp(self):
         self.results_by_id = {
-            "GENE_1" : [
+            "GENE_1": [
                 FakeHSP("modelA", "GENE_1", 0, 10, 50, 0),
                 FakeHSP("modelB", "GENE_1", 0, 10, 50, 0)
             ],
-            "GENE_2" : [
+            "GENE_2": [
                 FakeHSP("modelC", "GENE_2", 0, 10, 50, 0),
                 FakeHSP("modelB", "GENE_2", 0, 10, 50, 0)
             ],
-            "GENE_3" : [
+            "GENE_3": [
                 FakeHSP("modelC", "GENE_3", 0, 10, 50, 0),
                 FakeHSP("modelF", "GENE_3", 0, 10, 50, 0)
             ],
-            "GENE_4" : [
+            "GENE_4": [
                 FakeHSP("modelA", "GENE_4", 0, 10, 50, 0),
                 FakeHSP("modelE", "GENE_4", 0, 10, 50, 0)
             ],
-            "GENE_5" : [
+            "GENE_5": [
                 FakeHSP("modelA", "GENE_5", 0, 10, 50, 0),
                 FakeHSP("modelG", "GENE_5", 0, 10, 50, 0)
             ]
         }
         self.feature_by_id = {
-            "GENE_1" : DummyCDS(0, 30000, locus_tag="GENE_1"),
-            "GENE_2" : DummyCDS(30000, 50000, locus_tag="GENE_2"),
-            "GENE_3" : DummyCDS(70000, 90000, locus_tag="GENE_3"),
-            "GENE_X" : DummyCDS(95000, 100000, locus_tag="GENE_X"), # no hits
-            "GENE_4" : DummyCDS(125000, 140000, locus_tag="GENE_4"),
-            "GENE_5" : DummyCDS(130000, 150000, locus_tag="GENE_5")
+            "GENE_1": DummyCDS(0, 30000, locus_tag="GENE_1"),
+            "GENE_2": DummyCDS(30000, 50000, locus_tag="GENE_2"),
+            "GENE_3": DummyCDS(70000, 90000, locus_tag="GENE_3"),
+            "GENE_X": DummyCDS(95000, 100000, locus_tag="GENE_X"),  # no hits
+            "GENE_4": DummyCDS(125000, 140000, locus_tag="GENE_4"),
+            "GENE_5": DummyCDS(130000, 150000, locus_tag="GENE_5")
         }
 
         test_names = set(["modelA", "modelB", "modelC", "modelF", "modelG"])
@@ -98,7 +101,7 @@ class HmmDetectionTest(unittest.TestCase):
         self.features = []
         for gene_id in self.feature_by_id:
             self.features.append(self.feature_by_id[gene_id])
-        self.features.sort(key=lambda x: x.location.start) # vital for py3 < 3.5
+        self.features.sort(key=lambda x: x.location.start)  # vital for py3 < 3.5
         self.record = Record()
         self.record._record.seq = Seq("A"*150000)
         for feature in self.features:
@@ -110,11 +113,12 @@ class HmmDetectionTest(unittest.TestCase):
         restore()
 
     def test_core(self):
-        restore() # don't mock signature names for this test
+        restore()  # don't mock signature names for this test
+
         def as_list_and_string(types, should_be_empty):
             " both list in options and ',' or ';' separated strings are fine "
             for case in [types, ",".join(types), ";".join(types)]:
-                options = update_config({'enabled_cluster_types' : case})
+                options = update_config({'enabled_cluster_types': case})
                 if should_be_empty:
                     assert not core.check_options(options)
                 else:
@@ -139,23 +143,23 @@ class HmmDetectionTest(unittest.TestCase):
         for gid in detected_types:
             detected_types[gid] = set(detected_types[gid].split("-"))
         expected_types = {
-            "GENE_1" : set(["MetaboliteA", "MetaboliteB", "MetaboliteC", "MetaboliteD"]),
-            "GENE_2" : set(["MetaboliteC", "MetaboliteD"]),
-            "GENE_3" : set(["Metabolite0"]),
-            "GENE_4" : set(["MetaboliteA"]),
-            "GENE_5" : set(["Metabolite1", "MetaboliteA"])
+            "GENE_1": set(["MetaboliteA", "MetaboliteB", "MetaboliteC", "MetaboliteD"]),
+            "GENE_2": set(["MetaboliteC", "MetaboliteD"]),
+            "GENE_3": set(["Metabolite0"]),
+            "GENE_4": set(["MetaboliteA"]),
+            "GENE_5": set(["Metabolite1", "MetaboliteA"])
         }
         assert detected_types == expected_types
 
     def test_find_clusters(self):
-        nseqdict = {"Metabolite0" : "?", "Metabolite1" : "?"}
+        nseqdict = {"Metabolite0": "?", "Metabolite1": "?"}
         for i, gene_id in enumerate(self.feature_by_id):
             if gene_id == "GENE_X":
                 continue
             clustertype = "Metabolite%d" % (i % 2)
             hmm_detection._update_sec_met_entry(self.feature_by_id[gene_id],
                              self.results_by_id[gene_id], clustertype, nseqdict)
-        rules = {rule.name : rule for rule in self.rules}
+        rules = {rule.name: rule for rule in self.rules}
         hmm_detection.find_clusters(self.record, rules)
         result_clusters = []
         for cluster in self.record.get_clusters():
@@ -169,7 +173,7 @@ class HmmDetectionTest(unittest.TestCase):
         assert result_clusters == expected_clusters
 
     def test_create_rules(self):
-        restore() # don't mock signature names for this test
+        restore()  # don't mock signature names for this test
         assert hmm_detection.create_rules([]) == []
         assert hmm_detection.create_rules(['nonexistant_cluster_type']) == []
         t1pks_rules = hmm_detection.create_rules(['t1pks'])
@@ -184,7 +188,8 @@ class HmmDetectionTest(unittest.TestCase):
         assert get_overlaps_table(DummyRecord()) == {}
         assert len(self.record.get_cds_features()) == 6
         assert get_overlaps_table(self.record) == {'GENE_1': 0, 'GENE_2': 1,
-                    'GENE_3': 2, 'GENE_4': 4, 'GENE_5': 4, 'GENE_X': 3}
+                                                   'GENE_3': 2, 'GENE_4': 4,
+                                                   'GENE_5': 4, 'GENE_X': 3}
 
     def test_profiles_parsing(self):
         profiles = signatures.get_signature_profiles()
@@ -199,7 +204,7 @@ class HmmDetectionTest(unittest.TestCase):
         for cluster in record.get_clusters():
             assert not cluster.detection_rules
         dummy_rule = rule_parser.DetectionRule("dummy", 10, 20, "a")
-        hmm_detection.store_detection_details({"dummy" : dummy_rule}, record)
+        hmm_detection.store_detection_details({"dummy": dummy_rule}, record)
         for feature in record.get_clusters():
             assert feature.products == ['dummy']
             assert feature.detection_rules == ['a']
@@ -209,7 +214,7 @@ class HmmDetectionTest(unittest.TestCase):
         feature.products = ["a", "b"]
         dummy_rule_a = rule_parser.DetectionRule("a", 10, 20, "c")
         dummy_rule_b = rule_parser.DetectionRule("b", 10, 20, "d")
-        hmm_detection.store_detection_details({"a":dummy_rule_a, "b":dummy_rule_b},
+        hmm_detection.store_detection_details({"a": dummy_rule_a, "b": dummy_rule_b},
                                               DummyRecord(features=[feature]))
         assert feature.detection_rules == ['c', 'd']
         assert feature.products == ['a', 'b']
@@ -220,30 +225,29 @@ class HmmDetectionTest(unittest.TestCase):
         # not overlapping by > 20
         first = FakeHSP("AMP-binding", "A", 50, 90, 0.1, None)
         second = FakeHSP("A-OX", "A", 70, 100, 0.5, None)
-        new, by_id = hmm_detection.filter_results([first, second], {"A":[first, second]})
+        new, by_id = hmm_detection.filter_results([first, second], {"A": [first, second]})
         assert new == [first, second]
-        assert by_id == {"A":[first, second]}
+        assert by_id == {"A": [first, second]}
 
         # overlapping, in same group
         first.hit_end = 91
         assert hmm_detection.hsp_overlap_size(first, second) == 21
-        new, by_id = hmm_detection.filter_results([first, second], {"A":[first, second]})
+        new, by_id = hmm_detection.filter_results([first, second], {"A": [first, second]})
         assert new == [second]
-        assert by_id == {"A":[second]}
+        assert by_id == {"A": [second]}
 
         # overlapping, not in same group
         second.query_id = "none"
-        new, by_id = hmm_detection.filter_results([first, second], {"A":[first, second]})
+        new, by_id = hmm_detection.filter_results([first, second], {"A": [first, second]})
         assert new == [first, second]
-        assert by_id == {"A":[first, second]}
+        assert by_id == {"A": [first, second]}
 
         # not in the same CDS, but int he same group
         second.hit_id = "B"
         second.query_id = "A-OX"
-        new, by_id = hmm_detection.filter_results([first, second], {"A":[first], "B":[second]})
+        new, by_id = hmm_detection.filter_results([first, second], {"A": [first], "B": [second]})
         assert new == [first, second]
-        assert by_id == {"A":[first], "B":[second]}
-
+        assert by_id == {"A": [first], "B": [second]}
 
     def test_filter_multiple(self):
         # all in one CDS no overlap and the same query_ids -> cull all but the best score
@@ -252,23 +256,23 @@ class HmmDetectionTest(unittest.TestCase):
         first = FakeHSP("AMP-binding", "A", 50, 60, 0.1, None)
         second = FakeHSP("A-OX", "A", 70, 100, 0.5, None)
         both = [first, second]
-        by_id = {"A":[first, second]}
+        by_id = {"A": [first, second]}
         new, by_id = hmm_detection.filter_result_multiple(list(both), dict(by_id))
         assert new == [first, second]
-        assert by_id == {"A":[first, second]}
+        assert by_id == {"A": [first, second]}
 
         # not overlapping, same query_id
         first.query_id = "A-OX"
         new, by_id = hmm_detection.filter_result_multiple(list(both), dict(by_id))
         assert new == [second]
-        assert by_id == {"A":[second]}
+        assert by_id == {"A": [second]}
 
         # not in same CDS, same query_id
         second.hit_id = "B"
-        by_id = {"A":[first], "B":[second]}
+        by_id = {"A": [first], "B": [second]}
         new, by_id = hmm_detection.filter_result_multiple(list(both), dict(by_id))
         assert new == [first, second]
-        assert by_id == {"A":[first], "B":[second]}
+        assert by_id == {"A": [first], "B": [second]}
 
     def test_filter_overlapping_genes(self):
         # overlapping CDS: take the longest CDS from within the same equivalence group
@@ -284,7 +288,7 @@ class HmmDetectionTest(unittest.TestCase):
                         features[-1].locus_tag = hsp.hit_id[0]
             record = DummyRecord(features)
             overlaps = hmm_detection.get_overlaps_table(record)
-            features_by_id = {i.locus_tag : i for i in features}
+            features_by_id = {i.locus_tag: i for i in features}
             results_by_id = {}
             for hsp in results:
                 if hsp.hit_id not in results_by_id:
@@ -292,7 +296,6 @@ class HmmDetectionTest(unittest.TestCase):
                 results_by_id[hsp.hit_id].append(hsp)
             return hmm_detection.filter_result_overlapping_genes(
                     results, results_by_id, overlaps, features_by_id)
-
 
         # with overlap
         first = FakeHSP("AMP-binding", "A", 50, 71, 0.1, None)
@@ -305,7 +308,7 @@ class HmmDetectionTest(unittest.TestCase):
         first.hit_end = 67
         new_results, new_by_id = setup_and_run([first, second])
         assert new_results == [first, second]
-        assert new_by_id == {"A" : [first], "B" : [second]}
+        assert new_by_id == {"A": [first], "B": [second]}
 
         # make sure it catches a not-CDS if it snuck in
         with self.assertRaises(AssertionError):

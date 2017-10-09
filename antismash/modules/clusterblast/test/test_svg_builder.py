@@ -8,6 +8,7 @@ import unittest
 
 from antismash.modules.clusterblast import svg_builder
 
+
 class TestSVGHelpers(unittest.TestCase):
     def test_make_neighbours_distinct(self):
         def run(values):

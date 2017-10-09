@@ -16,6 +16,7 @@ from antismash.common import record_processing, path
 from antismash.common.secmet import Record
 from antismash.common.test import helpers
 
+
 class TestParseRecords(unittest.TestCase):
     def test_nisin(self):
         nisin_path = helpers.get_path_to_nisin_genbank()
@@ -50,8 +51,7 @@ class TestParseRecords(unittest.TestCase):
     def test_empty(self):
         with NamedTemporaryFile(suffix=".gbk") as temp:
             with self.assertRaisesRegex(RuntimeError, "No records could be read from file"):
-                records = record_processing.parse_input_sequence(temp.name)
-
+                record_processing.parse_input_sequence(temp.name)
 
 
 class TestGapNotation(unittest.TestCase):
@@ -133,6 +133,7 @@ class TestTrimSequence(unittest.TestCase):
         new = record_processing.trim_sequence(self.record, start=-1, end=-1)
         assert new.seq == self.record.seq
 
+
 class TestIsNuclSeq(unittest.TestCase):
     def test_seq(self):
         # > 20%
@@ -149,14 +150,17 @@ class TestIsNuclSeq(unittest.TestCase):
         assert not record_processing.is_nucl_seq("AGFTC")
         assert not record_processing.is_nucl_seq("AGFTCF")
 
+
 class TestPreprocessRecords(unittest.TestCase):
     def setUp(self):
         options = helpers.get_simple_options(None, [])
         options.triggered_limit = False
         self.options = config.update_config(options)
+
         class DummyModule:
             def __init__(self):
                 self.was_run = False
+
             def run_on_record(self, *_args, **_kwargs):
                 self.was_run = True
         self.genefinding = DummyModule()
@@ -193,7 +197,7 @@ class TestPreprocessRecords(unittest.TestCase):
 
         # make sure genfinding was run when not 'none'
         records[0].skip = False
-        config.update_config({"genefinding_tool" : "not-none"})
+        config.update_config({"genefinding_tool": "not-none"})
         record_processing.pre_process_sequences(records, self.options, self.genefinding)
         assert self.genefinding.was_run
         # still no features because we used dummy genefinding
@@ -202,7 +206,7 @@ class TestPreprocessRecords(unittest.TestCase):
     def test_nisin_fasta_gff(self):
         fasta = path.get_full_path(__file__, "data", "nisin.fasta")
         gff = path.get_full_path(__file__, "data", "nisin.gff3")
-        config.update_config({"genefinding_gff3" : gff})
+        config.update_config({"genefinding_gff3": gff})
         records = record_processing.parse_input_sequence(fasta)
         record_processing.pre_process_sequences(records, self.options, self.genefinding)
         assert not self.genefinding.was_run
@@ -226,7 +230,7 @@ class TestPreprocessRecords(unittest.TestCase):
         records = self.read_double_nisin()
         assert all(rec.skip is False for rec in records)
         assert not self.options.triggered_limit
-        config.update_config({"limit" : 1})
+        config.update_config({"limit": 1})
         record_processing.pre_process_sequences(records, self.options, None)
         assert records[0].skip is False
         assert records[1].skip.startswith("skipping all but first 1")
@@ -235,7 +239,7 @@ class TestPreprocessRecords(unittest.TestCase):
     def test_limit_to_record_partial(self):
         records = self.read_double_nisin()
         assert all(rec.skip is False for rec in records)
-        config.update_config({"limit_to_record" : records[0].id})
+        config.update_config({"limit_to_record": records[0].id})
         records[0].id += "_changed"
         record_processing.pre_process_sequences(records, self.options, None)
         assert not records[1].skip
@@ -243,6 +247,6 @@ class TestPreprocessRecords(unittest.TestCase):
 
     def test_limit_to_record_complete(self):
         records = self.read_double_nisin()
-        config.update_config({"limit_to_record" : "bad_id"})
+        config.update_config({"limit_to_record": "bad_id"})
         with self.assertRaisesRegex(ValueError, "No sequences matched filter.*"):
             record_processing.pre_process_sequences(records, self.options, None)

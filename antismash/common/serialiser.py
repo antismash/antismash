@@ -16,6 +16,7 @@ from Bio.SeqRecord import SeqRecord
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record
 
+
 class AntismashResults:
     def __init__(self, input_file, records, results, version):
         self.input_file = input_file
@@ -47,12 +48,14 @@ class AntismashResults:
             handle = open(handle, "w")
         handle.write(json.dumps(self.to_json()))
 
+
 def write_results(records, results, handle):
     copy = OrderedDict(results)
     copy["records"] = dump_records(records, results["record_results"])
     if isinstance(handle, str):
         handle = open(handle, "w")
     handle.write(json.dumps(copy))
+
 
 def dump_records(records, results, handle=None):
     data = []
@@ -93,6 +96,7 @@ def dump_records(records, results, handle=None):
         handle = open(handle, "w")
     handle.write(new_contents)
 
+
 def record_to_json(record):
     def annotations_to_json(annotations):
         res = dict(annotations)
@@ -113,6 +117,7 @@ def record_to_json(record):
     result["annotations"] = annotations_to_json(record.annotations)
     result["letter_annotations"] = record.letter_annotations
     return result
+
 
 def record_from_json(data):
     if isinstance(data, str):
@@ -140,8 +145,9 @@ def record_from_json(data):
 
 
 def sequence_to_json(sequence):
-    return {"data" : str(sequence),
-            "alphabet" : str(sequence.alphabet).rsplit('()')[0]} # DNA() -> DNA
+    return {"data": str(sequence),
+            "alphabet": str(sequence.alphabet).rsplit('()')[0]}  # DNA() -> DNA
+
 
 def sequence_from_json(data):
     if isinstance(data, str):
@@ -155,11 +161,11 @@ def sequence_from_json(data):
 
 
 def feature_to_json(feature):
-    return json.dumps({"location" : location_to_json(feature.location),
-                       "type" : feature.type,
-                       "id" : feature.id,
-                       "qualifiers" : feature.qualifiers
-                      })
+    return json.dumps({"location": location_to_json(feature.location),
+                       "type": feature.type,
+                       "id": feature.id,
+                       "qualifiers": feature.qualifiers})
+
 
 def feature_from_json(data):
     if isinstance(data, str):
@@ -172,6 +178,7 @@ def feature_from_json(data):
 
 def location_to_json(location):
     return str(location)
+
 
 def location_from_json(data):
     """
@@ -188,10 +195,10 @@ def location_from_json(data):
         return ExactPosition(int(string))
 
     def parse_single_location(string):
-        start = parse_position(string[1:].split(':', 1)[0]) # [<1:6](-) -> <1
-        end = parse_position(string.split(':', 1)[1].split(']', 1)[0]) # [<1:6](-) -> 6
+        start = parse_position(string[1:].split(':', 1)[0])  # [<1:6](-) -> <1
+        end = parse_position(string.split(':', 1)[1].split(']', 1)[0])  # [<1:6](-) -> 6
 
-        strand = string[-2] # [<1:6](-) -> -
+        strand = string[-2]  # [<1:6](-) -> -
         if strand == '-':
             strand = -1
         elif strand == '+':
@@ -202,7 +209,6 @@ def location_from_json(data):
             strand = None
         else:
             raise ValueError("Cannot identify strand in location: %s", string)
-
 
         return FeatureLocation(start, end, strand=strand)
 

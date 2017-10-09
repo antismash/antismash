@@ -13,12 +13,9 @@ if __name__ == "__main__":
     svm_classify = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(svm_classify)
 
-
     data_dir = os.path.dirname(__file__)
     prefix = os.path.join(data_dir, "lanthipeptide")
     training_set = os.path.join(data_dir, "training_set.csv")
-
-
 
     svm_classify.save_classifier(training_set, prefix, kernel='rbf', C=9.77e6,
                                  gamma=1.78e-9)

@@ -15,6 +15,7 @@ from .core import parse_all_clusters, write_fastas_with_all_genes, \
 from .results import ClusterResult, GeneralResults, write_clusterblast_output
 from .data_structures import MibigEntry
 
+
 def _get_datafile_path(filename) -> str:
     """ A helper to construct absolute paths to files in the knownclusterblast
         data directory.
@@ -26,6 +27,7 @@ def _get_datafile_path(filename) -> str:
             the absolute path of the file
     """
     return path.get_full_path(__file__, 'data', 'known', filename)
+
 
 def check_known_prereqs(options) -> List[str]:
     """ Determines if any prerequisite data files or executables are missing
@@ -51,6 +53,7 @@ def check_known_prereqs(options) -> List[str]:
 
     return failure_messages
 
+
 def run_knownclusterblast_on_record(record, options) -> GeneralResults:
     """ Run knownclusterblast on the given record
 
@@ -64,6 +67,7 @@ def run_knownclusterblast_on_record(record, options) -> GeneralResults:
     logging.info('Running known cluster search')
     clusters, proteins = load_clusterblast_database(record, searchtype="knownclusterblast")
     return perform_knownclusterblast(options, record, clusters, proteins)
+
 
 def perform_knownclusterblast(options, record, reference_clusters, proteins) -> GeneralResults:
     """ Run BLAST on gene cluster proteins of each cluster, parse output and

@@ -4,7 +4,7 @@
 from collections import defaultdict, OrderedDict
 import logging
 import os
-from typing import Dict, List, Set, Tuple # pylint: disable=unused-import
+from typing import Dict, List, Set, Tuple  # pylint: disable=unused-import
 
 from helperlibs.wrappers.io import TemporaryDirectory
 
@@ -13,7 +13,8 @@ from antismash.config import get_config
 
 from .data_structures import Subject, Query, Protein, ReferenceCluster, Score
 
-def get_core_gene_ids(record) -> Set[str]: #TODO: consider moving into secmet
+
+def get_core_gene_ids(record) -> Set[str]:  # TODO: consider moving into secmet
     """ Fetches all gene accessions of genes with CORE gene function from all
         clusters in a record
 
@@ -28,6 +29,7 @@ def get_core_gene_ids(record) -> Set[str]: #TODO: consider moving into secmet
         if gene.gene_function == secmet.GeneFunction.CORE:
             cores.append(gene.get_accession())
     return cores
+
 
 def runblast(query, database) -> str:
     """ Runs blastp, comparing the given query with the given database
@@ -50,6 +52,7 @@ def runblast(query, database) -> str:
     if not res.successful():
         raise RuntimeError("blastp run failed: %s..." % res.stderr[-200:])
     return out_file
+
 
 def run_diamond(query, database, tempdir, options) -> str:
     """ Runs diamond, comparing the given query to the given database
@@ -146,6 +149,7 @@ def load_reference_clusters(searchtype) -> Dict[str, ReferenceCluster]:
         clusters[cluster.get_name()] = cluster
     return clusters
 
+
 def load_reference_proteins(accessions, searchtype) -> Dict[str, Protein]:
     """ Load protein database
 
@@ -179,13 +183,14 @@ def load_reference_proteins(accessions, searchtype) -> Dict[str, Protein]:
             tabs = line.split("|")
             locustag = tabs[4]
             if locustag in accessions:
-                locustag = "h_" + locustag # TODO: needs to be actually unique
+                locustag = "h_" + locustag  # TODO: needs to be actually unique
             location = tabs[2]
             strand = tabs[3]
             annotations = tabs[5]
             name = tabs[6]
             proteins[name] = Protein(name, locustag, location, strand, annotations)
     return proteins
+
 
 def load_clusterblast_database(record, searchtype="clusterblast") -> Tuple[Dict[str, ReferenceCluster], Dict[str, Protein]]:
     """ Load clusterblast database
@@ -206,6 +211,7 @@ def load_clusterblast_database(record, searchtype="clusterblast") -> Tuple[Dict[
     clusters = load_reference_clusters(searchtype)
     proteins = load_reference_proteins(accessions, searchtype)
     return clusters, proteins
+
 
 def create_blast_inputs(cluster) -> Tuple[List[str], List[str]]:
     """ Creates fasta file contents for the cluster's CDS features
@@ -233,6 +239,7 @@ def create_blast_inputs(cluster) -> Tuple[List[str], List[str]]:
 
     return names, seqs
 
+
 def run_internal_blastsearch(query_filename) -> str:
     """ Constructs a blast database from the query and runs blastp on it
 
@@ -249,10 +256,11 @@ def run_internal_blastsearch(query_filename) -> str:
         blastoutput = handle.read()
     return blastoutput
 
+
 def remove_duplicate_hits(blastlines) -> List[List[str]]:
     """ Filter for best blast hits (of one query on each subject)
     """
-    query_subject_combinations = set() # type: Set[Tuple[Query, Subject]]
+    query_subject_combinations = set()  # type: Set[Tuple[Query, Subject]]
     blastlines2 = []
     for tabs in blastlines:
         # if it doesn't even have both values, it's not a hit so skip it
@@ -265,6 +273,7 @@ def remove_duplicate_hits(blastlines) -> List[List[str]]:
             query_subject_combinations.add(query_subject_combination)
             blastlines2.append(tabs)
     return blastlines2
+
 
 def parse_subject(tabs, seqlengths, accessions, record) -> Subject:
     """ Parses a blast-formatted subject line and converts to Subject instance
@@ -287,7 +296,7 @@ def parse_subject(tabs, seqlengths, accessions, record) -> Subject:
     if subject == "no_locus_tag":
         subject = subject_parts[6]
     if subject in accessions:
-        subject = "h_" + subject # TODO should be changed when the other h_ alteration is
+        subject = "h_" + subject  # TODO should be changed when the other h_ alteration is
     if len(subject_parts) > 6:
         locustag = subject_parts[6]
     else:
@@ -309,6 +318,7 @@ def parse_subject(tabs, seqlengths, accessions, record) -> Subject:
     return Subject(subject, genecluster, start, end, strand, annotation,
                    perc_ident, blastscore, perc_coverage, evalue, locustag)
 
+
 def parse_all_clusters(blasttext, record, min_seq_coverage, min_perc_identity
             ) -> Tuple[Dict[int, Dict[str, List[Query]]], Dict[int, Dict[str, Query]]]:
     """ Parses blast results, groups into results by cluster number
@@ -329,12 +339,12 @@ def parse_all_clusters(blasttext, record, min_seq_coverage, min_perc_identity
     """
     seqlengths = get_cds_lengths(record)
     geneclustergenes = [cds.get_accession() for cds in record.get_cds_features_within_clusters()]
-    queries = OrderedDict() # type: Dict[str, Query]
-    clusters = OrderedDict() # type: Dict[str, List[Query]]
+    queries = OrderedDict()  # type: Dict[str, Query]
+    clusters = OrderedDict()  # type: Dict[str, List[Query]]
     blastlines = remove_duplicate_hits([line.split("\t") for line in blasttext.rstrip().splitlines()])
     current_query = None
-    queries_by_cluster_number = {} # type: Dict[int, Dict[str, Query]]
-    clusters_by_query_cluster_number = {} # type: Dict[int, Dict[str, List[Query]]]
+    queries_by_cluster_number = {}  # type: Dict[int, Dict[str, Query]]
+    clusters_by_query_cluster_number = {}  # type: Dict[int, Dict[str, List[Query]]]
 
     for tabs in blastlines:
         query = tabs[0]
@@ -371,6 +381,7 @@ def parse_all_clusters(blasttext, record, min_seq_coverage, min_perc_identity
 
     return clusters_by_query_cluster_number, queries_by_cluster_number
 
+
 def blastparse(blasttext, record, min_seq_coverage=-1, min_perc_identity=-1) -> Tuple[Dict[str, Query], Dict[str, List[Query]]]:
     """ Parses blast output into a usable form, limiting to a single best hit
         for every query. Results can be further trimmed by minimum thresholds of
@@ -391,8 +402,8 @@ def blastparse(blasttext, record, min_seq_coverage=-1, min_perc_identity=-1) -> 
     """
     seqlengths = get_cds_lengths(record)
     accessions = [cds.get_accession() for cds in record.get_cds_features_within_clusters()]
-    queries = OrderedDict() # type: Dict[str, Query]
-    clusters = OrderedDict() # type: Dict[str, List[Query]]
+    queries = OrderedDict()  # type: Dict[str, Query]
+    clusters = OrderedDict()  # type: Dict[str, List[Query]]
     blastlines = remove_duplicate_hits([line.split("\t") for line in blasttext.rstrip().split("\n")])
     current_query = None
 
@@ -421,6 +432,7 @@ def blastparse(blasttext, record, min_seq_coverage=-1, min_perc_identity=-1) -> 
 
     return queries, clusters
 
+
 def get_cds_lengths(record) -> Dict[str, int]:
     """ Calculates the lengths of all CDS features in a Record.
 
@@ -435,6 +447,7 @@ def get_cds_lengths(record) -> Dict[str, int]:
         lengths[cds.get_accession()] = len(cds.get_aa_sequence())
     return lengths
 
+
 def find_internal_orthologous_groups(queries, cluster_names) -> List[List[str]]:
     """ Finds internal orthologous groups from blast queries, each cluster
         being a distinct group
@@ -446,7 +459,7 @@ def find_internal_orthologous_groups(queries, cluster_names) -> List[List[str]]:
         Returns:
             a list of groups, each list being
                 a list of query ids
-    """ #TODO check description
+    """  # TODO check description
     groups = []
     for name in cluster_names:
         if name not in queries:
@@ -464,7 +477,7 @@ def find_internal_orthologous_groups(queries, cluster_names) -> List[List[str]]:
         for i, other_group in enumerate(groups):
             for new_member in new_group:
                 if new_member in other_group:
-                    del groups[i] # TODO: stop changing during iteration
+                    del groups[i]  # TODO: stop changing during iteration
                     for member in other_group:
                         if member not in new_group:
                             new_group.append(member)
@@ -472,6 +485,7 @@ def find_internal_orthologous_groups(queries, cluster_names) -> List[List[str]]:
         new_group.sort()
         groups.append(new_group)
     return groups
+
 
 def internal_homology_blast(record) -> Dict[int, List[List[str]]]:
     """ Run BLAST on gene cluster proteins of each cluster on itself to find
@@ -502,6 +516,7 @@ def internal_homology_blast(record) -> Dict[int, List[List[str]]]:
             internalhomologygroups[cluster_number] = groups
     return internalhomologygroups
 
+
 def write_raw_clusterblastoutput(output_dir, blast_output, prefix="clusterblast") -> str:
     """ Writes blast output to file
 
@@ -521,6 +536,7 @@ def write_raw_clusterblastoutput(output_dir, blast_output, prefix="clusterblast"
     with open(os.path.join(output_dir, filename), "w") as handle:
         handle.write(blast_output)
     return filename
+
 
 def parse_clusterblast_dict(queries, clusters, cluster_name, allcoregenes) -> Tuple[Score, List[Tuple[int, int]], List[bool]]:
     """ Generates a score for a cluster, based on the queries and clusters,
@@ -543,7 +559,7 @@ def parse_clusterblast_dict(queries, clusters, cluster_name, allcoregenes) -> Tu
                         a core gene
     """
     result = Score()
-    hitpositions = [] # type: List[Tuple[int, int]]
+    hitpositions = []  # type: List[Tuple[int, int]]
     hitposcorelist = []
     cluster_locii = clusters[cluster_name][0]
     for query in queries:
@@ -568,6 +584,7 @@ def parse_clusterblast_dict(queries, clusters, cluster_name, allcoregenes) -> Tu
             hitposcorelist.extend([hit_value]*querynrhits)
     return result, hitpositions, hitposcorelist
 
+
 def find_clusterblast_hitsgroups(hitpositions: List[Tuple[int, int]]) -> Dict[int, List[int]]:
     """ Finds groups of hits within a set of pairings
 
@@ -578,10 +595,11 @@ def find_clusterblast_hitsgroups(hitpositions: List[Tuple[int, int]]) -> Dict[in
             a dictionary mapping each unique Query to
                 a list of Subjects that hit that Query
     """
-    groups = defaultdict(list) # type: Dict
+    groups = defaultdict(list)  # type: Dict
     for query, subject in hitpositions:
         groups[query].append(subject)
     return groups
+
 
 def calculate_synteny_score(hitgroupsdict, hitpositions, core_genes_found) -> int:
     """ Calculate the synteny score of a ranking
@@ -600,8 +618,8 @@ def calculate_synteny_score(hitgroupsdict, hitpositions, core_genes_found) -> in
         Returns:
             a int representing the synteny score
     """
-    scored_queries = set() # type: Set[int]
-    scored_hits = set() # type: Set[int]
+    scored_queries = set()  # type: Set[int]
+    scored_hits = set()  # type: Set[int]
     synteny_score = 0
     for i, pos in enumerate(hitpositions[:-1]):
         query, subject = pos
@@ -617,6 +635,7 @@ def calculate_synteny_score(hitgroupsdict, hitpositions, core_genes_found) -> in
             scored_queries.add(query)
             scored_hits.add(subject)
     return synteny_score
+
 
 def score_clusterblast_output(clusters, allcoregenes, cluster_names_to_queries) -> List[Tuple[ReferenceCluster, Score]]:
     """ Generate scores for all cluster matches
@@ -657,8 +676,9 @@ def score_clusterblast_output(clusters, allcoregenes, cluster_names_to_queries) 
             if subject != initial:
                 results[clusters[cluster_name]] = result
                 break
-    #Sort gene clusters by score
+    # Sort gene clusters by score
     return sorted(results.items(), reverse=True, key=lambda x: x[1].sort_score())
+
 
 def write_fastas_with_all_genes(clusters, filename, partitions=1) -> List[str]:
     """ Write fasta files containing all genes in all clusters in a

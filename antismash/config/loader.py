@@ -18,6 +18,7 @@ _USER_FILE_NAME = path.expanduser('~/.antismash.cfg')
 _INSTANCE_FILE_NAME = 'instance.cfg'
 _BASEDIR = path.dirname(path.abspath(__file__))
 
+
 def update_config_from_file(namespace=None):
     """Load config from a default and system-specific config file and
     add it to a namespace object, but don't overwrite existing settings

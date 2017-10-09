@@ -21,6 +21,7 @@ from Bio.SeqRecord import SeqRecord
 from .feature import Feature, CDSFeature, CDSMotif, AntismashDomain, Cluster, \
                      PFAMDomain, ClusterBorder, Prepeptide
 
+
 class Record:
     """A record containing secondary metabolite clusters"""
     # slots not for space, but to stop use as a horrible global
@@ -28,10 +29,11 @@ class Record:
                  "_clusters", "_cds_by_accession",
                  "_cluster_borders", "_cds_motifs", "_pfam_domains", "_antismash_domains",
                  "_cluster_numbering", "_nonspecific_features", "record_index"]
+
     def __init__(self, seq=None, **kwargs):
         self._record = SeqRecord(seq, **kwargs)
         self.record_index = None
-        self.skip = False #TODO: move to yet another abstraction layer?
+        self.skip = False  # TODO: move to yet another abstraction layer?
         self._cds_features = []
         self._cds_by_accession = {}
         self._cds_by_name = {}
@@ -50,7 +52,6 @@ class Record:
         if attr in Record.__slots__:
             return self.__getattribute__(attr)
         raise AttributeError("Record has no attribute '%s'" % attr)
-
 
     def __setattr__(self, attr, value):
         # passthroughs to the original SeqRecord
@@ -82,7 +83,7 @@ class Record:
 
     def get_cluster(self, index):
         """ Get the cluster with the given cluster number """
-        return self._clusters[index - 1] # change from 1-indexed to 0-indexed
+        return self._clusters[index - 1]  # change from 1-indexed to 0-indexed
 
     def clear_clusters(self):
         "Remove all Cluster features and reset CDS linking"
@@ -181,28 +182,28 @@ class Record:
     def get_feature_count(self):
         """ Returns the total number of features contained in the record. """
         return sum(map(len, [self._cds_features, self._clusters,
-                        self._cluster_borders, self._cds_motifs,
-                        self._pfam_domains, self._antismash_domains,
-                        self._cluster_numbering, self._nonspecific_features]))
+                             self._cluster_borders, self._cds_motifs,
+                             self._pfam_domains, self._antismash_domains,
+                             self._cluster_numbering, self._nonspecific_features]))
 
     def add_cluster(self, cluster):
         """ Add the given cluster to the record,
             causes cluster-CDS pairing to be recalculated """
         assert isinstance(cluster, Cluster)
         index = 0
-        for i, existing_cluster in enumerate(self._clusters): # TODO: fix performance
+        for i, existing_cluster in enumerate(self._clusters):  # TODO: fix performance
             if cluster.overlaps_with(existing_cluster):
                 raise ValueError("Clusters cannot overlap")
             if cluster < existing_cluster:
-                index = i # before
+                index = i  # before
                 break
             else:
-                index = i + 1 # after
+                index = i + 1  # after
         self._clusters.insert(index, cluster)
         cluster.parent_record = self
         # update numbering
         for i in range(index, len(self._clusters)):
-            self._cluster_numbering[self._clusters[i]] = i + 1 # 1-indexed
+            self._cluster_numbering[self._clusters[i]] = i + 1  # 1-indexed
         # link any relevant CDS features
         self._link_cluster_to_cds_features(cluster)
         for cluster_border in self._cluster_borders:
@@ -214,7 +215,7 @@ class Record:
                 break
 
     def add_cluster_border(self, cluster_border):
-        """ Add the given cluster_border to the feature """ #TODO and to a cluster?
+        """ Add the given cluster_border to the feature """  # TODO and to a cluster?
         assert isinstance(cluster_border, ClusterBorder)
         self._cluster_borders.append(cluster_border)
         # TODO fix performance
@@ -234,8 +235,9 @@ class Record:
         # ensure it has a translation
         if not cds_feature.translation:
             if not self.seq:
-                logging.error('No amino acid sequence in input entry for CDS %s, ' \
-                        'and no nucleotide sequence provided to translate it from.', cds_feature.unique_id)
+                logging.error('No amino acid sequence in input entry for CDS %s, '
+                              'and no nucleotide sequence provided to translate it from.',
+                              cds_feature.unique_id)
                 raise ValueError("Missing sequence info for CDS %s" % cds_feature.unique_id)
             cds_feature.translation = self.get_aa_translation_of_feature(cds_feature)
         index = bisect.bisect_left(self._cds_features, cds_feature)
@@ -252,7 +254,7 @@ class Record:
 
     def add_cds_motif(self, motif):
         """ Add the given cluster to the record """
-        assert isinstance(motif, (CDSMotif, Prepeptide)), "%s, %s" %(type(motif), motif.type)
+        assert isinstance(motif, (CDSMotif, Prepeptide)), "%s, %s" % (type(motif), motif.type)
         self._cds_motifs.append(motif)
 
     def add_pfam_domain(self, pfam_domain):
@@ -289,7 +291,7 @@ class Record:
             # TODO: check insertion order of clusters
             self.add_cds_feature(CDSFeature.from_biopython(feature))
         elif feature.type == 'cluster':
-            self.add_cluster(Cluster.from_biopython(feature)) # TODO: fix performance
+            self.add_cluster(Cluster.from_biopython(feature))  # TODO: fix performance
         elif feature.type == 'CDS_motif':
             self.add_cds_motif(CDSMotif.from_biopython(feature))
         elif feature.type == 'PFAM_domain':
@@ -302,7 +304,7 @@ class Record:
             self.add_feature(Feature.from_biopython(feature))
 
     @staticmethod
-    def from_biopython(seq_record) -> "Record": # string because forward decl
+    def from_biopython(seq_record) -> "Record":  # string because forward decl
         """ Constructs a new Record instance from a biopython SeqRecord,
             also replaces biopython SeqFeatures with Feature subclasses
         """
@@ -337,7 +339,7 @@ class Record:
             if not cds.is_contained_by(cluster):
                 break
             cluster.add_cds(cds)
-            cds.cluster = cluster # TODO: allow for multiple parent clusters
+            cds.cluster = cluster  # TODO: allow for multiple parent clusters
             index += 1
 
     def get_aa_translation_of_feature(self, feature):

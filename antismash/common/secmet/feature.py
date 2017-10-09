@@ -12,8 +12,10 @@ from helperlibs.bio import seqio
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 from Bio.SeqRecord import SeqRecord
 
+
 class Feature:
     __slots__ = ["location", "notes", "type", "_qualifiers"]
+
     def __init__(self, location, feature_type):
         assert isinstance(location, (FeatureLocation, CompoundLocation))
         self.location = location
@@ -44,7 +46,7 @@ class Feature:
 
     def is_contained_by(self, other):
         assert isinstance(other, Feature)
-        end = self.location.end - 1 # to account for the non-inclusive end
+        end = self.location.end - 1  # to account for the non-inclusive end
         return self.location.start in other.location and end in other.location
 
     def to_biopython(self, qualifiers=None):
@@ -55,7 +57,7 @@ class Feature:
             notes += qualifiers.pop("note", [])
             feature.qualifiers.update(qualifiers)
         if notes:
-             # sorting helps with consistency and comparison testing
+            # sorting helps with consistency and comparison testing
             feature.qualifiers["note"] = sorted(notes)
         return [feature]
 
@@ -92,8 +94,10 @@ class Feature:
             qualifiers["note"] = qualifiers["note"].copy()
         return qualifiers
 
+
 class ClusterBorder(Feature):
     __slots__ = ["tool", "probability", "parent_cluster"]
+
     def __init__(self, location, tool, probability):
         super().__init__(location, feature_type="cluster_border")
         self.notes.append("best prediction")
@@ -133,18 +137,20 @@ class ClusterBorder(Feature):
 
         return feature
 
+
 class AntismashFeature(Feature):
     __slots__ = ["domain_id", "database", "detection", "_evalue", "label",
                  "locus_tag", "_score", "translation"]
+
     def __init__(self, location, feature_type):
         super().__init__(location, feature_type)
         self.domain_id = None
         self.database = None
         self.detection = None
-        self._evalue = None #float
+        self._evalue = None  # float
         self.label = None
         self.locus_tag = None
-        self._score = None #float
+        self._score = None  # float
 
         self.translation = None
 
@@ -186,8 +192,10 @@ class AntismashFeature(Feature):
             mine.update(qualifiers)
         return super().to_biopython(mine)
 
+
 class Domain(AntismashFeature):
     __slots__ = ["tool", "domain", "domain_id"]
+
     def __init__(self, location, feature_type):
         super().__init__(location, feature_type)
         self.tool = None
@@ -205,8 +213,10 @@ class Domain(AntismashFeature):
             mine.update(qualifiers)
         return super().to_biopython(mine)
 
+
 class CDSMotif(Feature):
     __slots__ = ["motif"]
+
     def __init__(self, location):
         super().__init__(location, feature_type="CDS_motif")
         self.motif = None
@@ -229,8 +239,10 @@ class CDSMotif(Feature):
             mine.update(qualifiers)
         return super().to_biopython(mine)
 
+
 class PFAMDomain(Domain):
     __slots__ = ["description", "db_xref"]
+
     def __init__(self, location, description):
         super().__init__(location, feature_type="PFAM_domain")
         assert isinstance(description, list)
@@ -265,10 +277,11 @@ class PFAMDomain(Domain):
 
 class AntismashDomain(Domain):
     __slots__ = ["domain_subtype", "specificity"]
+
     def __init__(self, location):
         super().__init__(location, feature_type="aSDomain")
-        self.domain_subtype = None #keep
-        self.specificity = None #keep
+        self.domain_subtype = None
+        self.specificity = None
 
     def to_biopython(self, qualifiers=None):
         mine = OrderedDict()
@@ -296,6 +309,7 @@ class AntismashDomain(Domain):
 
         return feature
 
+
 @unique
 class GeneFunction(Enum):
     OTHER = 0
@@ -307,11 +321,12 @@ class GeneFunction(Enum):
     def __str__(self):
         return str(self.name).lower()
 
+
 class CDSFeature(Feature):
     __slots__ = ["_translation", "protein_id", "locus_tag", "gene", "product",
                  "transl_table", "_sec_met", "aSProdPred", "cluster", "_gene_function",
                  "unique_id"]
-    _counter = 0
+
     def __init__(self, location, translation=None, locus_tag=None, protein_id=None,
                  product=None, gene=None):
         super().__init__(location, feature_type="CDS")
@@ -333,8 +348,8 @@ class CDSFeature(Feature):
         if self.product:
             assert product[0] == "N"
         self.transl_table = None
-        self._sec_met = None #SecMetQualifier()
-        self.aSProdPred = [] # TODO: shift into nrps sub section?
+        self._sec_met = None  # SecMetQualifier()
+        self.aSProdPred = []  # TODO: shift into nrps sub section?
 
         if not (protein_id or locus_tag or gene):
             raise ValueError("CDSFeature requires at least one of: gene, protein_id, locus_tag")
@@ -347,7 +362,7 @@ class CDSFeature(Feature):
 
         # runtime-only data
         self.cluster = None
-        self.unique_id = None # set only when added to a record
+        self.unique_id = None  # set only when added to a record
 
     @property
     def gene_function(self):
@@ -357,7 +372,7 @@ class CDSFeature(Feature):
     def gene_function(self, value):
         assert isinstance(value, GeneFunction)
         if self._gene_function != GeneFunction.OTHER:
-            return # don't override if it's already been set
+            return  # don't override if it's already been set
         self._gene_function = value
 
     @property
@@ -459,6 +474,7 @@ class CDSFeature(Feature):
             mine.update(qualifiers)
         return super().to_biopython(mine)
 
+
 class Prepeptide(CDSFeature):
     def __init__(self, peptide_type, core, locus_tag, peptide_class=None, leader=None,
                  leader_seq=None, tail=None, **kwargs):
@@ -473,7 +489,7 @@ class Prepeptide(CDSFeature):
         super().__init__(core, locus_tag=locus_tag, **kwargs)
         self.type = "CDS_motif"
         self.peptide_type = peptide_type
-        self.peptide_class = peptide_class.replace("-", " ") # "Type-II" > "Type II"
+        self.peptide_class = peptide_class.replace("-", " ")  # "Type-II" > "Type II"
         self.leader_seq = leader_seq
         self.core = core
 
@@ -514,11 +530,13 @@ class Prepeptide(CDSFeature):
             features.append(tail)
         return features
 
+
 class Cluster(Feature):
     __slots__ = ["_extent", "_cutoff", "products", "contig_edge",
                  "detection_rules", "smiles_structure", "probability",
                  "clusterblast", "knownclusterblast", "subclusterblast",
                  "parent_record", "cds_children", "borders"]
+
     def __init__(self, location, cutoff, extent, products):
         super().__init__(location, feature_type="cluster")
 
@@ -527,9 +545,9 @@ class Cluster(Feature):
         assert isinstance(products, list)
         self.products = products
 
-        self.contig_edge = None # hmm_detection borderpredict
+        self.contig_edge = None  # hmm_detection borderpredict
         self.detection_rules = []
-        self.smiles_structure = None # SMILES string
+        self.smiles_structure = None  # SMILES string
         self.probability = None  # clusterfinder probability # TODO: unify with notes version
 
         self.clusterblast = None
@@ -594,14 +612,14 @@ class Cluster(Feature):
             products = []
             rules = []
             text = leftovers["note"].pop(index)
-            text = text.split(":", 1)[1] # strip the leadin
-            text = text.split(";") # separate rules
+            text = text.split(":", 1)[1]  # strip the leadin
+            text = text.split(";")  # separate rules
             for rule in text:
                 if not rule:
                     continue
                 assert ": " in rule, rule
                 product, rule = rule.split(": ")
-                rule = rule[1:-1] # strip ( )
+                rule = rule[1:-1]  # strip ( )
                 products.append(product.strip())
                 rules.append(rule)
             assert sorted(products) == sorted(cluster.products)
@@ -663,12 +681,13 @@ class Cluster(Feature):
 
         seqio.write([cluster_record], filename, 'genbank')
 
+
 class SecMetQualifier(list):
     def __init__(self, clustertype, domains):
-        self.domains = domains # SecMetResult instance or str
-        if domains and not isinstance(domains[0], str): # SecMetResult
+        self.domains = domains  # SecMetResult instance or str
+        if domains and not isinstance(domains[0], str):  # SecMetResult
             self.domain_ids = [domain.query_id for domain in self.domains]
-        else: # str
+        else:  # str
             self.domain_ids = [domain.split()[0] for domain in self.domains]
         self.clustertype = clustertype
         self.kind = "biosynthetic"
@@ -697,7 +716,7 @@ class SecMetQualifier(list):
                 clustertype = value.split("Type: ", 1)[0]
             elif value.startswith("Kind: "):
                 kind = value.split("Kind: ", 1)[1]
-                assert kind == "biosynthetic", kind # since it's the only kind we have
+                assert kind == "biosynthetic", kind  # since it's the only kind we have
             else:
                 domains = value.split("; ")
         if not domains and clustertype and kind:

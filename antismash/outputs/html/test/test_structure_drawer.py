@@ -11,6 +11,7 @@ from helperlibs.wrappers.io import TemporaryDirectory
 
 from antismash.outputs.html import structure_drawer
 
+
 class TestLoadSmiles(unittest.TestCase):
     def test_load(self):
         smiles = structure_drawer.load_smiles()
@@ -20,6 +21,7 @@ class TestLoadSmiles(unittest.TestCase):
         # and make sure none are empty
         for key, smile in smiles.items():
             assert smile, "smile %s has no smile" % key
+
 
 class TestImageGeneration(unittest.TestCase):
     def test_depict_ectoine(self):

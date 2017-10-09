@@ -40,6 +40,7 @@ from .data_structures import Protein
 
 T = TypeVar('T')
 
+
 def get_antismash_db_accessions() -> Set[str]:
     """ Find all accession numbers available in the antiSMASH database
 
@@ -81,7 +82,7 @@ def generate_distinct_colours(count) -> List[str]:
     rgbs = [colorsys.hsv_to_rgb(i/count, .9, .85) for i in range(count)]
     colours = []
     for rgb in rgbs:
-        red, green, blue = [str(hex(int(i*255)))[2:] for i in rgb] # [2:] strips the 0x
+        red, green, blue = [str(hex(int(i*255)))[2:] for i in rgb]  # [2:] strips the 0x
         colours.append("#%s%s%s" % (red, green, blue))
     assert len(colours) == count
     return colours
@@ -106,7 +107,7 @@ def sort_groups(query_ids, groups: Iterable[Iterable]) -> List[Iterable]:
             if query_id in group:
                 if id(group) not in found_groups:
                     ordered_groups.append(group)
-                    found_groups.add(id(group)) # id since sets are unhashable
+                    found_groups.add(id(group))  # id since sets are unhashable
     return ordered_groups
 
 
@@ -124,7 +125,7 @@ def make_neighbours_distinct(groups: List[T]) -> List[T]:
     # if there's only 2 groups, we can't fix that, so just return it as is
     if len(groups) < 2:
         spaced_groups = list(groups)
-    elif len(groups) < 4: # to avoid removing all groups with division below
+    elif len(groups) < 4:  # to avoid removing all groups with division below
         spaced_groups = list(groups)[::2] + list(groups)[1::2]
     else:
         spaced_groups = []
@@ -169,7 +170,7 @@ def build_colour_groups(query_genes, ranking) -> Dict[str, str]:
             the group the gene belongs to
     """
     # start with a set per query gene with only itself
-    groups = {gene.get_accession() : set() for gene in query_genes}
+    groups = {gene.get_accession(): set() for gene in query_genes}
     # populate the sets with the id of any hits matching a query gene
     for _, score in ranking:
         for query, subject in score.scored_pairings:
@@ -178,11 +179,11 @@ def build_colour_groups(query_genes, ranking) -> Dict[str, str]:
     # merge intersecting sets so only disjoint sets remain
     keys = list(groups.keys())
     for i, accession in enumerate(keys):
-        groups[accession].add(accession) # add the query name to it's group
+        groups[accession].add(accession)  # add the query name to it's group
         for other in keys[i + 1:]:
             if groups[accession].intersection(groups[other]):
-                groups[other].update(groups[accession]) # merge into later hit
-                groups[accession] = groups[other] # point to merged version
+                groups[other].update(groups[accession])  # merge into later hit
+                groups[accession] = groups[other]  # point to merged version
 
     # only track unique groups with more than one hit, since no match, no colour
     disjoints = set(tuple(group) for group in groups.values() if len(group) > 1)
@@ -190,7 +191,7 @@ def build_colour_groups(query_genes, ranking) -> Dict[str, str]:
     lookup = {}
     for group, colour in zip(arrange_colour_groups(query_genes, disjoints),
                              generate_distinct_colours(len(disjoints))):
-        for name in sorted(group): # sort to ensure cross-run consistency
+        for name in sorted(group):  # sort to ensure cross-run consistency
             lookup[name] = colour
     return lookup
 
@@ -223,7 +224,7 @@ class Gene:
         return self.name
 
     @staticmethod
-    def from_feature(feature) -> 'Gene': # string because forward reference
+    def from_feature(feature) -> 'Gene':  # string because forward reference
         """ Constructs a Gene instance from a CDS feature """
         start = int(feature.location.start)
         end = int(feature.location.end)
@@ -281,14 +282,12 @@ class Gene:
                 points = [(start, base),
                           (end, base - arrow_size),
                           (start, base - height),
-                          (start, base)
-                         ]
+                          (start, base)]
             else:
                 points = [(start, base - arrow_size),
                           (end, base - height),
                           (end, base),
-                          (start, base - arrow_size)
-                         ]
+                          (start, base - arrow_size)]
         else:
             if self.strand > -1:
                 arrowstart = end - arrow_size
@@ -297,8 +296,7 @@ class Gene:
                           (end, base - arrow_size),
                           (arrowstart, base - height),
                           (start, base - height),
-                          (start, base)
-                         ]
+                          (start, base)]
             else:
                 arrowstart = start + arrow_size
                 points = [(start, base - arrow_size),
@@ -306,10 +304,9 @@ class Gene:
                           (end, base - height),
                           (end, base),
                           (arrowstart, base),
-                          (start, base - arrow_size)
-                         ]
+                          (start, base - arrow_size)]
         arrow = builder.createPolygon(strokewidth=1, stroke='black', fill=colour,
-                            points=builder.convertTupleArrayToPoints(points))
+                                      points=builder.convertTupleArrayToPoints(points))
         locus_tag = self.name
         if self.protein:
             locus_tag = self.protein.get_id()
@@ -317,6 +314,7 @@ class Gene:
         arrow.setAttribute('locus_tag', locus_tag)
         arrow.set_class('clusterblast-orf')
         return arrow
+
 
 class Cluster:
     """ For constructing all SVG components required to represent a cluster
@@ -366,7 +364,7 @@ class Cluster:
         self.overall_strand *= -1
         for gene in self.genes:
             gene.reverse()
-        self.genes.reverse() # to ensure always drawing from left to right
+        self.genes.reverse()  # to ensure always drawing from left to right
 
     def __len__(self):
         return abs(self.start - self.end)
@@ -380,7 +378,7 @@ class Cluster:
                        + "%80s (%s)" % (self.description, self.similarity), 5, 20 + v_offset)
         elif self.accession.split("_")[0] in get_antismash_db_accessions():
             acc = Text('<a xlink:href="http://antismash-db.secondarymetabolites.org/output/'
-                       + self.accession  + '/index.html#cluster-%s" target="_blank">' % self.ref_cluster_number[1:]
+                       + self.accession + '/index.html#cluster-%s" target="_blank">' % self.ref_cluster_number[1:]
                        + self.full_description.replace(":", "</a>:"), 5, 20 + v_offset)
         acc.set_class("clusterblast-acc")
         group.addElement(acc)
@@ -410,15 +408,16 @@ class Cluster:
         for i, gene in enumerate(self.genes):
             group = Group()
             arrow = gene.get_arrow_polygon(scaling=scaling, offset=offset,
-                               base=arrow_y, colour=colours.get(gene.name, "white"))
+                                           base=arrow_y,
+                                           colour=colours.get(gene.name, "white"))
             if overview:
                 label = "all_"
             else:
                 label = "h"
             arrow.set_id("%s-%d_%s%d_%s_%s" % (prefix, self.query_cluster_number, label,
-                                              self.query_cluster_number, self.rank, i))
+                                               self.query_cluster_number, self.rank, i))
             group.addElement(arrow)
-            #Can be used for domains
+            # Can be used for domains
             group.set_id("a%s_00%s" % (self.query_cluster_number, i))
             groups.append(group)
         return groups
@@ -467,13 +466,14 @@ class QueryCluster(Cluster):
         groups.append(group)
 
         base = line_y + 5
-        offset = h_offset + 10 - self.start # 10 for margin
+        offset = h_offset + 10 - self.start  # 10 for margin
         for index, gene in enumerate(self.genes):
             arrow = gene.get_arrow_polygon(scaling=scaling, offset=offset,
                                            base=base, colour=colours.get(gene.name, "white"))
             arrow.set_id("%s-%s_q%s_%s_%s" % (prefix, self.query_cluster_number, index, self.rank, "all"))
             group.addElement(arrow)
         return groups
+
 
 class ClusterSVGBuilder:
     """ Constructs SVGs for both query cluster and matching clusters, in both
@@ -572,7 +572,7 @@ class ClusterSVGBuilder:
         viewbox = "0 0 %d %d" % (width, height)
         svg.set_viewBox(viewbox)
         svg.set_preserveAspectRatio("none")
-        scaling = (width - 20) / self.max_length # -20 for margins
+        scaling = (width - 20) / self.max_length  # -20 for margins
         offset = (self.max_length - len(self.query_cluster)) // 2
         for group in self.query_cluster.get_svg_groups(h_offset=offset, scaling=scaling,
                                              colours=self.colour_lookup, overview=True,

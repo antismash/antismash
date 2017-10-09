@@ -9,36 +9,35 @@ from minimock import mock, restore
 
 import antismash.modules.hmm_detection.rule_parser as rule_parser
 from antismash.common.test.helpers import DummyCDS, DummyRecord
-# pylint: disable=unused-import
-from antismash.modules.hmm_detection import signatures  # for mocking
-# pylint: enable=unused-import
+from antismash.modules.hmm_detection import signatures  # for mocking # pylint: disable=unused-import
 from antismash.modules.hmm_detection.test.test_hmm_detection import FakeHSP
+
 
 class DetectionTest(unittest.TestCase):
     def setUp(self):
         self.feature_by_id = {
-            "GENE_1" : DummyCDS(0, 30000, locus_tag="GENE_1"),
-            "GENE_2" : DummyCDS(30000, 50000, locus_tag="GENE_2"),
-            "GENE_3" : DummyCDS(70000, 90000, locus_tag="GENE_3"),
-            "GENE_X" : DummyCDS(95000, 100000, locus_tag="GENE_X"),
-            "GENE_4" : DummyCDS(125000, 140000, locus_tag="GENE_4"),
-            "GENE_5" : DummyCDS(145000, 150000, locus_tag="GENE_5")
+            "GENE_1": DummyCDS(0, 30000, locus_tag="GENE_1"),
+            "GENE_2": DummyCDS(30000, 50000, locus_tag="GENE_2"),
+            "GENE_3": DummyCDS(70000, 90000, locus_tag="GENE_3"),
+            "GENE_X": DummyCDS(95000, 100000, locus_tag="GENE_X"),
+            "GENE_4": DummyCDS(125000, 140000, locus_tag="GENE_4"),
+            "GENE_5": DummyCDS(145000, 150000, locus_tag="GENE_5")
         }
         self.features = list(self.feature_by_id.values())
-        self.features.sort(key=lambda x: x.location.start) # vital for py3 < 3.5
+        self.features.sort(key=lambda x: x.location.start)  # vital for py3 < 3.5
         self.record = DummyRecord(self.features)
 
         self.results_by_id = {
-            "GENE_1" : [FakeHSP("a", "GENE_1", 0, 10, 50, 0),
-                        FakeHSP("b", "GENE_1", 0, 10, 50, 0)],
-            "GENE_2" : [FakeHSP("a", "GENE_1", 0, 10, 50, 0),
-                        FakeHSP("c", "GENE_1", 0, 10, 50, 0)],
-            "GENE_3" : [FakeHSP("b", "GENE_1", 0, 10, 50, 0),
-                        FakeHSP("c", "GENE_1", 0, 10, 50, 0)],
-            "GENE_4" : [FakeHSP("e", "GENE_1", 0, 10, 50, 0),
-                        FakeHSP("f", "GENE_1", 0, 10, 50, 0)],
-            "GENE_5" : [FakeHSP("f", "GENE_1", 0, 10, 50, 0),
-                        FakeHSP("g", "GENE_1", 0, 10, 50, 0)]}
+            "GENE_1": [FakeHSP("a", "GENE_1", 0, 10, 50, 0),
+                       FakeHSP("b", "GENE_1", 0, 10, 50, 0)],
+            "GENE_2": [FakeHSP("a", "GENE_1", 0, 10, 50, 0),
+                       FakeHSP("c", "GENE_1", 0, 10, 50, 0)],
+            "GENE_3": [FakeHSP("b", "GENE_1", 0, 10, 50, 0),
+                       FakeHSP("c", "GENE_1", 0, 10, 50, 0)],
+            "GENE_4": [FakeHSP("e", "GENE_1", 0, 10, 50, 0),
+                       FakeHSP("f", "GENE_1", 0, 10, 50, 0)],
+            "GENE_5": [FakeHSP("f", "GENE_1", 0, 10, 50, 0),
+                       FakeHSP("g", "GENE_1", 0, 10, 50, 0)]}
         test_names = set(["a", "b", "c", "d", "e", "f", "g", "modelA", "modelB"])
         mock('signatures.get_signature_names', returns=test_names)
 
@@ -65,7 +64,7 @@ class DetectionTest(unittest.TestCase):
         return detected_types
 
     def expect(self, results, genes_to_hit):
-        expected = {gene : set("A") for gene in genes_to_hit}
+        expected = {gene: set("A") for gene in genes_to_hit}
         assert results == expected
 
     def test_single(self):
@@ -78,7 +77,7 @@ class DetectionTest(unittest.TestCase):
 
     def test_chained_or(self):
         results = self.run_test(["A 10 20 a or b or c or e or f"])
-        assert len(results) == 5 # all valid
+        assert len(results) == 5  # all valid
 
     def test_simple_and(self):
         results = self.run_test(["A 10 20 a and c"])
@@ -103,14 +102,14 @@ class DetectionTest(unittest.TestCase):
 
     def test_chained_and(self):
         results = self.run_test(["A 10 20 a and b and not c"])
-        self.expect(results, ["GENE_1"]) # 2 reaches c
+        self.expect(results, ["GENE_1"])  # 2 reaches c
 
         results = self.run_test(["A 10 20 a and b and not cds(a and b)"])
         # the range is too short to reach 2 for the a
         self.expect(results, [])
 
         results = self.run_test(["A 21 20 a and b and not cds(a and b)"])
-        self.expect(results, ["GENE_3"]) # 3 has b, 2 has a, 1 reaches 2 with a,b
+        self.expect(results, ["GENE_3"])  # 3 has b, 2 has a, 1 reaches 2 with a,b
 
     def test_simple_minimum(self):
         results = self.run_test(["A 10 20 minimum(2, [a, b])"])
@@ -121,12 +120,12 @@ class DetectionTest(unittest.TestCase):
 
     def test_single_gene(self):
         self.results_by_id = {
-            "GENE_1" : [
+            "GENE_1": [
                 FakeHSP("modelA", "GENE_1", 0, 10, 50, 0),
                 FakeHSP("modelB", "GENE_1", 0, 10, 50, 0)
             ]}
         self.feature_by_id = {
-            "GENE_1" : DummyCDS(0, 30000, locus_tag="GENE_1")
+            "GENE_1": DummyCDS(0, 30000, locus_tag="GENE_1")
         }
 
         results = self.run_test(["A 10 20 minimum(2, [modelA,modelB])"])
@@ -149,7 +148,7 @@ class DetectionTest(unittest.TestCase):
         self.expect(results, ["GENE_3"])
 
         results = self.run_test(["A 10 20 c and not minimum(1, [a, b])"])
-        expected = {} # 3 had a,c and 2 contributes a second option, b
+        expected = {}  # 3 had a,c and 2 contributes a second option, b
         assert results == expected
 
         results = self.run_test(["A 50 50 c and not minimum(2, [a, b])"])
@@ -157,18 +156,18 @@ class DetectionTest(unittest.TestCase):
         self.expect(results, ["GENE_4"])
 
     def test_negated_group(self):
-        #only gene 3 is far enough from both an a and an f
+        # only gene 3 is far enough from both an a and an f
         results = self.run_test(["A 10 10 c and not (a or f)"])
         self.expect(results, ["GENE_3"])
 
     def test_negated_cds(self):
         results = self.run_test(["A 10 20 not cds(a and b)"])
-        assert "GENE_1" not in results # since 1 has both a and b
-        assert "GENE_2" not in results # since 1 is within range and has both
+        assert "GENE_1" not in results  # since 1 has both a and b
+        assert "GENE_2" not in results  # since 1 is within range and has both
 
         results = self.run_test(["A 10 20 a and not cds(a and b)"])
-        assert "GENE_1" not in results # since 1 has both a and b
-        assert "GENE_2" not in results # since 1 is within range and has both
+        assert "GENE_1" not in results  # since 1 has both a and b
+        assert "GENE_2" not in results  # since 1 is within range and has both
 
         results = self.run_test(["A 10 20 not cds(a or f)"])
         # everything is close to a CDS with a or f, so no hits
@@ -200,7 +199,6 @@ class DetectionTest(unittest.TestCase):
         print(self.results_by_id["GENE_4"])
         self.expect(results, ["GENE_4"])
 
-
     def test_negated_minscore(self):
         # higher than default, everything with f counts
         results = self.run_test(["A 1 1 f and not minscore(e, 100)"])
@@ -213,6 +211,7 @@ class DetectionTest(unittest.TestCase):
         # below the cutoff
         results = self.run_test(["A 1 1 f and not minscore(e, 49)"])
         self.expect(results, ["GENE_5"])
+
 
 class RuleParserTest(unittest.TestCase):
     def setUp(self):
@@ -372,6 +371,7 @@ class RuleParserTest(unittest.TestCase):
     def test_emptylines(self):
         rules = rule_parser.Parser(["", "name 20 20 a"]).rules
         assert len(rules) == 1 and rules[0].name == "name"
+
 
 class TokenTest(unittest.TestCase):
     def test_alpha(self):

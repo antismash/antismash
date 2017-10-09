@@ -22,6 +22,7 @@ def get_git_version():
         pass
     return ""
 
+
 def get_version():
     """Get the current version string"""
     version = antismash.__version__
@@ -31,26 +32,24 @@ def get_version():
 
     return version
 
+
 def main(args):
     all_modules = antismash.get_detection_modules() + antismash.get_analysis_modules()
     parser = antismash.config.args.build_parser(from_config_file=True, modules=all_modules)
 
-    #if --help, show help texts and exit
+    # if --help, show help texts and exit
     if set(args).intersection({"-h", "--help", "--help-showall"}):
         parser.print_help(None, "--help-showall" in args)
         return 0
 
-    #Parse arguments, removing hyphens from the beginning of file names to avoid conflicts with argparse
-    infile_extensions = ('.fasta', '.fas', '.fa', '.gb', '.gbk', '.emb', '.embl')
-
     try:
-        options = parser.parse_args(["@config_test"] + args) #TODO use config loader here instead
+        options = parser.parse_args(["@config_test"] + args)  # TODO use config loader here instead
     except SystemExit as err:
         # note: logging isn't set up as usual here because it relies on config
         logging.error("option generation exited early %s", str(err))
         raise
 
-    #if -V, show version text and exit
+    # if -V, show version text and exit
     if options.version:
         print("antiSMASH %s" % get_version())
         return 0

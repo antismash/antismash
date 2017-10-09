@@ -4,12 +4,13 @@
 import logging
 import os
 
+
 class RecordLayer:
     def __init__(self, seq_record, options):
-        from antismash.outputs.html.js import convert_record # TODO break this circular dependency
+        from antismash.outputs.html.js import convert_record  # TODO break this circular dependency
         self.seq_record = seq_record
         self.options = options
-        self.record = convert_record(self.seq_record, self.options.options) #TODO stop this from being called again
+        self.record = convert_record(self.seq_record, self.options.options)  # TODO stop this from being called again
         self.clusters = []
         for cluster in self.record['clusters']:
             self.clusters.append(ClusterLayer(cluster, self, self.seq_record.get_cluster(cluster['idx'])))
@@ -86,7 +87,7 @@ class ClusterLayer:
         self.find_plugins_for_cluster()
         self.has_details = self.determine_has_details()
         self.has_sidepanel = self.determine_has_sidepanel()
-        self.probability = "BROKEN" #TODO when clusterfinder returns
+        self.probability = "BROKEN"  # TODO when clusterfinder returns
         self.has_domain_alignment = self.determine_has_domain_alignment()
 
     @property
@@ -123,7 +124,6 @@ class ClusterLayer:
     def BGCid(self):
         return format(self.cluster['BGCid'].split('_')[0])
 
-
     @property
     def detection_rules(self):
         return ["%s: %s" % (product, rules) for product, rules in zip(self.cluster_rec.products, self.cluster_rec.detection_rules)]
@@ -131,37 +131,37 @@ class ClusterLayer:
     def description_text(self):
         " returns the gene cluster description "
         if self.record.options.input_type == 'nucl':
-            description_text = self.record.seq_name +' - Gene Cluster %s. Type = %s. Location: %s - %s nt. ' %(self.idx, self.type, self.start, self.end)
+            description_text = self.record.seq_name \
+                    + ' - Gene Cluster %s. Type = %s. Location: %s - %s nt. ' % (
+                            self.idx, self.type, self.start, self.end)
         else:
-            description_text = self.record.seq_id + '- Gene Cluster %s. Type = %s. ' %(self.idx, self.type)
+            description_text = self.record.seq_id + '- Gene Cluster %s. Type = %s. ' % (self.idx, self.type)
         if 'probability' in self.cluster:
             description_text += 'ClusterFinder probability: %s. ' % self.probability
         description_text += 'Click on genes for more information.'
 
         return description_text
 
-    def cluster_blast_generator(self): # TODO: deduplicate
+    def cluster_blast_generator(self):  # TODO: deduplicate
         top_hits = self.cluster_rec.clusterblast[:self.record.options.nclusters]
         for i, label in enumerate(top_hits):
-            i += 1 # 1-indexed
+            i += 1  # 1-indexed
             svg_file = os.path.join('svg', 'clusterblast%s_%s.svg' % (self.idx, i))
             self.cluster_blast.append((label, svg_file))
-
 
     def knowncluster_blast_generator(self):
         top_hits = self.cluster_rec.knownclusterblast[:self.record.options.nclusters]
         for i, label_pair in enumerate(top_hits):
-            i += 1 # 1-indexed
+            i += 1  # 1-indexed
             label = label_pair[0]
             svg_file = os.path.join('svg', 'knownclusterblast%s_%s.svg' % (self.idx, i))
             self.knowncluster_blast.append((label, svg_file))
-
 
     def subcluster_blast_generator(self):
         assert self.cluster_rec.subclusterblast is not None, self.cluster_rec.location
         top_hits = self.cluster_rec.subclusterblast[:self.record.options.nclusters]
         for i, label in enumerate(top_hits):
-            i += 1 # since one-indexed
+            i += 1  # since one-indexed
             svg_file = os.path.join('svg', 'subclusterblast%s_%s.svg' % (self.idx, i))
             self.subcluster_blast.append((label, svg_file))
 
@@ -250,7 +250,7 @@ class OptionsLayer:
 
     @property
     def smcogs(self):
-        return not self.options.minimal or self.options.smcogs_enabled or self.options.smcogs_trees # TODO work out a better way of doing this
+        return not self.options.minimal or self.options.smcogs_enabled or self.options.smcogs_trees  # TODO work out a better way of doing this
 
     @property
     def tta(self):
@@ -275,7 +275,7 @@ class OptionsLayer:
     @property
     def transatpks_da(self):
         logging.critical("OptionsLayer.transatpks_da will always be False")
-        return False # self.options.transatpks_da
+        return False  # self.options.transatpks_da
 
     @property
     def logfile(self):

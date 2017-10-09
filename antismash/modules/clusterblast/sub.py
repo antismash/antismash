@@ -16,9 +16,11 @@ from .core import write_raw_clusterblastoutput, write_fastas_with_all_genes, \
                   runblast, load_clusterblast_database, get_core_gene_ids
 from .results import ClusterResult, GeneralResults
 
+
 def _get_datafile_path(filename):
     """ A simple helper to get the full path of subclusterblast datafile """
     return path.get_full_path(__file__, 'data', 'sub', filename)
+
 
 def check_sub_prereqs(options):
     "Check if all required applications and datafiles are present"
@@ -46,6 +48,7 @@ def check_sub_prereqs(options):
 
     return failure_messages
 
+
 def run_subclusterblast_on_record(record, options) -> GeneralResults:
     """ Loads reference databases and performs subclusterblast analysis
 
@@ -59,6 +62,7 @@ def run_subclusterblast_on_record(record, options) -> GeneralResults:
     logging.info('Running subcluster search')
     clusters, proteins = load_clusterblast_database(record, "subclusterblast")
     return perform_subclusterblast(options, record, clusters, proteins)
+
 
 def _run_blast_helper(database, index) -> str:
     """ A simple wrapper of runblast() to reverse arg order to allow for
@@ -77,6 +81,7 @@ def _run_blast_helper(database, index) -> str:
     """
     return runblast("input%d.fasta" % index, database)
 
+
 def run_clusterblast_processes(options) -> None:
     """ Run blast in parallel, creates `options.cpu` number of files with
         the name format "inputN.fasta"
@@ -94,6 +99,7 @@ def run_clusterblast_processes(options) -> None:
     subprocessing.parallel_function(partial, [[i] for i in range(options.cpus)],
                                     cpus=options.cpus)
 
+
 def read_clusterblast_output(options):
     """ Builds a single output from the results from the distributed blast run
 
@@ -109,6 +115,7 @@ def read_clusterblast_output(options):
             output = handle.read()
         blastoutput.append(output)
     return "".join(blastoutput)
+
 
 def perform_subclusterblast(options, record, clusters, proteins) -> GeneralResults:
     """ Run BLAST on gene cluster proteins of each cluster, parse output and
@@ -136,7 +143,8 @@ def perform_subclusterblast(options, record, clusters, proteins) -> GeneralResul
             write_raw_clusterblastoutput(options.output_dir, blastoutput, prefix="subclusterblast")
             # parse and score diamond results
             _, cluster_names_to_queries = blastparse(blastoutput, record,
-                                      min_seq_coverage=40, min_perc_identity=45)
+                                                     min_seq_coverage=40,
+                                                     min_perc_identity=45)
             ranking = score_clusterblast_output(clusters, allcoregenes, cluster_names_to_queries)
             logging.debug("Cluster at %s has %d subclusterblast results", cluster.location, len(ranking))
             # store results

@@ -8,6 +8,7 @@ import unittest
 
 from antismash.common import utils
 
+
 class TestUniqueID(unittest.TestCase):
     def test_bad_starts(self):
         for bad_start in ["start", None, dict(), list()]:
@@ -40,7 +41,6 @@ class TestUniqueID(unittest.TestCase):
         assert len(existing) == 15 and new not in existing
         assert new == "b_0" and counter == 0
 
-
     def test_overlong(self):
         existing = {"a_%d" % i for i in range(150)}
         # prefix itself too long
@@ -50,6 +50,7 @@ class TestUniqueID(unittest.TestCase):
         # the generated number is too long
         with self.assertRaisesRegex(RuntimeError, "Could not generate .*"):
             utils.generate_unique_id("a", existing, start=140, max_length=4)
+
 
 class TestRobustProteinAnalysis(unittest.TestCase):
     def test_init(self):
@@ -74,7 +75,7 @@ class TestRobustProteinAnalysis(unittest.TestCase):
         """ Test RobustProteinAnalysis.molecular_weight() calculates
             correct weight when ignoring invalids"""
         rpa = utils.RobustProteinAnalysis("MAGICXHAT")
-        self.assertEqual(802.9621, rpa.molecular_weight()) # default is True
+        self.assertEqual(802.9621, rpa.molecular_weight())  # default is True
 
         rpa = utils.RobustProteinAnalysis("MAGICXHAT", ignore_invalid=True)
         self.assertEqual(802.9621, rpa.molecular_weight())

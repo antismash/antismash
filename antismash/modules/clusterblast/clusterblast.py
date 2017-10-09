@@ -10,6 +10,7 @@ from .core import write_fastas_with_all_genes, run_diamond, write_raw_clusterbla
                   parse_all_clusters, score_clusterblast_output, get_core_gene_ids
 from .results import ClusterResult, GeneralResults
 
+
 def perform_clusterblast(options, record, db_clusters, db_proteins) -> GeneralResults:
     """ Run BLAST on gene cluster proteins for each cluster, parse output and
         return result rankings for each cluster

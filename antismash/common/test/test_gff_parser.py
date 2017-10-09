@@ -10,6 +10,7 @@ from Bio.SeqFeature import CompoundLocation
 from antismash.common import gff_parser, path
 from antismash.common.test.helpers import get_simple_options, DummyRecord
 
+
 class GffParserTest(TestCase):
     def setUp(self):
         self.config = get_simple_options(None, [])
@@ -53,9 +54,9 @@ class GffParserTest(TestCase):
 
         # doesn't test very much
         self.sequences[0].id = "CONTIG_1"
-        gff_parser.run(self.sequences[0], self.single_entry, self.config) # insert the features
+        gff_parser.run(self.sequences[0], self.single_entry, self.config)  # insert the features
         assert not gff_parser.check_gff_suitability(self.config, self.sequences)
 
         # test force correlation
-        self.sequences = self.sequences[1:] # CONTIG_2
+        self.sequences = self.sequences[1:]  # CONTIG_2
         assert gff_parser.check_gff_suitability(self.config, self.sequences)

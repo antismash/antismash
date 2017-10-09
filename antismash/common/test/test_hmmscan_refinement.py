@@ -15,6 +15,7 @@ with warnings.catch_warnings():
 import antismash.common.hmmscan_refinement as refinement
 from antismash.common import path
 
+
 class TestHMMResult(unittest.TestCase):
     def test_construction(self):
         strings = refinement.HMMResult("dummy_hit", "1", "5", "3E-10", "53.5")
@@ -48,14 +49,15 @@ class TestHMMResult(unittest.TestCase):
         result = refinement.HMMResult("dummy_hit", 1, 5, 3e-10, 53.5)
         assert str(result) == "HMMResult(dummy_hit, 1, 5, evalue=3e-10, bitscore=53.5)"
 
+
 class TestRefinement(unittest.TestCase):
     def setUp(self):
         self.gene_id = "SCO1217"
         datafile = path.get_full_path(__file__, 'data', 'hmmscan', 'SCO1217.hmmer3.txt')
         self.results = list(SearchIO.parse(datafile, 'hmmer3-text'))
-        self.hmm_lengths = {"SMCOG1003:sensor_histidine_kinase" : 570,
-                           "SMCOG1048:sensor_histidine_kinase" : 417,
-                           "SMCOG1237:transposase" : 387}
+        self.hmm_lengths = {"SMCOG1003:sensor_histidine_kinase": 570,
+                            "SMCOG1048:sensor_histidine_kinase": 417,
+                            "SMCOG1237:transposase": 387}
         self.hit_ids = set(self.hmm_lengths.keys())
 
     # TODO: create a test with multiple genes hit
@@ -131,7 +133,7 @@ class TestRefinement(unittest.TestCase):
         regulator_result = refinement.HMMResult(regulator_id, 1, 2, 1e-10, 1)
         results.append(regulator_result)
         new_lengths = dict(self.hmm_lengths)
-        new_lengths[regulator_id] = len(regulator_result) * 100 # always big
+        new_lengths[regulator_id] = len(regulator_result) * 100  # always big
         # set the thresholds to be unreachable
         new = refinement._remove_incomplete(results, new_lengths, threshold=2., fallback=2.)
         # ensure the tiny, but present, regulator is still in the list
@@ -142,15 +144,15 @@ class TestRefinement(unittest.TestCase):
         first = refinement.HMMResult("dummy_hit", 1, 10, 3e-10, 53.5)
         second = refinement.HMMResult("dummy_hit", 10, 20, 3e-20, 73.5)
         results = [first, second]
-        assert len(refinement._remove_overlapping(results, {"dummy_hit" : 20})) == 2
-        assert len(refinement._remove_overlapping(results, {"dummy_hit" : 100})) == 2
+        assert len(refinement._remove_overlapping(results, {"dummy_hit": 20})) == 2
+        assert len(refinement._remove_overlapping(results, {"dummy_hit": 100})) == 2
         first.query_end = 16
-        assert len(refinement._remove_overlapping(results, {"dummy_hit" : 20})) == 1
-        assert len(refinement._remove_overlapping(results, {"dummy_hit" : 100})) == 2
+        assert len(refinement._remove_overlapping(results, {"dummy_hit": 20})) == 1
+        assert len(refinement._remove_overlapping(results, {"dummy_hit": 100})) == 2
 
         first.query_end = 13
-        assert len(refinement._remove_overlapping(results, {"dummy_hit" : 10})) == 1
-        assert len(refinement._remove_overlapping(results, {"dummy_hit" : 100})) == 2
+        assert len(refinement._remove_overlapping(results, {"dummy_hit": 10})) == 1
+        assert len(refinement._remove_overlapping(results, {"dummy_hit": 100})) == 2
 
     def test_combined(self):
         results = refinement.refine_hmmscan_results(self.results, self.hmm_lengths)
