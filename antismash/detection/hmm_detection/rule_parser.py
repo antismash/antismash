@@ -103,7 +103,7 @@ Complete examples:
 import string
 from enum import IntEnum
 
-from antismash.modules.hmm_detection import signatures
+from antismash.detection.hmm_detection import signatures
 
 
 class RuleSyntaxError(SyntaxError):

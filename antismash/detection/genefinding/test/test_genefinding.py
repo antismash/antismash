@@ -7,7 +7,7 @@
 import unittest
 from argparse import Namespace
 
-from antismash.modules.genefinding import check_options, is_enabled
+from antismash.detection.genefinding import check_options, is_enabled
 
 
 class TestCore(unittest.TestCase):
@@ -36,4 +36,4 @@ class TestCore(unittest.TestCase):
         assert is_enabled(options)
 
         options.genefinding_tool = 'none'
-        assert is_enabled(options)
+        assert not is_enabled(options)

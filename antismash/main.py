@@ -15,8 +15,8 @@ from Bio import SeqIO
 from antismash.config import loader, update_config
 from antismash.common import deprecated, serialiser, record_processing
 from antismash.common.module_results import ModuleResults
-from antismash.modules import tta, genefinding, hmm_detection, clusterblast, \
-                              dummy, lanthipeptides, smcogs
+from antismash.detection import genefinding, hmm_detection
+from antismash.modules import tta, clusterblast, lanthipeptides, smcogs, dummy
 from antismash.outputs import html, svg
 
 __version__ = "5.0.0alpha"
@@ -43,7 +43,7 @@ def get_detection_modules() -> List[ModuleType]:
         Returns:
             a list of modules
     """
-    return [hmm_detection, genefinding]
+    return [genefinding, hmm_detection]
 
 
 def get_analysis_modules() -> List[ModuleType]:
@@ -134,32 +134,13 @@ def verify_options(options, modules) -> bool:
     return False
 
 
-def detect_signature_genes(record, options):  # TODO: pick one of this or run_detection_stage()
+def detect_signature_genes(record, options) -> None:
     """ Detect different secondary metabolite clusters based on HMM signatures """
-    logging.info('Looking for secondary metabolite cluster signatures')
-    hmm_detection.detect_signature_genes(record, options)
-
-
-def run_detection_stage(record, options, detection_modules) -> Dict[str, Optional[ModuleResults]]:
-    """ Runs detection modules on a record
-
-        Arguments:
-            record: the record to run detection on
-            options: antismash Config
-            detection_modules: the modules to use for detection
-
-        Returns:
-            a dict mapping module name to either ModuleResults (if appplicable)
-                or None
-    """
     # strip any existing antismash results first
     deprecated.strip_record(record)
 
-    detection_results = {}
-    for module in detection_modules:
-        if module.is_enabled(options):
-            detection_results[module.NAME] = module.run_on_record(record, options)
-    return detection_results
+    logging.info('Looking for secondary metabolite cluster signatures')
+    hmm_detection.detect_signature_genes(record, options)
 
 
 def regenerate_results_for_record(record, options, modules, previous_result
@@ -467,7 +448,7 @@ def run_antismash(sequence_file, options, detection_modules=None,
         # skip if we're not interested in it
         if seq_record.skip:
             continue
-        run_detection_stage(seq_record, options, detection_modules)
+        detect_signature_genes(seq_record, options)
         analyse_record(seq_record, options, analysis_modules, previous_result)
 
     # Write results

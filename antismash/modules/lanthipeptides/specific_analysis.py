@@ -16,7 +16,7 @@ from Bio.SeqFeature import FeatureLocation
 from helperlibs.wrappers.io import TemporaryFile
 from sklearn.externals import joblib
 
-from antismash.modules.hmm_detection.signatures import HmmSignature  # TODO shift into common
+from antismash.detection.hmm_detection.signatures import HmmSignature
 from antismash.common import deprecated, path, subprocessing, secmet, module_results, serialiser
 from antismash.config import get_config as get_global_config
 

@@ -7,10 +7,10 @@
 import unittest
 from minimock import mock, restore
 
-import antismash.modules.hmm_detection.rule_parser as rule_parser
 from antismash.common.test.helpers import DummyCDS, DummyRecord
-from antismash.modules.hmm_detection import signatures  # for mocking # pylint: disable=unused-import
-from antismash.modules.hmm_detection.test.test_hmm_detection import FakeHSP
+from antismash.detection.hmm_detection import rule_parser
+from antismash.detection.hmm_detection import signatures  # for mocking # pylint: disable=unused-import
+from antismash.detection.hmm_detection.test.test_hmm_detection import FakeHSP
 
 
 class DetectionTest(unittest.TestCase):

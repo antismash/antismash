@@ -11,7 +11,7 @@ from .run_glimmerhmm import run_glimmerhmm
 
 def run_on_record(record, options):
     "Find genes in a seq_record"
-    if options.genefinding_tool == 'none':
+    if options.genefinding_tool == 'error':
         raise ValueError("Called find_genes, but genefinding disabled")
     if options.genefinding_tool == "all-orfs":
         find_all_orfs(record)

@@ -7,7 +7,7 @@ import os
 from antismash.common.path import locate_executable
 from antismash.config import get_config
 from antismash.config.args import ModuleArgs
-from antismash.modules.genefinding.genefinding import run_on_record
+from antismash.detection.genefinding.genefinding import run_on_record
 
 NAME = "genefinding"
 SHORT_DESCRIPTION = "Genefinding with GlimmerHMM or Prodigal"
@@ -17,12 +17,14 @@ def get_arguments():
     args = ModuleArgs('Gene finding options (ignored when ORFs are annotated)', 'genefinding')
     args.add_option('tool',
                     dest='tool',
-                    default='none',
-                    choices=['glimmerhmm', 'prodigal', 'prodigal-m', 'all-orfs', 'none'],
+                    default='error',
+                    choices=['glimmerhmm', 'prodigal', 'prodigal-m', 'all-orfs', 'none', 'error'],
                     type=str,
                     help="Specify algorithm used for gene finding: GlimmerHMM, "
                          "Prodigal, Prodigal Metagenomic/Anonymous mode, use"
                          " all ORFs > 60 nucleotides, or none."
+                         " The 'error' option will raise an error if genefinding is attempted."
+                         " The 'none' option will not run genefinding."
                          " (default: %(default)s).")
     args.add_option('gff3',
                     dest='gff3',
@@ -63,4 +65,4 @@ def check_options(options):
 
 
 def is_enabled(options):
-    return options.genefinding_tool != "none" or options.genefinding_gff3
+    return options.genefinding_tool != "none"
