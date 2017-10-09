@@ -188,7 +188,7 @@ def pre_process_sequences(sequences, options, genefinding) -> List[Record]:
     for sequence in sequences:
         if sequence.skip:
             continue
-        if len(sequence.get_cds_features()) < 1:
+        if not sequence.get_cds_features():
             if options.genefinding_gff3:
                 logging.info("No CDS features found in record %r but GFF3 file provided, running GFF parser.", sequence.id)
                 gff_parser.run(sequence, single_entry, options)
@@ -197,7 +197,7 @@ def pre_process_sequences(sequences, options, genefinding) -> List[Record]:
             elif options.genefinding_tool != "none":
                 logging.info("No CDS features found in record %r, running gene finding.", sequence.id)
                 genefinding.run_on_record(sequence, options)
-            if len(sequence.get_cds_features()) < 1:
+            if sequence.get_cds_features():
                 logging.info("No genes found, skipping record")
                 sequence.skip = "No genes found"
                 continue

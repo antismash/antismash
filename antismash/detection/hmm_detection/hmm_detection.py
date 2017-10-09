@@ -9,8 +9,8 @@ from antismash.common import path, deprecated
 from antismash.common.secmet.feature import Cluster, SecMetQualifier, CDSFeature
 from antismash.common.deprecated import FeatureLocation
 from antismash.common.subprocessing import run_hmmsearch
-from antismash.modules.hmm_detection import rule_parser
-from antismash.modules.hmm_detection.signatures import get_signature_profiles, get_signature_names
+from antismash.detection.hmm_detection import rule_parser
+from antismash.detection.hmm_detection.signatures import get_signature_profiles, get_signature_names
 
 T = TypeVar("T")
 

@@ -15,8 +15,8 @@ from antismash.common.test.helpers import DummyRecord, DummyCDS, DummyFeature, D
 from antismash.common.secmet import Record, CDSFeature, Feature
 import antismash.common.path as path
 from antismash.config import get_config, update_config, destroy_config, args
-import antismash.modules.hmm_detection as core
-from antismash.modules.hmm_detection import hmm_detection, rule_parser, signatures
+import antismash.detection.hmm_detection as core
+from antismash.detection.hmm_detection import hmm_detection, rule_parser, signatures
 
 
 class FakeHSP(object):  # pylint: disable=too-few-public-methods

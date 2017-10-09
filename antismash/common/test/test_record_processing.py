@@ -186,6 +186,7 @@ class TestPreprocessRecords(unittest.TestCase):
         assert not self.genefinding.was_run
 
     def test_nisin_fasta_only(self):
+        config.update_config({"genefinding_tool": "none"})
         filepath = path.get_full_path(__file__, "data", "nisin.fasta")
         records = record_processing.parse_input_sequence(filepath)
         assert len(records) == 1
@@ -195,7 +196,7 @@ class TestPreprocessRecords(unittest.TestCase):
         assert not self.genefinding.was_run
         assert not records[0].get_cds_features()
 
-        # make sure genfinding was run when not 'none'
+        # make sure genefinding was run when not 'none'
         records[0].skip = False
         config.update_config({"genefinding_tool": "not-none"})
         record_processing.pre_process_sequences(records, self.options, self.genefinding)

@@ -12,10 +12,10 @@ from antismash.common.subprocessing import run_hmmpress
 
 from antismash.config.args import ModuleArgs
 
-from antismash.modules.hmm_detection import rule_parser
-from antismash.modules.hmm_detection.hmm_detection import detect_signature_genes
-from antismash.modules.hmm_detection.rule_parser import Parser
-from antismash.modules.hmm_detection.signatures import get_signature_profiles
+from antismash.detection.hmm_detection import rule_parser
+from antismash.detection.hmm_detection.hmm_detection import detect_signature_genes
+from antismash.detection.hmm_detection.rule_parser import Parser
+from antismash.detection.hmm_detection.signatures import get_signature_profiles
 
 NAME = "hmmdetection"
 SHORT_DESCRIPTION = "Cluster detection with HMM"
