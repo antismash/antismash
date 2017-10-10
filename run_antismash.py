@@ -9,7 +9,10 @@ import logging
 import sys
 import os
 
+from argparse import Namespace
+
 import antismash
+from antismash.config import update_config
 from antismash.common.subprocessing import execute
 
 
@@ -42,12 +45,11 @@ def main(args):
         parser.print_help(None, "--help-showall" in args)
         return 0
 
-    try:
-        options = parser.parse_args(["@config_test"] + args)  # TODO use config loader here instead
-    except SystemExit as err:
-        # note: logging isn't set up as usual here because it relies on config
-        logging.error("option generation exited early %s", str(err))
-        raise
+    options = antismash.config.build_config(args, parser=parser)
+
+    if options.write_config_file:
+        parser.write_to_config_file(options.write_config_file, options.__dict__)
+        return 0
 
     # if -V, show version text and exit
     if options.version:
@@ -66,7 +68,7 @@ def main(args):
         return 1
     if options.sequences:
         sequence = options.sequences[0]
-        del options.sequences
+        options.__dict__.pop("sequences")
     else:
         sequence = ""
 

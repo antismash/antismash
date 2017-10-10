@@ -30,7 +30,7 @@ def get_arguments():
 
 
 def check_options(options):
-    if options.without_fimo or options.borderpredict:
+    if options.without_fimo or options.borderpredict or options.cassis:
         raise ValueError("Dummy options can't be enabled")
     return []
 

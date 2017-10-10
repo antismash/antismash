@@ -14,24 +14,23 @@ import antismash
 from antismash.common import path
 from antismash.common.test import helpers
 from antismash.common.secmet import Record
-from antismash.config import update_config, destroy_config
-from antismash.config.args import build_parser
-from antismash.modules import lanthipeptides
+from antismash.config import build_config, update_config, destroy_config
 from antismash.modules.lanthipeptides import specific_analysis, LanthiResults
 import antismash.modules.lanthipeptides.config as lanthi_config
 
 
 class IntegrationLanthipeptides(unittest.TestCase):
     def setUp(self):
-        self.options = helpers.get_simple_options(lanthipeptides, [])
+        self.options = build_config(["--minimal", "--enable-lanthipeptides"],
+                                    isolated=True, modules=antismash.get_all_modules())
+        self.options.all_enabled_modules = [module for module in antismash.get_all_modules() if module.is_enabled(self.options)]  # TODO: shift elsewhere
         self.set_fimo_enabled(True)
 
     def tearDown(self):
         destroy_config()
 
     def set_fimo_enabled(self, val):
-        self.options.without_fimo = not val
-        update_config(self.options)
+        update_config({"without_fimo": not val})
         lanthi_config.get_config().fimo_present = val
 
     def test_nisin(self):
@@ -67,9 +66,7 @@ class IntegrationLanthipeptides(unittest.TestCase):
     def test_nisin_complete(self):
         with TemporaryDirectory() as output_dir:
             args = ["run_antismash.py", "--minimal", "--enable-lanthipeptides", "--output-dir", output_dir]
-            parser = build_parser(modules=antismash.get_all_modules())
-            options = parser.parse_args(args)
-            options.all_enabled_modules = [module for module in antismash.get_all_modules() if module.is_enabled(options)]  # TODO: shift elsewhere
+            options = build_config(args, isolated=True, modules=antismash.get_all_modules())
             antismash.run_antismash(helpers.get_path_to_nisin_genbank(), options)
 
             # make sure the html_output section was tested
@@ -173,6 +170,7 @@ class IntegrationLanthipeptides(unittest.TestCase):
 
 class IntegrationLanthipeptidesWithoutFimo(IntegrationLanthipeptides):
     def setUp(self):
-        self.options = helpers.get_simple_options(lanthipeptides, [])
+        self.options = build_config(["--minimal", "--enable-lanthipeptides"],
+                                    isolated=True, modules=antismash.get_all_modules())
         self.set_fimo_enabled(False)
         assert lanthi_config.get_config().fimo_present is False

@@ -14,13 +14,13 @@ from antismash.main import get_all_modules, detect_signature_genes
 from antismash.common.record_processing import parse_input_sequence
 from antismash.common.module_results import ModuleResults
 import antismash.common.test.helpers as helpers
-from antismash.config import args, get_config, update_config, destroy_config
+from antismash.config import build_config, get_config, update_config, destroy_config
 from antismash.modules import clusterblast
 
 
 class Base(unittest.TestCase):
     def setUp(self):
-        options = args.build_parser(modules=get_all_modules()).parse_args(self.get_args())
+        options = build_config(self.get_args(), isolated=True, modules=get_all_modules())
         self.old_config = get_config().__dict__
         self.options = update_config(options)
 

@@ -7,7 +7,7 @@ import multiprocessing
 import os
 
 
-class AntiSmashParser(argparse.ArgumentParser):
+class AntismashParser(argparse.ArgumentParser):
     """ Custom argument parser for antiSMASH to override default help output
 
         Also helps with module level arguments
@@ -66,12 +66,21 @@ class AntiSmashParser(argparse.ArgumentParser):
         self._show_all = show_all
         super().print_help(file)
 
-    def write_to_config_file(self, filename) -> None:
+    def write_to_config_file(self, filename, values=None) -> None:
         """ Write the default options to file in a form that can be parsed again
+
+            Arguments:
+                filename: the filename to write to
+                values: a Namespace object with values to use instead of defaults
         """
-        def construct_arg_text(arg, processed_destinations):
-            """ Only construct if not already processed and not a help arg"""
-            if arg.dest in ["help", "help_showall"] or arg.dest in processed_destinations:
+        def construct_arg_text(arg, processed_destinations, values):
+            """ Only construct if not already processed and not a help or input
+                arg
+            """
+            if arg.dest in ["help", "help_showall", "write_config_file",
+                            "reuse_results", "check_prereqs_only",
+                            "list_plugins", "version", "genefinding_gff3"] \
+                    or arg.dest in processed_destinations:
                 return []
             # skip postional args
             if not arg.option_strings:
@@ -88,35 +97,58 @@ class AntiSmashParser(argparse.ArgumentParser):
             # add the set of possible choices, if relevant
             if arg.choices:
                 lines.append("## Possible choices: {}".format(",".join(arg.choices)))
-            # convert options with list values to strings
+            # start with default value
             value = arg.default
+            # and if it was supplied, use it
+            if arg.dest in values:
+                value = values.get(arg.dest)
+            # convert options with list values to strings
+            was_list = isinstance(value, list)
             if value and isinstance(value, list):
                 value = ",".join(value)
-            if not value:
-                lines.append("#{}".format(flag))
+            if isinstance(arg, argparse._StoreTrueAction):
+                # don't write the value if it only changes to True,
+                # otherwise the True will be considered a positional arg
+                # and causes problems with the sequence
+                state = "#"
+                if value:
+                    state = ""
+                lines.append("{}{}".format(state, flag))
+            elif not value:
+                default = arg.default
+                if not default:
+                    default = arg.metavar
+                lines.append("#{} {}".format(flag, default))
             else:
-                lines.append("{} {}".format(flag, value))
-            return ["\n".join(lines), "\n"]
+                default = ""
+                if value == arg.default or was_list and value.split(",") == arg.default:
+                    default = "#"
+                lines.append("{}{} {}".format(default, flag, value))
+            return ["\n".join(lines)]
+
+        if not values:
+            values = argparse.Namespace()
 
         outfile = open(filename, 'w')
         dests = set()  # set of processed destinations
         titles = defaultdict(lambda: defaultdict(list))
-        for parent in self.parents:
+        for parent in sorted(self.parents, key=lambda group: group.title):
             if getattr(parent, 'parser'):
                 for arg in parent.parser.get_actions():
-                    titles[parent.title][parent.prefix].extend(construct_arg_text(arg, dests))
+                    titles[parent.title][parent.prefix].extend(construct_arg_text(arg, dests, values))
 
         for arg in self._actions:
-            titles["Core options"][""].extend(construct_arg_text(arg, dests))
+            titles["Core options"]["core"].extend(construct_arg_text(arg, dests, values))
 
         for title, prefixes in titles.items():
             banner = "#"*10 + "\n"
             outfile.writelines([banner, "#\t{}\n".format(title), banner, "\n"])
             for prefix, lines in prefixes.items():
-                if prefix:
-                    outfile.write("[{}]\n".format(prefix))
+#                if prefix:
+#                    outfile.write("[{}]\n".format(prefix))
                 outfile.write("\n".join(lines))
-            outfile.write("\n\n\n")
+                outfile.write("\n")
+            outfile.write("\n\n")
         outfile.close()
 
     def format_help(self) -> str:
@@ -229,7 +261,7 @@ class ModuleArgs:
         if not title:
             raise ValueError("Argument group must have a title")
         self.title = title
-        self.parser = AntiSmashParser()
+        self.parser = AntismashParser()
         self.override = override_safeties
         self.enabled_by_default = enabled_by_default
         # options for the module
@@ -340,8 +372,8 @@ class ModuleArgs:
         return name, dest
 
 
-def build_parser(from_config_file=False, modules=None) -> AntiSmashParser:
-    """ Constructs an AntiSmashParser with all the default options antismash
+def build_parser(from_config_file=False, modules=None) -> AntismashParser:
+    """ Constructs an AntismashParser with all the default options antismash
         requires for proper operation, along with any added by the provided
         modules.
 
@@ -352,7 +384,7 @@ def build_parser(from_config_file=False, modules=None) -> AntiSmashParser:
                         construction of the arguments themselves
 
         Returns:
-            an AntiSmashParser instance with options for all provided modules
+            an AntismashParser instance with options for all provided modules
     """
     parents = [basic_options(), output_options(), advanced_options(),
                debug_options()]
@@ -363,13 +395,13 @@ def build_parser(from_config_file=False, modules=None) -> AntiSmashParser:
         parents.extend(module.get_arguments() for module in modules)
 
     if from_config_file:
-        parser = AntiSmashParser(parents=parents, fromfile_prefix_chars="@")
+        parser = AntismashParser(parents=parents, fromfile_prefix_chars="@")
     else:
-        parser = AntiSmashParser(parents=parents)
+        parser = AntismashParser(parents=parents)
 
     # positional arguments
     parser.add_argument('sequences',
-                        metavar='sequence',
+                        metavar='SEQUENCE',
                         nargs="*",
                         help="GenBank/EMBL/FASTA file(s) containing DNA.")
 
@@ -440,7 +472,7 @@ def advanced_options():
                      dest="minlength",
                      type=int,
                      default=1000,
-                     help="Only process sequences larger than <minlength> (default: 1000).")
+                     help="Only process sequences larger than <minlength> (default: %(default)d).")
     group.add_option('--start',
                      dest='start',
                      type=int,
@@ -454,8 +486,16 @@ def advanced_options():
     group.add_option('--databases',
                      dest='database_dir',
                      default=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'databases'),
+                     metavar="PATH",
                      type=str,
-                     help="Root directory of the databases.")
+                     help="Root directory of the databases (default: %(default)s).")
+    group.add_option('--write-config-file',
+                     dest='write_config_file',
+                     default="",
+                     metavar="PATH",
+                     action=FullPathAction,
+                     type=str,
+                     help="Write a config file to the supplied path")
     return group
 
 
@@ -474,6 +514,7 @@ def debug_options():
     group.add_option('--logfile',
                      dest='logfile',
                      default="",
+                     metavar="PATH",
                      type=str,
                      help="Also write logging output to a file.")
     group.add_option('--list-plugins',
@@ -489,7 +530,7 @@ def debug_options():
     group.add_option('--limit-to-record',
                      dest='limit_to_record',
                      default="",
-                     metavar="record_id",
+                     metavar="RECORD_ID",
                      type=str,
                      help="Limit analysis to the record with ID record_id")
     group.add_option('-V', '--version',
