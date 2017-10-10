@@ -4,7 +4,7 @@ reports=y
 disable=bad-continuation
 
 [TYPECHECK]
-ignored-classes=Config,TestCase
+ignored-classes=Config,TestCase,Namespace
 
 [FORMAT]
 max-line-length=120

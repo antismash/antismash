@@ -416,7 +416,6 @@ def run_antismash(sequence_file, options, detection_modules=None,
 
     options.all_enabled_modules = [module for module in modules if module.is_enabled(options)]
     options = update_config(options)
-    loader.update_config_from_file()  # TODO move earlier to run_antismash?
 
     check_prerequisites(modules)
     if options.check_prereqs_only:

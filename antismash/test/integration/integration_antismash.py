@@ -9,16 +9,15 @@ from tempfile import TemporaryDirectory
 import unittest
 
 from antismash.main import run_antismash, get_all_modules
-from antismash.config import get_config
+from antismash.config import build_config, get_config
 from antismash.config.args import build_parser
 
 
 class TestAntismash(unittest.TestCase):
     def setUp(self):
-        args = ["run_antismash.py"]
+        args = ["run_antismash.py", "--minimal"]
         self.parser = build_parser(modules=get_all_modules())
-        self.default_options = self.parser.parse_args(args)
-        self.default_options.minimal = True
+        self.default_options = build_config(args, parser=self.parser)
         self.default_options.all_enabled_modules = []
         self.temp_dir = TemporaryDirectory()
         self.default_options.output_dir = self.temp_dir.name

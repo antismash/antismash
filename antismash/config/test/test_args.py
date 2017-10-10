@@ -141,7 +141,7 @@ class TestModuleArgs(unittest.TestCase):
     def test_good_options(self):
         mod_args = args.ModuleArgs('test args', 'test')
         mod_args.add_option('test', default="", type=str, help="no", dest="test")
-        parser = args.AntiSmashParser(parents=[mod_args])
+        parser = args.AntismashParser(parents=[mod_args])
         options = parser.parse_args(["--test", "thing"])
         assert options.test == "thing"
         options = parser.parse_args(["--test", "1"])

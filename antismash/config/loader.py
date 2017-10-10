@@ -5,39 +5,28 @@
 
 """
 import configparser
-import logging
-import sys
-from argparse import Namespace
-from os import path
+import os
+from typing import Any, Dict
 
-from antismash.config import update_config
+from argparse import Namespace
+
+from antismash.common import path
 
 _DEFAULT_NAME = 'default.cfg'
-_SYS_NAME = sys.platform + '.cfg'
-_USER_FILE_NAME = path.expanduser('~/.antismash.cfg')
-_INSTANCE_FILE_NAME = 'instance.cfg'
-_BASEDIR = path.dirname(path.abspath(__file__))
+_BASEDIR = path.get_full_path(__file__)
 
+def load_config_from_file() -> Dict[str, Any]:
+    """ Load config from default config.
 
-def update_config_from_file(namespace=None):
-    """Load config from a default and system-specific config file and
-    add it to a namespace object, but don't overwrite existing settings
+        Returns:
+            a dictionary mapping option name to option value
     """
-    if namespace is None:
-        namespace = Namespace()
-    default_file = path.join(_BASEDIR, _DEFAULT_NAME)
-    sys_file = path.join(_BASEDIR, _SYS_NAME)
-    instance_file = path.join(_BASEDIR, _INSTANCE_FILE_NAME)
-
+    namespace = Namespace()
+    default_file = os.path.join(_BASEDIR, _DEFAULT_NAME)
     # load generic configuration settins
     config = configparser.ConfigParser()
     with open(default_file, 'r') as handle:
         config.read_file(handle)
-
-    # load system-specific config file if available
-    # also load .antismash.cfg from the user's home dir
-    # and last, overriding all the other settings, instance.cfg
-    config.read([sys_file, _USER_FILE_NAME, instance_file])
 
     for section in config.sections():
         if section not in namespace:
@@ -57,5 +46,5 @@ def update_config_from_file(namespace=None):
         key = key.replace('-', '_')
         if key not in namespace:
             namespace.__dict__[key] = value
-    # store it in the singleton
-    update_config(namespace)
+
+    return namespace
