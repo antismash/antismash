@@ -220,3 +220,4 @@ TRI5	Trichodiene synthase	25	TRI5.hmm
 NasY	Long-chain N-acyl amino acid synthase	20	NasY.hmm
 FMO-like	Flavin-dependent monooxygenase	150	PF00743.hmm
 DUF98	Chorismate lyase	50	PF01947.hmm
+PpyS	PPY synthase	300	ppys.hmm
