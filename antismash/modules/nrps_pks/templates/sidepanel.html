@@ -1,0 +1,46 @@
+<div class="structure">
+  <h3>Predicted core structure</h3>
+    <a class = "structure-link" href="{{cluster.get_structure_image_url()}}" target="_new">
+      <img src="{{cluster.get_structure_image_url()}}">
+    </a>
+    <div class="as-structure-warning">
+      {{cluster.warning}}
+    </div>
+  </div>
+  <div class="more-details">
+    <h3>Prediction details</h3>
+      <dl class="prediction-text">
+        <dt>Monomers prediction:</dt>
+          <dd>{{cluster.get_monomer_prediction()}}</dd>
+          {% for gene_id, predictions in cluster.sidepanel_predictions.items() | sort %}
+            <dt>{{gene_id}}</dt>
+            {% if gene_id in cluster.url_strict %}
+              <dd> Search NORINE for peptide:
+                <a href="{{cluster.url_strict[gene_id]}}" target="_new">strict</a>
+                  or
+                <a href="{{cluster.url_relaxed[gene_id]}}" target="_new">relaxed</a>
+              </dd>
+              <br>
+            {% endif %}
+            {% for domain_preds in predictions %}
+              {% for method, pred in domain_preds | sort %}
+                <dd>{{method}}: {{pred}} </dd>
+              {% endfor %}
+              <br>
+            {% endfor %}
+            <br>
+          {% endfor %}
+      </dl>
+  </div>
+
+  {% if cluster.is_nrps() %}
+  <div>
+    <h3>Database cross-links</h3>
+    <div class="prediction-text">
+      <a href="http://bioinfo.lifl.fr/norine/form2.jsp" target="_new">Link to NORINE database query form</a>
+      <br>Direct lookup in NORINE database:
+      <a href="{{cluster.get_norine_url_for_cluster()}}" target="_new">strict</a> or
+        <a href="{{cluster.get_norine_url_for_cluster(be_strict = False)}}" target="_new">relaxed</a>
+    </div>
+  </div>
+  {% endif %}

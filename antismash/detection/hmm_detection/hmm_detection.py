@@ -326,6 +326,9 @@ def detect_signature_genes(record, options) -> None:
     """
     enabled_cluster_types = options.enabled_cluster_types
     feature_by_id = record.get_cds_name_mapping()
+    # if there's no genes, don't try to do anything
+    if not feature_by_id:
+        return None
     full_fasta = deprecated.get_multifasta(record)
     rules = create_rules(enabled_cluster_types)
     results = []

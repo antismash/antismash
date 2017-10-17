@@ -6,8 +6,8 @@ cover/
 __pycache__
 .cache
 .mypy_cache
-antismash/modules/smcogs/data/smcogs.hmm.h3f
-antismash/modules/smcogs/data/smcogs.hmm.h3i
-antismash/modules/smcogs/data/smcogs.hmm.h3m
-antismash/modules/smcogs/data/smcogs.hmm.h3p
+*.hmm.h3f
+*.hmm.h3i
+*.hmm.h3m
+*.hmm.h3p
 antismash/config/instance.cfg

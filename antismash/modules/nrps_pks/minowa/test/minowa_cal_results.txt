@@ -1,0 +1,8 @@
+\\
+SCO5892_CAL1
+Substrate:	Score:
+NH2	118.5
+fatty_acid	37.5
+AHBA	6.5
+shikimic_acid	0.0
+Acetyl-CoA	-1.6

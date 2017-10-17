@@ -1,13 +1,46 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
-from typing import Tuple
+from collections import OrderedDict
+import logging
+from typing import Dict, List, Set, Tuple
 
 import Bio.Data.IUPACData
 from Bio.SeqUtils.ProtParam import ProteinAnalysis
 
 
-def generate_unique_id(prefix, existing_ids, start=0, max_length=-1) -> Tuple[str, int]:
+def read_fasta(filename: str) -> Dict[str, str]:
+    """ reads a fasta file into a dict: id -> sequence, returns the dict """
+    ids = []
+    sequence_info = []
+    with open(filename, "r") as fasta:
+        current_seq = []
+        for line in fasta:
+            line = line.strip()
+            if not line:
+                continue
+            if line[0] == '>':
+                ids.append(line[1:].replace(" ", "_"))
+                if current_seq:
+                    sequence_info.append("".join(current_seq))
+                    current_seq = []
+            else:
+                if not ids:
+                    raise ValueError("Sequence before identifier in fasta file")
+                if not line.replace("-", "z").isalpha():
+                    raise ValueError("Sequence contains non-alphabetic characters")
+                current_seq.append(line)
+    if current_seq:
+        sequence_info.append("".join(current_seq))
+    if len(ids) != len(sequence_info):
+        raise ValueError("Fasta files contains different counts of sequences and ids")
+    if not ids:
+        logging.debug("Fasta file %s contains no sequences", filename)
+        raise ValueError("Fasta file contains no sequences")
+    return OrderedDict(zip(ids, sequence_info))
+
+
+def generate_unique_id(prefix: str, existing_ids: Set, start=0, max_length=-1) -> Tuple[str, int]:
     """ Generate a identifier of the form prefix_num, e.g. seq_15.
 
         Does *not* add the generated prefix to current identifiers
@@ -69,3 +102,28 @@ class RobustProteinAnalysis(ProteinAnalysis):
             aa_difference = len(self.original_sequence) - len(self.sequence)
             weight += 110 * aa_difference
         return weight
+
+def extract_by_reference_positions(query: str, reference: str, ref_positions: List[int]) -> str:
+    """ Extracts the given positions from a query alignment. The positions are
+        adjusted to account for any gaps in the reference sequence.
+
+        Arguments:
+            query: the aligned query
+            reference: the aligned reference
+            ref_positions: the positions of interest in the unaligned reference
+
+        Returns:
+            a string containing the sequence elements at the adjusted reference
+            positions
+    """
+    # adjust position of interest to account for gaps in the ref sequence alignment
+    positions = []
+    position_skipping_gaps = 0
+    for i, amino in enumerate(reference):
+        if amino == "-":
+            continue
+        if position_skipping_gaps in ref_positions:
+            positions.append(i)
+        position_skipping_gaps += 1
+    # extract positions from query sequence
+    return "".join([query[i] for i in positions])

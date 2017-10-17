@@ -6,14 +6,13 @@ import os
 
 
 class RecordLayer:
-    def __init__(self, seq_record, options):
-        from antismash.outputs.html.js import convert_record  # TODO break this circular dependency
+    def __init__(self, seq_record, results, options):
+        self.results = results
         self.seq_record = seq_record
         self.options = options
-        self.record = convert_record(self.seq_record, self.options.options)  # TODO stop this from being called again
         self.clusters = []
-        for cluster in self.record['clusters']:
-            self.clusters.append(ClusterLayer(cluster, self, self.seq_record.get_cluster(cluster['idx'])))
+        for cluster in seq_record.get_clusters():
+            self.clusters.append(ClusterLayer(self, cluster))
 
     @property
     def seq_name(self):
@@ -22,31 +21,20 @@ class RecordLayer:
     @property
     def number_clusters(self):
         " returns the number of clusters of the record "
-        return len(self.record['clusters'])
+        return len(self.seq_record.get_clusters())
 
     @property
     def seq_id(self):
-        return self.record['seq_id']
+        return self.seq_record.id
 
     @property
     def orig_id(self):
-        return self.record['orig_id']
-
-    @property
-    def name(self):
-        pass
-
-    @property
-    def input_type(self):
-        return self.options.input_type
-
-    @property
-    def has_details(self):
-        return any(cluster.has_details() for cluster in self.clusters)
+        logging.critical("using dummy orig_id in RecordLayer")
+        return "DUMMY ORIG_ID"
 
     def get_from_record(self):
         " returns the text to be displayed in the overview table > separator-text "
-        if self.input_type == 'nucl':
+        if self.options.input_type == 'nucl':
             id_text = self.seq_id
 
             if self.orig_id:
@@ -69,9 +57,8 @@ class RecordLayer:
 
 
 class ClusterLayer:
-    def __init__(self, cluster, record, cluster_rec):
+    def __init__(self, record, cluster_rec):
         self.record = record
-        self.cluster = cluster
         self.handlers = []
         self.cluster_rec = cluster_rec
         self.cluster_blast = []
@@ -88,7 +75,6 @@ class ClusterLayer:
         self.has_details = self.determine_has_details()
         self.has_sidepanel = self.determine_has_sidepanel()
         self.probability = "BROKEN"  # TODO when clusterfinder returns
-        self.has_domain_alignment = self.determine_has_domain_alignment()
 
     @property
     def type(self):
@@ -122,7 +108,9 @@ class ClusterLayer:
 
     @property
     def BGCid(self):
-        return format(self.cluster['BGCid'].split('_')[0])
+        if not self.cluster_rec.knownclusterblast:
+            return "-"
+        return format(self.cluster_rec.knownclusterblast[0][1])
 
     @property
     def detection_rules(self):
@@ -136,21 +124,21 @@ class ClusterLayer:
                             self.idx, self.type, self.start, self.end)
         else:
             description_text = self.record.seq_id + '- Gene Cluster %s. Type = %s. ' % (self.idx, self.type)
-        if 'probability' in self.cluster:
+        if self.probability != "BROKEN":  # TODO: real value check
             description_text += 'ClusterFinder probability: %s. ' % self.probability
         description_text += 'Click on genes for more information.'
 
         return description_text
 
     def cluster_blast_generator(self):  # TODO: deduplicate
-        top_hits = self.cluster_rec.clusterblast[:self.record.options.nclusters]
+        top_hits = self.cluster_rec.clusterblast[:self.record.options.cb_nclusters]
         for i, label in enumerate(top_hits):
             i += 1  # 1-indexed
             svg_file = os.path.join('svg', 'clusterblast%s_%s.svg' % (self.idx, i))
             self.cluster_blast.append((label, svg_file))
 
     def knowncluster_blast_generator(self):
-        top_hits = self.cluster_rec.knownclusterblast[:self.record.options.nclusters]
+        top_hits = self.cluster_rec.knownclusterblast[:self.record.options.cb_nclusters]
         for i, label_pair in enumerate(top_hits):
             i += 1  # 1-indexed
             label = label_pair[0]
@@ -159,7 +147,7 @@ class ClusterLayer:
 
     def subcluster_blast_generator(self):
         assert self.cluster_rec.subclusterblast is not None, self.cluster_rec.location
-        top_hits = self.cluster_rec.subclusterblast[:self.record.options.nclusters]
+        top_hits = self.cluster_rec.subclusterblast[:self.record.options.cb_nclusters]
         for i, label in enumerate(top_hits):
             i += 1  # since one-indexed
             svg_file = os.path.join('svg', 'subclusterblast%s_%s.svg' % (self.idx, i))
@@ -167,11 +155,11 @@ class ClusterLayer:
 
     def find_plugins_for_cluster(self):
         "Find a specific plugin responsible for a given gene cluster type"
-        product = self.type
+        products = self.subtype
         for plugin in self.record.options.plugins:
             if not hasattr(plugin, 'will_handle'):
                 continue
-            if plugin.will_handle(product):
+            if plugin.will_handle(products):
                 self.handlers.append(plugin)
         return self.handlers
 
@@ -191,13 +179,6 @@ class ClusterLayer:
                 break
         return self.has_sidepanel
 
-    def determine_has_domain_alignment(self):
-        self.has_domain_alignment = False
-        for handler in self.handlers:
-            if "generate_domain_alignment_div" in dir(handler):
-                self.has_domain_alignment = True
-        return self.has_domain_alignment
-
 
 class OptionsLayer:
     def __init__(self, options):
@@ -214,68 +195,12 @@ class OptionsLayer:
         return get_all_modules()
 
     @property
-    def input_type(self):
-        return self.options.input_type
-
-    @property
-    def taxon(self):
-        return self.options.taxon
-
-    @property
-    def nclusters(self):
-        return self.options.cb_nclusters
-
-    @property
-    def cb_general(self):
-        return self.options.cb_general
-
-    @property
-    def cb_knownclusters(self):
-        return self.options.cb_knownclusters
-
-    @property
-    def cb_subclusters(self):
-        return self.options.cb_subclusters
-
-    @property
-    def output_dir(self):
-        return self.options.output_dir
-
-    def get_options(self):
-        return self.options
-
-    @property
-    def has_docking(self):
-        return "docking" in self.options
-
-    @property
     def smcogs(self):
         return not self.options.minimal or self.options.smcogs_enabled or self.options.smcogs_trees  # TODO work out a better way of doing this
 
     @property
-    def tta(self):
-        return self.options.tta
-
-    @property
-    def cassis(self):
-        return self.options.cassis
-
-    @property
-    def borderpredict(self):
-        return self.options.borderpredict
-
-    @property
-    def limit(self):
-        return self.options.limit
-
-    @property
     def triggered_limit(self):
         return self.options.triggered_limit
-
-    @property
-    def transatpks_da(self):
-        logging.critical("OptionsLayer.transatpks_da will always be False")
-        return False  # self.options.transatpks_da
 
     @property
     def logfile(self):

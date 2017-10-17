@@ -68,6 +68,15 @@ def _merge_domain_list(domainlist):
     return sorted(remaining, key=lambda result: result.query_start)
 
 
+def _merge_immediate_neigbours(domains):
+    result = [domains[0]]
+    for domain in domains[1:]:
+        if domain.hit_id != result[-1].hit_id:
+            result.append(domain)
+            continue
+        result[-1] = result[-1].merge(domain)
+    return result
+
 class HMMResult:
     __slots__ = ["hit_id", "query_start", "query_end", "evalue", "bitscore"]
 
@@ -94,9 +103,25 @@ class HMMResult:
     def to_json(self):
         return {key: getattr(self, key) for key in self.__slots__}
 
+    def __repr__(self):
+        return str(self)
+
     def __str__(self):
         return "HMMResult(%s, %d, %d, evalue=%g, bitscore=%g)" % (self.hit_id,
                    self.query_start, self.query_end, self.evalue, self.bitscore)
+
+    def __getitem__(self, index):
+        if index == 0:
+            raise NotImplementedError("don't do HMMResult[0], use HMMResult.hit_id")
+        if index == 1:
+            raise NotImplementedError("don't do HMMResult[1], use HMMResult.query_start")
+        if index == 2:
+            raise NotImplementedError("don't do HMMResult[2], use HMMResult.query_end")
+        if index == 3:
+            raise NotImplementedError("don't do HMMResult[3], use HMMResult.evalue")
+        if index == 4:
+            raise NotImplementedError("don't do HMMResult[4], use HMMResult.bitscore")
+        raise AttributeError("cannot index HMMResult")
 
 
 def gather_by_query(results):
@@ -109,22 +134,35 @@ def gather_by_query(results):
     return results_by_id
 
 
-def refine_hmmscan_results(hmmscan_results, hmm_lengths):
+def refine_hmmscan_results(hmmscan_results, hmm_lengths, neighbour_mode=False):
     """ Processes a list of QueryResult objects (from SearchIO.parse(..., 'hmmer3-text'))
             - merges domain fragments of the same ID
             - keeps only best hits from overlaps
             - removes incomplete domains
 
-        Returns a mapping of gene name to HMMResult
+        Arguments:
+            hmmscan_results: a list of QueryResult objects
+            hmm_lengths: a dictionary mapping hmm id to length
+            neighbour_mode: if on, does overlap removal before merge and merges
+                            only when the next result has the same hit_id
+
+        Returns:
+            a mapping of gene name to list of HMMResults
     """
     results_by_id = gather_by_query(hmmscan_results)
     refined_results = {}
     for cds, results in results_by_id.items():
         refined = sorted(list(results), key=lambda result: result.query_start)
-        # Merge domain fragments which are really one domain
-        refined = _merge_domain_list(refined)
-        # Only keep best hits for overlapping domains
-        refined = _remove_overlapping(refined, hmm_lengths)
+        if neighbour_mode:
+            # Only keep best hits for overlapping domains
+            refined = _remove_overlapping(refined, hmm_lengths)
+            # Merge domain fragments which are really one domain
+            refined = _merge_immediate_neigbours(refined)
+        else:
+            # Merge domain fragments which are really one domain
+            refined = _merge_domain_list(refined)
+            # Only keep best hits for overlapping domains
+            refined = _remove_overlapping(refined, hmm_lengths)
         # Remove incomplete domains (covering less than 60% of total domain hmm length)
         refined = _remove_incomplete(refined, hmm_lengths)
         if refined:

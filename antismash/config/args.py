@@ -568,7 +568,7 @@ def specific_debugging(modules):
     errors = []
     for module in relevant_modules:
         try:
-            group.add_option('--enable-%s' % (module.NAME),
+            group.add_option('--enable-%s' % (module.NAME.replace("_", "-")),
                              dest='%s_enabled' % (module.NAME),
                              action='store_true',
                              default=False,

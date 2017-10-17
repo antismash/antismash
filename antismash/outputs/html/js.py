@@ -61,6 +61,7 @@ def convert_clusters(record, options, result=None):
         js_cluster['borders'] = convert_cluster_border_features(cluster.borders)
         js_cluster['tta_codons'] = convert_tta_codons(tta_codons)
         js_cluster['type'] = cluster.get_product_string()
+        js_cluster['products'] = cluster.products
         if cluster.probability is not None:
             js_cluster['probability'] = cluster.probability
         if options.input_type == 'prot':

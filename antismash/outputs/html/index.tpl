@@ -95,7 +95,6 @@
     <script src="js/svgene.js"></script>
     <script src="js/jsdomain.js"></script>
     <script src="js/clusterblast.js"></script>
-    <script src="js/domainalign.js"></script>
     <script src="geneclusters.js"></script>
     <script type="text/javascript">
 function toggle_downloadmenu(event) {
@@ -124,7 +123,6 @@ function switch_to_cluster() {
             jsdomain.drawDomains(anchor+ "-details-svg", details_data[anchor], 40, 700);
         }
         $("#" + anchor + " .clusterblast-selector").change();
-        $("#" + anchor + " .domainalign-selector").change();
     }, 1);
 }
 
@@ -238,21 +236,6 @@ $(document).ready(function() {
         $.get(url, function(data) {
             $('#' + id + '-svg').html(data);
             clusterblast.init(id + '-svg');
-            //            id =
-        }, 'html');
-        $('#' + id + '-download').off('click');
-        $('#' + id + '-download').click(function () {
-            var url = $("#" + id + "-select").val();
-            window.open(url, '_blank');
-        });
-    });
-
-    $('.domainalign-selector').change(function() {
-        var id = $(this).attr('id').replace('-select', '');
-        var url = $(this).val();
-        $.get(url, function(data) {
-            $('#' + id + '-svg').html(data);
-            domainalign.init(id + '-svg');
             //            id =
         }, 'html');
         $('#' + id + '-download').off('click');

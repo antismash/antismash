@@ -34,22 +34,24 @@ def generate_webpage(seq_records, results, options):
 
     generate_searchgtr_htmls(seq_records, options)
 
-    records = js.convert_records(seq_records, results, options)
+    json_records = js.convert_records(seq_records, results, options)
 
-    extra_data = dict(js_domains=[], clusterblast_clusters=[],
-                      subclusterblast_clusters=[], knownclusterblast_clusters=[])
+    extra_data = dict(js_domains=[])
 
-    for i, record in enumerate(records):
-        record['seq_id'] = "".join(char for char in record['seq_id'] if char in string.printable)
-        for cluster in record['clusters']:
+    for i, record in enumerate(seq_records):
+        json_record = json_records[i]
+        json_record['seq_id'] = "".join(char for char in json_record['seq_id'] if char in string.printable)
+        for json_cluster in json_record['clusters']:  # json clusters
             from antismash import get_analysis_modules  # TODO break circular dependency
-            handlers = find_plugins_for_cluster(get_analysis_modules(), cluster)
+            handlers = find_plugins_for_cluster(get_analysis_modules(), json_cluster)
             for handler in handlers:
+                # if there's no results for the module, don't let it try
+                if handler.__name__ not in results[i]:
+                    continue
                 if "generate_js_domains" in dir(handler):
-                    handler.generate_js_domains(cluster, seq_records[i], options,
-                                                extra_data['js_domains'])
+                    extra_data['js_domains'].extend(handler.generate_js_domains(json_cluster, record, results[i][handler.__name__], options))
 
-    write_geneclusters_js(records, options.output_dir, extra_data)
+    write_geneclusters_js(json_records, options.output_dir, extra_data)
 
     # jinja
     with open(os.path.join(options.output_dir, 'index.html'), 'w') as result:
@@ -58,9 +60,9 @@ def generate_webpage(seq_records, results, options):
                           loader=FileSystemLoader(path.get_full_path(__file__)))
         template = env.get_template('index.html')
         options_layered = OptionsLayer(options)
-        records = [RecordLayer(record, options_layered) for record in seq_records]
+        records = [RecordLayer(record, result, options_layered) for record, result in zip(seq_records, results)]
 
-        records_written = sum([len(record.clusters) for record in records])
+        records_written = sum([len(record.seq_record.get_clusters()) for record in records])
         aux = template.render(records=records, options=options_layered,
                               utils=utils, extra_data=extra_data,
                               records_written=records_written,
@@ -70,23 +72,14 @@ def generate_webpage(seq_records, results, options):
 
 def find_plugins_for_cluster(plugins, cluster):
     "Find a specific plugin responsible for a given gene cluster type"
-    product = cluster['type']
+    products = cluster['products']
     handlers = []
     for plugin in plugins:
         if not hasattr(plugin, 'will_handle'):
             continue
-        if plugin.will_handle(product):
+        if plugin.will_handle(products):
             handlers.append(plugin)
     return handlers
-
-
-def get_detection_rules(cluster_rec):
-    rules = []
-    for note in cluster_rec.qualifiers['note']:
-        if note.startswith("Detection rule(s)"):
-            rules.extend([rule.strip().replace('&', '&amp;') for rule in note[41:].split(';')])
-
-    return rules
 
 
 def load_searchgtr_search_form_template():

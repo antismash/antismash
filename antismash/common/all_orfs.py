@@ -15,62 +15,59 @@ def scan_orfs(seq, direction, offset=0):
     start_codons = ('ATG', 'GTG', 'TTG')
     stop_codons = ('TAA', 'TAG', 'TGA')
     matches = []
-    # Remember the last stop codon found per frame, so we can take some
-    # shortcuts later
-    last_stop = [0, 0, 0]
     # cache the sequence length
     seq_len = len(seq)
-    for i in range(0, seq_len - 2):
-        # If the last stop codon found is in the frame of this start codon
-        # and the start codon is upstream of the stop codon, we have
-        # already found a start codon further upstream.
-        if i < last_stop[i % 3]:
-            continue
-        if seq[i:i+3] in stop_codons and last_stop[i % 3] == 0:
-            # special case for unstarted stops
-            last_stop[i % 3] = i
-            if direction == 1:
-                new_orf = FeatureLocation(BeforePosition(offset), offset + i + 2, direction)
-            else:
-                new_orf = FeatureLocation(seq_len + offset - (i + 2),
-                                          AfterPosition(seq_len + offset), direction)
-            matches.append(new_orf)
-        if seq[i:i+3] not in start_codons:
-            continue
-        # Look for the next stop codon in this frame
-        for j in range(i, seq_len - 2, 3):
-            if seq[j:j+3] in stop_codons:
-                last_stop[j % 3] = j
-                # Skip Orfs that are shorter than 20 AA / 60 bases
-                if j - i <= 60:
-                    break  # since no ORFs will be bigger before the stop
-                start = i
-                end = j + 2
+    for frame in [0, 1, 2]:
+        i = frame
+        last_stop = 0
+        while i < seq_len - 2:
+            if seq[i:i+3] in stop_codons and last_stop == 0:
+                # special case for unstarted stops
+                last_stop = i
                 if direction == 1:
-                    new_orf = FeatureLocation(offset + start,
-                                              offset + end, direction)
+                    new_orf = FeatureLocation(BeforePosition(offset), offset + i + 2, direction)
                 else:
-                    # reversed, so convert back to the forward positions
-                    new_orf = FeatureLocation(seq_len + offset - end,
-                                              seq_len + offset - start, direction)
+                    new_orf = FeatureLocation(seq_len + offset - (i + 2),
+                                              AfterPosition(seq_len + offset), direction)
                 matches.append(new_orf)
-                # This was a good hit, update the last_stop cache.
-                break
+            if seq[i:i+3] not in start_codons:
+                i += 3
+                continue
+            # Look for the next stop codon in this frame
+            for j in range(i, seq_len - 2, 3):
+                if seq[j:j+3] in stop_codons:
+                    last_stop = j
+                    # Skip Orfs that are shorter than 20 AA / 60 bases
+                    if j - i <= 60:
+                        break  # since no ORFs will be bigger before the stop
+                    start = i
+                    end = j + 2
+                    if direction == 1:
+                        new_orf = FeatureLocation(offset + start,
+                                                  offset + end, direction)
+                    else:
+                        # reversed, so convert back to the forward positions
+                        new_orf = FeatureLocation(seq_len + offset - end,
+                                                  seq_len + offset - start, direction)
+                    matches.append(new_orf)
+                    # This was a good hit, update the last_stop cache.
+                    break
 
-        # if we found a matching stop, carry on looking for starts
-        if last_stop[i % 3] > i:
-            continue
+            # if we found a matching stop, carry on looking for starts after this stop
+            if last_stop > i:
+                i = last_stop
+                continue
 
-        # Save orfs ending at the end of the sequence without stop codon
-        if direction == 1:
-            new_orf = FeatureLocation(i + offset, AfterPosition(seq_len + offset), direction)
-        else:
-            # reversed, so convert back to the forward positions
-            new_orf = FeatureLocation(BeforePosition(offset), offset + seq_len - i, direction)
-        matches.append(new_orf)
-        # since there are no stop codons, just stop here
-        break
-    return matches
+            # Save orfs ending at the end of the sequence without stop codon
+            if direction == 1:
+                new_orf = FeatureLocation(i + offset, AfterPosition(seq_len + offset), direction)
+            else:
+                # reversed, so convert back to the forward positions
+                new_orf = FeatureLocation(BeforePosition(offset), offset + seq_len - i, direction)
+            matches.append(new_orf)
+            # since there are no stop codons, just stop here
+            break
+    return sorted(matches, key=lambda x: x.start)
 
 
 def sort_orfs(orfs):
