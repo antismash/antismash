@@ -86,3 +86,11 @@ class TestRobustProteinAnalysis(unittest.TestCase):
         """
         rpa = utils.RobustProteinAnalysis("MAGICXHAT", ignore_invalid=False)
         self.assertEqual(912.9621, rpa.molecular_weight())
+
+
+class TestSignatureBuilding(unittest.TestCase):
+    def test_extract_by_reference_positions(self):
+        sig = utils.extract_by_reference_positions("ABC-DE-F", "A-BC-DEF", [0, 1, 3, 4])
+        assert sig == "ACE-"
+        sig = utils.extract_by_reference_positions("ABCDF", "ABCDE", [0, 1, 3, 4])
+        assert sig == "ABDF"

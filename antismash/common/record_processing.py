@@ -64,7 +64,6 @@ def parse_input_sequence(filename, minimum_length=-1, start=-1, end=-1) -> List[
         if len(records) > 1:
             raise ValueError("--start and --end options cannot be used with multiple records")
         trim_sequence(records[0], start, end)
-
     return [Record.from_biopython(record) for record in records]
 
 
@@ -192,12 +191,16 @@ def pre_process_sequences(sequences, options, genefinding) -> List[Record]:
             if options.genefinding_gff3:
                 logging.info("No CDS features found in record %r but GFF3 file provided, running GFF parser.", sequence.id)
                 gff_parser.run(sequence, single_entry, options)
+                if not sequence.get_cds_features():
+                    logging.error("Record %s has no genes even after running GFF parser, skipping.", sequence.id)
+                    sequence.skip = "No genes found"
+                    continue
                 # since gff_parser adds features, make sure they don't share ids
                 ensure_no_duplicate_gene_ids(sequences)
             elif options.genefinding_tool != "none":
                 logging.info("No CDS features found in record %r, running gene finding.", sequence.id)
                 genefinding.run_on_record(sequence, options)
-            if sequence.get_cds_features():
+            if not sequence.get_cds_features():
                 logging.info("No genes found, skipping record")
                 sequence.skip = "No genes found"
                 continue

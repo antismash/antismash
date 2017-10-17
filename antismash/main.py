@@ -12,11 +12,11 @@ from typing import Dict, Optional, List
 
 from Bio import SeqIO
 
-from antismash.config import loader, update_config
+from antismash.config import update_config
 from antismash.common import deprecated, serialiser, record_processing
 from antismash.common.module_results import ModuleResults
-from antismash.detection import genefinding, hmm_detection
-from antismash.modules import tta, clusterblast, lanthipeptides, smcogs, dummy
+from antismash.detection import genefinding, hmm_detection, nrps_pks_domains
+from antismash.modules import tta, clusterblast, lanthipeptides, smcogs, dummy, nrps_pks
 from antismash.outputs import html, svg
 
 __version__ = "5.0.0alpha"
@@ -43,7 +43,7 @@ def get_detection_modules() -> List[ModuleType]:
         Returns:
             a list of modules
     """
-    return [genefinding, hmm_detection]
+    return [genefinding, hmm_detection, nrps_pks_domains]
 
 
 def get_analysis_modules() -> List[ModuleType]:
@@ -55,7 +55,7 @@ def get_analysis_modules() -> List[ModuleType]:
         Returns:
             a list of modules
     """
-    return [smcogs, tta, lanthipeptides, clusterblast, dummy]
+    return [smcogs, tta, lanthipeptides, clusterblast, nrps_pks, dummy]
 
 
 def get_output_modules() -> List[ModuleType]:
@@ -141,6 +141,12 @@ def detect_signature_genes(record, options) -> None:
 
     logging.info('Looking for secondary metabolite cluster signatures')
     hmm_detection.detect_signature_genes(record, options)
+    if not record.get_clusters():
+        logging.debug("No clusters detected, skipping NRPS/PKS gene detection and analysis")
+        record.skip = "No clusters detected"
+        return None
+    logging.debug('Marking NRPS/PKS genes and domains in clusters')
+    nrps_pks_domains.run_on_record(record, options)
 
 
 def regenerate_results_for_record(record, options, modules, previous_result
@@ -191,7 +197,6 @@ def analyse_record(record, options, modules, previous_result) -> None:
             None
     """
     module_results = regenerate_results_for_record(record, options, modules, previous_result)
-
     # try to run the given modules over the record
     logging.info("Analysing record: %s", record.id)
     for module in modules:
@@ -201,7 +206,7 @@ def analyse_record(record, options, modules, previous_result) -> None:
         results = module_results.get(module.__name__)
         logging.info("Running %s", module.__name__)
         results = module.run_on_record(record, results, options)
-        assert isinstance(results, ModuleResults)
+        assert isinstance(results, ModuleResults), "%s returned %s" % (module.__name__, type(results))
         module_results[module.__name__] = results
 
 
@@ -302,6 +307,9 @@ def annotate_records(results) -> None:
     for record, record_results in zip(results.records, results.results):
         if record.skip:
             logging.debug("Not annotating skipped record %s: %s", record.id, record.skip)
+            continue
+        if not record_results:
+            logging.debug("No results for record %s, not annotating", record.id)
             continue
         logging.debug("Annotating record %s with results from: %s", record.id,
                       ", ".join([name.split()[0].split('.')[-1] for name in record_results]))
@@ -448,6 +456,9 @@ def run_antismash(sequence_file, options, detection_modules=None,
         if seq_record.skip:
             continue
         detect_signature_genes(seq_record, options)
+        # and skip analysis if detection didn't find anything
+        if not seq_record.get_clusters():
+            continue
         analyse_record(seq_record, options, analysis_modules, previous_result)
 
     # Write results

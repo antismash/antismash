@@ -30,12 +30,9 @@ from .utils import generate_unique_id, RobustProteinAnalysis
 
 def CODE_SKIP_WARNING():
     prev = inspect.currentframe().f_back
-    logging.critical("skipping code:" + prev.f_code.co_name +"():" \
-            + linecache.getline(prev.f_code.co_filename, prev.f_lineno + 1).replace('%', '%%'))
+    logging.critical("skipping code: " + prev.f_code.co_name +"():" \
+            + linecache.getline(prev.f_code.co_filename, prev.f_lineno + 1).replace('%', '%%').rstrip())
 # end temp
-
-
-
 
 
 def get_multifasta(seq_record) -> str:
@@ -97,109 +94,24 @@ def get_smcog_annotations(seq_record):
     return smcogdict, smcogdescriptions
 
 def get_pksnrps_cds_features(seq_record) -> list:
-    logging.critical("skipping get_pksnrps_cds_features(), missing PKSNRPS module")
-    return []
-#    features = get_cds_features(seq_record)
-#    pksnrpscoregenes = []
-#    for feature in features:
-#        if 'sec_met' in feature.qualifiers:
-#            for annotation in feature.qualifiers['sec_met']:
-#                if annotation.startswith('NRPS/PKS Domain:'):
-#                    pksnrpscoregenes.append(feature)
-#                    break
-#    return pksnrpscoregenes
+    features = seq_record.get_cds_features_within_clusters()
+    pksnrpscoregenes = []
+    for feature in features:
+        if feature.nrps_pks.domains:
+            pksnrpscoregenes.append(feature)
+    return pksnrpscoregenes
 
 def get_nrpspks_domain_dict(seq_record) -> dict:
-    logging.critical("skipping get_pksnrps_domain_dict(), missing PKSNRPS module")
-    return {}
-#    domaindict = {}
-#    features = get_cds_features(seq_record)
-#    for feature in features:
-#        domainlist = []
-#        if 'sec_met' in feature.qualifiers:
-#            domains = [qualifier for qualifier in feature.qualifiers['sec_met'] if "NRPS/PKS Domain: " in qualifier]
-#            for domain in domains:
-#                hit_id =  domain.partition("NRPS/PKS Domain: ")[2].partition(" (")[0]
-#                domstart = domain.partition("NRPS/PKS Domain: ")[2].partition(" (")[2].partition("-")[0]
-#                domend = domain.partition("NRPS/PKS Domain: ")[2].partition("). ")[0].rpartition("-")[2]
-#                evalue = domain.partition("E-value: ")[2].partition(". Score:")[0]
-#                bitscore = domain.partition("Score: ")[2].partition(";")[0]
-#                domainlist.append([hit_id, int(domstart), int(domend), evalue, float(bitscore)])
-#            if len(domainlist) > 0:
-#                domaindict[feature.get_name()] = domainlist
-#    return domaindict
+    domaindict = {}
+    for feature in seq_record.get_cds_features():
+        if feature.nrps_pks.domains:
+            domaindict[feature.get_name()] = list(feature.nrps_pks.domains)
+    return domaindict
 
-def get_nrpspks_substr_spec_preds(seq_record):
-    logging.critical("skipping get_nrpspks_substr_spec_preds(), missing PKSNRPS module")
-    class Dummy:
-        pass
-    substr_spec_preds = Dummy()
-    substr_spec_preds.consensuspreds = {}
-    substr_spec_preds.nrps_svm_preds = {}
-    substr_spec_preds.nrps_code_preds = {}
-    substr_spec_preds.minowa_nrps_preds = {}
-    substr_spec_preds.pks_code_preds = {}
-    substr_spec_preds.minowa_pks_preds = {}
-    substr_spec_preds.minowa_cal_preds = {}
-    substr_spec_preds.kr_activity_preds = {}
-    substr_spec_preds.kr_stereo_preds = {}
-    return substr_spec_preds
-#    features = get_cds_features(seq_record)
-#    for feature in features:
-#        nrat, nra, nrcal, nrkr = 0, 0, 0, 0
-#        if 'sec_met' in feature.qualifiers:
-#            domains = [qualifier for qualifier in feature.qualifiers['sec_met'] if "NRPS/PKS Domain: " in qualifier]
-#            for domain in domains:
-#                if "AMP-binding" in domain or "A-OX" in domain:
-#                    nra += 1
-#                    domainname = feature.get_name() + "_A" + str(nra)
-#                    predictionstext = domain.partition("Substrate specificity predictions:")[2]
-#                    nrps_svm_pred = predictionstext.partition(" (NRPSPredictor2 SVM)")[0]
-#                    nrps_code_pred = predictionstext.partition(" (NRPSPredictor2 SVM), ")[2].partition(" (Stachelhaus code)")[0]
-#                    minowa_nrps_pred = predictionstext.partition("(Stachelhaus code), ")[2].partition(" (Minowa)")[0]
-#                    consensuspred = predictionstext.partition("(Minowa), ")[2].partition(" (consensus)")[0]
-#                    substr_spec_preds.nrps_svm_preds[domainname] = nrps_svm_pred
-#                    substr_spec_preds.nrps_code_preds[domainname] = nrps_code_pred
-#                    substr_spec_preds.minowa_nrps_preds[domainname] = minowa_nrps_pred
-#                    substr_spec_preds.consensuspreds[domainname] = consensuspred
-#                elif "PKS_AT" in domain:
-#                    nrat += 1
-#                    domainname = feature.get_name() + "_AT" + str(nrat)
-#                    predictionstext = domain.partition("Substrate specificity predictions:")[2]
-#                    pks_code_pred = predictionstext.partition(" (PKS signature)")[0]
-#                    minowa_pks_pred = predictionstext.partition("(PKS signature), ")[2].partition(" (Minowa)")[0]
-#                    consensuspred = predictionstext.partition("(Minowa), ")[2].partition(" (consensus)")[0]
-#                    substr_spec_preds.pks_code_preds[domainname] = pks_code_pred
-#                    substr_spec_preds.minowa_pks_preds[domainname] = minowa_pks_pred
-#                    substr_spec_preds.consensuspreds[domainname] = consensuspred
-#                elif "CAL_domain" in domain:
-#                    nrcal += 1
-#                    domainname = feature.get_name() + "_CAL" + str(nrcal)
-#                    predictionstext = domain.partition("Substrate specificity predictions:")[2]
-#                    minowa_cal_pred = predictionstext.partition(" (Minowa)")[0]
-#                    consensuspred = predictionstext.partition("(Minowa), ")[2].partition(" (consensus)")[0]
-#                    substr_spec_preds.minowa_cal_preds[domainname] = minowa_cal_pred
-#                    substr_spec_preds.consensuspreds[domainname] = consensuspred
-#                elif "PKS_KR" in domain:
-#                    nrkr += 1
-#                    domainname = feature.get_name() + "_KR" + str(nrkr)
-#                    activityprediction = domain.partition("Predicted KR activity: ")[2].partition(";")[0]
-#                    stereoprediction = domain.partition("Predicted KR stereochemistry: ")[2].partition(";")[0]
-#                    substr_spec_preds.kr_activity_preds[domainname] = activityprediction
-#                    substr_spec_preds.kr_stereo_preds[domainname] = stereoprediction
-#    return substr_spec_preds
-
-def get_structure_pred(cluster) -> str:
-    "Return all a structure prediction for a cluster feature"
-    for note in cluster.notes:
-        if "Monomers prediction: " in note:
-            return note.partition("Monomers prediction: ")[2]
-    if cluster.get_product_string() == 'ectoine':
-        return 'ectoine'
-    return "N/A"
 
 def get_version() -> str:
     return get_config().version
+
 
 def find_all_orfs(seq_record, cluster) -> list: # the old lassopeptides.find_all_orfs
     """Find all ORFs in gene cluster outside annotated CDS features"""
@@ -279,6 +191,12 @@ def hmmlengths(hmmfile) -> dict:
         length = lengthpart.split("\n")[0]
         lengths[name] = int(length)
     return lengths
+
+
+def get_cluster_features_of_type(record, product):
+    "Return all cluster features within a record that have a product type"
+    return [cluster for cluster in record.get_clusters() if product in cluster.products]
+
 
 # DEAD FUNCTIONS
 # these only exist so that the mapping to new functions is easier to do

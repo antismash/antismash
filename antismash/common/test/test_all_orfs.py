@@ -70,6 +70,16 @@ class TestOrfCounts(unittest.TestCase):
     def test_interleaved(self):
         self.run_both_dirs(2, "ATGNATGNN"+"N"*60+"TAGNTAG")
 
+    def test_multiframe(self):
+        starts = [3, 25, 72, 77]
+        seq = ["X"] * 200
+        for start in starts:
+            seq[start:start + 3] = "ATG"
+            seq[start + 63: start + 66] = "TAA"
+        assert len(seq) == 200
+        result = scan_orfs("".join(seq), direction=1)
+        assert sorted([orf.start for orf in result]) == starts
+        assert len(result) == 4
 
 class TestOrfLocations(unittest.TestCase):
     def test_contained(self):

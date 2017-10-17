@@ -167,7 +167,7 @@ class AntismashFeature(Feature):
         return self._evalue
 
     @evalue.setter
-    def value(self, evalue):
+    def evalue(self, evalue):
         self._evalue = float(evalue)
 
     def to_biopython(self, qualifiers=None):
@@ -177,7 +177,7 @@ class AntismashFeature(Feature):
         if self.score is not None:
             mine["score"] = [str(self.score)]
         if self.evalue is not None:
-            mine["evalue"] = [str(self.evalue)]
+            mine["evalue"] = [str("{:.2E}".format(self.evalue))]
         if self.locus_tag:
             mine["locus_tag"] = [self.locus_tag]
         if self.translation:
@@ -208,13 +208,13 @@ class Domain(AntismashFeature):
         if self.domain:
             mine["aSDomain"] = [self.domain]
         if self.domain_id:
-            mine["domain_id"] = [self.domain_id]
+            mine["aSDomain_id"] = [self.domain_id]
         if qualifiers:
             mine.update(qualifiers)
         return super().to_biopython(mine)
 
 
-class CDSMotif(Feature):
+class CDSMotif(Domain):
     __slots__ = ["motif"]
 
     def __init__(self, location):
@@ -281,7 +281,7 @@ class AntismashDomain(Domain):
     def __init__(self, location):
         super().__init__(location, feature_type="aSDomain")
         self.domain_subtype = None
-        self.specificity = None
+        self.specificity = []
 
     def to_biopython(self, qualifiers=None):
         mine = OrderedDict()
@@ -325,7 +325,7 @@ class GeneFunction(Enum):
 class CDSFeature(Feature):
     __slots__ = ["_translation", "protein_id", "locus_tag", "gene", "product",
                  "transl_table", "_sec_met", "aSProdPred", "cluster", "_gene_function",
-                 "unique_id"]
+                 "unique_id", "_nrps_pks", "motifs"]
 
     def __init__(self, location, translation=None, locus_tag=None, protein_id=None,
                  product=None, gene=None):
@@ -349,7 +349,10 @@ class CDSFeature(Feature):
             assert product[0] == "N"
         self.transl_table = None
         self._sec_met = None  # SecMetQualifier()
+        self._nrps_pks = NRPSPKSQualifier()
         self.aSProdPred = []  # TODO: shift into nrps sub section?
+
+        self.motifs = []
 
         if not (protein_id or locus_tag or gene):
             raise ValueError("CDSFeature requires at least one of: gene, protein_id, locus_tag")
@@ -386,6 +389,16 @@ class CDSFeature(Feature):
         self._sec_met = sec_met
         if sec_met and sec_met.kind == "biosynthetic":
             self.gene_function = GeneFunction.CORE
+
+    @property
+    def nrps_pks(self):
+        return self._nrps_pks
+
+    @nrps_pks.setter
+    def nrps_pks(self, qualifier):
+        if qualifier is not None and not isinstance(qualifier, NRPSPKSQualifier):
+            raise TypeError("CDSFeature.nrps_pks can only be set to an instance of NRPSPKSQualifier")
+        self._nrps_pks = qualifier
 
     @property
     def translation(self) -> str:
@@ -535,7 +548,7 @@ class Cluster(Feature):
     __slots__ = ["_extent", "_cutoff", "products", "contig_edge",
                  "detection_rules", "smiles_structure", "probability",
                  "clusterblast", "knownclusterblast", "subclusterblast",
-                 "parent_record", "cds_children", "borders"]
+                 "parent_record", "cds_children", "borders", "monomers_prediction"]
 
     def __init__(self, location, cutoff, extent, products):
         super().__init__(location, feature_type="cluster")
@@ -548,6 +561,7 @@ class Cluster(Feature):
         self.contig_edge = None  # hmm_detection borderpredict
         self.detection_rules = []
         self.smiles_structure = None  # SMILES string
+        self.monomers_prediction = None
         self.probability = None  # clusterfinder probability # TODO: unify with notes version
 
         self.clusterblast = None
@@ -680,6 +694,75 @@ class Cluster(Feature):
         cluster_record.annotations["topology"] = "linear"
 
         seqio.write([cluster_record], filename, 'genbank')
+
+
+class NRPSPKSQualifier(list):
+    class Domain:
+        __slots__ = ["name", "label", "start", "end", "evalue", "bitscore",
+                     "predictions"]
+        def __init__(self, name, label, start, end, evalue, bitscore):
+            self.label = label
+            self.name = name
+            self.start = start
+            self.end = end
+            self.evalue = evalue
+            self.bitscore = bitscore
+            self.predictions = {}
+
+    def __init__(self):
+        super().__init__()
+        self.type = "uninitialised"
+        self.subtypes = []
+        self.domains = []
+        self.domain_names = []
+        self.predictions = {}
+        self.cal = 0
+        self.at = 0
+        self.kr = 0
+        self.a = 0
+        self.other = 0
+
+    def append(self):
+        raise NotImplementedError("Appending to this list won't work, use add_subtype() or add_domain()")
+
+    def extend(self):
+        raise NotImplementedError("Extending this list won't work")
+
+    def __len__(self):
+        return len(self.subtypes) + len(self.domains)
+
+    def __iter__(self):
+        for domain in self.domains:
+            yield "NRPS/PKS Domain: %s (%s-%s). E-value: %s. Score: %s;" % (domain.hit_id,
+                    domain.query_start, domain.query_end, domain.evalue, domain.bitscore)
+        for subtype in self.subtypes:
+            yield "NRPS/PKS subtype: %s" % subtype
+
+    def add_subtype(self, subtype):
+        assert isinstance(subtype, str)
+        self.subtypes.append(subtype)
+
+    def add_domain(self, domain):
+        assert not isinstance(domain, str)
+        if domain.hit_id == "PKS_AT":
+            self.at += 1
+            suffix = "_AT%d" % self.at
+        elif domain.hit_id == "PKS_KR":
+            self.kr += 1
+            suffix = "_KR%d" % self.kr
+        elif domain.hit_id == "CAL-domain":
+            self.kr += 1
+            suffix = "_CAL%d" % self.cal
+        elif domain.hit_id == "AMP-binding":
+            self.a += 1
+            suffix = "_A%d" % self.a
+        else:
+            self.other += 1
+            suffix = "_OTHER%d" % self.a
+
+        self.domains.append(NRPSPKSQualifier.Domain(domain.hit_id, suffix,
+                domain.query_start, domain.query_end, domain.evalue, domain.bitscore))
+        self.domain_names.append(domain.hit_id)
 
 
 class SecMetQualifier(list):

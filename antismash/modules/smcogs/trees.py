@@ -1,7 +1,7 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 import glob
 import logging
 import shutil
@@ -10,39 +10,7 @@ from typing import Dict
 
 from helperlibs.wrappers.io import TemporaryDirectory
 
-from antismash.common import path, deprecated, subprocessing
-
-
-def read_fasta(filename) -> Dict[str, str]:
-    """ reads a fasta file into a dict: id -> sequence, returns the dict """
-    ids = []
-    sequence_info = []
-    with open(filename, "r") as fasta:
-        current_seq = []
-        for line in fasta:
-            line = line.strip()
-            if not line:
-                continue
-            if line[0] == '>':
-                ids.append(line[1:].replace(" ", "_"))
-                if current_seq:
-                    sequence_info.append("".join(current_seq))
-                    current_seq = []
-            else:
-                if not ids:
-                    raise ValueError("Sequence before identifier in fasta file")
-                if not line.replace("-", "z").isalpha():
-                    raise ValueError("Sequence contains non-alphabetic characters")
-                current_seq.append(line)
-    if current_seq:
-        sequence_info.append("".join(current_seq))
-    if len(ids) != len(sequence_info):
-        raise ValueError("Fasta files contains different counts of sequences and ids")
-    if not ids:
-        logging.debug("Fasta file %s contains no sequences", filename)
-        raise ValueError("Fasta file contains no sequences")
-    return OrderedDict(zip(ids, sequence_info))
-
+from antismash.common import path, deprecated, subprocessing, utils
 
 def generate_trees(smcogs_dir, hmm_results, geneclustergenes, nrpspks_genes, options) -> Dict[str, str]:
     """ smCOG phylogenetic tree construction """
@@ -117,7 +85,7 @@ def trim_alignment(inputnr, alignment_file) -> None:
                 return position
         return 0  # can't be earlier than the start
 
-    contents = read_fasta(alignment_file)
+    contents = utils.read_fasta(alignment_file)
     # check all sequences are the same length
     sequence_length = len(list(contents.values())[0])
     for name, seq in contents.items():

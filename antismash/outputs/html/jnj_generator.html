@@ -7,8 +7,8 @@
   {% if cluster.has_sidepanel %}
   <div class="sidepanel">
     {% for handler in cluster.handlers %}
-      {% if handler.generate_sidepanel is defined %}
-        {{handler.generate_sidepanel(cluster, record, options) | safe }}
+      {% if handler.generate_sidepanel is defined and handler.__name__ in record.results %}
+        {{handler.generate_sidepanel(cluster, record.results[handler.__name__], record, options) | safe }}
       {% endif %}
     {% endfor %}
   </div>
@@ -54,8 +54,8 @@
     </div>
     {% endif %}
     {% for handler in cluster.handlers %}
-      {% if handler.generate_details_div is defined %}
-        {{handler.generate_details_div(cluster, record, options) | safe}}
+      {% if handler.generate_details_div is defined and handler.__name__ in record.results %}
+        {{handler.generate_details_div(cluster, record.results[handler.__name__], record, options) | safe}}
       {% endif %}
     {% endfor %}
   </div>

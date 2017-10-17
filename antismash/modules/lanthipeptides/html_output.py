@@ -10,13 +10,13 @@ from antismash.common.layers import ClusterLayer
 from antismash.common.secmet import Prepeptide
 
 
-def will_handle(product):
-    return product.find('lanthipeptide') > -1
+def will_handle(products):
+    return 'lanthipeptide' in products
 
 
 class LanthipeptideLayer(ClusterLayer):
-    def __init__(self, cluster, record, cluster_feature):
-        ClusterLayer.__init__(self, cluster, record, cluster_feature)
+    def __init__(self, record, cluster_feature):
+        ClusterLayer.__init__(self, record, cluster_feature)
         self.motifs = []
         for motif in self.record.seq_record.get_cds_motifs():
             if not isinstance(motif, Prepeptide):
@@ -27,8 +27,8 @@ class LanthipeptideLayer(ClusterLayer):
                 self.motifs.append(motif)
 
 
-def generate_details_div(cluster_layer, record_layer, options_layer):
-    lanthi_layer = LanthipeptideLayer(cluster_layer.cluster, record_layer, cluster_layer.cluster_rec)
+def generate_details_div(cluster_layer, results, record_layer, options_layer):
+    lanthi_layer = LanthipeptideLayer(record_layer, cluster_layer.cluster_rec)
     if not (not options_layer.minimal or options_layer.lanthipeptides_enabled
             or lanthi_layer.motifs):
         return ""
@@ -41,12 +41,12 @@ def generate_details_div(cluster_layer, record_layer, options_layer):
     return details_div
 
 
-def generate_sidepanel(cluster_layer, record_layer, options_layer):
+def generate_sidepanel(cluster_layer, results, record_layer, options_layer):
     env = Environment(
         loader=FileSystemLoader(path.get_full_path(__file__, "templates")),
         autoescape=True, undefined=StrictUndefined)
     template = env.get_template('sidepanel.html')
-    cluster = LanthipeptideLayer(cluster_layer.cluster, record_layer, cluster_layer.cluster_rec)
+    cluster = LanthipeptideLayer(record_layer, cluster_layer.cluster_rec)
     if not cluster.motifs:
         return ""
     record = record_layer

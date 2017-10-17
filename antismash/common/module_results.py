@@ -7,6 +7,8 @@ class ModuleResults:
         For storage of individual module results. Should be subclassed by
         modules for a consistent API.
     """
+    __slots__ = ["record_id"]
+
     def __init__(self, record_id):
         self.record_id = record_id
 

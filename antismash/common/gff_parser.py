@@ -110,7 +110,6 @@ def run(record, single_entry, options):
     for feature in features:
         record.add_biopython_feature(feature)
 
-
 def check_sub(feature, sequence):
     new_features = []
     locations = []
@@ -153,7 +152,7 @@ def check_sub(feature, sequence):
 
     # if nothing to work on
     if not new_features and not locations:
-        return
+        return []
 
     # Only works in tip of the tree, when there's no new_feature built yet. If there is,
     # it means the script just came out of a check_sub and it's ready to return.

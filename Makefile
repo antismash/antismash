@@ -6,10 +6,11 @@ sanity_run = echo "sanity TTA run" && ./run_antismash.py --minimal ../inputs/nis
 
 unit:
 	echo "sanity TTA run" && ./run_antismash.py --tta antismash/test/integration/data/nisin.gbk
-	pytest antismash
+	echo "simple reuse test" && ./run_antismash.py --reuse-results nisin/nisin.json
+	pytest --durations=3 antismash
 
 integration:
-	python -m pytest antismash $(integration_flags)
+	python -m pytest --durations=3 antismash $(integration_flags)
 
 clean:
 	find . -name '*.pyc' | xargs rm

@@ -7,7 +7,6 @@
   <script src="js/svgene.js"></script>
   <script src="js/jsdomain.js"></script>
   <script src="js/clusterblast.js"></script>
-  <script src="js/domainalign.js"></script>
   <script src="geneclusters.js"></script>
   <script src="js/jnj.js"></script>
 
@@ -27,19 +26,15 @@
         <li class="clbutton"><a href="#">Overview</a></li>
         {% for record in records %}
           {% for cluster in record.clusters %}
+            {% set hybrid_text = "" %}
             {% if cluster.hybrid %}
-              <li class="clbutton {{cluster.type}} hybrid cluster-{{cluster.idx}}">
-                <a href="#cluster-{{cluster.idx}}">
-                  {{cluster.idx}}
-                </a>
-              </li>
-            {% else %}
-              <li class="clbutton {{cluster.type}} cluster-{{cluster.idx}}">
-                <a href="#cluster-{{cluster.idx}}">
-                  {{cluster.idx}}
-                </a>
-              </li>
+                {% set hybrid_text = "hybrid " %}
             {% endif %}
+            <li class="clbutton {{cluster.type}} {{hybrid_text}}cluster-{{cluster.idx}}">
+              <a href="#cluster-{{cluster.idx}}">
+                {{cluster.idx}}
+              </a>
+            </li>
           {% endfor %}
         {% endfor %}
         <li id="last-clbutton"><div class="arrow-right" id="next-cluster"></div></li>
@@ -87,9 +82,8 @@
                   </td>
                 {%- endif %}
                 <td>
-                  {% set cluster_subtypes = cluster.type.split('-') %}
                   {% set dash = joiner("-") %}
-                  {% for subtype in  cluster_subtypes -%}
+                  {% for subtype in cluster.subtype -%}
                     {{dash()}}<a href="http://antismash.secondarymetabolites.org/help#{{subtype}}" target="_blank">{{subtype | title}}</a>
                   {%- endfor %}
 
