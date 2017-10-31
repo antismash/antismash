@@ -73,7 +73,7 @@
             <td></td><td>{{record.no_result_note()}}</td>
           {% else %}
             <tr class = 'separator-row'>
-              <td class = 'separator-text' colspan = 2)>{{record.get_from_record()}}</td>
+              <td class = 'separator-text' colspan = 5)>{{record.get_from_record()}}</td>
             </tr>
             {% for cluster in record.clusters -%}
               <tr class = '{{loop.cycle('odd', 'even')}}'>
