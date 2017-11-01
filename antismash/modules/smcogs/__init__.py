@@ -120,7 +120,7 @@ class SMCOGResults(ModuleResults):
 
 
 def run_on_record(record, results, options):
-    relative_output_dir = os.path.join(options.output_dir, "smcogs")
+    relative_output_dir = os.path.relpath(os.path.join(options.output_dir, "smcogs"), os.getcwd())
     smcogs_dir = os.path.abspath(relative_output_dir)
     if not os.path.exists(smcogs_dir):
         os.mkdir(smcogs_dir)
