@@ -149,6 +149,10 @@ def convert_tree(inputnr, smcog_dir, tag) -> None:
     if run_result.return_code or "exception" in run_result.stdout or "Exception" in run_result.stdout or not os.path.exists(tree_png):
         raise RuntimeError("Tree image creation failed in external command attempting to create %s: %s" % (tree_png, command))
 
-    shutil.move(tag.split(".")[0] + '.png', smcog_dir)
+    png = tag.split(".")[0] + '.png'
+    target = os.path.join(smcog_dir, png)
+    if os.path.exists(target):
+        os.remove(target)
+    shutil.move(png, smcog_dir)
     os.remove("tree%d.xtg" % inputnr)
     os.remove("trimmed_alignment%d.fasta" % inputnr)
