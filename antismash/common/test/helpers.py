@@ -2,7 +2,7 @@
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
 """
-    Helper objects for testing antismash
+    Helper objects and functions for testing antismash
 """
 
 # for test files, silence irrelevant and noisy pylint warnings
@@ -15,7 +15,10 @@ import os
 
 from Bio.Seq import Seq
 from Bio.SeqFeature import FeatureLocation
+from helperlibs.wrappers.io import TemporaryDirectory
 
+import antismash
+from antismash.common import serialiser, module_results
 from antismash.common.secmet import Cluster, CDSFeature, Feature, Record
 from antismash.config.args import build_parser
 from antismash.main import get_all_modules
@@ -83,3 +86,29 @@ def get_path_to_balhymicin_genbank():
     for _i in range(3):
         path = os.path.dirname(path)
     return os.path.join(path, 'test/integration/data/Y16952.gbk')
+
+
+def run_and_regenerate_results_for_module(input_file, module, options, expected_record_count):
+    """ Runs antismash end to end over the given file with the given options
+        and returns the given modules regenerated results
+    """
+    with TemporaryDirectory(change=True):
+        json_filename = os.path.join(options.output_dir, os.path.basename(input_file).rsplit('.', 1)[0] + ".json")
+        assert not os.path.exists(json_filename)
+        antismash.main.run_antismash(input_file, options)
+        results = serialiser.AntismashResults.from_file(json_filename)
+    # not the responsibility of modules, but if it's wrong then everything is
+    assert len(results.results) == expected_record_count
+    assert len(results.records) == expected_record_count
+    if expected_record_count == 1:
+        regenerated = antismash.main.regenerate_results_for_record(results.records[0],
+                                     options, [module], results.results[0])
+        final = regenerated[module.__name__]
+        assert isinstance(final, module_results.ModuleResults)
+    else:
+        regenerated = [antismash.main.regenerate_results_for_record(record, options,
+                        [module], res) for record, res in zip(results.records, results.results)]
+        final = [result[module.__name__] for result in regenerated]
+        for res in final:
+            assert isinstance(res, module_results.ModuleResults)
+    return final
