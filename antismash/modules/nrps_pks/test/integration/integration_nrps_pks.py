@@ -11,7 +11,7 @@ from helperlibs.wrappers.io import TemporaryDirectory
 import minimock
 
 import antismash
-from antismash.common import path
+from antismash.common import path, serialiser
 from antismash.common.test import helpers
 from antismash.config import build_config, destroy_config
 from antismash.modules import nrps_pks
@@ -43,13 +43,33 @@ class IntegrationNRPSPKS(unittest.TestCase):
         destroy_config()
 
     def test_balhymicin(self):
-        with TemporaryDirectory(change=True):
-            assert not os.path.exists("structures/genecluster1.png")
-            antismash.main.run_antismash(helpers.get_path_to_balhymicin_genbank(), self.options)
-            assert os.path.exists("structures/genecluster1.png")
+        filename = helpers.get_path_to_balhymicin_genbank()
+        results = helpers.run_and_regenerate_results_for_module(filename, nrps_pks,
+                                             self.options, expected_record_count=1)
+        for key, val in results.pks.method_results.items():
+            if key != "minowa_cal":
+                assert not val
+                continue
+            assert len(val) == 1
+            assert len(val["pks_CAL1"]) == 5
+            assert val["pks_CAL1"][0] == ["AHBA", 167.0]
+        # when the NRPS subsections are added, this needs to change
+        assert results.nrps == {}
+        # as does this, though it still won't use domain docking
+        assert results.cluster_predictions == {'1': ['(nrp-nrp-nrp) + (nrp-nrp-nrp) + (nrp) + (nrp) + (pk)', False]}
 
     def test_CP002271_c19(self):
-        with TemporaryDirectory(change=True):
-            assert not os.path.exists("structures/genecluster1.png")
-            antismash.main.run_antismash(path.get_full_path(__file__, 'data', 'CP002271.1.cluster019.gbk'), self.options)
-            assert os.path.exists("structures/genecluster1.png")
+        filename = path.get_full_path(__file__, 'data', 'CP002271.1.cluster019.gbk')
+        results = helpers.run_and_regenerate_results_for_module(filename, nrps_pks,
+                                             self.options, expected_record_count=1)
+        # catch ordering changes along with ensuring ATResults are there
+        assert results.pks.method_results["signature"]["STAUR_3982_AT1"][0].score == 87.5
+        # ensure all genes are present and have the right consensus
+        assert results.consensus == {'STAUR_3982_AT1': 'ohmmal',
+                                              'STAUR_3983_AT1': 'ccmmal',
+                                              'STAUR_3984_AT1': 'ccmmal',
+                                              'STAUR_3985_AT1': 'pk'}
+        # check the gene ordering and, in this case, that it used domain docking
+        assert results.cluster_predictions == {'1': ['(ccmmal) + (ccmmal) + (pk) + (ohmmal)', True]}
+        # no A domains in the cluster, so make sure no NRPS results
+        assert results.nrps == {}
