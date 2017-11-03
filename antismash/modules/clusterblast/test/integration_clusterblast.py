@@ -51,12 +51,12 @@ class Base(unittest.TestCase):
         destroy_config()
         update_config(self.old_config)
 
-    def get_results(self):
-        """ override with a function that runs *blast, verifies basics and
-            returns results instance for further testing as a tuple of
+    def get_results(self, results):
+        """ override with a function that fetches specific results instance
+            for further testing as a tuple of
             (specific_results, global_results)
         """
-        self.fail()  # wasn't overriden
+        raise NotImplementedError("get_results not overridden")
 
     def check_svgs(self, results, expected, svg_dir):
         # make sure no svgs created yet
@@ -66,31 +66,26 @@ class Base(unittest.TestCase):
         num_svgs = len(glob.glob(os.path.join(svg_dir, "*.svg")))
         assert num_svgs == min(self.options.cb_nclusters, expected) + 1
 
-    def check_nisin(self, expected):
-        with TemporaryDirectory(change=True) as temp_dir:
-            self.build_record(helpers.get_path_to_nisin_genbank())
-            results, global_results = self.get_results()
+    def run_antismash(self, filename, expected):
+        with TemporaryDirectory() as output_dir:
+            update_config({"output_dir": output_dir})
+            results = helpers.run_and_regenerate_results_for_module(filename, clusterblast, self.options, expected_record_count=1)
+            update_config({"output_dir": ""})
+            results, global_results = self.get_results(results)
             assert len(results.cluster_results) == 1
             cluster = results.cluster_results[0]
             if expected > clusterblast.get_result_limit():
                 assert cluster.total_hits == expected
                 expected = clusterblast.get_result_limit()
             assert len(cluster.ranking) == expected  # will change if database does
-            self.check_svgs(global_results, expected, temp_dir)
+            self.check_svgs(global_results, expected, output_dir)
         return results
 
+    def check_nisin(self, expected):
+        return self.run_antismash(helpers.get_path_to_nisin_genbank(), expected)
+
     def check_balhymicin(self, expected):
-        with TemporaryDirectory(change=True) as temp_dir:
-            self.build_record(helpers.get_path_to_balhymicin_genbank())
-            results, global_results = self.get_results()
-            assert len(results.cluster_results) == 1
-            cluster = results.cluster_results[0]
-            if expected > clusterblast.get_result_limit():
-                assert cluster.total_hits == expected
-                expected = clusterblast.get_result_limit()
-            assert len(cluster.ranking) == expected  # will change if database does
-            self.check_svgs(global_results, expected, temp_dir)
-        return results
+        return self.run_antismash(helpers.get_path_to_balhymicin_genbank(), expected)
 
 
 class GeneralIntegrationTest(Base):
@@ -98,18 +93,12 @@ class GeneralIntegrationTest(Base):
     def get_args(self):
         return ["--cb-general"]
 
-    def get_results(self):
-        prior_results = clusterblast.ClusterBlastResults(self.record.id)
-        results = clusterblast.run_on_record(self.record, prior_results, self.options)
+    def get_results(self, results):
         assert isinstance(results, ModuleResults)
         assert results.general
         assert results.general.search_type == "clusterblast"
         assert results.knowncluster is None
         assert results.subcluster is None
-        json = results.to_json()
-        assert json
-        new = clusterblast.ClusterBlastResults.from_json(json, self.record)
-        assert json == new.to_json()
         return results.general, results
 
     def test_nisin(self):
@@ -120,18 +109,12 @@ class KnownIntegrationTest(Base):
     def get_args(self):
         return ["--cb-knowncluster"]
 
-    def get_results(self):
-        prior_results = clusterblast.ClusterBlastResults(self.record.id)
-        results = clusterblast.run_on_record(self.record, prior_results, self.options)
+    def get_results(self, results):
         assert isinstance(results, ModuleResults)
         assert results.general is None
         assert results.knowncluster
         assert results.knowncluster.search_type == "knownclusterblast"
         assert results.subcluster is None
-        json = results.to_json()
-        assert json
-        new = clusterblast.ClusterBlastResults.from_json(json, self.record)
-        assert json == new.to_json()
         return results.knowncluster, results
 
     def test_nisin(self):
@@ -145,18 +128,12 @@ class SubIntegrationTest(Base):
     def get_args(self):
         return ["--cb-subcluster"]
 
-    def get_results(self):
-        prior_results = clusterblast.ClusterBlastResults(self.record.id)
-        results = clusterblast.run_on_record(self.record, prior_results, self.options)
+    def get_results(self, results):
         assert isinstance(results, ModuleResults)
         assert results.general is None
         assert results.knowncluster is None
         assert results.subcluster
         assert results.subcluster.search_type == "subclusterblast"
-        json = results.to_json()
-        assert json
-        new = clusterblast.ClusterBlastResults.from_json(json, self.record)
-        assert json == new.to_json()
         return results.subcluster, results
 
     def test_nisin(self):
