@@ -64,8 +64,13 @@
 
       <tbody>
         {% for record in records -%}
-          {% if records_written == 0 %}
-            <td></td><td>{{record.no_result_note()}}</td>
+          {% if not record.clusters %}
+            <tr class = 'separator-row'>
+              <td class = 'separator-text' colspan = 5)>{{record.get_from_record()}}</td>
+            </tr>
+            <tr>
+              <td></td><td colspan = 5)>No secondary metabolite clusters found</td>
+            </tr>
           {% else %}
             <tr class = 'separator-row'>
               <td class = 'separator-text' colspan = 5)>{{record.get_from_record()}}</td>
