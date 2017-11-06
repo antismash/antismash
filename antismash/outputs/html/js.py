@@ -90,7 +90,7 @@ def convert_cds_features(record, features, options, mibig_entries):
             js_orf['end'], js_orf['start'] = js_orf['start'], js_orf['end']
         js_orf['strand'] = feature.strand if feature.strand is not None else 1
         js_orf['locus_tag'] = feature.get_name()
-        js_orf['type'] = get_biosynthetic_type(feature)
+        js_orf['type'] = str(feature.gene_function)
         js_orf['description'] = get_description(record, feature, js_orf['type'], options, mibig_entries.get(feature.protein_id, {}))
         js_orfs.append(js_orf)
     return js_orfs
@@ -218,17 +218,6 @@ def get_description(record, feature, type_, options, mibig_result):
 
     completed = template.format(**replacements)
     return "".join(char for char in completed if char in string.printable)
-
-
-def get_biosynthetic_type(feature):
-    "Get the biosythetic type of a CDS feature"
-
-    function = str(feature.gene_function)  # TODO: change the rest of js to suit this so conversion not required
-    if function == 'additional':
-        function = 'biosynthetic-additional'
-    elif function == 'core':
-        function = 'biosynthetic'
-    return function
 
 
 def get_model_details(feature):

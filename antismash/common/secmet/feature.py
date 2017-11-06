@@ -319,6 +319,12 @@ class GeneFunction(Enum):
     REGULATORY = 4
 
     def __str__(self):
+        # because this information ends up in the record, make these more
+        # labels more meaningful for users
+        if self == GeneFunction.CORE:
+            return "biosynthetic"
+        if self == GeneFunction.ADDITIONAL:
+            return "biosynthetic-additional"
         return str(self.name).lower()
 
 
