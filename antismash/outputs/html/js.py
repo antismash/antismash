@@ -19,38 +19,37 @@ def convert_records(seq_records, results, options):
 
 def convert_record(record, options, result=None):
     """Convert a SeqRecord to JSON"""
-    js_rec = {}
-    js_rec['seq_id'] = record.id
-    if "extrarecord" in options:
-        if record.id in options.extrarecord:
-            if "extradata" in options.extrarecord[record.id]:
-                if "orig_id" in options.extrarecord[record.id].extradata:
-                    js_rec['orig_id'] = options.extrarecord[record.id].extradata["orig_id"]
-    if 'orig_id' not in js_rec:
-        js_rec['orig_id'] = ""
-    js_rec['clusters'] = convert_clusters(record, options, result)
-
+    js_rec = {'seq_id': record.id,
+              'clusters': convert_clusters(record, options, result)}
+    # TODO: js_rec["orig_id"] = original id if changed
     return js_rec
 
 
-def convert_clusters(record, options, result=None):
+def fetch_tta_features(cluster, result):
+    """ Returns a list of all TTA features that overlap with the cluster """
+    hits = []
+    tta_results = result.get("antismash.modules.tta")
+    if not tta_results:
+        return hits
+
+    for feature in tta_results.features:
+        if feature.overlaps_with(cluster):
+            hits.append(feature)
+
+    return hits
+
+
+def convert_clusters(record, options, result):
     """Convert cluster SeqFeatures to JSON"""
     js_clusters = []
     mibig_results = {}
-    if result:
-        clusterblast_results = result.get("antismash.modules.clusterblast")
-        if clusterblast_results and clusterblast_results.knowncluster:
-            mibig_results = clusterblast_results.knowncluster.mibig_entries
+
+    clusterblast_results = result.get("antismash.modules.clusterblast")
+    if clusterblast_results and clusterblast_results.knowncluster:
+        mibig_results = clusterblast_results.knowncluster.mibig_entries
+
     for cluster in record.get_clusters():
-        tta_codons = []
-        all_misc_features = record.get_generics()
-        for feature in all_misc_features:
-            if not cluster.overlaps_with(feature):
-                continue
-            for note in feature.notes:
-                if note.startswith('tta leucine codon'):
-                    tta_codons.append(feature)
-                    break
+        tta_codons = fetch_tta_features(cluster, result)
 
         js_cluster = {}
         js_cluster['start'] = int(cluster.location.start) + 1
