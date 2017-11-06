@@ -51,14 +51,18 @@ class Feature:
 
     def to_biopython(self, qualifiers=None):
         feature = SeqFeature(self.location, type=self.type)
-        feature.qualifiers.update(self._qualifiers)
+        quals = self._qualifiers.copy()
         notes = self._qualifiers.get("note", []) + self.notes
         if qualifiers:
             notes += qualifiers.pop("note", [])
-            feature.qualifiers.update(qualifiers)
+            quals.update(qualifiers)
         if notes:
             # sorting helps with consistency and comparison testing
-            feature.qualifiers["note"] = sorted(notes)
+            quals["note"] = sorted(notes)
+        # sorted here to match the behaviour of biopython
+        for key, val in sorted(quals.items()):
+            feature.qualifiers[key] = val
+        assert isinstance(feature.qualifiers, dict)
         return [feature]
 
     def __lt__(self, other):
@@ -81,7 +85,8 @@ class Feature:
         if feature is None:
             feature = Feature(bio_feature.location, bio_feature.type)
             if not leftovers:
-                leftovers = dict(bio_feature.qualifiers)
+                assert isinstance(bio_feature.qualifiers, dict)
+                leftovers = bio_feature.qualifiers.copy()
             feature.notes = leftovers.pop("note", [])
         if leftovers:
             feature._qualifiers.update(leftovers)
