@@ -182,10 +182,13 @@ class TestGeneFunction(unittest.TestCase):
         assert GeneFunction.CORE != GeneFunction.OTHER
 
     def test_string_conversion(self):
+        assert str(GeneFunction.CORE) == "biosynthetic"
+        assert str(GeneFunction.ADDITIONAL) == "biosynthetic-additional"
         assert str(GeneFunction.OTHER) == "other"
         for member in dir(GeneFunction):
-            if member.isupper():
-                assert str(getattr(GeneFunction, member)) == member.lower()
+            if not member.isupper() or member in ["CORE", "ADDITIONAL"]:
+                continue
+            assert str(getattr(GeneFunction, member)) == member.lower()
 
     def test_CDS_function(self):
         cds = CDSFeature(FeatureLocation(1, 5), locus_tag="foo")
