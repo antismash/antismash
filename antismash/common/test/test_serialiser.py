@@ -120,6 +120,7 @@ class TestResultsJSON(unittest.TestCase):
         results.write_to_file(json_handle)
         json_handle.seek(0)
         new_results = serialiser.AntismashResults.from_file(json_handle)
+        assert results.to_json() == new_results.to_json()
         # check no records were lost
         assert len(new_results.records) == len(results.records)
         # check that the contents of the records is the same

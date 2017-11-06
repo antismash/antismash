@@ -161,10 +161,10 @@ def sequence_from_json(data):
 
 
 def feature_to_json(feature):
-    return json.dumps({"location": location_to_json(feature.location),
-                       "type": feature.type,
-                       "id": feature.id,
-                       "qualifiers": feature.qualifiers})
+    return {"location": location_to_json(feature.location),
+            "type": feature.type,
+            "id": feature.id,
+            "qualifiers": feature.qualifiers}
 
 
 def feature_from_json(data):
