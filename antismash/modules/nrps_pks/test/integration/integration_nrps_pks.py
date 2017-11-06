@@ -29,7 +29,9 @@ class IntegrationWithoutNRPSPKS(unittest.TestCase):
         minimock.restore()
 
     def test_minimal(self):
-        with TemporaryDirectory(change=True):
+        with TemporaryDirectory(change=True) as tempdir:
+            self.options = build_config(["--minimal", "--output-dir", tempdir],
+                                    isolated=True, modules=antismash.get_all_modules())
             antismash.main.run_antismash(helpers.get_path_to_balhymicin_genbank(), self.options)
         # make sure it didn't run
         minimock.assert_same_trace(self.tracker, "")
