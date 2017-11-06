@@ -29,8 +29,8 @@ class RecordLayer:
 
     @property
     def orig_id(self):
-        logging.critical("using dummy orig_id in RecordLayer")
-        return "DUMMY ORIG_ID"
+        logging.critical("orig_id in RecordLayer always empty")
+        return ""
 
     def get_from_record(self):
         " returns the text to be displayed in the overview table > separator-text "
@@ -46,14 +46,6 @@ class RecordLayer:
         else:
             text_from = ('The following clusters were found in your protein input:')
         return text_from
-
-    def no_result_note(self):
-        " returns the 'no result note' to be displayed in overview page/table "
-        if self.options.input_type == 'nucl':
-            no_result_note = 'No secondary metabolite clusters were found in the input sequence(s)'
-        else:
-            no_result_note = 'No secondary metabolite biosynthesis proteins were found in the input sequence(s)'
-        return no_result_note
 
 
 class ClusterLayer:
