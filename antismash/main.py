@@ -7,6 +7,8 @@ from io import StringIO
 import logging
 import pstats
 import os
+import shutil
+import tempfile
 from types import ModuleType
 from typing import Dict, Optional, List
 
@@ -289,10 +291,19 @@ def write_outputs(results, options) -> None:
             cluster.write_to_genbank(directory=options.output_dir, record=bio_record)
 
     # write records to an aggregate output
-    combined_filename = os.path.join(options.output_dir, results.input_file)
-    combined_filename = os.path.splitext(combined_filename)[0] + ".gbk"
+    base_filename = os.path.splitext(os.path.join(options.output_dir, results.input_file))[0]
+    combined_filename = base_filename + ".gbk"
     logging.debug("Writing final genbank file to '%s'", combined_filename)
     SeqIO.write(bio_records, combined_filename, "genbank")
+
+    zipfile = base_filename + ".zip"
+    logging.debug("Zipping output to '%s'", zipfile)
+    if os.path.exists(zipfile):
+        os.remove(zipfile)
+    with tempfile.NamedTemporaryFile() as temp:
+        shutil.make_archive(temp.name, "zip", root_dir=options.output_dir)
+        shutil.copy(temp.name, zipfile)
+    assert os.path.exists(zipfile)
 
 
 def annotate_records(results) -> None:
@@ -462,7 +473,6 @@ def run_antismash(sequence_file, options, detection_modules=None,
         analyse_record(seq_record, options, analysis_modules, previous_result)
 
     # Write results
-    # TODO: zipping, etc
     json_filename = os.path.join(options.output_dir, results.input_file)
     json_filename = os.path.splitext(json_filename)[0] + ".json"
     logging.debug("Writing json results to '%s'", json_filename)

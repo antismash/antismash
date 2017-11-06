@@ -20,6 +20,7 @@ from helperlibs.wrappers.io import TemporaryDirectory
 import antismash
 from antismash.common import serialiser, module_results
 from antismash.common.secmet import Cluster, CDSFeature, Feature, Record
+from antismash.config import update_config
 from antismash.config.args import build_parser
 from antismash.main import get_all_modules
 
@@ -92,10 +93,13 @@ def run_and_regenerate_results_for_module(input_file, module, options, expected_
     """ Runs antismash end to end over the given file with the given options
         and returns the given modules regenerated results
     """
-    with TemporaryDirectory(change=True):
+    with TemporaryDirectory(change=True) as tempdir:
+        orig_output = options.output_dir
+        update_config({"output_dir": tempdir})
         json_filename = os.path.join(options.output_dir, os.path.basename(input_file).rsplit('.', 1)[0] + ".json")
         assert not os.path.exists(json_filename)
         antismash.main.run_antismash(input_file, options)
+        update_config({"output_dir": orig_output})
         results = serialiser.AntismashResults.from_file(json_filename)
     # not the responsibility of modules, but if it's wrong then everything is
     assert len(results.results) == expected_record_count
