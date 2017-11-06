@@ -7,8 +7,8 @@
         <dd>Putative {{motif.peptide_class}}</dd>
         <dd>Cleavage pHMM score: {{'%0.2f' | format(motif.score)}}</dd>
         <dd>RODEO score: {{motif.rodeo_score}}</dd>
-        <dd>Monoisotopic mass: {{motif.monoisotopic_mass}} Da</dd>
-        <dd>Molecular weight: {{motif.molecular_weight}} Da</dd>
+        <dd>Monoisotopic mass: {{'%0.1f' | format(motif.monoisotopic_mass)}} Da</dd>
+        <dd>Molecular weight: {{'%0.1f' | format(motif.molecular_weight)}} Da</dd>
         <dd>Number of bridges: {{motif.lan_bridges}}</dd>
         {% if motif.get_modifications() | length != 0 %}
           {%- for mod in motif.get_modifications() %}
