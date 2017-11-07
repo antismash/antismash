@@ -193,15 +193,41 @@ class TestGeneFunction(unittest.TestCase):
     def test_CDS_function(self):
         cds = CDSFeature(FeatureLocation(1, 5), locus_tag="foo")
         # default value
+        assert cds.gene_functions.get_classification() == GeneFunction.OTHER
         assert cds.gene_function == GeneFunction.OTHER
         # check bad values can't be assigned
         with self.assertRaises(AssertionError):
-            cds.gene_function = "other"
-        with self.assertRaises(AssertionError):
-            cds.gene_function = 0
-        # check overriding OTHER works
-        cds.gene_function = GeneFunction.CORE
-        assert cds.gene_function == GeneFunction.CORE
-        # test that overriding non-other doesn't work
-        cds.gene_function = GeneFunction.ADDITIONAL
-        assert cds.gene_function == GeneFunction.CORE
+            cds.gene_functions.add("other", "a", "b")
+        with self.assertRaises(AttributeError):
+            cds.gene_functions = 0
+
+        cds.gene_functions.add(GeneFunction.ADDITIONAL, "first_tool", "dummy")
+        assert cds.gene_functions.get_classification() == GeneFunction.ADDITIONAL
+        assert cds.gene_function == GeneFunction.ADDITIONAL
+        # conflicting, so back to OTHER
+        cds.gene_functions.add(GeneFunction.TRANSPORT, "other_tool", "dummy")
+        assert cds.gene_functions.get_classification() == GeneFunction.OTHER
+        assert cds.gene_function == GeneFunction.OTHER
+        # but smcogs overrides that
+        cds.gene_functions.add(GeneFunction.REGULATORY, "smcogs", "dummy")
+        assert cds.gene_functions.get_classification() == GeneFunction.REGULATORY
+        # and cluster definition overrides even that
+        cds.gene_functions.add(GeneFunction.CORE, "cluster_definition", "dummy")
+        assert cds.gene_functions.get_classification() == GeneFunction.CORE
+
+        # and that we still have tracked these
+        smcogs = cds.gene_functions.get_by_tool("smcogs")
+        assert len(smcogs) == 1
+        assert smcogs[0].function == GeneFunction.REGULATORY
+
+        adds = cds.gene_functions.get_by_function(GeneFunction.ADDITIONAL)
+        assert len(adds) == 1
+        assert adds[0].tool == "first_tool"
+
+    def test_CDS_function_conversion(self):
+        cds = CDSFeature(FeatureLocation(1, 5), locus_tag="foo")
+        assert cds.gene_function == GeneFunction.OTHER
+        assert CDSFeature.from_biopython(cds.to_biopython()[0]).gene_function == GeneFunction.OTHER
+        cds.gene_functions.add(GeneFunction.ADDITIONAL, "tool", "desc")
+        assert cds.gene_function == GeneFunction.ADDITIONAL
+        assert CDSFeature.from_biopython(cds.to_biopython()[0]).gene_function == GeneFunction.ADDITIONAL

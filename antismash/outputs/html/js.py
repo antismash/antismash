@@ -150,14 +150,12 @@ def get_description(record, feature, type_, options, mibig_result):
     if feature.get_qualifier('EC_number'):
         template += "EC-number(s): {ecnumber}<br>\n"
     if smcogs:
-        for note in feature.notes:  # TODO move to secmet attribute
-            if note.startswith('smCOG:') and '(' in note:
-                text = note[6:].split('(', 1)[0]
-                smcog, desc = text.split(':', 1)
-                desc = desc.replace('_', ' ')
-                replacements['smcog'] = '%s (%s)' % (smcog, desc)
-                template += "smCOG: {smcog}<br>\n"
-            elif note.startswith('smCOG tree PNG image:'):
+        functions = feature.gene_functions.get_by_tool("smcogs")
+        if functions:
+            smcog, desc = functions[0].description.split(':', 1)
+            template += "smCOG: %s (%s)<br>\n" % (smcog, desc)
+        for note in feature.notes:  # TODO find a better way to store image urls
+            if note.startswith('smCOG tree PNG image:'):
                 entry = '<a href="%s" target="_new">View smCOG seed phylogenetic tree with this gene</a>'
                 url = note.split(':')[-1]
                 replacements['smcog_tree_line'] = entry % url

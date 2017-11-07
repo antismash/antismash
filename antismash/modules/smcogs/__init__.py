@@ -113,8 +113,8 @@ class SMCOGResults(ModuleResults):
             gene_id = feature.get_name()
             result = self.best_hits.get(gene_id)
             if result:  # TODO convert to qualifier like SecMetQualifier
-                feature.gene_function = functions[result.hit_id.split(':')[0]]
-                feature.notes.append("smCOG: %s (Score: %g; E-value: %g);" % (result.hit_id, result.bitscore, result.evalue))
+                smcog_id, name = result.hit_id.split(':')
+                feature.gene_functions.add(functions[smcog_id], "smcogs", "%s (Score: %g; E-value: %g)" % (result.hit_id, result.bitscore, result.evalue))
             if gene_id in self.tree_images:
                 feature.notes.append("smCOG tree PNG image: smcogs/%s" % self.tree_images[gene_id])
 
