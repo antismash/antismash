@@ -18,8 +18,8 @@ class MinowaResults(dict):
                 out_file.write("{}\t{}\n".format(name, score))
         out_file.close()
 
-def hmmsearch(fasta: str, hmm: str) -> str:
-    result = subprocessing.execute(["hmmsearch", "--noali", hmm, fasta])
+def hmmsearch(fasta_format: str, hmm: str) -> str:
+    result = subprocessing.execute(["hmmsearch", "--noali", hmm, "-"], stdin=fasta_format)
     if not result.successful():
         logging.error("hmmsearch stderr: %s", result.stderr)
         raise RuntimeError("hmmsearch exited non-zero")
@@ -70,14 +70,15 @@ def run_minowa(sequence_info: Dict[str, str], startpos: int, muscle_ref: str, re
         muscle = subprocessing.run_muscle_single(query_id, query_seq, muscle_ref)
 
         # count residues in ref sequence and put positions in list
-        # extract positions from query sequence and create fasta file to use as input for hmm searches
+        # extract positions from query sequence and create fasta formatted seq
+        # to use as input for hmm searches
         seq = utils.extract_by_reference_positions(muscle[query_id], muscle[ref_sequence], positions)
-        deprecated.writefasta([query_id], [seq.replace("-", "X")], "hmm_infile.fasta")
+        fasta_format = ">%s\n%s\n" % (query_id, seq.replace("-", "X"))
 
         # then use list to extract positions from every sequence -> HMMs (one time, without any query sequence)
         hmm_scores = {}
         for hmmname in hmm_names:
-            score = float(hmmsearch("hmm_infile.fasta", path.join(data_dir, hmmname + ".hmm")))
+            score = float(hmmsearch(fasta_format, path.join(data_dir, hmmname + ".hmm")))
             hmm_scores[hmmname] = score
 
         results = sorted(hmm_scores.items(), reverse=True, key=lambda x: (x[1], x[0]))
