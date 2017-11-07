@@ -946,9 +946,7 @@ def run_lanthipred(seq_record, query, lant_class, domains):
         #              utils.get_gene_id(query))
         return None
 
-    if not query.gene_function:
-        query.gene_function = secmet.GeneFunction.ADDITIONAL
-
+    query.gene_functions.add(secmet.GeneFunction.ADDITIONAL, "lanthipeptides", "predicted lanthipeptide")
     return result
 
 
@@ -1148,7 +1146,6 @@ def specific_analysis(seq_record):
             motif = result_vec_to_feature(lan_a, result_vec)
             results.motifs.append(motif)
             results.clusters_with_motifs.add(cluster)
-            lan_a.gene_function = secmet.GeneFunction.ADDITIONAL
             if "allorf" in lan_a.get_name():
                 seq_record.add_cds_feature(lan_a)  # TODO shift to add_to_record?
                 if lan_a.location.start < cluster.location.start:

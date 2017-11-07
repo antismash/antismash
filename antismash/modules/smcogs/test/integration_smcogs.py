@@ -83,10 +83,16 @@ class TestTreeGeneration(Base):
                 hit = results.best_hits.get(cds.get_name())
                 if hit:
                     assert not cds.notes
+                    assert cds.gene_function in [secmet.feature.GeneFunction.OTHER,
+                                                 secmet.feature.GeneFunction.CORE]
             results.add_to_record(self.record)
             for cds in self.record.get_cluster(0).cds_children:
+                if cds.sec_met:
+                    continue  # no sense checking, because we don't do anything with it
                 hit = results.best_hits.get(cds.get_name())
                 if not hit:
+                    assert cds.gene_function == secmet.feature.GeneFunction.OTHER
                     continue
                 assert cds.get_name() in results.tree_images
-                assert len(cds.notes) == 2
+                assert len(cds.notes) == 1
+                assert cds.gene_function != secmet.feature.GeneFunction.OTHER

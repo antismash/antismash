@@ -1,11 +1,12 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
-from collections import OrderedDict
+from collections import defaultdict, OrderedDict
 from enum import Enum, unique
 import logging
 import os
 import warnings
+from typing import List, Optional
 
 from helperlibs.bio import seqio
 
@@ -332,10 +333,90 @@ class GeneFunction(Enum):
             return "biosynthetic-additional"
         return str(self.name).lower()
 
+    @staticmethod
+    def from_string(label):
+        for value in GeneFunction:
+            if str(value) == label:
+                return value
+        raise ValueError("Unknown gene function label: %s", label)
+
+
+class GeneFunctionAnnotations:
+    slots = ["_annotations", "_by_tool", "_by_function"]
+
+    class GeneFunctionAnnotation:
+        slots = ["function", "tool", "description"]
+
+        def __init__(self, function: GeneFunction, tool: str, description: str):
+            assert isinstance(function, GeneFunction), "wrong type: %s" % type(function)
+            assert tool and len(tool.split()) == 1, tool  # no whitespace in tool name
+            assert description
+            self.function = function
+            self.tool = tool
+            self.description = description
+
+        def __str__(self):
+            return "%s (%s) %s" % (self.function, self.tool, self.description)
+
+        def __repr__(self):
+            return "GeneFunctionAnnotation(function=%r, tool='%s', '%s')" % (self.function, self.tool, self.description)
+
+    def __init__(self):
+        self._annotations = []
+        self._by_tool = defaultdict(list)
+        self._by_function = defaultdict(list)
+
+    def __iter__(self):
+        for annotation in self._annotations:
+            yield annotation
+
+    def __len__(self):
+        return len(self._annotations)
+
+    def add(self, function: GeneFunction, tool: str, description: str):
+        new = GeneFunctionAnnotations.GeneFunctionAnnotation(function, tool, description)
+        self._by_tool[tool].append(new)
+        self._by_function[function].append(new)
+        self._annotations.append(new)
+        return new
+
+    def add_from_qualifier(self, qualifier: List):
+        for section in qualifier:
+            function, tool, description = section.split(maxsplit=2)
+            tool = tool[1:-1]  # strip the ()
+            self.add(GeneFunction.from_string(function), tool, description)
+
+    def get_by_tool(self, tool: str) -> Optional[List]:
+        return self._by_tool.get(tool)
+
+    def get_by_function(self, function: GeneFunction) -> Optional[List]:
+        return self._by_function.get(function)
+
+    def get_classification(self) -> GeneFunction:
+        """ Returns, in order of priority:
+             - CORE if cluster defined by this gene
+             - smCOGs function if it exists
+             - a function from other tools if they all agree
+             - OTHER
+        """
+        # if no annotations, skip to OTHER
+        if not self._annotations:
+            return GeneFunction.OTHER
+        # priority for tools
+        for tool in ["cluster_definition", "smcogs"]:
+            annotations = self._by_tool[tool]
+            if annotations:
+                return annotations[0].function
+        # otherwise check all agree
+        function = self._annotations[0].function
+        for annotation in self._annotations[1:]:
+            if annotation.function != function:
+                return GeneFunction.OTHER
+        return function
 
 class CDSFeature(Feature):
     __slots__ = ["_translation", "protein_id", "locus_tag", "gene", "product",
-                 "transl_table", "_sec_met", "aSProdPred", "cluster", "_gene_function",
+                 "transl_table", "_sec_met", "aSProdPred", "cluster", "_gene_functions",
                  "unique_id", "_nrps_pks", "motifs"]
 
     def __init__(self, location, translation=None, locus_tag=None, protein_id=None,
@@ -344,7 +425,7 @@ class CDSFeature(Feature):
         # mandatory
         #  codon_start
         #  db_xref
-        self._gene_function = GeneFunction.OTHER
+        self._gene_functions = GeneFunctionAnnotations()
 
         # semi-optional
         self._translation = None
@@ -379,15 +460,12 @@ class CDSFeature(Feature):
         self.unique_id = None  # set only when added to a record
 
     @property
-    def gene_function(self):
-        return self._gene_function
+    def gene_functions(self):
+        return self._gene_functions
 
-    @gene_function.setter
-    def gene_function(self, value):
-        assert isinstance(value, GeneFunction)
-        if self._gene_function != GeneFunction.OTHER:
-            return  # don't override if it's already been set
-        self._gene_function = value
+    @property
+    def gene_function(self):
+        return self._gene_functions.get_classification()
 
     @property
     def sec_met(self):
@@ -398,8 +476,8 @@ class CDSFeature(Feature):
         if sec_met is not None and not isinstance(sec_met, SecMetQualifier):
             raise TypeError("CDSFeature.sec_met can only be set to an instance of SecMetQualifier")
         self._sec_met = sec_met
-        if sec_met and sec_met.kind == "biosynthetic":
-            self.gene_function = GeneFunction.CORE
+        if sec_met and sec_met.kind == str(GeneFunction.CORE):
+            self._gene_functions.add(GeneFunction.CORE, "cluster_definition", sec_met.domain_ids[0])
 
     @property
     def nrps_pks(self):
@@ -474,6 +552,10 @@ class CDSFeature(Feature):
         sec_met = leftovers.pop("sec_met", None)
         if sec_met:
             feature.sec_met = SecMetQualifier.from_biopython(sec_met)
+        gene_functions = leftovers.pop("gene_functions", [])
+        if gene_functions:
+            feature.gene_functions.add_from_qualifier(gene_functions)
+
 
         # grab parent optional qualifiers
         super(CDSFeature, feature).from_biopython(bio_feature, feature=feature, leftovers=leftovers)
@@ -490,6 +572,8 @@ class CDSFeature(Feature):
             val = getattr(self, attr)
             if val:
                 mine[attr] = [str(val)]
+        if self._gene_functions:
+            mine["gene_functions"] = list(map(str, self._gene_functions))
         # since it's already a list
         if self.sec_met:
             mine["sec_met"] = self.sec_met
