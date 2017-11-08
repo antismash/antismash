@@ -219,7 +219,7 @@ def create_rules(enabled_cluster_types):
     # TODO: as4: We should move all user-customizable files into config subdirectory;
     # the rulefiles are redundant also in hmm_detection_dblookup
     with open(path.get_full_path(__file__, "cluster_rules.txt"), "r") as ruledata:
-        parser = rule_parser.Parser(ruledata.readlines())
+        parser = rule_parser.Parser("".join(ruledata.readlines()))
     for rule in parser.rules:
         if rule.name in enabled_cluster_types:
             rules.append(rule)

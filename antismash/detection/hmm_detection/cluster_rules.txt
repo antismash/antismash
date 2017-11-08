@@ -1,49 +1,264 @@
-#Name	Cutoff (in kilobases)	Extension (in kilobases)	Conditions
-t1pks	20	20	cds(PKS_AT and (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS))
-transatpks	20	20	cds(ATd and (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS))
-t2pks	20	20	t2ks or t2clf
-t3pks	20	20	Chal_sti_synt_C or Chal_sti_synt_N
-otherks	20	20	t2pks2 or hglE or hglD or ksIII
-arylpolyene	20	20	APE_KS1 or APE_KS2
-resorcinol	20	20	DarB
-ladderane	20	20	ladderane
-PUFA	20	20	PUFA_KS
-nrps	20	20	cds(Condensation and AMP-binding) or cds(Condensation and A-OX) or (Condensation and AMP-binding)
-terpene	20	10	Terpene_synth or Terpene_synth_C or phytoene_synt or Lycopene_cycl or terpene_cyclase or NapT7 or fung_ggpps or fung_ggpps2 or trichodiene_synth or TRI5
-lanthipeptide	20	10	LANC_like and (Flavoprotein or Trp_halogenase or p450 or Lant_dehyd_N or Lant_dehyd_C or adh_short or adh_short_C2) or cds(LANC_like and (Pkinase or DUF4135)) or TIGR03731 or Antimicr18 or Gallidermin or L_biotic_A or leader_d or leader_eh or leader_abc or mature_d or mature_ab or mature_a or mature_b or mature_ha or mature_h_beta or lacticin_l or lacticin_mat or LD_lanti_pre or strep_PEQAXS
-bacteriocin	20	5	strepbact or Antimicrobial14 or Bacteriocin_IId or BacteriocIIc_cy or Bacteriocin_II or Bacteriocin_IIi or Lactococcin or Antimicrobial17 or Lactococcin_972 or Bacteriocin_IIc or LcnG-beta or Cloacin or Linocin_M18 or TIGR03603 or TIGR03604 or TIGR03605 or TIGR03651 or TIGR03678 or TIGR03693 or TIGR03798 or TIGR03882 or TIGR03601 or TIGR03602 or TIGR03795 or TIGR03793 or TIGR03975 or DUF692 or TIGR01193
-thiopeptide	20	10	YcaO and (Lant_dehyd_C or Lant_dehyd_N or (PF06968 and thio_amide) or (PF04055 and thio_amide) or (PF07366 and thio_amide) or PF07366 or PF06968 or PF04055) or (thiostrepton and tsrC) or thiostrepton
-linaridin	20	10	cypemycin or cypI
-cyanobactin	20	10	cyanobactin_synth
-glycocin	20	10	glycocin or sublancin
-LAP	20	10	goadsporin_like
-lassopeptide	10	10	PF13471 and PF00733 or micJ25 or mcjC
-sactipeptide	20	10	subtilosin or thuricin or TIGR04404 or TIGR03973
-bottromycin	20	10	botH
-head_to_tail	20	10	Subtilosin_A or skfc
-microviridin	20	10	mvd or mvnA
-proteusin	20	10	PoyD
-blactam	20	10	BLS or CAS or tabtoxin
-amglyccycl	20	10	strH or strK1 or strK2 or NeoL or DOIS or ValA or SpcFG or SpcDK_glyc or salQ
-aminocoumarin	20	10	novK or novJ or novI or novH or SpcDK_cou
-siderophore	20	5	IucA_IucC
-ectoine	20	5	ectoine_synt
-butyrolactone	20	5	AfsA
-indole	20	10	indsynth or dmat or indole_PTase
-nucleoside	20	10	LipM or LipV or LipU or ToyB or TunD or pur6 or pur10 or nikJ or nikO
-phosphoglycolipid	20	10	MoeO5 or moeGT
-melanin	20	5	melC
-oligosaccharide	20	10	minimum(3,[Glycos_transf_1,Glycos_transf_2,Glyco_transf_28,MGT,DUF1205]) and minscore(MGT, 150)
-furan	20	5	mmyO
-hserlactone	20	10	Autoind_synth
-phenazine	20	10	phzB
-phosphonate	20	20	phosphonates
-fused	20	10	pgm1 and pgm_amidino
-other	20	20	cds(PP-binding and AMP-binding) or cds(PP-binding and A-OX) or cds(NAD_binding_4 and A-OX) or cds(NAD_binding_4 and AMP-binding) or LmbU or Neocarzinostat or cycdipepsynth or fom1 or bcpB or frbD or mitE or vlmB or prnB or CaiA or bacilysin or orf2_PTase
-acyl_amino_acids	30	30	NasY
-#polybrominated diphenyl ethers (PBDEs) such as KX588877
-pbde	10	10	FMO-like and p450 and DUF98
-# PPY-like specific ketosynthases (PPYSKS) such as KT373879
-ppysks	10	10	PpyS
-#cf_saccharide	20	10	minimum(2,[Glycos_transf_1,Glycos_transf_2,Glyco_transf_28,PF02922,PF01041,PF00128,PF00908,PF02719,PF04321,PF01943,PF02806,PF02350,PF02397,PF04932,PF01075,PF00953,PF01050,PF01501,PF05159,PF04101,PF02563,PF08437,PF02585])
-#cf_fatty_acid	20	10 	bt1fas or ft1fas or t2fas or fabH
+# Cutoffs and extents are given in kilobases
+RULE t1pks
+    COMMENT Type-I PKS
+            Comments can cover multiple lines
+    CUTOFF 20
+    EXTENT 20
+    CONDITIONS cds(PKS_AT and (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS))
+
+RULE t2pks
+    COMMENT Type-II PKS
+    CUTOFF 20
+    EXTENT 20
+    CONDITIONS t2ks or t2clf
+
+RULE t3pks
+    COMMENT Type-III PKS
+    CUTOFF 20
+    EXTENT 20
+    CONDITIONS Chal_sti_synt_C or Chal_sti_synt_N
+
+RULE transatpks
+    CUTOFF 20
+    EXTENT 20
+    CONDITIONS cds(ATd and (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS))
+
+RULE otherks
+    CUTOFF 20
+    EXTENT 20
+    CONDITIONS t2pks2 or hglE or hglD or ksIII
+
+RULE arylpolyene
+    CUTOFF 20
+    EXTENT 20
+    CONDITIONS APE_KS1 or APE_KS2
+
+RULE resorcinol
+    CUTOFF 20
+    EXTENT 20
+    CONDITIONS DarB
+
+RULE ladderane
+    CUTOFF 20
+    EXTENT 20
+    CONDITIONS ladderane
+
+RULE PUFA
+    CUTOFF 20
+    EXTENT 20
+    CONDITIONS PUFA_KS
+
+RULE nrps
+    CUTOFF 20
+    EXTENT 20
+    CONDITIONS cds(Condensation and (AMP-binding or A-OX))
+               or (Condensation and AMP-binding)
+
+RULE terpene
+    CUTOFF 20
+    EXTENT 10
+    CONDITIONS Terpene_synth or Terpene_synth_C or phytoene_synt or Lycopene_cycl
+               or terpene_cyclase or NapT7 or fung_ggpps or fung_ggpps2
+               or trichodiene_synth or TRI5
+
+RULE lanthipeptide
+    CUTOFF 20
+    EXTENT 10
+    CONDITIONS LANC_like and (Flavoprotein or Trp_halogenase or p450
+                                or Lant_dehyd_N or Lant_dehyd_C
+                                or adh_short or adh_short_C2)
+               or cds(LANC_like and (Pkinase or DUF4135))
+               or TIGR03731 or Antimicr18 or Gallidermin or L_biotic_A or leader_d
+               or leader_eh or leader_abc or mature_d or mature_ab or mature_a
+               or mature_b or mature_ha or mature_h_beta or lacticin_l
+               or lacticin_mat or LD_lanti_pre or strep_PEQAXS
+
+RULE bacteriocin
+    CUTOFF 20
+    EXTENT 5
+    CONDITIONS strepbact or Antimicrobial14 or Bacteriocin_IId or BacteriocIIc_cy
+               or Bacteriocin_II or Bacteriocin_IIi or Lactococcin
+               or Antimicrobial17 or Lactococcin_972 or Bacteriocin_IIc
+               or LcnG-beta or Cloacin or Linocin_M18 or TIGR03603 or TIGR03604
+               or TIGR03605 or TIGR03651 or TIGR03678 or TIGR03693 or TIGR03798
+               or TIGR03882 or TIGR03601 or TIGR03602 or TIGR03795 or TIGR03793
+               or TIGR03975 or DUF692 or TIGR01193
+
+RULE thiopeptide
+    CUTOFF 20
+    EXTENT 10
+    CONDITIONS YcaO and ((thio_amide and (PF06968 or PF04055 or PF07366))
+                         or Lant_dehyd_C or Lant_dehyd_N
+                         or PF07366 or PF06968 or PF04055)
+               or (thiostrepton and tsrC) # TODO: keep this or the next line, not both
+               or thiostrepton
+
+RULE linaridin
+    CUTOFF 20
+    EXTENT 10
+    CONDITIONS cypemycin or cypI
+
+RULE cyanobactin
+    CUTOFF 20
+    EXTENT 10
+    CONDITIONS cyanobactin_synth
+
+RULE glycocin
+    CUTOFF 20
+    EXTENT 10
+    CONDITIONS glycocin or sublancin
+
+RULE LAP
+    CUTOFF 20
+    EXTENT 10
+    CONDITIONS goadsporin_like
+
+RULE lassopeptide
+    CUTOFF 10
+    EXTENT 10
+    CONDITIONS PF13471 and PF00733 or micJ25 or mcjC
+
+RULE sactipeptide
+    CUTOFF 20
+    EXTENT 10
+    CONDITIONS subtilosin or thuricin or TIGR04404 or TIGR03973
+
+RULE bottromycin
+    CUTOFF 20
+    EXTENT 10
+    CONDITIONS botH
+
+RULE head_to_tail
+    CUTOFF 20
+    EXTENT 10
+    CONDITIONS Subtilosin_A or skfc
+
+RULE microviridin
+    CUTOFF 20
+    EXTENT 10
+    CONDITIONS mvd or mvnA
+
+RULE proteusin
+    CUTOFF 20
+    EXTENT 10
+    CONDITIONS PoyD
+
+RULE blactam
+    CUTOFF 20
+    EXTENT 10
+    CONDITIONS BLS or CAS or tabtoxin
+
+RULE amglyccycl
+    CUTOFF 20
+    EXTENT 10
+    CONDITIONS strH or strK1 or strK2 or NeoL or DOIS or ValA or SpcFG
+               or SpcDK_glyc or salQ
+
+RULE aminocoumarin
+    CUTOFF 20
+    EXTENT 10
+    CONDITIONS novK or novJ or novI or novH or SpcDK_cou
+
+RULE siderophore
+    CUTOFF 20
+    EXTENT 5
+    CONDITIONS IucA_IucC
+
+RULE ectoine
+    CUTOFF 20
+    EXTENT 5
+    CONDITIONS ectoine_synt
+
+RULE butyrolactone
+    CUTOFF 20
+    EXTENT 5
+    CONDITIONS AfsA
+
+RULE indole
+    CUTOFF 20
+    EXTENT 10
+    CONDITIONS indsynth or dmat or indole_PTase
+
+RULE nucleoside
+    CUTOFF 20
+    EXTENT 10
+    CONDITIONS LipM or LipV or LipU or ToyB or TunD or pur6 or pur10 or nikJ or nikO
+
+RULE phosphoglycolipid
+    CUTOFF 20
+    EXTENT 10
+    CONDITIONS MoeO5 or moeGT
+
+RULE melanin
+    CUTOFF 20
+    EXTENT 5
+    CONDITIONS melC
+
+RULE oligosaccharide
+    CUTOFF 20
+    EXTENT 10
+    CONDITIONS minimum(3,[Glycos_transf_1,Glycos_transf_2,Glyco_transf_28,MGT,DUF1205])
+               and minscore(MGT, 150)
+
+RULE furan
+    CUTOFF 20
+    EXTENT 5
+    CONDITIONS mmyO
+
+RULE hserlactone
+    CUTOFF 20
+    EXTENT 10
+    CONDITIONS Autoind_synth
+
+RULE phenazine
+    CUTOFF 20
+    EXTENT 10
+    CONDITIONS phzB
+
+RULE phosphonate
+    CUTOFF 20
+    EXTENT 20
+    CONDITIONS phosphonates
+
+RULE fused
+    CUTOFF 20
+    EXTENT 10
+    CONDITIONS pgm1 and pgm_amidino
+
+RULE other
+    CUTOFF 20
+    EXTENT 20
+    CONDITIONS cds((PP-binding or NAD_binding_4) and (AMP-binding or A-OX))
+               or LmbU or Neocarzinostat or cycdipepsynth or fom1 or bcpB
+               or frbD or mitE or vlmB or prnB or CaiA or bacilysin or orf2_PTase
+
+RULE acyl_amino_acids
+    CUTOFF 30
+    EXTENT 30
+    CONDITIONS NasY
+
+RULE pbde
+    COMMENT polybrominated diphenyl ethers (PBDEs) such as KX588877
+    CUTOFF 10
+    EXTENT 10
+    CONDITIONS FMO-like and p450 and DUF98
+
+RULE ppysks
+    COMMENT PPY-like specific ketosynthases (PPYSKS) such as KT373879
+    CUTOFF 10
+    EXTENT 10
+    CONDITIONS PpyS
+
+#RULE cf_saccharide
+#    CUTOFF 20
+#    EXTENT 10
+#    CONDITIONS minimum(2,[Glycos_transf_1,Glycos_transf_2,Glyco_transf_28,
+#                          PF02922,PF01041,PF00128,PF00908,PF02719,PF04321,
+#                          PF01943,PF02806,PF02350,PF02397,PF04932,PF01075,
+#                          PF00953,PF01050,PF01501,PF05159,PF04101,PF02563,
+#                          PF08437,PF02585])
+
+#RULE cf_fatty_acid
+#    CUTOFF 20
+#    EXTENT 10
+#    CONDITIONS  bt1fas or ft1fas or t2fas or fabH
