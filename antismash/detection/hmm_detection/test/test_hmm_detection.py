@@ -91,13 +91,13 @@ class HmmDetectionTest(unittest.TestCase):
         test_names = set(["modelA", "modelB", "modelC", "modelF", "modelG"])
         mock('signatures.get_signature_names', returns=test_names)
 
-        self.rules = rule_parser.Parser([
-                "MetaboliteA 10 5 modelA",
-                "MetaboliteB 10 5 cds(modelA and modelB)",
-                "MetaboliteC 10 5 (modelA and modelB)",
-                "MetaboliteD 20 5 minimum(2,[modelC,modelB]) and modelA",
-                "Metabolite0 1 3 modelF",
-                "Metabolite1 1 3 modelG"]).rules
+        self.rules = rule_parser.Parser("\n".join([
+                "RULE MetaboliteA CUTOFF 10 EXTENT 5 CONDITIONS modelA",
+                "RULE MetaboliteB CUTOFF 10 EXTENT 5 CONDITIONS cds(modelA and modelB)",
+                "RULE MetaboliteC CUTOFF 10 EXTENT 5 CONDITIONS (modelA and modelB)",
+                "RULE MetaboliteD CUTOFF 20 EXTENT 5 CONDITIONS minimum(2,[modelC,modelB]) and modelA",
+                "RULE Metabolite0 CUTOFF 1 EXTENT 3 CONDITIONS modelF",
+                "RULE Metabolite1 CUTOFF 1 EXTENT 3 CONDITIONS modelG"])).rules
         self.features = []
         for gene_id in self.feature_by_id:
             self.features.append(self.feature_by_id[gene_id])

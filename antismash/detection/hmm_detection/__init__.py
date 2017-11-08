@@ -25,7 +25,7 @@ def get_supported_cluster_types():
     """ Returns a list of all cluster types for which there are rules
     """
     with open(path.get_full_path(__file__, 'cluster_rules.txt'), "r") as rulefile:
-        rules = rule_parser.Parser(rulefile).rules
+        rules = rule_parser.Parser("".join(rulefile.readlines())).rules
         clustertypes = [rule.name for rule in rules]
     return clustertypes
 
@@ -117,7 +117,7 @@ def check_prereqs():
     # Check that cluster_rules.txt is readable and well-formatted
     try:
         with open(path.get_full_path(__file__, "cluster_rules.txt")) as rules:
-            parser = Parser(rules.readlines())
+            parser = Parser("".join(rules.readlines()))
         if not parser.rules:
             failure_messages.append("No rules contained in cluster_rules.txt")
     except ValueError as err:
