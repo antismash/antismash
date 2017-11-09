@@ -98,18 +98,19 @@ def generate_searchgtr_htmls(seq_records, options):
     # TODO store somewhere sane
     js.searchgtr_links = {}
     for seq_record in seq_records:
-        smcogdict, _ = utils.get_smcog_annotations(seq_record)
         for feature in seq_record.get_cds_features():
-            gene_id = feature.get_name()
-            if gene_id not in smcogdict:
+            smcog_functions = feature.gene_functions.get_by_tool("smcogs")
+            if not smcog_functions:
                 continue
-            smcog = smcogdict[gene_id]
+            smcog = smcog_functions[0].description.split(":")[0]
             if smcog not in gtrcoglist:
                 continue
-            if not os.path.exists(options.output_dir + os.sep + "html"):
-                os.mkdir(options.output_dir + os.sep + "html")
-            formfileloc = options.output_dir + os.sep + "html" + os.sep + feature.get_name() + "_searchgtr.html"
-            link_loc = "html" + os.sep + feature.get_name() + "_searchgtr.html"
+            html_dir = os.path.join(options.output_dir, "html")
+            if not os.path.exists(html_dir):
+                os.mkdir(html_dir)
+            formfileloc = os.path.join(html_dir, feature.get_name() + "_searchgtr.html")
+            link_loc = os.path.join("html", feature.get_name() + "_searchgtr.html")
+            gene_id = feature.get_name()
             js.searchgtr_links[seq_record.id + "_" + gene_id] = link_loc
             with open(formfileloc, "w") as formfile:
                 specificformtemplate = searchgtrformtemplateparts[0].replace("GlycTr", gene_id)
