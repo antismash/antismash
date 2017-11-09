@@ -1,7 +1,7 @@
 <div class = "subclusterblast">
   <h3>Similar subclusters</h3>
+  {% if cluster.subcluster_blast %}
   <div>
-    {% if cluster.subcluster_blast %}
     <select id= "subclusterblast-{{cluster.idx}}-select" class= "clusterblast-selector">
       <option value="svg/subclusterblast{{cluster.idx}}_all.svg">
         All hits
@@ -12,10 +12,12 @@
       </option>
       {% endfor %}
     </select>
-        <button id= "subclusterblast-{{cluster.idx}}-download">Download graphic</button>
-    {% else %}
-        No matches found.<br>
-    {% endif %}
+    <button id="subclusterblast-{{cluster.idx}}-download">Download graphic</button>
   </div>
   <div id="subclusterblast-{{cluster.idx}}-svg"></div>
+  {% else %}
+  <div>
+    <p>No matches found.</p>
+  </div>
+  {% endif %}
 </div>
