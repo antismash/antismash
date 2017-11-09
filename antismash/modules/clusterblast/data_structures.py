@@ -75,6 +75,9 @@ class Subject:
         self.evalue = float(evalue)
         self.locus_tag = locus_tag
 
+    def __len__(self):
+        return abs(int(self.start) - int(self.end))
+
     def get_table_string(self):
         return "\t".join([str(i) for i in [self.name, self.perc_ident,
                                            self.blastscore, self.perc_coverage,
