@@ -19,6 +19,12 @@ import antismash.detection.hmm_detection as core
 from antismash.detection.hmm_detection import hmm_detection, rule_parser, signatures
 
 
+def create_rule(name, cutoff, extent, conditions):
+    text = "RULE {} CUTOFF {} EXTENT {} CONDITIONS {}".format(name, cutoff,
+                                                              extent, conditions)
+    return rule_parser.Parser(text).rules[0]
+
+
 class FakeHSP(object):  # pylint: disable=too-few-public-methods
     "class for generating a HSP like datastructure"
     def __init__(self, query_id, hit_id, hit_start, hit_end, bitscore, evalue):
@@ -88,7 +94,8 @@ class HmmDetectionTest(unittest.TestCase):
             "GENE_5": DummyCDS(130000, 150000, locus_tag="GENE_5")
         }
 
-        test_names = set(["modelA", "modelB", "modelC", "modelF", "modelG"])
+        test_names = {"modelA", "modelB", "modelC", "modelF", "modelG",
+                      "a", "b", "c", "d"}
         mock('signatures.get_signature_names', returns=test_names)
 
         self.rules = rule_parser.Parser("\n".join([
@@ -203,7 +210,7 @@ class HmmDetectionTest(unittest.TestCase):
         assert len(record.get_clusters()) == 2
         for cluster in record.get_clusters():
             assert not cluster.detection_rules
-        dummy_rule = rule_parser.DetectionRule("dummy", 10, 20, "a")
+        dummy_rule = create_rule("dummy", 10, 20, "a")
         hmm_detection.store_detection_details({"dummy": dummy_rule}, record)
         for feature in record.get_clusters():
             assert feature.products == ['dummy']
@@ -212,8 +219,8 @@ class HmmDetectionTest(unittest.TestCase):
     def test_store_detection_multitype(self):
         feature = DummyCluster(0, 50)
         feature.products = ["a", "b"]
-        dummy_rule_a = rule_parser.DetectionRule("a", 10, 20, "c")
-        dummy_rule_b = rule_parser.DetectionRule("b", 10, 20, "d")
+        dummy_rule_a = create_rule("dummy", 10, 20, "c")
+        dummy_rule_b = create_rule("dummy", 10, 20, "d")
         hmm_detection.store_detection_details({"a": dummy_rule_a, "b": dummy_rule_b},
                                               DummyRecord(features=[feature]))
         assert feature.detection_rules == ['c', 'd']

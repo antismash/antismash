@@ -298,20 +298,28 @@ def apply_cluster_rules(results_by_id, feature_by_id, rules) -> Dict[str, str]:
 
     for i, cds in enumerate(cds_with_hits):
         results = []
+        rule_texts = []
         info_by_range = {}
+        domain_matches = set()
         for rule in rules:
             if rule.cutoff not in info_by_range:
                 info_by_range[rule.cutoff] = calculate_nearby_features(cds_with_hits,
                         i, rule.cutoff, distances, feature_by_id, results_by_id)
             nearby_features, nearby_results = info_by_range[rule.cutoff]
-            if rule.detect(cds, nearby_features, nearby_results):
+            matching = rule.detect(cds, nearby_features, nearby_results)
+            if matching.met and matching.matches:
                 results.append(rule.name)
+                rule_texts.append(rule.reconstruct_rule_text())
+                domain_matches.update(matching.matches)
         if len(results) > 1 and "other" in results:
             results.remove("other")
         if results:
             type_results[cds] = "-".join(results)
             feature = feature_by_id[cds]
-            feature.gene_functions.add(GeneFunction.CORE, "cluster_definition", results_by_id[cds][0].query_id)
+            cds_results = results_by_id[cds]
+            # if a domain was used to mark a gene as CORE, then annotate that
+            for domain in domain_matches:
+                feature.gene_functions.add(GeneFunction.CORE, "cluster_definition", domain)
         else:
             type_results[cds] = "none"
     return type_results
