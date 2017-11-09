@@ -150,8 +150,7 @@ def get_description(record, feature, type_, options, mibig_result):
     if feature.get_qualifier('EC_number'):
         template += "EC-number(s): {ecnumber}<br>\n"
     for gene_function in feature.gene_functions:
-        if gene_function.tool != "cluster_definition":
-            template += "%s<br>\n" % str(gene_function)
+        template += "%s<br>\n" % str(gene_function)
     if smcogs:
         for note in feature.notes:  # TODO find a better way to store image urls
             if note.startswith('smCOG tree PNG image:'):
