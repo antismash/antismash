@@ -149,11 +149,10 @@ def get_description(record, feature, type_, options, mibig_result):
     template += 'Locus-tag: {locus_tag}; Protein-ID: {protein_id}<br>\n'
     if feature.get_qualifier('EC_number'):
         template += "EC-number(s): {ecnumber}<br>\n"
+    for gene_function in feature.gene_functions:
+        if gene_function.tool != "cluster_definition":
+            template += "%s<br>\n" % str(gene_function)
     if smcogs:
-        functions = feature.gene_functions.get_by_tool("smcogs")
-        if functions:
-            smcog, desc = functions[0].description.split(':', 1)
-            template += "smCOG: %s (%s)<br>\n" % (smcog, desc)
         for note in feature.notes:  # TODO find a better way to store image urls
             if note.startswith('smCOG tree PNG image:'):
                 entry = '<a href="%s" target="_new">View smCOG seed phylogenetic tree with this gene</a>'
