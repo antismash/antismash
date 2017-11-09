@@ -476,8 +476,6 @@ class CDSFeature(Feature):
         if sec_met is not None and not isinstance(sec_met, SecMetQualifier):
             raise TypeError("CDSFeature.sec_met can only be set to an instance of SecMetQualifier")
         self._sec_met = sec_met
-        if sec_met and sec_met.kind == str(GeneFunction.CORE):
-            self._gene_functions.add(GeneFunction.CORE, "cluster_definition", sec_met.domain_ids[0])
 
     @property
     def nrps_pks(self):

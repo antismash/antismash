@@ -6,7 +6,7 @@ from collections import defaultdict
 from typing import Dict, Tuple, TypeVar
 
 from antismash.common import path, deprecated
-from antismash.common.secmet.feature import Cluster, SecMetQualifier, CDSFeature
+from antismash.common.secmet.feature import Cluster, SecMetQualifier, CDSFeature, GeneFunction
 from antismash.common.deprecated import FeatureLocation
 from antismash.common.subprocessing import run_hmmsearch
 from antismash.detection.hmm_detection import rule_parser
@@ -310,6 +310,8 @@ def apply_cluster_rules(results_by_id, feature_by_id, rules) -> Dict[str, str]:
             results.remove("other")
         if results:
             type_results[cds] = "-".join(results)
+            feature = feature_by_id[cds]
+            feature.gene_functions.add(GeneFunction.CORE, "cluster_definition", results_by_id[cds][0].query_id)
         else:
             type_results[cds] = "none"
     return type_results
@@ -520,6 +522,8 @@ def _update_sec_met_entry(feature, results, clustertype, num_seeds) -> None:
     domains = [SecMetResult(res, num_seeds.get(res.query_id, "?")) for res in results]
 
     feature.sec_met = SecMetQualifier(clustertype, domains)
+    if not feature.gene_functions.get_by_tool("cluster_definition"):
+        feature.gene_functions.add(GeneFunction.ADDITIONAL, "hmm_detection", feature.sec_met.domains[0])
 
 
 def get_overlaps_table(record) -> Dict[str, int]:
