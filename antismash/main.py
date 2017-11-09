@@ -57,7 +57,7 @@ def get_analysis_modules() -> List[ModuleType]:
         Returns:
             a list of modules
     """
-    return [smcogs, tta, lanthipeptides, clusterblast, nrps_pks, dummy]
+    return [smcogs, tta, lanthipeptides, nrps_pks, clusterblast, dummy]
 
 
 def get_output_modules() -> List[ModuleType]:
