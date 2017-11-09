@@ -2,7 +2,7 @@
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
 # for test files, silence irrelevant and noisy pylint warnings
-# pylint: disable=no-self-use,protected-access,missing-docstring
+# pylint: disable=no-self-use,protected-access,missing-docstring,too-many-public-methods
 
 import unittest
 from minimock import mock, restore
@@ -15,6 +15,7 @@ from antismash.detection.hmm_detection.test.test_hmm_detection import FakeHSP
 
 def format_as_rule(name, cutoff, extent, conditions):
     return "RULE {} CUTOFF {} EXTENT {} CONDITIONS {}".format(name, cutoff, extent, conditions)
+
 
 class DetectionTest(unittest.TestCase):
     def setUp(self):
@@ -50,6 +51,8 @@ class DetectionTest(unittest.TestCase):
     def run_test(self, name, cutoff, extent, conditions):
         rules = format_as_rule(name, cutoff, extent, conditions)
         rules = rule_parser.Parser(rules).rules
+        for rule in rules:
+            assert rule.contains_positive_condition()
 
         detected_types = {}
         cds_with_hits = sorted(self.results_by_id, key=lambda gene_id: self.feature_by_id[gene_id].location.start)
@@ -57,7 +60,8 @@ class DetectionTest(unittest.TestCase):
             detected_type = detected_types.get(cds)
             if detected_type:
                 continue
-            results = [rule.name for rule in rules if rule.detect(cds, self.feature_by_id, self.results_by_id)]
+            rule_results = [rule.detect(cds, self.feature_by_id, self.results_by_id) for rule in rules]
+            results = [rule.name for rule, res in zip(rules, rule_results) if res.met and res.matches]
             if results:
                 detected_types[cds] = results
 
@@ -102,14 +106,16 @@ class DetectionTest(unittest.TestCase):
         results = self.run_test("A", 10, 20, "cds(a and (b or c))")
         self.expect(results, ["GENE_1", "GENE_2"])
 
-    def test_chained_and(self):
+    def test_chained_and_a(self):
         results = self.run_test("A", 10, 20, "a and b and not c")
         self.expect(results, ["GENE_1"])  # 2 reaches c
 
+    def test_chained_and_b(self):
         results = self.run_test("A", 10, 20, "a and b and not cds(a and b)")
         # the range is too short to reach 2 for the a
         self.expect(results, [])
 
+    def test_chained_and_c(self):
         results = self.run_test("A", 21, 20, "a and b and not cds(a and b)")
         self.expect(results, ["GENE_3"])  # 3 has b, 2 has a, 1 reaches 2 with a,b
 
@@ -146,45 +152,50 @@ class DetectionTest(unittest.TestCase):
         self.expect(results, ["GENE_1"])
 
     def test_negated_minimum(self):
+        # only GENE_2 and GENE_3 have a C
         results = self.run_test("A", 10, 20, "c and not minimum(2, [a, b])")
+        # 2 is too close to 1 with a,b
         self.expect(results, ["GENE_3"])
 
         results = self.run_test("A", 10, 20, "c and not minimum(1, [a, b])")
-        expected = {}  # 3 had a,c and 2 contributes a second option, b
+        expected = {}  # 3 has an a, so it's out with a min of 1
         assert results == expected
 
         results = self.run_test("A", 50, 50, "c and not minimum(2, [a, b])")
-        # 3 now reaches a so it's excluded, but 4 reaches a c
-        self.expect(results, ["GENE_4"])
+        # even with min of 2, 3 now reaches 1, so there's another b
+        assert results == {}
 
     def test_negated_group(self):
         # only gene 3 is far enough from both an a and an f
         results = self.run_test("A", 10, 10, "c and not (a or f)")
         self.expect(results, ["GENE_3"])
 
-    def test_negated_cds(self):
-        results = self.run_test("A", 10, 20, "not cds(a and b)")
+    def test_negated_cds_a(self):
+        results = self.run_test("A", 10, 20, "c and not cds(a and b)")
         assert "GENE_1" not in results  # since 1 has both a and b
         assert "GENE_2" not in results  # since 1 is within range and has both
 
-        results = self.run_test("A", 10, 20, "a and not cds(a and b)")
-        assert "GENE_1" not in results  # since 1 has both a and b
-        assert "GENE_2" not in results  # since 1 is within range and has both
+    def test_negated_cds_b(self):
+        results = self.run_test("A", 5, 5, "c and not cds(a and c)")
+        assert "GENE_2" not in results  # since 2 has a and c
+        assert "GENE_3" in results  # since 3 has c but isn't in range of 2
 
-        results = self.run_test("A", 10, 20, "not cds(a or f)")
+    def test_negated_cds_c(self):
+        results = self.run_test("A", 10, 20, "e and not cds(a or f)")
         # everything is close to a CDS with a or f, so no hits
         self.expect(results, [])
 
+    def test_negated_cds_d(self):
         # GENE_1 excludes itself and everything in range
         # GENE_4+ excluded because they have no c in range
         results = self.run_test("A", 15, 20, "c and not cds(a and b)")
         self.expect(results, ["GENE_3"])
 
     def test_negated_singles(self):
-        results = self.run_test("A", 10, 20, "not a and not e and not f")
+        results = self.run_test("A", 10, 20, "c and not a and not e and not f")
         self.expect(results, ["GENE_3"])
 
-        results = self.run_test("A", 10, 20, "not a and not b and not c")
+        results = self.run_test("A", 10, 20, "f and not a and not b and not c")
         self.expect(results, ["GENE_4", "GENE_5"])
 
     def test_minscore(self):
@@ -192,7 +203,7 @@ class DetectionTest(unittest.TestCase):
         results = self.run_test("A", 10, 20, "minscore(e, 100)")
         self.expect(results, [])
 
-        # on the cutoff (> vs >=), still no hit
+        # on the cutoff (> vs >=)
         results = self.run_test("A", 10, 20, "minscore(e, 50)")
         self.expect(results, ["GENE_4"])
 
@@ -255,7 +266,6 @@ class RuleParserTest(unittest.TestCase):
             rule_parser.Parser("RULE A CUTOFF 10 CONDITIONS a or b")
         with self.assertRaises(rule_parser.RuleSyntaxError):
             rule_parser.Parser("RULE A CUTOFF b EXTENT 10 CONDITIONS a or b")
-
 
     def test_comments(self):
         rule_chunk = "RULE name CUTOFF 20 EXTENT 20 CONDITIONS a"
@@ -380,6 +390,46 @@ class RuleParserTest(unittest.TestCase):
     def test_emptylines(self):
         rules = rule_parser.Parser("\nRULE name CUTOFF 20 EXTENT 20 CONDITIONS a").rules
         assert len(rules) == 1 and rules[0].name == "name"
+
+    def test_single_no_positive(self):
+        rules = format_as_rule("A", 10, 10, "not a")
+        with self.assertRaisesRegex(ValueError, "at least one positive requirement"):
+            rule_parser.Parser(rules)
+
+    def test_and_no_positive(self):
+        rules = format_as_rule("A", 10, 10, "not a and not c")
+        with self.assertRaisesRegex(ValueError, "at least one positive requirement"):
+            rule_parser.Parser(rules)
+
+    def test_or_no_positive(self):
+        rules = format_as_rule("A", 10, 10, "not a or not c")
+        with self.assertRaisesRegex(ValueError, "at least one positive requirement"):
+            rule_parser.Parser(rules)
+
+    def test_cds_no_positive(self):
+        rules = format_as_rule("A", 10, 10, "not cds(a and b)")
+        with self.assertRaisesRegex(ValueError, "at least one positive requirement"):
+            rule_parser.Parser(rules)
+
+        rules = format_as_rule("A", 10, 10, "not cds(a or b)")
+        with self.assertRaisesRegex(ValueError, "at least one positive requirement"):
+            rule_parser.Parser(rules)
+
+    def test_minimum_no_positive(self):
+        rules = format_as_rule("A", 10, 10, "not minimum(2, [a, b])")
+        with self.assertRaisesRegex(ValueError, "at least one positive requirement"):
+            rule_parser.Parser(rules)
+
+    def test_score_no_positive(self):
+        rules = format_as_rule("A", 10, 10, "not minscore(a, 15)")
+        with self.assertRaisesRegex(ValueError, "at least one positive requirement"):
+            rule_parser.Parser(rules)
+
+    def test_deep_no_positive(self):
+        for rule in ["(not a) and (not b)", "not (a and b)",
+                     "not a or (not b and not (c or d))"]:
+            with self.assertRaisesRegex(ValueError, "at least one positive requirement"):
+                rule_parser.Parser(format_as_rule("A", 10, 10, rule))
 
 
 class TokenTest(unittest.TestCase):

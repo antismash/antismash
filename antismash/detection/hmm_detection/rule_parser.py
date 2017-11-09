@@ -38,6 +38,19 @@ adding groups can collect lower precedence operators first, e.g.:
 The symbol 'cluster' cannot be a valid identifier to prevent confusion with the
 old rule system where 'cluster' was a keyword. Using it will raise an error.
 
+Rules cannot contain entirely negated conditions, as these cannot anchor clusters.
+At least one positive requirement must exist.
+Examples of negated rules:
+    not a
+    not a and not c
+    not (a or c)
+Examples of rules with positive requirements:
+    a
+    a and not c
+    (a or c)
+    (a or not c) # an 'or not' combination is effectively ignored for anchoring
+
+
 Grammar hints:
     (e) -> all of
     [e] -> optional
@@ -189,6 +202,9 @@ class TokenTypes(IntEnum):
 
     def __str__(self):
         return str(self.name).lower()  # the str() is for pylint's sake
+
+    def get_hit_string(self):
+        return str(self)
 
     @classmethod
     def classify(cls, text):
@@ -343,12 +359,30 @@ class Details:
                        self.cutoff)
 
 
+class ConditionMet:
+    def __init__(self, met, matches=None):
+        assert isinstance(met, bool)
+        self.met = met
+        if not met or not matches:
+            self.matches = set()
+        elif isinstance(matches, set):
+            self.matches = matches
+        elif isinstance(matches, ConditionMet):
+            self.matches = matches.matches
+        else:
+            assert isinstance(matches, set), type(matches)
+
+    def __bool__(self):
+        return self.met
+
+
 class Conditions:
     """ The base condition case. Can, and probably will, contain sub conditions
         (e.g. (a and b or c) style groups).
     """
     def __init__(self, negated: bool, sub_conditions=None) -> None:
         self.negated = negated
+        self.hits = 0
         assert self.negated in [False, True]
         if sub_conditions is None:
             sub_conditions = []
@@ -356,40 +390,72 @@ class Conditions:
         # just make sure that it's empty or that we have binary ops (a OR b..)
         assert not sub_conditions or len(sub_conditions) % 2 == 1
         if self.sub_conditions:
-            operands = self.sub_conditions[::2]
-            assert all(isinstance(sub, Conditions) for sub in operands)
-            assert all(isinstance(sub, TokenTypes) for sub in self.sub_conditions[1::2])
-            for operator in self.sub_conditions[1::2]:
+            assert all(isinstance(sub, Conditions) for sub in self.operands)
+            assert all(isinstance(sub, TokenTypes) for sub in self.operators)
+            for operator in self.operators:
                 assert operator in [TokenTypes.AND, TokenTypes.OR]
             unique_operands = set()  # type: Set[str]
-            for operand in map(str, operands):
+            for operand in map(str, self.operands):
                 if operand in unique_operands:
                     raise ValueError("Rule contains repeated condition: %s\nfrom rule %s"
                                      % (operand, self))
                 unique_operands.add(operand)
 
-    def are_subconditions_satisfied(self, details: Details, any_in_cds=False, local_only=False) -> bool:
-        """
-            any_in_cds is for determining if the CDS being classified contains
-                 any hits at all. Effectively changes all conditions to OR, but
-                 without looking past CDS being classified
+    @property
+    def operands(self):
+        return self.sub_conditions[::2]
 
+    @property
+    def operators(self):
+        return self.sub_conditions[1::2]
+
+    def are_subconditions_satisfied(self, details: Details, local_only=False) -> Set[str]:
+        """
             local_only limits the search to the single CDS in details
         """
         if len(self.sub_conditions) == 1:
-            return xor(self.negated, self.sub_conditions[0].is_satisfied(details, any_in_cds, local_only))
+            sub = self.sub_conditions[0].get_satisfied(details, local_only)
+            return ConditionMet(sub.met, sub)
 
         # since ANDs are bound together, all subconditions we have here are ORs
+        assert all(operator == TokenTypes.OR for operator in self.operators)
         # which means a simple any() will cover us
-        sub_results = [sub.is_satisfied(details, any_in_cds, local_only) for sub in self.sub_conditions[::2]]
-        return any(sub_results)
+        sub_results = [sub.get_satisfied(details, local_only) for sub in self.operands]
+        matching = set()
+        met = False
+        for sub_result in sub_results:
+            matching |= sub_result.matches
+            met |= sub_result.met
+        return ConditionMet(met, matching)
 
-    def is_satisfied(self, details: Details, any_in_cds=False, local_only=False) -> bool:
+    def get_satisfied(self, details: Details, local_only=False) -> ConditionMet:
+        satisfied = self.is_satisfied(details, local_only)
+        if satisfied and satisfied.matches:
+            self.hits += 1
+        return satisfied
+
+    def is_satisfied(self, details: Details, local_only=False) -> ConditionMet:
         """ Returns True if this condition is satisfied.
             Should be overridden in subclasses to suit their specific case.
         """
-        return xor(self.negated, self.are_subconditions_satisfied(details,
-                                                    any_in_cds, local_only))
+        subs = self.are_subconditions_satisfied(details, local_only)
+        return ConditionMet(xor(self.negated, subs.met), subs)
+
+    def get_hit_string(self):
+        prefix = "not " if self.negated else ""
+        if len(self.sub_conditions) == 1 \
+                and not isinstance(self.sub_conditions[0], AndCondition):
+            return "{}*({}{})".format(self.hits, prefix, self.sub_conditions[0].get_hit_string())
+        return "{}*({}{})".format(self.hits, prefix, " ".join(sub.get_hit_string() for sub in self.sub_conditions))
+
+    def contains_positive_condition(self):
+        # don't bother checking subs if this itself is negated
+        if self.negated:
+            return False
+        # if no subconditions no need to check
+        if not self.sub_conditions:
+            return True
+        return any(sub.contains_positive_condition() for sub in self.operands)
 
     def __repr__(self):
         return self.__str__()
@@ -399,20 +465,31 @@ class Conditions:
         if len(self.sub_conditions) == 1 \
                 and not isinstance(self.sub_conditions[0], AndCondition):
             return "{}{}".format(prefix, self.sub_conditions[0])
-        return "{}({})".format(prefix, " ".join(str(sub) for sub in self.sub_conditions))
+        return "{}({})".format(prefix, " ".join(map(str, self.sub_conditions)))
 
 
 class AndCondition(Conditions):
-    """ Represents any number of chained AND operators """
+    """ Represents any number of chained AND operators.
+
+        AndConditions can't be negated, as that is based on their operands, e.g.
+        'a not and b' is bad sytax and 'not (a and b)' is negating the parent
+        conditions group 'not (...)'.
+        """
+
     def __init__(self, subconditions):
-        self.operands = subconditions[::2]
         super().__init__(False, subconditions)
 
-    def is_satisfied(self, details: Details, any_in_cds=False, local_only=False) -> bool:
-        results = [sub.is_satisfied(details, any_in_cds, local_only) for sub in self.operands]
-        if any_in_cds:
-            return any(results)
-        return all(results)
+    def is_satisfied(self, details: Details, local_only=False) -> Set[str]:
+        results = [sub.get_satisfied(details, local_only) for sub in self.operands]
+        matched = set()
+        met = True
+        for result in results:
+            matched |= result.matches
+            met = met and result.met
+        return ConditionMet(met, matched)
+
+    def get_hit_string(self):
+        return "{}*({})".format(self.hits, " and ".join(op.get_hit_string() for op in self.operands))
 
     def __str__(self):
         return " and ".join(map(str, self.operands))
@@ -429,15 +506,14 @@ class MinimumCondition(Conditions):
             raise ValueError("Minimum conditions must have a required count > 0")
         super().__init__(negated)
 
-    def is_satisfied(self, details, any_in_cds=False, local_only=False) -> bool:
-        hit_count = len(self.options.intersection(set(details.possibilities)))
+    def is_satisfied(self, details, local_only=False) -> Set[str]:
+        hits = self.options.intersection(set(details.possibilities))
+        hit_count = len(hits)
         if hit_count >= self.count:
-            return not self.negated
-            # and if we're just checking that one is satisfied, return early too
-        if not self.negated and any_in_cds:
-            return hit_count > 0
+            return ConditionMet(not self.negated, hits)
+
         if local_only:
-            return xor(self.negated, hit_count >= self.count)
+            return ConditionMet(xor(self.negated, hit_count >= self.count), hits)
         current_cds = details.features_by_id[details.cds]
 
         # check to see if the remaining hits are in nearby CDSs
@@ -449,8 +525,11 @@ class MinimumCondition(Conditions):
             other_options = [r.query_id for r in details.results_by_id.get(other_id, [])]
             hit_count += len(self.options.intersection(set(other_options)))
             if hit_count >= self.count:
-                return not self.negated
-        return self.negated
+                return ConditionMet(not self.negated, hits)
+        return ConditionMet(self.negated, hits)
+
+    def get_hit_string(self):
+        return "{}*{}".format(self.hits, str(self))
 
     def __str__(self):
         return "{}minimum({}, [{}])".format("not " if self.negated else "",
@@ -459,31 +538,30 @@ class MinimumCondition(Conditions):
 
 class CDSCondition(Conditions):
     """ Represents the cds() condition type """
-    def is_satisfied(self, details, any_in_cds=False, local_only=False) -> bool:
+    def is_satisfied(self, details, local_only=False) -> bool:
         # all child conditions have to be within a single CDS
         # so we force local_only to True
-        satisfied_internally = super().is_satisfied(details.just_cds(details.cds),
-                any_in_cds=False, local_only=True)
+        satisfied_internally = super().are_subconditions_satisfied(details.just_cds(details.cds),
+                local_only=True)
         # start with the current cds (and end if local_only)
-        if any_in_cds or local_only:
-            return satisfied_internally
+        if local_only:
+            return ConditionMet(xor(self.negated, satisfied_internally.met), satisfied_internally)
 
-        # positive matches can return
-        if satisfied_internally:
-            return not self.negated
-
-        # negative matches must ensure all neighbours are negative
+        results = satisfied_internally.met
+        # negative matches must also ensure all neighbours are negative
         start_feature = details.features_by_id[details.cds]
         for cds, feature in details.features_by_id.items():
             if details.cds == cds:
                 continue
             if not details.in_range(start_feature.location, feature.location):
                 continue
-            if super().is_satisfied(details.just_cds(cds), any_in_cds=False, local_only=True):
-                # again, early return if positive match
-                return not self.negated  # True
+            results |= super().are_subconditions_satisfied(details.just_cds(cds), local_only=True).met
 
-        return self.negated  # failed to find a match either way
+        return ConditionMet(xor(results, self.negated), satisfied_internally)
+
+    def get_hit_string(self):
+        prefix = "not " if self.negated else ""
+        return "{}*({}cds({}))".format(self.hits, prefix, " ".join(sub.get_hit_string() for sub in self.sub_conditions))
 
     def __str__(self):
         prefix = "not " if self.negated else ""
@@ -496,16 +574,16 @@ class SingleCondition(Conditions):
         self.name = name
         super().__init__(negated)
 
-    def is_satisfied(self, details: Details, any_in_cds=False, local_only=False) -> bool:
+    def is_satisfied(self, details: Details, local_only=False) -> bool:
+        found_in_cds = self.name in details.possibilities
         # do we only care about this CDS? then use the smaller set
         if local_only:
-            return xor(self.negated, self.name in details.possibilities)
-
-        found_in_cds = self.name in details.possibilities
+            return ConditionMet(xor(self.negated, found_in_cds), set([self.name]))
 
         # we found all we were looking for, or we aren't allowed to look further
-        if any_in_cds or found_in_cds:
-            return xor(self.negated, found_in_cds)
+        if found_in_cds:
+            cond = ConditionMet(xor(self.negated, found_in_cds), set([self.name]))
+            return cond
 
         cds_feature = details.features_by_id[details.cds]
         # look at neighbours in range
@@ -519,10 +597,15 @@ class SingleCondition(Conditions):
             if self.name in other_possibilities:
                 # a positive match, so we can exit early
                 if not self.negated:
-                    return True
+                    return ConditionMet(True)
 
         # if negated and we failed to find anything, that's a good thing
-        return self.negated
+        return ConditionMet(self.negated)
+
+    def get_hit_string(self):
+        if self.negated:
+            return "{}*(not {})".format(self.hits, self.name)
+        return "{}*{}".format(self.hits, self.name)
 
     def __str__(self):
         return "{}{}".format("not " if self.negated else "", self.name)
@@ -535,14 +618,19 @@ class ScoreCondition(Conditions):
         self.score = score
         super().__init__(negated)
 
-    def is_satisfied(self, details: Details, any_in_cds=False, local_only=False) -> bool:
+    def is_satisfied(self, details: Details, local_only=False) -> bool:
         # do we only care about this CDS? then use the smaller set
-        if local_only or any_in_cds:
-            if self.name in details.possibilities:
-                for result in details.results_by_id[details.cds]:
-                    if result.query_id == self.name:
-                        return xor(self.negated, (result.bitscore >= self.score))
-            return self.negated
+        found_in_cds = False
+        match = set()
+        if self.name in details.possibilities:
+            for result in details.results_by_id[details.cds]:
+                if result.query_id == self.name and result.bitscore >= self.score:
+                    found_in_cds = True
+                    match.add(self.name)
+                    break
+
+        if local_only or found_in_cds:
+            return ConditionMet(not self.negated, match)
 
         cds_feature = details.features_by_id[details.cds]
         # look at neighbours in range
@@ -555,10 +643,15 @@ class ScoreCondition(Conditions):
                 for result in other_hits:
                     # a positive match, so we can exit early
                     if result.query_id == self.name and result.bitscore >= self.score:
-                        return not self.negated
+                        return ConditionMet(not self.negated)
 
         # if negated and we failed to find anything, that's a good thing
-        return self.negated
+        return ConditionMet(self.negated)
+
+    def get_hit_string(self):
+        if self.negated:
+            return "{}*({})".format(self.hits, str(self))
+        return "{}*{}".format(self.hits, str(self))
 
     def __str__(self):
         return "{}minscore({}, {})".format("not " if self.negated else "", self.name, self.score)
@@ -577,16 +670,23 @@ class DetectionRule:
         self.cutoff = cutoff
         self.extent = extent
         self.conditions = conditions
+        if not conditions.contains_positive_condition():
+            raise ValueError("A rule's conditions must contain at least one positive requirement")
         self.comments = comments
+        self.hits = 0
+
+    def contains_positive_condition(self):
+        return self.conditions.contains_positive_condition()
 
     def detect(self, cds, feature_by_id, results_by_id) -> bool:
         """ Returns True if a cluster can be formed around this CDS
             using this rule
         """
         details = Details(cds, feature_by_id, results_by_id, self.cutoff)
-        if not self.conditions.is_satisfied(details, any_in_cds=True):
-            return False  # at least one positive match required
-        return self.conditions.is_satisfied(details, any_in_cds=False)
+        results = self.conditions.get_satisfied(details)
+        if results and results.matches:
+            self.hits += 1
+        return results
 
     def __repr__(self):
         return self.__str__()
@@ -612,6 +712,10 @@ class DetectionRule:
             comments = "COMMENTS" + self.comments + " "
         return "RULE {} {}CUTOFF {} EXTENT {} CONDITIONS {}".format(self.name,
                     comments, self.cutoff // 1000, self.extent // 1000, condition_text)
+
+    def get_hit_string(self) -> str:
+        return self.conditions.get_hit_string()[3:-1]
+
 
 # a typedef, even positions will be a Conditions instance, odd will be TokenTypes
 ConditionList = List[Union[Conditions, TokenTypes]]  # pylint: disable=invalid-name
