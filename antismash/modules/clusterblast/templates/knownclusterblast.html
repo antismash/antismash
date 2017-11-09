@@ -1,5 +1,6 @@
 <div class = "knownclusterblast">
   <h3>Similar known gene clusters</h3>
+  {% if cluster.knowncluster_blast %}
   <div>
     <select id="knownclusterblast-{{cluster.idx}}-select" class="clusterblast-selector">
       <option value="svg/knownclusterblast{{cluster.idx}}_all.svg">
@@ -11,9 +12,12 @@
       </option>
       {% endfor %}
     </select>
-    {% if cluster.knowncluster_blast %}
     <button id="knownclusterblast-{{cluster.idx}}-download">Download graphic</button>
-    {% endif %}
   </div>
   <div id="knownclusterblast-{{cluster.idx}}-svg"></div>
+  {% else %}
+  <div>
+    <p>No matches found.</p>
+  </div>
+  {% endif %}
 </div>
