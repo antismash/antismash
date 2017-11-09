@@ -26,7 +26,7 @@
 import colorsys
 import logging
 import os
-from typing import Dict, Iterable, List, Set, TypeVar
+from typing import Dict, Iterable, List, Set, Tuple, TypeVar
 
 from pysvg.structure import Svg, G as Group
 from pysvg.text import Text
@@ -36,7 +36,7 @@ from antismash.common.secmet import Feature
 from antismash.common.path import get_full_path
 from antismash.config import get_config
 
-from .data_structures import Protein
+from .data_structures import Protein, Query, Subject
 
 T = TypeVar('T')
 
@@ -258,10 +258,10 @@ class Gene:
         """ Returns a HTML fragment describing the Gene """
         description = ['%s[br]Location: %s - %s' % (self.label, self.start, self.end)]
         format_string = ("<br><br><b>BlastP hit with %s</b><br>Percentage identity: %s<br>"
-                         "Percentage coverage: %s<br>BLAST bit score: %s<br>E-value: %s")
+                         "Percentage coverage: %.0f<br>BLAST bit score: %s<br>E-value: %s")
         for query, subject in self.pairings:
             description.append(format_string % (query.id, subject.perc_ident,
-                                                subject.perc_coverage,
+                                                float(subject.perc_coverage),
                                                 subject.blastscore, subject.evalue))
         return "".join(description)
 
@@ -475,6 +475,54 @@ class QueryCluster(Cluster):
         return groups
 
 
+def determine_strand_of_cluster(cluster, pairings: List[Tuple[Query, Subject]]) -> int:
+    """ Determines the strand of a cluster relative to the query cluster.
+        Calculated by using the median strand of all linked genes.
+
+        In the case of tie in the counts (e.g. 4 of -1 and 4 of 1) the strand
+        of the largest linked gene is used.
+
+        There may also be a tie for the size of largest, so the first will be
+        used.
+
+        Arguments:
+            cluster: the secmet.Cluster feature to operate on
+            pairings: a list of Query,Subject pairs for determining matches
+
+        Returns:
+            an int in -1, 0, 1
+    """
+    name_to_feature = {}
+    for cds in cluster.cds_children:
+        name_to_feature[cds.get_accession()] = cds
+
+    counted = set()
+    strand = 0
+    largest_size = 0
+    strand_of_largest = 0
+    for query, subject in pairings:
+        # only count a gene once for purposes of determining strand
+        if subject.name not in counted:
+            subject_strand = 1
+            if subject.strand == "-":
+                subject_strand = -1
+            if subject_strand == name_to_feature[query.id].location.strand:
+                strand += 1
+            else:
+                strand -= 1
+            if len(subject) > largest_size and subject_strand != 0:
+                largest_size = len(subject)
+                strand_of_largest = subject_strand
+        counted.add(subject.name)
+    if strand < 0:
+        strand = -1
+    elif strand > 0:
+        strand = 1
+    else:  # a tiebreaker is required
+        strand = strand_of_largest
+    return strand
+
+
 class ClusterSVGBuilder:
     """ Constructs SVGs for both query cluster and matching clusters, in both
         pairwise and combined forms
@@ -491,25 +539,16 @@ class ClusterSVGBuilder:
         num_added = 0
         cluster_limit = get_config().cb_nclusters
         queries = set()
+
         for cluster, score in ranking:
             if record_prefix == cluster.accession.split("_", 1)[0]:
                 continue
             # determine overall strand direction of hits
             hit_genes = set()
-            strand = 0
+            strand = determine_strand_of_cluster(cluster_feature, score.scored_pairings)
             for query, subject in score.scored_pairings:
-                if subject.name in hit_genes:
-                    continue
                 queries.add(query.id)
                 hit_genes.add(subject.name)
-                if subject.strand == "+":
-                    strand += 1
-                elif subject.strand == "-":
-                    strand -= 1
-            if strand < 0:
-                strand = -1
-            elif strand > 0:
-                strand = 1
             cluster = Cluster.from_reference_cluster(cluster, query_cluster_number,
                                                      score, reference_proteins,
                                                      num_added + 1, len(hit_genes),
@@ -519,14 +558,6 @@ class ClusterSVGBuilder:
             # obey the cluster display limit from options
             if num_added >= cluster_limit:
                 break
-        # update the query strand overall direction now that we know which
-        # genes were hit, defaults to 1
-        overall_query_strand = 0
-        for cds in cluster_feature.cds_children:
-            if cds.get_accession() in queries:
-                overall_query_strand += cds.location.strand
-        if overall_query_strand < 0:
-            self.query_cluster.overall_strand = -1
 
         self.max_length = self._size_of_largest_cluster()
         self._organise_strands()
@@ -541,9 +572,8 @@ class ClusterSVGBuilder:
 
     def _organise_strands(self) -> None:
         """ Attempt to make all hits have a uniform overall direction """
-        query_strand = self.query_cluster.overall_strand
         for cluster in self.hits:
-            if cluster.overall_strand != query_strand:
+            if cluster.overall_strand == -1:  # this is relative to the query
                 cluster.reverse_strand()
 
     def _size_of_largest_cluster(self) -> int:
