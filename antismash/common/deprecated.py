@@ -80,19 +80,6 @@ def strip_record(seq_record) -> None:
         feature.sec_met = None
 
 
-def get_smcog_annotations(seq_record):
-    logging.critical("get_smcog_annotations(): should use secmet for smCOG note")
-    smcogdict = {}
-    smcogdescriptions = {}
-    for feature in seq_record.get_cds_features():
-        for note in feature.notes:
-            if "smCOG: " in note:
-                smcogid = note.partition("smCOG: ")[2].partition(":")[0]
-                smcog_descr = note.partition("smCOG: ")[2].partition(":")[2].partition("(Score:")[0]
-                smcogdict[feature.get_name()] = smcogid
-                smcogdescriptions[smcogid] = smcog_descr
-    return smcogdict, smcogdescriptions
-
 def get_pksnrps_cds_features(seq_record) -> list:
     features = seq_record.get_cds_features_within_clusters()
     pksnrpscoregenes = []
