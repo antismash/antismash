@@ -90,6 +90,12 @@ def parallel_function(function, args, cpus=None, timeout=None) -> list:
 
     if not cpus:
         cpus = get_config().cpus
+
+    # if only 1 core is to be used, don't fork to run it... this ignores timeout
+    if cpus == 1:
+        # list() to handle generators, * to expand the list of args
+        return [function(*argset) for argset in args]
+
     pool = multiprocessing.Pool(cpus)
     jobs = pool.starmap_async(function, args)
 
