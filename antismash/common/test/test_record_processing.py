@@ -55,11 +55,17 @@ class TestParseRecords(unittest.TestCase):
 
 
 class TestGapNotation(unittest.TestCase):
+    def setUp(self):
+        config.build_config([], isolated=True)
+
+    def tearDown(self):
+        config.destroy_config()
+
     def test_no_conversion_required(self):
         gaps = "acgtNacgtN"
         no_gaps = "acgtacgt"
         records = [Record(Seq(gaps)), Record(Seq(no_gaps))]
-        record_processing.sanitise_sequences(records)
+        records = [record_processing.sanitise_sequence(record) for record in records]
         assert len(records) == 2
         assert records[0].seq == gaps.upper()
         assert records[1].seq == no_gaps.upper()
@@ -67,17 +73,22 @@ class TestGapNotation(unittest.TestCase):
     def test_conversion(self):
         for seq in ("acgtZacgtX", "acgtxacgtz", "acgtoacgtf"):
             record = Record(Seq(seq))
-            record_processing.sanitise_sequences([record])
+            record = record_processing.sanitise_sequence(record)
             assert record.seq == "ACGTNACGTN"
 
     def test_removal(self):
         record = Record(Seq("acg-ta--"))
-        record_processing.sanitise_sequences([record])
+        record = record_processing.sanitise_sequence(record)
+        assert record.seq == "ACGTA"
+
+        # test modified in place
+        record = Record(Seq("acg-ta--"))
+        record_processing.sanitise_sequence(record)
         assert record.seq == "ACGTA"
 
     def test_mix(self):
         record = Record(Seq("acg-ta-F-x"))
-        record_processing.sanitise_sequences([record])
+        record = record_processing.sanitise_sequence(record)
         assert record.seq == "ACGTANN"
 
 
@@ -153,17 +164,23 @@ class TestIsNuclSeq(unittest.TestCase):
 
 class TestPreprocessRecords(unittest.TestCase):
     def setUp(self):
-        options = helpers.get_simple_options(None, [])
-        options.triggered_limit = False
-        self.options = config.update_config(options)
-
         class DummyModule:
             def __init__(self):
                 self.was_run = False
 
+            def get_arguments(self):
+                args = config.args.ModuleArgs("genefinding", "genefinding")
+                args.add_option("gff3", default="", type=str, help="dummy", dest="gff3")
+                return args
+
             def run_on_record(self, *_args, **_kwargs):
                 self.was_run = True
         self.genefinding = DummyModule()
+
+        options = config.build_config(["--cpus", "1"], isolated=True, modules=[self.genefinding])
+        config.update_config({"triggered_limit": False})
+        self.options = options
+
 
     def read_nisin(self):
         records = record_processing.parse_input_sequence(helpers.get_path_to_nisin_genbank())
@@ -218,12 +235,12 @@ class TestPreprocessRecords(unittest.TestCase):
         records = record_processing.parse_input_sequence(filepath)
         with self.assertRaisesRegex(RuntimeError,
                      "Incomplete whole genome shotgun records are not supported"):
-            record_processing.pre_process_sequences(records, self.options, None)
+            record_processing.pre_process_sequences(records, self.options, self.genefinding)
 
     def test_duplicate_record_ids(self):
         records = self.read_double_nisin()
         assert records[0].id == records[1].id
-        record_processing.pre_process_sequences(records, self.options, None)
+        records = record_processing.pre_process_sequences(records, self.options, self.genefinding)
         assert len(records) == 2
         assert records[0].id != records[1].id
 
@@ -232,7 +249,7 @@ class TestPreprocessRecords(unittest.TestCase):
         assert all(rec.skip is False for rec in records)
         assert not self.options.triggered_limit
         config.update_config({"limit": 1})
-        record_processing.pre_process_sequences(records, self.options, None)
+        record_processing.pre_process_sequences(records, self.options, self.genefinding)
         assert records[0].skip is False
         assert records[1].skip.startswith("skipping all but first 1")
         assert self.options.triggered_limit
@@ -242,7 +259,7 @@ class TestPreprocessRecords(unittest.TestCase):
         assert all(rec.skip is False for rec in records)
         config.update_config({"limit_to_record": records[0].id})
         records[0].id += "_changed"
-        record_processing.pre_process_sequences(records, self.options, None)
+        record_processing.pre_process_sequences(records, self.options, self.genefinding)
         assert not records[1].skip
         assert records[0].skip.startswith("did not match filter")
 
@@ -250,4 +267,4 @@ class TestPreprocessRecords(unittest.TestCase):
         records = self.read_double_nisin()
         config.update_config({"limit_to_record": "bad_id"})
         with self.assertRaisesRegex(ValueError, "No sequences matched filter.*"):
-            record_processing.pre_process_sequences(records, self.options, None)
+            record_processing.pre_process_sequences(records, self.options, self.genefinding)

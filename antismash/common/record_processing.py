@@ -1,6 +1,7 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+import functools
 import logging
 import re
 import os
@@ -14,8 +15,9 @@ from helperlibs.bio import seqio
 
 from antismash.common import gff_parser
 from antismash.common.secmet import Record, CDSFeature
-from antismash.config import update_config
+from antismash.config import get_config, update_config
 
+from .subprocessing import parallel_function
 from .utils import generate_unique_id
 
 
@@ -67,6 +69,74 @@ def parse_input_sequence(filename, minimum_length=-1, start=-1, end=-1) -> List[
     return [Record.from_biopython(record) for record in records]
 
 
+def check_content(sequence: Record) -> Record:
+    """ Checks if the sequence of a record is correct for the input type. If not
+        the record's skip flag will be marked.
+
+        Arguments:
+            record: the Record instance to check
+
+        Returns:
+            the Record instance provided
+    """
+    options = get_config()
+    cdsfeatures = sequence.get_cds_features()
+    cdsfeatures_with_translations = len([cds for cds in cdsfeatures if cds.translation])
+    assert cdsfeatures_with_translations == len(cdsfeatures)
+    if options.input_type == 'prot':
+        if is_nucl_seq(sequence.seq):
+            logging.error("Record %s is a nucleotide record, skipping.", sequence.id)
+            sequence.skip = "nucleotide record in protein mode"
+    elif options.input_type == 'nucl':
+        if not isinstance(sequence.seq.alphabet, Bio.Alphabet.NucleotideAlphabet)\
+                and not is_nucl_seq(sequence.seq):
+            logging.error("Record %s is a protein record, skipping.", sequence.id)
+            sequence.skip = "protein record in nucleotide mode"
+        else:
+            sequence.seq.alphabet = Bio.Alphabet.generic_dna
+    return sequence
+
+
+def ensure_gene_info(single_entry: bool, genefinding, sequence: Record) -> Record:
+    """ Ensures the given record has CDS features with unique locus tags.
+        CDS features are retrieved from GFF file or via genefinding, depending
+        on antismash options.
+
+        Records without CDS features will have their skip flag marked.
+
+        Arguments:
+            single_entry: whether gff_parser can ignore mismatching record ids
+                          provided there's only one record provided here and in
+                          the GFF file
+            genefinding: the relevant run_on_record(record, options) function to
+                         use for finding genes if no GFF file being used
+            record: the Record instance to ensure CDS features for
+
+        Returns:
+            the Record instance provided
+    """
+    options = get_config()
+    if sequence.skip:
+        return sequence
+    if not sequence.get_cds_features():
+        if options.genefinding_gff3:
+            logging.info("No CDS features found in record %r but GFF3 file provided, running GFF parser.", sequence.id)
+            gff_parser.run(sequence, single_entry, options)
+            if not sequence.get_cds_features():
+                logging.error("Record %s has no genes even after running GFF parser, skipping.", sequence.id)
+                sequence.skip = "No genes found"
+                return sequence
+        elif options.genefinding_tool != "none":
+            logging.info("No CDS features found in record %r, running gene finding.", sequence.id)
+            genefinding(sequence, options)
+        if not sequence.get_cds_features():
+            logging.info("No genes found, skipping record")
+            sequence.skip = "No genes found"
+            return sequence
+    fix_locus_tags(sequence)
+    return sequence
+
+
 def pre_process_sequences(sequences, options, genefinding) -> List[Record]:
     """ hmm
 
@@ -85,46 +155,33 @@ def pre_process_sequences(sequences, options, genefinding) -> List[Record]:
         Returns:
             A list of altered secmet.Record
     """
+    logging.debug("Preprocessing %d sequences", len(sequences))
     # keep count of how many records matched filter
     matching_filter = 0
 
+    for i, seq in enumerate(sequences):
+        seq.record_index = i
+
     # keep sequences as clean as possible
     if options.input_type == "nucl":
-        sanitise_sequences(sequences)
+        logging.debug("Sanitising record sequences")
+        sequences = parallel_function(sanitise_sequence, ([record] for record in sequences))
+        for record in sequences:
+            if record.skip or not record.seq:
+                logging.warning("Record %s has no sequence, skipping.", record.id)
     elif options.input_type == "prot":
         for record in sequences:
             record.seq = Seq(str(record.seq).replace("-", ""))
 
-    # Check if seq_records have appropriate content
-    for i, sequence in enumerate(sequences):
+    # run the filter
+    for sequence in sequences:
         if options.limit_to_record and options.limit_to_record != sequence.id:
             sequence.skip = "did not match filter: %s" % options.limit_to_record
         else:
             matching_filter += 1
 
-        sequence.record_index = i
-
-        cdsfeatures = sequence.get_cds_features()
-        cdsfeatures_with_translations = len([cds for cds in cdsfeatures if cds.translation])
-        assert cdsfeatures_with_translations == len(cdsfeatures)
-        if not sequence.seq or (options.input_type == 'nucl' and
-                                not str(sequence.seq).replace("N", "")):
-            logging.error("Record %s has no sequence, skipping.", sequence.id)
-            sequence.skip = "contains no sequence"
-            continue
-
-        if options.input_type == 'prot':
-            if is_nucl_seq(sequence.seq):
-                logging.error("Record %s is a nucleotide record, skipping.", sequence.id)
-                sequence.skip = "nucleotide record in protein mode"
-                continue
-        elif options.input_type == 'nucl':
-            if not isinstance(sequence.seq.alphabet, Bio.Alphabet.NucleotideAlphabet)\
-                    and not is_nucl_seq(sequence.seq):
-                logging.error("Record %s is a protein record, skipping.", sequence.id)
-                sequence.skip = "protein record in nucleotide mode"
-                continue
-            sequence.seq.alphabet = Bio.Alphabet.generic_dna
+    # Check if seq_records have appropriate content
+    sequences = parallel_function(check_content, ([sequence] for sequence in sequences))
 
     if options.limit_to_record:
         limit = options.limit_to_record
@@ -168,6 +225,7 @@ def pre_process_sequences(sequences, options, genefinding) -> List[Record]:
     ensure_no_duplicate_gene_ids(sequences)
 
     # Check GFF suitability
+    single_entry = False
     if options.genefinding_gff3:
         single_entry = gff_parser.check_gff_suitability(options, sequences)
 
@@ -184,32 +242,13 @@ def pre_process_sequences(sequences, options, genefinding) -> List[Record]:
     for record in sequences:
         fix_record_name_id(record, all_record_ids)
 
-    for sequence in sequences:
-        if sequence.skip:
-            continue
-        if not sequence.get_cds_features():
-            if options.genefinding_gff3:
-                logging.info("No CDS features found in record %r but GFF3 file provided, running GFF parser.", sequence.id)
-                gff_parser.run(sequence, single_entry, options)
-                if not sequence.get_cds_features():
-                    logging.error("Record %s has no genes even after running GFF parser, skipping.", sequence.id)
-                    sequence.skip = "No genes found"
-                    continue
-                # since gff_parser adds features, make sure they don't share ids
-                ensure_no_duplicate_gene_ids(sequences)
-            elif options.genefinding_tool != "none":
-                logging.info("No CDS features found in record %r, running gene finding.", sequence.id)
-                genefinding.run_on_record(sequence, options)
-            if not sequence.get_cds_features():
-                logging.info("No genes found, skipping record")
-                sequence.skip = "No genes found"
-                continue
-        fix_locus_tags(sequence)
+    partial = functools.partial(ensure_gene_info, single_entry, genefinding.run_on_record)
+    sequences = parallel_function(partial, ([sequence] for sequence in sequences))
 
     return sequences
 
 
-def sanitise_sequences(records) -> None:
+def sanitise_sequence(record) -> Record:
     """ Ensures all sequences use N for gaps instead of -, and that all other
         characters are A, C, G, T, or N
 
@@ -219,16 +258,20 @@ def sanitise_sequences(records) -> None:
         Returns:
             None
     """
-    for record in records:
-        sanitised = []
-        for char in record.seq.upper():
-            if char == "-":
-                continue
-            elif char in "ACGT":
-                sanitised.append(char)
-            else:
-                sanitised.append("N")
-        record.seq = Seq("".join(sanitised), alphabet=record.seq.alphabet)
+    has_real_content = False
+    sanitised = []
+    for char in record.seq.upper():
+        if char == "-":
+            continue
+        elif char in "ACGT":
+            sanitised.append(char)
+            has_real_content = True
+        else:
+            sanitised.append("N")
+    record.seq = Seq("".join(sanitised), alphabet=record.seq.alphabet)
+    if not has_real_content:
+        record.skip = "contains no sequence"
+    return record
 
 
 def trim_sequence(record, start, end) -> SeqRecord:
