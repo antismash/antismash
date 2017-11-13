@@ -9,8 +9,9 @@ import logging
 from os import path
 from helperlibs.wrappers.io import TemporaryDirectory
 from helperlibs.bio import seqio
-from Bio.SeqFeature import SeqFeature, FeatureLocation
+from Bio.SeqFeature import FeatureLocation
 
+from antismash.common.secmet import CDSFeature
 from antismash.common.subprocessing import execute
 
 
@@ -29,7 +30,7 @@ def run_prodigal(seq_record, options):
         fasta_file = '%s.fasta' % name
         result_file = '%s.predict' % name
         with open(fasta_file, 'w') as handle:
-            seqio.write([seq_record], handle, 'fasta')
+            seqio.write([seq_record.to_biopython()], handle, 'fasta')
 
         # run prodigal
         prodigal = [path.join(basedir, 'prodigal')]
@@ -40,7 +41,8 @@ def run_prodigal(seq_record, options):
         err = execute(prodigal).stderr
         if err.find('Error') > -1:
             logging.error("Failed to run prodigal: %r", err)
-            return
+            raise RuntimeError("prodigal error: %s" % err)
+        found = 0
         for line in open(result_file, 'r'):
             # skip first line
             if not line.startswith('>'):
@@ -63,6 +65,7 @@ def run_prodigal(seq_record, options):
                 start, end = end, start
 
             loc = FeatureLocation(start-1, end, strand=strand)
-            feature = SeqFeature(location=loc, id=name, type="CDS",
-                    qualifiers={'locus_tag': ['ctg%s_%s' % (seq_record.record_index, name)]})
-            seq_record.features.append(feature)
+            feature = CDSFeature(loc, locus_tag='ctg%s_%s' % (seq_record.record_index, name))
+            seq_record.add_cds_feature(feature)
+            found += 1
+    logging.debug("prodigal found %d CDS features", found)
