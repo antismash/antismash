@@ -507,13 +507,14 @@ class MinimumCondition(Conditions):
         super().__init__(negated)
 
     def is_satisfied(self, details, local_only=False) -> Set[str]:
+        """ local_only is ignored here, since a MinimumCondition can't be inside
+            a CDSCondition
+        """
         hits = self.options.intersection(set(details.possibilities))
         hit_count = len(hits)
         if hit_count >= self.count:
             return ConditionMet(not self.negated, hits)
 
-        if local_only:
-            return ConditionMet(xor(self.negated, hit_count >= self.count), hits)
         current_cds = details.features_by_id[details.cds]
 
         # check to see if the remaining hits are in nearby CDSs
@@ -619,6 +620,9 @@ class ScoreCondition(Conditions):
         super().__init__(negated)
 
     def is_satisfied(self, details: Details, local_only=False) -> bool:
+        """ local_only is ignored since a ScoreCondition can't be inside a
+            CDSCondition
+        """
         # do we only care about this CDS? then use the smaller set
         found_in_cds = False
         match = set()
@@ -629,7 +633,7 @@ class ScoreCondition(Conditions):
                     match.add(self.name)
                     break
 
-        if local_only or found_in_cds:
+        if found_in_cds:
             return ConditionMet(not self.negated, match)
 
         cds_feature = details.features_by_id[details.cds]
