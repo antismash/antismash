@@ -35,7 +35,13 @@ def check_gff_suitability(options, sequences):
             limit_info = dict(gff_type=['CDS'])
 
             record_iter = GFF.parse(open(options.genefinding_gff3), limit_info=limit_info)
-            record = next(record_iter)
+            try:
+                record = next(record_iter)
+            except StopIteration:
+                raise ValueError("Could not parse records from GFF3 file")
+
+            if not record.features:
+                raise ValueError('GFF3 record %s contains no features' % record.id)
 
             coord_max = max([n.location.end.real for n in record.features])
             if coord_max > len(sequences[0]):
