@@ -396,8 +396,6 @@ def detect_signature_genes(record, options) -> None:
     rules = {rule.name: rule for rule in rules}
     find_clusters(record, rules)
 
-    # Find additional NRPS/PKS genes in gene clusters
-    add_additional_nrpspks_genes(typedict, results_by_id, record, nseqdict)
     # Add details of gene cluster detection to cluster features
     store_detection_details(rules, record)
     # If all-orfs option on, remove irrelevant short orfs
@@ -465,22 +463,6 @@ def remove_irrelevant_allorfs(record):
     featurenrs.reverse()
     for featurenr in featurenrs:
         del record.features[featurenr]
-
-
-def add_additional_nrpspks_genes(typedict, results_by_id, record, nseqdict):
-    logging.critical("add_additional_nrpspks_genes() overriding existing sec_met")
-    nrpspksdomains = ["PKS_KS", "PKS_AT", "ATd", "ene_KS", "mod_KS", "hyb_KS",
-                      "itr_KS", "tra_KS", "Condensation", "AMP-binding", "A-OX"]
-    clustercdsfeatures = record.get_cds_features_within_clusters()
-    othercds_with_results = []
-    for cds in clustercdsfeatures:
-        gene_id = cds.get_name()
-        if gene_id in results_by_id and typedict[gene_id] == "none":
-            othercds_with_results.append((cds, gene_id))
-    for cds, gene_id in othercds_with_results:
-        cdsresults = [res.query_id for res in results_by_id[gene_id]]
-        if len(set(nrpspksdomains) & set(cdsresults)) >= 1:
-            _update_sec_met_entry(cds, results_by_id[gene_id], "other", nseqdict)
 
 
 def store_detection_details(rules, record) -> None:
