@@ -374,6 +374,11 @@ class GeneFunctionAnnotations:
         return len(self._annotations)
 
     def add(self, function: GeneFunction, tool: str, description: str) -> "GeneFunctionAnnotations.GeneFunctionAnnotation":
+        # if there's already an exactly similar function annotation, skip adding
+        existing_functions = self._by_function.get(function, [])
+        for existing in existing_functions:
+            if existing.tool == tool and existing.description == description:
+                return existing
         new = GeneFunctionAnnotations.GeneFunctionAnnotation(function, tool, description)
         self._by_tool[tool].append(new)
         self._by_function[function].append(new)
