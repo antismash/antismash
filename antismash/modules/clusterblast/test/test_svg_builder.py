@@ -18,8 +18,8 @@ class TestSVGHelpers(unittest.TestCase):
             return res
         assert run([1]) == [1]
         assert run([2]) == [2]
-        assert run(range(3)) == [0, 2, 1]
-        assert run(range(4)) == [0, 2, 1, 3]
-        assert run(range(5)) == [4, 0, 2, 1, 3]
-        assert run(range(6)) == [0, 3, 1, 4, 2, 5]
-        assert run(range(7)) == [6, 0, 3, 1, 4, 2, 5]
+        assert run(range(3)) == [0, 1, 2]
+        assert run(range(4)) == [0, 1, 2, 3]
+        assert run(range(5)) == [0, 4, 1, 2, 3]
+        assert run(range(6)) == [0, 4, 1, 5, 2, 3]
+        assert run(range(7)) == [0, 4, 1, 5, 2, 6, 3]
