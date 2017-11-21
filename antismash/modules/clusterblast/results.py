@@ -4,7 +4,7 @@
 from collections import OrderedDict
 import logging
 import os
-from typing import Dict, List
+from typing import Any, Dict, List
 
 from antismash.common.module_results import ModuleResults
 
@@ -139,19 +139,20 @@ class ClusterResult:
 class GeneralResults(ModuleResults):
     schema_version = 1
 
-    def __init__(self, record_id, search_type="clusterblast") -> None:
+    def __init__(self, record_id: str, search_type: str = "clusterblast") -> None:
         assert record_id and isinstance(record_id, str)
         assert search_type and isinstance(search_type, str)
         super().__init__(record_id)
-        self.cluster_results = []  # [ClusterResult, ...]
+        self.cluster_results = []  # type: List[ClusterResult]
         self.search_type = search_type
         # keep here instead of duplicating in clusters
         # and only keep those that are relevant instead of 7 million
-        self.proteins_of_interest = OrderedDict()  # protein name -> Protein
-        self.clusters_of_interest = OrderedDict()  # cluster name -> ReferenceCluster
+        self.proteins_of_interest = OrderedDict()  # type: Dict[str, Protein]
+        self.clusters_of_interest = OrderedDict()  # type: Dict[str, ReferenceCluster]
         self.mibig_entries = None
 
-    def add_cluster_result(self, result, reference_clusters, reference_proteins):
+    def add_cluster_result(self, result: ClusterResult, reference_clusters: Dict[str, ReferenceCluster],
+                           reference_proteins: Dict[str, Protein]) -> None:
         assert isinstance(result, ClusterResult)
         assert reference_clusters and reference_proteins  # {str:ReferenceCluster}, {str:Protein}
         self.cluster_results.append(result)
@@ -163,17 +164,17 @@ class GeneralResults(ModuleResults):
             for protein_name in protein_names:
                 self.proteins_of_interest[protein_name] = reference_proteins[protein_name]
 
-    def write_to_file(self, record, options):
+    def write_to_file(self, record, options) -> None:
         for cluster in self.cluster_results:
             write_clusterblast_output(options, record, cluster,
                                       self.proteins_of_interest,
                                       searchtype=self.search_type)
 
-    def write_svg_files(self, svg_dir):
+    def write_svg_files(self, svg_dir) -> None:
         for cluster_result in self.cluster_results:
             cluster_result.write_svg_files(svg_dir, self.search_type)
 
-    def to_json(self):
+    def to_json(self) -> Dict[str, Any]:
         if not self.cluster_results:
             return None
         data = {"record_id": self.record_id,
@@ -192,12 +193,12 @@ class GeneralResults(ModuleResults):
             data["mibig_entries"] = entries
         return data
 
-    def add_to_record(self):
+    def add_to_record(self, _record) -> None:
         for cluster_result in self.cluster_results:
             cluster_result.update_cluster_descriptions(self.search_type)
 
     @staticmethod
-    def from_json(json, record):
+    def from_json(json, record) -> "GeneralResults":
         if json["schema_version"] != GeneralResults.schema_version:
             raise ValueError("Incompatible results schema version, expected %d"
                              % GeneralResults.schema_version)
@@ -255,7 +256,7 @@ class ClusterBlastResults(ModuleResults):
     def add_to_record(self, record):
         for result in [self.general, self.subcluster, self.knowncluster]:
             if result is not None:
-                result.add_to_record()
+                result.add_to_record(record)
 
     def write_svg_files(self, svg_dir):
         for result in [self.general, self.subcluster, self.knowncluster]:

@@ -4,14 +4,13 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
-import os
 import unittest
 
 from helperlibs.wrappers.io import TemporaryDirectory
 import minimock
 
 import antismash
-from antismash.common import path, serialiser
+from antismash.common import path
 from antismash.common.test import helpers
 from antismash.config import build_config, destroy_config
 from antismash.modules import nrps_pks
@@ -32,7 +31,8 @@ class IntegrationWithoutNRPSPKS(unittest.TestCase):
         with TemporaryDirectory(change=True) as tempdir:
             self.options = build_config(["--minimal", "--output-dir", tempdir],
                                     isolated=True, modules=antismash.get_all_modules())
-            antismash.main.run_antismash(helpers.get_path_to_balhymicin_genbank(), self.options)
+            antismash.main.run_antismash(helpers.get_path_to_balhymicin_genbank(),
+                                         self.options)
         # make sure it didn't run
         minimock.assert_same_trace(self.tracker, "")
 
@@ -58,7 +58,8 @@ class IntegrationNRPSPKS(unittest.TestCase):
         # when the NRPS subsections are added, this needs to change
         assert results.nrps == {}
         # as does this, though it still won't use domain docking
-        assert results.cluster_predictions == {'1': ['(nrp-nrp-nrp) + (nrp-nrp-nrp) + (nrp) + (nrp) + (pk)', False]}
+        assert results.cluster_predictions == {'1': [
+                '(nrp-nrp-nrp) + (nrp-nrp-nrp) + (nrp) + (nrp) + (pk)', False]}
 
     def test_CP002271_c19(self):
         filename = path.get_full_path(__file__, 'data', 'CP002271.1.cluster019.gbk')
@@ -68,10 +69,11 @@ class IntegrationNRPSPKS(unittest.TestCase):
         assert results.pks.method_results["signature"]["STAUR_3982_AT1"][0].score == 87.5
         # ensure all genes are present and have the right consensus
         assert results.consensus == {'STAUR_3982_AT1': 'ohmmal',
-                                              'STAUR_3983_AT1': 'ccmmal',
-                                              'STAUR_3984_AT1': 'ccmmal',
-                                              'STAUR_3985_AT1': 'pk'}
+                                     'STAUR_3983_AT1': 'ccmmal',
+                                     'STAUR_3984_AT1': 'ccmmal',
+                                     'STAUR_3985_AT1': 'pk'}
         # check the gene ordering and, in this case, that it used domain docking
-        assert results.cluster_predictions == {'1': ['(ccmmal) + (ccmmal) + (pk) + (ohmmal)', True]}
+        assert results.cluster_predictions == {'1': [
+                '(ccmmal) + (ccmmal) + (pk) + (ohmmal)', True]}
         # no A domains in the cluster, so make sure no NRPS results
         assert results.nrps == {}

@@ -115,8 +115,8 @@ def find_first_and_last_genes(genes: List[CDSFeature]) -> Tuple[Optional[CDSFeat
                 the end gene or None
     """
 
-    start_gene = ""
-    end_gene = ""
+    start_gene = None
+    end_gene = None
 
     # find the end
     for gene in genes:
@@ -137,7 +137,7 @@ def find_first_and_last_genes(genes: List[CDSFeature]) -> Tuple[Optional[CDSFeat
             start_gene = gene
 
     # if no AT-ACP start gene, try looking for KS-AT-ACP
-    if start_gene == "":
+    if not start_gene:
         for gene in genes:
             domain_names = gene.nrps_pks.domain_names
             if domain_names[:3] == ["PKS_KS", "PKS_AT", "ACP"]:
@@ -169,7 +169,7 @@ def extract_nterminus(data_dir, genes, start_gene):
     return n_terminal_residues
 
 
-def extract_cterminus(data_dir, genes, end_gene) -> Dict[str, List[str]]:
+def extract_cterminus(data_dir, genes, end_gene) -> Dict[str, str]:
     """ Extract C-terminal 100 residues of each non-ending protein,
         scan for docking domains, parse output to locate interacting residues
 
@@ -182,7 +182,7 @@ def extract_cterminus(data_dir, genes, end_gene) -> Dict[str, List[str]]:
             A dictionary mapping gene name to the pair of residues extracted
     """
     c_terminal_residues = {}
-    c_terminals = {}
+    c_terminals = {}  # type: Dict[str, str]
     cterm_file = os.path.join(data_dir, 'cterm.fasta')
     for gene in genes:
         gene_name = gene.get_name()
@@ -219,10 +219,10 @@ def find_possible_orders(genes: List[CDSFeature], start_gene: CDSFeature, end_ge
         else:
             genes_to_order.append(gene)
     possible_orders = []
-    start = []
+    start = []  # type: List[CDSFeature]
     if start_gene:
         start = [start_gene]
-    end = []
+    end = []  # type: List[CDSFeature]
     if end_gene:
         end = [end_gene]
     for order in list(itertools.permutations(genes_to_order, len(genes_to_order))):

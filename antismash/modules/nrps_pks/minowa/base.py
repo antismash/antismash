@@ -18,14 +18,14 @@ class MinowaResults(dict):
                 out_file.write("{}\t{}\n".format(name, score))
         out_file.close()
 
-def hmmsearch(fasta_format: str, hmm: str) -> str:
+def hmmsearch(fasta_format: str, hmm: str) -> float:
     result = subprocessing.execute(["hmmsearch", "--noali", hmm, "-"], stdin=fasta_format)
     if not result.successful():
         logging.error("hmmsearch stderr: %s", result.stderr)
         raise RuntimeError("hmmsearch exited non-zero")
 
     if "[No targets detected" in result.stdout:
-        return "0"
+        return 0.
 
     text = result.stdout
     start = text.find('Domain annotation for each sequence:')
@@ -64,7 +64,7 @@ def run_minowa(sequence_info: Dict[str, str], startpos: int, muscle_ref: str, re
     """
     positions = get_positions(positions_file, startpos)
 
-    results_by_query = {}
+    results_by_query = MinowaResults()
 
     for query_id, query_seq in sequence_info.items():
         muscle = subprocessing.run_muscle_single(query_id, query_seq, muscle_ref)
@@ -78,8 +78,7 @@ def run_minowa(sequence_info: Dict[str, str], startpos: int, muscle_ref: str, re
         # then use list to extract positions from every sequence -> HMMs (one time, without any query sequence)
         hmm_scores = {}
         for hmmname in hmm_names:
-            score = float(hmmsearch(fasta_format, path.join(data_dir, hmmname + ".hmm")))
-            hmm_scores[hmmname] = score
+            hmm_scores[hmmname] = hmmsearch(fasta_format, path.join(data_dir, hmmname + ".hmm"))
 
         results = sorted(hmm_scores.items(), reverse=True, key=lambda x: (x[1], x[0]))
         results_by_query[query_id] = results

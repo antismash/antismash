@@ -6,7 +6,7 @@ from enum import Enum, unique
 import logging
 import os
 import warnings
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from helperlibs.bio import seqio
 
@@ -347,7 +347,7 @@ class GeneFunctionAnnotations:
     class GeneFunctionAnnotation:
         slots = ["function", "tool", "description"]
 
-        def __init__(self, function: GeneFunction, tool: str, description: str):
+        def __init__(self, function: GeneFunction, tool: str, description: str) -> None:
             assert isinstance(function, GeneFunction), "wrong type: %s" % type(function)
             assert tool and len(tool.split()) == 1, tool  # no whitespace in tool name
             assert description
@@ -373,7 +373,7 @@ class GeneFunctionAnnotations:
     def __len__(self):
         return len(self._annotations)
 
-    def add(self, function: GeneFunction, tool: str, description: str):
+    def add(self, function: GeneFunction, tool: str, description: str) -> "GeneFunctionAnnotations.GeneFunctionAnnotation":
         new = GeneFunctionAnnotations.GeneFunctionAnnotation(function, tool, description)
         self._by_tool[tool].append(new)
         self._by_function[function].append(new)
@@ -511,14 +511,14 @@ class CDSFeature(Feature):
                 sequence = sequence.replace("*", "X")
         return sequence.replace("-", "")
 
-    def get_accession(self):
+    def get_accession(self) -> str:
         "Get the gene ID from protein id, gene name or locus_tag, in that order"
         for val in [self.protein_id, self.gene, self.locus_tag]:
             if val:
                 return val
         raise ValueError("%s altered to contain no identifiers" % self)
 
-    def get_name(self):
+    def get_name(self) -> str:
         "Get the gene ID from locus_tag, gene name or protein id, in that order"
         for val in [self.locus_tag, self.gene, self.protein_id]:
             if val:
@@ -526,7 +526,8 @@ class CDSFeature(Feature):
         raise ValueError("%s altered to contain no identifiers" % self)
 
     @staticmethod
-    def from_biopython(bio_feature, feature=None, leftovers=None):
+    def from_biopython(bio_feature: SeqFeature, feature: Feature = None,
+                       leftovers: Optional[Dict] = None) -> "CDSFeature":
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
         # grab mandatory qualifiers and create the class
@@ -560,8 +561,8 @@ class CDSFeature(Feature):
 
         return feature
 
-    def to_biopython(self, qualifiers=None):
-        mine = OrderedDict()
+    def to_biopython(self, qualifiers: Dict[str, List[str]] = None) -> SeqFeature:
+        mine = OrderedDict()  # type: Dict[str, List[str]]
         # mandatory
         mine["translation"] = [self.translation]
         # optional
@@ -600,24 +601,24 @@ class Prepeptide(CDSFeature):
         self.core = core
 
     @property
-    def leader(self):
+    def leader(self) -> FeatureLocation:
         return self._leader
 
     @leader.setter
-    def leader(self, leader):
+    def leader(self, leader: FeatureLocation) -> None:
         assert isinstance(leader, FeatureLocation)
         self._leader = leader
 
     @property
-    def tail(self):
+    def tail(self) -> FeatureLocation:
         return self._tail
 
     @tail.setter
-    def tail(self, tail):
+    def tail(self, tail: FeatureLocation) -> None:
         assert isinstance(tail, FeatureLocation)
         self._tail = tail
 
-    def to_biopython(self, qualifiers=None):
+    def to_biopython(self, qualifiers: Dict[str, List] = None):
         features = []
         if self.leader:
             assert isinstance(self._leader, FeatureLocation)

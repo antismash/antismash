@@ -68,20 +68,32 @@ class TestNRPSParserMonomerModification(unittest.TestCase):
     def test_insert_modified_monomers(self):
         # in pairs of (at, trans-at)
         expected_changes = [(set(), set()),  # redmxmal
-            ({('all_AT3', 'redmal'), ('all_AT1', 'redmal'), ('all_AT2', 'redmal')}, {('all_KS2', 'redmal'), ('all_KS3', 'redmal'), ('all_KS1', 'redmal')}),  # ccmal
-            ({('all_AT3', 'redemal'), ('all_AT1', 'redemal'), ('all_AT2', 'redemal')}, {('all_KS2', 'redemal'), ('all_KS3', 'redemal'), ('all_KS1', 'redemal')}),  # ohemal
-            ({('all_AT3', 'redmxmal'), ('all_AT1', 'redmxmal'), ('all_AT2', 'redmxmal')}, {('all_KS2', 'redmxmal'), ('all_KS3', 'redmxmal'), ('all_KS1', 'redmxmal')}),  # ohmxmal
-            ({('all_AT3', 'redmmal'), ('all_AT1', 'redmmal'), ('all_AT2', 'redmmal')}, {('all_KS2', 'redmmal'), ('all_KS3', 'redmmal'), ('all_KS1', 'redmmal')}),  # ohmmal
-            ({('all_AT3', 'redmmal'), ('all_AT1', 'redmmal'), ('all_AT2', 'redmmal')}, {('all_KS2', 'redmmal'), ('all_KS3', 'redmmal'), ('all_KS1', 'redmmal')}),  # ccmmal
-            ({('all_AT3', 'redemal'), ('all_AT1', 'redemal'), ('all_AT2', 'redemal')}, {('all_KS2', 'redemal'), ('all_KS1', 'redemal')}),  # emal
+            ({('all_AT3', 'redmal'), ('all_AT1', 'redmal'), ('all_AT2', 'redmal')},
+             {('all_KS2', 'redmal'), ('all_KS3', 'redmal'), ('all_KS1', 'redmal')}),  # ccmal
+            ({('all_AT3', 'redemal'), ('all_AT1', 'redemal'), ('all_AT2', 'redemal')},
+             {('all_KS2', 'redemal'), ('all_KS3', 'redemal'), ('all_KS1', 'redemal')}),  # ohemal
+            ({('all_AT3', 'redmxmal'), ('all_AT1', 'redmxmal'), ('all_AT2', 'redmxmal')},
+             {('all_KS2', 'redmxmal'), ('all_KS3', 'redmxmal'), ('all_KS1', 'redmxmal')}),  # ohmxmal
+            ({('all_AT3', 'redmmal'), ('all_AT1', 'redmmal'), ('all_AT2', 'redmmal')},
+             {('all_KS2', 'redmmal'), ('all_KS3', 'redmmal'), ('all_KS1', 'redmmal')}),  # ohmmal
+            ({('all_AT3', 'redmmal'), ('all_AT1', 'redmmal'), ('all_AT2', 'redmmal')},
+             {('all_KS2', 'redmmal'), ('all_KS3', 'redmmal'), ('all_KS1', 'redmmal')}),  # ccmmal
+            ({('all_AT3', 'redemal'), ('all_AT1', 'redemal'), ('all_AT2', 'redemal')},
+             {('all_KS2', 'redemal'), ('all_KS1', 'redemal')}),  # emal
             (set(), set()),  # redmmal
-            ({('all_AT3', 'redmmal'), ('all_AT1', 'redmmal'), ('all_AT2', 'redmmal')}, {('all_KS2', 'redmmal'), ('all_KS1', 'redmmal')}),  # mmal
-            ({('all_AT3', 'redmxmal'), ('all_AT1', 'redmxmal'), ('all_AT2', 'redmxmal')}, {('all_KS2', 'redmxmal'), ('all_KS3', 'redmxmal'), ('all_KS1', 'redmxmal')}),  # ccmxmal
-            ({('all_AT3', 'redmxmal'), ('all_AT1', 'redmxmal'), ('all_AT2', 'redmxmal')}, {('all_KS2', 'redmxmal'), ('all_KS1', 'redmxmal')}),  # mxmal
+            ({('all_AT3', 'redmmal'), ('all_AT1', 'redmmal'), ('all_AT2', 'redmmal')},
+             {('all_KS2', 'redmmal'), ('all_KS1', 'redmmal')}),  # mmal
+            ({('all_AT3', 'redmxmal'), ('all_AT1', 'redmxmal'), ('all_AT2', 'redmxmal')},
+             {('all_KS2', 'redmxmal'), ('all_KS3', 'redmxmal'), ('all_KS1', 'redmxmal')}),  # ccmxmal
+            ({('all_AT3', 'redmxmal'), ('all_AT1', 'redmxmal'), ('all_AT2', 'redmxmal')},
+             {('all_KS2', 'redmxmal'), ('all_KS1', 'redmxmal')}),  # mxmal
             (set(), set()),  # redemal
-            ({('all_AT3', 'redmal'), ('all_AT1', 'redmal'), ('all_AT2', 'redmal')}, {('all_KS2', 'redmal'), ('all_KS3', 'redmal'), ('all_KS1', 'redmal')}),  # ohmal
-            ({('all_AT3', 'redmal'), ('all_AT1', 'redmal'), ('all_AT2', 'redmal')}, {('all_KS2', 'redmal'), ('all_KS1', 'redmal')}),   # mal
-            ({('all_AT3', 'redemal'), ('all_AT1', 'redemal'), ('all_AT2', 'redemal')}, {('all_KS2', 'redemal'), ('all_KS3', 'redemal'), ('all_KS1', 'redemal')})]  # ccemal
+            ({('all_AT3', 'redmal'), ('all_AT1', 'redmal'), ('all_AT2', 'redmal')},
+             {('all_KS2', 'redmal'), ('all_KS3', 'redmal'), ('all_KS1', 'redmal')}),  # ohmal
+            ({('all_AT3', 'redmal'), ('all_AT1', 'redmal'), ('all_AT2', 'redmal')},
+             {('all_KS2', 'redmal'), ('all_KS1', 'redmal')}),   # mal
+            ({('all_AT3', 'redemal'), ('all_AT1', 'redemal'), ('all_AT2', 'redemal')},
+             {('all_KS2', 'redemal'), ('all_KS3', 'redemal'), ('all_KS1', 'redemal')})]  # ccemal
 
         for pred, expected in zip(self.predictions, expected_changes):
             for index in [0, 1]:  # AT and transAT
