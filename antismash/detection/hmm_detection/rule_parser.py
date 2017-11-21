@@ -742,8 +742,13 @@ class Parser:
             self.current_token = next(self.tokens)
         except StopIteration:
             raise ValueError("No rules to parse")
+        rule_names = set()
         while self.current_token and self.current_token.type == TokenTypes.RULE:
-            self.rules.append(self._parse_rule())
+            rule = self._parse_rule()
+            if rule.name in rule_names:
+                raise ValueError("Multiple rules specified for the same rule name")
+            rule_names.add(rule.name)
+            self.rules.append(rule)
         if self.current_token:
             raise RuleSyntaxError("Expected RULE but found %s\n%s\n%s%s" % (
                                     self.current_token.type,
