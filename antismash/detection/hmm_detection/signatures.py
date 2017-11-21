@@ -1,13 +1,15 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+from typing import List, Set
+
 from antismash.common import path
 from antismash.common.signature import Signature
 
 
 class HmmSignature(Signature):
     """HMM signature"""
-    def __init__(self, name, description, cutoff, hmm_filename):
+    def __init__(self, name: str, description: str, cutoff: int, hmm_filename: str) -> None:
         self.hmm_file = path.get_full_path(__file__, "data", hmm_filename)
         self.name = name
         if cutoff < 0:
@@ -15,17 +17,18 @@ class HmmSignature(Signature):
         super().__init__(name, 'model', description, cutoff, self.hmm_file)
 
 
-def get_signature_names():
+def get_signature_names() -> Set[str]:
     return set(prof.name for prof in get_signature_profiles())
 
 
-def get_signature_profiles():
+def get_signature_profiles() -> List[HmmSignature]:
     """ Generates the HMM signature profiles from hmmdetails.txt
         Only does the processing once per python invocation, future runs access
         existing profiles
     """
     existing = getattr(get_signature_profiles, 'existing', None)
     if existing is not None:
+        assert isinstance(existing, list)
         return existing
 
     bad_lines = []

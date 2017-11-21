@@ -3,7 +3,9 @@
 
 import logging
 from collections import defaultdict
-from typing import Dict, Tuple, TypeVar
+from typing import Dict, List, Optional, Set, Tuple, TypeVar  # pylint: disable=unused-import
+
+from Bio.SearchIO._model.hsp import HSP
 
 from antismash.common import path, deprecated
 from antismash.common.secmet.feature import Cluster, SecMetQualifier, CDSFeature, GeneFunction
@@ -14,10 +16,9 @@ from antismash.detection.hmm_detection.signatures import get_signature_profiles,
 
 T = TypeVar("T")
 
-
-def find_clusters(record, rules):
+def find_clusters(record, rules) -> List[Cluster]:
     """ Detects gene clusters based on the identified core genes """
-    clusters = []
+    clusters = []  # type: List[Cluster]
 
     for feature in record.get_cds_features():
         within_cutoff = False
@@ -77,9 +78,9 @@ def find_clusters(record, rules):
         cluster.contig_edge = edge
         record.add_cluster(cluster)
     logging.info("%d cluster(s) found in record", len(clusters))
+    return clusters
 
-
-def hsp_overlap_size(first, second):
+def hsp_overlap_size(first, second) -> int:
     """ Find the size of an overlapping region of two HSPs.
 
         Args:
@@ -96,7 +97,7 @@ def hsp_overlap_size(first, second):
     return max(0, segment_end - segment_start)
 
 
-def filter_results(results, results_by_id):
+def filter_results(results: List[HSP], results_by_id: Dict[str, List[HSP]]) -> Tuple[List[HSP], Dict[str, List[HSP]]]:
     """ Filter results by comparing scores of different models """
     for line in open(path.get_full_path(__file__, "filterhmmdetails.txt"), "r"):
         line = line.strip()
@@ -111,7 +112,7 @@ def filter_results(results, results_by_id):
             if len(hits & equivalence_group) < 2:
                 continue
             # Identify overlapping hits
-            overlapping_groups = []
+            overlapping_groups = []  # type: List[Set[HSP]]
             for hit in cdsresults:
                 for otherhit in cdsresults:
                     if hit == otherhit or hsp_overlap_size(hit, otherhit) <= 20:
@@ -127,7 +128,7 @@ def filter_results(results, results_by_id):
 
             for group in overlapping_groups:
                 # find the best
-                best = None
+                best = None  # type: Optional[HSP]
                 for hit in group:
                     if not best or hit.bitscore > best.bitscore:
                         best = hit
@@ -226,7 +227,8 @@ def create_rules(enabled_cluster_types):
     return rules
 
 
-def calculate_nearby_features(names, position, cutoff, distances, features,
+def calculate_nearby_features(names: List[str], position: int, cutoff: int,
+                              distances: List[int], features: Dict[str, CDSFeature],
                               results: Dict[str, T]) -> Tuple[Dict[str, CDSFeature], Dict[str, T]]:
     """ Find features within a specific distance
 
@@ -299,8 +301,8 @@ def apply_cluster_rules(results_by_id, feature_by_id, rules) -> Dict[str, str]:
     for i, cds in enumerate(cds_with_hits):
         results = []
         rule_texts = []
-        info_by_range = {}
-        domain_matches = set()
+        info_by_range = {}  # type: Dict[int, Tuple[Dict[str, CDSFeature], Dict]]
+        domain_matches = set()  # type: Set[str]
         for rule in rules:
             if rule.cutoff not in info_by_range:
                 info_by_range[rule.cutoff] = calculate_nearby_features(cds_with_hits,
@@ -316,7 +318,6 @@ def apply_cluster_rules(results_by_id, feature_by_id, rules) -> Dict[str, str]:
         if results:
             type_results[cds] = "-".join(results)
             feature = feature_by_id[cds]
-            cds_results = results_by_id[cds]
             # if a domain was used to mark a gene as CORE, then annotate that
             for domain in domain_matches:
                 feature.gene_functions.add(GeneFunction.CORE, "cluster_definition", domain)
@@ -343,7 +344,7 @@ def detect_signature_genes(record, options) -> None:
     rules = create_rules(enabled_cluster_types)
     results = []
     sig_by_name = {}
-    results_by_id = {}
+    results_by_id = {}  # type: Dict[str, HSP]
     for sig in get_signature_profiles():
         sig_by_name[sig.name] = sig
 
@@ -404,7 +405,7 @@ def detect_signature_genes(record, options) -> None:
         remove_irrelevant_allorfs(record)
 
 
-def get_sequence_counts() -> Dict[str, int]:
+def get_sequence_counts() -> Dict[str, str]:
     """ Gets the number of sequences/seeds used to generate each HMM signature
 
         Arguments:
@@ -546,10 +547,10 @@ def get_overlaps_table(record) -> Dict[str, int]:
             A dictionary of gene id to int representing overlap group
 
     """
-    overlaps = []
-    overlap_by_id = {}
+    overlaps = []  # type: List[List[CDSFeature]]
+    overlap_by_id = {}  # type: Dict[str, int]
     features = record.get_cds_features()
-    if len(features) < 1:
+    if not features:
         return overlap_by_id
     features = sorted(features, key=lambda feature: feature.location.start)
     i = 0

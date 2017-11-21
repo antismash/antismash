@@ -7,7 +7,7 @@ import multiprocessing
 import os
 from subprocess import PIPE, Popen, TimeoutExpired
 from tempfile import NamedTemporaryFile
-from typing import Dict
+from typing import Dict, List
 
 import warnings
 # Don't display the SearchIO experimental warning, we know this.
@@ -113,7 +113,7 @@ def parallel_function(function, args, cpus=None, timeout=None) -> list:
     return results
 
 
-def child_process(command):
+def child_process(command) -> int:
     """ Called by multiprocessing's map or map_async method, cannot be locally
         defined """
     try:
@@ -125,7 +125,7 @@ def child_process(command):
     return -1
 
 
-def parallel_execute(commands, cpus=None, timeout=None):
+def parallel_execute(commands, cpus=None, timeout=None) -> List[int]:
     """ Limited return vals, only returns return codes
     """
     os.setpgid(0, 0)

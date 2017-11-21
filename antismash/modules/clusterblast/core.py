@@ -14,7 +14,7 @@ from antismash.config import get_config
 from .data_structures import Subject, Query, Protein, ReferenceCluster, Score
 
 
-def get_core_gene_ids(record) -> Set[str]:  # TODO: consider moving into secmet
+def get_core_gene_ids(record) -> List[str]:  # TODO: consider moving into secmet
     """ Fetches all gene accessions of genes with CORE gene function from all
         clusters in a record
 

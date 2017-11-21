@@ -13,9 +13,11 @@
 
 import bisect
 import logging
+from typing import Dict, List, Tuple, Union
 
 import Bio.Alphabet
 from Bio.Seq import Seq
+from Bio.SeqFeature import SeqFeature
 from Bio.SeqRecord import SeqRecord
 
 from .feature import Feature, CDSFeature, CDSMotif, AntismashDomain, Cluster, \
@@ -68,7 +70,7 @@ class Record:
         except AttributeError:
             raise AttributeError("Record does not support dynamically adding attributes")
 
-    def add_annotation(self, key, value):
+    def add_annotation(self, key: str, value: List) -> None:
         """Adding annotations in Record"""
         if not isinstance(key, str) or not isinstance(value, (str, list)):
             raise ValueError('Key and Value are not in right format')
@@ -77,74 +79,74 @@ class Record:
     def __len__(self):
         return len(self._record)
 
-    def get_clusters(self):
+    def get_clusters(self) -> Tuple:
         """A list of secondary metabolite clusters present in the record"""
         return tuple(self._clusters)
 
-    def get_cluster(self, index):
+    def get_cluster(self, index: int) -> Cluster:
         """ Get the cluster with the given cluster number """
         return self._clusters[index - 1]  # change from 1-indexed to 0-indexed
 
-    def clear_clusters(self):
+    def clear_clusters(self) -> None:
         "Remove all Cluster features and reset CDS linking"
         self._clusters.clear()
         for cds in self.get_cds_features():
             cds.cluster = None
 
-    def get_cluster_borders(self):
+    def get_cluster_borders(self) -> Tuple:
         "Return all ClusterBorder features"
         return tuple(self._cluster_borders)
 
-    def clear_cluster_borders(self):
+    def clear_cluster_borders(self) -> None:
         "Remove all ClusterBorder features"
         self._cluster_borders.clear()
         for cluster in self._clusters:
             cluster.borders = []
 
-    def get_cds_features(self):
+    def get_cds_features(self) -> Tuple:
         """A list of secondary metabolite clusters present in the record"""
         return tuple(self._cds_features)
 
-    def get_cds_accession_mapping(self):
+    def get_cds_accession_mapping(self) -> Dict[str, CDSFeature]:
         """A dictionary mapping CDS accession to CDS feature"""
         return dict(self._cds_by_accession)
 
-    def get_cds_name_mapping(self):
+    def get_cds_name_mapping(self) -> Dict[str, CDSFeature]:
         """A dictionary mapping CDS name to CDS feature"""
         return dict(self._cds_by_name)
 
-    def get_cds_motifs(self):
+    def get_cds_motifs(self) -> Tuple:
         """A list of secondary metabolite CDS_motifs present in the record"""
         return tuple(self._cds_motifs)
 
-    def clear_cds_motifs(self):
+    def clear_cds_motifs(self) -> None:
         "Remove all CDSMotif features"
         self._cds_motifs.clear()
 
-    def get_pfam_domains(self):
+    def get_pfam_domains(self) -> Tuple:
         """A list of secondary metabolite PFAM_domains present in the record"""
         return tuple(self._pfam_domains)
 
-    def get_antismash_domains(self):
+    def get_antismash_domains(self) -> Tuple:
         """A list of secondary metabolite aSDomains present in the record"""
         return tuple(self._antismash_domains)
 
-    def clear_antismash_domains(self):
+    def clear_antismash_domains(self) -> None:
         "Remove all AntismashDomain features"
         self._antismash_domains.clear()
 
-    def get_generics(self):
+    def get_generics(self) -> Tuple:
         """A list of secondary metabolite generics present in the record"""
         return tuple(self._nonspecific_features)
 
-    def get_misc_feature_by_type(self, label):
+    def get_misc_feature_by_type(self, label: str) -> Tuple:
         """Returns a tuple of all generic features with a type matching label"""
         if label in ["cluster", "cluster_border", "CDS", "CDSmotif",
                      "PFAM_domain", "aSDomain", "aSProdPred"]:
             raise ValueError("Use the appropriate get_* type instead for %s" % label)
         return tuple(i for i in self.get_generics() if i.type == label)
 
-    def get_all_features(self):
+    def get_all_features(self) -> List[Feature]:
         """ Returns all features
             note: This is slow, if only a specific type is required, use
                   the other get_*() functions
@@ -158,10 +160,10 @@ class Record:
         features.extend(self.get_pfam_domains())
         return features
 
-    def to_biopython(self):
+    def to_biopython(self) -> SeqRecord:
         """Returns a Bio.SeqRecord instance of the record"""
         features = self.get_all_features()
-        bio_features = []
+        bio_features = []  # type: List[SeqFeature]
         for feature in sorted(features):
             bio_features.extend(feature.to_biopython())
         return SeqRecord(self.seq, id=self._record.id, name=self._record.name,
@@ -170,7 +172,7 @@ class Record:
                          annotations=self._record.annotations,
                          letter_annotations=self._record.letter_annotations)
 
-    def get_cluster_number(self, cluster):
+    def get_cluster_number(self, cluster: Cluster) -> int:
         """Returns cluster number of a cluster feature (1-indexed)
             param cluster : A ClusterFeature instance
         """
@@ -179,14 +181,14 @@ class Record:
             raise ValueError("Cluster not contained in record")
         return number
 
-    def get_feature_count(self):
+    def get_feature_count(self) -> int:
         """ Returns the total number of features contained in the record. """
         return sum(map(len, [self._cds_features, self._clusters,
                              self._cluster_borders, self._cds_motifs,
                              self._pfam_domains, self._antismash_domains,
                              self._cluster_numbering, self._nonspecific_features]))
 
-    def add_cluster(self, cluster):
+    def add_cluster(self, cluster: Cluster) -> None:
         """ Add the given cluster to the record,
             causes cluster-CDS pairing to be recalculated """
         assert isinstance(cluster, Cluster)
@@ -208,24 +210,25 @@ class Record:
         self._link_cluster_to_cds_features(cluster)
         for cluster_border in self._cluster_borders:
             if cluster.overlaps_with(cluster_border):
-                if cluster_border.parent is not None:
+                if cluster_border.parent_cluster is not None:
                     raise ValueError("A cluster border is overlapping with two clusters")
                 cluster.borders.append(cluster_border)
-                cluster_border.parent = cluster
+                cluster_border.parent_cluster = cluster
                 break
 
-    def add_cluster_border(self, cluster_border):
-        """ Add the given cluster_border to the feature """  # TODO and to a cluster?
+    def add_cluster_border(self, cluster_border: ClusterBorder) -> None:
+        """ Add the given cluster_border to the record and to any cluster it
+            overlaps with
+        """
         assert isinstance(cluster_border, ClusterBorder)
         self._cluster_borders.append(cluster_border)
         # TODO fix performance
         for cluster in self._clusters:
             if cluster.overlaps_with(cluster_border):
                 cluster.borders.append(cluster_border)
-                cluster_border.parent = cluster
-                break
+                cluster_border.parent_cluster = cluster
 
-    def add_cds_feature(self, cds_feature):
+    def add_cds_feature(self, cds_feature: CDSFeature) -> None:
         """ Add the given cluster to the record,
             causes cluster-CDS pairing to be recalculated """
         assert isinstance(cds_feature, CDSFeature)
@@ -252,22 +255,22 @@ class Record:
         self._cds_by_accession[cds_feature.get_accession()] = cds_feature
         self._cds_by_name[cds_feature.get_name()] = cds_feature
 
-    def add_cds_motif(self, motif):
+    def add_cds_motif(self, motif: Union[CDSMotif, Prepeptide]) -> None:
         """ Add the given cluster to the record """
         assert isinstance(motif, (CDSMotif, Prepeptide)), "%s, %s" % (type(motif), motif.type)
         self._cds_motifs.append(motif)
 
-    def add_pfam_domain(self, pfam_domain):
+    def add_pfam_domain(self, pfam_domain: PFAMDomain) -> None:
         """ Add the given cluster to the record """
         assert isinstance(pfam_domain, PFAMDomain)
         self._pfam_domains.append(pfam_domain)
 
-    def add_antismash_domain(self, antismash_domain):
+    def add_antismash_domain(self, antismash_domain: AntismashDomain) -> None:
         """ Add the given cluster to the record """
         assert isinstance(antismash_domain, AntismashDomain)
         self._antismash_domains.append(antismash_domain)
 
-    def add_feature(self, feature):
+    def add_feature(self, feature: Feature) -> None:
         """ Adds a Feature or any subclass to the relevant list """
         assert isinstance(feature, Feature)
         if isinstance(feature, Cluster):
@@ -283,7 +286,7 @@ class Record:
         else:
             self._nonspecific_features.append(feature)
 
-    def add_biopython_feature(self, feature) -> None:
+    def add_biopython_feature(self, feature: SeqFeature) -> None:
         """ Convert a biopython feature to SecMet feature, then add it to the
             record.
         """
@@ -304,7 +307,7 @@ class Record:
             self.add_feature(Feature.from_biopython(feature))
 
     @staticmethod
-    def from_biopython(seq_record) -> "Record":  # string because forward decl
+    def from_biopython(seq_record: SeqRecord) -> "Record":  # string because forward decl
         """ Constructs a new Record instance from a biopython SeqRecord,
             also replaces biopython SeqFeatures with Feature subclasses
         """
@@ -315,7 +318,7 @@ class Record:
             record.add_biopython_feature(feature)
         return record
 
-    def _link_cds_to_parent(self, cds):
+    def _link_cds_to_parent(self, cds: CDSFeature) -> None:
         """ connect the given CDS to the cluster that contains it, if any """
         assert isinstance(cds, CDSFeature)
         left = bisect.bisect_left(self._clusters, cds)
@@ -325,7 +328,7 @@ class Record:
                 cluster.add_cds(cds)
                 cds.cluster = cluster
 
-    def _link_cluster_to_cds_features(self, cluster):
+    def _link_cluster_to_cds_features(self, cluster: Cluster) -> None:
         """ connect the given cluster to every CDS feature within it's range """
         assert isinstance(cluster, Cluster)
         # quickly find the first cds with equal start
@@ -342,7 +345,7 @@ class Record:
             cds.cluster = cluster  # TODO: allow for multiple parent clusters
             index += 1
 
-    def get_aa_translation_of_feature(self, feature):
+    def get_aa_translation_of_feature(self, feature: Feature) -> Seq:
         """ Obtain content for translation qualifier for specific CDS feature in sequence record"""
         extracted = feature.extract(self.seq).ungap('-')
         if len(extracted) % 3 != 0:
@@ -357,16 +360,16 @@ class Record:
             seq = Seq(str(seq).replace("-", ""), Bio.Alphabet.generic_protein)
         return seq
 
-    def get_cds_features_within_clusters(self):
+    def get_cds_features_within_clusters(self) -> List[CDSFeature]:  # pylint: disable=invalid-name
         """ Returns all CDS features in the record that are located within a
             cluster
         """
-        features = []
+        features = []  # type: List[CDSFeature]
         for cluster in self._clusters:
             features.extend(cluster.cds_children)
         return features
 
-    def write_cluster_specific_genbanks(self, output_dir=None):
+    def write_cluster_specific_genbanks(self, output_dir: str = None) -> None:
         """ Write out a set genbank files, each containing a single cluster
 
             Arguments:
