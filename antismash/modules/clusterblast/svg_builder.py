@@ -122,21 +122,9 @@ def make_neighbours_distinct(groups: List[T]) -> List[T]:
              a list containing the members of the original container, with each
              member being as distant from it's original neighbours as possible
     """
-    # if there's only 2 groups, we can't fix that, so just return it as is
-    if len(groups) < 2:
-        spaced_groups = list(groups)
-    elif len(groups) < 4:  # to avoid removing all groups with division below
-        spaced_groups = list(groups)[::2] + list(groups)[1::2]
-    else:
-        spaced_groups = []
-        half = len(groups) // 2
-        for pair in zip(groups[:half], groups[half:]):
-            spaced_groups.extend(pair)
-        # if it was of odd length, we have the last one left out still
-        # put it at the beginning to keep it away from the second last
-        if len(groups) % 2 == 1:
-            spaced_groups = [groups[-1]] + spaced_groups
-    assert len(spaced_groups) == len(groups)
+    spaced_groups = []
+    for i in range(4):
+        spaced_groups.extend(groups[i::4])
     return spaced_groups
 
 
