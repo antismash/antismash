@@ -221,9 +221,17 @@ def create_rules(enabled_cluster_types):
     # the rulefiles are redundant also in hmm_detection_dblookup
     with open(path.get_full_path(__file__, "cluster_rules.txt"), "r") as ruledata:
         parser = rule_parser.Parser("".join(ruledata.readlines()))
+    # the 'other' rule is a special case, make sure it's last so we can skip it
+    # if other rules hit first
+    other = None
     for rule in parser.rules:
+        if rule.name == "other":
+            other = rule
+            continue
         if rule.name in enabled_cluster_types:
             rules.append(rule)
+    if other and "other" in enabled_cluster_types:
+        rules.append(other)
     return rules
 
 
@@ -304,6 +312,8 @@ def apply_cluster_rules(results_by_id, feature_by_id, rules) -> Dict[str, str]:
         info_by_range = {}  # type: Dict[int, Tuple[Dict[str, CDSFeature], Dict]]
         domain_matches = set()  # type: Set[str]
         for rule in rules:
+            if results and rule.name == "other":
+                continue
             if rule.cutoff not in info_by_range:
                 info_by_range[rule.cutoff] = calculate_nearby_features(cds_with_hits,
                         i, rule.cutoff, distances, feature_by_id, results_by_id)
@@ -313,8 +323,6 @@ def apply_cluster_rules(results_by_id, feature_by_id, rules) -> Dict[str, str]:
                 results.append(rule.name)
                 rule_texts.append(rule.reconstruct_rule_text())
                 domain_matches.update(matching.matches)
-        if len(results) > 1 and "other" in results:
-            results.remove("other")
         if results:
             type_results[cds] = "-".join(results)
             feature = feature_by_id[cds]
