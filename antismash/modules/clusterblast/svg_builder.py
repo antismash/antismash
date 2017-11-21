@@ -533,11 +533,11 @@ class ClusterSVGBuilder:
         self.prefix = prefix
         self.query_cluster = QueryCluster(cluster_feature)
         query_cluster_number = cluster_feature.get_cluster_number()
-        self.colour_lookup = build_colour_groups(cluster_feature.cds_children, ranking)
+        cluster_limit = get_config().cb_nclusters
+        self.colour_lookup = build_colour_groups(cluster_feature.cds_children, ranking[:cluster_limit])
         self.hits = []
         record_prefix = cluster_feature.parent_record.id.split(".", 1)[0]
         num_added = 0
-        cluster_limit = get_config().cb_nclusters
         queries = set()
 
         for cluster, score in ranking:
