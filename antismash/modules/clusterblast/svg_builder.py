@@ -420,7 +420,7 @@ class Cluster:
                           rank, num_hits, strand)
         for query, subject in score.scored_pairings:
             for gene in cluster.genes:
-                if gene.name == subject.name:
+                if gene.name in [subject.name, query.id]:
                     gene.pairings.append((query, subject))
         return cluster
 
