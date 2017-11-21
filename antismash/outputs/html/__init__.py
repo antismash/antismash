@@ -45,8 +45,6 @@ def copy_template_dir(template, output_dir):
     """ Copy files from a template directory to the output directory, removes
         any existing directory first
     """
-    basedir = os.path.dirname(__file__)
-
     target_dir = os.path.join(output_dir, template)
     if os.path.exists(target_dir):
         shutil.rmtree(target_dir)

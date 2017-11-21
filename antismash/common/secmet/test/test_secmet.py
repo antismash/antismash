@@ -81,47 +81,47 @@ class TestRecord(unittest.TestCase):
 class TestFeature(unittest.TestCase):
     def test_overlaps_with(self):
         # no overlap
-        a = helpers.DummyFeature(5, 10)
-        assert isinstance(a, Feature)  # just to be sure it works the way we want
-        b = helpers.DummyFeature(100, 110)
-        assert not a.overlaps_with(b) and not b.overlaps_with(a)
+        feature = helpers.DummyFeature(5, 10)
+        assert isinstance(feature, Feature)  # just to be sure it works the way we want
+        other = helpers.DummyFeature(100, 110)
+        assert not feature.overlaps_with(other) and not other.overlaps_with(feature)
         # completely within
-        b = helpers.DummyFeature(0, 20)
-        assert a.overlaps_with(b) and b.overlaps_with(a)
+        other = helpers.DummyFeature(0, 20)
+        assert feature.overlaps_with(other) and other.overlaps_with(feature)
         # partially within
-        b = helpers.DummyFeature(0, 8)
-        assert a.overlaps_with(b) and b.overlaps_with(a)
+        other = helpers.DummyFeature(0, 8)
+        assert feature.overlaps_with(other) and other.overlaps_with(feature)
         # borders touching
-        b = helpers.DummyFeature(0, 5)
-        assert not (a.overlaps_with(b) or b.overlaps_with(a))
+        other = helpers.DummyFeature(0, 5)
+        assert not (feature.overlaps_with(other) or other.overlaps_with(feature))
 
     def test_is_contained_by(self):
         # same location is considered to be contained
-        a = helpers.DummyFeature(5, 10)
-        assert a.is_contained_by(a)
+        feature = helpers.DummyFeature(5, 10)
+        assert feature.is_contained_by(feature)
         for strand in (-1, 1):
             # no overlap
-            b = helpers.DummyFeature(15, 25, strand)
-            assert not a.is_contained_by(b)
-            assert not b.is_contained_by(a)
+            other = helpers.DummyFeature(15, 25, strand)
+            assert not feature.is_contained_by(other)
+            assert not other.is_contained_by(feature)
             # b is contained
-            b = helpers.DummyFeature(6, 9, strand)
-            assert not a.is_contained_by(b)
-            assert b.is_contained_by(a)
+            other = helpers.DummyFeature(6, 9, strand)
+            assert not feature.is_contained_by(other)
+            assert other.is_contained_by(feature)
             # only partial overlap
-            b = helpers.DummyFeature(6, 19, strand)
-            assert not a.is_contained_by(b)
-            assert not b.is_contained_by(a)
-            b = helpers.DummyFeature(1, 7, strand)
-            assert not a.is_contained_by(b)
-            assert not b.is_contained_by(a)
+            other = helpers.DummyFeature(6, 19, strand)
+            assert not feature.is_contained_by(other)
+            assert not other.is_contained_by(feature)
+            other = helpers.DummyFeature(1, 7, strand)
+            assert not feature.is_contained_by(other)
+            assert not other.is_contained_by(feature)
             # edge cases
-            b = helpers.DummyFeature(5, 7, strand)
-            assert not a.is_contained_by(b)
-            assert b.is_contained_by(a)
-            b = helpers.DummyFeature(7, 10, strand)
-            assert not a.is_contained_by(b)
-            assert b.is_contained_by(a)
+            other = helpers.DummyFeature(5, 7, strand)
+            assert not feature.is_contained_by(other)
+            assert other.is_contained_by(feature)
+            other = helpers.DummyFeature(7, 10, strand)
+            assert not feature.is_contained_by(other)
+            assert other.is_contained_by(feature)
 
     def test_biopython_conversion(self):
         bio = SeqFeature(FeatureLocation(1, 5))
@@ -175,7 +175,7 @@ class TestGeneFunction(unittest.TestCase):
     def test_membership(self):
         assert GeneFunction.OTHER
         with self.assertRaises(AttributeError):
-            GeneFunction.non_existant
+            _ = GeneFunction.non_existant
 
     def test_equality(self):
         assert GeneFunction.OTHER == GeneFunction.OTHER
@@ -190,7 +190,7 @@ class TestGeneFunction(unittest.TestCase):
                 continue
             assert str(getattr(GeneFunction, member)) == member.lower()
 
-    def test_CDS_function(self):
+    def test_cds_function(self):
         cds = CDSFeature(FeatureLocation(1, 5), locus_tag="foo")
         # default value
         assert cds.gene_functions.get_classification() == GeneFunction.OTHER
@@ -224,7 +224,7 @@ class TestGeneFunction(unittest.TestCase):
         assert len(adds) == 1
         assert adds[0].tool == "first_tool"
 
-    def test_CDS_function_conversion(self):
+    def test_cds_function_conversion(self):
         cds = CDSFeature(FeatureLocation(1, 5), locus_tag="foo")
         assert cds.gene_function == GeneFunction.OTHER
         assert CDSFeature.from_biopython(cds.to_biopython()[0]).gene_function == GeneFunction.OTHER
