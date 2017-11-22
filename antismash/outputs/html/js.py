@@ -134,7 +134,6 @@ def get_description(record, feature, type_, options, mibig_result):
         'transport_blast_line': '',
         'smcog_tree_line': '',
         'searchgtr_line': '',
-        'model_details': get_model_details(feature),
     }
 
     smcogs = not options.minimal or options.smcogs_enabled or options.smcogs_trees  # TODO make simpler in args
@@ -161,9 +160,6 @@ def get_description(record, feature, type_, options, mibig_result):
         replacements["start"] = int(feature.location.start) + 1  # 1-indexed
         replacements["end"] = int(feature.location.end)
         template += "Location: {start} - {end}<br><br>\n"
-
-    if feature.sec_met:
-        template += '<span class="bold">Signature pHMM hits:</span><br>\n{model_details}<br>\n'
 
     if mibig_result:
         cluster_number = feature.cluster.get_cluster_number()
@@ -213,12 +209,6 @@ def get_description(record, feature, type_, options, mibig_result):
 
     completed = template.format(**replacements)
     return "".join(char for char in completed if char in string.printable)
-
-
-def get_model_details(feature):
-    if feature.sec_met:
-        return "<br>".join(map(str, feature.sec_met.domains))
-    return ""
 
 
 def get_ASF_predictions(feature):
