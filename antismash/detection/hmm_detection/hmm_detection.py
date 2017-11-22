@@ -155,55 +155,6 @@ def filter_result_multiple(results: List[HSP], results_by_id: Dict[str, HSP]) ->
     return results, results_by_id
 
 
-def filter_result_overlapping_genes(results, results_by_id, overlaps, feature_by_id):
-    """ Filter results of overlapping genes
-        (only gene with the best score can retain its result)
-    """
-    assert all(feature.type == "CDS" for feature in feature_by_id.values())
-    filterhmm_list = []
-    overlap_id_with_result = {}
-    for line in open(path.get_full_path(__file__, "filterhmmdetails.txt"), "r").read().split("\n"):
-        filterhmms = line.split(",")
-        if filterhmms not in filterhmm_list:
-            filterhmm_list.append(filterhmms)
-    for cds in results_by_id:
-        if overlaps[cds] not in overlap_id_with_result:
-            overlap_id_with_result[overlaps[cds]] = [cds]
-        elif cds not in overlap_id_with_result[overlaps[cds]]:
-            overlap_id_with_result[overlaps[cds]].append(cds)
-    for overlap_id in overlap_id_with_result:
-        best_hit_scores = {}
-        for cds in overlap_id_with_result[overlap_id]:
-            for hit in results_by_id[cds]:
-                feature = feature_by_id[hit.hit_id]
-                dist = abs(feature.location.end - feature.location.start)
-                if hit.query_id not in best_hit_scores or best_hit_scores[hit.query_id] < dist:
-                    best_hit_scores[hit.query_id] = dist
-        for cds in overlap_id_with_result[overlap_id]:
-            to_delete = []
-            for hit in results_by_id[cds]:
-                feature = feature_by_id[hit.hit_id]
-                dist = abs(feature.location.end - feature.location.start)
-                if dist < best_hit_scores[hit.query_id]:
-                    to_delete.append(hit)
-                else:  # filter for filterhmmdetails.txt
-                    for filterhmms in filterhmm_list:
-                        if hit.query_id not in filterhmms:
-                            continue
-                        for similar_hit in filterhmms:
-                            if similar_hit not in best_hit_scores:
-                                continue
-                            if dist < best_hit_scores[similar_hit]:
-                                to_delete.append(hit)
-                                break
-            for hit in to_delete:
-                del results[results.index(hit)]
-                del results_by_id[cds][results_by_id[cds].index(hit)]
-                if len(results_by_id[cds]) < 1:
-                    del results_by_id[cds]
-    return results, results_by_id
-
-
 def create_rules(enabled_cluster_types: List[str]) -> List[rule_parser.DetectionRule]:
     """ Creates DetectionRule instances from the default rules file
 
@@ -374,16 +325,8 @@ def detect_signature_genes(record, options) -> None:
                 else:
                     results_by_id[hsp.hit_id].append(hsp)
 
-    # Get overlap tables (for overlap filtering etc)
-    overlaps = get_overlaps_table(record)
-
     # Filter results by comparing scores of different models (for PKS systems)
     results, results_by_id = filter_results(results, results_by_id)
-
-    # Filter results of overlapping genes (only for plants)
-    if options.taxon == 'plants':
-        results, results_by_id = filter_result_overlapping_genes(results,
-                                         results_by_id, overlaps, feature_by_id)
 
     # Filter multiple results of the same model in one gene
     results, results_by_id = filter_result_multiple(results, results_by_id)
@@ -539,51 +482,3 @@ def _update_sec_met_entry(feature: CDSFeature, results: List[HSP],
         if secmet_domain.query_id not in all_matching:
             feature.gene_functions.add(GeneFunction.ADDITIONAL, "hmm_detection",
                                        secmet_domain)
-
-
-def get_overlaps_table(record) -> Dict[str, int]:
-    """
-        Identify overlapping genes by overlap group.
-        Genes with no overlap will have their own group.
-
-        Args:
-            record: The record to search.
-
-        Returns:
-            A dictionary of gene id to int representing overlap group
-
-    """
-    overlaps = []  # type: List[List[CDSFeature]]
-    overlap_by_id = {}  # type: Dict[str, int]
-    features = record.get_cds_features()
-    if not features:
-        return overlap_by_id
-    features = sorted(features, key=lambda feature: feature.location.start)
-    i = 0
-    j = i + 1
-    cds_queue = []
-    while i <= j < len(features):
-        cds = features[i]
-        ncds = features[j]
-        # TODO: ensure this works with opposite strands of genes
-        if cds.location.end <= ncds.location.start + 1:
-            overlaps.append([])
-            cds_queue.append(cds)
-            for cds in cds_queue:
-                overlap_by_id[cds.get_name()] = len(overlaps) - 1
-                overlaps[-1].append(cds)
-            cds_queue = []
-            i = j
-        else:
-            if cds.location.end < ncds.location.end:
-                cds_queue.append(cds)
-                i = j
-            else:
-                cds_queue.append(ncds)
-        j += 1
-    overlaps.append([])
-    cds_queue.append(features[i])
-    for cds in cds_queue:
-        overlap_by_id[cds.get_name()] = len(overlaps) - 1
-        overlaps[-1].append(cds)
-    return overlap_by_id
