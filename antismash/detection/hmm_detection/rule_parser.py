@@ -576,8 +576,8 @@ class SingleCondition(Conditions):
     def is_satisfied(self, details: Details, local_only=False) -> ConditionMet:
         found_in_cds = self.name in details.possibilities
         # do we only care about this CDS? then use the smaller set
-        if local_only:
-            return ConditionMet(xor(self.negated, found_in_cds), set([self.name]))
+        if local_only or found_in_cds:
+            return ConditionMet(xor(self.negated, found_in_cds), {self.name}.intersection(set(details.possibilities)))
 
         # we found all we were looking for, or we aren't allowed to look further
         if found_in_cds:
