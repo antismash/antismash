@@ -136,8 +136,6 @@ def get_description(record, feature, type_, options, mibig_result):
         'searchgtr_line': '',
     }
 
-    smcogs = not options.minimal or options.smcogs_enabled or options.smcogs_trees  # TODO make simpler in args
-
     blastp_url = "http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE=Proteins&" \
                  "PROGRAM=blastp&BLAST_PROGRAMS=blastp&QUERY=%s&" \
                  "LINK_LOC=protein&PAGE_TYPE=BlastSearch"
@@ -150,7 +148,7 @@ def get_description(record, feature, type_, options, mibig_result):
         template += "EC-number(s): {ecnumber}<br>\n"
     for gene_function in feature.gene_functions:
         template += "%s<br>\n" % str(gene_function)
-    if smcogs:
+    if options.smcogs_trees:
         for note in feature.notes:  # TODO find a better way to store image urls
             if note.startswith('smCOG tree PNG image:'):
                 entry = '<a href="%s" target="_new">View smCOG seed phylogenetic tree with this gene</a>'
