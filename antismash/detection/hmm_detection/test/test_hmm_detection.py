@@ -148,7 +148,7 @@ class HmmDetectionTest(unittest.TestCase):
         detected_types = hmm_detection.apply_cluster_rules(self.results_by_id,
                 self.feature_by_id, self.rules)
         for gid in detected_types:
-            detected_types[gid] = set(detected_types[gid].split("-"))
+            detected_types[gid] = set(detected_types[gid])
         expected_types = {
             "GENE_1": set(["MetaboliteA", "MetaboliteB", "MetaboliteC", "MetaboliteD"]),
             "GENE_2": set(["MetaboliteC", "MetaboliteD"]),
@@ -160,14 +160,22 @@ class HmmDetectionTest(unittest.TestCase):
 
     def test_find_clusters(self):
         nseqdict = {"Metabolite0": "?", "Metabolite1": "?"}
+        expected_types = {
+            "GENE_1": set(["MetaboliteA", "MetaboliteB", "MetaboliteC", "MetaboliteD"]),
+            "GENE_2": set(["MetaboliteC", "MetaboliteD"]),
+            "GENE_3": set(["Metabolite0"]),
+            "GENE_4": set(["MetaboliteA"]),
+            "GENE_5": set(["Metabolite1", "MetaboliteA"])
+        }
+        gene_clustertypes = {name: ["Metabolite%d" % (i % 2)] for i, name in enumerate(expected_types)}
         for i, gene_id in enumerate(self.feature_by_id):
             if gene_id == "GENE_X":
                 continue
-            clustertype = "Metabolite%d" % (i % 2)
             hmm_detection._update_sec_met_entry(self.feature_by_id[gene_id],
-                             self.results_by_id[gene_id], clustertype, nseqdict)
+                             self.results_by_id[gene_id], expected_types,
+                             nseqdict, gene_clustertypes[gene_id])
         rules = {rule.name: rule for rule in self.rules}
-        hmm_detection.find_clusters(self.record, rules)
+        hmm_detection.find_clusters(self.record, gene_clustertypes, rules)
         result_clusters = []
         for cluster in self.record.get_clusters():
             result_clusters.append(sorted(cds.get_name() for cds in cluster.cds_children))

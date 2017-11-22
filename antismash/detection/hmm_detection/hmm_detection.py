@@ -2,8 +2,7 @@
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
 import logging
-from collections import defaultdict
-from typing import Dict, List, Optional, Set, Tuple, TypeVar  # pylint: disable=unused-import
+from typing import Dict, List, Set, Tuple
 
 from Bio.SearchIO._model.hsp import HSP
 
@@ -14,25 +13,22 @@ from antismash.common.subprocessing import run_hmmsearch
 from antismash.detection.hmm_detection import rule_parser
 from antismash.detection.hmm_detection.signatures import get_signature_profiles, get_signature_names
 
-T = TypeVar("T")
 
-def find_clusters(record, rules) -> List[Cluster]:
+def find_clusters(record, cds_domains_by_cluster, rules_by_name) -> List[Cluster]:
     """ Detects gene clusters based on the identified core genes """
     clusters = []  # type: List[Cluster]
 
     for feature in record.get_cds_features():
         within_cutoff = False
-        if not feature.sec_met:
-            continue
-        feature_type = feature.sec_met.clustertype
+        feature_types = list(cds_domains_by_cluster.get(feature.get_name(), []))
         feature_start = min(feature.location.start, feature.location.end)
         feature_end = max(feature.location.start, feature.location.end)
-        if feature_type == "none":
+        if not feature_types:
             continue
         feature_cutoff = -1
         feature_extension = -1
-        for name in feature_type.split("-"):
-            rule = rules[name]
+        for name in feature_types:
+            rule = rules_by_name[name]
             feature_cutoff = max(feature_cutoff, rule.cutoff)
             feature_extension = max(feature_extension, rule.extent)
         cluster = None
@@ -53,7 +49,7 @@ def find_clusters(record, rules) -> List[Cluster]:
                 cluster.location = FeatureLocation(max(0, cluster.location.start - cluster.extent),
                                                    min(len(record), cluster.location.end + cluster.extent))
             # Create new cluster
-            new_cluster = Cluster(FeatureLocation(feature_start, feature_end), feature_cutoff, feature_extension, feature_type.split("-"))
+            new_cluster = Cluster(FeatureLocation(feature_start, feature_end), feature_cutoff, feature_extension, feature_types)
             clusters.append(new_cluster)
             cluster = clusters[-1]
 
@@ -61,9 +57,9 @@ def find_clusters(record, rules) -> List[Cluster]:
         cluster.location = FeatureLocation(min(cluster.location.start, feature_start), max(cluster.location.end, feature_end))
         cluster.cutoff = max(cluster.cutoff, feature_cutoff)
         cluster.extent = max(cluster.extent, feature_extension)
-        cluster.products = list(set(cluster.products) | set(feature_type.split('-')))
+        cluster.products = list(set(cluster.products) | set(feature_types))
         if len(cluster.products) > 1:
-            cluster.products = list(filter(lambda prod: prod != "other", cluster.products))
+            cluster.products = sorted(list(filter(lambda prod: prod != "other", cluster.products)))
 
     if clusters:
         # Finalize the last extended cluster
@@ -79,6 +75,7 @@ def find_clusters(record, rules) -> List[Cluster]:
         record.add_cluster(cluster)
     logging.info("%d cluster(s) found in record", len(clusters))
     return clusters
+
 
 def hsp_overlap_size(first, second) -> int:
     """ Find the size of an overlapping region of two HSPs.
@@ -126,9 +123,10 @@ def filter_results(results: List[HSP], results_by_id: Dict[str, List[HSP]]) -> T
                     if new_group_needed:
                         overlapping_groups.append(pairing)
 
+            # find the best in each group
             for group in overlapping_groups:
-                # find the best
-                best = None  # type: Optional[HSP]
+                # start with one of them
+                best = list(group)[0]
                 for hit in group:
                     if not best or hit.bitscore > best.bitscore:
                         best = hit
@@ -141,10 +139,10 @@ def filter_results(results: List[HSP], results_by_id: Dict[str, List[HSP]]) -> T
     return results, results_by_id
 
 
-def filter_result_multiple(results, results_by_id):
+def filter_result_multiple(results: List[HSP], results_by_id: Dict[str, HSP]) -> Tuple[List[HSP], Dict[str, HSP]]:
     """ Filter multiple results of the same model within a gene """
     for cds, hits in results_by_id.items():
-        query_scores = {}
+        query_scores = {}  # type: Dict[str, Tuple[int, HSP, float]]
         for i, hit in enumerate(hits):
             if query_scores.get(hit.query_id, (0, 0, -1))[2] < hit.bitscore:
                 query_scores[hit.query_id] = (i, hit, hit.bitscore)
@@ -206,7 +204,7 @@ def filter_result_overlapping_genes(results, results_by_id, overlaps, feature_by
     return results, results_by_id
 
 
-def create_rules(enabled_cluster_types):
+def create_rules(enabled_cluster_types: List[str]) -> List[rule_parser.DetectionRule]:
     """ Creates DetectionRule instances from the default rules file
 
         Args:
@@ -237,7 +235,8 @@ def create_rules(enabled_cluster_types):
 
 def calculate_nearby_features(names: List[str], position: int, cutoff: int,
                               distances: List[int], features: Dict[str, CDSFeature],
-                              results: Dict[str, T]) -> Tuple[Dict[str, CDSFeature], Dict[str, T]]:
+                              results: Dict[str, List[HSP]]
+                              ) -> Tuple[Dict[str, CDSFeature], Dict[str, List[HSP]]]:
     """ Find features within a specific distance
 
         Args:
@@ -273,7 +272,8 @@ def calculate_nearby_features(names: List[str], position: int, cutoff: int,
     return nearby_features, nearby_results
 
 
-def apply_cluster_rules(results_by_id, feature_by_id, rules) -> Dict[str, str]:
+def apply_cluster_rules(results_by_id: Dict[str, HSP], feature_by_id: Dict[str, CDSFeature],
+                        rules) -> Dict[str, Dict[str, Set[str]]]:
     """
         Run detection rules over each CDS and classify them if relevant.
         A CDS can satisfy multiple rules. If so, all rules satisfied
@@ -288,12 +288,13 @@ def apply_cluster_rules(results_by_id, feature_by_id, rules) -> Dict[str, str]:
             rules: A list of DetectionRule instances
 
         Returns:
-            A dictionary of CDS ID to type string.
+            A dictionary mapping CDS ID to
+                a dictionary mapping cluster type string to
+                    a set of domains used to determine the cluster.
     """
     if not results_by_id:
-        return defaultdict(lambda: "none")
+        return {}
 
-    type_results = {}
     cds_with_hits = sorted(results_by_id, key=lambda gene_id: feature_by_id[gene_id].location.start)
 
     def calculate_distance(first, second):
@@ -306,11 +307,14 @@ def apply_cluster_rules(results_by_id, feature_by_id, rules) -> Dict[str, str]:
     first_cds = feature_by_id[cds_with_hits[0]]
     distances = [calculate_distance(first_cds.location, feature_by_id[cds].location) for cds in cds_with_hits]
 
+    cds_domains_by_cluster_type = {}
+
     for i, cds in enumerate(cds_with_hits):
-        results = []
+        results = []  # type: List[str]
         rule_texts = []
         info_by_range = {}  # type: Dict[int, Tuple[Dict[str, CDSFeature], Dict]]
         domain_matches = set()  # type: Set[str]
+        domains_by_cluster = {}  # type: Dict[str, Set[str]]
         for rule in rules:
             if results and rule.name == "other":
                 continue
@@ -320,18 +324,12 @@ def apply_cluster_rules(results_by_id, feature_by_id, rules) -> Dict[str, str]:
             nearby_features, nearby_results = info_by_range[rule.cutoff]
             matching = rule.detect(cds, nearby_features, nearby_results)
             if matching.met and matching.matches:
+                domains_by_cluster[rule.name] = matching.matches
                 results.append(rule.name)
                 rule_texts.append(rule.reconstruct_rule_text())
                 domain_matches.update(matching.matches)
-        if results:
-            type_results[cds] = "-".join(results)
-            feature = feature_by_id[cds]
-            # if a domain was used to mark a gene as CORE, then annotate that
-            for domain in domain_matches:
-                feature.gene_functions.add(GeneFunction.CORE, "cluster_definition", domain)
-        else:
-            type_results[cds] = "none"
-    return type_results
+        cds_domains_by_cluster_type[cds] = domains_by_cluster
+    return cds_domains_by_cluster_type
 
 
 def detect_signature_genes(record, options) -> None:
@@ -391,21 +389,23 @@ def detect_signature_genes(record, options) -> None:
     results, results_by_id = filter_result_multiple(results, results_by_id)
 
     # Use rules to determine gene clusters
-    typedict = apply_cluster_rules(results_by_id, feature_by_id, rules)
+    cds_domains_by_cluster = apply_cluster_rules(results_by_id, feature_by_id, rules)
 
     # Find number of sequences on which each pHMM is based
     nseqdict = get_sequence_counts()
 
     # Save final results to record
+    rules_by_name = {rule.name: rule for rule in rules}
+    find_clusters(record, cds_domains_by_cluster, rules_by_name)
+
     for cds in results_by_id:
         feature = feature_by_id[cds]
-        _update_sec_met_entry(feature, results_by_id[cds], typedict[cds], nseqdict)
-
-    rules = {rule.name: rule for rule in rules}
-    find_clusters(record, rules)
+        _update_sec_met_entry(feature, results_by_id[cds],
+                              cds_domains_by_cluster[cds], nseqdict,
+                              feature.cluster.products)
 
     # Add details of gene cluster detection to cluster features
-    store_detection_details(rules, record)
+    store_detection_details(rules_by_name, record)
     # If all-orfs option on, remove irrelevant short orfs
     if options.genefinding_tool == "all-orfs":
         remove_irrelevant_allorfs(record)
@@ -428,14 +428,14 @@ def get_sequence_counts() -> Dict[str, str]:
             if line.startswith('NSEQ '):
                 result[hmm.name] = line[6:].strip()
                 break
-        # TODO: ideally this shouldn't ever happen
+        # TODO: ideally this shouldn't ever happen, clean up inputs and change to error
         if hmm.name not in result:
             result[hmm.name] = "?"
 
     return result
 
 
-def remove_irrelevant_allorfs(record):
+def remove_irrelevant_allorfs(record) -> None:
     """ Remove auto-orf features without unique sec_met qualifiers;
         remove glimmer ORFs overlapping with sec_met auto-orfs not caught by Glimmer
     """
@@ -505,13 +505,16 @@ class SecMetResult():
                 self.query_id, self.evalue, self.bitscore, self.nseeds)
 
 
-def _update_sec_met_entry(feature, results, clustertype, num_seeds) -> None:
+def _update_sec_met_entry(feature: CDSFeature, results: List[HSP],
+                          definition_domains: Dict[str, Set[str]],
+                          num_seeds: Dict[str, str],
+                          cluster_products: List[str]) -> None:
     """ Add or updates the secondary metabolite information of a feature
 
         Arguments:
             feature: the feature to update
             results: a dictionary mapping gene id to HSP results
-            clustertype: a string containing cluster types separated by -
+            definition_domains: a dictionary mapping cluster type to matching domains
             num_seeds: a dictionary mapping signature ids to number of seeds
                         generating the signature
 
@@ -520,9 +523,22 @@ def _update_sec_met_entry(feature, results, clustertype, num_seeds) -> None:
     """
     domains = [SecMetResult(res, num_seeds.get(res.query_id, "?")) for res in results]
 
-    feature.sec_met = SecMetQualifier(clustertype, domains)
-    if not feature.gene_functions.get_by_tool("cluster_definition"):
-        feature.gene_functions.add(GeneFunction.ADDITIONAL, "hmm_detection", feature.sec_met.domains[0])
+    full_name = "-".join(list(definition_domains)) or "none"
+
+    feature.sec_met = SecMetQualifier(full_name, domains)
+    all_matching = set()
+    for cluster_type, matching_domains in definition_domains.items():
+        if len(cluster_products) > 1 and cluster_type == "other":
+            continue
+        all_matching.update(matching_domains)
+        for domain in matching_domains:
+            feature.gene_functions.add(GeneFunction.CORE, "cluster_definition",
+                                       "%s: %s" % (cluster_type, domain))
+
+    for secmet_domain in feature.sec_met.domains:
+        if secmet_domain.query_id not in all_matching:
+            feature.gene_functions.add(GeneFunction.ADDITIONAL, "hmm_detection",
+                                       secmet_domain)
 
 
 def get_overlaps_table(record) -> Dict[str, int]:
