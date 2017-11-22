@@ -10,9 +10,8 @@ import unittest
 from Bio.Seq import Seq
 from minimock import mock, restore
 
-from antismash.common.deprecated import FeatureLocation
 from antismash.common.test.helpers import DummyRecord, DummyCDS, DummyFeature, DummyCluster
-from antismash.common.secmet import Record, CDSFeature, Feature
+from antismash.common.secmet import Record
 import antismash.common.path as path
 from antismash.config import get_config, update_config, destroy_config, args
 import antismash.detection.hmm_detection as core
@@ -168,7 +167,7 @@ class HmmDetectionTest(unittest.TestCase):
             "GENE_5": set(["Metabolite1", "MetaboliteA"])
         }
         gene_clustertypes = {name: ["Metabolite%d" % (i % 2)] for i, name in enumerate(expected_types)}
-        for i, gene_id in enumerate(self.feature_by_id):
+        for gene_id in self.feature_by_id:
             if gene_id == "GENE_X":
                 continue
             hmm_detection._update_sec_met_entry(self.feature_by_id[gene_id],
@@ -197,14 +196,6 @@ class HmmDetectionTest(unittest.TestCase):
         assert rule.name == 't1pks'
         assert rule.cutoff == 20000
         assert rule.extent == 20000
-
-    def test_get_overlaps_table(self):
-        get_overlaps_table = hmm_detection.get_overlaps_table
-        assert get_overlaps_table(DummyRecord()) == {}
-        assert len(self.record.get_cds_features()) == 6
-        assert get_overlaps_table(self.record) == {'GENE_1': 0, 'GENE_2': 1,
-                                                   'GENE_3': 2, 'GENE_4': 4,
-                                                   'GENE_5': 4, 'GENE_X': 3}
 
     def test_profiles_parsing(self):
         profiles = signatures.get_signature_profiles()
@@ -288,48 +279,6 @@ class HmmDetectionTest(unittest.TestCase):
         new, by_id = hmm_detection.filter_result_multiple(list(both), dict(by_id))
         assert new == [first, second]
         assert by_id == {"A": [first], "B": [second]}
-
-    def test_filter_overlapping_genes(self):
-        # overlapping CDS: take the longest CDS from within the same equivalence group
-        def setup_and_run(results, features=None):
-            if not features:
-                features = []
-                for hsp in results:
-                    loc = FeatureLocation(hsp.hit_start, hsp.hit_end)
-                    if hsp.query_id[0] == "A":
-                        features.append(CDSFeature(loc, "dummy_trans", locus_tag=hsp.hit_id[0]))
-                    else:
-                        features.append(Feature(loc, feature_type="not_CDS"))
-                        features[-1].locus_tag = hsp.hit_id[0]
-            record = DummyRecord(features)
-            overlaps = hmm_detection.get_overlaps_table(record)
-            features_by_id = {i.locus_tag: i for i in features}
-            results_by_id = {}
-            for hsp in results:
-                if hsp.hit_id not in results_by_id:
-                    results_by_id[hsp.hit_id] = []
-                results_by_id[hsp.hit_id].append(hsp)
-            return hmm_detection.filter_result_overlapping_genes(
-                    results, results_by_id, overlaps, features_by_id)
-
-        # with overlap
-        first = FakeHSP("AMP-binding", "A", 50, 71, 0.1, None)
-        second = FakeHSP("A-OX", "B", 68, 100, 0.5, None)
-        new_results, new_by_id = setup_and_run([first, second])
-        assert new_results == [second]
-        assert new_by_id == {"B": [second]}
-
-        # without overlap
-        first.hit_end = 67
-        new_results, new_by_id = setup_and_run([first, second])
-        assert new_results == [first, second]
-        assert new_by_id == {"A": [first], "B": [second]}
-
-        # make sure it catches a not-CDS if it snuck in
-        with self.assertRaises(AssertionError):
-            feature = DummyFeature(0, 20)
-            feature.locus_tag = "none"
-            setup_and_run([first], [feature])
 
     def test_equivalence_groups(self):
         group_file = path.get_full_path(os.path.dirname(__file__), "filterhmmdetails.txt")
