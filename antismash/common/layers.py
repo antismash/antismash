@@ -29,8 +29,7 @@ class RecordLayer:
 
     @property
     def orig_id(self):
-        logging.critical("orig_id in RecordLayer always empty")
-        return ""
+        return self.seq_record.original_id
 
     def get_from_record(self):
         " returns the text to be displayed in the overview table > separator-text "
