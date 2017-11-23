@@ -103,6 +103,7 @@ def filter_results(results: List[HSP], results_by_id: Dict[str, List[HSP]]) -> T
         if unknown:
             raise ValueError("Equivalence group contains unknown identifiers: %s" % (
                     unknown))
+        removed_ids = set()
         for cds, cdsresults in results_by_id.items():
             # Check if multiple competing HMM hits are present
             hits = set(hit.query_id for hit in cdsresults)
@@ -133,8 +134,10 @@ def filter_results(results: List[HSP], results_by_id: Dict[str, List[HSP]]) -> T
                 # remove the rest
                 for hit in group:
                     if hit != best:
-                        del results[results.index(hit)]
-                        del results_by_id[cds][results_by_id[cds].index(hit)]
+                        if id(hit) not in removed_ids:
+                            del results[results.index(hit)]
+                            del results_by_id[cds][results_by_id[cds].index(hit)]
+                            removed_ids.add(id(hit))
             assert results_by_id[cds]  # should always have one remaining
     return results, results_by_id
 
@@ -343,9 +346,12 @@ def detect_signature_genes(record, options) -> None:
 
     for cds in results_by_id:
         feature = feature_by_id[cds]
+        cluster_products = []
+        if feature.cluster:
+            cluster_products = feature.cluster.products
         _update_sec_met_entry(feature, results_by_id[cds],
                               cds_domains_by_cluster[cds], nseqdict,
-                              feature.cluster.products)
+                              cluster_products)
 
     # Add details of gene cluster detection to cluster features
     store_detection_details(rules_by_name, record)
