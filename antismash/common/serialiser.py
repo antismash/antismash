@@ -18,11 +18,12 @@ from antismash.common.secmet import Record
 
 
 class AntismashResults:
-    def __init__(self, input_file, records, results, version):
+    def __init__(self, input_file, records, results, version, timings=None):
         self.input_file = input_file
         self.records = records
         self.results = results
         self.version = version
+        self.timings_by_record = timings or {}  # {record_id : {module name: time}}
 
     @staticmethod
     def from_file(handle):
@@ -41,6 +42,7 @@ class AntismashResults:
         res["input_file"] = self.input_file
         biopython = [rec.to_biopython() for rec in self.records]
         res["records"] = dump_records(biopython, self.results)
+        res["timings"] = self.timings_by_record
         return res
 
     def write_to_file(self, handle):

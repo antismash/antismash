@@ -4,11 +4,13 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
+import logging  # pylint: disable=unused-import
 import unittest
+
+from minimock import mock, restore, TraceTracker, assert_same_trace
 
 from antismash import main
 from antismash.config.args import build_parser
-
 
 class TestAntismash(unittest.TestCase):
     def setUp(self):
@@ -34,3 +36,24 @@ class TestAntismash(unittest.TestCase):
             options = build_parser(modules=self.all_modules).parse_args([option])
             ret_val = main.run_antismash("", options)
             assert ret_val == 0
+
+class TestTimingsLog(unittest.TestCase):
+    def setUp(self):
+        self.trace_tracker = TraceTracker()
+        mock('logging.debug', tracker=self.trace_tracker, returns=None)
+
+    def tearDown(self):
+        restore()
+
+    def test_multi_record(self):
+        results = {"r1": {"a": 2, "b": 4}, "r2": {"a": 2}, "r3": {"b": 3}}
+        expected = ("Called logging.debug('Total times taken by modules')\n"
+                    "Called logging.debug('  %s: %.1fs', 'a', 4.0)\n"
+                    "Called logging.debug('  %s: %.1fs', 'b', 7.0)\n")
+        main.log_module_runtimes(results)
+        assert_same_trace(self.trace_tracker, expected)
+
+    def test_nothing_to_report(self):
+        results = {"r1": {}}
+        main.log_module_runtimes(results)
+        assert_same_trace(self.trace_tracker, "")
