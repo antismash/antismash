@@ -373,17 +373,13 @@ def ensure_no_duplicate_gene_ids(sequences) -> None:
         Returns:
             None
     """
-    no_tag = "no_tag_found"
-
     high_water_mark = 0
     all_ids = set()
     for sequence in sequences:
         for cdsfeature in sequence.get_cds_features():
             name = cdsfeature.get_name()
             if not name:
-                name = no_tag
-            if name == no_tag:
-                name, high_water_mark = generate_unique_id(name[:8], all_ids,
+                name, high_water_mark = generate_unique_id("unnamed_orf", all_ids,
                                                 start=high_water_mark + 1)
             elif name in all_ids:
                 name, _ = generate_unique_id(name[:8], all_ids, start=1)
@@ -468,13 +464,7 @@ def fix_record_name_id(record, all_record_ids) -> None:
 
 def fix_locus_tags(seq_record) -> None:  # TODO should be part of secmet
     "Fix CDS feature that don't have a locus_tag, gene name or protein id"
-    next_locus_tag = 1
-
     for feature in seq_record.get_cds_features():
-        if feature.get_name() == "no_tag_found":
-            logging.critical("fix_locus_tags overwriting tag 'no_tag_found' at %s", feature.location)
-            feature.locus_tag = '%s_%05d' % (seq_record.id, next_locus_tag)
-            next_locus_tag += 1
         # Fix locus tags, gene names or protein IDs if they contain illegal chars
         illegal_chars = set('''!"#$%&()*+,:; \r\n\t=>?@[]^`'{|}/ ''')
         for attr in ["locus_tag", "gene", "protein_id"]:
