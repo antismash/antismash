@@ -1,6 +1,7 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+from collections import defaultdict
 import cProfile
 from datetime import datetime
 from io import StringIO
@@ -8,6 +9,7 @@ import logging
 import pstats
 import os
 import shutil
+import time
 import tempfile
 from types import ModuleType
 from typing import Dict, Optional, List
@@ -182,7 +184,7 @@ def regenerate_results_for_record(record, options, modules, previous_result
     return previous_result
 
 
-def analyse_record(record, options, modules, previous_result) -> None:
+def analyse_record(record, options, modules, previous_result) -> Dict[str, float]:
     """ Run analysis modules on a record
 
         Arguments:
@@ -196,9 +198,10 @@ def analyse_record(record, options, modules, previous_result) -> None:
                                 instances
 
         Returns:
-            None
+            a dictionary mapping module name to time taken
     """
     module_results = regenerate_results_for_record(record, options, modules, previous_result)
+    timings = {}
     # try to run the given modules over the record
     logging.info("Analysing record: %s", record.id)
     for module in modules:
@@ -207,9 +210,16 @@ def analyse_record(record, options, modules, previous_result) -> None:
             continue
         results = module_results.get(module.__name__)
         logging.info("Running %s", module.__name__)
+
+        start = time.time()
         results = module.run_on_record(record, results, options)
+        duration = time.time() - start
+
         assert isinstance(results, ModuleResults), "%s returned %s" % (module.__name__, type(results))
         module_results[module.__name__] = results
+
+        timings[module.__name__] = duration
+    return timings
 
 
 def prepare_output_directory(name) -> None:
@@ -399,6 +409,27 @@ def list_plugins(modules) -> None:
         print(format_string % (module.NAME, module.SHORT_DESCRIPTION))
 
 
+def log_module_runtimes(timings: Dict[str, Dict[str, float]]) -> None:
+    """ Log the aggregate time taken per module.
+
+        Arguments:
+            timings: a dictionary mapping record id to
+                        a dictionary mapping module name to time taken
+
+        Returns:
+            None
+    """
+    total_times = defaultdict(lambda: 0.)
+    for result in timings.values():
+        for module, runtime in result.items():
+            total_times[module] += runtime
+    if not total_times:
+        return
+    logging.debug("Total times taken by modules")
+    for module, runtime in sorted(total_times.items()):
+        logging.debug("  %s: %.1fs", module, runtime)
+
+
 def run_antismash(sequence_file, options, detection_modules=None,
                   analysis_modules=None) -> int:
     """ The complete antismash pipeline. Reads in data, runs detection and
@@ -458,6 +489,9 @@ def run_antismash(sequence_file, options, detection_modules=None,
 
     results = read_data(sequence_file, options)
 
+    # reset module timings
+    results.timings_by_record = {}
+
     prepare_output_directory(options.output_dir)
 
     results.records = record_processing.pre_process_sequences(results.records,
@@ -470,7 +504,8 @@ def run_antismash(sequence_file, options, detection_modules=None,
         # and skip analysis if detection didn't find anything
         if not seq_record.get_clusters():
             continue
-        analyse_record(seq_record, options, analysis_modules, previous_result)
+        timings = analyse_record(seq_record, options, analysis_modules, previous_result)
+        results.timings_by_record[seq_record.id] = timings
 
     # Write results
     json_filename = os.path.join(options.output_dir, results.input_file)
@@ -493,6 +528,10 @@ def run_antismash(sequence_file, options, detection_modules=None,
 
     end_time = datetime.now()
     running_time = end_time - start_time
+
+    # display module runtimes before total time
+    if options.debug:
+        log_module_runtimes(results.timings_by_record)
 
     logging.debug("antiSMASH calculation finished at %s; runtime: %s",
                   str(end_time), str(running_time))
