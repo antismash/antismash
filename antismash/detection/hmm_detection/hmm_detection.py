@@ -477,6 +477,7 @@ def _update_sec_met_entry(feature: CDSFeature, results: List[HSP],
     feature.sec_met = SecMetQualifier(full_name, domains)
     all_matching = set()
     for cluster_type, matching_domains in definition_domains.items():
+        # don't add 'other' as CORE if another cluster applies
         if len(cluster_products) > 1 and cluster_type == "other":
             continue
         all_matching.update(matching_domains)
@@ -484,7 +485,16 @@ def _update_sec_met_entry(feature: CDSFeature, results: List[HSP],
             feature.gene_functions.add(GeneFunction.CORE, "cluster_definition",
                                        "%s: %s" % (cluster_type, domain))
 
+    # all all detected domains as ADDITIONAL if not CORE
     for secmet_domain in feature.sec_met.domains:
-        if secmet_domain.query_id not in all_matching:
+        if secmet_domain.query_id in all_matching:
+            continue
+        # skip if already added (e.g. reusing results)
+        found = False
+        for function in feature.gene_functions.get_by_tool("hmm_detection") or []:
+            if function.description == str(secmet_domain):
+                found = True
+                break
+        if not found:
             feature.gene_functions.add(GeneFunction.ADDITIONAL, "hmm_detection",
                                        secmet_domain)
