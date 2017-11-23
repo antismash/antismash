@@ -11,7 +11,7 @@
     <div id="downloadmenu">
       <ul id="downloadoptions">
         {% for record in records %}
-        <li><a href={{record.id}}.zip>Download all results</li>
+        <li><a href={{record.id}}.zip>Download all results</a></li>
           {% if config.input_type == 'nucl' %}
             <li><a href={{record.id}}.final.embl> Download EMBL summary file</a></li>
             <li><a href={{record.id}}.final.gbk> Download GenBank summary file</a></li>

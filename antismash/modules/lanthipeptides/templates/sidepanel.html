@@ -23,8 +23,8 @@
                 <dd class="alt-weight-desc">(assuming N unmodified Ser/Thr residues)</dd>
                 {% for weight in motif.alternative_weights %}
                   <dd>
-                    <span class="alt-weight"> {{ '%0.1f' | format(weight) }} Da
-                    <span class="alt-weight-n"> N = {{loop.index}}
+                    <span class="alt-weight"> {{ '%0.1f' | format(weight) }} Da</span>
+                    <span class="alt-weight-n"> N = {{loop.index}}</span>
                   </dd>
                 {% endfor %}
             </dl>
