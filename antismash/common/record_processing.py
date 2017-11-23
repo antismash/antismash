@@ -425,11 +425,6 @@ def fix_record_name_id(record, all_record_ids) -> None:
 
     old_id = record.id
 
-    if record.id in ["unknown", "unknown.1"]:  # TODO oddly specific
-        old_id = record.id
-        record.id = "unk_seq_{ctg:05d}".format(ctg=record.record_index)
-        logging.warning('Invalid sequence id "%s", replaced by %s', old_id, record.id)
-
     if len(record.id) > 16:
         # Check if it is a RefSeq accession number like NZ_AMZN01000079.1 that
         # is too long just because of the version number behind the dot
