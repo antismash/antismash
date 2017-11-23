@@ -13,7 +13,6 @@
         {% for record in records %}
         <li><a href={{record.id}}.zip>Download all results</li>
           {% if config.input_type == 'nucl' %}
-            <li><a href={{record.id}}.geneclusters.xls> Download XLS overview file</a></li>
             <li><a href={{record.id}}.final.embl> Download EMBL summary file</a></li>
             <li><a href={{record.id}}.final.gbk> Download GenBank summary file</a></li>
           {% else %}
