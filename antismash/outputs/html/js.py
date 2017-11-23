@@ -21,7 +21,6 @@ def convert_record(record, options, result=None):
     """Convert a SeqRecord to JSON"""
     js_rec = {'seq_id': record.id,
               'clusters': convert_clusters(record, options, result)}
-    # TODO: js_rec["orig_id"] = original id if changed
     return js_rec
 
 
