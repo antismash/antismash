@@ -58,7 +58,7 @@ class NrpspksLayer(ClusterLayer):
 
     def get_domain_details(self):
         js_domains = []
-        js_cluster_domains = {'id': "cluster-%s-details" % self.idx, 'orfs': []}
+        js_cluster_domains = {'id': "cluster-%s-details" % self.get_cluster_number(), 'orfs': []}
         features = self.cluster_rec.cds_children
 
         for feature in features:

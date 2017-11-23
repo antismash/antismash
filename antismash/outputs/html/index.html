@@ -11,7 +11,7 @@
   <script src="js/jnj.js"></script>
 
   {% for record in records %}
-  <title>{{record.seq_id}} - {{record.number_clusters}} cluster(s) - antiSMASH results</title>
+  <title>{{record.id}} - {{record.get_clusters() | length}} cluster(s) - antiSMASH results</title>
   <link rel="stylesheet" type="text/css" href="css/{{options.taxon}}.css">
   <meta charset="utf-8" />
   {% endfor %}
@@ -27,12 +27,12 @@
         {% for record in records %}
           {% for cluster in record.clusters %}
             {% set hybrid_text = "" %}
-            {% if cluster.hybrid %}
+            {% if cluster.products | length > 1 %}
                 {% set hybrid_text = "hybrid " %}
             {% endif %}
-            <li class="clbutton {{cluster.type}} {{hybrid_text}}cluster-{{cluster.idx}}">
-              <a href="#cluster-{{cluster.idx}}">
-                {{cluster.idx}}
+            <li class="clbutton {{cluster.get_product_string()}} {{hybrid_text}}cluster-{{cluster.get_cluster_number()}}">
+              <a href="#cluster-{{cluster.get_cluster_number()}}">
+                {{cluster.get_cluster_number()}}
               </a>
             </li>
           {% endfor %}
@@ -77,30 +77,28 @@
             </tr>
             {% for cluster in record.clusters -%}
               <tr class = '{{loop.cycle('odd', 'even')}}'>
-                {% if cluster.hybrid -%}
-                  <td class="clbutton {{cluster.type}} hybrid {{cluster.idx}}">
-                    <a href="#cluster-{{cluster.idx}}">Cluster {{cluster.idx}}</a>
-                  </td>
-                {%- else -%}
-                  <td class="clbutton {{cluster.type}} {{cluster.idx}}">
-                    <a href="#cluster-{{cluster.idx}}">Cluster {{cluster.idx}}</a>
-                  </td>
-                {%- endif %}
+                {% set hybrid_text = "" %}
+                {% if cluster.products | length > 1 %}
+                    {% set hybrid_text = "hybrid " %}
+                {% endif %}
+                <td class="clbutton {{cluster.get_product_string()}} {{hybrid_text}}{{cluster.get_cluster_number()}}">
+                  <a href="#cluster-{{cluster.get_cluster_number()}}">Cluster {{cluster.get_cluster_number()}}</a>
+                </td>
                 <td>
                   {% set dash = joiner("-") %}
-                  {% for subtype in cluster.subtype -%}
+                  {% for subtype in cluster.products -%}
                     {{dash()}}<a href="http://antismash.secondarymetabolites.org/help#{{subtype}}" target="_blank">{{subtype | title}}</a>
                   {%- endfor %}
 
                 </td>
-                <td class="digits">{{cluster.start}}</td>
-                <td class="digits">{{cluster.end}}</td>
-                <td>{{cluster.knowncluster[0][0] if cluster.knowncluster else "-"}}</td>
-                  {% if cluster.BGCid != "-"  -%}
+                <td class="digits">{{cluster.location.start + 1}}</td>
+                <td class="digits">{{cluster.location.end}}</td>
+                <td>{{cluster.best_knowncluster_name}}</td>
+                {% if cluster.BGCid != "-"  -%}
                   <td><a href="http://mibig.secondarymetabolites.org/repository/{{cluster.BGCid}}/index.html" target="_blank">{{cluster.BGCid}}</a></td>
-                  {%- else -%}
-                    <td>{{cluster.BGCid}}</td>
-                  {%- endif %}
+                {%- else -%}
+                  <td>-</td>
+                {%- endif %}
               </tr>
               {%- endfor %}
           {%- endif %}

@@ -14,37 +14,28 @@ class RecordLayer:
         for cluster in seq_record.get_clusters():
             self.clusters.append(ClusterLayer(self, cluster))
 
-    @property
-    def seq_name(self):
-        return self.seq_record.name
-
-    @property
-    def number_clusters(self):
-        " returns the number of clusters of the record "
-        return len(self.seq_record.get_clusters())
-
-    @property
-    def seq_id(self):
-        return self.seq_record.id
-
-    @property
-    def orig_id(self):
-        return self.seq_record.original_id
+    def __getattr__(self, attr):
+        if attr in self.__dict__:
+            return super().__getattribute__(attr)
+        return getattr(self.seq_record, attr)
 
     def get_from_record(self):
         " returns the text to be displayed in the overview table > separator-text "
-        if self.options.input_type == 'nucl':
-            id_text = self.seq_id
 
-            if self.orig_id:
-                if len(self.orig_id) < 40:
-                    id_text += " (original name was: %s)" % self.orig_id
-                else:
-                    id_text += " (original name was: %s...)" % self.orig_id[:60]
-            text_from = ('The following clusters are from record %s:' % id_text)
-        else:
-            text_from = ('The following clusters were found in your protein input:')
-        return text_from
+        if self.options.input_type != 'nucl':
+            return 'The following clusters were found in your protein input:'
+
+        current_id = self.seq_record.id
+
+        orig_id = self.seq_record.original_id
+
+        if orig_id:
+            if len(orig_id) < 40:
+                current_id += " (original name was: %s)" % orig_id
+            else:
+                current_id += " (original name was: %s...)" % orig_id[:60]
+
+        return 'The following clusters are from record %s:' % current_id
 
 
 class ClusterLayer:
@@ -67,35 +58,18 @@ class ClusterLayer:
         self.has_sidepanel = self.determine_has_sidepanel()
         self.probability = "BROKEN"  # TODO when clusterfinder returns
 
-    @property
-    def type(self):
-        return self.cluster_rec.get_product_string()
+    def __getattr__(self, attr):
+        if attr in self.__dict__:
+            return super().__getattribute__(attr)
+        return getattr(self.cluster_rec, attr)
 
     @property
-    def subtype(self):
-        " for hybrid clusters, returns the list with the subtypes "
-        return self.cluster_rec.products
-
-    @property
-    def hybrid(self):
-        " returns if cluster is hybrid"
-        return len(self.cluster_rec.products) > 1
-
-    @property
-    def idx(self):
-        return self.cluster_rec.get_cluster_number()
-
-    @property
-    def start(self):
-        return int(self.cluster_rec.location.start) + 1
-
-    @property
-    def end(self):
-        return int(self.cluster_rec.location.end)
-
-    @property
-    def knowncluster(self):
-        return self.cluster_rec.knownclusterblast
+    def best_knowncluster_name(self):
+        if not self.knownclusterblast:
+            return "-"
+        full = self.knownclusterblast[0][0]
+        return full.split(": ")[1].replace("_", " ").replace(
+                        " biosynthetic gene cluster", "")
 
     @property
     def BGCid(self):
@@ -110,11 +84,11 @@ class ClusterLayer:
     def description_text(self):
         " returns the gene cluster description "
         if self.record.options.input_type == 'nucl':
-            description_text = self.record.seq_name \
+            description_text = self.record.name \
                     + ' - Gene Cluster %s. Type = %s. Location: %s - %s nt. ' % (
-                            self.idx, self.type, self.start, self.end)
+                            self.get_cluster_number(), self.get_product_string(), self.location.start + 1, self.location.end)
         else:
-            description_text = self.record.seq_id + '- Gene Cluster %s. Type = %s. ' % (self.idx, self.type)
+            description_text = self.record.seq_id + '- Gene Cluster %s. Type = %s. ' % (self.get_cluster_number(), self.get_product_string())
         if self.probability != "BROKEN":  # TODO: real value check
             description_text += 'ClusterFinder probability: %s. ' % self.probability
         description_text += 'Click on genes for more information.'
@@ -125,7 +99,7 @@ class ClusterLayer:
         top_hits = self.cluster_rec.clusterblast[:self.record.options.cb_nclusters]
         for i, label in enumerate(top_hits):
             i += 1  # 1-indexed
-            svg_file = os.path.join('svg', 'clusterblast%s_%s.svg' % (self.idx, i))
+            svg_file = os.path.join('svg', 'clusterblast%s_%s.svg' % (self.get_cluster_number(), i))
             self.cluster_blast.append((label, svg_file))
 
     def knowncluster_blast_generator(self):
@@ -133,7 +107,7 @@ class ClusterLayer:
         for i, label_pair in enumerate(top_hits):
             i += 1  # 1-indexed
             label = label_pair[0]
-            svg_file = os.path.join('svg', 'knownclusterblast%s_%s.svg' % (self.idx, i))
+            svg_file = os.path.join('svg', 'knownclusterblast%s_%s.svg' % (self.get_cluster_number(), i))
             self.knowncluster_blast.append((label, svg_file))
 
     def subcluster_blast_generator(self):
@@ -141,16 +115,15 @@ class ClusterLayer:
         top_hits = self.cluster_rec.subclusterblast[:self.record.options.cb_nclusters]
         for i, label in enumerate(top_hits):
             i += 1  # since one-indexed
-            svg_file = os.path.join('svg', 'subclusterblast%s_%s.svg' % (self.idx, i))
+            svg_file = os.path.join('svg', 'subclusterblast%s_%s.svg' % (self.get_cluster_number(), i))
             self.subcluster_blast.append((label, svg_file))
 
     def find_plugins_for_cluster(self):
         "Find a specific plugin responsible for a given gene cluster type"
-        products = self.subtype
         for plugin in self.record.options.plugins:
             if not hasattr(plugin, 'will_handle'):
                 continue
-            if plugin.will_handle(products):
+            if plugin.will_handle(self.products):
                 self.handlers.append(plugin)
         return self.handlers
 
@@ -193,15 +166,10 @@ class OptionsLayer:
     def triggered_limit(self):
         return self.options.triggered_limit
 
-    @property
-    def logfile(self):
-        return 'logfile' in self.options
-
     def download_logfile(self):
-        logfile_path = os.path.abspath(self.options.logfile)
-        if os.path.dirname(logfile_path).startswith(self.options.output_dir):
-            rel_logfile_path = logfile_path[len(self.options.output_dir)+1:]
-            return rel_logfile_path
+        logfile_path = os.path.abspath(self.logfile)
+        if os.path.dirname(logfile_path).startswith(self.output_dir):
+            return logfile_path[len(self.output_dir) + 1:]
         return None
 
     @property

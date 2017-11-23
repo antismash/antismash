@@ -2,8 +2,8 @@
   <h3>Similar known gene clusters</h3>
   {% if cluster.knowncluster_blast %}
   <div>
-    <select id="knownclusterblast-{{cluster.idx}}-select" class="clusterblast-selector">
-      <option value="svg/knownclusterblast{{cluster.idx}}_all.svg">
+    <select id="knownclusterblast-{{cluster.get_cluster_number()}}-select" class="clusterblast-selector">
+      <option value="svg/knownclusterblast{{cluster.get_cluster_number()}}_all.svg">
         All hits
       </option>
       {% for opt_text, svg_file in cluster.knowncluster_blast %}
@@ -12,9 +12,9 @@
       </option>
       {% endfor %}
     </select>
-    <button id="knownclusterblast-{{cluster.idx}}-download">Download graphic</button>
+    <button id="knownclusterblast-{{cluster.get_cluster_number()}}-download">Download graphic</button>
   </div>
-  <div id="knownclusterblast-{{cluster.idx}}-svg"></div>
+  <div id="knownclusterblast-{{cluster.get_cluster_number()}}-svg"></div>
   {% else %}
   <div>
     <p>No matches found.</p>

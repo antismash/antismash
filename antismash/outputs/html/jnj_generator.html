@@ -2,8 +2,8 @@
 
 {% for record in records %}
 {% for cluster in record.clusters %}
-<div class= "page" id='cluster-{{cluster.idx}}'>
-  <h3> {{record.seq_record.name}} - Cluster {{cluster.idx}} - {{cluster.type | capitalize }}</h3>
+<div class= "page" id='cluster-{{cluster.get_cluster_number()}}'>
+  <h3> {{record.seq_record.name}} - Cluster {{cluster.get_cluster_number()}} - {{cluster.get_product_string() | capitalize }}</h3>
   {% if cluster.has_sidepanel %}
   <div class="sidepanel">
     {% for handler in cluster.handlers %}
@@ -17,16 +17,16 @@
     <div class ="description-container">
       <h3> Gene cluster description </h3>
       <div class = "cluster-download">
-        <a href = {{ '%s.cluster%03d.gbk' % (record.seq_id, cluster.idx) }}>Download cluster GenBank file</a>
+        <a href = {{ '%s.cluster%03d.gbk' % (record.id, cluster.get_cluster_number()) }}>Download cluster GenBank file</a>
       </div>
       <div class = 'description-text'>
         {{cluster.description_text()}}
       </div>
-      <a class="cluster-rules-header" id="cluster-{{cluster.idx}}-rules-header" href="#cluster-{{cluster.idx}}">Show pHMM detection rules used</a>
-      <div class = "cluster-rules" id= "cluster-{{cluster.idx}}-rules">
+      <a class="cluster-rules-header" id="cluster-{{cluster.get_cluster_number()}}-rules-header" href="#cluster-{{cluster.get_cluster_number()}}">Show pHMM detection rules used</a>
+      <div class = "cluster-rules" id= "cluster-{{cluster.get_cluster_number()}}-rules">
         {{- cluster.detection_rules|join('<br>'|safe) -}}
       </div>
-      <div id= 'cluster-{{cluster.idx}}-svg'>
+      <div id= 'cluster-{{cluster.get_cluster_number()}}-svg'>
       </div>
     </div>
     {% if options.input_type == 'nucl' %}
