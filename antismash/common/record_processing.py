@@ -235,6 +235,7 @@ def pre_process_sequences(sequences, options, genefinding) -> List[Record]:
         all_record_ids = set()
         for record in sequences:
             if record.id in all_record_ids:
+                record.original_id = record.id
                 record.id = generate_unique_id(record.id, all_record_ids)[0]
             all_record_ids.add(record.id)
         assert len(all_record_ids) == len(sequences), "%d != %d" % (len(all_record_ids), len(sequences))
@@ -465,6 +466,9 @@ def fix_record_name_id(record, all_record_ids) -> None:
     for char in record.name:
         if char in illegal_chars:
             record.name = record.name.replace(char, "")
+
+    if not record.original_id and old_id != record.id:
+        record.original_id = old_id
 
 
 def fix_locus_tags(seq_record) -> None:  # TODO should be part of secmet

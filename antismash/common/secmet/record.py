@@ -28,13 +28,14 @@ class Record:
     """A record containing secondary metabolite clusters"""
     # slots not for space, but to stop use as a horrible global
     __slots__ = ["_record", "_seq", "skip", "_cds_features", "_cds_by_name",
-                 "_clusters", "_cds_by_accession",
+                 "_clusters", "_cds_by_accession", "original_id",
                  "_cluster_borders", "_cds_motifs", "_pfam_domains", "_antismash_domains",
                  "_cluster_numbering", "_nonspecific_features", "record_index"]
 
     def __init__(self, seq=None, **kwargs):
         self._record = SeqRecord(seq, **kwargs)
         self.record_index = None
+        self.original_id = None
         self.skip = False  # TODO: move to yet another abstraction layer?
         self._cds_features = []
         self._cds_by_accession = {}
