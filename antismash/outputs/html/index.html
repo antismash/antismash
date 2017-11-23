@@ -51,7 +51,6 @@
     {% endif %}
     <table id="cluster-overview">
       <thead>
-
         <tr>
           <th>Cluster</th>
           <th>Type</th>
@@ -66,14 +65,14 @@
         {% for record in records -%}
           {% if not record.clusters %}
             <tr class = 'separator-row'>
-              <td class = 'separator-text' colspan = 5)>{{record.get_from_record()}}</td>
+              <td class = 'separator-text' colspan = 5>{{record.get_from_record()}}</td>
             </tr>
             <tr>
               <td></td><td colspan = 5)>No secondary metabolite clusters found</td>
             </tr>
           {% else %}
             <tr class = 'separator-row'>
-              <td class = 'separator-text' colspan = 5)>{{record.get_from_record()}}</td>
+              <td class = 'separator-text' colspan = 5>{{record.get_from_record()}}</td>
             </tr>
             {% for cluster in record.clusters -%}
               <tr class = '{{loop.cycle('odd', 'even')}}'>
@@ -103,10 +102,9 @@
               {%- endfor %}
           {%- endif %}
       {%- endfor %}
-    </tbody>
-  </table>
-
-</div>
+      </tbody>
+    </table>
+  </div>
 
 {% include 'jnj_generator.html' %}
 {% include 'footer.html' %}
