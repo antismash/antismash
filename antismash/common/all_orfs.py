@@ -2,16 +2,24 @@
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
 import logging
+from typing import List
+
 from Bio.SeqFeature import FeatureLocation, BeforePosition, AfterPosition
 
-from antismash.common.secmet import CDSFeature
+from antismash.common.secmet import CDSFeature, Feature
 
 
-def scan_orfs(seq, direction, offset=0):
-    """ Scan for open reading frames on a given sequence
-        skips all ORFs with a size less than 60 bases
+def scan_orfs(seq, direction: int, offset: int = 0) -> List[FeatureLocation]:
+    """ Scan for open reading frames on a given sequence.
+        Skips all ORFs with a size less than 60 bases.
 
-        all end positions +1 to be non-inclusive to match biopython
+        Arguments:
+            seq: the sequence to examine
+            direction: the search direction to use (all ORFs will use this as the strand)
+            offset: an offset to add to any location discovered
+
+        Returns:
+            a list of FeatureLocations for each ORF, ordered by ascending position
     """
     seq = seq.upper()
     start_codons = ('ATG', 'GTG', 'TTG')
@@ -26,11 +34,11 @@ def scan_orfs(seq, direction, offset=0):
             if seq[i:i+3] in stop_codons and last_stop == 0:
                 # special case for unstarted stops
                 last_stop = i
-                if direction == 1:
-                    new_orf = FeatureLocation(BeforePosition(offset), offset + i + 2 + 1, direction)
-                else:
-                    new_orf = FeatureLocation(seq_len + offset - (i + 2),
-                                              AfterPosition(seq_len + offset + 1), direction)
+                new_orf = FeatureLocation(BeforePosition(offset), offset + i + 2 + 1, direction)
+                if direction == -1:
+                    start = AfterPosition(seq_len + offset - new_orf.start)
+                    end = seq_len + offset - new_orf.end
+                    new_orf = FeatureLocation(end, start, strand=direction)
                 matches.append(new_orf)
             if seq[i:i+3] not in start_codons:
                 i += 3
@@ -43,14 +51,14 @@ def scan_orfs(seq, direction, offset=0):
                     if j - i <= 60:
                         break  # since no ORFs will be bigger before the stop
                     start = i
-                    end = j + 2
+                    end = j + 2 + 1
                     if direction == 1:
                         new_orf = FeatureLocation(offset + start,
-                                                  offset + end + 1, direction)
+                                                  offset + end, direction)
                     else:
                         # reversed, so convert back to the forward positions
                         new_orf = FeatureLocation(seq_len + offset - end,
-                                                  seq_len + offset - start + 1, direction)
+                                                  seq_len + offset - start, direction)
                     matches.append(new_orf)
                     # This was a good hit, update the last_stop cache.
                     break
@@ -62,41 +70,54 @@ def scan_orfs(seq, direction, offset=0):
 
             # Save orfs ending at the end of the sequence without stop codon
             if direction == 1:
-                new_orf = FeatureLocation(i + offset, AfterPosition(seq_len + offset + 1), direction)
+                new_orf = FeatureLocation(i + offset, AfterPosition(seq_len + offset), direction)
             else:
                 # reversed, so convert back to the forward positions
-                new_orf = FeatureLocation(BeforePosition(offset), offset + seq_len - i + 1, direction)
+                new_orf = FeatureLocation(BeforePosition(offset), offset + seq_len - i, direction)
             matches.append(new_orf)
             # since there are no stop codons, just stop here
             break
-    return sorted(matches, key=lambda x: x.start)
+    return sorted(matches, key=lambda x: min(x.start, x.end))
 
 
-def sort_orfs(orfs):
-    startpositions = [min([orf.start, orf.end]) for orf in orfs]
-    positions_and_orfs = sorted(zip(startpositions, orfs), key=lambda x: x[0])
-    startpositions, orfs = zip(*positions_and_orfs)
-    return orfs
+def find_all_orfs(record, cluster=None) -> List[CDSFeature]:
+    """ Find all ORFs of at least 60 bases that don't overlap with existing
+        CDS features.
 
+        Can (and should) be limited to just within a cluster.
 
-def find_all_orfs(seq_record):
-    logging.debug("Finding all ORFs")
-    # Get sequence
-    fasta_seq = str(seq_record.seq)
-    # Find orfs
-    forward_matches = scan_orfs(fasta_seq, 1)
-    reverse_matches = scan_orfs(str(seq_record.seq.complement()), -1)
-    all_orfs = forward_matches + reverse_matches
-    # Create seq_record features for identified genes
-    if not all_orfs:
-        logging.error("No ORFs found. Please check the "
-                      "format of your input FASTA file.")
-        return len(all_orfs)
-    orfs = sort_orfs(all_orfs)
-    for orfnr, orf in enumerate(orfs):
-        locus_tag = 'ctg%d_allorf%06d' % (seq_record.record_index, orfnr)
-        feature = CDSFeature(orf, locus_tag=locus_tag)
-        feature.notes.append("auto-all-orf")
-        seq_record.add_cds_feature(feature)
-    logging.info("Found %d ORFs", len(orfs))
-    return len(orfs)
+        Arguments:
+            record: the record to search
+            cluster: the specific Cluster to search within, or None
+
+        Returns:
+            a list of CDSFeatures, one for each ORF
+    """
+    # Get sequence for the range
+    offset = 0
+    seq = record.seq
+    existing = record.get_cds_features()
+    if cluster:
+        fasta_seq = record.seq[cluster.location.start:cluster.location.end]
+        offset = cluster.location.start
+        existing = cluster.cds_children
+
+    # Find orfs throughout the range
+    forward_matches = scan_orfs(seq, 1, offset)
+    reverse_matches = scan_orfs(seq.reverse_complement(), -1, offset)
+    locations = forward_matches + reverse_matches
+
+    orfnr = 1
+    new_features = []
+
+    for location in locations:
+        dummy_feature = Feature(location, feature_type="dummy")
+        # skip if overlaps with existing CDSs
+        if any(dummy_feature.overlaps_with(cds) for cds in existing):
+            continue
+        feature = CDSFeature(location, str(record.get_aa_translation_of_feature(dummy_feature)),
+                             locus_tag='allorf%03d' % orfnr)
+        new_features.append(feature)
+        orfnr += 1
+
+    return new_features

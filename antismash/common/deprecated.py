@@ -20,7 +20,6 @@ from Bio.SeqRecord import SeqRecord
 # pylint: enable=unused-import
 
 from antismash.config import get_config
-from antismash.common.all_orfs import scan_orfs, sort_orfs
 from antismash.common.secmet import CDSFeature, Feature
 
 # pylint: disable=unused-import
@@ -99,37 +98,6 @@ def get_nrpspks_domain_dict(seq_record) -> dict:
 def get_version() -> str:
     return get_config().version
 
-
-def find_all_orfs(seq_record, cluster) -> list: # the old lassopeptides.find_all_orfs
-    """Find all ORFs in gene cluster outside annotated CDS features"""
-    # Get sequence just for the gene cluster
-    fasta_seq = seq_record.seq[cluster.location.start:cluster.location.end]
-
-    # Find orfs throughout the cluster
-    forward_matches = scan_orfs(fasta_seq, 1, cluster.location.start)
-    reverse_matches = scan_orfs(fasta_seq.complement(), -1, cluster.location.start)
-    all_orfs = forward_matches + reverse_matches
-
-    orfnr = 1
-    new_features = []
-
-    for orf in sort_orfs(all_orfs):
-        # Remove if overlaps with existing CDSs
-        skip = False
-        for cds in cluster.cds_children:
-            if orf.start in cds.location or orf.end in cds.location or cds.location.start in orf or cds.location.end in orf:
-                skip = True
-                break
-        if skip:
-            continue
-        loc = orf
-        dummy_feature = Feature(loc, feature_type="dummy")
-        feature = CDSFeature(loc, str(seq_record.get_aa_translation_of_feature(dummy_feature)),
-                             locus_tag='cluster_%s_allorf%03d' % (cluster.get_cluster_number(), orfnr))
-        new_features.append(feature)
-        orfnr += 1
-
-    return new_features
 
 def distance_to_pfam(seq_record, query, hmmer_profiles) -> int: #also from lassopeptides
     """Function to check how many nt a gene is away from a gene with one of a list of given Pfams"""
