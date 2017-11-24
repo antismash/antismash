@@ -17,7 +17,8 @@ from helperlibs.wrappers.io import TemporaryFile
 from sklearn.externals import joblib
 
 from antismash.detection.hmm_detection.signatures import HmmSignature
-from antismash.common import deprecated, path, subprocessing, secmet, module_results, serialiser
+from antismash.common import all_orfs, deprecated, path, subprocessing, secmet, \
+                             module_results, serialiser
 from antismash.config import get_config as get_global_config
 
 from .config import get_config as get_lanthi_config
@@ -1121,7 +1122,8 @@ def specific_analysis(seq_record):
         lan_as = find_lan_a_features(cluster)
 
         # Find candidate ORFs that are not yet annotated
-        for orf in deprecated.find_all_orfs(seq_record, cluster):
+        extra_orfs = all_orfs.find_all_orfs(seq_record, cluster)
+        for orf in extra_orfs:
             aa_seq = orf.get_aa_sequence()
             if len(aa_seq) < 80:
                 lan_as.append(orf)
@@ -1146,8 +1148,7 @@ def specific_analysis(seq_record):
             motif = result_vec_to_feature(lan_a, result_vec)
             results.motifs.append(motif)
             results.clusters_with_motifs.add(cluster)
-            name = lan_a.get_name()
-            if name.startswith("cluster_%d_allorf" % cluster.get_cluster_number()):
+            if lan_a in extra_orfs:
                 seq_record.add_cds_feature(lan_a)  # TODO shift to add_to_record?
                 if lan_a.location.start < cluster.location.start:
                     logging.critical("Cluster location being altered in lanthipeptides")

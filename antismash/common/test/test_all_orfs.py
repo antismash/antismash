@@ -6,7 +6,7 @@
 
 import unittest
 
-from Bio.SeqFeature import BeforePosition, AfterPosition, ExactPosition
+from Bio.SeqFeature import BeforePosition, AfterPosition, ExactPosition, FeatureLocation
 
 from antismash.common.all_orfs import find_all_orfs, scan_orfs
 
@@ -14,61 +14,92 @@ from .helpers import DummyRecord
 
 
 class TestOrfCounts(unittest.TestCase):
-    def run_both_dirs(self, expected, seq):
-        assert expected == find_all_orfs(DummyRecord(seq=seq))
-
+    def reverse_starts_and_stops(self, seq):
         # replace for reverse direction testing
-        for start, comp in [('ATG', 'TAC'), ('GTG', 'CAC'), ('TTG', 'AAC')]:
+        for start, comp in [('ATG', 'TCA'), ('GTG', 'CAC'), ('TTG', 'AAC')]:
             seq = seq.replace(start, comp)
         for stop, comp in [('TAA', 'ATT'), ('TAG', 'ATC'), ('TGA', 'ACT')]:
             seq = seq.replace(stop, comp)
-        assert expected == find_all_orfs(DummyRecord(seq=seq))
+        return seq
+
+    def run_both_dirs(self, expected, seq):
+        def reverse_location(location, length):
+            return location._flip(length)
+
+        record = DummyRecord(seq=seq)
+        assert expected == [feat.location for feat in find_all_orfs(record)]
+        record.seq = record.seq.reverse_complement()
+
+        expected = [reverse_location(loc, len(seq)) for loc in expected[::-1]]
+        assert expected == [feat.location for feat in find_all_orfs(record)]
 
     def test_empty_sequence(self):
-        self.run_both_dirs(0, "")
+        self.run_both_dirs([], "")
 
     def test_no_hits(self):
         # no starts or stops
-        self.run_both_dirs(0, "NNN")
+        self.run_both_dirs([], "NNN")
 
         # nothing > 60
-        self.run_both_dirs(0, "ATGNNNTGA")
-        self.run_both_dirs(0, "ATG" + "N"*54 + "TGA")
+        self.run_both_dirs([], "ATGNNNTGA")
+        self.run_both_dirs([], "ATG" + "N"*54 + "TGA")
 
     def test_all_combos(self):
+        expected = [FeatureLocation(ExactPosition(0), ExactPosition(66), strand=1)]
         for start in ('ATG', 'GTG', 'TTG'):
             for stop in ('TAA', 'TAG', 'TGA'):
                 seq = "{}{}{}".format(start, "N"*60, stop)
-                self.run_both_dirs(1, seq)
+                self.run_both_dirs(expected, seq)
 
     def test_single_contained(self):
-        self.run_both_dirs(1, "ATG"+"N"*60+"TAG")
-        self.run_both_dirs(1, "NNNATG"+"N"*60+"TAG")
-        self.run_both_dirs(1, "ATG"+"N"*60+"TAGNNN")
-        self.run_both_dirs(1, "NNNATG"+"N"*60+"TAGNNN")
+        expected = [FeatureLocation(ExactPosition(0), ExactPosition(66), strand=1)]
+        self.run_both_dirs(expected, "ATG"+"N"*60+"TAG")
+        self.run_both_dirs(expected, "ATG"+"N"*60+"TAGNNN")
+        expected = [FeatureLocation(ExactPosition(3), ExactPosition(69), strand=1)]
+        self.run_both_dirs(expected, "NNNATG"+"N"*60+"TAG")
+        self.run_both_dirs(expected, "NNNATG"+"N"*60+"TAGNNN")
 
     def test_start_without_end(self):
-        self.run_both_dirs(1, "NNNATGNNN")
+        expected = [FeatureLocation(ExactPosition(3), AfterPosition(9), strand=1)]
+        self.run_both_dirs(expected, "NNNATGNNN")
 
     def test_end_without_start(self):
-        self.run_both_dirs(1, "NNNTAGNNN")
+        expected = [FeatureLocation(BeforePosition(0), ExactPosition(6), strand=1)]
+        self.run_both_dirs(expected, "NNNTAGNNN")
 
     def test_multiple(self):
         # start, stop, start, stop
-        self.run_both_dirs(2, "ATG"+"N"*60+"TAGGTG"+"N"*60+"TGA")
+        expected = [FeatureLocation(ExactPosition(0), ExactPosition(66), strand=1),
+                    FeatureLocation(ExactPosition(66), ExactPosition(132), strand=1)]
+        self.run_both_dirs(expected, "ATG"+"N"*60+"TAGGTG"+"N"*60+"TGA")
         # start, stop, start
-        self.run_both_dirs(2, "ATG"+"N"*60+"TAGGTG")
+        expected[1] = FeatureLocation(ExactPosition(66), AfterPosition(69), strand=1)
+        self.run_both_dirs(expected, "ATG"+"N"*60+"TAGGTG")
         # stop, start
-        self.run_both_dirs(2, "TAGGTGNNN")
+        expected = [FeatureLocation(BeforePosition(0), ExactPosition(3), strand=1),
+                    FeatureLocation(ExactPosition(3), AfterPosition(9), strand=1)]
+        self.run_both_dirs(expected, "TAGGTGNNN")
 
     def test_multi_start_single_stop(self):
-        self.run_both_dirs(1, "ATGNNNATG"+"N"*60+"TAG")
+        seq = "ATGNNNATG" + "N"*60 + "TAG"
+        expected = [FeatureLocation(ExactPosition(0), ExactPosition(72), strand=1)]
+        assert expected == [feat.location for feat in find_all_orfs(DummyRecord(seq=seq))]
+        seq = str(DummyRecord(seq=seq).seq.reverse_complement())
+        expected[0].strand = -1
+        assert expected == [feat.location for feat in find_all_orfs(DummyRecord(seq=seq))]
 
     def test_single_start_multi_stop(self):
-        self.run_both_dirs(1, "ATG"+"N"*60+"TAGNNNTAG")
+        seq = "ATG"+"N"*60+"TAGNNNTAG"
+        expected = [FeatureLocation(ExactPosition(0), ExactPosition(66), strand=1)]
+        assert expected == [feat.location for feat in find_all_orfs(DummyRecord(seq=seq))]
+        seq = str(DummyRecord(seq=seq).seq.reverse_complement())
+        expected = [FeatureLocation(ExactPosition(6), ExactPosition(72), strand=-1)]
+        assert expected == [feat.location for feat in find_all_orfs(DummyRecord(seq=seq))]
 
     def test_interleaved(self):
-        self.run_both_dirs(2, "ATGNATGNN"+"N"*60+"TAGNTAG")
+        expected = [FeatureLocation(ExactPosition(0), ExactPosition(72), strand=1),
+                    FeatureLocation(ExactPosition(4), ExactPosition(76), strand=1)]
+        self.run_both_dirs(expected, "ATGNATGNN"+"N"*60+"TAGNTAG")
 
     def test_multiframe(self):
         starts = [3, 25, 72, 77]
