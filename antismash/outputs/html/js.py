@@ -178,7 +178,7 @@ def get_description(record, feature, type_, options, mibig_result):
     template += """AA sequence: <a href="javascript:copyToClipboard('{sequence}')">Copy to clipboard</a><br>"""
     template += """Nucleotide sequence: <a href="javascript:copyToClipboard('{dna_sequence}')">Copy to clipboard</a><br>"""
 
-    replacements['product'] = feature.product
+    replacements['product'] = feature.product or feature.get_name()
     sequence = feature.translation
     dna_sequence = feature.extract(record.seq)
     replacements['blastp_url'] = blastp_url % sequence
