@@ -13,9 +13,7 @@ def run_on_record(record, options):
     "Find genes in a seq_record"
     if options.genefinding_tool == 'error':
         raise ValueError("Called find_genes, but genefinding disabled")
-    if options.genefinding_tool == "all-orfs":
-        find_all_orfs(record)
-    elif options.taxon == 'fungi':
+    if options.taxon == 'fungi':
         logging.debug("Running glimmerhmm genefinding")
         run_glimmerhmm(record, options)
     elif options.genefinding_tool in ["prodigal", "prodigal-m"]:
