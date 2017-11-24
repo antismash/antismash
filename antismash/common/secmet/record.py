@@ -256,6 +256,15 @@ class Record:
         self._cds_by_accession[cds_feature.get_accession()] = cds_feature
         self._cds_by_name[cds_feature.get_name()] = cds_feature
 
+    def remove_cds_feature(self, cds_feature: CDSFeature) -> None:
+        """ Removes a CDS feature from a record and any associated cluster. """
+        assert isinstance(cds_feature, CDSFeature)
+        if cds_feature.cluster:
+            del cds_feature.cluster.cds_children[cds_feature]
+        del self._cds_by_accession[cds_feature.get_accession()]
+        del self._cds_by_name[cds_feature.get_name()]
+        self._cds_features.remove(cds_feature)
+
     def add_cds_motif(self, motif: Union[CDSMotif, Prepeptide]) -> None:
         """ Add the given cluster to the record """
         assert isinstance(motif, (CDSMotif, Prepeptide)), "%s, %s" % (type(motif), motif.type)
