@@ -355,9 +355,6 @@ def detect_signature_genes(record, options) -> None:
 
     # Add details of gene cluster detection to cluster features
     store_detection_details(rules_by_name, record)
-    # If all-orfs option on, remove irrelevant short orfs
-    if options.genefinding_tool == "all-orfs":
-        remove_irrelevant_allorfs(record)
 
 
 def get_sequence_counts() -> Dict[str, str]:
@@ -382,44 +379,6 @@ def get_sequence_counts() -> Dict[str, str]:
             result[hmm.name] = "?"
 
     return result
-
-
-def remove_irrelevant_allorfs(record) -> None:
-    """ Remove auto-orf features without unique sec_met qualifiers;
-        remove glimmer ORFs overlapping with sec_met auto-orfs not caught by Glimmer
-    """
-    logging.critical("remove_irrelevant_allorfs() not yet tested")
-    auto_orf_features = []
-    other_features = []
-    for feature in record.get_cds_features():
-        if 'auto-all-orf' in feature.notes:
-            auto_orf_features.append(feature)
-        else:
-            other_features.append(feature)
-    to_delete = []
-    for autofeature in auto_orf_features:
-        if "sec_met" not in autofeature.qualifiers:
-            to_delete.append(autofeature)
-            continue
-        glimmer_has_sec_met = False
-        for otherfeature in other_features:
-            if autofeature.overlaps_with(otherfeature) and otherfeature.sec_met:
-                to_delete.append(autofeature)
-                glimmer_has_sec_met = True
-        if not glimmer_has_sec_met:
-            for otherfeature in other_features:
-                if autofeature.overlaps_with(otherfeature) and not otherfeature.secmet:
-                    to_delete.append(otherfeature)
-    logging.critical("attempting to remove features in remove_irrelevant_allorfs")
-    featurenrs = []
-    idx = 0
-    for feature in record.features:
-        if feature in to_delete:
-            featurenrs.append(idx)
-        idx += 1
-    featurenrs.reverse()
-    for featurenr in featurenrs:
-        del record.features[featurenr]
 
 
 def store_detection_details(rules, record) -> None:

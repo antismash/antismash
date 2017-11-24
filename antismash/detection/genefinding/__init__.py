@@ -18,11 +18,10 @@ def get_arguments():
     args.add_option('tool',
                     dest='tool',
                     default='error',
-                    choices=['glimmerhmm', 'prodigal', 'prodigal-m', 'all-orfs', 'none', 'error'],
+                    choices=['glimmerhmm', 'prodigal', 'prodigal-m', 'none', 'error'],
                     type=str,
                     help="Specify algorithm used for gene finding: GlimmerHMM, "
-                         "Prodigal, Prodigal Metagenomic/Anonymous mode, use"
-                         " all ORFs > 60 nucleotides, or none."
+                         "Prodigal, Prodigal Metagenomic/Anonymous mode, or none."
                          " The 'error' option will raise an error if genefinding is attempted."
                          " The 'none' option will not run genefinding."
                          " (default: %(default)s).")
@@ -37,7 +36,7 @@ def get_arguments():
 def check_prereqs():
     failure_messages = []
     options = get_config()
-    if options.genefinding_tool in ['none', 'all-orfs']:
+    if options.genefinding_tool in ['none']:
         return failure_messages
     binaries = []
     if options.genefinding_tool in ['prodigal', 'prodigal-m']:
