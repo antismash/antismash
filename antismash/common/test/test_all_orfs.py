@@ -94,7 +94,7 @@ class TestOrfLocations(unittest.TestCase):
             assert isinstance(orf.start, ExactPosition)
             assert isinstance(orf.end, ExactPosition)
             assert orf.start == 0 + offset
-            assert orf.end == 65 + offset
+            assert orf.end == 66 + offset
 
     def test_start_without_end(self):
         seq = "NNNATGNNN"
@@ -120,4 +120,4 @@ class TestOrfLocations(unittest.TestCase):
             orf = orfs[0]
             assert isinstance(orf.start, BeforePosition)
             assert isinstance(orf.end, ExactPosition)
-            assert orf.end == 5 + offset
+            assert orf.end == 6 + offset

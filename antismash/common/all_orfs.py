@@ -10,6 +10,8 @@ from antismash.common.secmet import CDSFeature
 def scan_orfs(seq, direction, offset=0):
     """ Scan for open reading frames on a given sequence
         skips all ORFs with a size less than 60 bases
+
+        all end positions +1 to be non-inclusive to match biopython
     """
     seq = seq.upper()
     start_codons = ('ATG', 'GTG', 'TTG')
@@ -25,10 +27,10 @@ def scan_orfs(seq, direction, offset=0):
                 # special case for unstarted stops
                 last_stop = i
                 if direction == 1:
-                    new_orf = FeatureLocation(BeforePosition(offset), offset + i + 2, direction)
+                    new_orf = FeatureLocation(BeforePosition(offset), offset + i + 2 + 1, direction)
                 else:
                     new_orf = FeatureLocation(seq_len + offset - (i + 2),
-                                              AfterPosition(seq_len + offset), direction)
+                                              AfterPosition(seq_len + offset + 1), direction)
                 matches.append(new_orf)
             if seq[i:i+3] not in start_codons:
                 i += 3
@@ -44,11 +46,11 @@ def scan_orfs(seq, direction, offset=0):
                     end = j + 2
                     if direction == 1:
                         new_orf = FeatureLocation(offset + start,
-                                                  offset + end, direction)
+                                                  offset + end + 1, direction)
                     else:
                         # reversed, so convert back to the forward positions
                         new_orf = FeatureLocation(seq_len + offset - end,
-                                                  seq_len + offset - start, direction)
+                                                  seq_len + offset - start + 1, direction)
                     matches.append(new_orf)
                     # This was a good hit, update the last_stop cache.
                     break
@@ -60,10 +62,10 @@ def scan_orfs(seq, direction, offset=0):
 
             # Save orfs ending at the end of the sequence without stop codon
             if direction == 1:
-                new_orf = FeatureLocation(i + offset, AfterPosition(seq_len + offset), direction)
+                new_orf = FeatureLocation(i + offset, AfterPosition(seq_len + offset + 1), direction)
             else:
                 # reversed, so convert back to the forward positions
-                new_orf = FeatureLocation(BeforePosition(offset), offset + seq_len - i, direction)
+                new_orf = FeatureLocation(BeforePosition(offset), offset + seq_len - i + 1, direction)
             matches.append(new_orf)
             # since there are no stop codons, just stop here
             break
