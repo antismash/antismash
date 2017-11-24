@@ -1146,7 +1146,8 @@ def specific_analysis(seq_record):
             motif = result_vec_to_feature(lan_a, result_vec)
             results.motifs.append(motif)
             results.clusters_with_motifs.add(cluster)
-            if "allorf" in lan_a.get_name():
+            name = lan_a.get_name()
+            if name.startswith("cluster_%d_allorf" % cluster.get_cluster_number()):
                 seq_record.add_cds_feature(lan_a)  # TODO shift to add_to_record?
                 if lan_a.location.start < cluster.location.start:
                     logging.critical("Cluster location being altered in lanthipeptides")
