@@ -894,7 +894,9 @@ def determine_precursor_peptide_candidate(seq_record, query, query_sequence, dom
         # If no pHMM hit, try regular expression
         start, end, score = run_cleavage_site_regex(lan_a_fasta)
         if score is None or end > len(query_sequence) - 8:
-            start, end, score = 0, int(len(query_sequence)*0.50), 0
+            # abort, since RODEO will predict duplicates based only on cluster
+            # attributes
+            return None
         lanthi_type = "lanthipeptide"
 
     # Run RODEO to assess whether candidate precursor peptide is judged real
