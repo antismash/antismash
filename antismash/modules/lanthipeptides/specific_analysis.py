@@ -53,13 +53,17 @@ class LanthiResults(module_results.ModuleResults):
     def __init__(self, record_id, *args):
         super().__init__(record_id, *args)
         self.clusters_with_motifs = set()
+        self.cds_features = defaultdict(list)  # CDSs found with find_all_orfs
         self.motifs = []
 
     def to_json(self):
+        cds_features_by_cluster = {key: [(serialiser.location_to_json(feature.location), feature.get_name()) for feature in features]
+                                         for key, features in self.cds_features.items()}
         return {"record_id": self.record_id,
                 "schema_version": LanthiResults.schema_version,
                 "clusters with motifs": [cluster.get_cluster_number() for cluster in self.clusters_with_motifs],
-                "motifs": [motif.to_json() for motif in self.motifs]}
+                "motifs": [motif.to_json() for motif in self.motifs],
+                "cds_features": cds_features_by_cluster}
 
     @staticmethod
     def from_json(data, record):
@@ -71,9 +75,17 @@ class LanthiResults(module_results.ModuleResults):
             results.motifs.append(LanthipeptideMotif.from_json(motif))
         for cluster in data["clusters with motifs"]:
             results.clusters_with_motifs.add(record.get_cluster(cluster))
+        for cluster, features in data["cds_features"]:
+            for location, name in features:
+                cds = all_orfs.create_feature_from_location(record, location, label=name)
+                results.cds_features[cluster].append(cds)
         return results
 
     def add_to_record(self, record):
+        for features in self.cds_features.values():
+            for cds in features:
+                record.add_cds_feature(cds)
+
         for motif in self.motifs:
             record.add_cds_motif(motif)
 
@@ -387,6 +399,7 @@ def predict_class_from_gene_cluster(cluster):
         # in vivo yet, we'll ignore that
         return 'Class-III'
 
+    # TODO drop this when dropping prepeptides from cluster rules
     # Ok, no biosynthetic enzymes found, let's try the prepeptide
     if 'Gallidermin' in found_domains:
         return 'Class-I'
@@ -1152,12 +1165,6 @@ def specific_analysis(seq_record):
             results.motifs.append(motif)
             results.clusters_with_motifs.add(cluster)
             if lan_a in extra_orfs:
-                seq_record.add_cds_feature(lan_a)  # TODO shift to add_to_record?
-                if lan_a.location.start < cluster.location.start:
-                    logging.critical("Cluster location being altered in lanthipeptides")
-                    cluster.location = FeatureLocation(lan_a.location.start, cluster.location.end)
-                if lan_a.location.end > cluster.location.end:
-                    logging.critical("Cluster location being altered in lanthipeptides")
-                    cluster.location = FeatureLocation(cluster.location.start, lan_a.location.end)
+                results.cds_features[cluster.get_cluster_number()].append(lan_a)
     logging.debug("Lanthipeptide module marked %d motifs", len(results.motifs))
     return results

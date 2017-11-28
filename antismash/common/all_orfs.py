@@ -80,6 +80,15 @@ def scan_orfs(seq, direction: int, offset: int = 0) -> List[FeatureLocation]:
     return sorted(matches, key=lambda x: min(x.start, x.end))
 
 
+def create_feature_from_location(record, location, counter=1, label=None):
+    if label is None:
+        label = 'allorf%03d' % counter
+    dummy = Feature(location, feature_type="temp")
+    feature = CDSFeature(location, str(record.get_aa_translation_of_feature(dummy)),
+                         locus_tag=label, protein_id=label, gene=label)
+    return feature
+
+
 def find_all_orfs(record, cluster=None) -> List[CDSFeature]:
     """ Find all ORFs of at least 60 bases that don't overlap with existing
         CDS features.
@@ -115,9 +124,8 @@ def find_all_orfs(record, cluster=None) -> List[CDSFeature]:
         # skip if overlaps with existing CDSs
         if any(dummy_feature.overlaps_with(cds) for cds in existing):
             continue
-        feature = CDSFeature(location, str(record.get_aa_translation_of_feature(dummy_feature)),
-                             locus_tag='allorf%03d' % orfnr)
-        new_features.append(feature)
+
+        new_features.append(create_feature_from_location(record, location, orfnr))
         orfnr += 1
 
     return new_features
