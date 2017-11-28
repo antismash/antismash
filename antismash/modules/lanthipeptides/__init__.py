@@ -7,10 +7,10 @@
 
 import logging
 
-import antismash.common.path as path
+from antismash.common import path
 from antismash.config.args import ModuleArgs
 
-from .config import get_config  # TODO: what is this
+from .config import get_config  # local config for fimo presence
 from .specific_analysis import specific_analysis, LanthiResults
 from .html_output import generate_details_div, generate_sidepanel, will_handle
 
@@ -28,7 +28,7 @@ def check_options(options):
 
 
 def is_enabled(options):
-    return not (options.minimal and not options.lanthipeptides_enabled)
+    return options.lanthipeptides_enabled or not options.minimal
 
 
 def regenerate_previous_results(results, record, options):

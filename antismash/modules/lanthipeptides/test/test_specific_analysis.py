@@ -15,6 +15,7 @@ from antismash.modules.lanthipeptides.specific_analysis import (
     Lanthipeptide,
     predict_cleavage_site,
     result_vec_to_feature,
+    lanscout,
 )
 
 
@@ -28,7 +29,7 @@ class TestLanthipeptide(unittest.TestCase):
         self.assertEqual(17, lant.score)
         self.assertEqual('Class-I', lant.lantype)
         self.assertEqual('', lant.core)
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegex(AssertionError, "calculating weight without a core"):
             lant.molecular_weight
 
     def test_repr(self):
@@ -138,6 +139,9 @@ class TestSpecificAnalysis(unittest.TestCase):
         self.assertEqual(42, res.end)
         self.assertEqual(17, res.score)
         self.assertEqual('fake', res.lantype)
+
+    def test_lanscout(self):
+        assert lanscout("ITSISLCTPGCKTGALMGCNMKTATCHCSIHVSK") == (7, [2, 1, 2, 2, 0])
 
     def test_result_vec_to_features(self):
         "Test lanthipeptides.result_vec_to_features()"
