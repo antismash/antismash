@@ -232,7 +232,7 @@ class Record:
     def add_cds_feature(self, cds_feature: CDSFeature) -> None:
         """ Add the given cluster to the record,
             causes cluster-CDS pairing to be recalculated """
-        assert isinstance(cds_feature, CDSFeature)
+        assert isinstance(cds_feature, CDSFeature), type(cds_feature)
         # provide a unique id over all records
         cds_feature.unique_id = "%s.%d-%d" % (self.id, cds_feature.location.start,
                                               cds_feature.location.end)
