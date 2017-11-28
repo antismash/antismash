@@ -1046,8 +1046,8 @@ class LanthipeptideMotif(secmet.Prepeptide):
         return mods
 
     def to_biopython(self):
-        logging.critical("%s already converted: %s, leader type %s", self.location, self._notes_appended, type(self._leader))
         if self._notes_appended:  # TODO: could be more clever
+            logging.critical("%s already converted: %s, leader type %s", self.location, self._notes_appended, type(self._leader))
             return super().to_biopython()
         self._notes_appended = True
         self.notes.append('monoisotopic mass: %0.1f' % self.monoisotopic_mass)
@@ -1139,6 +1139,7 @@ def specific_analysis(seq_record):
         lant_class = predict_class_from_gene_cluster(cluster)
         if not lant_class:
             continue
+
         for lan_a in lan_as:
             result_vec = run_lanthipred(seq_record, lan_a, lant_class, domains)
             if result_vec is None:
