@@ -11,6 +11,7 @@ from collections import defaultdict
 import logging
 import os
 import re
+from typing import Dict, List, Set, Tuple, Optional
 
 from Bio.SeqFeature import FeatureLocation
 from helperlibs.wrappers.io import TemporaryFile
@@ -209,8 +210,7 @@ class Lanthipeptide(PrepeptideBase):
         '''
         (re)calculate the monoisotopic mass and molecular weight
         '''
-        if not self._core:
-            raise ValueError()
+        assert self._core, "calculating weight without a core"
 
         amino_counts = self.core_analysis.count_amino_acids()
         no_thr_ser = amino_counts['T'] + amino_counts['S']
@@ -319,7 +319,7 @@ class CleavageSiteHit(object):
         self.lantype = lantype
 
 
-def get_detected_domains(cluster):
+def get_detected_domains(cluster: secmet.Cluster) -> List[str]:
     found_domains = []
     # Gather biosynthetic domains
     for feature in cluster.cds_children:
@@ -357,11 +357,6 @@ def run_non_biosynthetic_phmms(fasta):
                 if hsp.bitscore > sig.cutoff:
                     non_biosynthetic_hmms_by_id[hsp.hit_id].append(hsp)
     return non_biosynthetic_hmms_by_id
-
-
-def cds_has_domain(cds, domain):
-    """Function to test whether a cds has a certain domain"""
-    return cds.sec_met and domain in cds.sec_met.domain_ids
 
 
 def predict_cleavage_site(query_hmmfile, target_sequence, threshold=-100):
@@ -413,7 +408,7 @@ def run_cleavage_site_phmm(fasta, hmmer_profile, threshold):
     return predict_cleavage_site(profile, fasta, threshold)
 
 
-def identify_lanthi_motifs(leader, core):
+def identify_lanthi_motifs(leader: str, core: str) -> Dict[int, float]:
     """Run FIMO to identify lanthipeptide-specific motifs"""
     motifs_file = path.get_full_path(__file__, "data", "lanthi_motifs_meme.txt")
     with TemporaryFile() as tempfile:
@@ -421,9 +416,8 @@ def identify_lanthi_motifs(leader, core):
         out_file.write(">query\n%s%s" % (leader, core))
         out_file.close()
         fimo_output = subprocessing.run_fimo_simple(motifs_file, tempfile.name)
-    fimo_motifs = [int(line.partition("\t")[0]) for line in fimo_output.split("\n") if "\t" in line and line.partition("\t")[0].isdigit()]
     fimo_scores = {int(line.split("\t")[0]): float(line.split("\t")[5]) for line in fimo_output.split("\n") if "\t" in line and line.partition("\t")[0].isdigit()}
-    return fimo_motifs, fimo_scores
+    return fimo_scores
 
 
 def run_cleavage_site_regex(fasta):
@@ -444,7 +438,7 @@ def run_cleavage_site_regex(fasta):
     return start, end, 0
 
 
-def run_rodeo_svm(csv_columns):
+def run_rodeo_svm(csv_columns: List[float]) -> int:
     """Run RODEO SVM"""
     classifier_path = path.get_full_path(__file__, "data", "lanthipeptide.classifier.pkl")
     scaler_path = path.get_full_path(__file__, "data", "lanthipeptide.scaler.pkl")
@@ -458,61 +452,77 @@ def run_rodeo_svm(csv_columns):
     return 0
 
 
-def run_rodeo(seq_record, query, leader, core, domains):
+def run_rodeo(record: secmet.Record, query: secmet.CDSFeature, leader: str,
+              core: str, domains: List[str]) -> int:
     """Run RODEO heuristics + SVM to assess precursor peptide candidate"""
     rodeo_score = 0
 
     # Incorporate heuristic scores
-    heuristic_score, gathered_tabs_for_csv = acquire_rodeo_heuristics(seq_record, query, leader, core, domains)
+    heuristic_score, gathered_tabs_for_csv = acquire_rodeo_heuristics(record, query, leader, core, domains)
     rodeo_score += heuristic_score
 
-    fimo_motifs = []
     fimo_scores = {}
 
     if not get_global_config().without_fimo and get_lanthi_config().fimo_present:
         # Find motifs
-        fimo_motifs, fimo_scores = identify_lanthi_motifs(leader, core)
+        fimo_scores = identify_lanthi_motifs(leader, core)
 
     # Incorporate SVM scores
-    csv_columns = generate_rodeo_svm_csv(leader, core, gathered_tabs_for_csv, fimo_motifs, fimo_scores)
+    csv_columns = generate_rodeo_svm_csv(leader, core, gathered_tabs_for_csv, fimo_scores)
     svm_score = run_rodeo_svm(csv_columns)
     rodeo_score += svm_score
-    return rodeo_score >= 14, rodeo_score
+    return rodeo_score
 
 
-def lanscout(seq):
+def lanscout(core: str) -> Tuple[int, List[int]]:
     """ define lanthionine ring with a c-terminal Cys """
     lanlower = 2
     lanupper = 6
     lan = '(?=([T|S].{%d,%d}C))' % (lanlower, lanupper)
     sizes = []
-    numringlist = []
-    seq = [num for elem in seq for num in elem]
-    for sub_seq in seq:
-        core = str(sub_seq[:])
-        totrings = re.compile(lan, re.I).findall(core)
-        size = []
-        for i in range(0, len(totrings)):
-            size.append(len(totrings[i]))
-        sizes.append(size)
-        numrings = len(totrings)
-        numringlist.append(numrings)
+    totrings = re.compile(lan, re.I).findall(core)
+    for ring in totrings:
+        sizes.append(len(ring))
+    temp = []
+    for j in range(lanlower + 2, lanupper + 3):
+        temp.append(sizes.count(j))
 
-    profile = []
-    for size in sizes:
-        temp = []
-        for j in range(lanlower + 2, lanupper + 3):
-            temp.append(size.count(j))
-        profile.append(temp)
+    assert len(temp) == 5
 
-    for i in range(0, len(profile)):
-        profile[i] = str(profile[i]).strip('[]')
-    return numringlist, profile
+    return len(totrings), temp
 
 
-def acquire_rodeo_heuristics(seq_record, query, leader, core, domains):
-    """Calculate heuristic scores for RODEO"""
-    tabs = []
+def cds_has_domains(cds: secmet.CDSFeature, domains: Set[str]) -> bool:
+    """ Tests whether a cds has any of the given domains
+
+        Arguments:
+            cds: the CDSFeature to check
+            domains: a set of domain names
+
+        Returns:
+            True if any of the domains are present in the CDS, otherwise False
+    """
+    return cds.sec_met and set(cds.sec_met.domain_ids).intersection(domains)
+
+
+def acquire_rodeo_heuristics(record: secmet.Record, query: secmet.CDSFeature,
+                             leader: str, core: str,
+                             domains: List[str]) -> Tuple[int, List[float]]:
+    """ Calculate heuristic scores for RODEO
+
+        Arguments:
+            record: the record instance to analyse
+            query: the feature being checked
+            leader: the sequence of the peptide leader
+            core: the sequence of the peptide core
+            domains: the domains found within CDS features of the cluster
+
+        Returns:
+            a tuple of
+                the RODEO score, and
+                a list of floats for use in the RODEO SVM
+    """
+    tabs = []  # type: List[float]
     score = 0
     precursor = leader + core
     # Leader peptide contains FxLD motif
@@ -543,7 +553,7 @@ def acquire_rodeo_heuristics(seq_record, query, leader, core, domains):
         tabs.append(0)
     # Precursor is within 500 nt?
     hmmer_profiles = ['LANC_like', 'Lant_dehyd_C']
-    distance = deprecated.distance_to_pfam(seq_record, query, hmmer_profiles)
+    distance = deprecated.distance_to_pfam(record, query, hmmer_profiles)
     if distance < 500:
         score += 1
         tabs.append(1)
@@ -610,7 +620,7 @@ def acquire_rodeo_heuristics(seq_record, query, leader, core, domains):
     else:
         tabs.append(0)
     # Cluster contains PF02052 (Gallidermin)
-    if "Gallidermin" in domains or "mature_a" in domains or "mature_b" in domains or "matura_ab" in domains:
+    if set(domains).intersection({"Gallidermin", "mature_a", "mature_b", "matura_ab"}):
         tabs.append(1)
     else:
         tabs.append(0)
@@ -639,43 +649,43 @@ def acquire_rodeo_heuristics(seq_record, query, leader, core, domains):
     # Precursor peptide pHMMs below:
     precursor_hit = False
     # Precursor peptide hits gallidermin superfamily (cl03420) HMM
-    if cds_has_domain(query, "TIGR03731") or cds_has_domain(query, "Gallidermin"):
+    if cds_has_domains(query, {"TIGR03731", "Gallidermin"}):
         precursor_hit = True
         tabs.append(1)
     else:
         tabs.append(0)
     # Precursor peptide hits lantibio_gallid (TIGR03731) HMM
-    if cds_has_domain(query, "TIGR03731"):
+    if cds_has_domains(query, {"TIGR03731"}):
         precursor_hit = True
         tabs.append(1)
     else:
         tabs.append(0)
     # Precursor peptide hits lanti_SCO0268 superfamily (cl22812) HMM
-    if cds_has_domain(query, "TIGR04451") or cds_has_domain(query, "strep_PEQAXS"):
+    if cds_has_domains(query, {"TIGR04451", "strep_PEQAXS"}):
         precursor_hit = True
         tabs.append(1)
     else:
         tabs.append(0)
     # Precursor peptide hits LD_lanti_pre (TIGR04363) HMM
-    if cds_has_domain(query, "LD_lanti_pre"):
+    if cds_has_domains(query, {"LD_lanti_pre"}):
         precursor_hit = True
         tabs.append(1)
     else:
         tabs.append(0)
     # Precursor peptide hits Antimicrobial18 (cl06940) HMM
-    if cds_has_domain(query, "Antimicr18"):
+    if cds_has_domains(query, {"Antimicr18"}):
         precursor_hit = True
         tabs.append(1)
     else:
         tabs.append(0)
     # Precursor peptide hits gallidermin (PF02052) HMM
-    if cds_has_domain(query, "Gallidermin") or cds_has_domain(query, "mature_a") or cds_has_domain(query, "mature_ab") or cds_has_domain(query, "mature_b"):
+    if cds_has_domains(query, {"Gallidermin", "mature_a", "mature_ab", "mature_b"}):
         precursor_hit = True
         tabs.append(1)
     else:
         tabs.append(0)
     # precursor peptide hits Antimicrobial18 (PF08130) HMM
-    if cds_has_domain(query, "Antimicr18"):
+    if cds_has_domains(query, {"Antimicr18"}):
         precursor_hit = True
         tabs.append(1)
     else:
@@ -767,14 +777,14 @@ def acquire_rodeo_heuristics(seq_record, query, leader, core, domains):
         else:
             tabs.append(0)
     # Lanthionine regex maximum ring number > 4
-    numringlist, profile = lanscout([[core]])
-    if numringlist[0] > 4:
+    numrings, profile = lanscout(core)
+    if numrings > 4:
         score += 2
         tabs.append(1)
     else:
         tabs.append(0)
     # Lanthionine regex maximum ring number < 3
-    if numringlist[0] < 3:
+    if numrings < 3:
         score -= 2
         tabs.append(1)
     else:
@@ -782,15 +792,15 @@ def acquire_rodeo_heuristics(seq_record, query, leader, core, domains):
     # Lanthionine regex 4-membered ring/5-membered ring/6-membered ring/7-membered ring/8-membered ring
     scores = [2, 2, 2, 2, 1]
     scorepos = 0
-    for ringsize in profile[0].split(", ")[:2]:
-        if ringsize != "0" and ringsize != "1" and ringsize != "2":
+    for ringsize in profile[:2]:
+        if ringsize not in [0, 1, 2]:
             score += scores[scorepos]
             tabs.append(1)
         else:
             tabs.append(0)
         scorepos += 1
-    for ringsize in profile[0].split(", ")[2:]:
-        if ringsize != "0":
+    for ringsize in profile[2:]:
+        if ringsize != 0:
             score += scores[scorepos]
             tabs.append(1)
         else:
@@ -799,28 +809,22 @@ def acquire_rodeo_heuristics(seq_record, query, leader, core, domains):
     return score, tabs
 
 
-def generate_rodeo_svm_csv(leader, core, previously_gathered_tabs, fimo_motifs, fimo_scores):
+def generate_rodeo_svm_csv(leader: str, core: str, previously_gathered_tabs: List[float],
+                           fimo_scores: Dict[int, float]) -> List[float]:
     """Generates all the items for one candidate precursor peptide"""
     precursor = leader + core
-    columns = []
+    columns = []  # type: List[float]
     # Precursor Index
     columns.append(1)
     # classification
     columns.append(0)
     columns += previously_gathered_tabs
     # Lanthionine regex maximum ring number
-    numringlist, profile = lanscout([[core]])
-    columns.append(numringlist[0])
-    # Lanthionine regex 4-membered ring count
-    columns.append(int(profile[0].split(", ")[0]))
-    # Lanthionine regex 5-membered ring count
-    columns.append(int(profile[0].split(", ")[1]))
-    # Lanthionine regex 6-membered ring count
-    columns.append(int(profile[0].split(", ")[2]))
-    # Lanthionine regex 7-membered ring count
-    columns.append(int(profile[0].split(", ")[3]))
-    # Lanthionine regex 8-membered ring count
-    columns.append(int(profile[0].split(", ")[4]))
+    numrings, profile = lanscout(core)
+    columns.append(numrings)
+    # Lanthionine regex (n+4)-membered ring count
+    for i in range(5):
+        columns.append(profile[i])
     # Ratio of number of Cys in core peptide to sum of Ser/Thr in core peptide
     if "S" in core or "T" in core:
         columns.append(core.count("C") / float(core.count("S") + core.count("T")))
@@ -828,31 +832,9 @@ def generate_rodeo_svm_csv(leader, core, previously_gathered_tabs, fimo_motifs, 
         columns.append(1.0)
     # Ratio of number of Cys/Ser/Thr to length of core peptide
     columns.append(float(core.count("S") + core.count("T") + core.count("C")) / len(core))
-    # log10 p-value MEME motif 1
-    if 1 in fimo_motifs:
-        columns.append(fimo_scores[1])
-    else:
-        columns.append(0)
-    # log10 p-value MEME motif 2
-    if 2 in fimo_motifs:
-        columns.append(fimo_scores[2])
-    else:
-        columns.append(0)
-    # log10 p-value MEME motif 3
-    if 3 in fimo_motifs:
-        columns.append(fimo_scores[3])
-    else:
-        columns.append(0)
-    # log10 p-value MEME motif 4
-    if 4 in fimo_motifs:
-        columns.append(fimo_scores[4])
-    else:
-        columns.append(0)
-    # log10 p-value MEME motif 5
-    if 5 in fimo_motifs:
-        columns.append(fimo_scores[5])
-    else:
-        columns.append(0)
+    # log10 p-value MEME motifs
+    for i in range(1, 6):
+        columns.append(fimo_scores.get(i, 0))
     # Number in leader of each amino acid
     columns += [leader.count(aa) for aa in "ARDNCQEGHILKMFPSTWYV"]
     # Number in leader of each amino acid type (aromatic, aliphatic, hydroxyl, basic, acidic)
@@ -883,14 +865,16 @@ def generate_rodeo_svm_csv(leader, core, previously_gathered_tabs, fimo_motifs, 
     return columns
 
 
-def determine_precursor_peptide_candidate(seq_record, query, query_sequence, domains, hmmer_profile):
+def determine_precursor_peptide_candidate(record: secmet.Record, query: secmet.CDSFeature,
+                                          query_sequence: str, domains: List[str],
+                                          hmmer_profile: str) -> Optional[Lanthipeptide]:
     """ Identify precursor peptide candidates and split into two,
         only valid for Class-I lanthipeptides
     """
 
     # Skip sequences with >200 AA
     if len(query_sequence) > 200 or len(query_sequence) < 20:
-        return
+        return None
 
     # Create FASTA sequence for feature under study
     lan_a_fasta = ">%s\n%s" % (query.get_name(), query_sequence)
@@ -913,11 +897,10 @@ def determine_precursor_peptide_candidate(seq_record, query, query_sequence, dom
         lanthi_type = "lanthipeptide"
 
     # Run RODEO to assess whether candidate precursor peptide is judged real
-    rodeo_result = run_rodeo(seq_record, query, query_sequence[:end], query_sequence[end:], domains)
-    if rodeo_result[0] is False:
-        return
-    else:
-        lanthipeptide = Lanthipeptide(start, end, score, rodeo_result[1], lanthi_type)
+    rodeo_result = run_rodeo(record, query, query_sequence[:end], query_sequence[end:], domains)
+    if rodeo_result < 14:
+        return None
+    lanthipeptide = Lanthipeptide(start, end, score, rodeo_result, lanthi_type)
 
     # Determine the leader and core peptide
     lanthipeptide.leader = query_sequence[:end]
@@ -926,7 +909,7 @@ def determine_precursor_peptide_candidate(seq_record, query, query_sequence, dom
     return lanthipeptide
 
 
-def run_lanthipred(seq_record, query, lant_class, domains):
+def run_lanthipred(record: secmet.Record, query: secmet.CDSFeature, lant_class, domains):
     hmmer_profiles = {'Class-I': 'data/class1.hmm',
                       'Class-II': 'data/class2.hmm',
                       'Class-III': 'data/class3.hmm', }
@@ -947,12 +930,14 @@ def run_lanthipred(seq_record, query, lant_class, domains):
             #              THRESH_DICT[lant_class], lant_class)
             return None
 
-        result = Lanthipeptide(cleavage_result.start, cleavage_result.end, cleavage_result.score, "N/A", lant_class)
+        result = Lanthipeptide(cleavage_result.start, cleavage_result.end,
+                               cleavage_result.score, "N/A", lant_class)
         result.leader = query_sequence[:result.end]
         result.core = query_sequence[result.end:]
 
     else:
-        result = determine_precursor_peptide_candidate(seq_record, query, query_sequence, domains, hmmer_profiles[lant_class])
+        result = determine_precursor_peptide_candidate(record, query, query_sequence,
+                                                       domains, hmmer_profiles[lant_class])
         if result is None:
             return None
 
@@ -962,18 +947,18 @@ def run_lanthipred(seq_record, query, lant_class, domains):
         #              utils.get_gene_id(query))
         return None
 
-    query.gene_functions.add(secmet.GeneFunction.ADDITIONAL, "lanthipeptides", "predicted lanthipeptide")
+    query.gene_functions.add(secmet.GeneFunction.ADDITIONAL, "lanthipeptides",
+                             "predicted lanthipeptide")
     return result
 
 
-def find_lan_a_features(cluster):
+def find_lan_a_features(cluster: secmet.Cluster) -> List[secmet.CDSFeature]:
     lan_a_features = []
     for feature in cluster.cds_children:
         if not feature.is_contained_by(cluster):
             continue
 
-        aa_seq = feature.get_aa_sequence()
-        if len(aa_seq) < 80:
+        if len(feature.get_aa_sequence()) < 80:
             lan_a_features.append(feature)
             continue
         if feature.sec_met and set(feature.sec_met.domain_ids).intersection(KNOWN_PRECURSOR_DOMAINS):
@@ -982,48 +967,43 @@ def find_lan_a_features(cluster):
     return lan_a_features
 
 
-def has_only_domain(feature, domain):
-    return feature.sec_met and feature.sec_met.domain_ids == [domain]
+def cluster_contains_feature_with_single_domain(cluster: secmet.Cluster, domains: Set[str]) -> bool:
+    """ Checks for the existence of a feature within a cluster that has a single
+        domain and that the domain is within the provided set of domains
+
+        Arguments:
+            cluster: the Cluster instance to check
+            domains: the set of domain names allowable
+
+        Returns:
+            True if a feature matching the conditions was found, otherwise False
+    """
+    for feature in cluster.cds_children:
+        if not feature.sec_met or len(feature.sec_met.domain_ids) > 1:
+            continue
+        if len(domains.intersection(set(feature.sec_met.domain_ids))) == 1:
+            return True
+    return False
 
 
-def find_flavoprotein(cluster):
+def find_flavoprotein(cluster: secmet.Cluster) -> bool:
     "Look for an epiD-like flavoprotein responsible for aminovinylcystein"
-    for feature in cluster.cds_children:
-        if not feature.is_contained_by(cluster):
-            continue
-        if has_only_domain(feature, "Flavoprotein"):
-            return True
-    return False
+    return cluster_contains_feature_with_single_domain(cluster, {"Flavoprotein"})
 
 
-def find_halogenase(cluster):
+def find_halogenase(cluster: secmet.Cluster) -> bool:
     "Look for a halogenase"
-    for feature in cluster.cds_children:
-        if not feature.is_contained_by(cluster):
-            continue
-        if has_only_domain(feature, "Trp_halogenase"):
-            return True
-    return False
+    return cluster_contains_feature_with_single_domain(cluster, {"Trp_halogenase"})
 
 
-def find_p450_oxygenase(cluster):
+def find_p450_oxygenase(cluster: secmet.Cluster) -> bool:
     "Look for a p450 oxygenase"
-    for feature in cluster.cds_children:
-        if not feature.is_contained_by(cluster):
-            continue
-        if has_only_domain(feature, 'p450'):
-            return True
-    return False
+    return cluster_contains_feature_with_single_domain(cluster, {"p450"})
 
 
-def find_short_chain_dehydrogenase(cluster):
+def find_short_chain_dehydrogenase(cluster: secmet.Cluster) -> bool:
     "Look for an eciO-like short-chain dehydrogenase responsible for N-terminal lactone"
-    for feature in cluster.cds_children:
-        if not feature.is_contained_by(cluster):
-            continue
-        if has_only_domain(feature, 'adh_short') or has_only_domain(feature, 'adh_short_C2'):
-            return True
-    return False
+    return cluster_contains_feature_with_single_domain(cluster, {"adh_short", "adh_short_C2"})
 
 
 class LanthipeptideMotif(secmet.Prepeptide):
@@ -1060,7 +1040,8 @@ class LanthipeptideMotif(secmet.Prepeptide):
 
     def to_biopython(self):
         if self._notes_appended:  # TODO: could be more clever
-            logging.critical("%s already converted: %s, leader type %s", self.location, self._notes_appended, type(self._leader))
+            logging.critical("%s already converted: %s, leader type %s",
+                             self.location, self._notes_appended, type(self._leader))
             return super().to_biopython()
         self._notes_appended = True
         self.notes.append('monoisotopic mass: %0.1f' % self.monoisotopic_mass)
@@ -1104,13 +1085,11 @@ class LanthipeptideMotif(secmet.Prepeptide):
                          "peptide_class", "score", "rodeo_score", "aminovinyl_group",
                          "chlorinated", "oxygenated", "lactonated"]:
             args.append(data[arg_name])
-# pylint doesn't do well with the splat op, so don't report errors
-# pylint: disable=no-value-for-parameter
-        return LanthipeptideMotif(*args)
-# pylint: enable=no-value-for-parameter
+        # pylint doesn't do well with the splat op, so don't report errors
+        return LanthipeptideMotif(*args)  # pylint: disable=no-value-for-parameter
 
 
-def result_vec_to_feature(orig_feature, res_vec):
+def result_vec_to_feature(orig_feature: secmet.CDSFeature, res_vec) -> LanthipeptideMotif:
     start = orig_feature.location.start
     end = orig_feature.location.start + (res_vec.end * 3)
     strand = orig_feature.location.strand
@@ -1128,16 +1107,16 @@ def result_vec_to_feature(orig_feature, res_vec):
     return feature
 
 
-def specific_analysis(seq_record):
-    results = LanthiResults(seq_record.id)
-    for cluster in seq_record.get_clusters():
+def specific_analysis(record: secmet.Record) -> LanthiResults:
+    results = LanthiResults(record.id)
+    for cluster in record.get_clusters():
         if 'lanthipeptide' not in cluster.products:
             continue
 
         lan_as = find_lan_a_features(cluster)
 
         # Find candidate ORFs that are not yet annotated
-        extra_orfs = all_orfs.find_all_orfs(seq_record, cluster)
+        extra_orfs = all_orfs.find_all_orfs(record, cluster)
         for orf in extra_orfs:
             aa_seq = orf.get_aa_sequence()
             if len(aa_seq) < 80:
@@ -1154,7 +1133,7 @@ def specific_analysis(seq_record):
             continue
 
         for lan_a in lan_as:
-            result_vec = run_lanthipred(seq_record, lan_a, lant_class, domains)
+            result_vec = run_lanthipred(record, lan_a, lant_class, domains)
             if result_vec is None:
                 continue
             result_vec.aminovinyl_group = flavoprotein_found
