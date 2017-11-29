@@ -3,13 +3,13 @@
 
 import os
 
-from antismash.common import subprocessing, path, deprecated
+from antismash.common import subprocessing, path, fasta, deprecated
 from antismash.common.hmmscan_refinement import refine_hmmscan_results
 from antismash.common.secmet import GeneFunction
 
 
 def classify_genes(cds_features):
-    smcogs_fasta = deprecated.get_specific_multifasta(cds_features)
+    smcogs_fasta = fasta.get_fasta_from_features(cds_features)
     smcogs_opts = ["-E", "1E-6"]
     hmm_file = path.get_full_path(__file__, "data", "smcogs.hmm")
     smcogs_results = subprocessing.run_hmmscan(hmm_file, smcogs_fasta, smcogs_opts)

@@ -9,37 +9,6 @@ import Bio.Data.IUPACData
 from Bio.SeqUtils.ProtParam import ProteinAnalysis
 
 
-def read_fasta(filename: str) -> Dict[str, str]:
-    """ reads a fasta file into a dict: id -> sequence, returns the dict """
-    ids = []
-    sequence_info = []
-    with open(filename, "r") as fasta:
-        current_seq = []
-        for line in fasta:
-            line = line.strip()
-            if not line:
-                continue
-            if line[0] == '>':
-                ids.append(line[1:].replace(" ", "_"))
-                if current_seq:
-                    sequence_info.append("".join(current_seq))
-                    current_seq = []
-            else:
-                if not ids:
-                    raise ValueError("Sequence before identifier in fasta file")
-                if not line.replace("-", "z").isalpha():
-                    raise ValueError("Sequence contains non-alphabetic characters")
-                current_seq.append(line)
-    if current_seq:
-        sequence_info.append("".join(current_seq))
-    if len(ids) != len(sequence_info):
-        raise ValueError("Fasta files contains different counts of sequences and ids")
-    if not ids:
-        logging.debug("Fasta file %s contains no sequences", filename)
-        raise ValueError("Fasta file contains no sequences")
-    return OrderedDict(zip(ids, sequence_info))
-
-
 def generate_unique_id(prefix: str, existing_ids: Set, start=0, max_length=-1) -> Tuple[str, int]:
     """ Generate a identifier of the form prefix_num, e.g. seq_15.
 

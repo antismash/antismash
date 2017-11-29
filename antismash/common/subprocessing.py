@@ -17,10 +17,9 @@ with warnings.catch_warnings():
 
 from helperlibs.wrappers.io import TemporaryDirectory
 
+from antismash.common.fasta import write_fasta, read_fasta
 from antismash.config import get_config
 
-from .deprecated import writefasta
-from .utils import read_fasta
 
 class RunResult:
     def __init__(self, command, stdout, stderr, return_code, piped_out, piped_err):
@@ -264,7 +263,7 @@ def run_muscle_single(seq_name, seq, comparison_file) -> Dict[str, str]:
     """
     with NamedTemporaryFile(mode="w+") as temp_in:
         with NamedTemporaryFile(mode="w+") as temp_out:
-            writefasta([seq_name], [seq], temp_in.name)
+            write_fasta([seq_name], [seq], temp_in.name)
             # Run muscle and collect sequence positions from file
             result = execute(["muscle", "-profile", "-quiet",
                               "-in1", comparison_file,

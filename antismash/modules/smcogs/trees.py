@@ -10,7 +10,7 @@ from typing import Dict
 
 from helperlibs.wrappers.io import TemporaryDirectory
 
-from antismash.common import path, deprecated, subprocessing, utils
+from antismash.common import path, fasta, subprocessing
 
 def generate_trees(smcogs_dir, hmm_results, geneclustergenes, nrpspks_genes, options) -> Dict[str, str]:
     """ smCOG phylogenetic tree construction """
@@ -42,7 +42,7 @@ def smcog_tree_analysis(cds, inputnr, smcog, output_dir) -> None:
     gene_id = cds.get_name()
     seq = cds.get_aa_sequence()
     # create input.fasta file with single query sequence to be used as input for MSA
-    deprecated.writefasta([gene_id], [seq], "input" + str(inputnr) + ".fasta")
+    fasta.write_fasta([gene_id], [seq], "input" + str(inputnr) + ".fasta")
     alignment_file = alignsmcogs(smcog, inputnr)
     # Generate trimmed alignment
     trim_alignment(inputnr, alignment_file)
@@ -85,7 +85,7 @@ def trim_alignment(inputnr, alignment_file) -> None:
                 return position
         return 0  # can't be earlier than the start
 
-    contents = utils.read_fasta(alignment_file)
+    contents = fasta.read_fasta(alignment_file)
     # check all sequences are the same length
     sequence_length = len(list(contents.values())[0])
     for name, seq in contents.items():
@@ -110,7 +110,7 @@ def trim_alignment(inputnr, alignment_file) -> None:
     # Shorten sequences to detected conserved regions
     seqs = [seq[first_shared_amino:last_shared_amino] for seq in seqs]
     seed_fasta_name = "trimmed_alignment" + str(inputnr) + ".fasta"
-    deprecated.writefasta(names, seqs, seed_fasta_name)
+    fasta.write_fasta(names, seqs, seed_fasta_name)
 
 
 def draw_tree(inputnr) -> str:

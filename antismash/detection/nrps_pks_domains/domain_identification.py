@@ -7,6 +7,7 @@ from Bio.SeqFeature import FeatureLocation
 
 from antismash.common import path, subprocessing
 from antismash.common import deprecated
+from antismash.common.fasta import get_fasta_from_features
 from antismash.common.hmmscan_refinement import refine_hmmscan_results
 from antismash.common.secmet.feature import CDSMotif
 
@@ -15,7 +16,7 @@ def annotate_domains(record):
     genes_within_clusters = record.get_cds_features_within_clusters()
     assert genes_within_clusters  # because every cluster should have genes
 
-    fasta = deprecated.get_specific_multifasta(genes_within_clusters)
+    fasta = get_fasta_from_features(genes_within_clusters)
     gene_domains = find_domains(fasta, record)
     gene_motifs = find_ab_motifs(fasta)
 
