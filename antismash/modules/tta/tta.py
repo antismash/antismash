@@ -70,18 +70,6 @@ class TTAResults(antismash.common.module_results.ModuleResults):
         return results
 
 
-def create_results_from_json(data):
-    if data["schema_version"] != TTAResults.schema_version:  # or <, whatever is possible
-        raise ValueError("Result schema version mismatch, cannot parse")
-    results = TTAResults(data["record_id"])
-
-    for codon in data["TTA codons"]:
-        start = codon["start"]
-        strand = codon["strand"]
-        results.new_feature_from_basics(start, strand)
-    return results
-
-
 def detect(seq_record, options):
     """Detect TTA codons"""
     assert options.tta
