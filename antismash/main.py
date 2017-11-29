@@ -223,19 +223,23 @@ def analyse_record(record, options, modules, previous_result) -> Dict[str, float
     return timings
 
 
-def prepare_output_directory(name) -> None:
+def prepare_output_directory(name: str, input_file: str) -> None:
     """ Ensure the ouptut directory exists and is usable
 
         Raises an exception if the directory is unusable
 
         Arguments:
             name: the path of the directory
+            input_file: the path of the input file
 
         Returns:
             None
     """
+    # if not supplied, set the output directory to be the sequence name
     if not name:
-        return
+        name = os.path.abspath(os.path.splitext(os.path.basename(input_file))[0])
+        update_config({"output_dir": name})
+
     if os.path.exists(name):
         if not os.path.isdir(name):
             raise RuntimeError("Output directory %s exists and is not a directory" % name)
@@ -369,8 +373,6 @@ def read_data(sequence_file, options) -> serialiser.AntismashResults:
         if not contents:
             raise ValueError("No results contained in file: %s" % options.reuse_results)
     results = serialiser.AntismashResults.from_file(options.reuse_results)
-    # hacky bypass to set output dir #TODO work out alternate method
-    update_config({"output_dir": os.path.abspath(os.path.splitext(results.input_file)[0])})
     return results
 
 
@@ -493,7 +495,7 @@ def run_antismash(sequence_file, options, detection_modules=None,
     # reset module timings
     results.timings_by_record = {}
 
-    prepare_output_directory(options.output_dir)
+    prepare_output_directory(options.output_dir, sequence_file or options.reuse_results)
 
     results.records = record_processing.pre_process_sequences(results.records,
                                                               options, genefinding)

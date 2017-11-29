@@ -72,11 +72,6 @@ def main(args):
     else:
         sequence = ""
 
-    # if not supplied, set the output directory to be the sequence name
-    # can't be done in argparse because parsing interacting args is a bad idea
-    if not options.output_dir:
-        options.output_dir = os.path.abspath(os.path.splitext(os.path.basename(sequence))[0])
-
     options.version = get_version()
 
     return antismash.run_antismash(sequence, options)
