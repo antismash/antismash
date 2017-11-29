@@ -266,7 +266,7 @@ def acquire_rodeo_heuristics(record: secmet.Record, query: secmet.CDSFeature,
     else:
         tabs.append(0)
     # Core peptide contains CC motif (not in last 3 residues)
-    if re.search('CC', core[:-3]):
+    if 'CC' in core[:-3]:
         score -= 3
         tabs.append(1)
     else:
@@ -290,7 +290,7 @@ def acquire_rodeo_heuristics(record: secmet.Record, query: secmet.CDSFeature,
     else:
         tabs.append(0)
     # Core peptide contains C-terminal CC (within last 3 residues)
-    if re.search('CC', core[-3:]):
+    if 'CC' in core[-3:]:
         score += 2
         tabs.append(1)
     else:
@@ -300,7 +300,7 @@ def acquire_rodeo_heuristics(record: secmet.Record, query: secmet.CDSFeature,
               ('S[ARNDBCEQZGHILKMFPSTWYV]{2}LC', 2), ('CT[ARNDBCEQZGHILKMFPSTWYV]{1}GC', 1),
               ('TPGC', 1), ('SFNS[ARNDBCEQZGHILKMFPSTWYV]C', 1))
     for motif, motif_score in motifs:
-        if re.search(motif, core):
+        if motif in core:
             score += motif_score
             tabs.append(1)
         else:
