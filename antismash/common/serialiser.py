@@ -51,14 +51,6 @@ class AntismashResults:
         handle.write(json.dumps(self.to_json()))
 
 
-def write_results(records, results, handle):
-    copy = OrderedDict(results)
-    copy["records"] = dump_records(records, results["record_results"])
-    if isinstance(handle, str):
-        handle = open(handle, "w")
-    handle.write(json.dumps(copy))
-
-
 def dump_records(records, results, handle=None):
     data = []
     assert isinstance(results, list)
