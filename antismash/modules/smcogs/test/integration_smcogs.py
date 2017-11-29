@@ -4,21 +4,25 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
+import glob
 import os
 import unittest
 
 from helperlibs.bio import seqio
 from helperlibs.wrappers.io import TemporaryDirectory
 
+import antismash
 from antismash.common import secmet, path, subprocessing
 import antismash.common.test.helpers as helpers
-from antismash.config import args, get_config, update_config, destroy_config
+from antismash.config import get_config, update_config, destroy_config, build_config
+from antismash.main import read_data, regenerate_results_for_record
 from antismash.modules import smcogs
 
 
 class Base(unittest.TestCase):
     def setUp(self):
-        options = args.build_parser(modules=[smcogs]).parse_args(self.get_args())
+        options = build_config(self.get_args(), isolated=True,
+                                   modules=antismash.get_all_modules())
         self.old_config = get_config().__dict__
         self.options = update_config(options)
 
@@ -96,3 +100,38 @@ class TestTreeGeneration(Base):
                 assert cds.get_name() in results.tree_images
                 assert len(cds.notes) == 1
                 assert cds.gene_function != secmet.feature.GeneFunction.OTHER
+
+    def test_trees_complete(self):
+        with TemporaryDirectory() as output_dir:
+            args = ["--minimal", "--smcogs-trees", "--output-dir", output_dir, helpers.get_path_to_nisin_genbank()]
+            options = build_config(args, isolated=True, modules=antismash.get_all_modules())
+            antismash.run_antismash(helpers.get_path_to_nisin_genbank(), options)
+
+
+            with open(os.path.join(output_dir, "nisin.json")) as res_file:
+                assert "antismash.modules.smcogs" in res_file.read()
+
+
+            tree_files = list(glob.glob(os.path.join(output_dir, "smcogs", "*.png")))
+            assert len(tree_files) == 7
+            sample_tree = tree_files[0]
+
+            # regen the results
+            update_config({"reuse_results": os.path.join(output_dir, "nisin.json")})
+            prior_results = read_data(None, options)
+            record = prior_results.records[0]
+            results = prior_results.results[0]
+            regenned = regenerate_results_for_record(record, options, [smcogs], results)
+            smcogs_results = regenned["antismash.modules.smcogs"]
+            assert len(smcogs_results.tree_images) == 7
+            assert os.path.exists(sample_tree)
+
+            os.unlink(sample_tree)
+            assert not os.path.exists(sample_tree)
+
+            # attempt to regen the results, the deleted tree image will prevent it
+            prior_results = read_data(None, options)
+            record = prior_results.records[0]
+            results = prior_results.results[0]
+            regenned = regenerate_results_for_record(record, options, [smcogs], results)
+            assert "antismash.modules.smcogs" not in regenned
