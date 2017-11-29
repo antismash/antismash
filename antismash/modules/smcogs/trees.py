@@ -40,7 +40,7 @@ def generate_trees(smcogs_dir, hmm_results, geneclustergenes, nrpspks_genes, opt
 def smcog_tree_analysis(cds, inputnr, smcog, output_dir) -> None:
     "run smCOG search on all gene cluster CDS features"
     gene_id = cds.get_name()
-    seq = cds.get_aa_sequence()
+    seq = cds.translation
     # create input.fasta file with single query sequence to be used as input for MSA
     fasta.write_fasta([gene_id], [seq], "input" + str(inputnr) + ".fasta")
     alignment_file = alignsmcogs(smcog, inputnr)

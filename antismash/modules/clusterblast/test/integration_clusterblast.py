@@ -91,7 +91,7 @@ class Base(unittest.TestCase):
 class GeneralIntegrationTest(Base):
     # TODO: test with a small sequence instead (grab a CDS that hit and take it's translation)
     def get_args(self):
-        return ["--cb-general"]
+        return ["--cb-general", "--minimal"]
 
     def get_results(self, results):
         assert isinstance(results, ModuleResults)
@@ -107,7 +107,7 @@ class GeneralIntegrationTest(Base):
 
 class KnownIntegrationTest(Base):
     def get_args(self):
-        return ["--cb-knowncluster"]
+        return ["--cb-knowncluster", "--minimal"]
 
     def get_results(self, results):
         assert isinstance(results, ModuleResults)
@@ -126,7 +126,7 @@ class KnownIntegrationTest(Base):
 
 class SubIntegrationTest(Base):
     def get_args(self):
-        return ["--cb-subcluster"]
+        return ["--cb-subcluster", "--minimal"]
 
     def get_results(self, results):
         assert isinstance(results, ModuleResults)

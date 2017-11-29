@@ -472,7 +472,7 @@ def run_lanthipred(record: secmet.Record, query: secmet.CDSFeature, lant_class, 
     hmmer_profiles = {'Class-I': 'data/class1.hmm',
                       'Class-II': 'data/class2.hmm',
                       'Class-III': 'data/class3.hmm', }
-    query_sequence = query.get_aa_sequence(to_stop=True)
+    query_sequence = query.translation
     lan_a_fasta = ">%s\n%s" % (query.get_name(), query_sequence)
 
     if lant_class in ("Class-II", "Class-III"):
@@ -511,7 +511,7 @@ def find_lan_a_features(cluster: secmet.Cluster) -> List[secmet.CDSFeature]:
         if not feature.is_contained_by(cluster):
             continue
 
-        if len(feature.get_aa_sequence()) < 80:
+        if len(feature.translation) < 80:
             lan_a_features.append(feature)
             continue
         if feature.sec_met and set(feature.sec_met.domain_ids).intersection(KNOWN_PRECURSOR_DOMAINS):
@@ -651,7 +651,7 @@ def specific_analysis(record: secmet.Record) -> LanthiResults:
         # Find candidate ORFs that are not yet annotated
         extra_orfs = all_orfs.find_all_orfs(record, cluster)
         for orf in extra_orfs:
-            aa_seq = orf.get_aa_sequence()
+            aa_seq = orf.translation
             if len(aa_seq) < 80:
                 lan_as.append(orf)
 

@@ -15,10 +15,7 @@ from antismash.modules.nrps_pks import orderfinder
 class DummyCDSWrapper(DummyCDS):
     def __init__(self, start, end, seq, locus_tag=None):
         super().__init__(start, end, locus_tag=locus_tag)
-        self.aa_sequence = seq
-
-    def get_aa_sequence(self, _dummy=None):
-        return self.aa_sequence
+        self.translation = seq
 
 class TestCTerminalExtract(unittest.TestCase):
     def setUp(self):

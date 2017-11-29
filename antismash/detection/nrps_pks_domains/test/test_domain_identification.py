@@ -6,8 +6,6 @@
 
 import unittest
 
-from minimock import mock, restore
-
 from antismash.common.hmmscan_refinement import HMMResult
 from antismash.common.test.helpers import DummyRecord, DummyCDS
 from antismash.detection.nrps_pks_domains import domain_identification
@@ -21,11 +19,8 @@ class TestTerminalRemoval(unittest.TestCase):
     def setUp(self):
         self.func = domain_identification.filter_nonterminal_docking_domains
         self.cds = DummyCDS(0, 200)
+        self.cds.translation = "A" * 200
         self.record = DummyRecord(features=[self.cds])
-        mock("DummyCDS.get_aa_sequence", returns="A"*200)
-
-    def tearDown(self):
-        restore()
 
     def test_no_terminals(self):
         hits = [dummy_hmm(start=5 + i * 10) for i in range(10)]
