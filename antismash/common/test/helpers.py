@@ -18,7 +18,7 @@ from Bio.SeqFeature import FeatureLocation
 from helperlibs.wrappers.io import TemporaryDirectory
 
 import antismash
-from antismash.common import serialiser, module_results
+from antismash.common import serialiser, module_results, path
 from antismash.common.secmet import Cluster, CDSFeature, Feature, Record
 from antismash.config import update_config
 from antismash.config.args import build_parser
@@ -72,10 +72,14 @@ class DummyRecord(Record):
 
 
 def get_path_to_nisin_genbank():
-    path = __file__
+    file_path = __file__
     for _i in range(3):
-        path = os.path.dirname(path)
-    return os.path.join(path, 'test', 'integration', 'data', 'nisin.gbk')
+        file_path = os.path.dirname(file_path)
+    return os.path.join(file_path, 'test', 'integration', 'data', 'nisin.gbk')
+
+
+def get_path_to_nisin_fasta():
+    return path.get_full_path(__file__, "data", "nisin.fasta")
 
 
 def get_path_to_nisin_with_detection():
@@ -83,10 +87,10 @@ def get_path_to_nisin_with_detection():
 
 
 def get_path_to_balhymicin_genbank():
-    path = __file__
+    file_path = __file__
     for _i in range(3):
-        path = os.path.dirname(path)
-    return os.path.join(path, 'test/integration/data/Y16952.gbk')
+        file_path = os.path.dirname(file_path)
+    return os.path.join(file_path, 'test/integration/data/Y16952.gbk')
 
 
 def run_and_regenerate_results_for_module(input_file, module, options, expected_record_count):
