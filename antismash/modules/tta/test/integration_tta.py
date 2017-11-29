@@ -4,19 +4,23 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
+import os
+from tempfile import TemporaryDirectory
 import unittest
 
-from antismash.main import get_all_modules, detect_signature_genes
+import antismash
+from antismash.main import detect_signature_genes, read_data, regenerate_results_for_record
 from antismash.common.module_results import ModuleResults
 from antismash.common.record_processing import parse_input_sequence
 import antismash.common.test.helpers as helpers
-from antismash.config import args, get_config, update_config, destroy_config
+from antismash.config import get_config, update_config, destroy_config, build_config
 from antismash.modules import tta
 
 
 class TtaIntegrationTest(unittest.TestCase):
     def setUp(self):
-        options = args.build_parser(modules=get_all_modules()).parse_args(["--tta"])
+        options = build_config(["--minimal", "--tta"], isolated=True,
+                                modules=antismash.get_all_modules())
         self.old_config = get_config().__dict__
         self.options = update_config(options)
 
@@ -32,6 +36,7 @@ class TtaIntegrationTest(unittest.TestCase):
         for cluster in clusters:
             assert cluster.cds_children
         assert record.get_cds_features_within_clusters()
+        assert record.get_feature_count() == 26
 
         assert tta.check_prereqs() == []
         assert tta.check_options(self.options) == []
@@ -40,3 +45,22 @@ class TtaIntegrationTest(unittest.TestCase):
         results = tta.run_on_record(record, prior_results, self.options)
         assert isinstance(results, ModuleResults)
         assert len(results.features) == 174
+        assert record.get_feature_count() == 26
+        results.add_to_record(record)
+        assert record.get_feature_count() == 200
+
+    def test_nisin_complete(self):
+        with TemporaryDirectory() as output_dir:
+            args = ["--minimal", "--tta", "--output-dir", output_dir, helpers.get_path_to_nisin_genbank()]
+            options = build_config(args, isolated=True, modules=antismash.get_all_modules())
+            antismash.run_antismash(helpers.get_path_to_nisin_genbank(), options)
+
+            # regen the results
+            update_config({"reuse_results": os.path.join(output_dir, "nisin.json")})
+            prior_results = read_data(None, options)
+            record = prior_results.records[0]
+            results = prior_results.results[0]
+            regenned = regenerate_results_for_record(record, options, [tta], results)
+            tta_results = regenned["antismash.modules.tta"]
+            assert isinstance(tta_results, tta.TTAResults)
+            assert len(tta_results.features) == 174
