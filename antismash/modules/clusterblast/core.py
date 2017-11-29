@@ -235,7 +235,7 @@ def create_blast_inputs(cluster) -> Tuple[List[str], List[str]]:
                              "%d-%d" % (cds.location.start, cds.location.end),
                              strand, cds.get_accession(), cds.product])
         names.append(fullname)
-        seqs.append(cds.get_aa_sequence())
+        seqs.append(cds.translation)
 
     return names, seqs
 
@@ -313,7 +313,7 @@ def parse_subject(tabs, seqlengths, accessions, record) -> Subject:
         perc_coverage = (float(tabs[3]) / seqlengths[cds_accession]) * 100
     else:
         feature_by_id = record.get_cds_accession_mapping()
-        seqlength = len(feature_by_id[cds_accession].get_aa_sequence())
+        seqlength = len(feature_by_id[cds_accession].translation)
         perc_coverage = (float(tabs[3]) / seqlength) * 100
     return Subject(subject, genecluster, start, end, strand, annotation,
                    perc_ident, blastscore, perc_coverage, evalue, locustag)
@@ -444,7 +444,7 @@ def get_cds_lengths(record) -> Dict[str, int]:
     """
     lengths = {}
     for cds in record.get_cds_features():
-        lengths[cds.get_accession()] = len(cds.get_aa_sequence())
+        lengths[cds.get_accession()] = len(cds.translation)
     return lengths
 
 

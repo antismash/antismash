@@ -501,22 +501,6 @@ class CDSFeature(Feature):
         assert "-" not in translation
         self._translation = str(translation)
 
-    def get_aa_sequence(self, to_stop=False) -> str:
-        """ Extract the amino acid sequence of the CDS feature
-            Args:
-                to_stop: A boolean value indicating whether to limit the
-                         sequence to the first stop codon within the feature
-            Returns:
-                A string containing the ungapped sequence
-        """
-        sequence = self.translation
-        if "*" in sequence:
-            if to_stop:
-                sequence = sequence.split('*')[0]
-            else:
-                sequence = sequence.replace("*", "X")
-        return sequence
-
     def get_accession(self) -> str:
         "Get the gene ID from protein id, gene name or locus_tag, in that order"
         for val in [self.protein_id, self.gene, self.locus_tag]:

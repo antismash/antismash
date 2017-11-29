@@ -53,7 +53,7 @@ def filter_nonterminal_docking_domains(record, gene_domains):
     results = {}
     for gene_name in list(gene_domains):
         new = []
-        gene_length = len(feature_by_id[gene_name].get_aa_sequence())
+        gene_length = len(feature_by_id[gene_name].translation)
         for hit in gene_domains[gene_name]:
             if hit.hit_id in dockingdomains and \
                     not (gene_length - max(hit.query_start, hit.query_end) < 50

@@ -141,7 +141,7 @@ def get_cluster_cds_features(_cluster, _seq_record):
     raise RuntimeError("utils.get_cluster_cds_features(cluster) called, did you mean cluster.cds_children?")
 
 def get_aa_sequence(_feature, **_kwargs):
-    raise RuntimeError("get_aa_sequence(cds) called, did you mean cds.get_aa_sequence()?")
+    raise RuntimeError("get_aa_sequence(cds) called, did you mean cds.translation?")
 
 def get_feature_dict_protein_id(_record):
     raise RuntimeError("get_feature_dict_protein_id(record) called, did you mean record.get_cds_accession_mapping()?")

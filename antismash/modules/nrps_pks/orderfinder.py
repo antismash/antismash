@@ -159,7 +159,7 @@ def extract_nterminus(data_dir, genes, start_gene):
     for gene in genes:
         gene_name = gene.get_name()
         if gene_name != start_gene:
-            seq = str(gene.get_aa_sequence())
+            seq = str(gene.translation)
             n_terminals[gene_name] = seq[:50]
     for name, seq in n_terminals.items():
         alignments = subprocessing.run_muscle_single(name, seq, nterm_file)
@@ -187,7 +187,7 @@ def extract_cterminus(data_dir, genes, end_gene) -> Dict[str, str]:
     for gene in genes:
         gene_name = gene.get_name()
         if gene_name != end_gene:
-            seq = str(gene.get_aa_sequence())
+            seq = str(gene.translation)
             c_terminals[gene_name] = seq[-100:]
     for name, seq in c_terminals.items():
         alignments = subprocessing.run_muscle_single(name, seq, cterm_file)

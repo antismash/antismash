@@ -30,7 +30,7 @@ def extract_pks_genes(genes):
         for domain in domains:
             if domain.name == "PKS_AT":
                 count += 1
-                seq = str(gene.get_aa_sequence())[domain.start:domain.end]
+                seq = str(gene.translation)[domain.start:domain.end]
                 name = locus + "_AT" + str(count)
                 results[name] = seq
     return results
@@ -60,7 +60,7 @@ def run_minowa_predictor_pks_cal(genes):
         for domain in gene.nrps_pks.domains:
             if domain.name == "CAL_domain":
                 count += 1
-                seq = str(gene.get_aa_sequence())[domain.start:domain.end]
+                seq = str(gene.translation)[domain.start:domain.end]
                 name = locus + "_CAL" + str(count)
                 cal_domains[name] = seq
     with TemporaryDirectory(change=True):
@@ -80,7 +80,7 @@ def run_kr_stereochemistry_predictions(genes):
         for domain in gene.nrps_pks.domains:
             if domain.name == "PKS_KR":
                 count += 1
-                seq = str(gene.get_aa_sequence())[domain.start:domain.end]
+                seq = str(gene.translation)[domain.start:domain.end]
                 name = locus + "_KR" + str(count)
                 queries[name] = seq
     activity, stereo = kr_analysis.run_kr_analysis(queries)

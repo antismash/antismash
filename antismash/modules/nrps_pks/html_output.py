@@ -252,7 +252,7 @@ class NrpspksLayer(ClusterLayer):
 
         # Create url_link to NaPDoS for C and KS domains
         napdoslink = ""
-        domainseq = str(feature.get_aa_sequence())[domain.start:domain.end]
+        domainseq = str(feature.translation)[domain.start:domain.end]
         dna_sequence = ''
         if self.record.options.input_type == 'nucl':
             dna_sequence = str(feature.extract(self.record.seq_record.seq))
