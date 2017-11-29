@@ -8,7 +8,7 @@ from typing import Dict, List, Set, Tuple  # pylint: disable=unused-import
 
 from helperlibs.wrappers.io import TemporaryDirectory
 
-from antismash.common import path, subprocessing, deprecated as utils, secmet
+from antismash.common import path, subprocessing, fasta, secmet
 from antismash.config import get_config
 
 from .data_structures import Subject, Query, Protein, ReferenceCluster, Score
@@ -508,7 +508,7 @@ def internal_homology_blast(record) -> Dict[int, List[List[str]]]:
             cluster_number = cluster.get_cluster_number()
             iquerycluster_names, iqueryclusterseqs = create_blast_inputs(cluster)
             query_filename = "internal_input.fasta"
-            utils.writefasta(iquerycluster_names, iqueryclusterseqs, query_filename)
+            fasta.write_fasta(iquerycluster_names, iqueryclusterseqs, query_filename)
             blastoutput = run_internal_blastsearch(query_filename)
             queries, _ = blastparse(blastoutput, record, min_seq_coverage=25,
                                     min_perc_identity=30)
@@ -708,7 +708,7 @@ def write_fastas_with_all_genes(clusters, filename, partitions=1) -> List[str]:
     if not (all_names and all_seqs):
         raise ValueError("Diamond search space contains no sequences")
     if partitions == 1:
-        utils.writefasta(all_names, all_seqs, filename)
+        fasta.write_fasta(all_names, all_seqs, filename)
         return [filename]
 
     chunk_filename = "%d".join(os.path.splitext(filename))
@@ -719,5 +719,5 @@ def write_fastas_with_all_genes(clusters, filename, partitions=1) -> List[str]:
         if i == partitions - 1:
             chunk_names = all_names[i * size:]
             chunk_seqs = all_seqs[i * size:]
-        utils.writefasta(chunk_names, chunk_seqs, chunk_filename % i)
+        fasta.write_fasta(chunk_names, chunk_seqs, chunk_filename % i)
     return [chunk_filename % i for i in range(partitions)]

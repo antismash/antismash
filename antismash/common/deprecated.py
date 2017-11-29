@@ -12,15 +12,12 @@ import logging
 import inspect
 import linecache
 
-import Bio
-from Bio.Seq import Seq
 # pylint: disable=unused-import
 from Bio.SeqFeature import SeqFeature, FeatureLocation # for others importing
 from Bio.SeqRecord import SeqRecord
 # pylint: enable=unused-import
 
 from antismash.config import get_config
-from antismash.common.secmet import CDSFeature, Feature
 
 # pylint: disable=unused-import
 from .utils import generate_unique_id, RobustProteinAnalysis
@@ -33,39 +30,6 @@ def CODE_SKIP_WARNING():
             + linecache.getline(prev.f_code.co_filename, prev.f_lineno + 1).replace('%', '%%').rstrip())
 # end temp
 
-
-def get_multifasta(seq_record) -> str:
-    """Extract multi-protein FASTA from all CDS features in sequence record"""
-    features = seq_record.get_cds_features()
-    all_fastas = []
-    for feature in features:
-        gene_id = feature.get_name()
-        fasta_seq = feature.translation
-        if "-" in str(fasta_seq):
-            fasta_seq = Seq(str(fasta_seq).replace("-", ""), Bio.Alphabet.generic_protein)
-
-        # Never write empty fasta entries
-        if not fasta_seq:
-            logging.error("No translation for CDS %s", gene_id)
-            raise ValueError("No translation for CDS %s" % gene_id)
-
-        all_fastas.append(">%s\n%s" % (gene_id, fasta_seq))
-    full_fasta = "\n".join(all_fastas)
-    return full_fasta
-
-def writefasta(names, seqs, filename) -> None:
-    "Write sequence to a file"
-    e = 0
-    f = len(names) - 1
-    out_file = open(filename, "w")
-    while e <= f:
-        out_file.write(">")
-        out_file.write(names[e])
-        out_file.write("\n")
-        out_file.write(seqs[e])
-        out_file.write("\n")
-        e += 1
-    out_file.close()
 
 def strip_record(seq_record) -> None:
     """ Discard antismash specific features and feature qualifiers """
@@ -126,12 +90,6 @@ def distance_to_pfam(seq_record, query, hmmer_profiles) -> int: #also from lasso
                         closest_distance = distance[cds.get_name()]
     return closest_distance
 
-def get_specific_multifasta(features) -> str:
-    """Extract multi-protein FASTA from provided features"""
-    all_fastas = []
-    for feature in features:
-        all_fastas.append(">%s\n%s" % (feature.get_name(), feature.translation))
-    return "\n".join(all_fastas)
 
 def hmmlengths(hmmfile) -> dict:
     lengths = {}

@@ -6,7 +6,7 @@ from typing import Dict, List, Set, Tuple
 
 from Bio.SearchIO._model.hsp import HSP
 
-from antismash.common import path, deprecated
+from antismash.common import path, fasta
 from antismash.common.secmet.feature import Cluster, SecMetQualifier, CDSFeature, GeneFunction
 from antismash.common.deprecated import FeatureLocation
 from antismash.common.subprocessing import run_hmmsearch
@@ -300,7 +300,7 @@ def detect_signature_genes(record, options) -> None:
     # if there's no genes, don't try to do anything
     if not feature_by_id:
         return None
-    full_fasta = deprecated.get_multifasta(record)
+    full_fasta = fasta.get_fasta_from_record(record)
     rules = create_rules(enabled_cluster_types)
     results = []
     sig_by_name = {}

@@ -8,10 +8,10 @@ import unittest
 
 from antismash.modules.nrps_pks.minowa.minowa_at import run_minowa_at
 from antismash.modules.nrps_pks.minowa.minowa_cal import run_minowa_cal
-from antismash.common import path, utils
+from antismash.common import path, fasta
 
 class TestMinowaAT(unittest.TestCase):
-    query_data = utils.read_fasta(path.get_full_path(__file__, "data", "SCO.fasta"))
+    query_data = fasta.read_fasta(path.get_full_path(__file__, "data", "SCO.fasta"))
 
     def test_full_run(self):
         results = run_minowa_at(self.query_data)

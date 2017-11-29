@@ -6,13 +6,13 @@
 
 import unittest
 
-from antismash.common import path, utils
+from antismash.common import path, fasta
 from antismash.modules.nrps_pks.kr_analysis.kr_analysis import run_kr_analysis
 
 
 class TestKRAnalysis(unittest.TestCase):
     def setUp(self):
-        self.query_data = utils.read_fasta(path.get_full_path(__file__, 'data', 'SCO_genes.fasta'))
+        self.query_data = fasta.read_fasta(path.get_full_path(__file__, 'data', 'SCO_genes.fasta'))
 
     def test_full_run(self):
         active, stereo = run_kr_analysis(self.query_data)

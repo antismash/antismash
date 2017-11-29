@@ -4,7 +4,7 @@
 import logging
 from typing import Dict, List
 
-from antismash.common import path, subprocessing, utils
+from antismash.common import path, subprocessing, utils, fasta
 
 _SIGNATURE_LENGTH = 24
 _AT_DOMAINS_FILENAME = path.get_full_path(__file__, "data", "AT_domains_muscle.fasta")
@@ -104,4 +104,4 @@ def run_at_domain_analysis(domains) -> Dict[str, List[ATResult]]:
         query_signatures[name] = utils.extract_by_reference_positions(alignments[name],
                                          alignments[_REF_SEQUENCE], at_positions)
     # load reference PKS signatures and score queries against them
-    return score_signatures(query_signatures, utils.read_fasta(_SIGNATURES_FILENAME))
+    return score_signatures(query_signatures, fasta.read_fasta(_SIGNATURES_FILENAME))

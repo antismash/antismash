@@ -18,6 +18,7 @@ from Bio.SeqFeature import FeatureLocation
 from antismash.detection.hmm_detection.signatures import HmmSignature
 from antismash.common import all_orfs, deprecated, path, subprocessing, secmet, \
                              module_results, serialiser
+from antismash.common.fasta import get_fasta_from_features
 
 from .rodeo import run_rodeo
 
@@ -326,7 +327,7 @@ def get_detected_domains(cluster: secmet.Cluster) -> List[str]:
 
     # Gather non-biosynthetic domains
     cluster_features = cluster.cds_children
-    cluster_fasta = deprecated.get_specific_multifasta(cluster_features)
+    cluster_fasta = get_fasta_from_features(cluster_features)
     non_biosynthetic_hmms_by_id = run_non_biosynthetic_phmms(cluster_fasta)
     non_biosynthetic_hmms_found = []
     for hmm in non_biosynthetic_hmms_by_id:
