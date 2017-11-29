@@ -100,6 +100,7 @@ def setup_logging(logfile=None, verbose=False, debug=False) -> None:
 
     log_format = '%(levelname)-8s %(asctime)s   %(message)s'
     logging.basicConfig(format=log_format, level=log_level, datefmt="%d/%m %H:%M:%S")
+
     if not logfile:
         return
 
@@ -449,7 +450,7 @@ def run_antismash(sequence_file, options, detection_modules=None,
             0 if requested operations completed succesfully, otherwise 1
             Exceptions may also be raised
     """
-    logfile = options.logfile if 'logfile' in options else None
+    logfile = options.logfile
     setup_logging(logfile=logfile, verbose=options.verbose,
                   debug=options.debug)
 
