@@ -55,12 +55,19 @@ class DetectionTest(unittest.TestCase):
             assert rule.contains_positive_condition()
 
         detected_types = {}
-        cds_with_hits = sorted(self.results_by_id, key=lambda gene_id: self.feature_by_id[gene_id].location.start)
+        cds_with_hits = sorted(self.results_by_id,
+                               key=lambda gene_id: self.feature_by_id[gene_id].location.start)
         for cds in cds_with_hits:
             detected_type = detected_types.get(cds)
             if detected_type:
                 continue
-            rule_results = [rule.detect(cds, self.feature_by_id, self.results_by_id) for rule in rules]
+            rule_results = []
+            for rule in rules:
+                rule_results.append(rule.detect(cds, self.feature_by_id, self.results_by_id))
+                if rule_results[-1]:
+                    # check that we have something interesting to report
+                    hit_string = rule.get_hit_string().replace("0*", "")
+                    assert "*" in hit_string
             results = [rule.name for rule, res in zip(rules, rule_results) if res.met and res.matches]
             if results:
                 detected_types[cds] = results
@@ -434,32 +441,32 @@ class RuleParserTest(unittest.TestCase):
 
 class TokenTest(unittest.TestCase):
     def test_alpha(self):
-        t = rule_parser.Token("abc", 1, 7)
-        assert t.identifier == "abc"
-        assert t.position == 7 - len(t.identifier)
-        assert repr(t) == "'abc'"
+        token = rule_parser.Token("abc", 1, 7)
+        assert token.identifier == "abc"
+        assert token.position == 7 - len(token.identifier)
+        assert repr(token) == "'abc'"
         with self.assertRaises(AttributeError):
             # if it isn't an error, print it out for debugging
-            print(t.value)
+            print(token.value)
 
     def test_numeric(self):
-        t = rule_parser.Token("12", 1, 6)
-        assert t.value == 12
-        assert t.position == 6 - len("12")
-        assert repr(t) == ("12")
+        token = rule_parser.Token("12", 1, 6)
+        assert token.value == 12
+        assert token.position == 6 - len("12")
+        assert repr(token) == ("12")
         with self.assertRaises(AttributeError):
             # if it isn't an error, print it out for debugging
-            print(t.identifier)
+            print(token.identifier)
 
     def test_operators(self):
-        t = rule_parser.Token("minimum", 1, 20)
-        assert t.type == rule_parser.TokenTypes.MINIMUM
-        t = rule_parser.Token("and", 1, 20)
-        assert t.type == rule_parser.TokenTypes.AND
-        t = rule_parser.Token("or", 1, 20)
-        assert t.type == rule_parser.TokenTypes.OR
-        t = rule_parser.Token("not", 1, 20)
-        assert t.type == rule_parser.TokenTypes.NOT
+        token = rule_parser.Token("minimum", 1, 20)
+        assert token.type == rule_parser.TokenTypes.MINIMUM
+        token = rule_parser.Token("and", 1, 20)
+        assert token.type == rule_parser.TokenTypes.AND
+        token = rule_parser.Token("or", 1, 20)
+        assert token.type == rule_parser.TokenTypes.OR
+        token = rule_parser.Token("not", 1, 20)
+        assert token.type == rule_parser.TokenTypes.NOT
 
         # as a bonus, test the type converts to strings nicely for debugging
-        assert str(t.type) == "not"
+        assert str(token.type) == "not"
