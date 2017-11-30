@@ -25,8 +25,7 @@ class TestAntismash(unittest.TestCase):
         return ["--minimal"]
 
     def build_config(self, args):
-        self.parser = build_parser(modules=get_all_modules())
-        self.default_options = build_config(args, parser=self.parser)
+        self.default_options = build_config(args, isolated=True, modules=get_all_modules())
         self.default_options.all_enabled_modules = []
         self.default_options.output_dir = self.temp_dir.name
 

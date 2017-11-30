@@ -10,12 +10,16 @@ import unittest
 from minimock import mock, restore, TraceTracker, assert_same_trace
 
 from antismash import main
+from antismash.config import build_config, destroy_config
 from antismash.config.args import build_parser
 
 class TestAntismash(unittest.TestCase):
     def setUp(self):
         self.all_modules = main.get_all_modules()
         self.default_options = build_parser(modules=self.all_modules).parse_args([])
+
+    def tearDown(self):
+        destroy_config()
 
     def test_default_options(self):
         # default options should work with all normal modules
@@ -33,7 +37,7 @@ class TestAntismash(unittest.TestCase):
 
     def test_help_options(self):
         for option in ["--list-plugins", "--check-prereqs"]:
-            options = build_parser(modules=self.all_modules).parse_args([option])
+            options = build_config([option], isolated=False, modules=self.all_modules)
             ret_val = main.run_antismash("", options)
             assert ret_val == 0
 
