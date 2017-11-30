@@ -107,7 +107,7 @@ def find_all_orfs(record, cluster=None) -> List[CDSFeature]:
     seq = record.seq
     existing = record.get_cds_features()
     if cluster:
-        fasta_seq = record.seq[cluster.location.start:cluster.location.end]
+        seq = record.seq[cluster.location.start:cluster.location.end]
         offset = cluster.location.start
         existing = cluster.cds_children
 
