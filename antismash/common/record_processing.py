@@ -378,10 +378,7 @@ def ensure_no_duplicate_gene_ids(sequences) -> None:
     for sequence in sequences:
         for cdsfeature in sequence.get_cds_features():
             name = cdsfeature.get_name()
-            if not name:
-                name, high_water_mark = generate_unique_id("unnamed_orf", all_ids,
-                                                start=high_water_mark + 1)
-            elif name in all_ids:
+            if name in all_ids:
                 name, _ = generate_unique_id(name[:8], all_ids, start=1)
             if cdsfeature.product is None:
                 cdsfeature.product = name
