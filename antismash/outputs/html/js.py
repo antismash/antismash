@@ -62,8 +62,6 @@ def convert_clusters(record, options, result):
         js_cluster['products'] = cluster.products
         if cluster.probability is not None:
             js_cluster['probability'] = cluster.probability
-        if options.input_type == 'prot':
-            js_cluster['unordered'] = True
         js_cluster['knowncluster'] = "-"
         js_cluster['BGCid'] = "-"
 
@@ -153,10 +151,9 @@ def get_description(record, feature, type_, options, mibig_result):
                 entry = '<a href="%s" target="_new">View smCOG seed phylogenetic tree with this gene</a>'
                 url = note.split(':')[-1]
                 replacements['smcog_tree_line'] = entry % url
-    if options.input_type == 'nucl':
-        replacements["start"] = int(feature.location.start) + 1  # 1-indexed
-        replacements["end"] = int(feature.location.end)
-        template += "Location: {start} - {end}<br><br>\n"
+    replacements["start"] = int(feature.location.start) + 1  # 1-indexed
+    replacements["end"] = int(feature.location.end)
+    template += "Location: {start} - {end}<br><br>\n"
 
     if mibig_result:
         cluster_number = feature.cluster.get_cluster_number()

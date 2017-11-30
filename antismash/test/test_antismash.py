@@ -26,15 +26,6 @@ class TestAntismash(unittest.TestCase):
         options = self.default_options
         assert main.verify_options(options, self.all_modules)
 
-        # adding an incompatibility should not be ok
-        options.tta = True
-        options.input_type = 'prot'
-        assert not main.verify_options(options, self.all_modules)
-
-        # and just to be sure the above isn't just because tta
-        options.input_type = 'nucl'
-        assert main.verify_options(options, self.all_modules)
-
     def test_help_options(self):
         for option in ["--list-plugins", "--check-prereqs"]:
             options = build_config([option], isolated=False, modules=self.all_modules)

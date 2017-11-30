@@ -29,7 +29,6 @@
       <div id= 'cluster-{{cluster.get_cluster_number()}}-svg'>
       </div>
     </div>
-    {% if options.input_type == 'nucl' %}
     <div class="legend">
       <h4>Legend:</h4>
       <div>
@@ -52,7 +51,6 @@
         {% endif %}
       </div>
     </div>
-    {% endif %}
     {% for handler in cluster.handlers %}
       {% if handler.generate_details_div is defined and handler.__name__ in record.results %}
         {{handler.generate_details_div(cluster, record.results[handler.__name__], record, options) | safe}}

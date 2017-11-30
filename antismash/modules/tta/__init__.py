@@ -22,8 +22,6 @@ def get_arguments():
 
 
 def check_options(options):
-    if options.tta and options.input_type == "prot":
-        raise ValueError("TTA detection and protein input sequences are incompatible")
     return []
 
 

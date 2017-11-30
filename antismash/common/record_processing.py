@@ -83,17 +83,12 @@ def check_content(sequence: Record) -> Record:
     cdsfeatures = sequence.get_cds_features()
     cdsfeatures_with_translations = len([cds for cds in cdsfeatures if cds.translation])
     assert cdsfeatures_with_translations == len(cdsfeatures)
-    if options.input_type == 'prot':
-        if is_nucl_seq(sequence.seq):
-            logging.error("Record %s is a nucleotide record, skipping.", sequence.id)
-            sequence.skip = "nucleotide record in protein mode"
-    elif options.input_type == 'nucl':
-        if not isinstance(sequence.seq.alphabet, Bio.Alphabet.NucleotideAlphabet)\
-                and not is_nucl_seq(sequence.seq):
-            logging.error("Record %s is a protein record, skipping.", sequence.id)
-            sequence.skip = "protein record in nucleotide mode"
-        else:
-            sequence.seq.alphabet = Bio.Alphabet.generic_dna
+    if not isinstance(sequence.seq.alphabet, Bio.Alphabet.NucleotideAlphabet)\
+            and not is_nucl_seq(sequence.seq):
+        logging.error("Record %s is a protein record, skipping.", sequence.id)
+        sequence.skip = "protein record"
+    else:
+        sequence.seq.alphabet = Bio.Alphabet.generic_dna
     return sequence
 
 
@@ -163,15 +158,11 @@ def pre_process_sequences(sequences, options, genefinding) -> List[Record]:
         seq.record_index = i
 
     # keep sequences as clean as possible
-    if options.input_type == "nucl":
-        logging.debug("Sanitising record sequences")
-        sequences = parallel_function(sanitise_sequence, ([record] for record in sequences))
-        for record in sequences:
-            if record.skip or not record.seq:
-                logging.warning("Record %s has no sequence, skipping.", record.id)
-    elif options.input_type == "prot":
-        for record in sequences:
-            record.seq = Seq(str(record.seq).replace("-", ""))
+    logging.debug("Sanitising record sequences")
+    sequences = parallel_function(sanitise_sequence, ([record] for record in sequences))
+    for record in sequences:
+        if record.skip or not record.seq:
+            logging.warning("Record %s has no sequence, skipping.", record.id)
 
     # run the filter
     for sequence in sequences:
@@ -191,10 +182,6 @@ def pre_process_sequences(sequences, options, genefinding) -> List[Record]:
         elif matching_filter != len(sequences):
             logging.info("Skipped %d sequences not matching filter: %s",
                          len(sequences) - matching_filter, limit)
-
-    # If protein input, convert all protein seq_records to one nucleotide seq_record
-    if options.input_type == 'prot':
-        sequences = generate_nucl_seq_record(sequences)
 
     # catch WGS master or supercontig entries
     if records_contain_shotgun_scaffolds(sequences):
@@ -313,38 +300,6 @@ def is_nucl_seq(sequence) -> bool:
     for char in "acgtn":
         other = other.replace(char, "")
     return len(other) < 0.2 * len(sequence)
-
-
-def generate_nucl_seq_record(records) -> Record:
-    """ Generate single nucleotide-based record from multiple records
-
-        Arguments:
-            records: the records from which to generate the record
-
-        Returns:
-            a new secmet.Record instance containing all record info
-    """
-    if not records:
-        raise ValueError("Cannot generate nucleotide records of empty input")
-
-    # TODO: surely we can use a better base id/name/description
-    record = Record(Seq(""), id="Protein_Input", name="ProteinInput",
-                    description="antiSMASH protein input")
-    position = 0
-    cds_names = set()
-    for record in records:
-        start = position
-        end = position + len(record) * 3
-        position += len(record) * 3 + 1000
-        location = FeatureLocation(start, end, strand=1)
-        name = record.id[:15].replace(" ", "_")
-        if name in cds_names:
-            name, _ = generate_unique_id(name[:8], cds_names)
-        cds_names.add(name)
-        translation = str(record.seq).replace('.', 'X')
-        cdsfeature = CDSFeature(location, translation, product=name, locus_tag=name)
-        record.add_cds_feature(cdsfeature)
-    return record
 
 
 def records_contain_shotgun_scaffolds(records) -> bool:
