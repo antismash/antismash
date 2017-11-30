@@ -120,6 +120,11 @@ def find_all_orfs(record, cluster=None) -> List[CDSFeature]:
     new_features = []
 
     for location in locations:
+        if cluster:
+            if isinstance(location.start, (BeforePosition, AfterPosition)):
+                continue
+            if isinstance(location.end, (BeforePosition, AfterPosition)):
+                continue
         dummy_feature = Feature(location, feature_type="dummy")
         # skip if overlaps with existing CDSs
         if any(dummy_feature.overlaps_with(cds) for cds in existing):
