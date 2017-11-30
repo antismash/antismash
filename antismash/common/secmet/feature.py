@@ -442,8 +442,6 @@ class CDSFeature(Feature):
 
         # optional
         self.product = product
-        if self.product:
-            assert product[0] == "N"
         self.transl_table = None
         self._sec_met = None  # SecMetQualifier()
         self._nrps_pks = NRPSPKSQualifier()

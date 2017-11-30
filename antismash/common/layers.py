@@ -22,9 +22,6 @@ class RecordLayer:
     def get_from_record(self):
         " returns the text to be displayed in the overview table > separator-text "
 
-        if self.options.input_type != 'nucl':
-            return 'The following clusters were found in your protein input:'
-
         current_id = self.seq_record.id
 
         orig_id = self.seq_record.original_id
@@ -83,12 +80,9 @@ class ClusterLayer:
 
     def description_text(self):
         " returns the gene cluster description "
-        if self.record.options.input_type == 'nucl':
-            description_text = self.record.name \
-                    + ' - Gene Cluster %s. Type = %s. Location: %s - %s nt. ' % (
-                            self.get_cluster_number(), self.get_product_string(), self.location.start + 1, self.location.end)
-        else:
-            description_text = self.record.seq_id + '- Gene Cluster %s. Type = %s. ' % (self.get_cluster_number(), self.get_product_string())
+        description_text = self.record.name \
+                + ' - Gene Cluster %s. Type = %s. Location: %s - %s nt. ' % (
+                        self.get_cluster_number(), self.get_product_string(), self.location.start + 1, self.location.end)
         if self.probability != "BROKEN":  # TODO: real value check
             description_text += 'ClusterFinder probability: %s. ' % self.probability
         description_text += 'Click on genes for more information.'

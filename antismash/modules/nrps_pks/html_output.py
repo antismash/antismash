@@ -253,9 +253,7 @@ class NrpspksLayer(ClusterLayer):
         # Create url_link to NaPDoS for C and KS domains
         napdoslink = ""
         domainseq = str(feature.translation)[domain.start:domain.end]
-        dna_sequence = ''
-        if self.record.options.input_type == 'nucl':
-            dna_sequence = str(feature.extract(self.record.seq_record.seq))
+        dna_sequence = str(feature.extract(self.record.seq_record.seq))
         base = "http://napdos.ucsd.edu/cgi-bin/process_request.cgi?query_type=aa&amp;ref_seq_file=all_{0}_public_12062011.faa&amp;Sequence=%3E{0}_domain_from_antiSMASH%0D{1}"
         if domain.name == "PKS_KS":
             napdoslink = base.format("KS", domainseq)

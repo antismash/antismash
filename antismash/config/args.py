@@ -433,13 +433,6 @@ def basic_options():
                      choices=['bacteria', 'fungi'],
                      type=str,
                      help="Taxonomic classification of input sequence. (default: %(default)s)")
-
-    group.add_option('--input-type',
-                     dest='input_type',
-                     default='nucl',
-                     choices=['nucl', 'prot'],
-                     type=str,
-                     help="Determine input type: amino acid sequence(s) or nucleotide sequence(s). (default: %(default)s)")
     return group
 
 
