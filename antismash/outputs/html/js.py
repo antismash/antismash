@@ -84,7 +84,7 @@ def convert_cds_features(record, features, options, mibig_entries):
         # Fix for files that have their coordinates the wrong way around
         if js_orf['start'] > js_orf['end']:
             js_orf['end'], js_orf['start'] = js_orf['start'], js_orf['end']
-        js_orf['strand'] = feature.strand if feature.strand is not None else 1
+        js_orf['strand'] = feature.strand or 1
         js_orf['locus_tag'] = feature.get_name()
         js_orf['type'] = str(feature.gene_function)
         js_orf['description'] = get_description(record, feature, js_orf['type'], options, mibig_entries.get(feature.protein_id, {}))
@@ -125,35 +125,23 @@ def convert_tta_codons(tta_codons):
 def get_description(record, feature, type_, options, mibig_result):
     "Get the description text of a CDS feature"
 
-    replacements = {
-        'locus_tag': feature.locus_tag,
-        'protein_id': feature.protein_id,
-        'transport_blast_line': '',
-        'smcog_tree_line': '',
-        'searchgtr_line': '',
-    }
-
     blastp_url = "http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE=Proteins&" \
                  "PROGRAM=blastp&BLAST_PROGRAMS=blastp&QUERY=%s&" \
-                 "LINK_LOC=protein&PAGE_TYPE=BlastSearch"
+                 "LINK_LOC=protein&PAGE_TYPE=BlastSearch" % feature.translation
     genomic_context_url = "http://www.ncbi.nlm.nih.gov/projects/sviewer/?" \
                           "Db=gene&DbFrom=protein&Cmd=Link&noslider=1&"\
                           "id=%s&from=%s&to=%s"
-    template = '<span class="svgene-tooltip-bold">{product}</span><br>\n'
-    template += 'Locus-tag: {locus_tag}; Protein-ID: {protein_id}<br>\n'
+    template = '<span class="svgene-tooltip-bold">%s</span><br>\n' % feature.product or feature.get_name()
+    template += 'Locus-tag: %s; Protein-ID: %s<br>\n' % (feature.locus_tag, feature.protein_id)
+
     if feature.get_qualifier('EC_number'):
-        template += "EC-number(s): {ecnumber}<br>\n"
+        template += "EC-number(s): %s<br>\n" % feature.get_qualifier('EC_number')
+
     for gene_function in feature.gene_functions:
         template += "%s<br>\n" % str(gene_function)
-    if options.smcogs_trees:
-        for note in feature.notes:  # TODO find a better way to store image urls
-            if note.startswith('smCOG tree PNG image:'):
-                entry = '<a href="%s" target="_new">View smCOG seed phylogenetic tree with this gene</a>'
-                url = note.split(':')[-1]
-                replacements['smcog_tree_line'] = entry % url
-    replacements["start"] = int(feature.location.start) + 1  # 1-indexed
-    replacements["end"] = int(feature.location.end)
-    template += "Location: {start} - {end}<br><br>\n"
+
+    template += "Location: %d - %d<br><br>\n" % (feature.location.start + 1,  # 1-indexed
+                                                 feature.location.end)
 
     if mibig_result:
         cluster_number = feature.cluster.get_cluster_number()
@@ -161,57 +149,37 @@ def get_description(record, feature, type_, options, mibig_result):
                                          "cluster%d" % cluster_number,
                                          feature.get_accession() + '_mibig_hits.html')
         generate_html_table(mibig_homology_file, mibig_result)
-        replacements['mibig_homology_path'] = mibig_homology_file[len(options.output_dir) + 1:]
-        template += '<br><a href="{mibig_homology_path}" target="_new">MiBIG Hits</a><br>\n'
-    template += """
-{transport_blast_line}
-{searchgtr_line}
-<a href="{blastp_url}" target="_new">NCBI BlastP on this gene</a><br>
-<a href="{genomic_context_url}" target="_new">View genomic context</a><br>
-{smcog_tree_line}<br>"""
-    if get_ASF_predictions(feature):
-        replacements['asf'] = get_ASF_predictions(feature)
-        template += '<span class="bold">Active Site Finder results:</span><br>\n{asf}<br><br>\n'
-    template += """AA sequence: <a href="javascript:copyToClipboard('{sequence}')">Copy to clipboard</a><br>"""
-    template += """Nucleotide sequence: <a href="javascript:copyToClipboard('{dna_sequence}')">Copy to clipboard</a><br>"""
-
-    replacements['product'] = feature.product or feature.get_name()
-    sequence = feature.translation
-    dna_sequence = feature.extract(record.seq)
-    replacements['blastp_url'] = blastp_url % sequence
-    replacements['sequence'] = sequence
-    replacements['dna_sequence'] = dna_sequence
-    replacements['genomic_context_url'] = genomic_context_url % (record.id,
-                                 max(feature.location.start - 9999, 0),
-                                 min(feature.location.end + 10000, len(record)))
-    ecnumber = feature.get_qualifier('EC_number')
-    if ecnumber:
-        replacements['ecnumber'] = ", ".join(ecnumber)
+        mibig_path = mibig_homology_file[len(options.output_dir) + 1:]
+        template += '<br><a href="%s" target="_new">MiBIG Hits</a><br>\n' % mibig_path
 
     if type_ == 'transport':
         url = "http://blast.jcvi.org/er-blast/index.cgi?project=transporter;" \
               "program=blastp;database=pub/transporter.pep;" \
-              "sequence=sequence%%0A%s" % sequence
-        transport_blast_line = '<a href="%s" target="_new">TransportDB BLAST on this gene<br>' % url
-        replacements['transport_blast_line'] = transport_blast_line
+              "sequence=sequence%%0A%s" % feature.translation
+        template += '<a href="%s" target="_new">TransportDB BLAST on this gene<br>' % url
 
     key = record.id + "_" + feature.get_name()
     if key in searchgtr_links:
         url = searchgtr_links[key]
-        searchgtr_line = '<a href="%s" target="_new">SEARCHGTr on this gene<br>' % url
-        replacements['searchgtr_line'] = searchgtr_line
+        template += '<a href="%s" target="_new">SEARCHGTr on this gene<br>\n' % url
 
-    completed = template.format(**replacements)
-    return "".join(char for char in completed if char in string.printable)
+    template += '<a href="%s" target="_new">NCBI BlastP on this gene</a><br>\n' % blastp_url
 
+    context = genomic_context_url % (record.id,
+                                 max(feature.location.start - 9999, 0),
+                                 min(feature.location.end + 10000, len(record)))
+    template += """<a href="%s" target="_new">View genomic context</a><br>\n""" % context
 
-def get_ASF_predictions(feature):
-    "check whether predictions from the active site finder module are annotated"
-    if not hasattr(get_ASF_predictions, "logged"):
-        logging.critical("ASF_predictions being skipped in js.py")
-        get_ASF_predictions.logged = True
-    return ""  # TODO
-#    ASFsec_met_quals = [sec_met_qual[16:] for sec_met_qual in feature.qualifiers.get('sec_met', [""]) if sec_met_qual.startswith("ASF-prediction")]
-#    result = "<br>\n".join(ASFsec_met_quals)
+    if options.smcogs_trees:
+        for note in feature.notes:  # TODO find a better way to store image urls
+            if note.startswith('smCOG tree PNG image:'):
+                url = note.split(':')[-1]
+                entry = '<a href="%s" target="_new">View smCOG seed phylogenetic tree with this gene</a>\n'
+                template += entry % url
+                break
 
-#    return result
+    clipboard_fragment = """<a href="javascript:copyToClipboard('%s')">Copy to clipboard</a>"""
+    template += "AA sequence: %s<br>\n" % (clipboard_fragment % feature.translation)
+    template += "Nucleotide sequence: %s<br>\n" % (clipboard_fragment % feature.extract(record.seq))
+
+    return "".join(char for char in template if char in string.printable)
