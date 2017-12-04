@@ -93,9 +93,13 @@ def get_path_to_balhymicin_genbank():
     return os.path.join(file_path, 'test/integration/data/Y16952.gbk')
 
 
-def run_and_regenerate_results_for_module(input_file, module, options, expected_record_count):
+def run_and_regenerate_results_for_module(input_file, module, options,
+                                          expected_record_count, callback=None):
     """ Runs antismash end to end over the given file with the given options
         and returns the given modules regenerated results
+
+        if callback is supplied, it will be called with the output directory path
+        as an argument before the output directory is cleared
     """
     with TemporaryDirectory(change=True) as tempdir:
         orig_output = options.output_dir
@@ -105,6 +109,8 @@ def run_and_regenerate_results_for_module(input_file, module, options, expected_
         antismash.main.run_antismash(input_file, options)
         update_config({"output_dir": orig_output})
         results = serialiser.AntismashResults.from_file(json_filename)
+        if callback:
+            callback(tempdir)
     # not the responsibility of modules, but if it's wrong then everything is
     assert len(results.results) == expected_record_count
     assert len(results.records) == expected_record_count
