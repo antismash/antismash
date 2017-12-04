@@ -2,7 +2,7 @@
   <div class="more-details">
     <h3> Prediction details </h3>
     <dl class ="prediction-text">
-    {%- for motif in cluster.motifs -%}
+    {%- for motif in cluster.motifs if motif.peptide_type == "lanthipeptide" -%}
       <dt>{{motif.get_name()}}</dt>
         <dd>Putative {{motif.peptide_class}}</dd>
         <dd>Cleavage pHMM score: {{'%0.2f' | format(motif.score)}}</dd>
