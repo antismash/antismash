@@ -20,7 +20,8 @@ from antismash.config import update_config
 from antismash.common import deprecated, serialiser, record_processing
 from antismash.common.module_results import ModuleResults
 from antismash.detection import genefinding, hmm_detection, nrps_pks_domains
-from antismash.modules import tta, clusterblast, lanthipeptides, smcogs, dummy, nrps_pks
+from antismash.modules import tta, clusterblast, lanthipeptides, smcogs, dummy, \
+                              nrps_pks, thiopeptides
 from antismash.outputs import html, svg
 
 __version__ = "5.0.0alpha"
@@ -59,7 +60,7 @@ def get_analysis_modules() -> List[ModuleType]:
         Returns:
             a list of modules
     """
-    return [smcogs, tta, lanthipeptides, nrps_pks, clusterblast, dummy]
+    return [smcogs, tta, lanthipeptides, thiopeptides, nrps_pks, clusterblast, dummy]
 
 
 def get_output_modules() -> List[ModuleType]:

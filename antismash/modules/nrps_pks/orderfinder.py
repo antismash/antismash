@@ -25,7 +25,8 @@ def analyse_biosynthetic_order(nrps_pks_genes, consensus_predictions, seq_record
     compound_predictions = {}  # type: Dict[int, Tuple[str, bool]]
     # Find NRPS/PKS gene clusters
     nrpspksclusters = [cluster for cluster in seq_record.get_clusters() if "nrps" in cluster.products or "pks" in "-".join(cluster.products)]
-    assert nrpspksclusters
+    if not nrpspksclusters:
+        return {}
     # Predict biosynthetic gene order in gene cluster using starter domains, thioesterase domains, gene order and docking domains
     for cluster in nrpspksclusters:
         cluster_number = cluster.get_cluster_number()

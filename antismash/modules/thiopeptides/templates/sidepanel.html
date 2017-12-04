@@ -1,0 +1,51 @@
+<div class="more-details">
+  <h3> Prediction details </h3>
+  <dl class ="prediction-text">
+  {% for motif in cluster.motifs if motif.peptide_type == "thiopeptide" %}
+     <dt>{{motif.locus_tag}}</dt>
+      <dd>Putative {{motif.peptide_class}}</dd>
+        <dd>Cleavage pHMM score: {{'%0.2f' | format(motif.score)}}</dd>
+        <dd>RODEO score: {{motif.rodeo_score}}</dd>
+        <dd>Monoisotopic mass: {{ '%0.1f' % motif.monoisotopic_mass}} Da</dd>
+        <dd>Molecular weight: {{ '%0.1f' % motif.molecular_weight}} Da</dd>
+        <dd><u> Predicted peptide features:</u><br>{{motif.core_features}}</dd>
+
+        {% if motif.macrocycle -%}
+          <dd>Macrocycle: {{motif.macrocycle}}</dd>
+        {%- endif %}
+
+        {% if motif.amidation -%}
+          <dd>Tail reaction: {{motif.tail_reaction}}</dd>
+        {%- endif %}
+
+      <br>
+
+      {% if motif.peptide_class != "Type III" -%}
+        <dt>Considering maturation reactions</dt>
+          <dd>Monoisotopic mass: {{ '%0.1f' % motif.mature_weights[1]}} Da</dd>
+          <dd>Molecular weight: {{ '%0.1f' % motif.mature_weights[0]}} Da</dd>
+      {%- endif %}
+
+      {% if motif.alternative_weights -%}
+      <dd>
+      <dl>
+        <dt>Alternative weights</dt>
+        <dd class="alt-weight-desc">(assuming N unmodified Ser/Thr residues)</dd>
+        {% for weight in motif.alternative_weights -%}
+        <dd>
+          <span class="alt-weight"> {{ '%0.1f' | format(weight) }} Da
+          <span class="alt-weight-n"> N = {{loop.index}}
+        </dd>
+        {%- endfor %}
+      </dl>
+      {%- endif %}
+      </dd>
+    {%- endfor %}
+  </dl>
+</div>
+<div>
+  <h3>Database cross-links</h3>
+  <div class="prediction-text">
+    <a href="http://bioinfo.lifl.fr/norine/form2.jsp" target="_new">Look up in NORINE database</a>
+  </div>
+</div>
