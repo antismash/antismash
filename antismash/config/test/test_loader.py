@@ -8,7 +8,7 @@ import os
 import unittest
 
 from antismash.config import loader
-from antismash.config import update_config, get_config, destroy_config
+from antismash.config import destroy_config
 
 
 class TestLoader(unittest.TestCase):

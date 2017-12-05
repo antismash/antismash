@@ -6,9 +6,12 @@ This file will be removed as soon as all modules from antiSMASH 4 have been
 converted
 """
 
+# since this code has a limited lifetime, in this file kill any pylint messages
+# pylint: disable=missing-docstring,invalid-name
+
 import logging
 
-# temporary code skip logging # TODO
+# temporary code skip logging
 import inspect
 import linecache
 
@@ -18,10 +21,6 @@ from Bio.SeqRecord import SeqRecord
 # pylint: enable=unused-import
 
 from antismash.config import get_config
-
-# pylint: disable=unused-import
-from .utils import generate_unique_id, RobustProteinAnalysis
-# pylint: enable=unused-import
 
 
 def CODE_SKIP_WARNING():
@@ -61,34 +60,6 @@ def get_nrpspks_domain_dict(seq_record) -> dict:
 
 def get_version() -> str:
     return get_config().version
-
-
-def distance_to_pfam(seq_record, query, hmmer_profiles) -> int: #also from lassopeptides
-    """Function to check how many nt a gene is away from a gene with one of a list of given Pfams"""
-    nt = 40000 #maximum number of nucleotides distance to search
-    #Get all CDS features in seq_record
-    cds_features = seq_record.get_cds_features()
-    #Get all CDS features within <X nt distances
-    close_cds_features = []
-    distance = {}
-    for cds in cds_features:
-        if query.location.start - nt <= cds.location.start <= query.location.end + nt or \
-           query.location.start - nt <= cds.location.end <= query.location.end + nt:
-            close_cds_features.append(cds)
-            distance[cds.get_name()] = min([
-                                abs(cds.location.start - query.location.end),
-                                abs(cds.location.end - query.location.start),
-                                abs(cds.location.start - query.location.start),
-                                abs(cds.location.end - query.location.end)])
-    #For nearby CDS features, check if they have hits to the pHMM
-    closest_distance = -1
-    for cds in close_cds_features:
-        if cds.sec_met:
-            for profile in hmmer_profiles:
-                if profile in cds.sec_met.domains:
-                    if closest_distance == -1 or distance[cds.get_name()] < closest_distance:
-                        closest_distance = distance[cds.get_name()]
-    return closest_distance
 
 
 def hmmlengths(hmmfile) -> dict:

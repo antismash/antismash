@@ -12,3 +12,10 @@ max-line-length=120
 [VARIABLES]
 # unused imports in __init__.py are fine
 init-import=no
+
+[BASIC]
+# if clear function naming makes them long, that's fine
+function-rgx=[a-z_][a-z0-9_]{2,40}$
+method-rgx=[a-z_][a-z0-9_]{2,40}$
+# same is true for variables
+variable-rgx=[a-z_][a-z0-9_]{1,40}$

@@ -8,7 +8,7 @@ import unittest
 
 from minimock import Mock, mock, restore, TraceTracker, assert_same_trace
 
-from antismash.common import path
+from antismash.common import path  # mocked, pylint: disable=unused-import
 from antismash.modules.thiopeptides import check_prereqs
 
 

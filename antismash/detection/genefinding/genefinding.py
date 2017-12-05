@@ -3,8 +3,6 @@
 
 import logging
 
-from antismash.common.all_orfs import find_all_orfs
-
 from .run_prodigal import run_prodigal
 from .run_glimmerhmm import run_glimmerhmm
 

@@ -8,7 +8,7 @@ from typing import Dict, List, Set, Tuple
 
 from sklearn.externals import joblib
 
-from antismash.common import deprecated, path, subprocessing, secmet
+from antismash.common import path, subprocessing, secmet, utils
 from antismash.config import get_config as get_global_config
 
 from .config import get_config as get_lanthi_config
@@ -98,7 +98,7 @@ def acquire_rodeo_heuristics(record: secmet.Record, query: secmet.CDSFeature,
         tabs.append(0)
     # Precursor is within 500 nt?
     hmmer_profiles = ['LANC_like', 'Lant_dehyd_C']
-    distance = deprecated.distance_to_pfam(record, query, hmmer_profiles)
+    distance = utils.distance_to_pfam(record, query, hmmer_profiles)
     if distance < 500:
         score += 1
         tabs.append(1)
@@ -175,7 +175,7 @@ def acquire_rodeo_heuristics(record: secmet.Record, query: secmet.CDSFeature,
     else:
         tabs.append(0)
     # Precursor peptide mass < 4000 Da
-    precursor_analysis = deprecated.RobustProteinAnalysis(precursor,
+    precursor_analysis = utils.RobustProteinAnalysis(precursor,
                                                           monoisotopic=True,
                                                           ignore_invalid=True)
     if precursor_analysis.molecular_weight() < 4000:
@@ -184,7 +184,7 @@ def acquire_rodeo_heuristics(record: secmet.Record, query: secmet.CDSFeature,
     else:
         tabs.append(0)
     # Core peptide mass < 2000 Da
-    core_analysis = deprecated.RobustProteinAnalysis(core, monoisotopic=True,
+    core_analysis = utils.RobustProteinAnalysis(core, monoisotopic=True,
                                                      ignore_invalid=True)
     if core_analysis.molecular_weight() < 2000:
         score -= 3
@@ -240,15 +240,15 @@ def acquire_rodeo_heuristics(record: secmet.Record, query: secmet.CDSFeature,
         score += 3
 
     # Precursor peptide mass (unmodified)
-    precursor_analysis = deprecated.RobustProteinAnalysis(precursor, monoisotopic=True, ignore_invalid=False)
+    precursor_analysis = utils.RobustProteinAnalysis(precursor, monoisotopic=True, ignore_invalid=False)
     tabs.append(float(precursor_analysis.molecular_weight()))
 
     # Unmodified leader peptide mass
-    leader_analysis = deprecated.RobustProteinAnalysis(leader, monoisotopic=True, ignore_invalid=False)
+    leader_analysis = utils.RobustProteinAnalysis(leader, monoisotopic=True, ignore_invalid=False)
     tabs.append(float(leader_analysis.molecular_weight()))
 
     # Unmodified core peptide mass
-    core_analysis = deprecated.RobustProteinAnalysis(core, monoisotopic=True, ignore_invalid=False)
+    core_analysis = utils.RobustProteinAnalysis(core, monoisotopic=True, ignore_invalid=False)
     tabs.append(float(core_analysis.molecular_weight()))
 
     # Length of leader peptide

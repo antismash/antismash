@@ -143,9 +143,7 @@ class AntismashParser(argparse.ArgumentParser):
         for title, prefixes in titles.items():
             banner = "#"*10 + "\n"
             outfile.writelines([banner, "#\t{}\n".format(title), banner, "\n"])
-            for prefix, lines in prefixes.items():
-#                if prefix:
-#                    outfile.write("[{}]\n".format(prefix))
+            for lines in prefixes.values():
                 outfile.write("\n".join(lines))
                 outfile.write("\n")
             outfile.write("\n\n")

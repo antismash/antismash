@@ -11,7 +11,7 @@ from minimock import mock, restore
 
 from helperlibs.wrappers.io import TemporaryDirectory
 
-from antismash.common.secmet import CDSFeature, Record  # CDSFeature mocked
+from antismash.common.secmet import Record
 from antismash.common.test.helpers import DummyCDS, DummyCluster
 import antismash.modules.clusterblast.core as core
 
@@ -163,7 +163,7 @@ class TestBlastParsing(unittest.TestCase):
 class TestSubject(unittest.TestCase):
     def test_init(self):
         expected = ["a", "b", 1, 2, "+", "c", 5., 1, 5., 1e-8, "loc"]
-        s = core.Subject(*expected)
+        s = core.Subject(*expected)  # pylint: disable=invalid-name
         got = [s.name, s.genecluster, s.start, s.end, s.strand, s.annotation,
                s.perc_ident, s.blastscore, s.perc_coverage, s.evalue, s.locus_tag]
         for exp, val in zip(expected, got):

@@ -6,7 +6,7 @@ from enum import Enum, unique
 import logging
 import os
 import warnings
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 from helperlibs.bio import seqio
 
@@ -45,10 +45,13 @@ class Feature:
                or other.location.start in self.location \
                or other.location.end - 1 in self.location
 
-    def is_contained_by(self, other):
-        assert isinstance(other, Feature)
+    def is_contained_by(self, other: Union["Feature", FeatureLocation]):
         end = self.location.end - 1  # to account for the non-inclusive end
-        return self.location.start in other.location and end in other.location
+        if isinstance(other, Feature):
+            return self.location.start in other.location and end in other.location
+        if isinstance(other, FeatureLocation):
+            return self.location.start in other and end in other
+        raise TypeError("Container must be a Feature or a FeatureLocation, not %s" % type(other))
 
     def to_biopython(self, qualifiers=None):
         feature = SeqFeature(self.location, type=self.type)
@@ -419,6 +422,7 @@ class GeneFunctionAnnotations:
                 return GeneFunction.OTHER
         return function
 
+
 class CDSFeature(Feature):
     __slots__ = ["_translation", "protein_id", "locus_tag", "gene", "product",
                  "transl_table", "_sec_met", "aSProdPred", "cluster", "_gene_functions",
@@ -542,7 +546,6 @@ class CDSFeature(Feature):
         gene_functions = leftovers.pop("gene_functions", [])
         if gene_functions:
             feature.gene_functions.add_from_qualifier(gene_functions)
-
 
         # grab parent optional qualifiers
         super(CDSFeature, feature).from_biopython(bio_feature, feature=feature, leftovers=leftovers)
@@ -787,6 +790,7 @@ class NRPSPKSQualifier(list):
     class Domain:
         __slots__ = ["name", "label", "start", "end", "evalue", "bitscore",
                      "predictions"]
+
         def __init__(self, name, label, start, end, evalue, bitscore):
             self.label = label
             self.name = name

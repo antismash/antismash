@@ -9,12 +9,10 @@ import os
 from tempfile import TemporaryDirectory
 import unittest
 
-from minimock import mock, restore
-
 from antismash.main import run_antismash, get_all_modules
 from antismash.config import build_config, get_config, update_config
-from antismash.config.args import build_parser
 from antismash.detection import hmm_detection  # mocked.. pylint: disable=unused-import
+
 
 class TestAntismash(unittest.TestCase):
     def setUp(self):

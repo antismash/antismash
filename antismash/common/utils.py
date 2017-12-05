@@ -1,12 +1,14 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
-from collections import OrderedDict
 import logging
-from typing import Dict, List, Set, Tuple
+from typing import List, Set, Tuple
 
 import Bio.Data.IUPACData
 from Bio.SeqUtils.ProtParam import ProteinAnalysis
+from Bio.SeqFeature import FeatureLocation
+
+from .secmet import Feature, Record
 
 
 def generate_unique_id(prefix: str, existing_ids: Set, start=0, max_length=-1) -> Tuple[str, int]:
@@ -72,6 +74,7 @@ class RobustProteinAnalysis(ProteinAnalysis):
             weight += 110 * aa_difference
         return weight
 
+
 def extract_by_reference_positions(query: str, reference: str, ref_positions: List[int]) -> str:
     """ Extracts the given positions from a query alignment. The positions are
         adjusted to account for any gaps in the reference sequence.
@@ -96,3 +99,45 @@ def extract_by_reference_positions(query: str, reference: str, ref_positions: Li
         position_skipping_gaps += 1
     # extract positions from query sequence
     return "".join([query[i] for i in positions])
+
+
+def distance_to_pfam(record: Record, query: Feature, hmmer_profiles: List[str]) -> int:
+    """ Checks how many nucleotides a gene is away from another gene with one
+        of the given Pfams.
+
+        Arguments:
+            record: the secmet.Record containing the query and other genes to compare
+            query: a secmet.Feature to use the location of
+            hmmer_profiles: a list of profile names to search for in CDSFeature
+                            domain lists
+
+        Returns:
+            the distance (in bases) to the closest gene with one of the profiles
+            or -1 if no gene matching was found
+    """
+    max_range = 40000
+    # Get all CDS features in record
+    cds_features = record.get_cds_features()
+    # Get all CDS features within <X nt distances
+    close_cds_features = []
+    distance = {}
+    # TODO: change from O(n) to binary search for start position
+    for cds in cds_features:
+        search_range = FeatureLocation(query.location.start - max_range,
+                                       query.location.end - max_range)
+        if cds.is_contained_by(search_range):
+            close_cds_features.append(cds)
+            distance[cds.get_name()] = min([
+                                abs(cds.location.start - query.location.end),
+                                abs(cds.location.end - query.location.start),
+                                abs(cds.location.start - query.location.start),
+                                abs(cds.location.end - query.location.end)])
+    # For nearby CDS features, check if they have hits to the pHMM
+    closest_distance = -1
+    for cds in close_cds_features:
+        if cds.sec_met:
+            for profile in hmmer_profiles:
+                if profile in cds.sec_met.domains:
+                    if closest_distance == -1 or distance[cds.get_name()] < closest_distance:
+                        closest_distance = distance[cds.get_name()]
+    return closest_distance
