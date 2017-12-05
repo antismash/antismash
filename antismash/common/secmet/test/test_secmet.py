@@ -77,6 +77,26 @@ class TestRecord(unittest.TestCase):
             for cds in cluster.cds_children:
                 assert cds.overlaps_with(cluster)
 
+    def test_cds_removal(self):
+        record = Record(Seq("A" * 1000))
+        cluster = helpers.DummyCluster(0, 1000)
+        record.add_cluster(cluster)
+
+        first_cds = helpers.DummyCDS(0, 100, locus_tag="A")
+        second_cds = helpers.DummyCDS(200, 300, locus_tag="B")
+        record.add_cds_feature(first_cds)
+        record.add_cds_feature(second_cds)
+
+        assert len(record.get_cds_features()) == 2
+        assert len(cluster.cds_children) == 2
+
+        record.remove_cds_feature(first_cds)
+
+        assert len(record.get_cds_features()) == 1
+        assert len(cluster.cds_children) == 1
+        assert record.get_cds_features()[0] is list(cluster.cds_children)[0]
+        assert record.get_cds_features()[0].locus_tag == "B"
+
 
 class TestFeature(unittest.TestCase):
     def test_overlaps_with(self):
