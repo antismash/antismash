@@ -16,8 +16,8 @@ from typing import List, Set, Optional
 from Bio.SeqFeature import FeatureLocation
 
 from antismash.detection.hmm_detection.signatures import HmmSignature
-from antismash.common import all_orfs, deprecated, path, subprocessing, secmet, \
-                             module_results, serialiser
+from antismash.common import all_orfs, path, subprocessing, secmet, \
+                             module_results, serialiser, utils
 from antismash.common.fasta import get_fasta_from_features
 
 from .rodeo import run_rodeo
@@ -111,8 +111,8 @@ class PrepeptideBase:
 
     @core.setter
     def core(self, seq):
-        self.core_analysis_monoisotopic = deprecated.RobustProteinAnalysis(seq, monoisotopic=True)
-        self.core_analysis = deprecated.RobustProteinAnalysis(seq, monoisotopic=False)
+        self.core_analysis_monoisotopic = utils.RobustProteinAnalysis(seq, monoisotopic=True)
+        self.core_analysis = utils.RobustProteinAnalysis(seq, monoisotopic=False)
         self._core = seq
         self._calculate_mw()
 

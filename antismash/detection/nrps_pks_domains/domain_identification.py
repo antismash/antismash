@@ -12,7 +12,17 @@ from antismash.common.hmmscan_refinement import refine_hmmscan_results
 from antismash.common.secmet.feature import CDSMotif
 
 
-def annotate_domains(record):
+def annotate_domains(record) -> None:
+    """ Annotates NRPS/PKS domains on CDS features. The `nrps_pks` member of
+        each feature will be updated, along with creating CDSMotif features
+        when relevant.
+
+        Arguments:
+            record: the secmet.Record of which to annotate CDS features
+
+        Returns:
+            None
+    """
     genes_within_clusters = record.get_cds_features_within_clusters()
     assert genes_within_clusters  # because every cluster should have genes
 
@@ -64,6 +74,7 @@ def filter_nonterminal_docking_domains(record, gene_domains):
             results[gene_name] = new
     return results
 
+
 def find_ab_motifs(fasta):
     # Analyse for abMotifs
     opts = ["-E", "0.25"]
@@ -71,6 +82,7 @@ def find_ab_motifs(fasta):
     abmotif_results = subprocessing.run_hmmscan(motif_file, fasta, opts)
     lengths = deprecated.hmmlengths(motif_file)
     return refine_hmmscan_results(abmotif_results, lengths, neighbour_mode=True)
+
 
 def find_domains(fasta, record):
     # Analyse for C/A/PCP/E/KS/AT/ATd/DH/KR/ER/ACP/TE/TD/COM/Docking/MT/CAL domains
@@ -81,6 +93,7 @@ def find_domains(fasta, record):
     domains = refine_hmmscan_results(nrpspksdomain_results, lengths, neighbour_mode=True)
     return filter_nonterminal_docking_domains(record, domains)
 
+
 def find_ks_domains(fasta):
     # Analyse KS domains & PKS/NRPS protein domain composition to detect NRPS/PKS types
     opts = ["--cut_tc"]
@@ -89,6 +102,7 @@ def find_ks_domains(fasta):
     domains = subprocessing.run_hmmscan(ks_file, fasta, opts)
     refine_hmmscan_results(domains, lengths, neighbour_mode=True)
     raise NotImplementedError("no return value used from refine_hmmscan_results")
+
 
 class KetosynthaseCounter:
     """ Keeps track of the counts of various KS domains and simplifies

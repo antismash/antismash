@@ -9,12 +9,11 @@ from typing import List
 
 import Bio
 from Bio.Seq import Seq
-from Bio.SeqFeature import FeatureLocation
 from Bio.SeqRecord import SeqRecord
 from helperlibs.bio import seqio
 
 from antismash.common import gff_parser
-from antismash.common.secmet import Record, CDSFeature
+from antismash.common.secmet import Record
 from antismash.config import get_config, update_config
 
 from .subprocessing import parallel_function
@@ -79,7 +78,6 @@ def check_content(sequence: Record) -> Record:
         Returns:
             the Record instance provided
     """
-    options = get_config()
     cdsfeatures = sequence.get_cds_features()
     cdsfeatures_with_translations = len([cds for cds in cdsfeatures if cds.translation])
     assert cdsfeatures_with_translations == len(cdsfeatures)
@@ -328,7 +326,6 @@ def ensure_no_duplicate_gene_ids(sequences) -> None:
         Returns:
             None
     """
-    high_water_mark = 0
     all_ids = set()
     for sequence in sequences:
         for cdsfeature in sequence.get_cds_features():

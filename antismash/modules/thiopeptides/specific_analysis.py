@@ -803,10 +803,6 @@ class ThiopeptideMotif(secmet.Prepeptide):
         if self.amidation:
             self.tail_reaction = "dealkylation of C-Terminal residue; amidation"
 
-    def get_modifications(self):
-        mods = []
-        return mods
-
     def to_biopython(self):
         if self._notes_appended:  # TODO: could be more clever
             logging.critical("%s already converted: %s, leader type %s",

@@ -4,7 +4,6 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
-from tempfile import TemporaryDirectory
 import os
 import unittest
 
@@ -15,8 +14,6 @@ from antismash.common import path, secmet
 from antismash.common.test import helpers
 from antismash.config import update_config, destroy_config, build_config
 from antismash.modules import thiopeptides
-from antismash.modules.thiopeptides import specific_analysis
-from antismash.modules.thiopeptides import html_output as h
 
 
 class TestIntegration(unittest.TestCase):
@@ -31,8 +28,8 @@ class TestIntegration(unittest.TestCase):
         rec = seqio.read(path.get_full_path(__file__, 'data', 'nosi_before_analysis.gbk'))
         rec = secmet.Record.from_biopython(rec)
         assert rec.get_feature_count() == 56
-        assert len(rec.get_cds_motifs()) == 0
-        result = specific_analysis(rec, None)
+        assert not rec.get_cds_motifs()
+        result = thiopeptides.specific_analysis(rec, None)
         assert rec.get_feature_count() == 56
 
         result.add_to_record(rec)
@@ -60,12 +57,12 @@ class TestIntegration(unittest.TestCase):
         rec = seqio.read(path.get_full_path(__file__, 'data', 'lac_before_analysis.gbk'))
         rec = secmet.Record.from_biopython(rec)
         assert rec.get_feature_count() == 21
-        assert len(rec.get_cds_motifs()) == 0
-        results = specific_analysis(rec, None)
+        assert not rec.get_cds_motifs()
+        results = thiopeptides.specific_analysis(rec, None)
         assert len(results.motifs) == 1
         # ensure record not adjusted yet
         assert rec.get_feature_count() == 21
-        assert len(rec.get_cds_motifs()) == 0
+        assert not rec.get_cds_motifs()
 
         # add and check new motif added
         results.add_to_record(rec)
@@ -93,7 +90,7 @@ class TestIntegration(unittest.TestCase):
         # two existing motifs
         assert len(rec.get_cds_motifs()) == 2
 
-        results = specific_analysis(rec, None)
+        results = thiopeptides.specific_analysis(rec, None)
         assert len(results.motifs) == 1
         # ensure record not adjusted yet
         self.assertEqual(27, rec.get_feature_count())

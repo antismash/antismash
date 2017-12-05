@@ -5,7 +5,7 @@ import logging
 from os import path
 from typing import Dict, List
 
-from antismash.common import subprocessing, utils, deprecated
+from antismash.common import subprocessing, utils
 
 
 class MinowaResults(dict):
@@ -17,6 +17,7 @@ class MinowaResults(dict):
             for name, score in result:
                 out_file.write("{}\t{}\n".format(name, score))
         out_file.close()
+
 
 def hmmsearch(fasta_format: str, hmm: str) -> float:
     result = subprocessing.execute(["hmmsearch", "--noali", hmm, "-"], stdin=fasta_format)
