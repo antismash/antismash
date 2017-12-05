@@ -71,6 +71,22 @@ class DummyRecord(Record):
         self.record_index = 0
 
 
+class FakeHit(object):
+    """ For generating hmmpfam2-like results """
+    class FakeHsp(object):
+        def __init__(self, start, end, score):
+            self.query_start = start
+            self.query_end = end
+            self.bitscore = score
+
+    def __init__(self, start, end, score, desc):
+        self.hsps = [self.FakeHsp(start, end, score)]
+        self.description = desc
+
+    def __iter__(self):
+        return iter(self.hsps)
+
+
 def get_path_to_nisin_genbank():
     file_path = __file__
     for _i in range(3):
