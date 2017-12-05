@@ -98,6 +98,17 @@ class TestRecord(unittest.TestCase):
         assert record.get_cds_features()[0].locus_tag == "B"
 
 
+    def test_orphaned_cluster_number(self):
+        record = Record(Seq("A" * 1000))
+        cluster = helpers.DummyCluster(0, 1000)
+
+        with self.assertRaisesRegex(ValueError, "Cluster not contained in record"):
+            print(record.get_cluster_number(cluster))
+
+        with self.assertRaisesRegex(ValueError, "Cluster not contained in record"):
+            print(cluster.get_cluster_number())
+
+
 class TestFeature(unittest.TestCase):
     def test_overlaps_with(self):
         # no overlap

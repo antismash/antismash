@@ -665,7 +665,7 @@ class Cluster(Feature):
 
     def get_cluster_number(self):
         if not self.parent_record:
-            return None
+            raise ValueError("Cluster not contained in record")
         return self.parent_record.get_cluster_number(self)
 
     def add_cds(self, cds):
