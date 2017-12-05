@@ -7,10 +7,10 @@
 import unittest
 
 from Bio.SeqFeature import FeatureLocation
-from minimock import mock, restore, TraceTracker
+from minimock import mock, restore
 
 from antismash.common import subprocessing  # mocked, pylint: disable=unused-import
-from antismash.common.test.helpers import DummyCDS
+from antismash.common.test.helpers import DummyCDS, FakeHit
 from antismash.modules.thiopeptides.specific_analysis import (
     Thiopeptide,
     predict_cleavage_site,
@@ -31,7 +31,7 @@ class TestThiopeptide(unittest.TestCase):
         self.assertEqual('', thio.core)
         self.assertEqual(51, thio.rodeo_score)
         with self.assertRaisesRegex(AssertionError, "calculating weight without a core"):
-            thio.molecular_weight
+            print(thio.molecular_weight)
 
     def test_repr(self):
         "Test Thiopeptide representation"
@@ -71,10 +71,10 @@ class TestThiopeptide(unittest.TestCase):
         thio.thio_type = "Type-I"
 
         mat_weights = thio.mature_alt_weights
-        mw = mat_weights[0]
+        weight = mat_weights[0]
         mono = mat_weights[1]
         alt = mat_weights[2:]
-        self.assertAlmostEqual(mw, 1051.1623)
+        self.assertAlmostEqual(weight, 1051.1623)
         self.assertAlmostEqual(mono, 1050.367788)
         self.assertAlmostEqual(alt, [1069.1823, 1087.2023])
 
@@ -85,10 +85,10 @@ class TestThiopeptide(unittest.TestCase):
         thio._mature_alt_weights = []
 
         mat_weights = thio.mature_alt_weights
-        mw = mat_weights[0]
+        weight = mat_weights[0]
         mono = mat_weights[1]
         alt = mat_weights[2:]
-        self.assertAlmostEqual(mw, 1121.1623)
+        self.assertAlmostEqual(weight, 1121.1623)
         self.assertAlmostEqual(mono, 1120.367788)
         self.assertAlmostEqual(alt, [1139.1823, 1157.2023])
 
@@ -99,33 +99,18 @@ class TestThiopeptide(unittest.TestCase):
         thio._mature_alt_weights = []
 
         mat_weights = thio.mature_alt_weights
-        mw = mat_weights[0]
+        weight = mat_weights[0]
         mono = mat_weights[1]
         alt = mat_weights[2:]
-        self.assertAlmostEqual(mw, 1097.1623)
+        self.assertAlmostEqual(weight, 1097.1623)
         self.assertAlmostEqual(mono, 1096.367788)
         self.assertAlmostEqual(alt, [1115.1823, 1133.2023])
 
 
 class TestSpecificAnalysis(unittest.TestCase):
-    class FakeHit(object):
-        class FakeHsp(object):
-            def __init__(self, start, end, score):
-                self.query_start = start
-                self.query_end = end
-                self.bitscore = score
-
-        def __init__(self, start, end, score, desc):
-            self.hsps = [self.FakeHsp(start, end, score)]
-            self.description = desc
-
-        def __iter__(self):
-            return iter(self.hsps)
-
     def setUp(self):
-        self.tt = TraceTracker()
         self.hmmpfam_return_vals = []
-        mock('subprocessing.run_hmmpfam2', tracker=self.tt, returns=self.hmmpfam_return_vals)
+        mock('subprocessing.run_hmmpfam2', returns=self.hmmpfam_return_vals)
 
     def tearDown(self):
         restore()
@@ -134,7 +119,7 @@ class TestSpecificAnalysis(unittest.TestCase):
         "Test thiopeptides.predict_cleavage_site()"
         resvec = predict_cleavage_site('foo', 'bar', 51)
         self.assertEqual([None, None, None], resvec)
-        fake_hit = self.FakeHit(24, 42, 17, 'fake')
+        fake_hit = FakeHit(24, 42, 17, 'fake')
         self.hmmpfam_return_vals.append([fake_hit])
 
         start, end, score = predict_cleavage_site('foo', 'bar', 15)
@@ -173,7 +158,8 @@ class TestSpecificAnalysis(unittest.TestCase):
         self.assertAlmostEqual(motif.monoisotopic_mass, 861.3, places=1)
         assert len(motif.alternative_weights) == 7
         for calc, expect in zip(motif.alternative_weights, [879.9, 897.9, 916.0,
-                                                 934.0, 952.0, 970.0, 988.0]):
+                                                            934.0, 952.0, 970.0,
+                                                            988.0]):
             self.assertAlmostEqual(calc, expect, places=1)
         assert not motif.amidation
         assert not motif.macrocycle

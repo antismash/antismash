@@ -10,7 +10,7 @@ from Bio.SeqUtils.ProtParam import ProteinAnalysis
 from minimock import mock, restore, TraceTracker
 
 from antismash.common import subprocessing  # used in mocks # pylint: disable=unused-import
-from antismash.common.test.helpers import DummyCDS
+from antismash.common.test.helpers import DummyCDS, FakeHit
 from antismash.modules.lanthipeptides.specific_analysis import (
     Lanthipeptide,
     predict_cleavage_site,
@@ -29,7 +29,7 @@ class TestLanthipeptide(unittest.TestCase):
         self.assertEqual('Class-I', lant.lantype)
         self.assertEqual('', lant.core)
         with self.assertRaisesRegex(AssertionError, "calculating weight without a core"):
-            lant.molecular_weight
+            print(lant.molecular_weight)
 
     def test_repr(self):
         "Test Lanthipeptide representation"
@@ -103,20 +103,6 @@ class TestLanthipeptide(unittest.TestCase):
 
 
 class TestSpecificAnalysis(unittest.TestCase):
-    class FakeHit(object):  # TODO: see antismash.common.test.helpers
-        class FakeHsp(object):  # TODO: see antismash.common.test.helpers
-            def __init__(self, start, end, score):
-                self.query_start = start
-                self.query_end = end
-                self.bitscore = score
-
-        def __init__(self, start, end, score, desc):
-            self.hsps = [self.FakeHsp(start, end, score)]
-            self.description = desc
-
-        def __iter__(self):
-            return iter(self.hsps)
-
     def setUp(self):
         self.trace_tracker = TraceTracker()
         self.hmmpfam_return_vals = []
@@ -130,7 +116,7 @@ class TestSpecificAnalysis(unittest.TestCase):
         "Test lanthipeptides.predict_cleavage_site()"
         resvec = predict_cleavage_site('foo', 'bar')
         self.assertEqual(None, resvec)
-        fake_hit = self.FakeHit(24, 42, 17, 'fake')
+        fake_hit = FakeHit(24, 42, 17, 'fake')
         self.hmmpfam_return_vals.append([fake_hit])
 
         res = predict_cleavage_site('foo', 'bar')
