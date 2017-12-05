@@ -571,22 +571,25 @@ class CDSFeature(Feature):
 
 
 class Prepeptide(CDSFeature):
-    def __init__(self, peptide_type, core, locus_tag, peptide_class=None, leader=None,
-                 leader_seq=None, tail=None, **kwargs):
+    def __init__(self, peptide_type, core, core_seq, locus_tag, peptide_class=None, leader=None,
+                 leader_seq=None, tail=None, tail_seq=None, **kwargs):
         assert isinstance(peptide_type, str)
         if leader is not None:
             assert isinstance(leader, FeatureLocation)
             assert isinstance(leader_seq, str)
         self._leader = leader
-        if tail is not None:
-            assert isinstance(tail, FeatureLocation)
+        if tail is not None or tail_seq is not None:
+            assert isinstance(tail, FeatureLocation), "if tail_seq is provided, tail must also"
+            assert tail_seq, "if tail is provided, tail_seq must also"
         self._tail = tail
+        self.tail_seq = tail_seq
         super().__init__(core, locus_tag=locus_tag, **kwargs)
         self.type = "CDS_motif"
         self.peptide_type = peptide_type
         self.peptide_class = peptide_class.replace("-", " ")  # "Type-II" > "Type II"
         self.leader_seq = leader_seq
         self.core = core
+        self.core_seq = core_seq
 
     @property
     def leader(self) -> FeatureLocation:
@@ -611,6 +614,7 @@ class Prepeptide(CDSFeature):
         if self.leader:
             assert isinstance(self._leader, FeatureLocation)
             leader = SeqFeature(self.leader, type="CDS_motif")
+            leader.translation = self.leader_seq
             leader.qualifiers['locus_tag'] = self.locus_tag
             leader.qualifiers['note'] = ['leader peptide', self.peptide_type]
             leader.qualifiers['note'].append('predicted leader seq: %s' % self.leader_seq)
@@ -620,6 +624,7 @@ class Prepeptide(CDSFeature):
         features.extend(super().to_biopython(core))
         if self.tail:
             tail = SeqFeature(self.tail, type="CDS_motif")
+            tail.translation = self.tail_seq
             tail.qualifiers['locus_tag'] = self.locus_tag
             tail.qualifiers['note'] = ['tail peptide', self.peptide_type]
             features.append(tail)

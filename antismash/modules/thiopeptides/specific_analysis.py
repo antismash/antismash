@@ -784,9 +784,8 @@ class ThiopeptideMotif(secmet.Prepeptide):
                  locus_tag, monoisotopic_mass, molecular_weight, alternative_weights,
                  thio_class, score, rodeo_score, macrocycle, cleaved_residues,
                  core_features, mature_weights, amidation):
-        super().__init__("thiopeptide", core_location, locus_tag, thio_class,
+        super().__init__("thiopeptide", core_location, core_seq, locus_tag, thio_class,
                          leader=leader_location, leader_seq=leader_seq)
-        self.core_seq = core_seq
         self.monoisotopic_mass = monoisotopic_mass
         self.molecular_weight = molecular_weight
         self.alternative_weights = alternative_weights  # list of floats

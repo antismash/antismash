@@ -544,9 +544,8 @@ class LanthipeptideMotif(secmet.Prepeptide):
                  locus_tag, monoisotopic_mass, molecular_weight, alternative_weights,
                  lan_bridges, lanthi_class, score, rodeo_score, aminovinyl,
                  chlorinated, oxygenated, lactonated):
-        super().__init__("lanthipeptide", core_location, locus_tag, lanthi_class,
+        super().__init__("lanthipeptide", core_location, core_seq, locus_tag, lanthi_class,
                          leader=leader_location, leader_seq=leader_seq)
-        self.core_seq = core_seq
         self.monoisotopic_mass = monoisotopic_mass
         self.molecular_weight = molecular_weight
         self.alternative_weights = alternative_weights  # list of floats
