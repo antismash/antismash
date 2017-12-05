@@ -8,8 +8,6 @@ from collections import OrderedDict
 import logging
 from typing import Dict
 
-import Bio
-from Bio.Seq import Seq
 
 def get_fasta_from_features(features) -> str:
     """ Extract multi-protein FASTA from provided features """
@@ -19,9 +17,9 @@ def get_fasta_from_features(features) -> str:
     return "\n".join(all_fastas)
 
 
-def get_fasta_from_record(seq_record) -> str:
+def get_fasta_from_record(record) -> str:
     """ Extract multi-protein FASTA from all CDS features in sequence record """
-    features = seq_record.get_cds_features()
+    features = record.get_cds_features()
     all_fastas = []
     for feature in features:
         gene_id = feature.get_name()
@@ -67,4 +65,3 @@ def read_fasta(filename: str) -> Dict[str, str]:
         logging.debug("Fasta file %s contains no sequences", filename)
         raise ValueError("Fasta file contains no sequences")
     return OrderedDict(zip(ids, sequence_info))
-
