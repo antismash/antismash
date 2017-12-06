@@ -780,18 +780,14 @@ def run_thiopred(query: secmet.CDSFeature, thio_type, domains):
 
 
 class ThiopeptideMotif(secmet.Prepeptide):
-    def __init__(self, core_location, core_seq, leader_location, leader_seq,
+    def __init__(self, location, core_seq, leader_seq,
                  locus_tag, monoisotopic_mass, molecular_weight, alternative_weights,
                  thio_class, score, rodeo_score, macrocycle, cleaved_residues,
                  core_features, mature_weights, amidation):
-        super().__init__("thiopeptide", core_location, core_seq, locus_tag, thio_class,
-                         leader=leader_location, leader_seq=leader_seq)
-        self.monoisotopic_mass = monoisotopic_mass
-        self.molecular_weight = molecular_weight
-        self.alternative_weights = alternative_weights  # list of floats
-        self.score = score
+        super().__init__(location, "thiopeptide", core_seq, locus_tag, thio_class, score,
+                         monoisotopic_mass, molecular_weight, alternative_weights,
+                         leader=leader_seq)
         self.rodeo_score = rodeo_score
-        self._notes_appended = False
         self.amidation = amidation
         self.macrocycle = macrocycle
         self.cleaved_residues = cleaved_residues
@@ -804,28 +800,15 @@ class ThiopeptideMotif(secmet.Prepeptide):
             self.tail_reaction = "dealkylation of C-Terminal residue; amidation"
 
     def to_biopython(self):
-        if self._notes_appended:  # TODO: could be more clever
-            logging.critical("%s already converted: %s, leader type %s",
-                             self.location, self._notes_appended, type(self._leader))
-            return super().to_biopython()
-        self._notes_appended = True
-        self.notes.append('monoisotopic mass: %0.1f' % self.monoisotopic_mass)
-        self.notes.append('molecular weight: %0.1f' % self.molecular_weight)
-        if self.alternative_weights:
-            weights = map(lambda x: "%0.1f" % x, self.alternative_weights)
-            self.notes.append('alternative weights: %s' % "; ".join(weights))
-        self.notes.append('predicted core seq: %s' % self.core_seq)
-        self.notes.append('score: %0.2f' % self.score)
-        self.notes.append('RODEO score: %s' % str(self.rodeo_score))
+        notes = []
+        notes.append('RODEO score: %s' % str(self.rodeo_score))
         if self.amidation:
-            self.notes.append('predicted tail reaction: %s' % self.tail_reaction)
-        return super().to_biopython()
+            notes.append('predicted tail reaction: %s' % self.tail_reaction)
+        return super().to_biopython(qualifiers={"note": notes})
 
     def to_json(self):
-        json = dict(vars(self))  # TODO: use a better system that doesn't break encapsulation
-        json["core"] = serialiser.location_to_json(self.location)
-        json["_leader"] = serialiser.location_to_json(self._leader)
-        json["locus_tag"] = self.locus_tag  # not in vars() due to __slots__
+        json = super().to_json()
+        json["locus_tag"] = self.locus_tag
         try:
             assert json["locus_tag"]
         except KeyError:
@@ -835,12 +818,10 @@ class ThiopeptideMotif(secmet.Prepeptide):
     @staticmethod
     def from_json(data):
         args = []
-        args.append(serialiser.location_from_json(data["core"]))
-        args.append(data["core_seq"])
-        args.append(serialiser.location_from_json(data["_leader"]))
-        for arg_name in ["leader_seq", "locus_tag", "monoisotopic_mass",
+        args.append(serialiser.location_from_json(data["location"]))
+        for arg_name in ["core", "leader", "locus_tag", "monoisotopic_mass",
                          "molecular_weight", "alternative_weights",
-                         "peptide_class", "score", "rodeo_score", "macrocycle",
+                         "peptide_subclass", "score", "rodeo_score", "macrocycle",
                          "cleaved_residues", "core_features", "mature_weights",
                          "amidation"]:
             args.append(data[arg_name])
@@ -855,18 +836,10 @@ def result_vec_to_feature(orig_feature, res_vec):
     oldcore = res_vec.core
     res_vec.core = oldcore[:(len(res_vec.core) - len(res_vec.c_cut))]
 
-    start = orig_feature.location.start
-    end = orig_feature.location.start + (res_vec.end * 3)
-    strand = orig_feature.location.strand
-    leader_loc = FeatureLocation(start, end, strand=strand)
-
-    start = end
-    end = orig_feature.location.end
-    core_loc = FeatureLocation(start, end, strand=strand)
     mature_weights = []
     if res_vec.thio_type != "Type-III":
         mature_weights = res_vec.mature_alt_weights
-    feature = ThiopeptideMotif(core_loc, res_vec.core, leader_loc, res_vec.leader,
+    feature = ThiopeptideMotif(orig_feature.location, res_vec.core, res_vec.leader,
                                orig_feature.get_name(), res_vec.monoisotopic_mass,
                                res_vec.molecular_weight, res_vec.alternative_weights,
                                res_vec.thio_type, res_vec.score, res_vec.rodeo_score,

@@ -52,9 +52,9 @@ class IntegrationLanthipeptides(unittest.TestCase):
                                         prepeptide.alternative_weights):
             self.assertAlmostEqual(expected, calculated, delta=0.05)
         assert prepeptide.lan_bridges == 5
-        self.assertEqual("MSTKDFNLDLVSVSKKDSGASPR", prepeptide.leader_seq)
-        self.assertEqual("ITSISLCTPGCKTGALMGCNMKTATCHCSIHVSK", prepeptide.core_seq)
-        self.assertEqual('Class I', prepeptide.peptide_class)
+        self.assertEqual("MSTKDFNLDLVSVSKKDSGASPR", prepeptide.leader)
+        self.assertEqual("ITSISLCTPGCKTGALMGCNMKTATCHCSIHVSK", prepeptide.core)
+        self.assertEqual('Class I', prepeptide.peptide_subclass)
 
         initial_json = result.to_json()
         regenerated = LanthiResults.from_json(initial_json, rec)
@@ -87,9 +87,9 @@ class IntegrationLanthipeptides(unittest.TestCase):
         self.assertAlmostEqual(2164, prepeptide.monoisotopic_mass, delta=0.5)
         self.assertAlmostEqual(2165.6, prepeptide.molecular_weight, delta=0.5)
         self.assertEqual(3, prepeptide.lan_bridges)
-        self.assertEqual("MEAVKEKNDLFNLDVKVNAKESNDSGAEPR", prepeptide.leader_seq)
-        self.assertEqual("IASKFICTPGCAKTGSFNSYCC", prepeptide.core_seq)
-        self.assertEqual('Class I', prepeptide.peptide_class)
+        self.assertEqual("MEAVKEKNDLFNLDVKVNAKESNDSGAEPR", prepeptide.leader)
+        self.assertEqual("IASKFICTPGCAKTGSFNSYCC", prepeptide.core)
+        self.assertEqual('Class I', prepeptide.peptide_subclass)
         self.assertEqual(['AviCys'], prepeptide.get_modifications())
 
     def test_microbisporicin(self):
@@ -108,9 +108,9 @@ class IntegrationLanthipeptides(unittest.TestCase):
         self.assertAlmostEqual(2212.9, prepeptide.monoisotopic_mass, delta=0.5)
         self.assertAlmostEqual(2214.5, prepeptide.molecular_weight, delta=0.5)
         self.assertEqual(4, prepeptide.lan_bridges)
-        self.assertEqual("MPADILETRTSETEDLLDLDLSIGVEEITAGPA", prepeptide.leader_seq)
-        self.assertEqual("VTSWSLCTPGCTSPGGGSNCSFCC", prepeptide.core_seq)
-        self.assertEqual('Class I', prepeptide.peptide_class)
+        self.assertEqual("MPADILETRTSETEDLLDLDLSIGVEEITAGPA", prepeptide.leader)
+        self.assertEqual("VTSWSLCTPGCTSPGGGSNCSFCC", prepeptide.core)
+        self.assertEqual('Class I', prepeptide.peptide_subclass)
         self.assertEqual(['AviCys', 'Cl', 'OH'], prepeptide.get_modifications())
 
     def test_epicidin(self):
@@ -130,9 +130,9 @@ class IntegrationLanthipeptides(unittest.TestCase):
                                         prepeptide.alternative_weights):
             self.assertAlmostEqual(expected, calculated, delta=0.05)
         self.assertEqual(3, prepeptide.lan_bridges)
-        self.assertEqual("MENKKDLFDLEIKKDNMENNNELEAQ", prepeptide.leader_seq)
-        self.assertEqual("SLGPAIKATRQVCPKATRFVTVSCKKSDCQ", prepeptide.core_seq)
-        self.assertEqual('Class I', prepeptide.peptide_class)
+        self.assertEqual("MENKKDLFDLEIKKDNMENNNELEAQ", prepeptide.leader)
+        self.assertEqual("SLGPAIKATRQVCPKATRFVTVSCKKSDCQ", prepeptide.core)
+        self.assertEqual('Class I', prepeptide.peptide_subclass)
         self.assertEqual(['Lac'], prepeptide.get_modifications())
 
     def test_labyrinthopeptin(self):
@@ -154,7 +154,7 @@ class IntegrationLanthipeptides(unittest.TestCase):
         assert not rec.get_cds_motifs()
         result.add_to_record(rec)
         assert len(rec.get_cds_motifs()) == 1
-        self.assertEqual('Class I', result.motifs[0].peptide_class)
+        self.assertEqual('Class I', result.motifs[0].peptide_subclass)
 
     def test_lactocin_s(self):
         """Test lanthipeptide prediction for lactocin S"""
@@ -165,7 +165,7 @@ class IntegrationLanthipeptides(unittest.TestCase):
         assert not rec.get_cds_motifs()
         result.add_to_record(rec)
         assert len(rec.get_cds_motifs()) == 1
-        self.assertEqual('Class II', result.motifs[0].peptide_class)
+        self.assertEqual('Class II', result.motifs[0].peptide_subclass)
 
 
 class IntegrationLanthipeptidesWithoutFimo(IntegrationLanthipeptides):

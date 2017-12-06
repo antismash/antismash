@@ -540,17 +540,16 @@ def cluster_contains_feature_with_single_domain(cluster: secmet.Cluster, domains
 
 
 class LanthipeptideMotif(secmet.Prepeptide):
-    def __init__(self, core_location, core_seq, leader_location, leader_seq,
+    def __init__(self, location, core_seq, leader_seq,
                  locus_tag, monoisotopic_mass, molecular_weight, alternative_weights,
                  lan_bridges, lanthi_class, score, rodeo_score, aminovinyl,
                  chlorinated, oxygenated, lactonated):
-        super().__init__("lanthipeptide", core_location, core_seq, locus_tag, lanthi_class,
-                         leader=leader_location, leader_seq=leader_seq)
-        self.monoisotopic_mass = monoisotopic_mass
-        self.molecular_weight = molecular_weight
-        self.alternative_weights = alternative_weights  # list of floats
+        super().__init__(location, "lanthipeptide", core_seq, locus_tag, lanthi_class,
+                         score=score, monoisotopic_mass=monoisotopic_mass,
+                         molecular_weight=molecular_weight,
+                         alternative_weights=alternative_weights,
+                         leader=leader_seq)
         self.lan_bridges = lan_bridges
-        self.score = score
         self.rodeo_score = rodeo_score
         self.aminovinyl_group = aminovinyl  # bool
         self.chlorinated = chlorinated  # bool
@@ -571,50 +570,36 @@ class LanthipeptideMotif(secmet.Prepeptide):
         return mods
 
     def to_biopython(self):
-        if self._notes_appended:  # TODO: could be more clever
-            logging.critical("%s already converted: %s, leader type %s",
-                             self.location, self._notes_appended, type(self._leader))
-            return super().to_biopython()
-        self._notes_appended = True
-        self.notes.append('monoisotopic mass: %0.1f' % self.monoisotopic_mass)
-        self.notes.append('molecular weight: %0.1f' % self.molecular_weight)
-        if self.alternative_weights:
-            weights = map(lambda x: "%0.1f" % x, self.alternative_weights)
-            self.notes.append('alternative weights: %s' % "; ".join(weights))
-        self.notes.append('number of bridges: %s' % self.lan_bridges)
-        self.notes.append('predicted core seq: %s' % self.core_seq)
-        self.notes.append('score: %0.2f' % self.score)
-        self.notes.append('RODEO score: %s' % str(self.rodeo_score))
+        notes = []
+        notes.append('number of bridges: %s' % self.lan_bridges)
+        notes.append('RODEO score: %s' % str(self.rodeo_score))
         if self.aminovinyl_group:
-            self.notes.append('predicted additional modification: AviCys')
+            notes.append('predicted additional modification: AviCys')
         if self.chlorinated:
-            self.notes.append('predicted additional modification: Cl')
+            notes.append('predicted additional modification: Cl')
         if self.oxygenated:
-            self.notes.append('predicted additional modification: OH')
+            notes.append('predicted additional modification: OH')
         if self.lactonated:
-            self.notes.append('predicted additional modification: Lac')
-        return super().to_biopython()
+            notes.append('predicted additional modification: Lac')
+        return super().to_biopython(qualifiers={"note": notes})
 
     def to_json(self):
-        json = dict(vars(self))  # TODO: use a better system that doesn't break encapsulation
-        json["core"] = serialiser.location_to_json(self.location)
-        json["_leader"] = serialiser.location_to_json(self._leader)
+        json = super().to_json()
         json["locus_tag"] = self.locus_tag  # not in vars() due to __slots__
         try:
             assert json["locus_tag"]
         except KeyError:
-            logging.critical("bad locus tag on motif %s: %s ... %s", self.core, self.locus_tag, json)
+            logging.critical("bad locus tag on motif %s: %s ... %s", self.location, self.locus_tag, json)
         return json
 
     @staticmethod
     def from_json(data):
         args = []
-        args.append(serialiser.location_from_json(data["core"]))
-        args.append(data["core_seq"])
-        args.append(serialiser.location_from_json(data["_leader"]))
-        for arg_name in ["leader_seq", "locus_tag", "monoisotopic_mass",
+        args.append(serialiser.location_from_json(data["location"]))
+        args.append(data["core"])
+        for arg_name in ["leader", "locus_tag", "monoisotopic_mass",
                          "molecular_weight", "alternative_weights", "lan_bridges",
-                         "peptide_class", "score", "rodeo_score", "aminovinyl_group",
+                         "peptide_subclass", "score", "rodeo_score", "aminovinyl_group",
                          "chlorinated", "oxygenated", "lactonated"]:
             args.append(data[arg_name])
         # pylint doesn't do well with the splat op, so don't report errors
@@ -630,7 +615,7 @@ def result_vec_to_feature(orig_feature: secmet.CDSFeature, res_vec) -> Lanthipep
     start = end
     end = orig_feature.location.end
     core_loc = FeatureLocation(start, end, strand=strand)
-    feature = LanthipeptideMotif(core_loc, res_vec.core, leader_loc, res_vec.leader,
+    feature = LanthipeptideMotif(orig_feature.location, res_vec.core, res_vec.leader,
                                  orig_feature.get_name(), res_vec.monoisotopic_mass,
                                  res_vec.molecular_weight, res_vec.alternative_weights,
                                  res_vec.number_of_lan_bridges, res_vec.lantype,
