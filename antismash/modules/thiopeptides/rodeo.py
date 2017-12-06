@@ -93,7 +93,7 @@ def acquire_rodeo_heuristics(leader, core, domains):
     else:
         tabs.append(0)
     # Avg heterocycle block length > 3
-    if avg_heteroblock_length != "nan" and avg_heteroblock_length > 3:
+    if not np.isnan(avg_heteroblock_length) and avg_heteroblock_length > 3:
         score += 2
         tabs.append(1)
     else:
@@ -160,7 +160,7 @@ def generate_rodeo_svm_csv(leader, core, previously_gathered_tabs):
     # Number of blocks of heterocyclizable residues in core
     columns.append(number_of_heteroblocks)
     # Average core heterocycle block length
-    if avg_heteroblock_length == "nan":
+    if np.isnan(avg_heteroblock_length):
         columns.append(0)
     else:
         columns.append(avg_heteroblock_length)
@@ -272,8 +272,7 @@ def thioscout(core):
     number_of_heteroblocks = len(rexout2)
 
     if rexout2:
-        rexout2 = np.mean([len(x) for x in rexout2])
-        avg_heteroblock_length = float(str(rexout2).strip("[]"))
+        avg_heteroblock_length = np.mean([len(x) for x in rexout2])
     else:
         avg_heteroblock_length = 0.0
 
