@@ -23,7 +23,7 @@ class LanthipeptideLayer(ClusterLayer):
                 continue
             if not motif.is_contained_by(self.cluster_rec):
                 continue
-            if motif.peptide_type == "lanthipeptide":
+            if motif.peptide_class == "lanthipeptide":
                 self.motifs.append(motif)
 
 

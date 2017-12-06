@@ -133,18 +133,35 @@ class TestSpecificAnalysis(unittest.TestCase):
         seq = "TAILTAILTAILTAILTAILTAILTAILTAILTAILCC"
         vec.core = seq
         vec.leader = "HEADHEADHEAD"
-        new_feature = result_vec_to_feature(orig_feature, vec)
-        new_features = new_feature.to_biopython()
+        motif = result_vec_to_feature(orig_feature, vec)
+        assert motif.location.start == 0
+        assert motif.location.end == 165
+        assert motif.location.strand == 1
+        assert motif.locus_tag == orig_feature.locus_tag
+        assert motif.score == 42
+        assert motif.rodeo_score == 23
+        assert motif.peptide_class == "lanthipeptide"
+        assert motif.peptide_subclass == "Class I"
+        assert motif.lan_bridges == 2
+        self.assertAlmostEqual(motif.molecular_weight, 3648.6, places=1)
+        self.assertAlmostEqual(motif.monoisotopic_mass, 3646.3, places=1)
+        for calc, expected in zip(motif.alternative_weights,
+                        [3666.6, 3684.6, 3702.7, 3720.7, 3738.7, 3756.7, 3774.7]):
+            self.assertAlmostEqual(calc, expected, places=1)
+        assert motif.core == seq
+        assert motif.leader == vec.leader
+
+        new_features = motif.to_biopython()
         self.assertEqual(2, len(new_features))
         leader, core = new_features
 
         self.assertEqual(0, leader.location.start)
-        self.assertEqual((23 * 3), leader.location.end)
+        self.assertEqual((12 * 3), leader.location.end)
         self.assertEqual(leader.location.strand, 1)
         self.assertEqual('CDS_motif', leader.type)
-        self.assertEqual(orig_feature.locus_tag, leader.qualifiers['locus_tag'])
-        self.assertEqual(['leader peptide', 'lanthipeptide',
-                          'predicted leader seq: HEADHEADHEAD'], leader.qualifiers['note'])
+        self.assertEqual(orig_feature.locus_tag, leader.qualifiers['locus_tag'][0])
+        self.assertEqual(set(['leader peptide', 'lanthipeptide',
+                          'predicted leader seq: HEADHEADHEAD']), set(leader.qualifiers['note']))
 
         self.assertEqual(leader.location.end, core.location.start)
         self.assertEqual(165, core.location.end)

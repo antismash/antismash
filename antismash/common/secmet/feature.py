@@ -18,7 +18,7 @@ class Feature:
     __slots__ = ["location", "notes", "type", "_qualifiers"]
 
     def __init__(self, location, feature_type):
-        assert isinstance(location, (FeatureLocation, CompoundLocation))
+        assert isinstance(location, (FeatureLocation, CompoundLocation)), type(location)
         self.location = location
         self.notes = []
         assert feature_type
@@ -574,64 +574,128 @@ class CDSFeature(Feature):
 
 
 class Prepeptide(CDSFeature):
-    def __init__(self, peptide_type, core, core_seq, locus_tag, peptide_class=None, leader=None,
-                 leader_seq=None, tail=None, tail_seq=None, **kwargs):
-        assert isinstance(peptide_type, str)
-        if leader is not None:
-            assert isinstance(leader, FeatureLocation)
-            assert isinstance(leader_seq, str)
+    def __init__(self, location, peptide_class, core, locus_tag, peptide_subclass=None,
+                 score=0., monoisotopic_mass=0., molecular_weight=0.,
+                 alternative_weights=None, leader="", tail="", **kwargs):
+        """
+            Arguments:
+                peptide_class: the kind of prepeptide, e.g. 'lanthipeptide', 'thiopeptide'
+                core: the sequence of the core
+                locus_tag: the locus tag to use for the feature
+                prepeptide_subclass: the subclass of the prepeptide, e.g. 'Type II'
+                leader: the sequence of the leader, if it exists
+                tail: the sequence of the tail, if it exists
+                ... other args that will be passed through to CDSFeature
+        """
+        for arg in [peptide_class, core, leader, tail]:
+            assert isinstance(arg, str), type(arg)
         self._leader = leader
-        if tail is not None or tail_seq is not None:
-            assert isinstance(tail, FeatureLocation), "if tail_seq is provided, tail must also"
-            assert tail_seq, "if tail is provided, tail_seq must also"
+        self._core = core
         self._tail = tail
-        self.tail_seq = tail_seq
-        super().__init__(core, locus_tag=locus_tag, **kwargs)
+        super().__init__(location, locus_tag=locus_tag, **kwargs)
         self.type = "CDS_motif"
-        self.peptide_type = peptide_type
-        self.peptide_class = peptide_class.replace("-", " ")  # "Type-II" > "Type II"
-        self.leader_seq = leader_seq
-        self.core = core
-        self.core_seq = core_seq
+        self.peptide_class = peptide_class
+        self.peptide_subclass = peptide_subclass.replace("-", " ")  # "Type-II" > "Type II"
+        self.score = float(score)
+        self.monoisotopic_mass = float(monoisotopic_mass)
+        self.molecular_weight = float(molecular_weight)
+        if alternative_weights:
+            self.alternative_weights = [float(weight) for weight in alternative_weights]
 
     @property
-    def leader(self) -> FeatureLocation:
+    def translation(self) -> str:
+        return self._leader + self._core + self._tail
+
+    @property
+    def leader(self) -> str:
         return self._leader
 
     @leader.setter
-    def leader(self, leader: FeatureLocation) -> None:
-        assert isinstance(leader, FeatureLocation)
+    def leader(self, leader: str) -> None:
+        assert isinstance(leader, str)
         self._leader = leader
 
     @property
-    def tail(self) -> FeatureLocation:
+    def core(self) -> str:
+        return self._core
+
+    @leader.setter
+    def leader(self, core: str) -> None:
+        assert isinstance(core, str)
+        self._core = core
+
+    @property
+    def tail(self) -> str:
         return self._tail
 
     @tail.setter
-    def tail(self, tail: FeatureLocation) -> None:
-        assert isinstance(tail, FeatureLocation)
+    def tail(self, tail: str) -> None:
+        assert isinstance(tail, str)
         self._tail = tail
 
-    def to_biopython(self, qualifiers: Dict[str, List] = None):
+    def to_biopython(self, qualifiers: Dict[str, List] = None) -> List[SeqFeature]:
+        """ Generates up to three SeqFeatures, depending if leader and tail exist.
+            Any qualifiers given will be used as a base for all SeqFeatures created.
+        """
+        # calculate core location
+        core_start = self.location.start
+        core_end = self.location.end
+        if self.leader:
+            core_start += len(self.leader) * 3
+        if self.tail:
+            core_end -= len(self.tail) * 3
+        core_location = FeatureLocation(core_start, core_end, self.location.strand)
+
+        # add qualifiers
+        if not qualifiers:
+            qualifiers = {'note': []}
+        if 'note' not in qualifiers:
+            qualifiers['note'] = []
+
+
+        # build features
         features = []
         if self.leader:
-            assert isinstance(self._leader, FeatureLocation)
-            leader = SeqFeature(self.leader, type="CDS_motif")
-            leader.translation = self.leader_seq
-            leader.qualifiers['locus_tag'] = self.locus_tag
-            leader.qualifiers['note'] = ['leader peptide', self.peptide_type]
-            leader.qualifiers['note'].append('predicted leader seq: %s' % self.leader_seq)
+            start = self.location.start
+            leader_location = FeatureLocation(start, core_location.start, self.location.strand)
+            leader = SeqFeature(leader_location, type="CDS_motif", qualifiers={"note": []})
+            leader.translation = self.leader
+            leader.qualifiers['locus_tag'] = [self.locus_tag]
+            leader.qualifiers['note'].extend(['leader peptide', self.peptide_class,
+                                              'predicted leader seq: %s' % self.leader])
             features.append(leader)
-        core = OrderedDict()
-        core['note'] = ['core peptide', self.peptide_type, 'predicted class: %s' % self.peptide_class]
-        features.extend(super().to_biopython(core))
+
+        core = SeqFeature(core_location, type="CDS_motif", qualifiers=qualifiers)
+        core.qualifiers['locus_tag'] = [self.locus_tag]
+        core.qualifiers['note'].extend(['core peptide', self.peptide_class,
+                                        'predicted class: %s' % self.peptide_subclass,
+                                        "predicted core seq: %s" % self.core,
+                                        "score: %0.2f" % self.score,
+                                        "molecular weight: %0.1f" % self.molecular_weight,
+                                        "monoisotopic mass: %0.1f" % self.monoisotopic_mass])
+        if self.alternative_weights:
+            weights = map(lambda x: "%0.1f" % x, self.alternative_weights)
+            core.qualifiers['note'].append('alternative weights: %s' % "; ".join(weights))
+
+        features.append(core)
+
         if self.tail:
-            tail = SeqFeature(self.tail, type="CDS_motif")
-            tail.translation = self.tail_seq
-            tail.qualifiers['locus_tag'] = self.locus_tag
-            tail.qualifiers['note'] = ['tail peptide', self.peptide_type]
+            tail_location = FeatureLocation(core_location.end, self.location.end, self.location.strand)
+            tail = SeqFeature(tail_location, type="CDS_motif")
+            tail.translation = self.tail
+            tail.qualifiers['locus_tag'] = [self.locus_tag]
+            tail.qualifiers['note'] = ['tail peptide', self.peptide_class]
             features.append(tail)
+
         return features
+
+    def to_json(self):
+        data = dict(vars(self))
+        for var in ["_tail", "_core", "_leader"]:
+            data[var.replace("_", "")] = data[var]
+            del data[var]
+        data["location"] = str(self.location)
+        return data
 
 
 class Cluster(Feature):

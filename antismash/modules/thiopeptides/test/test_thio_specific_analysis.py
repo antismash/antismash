@@ -140,21 +140,23 @@ class TestSpecificAnalysis(unittest.TestCase):
         orig_feature.translation = seq + vec.leader
         motif = result_vec_to_feature(orig_feature, vec)
 
-        assert loc.start == motif.leader.start
-        assert loc.start + (23 * 3) == motif.leader.end
-        assert loc.strand == motif.leader.strand
+        leader, core = motif.to_biopython()
+
+        assert loc.start == leader.location.start
+        assert loc.start + (12 * 3) == leader.location.end
+        assert loc.strand == leader.location.strand
         assert motif.type == 'CDS_motif'
-        assert motif.peptide_type == "thiopeptide"
+        assert motif.peptide_class == "thiopeptide"
+        assert motif.peptide_subclass == "Type III"
         assert orig_feature.locus_tag == motif.locus_tag
         assert motif.rodeo_score == 51
         assert motif.score == 42
         self.assertAlmostEqual(motif.molecular_weight, 861.9, places=1)
-        assert motif.peptide_class == "Type III"
 
-        assert motif.leader_seq == "HEADHEADHEAD"
-        assert motif.leader.end == motif.core.start
-        assert loc.end == motif.core.end
-        assert loc.strand == motif.core.strand
+        assert motif.leader == "HEADHEADHEAD"
+        assert leader.location.end == core.location.start
+        assert loc.end == core.location.end
+        assert loc.strand == core.location.strand
         self.assertAlmostEqual(motif.monoisotopic_mass, 861.3, places=1)
         assert len(motif.alternative_weights) == 7
         for calc, expect in zip(motif.alternative_weights, [879.9, 897.9, 916.0,
@@ -165,7 +167,7 @@ class TestSpecificAnalysis(unittest.TestCase):
         assert not motif.macrocycle
         assert not motif.cleaved_residues
         assert motif.core_features == "Central ring: pyridine trisubstituted"
-        assert motif.core_seq == "SCTSSCTSS"
+        assert motif.core == "SCTSSCTSS"
 
     def test_acquire_rodeo_heuristics(self):
         """Test thiopeptides.acquire_rodeo_heuristics()"""

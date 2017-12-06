@@ -40,10 +40,10 @@ class TestIntegration(unittest.TestCase):
 
         self.assertAlmostEqual(1315.3, prepeptide.monoisotopic_mass, places=1)
         self.assertAlmostEqual(1316.5, prepeptide.molecular_weight, places=1)
-        assert prepeptide.leader_seq == "MDAAHLSDLDIDALEISEFLDESRLEDSEVVAKVMSA"
-        assert prepeptide.core_seq == "SCTTCECCCSCSS"
+        assert prepeptide.leader == "MDAAHLSDLDIDALEISEFLDESRLEDSEVVAKVMSA"
+        assert prepeptide.core == "SCTTCECCCSCSS"
         assert prepeptide.macrocycle == "26-member"
-        assert prepeptide.peptide_class == "Type I"
+        assert prepeptide.peptide_subclass == "Type I"
         self.assertAlmostEqual(1222.4, prepeptide.mature_weights[0], places=1)
         self.assertAlmostEqual(1221.2, prepeptide.mature_weights[1], places=1)
         for calc, expected in zip(prepeptide.mature_weights[2:],
@@ -72,10 +72,10 @@ class TestIntegration(unittest.TestCase):
         assert prepeptide is results.motifs[0]
         self.assertAlmostEqual(1362.5, prepeptide.monoisotopic_mass, places=1)
         self.assertAlmostEqual(1363.5, prepeptide.molecular_weight, places=1)
-        assert prepeptide.leader_seq == "MSDITASRVESLDLQDLDLSELTVTSLRDTVALPENGA"
-        assert prepeptide.core_seq == "SWGSCSCQASSSCA"
+        assert prepeptide.leader == "MSDITASRVESLDLQDLDLSELTVTSLRDTVALPENGA"
+        assert prepeptide.core == "SWGSCSCQASSSCA"
         assert not prepeptide.macrocycle
-        assert prepeptide.peptide_class == "Type III"
+        assert prepeptide.peptide_subclass == "Type III"
         assert prepeptide.core_features == 'Central ring: pyridine trisubstituted'
         assert prepeptide.cleaved_residues == 'QPQDM'
         for calc, expected in zip(prepeptide.alternative_weights,
@@ -112,10 +112,10 @@ class TestIntegration(unittest.TestCase):
         # check the values are as expected
         self.assertAlmostEqual(1639.6, prepeptide.monoisotopic_mass, places=1)
         self.assertAlmostEqual(1640.9, prepeptide.molecular_weight, places=1)
-        assert prepeptide.leader_seq == "MSNAALEIGVEGLTGLDVDTLEISDYMDETLLDGEDLTVTM"
-        assert prepeptide.core_seq == "IASASCTTCICTCSCSS"
+        assert prepeptide.leader == "MSNAALEIGVEGLTGLDVDTLEISDYMDETLLDGEDLTVTM"
+        assert prepeptide.core == "IASASCTTCICTCSCSS"
         assert prepeptide.macrocycle == "26-member"
-        assert prepeptide.peptide_class == "Type II"
+        assert prepeptide.peptide_subclass == "Type II"
         assert prepeptide.core_features == 'Central ring: piperidine; second macrocycle containing a quinaldic acid moiety'
         self.assertAlmostEqual(1646.8, prepeptide.mature_weights[0], places=1)
         self.assertAlmostEqual(1645.5, prepeptide.mature_weights[1], places=1)
