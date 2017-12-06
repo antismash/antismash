@@ -156,8 +156,9 @@ def pre_process_sequences(sequences, options, genefinding) -> List[Record]:
         seq.record_index = i
 
     # keep sequences as clean as possible
-    logging.debug("Sanitising record sequences")
-    sequences = parallel_function(sanitise_sequence, ([record] for record in sequences))
+    if not options.reuse_results:
+        logging.debug("Sanitising record sequences")
+        sequences = parallel_function(sanitise_sequence, ([record] for record in sequences))
     for record in sequences:
         if record.skip or not record.seq:
             logging.warning("Record %s has no sequence, skipping.", record.id)
