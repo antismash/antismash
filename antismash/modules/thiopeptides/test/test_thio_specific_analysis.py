@@ -15,8 +15,8 @@ from antismash.modules.thiopeptides.specific_analysis import (
     Thiopeptide,
     predict_cleavage_site,
     result_vec_to_feature,
-    acquire_rodeo_heuristics,
 )
+from antismash.modules.thiopeptides.rodeo import acquire_rodeo_heuristics
 
 
 class TestThiopeptide(unittest.TestCase):
