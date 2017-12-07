@@ -62,9 +62,10 @@ def acquire_rodeo_heuristics(leader, core, domains):
         else:
             tabs.append(0)
     # CSS/CTT, SS/SSS/SSS, CC/CCC/CCCC, TT/TT/TTTT motifs
-    motifs = (('[C][S]{2,}', 1), ('[C][T]{2,}', 1), ('[S]{2,}', 1), ('[S]{3,}', 1),
-              ('[S]{4,}', 2), ('[C]{2,}', 1), ('[C]{3,}', 1), ('[C]{4,}', 2),
-              ('[T]{2,}', 1), ('[T]{3,}', 1), ('[T]{4,}', 2))
+    motifs = (('CS{2,}', 1), ('CT{2,}', 1),
+              ('S{2,}', 1), ('S{3,}', 1), ('S{4,}', 2),
+              ('C{2,}', 1), ('C{3,}', 1), ('C{4,}', 2),
+              ('T{2,}', 1), ('T{3,}', 1), ('T{4,}', 2))
     for motif in motifs:
         if re.search(motif[0], core):
             score += motif[1]
@@ -87,7 +88,7 @@ def acquire_rodeo_heuristics(leader, core, domains):
         tabs.append(0)
     # Sum of repeating Cys/Ser/Thr > 4
     number_of_repeating_CST, _, avg_heteroblock_length, _ = thioscout(core)
-    if sum([int(nr) for nr in number_of_repeating_CST.split(", ")]) > 4:
+    if sum(number_of_repeating_CST) > 4:
         score += 2
         tabs.append(1)
     else:
@@ -119,7 +120,7 @@ def acquire_rodeo_heuristics(leader, core, domains):
     else:
         tabs.append(0)
     # Peptide terminates Cys/Ser/Thr
-    if core[-1] in ["C", "S", "T"]:
+    if core[-1] in "CST":
         score += 1
         tabs.append(1)
     else:
@@ -131,7 +132,7 @@ def acquire_rodeo_heuristics(leader, core, domains):
     else:
         tabs.append(0)
     # Number of heterocyclizable residues to core ratio > 0.4
-    if float(sum([core.count(aa) for aa in "CST"])) / len(core) >= 0.4:
+    if sum([core.count(aa) for aa in "CST"]) / len(core) >= 0.4:
         score += 2
         tabs.append(1)
     else:
@@ -152,11 +153,11 @@ def generate_rodeo_svm_csv(leader, core, previously_gathered_tabs):
     number_of_repeating_CST, number_of_repeat_blocks, avg_heteroblock_length, number_of_heteroblocks = thioscout(core)
     columns.append(number_of_repeat_blocks)
     # Number of core repeating Cys
-    columns.append(int(number_of_repeating_CST.split(", ")[0]))
+    columns.append(number_of_repeating_CST[0])
     # Number of core repeating Ser
-    columns.append(int(number_of_repeating_CST.split(", ")[1]))
+    columns.append(number_of_repeating_CST[1])
     # Number of core repeating Thr
-    columns.append(int(number_of_repeating_CST.split(", ")[2]))
+    columns.append(number_of_repeating_CST[2])
     # Number of blocks of heterocyclizable residues in core
     columns.append(number_of_heteroblocks)
     # Average core heterocycle block length
@@ -177,9 +178,9 @@ def generate_rodeo_svm_csv(leader, core, previously_gathered_tabs):
     # Length of Core
     columns.append(len(core))
     # Ratio of length of leader / length of core
-    columns.append(float(len(core)) / float(len(leader)))
-    # Ratio of heterocyclizable  residues / length of core
-    columns.append(float(sum([core.count(aa) for aa in "CST"])) / len(core))
+    columns.append(len(core) / len(leader))
+    # Ratio of heterocyclizable residues / length of core
+    columns.append(sum([core.count(aa) for aa in "CST"]) / len(core))
     # Number in leader of each amino acid
     columns += [leader.count(aa) for aa in "ARDNCQEGHILKMFPSTWYV"]
     # Aromatics in leader
@@ -257,16 +258,16 @@ def run_rodeo(leader, core, domains):
 def thioscout(core):
     """ThioScout function from Chris Schwalen to count repeat blocks"""
     # rex1 repeating Cys Ser Thr residues
-    rex1 = re.compile('[C]{2,}|[S]{2,}|[T]{2,}')
+    rex1 = re.compile('C{2,}|S{2,}|T{2,}')
 
     # rex2 contiguous cyclizable residues
-    rex2 = re.compile('[C|S|T]{2,}')
+    rex2 = re.compile('[CST]{2,}')
 
     rexout1 = re.findall(rex1, core)
     number_of_repeat_blocks = len(rexout1)
 
     temp = "".join(rexout1)
-    number_of_repeating_CST = str([temp.count("C"), temp.count("S"), temp.count("T")]).strip("[]")
+    number_of_repeating_CST = [temp.count(amino) for amino in "CST"]
 
     rexout2 = re.findall(rex2, core)
     number_of_heteroblocks = len(rexout2)
