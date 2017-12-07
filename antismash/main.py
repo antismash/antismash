@@ -316,8 +316,9 @@ def write_outputs(results, options) -> None:
     logging.debug("Zipping output to '%s'", zipfile)
     if os.path.exists(zipfile):
         os.remove(zipfile)
-    with tempfile.NamedTemporaryFile() as temp:
-        shutil.make_archive(temp.name, "zip", root_dir=options.output_dir)
+
+    with tempfile.NamedTemporaryFile(prefix="as_zip_tmp", suffix=".zip") as temp:
+        shutil.make_archive(temp.name.replace(".zip", ""), "zip", root_dir=options.output_dir)
         shutil.copy(temp.name, zipfile)
     assert os.path.exists(zipfile)
 
