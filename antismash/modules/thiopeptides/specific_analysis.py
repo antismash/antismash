@@ -10,6 +10,7 @@ from collections import defaultdict
 import logging
 import re
 import os
+from typing import Set
 
 from antismash.common import all_orfs, fasta, module_results, path, secmet, serialiser, subprocessing, utils
 from antismash.detection.hmm_detection.signatures import HmmSignature
@@ -76,7 +77,7 @@ class Thiopeptide(object):
         self._monoisotopic_weight = -1
         self._alt_weights = []
         self._macrocycle = ''
-        self._amidation = False
+        self.amidation = False
         self._mature_alt_weights = []
         self._mature_features = ''
         self._c_cut = ''
@@ -89,9 +90,13 @@ class Thiopeptide(object):
 
     @core.setter
     def core(self, seq):
+        assert isinstance(seq, str)
+        assert seq
+        self._core = seq
+        self._weight = -1
+        self._monoisotopic_weight = -1
         self.core_analysis_monoisotopic = utils.RobustProteinAnalysis(seq, monoisotopic=True)
         self.core_analysis = utils.RobustProteinAnalysis(seq, monoisotopic=False)
-        self._core = seq
 
     @property
     def leader(self):
@@ -135,14 +140,6 @@ class Thiopeptide(object):
                     self._macrocycle = "35-member"
 
     @property
-    def amidation(self):
-        return self._amidation
-
-    @amidation.setter
-    def amidation(self, value):
-        self._amidation = value
-
-    @property
     def mature_features(self):
         self._predict_mature_core_features()
         return self._mature_features
@@ -174,7 +171,8 @@ class Thiopeptide(object):
         return self._c_cut
 
     @c_cut.setter
-    def c_cut(self, ccut):
+    def c_cut(self, ccut: str):
+        assert isinstance(ccut, str)
         self._c_cut = ccut
 
     def __repr__(self):
@@ -290,13 +288,9 @@ class Thiopeptide(object):
         return self._mature_alt_weights
 
 
-def predict_amidation(found_domains):
-    amidation = False
+def predict_amidation(found_domains: Set[str]) -> bool:
     # nosA homologs nocA, tpdK nocA berI pbt
-    if 'thio_amide' in found_domains:
-        amidation = True
-
-    return amidation
+    return 'thio_amide' in found_domains
 
 
 def predict_cleavage_site(query_hmmfile, target_sequence, threshold):
@@ -305,19 +299,20 @@ def predict_cleavage_site(query_hmmfile, target_sequence, threshold):
     of the HMM alignment
     '''
     hmmer_res = subprocessing.run_hmmpfam2(query_hmmfile, target_sequence)
-    resvec = [None, None, None]
 
+    best_score = None
     for res in hmmer_res:
         for hits in res:
             for hsp in hits:
                 if hsp.bitscore > threshold:
-                    resvec = [hsp.query_start, hsp.query_end-14, hsp.bitscore]
-                    return resvec
+                    return hsp.query_start, hsp.query_end-14, hsp.bitscore
+                if best_score is None or hsp.bitscore > best_score:
+                    best_score = hsp.bitscore
 
-    return resvec
+    return None, None, best_score
 
 
-def predict_type_from_gene_cluster(found_domains):
+def predict_type_from_gene_cluster(found_domains: Set[str]) -> str:
     '''
     Predict the thiopeptide type from the gene cluster
     '''
@@ -331,7 +326,7 @@ def predict_type_from_gene_cluster(found_domains):
     return 'Type-III'
 
 
-def get_detected_domains(cluster):
+def get_detected_domains(cluster) -> Set[str]:
 
     found_domains = []
     # Gather biosynthetic domains
@@ -353,7 +348,7 @@ def get_detected_domains(cluster):
                 non_biosynthetic_hmms_found.append(hsp.query_id)
     found_domains.extend(non_biosynthetic_hmms_found)
 
-    return found_domains
+    return set(found_domains)
 
 
 def run_non_biosynthetic_phmms(cluster_fasta):
@@ -396,9 +391,9 @@ def run_cleavage_site_regex(sequence):
         start, end = [m.span() for m in rex2.finditer(sequence)][-1]
         end -= 5
     else:
-        return None, None, None
+        return None, None
 
-    return start, end, 0
+    return start, end
 
 
 def determine_precursor_peptide_candidate(query, query_sequence, domains):
@@ -415,15 +410,15 @@ def determine_precursor_peptide_candidate(query, query_sequence, domains):
     start, end, score = run_cleavage_site_phmm(thio_a_fasta, 'thio_cleave.hmm', -3.00)
 
     # If no pHMM hit, try regular expression
-    if score is None:
-        start, end, score = run_cleavage_site_regex(query_sequence)
-        if score is None or end > len(query_sequence) - 5:
-            start, end, score = 0, int(len(query_sequence)*0.60) - 14, 0
+    if start is None:
+        start, end = run_cleavage_site_regex(query_sequence)
+        if start is None or end > len(query_sequence) - 5:
+            start, end = 0, int(len(query_sequence)*0.60) - 14
 
     # Run RODEO to assess whether candidate precursor peptide is judged real
     rodeo_result = run_rodeo(query_sequence[:end], query_sequence[end:], domains)
     if rodeo_result[0] is False:
-        return
+        return Thiopeptide(start, end + 1, score, 0)
 
     thiopeptide = Thiopeptide(start, end + 1, score, rodeo_result[1])
 
@@ -434,7 +429,7 @@ def determine_precursor_peptide_candidate(query, query_sequence, domains):
     return thiopeptide
 
 
-def run_thiopred(query: secmet.CDSFeature, thio_type, domains):
+def run_thiopred(query: secmet.CDSFeature, thio_type, domains) -> Thiopeptide:
 
     query_sequence = query.translation
 
@@ -466,7 +461,7 @@ def run_thiopred(query: secmet.CDSFeature, thio_type, domains):
                     filter_out = False
 
     if filter_out:
-        return
+        return None
 
     # additional filter(s) for peptide prediction
     aux = ""
@@ -474,7 +469,7 @@ def run_thiopred(query: secmet.CDSFeature, thio_type, domains):
         aux = re.search("[ISTV][SACNTW][STNCVG][ATCSGM][SVTFC][CGSTEAV][TCGVY].*",
                         result.core).group()
     else:
-        return
+        return None
 
     diff = len(result.core)-len(aux)
 
@@ -502,7 +497,7 @@ def run_thiopred(query: secmet.CDSFeature, thio_type, domains):
 
     if result is None:
         logging.debug('%r: No C-terminal cleavage site predicted', query.get_name())
-        return
+        return None
 
     query.gene_functions.add(secmet.GeneFunction.ADDITIONAL, "thiopeptides",
                              "predicted thiopeptide")
@@ -559,12 +554,19 @@ class ThiopeptideMotif(secmet.Prepeptide):
         return ThiopeptideMotif(*args)  # pylint: disable=no-value-for-parameter
 
 
-def result_vec_to_feature(orig_feature, res_vec):
-    # resets .. to recalculate weights considering C-terminal putative cut
-    res_vec._weight = -1
-    res_vec._monoisotopic_weight = -1
-    oldcore = res_vec.core
-    res_vec.core = oldcore[:(len(res_vec.core) - len(res_vec.c_cut))]
+def result_vec_to_feature(orig_feature, res_vec: Thiopeptide) -> ThiopeptideMotif:
+    """ Converts a Thiopeptide object to a ThiopeptideMotif, based on an original
+        CDSFeature.
+
+        Arguments:
+            orig_feature: the original CDS feature that the Motif will attach to
+            res_vec: a Thiopeptide object containing results
+
+        Returns:
+            a ThiopeptideMotif
+    """
+    if res_vec.c_cut:
+        res_vec.core = res_vec.core[:-len(res_vec.c_cut)]
 
     mature_weights = []
     if res_vec.thio_type != "Type-III":
@@ -575,7 +577,6 @@ def result_vec_to_feature(orig_feature, res_vec):
                                res_vec.thio_type, res_vec.score, res_vec.rodeo_score,
                                res_vec.macrocycle, res_vec.c_cut, res_vec.mature_features,
                                mature_weights, res_vec.amidation)
-
     return feature
 
 
@@ -592,9 +593,6 @@ def specific_analysis(record, options):
         domains = get_detected_domains(cluster)
         thio_type = predict_type_from_gene_cluster(domains)
 
-        if thio_type is None:
-            return
-
         amidation = predict_amidation(domains)
 
         for thio_f in thio_fs:
@@ -605,7 +603,6 @@ def specific_analysis(record, options):
 
             if amidation:
                 result_vec.amidation = True
-
             new_feature = result_vec_to_feature(thio_f, result_vec)
             if thio_f in new_orfs:
                 results.cds_features[cluster.get_cluster_number()].append(thio_f)

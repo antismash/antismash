@@ -118,7 +118,7 @@ class TestSpecificAnalysis(unittest.TestCase):
     def test_predict_cleavage_site(self):
         "Test thiopeptides.predict_cleavage_site()"
         resvec = predict_cleavage_site('foo', 'bar', 51)
-        self.assertEqual([None, None, None], resvec)
+        self.assertEqual((None, None, None), resvec)
         fake_hit = FakeHit(24, 42, 17, 'fake')
         self.hmmpfam_return_vals.append([fake_hit])
 
