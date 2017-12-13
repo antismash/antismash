@@ -33,8 +33,10 @@ class TestIntegration(unittest.TestCase):
         assert rec.get_feature_count() == 56
 
         result.add_to_record(rec)
+        for i in rec.get_cds_motifs():
+            print(i, i.leader, i.score, i.rodeo_score)
+        assert len(rec.get_cds_motifs()) == 1, rec.get_cds_motifs()
         assert rec.get_feature_count() == 57
-        assert len(rec.get_cds_motifs()) == 1
         prepeptide = rec.get_cds_motifs()[0]
         assert prepeptide is result.motifs[0]
 
