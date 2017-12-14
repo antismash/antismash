@@ -27,16 +27,21 @@ class TestIntegration(unittest.TestCase):
         "Test thiopeptide prediction for nosiheptide - nosM"
         rec = seqio.read(path.get_full_path(__file__, 'data', 'nosi_before_analysis.gbk'))
         rec = secmet.Record.from_biopython(rec)
+        rec.get_cluster(1).trim_overlapping()
         assert rec.get_feature_count() == 56
         assert not rec.get_cds_motifs()
         result = thiopeptides.specific_analysis(rec, None)
         assert rec.get_feature_count() == 56
+
+        assert len(result.motifs) == 1
 
         result.add_to_record(rec)
         for i in rec.get_cds_motifs():
             print(i, i.leader, i.score, i.rodeo_score)
         assert len(rec.get_cds_motifs()) == 1, rec.get_cds_motifs()
         assert rec.get_feature_count() == 57
+
+        # check the motif in an existing CDS
         prepeptide = rec.get_cds_motifs()[0]
         assert prepeptide is result.motifs[0]
 
