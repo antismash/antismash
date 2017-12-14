@@ -1,6 +1,14 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+""" Provides a base for all module results objects to enable reusing previous
+    antismash run results.
+"""
+
+from typing import Dict
+
+from .secmet import Record
+
 
 class ModuleResults:
     """
@@ -9,10 +17,10 @@ class ModuleResults:
     """
     __slots__ = ["record_id"]
 
-    def __init__(self, record_id):
+    def __init__(self, record_id: str) -> None:
         self.record_id = record_id
 
-    def to_json(self):
+    def to_json(self) -> Dict:
         """
             Converts the contained results into a json structure of simple types
 
@@ -22,7 +30,7 @@ class ModuleResults:
         raise NotImplementedError()
 
     @staticmethod
-    def from_json(json):
+    def from_json(json: Dict, record: Record) -> "ModuleResults":
         """
             Converts a json structure back to a ModuleResults instance
 
@@ -31,13 +39,13 @@ class ModuleResults:
         """
         raise NotImplementedError()
 
-    def add_to_record(self, record):
+    def add_to_record(self, record: Record) -> None:
         """
             Stores relevant information from the results in the given record
         """
         raise NotImplementedError()
 
-    def generate_images(self, image_dir):
+    def generate_images(self, image_dir: str) -> None:
         """
             Generates svgs and saves them to the output image directory
         """
