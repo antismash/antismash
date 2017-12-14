@@ -130,7 +130,13 @@ def find_all_orfs(record, cluster=None) -> List[CDSFeature]:
         if any(dummy_feature.overlaps_with(cds) for cds in existing):
             continue
 
-        new_features.append(create_feature_from_location(record, location, orfnr))
+        feature = create_feature_from_location(record, location, orfnr)
+
+        # skip if not wholly contained in the cluster
+        if cluster and not feature.is_contained_by(cluster):
+            continue
+
+        new_features.append(feature)
         orfnr += 1
 
     return new_features
