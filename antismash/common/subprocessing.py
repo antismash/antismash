@@ -8,17 +8,18 @@ import os
 from subprocess import PIPE, Popen, TimeoutExpired
 from tempfile import NamedTemporaryFile
 from typing import Dict, List
-
 import warnings
+
+from helperlibs.wrappers.io import TemporaryDirectory
+
+from antismash.config import get_config
+
+from .fasta import write_fasta, read_fasta
+
 # Don't display the SearchIO experimental warning, we know this.
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     from Bio import SearchIO
-
-from helperlibs.wrappers.io import TemporaryDirectory
-
-from antismash.common.fasta import write_fasta, read_fasta
-from antismash.config import get_config
 
 
 class RunResult:
@@ -130,27 +131,37 @@ def parallel_execute(commands, cpus=None, timeout=None) -> List[int]:
     os.setpgid(0, 0)
     if not cpus:
         cpus = get_config().cpus
-    p = multiprocessing.Pool(cpus)
-    jobs = p.map_async(child_process, commands)
+    pool = multiprocessing.Pool(cpus)
+    jobs = pool.map_async(child_process, commands)
 
     try:
         errors = jobs.get(timeout=timeout)
     except multiprocessing.TimeoutError:
-        p.terminate()
+        pool.terminate()
         raise RuntimeError("One of %d child processes timed out after %d seconds" % (
                 cpus, timeout))
     except KeyboardInterrupt:
         logging.error("Interrupted by user")
-        p.terminate()
+        pool.terminate()
         raise
 
-    p.close()
+    pool.close()
 
     return errors
 
 
-def run_hmmsearch(query_hmmfile, target_sequence, use_tempfile=False):
-    "Run hmmsearch"
+def run_hmmsearch(query_hmmfile: str, target_sequence: str, use_tempfile=False):
+    """ Run hmmsearch on a HMM file and a fasta input
+
+        Arguments:
+            query_hmmfile: the path to the HMM file
+            target_sequence: the fasta input to search as a string
+            use_tempfile: if True, a tempfile will be written for the fasta input
+                          instead of piping
+
+        Returns:
+            a list of hmmsearch results as parsed by SearchIO
+    """
     config = get_config()
     command = ["hmmsearch", "--cpu", str(config.cpus),
                "-o", os.devnull,  # throw away the verbose output
@@ -181,7 +192,7 @@ def run_hmmsearch(query_hmmfile, target_sequence, use_tempfile=False):
         return list(SearchIO.parse("result.domtab", 'hmmsearch3-domtab'))
 
 
-def run_hmmpress(hmmfile):
+def run_hmmpress(hmmfile: str) -> RunResult:
     "Run hmmpress"
     command = ['hmmpress', hmmfile]
     run_result = execute(command)
@@ -190,8 +201,16 @@ def run_hmmpress(hmmfile):
     return run_result
 
 
-def run_hmmpfam2(query_hmmfile, target_sequence):  # TODO cleanup
-    "Run hmmpfam2"
+def run_hmmpfam2(query_hmmfile: str, target_sequence: str) -> List:  # TODO cleanup
+    """ Run hmmpfam2 over the provided HMM file and fasta input
+
+        Arguments:
+            query_hmmfile: the HMM file to use
+            target_sequence: a string in fasta format of the sequence to run
+
+        Returns:
+            a list of results as parsed by SearchIO
+    """
     config = get_config()
     command = ["hmmpfam2", "--cpu", str(config.cpus),
                query_hmmfile, '-']
@@ -211,8 +230,16 @@ def run_hmmpfam2(query_hmmfile, target_sequence):  # TODO cleanup
     return results
 
 
-def run_fimo_simple(query_motif_file, target_sequence):  # TODO cleanup
-    "Run FIMO"
+def run_fimo_simple(query_motif_file: str, target_sequence: str) -> RunResult:  # TODO cleanup
+    """ Runs FIMO on the provided inputs
+
+        Arguments:
+            query_motif_file: the path to the file containing query motifs
+            target_sequence: the path to the file containing input sequences
+
+        Returns:
+            a RunResult with the execution results
+    """
     command = ["fimo", "--text", "--verbosity", "1", query_motif_file, target_sequence]
     result = execute(command)
     if not result.successful():
@@ -222,8 +249,19 @@ def run_fimo_simple(query_motif_file, target_sequence):  # TODO cleanup
     return result.stdout
 
 
-def run_hmmscan(target_hmmfile, query_sequence, opts=None, results_file=None):
-    "Run hmmscan on the inputs and return a list of QueryResults"
+def run_hmmscan(target_hmmfile: str, query_sequence: str, opts=None, results_file=None):
+    """ Runs hmmscan on the inputs and return a list of QueryResults
+
+        Arguments:
+            target_hmmfile: the path to a HMM file to use in scanning
+            query_sequence: a string containing input sequences in fasta format
+            opts: a list of extra arguments to pass to hmmscan, or None
+            results_file: a path to keep a copy of hmmscan results in, if provided
+
+        Returns:
+            a list of QueryResults as parsed from hmmscan output by SearchIO
+
+    """
     if not query_sequence:
         raise ValueError("Cannot run hmmscan on empty sequence")
 
@@ -249,7 +287,8 @@ def run_hmmscan(target_hmmfile, query_sequence, opts=None, results_file=None):
 
     return list(SearchIO.parse(StringIO(result.stdout), 'hmmer3-text'))
 
-def run_muscle_single(seq_name, seq, comparison_file) -> Dict[str, str]:
+
+def run_muscle_single(seq_name: str, seq: str, comparison_file: str) -> Dict[str, str]:
     """ Runs muscle over a single sequence against a comparison file in profile
         mode and returns a dictionary of the resulting alignments
 

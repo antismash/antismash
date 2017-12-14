@@ -6,10 +6,12 @@
 
 from collections import OrderedDict
 import logging
-from typing import Dict
+from typing import Dict, List
+
+from antismash.common.secmet import CDSFeature, Record
 
 
-def get_fasta_from_features(features) -> str:
+def get_fasta_from_features(features: List[CDSFeature]) -> str:
     """ Extract multi-protein FASTA from provided features """
     all_fastas = []
     for feature in features:
@@ -17,7 +19,7 @@ def get_fasta_from_features(features) -> str:
     return "\n".join(all_fastas)
 
 
-def get_fasta_from_record(record) -> str:
+def get_fasta_from_record(record: Record) -> str:
     """ Extract multi-protein FASTA from all CDS features in sequence record """
     features = record.get_cds_features()
     all_fastas = []
@@ -28,7 +30,7 @@ def get_fasta_from_record(record) -> str:
     return "\n".join(all_fastas)
 
 
-def write_fasta(names, seqs, filename) -> None:
+def write_fasta(names: List[str], seqs: List[str], filename: str) -> None:
     "Write name/seq pairs to file in FASTA format"
     out_file = open(filename, "w")
     for name, seq in zip(names, seqs):
@@ -41,7 +43,7 @@ def read_fasta(filename: str) -> Dict[str, str]:
     ids = []
     sequence_info = []
     with open(filename, "r") as fasta:
-        current_seq = []
+        current_seq = []  # type: List[str]
         for line in fasta:
             line = line.strip()
             if not line:
@@ -50,7 +52,7 @@ def read_fasta(filename: str) -> Dict[str, str]:
                 ids.append(line[1:].replace(" ", "_"))
                 if current_seq:
                     sequence_info.append("".join(current_seq))
-                    current_seq = []
+                    current_seq.clear()
             else:
                 if not ids:
                     raise ValueError("Sequence before identifier in fasta file")
