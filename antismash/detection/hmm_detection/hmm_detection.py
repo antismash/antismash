@@ -73,6 +73,7 @@ def find_clusters(record, cds_domains_by_cluster, rules_by_name) -> List[Cluster
         edge = cluster.location.start == 0 or cluster.location.end == len(record)
         cluster.contig_edge = edge
         record.add_cluster(cluster)
+        cluster.trim_overlapping()
     logging.info("%d cluster(s) found in record", len(clusters))
     return clusters
 
