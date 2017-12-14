@@ -6,7 +6,7 @@ from enum import Enum, unique
 import logging
 import os
 import warnings
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 from helperlibs.bio import seqio
 
@@ -38,12 +38,17 @@ class Feature:
             return tuple(qualifier)
         return None
 
-    def overlaps_with(self, other):
-        assert isinstance(other, Feature)
-        return self.location.start in other.location \
-               or self.location.end - 1 in other.location \
-               or other.location.start in self.location \
-               or other.location.end - 1 in self.location
+    def overlaps_with(self, other: Union["Feature", FeatureLocation]):
+        if isinstance(other, Feature):
+            location = other.location
+        elif isinstance(other, FeatureLocation):
+            location = other
+        else:
+            raise TypeError("Container must be a Feature or a FeatureLocation, not %s" % type(other))
+        return self.location.start in location \
+               or self.location.end - 1 in location \
+               or location.start in self.location \
+               or location.end - 1 in self.location
 
     def is_contained_by(self, other: Union["Feature", FeatureLocation]):
         end = self.location.end - 1  # to account for the non-inclusive end
@@ -652,7 +657,6 @@ class Prepeptide(CDSFeature):
         if 'note' not in qualifiers:
             qualifiers['note'] = []
 
-
         # build features
         features = []
         if self.leader:
@@ -731,6 +735,65 @@ class Cluster(Feature):
         if not self.parent_record:
             raise ValueError("Cluster not contained in record")
         return self.parent_record.get_cluster_number(self)
+
+    def trim_overlapping(self):
+        if not self.parent_record:
+            logging.warning("Trimming cluster which does not belong to a record")
+            return
+        features = self.parent_record.get_cds_features_within_location(self.location,
+                                            with_overlapping=True)
+        # don't trim if there's no features to trim by
+        if not features:
+            return
+
+        # find the deepest feature that only overlaps at the beginning
+        previous = None
+        index = 0
+        current = features[index]
+        # track where to trim to
+        start = self.location.start
+        while current.overlaps_with(self) and not current.is_contained_by(self):
+            start = max([start, current.location.start, current.location.end])
+            previous = current
+            index += 1
+            if index >= len(features):
+                current = None
+                break
+            current = features[index]
+
+        # don't cause a contained feature to now overlap only
+        if previous and current:
+            start = min([start, current.location.start, current.location.end])
+
+        # find the deepest feature that only overlaps at the end
+        # but skip any indices already covered in the lead search
+        lead_index = index
+        previous = None
+        index = len(features) - 1
+        current = features[index]
+        # track where to trim to
+        end = self.location.end
+        while index > lead_index and current.overlaps_with(self) and not current.is_contained_by(self):
+            end = min([end, current.location.start, current.location.end])
+            previous = current
+            index -= 1
+            if index < 0:
+                current = None
+                break
+            current = features[index]
+
+        # but don't cause a contained feature to now overlap only
+        if previous and current:
+            end = max([end, current.location.start, current.location.end])
+
+        # finally, do the trim itself
+        new_loc = FeatureLocation(start, end, self.location.strand)
+        logging.debug("Cluster %d trimming location from %s to %s", self.get_cluster_number(),
+                      self.location, new_loc)
+        self.location = new_loc
+
+        for cds in self.cds_children:
+            assert cds.is_contained_by(self), "cluster trimming removed wholly contained CDS"
 
     def add_cds(self, cds):
         assert isinstance(cds, CDSFeature)
