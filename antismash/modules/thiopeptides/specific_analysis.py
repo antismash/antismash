@@ -387,7 +387,7 @@ def run_cleavage_site_regex(sequence):
     if re.search(rex1, sequence) and len(re.split(rex1, sequence)[-1]) > 10:
         start, end = [m.span() for m in rex1.finditer(sequence)][-1]
         end -= 5
-    elif re.search(rex2, sequence) and len(re.split(rex1, sequence)[-1]) > 10:
+    elif re.search(rex2, sequence) and len(re.split(rex2, sequence)[-1]) > 10:
         start, end = [m.span() for m in rex2.finditer(sequence)][-1]
         end -= 5
     else:
