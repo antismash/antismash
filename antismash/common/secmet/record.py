@@ -161,6 +161,38 @@ class Record:
         features.extend(self.get_pfam_domains())
         return features
 
+    def get_cds_features_within_location(self, location, with_overlapping=False) -> List[Feature]:
+        """ Returns all CDS features within the given location
+
+            Arguments:
+                location: the location to use as a range
+                with_overlapping: whether to include features which overlap the
+                                  edges of the range
+
+            Returns:
+                a list of CDSFeatures, ordered by earliest position in feature location
+        """
+        def find_start_in_list(location, features, include_overlaps):
+            dummy = Feature(location, feature_type='dummy')
+            index = bisect.bisect_left(features, dummy)
+            if include_overlaps:
+                while index >= 1 and features[index - 1].overlaps_with(dummy):
+                    index -= 1
+            return index
+
+        results = []
+        index = find_start_in_list(location, self._cds_features, with_overlapping)
+        while index < len(self._cds_features):
+            feature = self._cds_features[index]
+            if feature.is_contained_by(location):
+                results.append(feature)
+            elif with_overlapping and feature.overlaps_with(location):
+                results.append(feature)
+            else:
+                break
+            index += 1
+        return results
+
     def to_biopython(self) -> SeqRecord:
         """Returns a Bio.SeqRecord instance of the record"""
         features = self.get_all_features()
