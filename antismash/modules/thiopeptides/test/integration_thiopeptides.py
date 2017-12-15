@@ -145,3 +145,26 @@ class TestIntegration(unittest.TestCase):
         assert regenned_results
         assert len(regenned_results.motifs) == 1
         self.check_thiostrepton_values(regenned_results.motifs[0])
+
+    def test_CP009369(self):
+        " tests the special case HMM files for rodeo "
+        config = build_config(["--minimal", "--enable-thiopeptides"],
+                              isolated=True, modules=antismash.get_all_modules())
+        record_path = path.get_full_path(__file__, 'data', 'CP009369.1.gbk')
+        results = helpers.run_and_regenerate_results_for_module(record_path, thiopeptides, config,
+                                     expected_record_count=1)
+        assert results
+        assert len(results.motifs) == 1
+        prepeptide = results.motifs[0]
+        self.assertAlmostEqual(1934.6, prepeptide.monoisotopic_mass, places=1)
+        self.assertAlmostEqual(1936.0, prepeptide.molecular_weight, places=1)
+        assert prepeptide.leader == "MVKSIIKARESGRFYETKYLKGGEEMKEQKELKNEEFELDVEFLDLDEVSAIPETTA"
+        assert prepeptide.core == "SSGTSSCSASSTCGSSSCCGSC"
+        assert not prepeptide.macrocycle
+        assert prepeptide.peptide_subclass == "Type III"
+        assert prepeptide.core_features == 'Central ring: pyridine trisubstituted'
+        assert prepeptide.cleaved_residues == ''
+        for calc, expected in zip(prepeptide.alternative_weights,
+                                  [1954.0, 1972.1, 1990.1, 2008.1, 2026.1, 2044.1,
+                                   2062.2, 2080.2, 2098.2, 2116.2, 2134.2, 2152.3, 2170.3]):
+            self.assertAlmostEqual(calc, expected, places=1)
