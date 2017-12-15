@@ -1,7 +1,7 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
-import logging
+""" HTML generation for the thiopeptides module """
 
 from jinja2 import FileSystemLoader, Environment, StrictUndefined
 
@@ -10,10 +10,12 @@ from antismash.common.layers import ClusterLayer
 
 
 def will_handle(products):
+    """ HTML generation only occurs if this function reutrns True """
     return 'thiopeptide' in products
 
 
 class ThiopeptideLayer(ClusterLayer):
+    """ A wrapper of ClusterLayer to allow for tracking the ThiopeptideMotifs """
     def __init__(self, record, results, cluster_feature):
         ClusterLayer.__init__(self, record, cluster_feature)
         self.motifs = []
@@ -22,7 +24,8 @@ class ThiopeptideLayer(ClusterLayer):
                 self.motifs.append(motif)
 
 
-def generate_details_div(cluster_layer, results, record_layer, options_layer):
+def generate_details_div(cluster_layer, results, record_layer, options_layer) -> str:
+    """ Generates the HTML details section from the ThioResults instance """
     env = Environment(
         loader=FileSystemLoader(path.get_full_path(__file__, "templates")),
         autoescape=True, undefined=StrictUndefined)
@@ -33,7 +36,8 @@ def generate_details_div(cluster_layer, results, record_layer, options_layer):
     return details_div
 
 
-def generate_sidepanel(cluster_layer, results, record_layer, options_layer):
+def generate_sidepanel(cluster_layer, results, record_layer, options_layer) -> str:
+    """ Generates the HTML sidepanel section from the ThioResults instance """
     env = Environment(
         loader=FileSystemLoader(path.get_full_path(__file__, "templates")),
         autoescape=True, undefined=StrictUndefined)

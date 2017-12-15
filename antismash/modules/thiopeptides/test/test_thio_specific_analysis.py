@@ -37,7 +37,12 @@ class TestThiopeptide(unittest.TestCase):
         "Test Thiopeptide representation"
         thio = Thiopeptide(20, 31, 32, 51)
         thio.core = "MAGIC"
-        expected = "Thiopeptide(20..31, 32, 'MAGIC', '', -1(-1), , False, , )"
+        thio.thio_type = "Type I"
+        thio.c_cut = "DUMMYC"
+        thio.macrocycle = "dummy macro"
+        expected = ("Thiopeptide(20..31, 32, 'MAGIC', 'Type I', -1.0(-1.0), dummy macro, False, "
+                    "Central ring: pyridine tetrasubstituted (hydroxyl group present); second macrocycle, "
+                    "DUMMYC)")
         self.assertEqual(expected, repr(thio))
 
     def test_core(self):
@@ -68,7 +73,7 @@ class TestThiopeptide(unittest.TestCase):
         thio = Thiopeptide(23, 42, 17, 51)
         thio.core = "MAGICCHATS"
         thio.amidation = True
-        thio.thio_type = "Type-I"
+        thio.thio_type = "Type I"
 
         mat_weights = thio.mature_alt_weights
         weight = mat_weights[0]
@@ -80,7 +85,7 @@ class TestThiopeptide(unittest.TestCase):
 
         thio.core = "MAGICCHATS"
         thio.amidation = False
-        thio.thio_type = "Type-I"
+        thio.thio_type = "Type I"
         # reset mature alt weights to calculate them again
         thio._mature_alt_weights = []
 
@@ -94,7 +99,7 @@ class TestThiopeptide(unittest.TestCase):
 
         thio.core = "MAGICCHATS"
         thio.amidation = True
-        thio.thio_type = "Type-II"
+        thio.thio_type = "Type II"
         # reset mature alt weights to calculate them again
         thio._mature_alt_weights = []
 
@@ -134,7 +139,7 @@ class TestSpecificAnalysis(unittest.TestCase):
         orig_feature = DummyCDS(0, 165, locus_tag='FAKE0001')
         vec = Thiopeptide(17, 23, 42, 51)
         seq = 'SCTSSCTSS'
-        vec.thio_type = 'Type-III'
+        vec.thio_type = 'Type III'
         vec.core = seq
         vec.leader = "HEADHEADHEAD"
         orig_feature.translation = seq + vec.leader

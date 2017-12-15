@@ -51,4 +51,4 @@ def regenerate_previous_results(results, record, options):
 def run_on_record(record, previous_results, options):
     if previous_results:
         return previous_results
-    return specific_analysis(record, options)
+    return specific_analysis(record)
