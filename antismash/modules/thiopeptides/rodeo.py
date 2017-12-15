@@ -5,17 +5,16 @@
 
 import os
 import re
-from typing import List
+from typing import List, Set, Tuple
 
-import numpy as np
 from sklearn.externals import joblib
 
 from antismash.common import path, utils
 
 
-def acquire_rodeo_heuristics(leader, core, domains):
+def acquire_rodeo_heuristics(leader: str, core: str, domains: Set[str]) -> Tuple[int, List[float]]:
     """Calculate heuristic scores for RODEO"""
-    tabs = []
+    tabs = []  # type: List[float]
     score = 0
     # Contains TOMM YcaO (PF02624)
     if "YcaO" in domains:
@@ -87,14 +86,14 @@ def acquire_rodeo_heuristics(leader, core, domains):
     else:
         tabs.append(0)
     # Sum of repeating Cys/Ser/Thr > 4
-    number_of_repeating_CST, _, avg_heteroblock_length, _ = thioscout(core)
-    if sum(number_of_repeating_CST) > 4:
+    stats = ThioStatistics(core)
+    if stats.cst_repeats > 4:
         score += 2
         tabs.append(1)
     else:
         tabs.append(0)
     # Avg heterocycle block length > 3
-    if not np.isnan(avg_heteroblock_length) and avg_heteroblock_length > 3:
+    if stats.average_heteroblock_length > 3:
         score += 2
         tabs.append(1)
     else:
@@ -140,31 +139,28 @@ def acquire_rodeo_heuristics(leader, core, domains):
     return score, tabs
 
 
-def generate_rodeo_svm_csv(leader, core, previously_gathered_tabs):
+def generate_rodeo_svm_csv(leader: str, core: str, previously_gathered_tabs: List[float]) -> List[float]:
     """Generates all the items for one candidate precursor peptide"""
     precursor = leader + core
-    columns = []
+    columns = []  # type: List[float]
     # Precursor Index
     columns.append(1)
     # classification
     columns.append(0)
-    columns += previously_gathered_tabs
+    columns.extend(previously_gathered_tabs)
+    stats = ThioStatistics(core)
     # Number repeating blocks of heterocyclizable residues in core
-    number_of_repeating_CST, number_of_repeat_blocks, avg_heteroblock_length, number_of_heteroblocks = thioscout(core)
-    columns.append(number_of_repeat_blocks)
+    columns.append(stats.block_repeats)
     # Number of core repeating Cys
-    columns.append(number_of_repeating_CST[0])
+    columns.append(stats.c_repeats)
     # Number of core repeating Ser
-    columns.append(number_of_repeating_CST[1])
+    columns.append(stats.s_repeats)
     # Number of core repeating Thr
-    columns.append(number_of_repeating_CST[2])
+    columns.append(stats.t_repeats)
     # Number of blocks of heterocyclizable residues in core
-    columns.append(number_of_heteroblocks)
+    columns.append(stats.heteroblocks)
     # Average core heterocycle block length
-    if np.isnan(avg_heteroblock_length):
-        columns.append(0)
-    else:
-        columns.append(avg_heteroblock_length)
+    columns.append(stats.average_heteroblock_length)
     # Precursor peptide mass (unmodified)
     columns.append(utils.RobustProteinAnalysis(leader+core, monoisotopic=True).molecular_weight())
     # Unmodified leader peptide mass
@@ -240,7 +236,7 @@ def run_rodeo_svm(csv_columns: List[float]) -> int:
     return 0
 
 
-def run_rodeo(leader: str, core: str, domains):
+def run_rodeo(leader: str, core: str, domains: Set[str]) -> Tuple[bool, float]:
     """Run RODEO heuristics + SVM to assess precursor peptide candidate"""
     rodeo_score = 0
 
@@ -255,26 +251,68 @@ def run_rodeo(leader: str, core: str, domains):
     return rodeo_score >= 20, rodeo_score
 
 
-def thioscout(core):
-    """ThioScout function from Chris Schwalen to count repeat blocks"""
-    # rex1 repeating Cys Ser Thr residues
-    rex1 = re.compile('C{2,}|S{2,}|T{2,}')
+class ThioStatistics:
+    """ Contains the same statistics as the old thioscout() function, but
+        using lazy evaluation to only calculate when required."""
+    def __init__(self, core: str) -> None:
+        self._core = core
+        self._c_repeats = None
+        self._s_repeats = None
+        self._t_repeats = None
+        self._block_repeats = None
+        self._heteroblocks = None
+        self._average_heteroblock_length = None
 
-    # rex2 contiguous cyclizable residues
-    rex2 = re.compile('[CST]{2,}')
+    @property
+    def c_repeats(self):
+        """ The number of repeating Cys in the core """
+        if self._c_repeats is None:
+            self._c_repeats = len("".join(re.findall("C{2,}", self._core)))
+        return self._c_repeats
 
-    rexout1 = re.findall(rex1, core)
-    number_of_repeat_blocks = len(rexout1)
+    @property
+    def s_repeats(self):
+        """ The number of repeating Ser in the core """
+        if self._s_repeats is None:
+            self._s_repeats = len("".join(re.findall("S{2,}", self._core)))
+        return self._s_repeats
 
-    temp = "".join(rexout1)
-    number_of_repeating_CST = [temp.count(amino) for amino in "CST"]
+    @property
+    def t_repeats(self):
+        """ The number of repeating Thr in the core """
+        if self._t_repeats is None:
+            self._t_repeats = len("".join(re.findall("T{2,}", self._core)))
+        return self._t_repeats
 
-    rexout2 = re.findall(rex2, core)
-    number_of_heteroblocks = len(rexout2)
+    @property
+    def cst_repeats(self):
+        """ The total number of repeating Cys, Ser, and Thr in the core """
+        return sum([self.c_repeats, self.s_repeats, self.t_repeats])
 
-    if rexout2:
-        avg_heteroblock_length = np.mean([len(x) for x in rexout2])
-    else:
-        avg_heteroblock_length = 0.0
+    @property
+    def block_repeats(self):
+        """ The number of distinct blocks of repeating Cys, Ser, and Thr """
+        if self._block_repeats is None:
+            self._block_repeats = len(re.findall('C{2,}|S{2,}|T{2,}', self._core))
+        return self._block_repeats
 
-    return number_of_repeating_CST, number_of_repeat_blocks, avg_heteroblock_length, number_of_heteroblocks
+    @property
+    def heteroblocks(self):
+        """ The number of blocks of heterocyclizable residues in the core """
+        if self._heteroblocks is None:
+            self._calculate_heteroblocks()
+        return self._heteroblocks
+
+    @property
+    def average_heteroblock_length(self):
+        """ The average length of blocks of heterocyclizable residues in the core """
+        if self._average_heteroblock_length is None:
+            self._calculate_heteroblocks()
+        return self._average_heteroblock_length
+
+    def _calculate_heteroblocks(self):
+        results = re.findall('[CST]{2,}', self._core)
+        self._heteroblocks = len(results)
+        self._average_heteroblock_length = 0.
+        if self._heteroblocks:
+            self._average_heteroblock_length = sum(len(res) for res in results) / self._heteroblocks

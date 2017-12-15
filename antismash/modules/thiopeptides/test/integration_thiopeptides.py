@@ -30,7 +30,7 @@ class TestIntegration(unittest.TestCase):
         rec.get_cluster(1).trim_overlapping()
         assert rec.get_feature_count() == 56
         assert not rec.get_cds_motifs()
-        result = thiopeptides.specific_analysis(rec, None)
+        result = thiopeptides.specific_analysis(rec)
         assert rec.get_feature_count() == 56
 
         assert len(result.motifs) == 1
@@ -65,7 +65,7 @@ class TestIntegration(unittest.TestCase):
         rec = secmet.Record.from_biopython(rec)
         assert rec.get_feature_count() == 21
         assert not rec.get_cds_motifs()
-        results = thiopeptides.specific_analysis(rec, None)
+        results = thiopeptides.specific_analysis(rec)
         assert len(results.motifs) == 1
         # ensure record not adjusted yet
         assert rec.get_feature_count() == 21
@@ -97,7 +97,7 @@ class TestIntegration(unittest.TestCase):
         # two existing motifs
         assert len(rec.get_cds_motifs()) == 2
 
-        results = thiopeptides.specific_analysis(rec, None)
+        results = thiopeptides.specific_analysis(rec)
         assert len(results.motifs) == 1
         # ensure record not adjusted yet
         self.assertEqual(27, rec.get_feature_count())
@@ -146,7 +146,7 @@ class TestIntegration(unittest.TestCase):
         assert len(regenned_results.motifs) == 1
         self.check_thiostrepton_values(regenned_results.motifs[0])
 
-    def test_CP009369(self):
+    def test_CP009369(self):  # pylint: disable=invalid-name
         " tests the special case HMM files for rodeo "
         config = build_config(["--minimal", "--enable-thiopeptides"],
                               isolated=True, modules=antismash.get_all_modules())
