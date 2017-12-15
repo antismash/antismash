@@ -1,14 +1,20 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+
 from collections import defaultdict
+from io import StringIO
 import glob
 import logging
 import shutil
 import os
 from typing import Dict
 
+from Bio import Phylo
+from Bio.Phylo.NewickIO import NewickError
 from helperlibs.wrappers.io import TemporaryDirectory
+import matplotlib
+#import pylab
 
 from antismash.common import path, fasta, subprocessing
 
@@ -47,12 +53,7 @@ def smcog_tree_analysis(cds, inputnr, smcog, output_dir) -> None:
     # Generate trimmed alignment
     trim_alignment(inputnr, alignment_file)
     # Draw phylogenetic tree
-    draw_tree(inputnr)
-    # Convert tree to draw PNG image
-    try:
-        convert_tree(inputnr, output_dir, gene_id)
-    except RuntimeError:
-        logging.critical("Error during image generation for %s", gene_id)  # TODO fix
+    draw_tree(inputnr, output_dir, gene_id)
 
 
 def alignsmcogs(smcog, inputnr) -> str:
@@ -90,9 +91,9 @@ def trim_alignment(inputnr, alignment_file) -> None:
     sequence_length = len(list(contents.values())[0])
     for name, seq in contents.items():
         assert sequence_length == len(seq), "%s has different sequence length" % name
-    # stripping [ and ] because it breaks TreeGraph later on
     # stripping ( and ) because it breaks newick tree parsing
-    names = [name.replace("[", "").replace("]", "").replace("(", "_").replace(")", "_") for name in list(contents)]
+    # and keeping only the last two fields (id and description)
+    names = ["|".join(name.replace("(", "_").replace(")", "_").rsplit('|', 2)[-2:]) for name in list(contents)]
     seqs = list(contents.values())
 
     # store conservation of residues
@@ -113,46 +114,41 @@ def trim_alignment(inputnr, alignment_file) -> None:
     fasta.write_fasta(names, seqs, seed_fasta_name)
 
 
-def draw_tree(inputnr) -> str:
-    """ Construct phylogenetic tree with fasttree
+def draw_tree(inputnr: int, output_dir: str, tag: str) -> str:
+    """ Construct a PNG for display via fasttree
 
         Returns:
-            the filename of the newick tree generated
+            the filename of the image generated
     """
-    tree_filename = "tree%d.nwk" % inputnr
+    matplotlib.use('Agg')
     command = ["fasttree", "-quiet", "-fastest", "-noml", "trimmed_alignment%d.fasta" % inputnr]
-    run_result = subprocessing.execute(command, stdout=open(tree_filename, "w"))
+    run_result = subprocessing.execute(command)
     if not run_result.successful():
         raise RuntimeError("Fasttree failed to run successfully:", run_result.stderr)
+
+    handle = StringIO(run_result.stdout)
+    tree_filename = os.path.join(output_dir, tag + '.png')
+    try:
+        tree = Phylo.read(handle, 'newick')
+    except NewickError:
+        logging.debug('Invalid newick tree for %r', tag)
+        return ''
+
+    # enforce a minimum distance between branches
+    max_size = max(tree.distance(node) for node in tree.get_terminals())
+    for clade in tree.get_nonterminals() + tree.get_terminals():
+        if not clade.branch_length:
+            clade.branch_length = max_size / 20
+        else:
+            clade.branch_length = abs(clade.branch_length) + max_size / 20
+    # change the colour of the query gene
+    label_colors = {tag: 'green'}
+
+    Phylo.draw(tree, do_show=False, label_colors=label_colors,
+               label_func=lambda node: str(node).replace("|", " "))
+    fig = matplotlib.pyplot.gcf()
+    fig.set_size_inches(20, (tree.count_terminals() / 3))
+    matplotlib.pyplot.axis('off')
+    fig.savefig(os.path.join(output_dir, tag + '.png'), bbox_inches='tight')
+    matplotlib.pyplot.close(fig)
     return tree_filename
-
-
-def convert_tree(inputnr, smcog_dir, tag) -> None:
-    """ Convert tree to XTG and draw PNG image using TreeGraph
-    """
-    core_command = ['java', '-Djava.awt.headless=true', '-jar',
-                    path.get_full_path(__file__, 'external', 'TreeGraph.jar')]
-
-    if not os.path.exists("tree%s.nwk" % inputnr):
-        raise RuntimeError("No newick tree file exists for section %d" % inputnr)
-
-    xtg_file = "tree%s.xtg" % inputnr
-    tree_png = "%s.png" % tag.split('.')[0]
-
-    command = core_command + ['-convert', 'tree%s.nwk' % inputnr, '-xtg', xtg_file]
-    run_result = subprocessing.execute(command, timeout=60*20)
-    if run_result.return_code or "exception" in run_result.stdout or "Exception" in run_result.stdout or not os.path.exists(xtg_file):
-        raise RuntimeError("Tree conversion failed in external command attempting to create %s: %s\n%s\n%s:" % (tree_png, command, run_result.stdout, run_result.stderr))
-
-    command = core_command + ['-image', xtg_file, tree_png]
-    run_result = subprocessing.execute(command, timeout=60*20)
-    if run_result.return_code or "exception" in run_result.stdout or "Exception" in run_result.stdout or not os.path.exists(tree_png):
-        raise RuntimeError("Tree image creation failed in external command attempting to create %s: %s" % (tree_png, command))
-
-    png = tag.split(".")[0] + '.png'
-    target = os.path.join(smcog_dir, png)
-    if os.path.exists(target):
-        os.remove(target)
-    shutil.move(png, smcog_dir)
-    os.remove("tree%d.xtg" % inputnr)
-    os.remove("trimmed_alignment%d.fasta" % inputnr)
