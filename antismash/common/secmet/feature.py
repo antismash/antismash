@@ -257,11 +257,11 @@ class CDSMotif(Domain):
 class PFAMDomain(Domain):
     __slots__ = ["description", "db_xref"]
 
-    def __init__(self, location, description):
+    def __init__(self, location: FeatureLocation, description: str) -> None:
         super().__init__(location, feature_type="PFAM_domain")
-        assert isinstance(description, list)
+        assert isinstance(description, str)
         self.description = description
-        self.db_xref = None
+        self.db_xref = []
 
     def to_biopython(self, qualifiers=None):
         mine = OrderedDict()
@@ -281,7 +281,7 @@ class PFAMDomain(Domain):
         feature = PFAMDomain(bio_feature.location, description)
 
         # grab optional qualifiers
-        feature.db_xref = leftovers.pop("db_xref", None)
+        feature.db_xref = leftovers.pop("db_xref", [])
 
         # grab parent optional qualifiers
         super(PFAMDomain, feature).from_biopython(bio_feature, feature=feature, leftovers=leftovers)

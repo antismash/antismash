@@ -12,14 +12,14 @@ import shutil
 import time
 import tempfile
 from types import ModuleType
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Union
 
 from Bio import SeqIO
 
 from antismash.config import update_config
 from antismash.common import deprecated, serialiser, record_processing
 from antismash.common.module_results import ModuleResults
-from antismash.detection import genefinding, hmm_detection, nrps_pks_domains
+from antismash.detection import genefinding, hmm_detection, nrps_pks_domains, full_hmmer
 from antismash.modules import tta, clusterblast, lanthipeptides, smcogs, dummy, \
                               nrps_pks, thiopeptides
 from antismash.outputs import html, svg
@@ -48,7 +48,7 @@ def get_detection_modules() -> List[ModuleType]:
         Returns:
             a list of modules
     """
-    return [genefinding, hmm_detection, nrps_pks_domains]
+    return [genefinding, hmm_detection, nrps_pks_domains, full_hmmer]
 
 
 def get_analysis_modules() -> List[ModuleType]:
@@ -60,7 +60,8 @@ def get_analysis_modules() -> List[ModuleType]:
         Returns:
             a list of modules
     """
-    return [smcogs, tta, lanthipeptides, thiopeptides, nrps_pks, clusterblast, dummy]
+    return [smcogs, tta, lanthipeptides, thiopeptides, nrps_pks, clusterblast,
+            dummy]
 
 
 def get_output_modules() -> List[ModuleType]:
@@ -140,23 +141,41 @@ def verify_options(options, modules) -> bool:
     return False
 
 
-def detect_signature_genes(record, options) -> None:
-    """ Detect different secondary metabolite clusters based on HMM signatures """
+def detect_signature_genes(record, options, previous_result: Dict[str, Union[Dict, ModuleResults]]) -> Dict[str, float]:
+    """ Detect different secondary metabolite clusters based on HMM signatures
+
+        Returns:
+            the time taken by each detection module as a dictionary
+    """
     # strip any existing antismash results first
     deprecated.strip_record(record)
 
+    timings = {}
+
     logging.info('Looking for secondary metabolite cluster signatures')
+    start = time.time()
     hmm_detection.detect_signature_genes(record, options)
+    timings[hmm_detection.__name__] = time.time() - start
     if not record.get_clusters():
         logging.debug("No clusters detected, skipping NRPS/PKS gene detection and analysis")
         record.skip = "No clusters detected"
         return None
+
     logging.debug('Marking NRPS/PKS genes and domains in clusters')
+    start = time.time()
     nrps_pks_domains.run_on_record(record, options)
+    timings[nrps_pks_domains.__name__] = time.time() - start
+
+    module_results = regenerate_results_for_record(record, options, [full_hmmer],
+                                                   previous_result)
+    duration = run_module(record, full_hmmer, options, module_results)
+    if duration != -1:
+        timings[full_hmmer.__name__] = duration
+    return timings
 
 
 def regenerate_results_for_record(record, options, modules, previous_result
-                                 ) -> Dict[str, Optional[ModuleResults]]:
+                                  ) -> Dict[str, Optional[ModuleResults]]:
     """ Converts a record's JSON results to ModuleResults per module
 
         Arguments:
@@ -186,6 +205,39 @@ def regenerate_results_for_record(record, options, modules, previous_result
     return previous_result
 
 
+def run_module(record, module, options, module_results) -> float:
+    """ Run analysis modules on a record
+
+        Arguments:
+            record: the record to run the analysis on
+            options: antismash Config
+            modules: the modules to analyse with
+                        each module will run only if enabled and not reusing all
+                        results
+            module_results: a dictionary of module name to json results,
+                                json results will be replaced by ModuleResults
+                                instances
+        Returns:
+            the time taken to run the module as a float
+        """
+
+    logging.debug("Checking if %s should be run", module.__name__)
+    if not module.is_enabled(options):
+        return -1
+
+    results = module_results.get(module.__name__)
+    logging.info("Running %s", module.__name__)
+
+    start = time.time()
+    results = module.run_on_record(record, results, options)
+    duration = time.time() - start
+
+    assert isinstance(results, ModuleResults), "%s returned %s" % (module.__name__, type(results))
+    module_results[module.__name__] = results
+
+    return duration
+
+
 def analyse_record(record, options, modules, previous_result) -> Dict[str, float]:
     """ Run analysis modules on a record
 
@@ -207,20 +259,9 @@ def analyse_record(record, options, modules, previous_result) -> Dict[str, float
     # try to run the given modules over the record
     logging.info("Analysing record: %s", record.id)
     for module in modules:
-        logging.debug("Checking if %s should be run", module.__name__)
-        if not module.is_enabled(options):
-            continue
-        results = module_results.get(module.__name__)
-        logging.info("Running %s", module.__name__)
-
-        start = time.time()
-        results = module.run_on_record(record, results, options)
-        duration = time.time() - start
-
-        assert isinstance(results, ModuleResults), "%s returned %s" % (module.__name__, type(results))
-        module_results[module.__name__] = results
-
-        timings[module.__name__] = duration
+        duration = run_module(record, module, options, module_results)
+        if duration != -1:
+            timings[module.__name__] = duration
     return timings
 
 
@@ -505,11 +546,12 @@ def run_antismash(sequence_file, options, detection_modules=None,
         # skip if we're not interested in it
         if seq_record.skip:
             continue
-        detect_signature_genes(seq_record, options)
+        timings = detect_signature_genes(seq_record, options, previous_result)
         # and skip analysis if detection didn't find anything
         if not seq_record.get_clusters():
             continue
-        timings = analyse_record(seq_record, options, analysis_modules, previous_result)
+        analysis_timings = analyse_record(seq_record, options, analysis_modules, previous_result)
+        timings.update(analysis_timings)
         results.timings_by_record[seq_record.id] = timings
 
     # Write results

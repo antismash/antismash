@@ -71,16 +71,17 @@ class DummyRecord(Record):
         self.record_index = 0
 
 
+class FakeHSP(object):
+    def __init__(self, start, end, score):
+        self.query_start = start
+        self.query_end = end
+        self.bitscore = score
+
+
 class FakeHit(object):
     """ For generating hmmpfam2-like results """
-    class FakeHsp(object):
-        def __init__(self, start, end, score):
-            self.query_start = start
-            self.query_end = end
-            self.bitscore = score
-
     def __init__(self, start, end, score, desc):
-        self.hsps = [self.FakeHsp(start, end, score)]
+        self.hsps = [FakeHSP(start, end, score)]
         self.description = desc
 
     def __iter__(self):
@@ -122,7 +123,11 @@ def run_and_regenerate_results_for_module(input_file, module, options,
         update_config({"output_dir": tempdir})
         json_filename = os.path.join(options.output_dir, os.path.basename(input_file).rsplit('.', 1)[0] + ".json")
         assert not os.path.exists(json_filename)
-        antismash.main.run_antismash(input_file, options)
+        try:
+            antismash.main.run_antismash(input_file, options)
+        except:
+            update_config({"output_dir": orig_output})
+            raise
         update_config({"output_dir": orig_output})
         results = serialiser.AntismashResults.from_file(json_filename)
         if callback:
@@ -133,6 +138,7 @@ def run_and_regenerate_results_for_module(input_file, module, options,
     if expected_record_count == 1:
         regenerated = antismash.main.regenerate_results_for_record(results.records[0],
                                      options, [module], results.results[0])
+        print(list(regenerated))
         final = regenerated[module.__name__]
         assert isinstance(final, module_results.ModuleResults)
     else:
