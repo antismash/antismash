@@ -16,7 +16,7 @@ from antismash.modules.thiopeptides.specific_analysis import (
     predict_cleavage_site,
     result_vec_to_feature,
 )
-from antismash.modules.thiopeptides.rodeo import acquire_rodeo_heuristics
+
 
 
 class TestThiopeptide(unittest.TestCase):
@@ -170,33 +170,6 @@ class TestSpecificAnalysis(unittest.TestCase):
             self.assertAlmostEqual(calc, expect, places=1)
         assert not motif.amidation
         assert not motif.macrocycle
-        assert not motif.cleaved_residues
+        assert not motif.tail
         assert motif.core_features == "Central ring: pyridine trisubstituted"
         assert motif.core == "SCTSSCTSS"
-
-    def test_acquire_rodeo_heuristics(self):
-        """Test thiopeptides.acquire_rodeo_heuristics()"""
-        leader = "MSDITASRVESLDLQDLDLSELTVTSLRDTVALPENGA"
-        core = "SWGSCSCQASSSCAQPQDM"
-        domains = [
-            'LANC_like',
-            'Pkinase',
-            'Lant_dehyd_N',
-            'Lant_dehyd_C',
-            'Lant_dehydr_C',
-            'YcaO',
-            'PF00881',
-            'Lant_dehydr_C'
-        ]
-        expected_score = 15
-        expected_tabs = [1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1]
-        print(expected_tabs)
-        score, tabs = acquire_rodeo_heuristics(leader, core, domains)
-        print(tabs)
-        self.assertEqual(expected_score, score)
-        self.assertEqual(expected_tabs, tabs)
-
-        core = "SWGSCSCQASSSCAQPQDMX"
-        score, tabs = acquire_rodeo_heuristics(leader, core, domains)
-        self.assertEqual(expected_score, score)
-        self.assertEqual(expected_tabs, tabs)

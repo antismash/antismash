@@ -84,10 +84,11 @@ class TestIntegration(unittest.TestCase):
         assert not prepeptide.macrocycle
         assert prepeptide.peptide_subclass == "Type III"
         assert prepeptide.core_features == 'Central ring: pyridine trisubstituted'
-        assert prepeptide.cleaved_residues == 'QPQDM'
+        assert prepeptide.tail == 'QPQDM'
         for calc, expected in zip(prepeptide.alternative_weights,
                                   [1381.5, 1399.5, 1417.5, 1435.5, 1453.6, 1471.6]):
             self.assertAlmostEqual(calc, expected, places=1)
+        assert len(prepeptide.to_biopython()) == 3  # leader, core, tail
 
     def test_thiostrepton(self):
         "Test thiopeptide prediction for thiostrepton"
@@ -163,8 +164,9 @@ class TestIntegration(unittest.TestCase):
         assert not prepeptide.macrocycle
         assert prepeptide.peptide_subclass == "Type III"
         assert prepeptide.core_features == 'Central ring: pyridine trisubstituted'
-        assert prepeptide.cleaved_residues == ''
+        assert prepeptide.tail == ''
         for calc, expected in zip(prepeptide.alternative_weights,
                                   [1954.0, 1972.1, 1990.1, 2008.1, 2026.1, 2044.1,
                                    2062.2, 2080.2, 2098.2, 2116.2, 2134.2, 2152.3, 2170.3]):
             self.assertAlmostEqual(calc, expected, places=1)
+        assert len(prepeptide.to_biopython()) == 2  # no tail
