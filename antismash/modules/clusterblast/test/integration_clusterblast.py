@@ -39,7 +39,7 @@ class Base(unittest.TestCase):
     def build_record(self, genbank):
         # construct a working record
         self.record = parse_input_sequence(genbank)[0]
-        detect_signature_genes(self.record, self.options)
+        detect_signature_genes(self.record, self.options, {})
         clusters = self.record.get_clusters()
         # make sure it's worth using
         assert clusters

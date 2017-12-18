@@ -30,7 +30,7 @@ class TtaIntegrationTest(unittest.TestCase):
 
     def test_nisin(self):
         record = parse_input_sequence(helpers.get_path_to_nisin_genbank())[0]
-        detect_signature_genes(record, self.options)
+        detect_signature_genes(record, self.options, {})
         clusters = record.get_clusters()
         assert clusters
         for cluster in clusters:
