@@ -559,11 +559,10 @@ class ThiopeptideMotif(secmet.Prepeptide):
                  core_features, mature_weights, amidation):
         super().__init__(location, "thiopeptide", core_seq, locus_tag, thio_class, score,
                          monoisotopic_mass, molecular_weight, alternative_weights,
-                         leader=leader_seq)
+                         leader=leader_seq, tail=cleaved_residues)
         self.rodeo_score = rodeo_score
         self.amidation = amidation
         self.macrocycle = macrocycle
-        self.cleaved_residues = cleaved_residues
         self.core_features = core_features
         if thio_class == "Type III":
             assert not mature_weights
@@ -595,7 +594,7 @@ class ThiopeptideMotif(secmet.Prepeptide):
         for arg_name in ["core", "leader", "locus_tag", "monoisotopic_mass",
                          "molecular_weight", "alternative_weights",
                          "peptide_subclass", "score", "rodeo_score", "macrocycle",
-                         "cleaved_residues", "core_features", "mature_weights",
+                         "tail", "core_features", "mature_weights",
                          "amidation"]:
             args.append(data[arg_name])
         # pylint doesn't do well with the splat op, so don't report errors
