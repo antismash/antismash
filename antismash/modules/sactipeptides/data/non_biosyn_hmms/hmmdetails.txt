@@ -1,0 +1,6 @@
+PF00005	ABC transporter	20	PF00005.hmm
+PF00664	ABC transporter	24	PF00664.hmm
+PF00072	Response regulator	22	PF00072.hmm
+PF07690	MFS transporter	32	PF07690.hmm
+PF13304	ATPase	27	PF13304.hmm
+PF02518	ATPase	27	PF02518.hmm
