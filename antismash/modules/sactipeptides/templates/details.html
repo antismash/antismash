@@ -1,0 +1,21 @@
+<div class="details">
+  <h3>Detailed annotation</h3>
+  {% if not results %}
+    <div class="details-text">
+      Sactipeptides - No core peptides found.
+    </div>
+  {% else %}
+    <h4>Putative Sactipeptide(s)</h4>
+    {% for locus in results | sort %}
+    <hr>
+      <dl class="details-text">
+        {% for motif in results[locus] %}
+        <dt>{{motif.get_name()}} leader / core peptide</dt>
+        <dd>
+          {{ motif.leader }} - {{motif.core}}
+        </dd>
+      {% endfor %}
+    </dl>
+    {% endfor %}
+  {% endif %}
+</div>

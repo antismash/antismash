@@ -1,0 +1,261 @@
+LOCUS       BGC0000599.1            6014 bp    DNA              UNK 01-JAN-1980
+DEFINITION  Thuricin CD alfa / thuricin CD beta biosynthetic gene cluster
+ACCESSION   BGC0000599
+VERSION     BGC0000599.1
+KEYWORDS    .
+SOURCE      
+  ORGANISM  . .
+            .
+FEATURES             Location/Qualifiers
+     CDS             1..858
+                     /operon="thuricin"
+                     /product="ABC-transporter"
+                     /codon_start=1
+                     /transl_table=11
+                     /note="smCOG: SMCOG1000:ABC_transporter_ATP-binding_protein
+                     (Score: 148.5; E-value: 4.68e-44);"
+                     /db_xref="GI:332015808"
+                     /translation="MDKILNVKGLSKKYNDFHLHHINFELKRGSITGFIGENGAGKSTT
+                     IQSILNIIDYDSGEILFNGESFQQNRNDLKKRIGYVGDNNKFYDDVKLKVIRNFVKDAY
+                     LEYWDDKFSEYLVKDVFNLNLNMKIKELSKGMRAKFLLTLAMSHNPDLLILDEPTSGLD
+                     PIVRNQLLEILNDIAEKKGTTIFFSSHITDDIEKIAQKIIYLDNGSILLDEEKAAIFNR
+                     FKKIPIDKINSIQIEKLKEIGVLVQDHIVVDKQVLKEQDIYDLNLEKVVLDEVLLLLKK
+                     QKMN"
+                     /protein_id="AED99781.1"
+     source          1..6014
+                     /strain="DPC6431"
+                     /mol_type="genomic DNA"
+                     /organism="Bacillus thuringiensis"
+                     /db_xref="taxon:1428"
+     operon          1..>6014
+                     /operon="thuricin"
+     cluster         1..6014
+                     /note="Cluster number: 1"
+                     /note="Detection rule(s) for this cluster type:
+                     sactipeptide: (subtilosin or thuricin or TIGR04404 or
+                     TIGR03973);"
+                     /cutoff=20000
+                     /product="sactipeptide"
+                     /contig_edge="True"
+                     /extension=10000
+     CDS             895..1536
+                     /operon="thuricin"
+                     /product="ABC-transporter"
+                     /codon_start=1
+                     /transl_table=11
+                     /db_xref="GI:332015807"
+                     /translation="MIIMFAILKKDILINQKYLLIVLLYSIIFPVILIIDGDNKYLMMS
+                     FLLPFINVNFFVGKSCYIEDSVDVRNFLKMLPINHNKIVFIRYIEMIVTLALSSVYAFL
+                     VQLYLMNGVSNAFLIHVNLLVFSALLIYFGIYLSVYYKINYHAAQNTLMFLFVIGVSTF
+                     ILTEKVFNIKIEMINHLNYSASYIAFVISIIVLSITYLYSIKEFKFNKFA"
+                     /protein_id="AED99780.1"
+     CDS_motif       1581..1619
+                     /note="leader peptide"
+                     /note="sactipeptide"
+                     /note="predicted leader seq: MEVLNKQNVNII"
+                     /locus_tag="AED99782.1"
+     CDS             1581..1730
+                     /operon="thuricin"
+                     /product="trn-beta"
+                     /codon_start=1
+                     /transl_table=11
+                     /db_xref="GI:332015809"
+                     /sec_met="Type: sactipeptide"
+                     /sec_met="Domains detected: thuricin (E-value: 1.6e-41,
+                     bitscore: 128.8, seeds: 3)"
+                     /sec_met="Kind: biosynthetic"
+                     /translation="MEVLNKQNVNIIPESEEVGGWVACVGACGTVCLASGGVGTEFAAA
+                     SYFL"
+                     /protein_id="AED99782.1"
+     CDS_motif       1620..1730
+                     /note="core peptide"
+                     /note="predicted core seq:
+                     PESEEVGGWVACVGACGTVCLASGGVGTEFAAASYFL"
+                     /note="sactipeptide"
+                     /note="RODEO score: 30"
+                     /locus_tag="AED99782.1"
+     CDS_motif       1778..1813
+                     /note="leader peptide"
+                     /note="sactipeptide"
+                     /note="predicted leader seq: MEVMNNALITK"
+                     /locus_tag="AED99783.1"
+     CDS             1778..1921
+                     /operon="thuricin"
+                     /product="trn-alpha"
+                     /codon_start=1
+                     /transl_table=11
+                     /db_xref="GI:332015810"
+                     /sec_met="Kind: biosynthetic"
+                     /translation="MEVMNNALITKVDEEIGGNAACVIGCIGSCVISEGIGSLVGTAFT
+                     LG"
+                     /protein_id="AED99783.1"
+     CDS_motif       1814..1921
+                     /note="core peptide"
+                     /note="predicted core seq:
+                     VDEEIGGNAACVIGCIGSCVISEGIGSLVGTAFTLG"
+                     /note="sactipeptide"
+                     /note="RODEO score: 31"
+                     /locus_tag="AED99783.1"
+     CDS             2032..3552
+                     /operon="thuricin"
+                     /product="radical SAM domain protein"
+                     /codon_start=1
+                     /transl_table=11
+                     /db_xref="GI:332015811"
+                     /sec_met="Type: none"
+                     /sec_met="Domains detected: PF04055 (E-value: 8.8e-18,
+                     bitscore: 54.1, seeds: 518); Fer4_12 (E-value: 1.6e-10,
+                     bitscore: 30.3, seeds: ?)"
+                     /sec_met="Kind: biosynthetic"
+                     /translation="MSKKRLSMMPFKTDKFSYALDGNTGRVIVADKPTLYIISHFHKFE
+                     KEELLKKTKGKFAELHQDYLTTYNYVSSLINMGMFYLSEKEDSDSPIDSKELAINSNQS
+                     QLILILTEKCNLRCEYCIYNDKYPKEMGYSDEEMDFETAKKAVDMYYELHMERVKRGHK
+                     RFPVITMYGGEPLLKFDLIKKVMEYAKGLMPDTLFYTTTNGTLLSEKMMDYFINNRIII
+                     TFSIDGFKENHDRNRVFVNGMPTFERAFKNIKRLQEKKKEQNIEQIISFNCCFDQYTDV
+                     YKVAKFFEEHYDLFNPFFVLYNQINPFDTLYFDWCDEQVKTGKWNFDKNNFKNAMQKIE
+                     HELYEAETCDDHFQQVAGPLVMKDFVLSIRNKDGQQQITRNSCIPTSKIAVSPDGTLTL
+                     CEKMCKKYPIGTVEKGLDWKAVDGVTEKLVRHFNSDSCKYCPIRTMCEACFMFLDENGR
+                     IKPSFCKSKKMAVKKNLESYFAKKEKGFDVMKVYNHTSDLDSVKEMVK"
+                     /protein_id="AED99784.1"
+     CDS             3549..4793
+                     /operon="thuricin"
+                     /product="radical SAM domain protein"
+                     /codon_start=1
+                     /transl_table=11
+                     /db_xref="GI:332015812"
+                     /sec_met="Type: none"
+                     /sec_met="Domains detected: PF04055 (E-value: 1.1e-15,
+                     bitscore: 47.3, seeds: 518); PF13186 (E-value: 1.4e-08,
+                     bitscore: 24.2, seeds: 195); Fer4_12 (E-value: 1.5e-12,
+                     bitscore: 36.9, seeds: ?)"
+                     /sec_met="Kind: biosynthetic"
+                     /translation="MKKYFRLYPYCHLEIGETNSCLYDISSGKMIRVNRENAELLRQCQ
+                     ENVPIESINMDLGILDELIKMNLGTYYANPQFIEPFFETNDTKNRIFGKNNILRQMFIL
+                     TSTDCNMNCKHCNTDSTVFRKTGCKIWPKSINLNALTQSHWRKILEAFYNLHGEELTFI
+                     GGEPFLEFDFIKNIVEIAQEVGISKFSIFTNGSIINDTILNFLMENKIKVYIQIFEVDE
+                     NKFKAFTNSDIPSIQIIDNIKKLNNHHLDLQLRILITRDNDNNLKKIVNTLQKETNVKD
+                     IKIEFLYPKPDNSYYSKKYIPLMYDKKREFSHVNVQKMQFLHQYNPSFFGQITIRRDGK
+                     VVPHPMLLTRVIGDLQQDDLFTIINTEEYQEYSTLNKEKISKCSTCAYKYNCMDDRVIE
+                     NFATGDLYGMEYCNF"
+                     /protein_id="AED99785.1"
+     CDS             4824..>6014
+                     /operon="thuricin"
+                     /product="carboxyl-terminal protease"
+                     /codon_start=1
+                     /transl_table=11
+                     /db_xref="GI:332015813"
+                     /sec_met="Type: none"
+                     /sec_met="Domains detected: Peptidase_S41 (E-value:
+                     4.3e-25, bitscore: 77.1, seeds: ?)"
+                     /sec_met="Kind: biosynthetic"
+                     /translation="MNQRNLFLAESLVRIVNENYLFTGNQKRRWDRLSPLYLRKIQDSK
+                     VDSIIFDIIQDMVLELHDPHTLFFQRKEFRYCFDINVQWINNELFLIKNKNGYPEDYIG
+                     SKILKINSFNIIDEFKKQQKKFVGFPASMIRKAIIQNIMEGKYGAEELTILVETIDKKR
+                     KTFVINAQSIKHLFDYKSNINIIKNSFKPIVFETINKDTLLIKILTFKFLGMSELFVSS
+                     LRLLKGFKNIIFDIRDNSGGYISEAKQILSFIISKDIQMDYKIIQHAEEEKKFKVSSIQ
+                     VTSNQISLFSKRKFFILCNGGTASSAEFIFLKGLLLSNEDLTIIGEQTAGLSGQAKIFT
+                     IDEKDIIQVTTKKFLSRQGKEIKEGIQPDYTVIPLICDIINNKDTLLNFCLERFKLI"
+                     /protein_id="AED99786.1"
+ORIGIN
+        1 atggacaaaa tattaaatgt aaaaggttta tcaaaaaaat ataatgattt tcatttacat
+       61 cacattaact ttgaattaaa acggggatca ataacgggat tcatcggtga gaatggggca
+      121 ggaaaatcta ctactattca atcaatacta aatatcatag attatgattc aggtgaaata
+      181 ctatttaatg gagaatcttt tcaacagaat agaaatgatt taaaaaaaag aatcggatat
+      241 gtaggagata acaataaatt ttatgatgac gtcaaattga aagtaatacg taactttgtc
+      301 aaggatgctt atttagaata ttgggatgat aaattttctg aatatctagt taaggatgtg
+      361 tttaacctta atcttaatat gaaaataaag gaattatcaa aaggtatgag agcaaaattt
+      421 ttacttactt tagctatgtc acataaccca gatttattaa tactagacga accaacttca
+      481 ggtctagatc ctattgtaag aaatcagcta cttgaaatct taaatgatat tgcagaaaaa
+      541 aagggaacta caattttttt ctcctcccat attactgatg acattgaaaa aatagcacaa
+      601 aaaatcattt atcttgataa tggttcgatt ttattggatg aagaaaaggc ggctattttt
+      661 aataggttta aaaaaatacc tatcgataaa atcaattcaa tccaaattga aaaattaaaa
+      721 gaaatcggag ttttagtaca agatcatata gttgtagaca aacaggtatt aaaggaacag
+      781 gatatatatg atcttaatct tgaaaaggtg gttttagacg aagtgcttct actattaaag
+      841 aaacaaaaaa tgaattagtt gtatagtgta atcaacttta acttgattgg atgagtgatt
+      901 attatgtttg caattttaaa aaaagatata ttaattaatc aaaaatattt actaattgta
+      961 ttactttatt caattatatt tcctgtcatt ttgataattg atggagataa taaatattta
+     1021 atgatgagtt tcttattacc attcattaat gtgaatttct ttgtaggaaa gtcttgttac
+     1081 atagaagatt cagtagatgt aagaaacttt ttgaagatgc tacctattaa tcataataaa
+     1141 attgttttca ttagatatat tgaaatgatt gtaaccttgg ctctttcgag cgtatatgca
+     1201 tttcttgttc aattatactt aatgaatggt gtaagtaatg ctttcttaat acatgtaaat
+     1261 ctgttagttt tttcagcgct tttaatttac tttggtattt atttatctgt gtattacaaa
+     1321 ataaattatc atgctgctca gaatacactt atgtttttat ttgtaatagg agtctcaact
+     1381 tttatcttaa cagaaaaagt ttttaatata aaaatagaaa tgattaatca ccttaactat
+     1441 agtgcatctt acattgcatt tgtaatctca ataattgtac tttctattac gtatttatat
+     1501 tccattaagg aatttaaatt caataaattt gcttaaaaca ttttgaagaa gaggatctta
+     1561 aaaataagga ggaattaatc atggaagttt taaacaaaca aaatgtaaat attattccag
+     1621 aatctgaaga agtaggtgga tgggtagcat gtgttggagc atgtggtaca gtatgtcttg
+     1681 ctagtggtgg tgttggaaca gagtttgcag ctgcatctta tttcctataa gaattaaata
+     1741 aacataaaat gattaaaaaa ataaggagga attaatcatg gaagttatga acaatgcttt
+     1801 aattacaaaa gtagatgagg agattggagg aaacgctgct tgtgtaattg gttgtattgg
+     1861 cagttgcgta attagtgaag gaattggttc acttgtagga acagcattta ctttaggtta
+     1921 aaaatatata tttacacaga atagcacaaa aacatttagt aaacctcttc ttctaaatgt
+     1981 ttttttataa attcaaattt ttagtccatt attaatggga gtgaatagaa aatgtctaaa
+     2041 aaaagactat caatgatgcc ctttaaaact gataaatttt catatgcatt agatggtaat
+     2101 acgggtaggg taattgtagc tgataaacct acactgtaca tcatctcaca ttttcataag
+     2161 tttgaaaagg aagaattatt aaaaaaaaca aaaggaaaat ttgctgaatt acatcaagat
+     2221 tatcttacta catataatta tgtttcaagt ctcattaata tgggaatgtt ttatttatca
+     2281 gaaaaagaag attctgattc accgattgat tcaaaggaac ttgctataaa tagtaatcaa
+     2341 tcacagctta tattaatact tactgagaag tgtaatttac gttgtgaata ttgtatttat
+     2401 aacgacaaat atcctaaaga aatgggatat tctgatgaag aaatggattt tgaaactgct
+     2461 aagaaagctg tggatatgta ttatgaattg catatggaga gagtaaaaag aggtcataaa
+     2521 agatttccgg taattacaat gtatggtggt gaaccattat taaaatttga tttgataaaa
+     2581 aaggtaatgg agtatgcaaa aggacttatg cctgatactc ttttttatac aactacgaat
+     2641 ggcaccttat tatctgaaaa aatgatggat tattttatta ataatagaat tattattact
+     2701 tttagtattg atggttttaa agagaatcat gatcgaaaca gagtattcgt caatggaatg
+     2761 cccacatttg aacgagcatt taagaacatt aaaaggcttc aagaaaagaa aaaggaacaa
+     2821 aatatagagc aaattattag ttttaattgt tgttttgatc aatatacgga tgtatataaa
+     2881 gtagcaaaat ttttcgagga acactatgat ttatttaatc ctttctttgt tctttataat
+     2941 caaattaacc catttgacac attatatttt gattggtgcg atgaacaagt taaaactgga
+     3001 aaatggaatt ttgataaaaa taatttcaag aatgctatgc agaaaattga acatgaatta
+     3061 tatgaagctg aaacttgtga tgatcatttt caacaagtag ctggcccgct agtaatgaaa
+     3121 gattttgttc tttcaataag aaataaggat ggtcaacaac aaattaccag aaatagttgt
+     3181 attcctacta gtaaaatagc tgtttctcct gatggtactc taacattgtg tgaaaaaatg
+     3241 tgtaaaaagt atccaatagg cactgttgaa aaaggcttag attggaaagc tgtagatggc
+     3301 gttactgaaa aattagttcg gcattttaat agtgactcat gtaaatactg tccgattaga
+     3361 acaatgtgtg aagcgtgctt tatgttcctg gatgaaaatg gtcgaattaa gccttcattt
+     3421 tgcaaatcta agaagatggc agtaaagaaa aatttagaaa gttattttgc aaaaaaagaa
+     3481 aaaggctttg atgtaatgaa ggtttacaat catactagtg atcttgattc tgtcaaggag
+     3541 atggtaaaat gaaaaaatat ttcagattgt atccatattg tcacttagag ataggggaaa
+     3601 caaattcatg tctatatgat atcagtagcg gtaaaatgat aagagtaaac agagaaaatg
+     3661 ctgagttatt aagacaatgt caagagaatg tacctattga atccattaat atggatttgg
+     3721 gtattttaga tgagttaata aaaatgaatt taggtacgta ttatgctaat ccacaattca
+     3781 ttgagccttt ttttgaaact aatgatacga aaaacagaat attcggtaag aataatatat
+     3841 taagacaaat gttcatttta acttccacag attgtaacat gaattgtaag cactgtaata
+     3901 cggattcaac tgtttttaga aaaacagggt gtaagatttg gccaaaaagt attaatttaa
+     3961 atgcattaac ccaatcgcac tggagaaaaa ttttagaagc attttataat ctacatggag
+     4021 aagagctaac atttattggt ggggaaccat ttttagaatt tgattttatt aaaaatattg
+     4081 tagaaattgc ccaggaagtt ggcatttcaa aattttctat attcactaat ggtagcatta
+     4141 tcaatgatac tatacttaat ttcttgatgg aaaataaaat aaaagtgtac atacaaatct
+     4201 ttgaagtaga tgaaaataaa tttaaagcat ttactaattc agatatccct tccatacaaa
+     4261 ttatagataa tataaaaaaa ttaaacaacc atcacctaga tctgcaactt agaatattga
+     4321 tcacaaggga taatgacaat aatcttaaaa agatagttaa tacacttcaa aaagaaacta
+     4381 atgttaaaga tattaaaatt gagtttctat atccaaaacc agataatagt tattattcta
+     4441 aaaagtatat tcctttaatg tatgataaaa aaagagagtt ttcacatgtt aatgtgcaaa
+     4501 aaatgcaatt tttacatcag tataatccaa gtttttttgg ccaaataacg ataagaaggg
+     4561 atggcaaagt agtaccacat cctatgttgt taactagggt tataggtgat ctccagcaag
+     4621 atgatttatt tacaatcatt aatactgaag aatatcaaga gtacagtact ctcaataaag
+     4681 agaaaatatc caaatgttca acatgcgcat acaagtataa ttgtatggat gaccgagtaa
+     4741 ttgaaaattt tgctaccggt gatttgtatg gaatggaata ttgtaacttt taagttaaat
+     4801 ccaatatttt aggagtattc aatatgaatc aaaggaattt atttttagct gaaagtttgg
+     4861 ttcgaattgt taacgaaaat tatttattta caggcaatca aaaacggaga tgggacagac
+     4921 ttagtcctct ttatctaaga aaaatccaag attctaaagt agattctata atttttgata
+     4981 ttattcaaga catggtttta gaattacatg atccacatac tttatttttt caacggaaag
+     5041 aatttcgtta ttgctttgat attaatgtac agtggattaa taatgagtta tttctaataa
+     5101 aaaataaaaa tggatatcct gaagattata taggtagtaa gatattaaaa ataaattctt
+     5161 ttaatataat agatgagttt aaaaagcagc aaaagaaatt tgtaggcttt cctgcaagta
+     5221 tgataaggaa agccattata caaaatataa tggaaggaaa atatggagct gaagaattaa
+     5281 cgatacttgt tgaaacaatt gataaaaaaa gaaaaacatt cgtgatcaac gcacaatcta
+     5341 taaaacattt atttgattat aaaagtaata ttaatataat taaaaatagc tttaaaccga
+     5401 ttgtttttga aactataaac aaagatacgc tgttaataaa aattttaact tttaagtttc
+     5461 ttggtatgag cgaattattc gtctctagtt taagattact gaaaggattt aaaaatatta
+     5521 tttttgatat tagggataat tcaggaggat atatttcaga agcaaaacaa atattatcct
+     5581 ttattatttc taaggatatt caaatggact ataaaataat acagcatgct gaagaggaaa
+     5641 agaaatttaa agtttcttca attcaagtca ctagcaatca aatttcactt ttttcaaaac
+     5701 gaaaattctt cattttatgt aatggtggta cagcaagttc ggccgagttc atatttctaa
+     5761 aaggattgct gctatctaat gaagatttaa ccattatcgg agaacaaaca gctggtttat
+     5821 caggacaagc aaagatattt actattgacg aaaaagatat tattcaagtc acaacaaaga
+     5881 aatttcttag taggcaggga aaagaaataa aagagggaat acagcctgat tatacagtta
+     5941 ttcctttaat atgtgatatt attaataata aagatacact tttgaacttt tgtcttgaaa
+     6001 gatttaaatt aatt
+//

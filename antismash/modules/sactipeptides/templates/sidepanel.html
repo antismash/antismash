@@ -1,0 +1,21 @@
+{% if results | length != 0 %}
+<div class="more-details">
+  <h3> Prediction details </h3>
+  <dl class ="prediction-text">
+  {% for motifs in results.values() %}
+    {%- for motif in motifs -%}
+    <dt>{{motif.get_name()}}</dt>
+      <dd>Putative sactipeptide</dd>
+      <dd>RODEO score: {{motif.score}}</dd>
+      <dd>Core sequence, approximate: {{motif.core}}</dd>
+    {%- endfor -%}
+  {% endfor %}
+  </dl>
+</div>
+<div>
+  <h3>Database cross-links</h3>
+  <div class="prediction-text">
+    <a href="http://bioinfo.lifl.fr/norine/form2.jsp" target="_new">Look up in NORINE database</a>
+  </div>
+</div>
+{% endif %}
