@@ -139,4 +139,5 @@ def generate_results(record, hmmscan_results, options) -> FullHmmerResults:
     results = FullHmmerResults(record.id, options.fh_max_evalue,
                                options.fh_min_score, options.database_dir)
     results.hits = build_hits(record, options, hmmscan_results)
+    results.add_to_record(record)
     return results
