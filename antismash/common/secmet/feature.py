@@ -17,6 +17,17 @@ from Bio.SeqRecord import SeqRecord
 
 from .qualifiers import NRPSPKSQualifier, SecMetQualifier, GeneFunction, GeneFunctionAnnotations
 
+class ActiveSiteFinderQualifier:
+    def __init__(self, scaffold=None, choice=None, prediction=None, note=None):
+        if not any([scaffold, choice, prediction, note]):
+            raise ValueError("Can't create an empty ASF qualifier")
+        assert all(isinstance(arg, list) for arg in [scaffold, choice, prediction, note] if arg is not None)
+        if (scaffold or choice) and not note:
+            raise ValueError("If scaffold or choice are provided, note must also be provided")
+        self.choice = choice or []
+        self.prediction = prediction or []
+        self.scaffold = scaffold or []
+        self.note = note or []
 
 
 def _convert_protein_position_to_dna(start: int, end: int, location: FeatureLocation) -> Tuple[int, int]:
@@ -651,7 +662,7 @@ class CDSFeature(Feature):
     """ A feature representing a single CDS/gene. """
     __slots__ = ["_translation", "protein_id", "locus_tag", "gene", "product",
                  "transl_table", "_sec_met", "product_prediction", "cluster", "_gene_functions",
-                 "unique_id", "_nrps_pks", "motifs"]
+                 "unique_id", "_nrps_pks", "motifs", "_asf"]
 
     def __init__(self, location, translation=None, locus_tag=None, protein_id=None,
                  product=None, gene=None):
@@ -680,6 +691,8 @@ class CDSFeature(Feature):
 
         if not (protein_id or locus_tag or gene):
             raise ValueError("CDSFeature requires at least one of: gene, protein_id, locus_tag")
+
+        self._asf = None
 
         # runtime-only data
         self.cluster = None
@@ -730,6 +743,15 @@ class CDSFeature(Feature):
     def translation(self, translation: str) -> None:
         assert "-" not in translation, "%s contains - in translation" % self.get_name()
         self._translation = str(translation)
+
+    @property
+    def asf(self) -> ActiveSiteFinderQualifier:
+        return self._asf
+
+    @asf.setter
+    def asf(self, qualifier) -> None:
+        assert isinstance(qualifier, ActiveSiteFinderQualifier)
+        self._asf = qualifier
 
     def get_accession(self) -> str:
         "Get the gene ID from protein id, gene name or locus_tag, in that order"

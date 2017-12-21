@@ -1,0 +1,533 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE resource SYSTEM "SignatureResources.dtd">
+
+<resource xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<analysis name="PKSI_KR_Stereo" type="prediction">
+		<Prerequisite>
+			<primary_tag_type>aSDomain</primary_tag_type>
+			<tag>domain</tag>
+			<tag_value>PKS_KR</tag_value>
+		</Prerequisite>
+		<Execute program="hmmpfam2" CaptureConsole="True" UseSTDIN="True" STDINprefix="-">
+			<!-- Currently, the location of the hmmpfam2 binary and the database location
+				is inferred from the antismash configuration file! -->
+
+			<parameters>
+				<!-- If prefixes for parameters are required they can be added as attribute
+					prefix -->
+				<parameter name='score' prefix="-T">0</parameter>
+				<parameter name='evalue' prefix="-E">0.1</parameter>
+				<parameter name='cpus' prefix="--cpu">1</parameter>
+			</parameters>
+			<database>PKSI-KR.hmm2</database>
+			<BioPythonParser>hmmer2-text</BioPythonParser>
+			<db_source>CLUSEAN</db_source>
+		</Execute>
+		<Alignment>
+			<scaffold>
+				<scaffoldOffset>149, 162, 166</scaffoldOffset>
+				<scaffoldValue>S,Y,N</scaffoldValue>
+			</scaffold>
+			<choice result="KR catalyzing D-configuration product">
+				<offset>102</offset>
+				<value>D</value>
+				<comment>KR domain putatively catalyzing D-configuration product formation</comment>
+			</choice>
+			<choice result="KR catalyzing L-configuration product">
+				<offset>102</offset>
+				<value>[^D]</value>
+				<comment>KR domain putatively catalyzing L-configuration product formation</comment>
+			</choice>
+		</Alignment>
+		<description>Pediction of PKSI KR specificities according to Reid et al., Biochemistry 2003, 42, 72-79</description>
+		<referenceList>
+			<reference>Reid, R., M. Piagentini, E. Rodriguez, G. Ashley, N., Viswanathan, J. Carney, D. V. Santi, C. R. Hutchinson, and R. McDaniel. 2003. A model of structure and catalysis for ketoreductase domains in modular polyketide synthases. Biochemistry 42:72-79.</reference>
+		</referenceList>
+	</analysis>
+	<analysis name="ASP_KS" type="active_site_toCorrect">
+		<Prerequisite>
+			<primary_tag_type>aSDomain</primary_tag_type>
+			<tag>domain</tag>
+			<tag_value>PKS_KS</tag_value>
+		</Prerequisite>
+		<Execute program="hmmpfam2" CaptureConsole="True" UseSTDIN="True" STDINprefix="-"> program="hmmpfam2" CaptureConsole="True" UseSTDIN="True">
+			<!-- Currently, the location of the hmmpfam2 binary and the database location
+				is inferred from the antismash configuration file! -->
+
+			<parameters>
+				<!-- If prefixes for parameters are required they can be added as attribute
+					prefix -->
+				<parameter name='score' prefix="-T">0</parameter>
+				<parameter name='evalue' prefix="-E">0.1</parameter>
+				<parameter name='cpus' prefix="--cpu">1</parameter>
+			</parameters>
+			<database>PKSI-KS_N.hmm2</database>
+			<db_source>PFAM</db_source>
+			<BioPythonParser>hmmer2-text</BioPythonParser>
+		</Execute>
+		<Alignment>
+			<scaffold>
+				<scaffoldOffset>176,186,187,188</scaffoldOffset>
+				<scaffoldValue>G,S,S,S</scaffoldValue>
+				<scaffoldEmission>0.99,0.9,0.81,0.81</scaffoldEmission>
+			</scaffold>
+			<choice result="active site cysteine found">
+				<offset>185</offset>
+				<value>C</value>
+				<valueEmission>0.98</valueEmission>
+				<comment>Active site cysteine</comment>
+			</choice>
+		</Alignment>
+		<description>KS active site cysteine according to Huang et al
+			Microbiology 147 (2001), 631-642</description>
+		<referenceList>
+			<reference>Guozhong Huang, Lianhui Zhang and Robert G. Birch, A multifunctional polyketide–peptide synthetase essential for albicidin biosynthesis in Xanthomonas albilineans, Microbiology 147 (2001), 631-642</reference>
+		</referenceList>
+	</analysis>
+
+	<analysis name="ASP_KS_C" type="active_site_toCorrect">
+		<Prerequisite>
+			<primary_tag_type>aSDomain</primary_tag_type>
+			<tag>domain</tag>
+			<tag_value>PKS_KS</tag_value>
+		</Prerequisite>
+		<Execute program="hmmpfam2" CaptureConsole="True" UseSTDIN="True" STDINprefix="-">
+			<!-- Currently, the location of the hmmpfam2 binary and the database location
+				is inferred from the antismash configuration file! -->
+
+			<parameters>
+				<!-- If prefixes for parameters are required they can be added as attribute
+					prefix -->
+				<parameter name='score' prefix="-T">0</parameter>
+				<parameter name='evalue' prefix="-E">0.1</parameter>
+				<parameter name='cpus' prefix="--cpu">1</parameter>
+			</parameters>
+			<database>PKSI-KS_C.hmm2</database>
+			<db_source>PFAM</db_source>
+			<BioPythonParser>hmmer2-text</BioPythonParser>
+		</Execute>
+		<Alignment>
+			<scaffold>
+				<scaffoldOffset>47,50,51,52,53,56,57,60,106,110,117,123</scaffoldOffset>
+				<scaffoldValue>E,G,T,G,T,G,D,E,K,G,G,K</scaffoldValue>
+				<scaffoldEmission>0.96,0.92,0.95,0.94,0.95,0.96,0.99,0.99,1,0.99,0.96,0.93</scaffoldEmission>
+			</scaffold>
+			<choice result="Active site histidines found">
+				<offset>49,111</offset>
+				<value>H,H</value>
+				<valueEmission>0.95,1</valueEmission>
+				<comment>Active site his</comment>
+			</choice>
+		</Alignment>
+		<description>KS active site Histidine according to Huang et al
+			Microbiology 147 (2001), 631-642</description>
+		<referenceList>
+			<reference>Guozhong Huang, Lianhui Zhang and Robert G. Birch, A multifunctional polyketide–peptide synthetase essential for albicidin biosynthesis in Xanthomonas albilineans, Microbiology 147 (2001), 631-642</reference>
+		</referenceList>
+	</analysis>
+
+	<analysis name="ASP_AT" type="active_site">
+		<Prerequisite>
+			<primary_tag_type>aSDomain</primary_tag_type>
+			<tag>domain</tag>
+			<tag_value>PKS_AT</tag_value>
+		</Prerequisite>
+		<Execute program="hmmpfam2" CaptureConsole="True" UseSTDIN="True" STDINprefix="-">
+			<!-- Currently, the location of the hmmpfam2 binary and the database location
+				is inferred from the antismash configuration file! -->
+
+			<parameters>
+				<!-- If prefixes for parameters are required they can be added as attribute
+					prefix -->
+				<!-- If prefixes for parameters are required they can be added as attribute
+					prefix -->
+				<parameter name='score' prefix="-T">0</parameter>
+				<parameter name='evalue' prefix="-E">0.1</parameter>
+				<parameter name='cpus' prefix="--cpu">1</parameter>
+			</parameters>
+
+			<database>PKSI-AT.hmm2</database>
+			<db_source>CLUSEAN</db_source>
+			<BioPythonParser>hmmer2-text</BioPythonParser>
+		</Execute>
+		<Alignment>
+			<scaffold>
+				<scaffoldOffset>93,94,97,98</scaffoldOffset>
+				<scaffoldValue>G,H,G,E</scaffoldValue>
+				<scaffoldEmission>1,1,1,0.94</scaffoldEmission>
+			</scaffold>
+			<choice result="active site serine found">
+				<offset>95</offset>
+				<value>S</value>
+				<valueEmission>1</valueEmission>
+				<comment>Active site serine</comment>
+			</choice>
+		</Alignment>
+		<description>citation missing</description>
+		<referenceList>
+			<reference>citation missing</reference>
+		</referenceList>
+	</analysis>
+	<analysis name="ACP-type" type="prediction">
+		<Prerequisite>
+			<primary_tag_type>aSDomain</primary_tag_type>
+			<tag>domain</tag>
+			<tag_value>ACP</tag_value>
+		</Prerequisite>
+		<Execute program="hmmpfam2" CaptureConsole="True" UseSTDIN="True" STDINprefix="-">
+			<!-- Currently, the location of the hmmpfam2 binary and the database location
+				is inferred from the antismash configuration file! -->
+
+			<parameters>
+				<!-- If prefixes for parameters are required they can be added as attribute
+					prefix -->
+				<parameter name='score' prefix="-T">0</parameter>
+				<parameter name='evalue' prefix="-E">0.1</parameter>
+				<parameter name='cpus' prefix="--cpu">1</parameter>
+			</parameters>
+			<database>PKSI-ACP.hmm2</database>
+			<db_source>CLUSEAN</db_source>
+			<BioPythonParser>hmmer2-text</BioPythonParser>
+		</Execute>
+		<Alignment>
+			<scaffold>
+				<scaffoldOffset>28,30,31</scaffoldOffset>
+				<scaffoldValue>G,D,S</scaffoldValue>
+				<scaffoldEmission>0.97,0.9,0.98</scaffoldEmission>
+			</scaffold>
+			<choice result="non-beta-branching ACP">
+				<offset>37</offset>
+				<value>[^W]</value>
+				<valueEmission>0.99</valueEmission>
+				<comment>Trp characteristic for beta-branching ACPs found</comment>
+			</choice>
+			<choice result="beta-branching ACP">
+				<offset>37</offset>
+				<value>W</value>
+				<valueEmission>5.68E-5</valueEmission>
+				<comment>Trp characteristic for beta-branching ACPs found</comment>
+			</choice>
+		</Alignment>
+		<description>Beta-branching motif of ACPs according to Haines et al., Nature Chemical Biology 9:685-692 </description>
+		<referenceList>
+			<reference>Haines et al., A conserved motif flags acyl carrier proteins for beta-branching in polyketide synthesis, Nature Chemical Biology 9:685-692</reference>
+		</referenceList>
+	</analysis>
+	<analysis name="ASP_ACP" type="active_site">
+		<Prerequisite>
+			<primary_tag_type>aSDomain</primary_tag_type>
+			<tag>domain</tag>
+			<tag_value>ACP</tag_value>
+		</Prerequisite>
+		<Execute program="hmmpfam2" CaptureConsole="True" UseSTDIN="True" STDINprefix="-">
+			<!-- Currently, the location of the hmmpfam2 binary and the database location
+				is inferred from the antismash configuration file! -->
+
+			<parameters>
+				<!-- If prefixes for parameters are required they can be added as attribute
+					prefix -->
+				<parameter name='score' prefix="-T">0</parameter>
+				<parameter name='evalue' prefix="-E">0.1</parameter>
+				<parameter name='cpus' prefix="--cpu">1</parameter>
+			</parameters>
+			<database>PKSI-ACP.hmm2</database>
+			<db_source>CLUSEAN</db_source>
+			<BioPythonParser>hmmer2-text</BioPythonParser>
+		</Execute>
+		<Alignment>
+			<scaffold>
+				<scaffoldOffset>28,30</scaffoldOffset>
+				<scaffoldValue>G,D</scaffoldValue>
+				<scaffoldEmission>0.97,0.9</scaffoldEmission>
+			</scaffold>
+			<choice result="active site serine found">
+				<offset>31</offset>
+				<value>S</value>
+				<valueEmission>0.98</valueEmission>
+				<comment>Active site serine</comment>
+			</choice>
+		</Alignment>
+		<description>ACP active site serine according to Huang et al. Microbiology 147 (2001), 631-642</description>
+		<referenceList>
+			<reference>Guozhong Huang, Lianhui Zhang and Robert G. Birch, A albicidin biosynthesis in Xanthomonas albilineans, Microbiology 147 (2001), 631-642</reference>
+		</referenceList>
+	</analysis>
+
+	<analysis name="ASP_PKSI-DH" type="active_site">
+		<Prerequisite>
+			<primary_tag_type>aSDomain</primary_tag_type>
+			<tag>domain</tag>
+			<tag_value>PKS_DH</tag_value>
+		</Prerequisite>
+		<Execute program="hmmpfam2" CaptureConsole="True" UseSTDIN="True" STDINprefix="-">
+			<!-- Currently, the location of the hmmpfam2 binary and the database location
+				is inferred from the antismash configuration file! -->
+			<!-- If prefixes for parameters are required they can be added as attribute
+				prefix -->
+			<parameters>
+				<!-- If prefixes for parameters are required they can be added as attribute
+					prefix -->
+				<parameter name='score' prefix="-T">0</parameter>
+				<parameter name='evalue' prefix="-E">0.1</parameter>
+				<parameter name='cpus' prefix="--cpu">1</parameter>
+			</parameters>
+
+			<database>PKSI-DH.hmm2</database>
+			<db_source>CLUSEAN</db_source>
+			<BioPythonParser>hmmer2-text</BioPythonParser>
+		</Execute>
+		<Alignment>
+			<scaffold>
+				<scaffoldOffset>4,5,6,30,32,34</scaffoldOffset>
+				<scaffoldValue>L,L,G,P,L,D</scaffoldValue>
+				<scaffoldEmission>0.9,0.78,0.86,0.7,0.85,0.78</scaffoldEmission>
+			</scaffold>
+			<choice result="catalytic triade H,G,P found">
+				<offset>35,39,44</offset>
+				<value>H,G,P</value>
+				<valueEmission>1,0.62,0.97</valueEmission>
+				<comment>Catalytic triade</comment>
+			</choice>
+		</Alignment>
+		<description>citation missing</description>
+		<referenceList>
+			<reference>citation missing</reference>
+		</referenceList>
+	</analysis>
+
+	<analysis name="ASP_PKSI-KR" type="active_site">
+		<Prerequisite>
+			<primary_tag_type>aSDomain</primary_tag_type>
+			<tag>domain</tag>
+			<tag_value>PKS_KR</tag_value>
+		</Prerequisite>
+		<Execute program="hmmpfam2" CaptureConsole="True" UseSTDIN="True" STDINprefix="-">
+			<!-- Currently, the location of the hmmpfam2 binary and the database location
+				is inferred from the antismash configuration file! -->
+
+			<parameters>
+				<!-- If prefixes for parameters are required they can be added as attribute
+					prefix -->
+				<parameter name='score' prefix="-T">0</parameter>
+				<parameter name='evalue' prefix="-E">0.1</parameter>
+				<parameter name='cpus' prefix="--cpu">1</parameter>
+			</parameters>
+			<database>PKSI-KR.hmm2</database>
+			<db_source>CLUSEAN</db_source>
+		<BioPythonParser>hmmer2-text</BioPythonParser>
+		</Execute>
+		<Alignment>
+			<scaffold>
+				<scaffoldOffset>33,65,92,97,120,148</scaffoldOffset>
+				<scaffoldValue>R,D,G,A,K,S</scaffoldValue>
+				<scaffoldEmission>0.93,0.88,0.93,0.9,0.99,0.87</scaffoldEmission>
+			</scaffold>
+			<choice result="catalytic triade S,Y,N found">
+				<offset>149,162,166</offset>
+				<value>S,Y,N</value>
+				<valueEmission>0.98,0.99,0.83</valueEmission>
+				<comment>Active site S,Y,N catalytic triade</comment>
+			</choice>
+		</Alignment>
+		<description>Active site prediction according to Reid et al. Biochemistry 42:72-79 (2003)</description>
+		<referenceList>
+			<reference>Reid, R., M. Piagentini, E. Rodriguez, G. Ashley, N., Viswanathan, J. Carney, D. V. Santi, C. R. Hutchinson, and R. McDaniel. 2003. A model of structure and catalysis for ketoreductase domains in modular polyketide synthases. Biochemistry 42:72-79.</reference>
+		</referenceList>
+	</analysis>
+
+	<analysis name="ASP_Thioesterase" type="active_site">
+		<Prerequisite>
+			<primary_tag_type>aSDomain</primary_tag_type>
+			<tag>domain</tag>
+			<tag_value>Thioesterase</tag_value>
+		</Prerequisite>
+		<Execute program="hmmpfam2" CaptureConsole="True" UseSTDIN="True" STDINprefix="-">
+			<!-- Currently, the location of the hmmpfam2 binary and the database location
+				is inferred from the antismash configuration file! -->
+
+			<parameters>
+				<!-- If prefixes for parameters are required they can be added as attribute
+					prefix -->
+				<parameter name='score' prefix="-T">0</parameter>
+				<parameter name='evalue' prefix="-E">0.1</parameter>
+				<parameter name='cpus' prefix="--cpu">1</parameter>
+			</parameters>
+			<database>Thioesterase.hmm2</database>
+			<db_source>CLUSEAN</db_source>
+			<BioPythonParser>hmmer2-text</BioPythonParser>
+		</Execute>
+		<Alignment>
+			<scaffold>
+				<scaffoldOffset>73,79,83,87,108</scaffoldOffset>
+				<scaffoldValue>G,G,G,A,D</scaffoldValue>
+				<scaffoldEmission>0.93, 1, 0.99, 0.9, 0.9</scaffoldEmission>
+			</scaffold>
+			<choice result="active site serine present">
+				<offset>81</offset>
+				<value>S</value>
+				<valueEmission>0.93</valueEmission>
+				<comment>active site serine</comment>
+			</choice>
+		</Alignment>
+		<description>citation missing</description>
+		<referenceList>
+			<reference>citation missing</reference>
+		</referenceList>
+	</analysis>
+
+	<analysis name="PKSI_ER_Stereo" type="prediction">
+		<Prerequisite>
+			<primary_tag_type>aSDomain</primary_tag_type>
+			<tag>domain</tag>
+			<tag_value>PKS_ER</tag_value>
+		</Prerequisite>
+		<Execute program="hmmpfam2" CaptureConsole="True" UseSTDIN="True" STDINprefix="-">
+			<!-- Currently, the location of the hmmpfam2 binary and the database location
+				is inferred from the antismash configuration file! -->
+			<parameters>
+				<!-- If prefixes for parameters are required they can be added as attribute
+					prefix -->
+				<parameter name='score' prefix="-T">0</parameter>
+				<parameter name='evalue' prefix="-E">0.1</parameter>
+				<parameter name='cpus' prefix="--cpu">1</parameter>
+			</parameters>
+
+			<database>PKSI-ER.hmm2</database>
+			<db_source>CLUSEAN</db_source>
+			<BioPythonParser>hmmer2-text</BioPythonParser>
+		</Execute>
+		<Alignment>
+			<scaffold>
+				<scaffoldOffset>31,135,137,144,146,227</scaffoldOffset>
+				<scaffoldValue>D,L,H,G,A,G</scaffoldValue>
+			</scaffold>
+			<choice result="2S">
+				<offset>39</offset>
+				<value>Y</value>
+				<comment>ER domain putatively catalyzing 2S-configuration product formation</comment>
+			</choice>
+			<choice result="2R">
+				<offset>39</offset>
+				<value>[^Y]</value>
+				<comment>ER domain putatively catalyzing 2R-configuration product formation</comment>
+			</choice>
+		</Alignment>
+		<description>Pediction of PKSI ER specificities according to Kwan et all. ChemBiol 15:1231-1240, 2008</description>
+		<referenceList>
+			<reference> Kwan, D. H., Y. Sun, F. Schulz, H. Hong, B. Popovic, J. C., Sim-Stark, S. F. Haydock, and P. F. Leadlay. 2008. Prediction and  Manipulation of the Stereochemistry of Enoylreduction in Modular Polyketide Synthases. Chem.Biol 15:1231-1240.</reference>
+		</referenceList>
+	</analysis>
+
+	<analysis name="PKSI_AT_Spec" type="prediction">
+		<Prerequisite>
+			<primary_tag_type>aSDomain</primary_tag_type>
+			<tag>domain</tag>
+			<tag_value>PKS_AT</tag_value>
+		</Prerequisite>
+		<Execute program="hmmpfam2" CaptureConsole="True" UseSTDIN="True" STDINprefix="-">
+			<!-- Currently, the location of the hmmpfam2 binary and the database location
+				is inferred from the antismash configuration file! -->
+
+			<parameters>
+				<!-- If prefixes for parameters are required they can be added as attribute
+					prefix -->
+				<parameter name='score' prefix="-T">0</parameter>
+				<parameter name='evalue' prefix="-E">0.1</parameter>
+				<parameter name='cpus' prefix="--cpu">1</parameter>
+			</parameters>
+			<database>PKSI-AT.hmm2</database>
+			<db_source>CLUSEAN</db_source>
+			<BioPythonParser>hmmer2-text</BioPythonParser>
+		</Execute>
+		<Alignment>
+			<scaffold>
+				<scaffoldOffset>93,94,95,120,196,198,199,227,244,245</scaffoldOffset>
+				<scaffoldValue>G,H,S,R,A,H,S,S,Y,W</scaffoldValue>
+			</scaffold>
+			<choice result="Malonyl-CoA specific">
+				<offset>195,197</offset>
+				<value>H,F</value>
+				<comment>AT domain specific for malonyl-CoA</comment>
+			</choice>
+			<choice result="Methylmalonyl-CoA specific">
+				<offset>195,197</offset>
+				<value>Y,S</value>
+				<comment>AT domain specific for methylmalonyl-CoA</comment>
+			</choice>
+		</Alignment>
+		<description>Pediction of PKSI AT specificities according to DelVecchio et al., 1999, J Ind. Microbiol Biotechnol 30:489-494.</description>
+		<referenceList>
+			<reference>Del Vecchio, F., H. Petkovic, S. G. Kendrew, L. Low, B. Wilkinson, R. Lill, J. Cortes, B. A. Rudd, J. Staunton, and P. F. Leadlay. 2003. Active-site residue, domain and module swaps in modular polyketide synthases. J Ind. Microbiol Biotechnol 30:489-494.</reference>
+		</referenceList>
+	</analysis>
+
+	<analysis name="StachelhausExtract" type="active_site">
+		<Prerequisite>
+			<primary_tag_type>aSDomain</primary_tag_type>
+			<tag>domain</tag>
+			<tag_value>AMP-binding</tag_value>
+		</Prerequisite>
+		<Execute program="hmmpfam2" CaptureConsole="True" UseSTDIN="True" STDINprefix="-">
+			<!-- Currently, the location of the hmmpfam2 binary and the database location
+				is inferred from the antismash configuration file! -->
+			<parameters>
+				<!-- If prefixes for parameters are required they can be added as attribute
+					prefix -->
+				<parameter name='score' prefix="-T">0</parameter>
+				<parameter name='evalue' prefix="-E">0.1</parameter>
+				<parameter name='cpus' prefix="--cpu">1</parameter>
+			</parameters>
+			<database>aa-activating.aroundLys.hmm2</database>
+			<db_source>NRPSpredictor</db_source>
+			<BioPythonParser>hmmer2-text</BioPythonParser>
+		</Execute>
+		<Alignment>
+			<scaffold>
+				<scaffoldOffset>47,48,51,93,125,127,154,162,163</scaffoldOffset>
+				<scaffoldValue>D,A,W,T,I,A,A,I,C</scaffoldValue>
+			</scaffold>
+		</Alignment>
+		<description>Extracts specificity conferring amino acids according to
+			Stachelhaus et al. 1999</description>
+		<referenceList>
+			<reference>Stachelhaus, T., H. D. Mootz, and M. A. Marahiel. 1999. The specificity-conferring code of adenylation domains in nonribosomal peptide synthetases. Chem. Biol. 6:493-505.</reference>
+		</referenceList>
+	</analysis>
+
+	<analysis name="ASP_P450Oxy" type="active_site">
+		<Prerequisite>
+			<primary_tag_type>PFAM_domain</primary_tag_type>
+			<tag>domain</tag>
+			<tag_value>p450</tag_value>
+		</Prerequisite>
+		<Execute program="hmmscan" CaptureConsole="True" UseSTDIN="True" STDINprefix="-">
+			<!-- Currently, the location of the hmmpfam2 binary and the database location
+				is inferred from the antismash configuration file! -->
+
+			<parameters>
+				<!-- If prefixes for parameters are required they can be added as attribute
+					prefix -->
+				<parameter name='evalue' prefix="--domE">0.1</parameter>
+				<parameter name='cpus' prefix="--cpu">1</parameter>
+			</parameters>
+			<database>p450.hmm3</database>
+			<db_source>PFAM24</db_source>
+			<BioPythonParser>hmmer3-text</BioPythonParser>
+		</Execute>
+		<Alignment>
+			<scaffold>
+				<scaffoldOffset>327,330,400,403,409</scaffoldOffset>
+				<scaffoldValue>E,R,F,G,G</scaffoldValue>
+			</scaffold>
+			<choice result="active site cystein present">
+				<offset>407</offset>
+				<value>C</value>
+				<comment>Cytochrome P450 oxygenase active site cystein; coordinates heme Fe ligand</comment>
+			</choice>
+		</Alignment>
+		<description>Pediction of cytochrome P450 active site cystein</description>
+		<referenceList>
+			<reference>Del Vecchio, F., H. Petkovic, S. G. Kendrew, L. Low, B. Wilkinson, R. Lill, J. Cortes, B. A. Rudd, J. Staunton, and P. F. Leadlay. 2003. Active-site residue, domain and module swaps in modular polyketide synthases. J Ind. Microbiol Biotechnol 30:489-494.</reference>
+		</referenceList>
+	</analysis>
+</resource>

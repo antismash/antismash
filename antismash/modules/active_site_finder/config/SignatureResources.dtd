@@ -1,0 +1,119 @@
+<!-- Definition for antiSMASH SignatureResources.xml -->
+
+<!-- resource is the root element in the XML file; there is only 1 resource -->
+<!ELEMENT resource ( analysis+ ) >
+<!ATTLIST resource xmlns:xsd CDATA #REQUIRED >
+<!ATTLIST resource xmlns:xsi CDATA #REQUIRED >
+
+
+<!ELEMENT analysis ( Prerequisite, Execute, Alignment, description, referenceList ) >
+<!-- each implemented analysis is organised in an analysis element, which has sub-elements:
+Prerequisites: defines the sequence features that the analysis can be applied for,
+Execute: Parameters for external program execution
+Alignment: Defintion of positions to look at
+description: Short description of the analysis
+referenceList: References describing the analysis
+
+each analysis needs the attributes "name" and "type" defined
+
+-->
+<!ATTLIST analysis name ( #CDATA ) #REQUIRED >
+<!ATTLIST analysis type ( #CDATA ) #REQUIRED >
+
+
+<!ELEMENT Prerequisite ( primary_tag_type, tag, tag_value ) >
+<!-- The prerequisite element defines the feature in the seq_record that are subjected to the analysis:
+primary_tag_type: e.g. PFAM_domain
+tag: e.g. domain
+tag_value: e.g. PKS_AT
+
+XML example:
+<Execute program="hmmpfam2" CaptureConsole="TRUE">
+			<parameters>
+				<parameter name='score' prefix="-T">0</parameter>
+				<parameter name='evalue' prefix="-E">0.1</parameter>
+				<parameter name='cpus' prefix="--cpu">1</parameter>
+			</parameters>
+			<database>PKSI-AT.hmm2</database>
+			<db_source>CLUSEAN</db_source>
+			<BioPythonParser>hmmer2-text</BioPythonParser>
+		</Execute>
+-->
+<!ELEMENT primary_tag_type ( #PCDATA ) >
+<!ELEMENT tag ( #PCDATA ) >
+<!ELEMENT tag_value ( #PCDATA ) >
+
+
+<!ELEMENT Execute ( BioPythonParser | database | db_source | parameters )* >
+<!-- The Execute element defines the external program execution paramteres
+For example see Prerequisite element description-->
+
+<!ATTLIST Execute CaptureConsole ( #CDATA ) NMTOKEN #IMPLIED>
+<!ATTLIST Execute program ( #CDATA ) #REQUIRED >
+<!ATTLIST Execute UseSTDIN ( #CDATA ) #IMPLIED >
+<!ATTLIST Execute STDINprefix ( #CDATA ) #IMPLIED >
+
+<!ELEMENT parameters ( parameter+ ) >
+
+<!ELEMENT parameter ( #PCDATA ) >
+<!ATTLIST parameter name ( #PCDATA ) #IMPLIED >
+<!ATTLIST parameter prefix ( #PCDATA) #IMPLIED >
+
+<!ELEMENT database ( #PCDATA ) >
+<!ELEMENT db_source ( #PCDATA ) >
+<!ELEMENT BioPythonParser ( #PCDATA ) >
+
+
+
+<!ELEMENT Alignment ( scaffold, choice* ) >
+<!-- The alignment element defines the aa positions (relative to the hmm hit) that are extracted
+
+scaffold: These are "non active site" residues that are conserved and can be used to validate tha alignment
+choice: choice elements are finally evaluated and their "result" attribute is annotated if there is a match
+
+Example:
+		<Alignment>
+			<scaffold>
+				<scaffoldOffset>93,94,95,120,196,198,199,227,244,245</scaffoldOffset>
+				<scaffoldValue>G,H,S,R,A,H,S,S,Y,W</scaffoldValue>
+			</scaffold>
+			<choice result="Malonyl-CoA specific">
+				<offset>195,197</offset>
+				<value>H,F</value>
+				<comment>AT domain specific for malonyl-CoA</comment>
+			</choice>
+			<choice result="Methylmalonyl-CoA specific">
+				<offset>195,197</offset>
+				<value>Y,S</value>
+				<comment>AT domain specific for methylmalonyl-CoA</comment>
+			</choice>
+		</Alignment>
+
+-->
+
+<!ELEMENT scaffold ( scaffoldOffset, scaffoldValue, scaffoldEmission? ) >
+<!-- Definition of the scafold positions; mutlitple values are sparated by ","
+scaffold Emission: List of HMM emission values (from reference alignment tested against the HMM) optional
+scaffoldOffset: List of offsets
+scaffoldValues: amino acids at these positions
+-->
+<!ELEMENT scaffoldEmission ( #PCDATA ) >
+<!ELEMENT scaffoldOffset ( #PCDATA ) >
+<!ELEMENT scaffoldValue ( #PCDATA ) >
+
+<!ELEMENT choice ( comment | offset | value | valueEmission )* >
+<!-- Definition of the choice element, analogous to scaffold; with additional comment element -->
+<!ATTLIST choice result CDATA #REQUIRED >
+<!ELEMENT offset ( #PCDATA ) >
+<!ELEMENT value ( #PCDATA ) >
+<!ELEMENT valueEmission ( #PCDATA ) >
+
+<!ELEMENT comment ( #PCDATA ) >
+
+<!ELEMENT description ( #PCDATA ) >
+<!-- General description of the analysis -->
+
+<!ELEMENT referenceList ( reference ) >
+<!-- List of references -->
+<!ELEMENT reference ( #PCDATA ) >
+
