@@ -41,6 +41,7 @@ class ASFResults(module_results.ModuleResults):
     def add_to_record(self, *args):
         logging.critical("skipping ASFResults.add_to_record()")
 
+
 def check_prereqs():
     """Check the prerequisites"""
     # create a throwaway active_site_finder object without a record
@@ -75,15 +76,15 @@ def run_on_record(record, results, options):
 def get_prediction_annotation(result, predictionChoicesXML):
     "gererate annotation from choices/prediciton information"
 
-    choiceResultList = []
-    ASF_stringList = []
+    choices = []
+    descriptions = []
     query_seq = result.hsps[0].aln[0].seq
     hmm_seq = result.hsps[0].aln[1].seq
 
     for choice in predictionChoicesXML:
         extracted_aa_List = []
-        emission_List = []
-        match_List = []
+        emissions = []
+        matches = []
         skip = False
         predictionOffsetList = choice.find('./offset').text.split(',')
         predictionValueList = choice.find('./value').text.split(',')
@@ -99,14 +100,13 @@ def get_prediction_annotation(result, predictionChoicesXML):
         logging.debug("testing %s (%s):", predictionResult, predicitionComment)
 
         for i in range(0, len(predictionOffsetList)):
-            choiceMatch = False
             predictionOffset = int(predictionOffsetList[i]) - 1
             predictionValue = predictionValueList[i]
             if predictionValueEmissionList:
                 predictionValueEmission = int(predictionValueEmissionList[i])
             else:
                 predictionValueEmission = "n.d."
-            emission_List.append(predictionValueEmission)
+            emissions.append(predictionValueEmission)
 
             # Check whether coordinates are within HSP match of the HMM profile
             if (result.hsps[0].hit_start > predictionOffset) or (result.hsps[0].hit_end < predictionOffset):
@@ -119,7 +119,7 @@ def get_prediction_annotation(result, predictionChoicesXML):
                 fixed_predictionOffset = fix_coordinates(predictionOffset - result.hsps[0].hit_start, hmm_seq)
             except ValueError:
                 logging.warning("gap-fixed choice/prediction coordinate %s outside hsp! for result: %s, which has length: %s",
-                             predictionOffset, result.id, len(query_seq))
+                                predictionOffset, result.id, len(query_seq))
                 choiceOverallMatch = False
                 skip = True
                 break
@@ -127,7 +127,7 @@ def get_prediction_annotation(result, predictionChoicesXML):
             # Check whether gap-fixed coordinate still is within returned query sequence
             if len(hmm_seq) < fixed_predictionOffset + 1:
                 logging.warning("gap-fixed choice/prediction coordinate %s outside hsp! for result: %s, which has length: %s",
-                             fixed_predictionOffset, result.id, len(query_seq))
+                                fixed_predictionOffset, result.id, len(query_seq))
                 choiceOverallMatch = False
                 skip = True
                 break
@@ -144,12 +144,10 @@ def get_prediction_annotation(result, predictionChoicesXML):
 
             extracted_aa_List.append(extracted_aa)
 
-            if re.match("(?i)" + predictionValue, extracted_aa):
-                choiceMatch = True
-            else:
-                choiceOverallMatch = False
+            choiceMatch = bool(re.match("(?i)" + predictionValue, extracted_aa))
+            choiceOverallMatch = choiceOverallMatch and choiceMatch
 
-            match_List.append(str(choiceMatch))
+            matches.append(str(choiceMatch))
             logging.debug("Offset %s; fixed offset %s  Expected: %s; observed in query %s: observed in hmm %s; Emission %s; match %s",
                           predictionOffset,
                           fixed_predictionOffset,
@@ -162,7 +160,6 @@ def get_prediction_annotation(result, predictionChoicesXML):
         logging.debug("Overall Match for prediction %s: %s", choice.attrib['result'], str(choiceOverallMatch).upper())
         logging.debug("================================")
 
-        ASF_string = ""
         if not skip:
             ASF_string = "Description: %s, choice result: %s, choice coordinates: (%s); residues: (%s); " \
                          "expected for choice: (%s); matchArray: (%s); emission probability array (%s); overall match: %s" % \
@@ -171,17 +168,16 @@ def get_prediction_annotation(result, predictionChoicesXML):
                            ",".join(predictionOffsetList),
                            ",".join(extracted_aa_List),
                            ",".join(predictionValueList),
-                           ",".join(match_List),
-                           ",".join(emission_List),
+                           ",".join(matches),
+                           ",".join(emissions),
                            str(choiceOverallMatch).upper())
 
-            ASF_stringList.append(ASF_string)
+            descriptions.append(ASF_string)
 
-        choice_string = ""
         if choiceOverallMatch:
             choice_string = "Full match for prediction: %s" % predictionResult
-            choiceResultList.append(choice_string)
-    return (ASF_stringList, choiceResultList)
+            choices.append(choice_string)
+    return descriptions, choices
 
 
 def fix_coordinates(coordinate, seq):
@@ -222,15 +218,15 @@ def filter_features_by_qualifier(features, query_tag, query_value):
     return filtered_features
 
 
-def get_scaffold_annotation(result, scaffoldXML):
+def get_scaffold_annotation(result, scaffold_xml):
     "generate annotation from scaffold information"
 
     query_seq = result.hsps[0].aln[0].seq
     hmm_seq = result.hsps[0].aln[1].seq
-    scaffoldPos = scaffoldXML.find('./scaffoldOffset').text
-    scaffoldValue = scaffoldXML.find('./scaffoldValue').text
-    if scaffoldXML.find('./scaffoldEmission'):
-        scaffoldEmissionList = scaffoldXML.find('./scaffoldEmission').text.split(',')
+    scaffoldPos = scaffold_xml.find('./scaffoldOffset').text
+    scaffoldValue = scaffold_xml.find('./scaffoldValue').text
+    if scaffold_xml.find('./scaffoldEmission'):
+        scaffoldEmissionList = scaffold_xml.find('./scaffoldEmission').text.split(',')
     else:
         scaffoldEmissionList = []
     scaffoldPosList = scaffoldPos.split(',')
@@ -255,10 +251,9 @@ def get_scaffold_annotation(result, scaffoldXML):
     # Check scaffold matches
 
     extracted_aa_List = []
-    match_List = []
-    emission_List = []
+    matches = []
+    emissions = []
 
-    skip = False
     for i in range(0, len(scaffoldPosList)):
 
         scafPos = int(scaffoldPosList[i]) - 1
@@ -267,17 +262,15 @@ def get_scaffold_annotation(result, scaffoldXML):
         # Check whether scafPos is within HSP coordinates
         if (result.hsps[0].hit_start > scafPos) or (result.hsps[0].hit_end < scafPos):
             logging.warning("scaffold coordinate %s outside hsp!", scafPos)
-            overallMatch = False
-            skip = True
-            break
+            logging.debug("Overall Scaffold Match: FALSE\n")
+            return None
         # fix position for gap characters in hmm_hit
         try:
             fixedScafPos = fix_coordinates(scafPos - result.hsps[0].hit_start, hmm_seq)
         except ValueError:
             logging.error("gap-fixed scaffold coordinate %s outside hsp for original position: ", scafPos)
-            overallMatch = False
-            skip = True
-            break
+            logging.debug("Overall Scaffold Match: FALSE\n")
+            return None
 
         # Check whether amino acid in hmm_seq[fixedScafPos] equals predifined aa from XML
         # (should always match) and thus may be removed when the module is thoroughly tested
@@ -287,9 +280,8 @@ def get_scaffold_annotation(result, scaffoldXML):
                 logging.warning("ASF: aa extracted from hmm profile does not match predifined aa in XML config file!")
         except IndexError:
             logging.warning("gap-fixed scaffold coordinate %s outside hsp!", fixedScafPos)
-            overallMatch = False
-            skip = True
-            break
+            logging.debug("Overall Scaffold Match: FALSE\n")
+            return None
 
         extracted_aa = query_seq[fixedScafPos]
         extracted_aa_List.append(extracted_aa)
@@ -297,15 +289,12 @@ def get_scaffold_annotation(result, scaffoldXML):
             extracted_aa_Emission = int(scaffoldEmissionList[i])
         else:
             extracted_aa_Emission = "n.d."
-        emission_List.append(extracted_aa_Emission)
-        match = False
+        emissions.append(extracted_aa_Emission)
 
         # We have to use a RegEx here to allow negations and more complex queries; ignore case (?i)
-        if re.match("(?i)" + scafValue, query_seq[fixedScafPos]):
-            match = True
-        else:
-            overallMatch = False
-        match_List.append(str(match))
+        match = bool(re.match("(?i)" + scafValue, query_seq[fixedScafPos]))
+        overallMatch = overallMatch and match
+        matches.append(str(match))
         logging.debug("Scaffold coordinate %s; fixed scaffold coordinate %s, query aa %s; hmm aa %s; "
                       "scaffold value %s; emission probability %s; match %s",
                       scafPos, fixedScafPos, extracted_aa, hmm_seq[fixedScafPos], scafValue, extracted_aa_Emission, match)
@@ -313,17 +302,12 @@ def get_scaffold_annotation(result, scaffoldXML):
     logging.debug("Overall Scaffold Match: %s\n", str(overallMatch).upper())
 
     # Generate Feature qualifiers
+    ASF_string = ("Scaffold coordinates: (%s); scaffold residues: (%s); expected: (%s); matchArray: (%s); "
+                  "emission probability array (%s); overall match: %s") % (
+                 ",".join(scaffoldPosList), ",".join(extracted_aa_List), ",".join(scaffoldValueList),
+                 ",".join(matches), ",".join(emissions), str(overallMatch).upper())
 
-    if not skip:
-        ASF_string = ("Scaffold coordinates: (%s); scaffold residues: (%s); expected: (%s); matchArray: (%s); "
-                      "emission probability array (%s); overall match: %s") % (
-                     ",".join(scaffoldPosList), ",".join(extracted_aa_List), ",".join(scaffoldValueList),
-                     ",".join(match_List), ",".join(emission_List), str(overallMatch).upper())
-
-        # logging.debug("adding ASF info to %s %s..%s:" % (SeqFeature.type, SeqFeature.location.start,
-        # SeqFeature.location.end))
-        return ASF_string
-    return
+    return ASF_string
 
 
 def execute_tool(analysisResource, fileName=None, stdin_data=None):
@@ -390,6 +374,7 @@ def execute_tool(analysisResource, fileName=None, stdin_data=None):
 
     return results
 
+
 def run_external_tool(analysisResource, features):
     "Generate tempfile containing the extracted Feature sequences and run tool defined in XML file"
 
@@ -415,15 +400,13 @@ def run_external_tool(analysisResource, features):
     if 'UseSTDIN' in executeObj.attrib:
         UseSTDIN = executeObj.attrib['UseSTDIN']
 
+    results = []
     if not fastafile:
         logging.warning("ASP: No features found containing feature/tag/value %s / %s / %s",
-                     analysisResource.find('./Prerequisite/primary_tag_type').text,
-                     analysisResource.find('./Prerequisite/tag').text,
-                     analysisResource.find('./Prerequisite/tag_value').text)
-        return []
-
-    results = []
-    if UseSTDIN == "True":
+                        analysisResource.find('./Prerequisite/primary_tag_type').text,
+                        analysisResource.find('./Prerequisite/tag').text,
+                        analysisResource.find('./Prerequisite/tag_value').text)
+    elif UseSTDIN == "True":
         results = execute_tool(analysisResource, stdin_data=querydata)
     else:
         with NamedTemporaryFile(prefix='antiSMASH_ASP') as tempfile:
@@ -474,7 +457,6 @@ class active_site_finder(object):
         analysisResources = XMLroot.findall('./analysis')
 
         for analysisResource in analysisResources:
-
             # set variables
             analysisResourceName = analysisResource.attrib['name']
             analysisResourceType = analysisResource.attrib['type']
@@ -486,7 +468,7 @@ class active_site_finder(object):
             tagValue = analysisResource.find('./Prerequisite/tag_value').text
 
             # get scaffold / choice subtrees form XML file
-            scaffoldXML = analysisResource.find('./Alignment/scaffold')
+            scaffold_xml = analysisResource.find('./Alignment/scaffold')
             predictionChoicesXML = analysisResource.findall('./Alignment/choice')
 
             # Get pre-annoated feature where we have rules defined in XML file
@@ -497,7 +479,6 @@ class active_site_finder(object):
                 SeqFeatureList = [domain for domain in record.get_antismash_domains() if tagValue == domain.domain]
             else:
                 raise ValueError("Unknown tag type: %s", primaryTagType)
-
 
             SeqFeature_byID = {}
             for n, feature in enumerate(SeqFeatureList):
@@ -512,11 +493,11 @@ class active_site_finder(object):
             # with the corresponding SeqFeature
             for result in results:
                 logging.debug("found hit with %s", result.id)
+                if not result.hsps:
+                    continue
 
                 SeqFeature = SeqFeature_byID[result.id]
 
-                if not result.hsps:
-                    continue
                 if result.hsps[0].aln[0].id != result.id:
                     # This actually should never happen...
                     logging.exception("Result ID: %s", result.id)
@@ -525,7 +506,7 @@ class active_site_finder(object):
                     break
 
                 # identify scaffolds and annotate
-                ASF_string = get_scaffold_annotation(result, scaffoldXML)
+                ASF_string = get_scaffold_annotation(result, scaffold_xml)
 
                 note = None
                 scaffold = []
@@ -536,12 +517,12 @@ class active_site_finder(object):
                             (analysisResourceName, analysisResourceType)]
 
                 # identify predictions / active sites and annotate
-                (ASF_stringList, choiceResultList) = get_prediction_annotation(result, predictionChoicesXML)
-                choices = list(ASF_stringList)
+                descriptions, choiceResultList = get_prediction_annotation(result, predictionChoicesXML)
+                choices = list(descriptions)
 
-                for ASF_string in ASF_stringList:
+                for description in descriptions:
                     logging.debug("adding ASF choice info to %s %s..%s:", SeqFeature.type, SeqFeature.location.start, SeqFeature.location.end)
-                    logging.debug(ASF_string)
+                    logging.debug(description)
                     note = ["ASF analyisis with definition %s (type %s)" %
                             (analysisResourceName, analysisResourceType)]
 
@@ -594,7 +575,6 @@ class active_site_finder(object):
             '.h3p'
         ]
 
-        options = self.options
         failure_messages = []
 
         for binary_name, optional in _required_binaries:
@@ -603,17 +583,17 @@ class active_site_finder(object):
 
         # Get all HMM profile names from XML file
         paths_checked = set()
-        for HMMProfile in self.HmmProfilesFilenameObj:
-            full_hmm_path = path.get_full_path(__file__, "data", HMMProfile.text)
+        for profile in self.HmmProfilesFilenameObj:
+            full_hmm_path = path.get_full_path(__file__, "data", profile.text)
             if full_hmm_path in paths_checked:
                 continue
             paths_checked.add(full_hmm_path)
 
             if path.locate_file(full_hmm_path) is None:
-                failure_messages.append("Failed to locate file: %s" % HMMProfile.text)
+                failure_messages.append("Failed to locate file: %s" % profile.text)
                 continue
 
-            if HMMProfile.text.endswith(".hmm2"):
+            if profile.text.endswith(".hmm2"):
                 continue
 
             for ext in _binary_extensions:
@@ -621,7 +601,7 @@ class active_site_finder(object):
                 if not path.locate_file(binary):
                     result = subprocessing.run_hmmpress(full_hmm_path)
                     if not result.successful():
-                        failure_messages.append("Failed to hmmpress {!r}: {!r}".format(HMMProfile.text, result.stderr))
+                        failure_messages.append("Failed to hmmpress {!r}: {!r}".format(profile.text, result.stderr))
 
                     # hmmpress generates _all_ binary files in one go, so stop the loop
                     break
@@ -633,19 +613,19 @@ class active_site_finder(object):
                     continue
                 try:
                     from glob import glob
-                    for f in glob("{}.h3?".format(full_hmm_path)):
-                        logging.debug("removing outdated file %r", f)
-                        os.remove(f)
-                except OSError as e:
+                    for filename in glob("{}.h3?".format(full_hmm_path)):
+                        logging.debug("removing outdated file %r", filename)
+                        os.remove(filename)
+                except OSError as err:
                     failure_messages.append("Failed to remove outdated binary file for %s: %s" %
-                                            (HMMProfile.text, e))
+                                            (profile.text, err))
                     break
                 result = subprocessing.run_hmmpress(full_hmm_path)
                 if not result.successful():
-                    failure_messages.append("Failed to hmmpress %r: %r" % (HMMProfile.text, result.stderr))
+                    failure_messages.append("Failed to hmmpress %r: %r" % (profile.text, result.stderr))
                     import datetime
                     failure_messages.append("HMM binary files outdated. %s (changed: %s) vs %s (changed: %s)" %
-                                            (HMMProfile.text, datetime.datetime.fromtimestamp(hmm_mtime),
+                                            (profile.text, datetime.datetime.fromtimestamp(hmm_mtime),
                                              binary, datetime.datetime.fromtimestamp(binary_mtime)))
                 # hmmpress generates _all_ binary files in one go, so stop the loop
                 break
