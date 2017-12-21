@@ -145,6 +145,8 @@ class Feature:
                 assert isinstance(bio_feature.qualifiers, dict)
                 leftovers = bio_feature.qualifiers.copy()
             feature.notes = leftovers.pop("note", [])
+        else:
+            assert isinstance(feature, Feature)
         if leftovers:
             feature._qualifiers.update(leftovers)
         return feature
@@ -368,6 +370,29 @@ class AntismashFeature(Feature):
             mine.update(qualifiers)
         return super().to_biopython(mine)
 
+    @staticmethod
+    def from_biopython(bio_feature, qualifiers=None, feature=None, leftovers=None):
+        if leftovers is None:
+            leftovers = Feature.make_qualifiers_copy(bio_feature)
+        if not feature:
+            raise ValueError("AntismashFeature shouldn't be instantiated directly")
+        else:
+            assert isinstance(feature, AntismashFeature)
+        # grab optional qualifiers
+        feature.domain_id = leftovers.pop("domain_id", [None])[0]
+        feature.database = leftovers.pop("database", [None])[0]
+        feature.detection = leftovers.pop("detection", [None])[0]
+        feature.label = leftovers.pop("label", [None])[0]
+        feature.locus_tag = leftovers.pop("locus_tag", [None])[0]
+        feature.translation = leftovers.pop("translation", [None])[0]
+        if "evalue" in leftovers:
+            feature.evalue = float(leftovers.pop("evalue")[0])
+        if "score" in leftovers:
+            feature.score = float(leftovers.pop("score")[0])
+
+        # grab parent optional qualifiers
+        return Feature.from_biopython(bio_feature, feature=feature, leftovers=leftovers)
+
 
 class Domain(AntismashFeature):
     """ A base class for features which represent a domain type """
@@ -389,6 +414,24 @@ class Domain(AntismashFeature):
         if qualifiers:
             mine.update(qualifiers)
         return super().to_biopython(mine)
+
+    @staticmethod
+    def from_biopython(bio_feature, feature=None, leftovers=None):
+        if leftovers is None:
+            leftovers = Feature.make_qualifiers_copy(bio_feature)
+        if not feature:
+            raise ValueError("Domain shouldn't be instantiated directly")
+        else:
+            assert isinstance(feature, Domain), type(feature)
+
+        # grab optional qualifiers
+        if "aSTool" in leftovers:
+            feature.tool = leftovers.pop("aSTool")[0]
+        if "asDomain" in leftovers:
+            feature.domain = leftovers.pop("asDomain")[0]
+
+        # grab parent optional qualifiers
+        return AntismashFeature.from_biopython(bio_feature, feature=feature, leftovers=leftovers)
 
 
 class CDSMotif(Domain):
@@ -423,9 +466,12 @@ class PFAMDomain(Domain):
     """
     __slots__ = ["description", "db_xref", "probability"]
 
-    def __init__(self, location: FeatureLocation, description: str) -> None:
+    def __init__(self, location: FeatureLocation, description: str, domain: Optional[str] = None) -> None:
         super().__init__(location, feature_type="PFAM_domain")
-        assert isinstance(description, str)
+        assert description and isinstance(description, str)
+        if domain is not None:
+            assert domain and isinstance(domain, str)
+        self.domain = domain
         self.description = description
         self.probability = None
         self.db_xref = []  # type: List[str]
@@ -437,6 +483,8 @@ class PFAMDomain(Domain):
             mine["probability"] = [self.probability]
         if self.db_xref:
             mine["db_xref"] = self.db_xref
+        if self.domain is not None:
+            mine["domain"] = self.domain
         if qualifiers:
             mine.update(qualifiers)
         return super().to_biopython(mine)
@@ -453,9 +501,7 @@ class PFAMDomain(Domain):
         feature.db_xref = leftovers.pop("db_xref", [])
 
         # grab parent optional qualifiers
-        super(PFAMDomain, feature).from_biopython(bio_feature, feature=feature, leftovers=leftovers)
-
-        return feature
+        return super(PFAMDomain, feature).from_biopython(bio_feature, feature=feature, leftovers=leftovers)
 
 
 class AntismashDomain(Domain):
