@@ -11,12 +11,12 @@ import Bio.SeqIO
 from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation
 from antismash.common.test import helpers
-from antismash.common.secmet.feature import Cluster, CDSFeature, Feature, GeneFunction, ClusterBorder
+from antismash.common.secmet.feature import Cluster, CDSFeature, Feature, GeneFunction, ClusterBorder, PFAMDomain
 from antismash.common.secmet.record import _build_products_from_borders, Record
 
 
 class TestConversion(unittest.TestCase):
-    def test_conversion(self):
+    def test_record_conversion_from_biopython(self):
         before = list(Bio.SeqIO.parse(helpers.get_path_to_nisin_genbank(), "genbank"))[0]
         # sort notes, because direct comparisons otherwise are awful
         for feature in before.features:
@@ -47,6 +47,24 @@ class TestConversion(unittest.TestCase):
         assert type_counts["PFAM_domain"] == len(record.get_pfam_domains())
         assert type_counts["cluster"] == len(record.get_clusters())
         assert type_counts["aSDomain"] == len(record.get_antismash_domains())
+
+    def test_pfam_domain(self):
+        original = PFAMDomain(FeatureLocation(2, 5), description="test",
+                              domain="domainname")
+        original.db_xref.append("test-ref")
+        original.tool = "toolname"
+        original.domain_id = "domain_id"
+        original.database = "db"
+        original.detection = "someprogram"
+        original.evalue = 1e-5
+        original.score = 5.
+        original.locus_tag = "locus"
+        original.label = "somelabel"
+        original.translation = "ARNDCQ"
+        new = PFAMDomain.from_biopython(original.to_biopython()[0])
+        for slot in ["db_xref", "tool", "domain_id", "database", "detection",
+                     "evalue", "score", "locus_tag", "label", "translation"]:
+            assert getattr(original, slot) == getattr(new, slot)
 
 
 class TestRecord(unittest.TestCase):
