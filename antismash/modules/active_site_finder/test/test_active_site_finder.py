@@ -14,12 +14,10 @@ except ImportError:
     import xml.etree.ElementTree as ET
 
 from Bio import SearchIO  # mocked, pylint: disable=unused-import
-from minimock import mock, restore, TraceTracker, assert_same_trace, Printer
-from helperlibs.bio import seqio
+from minimock import mock, restore, TraceTracker, assert_same_trace
 
 from antismash.common import path  # mocked, pylint: disable=unused-import
 from antismash.common import record_processing, subprocessing
-from antismash.common.test import helpers
 from antismash.modules import active_site_finder
 
 
@@ -117,8 +115,6 @@ class TestASF(unittest.TestCase):
         self.my_ASF = asf
 
     def test__init(self):
-        "Test active_site_finder.__init__ method"
-
         self.tt = TraceTracker()
 
         class dummyET:
@@ -149,19 +145,16 @@ class TestASF(unittest.TestCase):
 
         self.my_ASF = asf
 
-    def test__get_scaffold_annotation(self):
-        "Test active_site_finder._get_scaffold_annotation method"
-
+    def test_get_scaffold_annotation(self):
         my_ScaffXML = self.etree_obj.find('./analysis/Alignment/scaffold')
 
-        resultline = self.my_ASF._get_scaffold_annotation(self.result, my_ScaffXML)
+        resultline = active_site_finder.get_scaffold_annotation(self.result, my_ScaffXML)
 
         expectation = "Scaffold coordinates: (327,330,400,403,409); scaffold residues: (E,R,F,G,G); expected: (E,R,F,G,G); matchArray: (True,True,True,True,True); emission probability array (n.d.,n.d.,n.d.,n.d.,n.d.); overall match: TRUE"
 
         self.assertEqual(resultline, expectation, "scaffold line mismatch")
 
     def test_get_prediction_annotation(self):
-        "Test active_site_finder._get_prediction_annotation method"
         my_ChoicesXML = self.etree_obj.findall('./analysis/Alignment/choice')
 
         (choiceList, predictionList) = active_site_finder.get_prediction_annotation(self.result, my_ChoicesXML)
@@ -172,10 +165,8 @@ class TestASF(unittest.TestCase):
         expected = ["Full match for prediction: active site cystein present"]
         self.assertListEqual(predictionList, expected, "prediction string mismatch")
 
-    def test__execute_tool(self):
-        "Test active_site_finder._execute_tool method"
+    def test_execute_tool(self):
         self.tt = TraceTracker()
-
 
         class NamePrinter(TraceTracker):
             def call(self, func_name, *args, **kw):
@@ -188,7 +179,7 @@ class TestASF(unittest.TestCase):
 
         mock('SearchIO.parse', returns=["SearchIO object"], tracker=self.tt2)
 
-        result = self.my_ASF._execute_tool(self.etree_obj.find('./analysis'), fileName="testTempfile")
+        result = active_site_finder.execute_tool(self.etree_obj.find('./analysis'), fileName="testTempfile")
 
         self.assertListEqual(result, ["SearchIO object"])
 
@@ -208,7 +199,7 @@ class TestASF(unittest.TestCase):
 
         mock('SearchIO.parse', returns=["SearchIO object"], tracker=self.tt2)
 
-        result = self.my_ASF._execute_tool(self.etree_obj.find('./analysis'), stdin_data="fasta sequence from stdin")
+        result = active_site_finder.execute_tool(self.etree_obj.find('./analysis'), stdin_data="fasta sequence from stdin")
 
         self.assertListEqual(result, ["SearchIO object"])
 
@@ -225,23 +216,19 @@ class TestASF(unittest.TestCase):
         self.tt = TraceTracker()
         del self.tt2
 
-    def test__run_external_tool(self):
-        "Test active_site_finder._run_external_tool method"
-
+    def test_run_external_tool(self):
         self.tt = TraceTracker()
 
         targets = [pfam for pfam in self.record.get_pfam_domains() if pfam.domain == "p450"]
         assert len(targets) == 6
 
-        mock('active_site_finder.active_site_finder._execute_tool', returns=["external program call successful"], tracker=self.tt)
+        mock('active_site_finder.execute_tool', returns=["external program call successful"], tracker=self.tt)
 
-        result = self.my_ASF._run_external_tool(self.etree_obj.find('./analysis'), targets)
+        result = active_site_finder.run_external_tool(self.etree_obj.find('./analysis'), targets)
         expected = ["external program call successful"]
         self.assertListEqual(result, expected)
 
     def test_fix_coordinates(self):
-        "Test active_site_finder._fix_coordinates method"
-
         seq = "lsgpeavkevlikkgeefs..grgdeallatsrkafkgkgvlfangekwkklRrfltptltsf.klsleelveeeaedlv"
 
         coord = active_site_finder.fix_coordinates(10, seq)
@@ -260,7 +247,6 @@ class TestASF(unittest.TestCase):
             coord = active_site_finder.fix_coordinates(77, seq)
 
     def test_check_prereqs(self):
-        "Test active_site_finder.check_prereqs method"
         # THIS TEST HAS TO BE UPDATED WHEN NEW PROFILES ARE ADDED TO THE MODULE!
 
         self.tt = TraceTracker()

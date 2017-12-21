@@ -222,6 +222,219 @@ def filter_features_by_qualifier(features, query_tag, query_value):
     return filtered_features
 
 
+def get_scaffold_annotation(result, scaffoldXML):
+    "generate annotation from scaffold information"
+
+    query_seq = result.hsps[0].aln[0].seq
+    hmm_seq = result.hsps[0].aln[1].seq
+    scaffoldPos = scaffoldXML.find('./scaffoldOffset').text
+    scaffoldValue = scaffoldXML.find('./scaffoldValue').text
+    if scaffoldXML.find('./scaffoldEmission'):
+        scaffoldEmissionList = scaffoldXML.find('./scaffoldEmission').text.split(',')
+    else:
+        scaffoldEmissionList = []
+    scaffoldPosList = scaffoldPos.split(',')
+    scaffoldValueList = scaffoldValue.split(',')
+
+    overallMatch = True
+
+    # Calculate and print match overview line and print alignment and match line
+    matchLineStr = []
+    for i in range(0, len(hmm_seq)):
+        offset = i + result.hsps[0].hit_start + 1
+        if hmm_seq[i] == ".":
+            matchLineStr.append(" ")
+        if str(offset) in scaffoldPosList:
+            matchLineStr.append("*")
+        else:
+            matchLineStr.append(" ")
+    logging.debug("%s %s..%s", query_seq, result.hsps[0].query_start, result.hsps[0].query_end)
+    logging.debug("%s %s..%s", hmm_seq, result.hsps[0].hit_start, result.hsps[0].hit_end)
+    logging.debug("".join(matchLineStr))
+
+    # Check scaffold matches
+
+    extracted_aa_List = []
+    match_List = []
+    emission_List = []
+
+    skip = False
+    for i in range(0, len(scaffoldPosList)):
+
+        scafPos = int(scaffoldPosList[i]) - 1
+        scafValue = scaffoldValueList[i]
+
+        # Check whether scafPos is within HSP coordinates
+        if (result.hsps[0].hit_start > scafPos) or (result.hsps[0].hit_end < scafPos):
+            logging.warning("scaffold coordinate %s outside hsp!", scafPos)
+            overallMatch = False
+            skip = True
+            break
+        # fix position for gap characters in hmm_hit
+        try:
+            fixedScafPos = fix_coordinates(scafPos - result.hsps[0].hit_start, hmm_seq)
+        except ValueError:
+            logging.error("gap-fixed scaffold coordinate %s outside hsp for original position: ", scafPos)
+            overallMatch = False
+            skip = True
+            break
+
+        # Check whether amino acid in hmm_seq[fixedScafPos] equals predifined aa from XML
+        # (should always match) and thus may be removed when the module is thoroughly tested
+        # This statement fails if the fixedScafPos is outside alignment due to gaps..., so I catch the exception...
+        try:
+            if hmm_seq[fixedScafPos].lower() != scafValue.lower():
+                logging.warning("ASF: aa extracted from hmm profile does not match predifined aa in XML config file!")
+        except IndexError:
+            logging.warning("gap-fixed scaffold coordinate %s outside hsp!", fixedScafPos)
+            overallMatch = False
+            skip = True
+            break
+
+        extracted_aa = query_seq[fixedScafPos]
+        extracted_aa_List.append(extracted_aa)
+        if scaffoldEmissionList:
+            extracted_aa_Emission = int(scaffoldEmissionList[i])
+        else:
+            extracted_aa_Emission = "n.d."
+        emission_List.append(extracted_aa_Emission)
+        match = False
+
+        # We have to use a RegEx here to allow negations and more complex queries; ignore case (?i)
+        if re.match("(?i)" + scafValue, query_seq[fixedScafPos]):
+            match = True
+        else:
+            overallMatch = False
+        match_List.append(str(match))
+        logging.debug("Scaffold coordinate %s; fixed scaffold coordinate %s, query aa %s; hmm aa %s; "
+                      "scaffold value %s; emission probability %s; match %s",
+                      scafPos, fixedScafPos, extracted_aa, hmm_seq[fixedScafPos], scafValue, extracted_aa_Emission, match)
+
+    logging.debug("Overall Scaffold Match: %s\n", str(overallMatch).upper())
+
+    # Generate Feature qualifiers
+
+    if not skip:
+        ASF_string = ("Scaffold coordinates: (%s); scaffold residues: (%s); expected: (%s); matchArray: (%s); "
+                      "emission probability array (%s); overall match: %s") % (
+                     ",".join(scaffoldPosList), ",".join(extracted_aa_List), ",".join(scaffoldValueList),
+                     ",".join(match_List), ",".join(emission_List), str(overallMatch).upper())
+
+        # logging.debug("adding ASF info to %s %s..%s:" % (SeqFeature.type, SeqFeature.location.start,
+        # SeqFeature.location.end))
+        return ASF_string
+    return
+
+
+def execute_tool(analysisResource, fileName=None, stdin_data=None):
+    "Perform the external program execution"
+
+    cmdlineList = []
+
+    # Assemble commad line list
+
+    # extract program name from XML
+    executeObj = analysisResource.find('./Execute')
+    cmdlineList.append(executeObj.attrib['program'])
+
+    # Cycle through parameters in XML
+    for parameter in list(analysisResource.findall('./Execute/parameters/parameter')):
+
+        if 'prefix' in parameter.attrib:
+            cmdlineList.append(parameter.attrib['prefix'])
+        cmdlineList.append(parameter.text)
+
+    # Get database name
+    database = analysisResource.find('./Execute/database')
+    if 'prefix' in database.attrib:
+        cmdlineList.append(database.attrib['prefix'])
+    # Add searchpath
+    cmdlineList.append(path.locate_file(path.get_full_path(__file__, "data", database.text)))
+
+    if fileName:
+        # Get (optional) input file prefix (e.g. -query in blast)
+        if 'inputfile_prefix' in executeObj.attrib:
+            cmdlineList.append(executeObj.attrib['inputfile_prefix'])
+        cmdlineList.append(fileName)
+
+    if stdin_data:
+        # Get (optional) prefix for stdin (e.g. "-" for hmmpfam / hmmscan
+        if 'STDINprefix' in executeObj.attrib:
+            cmdlineList.append(executeObj.attrib['STDINprefix'])
+
+    logging.debug("ASF: %s; external program call:\n%s", analysisResource.attrib['name'], " ".join(cmdlineList))
+
+    try:
+        if fileName:
+            logging.debug("Executing tool with file input")
+            result = subprocessing.execute(cmdlineList)
+        else:
+            logging.debug("Executing tools with STDIN input: %s", stdin_data)
+            result = subprocessing.execute(cmdlineList, stdin=stdin_data)
+    except OSError:
+        logging.warning('OS error on execution of: %s', " ".join(cmdlineList))
+        return []
+    if not result.successful():
+        logging.warning('%s returned %s', cmdlineList[0], result.exit_code)
+        return []
+    res_stream = StringIO(result.stdout)
+    logging.debug('External program output: %s', res_stream)
+
+    # Get Biopython parser information from XML
+    biopython_parser = analysisResource.find('./Execute/BioPythonParser')
+    try:
+        results = list(SearchIO.parse(res_stream, biopython_parser.text))
+    except Exception as e:
+        logging.warning('Error parsing results for active site finder analysis: %s ; no hits will be reported', e)
+        results = []
+
+    return results
+
+def run_external_tool(analysisResource, features):
+    "Generate tempfile containing the extracted Feature sequences and run tool defined in XML file"
+
+    # write fasta file for the features to tempfile
+    # FastA headers will be a simple numerical index to avoid names that
+    # are too long for tools
+
+    tempfile = ""
+    fastafile = []
+    for n, feature in enumerate(features):
+        fastaHeader = "feature%d" % n
+        fastaSeq = feature.translation
+        # Never write empty fasta entries
+        if not fastaSeq:
+            logging.warning("No translation for %s, skipping", fastaHeader)
+            continue
+        fastafile.append(">%s\n" % fastaHeader)
+        fastafile.append("%s\n" % fastaSeq)
+    querydata = "".join(fastafile)
+
+    UseSTDIN = "False"
+    executeObj = analysisResource.find('./Execute')
+    if 'UseSTDIN' in executeObj.attrib:
+        UseSTDIN = executeObj.attrib['UseSTDIN']
+
+    if not fastafile:
+        logging.warning("ASP: No features found containing feature/tag/value %s / %s / %s",
+                     analysisResource.find('./Prerequisite/primary_tag_type').text,
+                     analysisResource.find('./Prerequisite/tag').text,
+                     analysisResource.find('./Prerequisite/tag_value').text)
+        return []
+
+    results = []
+    if UseSTDIN == "True":
+        results = execute_tool(analysisResource, stdin_data=querydata)
+    else:
+        with NamedTemporaryFile(prefix='antiSMASH_ASP') as tempfile:
+            out_file = open(tempfile.name, "w")
+            out_file.write(querydata)
+            out_file.close()
+            results = execute_tool(analysisResource, fileName=tempfile.name)
+
+    return results
+
+
 class active_site_finder(object):
     """Active site finder class; perfoms analysis of active sites
     identified from reference aa positions of HMM profiles"""
@@ -292,7 +505,7 @@ class active_site_finder(object):
 
             # write multi-fasta tempfile with domain aa sequences and execute tool as defined in XML file
             # and parse with Biopython SearchIO
-            results = self._run_external_tool(analysisResource, SeqFeatureList)
+            results = run_external_tool(analysisResource, SeqFeatureList)
             logging.debug("found %s hsps in hmmer results", len(results))
 
             # Now cycle through all results for this analysis and associate the results
@@ -311,9 +524,8 @@ class active_site_finder(object):
                                       result.hsps[0].aln[0].id, result.id)
                     break
 
-                has_annotation = False
                 # identify scaffolds and annotate
-                ASF_string = self._get_scaffold_annotation(result, scaffoldXML)
+                ASF_string = get_scaffold_annotation(result, scaffoldXML)
 
                 note = None
                 scaffold = []
@@ -439,214 +651,3 @@ class active_site_finder(object):
                 break
 
         return failure_messages
-
-    def _get_scaffold_annotation(self, result, scaffoldXML):
-        "generate annotation from scaffold information"
-
-        query_seq = result.hsps[0].aln[0].seq
-        hmm_seq = result.hsps[0].aln[1].seq
-        scaffoldPos = scaffoldXML.find('./scaffoldOffset').text
-        scaffoldValue = scaffoldXML.find('./scaffoldValue').text
-        if scaffoldXML.find('./scaffoldEmission'):
-            scaffoldEmissionList = scaffoldXML.find('./scaffoldEmission').text.split(',')
-        else:
-            scaffoldEmissionList = []
-        scaffoldPosList = scaffoldPos.split(',')
-        scaffoldValueList = scaffoldValue.split(',')
-
-        overallMatch = True
-
-        # Calculate and print match overview line and print alignment and match line
-        matchLineStr = []
-        for i in range(0, len(hmm_seq)):
-            offset = i + result.hsps[0].hit_start + 1
-            if hmm_seq[i] == ".":
-                matchLineStr.append(" ")
-            if str(offset) in scaffoldPosList:
-                matchLineStr.append("*")
-            else:
-                matchLineStr.append(" ")
-        logging.debug("%s %s..%s", query_seq, result.hsps[0].query_start, result.hsps[0].query_end)
-        logging.debug("%s %s..%s", hmm_seq, result.hsps[0].hit_start, result.hsps[0].hit_end)
-        logging.debug("".join(matchLineStr))
-
-        # Check scaffold matches
-
-        extracted_aa_List = []
-        match_List = []
-        emission_List = []
-
-        skip = False
-        for i in range(0, len(scaffoldPosList)):
-
-            scafPos = int(scaffoldPosList[i]) - 1
-            scafValue = scaffoldValueList[i]
-
-            # Check whether scafPos is within HSP coordinates
-            if (result.hsps[0].hit_start > scafPos) or (result.hsps[0].hit_end < scafPos):
-                logging.warning("scaffold coordinate %s outside hsp!", scafPos)
-                overallMatch = False
-                skip = True
-                break
-            # fix position for gap characters in hmm_hit
-            try:
-                fixedScafPos = fix_coordinates(scafPos - result.hsps[0].hit_start, hmm_seq)
-            except ValueError:
-                logging.error("gap-fixed scaffold coordinate %s outside hsp for original position: ", scafPos)
-                overallMatch = False
-                skip = True
-                break
-
-            # Check whether amino acid in hmm_seq[fixedScafPos] equals predifined aa from XML
-            # (should always match) and thus may be removed when the module is thoroughly tested
-            # This statement fails if the fixedScafPos is outside alignment due to gaps..., so I catch the exception...
-            try:
-                if hmm_seq[fixedScafPos].lower() != scafValue.lower():
-                    logging.warning("ASF: aa extracted from hmm profile does not match predifined aa in XML config file!")
-            except IndexError:
-                logging.warning("gap-fixed scaffold coordinate %s outside hsp!", fixedScafPos)
-                overallMatch = False
-                skip = True
-                break
-
-            extracted_aa = query_seq[fixedScafPos]
-            extracted_aa_List.append(extracted_aa)
-            if scaffoldEmissionList:
-                extracted_aa_Emission = int(scaffoldEmissionList[i])
-            else:
-                extracted_aa_Emission = "n.d."
-            emission_List.append(extracted_aa_Emission)
-            match = False
-
-            # We have to use a RegEx here to allow negations and more complex queries; ignore case (?i)
-            if re.match("(?i)" + scafValue, query_seq[fixedScafPos]):
-                match = True
-            else:
-                overallMatch = False
-            match_List.append(str(match))
-            logging.debug("Scaffold coordinate %s; fixed scaffold coordinate %s, query aa %s; hmm aa %s; "
-                          "scaffold value %s; emission probability %s; match %s",
-                          scafPos, fixedScafPos, extracted_aa, hmm_seq[fixedScafPos], scafValue, extracted_aa_Emission, match)
-
-        logging.debug("Overall Scaffold Match: %s\n", str(overallMatch).upper())
-
-        # Generate Feature qualifiers
-
-        if not skip:
-            ASF_string = ("Scaffold coordinates: (%s); scaffold residues: (%s); expected: (%s); matchArray: (%s); "
-                          "emission probability array (%s); overall match: %s") % (
-                         ",".join(scaffoldPosList), ",".join(extracted_aa_List), ",".join(scaffoldValueList),
-                         ",".join(match_List), ",".join(emission_List), str(overallMatch).upper())
-
-            # logging.debug("adding ASF info to %s %s..%s:" % (SeqFeature.type, SeqFeature.location.start,
-            # SeqFeature.location.end))
-            return ASF_string
-        return
-
-    def _run_external_tool(self, analysisResource, features):
-        "Generate tempfile containing the extracted Feature sequences and run tool defined in XML file"
-
-        # write fasta file for the features to tempfile
-        # FastA headers will be a simple numerical index to avoid names that
-        # are too long for tools
-
-        tempfile = ""
-        fastafile = []
-        for n, feature in enumerate(features):
-            fastaHeader = "feature%d" % n
-            fastaSeq = feature.translation
-            # Never write empty fasta entries
-            if not fastaSeq:
-                logging.warning("No translation for %s, skipping", fastaHeader)
-                continue
-            fastafile.append(">%s\n" % fastaHeader)
-            fastafile.append("%s\n" % fastaSeq)
-        querydata = "".join(fastafile)
-
-        UseSTDIN = "False"
-        executeObj = analysisResource.find('./Execute')
-        if 'UseSTDIN' in executeObj.attrib:
-            UseSTDIN = executeObj.attrib['UseSTDIN']
-
-        if not fastafile:
-            logging.warning("ASP: No features found containing feature/tag/value %s / %s / %s",
-                         analysisResource.find('./Prerequisite/primary_tag_type').text,
-                         analysisResource.find('./Prerequisite/tag').text,
-                         analysisResource.find('./Prerequisite/tag_value').text)
-            return []
-
-        results = []
-        if UseSTDIN == "True":
-            results = self._execute_tool(analysisResource, stdin_data=querydata)
-        else:
-            with NamedTemporaryFile(prefix='antiSMASH_ASP') as tempfile:
-                out_file = open(tempfile.name, "w")
-                out_file.write(querydata)
-                out_file.close()
-                results = self._execute_tool(analysisResource, fileName=tempfile.name)
-
-        return results
-
-    def _execute_tool(self, analysisResource, fileName=None, stdin_data=None):
-        "Perform the external program execution"
-
-        cmdlineList = []
-
-        # Assemble commad line list
-
-        # extract program name from XML
-        executeObj = analysisResource.find('./Execute')
-        cmdlineList.append(executeObj.attrib['program'])
-
-        # Cycle through parameters in XML
-        for parameter in list(analysisResource.findall('./Execute/parameters/parameter')):
-
-            if 'prefix' in parameter.attrib:
-                cmdlineList.append(parameter.attrib['prefix'])
-            cmdlineList.append(parameter.text)
-
-        # Get database name
-        database = analysisResource.find('./Execute/database')
-        if 'prefix' in database.attrib:
-            cmdlineList.append(database.attrib['prefix'])
-        # Add searchpath
-        cmdlineList.append(path.locate_file(path.get_full_path(__file__, "data", database.text)))
-
-        if fileName:
-            # Get (optional) input file prefix (e.g. -query in blast)
-            if 'inputfile_prefix' in executeObj.attrib:
-                cmdlineList.append(executeObj.attrib['inputfile_prefix'])
-            cmdlineList.append(fileName)
-
-        if stdin_data:
-            # Get (optional) prefix for stdin (e.g. "-" for hmmpfam / hmmscan
-            if 'STDINprefix' in executeObj.attrib:
-                cmdlineList.append(executeObj.attrib['STDINprefix'])
-
-        logging.debug("ASF: %s; external program call:\n%s", analysisResource.attrib['name'], " ".join(cmdlineList))
-
-        try:
-            if fileName:
-                logging.debug("Executing tool with file input")
-                result = subprocessing.execute(cmdlineList)
-            else:
-                logging.debug("Executing tools with STDIN input: %s", stdin_data)
-                result = subprocessing.execute(cmdlineList, stdin=stdin_data)
-        except OSError:
-            logging.warning('OS error on execution of: %s', " ".join(cmdlineList))
-            return []
-        if not result.successful():
-            logging.warning('%s returned %s', cmdlineList[0], result.exit_code)
-            return []
-        res_stream = StringIO(result.stdout)
-        logging.debug('External program output: %s', res_stream)
-
-        # Get Biopython parser information from XML
-        biopython_parser = analysisResource.find('./Execute/BioPythonParser')
-        try:
-            results = list(SearchIO.parse(res_stream, biopython_parser.text))
-        except Exception as e:
-            logging.warning('Error parsing results for active site finder analysis: %s ; no hits will be reported', e)
-            results = []
-
-        return results
