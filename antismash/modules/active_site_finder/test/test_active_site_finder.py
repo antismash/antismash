@@ -57,7 +57,6 @@ class TestASF(unittest.TestCase):
         assert len(self.record.get_antismash_domains()) == 34
 
         xmltext = """<?xml version="1.0" encoding="UTF-8"?>
-
 <resource xmlns:xsd="http://www.w3.org/2001/XMLSchema"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <analysis name='ASP_P450Oxy' type="active_site">
@@ -112,72 +111,65 @@ class TestASF(unittest.TestCase):
 
         assert isinstance(asf, active_site_finder.active_site_finder)
 
-        self.my_ASF = asf
+        self.asf_obj = asf
+
+    def tearDown(self):
+        restore()
 
     def test__init(self):
-        self.tt = TraceTracker()
+        tracker = TraceTracker()
 
-        class dummyET:
+        class DummyET:
             def getroot(self):
-                return dummyET()
+                return DummyET()
 
             def findall(self, _dummy):
                 return "ET-Subtree"
 
-        mock('ET.parse', returns=dummyET(), tracker=self.tt)
-        mock('active_site_finder.active_site_finder.check_prereqs', returns=[], tracker=self.tt)
-
-        expected = """    Called ET.parse(
-        '{0}/config/SignatureResources.xml')""".format(self.asf_path)
-
-        active_site_finder.active_site_finder(self.record, self.options)
-
-        assert_same_trace(self.tt, expected)
-
-        # restore mocked objects that other tests can run with the original code
-        restore()
-        self.tt = TraceTracker()
+        mock('ET.parse', returns=DummyET(), tracker=tracker)
+        mock('active_site_finder.active_site_finder.check_prereqs', returns=[], tracker=tracker)
 
         # now acutally generate ASF object
+        expected = """Called ET.parse(\n    '{0}/config/SignatureResources.xml')""".format(self.asf_path)
         asf = active_site_finder.active_site_finder(self.record, self.options)
+        assert_same_trace(tracker, expected)
 
         assert isinstance(asf, active_site_finder.active_site_finder)
 
-        self.my_ASF = asf
+        self.asf_obj = asf
 
     def test_get_scaffold_annotation(self):
-        my_ScaffXML = self.etree_obj.find('./analysis/Alignment/scaffold')
+        scaffold = self.etree_obj.find('./analysis/Alignment/scaffold')
 
-        resultline = active_site_finder.get_scaffold_annotation(self.result, my_ScaffXML)
+        resultline = active_site_finder.get_scaffold_annotation(self.result, scaffold)
 
         expectation = "Scaffold coordinates: (327,330,400,403,409); scaffold residues: (E,R,F,G,G); expected: (E,R,F,G,G); matchArray: (True,True,True,True,True); emission probability array (n.d.,n.d.,n.d.,n.d.,n.d.); overall match: TRUE"
 
         self.assertEqual(resultline, expectation, "scaffold line mismatch")
 
     def test_get_prediction_annotation(self):
-        my_ChoicesXML = self.etree_obj.findall('./analysis/Alignment/choice')
+        all_choices = self.etree_obj.findall('./analysis/Alignment/choice')
 
-        (choiceList, predictionList) = active_site_finder.get_prediction_annotation(self.result, my_ChoicesXML)
+        choices, predictions = active_site_finder.get_prediction_annotation(self.result, all_choices)
 
         expected = ["Description: Cytochrome P450 oxygenase active site cystein; coordinates heme Fe ligand, choice result: active site cystein present, choice coordinates: (407); residues: (C); expected for choice: (C); matchArray: (True); emission probability array (n.d.); overall match: TRUE"]
-        self.assertListEqual(choiceList, expected, "prediction choices mismatch")
+        assert choices == expected, "prediction choices mismatch"
 
         expected = ["Full match for prediction: active site cystein present"]
-        self.assertListEqual(predictionList, expected, "prediction string mismatch")
+        assert predictions == expected, "prediction string mismatch"
 
     def test_execute_tool(self):
-        self.tt = TraceTracker()
-
         class NamePrinter(TraceTracker):
             def call(self, func_name, *args, **kw):
                 msg = 'Called %s()\n' % func_name
                 self.file.write(msg)
 
-        self.tt2 = NamePrinter()
+        tracker = TraceTracker()
+        simple_tracker = NamePrinter()
         dummy_run_result = subprocessing.RunResult('', "shell output".encode("utf-8"), "", 0, piped_out=True, piped_err=False)
-        mock('subprocessing.execute', returns=dummy_run_result, tracker=self.tt)
+        mock('subprocessing.execute', returns=dummy_run_result, tracker=tracker)
 
-        mock('SearchIO.parse', returns=["SearchIO object"], tracker=self.tt2)
+        mock('SearchIO.parse', returns=["SearchIO object"], tracker=simple_tracker)
 
         result = active_site_finder.execute_tool(self.etree_obj.find('./analysis'), fileName="testTempfile")
 
@@ -186,18 +178,17 @@ class TestASF(unittest.TestCase):
         expected = """        Called subprocessing.execute(
             ['hmmscan', '--domE', '0.1', '--cpu', '1', '{0}/data/p450.hmm3', 'testTempfile'])
       """.format(self.asf_path)
-        assert_same_trace(self.tt, expected)
+        assert_same_trace(tracker, expected)
 
         expected = "   Called SearchIO.parse()"
-        assert_same_trace(self.tt2, expected)
+        assert_same_trace(simple_tracker, expected)
 
         restore()
+        tracker.clear()
+        simple_tracker.clear()
 
-        self.tt.clear()
-        self.tt2.clear()
-        mock('subprocessing.execute', returns=dummy_run_result, tracker=self.tt)
-
-        mock('SearchIO.parse', returns=["SearchIO object"], tracker=self.tt2)
+        mock('subprocessing.execute', returns=dummy_run_result, tracker=tracker)
+        mock('SearchIO.parse', returns=["SearchIO object"], tracker=simple_tracker)
 
         result = active_site_finder.execute_tool(self.etree_obj.find('./analysis'), stdin_data="fasta sequence from stdin")
 
@@ -207,22 +198,18 @@ class TestASF(unittest.TestCase):
     ['hmmscan', '--domE', '0.1', '--cpu', '1', '{0}/data/p450.hmm3'],
     stdin='fasta sequence from stdin')
       """.format(self.asf_path)
-        assert_same_trace(self.tt, expected)
+        assert_same_trace(tracker, expected)
 
         expected = "Called SearchIO.parse()"
-        assert_same_trace(self.tt2, expected)
-
-        restore()
-        self.tt = TraceTracker()
-        del self.tt2
+        assert_same_trace(simple_tracker, expected)
 
     def test_run_external_tool(self):
-        self.tt = TraceTracker()
+        tracker = TraceTracker()
 
         targets = [pfam for pfam in self.record.get_pfam_domains() if pfam.domain == "p450"]
         assert len(targets) == 6
 
-        mock('active_site_finder.execute_tool', returns=["external program call successful"], tracker=self.tt)
+        mock('active_site_finder.execute_tool', returns=["external program call successful"], tracker=tracker)
 
         result = active_site_finder.run_external_tool(self.etree_obj.find('./analysis'), targets)
         expected = ["external program call successful"]
@@ -249,14 +236,14 @@ class TestASF(unittest.TestCase):
     def test_check_prereqs(self):
         # THIS TEST HAS TO BE UPDATED WHEN NEW PROFILES ARE ADDED TO THE MODULE!
 
-        self.tt = TraceTracker()
+        tracker = TraceTracker()
         discard_tracker = TraceTracker()
 
-        mock('path.locate_executable', returns="/my/path/to/executable", tracker=self.tt)
-        mock('path.locate_file', returns="/my/path/to/file", tracker=self.tt)
+        mock('path.locate_executable', returns="/my/path/to/executable", tracker=tracker)
+        mock('path.locate_file', returns="/my/path/to/file", tracker=tracker)
         mock('os.path.getmtime', returns_iter=[2, 1, 4, 3, 6, 5, 8, 7], tracker=discard_tracker)
 
-        result = self.my_ASF.check_prereqs()
+        result = self.asf_obj.check_prereqs()
 
         self.assertListEqual(result, [], "return empty list if executables/files are found")
 
@@ -292,16 +279,16 @@ Called path.locate_file(
     '{0}/data/p450.hmm3.h3m')
 Called path.locate_file(
     '{0}/data/p450.hmm3.h3p')""".format(self.asf_path)
-        assert_same_trace(self.tt, expected)
+        assert_same_trace(tracker, expected)
 
         restore()
-        self.tt = TraceTracker()
+        tracker = TraceTracker()
 
-        mock('path.locate_executable', returns=None, tracker=self.tt)
-        mock('path.locate_file', returns="/my/path/to/file", tracker=self.tt)
+        mock('path.locate_executable', returns=None, tracker=tracker)
+        mock('path.locate_file', returns="/my/path/to/file", tracker=tracker)
         mock('os.path.getmtime', returns_iter=[2, 1, 4, 3, 6, 5, 8, 7], tracker=discard_tracker)
 
-        result = self.my_ASF.check_prereqs()
+        result = self.asf_obj.check_prereqs()
         expected = [
             "Failed to locate file: 'blastp'",
             "Failed to locate file: 'hmmpfam2'",
@@ -309,4 +296,3 @@ Called path.locate_file(
             "Failed to locate file: 'hmmpress'",
         ]
         self.assertListEqual(result, expected, "test result if file not found. %r vs %r" % (result, expected))
-        restore()
