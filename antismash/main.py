@@ -29,7 +29,7 @@ from antismash.common.secmet import Record
 from antismash.detection import genefinding, hmm_detection, nrps_pks_domains, full_hmmer, \
                                 cassis, clusterfinder, cluster_hmmer
 from antismash.modules import tta, clusterblast, lanthipeptides, smcogs, dummy, \
-                              nrps_pks, thiopeptides, sactipeptides, lassopeptides
+                              nrps_pks, thiopeptides, sactipeptides, lassopeptides, active_site_finder
 from antismash.outputs import html, svg
 
 __version__ = "5.0.0alpha"
@@ -70,7 +70,7 @@ def get_analysis_modules() -> List[ModuleType]:
             a list of modules
     """
     return [smcogs, tta, lanthipeptides, thiopeptides, nrps_pks, clusterblast,
-            sactipeptides, lassopeptides, dummy]
+            sactipeptides, lassopeptides, active_site_finder, dummy]
 
 
 def get_output_modules() -> List[ModuleType]:
