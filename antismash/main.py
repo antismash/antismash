@@ -415,6 +415,7 @@ def annotate_records(results) -> None:
         Returns:
             None
     """
+    detection_module_names = {mod.__name__ for mod in get_detection_modules()}
     for record, record_results in zip(results.records, results.results):
         if record.skip:
             logging.debug("Not annotating skipped record %s: %s", record.id, record.skip)
@@ -425,6 +426,8 @@ def annotate_records(results) -> None:
         logging.debug("Annotating record %s with results from: %s", record.id,
                       ", ".join([name.split()[0].split('.')[-1] for name in record_results]))
         for module, result in record_results.items():
+            if module in detection_module_names:
+                continue
             logging.debug(" Adding results from %s", module)
             assert isinstance(result, ModuleResults), type(result)
             result.add_to_record(record)
