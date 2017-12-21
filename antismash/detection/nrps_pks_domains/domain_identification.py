@@ -12,7 +12,8 @@ from Bio.SeqFeature import FeatureLocation
 from antismash.common import path, subprocessing, utils
 from antismash.common.fasta import get_fasta_from_features
 from antismash.common.hmmscan_refinement import refine_hmmscan_results, HMMResult
-from antismash.common.secmet import CDSFeature, CDSMotif, Record
+from antismash.common.secmet.record import Record
+from antismash.common.secmet.feature import AntismashDomain, CDSFeature, CDSMotif
 
 
 def annotate_domains(record: Record) -> None:
@@ -39,6 +40,12 @@ def annotate_domains(record: Record) -> None:
         domains = cds_domains.get(cds_name)
         if not domains:
             continue
+
+        # generate domain features
+        domain_features = generate_domain_features(record, cds, domains)
+        for domain_feature in domain_features:
+            record.add_antismash_domain(domain_feature)
+
         domain_type = classify_feature([domain.hit_id for domain in domains])
         cds.nrps_pks.type = domain_type
 
@@ -222,7 +229,63 @@ def classify_feature(domain_names: List[str]) -> str:
     return classification
 
 
-def generate_motif_features(record: Record, feature: CDSFeature, motifs: List[HMMResult]) -> List[CDSMotif]:
+def generate_domain_features(record, gene: CDSFeature, domains: List[HMMResult]) -> List[AntismashDomain]:
+    new_features = []
+    nrat = 0
+    nra = 0
+    nrcal = 0
+    nrkr = 0
+    nrXdom = 0
+    for domain in domains:
+        # calculate respective positions based on aa coordinates
+        if gene.location.strand == 1:
+            start = gene.location.start + 3 * domain.query_start
+            end = gene.location.start + 3 * domain.query_end
+        else:
+            end = gene.location.end - 3 * domain.query_start
+            start = gene.location.end - 3 * domain.query_end
+        loc = FeatureLocation(start, end, strand=gene.location.strand)
+
+        # set up new feature
+        new_feature = AntismashDomain(loc)
+        new_feature.domain = domain.hit_id
+        new_feature.locus_tag = gene.locus_tag
+        new_feature.detection = "hmmscan"
+        new_feature.database = "nrpspksdomains.hmm"
+        new_feature.evalue = domain.evalue
+        new_feature.score = domain.bitscore
+
+        transl_table = gene.transl_table or 1
+        new_feature.translation = str(new_feature.extract(record.seq).translate(table=transl_table))
+
+        if domain.hit_id == "AMP-binding":
+            nra += 1
+            domainname = "{}_A{}".format(gene.get_name(), nra)
+            new_feature.label = domainname
+            new_feature.domain_id = "nrpspksdomains_" + domainname
+        elif domain.hit_id == "PKS_AT":
+            nrat += 1
+            domainname = "{}_AT{}".format(gene.get_name(), nrat)
+            new_feature.label = domainname
+            new_feature.domain_id = "nrpspksdomains_" + domainname
+        elif domain.hit_id == "CAL_domain":
+            nrcal += 1
+            domainname = gene.get_name() + "_CAL" + str(nrcal)
+            new_feature.label = domainname
+            new_feature.domain_id = "nrpspksdomains_" + domainname
+        elif domain.hit_id == "PKS_KR":
+            nrkr += 1
+            domainname = gene.get_name() + "_KR" + str(nrkr)
+            new_feature.label = domainname
+            new_feature.domain_id = "nrpspksdomains_" + domainname
+        else:
+            nrXdom += 1
+            new_feature.domain_id = "nrpspksdomains_" + gene.get_name().partition(".")[0] + "_Xdom"+'{:02d}'.format(nrXdom)
+        new_features.append(new_feature)
+    return new_features
+
+
+def generate_motif_features(record: Record, feature: CDSFeature, motifs) -> List[CDSMotif]:
     """ Convert a list of HMMResult to a list of CDSMotif features """
     # use a locus tag if one exists
     locus_tag = feature.get_name()
