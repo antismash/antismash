@@ -238,7 +238,7 @@ def run_hmmpress(hmmfile: str) -> RunResult:
     return run_result
 
 
-def run_hmmpfam2(query_hmmfile: str, target_sequence: str) -> List:  # TODO cleanup
+def run_hmmpfam2(query_hmmfile: str, target_sequence: str, extra_args: List[str] = None) -> List:  # TODO cleanup
     """ Run hmmpfam2 over the provided HMM file and fasta input
 
         Arguments:
@@ -249,13 +249,15 @@ def run_hmmpfam2(query_hmmfile: str, target_sequence: str) -> List:  # TODO clea
             a list of results as parsed by SearchIO
     """
     config = get_config()
-    command = ["hmmpfam2", "--cpu", str(config.cpus),
-               query_hmmfile, '-']
+    command = ["hmmpfam2"]
 
     # Allow to disable multithreading for HMMer2 calls in the command line #TODO fix options for this
     if config.get('hmmer2') and 'multithreading' in config.hmmer2 and \
-            not config.hmmer2.multithreading:
-        command = command[0:1] + command[3:]
+            config.hmmer2.multithreading:
+        command.extend(["--cpu", str(config.cpus)])
+    if extra_args:
+        command.extend(extra_args)
+    command.extend([query_hmmfile, '-'])
 
     result = execute(command, stdin=target_sequence)
     if not result.successful():

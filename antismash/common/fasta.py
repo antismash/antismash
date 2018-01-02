@@ -11,11 +11,15 @@ from typing import Dict, List
 from antismash.common.secmet import CDSFeature, Record
 
 
-def get_fasta_from_features(features: List[CDSFeature]) -> str:
+def get_fasta_from_features(features: List[CDSFeature], numeric_names=False) -> str:
     """ Extract multi-protein FASTA from provided features """
     all_fastas = []
-    for feature in features:
-        all_fastas.append(">%s\n%s" % (feature.get_name(), feature.translation))
+    if not numeric_names:
+        for feature in features:
+            all_fastas.append(">%s\n%s" % (feature.get_name(), feature.translation))
+    else:
+        for i, feature in enumerate(features):
+            all_fastas.append(">%s\n%s" % (i, feature.translation))
     return "\n".join(all_fastas)
 
 
