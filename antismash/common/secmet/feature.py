@@ -6,39 +6,59 @@ from enum import Enum, unique
 import logging
 import os
 import warnings
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from helperlibs.bio import seqio
 
+from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 from Bio.SeqRecord import SeqRecord
 
+from .qualifiers import NRPSPKSQualifier, SecMetQualifier
+
 
 class Feature:
+    """ The base class of any feature. Contains only a location, the label of the
+        subclass, the 'notes' qualifier, and other qualifiers not tracked by any
+        subclass.
+    """
     __slots__ = ["location", "notes", "type", "_qualifiers"]
 
-    def __init__(self, location, feature_type):
+    def __init__(self, location: FeatureLocation, feature_type: str) -> None:
         assert isinstance(location, (FeatureLocation, CompoundLocation)), type(location)
         self.location = location
-        self.notes = []
+        self.notes = []  # type: List[str]
         assert feature_type
         self.type = str(feature_type)
-        self._qualifiers = OrderedDict()
+        self._qualifiers = OrderedDict()  # type: Dict[str, List[str]]
 
     @property
-    def strand(self):
+    def strand(self) -> int:
+        """ A simple wrapper to access the location strand directly.
+        """
         return self.location.strand
 
-    def extract(self, sequence):
+    def extract(self, sequence: Union[Seq, str]) -> Union[Seq, str]:
+        """ Extracts the section of the given sequence that this feature covers.
+
+            Return type is the same as the input type.
+        """
         return self.location.extract(sequence)
 
-    def get_qualifier(self, key):
+    def get_qualifier(self, key: str) -> Optional[Tuple]:
+        """ Fetches a qualifier by key and returns a tuple of items stored under
+            that key or None if the key was not present.
+        """
         qualifier = self._qualifiers.get(key)
         if qualifier:
             return tuple(qualifier)
         return None
 
-    def overlaps_with(self, other: Union["Feature", FeatureLocation]):
+    def overlaps_with(self, other: Union["Feature", FeatureLocation]) -> bool:
+        """ Returns True if the given feature overlaps with this feature.
+            This operation is commutative, a.overlaps_with(b) is equivalent to
+            b.overlaps_with(a).
+        """
         if isinstance(other, Feature):
             location = other.location
         elif isinstance(other, FeatureLocation):
@@ -50,7 +70,10 @@ class Feature:
                or location.start in self.location \
                or location.end - 1 in self.location
 
-    def is_contained_by(self, other: Union["Feature", FeatureLocation]):
+    def is_contained_by(self, other: Union["Feature", FeatureLocation]) -> bool:
+        """ Returns True if the given feature is wholly contained by this
+            feature.
+        """
         end = self.location.end - 1  # to account for the non-inclusive end
         if isinstance(other, Feature):
             return self.location.start in other.location and end in other.location
@@ -58,7 +81,12 @@ class Feature:
             return self.location.start in other and end in other
         raise TypeError("Container must be a Feature or a FeatureLocation, not %s" % type(other))
 
-    def to_biopython(self, qualifiers=None):
+    def to_biopython(self, qualifiers: Dict[str, Any] = None) -> List[SeqFeature]:
+        """ Converts this feature into one or more SeqFeature instances.
+
+            Subclasses must manage their own attributes and potential extra
+            features.
+        """
         feature = SeqFeature(self.location, type=self.type)
         quals = self._qualifiers.copy()
         notes = self._qualifiers.get("note", []) + self.notes
@@ -74,7 +102,7 @@ class Feature:
         assert isinstance(feature.qualifiers, dict)
         return [feature]
 
-    def __lt__(self, other):
+    def __lt__(self, other: "Feature") -> bool:
         """ Allows sorting Features by location without key complication """
         assert isinstance(other, Feature)
         if self.location.start < other.location.start:
@@ -83,14 +111,27 @@ class Feature:
             return self.location.end < other.location.end
         return False
 
-    def __str__(self):
+    def __str__(self) -> str:
         return repr(self)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "%s(%s)" % (self.type, self.location)
 
     @staticmethod
-    def from_biopython(bio_feature, feature=None, leftovers=None):
+    def from_biopython(bio_feature: SeqFeature, feature: "Feature" = None,
+                       leftovers: Dict[str, Any] = None) -> SeqFeature:
+        """ Converts a SeqFeature into a single Feature instance.
+
+            Arguments:
+                bio_feature: the SeqFeature to convert
+                feature: a optional Feature instance to update with the values
+                         this class tracks
+                leftovers: any qualifiers remaining from the original SeqFeature
+                           that have not been used by any subclass
+
+            Returns:
+                a Feature instance
+        """
         if feature is None:
             feature = Feature(bio_feature.location, bio_feature.type)
             if not leftovers:
@@ -102,7 +143,10 @@ class Feature:
         return feature
 
     @staticmethod
-    def make_qualifiers_copy(bio_feature):
+    def make_qualifiers_copy(bio_feature: SeqFeature) -> Dict[str, Any]:
+        """ Makes a shallow copy of a SeqFeature's qualifiers. Only the 'notes'
+            key will have a copy taken at a deeper level.
+        """
         qualifiers = bio_feature.qualifiers.copy()
         if "note" in qualifiers:
             qualifiers["note"] = qualifiers["note"].copy()
@@ -110,6 +154,7 @@ class Feature:
 
 
 class ClusterBorder(Feature):
+    """ A feature representing a cluster border """
     __slots__ = ["tool", "probability", "parent_cluster"]
 
     def __init__(self, location, tool, probability):
@@ -153,6 +198,7 @@ class ClusterBorder(Feature):
 
 
 class AntismashFeature(Feature):
+    """ A base class for all sub-CDS Antismash features """
     __slots__ = ["domain_id", "database", "detection", "_evalue", "label",
                  "locus_tag", "_score", "translation"]
 
@@ -170,6 +216,7 @@ class AntismashFeature(Feature):
 
     @property
     def score(self):
+        """ The bitscore reported by a tool when locating the feature """
         return self._score
 
     @score.setter
@@ -178,6 +225,7 @@ class AntismashFeature(Feature):
 
     @property
     def evalue(self):
+        """ The e-value reported by a tool when locating the feature """
         return self._evalue
 
     @evalue.setter
@@ -208,7 +256,7 @@ class AntismashFeature(Feature):
 
 
 class Domain(AntismashFeature):
-    __slots__ = ["tool", "domain", "domain_id"]
+    __slots__ = ["tool", "domain"]
 
     def __init__(self, location, feature_type):
         super().__init__(location, feature_type)
@@ -255,13 +303,15 @@ class CDSMotif(Domain):
 
 
 class PFAMDomain(Domain):
+    """ A feature representing a PFAM domain within a CDS.
+    """
     __slots__ = ["description", "db_xref"]
 
     def __init__(self, location: FeatureLocation, description: str) -> None:
         super().__init__(location, feature_type="PFAM_domain")
         assert isinstance(description, str)
         self.description = description
-        self.db_xref = []
+        self.db_xref = []  # type: List[str]
 
     def to_biopython(self, qualifiers=None):
         mine = OrderedDict()
@@ -297,8 +347,8 @@ class AntismashDomain(Domain):
         self.domain_subtype = None
         self.specificity = []
 
-    def to_biopython(self, qualifiers=None):
-        mine = OrderedDict()
+    def to_biopython(self, qualifiers=None) -> List[SeqFeature]:
+        mine = OrderedDict()  # type: Dict[str, List[str]]
         if self.domain_subtype:
             mine["domain_subtype"] = [self.domain_subtype]
         if self.specificity:
@@ -308,7 +358,7 @@ class AntismashDomain(Domain):
         return super().to_biopython(mine)
 
     @staticmethod
-    def from_biopython(bio_feature, feature=None, leftovers=None):
+    def from_biopython(bio_feature, feature=None, leftovers=None) -> "AntismashDomain":
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
         # grab mandatory qualifiers and create the class
@@ -326,13 +376,16 @@ class AntismashDomain(Domain):
 
 @unique
 class GeneFunction(Enum):
+    """ An Enum representing the function of a gene.
+        Allows for more flexible conversion and more robust value constraints.
+    """
     OTHER = 0
     CORE = 1
     ADDITIONAL = 2
     TRANSPORT = 3
     REGULATORY = 4
 
-    def __str__(self):
+    def __str__(self) -> str:
         # because this information ends up in the record, make these more
         # labels more meaningful for users
         if self == GeneFunction.CORE:
@@ -342,7 +395,10 @@ class GeneFunction(Enum):
         return str(self.name).lower()
 
     @staticmethod
-    def from_string(label):
+    def from_string(label: str) -> "GeneFunction":
+        """ Converts a string to a GeneFunction instance when possible.
+            Raises an error if not possible.
+        """
         for value in GeneFunction:
             if str(value) == label:
                 return value
@@ -350,9 +406,14 @@ class GeneFunction(Enum):
 
 
 class GeneFunctionAnnotations:
+    """ Tracks multiple annotations of gene functions. Each annotation contains
+        the declared function of the gene, which tool determined the function,
+        and a comment on how the determination was made.
+    """
     slots = ["_annotations", "_by_tool", "_by_function"]
 
     class GeneFunctionAnnotation:
+        """ A single instance of an annotation. """
         slots = ["function", "tool", "description"]
 
         def __init__(self, function: GeneFunction, tool: str, description: str) -> None:
@@ -382,6 +443,17 @@ class GeneFunctionAnnotations:
         return len(self._annotations)
 
     def add(self, function: GeneFunction, tool: str, description: str) -> "GeneFunctionAnnotations.GeneFunctionAnnotation":
+        """ Adds a gene function annotation. If an existing annotation has all
+            the same values as those provided, a duplicate will not be added.
+
+            Arguments:
+                function: a GeneFunction value
+                tool: a string naming the tool that determined the gene function
+                description: description text for storing extra information
+
+            Returns:
+                the GeneFunction added (or the existing one if duplicated)
+        """
         # if there's already an exactly similar function annotation, skip adding
         existing_functions = self._by_function.get(function, [])
         for existing in existing_functions:
@@ -393,24 +465,34 @@ class GeneFunctionAnnotations:
         self._annotations.append(new)
         return new
 
-    def add_from_qualifier(self, qualifier: List):
+    def add_from_qualifier(self, qualifier: List[str]):
+        """ Converts a string-based qualifier into one or more GeneFunctions and
+            adds them to the current set.
+            Expected format will be as per str(GeneFunctionAnnotation).
+        """
         for section in qualifier:
             function, tool, description = section.split(maxsplit=2)
             tool = tool[1:-1]  # strip the ()
             self.add(GeneFunction.from_string(function), tool, description)
 
     def get_by_tool(self, tool: str) -> Optional[List]:
+        """ Returns a list of all GeneFunctionAnnotations which were added with
+            the tool name provided.
+        """
         return self._by_tool.get(tool)
 
     def get_by_function(self, function: GeneFunction) -> Optional[List]:
+        """ Returns a list of GeneFunctionAnnotations which have the same
+            gene function as that provided.
+        """
         return self._by_function.get(function)
 
     def get_classification(self) -> GeneFunction:
-        """ Returns, in order of priority:
+        """ Returns the function of the gene, in the priority order of priority:
              - CORE if cluster defined by this gene
-             - smCOGs function if it exists
-             - a function from other tools if they all agree
-             - OTHER
+             - the function determined by smCOGs, if it exists
+             - a function from all tools if they all agree
+             - or OTHER
         """
         # if no annotations, skip to OTHER
         if not self._annotations:
@@ -429,6 +511,7 @@ class GeneFunctionAnnotations:
 
 
 class CDSFeature(Feature):
+    """ A feature representing a single CDS/gene. """
     __slots__ = ["_translation", "protein_id", "locus_tag", "gene", "product",
                  "transl_table", "_sec_met", "aSProdPred", "cluster", "_gene_functions",
                  "unique_id", "_nrps_pks", "motifs"]
@@ -461,26 +544,27 @@ class CDSFeature(Feature):
         if not (protein_id or locus_tag or gene):
             raise ValueError("CDSFeature requires at least one of: gene, protein_id, locus_tag")
 
-        # TODO: add when active site finder completed
-        #self.aSASF_choice = []
-        #self.aSASF_note = []
-        #self.aSASF_prediction = []
-        #self.aSASF_scaffold = []
-
         # runtime-only data
         self.cluster = None
         self.unique_id = None  # set only when added to a record
 
     @property
-    def gene_functions(self):
+    def gene_functions(self) -> GeneFunctionAnnotations:
+        """ All gene function annotations for the CDS """
         return self._gene_functions
 
     @property
-    def gene_function(self):
+    def gene_function(self) -> GeneFunction:
+        """ The likely gene function of the CDS, as determined by all annotated
+            gene functions.
+        """
         return self._gene_functions.get_classification()
 
     @property
-    def sec_met(self):
+    def sec_met(self) -> SecMetQualifier:
+        """ The qualifier containing secondary metabolite information for the
+            CDSFeature.
+        """
         return self._sec_met
 
     @sec_met.setter
@@ -501,10 +585,11 @@ class CDSFeature(Feature):
 
     @property
     def translation(self) -> str:
+        """ The translation of the CDS, as a string of amino acids """
         return self._translation
 
     @translation.setter
-    def translation(self, translation) -> None:
+    def translation(self, translation: str) -> None:
         assert "-" not in translation
         self._translation = str(translation)
 
@@ -579,6 +664,10 @@ class CDSFeature(Feature):
 
 
 class Prepeptide(CDSFeature):
+    """ A class representing a prepeptide. Used for tracking a multi-feature
+        construction with a leader, core and tail. To allow for multiple types
+        of prepeptide (e.g. lanthi- or sacti-peptides), only the core must exist.
+    """
     def __init__(self, location, peptide_class, core, locus_tag, peptide_subclass=None,
                  score=0., monoisotopic_mass=0., molecular_weight=0.,
                  alternative_weights=None, leader="", tail="", **kwargs):
@@ -613,6 +702,7 @@ class Prepeptide(CDSFeature):
 
     @property
     def leader(self) -> str:
+        """ The leader sequence of the prepeptide """
         return self._leader
 
     @leader.setter
@@ -622,15 +712,17 @@ class Prepeptide(CDSFeature):
 
     @property
     def core(self) -> str:
+        """ The core sequence of the prepeptide """
         return self._core
 
-    @leader.setter
-    def leader(self, core: str) -> None:
+    @core.setter
+    def core(self, core: str) -> None:
         assert isinstance(core, str)
         self._core = core
 
     @property
     def tail(self) -> str:
+        """ The tail sequence of the prepeptide """
         return self._tail
 
     @tail.setter
@@ -693,7 +785,9 @@ class Prepeptide(CDSFeature):
 
         return features
 
-    def to_json(self):
+    def to_json(self) -> Dict:
+        """ Converts the qualifier to a dictionary for storing in JSON results.
+        """
         data = dict(vars(self))
         for var in ["_tail", "_core", "_leader"]:
             data[var.replace("_", "")] = data[var]
@@ -703,6 +797,7 @@ class Prepeptide(CDSFeature):
 
 
 class Cluster(Feature):
+    """ A feature representing a cluster. Tracks which CDS features belong to it"""
     __slots__ = ["_extent", "_cutoff", "products", "contig_edge",
                  "detection_rules", "smiles_structure", "probability",
                  "clusterblast", "knownclusterblast", "subclusterblast",
@@ -732,11 +827,18 @@ class Cluster(Feature):
         self.borders = []
 
     def get_cluster_number(self):
+        """ Returns the cluster number which the parent record uses to refer to
+            this cluster. """
         if not self.parent_record:
             raise ValueError("Cluster not contained in record")
         return self.parent_record.get_cluster_number(self)
 
     def trim_overlapping(self):
+        """ Shrinks the cluster, where possible, to exclude any features which
+            overlap with the edges of the cluster.
+            Any feature fully contained before shrinking will still be fully
+            contained.
+        """
         if not self.parent_record:
             logging.warning("Trimming cluster which does not belong to a record")
             return
@@ -795,13 +897,17 @@ class Cluster(Feature):
         for cds in self.cds_children:
             assert cds.is_contained_by(self), "cluster trimming removed wholly contained CDS"
 
-    def add_cds(self, cds):
+    def add_cds(self, cds: CDSFeature):
+        """ Adds a CDSFeature to the cluster """
         assert isinstance(cds, CDSFeature)
         assert cds.is_contained_by(self), "cds %s outside cluster %s" % (cds, self)
         self.cds_children[cds] = None
 
     @property
     def cutoff(self):
+        """ The maximal distance between genes when defining the cluster.
+            The distance between core genes after definition will likely be
+            smaller."""
         return self._cutoff
 
     @cutoff.setter
@@ -812,6 +918,9 @@ class Cluster(Feature):
 
     @property
     def extent(self):
+        """ The distance the cluster extends from the first and last genes which
+            from which the cluster was defined.
+        """
         return self._extent
 
     @extent.setter
@@ -820,6 +929,7 @@ class Cluster(Feature):
             self._extent = int(extent)
 
     def get_product_string(self):
+        """ Returns the cluster's products as a single string """
         return "-".join(self.products)
 
     @staticmethod
@@ -890,6 +1000,9 @@ class Cluster(Feature):
         return super().to_biopython(mine)
 
     def write_to_genbank(self, filename=None, directory=None, record=None):
+        """ Writes a genbank file containing only the information contained
+            within the Cluster.
+        """
         if not filename:
             filename = "%s.cluster%03d.gbk" % (self.parent_record.id, self.get_cluster_number())
         if directory:
@@ -911,118 +1024,3 @@ class Cluster(Feature):
         cluster_record.annotations["topology"] = "linear"
 
         seqio.write([cluster_record], filename, 'genbank')
-
-
-class NRPSPKSQualifier(list):
-    class Domain:
-        __slots__ = ["name", "label", "start", "end", "evalue", "bitscore",
-                     "predictions"]
-
-        def __init__(self, name, label, start, end, evalue, bitscore):
-            self.label = label
-            self.name = name
-            self.start = start
-            self.end = end
-            self.evalue = evalue
-            self.bitscore = bitscore
-            self.predictions = {}
-
-    def __init__(self):
-        super().__init__()
-        self.type = "uninitialised"
-        self.subtypes = []
-        self.domains = []
-        self.domain_names = []
-        self.predictions = {}
-        self.cal = 0
-        self.at = 0
-        self.kr = 0
-        self.a = 0
-        self.other = 0
-
-    def append(self):
-        raise NotImplementedError("Appending to this list won't work, use add_subtype() or add_domain()")
-
-    def extend(self):
-        raise NotImplementedError("Extending this list won't work")
-
-    def __len__(self):
-        return len(self.subtypes) + len(self.domains)
-
-    def __iter__(self):
-        for domain in self.domains:
-            yield "NRPS/PKS Domain: %s (%s-%s). E-value: %s. Score: %s;" % (domain.hit_id,
-                    domain.query_start, domain.query_end, domain.evalue, domain.bitscore)
-        for subtype in self.subtypes:
-            yield "NRPS/PKS subtype: %s" % subtype
-
-    def add_subtype(self, subtype):
-        assert isinstance(subtype, str)
-        self.subtypes.append(subtype)
-
-    def add_domain(self, domain):
-        assert not isinstance(domain, str)
-        if domain.hit_id == "PKS_AT":
-            self.at += 1
-            suffix = "_AT%d" % self.at
-        elif domain.hit_id == "PKS_KR":
-            self.kr += 1
-            suffix = "_KR%d" % self.kr
-        elif domain.hit_id == "CAL_domain":
-            self.cal += 1
-            suffix = "_CAL%d" % self.cal
-        elif domain.hit_id == "AMP-binding":
-            self.a += 1
-            suffix = "_A%d" % self.a
-        else:
-            self.other += 1
-            suffix = "_OTHER%d" % self.a
-
-        self.domains.append(NRPSPKSQualifier.Domain(domain.hit_id, suffix,
-                domain.query_start, domain.query_end, domain.evalue, domain.bitscore))
-        self.domain_names.append(domain.hit_id)
-
-
-class SecMetQualifier(list):
-    def __init__(self, clustertype, domains):
-        self.domains = domains  # SecMetResult instance or str
-        if domains and not isinstance(domains[0], str):  # SecMetResult
-            self.domain_ids = [domain.query_id for domain in self.domains]
-        else:  # str
-            self.domain_ids = [domain.split()[0] for domain in self.domains]
-        self.clustertype = clustertype
-        self.kind = "biosynthetic"
-        super().__init__()
-
-    def __iter__(self):
-        yield "Type: %s" % self.clustertype
-        yield "; ".join(map(str, self.domains))
-        yield "Kind: %s" % self.kind
-
-    def append(self):
-        raise NotImplementedError("Appending to this list won't work")
-
-    def extend(self):
-        raise NotImplementedError("Extending this list won't work")
-
-    @staticmethod
-    def from_biopython(qualifier):
-        domains = None
-        clustertype = None
-        kind = None
-        if len(qualifier) != 3:
-            raise ValueError("Cannot parse qualifier: %s" % qualifier)
-        for value in qualifier:
-            if value.startswith("Type: "):
-                clustertype = value.split("Type: ", 1)[0]
-            elif value.startswith("Kind: "):
-                kind = value.split("Kind: ", 1)[1]
-                assert kind == "biosynthetic", kind  # since it's the only kind we have
-            else:
-                domains = value.split("; ")
-        if not domains and clustertype and kind:
-            raise ValueError("Cannot parse qualifier: %s" % qualifier)
-        return SecMetQualifier(clustertype, domains)
-
-    def __len__(self):
-        return 3
