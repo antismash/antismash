@@ -10,8 +10,7 @@ import unittest
 
 from helperlibs.wrappers.io import TemporaryDirectory
 
-from antismash.main import get_all_modules, detect_signature_genes
-from antismash.common.record_processing import parse_input_sequence
+from antismash.main import get_all_modules
 from antismash.common.module_results import ModuleResults
 import antismash.common.test.helpers as helpers
 from antismash.config import build_config, get_config, update_config, destroy_config
@@ -28,24 +27,11 @@ class Base(unittest.TestCase):
         assert clusterblast.check_options(self.options) == []
         assert clusterblast.is_enabled(self.options)
 
-        self.record = None  # set it or build it with build_record(genbank)
-
     def get_args(self):
         """ override with the args you'll need to use in setUp(),
             format is as on the commandline, e.g. ["--tta", "--minimal"]
         """
         self.fail()  # not overridden
-
-    def build_record(self, genbank):
-        # construct a working record
-        self.record = parse_input_sequence(genbank)[0]
-        detect_signature_genes(self.record, self.options, {})
-        clusters = self.record.get_clusters()
-        # make sure it's worth using
-        assert clusters
-        for cluster in clusters:
-            assert cluster.cds_children
-        assert self.record.get_cds_features_within_clusters()
 
     def tearDown(self):
         destroy_config()
