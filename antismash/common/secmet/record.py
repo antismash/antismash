@@ -172,7 +172,10 @@ class Record:
             Returns:
                 a list of CDSFeatures, ordered by earliest position in feature location
         """
-        def find_start_in_list(location, features, include_overlaps):
+        def find_start_in_list(location, features, include_overlaps: bool) -> int:
+            """ Find the earliest feature that starts before the location
+                (and ends before, if include_overlaps is True)
+            """
             dummy = Feature(location, feature_type='dummy')
             index = bisect.bisect_left(features, dummy)
             if include_overlaps:

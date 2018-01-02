@@ -4,6 +4,8 @@
 """ Classes representing complex qualifiers for features.
 """
 
+from typing import List
+
 
 class NRPSPKSQualifier(list):
     """ A qualifier for tracking information about NRPS/PKS domains within a CDS.
@@ -30,9 +32,9 @@ class NRPSPKSQualifier(list):
     def __init__(self) -> None:
         super().__init__()
         self.type = "uninitialised"
-        self.subtypes = []
+        self.subtypes = []  # type: List[str]
         self.domains = []
-        self.domain_names = []
+        self.domain_names = []  # type: List[str]
         self.predictions = {}
         self.cal = 0
         self.at = 0
@@ -97,7 +99,7 @@ class SecMetQualifier(list):
 
         Can be directly used as a qualifier for BioPython's SeqFeature.
     """
-    def __init__(self, clustertype, domains):
+    def __init__(self, clustertype: str, domains: List) -> None:
         self.domains = domains  # SecMetResult instance or str
         if domains and not isinstance(domains[0], str):  # SecMetResult
             self.domain_ids = [domain.query_id for domain in self.domains]
