@@ -38,11 +38,12 @@ class Feature:
         """
         return self.location.strand
 
-    def extract(self, sequence: Union[Seq, str]) -> Union[Seq, str]:
+    def extract(self, sequence: Seq) -> Seq:
         """ Extracts the section of the given sequence that this feature covers.
 
-            Return type is the same as the input type.
+            Return type is always a Seq, unlike location.extract.
         """
+        assert isinstance(sequence, Seq)
         return self.location.extract(sequence)
 
     def get_qualifier(self, key: str) -> Optional[Tuple]:
@@ -709,6 +710,10 @@ class Prepeptide(CDSMotif):
     @property
     def translation(self) -> str:
         return self._leader + self._core + self._tail
+
+    @translation.setter
+    def translation(self) -> None:
+        raise AttributeError("Cannot assign to translation in a Prepeptide")
 
     @property
     def leader(self) -> str:
