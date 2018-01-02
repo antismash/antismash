@@ -65,11 +65,12 @@ def extract_by_reference_positions(query: str, reference: str, ref_positions: Li
     positions = []
     position_skipping_gaps = 0
     for i, amino in enumerate(reference):
-        if amino == "-":
+        if amino in "-.":
             continue
         if position_skipping_gaps in ref_positions:
             positions.append(i)
         position_skipping_gaps += 1
+    assert len(positions) == len(ref_positions)
     # extract positions from query sequence
     return "".join([query[i] for i in positions])
 

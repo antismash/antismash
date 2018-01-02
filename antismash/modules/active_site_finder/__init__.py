@@ -25,6 +25,8 @@ from antismash.common import path, subprocessing, module_results, secmet
 from antismash.config import get_config
 from antismash.config.args import ModuleArgs
 
+from .analysis import run_all
+
 NAME = "ActiveSiteFinder"
 SHORT_DESCRIPTION = "ActiveSiteFinder identifies conserved active sites in PFAM_Domain/aSDomain features"
 
@@ -68,6 +70,7 @@ def is_enabled(options):
 
 
 def run_on_record(record, results, options):
+    run_all(record)
     asf = active_site_finder(record, options)
     asf.execute()
     return ASFResults(record.id)
@@ -157,7 +160,7 @@ def get_prediction_annotation(result, predictionChoicesXML):
                           predictionValueEmission,
                           choiceMatch)
 
-        logging.debug("Overall Match for prediction %s: %s", choice.attrib['result'], str(choiceOverallMatch).upper())
+        logging.debug("Overall Match for prediction %s: %s", predictionResult, str(choiceOverallMatch).upper())
         logging.debug("================================")
 
         if not skip:
@@ -190,7 +193,7 @@ def fix_coordinates(coordinate, seq):
 
     numberOfGaps = seq[:coordinate].count('.')
 
-    while (coordinate < len(seq)) and (seq[coordinate] == "."):
+    while coordinate < len(seq) and seq[coordinate] == ".":
         coordinate += 1
         logging.debug("increase coordinate by 1")
     temp_coordinate = coordinate
@@ -249,13 +252,11 @@ def get_scaffold_annotation(result, scaffold_xml):
     logging.debug("".join(matchLineStr))
 
     # Check scaffold matches
-
     extracted_aa_List = []
     matches = []
     emissions = []
 
     for i in range(0, len(scaffoldPosList)):
-
         scafPos = int(scaffoldPosList[i]) - 1
         scafValue = scaffoldValueList[i]
 
@@ -316,7 +317,6 @@ def execute_tool(analysisResource, fileName=None, stdin_data=None):
     cmdlineList = []
 
     # Assemble commad line list
-
     # extract program name from XML
     executeObj = analysisResource.find('./Execute')
     cmdlineList.append(executeObj.attrib['program'])
@@ -362,7 +362,6 @@ def execute_tool(analysisResource, fileName=None, stdin_data=None):
         logging.warning('%s returned %s', cmdlineList[0], result.exit_code)
         return []
     res_stream = StringIO(result.stdout)
-    logging.debug('External program output: %s', res_stream)
 
     # Get Biopython parser information from XML
     biopython_parser = analysisResource.find('./Execute/BioPythonParser')
@@ -555,6 +554,8 @@ class active_site_finder(object):
                     cds = record.get_cds_name_mapping()[SeqFeature.locus_tag]
                     cds.asf = secmet.feature.ActiveSiteFinderQualifier(choice=choices,
                                  scaffold=scaffold, note=note, prediction=prediction)
+                    if analysisResourceName == "ASP_Thioesterase":
+                        print("cds:", cds.get_name(), choices, scaffold, note, prediction)
         return True
 
     def check_prereqs(self):
