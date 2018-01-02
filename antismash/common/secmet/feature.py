@@ -200,7 +200,7 @@ class ClusterBorder(Feature):
 class AntismashFeature(Feature):
     """ A base class for all sub-CDS Antismash features """
     __slots__ = ["domain_id", "database", "detection", "_evalue", "label",
-                 "locus_tag", "_score", "translation"]
+                 "locus_tag", "_score", "_translation"]
 
     def __init__(self, location, feature_type):
         super().__init__(location, feature_type)
@@ -212,7 +212,16 @@ class AntismashFeature(Feature):
         self.locus_tag = None
         self._score = None  # float
 
-        self.translation = None
+        self._translation = None
+
+    @property
+    def translation(self) -> str:
+        """ The amino acid translation of the feature. """
+        return self._translation
+
+    @translation.setter
+    def translation(self, translation: str):
+        self._translation = str(translation)
 
     @property
     def score(self):
@@ -242,8 +251,8 @@ class AntismashFeature(Feature):
             mine["evalue"] = [str("{:.2E}".format(self.evalue))]
         if self.locus_tag:
             mine["locus_tag"] = [self.locus_tag]
-        if self.translation:
-            mine["translation"] = [self.translation]
+        if self._translation:
+            mine["translation"] = [self._translation]
         if self.database:
             mine["database"] = [self.database]
         if self.detection:
@@ -663,7 +672,7 @@ class CDSFeature(Feature):
         return super().to_biopython(mine)
 
 
-class Prepeptide(CDSFeature):
+class Prepeptide(CDSMotif):
     """ A class representing a prepeptide. Used for tracking a multi-feature
         construction with a leader, core and tail. To allow for multiple types
         of prepeptide (e.g. lanthi- or sacti-peptides), only the core must exist.
@@ -686,7 +695,8 @@ class Prepeptide(CDSFeature):
         self._leader = leader
         self._core = core
         self._tail = tail
-        super().__init__(location, locus_tag=locus_tag, **kwargs)
+        super().__init__(location, **kwargs)
+        self.locus_tag = locus_tag
         self.type = "CDS_motif"
         self.peptide_class = peptide_class
         self.peptide_subclass = peptide_subclass.replace("-", " ")  # "Type-II" > "Type II"
@@ -729,6 +739,13 @@ class Prepeptide(CDSFeature):
     def tail(self, tail: str) -> None:
         assert isinstance(tail, str)
         self._tail = tail
+
+    def get_name(self) -> str:
+        """ Returns the locus tag of the parent CDS.
+
+            Uses the same function name as the CDSFeature for consistency.
+        """
+        return self.locus_tag
 
     def to_biopython(self, qualifiers: Dict[str, List] = None) -> List[SeqFeature]:
         """ Generates up to three SeqFeatures, depending if leader and tail exist.
@@ -793,6 +810,7 @@ class Prepeptide(CDSFeature):
             data[var.replace("_", "")] = data[var]
             del data[var]
         data["location"] = str(self.location)
+        data["score"] = self.score
         return data
 
 
