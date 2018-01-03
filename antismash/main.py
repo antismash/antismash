@@ -1,6 +1,12 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+""" The core setup functions wrapping all detection, analysis, and output
+    modules together.
+
+    The intended entry point of antismash is run_antismash() in this file.
+"""
+
 from collections import defaultdict
 import cProfile
 from datetime import datetime
@@ -92,7 +98,7 @@ def setup_logging(logfile=None, verbose=False, debug=False) -> None:
         """ make critical messages yellow and without the normal timestamp """
         msg = "\033[1;33m{}\033[0m".format(args[0])
         print(msg % args[1:])
-    logging.critical = new_critical
+    logging.critical = new_critical  # type: ignore
 
     log_level = logging.WARNING
     if debug:
@@ -126,7 +132,7 @@ def verify_options(options, modules) -> bool:
         Returns:
             True if no problems detected, otherwise False
     """
-    errors = []
+    errors = []  # type: List[str]
     for module in modules:
         try:
             logging.debug("Checking options for %s", module.__name__)
@@ -465,7 +471,7 @@ def log_module_runtimes(timings: Dict[str, Dict[str, float]]) -> None:
         Returns:
             None
     """
-    total_times = defaultdict(lambda: 0.)
+    total_times = defaultdict(lambda: 0.)  # type: Dict[str, float]
     for result in timings.values():
         for module, runtime in result.items():
             total_times[module] += runtime
@@ -511,6 +517,8 @@ def run_antismash(sequence_file, options, detection_modules=None,
         return 0
 
     options.all_enabled_modules = [module for module in modules if module.is_enabled(options)]
+    # converts from a namespace to an antismash.config.Config instance so
+    # modules can't fiddle with it
     options = update_config(options)
 
     check_prerequisites(modules)
@@ -524,11 +532,11 @@ def run_antismash(sequence_file, options, detection_modules=None,
         profiler.enable()
 
     # ensure the provided options are valid
-    if not verify_options(options, analysis_modules + detection_modules):
+    if not verify_options(options, modules):
         return 1  # TODO: change to a raise?
 
     # check that at least one module will run
-    if not any(module.is_enabled(options) for module in detection_modules + analysis_modules):
+    if not any(module.is_enabled(options) for module in modules):
         raise ValueError("No detection or analysis modules enabled")
 
     start_time = datetime.now()
@@ -573,15 +581,14 @@ def run_antismash(sequence_file, options, detection_modules=None,
         write_profiling_results(profiler, os.path.join(options.output_dir,
                                                        "profiling_results"))
 
-    end_time = datetime.now()
-    running_time = end_time - start_time
+    running_time = datetime.now() - start_time
 
     # display module runtimes before total time
     if options.debug:
         log_module_runtimes(results.timings_by_record)
 
     logging.debug("antiSMASH calculation finished at %s; runtime: %s",
-                  str(end_time), str(running_time))
+                  str(datetime.now()), str(running_time))
 
     logging.info("antiSMASH status: SUCCESS")
     return 0
