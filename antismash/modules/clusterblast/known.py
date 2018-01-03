@@ -1,6 +1,10 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+""" The knownclusterblast variant of clusterblast, comparing clusters to MIBiG
+    clusters.
+"""
+
 import logging
 from typing import Dict, List
 
@@ -29,7 +33,7 @@ def _get_datafile_path(filename) -> str:
     return path.get_full_path(__file__, 'data', 'known', filename)
 
 
-def check_known_prereqs(options) -> List[str]:
+def check_known_prereqs(_options) -> List[str]:
     """ Determines if any prerequisite data files or executables are missing
 
         Arguments:

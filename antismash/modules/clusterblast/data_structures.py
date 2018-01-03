@@ -1,11 +1,16 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+""" A collection of data structures shared by the clusterblast variants """
+
 from collections import OrderedDict
-from typing import Tuple
+from typing import List, Tuple
 
 
 class ReferenceCluster:
+    """ A reference cluster container, as read from a database of
+        antismash-predicted clusters.
+    """
     __slots__ = ["accession", "cluster_label", "proteins", "description",
                  "cluster_type", "tags"]
 
@@ -18,14 +23,9 @@ class ReferenceCluster:
         self.cluster_type = cluster_type
         self.tags = tags
 
-    def get_name(self):
+    def get_name(self) -> str:
+        """ Returns the name of the cluster, including cluster number """
         return "%s_%s" % (self.accession, self.cluster_label)
-
-    def __getitem__(self, index):
-        return [self.proteins, self.description, self.cluster_type, self.tags][index]
-
-    def __str__(self):
-        raise ValueError("nope")
 
 
 class Protein:
@@ -45,6 +45,7 @@ class Protein:
         self.annotations = annotations
 
     def get_id(self):
+        """ Returns best identifier for a Protein """
         if self.locus_tag and self.locus_tag != "no_locus_tag":
             return self.locus_tag
         return self.name
@@ -61,6 +62,7 @@ class Protein:
 
 
 class Subject:
+    """ Holds details of a subject as reported by BLAST """
     def __init__(self, name, genecluster, start, end, strand, annotation,
                  perc_ident, blastscore, perc_coverage, evalue, locus_tag):
         self.name = name
@@ -78,13 +80,15 @@ class Subject:
     def __len__(self):
         return abs(int(self.start) - int(self.end))
 
-    def get_table_string(self):
+    def get_table_string(self) -> str:
+        """ Returns a string of the Subject suitable for use in writing text tables """
         return "\t".join([str(i) for i in [self.name, self.perc_ident,
                                            self.blastscore, self.perc_coverage,
                                            self.evalue]])
 
     @staticmethod
-    def from_dict(data):
+    def from_dict(data) -> "Subject":
+        """ Recreates a Subject instance from a JSON formatted subject """
         args = []
         for key in ["name", "genecluster", "start", "end", "strand",
                     "annotation", "perc_ident", "blastscore", "perc_coverage",
@@ -94,26 +98,32 @@ class Subject:
 
 
 class Query:
-    def __init__(self, entry, index):
+    """ Holds details of a query as reported by blast, with links to subjects
+        that were connected to the query
+    """
+    def __init__(self, entry: str, index: int):
         parts = entry.split("|")
         self.cluster_number = int(parts[1][1:])  # c1 -> 1
         self.id = parts[4]  # accession
         self.entry = entry
         self.subjects = OrderedDict()
-        self.cluster_name_to_subjects = {}
+        self.cluster_name_to_subjects = {}  # type: Dict[str, List[Subject]]
         self.index = index
 
-    def add_subject(self, subject):
+    def add_subject(self, subject: Subject) -> None:
+        """ Adds a Subject to the Query linkings """
         self.subjects[subject.name] = subject
         if subject.genecluster not in self.cluster_name_to_subjects:
             self.cluster_name_to_subjects[subject.genecluster] = []
         self.cluster_name_to_subjects[subject.genecluster].append(subject)
 
-    def get_subjects_by_cluster(self, cluster_name):
+    def get_subjects_by_cluster(self, cluster_name: str) -> List[Subject]:
+        """ Returns a list of Subjects that shared the cluster name """
         return self.cluster_name_to_subjects.get(cluster_name, [])
 
 
 class Score:
+    """ A multi-part score for a cluster """
     __slots__ = ("hits", "core_gene_hits", "blast_score", "synteny_score",
                  "core_bonus", "scored_pairings")
 
@@ -127,6 +137,7 @@ class Score:
 
     @property
     def score(self):
+        """ The cluster's score """
         if self.core_gene_hits:
             self.core_bonus = 3
         return self.hits + self.core_bonus + self.core_gene_hits + self.synteny_score
@@ -139,6 +150,7 @@ class Score:
 
 
 class MibigEntry:
+    """ A container for tracking similarity to a MIBiG entry """
     def __init__(self, gene_id, gene_description, mibig_cluster,
                  mibig_product, percent_id, blast_score, coverage, evalue):
         self.gene_id = gene_id
@@ -152,6 +164,9 @@ class MibigEntry:
 
     @property
     def values(self):
+        """ a list of all class member values in constructor arg order, for
+            simplifying conversion to and from JSON
+        """
         return [self.gene_id, self.gene_description, self.mibig_id,
                 self.mibig_product, self.percent_id, self.blast_score,
                 self.coverage, self.evalue]

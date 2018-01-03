@@ -1,7 +1,10 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
-import logging
+""" The general clusterblast, comparing clusters to other antismash-predicted
+    clusters.
+"""
+
 import os
 
 from helperlibs.wrappers.io import TemporaryDirectory

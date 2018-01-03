@@ -1,6 +1,8 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+""" Shared functions across variants of clusterblast """
+
 from collections import defaultdict, OrderedDict
 import logging
 import os
@@ -192,7 +194,8 @@ def load_reference_proteins(accessions, searchtype) -> Dict[str, Protein]:
     return proteins
 
 
-def load_clusterblast_database(record, searchtype="clusterblast") -> Tuple[Dict[str, ReferenceCluster], Dict[str, Protein]]:
+def load_clusterblast_database(record, searchtype="clusterblast"
+                               ) -> Tuple[Dict[str, ReferenceCluster], Dict[str, Protein]]:
     """ Load clusterblast database
 
         Arguments:
@@ -320,7 +323,7 @@ def parse_subject(tabs, seqlengths, accessions, record) -> Subject:
 
 
 def parse_all_clusters(blasttext, record, min_seq_coverage, min_perc_identity
-            ) -> Tuple[Dict[int, Dict[str, List[Query]]], Dict[int, Dict[str, Query]]]:
+                       ) -> Tuple[Dict[int, Dict[str, List[Query]]], Dict[int, Dict[str, Query]]]:
     """ Parses blast results, groups into results by cluster number
 
         Arguments:
@@ -382,7 +385,8 @@ def parse_all_clusters(blasttext, record, min_seq_coverage, min_perc_identity
     return clusters_by_query_cluster_number, queries_by_cluster_number
 
 
-def blastparse(blasttext, record, min_seq_coverage=-1, min_perc_identity=-1) -> Tuple[Dict[str, Query], Dict[str, List[Query]]]:
+def blastparse(blasttext, record, min_seq_coverage=-1, min_perc_identity=-1
+               ) -> Tuple[Dict[str, Query], Dict[str, List[Query]]]:
     """ Parses blast output into a usable form, limiting to a single best hit
         for every query. Results can be further trimmed by minimum thresholds of
         both coverage and percent identity.
@@ -538,7 +542,9 @@ def write_raw_clusterblastoutput(output_dir, blast_output, prefix="clusterblast"
     return filename
 
 
-def parse_clusterblast_dict(queries, clusters, cluster_name, allcoregenes) -> Tuple[Score, List[Tuple[int, int]], List[bool]]:
+def parse_clusterblast_dict(queries: List[Query], clusters: Dict[str, ReferenceCluster],
+                            cluster_name: str, allcoregenes: Set[str]
+                            ) -> Tuple[Score, List[Tuple[int, int]], List[bool]]:
     """ Generates a score for a cluster, based on the queries and clusters,
         along with the pairings of subjects and queries used to determine that
         score.
@@ -554,14 +560,14 @@ def parse_clusterblast_dict(queries, clusters, cluster_name, allcoregenes) -> Tu
             a tuple of
                 a Score instance
                 a list of Query, Subject pairs ordered by best pairing
-                a list containing an boolean for each pairing, being
+                a list containing a boolean for each pairing, being
                         True only if one of the queries in the pairings was
                         a core gene
     """
     result = Score()
     hitpositions = []  # type: List[Tuple[int, int]]
     hitposcorelist = []
-    cluster_locii = clusters[cluster_name][0]
+    cluster_locii = clusters[cluster_name].proteins
     for query in queries:
         querynrhits = 0
         for subject in query.get_subjects_by_cluster(cluster_name):
