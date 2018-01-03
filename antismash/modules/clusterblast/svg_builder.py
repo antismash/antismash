@@ -24,7 +24,6 @@
 """
 
 import colorsys
-import logging
 import os
 from typing import Dict, Iterable, List, Set, Tuple, TypeVar
 
@@ -53,20 +52,24 @@ def get_antismash_db_accessions() -> Set[str]:
             a set of all accessions
     """
     # have we generated them previously
-    if not hasattr(get_antismash_db_accessions, "result"):
-        filename = get_full_path(__file__, os.path.join('data', 'accessions_in_db.txt'))
-        with open(filename, 'r') as handle:
-            text = handle.read()
+    results = getattr(get_antismash_db_accessions, "result", None)
+    if results is not None:
+        assert isinstance(results, set)
+        return results
 
-        accessions = text.split('\n')
-        if accessions[-1] == '':
-            accessions.pop()
+    filename = get_full_path(__file__, os.path.join('data', 'accessions_in_db.txt'))
+    with open(filename, 'r') as handle:
+        text = handle.read()
 
-        # cache the results
-        get_antismash_db_accessions.result = set(accessions)
+    accessions = text.split('\n')
+    if accessions[-1] == '':
+        accessions.pop()
 
-    # return the cached result
-    return get_antismash_db_accessions.result
+    # cache the results, silencing mypy warnings because it can't handle this
+    results = set(accessions)
+    get_antismash_db_accessions.result = results  # type: ignore
+
+    return results
 
 
 def generate_distinct_colours(count) -> List[str]:
@@ -101,7 +104,7 @@ def sort_groups(query_ids, groups: Iterable[Iterable]) -> List[Iterable]:
     """
 
     ordered_groups = []
-    found_groups = set()
+    found_groups = set()  # type: Set[int]
     for query_id in query_ids:
         for group in groups:
             if query_id in group:
@@ -158,7 +161,7 @@ def build_colour_groups(query_genes, ranking) -> Dict[str, str]:
             the group the gene belongs to
     """
     # start with a set per query gene with only itself
-    groups = {gene.get_accession(): set() for gene in query_genes}
+    groups = {gene.get_accession(): set() for gene in query_genes}  # type: Dict[str, Set[str]]
     # populate the sets with the id of any hits matching a query gene
     for _, score in ranking:
         for query, subject in score.scored_pairings:
@@ -484,7 +487,7 @@ def determine_strand_of_cluster(cluster, pairings: List[Tuple[Query, Subject]]) 
     for cds in cluster.cds_children:
         name_to_feature[cds.get_accession()] = cds
 
-    counted = set()
+    counted = set()  # type: Set[str]
     strand = 0
     largest_size = 0
     strand_of_largest = 0

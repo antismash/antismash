@@ -1,6 +1,9 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+""" Contains the results class for each variant of clusterblast """
+
+
 from collections import OrderedDict
 import logging
 import os
@@ -14,7 +17,8 @@ from .svg_builder import ClusterSVGBuilder
 _CLUSTER_LIMIT = 50
 
 
-def get_result_limit():
+def get_result_limit() -> int:
+    """ Returns the hard limit of cluster matches to report """
     return _CLUSTER_LIMIT
 
 
@@ -40,14 +44,14 @@ class ClusterResult:
         self.svg_builder = ClusterSVGBuilder(cluster, ranking, reference_proteins, prefix)
         self.prefix = prefix
 
-    def update_cluster_descriptions(self, search_type):
+    def update_cluster_descriptions(self, search_type: str) -> None:
         if search_type != "knownclusterblast":  # TODO clean this up
             setattr(self.cluster, search_type, self.svg_builder.get_cluster_descriptions())
             return
         self.cluster.knownclusterblast = list(zip(self.svg_builder.get_cluster_descriptions(),
                                                   self.svg_builder.get_cluster_accessions()))
 
-    def jsonify(self) -> Dict:
+    def jsonify(self) -> Dict[str, Any]:
         """ Convert the object into a simple dictionary for use in storing
             results.
 
@@ -64,14 +68,15 @@ class ClusterResult:
         for cluster, score in self.ranking:
             scoring = {key: getattr(score, key) for key in score.__slots__ if key != "scored_pairings"}
             json_cluster = {key: getattr(cluster, key) for key in cluster.__slots__}
-            scoring["pairings"] = [(query.entry, query.index, vars(subject)) for query, subject in score.scored_pairings]
+            scoring["pairings"] = [(query.entry, query.index, vars(subject))
+                                   for query, subject in score.scored_pairings]
             ranking.append((json_cluster, scoring))
         result["ranking"] = ranking
         result["prefix"] = self.prefix
         return result
 
     @staticmethod
-    def from_json(json, record, reference_proteins):
+    def from_json(json: Dict[str, Any], record, reference_proteins: Dict[str, Protein]) -> "ClusterResult":
         """ Convert a simple dictionary into a new ClusterResult object.
 
             The function ClusterResult.jsonify() should reconstruct the data
@@ -109,7 +114,7 @@ class ClusterResult:
         result.total_hits = json["total_hits"]
         return result
 
-    def write_svg_files(self, svg_dir, prefix) -> List[str]:
+    def write_svg_files(self, svg_dir: str, prefix: str) -> List[str]:
         """ Write all generated SVG files, one overview SVG and one for each
             ReferenceCluster pairing. The overview SVG will have _all in
             the filename and the individual pairings will have a counter.
@@ -137,6 +142,7 @@ class ClusterResult:
 
 
 class GeneralResults(ModuleResults):
+    """ A variant-agnostic results class for clusterblast variants """
     schema_version = 1
 
     def __init__(self, record_id: str, search_type: str = "clusterblast") -> None:
@@ -149,10 +155,23 @@ class GeneralResults(ModuleResults):
         # and only keep those that are relevant instead of 7 million
         self.proteins_of_interest = OrderedDict()  # type: Dict[str, Protein]
         self.clusters_of_interest = OrderedDict()  # type: Dict[str, ReferenceCluster]
-        self.mibig_entries = None
+        # hold mappings of cluster number -> protein name -> mibig entries
+        self.mibig_entries = {}  # type: Dict[int, Dict[str, List[MibigEntry]]]
 
     def add_cluster_result(self, result: ClusterResult, reference_clusters: Dict[str, ReferenceCluster],
                            reference_proteins: Dict[str, Protein]) -> None:
+        """ Add a result for a specific cluster. Reference proteins and clusters
+            required in order to write the relevant information. Only those used
+            are required.
+
+            Arguments:
+                result: the ClusterResult to add
+                reference_clusters: a dictionary mapping reference cluster name to ReferenceCluster
+                reference_proteins: a dictionary mapping reference protein name to Protein
+
+            Returns:
+                None
+        """
         assert isinstance(result, ClusterResult)
         assert reference_clusters and reference_proteins  # {str:ReferenceCluster}, {str:Protein}
         self.cluster_results.append(result)
@@ -165,12 +184,14 @@ class GeneralResults(ModuleResults):
                 self.proteins_of_interest[protein_name] = reference_proteins[protein_name]
 
     def write_to_file(self, record, options) -> None:
+        """ Write the results to a text file """
         for cluster in self.cluster_results:
             write_clusterblast_output(options, record, cluster,
                                       self.proteins_of_interest,
                                       searchtype=self.search_type)
 
-    def write_svg_files(self, svg_dir) -> None:
+    def write_svg_files(self, svg_dir: str) -> None:
+        """ Write the SVG files for each cluster with results """
         for cluster_result in self.cluster_results:
             cluster_result.write_svg_files(svg_dir, self.search_type)
 
@@ -183,7 +204,7 @@ class GeneralResults(ModuleResults):
                 "proteins": [{key: getattr(protein, key) for key in protein.__slots__}
                              for protein in self.proteins_of_interest.values()],
                 "search_type": self.search_type}
-        if self.mibig_entries is not None:
+        if self.mibig_entries:
             entries = {}
             for cluster_number, proteins in self.mibig_entries.items():
                 cluster = {}
@@ -212,16 +233,17 @@ class GeneralResults(ModuleResults):
             result.cluster_results.append(ClusterResult.from_json(cluster_result,
                                           record, result.proteins_of_interest))
         if "mibig_entries" in json:
-            entries = {}
+            entries = {}  # type: Dict[int, Dict[str, List[MibigEntry]]]
             for cluster_number, proteins in json["mibig_entries"].items():
                 entries[int(cluster_number)] = {}
-                for protein, protein_entries in proteins.items():
-                    entries[int(cluster_number)][protein] = [MibigEntry(*entry) for entry in protein_entries]
+                for protein_name, protein_entries in proteins.items():
+                    entries[int(cluster_number)][protein_name] = [MibigEntry(*entry) for entry in protein_entries]
             result.mibig_entries = entries
         return result
 
 
 class ClusterBlastResults(ModuleResults):
+    """ An aggregate results container for all variants of clusterblast """
     schema_version = 1
 
     def __init__(self, record_id):
@@ -230,7 +252,7 @@ class ClusterBlastResults(ModuleResults):
         self.subcluster = None
         self.knowncluster = None
 
-    def to_json(self):
+    def to_json(self) -> Dict[str, Any]:
         assert self.general or self.subcluster or self.knowncluster
         result = {"schema_version": self.schema_version,
                   "record_id": self.record_id}
@@ -241,7 +263,7 @@ class ClusterBlastResults(ModuleResults):
         return result
 
     @staticmethod
-    def from_json(json, record):
+    def from_json(json: Dict[str, Any], record) -> "ClusterBlastResults":
         if json["schema_version"] != ClusterBlastResults.schema_version:
             raise ValueError("Incompatible results schema version, expected %d"
                              % ClusterBlastResults.schema_version)
@@ -253,19 +275,33 @@ class ClusterBlastResults(ModuleResults):
         assert results.general or results.subcluster or results.knowncluster
         return results
 
-    def add_to_record(self, record):
+    def add_to_record(self, record) -> None:
         for result in [self.general, self.subcluster, self.knowncluster]:
             if result is not None:
                 result.add_to_record(record)
 
-    def write_svg_files(self, svg_dir):
+    def write_svg_files(self, svg_dir: str) -> None:
+        """ Write the SVG files for each clusterblast variant if it exists """
         for result in [self.general, self.subcluster, self.knowncluster]:
             if result:
                 result.write_svg_files(svg_dir)
 
 
-def write_clusterblast_output(options, seq_record, cluster_result, proteins,
-                              searchtype="clusterblast"):
+def write_clusterblast_output(options, record, cluster_result: ClusterResult,
+                              proteins: Dict[str, Protein],
+                              searchtype: str = "clusterblast") -> None:
+    """ Writes a text form of clusterblast results to file.
+
+        Arguments:
+            options: the antismash config
+            record: the record that the results came from
+            cluster_result: the ClusterResult object to write information about
+            proteins: a dict mapping protein name to Protein
+            searchtype: the name of the module of which to write results for
+
+        Returns:
+            None
+    """
     assert isinstance(proteins, dict)
 
     cluster_number = cluster_result.cluster.get_cluster_number()
@@ -277,14 +313,15 @@ def write_clusterblast_output(options, seq_record, cluster_result, proteins,
     os.chdir(_get_output_dir(options, searchtype))
 
     out_file = open("cluster" + str(cluster_number) + ".txt", "w")
-    out_file.write("ClusterBlast scores for " + seq_record.id + "\n")
+    out_file.write("ClusterBlast scores for " + record.id + "\n")
     out_file.write("\nTable of genes, locations, strands and annotations of query cluster:\n")
     for i, cds in enumerate(cluster_result.cluster.cds_children):
         if cds.strand == 1:
             strand = "+"
         else:
             strand = "-"
-        out_file.write("\t".join([cds.get_accession(), str(int(cds.location.start)), str(int(cds.location.end)), strand, cds.product]) + "\t\n")
+        out_file.write("\t".join([cds.get_accession(), str(int(cds.location.start)),
+                                  str(int(cds.location.end)), strand, cds.product]) + "\t\n")
     out_file.write("\n\nSignificant hits: \n")
     for i, cluster_and_score in enumerate(ranking):
         cluster = cluster_and_score[0]
@@ -305,7 +342,8 @@ def write_clusterblast_output(options, seq_record, cluster_result, proteins,
             protein = proteins.get(protein_name)
             if protein:
                 out_file.write(str(protein))
-        out_file.write("\nTable of Blast hits (query gene, subject gene, %identity, blast score, %coverage, e-value):\n")
+        out_file.write("\nTable of Blast hits (query gene, subject gene,"
+                       " %identity, blast score, %coverage, e-value):\n")
         if score.scored_pairings:
             for query, subject in score.scored_pairings:
                 out_file.write("{}\t{}\n".format(query.id, subject.get_table_string()))
@@ -316,7 +354,7 @@ def write_clusterblast_output(options, seq_record, cluster_result, proteins,
     os.chdir(currentdir)
 
 
-def _get_output_dir(options, searchtype):
+def _get_output_dir(options, searchtype: str) -> str:
     assert searchtype in ["clusterblast", "subclusterblast", "knownclusterblast"], searchtype
     output_dir = os.path.join(options.output_dir, searchtype)
 

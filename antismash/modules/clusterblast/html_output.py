@@ -32,7 +32,7 @@ def generate_div(cluster_layer, results, record_layer, options_layer, search_typ
         clusterblast
     """
     template_path = path.get_full_path(__file__, "templates")
-    env = Environment(loader=FileSystemLoader([template_path]), autoescape=True,
+    env = Environment(loader=FileSystemLoader(template_path), autoescape=True,
                       undefined=StrictUndefined)
     template = env.get_template('%s.html' % search_type)
     details_div = template.render(record=record_layer,

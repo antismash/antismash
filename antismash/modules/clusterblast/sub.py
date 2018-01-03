@@ -22,8 +22,10 @@ def _get_datafile_path(filename):
     return path.get_full_path(__file__, 'data', 'sub', filename)
 
 
-def check_sub_prereqs(options):
-    "Check if all required applications and datafiles are present"
+def check_sub_prereqs(_options):
+    """ Check if all required applications and datafiles are present.
+        options is irrelevant here
+    """
     # Tuple is ( binary_name, optional)
     _required_binaries = [
         ('blastp', False),
