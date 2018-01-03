@@ -5,6 +5,7 @@
 
 import logging
 import os
+from typing import List
 
 import antismash.common.path as path
 from antismash.config import get_config
@@ -21,7 +22,8 @@ NAME = "clusterblast"
 SHORT_DESCRIPTION = "comparative gene cluster analysis"
 
 
-def get_arguments():
+def get_arguments() -> ModuleArgs:
+    """ Builds the args for the clusterblast module """
     args = ModuleArgs('ClusterBlast options', 'cb')
     args.add_analysis_toggle('general',
                              dest='general',
@@ -60,20 +62,22 @@ def get_arguments():
     return args
 
 
-def is_enabled(options):
+def is_enabled(options) -> bool:
     """  Uses the supplied options to determine if the module should be run
     """
     return options.cb_general or options.cb_knownclusters or options.cb_subclusters
 
 
-def check_options(options):
+def check_options(options) -> List[str]:
+    """ Checks that extra options are valid """
     if options.cb_nclusters > get_result_limit():
         return ["nclusters of %d is over limit of %d" % (
                     options.cb_nclusters, get_result_limit())]
     return []
 
 
-def regenerate_previous_results(previous, record, options):
+def regenerate_previous_results(previous, record, options) -> ClusterBlastResults:
+    """ Regenerates previous results """
     if not previous:
         logging.debug("No previous clusterblast results to reuse")
         return None
@@ -112,16 +116,17 @@ def check_prereqs():
     return failure_messages
 
 
-def run_on_record(seq_record, results, options):
+def run_on_record(record, results, options):
+    """ Runs the specified clusterblast variants over the record """
     if not results:
-        results = ClusterBlastResults(seq_record.id)
-        results.internal_homology_groups = internal_homology_blast(seq_record)
+        results = ClusterBlastResults(record.id)
+        results.internal_homology_groups = internal_homology_blast(record)
     if options.cb_general and not results.general:
         logging.info('Running ClusterBlast')
-        clusters, proteins = load_clusterblast_database(seq_record)
-        results.general = perform_clusterblast(options, seq_record, clusters, proteins)
+        clusters, proteins = load_clusterblast_database(record)
+        results.general = perform_clusterblast(options, record, clusters, proteins)
     if options.cb_subclusters and not results.subcluster:
-        results.subcluster = run_subclusterblast_on_record(seq_record, options)
+        results.subcluster = run_subclusterblast_on_record(record, options)
     if options.cb_knownclusters and not results.knowncluster:
-        results.knowncluster = run_knownclusterblast_on_record(seq_record, options)
+        results.knowncluster = run_knownclusterblast_on_record(record, options)
     return results
