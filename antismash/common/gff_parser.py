@@ -1,13 +1,18 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+""" Reads GFF files and updates records with the contained information.
+"""
+
+
 import logging
+from typing import Dict, List, Set, Union
 
 from Bio.SeqFeature import FeatureLocation, CompoundLocation, SeqFeature
 from BCBio import GFF
 
 
-def check_gff_suitability(options, sequences):
+def check_gff_suitability(options, sequences) -> bool:
     """
         Checks that the provided GFF3 file is acceptable
 
@@ -15,7 +20,7 @@ def check_gff_suitability(options, sequences):
         are assumed to be the same.
 
         Returns:
-            bool - True if only a single entry is contained by both inputs and
+            True if only a single entry is contained by both inputs and
                     their sequence coordinates match
     """
     try:
@@ -70,7 +75,18 @@ def check_gff_suitability(options, sequences):
     return single_entries
 
 
-def get_features_from_file(seq_record, handle, limit_to_seq_id=False):
+def get_features_from_file(seq_record, handle,
+                           limit_to_seq_id: Union[bool, Dict[str, List[str]]] = False
+                           ) -> List[SeqFeature]:
+    """ Generates new SeqFeatures from a Record and a GFF file.
+
+        Arguments:
+            seq_record: the record that features belong to
+            limit_to_seq_id: False or a dictionary of GFF.parse options
+
+        Returns:
+            a list of SeqFeatures parsed from the GFF file
+    """
     features = []
     for record in GFF.parse(handle, limit_info=limit_to_seq_id):
         for feature in record.features:
@@ -104,52 +120,91 @@ def get_features_from_file(seq_record, handle, limit_to_seq_id=False):
     return features
 
 
-def run(record, single_entry, options):
+def run(record, single_entry: bool, options) -> None:
+    """ The entry point of gff_parser.
+        Generates new features and adds them to the provided record.
+
+        Arguments:
+            record: the secmet.Record instance to alter
+            single_entry: if True, record and GFF ids must match
+            options: an antismash.Config object, used only for fetching the GFF path
+
+        Returns:
+            None
+    """
     # If there's only one sequence in both, read all, otherwise, read only appropriate part of GFF3.
-    limit_info = False
+    limit_info = False  # type: Union[bool, Dict[str, List[str]]]
     if not single_entry:
-        limit_info = dict(gff_id=[record.id])
+        limit_info = {'gff_id': [record.id]}
 
     handle = open(options.genefinding_gff3)
     features = get_features_from_file(record, handle, limit_info)
-    logging.critical("gff parsing still generating SeqFeatures")  # TODO
+    logging.critical("gff parsing still generating SeqFeatures")  # TODO: use new secmet features
     for feature in features:
         record.add_biopython_feature(feature)
 
-def check_sub(feature, sequence):
-    new_features = []
-    locations = []
-    trans_locations = []
-    qualifiers = {}
+
+def generate_details_from_subfeature(sub_feature, existing_qualifiers: Dict,
+                                     locations: List[FeatureLocation],
+                                     trans_locations: List[FeatureLocation]) -> Set[str]:
+    """ Finds the locations of a subfeature and any mismatching qualifiers
+
+        Arguments:
+            sub_feature: the GFF subfeature to work on
+            existing_qualifiers: a dict of any existing qualifiers from other
+                                 subfeatures
+            locations: a list of any existing FeatureLocations from other
+                       subfeatures
+            trans_locations: a list of any existing FeatureLocations for
+                             translations
+
+        Returns:
+            a set of qualifiers from the subfeature for which an existing
+            qualifier existed but had a different value
+    """
     mismatching_qualifiers = set()
+    start = sub_feature.location.start.real
+    end = sub_feature.location.end.real
+    phase = int(sub_feature.qualifiers.get('phase', [0])[0])
+    if sub_feature.strand == 1:
+        start += phase
+    else:
+        end -= phase
+    locations.append(FeatureLocation(start, end, strand=sub_feature.strand))
+    # Make sure CDSs lengths are multiple of three. Otherwise extend to next full codon.
+    # This only applies for translation.
+    modulus = (end - start) % 3
+    if modulus and sub_feature.strand == 1:
+        end += 3 - modulus
+    elif modulus and sub_feature.strand == -1:
+        start -= 3 - modulus
+    trans_locations.append(FeatureLocation(start, end, strand=sub_feature.strand))
+    # For split features (CDSs), the final feature will have the same qualifiers as the children ONLY if
+    # they're the same, i.e.: all children have the same "protein_ID" (key and value).
+    for qual in sub_feature.qualifiers:
+        if qual not in existing_qualifiers:
+            existing_qualifiers[qual] = sub_feature.qualifiers[qual]
+        elif existing_qualifiers[qual] != sub_feature.qualifiers[qual]:
+            mismatching_qualifiers.add(qual)
+    return mismatching_qualifiers
+
+
+def check_sub(feature, sequence) -> List[SeqFeature]:
+    """ Recursively checks a GFF feature for any subfeatures and generates any
+        appropriate SeqFeature instances from them.
+    """
+    new_features = []
+    locations = []  # type: List[FeatureLocation]
+    trans_locations = []  # type: List[FeatureLocation]
+    qualifiers = {}  # type: Dict[str, List[str]]
+    mismatching_qualifiers = set()  # type: Set[str]
     for sub in feature.sub_features:
         if sub.sub_features:  # If there are sub_features, go deeper
             new_features.extend(check_sub(sub, sequence))
         elif sub.type == 'CDS':
-            start = sub.location.start.real
-            end = sub.location.end.real
-            if 'phase' in sub.qualifiers:
-                phase = int(sub.qualifiers['phase'][0])
-                if sub.strand == 1:
-                    start += phase
-                else:
-                    end -= phase
-            locations.append(FeatureLocation(start, end, strand=sub.strand))
-            # Make sure CDSs lengths are multiple of three. Otherwise extend to next full codon.
-            # This only applies for translation.
-            modulus = (end - start) % 3
-            if modulus and sub.strand == 1:
-                end += 3 - modulus
-            elif modulus and sub.strand == -1:
-                start -= 3 - modulus
-            trans_locations.append(FeatureLocation(start, end, strand=sub.strand))
-            # For split features (CDSs), the final feature will have the same qualifiers as the children ONLY if
-            # they're the same, i.e.: all children have the same "protein_ID" (key and value).
-            for qual in sub.qualifiers:
-                if qual not in qualifiers:
-                    qualifiers[qual] = sub.qualifiers[qual]
-                elif qualifiers[qual] != sub.qualifiers[qual]:
-                    mismatching_qualifiers.add(qual)
+            sub_mismatch = generate_details_from_subfeature(sub, qualifiers,
+                                                            locations, trans_locations)
+            mismatching_qualifiers.update(sub_mismatch)
 
     for qualifier in mismatching_qualifiers:
         del qualifiers[qualifier]
@@ -172,7 +227,7 @@ def check_sub(feature, sequence):
                 new_loc = CompoundLocation(locations)
             else:
                 new_loc = CompoundLocation(list(reversed(locations)))
-                trans_locations = reversed(trans_locations)
+                trans_locations = list(reversed(trans_locations))
         # TODO: use new secmet features
         new_feature = SeqFeature(new_loc)
         new_feature.qualifiers = qualifiers

@@ -1,6 +1,10 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+""" A collection of functions and related classes for executing external
+    commands from within antismash.
+"""
+
 from io import StringIO
 import logging
 import multiprocessing
@@ -23,6 +27,7 @@ with warnings.catch_warnings():
 
 
 class RunResult:
+    """ A container for simplifying the results of running a command """
     def __init__(self, command, stdout, stderr, return_code, piped_out, piped_err):
         self.command = command
         self.stdout_piped = piped_out
@@ -41,14 +46,33 @@ class RunResult:
         return super().__getattribute__(attr)
 
     def successful(self) -> bool:
+        """ Returns True if the command exited with an exit code of zero """
         return not self.return_code
 
     def get_command_string(self) -> str:
+        """ Returns the command that was run to obtain this result """
         return " ".join(self.command)
 
 
 def execute(commands, stdin=None, stdout=PIPE, stderr=PIPE, timeout=None) -> RunResult:
-    "Execute commands in a system-independent manner"
+    """ Executes commands in a system-independent manner via a child process.
+
+        By default, both stderr and stdout will be piped and the outputs
+        accessible.
+
+        Arguments:
+            commands: a list of arguments to execute
+            stdin: None or input to be piped into the child process
+            stdout: if a filename is provided, stdout from the child process
+                    will be piped to that file
+            stderr: if a filename is provided, stderr from the child process
+                    will be piped to that file
+            timeout: if provided, the child process will be terminated after
+                     this many seconds
+
+        Returns:
+            a RunResult object containing any piped output
+    """
 
     if stdin is not None:
         stdin_redir = PIPE
@@ -249,7 +273,7 @@ def run_fimo_simple(query_motif_file: str, target_sequence: str) -> RunResult:  
     return result.stdout
 
 
-def run_hmmscan(target_hmmfile: str, query_sequence: str, opts=None, results_file=None):
+def run_hmmscan(target_hmmfile: str, query_sequence: str, opts=None, results_file=None) -> List:
     """ Runs hmmscan on the inputs and return a list of QueryResults
 
         Arguments:

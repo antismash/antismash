@@ -1,11 +1,14 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+""" A collection of functions for reading, processing, and sanitising records.
+"""
+
 import functools
 import logging
 import re
 import os
-from typing import List
+from typing import List, Set
 
 import Bio
 from Bio.Seq import Seq
@@ -330,7 +333,7 @@ def ensure_no_duplicate_gene_ids(sequences) -> None:
         Returns:
             None
     """
-    all_ids = set()
+    all_ids = set()  # type: Set[str]
     for sequence in sequences:
         for cdsfeature in sequence.get_cds_features():
             name = cdsfeature.get_name()

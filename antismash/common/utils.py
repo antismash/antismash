@@ -1,7 +1,11 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
-import logging
+""" A collection of functions and classes that are used by multiple modules
+    within antismash but aren't large enough to justify their own module within
+    antismash.common.
+"""
+
 from typing import List, Set, Tuple
 
 import Bio.Data.IUPACData

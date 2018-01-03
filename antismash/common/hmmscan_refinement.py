@@ -1,8 +1,11 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+""" A collection of functions for refining hmm domain fragments into best hits.
+"""
+
 from collections import defaultdict
-import logging
+from typing import Dict, Set, Union
 
 
 def _remove_overlapping(results, hmm_lengths):
@@ -77,10 +80,15 @@ def _merge_immediate_neigbours(domains):
         result[-1] = result[-1].merge(domain)
     return result
 
+
 class HMMResult:
+    """ A variant of HSP that allows for operations between multiple instances
+        along with simplified operations e.g. len()
+    """
     __slots__ = ["hit_id", "query_start", "query_end", "evalue", "bitscore"]
 
-    def __init__(self, hit_id, start, end, evalue, bitscore):
+    def __init__(self, hit_id: str, start: int, end: int, evalue: float,
+                 bitscore: float) -> None:
         self.hit_id = hit_id
         self.query_start = int(start)
         self.query_end = int(end)
@@ -90,7 +98,10 @@ class HMMResult:
     def __len__(self):
         return self.query_end - self.query_start
 
-    def merge(self, other):
+    def merge(self, other: "HMMResult") -> "HMMResult":
+        """ Creates a new HMMResult instance from this instance and the
+            provided instance.
+        """
         assert self.hit_id == other.hit_id
         if self.query_start < other.query_start:
             start, end = self.query_start, other.query_end
@@ -100,7 +111,8 @@ class HMMResult:
                          min(self.evalue, other.evalue),
                          max(self.bitscore, other.bitscore))
 
-    def to_json(self):
+    def to_json(self) -> Dict[str, Union[str, int, float]]:
+        """ Converts the instance into a dictionary for use in json formats """
         return {key: getattr(self, key) for key in self.__slots__}
 
     def __repr__(self):
@@ -110,22 +122,10 @@ class HMMResult:
         return "HMMResult(%s, %d, %d, evalue=%g, bitscore=%g)" % (self.hit_id,
                    self.query_start, self.query_end, self.evalue, self.bitscore)
 
-    def __getitem__(self, index):
-        if index == 0:
-            raise NotImplementedError("don't do HMMResult[0], use HMMResult.hit_id")
-        if index == 1:
-            raise NotImplementedError("don't do HMMResult[1], use HMMResult.query_start")
-        if index == 2:
-            raise NotImplementedError("don't do HMMResult[2], use HMMResult.query_end")
-        if index == 3:
-            raise NotImplementedError("don't do HMMResult[3], use HMMResult.evalue")
-        if index == 4:
-            raise NotImplementedError("don't do HMMResult[4], use HMMResult.bitscore")
-        raise AttributeError("cannot index HMMResult")
 
-
-def gather_by_query(results):
-    results_by_id = defaultdict(set)
+def gather_by_query(results) -> Dict[str, Set[HMMResult]]:
+    """ Generates a mapping of query id to all HMMResults for that query """
+    results_by_id = defaultdict(set)  # type: Dict[str, Set[HMMResult]]
     for result in results:
         for hsp in result.hsps:
             results_by_id[hsp.query_id].add(HMMResult(hsp.hit_id, hsp.query_start,

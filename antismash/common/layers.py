@@ -1,11 +1,19 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
-import logging
+""" A collection of classes for simplification of HTML templating.
+
+    Each layer type is a different construct with helper functions that don't
+    really belong in the original objects.
+"""
+
 import os
+from types import ModuleType
+from typing import List, Optional
 
 
 class RecordLayer:
+    """ A layer for Record instances """
     def __init__(self, seq_record, results, options):
         self.results = results
         self.seq_record = seq_record
@@ -19,7 +27,7 @@ class RecordLayer:
             return super().__getattribute__(attr)
         return getattr(self.seq_record, attr)
 
-    def get_from_record(self):
+    def get_from_record(self) -> str:
         " returns the text to be displayed in the overview table > separator-text "
 
         current_id = self.seq_record.id
@@ -36,6 +44,9 @@ class RecordLayer:
 
 
 class ClusterLayer:
+    """ A layer for Cluster instances, contains special members for result of
+        the clusterblast and clusterfinder modules
+    """
     def __init__(self, record, cluster_rec):
         self.record = record
         self.handlers = []
@@ -61,7 +72,8 @@ class ClusterLayer:
         return getattr(self.cluster_rec, attr)
 
     @property
-    def best_knowncluster_name(self):
+    def best_knowncluster_name(self) -> str:
+        """ The name of the best hit from knownclusterblast, if it was run """
         if not self.knownclusterblast:
             return "-"
         full = self.knownclusterblast[0][0]
@@ -69,34 +81,40 @@ class ClusterLayer:
                         " biosynthetic gene cluster", "")
 
     @property
-    def BGCid(self):
+    def BGCid(self) -> str:
+        """ The BGC id of the best hit from knownclusterblast, if it was run """
         if not self.cluster_rec.knownclusterblast:
             return "-"
         return format(self.cluster_rec.knownclusterblast[0][1])
 
     @property
-    def detection_rules(self):
-        return ["%s: %s" % (product, rules) for product, rules in zip(self.cluster_rec.products, self.cluster_rec.detection_rules)]
+    def detection_rules(self) -> List[str]:
+        """ The details of rules that caused the cluster to be defined """
+        return ["%s: %s" % (product, rules) for product, rules in
+                zip(self.cluster_rec.products, self.cluster_rec.detection_rules)]
 
-    def description_text(self):
-        " returns the gene cluster description "
+    def description_text(self) -> str:
+        """ returns the gene cluster description """
         description_text = self.record.name \
-                + ' - Gene Cluster %s. Type = %s. Location: %s - %s nt. ' % (
-                        self.get_cluster_number(), self.get_product_string(), self.location.start + 1, self.location.end)
+            + ' - Gene Cluster %s. Type = %s. Location: %s - %s nt. ' % (
+                        self.get_cluster_number(), self.get_product_string(),
+                        self.location.start + 1, self.location.end)
         if self.probability != "BROKEN":  # TODO: real value check
             description_text += 'ClusterFinder probability: %s. ' % self.probability
         description_text += 'Click on genes for more information.'
 
         return description_text
 
-    def cluster_blast_generator(self):  # TODO: deduplicate
+    def cluster_blast_generator(self) -> None:  # TODO: deduplicate
+        """ Generates the details to use for clusterblast results """
         top_hits = self.cluster_rec.clusterblast[:self.record.options.cb_nclusters]
         for i, label in enumerate(top_hits):
             i += 1  # 1-indexed
             svg_file = os.path.join('svg', 'clusterblast%s_%s.svg' % (self.get_cluster_number(), i))
             self.cluster_blast.append((label, svg_file))
 
-    def knowncluster_blast_generator(self):
+    def knowncluster_blast_generator(self) -> None:
+        """ Generates the details to use for knownclusterblast results """
         top_hits = self.cluster_rec.knownclusterblast[:self.record.options.cb_nclusters]
         for i, label_pair in enumerate(top_hits):
             i += 1  # 1-indexed
@@ -104,7 +122,8 @@ class ClusterLayer:
             svg_file = os.path.join('svg', 'knownclusterblast%s_%s.svg' % (self.get_cluster_number(), i))
             self.knowncluster_blast.append((label, svg_file))
 
-    def subcluster_blast_generator(self):
+    def subcluster_blast_generator(self) -> None:
+        """ Generates the details to use for subclusterblast results """
         assert self.cluster_rec.subclusterblast is not None, self.cluster_rec.location
         top_hits = self.cluster_rec.subclusterblast[:self.record.options.cb_nclusters]
         for i, label in enumerate(top_hits):
@@ -112,7 +131,7 @@ class ClusterLayer:
             svg_file = os.path.join('svg', 'subclusterblast%s_%s.svg' % (self.get_cluster_number(), i))
             self.subcluster_blast.append((label, svg_file))
 
-    def find_plugins_for_cluster(self):
+    def find_plugins_for_cluster(self) -> List[ModuleType]:
         "Find a specific plugin responsible for a given gene cluster type"
         for plugin in self.record.options.plugins:
             if not hasattr(plugin, 'will_handle'):
@@ -121,7 +140,10 @@ class ClusterLayer:
                 self.handlers.append(plugin)
         return self.handlers
 
-    def determine_has_details(self):
+    def determine_has_details(self) -> bool:
+        """ Sets has_details to be True if at least one plugin might create
+            detail output for the cluster
+        """
         self.has_details = False
         for handler in self.handlers:
             if "generate_details_div" in dir(handler):
@@ -129,7 +151,10 @@ class ClusterLayer:
                 break
         return self.has_details
 
-    def determine_has_sidepanel(self):
+    def determine_has_sidepanel(self) -> bool:
+        """ Sets has_details to be True if at least one plugin might create
+            output for the cluster sidepanel
+        """
         self.has_sidepanel = False
         for handler in self.handlers:
             if "generate_sidepanel" in dir(handler):
@@ -139,6 +164,7 @@ class ClusterLayer:
 
 
 class OptionsLayer:
+    """ A layer for the global Config options. """
     def __init__(self, options):
         self.options = options
 
@@ -148,26 +174,28 @@ class OptionsLayer:
         return getattr(self.options, attr)
 
     @property
-    def plugins(self):
+    def plugins(self) -> List[ModuleType]:
+        """ A list of all modules """
         from antismash.main import get_all_modules
         return get_all_modules()
 
     @property
-    def smcogs(self):
-        return not self.options.minimal or self.options.smcogs_enabled or self.options.smcogs_trees  # TODO work out a better way of doing this
+    def smcogs(self) -> bool:
+        """ Whether smcogs was enabled or not """
+        return not self.options.minimal \
+               or self.options.smcogs_enabled \
+               or self.options.smcogs_trees  # TODO work out a better way of doing this
 
-    @property
-    def triggered_limit(self):
-        return self.options.triggered_limit
-
-    def download_logfile(self):
+    def download_logfile(self) -> Optional[str]:
+        """ Returns the path of the logfile, if it was created (otherwise None) """
         logfile_path = os.path.abspath(self.logfile)
         if os.path.dirname(logfile_path).startswith(self.output_dir):
             return logfile_path[len(self.output_dir) + 1:]
         return None
 
     @property
-    def base_url(self):
+    def base_url(self) -> str:
+        """ Returns the 'home' URL for fungismash/antismash """
         if self.options.taxon == "fungi":
             return self.options.urls.fungi_baseurl
         return self.options.urls.bacteria_baseurl
