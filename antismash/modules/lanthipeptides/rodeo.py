@@ -1,6 +1,15 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+""" The RODEO subsection of lanthipeptide analysis. Runs a support vector machine
+    using a precalculated training set and a variety of feature attributes to
+    determine whether a CDS likely contains a lanthipeptide precursor.
+
+    Requires fimo binary to be present on the system somewhere for full accuracy,
+    but not required.
+"""
+
+
 import os
 import re
 from tempfile import NamedTemporaryFile
@@ -176,8 +185,8 @@ def acquire_rodeo_heuristics(record: secmet.Record, query: secmet.CDSFeature,
         tabs.append(0)
     # Precursor peptide mass < 4000 Da
     precursor_analysis = utils.RobustProteinAnalysis(precursor,
-                                                          monoisotopic=True,
-                                                          ignore_invalid=True)
+                                                     monoisotopic=True,
+                                                     ignore_invalid=True)
     if precursor_analysis.molecular_weight() < 4000:
         score -= 3
         tabs.append(1)
@@ -185,7 +194,7 @@ def acquire_rodeo_heuristics(record: secmet.Record, query: secmet.CDSFeature,
         tabs.append(0)
     # Core peptide mass < 2000 Da
     core_analysis = utils.RobustProteinAnalysis(core, monoisotopic=True,
-                                                     ignore_invalid=True)
+                                                ignore_invalid=True)
     if core_analysis.molecular_weight() < 2000:
         score -= 3
         tabs.append(1)
@@ -449,5 +458,10 @@ def identify_lanthi_motifs(leader: str, core: str) -> Dict[int, float]:
         out_file.write(">query\n%s%s" % (leader, core))
         out_file.close()
         fimo_output = subprocessing.run_fimo_simple(motifs_file, tempfile.name)
-    fimo_scores = {int(line.split("\t")[0]): float(line.split("\t")[5]) for line in fimo_output.split("\n") if "\t" in line and line.partition("\t")[0].isdigit()}
+    fimo_scores = {}
+    for line in fimo_output.splitlines():
+        parts = line.split("\t")
+        if len(parts) < 2 or not parts[0].isdigit():
+            continue
+        fimo_scores[int(parts[0])] = parts[5]
     return fimo_scores

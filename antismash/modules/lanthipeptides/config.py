@@ -3,20 +3,16 @@
 
 """Lanthipeptide-specific configuration"""
 
-_config = None
 
-
-class LanthiConfig(object):
+class LanthiConfig(object):  # pylint: disable=too-few-public-methods
     """Lanthipeptide-specific configuration"""
     __slots__ = ('fimo_present', )
 
     def __init__(self):
         self.fimo_present = False
 
+_CONFIG = LanthiConfig()
 
 def get_config():
     """Access the lanthieptide-specific config"""
-    global _config
-    if _config is None:
-        _config = LanthiConfig()
-    return _config
+    return _CONFIG

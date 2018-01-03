@@ -13,12 +13,11 @@ from antismash.modules.lanthipeptides import check_prereqs, get_config
 
 class TestCheckPrereqs(unittest.TestCase):
     def setUp(self):
-        self.maxDiff = None
-        self.tt = TraceTracker()
+        self.tracker = TraceTracker()
         self.locate_exe = Mock('antismash.common.path.locate_executable',
-                               tracker=self.tt, returns="/fake/path/to/binary")
+                               tracker=self.tracker, returns="/fake/path/to/binary")
         mock('antismash.common.path.locate_executable',
-             mock_obj=self.locate_exe, tracker=self.tt)
+             mock_obj=self.locate_exe, tracker=self.tracker)
 
     def tearDown(self):
         restore()
@@ -29,7 +28,7 @@ class TestCheckPrereqs(unittest.TestCase):
         self.assertEqual(ret, [])
         expected = """    Called antismash.common.path.locate_executable('hmmpfam2')
     Called antismash.common.path.locate_executable('fimo')"""
-        assert_same_trace(self.tt, expected)
+        assert_same_trace(self.tracker, expected)
         self.assertTrue(get_config().fimo_present)
 
     def test_check_binary_prereqs_failing(self):
