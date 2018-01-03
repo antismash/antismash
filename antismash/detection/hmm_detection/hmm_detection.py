@@ -1,6 +1,9 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+""" Detects specific domains and defines clusters based on domains detected
+"""
+
 import logging
 from typing import Dict, List, Set, Tuple
 
@@ -49,12 +52,14 @@ def find_clusters(record, cds_domains_by_cluster, rules_by_name) -> List[Cluster
                 cluster.location = FeatureLocation(max(0, cluster.location.start - cluster.extent),
                                                    min(len(record), cluster.location.end + cluster.extent))
             # Create new cluster
-            new_cluster = Cluster(FeatureLocation(feature_start, feature_end), feature_cutoff, feature_extension, feature_types)
+            new_cluster = Cluster(FeatureLocation(feature_start, feature_end),
+                                  feature_cutoff, feature_extension, feature_types)
             clusters.append(new_cluster)
             cluster = clusters[-1]
 
         # Update cluster
-        cluster.location = FeatureLocation(min(cluster.location.start, feature_start), max(cluster.location.end, feature_end))
+        cluster.location = FeatureLocation(min(cluster.location.start, feature_start),
+                                           max(cluster.location.end, feature_end))
         cluster.cutoff = max(cluster.cutoff, feature_cutoff)
         cluster.extent = max(cluster.extent, feature_extension)
         cluster.products = list(set(cluster.products) | set(feature_types))
@@ -104,7 +109,7 @@ def filter_results(results: List[HSP], results_by_id: Dict[str, List[HSP]]) -> T
         if unknown:
             raise ValueError("Equivalence group contains unknown identifiers: %s" % (
                     unknown))
-        removed_ids = set()
+        removed_ids = set()  # type: Set[int]
         for cds, cdsresults in results_by_id.items():
             # Check if multiple competing HMM hits are present
             hits = set(hit.query_id for hit in cdsresults)
@@ -347,7 +352,7 @@ def detect_signature_genes(record, options) -> None:
 
     for cds in results_by_id:
         feature = feature_by_id[cds]
-        cluster_products = []
+        cluster_products = []  # type: List[str]
         if feature.cluster:
             cluster_products = feature.cluster.products
         _update_sec_met_entry(feature, results_by_id[cds],
@@ -407,7 +412,7 @@ class SecMetResult():
         self.nseeds = nseeds
 
     def __repr__(self):
-        return self.__str__()
+        return str(self)
 
     def __str__(self):
         return "{} (E-value: {}, bitscore: {}, seeds: {})".format(
