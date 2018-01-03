@@ -1,7 +1,14 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
-import logging
+""" A very basic genefinding system. Finds all ORFs in a sequence, with some
+    extra conditions applied.
+
+    Not intended for genefinding an unannotated sequence, but for finding extra
+    ORFs that have been skipped in an annotated sequence such as RiPP precursors.
+"""
+
+
 from typing import List
 
 from Bio.SeqFeature import FeatureLocation, BeforePosition, AfterPosition
@@ -80,7 +87,21 @@ def scan_orfs(seq, direction: int, offset: int = 0) -> List[FeatureLocation]:
     return sorted(matches, key=lambda x: min(x.start, x.end))
 
 
-def create_feature_from_location(record, location, counter=1, label=None):
+def create_feature_from_location(record, location, counter=1, label=None) -> CDSFeature:
+    """ Creates a CDS feature covering the provided location.
+
+        Arguments:
+            record: The Record the CDSFeature will belong to, used to generate
+                    the feature translation
+            location: The FeatureLocation specifying the location of the CDSFeature
+            counter: An integer to use to format a default label 'allorf' with,
+                     used only if label not provided
+            label: The locus tag, protein id, and gene name to use for the new
+                   CDSFeature
+
+        Returns:
+            The CDSFeature created.
+    """
     if label is None:
         label = 'allorf%03d' % counter
     dummy = Feature(location, feature_type="temp")

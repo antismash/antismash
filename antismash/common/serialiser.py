@@ -1,9 +1,14 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+""" A collection of functions and classes for serialising the result of
+    running antismash analyses.
+"""
+
 from collections import OrderedDict
 import json
 import logging
+from typing import Any, Dict, List, Union
 
 import Bio.Alphabet
 import Bio.Alphabet.IUPAC
@@ -18,6 +23,9 @@ from antismash.common.secmet import Record
 
 
 class AntismashResults:
+    """ A single repository of all results of an antismash run, including input
+        filename, records and individual module results
+    """
     def __init__(self, input_file, records, results, version, timings=None):
         self.input_file = input_file
         self.records = records
@@ -26,7 +34,10 @@ class AntismashResults:
         self.timings_by_record = timings or {}  # {record_id : {module name: time}}
 
     @staticmethod
-    def from_file(handle):
+    def from_file(handle) -> "AntismashResults":
+        """ Regenerates an instance of AntismashResults from JSON representation
+            in a file
+        """
         if isinstance(handle, str):
             handle = open(handle, "r")
         data = json.loads(handle.read())
@@ -36,8 +47,9 @@ class AntismashResults:
         results = [rec["modules"] for rec in data["records"]]
         return AntismashResults(input_file, records, results, version)
 
-    def to_json(self):
-        res = OrderedDict()
+    def to_json(self) -> Dict[str, Any]:
+        """ Constructs a JSON representation of the instance """
+        res = OrderedDict()  # type: Dict[str, Any]
         res["version"] = self.version
         res["input_file"] = self.input_file
         biopython = [rec.to_biopython() for rec in self.records]
@@ -45,18 +57,32 @@ class AntismashResults:
         res["timings"] = self.timings_by_record
         return res
 
-    def write_to_file(self, handle):
+    def write_to_file(self, handle) -> None:
+        """ Writes a JSON representation of the instance to the given filename
+            or handle
+        """
         if isinstance(handle, str):
             handle = open(handle, "w")
         handle.write(json.dumps(self.to_json()))
 
 
-def dump_records(records, results, handle=None):
+def dump_records(records, results, handle=None) -> List[Dict[str, Any]]:
+    """ Converts a list of records and a list of results to a JSON object.
+
+        Arguments:
+            records: a list of records to convert
+            results: a matching list of results to convert
+            handle: a filename or file-like object to write the resulting JSON
+                    object to
+
+        Returns:
+            the JSON object created
+    """
     data = []
     assert isinstance(results, list)
     for record, result in zip(records, results):
         json_record = record_to_json(record)
-        modules = OrderedDict()
+        modules = OrderedDict()  # type: Dict[str, Dict]
         if result:
             logging.debug("Record %s has results for modules: %s", record.id,
                           ", ".join([mod.rsplit('.', 1)[-1] for mod, resultv in result.items() if resultv]))
@@ -89,10 +115,12 @@ def dump_records(records, results, handle=None):
     if isinstance(handle, str):
         handle = open(handle, "w")
     handle.write(new_contents)
+    return data
 
-
-def record_to_json(record):
-    def annotations_to_json(annotations):
+def record_to_json(record: SeqRecord) -> Dict[str, Any]:
+    """ Constructs a JSON object representing a SeqRecord """
+    def annotations_to_json(annotations: Dict) -> Dict[str, Any]:
+        """ Converts the 'annotations' member of a SeqRecord """
         res = dict(annotations)
         res["references"] = []
         for reference in annotations.get("references", []):
@@ -101,7 +129,7 @@ def record_to_json(record):
             res["references"].append(ref)
         return res
 
-    result = OrderedDict()
+    result = OrderedDict()  # type: Dict[str, Any]
     result["id"] = record.id
     result["seq"] = sequence_to_json(record.seq)
     result["features"] = list(map(feature_to_json, record.features))
@@ -113,11 +141,14 @@ def record_to_json(record):
     return result
 
 
-def record_from_json(data):
+def record_from_json(data: Union[str, Dict]) -> SeqRecord:
+    """ Rebuilds a SeqRecord from JSON """
     if isinstance(data, str):
         data = json.loads(data)
+    assert isinstance(data, dict)
 
-    def rebuild_references(annotations):
+    def rebuild_references(annotations: Dict) -> Dict[str, List[Reference]]:
+        """ Rebuilds the SeqRecord 'references' annotation from JSON """
         bases = annotations["references"]
         refs = []
         for ref in bases:
@@ -138,14 +169,17 @@ def record_from_json(data):
                      letter_annotations=data["letter_annotations"])
 
 
-def sequence_to_json(sequence):
+def sequence_to_json(sequence: Seq) -> Dict[str, str]:
+    """ Constructs a JSON object that represents a Seq sequence """
     return {"data": str(sequence),
             "alphabet": str(sequence.alphabet).rsplit('()')[0]}  # DNA() -> DNA
 
 
-def sequence_from_json(data):
+def sequence_from_json(data: Union[str, Dict]) -> Seq:
+    """ Reconstructs a Seq sequence from JSON """
     if isinstance(data, str):
         data = json.loads(data)
+    assert isinstance(data, dict)
     alphabet = data["alphabet"]
     if "IUPAC" in alphabet:
         alphabet_class = getattr(Bio.Alphabet.IUPAC, alphabet)
@@ -154,32 +188,37 @@ def sequence_from_json(data):
     return Seq(data["data"], alphabet=alphabet_class())
 
 
-def feature_to_json(feature):
+def feature_to_json(feature: SeqFeature) -> Dict[str, Any]:
+    """ Creates a JSON representation of a SeqFeature """
     return {"location": location_to_json(feature.location),
             "type": feature.type,
             "id": feature.id,
             "qualifiers": feature.qualifiers}
 
 
-def feature_from_json(data):
+def feature_from_json(data: Union[str, Dict]) -> SeqFeature:
+    """ Converts a JSON representation of a feature into a SeqFeature """
     if isinstance(data, str):
         data = json.loads(data, object_pairs_hook=OrderedDict)
+    assert isinstance(data, dict)
     return SeqFeature(location=location_from_json(data["location"]),
                       type=data["type"],
                       id=data["id"],
                       qualifiers=data["qualifiers"])
 
 
-def location_to_json(location):
+def location_to_json(location: FeatureLocation) -> str:
+    """ Converts a FeatureLocation to a string """
     return str(location)
 
 
-def location_from_json(data):
+def location_from_json(data: str) -> FeatureLocation:
     """
-        Converts from json representation, e.g. [<1:6](-), to FeatureLocation
-        or CompoundLocation
+        Converts from json representation (a string), e.g. [<1:6](-), to a
+        FeatureLocation or CompoundLocation
     """
-    def parse_position(string):
+    def parse_position(string: str):
+        """ Converts a positiong from a string into a Position subclass """
         if string[0] == '<':
             return BeforePosition(int(string[1:]))
         if string[0] == '>':
@@ -188,16 +227,17 @@ def location_from_json(data):
             return UnknownPosition()
         return ExactPosition(int(string))
 
-    def parse_single_location(string):
+    def parse_single_location(string: str) -> FeatureLocation:
+        """ Converts a single location from a string to a FeatureLocation """
         start = parse_position(string[1:].split(':', 1)[0])  # [<1:6](-) -> <1
         end = parse_position(string.split(':', 1)[1].split(']', 1)[0])  # [<1:6](-) -> 6
 
-        strand = string[-2]  # [<1:6](-) -> -
-        if strand == '-':
+        strand_text = string[-2]  # [<1:6](-) -> -
+        if strand_text == '-':
             strand = -1
-        elif strand == '+':
+        elif strand_text == '+':
             strand = 1
-        elif strand == '?':
+        elif strand_text == '?':
             strand = 0
         elif '(' not in string:
             strand = None
@@ -213,7 +253,7 @@ def location_from_json(data):
 
     # otherwise it's a compound location
     # join{[1:6](+), [10:16](+)} -> ("join", "[1:6](+), [10:16](+)")
-    operator, locations = data[:-1].split('{', 1)
+    operator, combined_location = data[:-1].split('{', 1)
 
-    locations = [parse_single_location(part) for part in locations.split(', ')]
+    locations = [parse_single_location(part) for part in combined_location.split(', ')]
     return CompoundLocation(locations, operator=operator)

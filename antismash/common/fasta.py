@@ -31,7 +31,7 @@ def get_fasta_from_record(record: Record) -> str:
 
 
 def write_fasta(names: List[str], seqs: List[str], filename: str) -> None:
-    "Write name/seq pairs to file in FASTA format"
+    """ Write name/seq pairs to file in FASTA format """
     out_file = open(filename, "w")
     for name, seq in zip(names, seqs):
         out_file.write(">%s\n%s\n" % (name, seq))

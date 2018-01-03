@@ -10,7 +10,7 @@ from typing import Optional
 import os
 
 
-def get_full_path(current_file, *args) -> str:
+def get_full_path(current_file: str, *args) -> str:
     """ Generate the absolute path of the directory containing a file
         e.g. __file__ == os.path.join(get_full_path(__file__), filename)
 
@@ -33,7 +33,7 @@ def get_full_path(current_file, *args) -> str:
     return os.path.join(base, extra)
 
 
-def locate_executable(name) -> Optional[str]:
+def locate_executable(name: str) -> Optional[str]:
     """ Find an executable in the path and return the full path
 
         Arguments:
@@ -55,7 +55,7 @@ def locate_executable(name) -> Optional[str]:
     return None
 
 
-def locate_file(path) -> Optional[str]:
+def locate_file(path: str) -> Optional[str]:
     """ Checks that a given file path is valid and that read permissions exist
         for the file
 
