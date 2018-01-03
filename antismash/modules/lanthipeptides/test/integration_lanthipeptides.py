@@ -23,7 +23,6 @@ class IntegrationLanthipeptides(unittest.TestCase):
     def setUp(self):
         self.options = build_config(["--minimal", "--enable-lanthipeptides"],
                                     isolated=True, modules=antismash.get_all_modules())
-        self.options.all_enabled_modules = [module for module in antismash.get_all_modules() if module.is_enabled(self.options)]  # TODO: shift elsewhere
         self.set_fimo_enabled(True)
 
     def tearDown(self):

@@ -6,6 +6,7 @@
 """
 
 import logging
+from typing import List
 
 from antismash.common import path
 from antismash.config.args import ModuleArgs
@@ -18,20 +19,27 @@ NAME = "lanthipeptides"
 SHORT_DESCRIPTION = NAME.capitalize()
 
 
-def get_arguments():
+def get_arguments() -> ModuleArgs:
+    """ Return the args for the lanthipeptide module """
     args = ModuleArgs('Advanced options', 'lanthi', enabled_by_default=True)
     return args
 
 
-def check_options(options):
+def check_options(_options) -> List:
+    """ Lanthipeptide has no extra options, so there will be no conflicts """
     return []
 
 
-def is_enabled(options):
+def is_enabled(options) -> bool:
+    """ Returns True if the lanthipeptide module is enabled """
     return options.lanthipeptides_enabled or not options.minimal
 
 
-def regenerate_previous_results(results, record, options):
+def regenerate_previous_results(results, record, _options) -> LanthiResults:
+    """ Rebuilds the results from a prior run.
+
+        Options aren't used here as the lanthipeptide module has no extra options.
+    """
     if not results:
         return None
     results = LanthiResults.from_json(results, record)
@@ -40,7 +48,12 @@ def regenerate_previous_results(results, record, options):
     return results
 
 
-def check_prereqs():
+def check_prereqs() -> List[str]:
+    """ Checks the prereqs for the lanthipeptide module.
+
+        fimo is optional, having it available increases accuracy in the RODEO
+        subsection
+    """
     failure_messages = []
     for binary_name, optional in [('hmmpfam2', False), ('fimo', True)]:
         present = True
@@ -57,7 +70,12 @@ def check_prereqs():
     return failure_messages
 
 
-def run_on_record(record, results, options):
+def run_on_record(record, results, _options) -> LanthiResults:
+    """ Runs the lanthipeptide analysis over the given record, if the existing
+        results can't be reused.
+
+        Options aren't used here as the lanthipeptide module has no extra options.
+    """
     if isinstance(results, LanthiResults) and results.record_id == record.id:
         return results
     return specific_analysis(record)
