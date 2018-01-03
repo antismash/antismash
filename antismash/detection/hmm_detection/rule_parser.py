@@ -204,6 +204,7 @@ class TokenTypes(IntEnum):
         return str(self.name).lower()  # the str() is for pylint's sake
 
     def get_hit_string(self):
+        """ Returns a string for marking which sections of a rule were satisfied """
         return str(self)
 
     @classmethod
@@ -228,7 +229,7 @@ class TokenTypes(IntEnum):
         return 15 <= self.value <= 21
 
 
-class Tokeniser:
+class Tokeniser:  # pylint: disable=too-few-public-methods
     """ Converts a text block into a list of tokens
     """
     mapping = {"(": TokenTypes.GROUP_OPEN, ")": TokenTypes.GROUP_CLOSE,
@@ -297,9 +298,9 @@ class Tokeniser:
         self.current_symbol.clear()
 
 
-class Token:
+class Token:  # pylint: disable=too-few-public-methods
     """ Keeps the token details, the text, where it is in the total text block,
-        and what type """
+        and what type it is """
     def __init__(self, token_text: str, line_number: int, position: int) -> None:
         self.token_text = token_text
         self.type = TokenTypes.classify(token_text)
@@ -359,7 +360,10 @@ class Details:
                        self.cutoff)
 
 
-class ConditionMet:
+class ConditionMet:  # pylint: disable=too-few-public-methods
+    """ A container for tracking whether a condition was satisfied along with
+        what specific subsections of the condition were matched
+    """
     def __init__(self, met: bool, matches: Union[Set, "ConditionMet"] = None) -> None:
         assert isinstance(met, bool)
         self.met = met
@@ -370,7 +374,7 @@ class ConditionMet:
             self.matches = matches
         assert isinstance(self.matches, set), type(matches)
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return self.met
 
 
@@ -401,14 +405,17 @@ class Conditions:
 
     @property
     def operands(self):
+        """ All operands from the conditions in the instance """
         return self.sub_conditions[::2]
 
     @property
     def operators(self):
+        """ All operators from the conditions in the instance """
         return self.sub_conditions[1::2]
 
     def are_subconditions_satisfied(self, details: Details, local_only=False) -> ConditionMet:
-        """
+        """ Returns whether all subconditions are satisfied.
+
             local_only limits the search to the single CDS in details
         """
         if len(self.sub_conditions) == 1:
@@ -427,6 +434,9 @@ class Conditions:
         return ConditionMet(met, matching)
 
     def get_satisfied(self, details: Details, local_only=False) -> ConditionMet:
+        """ Increments hit counter if satisfied and returns whether or not all
+            conditions were satisfied.
+        """
         satisfied = self.is_satisfied(details, local_only)
         if satisfied and satisfied.matches:
             self.hits += 1
@@ -440,6 +450,9 @@ class Conditions:
         return ConditionMet(xor(self.negated, subs.met), subs)
 
     def get_hit_string(self) -> str:
+        """ Returns a string representation of the condition marking how many
+            times each subsection was satisfied.
+        """
         prefix = "not " if self.negated else ""
         if len(self.sub_conditions) == 1 \
                 and not isinstance(self.sub_conditions[0], AndCondition):
@@ -447,6 +460,7 @@ class Conditions:
         return "{}*({}{})".format(self.hits, prefix, " ".join(sub.get_hit_string() for sub in self.sub_conditions))
 
     def contains_positive_condition(self) -> bool:
+        """ Returns True if at least one non-negated subcondition is satisified """
         # don't bother checking subs if this itself is negated
         if self.negated:
             return False
@@ -678,6 +692,12 @@ class DetectionRule:
         self.hits = 0
 
     def contains_positive_condition(self) -> bool:
+        """ Returns True if at least one non-negated condition of the rule is
+            satisfied.
+
+            This is important since any rule which only satisfied negated
+            conditions (e.g. 'not LANC-like') should not be considered satisfied.
+        """
         return self.conditions.contains_positive_condition()
 
     def detect(self, cds, feature_by_id, results_by_id) -> ConditionMet:
@@ -716,6 +736,9 @@ class DetectionRule:
                     comments, self.cutoff // 1000, self.extent // 1000, condition_text)
 
     def get_hit_string(self) -> str:
+        """ Returns a string representation of the rule marking how many times
+            each subsection was satisfied.
+        """
         return self.conditions.get_hit_string()[3:-1]
 
 
@@ -723,7 +746,7 @@ class DetectionRule:
 ConditionList = List[Union[Conditions, TokenTypes]]  # pylint: disable=invalid-name
 
 
-class Parser:
+class Parser:  # pylint: disable=too-few-public-methods
     """ Responsible for parsing an entire block of text. Rules parsed from the
         text are stored in the .rules member.
     """

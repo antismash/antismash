@@ -1,11 +1,12 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
-"""General HMM detection module
-
+""" General HMM detection module for detecting specific domains and defining
+    clusters based on domains detected
 """
-import logging
+
 import os
+from typing import List
 
 import antismash.common.path as path
 from antismash.common.subprocessing import run_hmmpress
@@ -21,7 +22,7 @@ NAME = "hmmdetection"
 SHORT_DESCRIPTION = "Cluster detection with HMM"
 
 
-def get_supported_cluster_types():
+def get_supported_cluster_types() -> List[str]:
     """ Returns a list of all cluster types for which there are rules
     """
     with open(path.get_full_path(__file__, 'cluster_rules.txt'), "r") as rulefile:
@@ -30,7 +31,7 @@ def get_supported_cluster_types():
     return clustertypes
 
 
-def get_arguments():
+def get_arguments() -> ModuleArgs:
     """ Constructs commandline arguments and options for this module
     """
     args = ModuleArgs('Advanced options', '', override_safeties=True)
@@ -45,7 +46,7 @@ def get_arguments():
     return args
 
 
-def check_options(options):
+def check_options(options) -> List[str]:
     """ Checks the options to see if there are any issues before
         running any analyses
     """
@@ -67,23 +68,29 @@ def check_options(options):
     return errors
 
 
-def is_enabled(options):
+def is_enabled(_options) -> bool:
     """  Uses the supplied options to determine if the module should be run
     """
     # in this case, yes, always
     return True
 
 
-def regenerate_previous_results(results, record, options):
-    # always rerun hmmdetection
+def regenerate_previous_results(results, record, options) -> None:  # pylint: disable=unused-argument
+    """ Regenerate previous results. """
+    # always rerun hmmdetection  # TODO: should clusters be kept?
     return None
 
 
-def run_on_record(seq_record, options):
-    return detect_signature_genes(seq_record, options)
+def run_on_record(record, options) -> None:
+    """ Runs hmm_detection on the provided record.
+    """
+    return detect_signature_genes(record, options)
 
 
-def check_prereqs():
+def check_prereqs() -> List[str]:
+    """ Check that prereqs are satisfied. hmmpress is only required if the
+        databases have not yet been generated.
+    """
     failure_messages = []
     for binary_name, optional in [('hmmsearch', False), ('hmmpress', False)]:
         if path.locate_executable(binary_name) is None and not optional:
