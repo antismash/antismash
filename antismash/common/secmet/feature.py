@@ -704,6 +704,7 @@ class Prepeptide(CDSMotif):
         self.score = float(score)
         self.monoisotopic_mass = float(monoisotopic_mass)
         self.molecular_weight = float(molecular_weight)
+        self.alternative_weights = []
         if alternative_weights:
             self.alternative_weights = [float(weight) for weight in alternative_weights]
 
