@@ -64,7 +64,9 @@ def get_simple_options(module, args):
 class DummyRecord(Record):
     "class for generating a Record like data structure"
     def __init__(self, features=None, seq='FAKESEQ'):
-        super().__init__(Seq(seq))
+        if isinstance(seq, str):
+            seq = Seq(seq)
+        super().__init__(seq)
         if features:
             for feature in features:
                 self.add_feature(feature)
