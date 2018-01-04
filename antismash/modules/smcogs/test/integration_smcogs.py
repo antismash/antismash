@@ -66,6 +66,36 @@ class TestClassification(Base):
             json = results.to_json()
             assert smcogs.SMCOGResults.from_json(json).to_json() == json
 
+    def test_classification_with_colon(self):
+        # since SMCOG id and description are stored in a string separated by :,
+        # ensure that descriptions containing : are properly handled
+        # test gene is AQF52_5530 from CP013129.1
+        translation = ("MDTHQREEDPVAARRDRTHYLYLAVIGAVLLGIAVGFLAPGVAVELKPLGTGFVN"
+                       "LIKMMISPIIFCTIVLGVGSVRKAAKVGAVGGLALGYFLVMSTVALAIGLLVGNL"
+                       "LEPGSGLHLTKEIAEAGAKQAEGGGESTPDFLLGIIPTTFVSAFTEGEVLQTLLV"
+                       "ALLAGFALQAMGAAGEPVLRGIGHIQRLVFRILGMIMWVAPVGAFGAIAAVVGAT"
+                       "GAAALKSLAVIMIGFYLTCGLFVFVVLGAVLRLVAGINIWTLLRYLGREFLLILS"
+                       "TSSSESALPRLIAKMEHLGVSKPVVGITVPTGYSFNLDGTAIYLTMASLFVAEAM"
+                       "GDPLSIGEQISLLVFMIIASKGAAGVTGAGLATLAGGLQSHRPELVDGVGLIVGI"
+                       "DRFMSEARALTNFAGNAVATVLVGTWTKEIDKARVTEVLAGNIPFDEKTLVDDHA"
+                       "PVPVPDQRAEGGEEKARAGV")
+        cds = helpers.DummyCDS(0, len(translation))
+        cds.translation = translation
+        results = smcogs.classify.classify_genes([cds])
+        assert results[cds.get_name()][0].hit_id == "SMCOG1212:sodium:dicarboxylate_symporter"
+        record = helpers.DummyRecord(seq=translation)
+        record.add_cds_feature(cds)
+        record.add_cluster(helpers.DummyCluster(0, len(translation)))
+
+        with TemporaryDirectory(change=True):
+            results = smcogs.run_on_record(record, None, self.options)
+            # if we don't handle multiple semicolons right, this line will crash
+            results.add_to_record(record)
+            gene_functions = cds.gene_functions.get_by_tool("smcogs")
+            assert len(gene_functions) == 1
+            assert str(gene_functions[0]).startswith("transport (smcogs) SMCOG1212:sodium:dicarboxylate_symporter"
+                                                     " (Score: 416; E-value: 2.3e-126)")
+
 
 class TestTreeGeneration(Base):
     def get_args(self):
