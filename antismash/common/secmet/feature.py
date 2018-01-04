@@ -913,8 +913,11 @@ class Cluster(Feature):
 
         # finally, do the trim itself
         new_loc = FeatureLocation(start, end, self.location.strand)
-        logging.debug("Cluster %d trimming location from %s to %s", self.get_cluster_number(),
-                      self.location, new_loc)
+        if self.location.start != start or self.location.end != end:
+            logging.debug("Cluster %d trimming location from %s to %s",
+                          self.get_cluster_number(), self.location, new_loc)
+        # make sure the size is never increased
+        assert self.location.start <= start < end <= self.location.end
         self.location = new_loc
 
         for cds in self.cds_children:
