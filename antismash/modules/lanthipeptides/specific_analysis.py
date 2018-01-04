@@ -492,6 +492,10 @@ def determine_precursor_peptide_candidate(record: secmet.Record, query: secmet.C
             return None
         lanthi_type = "lanthipeptide"
 
+    # if the cleavage results in no core, that's not valid
+    if end == len(query_sequence):
+        return None
+
     # Run RODEO to assess whether candidate precursor peptide is judged real
     rodeo_result = run_rodeo(record, query, query_sequence[:end], query_sequence[end:], domains)
     if rodeo_result < 14:
@@ -529,6 +533,10 @@ def run_lanthipred(record: secmet.Record, query: secmet.CDSFeature, lant_class, 
             return None
 
         if THRESH_DICT[lant_class] > cleavage_result.score:
+            return None
+
+        # if the cleavage results in no core, that's not valid
+        if cleavage_result.end == len(query_sequence):
             return None
 
         result = Lanthipeptide(cleavage_result.start, cleavage_result.end,

@@ -10,11 +10,14 @@ from Bio.SeqUtils.ProtParam import ProteinAnalysis
 from minimock import mock, restore, TraceTracker
 
 from antismash.common import subprocessing  # used in mocks # pylint: disable=unused-import
-from antismash.common.test.helpers import DummyCDS, FakeHit
+from antismash.common.test.helpers import DummyCDS, FakeHit, DummyRecord
+from antismash.modules.lanthipeptides import specific_analysis as lanthi
 from antismash.modules.lanthipeptides.specific_analysis import (
     Lanthipeptide,
     predict_cleavage_site,
     result_vec_to_feature,
+    CleavageSiteHit,
+    run_lanthipred
 )
 
 
@@ -177,3 +180,41 @@ class TestSpecificAnalysis(unittest.TestCase):
                     'RODEO score: 23']
         self.assertEqual(set(expected), set(core.qualifiers['note']))
         self.assertEqual(orig_feature.locus_tag, core.qualifiers['locus_tag'][0])
+
+
+class TestNoCores(unittest.TestCase):
+    """ Ensure that cleavage sites that result in no prepeptide core don't
+        generate hits """
+    def setUp(self):
+        self.domains = ['Condensation', 'AMP-binding', 'PP-binding', 'Condensation',
+                        'A-OX', 'PP-binding', 'PKS_AT', 'hyb_KS', 'PP-binding',
+                        'PF00561', 'Peptidase_S9', 'LANC_like', 'Pkinase', 'p450',
+                        'Abi', 'DUF4135', 'Condensation', 'AMP-binding', 'PP-binding',
+                        'Condensation', 'AMP-binding', 'PP-binding', 'PF07366',
+                        'adh_short', 'adh_short_C2', 'p450', 'PF12697', 'PP-binding',
+                        'PKS_AT', 'mod_KS', 'hyb_KS', 'adh_short', 'PP-binding',
+                        'PKS_AT', 'mod_KS', 'adh_short', 'PP-binding', 'PKS_AT',
+                        'mod_KS', 'adh_short', 'NAD_binding_4', 'Condensation',
+                        'PP-binding']
+        mock("lanthi.run_rodeo", returns=20)
+        self.cds = DummyCDS(38, 48)
+        # an all_orf detected gene at 7922405:7922549 in CP013129.1, with a C appended
+        self.cds.translation = "VCGPRDHGRQRTSAPHAFHSDSMDRAASRPVEYGDYSGSPLSQGLGGC"
+
+    def tearDown(self):
+        restore()
+
+    def test_prediction_with_no_core(self):
+        # the real cleavage site result (+1 at end for the C)
+        cleavage_result = CleavageSiteHit(start=38, end=48, score=-6.8, lantype="Class-II")
+        mock("lanthi.predict_cleavage_site", returns=cleavage_result)
+
+        for part in ["I", "II"]:
+            assert run_lanthipred(None, self.cds, "Class-%s" % part, self.domains) is None
+
+    def test_prediction_with_core(self):
+        # the cleavage result adjusted to leave at least one amino in core
+        cleavage_result = CleavageSiteHit(start=38, end=40, score=-6.8, lantype="Class-II")
+        mock("lanthi.predict_cleavage_site", returns=cleavage_result)
+        for part in ["I", "II"]:
+            assert run_lanthipred(DummyRecord(features=[self.cds]), self.cds, "Class-%s" % part, self.domains) is not None
