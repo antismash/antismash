@@ -320,6 +320,10 @@ class CleavageSiteHit(object):
         self.score = score
         self.lantype = lantype
 
+    def __repr__(self):
+        return "CleavageSiteHit(start=%s, end=%s, score=%s, lantype='%s')" % (
+                    self.start, self.end, self.score, self.lantype)
+
 
 def get_detected_domains(cluster: secmet.Cluster) -> List[str]:
     """ Gathers all detected domains in a cluster, including some not detected
