@@ -15,7 +15,7 @@ from antismash.common import path
 from antismash.common.test import helpers
 from antismash.common.secmet import Record
 from antismash.config import build_config, update_config, destroy_config
-from antismash.modules.lanthipeptides import specific_analysis, LanthiResults
+from antismash.modules.lanthipeptides import run_specific_analysis, LanthiResults
 import antismash.modules.lanthipeptides.config as lanthi_config
 
 
@@ -36,7 +36,7 @@ class IntegrationLanthipeptides(unittest.TestCase):
         "Test lanthipeptide prediction for nisin A"
         rec = Record.from_biopython(seqio.read(helpers.get_path_to_nisin_with_detection()))
         assert not rec.get_cds_motifs()
-        result = specific_analysis(rec)
+        result = run_specific_analysis(rec)
         assert len(result.clusters_with_motifs) == 1
         assert len(result.motifs) == 1
         assert not rec.get_cds_motifs()
@@ -77,7 +77,7 @@ class IntegrationLanthipeptides(unittest.TestCase):
         "Test lanthipeptide prediction for epidermin"
         rec = Record.from_biopython(seqio.read(path.get_full_path(__file__, 'data', 'epidermin.gbk')))
         assert not rec.get_cds_motifs()
-        result = specific_analysis(rec)
+        result = run_specific_analysis(rec)
         assert len(result.motifs) == 1
         assert not rec.get_cds_motifs()
         result.add_to_record(rec)
@@ -95,7 +95,7 @@ class IntegrationLanthipeptides(unittest.TestCase):
         "Test lanthipeptide prediction for microbisporicin"
         rec = Record.from_biopython(seqio.read(path.get_full_path(__file__, 'data', 'microbisporicin.gbk')))
         assert not rec.get_cds_motifs()
-        result = specific_analysis(rec)
+        result = run_specific_analysis(rec)
         assert len(result.motifs) == 1
         assert not rec.get_cds_motifs()
         result.add_to_record(rec)
@@ -116,7 +116,7 @@ class IntegrationLanthipeptides(unittest.TestCase):
         "Test lanthipeptide prediction for epicidin 280"
         rec = Record.from_biopython(seqio.read(path.get_full_path(__file__, 'data', 'epicidin_280.gbk')))
         assert not rec.get_cds_motifs()
-        result = specific_analysis(rec)
+        result = run_specific_analysis(rec)
         assert len(result.motifs) == 1
         assert not rec.get_cds_motifs()
         result.add_to_record(rec)
@@ -138,7 +138,7 @@ class IntegrationLanthipeptides(unittest.TestCase):
         "Test lanthipeptide prediction for labyrinthopeptin"
         rec = Record.from_biopython(seqio.read(path.get_full_path(__file__, 'data', 'labyrinthopeptin.gbk')))
         assert not rec.get_cds_motifs()
-        result = specific_analysis(rec)
+        result = run_specific_analysis(rec)
         assert len(result.motifs) == 2
         assert not rec.get_cds_motifs()
         result.add_to_record(rec)
@@ -148,7 +148,7 @@ class IntegrationLanthipeptides(unittest.TestCase):
         "Test lanthipeptide prediction for SCO cluster #3"
         rec = Record.from_biopython(seqio.read(path.get_full_path(__file__, 'data', 'sco_cluster3.gbk')))
         assert not rec.get_cds_motifs()
-        result = specific_analysis(rec)
+        result = run_specific_analysis(rec)
         assert len(result.motifs) == 1
         assert not rec.get_cds_motifs()
         result.add_to_record(rec)
@@ -159,7 +159,7 @@ class IntegrationLanthipeptides(unittest.TestCase):
         """Test lanthipeptide prediction for lactocin S"""
         rec = Record.from_biopython(seqio.read(path.get_full_path(__file__, 'data', 'lactocin_s.gbk')))
         assert not rec.get_cds_motifs()
-        result = specific_analysis(rec)
+        result = run_specific_analysis(rec)
         assert len(result.motifs) == 1
         assert not rec.get_cds_motifs()
         result.add_to_record(rec)

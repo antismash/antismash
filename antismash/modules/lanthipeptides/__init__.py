@@ -12,7 +12,7 @@ from antismash.common import path
 from antismash.config.args import ModuleArgs
 
 from .config import get_config  # local config for fimo presence
-from .specific_analysis import specific_analysis, LanthiResults
+from .specific_analysis import run_specific_analysis, LanthiResults
 from .html_output import generate_details_div, generate_sidepanel, will_handle
 
 NAME = "lanthipeptides"
@@ -78,4 +78,4 @@ def run_on_record(record, results, _options) -> LanthiResults:
     """
     if isinstance(results, LanthiResults) and results.record_id == record.id:
         return results
-    return specific_analysis(record)
+    return run_specific_analysis(record)

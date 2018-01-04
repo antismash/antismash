@@ -680,7 +680,7 @@ def result_vec_to_feature(orig_feature: secmet.CDSFeature, res_vec: Lanthipeptid
     return feature
 
 
-def specific_analysis(record: secmet.Record) -> LanthiResults:
+def run_specific_analysis(record: secmet.Record) -> LanthiResults:
     """ Runs the full lanthipeptide analysis over the given record
 
         Arguments:
