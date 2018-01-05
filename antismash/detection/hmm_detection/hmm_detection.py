@@ -47,7 +47,7 @@ def find_clusters(record, cds_domains_by_cluster, rules_by_name) -> List[Cluster
         # start a new cluster if this is too far from the previous
         if not within_cutoff:
             if clusters:
-                # Finalize the last extended cluster
+                # Finalize the previous extended cluster
                 cluster = clusters[-1]
                 cluster.location = FeatureLocation(max(0, cluster.location.start - cluster.extent),
                                                    min(len(record), cluster.location.end + cluster.extent))
@@ -58,8 +58,18 @@ def find_clusters(record, cds_domains_by_cluster, rules_by_name) -> List[Cluster
             cluster = clusters[-1]
 
         # Update cluster
-        cluster.location = FeatureLocation(min(cluster.location.start, feature_start),
-                                           max(cluster.location.end, feature_end))
+        start = min(cluster.location.start, feature_start)
+        end = max(cluster.location.end, feature_end)
+        # if the extents would overlap, but not cutoffs, then trim the later
+        # cluster to start only where the previous ends
+        # (occurs in CP006259, clusters 1 and 2)
+        if len(clusters) > 1:
+            previous = clusters[-2]
+            if previous.location.end > start - cluster.extent:
+                # pad with the current extent, since that will be removed when
+                # the cluster is finalised
+                start = previous.location.end + cluster.extent
+        cluster.location = FeatureLocation(start, end)
         cluster.cutoff = max(cluster.cutoff, feature_cutoff)
         cluster.extent = max(cluster.extent, feature_extension)
         cluster.products = list(set(cluster.products) | set(feature_types))
