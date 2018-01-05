@@ -70,10 +70,6 @@ def calculate_consensus_prediction(genes, results) -> Tuple[Dict[str, str], Dict
 
     for feature in genes:
         locus = feature.get_name()
-        nra = 0
-        nrat = 0
-        nrcal = 0
-        nrtransat = 0
 
         for domain in feature.nrps_pks.domains:
             if 'OTHER' in domain.label:
@@ -81,7 +77,6 @@ def calculate_consensus_prediction(genes, results) -> Tuple[Dict[str, str], Dict
             domain_name = locus + domain.label
             if 'transatpks' not in feature.cluster.products:
                 if domain.name == "PKS_AT":
-                    nrat += 1
                     preds = []
                     if results["minowa_at"].get(domain_name):
                         pred = results["minowa_at"][domain_name][0][0]
@@ -92,23 +87,21 @@ def calculate_consensus_prediction(genes, results) -> Tuple[Dict[str, str], Dict
                     non_trans_at[domain_name] = consensus
             else:
                 if domain.name == "PKS_AT":
-                    nrat += 1
-                    domain_name = locus + "_AT%d" % nrat
                     preds = []
-                    preds.append(domain.predictions["Minowa"])
-                    preds.append(domain.predictions["PKS signature"])
+                    if results["minowa_at"].get(domain_name):
+                        pred = results["minowa_at"][domain_name][0][0]
+                        preds.append(LONG_TO_SHORT.get(pred))
+                    if results["signature"].get(domain_name):
+                        preds.append(results["signature"][domain_name][0].name.rsplit("_", 1)[-1])
                     consensus = calculate_individual_consensus(preds, available_smiles_parts)
                     trans_at[domain_name] = consensus
                 # For chemical display purpose for chemicals from trans-AT PKS gene cluster
                 # mal is always assumed for trans-AT
                 elif domain.name == "PKS_KS":
-                    nrtransat += 1
                     non_trans_at[domain_name] = "mal"
             if domain.name in ["AMP-binding", "A-OX"]:
-                nra += 1
                 non_trans_at[domain_name] = "nrp"
             elif domain.name == "CAL_domain":
-                nrcal += 1
                 pred = results["minowa_cal"][domain_name][0][0]
                 pred = LONG_TO_SHORT.get(pred, pred)
                 if pred in available_smiles_parts:

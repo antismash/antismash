@@ -8,17 +8,20 @@
 
 import logging
 
-from .results import PKSResults
-from .substrates_pks import count_pks_genes, run_minowa_predictor_pks_at, run_minowa_predictor_pks_cal, run_kr_stereochemistry_predictions, extract_pks_genes
+from antismash.common.secmet import CDSFeature
 
-def run_pks_substr_spec_predictions(genes) -> PKSResults:
-    pks_genes = extract_pks_genes(genes)
+from .results import PKSResults
+from .substrates_pks import count_pks_genes, run_minowa_predictor_pks_at, \
+                            run_minowa_predictor_pks_cal, run_kr_stereochemistry_predictions, \
+                            extract_at_domains
+
+
+def run_pks_substr_spec_predictions(genes: CDSFeature) -> PKSResults:
+    at_domains = extract_at_domains(genes)
     counted = count_pks_genes(genes)
-    if counted != len(pks_genes):
-        logging.critical("mismatching PKS genes counted and PKS names extracted")
     results = PKSResults()
-    if pks_genes:
-        signature_results, minowa_at_results = run_minowa_predictor_pks_at(pks_genes)
+    if at_domains:
+        signature_results, minowa_at_results = run_minowa_predictor_pks_at(at_domains)
         results.method_results["signature"] = signature_results
         results.method_results["minowa_at"] = minowa_at_results
     if counted:
