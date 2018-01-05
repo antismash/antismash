@@ -86,7 +86,7 @@ class NRPSPKSQualifier(list):
             suffix = "_A%d" % self.a
         else:
             self.other += 1
-            suffix = "_OTHER%d" % self.a
+            suffix = "_OTHER%d" % self.other
 
         self.domains.append(NRPSPKSQualifier.Domain(domain.hit_id, suffix,
                 domain.query_start, domain.query_end, domain.evalue, domain.bitscore))
