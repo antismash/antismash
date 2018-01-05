@@ -84,7 +84,7 @@ class TestRefinement(unittest.TestCase):
         assert hit_ids == self.hit_ids
         # 2 hits each for 1048 and 1237, for 5 hits total
         assert len(results) == 5
-        new = refinement._merge_domain_list(results)
+        new = refinement._merge_domain_list(results, self.hmm_lengths)
         # after merging, only one hit should remain for each
         assert len(new) == 3
         # and the original list should be untouched

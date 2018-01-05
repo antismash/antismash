@@ -71,9 +71,10 @@ class IntegrationNRPSPKS(unittest.TestCase):
         assert results.consensus == {'STAUR_3982_AT1': 'ohmmal',
                                      'STAUR_3983_AT1': 'ccmmal',
                                      'STAUR_3984_AT1': 'ccmmal',
-                                     'STAUR_3985_AT1': 'pk'}
+                                     'STAUR_3985_AT1': 'pk',
+                                     'STAUR_3985_AT2': 'pk'}
         # check the gene ordering and, in this case, that it used domain docking
         assert results.cluster_predictions == {'1': [
-                '(ccmmal) + (ccmmal) + (pk) + (ohmmal)', True]}
+                '(ccmmal) + (ccmmal) + (pk-pk) + (ohmmal)', True]}
         # no A domains in the cluster, so make sure no NRPS results
         assert results.nrps == {}
