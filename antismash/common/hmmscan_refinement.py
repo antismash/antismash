@@ -58,26 +58,35 @@ def _remove_incomplete(domains, hmm_lengths, threshold=0.5, fallback=1./3.):
     return []
 
 
-def _merge_domain_list(domainlist):
+def _merge_domain_list(domainlist, hmm_lengths):
     categories = defaultdict(list)
     for domain in domainlist:
         categories[domain.hit_id].append(domain)
     remaining = []
     for category in categories.values():
         merged = category[0]
+        max_span = 1.5 * hmm_lengths[merged.hit_id]
         for other in category[1:]:
-            merged = merged.merge(other)
+            # only merge if the hit spans of the two domains are small enough
+            if other.query_end - merged.query_start < max_span:
+                merged = merged.merge(other)
+            else:
+                merged = other
         remaining.append(merged)
     return sorted(remaining, key=lambda result: result.query_start)
 
 
-def _merge_immediate_neigbours(domains):
+def _merge_immediate_neigbours(domains, hmm_lengths):
     result = [domains[0]]
     for domain in domains[1:]:
         if domain.hit_id != result[-1].hit_id:
             result.append(domain)
             continue
-        result[-1] = result[-1].merge(domain)
+        # only merge if the hit spans of the two domains are small enough
+        if domain.query_end - result[-1].query_start < 1.5 * hmm_lengths[domain.hit_id]:
+            result[-1] = result[-1].merge(domain)
+        else:
+            result.append(domain)
     return result
 
 
@@ -157,10 +166,10 @@ def refine_hmmscan_results(hmmscan_results, hmm_lengths, neighbour_mode=False):
             # Only keep best hits for overlapping domains
             refined = _remove_overlapping(refined, hmm_lengths)
             # Merge domain fragments which are really one domain
-            refined = _merge_immediate_neigbours(refined)
+            refined = _merge_immediate_neigbours(refined, hmm_lengths)
         else:
             # Merge domain fragments which are really one domain
-            refined = _merge_domain_list(refined)
+            refined = _merge_domain_list(refined, hmm_lengths)
             # Only keep best hits for overlapping domains
             refined = _remove_overlapping(refined, hmm_lengths)
         # Remove incomplete domains (covering less than 60% of total domain hmm length)
