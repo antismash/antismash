@@ -231,6 +231,7 @@ class Record:
         index = 0
         for i, existing_cluster in enumerate(self._clusters):  # TODO: fix performance
             if cluster.overlaps_with(existing_cluster):
+                logging.error("existing %s overlaps with new %s", existing_cluster, cluster)
                 raise ValueError("Clusters cannot overlap")
             if cluster < existing_cluster:
                 index = i  # before
