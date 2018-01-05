@@ -46,10 +46,10 @@ class NRPSPKSQualifier(list):
         self.a = 0
         self.other = 0
 
-    def append(self):
+    def append(self, _value):
         raise NotImplementedError("Appending to this list won't work, use add_subtype() or add_domain()")
 
-    def extend(self):
+    def extend(self, _values):
         raise NotImplementedError("Extending this list won't work")
 
     def __len__(self):
@@ -57,8 +57,8 @@ class NRPSPKSQualifier(list):
 
     def __iter__(self):
         for domain in self.domains:
-            yield "NRPS/PKS Domain: %s (%s-%s). E-value: %s. Score: %s;" % (domain.hit_id,
-                    domain.query_start, domain.query_end, domain.evalue, domain.bitscore)
+            yield "NRPS/PKS Domain: %s (%s-%s). E-value: %s. Score: %s;" % (domain.name,
+                    domain.start, domain.end, domain.evalue, domain.bitscore)
         for subtype in self.subtypes:
             yield "NRPS/PKS subtype: %s" % subtype
 
