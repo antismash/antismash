@@ -29,6 +29,10 @@ class NRPSPKSQualifier(list):
             self.bitscore = bitscore
             self.predictions = {}
 
+        def __repr__(self):
+            return "NRPSPKSQualifier.Domain(%s, label=%s, start=%d, end=%d)" % (
+                        self.name, self.label, self.start, self.end)
+
     def __init__(self) -> None:
         super().__init__()
         self.type = "uninitialised"
