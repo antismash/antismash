@@ -22,6 +22,7 @@ RULE transatpks
     CUTOFF 20
     EXTENT 20
     CONDITIONS cds(ATd and (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS))
+               and cds(PKS_AT and not (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS))
 
 RULE otherks
     CUTOFF 20
