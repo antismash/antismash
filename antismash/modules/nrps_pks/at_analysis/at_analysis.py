@@ -77,8 +77,7 @@ def score_signatures(query_signatures: Dict[str, str],
             sorted in order of decreasing score
     """
     results = ATSignatureResults()
-    for key in sorted(query_signatures):
-        query_sig_seq = query_signatures[key]
+    for key, query_sig_seq in sorted(query_signatures.items()):
         scores = []
         for sig_name, sig_seq in reference_signatures.items():
             score = 0.
@@ -94,8 +93,17 @@ def score_signatures(query_signatures: Dict[str, str],
     return results
 
 
-def run_at_domain_analysis(domains) -> Dict[str, List[ATResult]]:
-    """ extract PKS signature from AT domains """
+def run_at_domain_analysis(domains: Dict[str, str]) -> Dict[str, List[ATResult]]:
+    """ Analyses PKS signature of AT domains
+
+        Arguments:
+            domains: a dictionary mapping domain identifier (e.g. 'locus_AT2')
+                     to domain sequence
+
+        Returns:
+            a dictionary mapping domain identifier to
+                a list of ATResults ordered by decreasing score
+    """
     # construct the query signatures
     query_signatures = {}
     at_positions = get_at_positions(startpos=7)

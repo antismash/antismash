@@ -2,8 +2,11 @@
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
 import logging
+from typing import Dict, List
 
 from helperlibs.wrappers.io import TemporaryDirectory
+
+from antismash.common.secmet import CDSFeature
 
 from .minowa import minowa_cal, minowa_at
 from .kr_analysis import kr_analysis
@@ -20,33 +23,32 @@ def count_pks_genes(genes):
     return pkscount
 
 
-def extract_pks_genes(genes):
-    """ returns a list of names and sequences for each PKS_AT domain found in the record """
+def extract_at_domains(genes: List[CDSFeature]) -> Dict[str, str]:
+    """ Returns a dictionary mapping domain name to domain sequence
+        for each PKS_AT domain found in the record
+    """
     results = {}
     for gene in genes:
         locus = gene.get_name()
         domains = gene.nrps_pks.domains
-        count = 0
         for domain in domains:
             if domain.name == "PKS_AT":
-                count += 1
                 seq = str(gene.translation)[domain.start:domain.end]
-                name = locus + "_AT" + str(count)
-                results[name] = seq
+                results[locus + domain.label] = seq
     return results
 
 
-def run_minowa_predictor_pks_at(pks_domains):
+def run_minowa_predictor_pks_at(at_domains: Dict[str, str]):
     """ analyses AT domains with Minowa and signature based detection """
     # Predict PKS AT domain specificities with Minowa et al. method and PKS code (NP searcher / ClustScan / own?)
     # Run PKS signature analysis
     logging.info("Predicting PKS AT domain substrate specificities by Yadav et al. PKS signature sequences")
-    signature_results = at_analysis.run_at_domain_analysis(pks_domains)
+    signature_results = at_analysis.run_at_domain_analysis(at_domains)
 
     # Minowa method: run Minowa_AT
     logging.info("Predicting PKS AT domain substrate specificities by Minowa et al. method")
     with TemporaryDirectory(change=True):
-        minowa_results = minowa_at.run_minowa_at(pks_domains)
+        minowa_results = minowa_at.run_minowa_at(at_domains)
     return signature_results, minowa_results
 
 
