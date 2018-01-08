@@ -9,25 +9,34 @@
 from io import StringIO
 import logging
 
-from helperlibs.wrappers.io import TemporaryDirectory
 from helperlibs.bio import seqio
+from helperlibs.wrappers.io import TemporaryDirectory
 
 from antismash.common import path
 from antismash.common.gff_parser import get_features_from_file
 from antismash.common.subprocessing import execute
 
 
-def write_search_fasta(seq_record):
-    name = seq_record.id.lstrip('-')
+def write_search_fasta(record) -> str:
+    """ Constructs a FASTA representation of a record and writes it to a
+        file in the current directory.
+
+        Returns:
+            the name of the file created
+    """
+    name = record.id.lstrip('-')
     if not name:
         name = "unknown"
     filename = "{}.fasta".format(name)
     with open(filename, 'w') as handle:
-        seqio.write([seq_record.to_biopython()], handle, 'fasta')
+        seqio.write([record.to_biopython()], handle, 'fasta')
     return filename
 
 
-def run_external(fasta_filename):
+def run_external(fasta_filename) -> str:
+    """ Runs glimmerhmm on the provided fasta file and returns the stdout output
+        from glimmerhmm.
+    """
     glimmerhmm = ['glimmerhmm', fasta_filename,
                   path.get_full_path(__file__, "data/train_crypto"), "-g"]
     run_result = execute(glimmerhmm)
@@ -40,13 +49,16 @@ def run_external(fasta_filename):
     return run_result.stdout
 
 
-def run_glimmerhmm(seq_record, options):
+def run_glimmerhmm(record) -> None:
+    """ Run glimmerhmm on the record, parse the results and add all detected
+        genes to the record
+    """
     with TemporaryDirectory(change=True):
         # Write FASTA file and run GlimmerHMM
-        fasta_file = write_search_fasta(seq_record)
+        fasta_file = write_search_fasta(record)
         results_text = run_external(fasta_file)
 
     handle = StringIO(results_text)
-    features = get_features_from_file(seq_record, handle)
+    features = get_features_from_file(record, handle)
     for feature in features:
-        seq_record.add_biopython_feature(feature)
+        record.add_biopython_feature(feature)
