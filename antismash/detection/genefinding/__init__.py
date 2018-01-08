@@ -1,19 +1,27 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+""" A module to find genes in a record using external tools """
+
 import logging
 import os
+from typing import List
 
 from antismash.common.path import locate_executable
 from antismash.config import get_config
 from antismash.config.args import ModuleArgs
-from antismash.detection.genefinding.genefinding import run_on_record
+
+from .run_prodigal import run_prodigal
+from .run_glimmerhmm import run_glimmerhmm
+
 
 NAME = "genefinding"
 SHORT_DESCRIPTION = "Genefinding with GlimmerHMM or Prodigal"
 
 
-def get_arguments():
+def get_arguments() -> ModuleArgs:
+    """ Construct args with options for which genefinding method to use (if any)
+    """
     args = ModuleArgs('Gene finding options (ignored when ORFs are annotated)', 'genefinding')
     args.add_option('tool',
                     dest='tool',
@@ -33,7 +41,8 @@ def get_arguments():
     return args
 
 
-def check_prereqs():
+def check_prereqs() -> List[str]:
+    """ Make sure the external tools to use are available """
     failure_messages = []
     options = get_config()
     if options.genefinding_tool in ['none']:
@@ -50,7 +59,10 @@ def check_prereqs():
     return failure_messages
 
 
-def check_options(options):
+def check_options(options) -> List[str]:
+    """ Check that fungal sequences aren't using bacterial genefinding
+        and vice versa.
+    """
     errors = []
     if options.genefinding_gff3:
         if not os.path.exists(options.genefinding_gff3):
@@ -64,4 +76,24 @@ def check_options(options):
 
 
 def is_enabled(options):
+    """ Considered enabled in the case of the tool being 'error', because it
+        should throw an error in that case.
+    """
     return options.genefinding_tool != "none"
+
+
+def run_on_record(record, options):
+    """ Find genes in a Record using glimmerhmm or prodigal.
+        Genes will be added to the record as they are found.
+    """
+    if options.genefinding_tool == 'error':
+        raise ValueError("Called find_genes, but genefinding disabled")
+    if options.taxon == 'fungi':
+        assert options.genefinding_tool == "glimmerhmm"
+        logging.debug("Running glimmerhmm genefinding")
+        run_glimmerhmm(record)
+    elif options.genefinding_tool in ["prodigal", "prodigal-m"]:
+        logging.debug("Running prodigal based genefinding")
+        run_prodigal(record, options)
+    else:
+        raise ValueError("Unknown genefinding tool: %s", options.genefinding_tool)

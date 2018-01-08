@@ -1,41 +1,40 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
-"""Gene finding using Prodigal
-
+""" Gene finding using Prodigal
 """
 
 import logging
 from os import path
-from helperlibs.wrappers.io import TemporaryDirectory
-from helperlibs.bio import seqio
+
 from Bio.SeqFeature import FeatureLocation
+from helperlibs.bio import seqio
+from helperlibs.wrappers.io import TemporaryDirectory
 
 from antismash.common.secmet import CDSFeature
 from antismash.common.subprocessing import execute
 
 
-def run_prodigal(seq_record, options):
-    """
-        Run progidal to annotate prokaryotic sequences
+def run_prodigal(record, options) -> None:
+    """ Run progidal to annotate prokaryotic sequences
     """
     if "basedir" in options.get('prodigal', ''):
         basedir = options.prodigal.basedir
     else:
         basedir = ""
     with TemporaryDirectory(change=True):
-        name = seq_record.id.lstrip('-')
+        name = record.id.lstrip('-')
         if not name:
             name = "unknown"
         fasta_file = '%s.fasta' % name
         result_file = '%s.predict' % name
         with open(fasta_file, 'w') as handle:
-            seqio.write([seq_record.to_biopython()], handle, 'fasta')
+            seqio.write([record.to_biopython()], handle, 'fasta')
 
         # run prodigal
         prodigal = [path.join(basedir, 'prodigal')]
         prodigal.extend(['-i', fasta_file, '-f', 'sco', '-o', result_file])
-        if options.genefinding_tool == "prodigal-m" or len(seq_record.seq) < 20000:
+        if options.genefinding_tool == "prodigal-m" or len(record.seq) < 20000:
             prodigal.extend(['-p', 'meta'])
 
         err = execute(prodigal).stderr
@@ -65,7 +64,7 @@ def run_prodigal(seq_record, options):
                 start, end = end, start
 
             loc = FeatureLocation(start-1, end, strand=strand)
-            feature = CDSFeature(loc, locus_tag='ctg%s_%s' % (seq_record.record_index, name))
-            seq_record.add_cds_feature(feature)
+            feature = CDSFeature(loc, locus_tag='ctg%s_%s' % (record.record_index, name))
+            record.add_cds_feature(feature)
             found += 1
     logging.debug("prodigal found %d CDS features", found)
