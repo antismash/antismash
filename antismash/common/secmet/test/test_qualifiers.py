@@ -13,7 +13,7 @@ class TestNRPSPKS(unittest.TestCase):
     def test_counter(self):
         qualifier = NRPSPKSQualifier()
         types = [("PKS_AT", "_AT"), ("PKS_KR", "_KR"), ("CAL_domain", "_CAL"),
-                 ("AMP-binding", "_A"), ("PKS_KS", "_OTHER")]
+                 ("AMP-binding", "_A"), ("PKS_KS", "_KS"), ("ACP", "_OTHER")]
         expected = set()
         for pks_type, suffix in types:
             domain = HMMResult(pks_type, 1, 1, 1, 1)

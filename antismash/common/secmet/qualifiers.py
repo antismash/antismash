@@ -44,6 +44,7 @@ class NRPSPKSQualifier(list):
         self.at = 0
         self.kr = 0
         self.a = 0
+        self.ks = 0
         self.other = 0
 
     def append(self, _value):
@@ -88,6 +89,9 @@ class NRPSPKSQualifier(list):
         elif domain.hit_id == "AMP-binding":
             self.a += 1
             suffix = "_A%d" % self.a
+        elif domain.hit_id == "PKS_KS":
+            self.ks += 1
+            suffix = "_KS%d" % self.ks
         else:
             self.other += 1
             suffix = "_OTHER%d" % self.other
