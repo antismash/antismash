@@ -107,7 +107,7 @@ def calculate_consensus_prediction(genes, results) -> Tuple[Dict[str, str], Dict
                 if pred in available_smiles_parts:
                     non_trans_at[domain_name] = pred
                 else:
-                    logging.critical("missing %s from SMILES parts", pred)
+                    logging.critical("missing %s from SMILES parts for domain %s", pred, domain_name)
                     non_trans_at[domain_name] = "pk"
     return non_trans_at, trans_at
 
