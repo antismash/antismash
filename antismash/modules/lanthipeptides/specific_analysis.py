@@ -41,34 +41,41 @@ KNOWN_PRECURSOR_DOMAINS = set([
 
 THRESH_DICT = {'Class-I': -15,
                'Class-II': -7.3,
-               'Class-III': 3.5}
+               'Class-III': -3.5}
+
+# the maximal number of bases in each direction of a core enzyme that a
+# precursor can be defined in
+MAX_PRECURSOR_DISTANCE = 10000
 
 
 class LanthiResults(module_results.ModuleResults):
     """ Holds the results of lanthipeptide analysis for a record
 
-        clusters_with_motifs: a set of cluster numbers that contain motifs
-        cds_features: a dictionary mapping cluster number to a list of CDS
-                      features in which prepeptides were found
-        motifs: a list of LanthipeptideMotif features
     """
-    schema_version = 1
+    schema_version = 2
 
     def __init__(self, record_id, *args):
         super().__init__(record_id, *args)
-        self.clusters_with_motifs = set()
-        self.cds_features = defaultdict(list)  # CDSs found with find_all_orfs
-        self.motifs = []
+        # keep new CDS features
+        self.new_cds_features = set()
+        # keep new CDSMotifs by the gene they match to
+        # e.g. self.motifs_by_locus[gene_locus] = [motif1, motif2..]
+        self.motifs_by_locus = defaultdict(list)
+        # keep clusters and which genes in them had precursor hits
+        # e.g. self.clusters[cluster_number] = {gene1_locus, gene2_locus}
+        self.clusters = defaultdict(set)
 
     def to_json(self):
-        cds_features_by_cluster = {key: [(serialiser.location_to_json(feature.location),
-                                          feature.get_name()) for feature in features]
-                                   for key, features in self.cds_features.items()}
+        cds_features = [(serialiser.location_to_json(feature.location),
+                         feature.get_name()) for feature in self.new_cds_features]
+        motifs = {}
+        for locus, locus_motifs in self.motifs_by_locus.items():
+            motifs[locus] = [motif.to_json() for motif in locus_motifs]
         return {"record_id": self.record_id,
                 "schema_version": LanthiResults.schema_version,
-                "clusters with motifs": [cluster.get_cluster_number() for cluster in self.clusters_with_motifs],
-                "motifs": [motif.to_json() for motif in self.motifs],
-                "cds_features": cds_features_by_cluster}
+                "motifs": motifs,
+                "new_cds_features": cds_features,
+                "clusters": {key: list(val) for key, val in self.clusters.items()}}
 
     @staticmethod
     def from_json(json, record) -> "LanthiResults":
@@ -76,23 +83,22 @@ class LanthiResults(module_results.ModuleResults):
             logging.warning("Discarding Lanthipeptide results, schema version mismatch")
             return None
         results = LanthiResults(json["record_id"])
-        for motif in json["motifs"]:
-            results.motifs.append(LanthipeptideMotif.from_json(motif))
-        for cluster in json["clusters with motifs"]:
-            results.clusters_with_motifs.add(record.get_cluster(cluster))
-        for cluster, features in json["cds_features"]:
-            for location, name in features:
-                cds = all_orfs.create_feature_from_location(record, location, label=name)
-                results.cds_features[cluster].append(cds)
+        for locus, motifs in json["motifs"].items():
+            for motif in motifs:
+                results.motifs_by_locus[locus].append(LanthipeptideMotif.from_json(motif))
+        results.clusters = {int(key): set(val) for key, val in json["clusters"].items()}
+        for location, name in json["new_cds_features"]:
+            cds = all_orfs.create_feature_from_location(record, location, label=name)
+            results.new_cds_features.add(cds)
         return results
 
     def add_to_record(self, record):
-        for features in self.cds_features.values():
-            for cds in features:
-                record.add_cds_feature(cds)
+        for feature in self.new_cds_features:
+            record.add_cds_feature(feature)
 
-        for motif in self.motifs:
-            record.add_cds_motif(motif)
+        for motifs in self.motifs_by_locus.values():
+            for motif in motifs:
+                record.add_cds_motif(motif)
 
 
 class PrepeptideBase:
@@ -325,12 +331,12 @@ class CleavageSiteHit(object):
                     self.start, self.end, self.score, self.lantype)
 
 
-def get_detected_domains(cluster: secmet.Cluster) -> List[str]:
+def get_detected_domains(genes: List[secmet.CDSFeature]) -> List[str]:
     """ Gathers all detected domains in a cluster, including some not detected
         by hmm_detection.
 
         Arguments:
-            cluster: the cluster to gather the domains of
+            genes: a list of genes to check
 
         Returns:
             a list of strings, each string being the name of a domain in the
@@ -338,14 +344,14 @@ def get_detected_domains(cluster: secmet.Cluster) -> List[str]:
     """
     found_domains = []  # type: List[str]
     # Gather biosynthetic domains
-    for feature in cluster.cds_children:
+    for feature in genes:
         if not feature.sec_met:
             continue
         found_domains.extend(feature.sec_met.domain_ids)
 
     # Gather non-biosynthetic domains
-    cluster_features = cluster.cds_children
-    cluster_fasta = get_fasta_from_features(cluster_features)
+    cluster_fasta = get_fasta_from_features(genes)
+    assert cluster_fasta
     non_biosynthetic_hmms_by_id = run_non_biosynthetic_phmms(cluster_fasta)
     non_biosynthetic_hmms_found = []  # type: List[str]
     for hsps_found in non_biosynthetic_hmms_by_id.values():
@@ -405,17 +411,17 @@ def predict_cleavage_site(query_hmmfile, target_sequence, threshold=-100) -> Opt
     return None
 
 
-def predict_class_from_gene_cluster(cluster) -> Optional[str]:
+def predict_class_from_genes(focus: secmet.CDSFeature, genes: List[secmet.CDSFeature]) -> Optional[str]:
     """ Predict the lanthipeptide class from the gene cluster
 
         Arguments:
-            cluster: the Cluster to predict the class of
+            genes: a list of genes to check
 
         Returns:
             a string representing the class, or None if no class predicted
     """
     found_domains = set()
-    for feature in cluster.cds_children:
+    for feature in genes + [focus]:
         if not feature.sec_met:
             continue
         found_domains.update(set(feature.sec_met.domain_ids))
@@ -428,11 +434,6 @@ def predict_class_from_gene_cluster(cluster) -> Optional[str]:
         # this could be class 3 or class 4, but as nobody has seen class 4
         # in vivo yet, we'll ignore that
         return 'Class-III'
-
-    # TODO drop this when dropping prepeptides from cluster rules
-    # Ok, no biosynthetic enzymes found, let's try the prepeptide
-    if 'Gallidermin' in found_domains:
-        return 'Class-I'
 
     return None
 
@@ -551,7 +552,7 @@ def run_lanthipred(record: secmet.Record, query: secmet.CDSFeature, lant_class, 
             return None
 
     # extract now (that class is known and thus the END component) the core peptide
-    if result.core.find('C') < 0:
+    if result.number_of_lan_bridges == 0:
         return None
 
     query.gene_functions.add(secmet.GeneFunction.ADDITIONAL, "lanthipeptides",
@@ -575,18 +576,18 @@ def find_lan_a_features(cluster: secmet.Cluster) -> List[secmet.CDSFeature]:
     return lan_a_features
 
 
-def cluster_contains_feature_with_single_domain(cluster: secmet.Cluster, domains: Set[str]) -> bool:
-    """ Checks for the existence of a feature within a cluster that has a single
+def contains_feature_with_single_domain(genes: List[secmet.CDSFeature], domains: Set[str]) -> bool:
+    """ Checks for the existence of a feature within a group that has a single
         domain and that the domain is within the provided set of domains
 
         Arguments:
-            cluster: the Cluster instance to check
+            genes: a list of genes to check
             domains: the set of domain names allowable
 
         Returns:
             True if a feature matching the conditions was found, otherwise False
     """
-    for feature in cluster.cds_children:
+    for feature in genes:
         if not feature.sec_met or len(feature.sec_met.domain_ids) > 1:
             continue
         if len(domains.intersection(set(feature.sec_met.domain_ids))) == 1:
@@ -692,6 +693,74 @@ def result_vec_to_feature(orig_feature: secmet.CDSFeature, res_vec: Lanthipeptid
     return feature
 
 
+def find_neighbours_in_range(center: secmet.CDSFeature,
+                             candidates: List[secmet.CDSFeature]) -> List[secmet.CDSFeature]:
+    """ Restrict a set of genes to those within precursor range of a central
+        gene.
+
+        Arguments:
+            center: the gene to find the neighbours of
+            candidates: the genes to filter by range
+
+        Returns:
+            a list of genes within range, with the same ordering as the input
+    """
+    neighbours = []
+    for candidate in candidates:
+        if candidate < center:
+            if center.location.start - candidate.location.start <= MAX_PRECURSOR_DISTANCE:
+                neighbours.append(candidate)
+        else:
+            if candidate.location.end - center.location.end <= MAX_PRECURSOR_DISTANCE:
+                neighbours.append(candidate)
+            else:
+                # skip looking further to the right if the previous one was too far away
+                break
+    return neighbours
+
+
+def run_lanthi_on_genes(record: secmet.Record, focus: secmet.CDSFeature,
+                        genes: List[secmet.CDSFeature], results: LanthiResults) -> None:
+    """ Runs lanthipeptide around a single focus gene which is a core biosynthetic
+        enzyme for lanthipeptides.
+        Updates the results object with any precursors found.
+
+        Arguments:
+            record: the Record instance containing the genes
+            focus: a core lanthipeptide gene
+            genes: a list of candidate precursor genes
+            results: a LanthiResults object to update
+
+        Returns:
+            None
+    """
+    domains = get_detected_domains(genes)
+    non_candidate_neighbours = find_neighbours_in_range(focus, focus.cluster.cds_children)
+    flavoprotein_found = contains_feature_with_single_domain(non_candidate_neighbours, {"Flavoprotein"})
+    halogenase_found = contains_feature_with_single_domain(non_candidate_neighbours, {"Trp_halogenase"})
+    oxygenase_found = contains_feature_with_single_domain(non_candidate_neighbours, {"p450"})
+    dehydrogenase_found = contains_feature_with_single_domain(non_candidate_neighbours, {"adh_short", "adh_short_C2"})
+
+    lant_class = predict_class_from_genes(focus, genes)
+    if not lant_class:
+        return
+
+    for candidate in genes:
+        result_vec = run_lanthipred(record, candidate, lant_class, domains)
+        if result_vec is None:
+            continue
+        result_vec.aminovinyl_group = flavoprotein_found
+        result_vec.chlorinated = halogenase_found
+        result_vec.oxygenated = oxygenase_found
+        result_vec.lactonated = dehydrogenase_found and result_vec.core.startswith('S')
+        motif = result_vec_to_feature(candidate, result_vec)
+        results.motifs_by_locus[focus.get_name()].append(motif)
+        results.clusters[focus.cluster.get_cluster_number()].add(focus.get_name())
+        # track new CDSFeatures if found with all_orfs
+        if candidate.cluster is None:
+            results.new_cds_features.add(candidate)
+
+
 def run_specific_analysis(record: secmet.Record) -> LanthiResults:
     """ Runs the full lanthipeptide analysis over the given record
 
@@ -706,36 +775,25 @@ def run_specific_analysis(record: secmet.Record) -> LanthiResults:
         if 'lanthipeptide' not in cluster.products:
             continue
 
-        lan_as = find_lan_a_features(cluster)
+        # find core biosynthetic enzyme locations
+        core_domain_names = {'Lant_dehyd_N', 'Lant_dehyd_C', 'DUF4135', 'Pkinase'}
+        core_genes = []
+        for gene in cluster.cds_children:
+            if not gene.sec_met:
+                continue
+            if core_domain_names.intersection(set(gene.sec_met.domain_ids)):
+                core_genes.append(gene)
 
+        precursor_candidates = find_lan_a_features(cluster)
         # Find candidate ORFs that are not yet annotated
         extra_orfs = all_orfs.find_all_orfs(record, cluster)
         for orf in extra_orfs:
             if len(orf.translation) < 80:
-                lan_as.append(orf)
+                precursor_candidates.append(orf)
 
-        domains = get_detected_domains(cluster)
-        flavoprotein_found = cluster_contains_feature_with_single_domain(cluster, {"Flavoprotein"})
-        halogenase_found = cluster_contains_feature_with_single_domain(cluster, {"Trp_halogenase"})
-        oxygenase_found = cluster_contains_feature_with_single_domain(cluster, {"p450"})
-        dehydrogenase_found = cluster_contains_feature_with_single_domain(cluster, {"adh_short", "adh_short_C2"})
+        for gene in core_genes:
+            neighbours = find_neighbours_in_range(gene, precursor_candidates)
+            run_lanthi_on_genes(record, gene, neighbours, results)
 
-        lant_class = predict_class_from_gene_cluster(cluster)
-        if not lant_class:
-            continue
-
-        for lan_a in lan_as:
-            result_vec = run_lanthipred(record, lan_a, lant_class, domains)
-            if result_vec is None:
-                continue
-            result_vec.aminovinyl_group = flavoprotein_found
-            result_vec.chlorinated = halogenase_found
-            result_vec.oxygenated = oxygenase_found
-            result_vec.lactonated = dehydrogenase_found and result_vec.core.startswith('S')
-            motif = result_vec_to_feature(lan_a, result_vec)
-            results.motifs.append(motif)
-            results.clusters_with_motifs.add(cluster)
-            if lan_a in extra_orfs:
-                results.cds_features[cluster.get_cluster_number()].append(lan_a)
-    logging.debug("Lanthipeptide module marked %d motifs", len(results.motifs))
+    logging.debug("Lanthipeptide module marked %d motifs", sum(map(len, results.motifs_by_locus)))
     return results

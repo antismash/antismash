@@ -44,7 +44,7 @@ def regenerate_previous_results(results, record, _options) -> LanthiResults:
         return None
     results = LanthiResults.from_json(results, record)
     logging.debug("Reusing Lanthipeptide results: %d clusters contained %d total motifs",
-                  len(results.clusters_with_motifs), len(results.motifs))
+                  len(results.clusters), sum(len(motifs) for motifs in results.motifs_by_locus.values()))
     return results
 
 
