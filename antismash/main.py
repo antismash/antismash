@@ -141,7 +141,8 @@ def verify_options(options, modules) -> bool:
             errors.append(str(err))
     if not errors:
         return True
-    logging.error("Incompatible options detected:")
+
+    logging.error("Incompatible options detected:\n  %s", "\n  ".join(errors))
     for error in errors:
         print(error)  # still commandline args, so don't use logging
     return False

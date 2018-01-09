@@ -1,40 +1,42 @@
 <div class="details">
   <h3>Detailed annotation</h3>
-  {% if cluster.motifs | length == 0 %}
+  {% if not results %}
     <div class="details-text">
-      No core peptides found.
+      Lanthipeptides - No core peptides found.
     </div>
   {% else %}
-  <h4>Lanthipeptide(s)</h4>
-  <hr>
-  <dl class="details-text">
-    {% for motif in cluster.motifs if motif.peptide_class == "lanthipeptide" %}
-      <dt>
-        {{motif.get_name()}} leader / core peptide, putative {{motif.peptide_subclass}}
-      </dt>
-      <dd>
-        {{ motif.leader }}
-        -
-        {% for aa in motif.core -%}
-          {%- if aa == 'S' -%}
-            <span class="dha">Dha</span>
-          {%- elif aa == 'T' -%}
-            <span class="dhb">Dhb</span>
-          {%- elif aa == 'C' -%}
-            <span class="cys">C</span>
-          {%- else -%}
-            {{ aa }}
-          {%- endif -%}
-      {% endfor -%}
+    {% for locus in results | sort %}
+      <h4>Lanthipeptide(s) for {{locus}} - Putative {{results[locus][0].peptide_subclass}}</h4>
+      <hr>
+      <dl class="details-text">
+        {% for motif in results[locus] %}
+          <dt>
+            {{motif.get_name()}} leader / core peptide
+          </dt>
+          <dd>
+            {{ motif.leader }}
+            -
+            {% for aa in motif.core -%}
+              {%- if aa == 'S' -%}
+                <span class="dha">Dha</span>
+              {%- elif aa == 'T' -%}
+                <span class="dhb">Dhb</span>
+              {%- elif aa == 'C' -%}
+                <span class="cys">C</span>
+              {%- else -%}
+                {{ aa }}
+              {%- endif -%}
+          {% endfor -%}
+        {% endfor %}
+        </dd>
+      </dl>
     {% endfor %}
-    </dd>
-  </dl>
-  <div class="legend">
-    <h4> Legend: </h4>
-    <div>
-      <span class="dha">Dha</span>: Didehydroalanine<br>
-      <span class="dhb">Dhb</span>: Didehydrobutyrine<br>
+    <div class="legend">
+      <h4> Legend: </h4>
+      <div>
+        <span class="dha">Dha</span>: Didehydroalanine<br>
+        <span class="dhb">Dhb</span>: Didehydrobutyrine<br>
+      </div>
     </div>
-  </div>
   {% endif %}
 </div>

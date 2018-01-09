@@ -11,10 +11,11 @@ from helperlibs.bio import seqio
 from helperlibs.wrappers.io import TemporaryDirectory
 
 import antismash
-from antismash.common import path
+from antismash.common import path, record_processing
 from antismash.common.test import helpers
 from antismash.common.secmet import Record
 from antismash.config import build_config, update_config, destroy_config
+from antismash.modules import lanthipeptides
 from antismash.modules.lanthipeptides import run_specific_analysis, LanthiResults
 import antismash.modules.lanthipeptides.config as lanthi_config
 
@@ -32,17 +33,36 @@ class IntegrationLanthipeptides(unittest.TestCase):
         update_config({"without_fimo": not val})
         lanthi_config.get_config().fimo_present = val
 
+    def gather_all_motifs(self, result):
+        motifs = []
+        for locii in result.clusters.values():
+            for locus in locii:
+                motifs.extend(result.motifs_by_locus[locus])
+        return motifs
+
+    def test_nisin_end_to_end(self):
+        # skip fimo being disabled for this, we already test the computational
+        # side elsewhere
+        if self.options.without_fimo:
+            return
+        result = helpers.run_and_regenerate_results_for_module(helpers.get_path_to_nisin_genbank(),
+                        lanthipeptides, self.options, expected_record_count=1)
+        assert list(result.motifs_by_locus) == ["nisB"]
+        prepeptide = result.motifs_by_locus["nisB"][0]
+        self.assertAlmostEqual(3336.0, prepeptide.molecular_weight, delta=0.05)
+
     def test_nisin(self):
         "Test lanthipeptide prediction for nisin A"
         rec = Record.from_biopython(seqio.read(helpers.get_path_to_nisin_with_detection()))
         assert not rec.get_cds_motifs()
         result = run_specific_analysis(rec)
-        assert len(result.clusters_with_motifs) == 1
-        assert len(result.motifs) == 1
+        assert len(result.clusters) == 1
+        motifs = self.gather_all_motifs(result)
+        assert len(motifs) == 1
         assert not rec.get_cds_motifs()
         result.add_to_record(rec)
         assert len(rec.get_cds_motifs()) == 1
-        prepeptide = result.motifs[0]
+        prepeptide = motifs[0]
         # real monoisotopic mass is 3351.51, but we overpredict a Dha
         self.assertAlmostEqual(3333.6, prepeptide.monoisotopic_mass, delta=0.05)
         # real mw is 3354.5, see above
@@ -57,9 +77,9 @@ class IntegrationLanthipeptides(unittest.TestCase):
 
         initial_json = result.to_json()
         regenerated = LanthiResults.from_json(initial_json, rec)
-        assert len(result.motifs) == len(regenerated.motifs)
-        assert len(result.clusters_with_motifs) == len(regenerated.clusters_with_motifs)
-        assert result.motifs[0].location == regenerated.motifs[0].location
+        assert list(result.motifs_by_locus) == ["nisB"]
+        assert str(result.motifs_by_locus) == str(regenerated.motifs_by_locus)
+        assert result.clusters == regenerated.clusters
         assert initial_json == regenerated.to_json()
 
     def test_nisin_complete(self):
@@ -71,18 +91,19 @@ class IntegrationLanthipeptides(unittest.TestCase):
             # make sure the html_output section was tested
             with open(os.path.join(output_dir, "index.html")) as handle:
                 content = handle.read()
-                assert "nisA leader / core peptide, putative Class I" in content
+                assert "nisA leader / core peptide" in content
 
     def test_epidermin(self):
         "Test lanthipeptide prediction for epidermin"
         rec = Record.from_biopython(seqio.read(path.get_full_path(__file__, 'data', 'epidermin.gbk')))
         assert not rec.get_cds_motifs()
         result = run_specific_analysis(rec)
-        assert len(result.motifs) == 1
+        motifs = self.gather_all_motifs(result)
+        assert len(motifs) == 1
         assert not rec.get_cds_motifs()
         result.add_to_record(rec)
         assert len(rec.get_cds_motifs()) == 1
-        prepeptide = result.motifs[0]
+        prepeptide = motifs[0]
         self.assertAlmostEqual(2164, prepeptide.monoisotopic_mass, delta=0.5)
         self.assertAlmostEqual(2165.6, prepeptide.molecular_weight, delta=0.5)
         self.assertEqual(3, prepeptide.lan_bridges)
@@ -96,12 +117,13 @@ class IntegrationLanthipeptides(unittest.TestCase):
         rec = Record.from_biopython(seqio.read(path.get_full_path(__file__, 'data', 'microbisporicin.gbk')))
         assert not rec.get_cds_motifs()
         result = run_specific_analysis(rec)
-        assert len(result.motifs) == 1
+        motifs = self.gather_all_motifs(result)
+        assert len(motifs) == 1
         assert not rec.get_cds_motifs()
         result.add_to_record(rec)
         assert len(rec.get_cds_motifs()) == 1
 
-        prepeptide = result.motifs[0]
+        prepeptide = motifs[0]
         # NOTE: this is not the correct weight for microbisporicin
         # there are some additional modifications we do not predict yet
         self.assertAlmostEqual(2212.9, prepeptide.monoisotopic_mass, delta=0.5)
@@ -117,12 +139,13 @@ class IntegrationLanthipeptides(unittest.TestCase):
         rec = Record.from_biopython(seqio.read(path.get_full_path(__file__, 'data', 'epicidin_280.gbk')))
         assert not rec.get_cds_motifs()
         result = run_specific_analysis(rec)
-        assert len(result.motifs) == 1
+        motifs = self.gather_all_motifs(result)
+        assert len(motifs) == 1
         assert not rec.get_cds_motifs()
         result.add_to_record(rec)
         assert len(rec.get_cds_motifs()) == 1
 
-        prepeptide = result.motifs[0]
+        prepeptide = motifs[0]
         self.assertAlmostEqual(3115.7, prepeptide.monoisotopic_mass, delta=0.5)
         self.assertAlmostEqual(3117.7, prepeptide.molecular_weight, delta=0.5)
         for expected, calculated in zip([3135.7, 3153.7, 3171.7],
@@ -139,7 +162,8 @@ class IntegrationLanthipeptides(unittest.TestCase):
         rec = Record.from_biopython(seqio.read(path.get_full_path(__file__, 'data', 'labyrinthopeptin.gbk')))
         assert not rec.get_cds_motifs()
         result = run_specific_analysis(rec)
-        assert len(result.motifs) == 2
+        motifs = self.gather_all_motifs(result)
+        assert len(motifs) == 2
         assert not rec.get_cds_motifs()
         result.add_to_record(rec)
         assert len(rec.get_cds_motifs()) == 2
@@ -149,22 +173,40 @@ class IntegrationLanthipeptides(unittest.TestCase):
         rec = Record.from_biopython(seqio.read(path.get_full_path(__file__, 'data', 'sco_cluster3.gbk')))
         assert not rec.get_cds_motifs()
         result = run_specific_analysis(rec)
-        assert len(result.motifs) == 1
+        motifs = self.gather_all_motifs(result)
+        assert len(motifs) == 1
         assert not rec.get_cds_motifs()
         result.add_to_record(rec)
         assert len(rec.get_cds_motifs()) == 1
-        self.assertEqual('Class I', result.motifs[0].peptide_subclass)
+        self.assertEqual('Class I', motifs[0].peptide_subclass)
 
     def test_lactocin_s(self):
         """Test lanthipeptide prediction for lactocin S"""
         rec = Record.from_biopython(seqio.read(path.get_full_path(__file__, 'data', 'lactocin_s.gbk')))
         assert not rec.get_cds_motifs()
         result = run_specific_analysis(rec)
-        assert len(result.motifs) == 1
+        assert len(result.clusters) == 1
+        assert result.clusters[1] == set(["lasM"])
+        assert len(result.motifs_by_locus["lasM"]) == 1
+        motifs = result.motifs_by_locus["lasM"]
+        assert len(motifs) == 1
         assert not rec.get_cds_motifs()
         result.add_to_record(rec)
         assert len(rec.get_cds_motifs()) == 1
-        self.assertEqual('Class II', result.motifs[0].peptide_subclass)
+        self.assertEqual('Class II', motifs[0].peptide_subclass)
+
+    def test_multiple_biosynthetic_enzymes(self):
+        rec = record_processing.parse_input_sequence(path.get_full_path(__file__, 'data', 'CP013129.1.section.gbk'))[0]
+        rec.clear_cds_motifs()
+        assert rec.get_cluster(0).products == ["lanthipeptide", "nrps"]
+        assert rec.get_cluster(0).cds_children
+        result = run_specific_analysis(rec)
+        assert len(result.clusters) == 1
+        assert result.clusters[1] == set(["AQF52_7190", "AQF52_7168"])
+        motif = result.motifs_by_locus["AQF52_7190"][0]
+        assert motif.peptide_subclass == "Class II"
+        motif = result.motifs_by_locus["AQF52_7168"][0]
+        assert motif.peptide_subclass == "Class III"
 
 
 class IntegrationLanthipeptidesWithoutFimo(IntegrationLanthipeptides):
