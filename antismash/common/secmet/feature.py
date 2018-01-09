@@ -1041,7 +1041,7 @@ class Cluster(Feature):
             filename = os.path.join(directory, filename)
 
         if record is None:
-            record = self.parent_record.to_biopython
+            record = self.parent_record.to_biopython()
         assert isinstance(record, SeqRecord)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
