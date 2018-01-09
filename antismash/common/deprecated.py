@@ -30,18 +30,6 @@ def CODE_SKIP_WARNING():
 # end temp
 
 
-def strip_record(seq_record) -> None:
-    """ Discard antismash specific features and feature qualifiers """
-    seq_record.clear_clusters()
-    seq_record.clear_cluster_borders()
-    seq_record.clear_cds_motifs()
-    seq_record.clear_antismash_domains()
-
-    # clean up antiSMASH annotations in CDS features
-    for feature in seq_record.get_cds_features():
-        feature.sec_met = None
-
-
 def get_pksnrps_cds_features(seq_record) -> list:
     features = seq_record.get_cds_features_within_clusters()
     pksnrpscoregenes = []
