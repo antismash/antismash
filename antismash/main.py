@@ -23,7 +23,7 @@ from typing import Dict, Optional, List, Union
 from Bio import SeqIO
 
 from antismash.config import update_config
-from antismash.common import deprecated, serialiser, record_processing
+from antismash.common import serialiser, record_processing
 from antismash.common.module_results import ModuleResults
 from antismash.detection import genefinding, hmm_detection, nrps_pks_domains, full_hmmer
 from antismash.modules import tta, clusterblast, lanthipeptides, smcogs, dummy, \
@@ -154,7 +154,7 @@ def detect_signature_genes(record, options, previous_result: Dict[str, Union[Dic
             the time taken by each detection module as a dictionary
     """
     # strip any existing antismash results first
-    deprecated.strip_record(record)
+    record_processing.strip_record(record)
 
     timings = {}
 

@@ -71,6 +71,18 @@ def parse_input_sequence(filename, minimum_length=-1, start=-1, end=-1) -> List[
     return [Record.from_biopython(record) for record in records]
 
 
+def strip_record(seq_record) -> None:
+    """ Discard antismash specific features and feature qualifiers """
+    seq_record.clear_clusters()
+    seq_record.clear_cluster_borders()
+    seq_record.clear_cds_motifs()
+    seq_record.clear_antismash_domains()
+
+    # clean up antiSMASH annotations in CDS features
+    for feature in seq_record.get_cds_features():
+        feature.sec_met = None
+
+
 def check_content(sequence: Record) -> Record:
     """ Checks if the sequence of a record is correct for the input type. If not
         the record's skip flag will be marked.
