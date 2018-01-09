@@ -26,6 +26,14 @@ class TestParseRecords(unittest.TestCase):
         assert len(records[0].get_cds_features()) == 11
         assert len(records[0].seq) == 15016
 
+    def test_trim(self):
+        nisin_path = helpers.get_path_to_nisin_genbank()
+        records = record_processing.parse_input_sequence(nisin_path, start=10, end=5000)
+        assert len(records) == 1
+        assert isinstance(records[0], Record)
+        assert len(records[0].get_cds_features()) == 2
+        assert len(records[0].seq) == 4990
+
     def test_minimum_length(self):
         nisin_path = helpers.get_path_to_nisin_genbank()
         records = record_processing.parse_input_sequence(nisin_path,
