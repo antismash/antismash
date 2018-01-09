@@ -67,7 +67,7 @@ def parse_input_sequence(filename, minimum_length=-1, start=-1, end=-1) -> List[
     if start > -1 or end > -1:
         if len(records) > 1:
             raise ValueError("--start and --end options cannot be used with multiple records")
-        trim_sequence(records[0], start, end)
+        records[0] = trim_sequence(records[0], start, end)
     return [Record.from_biopython(record) for record in records]
 
 
