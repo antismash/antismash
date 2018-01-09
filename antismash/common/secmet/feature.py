@@ -672,6 +672,11 @@ class CDSFeature(Feature):
             mine.update(qualifiers)
         return super().to_biopython(mine)
 
+    def __repr__(self) -> str:
+        return str(self)
+
+    def __str__(self) -> str:
+        return "CDS(%s, %s)" % (self.get_name(), self.location)
 
 class Prepeptide(CDSMotif):
     """ A class representing a prepeptide. Used for tracking a multi-feature
