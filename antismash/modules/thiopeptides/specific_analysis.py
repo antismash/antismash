@@ -32,7 +32,8 @@ class ThioResults(module_results.ModuleResults):
 
     def to_json(self) -> Dict[str, Any]:
         """ Converts the results to JSON format """
-        cds_features_by_cluster = {key: [(serialiser.location_to_json(feature.location), feature.get_name()) for feature in features]
+        cds_features_by_cluster = {key: [(serialiser.location_to_json(feature.location),
+                                          feature.get_name()) for feature in features]
                                    for key, features in self.cds_features.items()}
         return {"record_id": self.record_id,
                 "schema_version": ThioResults.schema_version,
@@ -587,7 +588,7 @@ class ThiopeptideMotif(secmet.Prepeptide):
         return json
 
     @staticmethod
-    def from_json(data: Dict, record: secmet.Record) -> "ThiopeptideMotif":
+    def from_json(data: Dict, _record: secmet.Record) -> "ThiopeptideMotif":
         """ Builds a ThiopeptideMotif from a JSON object"""
         args = []
         args.append(serialiser.location_from_json(data["location"]))

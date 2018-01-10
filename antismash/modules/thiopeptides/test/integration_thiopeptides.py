@@ -56,7 +56,9 @@ class TestIntegration(unittest.TestCase):
         for calc, expected in zip(prepeptide.mature_weights[2:],
                                   [1240.4, 1258.4, 1276.5, 1294.5, 1312.5, 1330.5]):
             self.assertAlmostEqual(calc, expected, places=1)
-        assert prepeptide.core_features == 'Central ring: pyridine tetrasubstituted (hydroxyl group present); second macrocycle'
+        expected_core_features = ("Central ring: pyridine tetrasubstituted (hydroxyl group present);"
+                                  " second macrocycle")
+        assert prepeptide.core_features == expected_core_features
         assert prepeptide.tail_reaction == 'dealkylation of C-Terminal residue; amidation'
 
     def test_lactazole(self):
@@ -124,7 +126,9 @@ class TestIntegration(unittest.TestCase):
         assert prepeptide.core == "IASASCTTCICTCSCSS"
         assert prepeptide.macrocycle == "26-member"
         assert prepeptide.peptide_subclass == "Type II"
-        assert prepeptide.core_features == 'Central ring: piperidine; second macrocycle containing a quinaldic acid moiety'
+        expected_features = ("Central ring: piperidine;"
+                             " second macrocycle containing a quinaldic acid moiety")
+        assert prepeptide.core_features == expected_features
         self.assertAlmostEqual(1646.8, prepeptide.mature_weights[0], places=1)
         self.assertAlmostEqual(1645.5, prepeptide.mature_weights[1], places=1)
         for calc, expect in zip(prepeptide.mature_weights[2:],
@@ -153,7 +157,7 @@ class TestIntegration(unittest.TestCase):
                               isolated=True, modules=antismash.get_all_modules())
         record_path = path.get_full_path(__file__, 'data', 'CP009369.1.gbk')
         results = helpers.run_and_regenerate_results_for_module(record_path, thiopeptides, config,
-                                     expected_record_count=1)
+                                                                expected_record_count=1)
         assert results
         assert len(results.motifs) == 1
         prepeptide = results.motifs[0]

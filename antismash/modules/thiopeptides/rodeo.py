@@ -12,8 +12,9 @@ from sklearn.externals import joblib
 from antismash.common import path, utils
 
 
-def acquire_rodeo_heuristics(leader: str, core: str, domains: Set[str]) -> Tuple[int, List[float]]:
-    """Calculate heuristic scores for RODEO"""
+def acquire_rodeo_heuristics(leader: str, core: str,  # pylint: disable=too-many-branches,too-many-statements
+                             domains: Set[str]) -> Tuple[int, List[float]]:
+    """ Calculate heuristic scores for RODEO """
     tabs = []  # type: List[float]
     score = 0
     # Contains TOMM YcaO (PF02624)
@@ -256,61 +257,61 @@ class ThioStatistics:
         using lazy evaluation to only calculate when required."""
     def __init__(self, core: str) -> None:
         self._core = core
-        self._c_repeats = None
-        self._s_repeats = None
-        self._t_repeats = None
-        self._block_repeats = None
-        self._heteroblocks = None
-        self._average_heteroblock_length = None
+        self._c_repeats = None  # int
+        self._s_repeats = None  # int
+        self._t_repeats = None  # int
+        self._block_repeats = None  # int
+        self._heteroblocks = None  # int
+        self._average_heteroblock_length = None  # float
 
     @property
-    def c_repeats(self):
+    def c_repeats(self) -> int:
         """ The number of repeating Cys in the core """
         if self._c_repeats is None:
             self._c_repeats = len("".join(re.findall("C{2,}", self._core)))
         return self._c_repeats
 
     @property
-    def s_repeats(self):
+    def s_repeats(self) -> int:
         """ The number of repeating Ser in the core """
         if self._s_repeats is None:
             self._s_repeats = len("".join(re.findall("S{2,}", self._core)))
         return self._s_repeats
 
     @property
-    def t_repeats(self):
+    def t_repeats(self) -> int:
         """ The number of repeating Thr in the core """
         if self._t_repeats is None:
             self._t_repeats = len("".join(re.findall("T{2,}", self._core)))
         return self._t_repeats
 
     @property
-    def cst_repeats(self):
+    def cst_repeats(self) -> int:
         """ The total number of repeating Cys, Ser, and Thr in the core """
         return sum([self.c_repeats, self.s_repeats, self.t_repeats])
 
     @property
-    def block_repeats(self):
+    def block_repeats(self) -> int:
         """ The number of distinct blocks of repeating Cys, Ser, and Thr """
         if self._block_repeats is None:
             self._block_repeats = len(re.findall('C{2,}|S{2,}|T{2,}', self._core))
         return self._block_repeats
 
     @property
-    def heteroblocks(self):
+    def heteroblocks(self) -> int:
         """ The number of blocks of heterocyclizable residues in the core """
         if self._heteroblocks is None:
             self._calculate_heteroblocks()
         return self._heteroblocks
 
     @property
-    def average_heteroblock_length(self):
+    def average_heteroblock_length(self) -> float:
         """ The average length of blocks of heterocyclizable residues in the core """
         if self._average_heteroblock_length is None:
             self._calculate_heteroblocks()
         return self._average_heteroblock_length
 
-    def _calculate_heteroblocks(self):
+    def _calculate_heteroblocks(self) -> None:
         results = re.findall('[CST]{2,}', self._core)
         self._heteroblocks = len(results)
         self._average_heteroblock_length = 0.

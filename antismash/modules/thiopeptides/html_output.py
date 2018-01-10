@@ -3,13 +3,15 @@
 
 """ HTML generation for the thiopeptides module """
 
+from typing import List
+
 from jinja2 import FileSystemLoader, Environment, StrictUndefined
 
 from antismash.common import path
 from antismash.common.layers import ClusterLayer
 
 
-def will_handle(products):
+def will_handle(products: List[str]) -> bool:
     """ HTML generation only occurs if this function reutrns True """
     return 'thiopeptide' in products
 
@@ -26,9 +28,8 @@ class ThiopeptideLayer(ClusterLayer):
 
 def generate_details_div(cluster_layer, results, record_layer, options_layer) -> str:
     """ Generates the HTML details section from the ThioResults instance """
-    env = Environment(
-        loader=FileSystemLoader(path.get_full_path(__file__, "templates")),
-        autoescape=True, undefined=StrictUndefined)
+    env = Environment(loader=FileSystemLoader(path.get_full_path(__file__, "templates")),
+                      autoescape=True, undefined=StrictUndefined)
     template = env.get_template('details.html')
     details_div = template.render(record=record_layer,
                                   cluster=ThiopeptideLayer(record_layer, results, cluster_layer.cluster_rec),
@@ -38,9 +39,8 @@ def generate_details_div(cluster_layer, results, record_layer, options_layer) ->
 
 def generate_sidepanel(cluster_layer, results, record_layer, options_layer) -> str:
     """ Generates the HTML sidepanel section from the ThioResults instance """
-    env = Environment(
-        loader=FileSystemLoader(path.get_full_path(__file__, "templates")),
-        autoescape=True, undefined=StrictUndefined)
+    env = Environment(loader=FileSystemLoader(path.get_full_path(__file__, "templates")),
+                      autoescape=True, undefined=StrictUndefined)
     template = env.get_template('sidepanel.html')
     cluster = ThiopeptideLayer(record_layer, results, cluster_layer.cluster_rec)
     record = record_layer
