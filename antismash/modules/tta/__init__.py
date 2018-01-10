@@ -3,6 +3,8 @@
 
 """Identify TTA codons in BGCs"""
 
+from typing import Any, Dict, List, Optional
+
 from antismash.config.args import ModuleArgs
 from antismash.modules.tta.tta import detect, TTAResults
 
@@ -11,7 +13,8 @@ SHORT_DESCRIPTION = "TTA detection"
 PRIORITY = 1
 
 
-def get_arguments():
+def get_arguments() -> ModuleArgs:
+    """ Build and return arguments. No extra options beyond a switch to enable """
     args = ModuleArgs('Additional analysis', 'tta')
     args.add_analysis_toggle('--tta',
                              dest='tta',
@@ -21,28 +24,33 @@ def get_arguments():
     return args
 
 
-def check_options(options):
+def check_options(_options) -> List[str]:
+    """ Checks options for conflicts.
+        No extra options, so they can't have conflicts.
+    """
     return []
 
 
-def check_prereqs():
+def check_prereqs() -> List[str]:
     """Check for prerequisites"""
     # No external dependencies
     return []
 
 
-def is_enabled(options):
+def is_enabled(options) -> bool:
     """ Should the module be run with these options """
     return options.tta
 
 
-def regenerate_previous_results(previous, record, options):
+def regenerate_previous_results(previous: Dict[str, Any], record, _options) -> Optional[TTAResults]:
+    """ Regenerate the previous results from JSON format. """
     if not previous:
         return None
-    return TTAResults.from_json(previous)
+    return TTAResults.from_json(previous, record)
 
 
-def run_on_record(seq_record, results, options):
-    if isinstance(results, TTAResults) and results.record_id == seq_record.id:
+def run_on_record(record, results: TTAResults, options) -> TTAResults:
+    """ Run the analysis, unless the previous results apply to the given record """
+    if isinstance(results, TTAResults) and results.record_id == record.id:
         return results
-    return detect(seq_record, options)
+    return detect(record, options)
