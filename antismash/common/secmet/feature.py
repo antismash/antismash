@@ -22,15 +22,17 @@ class Feature:
         subclass, the 'notes' qualifier, and other qualifiers not tracked by any
         subclass.
     """
-    __slots__ = ["location", "notes", "type", "_qualifiers"]
+    __slots__ = ["location", "notes", "type", "_qualifiers", "created_by_antismash"]
 
-    def __init__(self, location: FeatureLocation, feature_type: str) -> None:
+    def __init__(self, location: FeatureLocation, feature_type: str,
+                 created_by_antismash: bool = False) -> None:
         assert isinstance(location, (FeatureLocation, CompoundLocation)), type(location)
         self.location = location
         self.notes = []  # type: List[str]
         assert feature_type
         self.type = str(feature_type)
         self._qualifiers = OrderedDict()  # type: Dict[str, List[str]]
+        self.created_by_antismash = bool(created_by_antismash)
 
     @property
     def strand(self) -> int:
@@ -97,6 +99,8 @@ class Feature:
         if notes:
             # sorting helps with consistency and comparison testing
             quals["note"] = sorted(notes)
+        if self.created_by_antismash:
+            quals["tool"] = ["antismash"]
         # sorted here to match the behaviour of biopython
         for key, val in sorted(quals.items()):
             feature.qualifiers[key] = val
@@ -159,7 +163,8 @@ class ClusterBorder(Feature):
     __slots__ = ["tool", "probability", "parent_cluster"]
 
     def __init__(self, location, tool, probability):
-        super().__init__(location, feature_type="cluster_border")
+        super().__init__(location, feature_type="cluster_border",
+                         created_by_antismash=True)
         self.notes.append("best prediction")
         self.tool = str(tool)
         self.probability = float(probability)
@@ -169,7 +174,7 @@ class ClusterBorder(Feature):
 
     def to_biopython(self, qualifiers=None):
         mine = OrderedDict()
-        mine["tool"] = [self.tool]
+        mine["aStool"] = [self.tool]
         mine["probability"] = [str(self.probability)]
         if qualifiers:
             mine.update(qualifiers)
@@ -181,7 +186,7 @@ class ClusterBorder(Feature):
             leftovers = Feature.make_qualifiers_copy(bio_feature)
 
         # grab mandatory qualifiers and create the class
-        tool = leftovers.pop("tool")[0]
+        tool = leftovers.pop("aStool")[0]
         # clean up the note so it isn't duplicated
         notes = leftovers.get("note")
         if notes:
@@ -204,7 +209,7 @@ class AntismashFeature(Feature):
                  "locus_tag", "_score", "_translation"]
 
     def __init__(self, location, feature_type):
-        super().__init__(location, feature_type)
+        super().__init__(location, feature_type, created_by_antismash=True)
         self.domain_id = None
         self.database = None
         self.detection = None
@@ -833,7 +838,8 @@ class Cluster(Feature):
                  "parent_record", "cds_children", "borders", "monomers_prediction"]
 
     def __init__(self, location, cutoff, extent, products):
-        super().__init__(location, feature_type="cluster")
+        super().__init__(location, feature_type="cluster",
+                         created_by_antismash=True)
 
         self._extent = int(extent)
         self._cutoff = int(cutoff)
