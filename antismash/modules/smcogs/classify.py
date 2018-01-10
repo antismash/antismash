@@ -1,14 +1,28 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+""" The classification section of the smCOG module. Categorises gene function
+    according to a curated set of HMM profiles.
+"""
+
 import os
+from typing import Dict, List
 
 from antismash.common import subprocessing, path, fasta, deprecated
-from antismash.common.hmmscan_refinement import refine_hmmscan_results
-from antismash.common.secmet import GeneFunction
+from antismash.common.hmmscan_refinement import refine_hmmscan_results, HMMResult
+from antismash.common.secmet import GeneFunction, CDSFeature
 
 
-def classify_genes(cds_features):
+def classify_genes(cds_features: List[CDSFeature]) -> Dict[str, List[HMMResult]]:
+    """ Finds possible classifications for the provided genes.
+
+        Arguments:
+            cds_features: a list of CDSFeatures to classify
+
+        Returns:
+            a dictionary mapping CDS name to a list of HMMResult instances of
+                classifications
+    """
     smcogs_fasta = fasta.get_fasta_from_features(cds_features)
     smcogs_opts = ["-E", "1E-6"]
     hmm_file = path.get_full_path(__file__, "data", "smcogs.hmm")
@@ -17,8 +31,10 @@ def classify_genes(cds_features):
     return refine_hmmscan_results(smcogs_results, hmm_lengths)
 
 
-def load_cog_annotations():
-    "Load the smCOG type annotations from a file"
+def load_cog_annotations() -> Dict[str, GeneFunction]:
+    """ Load the smCOG type annotations from a file, returns a dictionary mapping
+        smCOG id to the gene function of that smCOG.
+    """
     mapping = {
         'B': GeneFunction.ADDITIONAL,  # 'biosynthetic-additional',
         'T': GeneFunction.TRANSPORT,  # 'transport',
@@ -32,7 +48,10 @@ def load_cog_annotations():
     return annotations
 
 
-def write_smcogs_file(hmm_results, cds_features, nrpspks_genes, options):
+def write_smcogs_file(hmm_results, cds_features, nrpspks_genes, options) -> None:
+    """ Writes a text file containing the smCOG results to the output directory
+        defined in options
+    """
     nrpspks_names = set(feature.get_name() for feature in nrpspks_genes)
     # TODO don't overwrite with multiple records
     smcogfile = open(os.path.join(options.output_dir, "smcogs", "smcogs.txt"), "w")
