@@ -1,33 +1,37 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+""" The phylogenetic tree generation section of the smcogs module.
+    Uses the classifications generated elsewhere in the module to generate the
+    trees based on other possible classifications.
+"""
+
 
 from collections import defaultdict
 from io import StringIO
 import glob
 import logging
-import shutil
 import os
-from typing import Dict
+from typing import Dict, List  # List used in comment type hints, pylint: disable=unused-import
 
 from Bio import Phylo
 from Bio.Phylo.NewickIO import NewickError
 from helperlibs.wrappers.io import TemporaryDirectory
 import matplotlib
-#import pylab
 
 from antismash.common import path, fasta, subprocessing
 
-def generate_trees(smcogs_dir, hmm_results, geneclustergenes, nrpspks_genes, options) -> Dict[str, str]:
+
+def generate_trees(smcogs_dir, hmm_results, geneclustergenes, nrpspks_genes) -> Dict[str, str]:
     """ smCOG phylogenetic tree construction """
-    pksnrpscoregenenames = set([feature.get_name() for feature in nrpspks_genes])
+    pks_nrps_gene_names = set([feature.get_name() for feature in nrpspks_genes])
     logging.info("Calculating and drawing phylogenetic trees of cluster genes "
                  "with smCOG members")
     with TemporaryDirectory(change=True):
         cds_features = []
         for cds in geneclustergenes:
             gene_id = cds.get_name()
-            if gene_id not in pksnrpscoregenenames and hmm_results.get(gene_id):
+            if gene_id not in pks_nrps_gene_names and hmm_results.get(gene_id):
                 cds_features.append(cds)
         args = []
         for index, cds in enumerate(cds_features):
@@ -74,7 +78,8 @@ def trim_alignment(inputnr, alignment_file) -> None:
         by at least a third of all sequences
     """
 
-    def find_first_aa_position(conservations, sequence_count):
+    def find_first_aa_position(conservations, sequence_count) -> int:
+        """ Finds the first position of a shared amino acid """
         for position, conservation in enumerate(conservations):
             aa = sorted(conservation.items(), key=lambda x: (x[1], x[0]), reverse=True)
             base, count = aa[0]
@@ -97,7 +102,7 @@ def trim_alignment(inputnr, alignment_file) -> None:
     seqs = list(contents.values())
 
     # store conservation of residues
-    conservations = [defaultdict(lambda: 0) for i in range(sequence_length)]
+    conservations = [defaultdict(lambda: 0) for i in range(sequence_length)]  # type: List[Dict[str, int]]
     for seq in seqs:
         for position, base in enumerate(seq):
             conservations[position][base] += 1

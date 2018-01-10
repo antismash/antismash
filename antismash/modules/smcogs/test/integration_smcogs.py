@@ -22,7 +22,7 @@ from antismash.modules import smcogs
 class Base(unittest.TestCase):
     def setUp(self):
         options = build_config(self.get_args(), isolated=True,
-                                   modules=antismash.get_all_modules())
+                               modules=antismash.get_all_modules())
         self.old_config = get_config().__dict__
         self.options = update_config(options)
 
@@ -64,7 +64,7 @@ class TestClassification(Base):
             contents = open("smcogs/smcogs.txt").readlines()
             assert contents == expected
             json = results.to_json()
-            assert smcogs.SMCOGResults.from_json(json).to_json() == json
+            assert smcogs.SMCOGResults.from_json(json, self.record).to_json() == json
 
     def test_classification_with_colon(self):
         # since SMCOG id and description are stored in a string separated by :,
@@ -110,7 +110,7 @@ class TestTreeGeneration(Base):
 
             # test the results function properly
             json = results.to_json()
-            assert smcogs.SMCOGResults.from_json(json).to_json() == json
+            assert smcogs.SMCOGResults.from_json(json, self.record).to_json() == json
             assert smcogs.regenerate_previous_results(json, self.record, self.options).to_json() == json
 
             for cds in self.record.get_cluster(0).cds_children:
@@ -137,10 +137,8 @@ class TestTreeGeneration(Base):
             options = build_config(args, isolated=True, modules=antismash.get_all_modules())
             antismash.run_antismash(helpers.get_path_to_nisin_genbank(), options)
 
-
             with open(os.path.join(output_dir, "nisin.json")) as res_file:
                 assert "antismash.modules.smcogs" in res_file.read()
-
 
             tree_files = list(glob.glob(os.path.join(output_dir, "smcogs", "*.png")))
             assert len(tree_files) == 7
