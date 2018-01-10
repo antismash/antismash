@@ -107,6 +107,7 @@ def create_feature_from_location(record, location, counter=1, label=None) -> CDS
     dummy = Feature(location, feature_type="temp")
     feature = CDSFeature(location, str(record.get_aa_translation_of_feature(dummy)),
                          locus_tag=label, protein_id=label, gene=label)
+    feature.created_by_antismash = True
     return feature
 
 
