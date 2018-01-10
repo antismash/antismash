@@ -14,12 +14,11 @@ from antismash.modules.thiopeptides import check_prereqs
 
 class TestCheckPrereqs(unittest.TestCase):
     def setUp(self):
-        self.maxDiff = None
-        self.tt = TraceTracker()
+        self.tracker = TraceTracker()
         self.locate_exe = Mock('antismash.common.path.locate_executable',
-                               tracker=self.tt, returns="/fake/path/to/binary")
+                               tracker=self.tracker, returns="/fake/path/to/binary")
         mock('path.locate_executable',
-             mock_obj=self.locate_exe, tracker=self.tt)
+             mock_obj=self.locate_exe, tracker=self.tracker)
 
     def tearDown(self):
         restore()
@@ -29,7 +28,7 @@ class TestCheckPrereqs(unittest.TestCase):
         ret = check_prereqs()
         self.assertEqual(ret, [])
         expected = "    Called antismash.common.path.locate_executable('hmmpfam2')"
-        assert_same_trace(self.tt, expected)
+        assert_same_trace(self.tracker, expected)
 
     def test_check_binary_prereqs_failing(self):
         "Test thiopeptidess.check_prereqs() returns 'missing binary' error"
