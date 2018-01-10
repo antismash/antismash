@@ -5,89 +5,7 @@
 """
 
 from collections import defaultdict
-from typing import Dict, Set, Union
-
-
-def _remove_overlapping(results, hmm_lengths):
-    """ Strip domain list of overlapping domains,
-        only keeping those with the highest scores
-
-        Domains with an overlap of 20% or less aren't considered to be overlapping
-    """
-    non_overlapping = [results[0]]
-    for result in results[1:]:
-        previous = non_overlapping[-1]
-        maxoverlap = 0.20 * max([hmm_lengths[result.hit_id],
-                                 hmm_lengths[previous.hit_id]])
-        if result.query_start < (previous.query_end - maxoverlap):
-            # if the current result scores higher, replace the previous one
-            if result.bitscore > previous.bitscore:
-                non_overlapping[-1] = result
-        else:
-            non_overlapping.append(result)
-    return non_overlapping
-
-
-def _remove_incomplete(domains, hmm_lengths, threshold=0.5, fallback=1./3.):
-    complete = []
-    for i in domains:
-        domainlength = hmm_lengths[i.hit_id]
-        if len(i) > (threshold * domainlength):
-            complete.append(i)
-    if complete:
-        return complete
-
-    # if none matched, just take the longest hit over the fallback size
-    longest = 0.
-    longest_index = 0
-    for i, domain in enumerate(domains):
-        domain_length = hmm_lengths[domain.hit_id]
-        proportional_length = len(domain) / domain_length
-        if proportional_length > longest:
-            longest = proportional_length
-            longest_index = i
-
-    if longest > fallback:
-        return [domains[longest_index]]
-
-    # if still none, take a regulator if one exists
-    for domain in domains:
-        if "regulator" in domain.hit_id:
-            return [domain]
-    # ran out of fallbacks, return nothing
-    return []
-
-
-def _merge_domain_list(domainlist, hmm_lengths):
-    categories = defaultdict(list)
-    for domain in domainlist:
-        categories[domain.hit_id].append(domain)
-    remaining = []
-    for category in categories.values():
-        merged = category[0]
-        max_span = 1.5 * hmm_lengths[merged.hit_id]
-        for other in category[1:]:
-            # only merge if the hit spans of the two domains are small enough
-            if other.query_end - merged.query_start < max_span:
-                merged = merged.merge(other)
-            else:
-                merged = other
-        remaining.append(merged)
-    return sorted(remaining, key=lambda result: result.query_start)
-
-
-def _merge_immediate_neigbours(domains, hmm_lengths):
-    result = [domains[0]]
-    for domain in domains[1:]:
-        if domain.hit_id != result[-1].hit_id:
-            result.append(domain)
-            continue
-        # only merge if the hit spans of the two domains are small enough
-        if domain.query_end - result[-1].query_start < 1.5 * hmm_lengths[domain.hit_id]:
-            result[-1] = result[-1].merge(domain)
-        else:
-            result.append(domain)
-    return result
+from typing import Dict, List, Set, Union
 
 
 class HMMResult:
@@ -132,8 +50,107 @@ class HMMResult:
                    self.query_start, self.query_end, self.evalue, self.bitscore)
 
 
+def _remove_overlapping(results: List[HMMResult], hmm_lengths: Dict[str, int]) -> List[HMMResult]:
+    """ Strip domain list of overlapping domains,
+        only keeping those with the highest scores
+
+        Domains with an overlap of 20% or less aren't considered to be overlapping
+    """
+    non_overlapping = [results[0]]
+    for result in results[1:]:
+        previous = non_overlapping[-1]
+        maxoverlap = 0.20 * max([hmm_lengths[result.hit_id],
+                                 hmm_lengths[previous.hit_id]])
+        if result.query_start < (previous.query_end - maxoverlap):
+            # if the current result scores higher, replace the previous one
+            if result.bitscore > previous.bitscore:
+                non_overlapping[-1] = result
+        else:
+            non_overlapping.append(result)
+    return non_overlapping
+
+
+def _remove_incomplete(domains: List[HMMResult], hmm_lengths: Dict[str, int],
+                       threshold: float = 0.5, fallback: float = 1./3.) -> List[HMMResult]:
+    """ Removes all incomplete fragments for a domain type that are less than
+        the threshold. If this would remove all hits for the domain type, then
+        use the fallback as the threshold for the largest incomplete threshold.
+        Will only strip all fragments if the largest fragment of this type is
+        smaller than both threshold and fallback threshold.
+    """
+    assert fallback <= threshold
+    complete = []
+    for domain in domains:
+        domainlength = hmm_lengths[domain.hit_id]
+        if len(domain) > (threshold * domainlength):
+            complete.append(domain)
+    if complete:
+        return complete
+
+    # if none matched, just take the longest hit over the fallback size
+    longest = 0.
+    longest_index = 0
+    for i, domain in enumerate(domains):
+        domain_length = hmm_lengths[domain.hit_id]
+        proportional_length = len(domain) / domain_length
+        if proportional_length > longest:
+            longest = proportional_length
+            longest_index = i
+
+    if longest > fallback:
+        return [domains[longest_index]]
+
+    # if still none, take a regulator if one exists
+    for domain in domains:
+        if "regulator" in domain.hit_id:
+            return [domain]
+    # ran out of fallbacks, return nothing
+    return []
+
+
+def _merge_domain_list(domains: List[HMMResult], hmm_lengths: Dict[str, int]) -> List[HMMResult]:
+    """ Merges domains of the same kind if they would not be too long """
+    categories = defaultdict(list)  # type: Dict[str, List[HMMResult]]
+    for domain in domains:
+        categories[domain.hit_id].append(domain)
+    remaining = []
+    for category in categories.values():
+        merged = category[0]
+        max_span = 1.5 * hmm_lengths[merged.hit_id]  # TODO: use a more specific check
+        for other in category[1:]:
+            # only merge if the hit spans of the two domains are small enough
+            if other.query_end - merged.query_start < max_span:
+                merged = merged.merge(other)
+            else:
+                merged = other
+        remaining.append(merged)
+    return sorted(remaining, key=lambda result: result.query_start)
+
+
+def _merge_immediate_neigbours(domains: List[HMMResult], hmm_lengths: Dict[str, int]) -> List[HMMResult]:
+    result = [domains[0]]
+    for domain in domains[1:]:
+        if domain.hit_id != result[-1].hit_id:
+            result.append(domain)
+            continue
+        # only merge if the hit spans of the two domains are small enough
+        if domain.query_end - result[-1].query_start < 1.5 * hmm_lengths[domain.hit_id]:
+            result[-1] = result[-1].merge(domain)
+        else:
+            result.append(domain)
+    return result
+
+
 def gather_by_query(results) -> Dict[str, Set[HMMResult]]:
-    """ Generates a mapping of query id to all HMMResults for that query """
+    """ Generates a mapping of query id to all HMMResults for that query
+
+        Arguments:
+            results: a list of HSP fragments as parsed by Bio's SearchIO
+
+        Returns:
+            a dictionary mapping query gene id to a set of HMMResults within that
+            gene
+    """
     results_by_id = defaultdict(set)  # type: Dict[str, Set[HMMResult]]
     for result in results:
         for hsp in result.hsps:
@@ -143,14 +160,15 @@ def gather_by_query(results) -> Dict[str, Set[HMMResult]]:
     return results_by_id
 
 
-def refine_hmmscan_results(hmmscan_results, hmm_lengths, neighbour_mode=False):
+def refine_hmmscan_results(hmmscan_results, hmm_lengths: Dict[str, int],
+                           neighbour_mode: bool = False) -> Dict[str, List[HMMResult]]:
     """ Processes a list of QueryResult objects (from SearchIO.parse(..., 'hmmer3-text'))
             - merges domain fragments of the same ID
             - keeps only best hits from overlaps
             - removes incomplete domains
 
         Arguments:
-            hmmscan_results: a list of QueryResult objects
+            hmmscan_results: a list of QueryResult objects from Bio's SearchIO
             hmm_lengths: a dictionary mapping hmm id to length
             neighbour_mode: if on, does overlap removal before merge and merges
                             only when the next result has the same hit_id

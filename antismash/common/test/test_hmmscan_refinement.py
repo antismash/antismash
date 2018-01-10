@@ -5,15 +5,15 @@
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
 import unittest
-
 import warnings
+
+import antismash.common.hmmscan_refinement as refinement
+from antismash.common import path
+
 # Don't display the SearchIO experimental warning, we know this.
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     from Bio import SearchIO
-
-import antismash.common.hmmscan_refinement as refinement
-from antismash.common import path
 
 
 class TestHMMResult(unittest.TestCase):
@@ -97,7 +97,7 @@ class TestRefinement(unittest.TestCase):
         # ensure they're all too short to be caught
         for result in results:
             assert len(result) / self.hmm_lengths[result.hit_id] < 1
-        new = refinement._remove_incomplete(results, self.hmm_lengths, fallback=1)
+        new = refinement._remove_incomplete(results, self.hmm_lengths)
         # ensure all were removed
         assert not new
         # and original list untouched
