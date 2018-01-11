@@ -33,7 +33,7 @@ class DummyFeature(Feature):
 class DummyCDS(CDSFeature):
     counter = 0
 
-    def __init__(self, start, end, strand=1, locus_tag=None, translation=None):
+    def __init__(self, start=0, end=7, strand=1, locus_tag=None, translation=None):
         if not translation:
             translation = "A"*(abs(start-end))
         if not locus_tag:
