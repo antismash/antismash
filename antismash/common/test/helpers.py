@@ -34,13 +34,12 @@ class DummyCDS(CDSFeature):
     counter = 0
 
     def __init__(self, start, end, strand=1, locus_tag=None, translation=None):
-        trans = "A"*(abs(start-end))
+        if not translation:
+            translation = "A"*(abs(start-end))
         if not locus_tag:
             locus_tag = "dummy_locus_tag_%d" % DummyCDS.counter
             DummyCDS.counter += 1
-        if translation:
-            self._translation = translation
-        super().__init__(FeatureLocation(start, end, strand), translation=trans,
+        super().__init__(FeatureLocation(start, end, strand), translation=translation,
                          locus_tag=locus_tag)
         assert self.get_accession() == locus_tag, self.get_accession()
 
