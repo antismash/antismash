@@ -1,0 +1,4 @@
+#pattern name	sequence name	start	stop	strand	score	p-value	q-value	matched sequence
+1	gene1	10	12	+	1.1	1.00e-01	0.1	ACG
+1	gene2	20	22	+	1.1	1.00e-01	0.1	ACG
+1	gene2	22	24	+	1.1	1.00e-01	0.1	GTA
