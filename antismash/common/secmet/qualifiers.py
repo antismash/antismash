@@ -27,7 +27,7 @@ class NRPSPKSQualifier(list):
             self.end = end
             self.evalue = evalue
             self.bitscore = bitscore
-            self.predictions = {}
+            self.predictions = {}  # method to prediction name, type: Dict[str, str]
 
         def __repr__(self):
             return "NRPSPKSQualifier.Domain(%s, label=%s, start=%d, end=%d)" % (
