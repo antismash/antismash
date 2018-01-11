@@ -25,7 +25,8 @@ from Bio import SeqIO
 from antismash.config import update_config
 from antismash.common import serialiser, record_processing
 from antismash.common.module_results import ModuleResults
-from antismash.detection import genefinding, hmm_detection, nrps_pks_domains, full_hmmer
+from antismash.detection import genefinding, hmm_detection, nrps_pks_domains, full_hmmer, \
+                                cassis
 from antismash.modules import tta, clusterblast, lanthipeptides, smcogs, dummy, \
                               nrps_pks, thiopeptides
 from antismash.outputs import html, svg
@@ -54,7 +55,7 @@ def get_detection_modules() -> List[ModuleType]:
         Returns:
             a list of modules
     """
-    return [genefinding, hmm_detection, nrps_pks_domains, full_hmmer]
+    return [genefinding, hmm_detection, nrps_pks_domains, full_hmmer, cassis]
 
 
 def get_analysis_modules() -> List[ModuleType]:
@@ -169,9 +170,11 @@ def run_detection(record, options, previous_result: Dict[str, Union[Dict, Module
     # generate cluster predictions
     logging.info("Detecting secondary metabolite clusters")
     predictions = []
-    for module in [hmm_detection]:  # TODO: , cassis, cluster_finder]:
+    for module in [hmm_detection, cassis]:  # TODO: cluster_finder
         run_module(record, module, options, module_results, timings)
-        predictions.extend(module_results[module.__name__].get_predictions())
+        results = module_results.get(module.__name__)
+        if results:
+            predictions.extend(results.get_predictions())
 
     # create merged clusters
     record.create_clusters_from_borders()

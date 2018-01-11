@@ -1,0 +1,7 @@
+#	promoter	start	end	length
+1	gene1	1	151	151
+2	gene4	302	551	250
+3	gene5	1451	2000	550
+4	gene6+gene7	2151	3050	900
+5	gene8	4002	4372	371
+6	gene9	8951	9604	654
