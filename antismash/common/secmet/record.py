@@ -122,6 +122,10 @@ class Record:
         """A dictionary mapping CDS name to CDS feature"""
         return dict(self._cds_by_name)
 
+    def get_cds_by_name(self, name: str) -> CDSFeature:
+        """ Return the CDS with the given name """
+        return self._cds_by_name[name]
+
     def get_cds_motifs(self) -> Tuple:
         """A list of secondary metabolite CDS_motifs present in the record"""
         return tuple(self._cds_motifs)
