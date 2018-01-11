@@ -12,37 +12,38 @@ from antismash.common.test.helpers import DummyCDS
 from antismash.detection.nrps_pks_domains import domain_identification
 from antismash.modules.nrps_pks import orderfinder
 
-class DummyCDSWrapper(DummyCDS):
-    def __init__(self, start, end, seq, locus_tag=None):
-        super().__init__(start, end, locus_tag=locus_tag)
-        self.translation = seq
 
 class TestCTerminalExtract(unittest.TestCase):
     def setUp(self):
         # 110 long, since only the last 100 will be used
-        self.seqs = {"STAUR_3982": "FLEFTRQRGFISEEFGREHDSELMKTYLPTLRKDLVLLESYSYAEEAPLDMPLTVFASTRDRIIPSTQLESWGELTREKPSIHLFEGDHFFARDAGGPLLALIREKLGLG",
-                     "STAUR_3984": "LARVLRMEASRIDRLRALGELGLDSLMSLELRNRLEASLGLKLSVTLLFTYPNLAGLAEYLHGELLPAAAREQPAAQSQTHAAPSQIAEQVEQLSKDELLAFFDKSFGIA",
-                     "STAUR_3983": "TNMGLDSLMSLELRNRLEATLGLKLSATLLFTYPNLAALADHLLGKLSSVDEAPAKTAPTAAAPPPPPTLKPQAALPAELDQLGKDELLSLFDESLTESLKRTRMTRTSR",
-                     "STAUR_3985": "PSKIDRLRALGELGLDSLMSLELRNRLEAALGMKLSATLLFTYPNLASLAQHVVGRMEFPSEATVAPITASPGAVEGQAERLAEVEQMSDDEAEQLLLASLESLSTELLK",
-                     "STAUR_3972": "SEAALRGSAAGVAYTASKHALIGFTKNTAFMYGAKGVRVNIVAPGPVRTSISGASRSDHGWSRIAPVMNVLAVPVAESATLAGHILWLMSDEAENINGAVLPSDGGWSTF"
-                    }
+        self.seqs = {"STAUR_3982": ("FLEFTRQRGFISEEFGREHDSELMKTYLPTLRKDLVLLESYSYAEEAPLDMPLTV"
+                                    "FASTRDRIIPSTQLESWGELTREKPSIHLFEGDHFFARDAGGPLLALIREKLGLG"),
+                     "STAUR_3984": ("LARVLRMEASRIDRLRALGELGLDSLMSLELRNRLEASLGLKLSVTLLFTYPNLA"
+                                    "GLAEYLHGELLPAAAREQPAAQSQTHAAPSQIAEQVEQLSKDELLAFFDKSFGIA"),
+                     "STAUR_3983": ("TNMGLDSLMSLELRNRLEATLGLKLSATLLFTYPNLAALADHLLGKLSSVDEAPA"
+                                    "KTAPTAAAPPPPPTLKPQAALPAELDQLGKDELLSLFDESLTESLKRTRMTRTSR"),
+                     "STAUR_3985": ("PSKIDRLRALGELGLDSLMSLELRNRLEAALGMKLSATLLFTYPNLASLAQHVVG"
+                                    "RMEFPSEATVAPITASPGAVEGQAERLAEVEQMSDDEAEQLLLASLESLSTELLK"),
+                     "STAUR_3972": ("SEAALRGSAAGVAYTASKHALIGFTKNTAFMYGAKGVRVNIVAPGPVRTSISGAS"
+                                    "RSDHGWSRIAPVMNVLAVPVAESATLAGHILWLMSDEAENINGAVLPSDGGWSTF")
+                     }
 
         self.data_dir = path.get_full_path(os.path.dirname(__file__), "data", "terminals")
 
-        self.features = [DummyCDSWrapper(1, 200, seq, locus_tag=seq_id) for seq_id, seq in self.seqs.items()]
+        self.features = [DummyCDS(1, 200, translation=seq, locus_tag=seq_id) for seq_id, seq in self.seqs.items()]
         self.features_by_id = {feature.locus_tag: feature for feature in self.features}
 
-    def test_c_terminals_no_end(self):  # TODO: move to integration
+    def test_c_terminals_no_end(self):  # TODO: move to integration or mock muscle
         residues = orderfinder.extract_cterminus(self.data_dir, self.features, "")
         assert residues == {'STAUR_3972': 'ES', 'STAUR_3982': 'GK',
                             'STAUR_3983': 'DS', 'STAUR_3984': 'DS',
                             'STAUR_3985': 'DS'}
 
-
-    def test_c_terminals_with_end(self):  # TODO: move to integration
+    def test_c_terminals_with_end(self):  # TODO: move to integration or mock muscle
         residues = orderfinder.extract_cterminus(self.data_dir, self.features, "STAUR_3982")
         assert residues == {'STAUR_3972': 'ES', 'STAUR_3983': 'DS',
                             'STAUR_3984': 'DS', 'STAUR_3985': 'DS'}
+
 
 class TestNTerminalExtract(unittest.TestCase):
     def setUp(self):
@@ -55,17 +56,16 @@ class TestNTerminalExtract(unittest.TestCase):
 
         self.data_dir = path.get_full_path(os.path.dirname(__file__), "data", "terminals")
 
-        self.features = [DummyCDSWrapper(1, 200, seq, locus_tag=seq_id) for seq_id, seq in self.seqs.items()]
+        self.features = [DummyCDS(1, 200, translation=seq, locus_tag=seq_id) for seq_id, seq in self.seqs.items()]
         self.features_by_id = {feature.locus_tag: feature for feature in self.features}
 
-    def test_n_terminals_no_start(self):  # TODO: move to integration
+    def test_n_terminals_no_start(self):  # TODO: move to integration or mock muscle
         residues = orderfinder.extract_nterminus(self.data_dir, self.features, "")
         assert residues == {'STAUR_3972': 'L-', 'STAUR_3982': 'ER',
                             'STAUR_3983': 'DK', 'STAUR_3984': 'SQ',
                             'STAUR_3985': 'SV'}
 
-
-    def test_n_terminals_with_start(self):  # TODO: move to integration
+    def test_n_terminals_with_start(self):  # TODO: move to integration or mock muscle
         residues = orderfinder.extract_nterminus(self.data_dir, self.features, "STAUR_3982")
         assert residues == {'STAUR_3972': 'L-', 'STAUR_3983': 'DK',
                             'STAUR_3984': 'SQ', 'STAUR_3985': 'SV'}
@@ -132,7 +132,7 @@ class TestOrdering(unittest.TestCase):
             cds = DummyCDS(1, 2, locus_tag=name)
             cds.nrps_pks.domain_names = domains
             genes[name] = cds
-         # no starts
+        # no starts
         start, end = orderfinder.find_first_and_last_genes(genes.values())
         assert not start
         assert not end
@@ -203,7 +203,7 @@ class TestOrdering(unittest.TestCase):
         best = self.run_ranking_as_genes(n_terms, c_terms, possible_orders)
         assert best == "BAC"
 
-    def test_order_C002271_c19(self):
+    def test_order_C002271_c19(self):  # pylint: disable=invalid-name
         n_terms = {'STAUR_3972': 'L-', 'STAUR_3982': 'ER',
                    'STAUR_3983': 'DK', 'STAUR_3984': 'SQ',
                    'STAUR_3985': 'SV'}
@@ -216,6 +216,7 @@ class TestOrdering(unittest.TestCase):
         best = self.run_ranking_as_genes(n_terms, c_terms, possible_orders)
         assert best == ['STAUR_3983', 'STAUR_3972', 'STAUR_3984', 'STAUR_3985', 'STAUR_3982']
 
+
 class TestEnzymeCounter(unittest.TestCase):
     def run_finder(self, names, all_domains, types=None):
         genes = [DummyCDS(1, 2, locus_tag=name) for name in names]
@@ -227,7 +228,7 @@ class TestEnzymeCounter(unittest.TestCase):
                 gene.nrps_pks.type = types[gene.get_name()]
         return orderfinder.find_cluster_modular_enzymes(genes)
 
-    def test_C002271_c19(self):
+    def test_C002271_c19(self):  # pylint: disable=invalid-name
         gene_names = ['STAUR_3972', 'STAUR_3982', 'STAUR_3983', 'STAUR_3984', 'STAUR_3985']
         gene_domains = {'STAUR_3985': ['ACP', 'PKS_KS', 'PKS_AT', 'PKS_DH', 'PKS_KR', 'ACP'],
                         'STAUR_3984': ['PKS_KS', 'PKS_AT', 'PKS_DH', 'PKS_KR', 'ACP'],

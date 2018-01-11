@@ -1,6 +1,11 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+""" A collection of functions for reinterpreting/converting the combined
+    predictions into a final, potentially modified, result.
+"""
+
+
 import logging
 
 from typing import Dict, List, Set, Tuple

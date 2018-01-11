@@ -5,9 +5,6 @@
     Runs minowa and kr_streochem over PKS domains
 """
 
-
-import logging
-
 from antismash.common.secmet import CDSFeature
 
 from .results import PKSResults
@@ -17,6 +14,9 @@ from .substrates_pks import count_pks_genes, run_minowa_predictor_pks_at, \
 
 
 def run_pks_substr_spec_predictions(genes: CDSFeature) -> PKSResults:
+    """ Runs the PKS analyses on the given genes and returns the various predictions
+        as a PKSResults object
+    """
     at_domains = extract_at_domains(genes)
     counted = count_pks_genes(genes)
     results = PKSResults()

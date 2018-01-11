@@ -1,19 +1,21 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+""" The section of nrps_pks responsible for analysing PKS components """
+
 import logging
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from helperlibs.wrappers.io import TemporaryDirectory
 
 from antismash.common.secmet import CDSFeature
 
-from .minowa import minowa_cal, minowa_at
+from .minowa import minowa_cal, minowa_at, base as minowa_base
 from .kr_analysis import kr_analysis
 from .at_analysis import at_analysis
 
 
-def count_pks_genes(genes):
+def count_pks_genes(genes: List[CDSFeature]) -> int:
     """ returns the combined count of PKS_AT, PKS_KR, and CAL_domain """
     pkscount = 0
     for gene in genes:
@@ -38,7 +40,8 @@ def extract_at_domains(genes: List[CDSFeature]) -> Dict[str, str]:
     return results
 
 
-def run_minowa_predictor_pks_at(at_domains: Dict[str, str]):
+def run_minowa_predictor_pks_at(at_domains: Dict[str, str]
+                                ) -> Tuple[at_analysis.ATSignatureResults, minowa_base.MinowaResults]:
     """ analyses AT domains with Minowa and signature based detection """
     # Predict PKS AT domain specificities with Minowa et al. method and PKS code (NP searcher / ClustScan / own?)
     # Run PKS signature analysis
@@ -52,7 +55,7 @@ def run_minowa_predictor_pks_at(at_domains: Dict[str, str]):
     return signature_results, minowa_results
 
 
-def run_minowa_predictor_pks_cal(genes):
+def run_minowa_predictor_pks_cal(genes: List[CDSFeature]) -> minowa_base.MinowaResults:
     """ Predict PKS CAL domain specificities with Minowa et al. method. """
     cal_domains = {}
     logging.info("Predicting CAL domain substrate specificities by Minowa et al. method")
@@ -70,7 +73,7 @@ def run_minowa_predictor_pks_cal(genes):
     return minowa_results
 
 
-def run_kr_stereochemistry_predictions(genes):
+def run_kr_stereochemistry_predictions(genes) -> Tuple[Dict[str, bool], Dict[str, str]]:
     """ Predict PKS KR domain stereochemistry using pattern as published in ClustScan
     """
     queries = {}

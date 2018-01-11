@@ -1,11 +1,16 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+""" Predicts CAL domain specificities by Minowa et al. method"""
+
+from typing import Dict
+
 from antismash.common import path
-from .base import run_minowa
+from .base import run_minowa, MinowaResults
 
 
-def run_minowa_cal(sequence_info):
+def run_minowa_cal(sequence_info: Dict[str, str]) -> MinowaResults:
+    """ Predicts CAL domain specificities by Minowa et al. method"""
     return run_minowa(sequence_info=sequence_info,
                       startpos=43,
                       muscle_ref=path.get_full_path(__file__, "data", "CAL_domains_muscle.fasta"),

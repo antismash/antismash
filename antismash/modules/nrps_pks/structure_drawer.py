@@ -1,9 +1,14 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+""" Generation of structure predictions for product compounds in both SMILES and
+    image format, where possible
+"""
+
 import shutil
 import os
 import logging
+from typing import Dict
 
 from helperlibs.wrappers.io import TemporaryDirectory
 
@@ -13,7 +18,8 @@ from .external.indigo import Indigo
 from .external.indigo_renderer import IndigoRenderer
 
 
-def gen_smiles_from_pksnrps(compound_pred, cluster_number):
+def gen_smiles_from_pksnrps(compound_pred, cluster_number: int) -> str:
+    """ Generates the SMILES string for a specific compound prediction """
     smiles = ""
     residues = compound_pred.replace("(", "").replace(")", "").replace(" + ", " ").replace("-", " ").split(" ")
     # Counts the number of malonate and its derivatives in polyketides
@@ -49,7 +55,8 @@ def gen_smiles_from_pksnrps(compound_pred, cluster_number):
     return smiles
 
 
-def generate_chemical_structure_preds(compound_predictions, record, options):
+def generate_chemical_structure_preds(compound_predictions, record, options) -> None:
+    """ Generates the SMILES strings for each cluster """
     # Create directory to store structures
     structures_dir = os.path.abspath(os.path.join(options.output_dir, "structures"))
     if not os.path.exists(structures_dir):
@@ -74,7 +81,7 @@ def generate_chemical_structure_preds(compound_predictions, record, options):
         cluster.smiles_structure = smiles_string
 
 
-def load_smiles():
+def load_smiles() -> Dict[str, str]:
     """Load smiles from a dictionary mapping residues to SMILES string"""
     aa_smiles = {}
 
@@ -93,7 +100,8 @@ def load_smiles():
     return aa_smiles
 
 
-def generate_image(cluster_number, smiles, structures_dir):
+def generate_image(cluster_number: int, smiles: str, structures_dir: str) -> bool:
+    """ Constructs an image, if possible, of a cluster's product structure """
     filename = "genecluster%d" % cluster_number
     png = filename + ".png"
     smi = filename + ".smi"

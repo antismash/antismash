@@ -1,6 +1,10 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+""" The core of the Minowa method. Removes duplication between similar methods
+    (e.g. CAL and AT domain analyses).
+"""
+
 import logging
 from os import path
 from typing import Dict, List
@@ -9,7 +13,13 @@ from antismash.common import subprocessing, utils
 
 
 class MinowaResults(dict):
-    def write_to_file(self, filename: str):
+    """ A simple wrapper of a dictionary to allow for writing the results to
+        file without extra work.
+
+        Maps a gene name to a list of tuples containing HMM name and score
+    """
+    def write_to_file(self, filename: str) -> None:
+        """ Save the results to file in a readable format """
         out_file = open(filename, "w")
         for query_id, result in self.items():
             out_file.write("\\\\\n" + query_id + "\n")
@@ -20,6 +30,7 @@ class MinowaResults(dict):
 
 
 def hmmsearch(fasta_format: str, hmm: str) -> float:
+    """ Runs hmmsearch, only taking a single value from the output """
     result = subprocessing.execute(["hmmsearch", "--noali", hmm, "-"], stdin=fasta_format)
     if not result.successful():
         logging.error("hmmsearch stderr: %s", result.stderr)
@@ -36,6 +47,7 @@ def hmmsearch(fasta_format: str, hmm: str) -> float:
 
 
 def get_positions(filename: str, startpos: int) -> List[int]:
+    """ Reads the signature positions from the file provided """
     with open(filename, "r") as handle:
         text = handle.read().strip().replace(' ', '_')
     return [int(i) - startpos for i in text.split("\t")]
