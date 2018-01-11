@@ -2,7 +2,6 @@
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
 import json
-import logging
 import string
 import os
 
@@ -49,7 +48,9 @@ def generate_webpage(seq_records, results, options):
                 if handler.__name__ not in results[i]:
                     continue
                 if "generate_js_domains" in dir(handler):
-                    extra_data['js_domains'].extend(handler.generate_js_domains(json_cluster, record, results[i][handler.__name__], options))
+                    domains = handler.generate_js_domains(json_cluster, record, results[i][handler.__name__], options)
+                    if domains:
+                        extra_data['js_domains'].append(domains)
 
     write_geneclusters_js(json_records, options.output_dir, extra_data)
 

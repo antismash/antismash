@@ -18,7 +18,8 @@ from antismash.common import path, subprocessing, utils
 _KR_DOMAINS_FILENAME = path.get_full_path(__file__, "data", "KRdomains_muscle.fasta")
 
 
-def is_active(signature):
+def is_active(signature: str) -> bool:
+    """ Returns True if a KR domain is active based on its signature """
     if signature[0] == "E" and signature[1] in "SAG" and signature[2] == "H" and signature[3] == "H":
         return True
     if signature[0] == "K" and signature[1] in "SAG" and signature[2] == "Y" and signature[3] in "NG":
@@ -26,7 +27,8 @@ def is_active(signature):
     return False
 
 
-def predict_stereochemistry(signature):
+def predict_stereochemistry(signature: str) -> str:
+    """ Predicts stereochemistry of a KR domain from its signature """
     stereochemistry = None
     if signature[0:3] != "LDD" and signature[3] == "W" and signature[5:] == "YAN":
         if signature[4] != "H":
@@ -75,7 +77,6 @@ def run_kr_analysis(queries: Dict[str, str]) -> Tuple[Dict[str, bool], Dict[str,
     activity = {}
     for name, signature in zip(querysignames, activity_signatures):
         activity[name] = is_active(signature)
-
 
     # Predict stereochemistry
     stereochemistry = {}

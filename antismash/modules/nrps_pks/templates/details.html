@@ -1,8 +1,6 @@
 <div class="details">
   <h3>Detailed annotation</h3>
-    {% for js in cluster.get_domain_details() %}
-      {% if js['orfs'] | length > 0 %}
-        <div class="details-svg" id="cluster-{{cluster.get_cluster_number()}}-details-svg"></div>
-      {% endif %}
-    {% endfor %}
+    {% if cluster.get_domain_details() %}
+      <div class="details-svg" id="cluster-{{cluster.get_cluster_number()}}-details-svg"></div>
+    {% endif %}
 </div>

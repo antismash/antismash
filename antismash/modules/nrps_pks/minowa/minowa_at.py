@@ -1,11 +1,16 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+""" Predicts AT domain specificities by Minowa et al. method """
+
+from typing import Dict
+
 from antismash.common import path
-from antismash.modules.nrps_pks.minowa.base import run_minowa
+from antismash.modules.nrps_pks.minowa.base import run_minowa, MinowaResults
 
 
-def run_minowa_at(sequence_info):
+def run_minowa_at(sequence_info: Dict[str, str]) -> MinowaResults:
+    """ Predicts AT domain specificities by Minowa et al. method """
     return run_minowa(sequence_info=sequence_info,
                       startpos=7,
                       muscle_ref=path.get_full_path(__file__, "data", "AT_domains_muscle.fasta"),

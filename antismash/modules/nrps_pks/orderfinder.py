@@ -1,6 +1,8 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+""" Calculates a likely order of NRPS/PKS domains """
+
 import itertools
 import logging
 import os
@@ -8,6 +10,7 @@ from typing import Dict, List, Optional, Tuple
 
 from antismash.common import path, subprocessing, utils
 from antismash.common.secmet import CDSFeature
+
 
 def analyse_biosynthetic_order(nrps_pks_genes, consensus_predictions, seq_record) -> Dict[int, Tuple[str, bool]]:
     """ For each NRPS or PKS cluster, determines if that cluster is docking or not
@@ -24,10 +27,12 @@ def analyse_biosynthetic_order(nrps_pks_genes, consensus_predictions, seq_record
     """
     compound_predictions = {}  # type: Dict[int, Tuple[str, bool]]
     # Find NRPS/PKS gene clusters
-    nrpspksclusters = [cluster for cluster in seq_record.get_clusters() if "nrps" in cluster.products or "pks" in "-".join(cluster.products)]
+    nrpspksclusters = [cluster for cluster in seq_record.get_clusters()
+                       if "nrps" in cluster.products or "pks" in "-".join(cluster.products)]
     if not nrpspksclusters:
         return {}
-    # Predict biosynthetic gene order in gene cluster using starter domains, thioesterase domains, gene order and docking domains
+    # Predict biosynthetic gene order in gene cluster using starter domains,
+    # thioesterase domains, gene order and docking domains
     for cluster in nrpspksclusters:
         cluster_number = cluster.get_cluster_number()
         genes_in_cluster = [gene for gene in nrps_pks_genes if gene.overlaps_with(cluster)]
@@ -46,6 +51,7 @@ def analyse_biosynthetic_order(nrps_pks_genes, consensus_predictions, seq_record
         prediction = generate_substrates_order(geneorder, consensus_predictions)
         compound_predictions[cluster_number] = (prediction, docking)
     return compound_predictions
+
 
 def find_cluster_modular_enzymes(genes) -> Tuple[int, int, int]:
     """ counts number of PKS domains, NRPS domains and hybrid domains in a cluster
@@ -198,7 +204,8 @@ def extract_cterminus(data_dir, genes, end_gene) -> Dict[str, str]:
     return c_terminal_residues
 
 
-def find_possible_orders(genes: List[CDSFeature], start_gene: CDSFeature, end_gene: CDSFeature) -> List[List[CDSFeature]]:
+def find_possible_orders(genes: List[CDSFeature], start_gene: CDSFeature,
+                         end_gene: CDSFeature) -> List[List[CDSFeature]]:
     """ Finds all possible arrangements of the given genes. If not None, the
         start gene will always be the first in each order. Similarly, the end
         gene will always be last.
@@ -231,7 +238,8 @@ def find_possible_orders(genes: List[CDSFeature], start_gene: CDSFeature, end_ge
     return possible_orders
 
 
-def rank_biosynthetic_orders(n_terminal_residues, c_terminal_residues, possible_orders: List[List[CDSFeature]]) -> List[CDSFeature]:
+def rank_biosynthetic_orders(n_terminal_residues, c_terminal_residues,
+                             possible_orders: List[List[CDSFeature]]) -> List[CDSFeature]:
     """ Scores each possible order according to terminal pairs of adjacent genes.
 
         Arguments:

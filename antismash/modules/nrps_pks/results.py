@@ -1,7 +1,10 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+""" Contains the results classes for the nrps_pks module """
+
 import logging
+from typing import Any, Dict
 
 from Bio.SeqFeature import FeatureLocation
 
@@ -28,7 +31,41 @@ DOMAIN_TYPE_MAPPING = {'Condensation_DCL': 'Condensation',
 _UNKNOWN = "(unknown)"
 
 
+class PKSResults:
+    """ Results for the PKS section of the nrps_pks module """
+    __slots__ = ["method_results"]
+
+    class EnforcedDict(dict):
+        """ Enforces the value of the key 'signature' to be a consistent type """
+        def __setitem__(self, key, val):
+            if key == "signature":
+                assert isinstance(val, ATSignatureResults)
+            return super().__setitem__(key, val)
+
+    def __init__(self):
+        self.method_results = PKSResults.EnforcedDict()
+
+    def to_json(self) -> Dict[str, Any]:
+        """ Store results as a JSON object """
+        results = {}
+        for key, value in self.method_results.items():
+            if key == "signature":
+                value = value.to_json()
+            results[key] = value
+        return results
+
+    @staticmethod
+    def from_json(json: Dict[str, Any]) -> "PKSResults":
+        """ Reconstruct a PKSResults instance from JSON object """
+        assert isinstance(json, dict)
+        results = PKSResults()
+        results.method_results = json
+        results.method_results["signature"] = ATSignatureResults.from_json(json.get("signature", {}))
+        return results
+
+
 class NRPS_PKS_Results(ModuleResults):
+    """ The combined results of the nrps_pks module """
     _schema_version = 1
     __slots__ = ["_pks", "nrps", "consensus", "consensus_transat", "cluster_predictions"]
 
@@ -41,15 +78,16 @@ class NRPS_PKS_Results(ModuleResults):
         self.consensus_transat = {}
 
     @property
-    def pks(self):
+    def pks(self) -> PKSResults:
+        """ The result of the PKS analyses """
         return self._pks
 
     @pks.setter
-    def pks(self, value):
+    def pks(self, value: PKSResults):
         assert isinstance(value, PKSResults)
         self._pks = value
 
-    def to_json(self):
+    def to_json(self) -> Dict[str, Any]:
         results = {"schema_version": self._schema_version}
         results["record_id"] = self.record_id
         results["pks"] = self.pks.to_json()
@@ -59,7 +97,7 @@ class NRPS_PKS_Results(ModuleResults):
         return results
 
     @staticmethod
-    def from_json(json):
+    def from_json(json: Dict[str, Any], _record) -> "NRPS_PKS_Results":
         assert "record_id" in json
         if json.get("schema_version") != NRPS_PKS_Results._schema_version:
             logging.warning("Mismatching schema version, dropping results")
@@ -73,15 +111,11 @@ class NRPS_PKS_Results(ModuleResults):
         results.cluster_predictions = json["cluster_predictions"]
         return results
 
-    def add_to_record(self, record):
+    def add_to_record(self, record) -> None:
         """ Save substrate specificity predictions in NRPS/PKS domain sec_met info of record
         """
 
         for feature in deprecated.get_pksnrps_cds_features(record):
-            at_count = 0
-            a_count = 0
-            cal_count = 0
-            kr_count = 0
             x_count = 0
             nrps_qualifier = feature.nrps_pks
             new_features = []
@@ -98,7 +132,7 @@ class NRPS_PKS_Results(ModuleResults):
                 # calculate respective positions based on aa coordinates
                 if feature.location.strand == 1:
                     start = feature.location.start + (3 * start_aa)
-                    end = feature.location.start + (3* end_aa)
+                    end = feature.location.start + (3 * end_aa)
                 else:
                     end = feature.location.end - (3 * start_aa)
                     start = feature.location.end - (3 * end_aa)
@@ -120,23 +154,20 @@ class NRPS_PKS_Results(ModuleResults):
                 else:
                     transl_table = 1
                 new_feature.translation = str(new_feature.extract(record.seq).translate(table=transl_table))
+                domainname = gene_id + domain.label
                 if domain_type == "AMP-binding":
-                    a_count += 1
-                    domainname = gene_id + "_A" + str(a_count)
                     new_feature.label = domainname
                     new_feature.domain_id = "nrpspksdomains_" + domainname
                     domain.predictions["consensus"] = "nrp"
 
                 elif domain_type == "PKS_AT":
-                    at_count += 1
-                    domainname = gene_id + "_AT" + str(at_count)
                     new_feature.label = domainname
                     new_feature.domain_id = "nrpspksdomains_" + domainname
 
                     # For t1pks, t2pks and t3pks
                     if 'transatpks' not in feature.cluster.products:
                         consensus = self.consensus[domainname]
-                    else: # for transatpks
+                    else:  # for transatpks
                         consensus = self.consensus_transat[domainname]
                     pks_sig = self.pks.method_results["signature"][domainname]
                     if pks_sig:
@@ -148,25 +179,24 @@ class NRPS_PKS_Results(ModuleResults):
                     domain.predictions["consensus"] = consensus
 
                 elif domain_type == "CAL_domain":
-                    cal_count += 1
-                    domainname = gene_id + "_CAL" + str(cal_count)
                     new_feature.label = domainname
                     new_feature.domain_id = "nrpspksdomains_" + domainname
                     minowa = self.pks.method_results["minowa_cal"][domainname][0][0]
                     domain.predictions["Minowa"] = LONG_TO_SHORT.get(minowa, minowa)
 
                 elif domain_type == "PKS_KR":
-                    kr_count += 1
-                    domainname = gene_id + "_KR" + str(kr_count)
                     new_feature.label = domainname
                     new_feature.domain_id = "nrpspksdomains_" + domainname
 
-                    domain.predictions["KR activity"] = "active" if self.pks.method_results["kr_activity"][domainname] else "inactive"
-                    domain.predictions["KR stereochemistry"] = self.pks.method_results["kr_stereochem"].get(domainname, _UNKNOWN)
+                    domain.predictions["KR activity"] = \
+                            "active" if self.pks.method_results["kr_activity"][domainname] else "inactive"
+                    domain.predictions["KR stereochemistry"] = \
+                            self.pks.method_results["kr_stereochem"].get(domainname, _UNKNOWN)
                 else:
                     x_count += 1
-                    new_feature.domain_id = "nrpspksdomains_" + gene_id.partition(".")[0] + "_Xdom"+'{:02d}'.format(x_count)
-    #                updated_nrps_qualifier.append(domain) # TODO weird, but should it be done?
+                    new_feature.domain_id = "nrpspksdomains_" + gene_id.partition(".")[0] \
+                                            + "_Xdom"+'{:02d}'.format(x_count)
+#                    updated_nrps_qualifier.append(domain) # TODO weird, but should it be done?
                 for method, pred in domain.predictions.items():
                     new_feature.specificity.append("%s: %s" % (method, pred))
                 mapping = DOMAIN_TYPE_MAPPING.get(domain_type)
@@ -177,32 +207,3 @@ class NRPS_PKS_Results(ModuleResults):
 
             for new_feature in new_features:
                 record.add_feature(new_feature)
-
-
-class PKSResults:
-    __slots__ = ["method_results"]
-
-    class EnforcedDict(dict):
-        def __setitem__(self, key, val):
-            if key == "signature":
-                assert isinstance(val, ATSignatureResults)
-            return super().__setitem__(key, val)
-
-    def __init__(self):
-        self.method_results = PKSResults.EnforcedDict()
-
-    def to_json(self):
-        results = {}
-        for key, value in self.method_results.items():
-            if key == "signature":
-                value = value.to_json()
-            results[key] = value
-        return results
-
-    @staticmethod
-    def from_json(json):
-        assert isinstance(json, dict)
-        results = PKSResults()
-        results.method_results = json
-        results.method_results["signature"] = ATSignatureResults.from_json(json.get("signature", {}))
-        return results
