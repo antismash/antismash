@@ -213,7 +213,7 @@ PF13353	4Fe-4S single cluster domain	22	PF13353.hmm
 PF02517	Abi	21	PF02517.hmm
 PF02163	Peptidase_M50	27	PF02163.hmm
 PF00326	Peptidase_S9	22	PF00326.hmm
-PF14028	Lant_dehydr_C	27	PF14028.hmm
+Lant_dehydr_C	Lant_dehydr_C	27	PF14028.hmm
 PF03412	Peptidase_C39	21	PF03412.hmm
 PF00899	ThiF	22	PF00899.hmm
 TRI5	Trichodiene synthase	25	TRI5.hmm
