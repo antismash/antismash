@@ -21,7 +21,7 @@ from Bio.SeqFeature import SeqFeature
 from Bio.SeqRecord import SeqRecord
 
 from .feature import Feature, CDSFeature, CDSMotif, AntismashDomain, Cluster, \
-                     PFAMDomain, ClusterBorder, Prepeptide
+                     PFAMDomain, ClusterBorder, Prepeptide, Gene
 
 
 class Record:
@@ -30,13 +30,15 @@ class Record:
     __slots__ = ["_record", "_seq", "skip", "_cds_features", "_cds_by_name",
                  "_clusters", "_cds_by_accession", "original_id",
                  "_cluster_borders", "_cds_motifs", "_pfam_domains", "_antismash_domains",
-                 "_cluster_numbering", "_nonspecific_features", "record_index"]
+                 "_cluster_numbering", "_nonspecific_features", "record_index",
+                 "_genes"]
 
     def __init__(self, seq=None, **kwargs):
         self._record = SeqRecord(seq, **kwargs)
         self.record_index = None
         self.original_id = None
         self.skip = False  # TODO: move to yet another abstraction layer?
+        self._genes = []
         self._cds_features = []
         self._cds_by_accession = {}
         self._cds_by_name = {}
@@ -104,6 +106,10 @@ class Record:
         for cluster in self._clusters:
             cluster.borders = []
 
+    def get_genes(self) -> Tuple:
+        """ Returns all Gene features (different to CDSFeatures) in the record """
+        return tuple(self._genes)
+
     def get_cds_features(self) -> Tuple:
         """A list of secondary metabolite clusters present in the record"""
         return tuple(self._cds_features)
@@ -153,6 +159,7 @@ class Record:
                   the other get_*() functions
         """
         features = list(self.get_generics())
+        features.extend(self._genes)
         features.extend(self.get_clusters())
         features.extend(self.get_cluster_borders())
         features.extend(self.get_cds_features())
@@ -222,7 +229,8 @@ class Record:
         return sum(map(len, [self._cds_features, self._clusters,
                              self._cluster_borders, self._cds_motifs,
                              self._pfam_domains, self._antismash_domains,
-                             self._cluster_numbering, self._nonspecific_features]))
+                             self._cluster_numbering, self._nonspecific_features,
+                             self._genes]))
 
     def add_cluster(self, cluster: Cluster) -> None:
         """ Add the given cluster to the record,
@@ -265,8 +273,13 @@ class Record:
                 cluster.borders.append(cluster_border)
                 cluster_border.parent_cluster = cluster
 
+    def add_gene(self, gene: Gene) -> None:
+        """ Adds a Gene feature to the record """
+        assert isinstance(gene, Gene), type(gene)
+        self._genes.append(gene)
+
     def add_cds_feature(self, cds_feature: CDSFeature) -> None:
-        """ Add the given cluster to the record,
+        """ Add the given CDSFeature to the record,
             causes cluster-CDS pairing to be recalculated """
         assert isinstance(cds_feature, CDSFeature), type(cds_feature)
         # provide a unique id over all records
@@ -323,6 +336,8 @@ class Record:
             self.add_cluster(feature)
         elif isinstance(feature, CDSFeature):
             self.add_cds_feature(feature)
+        elif isinstance(feature, Gene):
+            self.add_gene(feature)
         elif isinstance(feature, (CDSMotif, Prepeptide)):
             self.add_cds_motif(feature)
         elif isinstance(feature, PFAMDomain):
@@ -339,6 +354,8 @@ class Record:
         if feature.type == 'CDS':
             # TODO: check insertion order of clusters
             self.add_cds_feature(CDSFeature.from_biopython(feature))
+        elif feature.type == 'gene':
+            self.add_gene(Gene.from_biopython(feature))
         elif feature.type == 'cluster':
             self.add_cluster(Cluster.from_biopython(feature))  # TODO: fix performance
         elif feature.type == 'CDS_motif':
