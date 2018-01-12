@@ -158,6 +158,62 @@ class Feature:
         return qualifiers
 
 
+class Gene(Feature):
+    """ A feature representing a Gene (more general than a CDS) """
+    __slots__ = ["_pseudo", "locus_tag", "gene_name"]
+
+    def __init__(self, location, locus_tag=None, gene_name=None, pseudo_gene=False,
+                 created_by_antismash=False, qualifiers=None):
+        super().__init__(location, feature_type="gene",
+                         created_by_antismash=created_by_antismash)
+        self.locus_tag = str(locus_tag) if locus_tag else None
+        self.gene_name = str(gene_name) if gene_name else None
+        if not self.locus_tag and not self.gene_name:
+            raise ValueError("Gene instances must have a locus tag or name")
+        self._pseudo = bool(pseudo_gene)
+        if self._pseudo:
+            assert not created_by_antismash, "pseudo genes can only come from input files"
+        if qualifiers:
+            assert isinstance(qualifiers, dict)
+            self._qualifiers.update(qualifiers)
+
+    def get_name(self) -> str:
+        return self.locus_tag or self.gene_name
+
+    def is_pseudo_gene(self) -> bool:
+        """ Was the gene marked as a pseudo-gene """
+        return self._pseudo
+
+    def to_biopython(self) -> SeqFeature:
+        """ Construct a matching SeqFeature for this Gene """
+        quals = {}
+        if self.locus_tag:
+            quals["locus_tag"] = [self.locus_tag]
+        if self.gene_name:
+            quals["gene"] = [self.gene_name]
+        if self._pseudo:
+            quals["pseudo"] = []
+        return super().to_biopython(quals)
+
+    @staticmethod
+    def from_biopython(bio_feature, feature=None, leftovers=None) -> "Gene":
+        if leftovers is None:
+            leftovers = Feature.make_qualifiers_copy(bio_feature)
+        # grab mandatory qualifiers and create the class
+        locus = leftovers.pop("locus_tag", [None])[0]
+        name = leftovers.pop("gene", [None])[0]
+        pseudo = "pseudo" in leftovers
+        if pseudo:
+            leftovers.pop("pseudo")
+        try:
+            feature = Gene(bio_feature.location, locus_tag=locus, gene_name=name, pseudo_gene=pseudo)
+        except AssertionError:
+            print(locus, name, bio_feature.qualifiers)
+            raise
+        super(Gene, feature).from_biopython(bio_feature, feature=feature, leftovers=leftovers)
+        return feature
+
+
 class ClusterBorder(Feature):
     """ A feature representing a cluster border """
     __slots__ = ["tool", "probability", "parent_cluster"]
@@ -682,6 +738,7 @@ class CDSFeature(Feature):
 
     def __str__(self) -> str:
         return "CDS(%s, %s)" % (self.get_name(), self.location)
+
 
 class Prepeptide(CDSMotif):
     """ A class representing a prepeptide. Used for tracking a multi-feature
