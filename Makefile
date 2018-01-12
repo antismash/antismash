@@ -9,11 +9,12 @@ unit:
 	echo "simple reuse test" && ./run_antismash.py --reuse-results nisin/nisin.json
 	pytest --durations=3 antismash
 
-integration:
+integration: clean
 	python -m pytest --durations=3 antismash $(integration_flags)
 
 clean:
-	find . -name '*.pyc' | xargs rm
+	rm -f antismash/detection/hmm_detection/data/bgc_seeds.hmm*
+	find . -name '*.pyc' | xargs rm -f
 	find . -name '__pycache__' | xargs rm -rf
 
 cover: coverage

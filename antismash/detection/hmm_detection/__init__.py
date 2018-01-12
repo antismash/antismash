@@ -135,7 +135,7 @@ def check_prereqs() -> List[str]:
         binary = "{}{}".format(hmm, ext)
         if path.locate_file(binary) is None:
             result = run_hmmpress(hmm)
-            if not result.succesful():
+            if not result.successful():
                 failure_messages.append('Failed to hmmpress {!r}: {}'.format(hmm, result.stderr))
             break
 
