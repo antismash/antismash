@@ -68,7 +68,7 @@ def check_options(options) -> List[str]:
         if not os.path.exists(options.genefinding_gff3):
             errors.append("Specified gff file does not exist: %s" % (
                     options.genefinding_gff3))
-    if options.taxon == "fungi" and options.genefinding_tool not in ["glimmerhmm", "none"]:
+    if options.taxon == "fungi" and options.genefinding_tool not in ["glimmerhmm", "none", "error"]:
         errors.append("Fungi taxon must use glimmerhmm for genefinding if using genefinding")
     if options.taxon == "bacteria" and options.genefinding_tool == "glimmerhmm":
         errors.append("Bacteria taxon cannot use glimmerhmm for genefinding")
@@ -88,12 +88,15 @@ def run_on_record(record, options):
     """
     if options.genefinding_tool == 'error':
         raise ValueError("Called find_genes, but genefinding disabled")
+
     if options.taxon == 'fungi':
+        if options.genefinding_tool == ["none"]:
+            return None
         assert options.genefinding_tool == "glimmerhmm"
         logging.debug("Running glimmerhmm genefinding")
-        run_glimmerhmm(record)
+        return run_glimmerhmm(record)
     elif options.genefinding_tool in ["prodigal", "prodigal-m"]:
         logging.debug("Running prodigal based genefinding")
-        run_prodigal(record, options)
-    else:
-        raise ValueError("Unknown genefinding tool: %s", options.genefinding_tool)
+        return run_prodigal(record, options)
+
+    raise ValueError("Unknown genefinding tool: %s", options.genefinding_tool)
