@@ -164,12 +164,12 @@ mvd	Marinostatin/microviridin prepeptide	20	mvd_mst.hmm
 cypemycin	Cypemycin prepeptide	20	cypemycin.hmm
 cypI	cypemycin biosynthesis cypI enzyme	20	cypI.hmm
 PoyD	proteusin biosynthesis PoyD enzyme	25	PoyD.hmm
-PF02922	Carbohydrate-binding module 48 (Isoamylase N-terminal domain)	20	PF02922.hmm
-PF01041	DegT/DnrJ/EryC1/StrS aminotransferase family	19	PF01041.hmm
-PF00128	Alpha amylase, catalytic domain	20	PF00128.hmm
-PF00908	dTDP-4-dehydrorhamnose 3,5-epimerase	20	PF00908.hmm
-PF02719	Polysaccharide biosynthesis protein	20	PF02719.hmm
-PF04321	RmlD substrate binding domain	20	PF04321.hmm
+CBM_48	Carbohydrate-binding module 48 (Isoamylase N-terminal domain)	20	PF02922.hmm
+DegT_DnrJ_EryC1	DegT/DnrJ/EryC1/StrS aminotransferase family	19	PF01041.hmm
+Alpha-amylase	Alpha amylase, catalytic domain	20	PF00128.hmm
+dTDP_sugar_isom	dTDP-4-dehydrorhamnose 3,5-epimerase	20	PF00908.hmm
+Polysacc_synt_2	Polysaccharide biosynthesis protein	20	PF02719.hmm
+RmlD_sub_bind	RmlD substrate binding domain	20	PF04321.hmm
 PF01943	Polysaccharide biosynthesis protein	23	PF01943.hmm
 PF02806	Alpha amylase, C-terminal all-beta domain	21	PF02806.hmm
 PF02350	UDP-N-acetylglucosamine 2-epimerase	22	PF02350.hmm
@@ -205,7 +205,7 @@ PF00561	Abhydrolase	20	PF00561.hmm
 PF13186	SPASM	20	PF13186.hmm
 TIGR04404	SCIFF	45	TIGR04404.hmm
 TIGR03973	SkfA	50	TIGR03973.hmm
-PF00082	Peptidase_S8	21	PF00082.hmm
+Peptidase_S8	Subtilase family	21	PF00082.hmm
 PF00675	Peptidase_M16	22	PF00675.hmm
 PF03572	Peptidase_S41	21	PF03572.hmm
 PF05193	Peptidase_M16_C	20	PF05193.hmm
@@ -214,7 +214,7 @@ PF02517	Abi	21	PF02517.hmm
 PF02163	Peptidase_M50	27	PF02163.hmm
 PF00326	Peptidase_S9	22	PF00326.hmm
 Lant_dehydr_C	Lant_dehydr_C	27	PF14028.hmm
-PF03412	Peptidase_C39	21	PF03412.hmm
+Peptidase_C39	Peptidase C39 family	21	PF03412.hmm
 PF00899	ThiF	22	PF00899.hmm
 TRI5	Trichodiene synthase	25	TRI5.hmm
 NasY	Long-chain N-acyl amino acid synthase	20	NasY.hmm
