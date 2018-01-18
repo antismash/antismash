@@ -183,7 +183,7 @@ PF05159	Capsule polysaccharide biosynthesis protein	20	PF05159.hmm
 PF04101	Glycosyltransferase family 28 C-terminal domain	21	PF04101.hmm
 PF02563	Polysaccharide biosynthesis/export protein	26	PF02563.hmm
 PF08437	Glycosyl transferase family 8 C-terminal	19	PF08437.hmm
-PF02585	GlcNAc-PI de-N-acetylase	22	PF02585.hmm
+PIG-L	GlcNAc-PI de-N-acetylase	22	PF02585.hmm
 APE_KS1	Aryl polyene ketosynthase 1	50	APE_KS1.hmm
 APE_KS2	Aryl polyene ketosynthase 2	50	APE_KS2.hmm
 DarB	(Dialkyl)resorcinol-associated ketosynthase	50	DarB.hmm
