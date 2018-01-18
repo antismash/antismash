@@ -750,7 +750,7 @@ class Parser:  # pylint: disable=too-few-public-methods
     """ Responsible for parsing an entire block of text. Rules parsed from the
         text are stored in the .rules member.
     """
-    def __init__(self, text):
+    def __init__(self, text, signature_names: Set[str]):
         self.lines = text.splitlines()
         self.rules = []
         self.current_line = 1
@@ -778,7 +778,7 @@ class Parser:  # pylint: disable=too-few-public-methods
                                     self.lines[self.current_line - 1],
                                     " " * self.current_token.position, "^"))
         # verify gathered signature idenfiers exist as signatures
-        unknown = identifiers - signatures.get_signature_names()
+        unknown = identifiers - signature_names
         if unknown:
             raise ValueError("Rules contained identifers without signatures: %s" % ", ".join(sorted(list(unknown))))
 

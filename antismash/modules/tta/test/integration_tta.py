@@ -9,7 +9,7 @@ from tempfile import TemporaryDirectory
 import unittest
 
 import antismash
-from antismash.main import detect_signature_genes, read_data, regenerate_results_for_record
+from antismash.main import read_data, regenerate_results_for_record
 from antismash.common.module_results import ModuleResults
 from antismash.common.record_processing import parse_input_sequence
 import antismash.common.test.helpers as helpers
@@ -29,8 +29,7 @@ class TtaIntegrationTest(unittest.TestCase):
         update_config(self.old_config)
 
     def test_nisin(self):
-        record = parse_input_sequence(helpers.get_path_to_nisin_genbank())[0]
-        detect_signature_genes(record, self.options, {})
+        record = parse_input_sequence(helpers.get_path_to_nisin_with_detection())[0]
         clusters = record.get_clusters()
         assert clusters
         for cluster in clusters:

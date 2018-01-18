@@ -79,6 +79,20 @@ class FakeHSP(object):
         self.bitscore = score
 
 
+class FakeHSPHit:
+    "class for generating a HSP like datastructure"
+    def __init__(self, query_id, hit_id, hit_start, hit_end, bitscore, evalue):
+        self.query_id = query_id
+        self.hit_id = hit_id
+        self.hit_start = hit_start
+        self.hit_end = hit_end
+        self.bitscore = bitscore
+        self.evalue = evalue
+
+    def __repr__(self):
+        return "FakeHSP({})".format(str(vars(self)))
+
+
 class FakeHit(object):
     """ For generating hmmpfam2-like results """
     def __init__(self, start, end, score, desc):

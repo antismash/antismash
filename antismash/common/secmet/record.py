@@ -17,7 +17,7 @@ from typing import Dict, List, Tuple, Union
 
 import Bio.Alphabet
 from Bio.Seq import Seq
-from Bio.SeqFeature import SeqFeature
+from Bio.SeqFeature import SeqFeature, FeatureLocation
 from Bio.SeqRecord import SeqRecord
 
 from .feature import Feature, CDSFeature, CDSMotif, AntismashDomain, Cluster, \
@@ -256,24 +256,20 @@ class Record:
         # link any relevant CDS features
         self._link_cluster_to_cds_features(cluster)
         for cluster_border in self._cluster_borders:
-            if cluster.overlaps_with(cluster_border):
-                if cluster_border.parent_cluster is not None:
-                    raise ValueError("A cluster border is overlapping with two clusters")
+            if cluster_border.is_contained_by(cluster):
                 cluster.borders.append(cluster_border)
-                cluster_border.parent_cluster = cluster
-                break
 
     def add_cluster_border(self, cluster_border: ClusterBorder) -> None:
-        """ Add the given cluster_border to the record and to any cluster it
+        """ Add the given cluster_border to the record and to the cluster it
             overlaps with
         """
         assert isinstance(cluster_border, ClusterBorder)
         self._cluster_borders.append(cluster_border)
         # TODO fix performance
         for cluster in self._clusters:
-            if cluster.overlaps_with(cluster_border):
+            if cluster_border.is_contained_by(cluster):
                 cluster.borders.append(cluster_border)
-                cluster_border.parent_cluster = cluster
+                break
 
     def add_gene(self, gene: Gene) -> None:
         """ Adds a Gene feature to the record """
@@ -407,7 +403,7 @@ class Record:
             if not cds.is_contained_by(cluster):
                 break
             cluster.add_cds(cds)
-            cds.cluster = cluster  # TODO: allow for multiple parent clusters
+            cds.cluster = cluster  # TODO: allow for multiple parent clusters?
             index += 1
 
     def get_aa_translation_of_feature(self, feature: Feature) -> Seq:
@@ -444,3 +440,44 @@ class Record:
         bio_record = self.to_biopython()
         for cluster in self._clusters:
             cluster.write_to_genbank(directory=output_dir, record=bio_record)
+
+    def create_clusters_from_borders(self) -> int:
+        """ Takes all ClusterBorder instances and constructs Clusters that cover
+            each ClusterBorder. If a cluster would overlap with another, the
+            clusters are merged.
+
+            Returns:
+                the number of clusters created
+        """
+        if not self._cluster_borders:
+            return 0
+        borders = sorted(self._cluster_borders)
+        cluster = Cluster(borders[0].location, borders[0].cutoff,
+                          borders[0].extent, borders[0].products)
+        if borders[0].rules:
+            cluster.detection_rules = borders[0].rules
+
+        clusters_added = 0
+
+        for border in borders[1:]:
+            if border.overlaps_with(cluster):
+                start = max(cluster.location.start, border.location.start)
+                end = max(cluster.location.end, border.location.end)
+                cluster.location = FeatureLocation(start, end)
+                cluster.products.extend(product for product in border.products if product not in cluster.products)
+                cluster.detection_rules.extend(rule for rule in border.rules if rule not in cluster.detection_rules)
+            else:
+                cluster.contig_edge = cluster.location.start == 0 or cluster.location.end == len(self.seq)
+                self.add_cluster(cluster)
+                clusters_added += 1
+                cluster = Cluster(border.location, border.cutoff, border.extent,
+                                  border.products)
+                if border.rules:
+                    cluster.detection_rules = border.rules
+
+        # add the final cluster being built if it wasn't added already
+        cluster.contig_edge = cluster.location.start == 0 or cluster.location.end == len(self.seq)
+        self.add_cluster(cluster)
+        clusters_added += 1
+
+        return clusters_added

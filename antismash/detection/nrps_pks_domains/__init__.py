@@ -8,8 +8,9 @@ import datetime
 from glob import glob
 import logging
 import os
+from typing import List
 
-from antismash.common import path, subprocessing
+from antismash.common import path, subprocessing, module_results
 from antismash.config.args import ModuleArgs
 
 from .domain_identification import annotate_domains
@@ -17,37 +18,48 @@ from .domain_identification import annotate_domains
 NAME = "nrps_pks_domains"
 SHORT_DESCRIPTION = "NRPS/PKS domain identification"
 
+class NRPSPKSDomains(module_results.ModuleResults):
+    def to_json(self):
+        logging.critical("nrps_pks_domains results always empty")
+        return {}
 
-def get_arguments():
+    def add_to_record(self, record):
+        # as a detection module, results already added
+        pass
+
+
+def get_arguments() -> ModuleArgs:
     """ Constructs commandline arguments and options for this module
     """
     args = ModuleArgs('Advanced options', '', override_safeties=True)
     return args
 
 
-def check_options(options):
+def check_options(options) -> List[str]:
     """ Checks the options to see if there are any issues before
         running any analyses
     """
     return []
 
-def is_enabled(options):
+def is_enabled(options) -> bool:
     """  Uses the supplied options to determine if the module should be run
     """
     # in this case, yes, always
     return True
 
 
-def regenerate_previous_results(results, record, options):
+def regenerate_previous_results(results, record, options) -> None:
     # always rerun like other detection stages
     return None
 
 
-def run_on_record(record, options):
-    return annotate_domains(record)
+def run_on_record(record, _previous_results, options) -> module_results.ModuleResults:
+    logging.debug('Marking NRPS/PKS genes and domains in clusters')
+    annotate_domains(record)
+    return NRPSPKSDomains(record.id)
 
 
-def check_prereqs():
+def check_prereqs() -> List[str]:
     failure_messages = []
     for binary_name, optional in [('hmmscan', False), ('hmmpress', False)]:
         if path.locate_executable(binary_name) is None and not optional:

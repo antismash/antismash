@@ -9,17 +9,87 @@ from typing import Dict, List, Set, Tuple
 
 from Bio.SearchIO._model.hsp import HSP
 
-from antismash.common import path, fasta
-from antismash.common.secmet.feature import Cluster, SecMetQualifier, CDSFeature, GeneFunction
-from antismash.common.deprecated import FeatureLocation
+from antismash.common import fasta, path
+from antismash.common.secmet.feature import ClusterBorder, SecMetQualifier, CDSFeature, \
+                                            GeneFunction, FeatureLocation
 from antismash.common.subprocessing import run_hmmsearch
-from antismash.detection.hmm_detection import rule_parser
-from antismash.detection.hmm_detection.signatures import get_signature_profiles, get_signature_names
+from antismash.common.hmm_rule_parser import rule_parser
+from antismash.common.signature import get_signature_profiles
 
 
-def find_clusters(record, cds_domains_by_cluster, rules_by_name) -> List[Cluster]:
+class Domain:
+    """ A simple container for the information needed to create a domain """
+    def __init__(self, res: HSP, nseeds: str, tool: str):
+        self.query_id = str(res.query_id)
+        self.evalue = float(res.evalue)
+        self.bitscore = float(res.bitscore)
+        self.nseeds = str(nseeds)
+        self.tool = tool
+
+    def __repr__(self):
+        return str(self)
+
+    def __str__(self):
+        ret = "{} E-value: {}, bitscore: {}, seeds: {}"
+        return ret.format(self.query_id, self.evalue, self.bitscore, self.nseeds)
+
+
+class CDSResults:
+    def __init__(self, cds: CDSFeature, domains: List[Domain],
+                 definition_domains: Dict[str, Set[str]]) -> None:
+        """ Arguments:
+                cds: the CDSFeature these results were based on
+                domains: a list of Domains that were found in the CDSFeature
+                definition_domains: a dictionary mapping cluster type to
+                        domain names used to define that cluster, from this CDS
+        """
+        self.cds = cds
+        self.domains = domains
+        assert domains
+        assert isinstance(definition_domains, dict), type(definition_domains)
+        self.definition_domains = definition_domains
+        assert self.definition_domains
+
+    def annotate(self, products: Set[str]) -> None:
+        if not self.domains or self.definition_domains:
+            return
+        if not self.cds.sec_met:
+            self.cds.sec_met = SecMetQualifier(set(self.definition_domains), self.domains)
+        else:
+            self.cds.sec_met.add_products(products)
+            self.cds.sec_met.add_domains(self.domains)
+        all_matching = set()
+        for cluster_type, matching_domains in self.definition_domains.items():
+            all_matching.update(matching_domains)
+            for domain in matching_domains:
+                self.cds.gene_functions.add(GeneFunction.CORE, "cluster_definition",
+                                            "%s: %s" % (cluster_type, domain))
+
+        # and add all detected domains as ADDITIONAL if not CORE
+        for secmet_domain in self.cds.sec_met.domains:
+            if secmet_domain.query_id in all_matching:
+                continue
+            self.cds.gene_functions.add(GeneFunction.ADDITIONAL, secmet_domain.tool,
+                                        secmet_domain)
+
+
+class DetectionResults:
+    def __init__(self, cds_by_cluster: Dict[ClusterBorder, List[CDSResults]]) -> None:
+        self.cds_by_cluster = cds_by_cluster
+
+    @property
+    def borders(self) -> List[ClusterBorder]:
+        return list(self.cds_by_cluster)
+
+    def annotate_cds_features(self) -> None:
+        for border, cds_results in self.cds_by_cluster.items():
+            for cds_result in cds_results:
+                cds_result.annotate(border.products)
+
+
+def find_clusters(record, cds_domains_by_cluster, rules_by_name) -> List[ClusterBorder]:
     """ Detects gene clusters based on the identified core genes """
-    clusters = []  # type: List[Cluster]
+    clusters = []  # type: List[ClusterBorder]
 
     for feature in record.get_cds_features():
         within_cutoff = False
@@ -52,8 +122,8 @@ def find_clusters(record, cds_domains_by_cluster, rules_by_name) -> List[Cluster
                 cluster.location = FeatureLocation(max(0, cluster.location.start - cluster.extent),
                                                    min(len(record), cluster.location.end + cluster.extent))
             # Create new cluster
-            new_cluster = Cluster(FeatureLocation(feature_start, feature_end),
-                                  feature_cutoff, feature_extension, feature_types)
+            new_cluster = ClusterBorder(FeatureLocation(feature_start, feature_end), tool="rule-based clusters",
+                                        cutoff=feature_cutoff, extent=feature_extension, products=feature_types)
             clusters.append(new_cluster)
             cluster = clusters[-1]
 
@@ -83,13 +153,11 @@ def find_clusters(record, cds_domains_by_cluster, rules_by_name) -> List[Cluster
         cluster.location = FeatureLocation(max(0, cluster.location.start - extension),
                                            min(len(record), cluster.location.end + extension))
 
-    # Add a note to specify whether a cluster lies on the contig/scaffold edge or not
+    # TODO: Add a note to specify whether a cluster lies on the contig/scaffold edge or not
+
     for cluster in clusters:
-        edge = cluster.location.start == 0 or cluster.location.end == len(record)
-        cluster.contig_edge = edge
-        record.add_cluster(cluster)
-        cluster.trim_overlapping()
-    logging.info("%d cluster(s) found in record", len(clusters))
+        cluster.rules = [str(rules_by_name[product].conditions) for product in cluster.products]
+    logging.debug("%d rule-based cluster(s) found in record", len(clusters))
     return clusters
 
 
@@ -110,15 +178,16 @@ def hsp_overlap_size(first, second) -> int:
     return max(0, segment_end - segment_start)
 
 
-def filter_results(results: List[HSP], results_by_id: Dict[str, List[HSP]]) -> Tuple[List[HSP], Dict[str, List[HSP]]]:
+def filter_results(results: List[HSP], results_by_id: Dict[str, List[HSP]], filter_file: str,
+                   signature_names: Set[str]) -> Tuple[List[HSP], Dict[str, List[HSP]]]:
     """ Filter results by comparing scores of different models """
-    for line in open(path.get_full_path(__file__, "filterhmmdetails.txt"), "r"):
+    # TODO: filterfile = path.get_full_path(__file__, "filterhmmdetails.txt")
+    for line in open(filter_file, "r"):
         line = line.strip()
         equivalence_group = set(line.split(","))
-        unknown = equivalence_group - set(get_signature_names())
+        unknown = equivalence_group - signature_names
         if unknown:
-            raise ValueError("Equivalence group contains unknown identifiers: %s" % (
-                    unknown))
+            raise ValueError("Equivalence group contains unknown identifiers: %s" % (unknown))
         removed_ids = set()  # type: Set[int]
         for cds, cdsresults in results_by_id.items():
             # Check if multiple competing HMM hits are present
@@ -174,32 +243,24 @@ def filter_result_multiple(results: List[HSP], results_by_id: Dict[str, HSP]) ->
     return results, results_by_id
 
 
-def create_rules(enabled_cluster_types: List[str]) -> List[rule_parser.DetectionRule]:
+def create_rules(enabled_cluster_types: List[str], rule_file: str, signature_names: Set[str]
+                 ) -> List[rule_parser.DetectionRule]:
     """ Creates DetectionRule instances from the default rules file
 
         Args:
             enabled_cluster_types: A list of type names.
                     Only types in this list will have a DetectionRule.
+            rule_file: A path to a file containing cluster rules to use.
 
         Returns:
             A list of DetectionRules.
     """
     rules = []
-    # TODO: as4: We should move all user-customizable files into config subdirectory;
-    # the rulefiles are redundant also in hmm_detection_dblookup
-    with open(path.get_full_path(__file__, "cluster_rules.txt"), "r") as ruledata:
-        parser = rule_parser.Parser("".join(ruledata.readlines()))
-    # the 'other' rule is a special case, make sure it's last so we can skip it
-    # if other rules hit first
-    other = None
+    with open(rule_file, "r") as ruledata:
+        parser = rule_parser.Parser("".join(ruledata.readlines()), signature_names)
     for rule in parser.rules:
-        if rule.name == "other":
-            other = rule
-            continue
         if rule.name in enabled_cluster_types:
             rules.append(rule)
-    if other and "other" in enabled_cluster_types:
-        rules.append(other)
     return rules
 
 
@@ -298,34 +359,40 @@ def apply_cluster_rules(results_by_id: Dict[str, HSP], feature_by_id: Dict[str, 
                 results.append(rule.name)
                 rule_texts.append(rule.reconstruct_rule_text())
                 domain_matches.update(matching.matches)
-        cds_domains_by_cluster_type[cds] = domains_by_cluster
+        if domains_by_cluster:
+            cds_domains_by_cluster_type[cds] = domains_by_cluster
     return cds_domains_by_cluster_type
 
 
-def detect_signature_genes(record, options) -> None:
+def detect_borders_and_signatures(record, signature_file: str, seeds_file: str,
+                                  rules_file: str, filter_file: str, tool: str,
+                                  options) -> None:
     """ Compares all CDS features in a record with HMM signatures and generates
         Cluster features based on those hits and the current cluster detection
-        rules
+        rules.
 
         Arguments:
             record: the record to analyse
+            signature_file: a tab separated file; each row being a single HMM reference
+                        with columns: label, description, minimum score cutoff, hmm path
+            seeds_file: the file containing all HMM profiles
+            rules_file: the file containing all the rules to use for cluster definition
+            filter_file: a file containing equivalence sets of HMMs
+            tool: the name of the tool providing the HMMs (e.g. clusterfinder, rule_based_clusters)
             options: antismash Config
     """
     enabled_cluster_types = options.enabled_cluster_types
     feature_by_id = record.get_cds_name_mapping()
-    # if there's no genes, don't try to do anything
+    # if there's no CDS features, don't try to do anything
     if not feature_by_id:
         return None
     full_fasta = fasta.get_fasta_from_record(record)
-    rules = create_rules(enabled_cluster_types)
+    sig_by_name = {sig.name: sig for sig in get_signature_profiles(signature_file)}
+    rules = create_rules(enabled_cluster_types, rules_file, set(sig_by_name))
     results = []
-    sig_by_name = {}
     results_by_id = {}  # type: Dict[str, HSP]
-    for sig in get_signature_profiles():
-        sig_by_name[sig.name] = sig
 
-    runresults = run_hmmsearch(path.get_full_path(__file__, 'data/bgc_seeds.hmm'),
-                               full_fasta, use_tempfile=True)
+    runresults = run_hmmsearch(seeds_file, full_fasta, use_tempfile=True)
     for runresult in runresults:
         acc = runresult.accession.split('.')[0]
         # Store result if it is above cut-off
@@ -345,7 +412,7 @@ def detect_signature_genes(record, options) -> None:
                     results_by_id[hsp.hit_id].append(hsp)
 
     # Filter results by comparing scores of different models (for PKS systems)
-    results, results_by_id = filter_results(results, results_by_id)
+    results, results_by_id = filter_results(results, results_by_id, filter_file, set(sig_by_name))
 
     # Filter multiple results of the same model in one gene
     results, results_by_id = filter_result_multiple(results, results_by_id)
@@ -354,39 +421,39 @@ def detect_signature_genes(record, options) -> None:
     cds_domains_by_cluster = apply_cluster_rules(results_by_id, feature_by_id, rules)
 
     # Find number of sequences on which each pHMM is based
-    nseqdict = get_sequence_counts()
+    num_seeds_per_hmm = get_sequence_counts(signature_file)
 
     # Save final results to record
     rules_by_name = {rule.name: rule for rule in rules}
-    find_clusters(record, cds_domains_by_cluster, rules_by_name)
+    clusters = find_clusters(record, cds_domains_by_cluster, rules_by_name)
 
-    for cds in results_by_id:
-        feature = feature_by_id[cds]
-        cluster_products = []  # type: List[str]
-        if feature.cluster:
-            cluster_products = feature.cluster.products
-        _update_sec_met_entry(feature, results_by_id[cds],
-                              cds_domains_by_cluster[cds], nseqdict,
-                              cluster_products)
+    cds_results_by_cluster = {}
+    for cluster in clusters:
+        record.add_cluster_border(cluster)
+        cds_results = []
+        for cds in record.get_cds_features_within_location(cluster.location):
+            domains = [Domain(res, num_seeds_per_hmm.get(res.query_id, "?"), tool) for res in results_by_id.get(cds.get_name(), [])]
+            if domains and cds.get_name() in cds_domains_by_cluster:
+                cds_results.append(CDSResults(cds, domains, cds_domains_by_cluster[cds.get_name()]))
+        cds_results_by_cluster[cluster] = cds_results
 
-    # Add details of gene cluster detection to cluster features
-    store_detection_details(rules_by_name, record)
+    results = DetectionResults(cds_results_by_cluster)
+    return results
 
 
-def get_sequence_counts() -> Dict[str, str]:
+def get_sequence_counts(details_file: str) -> Dict[str, str]:
     """ Gets the number of sequences/seeds used to generate each HMM signature
 
         Arguments:
-            None
+            detail_file: a file containing all HMMs
 
         Returns:
             a dictionary mapping HMM name to the number of sequences used to
                 generate it
     """
     result = {}
-    for hmm in get_signature_profiles():
-        hmmfile = hmm.hmm_file
-        for line in open(hmmfile, 'r'):
+    for hmm in get_signature_profiles(details_file):
+        for line in open(path.get_full_path(details_file, hmm.hmm_file), 'r'):
             if line.startswith('NSEQ '):
                 result[hmm.name] = line[6:].strip()
                 break
@@ -395,81 +462,3 @@ def get_sequence_counts() -> Dict[str, str]:
             result[hmm.name] = "?"
 
     return result
-
-
-def store_detection_details(rules, record) -> None:
-    """ Add a note qualifier to every Cluster feature containing the detection
-        type and the detection rule used to determine that type.
-
-        Args:
-            rules: A dictionary of the detection rules.
-            record: The SeqRecord to modify the features of
-
-        Returns:
-            None. All changes are made in place.
-    """
-    for cluster in record.get_clusters():
-        assert cluster.type == "cluster"
-        cluster.detection_rules = [str(rules[product].conditions) for product in cluster.products]
-
-
-class SecMetResult():
-    """ A simple container for the information needed to create a domain """
-    def __init__(self, res, nseeds):
-        self.query_id = res.query_id
-        self.evalue = res.evalue
-        self.bitscore = res.bitscore
-        self.nseeds = nseeds
-
-    def __repr__(self):
-        return str(self)
-
-    def __str__(self):
-        return "{} (E-value: {}, bitscore: {}, seeds: {})".format(
-                self.query_id, self.evalue, self.bitscore, self.nseeds)
-
-
-def _update_sec_met_entry(feature: CDSFeature, results: List[HSP],
-                          definition_domains: Dict[str, Set[str]],
-                          num_seeds: Dict[str, str],
-                          cluster_products: List[str]) -> None:
-    """ Add or updates the secondary metabolite information of a feature
-
-        Arguments:
-            feature: the feature to update
-            results: a dictionary mapping gene id to HSP results
-            definition_domains: a dictionary mapping cluster type to matching domains
-            num_seeds: a dictionary mapping signature ids to number of seeds
-                        generating the signature
-
-        Returns:
-            None
-    """
-    domains = [SecMetResult(res, num_seeds.get(res.query_id, "?")) for res in results]
-
-    full_name = "-".join(list(definition_domains)) or "none"
-
-    feature.sec_met = SecMetQualifier(full_name, domains)
-    all_matching = set()
-    for cluster_type, matching_domains in definition_domains.items():
-        # don't add 'other' as CORE if another cluster applies
-        if len(cluster_products) > 1 and cluster_type == "other":
-            continue
-        all_matching.update(matching_domains)
-        for domain in matching_domains:
-            feature.gene_functions.add(GeneFunction.CORE, "cluster_definition",
-                                       "%s: %s" % (cluster_type, domain))
-
-    # all all detected domains as ADDITIONAL if not CORE
-    for secmet_domain in feature.sec_met.domains:
-        if secmet_domain.query_id in all_matching:
-            continue
-        # skip if already added (e.g. reusing results)
-        found = False
-        for function in feature.gene_functions.get_by_tool("hmm_detection") or []:
-            if function.description == str(secmet_domain):
-                found = True
-                break
-        if not found:
-            feature.gene_functions.add(GeneFunction.ADDITIONAL, "hmm_detection",
-                                       secmet_domain)
