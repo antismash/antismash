@@ -185,6 +185,8 @@ class Record:
             """
             dummy = Feature(location, feature_type='dummy')
             index = bisect.bisect_left(features, dummy)
+            while index > 0 and features[index -1].location.start == location.start:
+                index -= 1
             if include_overlaps:
                 while index >= 1 and features[index - 1].overlaps_with(dummy):
                     index -= 1
