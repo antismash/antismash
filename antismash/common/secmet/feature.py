@@ -216,22 +216,47 @@ class Gene(Feature):
 
 class ClusterBorder(Feature):
     """ A feature representing a cluster border """
-    __slots__ = ["tool", "probability", "parent_cluster"]
+    __slots__ = ["tool", "probability", "cutoff", "extent", "products", "rules"]
 
-    def __init__(self, location, tool, probability):
+    def __init__(self, location, tool, probability=None, cutoff=0, extent=0,
+                 products=None, rules=None, contig_edge=False):
         super().__init__(location, feature_type="cluster_border",
                          created_by_antismash=True)
-        self.notes.append("best prediction")
         self.tool = str(tool)
-        self.probability = float(probability)
+        # cassis has no extras
 
-        # runtime only
-        self.parent_cluster = None
+        # cluster finder might not be empty, rule parser will not be
+        if products is None:
+            products = []
+        assert isinstance(products, list)
+        self.products = products
+
+        # cluster finder
+        self.probability = None
+        if probability is not None:
+            self.probability = float(probability)
+
+        # rule parser
+        self.cutoff = int(cutoff)
+        self.extent = int(extent)
+        if rules is None:
+            rules = []
+        assert isinstance(rules, list)
+        self.rules = rules
 
     def to_biopython(self, qualifiers=None):
         mine = OrderedDict()
         mine["aStool"] = [self.tool]
-        mine["probability"] = [str(self.probability)]
+        if self.probability is not None:
+            mine["probability"] = [str(self.probability)]
+        if self.products:
+            mine["products"] = self.products
+        if self.cutoff:
+            mine["cutoff"] = [self.cutoff]
+        if self.extent:
+            mine["extent"] = [self.extent]
+        if self.rules:
+            mine["rules"] = self.rules
         if qualifiers:
             mine.update(qualifiers)
         return super().to_biopython(mine)
@@ -243,15 +268,16 @@ class ClusterBorder(Feature):
 
         # grab mandatory qualifiers and create the class
         tool = leftovers.pop("aStool")[0]
-        # clean up the note so it isn't duplicated
-        notes = leftovers.get("note")
-        if notes:
-            for i, note in enumerate(notes):
-                if note == "best prediction":
-                    notes.pop(i)
-                    break
-        probability = leftovers.pop("probability")[0]
-        feature = ClusterBorder(bio_feature.location, tool, probability)
+
+        # optional
+        probability = leftovers.pop("probability", [None])[0]
+        cutoff = leftovers.pop("cutoff", [0])[0]
+        extent = leftovers.pop("extent", [0])[0]
+        rules = leftovers.pop("rules", [])
+        products = leftovers.pop("products", [])
+
+        feature = ClusterBorder(bio_feature.location, tool, probability=probability,
+                                cutoff=cutoff, extent=extent, rules=rules, products=products)
 
         # grab parent optional qualifiers
         super(ClusterBorder, feature).from_biopython(bio_feature, feature=feature, leftovers=leftovers)

@@ -5,12 +5,9 @@
 # pylint: disable=no-self-use,protected-access,missing-docstring,too-many-public-methods
 
 import unittest
-from minimock import mock, restore
 
-from antismash.common.test.helpers import DummyCDS, DummyRecord
-from antismash.detection.hmm_detection import rule_parser
-from antismash.detection.hmm_detection import signatures  # for mocking # pylint: disable=unused-import
-from antismash.detection.hmm_detection.test.test_hmm_detection import FakeHSP
+from antismash.common.hmm_rule_parser import rule_parser
+from antismash.common.test.helpers import DummyCDS, DummyRecord, FakeHSPHit
 
 
 def format_as_rule(name, cutoff, extent, conditions):
@@ -32,25 +29,21 @@ class DetectionTest(unittest.TestCase):
         self.record = DummyRecord(self.features)
 
         self.results_by_id = {
-            "GENE_1": [FakeHSP("a", "GENE_1", 0, 10, 50, 0),
-                       FakeHSP("b", "GENE_1", 0, 10, 50, 0)],
-            "GENE_2": [FakeHSP("a", "GENE_1", 0, 10, 50, 0),
-                       FakeHSP("c", "GENE_1", 0, 10, 50, 0)],
-            "GENE_3": [FakeHSP("b", "GENE_1", 0, 10, 50, 0),
-                       FakeHSP("c", "GENE_1", 0, 10, 50, 0)],
-            "GENE_4": [FakeHSP("e", "GENE_1", 0, 10, 50, 0),
-                       FakeHSP("f", "GENE_1", 0, 10, 50, 0)],
-            "GENE_5": [FakeHSP("f", "GENE_1", 0, 10, 50, 0),
-                       FakeHSP("g", "GENE_1", 0, 10, 50, 0)]}
-        test_names = set(["a", "b", "c", "d", "e", "f", "g", "modelA", "modelB"])
-        mock('signatures.get_signature_names', returns=test_names)
-
-    def tearDown(self):
-        restore()
+            "GENE_1": [FakeHSPHit("a", "GENE_1", 0, 10, 50, 0),
+                       FakeHSPHit("b", "GENE_1", 0, 10, 50, 0)],
+            "GENE_2": [FakeHSPHit("a", "GENE_1", 0, 10, 50, 0),
+                       FakeHSPHit("c", "GENE_1", 0, 10, 50, 0)],
+            "GENE_3": [FakeHSPHit("b", "GENE_1", 0, 10, 50, 0),
+                       FakeHSPHit("c", "GENE_1", 0, 10, 50, 0)],
+            "GENE_4": [FakeHSPHit("e", "GENE_1", 0, 10, 50, 0),
+                       FakeHSPHit("f", "GENE_1", 0, 10, 50, 0)],
+            "GENE_5": [FakeHSPHit("f", "GENE_1", 0, 10, 50, 0),
+                       FakeHSPHit("g", "GENE_1", 0, 10, 50, 0)]}
+        self.signature_names = set(["a", "b", "c", "d", "e", "f", "g", "modelA", "modelB"])
 
     def run_test(self, name, cutoff, extent, conditions):
         rules = format_as_rule(name, cutoff, extent, conditions)
-        rules = rule_parser.Parser(rules).rules
+        rules = rule_parser.Parser(rules, self.signature_names).rules
         for rule in rules:
             assert rule.contains_positive_condition()
 
@@ -136,8 +129,8 @@ class DetectionTest(unittest.TestCase):
     def test_single_gene(self):
         self.results_by_id = {
             "GENE_1": [
-                FakeHSP("modelA", "GENE_1", 0, 10, 50, 0),
-                FakeHSP("modelB", "GENE_1", 0, 10, 50, 0)
+                FakeHSPHit("modelA", "GENE_1", 0, 10, 50, 0),
+                FakeHSPHit("modelB", "GENE_1", 0, 10, 50, 0)
             ]}
         self.feature_by_id = {
             "GENE_1": DummyCDS(0, 30000, locus_tag="GENE_1")
@@ -235,208 +228,207 @@ class DetectionTest(unittest.TestCase):
 
 class RuleParserTest(unittest.TestCase):
     def setUp(self):
-        test_names = set(["a", "b", "c", "d", "more", "other"])
-        mock('signatures.get_signature_names', returns=test_names)
+        self.signature_names = set(["a", "b", "c", "d", "more", "other"])
 
-    def tearDown(self):
-        restore()
+    def parse(self, text):
+        return rule_parser.Parser(text, self.signature_names)
 
     def test_invalid_signature(self):
         with self.assertRaises(ValueError) as details:
-            rule_parser.Parser(format_as_rule("A", 10, 20, "badname or a"))
+            self.parse(format_as_rule("A", 10, 20, "badname or a"))
         assert str(details.exception) == "Rules contained identifers without signatures: badname"
 
     def test_stringify(self):
         rule_lines = [format_as_rule(*args) for args in [["abc", 10, 20, "a and b or not (c and d)"],
                                                          ["def", 7, 30, "minimum(3, [a, b, other]) and more"],
                                                          ["fgh", 15, 20, "c and not cds(a and b)"]]]
-        rules = rule_parser.Parser("\n".join(rule_lines)).rules
+        rules = self.parse("\n".join(rule_lines)).rules
         assert rule_lines == [rule.reconstruct_rule_text() for rule in rules]
 
     def test_extra_whitespace(self):
-        rules = rule_parser.Parser("RULE A     CUTOFF 10\tEXTENT\t20\n CONDITIONS \t  a").rules
+        rules = self.parse("RULE A     CUTOFF 10\tEXTENT\t20\n CONDITIONS \t  a").rules
         assert len(rules) == 1
         assert str(rules[0]) == "A\t10\t20\ta"
 
     def test_cutoff_extent_parsing(self):
-        rules = rule_parser.Parser(format_as_rule("A", 10, 20, "a")).rules
+        rules = self.parse(format_as_rule("A", 10, 20, "a")).rules
         assert len(rules) == 1
         assert rules[0].cutoff == 10000
         assert rules[0].extent == 20000
 
         with self.assertRaises(rule_parser.RuleSyntaxError):
-            rule_parser.Parser("A 10 a or b")
+            self.parse("A 10 a or b")
         with self.assertRaises(rule_parser.RuleSyntaxError):
-            rule_parser.Parser("A b 10 a or b")
+            self.parse("A b 10 a or b")
 
         with self.assertRaises(rule_parser.RuleSyntaxError):
-            rule_parser.Parser("RULE A CUTOFF 10 CONDITIONS a or b")
+            self.parse("RULE A CUTOFF 10 CONDITIONS a or b")
         with self.assertRaises(rule_parser.RuleSyntaxError):
-            rule_parser.Parser("RULE A CUTOFF b EXTENT 10 CONDITIONS a or b")
+            self.parse("RULE A CUTOFF b EXTENT 10 CONDITIONS a or b")
 
     def test_comments(self):
         rule_chunk = "RULE name CUTOFF 20 EXTENT 20 CONDITIONS a"
-        rules = rule_parser.Parser("# comment line\n" + rule_chunk).rules
+        rules = self.parse("# comment line\n" + rule_chunk).rules
         assert len(rules) == 1 and rules[0].name == "name"
 
-        rules = rule_parser.Parser(rule_chunk + "#comment").rules
+        rules = self.parse(rule_chunk + "#comment").rules
         assert len(rules) == 1 and rules[0].name == "name"
 
     def test_missing_group_close(self):
         with self.assertRaises(rule_parser.RuleSyntaxError):
-            rule_parser.Parser(format_as_rule("A", 10, 10, "(a or b"))
+            self.parse(format_as_rule("A", 10, 10, "(a or b"))
 
     def test_missing_group_open(self):
         with self.assertRaises(rule_parser.RuleSyntaxError):
-            rule_parser.Parser(format_as_rule("A", 10, 10, "a or b) and c"))
+            self.parse(format_as_rule("A", 10, 10, "a or b) and c"))
 
     def test_bad_minscore(self):
         # negative scores
         with self.assertRaises(ValueError):
-            rule_parser.Parser(format_as_rule("A", 10, 20, "minscore(e, -1)"))
+            self.parse(format_as_rule("A", 10, 20, "minscore(e, -1)"))
 
         # missing/invalid score syntax
         with self.assertRaises(rule_parser.RuleSyntaxError):
-            rule_parser.Parser(format_as_rule("A", 10, 20, "minscore(e)"))
+            self.parse(format_as_rule("A", 10, 20, "minscore(e)"))
         with self.assertRaises(rule_parser.RuleSyntaxError):
-            rule_parser.Parser(format_as_rule("A", 10, 20, "minscore(e,)"))
+            self.parse(format_as_rule("A", 10, 20, "minscore(e,)"))
         with self.assertRaises(rule_parser.RuleSyntaxError):
-            rule_parser.Parser(format_as_rule("A", 10, 20, "minscore(e -1)"))
+            self.parse(format_as_rule("A", 10, 20, "minscore(e -1)"))
 
         # missing identifer
         with self.assertRaises(rule_parser.RuleSyntaxError):
-            rule_parser.Parser(format_as_rule("A", 10, 20, "minscore(5)"))
+            self.parse(format_as_rule("A", 10, 20, "minscore(5)"))
         with self.assertRaises(rule_parser.RuleSyntaxError):
-            rule_parser.Parser(format_as_rule("A", 10, 20, "minscore(,5)"))
+            self.parse(format_as_rule("A", 10, 20, "minscore(,5)"))
 
         # empty
         with self.assertRaises(rule_parser.RuleSyntaxError):
-            rule_parser.Parser(format_as_rule("A", 10, 20, "minscore()"))
+            self.parse(format_as_rule("A", 10, 20, "minscore()"))
 
     def test_missing_binary_operand(self):
         with self.assertRaises(rule_parser.RuleSyntaxError):
-            rule_parser.Parser(format_as_rule("A", 10, 10, "(a or )"))
+            self.parse(format_as_rule("A", 10, 10, "(a or )"))
 
     def test_missing_op(self):
         with self.assertRaises(rule_parser.RuleSyntaxError):
-            rule_parser.Parser(format_as_rule("A", 10, 10, "(a  b)"))
+            self.parse(format_as_rule("A", 10, 10, "(a  b)"))
 
     def test_double_not(self):
         with self.assertRaises(rule_parser.RuleSyntaxError):
-            rule_parser.Parser(format_as_rule("A", 10, 10, "not not a"))
+            self.parse(format_as_rule("A", 10, 10, "not not a"))
 
     def test_only_not(self):
         with self.assertRaises(rule_parser.RuleSyntaxError):
-            rule_parser.Parser(format_as_rule("A", 10, 10, "not"))
+            self.parse(format_as_rule("A", 10, 10, "not"))
 
     def test_repeated_minimum(self):
         with self.assertRaises(ValueError):
-            rule_parser.Parser(format_as_rule("A", 10, 10, "minimum(2, [a, a])"))
+            self.parse(format_as_rule("A", 10, 10, "minimum(2, [a, a])"))
 
     def test_empty_minimum(self):
         with self.assertRaises(rule_parser.RuleSyntaxError):
-            rule_parser.Parser(format_as_rule("A", 10, 10, "minimum()"))
+            self.parse(format_as_rule("A", 10, 10, "minimum()"))
 
     def test_minimum_without_group(self):
         with self.assertRaises(rule_parser.RuleSyntaxError):
-            rule_parser.Parser(format_as_rule("A", 10, 10, "minimum a"))
+            self.parse(format_as_rule("A", 10, 10, "minimum a"))
 
     def test_minimum_with_bad_count(self):
         with self.assertRaises(rule_parser.RuleSyntaxError):
-            rule_parser.Parser(format_as_rule("A", 10, 10, "minimum([a,b])"))
+            self.parse(format_as_rule("A", 10, 10, "minimum([a,b])"))
         with self.assertRaises(rule_parser.RuleSyntaxError):
-            rule_parser.Parser(format_as_rule("A", 10, 10, "minimum(1.3, [a,b])"))
+            self.parse(format_as_rule("A", 10, 10, "minimum(1.3, [a,b])"))
         with self.assertRaises(rule_parser.RuleSyntaxError):
-            rule_parser.Parser(format_as_rule("A", 10, 10, "minimum(1.3 [a,b])"))
+            self.parse(format_as_rule("A", 10, 10, "minimum(1.3 [a,b])"))
         with self.assertRaises(ValueError):
-            rule_parser.Parser(format_as_rule("A", 10, 10, "minimum(0, [a,b])"))
+            self.parse(format_as_rule("A", 10, 10, "minimum(0, [a,b])"))
         with self.assertRaises(ValueError):
-            rule_parser.Parser(format_as_rule("A", 10, 10, "minimum(-3, [a,b])"))
+            self.parse(format_as_rule("A", 10, 10, "minimum(-3, [a,b])"))
 
     def test_bad_identifier(self):
         assert not rule_parser.is_legal_identifier("a.b")
         with self.assertRaises(rule_parser.RuleSyntaxError):
-            rule_parser.Parser(format_as_rule("A", 10, 10, "a.b or c"))
+            self.parse(format_as_rule("A", 10, 10, "a.b or c"))
 
         assert not rule_parser.is_legal_identifier("0sdf")
         with self.assertRaises(rule_parser.RuleSyntaxError):
-            rule_parser.Parser(format_as_rule("A", 10, 10, "a or 0sdf"))
+            self.parse(format_as_rule("A", 10, 10, "a or 0sdf"))
 
         with self.assertRaises(rule_parser.RuleSyntaxError):
-            rule_parser.Parser(format_as_rule("A", 10, 10, "0sdf or a"))
+            self.parse(format_as_rule("A", 10, 10, "0sdf or a"))
 
         assert not rule_parser.is_legal_identifier("a!b")
         with self.assertRaises(rule_parser.RuleSyntaxError):
-            rule_parser.Parser(format_as_rule("A", 10, 10, "a or a!b"))
+            self.parse(format_as_rule("A", 10, 10, "a or a!b"))
 
     def test_bad_syntax(self):
         with self.assertRaises(rule_parser.RuleSyntaxError):
-            rule_parser.Parser(format_as_rule("A", 10, 10, "name or name2(missing and op)"))
+            self.parse(format_as_rule("A", 10, 10, "name or name2(missing and op)"))
         with self.assertRaises(rule_parser.RuleSyntaxError):
-            rule_parser.Parser(format_as_rule("A", 10, 10, "name not name2"))
+            self.parse(format_as_rule("A", 10, 10, "name not name2"))
         with self.assertRaises(rule_parser.RuleSyntaxError):
-            rule_parser.Parser(format_as_rule("A", 10, 10, "name not or name2"))
+            self.parse(format_as_rule("A", 10, 10, "name not or name2"))
 
     def test_bad_cds(self):
         with self.assertRaises(rule_parser.RuleSyntaxError):
-            rule_parser.Parser(format_as_rule("A", 10, 10, "cds()"))
+            self.parse(format_as_rule("A", 10, 10, "cds()"))
 
         with self.assertRaises(rule_parser.RuleSyntaxError):
-            rule_parser.Parser(format_as_rule("A", 10, 10, "cds(1)"))
+            self.parse(format_as_rule("A", 10, 10, "cds(1)"))
 
     def test_repetitions(self):
         with self.assertRaises(ValueError):
-            rule_parser.Parser(format_as_rule("A", 10, 10, "a or b or a"))
+            self.parse(format_as_rule("A", 10, 10, "a or b or a"))
         with self.assertRaises(ValueError):
-            rule_parser.Parser(format_as_rule("A", 10, 10, "cds(a and b) or cds(a and b)"))
+            self.parse(format_as_rule("A", 10, 10, "cds(a and b) or cds(a and b)"))
 
         # would be nice to catch these as redundant, but in the meantime
-        rule_parser.Parser(format_as_rule("A", 10, 10, "cds(a and b) or a and b"))
-        rule_parser.Parser(format_as_rule("A", 10, 10, "a and b or a"))
+        self.parse(format_as_rule("A", 10, 10, "cds(a and b) or a and b"))
+        self.parse(format_as_rule("A", 10, 10, "a and b or a"))
 
     def test_emptylines(self):
-        rules = rule_parser.Parser("\nRULE name CUTOFF 20 EXTENT 20 CONDITIONS a").rules
+        rules = self.parse("\nRULE name CUTOFF 20 EXTENT 20 CONDITIONS a").rules
         assert len(rules) == 1 and rules[0].name == "name"
 
     def test_single_no_positive(self):
         rules = format_as_rule("A", 10, 10, "not a")
         with self.assertRaisesRegex(ValueError, "at least one positive requirement"):
-            rule_parser.Parser(rules)
+            self.parse(rules)
 
     def test_and_no_positive(self):
         rules = format_as_rule("A", 10, 10, "not a and not c")
         with self.assertRaisesRegex(ValueError, "at least one positive requirement"):
-            rule_parser.Parser(rules)
+            self.parse(rules)
 
     def test_or_no_positive(self):
         rules = format_as_rule("A", 10, 10, "not a or not c")
         with self.assertRaisesRegex(ValueError, "at least one positive requirement"):
-            rule_parser.Parser(rules)
+            self.parse(rules)
 
     def test_cds_no_positive(self):
         rules = format_as_rule("A", 10, 10, "not cds(a and b)")
         with self.assertRaisesRegex(ValueError, "at least one positive requirement"):
-            rule_parser.Parser(rules)
+            self.parse(rules)
 
         rules = format_as_rule("A", 10, 10, "not cds(a or b)")
         with self.assertRaisesRegex(ValueError, "at least one positive requirement"):
-            rule_parser.Parser(rules)
+            self.parse(rules)
 
     def test_minimum_no_positive(self):
         rules = format_as_rule("A", 10, 10, "not minimum(2, [a, b])")
         with self.assertRaisesRegex(ValueError, "at least one positive requirement"):
-            rule_parser.Parser(rules)
+            self.parse(rules)
 
     def test_score_no_positive(self):
         rules = format_as_rule("A", 10, 10, "not minscore(a, 15)")
         with self.assertRaisesRegex(ValueError, "at least one positive requirement"):
-            rule_parser.Parser(rules)
+            self.parse(rules)
 
     def test_deep_no_positive(self):
         for rule in ["(not a) and (not b)", "not (a and b)",
                      "not a or (not b and not (c or d))"]:
             with self.assertRaisesRegex(ValueError, "at least one positive requirement"):
-                rule_parser.Parser(format_as_rule("A", 10, 10, rule))
+                self.parse(format_as_rule("A", 10, 10, rule))
 
 
 class TokenTest(unittest.TestCase):

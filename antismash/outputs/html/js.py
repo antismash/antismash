@@ -95,16 +95,13 @@ def convert_cds_features(record, features, options, mibig_entries):
 def convert_cluster_border_features(borders):
     js_borders = []
     for border in borders:
-        border_note = border.qualifiers['note'][0]
-        if not border_note.startswith('best prediction'):
-            continue
         js_border = {}
         js_border['start'] = int(border.location.start) + 1
         js_border['end'] = int(border.location.end)
         # Always order the coordinates correctly
         if js_border['start'] > js_border['end']:
             js_border['end'], js_border['start'] = js_border['start'], js_border['end']
-        js_border['tool'] = border.qualifiers['tool']
+        js_border['tool'] = border.tool
         js_borders.append(js_border)
     return js_borders
 

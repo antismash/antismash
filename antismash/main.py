@@ -148,36 +148,48 @@ def verify_options(options, modules) -> bool:
     return False
 
 
-def detect_signature_genes(record, options, previous_result: Dict[str, Union[Dict, ModuleResults]]) -> Dict[str, float]:
-    """ Detect different secondary metabolite clusters based on HMM signatures
+def run_detection(record, options, previous_result: Dict[str, Union[Dict, ModuleResults]]) -> Dict[str, float]:
+    """ Detect different secondary metabolite clusters, PFAMs, and domains.
 
         Returns:
             the time taken by each detection module as a dictionary
     """
-    # strip any existing antismash results first
+    # strip any existing antismash results first  # TODO: don't strip detection stage results if reusing
     record_processing.strip_record(record)
 
     timings = {}
 
-    logging.info('Looking for secondary metabolite cluster signatures')
-    start = time.time()
-    hmm_detection.detect_signature_genes(record, options)
-    timings[hmm_detection.__name__] = time.time() - start
+    module_results = regenerate_results_for_record(record, options, get_detection_modules(),
+                                                   previous_result)
+
+    # run full genome detections
+    logging.info("Running full genome PFAM detection")
+    for module in [full_hmmer]:
+        run_module(record, module, options, module_results, timings)
+
+    # generate cluster predictions
+    logging.info("Detecting secondary metabolite clusters")
+    predictions = []
+    for module in [hmm_detection]:  # TODO: , cassis, cluster_finder]:
+        run_module(record, module, options, module_results, timings)
+        predictions.extend(module_results[module.__name__].get_predictions())
+
+    # create merged clusters
+    record.create_clusters_from_borders()
+    for cluster in record.get_clusters():
+        cluster.trim_overlapping()
+
     if not record.get_clusters():
-        logging.debug("No clusters detected, skipping NRPS/PKS gene detection and analysis")
+        logging.debug("No clusters detected, skipping record")
         record.skip = "No clusters detected"
         return None
 
-    logging.debug('Marking NRPS/PKS genes and domains in clusters')
-    start = time.time()
-    nrps_pks_domains.run_on_record(record, options)
-    timings[nrps_pks_domains.__name__] = time.time() - start
+    logging.info("%d cluster(s) detected in record", len(record.get_clusters()))
 
-    module_results = regenerate_results_for_record(record, options, [full_hmmer],
-                                                   previous_result)
-    duration = run_module(record, full_hmmer, options, module_results)
-    if duration != -1:
-        timings[full_hmmer.__name__] = duration
+    # finally, run any detection limited to genes in clusters
+    for module in [nrps_pks_domains]:
+        run_module(record, module, options, module_results, timings)
+
     return timings
 
 
@@ -212,7 +224,7 @@ def regenerate_results_for_record(record, options, modules, previous_result
     return previous_result
 
 
-def run_module(record, module, options, module_results) -> float:
+def run_module(record, module, options, module_results, timings) -> None:
     """ Run analysis modules on a record
 
         Arguments:
@@ -224,13 +236,16 @@ def run_module(record, module, options, module_results) -> float:
             module_results: a dictionary of module name to json results,
                                 json results will be replaced by ModuleResults
                                 instances
+            timings: a dictionary mapping module name to time taken for that
+                     module, will be updated with the module timing
+
         Returns:
             the time taken to run the module as a float
         """
 
     logging.debug("Checking if %s should be run", module.__name__)
     if not module.is_enabled(options):
-        return -1
+        return
 
     results = module_results.get(module.__name__)
     logging.info("Running %s", module.__name__)
@@ -241,8 +256,7 @@ def run_module(record, module, options, module_results) -> float:
 
     assert isinstance(results, ModuleResults), "%s returned %s" % (module.__name__, type(results))
     module_results[module.__name__] = results
-
-    return duration
+    timings[module.__name__] = duration
 
 
 def analyse_record(record, options, modules, previous_result) -> Dict[str, float]:
@@ -266,9 +280,7 @@ def analyse_record(record, options, modules, previous_result) -> Dict[str, float
     # try to run the given modules over the record
     logging.info("Analysing record: %s", record.id)
     for module in modules:
-        duration = run_module(record, module, options, module_results)
-        if duration != -1:
-            timings[module.__name__] = duration
+        run_module(record, module, options, module_results, timings)
     return timings
 
 
@@ -555,7 +567,7 @@ def run_antismash(sequence_file, options, detection_modules=None,
         # skip if we're not interested in it
         if seq_record.skip:
             continue
-        timings = detect_signature_genes(seq_record, options, previous_result)
+        timings = run_detection(seq_record, options, previous_result)
         # and skip analysis if detection didn't find anything
         if not seq_record.get_clusters():
             continue

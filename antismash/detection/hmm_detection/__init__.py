@@ -5,6 +5,7 @@
     clusters based on domains detected
 """
 
+import logging
 import os
 from typing import List
 
@@ -12,21 +13,38 @@ import antismash.common.path as path
 from antismash.common.subprocessing import run_hmmpress
 
 from antismash.config.args import ModuleArgs
-
-from antismash.detection.hmm_detection import rule_parser
-from antismash.detection.hmm_detection.hmm_detection import detect_signature_genes
-from antismash.detection.hmm_detection.rule_parser import Parser
+from antismash.common.hmm_rule_parser import rule_parser
+from antismash.common.hmm_rule_parser.cluster_prediction import detect_borders_and_signatures
+from antismash.common.module_results import ModuleResults
 from antismash.detection.hmm_detection.signatures import get_signature_profiles
 
 NAME = "hmmdetection"
-SHORT_DESCRIPTION = "Cluster detection with HMM"
+SHORT_DESCRIPTION = "HMM signature detection"
+
+
+class HMMDetectionResults(ModuleResults):
+    def __init__(self, record_id, rule_results):
+        super().__init__(record_id)
+        self.rule_results = rule_results
+
+    def to_json(self):
+        logging.critical("hmm_detection results always empty")
+        return {}
+
+    def add_to_record(self, record):
+        # as a detection module, results already added
+        pass
+
+    def get_predictions(self):
+        return self.rule_results.borders
 
 
 def get_supported_cluster_types() -> List[str]:
     """ Returns a list of all cluster types for which there are rules
     """
+    signature_names = {sig.name for sig in get_signature_profiles()}
     with open(path.get_full_path(__file__, 'cluster_rules.txt'), "r") as rulefile:
-        rules = rule_parser.Parser("".join(rulefile.readlines())).rules
+        rules = rule_parser.Parser("".join(rulefile.readlines()), signature_names).rules
         clustertypes = [rule.name for rule in rules]
     return clustertypes
 
@@ -81,10 +99,17 @@ def regenerate_previous_results(results, record, options) -> None:  # pylint: di
     return None
 
 
-def run_on_record(record, options) -> None:
+def run_on_record(record, _previous_results, options) -> None:
     """ Runs hmm_detection on the provided record.
     """
-    return detect_signature_genes(record, options)
+    signatures = path.get_full_path(__file__, "data", "hmmdetails.txt")
+    seeds = path.get_full_path(__file__, "data", "bgc_seeds.hmm")
+    rules = path.get_full_path(__file__, "cluster_rules.txt")
+    equivalences = path.get_full_path(__file__, "filterhmmdetails.txt")
+    results = detect_borders_and_signatures(record, signatures, seeds, rules, equivalences,
+                                            "rule-based-clusters", options)
+    results.annotate_cds_features()
+    return HMMDetectionResults(record.id, results)
 
 
 def check_prereqs() -> List[str]:
@@ -120,15 +145,6 @@ def check_prereqs() -> List[str]:
     # if previous steps have failed, the remainder will too, so don't try
     if failure_messages:
         return failure_messages
-
-    # Check that cluster_rules.txt is readable and well-formatted
-    try:
-        with open(path.get_full_path(__file__, "cluster_rules.txt")) as rules:
-            parser = Parser("".join(rules.readlines()))
-        if not parser.rules:
-            failure_messages.append("No rules contained in cluster_rules.txt")
-    except ValueError as err:
-        failure_messages.append(str(err))
 
     binary_extensions = ['.h3f', '.h3i', '.h3m', '.h3p']
     for ext in binary_extensions:

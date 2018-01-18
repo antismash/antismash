@@ -13,7 +13,7 @@ import os
 import re
 from typing import Any, Dict, List, Set, Optional
 
-from antismash.detection.hmm_detection.signatures import HmmSignature
+from antismash.common.signature import HmmSignature
 from antismash.common import all_orfs, path, subprocessing, secmet, \
                              module_results, serialiser, utils
 from antismash.common.fasta import get_fasta_from_features

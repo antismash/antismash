@@ -13,7 +13,7 @@ import os
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 from antismash.common import all_orfs, fasta, module_results, path, secmet, serialiser, subprocessing, utils
-from antismash.detection.hmm_detection.signatures import HmmSignature
+from antismash.common.signature import HmmSignature
 
 from .rodeo import run_rodeo
 

@@ -4,7 +4,7 @@
 """ Classes representing complex qualifiers for features.
 """
 
-from typing import List
+from typing import List, Set
 
 
 class NRPSPKSQualifier(list):
@@ -107,19 +107,21 @@ class SecMetQualifier(list):
 
         Can be directly used as a qualifier for BioPython's SeqFeature.
     """
-    def __init__(self, clustertype: str, domains: List) -> None:
-        self.domains = domains  # SecMetResult instance or str
+    def __init__(self, products: Set[str], domains: List) -> None:
+        self._domains = domains  # SecMetResult instance or str
         if domains and not isinstance(domains[0], str):  # SecMetResult
-            self.domain_ids = [domain.query_id for domain in self.domains]
+            self.domain_ids = [domain.query_id for domain in self._domains]  # TODO: convert to a set
         else:  # str
-            self.domain_ids = [domain.split()[0] for domain in self.domains]
-        self.clustertype = clustertype
+            self.domain_ids = [domain.split()[0] for domain in self._domains]
+        self._products = set()
+        self.add_products(products)
+        assert self.clustertype
         self.kind = "biosynthetic"
         super().__init__()
 
     def __iter__(self):
         yield "Type: %s" % self.clustertype
-        yield "; ".join(map(str, self.domains))
+        yield "; ".join(map(str, self._domains))
         yield "Kind: %s" % self.kind
 
     def append(self, _item):
@@ -128,25 +130,43 @@ class SecMetQualifier(list):
     def extend(self, _items):
         raise NotImplementedError("Extending this list won't work")
 
+    def add_products(self, products: Set[str]) -> None:
+        assert isinstance(products, set), type(products)
+        for product in products:
+            assert isinstance(product, str) and "-" not in product, product
+        self._products.update(products)
+
+    @property
+    def domains(self) -> List:
+        return list(self._domains)
+
+    @property
+    def products(self) -> List[str]:
+        return sorted(self._products)
+
+    @property
+    def clustertype(self) -> str:
+        return "-".join(sorted(self.products))
+
     @staticmethod
     def from_biopython(qualifier) -> "SecMetQualifier":
         """ Converts a BioPython style qualifier into a SecMetQualifier. """
         domains = None
-        clustertype = None
+        products = None
         kind = None
         if len(qualifier) != 3:
             raise ValueError("Cannot parse qualifier: %s" % qualifier)
         for value in qualifier:
             if value.startswith("Type: "):
-                clustertype = value.split("Type: ", 1)[0]
+                products = set(value.split("Type: ", 1)[1].split("-"))
             elif value.startswith("Kind: "):
                 kind = value.split("Kind: ", 1)[1]
                 assert kind == "biosynthetic", kind  # since it's the only kind we have
             else:
                 domains = value.split("; ")
-        if not domains and clustertype and kind:
+        if not (domains and products and kind):
             raise ValueError("Cannot parse qualifier: %s" % qualifier)
-        return SecMetQualifier(clustertype, domains)
+        return SecMetQualifier(products, domains)
 
     def __len__(self):
         return 3
