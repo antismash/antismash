@@ -94,7 +94,7 @@ def convert_cds_features(record, features, options, mibig_entries):
 
 def convert_cluster_border_features(borders):
     js_borders = []
-    for border in borders:
+    for i, border in enumerate(sorted(borders, key=lambda x: x.products)):
         js_border = {}
         js_border['start'] = int(border.location.start) + 1
         js_border['end'] = int(border.location.end)
@@ -102,6 +102,8 @@ def convert_cluster_border_features(borders):
         if js_border['start'] > js_border['end']:
             js_border['end'], js_border['start'] = js_border['start'], js_border['end']
         js_border['tool'] = border.tool
+        js_border['height'] = i
+        js_border['product'] = border.products[0] if border.products else 'unknown'
         js_borders.append(js_border)
     return js_borders
 
