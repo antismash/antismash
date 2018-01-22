@@ -193,7 +193,11 @@ class Record:
             return index
 
         results = []
+        # shortcut if no CDS features exist
+        if not self._cds_features:
+            return results
         index = find_start_in_list(location, self._cds_features, with_overlapping)
+        first_feature = self._cds_features[index]
         while index < len(self._cds_features):
             feature = self._cds_features[index]
             if feature.is_contained_by(location):
@@ -456,25 +460,37 @@ class Record:
         if not self._cluster_borders:
             return 0
         borders = sorted(self._cluster_borders)
-        cluster = Cluster(borders[0].location, borders[0].cutoff,
+        cluster_location = FeatureLocation(max(0, borders[0].location.start - borders[0].extent),
+                                           min(borders[0].location.end + borders[0].extent, len(self)))
+        cluster = Cluster(cluster_location, borders[0].cutoff,
                           borders[0].extent, borders[0].products)
         if borders[0].rules:
             cluster.detection_rules = borders[0].rules
 
         clusters_added = 0
-
         for border in borders[1:]:
-            if border.overlaps_with(cluster):
-                start = max(cluster.location.start, border.location.start)
-                end = max(cluster.location.end, border.location.end)
+            dummy_border_location = FeatureLocation(max(0, border.location.start - border.extent),
+                                                    min(border.location.end + border.extent, len(self)))
+            if cluster.overlaps_with(dummy_border_location):
+                cluster.extent = max(cluster.extent, border.extent)
+                cluster.cutoff = max(cluster.cutoff, border.cutoff)
+                start = min(cluster.location.start, border.location.start - cluster.extent)
+                if start < 0:
+                    start = 0
+                end = max(cluster.location.end, border.location.end + cluster.extent)
+                if end > len(self):
+                    end = len(self)
                 cluster.location = FeatureLocation(start, end)
-                cluster.products.extend(product for product in border.products if product not in cluster.products)
+                cluster.products.extend(border.products)
+                cluster.products = sorted(set(cluster.products))
                 cluster.detection_rules.extend(rule for rule in border.rules if rule not in cluster.detection_rules)
             else:
                 cluster.contig_edge = cluster.location.start == 0 or cluster.location.end == len(self.seq)
                 self.add_cluster(cluster)
                 clusters_added += 1
-                cluster = Cluster(border.location, border.cutoff, border.extent,
+                cluster_location = FeatureLocation(max(0, border.location.start - border.extent),
+                                                   min(border.location.end + border.extent, len(self)))
+                cluster = Cluster(cluster_location, border.cutoff, border.extent,
                                   border.products)
                 if border.rules:
                     cluster.detection_rules = border.rules
