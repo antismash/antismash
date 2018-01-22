@@ -481,8 +481,7 @@ class Record:
                 if end > len(self):
                     end = len(self)
                 cluster.location = FeatureLocation(start, end)
-                cluster.products.extend(border.products)
-                cluster.products = sorted(set(cluster.products))
+                cluster.products.extend(product for product in border.products if product not in cluster.products)
                 cluster.detection_rules.extend(rule for rule in border.rules if rule not in cluster.detection_rules)
             else:
                 cluster.contig_edge = cluster.location.start == 0 or cluster.location.end == len(self.seq)
