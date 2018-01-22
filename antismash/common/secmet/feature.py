@@ -284,6 +284,11 @@ class ClusterBorder(Feature):
 
         return feature
 
+    def __str__(self) -> str:
+        return repr(self)
+
+    def __repr__(self) -> str:
+        return "ClusterBorder(%s, %s)" % (self.products, self.location)
 
 class AntismashFeature(Feature):
     """ A base class for all sub-CDS Antismash features """
@@ -515,11 +520,11 @@ class GeneFunctionAnnotations:
 
         def __init__(self, function: GeneFunction, tool: str, description: str) -> None:
             assert isinstance(function, GeneFunction), "wrong type: %s" % type(function)
-            assert tool and len(tool.split()) == 1, tool  # no whitespace in tool name
+            assert tool and len(tool.split()) == 1, tool  # no whitespace allowed in tool name
             assert description
             self.function = function
-            self.tool = tool
-            self.description = description
+            self.tool = str(tool)
+            self.description = str(description)
 
         def __str__(self):
             return "%s (%s) %s" % (self.function, self.tool, self.description)
@@ -551,6 +556,8 @@ class GeneFunctionAnnotations:
             Returns:
                 the GeneFunction added (or the existing one if duplicated)
         """
+        tool = str(tool)
+        description = str(description)
         # if there's already an exactly similar function annotation, skip adding
         existing_functions = self._by_function.get(function, [])
         for existing in existing_functions:
