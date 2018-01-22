@@ -606,6 +606,12 @@ class GeneFunctionAnnotations:
                 return GeneFunction.OTHER
         return function
 
+    def clear(self) -> None:
+        """ Removes all gene functions from the annotation """
+        self._annotations = []
+        self._by_tool = defaultdict(list)
+        self._by_function = defaultdict(list)
+
 
 class CDSFeature(Feature):
     """ A feature representing a single CDS/gene. """
