@@ -135,6 +135,10 @@ class SecMetQualifier(list):
             assert isinstance(product, str) and "-" not in product, product
         self._products.update(products)
 
+    def add_domains(self, domains):
+        # TODO: more validation
+        self._domains.extend(domains)
+
     @property
     def domains(self) -> List:
         return list(self._domains)
