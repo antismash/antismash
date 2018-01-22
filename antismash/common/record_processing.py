@@ -81,6 +81,7 @@ def strip_record(seq_record) -> None:
     # clean up antiSMASH annotations in CDS features
     for feature in seq_record.get_cds_features():
         feature.sec_met = None
+        feature.gene_functions.clear()
 
 
 def check_content(sequence: Record) -> Record:
