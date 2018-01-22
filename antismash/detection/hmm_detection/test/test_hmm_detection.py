@@ -130,8 +130,8 @@ class HmmDetectionTest(unittest.TestCase):
         as_list_and_string(defaults + ["bad_type"], False)
 
     def test_apply_cluster_rules(self):
-        detected_types = hmm_detection.apply_cluster_rules(self.results_by_id,
-                self.feature_by_id, self.rules)
+        detected_types, cluster_type_hits = hmm_detection.apply_cluster_rules(self.record, self.results_by_id,
+                                                           self.feature_by_id, self.rules)
         for gid in detected_types:
             detected_types[gid] = set(detected_types[gid])
         expected_types = {
@@ -143,6 +143,13 @@ class HmmDetectionTest(unittest.TestCase):
         }
         assert detected_types == expected_types
 
+        assert cluster_type_hits == {"MetaboliteA": {"GENE_1", "GENE_4", "GENE_5"},
+                                     "MetaboliteB": {"GENE_1"},
+                                     "MetaboliteC": {"GENE_1", "GENE_2"},
+                                     'MetaboliteD': {'GENE_1', 'GENE_2'},
+                                     'Metabolite0': {'GENE_3'},
+                                     'Metabolite1': {'GENE_5'}}
+
     def test_find_clusters(self):
         nseqdict = {"Metabolite0": "?", "Metabolite1": "?"}
         expected_types = {
@@ -152,8 +159,14 @@ class HmmDetectionTest(unittest.TestCase):
             "GENE_4": set(["MetaboliteA"]),
             "GENE_5": set(["Metabolite1", "MetaboliteA"])
         }
-        gene_clustertypes = {name: ["Metabolite%d" % (i % 2)] for i, name in enumerate(expected_types)}
+        cds_features_by_type = {"MetaboliteA": {"GENE_1", "GENE_4", "GENE_5"},
+                                "MetaboliteB": {"GENE_1"},
+                                "MetaboliteC": {"GENE_1", "GENE_2"},
+                                'MetaboliteD': {'GENE_1', 'GENE_2'},
+                                'Metabolite0': {'GENE_3'},
+                                'Metabolite1': {'GENE_5'}}
         # TODO, update to new system
+#        gene_clustertypes = {name: ["Metabolite%d" % (i % 2)] for i, name in enumerate(expected_types)}
 #        for gene_id in self.feature_by_id:
 #            if gene_id == "GENE_X":
 #                continue
@@ -161,7 +174,7 @@ class HmmDetectionTest(unittest.TestCase):
 #                             self.results_by_id[gene_id], expected_types,
 #                             nseqdict, gene_clustertypes[gene_id])
         rules = {rule.name: rule for rule in self.rules}
-        for border in hmm_detection.find_clusters(self.record, gene_clustertypes, rules):
+        for border in hmm_detection.find_clusters(self.record, cds_features_by_type, rules):
             self.record.add_cluster_border(border)
         self.record.create_clusters_from_borders()
         result_clusters = []

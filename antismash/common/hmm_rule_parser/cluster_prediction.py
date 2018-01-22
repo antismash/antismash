@@ -4,6 +4,7 @@
 """ Detects specific domains and defines clusters based on domains detected
 """
 
+from collections import defaultdict
 import logging
 from typing import Dict, List, Set, Tuple
 
@@ -45,23 +46,22 @@ class CDSResults:
         """
         self.cds = cds
         self.domains = domains
-        assert domains
+        assert domains, "CDSResults not possible without some domains"
         assert isinstance(definition_domains, dict), type(definition_domains)
+        # empty definition domains is ok
         self.definition_domains = definition_domains
-        assert self.definition_domains
 
     def annotate(self, products: Set[str]) -> None:
-        if not self.domains or self.definition_domains:
-            return
         if not self.cds.sec_met:
             self.cds.sec_met = SecMetQualifier(set(self.definition_domains), self.domains)
         else:
-            self.cds.sec_met.add_products(products)
+            self.cds.sec_met.add_products(set(products))
             self.cds.sec_met.add_domains(self.domains)
         all_matching = set()
         for cluster_type, matching_domains in self.definition_domains.items():
             all_matching.update(matching_domains)
             for domain in matching_domains:
+                # TODO: use tool name instead of 'cluster_definition'
                 self.cds.gene_functions.add(GeneFunction.CORE, "cluster_definition",
                                             "%s: %s" % (cluster_type, domain))
 
@@ -87,76 +87,46 @@ class DetectionResults:
                 cds_result.annotate(border.products)
 
 
-def find_clusters(record, cds_domains_by_cluster, rules_by_name) -> List[ClusterBorder]:
+def find_clusters(record, cds_by_cluster_type, rules_by_name) -> List[ClusterBorder]:
     """ Detects gene clusters based on the identified core genes """
     clusters = []  # type: List[ClusterBorder]
 
-    for feature in record.get_cds_features():
-        within_cutoff = False
-        feature_types = list(cds_domains_by_cluster.get(feature.get_name(), []))
-        feature_start = min(feature.location.start, feature.location.end)
-        feature_end = max(feature.location.start, feature.location.end)
-        if not feature_types:
-            continue
-        feature_cutoff = -1
-        feature_extension = -1
-        for name in feature_types:
-            rule = rules_by_name[name]
-            feature_cutoff = max(feature_cutoff, rule.cutoff)
-            feature_extension = max(feature_extension, rule.extent)
-        cluster = None
+    cds_feature_by_name = record.get_cds_name_mapping()
 
-        if clusters:
-            cluster = clusters[-1]
-            cluster_end = cluster.location.end
-            # Check cutoff
-            cutoff = max(cluster.cutoff, feature_cutoff)
-            cutoff = max(cutoff, cluster.extent + feature_extension)
-            within_cutoff = feature_start <= cluster_end + cutoff
-
-        # start a new cluster if this is too far from the previous
-        if not within_cutoff:
-            if clusters:
-                # Finalize the previous extended cluster
-                cluster = clusters[-1]
-                cluster.location = FeatureLocation(max(0, cluster.location.start - cluster.extent),
-                                                   min(len(record), cluster.location.end + cluster.extent))
-            # Create new cluster
-            new_cluster = ClusterBorder(FeatureLocation(feature_start, feature_end), tool="rule-based clusters",
-                                        cutoff=feature_cutoff, extent=feature_extension, products=feature_types)
-            clusters.append(new_cluster)
-            cluster = clusters[-1]
-
-        # Update cluster
-        start = min(cluster.location.start, feature_start)
-        end = max(cluster.location.end, feature_end)
-        # if the extents would overlap, but not cutoffs, then trim the later
-        # cluster to start only where the previous ends
-        # (occurs in CP006259, clusters 1 and 2)
-        if len(clusters) > 1:
-            previous = clusters[-2]
-            if previous.location.end > start - cluster.extent:
-                # pad with the current extent, since that will be removed when
-                # the cluster is finalised
-                start = previous.location.end + cluster.extent
-        cluster.location = FeatureLocation(start, end)
-        cluster.cutoff = max(cluster.cutoff, feature_cutoff)
-        cluster.extent = max(cluster.extent, feature_extension)
-        cluster.products = list(set(cluster.products) | set(feature_types))
-        if len(cluster.products) > 1:
-            cluster.products = sorted(list(filter(lambda prod: prod != "other", cluster.products)))
-
-    if clusters:
-        # Finalize the last extended cluster
-        cluster = clusters[-1]
-        extension = cluster.extent
-        cluster.location = FeatureLocation(max(0, cluster.location.start - extension),
-                                           min(len(record), cluster.location.end + extension))
-
-    # TODO: Add a note to specify whether a cluster lies on the contig/scaffold edge or not
+    for cluster_type, cds_names in cds_by_cluster_type.items():
+        cds_features = sorted([cds_feature_by_name[cds] for cds in cds_names])
+        rule = rules_by_name[cluster_type]
+        cutoff = rule.cutoff
+        extent = rule.extent
+        start, end = sorted([cds_features[0].location.start, cds_features[0].location.end])
+        cluster = ClusterBorder(FeatureLocation(start, end), tool="rule-based-clusters",
+                                cutoff=cutoff, extent=extent, products=[cluster_type])
+        assert cds_features[0].is_contained_by(cluster)
+        assert cds_features[0] in record.get_cds_features_within_location(cluster.location)
+        clusters.append(cluster)
+        for cds in cds_features[1:]:
+            feature_start, feature_end = sorted([cds.location.start, cds.location.end])
+            dummy_location = FeatureLocation(cluster.location.start - cutoff, cluster.location.end + cutoff)
+            if cds.is_contained_by(dummy_location):
+                start = min(feature_start, start)
+                end = max(feature_end, end)
+                cluster.location = FeatureLocation(start, end)
+            else:
+                start = feature_start
+                end = feature_end
+                cluster = ClusterBorder(FeatureLocation(start, end), tool="rule-based-clusters",
+                                        cutoff=cutoff, extent=extent, products=[cluster_type])
+                clusters.append(cluster)
 
     for cluster in clusters:
         cluster.rules = [str(rules_by_name[product].conditions) for product in cluster.products]
+        if cluster.location.start < 0:
+            cluster.location = FeatureLocation(0, cluster.location.end)
+            cluster.contig_edge = True
+        if cluster.location.end > len(record):
+            cluster.location = FeatureLocation(cluster.location.start, len(record))
+            cluster.contig_edge = True
+
     logging.debug("%d rule-based cluster(s) found in record", len(clusters))
     return clusters
 
@@ -264,47 +234,8 @@ def create_rules(enabled_cluster_types: List[str], rule_file: str, signature_nam
     return rules
 
 
-def calculate_nearby_features(names: List[str], position: int, cutoff: int,
-                              distances: List[int], features: Dict[str, CDSFeature],
-                              results: Dict[str, List[HSP]]
-                              ) -> Tuple[Dict[str, CDSFeature], Dict[str, List[HSP]]]:
-    """ Find features within a specific distance
-
-        Args:
-            names: A list of CDS names.
-            position: The index of the current CDS in the distances list.
-            cutoff: The maximum distance to include.
-            distances: An ordered list of distances from the first CDS in the list
-            features: A dict of feature ID to Feature instance
-            results: A dict of feature ID to list of HSP results
-
-        Returns:
-            A tuple of dictionaries. The dictionaries are strictly subsets of
-            the features and results args.
-    """
-    nearby_features = {names[position]: features[names[position]]}
-
-    center = distances[position]
-
-    before = position - 1
-    while before >= 0 and center - distances[before] <= cutoff:
-        neighbour = names[before]
-        nearby_features[neighbour] = features[neighbour]
-        before -= 1
-
-    after = position + 1
-    while after < len(distances) and distances[after] - center <= cutoff:
-        neighbour = names[after]
-        nearby_features[neighbour] = features[neighbour]
-        after += 1
-
-    nearby_results = {name: results[name] for name in nearby_features}
-
-    return nearby_features, nearby_results
-
-
-def apply_cluster_rules(results_by_id: Dict[str, HSP], feature_by_id: Dict[str, CDSFeature],
-                        rules) -> Dict[str, Dict[str, Set[str]]]:
+def apply_cluster_rules(record, results_by_id: Dict[str, HSP], feature_by_id: Dict[str, CDSFeature],
+                        rules: List[rule_parser.DetectionRule]) -> Dict[str, Dict[str, Set[str]]]:
     """
         Run detection rules over each CDS and classify them if relevant.
         A CDS can satisfy multiple rules. If so, all rules satisfied
@@ -314,6 +245,7 @@ def apply_cluster_rules(results_by_id: Dict[str, HSP], feature_by_id: Dict[str, 
         the 'other' rule will be ignored if another rule is also satisfied.
 
         Args:
+            record: the record being checked
             results_by_id: A dict of CDS ID to a list of HSP results
             feature_by_id: A dict of CDS ID to CDS Feature
             rules: A list of DetectionRule instances
@@ -323,8 +255,8 @@ def apply_cluster_rules(results_by_id: Dict[str, HSP], feature_by_id: Dict[str, 
                 a dictionary mapping cluster type string to
                     a set of domains used to determine the cluster.
     """
-    if not results_by_id:
-        return {}
+    if not results_by_id:  # TODO: update docstring
+        return {}, {}
 
     cds_with_hits = sorted(results_by_id, key=lambda gene_id: feature_by_id[gene_id].location.start)
 
@@ -335,23 +267,23 @@ def apply_cluster_rules(results_by_id: Dict[str, HSP], feature_by_id: Dict[str, 
         return min(abs(first_end - second_start), abs(second_end - first_start),
                    abs(first_start - second_start), abs(first_end - second_end))
 
-    first_cds = feature_by_id[cds_with_hits[0]]
-    distances = [calculate_distance(first_cds.location, feature_by_id[cds].location) for cds in cds_with_hits]
-
     cds_domains_by_cluster_type = {}
-
-    for i, cds in enumerate(cds_with_hits):
+    cluster_type_hits = defaultdict(set)
+    for cds in cds_with_hits:
+        feature = feature_by_id[cds]
+        feature_start, feature_end = sorted([feature.location.start, feature.location.end])
         results = []  # type: List[str]
         rule_texts = []
-        info_by_range = {}  # type: Dict[int, Tuple[Dict[str, CDSFeature], Dict]]
+        info_by_range = {}  # type: Dict[int, Tuple[Dict[str, CDSFeature], Dict[str, List[HSP]]]]
         domain_matches = set()  # type: Set[str]
         domains_by_cluster = {}  # type: Dict[str, Set[str]]
         for rule in rules:
-            if results and rule.name == "other":
-                continue
             if rule.cutoff not in info_by_range:
-                info_by_range[rule.cutoff] = calculate_nearby_features(cds_with_hits,
-                        i, rule.cutoff, distances, feature_by_id, results_by_id)
+                # TODO: improve performance
+                nearby = record.get_cds_features_within_location(FeatureLocation(feature_start - rule.cutoff, feature_end + rule.cutoff), with_overlapping=True)
+                nearby_features = {neighbour.get_name(): neighbour for neighbour in nearby}
+                nearby_results = {neighbour: results_by_id[neighbour] for neighbour in nearby_features if neighbour in results_by_id}
+                info_by_range[rule.cutoff] = (nearby_features, nearby_results)
             nearby_features, nearby_results = info_by_range[rule.cutoff]
             matching = rule.detect(cds, nearby_features, nearby_results)
             if matching.met and matching.matches:
@@ -359,9 +291,10 @@ def apply_cluster_rules(results_by_id: Dict[str, HSP], feature_by_id: Dict[str, 
                 results.append(rule.name)
                 rule_texts.append(rule.reconstruct_rule_text())
                 domain_matches.update(matching.matches)
+                cluster_type_hits[rule.name].add(cds)
         if domains_by_cluster:
             cds_domains_by_cluster_type[cds] = domains_by_cluster
-    return cds_domains_by_cluster_type
+    return cds_domains_by_cluster_type, cluster_type_hits
 
 
 def detect_borders_and_signatures(record, signature_file: str, seeds_file: str,
@@ -418,23 +351,25 @@ def detect_borders_and_signatures(record, signature_file: str, seeds_file: str,
     results, results_by_id = filter_result_multiple(results, results_by_id)
 
     # Use rules to determine gene clusters
-    cds_domains_by_cluster = apply_cluster_rules(results_by_id, feature_by_id, rules)
+    cds_domains_by_cluster, cluster_type_hits = apply_cluster_rules(record, results_by_id, feature_by_id, rules)
 
     # Find number of sequences on which each pHMM is based
     num_seeds_per_hmm = get_sequence_counts(signature_file)
 
     # Save final results to record
     rules_by_name = {rule.name: rule for rule in rules}
-    clusters = find_clusters(record, cds_domains_by_cluster, rules_by_name)
+    clusters = find_clusters(record, cluster_type_hits, rules_by_name)
 
     cds_results_by_cluster = {}
     for cluster in clusters:
         record.add_cluster_border(cluster)
         cds_results = []
-        for cds in record.get_cds_features_within_location(cluster.location):
-            domains = [Domain(res, num_seeds_per_hmm.get(res.query_id, "?"), tool) for res in results_by_id.get(cds.get_name(), [])]
-            if domains and cds.get_name() in cds_domains_by_cluster:
-                cds_results.append(CDSResults(cds, domains, cds_domains_by_cluster[cds.get_name()]))
+        cluster_extent = FeatureLocation(cluster.location.start - cluster.extent,
+                                         cluster.location.end + cluster.extent)
+        for cds in record.get_cds_features_within_location(cluster_extent):
+            domains = [Domain(res, num_seeds_per_hmm[res.query_id], tool) for res in results_by_id.get(cds.get_name(), [])]
+            if domains:
+                cds_results.append(CDSResults(cds, domains, cds_domains_by_cluster.get(cds.get_name(), {})))
         cds_results_by_cluster[cluster] = cds_results
 
     results = DetectionResults(cds_results_by_cluster)
