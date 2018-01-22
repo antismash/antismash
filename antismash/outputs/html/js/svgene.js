@@ -50,39 +50,53 @@ svgene.drawOrderedClusterOrfs = function(cluster, chart, all_orfs, borders, tta_
                                          single_cluster_height, offset) {
   chart.append("line")
     .attr("x1", 0)
-    .attr("y1", (single_cluster_height * i) + svgene.label_height + (height/2))
+    .attr("y1", (single_cluster_height * i) + svgene.label_height + (height/2) + 35)
     .attr("x2", width)
-    .attr("y2", (single_cluster_height * i) + svgene.label_height + (height/2))
+    .attr("y2", (single_cluster_height * i) + svgene.label_height + (height/2) + 35)
     .attr("class", "svgene-line");
-  chart.selectAll("rect")
+
+  var bar_size = 10;
+  var vertical_bar_gap = 2;
+  var cluster_bars = chart.selectAll("g")
     .data(borders)
-  .enter().append("rect")
+  .enter().append("g")
+    .attr("transform", function(d, i) { return "translate(0,0)"});
+  cluster_bars.append("rect")
+    .attr("width", function(d){ return scale(d.end) - scale(d.start)})
+    .attr("height", bar_size)
     .attr("x", function(d){ return scale(d.start)})
-    .attr("y", function(d){ var y = single_cluster_height * i  + offset; if (d.tool == "clusterfinder") y -= 3; return y})
-    .attr("height", 5)
-    .attr("width", function(d){ var width = scale(d.end) - scale(d.start); return width})
+    .attr("y", function(d){ return single_cluster_height * i + d.height * (bar_size + vertical_bar_gap) + offset})
     .attr("class", function(d){ return "svgene-border-" + d.tool});
+  cluster_bars.append("text")
+    .attr("x", function(d) { return scale(d.start) + 1 })
+    .attr("y", function(d) { return single_cluster_height * i + (d.height + 2) * (bar_size) + d.height + offset - (2 - d.height)})
+    .attr("dy", "-1em")
+    .style("font-size", "xx-small")
+    .attr("class", "clusterborderlabel")
+    .text(function(d) { return d.product; });
+
   chart.selectAll("polygon")
     .data(all_orfs)
   .enter().append("polygon")
-    .attr("points", function(d) { return svgene.geneArrowPoints(d, height, (single_cluster_height * i), offset, scale); })
+    .attr("points", function(d) { return svgene.geneArrowPoints(d, height, (single_cluster_height * i) + 35, offset, scale); })
     .attr("class", function(d) { return "svgene-type-" + d.type + " svgene-orf"; })
     .attr("id", function(d) { return idx + "-cluster" + cluster.idx + "-" + svgene.tag_to_id(d.locus_tag) + "-orf"; })
     .attr("style", function(d) { if (d.color !== undefined) { return "fill:" + d.color; } });
+
   chart.selectAll("polyline.svgene-tta-codon")
     .data(tta_codons)
   .enter().append("polyline")
-    .attr("points", function(d) { return svgene.ttaCodonPoints(d, height, (single_cluster_height * i), offset, scale) })
+    .attr("points", function(d) { return svgene.ttaCodonPoints(d, height, (single_cluster_height * i) + 35, offset, scale) })
     .attr("class", "svgene-tta-codon");
-  chart.selectAll("text")
+
+  chart.selectAll("text.svgene-locustag")
     .data(all_orfs)
   .enter().append("text")
     .attr("x", function(d) { return scale(d.start); })
-    .attr("y", (single_cluster_height * i) + svgene.label_height + offset/2)
+    .attr("y", (single_cluster_height * i) + svgene.label_height + offset/2 + 35)
     .attr("class", "svgene-locustag")
     .attr("id", function(d) { return idx + "-cluster" + cluster.idx + "-" + svgene.tag_to_id(d.locus_tag) + "-label"; })
     .text(function(d) { return d.locus_tag; });
-
 };
 
 svgene.drawUnorderedClusterOrfs = function(cluster, chart, all_orfs, scale,
@@ -116,11 +130,12 @@ svgene.drawClusters = function(id, clusters, height, width) {
   container.selectAll("svg").remove();
   container.selectAll("div").remove();
   var chart = container.append("svg")
-    .attr("height", single_cluster_height * clusters.length)
+    .attr("height", single_cluster_height * clusters.length + 35)
     .attr("width", width + svgene.extra_label_width);
   var all_orfs = [];
   var all_borders = [];
   var all_ttas = [];
+
 
   for (i=0; i < clusters.length; i++) {
       var cluster = clusters[i];

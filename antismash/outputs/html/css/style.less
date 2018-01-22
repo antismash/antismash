@@ -12,6 +12,7 @@
 @feature-tta-codon: magenta;
 @tool-cassis: wheat;
 @tool-clusterfinder: teal;
+@tool-rule-based-clusters: white;
 
 body {
     font-family: Verdana, Tahoma, Sans-Serif;
@@ -626,6 +627,12 @@ table {
     fill: @tool-clusterfinder;
 }
 
+.svgene-border-rule-based-clusters {
+    stroke: black;
+    stroke-width: 1px;
+    fill: @tool-rule-based-clusters;
+}
+
 .legend-type-other {
     background-color: @gene-type-other;
 }
@@ -710,7 +717,9 @@ table {
     .clusterblast-acc;
     font-size: 75%;
 }
-
+.clusterborderlabel {
+    font-size: 25%;
+}
 #footer {
     border-top: 2px solid @antismash-main;
 }
