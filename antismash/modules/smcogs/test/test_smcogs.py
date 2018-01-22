@@ -26,7 +26,7 @@ class TestAddingToRecord(unittest.TestCase):
         # since SMCOG id and description are stored in a string separated by :,
         # ensure that descriptions containing : are properly handled
         cds = CDSFeature(FeatureLocation(0, 100), locus_tag="test", translation="AAA")
-        record = helpers.DummyRecord(features=[cds])
+        record = helpers.DummyRecord(features=[cds], seq="A"*100)
         record.add_cluster(helpers.DummyCluster(0, 100))
         results = SMCOGResults(record.id)
         results.best_hits[cds.get_name()] = HMMResult("SMCOG1212:sodium:dicarboxylate_symporter",

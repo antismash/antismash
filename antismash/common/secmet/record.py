@@ -33,7 +33,7 @@ class Record:
                  "_cluster_numbering", "_nonspecific_features", "record_index",
                  "_genes"]
 
-    def __init__(self, seq=None, **kwargs):
+    def __init__(self, seq="", **kwargs):
         self._record = SeqRecord(seq, **kwargs)
         self.record_index = None
         self.original_id = None
@@ -238,6 +238,8 @@ class Record:
         """ Add the given cluster to the record,
             causes cluster-CDS pairing to be recalculated """
         assert isinstance(cluster, Cluster)
+        assert cluster.location.start >= 0, cluster
+        assert cluster.location.end <= len(self), "%s > %d" % (cluster, len(self))
         index = 0
         for i, existing_cluster in enumerate(self._clusters):  # TODO: fix performance
             if cluster.overlaps_with(existing_cluster):
@@ -264,6 +266,8 @@ class Record:
             overlaps with
         """
         assert isinstance(cluster_border, ClusterBorder)
+        assert cluster_border.location.start >= 0
+        assert cluster_border.location.end <= len(self)
         self._cluster_borders.append(cluster_border)
         # TODO fix performance
         for cluster in self._clusters:

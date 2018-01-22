@@ -58,7 +58,7 @@ class TestRecord(unittest.TestCase):
             assert cluster.get_cluster_number() == i + 1
 
     def test_overlapping_clusters(self):
-        record = Record()
+        record = Record(seq="A"*40)
         record.add_cluster(Cluster(FeatureLocation(10, 40), 0, 0, []))
         with self.assertRaises(ValueError):
             record.add_cluster(Cluster(FeatureLocation(0, 11), 0, 0, []))
@@ -66,7 +66,7 @@ class TestRecord(unittest.TestCase):
         record.add_cluster(Cluster(FeatureLocation(0, 10), 0, 0, []))
 
     def test_cds_cluster_linkage(self):
-        record = Record()
+        record = Record("A"*200)
         for start, end in [(50, 100), (10, 90), (0, 9), (150, 200)]:
             record.add_cds_feature(helpers.DummyCDS(start, end))
         for start, end in [(10, 120), (5, 110), (10, 160), (45, 200)]:
