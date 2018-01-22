@@ -359,6 +359,9 @@ class Details:
         return Details(cds_of_interest, self.features_by_id, self.results_by_id,
                        self.cutoff)
 
+    def __str__(self) -> str:
+        return "Details(cds=%s, possibilities=%s)" % (self.cds, self.possibilities)
+
 
 class ConditionMet:  # pylint: disable=too-few-public-methods
     """ A container for tracking whether a condition was satisfied along with
@@ -377,6 +380,8 @@ class ConditionMet:  # pylint: disable=too-few-public-methods
     def __bool__(self) -> bool:
         return self.met
 
+    def __str__(self) -> str:
+        return "%s %s" % (self.met, self.matches)
 
 class Conditions:
     """ The base condition case. Can, and probably will, contain sub conditions
@@ -486,6 +491,7 @@ class AndCondition(Conditions):
         AndConditions can't be negated, as that is based on their operands, e.g.
         'a not and b' is bad sytax and 'not (a and b)' is negating the parent
         conditions group 'not (...)'.
+        'a and not b' is fine, but again negating the operand and not the and.
         """
 
     def __init__(self, subconditions):
