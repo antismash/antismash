@@ -115,7 +115,6 @@ class SecMetQualifier(list):
             self.domain_ids = [domain.split()[0] for domain in self._domains]
         self._products = set()
         self.add_products(products)
-        assert self.clustertype
         self.kind = "biosynthetic"
         super().__init__()
 
