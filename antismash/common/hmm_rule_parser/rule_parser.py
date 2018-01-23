@@ -50,6 +50,11 @@ Examples of rules with positive requirements:
     (a or c)
     (a or not c) # an 'or not' combination is effectively ignored for anchoring
 
+Rule can optionally specify an SUPERIORS flag with a list of other rule identifiers
+to which the current rule is considered inferior to. If an inferior rule does
+not cover more than one or more of its superiors, then it will be discarded.
+A rule which is inferior to another rule cannot be superior to a third rule.
+Duplicate ids in the list will cause an error.
 
 Grammar hints:
     (e) -> all of
@@ -77,9 +82,10 @@ The grammar itself:
     CUTOFF_MARKER = "CUTOFF"
     EXTENT_MARKER = "EXTENT"
     CONDITIONS_MARKER = "CONDITIONS"
-
+    SUPERIORS_MARKER = "SUPERIORS"
 
     RULE = RULE_MARKER classification:ID [COMMENT_MARKER:COMMENTS]
+            [SUPERIORS_MARKER superiors:COMMA_SEPARATED_IDS]
             CUTOFF_MARKER cutoff:INT EXTENT_MARKER extension:INT
             CONDITIONS_MARKER conditions:CONDITIONS
 
@@ -116,6 +122,16 @@ Condition examples:
     minimum(3, [a,b,c,d]) and (a or b) # 3 of a,b,c or d, with one being a or b
     minimum(3, [a,b,c,d]) and a and b # 3 of a,b,c or d, with one being a and one being b
 
+SUPERIORS examples:
+    RULE a
+        CUTOFF 10
+        ...
+
+    RULE b
+        SUPERIORS a
+        CUTOFF 20
+        ...
+
 Complete examples:
     RULE t1pks
         CUTOFF 20
@@ -130,8 +146,6 @@ import string
 from enum import IntEnum
 from operator import xor  # so type hints can be bool and not int
 from typing import List, Set, Union
-
-from antismash.detection.hmm_detection import signatures
 
 
 class RuleSyntaxError(SyntaxError):
@@ -196,6 +210,7 @@ class TokenTypes(IntEnum):
     CUTOFF = 18
     EXTENT = 19
     CONDITIONS = 20
+    SUPERIORS = 21
 
     def __repr__(self):
         return self.__str__()
@@ -240,7 +255,7 @@ class Tokeniser:  # pylint: disable=too-few-public-methods
                "minscore": TokenTypes.SCORE, "RULE": TokenTypes.RULE,
                "CONDITIONS": TokenTypes.CONDITIONS,
                "COMMENT": TokenTypes.COMMENT, "CUTOFF": TokenTypes.CUTOFF,
-               "EXTENT": TokenTypes.EXTENT}
+               "EXTENT": TokenTypes.EXTENT, "SUPERIORS": TokenTypes.SUPERIORS}
 
     def __init__(self, text):
         self.text = text
@@ -279,7 +294,8 @@ class Tokeniser:  # pylint: disable=too-few-public-methods
                 try:
                     # skip to after a newline if it exists
                     global_position = self.text.index('\n', global_position)
-                    position = 0
+                    assert self.text[global_position] == "\n"
+                    continue
                 except ValueError:
                     # no newline after #, so we're finished
                     return
@@ -382,6 +398,7 @@ class ConditionMet:  # pylint: disable=too-few-public-methods
 
     def __str__(self) -> str:
         return "%s %s" % (self.met, self.matches)
+
 
 class Conditions:
     """ The base condition case. Can, and probably will, contain sub conditions
@@ -686,8 +703,9 @@ class DetectionRule:
             extent: the extent to use to include nearby CDS features (in bases)
             conditions: the conditions that potential clusters have to satisfy
             comments: any comments provided in the rule
+            superiors: a list of other rule names superior to this one
         """
-    def __init__(self, name, cutoff, extent, conditions, comments=""):
+    def __init__(self, name, cutoff, extent, conditions, comments="", superiors=None):
         self.name = name
         self.cutoff = cutoff
         self.extent = extent
@@ -696,6 +714,10 @@ class DetectionRule:
             raise ValueError("A rule's conditions must contain at least one positive requirement")
         self.comments = comments
         self.hits = 0
+        if superiors is None:
+            superiors = []
+        assert isinstance(superiors, list)
+        self.superiors = superiors
 
     def contains_positive_condition(self) -> bool:
         """ Returns True if at least one non-negated condition of the rule is
@@ -759,6 +781,7 @@ class Parser:  # pylint: disable=too-few-public-methods
     def __init__(self, text, signature_names: Set[str]):
         self.lines = text.splitlines()
         self.rules = []
+        self.rules_by_name = {}
         self.current_line = 1
         self.current_token = None
         identifiers = set()
@@ -771,19 +794,18 @@ class Parser:  # pylint: disable=too-few-public-methods
             self.current_token = next(self.tokens)
         except StopIteration:
             raise ValueError("No rules to parse")
-        rule_names = set()
         while self.current_token and self.current_token.type == TokenTypes.RULE:
             rule = self._parse_rule()
-            if rule.name in rule_names:
+            if rule.name in self.rules_by_name:
                 raise ValueError("Multiple rules specified for the same rule name")
-            rule_names.add(rule.name)
+            self.rules_by_name[rule.name] = rule
             self.rules.append(rule)
         if self.current_token:
             raise RuleSyntaxError("Expected RULE but found %s\n%s\n%s%s" % (
                                     self.current_token.type,
                                     self.lines[self.current_line - 1],
                                     " " * self.current_token.position, "^"))
-        # verify gathered signature idenfiers exist as signatures
+        # verify gathered signature identifiers exist as signatures
         unknown = identifiers - signature_names
         if unknown:
             raise ValueError("Rules contained identifers without signatures: %s" % ", ".join(sorted(list(unknown))))
@@ -793,9 +815,9 @@ class Parser:  # pylint: disable=too-few-public-methods
         if self.current_token is None:
             raise RuleSyntaxError("Unexpected end of rule, expected %s" % expected)
         if self.current_token.type != expected:
-            raise RuleSyntaxError("Expected %s but found %s\n%s\n%s%s" % (
-                    expected, self.current_token.type,
-                    self.lines[self.current_line - 1],
+            raise RuleSyntaxError("Expected %s but found %s (%s)\n%s\n%s%s" % (
+                    expected, self.current_token.type, self.current_token,
+                    "\n".join(self.lines[self.current_line - 5:self.current_line]),
                     " "*self.current_token.position, "^"))
         consumed = self.current_token
         try:
@@ -821,6 +843,9 @@ class Parser:  # pylint: disable=too-few-public-methods
         comments = ""
         if self.current_token.type == TokenTypes.COMMENT:
             comments = self._parse_comments()
+        superiors = None
+        if self.current_token.type == TokenTypes.SUPERIORS:
+            superiors = self._parse_superiors()
         self._consume(TokenTypes.CUTOFF)
         cutoff = self._consume_int() * 1000  # convert from kilobases
         self._consume(TokenTypes.EXTENT)
@@ -830,17 +855,17 @@ class Parser:  # pylint: disable=too-few-public-methods
         if self.current_token is not None and self.current_token.type != TokenTypes.RULE:
             raise RuleSyntaxError("Unexpected symbol %s\n%s\n%s%s" % (
                     self.current_token.type,
-                    self.lines[self.current_line - 1],
+                    "\n".join(self.lines[self.current_line - 5:self.current_line]),
                     " "*self.current_token.position, "^"))
         return DetectionRule(rule_name, cutoff, extent, conditions,
-                             comments=comments)
+                             comments=comments, superiors=superiors)
 
     def _parse_comments(self) -> str:
         """ COMMENTS = COMMENTS_MARKER comments
         """
         comment_tokens = []
         self._consume(TokenTypes.COMMENT)
-        while not self.current_token.type == TokenTypes.CUTOFF:
+        while not self.current_token.type.is_a_rule_keyword():
             comment_tokens.append(self.current_token)
             self.current_token = next(self.tokens)
         return " ".join([token.token_text for token in comment_tokens])
@@ -990,9 +1015,32 @@ class Parser:  # pylint: disable=too-few-public-methods
             LIST = LIST_OPEN contents:COMMA_SEPARATED_IDS LIST_CLOSE;
         """
         self._consume(TokenTypes.LIST_OPEN)
+        contents = self._parse_comma_separated_ids()
+        self._consume(TokenTypes.LIST_CLOSE)
+        return contents
+
+    def _parse_comma_separated_ids(self) -> List[str]:
+        """
+            COMMA_SEPARATED_IDS = ID {COMMA ID}*;
+        """
         contents = [self._consume_identifier()]
         while self.current_token.type == TokenTypes.COMMA:
             self._consume(TokenTypes.COMMA)
             contents.append(self._consume_identifier())
-        self._consume(TokenTypes.LIST_CLOSE)
         return contents
+
+    def _parse_superiors(self) -> List[str]:
+        """
+            SUPERIORS = SUPERIORS_MARKER COMMA_SEPARATED_IDS
+        """
+        self._consume(TokenTypes.SUPERIORS)
+        superiors = self._parse_comma_separated_ids()
+        for name in superiors:
+            if name not in self.rules_by_name:
+                raise ValueError("A rule's superior must already be defined. Unknown rule name: %s" % name)
+            # this is more of a semantics error than a syntax error, but still should be checked
+            if self.rules_by_name[name].superiors:
+                raise ValueError("A rule cannot have a superior which has its own superior")
+        if len(superiors) != len(set(superiors)):
+            raise ValueError("A rule's superiors cannot contain duplicates")
+        return superiors
