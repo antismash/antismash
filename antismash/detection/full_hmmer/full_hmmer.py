@@ -1,6 +1,8 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+""" Finds all PFAM domains found in features throughout a record. """
+
 import logging
 import os
 from typing import Any, Dict, List, Optional, Tuple
@@ -11,8 +13,12 @@ from antismash.config import get_config
 
 from .name2pfamid import NAME_TO_PFAMID
 
+MIN_SCORE = 0.
+MAX_EVALUE = 0.01
+
 
 class FullHmmerResults(ModuleResults):
+    """ Results for full-hmmer """
     schema_version = 1
 
     def __init__(self, record_id: str, evalue: float, score: float,
@@ -52,10 +58,10 @@ class FullHmmerResults(ModuleResults):
         assert isinstance(score, float) and isinstance(evalue, float)
 
         # if the current options have expanded the detection range, rerunning is required
-        if evalue < options.fh_max_evalue:
+        if evalue < MAX_EVALUE:
             logging.debug("Discarding FullHmmer results, using new evalue threshold")
             return None
-        if score > options.fh_min_score:
+        if score > MIN_SCORE:
             logging.debug("Discarding FullHmmer results, using new score threshold")
             return None
 
@@ -63,10 +69,9 @@ class FullHmmerResults(ModuleResults):
         if not isinstance(hits, list):
             raise TypeError("FullHmmer results contain unexpected types")
         # if the thresholds changed, trim out any extra hits here
-        hits = [hit for hit in hits if hit["score"] >= options.fh_min_score and hit["evalue"] <= options.fh_max_evalue]
+        hits = [hit for hit in hits if hit["score"] >= MIN_SCORE and hit["evalue"] <= MAX_EVALUE]
 
-        results = FullHmmerResults(record.id, options.fh_max_evalue, options.fh_min_score,
-                                   json["database"])
+        results = FullHmmerResults(record.id, MAX_EVALUE, MIN_SCORE, json["database"])
         results.hits = hits
 
         return results
@@ -83,11 +88,6 @@ class FullHmmerResults(ModuleResults):
             pfam.domain_id = "fullhmmer_{}_{:04d}".format(pfam.locus_tag, i + 1)
             record.add_pfam_domain(pfam)
 
-            # TODO: determine whether to keep this note in the parent feature or not
-#            feature.notes.append("%s-Hit: %s. Score: %s. E-value: %s. Domain range: %s..%s." %
-#                                 (pfam.database, pfam.domain, pfam.score,
-#                                  pfam.evalue, hsp.hit_start, hsp.hit_end))
-
 
 def calculate_start_and_end(feature, result) -> Tuple[int, int]:
     "Calculate start and end of a result"
@@ -101,7 +101,7 @@ def calculate_start_and_end(feature, result) -> Tuple[int, int]:
     return start, end
 
 
-def build_hits(record, options, results) -> List[Dict[str, Any]]:
+def build_hits(record, results) -> List[Dict[str, Any]]:
     "Annotate record with CDS_motifs for the result"
     logging.debug("Generating feature objects for PFAM hits")
 
@@ -111,7 +111,7 @@ def build_hits(record, options, results) -> List[Dict[str, Any]]:
 
     for result in results:
         for hsp in result.hsps:
-            if hsp.bitscore <= options.fh_min_score or hsp.evalue >= options.fh_max_evalue:
+            if hsp.bitscore <= MIN_SCORE or hsp.evalue >= MAX_EVALUE:
                 continue
 
             if hsp.query_id not in hsp.query_id:
@@ -136,8 +136,7 @@ def build_hits(record, options, results) -> List[Dict[str, Any]]:
 
 
 def generate_results(record, hmmscan_results, options) -> FullHmmerResults:
-    results = FullHmmerResults(record.id, options.fh_max_evalue,
-                               options.fh_min_score, options.database_dir)
-    results.hits = build_hits(record, options, hmmscan_results)
-    results.add_to_record(record)
+    """ Builds FullHmmerResults from hmmscan results """
+    results = FullHmmerResults(record.id, MAX_EVALUE, MIN_SCORE, options.database_dir)
+    results.hits = build_hits(record, hmmscan_results)
     return results

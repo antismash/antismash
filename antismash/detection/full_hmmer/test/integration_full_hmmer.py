@@ -15,14 +15,22 @@ from antismash.detection import full_hmmer
 
 class TestFullHmmer(unittest.TestCase):
     def setUp(self):
-        self.options = build_config(["--fh-analysis", "--minimal",
-                                     "--fh-min-score", "1",
-                                     "--fh-max-evalue", "0.01"],
+        self.original_min_score = full_hmmer.full_hmmer.MIN_SCORE
+        self.original_max_evalue = full_hmmer.full_hmmer.MAX_EVALUE
+        self.options = build_config(["--fullhmmer", "--minimal"],
                                     isolated=True,
                                     modules=antismash.get_all_modules())
 
     def tearDown(self):
+        self.set_max_evalue(self.original_max_evalue)
+        self.set_min_score(self.original_min_score)
         destroy_config()
+
+    def set_max_evalue(self, evalue):
+        full_hmmer.full_hmmer.MAX_EVALUE = evalue
+
+    def set_min_score(self, score):
+        full_hmmer.full_hmmer.MIN_SCORE = score
 
     def check_add_to_record(self, input_file, results):
         record = record_processing.parse_input_sequence(input_file)[0]
@@ -41,24 +49,21 @@ class TestFullHmmer(unittest.TestCase):
         self.check_add_to_record(nisin, results)
 
         # test regeneration when thresholds are less restrictive
-        original_score_threshold = self.options.fh_min_score
-        original_evalue_threshold = self.options.fh_max_evalue
-
-        new_score_threshold = original_score_threshold / 2
-        update_config({"fh_min_score": new_score_threshold})
+        new_score_threshold = self.original_min_score - .1
+        self.set_min_score(new_score_threshold)
         new_results = full_hmmer.full_hmmer.FullHmmerResults.from_json(json, record)
         assert new_results is None
-        update_config({"fh_min_score": original_score_threshold})
+        self.set_min_score(self.original_min_score)
 
-        new_evalue_threshold = original_evalue_threshold * 2
-        update_config({"fh_max_evalue": new_evalue_threshold})
+        new_evalue_threshold = self.original_max_evalue + .1
+        self.set_max_evalue(new_evalue_threshold)
         new_results = full_hmmer.full_hmmer.FullHmmerResults.from_json(json, record)
         assert new_results is None
-        update_config({"fh_max_evalue": original_evalue_threshold})
+        self.set_max_evalue(self.original_max_evalue)
 
         # test regeneration when evalue threshold is more restrictive
         new_evalue_threshold = sorted(hit["evalue"] for hit in results.hits)[12]
-        assert new_evalue_threshold < self.options.fh_max_evalue
+        assert new_evalue_threshold < self.original_max_evalue
         new_hits = []
         for hit in results.hits:
             if hit["evalue"] <= new_evalue_threshold:
@@ -66,15 +71,15 @@ class TestFullHmmer(unittest.TestCase):
         new_hits.sort(key=lambda x: x["evalue"])
         assert len(new_hits) < 24
 
-        update_config({"fh_max_evalue": new_evalue_threshold})
+        self.set_max_evalue(new_evalue_threshold)
         new_results = full_hmmer.full_hmmer.FullHmmerResults.from_json(json, record)
-        update_config({"fh_max_evalue": original_evalue_threshold})
+        self.set_max_evalue(self.original_max_evalue)
         assert sorted(new_results.hits, key=lambda x: x["evalue"]) == new_hits
         self.check_add_to_record(nisin, results)
 
         # test regeneration when score threshold is more restrictive
         new_score_threshold = sorted(hit["score"] for hit in results.hits)[12]
-        assert new_score_threshold > self.options.fh_min_score
+        assert new_score_threshold > full_hmmer.full_hmmer.MIN_SCORE
         new_hits = []
         for hit in results.hits:
             if hit["score"] >= new_score_threshold:
@@ -82,8 +87,8 @@ class TestFullHmmer(unittest.TestCase):
         new_hits.sort(key=lambda x: x["score"])
         assert len(new_hits) < 24
 
-        update_config({"fh_min_score": new_score_threshold})
+        self.set_min_score(new_score_threshold)
         new_results = full_hmmer.full_hmmer.FullHmmerResults.from_json(json, record)
-        update_config({"fh_min_score": original_score_threshold})
+        self.set_min_score(self.original_min_score)
         assert sorted(new_results.hits, key=lambda x: x["score"]) == new_hits
         self.check_add_to_record(nisin, results)

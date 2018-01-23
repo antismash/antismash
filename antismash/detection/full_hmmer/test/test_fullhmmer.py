@@ -14,6 +14,7 @@ import antismash
 from antismash.common import path, subprocessing  # mocked, pylint: disable=unused-import
 from antismash.common.test.helpers import FakeHSP, DummyRecord, DummyCDS
 from antismash.config import build_config
+from antismash.detection.full_hmmer import full_hmmer as consts
 from antismash.detection import full_hmmer
 
 
@@ -39,9 +40,11 @@ def _create_dummy_record(reverse=False):
 
 class TestFullhmmer(unittest.TestCase):
     def setUp(self):
-        self.config = build_config(["--fh-max-evalue", "0.02",
-                                    "--fh-min-score", "1"],
-                                   isolated=True,
+        self._old_max_evalue = consts.MAX_EVALUE
+        self._old_min_score = consts.MIN_SCORE
+        consts.MAX_EVALUE = 0.02
+        consts.MIN_SCORE = 1.
+        self.config = build_config([], isolated=True,
                                    modules=antismash.get_all_modules())
         self.tracer = TraceTracker()
         mock('antismash.common.path.locate_executable', returns='hmmsearch',
@@ -53,6 +56,8 @@ class TestFullhmmer(unittest.TestCase):
         mock('antismash.common.subprocessing.run_hmmscan', returns=[])
 
     def tearDown(self):
+        consts.MAX_EVALUE = self._old_max_evalue
+        consts.MIN_SCORE = self._old_min_score
         restore()
 
     def test_check_prereqs(self):
