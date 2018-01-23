@@ -55,6 +55,13 @@ RULE nrps
     CONDITIONS cds(Condensation and (AMP-binding or A-OX))
                or (Condensation and AMP-binding)  #TODO: dubious
 
+RULE nrpsfragment
+    COMMENT Catches NRPS-like fragments that are not detected by the NRPS rule
+    SUPERIORS nrps
+    CUTOFF 20
+    EXTENT 20
+    CONDITIONS cds((PP-binding or NAD_binding_4) and (AMP-binding or A-OX))
+
 RULE terpene
     CUTOFF 20
     EXTENT 10
@@ -231,8 +238,7 @@ RULE fused
 RULE other
     CUTOFF 20
     EXTENT 20
-    CONDITIONS cds((PP-binding or NAD_binding_4) and (AMP-binding or A-OX))
-               or LmbU or Neocarzinostat or cycdipepsynth or fom1 or bcpB
+    CONDITIONS LmbU or Neocarzinostat or cycdipepsynth or fom1 or bcpB
                or frbD or mitE or vlmB or prnB or CaiA or bacilysin or orf2_PTase
 
 RULE acyl_amino_acids

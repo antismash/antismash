@@ -71,7 +71,8 @@ class JSONOrf(JSONBase):
 
 def will_handle(products: List[str]) -> bool:
     """ Returns true if one or more relevant products are present """
-    return bool(set(products).intersection({"nrps", "t1pks", "t2pks", "transatpks", "other", "otherks"}))
+    return bool(set(products).intersection({"nrps", "t1pks", "t2pks", "transatpks",
+                                            "nrpsfragment", "otherks"}))
 
 
 def generate_js_domains(cluster, record, results, options
