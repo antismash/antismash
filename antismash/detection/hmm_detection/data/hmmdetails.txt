@@ -170,17 +170,17 @@ Alpha-amylase	Alpha amylase, catalytic domain	20	PF00128.hmm
 dTDP_sugar_isom	dTDP-4-dehydrorhamnose 3,5-epimerase	20	PF00908.hmm
 Polysacc_synt_2	Polysaccharide biosynthesis protein	20	PF02719.hmm
 RmlD_sub_bind	RmlD substrate binding domain	20	PF04321.hmm
-PF01943	Polysaccharide biosynthesis protein	23	PF01943.hmm
+Polysacc_synt	Polysaccharide biosynthesis protein	23	PF01943.hmm
 PF02806	Alpha amylase, C-terminal all-beta domain	21	PF02806.hmm
 PF02350	UDP-N-acetylglucosamine 2-epimerase	22	PF02350.hmm
-PF02397	Bacterial sugar transferase	21	PF02397.hmm
+Bac_transf	Bacterial sugar transferase	21	PF02397.hmm
 PF04932	O-Antigen ligase	24	PF04932.hmm
 PF01075	Glycosyltransferase family 9 (heptosyltransferase)	20	PF01075.hmm
 PF00953	Glycosyl transferase family 4	21	PF00953.hmm
 PF01050	Mannose-6-phosphate isomerase	23	PF01050.hmm
 PF01501	Glycosyl transferase family 8	24	PF01501.hmm
 PF05159	Capsule polysaccharide biosynthesis protein	20	PF05159.hmm
-PF04101	Glycosyltransferase family 28 C-terminal domain	21	PF04101.hmm
+Glyco_tran_28_C	Glycosyltransferase family 28 C-terminal domain	21	PF04101.hmm
 PF02563	Polysaccharide biosynthesis/export protein	26	PF02563.hmm
 PF08437	Glycosyl transferase family 8 C-terminal	19	PF08437.hmm
 PIG-L	GlcNAc-PI de-N-acetylase	22	PF02585.hmm
