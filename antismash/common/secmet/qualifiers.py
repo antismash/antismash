@@ -107,7 +107,24 @@ class SecMetQualifier(list):
 
         Can be directly used as a qualifier for BioPython's SeqFeature.
     """
-    def __init__(self, products: Set[str], domains: List) -> None:
+    class Domain:
+        """ A simple container for the information needed to create a domain """
+        def __init__(self, name: str, evalue: float, bitscore: float, nseeds: str,
+                     tool: str) -> None:
+            self.query_id = str(name)
+            self.evalue = float(evalue)
+            self.bitscore = float(bitscore)
+            self.nseeds = str(nseeds)  # TODO: will be int once all HMM inputs are cleaned up
+            self.tool = str(tool)
+
+        def __repr__(self):
+            return str(self)
+
+        def __str__(self):
+            ret = "{} E-value: {}, bitscore: {}, seeds: {}"
+            return ret.format(self.query_id, self.evalue, self.bitscore, self.nseeds)
+
+    def __init__(self, products: Set[str], domains: List["SecMetQualifier.Domain"]) -> None:
         self._domains = domains  # SecMetResult instance or str
         if domains and not isinstance(domains[0], str):  # SecMetResult
             self.domain_ids = [domain.query_id for domain in self._domains]  # TODO: convert to a set
@@ -135,12 +152,14 @@ class SecMetQualifier(list):
             assert isinstance(product, str) and "-" not in product, product
         self._products.update(products)
 
-    def add_domains(self, domains):
-        # TODO: more validation
+    def add_domains(self, domains: List["SecMetQualifier.Domain"]) -> None:
+        """ Add a group of Domains to the the qualifier """
+        for domain in domains:
+            assert isinstance(domain, SecMetQualifier.Domain)
         self._domains.extend(domains)
 
     @property
-    def domains(self) -> List:
+    def domains(self) -> List["SecMetQualifier.Domain"]:
         return list(self._domains)
 
     @property

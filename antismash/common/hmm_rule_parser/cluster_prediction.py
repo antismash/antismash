@@ -18,25 +18,8 @@ from antismash.common.hmm_rule_parser import rule_parser
 from antismash.common.signature import get_signature_profiles
 
 
-class Domain:
-    """ A simple container for the information needed to create a domain """
-    def __init__(self, res: HSP, nseeds: str, tool: str):
-        self.query_id = str(res.query_id)
-        self.evalue = float(res.evalue)
-        self.bitscore = float(res.bitscore)
-        self.nseeds = str(nseeds)
-        self.tool = tool
-
-    def __repr__(self):
-        return str(self)
-
-    def __str__(self):
-        ret = "{} E-value: {}, bitscore: {}, seeds: {}"
-        return ret.format(self.query_id, self.evalue, self.bitscore, self.nseeds)
-
-
 class CDSResults:
-    def __init__(self, cds: CDSFeature, domains: List[Domain],
+    def __init__(self, cds: CDSFeature, domains: List[SecMetQualifier.Domain],
                  definition_domains: Dict[str, Set[str]]) -> None:
         """ Arguments:
                 cds: the CDSFeature these results were based on
@@ -395,7 +378,10 @@ def detect_borders_and_signatures(record, signature_file: str, seeds_file: str,
         cluster_extent = FeatureLocation(cluster.location.start - cluster.extent,
                                          cluster.location.end + cluster.extent)
         for cds in record.get_cds_features_within_location(cluster_extent):
-            domains = [Domain(res, num_seeds_per_hmm[res.query_id], tool) for res in results_by_id.get(cds.get_name(), [])]
+            domains = []
+            for hsp in results_by_id.get(cds.get_name(), []):
+                domains.append(SecMetQualifier.Domain(hsp.query_id, hsp.evalue, hsp.bitscore,
+                                                      num_seeds_per_hmm[hsp.query_id], tool))
             if domains:
                 cds_results.append(CDSResults(cds, domains, cds_domains_by_cluster.get(cds.get_name(), {})))
         cds_results_by_cluster[cluster] = cds_results
