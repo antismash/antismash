@@ -20,37 +20,23 @@ SHORT_DESCRIPTION = "Full genome PFAM anotation"
 
 def get_arguments() -> ModuleArgs:
     """ Builds the module args """
-    args = ModuleArgs('Full HMMer options', 'fh')
-    args.add_analysis_toggle('analysis',
-                             dest='full_hmmer',
+    args = ModuleArgs('Full HMMer options', 'fullhmmer')
+    args.add_analysis_toggle('fullhmmer',
+                             dest='fullhmmer',
                              action='store_true',
                              default=False,
                              help="Run a whole-genome HMMer analysis.")
-    args.add_option('min-score',
-                    dest='min_score',
-                    metavar="LIMIT",
-                    type=float,
-                    default=0.0,
-                    help="A minimum score threshold for PFAM annotation. (default: %(default)s)")
-    args.add_option('max-evalue',
-                    dest='max_evalue',
-                    metavar="LIMIT",
-                    type=float,
-                    default=0.01,
-                    help="A maximum e-value threshold for PFAM annotation. (default: %(default)s)")
     return args
 
 
-def check_options(options):
-    problems = []
-    if options.fh_min_score < 0:
-        problems.append("fh-min-score cannot be negative")
-    return problems
+def check_options(options) -> List[str]:
+    """ Never an issue as no args to check """
+    return []
 
 
 def is_enabled(options) -> bool:
     """  Uses the supplied options to determine if the module should be run """
-    return options.fh_full_hmmer
+    return options.fullhmmer
 
 
 def check_prereqs() -> List[str]:
@@ -69,13 +55,14 @@ def check_prereqs() -> List[str]:
     return failure_messages
 
 
-def regenerate_previous_results(previous, record, options):
+def regenerate_previous_results(previous, record, _options) -> FullHmmerResults:
+    """ Rebuild previous results """
     if not previous:
         return None
     return FullHmmerResults.from_json(previous, record)
 
 
-def run_on_record(record, results, options):
+def run_on_record(record, results, options) -> FullHmmerResults:
     "run hmmsearch against PFAM for all CDS features"
     if results:
         return results
