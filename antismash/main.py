@@ -209,6 +209,10 @@ def regenerate_results_for_record(record, options, modules, previous_result
             as an instance of ModuleResults or None if results don't apply or
             could not be regenerated
     """
+    # skip if nothing to work with
+    if not previous_result:
+        return previous_result
+
     logging.debug("Regenerating results for record %s", record.id)
     for module in modules:
         section = previous_result.pop(module.__name__, None)
