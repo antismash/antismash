@@ -87,6 +87,32 @@ class DetectionResults:
                 cds_result.annotate(border.products)
 
 
+def remove_redundant_borders(borders: List[ClusterBorder],
+                             rules_by_name: Dict[str, rule_parser.DetectionRule]
+                             ) -> List[ClusterBorder]:
+    """ Removes clusters which have superiors covering the same (or larger) region
+    """
+    borders_by_rule = defaultdict(list)
+    for border in borders:
+        assert len(border.products) == 1
+        borders_by_rule[border.products[0]].append(border)
+
+    trimmed_borders = []
+    for border in borders:
+        rule_name = border.products[0]
+        is_redundant = False
+        for superior in rules_by_name[rule_name].superiors:
+            for other_border in borders_by_rule.get(superior, []):
+                if border.is_contained_by(other_border):
+                    is_redundant = True
+                    break
+            if is_redundant:
+                break
+        if not is_redundant:
+            trimmed_borders.append(border)
+    return trimmed_borders
+
+
 def find_clusters(record, cds_by_cluster_type, rules_by_name) -> List[ClusterBorder]:
     """ Detects gene clusters based on the identified core genes """
     clusters = []  # type: List[ClusterBorder]
@@ -126,6 +152,8 @@ def find_clusters(record, cds_by_cluster_type, rules_by_name) -> List[ClusterBor
         if cluster.location.end > len(record):
             cluster.location = FeatureLocation(cluster.location.start, len(record))
             cluster.contig_edge = True
+
+    clusters = remove_redundant_borders(clusters, rules_by_name)
 
     logging.debug("%d rule-based cluster(s) found in record", len(clusters))
     return clusters
