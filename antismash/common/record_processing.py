@@ -106,7 +106,7 @@ def check_content(sequence: Record) -> Record:
     return sequence
 
 
-def ensure_gene_info(single_entry: bool, genefinding, sequence: Record) -> Record:
+def ensure_cds_info(single_entry: bool, genefinding, sequence: Record) -> Record:
     """ Ensures the given record has CDS features with unique locus tags.
         CDS features are retrieved from GFF file or via genefinding, depending
         on antismash options.
@@ -171,28 +171,30 @@ def pre_process_sequences(sequences, options, genefinding) -> List[Record]:
     for i, seq in enumerate(sequences):
         seq.record_index = i
 
-    # keep sequences as clean as possible
-    if not options.reuse_results:
+    checking_required = not (options.reuse_results or options.skip_sanitisation)
+
+    # keep sequences as clean as possible and make sure they're valid
+    if checking_required:
         logging.debug("Sanitising record sequences")
         if len(sequences) == 1:
             sequences = [sanitise_sequence(sequences[0])]
+            sequences = [check_content(sequences[0])]
         else:
             sequences = parallel_function(sanitise_sequence, ([record] for record in sequences))
+            sequences = parallel_function(check_content, ([sequence] for sequence in sequences))
+
     for record in sequences:
         if record.skip or not record.seq:
             logging.warning("Record %s has no sequence, skipping.", record.id)
 
-    # run the filter
-    for sequence in sequences:
-        if options.limit_to_record and options.limit_to_record != sequence.id:
-            sequence.skip = "did not match filter: %s" % options.limit_to_record
-        else:
-            matching_filter += 1
-
-    # Check if seq_records have appropriate content
-    sequences = parallel_function(check_content, ([sequence] for sequence in sequences))
-
     if options.limit_to_record:
+        logging.debug("Limiting to record id: %s", options.limit_to_record)
+        # run the filter
+        for sequence in sequences:
+            if options.limit_to_record and options.limit_to_record != sequence.id:
+                sequence.skip = "did not match filter: %s" % options.limit_to_record
+            else:
+                matching_filter += 1
         limit = options.limit_to_record
         if matching_filter == 0:
             logging.error("No sequences matched filter: %s", limit)
@@ -206,6 +208,7 @@ def pre_process_sequences(sequences, options, genefinding) -> List[Record]:
         raise RuntimeError("Incomplete whole genome shotgun records are not supported")
 
     # Now remove small contigs < minimum length again
+    logging.debug("Removing sequences smaller than %d bases", options.minlength)
     for sequence in sequences:
         if len(sequence.seq) < options.minlength:
             sequence.skip = "smaller than minimum length (%d)" % options.minlength
@@ -226,30 +229,35 @@ def pre_process_sequences(sequences, options, genefinding) -> List[Record]:
 
     options = update_config({"triggered_limit": warned})  # TODO is there a better way
 
-    # Check if no duplicate locus tags / gene IDs are found
-    ensure_no_duplicate_gene_ids(sequences)
-
     # Check GFF suitability
     single_entry = False
     if options.genefinding_gff3:
         single_entry = gff_parser.check_gff_suitability(options, sequences)
 
-    all_record_ids = {seq.id for seq in sequences}
-    # Ensure all records have unique names
-    if len(all_record_ids) < len(sequences):
-        all_record_ids = set()
-        for record in sequences:
-            if record.id in all_record_ids:
-                record.original_id = record.id
-                record.id = generate_unique_id(record.id, all_record_ids)[0]
-            all_record_ids.add(record.id)
-        assert len(all_record_ids) == len(sequences), "%d != %d" % (len(all_record_ids), len(sequences))
-    # Ensure all records have valid names
-    for record in sequences:
-        fix_record_name_id(record, all_record_ids)
 
-    partial = functools.partial(ensure_gene_info, single_entry, genefinding.run_on_record)
-    sequences = parallel_function(partial, ([sequence] for sequence in sequences))
+    if checking_required:
+        # ensure CDS features have all relevant information
+        logging.debug("Ensuring CDS features have all required information")
+        partial = functools.partial(ensure_cds_info, single_entry, genefinding.run_on_record)
+        sequences = parallel_function(partial, ([sequence] for sequence in sequences))
+
+        # Check if no duplicate locus tags / gene IDs are found
+        logging.debug("Ensuring CDS features do not have duplicate IDs")
+        ensure_no_duplicate_cds_gene_ids(sequences)
+
+        all_record_ids = {seq.id for seq in sequences}
+        # Ensure all records have unique names
+        if len(all_record_ids) < len(sequences):
+            all_record_ids = set()
+            for record in sequences:
+                if record.id in all_record_ids:
+                    record.original_id = record.id
+                    record.id = generate_unique_id(record.id, all_record_ids)[0]
+                all_record_ids.add(record.id)
+            assert len(all_record_ids) == len(sequences), "%d != %d" % (len(all_record_ids), len(sequences))
+        # Ensure all records have valid names
+        for record in sequences:
+            fix_record_name_id(record, all_record_ids)
 
     return sequences
 
@@ -337,7 +345,7 @@ def records_contain_shotgun_scaffolds(records) -> bool:
     return False
 
 
-def ensure_no_duplicate_gene_ids(sequences) -> None:
+def ensure_no_duplicate_cds_gene_ids(sequences) -> None:
     """ Ensures that every CDS across all sequences has a unique id
 
         Arguments:

@@ -534,6 +534,11 @@ def debug_options():
                      action='store_true',
                      default=False,
                      help="Generate a profiling report, disables multiprocess python.")
+    group.add_option('--skip-sanitisation',
+                     dest='skip_sanitisation',
+                     action='store_true',
+                     default=False,
+                     help="Skip input record sanitisation. Use with care.")
     return group
 
 
