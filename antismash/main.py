@@ -163,7 +163,6 @@ def run_detection(record, options, previous_result: Dict[str, Union[Dict, Module
                                                    previous_result)
 
     # run full genome detections
-    logging.info("Running full genome PFAM detection")
     for module in [full_hmmer]:
         run_module(record, module, options, module_results, timings)
 
