@@ -19,6 +19,7 @@ from antismash.common.signature import get_signature_profiles
 
 
 class CDSResults:
+    """ Tracks the detection results for a single CDS """
     def __init__(self, cds: CDSFeature, domains: List[SecMetQualifier.Domain],
                  definition_domains: Dict[str, Set[str]]) -> None:
         """ Arguments:
@@ -34,18 +35,19 @@ class CDSResults:
         # empty definition domains is ok
         self.definition_domains = definition_domains
 
-    def annotate(self, products: Set[str]) -> None:
+    def annotate(self, products: Set[str], tool: str) -> None:
+        """ Annotates """
+        all_matching = set()
         if not self.cds.sec_met:
             self.cds.sec_met = SecMetQualifier(set(self.definition_domains), self.domains)
         else:
+            all_matching.update(set(self.cds.sec_met.domain_ids))
             self.cds.sec_met.add_products(set(products))
             self.cds.sec_met.add_domains(self.domains)
-        all_matching = set()
         for cluster_type, matching_domains in self.definition_domains.items():
             all_matching.update(matching_domains)
             for domain in matching_domains:
-                # TODO: use tool name instead of 'cluster_definition'
-                self.cds.gene_functions.add(GeneFunction.CORE, "cluster_definition",
+                self.cds.gene_functions.add(GeneFunction.CORE, tool,
                                             "%s: %s" % (cluster_type, domain))
 
         # and add all detected domains as ADDITIONAL if not CORE
@@ -57,8 +59,10 @@ class CDSResults:
 
 
 class DetectionResults:
-    def __init__(self, cds_by_cluster: Dict[ClusterBorder, List[CDSResults]]) -> None:
+    def __init__(self, cds_by_cluster: Dict[ClusterBorder, List[CDSResults]],
+                 tool: str) -> None:
         self.cds_by_cluster = cds_by_cluster
+        self.tool = str(tool)
 
     @property
     def borders(self) -> List[ClusterBorder]:
@@ -67,7 +71,7 @@ class DetectionResults:
     def annotate_cds_features(self) -> None:
         for border, cds_results in self.cds_by_cluster.items():
             for cds_result in cds_results:
-                cds_result.annotate(border.products)
+                cds_result.annotate(border.products, self.tool)
 
 
 def remove_redundant_borders(borders: List[ClusterBorder],
@@ -386,7 +390,7 @@ def detect_borders_and_signatures(record, signature_file: str, seeds_file: str,
                 cds_results.append(CDSResults(cds, domains, cds_domains_by_cluster.get(cds.get_name(), {})))
         cds_results_by_cluster[cluster] = cds_results
 
-    results = DetectionResults(cds_results_by_cluster)
+    results = DetectionResults(cds_results_by_cluster, tool)
     return results
 
 
