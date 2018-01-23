@@ -601,11 +601,13 @@ class GeneFunctionAnnotations:
         # if no annotations, skip to OTHER
         if not self._annotations:
             return GeneFunction.OTHER
-        # priority for tools
-        for tool in ["cluster_definition", "smcogs"]:
-            annotations = self._by_tool[tool]
-            if annotations:
-                return annotations[0].function
+        # if any CORE function set, use that
+        if self._by_function.get(GeneFunction.CORE):
+            return GeneFunction.CORE
+        # then priority for smcogs
+        annotations = self._by_tool.get("smcogs")
+        if annotations:
+            return annotations[0].function
         # otherwise check all agree
         function = self._annotations[0].function
         for annotation in self._annotations[1:]:
