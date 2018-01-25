@@ -8,7 +8,7 @@ import os
 from antismash.common.subprocessing import parallel_execute
 
 
-def run_meme(meme_dir, options):
+def run_meme(meme_dir, options, verbose):
     """Set paths, check existing files and run MEME in parallel on each promoter set"""
     args = []
     for plus_minus in os.listdir(meme_dir):
@@ -34,11 +34,11 @@ def run_meme(meme_dir, options):
                     "-evt", "1.0e+005",
                 ])
 
-    errors = parallel_execute(args)
+    errors = parallel_execute(args, verbose=verbose)
     return sum(errors)
 
 
-def run_fimo(meme_dir, fimo_dir, record, options):
+def run_fimo(meme_dir, fimo_dir, record, options, verbose):
     """Set paths, check existing files and run FIMO in parallel on each predicted motif"""
     if not os.path.exists(fimo_dir):
         os.makedirs(fimo_dir)
@@ -69,5 +69,5 @@ def run_fimo(meme_dir, fimo_dir, record, options):
                     os.path.join(options.output_dir, record.name + "_promoter_sequences.fasta"),
                 ])
 
-    errors = parallel_execute(args)
+    errors = parallel_execute(args, verbose=False)
     return sum(errors)

@@ -537,7 +537,7 @@ class TestCassisUtils(unittest.TestCase):
             copy(path.get_full_path(__file__, "data", "fake_binding_sites.fasta"),
                  os.path.join(meme_dir, subdir, "binding_sites.fasta"))
 
-        run_fimo(meme_dir, fimo_dir, seq_record, self.options)
+        run_fimo(meme_dir, fimo_dir, seq_record, self.options, verbose=True)
 
         for subdir in fimo_subdirs:
             fimo_result, expected_fimo_result = read_generated_expected_file(

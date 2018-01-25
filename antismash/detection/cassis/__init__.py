@@ -249,7 +249,7 @@ def detect(record: Record, options) -> List[ClusterBorder]:
         # predict motifs with MEME ("de novo")
         meme_dir = os.path.join(options.output_dir, "meme", anchor)
         promoter_sets = get_promoter_sets(meme_dir, anchor_promoter, promoters)
-        exit_code = run_meme(meme_dir, options)
+        exit_code = run_meme(meme_dir, options, VERBOSE_DEBUG)
         if exit_code != 0:
             logging.warning("MEME discovered a problem (exit code %d), skipping this anchor gene", exit_code)
             continue
@@ -261,7 +261,7 @@ def detect(record: Record, options) -> List[ClusterBorder]:
 
         # search motifs with FIMO ("scanning")
         fimo_dir = os.path.join(options.output_dir, "fimo", anchor)
-        exit_code = run_fimo(meme_dir, fimo_dir, record, options)
+        exit_code = run_fimo(meme_dir, fimo_dir, record, options, VERBOSE_DEBUG)
         if exit_code != 0:
             logging.warning("FIMO discovered a problem (exit code %d), skipping this anchor gene", exit_code)
             continue
