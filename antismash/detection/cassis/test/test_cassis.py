@@ -112,9 +112,9 @@ class TestCassisMethods(unittest.TestCase):
             [8950, 9603],
         ]
 
-        promoters = cassis.get_promoters(seq_record, genes, upstream_tss, downstream_tss, self.options)
+        promoters = cassis.get_promoters(seq_record, genes, upstream_tss, downstream_tss)
         self.assertEqual(list(map(lambda x: [x.start, x.end], promoters)), expected_promoters)
-
+        cassis.write_promoters_to_file(self.options.output_dir, seq_record.name, promoters)
         # read expected files and save to string variable
         expected_sequences_file = ""
         with open(path.get_full_path(__file__, "data", "expected_promoter_sequences.fasta")) as handle:
@@ -236,7 +236,7 @@ class TestCassisMethods(unittest.TestCase):
             os.makedirs(target)
         copy(source, os.path.join(target, "fimo.txt"))  # overwrite fimo.txt if exists
 
-        found_motifs = list(cassis.filter_fimo_results(motifs, fimo_dir, promoters, anchor_promoter, self.options))
+        found_motifs = list(cassis.filter_fimo_results(motifs, fimo_dir, promoters, anchor_promoter))
         assert found_motifs == expected_motifs
         bs_per_promoter, expected_bs_per_promoter = read_generated_expected_file(
             os.path.join(target, "bs_per_promoter.csv"), "expected_bs_per_promoter.csv")
