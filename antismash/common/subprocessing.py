@@ -8,6 +8,7 @@
 from io import StringIO
 import logging
 import multiprocessing
+import sys
 import os
 from subprocess import PIPE, Popen, TimeoutExpired
 from tempfile import NamedTemporaryFile
@@ -141,22 +142,34 @@ def child_process(command) -> int:
     """ Called by multiprocessing's map or map_async method, cannot be locally
         defined """
     try:
-        logging.debug("Calling %s", " ".join(command))
-        return execute(command).return_code
+        result = execute(command)
+        if result.stderr:
+            print(result.stderr, file=sys.stderr)
+        return result.return_code
     except KeyboardInterrupt:
         #  Need to raise some runtime error that is not KeyboardInterrupt, because Python has a bug there
         raise RuntimeError("Killed by keyboard interrupt")
     return -1
 
 
-def parallel_execute(commands, cpus=None, timeout=None) -> List[int]:
+def verbose_child_process(command) -> int:
+    """ A wrapper of child_process() that logs the command being run """
+    logging.debug("Calling %s", " ".join(command))
+    return child_process(command)
+
+
+def parallel_execute(commands, cpus=None, timeout=None, verbose=True) -> List[int]:
     """ Limited return vals, only returns return codes
     """
+    if verbose:
+        runner = verbose_child_process
+    else:
+        runner = child_process
     os.setpgid(0, 0)
     if not cpus:
         cpus = get_config().cpus
     pool = multiprocessing.Pool(cpus)
-    jobs = pool.map_async(child_process, commands)
+    jobs = pool.map_async(runner, commands)
 
     try:
         errors = jobs.get(timeout=timeout)
