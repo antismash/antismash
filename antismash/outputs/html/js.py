@@ -104,6 +104,8 @@ def convert_cluster_border_features(borders):
         js_border['tool'] = border.tool
         js_border['height'] = i
         js_border['product'] = border.products[0] if border.products else 'unknown'
+        if border.tool == "cassis":
+            js_border['product'] = border.get_qualifier("anchor")[0]
         js_borders.append(js_border)
     return js_borders
 
