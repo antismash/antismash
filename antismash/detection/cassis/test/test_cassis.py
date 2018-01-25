@@ -113,7 +113,7 @@ class TestCassisMethods(unittest.TestCase):
         ]
 
         promoters = cassis.get_promoters(seq_record, genes, upstream_tss, downstream_tss, self.options)
-        self.assertEqual(list(map(lambda x: [x["start"], x["end"]], promoters)), expected_promoters)
+        self.assertEqual(list(map(lambda x: [x.start, x.end], promoters)), expected_promoters)
 
         # read expected files and save to string variable
         expected_sequences_file = ""
@@ -142,27 +142,25 @@ class TestCassisMethods(unittest.TestCase):
 
     def test_get_anchor_promoter(self):
         anchor = "gene3"
-        promoters = [
-            {"id": ["gene1"]},
-            {"id": ["gene2"]},
-            {"id": ["gene3", "gene4"]},  # sharing bidirectional promoter
-            {"id": ["gene5"]},
-        ]
+        promoters = [cassis.Promoter("gene1", 1, 1),
+                     cassis.Promoter("gene2", 2, 2),
+                     cassis.CombinedPromoter("gene3", "gene4", 3, 4),
+                     cassis.Promoter("gene5", 5, 5)]
         self.assertEqual(cassis.get_anchor_promoter(anchor, promoters), 2)
 
     def test_get_promoter_sets(self):
         meme_dir = os.path.join(self.options.output_dir, "meme")
         anchor_promoter = 5
-        promoters = [
-            {"id": ["gene1"], "seq": Seq("acgtacgtacgtacgt")},
-            {"id": ["gene2"], "seq": Seq("acgtacgtacgtacgt")},
-            {"id": ["gene3", "gene4"], "seq": Seq("acgtacgtacgtacgt")},
-            {"id": ["gene5"], "seq": Seq("acgtacgtacgtacgt")},
-            {"id": ["gene6"], "seq": Seq("acgtacgtacgtacgt")},
-            {"id": ["gene7"], "seq": Seq("acgtacgtacgtacgt")},  # promoter with index=5 --> anchor promoter
-            {"id": ["gene8"], "seq": Seq("acgtacgtacgtacgt")},
-            {"id": ["gene9"], "seq": Seq("acgtacgtacgtacgt")},
-        ]
+        promoters = [cassis.Promoter("gene1", 1, 1, seq=Seq("acgtacgtacgtacgt")),
+                     cassis.Promoter("gene2", 2, 2, seq=Seq("acgtacgtacgtacgt")),
+                     cassis.CombinedPromoter("gene3", "gene4", 3, 4, seq=Seq("acgtacgtacgtacgt")),
+                     cassis.Promoter("gene5", 5, 5, seq=Seq("acgtacgtacgtacgt")),
+                     cassis.Promoter("gene6", 6, 6, seq=Seq("acgtacgtacgtacgt")),
+                     # promoter with index=5 --> anchor promoter
+                     cassis.Promoter("gene7", 7, 7, seq=Seq("acgtacgtacgtacgt")),
+                     cassis.Promoter("gene8", 8, 8, seq=Seq("acgtacgtacgtacgt")),
+                     cassis.Promoter("gene9", 9, 9, seq=Seq("acgtacgtacgtacgt"))]
+
         expected_promoter_sets = [
             {"plus": 0, "minus": 3, "score": None},
             {"plus": 0, "minus": 4, "score": None},
@@ -222,26 +220,13 @@ class TestCassisMethods(unittest.TestCase):
     def test_filter_fimo_results(self):
         fimo_dir = os.path.join(self.options.output_dir, "fimo")
         motifs = [{"plus": 0, "minus": 3}]
+        # gene2 will be the anchor promoter
         anchor_promoter = 1
-        promoters = [
-            {"start": 10, "end": 14, "id": ["gene1"]},
-            {"start": 20, "end": 24, "id": ["gene2"]},  # anchor promoter
-            {"start": 30, "end": 34, "id": ["gene3"]},
-            {"start": 40, "end": 44, "id": ["gene4"]},
-            {"start": 50, "end": 54, "id": ["gene5"]},
-            {"start": 60, "end": 64, "id": ["gene6"]},
-            {"start": 70, "end": 74, "id": ["gene7"]},
-            {"start": 80, "end": 84, "id": ["gene8"]},
-            {"start": 90, "end": 94, "id": ["gene9"]},
-            {"start": 100, "end": 104, "id": ["gene10"]},
-            {"start": 110, "end": 114, "id": ["gene11"]},
-            {"start": 120, "end": 124, "id": ["gene12"]},
-            {"start": 130, "end": 134, "id": ["gene13"]},
-            {"start": 140, "end": 144, "id": ["gene14"]},
-            {"start": 150, "end": 154, "id": ["gene15"]},
-            # need certain amount of promoters, otherwise the proportion of
-            # promoters with a motif (motif frequency) will be too high --> error
-        ]
+        promoters = []
+        for i in range(1, 16):
+            promoters.append(cassis.Promoter("gene%d" % i, i * 10, i * 10 + 4))
+        # need certain amount of promoters, otherwise the proportion of
+        # promoters with a motif (motif frequency) will be too high --> error
         expected_motifs = [{"plus": 0, "minus": 3, "hits": {"gene1": 1, "gene2": 2}}]
 
         # fake FIMO output file, corresponding to expected_motifs
@@ -262,30 +247,26 @@ class TestCassisMethods(unittest.TestCase):
             {"plus": 0, "minus": 3, "hits": {"gene1": 1, "gene2": 2}},
             {"plus": 0, "minus": 4, "hits": {"gene2": 3, "gene4": 2, "gene5": 1}},
         ]
+        # gene2 will be the anchor promoter
         anchor_promoter = 1
-        promoters = [
-            {"start": 10, "end": 14, "id": ["gene1"]},
-            {"start": 20, "end": 24, "id": ["gene2"]},  # anchor promoter
-            {"start": 30, "end": 34, "id": ["gene3"]},
-            {"start": 40, "end": 44, "id": ["gene4"]},
-            {"start": 50, "end": 54, "id": ["gene5"]},
-            {"start": 60, "end": 64, "id": ["gene6"]},
-        ]
+        promoters = []
+        for i in range(1, 7):
+            promoters.append(cassis.Promoter("gene%d" % i, i * 10, i * 10 + 4))
         expected_islands = [  # resulting in 2 different islands (this example)
             {
                 # promoter (pos): 1 2 3 4 5 6
                 # binding sites: 1 2 0 0 0 0
                 # island: |---|
-                "start": {"start": 10, "end": 14, "id": ["gene1"]},  # first promoter of island
-                "end": {"start": 20, "end": 24, "id": ["gene2"]},  # last promoter of island
+                "start": promoters[0],  # first promoter of island
+                "end": promoters[1],  # last promoter of island
                 "motif": {"hits": {"gene1": 1, "gene2": 2}, "plus": 0, "minus": 3},  # island is result of this motif
             },
             {
                 # promoter (pos): 1 2 3 4 5 6
                 # binding sites: 0 3 0 2 1 0
                 # island: |-------|
-                "start": {"start": 20, "end": 24, "id": ["gene2"]},  # first promoter of island
-                "end": {"start": 50, "end": 54, "id": ["gene5"]},  # last promoter of island
+                "start": promoters[1],  # first promoter of island
+                "end": promoters[4],  # last promoter of island
                 # island is result of this motif
                 "motif": {"hits": {"gene2": 3, "gene4": 2, "gene5": 1}, "plus": 0, "minus": 4},
             },
@@ -295,19 +276,19 @@ class TestCassisMethods(unittest.TestCase):
     def test_sort_by_abundance(self):
         islands = [
             {  # island 1: [gene1 -- gene2]
-                "start": {"start": 1, "end": 1, "id": ["gene1"]},
-                "end": {"start": 2, "end": 2, "id": ["gene2"]},
+                "start": cassis.Promoter("gene1", 1, 1),
+                "end": cassis.Promoter("gene2", 2, 2),
                 "motif": {"hits": {"gene1": 1, "gene2": 1}, "plus": 0, "minus": 3, "score": 3},
             },
             {  # island 2: [gene2 -- gene5]
-                "start": {"start": 2, "end": 2, "id": ["gene2"]},
-                "end": {"start": 5, "end": 5, "id": ["gene5"]},
+                "start": cassis.Promoter("gene2", 2, 2),
+                "end": cassis.Promoter("gene5", 5, 5),
                 "motif": {"hits": {"gene2": 1, "gene3": 1, "gene4": 1, "gene5": 1},
                           "plus": 3, "minus": 0, "score": 2},
             },
             {  # island 3: [gene1 -- gene5]
-                "start": {"start": 1, "end": 1, "id": ["gene1"]},
-                "end": {"start": 5, "end": 5, "id": ["gene5"]},
+                "start": cassis.Promoter("gene1", 1, 1),
+                "end": cassis.Promoter("gene5", 5, 5),
                 "motif": {"hits": {"gene1": 1, "gene2": 1, "gene3": 1, "gene4": 1, "gene5": 1},
                           "plus": 3, "minus": 3, "score": 1},
             },
@@ -340,11 +321,9 @@ class TestCassisMethods(unittest.TestCase):
 
     def test_check_cluster_predictions(self):
         seq_record = create_fake_record()
-        promoters = [
-            {"id": ["gene1"]},
-            {"id": ["gene2"]},
-            {"id": ["gene3", "gene4"]},
-        ]
+        promoters = [cassis.Promoter("gene1", 1, 5),
+                     cassis.Promoter("gene2", 6, 10),
+                     cassis.CombinedPromoter("gene3", "gene4", 11, 15)]
         ignored_genes = [  # see captured logging
             secmet.Gene(FeatureLocation(1, 5), locus_tag="gene5")
         ]
@@ -427,20 +406,20 @@ class TestCassisHelperMethods(unittest.TestCase):
     def test_mprint(self):
         self.assertEqual(cassis.mprint(3, 3), "+03_-03")
 
-    def test_get_promoter_id(self):
+
+class TestPromoters(unittest.TestCase):
+    def test_promoter_id(self):
         fake_promoter1 = {"id": ["gene1"]}
         fake_promoter2 = {"id": ["gene1", "gene2"]}
-        self.assertEqual(cassis.get_promoter_id(fake_promoter1), "gene1")
-        self.assertEqual(cassis.get_promoter_id(fake_promoter2), "gene1+gene2")
+        assert cassis.Promoter("gene1", 1, 5).get_id() == "gene1"
+        assert cassis.CombinedPromoter("gene1", "gene2", 1, 5).get_id() == "gene1+gene2"
 
 
 class TestCassisStorageMethods(unittest.TestCase):
     def test_store_promoters(self):
-        promoters = [
-            {"id": ["gene1"], "seq": Seq("cgtacgtacgt"), "start": 10, "end": 20},
-            {"id": ["gene2"], "seq": Seq("cgtacgtacgt"), "start": 30, "end": 40},
-            {"id": ["gene3", "gene4"], "seq": Seq("cgtacgtacgt"), "start": 50, "end": 60},
-        ]
+        promoters = [cassis.Promoter("gene1", 10, 20, seq=Seq("cgtacgtacgt")),
+                     cassis.Promoter("gene2", 30, 40, seq=Seq("cgtacgtacgt")),
+                     cassis.CombinedPromoter("gene3", "gene4", 50, 60, seq=Seq("cgtacgtacgt"))]
         record_with_promoters = create_fake_record()
         cassis.store_promoters(promoters, record_with_promoters)  # add ("store") promoters to seq_record
 
