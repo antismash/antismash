@@ -350,18 +350,15 @@ def get_promoters(record: Record, genes, upstream_tss, downstream_tss, options):
     promoters = []
     invalid = 0
 
-    pos_handle = open(os.path.join(options.output_dir, record.name + "_promoter_positions.csv"), "w")
-    pos_handle.write("\t".join(["#", "promoter", "start", "end", "length"]) + "\n")
-    seq_handle = open(os.path.join(options.output_dir, record.name + "_promoter_sequences.fasta"), "w")
 
-    skip = 0  # helper var for shared promoter of bidirectional genes
+    skip = False  # helper var for shared promoter of bidirectional genes
     for i, gene in enumerate(genes):
 
         if skip:  # two genes share the same promotor --> did computation with first gene, skip second gene
-            skip = 0
+            skip = False
+            # TODO: should this have a continue?
 
         elif len(genes) == 1:  # only one gene within record
-
             if gene.location.strand == 1:
                 # 1 (for explanation of these numbers see file promoterregions.png)
                 if (gene.location.start - upstream_tss >= 0
@@ -411,7 +408,6 @@ def get_promoters(record: Record, genes, upstream_tss, downstream_tss, options):
         elif (i == 0 and not (gene.location.strand == -1
                               and genes[i+1].location.strand == 1
                               and gene.location.end + upstream_tss >= genes[i+1].location.start - upstream_tss)):
-
             if gene.location.strand == 1:
                 # 1
                 if (gene.location.start - upstream_tss >= 0
@@ -456,7 +452,6 @@ def get_promoters(record: Record, genes, upstream_tss, downstream_tss, options):
 
         # last gene of record
         elif i == len(genes) - 1 and not skip:
-
             if gene.location.strand == 1:
                 # 1
                 if (genes[i-1].location.end < gene.location.start - upstream_tss
@@ -499,11 +494,10 @@ def get_promoters(record: Record, genes, upstream_tss, downstream_tss, options):
                     logging.error("BUG: Problem with promoter of gene %r", gene.get_name())
                     raise InvalidLocationError
 
-        # special-case 9
+        # special-case 9, bidirectional promoters
         elif (gene.location.strand == -1
                 and genes[i+1].location.strand == 1
                 and gene.location.end + upstream_tss >= genes[i+1].location.start - upstream_tss):
-
             # 9 (1+4)
             if (gene.location.end > gene.location.start + downstream_tss
                     and gene.location.start < gene.location.end - downstream_tss):
@@ -524,11 +518,10 @@ def get_promoters(record: Record, genes, upstream_tss, downstream_tss, options):
                 logging.error("BUG: Problem with promoter of gene %r", gene.get_name())
                 raise InvalidLocationError
 
-            skip = 1
+            skip = True
 
         # "normal" cases
         elif not skip:
-
             if gene.location.strand == 1:
                 # 1
                 if (genes[i-1].location.end < gene.location.start - upstream_tss
