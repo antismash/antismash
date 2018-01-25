@@ -30,6 +30,7 @@ MAX_GAP_LENGTH = 2  # the maximum gap length between islands
 
 VERBOSE_DEBUG = False  # whether to show all debugging info or not
 
+
 class CassisResults(module_results.ModuleResults):
     """ Contains the borders predicted by cassis """
     def __init__(self, record_id: str, borders: List[ClusterBorder]) -> None:
@@ -184,6 +185,7 @@ class Island:
         self.end = int(end)
         self.motifs = motifs
 
+
 # helper methods
 def mprint(plus, minus) -> str:
     """Motif-print: nicely format motif name in plus/minus style"""
@@ -214,7 +216,8 @@ def detect(record: Record, options) -> List[ClusterBorder]:
         # why these values? see "Wolf et al (2015): CASSIS and SMIPS ..."
         upstream_tss = 1000  # nucleotides upstream TSS
         downstream_tss = 50  # nucleotides downstream TSS
-        promoters = get_promoters(record, genes, upstream_tss, downstream_tss, options)
+        promoters = get_promoters(record, genes, upstream_tss, downstream_tss)
+        write_promoters_to_file(record.name, options.output_dir, promoters)
     except (InvalidLocationError, DuplicatePromoterError):
         logging.error("CASSIS discovered an error while working on the promoter sequences, skipping CASSIS analysis")
         return []
@@ -260,7 +263,7 @@ def detect(record: Record, options) -> List[ClusterBorder]:
         if exit_code != 0:
             logging.warning("FIMO discovered a problem (exit code %d), skipping this anchor gene", exit_code)
             continue
-        motifs = filter_fimo_results(motifs, fimo_dir, promoters, anchor_promoter, options)
+        motifs = filter_fimo_results(motifs, fimo_dir, promoters, anchor_promoter)
 
         if not motifs:
             logging.debug("Could not find motif occurrences for %r, skipping this anchor gene", anchor)
@@ -339,7 +342,28 @@ def ignore_overlapping(genes):
     return (genes, ignored)
 
 
-def get_promoters(record: Record, genes, upstream_tss, downstream_tss, options):
+def write_promoters_to_file(output_dir: str, prefix: str, promoters: List[Promoter]) -> None:
+
+    # positions file
+    pos_handle = open(os.path.join(output_dir, prefix + "_promoter_positions.csv"), "w")
+    pos_handle.write("\t".join(["#", "promoter", "start", "end", "length"]) + "\n")
+    # sequences file
+    seq_handle = open(os.path.join(output_dir, prefix + "_promoter_sequences.fasta"), "w")
+
+    for i, promoter in enumerate(promoters):
+        # write promoter positions to file
+        pos_handle.write("\t".join(map(str, [i + 1, promoter.get_id(),
+                                             promoter.start + 1, promoter.end + 1,
+                                             len(promoter)])) + "\n")
+
+        # write promoter sequences to file
+        SeqIO.write(SeqRecord(promoter.seq, id=promoter.get_id(),
+                    description="length={}bp".format(len(promoter))),
+                    seq_handle,
+                    "fasta")
+
+
+def get_promoters(record: Record, genes, upstream_tss: int, downstream_tss: int) -> List[Promoter]:
     """Compute promoter sequences for each gene in the sequence record"""
     logging.debug("Computing promoter sequences")
 
@@ -349,7 +373,6 @@ def get_promoters(record: Record, genes, upstream_tss, downstream_tss, options):
     record_seq_length = len(record.seq)
     promoters = []
     invalid = 0
-
 
     skip = False  # helper var for shared promoter of bidirectional genes
     for i, gene in enumerate(genes):
@@ -612,17 +635,6 @@ def get_promoters(record: Record, genes, upstream_tss, downstream_tss, options):
             else:
                 promoters[-1].seq = promoter_sequence
 
-                # write promoter positions to file
-                pos_handle.write("\t".join(map(str, [len(promoters), promoters[-1].get_id(),
-                                                     promoters[-1].start + 1, promoters[-1].end + 1,
-                                                     promoter_length])) + "\n")
-
-                # write promoter sequences to file
-                SeqIO.write(SeqRecord(promoter_sequence, id=promoters[-1].get_id(),
-                            description="length={}bp".format(promoter_length)),
-                            seq_handle,
-                            "fasta")
-
         # check if promoter IDs are unique
         if len(promoters) >= 2 and promoters[-1].get_id() == promoters[-2].get_id():
             logging.error("Promoter %r occurs at least twice. This may be caused by overlapping gene annotations",
@@ -748,7 +760,7 @@ def filter_meme_results(meme_dir: str, promoter_sets, anchor):
     return list(filter(lambda m: m["score"] is not None, promoter_sets))
 
 
-def filter_fimo_results(motifs, fimo_dir: str, promoters, anchor_promoter, options):
+def filter_fimo_results(motifs, fimo_dir: str, promoters: List[Promoter], anchor_promoter: Promoter):
     """Analyse and filter FIMO results"""
 
     for motif in motifs:
