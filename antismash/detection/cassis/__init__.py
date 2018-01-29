@@ -165,6 +165,8 @@ class Promoter:
             raise ValueError("Requesting length of a promoter sequence which hasn't been set")
         return len(self.seq)
 
+    def __str__(self) -> str:
+        return "Promoter(%r, %d, %d)" % (self.get_id(), self.start, self.end)
 
 class CombinedPromoter(Promoter):
     """ A promoter class for cases where two genes are involved """
@@ -367,6 +369,12 @@ def get_promoters(record: Record, genes, upstream_tss: int, downstream_tss: int)
     """Compute promoter sequences for each gene in the sequence record"""
     logging.debug("Computing promoter sequences")
 
+    def first(location):
+        return min(location.start, location.end)
+
+    def last(location):
+        return max(location.start, location.end)
+
     min_promoter_length = 6
     max_promoter_length = (upstream_tss + downstream_tss) * 2 + 1
 
@@ -376,216 +384,192 @@ def get_promoters(record: Record, genes, upstream_tss: int, downstream_tss: int)
 
     skip = False  # helper var for shared promoter of bidirectional genes
     for i, gene in enumerate(genes):
+        gene_first = first(gene.location)
+        gene_last = last(gene.location)
 
-        if skip:  # two genes share the same promotor --> did computation with first gene, skip second gene
+        downstream_inside_gene = gene_last > gene_first + downstream_tss
+        if gene.location.strand not in [1, -1]:
+            raise ValueError("Gene %s has unknown strand: %s" % (gene.get_name(), gene.location.strand))
+
+        if skip:  # two genes share the same promoter --> did computation with first gene, skip second gene
             skip = False
             # TODO: should this have a continue?
 
         elif len(genes) == 1:  # only one gene within record
             if gene.location.strand == 1:
-                # 1 (for explanation of these numbers see file promoterregions.png)
-                if (gene.location.start - upstream_tss >= 0
-                        and gene.location.end > gene.location.start + downstream_tss):
-                    # fuzzy (>|<) gene locations will be transformed to exact promoter locations
-                    # we could save the fuzzy locations for promoters, too, via a FeatureLocation object
-                    # but we use/calculate with the exact promoter locations anyway, here and later on
-                    promoters.append(Promoter(gene.get_name(), gene.location.start - upstream_tss, gene.location.start + downstream_tss))
-                # 2
-                elif (gene.location.start - upstream_tss < 0
-                        and gene.location.end > gene.location.start + downstream_tss):
-                    promoters.append(Promoter(gene.get_name(), 0, gene.location.start + downstream_tss))
-                # 3
-                elif (gene.location.start - upstream_tss >= 0
-                        and gene.location.start + downstream_tss >= gene.location.end):
-                    promoters.append(Promoter(gene.get_name(), gene.location.start - upstream_tss, gene.location.end))
-                # 7
-                elif (gene.location.start - upstream_tss < 0
-                        and gene.location.start + downstream_tss >= gene.location.end):
-                    promoters.append(Promoter(gene.get_name(), 0, gene.location.end))
+                upstream_inside_record = gene_first - upstream_tss >= 0
+                if downstream_inside_gene:
+                    if upstream_inside_record:
+                        # 1 (for explanation of these numbers see file promoterregions.png)
+                        # fuzzy (>|<) gene locations will be transformed to exact promoter locations
+                        # we could save the fuzzy locations for promoters, too, via a FeatureLocation object
+                        # but we use/calculate with the exact promoter locations anyway, here and later on
+                        promoters.append(Promoter(gene.get_name(), gene_first - upstream_tss, gene_first + downstream_tss))
+                    else:
+                        # 2
+                        promoters.append(Promoter(gene.get_name(), 0, gene_first + downstream_tss))
                 else:
-                    logging.error("BUG: Problem with promoter of gene %r", gene.get_name())
-                    raise InvalidLocationError
+                    if upstream_inside_record:
+                        # 3
+                        promoters.append(Promoter(gene.get_name(), gene_first - upstream_tss, gene_last))
+                    else:
+                        # 7
+                        promoters.append(Promoter(gene.get_name(), 0, gene_last))
 
             elif gene.location.strand == -1:
-                # 4
-                if (gene.location.start < gene.location.end - downstream_tss
-                        and gene.location.end + upstream_tss <= record_seq_length):
-                    promoters.append(Promoter(gene.get_name(), gene.location.end - downstream_tss, gene.location.end + upstream_tss))
-                # 5
-                elif (gene.location.start < gene.location.end - downstream_tss
-                        and gene.location.end + upstream_tss > record_seq_length):
-                    promoters.append(Promoter(gene.get_name(), gene.location.end - downstream_tss, record_seq_length))
-                # 6
-                elif (gene.location.start >= gene.location.end - downstream_tss
-                        and gene.location.end + upstream_tss <= record_seq_length):
-                    promoters.append(Promoter(gene.get_name(), gene.location.start, gene.location.end + upstream_tss))
-                # 8
-                elif (genes[i+1].location.start >= gene.location.end - upstream_tss
-                        and gene.location.end + upstream_tss > record_seq_length):
-                    promoters.append(Promoter(gene.get_name(), gene.location.start, record_seq_length))
+                upstream_inside_record = gene_last + upstream_tss <= record_seq_length
+                if downstream_inside_gene:
+                    if upstream_inside_record:
+                        # 4
+                        promoters.append(Promoter(gene.get_name(), gene_last - downstream_tss, gene_last + upstream_tss))
+                    else:
+                        # 5
+                        promoters.append(Promoter(gene.get_name(), gene_last - downstream_tss, record_seq_length))
                 else:
-                    logging.error("BUG: Problem with promoter of gene %r", gene.get_name())
-                    raise InvalidLocationError
+                    if upstream_inside_record:
+                        # 6
+                        promoters.append(Promoter(gene.get_name(), gene_first, gene_last + upstream_tss))
+                    else:
+                        # 8
+                        promoters.append(Promoter(gene.get_name(), gene_first, record_seq_length))
 
         # first gene of the record AND NOT special case #9
         elif (i == 0 and not (gene.location.strand == -1
                               and genes[i+1].location.strand == 1
-                              and gene.location.end + upstream_tss >= genes[i+1].location.start - upstream_tss)):
+                              and gene_last + upstream_tss >= first(genes[i+1].location) - upstream_tss)):
             if gene.location.strand == 1:
-                # 1
-                if (gene.location.start - upstream_tss >= 0
-                        and gene.location.end > gene.location.start + downstream_tss):
-                    promoters.append(Promoter(gene.get_name(), gene.location.start - upstream_tss, gene.location.start + downstream_tss))
-                # 2
-                elif (gene.location.start - upstream_tss < 0
-                        and gene.location.end > gene.location.start + downstream_tss):
-                    promoters.append(Promoter(gene.get_name(), 0, gene.location.start + downstream_tss))
-                # 3
-                elif (gene.location.start - upstream_tss >= 0
-                        and gene.location.start + downstream_tss >= gene.location.end):
-                    promoters.append(Promoter(gene.get_name(), gene.location.start - upstream_tss, gene.location.end))
-                # 7
-                elif (gene.location.start - upstream_tss < 0
-                        and gene.location.start + downstream_tss >= gene.location.end):
-                    promoters.append(Promoter(gene.get_name(), 0, gene.location.end))
+                within_record = gene_first - upstream_tss >= 0
+                if downstream_inside_gene:
+                    if within_record:
+                        # 1
+                        promoters.append(Promoter(gene.get_name(), gene_first - upstream_tss, gene_first + downstream_tss))
+                    else:
+                        # 2
+                        promoters.append(Promoter(gene.get_name(), 0, gene_first + downstream_tss))
                 else:
-                    logging.error("BUG: Problem with promoter of gene %r", gene.get_name())
-                    raise InvalidLocationError
+                    if within_record:
+                        # 3
+                        promoters.append(Promoter(gene.get_name(), gene_first - upstream_tss, gene_last))
+                    else:
+                        # 7
+                        promoters.append(Promoter(gene.get_name(), 0, gene_last))
 
             elif gene.location.strand == -1:
-                # 4
-                if (gene.location.start < gene.location.end - downstream_tss
-                        and genes[i+1].location.start > gene.location.end + upstream_tss):
-                    promoters.append(Promoter(gene.get_name(), gene.location.end - downstream_tss, gene.location.end + upstream_tss))
-                # 5
-                elif (gene.location.start < gene.location.end - downstream_tss
-                        and genes[i+1].location.start <= gene.location.end + upstream_tss):
-                    promoters.append(Promoter(gene.get_name(), gene.location.end - downstream_tss, genes[i+1].location.start - 1))
-                # 6
-                elif (gene.location.start >= gene.location.end - downstream_tss
-                        and genes[i+1].location.start > gene.location.end + upstream_tss):
-                    promoters.append(Promoter(gene.get_name(), gene.location.start, gene.location.end + upstream_tss))
-                # 8
-                elif (genes[i+1].location.start <= gene.location.end + upstream_tss
-                        and gene.location.start >= gene.location.end - downstream_tss):
-                    promoters.append(Promoter(gene.get_name(), gene.location.start, genes[i+1].location.start - 1))
+                other_first = first(genes[i+1].location)
+                other_in_upstream = other_first <= gene_last + upstream_tss
+                if downstream_inside_gene:
+                    if other_in_upstream:
+                        # 5
+                        promoters.append(Promoter(gene.get_name(), gene_last - downstream_tss, other_first - 1))
+                    else:
+                        # 4
+                        promoters.append(Promoter(gene.get_name(), gene_last - downstream_tss, gene_last + upstream_tss))
                 else:
-                    logging.error("BUG: Problem with promoter of gene %r", gene.get_name())
-                    raise InvalidLocationError
+                    if other_in_upstream:
+                        # 8
+                        promoters.append(Promoter(gene.get_name(), gene_first, other_first - 1))
+                    else:
+                        # 6
+                        promoters.append(Promoter(gene.get_name(), gene_first, gene_last + upstream_tss))
 
         # last gene of record
         elif i == len(genes) - 1 and not skip:
             if gene.location.strand == 1:
-                # 1
-                if (genes[i-1].location.end < gene.location.start - upstream_tss
-                        and gene.location.end > gene.location.start + downstream_tss):
-                    promoters.append(Promoter(gene.get_name(), gene.location.start - upstream_tss, gene.location.start + downstream_tss))
-                # 2
-                elif (genes[i-1].location.end >= gene.location.start - upstream_tss
-                        and gene.location.end > gene.location.start + downstream_tss):
-                    promoters.append(Promoter(gene.get_name(), genes[i-1].location.end + 1, gene.location.start + downstream_tss))
-                # 3
-                elif (genes[i-1].location.end < gene.location.start - upstream_tss
-                        and gene.location.start + downstream_tss >= gene.location.end):
-                    promoters.append(Promoter(gene.get_name(), gene.location.start - upstream_tss, gene.location.end))
-                # 7
-                elif (genes[i-1].location.end >= gene.location.start - upstream_tss
-                        and gene.location.start + downstream_tss >= gene.location.end):
-                    promoters.append(Promoter(gene.get_name(), genes[i-1].location.end + 1, gene.location.end))
+                other_last = last(genes[i-1].location)
+                other_inside_upstream = other_last < gene_first - upstream_tss
+                if downstream_inside_gene:
+                    if other_inside_upstream:
+                        # 1
+                        promoters.append(Promoter(gene.get_name(), gene_first - upstream_tss, gene_first + downstream_tss))
+                    else:
+                        # 2
+                        promoters.append(Promoter(gene.get_name(), other_last + 1, gene_first + downstream_tss))
                 else:
-                    logging.error("BUG: Problem with promoter of gene %r", gene.get_name())
-                    raise InvalidLocationError
+                    if other_inside_upstream:
+                        # 3
+                        promoters.append(Promoter(gene.get_name(), gene_first - upstream_tss, gene_last))
+                    else:
+                        # 7
+                        promoters.append(Promoter(gene.get_name(), other_last + 1, gene_last))
 
             elif gene.location.strand == -1:
-                # 4
-                if (gene.location.start < gene.location.end - downstream_tss
-                        and gene.location.end + upstream_tss <= record_seq_length):
-                    promoters.append(Promoter(gene.get_name(), gene.location.end - downstream_tss, gene.location.end + upstream_tss))
-                # 5
-                elif (gene.location.start < gene.location.end - downstream_tss
-                        and gene.location.end + upstream_tss > record_seq_length):
-                    promoters.append(Promoter(gene.get_name(), gene.location.end - downstream_tss, record_seq_length))
-                # 6
-                elif (gene.location.start >= gene.location.end - downstream_tss
-                        and gene.location.end + upstream_tss <= record_seq_length):
-                    promoters.append(Promoter(gene.get_name(), gene.location.start, gene.location.end + upstream_tss))
-                # 8
-                elif (genes[i+1].location.start <= gene.location.end + upstream_tss
-                        and gene.location.end + upstream_tss > record_seq_length):
-                    promoters.append(Promoter(gene.get_name(), gene.location.start, record_seq_length))
+                upstream_inside_record = gene_last + upstream_tss <= record_seq_length
+                if downstream_inside_gene:
+                    if upstream_inside_record:
+                        # 4
+                        promoters.append(Promoter(gene.get_name(), gene_last - downstream_tss, gene_last + upstream_tss))
+                    else:
+                        # 5
+                        promoters.append(Promoter(gene.get_name(), gene_last - downstream_tss, record_seq_length))
                 else:
-                    logging.error("BUG: Problem with promoter of gene %r", gene.get_name())
-                    raise InvalidLocationError
+                    if upstream_inside_record:
+                        # 6
+                        promoters.append(Promoter(gene.get_name(), gene_first, gene_last + upstream_tss))
+                    else:
+                        # 8
+                        promoters.append(Promoter(gene.get_name(), gene_first, record_seq_length))
 
         # special-case 9, bidirectional promoters
         elif (gene.location.strand == -1
                 and genes[i+1].location.strand == 1
-                and gene.location.end + upstream_tss >= genes[i+1].location.start - upstream_tss):
-            # 9 (1+4)
-            if (gene.location.end > gene.location.start + downstream_tss
-                    and gene.location.start < gene.location.end - downstream_tss):
-                promoters.append(CombinedPromoter(gene.get_name(), genes[i+1].get_name(), gene.location.end - downstream_tss, genes[i+1].location.start + downstream_tss))
-            # 9 (3+4)
-            elif (gene.location.start < gene.location.end - downstream_tss
-                    and genes[i+1].location.start + downstream_tss >= genes[i+1].location.end):
-                promoters.append(CombinedPromoter(gene.get_name(), genes[i+1].get_name(), gene.location.end - downstream_tss, genes[i+1].location.end))
-            # 9 (1+6)
-            elif (gene.location.start >= gene.location.end - downstream_tss
-                    and genes[i+1].location.end > genes[i+1].location.start + downstream_tss):
-                promoters.append(CombinedPromoter(gene.get_name(), genes[i+1].get_name(), gene.location.start, genes[i+1].location.start + downstream_tss))
-            # 9 (3+6)
-            elif (gene.location.start >= gene.location.end - downstream_tss
-                    and genes[i+1].location.start + downstream_tss >= genes[i+1].location.end):
-                promoters.append(CombinedPromoter(gene.get_name(), genes[i+1].get_name(), gene.location.start, genes[i+1].location.end))
+                and gene_last + upstream_tss >= first(genes[i+1].location) - upstream_tss):
+            other_first = first(genes[i+1].location)
+            other_last = last(genes[i+1].location)
+            other_downstream_in_other = other_last > other_first + downstream_tss
+            if downstream_inside_gene:
+                if other_downstream_in_other:
+                    # 9 (1+4)
+                    promoters.append(CombinedPromoter(gene.get_name(), genes[i+1].get_name(), gene_last - downstream_tss, other_first + downstream_tss))
+                else:
+                    # 9 (3+4)
+                    promoters.append(CombinedPromoter(gene.get_name(), genes[i+1].get_name(), gene_last - downstream_tss, other_last))
             else:
-                logging.error("BUG: Problem with promoter of gene %r", gene.get_name())
-                raise InvalidLocationError
+                if other_downstream_in_other:
+                    # 9 (1+6)
+                    promoters.append(CombinedPromoter(gene.get_name(), genes[i+1].get_name(), gene_first, other_first + downstream_tss))
+                else:
+                    # 9 (3+6)
+                    promoters.append(CombinedPromoter(gene.get_name(), genes[i+1].get_name(), gene_first, other_last))
 
             skip = True
 
         # "normal" cases
         elif not skip:
             if gene.location.strand == 1:
-                # 1
-                if (genes[i-1].location.end < gene.location.start - upstream_tss
-                        and gene.location.end > gene.location.start + downstream_tss):
-                    promoters.append(Promoter(gene.get_name(), gene.location.start - upstream_tss, gene.location.start + downstream_tss))
-                # 2
-                elif (genes[i-1].location.end >= gene.location.start - upstream_tss
-                        and gene.location.end > gene.location.start + downstream_tss):
-                    promoters.append(Promoter(gene.get_name(), genes[i-1].location.end + 1, gene.location.start + downstream_tss))
-                # 3
-                elif (genes[i-1].location.end < gene.location.start - upstream_tss
-                        and gene.location.start + downstream_tss >= gene.location.end):
-                    promoters.append(Promoter(gene.get_name(), gene.location.start - upstream_tss, gene.location.end))
-                # 7
-                elif (genes[i-1].location.end >= gene.location.start - upstream_tss
-                        and gene.location.start + downstream_tss >= gene.location.end):
-                    promoters.append(Promoter(gene.get_name(), genes[i-1].location.end + 1, gene.location.end))
+                other_last = last(genes[i-1].location)
+                other_inside_upstream = other_last < gene_first - upstream_tss
+                if downstream_inside_gene:
+                    if other_inside_upstream:
+                        # 1
+                        promoters.append(Promoter(gene.get_name(), gene_first - upstream_tss, gene_first + downstream_tss))
+                    else:
+                        # 2
+                        promoters.append(Promoter(gene.get_name(), other_last + 1, gene_first + downstream_tss))
                 else:
-                    logging.error("BUG: Problem with promoter of gene %r", gene.get_name())
-                    raise InvalidLocationError
+                    if other_inside_upstream:
+                        # 3
+                        promoters.append(Promoter(gene.get_name(), gene_first - upstream_tss, gene_last))
+                    else:
+                        # 7
+                        promoters.append(Promoter(gene.get_name(), other_last + 1, gene_last))
 
             elif gene.location.strand == -1:
-                # 4
-                if (gene.location.start < gene.location.end - downstream_tss
-                        and genes[i+1].location.start > gene.location.end + upstream_tss):
-                    promoters.append(Promoter(gene.get_name(), gene.location.end - downstream_tss, gene.location.end + upstream_tss))
-                # 5
-                elif (gene.location.start < gene.location.end - downstream_tss
-                        and genes[i+1].location.start <= gene.location.end + upstream_tss):
-                    promoters.append(Promoter(gene.get_name(), gene.location.end - downstream_tss, genes[i+1].location.start - 1))
-                # 6
-                elif (gene.location.start >= gene.location.end - downstream_tss
-                        and genes[i+1].location.start > gene.location.end + upstream_tss):
-                    promoters.append(Promoter(gene.get_name(), gene.location.start, gene.location.end + upstream_tss))
-                # 8
-                elif (genes[i+1].location.start <= gene.location.end + upstream_tss
-                        and gene.location.start >= gene.location.end - downstream_tss):
-                    promoters.append(Promoter(gene.get_name(), gene.location.start, genes[i+1].location.start - 1))
+                other_first = first(genes[i+1].location)
+                other_in_upstream = other_first <= gene_last + upstream_tss
+                if downstream_inside_gene:
+                    if other_in_upstream:
+                        # 5
+                        promoters.append(Promoter(gene.get_name(), gene_last - downstream_tss, other_first - 1))
+                    else:
+                        # 4
+                        promoters.append(Promoter(gene.get_name(), gene_last - downstream_tss, gene_last + upstream_tss))
                 else:
-                    logging.error("BUG: Problem with promoter of gene %r", gene.get_name())
-                    raise InvalidLocationError
+                    if other_in_upstream:
+                        # 8
+                        promoters.append(Promoter(gene.get_name(), gene_first, other_first - 1))
+                    else:
+                        # 6
+                        promoters.append(Promoter(gene.get_name(), gene_first, gene_last + upstream_tss))
 
         # negative start position or stop position "beyond" record --> might happen in very small records
         if promoters[-1].start < 0:
