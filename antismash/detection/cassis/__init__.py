@@ -20,7 +20,8 @@ from antismash.common.secmet.record import Record
 from antismash.config.args import ModuleArgs
 
 from .runners import run_fimo, run_meme
-from .promoters import Promoter, CombinedPromoter, get_promoters, DuplicatePromoterError
+from .promoters import Promoter, CombinedPromoter, get_promoters, DuplicatePromoterError, \
+                       write_promoters_to_file
 
 NAME = "cassis"
 SHORT_DESCRIPTION = "Detect secondary metabolite gene cluster (motif based)"
@@ -153,9 +154,9 @@ def detect(record: Record, options) -> List[ClusterBorder]:
     logging.info("Detecting gene clusters using CASSIS")
 
     # get core genes from hmmdetect --> necessary CASSIS input, aka "anchor genes"
-    anchor_genes = get_anchor_genes(record)
-    logging.info("Record has %d anchor genes", len(anchor_genes))
-    if not anchor_genes:
+    anchor_gene_names = get_anchor_gene_names(record)
+    logging.info("Record has %d anchor genes", len(anchor_gene_names))
+    if not anchor_gene_names:
         return []
 
     # filter all genes in record for neighbouring genes with overlapping annotations
@@ -172,7 +173,7 @@ def detect(record: Record, options) -> List[ClusterBorder]:
         upstream_tss = 1000  # nucleotides upstream TSS
         downstream_tss = 50  # nucleotides downstream TSS
         promoters = get_promoters(record, genes, upstream_tss, downstream_tss)
-        write_promoters_to_file(record.name, options.output_dir, promoters)
+        write_promoters_to_file(options.output_dir, record.name, promoters)
     except (InvalidLocationError, DuplicatePromoterError):
         logging.error("CASSIS discovered an error while working on the promoter sequences, skipping CASSIS analysis")
         return []
@@ -191,17 +192,18 @@ def detect(record: Record, options) -> List[ClusterBorder]:
 
     predicted_borders = []
     cluster_predictions = {}  # {anchor gene: cluster predictions}
-    for i, anchor in enumerate(anchor_genes):
-        logging.debug("Detecting cluster around anchor gene %r (%d of %d)", anchor, i + 1, len(anchor_genes))
+    for i, anchor in enumerate(anchor_gene_names):
+        logging.debug("Detecting cluster around anchor gene %r (%d of %d)", anchor, i + 1, len(anchor_gene_names))
 
-        anchor_promoter = get_anchor_promoter(anchor, promoters)
-        if anchor_promoter is None:
+        try:
+            anchor_promoter_index = get_anchor_promoter_index(anchor, promoters)
+        except ValueError:
             logging.debug("No promoter region for %r, skipping this anchor gene", anchor)
             continue
 
         # predict motifs with MEME ("de novo")
         meme_dir = os.path.join(options.output_dir, "meme", anchor)
-        promoter_sets = get_promoter_sets(meme_dir, anchor_promoter, promoters)
+        promoter_sets = get_promoter_sets(meme_dir, anchor_promoter_index, promoters)
         exit_code = run_meme(meme_dir, options, VERBOSE_DEBUG)
         if exit_code != 0:
             logging.warning("MEME discovered a problem (exit code %d), skipping this anchor gene", exit_code)
@@ -218,13 +220,13 @@ def detect(record: Record, options) -> List[ClusterBorder]:
         if exit_code != 0:
             logging.warning("FIMO discovered a problem (exit code %d), skipping this anchor gene", exit_code)
             continue
-        motifs = filter_fimo_results(motifs, fimo_dir, promoters, anchor_promoter)
+        motifs = filter_fimo_results(motifs, fimo_dir, promoters, anchor_promoter_index)
 
         if not motifs:
             logging.debug("Could not find motif occurrences for %r, skipping this anchor gene", anchor)
             continue
 
-        # TODO SiTaR (http://bioinformatics.oxfordjournals.org/content/27/20/2806):
+        # TODO: as4, SiTaR (http://bioinformatics.oxfordjournals.org/content/27/20/2806):
         # Alternative to MEME and FIMO. Part of the original CASSIS implementation.
         # No motif prediction (no MEME). Motif search with SiTaR (instead if FIMO).
         # Have to provide a file in FASTA format with binding site sequences of at least one transcription factor.
@@ -233,23 +235,24 @@ def detect(record: Record, options) -> List[ClusterBorder]:
         # implement: YES? NO?
 
         # find islands of binding sites around anchor gene
-        islands = get_islands(anchor_promoter, motifs, promoters)
+        islands = get_islands(anchor_promoter_index, motifs, promoters)
         logging.debug("%d possible cluster predictions for %r", len(islands), anchor)
 
         # return cluster predictions sorted by border abundance
         # (most abundant --> "best" prediction)
         cluster_predictions[anchor] = sort_by_abundance(islands)
-        cluster_predictions[anchor] = check_cluster_predictions(cluster_predictions[anchor], record, promoters, ignored_genes)
+        cluster_predictions[anchor] = check_cluster_predictions(cluster_predictions[anchor],
+                                                                record, promoters, ignored_genes)
 
         predicted_borders.extend(create_cluster_borders(anchor, cluster_predictions[anchor], record))
 
     logging.debug("Cleaning up MEME and FIMO output directories")
-    cleanup_outdir(anchor_genes, cluster_predictions, options)
+    cleanup_outdir(anchor_gene_names, cluster_predictions, options)
     return predicted_borders
 
 
 # additional methods
-def get_anchor_genes(record: Record) -> List[str]:
+def get_anchor_gene_names(record: Record) -> List[str]:
     """ Finds all gene names that have a CDS with secondary metabolite
         annotations.
 
@@ -297,38 +300,17 @@ def ignore_overlapping(genes):
     return (genes, ignored)
 
 
-def write_promoters_to_file(output_dir: str, prefix: str, promoters: List[Promoter]) -> None:
-
-    # positions file
-    pos_handle = open(os.path.join(output_dir, prefix + "_promoter_positions.csv"), "w")
-    pos_handle.write("\t".join(["#", "promoter", "start", "end", "length"]) + "\n")
-    # sequences file
-    seq_handle = open(os.path.join(output_dir, prefix + "_promoter_sequences.fasta"), "w")
-
-    for i, promoter in enumerate(promoters):
-        # write promoter positions to file
-        pos_handle.write("\t".join(map(str, [i + 1, promoter.get_id(),
-                                             promoter.start + 1, promoter.end + 1,
-                                             len(promoter)])) + "\n")
-
-        # write promoter sequences to file
-        SeqIO.write(SeqRecord(promoter.seq, id=promoter.get_id(),
-                    description="length={}bp".format(len(promoter))),
-                    seq_handle,
-                    "fasta")
-
-
-def get_anchor_promoter(anchor, promoters):
+def get_anchor_promoter_index(anchor, promoters) -> int:
     """Find the name of the promoter which includes the anchor gene"""
     # the promoter ID is not (necessarily) equal to the anchor ID!
     for i, promoter in enumerate(promoters):
         if anchor in promoter.get_gene_names():
             return i
 
-    return None
+    raise ValueError("No promoter exists for the given anchor: %s" % anchor)
 
 
-def get_promoter_sets(meme_dir: str, anchor_promoter, promoters):
+def get_promoter_sets(meme_dir: str, anchor_promoter: int, promoters: List[Promoter]) -> List[Dict[str, Any]]:
     """Prepare sets of promoter sequences and motif subdirectories"""
     promoter_sets = []
 
@@ -405,23 +387,28 @@ def filter_meme_results(meme_dir: str, promoter_sets, anchor):
                     anchor_seq_id = element.attrib["id"]  # e.g. id=sequence_1
 
             # only accept motifs which occur in the anchor genes promoter
-            contributing_sites = e.findall("motifs/motif/contributing_sites/contributing_site")  # sequences which contributed to the motif
+            # sequences which contributed to the motif
+            contributing_sites = e.findall("motifs/motif/contributing_sites/contributing_site")
             if anchor_seq_id in map(lambda site: site.attrib["sequence_id"], contributing_sites):
                 # save motif score
                 motif["score"] = e.find("motifs/motif").attrib["e_value"]  # one motif, didn't ask MEME for more
 
                 # save sequence sites which represent the motif
-                motif["seqs"] = ["".join(map(lambda letter: letter.attrib["letter_id"], site.findall("site/letter_ref")))
+                motif["seqs"] = ["".join(map(lambda letter: letter.attrib["letter_id"],
+                                             site.findall("site/letter_ref")))
                                  for site in contributing_sites]
                 # write sites to fasta file
-                with open(os.path.join(meme_dir, mprint(motif["plus"], motif["minus"]), "binding_sites.fasta"), "w") as handle:
+                with open(os.path.join(meme_dir, mprint(motif["plus"], motif["minus"]),
+                                       "binding_sites.fasta"), "w") as handle:
                     handle.write(">{}__{}\n".format(anchor, mprint(motif["plus"], motif["minus"])))
                     handle.write("\n".join(motif["seqs"]))
                 if VERBOSE_DEBUG:
-                    logging.debug("MEME: motif %s; e-value = %s", mprint(motif["plus"], motif["minus"]), motif["score"])
+                    logging.debug("MEME: motif %s; e-value = %s", mprint(motif["plus"],
+                                  motif["minus"]), motif["score"])
             else:
                 if VERBOSE_DEBUG:
-                    logging.debug("MEME: motif %s; does not occur in anchor gene promoter", mprint(motif["plus"], motif["minus"]))
+                    logging.debug("MEME: motif %s; does not occur in anchor gene promoter",
+                                  mprint(motif["plus"], motif["minus"]))
 
         # unexpected reason, don't know why MEME stopped :-$
         else:
@@ -483,7 +470,7 @@ def filter_fimo_results(motifs, fimo_dir: str, promoters: List[Promoter], anchor
     return list(filter(lambda m: m["hits"] is not None, motifs))
 
 
-def get_islands(anchor_promoter, motifs, promoters):
+def get_islands(anchor_promoter: int, motifs, promoters: List[Promoter]):
     """Find islands of binding sites (previously found by FIMO) around anchor gene to define cluster borders"""
     islands = []
     motifs = list(motifs)
@@ -673,19 +660,23 @@ def sort_by_abundance(islands):
         # keep track of motif score --> to sort by score if same abundance occurs more than once
         # AND
         # save motif "names" (plus, minus) --> additional info for showing the results later on
-        if "mscore" not in starts[i["start"].gene_name] or float(i["motif"]["score"]) < float(starts[i["start"].gene_name]["mscore"]):
+        if ("mscore" not in starts[i["start"].gene_name]
+                or float(i["motif"]["score"]) < float(starts[i["start"].gene_name]["mscore"])):
             starts[i["start"].gene_name]["mscore"] = i["motif"]["score"]
             starts[i["start"].gene_name]["plus"] = i["motif"]["plus"]
             starts[i["start"].gene_name]["minus"] = i["motif"]["minus"]
-        if "mscore" not in ends[i["end"].get_gene_names()[-1]] or float(i["motif"]["score"]) < float(ends[i["end"].get_gene_names()[-1]]["mscore"]):
+        if ("mscore" not in ends[i["end"].get_gene_names()[-1]]
+                or float(i["motif"]["score"]) < float(ends[i["end"].get_gene_names()[-1]]["mscore"])):
             ends[i["end"].get_gene_names()[-1]]["mscore"] = i["motif"]["score"]
             ends[i["end"].get_gene_names()[-1]]["plus"] = i["motif"]["plus"]
             ends[i["end"].get_gene_names()[-1]]["minus"] = i["motif"]["minus"]
 
     # compute sum of start and end abundance, remove duplicates, sort descending
-    abundances_sum_sorted = sorted(set([s["abund"] + e["abund"] for s in starts.values() for e in ends.values()]), reverse=True)
+    abundances_sum_sorted = sorted(set([s["abund"] + e["abund"]
+                                        for s in starts.values() for e in ends.values()]), reverse=True)
     # compute sum of start and end motif score, remove duplicates, sort ascending
-    scores_sum_sorted = sorted(set([float(s["mscore"]) + float(e["mscore"]) for s in starts.values() for e in ends.values()]))
+    scores_sum_sorted = sorted(set([float(s["mscore"]) + float(e["mscore"])
+                                    for s in starts.values() for e in ends.values()]))
     # sort by value (=abundance) of start, descending
     starts_sorted = sorted(starts, key=lambda x: starts[x]["abund"], reverse=True)
     # sort by value (=abundance) of end, descending
@@ -778,13 +769,13 @@ def check_cluster_predictions(cluster_predictions, record: Record, promoters, ig
         # warn if cluster prediction right at or next to record (~ contig) border
         if start_index_genes < 10:
             if VERBOSE_DEBUG:
-                logging.debug(
-                    "Upstream cluster border located at or next to sequence record border, prediction could have been truncated by record border")
+                logging.debug("Upstream cluster border located at or next to sequence record border,"
+                              " prediction could have been truncated by record border")
             sane = False
         if end_index_genes > len(all_gene_names) - 10:
             if VERBOSE_DEBUG:
-                logging.debug(
-                    "Downstream cluster border located at or next to sequence record border, prediction could have been truncated by record border")
+                logging.debug("Downstream cluster border located at or next to sequence record border,"
+                              " prediction could have been truncated by record border")
             sane = False
 
         # warn if cluster prediction too short (includes less than 3 genes)
@@ -793,7 +784,8 @@ def check_cluster_predictions(cluster_predictions, record: Record, promoters, ig
                 logging.debug("Cluster is very short (less than 3 genes). Prediction may be questionable.")
             sane = False
 
-        # warn if ignored gene (overlapping with anthor gene, see ignore_overlapping()) would have been part of the cluster
+        # warn if ignored gene (overlapping with anthor gene, see ignore_overlapping())
+        # would have been part of the cluster
         for ignored_gene in ignored_genes:
             if ignored_gene.get_name() in all_gene_names[start_index_genes: end_index_genes + 1]:
                 if VERBOSE_DEBUG:
@@ -811,13 +803,13 @@ def check_cluster_predictions(cluster_predictions, record: Record, promoters, ig
     return checked_predictions
 
 
-def cleanup_outdir(anchor_genes, cluster_predictions, options):
+def cleanup_outdir(anchor_gene_names: List[str], cluster_predictions, options):
     """Delete unnecessary files to free disk space"""
     all_motifs = set()
     for motif in _plus_minus:
         all_motifs.add(mprint(motif["plus"], motif["minus"]))
 
-    for anchor in anchor_genes:
+    for anchor in anchor_gene_names:
         if anchor in cluster_predictions:
             used_motifs = set()
             for cluster in cluster_predictions[anchor]:
@@ -838,9 +830,10 @@ def cleanup_outdir(anchor_genes, cluster_predictions, options):
 # storage methods
 def store_promoters(promoters, record: Record):
     """Store information about promoter sequences to a SeqRecord"""
+    logging.critical("adding promoters based on biopython features")
     for promoter in promoters:
         # remember to account for 0-indexed start location
-        new_feature = SeqFeature(FeatureLocation(promoter.start - 1, promoter.end),
+        new_feature = SeqFeature(FeatureLocation(max(0, promoter.start - 1), promoter.end),
                                  type="promoter")
         new_feature.qualifiers = {
             "locus_tag": promoter.get_gene_names(),  # already a list with one or two elements
@@ -850,17 +843,17 @@ def store_promoters(promoters, record: Record):
         if isinstance(promoter, CombinedPromoter):
             new_feature.qualifiers["note"] = ["bidirectional promoter"]
 
-        logging.critical("adding promoters based on biopython features")
         secmet_version = Feature.from_biopython(new_feature)
         secmet_version.created_by_antismash = True
 
         record.add_feature(secmet_version)
 
 
-def create_cluster_borders(anchor, clusters, record: Record) -> List[ClusterBorder]:
+def create_cluster_borders(anchor: str, clusters, record: Record) -> List[ClusterBorder]:
     """ Create the predicted ClusterBorders """
     if not clusters:
         return []
+    logging.critical("still constructing biopython features for cluster borders")
     borders = []
     for i, cluster in enumerate(clusters):
         # cluster borders returned by hmmdetect are based on CDS features
@@ -910,7 +903,6 @@ def create_cluster_borders(anchor, clusters, record: Record) -> List[ClusterBord
         else:
             new_feature.qualifiers["note"] = ["alternative prediction ({}) for anchor gene {}".format(i, anchor)]
 
-        logging.critical("still constructing biopython features for cluster borders")
         new_feature = ClusterBorder.from_biopython(new_feature)
         borders.append(new_feature)
     return borders

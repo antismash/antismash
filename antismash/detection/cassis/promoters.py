@@ -4,9 +4,12 @@
 """ Promoter-related functions and classes for CASSIS """
 
 import logging
+import os
 from typing import List, Union
 
+from Bio import SeqIO
 from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
 
 from antismash.common.secmet import Record
 
@@ -258,3 +261,28 @@ def is_invalid_promoter_sequence(promoter: Promoter, min_length: int, max_length
                       promoter.end, len(promoter))
 
     return bool(invalid_promoter_sequence)
+
+
+def write_promoters_to_file(output_dir: str, prefix: str, promoters: List[Promoter]) -> None:
+    """ Write the promoters to the given file using the given prefix.
+
+        The prefix helps in having separate files for multi-record inputs with
+        a singular output directory.
+    """
+    # positions file
+    pos_handle = open(os.path.join(output_dir, prefix + "_promoter_positions.csv"), "w")
+    pos_handle.write("\t".join(["#", "promoter", "start", "end", "length"]) + "\n")
+    # sequences file
+    seq_handle = open(os.path.join(output_dir, prefix + "_promoter_sequences.fasta"), "w")
+
+    for i, promoter in enumerate(promoters):
+        # write promoter positions to file
+        pos_handle.write("\t".join(map(str, [i + 1, promoter.get_id(),
+                                             promoter.start + 1, promoter.end + 1,
+                                             len(promoter)])) + "\n")
+
+        # write promoter sequences to file
+        SeqIO.write(SeqRecord(promoter.seq, id=promoter.get_id(),
+                    description="length={}bp".format(len(promoter))),
+                    seq_handle,
+                    "fasta")
