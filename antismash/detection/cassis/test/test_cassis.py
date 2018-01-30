@@ -78,13 +78,13 @@ class TestCassisMethods(unittest.TestCase):
         assert not os.path.isfile(path.get_full_path(__file__, "data", "test_promoter_positions.csv"))
         assert not os.path.isfile(path.get_full_path(__file__, "data", "test_promoter_sequences.fasta"))
 
-    def test_plus_minus(self):
-        self.assertEqual(len(cassis._plus_minus), 250)
+    def test_promoter_range(self):
+        self.assertEqual(len(cassis.PROMOTER_RANGE), 250)
 
-    def test_get_anchor_genes(self):
+    def test_get_anchor_gene_names(self):
         anchor_genes = ["gene4", "gene6"]
         seq_record = create_fake_record()
-        self.assertEqual(cassis.get_anchor_genes(seq_record), anchor_genes)
+        self.assertEqual(cassis.get_anchor_gene_names(seq_record), anchor_genes)
 
     def test_ignore_overlapping(self):
         expected_not_ignored = ["gene1", "gene4", "gene5", "gene6", "gene7", "gene8", "gene9"]
@@ -146,7 +146,7 @@ class TestCassisMethods(unittest.TestCase):
                      cassis.Promoter("gene2", 2, 2),
                      cassis.CombinedPromoter("gene3", "gene4", 3, 4),
                      cassis.Promoter("gene5", 5, 5)]
-        self.assertEqual(cassis.get_anchor_promoter(anchor, promoters), 2)
+        self.assertEqual(cassis.get_anchor_promoter_index(anchor, promoters), 2)
 
     def test_get_promoter_sets(self):
         meme_dir = os.path.join(self.options.output_dir, "meme")
@@ -161,49 +161,29 @@ class TestCassisMethods(unittest.TestCase):
                      cassis.Promoter("gene8", 8, 8, seq=Seq("acgtacgtacgtacgt")),
                      cassis.Promoter("gene9", 9, 9, seq=Seq("acgtacgtacgtacgt"))]
 
-        expected_promoter_sets = [
-            {"plus": 0, "minus": 3, "score": None},
-            {"plus": 0, "minus": 4, "score": None},
-            {"plus": 0, "minus": 5, "score": None},
-            {"plus": 1, "minus": 2, "score": None},
-            {"plus": 1, "minus": 3, "score": None},
-            {"plus": 1, "minus": 4, "score": None},
-            {"plus": 1, "minus": 5, "score": None},
-            {"plus": 2, "minus": 1, "score": None},
-            {"plus": 2, "minus": 2, "score": None},
-            {"plus": 2, "minus": 3, "score": None},
-            {"plus": 2, "minus": 4, "score": None},
-            {"plus": 2, "minus": 5, "score": None},
-        ]
+        expected_promoter_sets = [cassis.Motif(plus, minus) for plus in range(3) for minus in range(3-plus, 6)]
         self.assertEqual(cassis.get_promoter_sets(meme_dir, anchor_promoter, promoters), expected_promoter_sets)
 
     def test_filter_meme_results(self):
         meme_dir = os.path.join(self.options.output_dir, "meme")
         anchor = "AFUA_6G09660"
-        promoter_sets = [
-            {"plus": 0, "minus": 3},
-        ]
-        expected_motifs = [{
-            "plus": 0,
-            "minus": 3,
-            "score": "3.9e+003",
-            "seqs": [
-                "TTTCGACCCGTC",
-                "TTTCAAACCGTC",
-                "TTTTGATTCGTC",
-                "TTTTGACCGGTC",
-                "TTTTAGACGGTC",
-                "TTTTACCTCGTC",
-                "TCTCGATCCGTC",
-                "TTTCTATCCGTT",
-                "TTTTGGACCGCC",
-                "ATTTGGCCTGTC",
-                "TGTTGTCTCGTC",
-                "TTTGAGGCCGTC",
-                "TTGTATTCTGTC",
-                "TTTCTTCCTGTT",
-            ]
-        }]
+        promoter_sets = [cassis.Motif(0, 3)]
+        motif = cassis.Motif(0, 3, score=3.9e+003)
+        motif.seqs = ["TTTCGACCCGTC",
+                      "TTTCAAACCGTC",
+                      "TTTTGATTCGTC",
+                      "TTTTGACCGGTC",
+                      "TTTTAGACGGTC",
+                      "TTTTACCTCGTC",
+                      "TCTCGATCCGTC",
+                      "TTTCTATCCGTT",
+                      "TTTTGGACCGCC",
+                      "ATTTGGCCTGTC",
+                      "TGTTGTCTCGTC",
+                      "TTTGAGGCCGTC",
+                      "TTGTATTCTGTC",
+                      "TTTCTTCCTGTT"]
+        expected_motifs = [motif]
 
         # this is a "real" MEME output file, I was too lazy to create my own fake XML file
         source = path.get_full_path(__file__, "data", "real_meme.xml")
@@ -219,7 +199,7 @@ class TestCassisMethods(unittest.TestCase):
 
     def test_filter_fimo_results(self):
         fimo_dir = os.path.join(self.options.output_dir, "fimo")
-        motifs = [{"plus": 0, "minus": 3}]
+        motifs = [cassis.Motif(0, 3)]
         # gene2 will be the anchor promoter
         anchor_promoter = 1
         promoters = []
@@ -227,7 +207,7 @@ class TestCassisMethods(unittest.TestCase):
             promoters.append(cassis.Promoter("gene%d" % i, i * 10, i * 10 + 4))
         # need certain amount of promoters, otherwise the proportion of
         # promoters with a motif (motif frequency) will be too high --> error
-        expected_motifs = [{"plus": 0, "minus": 3, "hits": {"gene1": 1, "gene2": 2}}]
+        expected_motifs = [cassis.Motif(0, 3, hits={"gene1": 1, "gene2": 2})]
 
         # fake FIMO output file, corresponding to expected_motifs
         source = path.get_full_path(__file__, "data", "fake_short_fimo.txt")
@@ -236,84 +216,73 @@ class TestCassisMethods(unittest.TestCase):
             os.makedirs(target)
         copy(source, os.path.join(target, "fimo.txt"))  # overwrite fimo.txt if exists
 
-        found_motifs = list(cassis.filter_fimo_results(motifs, fimo_dir, promoters, anchor_promoter))
+        found_motifs = cassis.filter_fimo_results(motifs, fimo_dir, promoters, anchor_promoter)
         assert found_motifs == expected_motifs
         bs_per_promoter, expected_bs_per_promoter = read_generated_expected_file(
             os.path.join(target, "bs_per_promoter.csv"), "expected_bs_per_promoter.csv")
         self.assertEqual(bs_per_promoter, expected_bs_per_promoter)
 
     def test_get_islands(self):
-        motifs = [  # 2 different motifs
-            {"plus": 0, "minus": 3, "hits": {"gene1": 1, "gene2": 2}},
-            {"plus": 0, "minus": 4, "hits": {"gene2": 3, "gene4": 2, "gene5": 1}},
-        ]
+        motifs = [cassis.Motif(0, 3, hits={"gene1": 1, "gene2": 2}),
+                  cassis.Motif(0, 4, hits={"gene2": 3, "gene4": 2, "gene5": 1})]
         # gene2 will be the anchor promoter
         anchor_promoter = 1
         promoters = []
         for i in range(1, 7):
             promoters.append(cassis.Promoter("gene%d" % i, i * 10, i * 10 + 4))
-        expected_islands = [  # resulting in 2 different islands (this example)
-            {
-                # promoter (pos): 1 2 3 4 5 6
-                # binding sites: 1 2 0 0 0 0
-                # island: |---|
-                "start": promoters[0],  # first promoter of island
-                "end": promoters[1],  # last promoter of island
-                "motif": {"hits": {"gene1": 1, "gene2": 2}, "plus": 0, "minus": 3},  # island is result of this motif
-            },
-            {
-                # promoter (pos): 1 2 3 4 5 6
-                # binding sites: 0 3 0 2 1 0
-                # island: |-------|
-                "start": promoters[1],  # first promoter of island
-                "end": promoters[4],  # last promoter of island
-                # island is result of this motif
-                "motif": {"hits": {"gene2": 3, "gene4": 2, "gene5": 1}, "plus": 0, "minus": 4},
-            },
-        ]
+        # resulting in 2 different islands (this example)
+        # promoter (pos): 1 2 3 4 5 6
+        # binding sites: 1 2 0 0 0 0
+        # island: |---|
+        first_island = cassis.Island(promoters[0], promoters[1], motifs[0])
+        # promoter (pos): 1 2 3 4 5 6
+        # binding sites: 0 3 0 2 1 0
+        # island: |-------|
+        second_island = cassis.Island(promoters[1], promoters[4], motifs[1])
+        expected_islands = [first_island, second_island]
         assert cassis.get_islands(anchor_promoter, motifs, promoters) == expected_islands
 
     def test_sort_by_abundance(self):
-        islands = [
-            {  # island 1: [gene1 -- gene2]
-                "start": cassis.Promoter("gene1", 1, 1),
-                "end": cassis.Promoter("gene2", 2, 2),
-                "motif": {"hits": {"gene1": 1, "gene2": 1}, "plus": 0, "minus": 3, "score": 3},
-            },
-            {  # island 2: [gene2 -- gene5]
-                "start": cassis.Promoter("gene2", 2, 2),
-                "end": cassis.Promoter("gene5", 5, 5),
-                "motif": {"hits": {"gene2": 1, "gene3": 1, "gene4": 1, "gene5": 1},
-                          "plus": 3, "minus": 0, "score": 2},
-            },
-            {  # island 3: [gene1 -- gene5]
-                "start": cassis.Promoter("gene1", 1, 1),
-                "end": cassis.Promoter("gene5", 5, 5),
-                "motif": {"hits": {"gene1": 1, "gene2": 1, "gene3": 1, "gene4": 1, "gene5": 1},
-                          "plus": 3, "minus": 3, "score": 1},
-            },
-        ]
+        islands = []
+
+        # island 1: [gene1 -- gene2]
+        motif = cassis.Motif(0, 3, score=3, hits={"gene1": 1, "gene2": 1})
+        islands.append(cassis.Island(cassis.Promoter("gene1", 1, 1), cassis.Promoter("gene2", 2, 2), motif))
+        # island 2: [gene2 -- gene5]
+        motif = cassis.Motif(3, 0, score=2, hits={"gene2": 1, "gene3": 1, "gene4": 1, "gene5": 1})
+        islands.append(cassis.Island(cassis.Promoter("gene2", 2, 2), cassis.Promoter("gene5", 5, 5), motif))
+        # island 3: [gene1 -- gene5]
+        motif = cassis.Motif(3, 3, score=1, hits={"gene1": 1, "gene2": 1, "gene3": 1, "gene4": 1, "gene5": 1})
+        islands.append(cassis.Island(cassis.Promoter("gene1", 1, 1), cassis.Promoter("gene5", 5, 5), motif))
+
         # left border: 2x gene1, 1x gene2
         # right border: 2x gene5, 1x gene2
 
-        expected_clusters = [
-            {  # cluster 1: [gene1 -- gene5] --> abundance 2+2 (most abundant)
-                "start": {"gene": "gene1", "abundance": 2, "score": 1, "plus": 3, "minus": 3},
-                "end": {"gene": "gene5", "abundance": 2, "score": 1, "plus": 3, "minus": 3},
-            },
-            {  # cluster 3: [gene2 -- gene5] --> abundance 1+2, score 2+1 (better/lower)
-                "start": {"gene": "gene2", "abundance": 1, "score": 2, "plus": 3, "minus": 0},
-                "end": {"gene": "gene5", "abundance": 2, "score": 1, "plus": 3, "minus": 3},
-            },
-            {  # cluster 2: [gene1 -- gene2] --> abundance 2+1, score 1+3 (worse, higher)
-                "start": {"gene": "gene1", "abundance": 2, "score": 1, "plus": 3, "minus": 3},
-                "end": {"gene": "gene2", "abundance": 1, "score": 3, "plus": 0, "minus": 3},
-            },
-            {  # cluster 4: [gene2 -- gene2] --> abundance 1+1
-                "start": {"gene": "gene2", "abundance": 1, "score": 2, "plus": 3, "minus": 0},
-                "end": {"gene": "gene2", "abundance": 1, "score": 3, "plus": 0, "minus": 3},
-            },
-        ]
+        expected_clusters = []
+        # cluster 1: [gene1 -- gene5] --> abundance 2+2 (most abundant)
+        start = cassis.ClusterMarker("gene1", cassis.Motif(3, 3, score=1))
+        start.abundance = 2
+        end = cassis.ClusterMarker("gene5", cassis.Motif(3, 3, score=1))
+        end.abundance = 2
+        expected_clusters.append(cassis.ClusterPrediction(start, end))
+        # cluster 3: [gene2 -- gene5] --> abundance 1+2, score 2+1 (better/lower)
+        start = cassis.ClusterMarker("gene2", cassis.Motif(3, 0, score=2))
+        start.abundance = 1
+        end = cassis.ClusterMarker("gene5", cassis.Motif(3, 3, score=1))
+        end.abundance = 2
+        expected_clusters.append(cassis.ClusterPrediction(start, end))
+        # cluster 2: [gene1 -- gene2] --> abundance 2+1, score 1+3 (worse, higher)
+        start = cassis.ClusterMarker("gene1", cassis.Motif(3, 3, score=1))
+        start.abundance = 2
+        end = cassis.ClusterMarker("gene2", cassis.Motif(0, 3, score=3))
+        end.abundance = 1
+        expected_clusters.append(cassis.ClusterPrediction(start, end))
+        # cluster 4: [gene2 -- gene2] --> abundance 1+1
+        start = cassis.ClusterMarker("gene2", cassis.Motif(3, 0, score=2))
+        start.abundance = 1
+        end = cassis.ClusterMarker("gene2", cassis.Motif(0, 3, score=3))
+        end.abundance = 1
+        expected_clusters.append(cassis.ClusterPrediction(start, end))
         # abundance: as high as possible
         # score: as low as possible
 
@@ -327,22 +296,16 @@ class TestCassisMethods(unittest.TestCase):
         ignored_genes = [  # see captured logging
             secmet.Gene(FeatureLocation(1, 5), locus_tag="gene5")
         ]
-        clusters = [
-            {  # only one cluster for testing
-                "start": {"gene": "gene1", "abundance": 1, "score": 1, "plus": 3, "minus": 3},
-                "end": {"gene": "gene4", "abundance": 1, "score": 1, "plus": 3, "minus": 3},
-            },
-        ]
-        checked_clusters = [
-            {
-                "start": {"gene": "gene1", "promoter": "gene1", "abundance": 1, "score": 1, "plus": 3, "minus": 3},
-                "end": {"gene": "gene4", "promoter": "gene3+gene4", "abundance": 1, "score": 1, "plus": 3, "minus": 3},
-                "genes": 4,
-                "promoters": 3,
-            },
-        ]
+        clusters = [cassis.ClusterPrediction(cassis.ClusterMarker("gene1", cassis.Motif(3, 3, score=1)),
+                                             cassis.ClusterMarker("gene4", cassis.Motif(3, 3, score=1)))]
+        expected = [cassis.ClusterPrediction(cassis.ClusterMarker("gene1", cassis.Motif(3, 3, score=1)),
+                                             cassis.ClusterMarker("gene4", cassis.Motif(3, 3, score=1)))]
+        expected[0].start.promoter = "gene1"
+        expected[0].end.promoter = "gene3+gene4"
+        expected[0].genes = 4
+        expected[0].promoters = 3
 
-        assert cassis.check_cluster_predictions(clusters, seq_record, promoters, ignored_genes) == checked_clusters
+        assert cassis.check_cluster_predictions(clusters, seq_record, promoters, ignored_genes) == expected
         # -------------------- >> begin captured logging << --------------------
         # root: INFO: Best prediction (most abundant): 'gene1' -- 'gene4'
         # root: INFO: Upstream cluster border located at or next to sequence
@@ -356,18 +319,13 @@ class TestCassisMethods(unittest.TestCase):
 
     def test_cleanup_outdir(self):
         anchor_genes = ["gene1", "gene4"]
-        cluster_predictions = {
-            "gene1": [
-                {  # only one anchor gene and cluster for testing
-                    "start": {"gene": "gene1", "promoter": "gene1", "abundance": 1,
-                              "score": 1, "plus": 3, "minus": 3},
-                    "end": {"gene": "gene4", "promoter": "gene3+gene4", "abundance": 1,
-                            "score": 1, "plus": 3, "minus": 3},
-                    "genes": 4,
-                    "promoters": 3,
-                },
-            ]
-        }
+        cluster = cassis.ClusterPrediction(cassis.ClusterMarker("gene1", cassis.Motif(3, 3, score=1)),
+                                           cassis.ClusterMarker("gene4", cassis.Motif(3, 3, score=1)))
+        cluster.start.promoter = "gene1"
+        cluster.end.promoter = "gene3+gene4"
+        cluster.genes = 4
+        cluster.promoters = 3
+        cluster_predictions = {"gene1": [cluster]}
 
         # create some empty test dirs, which should be deleted during the test
         # prediction! --> keep!
@@ -406,6 +364,9 @@ class TestCassisHelperMethods(unittest.TestCase):
     def test_mprint(self):
         self.assertEqual(cassis.mprint(3, 3), "+03_-03")
 
+    def test_cprint(self):
+        assert cassis.cprint(cassis.Motif(3, 3)) == "+03_-03"
+
 
 class TestPromoters(unittest.TestCase):
     def test_promoter_id(self):
@@ -441,20 +402,29 @@ class TestCassisStorageMethods(unittest.TestCase):
     def test_store_clusters(self):
         # this test is similar to test_store_promoters
         anchor = "gene3"
-        clusters = [
-            {  # best prediction
-                "start": {"gene": "gene1", "promoter": "gene1", "abundance": 2, "score": 1, "plus": 3, "minus": 3},
-                "end": {"gene": "gene4", "promoter": "gene3+gene4", "abundance": 1, "score": 1, "plus": 3, "minus": 3},
-                "genes": 4,
-                "promoters": 3,
-            },
-            {  # alternative prediction
-                "start": {"gene": "gene1", "promoter": "gene1", "abundance": 1, "score": 1, "plus": 4, "minus": 4},
-                "end": {"gene": "gene5", "promoter": "gene5", "abundance": 1, "score": 1, "plus": 4, "minus": 4},
-                "genes": 4,
-                "promoters": 3,
-            },
-        ]
+
+        start_marker = cassis.ClusterMarker("gene1", cassis.Motif(3, 3, score=1))
+        start_marker.promoter = "gene1"
+        start_marker.abundance = 2
+        end_marker = cassis.ClusterMarker("gene4", cassis.Motif(3, 3, score=1))
+        end_marker.promoter = "gene3+gene4"
+        assert end_marker.abundance == 1
+        first_cluster = cassis.ClusterPrediction(start_marker, end_marker)
+        first_cluster.promoters = 3
+        first_cluster.genes = 4
+
+        start_marker = cassis.ClusterMarker("gene1", cassis.Motif(4, 4, score=1))
+        start_marker.promoter = "gene1"
+        assert start_marker.abundance == 1
+        end_marker = cassis.ClusterMarker("gene5", cassis.Motif(4, 4, score=1))
+        end_marker.promoter = "gene5"
+        assert end_marker.abundance == 1
+        second_cluster = cassis.ClusterPrediction(start_marker, end_marker)
+        second_cluster.promoters = 3
+        second_cluster.genes = 4
+
+        clusters = [first_cluster, second_cluster]
+
         record_with_clusters = create_fake_record()
         record_without_clusters = create_fake_record()  # just the same, without adding clusters
 
@@ -473,10 +443,10 @@ class TestCassisStorageMethods(unittest.TestCase):
             self.assertEqual(cluster_border.type, "cluster_border")
             self.assertEqual(cluster_border.tool, "cassis")
             self.assertEqual(cluster_border.get_qualifier("anchor"), (anchor,))
-            self.assertEqual(cluster_border.get_qualifier("genes"), (cluster["genes"],))
-            self.assertEqual(cluster_border.get_qualifier("promoters"), (cluster["promoters"],))
-            self.assertEqual(cluster_border.get_qualifier("gene_left"), (cluster["start"]["gene"],))
-            self.assertEqual(cluster_border.get_qualifier("gene_right"), (cluster["end"]["gene"],))
+            self.assertEqual(cluster_border.get_qualifier("genes"), (cluster.genes,))
+            self.assertEqual(cluster_border.get_qualifier("promoters"), (cluster.promoters,))
+            self.assertEqual(cluster_border.get_qualifier("gene_left"), (cluster.start.gene,))
+            self.assertEqual(cluster_border.get_qualifier("gene_right"), (cluster.end.gene,))
             # don't test all feature qualifiers, only some
 
 
