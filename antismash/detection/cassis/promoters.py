@@ -55,13 +55,18 @@ class CombinedPromoter(Promoter):
 
 
 def get_promoters(record: Record, genes, upstream_tss: int, downstream_tss: int) -> List[Promoter]:
-    """Compute promoter sequences for each gene in the sequence record"""
+    """Compute promoter sequences for each gene in the sequence record.
+
+       For explanation of these numbers see file promoterregions.png
+    """
     logging.debug("Computing promoter sequences")
 
     def first(location):
+        """ Returns the lowest coordinate of the location """
         return min(location.start, location.end)
 
     def last(location):
+        """ Returns the highest coordinate of the location """
         return max(location.start, location.end)
 
     min_promoter_length = 6
@@ -69,6 +74,7 @@ def get_promoters(record: Record, genes, upstream_tss: int, downstream_tss: int)
 
     record_seq_length = len(record.seq)
     promoters = []
+    promoter_ids = set()
     invalid = 0
 
     skip = False  # helper var for shared promoter of bidirectional genes
@@ -80,242 +86,175 @@ def get_promoters(record: Record, genes, upstream_tss: int, downstream_tss: int)
         if gene.location.strand not in [1, -1]:
             raise ValueError("Gene %s has unknown strand: %s" % (gene.get_name(), gene.location.strand))
 
+        is_special_case = (gene.location.strand == -1 and len(genes) > i + 1 and genes[i+1].location.strand == 1
+                           and gene_last + upstream_tss >= first(genes[i+1].location) - upstream_tss)
+
         if skip:  # two genes share the same promoter --> did computation with first gene, skip second gene
             skip = False
-            # TODO: should this have a continue?
+            continue
 
-        elif len(genes) == 1:  # only one gene within record
+        if len(genes) == 1:
             if gene.location.strand == 1:
-                upstream_inside_record = gene_first - upstream_tss >= 0
-                if downstream_inside_gene:
-                    if upstream_inside_record:
-                        # 1 (for explanation of these numbers see file promoterregions.png)
-                        # fuzzy (>|<) gene locations will be transformed to exact promoter locations
-                        # we could save the fuzzy locations for promoters, too, via a FeatureLocation object
-                        # but we use/calculate with the exact promoter locations anyway, here and later on
-                        promoters.append(Promoter(gene.get_name(), gene_first - upstream_tss, gene_first + downstream_tss))
-                    else:
-                        # 2
-                        promoters.append(Promoter(gene.get_name(), 0, gene_first + downstream_tss))
-                else:
-                    if upstream_inside_record:
-                        # 3
-                        promoters.append(Promoter(gene.get_name(), gene_first - upstream_tss, gene_last))
-                    else:
-                        # 7
-                        promoters.append(Promoter(gene.get_name(), 0, gene_last))
-
+                if downstream_inside_gene:  # 1, 2
+                    end = gene_first + downstream_tss
+                else:  # 3, 7
+                    end = gene_last
+                start = max(0, gene_first - upstream_tss)
             elif gene.location.strand == -1:
-                upstream_inside_record = gene_last + upstream_tss <= record_seq_length
-                if downstream_inside_gene:
-                    if upstream_inside_record:
-                        # 4
-                        promoters.append(Promoter(gene.get_name(), gene_last - downstream_tss, gene_last + upstream_tss))
-                    else:
-                        # 5
-                        promoters.append(Promoter(gene.get_name(), gene_last - downstream_tss, record_seq_length))
-                else:
-                    if upstream_inside_record:
-                        # 6
-                        promoters.append(Promoter(gene.get_name(), gene_first, gene_last + upstream_tss))
-                    else:
-                        # 8
-                        promoters.append(Promoter(gene.get_name(), gene_first, record_seq_length))
+                if downstream_inside_gene:  # 4, 5
+                    start = gene_last - downstream_tss
+                else:  # 6, 8
+                    start = gene_first
+                end = min(record_seq_length - 1, gene_last + upstream_tss)
+            current_promoter = Promoter(gene.get_name(), start, end)
 
         # first gene of the record AND NOT special case #9
-        elif (i == 0 and not (gene.location.strand == -1
-                              and genes[i+1].location.strand == 1
-                              and gene_last + upstream_tss >= first(genes[i+1].location) - upstream_tss)):
+        elif i == 0 and not is_special_case:
             if gene.location.strand == 1:
-                within_record = gene_first - upstream_tss >= 0
-                if downstream_inside_gene:
-                    if within_record:
-                        # 1
-                        promoters.append(Promoter(gene.get_name(), gene_first - upstream_tss, gene_first + downstream_tss))
-                    else:
-                        # 2
-                        promoters.append(Promoter(gene.get_name(), 0, gene_first + downstream_tss))
-                else:
-                    if within_record:
-                        # 3
-                        promoters.append(Promoter(gene.get_name(), gene_first - upstream_tss, gene_last))
-                    else:
-                        # 7
-                        promoters.append(Promoter(gene.get_name(), 0, gene_last))
-
+                if downstream_inside_gene:  # 1, 2
+                    end = gene_first + downstream_tss
+                else:  # 3, 7
+                    end = gene_last
+                start = max(0, gene_first - upstream_tss)
             elif gene.location.strand == -1:
                 other_first = first(genes[i+1].location)
                 other_in_upstream = other_first <= gene_last + upstream_tss
-                if downstream_inside_gene:
-                    if other_in_upstream:
-                        # 5
-                        promoters.append(Promoter(gene.get_name(), gene_last - downstream_tss, other_first - 1))
-                    else:
-                        # 4
-                        promoters.append(Promoter(gene.get_name(), gene_last - downstream_tss, gene_last + upstream_tss))
-                else:
-                    if other_in_upstream:
-                        # 8
-                        promoters.append(Promoter(gene.get_name(), gene_first, other_first - 1))
-                    else:
-                        # 6
-                        promoters.append(Promoter(gene.get_name(), gene_first, gene_last + upstream_tss))
+                if downstream_inside_gene:  # 4, 5
+                    start = gene_last - downstream_tss
+                else:  # 6, 8
+                    start = gene_first
+                if other_in_upstream:  # 5, 8
+                    end = other_first - 1
+                else:  # 4, 6
+                    end = gene_last + upstream_tss
+            current_promoter = Promoter(gene.get_name(), start, end)
 
         # last gene of record
-        elif i == len(genes) - 1 and not skip:
+        elif i == len(genes) - 1:
             if gene.location.strand == 1:
                 other_last = last(genes[i-1].location)
                 other_inside_upstream = other_last < gene_first - upstream_tss
-                if downstream_inside_gene:
-                    if other_inside_upstream:
-                        # 1
-                        promoters.append(Promoter(gene.get_name(), gene_first - upstream_tss, gene_first + downstream_tss))
-                    else:
-                        # 2
-                        promoters.append(Promoter(gene.get_name(), other_last + 1, gene_first + downstream_tss))
-                else:
-                    if other_inside_upstream:
-                        # 3
-                        promoters.append(Promoter(gene.get_name(), gene_first - upstream_tss, gene_last))
-                    else:
-                        # 7
-                        promoters.append(Promoter(gene.get_name(), other_last + 1, gene_last))
-
+                if downstream_inside_gene:  # 1, 2
+                    end = gene_first + downstream_tss
+                else:  # 3, 7
+                    end = gene_last
+                if other_inside_upstream:  # 1, 3
+                    start = gene_first - upstream_tss
+                else:  # 2, 7
+                    start = other_last + 1
             elif gene.location.strand == -1:
-                upstream_inside_record = gene_last + upstream_tss <= record_seq_length
-                if downstream_inside_gene:
-                    if upstream_inside_record:
-                        # 4
-                        promoters.append(Promoter(gene.get_name(), gene_last - downstream_tss, gene_last + upstream_tss))
-                    else:
-                        # 5
-                        promoters.append(Promoter(gene.get_name(), gene_last - downstream_tss, record_seq_length))
-                else:
-                    if upstream_inside_record:
-                        # 6
-                        promoters.append(Promoter(gene.get_name(), gene_first, gene_last + upstream_tss))
-                    else:
-                        # 8
-                        promoters.append(Promoter(gene.get_name(), gene_first, record_seq_length))
+                if downstream_inside_gene:  # 4, 5
+                    start = gene_last - downstream_tss
+                else:  # 6, 8
+                    start = gene_first
+                end = min(record_seq_length - 1, gene_last + upstream_tss)
+            current_promoter = Promoter(gene.get_name(), start, end)
 
         # special-case 9, bidirectional promoters
-        elif (gene.location.strand == -1
-                and genes[i+1].location.strand == 1
-                and gene_last + upstream_tss >= first(genes[i+1].location) - upstream_tss):
+        elif is_special_case:
             other_first = first(genes[i+1].location)
             other_last = last(genes[i+1].location)
             other_downstream_in_other = other_last > other_first + downstream_tss
-            if downstream_inside_gene:
-                if other_downstream_in_other:
-                    # 9 (1+4)
-                    promoters.append(CombinedPromoter(gene.get_name(), genes[i+1].get_name(), gene_last - downstream_tss, other_first + downstream_tss))
-                else:
-                    # 9 (3+4)
-                    promoters.append(CombinedPromoter(gene.get_name(), genes[i+1].get_name(), gene_last - downstream_tss, other_last))
-            else:
-                if other_downstream_in_other:
-                    # 9 (1+6)
-                    promoters.append(CombinedPromoter(gene.get_name(), genes[i+1].get_name(), gene_first, other_first + downstream_tss))
-                else:
-                    # 9 (3+6)
-                    promoters.append(CombinedPromoter(gene.get_name(), genes[i+1].get_name(), gene_first, other_last))
+            if downstream_inside_gene:  # 9.. (1+4), (3+4)
+                start = gene_last - downstream_tss
+            else:  # 9.. (1+6), (3+6)
+                start = gene_first
+            if other_downstream_in_other:  # 9.. (1+4), (1+6)
+                end = other_first + downstream_tss
+            else:  # 9.. (3+4), (3+6)
+                end = other_last
+            current_promoter = CombinedPromoter(gene.get_name(), genes[i+1].get_name(), start, end)
 
             skip = True
 
         # "normal" cases
-        elif not skip:
+        else:
             if gene.location.strand == 1:
                 other_last = last(genes[i-1].location)
                 other_inside_upstream = other_last < gene_first - upstream_tss
-                if downstream_inside_gene:
-                    if other_inside_upstream:
-                        # 1
-                        promoters.append(Promoter(gene.get_name(), gene_first - upstream_tss, gene_first + downstream_tss))
-                    else:
-                        # 2
-                        promoters.append(Promoter(gene.get_name(), other_last + 1, gene_first + downstream_tss))
-                else:
-                    if other_inside_upstream:
-                        # 3
-                        promoters.append(Promoter(gene.get_name(), gene_first - upstream_tss, gene_last))
-                    else:
-                        # 7
-                        promoters.append(Promoter(gene.get_name(), other_last + 1, gene_last))
-
+                if downstream_inside_gene:  # 1, 2
+                    end = gene_first + downstream_tss
+                else:  # 3, 7
+                    end = gene_last
+                if other_inside_upstream:  # 1, 3
+                    start = gene_first - upstream_tss
+                else:  # 2, 7
+                    start = other_last + 1
             elif gene.location.strand == -1:
                 other_first = first(genes[i+1].location)
                 other_in_upstream = other_first <= gene_last + upstream_tss
-                if downstream_inside_gene:
-                    if other_in_upstream:
-                        # 5
-                        promoters.append(Promoter(gene.get_name(), gene_last - downstream_tss, other_first - 1))
-                    else:
-                        # 4
-                        promoters.append(Promoter(gene.get_name(), gene_last - downstream_tss, gene_last + upstream_tss))
-                else:
-                    if other_in_upstream:
-                        # 8
-                        promoters.append(Promoter(gene.get_name(), gene_first, other_first - 1))
-                    else:
-                        # 6
-                        promoters.append(Promoter(gene.get_name(), gene_first, gene_last + upstream_tss))
+                if downstream_inside_gene:  # 5, 4
+                    start = gene_last - downstream_tss
+                else:  # 6, 8
+                    start = gene_first
+                if other_in_upstream:  # 5, 8
+                    end = other_first - 1
+                else:  # 4, 6
+                    end = gene_last + upstream_tss
+            current_promoter = Promoter(gene.get_name(), start, end)
 
-        # negative start position or stop position "beyond" record --> might happen in very small records
-        if promoters[-1].start < 0:
-            promoters[-1].start = 0
-        if promoters[-1].end > record_seq_length - 1:
-            promoters[-1].end = record_seq_length - 1
+        # ensure all promoters have locations within the record
+        current_promoter.start = max(0, current_promoter.start)
+        current_promoter.end = min(record_seq_length - 1, current_promoter.end)
 
-        # write promoter positions and sequences to file
-        if not skip:
-            promoter_sequence = record.seq[promoters[-1].start:promoters[-1].end + 1]
-            promoter_length = len(promoter_sequence)
+        current_promoter.seq = record.seq[current_promoter.start:current_promoter.end + 1]
 
-            invalid_promoter_sequence = ""
+        if is_invalid_promoter_sequence(current_promoter, min_promoter_length, max_promoter_length):
+            invalid += 1
+            continue
 
-            # check if promoter length is valid
-            if promoter_length < min_promoter_length or promoter_length > max_promoter_length:
-                invalid_promoter_sequence = "length"
-
-            # check if a, c, g and t occur at least once in the promoter sequence
-            elif "A" not in promoter_sequence.upper():
-                invalid_promoter_sequence = "A"
-            elif "C" not in promoter_sequence.upper():
-                invalid_promoter_sequence = "C"
-            elif "G" not in promoter_sequence.upper():
-                invalid_promoter_sequence = "G"
-            elif "T" not in promoter_sequence.upper():
-                invalid_promoter_sequence = "T"
-
-            if invalid_promoter_sequence:
-                invalid += 1
-
-                if invalid_promoter_sequence == "length":
-                    logging.warning("Promoter %r is invalid (length is %s)",
-                                    promoters[-1].get_id(), promoter_length)
-                else:
-                    # especially SiTaR doesn't like such missings
-                    logging.warning("Promoter %r is invalid (sequence without %r)",
-                                    promoters[-1].get_id(), invalid_promoter_sequence)
-
-                # more details for debug logging
-                logging.debug("Invalid promoter %r\n start %s\n end %s\n length %s\n",
-                              promoters[-1].get_id(), promoters[-1].start,
-                              promoters[-1].end, promoter_length)
-
-                promoters.pop()  # remove last (invalid!) promoter
-
-            else:
-                promoters[-1].seq = promoter_sequence
+        promoters.append(current_promoter)
 
         # check if promoter IDs are unique
-        if len(promoters) >= 2 and promoters[-1].get_id() == promoters[-2].get_id():
+        if current_promoter.get_id() in promoter_ids:
             logging.error("Promoter %r occurs at least twice. This may be caused by overlapping gene annotations",
-                          promoters[-1].get_id())
+                          current_promoter.get_id())
             raise DuplicatePromoterError
+        else:
+            promoter_ids.add(current_promoter.get_id())
 
     if invalid:
         logging.debug("Ignoring %d promoters due to invalid promoter sequences", invalid)
 
     logging.debug("Found %d promoter sequences for %d genes", len(promoters), len(genes))
     return promoters
+
+
+def is_invalid_promoter_sequence(promoter: Promoter, min_length: int, max_length: int) -> bool:
+    """ Checks if a promoter's sequence is valid.
+
+        A valid promoter sequence must be within the given length range and
+        contain at least one of each A, C, G, and T.
+    """
+    promoter_sequence = promoter.seq.upper()
+
+    invalid_promoter_sequence = ""
+
+    # check if promoter length is valid
+    if not min_length <= len(promoter) <= max_length:
+        invalid_promoter_sequence = "length"
+        logging.warning("Promoter %r is invalid (length is %s)",
+                        promoter.get_id(), len(promoter))
+
+    # check if a, c, g and t occur at least once in the promoter sequence
+    elif "A" not in promoter_sequence:
+        invalid_promoter_sequence = "A"
+    elif "C" not in promoter_sequence:
+        invalid_promoter_sequence = "C"
+    elif "G" not in promoter_sequence:
+        invalid_promoter_sequence = "G"
+    elif "T" not in promoter_sequence:
+        invalid_promoter_sequence = "T"
+
+    if invalid_promoter_sequence:
+        if invalid_promoter_sequence != "length":
+            # especially SiTaR doesn't like missing bases
+            logging.warning("Promoter %r is invalid (sequence without %r)",
+                            promoter.get_id(), invalid_promoter_sequence)
+
+        # more details for debug logging
+        logging.debug("Invalid promoter %r\n start %s\n end %s\n length %s\n",
+                      promoter.get_id(), promoter.start,
+                      promoter.end, len(promoter))
+
+    return bool(invalid_promoter_sequence)
