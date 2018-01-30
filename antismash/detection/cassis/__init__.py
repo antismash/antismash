@@ -3,11 +3,12 @@
 
 """Implementation of the CASSIS method for the motif-based prediction of SM gene clusters"""
 
+from collections import defaultdict
 import csv
 import logging
 import os
 import shutil
-from typing import Any, Dict, List, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 from xml.etree import cElementTree as ElementTree
 
 from Bio import SeqIO
@@ -15,7 +16,7 @@ from Bio.SeqRecord import SeqRecord
 from Bio.SeqFeature import SeqFeature
 
 from antismash.common import path, module_results
-from antismash.common.secmet.feature import ClusterBorder, Feature, FeatureLocation, GeneFunction
+from antismash.common.secmet.feature import ClusterBorder, Feature, FeatureLocation, GeneFunction, Gene
 from antismash.common.secmet.record import Record
 from antismash.config.args import ModuleArgs
 
@@ -114,14 +115,28 @@ class InvalidLocationError(Exception):
     pass
 
 
+class Pairing:
+    """ A common component throughout CASSIS is a range given by number of
+        promoters upstream and number of promoters downstream. This base class
+        is used to reduce duplication and simplify string generation for labels.
+    """
+    def __init__(self, plus: int, minus: int) -> None:
+        self.plus = int(plus)
+        self.minus = int(minus)
+
+    @property
+    def pairing_string(self) -> str:
+        """ A string representing the range of this pairing. """
+        return "+{:02d}_-{:02d}".format(self.plus, self.minus)
+
+    def __str__(self) -> str:
+        return self.pairing_string
+
+
 # all possible promoter sets for motif detection
 # plus --> include <plus> promoters downstream the anchor gene's promoter
 # minus --> include <minus> promoters upstream the anchor gene's promoter
-_plus_minus = []
-for plus in range(16):
-    for minus in range(16):
-        if plus + minus + 1 >= 4:
-            _plus_minus.append({"plus": plus, "minus": minus})
+PROMOTER_RANGE = [Pairing(plus, minus) for plus in range(16) for minus in range(16) if plus + minus >= 3]
 
 
 def check_prereqs():
@@ -135,20 +150,63 @@ def check_prereqs():
     return failure_messages
 
 
+class Motif(Pairing):
+    """ An individual motif, tracks a location as a plus/minus pair, an evalue (score)
+        and any hits.
+    """
+    def __init__(self, plus: int, minus: int, score: Optional[float] = None,
+                 hits: Optional[Dict[str, int]] = None) -> None:
+        super().__init__(plus, minus)
+        self._score = None  # type: Optional[float]
+        if score:
+            self.score = score
+        self.seqs = []  # type: List[str]
+        self.hits = defaultdict(lambda: 0)  # type: Dict[str, int]
+        if hits:
+            for key, val in hits.items():
+                self.hits[str(key)] = int(val)
+
+    @property
+    def score(self) -> Optional[float]:
+        """ The score/evalue of a motif """
+        return self._score
+
+    @score.setter
+    def score(self, score: float):
+        self._score = float(score)
+
+    def __eq__(self, other: Any) -> bool:
+        return (isinstance(other, Motif)
+                and self.plus == other.plus
+                and self.minus == other.minus
+                and self._score == other.score
+                and self.seqs == other.seqs
+                and self.hits == other.hits)
+
+    def __repr__(self) -> str:
+        return "Motif(%s, score=%s, hits=%s)" % (self.pairing_string, self.score, self.hits)
+
+
 class Island:
-    def __init__(self, start: int, end: int, motifs) -> None:
-        self.start = int(start)
-        self.end = int(end)
-        self.motifs = motifs
+    """ A container for an island between two promoters with a motif. """
+    def __init__(self, start: Promoter, end: Promoter, motif: Motif) -> None:
+        assert isinstance(start, Promoter)
+        self.start = start
+        assert isinstance(end, Promoter)
+        self.end = end
+        assert isinstance(motif, Motif)
+        self.motif = motif
+
+    def __eq__(self, other: Any) -> bool:
+        return (isinstance(other, Island)
+                and self.start == other.start
+                and self.end == other.end
+                and self.motif == other.motif)
+
+    def __repr__(self) -> str:
+        return "Island(start=%s, end=%s, motif=%s)" % (self.start, self.end, self.motif)
 
 
-# helper methods
-def mprint(plus, minus) -> str:
-    """Motif-print: nicely format motif name in plus/minus style"""
-    return "+{:02d}_-{:02d}".format(plus, minus)
-
-
-# main method
 def detect(record: Record, options) -> List[ClusterBorder]:
     """Use core genes (anchor genes) from hmmdetect as seeds to detect gene clusters"""
     logging.info("Detecting gene clusters using CASSIS")
@@ -167,7 +225,6 @@ def detect(record: Record, options) -> List[ClusterBorder]:
     genes, ignored_genes = ignore_overlapping(genes)
 
     # compute promoter sequences/regions --> necessary for motif prediction (MEME and FIMO input)
-    promoters = []
     try:
         # why these values? see "Wolf et al (2015): CASSIS and SMIPS ..."
         upstream_tss = 1000  # nucleotides upstream TSS
@@ -300,7 +357,7 @@ def ignore_overlapping(genes):
     return (genes, ignored)
 
 
-def get_anchor_promoter_index(anchor, promoters) -> int:
+def get_anchor_promoter_index(anchor: str, promoters: List[Promoter]) -> int:
     """Find the name of the promoter which includes the anchor gene"""
     # the promoter ID is not (necessarily) equal to the anchor ID!
     for i, promoter in enumerate(promoters):
@@ -310,7 +367,7 @@ def get_anchor_promoter_index(anchor, promoters) -> int:
     raise ValueError("No promoter exists for the given anchor: %s" % anchor)
 
 
-def get_promoter_sets(meme_dir: str, anchor_promoter: int, promoters: List[Promoter]) -> List[Dict[str, Any]]:
+def get_promoter_sets(meme_dir: str, anchor_promoter: int, promoters: List[Promoter]) -> List[Motif]:
     """Prepare sets of promoter sequences and motif subdirectories"""
     promoter_sets = []
 
@@ -319,29 +376,29 @@ def get_promoter_sets(meme_dir: str, anchor_promoter: int, promoters: List[Promo
 
     # prepare sets of promoter sequences (MEME input)
     indices = set()  # type: Set[Tuple[int, int]] # to monitor unique start_index/end_index
-    for pm in _plus_minus:
-        start_index = anchor_promoter - pm["minus"]
-        end_index = anchor_promoter + pm["plus"]
+    for pm in PROMOTER_RANGE:
+        start_index = anchor_promoter - pm.minus
+        end_index = anchor_promoter + pm.plus
 
         if start_index < 0:  # anchor promoter near beginning of record --> truncate
             if VERBOSE_DEBUG:
-                logging.debug("Promoter set " + mprint(pm["plus"], pm["minus"]) + " exceeds upstream record border")
+                logging.debug("Promoter set " + pm.pairing_string + " exceeds upstream record border")
             start_index = 0
 
         if end_index > len(promoters) - 1:  # anchor promoter near end of record --> truncate
             if VERBOSE_DEBUG:
-                logging.debug("Promoter set " + mprint(pm["plus"], pm["minus"]) + " exceeds downstream record border")
+                logging.debug("Promoter set " + pm.pairing_string + " exceeds downstream record border")
             end_index = len(promoters) - 1
 
         # discard promoter sets, which reappear due to truncation
         if (start_index, end_index) not in indices:
             indices.add((start_index, end_index))
 
-            # check (again, compare init of _plus_minus) if the promoter set has at least 4 promoters
+            # check (again, compare init of PROMOTER_RANGE) if the promoter set has at least 4 promoters
             if end_index - start_index + 1 >= 4:
-                promoter_sets.append({"plus": pm["plus"], "minus": pm["minus"], "score": None})
+                promoter_sets.append(Motif(pm.plus, pm.minus))
 
-                pm_dir = os.path.join(meme_dir, mprint(pm["plus"], pm["minus"]))
+                pm_dir = os.path.join(meme_dir, pm.pairing_string)
                 if not os.path.exists(pm_dir):
                     os.makedirs(pm_dir)
 
@@ -356,18 +413,18 @@ def get_promoter_sets(meme_dir: str, anchor_promoter: int, promoters: List[Promo
                         SeqIO.write(seq, pm_handle, "fasta")
             else:
                 if VERBOSE_DEBUG:
-                    logging.debug("Too short promoter set " + mprint(pm["plus"], pm["minus"]))
+                    logging.debug("Too short promoter set " + pm.pairing_string)
         else:
             if VERBOSE_DEBUG:
-                logging.debug("Duplicate promoter set " + mprint(pm["plus"], pm["minus"]))
+                logging.debug("Duplicate promoter set " + pm.pairing_string)
 
     return promoter_sets
 
 
-def filter_meme_results(meme_dir: str, promoter_sets, anchor):
+def filter_meme_results(meme_dir: str, promoter_sets: List[Motif], anchor):
     """Analyse and filter MEME results"""
     for motif in promoter_sets:
-        xml_file = os.path.join(meme_dir, mprint(motif["plus"], motif["minus"]), "meme.xml")
+        xml_file = os.path.join(meme_dir, motif.pairing_string, "meme.xml")
         e = ElementTree.parse(xml_file).getroot()
         reason = e.find("model/reason_for_stopping").text
         anchor_seq_id = ""
@@ -375,11 +432,10 @@ def filter_meme_results(meme_dir: str, promoter_sets, anchor):
         # no motif found for given e-value cutoff :-(
         if "Stopped because motif E-value > " in reason:
             if VERBOSE_DEBUG:
-                logging.debug("MEME: motif " + mprint(motif["plus"], motif["minus"]) + "; e-value exceeds cutoff")
+                logging.debug("MEME: motif %s; e-value exceeds cutoff", motif.pairing_string)
 
         # motif(s) found :-)
         elif "Stopped because requested number of motifs (1) found" in reason:
-
             # find anchor genes' sequence_id
             training_set = e.findall("training_set/sequence")  # all promoter sequences passed to MEME
             for element in training_set:
@@ -391,86 +447,83 @@ def filter_meme_results(meme_dir: str, promoter_sets, anchor):
             contributing_sites = e.findall("motifs/motif/contributing_sites/contributing_site")
             if anchor_seq_id in map(lambda site: site.attrib["sequence_id"], contributing_sites):
                 # save motif score
-                motif["score"] = e.find("motifs/motif").attrib["e_value"]  # one motif, didn't ask MEME for more
+                motif.score = float(e.find("motifs/motif").attrib["e_value"])  # one motif, didn't ask MEME for more
 
                 # save sequence sites which represent the motif
-                motif["seqs"] = ["".join(map(lambda letter: letter.attrib["letter_id"],
-                                             site.findall("site/letter_ref")))
-                                 for site in contributing_sites]
+                motif.seqs = ["".join(map(lambda letter: letter.attrib["letter_id"],
+                                          site.findall("site/letter_ref")))
+                              for site in contributing_sites]
                 # write sites to fasta file
-                with open(os.path.join(meme_dir, mprint(motif["plus"], motif["minus"]),
+                with open(os.path.join(meme_dir, str(motif),
                                        "binding_sites.fasta"), "w") as handle:
-                    handle.write(">{}__{}\n".format(anchor, mprint(motif["plus"], motif["minus"])))
-                    handle.write("\n".join(motif["seqs"]))
+                    handle.write(">{}__{}\n".format(anchor, str(motif)))
+                    handle.write("\n".join(motif.seqs))
                 if VERBOSE_DEBUG:
-                    logging.debug("MEME: motif %s; e-value = %s", mprint(motif["plus"],
-                                  motif["minus"]), motif["score"])
+                    logging.debug("MEME: motif %s; e-value = %s", motif, motif.score)
             else:
                 if VERBOSE_DEBUG:
-                    logging.debug("MEME: motif %s; does not occur in anchor gene promoter",
-                                  mprint(motif["plus"], motif["minus"]))
+                    logging.debug("MEME: motif %s; does not occur in anchor gene promoter", motif)
 
         # unexpected reason, don't know why MEME stopped :-$
         else:
             logging.error("MEME stopped unexpectedly (reason: " + reason + ")")
 
-    return list(filter(lambda m: m["score"] is not None, promoter_sets))
+    return [motif for motif in promoter_sets if motif.score is not None]
 
 
-def filter_fimo_results(motifs, fimo_dir: str, promoters: List[Promoter], anchor_promoter: int):
+def filter_fimo_results(motifs: List[Motif], fimo_dir: str, promoters: List[Promoter],
+                        anchor_promoter: int) -> List[Motif]:
     """Analyse and filter FIMO results"""
+
+    filtered = []
+
     for motif in motifs:
-        motif["hits"] = {}
-        with open(os.path.join(fimo_dir, mprint(motif["plus"], motif["minus"]), "fimo.txt"), "r") as handle:
-            table = csv.reader(handle, delimiter="\t")
-            for row in table:
-                if not row[0].startswith("#"):  # skip comment lines
-                    seq_id = row[1]
-                    if seq_id in motif["hits"]:
-                        motif["hits"][seq_id] += 1
-                    else:
-                        motif["hits"][seq_id] = 1
+        assert isinstance(motif, Motif), type(motif)
+        with open(os.path.join(fimo_dir, str(motif), "fimo.txt"), "r") as handle:
+            table_reader = csv.reader(handle, delimiter="\t")
+            for row in table_reader:
+                # skip comment lines
+                if row[0].startswith("#"):
+                    continue
+                seq_id = row[1]
+                motif.hits[seq_id] += 1
 
         # write binding sites per promoter to file
-        with open(os.path.join(fimo_dir, mprint(motif["plus"], motif["minus"]), "bs_per_promoter.csv"), "w") as handle:
-            table = csv.writer(handle, delimiter="\t", lineterminator="\n")
-            table.writerow(["#", "promoter", "binding sites"])  # table head
+        with open(os.path.join(fimo_dir, str(motif), "bs_per_promoter.csv"), "w") as handle:
+            table_writer = csv.writer(handle, delimiter="\t", lineterminator="\n")
+            table_writer.writerow(["#", "promoter", "binding sites"])  # table head
             for i, promoter in enumerate(promoters):
-                promoter = promoter.get_id()
-                if promoter in motif["hits"]:
-                    table.writerow([i+1, promoter, motif["hits"][promoter]])
-                else:
-                    table.writerow([i+1, promoter, 0])
+                table_writer.writerow([i+1, promoter.get_id(), motif.hits.get(promoter.get_id(), 0)])
 
-        percentage = len(motif["hits"]) / len(promoters) * 100
+        percentage = len(motif.hits) / len(promoters) * 100
         if percentage == 0.0:
             # too low
             if VERBOSE_DEBUG:
                 logging.debug("FIMO: motif %s; occurs in %d promoters (no hits)",
-                              mprint(motif["plus"], motif["minus"]), len(motif["hits"]))
-            motif["hits"] = None
+                              motif, len(motif.hits))
+            continue
         elif percentage > MAX_PERCENTAGE:
             # too high
             if VERBOSE_DEBUG:
                 logging.debug("FIMO: %s; occurs in %d promoters; %.2f%% of all promoters (too many)",
-                              mprint(motif["plus"], motif["minus"]), len(motif["hits"]), percentage)
-            motif["hits"] = None
-        elif promoters[anchor_promoter].get_id() not in motif["hits"]:  # not in achor promoter
+                              motif, len(motif.hits), percentage)
+            continue
+        elif promoters[anchor_promoter].get_id() not in motif.hits:  # not in achor promoter
             # no site in anchor promoter
             if VERBOSE_DEBUG:
-                logging.debug("FIMO: motif %s; not hits in the promoter of the anchor gene",
-                              mprint(motif["plus"], motif["minus"]))
-            motif["hits"] = None
-        else:
-            # everything ok
-            if VERBOSE_DEBUG:
-                logging.debug("FIMO: motif %s; occurs in %d promoters; %.2f%% of all promoters",
-                              mprint(motif["plus"], motif["minus"]), len(motif["hits"]), percentage)
+                logging.debug("FIMO: motif %s; no hits in the promoter of the anchor gene", motif)
+            continue
 
-    return list(filter(lambda m: m["hits"] is not None, motifs))
+        # everything ok
+        if VERBOSE_DEBUG:
+            logging.debug("FIMO: motif %s; occurs in %d promoters; %.2f%% of all promoters",
+                          motif, len(motif.hits), percentage)
+        filtered.append(motif)
+
+    return filtered
 
 
-def get_islands(anchor_promoter: int, motifs, promoters: List[Promoter]):
+def get_islands(anchor_promoter: int, motifs: List[Motif], promoters: List[Promoter]):
     """Find islands of binding sites (previously found by FIMO) around anchor gene to define cluster borders"""
     islands = []
     motifs = list(motifs)
@@ -478,8 +531,8 @@ def get_islands(anchor_promoter: int, motifs, promoters: List[Promoter]):
         # create list with binding sites per promoter
         bs_per_promoter = [0] * len(promoters)  # first: set number of binding sites to 0
         for i, promoter in enumerate(promoters):
-            if promoter.get_id() in motif["hits"]:  # second: set actual number of binding sites, if any
-                bs_per_promoter[i] = motif["hits"][promoter.get_id()]
+            # second: set actual number of binding sites, if any
+            bs_per_promoter[i] = motif.hits[promoter.get_id()]
 
         # upstream
         start = anchor_promoter  # init upstream cluster border
@@ -634,53 +687,94 @@ def get_islands(anchor_promoter: int, motifs, promoters: List[Promoter]):
             i += 1
         if VERBOSE_DEBUG:
             logging.debug("Island %s -- %s (motif %s)", promoters[start].get_id(),
-                          promoters[end].get_id(), mprint(motif["plus"], motif["minus"]))
-        islands.append({"start": promoters[start], "end": promoters[end], "motif": motif})
+                          promoters[end].get_id(), motif)
+        islands.append(Island(promoters[start], promoters[end], motif))
 
     return islands
 
 
-def sort_by_abundance(islands):
+class ClusterMarker(Pairing):
+    """ Marks the start or end position for a cluster by gene and motif.
+        Tracks abundance and the motif string (+n/-m) for that position.
+    """
+    def __init__(self, gene: str, motif: Motif) -> None:
+        super().__init__(motif.plus, motif.minus)
+        self.gene = str(gene)
+        self.abundance = 1
+        self.score = float(motif.score)
+        self.promoter = None  # type: Optional[str]
+
+    def update(self, motif) -> None:
+        """ Uses the given motif's values instead of the old ones, if the given
+            motif has a better (lower) score.
+        """
+        if self.score > float(motif.score):
+            self.score = float(motif.score)
+            self.plus = int(motif.plus)
+            self.minus = int(motif.minus)
+
+    def __str__(self) -> str:
+        return "gene %s; abundance %s; motif %s; score %s" % (
+                  self.gene, self.abundance, self.pairing_string, self.score)
+
+    def __repr__(self) -> str:
+        return "ClusterMarker(%s, promoter=%s)" % (str(self), self.promoter)
+
+    def __eq__(self, other: Any) -> bool:
+        return (isinstance(other, ClusterMarker)
+                and all(getattr(self, key) == getattr(other, key) for key in vars(self)))
+
+
+class ClusterPrediction:
+    """ A prediction of a cluster. Contains start and end ClusterMarkers along with
+        counts of genes and promoters within that range.
+    """
+    def __init__(self, start: ClusterMarker, end: ClusterMarker) -> None:
+        self.start = start
+        self.end = end
+        self.genes = 0
+        self.promoters = 0
+
+    def __repr__(self) -> str:
+        return "ClusterPrediction(start=%s, end=%s, gene_count=%d, promoter_count=%d)" % (
+                        self.start, self.end, self.genes, self.promoters)
+
+    def __eq__(self, other: Any) -> bool:
+        return (isinstance(other, ClusterPrediction)
+                and all(getattr(self, key) == getattr(other, key) for key in vars(self)))
+
+
+def sort_by_abundance(islands: List[Island]) -> List[ClusterPrediction]:
     """Sort upstream (start) and downstream (end) borders of islands by abundance"""
     # count border abundance
     # start/end are treated independently!
-    starts = {}
-    ends = {}
-    for i in islands:
-        if i["start"].gene_name in starts:
-            starts[i["start"].gene_name]["abund"] += 1
+    starts = {}  # type: Dict[str, ClusterMarker]
+    ends = {}  # type: Dict[str, ClusterMarker]
+    for island in islands:
+        if island.start.gene_name in starts:
+            scorer = starts[island.start.gene_name]
+            scorer.abundance += 1
+            scorer.update(island.motif)
         else:
-            starts[i["start"].gene_name] = {"abund": 1}
+            starts[island.start.gene_name] = ClusterMarker(island.start.gene_name, island.motif)
 
-        if i["end"].get_gene_names()[-1] in ends:
-            ends[i["end"].get_gene_names()[-1]]["abund"] += 1
+        if island.end.get_gene_names()[-1] in ends:
+            scorer = ends[island.end.get_gene_names()[-1]]
+            scorer.abundance += 1
+            scorer.update(island.motif)
         else:
-            ends[i["end"].get_gene_names()[-1]] = {"abund": 1}
-
-        # keep track of motif score --> to sort by score if same abundance occurs more than once
-        # AND
-        # save motif "names" (plus, minus) --> additional info for showing the results later on
-        if ("mscore" not in starts[i["start"].gene_name]
-                or float(i["motif"]["score"]) < float(starts[i["start"].gene_name]["mscore"])):
-            starts[i["start"].gene_name]["mscore"] = i["motif"]["score"]
-            starts[i["start"].gene_name]["plus"] = i["motif"]["plus"]
-            starts[i["start"].gene_name]["minus"] = i["motif"]["minus"]
-        if ("mscore" not in ends[i["end"].get_gene_names()[-1]]
-                or float(i["motif"]["score"]) < float(ends[i["end"].get_gene_names()[-1]]["mscore"])):
-            ends[i["end"].get_gene_names()[-1]]["mscore"] = i["motif"]["score"]
-            ends[i["end"].get_gene_names()[-1]]["plus"] = i["motif"]["plus"]
-            ends[i["end"].get_gene_names()[-1]]["minus"] = i["motif"]["minus"]
+            ends[island.end.get_gene_names()[-1]] = ClusterMarker(island.end.get_gene_names()[-1], island.motif)
 
     # compute sum of start and end abundance, remove duplicates, sort descending
-    abundances_sum_sorted = sorted(set([s["abund"] + e["abund"]
+    abundances_sum_sorted = sorted(set([s.abundance + e.abundance
                                         for s in starts.values() for e in ends.values()]), reverse=True)
     # compute sum of start and end motif score, remove duplicates, sort ascending
-    scores_sum_sorted = sorted(set([float(s["mscore"]) + float(e["mscore"])
+    scores_sum_sorted = sorted(set([s.score + e.score
                                     for s in starts.values() for e in ends.values()]))
     # sort by value (=abundance) of start, descending
-    starts_sorted = sorted(starts, key=lambda x: starts[x]["abund"], reverse=True)
+    starts_sorted = sorted(starts, key=lambda x: starts[x].abundance, reverse=True)
     # sort by value (=abundance) of end, descending
-    ends_sorted = sorted(ends, key=lambda x: ends[x]["abund"], reverse=True)
+    ends_sorted = sorted(ends, key=lambda x: ends[x].abundance, reverse=True)
 
     clusters = []
     for abundance in abundances_sum_sorted:
@@ -689,43 +783,21 @@ def sort_by_abundance(islands):
             # list from lowest (best) to highest (worst) motif score/e-value
             for start in starts_sorted:
                 for end in ends_sorted:
-                    if (starts[start]["abund"] + ends[end]["abund"] == abundance
-                            and float(starts[start]["mscore"]) + float(ends[end]["mscore"]) == score):
-                        clusters.append({
-                            "start": {
-                                "gene": start,
-                                "abundance": starts[start]["abund"],
-                                "score": starts[start]["mscore"],
-                                "plus": starts[start]["plus"],
-                                "minus": starts[start]["minus"],
-                            },
-                            "end": {
-                                "gene": end,
-                                "abundance": ends[end]["abund"],
-                                "score": ends[end]["mscore"],
-                                "plus": ends[end]["plus"],
-                                "minus": ends[end]["minus"],
-                            },
-                        })
+                    if (starts[start].abundance + ends[end].abundance == abundance
+                            and starts[start].score + ends[end].score == score):
+                        start_marker = starts[start]
+                        end_marker = ends[end]
+                        clusters.append(ClusterPrediction(start_marker, end_marker))
                         if VERBOSE_DEBUG:
-                            logging.debug("Upstream border:   gene %s; abundance %s; motif %s; score %s",
-                                          start,
-                                          starts[start]["abund"],
-                                          mprint(starts[start]["plus"], starts[start]["minus"]),
-                                          starts[start]["mscore"])
-                            logging.debug("Downstream border: gene %s; abundance %s; motif %s; score %s",
-                                          end,
-                                          ends[end]["abund"],
-                                          mprint(ends[end]["plus"], ends[end]["minus"]),
-                                          ends[end]["mscore"])
-                            logging.debug("Total abundance %s, total score %.1e",
-                                          abundance, score)
-
+                            logging.debug("Upstream border:   %s", start_marker)
+                            logging.debug("Downstream border: %s", end_marker)
+                            logging.debug("Total abundance %s, total score %.1e", abundance, score)
     return clusters
 
 
-def check_cluster_predictions(cluster_predictions, record: Record, promoters, ignored_genes):
-    """Get some more infos about each cluster prediction and check if it seems to be sane"""
+def check_cluster_predictions(cluster_predictions: List[ClusterPrediction],
+                              record: Record, promoters: List[Promoter], ignored_genes: List[Gene]):
+    """Get some more info about each cluster prediction and check if it is sane"""
     checked_predictions = []
     for cp, prediction in enumerate(cluster_predictions):
         sane = True
@@ -736,9 +808,9 @@ def check_cluster_predictions(cluster_predictions, record: Record, promoters, ig
         start_index_genes = None
         end_index_genes = None
         for i, gene_name in enumerate(all_gene_names):
-            if not start_index_genes and prediction["start"]["gene"] == gene_name:
+            if not start_index_genes and prediction.start.gene == gene_name:
                 start_index_genes = i
-            if not end_index_genes and prediction["end"]["gene"] == gene_name:
+            if not end_index_genes and prediction.end.gene == gene_name:
                 end_index_genes = i
             if start_index_genes and end_index_genes:
                 break
@@ -747,24 +819,24 @@ def check_cluster_predictions(cluster_predictions, record: Record, promoters, ig
         start_index_promoters = None
         end_index_promoters = None
         for i, promoter in enumerate(promoters):
-            if not start_index_promoters and prediction["start"]["gene"] in promoter.get_gene_names():
+            if not start_index_promoters and prediction.start.gene in promoter.get_gene_names():
                 start_index_promoters = i
-            if not end_index_promoters and prediction["end"]["gene"] in promoter.get_gene_names():
+            if not end_index_promoters and prediction.end.gene in promoter.get_gene_names():
                 end_index_promoters = i
             if start_index_promoters and end_index_promoters:
                 break
 
-        prediction["start"]["promoter"] = promoters[start_index_promoters].get_id()
-        prediction["end"]["promoter"] = promoters[end_index_promoters].get_id()
-        prediction["genes"] = end_index_genes - start_index_genes + 1
-        prediction["promoters"] = end_index_promoters - start_index_promoters + 1
+        prediction.start.promoter = promoters[start_index_promoters].get_id()
+        prediction.end.promoter = promoters[end_index_promoters].get_id()
+        prediction.genes = end_index_genes - start_index_genes + 1
+        prediction.promoters = end_index_promoters - start_index_promoters + 1
         if VERBOSE_DEBUG:
             if cp == 0:
                 logging.debug("Best prediction (most abundant): %r -- %r",
-                             prediction["start"]["gene"], prediction["end"]["gene"])
+                             prediction.start.gene, prediction.end.gene)
             else:
                 logging.debug("Alternative prediction (%s): %r -- %r",
-                             cp, prediction["start"]["gene"], prediction["end"]["gene"])
+                             cp, prediction.start.gene, prediction.end.gene)
 
         # warn if cluster prediction right at or next to record (~ contig) border
         if start_index_genes < 10:
@@ -779,7 +851,7 @@ def check_cluster_predictions(cluster_predictions, record: Record, promoters, ig
             sane = False
 
         # warn if cluster prediction too short (includes less than 3 genes)
-        if prediction["genes"] < 3:
+        if prediction.genes < 3:
             if VERBOSE_DEBUG:
                 logging.debug("Cluster is very short (less than 3 genes). Prediction may be questionable.")
             sane = False
@@ -797,24 +869,23 @@ def check_cluster_predictions(cluster_predictions, record: Record, promoters, ig
 
         checked_predictions.append(prediction)
 
-        if sane:
+        if sane:  # TODO: this seems wrong
             break
-
     return checked_predictions
 
 
-def cleanup_outdir(anchor_gene_names: List[str], cluster_predictions, options):
+def cleanup_outdir(anchor_gene_names: List[str], cluster_predictions: Dict[str, List[ClusterPrediction]], options):
     """Delete unnecessary files to free disk space"""
     all_motifs = set()
-    for motif in _plus_minus:
-        all_motifs.add(mprint(motif["plus"], motif["minus"]))
+    for motif in PROMOTER_RANGE:
+        all_motifs.add(motif.pairing_string)
 
     for anchor in anchor_gene_names:
         if anchor in cluster_predictions:
             used_motifs = set()
             for cluster in cluster_predictions[anchor]:
-                used_motifs.add(mprint(cluster["start"]["plus"], cluster["start"]["minus"]))
-                used_motifs.add(mprint(cluster["end"]["plus"], cluster["end"]["minus"]))
+                used_motifs.add(cluster.start.pairing_string)
+                used_motifs.add(cluster.end.pairing_string)
             unused_motifs = all_motifs.difference(used_motifs)
             # only remove directories from "unused" motifs (no cluster prediction)
             for directory in unused_motifs:
@@ -849,7 +920,8 @@ def store_promoters(promoters, record: Record):
         record.add_feature(secmet_version)
 
 
-def create_cluster_borders(anchor: str, clusters, record: Record) -> List[ClusterBorder]:
+def create_cluster_borders(anchor: str, clusters: List[ClusterPrediction],
+                           record: Record) -> List[ClusterBorder]:
     """ Create the predicted ClusterBorders """
     if not clusters:
         return []
@@ -857,7 +929,6 @@ def create_cluster_borders(anchor: str, clusters, record: Record) -> List[Cluste
     borders = []
     for i, cluster in enumerate(clusters):
         # cluster borders returned by hmmdetect are based on CDS features
-        # see find_clusters() in hmmdetect's __init__.py
         # in contrast, cluster borders returned by cassis are based on gene features
         # --> hmmdetect derived clusters have exact loctions, like the CDSs have
         # --> cassis derived clusters may have fuzzy locations, like the genes have
@@ -865,8 +936,8 @@ def create_cluster_borders(anchor: str, clusters, record: Record) -> List[Cluste
         # utils.get_all_features_of_type_with_query() returns a list
         # there should be no second gene with the same locus tag
         # --> always take the first [0] element of the return value
-        left_name = cluster["start"]["gene"]
-        right_name = cluster["end"]["gene"]
+        left_name = cluster.start.gene
+        right_name = cluster.end.gene
         left = None
         right = None
         for gene in record.get_genes():
@@ -882,20 +953,20 @@ def create_cluster_borders(anchor: str, clusters, record: Record) -> List[Cluste
         new_feature.qualifiers = {
             "aStool": ["cassis"],
             "anchor": [anchor],
-            "abundance": [cluster["start"]["abundance"] + cluster["end"]["abundance"]],
-            "motif_score": ["{:.1e}".format(float(cluster["start"]["score"]) + float(cluster["end"]["score"]))],
-            "gene_left": [cluster["start"]["gene"]],
-            "promoter_left": [cluster["start"]["promoter"]],
-            "abundance_left": [cluster["start"]["abundance"]],
-            "motif_left": [mprint(cluster["start"]["plus"], cluster["start"]["minus"])],
-            "motif_score_left": ["{:.1e}".format(float(cluster["start"]["score"]))],
-            "gene_right": [cluster["end"]["gene"]],
-            "promoter_right": [cluster["end"]["promoter"]],
-            "abundance_right": [cluster["end"]["abundance"]],
-            "motif_right": [mprint(cluster["end"]["plus"], cluster["end"]["minus"])],
-            "motif_score_right": ["{:.1e}".format(float(cluster["end"]["score"]))],
-            "genes": [cluster["genes"]],
-            "promoters": [cluster["promoters"]],
+            "abundance": [cluster.start.abundance + cluster.end.abundance],
+            "motif_score": ["{:.1e}".format(cluster.start.score + cluster.end.score)],
+            "gene_left": [cluster.start.gene],
+            "promoter_left": [cluster.start.promoter],
+            "abundance_left": [cluster.start.abundance],
+            "motif_left": [cluster.start.pairing_string],
+            "motif_score_left": ["{:.1e}".format(cluster.start.score)],
+            "gene_right": [cluster.end.gene],
+            "promoter_right": [cluster.end.promoter],
+            "abundance_right": [cluster.end.abundance],
+            "motif_right": [cluster.end.pairing_string],
+            "motif_score_right": ["{:.1e}".format(cluster.end.score)],
+            "genes": [cluster.genes],
+            "promoters": [cluster.promoters],
         }
 
         if i == 0:

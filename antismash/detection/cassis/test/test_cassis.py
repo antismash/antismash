@@ -360,12 +360,14 @@ class TestCassisMethods(unittest.TestCase):
         self.assertTrue("+04_-04" not in os.listdir(os.path.join(self.options.output_dir, "fimo", "gene1")))
 
 
-class TestCassisHelperMethods(unittest.TestCase):
-    def test_mprint(self):
-        self.assertEqual(cassis.mprint(3, 3), "+03_-03")
-
-    def test_cprint(self):
-        assert cassis.cprint(cassis.Motif(3, 3)) == "+03_-03"
+class TestMotifRepresentation(unittest.TestCase):
+    def test_conversion(self):
+        motif = cassis.Motif(3, 3)
+        assert motif.pairing_string == "+03_-03"
+        motif.plus = 4
+        assert motif.pairing_string == "+04_-03"
+        motif.minus = 2
+        assert motif.pairing_string == "+04_-02"
 
 
 class TestPromoters(unittest.TestCase):
