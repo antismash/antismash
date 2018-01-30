@@ -43,6 +43,8 @@ class Promoter:
     def __str__(self) -> str:
         return "Promoter(%r, %d, %d)" % (self.get_id(), self.start, self.end)
 
+    def __repr__(self) -> str:
+        return str(self)
 
 class CombinedPromoter(Promoter):
     """ A promoter class for cases where two genes are involved """
