@@ -288,3 +288,12 @@ def write_promoters_to_file(output_dir: str, prefix: str, promoters: List[Promot
                     description="length={}bp".format(len(promoter))),
                     seq_handle,
                     "fasta")
+
+def get_anchor_promoter_index(anchor: str, promoters: List[Promoter]) -> int:
+    """Find the name of the promoter which includes the anchor gene"""
+    # the promoter ID is not (necessarily) equal to the anchor ID!
+    for i, promoter in enumerate(promoters):
+        if anchor in promoter.get_gene_names():
+            return i
+
+    raise ValueError("No promoter exists for the given anchor: %s" % anchor)
