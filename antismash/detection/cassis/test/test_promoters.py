@@ -14,7 +14,8 @@ from minimock import mock, restore
 
 from antismash.common import secmet
 from antismash.common.test import helpers
-from antismash.detection.cassis import promoters as cassis
+from antismash.detection.cassis.promoters import Promoter, CombinedPromoter, get_promoters, \
+                get_anchor_promoter_index
 
 
 class TestGetPromoters(unittest.TestCase):
@@ -32,19 +33,19 @@ class TestGetPromoters(unittest.TestCase):
         return gene
 
     def get_promoters(self, upstream, downstream):
-        return cassis.get_promoters(self.record, self.record.get_genes(), upstream, downstream)
+        return get_promoters(self.record, self.record.get_genes(), upstream, downstream)
 
     def check_single_promoter(self, promoter, name, start, end):
         print(promoter)
-        assert isinstance(promoter, cassis.Promoter)
-        assert not isinstance(promoter, cassis.CombinedPromoter)
+        assert isinstance(promoter, Promoter)
+        assert not isinstance(promoter, CombinedPromoter)
         assert name == promoter.gene_name
         assert start == promoter.start
         assert end == promoter.end
 
     def check_combined_promoter(self, promoter, first_gene, second_gene, start, end):
         print(promoter)
-        assert isinstance(promoter, cassis.CombinedPromoter)
+        assert isinstance(promoter, CombinedPromoter)
         assert promoter.get_gene_names() == [first_gene, second_gene]
         assert promoter.get_id() == "+".join(promoter.get_gene_names())
         assert promoter.start == start
@@ -287,3 +288,13 @@ class TestGetPromoters(unittest.TestCase):
         self.add_gene("A", 10, 20, 0)
         with self.assertRaisesRegex(ValueError, "Gene A has unknown strand: 0"):
             self.get_promoters(5, 5)
+
+
+class TestPromoters(unittest.TestCase):
+    def test_get_anchor_promoter(self):
+        anchor = "gene3"
+        promoters = [Promoter("gene1", 1, 1),
+                     Promoter("gene2", 2, 2),
+                     CombinedPromoter("gene3", "gene4", 3, 4),
+                     Promoter("gene5", 5, 5)]
+        self.assertEqual(get_anchor_promoter_index(anchor, promoters), 2)
