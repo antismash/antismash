@@ -232,12 +232,12 @@ class TestCassisMethods(unittest.TestCase):
             promoters.append(cassis.Promoter("gene%d" % i, i * 10, i * 10 + 4))
         # resulting in 2 different islands (this example)
         # promoter (pos): 1 2 3 4 5 6
-        # binding sites: 1 2 0 0 0 0
-        # island: |---|
+        # binding sites:  1 2 0 0 0 0
+        # island:         |-|
         first_island = cassis.Island(promoters[0], promoters[1], motifs[0])
         # promoter (pos): 1 2 3 4 5 6
-        # binding sites: 0 3 0 2 1 0
-        # island: |-------|
+        # binding sites:  0 3 0 2 1 0
+        # island:           |---|
         second_island = cassis.Island(promoters[1], promoters[4], motifs[1])
         expected_islands = [first_island, second_island]
         assert cassis.get_islands(anchor_promoter, motifs, promoters) == expected_islands

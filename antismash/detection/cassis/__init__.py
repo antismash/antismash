@@ -523,8 +523,48 @@ def filter_fimo_results(motifs: List[Motif], fimo_dir: str, promoters: List[Prom
     return filtered
 
 
+def get_island_gap_size(position: int, promoter_scores: List[int], max_gap_size: int,
+                        upstream: bool) -> int:
+    """ Finds the size of an island in promoters, if it exists.
+
+        Arguments:
+            position: the position around which to check for an island in promoter_scores
+            promoter_scores: the number of hits for each promoter, ordered by location
+            max_gap_size: the maximum gap size allowable for an island
+            upstream: whether the search is looking upstream or not
+
+        Returns:
+            0 if no island found, otherwise an int less than or equal to max_gap_size
+    """
+    if upstream:
+        end = position + 1
+    else:
+        start = position
+
+    for gap_size in range(1, max_gap_size + 1):
+        if upstream:
+            start = position - gap_size - 1
+        else:
+            end = position + gap_size + 2
+
+        # skip anything that there are no promoters for
+        if start < 0 or end > len(promoter_scores):
+            continue
+
+        # for gap_size of 1: x 0 x, where 0 is the anchor
+        # for gap_size of 2: x 0 0 x...
+        # and so on
+        chunk = promoter_scores[start:end]
+        if chunk[0] > 0 and chunk[-1] > 0 and chunk[1:-1] == [0] * gap_size:
+            # since no larger island can contain a smaller one, stop
+            return gap_size
+
+    return 0
+
+
 def get_islands(anchor_promoter: int, motifs: List[Motif], promoters: List[Promoter]):
     """Find islands of binding sites (previously found by FIMO) around anchor gene to define cluster borders"""
+    assert MAX_GAP_LENGTH >= 0
     islands = []
     motifs = list(motifs)
     for motif in motifs:
@@ -538,77 +578,18 @@ def get_islands(anchor_promoter: int, motifs: List[Motif], promoters: List[Promo
         start = anchor_promoter  # init upstream cluster border
         i = anchor_promoter  # init position of anchor gene's promoter
         while i > 0:
-
             # promoter with binding site
             # … 1 …
-            if bs_per_promoter[i-1] >= 1:
+            if bs_per_promoter[i-1] > 0:
                 start -= 1
-
-            # no binding site, gap with length 1
-            # … 1 0 1  …
-            elif (i - 2 >= 0
-                  and MAX_GAP_LENGTH >= 1
-                  and bs_per_promoter[i] >= 1
-                  and bs_per_promoter[i-1] == 0
-                  and bs_per_promoter[i-2] >= 1):
-                start -= 2
                 i -= 1
-
-            # no binding site, gap with length 2
-            # … 1 0 0 1  …
-            elif (i - 3 >= 0
-                  and MAX_GAP_LENGTH >= 2
-                  and bs_per_promoter[i] >= 1
-                  and bs_per_promoter[i-1] == 0
-                  and bs_per_promoter[i-2] == 0
-                  and bs_per_promoter[i-3] >= 1):
-                start -= 3
-                i -= 2
-
-            # no binding site, gap with length 3
-            # … 1 0 0 0 1  …
-            elif (i - 4 >= 0
-                  and MAX_GAP_LENGTH >= 3
-                  and bs_per_promoter[i] >= 1
-                  and bs_per_promoter[i-1] == 0
-                  and bs_per_promoter[i-2] == 0
-                  and bs_per_promoter[i-3] == 0
-                  and bs_per_promoter[i-4] >= 1):
-                start -= 4
-                i -= 3
-
-            # no binding site, gap with length 4
-            # … 1 0 0 0 0 1  …
-            elif (i - 5 >= 0
-                  and MAX_GAP_LENGTH >= 4
-                  and bs_per_promoter[i] >= 1
-                  and bs_per_promoter[i-1] == 0
-                  and bs_per_promoter[i-2] == 0
-                  and bs_per_promoter[i-3] == 0
-                  and bs_per_promoter[i-4] == 0
-                  and bs_per_promoter[i-5] >= 1):
-                start -= 5
-                i -= 4
-
-            # no binding site, gap with length 5
-            # … 1 0 0 0 0 0 1  …
-            elif (i - 6 >= 0
-                  and MAX_GAP_LENGTH >= 5
-                  and bs_per_promoter[i] >= 1
-                  and bs_per_promoter[i-1] == 0
-                  and bs_per_promoter[i-2] == 0
-                  and bs_per_promoter[i-3] == 0
-                  and bs_per_promoter[i-4] == 0
-                  and bs_per_promoter[i-5] == 0
-                  and bs_per_promoter[i-6] >= 1):
-                start -= 6
-                i -= 5
-
-            # gap too long, stop upstream cluster extension
-            else:
+                continue
+            # check with gaps, e.g. 1 0 1 or 1 0 0 1
+            gap_size = get_island_gap_size(i, bs_per_promoter, MAX_GAP_LENGTH, upstream=True)
+            if gap_size == 0:
                 break
-
-            i -= 1
+            start -= gap_size + 1
+            i -= gap_size + 1
 
         # downstream
         i = anchor_promoter  # reset position of anchor gene's promoter
@@ -617,79 +598,22 @@ def get_islands(anchor_promoter: int, motifs: List[Motif], promoters: List[Promo
 
             # promoter with binding site(s)
             # … 1 …
-            if bs_per_promoter[i+1] > 0:
+            if bs_per_promoter[i + 1] > 0:
                 end += 1
-
-            # no binding site, gap with length 1
-            # … 1 0 1  …
-            elif (i + 2 < len(bs_per_promoter)
-                  and MAX_GAP_LENGTH >= 1
-                  and bs_per_promoter[i] >= 1
-                  and bs_per_promoter[i+1] == 0
-                  and bs_per_promoter[i+2] >= 1):
-                end += 2
                 i += 1
+                continue
 
-            # no binding site, gap with length 2
-            # … 1 0 0 1  …
-            elif (i + 3 < len(bs_per_promoter)
-                  and MAX_GAP_LENGTH >= 2
-                  and bs_per_promoter[i] >= 1
-                  and bs_per_promoter[i+1] == 0
-                  and bs_per_promoter[i+2] == 0
-                  and bs_per_promoter[i+3] >= 1):
-                end += 3
-                i += 2
-
-            # no binding site, gap with length 3
-            # … 1 0 0 0 1  …
-            elif (i + 4 < len(bs_per_promoter)
-                  and MAX_GAP_LENGTH >= 3
-                  and bs_per_promoter[i] >= 1
-                  and bs_per_promoter[i+1] == 0
-                  and bs_per_promoter[i+2] == 0
-                  and bs_per_promoter[i+3] == 0
-                  and bs_per_promoter[i+4] >= 1):
-                end += 4
-                i += 3
-
-            # no binding site, gap with length 4
-            # … 1 0 0 0 0 1  …
-            elif (i + 5 < len(bs_per_promoter)
-                  and MAX_GAP_LENGTH >= 4
-                  and bs_per_promoter[i] >= 1
-                  and bs_per_promoter[i+1] == 0
-                  and bs_per_promoter[i+2] == 0
-                  and bs_per_promoter[i+3] == 0
-                  and bs_per_promoter[i+4] == 0
-                  and bs_per_promoter[i+5] >= 1):
-                end += 5
-                i += 4
-
-            # no binding site, gap with length 5
-            # … 1 0 0 0 0 0 1  …
-            elif (i + 6 < len(bs_per_promoter)
-                  and MAX_GAP_LENGTH >= 5
-                  and bs_per_promoter[i] >= 1
-                  and bs_per_promoter[i+1] == 0
-                  and bs_per_promoter[i+2] == 0
-                  and bs_per_promoter[i+3] == 0
-                  and bs_per_promoter[i+4] == 0
-                  and bs_per_promoter[i+5] == 0
-                  and bs_per_promoter[i+6] >= 1):
-                end += 6
-                i += 5
-
-            # gap too long, stop downstream cluster extension
-            else:
+            # check with gaps, e.g. 1 0 1 or 1 0 0 1
+            gap_size = get_island_gap_size(i, bs_per_promoter, MAX_GAP_LENGTH, upstream=False)
+            if gap_size == 0:
                 break
+            end += gap_size + 1
+            i += gap_size + 1
 
-            i += 1
         if VERBOSE_DEBUG:
             logging.debug("Island %s -- %s (motif %s)", promoters[start].get_id(),
                           promoters[end].get_id(), motif)
         islands.append(Island(promoters[start], promoters[end], motif))
-
     return islands
 
 
