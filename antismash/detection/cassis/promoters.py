@@ -5,7 +5,7 @@
 
 import logging
 import os
-from typing import List, Union
+from typing import Any, Dict, List, Union
 
 from Bio import SeqIO
 from Bio.Seq import Seq
@@ -46,6 +46,24 @@ class Promoter:
     def __repr__(self) -> str:
         return str(self)
 
+    def __eq__(self, other: Any) -> bool:
+        return (isinstance(other, Promoter)
+                and self.gene_name == other.gene_name
+                and self.start == other.start
+                and self.end == other.end
+                and self.seq == other.seq)
+
+    def to_json(self) -> Dict[str, Any]:
+        """ Serialises a Promoter to a dictionary for use in JSON """
+        return {"gene": self.gene_name, "start": self.start, "end": self.end,
+                "seq": str(self.seq), "type": "Promoter"}
+
+    @staticmethod
+    def from_json(json: Dict[str, Any]) -> "Promoter":
+        """ Deserialises a Promoter from a dictionary """
+        return Promoter(str(json["gene"]), int(json["start"]), int(json["end"]), seq=str(json["seq"]))
+
+
 class CombinedPromoter(Promoter):
     """ A promoter class for cases where two genes are involved """
     def __init__(self, first_gene: str, second_gene: str, start: int, end: int, seq: Union[Seq, str] = None) -> None:
@@ -57,6 +75,25 @@ class CombinedPromoter(Promoter):
 
     def get_gene_names(self) -> List[str]:
         return super().get_gene_names() + [self.second_gene]
+
+    def __eq__(self, other: Any) -> bool:
+        return (isinstance(other, CombinedPromoter)
+                and super().__eq__(other)
+                and self.second_gene == other.second_gene)
+
+    def __str__(self) -> str:
+        return super().__str__().replace("Promoter(", "CombinedPromoter(")
+
+    def to_json(self) -> Dict[str, Any]:
+        core = super().to_json()
+        core["second_gene"] = self.second_gene
+        core["type"] = "CombinedPromoter"
+        return core
+
+    @staticmethod
+    def from_json(json: Dict[str, Any]) -> "CombinedPromoter":
+        return CombinedPromoter(str(json["gene"]), str(json["second_gene"]),
+                                int(json["start"]), int(json["end"]), seq=str(json["seq"]))
 
 
 def get_promoters(record: Record, genes, upstream_tss: int, downstream_tss: int) -> List[Promoter]:
@@ -288,6 +325,7 @@ def write_promoters_to_file(output_dir: str, prefix: str, promoters: List[Promot
                     description="length={}bp".format(len(promoter))),
                     seq_handle,
                     "fasta")
+
 
 def get_anchor_promoter_index(anchor: str, promoters: List[Promoter]) -> int:
     """Find the name of the promoter which includes the anchor gene"""

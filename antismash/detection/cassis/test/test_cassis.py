@@ -12,6 +12,7 @@ import unittest
 
 from Bio.Seq import Seq
 from Bio.SeqFeature import FeatureLocation
+from minimock import mock, restore
 
 from antismash.common import path, secmet
 from antismash.common.test import helpers
@@ -256,3 +257,81 @@ class TestCassisStorageMethods(unittest.TestCase):
             self.assertEqual(cluster_border.get_qualifier("gene_left"), (cluster.start.gene,))
             self.assertEqual(cluster_border.get_qualifier("gene_right"), (cluster.end.gene,))
             # don't test all feature qualifiers, only some
+
+
+class TestResults(unittest.TestCase):
+    def setUp(self):
+        self.old_max_perc = cassis.MAX_PERCENTAGE
+        self.old_max_gap = cassis.MAX_GAP_LENGTH
+
+    def tearDown(self):
+        cassis.MAX_PERCENTAGE = self.old_max_perc
+        cassis.MAX_GAP_LENGTH = self.old_max_gap
+        restore()
+
+    def test_base(self):
+        results = cassis.CassisResults("test")
+        assert results.record_id == "test"
+        assert results.borders == []
+        assert results.promoters == []
+
+    def test_regeneration(self):
+        record = create_fake_record()
+        results = cassis.CassisResults(record.id)
+        # create a prediction, since it will generate a border with many extra qualifiers
+        start_marker = ClusterMarker("gene1", Motif(3, 3, score=1))
+        start_marker.promoter = "gene1"
+        start_marker.abundance = 2
+        end_marker = ClusterMarker("gene4", Motif(3, 3, score=1))
+        end_marker.promoter = "gene3+gene4"
+        assert end_marker.abundance == 1
+        cluster = cassis.ClusterPrediction(start_marker, end_marker)
+        results.borders = cassis.create_cluster_borders("gene1", [cluster], record)
+        assert results.borders
+
+        results.promoters = [Promoter("gene1", 10, 20, seq=Seq("cgtacgtacgt")),
+                             Promoter("gene2", 30, 40, seq=Seq("cgtacgtacgt")),
+                             CombinedPromoter("gene3", "gene4", 50, 60, seq=Seq("cgtacgtacgt"))]
+
+        round_trip = cassis.regenerate_previous_results(results.to_json(), record, None)
+        assert isinstance(round_trip, cassis.CassisResults)
+        assert len(results.borders) == len(round_trip.borders)
+        for old, new in zip(results.borders, round_trip.borders):
+            assert old.location == new.location
+            assert old.to_biopython()[0].qualifiers == new.to_biopython()[0].qualifiers
+        assert round_trip.promoters == results.promoters
+
+    def test_changed_max_percentage(self):
+        record = create_fake_record()
+        json = cassis.CassisResults(record.id).to_json()
+        assert isinstance(cassis.regenerate_previous_results(json, record, None),
+                          cassis.CassisResults)
+        cassis.MAX_PERCENTAGE += 5
+        assert cassis.regenerate_previous_results(json, record, None) is None
+
+    def test_changed_max_gap_length(self):
+        record = create_fake_record()
+        json = cassis.CassisResults(record.id).to_json()
+        assert isinstance(cassis.regenerate_previous_results(json, record, None),
+                          cassis.CassisResults)
+        cassis.MAX_GAP_LENGTH += 1
+        assert cassis.regenerate_previous_results(json, record, None) is None
+
+    def test_not_same_record(self):
+        record = create_fake_record()
+        record.id = "A"
+        other = create_fake_record()
+        other.id = "B"
+        json = cassis.CassisResults(record.id).to_json()
+        assert isinstance(cassis.regenerate_previous_results(json, record, None),
+                          cassis.CassisResults)
+        assert cassis.regenerate_previous_results(json, other, None) is None
+
+    def test_run_on_record_skips_work(self):
+        record = create_fake_record()
+        record.id = "real"
+        results = cassis.CassisResults(record.id)
+
+        mock("cassis.detect", returns=cassis.CassisResults("fake"))
+        assert cassis.run_on_record(record, results, None).record_id == "real"
+        assert cassis.run_on_record(record, None, None).record_id == "fake"

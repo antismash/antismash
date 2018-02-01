@@ -6,18 +6,19 @@
 import logging
 import os
 import shutil
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from Bio.SeqFeature import SeqFeature
 
 from antismash.common import path, module_results
 from antismash.common.secmet.feature import ClusterBorder, Feature, FeatureLocation, GeneFunction
 from antismash.common.secmet.record import Record
+from antismash.common.serialiser import feature_to_json, feature_from_json
 from antismash.config.args import ModuleArgs
 
 from .cluster_prediction import get_predictions_for_anchor, ClusterPrediction
 from .pairings import PROMOTER_RANGE
-from .promoters import CombinedPromoter, get_promoters, DuplicatePromoterError, \
+from .promoters import Promoter, CombinedPromoter, get_promoters, DuplicatePromoterError, \
                        write_promoters_to_file
 
 NAME = "cassis"
@@ -31,19 +32,55 @@ VERBOSE_DEBUG = False  # whether to show all debugging info or not
 
 class CassisResults(module_results.ModuleResults):
     """ Contains the borders predicted by cassis """
-    def __init__(self, record_id: str, borders: List[ClusterBorder]) -> None:
+    def __init__(self, record_id: str) -> None:
         super().__init__(record_id)
-        self.borders = borders
+        self.borders = []  # type: List[ClusterBorder]
+        self.promoters = []  # type: List[Promoter]
 
-    def to_json(self, *args) -> Dict[str, Any]:
-        return {}
+    def to_json(self) -> Dict[str, Any]:
+        borders = []
+        promoters = []
+
+        for border in self.borders:
+            borders.append(feature_to_json(border.to_biopython()[0]))
+
+        for promoter in self.promoters:
+            promoters.append(promoter.to_json())
+
+        return {"record_id": self.record_id, "borders": borders, "promoters": promoters,
+                "max_percentage": MAX_PERCENTAGE, "max_gap_length": MAX_GAP_LENGTH}
 
     @staticmethod
-    def from_json(*args) -> "CassisResults":
-        return None
+    def from_json(json: Dict[str, Any], record: Record) -> Optional["CassisResults"]:
+        # throw away the results if the conditions are different
+        if json["record_id"] != record.id:
+            logging.debug("Record identifiers don't match, discarding previous results")
+            return None
+        if json["max_percentage"] != MAX_PERCENTAGE:
+            logging.debug("CASSIS commonality threshold changed, discarding previous results")
+            return None
+        if json["max_gap_length"] != MAX_GAP_LENGTH:
+            logging.debug("CASSIS maximum island length changed, discarding previous results")
+            return None
 
-    def add_to_record(self, record) -> None:
-        pass
+        borders = []
+        promoters = []
+        for border in json["borders"]:
+            borders.append(ClusterBorder.from_biopython(feature_from_json(border)))
+        for promoter in json["promoters"]:
+            if promoter["type"] == "CombinedPromoter":
+                promoters.append(CombinedPromoter.from_json(promoter))
+            else:
+                promoters.append(Promoter.from_json(promoter))
+        results = CassisResults(record.id)
+        results.borders = borders
+        results.promoters = promoters
+        return results
+
+    def add_to_record(self, record: Record) -> None:
+        store_promoters(self.promoters, record)
+        for border in self.borders:
+            record.add_cluster_border(border)
 
     def get_predictions(self) -> List[ClusterBorder]:
         return self.borders
@@ -73,7 +110,7 @@ def check_options(options) -> List[str]:
     return problems
 
 
-def regenerate_previous_results(previous, record: Record, options):
+def regenerate_previous_results(previous: Dict[str, Any], record: Record, options) -> Optional[CassisResults]:
     """ Rebuild the previous run results from a JSON object into this module's
         python results class.
 
@@ -82,11 +119,13 @@ def regenerate_previous_results(previous, record: Record, options):
             record: the Record that was used to generate the previous results
             options: an antismash.Config object
     """
-    logging.critical("always skipping results regeneration for cassis")
-    return None
+    results = CassisResults.from_json(previous, record)
+    if results:
+        store_promoters(results.promoters, record)
+    return results
 
 
-def run_on_record(record: Record, results, options):
+def run_on_record(record: Record, results: CassisResults, options) -> CassisResults:
     """ Run this module's analysis section on the given record or use the
         previous results.
 
@@ -99,16 +138,13 @@ def run_on_record(record: Record, results, options):
             this module's results as a subclass of
                 antismash.common.module_results.ModuleResults
     """
-    borders = detect(record, options)
-    logging.debug("Cassis detected %d cluster border(s)", len(borders))
-    for border in borders:
-        record.add_cluster_border(border)
-    return CassisResults(record.id, borders)
-
-
-class InvalidLocationError(Exception):
-    '''Thrown when running into invalid gene locations during runtime'''
-    pass
+    if results:
+        logging.debug("Cassis reusing %d cluster border(s)", len(results.borders))
+    else:
+        results = detect(record, options)
+        logging.debug("Cassis detected %d cluster border(s)", len(results.borders))
+    results.add_to_record(record)
+    return results
 
 
 def check_prereqs():
@@ -122,21 +158,23 @@ def check_prereqs():
     return failure_messages
 
 
-def detect(record: Record, options) -> List[ClusterBorder]:
+def detect(record: Record, options) -> CassisResults:
     """Use core genes (anchor genes) from hmmdetect as seeds to detect gene clusters"""
     logging.info("Detecting gene clusters using CASSIS")
+
+    results = CassisResults(record.id)
 
     # get core genes from hmmdetect --> necessary CASSIS input, aka "anchor genes"
     anchor_gene_names = get_anchor_gene_names(record)
     logging.info("Record has %d anchor genes", len(anchor_gene_names))
     if not anchor_gene_names:
-        return []
+        return results
 
     # filter all genes in record for neighbouring genes with overlapping annotations
     genes = record.get_genes()
     logging.info("Record has %d features of type 'gene'", len(genes))
     if not genes:
-        return []
+        return results
     genes, ignored_genes = ignore_overlapping(genes)
 
     # compute promoter sequences/regions --> necessary for motif prediction (MEME and FIMO input)
@@ -145,22 +183,21 @@ def detect(record: Record, options) -> List[ClusterBorder]:
         upstream_tss = 1000  # nucleotides upstream TSS
         downstream_tss = 50  # nucleotides downstream TSS
         promoters = get_promoters(record, genes, upstream_tss, downstream_tss)
+        results.promoters = promoters
         write_promoters_to_file(options.output_dir, record.name, promoters)
-    except (InvalidLocationError, DuplicatePromoterError):
+    except DuplicatePromoterError:
         logging.error("CASSIS discovered an error while working on the promoter sequences, skipping CASSIS analysis")
-        return []
+        return results
 
     if not promoters:
         logging.debug("CASSIS found zero promoter regions, skipping CASSIS analysis")
-        return []
+        return results
     elif len(promoters) < 3:
         logging.debug("Sequence %r yields less than 3 promoter regions, skipping CASSIS analysis", record.name)
-        return []
+        return results
     elif len(promoters) < 40:
         logging.debug("Sequence %r yields only %d promoter regions", record.name, len(promoters))
         logging.debug("Cluster detection on small sequences may lead to incomplete cluster predictions")
-
-    store_promoters(promoters, record)
 
     predicted_borders = []
     cluster_predictions = {}  # {anchor gene: cluster predictions}
@@ -175,7 +212,8 @@ def detect(record: Record, options) -> List[ClusterBorder]:
 
     logging.debug("Cleaning up MEME and FIMO output directories")
     cleanup_outdir(anchor_gene_names, cluster_predictions, options)
-    return predicted_borders
+    results.borders = predicted_borders
+    return results
 
 
 # additional methods
