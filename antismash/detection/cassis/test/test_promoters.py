@@ -298,3 +298,11 @@ class TestPromoters(unittest.TestCase):
                      CombinedPromoter("gene3", "gene4", 3, 4),
                      Promoter("gene5", 5, 5)]
         self.assertEqual(get_anchor_promoter_index(anchor, promoters), 2)
+
+    def test_serialisation(self):
+        for seq in [Seq("ACGT"), "ACGT"]:
+            for cls, promoter in [(Promoter, Promoter("gene1", 1, 5, seq=seq)),
+                                  (CombinedPromoter, CombinedPromoter("gene1", "gene2", 2, 7, seq=seq))]:
+                round_trip = cls.from_json(promoter.to_json())
+                assert promoter.seq == round_trip.seq
+                assert round_trip == promoter
