@@ -6,30 +6,18 @@
 
 import os
 from shutil import copy
-from tempfile import TemporaryDirectory
-import unittest
 
 from Bio.Seq import Seq
 
 from antismash.common import path
-from antismash.config import build_config, destroy_config
-from antismash.detection import cassis
 from antismash.detection.cassis.promoters import Promoter, CombinedPromoter
 from antismash.detection.cassis.motifs import generate_motifs, Motif, filter_meme_results, filter_fimo_results
 
+from .test_cassis import CassisTestCore
 from .test_runners import read_generated_expected_file
 
 
-class TestMotifs(unittest.TestCase):
-    def setUp(self):
-        self.tempdir = TemporaryDirectory(prefix="as_cassis")
-        self.options = build_config(["--cpus", "2", "--output-dir", self.tempdir.name],
-                                    isolated=True, modules=[cassis])
-
-    def tearDown(self):
-        destroy_config()
-        self.tempdir.cleanup()
-
+class TestMotifs(CassisTestCore):
     def test_get_promoter_sets(self):
         meme_dir = os.path.join(self.options.output_dir, "meme")
         anchor_promoter = 5

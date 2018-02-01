@@ -51,7 +51,7 @@ def create_fake_record():
     return seq_record
 
 
-class TestCassisMethods(unittest.TestCase):
+class CassisTestCore(unittest.TestCase):
     def setUp(self):
         self.tempdir = TemporaryDirectory(prefix="as_cassis")
         self.options = build_config(["--cpus", "2", "--output-dir", self.tempdir.name],
@@ -65,6 +65,8 @@ class TestCassisMethods(unittest.TestCase):
         assert not os.path.isfile(path.get_full_path(__file__, "data", "test_promoter_positions.csv"))
         assert not os.path.isfile(path.get_full_path(__file__, "data", "test_promoter_sequences.fasta"))
 
+
+class TestCassisMethods(CassisTestCore):
     def test_get_anchor_gene_names(self):
         anchor_genes = ["gene4", "gene6"]
         seq_record = create_fake_record()

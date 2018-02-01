@@ -111,8 +111,8 @@ def filter_meme_results(meme_dir: str, promoter_sets: List[Motif], anchor):
     """Analyse and filter MEME results"""
     for motif in promoter_sets:
         xml_file = os.path.join(meme_dir, motif.pairing_string, "meme.xml")
-        e = ElementTree.parse(xml_file).getroot()
-        reason = e.find("model/reason_for_stopping").text
+        root = ElementTree.parse(xml_file).getroot()
+        reason = root.find("model/reason_for_stopping").text
         anchor_seq_id = ""
 
         # no motif found for given e-value cutoff :-(
@@ -123,17 +123,17 @@ def filter_meme_results(meme_dir: str, promoter_sets: List[Motif], anchor):
         # motif(s) found :-)
         elif "Stopped because requested number of motifs (1) found" in reason:
             # find anchor genes' sequence_id
-            training_set = e.findall("training_set/sequence")  # all promoter sequences passed to MEME
+            training_set = root.findall("training_set/sequence")  # all promoter sequences passed to MEME
             for element in training_set:
                 if "__ANCHOR" in element.attrib["name"]:
                     anchor_seq_id = element.attrib["id"]  # e.g. id=sequence_1
 
             # only accept motifs which occur in the anchor genes promoter
             # sequences which contributed to the motif
-            contributing_sites = e.findall("motifs/motif/contributing_sites/contributing_site")
+            contributing_sites = root.findall("motifs/motif/contributing_sites/contributing_site")
             if anchor_seq_id in map(lambda site: site.attrib["sequence_id"], contributing_sites):
                 # save motif score
-                motif.score = float(e.find("motifs/motif").attrib["e_value"])  # one motif, didn't ask MEME for more
+                motif.score = float(root.find("motifs/motif").attrib["e_value"])  # one motif, didn't ask MEME for more
 
                 # save sequence sites which represent the motif
                 motif.seqs = ["".join(map(lambda letter: letter.attrib["letter_id"],
