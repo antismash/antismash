@@ -15,7 +15,7 @@ from minimock import mock, restore
 from antismash.common import secmet
 from antismash.common.test import helpers
 from antismash.detection.cassis.promoters import Promoter, CombinedPromoter, get_promoters, \
-                get_anchor_promoter_index
+                get_anchor_promoter_index, is_invalid_promoter_sequence
 
 
 class TestGetPromoters(unittest.TestCase):
@@ -306,3 +306,25 @@ class TestPromoters(unittest.TestCase):
                 round_trip = cls.from_json(promoter.to_json())
                 assert promoter.seq == round_trip.seq
                 assert round_trip == promoter
+
+class TestPromoterSequence(unittest.TestCase):
+    def setUp(self):
+        self.promoter = Promoter("gene1", 1, 1)
+
+    def test_missing(self):
+        bases = "ACGT"
+        self.promoter.seq = bases
+        assert not is_invalid_promoter_sequence(self.promoter, 1, 5)
+        for base in bases:
+            self.promoter.seq = bases.replace(base, "")
+            assert is_invalid_promoter_sequence(self.promoter, 0, 5)
+
+    def test_too_small(self):
+        self.promoter.seq = "ACGT"
+        assert not is_invalid_promoter_sequence(self.promoter, 1, 5)
+        assert is_invalid_promoter_sequence(self.promoter, 5, 10)
+
+    def test_too_big(self):
+        self.promoter.seq = "ACGT"
+        assert not is_invalid_promoter_sequence(self.promoter, 1, 5)
+        assert is_invalid_promoter_sequence(self.promoter, 1, 3)
