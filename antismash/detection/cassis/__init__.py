@@ -110,7 +110,7 @@ def check_options(options) -> List[str]:
     return problems
 
 
-def regenerate_previous_results(previous: Dict[str, Any], record: Record, options) -> Optional[CassisResults]:
+def regenerate_previous_results(previous: Dict[str, Any], record: Record, _options) -> Optional[CassisResults]:
     """ Rebuild the previous run results from a JSON object into this module's
         python results class.
 
@@ -316,17 +316,12 @@ def create_cluster_borders(anchor: str, clusters: List[ClusterPrediction],
     """ Create the predicted ClusterBorders """
     if not clusters:
         return []
-    logging.critical("still constructing biopython features for cluster borders")
     borders = []
     for i, cluster in enumerate(clusters):
         # cluster borders returned by hmmdetect are based on CDS features
         # in contrast, cluster borders returned by cassis are based on gene features
         # --> hmmdetect derived clusters have exact loctions, like the CDSs have
         # --> cassis derived clusters may have fuzzy locations, like the genes have
-        #
-        # utils.get_all_features_of_type_with_query() returns a list
-        # there should be no second gene with the same locus tag
-        # --> always take the first [0] element of the return value
         left_name = cluster.start.gene
         right_name = cluster.end.gene
         left = None

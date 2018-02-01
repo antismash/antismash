@@ -8,6 +8,7 @@ import unittest
 
 from antismash.detection.cassis.pairings import Pairing, PROMOTER_RANGE
 
+
 class TestPairings(unittest.TestCase):
     def test_pairing_count(self):
         self.assertEqual(len(PROMOTER_RANGE), 250)

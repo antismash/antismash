@@ -6,15 +6,11 @@
 
 import os
 from shutil import copy
-from tempfile import TemporaryDirectory
-import unittest
 
 from antismash.common import path
-from antismash.config import build_config, destroy_config
-from antismash.detection import cassis
 from antismash.detection.cassis import runners
 
-from .test_cassis import create_fake_record, convert_newline
+from .test_cassis import create_fake_record, convert_newline, CassisTestCore
 
 
 def read_generated_expected_file(generated_file, expected_file):
@@ -32,16 +28,7 @@ def read_generated_expected_file(generated_file, expected_file):
     return [generated_string, expected_string]
 
 
-class TestCassisRunners(unittest.TestCase):
-    def setUp(self):
-        self.tempdir = TemporaryDirectory(prefix="as_cassis")
-        self.options = build_config(["--cpus", "2", "--output-dir", self.tempdir.name],
-                                    isolated=True, modules=[cassis])
-
-    def tearDown(self):
-        destroy_config()
-        self.tempdir.cleanup()
-
+class TestCassisRunners(CassisTestCore):
     def test_run_fimo(self):
         seq_record = create_fake_record()
         meme_dir = os.path.join(self.options.output_dir, "meme")

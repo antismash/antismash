@@ -307,6 +307,7 @@ class TestPromoters(unittest.TestCase):
                 assert promoter.seq == round_trip.seq
                 assert round_trip == promoter
 
+
 class TestPromoterSequence(unittest.TestCase):
     def setUp(self):
         self.promoter = Promoter("gene1", 1, 1)

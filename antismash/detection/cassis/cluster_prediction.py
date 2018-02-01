@@ -16,6 +16,9 @@ from .pairings import Pairing
 from .promoters import Promoter, get_anchor_promoter_index
 from .runners import run_fimo, run_meme
 
+# if alternatives for predictions can contain ignored genes
+ALLOW_CLUSTERS_WITH_IGNORED_GENES = False
+
 
 class ClusterMarker(Pairing):
     """ Marks the start or end position for a cluster by gene and motif.
@@ -70,6 +73,19 @@ class ClusterPrediction:
 
 def get_predictions_for_anchor(anchor: str, promoters: List[Promoter], record: Record,
                                ignored_genes: List[str], options) -> List[ClusterPrediction]:
+    """ Generate the cluster predictions for an anchor gene.
+
+        Arguments:
+            anchor: the name of the anchor gene
+            promoters: a list of all gene promoters
+            record: the record the anchor gene belongs in
+            ignore_genes: the names of genes which are to be ignored
+            options: antimash config
+
+        Returns:
+            a list of ClusterPrediction instances, one for each predicted
+            cluster location
+    """
     try:
         anchor_promoter_index = get_anchor_promoter_index(anchor, promoters)
     except ValueError:
@@ -156,10 +172,10 @@ def check_cluster_predictions(cluster_predictions: List[ClusterPrediction],
         if cassis.VERBOSE_DEBUG:
             if cp == 0:
                 logging.debug("Best prediction (most abundant): %r -- %r",
-                             prediction.start.gene, prediction.end.gene)
+                              prediction.start.gene, prediction.end.gene)
             else:
                 logging.debug("Alternative prediction (%s): %r -- %r",
-                             cp, prediction.start.gene, prediction.end.gene)
+                              cp, prediction.start.gene, prediction.end.gene)
 
         # warn if cluster prediction right at or next to record (~ contig) border
         if start_index_genes < 10:
@@ -185,9 +201,10 @@ def check_cluster_predictions(cluster_predictions: List[ClusterPrediction],
             if ignored_gene.get_name() in all_gene_names[start_index_genes: end_index_genes + 1]:
                 if cassis.VERBOSE_DEBUG:
                     logging.debug("Gene %r is part of the predicted cluster,"
-                                 " but it is overlapping with another gene and was ignored", ignored_gene)
+                                  " but it is overlapping with another gene and was ignored", ignored_gene)
                     logging.debug("Gene %r could have affected the cluster prediction", ignored_gene)
-                # sane = False # uncomment if you want alternatives for predictions with ignored genes, too # TODO
+                if not ALLOW_CLUSTERS_WITH_IGNORED_GENES:
+                    sane = False
                 break
 
         checked_predictions.append(prediction)
