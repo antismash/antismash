@@ -11,10 +11,13 @@ import os
 from types import ModuleType
 from typing import List, Optional
 
+from antismash.common.secmet import Record, Cluster
+from antismash.common.module_results import ModuleResults
+
 
 class RecordLayer:
     """ A layer for Record instances """
-    def __init__(self, seq_record, results, options):
+    def __init__(self, seq_record: Record, results: ModuleResults, options):
         self.results = results
         self.seq_record = seq_record
         self.options = options
@@ -47,7 +50,8 @@ class ClusterLayer:
     """ A layer for Cluster instances, contains special members for result of
         the clusterblast and clusterfinder modules
     """
-    def __init__(self, record, cluster_rec):
+    def __init__(self, record: RecordLayer, cluster_rec: Cluster) -> None:
+        assert isinstance(cluster_rec, Cluster), type(cluster_rec)
         self.record = record
         self.handlers = []
         self.cluster_rec = cluster_rec
@@ -182,9 +186,9 @@ class OptionsLayer:
     @property
     def smcogs(self) -> bool:
         """ Whether smcogs was enabled or not """
-        return not self.options.minimal \
-               or self.options.smcogs_enabled \
-               or self.options.smcogs_trees  # TODO work out a better way of doing this
+        return (not self.options.minimal
+                or self.options.smcogs_enabled
+                or self.options.smcogs_trees)  # TODO work out a better way of doing this
 
     def download_logfile(self) -> Optional[str]:
         """ Returns the path of the logfile, if it was created (otherwise None) """
