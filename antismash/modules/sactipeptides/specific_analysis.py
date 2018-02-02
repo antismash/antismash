@@ -112,7 +112,7 @@ class Sactipeptide:
 
 def get_detected_domains(cluster: secmet.Cluster) -> Set[str]:
     """ Gathers all detected domain ids from a cluster. Includes detection of
-        some extra HMM profiles specific to thiopeptides.
+        some extra HMM profiles specific to sactipeptides.
 
         Arguments:
             cluster: the Cluster to gather domains from
@@ -630,7 +630,7 @@ def run_sactipred(record, cluster, query, domains) -> Optional[Sactipeptide]:
     if result is None:
         return None
 
-    query.gene_functions.add(secmet.GeneFunction.ADDITIONAL, "thiopeptides",
+    query.gene_functions.add(secmet.GeneFunction.ADDITIONAL, "sactipeptides",
                              "predicted sactipeptide")
     return result
 
