@@ -206,9 +206,9 @@ PF13186	SPASM	20	PF13186.hmm
 TIGR04404	SCIFF	45	TIGR04404.hmm
 TIGR03973	SkfA	50	TIGR03973.hmm
 Peptidase_S8	Subtilase family	21	PF00082.hmm
-PF00675	Peptidase_M16	22	PF00675.hmm
+Peptidase_M16	Insulinase (Peptidase family M16)	22	PF00675.hmm
 PF03572	Peptidase_S41	21	PF03572.hmm
-PF05193	Peptidase_M16_C	20	PF05193.hmm
+Peptidase_M16_C	Peptidase M16 inactive domain	20	PF05193.hmm
 PF13353	4Fe-4S single cluster domain	22	PF13353.hmm
 PF02517	Abi	21	PF02517.hmm
 PF02163	Peptidase_M50	27	PF02163.hmm
