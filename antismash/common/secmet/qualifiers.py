@@ -127,7 +127,7 @@ class SecMetQualifier(list):
     def __init__(self, products: Set[str], domains: List["SecMetQualifier.Domain"]) -> None:
         self._domains = domains  # SecMetResult instance or str
         if domains and not isinstance(domains[0], str):  # SecMetResult
-            self.domain_ids = [domain.query_id for domain in self._domains]  # TODO: convert to a set
+            self.domain_ids = [domain.query_id for domain in self._domains]
         else:  # str
             self.domain_ids = [domain.split()[0] for domain in self._domains]
         self._products = set()
