@@ -153,7 +153,6 @@ def run_and_regenerate_results_for_module(input_file, module, options,
     if expected_record_count == 1:
         regenerated = antismash.main.regenerate_results_for_record(results.records[0],
                                      options, [module], results.results[0])
-        print(list(regenerated))
         final = regenerated[module.__name__]
         assert isinstance(final, module_results.ModuleResults)
     else:
