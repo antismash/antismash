@@ -19,6 +19,10 @@ from antismash.common import utils, all_orfs, module_results, secmet, serialiser
 from antismash.common.secmet.qualifiers import SecMetQualifier
 from antismash.common.signature import HmmSignature
 
+# Cys chain limits (for CnnnC style sections)
+CHAIN_LOWER = 1  # CnC
+CHAIN_UPPER = 6  # CnnnnnnC
+
 
 class SactiResults(module_results.ModuleResults):
     """ Holds the results of sactipeptide analysis for a record
@@ -75,8 +79,9 @@ class SactiResults(module_results.ModuleResults):
 
 
 class SactipeptideMotif(secmet.Prepeptide):
+    """ A Sactipeptide-specific feature """
     def __init__(self, location: secmet.feature.FeatureLocation, name: str,
-                 score: float, leader: str, core: str) -> None:
+                 score: float, leader: str, core: str) -> None:  # pylint: disable=too-many-arguments
         super().__init__(location, "sactipeptide", core, name, leader=leader, score=score)
 
     def to_json(self) -> Dict[str, Any]:
@@ -87,7 +92,8 @@ class SactipeptideMotif(secmet.Prepeptide):
                 "leader": self.leader}
 
     @staticmethod
-    def from_json(json) -> "SactipeptideMotif":
+    def from_json(json: Dict[str, Any]) -> "SactipeptideMotif":
+        """ Regenerate an instance of the class from a JSON representation """
         location = serialiser.location_from_json(json["location"])
         return SactipeptideMotif(location, json["name"], json["score"], json["leader"], json["core"])
 
@@ -150,8 +156,8 @@ def cds_has_domains(cds: secmet.CDSFeature, domains: Set[str]) -> bool:
     return bool(cds.sec_met and set(cds.sec_met.domain_ids).intersection(domains))
 
 
-def acquire_rodeo_heuristics(record: secmet.Record, cluster: secmet.Cluster,
-                             query: secmet.CDSFeature, leader: str, core: str,
+def acquire_rodeo_heuristics(cluster: secmet.Cluster, query: secmet.CDSFeature,
+                             leader: str, core: str,
                              domains: Dict[str, int]) -> Tuple[int, List[float], List[int]]:
     """Calculate heuristic scores for RODEO"""
     tabs = []
@@ -168,23 +174,23 @@ def acquire_rodeo_heuristics(record: secmet.Record, cluster: secmet.Cluster,
     tabs.append(float(core_analysis.molecular_weight()))
     # Distance to any biosynthetic protein (E, B, C)
     hmmer_profiles = ['PF04055']
-    distance = utils.distance_to_pfam(record, query, hmmer_profiles)
+    distance = utils.distance_to_pfam(cluster.parent_record, query, hmmer_profiles)
     tabs.append(distance)
     # rSAM within 500 nt?
-    if utils.distance_to_pfam(record, query, ['PF04055']) < 500:
+    if utils.distance_to_pfam(cluster.parent_record, query, ['PF04055']) < 500:
         score += 1
         tabs.append(1)
     else:
         tabs.append(0)
     # rSAM within 150 nt?
-    if utils.distance_to_pfam(record, query, ['PF04055']) < 150:
+    if utils.distance_to_pfam(cluster.parent_record, query, ['PF04055']) < 150:
         score += 1
         tabs.append(1)
     else:
         tabs.append(0)
     # rSAM further than 1000 nt?
-    if utils.distance_to_pfam(record, query, ['PF04055']) == -1 or \
-       utils.distance_to_pfam(record, query, ['PF04055']) > 10000:
+    if utils.distance_to_pfam(cluster.parent_record, query, ['PF04055']) == -1 or \
+       utils.distance_to_pfam(cluster.parent_record, query, ['PF04055']) > 10000:
         score -= 2
         tabs.append(1)
     else:
@@ -207,8 +213,8 @@ def acquire_rodeo_heuristics(record: secmet.Record, cluster: secmet.Cluster,
         score -= 4
         tabs += [0, 1]
     # CxC/CxxC/CxxxC/CxxxxxC; # CC/CCC
-    motifs = (('C[ARNDBCEQZGHILKMFPSTWYV]{5}C', 2), ('C[ARNDBCEQZGHILKMFPSTWYV]{3}C', 1),
-              ('C[ARNDBCEQZGHILKMFPSTWYV]{2}C', 1), ('C[ARNDBCEQZGHILKMFPSTWYV]{1}C', 2),
+    motifs = (('C.{5}C', 2), ('C.{3}C', 1),
+              ('C.{2}C', 1), ('C.{1}C', 1),
               ('CC', -2), ('CCC', -2))
     for motif in motifs:
         if re.search(motif[0], core):
@@ -261,7 +267,7 @@ def acquire_rodeo_heuristics(record: secmet.Record, cluster: secmet.Cluster,
         tabs.append(1)
     else:
         tabs.append(0)
-    # PF04055 (rSAM) domain start
+    # PF04055 (rSAM) domain start > 80
     runresults = subprocessing.run_hmmsearch(path.get_full_path(__file__, "data", "PF04055.hmm"),
                                              fasta.get_fasta_from_features(cluster.cds_children))
     max_start = 0
@@ -335,32 +341,24 @@ def acquire_rodeo_heuristics(record: secmet.Record, cluster: secmet.Cluster,
         tabs.append(0)
     # C-terminal portion is < 0.35 or > 0.65; C-terminal portion is defined as
     # the part from the last cysteine in the last identified Cx(n)C motif to the C-terminus
-    # And criterion "C-terminal portion is > 0.35 and < 0.65"
-    if "C" not in precursor:
+    # the binary opposite is also included as the next field
+    last_motif_c = 0
+    index = -1
+    for aa in reversed(precursor):
+        if aa == "C" and "C" in precursor[index-6:index]:
+            last_motif_c = index + 1
+        index -= 1
+    if 0.35 <= last_motif_c / len(precursor) <= 0.65:
+        score += 3
+        tabs += [0, 1]
+    else:
         score -= 2
         tabs += [1, 0]
-    else:
-        last_motif_c = 0
-        index = -1
-        for aa in reversed(precursor):
-            if aa == "C" and "C" in precursor[index-6:index]:
-                last_motif_c = index + 1
-            index -= 1
-        if 0.35 <= last_motif_c / len(precursor) <= 0.65:
-            score += 3
-            tabs += [0, 1]
-        else:
-            score -= 2
-            tabs += [1, 0]
-    # SS profile sum > 1; The "SS profile" variables are calculated by the
-    # lanscout function, namely the last regex search done using the rex4.
-    # This provides a count for each number in the range
-    lanlower = 1
-    lanupper = 6
-    cysrex = '(?=(C.{%d,%d}C))' % (lanlower, lanupper)
+    # SS profile count > 1
+    # is there more than one Cx..C structure in the sequence
+    cysrex = '(?=(C.{%d,%d}C))' % (CHAIN_LOWER, CHAIN_UPPER)
     rex4 = re.compile(cysrex)
-    totrings = rex4.findall(core)
-    if len(totrings) > 1:
+    if len(rex4.findall(core)) > 1:
         score += 2
         tabs.append(1)
     else:
@@ -368,65 +366,59 @@ def acquire_rodeo_heuristics(record: secmet.Record, cluster: secmet.Cluster,
     return score, tabs, hitends
 
 
-def lanscout(seq):
-    lanlower = 1
-    lanupper = 6
-    # define lanSactinine ring with a c-terminal Cys
-    cysrex = '(?=(C.{%d,%d}C))' % (lanlower, lanupper)
+def structure_analysis(seq: str) -> Tuple[int, float, int, List[int]]:
+    """ Gathers information on the structural properties of the sequence
 
-    db = []
-    avgs = []
-    numrings = []
-    cterm = []
-    for n in range(0, len(seq)):
-        core = str(seq[n][:])
+        Arguments:
+            seq: the sequence to analyse
 
-        rex1 = re.compile(r'([G|A]{1,2}C)')
-        rex2 = re.compile(r'(C[G|A]{1,2})')
-        rex3 = re.compile(r'(C.{2,5})(?=C)')
-        rex4 = re.compile(cysrex)
+        Returns:
+            a tuple of
+                the number of [G|A][G|A]C (and reversed) structures found
+                the average distance between the GAC structures
+                a normalised location of final C..C terminal within the sequence
+                a list containing counts of each possible C...C size
+    """
+    # define Cys-gap structures with a c-terminal Cys
+    cysrex = '(?=(C.{%d,%d}C))' % (CHAIN_LOWER, CHAIN_UPPER)
 
-        loc1 = []
-        match1 = []
-        for county in rex1.finditer(core):
-            loc1.append(county.start())
-            match1.append(county.group())
+    core = str(seq)
 
-        for county in rex2.finditer(core):
-            loc1.append(county.start())
-            match1.append(county.group())
+    rex1 = re.compile(r'([G|A]{1,2}C)')
+    rex2 = re.compile(r'(C[G|A]{1,2})')
+    rex3 = re.compile(r'(C.{2,5})(?=C)')
+    rex4 = re.compile(cysrex)
 
-        tempy = []
-        for m in range(len(loc1[:-1])):
-            if (loc1[m+1]-loc1[m]) > 0:
-                tempy.append(loc1[m+1]-loc1[m])
-            else:
-                tempy.append(1)
+    locations = []
+    matches = []
+    for regex in [rex1, rex2]:
+        for hit in regex.finditer(core):
+            locations.append(hit.start())
+            matches.append(hit.group())
 
-        if sum(tempy):
-            avgs.append(sum(tempy) / len(tempy))
+    total = 0
+    count = 0
+    for i in range(len(locations) - 1):
+        distance = locations[i + 1] - locations[i]
+        if distance > 0:
+            total += distance
         else:
-            avgs.append(0)
+            total += 1
+        count += 1
 
-        numrings.append(len(match1))
-        cterm.append(len(rex3.split(core)[-1]) / len(core))
+    avg = 0
+    if total:
+        avg = total / count
 
-        numringlist = []
-        totrings = rex4.findall(core)
-        size = [len(ring) for ring in totrings]
-        db.append(size)
-        numringlist.append(numrings)
+    cterm = len(rex3.split(core)[-1]) / len(core)
 
     profile = []
-    for i in db:
-        temp = []
-        for j in range(lanlower + 2, lanupper + 3):
-            temp.append(i.count(j))
-        profile.append(temp)
+    chain_lengths = [len(ring) for ring in rex4.findall(core)]
+    for size in range(CHAIN_LOWER, CHAIN_UPPER + 1):
+        profile.append(chain_lengths.count(size + 2))  # includes the C on each end
+    assert len(profile) == CHAIN_UPPER - CHAIN_LOWER + 1
 
-    profile = [str(prof).strip('[]') for prof in profile]
-
-    return numrings, avgs, cterm, profile
+    return len(matches), avg, cterm, profile
 
 
 def generate_rodeo_svm_csv(leader, core, previously_gathered_tabs, hitends, domain_counts) -> List[float]:
@@ -449,30 +441,31 @@ def generate_rodeo_svm_csv(leader, core, previously_gathered_tabs, hitends, doma
     # Length of core / length of leader ratio
     columns.append(len(core) / len(leader))
     # Ratio of length of N-terminus to first Cys / length of precursor
-    columns.append(precursor.count("C") / float(len(precursor)))
+    columns.append(precursor.count("C") / len(precursor))
     # Number of occurrences of CxNC motifs
-    numrings, avgs, cterm, profile = lanscout([precursor])
-    columns.append(numrings[0])
+    numrings, avg, cterm, profile = structure_analysis(precursor)
+    columns.append(numrings)
     # Average distance between CxNC motifs
-    columns.append(avgs[0])
+    columns.append(avg)
     # Ratio of length from last CxNC to C-terminus / length of core
-    columns.append(cterm[0])
-    # Number of instances of CxNC where N = (1..6)
-    columns.extend(profile[0].split(",")[0:6])
+    columns.append(cterm)
+    # Number of instances of CxC where x exists (CHAIN_LOWER..CHAIN_UPPER) times
+    columns.extend(profile)
     # Number in entire precursor of each amino acid
     columns += [precursor.count(aa) for aa in "ARDNCQEGHILKMFPSTWYV"]
-    # Number in entire precursor of each amino acid type (Aromatics, Neg charged, Pos charged, Charged, Aliphatic, Hydroxyl)
+    # Number in entire precursor of each amino acid type
+    # (Aromatics, Neg charged, Pos charged, Charged, Aliphatic, Hydroxyl)
     amino_groups = ["FWY", "DE", "RK", "RKDE", "GAVLMI", "ST"]
     for group in amino_groups:
         columns.append(sum([precursor.count(aa) for aa in group]))
     # Number in leader of each amino acid
     columns += [leader.count(aa) for aa in "ARDNCQEGHILKMFPSTWYV"]
-    # Number in leader of each amino acid type (Aromatics, Neg charged, Pos charged, Charged, Aliphatic, Hydroxyl)
+    # Number in leader of each amino acid type
     for group in amino_groups:
         columns.append(sum([leader.count(aa) for aa in group]))
     # Number in core of each amino acid
     columns += [core.count(aa) for aa in "ARDNCQEGHILKMFPSTWYV"]
-    # Number in core of each amino acid type (Aromatics, Neg charged, Pos charged, Charged, Aliphatic, Hydroxyl)
+    # Number in core of each amino acid type
     for group in amino_groups:
         columns.append(sum([core.count(aa) for aa in group]))
     # Number of each peptidase Pfam hit (PF05193/PF00082/PF03572/PF00675/PF02517/PF02163/PF00326)
@@ -517,13 +510,13 @@ def run_rodeo_svm(csv_columns: List[float]) -> int:
     return 0
 
 
-def run_rodeo(record: secmet.Record, cluster: secmet.Cluster, query: secmet.CDSFeature,
+def run_rodeo(cluster: secmet.Cluster, query: secmet.CDSFeature,
               leader: str, core: str, domains: Dict[str, int]) -> Tuple[bool, float]:
     """Run RODEO heuristics + SVM to assess precursor peptide candidate"""
     rodeo_score = 0
 
     # Incorporate heuristic scores
-    heuristic_score, partial_csv, hitends = acquire_rodeo_heuristics(record, cluster, query, leader, core, domains)
+    heuristic_score, partial_csv, hitends = acquire_rodeo_heuristics(cluster, query, leader, core, domains)
     rodeo_score += heuristic_score
 
     # Incorporate SVM scores
@@ -533,35 +526,35 @@ def run_rodeo(record: secmet.Record, cluster: secmet.Cluster, query: secmet.CDSF
     return rodeo_score >= 26, rodeo_score
 
 
-def determine_precursor_peptide_candidate(record: secmet.Record, cluster: secmet.Cluster,
-                                          query: secmet.CDSFeature, query_sequence: str,
-                                          domains: Dict[str, int]) -> Optional[SactipeptideMotif]:
+def determine_precursor_peptide_candidate(cluster: secmet.Cluster, query: secmet.CDSFeature,
+                                          query_sequence: str, domains: Dict[str, int]
+                                          ) -> Optional[SactipeptideMotif]:
     """Identify precursor peptide candidates and split into two"""
 
     # Skip sequences with >100 AA
     if not 20 <= len(query_sequence) <= 100:
         return None
 
-    end = len(query_sequence) // 4
+    end = len(query_sequence) // 4  # TODO: this seems very arbitrary
 
     # Determine the leader and core peptide
     leader = query_sequence[:end]
     core = query_sequence[end:]
 
     # Run RODEO to assess whether candidate precursor peptide is judged real
-    rodeo_result = run_rodeo(record, cluster, query, leader, core, domains)
-    if not rodeo_result[0]:
+    valid, score = run_rodeo(cluster, query, leader, core, domains)
+    if not valid:
         return None
 
-    return SactipeptideMotif(query.location, query.get_name(), rodeo_result[1], leader, core)
+    return SactipeptideMotif(query.location, query.get_name(), score, leader, core)
 
 
-def run_sactipred(record: secmet.Record, cluster: secmet.Cluster,
-                  query: secmet.CDSFeature, domains: Dict[str, int]) -> Optional[SactipeptideMotif]:
+def run_sactipred(cluster: secmet.Cluster, query: secmet.CDSFeature,
+                  domains: Dict[str, int]) -> Optional[SactipeptideMotif]:
     """General function to predict and analyse sacti peptides"""
 
     # Run checks to determine whether an ORF encodes a precursor peptide
-    result = determine_precursor_peptide_candidate(record, cluster, query,
+    result = determine_precursor_peptide_candidate(cluster, query,
                                                    query.translation, domains)
     if result is None:
         return None
@@ -616,7 +609,7 @@ def specific_analysis(record: secmet.Record) -> SactiResults:
 
         # Evaluate each candidate precursor peptide
         for candidate in candidates:
-            motif = run_sactipred(record, cluster, candidate, domains)
+            motif = run_sactipred(cluster, candidate, domains)
             if motif is None:
                 continue
 
