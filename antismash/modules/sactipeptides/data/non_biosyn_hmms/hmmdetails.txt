@@ -4,3 +4,6 @@ PF00072	Response regulator	22	PF00072.hmm
 PF07690	MFS transporter	32	PF07690.hmm
 PF13304	ATPase	27	PF13304.hmm
 PF02518	ATPase	27	PF02518.hmm
+TIGR04404	SCIFF	45	../../../../detection/hmm_detection/data/TIGR04404.hmm
+TIGR03973	SkfA	50	../../../../detection/hmm_detection/data/TIGR03973.hmm
+Subtilosin_A	Subtilosin A	68	../../../../detection/hmm_detection/data/Subtilosin_A.hmm

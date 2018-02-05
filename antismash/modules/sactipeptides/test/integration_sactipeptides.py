@@ -58,4 +58,4 @@ class IntegrationSactipeptides(unittest.TestCase):
         assert prepeptide.get_name() == "allorf041"
         assert prepeptide.leader == "MKKAVIVENK"
         assert prepeptide.core == "GCATCSIGAACLVDGPIPDFEIAGATGLFGLWG"
-        self.assertAlmostEqual(prepeptide.score, 28.)
+        self.assertAlmostEqual(prepeptide.score, 31.)
