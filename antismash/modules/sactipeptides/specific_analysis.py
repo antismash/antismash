@@ -16,6 +16,7 @@ from typing import Any, Dict, Set, List, Optional, Tuple
 from sklearn.externals import joblib
 
 from antismash.common import utils, all_orfs, module_results, secmet, serialiser, subprocessing, path, fasta
+from antismash.common.secmet.qualifiers import SecMetQualifier
 from antismash.common.signature import HmmSignature
 
 
@@ -59,7 +60,8 @@ class SactiResults(module_results.ModuleResults):
                 results.motifs_by_locus[locus].append(SactipeptideMotif.from_json(motif))
         results.clusters = {int(key): set(val) for key, val in json["clusters"].items()}
         for location, name in json["new_cds_features"]:
-            cds = all_orfs.create_feature_from_location(record, location, label=name)
+            loc = serialiser.location_from_json(location)
+            cds = all_orfs.create_feature_from_location(record, loc, label=name)
             results.new_cds_features.add(cds)
         return results
 
@@ -86,8 +88,8 @@ class SactipeptideMotif(secmet.Prepeptide):
 
     @staticmethod
     def from_json(json) -> "SactipeptideMotif":
-        return SactipeptideMotif(serialiser.location_from_json(json["location"]),
-                                 json["name"], json["score"], json["leader"], json["core"])
+        location = serialiser.location_from_json(json["location"])
+        return SactipeptideMotif(location, json["name"], json["score"], json["leader"], json["core"])
 
 
 def get_detected_domains(cluster: secmet.Cluster) -> Dict[str, int]:
@@ -125,7 +127,7 @@ def run_non_biosynthetic_phmms(cluster_fasta: str) -> Dict[str, Any]:
 
     non_biosynthetic_hmms_by_id = defaultdict(list)  # type: Dict[str, Any]
     for sig in signature_profiles:
-        sig.path = path.get_full_path(__file__, "data", "non_biosyn_hmms", sig.path.rpartition(os.sep)[2])
+        sig.path = path.get_full_path(__file__, "data", "non_biosyn_hmms", sig.path)
         runresults = subprocessing.run_hmmsearch(sig.path, cluster_fasta)
         for runresult in runresults:
             # Store result if it is above cut-off
@@ -455,18 +457,8 @@ def generate_rodeo_svm_csv(leader, core, previously_gathered_tabs, hitends, doma
     columns.append(avgs[0])
     # Ratio of length from last CxNC to C-terminus / length of core
     columns.append(cterm[0])
-    # Number of instances of CxNC where N = 1
-    columns.append(profile[0].split(",")[0])
-    # Number of instances of CxNC where N = 2
-    columns.append(profile[0].split(",")[1])
-    # Number of instances of CxNC where N = 3
-    columns.append(profile[0].split(",")[2])
-    # Number of instances of CxNC where N = 4
-    columns.append(profile[0].split(",")[3])
-    # Number of instances of CxNC where N = 5
-    columns.append(profile[0].split(",")[4])
-    # Number of instances of CxNC where N = 6
-    columns.append(profile[0].split(",")[5])
+    # Number of instances of CxNC where N = (1..6)
+    columns.extend(profile[0].split(",")[0:6])
     # Number in entire precursor of each amino acid
     columns += [precursor.count(aa) for aa in "ARDNCQEGHILKMFPSTWYV"]
     # Number in entire precursor of each amino acid type (Aromatics, Neg charged, Pos charged, Charged, Aliphatic, Hydroxyl)
@@ -561,7 +553,6 @@ def determine_precursor_peptide_candidate(record: secmet.Record, cluster: secmet
     if not rodeo_result[0]:
         return None
 
-
     return SactipeptideMotif(query.location, query.get_name(), rodeo_result[1], leader, core)
 
 
@@ -580,6 +571,23 @@ def run_sactipred(record: secmet.Record, cluster: secmet.Cluster,
     return result
 
 
+def annotate_orfs(cds_features: List[secmet.CDSFeature], hmm_results):
+    """ Annotates newly found ORFs with sactipeptide domain information.
+        This is only relevant for CDS features that did not exist during
+        the cluster detection stage of antiSMASH.
+    """
+
+    domains_by_feature = defaultdict(list)
+    for hit_id, results in hmm_results.items():
+        for result in results:
+            domain = SecMetQualifier.Domain(result.query_id, result.evalue, result.bitscore, "N/A", "sactipeptides")
+            domains_by_feature[hit_id].append(domain)
+    for cds in cds_features:
+        domains = domains_by_feature[cds.get_name()]
+        if domains:
+            cds.sec_met = SecMetQualifier(set(), domains)
+
+
 def specific_analysis(record: secmet.Record) -> SactiResults:
     """ Analyse each sactipeptide cluster and find precursors within it.
         If an unannotated ORF would contain the precursor, it will be annotated.
@@ -591,12 +599,16 @@ def specific_analysis(record: secmet.Record) -> SactiResults:
             a SactiResults instance holding all found precursors and new ORFs
     """
     results = SactiResults(record.id)
+    new_feature_hits = 0
+    motif_count = 0
     for cluster in record.get_clusters():
         if 'sactipeptide' not in cluster.products:
             continue
 
         # Find candidate ORFs that are not yet annotated
         new_orfs = all_orfs.find_all_orfs(record, cluster)
+        hmm_results = run_non_biosynthetic_phmms(fasta.get_fasta_from_features(new_orfs))
+        annotate_orfs(new_orfs, hmm_results)
 
         # Get all CDS features to evaluate for RiPP-likeness
         candidates = list(cluster.cds_children) + new_orfs
@@ -609,8 +621,17 @@ def specific_analysis(record: secmet.Record) -> SactiResults:
                 continue
 
             results.motifs_by_locus[candidate.get_name()].append(motif)
+            motif_count += 1
             results.clusters[cluster.get_cluster_number()].add(candidate.get_name())
             # track new CDSFeatures if found with all_orfs
             if candidate.cluster is None:
                 results.new_cds_features.add(candidate)
+                new_feature_hits += 1
+
+    if not motif_count:
+        logging.debug("Found no sactipeptide motifs")
+    else:
+        verb = "is" if new_feature_hits == 1 else "are"
+        logging.debug("Found %d sactipeptide motif(s) in %d feature(s), %d of which %s new",
+                      motif_count, len(results.motifs_by_locus), new_feature_hits, verb)
     return results
