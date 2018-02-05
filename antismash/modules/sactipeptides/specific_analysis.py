@@ -9,10 +9,9 @@ bridges, molcular mass and macrolactam ring.
 
 from collections import defaultdict
 import logging
-import numpy as np
 import os
 import re
-from typing import Any, Dict, Set, List, Optional
+from typing import Any, Dict, Set, List, Optional, Tuple
 
 from sklearn.externals import joblib
 
@@ -26,18 +25,18 @@ class SactiResults(module_results.ModuleResults):
     """
     schema_version = 1
 
-    def __init__(self, record_id, *args):
-        super().__init__(record_id, *args)
+    def __init__(self, record_id: str) -> None:
+        super().__init__(record_id)
         # keep new CDS features
-        self.new_cds_features = set()
+        self.new_cds_features = set()  # type: Set[secmet.CDSFeature]
         # keep new CDSMotifs by the gene they match to
         # e.g. self.motifs_by_locus[gene_locus] = [motif1, motif2..]
-        self.motifs_by_locus = defaultdict(list)
+        self.motifs_by_locus = defaultdict(list)  # type: Dict[str, List[SactipeptideMotif]]
         # keep clusters and which genes in them had precursor hits
         # e.g. self.clusters[cluster_number] = {gene1_locus, gene2_locus}
-        self.clusters = defaultdict(set)
+        self.clusters = defaultdict(set)  # type: Dict[int, Set[str]]
 
-    def to_json(self):
+    def to_json(self) -> Dict[str, Any]:
         cds_features = [(serialiser.location_to_json(feature.location),
                          feature.get_name()) for feature in self.new_cds_features]
         motifs = {}
@@ -50,7 +49,7 @@ class SactiResults(module_results.ModuleResults):
                 "clusters": {key: list(val) for key, val in self.clusters.items()}}
 
     @staticmethod
-    def from_json(json, record) -> "SactiResults":
+    def from_json(json: Dict[str, Any], record: secmet.Record) -> "SactiResults":
         if json.get("schema_version") != SactiResults.schema_version:
             logging.warning("Discarding Sactipeptide results, schema version mismatch")
             return None
@@ -64,7 +63,7 @@ class SactiResults(module_results.ModuleResults):
             results.new_cds_features.add(cds)
         return results
 
-    def add_to_record(self, record):
+    def add_to_record(self, record: secmet.Record):
         for feature in self.new_cds_features:
             record.add_cds_feature(feature)
 
@@ -73,44 +72,25 @@ class SactiResults(module_results.ModuleResults):
                 record.add_cds_motif(motif)
 
 
-class Sactipeptide:
-    '''
-    Class to calculate and store sactipeptide information
-    '''
-    def __init__(self, start, end, rodeo_score):
-        self.start = start
-        self.end = end
-        self.rodeo_score = rodeo_score
-        self._leader = ''
-        self._core = ''
+class SactipeptideMotif(secmet.Prepeptide):
+    def __init__(self, location: secmet.feature.FeatureLocation, name: str,
+                 score: float, leader: str, core: str) -> None:
+        super().__init__(location, "sactipeptide", core, name, leader=leader, score=score)
 
-    @property
-    def core(self):
-        return self._core
+    def to_json(self) -> Dict[str, Any]:
+        return {"location": serialiser.location_to_json(self.location),
+                "name": self.get_name(),
+                "score": self.score,
+                "core": self.core,
+                "leader": self.leader}
 
-    @core.setter
-    def core(self, seq):
-        seq = seq.replace('X', '')
-        self._core = seq
-
-    @property
-    def leader(self):
-        return self._leader
-
-    @leader.setter
-    def leader(self, seq):
-        self._leader = seq
-
-    @property
-    def c_cut(self):
-        return self._c_cut
-
-    @c_cut.setter
-    def c_cut(self, ccut):
-        self._c_cut = ccut
+    @staticmethod
+    def from_json(json) -> "SactipeptideMotif":
+        return SactipeptideMotif(serialiser.location_from_json(json["location"]),
+                                 json["name"], json["score"], json["leader"], json["core"])
 
 
-def get_detected_domains(cluster: secmet.Cluster) -> Set[str]:
+def get_detected_domains(cluster: secmet.Cluster) -> Dict[str, int]:
     """ Gathers all detected domain ids from a cluster. Includes detection of
         some extra HMM profiles specific to sactipeptides.
 
@@ -120,12 +100,12 @@ def get_detected_domains(cluster: secmet.Cluster) -> Set[str]:
         Returns:
             a dictionary mapping domain ids to number of times that domain was found
     """
-    found_domains = {}  # type: Set[str]
+    found_domains = {}  # type: Dict[str, int]
     # Gather biosynthetic domains
     for feature in cluster.cds_children:
         if not feature.sec_met:
             continue
-        for domain_id in feature.sec_met.domain_ids:  # TODO: check domain_ids is not a set/unique only
+        for domain_id in feature.sec_met.domain_ids:
             found_domains[domain_id] = found_domains.get(domain_id, 0) + 1
 
     # Gather non-biosynthetic domains
@@ -165,10 +145,12 @@ def cds_has_domains(cds: secmet.CDSFeature, domains: Set[str]) -> bool:
         Returns:
             True if any of the domains are present in the CDS, otherwise False
     """
-    return cds.sec_met and set(cds.sec_met.domain_ids).intersection(domains)
+    return bool(cds.sec_met and set(cds.sec_met.domain_ids).intersection(domains))
 
 
-def acquire_rodeo_heuristics(record, cluster, query, leader, core, domains):
+def acquire_rodeo_heuristics(record: secmet.Record, cluster: secmet.Cluster,
+                             query: secmet.CDSFeature, leader: str, core: str,
+                             domains: Dict[str, int]) -> Tuple[int, List[float], List[int]]:
     """Calculate heuristic scores for RODEO"""
     tabs = []
     score = 0
@@ -233,7 +215,7 @@ def acquire_rodeo_heuristics(record, cluster, query, leader, core, domains):
         else:
             tabs.append(0)
     # No Cys in last 1/4th?
-    quarter_length = int(-len(precursor) / 4)
+    quarter_length = -len(precursor) // 4
     if "C" not in precursor[quarter_length:]:
         score += 1
         tabs.append(1)
@@ -241,7 +223,7 @@ def acquire_rodeo_heuristics(record, cluster, query, leader, core, domains):
         score -= 1
         tabs.append(0)
     # 2 Cys in first 2/3rds of precursor, 1 Cys in last 1/3rd of precursor
-    two_thirds = int(2 * len(precursor) / 3)
+    two_thirds = 2 * len(precursor) // 3
     if precursor[:two_thirds].count("C") == 2 and precursor[two_thirds:].count("C") == 1:
         score += 1
         tabs.append(1)
@@ -356,17 +338,17 @@ def acquire_rodeo_heuristics(record, cluster, query, leader, core, domains):
         score -= 2
         tabs += [1, 0]
     else:
-        last_motif_C = 0
+        last_motif_c = 0
         index = -1
         for aa in reversed(precursor):
             if aa == "C" and "C" in precursor[index-6:index]:
-                last_motif_C = len(precursor[:index]) + 1
+                last_motif_c = index + 1
             index -= 1
-        if not (0.35 <= last_motif_C / float(len(precursor)) <= 0.65):
-            score -= 2
-            tabs += [1, 0]
-        else:
+        if 0.35 <= last_motif_c / len(precursor) <= 0.65:
             score += 3
+            tabs += [0, 1]
+        else:
+            score -= 2
             tabs += [1, 0]
     # SS profile sum > 1; The "SS profile" variables are calculated by the
     # lanscout function, namely the last regex search done using the rex4.
@@ -419,31 +401,28 @@ def lanscout(seq):
             else:
                 tempy.append(1)
 
-        if tempy:
-            avgs.append(np.mean(tempy))
+        if sum(tempy):
+            avgs.append(sum(tempy) / len(tempy))
         else:
             avgs.append(0)
 
         numrings.append(len(match1))
-        cterm.append(len(rex3.split(core)[-1])/float(len(core)))
+        cterm.append(len(rex3.split(core)[-1]) / len(core))
 
         numringlist = []
         totrings = rex4.findall(core)
-        size = []
-        for i in range(0, len(totrings)):
-            size.append(len(totrings[i]))
+        size = [len(ring) for ring in totrings]
         db.append(size)
         numringlist.append(numrings)
 
     profile = []
-    for i in range(len(db)):
+    for i in db:
         temp = []
         for j in range(lanlower + 2, lanupper + 3):
-            temp.append(db[i].count(j))
+            temp.append(i.count(j))
         profile.append(temp)
 
-    for i in range(len(profile)):
-        profile[i] = str(profile[i]).strip('[]')
+    profile = [str(prof).strip('[]') for prof in profile]
 
     return numrings, avgs, cterm, profile
 
@@ -464,15 +443,13 @@ def generate_rodeo_svm_csv(leader, core, previously_gathered_tabs, hitends, doma
     # Length of core peptide
     columns.append(len(core))
     # Length of core / length of precursor ratio
-    columns.append(float(len(core)) / float(len(precursor)))
+    columns.append(len(core) / len(precursor))
     # Length of core / length of leader ratio
-    columns.append(float(len(core)) / float(len(leader)))
+    columns.append(len(core) / len(leader))
     # Ratio of length of N-terminus to first Cys / length of precursor
     columns.append(precursor.count("C") / float(len(precursor)))
     # Number of occurrences of CxNC motifs
     numrings, avgs, cterm, profile = lanscout([precursor])
-    if np.isnan(avgs[0]):
-        avgs = [0]
     columns.append(numrings[0])
     # Average distance between CxNC motifs
     columns.append(avgs[0])
@@ -493,71 +470,39 @@ def generate_rodeo_svm_csv(leader, core, previously_gathered_tabs, hitends, doma
     # Number in entire precursor of each amino acid
     columns += [precursor.count(aa) for aa in "ARDNCQEGHILKMFPSTWYV"]
     # Number in entire precursor of each amino acid type (Aromatics, Neg charged, Pos charged, Charged, Aliphatic, Hydroxyl)
-    columns.append(sum([precursor.count(aa) for aa in "FWY"]))
-    columns.append(sum([precursor.count(aa) for aa in "DE"]))
-    columns.append(sum([precursor.count(aa) for aa in "RK"]))
-    columns.append(sum([precursor.count(aa) for aa in "RKDE"]))
-    columns.append(sum([precursor.count(aa) for aa in "GAVLMI"]))
-    columns.append(sum([precursor.count(aa) for aa in "ST"]))
+    amino_groups = ["FWY", "DE", "RK", "RKDE", "GAVLMI", "ST"]
+    for group in amino_groups:
+        columns.append(sum([precursor.count(aa) for aa in group]))
     # Number in leader of each amino acid
     columns += [leader.count(aa) for aa in "ARDNCQEGHILKMFPSTWYV"]
     # Number in leader of each amino acid type (Aromatics, Neg charged, Pos charged, Charged, Aliphatic, Hydroxyl)
-    columns.append(sum([leader.count(aa) for aa in "FWY"]))
-    columns.append(sum([leader.count(aa) for aa in "DE"]))
-    columns.append(sum([leader.count(aa) for aa in "RK"]))
-    columns.append(sum([leader.count(aa) for aa in "RKDE"]))
-    columns.append(sum([leader.count(aa) for aa in "GAVLMI"]))
-    columns.append(sum([leader.count(aa) for aa in "ST"]))
+    for group in amino_groups:
+        columns.append(sum([leader.count(aa) for aa in group]))
     # Number in core of each amino acid
     columns += [core.count(aa) for aa in "ARDNCQEGHILKMFPSTWYV"]
     # Number in core of each amino acid type (Aromatics, Neg charged, Pos charged, Charged, Aliphatic, Hydroxyl)
-    columns.append(sum([core.count(aa) for aa in "FWY"]))
-    columns.append(sum([core.count(aa) for aa in "DE"]))
-    columns.append(sum([core.count(aa) for aa in "RK"]))
-    columns.append(sum([core.count(aa) for aa in "RKDE"]))
-    columns.append(sum([core.count(aa) for aa in "GAVLMI"]))
-    columns.append(sum([core.count(aa) for aa in "ST"]))
+    for group in amino_groups:
+        columns.append(sum([core.count(aa) for aa in group]))
     # Number of each peptidase Pfam hit (PF05193/PF00082/PF03572/PF00675/PF02517/PF02163/PF00326)
     peptidase_domains = ["PF05193", "PF00082", "PF03572", "PF00675", "PF02517", "PF02163", "PF00326"]
-    for pepdom in peptidase_domains:
-        if pepdom in domain_counts:
-            columns.append(domain_counts[pepdom])
-        else:
-            columns.append(0)
+    for peptidase in peptidase_domains:
+        columns.append(domain_counts.get(peptidase, 0))
     # Number of each ABC transporter Pfam hit (PF00005/PF00664)
     transp_domains = ["PF00005", "PF00664"]
     for transp_dom in transp_domains:
-        if transp_dom in domain_counts:
-            columns.append(domain_counts[transp_dom])
-        else:
-            columns.append(0)
+        columns.append(domain_counts.get(transp_dom, 0))
     # Number of each response regulator Pfam hit (PF00072)
-    if "PF00072" in domain_counts:
-        columns.append(domain_counts["PF00072"])
-    else:
-        columns.append(0)
+    columns.append(domain_counts.get("PF00072", 0))
     # Number of each major facilitator Pfam hit (PF07690)
-    if "PF07690" in domain_counts:
-        columns.append(domain_counts["PF07690"])
-    else:
-        columns.append(0)
+    columns.append(domain_counts.get("PF07690", 0))
     # Number of each ATPase Pfam hit (PF02518/PF13304)
     atpase_domains = ["PF02518", "PF13304"]
     for atpase_dom in atpase_domains:
-        if atpase_dom in domain_counts:
-            columns.append(domain_counts[atpase_dom])
-        else:
-            columns.append(0)
+        columns.append(domain_counts.get(atpase_dom, 0))
     # Number of each Fer4_12 Pfam hit (PF13353)
-    if "PF13353" in domain_counts:
-        columns.append(domain_counts["PF13353"])
-    else:
-        columns.append(0)
+    columns.append(domain_counts.get("PF13353", 0))
     # Number of each rSAM Pfam hit (PF04055)
-    if "PF04055" in domain_counts:
-        columns.append(domain_counts["PF04055"])
-    else:
-        columns.append(0)
+    columns.append(domain_counts.get("PF04055", 0))
     # Length of rSAM including PqqD domain
     if not hitends:
         columns.append(0)
@@ -580,48 +525,48 @@ def run_rodeo_svm(csv_columns: List[float]) -> int:
     return 0
 
 
-def run_rodeo(record, cluster, query, leader, core, domains):
+def run_rodeo(record: secmet.Record, cluster: secmet.Cluster, query: secmet.CDSFeature,
+              leader: str, core: str, domains: Dict[str, int]) -> Tuple[bool, float]:
     """Run RODEO heuristics + SVM to assess precursor peptide candidate"""
     rodeo_score = 0
 
     # Incorporate heuristic scores
-    heuristic_score, gathered_tabs_for_csv, hitends = acquire_rodeo_heuristics(record, cluster, query, leader, core, domains)
+    heuristic_score, partial_csv, hitends = acquire_rodeo_heuristics(record, cluster, query, leader, core, domains)
     rodeo_score += heuristic_score
 
     # Incorporate SVM scores
-    csv_columns = generate_rodeo_svm_csv(leader, core, gathered_tabs_for_csv, hitends, domains)
+    csv_columns = generate_rodeo_svm_csv(leader, core, partial_csv, hitends, domains)
     rodeo_score += run_rodeo_svm(csv_columns)
 
-    if rodeo_score >= 26:
-        return True, rodeo_score
-    else:
-        return False, rodeo_score
+    return rodeo_score >= 26, rodeo_score
 
 
-def determine_precursor_peptide_candidate(record, cluster, query, query_sequence, domains) -> Optional[Sactipeptide]:
+def determine_precursor_peptide_candidate(record: secmet.Record, cluster: secmet.Cluster,
+                                          query: secmet.CDSFeature, query_sequence: str,
+                                          domains: Dict[str, int]) -> Optional[SactipeptideMotif]:
     """Identify precursor peptide candidates and split into two"""
 
     # Skip sequences with >100 AA
     if not 20 <= len(query_sequence) <= 100:
         return None
 
-    end = int(len(query_sequence)*0.25)
+    end = len(query_sequence) // 4
+
+    # Determine the leader and core peptide
+    leader = query_sequence[:end]
+    core = query_sequence[end:]
 
     # Run RODEO to assess whether candidate precursor peptide is judged real
-    rodeo_result = run_rodeo(record, cluster, query, query_sequence[:end], query_sequence[end:], domains)
+    rodeo_result = run_rodeo(record, cluster, query, leader, core, domains)
     if not rodeo_result[0]:
         return None
 
-    sacti_peptide = Sactipeptide(0, end + 1, rodeo_result[1])
 
-    # Determine the leader and core peptide
-    sacti_peptide.leader = query_sequence[:end]
-    sacti_peptide.core = query_sequence[end:]
-
-    return sacti_peptide
+    return SactipeptideMotif(query.location, query.get_name(), rodeo_result[1], leader, core)
 
 
-def run_sactipred(record, cluster, query, domains) -> Optional[Sactipeptide]:
+def run_sactipred(record: secmet.Record, cluster: secmet.Cluster,
+                  query: secmet.CDSFeature, domains: Dict[str, int]) -> Optional[SactipeptideMotif]:
     """General function to predict and analyse sacti peptides"""
 
     # Run checks to determine whether an ORF encodes a precursor peptide
@@ -635,29 +580,16 @@ def run_sactipred(record, cluster, query, domains) -> Optional[Sactipeptide]:
     return result
 
 
-class SactipeptideMotif(secmet.Prepeptide):
-    def __init__(self, location, name, score, leader, core):
-        super().__init__(location, "sactipeptide", core, name, leader=leader, score=score)
+def specific_analysis(record: secmet.Record) -> SactiResults:
+    """ Analyse each sactipeptide cluster and find precursors within it.
+        If an unannotated ORF would contain the precursor, it will be annotated.
 
-    def to_json(self) -> Dict[str, Any]:
-        return {"location": serialiser.location_to_json(self.location),
-                "name": self.get_name(),
-                "score": self.score,
-                "core": self.core,
-                "leader": self.leader}
+        Arguments:
+            record: the Record to analyse
 
-    @staticmethod
-    def from_json(json) -> "SactipeptideMotif":
-        return SactipeptideMotif(serialiser.location_from_json(json["location"]),
-                                 json["name"], json["score"], json["leader"], json["core"])
-
-
-def result_vec_to_features(orig_feature, res_vec):
-    return SactipeptideMotif(orig_feature.location, orig_feature.get_name(),
-                             res_vec.rodeo_score, res_vec.leader, res_vec.core)
-
-
-def specific_analysis(record, options) -> SactiResults:
+        Returns:
+            a SactiResults instance holding all found precursors and new ORFs
+    """
     results = SactiResults(record.id)
     for cluster in record.get_clusters():
         if 'sactipeptide' not in cluster.products:
@@ -672,11 +604,9 @@ def specific_analysis(record, options) -> SactiResults:
 
         # Evaluate each candidate precursor peptide
         for candidate in candidates:
-            result_vec = run_sactipred(record, cluster, candidate, domains)
-            if result_vec is None:
+            motif = run_sactipred(record, cluster, candidate, domains)
+            if motif is None:
                 continue
-
-            motif = result_vec_to_features(candidate, result_vec)
 
             results.motifs_by_locus[candidate.get_name()].append(motif)
             results.clusters[cluster.get_cluster_number()].add(candidate.get_name())
