@@ -33,16 +33,29 @@ class IntegrationSactipeptides(unittest.TestCase):
         return motifs
 
     def test_ap012495_end_to_end(self):
-        # skip fimo being disabled for this, we already test the computational
-        # side elsewhere
-        if self.options.without_fimo:
-            return
         result = helpers.run_and_regenerate_results_for_module(path.get_full_path(__file__, "data", "AP012495.1_c14.gbk"),
                         sactipeptides, self.options, expected_record_count=1)
         assert isinstance(result, SactiResults)
         assert list(result.motifs_by_locus) == ["BEST7613_6887"]
         prepeptide = result.motifs_by_locus["BEST7613_6887"][0]
+        assert prepeptide.location.start == 9735
+        assert prepeptide.location.end == 9867
         assert prepeptide.get_name() == "BEST7613_6887"
         assert prepeptide.leader == "MKKAVIVENK"
         assert prepeptide.core == "GCATCSIGAACLVDGPIPDFEIAGATGLFGLWG"
         self.assertAlmostEqual(prepeptide.score, 31.)
+
+    def test_ap012495_end_to_end_all_orfs(self):
+        # make sure that unannotated orfs are found if they are the precursor
+        result = helpers.run_and_regenerate_results_for_module(path.get_full_path(__file__,
+                                             "data", "AP012495.1_c14_missing_precursor.gbk"),
+                        sactipeptides, self.options, expected_record_count=1)
+        assert isinstance(result, SactiResults)
+        assert list(result.motifs_by_locus) == ["allorf041"]
+        prepeptide = result.motifs_by_locus["allorf041"][0]
+        assert prepeptide.location.start == 9735
+        assert prepeptide.location.end == 9867
+        assert prepeptide.get_name() == "allorf041"
+        assert prepeptide.leader == "MKKAVIVENK"
+        assert prepeptide.core == "GCATCSIGAACLVDGPIPDFEIAGATGLFGLWG"
+        self.assertAlmostEqual(prepeptide.score, 28.)
