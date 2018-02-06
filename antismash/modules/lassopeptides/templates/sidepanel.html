@@ -1,0 +1,30 @@
+{% if results | length != 0 %}
+<div class="more-details">
+  <h3> Prediction details </h3>
+  <dl class ="prediction-text">
+    {% for motifs in results.values() %}
+    {%- for motif in motifs -%}
+    <dt>{{motif.get_name()}} - {{motif.peptide_subclass}}</dt>
+      <dd>Cleavage pHMM score: {{'%0.2f' | format(motif.score)}}</dd>
+      <dd>RODEO score: {{motif.rodeo_score}}</dd>
+      <dd>Monoisotopic mass: {{'%0.1f' | format(motif.cut_mass)}} Da</dd>
+      <dd>Molecular weight: {{'%0.1f' | format(motif.cut_weight)}} Da</dd>
+      <dd>Number of bridges: {{motif.num_bridges}}</dd>
+    {% if motif.tail -%}
+    <dl>
+      <dt>Weights before cleavage:</dt>
+        <dd>Monoisotopic mass: {{'%0.1f' | format(motif.monoisotopic_mass)}} Da</dd>
+        <dd>Molecular weight: {{'%0.1f' | format(motif.molecular_weight)}} Da</dd>
+    </dl>
+    {%- endif %}
+    {%- endfor -%}
+    {% endfor %}
+  </dl>
+</div>
+<div>
+  <h3>Database cross-links</h3>
+  <div class="prediction-text">
+    <a href="http://bioinfo.lifl.fr/norine/form2.jsp" target="_new">Look up in NORINE database</a>
+  </div>
+</div>
+{% endif %}

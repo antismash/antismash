@@ -181,7 +181,7 @@ PF01050	Mannose-6-phosphate isomerase	23	PF01050.hmm
 PF01501	Glycosyl transferase family 8	24	PF01501.hmm
 PF05159	Capsule polysaccharide biosynthesis protein	20	PF05159.hmm
 Glyco_tran_28_C	Glycosyltransferase family 28 C-terminal domain	21	PF04101.hmm
-PF02563	Polysaccharide biosynthesis/export protein	26	PF02563.hmm
+Poly_export	Polysaccharide biosynthesis/export protein	26	PF02563.hmm
 PF08437	Glycosyl transferase family 8 C-terminal	19	PF08437.hmm
 PIG-L	GlcNAc-PI de-N-acetylase	22	PF02585.hmm
 APE_KS1	Aryl polyene ketosynthase 1	50	APE_KS1.hmm
@@ -212,7 +212,7 @@ Peptidase_M16_C	Peptidase M16 inactive domain	20	PF05193.hmm
 PF13353	4Fe-4S single cluster domain	22	PF13353.hmm
 PF02517	Abi	21	PF02517.hmm
 PF02163	Peptidase_M50	27	PF02163.hmm
-PF00326	Peptidase_S9	22	PF00326.hmm
+Peptidase_S9	Prolyl oligopeptidase family	22	PF00326.hmm
 Lant_dehydr_C	Lant_dehydr_C	27	PF14028.hmm
 Peptidase_C39	Peptidase C39 family	21	PF03412.hmm
 PF00899	ThiF	22	PF00899.hmm
