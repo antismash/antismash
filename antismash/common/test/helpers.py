@@ -126,7 +126,7 @@ def get_path_to_balhymicin_genbank():
 
 
 def run_and_regenerate_results_for_module(input_file, module, options,
-                                          expected_record_count, callback=None):
+                                          expected_record_count=1, callback=None):
     """ Runs antismash end to end over the given file with the given options
         and returns the given modules regenerated results
 

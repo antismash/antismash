@@ -145,8 +145,8 @@ class TestIntegration(unittest.TestCase):
                               isolated=True, modules=antismash.get_all_modules())
 
         record_path = path.get_full_path(__file__, 'data', 'thiostrepton_before_analysis.gbk')
-        regenned_results = helpers.run_and_regenerate_results_for_module(record_path, thiopeptides, config,
-                                     expected_record_count=1, callback=callback)
+        regenned_results = helpers.run_and_regenerate_results_for_module(record_path, thiopeptides,
+                                                                         config, callback=callback)
         assert regenned_results
         assert len(regenned_results.motifs) == 1
         self.check_thiostrepton_values(regenned_results.motifs[0])
@@ -156,8 +156,7 @@ class TestIntegration(unittest.TestCase):
         config = build_config(["--minimal", "--enable-thiopeptides"],
                               isolated=True, modules=antismash.get_all_modules())
         record_path = path.get_full_path(__file__, 'data', 'CP009369.1.gbk')
-        results = helpers.run_and_regenerate_results_for_module(record_path, thiopeptides, config,
-                                                                expected_record_count=1)
+        results = helpers.run_and_regenerate_results_for_module(record_path, thiopeptides, config)
         assert results
         assert len(results.motifs) == 1
         prepeptide = results.motifs[0]

@@ -32,9 +32,12 @@ class IntegrationSactipeptides(unittest.TestCase):
                 motifs.extend(result.motifs_by_locus[locus])
         return motifs
 
+    def run_analyis(self, filename):
+        data_file = path.get_full_path(__file__, "data", filename)
+        return helpers.run_and_regenerate_results_for_module(data_file, sactipeptides, self.options)
+
     def test_ap012495_end_to_end(self):
-        result = helpers.run_and_regenerate_results_for_module(path.get_full_path(__file__, "data", "AP012495.1_c14.gbk"),
-                        sactipeptides, self.options, expected_record_count=1)
+        result = self.run_analyis("AP012495.1_c14.gbk")
         assert isinstance(result, SactiResults)
         assert list(result.motifs_by_locus) == ["BEST7613_6887"]
         prepeptide = result.motifs_by_locus["BEST7613_6887"][0]
@@ -47,9 +50,7 @@ class IntegrationSactipeptides(unittest.TestCase):
 
     def test_ap012495_end_to_end_all_orfs(self):
         # make sure that unannotated orfs are found if they are the precursor
-        result = helpers.run_and_regenerate_results_for_module(path.get_full_path(__file__,
-                                             "data", "AP012495.1_c14_missing_precursor.gbk"),
-                        sactipeptides, self.options, expected_record_count=1)
+        result = self.run_analyis("AP012495.1_c14_missing_precursor.gbk")
         assert isinstance(result, SactiResults)
         assert list(result.motifs_by_locus) == ["allorf041"]
         prepeptide = result.motifs_by_locus["allorf041"][0]

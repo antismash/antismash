@@ -11,7 +11,9 @@ class LanthiConfig(object):  # pylint: disable=too-few-public-methods
     def __init__(self):
         self.fimo_present = False
 
+
 _CONFIG = LanthiConfig()
+
 
 def get_config():
     """Access the lanthieptide-specific config"""

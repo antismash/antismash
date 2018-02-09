@@ -31,6 +31,7 @@ SHORT_DESCRIPTION = "lassopeptide precursor prediction"
 
 
 def check_prereqs() -> List[str]:
+    """ Checks if the required external programs are available """
     failure_messages = []
     for binary_name, optional in [('hmmpfam2', False), ('fimo', True)]:
         present = True
@@ -39,10 +40,8 @@ def check_prereqs() -> List[str]:
             if not optional:
                 failure_messages.append("Failed to locate executable for %r" %
                                         binary_name)
-        slot = '{}_present'.format(binary_name)
-        conf = get_config()
-        if hasattr(conf, slot):
-            setattr(conf, slot, present)
+        if binary_name == "fimo":
+            get_config().fimo_present = present
 
     return failure_messages
 
@@ -53,8 +52,8 @@ def get_arguments() -> ModuleArgs:
     return args
 
 
-def check_options(options) -> List[str]:
-    """ No options here to check, so ignore it """
+def check_options(_options) -> List[str]:
+    """ No options here to check, so just return """
     return []
 
 
@@ -63,12 +62,13 @@ def is_enabled(options):
     return not options.minimal or options.lassopeptides_enabled
 
 
-def regenerate_previous_results(previous: Dict[str, Any], record: Record, options) -> LassoResults:
+def regenerate_previous_results(previous: Dict[str, Any], record: Record, _options) -> LassoResults:
     """ Regenerate a results object from the given data """
     return LassoResults.from_json(previous, record)
 
 
-def run_on_record(record: Record, results: LassoResults, options) -> LassoResults:
+def run_on_record(record: Record, results: LassoResults, _options) -> LassoResults:
+    """ Finds all precursors within lassopeptide clusters """
     if results and isinstance(results, LassoResults):
         return results
     return specific_analysis(record)

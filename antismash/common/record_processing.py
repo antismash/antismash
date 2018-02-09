@@ -8,7 +8,7 @@ import functools
 import logging
 import re
 import os
-from typing import List, Set
+from typing import List, Set, Tuple
 
 import Bio
 from Bio.Seq import Seq
@@ -20,7 +20,6 @@ from antismash.common.secmet import Record
 from antismash.config import get_config, update_config
 
 from .subprocessing import parallel_function
-from .utils import generate_unique_id
 
 
 def parse_input_sequence(filename, minimum_length=-1, start=-1, end=-1) -> List[Record]:
@@ -233,7 +232,6 @@ def pre_process_sequences(sequences, options, genefinding) -> List[Record]:
     single_entry = False
     if options.genefinding_gff3:
         single_entry = gff_parser.check_gff_suitability(options, sequences)
-
 
     if checking_required:
         # ensure CDS features have all relevant information
@@ -453,3 +451,35 @@ def fix_locus_tags(seq_record) -> None:  # TODO should be part of secmet
                     val = val.replace(char, "_")
             logging.critical("%s altered in fix_locus_tags: %s->%s", attr, getattr(feature, attr), val)
             setattr(feature, attr, val)
+
+
+def generate_unique_id(prefix: str, existing_ids: Set[str], start: int = 0,
+                       max_length: int = -1) -> Tuple[str, int]:
+    """ Generate a identifier of the form prefix_num, e.g. seq_15.
+
+        Does *not* add the generated prefix to current identifiers
+
+        Args:
+            prefix: The text portion of the name.
+            existing_ids: The current identifiers to avoid collision with.
+            start: An integer to start counting at (default: 0)
+            max_length: The maximum length allowed for the identifier,
+                        values less than 1 are considerd to be no limit.
+
+        Returns:
+            A tuple of the identifier generated and the value of the counter
+                at the time the identifier was generated, e.g. ("seq_15", 15)
+
+    """
+    counter = int(start)
+    existing_ids = set(existing_ids)
+    max_length = int(max_length)
+
+    format_string = "{}_%d".format(prefix)
+    name = format_string % counter
+    while name in existing_ids:
+        counter += 1
+        name = format_string % counter
+    if max_length > 0 and len(name) > max_length:
+        raise RuntimeError("Could not generate unique id for %s after %d iterations" % (prefix, counter - start))
+    return name, counter

@@ -6,14 +6,12 @@
 
 import unittest
 
-from helperlibs.bio import seqio
-
 import antismash
-from antismash.common import path, secmet
+from antismash.common import path
 from antismash.common.test import helpers
 from antismash.config import build_config, destroy_config
 from antismash.modules import lassopeptides
-from antismash.modules.lassopeptides import specific_analysis, check_prereqs
+from antismash.modules.lassopeptides import check_prereqs
 
 check_prereqs()  # ensure fimo detected
 
@@ -26,10 +24,13 @@ class IntegrationLasso(unittest.TestCase):
     def tearDown(self):
         destroy_config()
 
+    def run_analysis(self, filename):
+        datafile = path.get_full_path(__file__, "data", filename)
+        return helpers.run_and_regenerate_results_for_module(datafile, lassopeptides, self.options)
+
     def test_astexin1(self):
         "Test lassopeptides prediction for astexin-1"
-        result = helpers.run_and_regenerate_results_for_module(path.get_full_path(__file__, "data", "astex1.gbk"),
-                        lassopeptides, self.options, expected_record_count=1)
+        result = self.run_analysis("astex1.gbk")
         assert list(result.motifs_by_locus) == ["ctg1_orf03094"]
         assert len(result.motifs_by_locus["ctg1_orf03094"]) == 1
         motif = result.motifs_by_locus["ctg1_orf03094"][0]
@@ -47,8 +48,7 @@ class IntegrationLasso(unittest.TestCase):
 
     def test_burhizin(self):
         "Test lassopeptide prediction for burhizin"
-        result = helpers.run_and_regenerate_results_for_module(path.get_full_path(__file__, "data", "burhizin.gbk"),
-                        lassopeptides, self.options, expected_record_count=1)
+        result = self.run_analysis("burhizin.gbk")
 
         assert list(result.motifs_by_locus) == ["ctg1_orf02117"]
         assert len(result.motifs_by_locus["ctg1_orf02117"]) == 1
@@ -67,8 +67,7 @@ class IntegrationLasso(unittest.TestCase):
 
     def test_ssv2083(self):
         "Test lassopeptide prediction for SSV-2083"
-        result = helpers.run_and_regenerate_results_for_module(path.get_full_path(__file__, "data", 'SSV2083.gbk'),
-                        lassopeptides, self.options, expected_record_count=1)
+        result = self.run_analysis("SSV2083.gbk")
 
         assert list(result.motifs_by_locus) == ["ctg1_orf11610"]
         assert len(result.motifs_by_locus["ctg1_orf11610"]) == 1

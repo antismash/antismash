@@ -55,8 +55,7 @@ class Base(unittest.TestCase):
     def run_antismash(self, filename, expected):
         with TemporaryDirectory() as output_dir:
             update_config({"output_dir": output_dir})
-            results = helpers.run_and_regenerate_results_for_module(filename,
-                            clusterblast, self.options, expected_record_count=1)
+            results = helpers.run_and_regenerate_results_for_module(filename, clusterblast, self.options)
             update_config({"output_dir": ""})
             results, global_results = self.get_results(results)
             assert len(results.cluster_results) == 1

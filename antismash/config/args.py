@@ -1,10 +1,18 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+""" A collection of classes and functions that allow each antismash module to
+    specify its own command line options.
+
+    Also constructs the general/default options.
+"""
+
 import argparse
 from collections import defaultdict
 import multiprocessing
 import os
+from types import ModuleType
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 
 class AntismashParser(argparse.ArgumentParser):
@@ -31,7 +39,8 @@ class AntismashParser(argparse.ArgumentParser):
         self._basic_help_groups.add("Additional analysis")
         super().__init__(*args, **kwargs)
 
-    def add_argument_group(self, title, description=None, basic=False, **kwargs):
+    def add_argument_group(self, title: str, description: str = None, basic: bool = False,
+                           **kwargs):  # pylint: disable=arguments-differ
         """ Overrides original to enable tracking of which help category a group
             is in.
 
@@ -52,38 +61,36 @@ class AntismashParser(argparse.ArgumentParser):
             self._basic_help_groups.add(title)
         return super().add_argument_group(title, description, **kwargs)
 
-    def print_help(self, file=None, show_all=False) -> None:  # arg added, so pylint: disable=arguments-differ
+    def print_help(self, file_handle=None, show_all=False) -> None:  # arg added, so pylint: disable=arguments-differ
         """ Overrides parent print_help() to be able to pass through whether all
             help should be shown or not.
 
             Arguments:
-                file: the file to write the help to, defaults to stdout
+                file_handle: the file to write the help to, defaults to stdout
                 show_all: True if all help should be shown, otherwise only basic
 
             Returns:
                 None
         """
         self._show_all = show_all
-        super().print_help(file)
+        super().print_help(file_handle)
 
-    def write_to_config_file(self, filename, values=None) -> None:
+    def write_to_config_file(self, filename: str, values: argparse.Namespace=None) -> None:
         """ Write the default options to file in a form that can be parsed again
 
             Arguments:
                 filename: the filename to write to
                 values: a Namespace object with values to use instead of defaults
         """
-        def construct_arg_text(arg, processed_destinations, values):
+        def construct_arg_text(arg, processed_destinations: Set[str], values: argparse.Namespace) -> List[str]:
             """ Only construct if not already processed and not a help or input
                 arg
             """
-            if arg.dest in ["help", "help_showall", "write_config_file",
-                            "reuse_results", "check_prereqs_only",
-                            "list_plugins", "version", "genefinding_gff3"] \
-                    or arg.dest in processed_destinations:
-                return []
-            # skip postional args
-            if not arg.option_strings:
+            if (arg.dest in ["help", "help_showall", "write_config_file",  # reserved
+                             "reuse_results", "check_prereqs_only",
+                             "list_plugins", "version", "genefinding_gff3"]
+                    or arg.dest in processed_destinations  # already exists
+                    or not arg.option_strings):  # skip postional args
                 return []
             lines = []
             processed_destinations.add(arg.dest)
@@ -106,7 +113,7 @@ class AntismashParser(argparse.ArgumentParser):
             was_list = isinstance(value, list)
             if value and isinstance(value, list):
                 value = ",".join(value)
-            if isinstance(arg, argparse._StoreTrueAction):
+            if arg.const and arg.default is False:  # i.e. is it a 'store_true'
                 # don't write the value if it only changes to True,
                 # otherwise the True will be considered a positional arg
                 # and causes problems with the sequence
@@ -254,11 +261,11 @@ class ModuleArgs:
             basic_help: Whether help for module options (not analysis toggles)
                     should be shown in the basic --help output.
     """
-    def __init__(self, title, prefix, override_safeties=False,
-                 enabled_by_default=False, basic_help=False):
+    def __init__(self, title: str, prefix: str, override_safeties: bool = False,
+                 enabled_by_default: bool = False, basic_help: bool = False) -> None:
         if not title:
             raise ValueError("Argument group must have a title")
-        self.title = title
+        self.title = str(title)
         self.parser = AntismashParser()
         self.override = override_safeties
         self.enabled_by_default = enabled_by_default
@@ -267,26 +274,37 @@ class ModuleArgs:
         # the main analysis toggle(s)
         self.group = self.parser.add_argument_group(title="Additional analysis",
                                                     basic=True)
+        # check the prefix is valid
         if not isinstance(prefix, str):
             raise TypeError("Argument prefix must be a string")
-        self.prefix = prefix
-        if len(self.prefix) < 2 and not self.override:
+        if len(prefix) < 2 and not self.override:
             raise ValueError("Argument prefixes must be at least 2 chars")
-        if self.prefix and not self.prefix[0].isalpha():
+        if prefix and not prefix[0].isalpha():
             raise ValueError("Argument prefixes cannot start with numbers")
-        if self.prefix and not self.prefix.isalnum():
+        if prefix and not prefix.isalnum():
             raise ValueError("Argument prefixes must be alphanumeric")
+        self.prefix = prefix
+
         self.skip_type_check = self.override
         self.single_arg = False
         self.args = []
         self.basic = basic_help
 
-    def add_option(self, name, *args, **kwargs) -> None:
+    def add_option(self, name: str, *args, **kwargs) -> None:
+        """ Add a commandline option that takes a value """
         if not name:
             raise ValueError("Options must have a name")
+        option_type = kwargs.get("type")
+        default = kwargs.get("default")
+        if kwargs.get("action") == "store_true" or hasattr(option_type, "__call__"):
+            # skip checking of options with no value or options using lambdas
+            pass
+        elif option_type is not None:
+            # if it has a type, ensure the default is that type
+            assert isinstance(default, option_type)
         self._add_argument(self.options, name, *args, **kwargs)
 
-    def add_analysis_toggle(self, name, *args, **kwargs) -> None:
+    def add_analysis_toggle(self, name: str, *args, **kwargs) -> None:
         """ Add a simple on-off option to appear in the "Additional analysis"
             section. Every module that isn't running by default must have one
             of these arguments.
@@ -307,7 +325,7 @@ class ModuleArgs:
         name, kwargs["dest"] = self.process_names(name, kwargs["dest"])
         self.args.append(group.add_argument(name, *args, **kwargs))
 
-    def verify_required(self, kwargs) -> None:
+    def verify_required(self, kwargs: Dict[str, Any]) -> None:
         """ Checks that all the important sections have arguments provided.
 
             If self.skip_type_check is truthy, extra checks on default types
@@ -337,7 +355,14 @@ class ModuleArgs:
         if not isinstance(kwargs["default"], declared_type):
             raise TypeError("Argument default doesn't match chosen type")
 
-    def process_names(self, name, dest):
+    def process_names(self, name: str, dest: str) -> Tuple[str, str]:
+        """ Ensures both commandline name and destination/attribute name are
+            valid.
+
+            Returns:
+                a tuple of name and destination, modified to include prefix if
+                it was ommitted
+        """
         if isinstance(name, list):
             raise TypeError("Module arguments may not have short-forms")
         if not isinstance(name, str) or not isinstance(dest, str):
@@ -372,7 +397,7 @@ class ModuleArgs:
         return name, dest
 
 
-def build_parser(from_config_file=False, modules=None) -> AntismashParser:
+def build_parser(from_config_file: bool = False, modules: List[ModuleType] = None) -> AntismashParser:
     """ Constructs an AntismashParser with all the default options antismash
         requires for proper operation, along with any added by the provided
         modules.
@@ -424,7 +449,8 @@ def build_parser(from_config_file=False, modules=None) -> AntismashParser:
     return parser
 
 
-def basic_options():
+def basic_options() -> ModuleArgs:
+    """ Constructs basic options for antismash. """
     group = ModuleArgs("Basic analysis options", '', override_safeties=True, basic_help=True)
 
     group.add_option('--taxon',
@@ -436,7 +462,9 @@ def basic_options():
     return group
 
 
-def output_options():
+def output_options() -> ModuleArgs:
+    """ Constructs output options for antismash.
+    """
     group = ModuleArgs("Output options", 'output', basic_help=True)
     group.add_option('--output-dir',
                      dest='output_dir',
@@ -447,7 +475,10 @@ def output_options():
     return group
 
 
-def advanced_options():
+def advanced_options() -> ModuleArgs:
+    """ Constructs a ModuleArgs for all the advanced options not shown
+        with just --help.
+    """
     group = ModuleArgs("Advanced options", '', override_safeties=True)
     group.add_option('--reuse-results',
                      dest='reuse_results',
@@ -492,7 +523,8 @@ def advanced_options():
     return group
 
 
-def debug_options():
+def debug_options() -> ModuleArgs:
+    """ Constructs a ModuleArgs object with antismash's debug options """
     group = ModuleArgs("Debugging & Logging options", '', override_safeties=True)
     group.add_option('-v', '--verbose',
                      dest='verbose',
@@ -544,7 +576,13 @@ def debug_options():
     return group
 
 
-def specific_debugging(modules):
+def specific_debugging(modules: List[ModuleType]) -> Optional[ModuleArgs]:
+    """ Inserts a --minimal option, along with --enable-X for all modules which
+        specified enabled_by_default as True.
+
+        If no modules have specified enabled_by_default, --minimal will not be
+        created.
+    """
     if not modules:
         return None
     # only relevant for modules that are disabled by --minimal
@@ -570,7 +608,8 @@ def specific_debugging(modules):
                              dest='%s_enabled' % (module.NAME),
                              action='store_true',
                              default=False,
-                             help="Enable %s (default: enabled, unless --minimal is specified)" % module.SHORT_DESCRIPTION)
+                             help=("Enable %s (default: enabled, unless --minimal is specified)" %
+                                    module.SHORT_DESCRIPTION))
         except AttributeError as err:
             errors.append(str(err).replace("'module' object", module.__name__))
     if errors:
