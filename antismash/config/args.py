@@ -272,8 +272,10 @@ class ModuleArgs:
         self.prefix = prefix
         if len(self.prefix) < 2 and not self.override:
             raise ValueError("Argument prefixes must be at least 2 chars")
-        if self.prefix and not self.prefix.isalpha():
-            raise ValueError("Argument prefixes must only be alphabetic")
+        if self.prefix and not self.prefix[0].isalpha():
+            raise ValueError("Argument prefixes cannot start with numbers")
+        if self.prefix and not self.prefix.isalnum():
+            raise ValueError("Argument prefixes must be alphanumeric")
         self.skip_type_check = self.override
         self.single_arg = False
         self.args = []

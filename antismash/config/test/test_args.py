@@ -89,8 +89,10 @@ class TestConfig(unittest.TestCase):
 
 class TestModuleArgs(unittest.TestCase):
     def test_bad_values(self):
-        with self.assertRaisesRegex(ValueError, "Argument prefixes must only be alphabetic"):
+        with self.assertRaisesRegex(ValueError, "Argument prefixes must be alphanumeric"):
             mod_args = args.ModuleArgs('test options', 'prefix-has-dash')
+        with self.assertRaisesRegex(ValueError, "Argument prefixes cannot start with numbers"):
+            mod_args = args.ModuleArgs('test options', '2prefix')
         with self.assertRaisesRegex(TypeError, "Argument prefix must be a string"):
             mod_args = args.ModuleArgs('test options', 7)
         with self.assertRaisesRegex(ValueError, "Argument prefixes must be at least 2 chars"):
@@ -146,6 +148,8 @@ class TestModuleArgs(unittest.TestCase):
         assert options.test == "thing"
         options = parser.parse_args(["--test", "1"])
         assert options.test == "1"
+
+        mod_args = args.ModuleArgs('test', 't2pks')
 
 
 # pytest only here for simple output capturing
