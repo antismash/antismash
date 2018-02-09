@@ -11,7 +11,7 @@ import logging
 import os
 from typing import Any, Dict, List, Optional
 
-from antismash.common import deprecated, path, subprocessing, hmmscan_refinement
+from antismash.common import path, subprocessing, hmmscan_refinement
 from antismash.common.module_results import ModuleResults
 from antismash.config.args import ModuleArgs
 
@@ -160,14 +160,14 @@ def run_on_record(record, results, options) -> SMCOGResults:
             if not hits:
                 continue
             results.best_hits[gene.get_name()] = hits[0]
-        write_smcogs_file(hmm_results, genes, deprecated.get_pksnrps_cds_features(record), options)
+        write_smcogs_file(hmm_results, genes, record.get_nrps_pks_cds_features(), options)
 
     if not results.tree_images and options.smcogs_trees:
         # create the smcogs output directory if required
         results.relative_tree_path = relative_output_dir
         original_dir = os.getcwd()
         os.chdir(smcogs_dir)  # TODO make a context manager
-        nrpspks_genes = deprecated.get_pksnrps_cds_features(record)
+        nrpspks_genes = record.get_nrps_pks_cds_features()
         nrpspks_genes = []
         results.tree_images = generate_trees(smcogs_dir, hmm_results, genes, nrpspks_genes)
 

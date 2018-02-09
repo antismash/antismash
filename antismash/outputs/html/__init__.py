@@ -4,13 +4,10 @@
 """HTML output format module
 
 """
-import logging
 import os
 import shutil
 
-from argparse import Namespace
-
-from antismash.common import path, deprecated
+from antismash.common import path
 from antismash.config.args import ModuleArgs
 from antismash.outputs.html.generator import generate_webpage
 

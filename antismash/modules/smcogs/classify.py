@@ -8,7 +8,7 @@
 import os
 from typing import Dict, List
 
-from antismash.common import subprocessing, path, fasta, deprecated
+from antismash.common import subprocessing, path, fasta, utils
 from antismash.common.hmmscan_refinement import refine_hmmscan_results, HMMResult
 from antismash.common.secmet import GeneFunction, CDSFeature
 
@@ -27,7 +27,7 @@ def classify_genes(cds_features: List[CDSFeature]) -> Dict[str, List[HMMResult]]
     smcogs_opts = ["-E", "1E-6"]
     hmm_file = path.get_full_path(__file__, "data", "smcogs.hmm")
     smcogs_results = subprocessing.run_hmmscan(hmm_file, smcogs_fasta, smcogs_opts)
-    hmm_lengths = deprecated.hmmlengths(hmm_file)
+    hmm_lengths = utils.get_hmm_lengths(hmm_file)
     return refine_hmmscan_results(smcogs_results, hmm_lengths)
 
 

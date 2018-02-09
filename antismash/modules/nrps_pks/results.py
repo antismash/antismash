@@ -8,7 +8,6 @@ from typing import Any, Dict
 
 from Bio.SeqFeature import FeatureLocation
 
-from antismash.common import deprecated
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import AntismashDomain
 
@@ -115,7 +114,7 @@ class NRPS_PKS_Results(ModuleResults):
         """ Save substrate specificity predictions in NRPS/PKS domain sec_met info of record
         """
 
-        for feature in deprecated.get_pksnrps_cds_features(record):
+        for feature in record.get_nrps_pks_cds_features():
             x_count = 0
             nrps_qualifier = feature.nrps_pks
             new_features = []

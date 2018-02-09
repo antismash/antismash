@@ -8,7 +8,7 @@ import os
 import jinja2
 from jinja2 import FileSystemLoader, Environment
 
-from antismash.common import path, deprecated as utils
+from antismash.common import path
 from antismash.common.layers import RecordLayer, OptionsLayer
 from antismash.outputs.html import js
 
@@ -65,7 +65,7 @@ def generate_webpage(seq_records, results, options):
 
         records_written = sum([len(record.seq_record.get_clusters()) for record in records])
         aux = template.render(records=records, options=options_layered,
-                              utils=utils, extra_data=extra_data,
+                              version=options.version, extra_data=extra_data,
                               records_written=records_written,
                               config=options)
         result.write(aux)
