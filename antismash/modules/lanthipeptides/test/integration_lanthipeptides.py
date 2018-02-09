@@ -45,8 +45,8 @@ class IntegrationLanthipeptides(unittest.TestCase):
         # side elsewhere
         if self.options.without_fimo:
             return
-        result = helpers.run_and_regenerate_results_for_module(helpers.get_path_to_nisin_genbank(),
-                        lanthipeptides, self.options, expected_record_count=1)
+        nisin = helpers.get_path_to_nisin_genbank()
+        result = helpers.run_and_regenerate_results_for_module(nisin, lanthipeptides, self.options)
         assert list(result.motifs_by_locus) == ["nisB"]
         prepeptide = result.motifs_by_locus["nisB"][0]
         self.assertAlmostEqual(3336.0, prepeptide.molecular_weight, delta=0.05)

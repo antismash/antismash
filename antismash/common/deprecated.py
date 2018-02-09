@@ -20,8 +20,6 @@ from Bio.SeqFeature import SeqFeature, FeatureLocation # for others importing
 from Bio.SeqRecord import SeqRecord
 # pylint: enable=unused-import
 
-from antismash.config import get_config
-
 
 def CODE_SKIP_WARNING():
     prev = inspect.currentframe().f_back

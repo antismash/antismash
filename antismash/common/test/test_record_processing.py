@@ -189,7 +189,6 @@ class TestPreprocessRecords(unittest.TestCase):
         config.update_config({"triggered_limit": False})
         self.options = options
 
-
     def read_nisin(self):
         records = record_processing.parse_input_sequence(helpers.get_path_to_nisin_genbank())
         assert len(records) == 1
@@ -241,8 +240,7 @@ class TestPreprocessRecords(unittest.TestCase):
     def test_shotgun(self):
         filepath = path.get_full_path(__file__, "data", "wgs.gbk")
         records = record_processing.parse_input_sequence(filepath)
-        with self.assertRaisesRegex(RuntimeError,
-                     "Incomplete whole genome shotgun records are not supported"):
+        with self.assertRaisesRegex(RuntimeError, "Incomplete whole genome shotgun records are not supported"):
             record_processing.pre_process_sequences(records, self.options, self.genefinding)
 
     def test_duplicate_record_ids(self):
@@ -276,3 +274,44 @@ class TestPreprocessRecords(unittest.TestCase):
         config.update_config({"limit_to_record": "bad_id"})
         with self.assertRaisesRegex(ValueError, "No sequences matched filter.*"):
             record_processing.pre_process_sequences(records, self.options, self.genefinding)
+
+
+class TestUniqueID(unittest.TestCase):
+    def test_bad_starts(self):
+        for bad_start in ["start", None, dict(), list()]:
+            with self.assertRaises((ValueError, TypeError)):
+                record_processing.generate_unique_id("pref", [], bad_start)
+
+    def test_bad_collections(self):
+        for bad_existing in [None, object(), 2]:
+            with self.assertRaises((ValueError, TypeError)):
+                record_processing.generate_unique_id("pref", bad_existing, 1)
+
+    def test_bad_max(self):
+        for bad_max in ["start", None, dict(), list()]:
+            with self.assertRaises((ValueError, TypeError)):
+                record_processing.generate_unique_id("pref", {}, 1, bad_max)
+
+    def test_generation(self):
+        existing = {"a_%d" % i for i in range(15)}
+        new, counter = record_processing.generate_unique_id("a", existing)
+        assert len(existing) == 15 and new not in existing
+        assert new == "a_15" and counter == 15
+
+        new, counter = record_processing.generate_unique_id("a", existing, start=17)
+        assert len(existing) == 15 and new not in existing
+        assert new == "a_17" and counter == 17
+
+        new, counter = record_processing.generate_unique_id("b", existing)
+        assert len(existing) == 15 and new not in existing
+        assert new == "b_0" and counter == 0
+
+    def test_overlong(self):
+        existing = {"a_%d" % i for i in range(150)}
+        # prefix itself too long
+        with self.assertRaisesRegex(RuntimeError, "Could not generate .*"):
+            record_processing.generate_unique_id("aaa", existing, start=0, max_length=3)
+
+        # the generated number is too long
+        with self.assertRaisesRegex(RuntimeError, "Could not generate .*"):
+            record_processing.generate_unique_id("a", existing, start=140, max_length=4)

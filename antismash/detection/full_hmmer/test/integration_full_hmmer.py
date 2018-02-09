@@ -9,7 +9,7 @@ import unittest
 import antismash
 from antismash.common import record_processing
 from antismash.common.test import helpers
-from antismash.config import build_config, destroy_config, update_config
+from antismash.config import build_config, destroy_config
 from antismash.detection import full_hmmer
 
 
@@ -42,8 +42,7 @@ class TestFullHmmer(unittest.TestCase):
         nisin = helpers.get_path_to_nisin_genbank()
         record = record_processing.parse_input_sequence(nisin)[0]
 
-        results = helpers.run_and_regenerate_results_for_module(nisin, full_hmmer,
-                                         self.options, expected_record_count=1)
+        results = helpers.run_and_regenerate_results_for_module(nisin, full_hmmer, self.options)
         json = results.to_json()
         assert len(results.hits) == 24
         self.check_add_to_record(nisin, results)

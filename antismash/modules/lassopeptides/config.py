@@ -3,10 +3,8 @@
 
 """Lassopeptide-specific configuration"""
 
-_config = None
 
-
-class LassoConfig(object):
+class LassoConfig:  # pylint: disable=too-few-public-methods
     """Lassopeptide-specific configuration"""
     __slots__ = ('fimo_present', )
 
@@ -14,9 +12,9 @@ class LassoConfig(object):
         self.fimo_present = False
 
 
+_CONFIG = LassoConfig()
+
+
 def get_config():
     """Access the lassopeptide-specific config"""
-    global _config
-    if _config is None:
-        _config = LassoConfig()
-    return _config
+    return _CONFIG

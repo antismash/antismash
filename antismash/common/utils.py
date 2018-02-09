@@ -6,44 +6,13 @@
     antismash.common.
 """
 
-from typing import Dict, List, Set, Tuple
+from typing import Dict, List
 
 import Bio.Data.IUPACData
 from Bio.SeqUtils.ProtParam import ProteinAnalysis
 from Bio.SeqFeature import FeatureLocation
 
 from .secmet import Feature, Record
-
-
-def generate_unique_id(prefix: str, existing_ids: Set, start=0, max_length=-1) -> Tuple[str, int]:
-    """ Generate a identifier of the form prefix_num, e.g. seq_15.
-
-        Does *not* add the generated prefix to current identifiers
-
-        Args:
-            prefix: The text portion of the name.
-            existing_ids: The current identifiers to avoid collision with.
-            start: An integer to start counting at (default: 0)
-            max_length: The maximum length allowed for the identifier,
-                        values less than 1 are considerd to be no limit.
-
-        Returns:
-            A tuple of the identifier generated and the value of the counter
-                at the time the identifier was generated, e.g. ("seq_15", 15)
-
-    """
-    counter = int(start)
-    existing_ids = set(existing_ids)
-    max_length = int(max_length)
-
-    format_string = "{}_%d".format(prefix)
-    name = format_string % counter
-    while name in existing_ids:
-        counter += 1
-        name = format_string % counter
-    if max_length > 0 and len(name) > max_length:
-        raise RuntimeError("Could not generate unique id for %s after %d iterations" % (prefix, counter - start))
-    return name, counter
 
 
 class RobustProteinAnalysis(ProteinAnalysis):
@@ -145,6 +114,7 @@ def distance_to_pfam(record: Record, query: Feature, hmmer_profiles: List[str]) 
                     if closest_distance == -1 or distance[cds.get_name()] < closest_distance:
                         closest_distance = distance[cds.get_name()]
     return closest_distance
+
 
 def get_hmm_lengths(hmm_file: str) -> Dict[str, int]:
     """ Finds the lengths of all HMM profiles in the provided HMM file.

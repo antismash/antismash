@@ -36,7 +36,7 @@ class CDSResults:
         self.definition_domains = definition_domains
 
     def annotate(self, products: Set[str], tool: str) -> None:
-        """ Annotates """
+        """ Annotates a CDSFeature with the results gathered """
         all_matching = set()
         if not self.cds.sec_met:
             self.cds.sec_met = SecMetQualifier(set(self.definition_domains), self.domains)
@@ -59,6 +59,7 @@ class CDSResults:
 
 
 class DetectionResults:
+    """ A container for the all results of running the cluster prediction """
     def __init__(self, cds_by_cluster: Dict[ClusterBorder, List[CDSResults]],
                  tool: str) -> None:
         self.cds_by_cluster = cds_by_cluster
@@ -66,9 +67,11 @@ class DetectionResults:
 
     @property
     def borders(self) -> List[ClusterBorder]:
+        """ A list of ClusterBorders predicted """
         return list(self.cds_by_cluster)
 
     def annotate_cds_features(self) -> None:
+        """ Annotate relevant CDS features with the HMM information detected """
         for border, cds_results in self.cds_by_cluster.items():
             for cds_result in cds_results:
                 cds_result.annotate(border.products, self.tool)
@@ -166,7 +169,6 @@ def hsp_overlap_size(first, second) -> int:
 def filter_results(results: List[HSP], results_by_id: Dict[str, List[HSP]], filter_file: str,
                    signature_names: Set[str]) -> Tuple[List[HSP], Dict[str, List[HSP]]]:
     """ Filter results by comparing scores of different models """
-    # TODO: filterfile = path.get_full_path(__file__, "filterhmmdetails.txt")
     for line in open(filter_file, "r"):
         line = line.strip()
         equivalence_group = set(line.split(","))
@@ -250,7 +252,8 @@ def create_rules(enabled_cluster_types: List[str], rule_file: str, signature_nam
 
 
 def apply_cluster_rules(record, results_by_id: Dict[str, HSP], feature_by_id: Dict[str, CDSFeature],
-                        rules: List[rule_parser.DetectionRule]) -> Dict[str, Dict[str, Set[str]]]:
+                        rules: List[rule_parser.DetectionRule]
+                        ) -> Tuple[Dict[str, Dict[str, Set[str]]], Dict[str, Set[CDSFeature]]]:
     """
         Run detection rules over each CDS and classify them if relevant.
         A CDS can satisfy multiple rules. If so, all rules satisfied
@@ -266,21 +269,17 @@ def apply_cluster_rules(record, results_by_id: Dict[str, HSP], feature_by_id: Di
             rules: A list of DetectionRule instances
 
         Returns:
-            A dictionary mapping CDS ID to
-                a dictionary mapping cluster type string to
-                    a set of domains used to determine the cluster.
+            A tuple of
+                a dictionary mapping CDS ID to
+                    a dictionary mapping cluster type string to
+                        a set of domains used to determine the cluster
+                and a dictionary mapping rule name to
+                    a set of CDS features that matched the rule
     """
-    if not results_by_id:  # TODO: update docstring
+    if not results_by_id:
         return {}, {}
 
     cds_with_hits = sorted(results_by_id, key=lambda gene_id: feature_by_id[gene_id].location.start)
-
-    def calculate_distance(first, second):
-        """ Calculate the distance between two FeatureLocations """
-        first_start, first_end = sorted([first.start, first.end])
-        second_start, second_end = sorted([second.start, second.end])
-        return min(abs(first_end - second_start), abs(second_end - first_start),
-                   abs(first_start - second_start), abs(first_end - second_end))
 
     cds_domains_by_cluster_type = {}
     cluster_type_hits = defaultdict(set)
@@ -295,9 +294,11 @@ def apply_cluster_rules(record, results_by_id: Dict[str, HSP], feature_by_id: Di
         for rule in rules:
             if rule.cutoff not in info_by_range:
                 # TODO: improve performance
-                nearby = record.get_cds_features_within_location(FeatureLocation(feature_start - rule.cutoff, feature_end + rule.cutoff), with_overlapping=True)
+                location = FeatureLocation(feature_start - rule.cutoff, feature_end + rule.cutoff)
+                nearby = record.get_cds_features_within_location(location, with_overlapping=True)
                 nearby_features = {neighbour.get_name(): neighbour for neighbour in nearby}
-                nearby_results = {neighbour: results_by_id[neighbour] for neighbour in nearby_features if neighbour in results_by_id}
+                nearby_results = {neighbour: results_by_id[neighbour]
+                                  for neighbour in nearby_features if neighbour in results_by_id}
                 info_by_range[rule.cutoff] = (nearby_features, nearby_results)
             nearby_features, nearby_results = info_by_range[rule.cutoff]
             matching = rule.detect(cds, nearby_features, nearby_results)

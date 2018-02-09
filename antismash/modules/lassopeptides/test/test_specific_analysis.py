@@ -10,7 +10,7 @@ from Bio.SeqUtils.ProtParam import ProteinAnalysis
 from minimock import mock, restore
 
 from antismash.common import subprocessing  # used in mocking  # pylint: disable=unused-import
-from antismash.common.test.helpers import DummyCDS
+from antismash.common.test.helpers import DummyCDS, FakeHSP
 
 from antismash.modules.lassopeptides.specific_analysis import (
     Lassopeptide,
@@ -92,15 +92,9 @@ class TestLassopeptide(unittest.TestCase):
 
 
 class TestSpecificAnalysis(unittest.TestCase):
-    class FakeHit(object):
-        class FakeHsp(object):
-            def __init__(self, start, end, score):
-                self.query_start = start
-                self.query_end = end
-                self.bitscore = score
-
+    class FakeHit:  # pylint: disable=too-few-public-methods
         def __init__(self, start, end, score, desc):
-            self.hsps = [self.FakeHsp(start, end, score)]
+            self.hsps = [FakeHSP(start, end, score)]
             self.description = desc
 
         def __iter__(self):

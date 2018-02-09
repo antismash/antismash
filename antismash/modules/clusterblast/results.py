@@ -45,6 +45,9 @@ class ClusterResult:
         self.prefix = prefix
 
     def update_cluster_descriptions(self, search_type: str) -> None:
+        """ Rebuilds the cluster's result descriptions.
+            For knownclusterblast, this includes the accessions of the hits.
+        """
         if search_type != "knownclusterblast":  # TODO clean this up
             setattr(self.cluster, search_type, self.svg_builder.get_cluster_descriptions())
             return

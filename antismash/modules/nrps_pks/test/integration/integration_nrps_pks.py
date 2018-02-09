@@ -15,10 +15,10 @@ from antismash.common.test import helpers
 from antismash.config import build_config, destroy_config
 from antismash.modules import nrps_pks
 
+
 class IntegrationWithoutNRPSPKS(unittest.TestCase):
     def setUp(self):
-        self.options = build_config(["--minimal"],
-                                    isolated=True, modules=antismash.get_all_modules())
+        self.options = build_config(["--minimal"], isolated=True, modules=antismash.get_all_modules())
         assert not nrps_pks.is_enabled(self.options)
         self.tracker = minimock.TraceTracker()
         minimock.mock("nrps_pks.run_on_record", tracker=self.tracker)
@@ -30,11 +30,12 @@ class IntegrationWithoutNRPSPKS(unittest.TestCase):
     def test_minimal(self):
         with TemporaryDirectory(change=True) as tempdir:
             self.options = build_config(["--minimal", "--output-dir", tempdir],
-                                    isolated=True, modules=antismash.get_all_modules())
+                                        isolated=True, modules=antismash.get_all_modules())
             antismash.main.run_antismash(helpers.get_path_to_balhymicin_genbank(),
                                          self.options)
         # make sure it didn't run
         minimock.assert_same_trace(self.tracker, "")
+
 
 class IntegrationNRPSPKS(unittest.TestCase):
     def setUp(self):
@@ -46,8 +47,7 @@ class IntegrationNRPSPKS(unittest.TestCase):
 
     def test_balhymicin(self):
         filename = helpers.get_path_to_balhymicin_genbank()
-        results = helpers.run_and_regenerate_results_for_module(filename, nrps_pks,
-                                             self.options, expected_record_count=1)
+        results = helpers.run_and_regenerate_results_for_module(filename, nrps_pks, self.options)
         for key, val in results.pks.method_results.items():
             if key != "minowa_cal":
                 assert not val
@@ -61,10 +61,9 @@ class IntegrationNRPSPKS(unittest.TestCase):
         assert results.cluster_predictions == {'1': [
                 '(nrp-nrp-nrp) + (nrp-nrp-nrp) + (nrp) + (nrp) + (pk)', False]}
 
-    def test_CP002271_c19(self):
+    def test_cp002271_c19(self):
         filename = path.get_full_path(__file__, 'data', 'CP002271.1.cluster019.gbk')
-        results = helpers.run_and_regenerate_results_for_module(filename, nrps_pks,
-                                             self.options, expected_record_count=1)
+        results = helpers.run_and_regenerate_results_for_module(filename, nrps_pks, self.options)
         # catch ordering changes along with ensuring ATResults are there
         assert results.pks.method_results["signature"]["STAUR_3982_AT1"][0].score == 87.5
         # ensure all genes are present and have the right consensus

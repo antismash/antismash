@@ -1,17 +1,21 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
-import logging
+""" Functions to find, classify, and annotate NRPS and PKS domains within CDS
+    features.
+"""
+
+from typing import Dict, List
 
 from Bio.SeqFeature import FeatureLocation
 
 from antismash.common import path, subprocessing, utils
 from antismash.common.fasta import get_fasta_from_features
-from antismash.common.hmmscan_refinement import refine_hmmscan_results
-from antismash.common.secmet.feature import CDSMotif
+from antismash.common.hmmscan_refinement import refine_hmmscan_results, HMMResult
+from antismash.common.secmet import CDSFeature, CDSMotif, Record
 
 
-def annotate_domains(record) -> None:
+def annotate_domains(record: Record) -> None:
     """ Annotates NRPS/PKS domains on CDS features. The `nrps_pks` member of
         each feature will be updated, along with creating CDSMotif features
         when relevant.
@@ -22,37 +26,38 @@ def annotate_domains(record) -> None:
         Returns:
             None
     """
-    genes_within_clusters = record.get_cds_features_within_clusters()
-    assert genes_within_clusters  # because every cluster should have genes
+    cds_within_clusters = record.get_cds_features_within_clusters()
+    assert cds_within_clusters  # because every cluster should have genes
 
-    fasta = get_fasta_from_features(genes_within_clusters)
-    gene_domains = find_domains(fasta, record)
-    gene_motifs = find_ab_motifs(fasta)
+    fasta = get_fasta_from_features(cds_within_clusters)
+    cds_domains = find_domains(fasta, record)
+    cds_motifs = find_ab_motifs(fasta)
 
-    for gene in genes_within_clusters:
-        gene_name = gene.get_name()
+    for cds in cds_within_clusters:
+        cds_name = cds.get_name()
         # gather domains and classify
-        domains = gene_domains.get(gene_name)
+        domains = cds_domains.get(cds_name)
         if not domains:
             continue
         domain_type = classify_feature([domain.hit_id for domain in domains])
-        gene.nrps_pks.type = domain_type
+        cds.nrps_pks.type = domain_type
 
         for domain in domains:
-            gene.nrps_pks.add_domain(domain)
+            cds.nrps_pks.add_domain(domain)
 
         # construct motif features
-        motifs = gene_motifs.get(gene_name)
+        motifs = cds_motifs.get(cds_name)
         if not motifs:
             continue
-        motif_features = generate_motif_features(record, gene, motifs)
+        motif_features = generate_motif_features(record, cds, motifs)
 
         for motif in motif_features:
             record.add_cds_motif(motif)
-        gene.motifs.extend(motif_features)
+        cds.motifs.extend(motif_features)
 
 
-def filter_nonterminal_docking_domains(record, gene_domains):
+def filter_nonterminal_docking_domains(record: Record, cds_domains: Dict[str, List[HMMResult]]
+                                       ) -> Dict[str, List[HMMResult]]:
     """ For multiprotein domains, remove all docking terminal predictions that
         aren't overlapping with the first or last 50 amino acids of the protein.
     """
@@ -60,22 +65,29 @@ def filter_nonterminal_docking_domains(record, gene_domains):
                       'PKS_Docking_Cterm', 'PKS_Docking_Nterm'}
     feature_by_id = record.get_cds_name_mapping()
     results = {}
-    for gene_name in list(gene_domains):
+    for cds_name in list(cds_domains):
         new = []
-        gene_length = len(feature_by_id[gene_name].translation)
-        for hit in gene_domains[gene_name]:
+        cds_length = len(feature_by_id[cds_name].translation)
+        for hit in cds_domains[cds_name]:
             if hit.hit_id in dockingdomains and \
-                    not (gene_length - max(hit.query_start, hit.query_end) < 50
+                    not (cds_length - max(hit.query_start, hit.query_end) < 50
                          or min(hit.query_start, hit.query_end) < 50):
                 continue
             new.append(hit)
         if new:
-            results[gene_name] = new
+            results[cds_name] = new
     return results
 
 
-def find_ab_motifs(fasta):
-    # Analyse for abMotifs
+def find_ab_motifs(fasta: str) -> Dict[str, List[HMMResult]]:
+    """ Analyse for abMotifs
+
+        Arguments:
+            fasta: a group of features in fasta format
+
+        Returns:
+            a dictionary mapping feature name to a list of motif results for that feature
+    """
     opts = ["-E", "0.25"]
     motif_file = path.get_full_path(__file__, "data", "abmotifs.hmm")
     abmotif_results = subprocessing.run_hmmscan(motif_file, fasta, opts)
@@ -83,8 +95,16 @@ def find_ab_motifs(fasta):
     return refine_hmmscan_results(abmotif_results, lengths, neighbour_mode=True)
 
 
-def find_domains(fasta, record):
-    # Analyse for C/A/PCP/E/KS/AT/ATd/DH/KR/ER/ACP/TE/TD/COM/Docking/MT/CAL domains
+def find_domains(fasta: str, record: Record) -> Dict[str, List[HMMResult]]:
+    """ Analyse for C/A/PCP/E/KS/AT/ATd/DH/KR/ER/ACP/TE/TD/COM/Docking/MT/CAL domains
+
+        Arguments:
+            fasta: a group of features in fasta format
+            record: the Record that contains all the features
+
+        Returns:
+            a dictionary mapping feature name to a list of domain results for that feature
+    """
     opts = ["--cut_tc"]
     nrpspks_file = path.get_full_path(__file__, "data", "nrpspksdomains.hmm")
     nrpspksdomain_results = subprocessing.run_hmmscan(nrpspks_file, fasta, opts)
@@ -93,8 +113,15 @@ def find_domains(fasta, record):
     return filter_nonterminal_docking_domains(record, domains)
 
 
-def find_ks_domains(fasta):
-    # Analyse KS domains & PKS/NRPS protein domain composition to detect NRPS/PKS types
+def find_ks_domains(fasta: str) -> Dict[str, List[HMMResult]]:
+    """ Analyse KS domains & PKS/NRPS protein domain composition to detect NRPS/PKS types
+
+        Arguments:
+            fasta: a group of features in fasta format
+
+        Returns:
+            a dictionary mapping feature name to a list of KS domain results for that feature
+    """
     opts = ["--cut_tc"]
     ks_file = path.get_full_path(__file__, "data", "ksdomains.hmm")
     lengths = utils.get_hmm_lengths(ks_file)
@@ -107,7 +134,7 @@ class KetosynthaseCounter:
     """ Keeps track of the counts of various KS domains and simplifies
         finding the largest value.
     """
-    def __init__(self, domain_names):
+    def __init__(self, domain_names: List[str]) -> None:
         """
             Arguments:
                 domain_names: a collection of domain names
@@ -130,25 +157,32 @@ class KetosynthaseCounter:
             elif domain == "Iterative-KS":
                 self.iterative += 1
 
-    def trans_is_greatest(self):
+    def trans_is_greatest(self) -> bool:
         """ Returns true if the trans_at count is strictly greater than others """
         return self.trans_at > max([self.modular, self.enediyne, self.iterative])
 
-    def ene_is_greatest(self):
+    def ene_is_greatest(self) -> bool:
         """ Returns true if the enediyne count is strictly greater than others """
         return self.enediyne > max([self.modular, self.trans_at, self.iterative])
 
-    def modular_is_greatest(self):
+    def modular_is_greatest(self) -> bool:
         """ Returns true if the modular count is strictly greater than others """
         return self.modular > max([self.enediyne, self.trans_at, self.iterative])
 
-    def iterative_is_greatest(self):
+    def iterative_is_greatest(self) -> bool:
         """ Returns true if the iterative count is strictly greater than others """
         return self.iterative > max([self.enediyne, self.trans_at, self.modular])
 
 
-def classify_feature(domain_names) -> str:
-    """ """
+def classify_feature(domain_names: List[str]) -> str:
+    """ Classifies a CDS based on the type and counts of domains present.
+
+        Arguments:
+            domain_names: a list of domain names present in the CDS
+
+        Returns:
+            a string of the classification (e.g. 'NRPS-like protein')
+    """
     # get the set of domains and count the relevant types
     counter = KetosynthaseCounter(domain_names)
     domains = set(domain_names)
@@ -188,7 +222,8 @@ def classify_feature(domain_names) -> str:
     return classification
 
 
-def generate_motif_features(record, feature, motifs):
+def generate_motif_features(record: Record, feature: CDSFeature, motifs: List[HMMResult]) -> List[CDSMotif]:
+    """ Convert a list of HMMResult to a list of CDSMotif features """
     # use a locus tag if one exists
     locus_tag = feature.get_name()
     if feature.locus_tag:
@@ -221,7 +256,8 @@ def generate_motif_features(record, feature, motifs):
         new_motif.locus_tag = locus_tag
 
         new_motif.translation = str(new_motif.extract(record.seq).translate(table=transl_table))
-        new_motif.notes.append("NRPS/PKS Motif: " + motif.hit_id + " (e-value: " + str(motif.evalue) + ", bit-score: " + str(motif.bitscore) + ")")  # TODO move to CDSMotif
+        new_motif.notes.append("NRPS/PKS Motif: %s (e-value: %s, bit-score: %s)" % (
+                               motif.hit_id, motif.evalue, motif.bitscore))  # TODO move to CDSMotif
 
         motif_features.append(new_motif)
     return motif_features

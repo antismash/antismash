@@ -14,7 +14,7 @@ def will_handle(products) -> bool:
     return 'lassopeptide' in products
 
 
-def generate_details_div(cluster_layer, results, record_layer, options_layer) -> str:
+def generate_details_div(cluster_layer, results, _record_layer, _options_layer) -> str:
     """ Generates a HTML div for the main page of results """
     if not results:
         return ""
@@ -28,7 +28,7 @@ def generate_details_div(cluster_layer, results, record_layer, options_layer) ->
     return details_div
 
 
-def generate_sidepanel(cluster_layer, results, record_layer, options_layer) -> str:
+def generate_sidepanel(cluster_layer, results, _record_layer, _options_layer) -> str:
     """ Generates a div for the sidepanel results """
     if not results:
         return ""

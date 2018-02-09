@@ -9,49 +9,6 @@ import unittest
 from antismash.common import utils
 
 
-class TestUniqueID(unittest.TestCase):
-    def test_bad_starts(self):
-        for bad_start in ["start", None, dict(), list()]:
-            with self.assertRaises((ValueError, TypeError)):
-                utils.generate_unique_id("pref", [], bad_start)
-
-    def test_bad_collections(self):
-        class Dummy:
-            pass
-        for bad_existing in [None, Dummy(), 2]:
-            with self.assertRaises((ValueError, TypeError)):
-                utils.generate_unique_id("pref", bad_existing, 1)
-
-    def test_bad_max(self):
-        for bad_max in ["start", None, dict(), list()]:
-            with self.assertRaises((ValueError, TypeError)):
-                utils.generate_unique_id("pref", {}, 1, bad_max)
-
-    def test_generation(self):
-        existing = {"a_%d" % i for i in range(15)}
-        new, counter = utils.generate_unique_id("a", existing)
-        assert len(existing) == 15 and new not in existing
-        assert new == "a_15" and counter == 15
-
-        new, counter = utils.generate_unique_id("a", existing, start=17)
-        assert len(existing) == 15 and new not in existing
-        assert new == "a_17" and counter == 17
-
-        new, counter = utils.generate_unique_id("b", existing)
-        assert len(existing) == 15 and new not in existing
-        assert new == "b_0" and counter == 0
-
-    def test_overlong(self):
-        existing = {"a_%d" % i for i in range(150)}
-        # prefix itself too long
-        with self.assertRaisesRegex(RuntimeError, "Could not generate .*"):
-            utils.generate_unique_id("aaa", existing, start=0, max_length=3)
-
-        # the generated number is too long
-        with self.assertRaisesRegex(RuntimeError, "Could not generate .*"):
-            utils.generate_unique_id("a", existing, start=140, max_length=4)
-
-
 class TestRobustProteinAnalysis(unittest.TestCase):
     def test_init(self):
         """Test RobustProteinAnalysis initialisation"""
