@@ -6,6 +6,7 @@ cover/
 __pycache__
 .cache
 .mypy_cache
+.pytest_cache
 *.hmm.h3f
 *.hmm.h3i
 *.hmm.h3m
