@@ -171,18 +171,18 @@ dTDP_sugar_isom	dTDP-4-dehydrorhamnose 3,5-epimerase	20	PF00908.hmm
 Polysacc_synt_2	Polysaccharide biosynthesis protein	20	PF02719.hmm
 RmlD_sub_bind	RmlD substrate binding domain	20	PF04321.hmm
 Polysacc_synt	Polysaccharide biosynthesis protein	23	PF01943.hmm
-PF02806	Alpha amylase, C-terminal all-beta domain	21	PF02806.hmm
-PF02350	UDP-N-acetylglucosamine 2-epimerase	22	PF02350.hmm
+Alpha-amylase_C	Alpha amylase, C-terminal all-beta domain	21	PF02806.hmm
+Epimerase_2	UDP-N-acetylglucosamine 2-epimerase	22	PF02350.hmm
 Bac_transf	Bacterial sugar transferase	21	PF02397.hmm
-PF04932	O-Antigen ligase	24	PF04932.hmm
-PF01075	Glycosyltransferase family 9 (heptosyltransferase)	20	PF01075.hmm
-PF00953	Glycosyl transferase family 4	21	PF00953.hmm
-PF01050	Mannose-6-phosphate isomerase	23	PF01050.hmm
-PF01501	Glycosyl transferase family 8	24	PF01501.hmm
-PF05159	Capsule polysaccharide biosynthesis protein	20	PF05159.hmm
+Wzy_C	O-Antigen ligase	24	PF04932.hmm
+Glyco_transf_9	Glycosyltransferase family 9 (heptosyltransferase)	20	PF01075.hmm
+Glycos_transf_4	Glycosyl transferase family 4	21	PF00953.hmm
+MannoseP_isomer	Mannose-6-phosphate isomerase	23	PF01050.hmm
+Glyco_transf_8	Glycosyl transferase family 8	24	PF01501.hmm
+Capsule_synth	Capsule polysaccharide biosynthesis protein	20	PF05159.hmm
 Glyco_tran_28_C	Glycosyltransferase family 28 C-terminal domain	21	PF04101.hmm
 Poly_export	Polysaccharide biosynthesis/export protein	26	PF02563.hmm
-PF08437	Glycosyl transferase family 8 C-terminal	19	PF08437.hmm
+Glyco_transf_8C	Glycosyl transferase family 8 C-terminal	19	PF08437.hmm
 PIG-L	GlcNAc-PI de-N-acetylase	22	PF02585.hmm
 APE_KS1	Aryl polyene ketosynthase 1	50	APE_KS1.hmm
 APE_KS2	Aryl polyene ketosynthase 2	50	APE_KS2.hmm
@@ -207,15 +207,15 @@ TIGR04404	SCIFF	45	TIGR04404.hmm
 TIGR03973	SkfA	50	TIGR03973.hmm
 Peptidase_S8	Subtilase family	21	PF00082.hmm
 Peptidase_M16	Insulinase (Peptidase family M16)	22	PF00675.hmm
-PF03572	Peptidase_S41	21	PF03572.hmm
+Peptidase_S41	Peptidase family S41	21	PF03572.hmm
 Peptidase_M16_C	Peptidase M16 inactive domain	20	PF05193.hmm
-PF13353	4Fe-4S single cluster domain	22	PF13353.hmm
-PF02517	Abi	21	PF02517.hmm
-PF02163	Peptidase_M50	27	PF02163.hmm
+Fer4_12	4Fe-4S single cluster domain	22	PF13353.hmm
+Abi	CAAX protease self-immunity	21	PF02517.hmm
+Peptidase_M50	Peptidase family M50	27	PF02163.hmm
 Peptidase_S9	Prolyl oligopeptidase family	22	PF00326.hmm
 Lant_dehydr_C	Lant_dehydr_C	27	PF14028.hmm
 Peptidase_C39	Peptidase C39 family	21	PF03412.hmm
-PF00899	ThiF	22	PF00899.hmm
+ThiF	ThiF family	22	PF00899.hmm
 TRI5	Trichodiene synthase	25	TRI5.hmm
 NasY	Long-chain N-acyl amino acid synthase	20	NasY.hmm
 FMO-like	Flavin-dependent monooxygenase	150	PF00743.hmm

@@ -11,6 +11,7 @@ from Bio.Seq import Seq
 
 from antismash.common import path
 from antismash.common.hmm_rule_parser import rule_parser, cluster_prediction as hmm_detection  # TODO: redo tests
+from antismash.common.hmm_rule_parser.test.helpers import check_hmm_signatures
 from antismash.common.secmet import Record
 from antismash.common.test.helpers import DummyCDS, FakeHSPHit
 from antismash.config import get_config, update_config, destroy_config, args
@@ -300,3 +301,9 @@ class HmmDetectionTest(unittest.TestCase):
         first.hit_end = 50
         with self.assertRaises(AssertionError):
             overlap_size(first, second)
+
+
+class TestSignatureFile(unittest.TestCase):
+    def test_details(self):
+        data_dir = path.get_full_path(os.path.dirname(__file__), 'data')
+        check_hmm_signatures(os.path.join(data_dir, 'hmmdetails.txt'), data_dir)

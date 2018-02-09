@@ -8,7 +8,7 @@ from typing import List
 from .path import get_full_path
 
 
-class Signature(object):
+class Signature:
     """Secondary metabolite signature"""
     def __init__(self, name: str, _type: str, description: str, cutoff: int, path: str) -> None:
         self.name = name
