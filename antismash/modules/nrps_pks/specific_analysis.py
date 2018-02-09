@@ -7,8 +7,6 @@ In-depth analysis and annotation of NRPS/PKS gene clusters.
 
 import logging
 
-from antismash.common import deprecated
-
 from .orderfinder import analyse_biosynthetic_order
 from .parsers import calculate_consensus_prediction, modify_monomer_predictions
 from .results import NRPS_PKS_Results
@@ -27,7 +25,7 @@ def generate_structure_images(record, results, options):
 
 def specific_analysis(record, results, options) -> NRPS_PKS_Results:
     """ Runs the various NRPS/PKS analyses on a record and returns their results """
-    nrps_pks_genes = deprecated.get_pksnrps_cds_features(record)
+    nrps_pks_genes = record.get_nrps_pks_cds_features()
 
     if not nrps_pks_genes:
         logging.debug("No NRPS or PKS genes found, skipping analysis")

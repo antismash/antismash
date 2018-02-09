@@ -31,38 +31,19 @@ def CODE_SKIP_WARNING():
 
 
 def get_pksnrps_cds_features(seq_record) -> list:
-    features = seq_record.get_cds_features_within_clusters()
-    pksnrpscoregenes = []
-    for feature in features:
-        if feature.nrps_pks.domains:
-            pksnrpscoregenes.append(feature)
-    return pksnrpscoregenes
+    raise NotImplementedError("get_pksnrps_cds_features(record) called, use record.get_nrps_pks_cds_features()")
+
 
 def get_nrpspks_domain_dict(seq_record) -> dict:
-    domaindict = {}
-    for feature in seq_record.get_cds_features():
-        if feature.nrps_pks.domains:
-            domaindict[feature.get_name()] = list(feature.nrps_pks.domains)
-    return domaindict
+    raise RuntimeError("get_nrpspks_domain_dict() should not be called")
 
 
 def get_version() -> str:
-    return get_config().version
+    raise NotImplementedError("get_version() called, use AntismashConfig.version")
 
 
 def hmmlengths(hmmfile) -> dict:
-    lengths = {}
-    with open(hmmfile, "r") as handle:
-        contents = handle.read()
-    contents = contents.replace("\r", "\n")
-    hmms = contents.split("//")[:-1]
-    for hmm in hmms:
-        namepart = hmm.split("NAME  ")[1]
-        name = namepart.split("\n")[0]
-        lengthpart = hmm.split("LENG  ")[1]
-        length = lengthpart.split("\n")[0]
-        lengths[name] = int(length)
-    return lengths
+    raise NotImplementedError("hmmlengths() called, use antismash.common.utils.get_hmm_lengths(hmmfile)")
 
 
 def get_cluster_features_of_type(record, product):

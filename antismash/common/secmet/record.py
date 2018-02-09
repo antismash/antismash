@@ -504,3 +504,9 @@ class Record:
         clusters_added += 1
 
         return clusters_added
+
+    def get_nrps_pks_cds_features(self) -> List[CDSFeature]:
+        """ Returns a list of all CDS features within Clusters that contain at least
+            one NRPS/PKS domain.
+        """
+        return [feature for feature in self.get_cds_features_within_clusters() if feature.nrps_pks.domains]

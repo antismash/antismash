@@ -6,7 +6,7 @@
     antismash.common.
 """
 
-from typing import List, Set, Tuple
+from typing import Dict, List, Set, Tuple
 
 import Bio.Data.IUPACData
 from Bio.SeqUtils.ProtParam import ProteinAnalysis
@@ -145,3 +145,25 @@ def distance_to_pfam(record: Record, query: Feature, hmmer_profiles: List[str]) 
                     if closest_distance == -1 or distance[cds.get_name()] < closest_distance:
                         closest_distance = distance[cds.get_name()]
     return closest_distance
+
+def get_hmm_lengths(hmm_file: str) -> Dict[str, int]:
+    """ Finds the lengths of all HMM profiles in the provided HMM file.
+
+        Arguments:
+            hmm_file: the HMM file to read
+
+        Returns:
+            a dictionary mapping each NAME field in the file to it's LENG field
+    """
+    lengths = {}
+    with open(hmm_file, "r") as handle:
+        contents = handle.read()
+    contents = contents.replace("\r", "")
+    hmms = contents.split("//")[:-1]
+    for hmm in hmms:
+        namepart = hmm.split("NAME  ")[1]
+        name = namepart.split("\n")[0]
+        lengthpart = hmm.split("LENG  ")[1]
+        length = lengthpart.split("\n")[0]
+        lengths[name] = int(length)
+    return lengths

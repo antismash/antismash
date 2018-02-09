@@ -5,8 +5,7 @@ import logging
 
 from Bio.SeqFeature import FeatureLocation
 
-from antismash.common import path, subprocessing
-from antismash.common import deprecated
+from antismash.common import path, subprocessing, utils
 from antismash.common.fasta import get_fasta_from_features
 from antismash.common.hmmscan_refinement import refine_hmmscan_results
 from antismash.common.secmet.feature import CDSMotif
@@ -80,7 +79,7 @@ def find_ab_motifs(fasta):
     opts = ["-E", "0.25"]
     motif_file = path.get_full_path(__file__, "data", "abmotifs.hmm")
     abmotif_results = subprocessing.run_hmmscan(motif_file, fasta, opts)
-    lengths = deprecated.hmmlengths(motif_file)
+    lengths = utils.get_hmm_lengths(motif_file)
     return refine_hmmscan_results(abmotif_results, lengths, neighbour_mode=True)
 
 
@@ -89,7 +88,7 @@ def find_domains(fasta, record):
     opts = ["--cut_tc"]
     nrpspks_file = path.get_full_path(__file__, "data", "nrpspksdomains.hmm")
     nrpspksdomain_results = subprocessing.run_hmmscan(nrpspks_file, fasta, opts)
-    lengths = deprecated.hmmlengths(nrpspks_file)
+    lengths = utils.get_hmm_lengths(nrpspks_file)
     domains = refine_hmmscan_results(nrpspksdomain_results, lengths, neighbour_mode=True)
     return filter_nonterminal_docking_domains(record, domains)
 
@@ -98,7 +97,7 @@ def find_ks_domains(fasta):
     # Analyse KS domains & PKS/NRPS protein domain composition to detect NRPS/PKS types
     opts = ["--cut_tc"]
     ks_file = path.get_full_path(__file__, "data", "ksdomains.hmm")
-    lengths = deprecated.hmmlengths(ks_file)
+    lengths = utils.get_hmm_lengths(ks_file)
     domains = subprocessing.run_hmmscan(ks_file, fasta, opts)
     refine_hmmscan_results(domains, lengths, neighbour_mode=True)
     raise NotImplementedError("no return value used from refine_hmmscan_results")
