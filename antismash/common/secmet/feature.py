@@ -1,8 +1,9 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
-from collections import defaultdict, OrderedDict
-from enum import Enum, unique
+""" A collection of classes for representing a variety of feature types """
+
+from collections import OrderedDict
 import logging
 import os
 import warnings
@@ -14,7 +15,7 @@ from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 from Bio.SeqRecord import SeqRecord
 
-from .qualifiers import NRPSPKSQualifier, SecMetQualifier
+from .qualifiers import NRPSPKSQualifier, SecMetQualifier, GeneFunction, GeneFunctionAnnotations
 
 
 class Feature:
@@ -68,10 +69,10 @@ class Feature:
             location = other
         else:
             raise TypeError("Container must be a Feature or a FeatureLocation, not %s" % type(other))
-        return self.location.start in location \
-               or self.location.end - 1 in location \
-               or location.start in self.location \
-               or location.end - 1 in self.location
+        return (self.location.start in location
+                or self.location.end - 1 in location
+                or location.start in self.location
+                or location.end - 1 in self.location)
 
     def is_contained_by(self, other: Union["Feature", FeatureLocation]) -> bool:
         """ Returns True if the given feature is wholly contained by this
@@ -178,22 +179,24 @@ class Gene(Feature):
             self._qualifiers.update(qualifiers)
 
     def get_name(self) -> str:
+        """ Returns the locus tag or gene name of the gene, in that order """
         return self.locus_tag or self.gene_name
 
     def is_pseudo_gene(self) -> bool:
         """ Was the gene marked as a pseudo-gene """
         return self._pseudo
 
-    def to_biopython(self) -> SeqFeature:
+    def to_biopython(self, qualifiers: Dict[str, Any] = None) -> SeqFeature:
         """ Construct a matching SeqFeature for this Gene """
-        quals = {}
+        if not qualifiers:
+            qualifiers = {}
         if self.locus_tag:
-            quals["locus_tag"] = [self.locus_tag]
+            qualifiers["locus_tag"] = [self.locus_tag]
         if self.gene_name:
-            quals["gene"] = [self.gene_name]
+            qualifiers["gene"] = [self.gene_name]
         if self._pseudo:
-            quals["pseudo"] = []
-        return super().to_biopython(quals)
+            qualifiers["pseudo"] = []
+        return super().to_biopython(qualifiers)
 
     @staticmethod
     def from_biopython(bio_feature, feature=None, leftovers=None) -> "Gene":
@@ -216,7 +219,8 @@ class Gene(Feature):
 
 class ClusterBorder(Feature):
     """ A feature representing a cluster border """
-    __slots__ = ["tool", "probability", "cutoff", "extent", "products", "rules"]
+    __slots__ = ["tool", "probability", "cutoff", "extent", "products", "rules",
+                 "contig_edge"]
 
     def __init__(self, location, tool, probability=None, cutoff=0, extent=0,
                  products=None, rules=None, contig_edge=False):
@@ -243,10 +247,12 @@ class ClusterBorder(Feature):
             rules = []
         assert isinstance(rules, list)
         self.rules = rules
+        self.contig_edge = bool(contig_edge)
 
     def to_biopython(self, qualifiers=None):
         mine = OrderedDict()
         mine["aStool"] = [self.tool]
+        mine["contig_edge"] = [self.contig_edge]
         if self.probability is not None:
             mine["probability"] = [str(self.probability)]
         if self.products:
@@ -275,9 +281,11 @@ class ClusterBorder(Feature):
         extent = leftovers.pop("extent", [0])[0]
         rules = leftovers.pop("rules", [])
         products = leftovers.pop("products", [])
+        contig_edge = leftovers.pop("contig_edge", [""])[0] == "True"
 
         feature = ClusterBorder(bio_feature.location, tool, probability=probability,
-                                cutoff=cutoff, extent=extent, rules=rules, products=products)
+                                cutoff=cutoff, extent=extent, rules=rules, products=products,
+                                contig_edge=contig_edge)
 
         # grab parent optional qualifiers
         super(ClusterBorder, feature).from_biopython(bio_feature, feature=feature, leftovers=leftovers)
@@ -289,6 +297,7 @@ class ClusterBorder(Feature):
 
     def __repr__(self) -> str:
         return "ClusterBorder(%s, %s)" % (self.products, self.location)
+
 
 class AntismashFeature(Feature):
     """ A base class for all sub-CDS Antismash features """
@@ -358,6 +367,7 @@ class AntismashFeature(Feature):
 
 
 class Domain(AntismashFeature):
+    """ A base class for features which represent a domain type """
     __slots__ = ["tool", "domain"]
 
     def __init__(self, location, feature_type):
@@ -379,6 +389,7 @@ class Domain(AntismashFeature):
 
 
 class CDSMotif(Domain):
+    """ A base class for features that represent a motif within a CDSFeature """
     __slots__ = ["motif"]
 
     def __init__(self, location):
@@ -442,6 +453,7 @@ class PFAMDomain(Domain):
 
 
 class AntismashDomain(Domain):
+    """ A class to represent a Domain with extra specificities and type information """
     __slots__ = ["domain_subtype", "specificity"]
 
     def __init__(self, location):
@@ -476,156 +488,10 @@ class AntismashDomain(Domain):
         return feature
 
 
-@unique
-class GeneFunction(Enum):
-    """ An Enum representing the function of a gene.
-        Allows for more flexible conversion and more robust value constraints.
-    """
-    OTHER = 0
-    CORE = 1
-    ADDITIONAL = 2
-    TRANSPORT = 3
-    REGULATORY = 4
-
-    def __str__(self) -> str:
-        # because this information ends up in the record, make these more
-        # labels more meaningful for users
-        if self == GeneFunction.CORE:
-            return "biosynthetic"
-        if self == GeneFunction.ADDITIONAL:
-            return "biosynthetic-additional"
-        return str(self.name).lower()
-
-    @staticmethod
-    def from_string(label: str) -> "GeneFunction":
-        """ Converts a string to a GeneFunction instance when possible.
-            Raises an error if not possible.
-        """
-        for value in GeneFunction:
-            if str(value) == label:
-                return value
-        raise ValueError("Unknown gene function label: %s", label)
-
-
-class GeneFunctionAnnotations:
-    """ Tracks multiple annotations of gene functions. Each annotation contains
-        the declared function of the gene, which tool determined the function,
-        and a comment on how the determination was made.
-    """
-    slots = ["_annotations", "_by_tool", "_by_function"]
-
-    class GeneFunctionAnnotation:
-        """ A single instance of an annotation. """
-        slots = ["function", "tool", "description"]
-
-        def __init__(self, function: GeneFunction, tool: str, description: str) -> None:
-            assert isinstance(function, GeneFunction), "wrong type: %s" % type(function)
-            assert tool and len(tool.split()) == 1, tool  # no whitespace allowed in tool name
-            assert description
-            self.function = function
-            self.tool = str(tool)
-            self.description = str(description)
-
-        def __str__(self):
-            return "%s (%s) %s" % (self.function, self.tool, self.description)
-
-        def __repr__(self):
-            return "GeneFunctionAnnotation(function=%r, tool='%s', '%s')" % (self.function, self.tool, self.description)
-
-    def __init__(self):
-        self._annotations = []
-        self._by_tool = defaultdict(list)
-        self._by_function = defaultdict(list)
-
-    def __iter__(self):
-        for annotation in self._annotations:
-            yield annotation
-
-    def __len__(self):
-        return len(self._annotations)
-
-    def add(self, function: GeneFunction, tool: str, description: str) -> "GeneFunctionAnnotations.GeneFunctionAnnotation":
-        """ Adds a gene function annotation. If an existing annotation has all
-            the same values as those provided, a duplicate will not be added.
-
-            Arguments:
-                function: a GeneFunction value
-                tool: a string naming the tool that determined the gene function
-                description: description text for storing extra information
-
-            Returns:
-                the GeneFunction added (or the existing one if duplicated)
-        """
-        tool = str(tool)
-        description = str(description)
-        # if there's already an exactly similar function annotation, skip adding
-        existing_functions = self._by_function.get(function, [])
-        for existing in existing_functions:
-            if existing.tool == tool and existing.description == description:
-                return existing
-        new = GeneFunctionAnnotations.GeneFunctionAnnotation(function, tool, description)
-        self._by_tool[tool].append(new)
-        self._by_function[function].append(new)
-        self._annotations.append(new)
-        return new
-
-    def add_from_qualifier(self, qualifier: List[str]):
-        """ Converts a string-based qualifier into one or more GeneFunctions and
-            adds them to the current set.
-            Expected format will be as per str(GeneFunctionAnnotation).
-        """
-        for section in qualifier:
-            function, tool, description = section.split(maxsplit=2)
-            tool = tool[1:-1]  # strip the ()
-            self.add(GeneFunction.from_string(function), tool, description)
-
-    def get_by_tool(self, tool: str) -> Optional[List]:
-        """ Returns a list of all GeneFunctionAnnotations which were added with
-            the tool name provided.
-        """
-        return self._by_tool.get(tool)
-
-    def get_by_function(self, function: GeneFunction) -> Optional[List]:
-        """ Returns a list of GeneFunctionAnnotations which have the same
-            gene function as that provided.
-        """
-        return self._by_function.get(function)
-
-    def get_classification(self) -> GeneFunction:
-        """ Returns the function of the gene, in the priority order of priority:
-             - CORE if cluster defined by this gene
-             - the function determined by smCOGs, if it exists
-             - a function from all tools if they all agree
-             - or OTHER
-        """
-        # if no annotations, skip to OTHER
-        if not self._annotations:
-            return GeneFunction.OTHER
-        # if any CORE function set, use that
-        if self._by_function.get(GeneFunction.CORE):
-            return GeneFunction.CORE
-        # then priority for smcogs
-        annotations = self._by_tool.get("smcogs")
-        if annotations:
-            return annotations[0].function
-        # otherwise check all agree
-        function = self._annotations[0].function
-        for annotation in self._annotations[1:]:
-            if annotation.function != function:
-                return GeneFunction.OTHER
-        return function
-
-    def clear(self) -> None:
-        """ Removes all gene functions from the annotation """
-        self._annotations = []
-        self._by_tool = defaultdict(list)
-        self._by_function = defaultdict(list)
-
-
 class CDSFeature(Feature):
     """ A feature representing a single CDS/gene. """
     __slots__ = ["_translation", "protein_id", "locus_tag", "gene", "product",
-                 "transl_table", "_sec_met", "aSProdPred", "cluster", "_gene_functions",
+                 "transl_table", "_sec_met", "product_prediction", "cluster", "_gene_functions",
                  "unique_id", "_nrps_pks", "motifs"]
 
     def __init__(self, location, translation=None, locus_tag=None, protein_id=None,
@@ -649,7 +515,7 @@ class CDSFeature(Feature):
         self.transl_table = None
         self._sec_met = None  # SecMetQualifier()
         self._nrps_pks = NRPSPKSQualifier()
-        self.aSProdPred = []  # TODO: shift into nrps sub section?
+        self.product_prediction = []  # TODO: shift into nrps sub section?
 
         self.motifs = []
 
@@ -687,6 +553,7 @@ class CDSFeature(Feature):
 
     @property
     def nrps_pks(self):
+        """ The NRPSPKSQualifier of the feature """
         return self._nrps_pks
 
     @nrps_pks.setter
@@ -748,6 +615,7 @@ class CDSFeature(Feature):
         gene_functions = leftovers.pop("gene_functions", [])
         if gene_functions:
             feature.gene_functions.add_from_qualifier(gene_functions)
+        feature.product_prediction = leftovers.pop("aSProdPred", [])
 
         # grab parent optional qualifiers
         super(CDSFeature, feature).from_biopython(bio_feature, feature=feature, leftovers=leftovers)
@@ -758,8 +626,10 @@ class CDSFeature(Feature):
         mine = OrderedDict()  # type: Dict[str, List[str]]
         # mandatory
         mine["translation"] = [self.translation]
+        if self.product_prediction:
+            mine["aSProdPred"] = [self.product_prediction]
         # optional
-        for attr in ["gene", "aSProdPred", "transl_table", "locus_tag",
+        for attr in ["gene", "transl_table", "locus_tag",
                      "protein_id", "product"]:
             val = getattr(self, attr)
             if val:

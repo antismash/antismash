@@ -4,7 +4,9 @@
 """ Classes representing complex qualifiers for features.
 """
 
-from typing import List, Set
+from collections import defaultdict
+from enum import Enum, unique
+from typing import List, Set, Optional
 
 
 class NRPSPKSQualifier(list):
@@ -40,12 +42,12 @@ class NRPSPKSQualifier(list):
         self.domains = []
         self.domain_names = []  # type: List[str]
         self.predictions = {}
-        self.cal = 0
-        self.at = 0
-        self.kr = 0
-        self.a = 0
-        self.ks = 0
-        self.other = 0
+        self.cal_counter = 0
+        self.at_counter = 0
+        self.kr_counter = 0
+        self.a_counter = 0
+        self.ks_counter = 0
+        self.other_counter = 0
 
     def append(self, _value):
         raise NotImplementedError("Appending to this list won't work, use add_subtype() or add_domain()")
@@ -78,23 +80,23 @@ class NRPSPKSQualifier(list):
         """
         assert not isinstance(domain, str)
         if domain.hit_id == "PKS_AT":
-            self.at += 1
-            suffix = "_AT%d" % self.at
+            self.at_counter += 1
+            suffix = "_AT%d" % self.at_counter
         elif domain.hit_id == "PKS_KR":
-            self.kr += 1
-            suffix = "_KR%d" % self.kr
+            self.kr_counter += 1
+            suffix = "_KR%d" % self.kr_counter
         elif domain.hit_id == "CAL_domain":
-            self.cal += 1
-            suffix = "_CAL%d" % self.cal
+            self.cal_counter += 1
+            suffix = "_CAL%d" % self.cal_counter
         elif domain.hit_id == "AMP-binding":
-            self.a += 1
-            suffix = "_A%d" % self.a
+            self.a_counter += 1
+            suffix = "_A%d" % self.a_counter
         elif domain.hit_id == "PKS_KS":
-            self.ks += 1
-            suffix = "_KS%d" % self.ks
+            self.ks_counter += 1
+            suffix = "_KS%d" % self.ks_counter
         else:
-            self.other += 1
-            suffix = "_OTHER%d" % self.other
+            self.other_counter += 1
+            suffix = "_OTHER%d" % self.other_counter
 
         self.domains.append(NRPSPKSQualifier.Domain(domain.hit_id, suffix,
                 domain.query_start, domain.query_end, domain.evalue, domain.bitscore))
@@ -147,6 +149,7 @@ class SecMetQualifier(list):
         raise NotImplementedError("Extending this list won't work")
 
     def add_products(self, products: Set[str]) -> None:
+        """ Adds one or more products to the qualifier """
         assert isinstance(products, set), type(products)
         for product in products:
             assert isinstance(product, str) and "-" not in product, product
@@ -160,14 +163,17 @@ class SecMetQualifier(list):
 
     @property
     def domains(self) -> List["SecMetQualifier.Domain"]:
+        """ A list of domains stored in the qualifier"""
         return list(self._domains)
 
     @property
     def products(self) -> List[str]:
+        """ A list of all products a feature is involved in"""
         return sorted(self._products)
 
     @property
     def clustertype(self) -> str:
+        """ A string hypen-separated products """
         return "-".join(sorted(self.products))
 
     @staticmethod
@@ -192,3 +198,150 @@ class SecMetQualifier(list):
 
     def __len__(self):
         return 3
+
+
+@unique
+class GeneFunction(Enum):
+    """ An Enum representing the function of a gene.
+        Allows for more flexible conversion and more robust value constraints.
+    """
+    OTHER = 0
+    CORE = 1
+    ADDITIONAL = 2
+    TRANSPORT = 3
+    REGULATORY = 4
+
+    def __str__(self) -> str:
+        # because this information ends up in the record, make these more
+        # labels more meaningful for users
+        if self == GeneFunction.CORE:
+            return "biosynthetic"
+        if self == GeneFunction.ADDITIONAL:
+            return "biosynthetic-additional"
+        return str(self.name).lower()
+
+    @staticmethod
+    def from_string(label: str) -> "GeneFunction":
+        """ Converts a string to a GeneFunction instance when possible.
+            Raises an error if not possible.
+        """
+        for value in GeneFunction:
+            if str(value) == label:
+                return value
+        raise ValueError("Unknown gene function label: %s", label)
+
+
+class GeneFunctionAnnotations:
+    """ Tracks multiple annotations of gene functions. Each annotation contains
+        the declared function of the gene, which tool determined the function,
+        and a comment on how the determination was made.
+    """
+    slots = ["_annotations", "_by_tool", "_by_function"]
+
+    class GeneFunctionAnnotation:
+        """ A single instance of an annotation. """
+        slots = ["function", "tool", "description"]
+
+        def __init__(self, function: GeneFunction, tool: str, description: str) -> None:
+            assert isinstance(function, GeneFunction), "wrong type: %s" % type(function)
+            assert tool and len(tool.split()) == 1, tool  # no whitespace allowed in tool name
+            assert description
+            self.function = function
+            self.tool = str(tool)
+            self.description = str(description)
+
+        def __str__(self):
+            return "%s (%s) %s" % (self.function, self.tool, self.description)
+
+        def __repr__(self):
+            return "GeneFunctionAnnotation(function=%r, tool='%s', '%s')" % (self.function, self.tool, self.description)
+
+    def __init__(self):
+        self._annotations = []
+        self._by_tool = defaultdict(list)
+        self._by_function = defaultdict(list)
+
+    def __iter__(self):
+        for annotation in self._annotations:
+            yield annotation
+
+    def __len__(self):
+        return len(self._annotations)
+
+    def add(self, function: GeneFunction, tool: str, description: str
+            ) -> "GeneFunctionAnnotations.GeneFunctionAnnotation":
+        """ Adds a gene function annotation. If an existing annotation has all
+            the same values as those provided, a duplicate will not be added.
+
+            Arguments:
+                function: a GeneFunction value
+                tool: a string naming the tool that determined the gene function
+                description: description text for storing extra information
+
+            Returns:
+                the GeneFunction added (or the existing one if duplicated)
+        """
+        tool = str(tool)
+        description = str(description)
+        # if there's already an exactly similar function annotation, skip adding
+        existing_functions = self._by_function.get(function, [])
+        for existing in existing_functions:
+            if existing.tool == tool and existing.description == description:
+                return existing
+        new = GeneFunctionAnnotations.GeneFunctionAnnotation(function, tool, description)
+        self._by_tool[tool].append(new)
+        self._by_function[function].append(new)
+        self._annotations.append(new)
+        return new
+
+    def add_from_qualifier(self, qualifier: List[str]):
+        """ Converts a string-based qualifier into one or more GeneFunctions and
+            adds them to the current set.
+            Expected format will be as per str(GeneFunctionAnnotation).
+        """
+        for section in qualifier:
+            function, tool, description = section.split(maxsplit=2)
+            tool = tool[1:-1]  # strip the ()
+            self.add(GeneFunction.from_string(function), tool, description)
+
+    def get_by_tool(self, tool: str) -> Optional[List]:
+        """ Returns a list of all GeneFunctionAnnotations which were added with
+            the tool name provided.
+        """
+        return self._by_tool.get(tool)
+
+    def get_by_function(self, function: GeneFunction) -> Optional[List]:
+        """ Returns a list of GeneFunctionAnnotations which have the same
+            gene function as that provided.
+        """
+        return self._by_function.get(function)
+
+    def get_classification(self) -> GeneFunction:
+        """ Returns the function of the gene, in the priority order of priority:
+             - CORE if cluster defined by this gene
+             - the function determined by smCOGs, if it exists
+             - a function from all tools if they all agree
+             - or OTHER
+        """
+        # if no annotations, skip to OTHER
+        if not self._annotations:
+            return GeneFunction.OTHER
+        # if any CORE function set, use that
+        if self._by_function.get(GeneFunction.CORE):
+            return GeneFunction.CORE
+        # then priority for smcogs
+        annotations = self._by_tool.get("smcogs")
+        if annotations:
+            return annotations[0].function
+        # otherwise check all agree
+        function = self._annotations[0].function
+        for annotation in self._annotations[1:]:
+            if annotation.function != function:
+                return GeneFunction.OTHER
+        return function
+
+    def clear(self) -> None:
+        """ Removes all gene functions from the annotation """
+        self._annotations = []
+        self._by_tool = defaultdict(list)
+        self._by_function = defaultdict(list)
