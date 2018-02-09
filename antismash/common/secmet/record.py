@@ -189,7 +189,7 @@ class Record:
             """
             dummy = Feature(location, feature_type='dummy')
             index = bisect.bisect_left(features, dummy)
-            while index > 0 and features[index -1].location.start == location.start:
+            while index > 0 and features[index - 1].location.start == location.start:
                 index -= 1
             if include_overlaps:
                 while index >= 1 and features[index - 1].overlaps_with(dummy):
@@ -201,7 +201,6 @@ class Record:
         if not self._cds_features:
             return results
         index = find_start_in_list(location, self._cds_features, with_overlapping)
-        first_feature = self._cds_features[index]
         while index < len(self._cds_features):
             feature = self._cds_features[index]
             if feature.is_contained_by(location):
