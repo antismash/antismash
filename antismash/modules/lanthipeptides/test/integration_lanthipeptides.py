@@ -198,7 +198,7 @@ class IntegrationLanthipeptides(unittest.TestCase):
     def test_multiple_biosynthetic_enzymes(self):
         rec = record_processing.parse_input_sequence(path.get_full_path(__file__, 'data', 'CP013129.1.section.gbk'))[0]
         rec.clear_cds_motifs()
-        assert rec.get_cluster(0).products == ["lanthipeptide", "nrps"]
+        assert rec.get_cluster(0).products == ("lanthipeptide", "nrps")
         assert rec.get_cluster(0).cds_children
         result = run_specific_analysis(rec)
         assert len(result.clusters) == 1

@@ -7,7 +7,7 @@ from collections import OrderedDict
 import logging
 import os
 import warnings
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 from helperlibs.bio import seqio
 
@@ -219,21 +219,20 @@ class Gene(Feature):
 
 class ClusterBorder(Feature):
     """ A feature representing a cluster border """
-    __slots__ = ["tool", "probability", "cutoff", "extent", "products", "rules",
+    __slots__ = ["tool", "probability", "cutoff", "extent", "product", "rule",
                  "contig_edge"]
 
     def __init__(self, location, tool, probability=None, cutoff=0, extent=0,
-                 products=None, rules=None, contig_edge=False):
+                 product: Optional[str] = None, rule: Optional[str] = None, contig_edge=False):
         super().__init__(location, feature_type="cluster_border",
                          created_by_antismash=True)
         self.tool = str(tool)
         # cassis has no extras
 
         # cluster finder might not be empty, rule parser will not be
-        if products is None:
-            products = []
-        assert isinstance(products, list)
-        self.products = products
+        if product is not None:
+            assert isinstance(product, str), type(product)
+        self.product = product
 
         # cluster finder
         self.probability = None
@@ -243,10 +242,9 @@ class ClusterBorder(Feature):
         # rule parser
         self.cutoff = int(cutoff)
         self.extent = int(extent)
-        if rules is None:
-            rules = []
-        assert isinstance(rules, list)
-        self.rules = rules
+        if rule is not None:
+            assert isinstance(rule, str), type(rule)
+        self.rule = rule
         self.contig_edge = bool(contig_edge)
 
     def to_biopython(self, qualifiers=None):
@@ -255,14 +253,14 @@ class ClusterBorder(Feature):
         mine["contig_edge"] = [self.contig_edge]
         if self.probability is not None:
             mine["probability"] = [str(self.probability)]
-        if self.products:
-            mine["products"] = self.products
+        if self.product:
+            mine["product"] = [self.product]
         if self.cutoff:
             mine["cutoff"] = [self.cutoff]
         if self.extent:
             mine["extent"] = [self.extent]
-        if self.rules:
-            mine["rules"] = self.rules
+        if self.rule:
+            mine["rule"] = [self.rule]
         if qualifiers:
             mine.update(qualifiers)
         return super().to_biopython(mine)
@@ -279,12 +277,12 @@ class ClusterBorder(Feature):
         probability = leftovers.pop("probability", [None])[0]
         cutoff = leftovers.pop("cutoff", [0])[0]
         extent = leftovers.pop("extent", [0])[0]
-        rules = leftovers.pop("rules", [])
-        products = leftovers.pop("products", [])
+        rule = leftovers.pop("rule", [None])[0]
+        product = leftovers.pop("product", [None])[0]
         contig_edge = leftovers.pop("contig_edge", [""])[0] == "True"
 
         feature = ClusterBorder(bio_feature.location, tool, probability=probability,
-                                cutoff=cutoff, extent=extent, rules=rules, products=products,
+                                cutoff=cutoff, extent=extent, rule=rule, product=product,
                                 contig_edge=contig_edge)
 
         # grab parent optional qualifiers
@@ -296,7 +294,7 @@ class ClusterBorder(Feature):
         return repr(self)
 
     def __repr__(self) -> str:
-        return "ClusterBorder(%s, %s)" % (self.products, self.location)
+        return "ClusterBorder(%s, %s)" % (self.product, self.location)
 
 
 class AntismashFeature(Feature):
@@ -802,19 +800,20 @@ class Prepeptide(CDSMotif):
 
 class Cluster(Feature):
     """ A feature representing a cluster. Tracks which CDS features belong to it"""
-    __slots__ = ["_extent", "_cutoff", "products", "contig_edge",
+    __slots__ = ["_extent", "_cutoff", "_products", "contig_edge",
                  "detection_rules", "smiles_structure", "probability",
                  "clusterblast", "knownclusterblast", "subclusterblast",
                  "parent_record", "cds_children", "borders", "monomers_prediction"]
 
-    def __init__(self, location, cutoff, extent, products):
+    def __init__(self, location: FeatureLocation, cutoff: int, extent: int, products: List) -> None:
         super().__init__(location, feature_type="cluster",
                          created_by_antismash=True)
 
         self._extent = int(extent)
         self._cutoff = int(cutoff)
-        assert isinstance(products, list)
-        self.products = products
+        self._products = []
+        for product in products:
+            self.add_product(product)
 
         self.contig_edge = None  # hmm_detection borderpredict
         self.detection_rules = []
@@ -830,6 +829,16 @@ class Cluster(Feature):
         self.parent_record = None
         self.cds_children = OrderedDict()
         self.borders = []
+
+    @property
+    def products(self) -> Iterable[str]:
+        """ The products of a cluster """
+        return tuple(self._products)
+
+    def add_product(self, product: str) -> None:
+        """ Add the given product to the cluster's list of products """
+        assert product and isinstance(product, str), str(product)
+        self._products.append(product)
 
     def get_cluster_number(self):
         """ Returns the cluster number which the parent record uses to refer to
@@ -938,7 +947,8 @@ class Cluster(Feature):
 
     def get_product_string(self):
         """ Returns the cluster's products as a single string """
-        return "-".join(self.products)
+        assert None not in self._products, self._products
+        return "-".join(self._products)
 
     @staticmethod
     def from_biopython(bio_feature, feature=None, leftovers=None):
@@ -971,8 +981,6 @@ class Cluster(Feature):
                 rule = rule[1:-1]  # strip ( )
                 products.append(product.strip())
                 rules.append(rule)
-            assert sorted(products) == sorted(cluster.products)
-            cluster.products = products
             cluster.detection_rules = rules
 
         # grab optional qualifiers
@@ -993,7 +1001,7 @@ class Cluster(Feature):
         mine["extension"] = [str(self.extent)]
         if self.contig_edge is not None:
             mine["contig_edge"] = [str(self.contig_edge)]
-        assert isinstance(self.products, list), type(self.products)
+        assert isinstance(self._products, list), type(self.products)
         mine["product"] = [self.get_product_string()]
         rule_text = ["Detection rule(s) for this cluster type:"]
         assert isinstance(self.detection_rules, list), type(self.detection_rules)
