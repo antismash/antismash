@@ -34,7 +34,7 @@ class TestRedundancy(unittest.TestCase):
     def create_border(self, rule_name, start, end):
         rule = self.rules_by_name[rule_name]
         return ClusterBorder(FeatureLocation(start, end), tool="testing",
-                             cutoff=rule.cutoff, extent=rule.extent, products=[rule_name])
+                             cutoff=rule.cutoff, extent=rule.extent, product=rule_name)
 
     def test_alone(self):
         borders = [self.create_border("inferior", 1, 10)]

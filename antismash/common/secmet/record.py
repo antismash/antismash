@@ -465,10 +465,12 @@ class Record:
         borders = sorted(self._cluster_borders)
         cluster_location = FeatureLocation(max(0, borders[0].location.start - borders[0].extent),
                                            min(borders[0].location.end + borders[0].extent, len(self)))
-        cluster = Cluster(cluster_location, borders[0].cutoff,
-                          borders[0].extent, borders[0].products)
-        if borders[0].rules:
-            cluster.detection_rules = borders[0].rules
+        products = [borders[0].product]
+        if products[0] is None:
+            products = []
+        cluster = Cluster(cluster_location, borders[0].cutoff, borders[0].extent, products)
+        if borders[0].rule:
+            cluster.detection_rules.append(borders[0].rule)
 
         clusters_added = 0
         for border in borders[1:]:
@@ -484,18 +486,22 @@ class Record:
                 if end > len(self):
                     end = len(self)
                 cluster.location = FeatureLocation(start, end)
-                cluster.products.extend(product for product in border.products if product not in cluster.products)
-                cluster.detection_rules.extend(rule for rule in border.rules if rule not in cluster.detection_rules)
+                if border.product is not None and border.product not in cluster.products:
+                    cluster.add_product(border.product)
+                if border.rule:
+                    cluster.detection_rules.append(border.rule)
             else:
                 cluster.contig_edge = cluster.location.start == 0 or cluster.location.end == len(self.seq)
                 self.add_cluster(cluster)
                 clusters_added += 1
                 cluster_location = FeatureLocation(max(0, border.location.start - border.extent),
                                                    min(border.location.end + border.extent, len(self)))
-                cluster = Cluster(cluster_location, border.cutoff, border.extent,
-                                  border.products)
-                if border.rules:
-                    cluster.detection_rules = border.rules
+                products = []
+                if border.product:
+                    products.append(border.product)
+                cluster = Cluster(cluster_location, border.cutoff, border.extent, products)
+                if border.rule:
+                    cluster.detection_rules.append(border.rule)
 
         # add the final cluster being built if it wasn't added already
         cluster.contig_edge = cluster.location.start == 0 or cluster.location.end == len(self.seq)

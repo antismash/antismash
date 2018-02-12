@@ -45,12 +45,13 @@ class DummyCDS(CDSFeature):
 
 
 class DummyCluster(Cluster):
-    def __init__(self, start, end, strand=1):
+    def __init__(self, start, end, strand=1, products=None):
         cutoff = 10
         extent = 10
-        product = ["dummy"]
+        if products is None:
+            products = ["dummy"]
         super().__init__(FeatureLocation(start, end, strand), cutoff, extent,
-                         product)
+                         products)
 
 
 def get_simple_options(module, args):

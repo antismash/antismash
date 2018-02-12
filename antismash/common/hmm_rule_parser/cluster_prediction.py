@@ -35,14 +35,14 @@ class CDSResults:
         # empty definition domains is ok
         self.definition_domains = definition_domains
 
-    def annotate(self, products: Set[str], tool: str) -> None:
+    def annotate(self, product: str, tool: str) -> None:
         """ Annotates a CDSFeature with the results gathered """
         all_matching = set()
         if not self.cds.sec_met:
             self.cds.sec_met = SecMetQualifier(set(self.definition_domains), self.domains)
         else:
             all_matching.update(set(self.cds.sec_met.domain_ids))
-            self.cds.sec_met.add_products(set(products))
+            self.cds.sec_met.add_products({product})
             self.cds.sec_met.add_domains(self.domains)
         for cluster_type, matching_domains in self.definition_domains.items():
             all_matching.update(matching_domains)
@@ -74,7 +74,7 @@ class DetectionResults:
         """ Annotate relevant CDS features with the HMM information detected """
         for border, cds_results in self.cds_by_cluster.items():
             for cds_result in cds_results:
-                cds_result.annotate(border.products, self.tool)
+                cds_result.annotate(border.product, self.tool)
 
 
 def remove_redundant_borders(borders: List[ClusterBorder],
@@ -84,12 +84,11 @@ def remove_redundant_borders(borders: List[ClusterBorder],
     """
     borders_by_rule = defaultdict(list)
     for border in borders:
-        assert len(border.products) == 1
-        borders_by_rule[border.products[0]].append(border)
+        borders_by_rule[border.product].append(border)
 
     trimmed_borders = []
     for border in borders:
-        rule_name = border.products[0]
+        rule_name = border.product
         is_redundant = False
         for superior in rules_by_name[rule_name].superiors:
             for other_border in borders_by_rule.get(superior, []):
@@ -116,7 +115,7 @@ def find_clusters(record, cds_by_cluster_type, rules_by_name) -> List[ClusterBor
         extent = rule.extent
         start, end = sorted([cds_features[0].location.start, cds_features[0].location.end])
         cluster = ClusterBorder(FeatureLocation(start, end), tool="rule-based-clusters",
-                                cutoff=cutoff, extent=extent, products=[cluster_type])
+                                cutoff=cutoff, extent=extent, product=cluster_type)
         assert cds_features[0].is_contained_by(cluster)
         assert cds_features[0] in record.get_cds_features_within_location(cluster.location)
         clusters.append(cluster)
@@ -131,11 +130,11 @@ def find_clusters(record, cds_by_cluster_type, rules_by_name) -> List[ClusterBor
                 start = feature_start
                 end = feature_end
                 cluster = ClusterBorder(FeatureLocation(start, end), tool="rule-based-clusters",
-                                        cutoff=cutoff, extent=extent, products=[cluster_type])
+                                        cutoff=cutoff, extent=extent, product=cluster_type)
                 clusters.append(cluster)
 
     for cluster in clusters:
-        cluster.rules = [str(rules_by_name[product].conditions) for product in cluster.products]
+        cluster.rule = str(rules_by_name[cluster.product].conditions)
         if cluster.location.start < 0:
             cluster.location = FeatureLocation(0, cluster.location.end)
             cluster.contig_edge = True
@@ -375,6 +374,7 @@ def detect_borders_and_signatures(record, signature_file: str, seeds_file: str,
     # Save final results to record
     rules_by_name = {rule.name: rule for rule in rules}
     clusters = find_clusters(record, cluster_type_hits, rules_by_name)
+    strip_inferior_domains(cds_domains_by_cluster, rules_by_name)
 
     cds_results_by_cluster = {}
     for cluster in clusters:
@@ -393,6 +393,21 @@ def detect_borders_and_signatures(record, signature_file: str, seeds_file: str,
 
     results = DetectionResults(cds_results_by_cluster, tool)
     return results
+
+
+def strip_inferior_domains(cds_domains_by_cluster: Dict[str, Dict[str, List[str]]],
+                           rules_by_name: Dict[str, rule_parser.DetectionRule]) -> None:
+    """ Remove any domain hits for each inferior rule within a CDS that the CDS also
+        satisfies the rule's superior.
+
+        Modifies cds_domains_by_cluster in place.
+    """
+    for domains_by_cluster in cds_domains_by_cluster.values():
+        all_satisfied = set(domains_by_cluster)
+        for product in all_satisfied:
+            rule = rules_by_name[product]
+            if set(rule.superiors).intersection(all_satisfied):
+                domains_by_cluster.pop(product)
 
 
 def get_sequence_counts(details_file: str) -> Dict[str, str]:

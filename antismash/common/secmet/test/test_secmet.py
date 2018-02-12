@@ -97,7 +97,6 @@ class TestRecord(unittest.TestCase):
         assert record.get_cds_features()[0] is list(cluster.cds_children)[0]
         assert record.get_cds_features()[0].locus_tag == "B"
 
-
     def test_orphaned_cluster_number(self):
         record = Record(Seq("A" * 1000))
         cluster = helpers.DummyCluster(0, 1000)
@@ -186,7 +185,7 @@ class TestFeature(unittest.TestCase):
         with self.assertRaises(AttributeError):
             CDSFeature(location, translation="none", gene="a").other_value = 1
         cluster = Cluster(location, 0, 0, products=["a", "b"])
-        assert cluster.products == ["a", "b"]
+        assert cluster.products == ("a", "b")
         # Clusters have products, not product
         with self.assertRaises(AttributeError):
             cluster.product = ["c", "d"]
@@ -273,6 +272,17 @@ class TestCluster(unittest.TestCase):
         assert self.cluster.location.start == self.start
         assert self.cluster.location.end == self.end - 1
 
+    def test_products(self):
+        assert self.cluster.products == ("a",)
+        self.cluster.add_product("b")
+        assert self.cluster.products == ("a", "b")
+        with self.assertRaises(AttributeError):
+            self.cluster.products.append("c")  # pylint: disable=no-member
+        with self.assertRaises(AssertionError):
+            self.cluster.add_product(None)
+        with self.assertRaises(AssertionError):
+            self.cluster.add_product(["C"])
+
 
 class TestCDSFeature(unittest.TestCase):
     def test_required_identifiers(self):
@@ -287,7 +297,7 @@ class TestGeneFunction(unittest.TestCase):
     def test_membership(self):
         assert GeneFunction.OTHER
         with self.assertRaises(AttributeError):
-            _ = GeneFunction.non_existant
+            print(GeneFunction.non_existant)
 
     def test_equality(self):
         assert GeneFunction.OTHER == GeneFunction.OTHER
