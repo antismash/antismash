@@ -421,17 +421,20 @@ class CDSMotif(Domain):
 class PFAMDomain(Domain):
     """ A feature representing a PFAM domain within a CDS.
     """
-    __slots__ = ["description", "db_xref"]
+    __slots__ = ["description", "db_xref", "probability"]
 
     def __init__(self, location: FeatureLocation, description: str) -> None:
         super().__init__(location, feature_type="PFAM_domain")
         assert isinstance(description, str)
         self.description = description
+        self.probability = None
         self.db_xref = []  # type: List[str]
 
     def to_biopython(self, qualifiers=None):
         mine = OrderedDict()
         mine["description"] = self.description
+        if self.probability is not None:
+            mine["probability"] = [self.probability]
         if self.db_xref:
             mine["db_xref"] = self.db_xref
         if qualifiers:
