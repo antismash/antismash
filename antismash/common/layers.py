@@ -68,7 +68,6 @@ class ClusterLayer:
         self.find_plugins_for_cluster()
         self.has_details = self.determine_has_details()
         self.has_sidepanel = self.determine_has_sidepanel()
-        self.probability = "BROKEN"  # TODO when clusterfinder returns
 
     def __getattr__(self, attr):
         if attr in self.__dict__:

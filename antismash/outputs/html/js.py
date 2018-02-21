@@ -5,6 +5,8 @@ import logging
 import string
 import os
 
+from antismash.detection import clusterfinder
+from antismash.modules import clusterblast
 from antismash.outputs.html.generate_html_table import generate_html_table
 
 searchgtr_links = {}
@@ -43,7 +45,7 @@ def convert_clusters(record, options, result):
     js_clusters = []
     mibig_results = {}
 
-    clusterblast_results = result.get("antismash.modules.clusterblast")
+    clusterblast_results = result.get(clusterblast.__name__)
     if clusterblast_results and clusterblast_results.knowncluster:
         mibig_results = clusterblast_results.knowncluster.mibig_entries
 
@@ -94,7 +96,12 @@ def convert_cds_features(record, features, options, mibig_entries):
 
 def convert_cluster_border_features(borders):
     js_borders = []
-    for i, border in enumerate(sorted(borders, key=lambda x: x.product or "unknown")):
+    # clusterfinder's putative borders can never overlap, so if they exist, collapse
+    # them into a single row
+    putatives = [border for border in borders if border.product == clusterfinder.PUTATIVE_PRODUCT]
+    non_putatives = [border for border in borders if border.product != clusterfinder.PUTATIVE_PRODUCT]
+    borders = putatives + sorted(non_putatives, key=lambda x: x.product or "unknown")
+    for i, border in enumerate(borders):
         js_border = {}
         js_border['start'] = int(border.location.start) + 1
         js_border['end'] = int(border.location.end)
@@ -102,7 +109,10 @@ def convert_cluster_border_features(borders):
         if js_border['start'] > js_border['end']:
             js_border['end'], js_border['start'] = js_border['start'], js_border['end']
         js_border['tool'] = border.tool
-        js_border['height'] = i
+        if border.product == "cf_putative":
+            js_border['height'] = 0
+        else:
+            js_border['height'] = i - len(putatives) + 1
         js_border['extent'] = border.extent
         js_border['product'] = border.product or 'unknown'
         if border.tool == "cassis":

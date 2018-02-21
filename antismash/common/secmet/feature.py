@@ -809,7 +809,7 @@ class Prepeptide(CDSMotif):
 class Cluster(Feature):
     """ A feature representing a cluster. Tracks which CDS features belong to it"""
     __slots__ = ["_extent", "_cutoff", "_products", "contig_edge",
-                 "detection_rules", "smiles_structure", "probability",
+                 "detection_rules", "smiles_structure",
                  "clusterblast", "knownclusterblast", "subclusterblast",
                  "parent_record", "cds_children", "borders", "monomers_prediction"]
 
@@ -827,7 +827,6 @@ class Cluster(Feature):
         self.detection_rules = []
         self.smiles_structure = None  # SMILES string
         self.monomers_prediction = None
-        self.probability = None  # clusterfinder probability # TODO: unify with notes version
 
         self.clusterblast = None
         self.knownclusterblast = None
@@ -957,6 +956,19 @@ class Cluster(Feature):
         """ Returns the cluster's products as a single string """
         assert None not in self._products, self._products
         return "-".join(self._products)
+
+    @property
+    def probability(self) -> Optional[float]:
+        """ The cluster probability, if relevant. """
+        probabilities = {border.probability for border in self.borders}
+        # one border ignores probabilities, then don't use a probability
+        if None in probabilities:
+            return None
+        # if all agree on the probability
+        if len(probabilities) == 1:
+            return list(probabilities)[0]
+        # if they disagree, return None again
+        return None
 
     @staticmethod
     def from_biopython(bio_feature, feature=None, leftovers=None):

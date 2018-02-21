@@ -27,7 +27,7 @@ from antismash.common import serialiser, record_processing
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record
 from antismash.detection import genefinding, hmm_detection, nrps_pks_domains, full_hmmer, \
-                                cassis
+                                cassis, clusterfinder
 from antismash.modules import tta, clusterblast, lanthipeptides, smcogs, dummy, \
                               nrps_pks, thiopeptides, sactipeptides, lassopeptides
 from antismash.outputs import html, svg
@@ -56,7 +56,7 @@ def get_detection_modules() -> List[ModuleType]:
         Returns:
             a list of modules
     """
-    return [genefinding, hmm_detection, nrps_pks_domains, full_hmmer, cassis]
+    return [genefinding, hmm_detection, nrps_pks_domains, full_hmmer, cassis, clusterfinder]
 
 
 def get_analysis_modules() -> List[ModuleType]:
@@ -182,7 +182,7 @@ def run_detection(record: Record, options, previous_result: Dict[str, Union[Dict
     # generate cluster predictions
     logging.info("Detecting secondary metabolite clusters")
     predictions = []
-    for module in [hmm_detection, cassis]:  # TODO: cluster_finder
+    for module in [hmm_detection, cassis, clusterfinder]:
         run_module(record, module, options, module_results, timings)
         results = module_results.get(module.__name__)
         if results:
