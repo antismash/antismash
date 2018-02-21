@@ -12,19 +12,20 @@ import cProfile
 from datetime import datetime
 from io import StringIO
 import logging
-import pstats
 import os
+import pstats
 import shutil
 import time
 import tempfile
 from types import ModuleType
-from typing import Dict, Optional, List, Union
+from typing import Dict, List, Optional, Union
 
 from Bio import SeqIO
 
 from antismash.config import update_config
 from antismash.common import serialiser, record_processing
 from antismash.common.module_results import ModuleResults
+from antismash.common.secmet import Record
 from antismash.detection import genefinding, hmm_detection, nrps_pks_domains, full_hmmer, \
                                 cassis
 from antismash.modules import tta, clusterblast, lanthipeptides, smcogs, dummy, \
@@ -83,7 +84,7 @@ def get_output_modules() -> List[ModuleType]:
     return [html]
 
 
-def setup_logging(logfile=None, verbose=False, debug=False) -> None:
+def setup_logging(logfile: str = None, verbose: bool = False, debug: bool = False) -> None:
     """ Define the logging format, levels and outputs
 
         Arguments:
@@ -123,7 +124,7 @@ def setup_logging(logfile=None, verbose=False, debug=False) -> None:
     logging.getLogger('').addHandler(handler)
 
 
-def verify_options(options, modules) -> bool:
+def verify_options(options, modules: List[ModuleType]) -> bool:
     """ Find and display any incompatibilities in provided options
 
         Arguments:
@@ -149,8 +150,16 @@ def verify_options(options, modules) -> bool:
     return False
 
 
-def run_detection(record, options, previous_result: Dict[str, Union[Dict, ModuleResults]]) -> Dict[str, float]:
+def run_detection(record: Record, options, previous_result: Dict[str, Union[Dict, ModuleResults]]) -> Dict[str, float]:
     """ Detect different secondary metabolite clusters, PFAMs, and domains.
+
+        Arguments:
+            record: the Record to run detection over
+            options: antiSMASH config
+            previous_result: a dictionary mapping a module's name to results from
+                             a previous run on this module, either as a
+                             ModuleResults subclass or a JSON-like dictionary if
+                             the module created it is no longer present
 
         Returns:
             the time taken by each detection module as a dictionary
@@ -166,6 +175,9 @@ def run_detection(record, options, previous_result: Dict[str, Union[Dict, Module
     # run full genome detections
     for module in [full_hmmer]:
         run_module(record, module, options, module_results, timings)
+        results = module_results.get(module.__name__)
+        if results:
+            results.add_to_record(record)
 
     # generate cluster predictions
     logging.info("Detecting secondary metabolite clusters")
@@ -195,7 +207,8 @@ def run_detection(record, options, previous_result: Dict[str, Union[Dict, Module
     return timings
 
 
-def regenerate_results_for_record(record, options, modules, previous_result
+def regenerate_results_for_record(record: Record, options, modules: List[ModuleType],
+                                  previous_result: Dict[str, Dict]
                                   ) -> Dict[str, Optional[ModuleResults]]:
     """ Converts a record's JSON results to ModuleResults per module
 
@@ -444,7 +457,7 @@ def read_data(sequence_file, options) -> serialiser.AntismashResults:
     return results
 
 
-def check_prerequisites(modules) -> None:
+def check_prerequisites(modules: List[ModuleType]) -> None:
     """ Checks that each module's prerequisites are satisfied. If not satisfied,
         a RuntimeError is raised.
 
@@ -462,7 +475,7 @@ def check_prerequisites(modules) -> None:
                                module.__name__, "\n".join(res)))
 
 
-def list_plugins(modules) -> None:
+def list_plugins(modules: List[ModuleType]) -> None:
     """ Prints the name and short description of the given modules
 
         Arguments:
@@ -501,8 +514,7 @@ def log_module_runtimes(timings: Dict[str, Dict[str, float]]) -> None:
         logging.debug("  %s: %.1fs", module, runtime)
 
 
-def run_antismash(sequence_file, options, detection_modules=None,
-                  analysis_modules=None) -> int:
+def run_antismash(sequence_file: Optional[str], options) -> int:
     """ The complete antismash pipeline. Reads in data, runs detection and
         analysis modules over any records found, then outputs the results to
         file.
@@ -524,11 +536,8 @@ def run_antismash(sequence_file, options, detection_modules=None,
     setup_logging(logfile=logfile, verbose=options.verbose,
                   debug=options.debug)
 
-    if detection_modules is None:
-        detection_modules = get_detection_modules()
-    if analysis_modules is None:
-        analysis_modules = get_analysis_modules()
-
+    detection_modules = get_detection_modules()
+    analysis_modules = get_analysis_modules()
     modules = detection_modules + analysis_modules
 
     if options.list_plugins:
