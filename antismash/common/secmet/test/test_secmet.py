@@ -11,7 +11,8 @@ import Bio.SeqIO
 from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation
 from antismash.common.test import helpers
-from antismash.common.secmet import Record, Cluster, CDSFeature, Feature, GeneFunction
+from antismash.common.secmet.feature import Cluster, CDSFeature, Feature, GeneFunction, ClusterBorder
+from antismash.common.secmet.record import _build_products_from_borders, Record
 
 
 class TestConversion(unittest.TestCase):
@@ -106,6 +107,21 @@ class TestRecord(unittest.TestCase):
 
         with self.assertRaisesRegex(ValueError, "Cluster not contained in record"):
             print(cluster.get_cluster_number())
+
+    def test_products_from_borders(self):
+        location = FeatureLocation(1, 10)
+        border1 = ClusterBorder(location, "toolA", product="A")
+        assert border1.high_priority_product
+        border2 = ClusterBorder(location, "toolB", product="B")
+        assert border1.high_priority_product
+        assert _build_products_from_borders([border1, border2]) == ["A", "B"]
+        assert _build_products_from_borders([border2, border1]) == ["B", "A"]
+        border2 = ClusterBorder(location, "toolB", product="B", high_priority_product=False)
+        assert _build_products_from_borders([border1, border2]) == ["A"]
+        assert _build_products_from_borders([border2, border1]) == ["A"]
+        border1.high_priority_product = False
+        assert _build_products_from_borders([border1, border2]) == ["A", "B"]
+        assert _build_products_from_borders([border2, border1]) == ["B", "A"]
 
 
 class TestFeature(unittest.TestCase):
