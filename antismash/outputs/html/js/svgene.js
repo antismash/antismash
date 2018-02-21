@@ -61,6 +61,12 @@ svgene.drawOrderedClusterOrfs = function(cluster, chart, all_orfs, borders, tta_
     .data(borders)
   .enter().append("g")
     .attr("transform", function(d, i) { return "translate(0,0)"});
+  cluster_bars.append("line")
+    .attr("x1", function(d){ return scale(d.start - d.extent)})
+    .attr("y1", function(d){ return single_cluster_height * i + d.height * (bar_size + vertical_bar_gap) + offset + bar_size/2})
+    .attr("x2", function(d){ return scale(d.end + d.extent)})
+    .attr("y2", function(d){ return single_cluster_height * i + d.height * (bar_size + vertical_bar_gap) + offset + bar_size/2})
+    .attr("class", "svgene-line");
   cluster_bars.append("rect")
     .attr("width", function(d){ return scale(d.end) - scale(d.start)})
     .attr("height", bar_size)
