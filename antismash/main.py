@@ -177,7 +177,7 @@ def run_detection(record, options, previous_result: Dict[str, Union[Dict, Module
             predictions.extend(results.get_predictions())
 
     # create merged clusters
-    record.create_clusters_from_borders()
+    record.create_clusters_from_borders(predictions)
     for cluster in record.get_clusters():
         cluster.trim_overlapping()
 

@@ -13,7 +13,7 @@
 
 import bisect
 import logging
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import Bio.Alphabet
 from Bio.Seq import Seq
@@ -340,7 +340,7 @@ class Record:
 
     def add_feature(self, feature: Feature) -> None:
         """ Adds a Feature or any subclass to the relevant list """
-        assert isinstance(feature, Feature)
+        assert isinstance(feature, Feature), type(feature)
         if isinstance(feature, Cluster):
             self.add_cluster(feature)
         elif isinstance(feature, CDSFeature):
@@ -452,7 +452,7 @@ class Record:
         for cluster in self._clusters:
             cluster.write_to_genbank(directory=output_dir, record=bio_record)
 
-    def create_clusters_from_borders(self) -> int:
+    def create_clusters_from_borders(self, borders: Optional[List[ClusterBorder]] = None) -> int:
         """ Takes all ClusterBorder instances and constructs Clusters that cover
             each ClusterBorder. If a cluster would overlap with another, the
             clusters are merged.
@@ -460,15 +460,18 @@ class Record:
             Returns:
                 the number of clusters created
         """
-        if not self._cluster_borders:
+        if borders is None:
+            borders = self._cluster_borders
+
+        if not borders:
             return 0
-        borders = sorted(self._cluster_borders)
+
+        borders = sorted(borders)
         cluster_location = FeatureLocation(max(0, borders[0].location.start - borders[0].extent),
                                            min(borders[0].location.end + borders[0].extent, len(self)))
-        products = [borders[0].product]
-        if products[0] is None:
-            products = []
-        cluster = Cluster(cluster_location, borders[0].cutoff, borders[0].extent, products)
+        # create without products initially, add based on the border naming attributes
+        borders_within_cluster = [borders[0]]
+        cluster = Cluster(cluster_location, borders[0].cutoff, borders[0].extent, [])
         if borders[0].rule:
             cluster.detection_rules.append(borders[0].rule)
 
@@ -486,25 +489,27 @@ class Record:
                 if end > len(self):
                     end = len(self)
                 cluster.location = FeatureLocation(start, end)
-                if border.product is not None and border.product not in cluster.products:
-                    cluster.add_product(border.product)
+                borders_within_cluster.append(border)
                 if border.rule:
                     cluster.detection_rules.append(border.rule)
             else:
                 cluster.contig_edge = cluster.location.start == 0 or cluster.location.end == len(self.seq)
+                for product in _build_products_from_borders(borders_within_cluster):
+                    cluster.add_product(product)
                 self.add_cluster(cluster)
+                borders_within_cluster.clear()
                 clusters_added += 1
                 cluster_location = FeatureLocation(max(0, border.location.start - border.extent),
                                                    min(border.location.end + border.extent, len(self)))
-                products = []
-                if border.product:
-                    products.append(border.product)
-                cluster = Cluster(cluster_location, border.cutoff, border.extent, products)
+                cluster = Cluster(cluster_location, border.cutoff, border.extent, [])
+                borders_within_cluster.append(border)
                 if border.rule:
                     cluster.detection_rules.append(border.rule)
 
         # add the final cluster being built if it wasn't added already
         cluster.contig_edge = cluster.location.start == 0 or cluster.location.end == len(self.seq)
+        for product in _build_products_from_borders(borders_within_cluster):
+            cluster.add_product(product)
         self.add_cluster(cluster)
         clusters_added += 1
 
@@ -515,3 +520,29 @@ class Record:
             one NRPS/PKS domain.
         """
         return [feature for feature in self.get_cds_features_within_clusters() if feature.nrps_pks.domains]
+
+
+def _build_products_from_borders(borders: List[ClusterBorder]) -> List[str]:
+    """ Builds a list of unique products from a list of ClusterBorders,
+        with the same ordering. If a border has no product, it is ignored.
+
+        Arguments:
+            borders: the list of ClusterBorders to build a product list from
+
+        Returns:
+            a list of unique strings, one for each unique product
+    """
+    products = []
+    # use only those border products considered high priority
+    for border in borders:
+        if not border.high_priority_product:
+            continue
+        if border.product and border.product not in products:
+            products.append(border.product)
+    if products:
+        return products
+    # if that results in no products, then use the product from all borders
+    for border in borders:
+        if border.product and border.product not in products:
+            products.append(border.product)
+    return products
