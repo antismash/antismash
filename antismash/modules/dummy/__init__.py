@@ -23,11 +23,6 @@ def get_arguments() -> ModuleArgs:
         arguments.
     """
     args = ModuleArgs('Dummy options', '', override_safeties=True)
-    args.add_option('--dummy-borderpredict',
-                    dest='borderpredict',
-                    action='store_true',
-                    default=False,
-                    help="Dummy only.")
     args.add_option('--dummy-without-fimo',
                     dest='without_fimo',
                     action='store_true',
@@ -47,7 +42,7 @@ def check_options(options) -> List[str]:
             a list of strings describing any errors, if they exist
     """
     # because the placeholders are special, raise an error if they're used
-    if options.without_fimo or options.borderpredict:
+    if options.without_fimo:
         raise ValueError("Dummy options can't be enabled")
     return []
 

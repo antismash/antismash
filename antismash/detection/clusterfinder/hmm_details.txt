@@ -1,0 +1,223 @@
+Condensation	Condensation domain	20	Condensation.hmm
+AMP-binding	Adenylation domain	20	AMP-binding.hmm
+A-OX	Adenylation domain with integrated oxidase	50	A-OX.hmm
+PP-binding	Thiolation domain	20	PP-binding.hmm
+PKS_KS	Ketosynthase domain	50	PKS_KS.hmm
+PKS_AT	Acyltransferase domain	50	PKS_AT.hmm
+ATd	Trans-acyltransferase docking domain	65	ATd.hmm
+bt1fas	Bacterial type I fatty acid synthase	50	bt1fas.hmm
+ft1fas	Fungal type I fatty acid synthase	50	ft1fas.hmm
+t2fas	Type II fatty acid synthase	50	t2fas.hmm
+fabH	FabH fatty acid synthase	50	fabH.hmm
+ene_KS	Enediyine ketosynthase	50	ene_KS.hmm
+mod_KS	Modular ketosynthase	50	mod_KS.hmm
+hyb_KS	Hybrid ketosynthase	50	hyb_KS.hmm
+itr_KS	Iterative ketosynthase	50	itr_KS.hmm
+tra_KS	Trans-AT ketosynthase	50	tra_KS.hmm
+hglD	Unusual PKS HglD-like	50	hglD.hmm
+hglE	Unusual PKS HglE-like	50	hglE.hmm
+t2ks	Type II PKS ketosynthase	50	t2ks.hmm
+t2pks2	Type II PKS ketosynthase, model 2	450	t2ks2.hmm
+t2clf	Type II PKS Chain length factor	50	t2clf.hmm
+Chal_sti_synt_N	Type III PKS N-terminal	63	Chal_sti_synt_N.hmm
+Chal_sti_synt_C	Type III PKS C-terminal	35	Chal_sti_synt_C.hmm
+Terpene_synth_C	Terpene synthase, C-terminus	23	Terpene_synth_C.hmm
+Terpene_synth	Terpene synthase	23	Terpene_synth.hmm
+phytoene_synt	Phytoene_synthase	20	phytoene_synt.hmm
+Lycopene_cycl	Lycopene cyclase	80	Lycopene_cycl.hmm
+terpene_cyclase	Terpene cyclase	50	terpene_cyclase.hmm
+NapT7	NapT7-like protein	250	NapT7.hmm
+fung_ggpps	Fungal geranylgeranyl pyrophosphate synthase	420	fung_ggpps.hmm
+fung_ggpps2	Fungal geranylgeranyl pyrophosphate synthase, model 2	312	fung_ggpps2.hmm
+dmat	Dimethylallyl tryptophan synthase	200	dmat.hmm
+trichodiene_synth	Trichodiene synthase	150	trichodiene_synth.hmm
+LANC_like	LanC-like lantibiotics biosynthesis protein	17	LANC_like.hmm
+DUF4135	Lantibiotic-associated domain	150	PF13575.hmm
+Lant_dehyd_N	Lantibiotic dehydratase, N-terminus	20	Lant_dehyd_N.hmm
+Lant_dehyd_C	Lantibiotic dehydratase, C-terminus	20	Lant_dehyd_C.hmm
+Flavoprotein	Lantibiotic aminovinly flavoprotein	20	PF02441.hmm
+Trp_halogenase	Tryptophan halogenase	20	PF04820.hmm
+p450	P450 oxygenase	21	PF00067.hmm
+Pkinase	Protein kinase domain	30	PF00069.hmm
+adh_short	Short-chain dehydrogenase	100	PF00106.hmm
+adh_short_C2	Short-chain dehydrogenase, C-terminus	100	PF13561.hmm
+Antimicr18	Lantibiotic antimicrobial peptide 18	20	Antimicrobial18.hmm
+Gallidermin	Gallidermin	20	Gallidermin.hmm
+L_biotic_A	Lantibiotic, type A	20	L_biotic_typeA.hmm
+TIGR03731	Lantibiotic, gallidermin/nisin family	20	TIGR03731.hmm
+leader_d	Lantibiotic leader lacticin 481 group	20	LE-LAC481.hmm
+leader_eh	Lantibiotic leader mersacidin cinnamycin group	20	LE-MER+2PEP.hmm
+leader_abc	Lantibiotic leader LanBC modified	20	LE-LanBC.hmm
+mature_d	Lantibiotic peptide lacticin 481 group	20	MA-LAC481.hmm
+mature_ab	Lantibiotic peptide nisin epidermin group	20	MA-NIS+EPI.hmm
+mature_a	Lantibiotic peptide nisin group	20	MA-NIS.hmm
+mature_b	Lantibiotic peptide epidermin group	25	MA-EPI.hmm
+mature_ha	Lantibiotic peptide two component alpha	20	MA-2PEPA.hmm
+mature_h_beta	Lantibiotic peptide two component beta	20	MA-2PEPB.hmm
+lacticin_l	lantibiotic peptide lacticin 481 group (dufour et al)	20	LE-DUF.hmm
+lacticin_mat	lantibiotic leader lacticin 481 group (dufour et al)	20	MA-DUF.hmm
+LD_lanti_pre	FxLD family lantipeptide	20	TIGR04363.hmm
+strep_PEQAXS	Streptomyces PEQAXS motif lantipeptide	20	strep_PEQAXS.hmm
+strepbact	Putative Streptomyces bacteriocin	50	strepbact.hmm
+Antimicrobial14	Antimicrobial peptide 14	90	Antimicrobial14.hmm
+Bacteriocin_IIc	Bacteriocin_IIc domain	27	Bacteriocin_IIc.hmm
+Bacteriocin_IId	Bacteriocin_IId domain	23	Bacteriocin_IId.hmm
+BacteriocIIc_cy	Bacteriocin_IIdc_cydomain	92	BacteriocIIc_cy.hmm
+Bacteriocin_II	Bacteriocin_II domain	40	Bacteriocin_II.hmm
+Bacteriocin_IIi	Bacteriocin_IIi domain	56	Bacteriocin_IIi.hmm
+Lactococcin	Lactococcin	24	Lactococcin.hmm
+Antimicrobial17	Antimicrobial peptide 17	31	Antimicrobial17.hmm
+Lactococcin_972	Lactococcin 972	25	Lactococcin_972.hmm
+LcnG-beta	Lactococcin G-beta	78	LcnG-beta.hmm
+Subtilosin_A	Subtilosin A	68	Subtilosin_A.hmm
+Cloacin	Cloacin	27	Cloacin.hmm
+Linocin_M18	Linocin M18	25	Linocin_M18.hmm
+TIGR03603	Bacteriocin biosynthesis cyclodehydratase	150	TIGR03603.hmm
+TIGR03604	Bacteriocin biosynthesis docking scaffold	440	TIGR03604.hmm
+TIGR03605	SagB-type dehydrogenase	200	TIGR03605.hmm
+TIGR03651	Bacteriocin, circularin A/uberolysin famil	18	TIGR03651.hmm
+TIGR03678	Bacteriocin, microcyclamide/patellamide family	35	TIGR03678.hmm
+TIGR03693	Thiazole-containing bacteriocin maturation protein	400	TIGR03693.hmm
+TIGR03798	Bacteriocin propeptide	20	TIGR03798.hmm
+TIGR03882	Bacteriocin biosynthesis cyclodehydratase	150	TIGR03882.hmm
+TIGR03601	Bacteriocin, BA_2677 family	50	TIGR03601.hmm
+TIGR03602	Bacteriocin protoxin, streptolysin S family	50	TIGR03602.hmm
+TIGR03795	Ribosomal natural product, two-chain TOMM family	41	TIGR03795.hmm
+TIGR03793	NHLP leader peptide domain	51	TIGR03793.hmm
+TIGR03975	Bacteriocin maturation radical SAM protein 1	282	TIGR03975.hmm
+TIGR01193	ABC-type bacteriocin transporter	523	TIGR01193.hmm
+mvnA	Microviridin A	25	mvnA.hmm
+thiostrepton	Thiostrepton-like thiopeptides	20	thiostrepton.hmm
+BLS	Beta-lactam synthase	250	BLS.hmm
+CAS	Clavulanic acid synthase-like	250	CAS.hmm
+tabtoxin	Tabtoxin synthase-like	500	tabtoxin.hmm
+DOIS	2-deoxy-scyllo-inosose synthase	500	DOIS.hmm
+NeoL	NeoL-like deacetylase	50	neoL_like.hmm
+SpcDK_glyc	SpcD-/SpcK-like thymidylyltransferas	600	spcDK_like_glyc.hmm
+SpcFG	SpcF-/SpcG-like glycosyltransferase	200	spcFG_like.hmm
+strH	StrH-like glycosyltransferase	200	strH_like.hmm
+strK1	StrK-like phosphatase	800	strK_like1.hmm
+strK2	StrK-like phosphatase	650	strK_like2.hmm
+ValA	ValA-like 2-epi-5-epi-valiolone synthase	600	valA_like.hmm
+salQ	2-epi-5-epi-valiolone synthase, SalQ-like	480	salQ.hmm
+novK	NovK-like reductase	200	novK.hmm
+novJ	NovJ-like reductase	350	novJ.hmm
+novI	NovI-like cytochrome P450	600	novI.hmm
+novH	NovH-like protein	750	novH.hmm
+SpcDK_cou	SpcD/SpcK-like thymidylyltransferase, aminocoumarins group	600	spcDK_like_cou.hmm
+IucA_IucC	Siderophore synthase	30	IucA_IucC.hmm
+ectoine_synt	Ectoine synthase	35	ectoine_synt.hmm
+AfsA	AfsA-like butyrolactone synthase	25	AfsA.hmm
+indsynth	StaD-like chromopyrrolic acid synthase domain	100	indsynth.hmm
+LipM	LipM-like nucleotidyltransferase	50	LipM.hmm
+LipU	LipU-like protein	30	LipU.hmm
+LipV	LipV-like dehydrogenase	375	LipV.hmm
+ToyB	ToyB-like synthase	175	ToyB.hmm
+TunD	TunD-like putative N-acetylglucosamine transferase	200	TunD.hmm
+pur6	Pur6-like synthetase	200	pur6.hmm
+pur10	Pur10-like oxidoreductase	600	pur10.hmm
+nikJ	NikJ-like protein	200	nikJ.hmm
+nikO	NikO-like enolpyruvyl transferase	400	nikO.hmm
+MoeO5	MoeO5-like prenyl-3-phosphoglycerate synthase	65	MoeO5.hmm
+moeGT	Phosphoglycolipid glycosyltransferase	100	moeGT.hmm
+melC	MelC-like melanin synthase	40	melC.hmm
+NAD_binding_4	NAD-binding domain 4	40	NAD_binding_4.hmm
+LmbU	LmbU-like protein	50	LmbU.hmm
+mmyO	MmyO-like protein	500	mmyO.hmm
+goadsporin_like	Goadsporin-like protein	500	goadsporin_like.hmm
+Neocarzinostat	Neocarzinostatin-like protein	28	Neocarzinostat.hmm
+cyanobactin_synth	Cyanobactin protease	80	cyanobactin_synth.hmm
+cycdipepsynth	Cyclodipeptide synthase	110	cycdipepsynth.hmm
+fom1	Fom1-like phosphomutase	750	fom1.hmm
+bcpB	BcpB-like phosphomutase	400	bcpB.hmm
+frbD	FrbD-like phosphomutase	350	frbD.hmm
+mitE	MitE-like CoA-ligase	400	mitE.hmm
+vlmB	Valanimycin biosynthesis VlmB domain	250	vlmB.hmm
+prnB	Pyrrolnitrin biosynthesis PrnB domain	200	prnB.hmm
+CaiA	Nitrososynthase domain linked to oligosaccharide antibiotics	200	CaiA.hmm
+MGT	Secondary metabolite-related glycosyltransferase	100	MGT.hmm
+Glycos_transf_1	Secondary metabolite-related glycosyltransferase	20	Glycos_transf_1.hmm
+Glycos_transf_2	Secondary metabolite-related glycosyltransferase	20	Glycos_transf_2.hmm
+Glyco_transf_28	Secondary metabolite-related glycosyltransferase	26	Glyco_transf_28.hmm
+DUF1205	Secondary metabolite-related glycosyltransferase	20	DUF1205.hmm
+Autoind_synth	Autoinducer synthetase	20	Autoind_synth.hmm
+YcaO	YcaO-like family	25	YcaO.hmm
+PF06968	BATS family	20	PF06968.hmm
+PF04055	radical SAM superfamily	40	PF04055.hmm
+PF07366	SnoaL family	20	PF07366.hmm
+thio_amide	nosA tpdK nocA berI pbtH	20	thio_amide.hmm
+tsrC	Lant_dehydr_N (tsrC)	20	tsrC.hmm
+phzB	Phenazine biosynthesis gene	80	phzB.hmm
+phosphonates	Phosphonate biosynthesis PEP mutase	275	phosphonates.hmm
+bacilysin	Bacilysin-related amino acid ligase	160	bacilysin.hmm
+subtilosin	Putative subtilosin biosynthesis enzyme ywiA	140	subtilosin.hmm
+sublancin	Sublancin prepeptide	30	sublancin.hmm
+thuricin	Thuricin prepeptide	30	thuricin.hmm
+skfc	SkfC biosynthesis enzyme	70	skfc.hmm
+botH	bottromycin biosynthesis enzyme	65	botH.hmm
+glycocin	glycocin prepeptide	30	glycocin.hmm
+mcjC	Microcin J25-processing protein McjC	60	mcjC.hmm
+micJ25	Microcin J25 prepeptide	60	micJ25.hmm
+DUF692	DUF692 domain of unknown function, associated with small prepeptides such as methanobactin	40	DUF692.hmm
+lasso	Lasso peptide modification enzyme	400	lasso.hmm
+mvd	Marinostatin/microviridin prepeptide	20	mvd_mst.hmm
+cypemycin	Cypemycin prepeptide	20	cypemycin.hmm
+cypI	cypemycin biosynthesis cypI enzyme	20	cypI.hmm
+PoyD	proteusin biosynthesis PoyD enzyme	25	PoyD.hmm
+CBM_48	Carbohydrate-binding module 48 (Isoamylase N-terminal domain)	20	PF02922.hmm
+DegT_DnrJ_EryC1	DegT/DnrJ/EryC1/StrS aminotransferase family	19	PF01041.hmm
+Alpha-amylase	Alpha amylase, catalytic domain	20	PF00128.hmm
+dTDP_sugar_isom	dTDP-4-dehydrorhamnose 3,5-epimerase	20	PF00908.hmm
+Polysacc_synt_2	Polysaccharide biosynthesis protein	20	PF02719.hmm
+RmlD_sub_bind	RmlD substrate binding domain	20	PF04321.hmm
+Polysacc_synt	Polysaccharide biosynthesis protein	23	PF01943.hmm
+Alpha-amylase_C	Alpha amylase, C-terminal all-beta domain	21	PF02806.hmm
+Epimerase_2	UDP-N-acetylglucosamine 2-epimerase	22	PF02350.hmm
+Bac_transf	Bacterial sugar transferase	21	PF02397.hmm
+Wzy_C	O-Antigen ligase	24	PF04932.hmm
+Glyco_transf_9	Glycosyltransferase family 9 (heptosyltransferase)	20	PF01075.hmm
+Glycos_transf_4	Glycosyl transferase family 4	21	PF00953.hmm
+MannoseP_isomer	Mannose-6-phosphate isomerase	23	PF01050.hmm
+Glyco_transf_8	Glycosyl transferase family 8	24	PF01501.hmm
+Capsule_synth	Capsule polysaccharide biosynthesis protein	20	PF05159.hmm
+Glyco_tran_28_C	Glycosyltransferase family 28 C-terminal domain	21	PF04101.hmm
+Poly_export	Polysaccharide biosynthesis/export protein	26	PF02563.hmm
+Glyco_transf_8C	Glycosyl transferase family 8 C-terminal	19	PF08437.hmm
+PIG-L	GlcNAc-PI de-N-acetylase	22	PF02585.hmm
+APE_KS1	Aryl polyene ketosynthase 1	50	APE_KS1.hmm
+APE_KS2	Aryl polyene ketosynthase 2	50	APE_KS2.hmm
+DarB	(Dialkyl)resorcinol-associated ketosynthase	50	DarB.hmm
+FabF	FabF	50	FabF.hmm
+ksIII	CerJ-like KSIII enzyme	50	ksIII.hmm
+ladderane	Ladderane lipid ketosynthase	200	ladderane.hmm
+PUFA_KS	Polyunsaturated fatty acid ketosynthase	50	PUFA_KS.hmm
+PF13471	Transglut_core3 domain	22	PF13471.hmm
+PF00733	Asparagine synthase	21	PF00733.hmm
+PF05402	PqqD / RRE protein	23	PF05402.hmm
+orf2_PTase	Orf2-type phenol/phenazine prenyltransferase	50	orf2_PTase.hmm
+indole_PTase	bacterial indole prenyltransferase	50	indole_PTase.hmm
+ubiA	UbiA prenyltransferase of lipoquinone biosynthesis	50	UbiA.hmm
+pgm1	Pgm1-like peptide ligase	300	pgm1.hmm
+pgm_amidino	Pgm-related amidinotransferase	300	pgm_amidino.hmm
+PF00881	TOMM dehydrogenase	20	PF00881.hmm
+PF12697	Abhydrolase	20	PF12697.hmm
+PF00561	Abhydrolase	20	PF00561.hmm
+PF13186	SPASM	20	PF13186.hmm
+TIGR04404	SCIFF	45	TIGR04404.hmm
+TIGR03973	SkfA	50	TIGR03973.hmm
+Peptidase_S8	Subtilase family	21	PF00082.hmm
+Peptidase_M16	Insulinase (Peptidase family M16)	22	PF00675.hmm
+Peptidase_S41	Peptidase family S41	21	PF03572.hmm
+Peptidase_M16_C	Peptidase M16 inactive domain	20	PF05193.hmm
+Fer4_12	4Fe-4S single cluster domain	22	PF13353.hmm
+Abi	CAAX protease self-immunity	21	PF02517.hmm
+Peptidase_M50	Peptidase family M50	27	PF02163.hmm
+Peptidase_S9	Prolyl oligopeptidase family	22	PF00326.hmm
+Lant_dehydr_C	Lant_dehydr_C	27	PF14028.hmm
+Peptidase_C39	Peptidase C39 family	21	PF03412.hmm
+ThiF	ThiF family	22	PF00899.hmm
+TRI5	Trichodiene synthase	25	TRI5.hmm
+NasY	Long-chain N-acyl amino acid synthase	20	NasY.hmm
+FMO-like	Flavin-dependent monooxygenase	150	PF00743.hmm
+DUF98	Chorismate lyase	50	PF01947.hmm
+PpyS	PPY synthase	300	ppys.hmm

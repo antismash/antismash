@@ -46,7 +46,7 @@
         {% if options.cassis %}
             {{le.legend('legend-border-cassis', 'cluster extent as predicted by CASSIS')}}
         {% endif %}
-        {% if options.borderpredict %}
+        {% if options.cf_create_clusters or options.cf_borders_only %}
             {{le.legend('legend-border-clusterfinder', 'cluster extent as predicted by ClusterFinder')}}
         {% endif %}
       </div>
