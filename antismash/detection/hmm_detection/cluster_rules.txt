@@ -257,17 +257,3 @@ RULE ppysks
     CUTOFF 10
     EXTENT 10
     CONDITIONS PpyS
-
-#RULE cf_saccharide
-#    CUTOFF 20
-#    EXTENT 10
-#    CONDITIONS minimum(2,[Glycos_transf_1,Glycos_transf_2,Glyco_transf_28,
-#                          PF02922,PF01041,PF00128,PF00908,PF02719,PF04321,
-#                          PF01943,PF02806,PF02350,PF02397,PF04932,PF01075,
-#                          PF00953,PF01050,PF01501,PF05159,PF04101,PF02563,
-#                          PF08437,PF02585])
-
-#RULE cf_fatty_acid
-#    CUTOFF 20
-#    EXTENT 10
-#    CONDITIONS  bt1fas or ft1fas or t2fas or fabH
