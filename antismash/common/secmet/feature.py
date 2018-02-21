@@ -220,32 +220,37 @@ class Gene(Feature):
 class ClusterBorder(Feature):
     """ A feature representing a cluster border """
     __slots__ = ["tool", "probability", "cutoff", "extent", "product", "rule",
-                 "contig_edge"]
+                 "contig_edge", "high_priority_product"]
 
-    def __init__(self, location, tool, probability=None, cutoff=0, extent=0,
-                 product: Optional[str] = None, rule: Optional[str] = None, contig_edge=False):
+    def __init__(self, location: FeatureLocation, tool: str, probability: float = None,
+                 cutoff: int = 0, extent: int = 0,
+                 product: Optional[str] = None, rule: Optional[str] = None,
+                 contig_edge: bool = False, high_priority_product: bool = True) -> None:
         super().__init__(location, feature_type="cluster_border",
                          created_by_antismash=True)
+        # required
         self.tool = str(tool)
-        # cassis has no extras
+        # args with simple defaults
+        self.high_priority_product = bool(high_priority_product)
+        self.contig_edge = bool(contig_edge)
+        self.cutoff = int(cutoff)
+        self.extent = int(extent)
 
-        # cluster finder might not be empty, rule parser will not be
+        # more complicated args
         if product is not None:
             assert isinstance(product, str), type(product)
         self.product = product
 
-        # cluster finder
+        # specific to cluster finder
         self.probability = None
         if probability is not None:
             self.probability = float(probability)
 
-        # rule parser
-        self.cutoff = int(cutoff)
-        self.extent = int(extent)
+        # specific to rule-based
         if rule is not None:
             assert isinstance(rule, str), type(rule)
         self.rule = rule
-        self.contig_edge = bool(contig_edge)
+
 
     def to_biopython(self, qualifiers=None):
         mine = OrderedDict()
