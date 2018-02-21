@@ -68,6 +68,13 @@ class TestLogfile(TestAntismash):
         assert os.path.exists(os.path.join(self.temp_dir.name, "logfile"))
 
 
+class TestNoModules(TestAntismash):
+    def test_nisin_minimal(self):
+        path = os.path.abspath(os.path.join(os.path.dirname(__file__), "data", "nisin.gbk"))
+        with self.assertRaisesRegex(ValueError, "No detection or analysis modules enabled"):
+            run_antismash(path, self.default_options)
+
+
 class TestResultsReuse(TestAntismash):
     def test_nisin_minimal(self):
         path = os.path.abspath(os.path.join(os.path.dirname(__file__), "data", "nisin.gbk"))
