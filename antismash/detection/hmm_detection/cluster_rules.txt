@@ -58,7 +58,7 @@ RULE nrps
 RULE nrpsfragment
     COMMENT Catches NRPS-like fragments that are not detected by the NRPS rule
     SUPERIORS nrps
-    CUTOFF 20
+    CUTOFF 0  # since we're really looking at single CDS fragments
     EXTENT 20
     CONDITIONS cds((PP-binding or NAD_binding_4) and (AMP-binding or A-OX))
 
