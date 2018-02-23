@@ -6,7 +6,7 @@
 
 from collections import defaultdict
 from enum import Enum, unique
-from typing import List, Set, Optional
+from typing import Dict, List, Set, Optional, Union
 
 
 class NRPSPKSQualifier(list):
@@ -23,13 +23,13 @@ class NRPSPKSQualifier(list):
 
         def __init__(self, name: str, label: str, start: int, end: int,
                      evalue: float, bitscore: float) -> None:
-            self.label = label
-            self.name = name
-            self.start = start
-            self.end = end
-            self.evalue = evalue
-            self.bitscore = bitscore
-            self.predictions = {}  # method to prediction name, type: Dict[str, str]
+            self.label = str(label)
+            self.name = str(name)
+            self.start = int(start)
+            self.end = int(end)
+            self.evalue = float(evalue)
+            self.bitscore = float(bitscore)
+            self.predictions = {}  # type: Dict[str, str] # method to prediction name
 
         def __repr__(self):
             return "NRPSPKSQualifier.Domain(%s, label=%s, start=%d, end=%d)" % (
@@ -39,7 +39,7 @@ class NRPSPKSQualifier(list):
         super().__init__()
         self.type = "uninitialised"
         self.subtypes = []  # type: List[str]
-        self.domains = []
+        self.domains = []  # type: List["NRPSPKSQualifier.Domain"]
         self.domain_names = []  # type: List[str]
         self.predictions = {}
         self.cal_counter = 0
@@ -126,13 +126,18 @@ class SecMetQualifier(list):
             ret = "{} E-value: {}, bitscore: {}, seeds: {}"
             return ret.format(self.query_id, self.evalue, self.bitscore, self.nseeds)
 
-    def __init__(self, products: Set[str], domains: List["SecMetQualifier.Domain"]) -> None:
-        self._domains = domains  # SecMetResult instance or str
+    def __init__(self, products: Set[str], domains: Union[List["SecMetQualifier.Domain"], List[str]]) -> None:
+        self._domains = domains  # Domain instance or str
+        self.domain_ids = []  # type: List[str]
         if domains and not isinstance(domains[0], str):  # SecMetResult
-            self.domain_ids = [domain.query_id for domain in self._domains]
-        else:  # str
-            self.domain_ids = [domain.split()[0] for domain in self._domains]
-        self._products = set()
+            for domain in self._domains:
+                assert isinstance(domain, SecMetQualifier.Domain)
+                self.domain_ids.append(domain.query_id)
+        else:  # TODO: regenerate a Domain from the string
+            for domain in self._domains:
+                assert isinstance(domain, str)
+                self.domain_ids.append(domain.split()[0])
+        self._products = set()  # type: Set[str]
         self.add_products(products)
         self.kind = "biosynthetic"
         super().__init__()

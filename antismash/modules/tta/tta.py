@@ -9,22 +9,24 @@
 """
 
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, List, Tuple
 
 from antismash.common.secmet.feature import Feature, FeatureLocation
 import antismash.common.module_results
+
+Codon = Tuple[int, int]  # keeping as a type style, so # pylint: disable=invalid-name
 
 
 class TTAResults(antismash.common.module_results.ModuleResults):
     """ Holds results for the TTA module by tracking locations of TTA codons."""
     schema_version = 1
 
-    def __init__(self, record_id: str):
+    def __init__(self, record_id: str) -> None:
         super().__init__(record_id)
-        self.codon_starts = []  # tuples of start and strand for each marker
-        self.features = []  # features created for markers
+        self.codon_starts = []  # type: List[Codon] # tuples of start and strand for each marker
+        self.features = []  # type: List[Feature] # features created for markers
 
-    def new_feature_from_basics(self, start, strand) -> Feature:
+    def new_feature_from_basics(self, start: int, strand: int) -> Feature:
         """ Constructs a new TTA marking feature from a start position and
             a strand
         """
@@ -37,7 +39,7 @@ class TTAResults(antismash.common.module_results.ModuleResults):
 
         return tta_feature
 
-    def new_feature_from_other(self, feature, offset) -> Feature:
+    def new_feature_from_other(self, feature: Feature, offset: int) -> Feature:
         """Create a misc_feature entry for a TTA codon on a given feature"""
         if feature.strand == 1:
             start = feature.location.start + offset
@@ -53,7 +55,7 @@ class TTAResults(antismash.common.module_results.ModuleResults):
                 "schema_version": TTAResults.schema_version,
                 "record_id": self.record_id}
 
-    def add_to_record(self, record):
+    def add_to_record(self, record) -> None:
         """ Adds the found TTA features to the record """
         if record.id != self.record_id:
             raise ValueError("Record to store in and record analysed don't match")

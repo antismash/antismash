@@ -64,7 +64,7 @@ class CassisResults(module_results.ModuleResults):
             return None
 
         borders = []
-        promoters = []
+        promoters = []  # type: List[Promoter]
         for border in json["borders"]:
             borders.append(ClusterBorder.from_biopython(feature_from_json(border)))
         for promoter in json["promoters"]:

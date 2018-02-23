@@ -7,35 +7,48 @@
 
 import logging
 import os
-from typing import List
+from typing import Any, Dict, List, Optional
 
 import antismash.common.path as path
 from antismash.common.subprocessing import run_hmmpress
 
 from antismash.config.args import ModuleArgs
 from antismash.common.hmm_rule_parser import rule_parser
-from antismash.common.hmm_rule_parser.cluster_prediction import detect_borders_and_signatures
-from antismash.common.module_results import ModuleResults
+from antismash.common.hmm_rule_parser.cluster_prediction import detect_borders_and_signatures, RuleDetectionResults
+from antismash.common.module_results import DetectionResults
+from antismash.common.secmet.record import Record
+from antismash.common.secmet.feature import ClusterBorder
 from antismash.detection.hmm_detection.signatures import get_signature_profiles
 
 NAME = "hmmdetection"
 SHORT_DESCRIPTION = "HMM signature detection"
 
 
-class HMMDetectionResults(ModuleResults):
-    def __init__(self, record_id, rule_results):
+class HMMDetectionResults(DetectionResults):
+    """ A container for clusters predicted by rules in this module """
+    schema_version = 1
+
+    def __init__(self, record_id: str, rule_results: RuleDetectionResults, enabled_types: List[str]) -> None:
         super().__init__(record_id)
         self.rule_results = rule_results
+        self.enabled_types = enabled_types
 
-    def to_json(self):
-        logging.critical("hmm_detection results always empty")
-        return {}
+    def to_json(self) -> Dict[str, Any]:
+        logging.critical("hmm_detection not storing borders or secmet annotation info in results JSON")
+        return {"record_id": self.record_id,
+                "schema_version": self.schema_version,
+                "enabled_types": self.enabled_types}
 
-    def add_to_record(self, record):
-        # as a detection module, results already added
-        pass
+    @staticmethod
+    def from_json(json: Dict[str, Any], record: Record) -> "HMMDetectionResults":
+        if json["schema_version"] != HMMDetectionResults.schema_version:
+            raise ValueError("Detection results have changed. No results can be reused.")
 
-    def get_predictions(self):
+        class Dummy:
+            borders = []
+        return HMMDetectionResults(record.id, Dummy(), json["enabled_types"])
+
+    def get_predictions(self) -> List[ClusterBorder]:
         return self.rule_results.borders
 
 
@@ -93,15 +106,24 @@ def is_enabled(_options) -> bool:
     return True
 
 
-def regenerate_previous_results(results, record, options) -> None:  # pylint: disable=unused-argument
+def regenerate_previous_results(results: Dict[str, Any], record: Record, options) -> Optional[HMMDetectionResults]:
     """ Regenerate previous results. """
     # always rerun hmmdetection  # TODO: should clusters be kept?
-    return None
+    if not results:
+        return None
+    regenerated = HMMDetectionResults.from_json(results, record)
+    if set(regenerated.enabled_types) != set(options.enabled_cluster_types):
+        raise RuntimeError("HMM detection parameters have changed, all results invalid")
+    return regenerated
 
 
-def run_on_record(record, _previous_results, options) -> None:
+def run_on_record(record: Record, previous_results: Optional[HMMDetectionResults], options) -> HMMDetectionResults:
     """ Runs hmm_detection on the provided record.
     """
+    if previous_results:
+        # TODO: return the results after they're properly stored
+        pass
+
     signatures = path.get_full_path(__file__, "data", "hmmdetails.txt")
     seeds = path.get_full_path(__file__, "data", "bgc_seeds.hmm")
     rules = path.get_full_path(__file__, "cluster_rules.txt")
@@ -109,7 +131,7 @@ def run_on_record(record, _previous_results, options) -> None:
     results = detect_borders_and_signatures(record, signatures, seeds, rules, equivalences,
                                             "rule-based-clusters", options)
     results.annotate_cds_features()
-    return HMMDetectionResults(record.id, results)
+    return HMMDetectionResults(record.id, results, options.enabled_cluster_types)
 
 
 def check_prereqs() -> List[str]:

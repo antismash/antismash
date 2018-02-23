@@ -6,7 +6,7 @@
 
 from collections import defaultdict
 import logging
-from typing import Dict, List, Set, Tuple
+from typing import Dict, List, Optional, Set, Tuple
 
 from Bio.SearchIO._model.hsp import HSP
 
@@ -58,7 +58,7 @@ class CDSResults:
                                         secmet_domain)
 
 
-class DetectionResults:
+class RuleDetectionResults:
     """ A container for the all results of running the cluster prediction """
     def __init__(self, cds_by_cluster: Dict[ClusterBorder, List[CDSResults]],
                  tool: str) -> None:
@@ -314,7 +314,7 @@ def apply_cluster_rules(record, results_by_id: Dict[str, HSP], feature_by_id: Di
 
 def detect_borders_and_signatures(record, signature_file: str, seeds_file: str,
                                   rules_file: str, filter_file: str, tool: str,
-                                  options) -> None:
+                                  options) -> RuleDetectionResults:
     """ Compares all CDS features in a record with HMM signatures and generates
         Cluster features based on those hits and the current cluster detection
         rules.
@@ -391,7 +391,7 @@ def detect_borders_and_signatures(record, signature_file: str, seeds_file: str,
                 cds_results.append(CDSResults(cds, domains, cds_domains_by_cluster.get(cds.get_name(), {})))
         cds_results_by_cluster[cluster] = cds_results
 
-    results = DetectionResults(cds_results_by_cluster, tool)
+    results = RuleDetectionResults(cds_results_by_cluster, tool)
     return results
 
 
