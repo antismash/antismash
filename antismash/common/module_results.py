@@ -5,9 +5,10 @@
     antismash run results.
 """
 
-from typing import Dict
+from typing import Dict, List
 
 from .secmet import Record
+from .secmet.feature import ClusterBorder
 
 
 class ModuleResults:
@@ -50,3 +51,17 @@ class ModuleResults:
             Generates svgs and saves them to the output image directory
         """
         pass
+
+
+class DetectionResults(ModuleResults):
+    """ Stores results for detection modules.
+
+        add_to_record() no longer requires overriding
+        get_predictions() should be overridden if the module predicts cluster borders
+    """
+    def add_to_record(self, record: Record) -> None:
+        pass
+
+    def get_predictions(self) -> List[ClusterBorder]:
+        """ Returns a list of ClusterBorder features predicted by the module """
+        return []

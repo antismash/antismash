@@ -11,7 +11,7 @@ from collections import defaultdict
 import logging
 import re
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set
 
 from helperlibs.wrappers.io import TemporaryFile
 from sklearn.externals import joblib
@@ -24,7 +24,7 @@ from .config import get_config as get_lasso_config
 
 
 class LassoResults(module_results.ModuleResults):
-    """ Holds the results of sactipeptide analysis for a record
+    """ Holds the results of lassopeptide analysis for a record
 
     """
     schema_version = 1
@@ -35,7 +35,7 @@ class LassoResults(module_results.ModuleResults):
         self.new_cds_features = set()  # type: Set[CDSFeature]
         # keep new CDSMotifs by the gene they match to
         # e.g. self.motifs_by_locus[gene_locus] = [motif1, motif2..]
-        self.motifs_by_locus = defaultdict(list)  # type: Dict[str, List[SactipeptideMotif]]
+        self.motifs_by_locus = defaultdict(list)  # type: Dict[str, List[LassopeptideMotif]]
         # keep clusters and which genes in them had precursor hits
         # e.g. self.clusters[cluster_number] = {gene1_locus, gene2_locus}
         self.clusters = defaultdict(set)  # type: Dict[int, Set[str]]
@@ -114,9 +114,9 @@ class LassopeptideMotif(Prepeptide):
         return json
 
     @staticmethod
-    def from_json(data: Dict[str, Any]) -> "LanthipeptideMotif":
+    def from_json(data: Dict[str, Any]) -> "LassopeptideMotif":
         """ Converts a JSON representation of the motif back into an instance
-            of LanthipeptideMotif
+            of LassopeptideMotif
         """
         args = []
         args.append(serialiser.location_from_json(data["location"]))

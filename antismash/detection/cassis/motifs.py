@@ -7,7 +7,7 @@ from collections import defaultdict
 import csv
 import logging
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set
 from xml.etree import cElementTree as ElementTree
 
 from Bio import SeqIO
@@ -41,7 +41,7 @@ class Motif(Pairing):
         return self._score
 
     @score.setter
-    def score(self, score: float):
+    def score(self, score: float) -> None:
         self._score = float(score)
 
     def __eq__(self, other: Any) -> bool:
@@ -107,7 +107,7 @@ def generate_motifs(meme_dir: str, anchor_promoter: int, promoters: List[Promote
     return promoter_sets
 
 
-def filter_meme_results(meme_dir: str, promoter_sets: List[Motif], anchor):
+def filter_meme_results(meme_dir: str, promoter_sets: List[Motif], anchor: str) -> List[Motif]:
     """Analyse and filter MEME results"""
     for motif in promoter_sets:
         xml_file = os.path.join(meme_dir, motif.pairing_string, "meme.xml")

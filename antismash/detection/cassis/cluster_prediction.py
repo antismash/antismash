@@ -5,7 +5,7 @@
 
 import logging
 import os
-from typing import Any, List
+from typing import Any, Dict, List, Optional
 
 from antismash.common.secmet import Record, Gene
 from antismash.detection import cassis
