@@ -167,6 +167,11 @@ def pre_process_sequences(sequences, options, genefinding) -> List[Record]:
             A list of altered secmet.Record
     """
     logging.debug("Preprocessing %d sequences", len(sequences))
+
+    # catch WGS master or supercontig entries
+    if records_contain_shotgun_scaffolds(sequences):
+        raise RuntimeError("Incomplete whole genome shotgun records are not supported")
+
     # keep count of how many records matched filter
     matching_filter = 0
 
@@ -204,10 +209,6 @@ def pre_process_sequences(sequences, options, genefinding) -> List[Record]:
         elif matching_filter != len(sequences):
             logging.info("Skipped %d sequences not matching filter: %s",
                          len(sequences) - matching_filter, limit)
-
-    # catch WGS master or supercontig entries
-    if records_contain_shotgun_scaffolds(sequences):
-        raise RuntimeError("Incomplete whole genome shotgun records are not supported")
 
     # Now remove small contigs < minimum length again
     logging.debug("Removing sequences smaller than %d bases", options.minlength)
