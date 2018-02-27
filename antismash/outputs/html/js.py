@@ -147,7 +147,7 @@ def get_description(record, feature, type_, options, mibig_result):
     template += 'Locus-tag: %s; Protein-ID: %s<br>\n' % (feature.locus_tag, feature.protein_id)
 
     if feature.get_qualifier('EC_number'):
-        template += "EC-number(s): %s<br>\n" % feature.get_qualifier('EC_number')
+        template += "EC-number(s): %s<br>\n" % ",".join(feature.get_qualifier('EC_number'))
 
     for gene_function in feature.gene_functions:
         template += "%s<br>\n" % str(gene_function)
