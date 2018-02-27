@@ -22,13 +22,17 @@ from antismash.config import get_config, update_config
 from .subprocessing import parallel_function
 
 
-def parse_input_sequence(filename, minimum_length=-1, start=-1, end=-1) -> List[Record]:
+def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length=-1,
+                         start=-1, end=-1) -> List[Record]:
     """ Parse input records contained in a file
 
         Arguments:
             filename: the path of the file to read
+            taxon: the taxon of the input, e.g. 'bacteria', 'fungi'
             minimum_length: records with length less than this will be ignored
                             if not positive, all records are included
+            start: a start location for trimming the sequence, or -1 to use all
+            end: an end location for trimming the sequence, or -1 to use all
 
         Returns:
             A list of secmet.Record instances, one for each record in the file
@@ -66,8 +70,8 @@ def parse_input_sequence(filename, minimum_length=-1, start=-1, end=-1) -> List[
     if start > -1 or end > -1:
         if len(records) > 1:
             raise ValueError("--start and --end options cannot be used with multiple records")
-        records[0] = trim_sequence(records[0], start, end)
-    return [Record.from_biopython(record) for record in records]
+        records[0] = trim_sequence(records[0], max(start, 0), min(len(records[0]), end))
+    return [Record.from_biopython(record, taxon) for record in records]
 
 
 def strip_record(seq_record) -> None:

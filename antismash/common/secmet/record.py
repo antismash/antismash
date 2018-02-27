@@ -31,9 +31,9 @@ class Record:
                  "_clusters", "_cds_by_accession", "original_id",
                  "_cluster_borders", "_cds_motifs", "_pfam_domains", "_antismash_domains",
                  "_cluster_numbering", "_nonspecific_features", "record_index",
-                 "_genes"]
+                 "_genes", "_transl_table"]
 
-    def __init__(self, seq="", **kwargs):
+    def __init__(self, seq="", transl_table: int = 1, **kwargs):
         self._record = SeqRecord(seq, **kwargs)
         self.record_index = None
         self.original_id = None
@@ -49,6 +49,7 @@ class Record:
         self._antismash_domains = []
         self._cluster_numbering = {}
         self._nonspecific_features = []
+        self._transl_table = int(transl_table)
 
     def __getattr__(self, attr):
         # passthroughs to the original SeqRecord
@@ -379,12 +380,15 @@ class Record:
             self.add_feature(Feature.from_biopython(feature))
 
     @staticmethod
-    def from_biopython(seq_record: SeqRecord) -> "Record":  # string because forward decl
+    def from_biopython(seq_record: SeqRecord, taxon: str) -> "Record":  # string because forward decl
         """ Constructs a new Record instance from a biopython SeqRecord,
             also replaces biopython SeqFeatures with Feature subclasses
         """
         assert isinstance(seq_record, SeqRecord)
-        record = Record()
+        transl_table = 1
+        if str(taxon) == "bacteria":
+            transl_table = 11
+        record = Record(transl_table=transl_table)
         record._record = seq_record
         for feature in seq_record.features:
             record.add_biopython_feature(feature)
@@ -419,13 +423,16 @@ class Record:
 
     def get_aa_translation_of_feature(self, feature: Feature) -> Seq:
         """ Obtain content for translation qualifier for specific CDS feature in sequence record"""
+        transl_table = self._transl_table
+        if hasattr(feature, "transl_table") and feature.transl_table is not None:
+            transl_table = feature.transl_table
         extracted = feature.extract(self.seq).ungap('-')
         if len(extracted) % 3 != 0:
             extracted = extracted[:-(len(extracted) % 3)]
-        seq = extracted.translate(to_stop=True)
+        seq = extracted.translate(to_stop=True, table=transl_table)
         if not seq:
             # go past stop codons and hope for something to work with
-            seq = extracted.translate()
+            seq = extracted.translate(table=transl_table)
         if "*" in str(seq):
             seq = Seq(str(seq).replace("*", "X"), Bio.Alphabet.generic_protein)
         if "-" in str(seq):

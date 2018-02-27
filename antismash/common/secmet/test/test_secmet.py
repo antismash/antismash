@@ -26,7 +26,7 @@ class TestConversion(unittest.TestCase):
         type_counts = defaultdict(lambda: 0)
         for feature in before.features:
             type_counts[feature.type] += 1
-        record = Record.from_biopython(before)
+        record = Record.from_biopython(before, taxon="bacteria")
         after = record.to_biopython()
 
         # ensure new features are correct
