@@ -141,7 +141,6 @@ def ensure_cds_info(single_entry: bool, genefinding, sequence: Record) -> Record
             logging.info("No genes found, skipping record")
             sequence.skip = "No genes found"
             return sequence
-    fix_locus_tags(sequence)
     return sequence
 
 
@@ -435,22 +434,6 @@ def fix_record_name_id(record, all_record_ids) -> None:
 
     if not record.original_id and old_id != record.id:
         record.original_id = old_id
-
-
-def fix_locus_tags(seq_record) -> None:  # TODO should be part of secmet
-    "Fix CDS feature that don't have a locus_tag, gene name or protein id"
-    for feature in seq_record.get_cds_features():
-        # Fix locus tags, gene names or protein IDs if they contain illegal chars
-        illegal_chars = set('''!"#$%&()*+,:; \r\n\t=>?@[]^`'{|}/ ''')
-        for attr in ["locus_tag", "gene", "protein_id"]:
-            val = getattr(feature, attr)
-            if not val or not set(val).intersection(illegal_chars):
-                continue
-            for char in val:
-                if char in illegal_chars:
-                    val = val.replace(char, "_")
-            logging.critical("%s altered in fix_locus_tags: %s->%s", attr, getattr(feature, attr), val)
-            setattr(feature, attr, val)
 
 
 def generate_unique_id(prefix: str, existing_ids: Set[str], start: int = 0,

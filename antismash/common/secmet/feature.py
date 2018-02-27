@@ -251,7 +251,6 @@ class ClusterBorder(Feature):
             assert isinstance(rule, str), type(rule)
         self.rule = rule
 
-
     def to_biopython(self, qualifiers=None):
         mine = OrderedDict()
         mine["aStool"] = [self.tool]
@@ -512,9 +511,9 @@ class CDSFeature(Feature):
         self._translation = None
         if translation is not None:
             self.translation = translation
-        self.protein_id = protein_id
-        self.locus_tag = locus_tag
-        self.gene = gene
+        self.protein_id = _sanitise_id_value(protein_id)
+        self.locus_tag = _sanitise_id_value(locus_tag)
+        self.gene = _sanitise_id_value(gene)
 
         # optional
         self.product = product
@@ -1060,3 +1059,14 @@ class Cluster(Feature):
         cluster_record.annotations["topology"] = "linear"
 
         seqio.write([cluster_record], filename, 'genbank')
+
+
+def _sanitise_id_value(name: Optional[str]) -> Optional[str]:
+    """ Ensures a name doesn't contain characters that will break external programs"""
+    if name is None:
+        return None
+    name = str(name)
+    illegal_chars = set("!\"#$%&()*+,:; \r\n\t=>?@[]^`'{|}/ ")
+    for char in set(name).intersection(illegal_chars):
+        name = name.replace(char, "_")
+    return name
