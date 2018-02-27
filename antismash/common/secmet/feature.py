@@ -599,7 +599,6 @@ class CDSFeature(Feature):
         # grab mandatory qualifiers and create the class
 
         # semi-optional qualifiers
-        translation = leftovers.pop("translation", [None])[0]
         protein_id = leftovers.pop("protein_id", [None])[0]
         locus_tag = leftovers.pop("locus_tag", [None])[0]
         gene = leftovers.pop("gene", [None])[0]
@@ -610,6 +609,11 @@ class CDSFeature(Feature):
                 # TODO solve somehow?
                 logging.critical("CDS feature created from biopython without identifier: %s", bio_feature)
                 raise ValueError("CDSFeature requires at least one of: gene, protein_id, locus_tag")
+        translation = leftovers.pop("translation", [None])[0]
+        if translation and "-" in translation:
+            logging.warning("Translation for CDS %s (at %s) has a gap. Discarding and regenerating.",
+                            locus_tag or protein_id or gene, bio_feature.location)
+            translation = None
 
         feature = CDSFeature(bio_feature.location, translation, gene=gene,
                              locus_tag=locus_tag, protein_id=protein_id)
