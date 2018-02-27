@@ -508,12 +508,12 @@ class CDSFeature(Feature):
         self._gene_functions = GeneFunctionAnnotations()
 
         # semi-optional
-        self._translation = None
-        if translation is not None:
-            self.translation = translation
         self.protein_id = _sanitise_id_value(protein_id)
         self.locus_tag = _sanitise_id_value(locus_tag)
         self.gene = _sanitise_id_value(gene)
+        self._translation = None
+        if translation is not None:
+            self.translation = translation
 
         # optional
         self.product = product
@@ -574,7 +574,7 @@ class CDSFeature(Feature):
 
     @translation.setter
     def translation(self, translation: str) -> None:
-        assert "-" not in translation
+        assert "-" not in translation, "%s contains - in translation" % self.get_name()
         self._translation = str(translation)
 
     def get_accession(self) -> str:
