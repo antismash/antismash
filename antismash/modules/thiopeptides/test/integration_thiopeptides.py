@@ -26,7 +26,7 @@ class TestIntegration(unittest.TestCase):
     def test_nosiheptide(self):
         "Test thiopeptide prediction for nosiheptide - nosM"
         rec = seqio.read(path.get_full_path(__file__, 'data', 'nosi_before_analysis.gbk'))
-        rec = secmet.Record.from_biopython(rec)
+        rec = secmet.Record.from_biopython(rec, "bacteria")
         rec.get_cluster(1).trim_overlapping()
         assert rec.get_feature_count() == 56
         assert not rec.get_cds_motifs()
@@ -64,7 +64,7 @@ class TestIntegration(unittest.TestCase):
     def test_lactazole(self):
         "Test thiopeptide prediction for lactazole - lazA"
         rec = seqio.read(path.get_full_path(__file__, 'data', 'lac_before_analysis.gbk'))
-        rec = secmet.Record.from_biopython(rec)
+        rec = secmet.Record.from_biopython(rec, "bacteria")
         assert rec.get_feature_count() == 21
         assert not rec.get_cds_motifs()
         results = thiopeptides.specific_analysis(rec)
@@ -95,7 +95,7 @@ class TestIntegration(unittest.TestCase):
     def test_thiostrepton(self):
         "Test thiopeptide prediction for thiostrepton"
         rec = seqio.read(path.get_full_path(__file__, 'data', 'thiostrepton_before_analysis.gbk'))
-        rec = secmet.Record.from_biopython(rec)
+        rec = secmet.Record.from_biopython(rec, "bacteria")
         assert rec.get_feature_count() == 27
         # two existing motifs
         assert len(rec.get_cds_motifs()) == 2

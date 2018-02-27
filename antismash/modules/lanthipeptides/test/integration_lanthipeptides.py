@@ -53,7 +53,7 @@ class IntegrationLanthipeptides(unittest.TestCase):
 
     def test_nisin(self):
         "Test lanthipeptide prediction for nisin A"
-        rec = Record.from_biopython(seqio.read(helpers.get_path_to_nisin_with_detection()))
+        rec = Record.from_biopython(seqio.read(helpers.get_path_to_nisin_with_detection()), taxon="bacteria")
         assert not rec.get_cds_motifs()
         result = run_specific_analysis(rec)
         assert len(result.clusters) == 1
@@ -95,7 +95,8 @@ class IntegrationLanthipeptides(unittest.TestCase):
 
     def test_epidermin(self):
         "Test lanthipeptide prediction for epidermin"
-        rec = Record.from_biopython(seqio.read(path.get_full_path(__file__, 'data', 'epidermin.gbk')))
+        filename = path.get_full_path(__file__, 'data', 'epidermin.gbk')
+        rec = Record.from_biopython(seqio.read(filename), taxon="bacteria")
         assert not rec.get_cds_motifs()
         result = run_specific_analysis(rec)
         motifs = self.gather_all_motifs(result)
@@ -114,7 +115,8 @@ class IntegrationLanthipeptides(unittest.TestCase):
 
     def test_microbisporicin(self):
         "Test lanthipeptide prediction for microbisporicin"
-        rec = Record.from_biopython(seqio.read(path.get_full_path(__file__, 'data', 'microbisporicin.gbk')))
+        filename = path.get_full_path(__file__, 'data', 'microbisporicin.gbk')
+        rec = Record.from_biopython(seqio.read(filename), taxon="bacteria")
         assert not rec.get_cds_motifs()
         result = run_specific_analysis(rec)
         motifs = self.gather_all_motifs(result)
@@ -136,7 +138,8 @@ class IntegrationLanthipeptides(unittest.TestCase):
 
     def test_epicidin(self):
         "Test lanthipeptide prediction for epicidin 280"
-        rec = Record.from_biopython(seqio.read(path.get_full_path(__file__, 'data', 'epicidin_280.gbk')))
+        filename = path.get_full_path(__file__, 'data', 'epicidin_280.gbk')
+        rec = Record.from_biopython(seqio.read(filename), taxon="bacteria")
         assert not rec.get_cds_motifs()
         result = run_specific_analysis(rec)
         motifs = self.gather_all_motifs(result)
@@ -159,7 +162,8 @@ class IntegrationLanthipeptides(unittest.TestCase):
 
     def test_labyrinthopeptin(self):
         "Test lanthipeptide prediction for labyrinthopeptin"
-        rec = Record.from_biopython(seqio.read(path.get_full_path(__file__, 'data', 'labyrinthopeptin.gbk')))
+        filename = path.get_full_path(__file__, 'data', 'labyrinthopeptin.gbk')
+        rec = Record.from_biopython(seqio.read(filename), taxon="bacteria")
         assert not rec.get_cds_motifs()
         result = run_specific_analysis(rec)
         motifs = self.gather_all_motifs(result)
@@ -170,7 +174,8 @@ class IntegrationLanthipeptides(unittest.TestCase):
 
     def test_sco_cluster3(self):
         "Test lanthipeptide prediction for SCO cluster #3"
-        rec = Record.from_biopython(seqio.read(path.get_full_path(__file__, 'data', 'sco_cluster3.gbk')))
+        filename = path.get_full_path(__file__, 'data', 'sco_cluster3.gbk')
+        rec = Record.from_biopython(seqio.read(filename), taxon="bacteria")
         assert not rec.get_cds_motifs()
         result = run_specific_analysis(rec)
         motifs = self.gather_all_motifs(result)
@@ -182,7 +187,8 @@ class IntegrationLanthipeptides(unittest.TestCase):
 
     def test_lactocin_s(self):
         """Test lanthipeptide prediction for lactocin S"""
-        rec = Record.from_biopython(seqio.read(path.get_full_path(__file__, 'data', 'lactocin_s.gbk')))
+        filename = path.get_full_path(__file__, 'data', 'lactocin_s.gbk')
+        rec = Record.from_biopython(seqio.read(filename), taxon="bacteria")
         assert not rec.get_cds_motifs()
         result = run_specific_analysis(rec)
         assert len(result.clusters) == 1
@@ -196,7 +202,8 @@ class IntegrationLanthipeptides(unittest.TestCase):
         self.assertEqual('Class II', motifs[0].peptide_subclass)
 
     def test_multiple_biosynthetic_enzymes(self):
-        rec = record_processing.parse_input_sequence(path.get_full_path(__file__, 'data', 'CP013129.1.section.gbk'))[0]
+        filename = path.get_full_path(__file__, 'data', 'CP013129.1.section.gbk')
+        rec = record_processing.parse_input_sequence(filename, taxon="bacteria")[0]
         rec.clear_cds_motifs()
         assert rec.get_cluster(0).products == ("lanthipeptide", "nrps")
         assert rec.get_cluster(0).cds_children

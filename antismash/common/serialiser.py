@@ -34,7 +34,7 @@ class AntismashResults:
         self.timings_by_record = timings or {}  # {record_id : {module name: time}}
 
     @staticmethod
-    def from_file(handle) -> "AntismashResults":
+    def from_file(handle, taxon: str) -> "AntismashResults":
         """ Regenerates an instance of AntismashResults from JSON representation
             in a file
         """
@@ -43,7 +43,7 @@ class AntismashResults:
         data = json.loads(handle.read())
         version = data["version"]
         input_file = data["input_file"]
-        records = [Record.from_biopython(record_from_json(rec)) for rec in data["records"]]
+        records = [Record.from_biopython(record_from_json(rec), taxon=taxon) for rec in data["records"]]
         results = [rec["modules"] for rec in data["records"]]
         return AntismashResults(input_file, records, results, version)
 

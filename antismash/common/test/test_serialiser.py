@@ -114,12 +114,12 @@ class TestResultsJSON(unittest.TestCase):
     def test_record_to_json_and_back(self):
         filename = get_path_to_nisin_genbank()
         records = list(seqio.parse(open(filename), "genbank"))
-        records = [Record.from_biopython(rec) for rec in records]
+        records = [Record.from_biopython(rec, taxon="bacteria") for rec in records]
         results = serialiser.AntismashResults(filename, records, [{}, {}, {}], "dummy")
         json_handle = StringIO()
         results.write_to_file(json_handle)
         json_handle.seek(0)
-        new_results = serialiser.AntismashResults.from_file(json_handle)
+        new_results = serialiser.AntismashResults.from_file(json_handle, taxon="bacteria")
         assert results.to_json() == new_results.to_json()
         # check no records were lost
         assert len(new_results.records) == len(results.records)

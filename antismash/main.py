@@ -442,7 +442,7 @@ def read_data(sequence_file, options) -> serialiser.AntismashResults:
         raise ValueError("No sequence file or prior results to read")
 
     if sequence_file:
-        records = record_processing.parse_input_sequence(sequence_file,
+        records = record_processing.parse_input_sequence(sequence_file, options.taxon,
                                 options.minlength, options.start, options.end)
         return serialiser.AntismashResults(sequence_file.rsplit(os.sep, 1)[-1],
                                            records, [{}] * len(records),
@@ -453,7 +453,7 @@ def read_data(sequence_file, options) -> serialiser.AntismashResults:
         contents = handle.read()
         if not contents:
             raise ValueError("No results contained in file: %s" % options.reuse_results)
-    results = serialiser.AntismashResults.from_file(options.reuse_results)
+    results = serialiser.AntismashResults.from_file(options.reuse_results, options.taxon)
     return results
 
 

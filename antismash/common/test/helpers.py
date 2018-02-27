@@ -63,10 +63,10 @@ def get_simple_options(module, args):
 
 class DummyRecord(Record):
     "class for generating a Record like data structure"
-    def __init__(self, features=None, seq='FAKESEQ'):
+    def __init__(self, features=None, seq='FAKESEQ', taxon='bacteria'):
         if isinstance(seq, str):
             seq = Seq(seq)
-        super().__init__(seq)
+        super().__init__(seq, transl_table=11 if taxon == 'bacteria' else 1)
         if features:
             for feature in features:
                 self.add_feature(feature)
@@ -145,7 +145,7 @@ def run_and_regenerate_results_for_module(input_file, module, options,
             update_config({"output_dir": orig_output})
             raise
         update_config({"output_dir": orig_output})
-        results = serialiser.AntismashResults.from_file(json_filename)
+        results = serialiser.AntismashResults.from_file(json_filename, options.taxon)
         if callback:
             callback(tempdir)
     # not the responsibility of modules, but if it's wrong then everything is

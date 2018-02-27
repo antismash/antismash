@@ -29,7 +29,7 @@ class TestGlimmerHMM(TestCase):
         return os.path.join(self.data_location, filename)
 
     def test_fumigatus_cluster(self):
-        record = parse_input_sequence(self.data_file('fumigatus.cluster1.fna'))[0]
+        record = parse_input_sequence(self.data_file('fumigatus.cluster1.fna'), taxon="fungi")[0]
         assert record.get_feature_count() == 0
         record = pre_process_sequences([record], self.options, genefinding)[0]
         assert record.get_feature_count() == 11
