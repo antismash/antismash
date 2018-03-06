@@ -28,13 +28,11 @@ class FullHmmerResults(ModuleResults):
         self.evalue = evalue
         self.score = score
         self.database = database
-        self.added_to_record = False
 
     def to_json(self) -> Dict[str, Any]:
         json = {"hits": self.hits, "record id": self.record_id,
                 "schema": self.schema_version, "max evalue": self.evalue,
-                "min score": self.score, "database": self.database,
-                "added": self.added_to_record}
+                "min score": self.score, "database": self.database}
         return json
 
     @staticmethod
@@ -80,9 +78,6 @@ class FullHmmerResults(ModuleResults):
         return results
 
     def add_to_record(self, record):
-        if self.added_to_record:
-            return
-        self.added_to_record = True
         for i, hit in enumerate(self.hits):
             pfam = PFAMDomain(FeatureLocation(hit["start"], hit["end"], hit["strand"]),
                               description=hit["description"])
