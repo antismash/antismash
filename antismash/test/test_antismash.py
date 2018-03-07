@@ -12,7 +12,7 @@ from minimock import mock, restore, TraceTracker, assert_same_trace
 from antismash import main
 from antismash.config import build_config, destroy_config
 from antismash.config.args import build_parser
-from antismash.detection import full_hmmer
+from antismash.detection import cluster_hmmer, full_hmmer
 
 class TestAntismash(unittest.TestCase):
     def setUp(self):
@@ -27,7 +27,7 @@ class TestAntismash(unittest.TestCase):
         # barring those using databases not packed with antismash
         options = self.default_options
         modules = list(self.all_modules)
-        for special in [full_hmmer]:
+        for special in [full_hmmer, cluster_hmmer]:
             if special in modules:
                 modules.pop(modules.index(special))
         assert main.verify_options(options, modules)

@@ -27,7 +27,7 @@ from antismash.common import serialiser, record_processing
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record
 from antismash.detection import genefinding, hmm_detection, nrps_pks_domains, full_hmmer, \
-                                cassis, clusterfinder
+                                cassis, clusterfinder, cluster_hmmer
 from antismash.modules import tta, clusterblast, lanthipeptides, smcogs, dummy, \
                               nrps_pks, thiopeptides, sactipeptides, lassopeptides
 from antismash.outputs import html, svg
@@ -56,7 +56,8 @@ def get_detection_modules() -> List[ModuleType]:
         Returns:
             a list of modules
     """
-    return [genefinding, hmm_detection, nrps_pks_domains, full_hmmer, cassis, clusterfinder]
+    return [genefinding, hmm_detection, nrps_pks_domains, full_hmmer, cassis, clusterfinder,
+            cluster_hmmer]
 
 
 def get_analysis_modules() -> List[ModuleType]:
@@ -201,7 +202,7 @@ def run_detection(record: Record, options, previous_result: Dict[str, Union[Dict
     logging.info("%d cluster(s) detected in record", len(record.get_clusters()))
 
     # finally, run any detection limited to genes in clusters
-    for module in [nrps_pks_domains]:
+    for module in [nrps_pks_domains, cluster_hmmer]:
         run_module(record, module, options, module_results, timings)
 
     return timings
