@@ -33,40 +33,45 @@ def get_full_path(current_file: str, *args) -> str:
     return os.path.join(base, extra)
 
 
-def locate_executable(name: str) -> Optional[str]:
+def locate_executable(name: str, silent: bool = False) -> Optional[str]:
     """ Find an executable in the path and return the full path
 
         Arguments:
             name: the name of the executable to find
+            silent: if True, debug messages won't be logged
 
         Returns:
             The absolute path to the executable as a string or None if not found
     """
     if os.path.split(name)[0]:
         if os.path.isfile(name) and os.access(name, os.X_OK):
-            logging.debug("Found executable %r", name)
+            if not silent:
+                logging.debug("Found executable %r", name)
             return name
     for path in os.environ["PATH"].split(os.pathsep):
         full_name = os.path.join(path, name)
         if os.path.isfile(full_name) and os.access(full_name, os.X_OK):
-            logging.debug("Found executable %r", full_name)
+            if not silent:
+                logging.debug("Found executable %r", full_name)
             return full_name
 
     return None
 
 
-def locate_file(path: str) -> Optional[str]:
+def locate_file(path: str,  silent: bool = False) -> Optional[str]:
     """ Checks that a given file path is valid and that read permissions exist
         for the file
 
         Arguments:
             path: the file path to check
+            silent: if True, debug messages won't be logged
 
         Returns:
             The path if it was valid or None if not
     """
     if os.path.split(path)[0]:
         if os.path.isfile(path) and os.access(path, os.R_OK):
-            logging.debug("Found file %r", path)
+            if not silent:
+                logging.debug("Found file %r", path)
             return path
     return None

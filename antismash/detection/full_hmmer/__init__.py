@@ -8,68 +8,84 @@ import os
 from typing import List
 
 from antismash.config import get_config
-from antismash.common import fasta, path, subprocessing
+from antismash.common import path, pfamdb, hmmer
 from antismash.config.args import ModuleArgs
-
-from .full_hmmer import generate_results, FullHmmerResults
-
 
 NAME = "full_hmmer"
 SHORT_DESCRIPTION = "Full genome PFAM anotation"
+
+MIN_SCORE = 0.
+MAX_EVALUE = 0.01
 
 
 def get_arguments() -> ModuleArgs:
     """ Builds the module args """
     args = ModuleArgs('Full HMMer options', 'fullhmmer')
-    args.add_analysis_toggle('fullhmmer',
-                             dest='fullhmmer',
+    args.add_analysis_toggle('fullhmmer-run',
+                             dest='fullhmmer_run',
                              action='store_true',
                              default=False,
                              help="Run a whole-genome HMMer analysis.")
+    args.add_option('pfamdb-version',
+                    dest='pfamdb_version',
+                    type=str,
+                    default='latest',
+                    help="PFAM database version number (e.g. 27.0) (default: %(default)s).")
     return args
 
 
 def check_options(options) -> List[str]:
-    """ Never an issue as no args to check """
-    return []
+    """ Check the requested PFAM database exists """
+    database_version = options.fullhmmer_pfamdb_version
+    pfam_dir = os.path.join(options.database_dir, "pfam")
+    if database_version == "latest":
+        database_version = pfamdb.find_latest_database_version(options.database_dir)
+    return pfamdb.check_db(os.path.join(pfam_dir, database_version))
 
 
 def is_enabled(options) -> bool:
     """  Uses the supplied options to determine if the module should be run """
-    return options.fullhmmer
+    return options.fullhmmer_run
 
 
 def check_prereqs() -> List[str]:
-    "Check if all required applications are around"
+    """ Ensure at least one database exists and is valid """
     failure_messages = []
     for binary_name in ['hmmscan']:
         if not path.locate_executable(binary_name):
-            failure_messages.append("Failed to locate file: %r" % binary_name)
+            failure_messages.append("Failed to locate executable: %r" % binary_name)
 
-    options = get_config()
-    for file_name in ['Pfam-A.hmm', 'Pfam-A.hmm.h3f', 'Pfam-A.hmm.h3i',
-                      'Pfam-A.hmm.h3m', 'Pfam-A.hmm.h3p']:
-        if not path.locate_file(os.path.join(options.database_dir, 'pfam', file_name)):
-            failure_messages.append("Failed to locate file: %r" % file_name)
+    data_dir = get_config().database_dir
+    try:
+        version = pfamdb.find_latest_database_version(data_dir)
+    except ValueError as err:
+        failure_messages.append(err)
+        return failure_messages
 
+    data_path = os.path.join(data_dir, "pfam", version)
+    failure_messages.extend(pfamdb.check_db(data_path))
     return failure_messages
 
 
-def regenerate_previous_results(previous, record, _options) -> FullHmmerResults:
+def regenerate_previous_results(previous, record, options) -> hmmer.HmmerResults:
     """ Rebuild previous results """
     if not previous:
         return None
-    return FullHmmerResults.from_json(previous, record)
+    db = pfamdb.get_db_path_from_version(options.fullhmmer_pfamdb_version, options.database_dir)
+    return hmmer.HmmerResults.from_json(previous, record, MAX_EVALUE, MIN_SCORE, db)
 
 
-def run_on_record(record, results, options) -> FullHmmerResults:
-    "run hmmsearch against PFAM for all CDS features"
+def run_on_record(record, results, options) -> hmmer.HmmerResults:
+    """ Run hmmsearch against PFAM for all CDS features within the record """
     if results:
         return results
 
     logging.info('Running whole-genome PFAM search')
-    query_sequence = fasta.get_fasta_from_record(record)
-    target_hmmfile = os.path.join(options.database_dir, 'pfam', 'Pfam-A.hmm')
-    results = subprocessing.run_hmmscan(target_hmmfile, query_sequence)
 
-    return generate_results(record, results, options)
+    if options.fullhmmer_pfamdb_version == "latest":
+        database_version = pfamdb.find_latest_database_version(options.database_dir)
+    else:
+        database_version = options.fullhmmer_pfamdb_version
+    database = os.path.join(options.database_dir, 'pfam', database_version, 'Pfam-A.hmm')
+
+    return hmmer.run_hmmer(record, record.get_cds_features(), MAX_EVALUE, MIN_SCORE, database, "fullhmmer")
