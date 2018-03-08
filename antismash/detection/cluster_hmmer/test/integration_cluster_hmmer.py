@@ -17,7 +17,7 @@ class TestClusterHmmer(unittest.TestCase):
     def setUp(self):
         self.original_min_score = cluster_hmmer.MIN_SCORE
         self.original_max_evalue = cluster_hmmer.MAX_EVALUE
-        self.options = build_config(["--clusterhmmer-run", "--minimal"],
+        self.options = build_config(["--clusterhmmer", "--minimal"],
                                     isolated=True,
                                     modules=antismash.get_all_modules())
         self.pfam_db = pfamdb.get_latest_db_path(self.options.database_dir)

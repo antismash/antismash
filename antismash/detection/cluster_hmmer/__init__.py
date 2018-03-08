@@ -21,8 +21,8 @@ MAX_EVALUE = 0.01
 def get_arguments() -> ModuleArgs:
     """ Builds the module args """
     args = ModuleArgs('Cluster HMMer options', 'clusterhmmer')
-    args.add_analysis_toggle('clusterhmmer-run',
-                             dest='clusterhmmer_run',
+    args.add_analysis_toggle('clusterhmmer',
+                             dest='clusterhmmer',
                              action='store_true',
                              default=False,
                              help="Run a cluster-limited HMMer analysis.")
@@ -36,7 +36,7 @@ def get_arguments() -> ModuleArgs:
 
 def is_enabled(options) -> bool:
     """  Uses the supplied options to determine if the module should be run """
-    return options.clusterhmmer_run
+    return options.clusterhmmer
 
 
 def check_prereqs() -> List[str]:
