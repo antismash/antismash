@@ -17,7 +17,7 @@ class TestFullHmmer(unittest.TestCase):
     def setUp(self):
         self.original_min_score = full_hmmer.MIN_SCORE
         self.original_max_evalue = full_hmmer.MAX_EVALUE
-        self.options = build_config(["--fullhmmer-run", "--minimal"],
+        self.options = build_config(["--fullhmmer", "--minimal"],
                                     isolated=True,
                                     modules=antismash.get_all_modules())
         self.pfam_db = pfamdb.get_latest_db_path(self.options.database_dir)

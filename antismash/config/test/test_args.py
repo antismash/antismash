@@ -4,7 +4,7 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
-from argparse import Namespace
+from argparse import ArgumentError, Namespace
 import os
 import unittest
 
@@ -136,17 +136,20 @@ class TestModuleArgs(unittest.TestCase):
     def test_bad_option_names(self):
         mod_args = args.ModuleArgs('test args', 'test')
         mod_args.add_option('--test', default="", type=str, help="no", dest="test")
-        with self.assertRaisesRegex(ValueError, "Cannot add more arguments after"):
-            mod_args.add_option("other", default="", type=str, help="no", dest="test_thing")
+        with self.assertRaisesRegex(ArgumentError, "argument --test: conflicting option string: --test"):
+            mod_args.add_option('--test', default="", type=str, help="no", dest="test")
 
     def test_good_options(self):
         mod_args = args.ModuleArgs('test args', 'test')
         mod_args.add_option('test', default="", type=str, help="no", dest="test")
+        mod_args.add_option('other', default="x", type=str, help="no", dest="test_other")
         parser = args.AntismashParser(parents=[mod_args])
         options = parser.parse_args(["--test", "thing"])
+        assert options.test_other == "x"
         assert options.test == "thing"
-        options = parser.parse_args(["--test", "1"])
+        options = parser.parse_args(["--test", "1", "--test-other", "y"])
         assert options.test == "1"
+        assert options.test_other == "y"
 
         mod_args = args.ModuleArgs('test', 't2pks')
 

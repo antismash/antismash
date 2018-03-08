@@ -21,8 +21,8 @@ MAX_EVALUE = 0.01
 def get_arguments() -> ModuleArgs:
     """ Builds the module args """
     args = ModuleArgs('Full HMMer options', 'fullhmmer')
-    args.add_analysis_toggle('fullhmmer-run',
-                             dest='fullhmmer_run',
+    args.add_analysis_toggle('fullhmmer',
+                             dest='fullhmmer',
                              action='store_true',
                              default=False,
                              help="Run a whole-genome HMMer analysis.")
@@ -45,7 +45,7 @@ def check_options(options) -> List[str]:
 
 def is_enabled(options) -> bool:
     """  Uses the supplied options to determine if the module should be run """
-    return options.fullhmmer_run
+    return options.fullhmmer
 
 
 def check_prereqs() -> List[str]:

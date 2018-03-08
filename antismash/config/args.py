@@ -286,7 +286,6 @@ class ModuleArgs:
         self.prefix = prefix
 
         self.skip_type_check = self.override
-        self.single_arg = False
         self.args = []
         self.basic = basic_help
 
@@ -312,8 +311,6 @@ class ModuleArgs:
         self._add_argument(self.group, name, *args, **kwargs)
 
     def _add_argument(self, group, name, *args, **kwargs) -> None:
-        if self.single_arg:
-            raise ValueError("Cannot add more arguments after an argument that is just the prefix name")
         # prevent the option name being considered destination by argparse
         if not name.startswith("-"):
             name = "-%s%s" % ("-" if len(name) > 1 else "", name)
@@ -376,9 +373,6 @@ class ModuleArgs:
         # ensure all destinations and flags start with the prefix
         if name.lstrip("-") == self.prefix:
             # not having anything else is ok if it's the only arg
-            if self.args:
-                raise ValueError("Arg name must not be just prefix if supporting multiple args")
-            self.single_arg = True
             if not dest:
                 dest = self.prefix
         elif not name.lstrip("-").startswith(self.prefix + "-"):
@@ -386,10 +380,7 @@ class ModuleArgs:
 
         if not dest:
             dest = name.lstrip("--").replace("-", "_")
-        elif dest == self.prefix:
-            if not self.single_arg:
-                raise ValueError("Destination must include more information than the prefix")
-        elif not dest.startswith(self.prefix + "_"):
+        elif dest != self.prefix and not dest.startswith(self.prefix + "_"):
             dest = "{}_{}".format(self.prefix, dest)
         if "-" in dest:
             raise ValueError("Destination for option cannot contain hyphens")
