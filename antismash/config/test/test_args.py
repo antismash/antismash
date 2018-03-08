@@ -79,7 +79,6 @@ class TestConfig(unittest.TestCase):
 
             parser = args.build_parser(modules=get_all_modules(), from_config_file=True)
             from_file = parser.parse_args(["@default_options.cfg"])
-            assert isinstance(from_file.enabled_cluster_types, list)
             assert vars(default_options) == vars(from_file)
 
     def test_paths(self):

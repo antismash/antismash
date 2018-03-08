@@ -37,15 +37,6 @@ class TestArgs(unittest.TestCase):
         options = self.parser.parse_args(options)
         return update_config(options)
 
-    def test_args(self):
-        # argparse raises SystemExit, because it's missing the following option
-        with self.assertRaises(SystemExit):
-            self.build_options(["--enable"])
-        options = self.build_options(["--enable", "t1pks,other"])
-        assert options.enabled_cluster_types == ["t1pks", "other"]
-        options = self.build_options(["--enable", "t1pks"])
-        assert options.enabled_cluster_types == ["t1pks"]
-
 
 class HmmDetectionTest(unittest.TestCase):
     def setUp(self):
@@ -108,27 +99,10 @@ class HmmDetectionTest(unittest.TestCase):
         get_config().__dict__.clear()
 
     def test_core(self):
-        def as_list_and_string(types, should_be_empty):
-            " both list in options and ',' or ';' separated strings are fine "
-            for case in [types, ",".join(types), ";".join(types)]:
-                options = update_config({'enabled_cluster_types': case})
-                if should_be_empty:
-                    assert not core.check_options(options)
-                else:
-                    assert core.check_options(options)
-                options.__dict__.clear()
-
         # should be no failing prerequisites
         assert core.check_prereqs() == []
         # always runs
         assert core.is_enabled(None)
-        # default search types should be fine
-        defaults = core.get_supported_cluster_types()
-        as_list_and_string(defaults, True)
-        # subsets of supported types should be fine
-        as_list_and_string(defaults[:len(defaults)//2], True)
-        # but adding an invalid cluster type should be caught
-        as_list_and_string(defaults + ["bad_type"], False)
 
     def test_apply_cluster_rules(self):
         detected_types, cluster_type_hits = hmm_detection.apply_cluster_rules(self.record, self.results_by_id,
@@ -190,9 +164,9 @@ class HmmDetectionTest(unittest.TestCase):
         assert result_clusters == expected_clusters
 
     def test_create_rules(self):
-        assert hmm_detection.create_rules([], self.rules_file, self.signature_names) == []
-        assert hmm_detection.create_rules(['nonexistant_cluster_type'], self.rules_file, self.signature_names) == []
-        t1pks_rules = hmm_detection.create_rules(['t1pks'], self.rules_file, self.signature_names)
+        rules = hmm_detection.create_rules(self.rules_file, self.signature_names)
+        assert len(rules) == 45
+        t1pks_rules = [rule for rule in rules if rule.name == "t1pks"]
         assert len(t1pks_rules) == 1
         rule = t1pks_rules[0]
         assert rule.name == 't1pks'
