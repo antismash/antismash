@@ -229,13 +229,11 @@ def filter_result_multiple(results: List[HSP], results_by_id: Dict[str, HSP]) ->
     return results, results_by_id
 
 
-def create_rules(enabled_cluster_types: List[str], rule_file: str, signature_names: Set[str]
+def create_rules(rule_file: str, signature_names: Set[str]
                  ) -> List[rule_parser.DetectionRule]:
     """ Creates DetectionRule instances from the default rules file
 
         Args:
-            enabled_cluster_types: A list of type names.
-                    Only types in this list will have a DetectionRule.
             rule_file: A path to a file containing cluster rules to use.
 
         Returns:
@@ -245,8 +243,7 @@ def create_rules(enabled_cluster_types: List[str], rule_file: str, signature_nam
     with open(rule_file, "r") as ruledata:
         parser = rule_parser.Parser("".join(ruledata.readlines()), signature_names)
     for rule in parser.rules:
-        if rule.name in enabled_cluster_types:
-            rules.append(rule)
+        rules.append(rule)
     return rules
 
 
@@ -329,14 +326,13 @@ def detect_borders_and_signatures(record, signature_file: str, seeds_file: str,
             tool: the name of the tool providing the HMMs (e.g. clusterfinder, rule_based_clusters)
             options: antismash Config
     """
-    enabled_cluster_types = options.enabled_cluster_types
     feature_by_id = record.get_cds_name_mapping()
     # if there's no CDS features, don't try to do anything
     if not feature_by_id:
         return None
     full_fasta = fasta.get_fasta_from_record(record)
     sig_by_name = {sig.name: sig for sig in get_signature_profiles(signature_file)}
-    rules = create_rules(enabled_cluster_types, rules_file, set(sig_by_name))
+    rules = create_rules(rules_file, set(sig_by_name))
     results = []
     results_by_id = {}  # type: Dict[str, HSP]
 

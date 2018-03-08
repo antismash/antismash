@@ -65,38 +65,14 @@ def get_supported_cluster_types() -> List[str]:
 def get_arguments() -> ModuleArgs:
     """ Constructs commandline arguments and options for this module
     """
-    args = ModuleArgs('Advanced options', '', override_safeties=True)
-    cluster_types = get_supported_cluster_types()
-    args.add_option('--enable',
-                    metavar="TYPES",
-                    dest='enabled_cluster_types',
-                    type=lambda x: x.split(","),
-                    default=cluster_types,
-                    help=("Select sec. met. cluster types to search for. "
-                          " E.g. --enable t1pks,nrps,other"))
-    return args
+    return ModuleArgs('Advanced options', 'hmmdetection')
 
 
-def check_options(options) -> List[str]:
+def check_options(_options) -> List[str]:
     """ Checks the options to see if there are any issues before
         running any analyses
     """
-    available = set(get_supported_cluster_types())
-    enabled = options.enabled_cluster_types
-    if isinstance(enabled, list):
-        requested = set(enabled)
-    else:
-        requested = set(enabled.replace(";", ",").split(","))
-
-    unavailable = requested - available
-
-    errors = []
-    if unavailable:
-        errors.append("The following cluster types are unavailable:")
-        errors.extend(" "+cluster for cluster in unavailable)
-        errors.append("Available types are:")
-        errors.extend(" "+cluster for cluster in sorted(available))
-    return errors
+    return []
 
 
 def is_enabled(_options) -> bool:
@@ -112,8 +88,8 @@ def regenerate_previous_results(results: Dict[str, Any], record: Record, options
     if not results:
         return None
     regenerated = HMMDetectionResults.from_json(results, record)
-    if set(regenerated.enabled_types) != set(options.enabled_cluster_types):
-        raise RuntimeError("HMM detection parameters have changed, all results invalid")
+    if set(regenerated.enabled_types) != set(get_supported_cluster_types()):
+        raise RuntimeError("Cluster types supported by HMM detection have changed, all results invalid")
     return regenerated
 
 
@@ -131,7 +107,7 @@ def run_on_record(record: Record, previous_results: Optional[HMMDetectionResults
     results = detect_borders_and_signatures(record, signatures, seeds, rules, equivalences,
                                             "rule-based-clusters", options)
     results.annotate_cds_features()
-    return HMMDetectionResults(record.id, results, options.enabled_cluster_types)
+    return HMMDetectionResults(record.id, results, get_supported_cluster_types())
 
 
 def check_prereqs() -> List[str]:
