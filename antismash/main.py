@@ -462,18 +462,25 @@ def check_prerequisites(modules: List[ModuleType]) -> None:
     """ Checks that each module's prerequisites are satisfied. If not satisfied,
         a RuntimeError is raised.
 
+        Any issues found are logged to logging.error
+
         Arguments:
             modules: the modules to check
 
         Returns:
             None
     """
+    errors_by_module = {}
     for module in modules:
         logging.debug("Checking prerequisites for %s", module.__name__)
         res = module.check_prereqs()
         if res:
-            raise RuntimeError("Module failing prerequisite check: %s %s" % (
-                               module.__name__, "\n".join(res)))
+            errors_by_module[module.__name__] = res
+    if errors_by_module:
+        for module, errors in errors_by_module.items():
+            for error in errors:
+                logging.error("%s: preqrequisite failure: %s", module, error)
+        raise RuntimeError("Modules failing prerequisites")
 
 
 def list_plugins(modules: List[ModuleType]) -> None:
@@ -550,10 +557,16 @@ def run_antismash(sequence_file: Optional[str], options) -> int:
     # modules can't fiddle with it
     options = update_config(options)
 
-    check_prerequisites(modules)
     if options.check_prereqs_only:
+        try:
+            check_prerequisites(modules)
+        except RuntimeError:
+            print("Some module prerequisites not satisfied")
+            return 1
         print("All prerequisites satisfied")
         return 0
+    else:
+        check_prerequisites(options.all_enabled_modules)
 
     # start up profiling if relevant
     if options.profile:
@@ -561,11 +574,11 @@ def run_antismash(sequence_file: Optional[str], options) -> int:
         profiler.enable()
 
     # ensure the provided options are valid
-    if not verify_options(options, modules):
+    if not verify_options(options, options.all_enabled_modules):
         return 1  # TODO: change to a raise?
 
     # check that at least one module will run
-    if not any(module.is_enabled(options) for module in modules):
+    if not options.all_enabled_modules:
         raise ValueError("No detection or analysis modules enabled")
 
     start_time = datetime.now()
