@@ -59,7 +59,7 @@ def check_prereqs() -> List[str]:
     try:
         version = pfamdb.find_latest_database_version(data_dir)
     except ValueError as err:
-        failure_messages.append(err)
+        failure_messages.append(str(err))
         return failure_messages
 
     data_path = os.path.join(data_dir, "pfam", version)
