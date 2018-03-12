@@ -278,14 +278,14 @@ def remove_duplicate_hits(blastlines) -> List[List[str]]:
     return blastlines2
 
 
-def parse_subject(tabs, seqlengths, accessions, record) -> Subject:
+def parse_subject(tabs, seqlengths, names, record) -> Subject:
     """ Parses a blast-formatted subject line and converts to Subject instance
 
         Arguments:
             tabs: a list of line parts, the original line split on tabs
             seqlengths: a dictionary of CDS accession to CDS length for calculating
                         percentage of hit coverage
-            accessions: a set of CDS locus tags to avoid collisions
+            names: a set of CDS names to avoid collisions
             record: the Record to operate on
 
         Returns:
@@ -298,7 +298,7 @@ def parse_subject(tabs, seqlengths, accessions, record) -> Subject:
     subject = subject_parts[4]
     if subject == "no_locus_tag":
         subject = subject_parts[6]
-    if subject in accessions:
+    if subject in names:
         subject = "h_" + subject  # TODO should be changed when the other h_ alteration is
     if len(subject_parts) > 6:
         locustag = subject_parts[6]
@@ -311,12 +311,11 @@ def parse_subject(tabs, seqlengths, accessions, record) -> Subject:
     perc_ident = int(float(tabs[2]) + 0.5)
     evalue = str(tabs[10])
     blastscore = int(float(tabs[11]) + 0.5)
-    cds_accession = query.split("|")[4]
-    if cds_accession in seqlengths:
-        perc_coverage = (float(tabs[3]) / seqlengths[cds_accession]) * 100
+    cds_name = query.split("|")[4]
+    if cds_name in seqlengths:
+        perc_coverage = (float(tabs[3]) / seqlengths[cds_name]) * 100
     else:
-        feature_by_id = record.get_cds_accession_mapping()
-        seqlength = len(feature_by_id[cds_accession].translation)
+        seqlength = len(record.get_cds_by_name(cds_name).translation)
         perc_coverage = (float(tabs[3]) / seqlength) * 100
     return Subject(subject, genecluster, start, end, strand, annotation,
                    perc_ident, blastscore, perc_coverage, evalue, locustag)
@@ -405,7 +404,7 @@ def blastparse(blasttext, record, min_seq_coverage=-1, min_perc_identity=-1
                     a list of Query instances from that cluster
     """
     seqlengths = get_cds_lengths(record)
-    accessions = [cds.get_accession() for cds in record.get_cds_features_within_clusters()]
+    names = [cds.get_name() for cds in record.get_cds_features_within_clusters()]
     queries = OrderedDict()  # type: Dict[str, Query]
     clusters = OrderedDict()  # type: Dict[str, List[Query]]
     blastlines = remove_duplicate_hits([line.split("\t") for line in blasttext.rstrip().split("\n")])
@@ -413,7 +412,7 @@ def blastparse(blasttext, record, min_seq_coverage=-1, min_perc_identity=-1
 
     for tabs in blastlines:
         query = tabs[0]
-        subject = parse_subject(tabs, seqlengths, accessions, record)
+        subject = parse_subject(tabs, seqlengths, names, record)
 
         # only process the pairing if limits met
         if subject.perc_ident <= min_perc_identity \

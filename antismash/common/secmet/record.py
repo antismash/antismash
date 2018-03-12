@@ -28,7 +28,7 @@ class Record:
     """A record containing secondary metabolite clusters"""
     # slots not for space, but to stop use as a horrible global
     __slots__ = ["_record", "_seq", "skip", "_cds_features", "_cds_by_name",
-                 "_clusters", "_cds_by_accession", "original_id",
+                 "_clusters", "original_id",
                  "_cluster_borders", "_cds_motifs", "_pfam_domains", "_antismash_domains",
                  "_cluster_numbering", "_nonspecific_features", "record_index",
                  "_genes", "_transl_table"]
@@ -40,7 +40,6 @@ class Record:
         self.skip = False  # TODO: move to yet another abstraction layer?
         self._genes = []
         self._cds_features = []
-        self._cds_by_accession = {}
         self._cds_by_name = {}
         self._clusters = []
         self._cluster_borders = []
@@ -114,10 +113,6 @@ class Record:
     def get_cds_features(self) -> Tuple:
         """A list of secondary metabolite clusters present in the record"""
         return tuple(self._cds_features)
-
-    def get_cds_accession_mapping(self) -> Dict[str, CDSFeature]:
-        """A dictionary mapping CDS accession to CDS feature"""
-        return dict(self._cds_by_accession)
 
     def get_cds_name_mapping(self) -> Dict[str, CDSFeature]:
         """A dictionary mapping CDS name to CDS feature"""
@@ -306,13 +301,9 @@ class Record:
         index = bisect.bisect_left(self._cds_features, cds_feature)
         self._cds_features.insert(index, cds_feature)
         self._link_cds_to_parent(cds_feature)
-        if cds_feature.get_accession() in self._cds_by_accession:
-            raise ValueError("Multiple CDS features have the same accession for mapping: %s" %
-                             cds_feature.get_accession())
         if cds_feature.get_name() in self._cds_by_name:
             raise ValueError("Multiple CDS features have the same name for mapping: %s" %
                              cds_feature.get_name())
-        self._cds_by_accession[cds_feature.get_accession()] = cds_feature
         self._cds_by_name[cds_feature.get_name()] = cds_feature
 
     def remove_cds_feature(self, cds_feature: CDSFeature) -> None:
@@ -320,7 +311,6 @@ class Record:
         assert isinstance(cds_feature, CDSFeature)
         if cds_feature.cluster:
             del cds_feature.cluster.cds_children[cds_feature]
-        del self._cds_by_accession[cds_feature.get_accession()]
         del self._cds_by_name[cds_feature.get_name()]
         self._cds_features.remove(cds_feature)
 
