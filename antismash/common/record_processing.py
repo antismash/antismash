@@ -11,7 +11,7 @@ import os
 from typing import List, Set, Tuple
 
 import Bio
-from Bio.Seq import Seq
+from Bio.Seq import Seq, UnknownSeq
 from Bio.SeqRecord import SeqRecord
 from helperlibs.bio import seqio
 
@@ -340,9 +340,9 @@ def records_contain_shotgun_scaffolds(records) -> bool:
             True if one of the given records is a WGS or supercontig record
     """
     for record in records:
-        if 'wgs_scafld' in record.annotations \
-                or 'wgs' in record.annotations \
-                or 'contig' in record.annotations:
+        if isinstance(record.seq, UnknownSeq) and ('wgs_scafld' in record.annotations
+                                                   or 'wgs' in record.annotations
+                                                   or 'contig' in record.annotations):
             return True
     return False
 
