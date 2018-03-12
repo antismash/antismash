@@ -446,7 +446,7 @@ def read_data(sequence_file, options) -> serialiser.AntismashResults:
         records = record_processing.parse_input_sequence(sequence_file, options.taxon,
                                 options.minlength, options.start, options.end)
         return serialiser.AntismashResults(sequence_file.rsplit(os.sep, 1)[-1],
-                                           records, [{}] * len(records),
+                                           records, [{} for i in range(len(records))],
                                            __version__)
 
     logging.debug("Attempting to reuse previous results in: %s", options.reuse_results)
