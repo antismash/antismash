@@ -479,10 +479,10 @@ class Record:
             if cluster.overlaps_with(dummy_border_location):
                 cluster.extent = max(cluster.extent, border.extent)
                 cluster.cutoff = max(cluster.cutoff, border.cutoff)
-                start = min(cluster.location.start, border.location.start - cluster.extent)
+                start = min(cluster.location.start, border.location.start - border.extent)
                 if start < 0:
                     start = 0
-                end = max(cluster.location.end, border.location.end + cluster.extent)
+                end = max(cluster.location.end, border.location.end + border.extent)
                 if end > len(self):
                     end = len(self)
                 cluster.location = FeatureLocation(start, end)
