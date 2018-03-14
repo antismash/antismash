@@ -204,6 +204,9 @@ def run_detection(record: Record, options, previous_result: Dict[str, Union[Dict
     # finally, run any detection limited to genes in clusters
     for module in [nrps_pks_domains, cluster_hmmer]:
         run_module(record, module, options, module_results, timings)
+        results = module_results.get(module.__name__)
+        if results:
+            results.add_to_record(record)
 
     return timings
 
