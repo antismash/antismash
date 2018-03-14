@@ -445,7 +445,7 @@ class PFAMDomain(Domain):
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
         # grab mandatory qualifiers and create the class
-        description = leftovers.pop("description")
+        description = leftovers.pop("description")[0]
         feature = PFAMDomain(bio_feature.location, description)
 
         # grab optional qualifiers
