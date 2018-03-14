@@ -2,7 +2,7 @@ omit = --omit '*indigo*','*/external/*'
 coverage = coverage run $(omit) --source antismash -m pytest
 integration_flags = --override-ini=python_files=integration_*.py
 integration_coverage = .coverage_integration
-sanity_run = echo "sanity TTA run" && ./run_antismash.py --minimal ../inputs/nisin.gbk --tta
+sanity_run = echo "sanity TTA run" && ./run_antismash.py --minimal --tta antismash/test/integration/data/nisin.gbk
 
 unit:
 	echo "sanity TTA run" && ./run_antismash.py --tta antismash/test/integration/data/nisin.gbk
