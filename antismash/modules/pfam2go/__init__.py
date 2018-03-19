@@ -54,5 +54,4 @@ def run_on_record(record, results: Pfam2GoResults, options) -> Pfam2GoResults:
     if isinstance(results, Pfam2GoResults) and results.record_id == record.id:
         return results
     #  otherwise, extract Pfam IDs, do pfam to GO mapping with these?
-    #return detect(record, options)
     return Pfam2GoResults(record.id, get_gos_for_pfams(record))
