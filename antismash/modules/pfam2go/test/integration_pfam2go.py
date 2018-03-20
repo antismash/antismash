@@ -41,18 +41,34 @@ class PfamToGoTest(unittest.TestCase):
                                                          "GO:0000160": "phosphorelay signal transduction system",
                                                          "GO:0006355": "regulation of transcription, DNA-templated"}}
         expected_pfams_without_gos = ["PF05147", "PF04738"]
-        pfams_found_with = []
+        pfams_found_with_ids = []
         for pfam, all_ontologies in results.pfam_domains_with_gos.items():
-            for pfam_id in pfam.db_xref:
-                pfam_id_without_version = pfam_id.partition('.')[0]
-                pfams_found_with.append(pfam_id_without_version)
-                if pfam_id_without_version in expected_pfams_and_gos_with_descs:
-                    for ontologies in all_ontologies:
-                        if ontologies.pfam == pfam_id_without_version:
-                            go_ids = [str(go_entry) for go_entry in ontologies.go_entries]
-                            for go_id in go_ids:
-                                assert go_id in expected_pfams_and_gos_with_descs[pfam_id_without_version]
+            pfam_ids_without_versions = [pfam_id.partition('.')[0] for pfam_id in pfam.db_xref]
+            for ontologies in all_ontologies:
+                assert ontologies.pfam in pfam_ids_without_versions
+                pfams_found_with_ids.append(ontologies.pfam)
+                if ontologies.pfam in expected_pfams_and_gos_with_descs:
+                    go_ids = [str(go_entry) for go_entry in ontologies.go_entries]
+                    assert len(go_ids) == len(expected_pfams_and_gos_with_descs[ontologies.pfam])
+                    for go_id in go_ids:
+                        assert go_id in expected_pfams_and_gos_with_descs[ontologies.pfam]
+
+
+        # for pfam in results.pfam_domains_with_gos:
+        #     for pfam_id in pfam.db_xref:
+        #         pfam_id_without_version = pfam_id.partition('.')[0]
+        #         pfams_found_with_ids.append(pfam_id_without_version)
+        #         # did it find the right amount of GO IDs for the sample Pfams, and did it find the right ones?
+        #         if pfam_id_without_version in expected_pfams_and_gos_with_descs:
+        #             for ontologies in results.pfam_domains_with_gos[pfam]:
+        #                 if ontologies.pfam == pfam_id_without_version:
+        #                     go_ids = [str(go_entry) for go_entry in ontologies.go_entries]
+        #                     assert len(go_ids) == len(expected_pfams_and_gos_with_descs[pfam_id_without_version])
+        #                     for go_id in go_ids:
+        #                         assert go_id in expected_pfams_and_gos_with_descs[pfam_id_without_version]
+        #  did it find and assign Gene Ontology IDs to all Pfam IDs expected to have some?
         for expected_pfam, expected_gos in expected_pfams_and_gos_with_descs.items():
-            assert expected_pfam in pfams_found_with
+            assert expected_pfam in pfams_found_with_ids
+        #  did it assign any wrongly?
         for pfam_without_gos in expected_pfams_without_gos:
-            assert pfam_without_gos not in pfams_found_with
+            assert pfam_without_gos not in pfams_found_with_ids
