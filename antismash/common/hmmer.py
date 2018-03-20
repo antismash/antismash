@@ -7,7 +7,7 @@ import logging
 import os
 from typing import Any, Dict, List, Optional, Tuple
 
-from antismash.common import fasta, module_results, pfamdb, subprocessing
+from antismash.common import fasta, module_results, pfamdb, serialiser, subprocessing
 from antismash.common.secmet import Record, CDSFeature
 from antismash.common.secmet.feature import FeatureLocation, PFAMDomain
 
@@ -78,7 +78,7 @@ class HmmerResults(module_results.ModuleResults):
     def add_to_record(self, record: Record) -> None:
         db_version = pfamdb.get_db_version_from_path(self.database)
         for i, hit in enumerate(self.hits):
-            pfam_feature = PFAMDomain(FeatureLocation(hit["start"], hit["end"], hit["strand"]),
+            pfam_feature = PFAMDomain(serialiser.location_from_json(hit["location"]),
                                       description=hit["description"])
             for key in ["label", "locus_tag", "domain", "evalue",
                         "score", "translation", "db_xref"]:
@@ -119,15 +119,14 @@ def build_hits(record, hmmscan_results, min_score: float, max_evalue: float, dat
 
             feature = feature_by_id[hsp.query_id]
 
+#            location = feature.get_sub_location_from_protein_coordinates(hsp.query_start, hsp.query_end)
             start, end = calculate_start_and_end(feature, hsp)
+            location = FeatureLocation(start, end, feature.location.strand)
 
-            dummy_feature = PFAMDomain(FeatureLocation(start, end, feature.location.strand),
-                                       description="")
-
-            hit = {"start": start, "end": end, "strand": feature.location.strand,
+            hit = {"location": str(location),
                    "label": result.id, "locus_tag": feature.locus_tag,
                    "domain": hsp.hit_id, "evalue": hsp.evalue, "score": hsp.bitscore,
-                   "translation": str(dummy_feature.extract(record.seq).translate(table=feature.transl_table)),
+                   "translation": str(location.extract(record.seq).translate(table=feature.transl_table)),
                    "db_xref": [pfamdb.get_pfam_id_from_name(hsp.hit_id, database)],
                    "description": hsp.hit_description}
             hits.append(hit)
