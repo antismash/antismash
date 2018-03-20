@@ -64,7 +64,8 @@ class PfamToGoTest(unittest.TestCase):
         sample_ontologies = pfam2go.GeneOntologies(sample_pfam, [sample_ontology])
         assert sample_ontologies.pfam == sample_pfam
         assert sample_ontologies.go_entries == [sample_ontology]
-        # check the string stuff too?
+        all_entries = [str(go_entry) for go_entry in sample_ontologies.go_entries]
+        assert sample_ontology.id in all_entries
 
     def test_gene_ontologies_fail(self):
         fail_ontology = {'GO:0004871': 'signal transducer activity'}
@@ -113,10 +114,10 @@ class PfamToGoTest(unittest.TestCase):
         fake_record.add_pfam_domain(fake_pfam)
         gos_for_fake_pfam = pfam2go.get_gos_for_pfams(fake_record)
         for pfam, all_ontologies in gos_for_fake_pfam.items():
-        #for ontologies in gos_for_fake_pfam['PF00015']:
             for ontologies in all_ontologies:
-                for ontology in ontologies.go_entries:
-                    assert ontology.id in self.known_connections['PF00015'] # this only works because there's only one, do that nicer
+                go_ids = [str(go_entry) for go_entry in ontologies.go_entries]
+                for go_id in go_ids:
+                    assert go_id in self.known_connections[ontologies.pfam]
 
     def test_get_gos_id_handling(self):
         fake_record = Record(Seq("ATGTTATGAGGGTCATAACAT", generic_dna))
@@ -147,6 +148,11 @@ class PfamToGoTest(unittest.TestCase):
         fake_results = pfam2go.Pfam2GoResults(fake_record.id, gos_for_fake_pfam)
         assert gos_for_fake_pfam == fake_results.pfam_domains_with_gos
         assert fake_record.id == fake_results.record_id
+        for pfam, all_ontologies in fake_results.pfam_domains_with_gos.items():
+            pfam_ids_without_versions = [pfam_id.partition('.')[0] for pfam_id in pfam.db_xref]
+            for ontologies in all_ontologies:
+                assert ontologies.pfam in pfam_ids_without_versions
+
 
     def test_add_results_to_record(self):
         fake_record = Record(Seq("ATGTTATGAGGGTCATAACAT", generic_dna))

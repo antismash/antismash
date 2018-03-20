@@ -51,8 +51,6 @@ class Pfam2GoResults(ModuleResults):
             raise ValueError("Record to store in and record analysed don't match")
         for domain in record.get_pfam_domains():
             domain.gene_ontologies = self.pfam_domains_with_gos.get(domain, [])  # is this breaking when multiple domains have same id?
-        #for updated_domain in record.get_pfam_domains():
-        #    print(updated_domain.db_xref, str(updated_domain.gene_ontologies))
 
     def to_json(self) -> Dict[str, Any]:
         """ Construct a JSON representation of this instance """
@@ -61,7 +59,6 @@ class Pfam2GoResults(ModuleResults):
         for pfam, all_ontologies in self.pfam_domains_with_gos.items():
             for ontologies in all_ontologies:
                 jsonfile["pfams"][ontologies.pfam] = [(str(go_entry), go_entry.description) for go_entry in ontologies.go_entries]
-        print(jsonfile)
         return jsonfile
 
 
@@ -114,9 +111,9 @@ def build_as_i_go(mapfile) -> Dict[str, GeneOntologies]:
                 continue
             pfam_info = line.split(' > ')[0]
             go_info = line.split(' > ')[1].strip()
-            pfam_id = pfam_info.split(' ')[0].replace('Pfam:','')
+            pfam_id = pfam_info.split(' ')[0].replace('Pfam:', '')
             go_id = go_info.split(' ; ')[1]
-            go_readable = go_info.split(' ; ')[0].replace('GO:','')
+            go_readable = go_info.split(' ; ')[0].replace('GO:', '')
             gene_ontology_per_pfam[pfam_id].append(GeneOntology(go_id, go_readable))
             # if pfam_id not in results:
             #     current_ontologies = GeneOntologies(pfam_id,[GeneOntology(go_id,go_readable)])
@@ -124,7 +121,7 @@ def build_as_i_go(mapfile) -> Dict[str, GeneOntologies]:
             #     current_ontologies.go_entries.append(GeneOntology(go_id,go_readable))
             # results[pfam_id] = current_ontologies
     for pfam, ontology_list in gene_ontology_per_pfam.items():
-        results[pfam] = GeneOntologies(pfam,ontology_list)
+        results[pfam] = GeneOntologies(pfam, ontology_list)
     return results
 
 
@@ -166,13 +163,3 @@ def get_gos_for_pfams(record) -> Dict[PFAMDomain, List[GeneOntologies]]:
             if gene_ontologies_for_pfam:
                 pfam_domains_with_gos[pfam].append(gene_ontologies_for_pfam)
     return pfam_domains_with_gos
-
-
-if __name__ == '__main__':
-    go_ids_for_debug, go_ids_and_descs = parse_all_mappings('pfam2go-march-2018.txt')
-    print('PF08494', build_at_the_end(go_ids_for_debug,go_ids_and_descs)['PF08494'])
-    print('PF08494', build_as_i_go('pfam2go-march-2018.txt')['PF08494'])
-#print('GO:0004559',go_desc_by_id['GO:0004559'])
-
-
-#print(list(filter(lambda x: x[1] !=1, gos.items())))
