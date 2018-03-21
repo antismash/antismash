@@ -90,18 +90,6 @@ class HmmerResults(module_results.ModuleResults):
             record.add_pfam_domain(pfam_feature)
 
 
-def calculate_start_and_end(feature, result) -> Tuple[int, int]:
-    "Calculate start and end of a result"
-    if feature.strand == 1:
-        start = feature.location.start + (3 * result.query_start)
-        end = feature.location.start + (3 * result.query_end)
-    else:
-        end = feature.location.end - (3 * result.query_start)
-        start = feature.location.end - (3 * result.query_end)
-
-    return start, end
-
-
 def build_hits(record, hmmscan_results, min_score: float, max_evalue: float, database: str) -> List[Dict[str, Any]]:
     "Builds PFAMDomains from the given hmmscan results"
     logging.debug("Generating feature objects for PFAM hits")
@@ -118,10 +106,7 @@ def build_hits(record, hmmscan_results, min_score: float, max_evalue: float, dat
                 continue
 
             feature = feature_by_id[hsp.query_id]
-
-#            location = feature.get_sub_location_from_protein_coordinates(hsp.query_start, hsp.query_end)
-            start, end = calculate_start_and_end(feature, hsp)
-            location = FeatureLocation(start, end, feature.location.strand)
+            location = feature.get_sub_location_from_protein_coordinates(hsp.query_start, hsp.query_end)
 
             hit = {"location": str(location),
                    "label": result.id, "locus_tag": feature.locus_tag,

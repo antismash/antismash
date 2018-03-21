@@ -31,20 +31,3 @@ def _create_dummy_record(reverse=False):
         idx += 1
 
     return rec
-
-
-class TestHMMER(unittest.TestCase):
-    def test_calculate_start_and_end(self):
-        hsp = FakeHSP(1, 5, 1.5)
-        rec = _create_dummy_record()
-        feature = rec.get_cds_features()[1]
-        start, end = hmmer.calculate_start_and_end(feature, hsp)
-        self.assertEqual((18, 30), (start, end))
-        self.assertEqual("YSTI", str(rec.seq[start:end].translate()))
-
-        rev = _create_dummy_record(reverse=True)
-        feature = rev.get_cds_features()[1]
-        start, end = hmmer.calculate_start_and_end(feature, hsp)
-        assert start == 30
-        assert end == 42
-        assert str(rev.seq[start:end].reverse_complement().translate()) == "YSTI"
