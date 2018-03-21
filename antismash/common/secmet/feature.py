@@ -671,7 +671,7 @@ class CDSFeature(Feature):
 
         # optional
         self.product = product
-        self.transl_table = None
+        self.transl_table = "Standard"
         self._sec_met = None  # SecMetQualifier()
         self._nrps_pks = NRPSPKSQualifier()
         self.product_prediction = []  # TODO: shift into nrps sub section?
@@ -774,7 +774,7 @@ class CDSFeature(Feature):
 
         # grab optional qualifiers
         feature.product = leftovers.pop("product", [None])[0]
-        feature.transl_table = leftovers.pop("transl_table", [None])[0]
+        feature.transl_table = leftovers.pop("transl_table", ["Standard"])[0]
         sec_met = leftovers.pop("sec_met", None)
         if sec_met:
             feature.sec_met = SecMetQualifier.from_biopython(sec_met)
