@@ -9,8 +9,9 @@ import unittest
 
 import Bio.SeqIO
 from Bio.Seq import Seq
-from Bio.SeqFeature import SeqFeature, FeatureLocation
+from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 from antismash.common.test import helpers
+from antismash.common import secmet
 from antismash.common.secmet.feature import Cluster, CDSFeature, Feature, GeneFunction, ClusterBorder, PFAMDomain
 from antismash.common.secmet.record import _build_products_from_borders, Record
 
@@ -316,6 +317,292 @@ class TestCluster(unittest.TestCase):
             self.cluster.add_product(None)
         with self.assertRaises(AssertionError):
             self.cluster.add_product(["C"])
+
+
+class TestProteinPositionConversion(unittest.TestCase):
+    def setUp(self):
+        self.func = secmet.feature._convert_protein_position_to_dna
+
+    def test_position_conversion_simple_forward(self):
+        location = FeatureLocation(0, 15, strand=1)
+        assert len(location) == 15
+        assert self.func(0, 2, location) == (0, 6)
+        assert self.func(1, 4, location) == (3, 12)
+
+    def test_position_conversion_simple_reverse(self):
+        location = FeatureLocation(0, 15, strand=-1)
+        assert len(location) == 15
+        assert self.func(0, 2, location) == (9, 15)
+        assert self.func(1, 4, location) == (3, 12)
+
+    def test_position_conversion_nonzero_start(self):
+        location = FeatureLocation(6, 21, strand=1)
+        assert len(location) == 15
+        assert self.func(0, 2, location) == (6, 12)
+        assert self.func(1, 4, location) == (9, 18)
+
+        location = FeatureLocation(6, 21, strand=-1)
+        assert len(location) == 15
+        assert self.func(0, 2, location) == (15, 21)
+        assert self.func(1, 4, location) == (9, 18)
+
+    def test_position_conversion_nonzero_start_compound(self):
+        location = CompoundLocation([FeatureLocation(6, 18, strand=1),
+                                     FeatureLocation(24, 27, strand=1)])
+        assert len(location) == 15
+        assert self.func(0, 2, location) == (6, 12)
+        assert self.func(1, 4, location) == (9, 18)
+        assert self.func(3, 5, location) == (15, 27)
+
+        location = CompoundLocation([FeatureLocation(6, 15, strand=-1),
+                                     FeatureLocation(21, 27, strand=-1)])
+        assert len(location) == 15
+        assert self.func(0, 2, location) == (21, 27)
+        assert self.func(1, 4, location) == (9, 24)
+        assert self.func(3, 5, location) == (6, 12)
+
+
+    def test_position_conversion_compound_forward(self):
+        location = CompoundLocation([FeatureLocation(0, 6, strand=1),
+                                     FeatureLocation(9, 18, strand=1)])
+        assert len(location) == 15
+        assert self.func(0, 4, location) == (0, 15)
+        assert self.func(1, 5, location) == (3, 18)
+
+        location = CompoundLocation([FeatureLocation(0, 6, strand=1),
+                                     FeatureLocation(12, 15, strand=1),
+                                     FeatureLocation(21, 27, strand=1)])
+        assert len(location) == 15
+        assert self.func(0, 4, location) == (0, 24)
+        assert self.func(1, 5, location) == (3, 27)
+        assert self.func(2, 3, location) == (12, 15)
+
+    def test_position_conversion_compound_reverse(self):
+        location = CompoundLocation([FeatureLocation(0, 6, strand=-1),
+                                     FeatureLocation(9, 18, strand=-1)])
+        assert len(location) == 15
+        assert self.func(0, 4, location) == (3, 18)
+        assert self.func(1, 5, location) == (0, 15)
+
+        location = CompoundLocation([FeatureLocation(0, 6, strand=-1),
+                                     FeatureLocation(12, 15, strand=-1),
+                                     FeatureLocation(21, 27, strand=-1)])
+        assert len(location) == 15
+        assert self.func(0, 4, location) == (3, 27)
+        assert self.func(1, 5, location) == (0, 24)
+        assert self.func(2, 3, location) == (12, 15)
+
+    def test_other(self):
+        location = CompoundLocation([FeatureLocation(5922, 6190, strand=1),
+                                     FeatureLocation(5741, 5877, strand=1),
+                                     FeatureLocation(4952, 5682, strand=1)])
+        assert self.func(97, 336, location) == (5243, 6064)
+
+        location = CompoundLocation([FeatureLocation(5922, 6190, strand=-1),
+                                     FeatureLocation(5741, 5877, strand=-1),
+                                     FeatureLocation(4952, 5682, strand=-1)])
+        assert self.func(97, 336, location) == (5078, 5854)
+
+class TestCDSProteinLocation(unittest.TestCase):
+    def setUp(self):
+        self.magic_split = Seq("ATGGCAxxxxxxGGTxxxxxxATTTGT")
+        self.magic = Seq("ATGGCAGGTATTTGT")
+        self.translation = "MAGIC"
+        self.sub_locations = [FeatureLocation(0, 6, strand=1),
+                              FeatureLocation(12, 15, strand=1),
+                              FeatureLocation(21, 27, strand=1)]
+        self.location = CompoundLocation(self.sub_locations)
+        self.cds = CDSFeature(self.location, locus_tag="compound")
+
+    def reverse_strand(self):
+        self.magic = self.magic.reverse_complement()
+        self.magic_split = self.magic_split.reverse_complement()
+        self.sub_locations = [FeatureLocation(loc.start, loc.end, strand=-1) for loc in self.sub_locations]
+        self.location = CompoundLocation(self.sub_locations)
+        self.cds = CDSFeature(self.location, locus_tag="compound")
+
+    def test_simple_location_forward_complete(self):
+        cds = CDSFeature(FeatureLocation(0, 15), locus_tag="simple")
+        new = cds.get_sub_location_from_protein_coordinates(0, 5)
+        extracted = new.extract(self.magic)
+        assert extracted == self.magic
+        assert extracted.translate() == self.translation
+
+    def test_simple_location_forward_partial(self):
+        cds = CDSFeature(FeatureLocation(0, 15), locus_tag="simple")
+        for start, end in [(1, 5), (0, 3), (2, 3), (1, 4)]:
+            print("testing", start, end)
+            new = cds.get_sub_location_from_protein_coordinates(start, end)
+            print(new)
+            extracted = new.extract(self.magic)
+            assert extracted == self.magic[start * 3: end * 3]
+            assert extracted.translate() == self.translation[start:end]
+
+    def test_compound_location_forward_full(self):
+        new = self.cds.get_sub_location_from_protein_coordinates(0, 5)
+        assert isinstance(new, CompoundLocation)
+        assert len(new.parts) == 3
+        print(list(map(str, self.cds.location.parts)))
+        print(list(map(str, new.parts)))
+        assert len(new) == len(self.cds.location)
+        assert new == self.location, "%s != %s" % (str(new), str(self.location))
+        extracted = new.extract(self.magic_split)
+        assert extracted == self.magic
+        assert extracted.translate() == self.translation[0:5]
+
+    def test_compound_forward_within_single(self):
+        new = self.cds.get_sub_location_from_protein_coordinates(0, 2)
+        assert isinstance(new, FeatureLocation)
+        assert len(new) == 6
+        assert new.start == 0
+        assert new.end == 6
+        assert new.extract(self.magic_split).translate() == self.translation[0:2]
+
+        new = self.cds.get_sub_location_from_protein_coordinates(2, 3)
+        assert isinstance(new, FeatureLocation)
+        assert len(new) == 3
+        assert new.start == 12
+        assert new.end == 15
+        assert new.extract(self.magic_split).translate() == self.translation[2:3]
+
+    def test_compound_forward_over_multiple(self):
+        new = self.cds.get_sub_location_from_protein_coordinates(2, 4)
+        assert isinstance(new, CompoundLocation)
+        print(list(map(str, self.cds.location.parts)))
+        print(list(map(str, new.parts)))
+        assert len(new.parts) == 2
+        assert len(new) == 6
+        assert new.parts[0].start == 12
+        assert new.parts[0].end == 15
+        assert new.parts[1].start == 21
+        assert new.parts[1].end == 24
+        assert new.extract(self.magic_split).translate() == self.translation[2:4]
+
+    def test_compound_location_reverse_full(self):
+        self.reverse_strand()
+        for direction in [1, -1]:
+            print("sub locations sorted in direction:", direction)
+            cds = CDSFeature(CompoundLocation(self.sub_locations[::direction]), locus_tag="compound")
+            new = cds.get_sub_location_from_protein_coordinates(0, 5)
+            assert isinstance(new, CompoundLocation)
+            assert len(new.parts) == 3
+            print(list(map(str, cds.location.parts)))
+            print(list(map(str, new.parts)))
+            assert len(new) == len(cds.location)
+            assert new.extract(self.magic_split).translate() == self.translation[0:5]
+
+    def test_compound_location_reverse_single(self):
+        self.reverse_strand()
+        for direction in [1, -1]:
+            print("sub locations sorted in direction:", direction)
+            cds = CDSFeature(CompoundLocation(self.sub_locations[::direction]), locus_tag="compound")
+
+            new = cds.get_sub_location_from_protein_coordinates(0, 2)
+            assert isinstance(new, FeatureLocation)
+            assert len(new) == 6
+            assert new.start == 21
+            assert new.end == 27
+            assert new.extract(self.magic_split).translate() == self.translation[0:2]
+
+            new = cds.get_sub_location_from_protein_coordinates(2, 3)
+            assert isinstance(new, FeatureLocation)
+            assert len(new) == 3
+            assert new.start == 12
+            assert new.end == 15
+            assert new.extract(self.magic_split).translate() == self.translation[2:3]
+
+    def test_compound_location_reverse_multiple(self):
+        self.reverse_strand()
+        for direction in [1, -1]:
+            print("sub locations sorted in direction:", direction)
+            cds = CDSFeature(CompoundLocation(self.sub_locations[::direction]), locus_tag="compound")
+
+            new = cds.get_sub_location_from_protein_coordinates(2, 4)
+            assert isinstance(new, CompoundLocation)
+            print(list(map(str, cds.location.parts)))
+            print(list(map(str, new.parts)))
+            assert len(new.parts) == 2
+            assert len(new) == 6
+            assert new.parts[0].start == 12
+            assert new.parts[0].end == 15
+            assert new.parts[1].start == 3
+            assert new.parts[1].end == 6
+            assert new.extract(self.magic_split).translate() == self.translation[2:4]
+
+    def test_complicated(self):
+        parts = [FeatureLocation(121124, 122061, 1), FeatureLocation(122339, 122383, 1),
+                 FeatureLocation(122559, 122666, 1), FeatureLocation(122712, 122874, 1),
+                 FeatureLocation(123060, 123337, 1), FeatureLocation(123481, 123749, 1),
+                 FeatureLocation(123809, 124032, 1), FeatureLocation(124091, 124193, 1),
+                 FeatureLocation(124236, 124401, 1), FeatureLocation(124684, 124724, 1)]
+        location = CompoundLocation(parts, operator="join")
+        cds = CDSFeature(location, locus_tag="complicated")
+        seq = ("ATGAGCCCTCGTCTAGACTACAATGAAGGATACGATTCCGAAGACGAGGAGATCCCCCGTTACGTACACCAT"
+               "TCTAGAGGAAAGAGTCATAGATCCGTGAGGACGTCAGGTCGCTCACGCACGTTGGATTACGACGGGGATGAT"
+               "GAAGCTAGTGACCACGCTGCCCCCTCCGGGATTGATCGGGACGCTCGAGCCTGTCCAACATCTCGCAGATAT"
+               "ACTGATGACTGCCTTGAGACACATAAATTTCGAGGTGCCCGCTCCTCTCGCTCCCGTGGACGAACCGATGAT"
+               "AACAAGGTTTTGTACTACACCAAGTATCGCAGCCCGGCTAAGGACTTGCCTATCGAGCGTGATCCCGAGGGT"
+               "ATTAATTTATTCAAGGTCCGACAGCACACACGGCCAAGTGACGCTCATGTGCCCAGTGGATACCGTGAGCCC"
+               "TACGAAGTCAAGGTCGACGAGTATGAGGATGATCATCCCCGTACATGCACTAGCCGCCGTGACTCTAGACAG"
+               "CCGAAAGTCTACAAGGTCCGGGTTGATGAGTACGAGGATAACCTCCCTGCACGCTCTCACACTGACTTTCGC"
+               "GAGTCTCCACGGTCTGAAAGATGCTCTAGCCGCTACACCGAGGACTCGAAGCCTGGGGAGCTTCCTCCCCGC"
+               "TCAGGGCCCTGTCGGTCCAGCAGGCCTTCTCCGGTCGATGAGGACGTCGAGTATGAGATCCGTGAGCCCCGA"
+               "GGGCATCGCTCCAGTCGACACTCTACAGATGTTGACTTTCAGCCAGTAGAACAACATCCTCGCTTTGGACAA"
+               "CGTGGACTCAGCAGACCTTCGCGGGTTGATGAGGAAGTCGATTATGAGATCCGTGAGCCCCGTGGCAATCGT"
+               "GTCAGTCACGCTGCTCATGGTGACAGCCCCTGTCAGGACCAAAGCTCCAGGCATATCGGCATTCAATTGTGG"
+               "AGTACGCGCGGACCCCGGGCGGCTGGCCGTGGCCGGGGTCCTGATGAGTCTGACGATGTTGAGCCCTAGGCA"
+               "GGGAATTGCCGTAATGCTCTTCAAACTGTATAGCAAGCTCAGCATCAATTCTTTAACTGGCAGGCGCTCTGC"
+               "TCGCGCGTTTCTCTCTTGGGGTGGTTGGTTTGACTGTAGATTTCCTCTTTCAAGGCTTCTAGATACACCTTT"
+               "GGAAGATAGCAACGCTATGCAAGATATTTTTGATAATTCAAATCCTTTTTACACATGGAATAGCTGGTGTTC"
+               "CTGTTTTATCTAGGCAATTGACCCACGCCATCTCGGTAGGTACGGTAAAAGCAAGCCGTAATCTCGTATGGC"
+               "TTCATCCTTAGCATCGTATAGATCTCCACTCGGGACTCGGCCAGGGATCTTCCATCAATCAACGTGAAGAAG"
+               "TCCAGCACCCCGCTGAATCATAATATCCTACCGATTCTGCTCTCTTCACCTCTAGATACCCCTCTAGACTCC"
+               "TGTCAACATGTTCCGTACAGTCGAAGACCGCCCGACCCCAAAAGAGGTATATAACTGGCGGCTGTACACCGA"
+               "GGCCACCATCATTGCCACTGGTACACTCTTGTGAGTAGGTGCTGTTGTAACGAAAAACATCCAACTGATCCG"
+               "CCAGGTTCGGCTATGACTCGGCTTTTGTGGGAACTACCATTGCCCGCCAAAGCTTCGTTGATGCCTTCAACA"
+               "TCGTCGAGTCGGAGGCGGCGGATATTTCAAGCAATATCACGTCAACCTTTCAGGCCGGCGCATTTTTCGGCG"
+               "CCATCTTCTGCTTCTTGCCTGAGTGAAGCCGTTAGAGACGGTCTCACTGGCTAACCGGACCAAGTGACCGAC"
+               "AAAATTGGGCGTAAATGGGCCCTTCAGGCAAACACACTGCTGTTTCTTATTGGCGCGATTGTGATGACGGCT"
+               "GCAACACATCACCTTTCCTATATATGTAAGTCATATCCCCGTAGTAGTCAAGGTTGTTAACTAGAGCAGATG"
+               "CTGGACGAGCTCTCACCGGCATCGCATGCGGCGCTATCACCGCGACCGTCCCCAGCTATATTGCCGAGCTGT"
+               "CAATCGTGTCGATCCGGGGCTTCCTCACCGGGTTCTTCGAAGTCGCATACCAGATTGGTAGCTTGGTTGGAT"
+               "TCTGGATCAACTATGGCATTAACGAGAACATGGACAACTCCTCGGCCGCAAGCTGGAGAGTGCCTATGGCAG"
+               "TCCAGATCATCCCCGCAGGAGTCCTTTTCATTGGTGGCTTTTCCTCCATGAGAGTCCTCTCTGGCTGATGCG"
+               "AAAAGACAGTGAGGATGCCGCGACGGCTGCCCTGGAGGCGTTGAGGAAACTGCCACGGTCTCATCAATGTAA"
+               "TCTCCCACCAAGACTCAGGACATAGTCCCATGCTGACTATTTTAGATGTCCAGGAAGACATCGAGATGAACC"
+               "GCACCAGGCTGCTGGAGGAAGCTCGGATCGCCGAGAAGTACGGACAAGGTTGGTTGGCATATATCCGAGGCG"
+               "CACTCTTCGAGCTCTCGCGCCATGGGATGTGGAATCGTGTTCTGCTCGTCCTCTGTGCCTTTGCACTGCAGA"
+               "ATATGTCGGGAGCTGCTGCTATCAACTACTATTCCCCCATACTCTTTGCGTCGTTGGGGATCACTGATGTCG"
+               "CTCTGTATACAGGTATTTATGGCCTGGTAAAAGGTAAGTTCTTCTCCTTAAGTATCTCTGGCTGACAATAGG"
+               "GATTAACTGATGAGTTTACAGCCGTCGCATCAATTATATTCTACGGCATTCTCATTGATATGTGGGGCCGCC"
+               "GACGTCCGACCATTGTTTCGTCACTGGCCTGCCCTCTATGTCTCTGGTTTGTGGGTGCATACGTCAAAGTTG"
+               "GGCATCCAGCCGATATCATAGACGCCGGCGGGGAATTGTCCCCCTCCACGGAGGCTGGTGGTAGAGCGGCGA"
+               "CTGCGATGATTATGATCTACTCCGTCTTGTAAGTGCCCCTCACTTTTGAATGGGCTTCAGCTTGGAACTCGA"
+               "GTAACTGGTATCCAGTTGGTCTTTTGGTCTCAACGGTATCCCCTGGATTGTCTCCGCCGAAATCTTCCCCGG"
+               "CGCGCTGCGAAATCTCACGGGGACATGGGCTGCGCTGGTGCAATGGTATGCAATTCCCTTCACCTAGTATCC"
+               "ATATCTAAATCAGCAGGTTGATCCAATTCGTTATCACCAAAGCTCTCCCGTACATCTTCAATAGCCTTGGGT"
+               "ACGGGACGTGGTTCTTCTTCGCCTCCTGGATGCTGCTCGCTATCATTTGGTCATTCTTTTTTCTCCCGGAAA"
+               "CCAAGGGGAAGACTCTCGATGAAATGCATACGATCTTGTACGTTTCTCTCCGTCGAAATGTGGTCTTGGCTA"
+               "ATGAATCAGCGGCCATTCTCTCGCCGAAGAGCAGGGTAAGGGTGAGGTTCGAGATAACACTACTAAAAGTGA"
+               "TCGGGAGGCTGTCTAGTCCAGTAGTTCTAGAGGACTATTGGCTGGATGATTCCTCTGATGATTTTTGATTGG"
+               "TGGTGAAAATGTTGGATGTTTAATGCCAATGTACTGGGAGAGAACATGCCGATAGTACATACCGCTGTGTTG"
+               "TATATCGAAGACGGTTGATTTATATATCTTAGTCTTTCAAAAGACGGCACTCACACAATCACACTTCGATGA")
+        translation = ("MSPRLDYNEGYDSEDEEIPRYVHHSRGKSHRSVRTSGRSRTLDYDGDDEASDHAAPSGIDRDAR"
+                       "ACPTSRRYTDDCLETHKFRGARSSRSRGRTDDNKVLYYTKYRSPAKDLPIERDPEGINLFKVRQ"
+                       "HTRPSDAHVPSGYREPYEVKVDEYEDDHPRTCTSRRDSRQPKVYKVRVDEYEDNLPARSHTDFR"
+                       "ESPRSERCSSRYTEDSKPGELPPRSGPCRSSRPSPVDEDVEYEIREPRGHRSSRHSTDVDFQPV"
+                       "EQHPRFGQRGLSRPSRVDEEVDYEIREPRGNRVSHAAHGDSPCQDQSSRHIGIQLWTGVPVLSR"
+                       "QLTHAISTPVNMFRTVEDRPTPKEVYNWRLYTEATIIATGTLLFGYDSAFVGTTIARQSFVDAF"
+                       "NIVESEAADISSNITSTFQAGAFFGAIFCFLPEADAGRALTGIACGAITATVPSYIAELSIVSI"
+                       "RGFLTGFFEVAYQIGSLVGFWINYGINENMDNSSAASWRVPMAVQIIPAGVLFIGGFSSMREDI"
+                       "EMNRTRLLEEARIAEKYGQGWLAYIRGALFELSRHGMWNRVLLVLCAFALQNMSGAAAINYYSP"
+                       "ILFASLGITDVALYTGIYGLVKAVASIIFYGILIDMWGRRRPTIVSSLACPLCLWFVGAYVKVG"
+                       "HPADIIDAGGELSPSTEAGGRAATAMIMIYSVFWSFGLNGIPWIVSAEIFPGALRNLTGTWAAL"
+                       "VQWLIQFVITKALPYIFNSLGYGTWFFFASWMLLAIIWSFFFLPETKGKTLDEMHTIFLSKDGT"
+                       "HTITLR")
+        new = cds.get_sub_location_from_protein_coordinates(353, 412)
+        # pad the beginning to match the location
+        assert new.extract(Seq("x" * location.start + seq)).translate() == translation[353:412]
 
 
 class TestCDSFeature(unittest.TestCase):
