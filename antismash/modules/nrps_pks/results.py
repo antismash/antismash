@@ -128,14 +128,7 @@ class NRPS_PKS_Results(ModuleResults):
 
                 domain.predictions.clear()
 
-                # calculate respective positions based on aa coordinates
-                if feature.location.strand == 1:
-                    start = feature.location.start + (3 * start_aa)
-                    end = feature.location.start + (3 * end_aa)
-                else:
-                    end = feature.location.end - (3 * start_aa)
-                    start = feature.location.end - (3 * end_aa)
-                loc = FeatureLocation(start, end, strand=feature.strand)
+                loc = feature.get_sub_location_from_protein_coordinates(start_aa, end_aa)
 
                 #  set up new CDS_motif feature
                 new_feature = AntismashDomain(loc)
