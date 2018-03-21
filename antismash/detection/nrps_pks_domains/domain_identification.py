@@ -237,14 +237,7 @@ def generate_domain_features(record, gene: CDSFeature, domains: List[HMMResult])
     nrkr = 0
     nrXdom = 0
     for domain in domains:
-        # calculate respective positions based on aa coordinates
-        if gene.location.strand == 1:
-            start = gene.location.start + 3 * domain.query_start
-            end = gene.location.start + 3 * domain.query_end
-        else:
-            end = gene.location.end - 3 * domain.query_start
-            start = gene.location.end - 3 * domain.query_end
-        loc = FeatureLocation(start, end, strand=gene.location.strand)
+        loc = gene.get_sub_location_from_protein_coordinates(domain.query_start, domain.query_end)
 
         # set up new feature
         new_feature = AntismashDomain(loc)
@@ -300,13 +293,7 @@ def generate_motif_features(record: Record, feature: CDSFeature, motifs) -> List
     motif_features = []
     for i, motif in enumerate(motifs):
         i += 1  # user facing, so 1-indexed
-        if feature.location.strand == 1:
-            start = feature.location.start + 3 * motif.query_start
-            end = feature.location.start + 3 * motif.query_end
-        else:
-            end = feature.location.end - 3 * motif.query_start
-            start = feature.location.end - 3 * motif.query_end
-        loc = FeatureLocation(start, end, strand=feature.strand)
+        loc = feature.get_sub_location_from_protein_coordinates(motif.query_start, motif.query_end)
         new_motif = CDSMotif(loc)
         new_motif.label = motif.hit_id
         new_motif.motif = motif.hit_id  # TODO: why both label AND motif?
