@@ -246,7 +246,7 @@ def location_from_json(data: str) -> FeatureLocation:
 
         return FeatureLocation(start, end, strand=strand)
 
-    assert isinstance(data, str)
+    assert isinstance(data, str), "%s, %r" % (type(data), data)
 
     if '{' not in data:
         return parse_single_location(data)
