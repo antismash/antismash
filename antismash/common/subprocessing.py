@@ -265,7 +265,16 @@ def run_hmmpfam2(query_hmmfile: str, target_sequence: str, extra_args: List[str]
                       result.stderr, query_hmmfile)
         raise RuntimeError("hmmpfam2 problem while running %s", command)
     res_stream = StringIO(result.stdout)
-    results = list(SearchIO.parse(res_stream, 'hmmer2-text'))
+    try:
+        results = list(SearchIO.parse(res_stream, 'hmmer2-text'))
+    except ValueError as err:
+        if "Sequence lengths do not match" in str(err):
+            # this bug exists in version <= 1.70, once line breaks in end markers
+            # doesn't cause this bug, remove this entire try/except section
+            logging.warning("A Bio.SearchIO bug caused parsing of hmmpfam2 output to fail, discarding input set")
+            results = []
+        else:
+            raise
     return results
 
 
