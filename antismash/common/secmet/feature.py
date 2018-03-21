@@ -575,9 +575,9 @@ class PFAMDomain(Domain):
 
     def __init__(self, location: FeatureLocation, description: str, domain: Optional[str] = None) -> None:
         super().__init__(location, feature_type="PFAM_domain")
-        assert description and isinstance(description, str)
+        assert description and isinstance(description, str), description
         if domain is not None:
-            assert domain and isinstance(domain, str)
+            assert domain and isinstance(domain, str), domain
         self.domain = domain
         self.description = description
         self.probability = None
