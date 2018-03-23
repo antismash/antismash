@@ -1,0 +1,144 @@
+hmmpfam - search one or more sequences against HMM database
+HMMER 2.3.2 (Oct 2003)
+Copyright (C) 1992-2003 HHMI/Washington University School of Medicine
+Freely distributed under the GNU General Public License (GPL)
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+HMM file:                 antismash/modules/active_site_finder/data/p450.hmm2
+Sequence file:            antismash/modules/active_site_finder/test/data/p450.input
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Query sequence: 0
+Accession:      [none]
+Description:    [none]
+
+Scores for sequence family classification (score includes all domains):
+Model    Description                                    Score    E-value  N
+-------- -----------                                    -----    ------- ---
+p450                                                    112.8    1.1e-34   1
+
+Parsed for domains:
+Model    Domain  seq-f seq-t    hmm-f hmm-t      score  E-value
+-------- ------- ----- -----    ----- -----      -----  -------
+p450       1/1       1   439 []     1   481 []   112.8  1.1e-34
+
+Alignments of top-scoring domains:
+p450: domain 1 of 1, from 1 to 439: score 112.8, E = 1.1e-34
+                CS    --SESEHHCCHCHHHHTTGTCCHHHHHHHHHHHH-SEEEEEETTEEE
+                   *->PpgptplPlfGnllqlgrgkdnlhsvftklakkYGpiftlylGpkpv
+                                    ++ +  +  h ++t+l++ YG++++  +    +
+           0     1    --------------WVTT--GRAHTIHTELHRQYGKVVRAGP---NT 28
+
+                CS EEEESHHHHHHHHCTSTTTTCEESSHHHHHHHHHTTTTSSS  TTCGHSH
+                   VvlsgpeavkevLikkgeefsgrgdealfdtlrkpflgkgi..vfangGe
+                   V++s+p a+ ++++    + ++ + +al  +     +gk i++vfa+
+           0    29 VFVSDPAAIPAIYRFNEPYQKSEFYDALMPY----VRGKSIpdVFAT--R 72
+
+                CS HHHHHHHHHHHHHTSHCSSTTCTHHHHHHHHHHHHHHHHHCCCCHCS EE
+                   rWrqlRrfltptfrsfgmgklksfepriqeeardLveklrktagepg.vi
+                   + + +R++  p      m  l+sfep ++  ++++  +l+    e g+v+
+           0    73 DEHIHRTMKQPIAAIYSMSNLVSFEPYVKSTIEYFFSRLDSLFVETGkVC 122
+
+                CS ETHHHHHHHHHHHHHHHHHSSHHHTTTSSHHHHHHHHHHHHHHHHHCHHH
+                   DitfllskaalnvIcsilFgkrfdsledpkflellkavqelfsllsspsp
+                   +   +l ++a +v++ i+F++r++ le   +  +++ +  + +++
+           0   123 NFGLWLHLFASDVMGEITFSRRLGFLETGGD--MENVMANNWKFF-VQAA 169
+
+                CS HCCCCCHHHHTCCSCHHHHHHHHHHHHHHHHHHHHHHHHHHCHCHC.SSC
+                   qlldlfpillkylpgphgrklkrarkklkdlldelieerretldpagkkk
+                       +++ ++++  +p++   ++  +k++++ +++i+er     +   +
+           0   170 PATQMPWLDYFWKRNPLLPGSVKP-NKVIEFGVARIQERLHLSEKHPDHV 218
+
+                CS SSCSHHHHHHHHCHCTCCCCCGCSSSSHHHHHHHHHHHHHHHHHHHHHHH
+                   sprDfldalLlakmekekdgedesklsdeelratvldlffAGteTTSsTL
+                   + rDfl  +++ak   ek+ +       + +++     + AG++TT+  L
+           0   219 NSRDFLSRFIAAK---EKNSQ----IGPDAIMTWANSNIQAGSDTTAILL 261
+
+                CS HHHHHHHHHSHHHHHHHHHHHHHHC CTTT..T-HHHHCCT-HHHHHHHH
+                   swaLylLakhPevQeklreEidqvi.gdhrkesptydDlqkmPYLdavIk
+                   s  +y+L+k+P+  ++l  Eid + +++     +t++   ++PYLda++k
+           0   262 SALFYHLLKNPTSLAALCTEIDAAAkRGCLSSILTWKETRDLPYLDACVK 311
+
+                CS HHHHHSCSST EEEEESSS CEEETT.EEEE-TT-EEEEEHHHHHT-TTT
+                   EtLRlhPvvp.llpRkvtk.DtvirGtgylIPKGTlVivnlyalhrDpkv
+                   E+ RlhP++   l+R+++++ tvi+G  + IP GT+V +n++a+hrD +v
+           0   312 EAARLHPPISlPLERVIPEsGTVIGG--FKIPGGTRVAMNPWAVHRDRDV 359
+
+                CS S SSTTS--GGGGB-TTSCCTESSCTT--TTEEGGGS-TTHHHHHHHHHH
+                   f.pnPeeFdPeRFLdengtnfkrksfaflPFGaGpRnClGerlArmElfl
+                   f+ +++  +PeR+L+ +  + k  + + l FG G R+ClG+++  +E+
+           0   360 FgADADTWRPERWLEGEE-KAKTLYNSLLTFGGGHRSCLGKNISYLEIYK 408
+
+                CS HHHHHHHHEEEEESTSTSGGEEESSCCESSEEESSSSEEEE
+                   fLatiLqnFelelppgvdppdidetpisglllppkpyklkf<-*
+                   +  +iL ++e  l + ++++  ++++   +++p+
+           0   409 LVPSILLRYEIGLAEPEKEWHLENRW---FVMPS-------    439
+
+//
+
+Query sequence: 1
+Accession:      [none]
+Description:    [none]
+
+Scores for sequence family classification (score includes all domains):
+Model    Description                                    Score    E-value  N
+-------- -----------                                    -----    ------- ---
+p450                                                     40.4    9.9e-15   1
+
+Parsed for domains:
+Model    Domain  seq-f seq-t    hmm-f hmm-t      score  E-value
+-------- ------- ----- -----    ----- -----      -----  -------
+p450       1/1       1   410 []     1   481 []    40.4  9.9e-15
+
+Alignments of top-scoring domains:
+p450: domain 1 of 1, from 1 to 410: score 40.4, E = 9.9e-15
+                CS    --SESEHHCCHCHHHHTTGTCCHHHHHHHHHHHH-SEEEEEETTEEE
+                   *->PpgptplPlfGnllqlgrgkdnlhsvftklakkYGpiftlylGpkpv
+                                             ++ f+ l+kkYG+i+++ + +  +
+           1     1    -----------------------YK-FNSLHKKYGKIVRFAPNQLSF 23
+
+                CS EEEESHHHHHHHHCTSTTTTCEESSHHHHHHHHHTTTTSSSTTCGHSHHH
+                   VvlsgpeavkevLikkgeefsgrgdealfdtlrkpflgkgivfangGerW
+                     +     ++++++++   +s+ + + +f++   +   ++i++a+    +
+           1    24 NTIK---GMRNIYGAGL-GKSNTFLKTGFYK---AISRRNIFTATDPYYH 66
+
+                CS HHHHHHHHHHHTSHCSSTTCTHHHHHHHHHHHHHHHHHCCCCHCSEEETH
+                   rqlRrfltptfrsfgmgklksfepriqeeardLveklrktagepgviDit
+                      R+++ p +  + m ++   ep+i+ +++++++  +++  +++ i++
+           1    67 ATVRKLFSPSLSPGCMAAH---EPVIKGCIARFHALVKQRMQSQKAISLN 113
+
+                CS HHHHHHHHHHHHHHHHSSHHHTTTSSH       HHHHHHHHHHHHHHHH
+                   fllskaalnvIcsilFgkrfdsledpk.......flellkavqelfslls
+                   +l      ++++ +l+gk++++ e  ++   +++++++  +     + +
+           1   114 DLYYSLSVDMVSEVLLGKSLGCIERGRpffwteqLPRIFYWATIR-DQF- 161
+
+                CS CHHHHCCCCCHHHHTCCSCHHHHHHHHHHHHHHHHHHHHHHHHHHCHCHC
+                   spspqlldlfpillkylpgphgrklkrarkklkdlldelieerretldpa
+                   + s+ + ++++ l ++l   ++++ ++a          +++ +re+l  +
+           1   162 KGSGVPTLIKWMLRQILRKGIRQRSEEA----------RMRLIREQLKAT 201
+
+                CS .SSCSSCSHHHHHHHHCHCTCCCCCGCSSSSHHHHHHHHHHHHHHHHHHH
+                   gkkksprDfldalLlakmekekdgedesklsdeelratvldlffAGteTT
+                      + +rD +   L+         +  s+l ++e++ +   ++ AG++TT
+           1   202 ---HTRRDVMVEVLERA-------D-SSTLPEDEIAENFSAIMLAGFHTT 240
+
+                CS HHHHHHHHHHHHHSHHHHHHHHHHHHHHCCTTT..T-HHHHCCT-HHHHH
+                   SsTLswaLylLakhPevQeklreEidqvigdhrkesptydDlqkmPYLda
+                   S++++ ++ l + hPe  e+l++E+ +++++ +  ++++d l+k+P L+a
+           1   241 SHAICATIWLVLSHPETRERLQNELRTAFQSTD--EISLDVLAKLPWLNA 288
+
+                CS HHHHHHHHSCSSTEEEEESSSCEEETT. EEEE-TT-EEEEEHHHHHT-T
+                   vIkEtLRlhPvvpllpRkvtkDtvirGt.gylIPKGTlVivnlyalhrDp
+                   vI E+LR +P+vpl   +++    ++G   +l     +V+++lyalh++
+           1   289 VITEALRVYPPVPLGGARISPGAYVDGFvAFLTGPQVEVSTSLYALHHNG 338
+
+                CS TTSSSTTS--GGGGB-TTSCCTESSCTT--TTEEGGGS-TTHHHHHHHHH
+                   kvfpnPeeFdPeRFLdengtnfkrksfaflPFGaGpRnClGerlArmElf
+                   ++f nP +F PeR+ + +       ++a  PF  G R+C+ + +A ++l
+           1   339 EYFKNPYKFAPERWVNPES--T-DRKEAVQPFLLGSRSCIAKYFAQQMLL 385
+
+                CS HHHHHHHHHEEEEESTSTSGGEEESSCCESSEEESSSSEEEE
+                   lfLatiLqnFelelppgvdppdidetpisglllppkpyklkf<-*
+                   l La++  +F+ ++  +v+ ++++
+           1   386 LTLASFFVEFDGQYVGKVKDWTTES-----------------    410
+
+//

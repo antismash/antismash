@@ -1,0 +1,163 @@
+# License: GNU Affero General Public License v3 or later
+# A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
+
+# for test files, silence irrelevant and noisy pylint warnings
+# pylint: disable=no-self-use,protected-access,missing-docstring
+
+import unittest
+
+from Bio import SearchIO
+from minimock import mock, restore
+
+from antismash.common import subprocessing  # mocked, pylint: disable=unused-import
+from antismash.common import fasta, path
+from antismash.common.secmet.feature import AntismashDomain, PFAMDomain, FeatureLocation
+from antismash.modules.active_site_finder.common import ActiveSiteAnalysis, Alignment, get_signature
+
+
+class TestCommon(unittest.TestCase):
+    def test_get_signature(self):
+        query = "TYLVTGGAGGIGGQLALWLAD-QGARHLLLTGRS-A-L--PEQdavvsethpqaTAVAVLRQLRERGVNVTYKAVDVADAHAMQATLESRRRA-GM--PPVRGVFHAAGVIDYTLLSDMSGAEMDRVLAAKVSGAWNLHRLLR-EES----VEAFVLFSSGSALLSSPMLGGYAAGNAFLDALAHHRHAQGL--SGTVVNWGFWD--"
+        aln = "tYLitGGlGGLGlslArWLaerrGARrLvLlSRslglpllpsp...........eaqellaeLealGarVrvvacDVtdraavrrllaeiraldtlespPirGViHaAgVLrDallenmtaedfrrVlaPKVdGawnLHeatreddppegsLDFFvlFSSiagllGnpGQanYAAANaFLDAlAryRRarGLRGpAlsinWGaWadv"
+        positions = [102]
+
+        assert get_signature(query, aln, positions) == "Y"
+
+        # bad coords
+        assert get_signature(query, aln, [len(aln)]) == ""
+
+
+class TestAlignment(unittest.TestCase):
+    def setUp(self):
+        self.domain = PFAMDomain(FeatureLocation(1, 6), "description", domain="p450")
+        self.alignment = Alignment(self.domain, "WLAD-QGAR", "WLaer.rGA", 10, 19)
+
+    def test_extract_position(self):
+        assert self.alignment.extract_position(11) == "W"
+        assert self.alignment.extract_position(13) == "a"
+        assert self.alignment.extract_position(15) == "r"
+        assert self.alignment.extract_position(0) == ""
+        assert self.alignment.extract_position(10) == ""
+        assert self.alignment.extract_position(20) == ""
+
+    def test_extract_positions(self):
+        positions = [11, 13, 15]
+        assert self.alignment.extract_positions(positions) == "War"
+        assert self.alignment.extract_positions([0, 13, 15]) == "ar"
+        assert self.alignment.extract_positions([11, 13, 20]) == "Wa"
+
+    def test_get_signature(self):
+        assert self.alignment.get_signature([11, 13, 15]) == "WA-"
+
+    def test_bad_positions(self):
+        with self.assertRaisesRegex(ValueError, "Hit start position is negative"):
+            Alignment(self.domain, "A", "B", -1, 10)
+        with self.assertRaisesRegex(ValueError, "Hit end position is not greater than the start"):
+            Alignment(self.domain, "A", "B", 10, 1)
+
+
+class TestAnalysisCore(unittest.TestCase):
+    def setUp(self):
+        self.domain = PFAMDomain(FeatureLocation(1, 6), "description", domain="p450")
+
+    def tearDown(self):
+        restore()
+
+    def generate_domains(self):
+        inputs = fasta.read_fasta(path.get_full_path(__file__, 'data', 'PKS_KS.input'))
+        domains = []
+        last_end = 0
+        for translation in inputs.values():
+            domain = AntismashDomain(FeatureLocation(last_end + 10, last_end + len(translation)*3 + 16))
+            domain.translation = translation
+            domains.append(domain)
+            domain.domain = "PKS_KS"
+
+        domains.append(AntismashDomain(FeatureLocation(last_end + 10, last_end + len(domains[-1].translation)*3 + 16)))
+        domains[-1].domain = "PKS_KR"
+        return domains
+
+    def test_bad_args(self):
+        with self.assertRaisesRegex(ValueError, "No database file located for"):
+            ActiveSiteAnalysis("test", tuple(), "bad_db", [5, 6], ["C", "S"])
+        with self.assertRaisesRegex(ValueError, "Number of expected values must match number of positions"):
+            ActiveSiteAnalysis("test", tuple(), "PKSI-KR.hmm2", [5, 6], ["C"])
+        with self.assertRaisesRegex(ValueError, "Number of expected values must match number of positions"):
+            ActiveSiteAnalysis("test", tuple(), "PKSI-KR.hmm2", [5], ["C", "S"])
+        with self.assertRaisesRegex(ValueError, "Number of emissions must match number of positions"):
+            ActiveSiteAnalysis("test", tuple(), "PKSI-KR.hmm2", [5, 6], ["C", "S"], emissions=[1.0, .2, .3])
+        with self.assertRaisesRegex(ValueError, "Number of emissions must match number of positions"):
+            ActiveSiteAnalysis("test", tuple(), "PKSI-KR.hmm2", [5, 6], ["C", "S"], emissions=[1.0])
+
+    def test_no_candidates_doesnt_break(self):
+        mock("subprocessing.run_hmmpfam2", returns=RuntimeError)
+        analysis = ActiveSiteAnalysis("test", tuple(), "PKSI-KR.hmm2", [5, 6], ["C", "S"])
+        assert analysis.get_alignments() == []
+
+    def test_domains_of_interest(self):
+        analysis = ActiveSiteAnalysis("not-p450", (self.domain,), "PKSI-KR.hmm2", [5, 6], ["C", "S"])
+        assert analysis.domains_of_interest == []
+        analysis = ActiveSiteAnalysis("p450", (self.domain,), "PKSI-KR.hmm2", [5, 6], ["C", "S"])
+        assert analysis.domains_of_interest == [self.domain]
+
+    def test_bad_candidates(self):
+        with self.assertRaisesRegex(TypeError, "Candidates must be Domains, not"):
+            ActiveSiteAnalysis("not-p450", ("not a Domain",), "PKSI-KR.hmm2", [5, 6], ["C", "S"])
+
+    def test_alignment_generation(self):
+        pregenerated = list(SearchIO.parse(open(path.get_full_path(__file__, 'data', 'KS_N.output')),
+                                           "hmmer2-text"))
+        mock("subprocessing.run_hmmpfam2", returns=pregenerated)
+
+        domains = self.generate_domains()
+        analysis = ActiveSiteAnalysis("PKS_KS", domains, "PKSI-KS_N.hmm2",
+                                      [176, 186, 187, 188], ['G', 'S', 'S', 'S'])
+        assert {"PKS_KS"} == {domain.domain for domain in analysis.domains_of_interest}
+        alignments = analysis.get_alignments()
+        assert len(alignments) == 4
+        assert [align.domain for align in alignments[:4]] == domains[:4]
+
+    def test_alignment_generation_no_hits(self):
+        no_hits = list(SearchIO.parse(open(path.get_full_path(__file__, 'data', 'no_hits.output')),
+                                      "hmmer2-text"))
+        mock("subprocessing.run_hmmpfam2", returns=no_hits)
+        for result in no_hits:
+            assert not result.hsps, "hits shouldn't exist"
+        domains = self.generate_domains()
+        analysis = ActiveSiteAnalysis("PKS_KS", domains, "PKSI-KS_N.hmm2",
+                                      [176, 186, 187, 188], ['G', 'S', 'S', 'S'])
+        assert analysis.get_alignments() == []
+
+
+class TestScaffoldMatching(unittest.TestCase):
+    def setUp(self):
+        domain = PFAMDomain(FeatureLocation(1, 6), "description", domain="p450")
+        self.alignment = Alignment(domain, "WLAD-QGAR", "WLae.rGAR", 10, 19)
+
+    def create_analysis(self, positions, expected):
+        return ActiveSiteAnalysis("test", tuple(), "PKSI-KR.hmm2", positions, expected)
+
+    def test_mismatch_over_gap(self):
+        # WDG vs WEG
+        analysis = self.create_analysis([1, 4, 7], ["W", "e", "G"])
+        assert not analysis.scaffold_matches(self.alignment)
+
+    def test_mismatch_on_gap(self):
+        # W-G vs WrG
+        analysis = self.create_analysis([1, 5, 7], ["W", "r", "G"])
+        assert not analysis.scaffold_matches(self.alignment)
+
+    def test_match_no_gaps(self):
+        # WL
+        analysis = self.create_analysis([1, 2], ["W", "L"])
+        assert analysis.scaffold_matches(self.alignment)
+
+    def test_match_no_gaps_case(self):
+        # WLA vs WLa
+        analysis = self.create_analysis([1, 2, 3], ["W", "L", "a"])
+        assert not analysis.scaffold_matches(self.alignment)
+
+    def test_match_over_gap(self):
+        # WLG
+        analysis = self.create_analysis([1, 2, 6], ["W", "L", "G"])
+        assert analysis.scaffold_matches(self.alignment)

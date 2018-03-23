@@ -1,0 +1,128 @@
+hmmpfam - search one or more sequences against HMM database
+HMMER 2.3.2 (Oct 2003)
+Copyright (C) 1992-2003 HHMI/Washington University School of Medicine
+Freely distributed under the GNU General Public License (GPL)
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+HMM file:                 antismash/modules/active_site_finder/data/PKSI-KS_C.hmm2
+Sequence file:            KS_N.input
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Query sequence: 0
+Accession:      [none]
+Description:    [none]
+
+Scores for sequence family classification (score includes all domains):
+Model     Description                                   Score    E-value  N
+--------  -----------                                   -----    ------- ---
+PKSI-KS_C                                               130.0    7.6e-40   1
+
+Parsed for domains:
+Model     Domain  seq-f seq-t    hmm-f hmm-t      score  E-value
+--------  ------- ----- -----    ----- -----      -----  -------
+PKSI-KS_C   1/1     251   344 ..     1   140 []   130.0  7.6e-40
+
+Alignments of top-scoring domains:
+PKSI-KS_C: domain 1 of 1, from 251 to 344: score 130.0, E = 7.6e-40
+                   *->lAVIRGsavNqDGrt.GiTaPsgeAQealirrAyarAGvdPadvgYV
+                       +VI ++avNq+  ++ iT+P++e+Q +l+r++  +AG++P+dv++V
+           0   251    MGVIAAAAVNQNQNStAITVPHSESQIELYRKVVSEAGLHPHDVSFV 297
+
+                   EAHGTGTplGDPiEaeAlaavFgefgpsesdesgrprrrsgsetptasts
+                   EAHGTGTp+GDPiE+++++ vF   g        + r
+           0   298 EAHGTGTPVGDPIEFTSIRTVF---GG-------SNR------------- 324
+
+                   dqPlaiGSVKsNIGHlEaAAGiAGLIKvvLaLehgvIPPnlhfe<-*
+                   ++Plai SVK NIGH+E+AA
+           0   325 ANPLAIASVKGNIGHTEGAA------------------------    344
+
+//
+
+Query sequence: 1
+Accession:      [none]
+Description:    [none]
+
+Scores for sequence family classification (score includes all domains):
+Model     Description                                   Score    E-value  N
+--------  -----------                                   -----    ------- ---
+PKSI-KS_C                                               202.8    8.7e-62   1
+
+Parsed for domains:
+Model     Domain  seq-f seq-t    hmm-f hmm-t      score  E-value
+--------  ------- ----- -----    ----- -----      -----  -------
+PKSI-KS_C   1/1     214   327 ..     1   140 []   202.8  8.7e-62
+
+Alignments of top-scoring domains:
+PKSI-KS_C: domain 1 of 1, from 214 to 327: score 202.8, E = 8.7e-62
+                   *->lAVIRGsavNqDGrt.GiTaPsgeAQealirrAyarAGvdP.advgY
+                      +AVIR++avN+DGrt  +T+Ps+eAQe+lir+Ay++AG+   +++ Y
+           1   214    RAVIRATAVNNDGRTlILTTPSAEAQEDLIRQAYRKAGIEDfNETAY 260
+
+                   VEAHGTGTplGDPiEaeAlaavFgefgpsesdesgrprrrsgsetptast
+                   +E+HGTGT +GD  E +A+a+ F    +
+           1   261 FECHGTGTMAGDTAETAAIAKIF----H---------------------- 284
+
+                   sdqPlaiGSVKsNIGHlEaAAGiAGLIKvvLaLehgvIPPnlhfe<-*
+                    ++ +++GS+K+N GH+E+++G+++LIK++L+Le++++ P++h +
+           1   285 -EG-IYVGSAKPNFGHSEGTSGLTSLIKAILSLEKKTLLPHIHMR    327
+
+//
+
+Query sequence: 2
+Accession:      [none]
+Description:    [none]
+
+Scores for sequence family classification (score includes all domains):
+Model     Description                                   Score    E-value  N
+--------  -----------                                   -----    ------- ---
+PKSI-KS_C                                               196.4    7.8e-60   1
+
+Parsed for domains:
+Model     Domain  seq-f seq-t    hmm-f hmm-t      score  E-value
+--------  ------- ----- -----    ----- -----      -----  -------
+PKSI-KS_C   1/1     256   377 ..     1   140 []   196.4  7.8e-60
+
+Alignments of top-scoring domains:
+PKSI-KS_C: domain 1 of 1, from 256 to 377: score 196.4, E = 7.8e-60
+                   *->lAVIRGsavNqDGrt.GiTaPsgeAQealirrAyarAGvdPadvgYV
+                       AV++ +a+N+++ + +iT+P++  Q + +r++ + A v+P dv+Y+
+           2   256    IAVVLSAATNHSAEAiSITHPHAGNQKDNYRQVIDMAAVNPLDVSYI 302
+
+                   EAHGTGTplGDPiEaeAlaavFgefgpsesdesgrprrrsgsetptasts
+                   E HGTGT++GD++E e++ +vF   +p      ++p+rr
+           2   303 ELHGTGTQAGDAVESESVLDVF---AP------RSPPRRP---------- 333
+
+                   dqPlaiGSVKsNIGHlEaAAGiAGLIKvvLaLehgvIPPnlhfe<-*
+                   dq l +G+VKsNIGH+EaAAGiA+++Kv+L+ ++++IP++++++
+           2   334 DQLLQLGAVKSNIGHGEAAAGIASFLKVLLMYQKNMIPAHIGIH    377
+
+//
+
+Query sequence: 3
+Accession:      [none]
+Description:    [none]
+
+Scores for sequence family classification (score includes all domains):
+Model     Description                                   Score    E-value  N
+--------  -----------                                   -----    ------- ---
+PKSI-KS_C                                               263.9    3.6e-80   1
+
+Parsed for domains:
+Model     Domain  seq-f seq-t    hmm-f hmm-t      score  E-value
+--------  ------- ----- -----    ----- -----      -----  -------
+PKSI-KS_C   1/1     264   382 ..     1   140 []   263.9  3.6e-80
+
+Alignments of top-scoring domains:
+PKSI-KS_C: domain 1 of 1, from 264 to 382: score 263.9, E = 3.6e-80
+                   *->lAVIRGsavNqDGrt.GiTaPsgeAQealirrAyarAGvdPadvgYV
+                      +A++R+s+ NqDG+t+ iT+Ps eAQ+al+r++y+rAG+d ad++Y
+           3   264    RAIVRESGLNQDGKTeTITTPSEEAQVALMRDCYRRAGLDYADTQYL 310
+
+                   EAHGTGTplGDPiEaeAlaavFgefgpsesdesgrprrrsgsetptasts
+                   EAHGTGT+ GDPiE +A+a vF   ++       r+
+           3   311 EAHGTGTSTGDPIECRAIATVF---KD------SRSS------------- 338
+
+                   dqPlaiGSVKsNIGHlEaAAGiAGLIKvvLaLehgvIPPnlhfe<-*
+                   +qPl+iGSVK+N+GH+EaA+G+A+LIKvv+aLe+g+IPP+++fe
+           3   339 EQPLRIGSVKTNVGHTEAASGLASLIKVVMALEKGKIPPSINFE    382
+
+//

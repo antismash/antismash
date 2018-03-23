@@ -1,0 +1,50 @@
+hmmpfam - search one or more sequences against HMM database
+HMMER 2.3.2 (Oct 2003)
+Copyright (C) 1992-2003 HHMI/Washington University School of Medicine
+Freely distributed under the GNU General Public License (GPL)
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+HMM file:                 antismash/modules/active_site_finder/data/Thioesterase.hmm2
+Sequence file:            antismash/modules/active_site_finder/test/data/TE.input
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Query sequence: 0
+Accession:      [none]
+Description:    [none]
+
+Scores for sequence family classification (score includes all domains):
+Model        Description                                Score    E-value  N
+--------     -----------                                -----    ------- ---
+Thioesterase                                            249.9    5.8e-76   1
+
+Parsed for domains:
+Model        Domain  seq-f seq-t    hmm-f hmm-t      score  E-value
+--------     ------- ----- -----    ----- -----      -----  -------
+Thioesterase   1/1       1   215 []     1   243 []   249.9  5.8e-76
+
+Alignments of top-scoring domains:
+Thioesterase: domain 1 of 1, from 1 to 215: score 249.9, E = 5.8e-76
+                   *->pPLFcvHPggGsawsYapLarhLgpdrPvYGLQapgldgppemellp
+                      pPLFcvH+ gG++w Y pL+r+L+p++PvYG+Qa+gl+++ e +l p
+           0     1    PPLFCVHASGGLSWNYEPLLRYLPPNQPVYGVQARGLART-E-PL-P 44
+
+                   egeplesieemAarYveaIRrvQPeGPYhLlGWSfGGvlAyEmArqLeaq
+                        +s+eemAa+Y+e+IR+vQP GPYhLlGWS+GG +A++mAr+Lea
+           0    45 -----GSVEEMAADYLEQIRAVQPAGPYHLLGWSLGGRIAQAMARLLEAD 89
+
+                   GeeValLaLlDsyp........dledlpall.aa.eeqll....lleala
+                   Ge+ +lLaLlD+yp   ++ ++++++ +a+l++ ++++l+  ++l+  +
+           0    90 GERLGLLALLDAYPvymgrkttGAASEEAALeQRnQQDLDlagqLVKGV- 138
+
+                   raGllacatapggpagldadalerllrvfaanlral.rYrppplkydgdv
+                                      +a +rl +v+++  +  +r++  p  ++gdv
+           0   139 -------------------AARSRLEAVMRNLWKVGpRHTRSP--FAGDV 167
+
+                   tlfrAe.....radla.pddgWrprllpgiaaagrlevhdvppGdHfsml
+                   +lf+A+ +++ + + + + ++W++ ++     +g +e h++p  +H++m
+           0   168 LLFVATvdrpaHLPVPvAKASWKE-FT-----SGAVEAHEIP-SNHYDM- 209
+
+                   lqppavaalaellreaL<-*
+                   +q           ++aL
+           0   210 VQ-----------SAAL    215
+
+//

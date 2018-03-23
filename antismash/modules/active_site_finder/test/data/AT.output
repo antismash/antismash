@@ -1,0 +1,192 @@
+hmmpfam - search one or more sequences against HMM database
+HMMER 2.3.2 (Oct 2003)
+Copyright (C) 1992-2003 HHMI/Washington University School of Medicine
+Freely distributed under the GNU General Public License (GPL)
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+HMM file:                 antismash/modules/active_site_finder/data/PKSI-AT.hmm2
+Sequence file:            AT.input
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Query sequence: 0
+Accession:      [none]
+Description:    [none]
+
+Scores for sequence family classification (score includes all domains):
+Model          Description                              Score    E-value  N
+--------       -----------                              -----    ------- ---
+PKS-AT.tcoffee                                          117.8    3.4e-36   1
+
+Parsed for domains:
+Model          Domain  seq-f seq-t    hmm-f hmm-t      score  E-value
+--------       ------- ----- -----    ----- -----      -----  -------
+PKS-AT.tcoffee   1/1       1   288 []     1   308 []   117.8  3.4e-36
+
+Alignments of top-scoring domains:
+PKS-AT.tcoffee: domain 1 of 1, from 1 to 288: score 117.8, E = 3.4e-36
+                   *->lFpGQGsQyaGMGreLYetePVFRqalDrCaaaLrphLgfsLlevLf
+                       F GQ +  +G  r+ Y+++ V R +l  C+++L      s+   +f
+           0     1    -FGGQVARSVGLSRQVYDSSAVLRTHLSNCDDILTSAGLNSIFPAIF 46
+
+                   gdegqeeaaaslLdqTryaQPALFAvEYALArLWrSWGvePdAVlGHSvG
+                             + ++++     ALF  +YA+A+ W   Gv P+A++GHS+G
+           0    47 R--------KEPIADVVLLHSALFSAQYACAMTWIEAGVIPAALIGHSFG 88
+
+                   EyvAAcvAGVlSLEDALrLVaaRGrLMqal..pggGaMlaVraseeevre
+                   ++ A  v  VlSL D+L L+ +R++LM+   +p++G M++V+a++++v++
+           0    89 QLTALSVGRVLSLKDGLGLITERAKLMRDAwgPEHGSMVSVQADVQTVAR 138
+
+                   lLapygg.....rlsiAAvNGPrsvVvSGdaeaieallaeLeaqGirarr
+                   l ++++ ++++++l+iA  NGP s Vv G+a+a ++l+a+L+++ ir++r
+           0   139 LMKAAETkdpkdALEIACFNGPTSHVVVGSADAADRLEAALTQESIRYKR 188
+
+                   LkVsHAFHSplMepmldeleevlagitpraPriPliSnvTGewltgeeal
+                   L+VsH FHS   ep+l  le++++++t+r P+  +  + +G   ++   +
+           0   189 LAVSHGFHSKFTEPLLLGLEQCAERLTFRTPKYAIETCSSGSSWSE---F 235
+
+                   dpaYWarhlRePVrFadgletLlaelGctvFlEvGPhpvLtalarrtlge
+                   +++  ++h+R PV + ++l++  a+lG++++lEvG +   ++++r  l
+           0   236 NASMIVQHTRTPVYYTEALARIEAKLGACTWLEVGTGGSVAGMIRGALNV 285
+
+                   sagtngadaawlaSLrrg<-*
+                    +               +
+           0   286 PS---------------D    288
+
+//
+
+Query sequence: 1
+Accession:      [none]
+Description:    [none]
+
+Scores for sequence family classification (score includes all domains):
+Model          Description                              Score    E-value  N
+--------       -----------                              -----    ------- ---
+PKS-AT.tcoffee                                          225.8    1.1e-68   1
+
+Parsed for domains:
+Model          Domain  seq-f seq-t    hmm-f hmm-t      score  E-value
+--------       ------- ----- -----    ----- -----      -----  -------
+PKS-AT.tcoffee   1/1       1   309 []     1   308 []   225.8  1.1e-68
+
+Alignments of top-scoring domains:
+PKS-AT.tcoffee: domain 1 of 1, from 1 to 309: score 225.8, E = 1.1e-68
+                   *->lFpGQGsQyaGMGreLYetePVFRqalDrCaaaLrphLgfsL...le
+                      +F+GQG+Q++ MGr+L e++ +FR+++++ ++aL+  L  +   +le
+           1     1    VFTGQGAQWPAMGRALIESFGTFRETIQQLDQALQS-LREPPawkLE 46
+
+                   vLfgdegqeeaaaslLdqTryaQPALFAvEYALArLWrSWGvePdAVlGH
+                    L g +     + + + + + aQP   A++  L  L+ +WG+ P+ V+GH
+           1    47 ALLGKDC----SQEQISRAELAQPSCCAIQIGLVNLLADWGIAPASVVGH 92
+
+                   SvGEyvAAcvAGVlSLEDALrLVaaRGrLMqalpggGaMlaVraseeevr
+                   S GE++AA++AG+ +  +   +   RG++M ++ ++G+M+aV   +e++
+           1    93 SSGEIAAAYAAGAITASESIIIAYYRGKAMNKVTRKGGMAAVSIGREQAT 142
+
+                   elLapyggrlsiAAvNGPrsvVvSGdaeaieallaeLeaqG..irarrLk
+                   ++L +   ++ iA  N+  sv +SGd +++e +l++ +a+++++ +r L
+           1   143 PYLVD--RGVVIACENSQHSVTLSGDLDELEDILEKIKADDpdVYCRMLR 190
+
+                   VsHAFHSplMepmldeleevlagitpraPr...iPliSnvTGewltgeea
+                   V+ A+HS++M  +++++e  l+g++ +++    +Pl+S+v G  +t+
+           1   191 VDKAYHSHHMHDVAEDYESSLQGLSTSEGSlfmVPLFSSVIGIKVTESSQ 240
+
+                   ldpaYWarhlRePVrFadgletLlaelGct...vFlEvGPhpvLtalarr
+                   l++ YW+++l +PVrF  ++++ l++   +++++FlE+GPh++L++++r+
+           1   241 LNGTYWRQNLESPVRFLTAVQAVLDS-EEEksrTFLEIGPHSALSGPLRQ 289
+
+                   tlgesagtngadaawlaSLrrg<-*
+                    l e++   g  ++ +aSL rg
+           1   290 ILSEHPR--GKVCSYVASLVRG    309
+
+//
+
+Query sequence: 2
+Accession:      [none]
+Description:    [none]
+
+Scores for sequence family classification (score includes all domains):
+Model          Description                              Score    E-value  N
+--------       -----------                              -----    ------- ---
+PKS-AT.tcoffee                                          155.7    1.3e-47   1
+
+Parsed for domains:
+Model          Domain  seq-f seq-t    hmm-f hmm-t      score  E-value
+--------       ------- ----- -----    ----- -----      -----  -------
+PKS-AT.tcoffee   1/1       1   295 []     1   308 []   155.7  1.3e-47
+
+Alignments of top-scoring domains:
+PKS-AT.tcoffee: domain 1 of 1, from 1 to 295: score 155.7, E = 1.3e-47
+                   *->lFpGQGsQyaGMGreLYetePVFRqalDrCaaaLrphLg.fsLlevL
+                       F+GQG+ y G +reL+e++  FR+ + + + + ++ Lg  s++ v+
+           2     1    -FTGQGAFYQGIARELFESFSYFRDEVLQLDHIVQR-LGfQSIVPVI 45
+
+                   fgdegqeeaaaslLdqTryaQPALFAvEYALArLW.rSWGvePdAVlGHS
+                    g+ g  ++a        + Q  ++++E ALA LW+   G++P AV+GHS
+           2    46 DGSIGENPSA-------TVSQLSIVVIEIALAHLWtLLLGMQPSAVIGHS 88
+
+                   vGEyvAAcvAGVlSLEDALrLVaaRGrLMqalpggGa..MlaVraseeev
+                   +GEy+A +vAGVlS  D+  L  +R++L++++   G + Ml+Vras++e+
+           2    89 LGEYAALVVAGVLSTADGIFLAGRRAQLIEKCCTAGShaMLSVRASVSEI 138
+
+                   relLapyggrlsiAAvNGPrsvVvSGdaeaieallaeLeaqGirarrLkV
+                    +lL++  ++ +i   N  +++V+ G+ + ++a+++ Le+  i++++++V
+           2   139 SKLLGN--AKYEISCQNTLNDTVIGGTKANLDAARQVLESSSIKCVPVDV 186
+
+                   sHAFHSplMepmldeleevlagitpraPriPliSnvTGewltgeealdpa
+                   + AFH+ +++p+ld+l +v++ + + aP iP+iS +    + +    + +
+           2   187 PFAFHTEQVDPVLDQLTRVAETVHFKAPSIPIISPLLRSVVFDGKTINSS 236
+
+                   YWarhlRePVrFadgletLlaelGct....vFlEvGPhpvLtalarrtlg
+                   Y  r +RePV Fa ++e+++++ G  ++++v++ vGPhp+ ++++r  ++
+           2   237 YLIRATREPVHFAGAIEAAQDL-GMVndktVWVDVGPHPICASFVRSLIP 285
+
+                   esagtngadaawlaSLrrg<-*
+                            a++ +S rr
+           2   286 K--------ARVASSCRR-    295
+
+//
+
+Query sequence: 3
+Accession:      [none]
+Description:    [none]
+
+Scores for sequence family classification (score includes all domains):
+Model          Description                              Score    E-value  N
+--------       -----------                              -----    ------- ---
+PKS-AT.tcoffee                                          196.7    6.2e-60   1
+
+Parsed for domains:
+Model          Domain  seq-f seq-t    hmm-f hmm-t      score  E-value
+--------       ------- ----- -----    ----- -----      -----  -------
+PKS-AT.tcoffee   1/1       1   320 []     1   308 []   196.7  6.2e-60
+
+Alignments of top-scoring domains:
+PKS-AT.tcoffee: domain 1 of 1, from 1 to 320: score 196.7, E = 6.2e-60
+                   *->lFpGQGsQyaGMGreLYetePVFRqalDrCaaaLrphLg..fsLlev
+                      +F+GQG+Q+  MGreL +++PVF ++l + ++ L+  Lg ++s++e
+           3     1    VFTGQGAQWYAMGRELIAAYPVFKASLKETDRHLAA-LGarWSVIEE 46
+
+                   LfgdegqeeaaaslLdqTryaQPALFAvEYALArLWrSWGvePdAVlGHS
+                   L +d      +as+ ++++y  P  +Av+ +L rL+rSWGv+P AV  HS
+           3    47 LNQDI-----PASRVHDVEYSTPLCVAVQISLVRLLRSWGVKPVAVTSHS 91
+
+                   vGEyvAAcvAGVlSLEDALrLVaaRGrLMqalpg...gGaMlaVraseee
+                    GE++AA++ G+l  +DA+++  +R+ L  + + ++++GaMl+V  s+ee
+           3    92 SGEIAAAYAVGALGCQDAMAVAYHRALLATRSSLgskQGAMLVVGMSLEE 141
+
+                   vrelLapyggrlsiAA...vNGPrsvVvSGdaeaieallaeLeaqGirar
+                    + +La+ ++ + iA+   vN+P+s+ vSGd +a++al+a  + +Gi++
+           3   142 TETYLARIDAQIGIATvacVNSPSSITVSGDQDAVNALEALARNDGIFTH 191
+
+                   rLkVsHAFHSplMepmldeleevla.gitpr....aPriPliSnvTGewl
+                   rLk + AFHS++M p++d ++ +l++ ++p +++ +  i++ S vTG+++
+           3   192 RLKIHTAFHSHHMNPIADLYRSALQgALSPNhdkvESDITFSSPVTGRRI 241
+
+                   tg.eealdpaYWarhlRePVrFadg.......letLlaelGctvFlEvGP
+                   t   ++  p++W++ l  PV+F d+ ++   +   +  +  +++ lEvGP
+           3   242 TNlSQLSEPDHWVDSLLKPVQFVDAftdmvlgASGASSA-NVDLILEVGP 290
+
+                   hpvLtalarrtlgesagtngadaawlaSLrrg<-*
+                   h +L a++++ l e +   g d ++l+SL r
+           3   291 HTALGAPIKQILAEPKFA-GLDISCLGSLVR-    320
+
+//

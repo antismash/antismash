@@ -6,7 +6,25 @@
 
 from collections import defaultdict
 from enum import Enum, unique
-from typing import Dict, List, Set, Optional, Union
+from typing import Dict, List, Generator, Set, Optional, Union
+
+
+class ActiveSiteFinderQualifier:
+    """ A qualifier for tracking active sites found (or not found) within a CDS.
+    """
+    def __init__(self):
+        self._hits = set()
+
+    def add(self, label: str) -> None:
+        """ Adds an active site presence label to the qualifier. """
+        self._hits.add(str(label))
+
+    def to_biopython(self) -> List[str]:
+        """ Creates a BioPython style qualifier from the qualifier """
+        return sorted(list(self._hits))
+
+    def __bool__(self) -> bool:
+        return bool(self._hits)
 
 
 class NRPSPKSQualifier(list):

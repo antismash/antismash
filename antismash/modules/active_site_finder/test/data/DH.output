@@ -1,0 +1,76 @@
+hmmpfam - search one or more sequences against HMM database
+HMMER 2.3.2 (Oct 2003)
+Copyright (C) 1992-2003 HHMI/Washington University School of Medicine
+Freely distributed under the GNU General Public License (GPL)
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+HMM file:                 antismash/modules/active_site_finder/data/PKSI-DH.hmm2
+Sequence file:            antismash/modules/active_site_finder/test/data/DH.input
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Query sequence: 0
+Accession:      [none]
+Description:    [none]
+
+Scores for sequence family classification (score includes all domains):
+Model    Description                                    Score    E-value  N
+-------- -----------                                    -----    ------- ---
+PKSI-DH                                                 145.0    2.2e-44   1
+
+Parsed for domains:
+Model    Domain  seq-f seq-t    hmm-f hmm-t      score  E-value
+-------- ------- ----- -----    ----- -----      -----  -------
+PKSI-DH    1/1       1   170 []     1   184 []   145.0  2.2e-44
+
+Alignments of top-scoring domains:
+PKSI-DH: domain 1 of 1, from 1 to 170: score 145.0, E = 2.2e-44
+                   *->vHPLLGsrvplpsspgepvWrnrLslselPWLaDHrVqGvvVfPGAa
+                       H+LLGsrv ++ ++ ep Wrn Lsl++ PWL +Hr+ G+ +fPGA+
+           0     1    -HELLGSRVLGS-TDIEPSWRNNLSLDDAPWLYGHRIMGKTLFPGAG 45
+
+                   YleMALaAAarqllgaereaggvrLrDvvfeqaLvLpedeatevqlsltp
+                   Y++MA + A +ql    r+   +++  +v++ aL L+ +e +e+ + l+p
+           0    46 YIAMAGE-AIQQLVS--RPNVSYQISHLVLKHALFLDSNECVELITNLRP 92
+
+                   egg.sdgssgwasFsIySrarradGeeddWtlHatGrlrrapdapqeppe
+                    + +++ +s w++FsI +    ++Ge    t+ + G++r+ap+ +
+           0    93 VRIsDIQDSEWHEFSITA---VQAGE---ATRLCLGQVRVAPPSV----- 131
+
+                   aldlaelra.rcprpvdpedlYerlaarGldYGPaFqgl<-*
+                   a++++    + + r+v ++++Y++l+++G+dY   F+gl
+           0   132 APTMPLTGStKLKRRVMSAAWYKALREAGMDYNREFRGL    170
+
+//
+
+Query sequence: 1
+Accession:      [none]
+Description:    [none]
+
+Scores for sequence family classification (score includes all domains):
+Model    Description                                    Score    E-value  N
+-------- -----------                                    -----    ------- ---
+PKSI-DH                                                 210.2    5.2e-64   1
+
+Parsed for domains:
+Model    Domain  seq-f seq-t    hmm-f hmm-t      score  E-value
+-------- ------- ----- -----    ----- -----      -----  -------
+PKSI-DH    1/1       1   181 []     1   184 []   210.2  5.2e-64
+
+Alignments of top-scoring domains:
+PKSI-DH: domain 1 of 1, from 1 to 181: score 210.2, E = 5.2e-64
+                   *->vHPLLGsrvplpsspgepvWrnrLslselPWLaDHrVqGvvVfPGAa
+                       H+LLGs v ++ +p +p+Wr++L l++ PWL++H+Vq++++fPGA+
+           1     1    -HDLLGSLVLGT-DPNSPTWRHILKLKDAPWLREHVVQEDILFPGAG 45
+
+                   YleMALaAAarqllg....aereaggvrLrDvvfeqaLvLped.eatevq
+                   ++++A++ A   l   +++a+ +a+g+rLrDv+++q Lv+p++++ +e+q
+           1    46 FICLAIE-AIKMLPElqskAPQAAAGYRLRDVDLLQGLVIPDNdDGVEIQ 94
+
+                   lsltpegg.sdgssgwasFsIySrarradGeeddWtlHatGrlrrapdap
+                   +sl++ +++ +g++gw +F+++S    ++++ ++W +Ha+G++  +p+++
+           1    95 TSLSEVSDkEMGNRGWKRFEVSS----VSAD-NQWSTHARGLITMEPEDA 139
+
+                   qeppealdlaelrarc..prpvdpedlYerlaarGldYGPaFqgl<-*
+                     p+  ++ +++++  + +r++ p+dlY+++++rG+ +GPaFq +
+           1   140 --PDKTITKSRPADLSgyTRRFGPSDLYDMMRERGIYHGPAFQ-I    181
+
+//
