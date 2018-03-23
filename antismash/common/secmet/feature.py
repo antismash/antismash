@@ -466,6 +466,10 @@ class AntismashFeature(Feature):
     def evalue(self, evalue):
         self._evalue = float(evalue)
 
+    def get_name(self) -> str:
+        """ Returns the domain's identifier """
+        return self.domain_id
+
     def to_biopython(self, qualifiers=None):
         mine = OrderedDict()
         if self.label:
