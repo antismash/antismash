@@ -6,12 +6,13 @@
 
 from collections import OrderedDict
 import logging
-from typing import Dict, List
+from typing import Dict, List, Union
 
-from antismash.common.secmet import CDSFeature, Record
+from antismash.common.secmet import Record
+from antismash.common.secmet.feature import CDSFeature, Domain
 
 
-def get_fasta_from_features(features: List[CDSFeature], numeric_names=False) -> str:
+def get_fasta_from_features(features: Union[List[CDSFeature], List[Domain]], numeric_names=False) -> str:
     """ Extract multi-protein FASTA from provided features """
     all_fastas = []
     if not numeric_names:
