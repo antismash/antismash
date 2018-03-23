@@ -1,0 +1,176 @@
+hmmpfam - search one or more sequences against HMM database
+HMMER 2.3.2 (Oct 2003)
+Copyright (C) 1992-2003 HHMI/Washington University School of Medicine
+Freely distributed under the GNU General Public License (GPL)
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+HMM file:                 antismash/modules/active_site_finder/data/PKSI-KS_N.hmm2
+Sequence file:            KS_N.input
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Query sequence: 0
+Accession:      [none]
+Description:    [none]
+
+Scores for sequence family classification (score includes all domains):
+Model    Description                                    Score    E-value  N
+-------- -----------                                    -----    ------- ---
+PKSI-KS                                                 392.9   5.4e-119   1
+
+Parsed for domains:
+Model    Domain  seq-f seq-t    hmm-f hmm-t      score  E-value
+-------- ------- ----- -----    ----- -----      -----  -------
+PKSI-KS    1/1       1   243 [.     1   264 []   392.9 5.4e-119
+
+Alignments of top-scoring domains:
+PKSI-KS: domain 1 of 1, from 1 to 243: score 392.9, E = 5.4e-119
+                   *->epIAIVGmacRFPGgAdspeaFWelLleGrdaisevPadRwdadafy
+                        IAI+Gm+c FPG Ad+++++W+lL++G + ++ +P++R+  +++
+           0     1    --IAIIGMGCKFPG-ADTLDEYWQLLAQGTSMCRTMPEERFKTSSLR 44
+
+                   dPdgerpGktytrwGgFLddvdlFDAaFFgISPrEAeaMDPQQRLLLEva
+                      ge+       wG+F+ dvd+FD++FF  S rEA++MDPQQRL L+va
+           0    45 RSPGEKLKF----WGNFVNDVDAFDHRFFKKSSREAASMDPQQRLVLQVA 90
+
+                   wEALEdAGip.peslrGArhgerlgs.rtGVFvGasssDYgdllplrdap
+                   ++ LE+A +++++ ++         s+++G++ G + sDY d   ++
+           0    91 YQTLESAEYSgLSGIKA--------SrDVGCYLGLCASDYTDNV-ASH-- 129
+
+                   ddpedidayaatGtarsilANRiSYffdLrGPSltVDTACSSSLVAlHlA
+                     p+  +a++  Gt r++l++ iS+ff+++GPS+t DTACSSS VA++ A
+           0   130 --PP--NAFSSLGTLRAFLSGKISHFFGWTGPSITYDTACSSSAVAIQAA 175
+
+                   CqsLrlsGEcdmAlaGGVNLilsPdmfialsklgmLSPdGrCktFDarAD
+                   C++L+ +GEc+mAlaGGV+L +sP+ +  ls + +LSP+G  k+FDa +D
+           0   176 CRALQ-TGECSMALAGGVSLYTSPNFYQNLSAASFLSPTGPTKPFDAKGD 224
+
+                   GYvRGEGvGvVvLKRLsDA<-*
+                   GY+RGEGvG V+LK+Ls A
+           0   225 GYCRGEGVGLVFLKPLSSA    243
+
+//
+
+Query sequence: 1
+Accession:      [none]
+Description:    [none]
+
+Scores for sequence family classification (score includes all domains):
+Model    Description                                    Score    E-value  N
+-------- -----------                                    -----    ------- ---
+PKSI-KS                                                 149.4    1.1e-45   1
+
+Parsed for domains:
+Model    Domain  seq-f seq-t    hmm-f hmm-t      score  E-value
+-------- ------- ----- -----    ----- -----      -----  -------
+PKSI-KS    1/1       1   206 [.     1   264 []   149.4  1.1e-45
+
+Alignments of top-scoring domains:
+PKSI-KS: domain 1 of 1, from 1 to 206: score 149.4, E = 1.1e-45
+                   *->epIAIVGmacRFPGgAdspeaFWelLleGrdaisevPadRwdadafy
+                        IAIVG++ R+PGg++s+ +  e+L+ ++d+ +evP +R+++++f
+           1     1    --IAIVGIGTRLPGGVNSVPSMYEFLRKKKDGLREVPLSRFNIAGF- 44
+
+                   dPdgerpGktytrwGgFL.ddvdlFDAaFFgISPrEAeaMDPQQRLLLEv
+                   + dg+ +  +  +  +FL++d+ + DA+FFg S  E +  DP  RLLLEv
+           1    45 HNDGDVAYSMRQQKSYFLdEDISMMDALFFGSSEMETAGSDPRARLLLEV 94
+
+                   awEALEdAGippeslrGArhgerlgsrtGVFvGasssDYgdllplrdapd
+                   ++E+LE+AG    + rG         ++G+++Ga++ D+++l  l+d
+           1    95 VYECLENAGK--TRYRG--------EKIGCYIGAWGVDWSELT-LKD--- 130
+
+                   dpedidayaatGtarsilANRiSYffdLrGPSltVDTACSSSLVAlHlAC
+                    +++ ++  +  +++ +l+  i++ +dLrGP
+           1   131 -GQQRNPMIGAAAGSFFLSSYIAWSLDLRGP------------------- 160
+
+                   qsLrlsGEcdmAlaGGVNLilsPdmfialsklgmLSPdGrCktFDarADG
+                     Lr        l G V   l   +f      ++L  d          DG
+           1   161 TLLR--------LYGSVARSLPVTIFW-----RVLVRD---------PDG 188
+
+                   YvRGEGvGvVvLKRLsDA<-*
+                   ++R+E+v +V+LK+L+DA
+           1   189 FGRAEAVNAVLLKPLDDA    206
+
+//
+
+Query sequence: 2
+Accession:      [none]
+Description:    [none]
+
+Scores for sequence family classification (score includes all domains):
+Model    Description                                    Score    E-value  N
+-------- -----------                                    -----    ------- ---
+PKSI-KS                                                 440.4   2.7e-133   1
+
+Parsed for domains:
+Model    Domain  seq-f seq-t    hmm-f hmm-t      score  E-value
+-------- ------- ----- -----    ----- -----      -----  -------
+PKSI-KS    1/1       1   248 [.     1   264 []   440.4 2.7e-133
+
+Alignments of top-scoring domains:
+PKSI-KS: domain 1 of 1, from 1 to 248: score 440.4, E = 2.7e-133
+                   *->epIAIVGmacRFPGgAdspeaFWelLleGrdaisevPadRwdadafy
+                         A+VGmacR+PGg ++ e FWe L++Grd+++ vPadR+d++++y
+           2     1    ---AVVGMACRMPGGGNDTELFWEILEQGRDVHTTVPADRFDLSTHY 44
+
+                   dPdgerpGkty.trwGgFLddvdlFDAaFFgISPrEAeaMDPQQRLLLEv
+                   dP+g+  ++  +t++G+F+d ++lFDA+FF++SP+EAe++DP+QRL+L +
+           2    45 DPSGK-TDNAAtTPYGNFVDKPGLFDAGFFNMSPKEAEQTDPMQRLALVT 93
+
+                   awEALEdAGippeslrGArhgerlgs...rtGVFvGasssDYgdllplrd
+                   a+EALE+AG++p ++++        s+++r+G ++G++s+D+++l+   +
+           2    94 AYEALEMAGVVPGRTAS--------SnpkRIGTYYGQASDDWRELN---A 132
+
+                   apddpedidayaatGtarsilANRiSYffdLrGPSltVDTACSSSLVAlH
+                        ++i++ya+tG+ r++  +Ri+Y+f + GPS+ VDTACSS+L+A++
+           2   133 ----SQNIGTYAVTGGVRAFGNGRINYYFKFPGPSFNVDTACSSGLAAVQ 178
+
+                   lACqsLrlsGEcdmAlaGGVNLilsPdmfialsklgmLSPdGrCktFDar
+                    AC +L+ +GE+d+ laGG N+i++Pd +++l  +++LS++G Ck +D+
+           2   179 VACSALW-AGEADTVLAGGLNIITDPDNYAGLGCGHFLSKTGQCKVWDET 227
+
+                   ADGYvRGEGvGvVvLKRLsDA<-*
+                   ADGY+R++G+G+Vv+KRL+DA
+           2   228 ADGYCRADGIGSVVIKRLEDA    248
+
+//
+
+Query sequence: 3
+Accession:      [none]
+Description:    [none]
+
+Scores for sequence family classification (score includes all domains):
+Model    Description                                    Score    E-value  N
+-------- -----------                                    -----    ------- ---
+PKSI-KS                                                 405.2   1.1e-122   1
+
+Parsed for domains:
+Model    Domain  seq-f seq-t    hmm-f hmm-t      score  E-value
+-------- ------- ----- -----    ----- -----      -----  -------
+PKSI-KS    1/1       1   256 [.     1   264 []   405.2 1.1e-122
+
+Alignments of top-scoring domains:
+PKSI-KS: domain 1 of 1, from 1 to 256: score 405.2, E = 1.1e-122
+                   *->epIAIVGmacRFPGgAdspeaFWelLleGrdaisevPadRwdadafy
+                        IAIVG++c F G A++p+ +We+L++Gr+a+se+P++R+++++ y
+           3     1    --IAIVGLSCKFAGEASTPDRLWEMLAAGRSAWSEIPPSRFNLKGAY 45
+
+                   dPdgerpGk................tytrwGgFL.ddvdlFDAaFFgISP
+                   +P+++r  +   ++  +++++++++ ++r+G+FL++d++lFDA+FF+ S+
+           3    46 HPSADRTNTvcfnslcrgnpteekkVHVRGGHFLeQDLGLFDAQFFSFSA 95
+
+                   rEAeaMDPQQRLLLEvawEALEdAGippeslrGArhgerlgsrtGVFvGa
+                     A++MDPQ RL LE ++EALE+AGi++ +++G        s+t+V++ +
+           3    96 ETAASMDPQIRLQLESVYEALENAGITLPDVAG--------SNTAVYAAV 137
+
+                   sssDYgdllplrdapddpedidayaatGtarsilANRiSYffdLrGPSlt
+                   +s DY+d    rd     ++++++  tGt+ ++ +NR+S+ffdLrGPS+t
+           3   138 FSRDYRDGI-IRD----EDRLPRFLPTGTGDAMFSNRVSHFFDLRGPSIT 182
+
+                   VDTACSSSLVAlHlACqsLrlsGEcdmAlaGGVNLilsPdmfialsklgm
+                   +DT CS +LVAlH  ++sLr +GE+dmAl  G  L          +++++
+           3   183 LDTGCSGGLVALHEGVKSLR-TGESDMALISGEGL---------TDEGRF 222
+
+                   LSPdGrCktFDarADGYvRGEGvGvVvLKRLsDA<-*
+                   +SPdG++++FD+rA+GY+RGEG++++v+KRLsDA
+           3   223 FSPDGKSYAFDSRANGYGRGEGIATIVIKRLSDA    256
+
+//

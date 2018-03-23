@@ -1,0 +1,104 @@
+hmmpfam - search one or more sequences against HMM database
+HMMER 2.3.2 (Oct 2003)
+Copyright (C) 1992-2003 HHMI/Washington University School of Medicine
+Freely distributed under the GNU General Public License (GPL)
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+HMM file:                 antismash/modules/active_site_finder/data/PKSI-ACP.hmm2
+Sequence file:            antismash/modules/active_site_finder/test/data/ACP.input
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Query sequence: 0
+Accession:      [none]
+Description:    [none]
+
+Scores for sequence family classification (score includes all domains):
+Model    Description                                    Score    E-value  N
+-------- -----------                                    -----    ------- ---
+PKSI-ACP                                                 15.4    9.9e-07   1
+
+Parsed for domains:
+Model    Domain  seq-f seq-t    hmm-f hmm-t      score  E-value
+-------- ------- ----- -----    ----- -----      -----  -------
+PKSI-ACP   1/1       1    58 []     1    67 []    15.4  9.9e-07
+
+Alignments of top-scoring domains:
+PKSI-ACP: domain 1 of 1, from 1 to 58: score 15.4, E = 9.9e-07
+                   *->ealreivAevlglppdeldpdrpLadlGvDSLmavelrnrlreelGl
+                            +++v  +p++++++   LadlGvDSL++ e+  ++ + + +
+           0     1    ------LSRVVEVPVADIHDGGILADLGVDSLLGTEVLTEINQVFNV 41
+
+                   dlpatllldypTiaaLaeyl<-*
+                   ++pa ++     + ++a
+           0    42 SIPADEFAL---LTDVASIS    58
+
+//
+
+Query sequence: 1
+Accession:      [none]
+Description:    [none]
+
+Scores for sequence family classification (score includes all domains):
+Model    Description                                    Score    E-value  N
+-------- -----------                                    -----    ------- ---
+	[no hits above thresholds]
+
+Parsed for domains:
+Model    Domain  seq-f seq-t    hmm-f hmm-t      score  E-value
+-------- ------- ----- -----    ----- -----      -----  -------
+	[no hits above thresholds]
+
+Alignments of top-scoring domains:
+	[no hits above thresholds]
+//
+
+Query sequence: 2
+Accession:      [none]
+Description:    [none]
+
+Scores for sequence family classification (score includes all domains):
+Model    Description                                    Score    E-value  N
+-------- -----------                                    -----    ------- ---
+PKSI-ACP                                                 71.3    3.5e-22   1
+
+Parsed for domains:
+Model    Domain  seq-f seq-t    hmm-f hmm-t      score  E-value
+-------- ------- ----- -----    ----- -----      -----  -------
+PKSI-ACP   1/1       1    63 [.     1    67 []    71.3  3.5e-22
+
+Alignments of top-scoring domains:
+PKSI-ACP: domain 1 of 1, from 1 to 63: score 71.3, E = 3.5e-22
+                   *->ealreivAevlglppdeldpdrpLadlGvDSLmavelrnrlreelGl
+                          + +A ++g ++ el+pd+ + +lGvDSLm+++l+ ++r+elGl
+           2     1    ----QLIANETGQSVNELTPDATFVQLGVDSLMSLVLSEKFRAELGL 43
+
+                   dlpatllldypTiaaLaeyl<-*
+                   ++ ++l+l++pT++++ ++l
+           2    44 EVKSSLFLECPTVGDMMDWL    63
+
+//
+
+Query sequence: 3
+Accession:      [none]
+Description:    [none]
+
+Scores for sequence family classification (score includes all domains):
+Model    Description                                    Score    E-value  N
+-------- -----------                                    -----    ------- ---
+PKSI-ACP                                                 35.0    2.9e-11   1
+
+Parsed for domains:
+Model    Domain  seq-f seq-t    hmm-f hmm-t      score  E-value
+-------- ------- ----- -----    ----- -----      -----  -------
+PKSI-ACP   1/1       1    55 [.     1    67 []    35.0  2.9e-11
+
+Alignments of top-scoring domains:
+PKSI-ACP: domain 1 of 1, from 1 to 55: score 35.0, E = 2.9e-11
+                   *->ealreivAevlglppdeldpdrpLadlGvDSLmavelrnrlreelGl
+                                  +p++ +d+ + L+++G+DSL avelrn l+ +  +
+           3     1    ------------IPVAHVDAAKHLSEYGLDSLSAVELRNMLALQAAA 35
+
+                   dlpatllldypTiaaLaeyl<-*
+                   d++++ ++++ ++aaLa  +
+           3    36 DVSIFSIMQSESLAALASEV    55
+
+//

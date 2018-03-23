@@ -1,0 +1,102 @@
+hmmpfam - search one or more sequences against HMM database
+HMMER 2.3.2 (Oct 2003)
+Copyright (C) 1992-2003 HHMI/Washington University School of Medicine
+Freely distributed under the GNU General Public License (GPL)
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+HMM file:                 antismash/modules/active_site_finder/data/PKSI-KR.hmm2
+Sequence file:            antismash/modules/active_site_finder/test/data/KR.input
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Query sequence: 0
+Accession:      [none]
+Description:    [none]
+
+Scores for sequence family classification (score includes all domains):
+Model    Description                                    Score    E-value  N
+-------- -----------                                    -----    ------- ---
+	[no hits above thresholds]
+
+Parsed for domains:
+Model    Domain  seq-f seq-t    hmm-f hmm-t      score  E-value
+-------- ------- ----- -----    ----- -----      -----  -------
+	[no hits above thresholds]
+
+Alignments of top-scoring domains:
+	[no hits above thresholds]
+//
+
+Query sequence: 1
+Accession:      [none]
+Description:    [none]
+
+Scores for sequence family classification (score includes all domains):
+Model    Description                                    Score    E-value  N
+-------- -----------                                    -----    ------- ---
+PKSI-KR                                                 252.5    9.6e-77   1
+
+Parsed for domains:
+Model    Domain  seq-f seq-t    hmm-f hmm-t      score  E-value
+-------- ------- ----- -----    ----- -----      -----  -------
+PKSI-KR    1/1       1   175 []     1   196 []   252.5  9.6e-77
+
+Alignments of top-scoring domains:
+PKSI-KR: domain 1 of 1, from 1 to 175: score 252.5, E = 9.6e-77
+                   *->tYLitGGlGGLGlslArWLaerrGARrLvLlSRslglpllpspeaqe
+                      +YL+ GGlGGLG++l  W++e rGAR L  lS s+g     ++++qe
+           1     1    AYLLCGGLGGLGRALSNWMVE-RGARCLLYLSPSAG----VGDDHQE 42
+
+                   llaeLealGarVrvvacDVtdraavrrllaeiraldtlespPirGViHaA
+                   + +eLe +G++V++v++ ++d+ +v r++++     +    Pi+GV+++A
+           1    43 FAEELECQGCEVVYVKGTASDASDVSRAISQ-----SP--KPIKGVVQLA 85
+
+                   gVLrDallenmtaedfrrVlaPKVdGawnLHeatreddppegsLDFFvlF
+                     L+Da l++mt+ed+++ l +KV+G+wnLH+a++ d p    LDFF++F
+           1    86 LTLKDASLQRMTFEDWTTPLTAKVHGTWNLHQAFQ-DTP----LDFFLMF 130
+
+                   SSiagllGnpGQanYAAANaFLDAlAryRRarGLRGpAlsinWGaWadv<
+                    Siag+ G +GQ+nY+AAN+F  Al ryR+++    pA+++++G++a
+           1   131 GSIAGITGMAGQCNYSAANSFIHALSRYRHSLNE--PASVLDLGPVA--  175
+
+                   -*
+
+           1     -    -
+
+//
+
+Query sequence: 2
+Accession:      [none]
+Description:    [none]
+
+Scores for sequence family classification (score includes all domains):
+Model    Description                                    Score    E-value  N
+-------- -----------                                    -----    ------- ---
+PKSI-KR                                                 311.8    1.4e-94   1
+
+Parsed for domains:
+Model    Domain  seq-f seq-t    hmm-f hmm-t      score  E-value
+-------- ------- ----- -----    ----- -----      -----  -------
+PKSI-KR    1/1       1   178 []     1   196 []   311.8  1.4e-94
+
+Alignments of top-scoring domains:
+PKSI-KR: domain 1 of 1, from 1 to 178: score 311.8, E = 1.4e-94
+                   *->tYLitGGlGGLGlslArWLaerrGARrLvLlSRslglpllpspeaqe
+                      +YL++GG+GG+G+s+A WLa+ +GA+++++lSRs+g    +sp+++e
+           2     1    SYLLVGGAGGIGRSMAHWLAA-HGAKNIIVLSRSAG----TSPAVAE 42
+
+                   llaeLealGarVrvvacDVtdraavrrllaeiraldtlespPirGViHaA
+                   l+aeL+ lG++V+ ++cD++ +a+++++l+++ a  +l  pPirGVi+aA
+           2    43 LVAELQPLGCHVKPISCDASVKADLAAALSSCSA--EL--PPIRGVIQAA 88
+
+                   gVLrDallenmtaedfrrVlaPKVdGawnLHeatreddppegsLDFFvlF
+                   +VL+D++le+mt+ed+++ l PKV+ +wn H+ +r d++    LDFFv++
+           2    89 MVLQDSVLERMTFEDWQTSLNPKVRASWNVHTQLR-DAD----LDFFVFL 133
+
+                   SSiagllGnpGQanYAAANaFLDAlAryRRarGLRGpAlsinWGaWadv<
+                   SS++g+ G   Q+nY+A+N++ DAlA++R ++GL  pA+s+++G+++
+           2   134 SSMSGIYGYTTQSNYSAGNTYEDALAHWRVSQGL--PAVSMDLGPVK--  178
+
+                   -*
+
+           2     -    -
+
+//

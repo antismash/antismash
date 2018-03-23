@@ -15,19 +15,7 @@ from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 from Bio.SeqRecord import SeqRecord
 
-from .qualifiers import NRPSPKSQualifier, SecMetQualifier, GeneFunction, GeneFunctionAnnotations
-
-class ActiveSiteFinderQualifier:
-    def __init__(self, scaffold=None, choice=None, prediction=None, note=None):
-        if not any([scaffold, choice, prediction, note]):
-            raise ValueError("Can't create an empty ASF qualifier")
-        assert all(isinstance(arg, list) for arg in [scaffold, choice, prediction, note] if arg is not None)
-        if (scaffold or choice) and not note:
-            raise ValueError("If scaffold or choice are provided, note must also be provided")
-        self.choice = choice or []
-        self.prediction = prediction or []
-        self.scaffold = scaffold or []
-        self.note = note or []
+from .qualifiers import NRPSPKSQualifier, SecMetQualifier, GeneFunction, GeneFunctionAnnotations, ActiveSiteFinderQualifier
 
 
 def _convert_protein_position_to_dna(start: int, end: int, location: FeatureLocation) -> Tuple[int, int]:
@@ -523,12 +511,18 @@ class AntismashFeature(Feature):
 
 class Domain(AntismashFeature):
     """ A base class for features which represent a domain type """
-    __slots__ = ["tool", "domain"]
+    __slots__ = ["tool", "domain", "_asf"]
 
     def __init__(self, location, feature_type):
         super().__init__(location, feature_type)
         self.tool = None
         self.domain = None
+        self._asf = ActiveSiteFinderQualifier()
+
+    @property
+    def asf(self) -> ActiveSiteFinderQualifier:
+        """ An ActiveSiteFinderQualifier storing active site descriptions """
+        return self._asf
 
     def to_biopython(self, qualifiers=None):
         mine = OrderedDict()
@@ -646,6 +640,8 @@ class AntismashDomain(Domain):
             mine["domain_subtype"] = [self.domain_subtype]
         if self.specificity:
             mine["specificity"] = self.specificity
+        if self.asf:
+            mine["ASF"] = self.asf.to_biopython()
         if qualifiers:
             mine.update(qualifiers)
         return super().to_biopython(mine)
@@ -701,7 +697,7 @@ class CDSFeature(Feature):
         if not (protein_id or locus_tag or gene):
             raise ValueError("CDSFeature requires at least one of: gene, protein_id, locus_tag")
 
-        self._asf = None
+        self._asf = ActiveSiteFinderQualifier()
 
         # runtime-only data
         self.cluster = None
@@ -755,12 +751,8 @@ class CDSFeature(Feature):
 
     @property
     def asf(self) -> ActiveSiteFinderQualifier:
+        """ An ActiveSiteFinderQualifier storing active site descriptions """
         return self._asf
-
-    @asf.setter
-    def asf(self, qualifier) -> None:
-        assert isinstance(qualifier, ActiveSiteFinderQualifier)
-        self._asf = qualifier
 
     def get_accession(self) -> str:
         "Get the gene ID from protein id, gene name or locus_tag, in that order"
@@ -831,6 +823,8 @@ class CDSFeature(Feature):
             val = getattr(self, attr)
             if val:
                 mine[attr] = [str(val)]
+        if self._asf:
+            mine["ASF"] = self._asf.to_biopython()
         if self._gene_functions:
             mine["gene_functions"] = list(map(str, self._gene_functions))
         # since it's already a list
