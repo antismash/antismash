@@ -442,11 +442,16 @@ class AntismashFeature(Feature):
     @property
     def translation(self) -> str:
         """ The amino acid translation of the feature. """
+        if not self._translation:
+            raise ValueError("Domain has no translation: %s" % self.domain_id)
         return self._translation
 
     @translation.setter
     def translation(self, translation: str):
-        self._translation = str(translation)
+        assert isinstance(translation, str)
+        if not translation:
+            raise ValueError("Domain translation cannot be empty")
+        self._translation = translation
 
     @property
     def score(self):
