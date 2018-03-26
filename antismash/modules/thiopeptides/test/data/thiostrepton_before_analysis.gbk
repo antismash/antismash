@@ -382,20 +382,6 @@ FEATURES             Location/Qualifiers
                      PLPGKPVWLEDVGPDGVGTLWTRGPDTRFAVTGGRLTTGPDGAVTTGDLAHRADGGGGF
                      VLDGRADDLVKVDGVSVYPREITAAVRALPGVRDASVSVDRSRTGDRLTVIVMGTDAVT
                      EDRVRDACARLPVPVTPHRVLCRPADETAYDARGKVLR"
-     CDS_motif       22358..22414
-                     /aSDomain_id="nrpspksmotif_ACN52300.1_0001"
-                     /aSTool="pksnrpsmotif"
-                     /database="abmotifs"
-                     /detection="hmmscan"
-                     /domain_id="nrpspksmotif_ACN52300.1_0001"
-                     /evalue="1.00E-04"
-                     /label="NRPS-A_a8"
-                     /locus_tag="ACN52300.1"
-                     /motif="NRPS-A_a8"
-                     /note="NRPS/PKS Motif: NRPS-A_a8 (e-value: 0.0001,
-                     bit-score: 15.0)"
-                     /score="15.0"
-                     /translation="GRADDLVKVDGVSVYPREI"
      CDS             22752..23942
                      /codon_start=1
                      /db_xref="GI:224495616"
@@ -495,22 +481,6 @@ FEATURES             Location/Qualifiers
                      VDLLVNNAGLVDQGELPFWEADPERWWEVFETNVRGTVNTCRAVLPEMTRRGSGRVVNV
                      NSRLAVQGDPRYSAYCGSKATLLALDAVAAEPLRDRGVHLFDISPGMVRTDMTLSMAVC
                      AGRDDWTDPALFLAAILRVAHGDLDPLAGRFLHVGADDFDALLSERRLAV"
-     CDS_motif       28595..29038
-                     /aSDomain_id="nrpspksmotif_ACN52304.1_0001"
-                     /aSTool="pksnrpsmotif"
-                     /database="abmotifs"
-                     /detection="hmmscan"
-                     /domain_id="nrpspksmotif_ACN52304.1_0001"
-                     /evalue="8.40E-04"
-                     /label="PKSI-KR_m1"
-                     /locus_tag="ACN52304.1"
-                     /motif="PKSI-KR_m1"
-                     /note="NRPS/PKS Motif: PKSI-KR_m1 (e-value: 0.00084,
-                     bit-score: 12.0)"
-                     /score="12.0"
-                     /translation="LVTGAGRGIGRMVAVALAEAGMTVGLVGRNRRLLDVTARACAAAR
-                     EAASGDGSGDGSGGGPEAGVAVAVADVRAPAEIREAAEAVRAALGPVDLLVNNAGLVDQ
-                     GELPFWEADPERWWEVFETNVRGTVNTCRAVLPEMTRRGSGRVV"
 ORIGIN
         1 tctgcgtgtg cccgctcagt ctcccggcgc ctcccccggc tccgtcggcc cctccactga
        61 tgccgccggc cccaccggct cctcgcgctc cttggccaga cgggcggtca gccggaggac
