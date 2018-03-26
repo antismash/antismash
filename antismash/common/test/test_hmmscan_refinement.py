@@ -39,11 +39,18 @@ class TestHMMResult(unittest.TestCase):
 
     def test_json_conversion(self):
         result = refinement.HMMResult("dummy_hit", 1, 5, 3e-10, 53.5)
-        assert result.to_json() == {'bitscore': 53.5,
-                                    'evalue': 3e-10,
-                                    'hit_id': 'dummy_hit',
-                                    'query_end': 5,
-                                    'query_start': 1}
+        json = result.to_json()
+        assert json == {'bitscore': 53.5,
+                        'evalue': 3e-10,
+                        'hit_id': 'dummy_hit',
+                        'query_end': 5,
+                        'query_start': 1}
+        regenerated = refinement.HMMResult.from_json(json)
+        assert regenerated.hit_id == "dummy_hit"
+        assert regenerated.query_start == 1
+        assert regenerated.query_end == 5
+        assert regenerated.evalue == 3e-10
+        assert regenerated.bitscore == 53.5
 
     def test_str_conversion(self):
         result = refinement.HMMResult("dummy_hit", 1, 5, 3e-10, 53.5)
