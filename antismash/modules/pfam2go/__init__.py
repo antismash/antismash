@@ -6,8 +6,9 @@
 from typing import Any, Dict, List, Optional
 
 from antismash.config.args import ModuleArgs
-from antismash.modules.pfam2go.pfam2go import parse_all_mappings, build_at_the_end, build_as_i_go,\
-    construct_gene_ontologies, GeneOntology, GeneOntologies, Pfam2GoResults, get_gos_for_pfams
+#from antismash.modules.pfam2go.pfam2go import parse_all_mappings, build_at_the_end, build_as_i_go,\
+#    construct_gene_ontologies, GeneOntology, GeneOntologies, Pfam2GoResults, get_gos_for_pfams
+from antismash.modules.pfam2go.pfam2go import get_gos_for_pfams, Pfam2GoResults
 
 NAME = "pfam2go"
 SHORT_DESCRIPTION = "Pfam domain to GO mapping"
@@ -53,5 +54,5 @@ def run_on_record(record, results: Pfam2GoResults, options) -> Pfam2GoResults:
     """ Run the analysis, unless the previous results apply to the given record """
     if isinstance(results, Pfam2GoResults) and results.record_id == record.id:
         return results
-    #  otherwise, extract Pfam IDs, do pfam to GO mapping with these?
+    #  otherwise, extract Pfam IDs, do pfam to GO mapping with these
     return Pfam2GoResults(record.id, get_gos_for_pfams(record))

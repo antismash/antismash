@@ -12,6 +12,7 @@ from antismash.common.test import helpers
 from antismash.config import build_config, destroy_config
 from antismash.modules import pfam2go
 
+
 class PfamToGoTest(unittest.TestCase):
     def setUp(self):
         self.options = build_config(["--clusterhmmer", "--pfam2go", "--minimal"], isolated=True,
@@ -25,8 +26,11 @@ class PfamToGoTest(unittest.TestCase):
         record = record_processing.parse_input_sequence(input_file)[0]
         assert record.get_pfam_domains()
         for domain in record.get_pfam_domains():
-            assert not domain.gene_ontologies
+            assert not domain.gene_ontologies['pfam2go']
         results.add_to_record(record)
+        for domain in record.get_pfam_domains():
+            if domain.gene_ontologies['pfam2go']:
+                assert domain.gene_ontologies['pfam2go'] == results.pfam_domains_with_gos[domain]
         # test it's been added to the record correctly
 
     def test_reuse(self):
@@ -67,8 +71,8 @@ class PfamToGoTest(unittest.TestCase):
         #                     for go_id in go_ids:
         #                         assert go_id in expected_pfams_and_gos_with_descs[pfam_id_without_version]
         #  did it find and assign Gene Ontology IDs to all Pfam IDs expected to have some?
-        for expected_pfam, expected_gos in expected_pfams_and_gos_with_descs.items():
+        for expected_pfam in expected_pfams_and_gos_with_descs:
             assert expected_pfam in pfams_found_with_ids
-        #  did it assign any wrongly?
-        for pfam_without_gos in expected_pfams_without_gos:
-            assert pfam_without_gos not in pfams_found_with_ids
+        # does adding to the record work?
+        for expected_not_found in expected_pfams_without_gos:
+            assert expected_not_found not in pfams_found_with_ids

@@ -9,11 +9,12 @@ import unittest
 
 from Bio.Alphabet import generic_dna
 from Bio.Seq import Seq
-from Bio.SeqFeature import SeqFeature, FeatureLocation
+from Bio.SeqFeature import FeatureLocation
+from typing import List
 from antismash.common import path
 from antismash.common.secmet.feature import PFAMDomain
 from antismash.common.secmet.record import Record
-from antismash.modules import pfam2go
+from antismash.modules.pfam2go import pfam2go
 
 
 class PfamToGoTest(unittest.TestCase):
@@ -27,9 +28,17 @@ class PfamToGoTest(unittest.TestCase):
                      'GO:0006075': '(1->3)-beta-D-glucan biosynthetic process',
                      'GO:0000148': '1,3-beta-D-glucan synthase complex'}
 
+    def set_record(self, pfam_id: List[str]) -> Record:
+        fake_record = Record(Seq("ATGTTATGAGGGTCATAACAT", generic_dna))
+        fake_pfam_location = FeatureLocation(0, 12)
+        fake_pfam = PFAMDomain(location=fake_pfam_location, description='MCPsignal')
+        fake_pfam.db_xref = pfam_id
+        fake_record.add_pfam_domain(fake_pfam)
+        return fake_record
+
     def test_parse_mappings(self):
         data = path.get_full_path(os.path.dirname(__file__), 'pfam2go-march-2018.txt')
-        print(data)
+        #print(data)
         go_ids_by_pfam, go_desc_by_id = pfam2go.parse_all_mappings(data)
         # make sure all go ids actually have associated descriptions
         for go_ids_found in go_ids_by_pfam.values():
@@ -45,7 +54,7 @@ class PfamToGoTest(unittest.TestCase):
         # for now: sanity check, is this even working off good data?
         for go_ids_found in go_ids_by_pfam.values():
             for go_id in go_ids_found:
-                self.assertIn(go_id, go_desc_by_id)
+                assert go_id in go_desc_by_id
         ontologies_per_pfam = pfam2go.build_at_the_end(go_ids_by_pfam, go_desc_by_id)
         for ontologies in ontologies_per_pfam.values():
             self.assertIsInstance(ontologies, pfam2go.GeneOntologies)
@@ -70,8 +79,11 @@ class PfamToGoTest(unittest.TestCase):
     def test_gene_ontologies_fail(self):
         fail_ontology = {'GO:0004871': 'signal transducer activity'}
         fail_pfam = 15
+        sample_ontology = pfam2go.GeneOntology('GO:0004871', 'signal transducer activity')
+        sample_pfam = 'PF00015'
         with self.assertRaises(AssertionError):  # could likely do that more prettily?
-            pfam2go.GeneOntologies(fail_pfam, fail_ontology)
+            pfam2go.GeneOntologies(sample_pfam, fail_ontology)
+        # test faily pfam/working ontology
 
     def test_gene_ontology(self):
         sample_go_id = 'GO:0004871'
@@ -86,7 +98,7 @@ class PfamToGoTest(unittest.TestCase):
         working_id = 'GO:0004871'
         working_description = 'signal transducer activity'
         fail_description = ['signal transducer activity']
-        with self.assertRaisesRegex(ValueError, "Invalid Gene Ontology ID"):
+        with self.assertRaisesRegex(ValueError, "Invalid Gene Ontology ID: 0004871"):
             pfam2go.GeneOntology(fail_id, working_description)
         with self.assertRaises(AssertionError):
             pfam2go.GeneOntology(working_id, fail_description)
@@ -107,11 +119,12 @@ class PfamToGoTest(unittest.TestCase):
             self.assertEqual(str(go_ids), str(ontologies_per_pfam[pfam]))
 
     def test_get_gos(self):
-        fake_record = Record(Seq("ATGTTATGAGGGTCATAACAT", generic_dna))
-        fake_pfam_location = FeatureLocation(0,12)
-        fake_pfam = PFAMDomain(location=fake_pfam_location, description='MCPsignal')
-        fake_pfam.db_xref = ['PF00015']
-        fake_record.add_pfam_domain(fake_pfam)
+        # fake_record = Record(Seq("ATGTTATGAGGGTCATAACAT", generic_dna))
+        # fake_pfam_location = FeatureLocation(0,12)
+        # fake_pfam = PFAMDomain(location=fake_pfam_location, description='MCPsignal')
+        # fake_pfam.db_xref = ['PF00015']
+        # fake_record.add_pfam_domain(fake_pfam)
+        fake_record = self.set_record(['PF00015'])
         gos_for_fake_pfam = pfam2go.get_gos_for_pfams(fake_record)
         for pfam, all_ontologies in gos_for_fake_pfam.items():
             for ontologies in all_ontologies:
@@ -119,18 +132,36 @@ class PfamToGoTest(unittest.TestCase):
                 for go_id in go_ids:
                     assert go_id in self.known_connections[ontologies.pfam]
 
-    def test_get_gos_id_handling(self):
-        fake_record = Record(Seq("ATGTTATGAGGGTCATAACAT", generic_dna))
+    def test_blank_records(self):
+        blank_no_pfams = Record(Seq("ATGTTATGAGGGTCATAACAT", generic_dna))
+        blank_no_ids = Record(Seq("ATGTTATGAGGGTCATAACAT", generic_dna))
         fake_pfam_location = FeatureLocation(0, 12)
-        fake_pfam_versionnr = PFAMDomain(location=fake_pfam_location, description='MCPsignal')
-        fake_pfam_versionnr.db_xref = ['PF00015.42']
-        fake_record.add_pfam_domain(fake_pfam_versionnr)
+        fake_pfam = PFAMDomain(location=fake_pfam_location, description='MCPsignal')
+        blank_no_ids.add_pfam_domain(fake_pfam)
+        with self.assertLogs(level='INFO') as log_cm:
+            gos_for_no_pfams = pfam2go.get_gos_for_pfams(blank_no_pfams)
+            assert 'No Pfam domains found' in str(log_cm.output)
+            gos_for_no_ids = pfam2go.get_gos_for_pfams(blank_no_ids)
+            assert 'No Pfam ids found' in str(log_cm.output)
+
+    def test_get_gos_id_handling(self):
+        # fake_record = Record(Seq("ATGTTATGAGGGTCATAACAT", generic_dna))
+        # fake_pfam_location = FeatureLocation(0, 12)
+        # fake_pfam_versionnr = PFAMDomain(location=fake_pfam_location, description='MCPsignal')
+        # fake_pfam_versionnr.db_xref = ['PF00015.42']
+        # fake_record.add_pfam_domain(fake_pfam_versionnr)
+        fake_record = self.set_record(['PF00015.42'])
+        fake_pfam_location = FeatureLocation(0, 12)
         fake_pfam_brokennr = PFAMDomain(location=fake_pfam_location, description='MCPsignal')
         fake_pfam_brokennr.db_xref = ['PF00015_42']
-        gos_for_fake_pfam = pfam2go.get_gos_for_pfams(fake_record)
+        fake_record.add_pfam_domain(fake_pfam_brokennr)
+        # are wrong PFAM ids logged?
+        with self.assertLogs() as log_cm:
+            gos_for_fake_pfam = pfam2go.get_gos_for_pfams(fake_record)
+            assert 'Pfam id PF00015_42 is not a valid Pfam id, skipping' in str(log_cm.output)
         for pfam_domain, all_ontologies in gos_for_fake_pfam.items():
             for ontologies in all_ontologies:
-                # catches both stripping version number and broken ID not being included, find way to catch broken alphanumeric IDs
+                # catches both stripping version number and broken ID not being included
                 assert ontologies.pfam.isalnum()
                 assert ontologies.pfam.startswith('PF')
                 # messy check for correct data
@@ -139,11 +170,12 @@ class PfamToGoTest(unittest.TestCase):
                         assert ontology.id in self.known_connections['PF00015']
 
     def test_results(self):
-        fake_record = Record(Seq("ATGTTATGAGGGTCATAACAT", generic_dna))
-        fake_pfam_location = FeatureLocation(0, 12)
-        fake_pfam = PFAMDomain(location=fake_pfam_location, description='MCPsignal')
-        fake_pfam.db_xref = ['PF00015']
-        fake_record.add_pfam_domain(fake_pfam)
+        # fake_record = Record(Seq("ATGTTATGAGGGTCATAACAT", generic_dna))
+        # fake_pfam_location = FeatureLocation(0, 12)
+        # fake_pfam = PFAMDomain(location=fake_pfam_location, description='MCPsignal')
+        # fake_pfam.db_xref = ['PF00015']
+        # fake_record.add_pfam_domain(fake_pfam)
+        fake_record = self.set_record(['PF00015'])
         gos_for_fake_pfam = pfam2go.get_gos_for_pfams(fake_record)
         fake_results = pfam2go.Pfam2GoResults(fake_record.id, gos_for_fake_pfam)
         assert gos_for_fake_pfam == fake_results.pfam_domains_with_gos
@@ -152,7 +184,6 @@ class PfamToGoTest(unittest.TestCase):
             pfam_ids_without_versions = [pfam_id.partition('.')[0] for pfam_id in pfam.db_xref]
             for ontologies in all_ontologies:
                 assert ontologies.pfam in pfam_ids_without_versions
-
 
     def test_add_results_to_record(self):
         fake_record = Record(Seq("ATGTTATGAGGGTCATAACAT", generic_dna))
@@ -176,37 +207,37 @@ class PfamToGoTest(unittest.TestCase):
         fake_results = pfam2go.Pfam2GoResults(fake_record.id, gos_for_fake_pfam)
         fake_results.add_to_record(fake_record)
         for pfam in fake_record.get_pfam_domains():
-            assert pfam.gene_ontologies == fake_results.pfam_domains_with_gos[pfam]
-        # something seems to be wrong in results of real run and the test doesn't seem to catch it
+            assert pfam.gene_ontologies['pfam2go'] == fake_results.pfam_domains_with_gos[pfam]
         assert fake_duplicate_pfam.db_xref == ['PF00015.2']
-        assert fake_duplicate_pfam.gene_ontologies == fake_results.pfam_domains_with_gos[fake_duplicate_pfam]
-        assert fake_duplicate_pfam.gene_ontologies == fake_pfam.gene_ontologies
-        assert duplicate_with_different_version.gene_ontologies == fake_pfam.gene_ontologies
+        assert fake_duplicate_pfam.gene_ontologies['pfam2go'] == fake_results.pfam_domains_with_gos[fake_duplicate_pfam]
+        assert fake_duplicate_pfam.gene_ontologies['pfam2go'] == fake_pfam.gene_ontologies['pfam2go']
+        assert duplicate_with_different_version.gene_ontologies['pfam2go'] == fake_pfam.gene_ontologies['pfam2go']
 
     def test_adding_to_wrong_record(self):
-        fake_record = Record(Seq("ATGTTATGAGGGTCATAACAT", generic_dna))
-        fake_pfam_location = FeatureLocation(0, 12)
-        fake_pfam = PFAMDomain(location=fake_pfam_location, description='MCPsignal')
-        fake_pfam.db_xref = ['PF00015']
-        fake_record.add_pfam_domain(fake_pfam)
+        # fake_record = Record(Seq("ATGTTATGAGGGTCATAACAT", generic_dna))
+        # fake_pfam_location = FeatureLocation(0, 12)
+        # fake_pfam = PFAMDomain(location=fake_pfam_location, description='MCPsignal')
+        # fake_pfam.db_xref = ['PF00015']
+        # fake_record.add_pfam_domain(fake_pfam)
+        fake_record = self.set_record(['PF00015'])
         gos_for_fake_pfam = pfam2go.get_gos_for_pfams(fake_record)
         fake_results = pfam2go.Pfam2GoResults('FAKEID', gos_for_fake_pfam)
         with self.assertRaisesRegex(ValueError, "Record to store in and record analysed don't match"):
             fake_results.add_to_record(fake_record)
 
     def test_to_json(self):
-        fake_record = Record(Seq("ATGTTATGAGGGTCATAACAT", generic_dna))
+        # fake_record = Record(Seq("ATGTTATGAGGGTCATAACAT", generic_dna))
         fake_pfam_location = FeatureLocation(0, 12)
-        fake_pfam = PFAMDomain(location=fake_pfam_location, description='MCPsignal')
-        fake_pfam.db_xref = ['PF00015']
-        fake_record.add_pfam_domain(fake_pfam)
+        # fake_pfam = PFAMDomain(location=fake_pfam_location, description='MCPsignal')
+        # fake_pfam.db_xref = ['PF00015']
+        # fake_record.add_pfam_domain(fake_pfam)
+        fake_record = self.set_record(['PF00015'])
         fake_other_pfam = PFAMDomain(location=fake_pfam_location, description='MCPsignal')
         fake_other_pfam.db_xref = ['PF00351']
         fake_record.add_pfam_domain(fake_other_pfam)
         gos_for_fake_pfam = pfam2go.get_gos_for_pfams(fake_record)
         fake_results = pfam2go.Pfam2GoResults(fake_record.id, gos_for_fake_pfam)
         result_json = fake_results.to_json()
-        print(result_json)
         expected_result = {"pfams": {"PF00015": [("GO:0004871", "signal transducer activity"),
                                                  ("GO:0007165", "signal transduction"),
                                                  ("GO:0016020", "membrane")],
@@ -218,19 +249,24 @@ class PfamToGoTest(unittest.TestCase):
             assert expected_result["pfams"][pfam] == result_json["pfams"][pfam]
 
     def test_from_json(self):
-        fake_record = Record(Seq("ATGTTATGAGGGTCATAACAT", generic_dna))
+        #fake_record = Record(Seq("ATGTTATGAGGGTCATAACAT", generic_dna))
         fake_pfam_location = FeatureLocation(0, 12)
-        fake_pfam = PFAMDomain(location=fake_pfam_location, description='MCPsignal')
-        fake_pfam.db_xref = ['PF00015']
-        fake_record.add_pfam_domain(fake_pfam)
+        #fake_pfam = PFAMDomain(location=fake_pfam_location, description='MCPsignal')
+        #fake_pfam.db_xref = ['PF00015']
+        #fake_record.add_pfam_domain(fake_pfam)
+        fake_record = self.set_record(['PF00015'])
         fake_other_pfam = PFAMDomain(location=fake_pfam_location, description='MCPsignal')
         fake_other_pfam.db_xref = ['PF00351']
         fake_record.add_pfam_domain(fake_other_pfam)
+        fake_pfam_no_gos = PFAMDomain(location=fake_pfam_location, description='MCPsignal')
+        fake_pfam_no_gos.db_xref = ['PF05147']
+        fake_record.add_pfam_domain(fake_pfam_no_gos)
         gos_for_fake_pfam = pfam2go.get_gos_for_pfams(fake_record)
         fake_results = pfam2go.Pfam2GoResults(fake_record.id, gos_for_fake_pfam)
         result_json = fake_results.to_json()
         results_from_json = pfam2go.Pfam2GoResults.from_json(result_json, fake_record)
-        for pfam in results_from_json.pfam_domains_with_gos.keys():
+        assert 'PF05147' not in result_json["pfams"]
+        for pfam in results_from_json.pfam_domains_with_gos:
             for pfam_id in pfam.db_xref:
                 assert pfam_id in result_json["pfams"]
         from_json_to_json = results_from_json.to_json()
