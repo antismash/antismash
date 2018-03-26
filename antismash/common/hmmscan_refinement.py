@@ -42,6 +42,12 @@ class HMMResult:
         """ Converts the instance into a dictionary for use in json formats """
         return {key: getattr(self, key) for key in self.__slots__}
 
+    @staticmethod
+    def from_json(data: Dict[str, Union[str, int, float]]) -> "HMMResult":
+        """ Rebuilds a HMMResult instance from a JSON representation """
+        return HMMResult(data["hit_id"], data["query_start"], data["query_end"],
+                         data["evalue"], data["bitscore"])
+
     def __repr__(self):
         return str(self)
 
