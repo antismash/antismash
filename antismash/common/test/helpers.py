@@ -151,9 +151,15 @@ def run_and_regenerate_results_for_module(input_file, module, options,
     # not the responsibility of modules, but if it's wrong then everything is
     assert len(results.results) == expected_record_count
     assert len(results.records) == expected_record_count
+    # ensure all detection stages add their relevant parts
+    modules_to_regenerate = antismash.main.get_detection_modules()
+    # don't try and regenerate twice
+    if not module in modules_to_regenerate:
+        modules_to_regenerate.append(module)
     if expected_record_count == 1:
         regenerated = antismash.main.regenerate_results_for_record(results.records[0],
-                                     options, [module], results.results[0])
+                                     options, modules_to_regenerate,
+                                     results.results[0])
         final = regenerated[module.__name__]
         assert isinstance(final, module_results.ModuleResults)
     else:
