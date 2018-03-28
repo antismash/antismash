@@ -14,6 +14,8 @@ __pycache__
 antismash/config/instance.cfg
 antismash/detection/hmm_detection/data/bgc_seeds.hmm
 antismash/databases/*
+antismash.egg-info/*
+**/.ropeproject/*
 
 # keep these, even in locations that are ignored
 !antismash/databases/README
