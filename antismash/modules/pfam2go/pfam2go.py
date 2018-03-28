@@ -1,7 +1,8 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
-# initial test if approach even works... later, maybe check for Pfam ids of interest first and only work with these?
+"""Maps Pfam IDs of Pfam domains found in the record to Gene Ontology terms, using the Pfam domains to Gene Ontology
+term mapping supplied on geneontology.org. Current mapping used: version 02/24/2018"""
 
 import logging
 from collections import defaultdict
@@ -14,6 +15,7 @@ from antismash.common.secmet.record import Record
 
 
 class GeneOntology:
+    """A single Gene Ontology term; holds Gene Ontology ID and its human-readable description."""
     def __init__(self, _id: str, description: str):
         if not _id.startswith('GO:'):
             raise ValueError('Invalid Gene Ontology ID: {0}'.format(_id))
@@ -26,6 +28,7 @@ class GeneOntology:
 
 
 class GeneOntologies:
+    """A collection of all Gene Ontology terms for a Pfam ID."""
     def __init__(self, pfam: str, gos: List[GeneOntology]):
         self.pfam = str(pfam)
         assert self.pfam.startswith('PF')
@@ -38,36 +41,37 @@ class GeneOntologies:
 
 class Pfam2GoResults(ModuleResults):
     """Holds results for Pfam to Gene Ontology module."""
-    # schema version needed?
+    schema_version = 1
+
     def __init__(self, record_id: str, pfam_domains_with_gos: Dict[PFAMDomain, List[GeneOntologies]]):
         super().__init__(record_id)
         #  store mapping of PFAM domain ID and GO terms
         self.pfam_domains_with_gos = pfam_domains_with_gos
 
     def add_to_record(self, record: Record):
+        """Adds Gene Ontologies objects to the respective Pfam domains."""
         if record.id != self.record_id:
             raise ValueError("Record to store in and record analysed don't match")
         for domain, all_ontologies in self.pfam_domains_with_gos.items():
-            #domain.gene_ontologies = all_ontologies
             domain.gene_ontologies['pfam2go'] = all_ontologies
 
     def to_json(self) -> Dict[str, Any]:
         """ Construct a JSON representation of this instance """
-        # first, awful attempt
-        jsonfile = {"pfams": {}, "record_id": self.record_id}
-        for pfam, all_ontologies in self.pfam_domains_with_gos.items():
+        jsonfile = {"pfams": {}, "record_id": self.record_id, "schema_version": Pfam2GoResults.schema_version}
+        for all_ontologies in self.pfam_domains_with_gos.values():
             for ontologies in all_ontologies:
                 jsonfile["pfams"][ontologies.pfam] = [(str(go_entry), go_entry.description)
                                                       for go_entry in ontologies.go_entries]
         return jsonfile
 
     @staticmethod
-    def from_json(json: Dict[str, Any], record) -> "Pfam2GoResults":
+    def from_json(json: Dict[str, Any], record: Record) -> "Pfam2GoResults":
         """ Constructs a new Pfam2GoResults instance from a json format and the
             original record analysed.
         """
-        #  schema version check?
-        #  record id check?
+        if json["schema_version"] != Pfam2GoResults.schema_version:
+            logging.warning("Schema version mismatch, discarding Pfam2GO results")
+            return None
         all_pfam_ids_to_ontologies = defaultdict(list)
         for domain in record.get_pfam_domains():
             for pfam_id in domain.db_xref:
@@ -80,7 +84,10 @@ class Pfam2GoResults(ModuleResults):
         return results
 
 
-def build_as_i_go(mapfile) -> Dict[str, GeneOntologies]:
+def construct_mapping(mapfile) -> Dict[str, GeneOntologies]:
+    """Read a file mapping Pfam IDs to Gene Ontology terms, then convert to a dictionary matching Pfam IDs to
+    collections of all Gene Ontology terms for these IDs.
+    """
     results = {}
     gene_ontology_per_pfam = defaultdict(list)
     with open(path.get_full_path(__file__, mapfile), 'r') as pfam_map:
@@ -101,10 +108,18 @@ def build_as_i_go(mapfile) -> Dict[str, GeneOntologies]:
     return results
 
 
-def get_gos_for_pfams(record) -> Dict[PFAMDomain, List[GeneOntologies]]:
+def get_gos_for_pfams(record: Record) -> Dict[PFAMDomain, List[GeneOntologies]]:
+    """ Find Gene Ontology terms for a record's Pfam domains.
+
+    Arguments:
+        record: Record instance to annotate with Gene Ontology information
+
+    Returns:
+        A dictionary mapping a specific PFAMDomain instance to a list of GeneOntologies within the PFAMDomain.
+    """
     pfam_domains_with_gos = defaultdict(list)
     pfams = record.get_pfam_domains()
-    full_gomap_as_ontologies = build_as_i_go('data/pfam2go-march-2018.txt')
+    full_gomap_as_ontologies = construct_mapping('data/pfam2go-march-2018.txt')
     if not pfams:
         logging.info('No Pfam domains found')
     for pfam in pfams:
@@ -112,12 +127,11 @@ def get_gos_for_pfams(record) -> Dict[PFAMDomain, List[GeneOntologies]]:
         if not pfam_ids:
             logging.info('No Pfam ids found')
         for pfam_id in pfam_ids:
-            pfam_id = pfam_id.partition('.')[0]  # strip out version number; supposedly faster than split
-            if not pfam_id.isalnum() or not pfam_id.startswith('PF'):
+            pfam_id = pfam_id.partition('.')[0]  # strip out version number
+            if not pfam_id.isalnum() or not pfam_id.startswith('PF'): # TODO: change to "must be PF followed by number"
                 # invalid ID shouldn't break anything, but should be noticed
-                logging.warning('Pfam id {0} is not a valid Pfam id, skipping'.format(pfam_id))
+                logging.warning('Pfam id %s is not a valid Pfam id, skipping', pfam_id)
             gene_ontologies_for_pfam = full_gomap_as_ontologies.get(pfam_id)
             if gene_ontologies_for_pfam:
                 pfam_domains_with_gos[pfam].append(gene_ontologies_for_pfam)
     return pfam_domains_with_gos
-

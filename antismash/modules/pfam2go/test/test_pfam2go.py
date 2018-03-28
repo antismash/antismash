@@ -79,7 +79,7 @@ class PfamToGoTest(unittest.TestCase):
 
     def test_build_as_i_go(self):
         data = path.get_full_path(os.path.dirname(__file__), 'data/pfam2go-march-2018.txt')
-        ontologies_per_pfam = pfam2go.build_as_i_go(data)
+        ontologies_per_pfam = pfam2go.construct_mapping(data)
         for ontology in ontologies_per_pfam.values():
             self.assertIsInstance(ontology, pfam2go.GeneOntologies)
         for pfam, go_ids in self.known_connections.items():
@@ -173,8 +173,10 @@ class PfamToGoTest(unittest.TestCase):
                                                  ("GO:0016020", "membrane")],
                                      "PF00351": [("GO:0016714", "oxidoreductase activity, acting on paired donors, with incorporation or reduction of molecular oxygen, reduced pteridine as one donor, and incorporation of one atom of oxygen"),
                                                  ("GO:0055114", "oxidation-reduction process")]},
-                           "record_id": fake_record.id}
+                           "record_id": fake_record.id,
+                           "schema_version": 1}
         assert result_json["record_id"] == expected_result["record_id"]
+        assert result_json["schema_version"] == 1
         for pfam in expected_result["pfams"]:
             assert expected_result["pfams"][pfam] == result_json["pfams"][pfam]
 
@@ -192,6 +194,7 @@ class PfamToGoTest(unittest.TestCase):
                 assert pfam_id in result_json["pfams"]
         from_json_to_json = results_from_json.to_json()
         assert result_json == from_json_to_json  # JSONception
+        assert from_json_to_json["schema_version"] == 1
 
 
 if __name__ == '__main__':
