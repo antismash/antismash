@@ -150,7 +150,7 @@ $(document).ready(function() {
   $('.cluster-rules-header').click(toggle_cluster_rules);
 
   switch_to_cluster();
-  draw_structures()
+  draw_structures();
 });
 
 function draw_structures () {
