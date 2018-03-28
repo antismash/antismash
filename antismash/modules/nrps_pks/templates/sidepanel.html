@@ -1,7 +1,7 @@
 <div class="structure">
   <h3>Predicted core structure</h3>
     {% if cluster.smiles_structure %}
-    <canvas id="smiles-canvas-{{cluster.get_cluster_number()}}" class="smiles-canvas" data-smiles="{{cluster.smiles_structure}}" width="200" height="200" style="border:1px solid #000000;"></canvas>
+    <canvas id="smiles-canvas-{{cluster.get_cluster_number()}}" class="smiles-canvas" data-smiles="{{cluster.smiles_structure}}" width="250" height="250"></canvas>
     {% else %}
     <a class = "structure-link" href="{{cluster.get_structure_image_url()}}" target="_new">
       <img src="{{cluster.get_structure_image_url()}}">

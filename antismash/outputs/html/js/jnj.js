@@ -154,16 +154,32 @@ $(document).ready(function() {
 });
 
 function draw_structures () {
-  let options = {
-      width: 200,
-      height: 200,
-  };
-  let smilesDrawer = new SmilesDrawer.Drawer(options);
 
   $('.smiles-canvas').each(  function(counter) {
+    //Draw structure on a 250x250 canvas
+    let options = {
+        width: 250,
+        height: 250,
+    };
+    let smilesDrawer = new SmilesDrawer.Drawer(options);
     let canvas = this;
     SmilesDrawer.parse(canvas.getAttribute('data-smiles'), function(tree) {
             smilesDrawer.draw(tree, canvas, 'light', false);
         });
+    //Calculate extra vertical space left for this structure
+    drawing_height = smilesDrawer.canvasWrapper.drawingHeight;
+    drawing_width = smilesDrawer.canvasWrapper.drawingWidth;
+    vertical_size = (drawing_height/drawing_width) * 250;
+    options = {
+        width: 250,
+        height: vertical_size * 0.8 //remove a bit of extra white space
+    };
+    //Draw it again; THIS IS NOT VERY ELEGANT, BUT WELL...
+    smilesDrawer = new SmilesDrawer.Drawer(options);
+    canvas.height = vertical_size;
+    SmilesDrawer.parse(canvas.getAttribute('data-smiles'), function(tree) {
+            smilesDrawer.draw(tree, canvas, 'light', false);
+        });
     })
+  
 }
