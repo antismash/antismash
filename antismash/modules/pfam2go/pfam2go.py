@@ -80,26 +80,6 @@ class Pfam2GoResults(ModuleResults):
         return results
 
 
-def parse_all_mappings(mapfile):
-    go_ids_by_pfam = defaultdict(list)
-    go_desc_by_id = {}
-    with open(path.get_full_path(__file__, mapfile), 'r') as pfam_map:
-        for line in pfam_map:
-            if line.startswith('!'):
-                continue
-            both_info = line.split(' > ')
-            pfam_info = both_info[0]
-            go_info = both_info[1].strip()
-            pfam_split = pfam_info.split(' ')
-            pfam_id = pfam_split[0].replace('Pfam:', '')
-            go_split = go_info.split(' ; ')
-            go_id = go_split[1]
-            go_readable = go_split[0].replace('GO:', '')
-            go_ids_by_pfam[pfam_id].append(go_id)
-            go_desc_by_id[go_id] = go_readable
-    return go_ids_by_pfam, go_desc_by_id
-
-
 def build_as_i_go(mapfile) -> Dict[str, GeneOntologies]:
     results = {}
     gene_ontology_per_pfam = defaultdict(list)
@@ -118,24 +98,6 @@ def build_as_i_go(mapfile) -> Dict[str, GeneOntologies]:
             gene_ontology_per_pfam[pfam_id].append(GeneOntology(go_id, go_readable))
     for pfam, ontology_list in gene_ontology_per_pfam.items():
         results[pfam] = GeneOntologies(pfam, ontology_list)
-    return results
-
-
-def construct_gene_ontologies(pfam: str, go_ids: List, go_desc_by_id: Dict) -> GeneOntologies:
-    gene_ontologies = []
-    for go_id in go_ids:
-        if go_id not in go_desc_by_id:
-            raise ValueError('Gene Ontology ID has no associated description: %s.' % go_id)
-        gene_ontology = GeneOntology(go_id, go_desc_by_id[go_id])
-        gene_ontologies.append(gene_ontology)
-    return GeneOntologies(pfam, gene_ontologies)
-
-
-def build_at_the_end(go_ids_by_pfam: Dict, go_desc_by_id: Dict) -> Dict[str, GeneOntologies]:
-    results = {}
-    for pfam in go_ids_by_pfam:
-        construction = construct_gene_ontologies(pfam, go_ids_by_pfam[pfam], go_desc_by_id)
-        results[pfam] = construction
     return results
 
 

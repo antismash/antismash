@@ -38,34 +38,6 @@ class PfamToGoTest(unittest.TestCase):
         fake_record = DummyRecord(features=pfam_domains)
         return fake_record
 
-    def test_parse_mappings(self):
-        data = path.get_full_path(os.path.dirname(__file__), 'data/pfam2go-march-2018.txt')
-        go_ids_by_pfam, go_desc_by_id = pfam2go.parse_all_mappings(data)
-        # make sure all go ids actually have associated descriptions
-        for go_ids_found in go_ids_by_pfam.values():
-            for go_id in go_ids_found:
-                assert go_id in go_desc_by_id
-        # see if GO ids work
-        for pfam, go_ids in self.known_connections.items():
-            self.assertEqual(go_ids, go_ids_by_pfam[pfam])
-
-    def test_build_at_the_end(self):
-        data = path.get_full_path(os.path.dirname(__file__), 'data/pfam2go-march-2018.txt')
-        go_ids_by_pfam, go_desc_by_id = pfam2go.parse_all_mappings(data)
-        # for now: sanity check, is this even working off good data?
-        for go_ids_found in go_ids_by_pfam.values():
-            for go_id in go_ids_found:
-                assert go_id in go_desc_by_id
-        ontologies_per_pfam = pfam2go.build_at_the_end(go_ids_by_pfam, go_desc_by_id)
-        for ontologies in ontologies_per_pfam.values():
-            self.assertIsInstance(ontologies, pfam2go.GeneOntologies)
-
-    def test_construct_ontologies(self):
-        data = path.get_full_path(os.path.dirname(__file__), 'data/pfam2go-march-2018.txt')
-        go_ids_by_pfam, go_desc_by_id = pfam2go.parse_all_mappings(data)
-        for pfam in go_ids_by_pfam:
-            ontology_tested = pfam2go.construct_gene_ontologies(pfam, go_ids_by_pfam[pfam], go_desc_by_id)
-            self.assertIsInstance(ontology_tested, pfam2go.GeneOntologies)
 
     def test_gene_ontologies(self):
         # does it use arguments given? How is bad input handled?
@@ -104,13 +76,6 @@ class PfamToGoTest(unittest.TestCase):
             pfam2go.GeneOntology(fail_id, working_description)
         with self.assertRaises(AssertionError):
             pfam2go.GeneOntology(working_id, fail_description)
-
-    def test_ontology_fails_when_bad_input(self):
-        bad_ids = {'PF00015': ['GO:004871', 'GO:0007165', 'GO:0016020']}
-        data = path.get_full_path(os.path.dirname(__file__), 'data/pfam2go-march-2018.txt')
-        go_desc_by_id = pfam2go.parse_all_mappings(data)[1]
-        with self.assertRaisesRegex(ValueError, "Gene Ontology ID has no associated description: GO:004871"):
-            pfam2go.construct_gene_ontologies('PF00015', bad_ids['PF00015'], go_desc_by_id)
 
     def test_build_as_i_go(self):
         data = path.get_full_path(os.path.dirname(__file__), 'data/pfam2go-march-2018.txt')
