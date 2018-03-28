@@ -24,9 +24,9 @@ class PfamToGoTest(unittest.TestCase):
 
     def check_add_to_record(self, input_file, results):
         record = record_processing.parse_input_sequence(input_file)[0]
-        assert record.get_pfam_domains()
-        for domain in record.get_pfam_domains():
-            assert not domain.gene_ontologies['pfam2go']
+        #assert record.get_pfam_domains()
+        #for domain in record.get_pfam_domains():
+        #    assert not domain.gene_ontologies['pfam2go']
         results.add_to_record(record)
         for domain in record.get_pfam_domains():
             if domain.gene_ontologies['pfam2go']:
@@ -44,35 +44,22 @@ class PfamToGoTest(unittest.TestCase):
                                              "PF00486": {"GO:0003677": "DNA binding",
                                                          "GO:0000160": "phosphorelay signal transduction system",
                                                          "GO:0006355": "regulation of transcription, DNA-templated"}}
-        expected_pfams_without_gos = ["PF05147", "PF04738"]
-        pfams_found_with_ids = []
+        expected_pfams_found = set()
         for pfam, all_ontologies in results.pfam_domains_with_gos.items():
-            pfam_ids_without_versions = [pfam_id.partition('.')[0] for pfam_id in pfam.db_xref]
+            pfam_ids_without_versions = [pfam_id.partition(".")[0] for pfam_id in pfam.db_xref]
+            # make sure the Pfams without gos aren't in the results
+            assert "PF05147" not in pfam_ids_without_versions and "PF04738" not in pfam_ids_without_versions
             for ontologies in all_ontologies:
+                # make sure GeneOntologies' pfam id actually is one found in the domain's ids
                 assert ontologies.pfam in pfam_ids_without_versions
-                pfams_found_with_ids.append(ontologies.pfam)
+                # did it find the right amount of GO IDs for the sample Pfams, and did it find the right ones?
                 if ontologies.pfam in expected_pfams_and_gos_with_descs:
+                    expected_pfams_found.add(ontologies.pfam)
                     go_ids = [str(go_entry) for go_entry in ontologies.go_entries]
                     assert len(go_ids) == len(expected_pfams_and_gos_with_descs[ontologies.pfam])
                     for go_id in go_ids:
                         assert go_id in expected_pfams_and_gos_with_descs[ontologies.pfam]
+        # make sure all expected pfams have been found
+        assert len(expected_pfams_found) == len(expected_pfams_and_gos_with_descs)
 
-
-        # for pfam in results.pfam_domains_with_gos:
-        #     for pfam_id in pfam.db_xref:
-        #         pfam_id_without_version = pfam_id.partition('.')[0]
-        #         pfams_found_with_ids.append(pfam_id_without_version)
-        #         # did it find the right amount of GO IDs for the sample Pfams, and did it find the right ones?
-        #         if pfam_id_without_version in expected_pfams_and_gos_with_descs:
-        #             for ontologies in results.pfam_domains_with_gos[pfam]:
-        #                 if ontologies.pfam == pfam_id_without_version:
-        #                     go_ids = [str(go_entry) for go_entry in ontologies.go_entries]
-        #                     assert len(go_ids) == len(expected_pfams_and_gos_with_descs[pfam_id_without_version])
-        #                     for go_id in go_ids:
-        #                         assert go_id in expected_pfams_and_gos_with_descs[pfam_id_without_version]
-        #  did it find and assign Gene Ontology IDs to all Pfam IDs expected to have some?
-        for expected_pfam in expected_pfams_and_gos_with_descs:
-            assert expected_pfam in pfams_found_with_ids
-        # does adding to the record work?
-        for expected_not_found in expected_pfams_without_gos:
-            assert expected_not_found not in pfams_found_with_ids
+        self.check_add_to_record(nisin, results)
