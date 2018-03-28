@@ -140,6 +140,6 @@ def run_hmmer(record: Record, features: List[CDSFeature], max_evalue: float,
     if not os.path.exists(database):
         raise ValueError("Given database does not exist: %s" % database)
     query_sequence = fasta.get_fasta_from_features(features)
-    hmmscan_results = subprocessing.run_hmmscan(database, query_sequence)
+    hmmscan_results = subprocessing.run_hmmscan(database, query_sequence, opts=["--cut_tc"])
     hits = build_hits(record, hmmscan_results, min_score, max_evalue, database)
     return HmmerResults(record.id, max_evalue, min_score, database, tool, hits)
