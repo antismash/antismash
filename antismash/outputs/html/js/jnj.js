@@ -150,5 +150,20 @@ $(document).ready(function() {
   $('.cluster-rules-header').click(toggle_cluster_rules);
 
   switch_to_cluster();
-
+  draw_structures()
 });
+
+function draw_structures () {
+  let options = {
+      width: 200,
+      height: 200,
+  };
+  let smilesDrawer = new SmilesDrawer.Drawer(options);
+
+  $('.smiles-canvas').each(  function(counter) {
+    let canvas = this;
+    SmilesDrawer.parse(canvas.getAttribute('data-smiles'), function(tree) {
+            smilesDrawer.draw(tree, canvas, 'light', false);
+        });
+    })
+}
