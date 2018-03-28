@@ -3,16 +3,10 @@
 
 # initial test if approach even works... later, maybe check for Pfam ids of interest first and only work with these?
 
-#from antismash.common.secmet.feature import Feature, FeatureLocation
 import logging
-import os
-import timeit
 from collections import defaultdict
 from typing import Any, Dict, List
 
-from Bio.Alphabet import generic_dna
-from Bio.Seq import Seq
-from Bio.SeqFeature import FeatureLocation
 from antismash.common import path
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet.feature import PFAMDomain
@@ -34,6 +28,7 @@ class GeneOntology:
 class GeneOntologies:
     def __init__(self, pfam: str, gos: List[GeneOntology]):
         self.pfam = str(pfam)
+        assert self.pfam.startswith('PF')
         assert isinstance(gos, list) and gos
         self.go_entries = gos
 
@@ -53,7 +48,6 @@ class Pfam2GoResults(ModuleResults):
         if record.id != self.record_id:
             raise ValueError("Record to store in and record analysed don't match")
         for domain, all_ontologies in self.pfam_domains_with_gos.items():
-            # TODO: currently replaces all gene ontologies
             #domain.gene_ontologies = all_ontologies
             domain.gene_ontologies['pfam2go'] = all_ontologies
 
@@ -148,7 +142,7 @@ def build_at_the_end(go_ids_by_pfam: Dict, go_desc_by_id: Dict) -> Dict[str, Gen
 def get_gos_for_pfams(record) -> Dict[PFAMDomain, List[GeneOntologies]]:
     pfam_domains_with_gos = defaultdict(list)
     pfams = record.get_pfam_domains()
-    full_gomap_as_ontologies = build_as_i_go('pfam2go-march-2018.txt')
+    full_gomap_as_ontologies = build_as_i_go('data/pfam2go-march-2018.txt')
     if not pfams:
         logging.info('No Pfam domains found')
     for pfam in pfams:
@@ -160,42 +154,8 @@ def get_gos_for_pfams(record) -> Dict[PFAMDomain, List[GeneOntologies]]:
             if not pfam_id.isalnum() or not pfam_id.startswith('PF'):
                 # invalid ID shouldn't break anything, but should be noticed
                 logging.warning('Pfam id {0} is not a valid Pfam id, skipping'.format(pfam_id))
-            gene_ontologies_for_pfam = full_gomap_as_ontologies.get(pfam_id, False)
+            gene_ontologies_for_pfam = full_gomap_as_ontologies.get(pfam_id)
             if gene_ontologies_for_pfam:
                 pfam_domains_with_gos[pfam].append(gene_ontologies_for_pfam)
     return pfam_domains_with_gos
 
-
-if __name__ == '__main__':
-    build_as_i_go_stmt = """data = 'pfam2go-march-2018.txt'
-build_as_i_go(data)
-    """
-
-    build_at_the_end_statement = """data = 'pfam2go-march-2018.txt'
-go_ids_by_pfam, go_desc_by_id = parse_all_mappings(data)
-build_at_the_end(go_ids_by_pfam, go_desc_by_id)
-    """
-
-    def build_fake_record():
-        fake_record = Record(Seq("ATGTTATGAGGGTCATAACAT", generic_dna))
-        fake_pfam_location = FeatureLocation(0, 12)
-        fake_pfam = PFAMDomain(location=fake_pfam_location, description='MCPsignal')
-        fake_pfam.db_xref = ['PF02364']
-        fake_record.add_pfam_domain(fake_pfam)
-        return fake_record
-
-    setup_to_json = """from __main__ import build_fake_record, get_gos_for_pfams, Pfam2GoResults
-fake_record = build_fake_record()
-results = Pfam2GoResults(fake_record.id, get_gos_for_pfams(fake_record))
-    """
-    setup_from_json =  """from __main__ import build_fake_record, get_gos_for_pfams, Pfam2GoResults
-fake_record = build_fake_record()
-results = Pfam2GoResults(fake_record.id, get_gos_for_pfams(fake_record))
-results_to_json = results.to_json()
-    """
-
-    #print(timeit.repeat(stmt=build_as_i_go_stmt, number=10, repeat=3, setup='from __main__ import build_as_i_go'))
-    #print(timeit.repeat(stmt=build_at_the_end_statement, number=10, repeat=3, setup='from __main__ import build_at_the_end, parse_all_mappings'))
-    print(timeit.repeat(stmt='results_to_json = results.to_json()', number=10000, repeat=3, setup=setup_to_json))
-    print(timeit.repeat(stmt='results_from_json = Pfam2GoResults.from_json(results_to_json, fake_record)', number=10000,
-                        repeat=3, setup=setup_from_json))
