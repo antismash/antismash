@@ -18,7 +18,7 @@ from Bio.SeqFeature import FeatureLocation
 from helperlibs.wrappers.io import TemporaryDirectory
 
 import antismash
-from antismash.common import serialiser, module_results, path
+from antismash.common import serialiser, module_results, path, record_processing
 from antismash.common.secmet import Cluster, CDSFeature, Feature, Record
 from antismash.config import update_config
 from antismash.config.args import build_parser
@@ -146,6 +146,12 @@ def run_and_regenerate_results_for_module(input_file, module, options,
             raise
         update_config({"output_dir": orig_output})
         results = serialiser.AntismashResults.from_file(json_filename, options.taxon)
+        # remove things that were added by results, because otherwise the add isn't tested by detection
+        # result regeneration
+        # this should eventually include every feature and qualifier created by antismash
+        for record in results.records:
+            record.clear_antismash_domains()
+            record.clear_cds_motifs()
         if callback:
             callback(tempdir)
     # not the responsibility of modules, but if it's wrong then everything is
