@@ -21,12 +21,3 @@ class TestLoadSmiles(unittest.TestCase):
         # and make sure none are empty
         for key, smile in smiles.items():
             assert smile, "smile %s has no smile" % key
-
-
-class TestImageGeneration(unittest.TestCase):
-    def test_depict_ectoine(self):
-        with TemporaryDirectory(change=True) as temp:
-            assert structure_drawer.generate_image(0, "CC1=NCCC(N1)C(=O)O", temp)
-            assert os.path.exists("genecluster0.smi")
-            assert os.path.exists("genecluster0.png")
-            assert os.path.exists("genecluster0_icon.png")
