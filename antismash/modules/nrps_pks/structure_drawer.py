@@ -14,10 +14,6 @@ from helperlibs.wrappers.io import TemporaryDirectory
 
 import antismash.common.path as path
 
-from .external.indigo import Indigo
-from .external.indigo_renderer import IndigoRenderer
-
-
 def gen_smiles_from_pksnrps(compound_pred, cluster_number: int) -> str:
     """ Generates the SMILES string for a specific compound prediction """
     smiles = ""
@@ -76,8 +72,6 @@ def generate_chemical_structure_preds(compound_predictions, record, options) -> 
         if not smiles_string:
             continue
 
-        assert generate_image(cluster_number, smiles_string, structures_dir)
-
         cluster.smiles_structure = smiles_string
 
 
@@ -100,34 +94,3 @@ def load_smiles() -> Dict[str, str]:
     return aa_smiles
 
 
-def generate_image(cluster_number: int, smiles: str, structures_dir: str) -> bool:
-    """ Constructs an image, if possible, of a cluster's product structure """
-    filename = "genecluster%d" % cluster_number
-    png = filename + ".png"
-    smi = filename + ".smi"
-    icon = filename + "_icon.png"
-
-    with TemporaryDirectory(change=True):
-        with open(smi, "w") as handler:
-            handler.write(smiles)
-
-        indigo = Indigo()
-        query = indigo.loadMoleculeFromFile(smi)
-        renderer = IndigoRenderer(indigo)
-        # now that the renderer exists, so does the render-coloring option
-        indigo.setOption("render-coloring", True)
-        renderer.renderToFile(query, png)
-
-        indigo.setOption("render-image-size", 200, 150)
-        renderer.renderToFile(query, icon)
-
-        # was it successful
-        dircontents = os.listdir(os.getcwd())
-        # an exception should be raised by indigo, but just in case
-        if png not in dircontents:
-            return False
-        # if so, move the files to the output dir
-        for filename in [png, icon, smi]:
-            shutil.copy(filename, structures_dir)
-            os.remove(filename)
-    return True
