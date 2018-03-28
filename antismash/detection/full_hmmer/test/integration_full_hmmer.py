@@ -45,7 +45,7 @@ class TestFullHmmer(unittest.TestCase):
 
         results = helpers.run_and_regenerate_results_for_module(nisin, full_hmmer, self.options)
         json = results.to_json()
-        assert len(results.hits) == 24
+        assert len(results.hits) == 13
         self.check_add_to_record(nisin, results)
 
         # test regeneration when thresholds are less restrictive
@@ -62,7 +62,7 @@ class TestFullHmmer(unittest.TestCase):
         self.set_max_evalue(self.original_max_evalue)
 
         # test regeneration when evalue threshold is more restrictive
-        new_evalue_threshold = sorted(hit["evalue"] for hit in results.hits)[12]
+        new_evalue_threshold = sorted(hit["evalue"] for hit in results.hits)[6]
         assert new_evalue_threshold < self.original_max_evalue
         new_hits = []
         for hit in results.hits:
@@ -78,7 +78,7 @@ class TestFullHmmer(unittest.TestCase):
         self.check_add_to_record(nisin, results)
 
         # test regeneration when score threshold is more restrictive
-        new_score_threshold = sorted(hit["score"] for hit in results.hits)[12]
+        new_score_threshold = sorted(hit["score"] for hit in results.hits)[6]
         assert new_score_threshold > full_hmmer.MIN_SCORE
         new_hits = []
         for hit in results.hits:
