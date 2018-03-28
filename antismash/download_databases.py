@@ -237,12 +237,10 @@ def main():
     compile_pfam(os.path.join(LOCAL_FILE_PATH, "detection", "nrps_pks_domains", "data", "dockingdomains.hmm"))
     compile_pfam(os.path.join(LOCAL_FILE_PATH, "detection", "nrps_pks_domains", "data", "ksdomains.hmm"))
     compile_pfam(os.path.join(LOCAL_FILE_PATH, "detection", "nrps_pks_domains", "data", "nrpspksdomains.hmm"))
-    # TODO: readd a compile call for SANDPUMA once that is in
+    # TODO: re-add a compile call for SANDPUMA once that is in
 
     # hmmpress the smcog specific database
     compile_pfam(os.path.join(LOCAL_FILE_PATH, "modules", "smcogs", "data", "smcogs.hmm"))
-
-    # TODO: readd a compile call for ASF p450 once that is in
 
     # TODO: Press the bgc_seeds once there is an antismash.common function for it
 
