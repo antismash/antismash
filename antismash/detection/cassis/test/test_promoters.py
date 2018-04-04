@@ -98,8 +98,7 @@ class TestGetPromoters(unittest.TestCase):
         other_gene = self.add_gene("B", 30, 40, 1)
 
         for strand in [1, -1]:
-            start, end = sorted([30, 40])[::strand]
-            other_gene.location = FeatureLocation(start, end, strand)
+            other_gene.location = FeatureLocation(30, 40, strand)
             print(other_gene.location)
 
             promoters = self.get_promoters(5, 75)
@@ -119,7 +118,7 @@ class TestGetPromoters(unittest.TestCase):
             self.check_single_promoter(promoters[0], "A", 0, 15)
 
     def test_first_gene_reverse(self):
-        gene_of_interest = self.add_gene("A", 20, 10, -1)
+        gene_of_interest = self.add_gene("A", 10, 20, -1)
         mock("enumerate", returns=[(0, gene_of_interest)])
         other_gene = self.add_gene("B", 30, 40, 1)
 
@@ -130,7 +129,7 @@ class TestGetPromoters(unittest.TestCase):
         self.check_single_promoter(promoters[0], "A", 16, 22)
 
         # then reverse the gene and do more thorough testing
-        other_gene.location = FeatureLocation(40, 30, -1)
+        other_gene.location = FeatureLocation(30, 40, -1)
         promoters = self.get_promoters(5, 75)
         assert len(promoters) == 1
         self.check_single_promoter(promoters[0], "A", 10, 25)
@@ -154,8 +153,7 @@ class TestGetPromoters(unittest.TestCase):
         mock("enumerate", returns=[(1, gene_of_interest)])
 
         for strand in [1, -1]:
-            start, end = sorted([10, 20])[::strand]
-            other_gene.location = FeatureLocation(start, end, strand)
+            other_gene.location = FeatureLocation(10, 20, strand)
             print(other_gene.location)
 
             promoters = self.get_promoters(5, 75)
@@ -177,12 +175,11 @@ class TestGetPromoters(unittest.TestCase):
     def test_last_gene_reverse(self):
         other_gene = self.add_gene("A", 10, 20, 1)
         # ensure coverage only considers this gene of interest
-        gene_of_interest = self.add_gene("B", 40, 30, -1)
+        gene_of_interest = self.add_gene("B", 30, 40, -1)
         mock("enumerate", returns=[(1, gene_of_interest)])
 
         for strand in [1, -1]:
-            start, end = sorted([10, 20])[::strand]
-            other_gene.location = FeatureLocation(start, end, strand)
+            other_gene.location = FeatureLocation(10, 20, strand)
             print(other_gene.location)
 
             promoters = self.get_promoters(5, 75)
@@ -202,13 +199,13 @@ class TestGetPromoters(unittest.TestCase):
             self.check_single_promoter(promoters[0], "B", 35, 99)
 
     def test_special_case(self):
-        first = self.add_gene("A", 20, 10, -1)
+        first = self.add_gene("A", 10, 20, -1)
         second = self.add_gene("B", 30, 50, 1)
 
         promoters = self.get_promoters(5, 5)
         assert len(promoters) == 1
-        assert second.location.end > second.location.start + 5
-        assert first.location.start > first.location.end + 5
+        assert second.location.start + 5 < second.location.end
+        assert first.location.start + 5 < first.location.end
         self.check_combined_promoter(promoters[0], "A", "B", 15, 35)
 
         promoters = self.get_promoters(5, 15)
@@ -217,18 +214,18 @@ class TestGetPromoters(unittest.TestCase):
         assert second.location.end > second.location.start + 15
         self.check_combined_promoter(promoters[0], "A", "B", 10, 45)
 
-        first.location = FeatureLocation(35, 10, -1)
+        first.location = FeatureLocation(10, 35, -1)
         second.location = FeatureLocation(45, 60, 1)
 
         promoters = self.get_promoters(25, 20)
         assert len(promoters) == 1
-        assert first.location.start > first.location.end + 20
-        assert not second.location.end > second.location.start + 20
+        assert first.location.start + 20 < first.location.end
+        assert not second.location.start + 20 < second.location.end
         self.check_combined_promoter(promoters[0], "A", "B", 15, 60)
 
         promoters = self.get_promoters(25, 30)
-        assert not second.location.end > second.location.start + 30
-        assert not first.location.start > first.location.end + 30
+        assert not second.location.start + 30 < second.location.end
+        assert not first.location.start + 30 < first.location.end
         assert len(promoters) == 1
         self.check_combined_promoter(promoters[0], "A", "B", 10, 60)
 
@@ -239,8 +236,7 @@ class TestGetPromoters(unittest.TestCase):
         mock("enumerate", returns=[(1, gene_of_interest)])
 
         for strand in [-1, 1]:
-            start, end = sorted([other.location.start, other.location.end])[::strand]
-            other.location = FeatureLocation(start, end, strand)
+            other.location = FeatureLocation(other.location.start, other.location.end, strand)
 
             promoters = self.get_promoters(5, 5)
             assert len(promoters) == 1
@@ -261,12 +257,11 @@ class TestGetPromoters(unittest.TestCase):
     def test_normal_case_reverse(self):
         self.add_gene("A", 10, 20, 1)
         gene_of_interest = self.add_gene("B", 40, 60, -1)
-        other = self.add_gene("C", 80, 70, -1)
+        other = self.add_gene("C", 70, 80, -1)
         mock("enumerate", returns=[(1, gene_of_interest)])
 
         for strand in [-1]:
-            start, end = sorted([other.location.start, other.location.end])[::strand]
-            other.location = FeatureLocation(start, end, strand)
+            other.location = FeatureLocation(other.location.start, other.location.end, strand)
 
             promoters = self.get_promoters(5, 5)
             assert len(promoters) == 1
