@@ -252,7 +252,7 @@ class TestCluster(unittest.TestCase):
             self.record.remove_cds_feature(cds)
         assert not self.cluster.cds_children
 
-        for end, start in zip(starts, ends):
+        for start, end in zip(starts, ends):
             feature = self.create_cds(start, end, strand=-1)
             self.record.add_cds_feature(feature)
             assert feature.cluster == self.cluster

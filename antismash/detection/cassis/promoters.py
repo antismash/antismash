@@ -103,14 +103,6 @@ def get_promoters(record: Record, genes, upstream_tss: int, downstream_tss: int)
     """
     logging.debug("Computing promoter sequences")
 
-    def first(location):
-        """ Returns the lowest coordinate of the location """
-        return min(location.start, location.end)
-
-    def last(location):
-        """ Returns the highest coordinate of the location """
-        return max(location.start, location.end)
-
     min_promoter_length = 6
     max_promoter_length = (upstream_tss + downstream_tss) * 2 + 1
 
@@ -121,15 +113,16 @@ def get_promoters(record: Record, genes, upstream_tss: int, downstream_tss: int)
 
     skip = False  # helper var for shared promoter of bidirectional genes
     for i, gene in enumerate(genes):
-        gene_first = first(gene.location)
-        gene_last = last(gene.location)
+        gene_first = gene.location.start
+        gene_last = gene.location.end
+        assert gene_first < gene_last
 
         downstream_inside_gene = gene_last > gene_first + downstream_tss
         if gene.location.strand not in [1, -1]:
             raise ValueError("Gene %s has unknown strand: %s" % (gene.get_name(), gene.location.strand))
 
         is_special_case = (gene.location.strand == -1 and len(genes) > i + 1 and genes[i+1].location.strand == 1
-                           and gene_last + upstream_tss >= first(genes[i+1].location) - upstream_tss)
+                           and gene_last + upstream_tss >= genes[i+1].location.start - upstream_tss)
 
         if skip:  # two genes share the same promoter --> did computation with first gene, skip second gene
             skip = False
@@ -159,7 +152,7 @@ def get_promoters(record: Record, genes, upstream_tss: int, downstream_tss: int)
                     end = gene_last
                 start = max(0, gene_first - upstream_tss)
             elif gene.location.strand == -1:
-                other_first = first(genes[i+1].location)
+                other_first = genes[i+1].location.start
                 other_in_upstream = other_first <= gene_last + upstream_tss
                 if downstream_inside_gene:  # 4, 5
                     start = gene_last - downstream_tss
@@ -174,7 +167,7 @@ def get_promoters(record: Record, genes, upstream_tss: int, downstream_tss: int)
         # last gene of record
         elif i == len(genes) - 1:
             if gene.location.strand == 1:
-                other_last = last(genes[i-1].location)
+                other_last = genes[i-1].location.end
                 other_inside_upstream = other_last < gene_first - upstream_tss
                 if downstream_inside_gene:  # 1, 2
                     end = gene_first + downstream_tss
@@ -194,8 +187,8 @@ def get_promoters(record: Record, genes, upstream_tss: int, downstream_tss: int)
 
         # special-case 9, bidirectional promoters
         elif is_special_case:
-            other_first = first(genes[i+1].location)
-            other_last = last(genes[i+1].location)
+            other_first = genes[i+1].location.start
+            other_last = genes[i+1].location.end
             other_downstream_in_other = other_last > other_first + downstream_tss
             if downstream_inside_gene:  # 9.. (1+4), (3+4)
                 start = gene_last - downstream_tss
@@ -212,7 +205,7 @@ def get_promoters(record: Record, genes, upstream_tss: int, downstream_tss: int)
         # "normal" cases
         else:
             if gene.location.strand == 1:
-                other_last = last(genes[i-1].location)
+                other_last = genes[i-1].location.end
                 other_inside_upstream = other_last < gene_first - upstream_tss
                 if downstream_inside_gene:  # 1, 2
                     end = gene_first + downstream_tss
@@ -223,7 +216,7 @@ def get_promoters(record: Record, genes, upstream_tss: int, downstream_tss: int)
                 else:  # 2, 7
                     start = other_last + 1
             elif gene.location.strand == -1:
-                other_first = first(genes[i+1].location)
+                other_first = genes[i+1].location.start
                 other_in_upstream = other_first <= gene_last + upstream_tss
                 if downstream_inside_gene:  # 5, 4
                     start = gene_last - downstream_tss

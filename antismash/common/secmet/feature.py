@@ -28,6 +28,7 @@ class Feature:
     def __init__(self, location: FeatureLocation, feature_type: str,
                  created_by_antismash: bool = False) -> None:
         assert isinstance(location, (FeatureLocation, CompoundLocation)), type(location)
+        assert location.start < location.end, "Feature location invalid"
         self.location = location
         self.notes = []  # type: List[str]
         assert feature_type
