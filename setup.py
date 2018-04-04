@@ -21,6 +21,7 @@ install_requires = [
     'numpy',
     'biopython >= 1.70',
     'helperlibs',
+    'jinja2',
     'pysvg-py3',
     'pyExcelerator',
     'bcbio-gff',
