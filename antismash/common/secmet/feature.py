@@ -499,7 +499,9 @@ class AntismashFeature(Feature):
         feature.detection = leftovers.pop("detection", [None])[0]
         feature.label = leftovers.pop("label", [None])[0]
         feature.locus_tag = leftovers.pop("locus_tag", [None])[0]
-        feature.translation = leftovers.pop("translation", [None])[0]
+        translation = leftovers.pop("translation", [None])[0]
+        if translation is not None:
+            feature.translation = translation
         if "evalue" in leftovers:
             feature.evalue = float(leftovers.pop("evalue")[0])
         if "score" in leftovers:
