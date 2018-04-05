@@ -4,28 +4,16 @@
 """ Detection of NRPS/PKS domains within genes
 """
 
-import datetime
-from glob import glob
 import logging
-import os
 from typing import List
 
-from antismash.common import path, subprocessing, module_results
+from antismash.common import path, subprocessing
 from antismash.config.args import ModuleArgs
 
-from .domain_identification import annotate_domains
+from .domain_identification import generate_domains, NRPSPKSDomains
 
 NAME = "nrps_pks_domains"
 SHORT_DESCRIPTION = "NRPS/PKS domain identification"
-
-class NRPSPKSDomains(module_results.ModuleResults):
-    def to_json(self):
-        logging.critical("nrps_pks_domains results always empty")
-        return {}
-
-    def add_to_record(self, record):
-        # as a detection module, results already added
-        pass
 
 
 def get_arguments() -> ModuleArgs:
@@ -49,15 +37,15 @@ def is_enabled(options) -> bool:
     return True
 
 
-def regenerate_previous_results(results, record, options) -> None:
-    # always rerun like other detection stages
-    return None
+def regenerate_previous_results(results, record, _options) -> NRPSPKSDomains:
+    return NRPSPKSDomains.from_json(results, record)
 
 
-def run_on_record(record, _previous_results, options) -> module_results.ModuleResults:
+def run_on_record(record, _previous_results, options) -> NRPSPKSDomains:
     logging.debug('Marking NRPS/PKS genes and domains in clusters')
-    annotate_domains(record)
-    return NRPSPKSDomains(record.id)
+    results = generate_domains(record)
+    results.add_to_record(record)
+    return results
 
 
 def check_prereqs() -> List[str]:
