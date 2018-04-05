@@ -5,10 +5,10 @@
     predictions into a final, potentially modified, result.
 """
 
-
 import logging
-
 from typing import Dict, List, Set, Tuple
+
+from antismash.common.secmet.feature import CDSFeature
 
 LONG_TO_SHORT = {'Malonyl-CoA': 'mal', 'Methylmalonyl-CoA': 'mmal', 'Methoxymalonyl-CoA': 'mxmal',
                  'Ethylmalonyl-CoA': 'emal', 'Isobutyryl-CoA': 'isobut', '2-Methylbutyryl-CoA': '2metbut',
@@ -43,7 +43,8 @@ def calculate_individual_consensus(predictions: List[str], available_smiles_part
     return best
 
 
-def calculate_consensus_prediction(genes, results) -> Tuple[Dict[str, str], Dict[str, str]]:
+def calculate_consensus_prediction(genes: List[CDSFeature], results: Dict[str, str]
+                                   ) -> Tuple[Dict[str, str], Dict[str, str]]:
     """ Uses all calculations to generate smiles parts to use
 
         Arguments:
@@ -167,12 +168,12 @@ def update_prediction(locus: str, preds: Dict[str, str], target: str,
                 preds[key] = mapping.get(current, current)
 
 
-def modify_monomer_predictions(genes, predictions) -> None:
+def modify_monomer_predictions(genes: List[CDSFeature], predictions: Dict) -> None:
     """ Modifies monomer predictions based on domain construction chain. Changes
         the predictions in place.
 
         Arguments:
-            gene_domains: a dictionary mapping gene name to a list of domain names
+            genes: a dictionary mapping gene name to a list of domain names
                           in the order they are found in the gene
             predictions:
 
@@ -180,7 +181,6 @@ def modify_monomer_predictions(genes, predictions) -> None:
             None
 
     """
-
     # for modifications, e.g. mal -> ohmal
     # must be the same length and ordering as the lists generation below
     # i.e. for each mapping there must be exactly one domain position list

@@ -41,6 +41,7 @@ def check_options(options) -> List[str]:
     """
     return []
 
+
 def is_enabled(options) -> bool:
     """  Uses the supplied options to determine if the module should be run
     """

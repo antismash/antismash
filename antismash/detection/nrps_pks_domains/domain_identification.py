@@ -274,11 +274,12 @@ def generate_domain_features(record, gene: CDSFeature, domains: List[HMMResult])
         else:
             nrXdom += 1
             new_feature.domain_id = "nrpspksdomains_" + gene.get_name().partition(".")[0] + "_Xdom"+'{:02d}'.format(nrXdom)
-        new_features.append(new_feature)
+        assert new_feature.get_name() not in new_features
+        new_features[domain] = new_feature
     return new_features
 
 
-def generate_motif_features(record: Record, feature: CDSFeature, motifs) -> List[CDSMotif]:
+def generate_motif_features(record: Record, feature: CDSFeature, motifs: List[HMMResult]) -> List[CDSMotif]:
     """ Convert a list of HMMResult to a list of CDSMotif features """
     # use a locus tag if one exists
     locus_tag = feature.get_name()
