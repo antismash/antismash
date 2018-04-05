@@ -51,8 +51,7 @@ def run_kr_analysis(queries: Dict[str, str]) -> Tuple[Dict[str, bool], Dict[str,
     """ Extract activity and stereochemistry signatures from KR domains
 
         Arguments:
-            input_file: the fasta file to read queries from
-            out_file: a filename, if provided, writes results to file as well
+            queries: a mapping of query CDS name to sequence
 
         Returns:
             a pair of dicts, one mapping query name to activity bool,
