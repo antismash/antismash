@@ -233,7 +233,8 @@ def find_possible_orders(genes: List[CDSFeature], start_gene: CDSFeature,
         end = [end_gene]
     for order in list(itertools.permutations(genes_to_order, len(genes_to_order))):
         possible_orders.append(start + list(order) + end)
-    return possible_orders
+    # ensure the list of possible orders is itself ordered for reliability
+    return sorted(possible_orders, key=lambda x: [g.location.start for g in x])
 
 
 def rank_biosynthetic_orders(n_terminal_residues, c_terminal_residues,
