@@ -25,7 +25,7 @@ class TestAddingToRecord(unittest.TestCase):
     def test_classification_with_colon(self):
         # since SMCOG id and description are stored in a string separated by :,
         # ensure that descriptions containing : are properly handled
-        cds = CDSFeature(FeatureLocation(0, 100), locus_tag="test", translation="AAA")
+        cds = helpers.DummyCDS(locus_tag="test")
         record = helpers.DummyRecord(features=[cds], seq="A"*100)
         record.add_cluster(helpers.DummyCluster(0, 100))
         results = SMCOGResults(record.id)

@@ -42,7 +42,7 @@ class ClusterFinderTest(unittest.TestCase):
                                                  (1090, 1100, 0.8, 'PF02401'),
                                                  (1100, 1110, 0.32, 'PF04369'),
                                                  (1110, 1120, 1.0, 'PF00128')]:
-            location = FeatureLocation(start, end)
+            location = FeatureLocation(start, end, strand=1)
             self.record.add_cds_feature(CDSFeature(location, locus_tag=str(start)))
             pfam = PFAMDomain(location, "dummy_description")
             pfam.domain_id = "pfam_%d" % start
