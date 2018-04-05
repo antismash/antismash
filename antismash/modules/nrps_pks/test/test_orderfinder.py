@@ -72,32 +72,51 @@ class TestNTerminalExtract(unittest.TestCase):
 
 
 class TestOrdering(unittest.TestCase):
+    def setUp(self):
+        self.gene_mapping = {"a": DummyCDS(1, 2, locus_tag="a"),
+                             "b": DummyCDS(3, 4, locus_tag="b"),
+                             "c": DummyCDS(5, 6, locus_tag="c"),
+                             "e": DummyCDS(7, 8, locus_tag="e")}
+        self.genes = list(self.gene_mapping.values())
+
+    def run_ordering_simple(self, start, end, gene_list=None):
+        start_gene = self.gene_mapping.get(start)
+        end_gene = self.gene_mapping.get(end)
+        if gene_list is None:
+            gene_list = "abc"
+        genes = [self.gene_mapping[name] for name in gene_list]
+        orders = orderfinder.find_possible_orders(genes, start_gene, end_gene)
+        simple_orders = []
+        for order in orders:
+            simple_orders.append([g.locus_tag for g in order])
+        return simple_orders
+
     def run_ranking_as_genes(self, n_terms, c_terms, orders):
-        genes = {name: DummyCDS(1, 2, locus_tag=name) for name in orders[0]}
+        genes = {name: DummyCDS(locus_tag=name) for name in orders[0]}
         gene_orders = [[genes[k] for k in order] for order in orders]
         res = orderfinder.rank_biosynthetic_orders(n_terms, c_terms, gene_orders)
         if isinstance(orders[0], str):
             return "".join(gene.locus_tag for gene in res)
-        return [gene.locus_tag for gene in res]
+        return [gene.get_name() for gene in res]
 
     def test_permutations_no_start_no_end(self):
-        perms = orderfinder.find_possible_orders(list("abc"), "", "")
+        perms = self.run_ordering_simple("", "")
         assert perms == [["a", "b", "c"], ["a", "c", "b"],
                          ["b", "a", "c"], ["b", "c", "a"],
                          ["c", "a", "b"], ["c", "b", "a"]]
 
     def test_permutations_end_only(self):
-        perms = orderfinder.find_possible_orders(list("abc"), "", "a")
+        perms = self.run_ordering_simple("", "a")
         assert perms == [["b", "c", "a"], ["c", "b", "a"]]
 
     def test_permutations_start_only(self):
-        perms = orderfinder.find_possible_orders(list("abc"), "a", "")
+        perms = self.run_ordering_simple("a", "")
         assert perms == [["a", "b", "c"], ["a", "c", "b"]]
 
     def test_permutations_start_and_end(self):
-        perms = orderfinder.find_possible_orders(list("abc"), "a", "b")
+        perms = self.run_ordering_simple("a", "b")
         assert perms == [["a", "c", "b"]]
-        perms = orderfinder.find_possible_orders(list("abce"), "a", "b")
+        perms = self.run_ordering_simple("a", "b", "abce")
         assert perms == [["a", "c", "e", "b"], ["a", "e", "c", "b"]]
 
     def test_finding_end_gene(self):
@@ -204,16 +223,23 @@ class TestOrdering(unittest.TestCase):
         assert best == "BAC"
 
     def test_order_C002271_c19(self):  # pylint: disable=invalid-name
+        cdss = {}
+        for i, name in enumerate(["STAUR_3972", "STAUR_3982", "STAUR_3983",
+                                  "STAUR_3984", "STAUR_3985"]):
+            cdss[name] = DummyCDS(start=i*10, end=i*10+1, locus_tag=name)
+
         n_terms = {'STAUR_3972': 'L-', 'STAUR_3982': 'ER',
                    'STAUR_3983': 'DK', 'STAUR_3984': 'SQ',
                    'STAUR_3985': 'SV'}
-        c_terms = {'STAUR_3972': 'ES', 'STAUR_3983': 'DS',
-                   'STAUR_3984': 'DS', 'STAUR_3985': 'DS'}
-        start = ""
-        end = "STAUR_3982"
+        c_terms = {'STAUR_3972': 'ES', 'STAUR_3982': '--',
+                   'STAUR_3983': 'DS', 'STAUR_3984': 'DS',
+                   'STAUR_3985': 'DS'}
+        start = None
+        end = cdss["STAUR_3982"]
         # there are multiple orders of equal score, but sort for simple testing
-        possible_orders = sorted(orderfinder.find_possible_orders(list(n_terms), start, end))
-        best = self.run_ranking_as_genes(n_terms, c_terms, possible_orders)
+        possible_orders = orderfinder.find_possible_orders(list(cdss.values()), start, end)
+        best = orderfinder.rank_biosynthetic_orders(n_terms, c_terms, possible_orders)
+        best = [gene.get_name() for gene in best]
         assert best == ['STAUR_3983', 'STAUR_3972', 'STAUR_3984', 'STAUR_3985', 'STAUR_3982']
 
 
