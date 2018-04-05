@@ -532,8 +532,6 @@ class Domain(AntismashFeature):
             mine["aSTool"] = [self.tool]
         if self.domain:
             mine["aSDomain"] = [self.domain]
-        if self.domain_id:
-            mine["aSDomain_id"] = [self.domain_id]
         if qualifiers:
             mine.update(qualifiers)
         return super().to_biopython(mine)
