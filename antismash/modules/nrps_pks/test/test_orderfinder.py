@@ -7,10 +7,23 @@
 import os
 import unittest
 
-from antismash.common import path
+from antismash.common import path, secmet
 from antismash.common.test.helpers import DummyCDS
 from antismash.detection.nrps_pks_domains import domain_identification
 from antismash.modules.nrps_pks import orderfinder
+
+
+class DummyNRPSQualfier(secmet.qualifiers.NRPSPKSQualifier):
+    def __init__(self):
+        super().__init__(strand=1)
+
+    @property
+    def domain_names(self):
+        return self._domain_names
+
+    @domain_names.setter
+    def domain_names(self, names):
+        self._domain_names = names
 
 
 class TestCTerminalExtract(unittest.TestCase):
@@ -130,7 +143,8 @@ class TestOrdering(unittest.TestCase):
                   "STAUR_3984": ['PKS_KS', 'PKS_AT', 'PKS_DH', 'PKS_KR', 'ACP']}
         genes = {}
         for name, domains in inputs.items():
-            cds = DummyCDS(1, 2, locus_tag=name)
+            cds = DummyCDS(locus_tag=name)
+            cds.nrps_pks = DummyNRPSQualfier()
             cds.nrps_pks.domain_names = domains
             genes[name] = cds
         start, end = orderfinder.find_first_and_last_genes(genes.values())
@@ -152,7 +166,8 @@ class TestOrdering(unittest.TestCase):
                   "STAUR_3985": ['ACP', 'PKS_KS', 'PKS_AT', 'PKS_DH', 'PKS_KR', 'ACP']}
         genes = {}
         for name, domains in inputs.items():
-            cds = DummyCDS(1, 2, locus_tag=name)
+            cds = DummyCDS(locus_tag=name)
+            cds.nrps_pks = DummyNRPSQualfier()
             cds.nrps_pks.domain_names = domains
             genes[name] = cds
         # no starts
@@ -251,6 +266,7 @@ class TestEnzymeCounter(unittest.TestCase):
     def run_finder(self, names, all_domains, types=None):
         genes = [DummyCDS(1, 2, locus_tag=name) for name in names]
         for gene in genes:
+            gene.nrps_pks = DummyNRPSQualfier()
             gene.nrps_pks.domain_names = all_domains[gene.get_name()]
             if not types:
                 gene.nrps_pks.type = domain_identification.classify_cds(all_domains[gene.get_name()])
