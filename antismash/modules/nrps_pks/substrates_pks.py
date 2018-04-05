@@ -36,7 +36,7 @@ def extract_at_domains(genes: List[CDSFeature]) -> Dict[str, str]:
         for domain in domains:
             if domain.name == "PKS_AT":
                 seq = str(gene.translation)[domain.start:domain.end]
-                results[locus + domain.label] = seq
+                results[domain.feature_name] = seq
     return results
 
 
@@ -61,13 +61,10 @@ def run_minowa_predictor_pks_cal(genes: List[CDSFeature]) -> minowa_base.MinowaR
     logging.info("Predicting CAL domain substrate specificities by Minowa et al. method")
     for gene in genes:
         locus = gene.get_name()
-        count = 0
         for domain in gene.nrps_pks.domains:
             if domain.name == "CAL_domain":
-                count += 1
                 seq = str(gene.translation)[domain.start:domain.end]
-                name = locus + "_CAL" + str(count)
-                cal_domains[name] = seq
+                cal_domains[domain.feature_name] = seq
     with TemporaryDirectory(change=True):
         minowa_results = minowa_cal.run_minowa_cal(cal_domains)
     return minowa_results
@@ -81,12 +78,9 @@ def run_kr_stereochemistry_predictions(genes) -> Tuple[Dict[str, bool], Dict[str
                  "fingerprints from Starcevic et al.")
     for gene in genes:
         locus = gene.get_name()
-        count = 0
         for domain in gene.nrps_pks.domains:
             if domain.name == "PKS_KR":
-                count += 1
                 seq = str(gene.translation)[domain.start:domain.end]
-                name = locus + "_KR" + str(count)
-                queries[name] = seq
+                queries[domain.feature_name] = seq
     activity, stereo = kr_analysis.run_kr_analysis(queries)
     return activity, stereo

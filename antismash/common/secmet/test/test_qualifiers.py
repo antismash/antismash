@@ -19,7 +19,7 @@ class TestNRPSPKS(unittest.TestCase):
             domain = HMMResult(pks_type, 1, 1, 1, 1)
             suffix = suffix + "%d"
             for i in range(3):
-                qualifier.add_domain(domain)
+                qualifier.add_domain(domain, "missing")
                 expected.add(suffix % (i + 1))
         assert len(qualifier.domains) == 3 * len(types)
         assert {domain.label for domain in qualifier.domains} == expected
@@ -36,7 +36,7 @@ class TestNRPSPKS(unittest.TestCase):
         qualifier = NRPSPKSQualifier()
         assert isinstance(qualifier, list)
         for pks in ["PKS_AT", "AMP-binding"]:
-            qualifier.add_domain(HMMResult(pks, 1, 1, 1, 1))
+            qualifier.add_domain(HMMResult(pks, 1, 1, 1, 1), "missing")
             qualifier.add_subtype(pks + "dummy")
         assert len(qualifier) == 4
         for i in qualifier:

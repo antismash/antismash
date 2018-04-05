@@ -74,46 +74,43 @@ def calculate_consensus_prediction(genes, results) -> Tuple[Dict[str, str], Dict
                               'Bmt', 'Adds', 'DHpg', 'DHB', 'nrp', 'pk'}
 
     for feature in genes:
-        locus = feature.get_name()
-
         for domain in feature.nrps_pks.domains:
             if 'OTHER' in domain.label:
                 continue
-            domain_name = locus + domain.label
             if 'transatpks' not in feature.cluster.products:
                 if domain.name == "PKS_AT":
                     preds = []
-                    if results["minowa_at"].get(domain_name):
-                        pred = results["minowa_at"][domain_name][0][0]
+                    if results["minowa_at"].get(domain.feature_name):
+                        pred = results["minowa_at"][domain.feature_name][0][0]
                         preds.append(LONG_TO_SHORT.get(pred))
-                    if results["signature"].get(domain_name):
-                        preds.append(results["signature"][domain_name][0].name.rsplit("_", 1)[-1])
+                    if results["signature"].get(domain.feature_name):
+                        preds.append(results["signature"][domain.feature_name][0].name.rsplit("_", 1)[-1])
                     consensus = calculate_individual_consensus(preds, available_smiles_parts)
-                    non_trans_at[domain_name] = consensus
+                    non_trans_at[domain.feature_name] = consensus
             else:
                 if domain.name == "PKS_AT":
                     preds = []
-                    if results["minowa_at"].get(domain_name):
-                        pred = results["minowa_at"][domain_name][0][0]
+                    if results["minowa_at"].get(domain.feature_name):
+                        pred = results["minowa_at"][domain.feature_name][0][0]
                         preds.append(LONG_TO_SHORT.get(pred))
-                    if results["signature"].get(domain_name):
-                        preds.append(results["signature"][domain_name][0].name.rsplit("_", 1)[-1])
+                    if results["signature"].get(domain.feature_name):
+                        preds.append(results["signature"][domain.feature_name][0].name.rsplit("_", 1)[-1])
                     consensus = calculate_individual_consensus(preds, available_smiles_parts)
-                    trans_at[domain_name] = consensus
+                    trans_at[domain.feature_name] = consensus
                 # For chemical display purpose for chemicals from trans-AT PKS gene cluster
                 # mal is always assumed for trans-AT
                 elif domain.name == "PKS_KS":
-                    non_trans_at[domain_name] = "mal"
+                    non_trans_at[domain.feature_name] = "mal"
             if domain.name in ["AMP-binding", "A-OX"]:
-                non_trans_at[domain_name] = "nrp"
+                non_trans_at[domain.feature_name] = "nrp"
             elif domain.name == "CAL_domain":
-                pred = results["minowa_cal"][domain_name][0][0]
+                pred = results["minowa_cal"][domain.feature_name][0][0]
                 pred = LONG_TO_SHORT.get(pred, pred)
                 if pred in available_smiles_parts:
-                    non_trans_at[domain_name] = pred
+                    non_trans_at[domain.feature_name] = pred
                 else:
-                    logging.critical("missing %s from SMILES parts for domain %s", pred, domain_name)
-                    non_trans_at[domain_name] = "pk"
+                    logging.critical("missing %s from SMILES parts for domain %s", pred, domain.feature_name)
+                    non_trans_at[domain.feature_name] = "pk"
     return non_trans_at, trans_at
 
 
@@ -159,7 +156,7 @@ def update_prediction(locus: str, preds: Dict[str, str], target: str,
     """
     assert len(lists) == len(mappings)
     for idx, target_element in enumerate(target_list):
-        key = locus + target + str(idx + 1)
+        key = "nrpspksdomains_" + locus + target + str(idx + 1)
         for sublist, mapping in zip(lists, mappings):
             for position in sublist:
                 if not target_element < position:

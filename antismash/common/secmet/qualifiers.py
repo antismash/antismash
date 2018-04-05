@@ -35,18 +35,25 @@ class NRPSPKSQualifier(list):
     class Domain:
         """ Contains information about a NRPS/PKS domain, including predictions
             made by modules.
+
+            feature_name is identical to that of the AntismashDomain that contains
+            this same information
         """
         __slots__ = ["name", "label", "start", "end", "evalue", "bitscore",
-                     "predictions"]
+                     "predictions", "feature_name"]
 
         def __init__(self, name: str, label: str, start: int, end: int,
-                     evalue: float, bitscore: float) -> None:
+                     evalue: float, bitscore: float, feature_name: str) -> None:
             self.label = str(label)
             self.name = str(name)
             self.start = int(start)
             self.end = int(end)
             self.evalue = float(evalue)
             self.bitscore = float(bitscore)
+            if feature_name:
+                self.feature_name = str(feature_name)
+            else:
+                self.feature_name = None
             self.predictions = {}  # type: Dict[str, str] # method to prediction name
 
         def __repr__(self):
@@ -90,11 +97,17 @@ class NRPSPKSQualifier(list):
         assert isinstance(subtype, str)
         self.subtypes.append(subtype)
 
-    def add_domain(self, domain) -> None:
+    def add_domain(self, domain, feature_name: str) -> None:
         """ Adds a domain to the current set.
 
-            The domain should be a HMMResult-like object
-            (see: antismash.common.hmmscan_refinement.HMMResult).
+            Arguments:
+                domain: the domain to add, this should be a HMMResult-like object
+                        (see: antismash.common.hmmscan_refinement.HMMResult).
+                feature_name: the name of the matching AntismashDomain feature
+                              in the same record as this qualifier
+
+            Returns:
+                None
         """
         assert not isinstance(domain, str)
         if domain.hit_id == "PKS_AT":
@@ -117,7 +130,7 @@ class NRPSPKSQualifier(list):
             suffix = "_OTHER%d" % self.other_counter
 
         self.domains.append(NRPSPKSQualifier.Domain(domain.hit_id, suffix,
-                domain.query_start, domain.query_end, domain.evalue, domain.bitscore))
+                domain.query_start, domain.query_end, domain.evalue, domain.bitscore, feature_name))
         self.domain_names.append(domain.hit_id)
 
 
