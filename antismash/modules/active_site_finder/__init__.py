@@ -28,9 +28,8 @@ class ASFResults(module_results.ModuleResults):
 
     def to_json(self) -> Dict[str, List[str]]:
         json = {"schema version": self.schema_version,
-                "record id": self.record_id}
-        for feature, results in self.pairings:
-            json[feature.domain_id] = (feature.type, results)
+                "record id": self.record_id,
+                "pairings": [(feature.get_name(), results) for feature, results in self.pairings]}
         return json
 
     @staticmethod
@@ -40,8 +39,13 @@ class ASFResults(module_results.ModuleResults):
             return None
         if record.id != json.pop("record id", None):
             raise ValueError("ASF results contained mismatching record ids")
-        # TODO: fetch the domain from the record using domain id
-        return ASFResults(record.id, list(json.values()))
+
+        pairings = []
+        for domain_name, labels in json["pairings"]:
+            domain = record.get_domain_by_name(domain_name)
+            pairings.append((domain, labels))
+
+        return ASFResults(record.id, pairings)
 
     def add_to_record(self, record):
         assert record.id == self.record_id
