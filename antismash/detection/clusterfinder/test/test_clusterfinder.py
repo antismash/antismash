@@ -45,6 +45,7 @@ class ClusterFinderTest(unittest.TestCase):
             location = FeatureLocation(start, end)
             self.record.add_cds_feature(CDSFeature(location, locus_tag=str(start)))
             pfam = PFAMDomain(location, "dummy_description")
+            pfam.domain_id = "pfam_%d" % start
             pfam.db_xref.append(pfam_id)
             pfam.probability = probability
             self.record.add_pfam_domain(pfam)

@@ -53,8 +53,8 @@ class IntegrationNRPSPKS(unittest.TestCase):
                 assert not val
                 continue
             assert len(val) == 1
-            assert len(val["pks_CAL1"]) == 5
-            assert val["pks_CAL1"][0] == ["AHBA", 167.0]
+            assert len(val["nrpspksdomains_pks_CAL1"]) == 5
+            assert val["nrpspksdomains_pks_CAL1"][0] == ["AHBA", 167.0]
         # when the NRPS subsections are added, this needs to change
         assert results.nrps == {}
         # as does this, though it still won't use domain docking
@@ -65,13 +65,13 @@ class IntegrationNRPSPKS(unittest.TestCase):
         filename = path.get_full_path(__file__, 'data', 'CP002271.1.cluster019.gbk')
         results = helpers.run_and_regenerate_results_for_module(filename, nrps_pks, self.options)
         # catch ordering changes along with ensuring ATResults are there
-        assert results.pks.method_results["signature"]["STAUR_3982_AT1"][0].score == 87.5
+        assert results.pks.method_results["signature"]["nrpspksdomains_STAUR_3982_AT1"][0].score == 87.5
         # ensure all genes are present and have the right consensus
-        assert results.consensus == {'STAUR_3982_AT1': 'ohmmal',
-                                     'STAUR_3983_AT1': 'ccmmal',
-                                     'STAUR_3984_AT1': 'ccmmal',
-                                     'STAUR_3985_AT1': 'pk',
-                                     'STAUR_3985_AT2': 'pk'}
+        assert results.consensus == {'nrpspksdomains_STAUR_3982_AT1': 'ohmmal',
+                                     'nrpspksdomains_STAUR_3983_AT1': 'ccmmal',
+                                     'nrpspksdomains_STAUR_3984_AT1': 'ccmmal',
+                                     'nrpspksdomains_STAUR_3985_AT1': 'pk',
+                                     'nrpspksdomains_STAUR_3985_AT2': 'pk'}
         # check the gene ordering and, in this case, that it used domain docking
         assert results.cluster_predictions == {'1': [
                 '(ccmmal) + (ccmmal) + (pk-pk) + (ohmmal)', True]}
