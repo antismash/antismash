@@ -96,18 +96,18 @@ class TestIntegration(unittest.TestCase):
         "Test thiopeptide prediction for thiostrepton"
         rec = seqio.read(path.get_full_path(__file__, 'data', 'thiostrepton_before_analysis.gbk'))
         rec = secmet.Record.from_biopython(rec, "bacteria")
-        assert rec.get_feature_count() == 27
+        assert rec.get_feature_count() == 25
         # two existing motifs
-        assert len(rec.get_cds_motifs()) == 2
+        assert not rec.get_cds_motifs()
 
         results = thiopeptides.specific_analysis(rec)
         assert len(results.motifs) == 1
         # ensure record not adjusted yet
-        self.assertEqual(27, rec.get_feature_count())
+        assert rec.get_feature_count() == 25
         results.add_to_record(rec)
         # the new motif is added
-        assert rec.get_feature_count() == 28
-        assert len(rec.get_cds_motifs()) == 3
+        assert rec.get_feature_count() == 26
+        assert len(rec.get_cds_motifs()) == 1
         prepeptides = rec.get_cds_motifs()
         prepeptide = None
         for feature in prepeptides:

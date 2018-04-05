@@ -21,7 +21,7 @@ from Bio.SeqFeature import SeqFeature, FeatureLocation
 from Bio.SeqRecord import SeqRecord
 
 from .feature import Feature, CDSFeature, CDSMotif, AntismashDomain, Cluster, \
-                     PFAMDomain, ClusterBorder, Prepeptide, Gene
+                     PFAMDomain, ClusterBorder, Prepeptide, Gene, Domain
 
 
 class Record:
@@ -31,7 +31,7 @@ class Record:
                  "_clusters", "original_id",
                  "_cluster_borders", "_cds_motifs", "_pfam_domains", "_antismash_domains",
                  "_cluster_numbering", "_nonspecific_features", "record_index",
-                 "_genes", "_transl_table"]
+                 "_genes", "_transl_table", "_domains_by_name"]
 
     def __init__(self, seq="", transl_table: int = 1, **kwargs):
         self._record = SeqRecord(seq, **kwargs)
@@ -49,6 +49,7 @@ class Record:
         self._cluster_numbering = {}
         self._nonspecific_features = []
         self._transl_table = int(transl_table)
+        self._domains_by_name = {}  # for use as x[domain.get_name()] = domain
 
     def __getattr__(self, attr):
         # passthroughs to the original SeqRecord
@@ -122,12 +123,18 @@ class Record:
         """ Return the CDS with the given name """
         return self._cds_by_name[name]
 
+    def get_domain_by_name(self, name: str) -> Domain:
+        """ Return the Domain with the given name """
+        return self._domains_by_name[name]
+
     def get_cds_motifs(self) -> Tuple:
         """A list of secondary metabolite CDS_motifs present in the record"""
         return tuple(self._cds_motifs)
 
     def clear_cds_motifs(self) -> None:
         "Remove all CDSMotif features"
+        for motif in self._cds_motifs:
+            del self._domains_by_name[motif.get_name()]
         self._cds_motifs.clear()
 
     def get_pfam_domains(self) -> Tuple:
@@ -140,6 +147,8 @@ class Record:
 
     def clear_antismash_domains(self) -> None:
         "Remove all AntismashDomain features"
+        for domain in self._antismash_domains:
+            del self._domains_by_name[domain.get_name()]
         self._antismash_domains.clear()
 
     def get_generics(self) -> Tuple:
@@ -318,16 +327,31 @@ class Record:
         """ Add the given cluster to the record """
         assert isinstance(motif, (CDSMotif, Prepeptide)), "%s, %s" % (type(motif), motif.type)
         self._cds_motifs.append(motif)
+        assert motif.get_name()
+        if motif.get_name() in self._domains_by_name:
+            raise ValueError("Multiple Domain features have the same name for mapping: %s" %
+                             motif.get_name())
+        self._domains_by_name[motif.get_name()] = motif
 
     def add_pfam_domain(self, pfam_domain: PFAMDomain) -> None:
         """ Add the given cluster to the record """
         assert isinstance(pfam_domain, PFAMDomain)
+        assert pfam_domain.get_name()
         self._pfam_domains.append(pfam_domain)
+        if pfam_domain.get_name() in self._domains_by_name:
+            raise ValueError("Multiple Domain features have the same name for mapping: %s" %
+                             pfam_domain.get_name())
+        self._domains_by_name[pfam_domain.get_name()] = pfam_domain
 
     def add_antismash_domain(self, antismash_domain: AntismashDomain) -> None:
         """ Add the given cluster to the record """
         assert isinstance(antismash_domain, AntismashDomain)
+        assert antismash_domain.get_name()
         self._antismash_domains.append(antismash_domain)
+        if antismash_domain.get_name() in self._domains_by_name:
+            raise ValueError("Multiple Domain features have the same name for mapping: %s" %
+                             antismash_domain.get_name())
+        self._domains_by_name[antismash_domain.get_name()] = antismash_domain
 
     def add_feature(self, feature: Feature) -> None:
         """ Adds a Feature or any subclass to the relevant list """
