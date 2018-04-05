@@ -28,7 +28,7 @@ class GeneOntology:
 
 
 class GeneOntologies:
-    """A collection of all Gene Ontology terms for a Pfam ID."""
+    """A collection of all Gene Ontology terms (as GeneOntology objects) for a Pfam ID."""
     def __init__(self, pfam: str, gos: List[GeneOntology]):
         self.pfam = str(pfam)
         assert self.pfam.startswith('PF')
@@ -49,7 +49,10 @@ class Pfam2GoResults(ModuleResults):
         self.pfam_domains_with_gos = pfam_domains_with_gos
 
     def add_to_record(self, record: Record):
-        """Adds Gene Ontologies objects to the respective Pfam domains."""
+        """Add GeneOntologies objects to the respective PFAMDomains.
+        Arguments:
+            record: Record to which to add GeneOntologies
+        """
         if record.id != self.record_id:
             raise ValueError("Record to store in and record analysed don't match")
         for domain, all_ontologies in self.pfam_domains_with_gos.items():
@@ -68,6 +71,13 @@ class Pfam2GoResults(ModuleResults):
     def from_json(json: Dict[str, Any], record: Record) -> "Pfam2GoResults":
         """ Constructs a new Pfam2GoResults instance from a json format and the
             original record analysed.
+
+            Arguments:
+                json: JSON representation of Pfam2GoResults
+                record: Record analysed
+
+            Returns:
+                A Pfam2GoResults instance constructed from the record and the JSON
         """
         if json["schema_version"] != Pfam2GoResults.schema_version:
             logging.warning("Schema version mismatch, discarding Pfam2GO results")
@@ -86,7 +96,14 @@ class Pfam2GoResults(ModuleResults):
 
 def construct_mapping(mapfile) -> Dict[str, GeneOntologies]:
     """Read a file mapping Pfam IDs to Gene Ontology terms, then convert to a dictionary matching Pfam IDs to
-    collections of all Gene Ontology terms for these IDs.
+    collections of all Gene Ontology terms for these IDs as GeneOntologies objects.
+
+    Arguments:
+        mapfile: the path of the file containing the Pfam ID to GO mappings
+
+    Returns:
+        A dictionary mapping a Pfam ID to a GeneOntologies object containing GeneOntology representations of all GO
+        terms matched to this ID.
     """
     results = {}
     gene_ontology_per_pfam = defaultdict(list)

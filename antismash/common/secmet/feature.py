@@ -588,7 +588,8 @@ class CDSMotif(Domain):
 class PFAMDomain(Domain):
     """ A feature representing a PFAM domain within a CDS.
     """
-    __slots__ = ["description", "db_xref", "probability", "protein_start", "protein_end"]
+    __slots__ = ["description", "db_xref", "probability", "protein_start", "protein_end",
+                 "gene_ontologies"]
 
     def __init__(self, location: FeatureLocation, description: str, protein_start: int,
                  protein_end: int, domain: Optional[str] = None) -> None:
@@ -611,6 +612,8 @@ class PFAMDomain(Domain):
         self.protein_end = int(protein_end)
         if self.protein_start >= self.protein_end:
             raise ValueError("A PFAMDomain protein location cannot end before it starts")
+        self.gene_ontologies = {}  # type: Dict[str, List]
+        #  dictionary mapping lists of GeneOntologies (see pfam2go) to names of modules yielding these results
 
     def to_biopython(self, qualifiers=None):
         mine = OrderedDict()
