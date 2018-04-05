@@ -5,18 +5,99 @@
     features.
 """
 
-from typing import Dict, List
+import logging
+from typing import Any, Dict, List, Optional
 
-from Bio.SeqFeature import FeatureLocation
-
-from antismash.common import path, subprocessing, utils
+from antismash.common import module_results, path, subprocessing, utils
 from antismash.common.fasta import get_fasta_from_features
 from antismash.common.hmmscan_refinement import refine_hmmscan_results, HMMResult
 from antismash.common.secmet.record import Record
 from antismash.common.secmet.feature import AntismashDomain, CDSFeature, CDSMotif
 
 
-def annotate_domains(record: Record) -> None:
+class CDSResult:
+    """ Stores and enables reconstruction of all results for a single CDS """
+    def __init__(self, domain_hmms: List[HMMResult], motif_hmms: List[HMMResult],
+                 feature_type: str) -> None:
+        self.domain_hmms = domain_hmms
+        self.motif_hmms = motif_hmms
+        self.type = feature_type
+
+    def to_json(self) -> Dict[str, Any]:
+        """ Create a JSON representation """
+        return {"domain_hmms": [hmm.to_json() for hmm in self.domain_hmms],
+                "motif_hmms": [hmm.to_json() for hmm in self.motif_hmms],
+                "type": self.type}
+
+    @staticmethod
+    def from_json(data) -> "CDSResult":
+        """ Reconstruct from a JSON representation """
+        domain_hmms = [HMMResult.from_json(hmm) for hmm in data["domain_hmms"]]
+        motif_hmms = [HMMResult.from_json(hmm) for hmm in data["motif_hmms"]]
+        return CDSResult(domain_hmms, motif_hmms, data["type"])
+
+    def annotate_domains(self, record: Record, cds: CDSFeature) -> None:
+        if not self.domain_hmms:
+            return
+
+        cds.nrps_pks.type = self.type
+
+        # generate AntismashDomain features
+        domain_features = generate_domain_features(record, cds, self.domain_hmms)
+        for domain, domain_feature in domain_features.items():
+            record.add_antismash_domain(domain_feature)
+            # update the CDS' NRPS_PKS qualifier
+            cds.nrps_pks.add_domain(domain, domain_feature.get_name())
+
+        # construct CDSMotif features
+        if not self.motif_hmms:
+            return
+
+        motif_features = generate_motif_features(record, cds, self.motif_hmms)
+
+        for motif in motif_features:
+            record.add_cds_motif(motif)
+        cds.motifs.extend(motif_features)
+
+
+class NRPSPKSDomains(module_results.DetectionResults):
+    """ Results tracking for NRPS and PKS domains """
+    schema_version = 1
+
+    def __init__(self, record_id: str):
+        super().__init__(record_id)
+        self.cds_results = {}  # type: Dict[CDSFeature, CDSResult]
+        # for protection against double-adds
+        self.added = False
+
+    def to_json(self) -> Dict[str, List[Any]]:
+        return {"cds_results": {cds.get_name(): cds_result.to_json() for cds, cds_result in self.cds_results.items()},
+                "schema_version": NRPSPKSDomains.schema_version,
+                "record_id": self.record_id}
+
+    @staticmethod
+    def from_json(data: Dict[str, Any], record: Record) -> Optional["NRPSPKSDomains"]:
+        if NRPSPKSDomains.schema_version != data.get("schema_version"):
+            logging.warning("Schema version mismatch, discarding NRPS PKS domain results")
+            return None
+        if record.id != data.get("record_id"):
+            logging.warning("Record identifier mismatch, discarding NRPS PKS domain results")
+            return None
+
+        cds_results = {}
+        for cds_name, cds_result in data["cds_results"].items():
+            cds = record.get_cds_by_name(cds_name)
+            cds_result = CDSResult.from_json(cds_result)
+            cds_result.annotate_domains(record, cds)
+            cds_results[cds] = cds_result
+
+        result = NRPSPKSDomains(record.id)
+        result.cds_results = cds_results
+        result.added = True
+        return result
+
+
+def generate_domains(record: Record) -> NRPSPKSDomains:
     """ Annotates NRPS/PKS domains on CDS features. The `nrps_pks` member of
         each feature will be updated, along with creating CDSMotif features
         when relevant.
@@ -25,8 +106,10 @@ def annotate_domains(record: Record) -> None:
             record: the secmet.Record of which to annotate CDS features
 
         Returns:
-            None
+            a NRPSPKSDomains instance containing all found motifs and domain HMMs for each CDS
     """
+    results = NRPSPKSDomains(record.id)
+
     cds_within_clusters = record.get_cds_features_within_clusters()
     assert cds_within_clusters  # because every cluster should have genes
 
@@ -35,32 +118,17 @@ def annotate_domains(record: Record) -> None:
     cds_motifs = find_ab_motifs(fasta)
 
     for cds in cds_within_clusters:
-        cds_name = cds.get_name()
-        # gather domains and classify
-        domains = cds_domains.get(cds_name)
-        if not domains:
+        domains = cds_domains.get(cds.get_name(), [])
+        motifs = cds_motifs.get(cds.get_name(), [])
+        if not (domains or motifs):
             continue
+        domain_type = classify_cds([domain.hit_id for domain in domains])
+        results.cds_results[cds] = CDSResult(domains, motifs, domain_type)
 
-        # generate domain features
-        domain_features = generate_domain_features(record, cds, domains)
-        for domain_feature in domain_features:
-            record.add_antismash_domain(domain_feature)
-
-        domain_type = classify_feature([domain.hit_id for domain in domains])
-        cds.nrps_pks.type = domain_type
-
-        for domain in domains:
-            cds.nrps_pks.add_domain(domain)
-
-        # construct motif features
-        motifs = cds_motifs.get(cds_name)
-        if not motifs:
-            continue
-        motif_features = generate_motif_features(record, cds, motifs)
-
-        for motif in motif_features:
-            record.add_cds_motif(motif)
-        cds.motifs.extend(motif_features)
+    for cds, cds_result in results.cds_results.items():
+        cds_result.annotate_domains(record, cds)
+    results.added = True
+    return results
 
 
 def filter_nonterminal_docking_domains(record: Record, cds_domains: Dict[str, List[HMMResult]]
@@ -181,7 +249,7 @@ class KetosynthaseCounter:
         return self.iterative > max([self.enediyne, self.trans_at, self.modular])
 
 
-def classify_feature(domain_names: List[str]) -> str:
+def classify_cds(domain_names: List[str]) -> str:
     """ Classifies a CDS based on the type and counts of domains present.
 
         Arguments:
@@ -229,8 +297,18 @@ def classify_feature(domain_names: List[str]) -> str:
     return classification
 
 
-def generate_domain_features(record, gene: CDSFeature, domains: List[HMMResult]) -> List[AntismashDomain]:
-    new_features = []
+def generate_domain_features(record: Record, gene: CDSFeature, domains: List[HMMResult]) -> Dict[HMMResult, AntismashDomain]:
+    """ Generates AntismashDomain features for each provided HMMResult
+
+        Arguments:
+            record: the record the new features will belong to
+            gene: the CDSFeature the domains were found in
+            domains: a list of HMMResults found in the CDSFeature
+
+        Returns:
+            a dictionary mapping the HMMResult used to the matching AntismashDomain
+    """
+    new_features = {}
     nrat = 0
     nra = 0
     nrcal = 0

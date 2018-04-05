@@ -223,7 +223,7 @@ class TestEnzymeCounter(unittest.TestCase):
         for gene in genes:
             gene.nrps_pks.domain_names = all_domains[gene.get_name()]
             if not types:
-                gene.nrps_pks.type = domain_identification.classify_feature(all_domains[gene.get_name()])
+                gene.nrps_pks.type = domain_identification.classify_cds(all_domains[gene.get_name()])
             else:
                 gene.nrps_pks.type = types[gene.get_name()]
         return orderfinder.find_cluster_modular_enzymes(genes)
