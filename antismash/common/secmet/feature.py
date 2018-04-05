@@ -672,6 +672,8 @@ class CDSFeature(Feature):
     def __init__(self, location, translation=None, locus_tag=None, protein_id=None,
                  product=None, gene=None):
         super().__init__(location, feature_type="CDS")
+        if location.strand not in [1, -1]:
+            raise ValueError("Strand must be 1 or -1 for a CDS, not %s" % location.strand)
         # mandatory
         #  codon_start
         #  db_xref

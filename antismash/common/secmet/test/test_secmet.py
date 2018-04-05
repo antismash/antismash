@@ -212,7 +212,7 @@ class TestFeature(unittest.TestCase):
 # since we're about to test assigning to non-slots, shut pylint up
 # pylint: disable=assigning-non-slot
     def test_membership(self):
-        location = FeatureLocation(0, 1)
+        location = FeatureLocation(0, 1, strand=1)
         # Features don't have locus tags
         with self.assertRaises(AttributeError):
             Feature(location, feature_type="none").locus_tag = "something"
@@ -422,14 +422,14 @@ class TestCDSProteinLocation(unittest.TestCase):
         self.cds = CDSFeature(self.location, locus_tag="compound")
 
     def test_simple_location_forward_complete(self):
-        cds = CDSFeature(FeatureLocation(0, 15), locus_tag="simple")
+        cds = CDSFeature(FeatureLocation(0, 15, 1), locus_tag="simple")
         new = cds.get_sub_location_from_protein_coordinates(0, 5)
         extracted = new.extract(self.magic)
         assert extracted == self.magic
         assert extracted.translate() == self.translation
 
     def test_simple_location_forward_partial(self):
-        cds = CDSFeature(FeatureLocation(0, 15), locus_tag="simple")
+        cds = CDSFeature(FeatureLocation(0, 15, 1), locus_tag="simple")
         for start, end in [(1, 5), (0, 3), (2, 3), (1, 4)]:
             print("testing", start, end)
             new = cds.get_sub_location_from_protein_coordinates(start, end)
@@ -608,10 +608,10 @@ class TestCDSProteinLocation(unittest.TestCase):
 class TestCDSFeature(unittest.TestCase):
     def test_required_identifiers(self):
         with self.assertRaises(ValueError):
-            CDSFeature(FeatureLocation(1, 5))
-        assert CDSFeature(FeatureLocation(1, 5), locus_tag="foo")
-        assert CDSFeature(FeatureLocation(1, 5), protein_id="foo")
-        assert CDSFeature(FeatureLocation(1, 5), gene="foo")
+            CDSFeature(FeatureLocation(1, 5, 1))
+        assert CDSFeature(FeatureLocation(1, 5, 1), locus_tag="foo")
+        assert CDSFeature(FeatureLocation(1, 5, 1), protein_id="foo")
+        assert CDSFeature(FeatureLocation(1, 5, 1), gene="foo")
 
 
 class TestGeneFunction(unittest.TestCase):
@@ -634,7 +634,7 @@ class TestGeneFunction(unittest.TestCase):
             assert str(getattr(GeneFunction, member)) == member.lower()
 
     def test_cds_function(self):
-        cds = CDSFeature(FeatureLocation(1, 5), locus_tag="foo")
+        cds = CDSFeature(FeatureLocation(1, 5, 1), locus_tag="foo")
         # default value
         assert cds.gene_functions.get_classification() == GeneFunction.OTHER
         assert cds.gene_function == GeneFunction.OTHER
@@ -668,7 +668,7 @@ class TestGeneFunction(unittest.TestCase):
         assert adds[0].tool == "first_tool"
 
     def test_cds_function_conversion(self):
-        cds = CDSFeature(FeatureLocation(1, 5), locus_tag="foo")
+        cds = CDSFeature(FeatureLocation(1, 5, 1), locus_tag="foo")
         assert cds.gene_function == GeneFunction.OTHER
         assert CDSFeature.from_biopython(cds.to_biopython()[0]).gene_function == GeneFunction.OTHER
         cds.gene_functions.add(GeneFunction.ADDITIONAL, "tool", "desc")
