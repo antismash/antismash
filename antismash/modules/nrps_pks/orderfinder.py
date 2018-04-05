@@ -93,10 +93,8 @@ def generate_substrates_order(geneorder: List[CDSFeature], consensus_predictions
 
     for gene in geneorder:
         consensuses = []
-        gene_name = gene.get_name()
         for domain in gene.nrps_pks.domains:
-            domain_name = gene_name + domain.label
-            consensus = consensus_predictions.get(domain_name)
+            consensus = consensus_predictions.get(domain.feature_name)
             if consensus:
                 consensuses.append(consensus)
         if consensuses:
