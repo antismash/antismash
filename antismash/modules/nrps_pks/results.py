@@ -6,10 +6,7 @@
 import logging
 from typing import Any, Dict
 
-from Bio.SeqFeature import FeatureLocation
-
 from antismash.common.module_results import ModuleResults
-from antismash.common.secmet import AntismashDomain
 
 from .at_analysis.at_analysis import ATSignatureResults
 from .parsers import LONG_TO_SHORT
@@ -114,88 +111,43 @@ class NRPS_PKS_Results(ModuleResults):
         """ Save substrate specificity predictions in NRPS/PKS domain sec_met info of record
         """
 
-        for feature in record.get_nrps_pks_cds_features():
-            x_count = 0
-            nrps_qualifier = feature.nrps_pks
-            new_features = []
-            gene_id = feature.get_name()
+        for cds_feature in record.get_nrps_pks_cds_features():
+            nrps_qualifier = cds_feature.nrps_pks
             for domain in nrps_qualifier.domains:
-                domain_type = domain.name
-                start_aa = domain.start
-                end_aa = domain.end
-                evalue = domain.evalue
-                score = domain.bitscore
-
+                feature = record.get_domain_by_name(domain.feature_name)
                 domain.predictions.clear()
-
-                loc = feature.get_sub_location_from_protein_coordinates(start_aa, end_aa)
-
-                #  set up new CDS_motif feature
-                new_feature = AntismashDomain(loc)
-                new_feature.domain_subtype = domain_type
-                if feature.locus_tag:
-                    new_feature.locus_tag = feature.locus_tag
-                else:
-                    new_feature.locus_tag = gene_id
-                new_feature.detection = "hmmscan"
-                new_feature.database = "nrpspksdomains.hmm"
-                new_feature.evalue = evalue
-                new_feature.score = score
-                if feature.transl_table:
-                    transl_table = feature.transl_table
-                else:
-                    transl_table = 1
-                new_feature.translation = str(new_feature.extract(record.seq).translate(table=transl_table))
-                domainname = gene_id + domain.label
-                if domain_type == "AMP-binding":
-                    new_feature.label = domainname
-                    new_feature.domain_id = "nrpspksdomains_" + domainname
+                if domain.name == "AMP-binding":
+                    # no NRPS predictors right now, so all A domains are 'nrp'
                     domain.predictions["consensus"] = "nrp"
 
-                elif domain_type == "PKS_AT":
-                    new_feature.label = domainname
-                    new_feature.domain_id = "nrpspksdomains_" + domainname
-
+                elif domain.name == "PKS_AT":
                     # For t1pks, t2pks and t3pks
-                    if 'transatpks' not in feature.cluster.products:
-                        consensus = self.consensus[domainname]
+                    if 'transatpks' not in cds_feature.cluster.products:
+                        consensus = self.consensus[domain.feature_name]
                     else:  # for transatpks
-                        consensus = self.consensus_transat[domainname]
-                    pks_sig = self.pks.method_results["signature"][domainname]
+                        consensus = self.consensus_transat[domain.feature_name]
+                    pks_sig = self.pks.method_results["signature"][domain.feature_name]
                     if pks_sig:
                         domain.predictions["PKS signature"] = pks_sig[0].name.rsplit("_", 1)[1]
                     else:
                         domain.predictions["PKS signature"] = _UNKNOWN
-                    minowa = self.pks.method_results["minowa_at"][domainname][0][0]
+                    minowa = self.pks.method_results["minowa_at"][domain.feature_name][0][0]
                     domain.predictions["Minowa"] = LONG_TO_SHORT.get(minowa, minowa)
                     domain.predictions["consensus"] = consensus
 
-                elif domain_type == "CAL_domain":
-                    new_feature.label = domainname
-                    new_feature.domain_id = "nrpspksdomains_" + domainname
-                    minowa = self.pks.method_results["minowa_cal"][domainname][0][0]
+                elif domain.name == "CAL_domain":
+                    minowa = self.pks.method_results["minowa_cal"][domain.feature_name][0][0]
                     domain.predictions["Minowa"] = LONG_TO_SHORT.get(minowa, minowa)
 
-                elif domain_type == "PKS_KR":
-                    new_feature.label = domainname
-                    new_feature.domain_id = "nrpspksdomains_" + domainname
-
+                elif domain.name == "PKS_KR":
                     domain.predictions["KR activity"] = \
-                            "active" if self.pks.method_results["kr_activity"][domainname] else "inactive"
+                            "active" if self.pks.method_results["kr_activity"][domain.feature_name] else "inactive"
                     domain.predictions["KR stereochemistry"] = \
-                            self.pks.method_results["kr_stereochem"].get(domainname, _UNKNOWN)
-                else:
-                    x_count += 1
-                    new_feature.domain_id = "nrpspksdomains_" + gene_id.partition(".")[0] \
-                                            + "_Xdom"+'{:02d}'.format(x_count)
-#                    updated_nrps_qualifier.append(domain) # TODO weird, but should it be done?
+                            self.pks.method_results["kr_stereochem"].get(domain.feature_name, _UNKNOWN)
                 for method, pred in domain.predictions.items():
-                    new_feature.specificity.append("%s: %s" % (method, pred))
-                mapping = DOMAIN_TYPE_MAPPING.get(domain_type)
-                if mapping:
-                    new_feature.domain_subtype = domain_type
-                    new_feature.domain = mapping
-                new_features.append(new_feature)
+                    feature.specificity.append("%s: %s" % (method, pred))
 
-            for new_feature in new_features:
-                record.add_feature(new_feature)
+                mapping = DOMAIN_TYPE_MAPPING.get(domain.name)
+                if mapping:
+                    feature.domain_subtype = domain.name
+                    feature.domain = mapping
