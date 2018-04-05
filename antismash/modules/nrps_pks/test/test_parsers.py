@@ -9,6 +9,7 @@ import unittest
 from antismash.common.test import helpers
 from antismash.modules.nrps_pks import parsers
 
+from .test_orderfinder import DummyNRPSQualfier
 
 class TestNRPSParserMonomerModification(unittest.TestCase):
     def setUp(self):
@@ -24,6 +25,7 @@ class TestNRPSParserMonomerModification(unittest.TestCase):
                     locus_tag = "all"
                 cds = helpers.DummyCDS(1, 2, locus_tag=locus_tag)
                 cds.product = product
+                cds.nrps_pks = DummyNRPSQualfier()
                 cds.nrps_pks.domain_names = domain_names["nrpspksdomains_" + locus_tag]
                 cds.cluster = cluster
                 cluster.add_cds(cds)

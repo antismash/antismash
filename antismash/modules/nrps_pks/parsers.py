@@ -145,8 +145,8 @@ def update_prediction(locus: str, preds: Dict[str, str], target: str,
 
         Arguments:
             locus: the name of the gene
-            preds: a dict mapping domain label (e.g. SCO123_AT1) to prediction
-                   for that domain
+            preds: a dict mapping domain label (e.g. nrpspksdomains_SCO123_AT1)
+                   to a prediction for that domain
             target: "_KS" or "_AT" for checking AT vs trans-AT
             target_list: a list of positions in the gene's domains where target is found
             lists: a list of lists of positions for KR, DH and ER domains

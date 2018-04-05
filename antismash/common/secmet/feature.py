@@ -691,7 +691,7 @@ class CDSFeature(Feature):
         self.product = product
         self.transl_table = "Standard"
         self._sec_met = None  # SecMetQualifier()
-        self._nrps_pks = NRPSPKSQualifier()
+        self._nrps_pks = NRPSPKSQualifier(self.location.strand)
         self.product_prediction = []  # TODO: shift into nrps sub section?
 
         self.motifs = []

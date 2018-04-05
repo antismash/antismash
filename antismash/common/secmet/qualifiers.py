@@ -4,9 +4,11 @@
 """ Classes representing complex qualifiers for features.
 """
 
+import logging
+import bisect
 from collections import defaultdict
 from enum import Enum, unique
-from typing import Dict, List, Generator, Set, Optional, Union
+from typing import Dict, List, Set, Tuple, Optional, Union
 
 
 class ActiveSiteFinderQualifier:
@@ -56,16 +58,22 @@ class NRPSPKSQualifier(list):
                 self.feature_name = None
             self.predictions = {}  # type: Dict[str, str] # method to prediction name
 
+        def __lt__(self, other: "Domain") -> bool:
+            return (self.start, self.end) < (other.start, other.end)
+
         def __repr__(self):
             return "NRPSPKSQualifier.Domain(%s, label=%s, start=%d, end=%d)" % (
                         self.name, self.label, self.start, self.end)
 
-    def __init__(self) -> None:
+    def __init__(self, strand: int) -> None:
         super().__init__()
+        if strand not in [1, -1]:
+            raise ValueError("strand must be 1 or -1, not %s" % strand)
+        self.strand = strand
         self.type = "uninitialised"
         self.subtypes = []  # type: List[str]
-        self.domains = []  # type: List["NRPSPKSQualifier.Domain"]
-        self.domain_names = []  # type: List[str]
+        self._domains = []  # type: List["NRPSPKSQualifier.Domain"]
+        self._domain_names = []  # type: List[str]
         self.predictions = {}
         self.cal_counter = 0
         self.at_counter = 0
@@ -74,6 +82,16 @@ class NRPSPKSQualifier(list):
         self.ks_counter = 0
         self.other_counter = 0
 
+    @property
+    def domains(self) -> Tuple["NRPSPKSQualifier.Domain", ...]:
+        """ Returns a list of Domains added to the qualifier, ordered by position """
+        return tuple(self._domains)
+
+    @property
+    def domain_names(self) -> List[str]:
+        """ Returns a list of domain names in order first to last position on the strand """
+        return self._domain_names
+
     def append(self, _value):
         raise NotImplementedError("Appending to this list won't work, use add_subtype() or add_domain()")
 
@@ -81,7 +99,7 @@ class NRPSPKSQualifier(list):
         raise NotImplementedError("Extending this list won't work")
 
     def __len__(self):
-        return len(self.subtypes) + len(self.domains)
+        return len(self.subtypes) + len(self._domains)
 
     def __iter__(self):
         for domain in self.domains:
@@ -102,7 +120,7 @@ class NRPSPKSQualifier(list):
 
             Arguments:
                 domain: the domain to add, this should be a HMMResult-like object
-                        (see: antismash.common.hmmscan_refinement.HMMResult).
+            (see: antismash.common.hmmscan_refinement.HMMResult).
                 feature_name: the name of the matching AntismashDomain feature
                               in the same record as this qualifier
 
@@ -129,9 +147,12 @@ class NRPSPKSQualifier(list):
             self.other_counter += 1
             suffix = "_OTHER%d" % self.other_counter
 
-        self.domains.append(NRPSPKSQualifier.Domain(domain.hit_id, suffix,
-                domain.query_start, domain.query_end, domain.evalue, domain.bitscore, feature_name))
-        self.domain_names.append(domain.hit_id)
+        new = NRPSPKSQualifier.Domain(domain.hit_id, suffix,
+                                      domain.query_start, domain.query_end,
+                                      domain.evalue, domain.bitscore, feature_name)
+        bisect.insort_right(self._domains, new)
+        # update the domain name list
+        self._domain_names = [domain.name for domain in self._domains]
 
 
 class SecMetQualifier(list):

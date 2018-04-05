@@ -11,7 +11,7 @@ from antismash.common.secmet.qualifiers import NRPSPKSQualifier
 
 class TestNRPSPKS(unittest.TestCase):
     def test_counter(self):
-        qualifier = NRPSPKSQualifier()
+        qualifier = NRPSPKSQualifier(strand=1)
         types = [("PKS_AT", "_AT"), ("PKS_KR", "_KR"), ("CAL_domain", "_CAL"),
                  ("AMP-binding", "_A"), ("PKS_KS", "_KS"), ("ACP", "_OTHER")]
         expected = set()
@@ -25,7 +25,7 @@ class TestNRPSPKS(unittest.TestCase):
         assert {domain.label for domain in qualifier.domains} == expected
 
     def test_no_append(self):
-        qualifier = NRPSPKSQualifier()
+        qualifier = NRPSPKSQualifier(strand=1)
         with self.assertRaisesRegex(NotImplementedError, "Appending to this list won't work"):
             qualifier.append("test")
 
@@ -33,7 +33,7 @@ class TestNRPSPKS(unittest.TestCase):
             qualifier.extend(["test"])
 
     def test_biopython_compatibility(self):
-        qualifier = NRPSPKSQualifier()
+        qualifier = NRPSPKSQualifier(strand=1)
         assert isinstance(qualifier, list)
         for pks in ["PKS_AT", "AMP-binding"]:
             qualifier.add_domain(HMMResult(pks, 1, 1, 1, 1), "missing")
