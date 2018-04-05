@@ -119,6 +119,10 @@ class TestOrdering(unittest.TestCase):
         perms = self.run_ordering_simple("a", "b", "abce")
         assert perms == [["a", "c", "e", "b"], ["a", "e", "c", "b"]]
 
+    def test_same_start_and_end(self):
+        with self.assertRaisesRegex(AssertionError, "Using same gene for start and end of ordering"):
+            self.run_ordering_simple("a", "a")
+
     def test_finding_end_gene(self):
         inputs = {"STAUR_3972": ['PKS_KR'],
                   "STAUR_3982": ['PKS_KS', 'PKS_AT', 'PKS_DH2', 'PKS_KR', 'ACP', 'Thioesterase'],

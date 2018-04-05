@@ -134,6 +134,8 @@ def find_first_and_last_genes(genes: List[CDSFeature]) -> Tuple[Optional[CDSFeat
 
     # find the start
     for gene in genes:
+        if gene == end_gene:
+            continue
         domain_names = gene.nrps_pks.domain_names
         if domain_names[:2] == ["PKS_AT", "ACP"]:
             if start_gene:
@@ -144,6 +146,8 @@ def find_first_and_last_genes(genes: List[CDSFeature]) -> Tuple[Optional[CDSFeat
     # if no AT-ACP start gene, try looking for KS-AT-ACP
     if not start_gene:
         for gene in genes:
+            if gene == end_gene:
+                continue
             domain_names = gene.nrps_pks.domain_names
             if domain_names[:3] == ["PKS_KS", "PKS_AT", "ACP"]:
                 if start_gene:
@@ -209,7 +213,7 @@ def find_possible_orders(genes: List[CDSFeature], start_gene: CDSFeature,
         gene will always be last.
 
         Arguments:
-            genes: a list of all genes, may include start and end
+            genes: a list of all genes, may include start_gene and end_gene
             start_gene: None or the gene with which to start every arrangement
             end_gene: None or the gene with which to end every arrangement
 
@@ -218,6 +222,8 @@ def find_possible_orders(genes: List[CDSFeature], start_gene: CDSFeature,
             provided genes
     """
     assert genes
+    if start_gene or end_gene:
+        assert start_gene != end_gene, "Using same gene for start and end of ordering"
     genes_to_order = []
     for gene in genes:
         if gene == start_gene or gene == end_gene:
