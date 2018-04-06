@@ -76,10 +76,6 @@ class ActiveSiteAnalysis:
         if not self.domains_of_interest:
             return []
 
-        # TODO
-        # run_hmmpfam fails for some cases due to a biopython bug.
-        # run each domain on its own and warn about the bad ones, then continue
-
         # for safety of the tools, rename long domain names to a simple numeric index
         data = fasta.get_fasta_from_features(self.domains_of_interest, numeric_names=True)
         assert data, "empty fasta created"
@@ -104,7 +100,7 @@ class ActiveSiteAnalysis:
         return get_signature(alignment.query, alignment.profile, self.positions) == "".join(self.expected_values)
 
 
-def get_signature(query: str, hmm: str, positions: List[str]) -> str:
+def get_signature(query: str, hmm: str, positions: List[int]) -> str:
     """ Retrieves a signature from an aligned pair based on 1-indexed positions given.
 
         Arguments:

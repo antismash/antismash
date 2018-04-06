@@ -8,7 +8,7 @@ import datetime
 import glob
 import logging
 import os
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from antismash.common import path, subprocessing, module_results, secmet
 from antismash.config.args import ModuleArgs
@@ -20,13 +20,15 @@ SHORT_DESCRIPTION = "ActiveSiteFinder identifies conserved active sites in PFAM_
 
 
 class ASFResults(module_results.ModuleResults):
+    """ Results for active site finder """
     schema_version = 1
-    def __init__(self, record_id: str, pairings: List[Tuple[secmet.feature.AntismashFeature, List[str]]]) -> None:
+
+    def __init__(self, record_id: str, pairings: List[Tuple[secmet.feature.Domain, List[str]]]) -> None:
         # pairing features will be either AntismashDomain or PFAMDomain
         super().__init__(record_id)
         self.pairings = pairings
 
-    def to_json(self) -> Dict[str, List[str]]:
+    def to_json(self) -> Dict[str, Any]:
         json = {"schema version": self.schema_version,
                 "record id": self.record_id,
                 "pairings": [(feature.get_name(), results) for feature, results in self.pairings]}
@@ -54,7 +56,10 @@ class ASFResults(module_results.ModuleResults):
                 feature.asf.add(result)
 
 
-def check_options(options) -> List[str]:
+def check_options(_options) -> List[str]:
+    """ Checks options for conflicts.
+        No extra options, so they can't have conflicts.
+    """
     return []  # TODO: maybe bail if no full_hmmer/cluster_hmmer?
 
 
@@ -116,7 +121,8 @@ def check_prereqs() -> List[str]:
     return failure_messages
 
 
-def get_arguments():
+def get_arguments() -> ModuleArgs:
+    """ Build and return arguments. """
     args = ModuleArgs('Additional analysis', 'asf')
     args.add_analysis_toggle('--asf',
                              dest='asf',
@@ -126,15 +132,18 @@ def get_arguments():
     return args
 
 
-def is_enabled(options):
+def is_enabled(options) -> bool:
+    """ Should the module be run with these options """
     return options.asf
 
 
-def regenerate_previous_results(results, record, _options) -> ASFResults:
+def regenerate_previous_results(results: Dict[str, Any], record: secmet.Record, _options) -> ASFResults:
+    """ Regenerate the previous results from JSON format. """
     return ASFResults.from_json(results, record)
 
 
-def run_on_record(record, results, _options) -> ASFResults:
+def run_on_record(record: secmet.Record, results: Optional[ASFResults], _options) -> ASFResults:
+    """ Run the analysis, unless the previous results apply to the given record """
     if results:
         assert isinstance(results, ASFResults), type(results)
         return results
