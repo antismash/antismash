@@ -17,8 +17,12 @@ from antismash.modules.active_site_finder.common import ActiveSiteAnalysis, Alig
 
 class TestCommon(unittest.TestCase):
     def test_get_signature(self):
-        query = "TYLVTGGAGGIGGQLALWLAD-QGARHLLLTGRS-A-L--PEQdavvsethpqaTAVAVLRQLRERGVNVTYKAVDVADAHAMQATLESRRRA-GM--PPVRGVFHAAGVIDYTLLSDMSGAEMDRVLAAKVSGAWNLHRLLR-EES----VEAFVLFSSGSALLSSPMLGGYAAGNAFLDALAHHRHAQGL--SGTVVNWGFWD--"
-        aln = "tYLitGGlGGLGlslArWLaerrGARrLvLlSRslglpllpsp...........eaqellaeLealGarVrvvacDVtdraavrrllaeiraldtlespPirGViHaAgVLrDallenmtaedfrrVlaPKVdGawnLHeatreddppegsLDFFvlFSSiagllGnpGQanYAAANaFLDAlAryRRarGLRGpAlsinWGaWadv"
+        query = ("TYLVTGGAGGIGGQLALWLAD-QGARHLLLTGRS-A-L--PEQdavvsethpqaTAVAVLRQLRERGVNVTYKAVDVADAH"
+                 "AMQATLESRRRA-GM--PPVRGVFHAAGVIDYTLLSDMSGAEMDRVLAAKVSGAWNLHRLLR-EES----VEAFVLFSSGS"
+                 "ALLSSPMLGGYAAGNAFLDALAHHRHAQGL--SGTVVNWGFWD--")
+        aln = ("tYLitGGlGGLGlslArWLaerrGARrLvLlSRslglpllpsp...........eaqellaeLealGarVrvvacDVtdraav"
+               "rrllaeiraldtlespPirGViHaAgVLrDallenmtaedfrrVlaPKVdGawnLHeatreddppegsLDFFvlFSSiagllG"
+               "npGQanYAAANaFLDAlAryRRarGLRGpAlsinWGaWadv")
         positions = [102]
 
         assert get_signature(query, aln, positions) == "Y"
