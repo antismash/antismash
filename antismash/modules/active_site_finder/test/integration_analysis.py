@@ -29,3 +29,11 @@ class TestAnalyses(unittest.TestCase):
                 assert label
                 assert isinstance(label, str)
             assert isinstance(domain, secmet.AntismashDomain)
+        record = parse_input_sequence(datafile)
+
+        # check the reuse portion works
+        rerun = active_site_finder.run_on_record(record, results, self.options)
+        assert rerun is results  # specifically checking it's the same object
+
+        with self.assertRaisesRegex(AssertionError, "str"):
+            active_site_finder.run_on_record(record, "invalid", self.options)
