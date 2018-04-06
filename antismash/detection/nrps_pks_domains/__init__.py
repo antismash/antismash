@@ -5,7 +5,7 @@
 """
 
 import logging
-from typing import List
+from typing import List, Optional
 
 from antismash.common import path, subprocessing
 from antismash.config.args import ModuleArgs
@@ -41,8 +41,11 @@ def regenerate_previous_results(results, record, _options) -> NRPSPKSDomains:
     return NRPSPKSDomains.from_json(results, record)
 
 
-def run_on_record(record, _previous_results, options) -> NRPSPKSDomains:
+def run_on_record(record, previous_results: Optional[NRPSPKSDomains], options) -> NRPSPKSDomains:
     logging.debug('Marking NRPS/PKS genes and domains in clusters')
+    if previous_results:
+        assert isinstance(previous_results, NRPSPKSDomains)
+        return previous_results
     results = generate_domains(record)
     results.add_to_record(record)
     return results
