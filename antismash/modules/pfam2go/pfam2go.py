@@ -5,6 +5,7 @@
 term mapping supplied on geneontology.org. Current mapping used: version 02/24/2018"""
 
 import logging
+import re
 from collections import defaultdict
 from typing import Any, Dict, List
 
@@ -137,6 +138,13 @@ def get_gos_for_pfams(record: Record) -> Dict[PFAMDomain, List[GeneOntologies]]:
     pfam_domains_with_gos = defaultdict(list)
     pfams = record.get_pfam_domains()
     full_gomap_as_ontologies = construct_mapping('data/pfam2go-march-2018.txt')
+    # define structure of a valid PFAM id
+    valid_pfam_format = re.compile(r'''
+    ^           # Beginning of word -> must start with PF
+    (PF)
+    ([0-9]{5})  # followed by five digits
+    $           # end of word -> no extra characters after number
+    ''', re.VERBOSE | re.IGNORECASE)
     if not pfams:
         logging.info('No Pfam domains found')
     for pfam in pfams:
@@ -145,7 +153,7 @@ def get_gos_for_pfams(record: Record) -> Dict[PFAMDomain, List[GeneOntologies]]:
             logging.info('No Pfam ids found')
         for pfam_id in pfam_ids:
             pfam_id = pfam_id.partition('.')[0]  # strip out version number
-            if not pfam_id.isalnum() or not pfam_id.startswith('PF'): # TODO: change to "must be PF followed by number"
+            if not re.search(valid_pfam_format, pfam_id):
                 # invalid ID shouldn't break anything, but should be noticed
                 logging.warning('Pfam id %s is not a valid Pfam id, skipping', pfam_id)
             gene_ontologies_for_pfam = full_gomap_as_ontologies.get(pfam_id)
