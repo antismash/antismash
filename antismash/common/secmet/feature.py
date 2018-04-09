@@ -546,10 +546,8 @@ class Domain(AntismashFeature):
             assert isinstance(feature, Domain), type(feature)
 
         # grab optional qualifiers
-        if "aSTool" in leftovers:
-            feature.tool = leftovers.pop("aSTool")[0]
-        if "asDomain" in leftovers:
-            feature.domain = leftovers.pop("asDomain")[0]
+        feature.tool = leftovers.pop("aSTool", [None])[0]
+        feature.domain = leftovers.pop("aSDomain", [None])[0]
 
         # grab parent optional qualifiers
         return AntismashFeature.from_biopython(bio_feature, feature=feature, leftovers=leftovers)
@@ -604,8 +602,6 @@ class PFAMDomain(Domain):
             mine["probability"] = [self.probability]
         if self.db_xref:
             mine["db_xref"] = self.db_xref
-        if self.domain is not None:
-            mine["domain"] = self.domain
         if qualifiers:
             mine.update(qualifiers)
         return super().to_biopython(mine)
