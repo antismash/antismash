@@ -667,7 +667,7 @@ class CDSFeature(Feature):
     """ A feature representing a single CDS/gene. """
     __slots__ = ["_translation", "protein_id", "locus_tag", "gene", "product",
                  "transl_table", "_sec_met", "product_prediction", "cluster", "_gene_functions",
-                 "unique_id", "_nrps_pks", "motifs", "_asf"]
+                 "unique_id", "_nrps_pks", "motifs"]
 
     def __init__(self, location, translation=None, locus_tag=None, protein_id=None,
                  product=None, gene=None):
@@ -698,8 +698,6 @@ class CDSFeature(Feature):
 
         if not (protein_id or locus_tag or gene):
             raise ValueError("CDSFeature requires at least one of: gene, protein_id, locus_tag")
-
-        self._asf = ActiveSiteFinderQualifier()
 
         # runtime-only data
         self.cluster = None
@@ -750,11 +748,6 @@ class CDSFeature(Feature):
     def translation(self, translation: str) -> None:
         assert "-" not in translation, "%s contains - in translation" % self.get_name()
         self._translation = str(translation)
-
-    @property
-    def asf(self) -> ActiveSiteFinderQualifier:
-        """ An ActiveSiteFinderQualifier storing active site descriptions """
-        return self._asf
 
     def get_accession(self) -> str:
         "Get the gene ID from protein id, gene name or locus_tag, in that order"
@@ -825,8 +818,6 @@ class CDSFeature(Feature):
             val = getattr(self, attr)
             if val:
                 mine[attr] = [str(val)]
-        if self._asf:
-            mine["ASF"] = self._asf.to_biopython()
         if self._gene_functions:
             mine["gene_functions"] = list(map(str, self._gene_functions))
         # since it's already a list
