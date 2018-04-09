@@ -4,7 +4,6 @@
 """ Classes representing complex qualifiers for features.
 """
 
-import logging
 import bisect
 from collections import defaultdict
 from enum import Enum, unique
@@ -17,13 +16,18 @@ class ActiveSiteFinderQualifier:
     def __init__(self):
         self._hits = set()
 
+    @property
+    def hits(self) -> List[str]:
+        """ Returns a list of all active site notes """
+        return sorted(list(self._hits))
+
     def add(self, label: str) -> None:
         """ Adds an active site presence label to the qualifier. """
         self._hits.add(str(label))
 
     def to_biopython(self) -> List[str]:
         """ Creates a BioPython style qualifier from the qualifier """
-        return sorted(list(self._hits))
+        return self.hits
 
     def __bool__(self) -> bool:
         return bool(self._hits)
