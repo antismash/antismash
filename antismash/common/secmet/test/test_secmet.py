@@ -57,6 +57,7 @@ class TestConversion(unittest.TestCase):
         original.domain_id = "domain_id"
         original.database = "db"
         original.detection = "someprogram"
+        original.domain = "p450"
         original.evalue = 1e-5
         original.score = 5.
         original.locus_tag = "locus"
@@ -64,7 +65,7 @@ class TestConversion(unittest.TestCase):
         original.translation = "ARNDCQ"
         new = PFAMDomain.from_biopython(original.to_biopython()[0])
         for slot in ["db_xref", "tool", "domain_id", "database", "detection",
-                     "evalue", "score", "locus_tag", "label", "translation"]:
+                     "evalue", "score", "locus_tag", "label", "translation", "domain"]:
             assert getattr(original, slot) == getattr(new, slot)
 
 
