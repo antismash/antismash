@@ -324,7 +324,7 @@ class Record:
         self._cds_features.remove(cds_feature)
 
     def add_cds_motif(self, motif: Union[CDSMotif, Prepeptide]) -> None:
-        """ Add the given cluster to the record """
+        """ Add the given CDSMotif to the record """
         assert isinstance(motif, (CDSMotif, Prepeptide)), "%s, %s" % (type(motif), motif.type)
         self._cds_motifs.append(motif)
         assert motif.get_name()
@@ -334,7 +334,7 @@ class Record:
         self._domains_by_name[motif.get_name()] = motif
 
     def add_pfam_domain(self, pfam_domain: PFAMDomain) -> None:
-        """ Add the given cluster to the record """
+        """ Add the given PFAMDomain to the record and links it in the parent CDS """
         assert isinstance(pfam_domain, PFAMDomain)
         assert pfam_domain.get_name()
         self._pfam_domains.append(pfam_domain)
@@ -342,9 +342,10 @@ class Record:
             raise ValueError("Multiple Domain features have the same name for mapping: %s" %
                              pfam_domain.get_name())
         self._domains_by_name[pfam_domain.get_name()] = pfam_domain
+        self._pfams_by_cds_name[pfam_domain.locus_tag].append(pfam_domain)
 
     def add_antismash_domain(self, antismash_domain: AntismashDomain) -> None:
-        """ Add the given cluster to the record """
+        """ Add the given AntismashDomain to the record """
         assert isinstance(antismash_domain, AntismashDomain)
         assert antismash_domain.get_name()
         self._antismash_domains.append(antismash_domain)
