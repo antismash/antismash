@@ -51,13 +51,13 @@ class TestConversion(unittest.TestCase):
 
     def test_pfam_domain(self):
         original = PFAMDomain(FeatureLocation(2, 5), description="test",
-                              domain="domainname")
+                              protein_start=5, protein_end=10,
+                              domain="p450")
         original.db_xref.append("test-ref")
         original.tool = "toolname"
         original.domain_id = "domain_id"
         original.database = "db"
         original.detection = "someprogram"
-        original.domain = "p450"
         original.evalue = 1e-5
         original.score = 5.
         original.locus_tag = "locus"
@@ -65,8 +65,19 @@ class TestConversion(unittest.TestCase):
         original.translation = "ARNDCQ"
         new = PFAMDomain.from_biopython(original.to_biopython()[0])
         for slot in ["db_xref", "tool", "domain_id", "database", "detection",
-                     "evalue", "score", "locus_tag", "label", "translation", "domain"]:
+                     "evalue", "score", "locus_tag", "label", "translation", "domain",
+                     "protein_start", "protein_end"]:
             assert getattr(original, slot) == getattr(new, slot)
+
+    def test_bad_pfam_domain(self):
+        with self.assertRaisesRegex(TypeError, "PFAMDomain description must be a string"):
+            PFAMDomain(FeatureLocation(2, 5), description=None, protein_start=5, protein_end=10)
+        with self.assertRaisesRegex(TypeError, "Domain must be given domain as a string"):
+            PFAMDomain(FeatureLocation(2, 5), description="desc", protein_start=5, protein_end=10, domain=5)
+        with self.assertRaisesRegex(ValueError, "A PFAMDomain protein location cannot end before it starts"):
+            PFAMDomain(FeatureLocation(2, 5), description="desc", protein_start=10, protein_end=5)
+        with self.assertRaisesRegex(ValueError, "invalid literal for int()"):
+            PFAMDomain(FeatureLocation(2, 5), description="desc", protein_start=10, protein_end="nope")
 
 
 class TestRecord(unittest.TestCase):

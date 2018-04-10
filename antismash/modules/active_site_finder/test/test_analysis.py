@@ -67,7 +67,7 @@ class TestAnalyses(unittest.TestCase):
         dummy_location = secmet.feature.FeatureLocation(1, 100)
         domain_fasta = fasta.read_fasta(path.get_full_path(__file__, 'data', "p450.input"))
         for name, translation in domain_fasta.items():
-            pfam_domain = secmet.feature.PFAMDomain(dummy_location, description="test")
+            pfam_domain = secmet.feature.PFAMDomain(dummy_location, protein_start=5, protein_end=10, description="test")
             pfam_domain.translation = translation
             pfam_domain.domain_id = "PFAM_p450_" + name
             pfam_domain.domain = "p450"

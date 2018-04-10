@@ -14,7 +14,7 @@ from antismash.common.secmet.feature import FeatureLocation, PFAMDomain
 
 class HmmerResults(module_results.ModuleResults):
     """ Results for full-hmmer """
-    schema_version = 1
+    schema_version = 2
 
     def __init__(self, record_id: str, evalue: float, score: float,
                  database: str, tool: str, hits: List[Dict[str, Any]]) -> None:
@@ -79,7 +79,8 @@ class HmmerResults(module_results.ModuleResults):
         db_version = pfamdb.get_db_version_from_path(self.database)
         for i, hit in enumerate(self.hits):
             pfam_feature = PFAMDomain(serialiser.location_from_json(hit["location"]),
-                                      description=hit["description"])
+                                      description=hit["description"], protein_start=hit["protein_start"],
+                                      protein_end=hit["protein_end"])
             for key in ["label", "locus_tag", "domain", "evalue",
                         "score", "translation", "db_xref"]:
                 setattr(pfam_feature, key, hit[key])
@@ -113,7 +114,7 @@ def build_hits(record, hmmscan_results, min_score: float, max_evalue: float, dat
                    "domain": hsp.hit_id, "evalue": hsp.evalue, "score": hsp.bitscore,
                    "translation": str(location.extract(record.seq).translate(table=feature.transl_table)),
                    "db_xref": [pfamdb.get_pfam_id_from_name(hsp.hit_id, database)],
-                   "description": hsp.hit_description}
+                   "description": hsp.hit_description, "protein_start": hsp.query_start, "protein_end": hsp.query_end}
             hits.append(hit)
     return hits
 
