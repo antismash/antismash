@@ -515,10 +515,15 @@ class Domain(AntismashFeature):
     """ A base class for features which represent a domain type """
     __slots__ = ["tool", "domain", "_asf"]
 
-    def __init__(self, location, feature_type):
+    def __init__(self, location, feature_type, domain: Optional[str] = None):
         super().__init__(location, feature_type)
         self.tool = None
-        self.domain = None
+        if domain is not None:
+            if not isinstance(domain, str):
+                raise TypeError("Domain must be given domain as a string, not %s" % type(domain))
+            if not domain:
+                raise ValueError("Domain cannot be an empty string")
+        self.domain = domain
         self._asf = ActiveSiteFinderQualifier()
 
     @property
