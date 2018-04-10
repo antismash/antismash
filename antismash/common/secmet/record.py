@@ -158,6 +158,9 @@ class Record:
     def clear_pfam_domains(self) -> None:
         """ Remove all PFAMDomain features """
         self._pfams_by_cds_name.clear()
+        # remove pfams only from the domains mapping
+        for domain in self._pfam_domains:
+            del self._domains_by_name[domain.get_name()]
         self._pfam_domains.clear()
 
     def get_antismash_domains(self) -> Tuple:
@@ -166,6 +169,7 @@ class Record:
 
     def clear_antismash_domains(self) -> None:
         "Remove all AntismashDomain features"
+        # remove antismash domains only from the domains mapping
         for domain in self._antismash_domains:
             del self._domains_by_name[domain.get_name()]
         self._antismash_domains.clear()
