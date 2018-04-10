@@ -12,6 +12,7 @@
 
 
 import bisect
+from collections import defaultdict
 import logging
 from typing import Dict, List, Optional, Tuple, Union
 
@@ -31,7 +32,7 @@ class Record:
                  "_clusters", "original_id",
                  "_cluster_borders", "_cds_motifs", "_pfam_domains", "_antismash_domains",
                  "_cluster_numbering", "_nonspecific_features", "record_index",
-                 "_genes", "_transl_table", "_domains_by_name"]
+                 "_genes", "_transl_table", "_domains_by_name", "_pfams_by_cds_name"]
 
     def __init__(self, seq="", transl_table: int = 1, **kwargs):
         self._record = SeqRecord(seq, **kwargs)
@@ -50,6 +51,7 @@ class Record:
         self._nonspecific_features = []
         self._transl_table = int(transl_table)
         self._domains_by_name = {}  # for use as x[domain.get_name()] = domain
+        self._pfams_by_cds_name = defaultdict(list)  # type: Dict[str, List[PFAMDomain]]
 
     def __getattr__(self, attr):
         # passthroughs to the original SeqRecord
@@ -140,6 +142,23 @@ class Record:
     def get_pfam_domains(self) -> Tuple:
         """A list of secondary metabolite PFAM_domains present in the record"""
         return tuple(self._pfam_domains)
+
+    def get_pfam_domains_in_cds(self, cds: Union[str, CDSFeature]) -> Tuple[PFAMDomain, ...]:
+        """ Returns a list of PFAMDomains contained by a CDSFeature. Either the
+            CDS name or the CDSFeature itself can be used to specify which CDS.
+        """
+        if isinstance(cds, CDSFeature):
+            cds_name = cds.get_name()
+        elif isinstance(cds, str):
+            cds_name = cds
+        else:
+            raise TypeError("CDS must be a string or CDSFeature, not %s" % type(cds))
+        return self._pfams_by_cds_name[cds_name]
+
+    def clear_pfam_domains(self) -> None:
+        """ Remove all PFAMDomain features """
+        self._pfams_by_cds_name.clear()
+        self._pfam_domains.clear()
 
     def get_antismash_domains(self) -> Tuple:
         """A list of secondary metabolite aSDomains present in the record"""
