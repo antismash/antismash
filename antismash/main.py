@@ -178,6 +178,7 @@ def run_detection(record: Record, options, previous_result: Dict[str, Union[Dict
         run_module(record, module, options, module_results, timings)
         results = module_results.get(module.__name__)
         if results:
+            logging.debug("Adding detection results from %s to record", module.__name__)
             results.add_to_record(record)
 
     # generate cluster predictions
@@ -206,6 +207,7 @@ def run_detection(record: Record, options, previous_result: Dict[str, Union[Dict
         run_module(record, module, options, module_results, timings)
         results = module_results.get(module.__name__)
         if results:
+            logging.debug("Adding detection results from %s to record", module.__name__)
             results.add_to_record(record)
 
     return timings
