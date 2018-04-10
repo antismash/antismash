@@ -71,24 +71,30 @@ def regenerate_previous_results(previous, record, options) -> hmmer.HmmerResults
     """ Rebuild previous results """
     if not previous:
         return None
-    db = pfamdb.get_db_path_from_version(options.clusterhmmer_pfamdb_version, options.database_dir)
-    return hmmer.HmmerResults.from_json(previous, record, MAX_EVALUE, MIN_SCORE, db)
+    return hmmer.HmmerResults.from_json(previous, record, MAX_EVALUE, MIN_SCORE)
 
 
 def run_on_record(record, results, options) -> hmmer.HmmerResults:
     """ Run hmmsearch against PFAM for all CDS features within the record """
-    if results:
-        return results
-
-    logging.info('Running cluster PFAM search')
 
     if options.clusterhmmer_pfamdb_version == "latest":
         database_version = pfamdb.find_latest_database_version(options.database_dir)
     else:
         database_version = options.clusterhmmer_pfamdb_version
-    database = os.path.join(options.database_dir, 'pfam', database_version, 'Pfam-A.hmm')
+
+    if results:
+        previous_db = pfamdb.get_db_version_from_path(results.database)
+        # same version requested, so reuse the results
+        if database_version == previous_db:
+            return results
+        else:
+            logging.debug("Replacing clusterhmmer results from %s with %s",
+                          previous_db, database_version)
+
+    logging.info('Running cluster PFAM search')
 
     features = []
     for cluster in record.get_clusters():
         features.extend(list(cluster.cds_children))
+    database = os.path.join(options.database_dir, 'pfam', database_version, 'Pfam-A.hmm')
     return hmmer.run_hmmer(record, features, MAX_EVALUE, MIN_SCORE, database, "clusterhmmer")

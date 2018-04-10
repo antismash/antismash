@@ -34,7 +34,7 @@ class HmmerResults(module_results.ModuleResults):
 
     @staticmethod
     def from_json(json: Dict[str, Any], record: Record, max_evalue: float,
-                  min_score: float, database: str) -> Optional["HmmerResults"]:
+                  min_score: float) -> Optional["HmmerResults"]:
         """ Regenerate the results from JSON.
             If max_evalue or min_score aren't equal or narrower than those the
             results were generated with, the results will be discarded.
@@ -46,10 +46,6 @@ class HmmerResults(module_results.ModuleResults):
 
         if json.get("schema") != HmmerResults.schema_version:
             logging.warning("Hmmer results are for different result schema, discarding previous results")
-            return None
-
-        if json.get("database") != database:
-            logging.warning("Hmmer database has changed, discarding previous results")
             return None
 
         evalue = json.get("max evalue")
