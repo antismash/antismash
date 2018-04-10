@@ -190,6 +190,16 @@ def get_description(record, feature, type_, options, mibig_result):
                 template += entry % url
                 break
 
+    asf_notes = []
+    for domain in feature.nrps_pks.domains:
+        for hit in record.get_domain_by_name(domain.feature_name).asf.hits:
+            asf_notes.append("%s (%d..%d): %s" % (domain.name, domain.start, domain.end, hit))
+    for pfam in record.get_pfam_domains_in_cds(feature):
+        for hit in pfam.asf.hits:
+            asf_notes.append("%s (%d..%d): %s" % (pfam.domain, pfam.protein_start, pfam.protein_end, hit))
+    if asf_notes:
+        template += '<span class="bold">Active Site Finder results:</span><br>\n%s<br><br>\n' % "<br>".join(asf_notes)
+
     clipboard_fragment = """<a href="javascript:copyToClipboard('%s')">Copy to clipboard</a>"""
     template += "AA sequence: %s<br>\n" % (clipboard_fragment % feature.translation)
     template += "Nucleotide sequence: %s<br>\n" % (clipboard_fragment % feature.extract(record.seq))
