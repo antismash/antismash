@@ -19,7 +19,7 @@ install_requires = [
     'argparse',
     'cssselect',
     'numpy',
-    'biopython >= 1.70',
+    'biopython >= 1.71',
     'helperlibs',
     'jinja2',
     'pysvg-py3',
