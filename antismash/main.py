@@ -453,16 +453,19 @@ def read_data(sequence_file, options) -> serialiser.AntismashResults:
     if sequence_file:
         records = record_processing.parse_input_sequence(sequence_file, options.taxon,
                                 options.minlength, options.start, options.end)
-        return serialiser.AntismashResults(sequence_file.rsplit(os.sep, 1)[-1],
+        results = serialiser.AntismashResults(sequence_file.rsplit(os.sep, 1)[-1],
                                            records, [{} for i in range(len(records))],
                                            __version__)
+        update_config({"input_file": os.path.splitext(results.input_file)[1]})
+    else:
+        logging.debug("Attempting to reuse previous results in: %s", options.reuse_results)
+        with open(options.reuse_results) as handle:
+            contents = handle.read()
+            if not contents:
+                raise ValueError("No results contained in file: %s" % options.reuse_results)
+        results = serialiser.AntismashResults.from_file(options.reuse_results, options.taxon)
 
-    logging.debug("Attempting to reuse previous results in: %s", options.reuse_results)
-    with open(options.reuse_results) as handle:
-        contents = handle.read()
-        if not contents:
-            raise ValueError("No results contained in file: %s" % options.reuse_results)
-    results = serialiser.AntismashResults.from_file(options.reuse_results, options.taxon)
+    update_config({"input_file": os.path.splitext(results.input_file)[0]})
     return results
 
 
