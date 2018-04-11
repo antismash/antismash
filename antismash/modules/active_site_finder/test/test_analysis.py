@@ -122,8 +122,8 @@ class TestAnalyses(unittest.TestCase):
     def test_DH(self):
         mock("subprocessing.run_hmmpfam2", returns=parse_hmmpfam_results("DH.output"))
         results = analysis.asp_pksi_dh(self.record)
-        expected = {'PKS_DH0': 'catalytic triade H,G,P inconclusive',
-                    'PKS_DH1': 'catalytic triade H,G,P inconclusive'}
+        expected = {'PKS_DH0': 'catalytic triad H,G,P inconclusive',
+                    'PKS_DH1': 'catalytic triad H,G,P inconclusive'}
         assert {dom.domain_id: message for dom, message in results} == expected
 
     def test_KR_stereo(self):
@@ -138,8 +138,8 @@ class TestAnalyses(unittest.TestCase):
         # use an altered output to avoid the Biopython bug
         mock("subprocessing.run_hmmpfam2", returns=parse_hmmpfam_results("KR.output.altered"))
         results = analysis.asp_pksi_kr(self.record)
-        expected = {'PKS_KR1': 'catalytic triade S,Y,N inconclusive',
-                    'PKS_KR2': 'catalytic triade S,Y,N found: True'}
+        expected = {'PKS_KR1': 'catalytic triad S,Y,N inconclusive',
+                    'PKS_KR2': 'catalytic triad S,Y,N found: True'}
         assert {dom.domain_id: message for dom, message in results} == expected
 
     def test_thioesterase(self):
@@ -169,8 +169,8 @@ class TestAnalyses(unittest.TestCase):
     def test_p450(self):
         mock("subprocessing.run_hmmpfam2", returns=parse_hmmpfam_results("p450.output"))
         results = analysis.asp_p450_oxy(self.record)
-        expected = {'PFAM_p450_0': 'active site cystein inconclusive',
-                    'PFAM_p450_1': 'active site cystein inconclusive'}
+        expected = {'PFAM_p450_0': 'active site cysteine inconclusive',
+                    'PFAM_p450_1': 'active site cysteine inconclusive'}
         assert {dom.domain_id: message for dom, message in results} == expected
 
 
@@ -209,14 +209,14 @@ class TestSynthetic(unittest.TestCase):
                 mock("active_site_finder.common.ActiveSiteAnalysis.get_alignments",
                      returns=[DummyAlignment(values, {5: values[0], 39: values[1], 44: values[2]})])
                 pairings = analysis.asp_pksi_dh(self.record)
-                assert pairings == [(values, "catalytic triade H,G,P found: %s" % (values == "HGP"))]
+                assert pairings == [(values, "catalytic triad H,G,P found: %s" % (values == "HGP"))]
             # and an inconclusive
             mocked_match.return_value = False
             # values here don't matter
             mock("active_site_finder.common.ActiveSiteAnalysis.get_alignments",
                  returns=[DummyAlignment("incon", {})])
             pairings = analysis.asp_pksi_dh(self.record)
-            assert pairings == [("incon", "catalytic triade H,G,P inconclusive")]
+            assert pairings == [("incon", "catalytic triad H,G,P inconclusive")]
 
     def test_thioesterase(self):
         with umock.patch.object(active_site_finder.common.ActiveSiteAnalysis, "scaffold_matches") as mocked_match:
@@ -281,11 +281,11 @@ class TestSynthetic(unittest.TestCase):
                 mock("active_site_finder.common.ActiveSiteAnalysis.get_alignments",
                      returns=[DummyAlignment(char, {407: char})])
                 pairings = analysis.asp_p450_oxy(self.record)
-                assert pairings == [(char, "active site cystein present: %s" % (char == "C"))]
+                assert pairings == [(char, "active site cysteine present: %s" % (char == "C"))]
             # and an inconclusive
             mocked_match.return_value = False
             # values here don't matter
             mock("active_site_finder.common.ActiveSiteAnalysis.get_alignments",
                  returns=[DummyAlignment("incon", {})])
             pairings = analysis.asp_p450_oxy(self.record)
-            assert pairings == [("incon", "active site cystein inconclusive")]
+            assert pairings == [("incon", "active site cysteine inconclusive")]
