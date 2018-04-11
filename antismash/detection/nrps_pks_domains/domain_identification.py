@@ -313,6 +313,7 @@ def generate_domain_features(record: Record, gene: CDSFeature, domains: List[HMM
     nra = 0
     nrcal = 0
     nrkr = 0
+    nrks = 0
     nrXdom = 0
     for domain in domains:
         loc = gene.get_sub_location_from_protein_coordinates(domain.query_start, domain.query_end)
@@ -331,28 +332,25 @@ def generate_domain_features(record: Record, gene: CDSFeature, domains: List[HMM
 
         if domain.hit_id == "AMP-binding":
             nra += 1
-            domainname = "{}_A{}".format(gene.get_name(), nra)
-            new_feature.label = domainname
-            new_feature.domain_id = "nrpspksdomains_" + domainname
+            domain_name = "{}_A{}".format(gene.get_name(), nra)
         elif domain.hit_id == "PKS_AT":
             nrat += 1
-            domainname = "{}_AT{}".format(gene.get_name(), nrat)
-            new_feature.label = domainname
-            new_feature.domain_id = "nrpspksdomains_" + domainname
+            domain_name = "{}_AT{}".format(gene.get_name(), nrat)
         elif domain.hit_id == "CAL_domain":
             nrcal += 1
-            domainname = gene.get_name() + "_CAL" + str(nrcal)
-            new_feature.label = domainname
-            new_feature.domain_id = "nrpspksdomains_" + domainname
+            domain_name = gene.get_name() + "_CAL" + str(nrcal)
         elif domain.hit_id == "PKS_KR":
             nrkr += 1
-            domainname = gene.get_name() + "_KR" + str(nrkr)
-            new_feature.label = domainname
-            new_feature.domain_id = "nrpspksdomains_" + domainname
+            domain_name = gene.get_name() + "_KR" + str(nrkr)
+        elif domain.hit_id == "PKS_KS":
+            nrks += 1
+            domain_name = gene.get_name() + "_KS" + str(nrks)
         else:
             nrXdom += 1
-            new_feature.domain_id = "nrpspksdomains_" + gene.get_name().partition(".")[0] + "_Xdom"+'{:02d}'.format(nrXdom)
-        assert new_feature.get_name() not in new_features
+            domain_name = gene.get_name().partition(".")[0] + "_Xdom" + str(nrXdom)
+        new_feature.domain_id = "nrpspksdomains_" + domain_name
+        new_feature.label = domain_name
+
         new_features[domain] = new_feature
     return new_features
 
