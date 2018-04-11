@@ -66,6 +66,7 @@ def convert_clusters(record, options, result):
             js_cluster['probability'] = cluster.probability
         js_cluster['knowncluster'] = "-"
         js_cluster['BGCid'] = "-"
+        js_cluster['anchor'] = "r%dc%d" % (record.record_index, cluster.get_cluster_number())
 
         if cluster.knownclusterblast:
             bestcluster = cluster.knownclusterblast[0]

@@ -31,10 +31,8 @@
             {% if cluster.products | length > 1 %}
                 {% set hybrid_text = "hybrid " %}
             {% endif %}
-            <li class="clbutton {{cluster.get_product_string()}} {{hybrid_text}}cluster-{{cluster.get_cluster_number()}}">
-              <a href="#cluster-{{cluster.get_cluster_number()}}">
-                {{cluster.get_cluster_number()}}
-              </a>
+            <li class="clbutton {{cluster.get_product_string()}} {{hybrid_text}}{{cluster.anchor_id}}">
+              <a href="#{{cluster.anchor_id}}">{{cluster.get_cluster_number()}}</a>
             </li>
           {% endfor %}
         {% endfor %}
@@ -81,8 +79,8 @@
                 {% if cluster.products | length > 1 %}
                     {% set hybrid_text = "hybrid " %}
                 {% endif %}
-                <td class="clbutton {{cluster.get_product_string()}} {{hybrid_text}}{{cluster.get_cluster_number()}}">
-                  <a href="#cluster-{{cluster.get_cluster_number()}}">Cluster {{cluster.get_cluster_number()}}</a>
+                <td class="clbutton {{cluster.get_product_string()}} {{hybrid_text}}{{cluster.anchor_id}}">
+                  <a href="#{{cluster.anchor_id}}">Cluster {{cluster.get_cluster_number()}}</a>
                 </td>
                 <td>
                   {% set dash = joiner("-") %}

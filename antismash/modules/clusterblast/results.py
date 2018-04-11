@@ -130,14 +130,14 @@ class ClusterResult:
                 a list of filenames created
         """
         cluster_num = self.cluster.get_cluster_number()
-
-        filename = "%s%d_all.svg" % (prefix, cluster_num)
+        record_index = self.cluster.parent_record.record_index
+        filename = "{}_r{}c{}_all.svg".format(prefix, record_index, cluster_num)
         with open(os.path.join(svg_dir, filename), "w") as handle:
             handle.write(self.svg_builder.get_overview_contents(width=800, height=50 + 50 * len(self.svg_builder.hits)))
 
         files = []
         for i in range(len(self.svg_builder.hits)):
-            filename = "%s%d_%d.svg" % (prefix, cluster_num, i + 1)  # 1-index
+            filename = "{}_r{}c{}_{}.svg".format(prefix, record_index, cluster_num, i + 1)  # 1-index
             with open(os.path.join(svg_dir, filename), "w") as handle:
                 handle.write(self.svg_builder.get_pairing_contents(i, width=800, height=230))
             files.append(filename)
@@ -315,7 +315,7 @@ def write_clusterblast_output(options, record, cluster_result: ClusterResult,
     currentdir = os.getcwd()
     os.chdir(_get_output_dir(options, searchtype))
 
-    out_file = open("cluster" + str(cluster_number) + ".txt", "w")
+    out_file = open("%s_c%d.txt" % (record.id, cluster_number), "w")
     out_file.write("ClusterBlast scores for " + record.id + "\n")
     out_file.write("\nTable of genes, locations, strands and annotations of query cluster:\n")
     for i, cds in enumerate(cluster_result.cluster.cds_children):

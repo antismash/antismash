@@ -215,7 +215,7 @@ class NrpspksLayer(ClusterLayer):
             orfs.append(js_orf)
 
         if orfs:
-            return {'id': "cluster-%s-details" % self.get_cluster_number(),
+            return {'id': self.anchor_id,
                     'orfs': orfs}
 
         return None

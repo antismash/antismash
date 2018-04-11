@@ -15,17 +15,17 @@ from antismash.outputs.html import js
 
 def write_geneclusters_js(records, output_dir, extra_data):
     with open(os.path.join(output_dir, 'geneclusters.js'), 'w') as result:
-        geneclusters = {}
+        geneclusters = {"order": []}
         for record in records:
             for cluster in record['clusters']:
                 idx = cluster['idx']
-                geneclusters['cluster-%s' % idx] = cluster
+                geneclusters[cluster['anchor']] = cluster
+                geneclusters['order'].append(cluster['anchor'])
         result.write('var geneclusters = %s;\n' % json.dumps(geneclusters, indent=4))
 
         js_domains = {}
-        for domain in extra_data['js_domains']:
-            idx = domain['id'].split('-')[1]
-            js_domains['cluster-%s' % idx] = domain
+        for cluster in extra_data['js_domains']:
+            js_domains[cluster['id']] = cluster
         result.write('var details_data = %s;\n' % json.dumps(js_domains, indent=4))
 
 

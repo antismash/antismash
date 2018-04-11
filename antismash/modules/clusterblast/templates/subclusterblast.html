@@ -2,8 +2,8 @@
   <h3>Similar subclusters</h3>
   {% if cluster.subcluster_blast %}
   <div>
-    <select id= "subclusterblast-{{cluster.get_cluster_number()}}-select" class= "clusterblast-selector">
-      <option value="svg/subclusterblast{{cluster.get_cluster_number()}}_all.svg">
+    <select id= "subclusterblast-{{cluster.anchor_id}}-select" class= "clusterblast-selector">
+      <option value="svg/subclusterblast_r{{record.record_index}}c{{cluster.get_cluster_number()}}_all.svg">
         All hits
       </option>
       {% for opt_text, svg_file in cluster.subcluster_blast %}
@@ -12,9 +12,9 @@
       </option>
       {% endfor %}
     </select>
-    <button id="subclusterblast-{{cluster.get_cluster_number()}}-download">Download graphic</button>
+    <button id="subclusterblast-{{cluster.anchor_id}}-download">Download graphic</button>
   </div>
-  <div id="subclusterblast-{{cluster.get_cluster_number()}}-svg"></div>
+  <div id="subclusterblast-{{cluster.anchor_id}}-svg"></div>
   {% else %}
   <div>
     <p>No matches found.</p>
