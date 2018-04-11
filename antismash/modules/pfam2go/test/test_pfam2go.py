@@ -153,11 +153,17 @@ class PfamToGoTest(unittest.TestCase):
         fake_results.add_to_record(fake_record)
         assert fake_duplicate_pfam.db_xref == ['PF00015.2']
         for pfam in fake_record.get_pfam_domains():
-            assert pfam.gene_ontologies['pfam2go'] == fake_results.pfam_domains_with_gos[pfam]
+            assert sorted(pfam.gene_ontologies.ids) == sorted([go_entry.id
+                                                               for ontologies in fake_results.pfam_domains_with_gos[pfam]
+                                                               for go_entry in ontologies.go_entries])
             # make sure identical pfams (with different version numbers) all have the same gene ontologies
             for pfam_id in pfam.db_xref:
                 if pfam_id.startswith('PF00015'):
-                    assert pfam.gene_ontologies['pfam2go'] == fake_results.pfam_domains_with_gos[fake_duplicate_pfam]
+                    assert sorted(pfam.gene_ontologies.ids) == sorted([go_entry.id
+                                                                       for ontologies
+                                                                       in fake_results.pfam_domains_with_gos[fake_duplicate_pfam]
+                                                                       for go_entry
+                                                                       in ontologies.go_entries])
 
     def test_adding_to_wrong_record(self):
         pfams = {'PF00015': FeatureLocation(0, 3)}
