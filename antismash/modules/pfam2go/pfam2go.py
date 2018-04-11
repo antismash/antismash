@@ -12,6 +12,7 @@ from typing import Any, Dict, List
 from antismash.common import path
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet.feature import PFAMDomain
+from antismash.common.secmet.qualifiers import GOQualifier
 from antismash.common.secmet.record import Record
 
 
@@ -57,14 +58,16 @@ class Pfam2GoResults(ModuleResults):
         if record.id != self.record_id:
             raise ValueError("Record to store in and record analysed don't match")
         for domain, all_ontologies in self.pfam_domains_with_gos.items():
-            domain.gene_ontologies['pfam2go'] = all_ontologies
+            domain.gene_ontologies = GOQualifier({go_entry.id: go_entry.description
+                                                 for ontologies in all_ontologies
+                                                  for go_entry in ontologies.go_entries})  # nested dict comprehension
 
     def to_json(self) -> Dict[str, Any]:
         """ Construct a JSON representation of this instance """
         jsonfile = {"pfams": {}, "record_id": self.record_id, "schema_version": Pfam2GoResults.schema_version}
         for all_ontologies in self.pfam_domains_with_gos.values():
             for ontologies in all_ontologies:
-                jsonfile["pfams"][ontologies.pfam] = [(str(go_entry), go_entry.description)
+                jsonfile["pfams"][ontologies.pfam] = [(go_entry.id, go_entry.description)
                                                       for go_entry in ontologies.go_entries]
         return jsonfile
 

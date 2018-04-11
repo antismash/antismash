@@ -24,13 +24,13 @@ class PfamToGoTest(unittest.TestCase):
 
     def check_add_to_record(self, input_file, results):
         record = record_processing.parse_input_sequence(input_file)[0]
-        #assert record.get_pfam_domains()
-        #for domain in record.get_pfam_domains():
-        #    assert not domain.gene_ontologies['pfam2go']
         results.add_to_record(record)
         for domain in record.get_pfam_domains():
-            if domain.gene_ontologies['pfam2go']:
-                assert domain.gene_ontologies['pfam2go'] == results.pfam_domains_with_gos[domain]
+            if domain.gene_ontologies:
+                assert sorted(domain.gene_ontologies.ids) == sorted([go_entry.id
+                                                               for ontologies in results.pfam_domains_with_gos[domain]
+                                                               for go_entry in ontologies.go_entries])
+
         # test it's been added to the record correctly
 
     def test_reuse(self):
