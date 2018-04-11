@@ -127,16 +127,14 @@ class TestAnalyses(unittest.TestCase):
         assert {dom.domain_id: message for dom, message in results} == expected
 
     def test_KR_stereo(self):
-        # use an altered output to avoid the Biopython bug
-        mock("subprocessing.run_hmmpfam2", returns=parse_hmmpfam_results("KR.output.altered"))
+        mock("subprocessing.run_hmmpfam2", returns=parse_hmmpfam_results("KR.output"))
         results = analysis.pksi_kr_stereo(self.record)
         expected = {'PKS_KR1': 'KR domain putatively catalyzing D-configuration product formation',
                     'PKS_KR2': 'KR domain putatively catalyzing D-configuration product formation'}
         assert {dom.domain_id: message for dom, message in results} == expected
 
     def test_KR(self):
-        # use an altered output to avoid the Biopython bug
-        mock("subprocessing.run_hmmpfam2", returns=parse_hmmpfam_results("KR.output.altered"))
+        mock("subprocessing.run_hmmpfam2", returns=parse_hmmpfam_results("KR.output"))
         results = analysis.asp_pksi_kr(self.record)
         expected = {'PKS_KR1': 'catalytic triad S,Y,N inconclusive',
                     'PKS_KR2': 'catalytic triad S,Y,N found: True'}
