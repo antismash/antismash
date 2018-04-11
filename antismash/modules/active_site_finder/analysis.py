@@ -219,11 +219,11 @@ def asp_pksi_dh(record: secmet.Record) -> List[SinglePairing]:
 
     for alignment in analyser.get_alignments():
         if not analyser.scaffold_matches(alignment):
-            results.append((alignment.domain, "catalytic triade H,G,P inconclusive"))
+            results.append((alignment.domain, "catalytic triad H,G,P inconclusive"))
             continue
         value = alignment.extract_positions([5, 39, 44])
         found = value == "HGP"  # emissions 1., 0.62, 097
-        results.append((alignment.domain, "catalytic triade H,G,P found: %s" % found))
+        results.append((alignment.domain, "catalytic triad H,G,P found: %s" % found))
 
     return results
 
@@ -251,11 +251,11 @@ def asp_pksi_kr(record: secmet.Record) -> List[SinglePairing]:
 
     for alignment in analyser.get_alignments():
         if not analyser.scaffold_matches(alignment):
-            results.append((alignment.domain, "catalytic triade S,Y,N inconclusive"))
+            results.append((alignment.domain, "catalytic triad S,Y,N inconclusive"))
             continue
         value = alignment.extract_positions([149, 162, 166])
         found = value == "SYN"
-        results.append((alignment.domain, "catalytic triade S,Y,N found: %s" % found))
+        results.append((alignment.domain, "catalytic triad S,Y,N found: %s" % found))
 
     return results
 
@@ -355,7 +355,7 @@ def pksi_at_spec(record: secmet.Record) -> List[SinglePairing]:
 
 
 def asp_p450_oxy(record: secmet.Record) -> List[SinglePairing]:
-    """ Prediction of cytochrome P450 active site cystein
+    """ Prediction of cytochrome P450 active site cysteine
 
         database: p450.hmm2
         database_source: PFAM31
@@ -375,9 +375,9 @@ def asp_p450_oxy(record: secmet.Record) -> List[SinglePairing]:
 
     for alignment in analyser.get_alignments():
         if not analyser.scaffold_matches(alignment):
-            results.append((alignment.domain, "active site cystein inconclusive"))
+            results.append((alignment.domain, "active site cysteine inconclusive"))
             continue
         value = alignment.extract_position(407)
         found = value == "C"
-        results.append((alignment.domain, "active site cystein present: %s" % found))
+        results.append((alignment.domain, "active site cysteine present: %s" % found))
     return results
