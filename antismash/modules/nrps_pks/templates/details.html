@@ -1,6 +1,6 @@
 <div class="details">
   <h3>Detailed annotation</h3>
     {% if cluster.get_domain_details() %}
-      <div class="details-svg" id="cluster-{{cluster.get_cluster_number()}}-details-svg"></div>
+      <div class="details-svg" id="{{cluster.anchor_id}}-details-svg"></div>
     {% endif %}
 </div>

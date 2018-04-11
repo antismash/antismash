@@ -29,42 +29,36 @@ function switch_to_cluster() {
 }
 
 function next_cluster() {
-  var num_clusters = Object.keys(geneclusters).length;
-  var url = $.url();
-  var anchor = url.data.attr.fragment;
-  var href = "#" + anchor;
-  if (anchor == "" || anchor == "overview") {
-    anchor = "cluster-0";
-  }
-  var cluster_number = parseInt(anchor.split('-')[1]);
-  var next_cluster_number = cluster_number + 1;
-  if (next_cluster_number <= num_clusters) {
-    href = "#cluster-" + next_cluster_number;
+  var clusters = geneclusters['order'];
+  var current = $.url().data.attr.fragment;
+  if (current == "" || current == "overview") {
+    next = "r0c1";
   } else {
-    href = "#overview";
+    current_index = clusters.indexOf(current);
+    if (current_index == clusters.length - 1) {
+      next = "overview";
+    } else {
+      next = clusters[current_index + 1];
+    }
   }
-  window.location.href = href;
+  window.location.href = "#" + next;
   switch_to_cluster();
 }
 
 function previous_cluster() {
-  var num_clusters = Object.keys(geneclusters).length;
-  var url = $.url();
-  var anchor = url.data.attr.fragment;
-  var href = "#" + anchor;
-  if (anchor == "" || anchor == "overview") {
-    anchor = "cluster-0";
-  }
-  var cluster_number = parseInt(anchor.split('-')[1]);
-  var prev_cluster_number = cluster_number - 1;
-  if (prev_cluster_number == 0 ) {
-    href = "#overview";
-  } else if (prev_cluster_number < 0){
-    href = "#cluster-" + num_clusters;
+  var clusters = geneclusters['order'];
+  var current = $.url().data.attr.fragment;
+  if (current == "" || current == "overview") {
+    prev = clusters[clusters.length - 1];
   } else {
-    href = "#cluster-" + prev_cluster_number;
+    current_index = clusters.indexOf(current);
+    if (current_index == 0) {
+      prev = "overview";
+    } else {
+      prev = clusters[current_index - 1];
+    }
   }
-  window.location.href = href;
+  window.location.href = "#" + prev;
   switch_to_cluster();
 }
 

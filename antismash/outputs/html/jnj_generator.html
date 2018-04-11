@@ -2,7 +2,7 @@
 
 {% for record in records %}
 {% for cluster in record.clusters %}
-<div class= "page" id='cluster-{{cluster.get_cluster_number()}}'>
+<div class= "page" id='{{cluster.anchor_id}}'>
   <h3> {{record.seq_record.name}} - Cluster {{cluster.get_cluster_number()}} - {{cluster.get_product_string() | capitalize }}</h3>
   {% if cluster.has_sidepanel %}
   <div class="sidepanel">
@@ -22,11 +22,11 @@
       <div class = 'description-text'>
         {{cluster.description_text()}}
       </div>
-      <a class="cluster-rules-header" id="cluster-{{cluster.get_cluster_number()}}-rules-header" href="#cluster-{{cluster.get_cluster_number()}}">Show pHMM detection rules used</a>
-      <div class = "cluster-rules" id= "cluster-{{cluster.get_cluster_number()}}-rules">
+      <a class="cluster-rules-header" id="{{cluster.anchor_id}}-rules-header" href="#{{cluster.anchor_id}}">Show pHMM detection rules used</a>
+      <div class = "cluster-rules" id="{{cluster.anchor_id}}-rules">
         {{- cluster.detection_rules|join('<br>'|safe) -}}
       </div>
-      <div id= 'cluster-{{cluster.get_cluster_number()}}-svg'>
+      <div id='{{cluster.anchor_id}}-svg'>
       </div>
     </div>
     <div class="legend">

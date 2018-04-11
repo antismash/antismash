@@ -53,6 +53,8 @@ class ClusterLayer:
     def __init__(self, record: RecordLayer, cluster_rec: Cluster) -> None:
         assert isinstance(cluster_rec, Cluster), type(cluster_rec)
         self.record = record
+        self.anchor_id = "r{}c{}".format(cluster_rec.parent_record.record_index,
+                                         cluster_rec.get_cluster_number())
         self.handlers = []
         self.cluster_rec = cluster_rec
         self.cluster_blast = []
@@ -113,7 +115,7 @@ class ClusterLayer:
         top_hits = self.cluster_rec.clusterblast[:self.record.options.cb_nclusters]
         for i, label in enumerate(top_hits):
             i += 1  # 1-indexed
-            svg_file = os.path.join('svg', 'clusterblast%s_%s.svg' % (self.get_cluster_number(), i))
+            svg_file = os.path.join('svg', 'clusterblast_r%dc%d_%s.svg' % (self.record.record_index, self.get_cluster_number(), i))
             self.cluster_blast.append((label, svg_file))
 
     def knowncluster_blast_generator(self) -> None:
@@ -122,7 +124,7 @@ class ClusterLayer:
         for i, label_pair in enumerate(top_hits):
             i += 1  # 1-indexed
             label = label_pair[0]
-            svg_file = os.path.join('svg', 'knownclusterblast%s_%s.svg' % (self.get_cluster_number(), i))
+            svg_file = os.path.join('svg', 'knownclusterblast_r%dc%d_%s.svg' % (self.record.record_index, self.get_cluster_number(), i))
             self.knowncluster_blast.append((label, svg_file))
 
     def subcluster_blast_generator(self) -> None:
@@ -131,7 +133,7 @@ class ClusterLayer:
         top_hits = self.cluster_rec.subclusterblast[:self.record.options.cb_nclusters]
         for i, label in enumerate(top_hits):
             i += 1  # since one-indexed
-            svg_file = os.path.join('svg', 'subclusterblast%s_%s.svg' % (self.get_cluster_number(), i))
+            svg_file = os.path.join('svg', 'subclusterblast_r%dc%d_%s.svg' % (self.record.record_index, self.get_cluster_number(), i))
             self.subcluster_blast.append((label, svg_file))
 
     def find_plugins_for_cluster(self) -> List[ModuleType]:
