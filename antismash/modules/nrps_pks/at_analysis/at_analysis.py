@@ -14,29 +14,11 @@ _SIGNATURES_FILENAME = path.get_full_path(__file__, "data", "pks_signatures.fast
 _REF_SEQUENCE = "P0AAI9_AT1"
 
 
-class ATSignatureResults(dict):
-    """ Holds a list of ATResult for each gene name """
-    def to_json(self) -> Dict[str, List[Tuple[str, str, float]]]:
-        """ Serialises the instance """
-        results = {}
-        for key, value in self.items():
-            results[key] = [result.to_json() for result in value]
-        return results
-
-    @staticmethod
-    def from_json(json) -> "ATSignatureResults":
-        """ Deserialises an ATSignatureResults instance """
-        results = ATSignatureResults()
-        for key, value in json.items():
-            results[key] = [ATResult.from_json(val) for val in value]
-        return results
-
-
 class ATResult:
     """ A result for a specific AT domain """
     __slots__ = ["name", "signature", "score"]
 
-    def __init__(self, name, signature, score):
+    def __init__(self, name: str, signature: str, score: float) -> None:
         assert isinstance(name, str)
         assert isinstance(signature, str)
         assert isinstance(score, float)
@@ -55,12 +37,37 @@ class ATResult:
         return (self.name, self.signature, self.score)
 
     @staticmethod
-    def from_json(json) -> "ATResult":
+    def from_json(json: Tuple[str, str, float]) -> "ATResult":
         """ Deserialise an ATResult instance """
+        assert len(json) == 3
         return ATResult(*json)
 
 
-def get_at_positions(startpos=7):
+class ATSignatureResults(dict):
+    """ Holds a list of ATResult for each gene name """
+    def __setitem__(self, key: str, val: List[ATResult]) -> None:
+        assert isinstance(val, list)
+        for sub in val:
+            assert isinstance(sub, ATResult)
+        super().__setitem__(key, val)
+
+    def to_json(self) -> Dict[str, List[Tuple[str, str, float]]]:
+        """ Serialises the instance """
+        results = {}
+        for key, value in self.items():
+            results[key] = [result.to_json() for result in value]
+        return results
+
+    @staticmethod
+    def from_json(json: Dict[str, List[Tuple[str, str, float]]]) -> "ATSignatureResults":
+        """ Deserialises an ATSignatureResults instance """
+        results = ATSignatureResults()
+        for key, value in json.items():
+            results[key] = [ATResult.from_json(val) for val in value]
+        return results
+
+
+def get_at_positions(startpos: int = 7) -> List[int]:
     """ Reads a reference list of positions used in signature extraction
         from file.
     """
@@ -71,8 +78,7 @@ def get_at_positions(startpos=7):
 
 
 def score_signatures(query_signatures: Dict[str, str],
-                     reference_signatures: Dict[str, str]
-                     ) -> Dict[str, List[ATResult]]:
+                     reference_signatures: Dict[str, str]) -> ATSignatureResults:
     """ Scores PKS signature by comparing against database of signatures.
 
         The score is calculated as a percentage of pairwise matches for the

@@ -4,17 +4,23 @@
 """ Manages HTML construction for the Lassopeptide module
 """
 
+from typing import List
+
 from jinja2 import FileSystemLoader, Environment, StrictUndefined
 
 from antismash.common import path
+from antismash.common.layers import RecordLayer, ClusterLayer, OptionsLayer
+
+from .specific_analysis import LassoResults
 
 
-def will_handle(products) -> bool:
+def will_handle(products: List[str]) -> bool:
     """ Returns True if the products provided are relevant to the module """
     return 'lassopeptide' in products
 
 
-def generate_details_div(cluster_layer, results, _record_layer, _options_layer) -> str:
+def generate_details_div(cluster_layer: ClusterLayer, results: LassoResults,
+                         _record_layer: RecordLayer, _options_layer: OptionsLayer) -> str:
     """ Generates a HTML div for the main page of results """
     if not results:
         return ""
@@ -28,7 +34,8 @@ def generate_details_div(cluster_layer, results, _record_layer, _options_layer) 
     return details_div
 
 
-def generate_sidepanel(cluster_layer, results, _record_layer, _options_layer) -> str:
+def generate_sidepanel(cluster_layer: ClusterLayer, results: LassoResults,
+                       _record_layer: RecordLayer, _options_layer: OptionsLayer) -> str:
     """ Generates a div for the sidepanel results """
     if not results:
         return ""

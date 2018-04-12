@@ -20,6 +20,7 @@ from typing import Any, Dict, List
 
 from antismash.common import path
 from antismash.common.secmet import Record
+from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
 
 from .config import get_config
@@ -52,22 +53,22 @@ def get_arguments() -> ModuleArgs:
     return args
 
 
-def check_options(_options) -> List[str]:
+def check_options(_options: ConfigType) -> List[str]:
     """ No options here to check, so just return """
     return []
 
 
-def is_enabled(options):
+def is_enabled(options: ConfigType) -> bool:
     """ Will the module run with the given options """
     return not options.minimal or options.lassopeptides_enabled
 
 
-def regenerate_previous_results(previous: Dict[str, Any], record: Record, _options) -> LassoResults:
+def regenerate_previous_results(previous: Dict[str, Any], record: Record, _options: ConfigType) -> LassoResults:
     """ Regenerate a results object from the given data """
     return LassoResults.from_json(previous, record)
 
 
-def run_on_record(record: Record, results: LassoResults, _options) -> LassoResults:
+def run_on_record(record: Record, results: LassoResults, _options: ConfigType) -> LassoResults:
     """ Finds all precursors within lassopeptide clusters """
     if results and isinstance(results, LassoResults):
         return results

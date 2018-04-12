@@ -24,7 +24,8 @@ class RobustProteinAnalysis(ProteinAnalysis):
     """
     PROTEIN_LETTERS = set(Bio.Data.IUPACData.protein_letters)
 
-    def __init__(self, prot_sequence, monoisotopic=False, ignore_invalid=True) -> None:
+    def __init__(self, prot_sequence: str, monoisotopic: bool = False,
+                 ignore_invalid: bool = True) -> None:
         if not isinstance(ignore_invalid, bool):
             raise TypeError("ignore_invalid must be a boolean")
         self._ignore_invalid = ignore_invalid
@@ -33,11 +34,8 @@ class RobustProteinAnalysis(ProteinAnalysis):
 
         self.original_sequence = prot_sequence
         # remove all invalids
-        prot_sequence = []
-        for i in self.original_sequence:
-            if i in RobustProteinAnalysis.PROTEIN_LETTERS:
-                prot_sequence.append(i)
-        prot_sequence = "".join(prot_sequence)
+        prot_sequence = "".join(filter(lambda x: x in RobustProteinAnalysis.PROTEIN_LETTERS,
+                                       self.original_sequence))
         super(RobustProteinAnalysis, self).__init__(prot_sequence, monoisotopic)
 
     def molecular_weight(self) -> float:

@@ -11,11 +11,12 @@ from typing import Dict, List, Optional, Set, Tuple
 from Bio.SearchIO._model.hsp import HSP
 
 from antismash.common import fasta, path
-from antismash.common.secmet.feature import ClusterBorder, SecMetQualifier, CDSFeature, \
-                                            GeneFunction, FeatureLocation
+from antismash.common.secmet import Record, ClusterBorder, CDSFeature
+from antismash.common.secmet.feature import SecMetQualifier, GeneFunction, FeatureLocation
 from antismash.common.subprocessing import run_hmmsearch
 from antismash.common.hmm_rule_parser import rule_parser
 from antismash.common.signature import get_signature_profiles
+from antismash.config import ConfigType
 
 
 class CDSResults:
@@ -55,7 +56,7 @@ class CDSResults:
             if secmet_domain.query_id in all_matching:
                 continue
             self.cds.gene_functions.add(GeneFunction.ADDITIONAL, secmet_domain.tool,
-                                        secmet_domain)
+                                        str(secmet_domain))
 
 
 class RuleDetectionResults:
@@ -82,7 +83,7 @@ def remove_redundant_borders(borders: List[ClusterBorder],
                              ) -> List[ClusterBorder]:
     """ Removes clusters which have superiors covering the same (or larger) region
     """
-    borders_by_rule = defaultdict(list)
+    borders_by_rule = defaultdict(list)  # type: Dict[str, List[ClusterBorder]]
     for border in borders:
         borders_by_rule[border.product].append(border)
 
@@ -102,7 +103,8 @@ def remove_redundant_borders(borders: List[ClusterBorder],
     return trimmed_borders
 
 
-def find_clusters(record, cds_by_cluster_type, rules_by_name) -> List[ClusterBorder]:
+def find_clusters(record: Record, cds_by_cluster_type: Dict[str, Set[str]],
+                  rules_by_name: Dict[str, rule_parser.DetectionRule]) -> List[ClusterBorder]:
     """ Detects gene clusters based on the identified core genes """
     clusters = []  # type: List[ClusterBorder]
 
@@ -148,7 +150,7 @@ def find_clusters(record, cds_by_cluster_type, rules_by_name) -> List[ClusterBor
     return clusters
 
 
-def hsp_overlap_size(first, second) -> int:
+def hsp_overlap_size(first: HSP, second: HSP) -> int:
     """ Find the size of an overlapping region of two HSPs.
 
         Args:
@@ -247,9 +249,10 @@ def create_rules(rule_file: str, signature_names: Set[str]
     return rules
 
 
-def apply_cluster_rules(record, results_by_id: Dict[str, HSP], feature_by_id: Dict[str, CDSFeature],
+def apply_cluster_rules(record: Record, results_by_id: Dict[str, List[HSP]],
                         rules: List[rule_parser.DetectionRule]
-                        ) -> Tuple[Dict[str, Dict[str, Set[str]]], Dict[str, Set[CDSFeature]]]:
+                        ) -> Tuple[Dict[str, Dict[str, Set[str]]],
+                                   Dict[str, Set[str]]]:
     """
         Run detection rules over each CDS and classify them if relevant.
         A CDS can satisfy multiple rules. If so, all rules satisfied
@@ -261,7 +264,6 @@ def apply_cluster_rules(record, results_by_id: Dict[str, HSP], feature_by_id: Di
         Args:
             record: the record being checked
             results_by_id: A dict of CDS ID to a list of HSP results
-            feature_by_id: A dict of CDS ID to CDS Feature
             rules: A list of DetectionRule instances
 
         Returns:
@@ -270,17 +272,17 @@ def apply_cluster_rules(record, results_by_id: Dict[str, HSP], feature_by_id: Di
                     a dictionary mapping cluster type string to
                         a set of domains used to determine the cluster
                 and a dictionary mapping rule name to
-                    a set of CDS features that matched the rule
+                    a set of CDS feature names that matched the rule
     """
     if not results_by_id:
         return {}, {}
 
-    cds_with_hits = sorted(results_by_id, key=lambda gene_id: feature_by_id[gene_id].location.start)
+    cds_with_hits = sorted(results_by_id, key=lambda gene_id: record.get_cds_by_name(gene_id).location.start)
 
     cds_domains_by_cluster_type = {}
-    cluster_type_hits = defaultdict(set)
-    for cds in cds_with_hits:
-        feature = feature_by_id[cds]
+    cluster_type_hits = defaultdict(set)  # type: Dict[str, Set[str]]
+    for cds_name in cds_with_hits:
+        feature = record.get_cds_by_name(cds_name)
         feature_start, feature_end = sorted([feature.location.start, feature.location.end])
         results = []  # type: List[str]
         rule_texts = []
@@ -297,21 +299,21 @@ def apply_cluster_rules(record, results_by_id: Dict[str, HSP], feature_by_id: Di
                                   for neighbour in nearby_features if neighbour in results_by_id}
                 info_by_range[rule.cutoff] = (nearby_features, nearby_results)
             nearby_features, nearby_results = info_by_range[rule.cutoff]
-            matching = rule.detect(cds, nearby_features, nearby_results)
+            matching = rule.detect(cds_name, nearby_features, nearby_results)
             if matching.met and matching.matches:
                 domains_by_cluster[rule.name] = matching.matches
                 results.append(rule.name)
                 rule_texts.append(rule.reconstruct_rule_text())
                 domain_matches.update(matching.matches)
-                cluster_type_hits[rule.name].add(cds)
+                cluster_type_hits[rule.name].add(cds_name)
         if domains_by_cluster:
-            cds_domains_by_cluster_type[cds] = domains_by_cluster
+            cds_domains_by_cluster_type[cds_name] = domains_by_cluster
     return cds_domains_by_cluster_type, cluster_type_hits
 
 
-def detect_borders_and_signatures(record, signature_file: str, seeds_file: str,
+def detect_borders_and_signatures(record: Record, signature_file: str, seeds_file: str,
                                   rules_file: str, filter_file: str, tool: str,
-                                  options) -> RuleDetectionResults:
+                                  options: ConfigType) -> RuleDetectionResults:
     """ Compares all CDS features in a record with HMM signatures and generates
         Cluster features based on those hits and the current cluster detection
         rules.
@@ -326,11 +328,10 @@ def detect_borders_and_signatures(record, signature_file: str, seeds_file: str,
             tool: the name of the tool providing the HMMs (e.g. clusterfinder, rule_based_clusters)
             options: antismash Config
     """
-    feature_by_id = record.get_cds_name_mapping()
-    # if there's no CDS features, don't try to do anything
-    if not feature_by_id:
-        return None
     full_fasta = fasta.get_fasta_from_record(record)
+    # if there's no CDS features, don't try to do anything
+    if not full_fasta:
+        return None
     sig_by_name = {sig.name: sig for sig in get_signature_profiles(signature_file)}
     rules = create_rules(rules_file, set(sig_by_name))
     results = []
@@ -362,7 +363,7 @@ def detect_borders_and_signatures(record, signature_file: str, seeds_file: str,
     results, results_by_id = filter_result_multiple(results, results_by_id)
 
     # Use rules to determine gene clusters
-    cds_domains_by_cluster, cluster_type_hits = apply_cluster_rules(record, results_by_id, feature_by_id, rules)
+    cds_domains_by_cluster, cluster_type_hits = apply_cluster_rules(record, results_by_id, rules)
 
     # Find number of sequences on which each pHMM is based
     num_seeds_per_hmm = get_sequence_counts(signature_file)
@@ -387,11 +388,10 @@ def detect_borders_and_signatures(record, signature_file: str, seeds_file: str,
                 cds_results.append(CDSResults(cds, domains, cds_domains_by_cluster.get(cds.get_name(), {})))
         cds_results_by_cluster[cluster] = cds_results
 
-    results = RuleDetectionResults(cds_results_by_cluster, tool)
-    return results
+    return RuleDetectionResults(cds_results_by_cluster, tool)
 
 
-def strip_inferior_domains(cds_domains_by_cluster: Dict[str, Dict[str, List[str]]],
+def strip_inferior_domains(cds_domains_by_cluster: Dict[str, Dict[str, Set[str]]],
                            rules_by_name: Dict[str, rule_parser.DetectionRule]) -> None:
     """ Remove any domain hits for each inferior rule within a CDS that the CDS also
         satisfies the rule's superior.

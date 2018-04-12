@@ -11,13 +11,14 @@ from collections import defaultdict
 import logging
 import re
 import os
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set, Tuple, Union  # pylint: disable=unused-import
 
 from helperlibs.wrappers.io import TemporaryFile
 from sklearn.externals import joblib
 
 from antismash.common import all_orfs, module_results, path, serialiser, subprocessing, utils
-from antismash.common.secmet import Record, CDSFeature, Prepeptide, GeneFunction
+from antismash.common.secmet import Record, CDSFeature, Prepeptide, GeneFunction, Cluster
+from antismash.common.secmet.feature import FeatureLocation, SeqFeature
 from antismash.config import get_config as get_global_config
 
 from .config import get_config as get_lasso_config
@@ -68,7 +69,7 @@ class LassoResults(module_results.ModuleResults):
             results.new_cds_features.add(cds)
         return results
 
-    def add_to_record(self, record: Record):
+    def add_to_record(self, record: Record) -> None:
         for feature in self.new_cds_features:
             record.add_cds_feature(feature)
 
@@ -79,9 +80,9 @@ class LassoResults(module_results.ModuleResults):
 
 class LassopeptideMotif(Prepeptide):
     """ A lanthipeptide-specific feature """
-    def __init__(self, location, leader, core, tail, locus_tag,
-                 monoisotopic_mass, molecular_weight, cut_mass, cut_weight,
-                 num_bridges, lasso_class, score, rodeo_score, macrolactam):
+    def __init__(self, location: FeatureLocation, leader: str, core: str, tail: str, locus_tag: str,
+                 monoisotopic_mass: float, molecular_weight: float, cut_mass: float, cut_weight: float,
+                 num_bridges: int, lasso_class: str, score: float, rodeo_score: float, macrolactam: str) -> None:
         super().__init__(location, "lassopeptide", core, locus_tag, peptide_subclass=lasso_class,
                          score=score, monoisotopic_mass=monoisotopic_mass,
                          molecular_weight=molecular_weight,
@@ -92,7 +93,7 @@ class LassopeptideMotif(Prepeptide):
         self.cut_mass = float(cut_mass)
         self.cut_weight = float(cut_weight)
 
-    def to_biopython(self, qualifiers: Dict[str, List] = None):
+    def to_biopython(self, qualifiers: Dict[str, List] = None) -> List[SeqFeature]:
         notes = []
         if not qualifiers:
             qualifiers = {}
@@ -104,7 +105,7 @@ class LassopeptideMotif(Prepeptide):
             qualifiers["note"].extend(notes)
         return super().to_biopython(qualifiers=qualifiers)
 
-    def to_json(self):
+    def to_json(self) -> Dict[str, Any]:
         json = super().to_json()
         json["locus_tag"] = self.locus_tag  # not in vars() due to __slots__
         try:
@@ -129,10 +130,11 @@ class LassopeptideMotif(Prepeptide):
         return LassopeptideMotif(*args)  # pylint: disable=no-value-for-parameter
 
 
-class Lassopeptide(object):
+class Lassopeptide:
     """ Class to calculate and store lassopeptide information
     """
-    def __init__(self, start, end, score, rodeo_score, leader, core):
+    def __init__(self, start: int, end: int, score: float, rodeo_score: float,
+                 leader: str, core: str) -> None:
         self.start = start
         self.end = end
         self.score = score
@@ -151,6 +153,7 @@ class Lassopeptide(object):
 
     @property
     def core(self) -> str:
+        """ The core of the prepeptide """
         return self._core
 
     @core.setter
@@ -159,6 +162,7 @@ class Lassopeptide(object):
 
     @property
     def leader(self) -> str:
+        """ The leader of the prepeptide """
         return self._leader
 
     @leader.setter
@@ -167,13 +171,14 @@ class Lassopeptide(object):
 
     @property
     def c_cut(self) -> str:
+        """ The tail of the prepeptide """
         return self._c_cut
 
     @c_cut.setter
-    def c_cut(self, ccut: str):
+    def c_cut(self, ccut: str) -> None:
         self._c_cut = str(ccut)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "Lassopeptide(%s..%s, %s, %r, %r, %s, %s(%s), %s, %s)" % (
                         self.start, self.end, self.score, self._lassotype,
                         self._core, self._num_bridges, self._monoisotopic_weight,
@@ -182,10 +187,10 @@ class Lassopeptide(object):
     def _calculate_weight(self, analysis: utils.RobustProteinAnalysis) -> float:
         """ Calculate the molecular weight/monoisotopic mass from the given input
         """
-        CC_mass = 2 * self._num_bridges
+        cc_mass = 2 * self._num_bridges
         mw = analysis.molecular_weight()
         bond = 18.02
-        return mw + CC_mass - bond
+        return mw + cc_mass - bond
 
     @property
     def monoisotopic_mass(self) -> float:
@@ -220,7 +225,7 @@ class Lassopeptide(object):
         return self._calculate_weight(utils.RobustProteinAnalysis(self.core[:-len(self.c_cut)], monoisotopic=False))
 
     @property
-    def macrolactam(self):
+    def macrolactam(self) -> str:
         """
         Predict the lassopeptide macrolactam ring
         """
@@ -236,7 +241,7 @@ class Lassopeptide(object):
         return self._macrolactam
 
     @property
-    def number_bridges(self):
+    def number_bridges(self)-> int:
         """
         Predict the lassopeptide number of disulfide bridges
         """
@@ -249,7 +254,7 @@ class Lassopeptide(object):
         return self._num_bridges
 
     @property
-    def lasso_class(self):
+    def lasso_class(self) -> str:
         """
         Predict the lassopeptide class based on disulfide bridges
         """
@@ -263,31 +268,31 @@ class Lassopeptide(object):
         return self._lassotype
 
 
-def predict_cleavage_site(query_hmmfile, target_sequence, threshold):
+def predict_cleavage_site(query_hmmfile: str, target_sequence: str, threshold: float
+                          ) -> Union[Tuple[None, None, None], Tuple[int, int, float]]:
     """
     Function extracts from HMMER the start position, end position and score
     of the HMM alignment
     """
     hmmer_res = subprocessing.run_hmmpfam2(query_hmmfile, target_sequence)
-    resvec = [None, None, None]
+    resvec = (None, None, None)
     for res in hmmer_res:
         for hits in res:
             for hsp in hits:
-
                 # when hmm includes 1st macrolactam residue: end-2
                 if hsp.bitscore > threshold:
-                    resvec = [hsp.query_start-1, hsp.query_end-1, hsp.bitscore]
-                    return resvec
+                    resvec = (hsp.query_start - 1, hsp.query_end - 1, hsp.bitscore)
+                    break
     return resvec
 
 
-def run_cleavage_site_phmm(fasta, hmmer_profile, threshold):
+def run_cleavage_site_phmm(fasta: str, hmmer_profile: str, threshold: float) -> Tuple[int, int, float]:
     """Try to identify cleavage site using pHMM"""
     profile = path.get_full_path(__file__, 'data', hmmer_profile)
     return predict_cleavage_site(profile, fasta, threshold)
 
 
-def run_cleavage_site_regex(fasta):
+def run_cleavage_site_regex(fasta: str) -> Tuple[Optional[int], Optional[int], Optional[int]]:
     """Try to identify cleavage site using regular expressions"""
     # Regular expressions; try 1 first, then 2, etc.
     rex1 = re.compile('(Y[ARNDBCEQZGHILKMFPSTWYV]{2}P[ARNDBCEQZGHILKMFPSTWYV]'
@@ -315,7 +320,7 @@ def run_cleavage_site_regex(fasta):
     return start, end, 0
 
 
-def is_on_same_strand_as(cluster, query, profile_name):
+def is_on_same_strand_as(cluster: Cluster, query: CDSFeature, profile_name: str) -> bool:
     """Check if a query CDS is on same strand as gene with pHMM hit"""
     for cds in cluster.cds_children:
         if not cds.sec_met:
@@ -327,15 +332,14 @@ def is_on_same_strand_as(cluster, query, profile_name):
     return False
 
 
-def acquire_rodeo_heuristics(record, cluster, query, leader, core):
+def acquire_rodeo_heuristics(record: Record, cluster: Cluster, query: CDSFeature,
+                             leader: str, core: str) -> Tuple[int, List[Union[float, int]]]:
     """Calculate heuristic scores for RODEO"""
-    tabs = []
+    tabs = []  # type: List[Union[float, int]]
     score = 0
     # Calcd. lasso peptide mass (Da) (with Xs average out)
     core_analysis = utils.RobustProteinAnalysis(core, monoisotopic=True, ignore_invalid=False)
     tabs.append(float(core_analysis.molecular_weight()))
-
-    score += 0
 
     # Distance to any biosynthetic protein (E, B, C)
     hmmer_profiles = ['PF13471', 'PF00733', 'PF05402']
@@ -459,7 +463,7 @@ def acquire_rodeo_heuristics(record, cluster, query, leader, core):
     return score, tabs
 
 
-def identify_lasso_motifs(leader, core):
+def identify_lasso_motifs(leader: str, core: str) -> Tuple[List[int], int, Dict[int, float]]:
     """Run FIMO to identify lasso peptide-specific motifs"""
     motif_file = path.get_full_path(__file__, 'data', "lasso_motifs_meme.txt")
     with TemporaryFile() as tempfile:
@@ -484,10 +488,11 @@ def identify_lasso_motifs(leader, core):
     return fimo_motifs, motif_score, fimo_scores
 
 
-def generate_rodeo_svm_csv(record, query, leader, core,
-                           previously_gathered_tabs, fimo_motifs, fimo_scores):
-    """Generates all the items for one candidate precursor peptide"""
-    columns = []
+def generate_rodeo_svm_csv(record: Record, query: CDSFeature, leader: str, core: str,
+                           previously_gathered_tabs: List[Union[float, int]], fimo_motifs: List[int],
+                           fimo_scores: Dict[int, float]) -> List[Union[float, int]]:
+    """Generates all the items for a single precursor peptide candidate"""
+    columns = []  # type: List[Union[float, int]]
     # Precursor Index
     columns.append(1)
     # classification
@@ -624,17 +629,17 @@ def run_rodeo_svm(csv_columns: List[float]) -> int:
     return 0
 
 
-def run_rodeo(record, cluster, query, leader, core):
+def run_rodeo(record: Record, cluster: Cluster, query: CDSFeature, leader: str, core: str) -> Tuple[bool, float]:
     """Run RODEO heuristics + SVM to assess precursor peptide candidate"""
-    rodeo_score = 0
+    rodeo_score = 0.
 
     # Incorporate heuristic scores
     heuristic_score, gathered_tabs_for_csv = acquire_rodeo_heuristics(record, cluster, query, leader, core)
     rodeo_score += heuristic_score
 
-    fimo_motifs = []
-    fimo_scores = {}
-    motif_score = 0
+    fimo_motifs = []  # type: List[int]
+    fimo_scores = {}  # type: Dict[int, float]
+    motif_score = 0.
 
     if not get_global_config().without_fimo and get_lasso_config().fimo_present:
         # Incorporate motif scores
@@ -648,7 +653,8 @@ def run_rodeo(record, cluster, query, leader, core):
     return rodeo_score >= 15, rodeo_score
 
 
-def determine_precursor_peptide_candidate(record, cluster, query, query_sequence) -> Optional[Lassopeptide]:
+def determine_precursor_peptide_candidate(record: Record, cluster: Cluster,
+                                          query: CDSFeature, query_sequence: str) -> Optional[Lassopeptide]:
     """Identify precursor peptide candidates and split into two"""
 
     # Skip sequences with >100 AA
@@ -665,7 +671,7 @@ def determine_precursor_peptide_candidate(record, cluster, query, query_sequence
     if score is None:
         start, end, score = run_cleavage_site_regex(lasso_a_fasta)
         if score is None or end > len(query_sequence) - 3:
-            start, end, score = 0, len(query_sequence) // 2 - 5, 0
+            start, end, score = 0, len(query_sequence) // 2 - 5, 0.
 
     # Run RODEO to assess whether candidate precursor peptide is judged real
     valid, rodeo_score = run_rodeo(record, cluster, query, query_sequence[:end], query_sequence[end:])
@@ -678,7 +684,7 @@ def determine_precursor_peptide_candidate(record, cluster, query, query_sequence
     return Lassopeptide(start, end + 1, score, rodeo_score, leader, core)
 
 
-def run_lassopred(record, cluster, query) -> Optional[LassopeptideMotif]:
+def run_lassopred(record: Record, cluster: Cluster, query: CDSFeature) -> Optional[LassopeptideMotif]:
     """General function to predict and analyse lasso peptides"""
 
     # Run checks to determine whether an ORF encodes a precursor peptide
@@ -687,19 +693,19 @@ def run_lassopred(record, cluster, query) -> Optional[LassopeptideMotif]:
         return None
 
     # prediction of cleavage in C-terminal based on lasso's core sequence
-    C_term_hmmer_profile = 'tail_cut.hmm'
-    thresh_C_hit = -7.5
+    c_term_hmmer_profile = 'tail_cut.hmm'
+    thresh_c_hit = -7.5
 
     aux = result.core[(len(result.core) // 2):]
     core_a_fasta = ">%s\n%s" % (query.get_name(), aux)
 
-    profile_C = path.get_full_path(__file__, 'data', C_term_hmmer_profile)
-    hmmer_res_C = subprocessing.run_hmmpfam2(profile_C, core_a_fasta)
+    profile = path.get_full_path(__file__, 'data', c_term_hmmer_profile)
+    hmmer_res = subprocessing.run_hmmpfam2(profile, core_a_fasta)
 
-    for res in hmmer_res_C:
+    for res in hmmer_res:
         for hits in res:
             for seq in hits:
-                if seq.bitscore > thresh_C_hit:
+                if seq.bitscore > thresh_c_hit:
                     result.c_cut = aux[seq.query_start+1:]
 
     if result is None:
@@ -713,6 +719,7 @@ def run_lassopred(record, cluster, query) -> Optional[LassopeptideMotif]:
 
 
 def result_vec_to_motif(query: CDSFeature, result: Lassopeptide) -> LassopeptideMotif:
+    """ Converts a Lassopeptide to a LassopeptideMotif """
     leader = result.leader
     core = result.core
     tail = result.c_cut

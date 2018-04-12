@@ -5,13 +5,13 @@
 
 import logging
 import os
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Union, Set, Tuple  # pylint: disable=unused-import
 
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
-from antismash.common.secmet import Record
+from antismash.common.secmet import Record, Gene
 
 
 class DuplicatePromoterError(Exception):
@@ -96,7 +96,8 @@ class CombinedPromoter(Promoter):
                                 int(json["start"]), int(json["end"]), seq=str(json["seq"]))
 
 
-def get_promoters(record: Record, genes, upstream_tss: int, downstream_tss: int) -> List[Promoter]:
+def get_promoters(record: Record, genes: List[Gene],
+                  upstream_tss: int, downstream_tss: int) -> List[Promoter]:
     """Compute promoter sequences for each gene in the sequence record.
 
        For explanation of these numbers see file promoterregions.png
@@ -108,7 +109,7 @@ def get_promoters(record: Record, genes, upstream_tss: int, downstream_tss: int)
 
     record_seq_length = len(record.seq)
     promoters = []
-    promoter_ids = set()
+    promoter_ids = set()  # type: Set[str]
     invalid = 0
 
     skip = False  # helper var for shared promoter of bidirectional genes

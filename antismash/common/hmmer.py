@@ -1,19 +1,19 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
-""" Finds all PFAM domains found in features throughout a record. """
+""" Common functionality for finding and marking PFAMDomains within a record. """
 
 import logging
 import os
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Iterable, List, Optional
 
 from antismash.common import fasta, module_results, pfamdb, serialiser, subprocessing
 from antismash.common.secmet import Record, CDSFeature
-from antismash.common.secmet.feature import FeatureLocation, PFAMDomain
+from antismash.common.secmet.feature import PFAMDomain
 
 
 class HmmerResults(module_results.ModuleResults):
-    """ Results for full-hmmer """
+    """ Results for hmmer-based detection """
     schema_version = 2
 
     def __init__(self, record_id: str, evalue: float, score: float,
@@ -33,7 +33,7 @@ class HmmerResults(module_results.ModuleResults):
         return json
 
     @staticmethod
-    def from_json(json: Dict[str, Any], record: Record, max_evalue: float,
+    def from_json(json: Dict[str, Any], record: Record, max_evalue: float,  # type: ignore  # pylint: disable=arguments-differ
                   min_score: float) -> Optional["HmmerResults"]:
         """ Regenerate the results from JSON.
             If max_evalue or min_score aren't equal or narrower than those the
@@ -87,8 +87,20 @@ class HmmerResults(module_results.ModuleResults):
             record.add_pfam_domain(pfam_feature)
 
 
-def build_hits(record, hmmscan_results, min_score: float, max_evalue: float, database: str) -> List[Dict[str, Any]]:
-    "Builds PFAMDomains from the given hmmscan results"
+def build_hits(record: Record, hmmscan_results: List, min_score: float,
+               max_evalue: float, database: str) -> List[Dict[str, Any]]:
+    """ Builds PFAMDomains from the given hmmscan results
+
+        Arguments:
+            record: the Record being scanned
+            hmmscan_results: the results of Bio.SearchIO.parse
+            min_score: a minimum allowable bitscore for hits (exclusive)
+            max_evalue: a maximum allowable evalue for hits (exclusive)
+            database: the name of the database used to find the hits
+
+        Returns:
+            a list of JSON representations of hmmer hits
+    """
     logging.debug("Generating feature objects for PFAM hits")
 
     hits = []
@@ -115,9 +127,18 @@ def build_hits(record, hmmscan_results, min_score: float, max_evalue: float, dat
     return hits
 
 
-def run_hmmer(record: Record, features: List[CDSFeature], max_evalue: float,
+def run_hmmer(record: Record, features: Iterable[CDSFeature], max_evalue: float,
               min_score: float, database: str, tool: str) -> HmmerResults:
-    """ Build hmmer results for the given features"""
+    """ Build hmmer results for the given features
+
+        Arguments:
+            record: the Record instance to run hmmer over
+            features: the list of CDSFeatures to run over specifically
+            max_evalue: a maximum evalue allowed for hits (exclusive)
+            min_evalue: a minimum evalue allowed for hits (exclusive)
+            database: the database to search for hits within
+            tool: the name of the specific tool calling into this module
+    """
     if not os.path.exists(database):
         raise ValueError("Given database does not exist: %s" % database)
     query_sequence = fasta.get_fasta_from_features(features)

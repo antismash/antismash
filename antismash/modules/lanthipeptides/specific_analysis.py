@@ -11,12 +11,14 @@ from collections import defaultdict
 import logging
 import os
 import re
-from typing import Any, Dict, List, Set, Optional
+from typing import Any, Dict, List, Optional, Set, Tuple
+
+from Bio.SeqFeature import SeqFeature
 
 from antismash.common.signature import HmmSignature
-from antismash.common import all_orfs, path, subprocessing, secmet, \
-                             module_results, serialiser, utils
+from antismash.common import all_orfs, path, subprocessing, module_results, serialiser, utils
 from antismash.common.fasta import get_fasta_from_features
+from antismash.common.secmet import CDSFeature, Record, Cluster, Prepeptide, GeneFunction, FeatureLocation
 
 from .rodeo import run_rodeo
 
@@ -54,18 +56,18 @@ class LanthiResults(module_results.ModuleResults):
     """
     schema_version = 2
 
-    def __init__(self, record_id, *args):
-        super().__init__(record_id, *args)
+    def __init__(self, record_id: str) -> None:
+        super().__init__(record_id)
         # keep new CDS features
-        self.new_cds_features = set()
+        self.new_cds_features = set()  # type: Set[CDSFeature]
         # keep new CDSMotifs by the gene they match to
         # e.g. self.motifs_by_locus[gene_locus] = [motif1, motif2..]
-        self.motifs_by_locus = defaultdict(list)
+        self.motifs_by_locus = defaultdict(list)  # type: Dict[str, List[LanthipeptideMotif]]
         # keep clusters and which genes in them had precursor hits
         # e.g. self.clusters[cluster_number] = {gene1_locus, gene2_locus}
-        self.clusters = defaultdict(set)
+        self.clusters = defaultdict(set)  # type: Dict[int, Set[str]]
 
-    def to_json(self):
+    def to_json(self) -> Dict[str, Any]:
         cds_features = [(serialiser.location_to_json(feature.location),
                          feature.get_name()) for feature in self.new_cds_features]
         motifs = {}
@@ -78,7 +80,7 @@ class LanthiResults(module_results.ModuleResults):
                 "clusters": {key: list(val) for key, val in self.clusters.items()}}
 
     @staticmethod
-    def from_json(json, record) -> "LanthiResults":
+    def from_json(json: Dict[str, Any], record: Record) -> "LanthiResults":
         if json.get("schema_version") != LanthiResults.schema_version:
             logging.warning("Discarding Lanthipeptide results, schema version mismatch")
             return None
@@ -92,7 +94,7 @@ class LanthiResults(module_results.ModuleResults):
             results.new_cds_features.add(cds)
         return results
 
-    def add_to_record(self, record):
+    def add_to_record(self, record: Record) -> None:
         for feature in self.new_cds_features:
             record.add_cds_feature(feature)
 
@@ -103,20 +105,20 @@ class LanthiResults(module_results.ModuleResults):
 
 class PrepeptideBase:
     """ A generic prepeptide class for tracking various typical components """
-    def __init__(self, start, end, score, rodeo_score=None):
-        self.start = start  # same as CDS
-        self.end = end  # same as CDS
-        self.score = score  # of cleavage site
-        self.rodeo_score = rodeo_score
-        self._leader = None
+    def __init__(self, start: int, end: int, score: int, rodeo_score: int = None) -> None:
+        self.start = int(start)  # same as CDS
+        self.end = int(end)  # same as CDS
+        self.score = int(score)  # of cleavage site
+        self.rodeo_score = int(rodeo_score) if rodeo_score is not None else None
+        self._leader = None  # type: str
         self._core = ''
-        self._tail = None
+        self._tail = None  # type: str
         self._lan_bridges = -1
         self._weight = -1
         self._monoisotopic_weight = -1
-        self._alt_weights = None
-        self.core_analysis_monoisotopic = None
-        self.core_analysis = None
+        self._alt_weights = None  # type: List[float]
+        self.core_analysis_monoisotopic = None  # type: utils.RobustProteinAnalysis
+        self.core_analysis = None  # type: utils.RobustProteinAnalysis
 
     @property
     def core(self) -> str:
@@ -124,7 +126,7 @@ class PrepeptideBase:
         return self._core
 
     @core.setter
-    def core(self, seq: str):
+    def core(self, seq: str) -> None:
         self.core_analysis_monoisotopic = utils.RobustProteinAnalysis(seq, monoisotopic=True)
         self.core_analysis = utils.RobustProteinAnalysis(seq, monoisotopic=False)
         self._core = seq
@@ -136,21 +138,21 @@ class PrepeptideBase:
         return self._leader
 
     @leader.setter
-    def leader(self, seq: str):
+    def leader(self, seq: str) -> None:
         self._leader = seq
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "PrepeptideBase(%s..%s, %s, %r, %r)" % (self.start, self.end,
                                       self.score, self.rodeo_score, self._core)
 
     @property
-    def number_of_lan_bridges(self):
+    def number_of_lan_bridges(self) -> int:
         """
         function determines the number of lanthionine bridges in the core peptide
         """
         raise NotImplementedError()
 
-    def _calculate_mw(self):
+    def _calculate_mw(self) -> None:
         """
         (re)calculate the monoisotopic mass and molecular weight
         """
@@ -158,7 +160,7 @@ class PrepeptideBase:
         raise NotImplementedError()
 
     @property
-    def monoisotopic_mass(self):
+    def monoisotopic_mass(self) -> float:
         """ weight of the dehydrated core
         """
         if self._monoisotopic_weight is None:
@@ -168,7 +170,7 @@ class PrepeptideBase:
         return self._monoisotopic_weight
 
     @property
-    def molecular_weight(self):
+    def molecular_weight(self)-> float:
         """ Weight of the dehydrated core
         """
         if self._weight is None:
@@ -178,7 +180,7 @@ class PrepeptideBase:
         return self._weight
 
     @property
-    def alternative_weights(self):
+    def alternative_weights(self) -> List[float]:
         """ The possible alternative weights assuming one or more of the Ser/Thr
             residues aren't dehydrated
         """
@@ -190,7 +192,7 @@ class PrepeptideBase:
 class Lanthipeptide(PrepeptideBase):
     """ Calculates and stores lanthipeptide information
     """
-    def __init__(self, start, end, score, rodeo_score, lantype):
+    def __init__(self, start: int, end: int, score: int, rodeo_score: int, lantype: str) -> None:
         super().__init__(start, end, score, rodeo_score)
         self.lantype = lantype
         self._aminovinyl = False
@@ -198,7 +200,7 @@ class Lanthipeptide(PrepeptideBase):
         self._oxygenated = False
         self._lac = False
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "Lanthipeptide(%s..%s, %s, %r, %r, %s, %s(%s))" % (self.start,
                     self.end, self.score, self.lantype, self._core,
                     self._lan_bridges, self._monoisotopic_weight, self._weight)
@@ -309,7 +311,7 @@ class Lanthipeptide(PrepeptideBase):
         return self._lac
 
     @lactonated.setter
-    def lactonated(self, value: bool):
+    def lactonated(self, value: bool) -> None:
         """ Sets whether lanthipeptide has a lactone and triggers
             recalculation of the molecular weight
         """
@@ -318,20 +320,20 @@ class Lanthipeptide(PrepeptideBase):
             self._calculate_mw()
 
 
-class CleavageSiteHit(object):
+class CleavageSiteHit:
     """ A simple container for storing cleavage site information """
-    def __init__(self, start, end, score, lantype):
+    def __init__(self, start: int, end: int, score: int, lantype: str) -> None:
         self.start = start
         self.end = end
-        self.score = score
+        self.score = int(score)
         self.lantype = lantype
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "CleavageSiteHit(start=%s, end=%s, score=%s, lantype='%s')" % (
                     self.start, self.end, self.score, self.lantype)
 
 
-def get_detected_domains(genes: List[secmet.CDSFeature]) -> List[str]:
+def get_detected_domains(genes: List[CDSFeature]) -> List[str]:
     """ Gathers all detected domains in a cluster, including some not detected
         by hmm_detection.
 
@@ -387,7 +389,7 @@ def run_non_biosynthetic_phmms(fasta: str) -> Dict[str, List[str]]:
     return non_biosynthetic_hmms_by_id
 
 
-def predict_cleavage_site(query_hmmfile, target_sequence, threshold=-100) -> Optional[CleavageSiteHit]:
+def predict_cleavage_site(query_hmmfile: str, target_sequence: str, threshold: float = -100.) -> Optional[CleavageSiteHit]:
     """ Extracts from HMMER the start position, end position and score
         of the HMM alignment for a cleavage site
 
@@ -411,7 +413,7 @@ def predict_cleavage_site(query_hmmfile, target_sequence, threshold=-100) -> Opt
     return None
 
 
-def predict_class_from_genes(focus: secmet.CDSFeature, genes: List[secmet.CDSFeature]) -> Optional[str]:
+def predict_class_from_genes(focus: CDSFeature, genes: List[CDSFeature]) -> Optional[str]:
     """ Predict the lanthipeptide class from the gene cluster
 
         Arguments:
@@ -438,13 +440,13 @@ def predict_class_from_genes(focus: secmet.CDSFeature, genes: List[secmet.CDSFea
     return None
 
 
-def run_cleavage_site_phmm(fasta, hmmer_profile, threshold):
+def run_cleavage_site_phmm(fasta: str, hmmer_profile: str, threshold: float) -> Optional[CleavageSiteHit]:
     """ Try to identify cleavage site using pHMM """
     profile = path.get_full_path(__file__, hmmer_profile)
     return predict_cleavage_site(profile, fasta, threshold)
 
 
-def run_cleavage_site_regex(fasta):
+def run_cleavage_site_regex(fasta: str) -> Tuple[Optional[int], Optional[int], Optional[int]]:
     """ Try to identify cleavage site using regular expressions"""
     # Regular expressions; try 1 first, then 2, etc.
     rex1 = re.compile('F?LD')
@@ -458,11 +460,11 @@ def run_cleavage_site_regex(fasta):
         start, end = [m.span() for m in rex2.finditer(fasta)][-1]
         end += 15
     else:
-        return [None, None, None]
+        return None, None, None
     return start, end, 0
 
 
-def determine_precursor_peptide_candidate(record: secmet.Record, query: secmet.CDSFeature,
+def determine_precursor_peptide_candidate(record: Record, query: CDSFeature,
                                           query_sequence: str, domains: List[str],
                                           hmmer_profile: str) -> Optional[Lanthipeptide]:
     """ Identify precursor peptide candidates and split into two,
@@ -510,7 +512,7 @@ def determine_precursor_peptide_candidate(record: secmet.Record, query: secmet.C
     return lanthipeptide
 
 
-def run_lanthipred(record: secmet.Record, query: secmet.CDSFeature, lant_class, domains):
+def run_lanthipred(record: Record, query: CDSFeature, lant_class: str, domains: List[str]) -> Optional[Lanthipeptide]:
     """ Determines if a CDS is a predicted lanthipeptide based on the class
         and any contained domains.
 
@@ -541,7 +543,7 @@ def run_lanthipred(record: secmet.Record, query: secmet.CDSFeature, lant_class, 
             return None
 
         result = Lanthipeptide(cleavage_result.start, cleavage_result.end,
-                               cleavage_result.score, "N/A", lant_class)
+                               cleavage_result.score, None, lant_class)
         result.leader = query_sequence[:result.end]
         result.core = query_sequence[result.end:]
 
@@ -555,12 +557,12 @@ def run_lanthipred(record: secmet.Record, query: secmet.CDSFeature, lant_class, 
     if result.number_of_lan_bridges == 0:
         return None
 
-    query.gene_functions.add(secmet.GeneFunction.ADDITIONAL, "lanthipeptides",
+    query.gene_functions.add(GeneFunction.ADDITIONAL, "lanthipeptides",
                              "predicted lanthipeptide")
     return result
 
 
-def find_lan_a_features(cluster: secmet.Cluster) -> List[secmet.CDSFeature]:
+def find_lan_a_features(cluster: Cluster) -> List[CDSFeature]:
     """ Finds all lanthipeptide candidate features """
     lan_a_features = []
     for feature in cluster.cds_children:
@@ -576,7 +578,7 @@ def find_lan_a_features(cluster: secmet.Cluster) -> List[secmet.CDSFeature]:
     return lan_a_features
 
 
-def contains_feature_with_single_domain(genes: List[secmet.CDSFeature], domains: Set[str]) -> bool:
+def contains_feature_with_single_domain(genes: List[CDSFeature], domains: Set[str]) -> bool:
     """ Checks for the existence of a feature within a group that has a single
         domain and that the domain is within the provided set of domains
 
@@ -595,12 +597,12 @@ def contains_feature_with_single_domain(genes: List[secmet.CDSFeature], domains:
     return False
 
 
-class LanthipeptideMotif(secmet.Prepeptide):
+class LanthipeptideMotif(Prepeptide):
     """ A lanthipeptide-specific feature """
-    def __init__(self, location, core_seq, leader_seq,
-                 locus_tag, monoisotopic_mass, molecular_weight, alternative_weights,
-                 lan_bridges, lanthi_class, score, rodeo_score, aminovinyl,
-                 chlorinated, oxygenated, lactonated):
+    def __init__(self, location: FeatureLocation, core_seq: str, leader_seq: str,
+                 locus_tag: str, monoisotopic_mass: float, molecular_weight: float, alternative_weights: List[float],
+                 lan_bridges: int, lanthi_class: str, score: float, rodeo_score: int, aminovinyl: bool,
+                 chlorinated: bool, oxygenated: bool, lactonated: bool) -> None:
         super().__init__(location, "lanthipeptide", core_seq, locus_tag, lanthi_class,
                          score=score, monoisotopic_mass=monoisotopic_mass,
                          molecular_weight=molecular_weight,
@@ -628,7 +630,7 @@ class LanthipeptideMotif(secmet.Prepeptide):
             mods.append("Lac")
         return mods
 
-    def to_biopython(self, qualifiers: Dict[str, List] = None):
+    def to_biopython(self, qualifiers: Dict[str, List] = None) -> List[SeqFeature]:
         notes = []
         if not qualifiers:
             qualifiers = {}
@@ -648,7 +650,7 @@ class LanthipeptideMotif(secmet.Prepeptide):
             qualifiers["note"].extend(notes)
         return super().to_biopython(qualifiers=qualifiers)
 
-    def to_json(self):
+    def to_json(self) -> Dict[str, Any]:
         json = super().to_json()
         json["locus_tag"] = self.locus_tag  # not in vars() due to __slots__
         try:
@@ -674,7 +676,7 @@ class LanthipeptideMotif(secmet.Prepeptide):
         return LanthipeptideMotif(*args)  # pylint: disable=no-value-for-parameter
 
 
-def result_vec_to_feature(orig_feature: secmet.CDSFeature, res_vec: Lanthipeptide) -> LanthipeptideMotif:
+def result_vec_to_feature(orig_feature: CDSFeature, res_vec: Lanthipeptide) -> LanthipeptideMotif:
     """ Generates a LanthipeptideMotif feature from a CDSFeature and a Lanthipeptide
 
         Arguments:
@@ -693,8 +695,8 @@ def result_vec_to_feature(orig_feature: secmet.CDSFeature, res_vec: Lanthipeptid
     return feature
 
 
-def find_neighbours_in_range(center: secmet.CDSFeature,
-                             candidates: List[secmet.CDSFeature]) -> List[secmet.CDSFeature]:
+def find_neighbours_in_range(center: CDSFeature,
+                             candidates: List[CDSFeature]) -> List[CDSFeature]:
     """ Restrict a set of genes to those within precursor range of a central
         gene.
 
@@ -719,8 +721,8 @@ def find_neighbours_in_range(center: secmet.CDSFeature,
     return neighbours
 
 
-def run_lanthi_on_genes(record: secmet.Record, focus: secmet.CDSFeature,
-                        genes: List[secmet.CDSFeature], results: LanthiResults) -> None:
+def run_lanthi_on_genes(record: Record, focus: CDSFeature,
+                        genes: List[CDSFeature], results: LanthiResults) -> None:
     """ Runs lanthipeptide around a single focus gene which is a core biosynthetic
         enzyme for lanthipeptides.
         Updates the results object with any precursors found.
@@ -735,7 +737,7 @@ def run_lanthi_on_genes(record: secmet.Record, focus: secmet.CDSFeature,
             None
     """
     domains = get_detected_domains(genes)
-    non_candidate_neighbours = find_neighbours_in_range(focus, focus.cluster.cds_children)
+    non_candidate_neighbours = find_neighbours_in_range(focus, list(focus.cluster.cds_children))
     flavoprotein_found = contains_feature_with_single_domain(non_candidate_neighbours, {"Flavoprotein"})
     halogenase_found = contains_feature_with_single_domain(non_candidate_neighbours, {"Trp_halogenase"})
     oxygenase_found = contains_feature_with_single_domain(non_candidate_neighbours, {"p450"})
@@ -761,7 +763,7 @@ def run_lanthi_on_genes(record: secmet.Record, focus: secmet.CDSFeature,
             results.new_cds_features.add(candidate)
 
 
-def run_specific_analysis(record: secmet.Record) -> LanthiResults:
+def run_specific_analysis(record: Record) -> LanthiResults:
     """ Runs the full lanthipeptide analysis over the given record
 
         Arguments:

@@ -3,9 +3,12 @@
 
 """reserves/creates some cmdline options that we need placeholders for"""
 
-from typing import List
+from typing import Any, Dict, List, Optional
 
+from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
+from antismash.common.secmet import Record
+from antismash.common.module_results import ModuleResults
 
 NAME = "dummy"
 SHORT_DESCRIPTION = "options placeholders and base example"
@@ -31,7 +34,7 @@ def get_arguments() -> ModuleArgs:
     return args
 
 
-def check_options(options) -> List[str]:
+def check_options(options: ConfigType) -> List[str]:
     """ Check the options of this module for any conflicting or invalid values.
 
         Arguments:
@@ -57,14 +60,14 @@ def check_prereqs() -> List[str]:
     return []
 
 
-def is_enabled(options) -> bool:
+def is_enabled(options: ConfigType) -> bool:
     """ Returns True if this module should be run based on the options provided
     """
     # since this is largely a placeholder or demo, it is never enabled
     return False
 
 
-def regenerate_previous_results(previous, record, options):
+def regenerate_previous_results(previous: Dict[str, Any], record: Record, options: ConfigType) -> ModuleResults:
     """ Rebuild the previous run results from a JSON object into this module's
         python results class. If the current options are incompatible with the
         previous results, None should be returned.
@@ -83,7 +86,7 @@ def regenerate_previous_results(previous, record, options):
     return None
 
 
-def run_on_record(record, results, options):
+def run_on_record(record: Record, results: Optional[ModuleResults], options: ConfigType) -> ModuleResults:
     """ Run this module's analysis section on the given record or use the
         previous results.
 

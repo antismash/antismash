@@ -142,10 +142,14 @@ Complete examples:
 
 """
 
-import string
 from enum import IntEnum
 from operator import xor  # so type hints can be bool and not int
-from typing import List, Set, Union
+import string
+from typing import Any, Dict, List, Optional, Set, Type, Union
+
+from Bio.SearchIO._model.hsp import HSP
+
+from antismash.common.secmet import CDSFeature, FeatureLocation
 
 
 class RuleSyntaxError(SyntaxError):
@@ -153,39 +157,6 @@ class RuleSyntaxError(SyntaxError):
         parsed.
     """
     pass
-
-
-def is_legal_identifier(identifier) -> bool:
-    """ Returns true if the identifier matches the form:
-        [a-zA-Z]{[a-zA-Z0-9_-]}*
-    """
-    if not identifier[0].isalpha():
-        return False
-    for char in identifier:
-        if not (char.isalpha() or char.isdigit() or char in ['_', '-']):
-            return False
-    # for now, keep cluster reserved to avoid confusion with previous system
-    if identifier == "cluster":
-        return False
-    # to avoid confusion with minscore
-    if identifier == "score":
-        return False
-    # keywords
-    return True
-
-
-def find_condition_identifiers(tokens) -> Set[str]:
-    """ Finds and returns all identifiers within a condition section"""
-    identifiers = set()
-    in_conditions = False
-    for token in list(tokens):
-        if token.type == TokenTypes.CONDITIONS:
-            in_conditions = True
-        elif token.type.is_a_rule_keyword():
-            in_conditions = False
-        elif in_conditions and token.type == TokenTypes.IDENTIFIER:
-            identifiers.add(token.identifier)
-    return identifiers
 
 
 class TokenTypes(IntEnum):
@@ -212,18 +183,18 @@ class TokenTypes(IntEnum):
     CONDITIONS = 20
     SUPERIORS = 21
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.__str__()
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.name).lower()  # the str() is for pylint's sake
 
-    def get_hit_string(self):
+    def get_hit_string(self) -> str:
         """ Returns a string for marking which sections of a rule were satisfied """
         return str(self)
 
     @classmethod
-    def classify(cls, text):
+    def classify(cls: Type["TokenTypes"], text: str) -> "TokenTypes":
         """ Returns the type of a token or raises an error if no classification
             possible
         """
@@ -237,7 +208,7 @@ class TokenTypes(IntEnum):
                 raise RuleSyntaxError("Unclassifiable token: %s" % text)
         return classification
 
-    def is_a_rule_keyword(self):
+    def is_a_rule_keyword(self) -> bool:
         """ Returns True if the token is a rule structure keyword such as
             RULE, COMMENT, CONDITIONS, etc
         """
@@ -257,15 +228,15 @@ class Tokeniser:  # pylint: disable=too-few-public-methods
                "COMMENT": TokenTypes.COMMENT, "CUTOFF": TokenTypes.CUTOFF,
                "EXTENT": TokenTypes.EXTENT, "SUPERIORS": TokenTypes.SUPERIORS}
 
-    def __init__(self, text):
+    def __init__(self, text: str) -> None:
         self.text = text
-        self.tokens = []
+        self.tokens = []  # type: List[Token]
+        self.current_symbol = []  # type: List[str]
         self.tokenise()
-        self.current_symbol = []
 
-    def tokenise(self):
+    def tokenise(self) -> None:
         """ Does the work of separating tokens """
-        self.current_symbol = []
+        self.current_symbol.clear()
         global_position = 0
         position = 0
         line = 1
@@ -306,11 +277,11 @@ class Tokeniser:  # pylint: disable=too-few-public-methods
             global_position += 1
         self._finalise(line, len(self.text))
 
-    def _finalise(self, line, position):
+    def _finalise(self, line_number: int, position: int) -> None:
         """ convert the current collection of chars into a Token """
         if not self.current_symbol:
             return
-        self.tokens.append(Token("".join(self.current_symbol), line, position))
+        self.tokens.append(Token("".join(self.current_symbol), line_number, position))
         self.current_symbol.clear()
 
 
@@ -325,7 +296,7 @@ class Token:  # pylint: disable=too-few-public-methods
         if len(token_text) > 1:
             self.position -= len(token_text)
 
-    def __getattr__(self, key):
+    def __getattr__(self, key: str) -> Any:
         if key == 'value':
             if self.type != TokenTypes.INT:
                 raise AttributeError("Token is not numeric")
@@ -336,7 +307,7 @@ class Token:  # pylint: disable=too-few-public-methods
             return self.token_text
         return self.__dict__[key]
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         if self.type == TokenTypes.IDENTIFIER:
             return "'{}'".format(self.token_text)
         if self.type == TokenTypes.INT:
@@ -348,14 +319,15 @@ class Details:
     """ Keeps together a collection of useful contextual information when
         parsing
     """
-    def __init__(self, cds, feats, results, cutoff):
-        self.cds = cds  # str, name of cds that is being classified
+    def __init__(self, cds_name: str, feats: Dict[str, CDSFeature],
+                 results: Dict[str, HSP], cutoff: int) -> None:
+        self.cds = cds_name  # str, name of cds that is being classified
         self.features_by_id = feats  # { id : feature }
         self.results_by_id = results  # { id : HSP list }
-        self.possibilities = set(res.query_id for res in results.get(cds, []))
-        self.cutoff = cutoff  # int
+        self.possibilities = set(res.query_id for res in results.get(cds_name, []))
+        self.cutoff = int(cutoff)
 
-    def in_range(self, cds, other) -> bool:
+    def in_range(self, cds: FeatureLocation, other: FeatureLocation) -> bool:
         """ returns True if the two Locations are within cutoff distance
 
             this may be redundant if inputs are already limited, but here
@@ -367,7 +339,7 @@ class Details:
                        abs(cds_end - other_end), abs(other_start - cds_start))
         return distance < self.cutoff
 
-    def just_cds(self, cds_of_interest) -> "Details":
+    def just_cds(self, cds_of_interest: str) -> "Details":
         """ creates a new Details object with cds_of_interest as the focus
 
             the largest impact is Details.possibilities is updated
@@ -404,7 +376,9 @@ class Conditions:
     """ The base condition case. Can, and probably will, contain sub conditions
         (e.g. (a and b or c) style groups).
     """
-    def __init__(self, negated: bool, sub_conditions=None) -> None:
+    def __init__(self, negated: bool,
+                 sub_conditions: Optional[List[Union[TokenTypes, "Conditions"]]] = None
+                 ) -> None:
         self.negated = negated
         self.hits = 0
         assert self.negated in [False, True]
@@ -413,34 +387,42 @@ class Conditions:
         self.sub_conditions = sub_conditions
         # just make sure that it's empty or that we have binary ops (a OR b..)
         assert not sub_conditions or len(sub_conditions) % 2 == 1
-        if self.sub_conditions:
-            assert all(isinstance(sub, Conditions) for sub in self.operands)
-            assert all(isinstance(sub, TokenTypes) for sub in self.operators)
-            for operator in self.operators:
-                assert operator in [TokenTypes.AND, TokenTypes.OR]
-            unique_operands = set()  # type: Set[str]
-            for operand in map(str, self.operands):
-                if operand in unique_operands:
-                    raise ValueError("Rule contains repeated condition: %s\nfrom rule %s"
-                                     % (operand, self))
-                unique_operands.add(operand)
+
+        self._operands = []  # type: List[Conditions]
+        for sub in self.sub_conditions[::2]:
+            assert isinstance(sub, Conditions)
+            self._operands.append(sub)
+
+        self._operators = []  # type: List[TokenTypes]
+        for sub in self.sub_conditions[1::2]:
+            assert isinstance(sub, TokenTypes)
+            assert sub in [TokenTypes.AND, TokenTypes.OR]
+            self._operators.append(sub)
+
+        unique_operands = set()  # type: Set[str]
+        for operand in map(str, self.operands):
+            if operand in unique_operands:
+                raise ValueError("Rule contains repeated condition: %s\nfrom rule %s"
+                                 % (operand, self))
+            unique_operands.add(operand)
 
     @property
-    def operands(self):
+    def operands(self) -> List["Conditions"]:
         """ All operands from the conditions in the instance """
-        return self.sub_conditions[::2]
+        return self._operands
 
     @property
-    def operators(self):
+    def operators(self) -> List[TokenTypes]:
         """ All operators from the conditions in the instance """
-        return self.sub_conditions[1::2]
+        return self._operators
 
-    def are_subconditions_satisfied(self, details: Details, local_only=False) -> ConditionMet:
+    def are_subconditions_satisfied(self, details: Details, local_only: bool = False) -> ConditionMet:
         """ Returns whether all subconditions are satisfied.
 
             local_only limits the search to the single CDS in details
         """
         if len(self.sub_conditions) == 1:
+            assert isinstance(self.sub_conditions[0], Conditions)
             sub = self.sub_conditions[0].get_satisfied(details, local_only)
             return ConditionMet(sub.met, sub)
 
@@ -455,7 +437,7 @@ class Conditions:
             met |= sub_result.met
         return ConditionMet(met, matching)
 
-    def get_satisfied(self, details: Details, local_only=False) -> ConditionMet:
+    def get_satisfied(self, details: Details, local_only: bool = False) -> ConditionMet:
         """ Increments hit counter if satisfied and returns whether or not all
             conditions were satisfied.
         """
@@ -464,7 +446,7 @@ class Conditions:
             self.hits += 1
         return satisfied
 
-    def is_satisfied(self, details: Details, local_only=False) -> ConditionMet:
+    def is_satisfied(self, details: Details, local_only: bool = False) -> ConditionMet:
         """ Returns True if this condition is satisfied.
             Should be overridden in subclasses to suit their specific case.
         """
@@ -491,10 +473,10 @@ class Conditions:
             return True
         return any(sub.contains_positive_condition() for sub in self.operands)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.__str__()
 
-    def __str__(self):
+    def __str__(self) -> str:
         prefix = "not " if self.negated else ""
         if len(self.sub_conditions) == 1 \
                 and not isinstance(self.sub_conditions[0], AndCondition):
@@ -511,10 +493,10 @@ class AndCondition(Conditions):
         'a and not b' is fine, but again negating the operand and not the and.
         """
 
-    def __init__(self, subconditions):
+    def __init__(self, subconditions: List[Union[Conditions, TokenTypes]]) -> None:
         super().__init__(False, subconditions)
 
-    def is_satisfied(self, details: Details, local_only=False) -> ConditionMet:
+    def is_satisfied(self, details: Details, local_only: bool = False) -> ConditionMet:
         results = [sub.get_satisfied(details, local_only) for sub in self.operands]
         matched = set()  # type: Set[str]
         met = True
@@ -526,13 +508,13 @@ class AndCondition(Conditions):
     def get_hit_string(self) -> str:
         return "{}*({})".format(self.hits, " and ".join(op.get_hit_string() for op in self.operands))
 
-    def __str__(self):
+    def __str__(self) -> str:
         return " and ".join(map(str, self.operands))
 
 
 class MinimumCondition(Conditions):
     """ Represents the minimum() condition type"""
-    def __init__(self, negated, count, options):
+    def __init__(self, negated: bool, count: int, options: List[str]) -> None:
         self.count = count
         self.options = set(options)
         if len(self.options) != len(options):
@@ -541,7 +523,7 @@ class MinimumCondition(Conditions):
             raise ValueError("Minimum conditions must have a required count > 0")
         super().__init__(negated)
 
-    def is_satisfied(self, details, local_only=False) -> ConditionMet:
+    def is_satisfied(self, details: Details, local_only: bool = False) -> ConditionMet:
         """ local_only is ignored here, since a MinimumCondition can't be inside
             a CDSCondition
         """
@@ -567,18 +549,18 @@ class MinimumCondition(Conditions):
     def get_hit_string(self) -> str:
         return "{}*{}".format(self.hits, str(self))
 
-    def __str__(self):
-        return "{}minimum({}, [{}])".format("not " if self.negated else "",
-                self.count, ", ".join(sorted(list(self.options))))
+    def __str__(self) -> str:
+        return "{}minimum({}, [{}])".format("not " if self.negated else "", self.count,
+                                            ", ".join(sorted(list(self.options))))
 
 
 class CDSCondition(Conditions):
     """ Represents the cds() condition type """
-    def is_satisfied(self, details, local_only=False) -> ConditionMet:
+    def is_satisfied(self, details: Details, local_only: bool = False) -> ConditionMet:
         # all child conditions have to be within a single CDS
         # so we force local_only to True
         satisfied_internally = super().are_subconditions_satisfied(details.just_cds(details.cds),
-                local_only=True)
+                                                                   local_only=True)
         # start with the current cds (and end if local_only or satisifed)
         if local_only or satisfied_internally:
             return ConditionMet(xor(self.negated, satisfied_internally.met), satisfied_internally)
@@ -599,18 +581,18 @@ class CDSCondition(Conditions):
         prefix = "not " if self.negated else ""
         return "{}*({}cds({}))".format(self.hits, prefix, " ".join(sub.get_hit_string() for sub in self.sub_conditions))
 
-    def __str__(self):
+    def __str__(self) -> str:
         prefix = "not " if self.negated else ""
         return "{}cds({})".format(prefix, " ".join(map(str, self.sub_conditions)))
 
 
 class SingleCondition(Conditions):
     """ Represents a single domain type that must be present """
-    def __init__(self, negated, name):
+    def __init__(self, negated: bool, name: str) -> None:
         self.name = name
         super().__init__(negated)
 
-    def is_satisfied(self, details: Details, local_only=False) -> ConditionMet:
+    def is_satisfied(self, details: Details, local_only: bool = False) -> ConditionMet:
         found_in_cds = self.name in details.possibilities
         # do we only care about this CDS? then use the smaller set
         if local_only or found_in_cds:
@@ -643,7 +625,7 @@ class SingleCondition(Conditions):
             return "{}*(not {})".format(self.hits, self.name)
         return "{}*{}".format(self.hits, self.name)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "{}{}".format("not " if self.negated else "", self.name)
 
 
@@ -654,7 +636,7 @@ class ScoreCondition(Conditions):
         self.score = score
         super().__init__(negated)
 
-    def is_satisfied(self, details: Details, local_only=False) -> ConditionMet:
+    def is_satisfied(self, details: Details, local_only: bool = False) -> ConditionMet:
         """ local_only is ignored since a ScoreCondition can't be inside a
             CDSCondition
         """
@@ -692,7 +674,7 @@ class ScoreCondition(Conditions):
             return "{}*({})".format(self.hits, str(self))
         return "{}*{}".format(self.hits, str(self))
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "{}minscore({}, {})".format("not " if self.negated else "", self.name, self.score)
 
 
@@ -705,7 +687,8 @@ class DetectionRule:
             comments: any comments provided in the rule
             superiors: a list of other rule names superior to this one
         """
-    def __init__(self, name, cutoff, extent, conditions, comments="", superiors=None):
+    def __init__(self, name: str, cutoff: int, extent: int, conditions: Conditions,
+                 comments: str = "", superiors: List[str] = None) -> None:
         self.name = name
         self.cutoff = cutoff
         self.extent = extent
@@ -728,20 +711,21 @@ class DetectionRule:
         """
         return self.conditions.contains_positive_condition()
 
-    def detect(self, cds, feature_by_id, results_by_id) -> ConditionMet:
+    def detect(self, cds_name: str, feature_by_id: Dict[str, CDSFeature],
+               results_by_id: Dict[str, List[HSP]]) -> ConditionMet:
         """ Returns True if a cluster can be formed around this CDS
             using this rule
         """
-        details = Details(cds, feature_by_id, results_by_id, self.cutoff)
+        details = Details(cds_name, feature_by_id, results_by_id, self.cutoff)
         results = self.conditions.get_satisfied(details)
         if results and results.matches:
             self.hits += 1
         return results
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.__str__()
 
-    def __str__(self):
+    def __str__(self) -> str:
         condition_text = str(self.conditions)
         # strip off outer parens if they exist
         if condition_text[0] == "(" and condition_text[-1] == ')':
@@ -764,7 +748,7 @@ class DetectionRule:
                     comments, self.cutoff // 1000, self.extent // 1000, condition_text)
 
     def get_hit_string(self) -> str:
-        """ Returns a string representation of the rule marking how many times
+        """ Returns a string representation of the rule, marking how many times
             each subsection was satisfied.
         """
         return self.conditions.get_hit_string()[3:-1]
@@ -778,13 +762,12 @@ class Parser:  # pylint: disable=too-few-public-methods
     """ Responsible for parsing an entire block of text. Rules parsed from the
         text are stored in the .rules member.
     """
-    def __init__(self, text, signature_names: Set[str]):
+    def __init__(self, text: str, signature_names: Set[str]) -> None:
         self.lines = text.splitlines()
-        self.rules = []
-        self.rules_by_name = {}
+        self.rules = []  # type: List[DetectionRule]
+        self.rules_by_name = {}  # type: Dict[str, DetectionRule]
         self.current_line = 1
         self.current_token = None
-        identifiers = set()
         tokens = Tokeniser(text.expandtabs()).tokens
         # gather all signature identifiers from condition blocks
         identifiers = find_condition_identifiers(tokens)
@@ -878,11 +861,11 @@ class Parser:  # pylint: disable=too-few-public-methods
             self._consume(TokenTypes.NOT)
         return negated
 
-    def _parse_ands(self, lvalue, allow_cds) -> AndCondition:
+    def _parse_ands(self, lvalue: Conditions, allow_cds: bool) -> AndCondition:
         """ CONDITION and CONDITION { and CONDITION}
             ^ lvalue being passed in
         """
-        and_conditions = [lvalue]
+        and_conditions = [lvalue]  # type: List[Union[Conditions, TokenTypes]]
         and_conditions.append(self._consume(TokenTypes.AND).type)
         and_conditions.append(self._parse_single_condition(allow_cds))
         while self.current_token and self.current_token.type == TokenTypes.AND:
@@ -891,7 +874,7 @@ class Parser:  # pylint: disable=too-few-public-methods
             and_conditions.append(next_condition)
         return AndCondition(and_conditions)
 
-    def _parse_conditions(self, allow_cds=True, is_group=False) -> ConditionList:
+    def _parse_conditions(self, allow_cds: bool = True, is_group: bool = False) -> ConditionList:
         """    CONDITIONS = CONDITION {BINARY_OP CONDITIONS}*;
         """
         conditions = []  # type: List[Union[Conditions, TokenTypes]]
@@ -931,7 +914,7 @@ class Parser:  # pylint: disable=too-few-public-methods
                     " " * self.current_token.position))
         return conditions
 
-    def _parse_single_condition(self, allow_cds) -> Conditions:
+    def _parse_single_condition(self, allow_cds: bool) -> Conditions:
         """
             CONDITION = [UNARY_OP] ( ID | CONDITION_GROUP | MINIMUM | CDS );
             or we're in a CDS (i.e. allow_cds == False)
@@ -951,7 +934,7 @@ class Parser:  # pylint: disable=too-few-public-methods
             return self._parse_score(negated=negated)
         return SingleCondition(negated, self._consume_identifier())
 
-    def _parse_score(self, negated=False) -> ScoreCondition:
+    def _parse_score(self, negated: bool = False) -> ScoreCondition:
         """
             SCORE = minscore GROUP_OPEN ID COMMA INT GROUP_CLOSE
             e.g. minscore(trsC, 150)
@@ -981,7 +964,7 @@ class Parser:  # pylint: disable=too-few-public-methods
         self._consume(TokenTypes.GROUP_CLOSE)
         return conditions
 
-    def _parse_group(self, allow_cds) -> ConditionList:
+    def _parse_group(self, allow_cds: bool) -> ConditionList:
         """
             CONDITION_GROUP = GROUP_OPEN CONDITIONS GROUP_CLOSE;
         """
@@ -990,7 +973,7 @@ class Parser:  # pylint: disable=too-few-public-methods
         self._consume(TokenTypes.GROUP_CLOSE)
         return conditions
 
-    def _parse_minimum(self, negated=False) -> MinimumCondition:
+    def _parse_minimum(self, negated: bool = False) -> MinimumCondition:
         """
             MINIMUM = MINIMUM_LABEL GROUP_OPEN
                   count:INT COMMA
@@ -1044,3 +1027,36 @@ class Parser:  # pylint: disable=too-few-public-methods
         if len(superiors) != len(set(superiors)):
             raise ValueError("A rule's superiors cannot contain duplicates")
         return superiors
+
+
+def is_legal_identifier(identifier: str) -> bool:
+    """ Returns true if the identifier matches the form:
+        [a-zA-Z]{[a-zA-Z0-9_-]}*
+    """
+    if not identifier[0].isalpha():
+        return False
+    for char in identifier:
+        if not (char.isalpha() or char.isdigit() or char in ['_', '-']):
+            return False
+    # for now, keep cluster reserved to avoid confusion with previous system
+    if identifier == "cluster":
+        return False
+    # to avoid confusion with minscore
+    if identifier == "score":
+        return False
+    # keywords
+    return True
+
+
+def find_condition_identifiers(tokens: List[Token]) -> Set[str]:
+    """ Finds and returns all identifiers within a condition section"""
+    identifiers = set()
+    in_conditions = False
+    for token in list(tokens):
+        if token.type == TokenTypes.CONDITIONS:
+            in_conditions = True
+        elif token.type.is_a_rule_keyword():
+            in_conditions = False
+        elif in_conditions and token.type == TokenTypes.IDENTIFIER:
+            identifiers.add(token.identifier)
+    return identifiers

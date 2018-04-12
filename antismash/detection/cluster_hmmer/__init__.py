@@ -5,10 +5,11 @@
 
 import logging
 import os
-from typing import List
+from typing import Any, Dict, List, Optional
 
 from antismash.common import hmmer, path, pfamdb
-from antismash.config import get_config
+from antismash.common.secmet import Record
+from antismash.config import get_config, ConfigType
 from antismash.config.args import ModuleArgs
 
 NAME = "cluster_hmmer"
@@ -34,7 +35,7 @@ def get_arguments() -> ModuleArgs:
     return args
 
 
-def is_enabled(options) -> bool:
+def is_enabled(options: ConfigType) -> bool:
     """  Uses the supplied options to determine if the module should be run """
     return options.clusterhmmer
 
@@ -58,7 +59,7 @@ def check_prereqs() -> List[str]:
     return failure_messages
 
 
-def check_options(options) -> List[str]:
+def check_options(options: ConfigType) -> List[str]:
     """ Check the requested PFAM database exists """
     database_version = options.clusterhmmer_pfamdb_version
     pfam_dir = os.path.join(options.database_dir, "pfam")
@@ -67,14 +68,16 @@ def check_options(options) -> List[str]:
     return pfamdb.check_db(os.path.join(pfam_dir, database_version))
 
 
-def regenerate_previous_results(previous, record, options) -> hmmer.HmmerResults:
+def regenerate_previous_results(previous: Dict[str, Any], record: Record,
+                                _options: ConfigType) -> hmmer.HmmerResults:
     """ Rebuild previous results """
     if not previous:
         return None
     return hmmer.HmmerResults.from_json(previous, record, MAX_EVALUE, MIN_SCORE)
 
 
-def run_on_record(record, results, options) -> hmmer.HmmerResults:
+def run_on_record(record: Record, results: Optional[hmmer.HmmerResults],
+                  options: ConfigType) -> hmmer.HmmerResults:
     """ Run hmmsearch against PFAM for all CDS features within the record """
 
     if options.clusterhmmer_pfamdb_version == "latest":

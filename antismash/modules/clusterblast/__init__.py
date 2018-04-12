@@ -5,18 +5,19 @@
 
 import logging
 import os
-from typing import List
+from typing import Any, Dict, List, Optional
 
-import antismash.common.path as path
-from antismash.config import get_config
+from antismash.common import path
+from antismash.common.secmet import Record
+from antismash.config import get_config, ConfigType
 from antismash.config.args import ModuleArgs
 
 from .core import load_clusterblast_database, internal_homology_blast
 from .clusterblast import perform_clusterblast
+from .html_output import will_handle, generate_details_div
 from .known import run_knownclusterblast_on_record, check_known_prereqs
 from .results import ClusterBlastResults, get_result_limit
 from .sub import run_subclusterblast_on_record, check_sub_prereqs
-from .html_output import will_handle, generate_details_div
 
 NAME = "clusterblast"
 SHORT_DESCRIPTION = "comparative gene cluster analysis"
@@ -62,13 +63,13 @@ def get_arguments() -> ModuleArgs:
     return args
 
 
-def is_enabled(options) -> bool:
+def is_enabled(options: ConfigType) -> bool:
     """  Uses the supplied options to determine if the module should be run
     """
     return options.cb_general or options.cb_knownclusters or options.cb_subclusters
 
 
-def check_options(options) -> List[str]:
+def check_options(options: ConfigType) -> List[str]:
     """ Checks that extra options are valid """
     if options.cb_nclusters > get_result_limit():
         return ["nclusters of %d is over limit of %d" % (
@@ -76,7 +77,8 @@ def check_options(options) -> List[str]:
     return []
 
 
-def regenerate_previous_results(previous, record, options) -> ClusterBlastResults:
+def regenerate_previous_results(previous: Dict[str, Any], record: Record,
+                                _options: ConfigType) -> ClusterBlastResults:
     """ Regenerates previous results """
     if not previous:
         logging.debug("No previous clusterblast results to reuse")
@@ -84,7 +86,7 @@ def regenerate_previous_results(previous, record, options) -> ClusterBlastResult
     return ClusterBlastResults.from_json(previous, record)
 
 
-def check_prereqs():
+def check_prereqs() -> List[str]:
     "Check if all required applications are around"
     options = get_config()
     # Tuple is ( binary_name, optional)
@@ -116,7 +118,8 @@ def check_prereqs():
     return failure_messages
 
 
-def run_on_record(record, results, options):
+def run_on_record(record: Record, results: Optional[ClusterBlastResults],
+                  options: ConfigType) -> ClusterBlastResults:
     """ Runs the specified clusterblast variants over the record """
     if not results:
         results = ClusterBlastResults(record.id)

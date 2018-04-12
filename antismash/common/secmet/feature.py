@@ -15,7 +15,13 @@ from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 from Bio.SeqRecord import SeqRecord
 
-from .qualifiers import NRPSPKSQualifier, SecMetQualifier, GeneFunction, GeneFunctionAnnotations, ActiveSiteFinderQualifier, GOQualifier
+from .qualifiers import (ActiveSiteFinderQualifier,
+                         GeneFunction,
+                         GeneFunctionAnnotations,
+                         GOQualifier,
+                         NRPSPKSQualifier,
+                         SecMetQualifier,
+                         )
 
 
 def _convert_protein_position_to_dna(start: int, end: int, location: FeatureLocation) -> Tuple[int, int]:
@@ -40,7 +46,9 @@ def _convert_protein_position_to_dna(start: int, end: int, location: FeatureLoca
 
     # only CompoundLocations are complicated
     if not isinstance(location, CompoundLocation):
-        assert location.start <= dna_start < dna_end <= location.end, "Converted coordinates %d..%d out of bounds for location %s" % (dna_start, dna_end, location)
+        if not location.start <= dna_start < dna_end <= location.end:
+            raise ValueError(("Converted coordinates %d..%d "
+                              "out of bounds for location %s") % (dna_start, dna_end, location))
         return dna_start, dna_end
 
     parts = sorted(location.parts, key=lambda x: x.start)
@@ -64,7 +72,9 @@ def _convert_protein_position_to_dna(start: int, end: int, location: FeatureLoca
     assert start_found
     assert end_found
 
-    assert location.start <= dna_start < dna_end <= location.end, "Converted coordinates %d..%d out of bounds for location %s" % (dna_start, dna_end, location)
+    if not location.start <= dna_start < dna_end <= location.end:
+        raise ValueError(("Converted coordinates %d..%d "
+                          "out of bounds for location %s") % (dna_start, dna_end, location))
     return dna_start, dna_end
 
 
@@ -146,7 +156,8 @@ class Feature:
                 new_locations.append(location)
 
         if not new_locations:
-            raise ValueError("Could not create compound location from %s and internal protein coordinates %d..%d (dna %d..%d)" % (
+            raise ValueError(("Could not create compound location from"
+                              " %s and internal protein coordinates %d..%d (dna %d..%d)") % (
                                 str(self.location), start, end, dna_start, dna_end))
         if self.location.strand == -1:
             new_locations.reverse()
@@ -232,7 +243,7 @@ class Feature:
 
     @staticmethod
     def from_biopython(bio_feature: SeqFeature, feature: "Feature" = None,
-                       leftovers: Dict[str, Any] = None) -> SeqFeature:
+                       leftovers: Dict[str, Any] = None) -> "Feature":
         """ Converts a SeqFeature into a single Feature instance.
 
             Arguments:
@@ -272,8 +283,9 @@ class Gene(Feature):
     """ A feature representing a Gene (more general than a CDS) """
     __slots__ = ["_pseudo", "locus_tag", "gene_name"]
 
-    def __init__(self, location, locus_tag=None, gene_name=None, pseudo_gene=False,
-                 created_by_antismash=False, qualifiers=None):
+    def __init__(self, location: FeatureLocation, locus_tag: Optional[str] = None,
+                 gene_name: Optional[str] = None, pseudo_gene: bool = False,
+                 created_by_antismash: bool = False, qualifiers: Optional[Dict[str, List[str]]] = None) -> None:
         super().__init__(location, feature_type="gene",
                          created_by_antismash=created_by_antismash)
         self.locus_tag = str(locus_tag) if locus_tag else None
@@ -308,7 +320,8 @@ class Gene(Feature):
         return super().to_biopython(qualifiers)
 
     @staticmethod
-    def from_biopython(bio_feature, feature=None, leftovers=None) -> "Gene":
+    def from_biopython(bio_feature: SeqFeature, feature: "Gene" = None,  # type: ignore
+                       leftovers: Dict[str, List[str]] = None) -> "Gene":
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
         # grab mandatory qualifiers and create the class
@@ -317,11 +330,7 @@ class Gene(Feature):
         pseudo = "pseudo" in leftovers
         if pseudo:
             leftovers.pop("pseudo")
-        try:
-            feature = Gene(bio_feature.location, locus_tag=locus, gene_name=name, pseudo_gene=pseudo)
-        except AssertionError:
-            print(locus, name, bio_feature.qualifiers)
-            raise
+        feature = Gene(bio_feature.location, locus_tag=locus, gene_name=name, pseudo_gene=pseudo)
         super(Gene, feature).from_biopython(bio_feature, feature=feature, leftovers=leftovers)
         return feature
 
@@ -360,18 +369,18 @@ class ClusterBorder(Feature):
             assert isinstance(rule, str), type(rule)
         self.rule = rule
 
-    def to_biopython(self, qualifiers=None):
-        mine = OrderedDict()
+    def to_biopython(self, qualifiers: Dict[str, List[str]] = None) -> List[SeqFeature]:
+        mine = OrderedDict()  # type: Dict[str, List[str]]
         mine["aStool"] = [self.tool]
-        mine["contig_edge"] = [self.contig_edge]
+        mine["contig_edge"] = [str(self.contig_edge)]
         if self.probability is not None:
             mine["probability"] = [str(self.probability)]
         if self.product:
             mine["product"] = [self.product]
         if self.cutoff:
-            mine["cutoff"] = [self.cutoff]
+            mine["cutoff"] = [str(self.cutoff)]
         if self.extent:
-            mine["extent"] = [self.extent]
+            mine["extent"] = [str(self.extent)]
         if self.rule:
             mine["rule"] = [self.rule]
         if qualifiers:
@@ -379,7 +388,8 @@ class ClusterBorder(Feature):
         return super().to_biopython(mine)
 
     @staticmethod
-    def from_biopython(bio_feature, feature=None, leftovers=None):
+    def from_biopython(bio_feature: SeqFeature, feature: "ClusterBorder" = None,    # type: ignore
+                       leftovers: Dict[str, List[str]] = None) -> "ClusterBorder":
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
 
@@ -387,9 +397,9 @@ class ClusterBorder(Feature):
         tool = leftovers.pop("aStool")[0]
 
         # optional
-        probability = leftovers.pop("probability", [None])[0]
-        cutoff = leftovers.pop("cutoff", [0])[0]
-        extent = leftovers.pop("extent", [0])[0]
+        probability = float(leftovers.pop("probability")[0]) if "probability" in leftovers else None
+        cutoff = int(leftovers.pop("cutoff", ["0"])[0])
+        extent = int(leftovers.pop("extent", ["0"])[0])
         rule = leftovers.pop("rule", [None])[0]
         product = leftovers.pop("product", [None])[0]
         contig_edge = leftovers.pop("contig_edge", [""])[0] == "True"
@@ -415,17 +425,17 @@ class AntismashFeature(Feature):
     __slots__ = ["domain_id", "database", "detection", "_evalue", "label",
                  "locus_tag", "_score", "_translation"]
 
-    def __init__(self, location, feature_type):
+    def __init__(self, location: FeatureLocation, feature_type: str) -> None:
         super().__init__(location, feature_type, created_by_antismash=True)
-        self.domain_id = None
-        self.database = None
-        self.detection = None
-        self._evalue = None  # float
-        self.label = None
-        self.locus_tag = None
-        self._score = None  # float
+        self.domain_id = None  # type: str
+        self.database = None  # type: str
+        self.detection = None  # type: str
+        self._evalue = None  # type: float
+        self.label = None  # type: str
+        self.locus_tag = None  # type: str
+        self._score = None  # type: float
 
-        self._translation = None
+        self._translation = ""
 
     @property
     def translation(self) -> str:
@@ -435,36 +445,36 @@ class AntismashFeature(Feature):
         return self._translation
 
     @translation.setter
-    def translation(self, translation: str):
+    def translation(self, translation: str) -> None:
         assert isinstance(translation, str)
         if not translation:
             raise ValueError("Domain translation cannot be empty")
         self._translation = translation
 
     @property
-    def score(self):
+    def score(self) -> float:
         """ The bitscore reported by a tool when locating the feature """
         return self._score
 
     @score.setter
-    def score(self, score):
+    def score(self, score: float) -> None:
         self._score = float(score)
 
     @property
-    def evalue(self):
+    def evalue(self) -> float:
         """ The e-value reported by a tool when locating the feature """
         return self._evalue
 
     @evalue.setter
-    def evalue(self, evalue):
+    def evalue(self, evalue: float) -> None:
         self._evalue = float(evalue)
 
     def get_name(self) -> str:
         """ Returns the domain's identifier """
         return self.domain_id
 
-    def to_biopython(self, qualifiers=None):
-        mine = OrderedDict()
+    def to_biopython(self, qualifiers: Dict[str, List[str]] = None) -> List[SeqFeature]:
+        mine = OrderedDict()  # type: Dict[str, List[str]]
         if self.label:
             mine["label"] = [self.label]
         if self.score is not None:
@@ -486,7 +496,8 @@ class AntismashFeature(Feature):
         return super().to_biopython(mine)
 
     @staticmethod
-    def from_biopython(bio_feature, qualifiers=None, feature=None, leftovers=None):
+    def from_biopython(bio_feature: SeqFeature, feature: "AntismashFeature" = None,  # type: ignore
+                       leftovers: Dict[str, List[str]] = None) -> "AntismashFeature":
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
         if not feature:
@@ -508,16 +519,19 @@ class AntismashFeature(Feature):
             feature.score = float(leftovers.pop("score")[0])
 
         # grab parent optional qualifiers
-        return Feature.from_biopython(bio_feature, feature=feature, leftovers=leftovers)
+        updated = super(AntismashFeature, feature).from_biopython(bio_feature, feature=feature, leftovers=leftovers)
+        assert isinstance(updated, AntismashFeature)
+        return updated
 
 
 class Domain(AntismashFeature):
     """ A base class for features which represent a domain type """
     __slots__ = ["tool", "domain", "_asf"]
 
-    def __init__(self, location, feature_type, domain: Optional[str] = None):
+    def __init__(self, location: FeatureLocation, feature_type: str,
+                 domain: Optional[str] = None) -> None:
         super().__init__(location, feature_type)
-        self.tool = None
+        self.tool = None  # type: Optional[str]
         if domain is not None:
             if not isinstance(domain, str):
                 raise TypeError("Domain must be given domain as a string, not %s" % type(domain))
@@ -531,8 +545,8 @@ class Domain(AntismashFeature):
         """ An ActiveSiteFinderQualifier storing active site descriptions """
         return self._asf
 
-    def to_biopython(self, qualifiers=None):
-        mine = OrderedDict()
+    def to_biopython(self, qualifiers: Dict[str, List[str]] = None) -> List[SeqFeature]:
+        mine = OrderedDict()  # type: Dict[str, List[str]]
         if self.tool:
             mine["aSTool"] = [self.tool]
         if self.domain:
@@ -542,7 +556,8 @@ class Domain(AntismashFeature):
         return super().to_biopython(mine)
 
     @staticmethod
-    def from_biopython(bio_feature, feature=None, leftovers=None):
+    def from_biopython(bio_feature: SeqFeature, feature: "Domain" = None,  # type: ignore
+                       leftovers: Dict[str, List[str]] = None) -> "Domain":
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
         if not feature:
@@ -555,29 +570,37 @@ class Domain(AntismashFeature):
         feature.domain = leftovers.pop("aSDomain", [None])[0]
 
         # grab parent optional qualifiers
-        return AntismashFeature.from_biopython(bio_feature, feature=feature, leftovers=leftovers)
+        updated = super(Domain, feature).from_biopython(bio_feature, feature=feature, leftovers=leftovers)
+        assert updated is feature
+        assert isinstance(updated, Domain)
+        return updated
 
 
 class CDSMotif(Domain):
     """ A base class for features that represent a motif within a CDSFeature """
     __slots__ = ["motif"]
 
-    def __init__(self, location):
+    def __init__(self, location: FeatureLocation) -> None:
         super().__init__(location, feature_type="CDS_motif")
-        self.motif = None
+        self.motif = None  # type: Optional[str]
 
     @staticmethod
-    def from_biopython(bio_feature, feature=None, leftovers=None):
+    def from_biopython(bio_feature: SeqFeature, feature: Optional["CDSMotif"] = None,  # type: ignore
+                       leftovers: Optional[Dict[str, List[str]]] = None) -> "CDSMotif":
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
         if not feature:
             feature = CDSMotif(bio_feature.location)
 
-        feature.motif = leftovers.pop("description", [None])[0]
-        return super(CDSMotif, feature).from_biopython(bio_feature, feature, leftovers)
+        if "motif" in leftovers:
+            feature.motif = leftovers.pop("motif")[0]
+        updated = super(CDSMotif, feature).from_biopython(bio_feature, feature, leftovers)
+        assert updated is feature
+        assert isinstance(updated, CDSMotif)
+        return updated
 
-    def to_biopython(self, qualifiers=None):
-        mine = OrderedDict()
+    def to_biopython(self, qualifiers: Dict[str, List] = None) -> List[SeqFeature]:
+        mine = OrderedDict()  # type: Dict[str, List[str]]
         if self.motif:
             mine["motif"] = [self.motif]
         if qualifiers:
@@ -614,11 +637,11 @@ class PFAMDomain(Domain):
             raise ValueError("A PFAMDomain protein location cannot end before it starts")
         self.gene_ontologies = None  # type: Optional[GOQualifier]
 
-    def to_biopython(self, qualifiers=None):
-        mine = OrderedDict()
+    def to_biopython(self, qualifiers: Dict[str, List[str]] = None) -> List[SeqFeature]:
+        mine = OrderedDict()  # type: Dict[str, List[str]]
         mine["description"] = [self.description]
-        mine["protein_start"] = [self.protein_start]
-        mine["protein_end"] = [self.protein_end]
+        mine["protein_start"] = [str(self.protein_start)]
+        mine["protein_end"] = [str(self.protein_end)]
         if self.probability is not None:
             mine["probability"] = [self.probability]
         if self.db_xref:
@@ -631,7 +654,8 @@ class PFAMDomain(Domain):
         return super().to_biopython(mine)
 
     @staticmethod
-    def from_biopython(bio_feature, feature=None, leftovers=None):
+    def from_biopython(bio_feature: SeqFeature, feature: "PFAMDomain" = None,  # type: ignore
+                       leftovers: Dict[str, List[str]] = None) -> "PFAMDomain":
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
         # grab mandatory qualifiers and create the class
@@ -645,19 +669,21 @@ class PFAMDomain(Domain):
         feature.gene_ontologies = GOQualifier.from_biopython(leftovers.pop("gene_ontologies", []))
 
         # grab parent optional qualifiers
-        return super(PFAMDomain, feature).from_biopython(bio_feature, feature=feature, leftovers=leftovers)
+        updated = super(PFAMDomain, feature).from_biopython(bio_feature, feature=feature, leftovers=leftovers)
+        assert isinstance(updated, PFAMDomain)
+        return updated
 
 
 class AntismashDomain(Domain):
     """ A class to represent a Domain with extra specificities and type information """
     __slots__ = ["domain_subtype", "specificity"]
 
-    def __init__(self, location):
+    def __init__(self, location: FeatureLocation) -> None:
         super().__init__(location, feature_type="aSDomain")
-        self.domain_subtype = None
-        self.specificity = []
+        self.domain_subtype = None  # type: str
+        self.specificity = []  # type: List[str]
 
-    def to_biopython(self, qualifiers=None) -> List[SeqFeature]:
+    def to_biopython(self, qualifiers: Dict[str, List[str]] = None) -> List[SeqFeature]:
         mine = OrderedDict()  # type: Dict[str, List[str]]
         if self.domain_subtype:
             mine["domain_subtype"] = [self.domain_subtype]
@@ -670,7 +696,8 @@ class AntismashDomain(Domain):
         return super().to_biopython(mine)
 
     @staticmethod
-    def from_biopython(bio_feature, feature=None, leftovers=None) -> "AntismashDomain":
+    def from_biopython(bio_feature: SeqFeature, feature: "AntismashDomain" = None,  # type: ignore
+                       leftovers: Dict[str, List[str]] = None) -> "AntismashDomain":
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
         # grab mandatory qualifiers and create the class
@@ -678,7 +705,7 @@ class AntismashDomain(Domain):
 
         # grab optional qualifiers
         feature.domain_subtype = leftovers.pop("domain_subtype", [None])[0]
-        feature.specificity = list(leftovers.pop("specificity", []))
+        feature.specificity = leftovers.pop("specificity", [])
 
         # grab parent optional qualifiers
         super(AntismashDomain, feature).from_biopython(bio_feature, feature=feature, leftovers=leftovers)
@@ -689,11 +716,11 @@ class AntismashDomain(Domain):
 class CDSFeature(Feature):
     """ A feature representing a single CDS/gene. """
     __slots__ = ["_translation", "protein_id", "locus_tag", "gene", "product",
-                 "transl_table", "_sec_met", "product_prediction", "cluster", "_gene_functions",
+                 "transl_table", "_sec_met", "cluster", "_gene_functions",
                  "unique_id", "_nrps_pks", "motifs"]
 
-    def __init__(self, location, translation=None, locus_tag=None, protein_id=None,
-                 product=None, gene=None):
+    def __init__(self, location: FeatureLocation, translation: str = None, locus_tag: str = None,
+                 protein_id: str = None, product: str = None, gene: str = None) -> None:
         super().__init__(location, feature_type="CDS")
         if location.strand not in [1, -1]:
             raise ValueError("Strand must be 1 or -1 for a CDS, not %s" % location.strand)
@@ -706,25 +733,24 @@ class CDSFeature(Feature):
         self.protein_id = _sanitise_id_value(protein_id)
         self.locus_tag = _sanitise_id_value(locus_tag)
         self.gene = _sanitise_id_value(gene)
-        self._translation = None
+        self._translation = None  # type: Optional[str]
         if translation is not None:
             self.translation = translation
 
         # optional
         self.product = product
-        self.transl_table = "Standard"
-        self._sec_met = None  # SecMetQualifier()
+        self.transl_table = "Standard"  # type: Union[str, int]
+        self._sec_met = None  # type: SecMetQualifier
         self._nrps_pks = NRPSPKSQualifier(self.location.strand)
-        self.product_prediction = []  # TODO: shift into nrps sub section?
 
-        self.motifs = []
+        self.motifs = []  # type: List[CDSMotif]
 
         if not (protein_id or locus_tag or gene):
             raise ValueError("CDSFeature requires at least one of: gene, protein_id, locus_tag")
 
         # runtime-only data
-        self.cluster = None
-        self.unique_id = None  # set only when added to a record
+        self.cluster = None  # type: Optional[Cluster]
+        self.unique_id = None  # type: Optional[str] # set only when added to a record
 
     @property
     def gene_functions(self) -> GeneFunctionAnnotations:
@@ -746,18 +772,18 @@ class CDSFeature(Feature):
         return self._sec_met
 
     @sec_met.setter
-    def sec_met(self, sec_met):
+    def sec_met(self, sec_met: SecMetQualifier) -> None:
         if sec_met is not None and not isinstance(sec_met, SecMetQualifier):
             raise TypeError("CDSFeature.sec_met can only be set to an instance of SecMetQualifier")
         self._sec_met = sec_met
 
     @property
-    def nrps_pks(self):
+    def nrps_pks(self) -> NRPSPKSQualifier:
         """ The NRPSPKSQualifier of the feature """
         return self._nrps_pks
 
     @nrps_pks.setter
-    def nrps_pks(self, qualifier):
+    def nrps_pks(self, qualifier: NRPSPKSQualifier) -> None:
         if qualifier is not None and not isinstance(qualifier, NRPSPKSQualifier):
             raise TypeError("CDSFeature.nrps_pks can only be set to an instance of NRPSPKSQualifier")
         self._nrps_pks = qualifier
@@ -787,7 +813,7 @@ class CDSFeature(Feature):
         raise ValueError("%s altered to contain no identifiers" % self)
 
     @staticmethod
-    def from_biopython(bio_feature: SeqFeature, feature: Feature = None,
+    def from_biopython(bio_feature: SeqFeature, feature: "CDSFeature" = None,  # type: ignore
                        leftovers: Optional[Dict] = None) -> "CDSFeature":
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
@@ -822,7 +848,6 @@ class CDSFeature(Feature):
         gene_functions = leftovers.pop("gene_functions", [])
         if gene_functions:
             feature.gene_functions.add_from_qualifier(gene_functions)
-        feature.product_prediction = leftovers.pop("aSProdPred", [])
 
         # grab parent optional qualifiers
         super(CDSFeature, feature).from_biopython(bio_feature, feature=feature, leftovers=leftovers)
@@ -833,8 +858,6 @@ class CDSFeature(Feature):
         mine = OrderedDict()  # type: Dict[str, List[str]]
         # mandatory
         mine["translation"] = [self.translation]
-        if self.product_prediction:
-            mine["aSProdPred"] = [self.product_prediction]
         # optional
         for attr in ["gene", "transl_table", "locus_tag",
                      "protein_id", "product"]:
@@ -863,25 +886,29 @@ class Prepeptide(CDSMotif):
         construction with a leader, core and tail. To allow for multiple types
         of prepeptide (e.g. lanthi- or sacti-peptides), only the core must exist.
     """
-    def __init__(self, location, peptide_class, core, locus_tag, peptide_subclass=None,
-                 score=0., monoisotopic_mass=0., molecular_weight=0.,
-                 alternative_weights=None, leader="", tail="", **kwargs):
+    def __init__(self, location: FeatureLocation, peptide_class: str, core: str, locus_tag: str,
+                 peptide_subclass: str = None, score: float = 0., monoisotopic_mass: float = 0.,
+                 molecular_weight: float = 0., alternative_weights: List[float] = None,
+                 leader: str = "", tail: str = "") -> None:
         """
             Arguments:
                 peptide_class: the kind of prepeptide, e.g. 'lanthipeptide', 'thiopeptide'
                 core: the sequence of the core
                 locus_tag: the locus tag to use for the feature
                 prepeptide_subclass: the subclass of the prepeptide, e.g. 'Type II'
+                score: the prepeptide score
+                monoisotopic_mass: the monoisotopic mass of the prepeptide
+                molecular_weight: the molecular weight of the prepeptide
+                alternative_weights: a list of alternative weights for the prepeptide
                 leader: the sequence of the leader, if it exists
                 tail: the sequence of the tail, if it exists
-                ... other args that will be passed through to CDSFeature
         """
+        super().__init__(location)
         for arg in [peptide_class, core, leader, tail]:
             assert isinstance(arg, str), type(arg)
         self._leader = leader
         self._core = core
         self._tail = tail
-        super().__init__(location, **kwargs)
         self.locus_tag = locus_tag
         self.type = "CDS_motif"
         self.peptide_class = peptide_class
@@ -891,8 +918,8 @@ class Prepeptide(CDSMotif):
         self.score = float(score)
         self.monoisotopic_mass = float(monoisotopic_mass)
         self.molecular_weight = float(molecular_weight)
-        self.alternative_weights = []
-        if alternative_weights:
+        self.alternative_weights = []  # type: List[float]
+        if alternative_weights is not None:
             self.alternative_weights = [float(weight) for weight in alternative_weights]
 
     @property
@@ -1014,29 +1041,29 @@ class Cluster(Feature):
                  "clusterblast", "knownclusterblast", "subclusterblast",
                  "parent_record", "cds_children", "borders", "monomers_prediction"]
 
-    def __init__(self, location: FeatureLocation, cutoff: int, extent: int, products: List) -> None:
+    def __init__(self, location: FeatureLocation, cutoff: int, extent: int, products: List[str]) -> None:
         super().__init__(location, feature_type="cluster",
                          created_by_antismash=True)
 
         self._extent = int(extent)
         self._cutoff = int(cutoff)
-        self._products = []
+        self._products = []  # type: List[str]
         for product in products:
             self.add_product(product)
 
-        self.contig_edge = None  # hmm_detection borderpredict
-        self.detection_rules = []
-        self.smiles_structure = None  # SMILES string
+        self.contig_edge = None  # type: Optional[bool] # hmm_detection borderpredict
+        self.detection_rules = []  # type: List[str]
+        self.smiles_structure = None  # type: Optional[str] # SMILES string
         self.monomers_prediction = None
 
-        self.clusterblast = None
-        self.knownclusterblast = None
-        self.subclusterblast = None
+        self.clusterblast = None  # type: Any  # TODO: actually a clusterblast result, remove
+        self.knownclusterblast = None  # type: Any  # TODO: actually a clusterblast result, remove
+        self.subclusterblast = None  # type: Any  # TODO: actually a clusterblast result, remove
 
         # for runtime management
-        self.parent_record = None
-        self.cds_children = OrderedDict()
-        self.borders = []
+        self.parent_record = None  # type: Any  # TODO: optional Record, but that's a circular dependency
+        self.cds_children = OrderedDict()  # type: Dict[CDSFeature, None]
+        self.borders = []  # type: List[ClusterBorder]
 
     @property
     def products(self) -> Iterable[str]:
@@ -1048,14 +1075,14 @@ class Cluster(Feature):
         assert product and isinstance(product, str), str(product)
         self._products.append(product)
 
-    def get_cluster_number(self):
+    def get_cluster_number(self) -> int:
         """ Returns the cluster number which the parent record uses to refer to
             this cluster. """
         if not self.parent_record:
             raise ValueError("Cluster not contained in record")
         return self.parent_record.get_cluster_number(self)
 
-    def trim_overlapping(self):
+    def trim_overlapping(self) -> None:
         """ Shrinks the cluster, where possible, to exclude any features which
             overlap with the edges of the cluster.
             Any feature fully contained before shrinking will still be fully
@@ -1064,8 +1091,7 @@ class Cluster(Feature):
         if not self.parent_record:
             logging.warning("Trimming cluster which does not belong to a record")
             return
-        features = self.parent_record.get_cds_features_within_location(self.location,
-                                            with_overlapping=True)
+        features = self.parent_record.get_cds_features_within_location(self.location, with_overlapping=True)
         # don't trim if there's no features to trim by
         if not features:
             return
@@ -1122,38 +1148,38 @@ class Cluster(Feature):
         for cds in self.cds_children:
             assert cds.is_contained_by(self), "cluster trimming removed wholly contained CDS"
 
-    def add_cds(self, cds: CDSFeature):
+    def add_cds(self, cds: CDSFeature) -> None:
         """ Adds a CDSFeature to the cluster """
         assert isinstance(cds, CDSFeature)
         assert cds.is_contained_by(self), "cds %s outside cluster %s" % (cds, self)
         self.cds_children[cds] = None
 
     @property
-    def cutoff(self):
+    def cutoff(self) -> int:
         """ The maximal distance between genes when defining the cluster.
             The distance between core genes after definition will likely be
             smaller."""
         return self._cutoff
 
     @cutoff.setter
-    def cutoff(self, cutoff):
+    def cutoff(self, cutoff: int) -> None:
         if cutoff is not None:
             cutoff = int(cutoff)
         self._cutoff = cutoff
 
     @property
-    def extent(self):
+    def extent(self) -> int:
         """ The distance the cluster extends from the first and last genes which
             from which the cluster was defined.
         """
         return self._extent
 
     @extent.setter
-    def extent(self, extent):
+    def extent(self, extent: int) -> None:
         if extent is not None:
             self._extent = int(extent)
 
-    def get_product_string(self):
+    def get_product_string(self) -> str:
         """ Returns the cluster's products as a single string """
         assert None not in self._products, self._products
         return "-".join(self._products)
@@ -1172,14 +1198,16 @@ class Cluster(Feature):
         return None
 
     @staticmethod
-    def from_biopython(bio_feature, feature=None, leftovers=None):
+    def from_biopython(bio_feature: SeqFeature, feature: "Cluster" = None,  # type: ignore
+                       leftovers: Dict[str, List[str]] = None) -> "Cluster":
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
         # grab mandatory qualifiers and create the class
-        cutoff = leftovers.pop("cutoff")[0]
-        extent = leftovers.pop("extension")[0]
+        cutoff = int(leftovers.pop("cutoff")[0])
+        extent = int(leftovers.pop("extension")[0])
         products = leftovers.pop("product")[0].split("-")
-        cluster = Cluster(bio_feature.location, cutoff, extent, products)
+        if not feature:
+            feature = Cluster(bio_feature.location, cutoff, extent, products)
         # take the detection rules from "note"
         # first check it exists
         index = -1
@@ -1193,31 +1221,33 @@ class Cluster(Feature):
             rules = []
             text = leftovers["note"].pop(index)
             text = text.split(":", 1)[1]  # strip the leadin
-            text = text.split(";")  # separate rules
-            for rule in text:
-                if not rule:
+            products_rules = text.split(";")  # separate rules
+            for product_rule in products_rules:
+                if not product_rule:
                     continue
-                assert ": " in rule, rule
-                product, rule = rule.split(": ")
+                assert ": " in product_rule, product_rule
+                product, rule = product_rule.split(": ")
                 rule = rule[1:-1]  # strip ( )
                 products.append(product.strip())
                 rules.append(rule)
-            cluster.detection_rules = rules
+            feature.detection_rules = rules
 
         # grab optional qualifiers
         contig_edge = leftovers.pop("contig_edge", [None])[0]
         if not contig_edge:
-            cluster.contig_edge = None
+            feature.contig_edge = None
         else:
-            cluster.contig_edge = contig_edge == "True"
-        cluster.smiles_structure = leftovers.pop("structure", None)
+            feature.contig_edge = contig_edge == "True"
+        if "structure" in leftovers:
+            feature.smiles_structure = leftovers.pop("structure")[0]
         # grab optional parent qualifiers
-        super(Cluster, cluster).from_biopython(bio_feature, cluster, leftovers)
+        updated = super(Cluster, feature).from_biopython(bio_feature, feature, leftovers)
+        assert updated is feature, "feature changed: %s -> %s" % (feature, updated)
+        assert isinstance(updated, Cluster)
+        return updated
 
-        return cluster
-
-    def to_biopython(self, qualifiers=None):
-        mine = OrderedDict()
+    def to_biopython(self, qualifiers: Optional[Dict[str, List[str]]] = None) -> List[SeqFeature]:
+        mine = OrderedDict()  # type: Dict[str, List[str]]
         mine["cutoff"] = [str(self.cutoff)]
         mine["extension"] = [str(self.extent)]
         if self.contig_edge is not None:
@@ -1228,15 +1258,14 @@ class Cluster(Feature):
         assert isinstance(self.detection_rules, list), type(self.detection_rules)
         for product, rule in zip(self.products, self.detection_rules):
             rule_text.append("%s: (%s);" % (product, rule))
-        rule_text = " ".join(rule_text)
         if qualifiers:
             mine.update(qualifiers)
         if "note" not in mine:
             mine["note"] = []
-        mine["note"].append(rule_text)
+        mine["note"].append(" ".join(rule_text))
         return super().to_biopython(mine)
 
-    def write_to_genbank(self, filename=None, directory=None, record=None):
+    def write_to_genbank(self, filename: str = None, directory: str = None, record: SeqRecord = None) -> None:
         """ Writes a genbank file containing only the information contained
             within the Cluster.
         """

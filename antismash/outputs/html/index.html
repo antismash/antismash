@@ -92,8 +92,8 @@
                 <td class="digits">{{cluster.location.start + 1}}</td>
                 <td class="digits">{{cluster.location.end}}</td>
                 <td>{{cluster.best_knowncluster_name}}</td>
-                {% if cluster.BGCid != "-"  -%}
-                  <td><a href="http://mibig.secondarymetabolites.org/repository/{{cluster.BGCid}}/index.html" target="_blank">{{cluster.BGCid}}</a></td>
+                {% if cluster.bgc_id != "-"  -%}
+                  <td><a href="http://mibig.secondarymetabolites.org/repository/{{cluster.bgc_id}}/index.html" target="_blank">{{cluster.bgc_id}}</a></td>
                 {%- else -%}
                   <td>-</td>
                 {%- endif %}

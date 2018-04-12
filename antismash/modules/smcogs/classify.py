@@ -6,11 +6,12 @@
 """
 
 import os
-from typing import Dict, List
+from typing import Dict, Iterable, List
 
 from antismash.common import subprocessing, path, fasta, utils
 from antismash.common.hmmscan_refinement import refine_hmmscan_results, HMMResult
 from antismash.common.secmet import GeneFunction, CDSFeature
+from antismash.config import ConfigType
 
 
 def classify_genes(cds_features: List[CDSFeature]) -> Dict[str, List[HMMResult]]:
@@ -48,7 +49,8 @@ def load_cog_annotations() -> Dict[str, GeneFunction]:
     return annotations
 
 
-def write_smcogs_file(hmm_results, cds_features, nrpspks_genes, options) -> None:
+def write_smcogs_file(hmm_results: Dict[str, List[HMMResult]], cds_features: Iterable[CDSFeature],
+                      nrpspks_genes: Iterable[CDSFeature], options: ConfigType) -> None:
     """ Writes a text file containing the smCOG results to the output directory
         defined in options
     """

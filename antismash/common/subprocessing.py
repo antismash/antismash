@@ -12,7 +12,7 @@ import sys
 import os
 from subprocess import PIPE, Popen, TimeoutExpired
 from tempfile import NamedTemporaryFile
-from typing import Dict, List
+from typing import Any, Callable, Dict, IO, Iterable, List, Optional, Union
 import warnings
 
 from helperlibs.wrappers.io import TemporaryDirectory
@@ -29,7 +29,8 @@ with warnings.catch_warnings():
 
 class RunResult:
     """ A container for simplifying the results of running a command """
-    def __init__(self, command, stdout, stderr, return_code, piped_out, piped_err):
+    def __init__(self, command: List[str], stdout: bytes, stderr: bytes,
+                 return_code: int, piped_out: bool, piped_err: bool) -> None:
         self.command = command
         self.stdout_piped = piped_out
         self.stderr_piped = piped_err
@@ -39,7 +40,7 @@ class RunResult:
             self.stderr = stderr.decode()
         self.return_code = return_code
 
-    def __getattribute__(self, attr):
+    def __getattribute__(self, attr: str) -> Union[bool, str, int]:
         if attr == 'stdout' and not self.stdout_piped:
             raise ValueError("stdout was redirected to file, unable to access")
         if attr == 'stderr' and not self.stderr_piped:
@@ -55,7 +56,8 @@ class RunResult:
         return " ".join(self.command)
 
 
-def execute(commands, stdin=None, stdout=PIPE, stderr=PIPE, timeout=None) -> RunResult:
+def execute(commands: List[str], stdin: Optional[str] = None, stdout: Union[int, IO[Any], None] = PIPE,
+            stderr: Union[int, IO[Any], None] = PIPE, timeout: int = None) -> RunResult:
     """ Executes commands in a system-independent manner via a child process.
 
         By default, both stderr and stdout will be piped and the outputs
@@ -64,10 +66,10 @@ def execute(commands, stdin=None, stdout=PIPE, stderr=PIPE, timeout=None) -> Run
         Arguments:
             commands: a list of arguments to execute
             stdin: None or input to be piped into the child process
-            stdout: if a filename is provided, stdout from the child process
-                    will be piped to that file
-            stderr: if a filename is provided, stderr from the child process
-                    will be piped to that file
+            stdout: if a file is provided, stdout from the child process
+                    will be piped to that file instead of the parent process
+            stderr: if a file is provided, stderr from the child process
+                    will be piped to that file instead of the parent process
             timeout: if provided, the child process will be terminated after
                      this many seconds
 
@@ -94,7 +96,8 @@ def execute(commands, stdin=None, stdout=PIPE, stderr=PIPE, timeout=None) -> Run
                      stderr == PIPE)
 
 
-def parallel_function(function, args, cpus=None, timeout=None) -> list:
+def parallel_function(function: Callable, args: Iterable[List[Any]],
+                      cpus: Optional[int] = None, timeout: int = None) -> list:
     """ Runs the given function in parallel on `cpus` cores at a time.
         Uses separate processes so all args are effectively immutable.
 
@@ -138,7 +141,7 @@ def parallel_function(function, args, cpus=None, timeout=None) -> list:
     return results
 
 
-def child_process(command) -> int:
+def child_process(command: List[str]) -> int:
     """ Called by multiprocessing's map or map_async method, cannot be locally
         defined """
     try:
@@ -152,13 +155,14 @@ def child_process(command) -> int:
     return -1
 
 
-def verbose_child_process(command) -> int:
+def verbose_child_process(command: List[str]) -> int:
     """ A wrapper of child_process() that logs the command being run """
     logging.debug("Calling %s", " ".join(command))
     return child_process(command)
 
 
-def parallel_execute(commands, cpus=None, timeout=None, verbose=True) -> List[int]:
+def parallel_execute(commands: List[List[str]], cpus: Optional[int] = None,
+                     timeout: Optional[int] = None, verbose: bool = True) -> List[int]:
     """ Limited return vals, only returns return codes
     """
     if verbose:
@@ -187,7 +191,8 @@ def parallel_execute(commands, cpus=None, timeout=None, verbose=True) -> List[in
     return errors
 
 
-def run_hmmsearch(query_hmmfile: str, target_sequence: str, use_tempfile=False):
+def run_hmmsearch(query_hmmfile: str, target_sequence: str, use_tempfile: bool = False
+                  ) -> List[SearchIO._model.query.QueryResult]:  # pylint: disable=protected-access
     """ Run hmmsearch on a HMM file and a fasta input
 
         Arguments:
@@ -238,7 +243,8 @@ def run_hmmpress(hmmfile: str) -> RunResult:
     return run_result
 
 
-def run_hmmpfam2(query_hmmfile: str, target_sequence: str, extra_args: List[str] = None) -> List:  # TODO cleanup
+def run_hmmpfam2(query_hmmfile: str, target_sequence: str, extra_args: List[str] = None
+                 ) -> List[SearchIO._model.query.QueryResult]:  # pylint: disable=protected-access
     """ Run hmmpfam2 over the provided HMM file and fasta input
 
         Arguments:
@@ -263,12 +269,12 @@ def run_hmmpfam2(query_hmmfile: str, target_sequence: str, extra_args: List[str]
     if not result.successful():
         logging.debug('hmmpfam2 returned %d: %r while searching %r', result.return_code,
                       result.stderr, query_hmmfile)
-        raise RuntimeError("hmmpfam2 problem while running %s: %s", command, result.stderr)
+        raise RuntimeError("hmmpfam2 problem while running %s: %s" % (command, result.stderr))
     res_stream = StringIO(result.stdout)
     return list(SearchIO.parse(res_stream, 'hmmer2-text'))
 
 
-def run_fimo_simple(query_motif_file: str, target_sequence: str) -> RunResult:  # TODO cleanup
+def run_fimo_simple(query_motif_file: str, target_sequence: str) -> str:
     """ Runs FIMO on the provided inputs
 
         Arguments:
@@ -276,18 +282,19 @@ def run_fimo_simple(query_motif_file: str, target_sequence: str) -> RunResult:  
             target_sequence: the path to the file containing input sequences
 
         Returns:
-            a RunResult with the execution results
+            the output from running FIMO
     """
     command = ["fimo", "--text", "--verbosity", "1", query_motif_file, target_sequence]
     result = execute(command)
     if not result.successful():
         logging.debug('FIMO returned %d: %r while searching %r', result.return_code,
                       result.stderr, query_motif_file)
-        raise RuntimeError("FIMO problem while running %s... %s", command, result.stderr[-100:])
+        raise RuntimeError("FIMO problem while running %s... %s" % (command, result.stderr[-100:]))
     return result.stdout
 
 
-def run_hmmscan(target_hmmfile: str, query_sequence: str, opts=None, results_file=None) -> List:
+def run_hmmscan(target_hmmfile: str, query_sequence: str, opts: List[str] = None,
+                results_file: str = None) -> List[SearchIO._model.query.QueryResult]:  # pylint: disable=protected-access
     """ Runs hmmscan on the inputs and return a list of QueryResults
 
         Arguments:

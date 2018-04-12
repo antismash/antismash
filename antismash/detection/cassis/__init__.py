@@ -6,14 +6,15 @@
 import logging
 import os
 import shutil
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from Bio.SeqFeature import SeqFeature
 
 from antismash.common import path, module_results
-from antismash.common.secmet.feature import ClusterBorder, Feature, FeatureLocation, GeneFunction
+from antismash.common.secmet.feature import ClusterBorder, Feature, FeatureLocation, GeneFunction, Gene
 from antismash.common.secmet.record import Record
 from antismash.common.serialiser import feature_to_json, feature_from_json
+from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
 
 from .cluster_prediction import get_predictions_for_anchor, ClusterPrediction
@@ -97,12 +98,12 @@ def get_arguments() -> ModuleArgs:
     return args
 
 
-def is_enabled(options) -> bool:
+def is_enabled(options: ConfigType) -> bool:
     """ Is the module enabled """
     return options.cassis
 
 
-def check_options(options) -> List[str]:
+def check_options(options: ConfigType) -> List[str]:
     """ Make sure the options are sane """
     problems = []
     if options.taxon != "fungi" and is_enabled(options):
@@ -110,7 +111,7 @@ def check_options(options) -> List[str]:
     return problems
 
 
-def regenerate_previous_results(previous: Dict[str, Any], record: Record, _options) -> Optional[CassisResults]:
+def regenerate_previous_results(previous: Dict[str, Any], record: Record, _options: ConfigType) -> Optional[CassisResults]:
     """ Rebuild the previous run results from a JSON object into this module's
         python results class.
 
@@ -125,7 +126,7 @@ def regenerate_previous_results(previous: Dict[str, Any], record: Record, _optio
     return results
 
 
-def run_on_record(record: Record, results: CassisResults, options) -> CassisResults:
+def run_on_record(record: Record, results: CassisResults, options: ConfigType) -> CassisResults:
     """ Run this module's analysis section on the given record or use the
         previous results.
 
@@ -147,7 +148,7 @@ def run_on_record(record: Record, results: CassisResults, options) -> CassisResu
     return results
 
 
-def check_prereqs():
+def check_prereqs() -> List[str]:
     """Check for prerequisites"""
     failure_messages = []
     for binary_name, _ in [("meme", "4.11.1"), ("fimo", "4.11.1")]:
@@ -158,7 +159,7 @@ def check_prereqs():
     return failure_messages
 
 
-def detect(record: Record, options) -> CassisResults:
+def detect(record: Record, options: ConfigType) -> CassisResults:
     """Use core genes (anchor genes) from hmmdetect as seeds to detect gene clusters"""
     logging.info("Detecting gene clusters using CASSIS")
 
@@ -175,14 +176,14 @@ def detect(record: Record, options) -> CassisResults:
     logging.info("Record has %d features of type 'gene'", len(genes))
     if not genes:
         return results
-    genes, ignored_genes = ignore_overlapping(genes)
+    candidate_genes, ignored_genes = ignore_overlapping(list(genes))
 
     # compute promoter sequences/regions --> necessary for motif prediction (MEME and FIMO input)
     try:
         # why these values? see "Wolf et al (2015): CASSIS and SMIPS ..."
         upstream_tss = 1000  # nucleotides upstream TSS
         downstream_tss = 50  # nucleotides downstream TSS
-        promoters = get_promoters(record, genes, upstream_tss, downstream_tss)
+        promoters = get_promoters(record, candidate_genes, upstream_tss, downstream_tss)
         results.promoters = promoters
         write_promoters_to_file(options.output_dir, record.name, promoters)
     except DuplicatePromoterError:
@@ -216,7 +217,6 @@ def detect(record: Record, options) -> CassisResults:
     return results
 
 
-# additional methods
 def get_anchor_gene_names(record: Record) -> List[str]:
     """ Finds all gene names that have a CDS with secondary metabolite
         annotations.
@@ -239,19 +239,19 @@ def get_anchor_gene_names(record: Record) -> List[str]:
     return anchor_genes
 
 
-def ignore_overlapping(genes):
+def ignore_overlapping(genes: List[Gene]) -> Tuple[List[Gene], List[Gene]]:
     """Ignore genes with overlapping locations (skip the second gene of an overlapping couple)"""
     ignored = []
 
     overlap = True
-    while overlap:  # check again until we didn't find any overlap in the entire (remaining) gene list
+    while overlap:  # check again until no overlap found in the entire (remaining) gene list
         overlap = False
         non_overlapping = [genes[0]]
 
         for i in range(1, len(genes)):
             if genes[i-1].overlaps_with(genes[i]):
                 logging.debug("Ignoring %r (overlapping with %r)",
-                             genes[i].get_name(), genes[i-1].get_name())
+                              genes[i].get_name(), genes[i-1].get_name())
                 ignored.append(genes[i])
                 overlap = True
             else:
@@ -265,7 +265,8 @@ def ignore_overlapping(genes):
     return (genes, ignored)
 
 
-def cleanup_outdir(anchor_gene_names: List[str], cluster_predictions: Dict[str, List[ClusterPrediction]], options):
+def cleanup_outdir(anchor_gene_names: Iterable[str], cluster_predictions: Dict[str, List[ClusterPrediction]],
+                   options: ConfigType) -> None:
     """Delete unnecessary files to free disk space"""
     all_motifs = set()
     for motif in PROMOTER_RANGE:
@@ -289,8 +290,7 @@ def cleanup_outdir(anchor_gene_names: List[str], cluster_predictions: Dict[str, 
             shutil.rmtree(os.path.join(options.output_dir, "fimo", anchor), ignore_errors=True)
 
 
-# storage methods
-def store_promoters(promoters, record: Record):
+def store_promoters(promoters: Iterable[Promoter], record: Record) -> None:
     """Store information about promoter sequences to a SeqRecord"""
     logging.critical("adding promoters based on biopython features")
     for promoter in promoters:

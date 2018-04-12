@@ -18,7 +18,7 @@ from Bio.SeqFeature import FeatureLocation
 from helperlibs.wrappers.io import TemporaryDirectory
 
 import antismash
-from antismash.common import serialiser, module_results, path, record_processing
+from antismash.common import serialiser, module_results, path
 from antismash.common.secmet import Cluster, CDSFeature, Feature, Record
 from antismash.config import update_config
 from antismash.config.args import build_parser
@@ -73,7 +73,7 @@ class DummyRecord(Record):
         self.record_index = 0
 
 
-class FakeHSP(object):
+class FakeHSP:
     def __init__(self, start, end, score):
         self.query_start = start
         self.query_end = end
@@ -94,7 +94,7 @@ class FakeHSPHit:
         return "FakeHSP({})".format(str(vars(self)))
 
 
-class FakeHit(object):
+class FakeHit:
     """ For generating hmmpfam2-like results """
     def __init__(self, start, end, score, desc):
         self.hsps = [FakeHSP(start, end, score)]

@@ -10,4 +10,4 @@
 
 from .record import Record
 from .feature import CDSMotif, PFAMDomain, AntismashDomain, Cluster, \
-                     CDSFeature, Feature, Prepeptide, GeneFunction, Gene
+                     CDSFeature, Feature, Prepeptide, GeneFunction, Gene, ClusterBorder, FeatureLocation

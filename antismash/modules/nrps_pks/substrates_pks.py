@@ -25,17 +25,15 @@ def count_pks_genes(genes: List[CDSFeature]) -> int:
     return pkscount
 
 
-def extract_at_domains(genes: List[CDSFeature]) -> Dict[str, str]:
+def extract_at_domains(cds_features: List[CDSFeature]) -> Dict[str, str]:
     """ Returns a dictionary mapping domain name to domain sequence
         for each PKS_AT domain found in the record
     """
     results = {}
-    for gene in genes:
-        locus = gene.get_name()
-        domains = gene.nrps_pks.domains
-        for domain in domains:
+    for cds in cds_features:
+        for domain in cds.nrps_pks.domains:
             if domain.name == "PKS_AT":
-                seq = str(gene.translation)[domain.start:domain.end]
+                seq = str(cds.translation)[domain.start:domain.end]
                 results[domain.feature_name] = seq
     return results
 
@@ -55,32 +53,30 @@ def run_minowa_predictor_pks_at(at_domains: Dict[str, str]
     return signature_results, minowa_results
 
 
-def run_minowa_predictor_pks_cal(genes: List[CDSFeature]) -> minowa_base.MinowaResults:
+def run_minowa_predictor_pks_cal(cds_features: List[CDSFeature]) -> minowa_base.MinowaResults:
     """ Predict PKS CAL domain specificities with Minowa et al. method. """
     cal_domains = {}
     logging.info("Predicting CAL domain substrate specificities by Minowa et al. method")
-    for gene in genes:
-        locus = gene.get_name()
-        for domain in gene.nrps_pks.domains:
+    for cds in cds_features:
+        for domain in cds.nrps_pks.domains:
             if domain.name == "CAL_domain":
-                seq = str(gene.translation)[domain.start:domain.end]
+                seq = str(cds.translation)[domain.start:domain.end]
                 cal_domains[domain.feature_name] = seq
     with TemporaryDirectory(change=True):
         minowa_results = minowa_cal.run_minowa_cal(cal_domains)
     return minowa_results
 
 
-def run_kr_stereochemistry_predictions(genes) -> Tuple[Dict[str, bool], Dict[str, str]]:
+def run_kr_stereochemistry_predictions(cds_features: List[CDSFeature]) -> Tuple[Dict[str, bool], Dict[str, str]]:
     """ Predict PKS KR domain stereochemistry using pattern as published in ClustScan
     """
     queries = {}
     logging.info("Predicting PKS KR activity and stereochemistry using KR "
                  "fingerprints from Starcevic et al.")
-    for gene in genes:
-        locus = gene.get_name()
-        for domain in gene.nrps_pks.domains:
+    for cds in cds_features:
+        for domain in cds.nrps_pks.domains:
             if domain.name == "PKS_KR":
-                seq = str(gene.translation)[domain.start:domain.end]
+                seq = str(cds.translation)[domain.start:domain.end]
                 queries[domain.feature_name] = seq
     activity, stereo = kr_analysis.run_kr_analysis(queries)
     return activity, stereo

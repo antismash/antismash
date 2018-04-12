@@ -10,6 +10,8 @@ from typing import Dict, List, Set, Tuple
 
 from antismash.common.secmet.feature import CDSFeature
 
+from .results import ATSignatureResults
+
 LONG_TO_SHORT = {'Malonyl-CoA': 'mal', 'Methylmalonyl-CoA': 'mmal', 'Methoxymalonyl-CoA': 'mxmal',
                  'Ethylmalonyl-CoA': 'emal', 'Isobutyryl-CoA': 'isobut', '2-Methylbutyryl-CoA': '2metbut',
                  'trans-1,2-CPDA': 'trans-1,2-CPDA', 'Acetyl-CoA': 'Acetyl-CoA', 'Benzoyl-CoA': 'benz',
@@ -43,12 +45,12 @@ def calculate_individual_consensus(predictions: List[str], available_smiles_part
     return best
 
 
-def calculate_consensus_prediction(genes: List[CDSFeature], results: Dict[str, str]
+def calculate_consensus_prediction(cds_features: List[CDSFeature], results: Dict[str, Dict[str, str]]
                                    ) -> Tuple[Dict[str, str], Dict[str, str]]:
     """ Uses all calculations to generate smiles parts to use
 
         Arguments:
-            genes: a list of CDSFeature to calculate consensus for
+            cds_features: a list of CDSFeature to calculate consensus for
             results: a dictionary mapping PKS analysis method to the prediction
                      for that method
 
@@ -58,8 +60,8 @@ def calculate_consensus_prediction(genes: List[CDSFeature], results: Dict[str, s
                 the second for KS domains
     """
     # Combine substrate specificity predictions into consensus prediction
-    non_trans_at = {}
-    trans_at = {}
+    cis_at = {}  # type: Dict[str, str]  # feature name -> prediction
+    trans_at = {}  # type: Dict[str, str]  # feature name -> prediction
     available_smiles_parts = {'GLY', 'ALA', 'VAL', 'LEU', 'ILE', 'MET', 'PRO', 'PHE', 'TRP', 'SER', 'THR', 'ASN', 'GLN',
                               'TYR', 'CYS', 'LYS', 'ARG',
                               'HIS', 'ASP', 'GLU', 'MPRO', 'ORN', 'PGLY', 'DAB', 'BALA', 'AEO', 'DHA', 'PIP', 'BMT',
@@ -74,48 +76,47 @@ def calculate_consensus_prediction(genes: List[CDSFeature], results: Dict[str, s
                               'Pgly', 'Dab', 'Bala', 'Aeo', '4Mha', 'Pico', 'Aaa', 'Dha', 'Scy', 'Pip',
                               'Bmt', 'Adds', 'DHpg', 'DHB', 'nrp', 'pk'}
 
-    for feature in genes:
-        for domain in feature.nrps_pks.domains:
+    for cds in cds_features:
+        assert cds.cluster, "Orphaned CDS found"
+        for domain in cds.nrps_pks.domains:
             if 'OTHER' in domain.label:
                 continue
-            if 'transatpks' not in feature.cluster.products:
-                if domain.name == "PKS_AT":
-                    preds = []
-                    if results["minowa_at"].get(domain.feature_name):
-                        pred = results["minowa_at"][domain.feature_name][0][0]
-                        preds.append(LONG_TO_SHORT.get(pred))
-                    if results["signature"].get(domain.feature_name):
-                        preds.append(results["signature"][domain.feature_name][0].name.rsplit("_", 1)[-1])
+            if domain.name == "PKS_AT":
+                preds = []
+                at_results = results["minowa_at"].get(domain.feature_name)
+                if at_results:
+                    pred = results["minowa_at"][domain.feature_name][0][0]
+                    preds.append(LONG_TO_SHORT.get(pred))
+                sig_results = results["signature"].get(domain.feature_name)
+                if sig_results:
+                    preds.append(sig_results[0].name.rsplit("_", 1)[-1])
                     consensus = calculate_individual_consensus(preds, available_smiles_parts)
-                    non_trans_at[domain.feature_name] = consensus
-            else:
-                if domain.name == "PKS_AT":
-                    preds = []
-                    if results["minowa_at"].get(domain.feature_name):
-                        pred = results["minowa_at"][domain.feature_name][0][0]
-                        preds.append(LONG_TO_SHORT.get(pred))
-                    if results["signature"].get(domain.feature_name):
-                        preds.append(results["signature"][domain.feature_name][0].name.rsplit("_", 1)[-1])
-                    consensus = calculate_individual_consensus(preds, available_smiles_parts)
+
+                if 'transatpks' not in cds.cluster.products:
+                    cis_at[domain.feature_name] = consensus
+                else:
                     trans_at[domain.feature_name] = consensus
+
+            if 'transatpks' in cds.cluster.products and domain.name == "PKS_KS":
                 # For chemical display purpose for chemicals from trans-AT PKS gene cluster
                 # mal is always assumed for trans-AT
-                elif domain.name == "PKS_KS":
-                    non_trans_at[domain.feature_name] = "mal"
+                cis_at[domain.feature_name] = "mal"
+
             if domain.name in ["AMP-binding", "A-OX"]:
-                non_trans_at[domain.feature_name] = "nrp"
+                cis_at[domain.feature_name] = "nrp"
             elif domain.name == "CAL_domain":
                 pred = results["minowa_cal"][domain.feature_name][0][0]
                 pred = LONG_TO_SHORT.get(pred, pred)
                 if pred in available_smiles_parts:
-                    non_trans_at[domain.feature_name] = pred
+                    cis_at[domain.feature_name] = pred
                 else:
                     logging.critical("missing %s from SMILES parts for domain %s", pred, domain.feature_name)
-                    non_trans_at[domain.feature_name] = "pk"
-    return non_trans_at, trans_at
+                    cis_at[domain.feature_name] = "pk"
+
+    return cis_at, trans_at
 
 
-def find_duplicate_position(domains, item) -> List[int]:
+def find_duplicate_position(domains: List[str], item: str) -> List[int]:
     """ Finds all indices of elements of domains that are equal to item
 
         Arguments:
@@ -168,18 +169,18 @@ def update_prediction(locus: str, preds: Dict[str, str], target: str,
                 preds[key] = mapping.get(current, current)
 
 
-def modify_monomer_predictions(genes: List[CDSFeature], predictions: Dict) -> None:
+def modify_monomer_predictions(cds_features: List[CDSFeature], predictions: Dict[str, str]) -> None:
     """ Modifies monomer predictions based on domain construction chain. Changes
         the predictions in place.
 
         Arguments:
-            genes: a dictionary mapping gene name to a list of domain names
-                          in the order they are found in the gene
-            predictions:
+            cds_features: a dictionary mapping CDS name to a list of domain names
+                          in the order they are found in the CDS
+            predictions: a dict mapping domain label (e.g. nrpspksdomains_SCO123_AT1)
+                         to a prediction for that domain
 
         Returns:
             None
-
     """
     # for modifications, e.g. mal -> ohmal
     # must be the same length and ordering as the lists generation below
@@ -188,17 +189,18 @@ def modify_monomer_predictions(genes: List[CDSFeature], predictions: Dict) -> No
                 {"ohmal": "ccmal", "ohmmal": "ccmmal", "ohmxmal": "ccmxmal", "ohemal": "ccemal"},  # DH
                 {"ccmal": "redmal", "ccmmal": "redmmal", "ccmxmal": "redmxmal", "ccemal": "redemal"}]  # ER
 
-    for gene in genes:
-        domain_names = gene.nrps_pks.domain_names
+    for cds in cds_features:
+        assert cds.cluster, "Orphaned CDS found"
+        domain_names = cds.nrps_pks.domain_names
         lists = [find_duplicate_position(domain_names, 'PKS_KR'),
                  find_duplicate_position(domain_names, 'PKS_DH'),
                  find_duplicate_position(domain_names, 'PKS_ER')]
 
-        if 'transatpks' not in gene.cluster.products:
+        if 'transatpks' not in cds.cluster.products:
             label = "_AT"
             data = find_duplicate_position(domain_names, 'PKS_AT')
         else:
             label = "_KS"
             data = find_duplicate_position(domain_names, 'PKS_KS')
         # TODO: should the transat predictions be used if relevant?
-        update_prediction(gene.get_name(), predictions, label, data, lists, mappings)
+        update_prediction(cds.get_name(), predictions, label, data, lists, mappings)

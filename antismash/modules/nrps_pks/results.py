@@ -4,9 +4,10 @@
 """ Contains the results classes for the nrps_pks module """
 
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, Tuple, Union  # pylint: disable=unused-import
 
 from antismash.common.module_results import ModuleResults
+from antismash.common.secmet import Record, AntismashDomain
 
 from .at_analysis.at_analysis import ATSignatureResults
 from .parsers import LONG_TO_SHORT
@@ -33,12 +34,12 @@ class PKSResults:
 
     class EnforcedDict(dict):
         """ Enforces the value of the key 'signature' to be a consistent type """
-        def __setitem__(self, key, val):
+        def __setitem__(self, key: str, val: Union[Dict[str, str], Dict[str, bool]]) -> None:
             if key == "signature":
                 assert isinstance(val, ATSignatureResults)
             return super().__setitem__(key, val)
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.method_results = PKSResults.EnforcedDict()
 
     def to_json(self) -> Dict[str, Any]:
@@ -55,7 +56,7 @@ class PKSResults:
         """ Reconstruct a PKSResults instance from JSON object """
         assert isinstance(json, dict)
         results = PKSResults()
-        results.method_results = json
+        results.method_results.update(json)
         results.method_results["signature"] = ATSignatureResults.from_json(json.get("signature", {}))
         return results
 
@@ -65,13 +66,13 @@ class NRPS_PKS_Results(ModuleResults):
     _schema_version = 1
     __slots__ = ["_pks", "nrps", "consensus", "consensus_transat", "cluster_predictions"]
 
-    def __init__(self, record_id):
+    def __init__(self, record_id: str) -> None:
         super().__init__(record_id)
         self._pks = PKSResults()
-        self.nrps = {}  # not currently used, but will be
-        self.consensus = {}
-        self.cluster_predictions = {}  # type: Dict[int, str]
-        self.consensus_transat = {}
+        self.nrps = {}  # type: Dict[str, Any] # not currently used, but will be
+        self.consensus = {}  # type: Dict[str, str]
+        self.cluster_predictions = {}  # type: Dict[int, Tuple[str, bool]]
+        self.consensus_transat = {}  # type: Dict[str, str]
 
     @property
     def pks(self) -> PKSResults:
@@ -79,21 +80,21 @@ class NRPS_PKS_Results(ModuleResults):
         return self._pks
 
     @pks.setter
-    def pks(self, value: PKSResults):
+    def pks(self, value: PKSResults) -> None:
         assert isinstance(value, PKSResults)
         self._pks = value
 
     def to_json(self) -> Dict[str, Any]:
-        results = {"schema_version": self._schema_version}
-        results["record_id"] = self.record_id
-        results["pks"] = self.pks.to_json()
-        results["nrps"] = self.nrps
-        results["consensus"] = self.consensus
-        results["cluster_predictions"] = self.cluster_predictions
+        results = {"schema_version": self._schema_version,
+                   "record_id": self.record_id,
+                   "pks": self.pks.to_json(),
+                   "nrps": self.nrps,
+                   "consensus": self.consensus,
+                   "cluster_predictions": self.cluster_predictions}
         return results
 
     @staticmethod
-    def from_json(json: Dict[str, Any], _record) -> "NRPS_PKS_Results":
+    def from_json(json: Dict[str, Any], _record: Record) -> "NRPS_PKS_Results":
         assert "record_id" in json
         if json.get("schema_version") != NRPS_PKS_Results._schema_version:
             logging.warning("Mismatching schema version, dropping results")
@@ -104,10 +105,10 @@ class NRPS_PKS_Results(ModuleResults):
             results.pks = PKSResults.from_json(pks)
         results.nrps = json.get("nrps", {})
         results.consensus = json["consensus"]
-        results.cluster_predictions = json["cluster_predictions"]
+        results.cluster_predictions.update(json["cluster_predictions"])
         return results
 
-    def add_to_record(self, record) -> None:
+    def add_to_record(self, record: Record) -> None:
         """ Save substrate specificity predictions in NRPS/PKS domain sec_met info of record
         """
 
@@ -115,6 +116,7 @@ class NRPS_PKS_Results(ModuleResults):
             nrps_qualifier = cds_feature.nrps_pks
             for domain in nrps_qualifier.domains:
                 feature = record.get_domain_by_name(domain.feature_name)
+                assert isinstance(feature, AntismashDomain)
                 domain.predictions.clear()
                 if domain.name == "AMP-binding":
                     # no NRPS predictors right now, so all A domains are 'nrp'

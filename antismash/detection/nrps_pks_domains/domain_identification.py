@@ -30,7 +30,7 @@ class CDSResult:
                 "type": self.type}
 
     @staticmethod
-    def from_json(data) -> "CDSResult":
+    def from_json(data: Dict[str, Any]) -> "CDSResult":
         """ Reconstruct from a JSON representation """
         domain_hmms = [HMMResult.from_json(hmm) for hmm in data["domain_hmms"]]
         motif_hmms = [HMMResult.from_json(hmm) for hmm in data["motif_hmms"]]
@@ -64,13 +64,13 @@ class NRPSPKSDomains(module_results.DetectionResults):
     """ Results tracking for NRPS and PKS domains """
     schema_version = 1
 
-    def __init__(self, record_id: str):
+    def __init__(self, record_id: str) -> None:
         super().__init__(record_id)
         self.cds_results = {}  # type: Dict[CDSFeature, CDSResult]
         # for protection against double-adds
         self.added = False
 
-    def to_json(self) -> Dict[str, List[Any]]:
+    def to_json(self) -> Dict[str, Any]:
         return {"cds_results": {cds.get_name(): cds_result.to_json() for cds, cds_result in self.cds_results.items()},
                 "schema_version": NRPSPKSDomains.schema_version,
                 "record_id": self.record_id}

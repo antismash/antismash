@@ -11,7 +11,7 @@ from typing import Dict, List
 
 from antismash.common import path
 
-KNOWN_MAPPINGS = {}  # tracks name mappings per database
+KNOWN_MAPPINGS = {}  # type: Dict[str, Dict[str, str]] # tracks name mappings per database
 
 
 def find_latest_database_version(database_dir: str) -> str:
@@ -57,17 +57,17 @@ def get_latest_db_path(data_dir: str) -> str:
     return get_db_path_from_version(find_latest_database_version(data_dir), data_dir)
 
 
-def get_db_version_from_path(path: str) -> str:
+def get_db_version_from_path(db_path: str) -> str:
     """ Given a path to a PFAM database, pulls the version number. Paths are
         expected to match the typical antiSMASH layout of .../pfam/'VERSION'/...
 
         Arguments:
-            path: the path to find
+            db_path: the path to find
 
         Returns:
             the version number as a string, e.g. "31.0"
     """
-    parts = path.split(os.sep)
+    parts = db_path.split(os.sep)
     if 'pfam' not in parts:
         raise ValueError("Database path does not contain a 'pfam' directory")
     try:

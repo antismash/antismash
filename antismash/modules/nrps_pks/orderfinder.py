@@ -9,15 +9,19 @@ import os
 from typing import Dict, List, Optional, Tuple
 
 from antismash.common import path, subprocessing, utils
-from antismash.common.secmet import CDSFeature
+from antismash.common.secmet import CDSFeature, Record
 
 
-def analyse_biosynthetic_order(nrps_pks_genes, consensus_predictions, seq_record) -> Dict[int, Tuple[str, bool]]:
+def analyse_biosynthetic_order(nrps_pks_features: List[CDSFeature],
+                               consensus_predictions: Dict[str, str],
+                               record: Record) -> Dict[int, Tuple[str, bool]]:
     """ For each NRPS or PKS cluster, determines if that cluster is docking or not
         then calls generate_substrates_order()
 
         Arguments:
-            gene_domains: a dict mapping gene name to list of domains in that gene
+            nrps_pks_features: all NRPS/PKS features within the record
+            consensus_predictions: a dictionary mapping each NRPS/PKS domain name to its prediction
+            record: the Record being analysed
 
         Returns:
             a dictionary mapping cluster number to
@@ -27,7 +31,7 @@ def analyse_biosynthetic_order(nrps_pks_genes, consensus_predictions, seq_record
     """
     compound_predictions = {}  # type: Dict[int, Tuple[str, bool]]
     # Find NRPS/PKS gene clusters
-    nrpspksclusters = [cluster for cluster in seq_record.get_clusters()
+    nrpspksclusters = [cluster for cluster in record.get_clusters()
                        if "nrps" in cluster.products or "pks" in "-".join(cluster.products)]
     if not nrpspksclusters:
         return {}
@@ -35,47 +39,47 @@ def analyse_biosynthetic_order(nrps_pks_genes, consensus_predictions, seq_record
     # thioesterase domains, gene order and docking domains
     for cluster in nrpspksclusters:
         cluster_number = cluster.get_cluster_number()
-        genes_in_cluster = [gene for gene in nrps_pks_genes if gene.overlaps_with(cluster)]
-        if not genes_in_cluster:
+        cds_in_cluster = [gene for gene in nrps_pks_features if gene.overlaps_with(cluster)]
+        if not cds_in_cluster:
             continue
-        pks_count, nrps_count, hybrid_count = find_cluster_modular_enzymes(genes_in_cluster)
-        # If more than three PKS genes, use dock_dom_analysis if possible to identify order
+        pks_count, nrps_count, hybrid_count = find_cluster_modular_enzymes(cds_in_cluster)
+        # If more than three PKS cds features, use dock_dom_analysis if possible to identify order
         if 3 < pks_count < 11 and not nrps_count and not hybrid_count:
             logging.debug("Cluster %d monomer ordering method: domain docking analysis", cluster_number)
-            geneorder = perform_docking_domain_analysis(genes_in_cluster)
+            geneorder = perform_docking_domain_analysis(cds_in_cluster)
             docking = True
         else:
             logging.debug("Cluster %d monomer ordering method: colinear", cluster_number)
-            geneorder = find_colinear_order(genes_in_cluster)
+            geneorder = find_colinear_order(cds_in_cluster)
             docking = False
         prediction = generate_substrates_order(geneorder, consensus_predictions)
         compound_predictions[cluster_number] = (prediction, docking)
     return compound_predictions
 
 
-def find_cluster_modular_enzymes(genes) -> Tuple[int, int, int]:
+def find_cluster_modular_enzymes(cds_features: List[CDSFeature]) -> Tuple[int, int, int]:
     """ counts number of PKS domains, NRPS domains and hybrid domains in a cluster
     """
-    pksgenes = 0
-    nrpsgenes = 0
-    hybridgenes = 0
-    for gene in genes:
+    pkscds_features = 0
+    nrpscds_features = 0
+    hybridcds_features = 0
+    for gene in cds_features:
         classification = gene.nrps_pks.type
         if "PKS" in classification and "NRPS" not in classification:
-            pksgenes += 1
+            pkscds_features += 1
         elif "PKS" not in classification and "NRPS" in classification:
-            nrpsgenes += 1
+            nrpscds_features += 1
         elif "PKS/NRPS" in classification:
             domain_names = set(gene.nrps_pks.domain_names)
             contains_nrps = domain_names.intersection({"AMP-binding", "A-OX", "Condensation"})
             contains_pks = domain_names.intersection({"PKS_KS", "PKS_AT"})
             if contains_pks and not contains_nrps:
-                pksgenes += 1
+                pkscds_features += 1
             # the case of both single pks domain and nrps domain(s) is ignored
             # because that construction isn't meaningful
         elif "Hybrid" in classification:
-            hybridgenes += 1
-    return pksgenes, nrpsgenes, hybridgenes
+            hybridcds_features += 1
+    return pkscds_features, nrpscds_features, hybridcds_features
 
 
 def generate_substrates_order(geneorder: List[CDSFeature], consensus_predictions: Dict[str, str]) -> str:
@@ -105,59 +109,59 @@ def generate_substrates_order(geneorder: List[CDSFeature], consensus_predictions
     return " + ".join(predictions)
 
 
-def find_first_and_last_genes(genes: List[CDSFeature]) -> Tuple[Optional[CDSFeature], Optional[CDSFeature]]:
-    """ Find first and last genes based on starter module and TE / TD.
+def find_first_and_last_cds(cds_features: List[CDSFeature]) -> Tuple[Optional[CDSFeature], Optional[CDSFeature]]:
+    """ Find first and last CDSFeature based on starter module and TE / TD.
 
         If multiple possibilities are found for start or end, no gene will be
         returned as such.
 
         Arguments:
-            genes: the CDS features to search in for start and end genes
+            cds_features: the CDS features to search in for start and end CDS
 
         Returns:
             a tuple of
-                the start gene or None, and
-                the end gene or None
+                the start CDS or None, and
+                the end CDS or None
     """
 
-    start_gene = None
-    end_gene = None
+    start_cds = None
+    end_cds = None
 
     # find the end
-    for gene in genes:
-        domain_names = gene.nrps_pks.domain_names
+    for cds in cds_features:
+        domain_names = cds.nrps_pks.domain_names
         if "Thioesterase" in domain_names or "TD" in domain_names:
-            if end_gene:
-                end_gene = None
+            if end_cds:
+                end_cds = None
                 break
-            end_gene = gene
+            end_cds = cds
 
     # find the start
-    for gene in genes:
-        if gene == end_gene:
+    for cds in cds_features:
+        if cds == end_cds:
             continue
-        domain_names = gene.nrps_pks.domain_names
+        domain_names = cds.nrps_pks.domain_names
         if domain_names[:2] == ["PKS_AT", "ACP"]:
-            if start_gene:
+            if start_cds:
                 # two possible starts, don't attempt fallbacks
-                return None, end_gene
-            start_gene = gene
+                return None, end_cds
+            start_cds = cds
 
     # if no AT-ACP start gene, try looking for KS-AT-ACP
-    if not start_gene:
-        for gene in genes:
-            if gene == end_gene:
+    if not start_cds:
+        for cds in cds_features:
+            if cds == end_cds:
                 continue
-            domain_names = gene.nrps_pks.domain_names
+            domain_names = cds.nrps_pks.domain_names
             if domain_names[:3] == ["PKS_KS", "PKS_AT", "ACP"]:
-                if start_gene:
-                    start_gene = None
+                if start_cds:
+                    start_cds = None
                     break
-                start_gene = gene
-    return start_gene, end_gene
+                start_cds = cds
+    return start_cds, end_cds
 
 
-def extract_nterminus(data_dir, genes, start_gene):
+def extract_nterminus(data_dir: str, cds_features: List[CDSFeature], start_cds: Optional[CDSFeature]) -> Dict[str, str]:
     """ -extract N-terminal 50 residues of each non-starting protein
         -scan for docking domains using hmmsearch
         -parse output to locate interacting residues
@@ -165,11 +169,10 @@ def extract_nterminus(data_dir, genes, start_gene):
     n_terminal_residues = {}
     n_terminals = {}
     nterm_file = os.path.join(data_dir, 'nterm.fasta')
-    for gene in genes:
-        gene_name = gene.get_name()
-        if gene_name != start_gene:
-            seq = str(gene.translation)
-            n_terminals[gene_name] = seq[:50]
+    for cds in cds_features:
+        if cds is not start_cds:
+            seq = str(cds.translation)
+            n_terminals[cds.get_name()] = seq[:50]
     for name, seq in n_terminals.items():
         alignments = subprocessing.run_muscle_single(name, seq, nterm_file)
         query_seq = alignments[name]
@@ -178,14 +181,14 @@ def extract_nterminus(data_dir, genes, start_gene):
     return n_terminal_residues
 
 
-def extract_cterminus(data_dir, genes, end_gene) -> Dict[str, str]:
+def extract_cterminus(data_dir: str, cds_features: List[CDSFeature], end_cds: Optional[CDSFeature]) -> Dict[str, str]:
     """ Extract C-terminal 100 residues of each non-ending protein,
         scan for docking domains, parse output to locate interacting residues
 
         Arguments:
             data_dir: the directory containing the C-terminal reference files
-            genes: the list of genes to extract terminals from
-            end_gene: if not None, skips this gene since C-terminals are irrelevant
+            cds_features: the list of CDSFeatures to extract terminals from
+            end_cds: if not None, skips this CDS since C-terminals are irrelevant
 
         Returns:
             A dictionary mapping gene name to the pair of residues extracted
@@ -193,11 +196,10 @@ def extract_cterminus(data_dir, genes, end_gene) -> Dict[str, str]:
     c_terminal_residues = {}
     c_terminals = {}  # type: Dict[str, str]
     cterm_file = os.path.join(data_dir, 'cterm.fasta')
-    for gene in genes:
-        gene_name = gene.get_name()
-        if gene_name != end_gene:
-            seq = str(gene.translation)
-            c_terminals[gene_name] = seq[-100:]
+    for cds in cds_features:
+        if cds is not end_cds:
+            seq = str(cds.translation)
+            c_terminals[cds.get_name()] = seq[-100:]
     for name, seq in c_terminals.items():
         alignments = subprocessing.run_muscle_single(name, seq, cterm_file)
         query_seq = alignments[name]
@@ -206,50 +208,53 @@ def extract_cterminus(data_dir, genes, end_gene) -> Dict[str, str]:
     return c_terminal_residues
 
 
-def find_possible_orders(genes: List[CDSFeature], start_gene: CDSFeature,
-                         end_gene: CDSFeature) -> List[List[CDSFeature]]:
-    """ Finds all possible arrangements of the given genes. If not None, the
+def find_possible_orders(cds_features: List[CDSFeature], start_cds: Optional[CDSFeature],
+                         end_cds: Optional[CDSFeature]) -> List[List[CDSFeature]]:
+    """ Finds all possible arrangements of the given cds_features. If not None, the
         start gene will always be the first in each order. Similarly, the end
         gene will always be last.
 
         Arguments:
-            genes: a list of all genes, may include start_gene and end_gene
-            start_gene: None or the gene with which to start every arrangement
-            end_gene: None or the gene with which to end every arrangement
+            cds_features: a list of all CDSFeatures, may include start_cds and end_cds
+            start_cds: None or the CDS with which to start every arrangement
+            end_cds: None or the CDS with which to end every arrangement
 
         Returns:
             a list of lists, each sublist being a unique ordering of the
-            provided genes
+            provided CDSFeatures
     """
-    assert genes
-    if start_gene or end_gene:
-        assert start_gene != end_gene, "Using same gene for start and end of ordering"
-    genes_to_order = []
-    for gene in genes:
-        if gene == start_gene or gene == end_gene:
+    assert cds_features
+    assert start_cds is None or isinstance(start_cds, CDSFeature)
+    assert end_cds is None or isinstance(end_cds, CDSFeature)
+    if start_cds or end_cds:
+        assert start_cds != end_cds, "Using same gene for start and end of ordering"
+    cds_to_order = []
+    for cds in cds_features:
+        if cds == start_cds or cds == end_cds:
             pass
         else:
-            genes_to_order.append(gene)
+            cds_to_order.append(cds)
     possible_orders = []
     start = []  # type: List[CDSFeature]
-    if start_gene:
-        start = [start_gene]
+    if start_cds:
+        start = [start_cds]
     end = []  # type: List[CDSFeature]
-    if end_gene:
-        end = [end_gene]
-    for order in list(itertools.permutations(genes_to_order, len(genes_to_order))):
+    if end_cds:
+        end = [end_cds]
+    for order in list(itertools.permutations(cds_to_order, len(cds_to_order))):
         possible_orders.append(start + list(order) + end)
     # ensure the list of possible orders is itself ordered for reliability
     return sorted(possible_orders, key=lambda x: [g.location.start for g in x])
 
 
-def rank_biosynthetic_orders(n_terminal_residues, c_terminal_residues,
+def rank_biosynthetic_orders(n_terminal_residues: Dict[str, str],
+                             c_terminal_residues: Dict[str, str],
                              possible_orders: List[List[CDSFeature]]) -> List[CDSFeature]:
-    """ Scores each possible order according to terminal pairs of adjacent genes.
+    """ Scores each possible order according to terminal pairs of adjacent cds_features.
 
         Arguments:
-            n_terminal_residues: a dictionary mapping genes to their pair of N terminal residues
-            c_terminal_residues: a dictionary mapping genes to their pair of C terminal residues
+            n_terminal_residues: a dictionary mapping CDSFeature to their pair of N terminal residues
+            c_terminal_residues: a dictionary mapping CDSFeature to their pair of C terminal residues
             possible_orders: a list of gene orderings to evaluate
 
         Returns:
@@ -283,39 +288,39 @@ def rank_biosynthetic_orders(n_terminal_residues, c_terminal_residues,
     return best_order
 
 
-def perform_docking_domain_analysis(genes: List[CDSFeature]) -> List[CDSFeature]:
+def perform_docking_domain_analysis(cds_features: List[CDSFeature]) -> List[CDSFeature]:
     """ Estimates gene ordering based on docking domains of features
 
         Arguments:
-            genes: a list of genes to order
+            cds_features: a list of CDSFeatures to order
 
         Returns:
-            a list of genes in estimated order
+            a list of CDSFeatures in estimated order
     """
-    start_gene, end_gene = find_first_and_last_genes(genes)
+    start_cds, end_cds = find_first_and_last_cds(cds_features)
     data_dir = path.get_full_path(__file__, "data", "terminals")
 
-    n_terminal_residues = extract_nterminus(data_dir, genes, start_gene)
-    c_terminal_residues = extract_cterminus(data_dir, genes, end_gene)
-    possible_orders = find_possible_orders(genes, start_gene, end_gene)
+    n_terminal_residues = extract_nterminus(data_dir, cds_features, start_cds)
+    c_terminal_residues = extract_cterminus(data_dir, cds_features, end_cds)
+    possible_orders = find_possible_orders(cds_features, start_cds, end_cds)
 
     geneorder = rank_biosynthetic_orders(n_terminal_residues, c_terminal_residues, possible_orders)
     return geneorder
 
 
-def find_colinear_order(genes: List[CDSFeature]) -> List[CDSFeature]:
+def find_colinear_order(cds_features: List[CDSFeature]) -> List[CDSFeature]:
     """ Estimates gene ordering based on colinearity
 
         Arguments:
-            genes: a list of genes to order
+            cds_features: a list of CDSFeatures to order
 
         Returns:
-            a list of genes in estimated order
+            a list of CDSFeatures in estimated order
     """
     direction = 0
-    for gene in genes:
+    for gene in cds_features:
         direction += gene.strand
-    geneorder = list(genes)
+    geneorder = list(cds_features)
     # Reverse if first gene encodes a multidomain protein with a TE/TD domain
     if direction < 0:
         geneorder.reverse()

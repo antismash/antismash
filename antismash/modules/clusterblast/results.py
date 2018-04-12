@@ -7,9 +7,11 @@
 from collections import OrderedDict
 import logging
 import os
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 from antismash.common.module_results import ModuleResults
+from antismash.common.secmet import Record, Cluster
+from antismash.config import ConfigType
 
 from .data_structures import Score, Query, Subject, ReferenceCluster, Protein, MibigEntry
 from .svg_builder import ClusterSVGBuilder
@@ -28,7 +30,8 @@ class ClusterResult:
     """
     __slots__ = ["cluster", "ranking", "total_hits", "svg_builder", "prefix"]
 
-    def __init__(self, cluster, ranking, reference_proteins, prefix):
+    def __init__(self, cluster: Cluster, ranking: List[Tuple[ReferenceCluster, Score]],
+                 reference_proteins: Dict[str, Protein], prefix: str) -> None:
         """ Arguments:
                 cluster: the cluster feature
                 ranking: a list of tuples in the form (ReferenceCluster, Score)
@@ -38,7 +41,7 @@ class ClusterResult:
                         javascript on the results page can differentiate between
                         types of clusterblast
         """
-        self.cluster = cluster  # Cluster
+        self.cluster = cluster
         self.ranking = ranking[:get_result_limit()]  # [(ReferenceCluster, Score),...]
         self.total_hits = len(ranking)
         self.svg_builder = ClusterSVGBuilder(cluster, ranking, reference_proteins, prefix)
@@ -64,9 +67,6 @@ class ClusterResult:
             Returns:
                 a dict containing the object data in basic types
         """
-        result = {}
-        result["cluster_number"] = self.cluster.get_cluster_number()
-        result["total_hits"] = self.total_hits
         ranking = []
         for cluster, score in self.ranking:
             scoring = {key: getattr(score, key) for key in score.__slots__ if key != "scored_pairings"}
@@ -74,12 +74,17 @@ class ClusterResult:
             scoring["pairings"] = [(query.entry, query.index, vars(subject))
                                    for query, subject in score.scored_pairings]
             ranking.append((json_cluster, scoring))
-        result["ranking"] = ranking
-        result["prefix"] = self.prefix
+
+        result = {"cluster_number": self.cluster.get_cluster_number(),
+                  "total_hits": self.total_hits,
+                  "ranking": ranking,
+                  "prefix": self.prefix}
+
         return result
 
     @staticmethod
-    def from_json(json: Dict[str, Any], record, reference_proteins: Dict[str, Protein]) -> "ClusterResult":
+    def from_json(json: Dict[str, Any], record: Record,
+                  reference_proteins: Dict[str, Protein]) -> "ClusterResult":
         """ Convert a simple dictionary into a new ClusterResult object.
 
             The function ClusterResult.jsonify() should reconstruct the data
@@ -186,7 +191,7 @@ class GeneralResults(ModuleResults):
             for protein_name in protein_names:
                 self.proteins_of_interest[protein_name] = reference_proteins[protein_name]
 
-    def write_to_file(self, record, options) -> None:
+    def write_to_file(self, record: Record, options: ConfigType) -> None:
         """ Write the results to a text file """
         for cluster in self.cluster_results:
             write_clusterblast_output(options, record, cluster,
@@ -217,12 +222,12 @@ class GeneralResults(ModuleResults):
             data["mibig_entries"] = entries
         return data
 
-    def add_to_record(self, _record) -> None:
+    def add_to_record(self, _record: Record) -> None:
         for cluster_result in self.cluster_results:
             cluster_result.update_cluster_descriptions(self.search_type)
 
     @staticmethod
-    def from_json(json, record) -> "GeneralResults":
+    def from_json(json: Dict[str, Any], record: Record) -> "GeneralResults":
         if json["schema_version"] != GeneralResults.schema_version:
             raise ValueError("Incompatible results schema version, expected %d"
                              % GeneralResults.schema_version)
@@ -249,11 +254,12 @@ class ClusterBlastResults(ModuleResults):
     """ An aggregate results container for all variants of clusterblast """
     schema_version = 1
 
-    def __init__(self, record_id):
+    def __init__(self, record_id: str) -> None:
         super().__init__(record_id)
-        self.general = None
-        self.subcluster = None
-        self.knowncluster = None
+        self.general = None  # type: GeneralResults
+        self.subcluster = None  # type: GeneralResults
+        self.knowncluster = None  # type: GeneralResults
+        self.internal_homology_groups = {}  # type: Dict[int, List[List[str]]]
 
     def to_json(self) -> Dict[str, Any]:
         assert self.general or self.subcluster or self.knowncluster
@@ -266,7 +272,7 @@ class ClusterBlastResults(ModuleResults):
         return result
 
     @staticmethod
-    def from_json(json: Dict[str, Any], record) -> "ClusterBlastResults":
+    def from_json(json: Dict[str, Any], record: Record) -> "ClusterBlastResults":
         if json["schema_version"] != ClusterBlastResults.schema_version:
             raise ValueError("Incompatible results schema version, expected %d"
                              % ClusterBlastResults.schema_version)
@@ -278,7 +284,7 @@ class ClusterBlastResults(ModuleResults):
         assert results.general or results.subcluster or results.knowncluster
         return results
 
-    def add_to_record(self, record) -> None:
+    def add_to_record(self, record: Record) -> None:
         for result in [self.general, self.subcluster, self.knowncluster]:
             if result is not None:
                 result.add_to_record(record)
@@ -290,8 +296,8 @@ class ClusterBlastResults(ModuleResults):
                 result.write_svg_files(svg_dir)
 
 
-def write_clusterblast_output(options, record, cluster_result: ClusterResult,
-                              proteins: Dict[str, Protein],
+def write_clusterblast_output(options: ConfigType, record: Record,
+                              cluster_result: ClusterResult, proteins: Dict[str, Protein],
                               searchtype: str = "clusterblast") -> None:
     """ Writes a text form of clusterblast results to file.
 
@@ -357,7 +363,7 @@ def write_clusterblast_output(options, record, cluster_result: ClusterResult,
     os.chdir(currentdir)
 
 
-def _get_output_dir(options, searchtype: str) -> str:
+def _get_output_dir(options: ConfigType, searchtype: str) -> str:
     assert searchtype in ["clusterblast", "subclusterblast", "knownclusterblast"], searchtype
     output_dir = os.path.join(options.output_dir, searchtype)
 

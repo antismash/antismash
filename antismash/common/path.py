@@ -6,11 +6,11 @@
 """
 
 import logging
-from typing import Optional
 import os
+from typing import List, Optional, Union
 
 
-def get_full_path(current_file: str, *args) -> str:
+def get_full_path(current_file: str, *args: Union[str, List[str]]) -> str:
     """ Generate the absolute path of the directory containing a file
         e.g. __file__ == os.path.join(get_full_path(__file__), filename)
 
@@ -29,7 +29,8 @@ def get_full_path(current_file: str, *args) -> str:
     base = os.path.dirname(os.path.abspath(current_file))
     if not args:
         return base
-    extra = os.path.join(*args)
+    extra = os.path.join(*args)  # type: ignore  # mypy can't manage the splat
+    assert isinstance(extra, str)
     return os.path.join(base, extra)
 
 
@@ -58,7 +59,7 @@ def locate_executable(name: str, silent: bool = False) -> Optional[str]:
     return None
 
 
-def locate_file(path: str,  silent: bool = False) -> Optional[str]:
+def locate_file(path: str, silent: bool = False) -> Optional[str]:
     """ Checks that a given file path is valid and that read permissions exist
         for the file
 

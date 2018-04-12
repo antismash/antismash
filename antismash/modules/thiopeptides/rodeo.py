@@ -5,7 +5,7 @@
 
 import os
 import re
-from typing import List, Set, Tuple
+from typing import List, Set, Tuple, Optional  # pylint: disable=unused-import
 
 from sklearn.externals import joblib
 
@@ -257,12 +257,12 @@ class ThioStatistics:
         using lazy evaluation to only calculate when required."""
     def __init__(self, core: str) -> None:
         self._core = core
-        self._c_repeats = None  # int
-        self._s_repeats = None  # int
-        self._t_repeats = None  # int
-        self._block_repeats = None  # int
-        self._heteroblocks = None  # int
-        self._average_heteroblock_length = None  # float
+        self._c_repeats = None  # type: Optional[int]
+        self._s_repeats = None  # type: Optional[int]
+        self._t_repeats = None  # type: Optional[int]
+        self._block_repeats = None  # type: Optional[int]
+        self._heteroblocks = None  # type: Optional[int]
+        self._average_heteroblock_length = None  # type: Optional[float]
 
     @property
     def c_repeats(self) -> int:

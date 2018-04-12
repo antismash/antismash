@@ -53,7 +53,7 @@ class TestCTerminalExtract(unittest.TestCase):
                             'STAUR_3985': 'DS'}
 
     def test_c_terminals_with_end(self):  # TODO: move to integration or mock muscle
-        residues = orderfinder.extract_cterminus(self.data_dir, self.features, "STAUR_3982")
+        residues = orderfinder.extract_cterminus(self.data_dir, self.features, self.features_by_id["STAUR_3982"])
         assert residues == {'STAUR_3972': 'ES', 'STAUR_3983': 'DS',
                             'STAUR_3984': 'DS', 'STAUR_3985': 'DS'}
 
@@ -73,13 +73,13 @@ class TestNTerminalExtract(unittest.TestCase):
         self.features_by_id = {feature.locus_tag: feature for feature in self.features}
 
     def test_n_terminals_no_start(self):  # TODO: move to integration or mock muscle
-        residues = orderfinder.extract_nterminus(self.data_dir, self.features, "")
+        residues = orderfinder.extract_nterminus(self.data_dir, self.features, None)
         assert residues == {'STAUR_3972': 'L-', 'STAUR_3982': 'ER',
                             'STAUR_3983': 'DK', 'STAUR_3984': 'SQ',
                             'STAUR_3985': 'SV'}
 
     def test_n_terminals_with_start(self):  # TODO: move to integration or mock muscle
-        residues = orderfinder.extract_nterminus(self.data_dir, self.features, "STAUR_3982")
+        residues = orderfinder.extract_nterminus(self.data_dir, self.features, self.features_by_id["STAUR_3982"])
         assert residues == {'STAUR_3972': 'L-', 'STAUR_3983': 'DK',
                             'STAUR_3984': 'SQ', 'STAUR_3985': 'SV'}
 
@@ -147,15 +147,15 @@ class TestOrdering(unittest.TestCase):
             cds.nrps_pks = DummyNRPSQualfier()
             cds.nrps_pks.domain_names = domains
             genes[name] = cds
-        start, end = orderfinder.find_first_and_last_genes(genes.values())
+        start, end = orderfinder.find_first_and_last_cds(genes.values())
         assert not start
         assert end.get_name() == "STAUR_3982"
         genes["STAUR_3983"].nrps_pks.domain_names.append("TD")
-        start, end = orderfinder.find_first_and_last_genes(genes.values())
+        start, end = orderfinder.find_first_and_last_cds(genes.values())
         assert not start
         assert not end
         genes["STAUR_3984"].nrps_pks.domain_names.append("Thiosterase")
-        start, end = orderfinder.find_first_and_last_genes(genes.values())
+        start, end = orderfinder.find_first_and_last_cds(genes.values())
         assert not start
         assert not end
 
@@ -171,27 +171,27 @@ class TestOrdering(unittest.TestCase):
             cds.nrps_pks.domain_names = domains
             genes[name] = cds
         # no starts
-        start, end = orderfinder.find_first_and_last_genes(genes.values())
+        start, end = orderfinder.find_first_and_last_cds(genes.values())
         assert not start
         assert not end
         # fallback start
         genes["STAUR_3983"].nrps_pks.domain_names = ["PKS_KS", "PKS_AT", "ACP"]
-        start, end = orderfinder.find_first_and_last_genes(genes.values())
+        start, end = orderfinder.find_first_and_last_cds(genes.values())
         assert start.get_name() == "STAUR_3983"
         assert not end
         # two fallback start possibilities
         genes["STAUR_3984"].nrps_pks.domain_names = ["PKS_KS", "PKS_AT", "ACP"]
-        start, end = orderfinder.find_first_and_last_genes(genes.values())
+        start, end = orderfinder.find_first_and_last_cds(genes.values())
         assert not start
         assert not end
         # first-class start
         genes["STAUR_3972"].nrps_pks.domain_names = ["PKS_AT", "ACP"]
-        start, end = orderfinder.find_first_and_last_genes(genes.values())
+        start, end = orderfinder.find_first_and_last_cds(genes.values())
         assert start.get_name() == "STAUR_3972"
         assert not end
         # two possible starts
         genes["STAUR_3984"].nrps_pks.domain_names = ["PKS_AT", "ACP"]
-        start, end = orderfinder.find_first_and_last_genes(genes.values())
+        start, end = orderfinder.find_first_and_last_cds(genes.values())
         assert not start
         assert not end
 

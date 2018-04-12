@@ -6,7 +6,6 @@
 """
 import configparser
 import os
-from typing import Any, Dict
 
 from argparse import Namespace
 
@@ -15,7 +14,8 @@ from antismash.common import path
 _DEFAULT_NAME = 'default.cfg'
 _BASEDIR = path.get_full_path(__file__)
 
-def load_config_from_file() -> Dict[str, Any]:
+
+def load_config_from_file() -> Namespace:
     """ Load config from default config.
 
         Returns:

@@ -8,6 +8,7 @@ import os
 from typing import Any, Dict, List, Optional
 
 from antismash.common.secmet import Record, Gene
+from antismash.config import ConfigType
 from antismash.detection import cassis
 
 from .islands import get_islands, Island
@@ -31,7 +32,7 @@ class ClusterMarker(Pairing):
         self.score = float(motif.score)
         self.promoter = None  # type: Optional[str]
 
-    def update(self, motif) -> None:
+    def update(self, motif: Motif) -> None:
         """ Uses the given motif's values instead of the old ones, if the given
             motif has a better (lower) score.
         """
@@ -72,14 +73,14 @@ class ClusterPrediction:
 
 
 def get_predictions_for_anchor(anchor: str, promoters: List[Promoter], record: Record,
-                               ignored_genes: List[str], options) -> List[ClusterPrediction]:
+                               ignored_genes: List[Gene], options: ConfigType) -> List[ClusterPrediction]:
     """ Generate the cluster predictions for an anchor gene.
 
         Arguments:
             anchor: the name of the anchor gene
             promoters: a list of all gene promoters
             record: the record the anchor gene belongs in
-            ignore_genes: the names of genes which are to be ignored
+            ignore_genes: the genes which are to be ignored
             options: antimash config
 
         Returns:

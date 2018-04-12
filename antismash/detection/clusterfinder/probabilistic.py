@@ -8,12 +8,14 @@
 
 import logging
 import pickle
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import numpy as np
 
 from antismash.common import path
+from antismash.common.secmet import Record
 from antismash.common.secmet.feature import FeatureLocation
+from antismash.config import ConfigType
 
 
 # these pickled and unpickled numpy arrays are direct from the ClusterFinder source:
@@ -58,25 +60,25 @@ REPEATS = {'PF07721', 'PF05593', 'PF07719', 'PF00515', 'PF00132', 'PF03130', 'PF
 
 class ClusterFinderHit:
     "A putative cluster identified by ClusterFinder"
-    def __init__(self, positions, probability):
+    def __init__(self, positions: Tuple[int, int], probability: float) -> None:
         self.location = FeatureLocation(positions[0], positions[1])
         self.probability = probability
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "CFHit({}, {})".format(self.location, self.probability)
 
 
-def find_probabilistic_clusters(record, options):
+def find_probabilistic_clusters(record: Record, options: ConfigType) -> List[ClusterFinderHit]:
     """ Find clusters based on ClusterFinder probabilities of PFAM features """
     pfam_features = record.get_pfam_domains()
     cf_clusters = []
     state = "seed"
-    clusterpositions = [0, 0]
-    pfam_ids = []
+    cluster_position = (0, 0)
+    pfam_ids = []  # type: List[str]
     loop_index = 1
-    probabilities = [0]
+    probabilities = [0.]
     for feature in pfam_features:
-        featurepositions = int(feature.location.start), int(feature.location.end)
+        feature_position = (int(feature.location.start), int(feature.location.end))
         if feature.probability is None:
             loop_index += 1
             continue
@@ -84,34 +86,34 @@ def find_probabilistic_clusters(record, options):
             if state == "seed":
                 state = "extend"
                 probabilities = [feature.probability]
-                clusterpositions = sorted(featurepositions)
+                cluster_position = (min(feature_position), max(feature_position))
                 pfam_ids.clear()
             else:
                 probabilities.append(feature.probability)
-                if max(featurepositions) > clusterpositions[1]:
-                    clusterpositions[1] = max(featurepositions)
+                if max(feature_position) > cluster_position[1]:
+                    cluster_position = (cluster_position[0], max(feature_position))
             pfam_ids.extend(list(feature.db_xref))
         else:
             if state == "extend":
                 state = "seed"
-                clusterpositions, cdsnr = find_nr_cds(clusterpositions, record)
-                if is_good_cluster_hit(cdsnr, probabilities, pfam_ids, options):
-                    cf_clusters.append(ClusterFinderHit(clusterpositions, np.mean(probabilities)))
-                clusterpositions = []
+                cluster_position, cds_count = find_nr_cds(cluster_position, record)
+                if is_good_cluster_hit(cds_count, probabilities, pfam_ids, options):
+                    cf_clusters.append(ClusterFinderHit(cluster_position, np.mean(probabilities)))
+                cluster_position = (0, 0)
                 pfam_ids = []
         if loop_index == len(pfam_features):
-            if clusterpositions:
-                clusterpositions, cdsnr = find_nr_cds(clusterpositions, record)
-                if is_good_cluster_hit(cdsnr, probabilities, pfam_ids, options):
-                    cf_clusters.append(ClusterFinderHit(clusterpositions, np.mean(probabilities)))
-            clusterpositions = []
+            if cluster_position:
+                cluster_position, cds_count = find_nr_cds(cluster_position, record)
+                if is_good_cluster_hit(cds_count, probabilities, pfam_ids, options):
+                    cf_clusters.append(ClusterFinderHit(cluster_position, np.mean(probabilities)))
+            cluster_position = (0, 0)
             pfam_ids = []
         loop_index += 1
     logging.debug("ClusterFinder detected %d probabilistic clusters", len(cf_clusters))
     return cf_clusters
 
 
-def is_good_cluster_hit(num_cds, probabilities, pfam_ids, options) -> bool:
+def is_good_cluster_hit(num_cds: int, probabilities: List[float], pfam_ids: List[str], options: ConfigType) -> bool:
     "Check if the current cluster is a good hit"
     if num_cds < options.cf_min_cds_features:
         return False
@@ -121,7 +123,7 @@ def is_good_cluster_hit(num_cds, probabilities, pfam_ids, options) -> bool:
     return bool(unique_pfams >= options.cf_min_pfams)
 
 
-def find_nr_cds(cluster_position, record):
+def find_nr_cds(cluster_position: Tuple[int, int], record: Record) -> Tuple[Tuple[int, int], int]:
     """ Find the number of CDSs in candidate cluster and adjust the cluster starts
         and ends to match the CDS starts and ends """
     area = FeatureLocation(cluster_position[0], cluster_position[1])
@@ -135,7 +137,7 @@ def find_nr_cds(cluster_position, record):
     # avoid getting the complete genome as cluster if one CDS
     # starts at end and finishes at start of genome
     if not (0 in startlocations and len(record.seq) in endlocations):
-        cluster_position = [min(startlocations), max(endlocations)]
+        cluster_position = (min(startlocations), max(endlocations))
     return cluster_position, len(cds_features)
 
 
@@ -152,7 +154,7 @@ def get_pfam_probabilities(observations: List[str]) -> List[float]:
 
 
 def forward_backward(transitions: np.array, emissions: np.array,
-                     observations: List[str], observation_indices: Dict[str, int]):
+                     observations: List[str], observation_indices: Dict[str, int]) -> List[float]:
     """ Forward-backward algorithm with precomputed emission and transition probabilities.
 
         Observation indices serve to find the correct index of an observation into
@@ -184,9 +186,9 @@ def forward_backward(transitions: np.array, emissions: np.array,
     num_emissions = emissions.shape[1]
     emissions = np.hstack((emissions, [[1./num_emissions]] * num_transitions))
     # then point all those missing observations to that final position
-    for obs in observations:
-        if obs not in observation_indices:
-            observation_indices[obs] = num_emissions
+    for observation in observations:
+        if observation not in observation_indices:
+            observation_indices[observation] = num_emissions
 
     # forward (F), a |O|+1 X |T| matrix, the extra observation adds the ground state
     # formula: F_o_j = \begin{cases}
@@ -199,18 +201,18 @@ def forward_backward(transitions: np.array, emissions: np.array,
     for i in range(num_transitions):
         forward[0][i] = emissions[i, emission_index]
     # following states
-    for obs in range(1, num_observations):
-        emission_index = observation_indices[observations[obs]]
+    for obs_index in range(1, num_observations):
+        emission_index = observation_indices[observations[obs_index]]
         for j in range(num_transitions):
-            total = 0
+            total = 0.
             for i in range(num_transitions):
-                total += forward[obs - 1, i] * transitions[i, j] * emissions[j, emission_index]
-            forward[obs, j] = total
+                total += forward[obs_index - 1, i] * transitions[i, j] * emissions[j, emission_index]
+            forward[obs_index, j] = total
         # the original clusterfinder underflow protection
         # doesn't seem numerically valid, but no clusters are detected without it
-        if sum(forward[obs]) < 1e20:
+        if sum(forward[obs_index]) < 1e20:
             for j in range(num_transitions):
-                forward[obs, j] *= 1e10
+                forward[obs_index, j] *= 1e10
 
     # backward (B), a |O| X |T| matrix
     # formula: B_i_j = \begin{cases}
@@ -221,29 +223,29 @@ def forward_backward(transitions: np.array, emissions: np.array,
     # base state
     backward[-1] = np.ones((1, num_transitions))
     # previous states, building backwards from the end
-    for obs in reversed(range(0, num_observations - 1)):
-        emission_index = observation_indices[observations[obs + 1]]
+    for obs_index in reversed(range(0, num_observations - 1)):
+        emission_index = observation_indices[observations[obs_index + 1]]
         for i in range(num_transitions):
             total = 0.
             for j in range(num_transitions):
-                total += backward[obs + 1, j] * transitions[i, j] * emissions[j, emission_index]
-            backward[obs][i] = total
+                total += backward[obs_index + 1, j] * transitions[i, j] * emissions[j, emission_index]
+            backward[obs_index][i] = total
 
         # the original ClusterFinder underflow protection
         # doesn't seem numerically valid, but no clusters are detected without it
-        if sum(backward[obs]) < 1e20:
+        if sum(backward[obs_index]) < 1e20:
             for i in range(num_transitions):
-                backward[obs, i] *= 1e10
+                backward[obs_index, i] *= 1e10
 
     # merge forward and backward into posterior marginals (P), a |T| X |o| matrix
     # formula: P_o_j = \frac{F_o_j \times B_o_j} {\sum_{i=0}^{|O|}{(F_i_j \times B_i_j)} }
     posterior = np.zeros((num_observations, num_transitions))
-    for obs in range(num_observations):
-        total = sum(forward[obs] * backward[obs])
+    for obs_index in range(num_observations):
+        total = sum(forward[obs_index] * backward[obs_index])
         # skip division by zero and let the probablity stay at the 0 it was init as
         if not total:
             continue
         for j in range(num_transitions):
-            posterior[obs, j] = (forward[obs, j] * backward[obs, j]) / total
+            posterior[obs_index, j] = (forward[obs_index, j] * backward[obs_index, j]) / total
 
     return list(posterior[:, 0])

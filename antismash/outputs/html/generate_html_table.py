@@ -2,11 +2,14 @@
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
 import os
+from typing import List
 
 from jinja2 import FileSystemLoader, Environment, StrictUndefined
 
+from antismash.modules.clusterblast.results import MibigEntry
 
-def generate_html_table(outfile_name, mibig_entries):
+
+def generate_html_table(outfile_name: str, mibig_entries: List[MibigEntry]) -> None:
     if not os.path.exists(os.path.dirname(outfile_name)):
         os.mkdir(os.path.dirname(outfile_name))
 

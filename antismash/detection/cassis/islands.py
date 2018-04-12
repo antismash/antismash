@@ -32,7 +32,7 @@ class Island:
         return "Island(start=%s, end=%s, motif=%s)" % (self.start, self.end, self.motif)
 
 
-def get_islands(anchor_promoter: int, motifs: List[Motif], promoters: List[Promoter]):
+def get_islands(anchor_promoter: int, motifs: List[Motif], promoters: List[Promoter]) -> List[Island]:
     """Find islands of binding sites (previously found by FIMO) around anchor gene to define cluster borders"""
     assert cassis.MAX_GAP_LENGTH >= 0
     islands = []

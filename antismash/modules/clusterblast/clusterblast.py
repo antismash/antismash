@@ -6,15 +6,22 @@
 """
 
 import os
+from typing import Dict
 
 from helperlibs.wrappers.io import TemporaryDirectory
 
+from antismash.config import ConfigType
+from antismash.common.secmet import Record
+
 from .core import write_fastas_with_all_genes, run_diamond, write_raw_clusterblastoutput, \
                   parse_all_clusters, score_clusterblast_output, get_core_gene_ids
+from .data_structures import ReferenceCluster, Protein
 from .results import ClusterResult, GeneralResults
 
 
-def perform_clusterblast(options, record, db_clusters, db_proteins) -> GeneralResults:
+def perform_clusterblast(options: ConfigType, record: Record,
+                         db_clusters: Dict[str, ReferenceCluster],
+                         db_proteins: Dict[str, Protein]) -> GeneralResults:
     """ Run BLAST on gene cluster proteins for each cluster, parse output and
         return result rankings for each cluster
 
@@ -22,7 +29,7 @@ def perform_clusterblast(options, record, db_clusters, db_proteins) -> GeneralRe
             options: antismash Config
             record: the Record to analyse
             db_clusters: a dict mapping reference cluster name to ReferenceCluster
-            db_proteins: a dict mapping reference protein to Protein
+            db_proteins: a dict mapping reference protein name to Protein
 
         Returns:
             a GeneralResults instance with results for each cluster in the record

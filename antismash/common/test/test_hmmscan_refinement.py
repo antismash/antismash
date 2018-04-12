@@ -65,7 +65,7 @@ class TestRefinement(unittest.TestCase):
         self.hmm_lengths = {"SMCOG1003:sensor_histidine_kinase": 570,
                             "SMCOG1048:sensor_histidine_kinase": 417,
                             "SMCOG1237:transposase": 387}
-        self.hit_ids = set(self.hmm_lengths.keys())
+        self.hit_ids = set(self.hmm_lengths)
 
     # TODO: create a test with multiple genes hit
 
@@ -78,7 +78,7 @@ class TestRefinement(unittest.TestCase):
         gathered = refinement.gather_by_query(self.results)
         # make sure we only found the one we're interested
         assert len(gathered) == 1
-        assert [self.gene_id] == list(gathered.keys())
+        assert [self.gene_id] == list(gathered)
 
         for result in gathered[self.gene_id]:
             assert isinstance(result, refinement.HMMResult)

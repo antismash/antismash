@@ -11,6 +11,7 @@ import os
 from typing import Any, Dict, List, Optional, Tuple
 
 from antismash.common import path, subprocessing, module_results, secmet
+from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
 
 from .analysis import run_all_analyses
@@ -49,14 +50,14 @@ class ASFResults(module_results.ModuleResults):
 
         return ASFResults(record.id, pairings)
 
-    def add_to_record(self, record):
+    def add_to_record(self, record: secmet.Record) -> None:
         assert record.id == self.record_id
         for feature, results in self.pairings:
             for result in results:
                 feature.asf.add(result)
 
 
-def check_options(_options) -> List[str]:
+def check_options(_options: ConfigType) -> List[str]:
     """ Checks options for conflicts.
         No extra options, so they can't have conflicts.
     """
@@ -132,17 +133,19 @@ def get_arguments() -> ModuleArgs:
     return args
 
 
-def is_enabled(options) -> bool:
+def is_enabled(options: ConfigType) -> bool:
     """ Should the module be run with these options """
     return options.asf
 
 
-def regenerate_previous_results(results: Dict[str, Any], record: secmet.Record, _options) -> ASFResults:
+def regenerate_previous_results(results: Dict[str, Any], record: secmet.Record,
+                                _options: ConfigType) -> ASFResults:
     """ Regenerate the previous results from JSON format. """
     return ASFResults.from_json(results, record)
 
 
-def run_on_record(record: secmet.Record, results: Optional[ASFResults], _options) -> ASFResults:
+def run_on_record(record: secmet.Record, results: Optional[ASFResults],
+                  _options: ConfigType) -> ASFResults:
     """ Run the analysis, unless the previous results apply to the given record """
     if results:
         assert isinstance(results, ASFResults), type(results)
