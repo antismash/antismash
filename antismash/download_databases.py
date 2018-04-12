@@ -31,6 +31,8 @@ CLUSTERBLAST_DMND_CHECKSUM = "388df3e711b3049ad851bfc8bd45ec292a3808907f048e6a7e
 
 LOCAL_FILE_PATH = os.path.abspath(os.path.dirname(__file__))
 
+CHUNK = 128 * 1024
+
 
 class DownloadError(RuntimeError):
     """Exception to throw when downloads fail."""
@@ -56,8 +58,7 @@ def get_free_space(folder):
         free_bytes = ctypes.c_ulonglong(0)
         ctypes.windll.kernel32.GetDiskFreeSpaceExW(ctypes.c_wchar_p(folder), None, None, ctypes.pointer(free_bytes))
         return free_bytes.value
-    else:
-        return os.statvfs(folder).f_bfree * os.statvfs(folder).f_frsize
+    return os.statvfs(folder).f_bfree * os.statvfs(folder).f_frsize
 
 
 def check_diskspace(file_url):
@@ -84,7 +85,6 @@ def download_file(url, filename):
     if not os.path.isdir(dirname):
         os.makedirs(dirname)
 
-    CHUNK = 128 * 1024
     overall = 0
     with open(filename, 'wb') as fp:
         while True:

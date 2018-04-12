@@ -7,6 +7,9 @@ In-depth analysis and annotation of NRPS/PKS gene clusters.
 
 import logging
 
+from antismash.common.secmet import Record
+from antismash.config import ConfigType
+
 from .orderfinder import analyse_biosynthetic_order
 from .parsers import calculate_consensus_prediction, modify_monomer_predictions
 from .results import NRPS_PKS_Results
@@ -14,7 +17,7 @@ from .structure_drawer import generate_chemical_structure_preds
 from .substrates import run_pks_substr_spec_predictions
 
 
-def generate_structure_images(record, results, options):
+def generate_structure_images(record: Record, results: NRPS_PKS_Results, options: ConfigType) -> None:
     """ Generate the structure images based on monomers prediction for all
         cluster features
     """
@@ -23,7 +26,7 @@ def generate_structure_images(record, results, options):
         generate_chemical_structure_preds(compound_predictions, record, options)
 
 
-def specific_analysis(record, results, options) -> NRPS_PKS_Results:
+def specific_analysis(record: Record, results: NRPS_PKS_Results, options: ConfigType) -> NRPS_PKS_Results:
     """ Runs the various NRPS/PKS analyses on a record and returns their results """
     nrps_pks_genes = record.get_nrps_pks_cds_features()
 

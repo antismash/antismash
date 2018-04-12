@@ -7,7 +7,7 @@ from collections import defaultdict
 import csv
 import logging
 import os
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set, Tuple  # pylint: disable=unused-import
 from xml.etree import cElementTree as ElementTree
 
 from Bio import SeqIO
@@ -71,12 +71,12 @@ def generate_motifs(meme_dir: str, anchor_promoter: int, promoters: List[Promote
 
         if start_index < 0:  # anchor promoter near beginning of record --> truncate
             if cassis.VERBOSE_DEBUG:
-                logging.debug("Promoter set " + pm.pairing_string + " exceeds upstream record border")
+                logging.debug("Promoter set %s exceeds upstream record border", pm.pairing_string)
             start_index = 0
 
         if end_index > len(promoters) - 1:  # anchor promoter near end of record --> truncate
             if cassis.VERBOSE_DEBUG:
-                logging.debug("Promoter set " + pm.pairing_string + " exceeds downstream record border")
+                logging.debug("Promoter set %s exceeds downstream record border", pm.pairing_string)
             end_index = len(promoters) - 1
 
         # discard promoter sets, which reappear due to truncation
@@ -102,7 +102,7 @@ def generate_motifs(meme_dir: str, anchor_promoter: int, promoters: List[Promote
                         SeqIO.write(seq, pm_handle, "fasta")
         else:
             if cassis.VERBOSE_DEBUG:
-                logging.debug("Duplicate promoter set " + pm.pairing_string)
+                logging.debug("Duplicate promoter set %s", pm.pairing_string)
 
     return promoter_sets
 
@@ -152,7 +152,7 @@ def filter_meme_results(meme_dir: str, promoter_sets: List[Motif], anchor: str) 
 
         # unexpected reason, don't know why MEME stopped :-$
         else:
-            logging.error("MEME stopped unexpectedly (reason: " + reason + ")")
+            logging.error("MEME stopped unexpectedly (reason: %s)", reason)
 
     return [motif for motif in promoter_sets if motif.score is not None]
 

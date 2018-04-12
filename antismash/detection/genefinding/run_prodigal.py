@@ -11,11 +11,12 @@ from Bio.SeqFeature import FeatureLocation
 from helperlibs.bio import seqio
 from helperlibs.wrappers.io import TemporaryDirectory
 
-from antismash.common.secmet import CDSFeature
+from antismash.common.secmet import CDSFeature, Record
 from antismash.common.subprocessing import execute
+from antismash.config import ConfigType
 
 
-def run_prodigal(record, options) -> None:
+def run_prodigal(record: Record, options: ConfigType) -> None:
     """ Run progidal to annotate prokaryotic sequences
     """
     if "basedir" in options.get('prodigal', ''):
@@ -46,11 +47,11 @@ def run_prodigal(record, options) -> None:
             # skip first line
             if not line.startswith('>'):
                 continue
-            name, start, end, prodigal_strand = line[1:].rstrip().split("_")
+            name, start_chunk, end_chunk, prodigal_strand = line[1:].rstrip().split("_")
 
             try:
-                start = int(start)
-                end = int(end)
+                start = int(start_chunk)
+                end = int(end_chunk)
                 if prodigal_strand == "+":
                     strand = 1
                 else:

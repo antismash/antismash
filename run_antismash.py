@@ -5,18 +5,15 @@
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 """Run the antiSMASH pipeline"""
 
-import logging
 import sys
-import os
-
-from argparse import Namespace
+from typing import List
 
 import antismash
-from antismash.config import update_config
 from antismash.common.subprocessing import execute
+from antismash.config import ConfigType
 
 
-def get_git_version():
+def get_git_version() -> str:
     """Get the sha1 of the current git version"""
     args = ['git', 'rev-parse', '--short', 'HEAD']
     try:
@@ -26,7 +23,7 @@ def get_git_version():
     return ""
 
 
-def get_version():
+def get_version() -> str:
     """Get the current version string"""
     version = antismash.__version__
     git_version = get_git_version()
@@ -36,7 +33,7 @@ def get_version():
     return version
 
 
-def main(args):
+def main(args: List[str]) -> int:
     all_modules = antismash.get_detection_modules() + antismash.get_analysis_modules()
     parser = antismash.config.args.build_parser(from_config_file=True, modules=all_modules)
 

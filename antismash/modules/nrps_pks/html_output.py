@@ -7,44 +7,46 @@
 import logging
 import os
 import re
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
 from jinja2 import FileSystemLoader, Environment, StrictUndefined
 
 from antismash.common import path
 from antismash.common.layers import ClusterLayer, RecordLayer, OptionsLayer
-from antismash.common.secmet import CDSFeature
+from antismash.common.secmet import CDSFeature, Record, Cluster
 from antismash.common.secmet.qualifiers import NRPSPKSQualifier
+from antismash.config import ConfigType
 
 from .results import NRPS_PKS_Results
 
 
 class JSONBase(dict):
     """ A base class for JSON-serialisable objects """
-    def __init__(self, keys):
+    def __init__(self, keys: List[str]) -> None:
         super().__init__()
         self._keys = keys
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> Any:
         return getattr(self, key)
 
-    def items(self):
+    def items(self) -> Iterator[Tuple[str, Any]]:  # type: ignore
         for key in self._keys:
             yield (key, getattr(self, key))
 
-    def values(self):
+    def values(self) -> Iterator[Any]:  # type: ignore
         for key in self._keys:
             yield getattr(self, key)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._keys)
 
 
 class JSONDomain(JSONBase):
     """ A JSON-serialisable object for simplifying domain datatypes throughout this file """
-    def __init__(self, domain, predictions, napdos_link, blast_link, sequence, dna):
+    def __init__(self, domain: NRPSPKSQualifier.Domain, predictions: List[Tuple[str, str]], napdos_link: str,
+                 blast_link: str, sequence: str, dna: str) -> None:
         super().__init__(['type', 'start', 'end', 'predictions', 'napdoslink',
-                      'blastlink', 'sequence', 'dna_sequence'])
+                          'blastlink', 'sequence', 'dna_sequence'])
         self.type = str(domain.name)
         self.start = int(domain.start)
         self.end = int(domain.end)
@@ -57,11 +59,11 @@ class JSONDomain(JSONBase):
 
 class JSONOrf(JSONBase):
     """ A JSON-serialisable object for simplifying ORF datatypes throughout this file """
-    def __init__(self, feature):
+    def __init__(self, feature: CDSFeature) -> None:
         super().__init__(['id', 'sequence', 'domains'])
         self.sequence = feature.translation
         self.id = feature.get_name()
-        self.domains = []
+        self.domains = []  # type: List[JSONDomain]
 
     def add_domain(self, domain: JSONDomain) -> None:
         """ Add a JSONDomain to the list of domains in this ORF """
@@ -75,35 +77,37 @@ def will_handle(products: List[str]) -> bool:
                                             "nrpsfragment", "otherks"}))
 
 
-def generate_js_domains(cluster, record, results, options
-                        ) -> Optional[Dict[str, Union[str, List[JSONDomain]]]]:
+def generate_js_domains(cluster_json: Dict[str, Any], record: Record, results: NRPS_PKS_Results,
+                        options: ConfigType) -> Optional[Dict[str, Union[str, List[JSONOrf]]]]:
     """ Generate """
     assert isinstance(results, NRPS_PKS_Results), type(results)
-    cluster_feature = record.get_cluster(cluster['idx'])
+    cluster_feature = record.get_cluster(cluster_json['idx'])
     cluster = NrpspksLayer(results, cluster_feature, RecordLayer(record, results, OptionsLayer(options)))
     return cluster.get_domain_details()
 
 
-def generate_details_div(cluster_layer, results, record_layer, options_layer) -> str:
+def generate_details_div(cluster_layer: ClusterLayer, results: NRPS_PKS_Results,
+                         record_layer: RecordLayer, options_layer: OptionsLayer) -> str:
     """ Generate the main HTML with results from the NRPS/PKS module """
     env = Environment(loader=FileSystemLoader(path.get_full_path(__file__, 'templates')),
                       autoescape=True, undefined=StrictUndefined)
     template = env.get_template('details.html')
-    cluster = NrpspksLayer(results, cluster_layer.cluster_rec, record_layer)
+    cluster = NrpspksLayer(results, cluster_layer.cluster_feature, record_layer)
     details_div = template.render(record=record_layer,
                                   cluster=cluster,
                                   options=options_layer)
     return details_div
 
 
-def generate_sidepanel(cluster_layer, results, record_layer, options_layer) -> str:
+def generate_sidepanel(cluster_layer: ClusterLayer, results: NRPS_PKS_Results,
+                       record_layer: RecordLayer, options_layer: OptionsLayer) -> str:
     """ Generate the sidepanel HTML with results from the NRPS/PKS module """
     env = Environment(loader=FileSystemLoader(path.get_full_path(__file__, 'templates')),
                       autoescape=True, undefined=StrictUndefined)
     template = env.get_template('sidepanel.html')
-    cluster = NrpspksLayer(results, cluster_layer.cluster_rec, record_layer)
+    nrps_layer = NrpspksLayer(results, cluster_layer.cluster_feature, record_layer)
     sidepanel = template.render(record=record_layer,
-                                cluster=cluster,
+                                cluster=nrps_layer,
                                 options=options_layer)
     return sidepanel
 
@@ -137,7 +141,7 @@ def parse_substrate_predictions(nrps_predictions: Dict[str, str]) -> List[Tuple[
     return predictions
 
 
-def filter_norine_as(as_list, be_strict=False) -> List[str]:
+def filter_norine_as(monomers: List[str], be_strict: bool = False) -> List[str]:
     """ Remove PKS and unknown substrate predictions
         use be_strict = True to also filter nrp/X
     """
@@ -145,7 +149,7 @@ def filter_norine_as(as_list, be_strict=False) -> List[str]:
     bad_monomers = {'pk', 'N/A', 'hydrophilic', 'hydrophobic', 'mal', 'mmal'}
     if be_strict:
         bad_monomers = bad_monomers.union({'nrp', 'X'})
-    for monomer in as_list:
+    for monomer in monomers:
         for sub_monomer in monomer.split("|"):  # if no pipe, list of 1
             if sub_monomer in bad_monomers:
                 continue
@@ -153,7 +157,8 @@ def filter_norine_as(as_list, be_strict=False) -> List[str]:
     return filtered_list
 
 
-def get_norine_url_for_specificities(specificities, be_strict=True) -> Optional[str]:
+def get_norine_url_for_specificities(specificities: List[List[str]],
+                                     be_strict: bool = True) -> Optional[str]:
     """ generate NORINE URL string for direct querying from array of specificity predictions
         use be_strict=False to add * after each monomer
     """
@@ -188,16 +193,20 @@ def get_norine_url_for_specificities(specificities, be_strict=True) -> Optional[
 
 
 class NrpspksLayer(ClusterLayer):
-    """ A """
-    def __init__(self, results, cluster_rec, record):
-        self.url_strict = {}  # gene name -> url
-        self.url_relaxed = {}  # gene name -> url
-        super().__init__(record, cluster_rec)
+    """ A wrapper for ClusterLayer that adds some specific sections for NRPS/PKS
+        domains and structures.
+    """
+    # TODO: some of these need to shift to nrps_pks_domains output, the remainder
+    #       can move into the NRPS_PKS_Results object instead.
+    def __init__(self, results: NRPS_PKS_Results, cluster_feature: Cluster, record: RecordLayer) -> None:
+        self.url_strict = {}  # type: Dict[str, str]  # gene name -> url
+        self.url_relaxed = {}  # type: Dict[str, str]  # gene name -> url
+        super().__init__(record, cluster_feature)
         self.transatpks = False
-        assert isinstance(results, NRPS_PKS_Results), list(results)
+        assert isinstance(results, NRPS_PKS_Results), type(results)
         self.results = results
 
-        cluster_number = cluster_rec.get_cluster_number()
+        cluster_number = cluster_feature.get_cluster_number()
         default_prediction = ("N/A", False)
         self.monomer, self.used_domain_docking = results.cluster_predictions.get(cluster_number, default_prediction)
 
@@ -206,7 +215,7 @@ class NrpspksLayer(ClusterLayer):
             drawing the domains
         """
         orfs = []  # type: List[JSONOrf]
-        for feature in self.cluster_rec.cds_children:
+        for feature in self.cluster_feature.cds_children:
             if not feature.nrps_pks:
                 continue
             js_orf = JSONOrf(feature)
@@ -239,7 +248,7 @@ class NrpspksLayer(ClusterLayer):
             related searches
         """
         sidepanel_predictions = {}  # type: Dict[str, List[List[Tuple[str, str]]]]
-        features = self.cluster_rec.cds_children
+        features = self.cluster_feature.cds_children
         for feature in features:
             if not feature.nrps_pks:
                 continue
@@ -273,28 +282,28 @@ class NrpspksLayer(ClusterLayer):
                 self.url_strict[gene_id] = get_norine_url_for_specificities(per_cds_predictions)
                 if self.url_strict[gene_id]:
                     self.url_relaxed[gene_id] = get_norine_url_for_specificities(per_cds_predictions,
-                                                                 be_strict=False)
+                                                                                 be_strict=False)
 
         return sidepanel_predictions
 
     def is_nrps(self) -> bool:
         """ is the cluster a NRPS or NRPS hybrid """
-        return 'nrps' in self.cluster_rec.products
+        return 'nrps' in self.cluster_feature.products
 
-    def get_structure_image_url(self):
+    def get_structure_image_url(self) -> str:
         "Get the relative url to the structure image"
         expected = os.path.join("structures",
-                                "genecluster%d.png" % self.cluster_rec.get_cluster_number())
+                                "genecluster%d.png" % self.cluster_feature.get_cluster_number())
         abs_path = os.path.join(self.record.options.output_dir, expected)
         if os.path.exists(abs_path):
             return expected
         return 'images/nostructure_icon.png'
 
-    def get_monomer_prediction(self):
+    def get_monomer_prediction(self) -> str:
         "Get the monomer prediction of the cluster"
         return self.monomer
 
-    def get_norine_url_for_cluster(self, be_strict=True):
+    def get_norine_url_for_cluster(self, be_strict: bool = True) -> str:
         """ Get a NORINE URL string for direct querying
             use be_strict=False to add * after each monomer"""
 

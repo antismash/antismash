@@ -7,9 +7,8 @@
 from collections import OrderedDict
 import unittest
 import os
-from collections import defaultdict
-from minimock import mock, restore
 
+from minimock import mock, restore
 from helperlibs.wrappers.io import TemporaryDirectory
 
 from antismash.common.secmet import Record
@@ -59,7 +58,7 @@ class TestBlastParsing(unittest.TestCase):
         for subject in subjects:
             self.assertTrue(subject.genecluster in cluster_name_to_queries)
             subject_clusters.add(subject.genecluster)
-        self.assertEqual(sorted(subject_clusters), sorted(cluster_name_to_queries.keys()))
+        self.assertEqual(sorted(subject_clusters), sorted(cluster_name_to_queries))
 
     def test_blastparse(self):
         queries, clusters = core.blastparse(self.sample_data, Record(), 0, 0)
@@ -104,9 +103,9 @@ class TestBlastParsing(unittest.TestCase):
                                 Record(), coverage_threshold, ident_threshold)
             # make sure we only found one cluster number
             self.assertEqual(len(clusters_by_number), 1)
-            self.assertEqual(list(clusters_by_number.keys()), [24])
+            self.assertEqual(list(clusters_by_number), [24])
             self.assertEqual(len(queries_by_number), 1)
-            self.assertEqual(list(queries_by_number.keys()), [24])
+            self.assertEqual(list(queries_by_number), [24])
 
             # now test the values of those queries
             queries = queries_by_number[24]
@@ -147,9 +146,9 @@ class TestBlastParsing(unittest.TestCase):
         sample_data = self.read_sample_data("data/diamond_output_sample_multicluster.txt")
         clusters_by_number, queries_by_number = core.parse_all_clusters(sample_data, Record(), 0, 0)
         self.assertEqual(len(clusters_by_number), 3)
-        self.assertEqual(sorted(clusters_by_number.keys()), [1, 2, 4])
+        self.assertEqual(sorted(clusters_by_number), [1, 2, 4])
         self.assertEqual(len(queries_by_number), 3)
-        self.assertEqual(sorted(queries_by_number.keys()), [1, 2, 4])
+        self.assertEqual(sorted(queries_by_number), [1, 2, 4])
         for i in [1, 2, 4]:
             self.assertEqual(len(clusters_by_number[i]), i)
             self.assertEqual(len(queries_by_number[i]), i)
@@ -191,7 +190,7 @@ class TestQuery(unittest.TestCase):
         for container in containers:
             self.assertEqual(len(container), 1)
         self.assertEqual(query.cluster_name_to_subjects["a"], [sub1])
-        assert list(query.subjects.keys()) == ["a1"]
+        assert list(query.subjects) == ["a1"]
         sub2 = core.Subject("a2", "b", 1, 2, "+", "c", 0.5, 1, 0.5, 1e-8, "loc")
         query.add_subject(sub2)
         for container in containers:
@@ -207,12 +206,13 @@ class TestQuery(unittest.TestCase):
         self.assertEqual(query.cluster_name_to_subjects["a"], [sub1, sub3])
         self.assertEqual(query.cluster_name_to_subjects["b"], [sub2])
         # check ordering preserved on subject names
-        self.assertEqual(list(query.subjects.keys()), ["a1", "a2", "a3"])
+        self.assertEqual(list(query.subjects), ["a1", "a2", "a3"])
 
         # check the getter has the same results as direct access
         self.assertEqual(query.get_subjects_by_cluster("a"), [sub1, sub3])
         # check that an empty iterable is returned if cluster not known
         self.assertEqual(query.get_subjects_by_cluster("new_name"), [])
+
 
 # pylint: disable=assigning-non-slot
 class TestScore(unittest.TestCase):
@@ -304,8 +304,8 @@ class TestSubjectParsing(unittest.TestCase):
         self.assertEqual(sub.evalue, 7.2e-129)
         self.assertEqual(sub.locus_tag, "CAG25751")
         self.assertEqual(sub.genecluster, "Y16952_c1")
-        self.assertEqual(sub.start, "1")
-        self.assertEqual(sub.end, "759")
+        self.assertEqual(sub.start, 1)
+        self.assertEqual(sub.end, 759)
         self.assertEqual(sub.strand, "-")
         self.assertEqual(sub.perc_ident, 100)
         self.assertEqual(sub.perc_coverage, 100.)

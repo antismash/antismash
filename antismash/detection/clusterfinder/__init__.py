@@ -5,13 +5,14 @@
 """
 
 import logging
-from typing import List
+from typing import Any, Dict, List, Optional
 
-from antismash.config.args import ModuleArgs
 from antismash.common import path
 from antismash.common.hmm_rule_parser.cluster_prediction import detect_borders_and_signatures
 from antismash.common.module_results import DetectionResults
-from antismash.common.secmet.feature import ClusterBorder
+from antismash.common.secmet import ClusterBorder, Record
+from antismash.config import ConfigType
+from antismash.config.args import ModuleArgs
 
 from .probabilistic import find_probabilistic_clusters, get_pfam_probabilities
 
@@ -62,13 +63,13 @@ def get_arguments() -> ModuleArgs:
     return args
 
 
-def is_enabled(options) -> bool:
+def is_enabled(options: ConfigType) -> bool:
     """  Uses the supplied options to determine if the module should be run
     """
     return options.cf_borders_only or options.cf_create_clusters
 
 
-def check_options(options) -> List[str]:
+def check_options(options: ConfigType) -> List[str]:
     """ Checks that extra options are valid """
     if not 0. < options.cf_threshold <= 1.:
         return ["probability threshold (--cf-mean-threshold) must be between 0 and 1"]
@@ -77,34 +78,39 @@ def check_options(options) -> List[str]:
 
 class ClusterFinderResults(DetectionResults):
     """ Storage for predictions """
-    def __init__(self, record_id, borders: List[ClusterBorder], create=False):
+    def __init__(self, record_id: str, borders: List[ClusterBorder], create: bool = False) -> None:
         super().__init__(record_id)
         self.create_new_clusters = create
         assert isinstance(borders, list), type(borders)
         self.borders = borders
 
-    def to_json(self):
+    def to_json(self) -> Dict[str, Any]:  # TODO: implement to/from json
         logging.critical("cluster_finder results always empty")
         return {}
 
-    def add_to_record(self, record):
-        if self.create_new_clusters:  # then get_predictions covered it
+    @staticmethod
+    def from_json(json: Dict[str, Any], record: Record) -> "ClusterFinderResults":
+        raise NotImplementedError("No conversion exists yet for ClusterFinderResults from JSON")
+
+    def add_to_record(self, record: Record) -> None:
+        if self.create_new_clusters:  # then get_predictions covered it already
             return
         for border in self.borders:
             record.add_cluster_border(border)
 
-    def get_predictions(self):
+    def get_predictions(self) -> List[ClusterBorder]:
         if not self.create_new_clusters:  # then don't predict, just annotate
             return []
         return self.borders
 
 
-def check_prereqs():
+def check_prereqs() -> List[str]:
     """Don't check for prerequisites, we don't have any"""
     return []
 
 
-def run_on_record(record, results, options) -> ClusterFinderResults:
+def run_on_record(record: Record, results: Optional[ClusterFinderResults],
+                  options: ConfigType) -> ClusterFinderResults:
     """Load the data and run the cluster_predict tool"""
     if results:
         return results
@@ -115,24 +121,25 @@ def run_on_record(record, results, options) -> ClusterFinderResults:
         logging.debug("No PFAM domains in record, probabilistic clusters cannot be found")
         return ClusterFinderResults(record.id, [])
 
-    pfam_ids = []
+    pfam_ids = []  # type: List[str]
     for pfam in pfam_features:
         pfam_ids.extend(pfam.db_xref)
     if not pfam_ids:
         logging.debug("No valid PFAM ids in record, probabilistic clusters cannot be found")
         return ClusterFinderResults(record.id, [])
 
-    pfam_features = [feature for feature in pfam_features if feature.db_xref]
+    # TODO: change when PFAMs have enforced ID attributes
+    pfam_features_with_ids = [feature for feature in pfam_features if feature.db_xref]
 
     # annotate ClusterFinder probabilities within PFAM features
     probabilities = get_pfam_probabilities(pfam_ids)
-    for pfam, probabilitiy in zip(pfam_features, probabilities):
+    for pfam, probabilitiy in zip(pfam_features_with_ids, probabilities):
         pfam.probability = probabilitiy
 
     return generate_results(record, options)
 
 
-def find_rule_based_clusters(record, options) -> List[ClusterBorder]:
+def find_rule_based_clusters(record: Record, options: ConfigType) -> List[ClusterBorder]:
     """ Generate cluster predictions using HMM profile base rules.
 
         Arguments:
@@ -154,7 +161,7 @@ def find_rule_based_clusters(record, options) -> List[ClusterBorder]:
     return results.borders
 
 
-def generate_results(record, options) -> List[ClusterBorder]:
+def generate_results(record: Record, options: ConfigType) -> ClusterFinderResults:
     """ Find and construct cluster borders """
     rule_clusters = find_rule_based_clusters(record, options)
     prob_clusters = find_probabilistic_clusters(record, options)

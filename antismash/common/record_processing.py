@@ -8,7 +8,8 @@ import functools
 import logging
 import re
 import os
-from typing import List, Set, Tuple
+from types import ModuleType
+from typing import Any, Callable, List, Set, Tuple, Union
 
 import Bio
 from Bio.Seq import Seq, UnknownSeq
@@ -17,13 +18,14 @@ from helperlibs.bio import seqio
 
 from antismash.common import gff_parser
 from antismash.common.secmet import Record
-from antismash.config import get_config, update_config
+from antismash.config import get_config, update_config, ConfigType
+from antismash.typing import AntismashModule
 
 from .subprocessing import parallel_function
 
 
-def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length=-1,
-                         start=-1, end=-1) -> List[Record]:
+def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length: int = -1,
+                         start: int = -1, end: int = -1) -> List[Record]:
     """ Parse input records contained in a file
 
         Arguments:
@@ -74,17 +76,17 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length=
     return [Record.from_biopython(record, taxon) for record in records]
 
 
-def strip_record(seq_record) -> None:
+def strip_record(record: Record) -> None:
     """ Discard antismash specific features and feature qualifiers """
-    logging.debug("Stripping antiSMASH features and annotations from record: %s", seq_record.id)
-    seq_record.clear_clusters()
-    seq_record.clear_cluster_borders()
-    seq_record.clear_cds_motifs()
-    seq_record.clear_antismash_domains()
-    seq_record.clear_pfam_domains()
+    logging.debug("Stripping antiSMASH features and annotations from record: %s", record.id)
+    record.clear_clusters()
+    record.clear_cluster_borders()
+    record.clear_cds_motifs()
+    record.clear_antismash_domains()
+    record.clear_pfam_domains()
 
     # clean up antiSMASH annotations in CDS features
-    for feature in seq_record.get_cds_features():
+    for feature in record.get_cds_features():
         feature.sec_met = None
         feature.gene_functions.clear()
 
@@ -111,7 +113,7 @@ def check_content(sequence: Record) -> Record:
     return sequence
 
 
-def ensure_cds_info(single_entry: bool, genefinding, sequence: Record) -> Record:
+def ensure_cds_info(single_entry: bool, genefinding: Callable[[Record, Any], None], sequence: Record) -> Record:
     """ Ensures the given record has CDS features with unique locus tags.
         CDS features are retrieved from GFF file or via genefinding, depending
         on antismash options.
@@ -150,7 +152,7 @@ def ensure_cds_info(single_entry: bool, genefinding, sequence: Record) -> Record
     return sequence
 
 
-def pre_process_sequences(sequences, options, genefinding) -> List[Record]:
+def pre_process_sequences(sequences: List[Record], options: ConfigType, genefinding: AntismashModule) -> List[Record]:
     """ hmm
 
         - gaps removed
@@ -232,7 +234,7 @@ def pre_process_sequences(sequences, options, genefinding) -> List[Record]:
                     warned = True
                 sequence.skip = "skipping all but first {0} meaningful records (--limit {0}) ".format(options.limit)
 
-    options = update_config({"triggered_limit": warned})  # TODO is there a better way
+    update_config({"triggered_limit": warned})  # TODO is there a better way
 
     # Check GFF suitability
     single_entry = False
@@ -242,6 +244,7 @@ def pre_process_sequences(sequences, options, genefinding) -> List[Record]:
     if checking_required:
         # ensure CDS features have all relevant information
         logging.debug("Ensuring CDS features have all required information")
+        assert hasattr(genefinding, "run_on_record")
         partial = functools.partial(ensure_cds_info, single_entry, genefinding.run_on_record)
         sequences = parallel_function(partial, ([sequence] for sequence in sequences))
 
@@ -266,7 +269,7 @@ def pre_process_sequences(sequences, options, genefinding) -> List[Record]:
     return sequences
 
 
-def sanitise_sequence(record) -> Record:
+def sanitise_sequence(record: Record) -> Record:
     """ Ensures all sequences use N for gaps instead of -, and that all other
         characters are A, C, G, T, or N
 
@@ -274,7 +277,7 @@ def sanitise_sequence(record) -> Record:
             records: the secmet.Records to alter
 
         Returns:
-            None
+            the same Record instance as given
     """
     has_real_content = False
     sanitised = []
@@ -292,7 +295,7 @@ def sanitise_sequence(record) -> Record:
     return record
 
 
-def trim_sequence(record, start, end) -> SeqRecord:
+def trim_sequence(record: SeqRecord, start: int, end: int) -> SeqRecord:
     """ Trims a record to the range given
 
         Arguments:
@@ -317,7 +320,7 @@ def trim_sequence(record, start, end) -> SeqRecord:
     return record[start:end]
 
 
-def is_nucl_seq(sequence) -> bool:
+def is_nucl_seq(sequence: Union[Seq, str]) -> bool:
     """ Determines if a sequence is a nucleotide sequence based on content.
 
         Arguments:
@@ -332,7 +335,7 @@ def is_nucl_seq(sequence) -> bool:
     return len(other) < 0.2 * len(sequence)
 
 
-def records_contain_shotgun_scaffolds(records) -> bool:
+def records_contain_shotgun_scaffolds(records: List[Record]) -> bool:
     """ Check if given records contain a WGS master record or supercontig record
 
         Arguments:
@@ -349,7 +352,7 @@ def records_contain_shotgun_scaffolds(records) -> bool:
     return False
 
 
-def ensure_no_duplicate_cds_gene_ids(sequences) -> None:
+def ensure_no_duplicate_cds_gene_ids(sequences: List[Record]) -> None:
     """ Ensures that every CDS across all sequences has a unique id
 
         Arguments:
@@ -370,7 +373,7 @@ def ensure_no_duplicate_cds_gene_ids(sequences) -> None:
             all_ids.add(name)
 
 
-def fix_record_name_id(record, all_record_ids) -> None:
+def fix_record_name_id(record: Record, all_record_ids: Set[str]) -> None:
     """ Changes a record's name and id to be no more than 16 characters long,
         so it can be used in GenBank files.
 
@@ -384,7 +387,7 @@ def fix_record_name_id(record, all_record_ids) -> None:
             None
     """
 
-    def _shorten_ids(idstring):
+    def _shorten_ids(idstring: str) -> str:
         contigstrmatch = re.search(r"onti?g?(\d+)\b", idstring)
         if not contigstrmatch:
             # if there is a substring "[Ss]caf(fold)XXX" use this number

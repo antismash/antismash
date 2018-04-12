@@ -11,8 +11,9 @@ from collections import defaultdict
 import logging
 import os
 import re
-from typing import Any, Dict, Set, List, Optional, Tuple
+from typing import Any, Dict, Set, List, Optional, Tuple, Union
 
+from Bio.SearchIO._model.hsp import HSP
 from sklearn.externals import joblib
 
 from antismash.common import utils, all_orfs, module_results, secmet, serialiser, subprocessing, path, fasta
@@ -69,7 +70,7 @@ class SactiResults(module_results.ModuleResults):
             results.new_cds_features.add(cds)
         return results
 
-    def add_to_record(self, record: secmet.Record):
+    def add_to_record(self, record: secmet.Record) -> None:
         for feature in self.new_cds_features:
             record.add_cds_feature(feature)
 
@@ -125,7 +126,7 @@ def get_detected_domains(cluster: secmet.Cluster) -> Dict[str, int]:
     return found_domains
 
 
-def run_non_biosynthetic_phmms(cluster_fasta: str) -> Dict[str, Any]:
+def run_non_biosynthetic_phmms(cluster_fasta: str) -> Dict[str, List[HSP]]:
     """ Try to identify cleavage site using pHMM """
     with open(path.get_full_path(__file__, "data", "non_biosyn_hmms", "hmmdetails.txt"), "r") as handle:
         hmmdetails = [line.split("\t") for line in handle.read().splitlines() if line.count("\t") == 3]
@@ -366,7 +367,7 @@ def acquire_rodeo_heuristics(cluster: secmet.Cluster, query: secmet.CDSFeature,
     return score, tabs, hitends
 
 
-def structure_analysis(seq: str) -> Tuple[int, float, int, List[int]]:
+def structure_analysis(seq: str) -> Tuple[int, float, float, List[int]]:
     """ Gathers information on the structural properties of the sequence
 
         Arguments:
@@ -406,7 +407,7 @@ def structure_analysis(seq: str) -> Tuple[int, float, int, List[int]]:
             total += 1
         count += 1
 
-    avg = 0
+    avg = 0.
     if total:
         avg = total / count
 
@@ -421,7 +422,8 @@ def structure_analysis(seq: str) -> Tuple[int, float, int, List[int]]:
     return len(matches), avg, cterm, profile
 
 
-def generate_rodeo_svm_csv(leader, core, previously_gathered_tabs, hitends, domain_counts) -> List[float]:
+def generate_rodeo_svm_csv(leader: str, core: str, previously_gathered_tabs: List[Union[float, int]],
+                           hitends: List[int], domain_counts: Dict[str, int]) -> List[float]:
     """Generates all the items for one candidate precursor peptide"""
     columns = []  # type: List[float]
     precursor = leader + core
@@ -564,13 +566,13 @@ def run_sactipred(cluster: secmet.Cluster, query: secmet.CDSFeature,
     return result
 
 
-def annotate_orfs(cds_features: List[secmet.CDSFeature], hmm_results):
+def annotate_orfs(cds_features: List[secmet.CDSFeature], hmm_results: Dict[str, List[HSP]]) -> None:
     """ Annotates newly found ORFs with sactipeptide domain information.
         This is only relevant for CDS features that did not exist during
         the cluster detection stage of antiSMASH.
     """
 
-    domains_by_feature = defaultdict(list)
+    domains_by_feature = defaultdict(list)  # type: Dict[str, List[SecMetQualifier.Domain]]
     for hit_id, results in hmm_results.items():
         for result in results:
             domain = SecMetQualifier.Domain(result.query_id, result.evalue, result.bitscore, "N/A", "sactipeptides")

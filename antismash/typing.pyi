@@ -9,12 +9,19 @@
 from types import ModuleType
 from typing import Any, Dict, List, Optional
 
-from antismash.config import ConfigType
-from antismash.config.args import ModuleArgs
+from .config.args import ModuleArgs
 
-from .module_results import ModuleResults
-from .secmet import Record
+from .common.module_results import ModuleResults
+from .common.secmet import Record
 
+
+class ConfigType:
+    """ A type for the Config._Config object to ensure the right object types are
+        being passed without all the warnings about non-existant members """
+
+    def __getattr__(self, attr: str) -> Any: ...
+
+    def __setattr__(self, attr: str, value: Any) -> None: ...
 
 class AntismashModule(ModuleType):
     """ A type to prevent all the many "ModuleType has no attribute 'run_on_record'"

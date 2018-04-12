@@ -4,7 +4,7 @@
 """ A collection of data structures shared by the clusterblast variants """
 
 from collections import OrderedDict
-from typing import List, Tuple
+from typing import Dict, List, Tuple, Union  # in comment hints: pylint: disable=unused-import
 
 
 class ReferenceCluster:
@@ -14,8 +14,8 @@ class ReferenceCluster:
     __slots__ = ["accession", "cluster_label", "proteins", "description",
                  "cluster_type", "tags"]
 
-    def __init__(self, accession, cluster_label, proteins, description,
-                 cluster_type, tags):
+    def __init__(self, accession: str, cluster_label: str, proteins: List[str],
+                 description: str, cluster_type: str, tags: List[str]) -> None:
         self.accession = accession
         self.cluster_label = cluster_label
         self.proteins = proteins
@@ -37,20 +37,20 @@ class Protein:
     #                                                and with slots: 0.4 Gb
     __slots__ = ("name", "locus_tag", "location", "strand", "annotations")
 
-    def __init__(self, name, locus_tag, location, strand, annotations):
+    def __init__(self, name: str, locus_tag: str, location: str, strand: str, annotations: str) -> None:
         self.name = name
         self.locus_tag = locus_tag
         self.location = location
         self.strand = strand
         self.annotations = annotations
 
-    def get_id(self):
+    def get_id(self) -> str:
         """ Returns best identifier for a Protein """
         if self.locus_tag and self.locus_tag != "no_locus_tag":
             return self.locus_tag
         return self.name
 
-    def __str__(self):
+    def __str__(self) -> str:
         if len(self.location.split("-")) != 2:
             raise ValueError("Invalid location in Protein: %s" % self.location)
         tag = self.locus_tag
@@ -63,21 +63,21 @@ class Protein:
 
 class Subject:
     """ Holds details of a subject as reported by BLAST """
-    def __init__(self, name, genecluster, start, end, strand, annotation,
-                 perc_ident, blastscore, perc_coverage, evalue, locus_tag):
+    def __init__(self, name: str, genecluster: str, start: int, end: int, strand: str, annotation: str,
+                 perc_ident: int, blastscore: int, perc_coverage: float, evalue: float, locus_tag: str) -> None:
         self.name = name
         self.genecluster = genecluster
-        self.start = start
-        self.end = end
-        self.strand = strand
+        self.start = int(start)
+        self.end = int(end)
+        self.strand = str(strand)
         self.annotation = annotation
         self.perc_ident = int(perc_ident)
         self.blastscore = int(blastscore)
         self.perc_coverage = float(perc_coverage)
         self.evalue = float(evalue)
-        self.locus_tag = locus_tag
+        self.locus_tag = str(locus_tag)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return abs(int(self.start) - int(self.end))
 
     def get_table_string(self) -> str:
@@ -87,26 +87,26 @@ class Subject:
                                            self.evalue]])
 
     @staticmethod
-    def from_dict(data) -> "Subject":
+    def from_dict(data: Dict[str, Union[str, int, float]]) -> "Subject":
         """ Recreates a Subject instance from a JSON formatted subject """
         args = []
         for key in ["name", "genecluster", "start", "end", "strand",
                     "annotation", "perc_ident", "blastscore", "perc_coverage",
                     "evalue", "locus_tag"]:
             args.append(data[key])
-        return Subject(*args)  # pylint: disable=no-value-for-parameter
+        return Subject(*args)  # type: ignore # pylint: disable=no-value-for-parameter
 
 
 class Query:
     """ Holds details of a query as reported by blast, with links to subjects
         that were connected to the query
     """
-    def __init__(self, entry: str, index: int):
+    def __init__(self, entry: str, index: int) -> None:
         parts = entry.split("|")
         self.cluster_number = int(parts[1][1:])  # c1 -> 1
         self.id = parts[4]  # accession
         self.entry = entry
-        self.subjects = OrderedDict()
+        self.subjects = OrderedDict()  # type: Dict[str, Subject]
         self.cluster_name_to_subjects = {}  # type: Dict[str, List[Subject]]
         self.index = index
 
@@ -127,16 +127,16 @@ class Score:
     __slots__ = ("hits", "core_gene_hits", "blast_score", "synteny_score",
                  "core_bonus", "scored_pairings")
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.hits = 0
         self.core_gene_hits = 0
-        self.blast_score = 0
+        self.blast_score = 0.
         self.synteny_score = 0
         self.core_bonus = 0
-        self.scored_pairings = []
+        self.scored_pairings = []  # type: List[Tuple[Query, Subject]]
 
     @property
-    def score(self):
+    def score(self) -> int:
         """ The cluster's score """
         if self.core_gene_hits:
             self.core_bonus = 3
@@ -151,8 +151,9 @@ class Score:
 
 class MibigEntry:
     """ A container for tracking similarity to a MIBiG entry """
-    def __init__(self, gene_id, gene_description, mibig_cluster,
-                 mibig_product, percent_id, blast_score, coverage, evalue):
+    def __init__(self, gene_id: str, gene_description: str, mibig_cluster: str,
+                 mibig_product: str, percent_id: float, blast_score: float,
+                 coverage: float, evalue: float) -> None:
         self.gene_id = gene_id
         self.gene_description = gene_description
         self.mibig_id = mibig_cluster.split("_c")[0]
@@ -163,7 +164,7 @@ class MibigEntry:
         self.evalue = float(evalue)
 
     @property
-    def values(self):
+    def values(self) -> List[Union[str, float]]:
         """ a list of all class member values in constructor arg order, for
             simplifying conversion to and from JSON
         """
@@ -171,5 +172,5 @@ class MibigEntry:
                 self.mibig_product, self.percent_id, self.blast_score,
                 self.coverage, self.evalue]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "%s\n" % "\t".join(str(val) for val in self.values)

@@ -1,38 +1,43 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
-import logging
 import string
 import os
+from typing import cast, Any, Dict, Iterable, List
 
+from antismash.common.module_results import ModuleResults
+from antismash.common.secmet import CDSFeature, Cluster, ClusterBorder, Feature, Record
+from antismash.config import ConfigType
 from antismash.detection import clusterfinder
-from antismash.modules import clusterblast
+from antismash.modules import clusterblast, tta
 from antismash.outputs.html.generate_html_table import generate_html_table
 
-searchgtr_links = {}
+searchgtr_links = {}  # type: Dict[str, str]  # TODO: refactor away from global
 
 
-def convert_records(seq_records, results, options):
-    records = []
-    for srec, result in zip(seq_records, results):
-        records.append(convert_record(srec, options, result))
-    return records
+def convert_records(records: List[Record], results: List[Dict[str, ModuleResults]],
+                    options: ConfigType) -> List[Dict[str, Any]]:
+    """ Convert multiple Records to JSON """
+    json_records = []
+    for record, result in zip(records, results):
+        json_records.append(convert_record(record, options, result))
+    return json_records
 
 
-def convert_record(record, options, result=None):
-    """Convert a SeqRecord to JSON"""
-    js_rec = {'seq_id': record.id,
-              'clusters': convert_clusters(record, options, result)}
-    return js_rec
+def convert_record(record: Record, options: ConfigType, result: Dict[str, ModuleResults] = None) -> Dict[str, Any]:
+    """ Convert a Record to JSON """
+    return {'seq_id': record.id,
+            'clusters': convert_clusters(record, options, result)}
 
 
-def fetch_tta_features(cluster, result):
+def fetch_tta_features(cluster: Cluster, result: Dict[str, ModuleResults]) -> List[Feature]:
     """ Returns a list of all TTA features that overlap with the cluster """
-    hits = []
-    tta_results = result.get("antismash.modules.tta")
+    hits = []  # type: List[Feature]
+    tta_results = result.get(tta.__name__)
     if not tta_results:
         return hits
 
+    assert isinstance(tta_results, tta.TTAResults), type(tta_results)
     for feature in tta_results.features:
         if feature.overlaps_with(cluster):
             hits.append(feature)
@@ -40,19 +45,21 @@ def fetch_tta_features(cluster, result):
     return hits
 
 
-def convert_clusters(record, options, result):
-    """Convert cluster SeqFeatures to JSON"""
+def convert_clusters(record: Record, options: ConfigType, result: Dict[str, ModuleResults]) -> List[Dict[str, Any]]:
+    """Convert Cluster features to JSON"""
     js_clusters = []
-    mibig_results = {}
+    mibig_results = {}  # type: Dict[int, Dict[str, List[clusterblast.results.MibigEntry]]]
 
     clusterblast_results = result.get(clusterblast.__name__)
-    if clusterblast_results and clusterblast_results.knowncluster:
-        mibig_results = clusterblast_results.knowncluster.mibig_entries
+    if clusterblast_results is not None:
+        assert isinstance(clusterblast_results, clusterblast.results.ClusterBlastResults)
+        if clusterblast_results.knowncluster:
+            mibig_results = clusterblast_results.knowncluster.mibig_entries
 
     for cluster in record.get_clusters():
         tta_codons = fetch_tta_features(cluster, result)
 
-        js_cluster = {}
+        js_cluster = {}  # type: Dict[str, Any]
         js_cluster['start'] = int(cluster.location.start) + 1
         js_cluster['end'] = int(cluster.location.end)
         js_cluster['idx'] = cluster.get_cluster_number()
@@ -65,37 +72,37 @@ def convert_clusters(record, options, result):
         if cluster.probability is not None:
             js_cluster['probability'] = cluster.probability
         js_cluster['knowncluster'] = "-"
-        js_cluster['BGCid'] = "-"
+        js_cluster['bgc_id'] = "-"
         js_cluster['anchor'] = "r%dc%d" % (record.record_index, cluster.get_cluster_number())
 
         if cluster.knownclusterblast:
             bestcluster = cluster.knownclusterblast[0]
             js_cluster['knowncluster'] = bestcluster[0]
-            js_cluster['BGCid'] = bestcluster[1]
+            js_cluster['bgc_id'] = bestcluster[1]
         js_clusters.append(js_cluster)
 
     return js_clusters
 
 
-def convert_cds_features(record, features, options, mibig_entries):
-    """Convert CDS SeqFeatures to JSON"""
+def convert_cds_features(record: Record, features: Iterable[CDSFeature], options: ConfigType,
+                         mibig_entries: Dict[str, List[clusterblast.results.MibigEntry]]
+                         ) -> List[Dict[str, Any]]:
+    """ Convert CDSFeatures to JSON """
     js_orfs = []
     for feature in features:
-        js_orf = {}
-        js_orf['start'] = int(feature.location.start) + 1
-        js_orf['end'] = int(feature.location.end)
-        # Fix for files that have their coordinates the wrong way around
-        if js_orf['start'] > js_orf['end']:
-            js_orf['end'], js_orf['start'] = js_orf['start'], js_orf['end']
-        js_orf['strand'] = feature.strand or 1
-        js_orf['locus_tag'] = feature.get_name()
-        js_orf['type'] = str(feature.gene_function)
-        js_orf['description'] = get_description(record, feature, js_orf['type'], options, mibig_entries.get(feature.protein_id, {}))
-        js_orfs.append(js_orf)
+        gene_function = str(feature.gene_function)
+        js_orfs.append({"start": feature.location.start + 1,
+                        "end": feature.location.end,
+                        "strand": feature.strand or 1,
+                        "locus_tag": feature.get_name(),
+                        "type": gene_function,
+                        "description": get_description(record, feature, gene_function, options,
+                                                       mibig_entries.get(feature.protein_id, []))})
     return js_orfs
 
 
-def convert_cluster_border_features(borders):
+def convert_cluster_border_features(borders: Iterable[ClusterBorder]) -> List[Dict[str, Any]]:
+    """ Converts ClusterBorder features to JSON """
     js_borders = []
     # clusterfinder's putative borders can never overlap, so if they exist, collapse
     # them into a single row
@@ -103,35 +110,28 @@ def convert_cluster_border_features(borders):
     non_putatives = [border for border in borders if border.product != clusterfinder.PUTATIVE_PRODUCT]
     borders = putatives + sorted(non_putatives, key=lambda x: x.product or "unknown")
     for i, border in enumerate(borders):
-        js_border = {}
-        js_border['start'] = int(border.location.start) + 1
-        js_border['end'] = int(border.location.end)
-        # Always order the coordinates correctly
-        if js_border['start'] > js_border['end']:
-            js_border['end'], js_border['start'] = js_border['start'], js_border['end']
-        js_border['tool'] = border.tool
+        js_border = {"start": border.location.start,
+                     "end": border.location.end,
+                     "tool": border.tool,
+                     "extent": border.extent,
+                     "product": border.product or "unknown"}
         if border.product == "cf_putative":
             js_border['height'] = 0
         else:
             js_border['height'] = i - len(putatives) + 1
-        js_border['extent'] = border.extent
-        js_border['product'] = border.product or 'unknown'
         if border.tool == "cassis":
             js_border['product'] = border.get_qualifier("anchor")[0]
         js_borders.append(js_border)
     return js_borders
 
 
-def convert_tta_codons(tta_codons):
+def convert_tta_codons(tta_codons: List[Feature]) -> List[Dict[str, Any]]:
     """Convert found TTA codon features to JSON"""
     js_codons = []
     for codon in tta_codons:
-        js_codon = {}
-        js_codon['start'] = int(codon.location.start) + 1
-        js_codon['end'] = int(codon.location.end)
-        js_codon['strand'] = codon.strand if codon.strand is not None else 1
-        js_codons.append(js_codon)
-
+        js_codons.append({'start': codon.location.start + 1,
+                          'end': codon.location.end,
+                          'strand': codon.strand if codon.strand is not None else 1})
     return js_codons
 
 
@@ -151,7 +151,8 @@ def generate_pfam2go_tooltip(record, feature):
     return go_notes
 
 
-def get_description(record, feature, type_, options, mibig_result):
+def get_description(record: Record, feature: CDSFeature, type_: str,
+                    options: ConfigType, mibig_result: List[clusterblast.results.MibigEntry]) -> str:
     "Get the description text of a CDS feature"
 
     blastp_url = "http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE=Proteins&" \
@@ -175,8 +176,8 @@ def get_description(record, feature, type_, options, mibig_result):
     if mibig_result:
         cluster_number = feature.cluster.get_cluster_number()
         mibig_homology_file = os.path.join(options.output_dir, "knownclusterblast",
-                                         "cluster%d" % cluster_number,
-                                         feature.get_accession() + '_mibig_hits.html')
+                                           "cluster%d" % cluster_number,
+                                           feature.get_accession() + '_mibig_hits.html')
         generate_html_table(mibig_homology_file, mibig_result)
         mibig_path = mibig_homology_file[len(options.output_dir) + 1:]
         template += '<br><a href="%s" target="_new">MiBIG Hits</a><br>\n' % mibig_path
@@ -195,8 +196,8 @@ def get_description(record, feature, type_, options, mibig_result):
     template += '<a href="%s" target="_new">NCBI BlastP on this gene</a><br>\n' % blastp_url
 
     context = genomic_context_url % (record.id,
-                                 max(feature.location.start - 9999, 0),
-                                 min(feature.location.end + 10000, len(record)))
+                                     max(feature.location.start - 9999, 0),
+                                     min(feature.location.end + 10000, len(record)))
     template += """<a href="%s" target="_new">View genomic context</a><br>\n""" % context
 
     if options.smcogs_trees:

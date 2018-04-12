@@ -11,8 +11,14 @@ import argparse
 from collections import defaultdict
 import multiprocessing
 import os
-from types import ModuleType
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import (Any, AnyStr, IO, List, Optional,   # pylint: disable=unused-import
+                    Dict, Set, Tuple)
+
+from antismash.typing import AntismashModule
+
+# There are some issues with mypy's typeshed for argparse, so there's a lot of
+# ignores sprinkled throughout. Most deal with ArgumentParser methods
+# not being picked up or argparse's liberal use of *kwargs.
 
 
 class AntismashParser(argparse.ArgumentParser):
@@ -24,7 +30,7 @@ class AntismashParser(argparse.ArgumentParser):
             parents argument: A list of ModuleArgs instead of other parsers
             add_help argument: Always overridden to False
     """
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         # while keeping parents as ModuleArg instances is important
         # ArgumentParser itself expects parsers, so modify kwargs accordingly
         self.parents = kwargs.get("parents", [])
@@ -39,8 +45,10 @@ class AntismashParser(argparse.ArgumentParser):
         self._basic_help_groups.add("Additional analysis")
         super().__init__(*args, **kwargs)
 
-    def add_argument_group(self, title: str, description: str = None, basic: bool = False,
-                           **kwargs):  # pylint: disable=arguments-differ
+# overridden ArgumentParser methods which only used args/kwargs or with less options
+# pylint: disable=arguments-differ
+    def add_argument_group(self, title: str, description: str = None, basic: bool = False,  # type: ignore
+                           **kwargs: Any):
         """ Overrides original to enable tracking of which help category a group
             is in.
 
@@ -59,9 +67,10 @@ class AntismashParser(argparse.ArgumentParser):
         # with the same label
         if basic:
             self._basic_help_groups.add(title)
-        return super().add_argument_group(title, description, **kwargs)
+        return super().add_argument_group(title, description, **kwargs)  # type: ignore
 
-    def print_help(self, file_handle=None, show_all=False) -> None:  # arg added, so pylint: disable=arguments-differ
+    def print_help(self, file_handle: IO = None, show_all: bool = False
+                   ) -> None:
         """ Overrides parent print_help() to be able to pass through whether all
             help should be shown or not.
 
@@ -74,15 +83,17 @@ class AntismashParser(argparse.ArgumentParser):
         """
         self._show_all = show_all
         super().print_help(file_handle)
+# pylint: enable=arguments-differ
 
-    def write_to_config_file(self, filename: str, values: argparse.Namespace=None) -> None:
+    def write_to_config_file(self, filename: str, values: Dict[str, Any] = None) -> None:
         """ Write the default options to file in a form that can be parsed again
 
             Arguments:
                 filename: the filename to write to
                 values: a Namespace object with values to use instead of defaults
         """
-        def construct_arg_text(arg, processed_destinations: Set[str], values: argparse.Namespace) -> List[str]:
+        def construct_arg_text(arg: argparse.Action, processed_destinations: Set[str],
+                               values: Dict[str, Any]) -> List[str]:
             """ Only construct if not already processed and not a help or input
                 arg
             """
@@ -134,17 +145,16 @@ class AntismashParser(argparse.ArgumentParser):
             return ["\n".join(lines)]
 
         if not values:
-            values = argparse.Namespace()
+            values = {}
 
         outfile = open(filename, 'w')
-        dests = set()  # set of processed destinations
-        titles = defaultdict(lambda: defaultdict(list))
+        dests = set()  # type: Set[str] # set of processed destinations
+        titles = defaultdict(lambda: defaultdict(list))  # type: Dict[str, Dict[str, List[str]]]
         for parent in sorted(self.parents, key=lambda group: group.title):
-            if getattr(parent, 'parser'):
-                for arg in parent.parser.get_actions():
-                    titles[parent.title][parent.prefix].extend(construct_arg_text(arg, dests, values))
+            for arg in parent.parser.get_actions():
+                titles[parent.title][parent.prefix].extend(construct_arg_text(arg, dests, values))
 
-        for arg in self._actions:
+        for arg in self._actions:  # type: ignore
             titles["Core options"]["core"].extend(construct_arg_text(arg, dests, values))
 
         for title, prefixes in titles.items():
@@ -174,29 +184,29 @@ Options
     def format_usage(self) -> str:
         """ Custom usage generator """
         if self._show_all:
-            formatter = self._get_formatter()
-            formatter.add_usage(self.usage, self._actions, self._mutually_exclusive_groups)
+            formatter = self._get_formatter()  # type: ignore
+            formatter.add_usage(self.usage, self._actions, self._mutually_exclusive_groups)  # type: ignore
             return formatter.format_help()
         return "usage: {prog} [-h] [options ..] sequence".format(prog=self.prog) + "\n"
 
-    def _get_args_text(self):
+    def _get_args_text(self) -> str:
         # fetch arg lists using formatter
-        formatter = self._get_formatter()
-        for action_group in self._action_groups:
+        formatter = self._get_formatter()  # type: ignore
+        for action_group in self._action_groups:  # type: ignore
             if action_group.title == "positional arguments":
                 formatter.start_section("arguments")
-                formatter.add_arguments(action_group._group_actions)
+                formatter.add_arguments(action_group._group_actions)  # pylint: disable=protected-access
                 formatter.end_section()
                 break
         return formatter.format_help()
 
-    def _get_opts_text(self):
-        # fetch opt lists using formatter
-        formatter = self._get_formatter()
-        for action_group in self._action_groups:
+    def _get_opts_text(self) -> str:
+        """ fetch opt lists using formatter """
+        formatter = self._get_formatter()  # type: ignore
+        for action_group in self._action_groups:  # type: ignore
             if action_group.title in ["optional arguments"]:
-                formatter.add_arguments(action_group._group_actions)
-        for action_group in self._action_groups:
+                formatter.add_arguments(action_group._group_actions)  # pylint: disable=protected-access
+        for action_group in self._action_groups:  # type: ignore
             if action_group.title not in ["optional arguments", "positional arguments"]:
                 show_opt = self._show_all
                 if not show_opt:
@@ -207,11 +217,11 @@ Options
                     if action_group.description is None:
                         action_group.description = ''
                     formatter.add_text(action_group.description)
-                    formatter.add_arguments(action_group._group_actions)
+                    formatter.add_arguments(action_group._group_actions)  # pylint: disable=protected-access
                     formatter.end_section()
         return formatter.format_help()
 
-    def convert_arg_line_to_args(self, arg_line):
+    def convert_arg_line_to_args(self, arg_line: str) -> List[str]:
         """ overrides original to properly parse config files """
         line = arg_line.strip()
         if not line:
@@ -224,15 +234,16 @@ Options
         args[0] = "--" + args[0]
         return args
 
-    def get_actions(self):
+    def get_actions(self) -> Tuple[argparse.Action, ...]:
         """ a getter for _actions operated on by ArgumentParser, which may
             change behaviour """
-        return tuple(self._actions)
+        return tuple(self._actions)  # type: ignore
 
 
 class FullPathAction(argparse.Action):  # pylint: disable=too-few-public-methods
     """ An argparse.Action to ensure provided paths are absolute. """
-    def __call__(self, parser, namespace, values, option_string=None):
+    def __call__(self, parser: argparse.ArgumentParser, namespace: argparse.Namespace,  # type: ignore
+                 values: AnyStr, option_string: str = None) -> None:
         setattr(namespace, self.dest, os.path.abspath(values))
 
 
@@ -266,7 +277,7 @@ class ModuleArgs:
         if not title:
             raise ValueError("Argument group must have a title")
         self.title = str(title)
-        self.parser = AntismashParser()
+        self.parser = AntismashParser(parents=[])
         self.override = override_safeties
         self.enabled_by_default = enabled_by_default
         # options for the module
@@ -286,10 +297,10 @@ class ModuleArgs:
         self.prefix = prefix
 
         self.skip_type_check = self.override
-        self.args = []
+        self.args = []  # type: List[argparse.Action]
         self.basic = basic_help
 
-    def add_option(self, name: str, *args, **kwargs) -> None:
+    def add_option(self, name: str, *args: Any, **kwargs: Any) -> None:
         """ Add a commandline option that takes a value """
         if not name:
             raise ValueError("Options must have a name")
@@ -303,14 +314,16 @@ class ModuleArgs:
             assert isinstance(default, option_type)
         self._add_argument(self.options, name, *args, **kwargs)
 
-    def add_analysis_toggle(self, name: str, *args, **kwargs) -> None:
+    def add_analysis_toggle(self, name: str, *args: Any, **kwargs: Any) -> None:
         """ Add a simple on-off option to appear in the "Additional analysis"
             section. Every module that isn't running by default must have one
             of these arguments.
         """
         self._add_argument(self.group, name, *args, **kwargs)
 
-    def _add_argument(self, group, name, *args, **kwargs) -> None:
+    def _add_argument(self, group: argparse._ArgumentGroup, name: str,  # pylint: disable=protected-access
+                      *args: Any, **kwargs: Any) -> None:
+        self.skip_type_check = self.override
         # prevent the option name being considered destination by argparse
         if not name.startswith("-"):
             name = "-%s%s" % ("-" if len(name) > 1 else "", name)
@@ -388,7 +401,7 @@ class ModuleArgs:
         return name, dest
 
 
-def build_parser(from_config_file: bool = False, modules: List[ModuleType] = None) -> AntismashParser:
+def build_parser(from_config_file: bool = False, modules: List[AntismashModule] = None) -> AntismashParser:
     """ Constructs an AntismashParser with all the default options antismash
         requires for proper operation, along with any added by the provided
         modules.
@@ -567,7 +580,7 @@ def debug_options() -> ModuleArgs:
     return group
 
 
-def specific_debugging(modules: List[ModuleType]) -> Optional[ModuleArgs]:
+def specific_debugging(modules: List[AntismashModule]) -> Optional[ModuleArgs]:
     """ Inserts a --minimal option, along with --enable-X for all modules which
         specified enabled_by_default as True.
 

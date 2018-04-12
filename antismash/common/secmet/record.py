@@ -14,7 +14,7 @@
 import bisect
 from collections import defaultdict
 import logging
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import Bio.Alphabet
 from Bio.Seq import Seq
@@ -34,26 +34,26 @@ class Record:
                  "_cluster_numbering", "_nonspecific_features", "record_index",
                  "_genes", "_transl_table", "_domains_by_name", "_pfams_by_cds_name"]
 
-    def __init__(self, seq="", transl_table: int = 1, **kwargs):
+    def __init__(self, seq: str = "", transl_table: int = 1, **kwargs: Any) -> None:
         self._record = SeqRecord(seq, **kwargs)
-        self.record_index = None
+        self.record_index = None  # type: Optional[int]
         self.original_id = None
-        self.skip = False  # TODO: move to yet another abstraction layer?
-        self._genes = []
-        self._cds_features = []
-        self._cds_by_name = {}
-        self._clusters = []
-        self._cluster_borders = []
-        self._cds_motifs = []
-        self._pfam_domains = []
-        self._antismash_domains = []
-        self._cluster_numbering = {}
-        self._nonspecific_features = []
+        self.skip = None  # type: Optional[str] # TODO: move to yet another abstraction layer?
+        self._genes = []  # type: List[Gene]
+        self._cds_features = []  # type: List[CDSFeature]
+        self._cds_by_name = {}  # type: Dict[str, CDSFeature]
+        self._clusters = []  # type: List[Cluster]
+        self._cluster_borders = []  # type: List[ClusterBorder]
+        self._cds_motifs = []  # type: List[CDSMotif]
+        self._pfam_domains = []  # type: List[PFAMDomain]
+        self._antismash_domains = []  # type: List[AntismashDomain]
+        self._cluster_numbering = {}  # type: Dict[Cluster, int]
+        self._nonspecific_features = []  # type: List[Feature]
         self._transl_table = int(transl_table)
-        self._domains_by_name = {}  # for use as x[domain.get_name()] = domain
+        self._domains_by_name = {}  # type: Dict[str, Domain]  # for use as x[domain.get_name()] = domain
         self._pfams_by_cds_name = defaultdict(list)  # type: Dict[str, List[PFAMDomain]]
 
-    def __getattr__(self, attr):
+    def __getattr__(self, attr: str) -> Any:
         # passthroughs to the original SeqRecord
         if attr in ["id", "seq", "description", "name", "annotations", "dbxrefs"]:
             return getattr(self._record, attr)
@@ -61,10 +61,11 @@ class Record:
             return self.__getattribute__(attr)
         raise AttributeError("Record has no attribute '%s'" % attr)
 
-    def __setattr__(self, attr, value):
+    def __setattr__(self, attr: str, value: Any) -> None:
         # passthroughs to the original SeqRecord
         if attr in ["id", "seq", "description", "name"]:
-            return setattr(self._record, attr, value)
+            setattr(self._record, attr, value)
+            return
         if attr in ["annotations"]:
             assert isinstance(value, dict)
             for key, val in value.items():
@@ -82,7 +83,7 @@ class Record:
             raise ValueError('Key and Value are not in right format')
         self._record.annotations[key] = value
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._record)
 
     def get_clusters(self) -> Tuple:
@@ -153,7 +154,7 @@ class Record:
             cds_name = cds
         else:
             raise TypeError("CDS must be a string or CDSFeature, not %s" % type(cds))
-        return self._pfams_by_cds_name[cds_name]
+        return tuple(self._pfams_by_cds_name[cds_name])
 
     def clear_pfam_domains(self) -> None:
         """ Remove all PFAMDomain features """
@@ -163,7 +164,7 @@ class Record:
             del self._domains_by_name[domain.get_name()]
         self._pfam_domains.clear()
 
-    def get_antismash_domains(self) -> Tuple:
+    def get_antismash_domains(self) -> Tuple[AntismashDomain, ...]:
         """A list of secondary metabolite aSDomains present in the record"""
         return tuple(self._antismash_domains)
 
@@ -200,7 +201,8 @@ class Record:
         features.extend(self.get_pfam_domains())
         return features
 
-    def get_cds_features_within_location(self, location, with_overlapping=False) -> List[Feature]:
+    def get_cds_features_within_location(self, location: FeatureLocation,
+                                         with_overlapping: bool =False) -> List[CDSFeature]:
         """ Returns all CDS features within the given location
 
             Arguments:
@@ -211,7 +213,8 @@ class Record:
             Returns:
                 a list of CDSFeatures, ordered by earliest position in feature location
         """
-        def find_start_in_list(location, features, include_overlaps: bool) -> int:
+        def find_start_in_list(location: FeatureLocation, features: List[CDSFeature],
+                               include_overlaps: bool) -> int:
             """ Find the earliest feature that starts before the location
                 (and ends before, if include_overlaps is True)
             """
@@ -224,7 +227,7 @@ class Record:
                     index -= 1
             return index
 
-        results = []
+        results = []  # type: List[CDSFeature]
         # shortcut if no CDS features exist
         if not self._cds_features:
             return results
@@ -263,7 +266,7 @@ class Record:
 
     def get_feature_count(self) -> int:
         """ Returns the total number of features contained in the record. """
-        return sum(map(len, [self._cds_features, self._clusters,
+        return sum(map(len, [self._cds_features, self._clusters,  # type: ignore
                              self._cluster_borders, self._cds_motifs,
                              self._pfam_domains, self._antismash_domains,
                              self._cluster_numbering, self._nonspecific_features,
@@ -329,7 +332,7 @@ class Record:
                               'and no nucleotide sequence provided to translate it from.',
                               cds_feature.unique_id)
                 raise ValueError("Missing sequence info for CDS %s" % cds_feature.unique_id)
-            cds_feature.translation = self.get_aa_translation_of_feature(cds_feature)
+            cds_feature.translation = self.get_aa_translation_from_location(cds_feature.location, cds_feature.transl_table)
         index = bisect.bisect_left(self._cds_features, cds_feature)
         self._cds_features.insert(index, cds_feature)
         self._link_cds_to_parent(cds_feature)
@@ -459,12 +462,12 @@ class Record:
             cds.cluster = cluster  # TODO: allow for multiple parent clusters?
             index += 1
 
-    def get_aa_translation_of_feature(self, feature: Feature) -> Seq:
-        """ Obtain content for translation qualifier for specific CDS feature in sequence record"""
-        transl_table = self._transl_table
-        if hasattr(feature, "transl_table") and feature.transl_table is not None:
-            transl_table = feature.transl_table
-        extracted = feature.extract(self.seq).ungap('-')
+    def get_aa_translation_from_location(self, location: FeatureLocation,
+                                         transl_table: Union[str, int] = None) -> Seq:
+        """ Obtain the translation for a feature based on its location """
+        if transl_table is None:
+            transl_table = self._transl_table
+        extracted = location.extract(self.seq).ungap('-')
         if len(extracted) % 3 != 0:
             extracted = extracted[:-(len(extracted) % 3)]
         seq = extracted.translate(to_stop=True, table=transl_table)
@@ -577,7 +580,7 @@ def _build_products_from_borders(borders: List[ClusterBorder]) -> List[str]:
         Returns:
             a list of unique strings, one for each unique product
     """
-    products = []
+    products = []  # type: List[str]
     # use only those border products considered high priority
     for border in borders:
         if not border.high_priority_product:

@@ -252,17 +252,17 @@ class TestPreprocessRecords(unittest.TestCase):
 
     def test_limit(self):
         records = self.read_double_nisin()
-        assert all(rec.skip is False for rec in records)
+        assert all(rec.skip is None for rec in records)
         assert not self.options.triggered_limit
         config.update_config({"limit": 1})
         record_processing.pre_process_sequences(records, self.options, self.genefinding)
-        assert records[0].skip is False
+        assert records[0].skip is None
         assert records[1].skip.startswith("skipping all but first 1")
         assert self.options.triggered_limit
 
     def test_limit_to_record_partial(self):
         records = self.read_double_nisin()
-        assert all(rec.skip is False for rec in records)
+        assert all(rec.skip is None for rec in records)
         config.update_config({"limit_to_record": records[0].id})
         records[0].id += "_changed"
         record_processing.pre_process_sequences(records, self.options, self.genefinding)

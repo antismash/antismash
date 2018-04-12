@@ -9,14 +9,14 @@
 """
 
 
-from typing import List
+from typing import List, Optional
 
 from Bio.SeqFeature import FeatureLocation, BeforePosition, AfterPosition
 
-from antismash.common.secmet import CDSFeature, Feature
+from antismash.common.secmet import CDSFeature, Feature, Record, Cluster
 
 
-def scan_orfs(seq, direction: int, offset: int = 0) -> List[FeatureLocation]:
+def scan_orfs(seq: str, direction: int, offset: int = 0) -> List[FeatureLocation]:
     """ Scan for open reading frames on a given sequence.
         Skips all ORFs with a size less than 60 bases.
 
@@ -87,7 +87,8 @@ def scan_orfs(seq, direction: int, offset: int = 0) -> List[FeatureLocation]:
     return sorted(matches, key=lambda x: min(x.start, x.end))
 
 
-def create_feature_from_location(record, location, counter=1, label=None) -> CDSFeature:
+def create_feature_from_location(record: Record, location: FeatureLocation,
+                                 counter: int = 1, label: Optional[str] = None) -> CDSFeature:
     """ Creates a CDS feature covering the provided location.
 
         Arguments:
@@ -104,14 +105,13 @@ def create_feature_from_location(record, location, counter=1, label=None) -> CDS
     """
     if label is None:
         label = 'allorf%03d' % counter
-    dummy = Feature(location, feature_type="temp")
-    feature = CDSFeature(location, str(record.get_aa_translation_of_feature(dummy)),
+    feature = CDSFeature(location, str(record.get_aa_translation_from_location(location)),
                          locus_tag=label, protein_id=label, gene=label)
     feature.created_by_antismash = True
     return feature
 
 
-def find_all_orfs(record, cluster=None) -> List[CDSFeature]:
+def find_all_orfs(record: Record, cluster: Optional[Cluster] = None) -> List[CDSFeature]:
     """ Find all ORFs of at least 60 bases that don't overlap with existing
         CDS features.
 
@@ -131,7 +131,7 @@ def find_all_orfs(record, cluster=None) -> List[CDSFeature]:
     if cluster:
         seq = record.seq[cluster.location.start:cluster.location.end]
         offset = cluster.location.start
-        existing = cluster.cds_children
+        existing = tuple(cluster.cds_children)
 
     # Find orfs throughout the range
     forward_matches = scan_orfs(seq, 1, offset)

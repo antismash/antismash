@@ -4,9 +4,11 @@
 """ NRPS/PKS analysis module
 """
 
-from typing import List
+from typing import Any, Dict, List, Optional
 
 from antismash.common import path
+from antismash.common.secmet import Record
+from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
 
 from .html_output import will_handle, generate_sidepanel, generate_details_div, generate_js_domains
@@ -39,22 +41,22 @@ def get_arguments() -> ModuleArgs:
     return args
 
 
-def check_options(_options) -> List[str]:
+def check_options(_options: ConfigType) -> List[str]:
     """ No options to check at the moment """
     return []
 
 
-def regenerate_previous_results(json, record, _options) -> NRPS_PKS_Results:
+def regenerate_previous_results(json: Dict[str, Any], record: Record, _options: ConfigType) -> NRPS_PKS_Results:
     """ Regenerate results from previous run """
     return NRPS_PKS_Results.from_json(json, record)
 
 
-def is_enabled(options):
+def is_enabled(options: ConfigType) -> bool:
     """ Whether the module is enabled """
     return not options.minimal or options.nrps_pks_enabled
 
 
-def run_on_record(record, results, options):
+def run_on_record(record: Record, results: Optional[NRPS_PKS_Results], options: ConfigType) -> NRPS_PKS_Results:
     """ Analyse a record """
     if not results:
         results = NRPS_PKS_Results(record.id)

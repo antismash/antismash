@@ -6,26 +6,43 @@
 
 from collections import OrderedDict
 import logging
-from typing import Dict, List, Union
+from typing import Dict, Iterable, List, Union
 
 from antismash.common.secmet import Record
 from antismash.common.secmet.feature import CDSFeature, Domain
 
 
-def get_fasta_from_features(features: Union[List[CDSFeature], List[Domain]], numeric_names=False) -> str:
-    """ Extract multi-protein FASTA from provided features """
+def get_fasta_from_features(features: Union[Iterable[CDSFeature], Iterable[Domain]], numeric_names: bool = False) -> str:
+    """ Extract multi-protein FASTA from provided features
+
+        Arguments:
+            features: a list of CDSFeatures or a list of Domains, all of which must have a translation
+            numeric_names: whether to use integer names (matching the index within the list) instead
+                           of feature names (avoiding long identifiers causing issues in external tools)
+
+        Returns:
+            a single string containing all provided feature translations in FASTA format
+
+    """
     all_fastas = []
     if not numeric_names:
         for feature in features:
             all_fastas.append(">%s\n%s" % (feature.get_name(), feature.translation))
     else:
         for i, feature in enumerate(features):
-            all_fastas.append(">%s\n%s" % (i, feature.translation))
+            all_fastas.append(">%d\n%s" % (i, feature.translation))
     return "\n".join(all_fastas)
 
 
 def get_fasta_from_record(record: Record) -> str:
-    """ Extract multi-protein FASTA from all CDS features in sequence record """
+    """ Extract multi-protein FASTA from all CDS features in sequence record
+
+        Arguments:
+            record: the Record instance to fetch CDSFeatures from
+
+        Returns:
+            a string containing all CDSFeature labels and sequences in FASTA format
+    """
     features = record.get_cds_features()
     all_fastas = []
     for feature in features:
@@ -36,7 +53,16 @@ def get_fasta_from_record(record: Record) -> str:
 
 
 def write_fasta(names: List[str], seqs: List[str], filename: str) -> None:
-    """ Write name/seq pairs to file in FASTA format """
+    """ Writes name/sequence pairs to file in FASTA format
+
+        Argumnets:
+            names: a list of sequence identifiers
+            seqs: a list of sequences as strings
+            filename: the filename to write the FASTA formatted data to
+
+        Returns:
+            None
+    """
     out_file = open(filename, "w")
     for name, seq in zip(names, seqs):
         out_file.write(">%s\n%s\n" % (name, seq))
@@ -44,7 +70,15 @@ def write_fasta(names: List[str], seqs: List[str], filename: str) -> None:
 
 
 def read_fasta(filename: str) -> Dict[str, str]:
-    """ reads a fasta file into a dict: id -> sequence, returns the dict """
+    """ Reads a fasta file into a dictionary
+
+        Arguments:
+            filename: the path to the FASTA file to read
+
+        Returns:
+            a dictionary mapping sequence ID to sequence
+
+    """
     ids = []
     sequence_info = []
     with open(filename, "r") as fasta:

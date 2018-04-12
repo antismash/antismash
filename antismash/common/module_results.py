@@ -5,7 +5,7 @@
     antismash run results.
 """
 
-from typing import Dict, List
+from typing import Any, Dict, List
 
 from .secmet import Record
 from .secmet.feature import ClusterBorder
@@ -21,7 +21,7 @@ class ModuleResults:
     def __init__(self, record_id: str) -> None:
         self.record_id = record_id
 
-    def to_json(self) -> Dict:
+    def to_json(self) -> Dict[str, Any]:
         """
             Converts the contained results into a json structure of simple types
 
@@ -31,7 +31,7 @@ class ModuleResults:
         raise NotImplementedError()
 
     @staticmethod
-    def from_json(json: Dict, record: Record) -> "ModuleResults":
+    def from_json(json: Dict[str, Any], record: Record) -> "ModuleResults":
         """
             Converts a json structure back to a ModuleResults instance
 
@@ -53,7 +53,7 @@ class ModuleResults:
         pass
 
 
-class DetectionResults(ModuleResults):
+class DetectionResults(ModuleResults):  # keeping abstract is deliberate, pylint: disable=abstract-method
     """ Stores results for detection modules.
 
         add_to_record() no longer requires overriding
@@ -62,6 +62,8 @@ class DetectionResults(ModuleResults):
     def add_to_record(self, record: Record) -> None:
         pass
 
-    def get_predictions(self) -> List[ClusterBorder]:
-        """ Returns a list of ClusterBorder features predicted by the module """
+    def get_predictions(self) -> List[ClusterBorder]:  # pylint: disable=no-self-use
+        """ Returns a list of ClusterBorder features predicted by the module.
+            Should be overridden by any subclass that makes cluster predictions.
+        """
         return []

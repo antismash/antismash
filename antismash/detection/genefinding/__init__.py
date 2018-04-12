@@ -8,7 +8,8 @@ import os
 from typing import List
 
 from antismash.common.path import locate_executable
-from antismash.config import get_config
+from antismash.common.secmet import Record
+from antismash.config import get_config, ConfigType
 from antismash.config.args import ModuleArgs
 
 from .run_prodigal import run_prodigal
@@ -43,11 +44,11 @@ def get_arguments() -> ModuleArgs:
 
 def check_prereqs() -> List[str]:
     """ Make sure the external tools to use are available """
-    failure_messages = []
+    failure_messages = []  # type: List[str]
     options = get_config()
     if options.genefinding_tool in ['none']:
         return failure_messages
-    binaries = []
+    binaries = []  # type: List[str]
     if options.genefinding_tool in ['prodigal', 'prodigal-m']:
         binaries = ['prodigal']
     elif options.taxon == 'fungi':
@@ -59,7 +60,7 @@ def check_prereqs() -> List[str]:
     return failure_messages
 
 
-def check_options(options) -> List[str]:
+def check_options(options: ConfigType) -> List[str]:
     """ Check that fungal sequences aren't using bacterial genefinding
         and vice versa.
     """
@@ -75,14 +76,14 @@ def check_options(options) -> List[str]:
     return errors
 
 
-def is_enabled(options):
+def is_enabled(options: ConfigType) -> bool:
     """ Considered enabled in the case of the tool being 'error', because it
         should throw an error in that case.
     """
     return options.genefinding_tool != "none"
 
 
-def run_on_record(record, options):
+def run_on_record(record: Record, options: ConfigType) -> None:
     """ Find genes in a Record using glimmerhmm or prodigal.
         Genes will be added to the record as they are found.
     """

@@ -1,36 +1,49 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+""" Handles HTML output for sactipeptides """
+
+from typing import List
+
 from jinja2 import FileSystemLoader, Environment, StrictUndefined
 
 from antismash.common import path
-from antismash.common.secmet import Prepeptide
-from antismash.common.layers import ClusterLayer
+from antismash.common.secmet import Prepeptide, Cluster
+from antismash.common.layers import ClusterLayer, RecordLayer, OptionsLayer
+
+from .specific_analysis import SactiResults
 
 
-def will_handle(products):
+def will_handle(products: List[str]) -> bool:
+    """ Returns True if this module can handle the provided cluster products """
     return 'sactipeptide' in products
 
 
-def generate_details_div(cluster_layer, results, record_layer, options_layer):
-    env = Environment(loader=FileSystemLoader([path.get_full_path(__file__, 'templates')]),
+def generate_details_div(cluster_layer: ClusterLayer, results: SactiResults,
+                         record_layer: RecordLayer, options_layer: OptionsLayer) -> str:
+    """ Generates the main page section of HTML with any results for the given
+        cluster """
+    env = Environment(loader=FileSystemLoader(path.get_full_path(__file__, 'templates')),
                       autoescape=True, undefined=StrictUndefined)
     template = env.get_template('details.html')
     motifs_in_cluster = {}
     for locus in results.clusters.get(cluster_layer.get_cluster_number(), []):
         motifs_in_cluster[locus] = results.motifs_by_locus[locus]
     details_div = template.render(record=record_layer,
-                                  cluster=SactipeptideLayer(record_layer, cluster_layer.cluster_rec),
+                                  cluster=SactipeptideLayer(record_layer, cluster_layer.cluster_feature),
                                   options=options_layer,
                                   results=motifs_in_cluster)
     return details_div
 
 
-def generate_sidepanel(cluster_layer, results, record_layer, options_layer):
-    env = Environment(loader=FileSystemLoader([path.get_full_path(__file__, 'templates')]),
+def generate_sidepanel(cluster_layer: ClusterLayer, results: SactiResults,
+                       record_layer: RecordLayer, options_layer: OptionsLayer) -> str:
+    """ Generates the sidepanel section of HTML with any results for the given
+        cluster """
+    env = Environment(loader=FileSystemLoader(path.get_full_path(__file__, 'templates')),
                       autoescape=True, undefined=StrictUndefined)
     template = env.get_template('sidepanel.html')
-    cluster = SactipeptideLayer(record_layer, cluster_layer.cluster_rec)
+    cluster = SactipeptideLayer(record_layer, cluster_layer.cluster_feature)
     motifs_in_cluster = {}
     for locus in results.clusters.get(cluster_layer.get_cluster_number(), []):
         motifs_in_cluster[locus] = results.motifs_by_locus[locus]
@@ -43,13 +56,13 @@ def generate_sidepanel(cluster_layer, results, record_layer, options_layer):
 
 class SactipeptideLayer(ClusterLayer):
     """ An extended ClusterLayer for holding a list of LanthipeptideMotifs """
-    def __init__(self, record, cluster_feature):
+    def __init__(self, record: RecordLayer, cluster_feature: Cluster) -> None:
         ClusterLayer.__init__(self, record, cluster_feature)
-        self.motifs = []
+        self.motifs = []  # type: List[Prepeptide]
         for motif in self.record.seq_record.get_cds_motifs():
             if not isinstance(motif, Prepeptide):
                 continue
-            if not motif.is_contained_by(self.cluster_rec):
+            if not motif.is_contained_by(self.cluster_feature):
                 continue
             if motif.peptide_class == "sactipeptide":
                 self.motifs.append(motif)

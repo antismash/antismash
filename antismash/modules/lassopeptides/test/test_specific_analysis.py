@@ -110,12 +110,12 @@ class TestSpecificAnalysis(unittest.TestCase):
     def test_predict_cleavage_site(self):
         "Test lassopeptides.predict_cleavage_site()"
         resvec = predict_cleavage_site('foo', 'bar', 51)
-        self.assertEqual([None, None, None], resvec)
+        self.assertEqual((None, None, None), resvec)
         fake_hit = self.FakeHit(24, 42, 17, 'Class II')
         self.hmmpfam_return_vals.append([fake_hit, fake_hit])
 
         resvec = predict_cleavage_site('foo', 'bar', 51)
-        self.assertEqual([None, None, None], resvec)
+        self.assertEqual((None, None, None), resvec)
 
         start, end, score = predict_cleavage_site('foo', 'bar', 15)
 

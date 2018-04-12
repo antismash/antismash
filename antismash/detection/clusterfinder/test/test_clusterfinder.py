@@ -74,12 +74,12 @@ class ClusterFinderTest(unittest.TestCase):
 
         middle = (35, 115)
         newpos, count = clusterfinder.probabilistic.find_nr_cds(middle, self.record)
-        assert newpos == [30, 120]
+        assert newpos == (30, 120)
         assert count == 7
 
         small = (501, 504)
         newpos, count = clusterfinder.probabilistic.find_nr_cds(small, self.record)
-        assert newpos == [500, 505]
+        assert newpos == (500, 505)
         assert count == 1
 
     def test_find_probabilistic_clusters(self):
@@ -92,20 +92,23 @@ class ClusterFinderTest(unittest.TestCase):
 
     def test_no_overlaps(self):
         results = clusterfinder.generate_results(self.record, self.config)
+        borders = self.record.get_cluster_borders()
 
-        self.assertEqual(2, len(results.borders))
-        assert list(self.record.get_cluster_borders()) == results.borders
-        cluster1, cluster2 = self.record.get_cluster_borders()
+        assert len(results.borders) == 2
+        assert len(borders) == 2
+        assert list(borders) == results.borders
 
-        assert cluster1.location.start == 30
-        assert cluster1.location.end == 120
-        assert not cluster1.high_priority_product
-        self.assertAlmostEqual(0.6429, cluster1.probability, places=4)
+        cluster = borders[0]
+        assert cluster.location.start == 30
+        assert cluster.location.end == 120
+        assert not cluster.high_priority_product
+        self.assertAlmostEqual(0.6429, cluster.probability, places=4)
 
-        assert cluster2.location.start == 1030
-        assert cluster2.location.end == 1120
-        assert not cluster2.high_priority_product
-        self.assertAlmostEqual(0.6429, cluster2.probability, places=4)
+        cluster = borders[1]
+        assert cluster.location.start == 1030
+        assert cluster.location.end == 1120
+        assert not cluster.high_priority_product
+        self.assertAlmostEqual(0.6429, cluster.probability, places=4)
 
     def test_merges(self):
         clusterfinder.generate_results(self.record, self.config)
@@ -119,13 +122,12 @@ class ClusterFinderTest(unittest.TestCase):
 
         self.record.create_clusters_from_borders()
 
-        assert len(self.record.get_clusters()) == 2
+        clusters = self.record.get_clusters()
+        assert len(clusters) == 2
 
-        cluster1, cluster2 = self.record.get_clusters()
-
-        assert cluster1.location.start == 10
-        assert cluster1.location.end == 400
-        assert cluster1.products == ("10", "110")
-        assert cluster2.location.start == 1030
-        assert cluster2.location.end == 1120
-        assert cluster2.products == ("1040",)
+        assert clusters[0].location.start == 10
+        assert clusters[0].location.end == 400
+        assert clusters[0].products == ("10", "110")
+        assert clusters[1].location.start == 1030
+        assert clusters[1].location.end == 1120
+        assert clusters[1].products == ("1040",)

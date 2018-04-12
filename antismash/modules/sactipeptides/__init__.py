@@ -5,10 +5,11 @@
 
 """
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from antismash.common import path
 from antismash.common.secmet import Record
+from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
 
 from .specific_analysis import specific_analysis, SactiResults
@@ -18,7 +19,7 @@ NAME = "sactipeptides"
 SHORT_DESCRIPTION = "sactipeptide detection"
 
 
-def check_prereqs():
+def check_prereqs() -> List[str]:
     """ Ensures all required external programs are available """
     failure_messages = []
     for binary_name in ['hmmpfam2']:
@@ -28,28 +29,28 @@ def check_prereqs():
     return failure_messages
 
 
-def get_arguments():
+def get_arguments() -> ModuleArgs:
     """ Runs by default, but add minimal's --enable option """
     args = ModuleArgs('Advanced options', 'sacti', enabled_by_default=True)
     return args
 
 
-def check_options(_options):
+def check_options(_options: ConfigType) -> List[str]:
     """ No specific options to check """
     return []
 
 
-def is_enabled(options):
+def is_enabled(options: ConfigType) -> bool:
     """ Should the module run with the given options """
     return not options.minimal or options.sactipeptides_enabled
 
 
-def regenerate_previous_results(previous: Dict[Any, str], record: Record, _options) -> SactiResults:
+def regenerate_previous_results(previous: Dict[Any, str], record: Record, _options: ConfigType) -> SactiResults:
     """ Regenerate a SactiResults object from a JSON-like dict """
     return SactiResults.from_json(previous, record)
 
 
-def run_on_record(record: Record, results: Optional[SactiResults], _options) -> SactiResults:
+def run_on_record(record: Record, results: Optional[SactiResults], _options: ConfigType) -> SactiResults:
     """ Run the sactipeptide analysis over the given record """
     if results:
         return results

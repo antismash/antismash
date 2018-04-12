@@ -6,9 +6,11 @@
 import os
 
 from antismash.common.subprocessing import parallel_execute
+from antismash.common.secmet import Record
+from antismash.config import ConfigType
 
 
-def run_meme(meme_dir, _options, verbose):
+def run_meme(meme_dir: str, _options: ConfigType, verbose: bool) -> int:
     """Set paths, check existing files and run MEME in parallel on each promoter set"""
     args = []
     for plus_minus in os.listdir(meme_dir):
@@ -38,7 +40,7 @@ def run_meme(meme_dir, _options, verbose):
     return sum(errors)
 
 
-def run_fimo(meme_dir, fimo_dir, record, options, verbose):
+def run_fimo(meme_dir: str, fimo_dir: str, record: Record, options: ConfigType, verbose: bool) -> int:
     """Set paths, check existing files and run FIMO in parallel on each predicted motif"""
     if not os.path.exists(fimo_dir):
         os.makedirs(fimo_dir)

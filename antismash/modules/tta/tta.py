@@ -9,15 +9,17 @@
 """
 
 import logging
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple  # used in comment type hints #pylint: disable=unused-import
 
+from antismash.common.secmet import Record
 from antismash.common.secmet.feature import Feature, FeatureLocation
-import antismash.common.module_results
+from antismash.common.module_results import ModuleResults
+from antismash.config import ConfigType
 
 Codon = Tuple[int, int]  # keeping as a type style, so # pylint: disable=invalid-name
 
 
-class TTAResults(antismash.common.module_results.ModuleResults):
+class TTAResults(ModuleResults):
     """ Holds results for the TTA module by tracking locations of TTA codons."""
     schema_version = 1
 
@@ -55,18 +57,18 @@ class TTAResults(antismash.common.module_results.ModuleResults):
                 "schema_version": TTAResults.schema_version,
                 "record_id": self.record_id}
 
-    def add_to_record(self, record) -> None:
+    def add_to_record(self, record: Record) -> None:
         """ Adds the found TTA features to the record """
         if record.id != self.record_id:
             raise ValueError("Record to store in and record analysed don't match")
         for feature in self.features:
             record.add_feature(feature)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.features)
 
     @staticmethod
-    def from_json(json: Dict[str, Any], record) -> "TTAResults":
+    def from_json(json: Dict[str, Any], record: Record) -> "TTAResults":
         """ Constructs a new TTAResults instance from a json format and the
             original record analysed.
         """
@@ -80,8 +82,16 @@ class TTAResults(antismash.common.module_results.ModuleResults):
         return results
 
 
-def detect(record, options) -> TTAResults:
-    """Detect TTA codons"""
+def detect(record: Record, options: ConfigType) -> TTAResults:
+    """ Find TTA codons in a record
+
+        Arguments:
+            record: the record to search
+            options: an antismash config object
+
+        Returns:
+            a TTAResults instance with all detected TTA codons
+    """
     assert options.tta
     logging.info("Detecting TTA codons")
     results = TTAResults(record.id)

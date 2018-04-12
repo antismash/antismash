@@ -13,6 +13,7 @@ import os
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 from antismash.common import all_orfs, fasta, module_results, path, secmet, serialiser, subprocessing, utils
+from antismash.common.secmet.feature import FeatureLocation
 from antismash.common.signature import HmmSignature
 
 from .rodeo import run_rodeo
@@ -58,7 +59,7 @@ class ThioResults(module_results.ModuleResults):
                 results.cds_features[cluster].append(cds)
         return results
 
-    def add_to_record(self, record: secmet.Record):
+    def add_to_record(self, record: secmet.Record) -> None:
         """ Adds any relevant result constructions to the record """
         for features in self.cds_features.values():
             for cds in features:
@@ -68,7 +69,7 @@ class ThioResults(module_results.ModuleResults):
             record.add_cds_motif(motif)
 
 
-class Thiopeptide(object):
+class Thiopeptide:
     """ Class to calculate and store thiopeptide information
     """
     def __init__(self, start: int, end: int, score: float, rodeo_score: float) -> None:
@@ -96,7 +97,7 @@ class Thiopeptide(object):
         return self._core
 
     @core.setter
-    def core(self, seq: str):
+    def core(self, seq: str) -> None:
         assert isinstance(seq, str)
         assert seq
         self._core = seq
@@ -106,23 +107,23 @@ class Thiopeptide(object):
         self.core_analysis = utils.RobustProteinAnalysis(seq, monoisotopic=False)
 
     @property
-    def leader(self):
+    def leader(self) -> str:
         """ The leader section of the motif """
         return self._leader
 
     @leader.setter
-    def leader(self, leader: str):
+    def leader(self, leader: str) -> None:
         assert isinstance(leader, str)
         self._leader = leader
 
     @property
-    def macrocycle(self):
+    def macrocycle(self) -> str:
         """ Recalculates the macrocycle prediction and returns it """
         self._predict_macrocycle()
         return self._macrocycle
 
     @macrocycle.setter
-    def macrocycle(self, macro: str):
+    def macrocycle(self, macro: str) -> None:
         assert macro and isinstance(macro, str), macro
         self._macrocycle = macro
 
@@ -181,11 +182,11 @@ class Thiopeptide(object):
         return self._c_cut
 
     @c_cut.setter
-    def c_cut(self, ccut: str):
+    def c_cut(self, ccut: str) -> None:
         assert isinstance(ccut, str)
         self._c_cut = ccut
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "Thiopeptide(%s..%s, %s, %r, %r, %s(%s), %s, %s, %s, %s)" % (
                         self.start, self.end, self.score, self._core,
                         self.thio_type, self._monoisotopic_weight, self._weight,
@@ -554,10 +555,10 @@ def run_thiopred(query: secmet.CDSFeature, thio_type: str, domains: Set[str]) ->
 
 class ThiopeptideMotif(secmet.Prepeptide):
     """ A thiopeptide-specific motif feature """
-    def __init__(self, location, core_seq, leader_seq,
-                 locus_tag, monoisotopic_mass, molecular_weight, alternative_weights,
-                 thio_class, score, rodeo_score, macrocycle, cleaved_residues,
-                 core_features, mature_weights, amidation):
+    def __init__(self, location: FeatureLocation, core_seq: str, leader_seq: str,
+                 locus_tag: str, monoisotopic_mass: float, molecular_weight: float, alternative_weights: List[float],
+                 thio_class: str, score: float, rodeo_score: float, macrocycle: str, cleaved_residues: str,
+                 core_features: str, mature_weights: List[float], amidation: bool) -> None:
         super().__init__(location, "thiopeptide", core_seq, locus_tag, thio_class, score,
                          monoisotopic_mass, molecular_weight, alternative_weights,
                          leader=leader_seq, tail=cleaved_residues)

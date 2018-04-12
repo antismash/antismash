@@ -6,23 +6,27 @@
 
 import functools
 import logging
+from typing import Dict, List
 
 from helperlibs.wrappers.io import TemporaryDirectory
 
 from antismash.common import path, subprocessing
+from antismash.common.secmet import Record
+from antismash.config import ConfigType
 
 from .core import write_raw_clusterblastoutput, write_fastas_with_all_genes, \
                   blastparse, score_clusterblast_output, \
-                  runblast, load_clusterblast_database, get_core_gene_ids
+                  run_blast, load_clusterblast_database, get_core_gene_ids
 from .results import ClusterResult, GeneralResults
+from .data_structures import ReferenceCluster, Protein
 
 
-def _get_datafile_path(filename):
+def _get_datafile_path(filename: str) -> str:
     """ A simple helper to get the full path of subclusterblast datafile """
     return path.get_full_path(__file__, 'data', 'sub', filename)
 
 
-def check_sub_prereqs(_options):
+def check_sub_prereqs(_options: ConfigType) -> List[str]:
     """ Check if all required applications and datafiles are present.
         options is irrelevant here
     """
@@ -51,7 +55,7 @@ def check_sub_prereqs(_options):
     return failure_messages
 
 
-def run_subclusterblast_on_record(record, options) -> GeneralResults:
+def run_subclusterblast_on_record(record: Record, options: ConfigType) -> GeneralResults:
     """ Loads reference databases and performs subclusterblast analysis
 
         Arguments:
@@ -66,8 +70,8 @@ def run_subclusterblast_on_record(record, options) -> GeneralResults:
     return perform_subclusterblast(options, record, clusters, proteins)
 
 
-def _run_blast_helper(database, index) -> str:
-    """ A simple wrapper of runblast() to reverse arg order to allow for
+def _run_blast_helper(database: str, index: int) -> str:
+    """ A simple wrapper of run_blast() to reverse arg order to allow for
         functools.partial to simplify run_clusterblast_processes()
 
         Cannot be a locally defined function because Pool requires it to be
@@ -79,12 +83,12 @@ def _run_blast_helper(database, index) -> str:
                     filename to use
 
         Returns:
-            the name of the output file created by runblast()
+            the name of the output file created by run_blast()
     """
-    return runblast("input%d.fasta" % index, database)
+    return run_blast("input%d.fasta" % index, database)
 
 
-def run_clusterblast_processes(options) -> None:
+def run_clusterblast_processes(options: ConfigType) -> None:
     """ Run blast in parallel, creates `options.cpu` number of files with
         the name format "inputN.fasta"
 
@@ -102,7 +106,7 @@ def run_clusterblast_processes(options) -> None:
                                     cpus=options.cpus)
 
 
-def read_clusterblast_output(options):
+def read_clusterblast_output(options: ConfigType) -> str:
     """ Builds a single output from the results from the distributed blast run
 
         Arguments:
@@ -119,7 +123,8 @@ def read_clusterblast_output(options):
     return "".join(blastoutput)
 
 
-def perform_subclusterblast(options, record, clusters, proteins) -> GeneralResults:
+def perform_subclusterblast(options: ConfigType, record: Record, clusters: Dict[str, ReferenceCluster],
+                            proteins: Dict[str, Protein]) -> GeneralResults:
     """ Run BLAST on gene cluster proteins of each cluster, parse output and
         return result rankings for each cluster
 

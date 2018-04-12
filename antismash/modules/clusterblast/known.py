@@ -11,16 +11,18 @@ from typing import Dict, List
 from helperlibs.wrappers.io import TemporaryDirectory
 
 from antismash.common import path
+from antismash.common.secmet import Record
+from antismash.config import ConfigType
 
 from .core import parse_all_clusters, write_fastas_with_all_genes, \
                   load_clusterblast_database, run_diamond, \
                   write_raw_clusterblastoutput, score_clusterblast_output, \
                   get_core_gene_ids
 from .results import ClusterResult, GeneralResults, write_clusterblast_output
-from .data_structures import MibigEntry
+from .data_structures import MibigEntry, ReferenceCluster, Protein
 
 
-def _get_datafile_path(filename) -> str:
+def _get_datafile_path(filename: str) -> str:
     """ A helper to construct absolute paths to files in the knownclusterblast
         data directory.
 
@@ -33,7 +35,7 @@ def _get_datafile_path(filename) -> str:
     return path.get_full_path(__file__, 'data', 'known', filename)
 
 
-def check_known_prereqs(_options) -> List[str]:
+def check_known_prereqs(_options: ConfigType) -> List[str]:
     """ Determines if any prerequisite data files or executables are missing
 
         Arguments:
@@ -58,7 +60,7 @@ def check_known_prereqs(_options) -> List[str]:
     return failure_messages
 
 
-def run_knownclusterblast_on_record(record, options) -> GeneralResults:
+def run_knownclusterblast_on_record(record: Record, options: ConfigType) -> GeneralResults:
     """ Run knownclusterblast on the given record
 
         Arguments:
@@ -73,7 +75,9 @@ def run_knownclusterblast_on_record(record, options) -> GeneralResults:
     return perform_knownclusterblast(options, record, clusters, proteins)
 
 
-def perform_knownclusterblast(options, record, reference_clusters, proteins) -> GeneralResults:
+def perform_knownclusterblast(options: ConfigType, record: Record,
+                              reference_clusters: Dict[str, ReferenceCluster],
+                              proteins: Dict[str, Protein]) -> GeneralResults:
     """ Run BLAST on gene cluster proteins of each cluster, parse output and
         return result rankings for each cluster
 
@@ -122,7 +126,8 @@ def perform_knownclusterblast(options, record, reference_clusters, proteins) -> 
     return results
 
 
-def mibig_protein_homology(blastoutput, record, clusters) -> Dict[int, Dict[str, List[MibigEntry]]]:
+def mibig_protein_homology(blastoutput: str, record: Record, clusters: Dict[str, ReferenceCluster]
+                           ) -> Dict[int, Dict[str, List[MibigEntry]]]:
     """ Constructs a mapping of clusters and genes to MiBiG hits
 
         Arguments:

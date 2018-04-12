@@ -5,9 +5,11 @@
 """
 
 import logging
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from antismash.common import path, subprocessing
+from antismash.common.secmet import Record
+from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
 
 from .domain_identification import generate_domains, NRPSPKSDomains
@@ -23,25 +25,26 @@ def get_arguments() -> ModuleArgs:
     return args
 
 
-def check_options(options) -> List[str]:
+def check_options(options: ConfigType) -> List[str]:
     """ Checks the options to see if there are any issues before
         running any analyses
     """
     return []
 
 
-def is_enabled(options) -> bool:
+def is_enabled(options: ConfigType) -> bool:
     """  Uses the supplied options to determine if the module should be run
     """
     # in this case, yes, always
     return True
 
 
-def regenerate_previous_results(results, record, _options) -> NRPSPKSDomains:
+def regenerate_previous_results(results: Dict[str, Any], record: Record, _options: ConfigType) -> NRPSPKSDomains:
     return NRPSPKSDomains.from_json(results, record)
 
 
-def run_on_record(record, previous_results: Optional[NRPSPKSDomains], options) -> NRPSPKSDomains:
+def run_on_record(record: Record, previous_results: Optional[NRPSPKSDomains],
+                  options: ConfigType) -> NRPSPKSDomains:
     logging.debug('Marking NRPS/PKS genes and domains in clusters')
     if previous_results:
         assert isinstance(previous_results, NRPSPKSDomains)

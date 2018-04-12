@@ -6,7 +6,6 @@
     trees based on other possible classifications.
 """
 
-
 from collections import defaultdict
 from io import StringIO
 import glob
@@ -16,20 +15,23 @@ from typing import Dict, List  # List used in comment type hints, pylint: disabl
 
 from Bio import Phylo
 from Bio.Phylo.NewickIO import NewickError
+from Bio.SearchIO._model.hsp import HSP
 from helperlibs.wrappers.io import TemporaryDirectory
 import matplotlib
 
 from antismash.common import path, fasta, subprocessing
+from antismash.common.secmet import CDSFeature
 
 
-def generate_trees(smcogs_dir, hmm_results, geneclustergenes, nrpspks_genes) -> Dict[str, str]:
+def generate_trees(smcogs_dir: str, hmm_results: Dict[str, List[HSP]], genes_within_clusters: List[CDSFeature],
+                   nrpspks_genes: List[CDSFeature]) -> Dict[str, str]:
     """ smCOG phylogenetic tree construction """
     pks_nrps_gene_names = set([feature.get_name() for feature in nrpspks_genes])
     logging.info("Calculating and drawing phylogenetic trees of cluster genes "
                  "with smCOG members")
     with TemporaryDirectory(change=True):
         cds_features = []
-        for cds in geneclustergenes:
+        for cds in genes_within_clusters:
             gene_id = cds.get_name()
             if gene_id not in pks_nrps_gene_names and hmm_results.get(gene_id):
                 cds_features.append(cds)
@@ -47,25 +49,25 @@ def generate_trees(smcogs_dir, hmm_results, geneclustergenes, nrpspks_genes) -> 
     return tree_filenames
 
 
-def smcog_tree_analysis(cds, inputnr, smcog, output_dir) -> None:
+def smcog_tree_analysis(cds: CDSFeature, input_number: int, smcog: str, output_dir: str) -> None:
     "run smCOG search on all gene cluster CDS features"
     gene_id = cds.get_name()
     seq = cds.translation
     # create input.fasta file with single query sequence to be used as input for MSA
-    fasta.write_fasta([gene_id], [seq], "input" + str(inputnr) + ".fasta")
-    alignment_file = alignsmcogs(smcog, inputnr)
+    fasta.write_fasta([gene_id], [seq], "input" + str(input_number) + ".fasta")
+    alignment_file = alignsmcogs(smcog, input_number)
     # Generate trimmed alignment
-    trim_alignment(inputnr, alignment_file)
+    trim_alignment(input_number, alignment_file)
     # Draw phylogenetic tree
-    draw_tree(inputnr, output_dir, gene_id)
+    draw_tree(input_number, output_dir, gene_id)
 
 
-def alignsmcogs(smcog, inputnr) -> str:
+def alignsmcogs(smcog: str, input_number: int) -> str:
     """ Align to multiple sequence alignment, output as fasta file """
     reference = path.get_full_path(__file__, "data", "%s_muscle.fasta" % str(smcog).lower())
-    output_filename = "muscle%d.fasta" % inputnr
+    output_filename = "muscle%d.fasta" % input_number
     musclecommand = ["muscle", "-quiet", "-profile", "-in1", reference,
-                     "-in2", "input" + str(inputnr) + ".fasta",
+                     "-in2", "input" + str(input_number) + ".fasta",
                      "-out", output_filename]
     result = subprocessing.execute(musclecommand)
     if result.return_code:
@@ -73,12 +75,12 @@ def alignsmcogs(smcog, inputnr) -> str:
     return output_filename
 
 
-def trim_alignment(inputnr, alignment_file) -> None:
+def trim_alignment(input_number: int, alignment_file: str) -> None:
     """ remove all positions before the first and after the last position shared
         by at least a third of all sequences
     """
 
-    def find_first_aa_position(conservations, sequence_count) -> int:
+    def find_first_aa_position(conservations: List[Dict[str, int]], sequence_count: int) -> int:
         """ Finds the first position of a shared amino acid """
         for position, conservation in enumerate(conservations):
             aa = sorted(conservation.items(), key=lambda x: (x[1], x[0]), reverse=True)
@@ -115,18 +117,18 @@ def trim_alignment(inputnr, alignment_file) -> None:
 
     # Shorten sequences to detected conserved regions
     seqs = [seq[first_shared_amino:last_shared_amino] for seq in seqs]
-    seed_fasta_name = "trimmed_alignment" + str(inputnr) + ".fasta"
+    seed_fasta_name = "trimmed_alignment" + str(input_number) + ".fasta"
     fasta.write_fasta(names, seqs, seed_fasta_name)
 
 
-def draw_tree(inputnr: int, output_dir: str, tag: str) -> str:
+def draw_tree(input_number: int, output_dir: str, tag: str) -> str:
     """ Construct a PNG for display via fasttree
 
         Returns:
             the filename of the image generated
     """
     matplotlib.use('Agg')
-    command = ["fasttree", "-quiet", "-fastest", "-noml", "trimmed_alignment%d.fasta" % inputnr]
+    command = ["fasttree", "-quiet", "-fastest", "-noml", "trimmed_alignment%d.fasta" % input_number]
     run_result = subprocessing.execute(command)
     if not run_result.successful():
         raise RuntimeError("Fasttree failed to run successfully:", run_result.stderr)

@@ -32,7 +32,7 @@ def run_rodeo(record: secmet.Record, query: secmet.CDSFeature, leader: str,
     heuristic_score, gathered_tabs_for_csv = acquire_rodeo_heuristics(record, query, leader, core, domains)
     rodeo_score += heuristic_score
 
-    fimo_scores = {}
+    fimo_scores = {}  # type: Dict[int, float]
 
     if not get_global_config().without_fimo and get_lanthi_config().fimo_present:
         # Find motifs
@@ -447,7 +447,7 @@ def cds_has_domains(cds: secmet.CDSFeature, domains: Set[str]) -> bool:
         Returns:
             True if any of the domains are present in the CDS, otherwise False
     """
-    return cds.sec_met and set(cds.sec_met.domain_ids).intersection(domains)
+    return bool(cds.sec_met and set(cds.sec_met.domain_ids).intersection(domains))
 
 
 def identify_lanthi_motifs(leader: str, core: str) -> Dict[int, float]:
@@ -463,5 +463,5 @@ def identify_lanthi_motifs(leader: str, core: str) -> Dict[int, float]:
         parts = line.split("\t")
         if len(parts) < 2 or not parts[0].isdigit():
             continue
-        fimo_scores[int(parts[0])] = parts[5]
+        fimo_scores[int(parts[0])] = float(parts[5])
     return fimo_scores

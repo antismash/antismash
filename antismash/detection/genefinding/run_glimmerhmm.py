@@ -14,10 +14,11 @@ from helperlibs.wrappers.io import TemporaryDirectory
 
 from antismash.common import path
 from antismash.common.gff_parser import get_features_from_file
+from antismash.common.secmet import Record
 from antismash.common.subprocessing import execute
 
 
-def write_search_fasta(record) -> str:
+def write_search_fasta(record: Record) -> str:
     """ Constructs a FASTA representation of a record and writes it to a
         file in the current directory.
 
@@ -33,7 +34,7 @@ def write_search_fasta(record) -> str:
     return filename
 
 
-def run_external(fasta_filename) -> str:
+def run_external(fasta_filename: str) -> str:
     """ Runs glimmerhmm on the provided fasta file and returns the stdout output
         from glimmerhmm.
     """
@@ -42,14 +43,14 @@ def run_external(fasta_filename) -> str:
     run_result = execute(glimmerhmm)
     if run_result.stderr.find('ERROR') > -1:
         logging.error("Failed to run GlimmerHMM: %r", run_result.stderr)
-        raise RuntimeError("Failed to run GlimmerHMM: %s", run_result.stderr)
+        raise RuntimeError("Failed to run GlimmerHMM: %s" % run_result.stderr)
     if "CDS" not in run_result.stdout:
         logging.error("GlimmerHMM gene prediction failed: no genes found.")
         raise RuntimeError("GlimmerHMM found no genes")
     return run_result.stdout
 
 
-def run_glimmerhmm(record) -> None:
+def run_glimmerhmm(record: Record) -> None:
     """ Run glimmerhmm on the record, parse the results and add all detected
         genes to the record
     """

@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Optional
 import antismash.common.path as path
 from antismash.common.subprocessing import run_hmmpress
 
+from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
 from antismash.common.hmm_rule_parser import rule_parser
 from antismash.common.hmm_rule_parser.cluster_prediction import detect_borders_and_signatures, RuleDetectionResults
@@ -45,8 +46,9 @@ class HMMDetectionResults(DetectionResults):
             raise ValueError("Detection results have changed. No results can be reused.")
 
         class Dummy:
-            borders = []
-        return HMMDetectionResults(record.id, Dummy(), json["enabled_types"])
+            """ A simple dummy class as part of results regeneration skip"""
+            borders = []  # type: List[ClusterBorder]
+        return HMMDetectionResults(record.id, Dummy(), json["enabled_types"])  # type: ignore
 
     def get_predictions(self) -> List[ClusterBorder]:
         return self.rule_results.borders
@@ -68,21 +70,22 @@ def get_arguments() -> ModuleArgs:
     return ModuleArgs('Advanced options', 'hmmdetection')
 
 
-def check_options(_options) -> List[str]:
+def check_options(_options: ConfigType) -> List[str]:
     """ Checks the options to see if there are any issues before
         running any analyses
     """
     return []
 
 
-def is_enabled(_options) -> bool:
+def is_enabled(_options: ConfigType) -> bool:
     """  Uses the supplied options to determine if the module should be run
     """
     # in this case, yes, always
     return True
 
 
-def regenerate_previous_results(results: Dict[str, Any], record: Record, options) -> Optional[HMMDetectionResults]:
+def regenerate_previous_results(results: Dict[str, Any], record: Record,
+                                _options: ConfigType) -> Optional[HMMDetectionResults]:
     """ Regenerate previous results. """
     # always rerun hmmdetection  # TODO: should clusters be kept?
     if not results:
@@ -93,7 +96,8 @@ def regenerate_previous_results(results: Dict[str, Any], record: Record, options
     return regenerated
 
 
-def run_on_record(record: Record, previous_results: Optional[HMMDetectionResults], options) -> HMMDetectionResults:
+def run_on_record(record: Record, previous_results: Optional[HMMDetectionResults],
+                  options: ConfigType) -> HMMDetectionResults:
     """ Runs hmm_detection on the provided record.
     """
     if previous_results:

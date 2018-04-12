@@ -6,13 +6,16 @@
 
 
 import logging
-from typing import Dict, List, Set, Union
+from typing import Dict, IO, List, Set, Union
 
 from Bio.SeqFeature import FeatureLocation, CompoundLocation, SeqFeature
 from BCBio import GFF
 
+from antismash.common.secmet import Record
+from antismash.config import ConfigType
 
-def check_gff_suitability(options, sequences) -> bool:
+
+def check_gff_suitability(options: ConfigType, sequences: List[Record]) -> bool:
     """
         Checks that the provided GFF3 file is acceptable
 
@@ -75,25 +78,26 @@ def check_gff_suitability(options, sequences) -> bool:
     return single_entries
 
 
-def get_features_from_file(seq_record, handle,
+def get_features_from_file(record: Record, handle: IO,
                            limit_to_seq_id: Union[bool, Dict[str, List[str]]] = False
                            ) -> List[SeqFeature]:
-    """ Generates new SeqFeatures from a Record and a GFF file.
+    """ Generates new SeqFeatures from a GFF file.
 
         Arguments:
-            seq_record: the record that features belong to
+            record: the Record that features belong to
+            handle: a file handle/stream with the GFF contents
             limit_to_seq_id: False or a dictionary of GFF.parse options
 
         Returns:
             a list of SeqFeatures parsed from the GFF file
     """
     features = []
-    for record in GFF.parse(handle, limit_info=limit_to_seq_id):
-        for feature in record.features:
+    for gff_record in GFF.parse(handle, limit_info=limit_to_seq_id):
+        for feature in gff_record.features:
             if feature.type == 'CDS':
                 new_features = [feature]
             else:
-                new_features = check_sub(feature, seq_record)
+                new_features = check_sub(feature, record)
                 if not new_features:
                     continue
 
@@ -120,7 +124,7 @@ def get_features_from_file(seq_record, handle,
     return features
 
 
-def run(record, single_entry: bool, options) -> None:
+def run(record: Record, single_entry: bool, options: ConfigType) -> None:
     """ The entry point of gff_parser.
         Generates new features and adds them to the provided record.
 
@@ -137,14 +141,15 @@ def run(record, single_entry: bool, options) -> None:
     if not single_entry:
         limit_info = {'gff_id': [record.id]}
 
-    handle = open(options.genefinding_gff3)
-    features = get_features_from_file(record, handle, limit_info)
-    logging.critical("gff parsing still generating SeqFeatures")  # TODO: use new secmet features
-    for feature in features:
-        record.add_biopython_feature(feature)
+    with open(options.genefinding_gff3) as handle:
+        features = get_features_from_file(record, handle, limit_info)
+        logging.critical("gff parsing still generating SeqFeatures")  # TODO: use new secmet features
+        for feature in features:
+            record.add_biopython_feature(feature)
 
 
-def generate_details_from_subfeature(sub_feature, existing_qualifiers: Dict,
+def generate_details_from_subfeature(sub_feature: SeqFeature,
+                                     existing_qualifiers: Dict[str, List[str]],
                                      locations: List[FeatureLocation],
                                      trans_locations: List[FeatureLocation]) -> Set[str]:
     """ Finds the locations of a subfeature and any mismatching qualifiers
@@ -189,7 +194,7 @@ def generate_details_from_subfeature(sub_feature, existing_qualifiers: Dict,
     return mismatching_qualifiers
 
 
-def check_sub(feature, sequence) -> List[SeqFeature]:
+def check_sub(feature: SeqFeature, sequence: Record) -> List[SeqFeature]:
     """ Recursively checks a GFF feature for any subfeatures and generates any
         appropriate SeqFeature instances from them.
     """
