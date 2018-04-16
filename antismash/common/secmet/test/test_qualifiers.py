@@ -7,7 +7,7 @@
 import unittest
 
 from antismash.common.hmmscan_refinement import HMMResult
-from antismash.common.secmet.qualifiers import NRPSPKSQualifier
+from antismash.common.secmet.qualifiers import NRPSPKSQualifier, GOQualifier
 
 class TestNRPSPKS(unittest.TestCase):
     def test_counter(self):
@@ -41,3 +41,36 @@ class TestNRPSPKS(unittest.TestCase):
         assert len(qualifier) == 4
         for i in qualifier:
             assert isinstance(i, str)
+
+
+class TestGOQualifier(unittest.TestCase):
+    def test_go_entries(self):
+        original_go_entries = {'GO:0004871': 'signal transducer activity', 'GO:0007165': 'signal transduction',
+                                'GO:0016020': 'membrane'}
+        go_qualifier = GOQualifier(original_go_entries)
+        assert go_qualifier.go_entries == original_go_entries
+
+    def test_go_ids(self):
+        original_go_entries = {'GO:0004871': 'signal transducer activity', 'GO:0007165': 'signal transduction',
+                               'GO:0016020': 'membrane'}
+        go_qualifier = GOQualifier(original_go_entries)
+        for go_id in go_qualifier.ids:
+            assert go_id in original_go_entries
+
+    def test_go_descs(self):
+        original_go_entries = {'GO:0004871': 'signal transducer activity', 'GO:0007165': 'signal transduction',
+                               'GO:0016020': 'membrane'}
+        go_qualifier = GOQualifier(original_go_entries)
+        for go_description in go_qualifier.descriptions:
+            assert go_description in original_go_entries.values()
+
+    def test_biopython_to_and_from(self):
+        original = GOQualifier({'GO:0004871': 'signal transducer activity', 'GO:0007165': 'signal transduction',
+                                'GO:0016020': 'membrane'})
+        new = GOQualifier.from_biopython(original.to_biopython())
+        assert original.go_entries == new.go_entries
+
+    def test_parse_broken_qualifier(self):
+        broken_qualifier = ["GO:0004871: signal transducer activity", "GO:0007165; signal transduction"]
+        with self.assertRaisesRegex(ValueError, "Cannot parse qualifier"):
+            GOQualifier.from_biopython(broken_qualifier)
