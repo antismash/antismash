@@ -451,43 +451,44 @@ def get_cds_lengths(record) -> Dict[str, int]:
     return lengths
 
 
-def find_internal_orthologous_groups(queries, cluster_names) -> List[List[str]]:
+def find_internal_orthologous_groups(queries: Dict[str, Query], cluster_names: List[str]) -> List[List[str]]:
     """ Finds internal orthologous groups from blast queries, each cluster
         being a distinct group
 
         Arguments:
             queries: the queries to build groups from
-            cluster_names: the names of the clusters used to construct the queries
+            cluster_names: the names of the clusters used to construct the queries,
+                           e.g. rec_id|c1|52644-53715|+|protein_id|description
 
         Returns:
             a list of groups, each list being
-                a list of query ids
+                a list of query ids in alphabetical order
     """  # TODO check description
+
     groups = []
     for name in cluster_names:
         if name not in queries:
             groups.append([name.split("|")[4]])
             continue
         query = queries[name]
-        new_group = []
+        new_group = {query.id}
         for hit in query.subjects:
-            if hit.startswith("h_"):
-                new_group.append(hit[2:])
+            if hit.startswith("h_"):  # TODO: when the unique naming hack changes, this must too
+                new_group.add(hit[2:])
             else:
-                new_group.append(hit)
-        if query.id not in new_group:
-            new_group.append(query.id)
+                new_group.add(hit)
+
+        redundant_groups = []
         for i, other_group in enumerate(groups):
-            for new_member in new_group:
-                if new_member in other_group:
-                    del groups[i]  # TODO: stop changing during iteration
-                    for member in other_group:
-                        if member not in new_group:
-                            new_group.append(member)
-                    break
-        new_group.sort()
+            if new_group.intersection(other_group):
+                redundant_groups.append(i)
+                new_group.update(other_group)
+
+        for i in reversed(redundant_groups):
+            del groups[i]
+
         groups.append(new_group)
-    return groups
+    return [sorted(list(i)) for i in groups]
 
 
 def internal_homology_blast(record) -> Dict[int, List[List[str]]]:
