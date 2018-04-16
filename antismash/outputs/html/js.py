@@ -5,6 +5,8 @@ import logging
 import string
 import os
 
+from collections import OrderedDict
+
 from antismash.detection import clusterfinder
 from antismash.modules import clusterblast
 from antismash.outputs.html.generate_html_table import generate_html_table
@@ -200,6 +202,23 @@ def get_description(record, feature, type_, options, mibig_result):
             asf_notes.append("%s (%d..%d): %s" % (pfam.domain, pfam.protein_start, pfam.protein_end, hit))
     if asf_notes:
         template += '<span class="bold">Active Site Finder results:</span><br>\n%s<br><br>\n' % "<br>".join(asf_notes)
+
+    go_notes = []
+    unique_pfams_with_gos = {}
+    go_url = 'http://amigo.geneontology.org/amigo/term/'
+    for pfam in record.get_pfam_domains_in_cds(feature):
+        if pfam.gene_ontologies:
+            pfam_ids = ", ".join([xref for xref in pfam.db_xref if xref.startswith('PF')])
+            unique_pfams_with_gos[pfam_ids] = pfam.gene_ontologies
+
+    for unique_id, go_qualifier in OrderedDict(sorted(unique_pfams_with_gos.items(), key=lambda t: t[0])).items():
+        go_notes.extend(["{pf_id}: <a href='{url}{go_id}' target='_blank'> {go_id}:</a> {go_desc}".format(pf_id=unique_id,
+                                                                                          url=go_url,
+                                                                                          go_id=go_id,
+                                                                                          go_desc=go_description)
+                                   for go_id, go_description in go_qualifier.go_entries.items()])
+    if go_notes:
+        template += '<br><span class="bold">Gene Ontology terms for PFAM domains:</span><br>\n%s<br><br>\n' % "<br>".join(go_notes)
 
     clipboard_fragment = """<a href="javascript:copyToClipboard('%s')">Copy to clipboard</a>"""
     template += "AA sequence: %s<br>\n" % (clipboard_fragment % feature.translation)
