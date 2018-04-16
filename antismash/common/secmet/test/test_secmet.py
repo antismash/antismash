@@ -13,6 +13,7 @@ from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 from antismash.common.test import helpers
 from antismash.common import secmet
 from antismash.common.secmet.feature import Cluster, CDSFeature, Feature, GeneFunction, ClusterBorder, PFAMDomain
+from antismash.common.secmet.qualifiers import GOQualifier
 from antismash.common.secmet.record import _build_products_from_borders, Record
 
 
@@ -63,11 +64,14 @@ class TestConversion(unittest.TestCase):
         original.locus_tag = "locus"
         original.label = "somelabel"
         original.translation = "ARNDCQ"
+        original.gene_ontologies = GOQualifier({'GO:0004871': 'signal transducer activity', 'GO:0007165': 'signal transduction',
+                               'GO:0016020': 'membrane'})
         new = PFAMDomain.from_biopython(original.to_biopython()[0])
         for slot in ["db_xref", "tool", "domain_id", "database", "detection",
                      "evalue", "score", "locus_tag", "label", "translation", "domain",
                      "protein_start", "protein_end"]:
             assert getattr(original, slot) == getattr(new, slot)
+        assert original.gene_ontologies.go_entries == new.gene_ontologies.go_entries
 
     def test_bad_pfam_domain(self):
         with self.assertRaisesRegex(TypeError, "PFAMDomain description must be a string"):

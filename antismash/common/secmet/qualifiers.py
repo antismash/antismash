@@ -410,7 +410,7 @@ class GOQualifier:
     """A qualifier for tracking Gene Ontology terms for a PFAM domain.
         Cannot be directly used as a qualifier for BioPython's SeqFeature.
     """
-    def __init__(self, go_entries: Dict[str, str]):  # Gene Ontology IDs to readable descriptions
+    def __init__(self, go_entries: Dict[str, str]) -> None:  # dict mapping Gene Ontology IDs to readable descriptions
         self.go_entries = go_entries
         self.ids = list(go_entries.keys())
         self.descriptions = list(go_entries.values())
@@ -422,7 +422,7 @@ class GOQualifier:
         return go_ids_and_descriptions
 
     @staticmethod
-    def from_biopython(qualifier) -> "GOQualifier":
+    def from_biopython(qualifier: List[str]) -> "GOQualifier":
         """Convert BioPython-style qualifier to GOQualifier"""
         go_entries = {}
         for go_string in qualifier:

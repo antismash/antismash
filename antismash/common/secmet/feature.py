@@ -624,7 +624,7 @@ class PFAMDomain(Domain):
         if self.db_xref:
             mine["db_xref"] = self.db_xref
         if self.gene_ontologies: # should only be the case if db_xrefs present, since those are needed for mapping
-            mine["go_terms"] = self.gene_ontologies.to_biopython()
+            mine["gene_ontologies"] = self.gene_ontologies.to_biopython()
             mine["db_xref"].extend(self.gene_ontologies.ids)
         if qualifiers:
             mine.update(qualifiers)
@@ -642,6 +642,7 @@ class PFAMDomain(Domain):
 
         # grab optional qualifiers
         feature.db_xref = leftovers.pop("db_xref", [])
+        feature.gene_ontologies = GOQualifier.from_biopython(leftovers.pop("gene_ontologies", []))
 
         # grab parent optional qualifiers
         return super(PFAMDomain, feature).from_biopython(bio_feature, feature=feature, leftovers=leftovers)
