@@ -90,10 +90,10 @@ class PfamToGoTest(unittest.TestCase):
             self.assertEqual(str(go_ids), str(ontologies_per_pfam[pfam]))
 
     def test_get_gos(self):
-        pfams = {'PF00015':FeatureLocation(0, 3)}
+        pfams = {'PF00015': FeatureLocation(0, 3)}
         fake_record = set_dummy_with_pfams(pfams)
         gos_for_fake_pfam = pfam2go.get_gos_for_pfams(fake_record)
-        for pfam, all_ontologies in gos_for_fake_pfam.items():
+        for all_ontologies in gos_for_fake_pfam.values():
             for ontologies in all_ontologies:
                 go_ids = [str(go_entry) for go_entry in ontologies.go_entries]
                 for go_id in go_ids:
@@ -109,8 +109,10 @@ class PfamToGoTest(unittest.TestCase):
         with self.assertLogs(level='INFO') as log_cm:
             gos_for_no_pfams = pfam2go.get_gos_for_pfams(blank_no_pfams)
             assert 'No Pfam domains found' in str(log_cm.output)
+            assert not gos_for_no_pfams
             gos_for_no_ids = pfam2go.get_gos_for_pfams(blank_no_ids)
             assert 'No Pfam ids found' in str(log_cm.output)
+            assert not gos_for_no_ids
 
     def test_get_gos_id_handling(self):
         pfams = {'PF00015.42': FeatureLocation(0, 3), 'PF00015_42': FeatureLocation(0, 3),
@@ -122,7 +124,7 @@ class PfamToGoTest(unittest.TestCase):
             assert 'Pfam id PF00015_42 is not a valid Pfam id, skipping' in str(log_cm.output) \
                    and 'Pfam id PF0015 is not a valid Pfam id, skipping' in str(log_cm.output) \
                    and 'Pfam id PPF00015 is not a valid Pfam id, skipping' in str(log_cm.output)
-        for pfam_domain, all_ontologies in gos_for_fake_pfam.items():
+        for all_ontologies in gos_for_fake_pfam.values():
             for ontologies in all_ontologies:
                 # catches both stripping version number and broken ID not being included
                 assert ontologies.pfam.isalnum()
@@ -143,6 +145,12 @@ class PfamToGoTest(unittest.TestCase):
                 assert ontologies.pfam in pfam_ids_without_versions
 
     def test_add_results_to_record(self):
+        #def fetch_go_ids_from_pfam(result, pfam_domain):
+        #    all_gos_from_pfam = []
+        #    for ontologies in result.pfam_domains_with_gos[pfam_domain]:
+        #        for go_entry in ontologies.go_entries:
+        #            all_gos_from_pfam.append(go_entry.id)
+        #    return sorted(all_gos_from_pfam)
         pfams = {'PF00015.2': FeatureLocation(0, 3), 'PF00351.1': FeatureLocation(0, 3),
                  'PF00015.27': FeatureLocation(3, 6)}
         fake_record = set_dummy_with_pfams(pfams)
@@ -157,19 +165,11 @@ class PfamToGoTest(unittest.TestCase):
         fake_results.add_to_record(fake_record)
         assert fake_duplicate_pfam.db_xref == ['PF00015.2']
         for pfam in fake_record.get_pfam_domains():
-            assert sorted(pfam.gene_ontologies.ids) == sorted([go_entry.id
-                                                               for ontologies
-                                                               in fake_results.pfam_domains_with_gos[pfam]
-                                                               for go_entry
-                                                               in ontologies.go_entries])
+            assert sorted(pfam.gene_ontologies.ids) == sorted(fake_results.get_all_gos(pfam))
             # make sure identical pfams (with different version numbers) all have the same gene ontologies
             for pfam_id in pfam.db_xref:
                 if pfam_id.startswith('PF00015'):
-                    assert sorted(pfam.gene_ontologies.ids) == sorted([go_entry.id
-                                                                       for ontologies
-                                                                       in fake_results.pfam_domains_with_gos[fake_duplicate_pfam]
-                                                                       for go_entry
-                                                                       in ontologies.go_entries])
+                    assert sorted(pfam.gene_ontologies.ids) == sorted(fake_results.get_all_gos(fake_duplicate_pfam))
 
     def test_adding_to_wrong_record(self):
         pfams = {'PF00015': FeatureLocation(0, 3)}
@@ -201,6 +201,7 @@ class PfamToGoTest(unittest.TestCase):
         for pfam in expected_result["pfams"]:
             assert expected_result["pfams"][pfam] == result_json["pfams"][pfam]
 
+
     def test_from_json(self):
         fake_pfam_location = FeatureLocation(0, 12)
         pfams = {'PF00015': fake_pfam_location, 'PF00351': fake_pfam_location, 'PF05147': fake_pfam_location}
@@ -216,6 +217,27 @@ class PfamToGoTest(unittest.TestCase):
         from_json_to_json = results_from_json.to_json()
         assert result_json == from_json_to_json
         assert from_json_to_json["schema_version"] == 1
+
+    def test_from_wrong_schema(self):
+        fake_pfam_location = FeatureLocation(0, 12)
+        pfams = {'PF00015': fake_pfam_location, 'PF00351': fake_pfam_location, 'PF05147': fake_pfam_location}
+        fake_record = set_dummy_with_pfams(pfams)
+        broken_json = {"pfams": {"PF00015": [("GO:0004871", "signal transducer activity"),
+                                             ("GO:0007165", "signal transduction"),
+                                             ("GO:0016020", "membrane")],
+                                 "PF00351": [("GO:0016714", ("oxidoreductase activity, acting on paired donors, "
+                                                             "with incorporation or reduction of molecular oxygen, "
+                                                             "reduced pteridine as one donor, and incorporation of "
+                                                             "one atom of oxygen")),
+                                             ("GO:0055114", "oxidation-reduction process")]},
+                       "record_id": fake_record.id,
+                       "schema_version": 2}
+        with self.assertLogs() as log_cm:
+            from_broken_json = pfam2go.Pfam2GoResults.from_json(broken_json, fake_record)
+            assert "Schema version mismatch, discarding Pfam2GO results" in str(log_cm.output)
+            assert not from_broken_json
+
+
 
 
 if __name__ == '__main__':
