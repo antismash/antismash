@@ -623,7 +623,7 @@ class PFAMDomain(Domain):
             mine["probability"] = [self.probability]
         if self.db_xref:
             mine["db_xref"] = self.db_xref
-        if self.gene_ontologies: # should only be the case if db_xrefs present, since those are needed for mapping
+        if self.gene_ontologies:  # should only be the case if db_xrefs present, since those are needed for mapping
             mine["gene_ontologies"] = self.gene_ontologies.to_biopython()
             mine["db_xref"].extend(self.gene_ontologies.ids)
         if qualifiers:

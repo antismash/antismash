@@ -64,8 +64,9 @@ class TestConversion(unittest.TestCase):
         original.locus_tag = "locus"
         original.label = "somelabel"
         original.translation = "ARNDCQ"
-        original.gene_ontologies = GOQualifier({'GO:0004871': 'signal transducer activity', 'GO:0007165': 'signal transduction',
-                               'GO:0016020': 'membrane'})
+        original.gene_ontologies = GOQualifier({'GO:0004871': 'signal transducer activity',
+                                                'GO:0007165': 'signal transduction',
+                                                'GO:0016020': 'membrane'})
         new = PFAMDomain.from_biopython(original.to_biopython()[0])
         for slot in ["db_xref", "tool", "domain_id", "database", "detection",
                      "evalue", "score", "locus_tag", "label", "translation", "domain",

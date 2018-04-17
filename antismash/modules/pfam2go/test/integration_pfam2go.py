@@ -17,7 +17,6 @@ class PfamToGoTest(unittest.TestCase):
     def setUp(self):
         self.options = build_config(["--clusterhmmer", "--pfam2go", "--minimal"], isolated=True,
                                     modules=antismash.get_all_modules())
-        # database needed since working with clusterhmmer?
 
     def tearDown(self):
         destroy_config()
@@ -28,8 +27,10 @@ class PfamToGoTest(unittest.TestCase):
         for domain in record.get_pfam_domains():
             if domain.gene_ontologies:
                 assert sorted(domain.gene_ontologies.ids) == sorted([go_entry.id
-                                                               for ontologies in results.pfam_domains_with_gos[domain]
-                                                               for go_entry in ontologies.go_entries])
+                                                                    for ontologies
+                                                                    in results.pfam_domains_with_gos[domain]
+                                                                    for go_entry
+                                                                    in ontologies.go_entries])
 
         # test it's been added to the record correctly
 
@@ -38,7 +39,7 @@ class PfamToGoTest(unittest.TestCase):
         record = record_processing.parse_input_sequence(nisin)[0]
 
         results = helpers.run_and_regenerate_results_for_module(nisin, pfam2go, self.options)
-        #  are the expected go ids for pfams found/no wrong ids for pfams? Only some samples first
+        #  are the expected go ids for pfams found/no wrong ids for pfams?
         expected_pfams_and_gos_with_descs = {"PF00005": {"GO:0005524": "ATP binding", "GO:0016887": "ATPase activity"},
                                              "PF00072": {"GO:0000160": "phosphorelay signal transduction system"},
                                              "PF00486": {"GO:0003677": "DNA binding",
