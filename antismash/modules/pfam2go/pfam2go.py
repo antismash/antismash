@@ -40,6 +40,10 @@ class GeneOntologies:
     def __str__(self) -> str:
         return str([str(go_entry) for go_entry in self.go_entries])
 
+    def as_dict(self) -> Dict[str, str]:
+        """Return a dictionary of IDs to descriptions for all GeneOntology objects in the collection."""
+        return {go_entry.id: go_entry.description for go_entry in self.go_entries}
+
 
 class Pfam2GoResults(ModuleResults):
     """Holds results for Pfam to Gene Ontology module."""
@@ -50,6 +54,18 @@ class Pfam2GoResults(ModuleResults):
         #  store mapping of PFAM domain ID and GO terms
         self.pfam_domains_with_gos = pfam_domains_with_gos
 
+    def get_all_gos(self, pfam_domain: PFAMDomain) -> Dict[str, str]:
+        """"Get all Gene Ontology IDs and descriptions for a PFAMDomain.
+        Arguments:
+            pfam_domain: PFAMDomain for which to get the ID/description pairings
+        Returns:
+            A dictionary mapping Gene Ontology IDs to descriptions.
+        """
+        all_gos = {}
+        for ontologies in self.pfam_domains_with_gos[pfam_domain]:
+            all_gos.update(ontologies.as_dict())
+        return all_gos
+
     def add_to_record(self, record: Record):
         """Add GeneOntologies objects to the respective PFAMDomains.
         Arguments:
@@ -57,10 +73,8 @@ class Pfam2GoResults(ModuleResults):
         """
         if record.id != self.record_id:
             raise ValueError("Record to store in and record analysed don't match")
-        for domain, all_ontologies in self.pfam_domains_with_gos.items():
-            domain.gene_ontologies = GOQualifier({go_entry.id: go_entry.description
-                                                 for ontologies in all_ontologies
-                                                  for go_entry in ontologies.go_entries})  # nested dict comprehension
+        for domain in self.pfam_domains_with_gos:
+            domain.gene_ontologies = GOQualifier(self.get_all_gos(domain))
 
     def to_json(self) -> Dict[str, Any]:
         """ Construct a JSON representation of this instance """

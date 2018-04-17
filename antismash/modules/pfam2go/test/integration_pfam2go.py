@@ -26,18 +26,12 @@ class PfamToGoTest(unittest.TestCase):
         results.add_to_record(record)
         for domain in record.get_pfam_domains():
             if domain.gene_ontologies:
-                assert sorted(domain.gene_ontologies.ids) == sorted([go_entry.id
-                                                                    for ontologies
-                                                                    in results.pfam_domains_with_gos[domain]
-                                                                    for go_entry
-                                                                    in ontologies.go_entries])
+                assert sorted(domain.gene_ontologies.ids) == sorted(results.get_all_gos().keys())
 
         # test it's been added to the record correctly
 
     def test_reuse(self):
         nisin = helpers.get_path_to_nisin_genbank()
-        record = record_processing.parse_input_sequence(nisin)[0]
-
         results = helpers.run_and_regenerate_results_for_module(nisin, pfam2go, self.options)
         #  are the expected go ids for pfams found/no wrong ids for pfams?
         expected_pfams_and_gos_with_descs = {"PF00005": {"GO:0005524": "ATP binding", "GO:0016887": "ATPase activity"},
