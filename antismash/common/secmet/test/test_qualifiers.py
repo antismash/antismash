@@ -46,7 +46,7 @@ class TestNRPSPKS(unittest.TestCase):
 class TestGOQualifier(unittest.TestCase):
     def test_go_entries(self):
         original_go_entries = {'GO:0004871': 'signal transducer activity', 'GO:0007165': 'signal transduction',
-                                'GO:0016020': 'membrane'}
+                               'GO:0016020': 'membrane'}
         go_qualifier = GOQualifier(original_go_entries)
         assert go_qualifier.go_entries == original_go_entries
 

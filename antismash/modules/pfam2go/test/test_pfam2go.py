@@ -7,15 +7,18 @@
 import os
 import unittest
 
+from typing import Dict
+
 from Bio.Alphabet import generic_dna
 from Bio.Seq import Seq
 from Bio.SeqFeature import FeatureLocation
-from typing import Dict, List
+
 from antismash.common import path
 from antismash.common.secmet.feature import PFAMDomain
 from antismash.common.secmet.record import Record
 from antismash.common.test.helpers import DummyRecord
 from antismash.modules.pfam2go import pfam2go
+
 
 def set_dummy_with_pfams(pfam_ids: Dict[str, FeatureLocation]) -> DummyRecord:  # Dict id: FeatureLocation
     pfam_domains = []
@@ -24,8 +27,8 @@ def set_dummy_with_pfams(pfam_ids: Dict[str, FeatureLocation]) -> DummyRecord:  
         pfam_domain.db_xref = [pfam_id]
         pfam_domain.domain_id = '%s.%d.%d' % (pfam_id, pfam_ids[pfam_id].start, pfam_ids[pfam_id].end)
         pfam_domains.append(pfam_domain)
-    fake_record = DummyRecord(features=pfam_domains)
-    return fake_record
+    return DummyRecord(features=pfam_domains)
+
 
 class PfamToGoTest(unittest.TestCase):
     known_connections = {'PF00015': ['GO:0004871', 'GO:0007165', 'GO:0016020'],
@@ -33,11 +36,12 @@ class PfamToGoTest(unittest.TestCase):
                          'PF02364': ['GO:0003843', 'GO:0006075', 'GO:0000148', 'GO:0016020']}
     working_descs = {'GO:0004871': 'signal transducer activity', 'GO:0007165': 'signal transduction',
                      'GO:0016020': 'membrane',
-                     'GO:0016714': 'oxidoreductase activity, acting on paired donors, with incorporation or reduction of molecular oxygen, reduced pteridine as one donor, and incorporation of one atom of oxygen',
+                     'GO:0016714': ('oxidoreductase activity, acting on paired donors, with incorporation'
+                                    ' or reduction of molecular oxygen, reduced pteridine as one donor,'
+                                    ' and incorporation of one atom of oxygen'),
                      'GO:0055114': 'oxidation-reduction process', 'GO:0003843': '1,3-beta-D-glucan synthase activity',
                      'GO:0006075': '(1->3)-beta-D-glucan biosynthetic process',
                      'GO:0000148': '1,3-beta-D-glucan synthase complex'}
-
 
     def test_gene_ontologies(self):
         # does it use arguments given? How is bad input handled?
@@ -54,7 +58,7 @@ class PfamToGoTest(unittest.TestCase):
         fail_pfam = 15
         sample_ontology = pfam2go.GeneOntology('GO:0004871', 'signal transducer activity')
         sample_pfam = 'PF00015'
-        with self.assertRaises(AssertionError):  # could likely do that more prettily?
+        with self.assertRaises(AssertionError):
             pfam2go.GeneOntologies(sample_pfam, fail_ontology)
         with self.assertRaises(AssertionError):
             pfam2go.GeneOntologies(fail_pfam, [sample_ontology])
@@ -110,7 +114,7 @@ class PfamToGoTest(unittest.TestCase):
 
     def test_get_gos_id_handling(self):
         pfams = {'PF00015.42': FeatureLocation(0, 3), 'PF00015_42': FeatureLocation(0, 3),
-                 'PF0015.42': FeatureLocation(0,3), 'PPF00015.42': FeatureLocation(0, 3)}
+                 'PF0015.42': FeatureLocation(0, 3), 'PPF00015.42': FeatureLocation(0, 3)}
         fake_record = set_dummy_with_pfams(pfams)
         # are wrong PFAM ids logged?
         with self.assertLogs() as log_cm:
@@ -154,8 +158,10 @@ class PfamToGoTest(unittest.TestCase):
         assert fake_duplicate_pfam.db_xref == ['PF00015.2']
         for pfam in fake_record.get_pfam_domains():
             assert sorted(pfam.gene_ontologies.ids) == sorted([go_entry.id
-                                                               for ontologies in fake_results.pfam_domains_with_gos[pfam]
-                                                               for go_entry in ontologies.go_entries])
+                                                               for ontologies
+                                                               in fake_results.pfam_domains_with_gos[pfam]
+                                                               for go_entry
+                                                               in ontologies.go_entries])
             # make sure identical pfams (with different version numbers) all have the same gene ontologies
             for pfam_id in pfam.db_xref:
                 if pfam_id.startswith('PF00015'):
@@ -183,7 +189,10 @@ class PfamToGoTest(unittest.TestCase):
         expected_result = {"pfams": {"PF00015": [("GO:0004871", "signal transducer activity"),
                                                  ("GO:0007165", "signal transduction"),
                                                  ("GO:0016020", "membrane")],
-                                     "PF00351": [("GO:0016714", "oxidoreductase activity, acting on paired donors, with incorporation or reduction of molecular oxygen, reduced pteridine as one donor, and incorporation of one atom of oxygen"),
+                                     "PF00351": [("GO:0016714", ("oxidoreductase activity, acting on paired donors, "
+                                                                 "with incorporation or reduction of molecular oxygen, "
+                                                                 "reduced pteridine as one donor, and incorporation of "
+                                                                 "one atom of oxygen")),
                                                  ("GO:0055114", "oxidation-reduction process")]},
                            "record_id": fake_record.id,
                            "schema_version": 1}
@@ -205,7 +214,7 @@ class PfamToGoTest(unittest.TestCase):
             for pfam_id in pfam.db_xref:
                 assert pfam_id in result_json["pfams"]
         from_json_to_json = results_from_json.to_json()
-        assert result_json == from_json_to_json  # JSONception
+        assert result_json == from_json_to_json
         assert from_json_to_json["schema_version"] == 1
 
 

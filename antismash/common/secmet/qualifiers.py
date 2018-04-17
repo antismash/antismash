@@ -423,7 +423,15 @@ class GOQualifier:
 
     @staticmethod
     def from_biopython(qualifier: List[str]) -> "GOQualifier":
-        """Convert BioPython-style qualifier to GOQualifier"""
+        """Convert BioPython-style qualifier to GOQualifier.
+
+            Arguments:
+                qualifier: BioPython-style qualifier (list of strings)
+
+            Returns:
+                A GOQualifier instance constructed from the qualifier.
+
+        """
         go_entries = {}
         for go_string in qualifier:
             go_id, separator, go_description = go_string.partition(": ")
