@@ -54,15 +54,13 @@ class TestGOQualifier(unittest.TestCase):
         original_go_entries = {'GO:0004871': 'signal transducer activity', 'GO:0007165': 'signal transduction',
                                'GO:0016020': 'membrane'}
         go_qualifier = GOQualifier(original_go_entries)
-        for go_id in go_qualifier.ids:
-            assert go_id in original_go_entries
+        assert set(go_qualifier.ids) == set(original_go_entries)
 
     def test_go_descs(self):
         original_go_entries = {'GO:0004871': 'signal transducer activity', 'GO:0007165': 'signal transduction',
                                'GO:0016020': 'membrane'}
         go_qualifier = GOQualifier(original_go_entries)
-        for go_description in go_qualifier.descriptions:
-            assert go_description in original_go_entries.values()
+        assert set(go_qualifier.descriptions) == set(original_go_entries.values())
 
     def test_biopython_to_and_from(self):
         original = GOQualifier({'GO:0004871': 'signal transducer activity', 'GO:0007165': 'signal transduction',
@@ -71,6 +69,7 @@ class TestGOQualifier(unittest.TestCase):
         assert original.go_entries == new.go_entries
 
     def test_parse_broken_qualifier(self):
+        # test if wrong separator between GO ID and description (semicolon instead of colon) is caught
         broken_qualifier = ["GO:0004871: signal transducer activity", "GO:0007165; signal transduction"]
         with self.assertRaisesRegex(ValueError, "Cannot parse qualifier"):
             GOQualifier.from_biopython(broken_qualifier)

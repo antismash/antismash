@@ -26,7 +26,7 @@ class PfamToGoTest(unittest.TestCase):
         results.add_to_record(record)
         for domain in record.get_pfam_domains():
             if domain.gene_ontologies:
-                assert sorted(domain.gene_ontologies.ids) == sorted(results.get_all_gos().keys())
+                assert sorted(domain.gene_ontologies.ids) == sorted(results.get_all_gos())
 
         # test it's been added to the record correctly
 

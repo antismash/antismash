@@ -20,12 +20,12 @@ from antismash.common.test.helpers import DummyRecord
 from antismash.modules.pfam2go import pfam2go
 
 
-def set_dummy_with_pfams(pfam_ids: Dict[str, FeatureLocation]) -> DummyRecord:  # Dict id: FeatureLocation
+def set_dummy_with_pfams(pfam_ids: Dict[str, FeatureLocation]) -> DummyRecord:
     pfam_domains = []
-    for pfam_id in pfam_ids:
-        pfam_domain = PFAMDomain(location=pfam_ids[pfam_id], description='FAKE', protein_start=0, protein_end=5)
+    for pfam_id, pfam_location in pfam_ids.items():
+        pfam_domain = PFAMDomain(location=pfam_location, description='FAKE', protein_start=0, protein_end=5)
         pfam_domain.db_xref = [pfam_id]
-        pfam_domain.domain_id = '%s.%d.%d' % (pfam_id, pfam_ids[pfam_id].start, pfam_ids[pfam_id].end)
+        pfam_domain.domain_id = '%s.%d.%d' % (pfam_id, pfam_location.start, pfam_location.end)
         pfam_domains.append(pfam_domain)
     return DummyRecord(features=pfam_domains)
 
@@ -81,7 +81,7 @@ class PfamToGoTest(unittest.TestCase):
         with self.assertRaises(AssertionError):
             pfam2go.GeneOntology(working_id, fail_description)
 
-    def test_build_as_i_go(self):
+    def test_construct_mapping(self):
         data = path.get_full_path(os.path.dirname(__file__), 'data/pfam2go-march-2018.txt')
         ontologies_per_pfam = pfam2go.construct_mapping(data)
         for ontology in ontologies_per_pfam.values():
@@ -90,7 +90,7 @@ class PfamToGoTest(unittest.TestCase):
             self.assertEqual(str(go_ids), str(ontologies_per_pfam[pfam]))
 
     def test_get_gos(self):
-        pfams = {'PF00015': FeatureLocation(0, 3)}
+        pfams = {'PF00015': FeatureLocation(0, 3), 'PF00351.42': FeatureLocation(6, 12)}
         fake_record = set_dummy_with_pfams(pfams)
         gos_for_fake_pfam = pfam2go.get_gos_for_pfams(fake_record)
         for all_ontologies in gos_for_fake_pfam.values():
@@ -106,7 +106,7 @@ class PfamToGoTest(unittest.TestCase):
         fake_pfam = PFAMDomain(location=fake_pfam_location, description='MCPsignal', protein_start=0, protein_end=5)
         fake_pfam.domain_id = 'BLANK'
         blank_no_ids.add_pfam_domain(fake_pfam)
-        with self.assertLogs(level='INFO') as log_cm:
+        with self.assertLogs(level='DEBUG') as log_cm:
             gos_for_no_pfams = pfam2go.get_gos_for_pfams(blank_no_pfams)
             assert 'No Pfam domains found' in str(log_cm.output)
             assert not gos_for_no_pfams
@@ -115,22 +115,11 @@ class PfamToGoTest(unittest.TestCase):
             assert not gos_for_no_ids
 
     def test_get_gos_id_handling(self):
-        pfams = {'PF00015.42': FeatureLocation(0, 3), 'PF00015_42': FeatureLocation(0, 3),
-                 'PF0015.42': FeatureLocation(0, 3), 'PPF00015.42': FeatureLocation(0, 3)}
+        pfams = {'PF00015.42': FeatureLocation(0, 3),
+                 'PF0015.42': FeatureLocation(0, 3)}
         fake_record = set_dummy_with_pfams(pfams)
-        # are wrong PFAM ids logged?
-        with self.assertLogs() as log_cm:
-            gos_for_fake_pfam = pfam2go.get_gos_for_pfams(fake_record)
-            assert 'Pfam id PF00015_42 is not a valid Pfam id, skipping' in str(log_cm.output) \
-                   and 'Pfam id PF0015 is not a valid Pfam id, skipping' in str(log_cm.output) \
-                   and 'Pfam id PPF00015 is not a valid Pfam id, skipping' in str(log_cm.output)
-        for all_ontologies in gos_for_fake_pfam.values():
-            for ontologies in all_ontologies:
-                # catches both stripping version number and broken ID not being included
-                assert ontologies.pfam.isalnum()
-                assert ontologies.pfam.startswith('PF')
-                for ontology in ontologies.go_entries:
-                    assert ontology.id in self.known_connections[ontologies.pfam]
+        with self.assertRaises(ValueError):
+            pfam2go.get_gos_for_pfams(fake_record)
 
     def test_results(self):
         pfams = {'PF00015': FeatureLocation(0, 3)}
@@ -145,12 +134,6 @@ class PfamToGoTest(unittest.TestCase):
                 assert ontologies.pfam in pfam_ids_without_versions
 
     def test_add_results_to_record(self):
-        #def fetch_go_ids_from_pfam(result, pfam_domain):
-        #    all_gos_from_pfam = []
-        #    for ontologies in result.pfam_domains_with_gos[pfam_domain]:
-        #        for go_entry in ontologies.go_entries:
-        #            all_gos_from_pfam.append(go_entry.id)
-        #    return sorted(all_gos_from_pfam)
         pfams = {'PF00015.2': FeatureLocation(0, 3), 'PF00351.1': FeatureLocation(0, 3),
                  'PF00015.27': FeatureLocation(3, 6)}
         fake_record = set_dummy_with_pfams(pfams)
@@ -223,13 +206,13 @@ class PfamToGoTest(unittest.TestCase):
         pfams = {'PF00015': fake_pfam_location, 'PF00351': fake_pfam_location, 'PF05147': fake_pfam_location}
         fake_record = set_dummy_with_pfams(pfams)
         broken_json = {"pfams": {"PF00015": {"GO:0004871": "signal transducer activity",
-                                                 "GO:0007165": "signal transduction",
-                                                 "GO:0016020": "membrane"},
-                                     "PF00351": {"GO:0016714": ("oxidoreductase activity, acting on paired donors, "
-                                                                "with incorporation or reduction of molecular oxygen, "
-                                                                "reduced pteridine as one donor, and incorporation of "
-                                                                "one atom of oxygen"),
-                                                 "GO:0055114": "oxidation-reduction process"}},
+                                             "GO:0007165": "signal transduction",
+                                             "GO:0016020": "membrane"},
+                                 "PF00351": {"GO:0016714": ("oxidoreductase activity, acting on paired donors, "
+                                                            "with incorporation or reduction of molecular oxygen, "
+                                                            "reduced pteridine as one donor, and incorporation of "
+                                                            "one atom of oxygen"),
+                                 "GO:0055114": "oxidation-reduction process"}},
                        "record_id": fake_record.id,
                        "schema_version": 2}
         with self.assertLogs() as log_cm:
