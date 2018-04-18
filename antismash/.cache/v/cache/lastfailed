@@ -1,4 +1,0 @@
-{
-  "common/test/test_gff_parser.py": true,
-  "modules/tta/test/test_tta.py": true
-}
