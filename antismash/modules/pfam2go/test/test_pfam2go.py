@@ -186,14 +186,14 @@ class PfamToGoTest(unittest.TestCase):
         gos_for_fake_pfam = pfam2go.get_gos_for_pfams(fake_record)
         fake_results = pfam2go.Pfam2GoResults(fake_record.id, gos_for_fake_pfam)
         result_json = fake_results.to_json()
-        expected_result = {"pfams": {"PF00015": [("GO:0004871", "signal transducer activity"),
-                                                 ("GO:0007165", "signal transduction"),
-                                                 ("GO:0016020", "membrane")],
-                                     "PF00351": [("GO:0016714", ("oxidoreductase activity, acting on paired donors, "
-                                                                 "with incorporation or reduction of molecular oxygen, "
-                                                                 "reduced pteridine as one donor, and incorporation of "
-                                                                 "one atom of oxygen")),
-                                                 ("GO:0055114", "oxidation-reduction process")]},
+        expected_result = {"pfams": {"PF00015": {"GO:0004871": "signal transducer activity",
+                                                 "GO:0007165": "signal transduction",
+                                                 "GO:0016020": "membrane"},
+                                     "PF00351": {"GO:0016714": ("oxidoreductase activity, acting on paired donors, "
+                                                                "with incorporation or reduction of molecular oxygen, "
+                                                                "reduced pteridine as one donor, and incorporation of "
+                                                                "one atom of oxygen"),
+                                                 "GO:0055114": "oxidation-reduction process"}},
                            "record_id": fake_record.id,
                            "schema_version": 1}
         assert result_json["record_id"] == expected_result["record_id"]
@@ -222,14 +222,14 @@ class PfamToGoTest(unittest.TestCase):
         fake_pfam_location = FeatureLocation(0, 12)
         pfams = {'PF00015': fake_pfam_location, 'PF00351': fake_pfam_location, 'PF05147': fake_pfam_location}
         fake_record = set_dummy_with_pfams(pfams)
-        broken_json = {"pfams": {"PF00015": [("GO:0004871", "signal transducer activity"),
-                                             ("GO:0007165", "signal transduction"),
-                                             ("GO:0016020", "membrane")],
-                                 "PF00351": [("GO:0016714", ("oxidoreductase activity, acting on paired donors, "
-                                                             "with incorporation or reduction of molecular oxygen, "
-                                                             "reduced pteridine as one donor, and incorporation of "
-                                                             "one atom of oxygen")),
-                                             ("GO:0055114", "oxidation-reduction process")]},
+        broken_json = {"pfams": {"PF00015": {"GO:0004871": "signal transducer activity",
+                                                 "GO:0007165": "signal transduction",
+                                                 "GO:0016020": "membrane"},
+                                     "PF00351": {"GO:0016714": ("oxidoreductase activity, acting on paired donors, "
+                                                                "with incorporation or reduction of molecular oxygen, "
+                                                                "reduced pteridine as one donor, and incorporation of "
+                                                                "one atom of oxygen"),
+                                                 "GO:0055114": "oxidation-reduction process"}},
                        "record_id": fake_record.id,
                        "schema_version": 2}
         with self.assertLogs() as log_cm:
