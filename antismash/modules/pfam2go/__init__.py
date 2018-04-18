@@ -5,6 +5,7 @@
 
 from typing import Any, Dict, List, Optional
 
+from antismash.common import path
 from antismash.config.args import ModuleArgs
 from antismash.modules.pfam2go.pfam2go import get_gos_for_pfams, Pfam2GoResults
 
@@ -31,9 +32,13 @@ def check_options(_options) -> List[str]:
 
 
 def check_prereqs() -> List[str]:
-    """Check for prerequisites"""
-    # Needs Pfam IDs, how to check?
-    return []
+    """Check for prerequisites
+        pfam2go-march-2018.txt: mapping file for Pfam to Gene Ontology mapping
+    """
+    failure_messages = []
+    if path.locate_file(path.get_full_path(__file__, 'data/pfam2go-march-2018.txt')) is None:
+        failure_messages.append('Failed to locate Pfam to Gene Ontology mapping file')
+    return failure_messages
 
 
 def is_enabled(options) -> bool:

@@ -5,9 +5,8 @@
 term mapping supplied on geneontology.org. Current mapping used: version 02/24/2018"""
 
 import logging
-import re
 from collections import defaultdict
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from antismash.common import path
 from antismash.common.module_results import ModuleResults
@@ -78,14 +77,16 @@ class Pfam2GoResults(ModuleResults):
 
     def to_json(self) -> Dict[str, Any]:
         """ Construct a JSON representation of this instance """
-        jsonfile = {"pfams": {}, "record_id": self.record_id, "schema_version": Pfam2GoResults.schema_version}
+        json_out = {"pfams": {},
+                    "record_id": self.record_id,
+                    "schema_version": Pfam2GoResults.schema_version}
         for all_ontologies in self.pfam_domains_with_gos.values():
             for ontologies in all_ontologies:
-                jsonfile["pfams"][ontologies.pfam] = ontologies.as_dict()
-        return jsonfile
+                json_out["pfams"][ontologies.pfam] = ontologies.as_dict()
+        return json_out
 
     @staticmethod
-    def from_json(json: Dict[str, Any], record: Record) -> "Pfam2GoResults":
+    def from_json(json: Dict[str, Any], record: Record) -> Optional["Pfam2GoResults"]:
         """ Constructs a new Pfam2GoResults instance from a json format and the
             original record analysed.
 
@@ -114,6 +115,8 @@ class Pfam2GoResults(ModuleResults):
 def construct_mapping(mapfile) -> Dict[str, GeneOntologies]:
     """Read a file mapping Pfam IDs to Gene Ontology terms, then convert to a dictionary matching Pfam IDs to
     collections of all Gene Ontology terms for these IDs as GeneOntologies objects.
+    The mapping file must be in the following format:
+    Pfam:pfam_id pfam_symbol > GO:go_readable ; go_id
 
     Arguments:
         mapfile: the path of the file containing the Pfam ID to GO mappings
@@ -153,25 +156,17 @@ def get_gos_for_pfams(record: Record) -> Dict[PFAMDomain, List[GeneOntologies]]:
     """
     pfam_domains_with_gos = defaultdict(list)
     pfams = record.get_pfam_domains()
-    full_gomap_as_ontologies = construct_mapping('data/pfam2go-march-2018.txt')
-    # define structure of a valid PFAM id
-    valid_pfam_format = re.compile(r'''
-    ^           # Beginning of word -> must start with PF
-    (PF)
-    ([0-9]{5})  # followed by five digits
-    $           # end of word -> no extra characters after number
-    ''', re.VERBOSE | re.IGNORECASE)
+    full_gomap_as_ontologies = construct_mapping(path.get_full_path(__file__, 'data/pfam2go-march-2018.txt'))
     if not pfams:
-        logging.info('No Pfam domains found')
+        logging.debug('No Pfam domains found in record, cannot create Pfam to Gene Ontology mapping')
     for pfam in pfams:
         pfam_ids = pfam.db_xref
         if not pfam_ids:
-            logging.info('No Pfam ids found')
+            logging.debug('No Pfam ids found in Pfam domain %s, cannot create Pfam to Gene Ontology mapping', pfam)
         for pfam_id in pfam_ids:
             pfam_id = pfam_id.partition('.')[0]  # strip out version number
-            if not re.search(valid_pfam_format, pfam_id):
-                # invalid ID shouldn't break anything, but should be noticed
-                logging.warning('Pfam id %s is not a valid Pfam id, skipping', pfam_id)
+            if not (len(pfam_id) == 7 and pfam_id[:2] == 'PF' and pfam_id[2:].isdecimal()):
+                raise ValueError('Pfam id {} is not a valid Pfam id'.format(pfam_id))
             gene_ontologies_for_pfam = full_gomap_as_ontologies.get(pfam_id)
             if gene_ontologies_for_pfam:
                 pfam_domains_with_gos[pfam].append(gene_ontologies_for_pfam)

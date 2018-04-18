@@ -32,6 +32,7 @@ class ActiveSiteFinderQualifier:
     def __bool__(self) -> bool:
         return bool(self._hits)
 
+
 class NRPSPKSQualifier(list):
     """ A qualifier for tracking information about NRPS/PKS domains within a CDS.
 
@@ -406,6 +407,7 @@ class GeneFunctionAnnotations:
         self._by_tool = defaultdict(list)
         self._by_function = defaultdict(list)
 
+
 class GOQualifier:
     """A qualifier for tracking Gene Ontology terms for a PFAM domain.
         Cannot be directly used as a qualifier for BioPython's SeqFeature.
@@ -417,9 +419,7 @@ class GOQualifier:
 
     def to_biopython(self) -> List[str]:
         """Convert GOQualifier to BioPython-style qualifier."""
-        go_ids_and_descriptions = ["{}: {}".format(go_id, go_description)
-                                   for go_id, go_description in self.go_entries.items()]
-        return go_ids_and_descriptions
+        return ["{}: {}".format(go_id, go_description) for go_id, go_description in self.go_entries.items()]
 
     @staticmethod
     def from_biopython(qualifier: List[str]) -> "GOQualifier":
