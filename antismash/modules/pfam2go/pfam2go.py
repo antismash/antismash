@@ -81,8 +81,7 @@ class Pfam2GoResults(ModuleResults):
         jsonfile = {"pfams": {}, "record_id": self.record_id, "schema_version": Pfam2GoResults.schema_version}
         for all_ontologies in self.pfam_domains_with_gos.values():
             for ontologies in all_ontologies:
-                jsonfile["pfams"][ontologies.pfam] = [(go_entry.id, go_entry.description)
-                                                      for go_entry in ontologies.go_entries]
+                jsonfile["pfams"][ontologies.pfam] = ontologies.as_dict()
         return jsonfile
 
     @staticmethod
@@ -105,8 +104,8 @@ class Pfam2GoResults(ModuleResults):
             for pfam_id in domain.db_xref:
                 id_without_version = pfam_id.partition('.')[0]
                 if id_without_version in json["pfams"]:
-                    all_ontology = [GeneOntology(goid_desc_pair[0], goid_desc_pair[1])
-                                    for goid_desc_pair in json["pfams"][id_without_version]]
+                    all_ontology = [GeneOntology(go_id, go_description)
+                                    for go_id, go_description in json["pfams"][id_without_version].items()]
                     all_pfam_ids_to_ontologies[domain].append(GeneOntologies(id_without_version, all_ontology))
         results = Pfam2GoResults(record.id, all_pfam_ids_to_ontologies)
         return results
