@@ -146,7 +146,7 @@ def generate_pfam2go_tooltip(record, feature):
             pfam_ids = ", ".join([xref for xref in pfam.db_xref if xref.startswith('PF')])
             unique_pfams_with_gos[pfam_ids] = pfam.gene_ontologies
     for unique_id, go_qualifier in sorted(unique_pfams_with_gos.items()):
-        for go_id, go_description in go_qualifier.go_entries.items():
+        for go_id, go_description in sorted(go_qualifier.go_entries.items()):
             go_notes.append(go_info_line.format(pf_id=unique_id, url=go_url, go_id=go_id, go_desc=go_description))
     return go_notes
 
