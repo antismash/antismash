@@ -36,7 +36,7 @@ def check_prereqs() -> List[str]:
         pfam2go-march-2018.txt: mapping file for Pfam to Gene Ontology mapping
     """
     failure_messages = []
-    if path.locate_file(path.get_full_path(__file__, 'data/pfam2go-march-2018.txt')) is None:
+    if path.locate_file(path.get_full_path(__file__, 'data', 'pfam2go-march-2018.txt')) is None:
         failure_messages.append('Failed to locate Pfam to Gene Ontology mapping file')
     return failure_messages
 

@@ -82,7 +82,7 @@ class PfamToGoTest(unittest.TestCase):
             pfam2go.GeneOntology(working_id, fail_description)
 
     def test_construct_mapping(self):
-        data = path.get_full_path(os.path.dirname(__file__), 'data/pfam2go-march-2018.txt')
+        data = path.get_full_path(os.path.dirname(__file__), 'data', 'pfam2go-march-2018.txt')
         ontologies_per_pfam = pfam2go.construct_mapping(data)
         for ontology in ontologies_per_pfam.values():
             self.assertIsInstance(ontology, pfam2go.GeneOntologies)
@@ -118,7 +118,7 @@ class PfamToGoTest(unittest.TestCase):
         pfams = {'PF00015.42': FeatureLocation(0, 3),
                  'PF0015.42': FeatureLocation(0, 3)}
         fake_record = set_dummy_with_pfams(pfams)
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegex(ValueError, 'Pfam id PF0015 is not a valid Pfam id'):
             pfam2go.get_gos_for_pfams(fake_record)
 
     def test_results(self):

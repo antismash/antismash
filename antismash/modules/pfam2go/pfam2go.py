@@ -156,7 +156,7 @@ def get_gos_for_pfams(record: Record) -> Dict[PFAMDomain, List[GeneOntologies]]:
     """
     pfam_domains_with_gos = defaultdict(list)
     pfams = record.get_pfam_domains()
-    full_gomap_as_ontologies = construct_mapping(path.get_full_path(__file__, 'data/pfam2go-march-2018.txt'))
+    full_gomap_as_ontologies = construct_mapping(path.get_full_path(__file__, 'data', 'pfam2go-march-2018.txt'))
     if not pfams:
         logging.debug('No Pfam domains found in record, cannot create Pfam to Gene Ontology mapping')
     for pfam in pfams:
