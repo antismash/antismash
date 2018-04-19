@@ -414,12 +414,12 @@ class GOQualifier:
     """
     def __init__(self, go_entries: Dict[str, str]) -> None:  # dict mapping Gene Ontology IDs to readable descriptions
         self.go_entries = go_entries
-        self.ids = list(go_entries.keys())
+        self.ids = sorted(list(go_entries.keys()))
         self.descriptions = list(go_entries.values())
 
     def to_biopython(self) -> List[str]:
         """Convert GOQualifier to BioPython-style qualifier."""
-        return ["{}: {}".format(go_id, go_description) for go_id, go_description in self.go_entries.items()]
+        return ["{}: {}".format(go_id, go_description) for go_id, go_description in sorted(self.go_entries.items())]
 
     @staticmethod
     def from_biopython(qualifier: List[str]) -> "GOQualifier":
