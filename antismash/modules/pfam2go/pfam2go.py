@@ -17,7 +17,7 @@ from antismash.common.secmet.record import Record
 
 class GeneOntology:
     """A single Gene Ontology term; holds Gene Ontology ID and its human-readable description."""
-    def __init__(self, _id: str, description: str):
+    def __init__(self, _id: str, description: str) -> None:
         if not _id.startswith('GO:'):
             raise ValueError('Invalid Gene Ontology ID: {0}'.format(_id))
         self.id = _id
@@ -30,7 +30,7 @@ class GeneOntology:
 
 class GeneOntologies:
     """A collection of all Gene Ontology terms (as GeneOntology objects) for a Pfam ID."""
-    def __init__(self, pfam: str, gos: List[GeneOntology]):
+    def __init__(self, pfam: str, gos: List[GeneOntology]) -> None:
         self.pfam = str(pfam)
         assert self.pfam.startswith('PF')
         assert isinstance(gos, list) and gos
@@ -48,7 +48,7 @@ class Pfam2GoResults(ModuleResults):
     """Holds results for Pfam to Gene Ontology module."""
     schema_version = 1
 
-    def __init__(self, record_id: str, pfam_domains_with_gos: Dict[PFAMDomain, List[GeneOntologies]]):
+    def __init__(self, record_id: str, pfam_domains_with_gos: Dict[PFAMDomain, List[GeneOntologies]]) -> None:
         super().__init__(record_id)
         #  store mapping of PFAM domain ID and GO terms
         self.pfam_domains_with_gos = pfam_domains_with_gos
@@ -65,7 +65,7 @@ class Pfam2GoResults(ModuleResults):
             all_gos.update(ontologies.as_dict())
         return all_gos
 
-    def add_to_record(self, record: Record):
+    def add_to_record(self, record: Record) -> None:
         """Add GeneOntologies objects to the respective PFAMDomains.
         Arguments:
             record: Record to which to add GeneOntologies
@@ -112,7 +112,7 @@ class Pfam2GoResults(ModuleResults):
         return results
 
 
-def construct_mapping(mapfile) -> Dict[str, GeneOntologies]:
+def construct_mapping(mapfile: str) -> Dict[str, GeneOntologies]:
     """Read a file mapping Pfam IDs to Gene Ontology terms, then convert to a dictionary matching Pfam IDs to
     collections of all Gene Ontology terms for these IDs as GeneOntologies objects.
     The mapping file must be in the following format:
