@@ -24,7 +24,7 @@ class GeneOntology:
         assert isinstance(description, str)
         self.description = description
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.id
 
 
@@ -100,7 +100,7 @@ class Pfam2GoResults(ModuleResults):
         if json["schema_version"] != Pfam2GoResults.schema_version:
             logging.warning("Schema version mismatch, discarding Pfam2GO results")
             return None
-        all_pfam_ids_to_ontologies = defaultdict(list)
+        all_pfam_ids_to_ontologies = defaultdict(list)  # type: Dict[PFAMDomain, List[GeneOntologies]]
         for domain in record.get_pfam_domains():
             for pfam_id in domain.db_xref:
                 id_without_version = pfam_id.partition('.')[0]
@@ -126,7 +126,7 @@ def construct_mapping(mapfile: str) -> Dict[str, GeneOntologies]:
         terms matched to this ID.
     """
     results = {}
-    gene_ontology_per_pfam = defaultdict(list)
+    gene_ontology_per_pfam = defaultdict(list)  # type: Dict[str, List[GeneOntology]]
     with open(path.get_full_path(__file__, mapfile), 'r') as pfam_map:
         for line in pfam_map:
             if line.startswith('!'):
@@ -154,7 +154,7 @@ def get_gos_for_pfams(record: Record) -> Dict[PFAMDomain, List[GeneOntologies]]:
     Returns:
         A dictionary mapping a specific PFAMDomain instance to a list of GeneOntologies within the PFAMDomain.
     """
-    pfam_domains_with_gos = defaultdict(list)
+    pfam_domains_with_gos = defaultdict(list)  # type: Dict[PFAMDomain, List[GeneOntologies]]
     pfams = record.get_pfam_domains()
     full_gomap_as_ontologies = construct_mapping(path.get_full_path(__file__, 'data', 'pfam2go-march-2018.txt'))
     if not pfams:
