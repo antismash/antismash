@@ -414,7 +414,7 @@ class GOQualifier:
     """
     def __init__(self, go_entries: Dict[str, str]) -> None:  # dict mapping Gene Ontology IDs to readable descriptions
         self.go_entries = go_entries
-        self.ids = sorted(list(go_entries.keys()))
+        self.ids = list(go_entries)
         self.descriptions = list(go_entries.values())
 
     def to_biopython(self) -> List[str]:

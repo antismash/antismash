@@ -625,7 +625,7 @@ class PFAMDomain(Domain):
             mine["db_xref"] = self.db_xref
         if self.gene_ontologies:  # should only be the case if db_xrefs present, since those are needed for mapping
             mine["gene_ontologies"] = self.gene_ontologies.to_biopython()
-            mine["db_xref"].extend(self.gene_ontologies.ids)
+            mine["db_xref"].extend(sorted(self.gene_ontologies.ids))
         if qualifiers:
             mine.update(qualifiers)
         return super().to_biopython(mine)
