@@ -30,9 +30,6 @@ FEATURES             Location/Qualifiers
      gene            complement(<1..827)
                      /gene="epiY'"
      CDS             complement(<1..827)
-                     /note="Protein sequence is in conflict with the conceptual
-                     translation; none of previously described start codons for
-                     Staphylococci (ATG,TTg,GTG) is present"
                      /codon_start=1
                      /db_xref="GOA:P30193"
                      /db_xref="InterPro:IPR001140"
@@ -40,56 +37,61 @@ FEATURES             Location/Qualifiers
                      /db_xref="InterPro:IPR011527"
                      /db_xref="InterPro:IPR017940"
                      /db_xref="UniProtKB/Swiss-Prot:P30193"
+                     /gene="epiY_"
+                     /locus_tag="epiY_"
+                     /note="Protein sequence is in conflict with the conceptual
+                     translation; none of previously described start codons for
+                     Staphylococci (ATG,TTg,GTG) is present"
+                     /product="epiY'"
+                     /protein_id="CAA44250.1"
+                     /transl_table=11
                      /translation="NLFSVIVSLIFLYIINKTLTLYLVCTLPILIIVILPIGNIMKRVS
                      SKSQEATAKLSSYYSNRLSTIKLIKTLSTYNIEKIKNYTLLKNIFDIELHKIKVLSFFE
                      PIMNLILFINIFGILFLGYYLMENNMMKSGDMFAYVLYLFQIINPIVSITSYWTEVQRA
                      IGSSDRILKINKEPEEVLTIKTTYNNFVQKMEINDLNFTKDNKQIINSISLDLHKGYIY
                      NIIGESGCGKSTLLNILAGLNTEYTGNIYLDKLDKSQFSKYEWRNLFSYITQDL"
-                     /gene="epiY_"
-                     /transl_table=11
-                     /locus_tag="epiY_"
-                     /protein_id="CAA44250.1"
-                     /product="epiY'"
      source          1..8700
-                     /mol_type="genomic DNA"
                      /clone="pTepi14"
                      /db_xref="taxon:1282"
+                     /mol_type="genomic DNA"
                      /organism="Staphylococcus epidermidis"
                      /strain="Tu 3298"
      cluster         1..8700
+                     /contig_edge="True"
                      /cutoff="20000"
                      /extension="10000"
-                     /contig_edge="True"
-                     /product="lanthipeptide"
                      /note="Detection rule(s) for this cluster type:
-                     lanthipeptide: ((LANC_like and (Flavoprotein or
+                     lanthipeptide: (((LANC_like and (Flavoprotein or
                      Trp_halogenase or p450 or Lant_dehyd_N or Lant_dehyd_C or
-                     adh_short or adh_short_C2) or cds(LANC_like and (Pkinase or
-                     DUF4135)) or TIGR03731 or Antimicr18 or Gallidermin or
-                     L_biotic_A or leader_d or leader_eh or leader_abc or
-                     mature_d or mature_ab or mature_a or mature_b or mature_ha
-                     or mature_h_beta or lacticin_l or lacticin_mat or
-                     LD_lanti_pre or strep_PEQAXS));"
+                     Lant_dehydr_C or tsrC or adh_short or adh_short_C2) or
+                     cds(LANC_like and (Pkinase or DUF4135)) or TIGR03731 or
+                     Antimicr18 or Gallidermin or L_biotic_A or leader_d or
+                     leader_eh or leader_abc or mature_d or mature_ab or
+                     mature_a or mature_b or mature_ha or mature_h_beta or
+                     lacticin_l or lacticin_mat or LD_lanti_pre or strep_PEQAXS)
+                     and not YcaO));"
+                     /product="lanthipeptide"
+                     /tool="antismash"
      gene            complement(781..1227)
                      /gene="epiY"
      CDS             complement(781..1227)
-                     /note="Protein sequence is in conflict with the conceptual
-                     translation; none of previously described start codons for
-                     Staphylococci (ATG,TTg,GTG) is present"
                      /codon_start=1
                      /db_xref="GOA:P30194"
                      /db_xref="InterPro:IPR001140"
                      /db_xref="InterPro:IPR011527"
                      /db_xref="InterPro:IPR017940"
                      /db_xref="UniProtKB/Swiss-Prot:P30194"
+                     /gene="epiY"
+                     /locus_tag="epiY"
+                     /note="Protein sequence is in conflict with the conceptual
+                     translation; none of previously described start codons for
+                     Staphylococci (ATG,TTg,GTG) is present"
+                     /product="epiY"
+                     /protein_id="CAA44251.1"
+                     /transl_table=11
                      /translation="SLKGDDIIKGLYDLWKITKPNTLLLSIGLIFSLIGTSFSLYIPLI
                      IRNALNKSSLSTDKIVIIIICFGLTLIFSGVSTYILGYIGQKIIQNIRSVTWNKVIKLP
                      YSFHLKNSASNLTSRLVNDTMNITRVFSVEFIFSYSITNIFIYN"
-                     /gene="epiY"
-                     /transl_table=11
-                     /locus_tag="epiY"
-                     /protein_id="CAA44251.1"
-                     /product="epiY"
      gene            1381..1539
                      /gene="epiA"
      CDS             1381..1539
@@ -99,18 +101,38 @@ FEATURES             Location/Qualifiers
                      /db_xref="InterPro:IPR006079"
                      /db_xref="PDB:1G5Q"
                      /db_xref="UniProtKB/Swiss-Prot:P08136"
-                     /translation="MEAVKEKNDLFNLDVKVNAKESNDSGAEPRIASKFICTPGCAKTG
-                     SFNSYCC"
                      /gene="epiA"
-                     /transl_table=11
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     lanthipeptide: mature_b"
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     lanthipeptide: Gallidermin"
                      /locus_tag="epiA"
-                     /protein_id="CAA44252.1"
                      /product="Epidermin prepeptide"
+                     /protein_id="CAA44252.1"
                      /sec_met="Type: lanthipeptide"
                      /sec_met="Gallidermin (E-value: 4.7e-40, bitscore: 125.0,
-                     seeds: 3); mature_b (E-value: 7.5e-16, bitscore: 46.8,
-                     seeds: 5)"
+                     seeds: 3, tool: rule-based-clusters); mature_b (E-value:
+                     7.5e-16, bitscore: 46.8, seeds: 5, tool:
+                     rule-based-clusters)"
                      /sec_met="Kind: biosynthetic"
+                     /transl_table=11
+                     /translation="MEAVKEKNDLFNLDVKVNAKESNDSGAEPRIASKFICTPGCAKTG
+                     SFNSYCC"
+     cluster_border  1381..6369
+                     /aStool="rule-based-clusters"
+                     /contig_edge="False"
+                     /cutoff="20000"
+                     /extent="10000"
+                     /product="lanthipeptide"
+                     /rule="((LANC_like and (Flavoprotein or Trp_halogenase or
+                     p450 or Lant_dehyd_N or Lant_dehyd_C or Lant_dehydr_C or
+                     tsrC or adh_short or adh_short_C2) or cds(LANC_like and
+                     (Pkinase or DUF4135)) or TIGR03731 or Antimicr18 or
+                     Gallidermin or L_biotic_A or leader_d or leader_eh or
+                     leader_abc or mature_d or mature_ab or mature_a or mature_b
+                     or mature_ha or mature_h_beta or lacticin_l or lacticin_mat
+                     or LD_lanti_pre or strep_PEQAXS) and not YcaO)"
+                     /tool="antismash"
      gene            1605..4565
                      /gene="epiB"
      CDS             1605..4565
@@ -120,6 +142,24 @@ FEATURES             Location/Qualifiers
                      /db_xref="InterPro:IPR006827"
                      /db_xref="UniProtKB/Swiss-Prot:P30195"
                      /function="modifying enzyme"
+                     /gene="epiB"
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     lanthipeptide: Lant_dehydr_C"
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     lanthipeptide: Lant_dehyd_C"
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     lanthipeptide: Lant_dehyd_N"
+                     /locus_tag="epiB"
+                     /product="epiB"
+                     /protein_id="CAA44253.1"
+                     /sec_met="Type: lanthipeptide"
+                     /sec_met="Lant_dehyd_N (E-value: 1.9e-28, bitscore: 87.8,
+                     seeds: 38, tool: rule-based-clusters); Lant_dehyd_C
+                     (E-value: 2.2e-130, bitscore: 424.4, seeds: 37, tool:
+                     rule-based-clusters); Lant_dehydr_C (E-value: 3.9e-19,
+                     bitscore: 58.3, seeds: 35, tool: rule-based-clusters)"
+                     /sec_met="Kind: biosynthetic"
+                     /transl_table=11
                      /translation="MDNIFVPSNIYMVRTPIFSIELYNQFLKSDNIDYDLILQNDIFKE
                      SIMTTTYNLYQSIGKIDWEKDNKKTRNVKESLLKYLIRMSTRSTPYGMLSGVALGEFSE
                      NNNIKIKDSSFHKKDVKIDGQWLYKLVHYLESDYTYYKDSFVIWNQQNYIYNNRLYLDN
@@ -137,17 +177,6 @@ FEATURES             Location/Qualifiers
                      PEVYRYGGPHVIEDIENFFMYDSLLSINIIQSEFKIPKEFIVAISIDFLLDYLEINKSE
                      KEEILINNAEDLYRSNDIREYKNLLAKLTNPKNDYEILKKEFPNLHEFLFNKISILENL
                      KKTLQKSLYTSRSRIIGSFIHMRCNRIFGINPEKEKFVLSIFNEITKTKKYWDGCD"
-                     /gene="epiB"
-                     /transl_table=11
-                     /locus_tag="epiB"
-                     /protein_id="CAA44253.1"
-                     /product="epiB"
-                     /sec_met="Type: lanthipeptide"
-                     /sec_met="Lant_dehyd_N (E-value: 1.9e-28, bitscore: 87.8,
-                     seeds: 38); Lant_dehyd_C (E-value: 2.2e-130, bitscore:
-                     424.4, seeds: 37); Lant_dehydr_C (E-value: 3.9e-19,
-                     bitscore: 58.3, seeds: ?)"
-                     /sec_met="Kind: biosynthetic"
      gene            4441..5808
                      /gene="epiC"
      CDS             4441..5808
@@ -156,6 +185,17 @@ FEATURES             Location/Qualifiers
                      /db_xref="InterPro:IPR020406"
                      /db_xref="UniProtKB/Swiss-Prot:P30196"
                      /function="modifying enzyme"
+                     /gene="epiC"
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     lanthipeptide: LANC_like"
+                     /locus_tag="epiC"
+                     /product="epiC"
+                     /protein_id="CAA44254.1"
+                     /sec_met="Type: lanthipeptide"
+                     /sec_met="LANC_like (E-value: 1.5e-85, bitscore: 276.1,
+                     seeds: 47, tool: rule-based-clusters)"
+                     /sec_met="Kind: biosynthetic"
+                     /transl_table=11
                      /translation="MAVLYTCVVIEYSVLILKKKNLFYLFLMKLQKLKNIGMVVININN
                      IKKILENKITFLSDIEKATYIIENQSEYWDPYTLSHGYPGIILFLSASEKVFHKDLEKV
                      IHQYIRKLGPYLESGIDGFSLFSGLSGIGFALDIASDKQYSYQSILEQIDNLLVQYVFD
@@ -164,15 +204,6 @@ FEATURES             Location/Qualifiers
                      LKPEFKNNNEWFDRYDILENYIPNYSVRNGWCYGDTGIMNTLLLSGKALNNEGLIKMSK
                      NILINIIDKNNDDLISPTFCHGLASHLTIIHQANKFFNLSQVSTYIDTIVRKIISHYSE
                      ESSFMFQDIEYSYGQKIYKNKVGILEGELGVLLALLDYIDTQNQSRKNWKNMFLIT"
-                     /gene="epiC"
-                     /transl_table=11
-                     /locus_tag="epiC"
-                     /protein_id="CAA44254.1"
-                     /product="epiC"
-                     /sec_met="Type: lanthipeptide"
-                     /sec_met="LANC_like (E-value: 1.5e-85, bitscore: 276.1,
-                     seeds: 47)"
-                     /sec_met="Kind: biosynthetic"
      gene            5824..6369
                      /gene="epiD"
      CDS             5824..6369
@@ -183,19 +214,21 @@ FEATURES             Location/Qualifiers
                      /db_xref="PDB:1G63"
                      /db_xref="UniProtKB/Swiss-Prot:P30197"
                      /function="modifying enzyme"
+                     /gene="epiD"
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     lanthipeptide: Flavoprotein"
+                     /locus_tag="epiD"
+                     /product="epiD"
+                     /protein_id="CAA44255.1"
+                     /sec_met="Type: lanthipeptide"
+                     /sec_met="Flavoprotein (E-value: 3.8e-28, bitscore: 87.1,
+                     seeds: 143, tool: rule-based-clusters)"
+                     /sec_met="Kind: biosynthetic"
+                     /transl_table=11
                      /translation="MYGKLLICATASINVININHYIVELKQHFDEVNILFSPSSKNFIN
                      TDVLKLFCDNLYDEIKDPLLNHINIVENHEYILVLPASANTINKIANGICDNLLTTVCL
                      TGYQKLFIFPNMNIRMWGNPFLQKNIDLLKNNDVKVYSPDMNKSFEISSGRYKNNITMP
                      NIENVLNFVLNNEKRPLD"
-                     /gene="epiD"
-                     /transl_table=11
-                     /locus_tag="epiD"
-                     /protein_id="CAA44255.1"
-                     /product="epiD"
-                     /sec_met="Type: lanthipeptide"
-                     /sec_met="Flavoprotein (E-value: 3.8e-28, bitscore: 87.1,
-                     seeds: 143)"
-                     /sec_met="Kind: biosynthetic"
      gene            complement(6366..6983)
                      /gene="epiQ"
      CDS             complement(6366..6983)
@@ -206,15 +239,15 @@ FEATURES             Location/Qualifiers
                      /db_xref="InterPro:IPR016032"
                      /db_xref="UniProtKB/Swiss-Prot:P30198"
                      /function="response regulator"
+                     /gene="epiQ"
+                     /locus_tag="epiQ"
+                     /product="epiQ"
+                     /protein_id="CAA44256.1"
+                     /transl_table=11
                      /translation="MISINIVGEVDSILIESILELDRRITINSSNIDPNFIIVYEKFDE
                      YYTFLKEFIGKIPIVIITGNTSYSRKCYFYSLGIDLYIIKNNESKSLILCRILNEIKKY
                      IKYVNDDFIDFENHQFVFNNYLVNLSNIELKILRCLYINLGRYVSKEELKKGVWDTEDF
                      VDSNTINVYIHRLRDSLKNCKEIEIINERKLGYKILIRKDLC"
-                     /gene="epiQ"
-                     /transl_table=11
-                     /locus_tag="epiQ"
-                     /protein_id="CAA44256.1"
-                     /product="epiQ"
      gene            complement(6994..8379)
                      /gene="epiP"
      CDS             complement(6994..8379)
@@ -226,6 +259,18 @@ FEATURES             Location/Qualifiers
                      /db_xref="InterPro:IPR022398"
                      /db_xref="UniProtKB/Swiss-Prot:P30199"
                      /function="serine protease"
+                     /gene="epiP"
+                     /gene_functions="biosynthetic-additional
+                     (rule-based-clusters) Peptidase_S8 (E-value: 5.1e-50,
+                     bitscore: 159.4, seeds: 43, tool: rule-based-clusters)"
+                     /locus_tag="epiP"
+                     /product="epiP"
+                     /protein_id="CAA44257.1"
+                     /sec_met="Type: "
+                     /sec_met="Peptidase_S8 (E-value: 5.1e-50, bitscore: 159.4,
+                     seeds: 43, tool: rule-based-clusters)"
+                     /sec_met="Kind: biosynthetic"
+                     /transl_table=11
                      /translation="MNKFKFFIVFLILSLVFLQNEYAFGSSLNEELSYYSVEYDNAKTF
                      KESIKQKNIELTYKIPELHTAQIKTSKSKLNSLIKSNKNVKFVNPTCSTCVVEKSVKTG
                      KNLNNKKNGSHDLFDRQWDMRKITNEGKSYKLSPDRKKAKVALVDSGVNSSHTDLKSIN
@@ -235,15 +280,6 @@ FEATURES             Location/Qualifiers
                      NDYISEFSNYGNNFIDLMTIGGSYKLLDKYGKDAWLEKGYMQKQSVLSTSSNGRYIYQS
                      GTSLAAPKVSGALALEIDKYQLKDQPETAIELFKKKGIEKEKYMDKKHYGNGKLDVYKL
                      LKE"
-                     /gene="epiP"
-                     /transl_table=11
-                     /locus_tag="epiP"
-                     /protein_id="CAA44257.1"
-                     /product="epiP"
-                     /sec_met="Type: none"
-                     /sec_met="Peptidase_S8 (E-value: 5.1e-50, bitscore: 159.4,
-                     seeds: ?)"
-                     /sec_met="Kind: biosynthetic"
 ORIGIN
         1 agatcttgtg ttatataact aaacaaattt ctccattcgt atttagaaaa ttgactttta
        61 tcaagtttat ccaaatatat atttccagta tattctgtat ttaacccagc taatatattt

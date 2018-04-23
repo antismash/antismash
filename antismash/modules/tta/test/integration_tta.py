@@ -9,7 +9,7 @@ from tempfile import TemporaryDirectory
 import unittest
 
 import antismash
-from antismash.main import read_data, regenerate_results_for_record
+from antismash.main import read_data
 from antismash.common.module_results import ModuleResults
 from antismash.common.record_processing import parse_input_sequence
 import antismash.common.test.helpers as helpers
@@ -35,7 +35,7 @@ class TtaIntegrationTest(unittest.TestCase):
         for cluster in clusters:
             assert cluster.cds_children
         assert record.get_cds_features_within_clusters()
-        assert record.get_feature_count() == 26
+        before_count = record.get_feature_count()
 
         assert tta.check_prereqs() == []
         assert tta.check_options(self.options) == []
@@ -44,9 +44,9 @@ class TtaIntegrationTest(unittest.TestCase):
         results = tta.run_on_record(record, prior_results, self.options)
         assert isinstance(results, ModuleResults)
         assert len(results.features) == 174
-        assert record.get_feature_count() == 26
+        assert record.get_feature_count() == before_count
         results.add_to_record(record)
-        assert record.get_feature_count() == 200
+        assert record.get_feature_count() == before_count + 174
 
     def test_nisin_complete(self):
         with TemporaryDirectory() as output_dir:
@@ -59,7 +59,6 @@ class TtaIntegrationTest(unittest.TestCase):
             prior_results = read_data(None, options)
             record = prior_results.records[0]
             results = prior_results.results[0]
-            regenned = regenerate_results_for_record(record, options, [tta], results)
-            tta_results = regenned["antismash.modules.tta"]
+            tta_results = tta.regenerate_previous_results(results.get("antismash.modules.tta"), record, options)
             assert isinstance(tta_results, tta.TTAResults)
             assert len(tta_results.features) == 174

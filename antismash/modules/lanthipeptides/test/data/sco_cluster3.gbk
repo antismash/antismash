@@ -10,25 +10,31 @@ SOURCE      Streptomyces coelicolor A3(2)
             albidoflavus group.
 FEATURES             Location/Qualifiers
      cluster         1..35099
+                     /contig_edge="True"
                      /cutoff="20000"
                      /extension="10000"
-                     /contig_edge="False"
-                     /product="lanthipeptide"
                      /note="Detection rule(s) for this cluster type:
-                     lanthipeptide: ((LANC_like and (Flavoprotein or
+                     lanthipeptide: (((LANC_like and (Flavoprotein or
                      Trp_halogenase or p450 or Lant_dehyd_N or Lant_dehyd_C or
-                     adh_short or adh_short_C2) or cds(LANC_like and (Pkinase or
-                     DUF4135)) or TIGR03731 or Antimicr18 or Gallidermin or
-                     L_biotic_A or leader_d or leader_eh or leader_abc or
-                     mature_d or mature_ab or mature_a or mature_b or mature_ha
-                     or mature_h_beta or lacticin_l or lacticin_mat or
-                     LD_lanti_pre or strep_PEQAXS));"
+                     Lant_dehydr_C or tsrC or adh_short or adh_short_C2) or
+                     cds(LANC_like and (Pkinase or DUF4135)) or TIGR03731 or
+                     Antimicr18 or Gallidermin or L_biotic_A or leader_d or
+                     leader_eh or leader_abc or mature_d or mature_ab or
+                     mature_a or mature_b or mature_ha or mature_h_beta or
+                     lacticin_l or lacticin_mat or LD_lanti_pre or strep_PEQAXS)
+                     and not YcaO));"
+                     /product="lanthipeptide"
+                     /tool="antismash"
      gene            797..1822
-                     /locus_tag="SCO0247"
                      /db_xref="GeneID:1095671"
                      /gene_synonym="SCJ9A.26"
+                     /locus_tag="SCO0247"
      CDS             797..1822
+                     /codon_start=1
+                     /db_xref="GI:21218800"
+                     /db_xref="GeneID:1095671"
                      /gene_synonym="SCJ9A.26"
+                     /locus_tag="SCO0247"
                      /note="SCJ9A.26, unknown, possibly membrane associated,
                      len: 341aa; similar to TR:P71088 (EMBL:Z82044) hypothetical
                      protein from Bacillus subtilis (258 aa) fasta scores; opt:
@@ -38,9 +44,9 @@ FEATURES             Location/Qualifiers
                      fasta scores; opt: 572, z-score: 600.1, E(): 4.6e-26,
                      (50.0% identity in 184 aa overlap). Contains possible
                      membrane spanning hydrophobic region."
-                     /db_xref="GI:21218800"
-                     /db_xref="GeneID:1095671"
-                     /codon_start=1
+                     /product="hypothetical protein"
+                     /protein_id="NP_624579.1"
+                     /transl_table=11
                      /translation="MDATMVFKRLLGSLGVGAPTVDTVLDPAPVLPGGTLTGQVHLEGG
                      QTDFDIEHITLELVARVEAEHEDGEDEGVVVFDRFTVGGGFRLGAEEPRSVPFRVTLPW
                      ETPITELYGQPLGIVLGVRTELAVADAKDKGDLDQLTVTALPVQEAVLEAFGQLGFGFG
@@ -48,35 +54,35 @@ FEATURES             Location/Qualifiers
                      LLSSGHDAVTRFSVGHHDARDWAAEVEGWVRQLVEHHTTYGAPGTHGHSTPYAGHGHHD
                      PHGNGGRHHDDHRSGPGVGTAVAAGAAGLAVGVVGGMVAAEVVDEVGDFFEGDDEEEDE
                      G"
-                     /transl_table=11
-                     /locus_tag="SCO0247"
-                     /protein_id="NP_624579.1"
-                     /product="hypothetical protein"
      gene            complement(1679..2266)
-                     /locus_tag="SCO0248"
                      /db_xref="GeneID:1095672"
                      /gene_synonym="SCJ9A.27c"
+                     /locus_tag="SCO0248"
      CDS             complement(1679..2266)
-                     /gene_synonym="SCJ9A.27c"
-                     /note="SCJ9A.27c, unknown, len: 195aa; prediction based on
-                     Hidden Markov Model and amino acid usage."
+                     /codon_start=1
                      /db_xref="GI:21218801"
                      /db_xref="GeneID:1095672"
-                     /codon_start=1
+                     /gene_synonym="SCJ9A.27c"
+                     /locus_tag="SCO0248"
+                     /note="SCJ9A.27c, unknown, len: 195aa; prediction based on
+                     Hidden Markov Model and amino acid usage."
+                     /product="hypothetical protein"
+                     /protein_id="NP_624580.1"
+                     /transl_table=11
                      /translation="MPVPKASRPVPPTCPKRRPGTDGAPHIGAGGHRRRKDARSVGPVT
                      IPVRVDDGRAAIDEASPGPRSWRTTRRARARAARPGCSARRSTSRPGGVRRVGAAVVPS
                      GPDGGCAHVFGGAVMPSRVHCSGIGGRLGMTPFRTCAPGGGGRRSALVLLLVVAFEEVA
                      DLVDDFRGHHATDHADRESGRSGRDGRAHTRA"
-                     /transl_table=11
-                     /locus_tag="SCO0248"
-                     /protein_id="NP_624580.1"
-                     /product="hypothetical protein"
      gene            complement(2295..3809)
-                     /locus_tag="SCO0249"
                      /db_xref="GeneID:1095673"
                      /gene_synonym="SCJ9A.28c"
+                     /locus_tag="SCO0249"
      CDS             complement(2295..3809)
+                     /codon_start=1
+                     /db_xref="GI:21218802"
+                     /db_xref="GeneID:1095673"
                      /gene_synonym="SCJ9A.28c"
+                     /locus_tag="SCO0249"
                      /note="SCJ9A.28c, possible monooxygenase, len: 504 aa;
                      similar to many e.g. TR:Q9ZGM8 (EMBL:AF077869) oxygenase
                      involved in the last step of mithramycin biosynthesis in
@@ -88,9 +94,9 @@ FEATURES             Location/Qualifiers
                      Prokaryotic membrane lipoprotein lipid attachment site.
                      Also contains possible uncleavable N-terminal signal
                      sequence."
-                     /db_xref="GI:21218802"
-                     /db_xref="GeneID:1095673"
-                     /codon_start=1
+                     /product="hypothetical protein"
+                     /protein_id="NP_624581.1"
+                     /transl_table=11
                      /translation="MSTDVIVVGAGPTGLMLACELALAGVRTRVLERRTEPQRDSRALS
                      LHPRSVELMDQRGLLDRFLPLGRAVPGWHFAGLRTQLDFSALDSRHGYTLFLAQARTEA
                      ILERRAHELGVEISRGHEVLGVRQDGDGVEVEVRAPGGGTETAHSLYAVGCDGGRSIVR
@@ -100,23 +106,19 @@ FEATURES             Location/Qualifiers
                      LLAELTLVAQYRRPAEALRRLLDQLLGMAEVNRRLADQVSALGTGYPPPDPGADPLVGR
                      RMPDVGLTAAGSEATRVYELLHGGRFVLLSLAGDPALRESVDAGWGPRVTAVAVDKYDE
                      HPDLDGVTEVLVRPDGHVAWATRTTDGGARDDQRARALTAWAGTRS"
-                     /transl_table=11
-                     /locus_tag="SCO0249"
-                     /protein_id="NP_624581.1"
-                     /product="hypothetical protein"
      misc_feature    complement(2799..3368)
-                     /locus_tag="SCO0249"
                      /gene_synonym="SCJ9A.28c"
+                     /locus_tag="SCO0249"
                      /note="Pfam match to entry PF01360 Monooxygenase,
                      Monooxygenase, score 166.60, E-value 4.2e-46"
      misc_feature    complement(3393..3797)
-                     /locus_tag="SCO0249"
                      /gene_synonym="SCJ9A.28c"
+                     /locus_tag="SCO0249"
                      /note="Pfam match to entry PF01494 FAD_binding_3, , score
                      137.20, E-value 2.9e-37"
      misc_feature    complement(3753..3785)
-                     /locus_tag="SCO0249"
                      /gene_synonym="SCJ9A.28c"
+                     /locus_tag="SCO0249"
                      /note="PS00013 Prokaryotic membrane lipoprotein lipid
                      attachment site"
      misc_feature    3826..3831
@@ -126,11 +128,15 @@ FEATURES             Location/Qualifiers
                      /note="Cleavage site for AseI restriction endonuclease
                      AT*TAAT."
      gene            3873..4538
-                     /locus_tag="SCO0250"
                      /db_xref="GeneID:1095674"
                      /gene_synonym="SCJ9A.29"
+                     /locus_tag="SCO0250"
      CDS             3873..4538
+                     /codon_start=1
+                     /db_xref="GI:21218803"
+                     /db_xref="GeneID:1095674"
                      /gene_synonym="SCJ9A.29"
+                     /locus_tag="SCO0250"
                      /note="SCJ9A.29, possible transcriptional regulator, len:
                      221aa; similar to many tetR-family transcriptional
                      regulators eg. SW:TER1_ECOLI TetR from Tn1721 of
@@ -138,40 +144,40 @@ FEATURES             Location/Qualifiers
                      484.8, E(): 1.2e-19, (40.7% identity in 209 aa overlap).
                      Contains possible helix-turn-helix motif (+4.13 SD)
                      37-58aa."
-                     /db_xref="GI:21218803"
-                     /db_xref="GeneID:1095674"
-                     /codon_start=1
+                     /product="transcriptional regulator"
+                     /protein_id="NP_624582.1"
+                     /transl_table=11
                      /translation="MSLPSSRTRGRPARLDRARTVQTALDLLNESGLDTLTMRRLAQAM
                      DVQAGALYRYFAAKQDLLTAMAEHMVDGVADAAGATGDGDWSERTARLARALRAALLAH
                      RDGARVFAGTHATGPNTLRFADGLVGVLREAGFGDGDAARALYSVANFTVGHTLEEQAA
                      LTPGGGGPLDEATLREAVAAGTYPHLAATLPVLTSTDFTAHFEFGLRLLLDGLRAVRQ"
-                     /transl_table=11
-                     /locus_tag="SCO0250"
-                     /protein_id="NP_624582.1"
-                     /product="transcriptional regulator"
      gene            complement(4574..4858)
-                     /locus_tag="SCO0251"
                      /db_xref="GeneID:1095675"
                      /gene_synonym="SCJ9A.30c"
+                     /locus_tag="SCO0251"
      CDS             complement(4574..4858)
-                     /gene_synonym="SCJ9A.30c"
-                     /note="SCJ9A.30c, unknown, len: 94aa; prediction based on
-                     Hidden Markov Model."
+                     /codon_start=1
                      /db_xref="GI:21218804"
                      /db_xref="GeneID:1095675"
-                     /codon_start=1
+                     /gene_synonym="SCJ9A.30c"
+                     /locus_tag="SCO0251"
+                     /note="SCJ9A.30c, unknown, len: 94aa; prediction based on
+                     Hidden Markov Model."
+                     /product="hypothetical protein"
+                     /protein_id="NP_624583.1"
+                     /transl_table=11
                      /translation="MFLRDRRAEPLSTTVSPASRPSWRTSRGTGAEDAAGRATGEAGAA
                      AVLAGAAVVIAPSGLPAADVPRHRARLVAIARRTGLARGHRPPSPGRRR"
-                     /transl_table=11
-                     /locus_tag="SCO0251"
-                     /protein_id="NP_624583.1"
-                     /product="hypothetical protein"
      gene            complement(4891..6138)
-                     /locus_tag="SCO0252"
                      /db_xref="GeneID:1095676"
                      /gene_synonym="SCJ9A.31c"
+                     /locus_tag="SCO0252"
      CDS             complement(4891..6138)
+                     /codon_start=1
+                     /db_xref="GI:21218805"
+                     /db_xref="GeneID:1095676"
                      /gene_synonym="SCJ9A.31c"
+                     /locus_tag="SCO0252"
                      /note="SCJ9A.31c, possible oxidoreductase, len: 415 aa;
                      similar to many e.g. TR:AAD25066 (EMBL:AF121000)
                      tetracycline resistance associated oxidoreductase homolog
@@ -182,9 +188,9 @@ FEATURES             Location/Qualifiers
                      aa) fasta scores; opt: 275, z-score: 324.5, E(): 1e-10,
                      (24.9% identity in 377 aa overlap). Contains Pfam match to
                      entry PF01360 Monooxygenase, Monooxygenase."
-                     /db_xref="GI:21218805"
-                     /db_xref="GeneID:1095676"
-                     /codon_start=1
+                     /product="oxidoreductase"
+                     /protein_id="NP_624584.1"
+                     /transl_table=11
                      /translation="MAQRSGTTSLRVLVAGGGIAGHALAYWLARGGHRVTVRERYPDLR
                      ATGAQIDLRGQGIEAVRRMGLLDTVRGRLVDEAGVAFLDARGRPRATLMANTSGRGRQS
                      LTSEYEIMRGDLVRILHEATGNDVEYVYGTSVDGFDQDEHEVVAHCSDGSSETYDLLVA
@@ -193,21 +199,21 @@ FEATURES             Location/Qualifiers
                      EIVQVRTGTWSRGRVVLAGDAAHCASPYSGMGTSGGLVGAHVLAGEINRRPDDLPTALA
                      HYDTTLRPFTDEIQGEVNPRLLKLAMPMTQRAIDAFLTVTGMATRLRVPDLATRFSKED
                      RGGAWRLPHYPELRTA"
-                     /transl_table=11
-                     /locus_tag="SCO0252"
-                     /protein_id="NP_624584.1"
-                     /product="oxidoreductase"
      misc_feature    complement(5065..5670)
-                     /locus_tag="SCO0252"
                      /gene_synonym="SCJ9A.31c"
+                     /locus_tag="SCO0252"
                      /note="Pfam match to entry PF01360 Monooxygenase,
                      Monooxygenase, score 52.70, E-value 8.1e-12"
      gene            6209..6781
-                     /locus_tag="SCO0253"
                      /db_xref="GeneID:1095677"
                      /gene_synonym="SCJ9A.32"
+                     /locus_tag="SCO0253"
      CDS             6209..6781
+                     /codon_start=1
+                     /db_xref="GI:21218806"
+                     /db_xref="GeneID:1095677"
                      /gene_synonym="SCJ9A.32"
+                     /locus_tag="SCO0253"
                      /note="SCJ9A.32, probable tetR-family transcriptional
                      regulator, len: 190 aa; similar to many e.g. SW:TER1_ECOLI
                      TetR tetracycline resistance repressor from Escherichia
@@ -217,34 +223,34 @@ FEATURES             Location/Qualifiers
                      tetR family and Prosite match to PS01081 Bacterial
                      regulatory proteins, tetR family signature. Contains
                      possible helix-turn-helix motif (+5.97 SD) 26-47 aa"
-                     /db_xref="GI:21218806"
-                     /db_xref="GeneID:1095677"
-                     /codon_start=1
+                     /product="TetR family transcriptional regulator"
+                     /protein_id="NP_624585.1"
+                     /transl_table=11
                      /translation="MTKMNRETVITEALDLLDEVGLDGVSTRRLAKRLGVEQPSLYWYF
                      RTKRDLLTAMAQAAMAPHAAEPLPEPGEDWHGWFLRNTRSFRRTLLARRDGARLHAGSR
                      PTADLDRVRRKMDFLVASGVPERHAQMAMLAAGRFTVGCVLEEQAETGAGDTADLPADV
                      PEIDHESAFEAGLALITDGLVRHVDAR"
-                     /transl_table=11
-                     /locus_tag="SCO0253"
-                     /protein_id="NP_624585.1"
-                     /product="TetR family transcriptional regulator"
      misc_feature    6233..6373
-                     /locus_tag="SCO0253"
                      /gene_synonym="SCJ9A.32"
+                     /locus_tag="SCO0253"
                      /note="Pfam match to entry PF00440 tetR, Bacterial
                      regulatory proteins, tetR family, score 67.50, E-value
                      5.2e-17"
      misc_feature    6269..6361
-                     /locus_tag="SCO0253"
                      /gene_synonym="SCJ9A.32"
+                     /locus_tag="SCO0253"
                      /note="PS01081 Bacterial regulatory proteins, tetR family
                      signature."
      gene            complement(7037..7777)
-                     /locus_tag="SCO0254"
                      /db_xref="GeneID:1095678"
                      /gene_synonym="SCJ9A.33c"
+                     /locus_tag="SCO0254"
      CDS             complement(7037..7777)
+                     /codon_start=1
+                     /db_xref="GI:21218807"
+                     /db_xref="GeneID:1095678"
                      /gene_synonym="SCJ9A.33c"
+                     /locus_tag="SCO0254"
                      /note="SCJ9A.33c, hypothetical protein, len: 246 aa; weakly
                      similar to TR:Q18926 (EMBL:U23517) hypothetical protein
                      from the eukaryote Caenorhabditis elegans (243 aa) fasta
@@ -257,24 +263,24 @@ FEATURES             Location/Qualifiers
                      Pseudomonas aeruginosa hypothetical protein PA1166, 262 aa;
                      fasta scores: opt: 474 Z-score: 515.3 E(): 4.5e-21; 35.000%
                      identity in 240 aa overlap"
-                     /db_xref="GI:21218807"
-                     /db_xref="GeneID:1095678"
-                     /codon_start=1
+                     /product="hypothetical protein"
+                     /protein_id="NP_624586.1"
+                     /transl_table=11
                      /translation="MTTITTRTVEYAADGLTMIGHLALPPGADRRPAVLLGPEGMGLSD
                      VERGRADALAELGYAALAFDLHGGRYLGDPEEMLARCLPLLADPDRMRGIGHAALDVLR
                      TQPRTDPGRIAAVGYGTGGAVGLELGRDGVDLRAIGTVNALTTGRPGEAERIRCPVWAG
                      VGSQDPIMPPEQRNAFTAEMQAAGVDWRLTVYGGALHAFHHPPVDHPTVPGVGYHPRHA
                      QRAWRDVVDLLAECLPLAEDRGTS"
-                     /transl_table=11
-                     /locus_tag="SCO0254"
-                     /protein_id="NP_624586.1"
-                     /product="hypothetical protein"
      gene            complement(7951..9687)
-                     /locus_tag="SCO0255"
                      /db_xref="GeneID:1095679"
                      /gene_synonym="SCF20.01c; SCJ9A.34c"
+                     /locus_tag="SCO0255"
      CDS             complement(7951..9687)
+                     /codon_start=1
+                     /db_xref="GI:32141103"
+                     /db_xref="GeneID:1095679"
                      /gene_synonym="SCF20.01c; SCJ9A.34c"
+                     /locus_tag="SCO0255"
                      /note="SCF20.01c, possible transcriptional regulator, len:
                      >476aa; weakly similar to the N-terminal region of many
                      transcriptional regulator eg. SW:ACOR_ALCEU acetoin
@@ -292,9 +298,9 @@ FEATURES             Location/Qualifiers
                      match to entry PF00158 sigma54, Sigma-54 transcription
                      factors. Contains possible helix-turn-helix motif (+4.35
                      SD) 155-176aa."
-                     /db_xref="GI:32141103"
-                     /db_xref="GeneID:1095679"
-                     /codon_start=1
+                     /product="sigma factor"
+                     /protein_id="NP_733494.1"
+                     /transl_table=11
                      /translation="MPEGILNSWQRSKYLGIGTDEVVVPYQPDYDRESRLVRAATPVLD
                      RLEQALTGSDASVIVTDRNGWVRDRRVGEKRLSAHLDRVHLAPGFNYAEQFVGTNGIGV
                      ALEERRPNVVLGTEHFNERLQSVSCAAAPIRNTVTGRVEGAMNLTCWNGPARLLMAALV
@@ -306,31 +312,33 @@ FEATURES             Location/Qualifiers
                      ALVDCLLRRIGGGVGCAPEVLPPLRRHDWPGNVRELSLVLSKAAAARRTYRIEVGDLPP
                      SLHSAGGRSLSVWEASERDTLVQALLEADGNKLLAAQRLGISRTTIYRKMRAYGITLPA
                      RG"
-                     /transl_table=11
-                     /locus_tag="SCO0255"
-                     /protein_id="NP_733494.1"
-                     /product="sigma factor"
      misc_feature    complement(7969..8088)
-                     /locus_tag="SCO0255"
                      /gene_synonym="SCF20.01c; SCJ9A.34c"
+                     /locus_tag="SCO0255"
                      /note="Pfam match to entry PF00158 sigma54, Sigma-54
                      transcription factors, score 36.00, E-value 3e-09"
      misc_feature    complement(8626..8760)
-                     /locus_tag="SCO0255"
                      /gene_synonym="SCF20.01c; SCJ9A.34c"
+                     /locus_tag="SCO0255"
                      /note="Pfam match to entry PF00158 sigma54, Sigma-54
                      transcription factors, score 32.10, E-value 3.8e-08"
      misc_feature    complement(8647..8688)
-                     /locus_tag="SCO0255"
                      /gene_synonym="SCF20.01c; SCJ9A.34c"
+                     /locus_tag="SCO0255"
                      /note="PS00675 Sigma-54 interaction domain ATP-binding
                      region A signature."
      gene            10001..10798
-                     /locus_tag="SCO0256"
                      /db_xref="GeneID:1095680"
                      /gene_synonym="SCF20.02"
+                     /locus_tag="SCO0256"
      CDS             10001..10798
+                     /codon_start=1
+                     /db_xref="GI:21218808"
+                     /db_xref="GeneID:1095680"
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     lanthipeptide: adh_short"
                      /gene_synonym="SCF20.02"
+                     /locus_tag="SCO0256"
                      /note="SCF20.02, possible short chain oxidoreductase, len:
                      265aa; similar to many oxidoreductases e.g. TR:Q9ZNN8
                      (EMBL:AB009078) L-2,3-butanediol dehydrogenase from
@@ -341,89 +349,117 @@ FEATURES             Location/Qualifiers
                      Short chain dehydrogenase/reductase C-terminus and Prosite
                      match to PS00061 Short-chain dehydrogenases/reductases
                      family signature"
-                     /db_xref="GI:21218808"
-                     /db_xref="GeneID:1095680"
-                     /codon_start=1
+                     /product="short chain oxidoreductase"
+                     /protein_id="NP_624587.1"
+                     /sec_met="Type: lanthipeptide"
+                     /sec_met="adh_short (E-value: 3.1e-34, bitscore: 109.6,
+                     seeds: 230, tool: rule-based-clusters)"
+                     /sec_met="Kind: biosynthetic"
+                     /transl_table=11
                      /translation="MTSVDNATPRTAVVTGAARGIGRGIAERLAEDGLDVVVADLPSMA
                      EELSAVAAGIEKTGRRALAVHADVTSKEQTDALVAAAADRFGRIDVYVANAGIARVTPL
                      LETDLDEFEQVMAVNLRGVFLSYQAAARQMIAQGGGGKIIGAASIVAHRPFALLGAYSA
                      SKWGVRGLTQAAAMEWARHGITVNAYCPGIVGTDMWDLIDERLAEEAGIEKGQAIKKHA
                      ESIALGRVEEPADVAAFVSYLASRDSDYMTGQSVMIDGGIQFA"
-                     /transl_table=11
-                     /locus_tag="SCO0256"
-                     /protein_id="NP_624587.1"
-                     /product="short chain oxidoreductase"
-                     /sec_met="Type: lanthipeptide"
-                     /sec_met="adh_short (E-value: 7.5e-32, bitscore: 109.6,
-                     seeds: 230)"
-                     /sec_met="Kind: biosynthetic"
+     cluster_border  10001..25099
+                     /aStool="rule-based-clusters"
+                     /contig_edge="False"
+                     /cutoff="20000"
+                     /extent="10000"
+                     /product="lanthipeptide"
+                     /rule="((LANC_like and (Flavoprotein or Trp_halogenase or
+                     p450 or Lant_dehyd_N or Lant_dehyd_C or Lant_dehydr_C or
+                     tsrC or adh_short or adh_short_C2) or cds(LANC_like and
+                     (Pkinase or DUF4135)) or TIGR03731 or Antimicr18 or
+                     Gallidermin or L_biotic_A or leader_d or leader_eh or
+                     leader_abc or mature_d or mature_ab or mature_a or mature_b
+                     or mature_ha or mature_h_beta or lacticin_l or lacticin_mat
+                     or LD_lanti_pre or strep_PEQAXS) and not YcaO)"
+                     /tool="antismash"
      misc_feature    10028..10591
-                     /locus_tag="SCO0256"
                      /gene_synonym="SCF20.02"
+                     /locus_tag="SCO0256"
                      /note="Pfam match to entry PF00106 adh_short, short chain
                      dehydrogenase, score 245.80, E-value 6e-70"
-     misc_feature    10442..10528
+     aSDomain        10031..10372
+                     /aSDomain="PKS_KR"
+                     /database="nrpspksdomains.hmm"
+                     /detection="hmmscan"
+                     /domain_id="nrpspksdomains_SCO0256_KR1"
+                     /evalue="5.60E-11"
+                     /label="SCO0256_KR1"
                      /locus_tag="SCO0256"
+                     /score="34.2"
+                     /tool="antismash"
+                     /translation="TAVVTGAARGIGRGIAERLAEDGLDVVVADLPSMAEELSAVAAGI
+                     EKTGRRALAVHADVTSKEQTDALVAAAADRFGRIDVYVANAGIARVTPLLETDLDEFEQ
+                     VMAVNLRGVF"
+     misc_feature    10442..10528
                      /gene_synonym="SCF20.02"
+                     /locus_tag="SCO0256"
                      /note="PS00061 Short-chain dehydrogenases/reductases family
                      signature."
      misc_feature    10682..10774
-                     /locus_tag="SCO0256"
                      /gene_synonym="SCF20.02"
+                     /locus_tag="SCO0256"
                      /note="Pfam match to entry PF00678 adh_short_C2, Short
                      chain dehydrogenase/reductase C-terminus, score 35.90,
                      E-value 8.9e-07"
      gene            10883..11884
-                     /locus_tag="SCO0257"
                      /db_xref="GeneID:1095681"
                      /gene_synonym="SCF20.03"
+                     /locus_tag="SCO0257"
      CDS             10883..11884
+                     /codon_start=1
+                     /db_xref="GI:21218809"
+                     /db_xref="GeneID:1095681"
                      /gene_synonym="SCF20.03"
+                     /locus_tag="SCO0257"
                      /note="SCF20.03, hypothetical protein, len: 333 aa; similar
                      to TR:Q9Y9P8 (EMBL:AP000063) hypothetical protein APE2240
                      from Aeropyrum pernix (324 aa) fasta scores; opt: 728,
                      z-score: 908.5, E(): 0, (51.7% identity in 298 aa overlap)"
-                     /db_xref="GI:21218809"
-                     /db_xref="GeneID:1095681"
-                     /codon_start=1
+                     /product="hypothetical protein"
+                     /protein_id="NP_624588.1"
+                     /transl_table=11
                      /translation="MYSKDGENYFIVDAHVALWDARRENQRNIHGKQFIDCFYDYHRNL
                      SPASELWPYEDFLYQGGERLMKDLFTDGYVDHAIFQPAHLGAFYNTGFGQTEEAFALTR
                      KHPGMLTYNHCFDPRFEEAGLKQLREDAARFGLKGVKLYTAEWKGDSRGYKLSDPWTYR
                      YLDACRELGIKNIHVHKGPTIRPLDRDAFDVADVDAAASDFTDLNFVVEHCGLPRLEDF
                      CWIATQEPNVHAGLAVAIPFMHTRPRYFAQIIGELLYWLDEDRIQFSSDYALWTPRWIV
                      EQFVDFRIPDDMTGEYPQLTVAQKKKILGLNAAAMYDIEVPAGLGLAEPAVV"
-                     /transl_table=11
-                     /locus_tag="SCO0257"
-                     /protein_id="NP_624588.1"
-                     /product="hypothetical protein"
      gene            11886..12695
-                     /locus_tag="SCO0258"
                      /db_xref="GeneID:1095682"
                      /gene_synonym="SCF20.04"
+                     /locus_tag="SCO0258"
      CDS             11886..12695
+                     /codon_start=1
+                     /db_xref="GI:21218810"
+                     /db_xref="GeneID:1095682"
                      /gene_synonym="SCF20.04"
+                     /locus_tag="SCO0258"
                      /note="SCF20.04, hypothetical protein, len: 269 aa; similar
                      to TR:BAA81254 (EMBL:AP000063) hypothetical protein from
                      Aeropyrum pernix (238 aa) fasta scores; opt: 228, z-score:
                      274.4, E(): 6.4e-08, (29.7% identity in 232 aa overlap)."
-                     /db_xref="GI:21218810"
-                     /db_xref="GeneID:1095682"
-                     /codon_start=1
+                     /product="hypothetical protein"
+                     /protein_id="NP_624589.1"
+                     /transl_table=11
                      /translation="MWAAQLEVAARAALDTVYDPELDEPVTDLGFVRSLTAEDGRVTVH
                      LRLPTSFCSPNFAYLMASDAKDALSALPGAREVTVLLDDHHDSDLINRGLAADAGYRGT
                      FGHEAEQDLEELRGIFRRKAHTAAMERALTALLRARPDLAEEQLGDVVLGDLPDTSATR
                      ALLRRRAALGLGTAPADPALVDDDGRPCPRGEVPLRLRFARSVRISIDGNAHFCRGLLR
                      TRYPQSAADQSARPEEFPAGGEPVGAGETVPAGELFRLSAPAKENVS"
-                     /transl_table=11
-                     /locus_tag="SCO0258"
-                     /protein_id="NP_624589.1"
-                     /product="hypothetical protein"
      gene            12692..13717
-                     /locus_tag="SCO0259"
                      /db_xref="GeneID:1095683"
                      /gene_synonym="SCF1.01; SCF20.05"
+                     /locus_tag="SCO0259"
      CDS             12692..13717
+                     /codon_start=1
+                     /db_xref="GI:32141104"
+                     /db_xref="GeneID:1095683"
                      /gene_synonym="SCF1.01; SCF20.05"
+                     /locus_tag="SCO0259"
                      /note="SCF1.01, partial CDS, probable alcohol
                      dehydrogenase, len: >167aa; similar the C-terminal region
                      of many eg. SW:ADH3_SULSO NAD-dependent alcohol
@@ -445,9 +481,9 @@ FEATURES             Location/Qualifiers
                      entry PF00107 adh_zinc, Zinc-binding dehydrogenases and
                      Prosite match to PS00059 Zinc-containing alcohol
                      dehydrogenases signature."
-                     /db_xref="GI:32141104"
-                     /db_xref="GeneID:1095683"
-                     /codon_start=1
+                     /product="alcohol dehydrogenase"
+                     /protein_id="NP_733495.1"
+                     /transl_table=11
                      /translation="MKAVQVVGYGKNLEMAEVPAPEVTGPYDVIVRIGGAGVCRTDLHI
                      LEGQWAEKSGVELPYTIGHENAGWVHAVGSAVTNVSEGDKVIVHPLITCGLCRACRAGD
                      DVHCENNRFPGIDTAGGYAEYLKTSARSVVRLDDSLEPADVAALADAGLTAYHAAAKAA
@@ -455,46 +491,59 @@ FEATURES             Location/Qualifiers
                      GHVDRVRELTGGHGAEAVIDFVGEGGSTGDGIGMLRRAGDYHVVGYGENIDVPTIDVIS
                      AEINFIGNLVGSYNDLCELMVLAARGRVRLHTAKYSLDRFQDALDDLDGGRIRGRAILV
                      P"
-                     /transl_table=11
-                     /locus_tag="SCO0259"
-                     /protein_id="NP_733495.1"
-                     /product="alcohol dehydrogenase"
      misc_feature    12704..13399
-                     /locus_tag="SCO0259"
                      /gene_synonym="SCF1.01; SCF20.05"
+                     /locus_tag="SCO0259"
                      /note="Pfam match to entry PF00107 adh_zinc, Zinc-binding
                      dehydrogenases, score 17.10, E-value 1.1e-10"
      misc_feature    12878..12922
-                     /locus_tag="SCO0259"
                      /gene_synonym="SCF1.01; SCF20.05"
+                     /locus_tag="SCO0259"
                      /note="PS00059 Zinc-containing alcohol dehydrogenases
                      signature."
+     aSDomain        13049..13423
+                     /aSDomain="PKS_ER"
+                     /database="nrpspksdomains.hmm"
+                     /detection="hmmscan"
+                     /domain_id="nrpspksdomains_SCO0259_Xdom1"
+                     /evalue="3.50E-09"
+                     /label="SCO0259_Xdom1"
+                     /locus_tag="SCO0259"
+                     /score="27.7"
+                     /tool="antismash"
+                     /translation="GGYAEYLKTSARSVVRLDDSLEPADVAALADAGLTAYHAAAKAAR
+                     RLRPGDRCVVIGAGGLGHIGIQVLGALTAAEIVVVDRNPDAVDLAVSVGADHGVLADGG
+                     HVDRVRELTGGHGAEAVIDFV"
      gene            13770..14099
-                     /locus_tag="SCO0260"
                      /db_xref="GeneID:1095684"
                      /gene_synonym="SCF1.02"
+                     /locus_tag="SCO0260"
      CDS             13770..14099
+                     /codon_start=1
+                     /db_xref="GI:21218811"
+                     /db_xref="GeneID:1095684"
                      /gene_synonym="SCF1.02"
+                     /locus_tag="SCO0260"
                      /note="SCF1.02, unknown, len: 109 aa; similar to TR:O06569
                      (EMBL:Z95585) hypothetical protein from Mycobacterium
                      tuberculosis (107 aa) fasta scores; opt: 433, z-score:
                      595.2, E(): 8.7e-26, (56.6% identity in 106 aa overlap)"
-                     /db_xref="GI:21218811"
-                     /db_xref="GeneID:1095684"
-                     /codon_start=1
+                     /product="hypothetical protein"
+                     /protein_id="NP_624590.1"
+                     /transl_table=11
                      /translation="MIFITAKFRVLPEHADQWPQVVEDFTRATRAEPGCLWFDWSRSLD
                      DPTEYVLVEAFRDDEAGAAHVGSAHFKAAQQTLPPHLATTPRIVNANVPQDDWSLLGEM
                      AVDAG"
-                     /transl_table=11
-                     /locus_tag="SCO0260"
-                     /protein_id="NP_624590.1"
-                     /product="hypothetical protein"
      gene            complement(14179..14706)
-                     /locus_tag="SCO0261"
                      /db_xref="GeneID:1095685"
                      /gene_synonym="SCF1.03c"
+                     /locus_tag="SCO0261"
      CDS             complement(14179..14706)
+                     /codon_start=1
+                     /db_xref="GI:21218812"
+                     /db_xref="GeneID:1095685"
                      /gene_synonym="SCF1.03c"
+                     /locus_tag="SCO0261"
                      /note="SCF1.03c, probable acetyltransferase, len: 175 aa;
                      similar to many e.g. SW:MAA_ECOLI maltose
                      O-acetyltransferase from Escherichia coli (182 aa) fasta
@@ -503,34 +552,34 @@ FEATURES             Location/Qualifiers
                      PF00132 hexapep, Bacterial transferase hexapeptide (four
                      repeats) and Prosite match to PS00101 Hexapeptide-repeat
                      containing-transferases signature"
-                     /db_xref="GI:21218812"
-                     /db_xref="GeneID:1095685"
-                     /codon_start=1
+                     /product="acetyltransferase"
+                     /protein_id="NP_624591.1"
+                     /transl_table=11
                      /translation="MYVHTPEFARHAERIVEVTDATSRLNVLPFSDSAGRSELLSVVFG
                      GPLPESVTIYPPFFTEYGLNTTFGENVFVNQGCTFMDKGGIRIGNRVMIAPKASLVTGG
                      HPLPLAERRAHLSFAPIVVEDDVWIGTAAVITQGVTIGAGAVVAAGAVVTRDVPAGTVV
                      AGVPARVIKQIG"
-                     /transl_table=11
-                     /locus_tag="SCO0261"
-                     /protein_id="NP_624591.1"
-                     /product="acetyltransferase"
      misc_feature    complement(14236..14322)
-                     /locus_tag="SCO0261"
                      /gene_synonym="SCF1.03c"
+                     /locus_tag="SCO0261"
                      /note="PS00101 Hexapeptide-repeat containing-transferases
                      signature."
      misc_feature    complement(14236..14340)
-                     /locus_tag="SCO0261"
                      /gene_synonym="SCF1.03c"
+                     /locus_tag="SCO0261"
                      /note="Pfam match to entry PF00132 hexapep, Bacterial
                      transferase hexapeptide (four repeats), score 49.50,
                      E-value 3.2e-12"
      gene            14820..15755
-                     /locus_tag="SCO0262"
                      /db_xref="GeneID:1095686"
                      /gene_synonym="SCF1.04"
+                     /locus_tag="SCO0262"
      CDS             14820..15755
+                     /codon_start=1
+                     /db_xref="GI:21218813"
+                     /db_xref="GeneID:1095686"
                      /gene_synonym="SCF1.04"
+                     /locus_tag="SCO0262"
                      /note="SCF1.04, probable LysR-family transcriptional
                      regulator, len: 311 aa; similar to many transcriptional
                      regulators especially in the N-terminal region, e.g.
@@ -541,45 +590,45 @@ FEATURES             Location/Qualifiers
                      Bacterial regulatory helix-turn-helix protein, lysR family
                      and Prosite match to PS00044 Bacterial regulatory proteins,
                      lysR family signature."
-                     /db_xref="GI:21218813"
-                     /db_xref="GeneID:1095686"
-                     /codon_start=1
+                     /product="LysR family transcriptional regulator"
+                     /protein_id="NP_624592.1"
+                     /transl_table=11
                      /translation="MDVEALRTFVVVAGVGQFQAAADELGISQQAVSKRIAALERHVAV
                      TLVVRSSRGSRLSLDGQVFLPHAKKVLTAVEQAERAVNPGSRPLRVDVLNRRISPAQAV
                      YRFYRSRPETDLDAVTLDKENAAQAAQAVLEGVVDASFRALPADRVPTGITAERLLDEP
                      LELLVGPGHPLADAPRISPVDLAGHRIWIPGIRPGTEWAAFYQALSEAFGLSIDALGPN
                      FGDEALMDALADSASLATLVGRGDRYLWPRTHDLRRIPLHDPTPFYPHLLLFRTGDRHP
                      VLTALRDHLRTTAPRTPHDAWTPDWTVTVH"
-                     /transl_table=11
-                     /locus_tag="SCO0262"
-                     /protein_id="NP_624592.1"
-                     /product="LysR family transcriptional regulator"
      misc_feature    14826..15245
-                     /locus_tag="SCO0262"
                      /gene_synonym="SCF1.04"
+                     /locus_tag="SCO0262"
                      /note="Pfam match to entry PF00126 HTH_1, Bacterial
                      regulatory helix-turn-helix protein, lysR family, score
                      83.50, E-value 4.3e-21"
      misc_feature    14868..14960
-                     /locus_tag="SCO0262"
                      /gene_synonym="SCF1.04"
+                     /locus_tag="SCO0262"
                      /note="PS00044 Bacterial regulatory proteins, lysR family
                      signature."
      gene            complement(15779..16894)
-                     /locus_tag="SCO0263"
                      /db_xref="GeneID:1095687"
                      /gene_synonym="SCF1.05c"
+                     /locus_tag="SCO0263"
      CDS             complement(15779..16894)
+                     /codon_start=1
+                     /db_xref="GI:21218814"
+                     /db_xref="GeneID:1095687"
                      /gene_synonym="SCF1.05c"
+                     /locus_tag="SCO0263"
                      /note="SCF1.05c, possible oxidoreductase, len: 371 aa;
                      weakly similar to many e.g. TR:O69945 (EMBL:AL023862)
                      oxidoreductase from Streptomyces coelicolor (430 aa) fasta
                      scores; opt: 224, z-score: 247.7, E(): 2e-06, (26.0%
                      identity in 392 aa overlap). Contains Pfam match to entry
                      PF01408 GFO_IDH_MocA, Oxidoreductase family."
-                     /db_xref="GI:21218814"
-                     /db_xref="GeneID:1095687"
-                     /codon_start=1
+                     /product="oxidoreductase"
+                     /protein_id="NP_624593.1"
+                     /transl_table=11
                      /translation="MNTPGSALADLARSGRPIGVGVIGLGAHGSWAERSHLPALRAVGG
                      FELRALSTSSKQSAERSGHKHGVRRAFGTAAELAACDEVDLVVVAVKVPHHRELVRTVL
                      NAGKSVLCEWPLGNGLAEAEDMARLARAHAVPTVVGLQARSHPAFAYTRHLVADGYVGE
@@ -587,26 +636,26 @@ FEATURES             Location/Qualifiers
                      ASRRTSAVDTETGRPVPMTAADQVVASGRLPGGAVATFHYRGGMSRGTNFRWEINGTEG
                      DLVLTAPVGHPQLSPLTLEGGRGTSTALAPLTVPEAYARVARLEPRADAPAYAVAHAYQ
                      RFLDDLREGTAHVPDFAHGVVRHRSIEQYLP"
-                     /transl_table=11
-                     /locus_tag="SCO0263"
-                     /protein_id="NP_624593.1"
-                     /product="oxidoreductase"
      misc_feature    complement(16070..16843)
-                     /locus_tag="SCO0263"
                      /gene_synonym="SCF1.05c"
+                     /locus_tag="SCO0263"
                      /note="Pfam match to entry PF01408 GFO_IDH_MocA,
                      Oxidoreductase family, score 86.40, E-value 5.9e-22"
      misc_feature    complement(16416..16418)
-                     /locus_tag="SCO0263"
                      /gene_synonym="SCF1.05c"
+                     /locus_tag="SCO0263"
                      /note="TTA leucine codon. Possible target for bldA
                      regulation"
      gene            16961..17413
-                     /locus_tag="SCO0264"
                      /db_xref="GeneID:1095688"
                      /gene_synonym="SCF1.06"
+                     /locus_tag="SCO0264"
      CDS             16961..17413
+                     /codon_start=1
+                     /db_xref="GI:21218815"
+                     /db_xref="GeneID:1095688"
                      /gene_synonym="SCF1.06"
+                     /locus_tag="SCO0264"
                      /note="SCF1.06, possible transcriptional regulator, len:
                      150 aa; weakly similar to many e.g. TR:AAD32748
                      (EMBL:AF127374) transcriptional repressor from Streptomyces
@@ -614,27 +663,27 @@ FEATURES             Location/Qualifiers
                      E(): 0.0062, (27.3% identity in 128 aa overlap). Contains
                      Pfam match to entry PF01047 MarR, MarR family and probable
                      helix-turn-helix motif (+3.47 SD) 68-89aa."
-                     /db_xref="GI:21218815"
-                     /db_xref="GeneID:1095688"
-                     /codon_start=1
+                     /product="transcriptional regulator"
+                     /protein_id="NP_624594.1"
+                     /transl_table=11
                      /translation="MSTRGRAPDPQEGTSEAALDPIGLWSAFKRAHEVVRTRVIADAAE
                      AAGLSEPDLTILADLNKAGGALRQSELAASLGWDRTRVSHQLTRMSKRELVTRRRANGV
                      IVVLTDAGHQAITAVYPGLDAAVRRHFTDKLSTQEVETLAAVLDRL"
-                     /transl_table=11
-                     /locus_tag="SCO0264"
-                     /protein_id="NP_624594.1"
-                     /product="transcriptional regulator"
      misc_feature    17105..17410
-                     /locus_tag="SCO0264"
                      /gene_synonym="SCF1.06"
+                     /locus_tag="SCO0264"
                      /note="Pfam match to entry PF01047 MarR, MarR family, score
                      42.90, E-value 7.3e-09"
      gene            17514..18305
-                     /locus_tag="SCO0265"
                      /db_xref="GeneID:1095689"
                      /gene_synonym="SCF1.07"
+                     /locus_tag="SCO0265"
      CDS             17514..18305
+                     /codon_start=1
+                     /db_xref="GI:21218816"
+                     /db_xref="GeneID:1095689"
                      /gene_synonym="SCF1.07"
+                     /locus_tag="SCO0265"
                      /note="SCF1.07, possible hydroxylase, len: 263 aa; similar
                      to many from Streptomyces sp. eg. TR:Q55078 (EMBL:U50973)
                      daunomycin C-14 hydroxylase from Streptomyces sp. strain C5
@@ -644,24 +693,24 @@ FEATURES             Location/Qualifiers
                      Streptomyces coelicolor (263 aa) fasta scores; opt: 746,
                      z-score: 870.2, E(): 0, (44.3% identity in 262 aa
                      overlap)."
-                     /db_xref="GI:21218816"
-                     /db_xref="GeneID:1095689"
-                     /codon_start=1
+                     /product="hydroxylase"
+                     /protein_id="NP_624595.1"
+                     /transl_table=11
                      /translation="MITNDFAPGSPCWLDLGSPDVAGTAAFYGGVFGWTYEAMGEDAEG
                      GMFRKDGKIVAGLGRLTEEGARSAWMIYYSVTDADATTQAVQRAGGTVRVAPTDLDDWG
                      RMAQYSDPSGGQFAVWQPGRTRGVELVDQPGTLCWTELYTSDAAAAKEFYGGVLGWRFG
                      DMAVPGGEGTYSLITPSGLSEDRMHGGLMQLDERDLTLTGGRAYWHPVFAVTDCDAAVS
                      AVTAHGGSVQMGPADAEGVGRLAVCLDPSKADFVVLAPASG"
-                     /transl_table=11
-                     /locus_tag="SCO0265"
-                     /protein_id="NP_624595.1"
-                     /product="hydroxylase"
      gene            complement(18347..19324)
-                     /locus_tag="SCO0266"
                      /db_xref="GeneID:1095690"
                      /gene_synonym="SCF1.08c"
+                     /locus_tag="SCO0266"
      CDS             complement(18347..19324)
+                     /codon_start=1
+                     /db_xref="GI:21218817"
+                     /db_xref="GeneID:1095690"
                      /gene_synonym="SCF1.08c"
+                     /locus_tag="SCO0266"
                      /note="SCF1.08c, possible transcriptional regulator, len:
                      325aa; similar to many eg. TR:CAB43482 (EMBL:Y18527) PobR
                      regulator from Pseudomonas sp. strain HR199 (293 aa) fasta
@@ -672,94 +721,129 @@ FEATURES             Location/Qualifiers
                      E(): 1.3e-13, (37.2% identity in 253 aa overlap). Contains
                      Pfam match to entry PF00165 HTH_2, Bacterial regulatory
                      helix-turn-helix proteins, araC family."
-                     /db_xref="GI:21218817"
-                     /db_xref="GeneID:1095690"
-                     /codon_start=1
+                     /product="transcriptional regulator"
+                     /protein_id="NP_624596.1"
+                     /transl_table=11
                      /translation="MALLVRCPGRLPRVSIEPLAPGPGIGVSGRAMVKTGHVSAIRQMT
                      YQPPGRGAASVETMTFGRLRELNDGGTQRADFHVLAVVDAGRGSVTVDFRLHPLQDRSA
                      VWIPPGAVHRWDDVAEVEGHLVLFVPTAPVTHATRELVASPDPAAHWIVPAADWPFVDA
                      ARGHLRLEASAPPSDSSTELPAILLSALIARLHPPHAEARLAHPVVRLFRSSVEANFRQ
                      HHDAGYYARTLGYAPRTLSRAVRQATGRTAKAYLVERLVLEAKRLLAHERLTAARCAGV
                      LGFPDASNFSVFFHKATGERPGAWQAAATGPGVPTASTPPEPVT"
-                     /transl_table=11
-                     /locus_tag="SCO0266"
-                     /protein_id="NP_624596.1"
-                     /product="transcriptional regulator"
      misc_feature    complement(18398..18637)
-                     /locus_tag="SCO0266"
                      /gene_synonym="SCF1.08c"
+                     /locus_tag="SCO0266"
                      /note="Pfam match to entry PF00165 HTH_2, Bacterial
                      regulatory helix-turn-helix proteins, araC family, score
                      14.90, E-value 0.00057"
      gene            19326..20102
-                     /locus_tag="SCO0267"
                      /db_xref="GeneID:1095691"
                      /gene_synonym="SCF1.09"
+                     /locus_tag="SCO0267"
      CDS             19326..20102
+                     /codon_start=1
+                     /db_xref="GI:21218818"
+                     /db_xref="GeneID:1095691"
+                     /gene_functions="biosynthetic-additional
+                     (rule-based-clusters) PF12697 (E-value: 4.1e-21, bitscore:
+                     67.6, seeds: 465, tool: rule-based-clusters)"
+                     /gene_functions="biosynthetic-additional
+                     (rule-based-clusters) PF00561 (E-value: 5.7e-17, bitscore:
+                     53.2, seeds: 48, tool: rule-based-clusters)"
                      /gene_synonym="SCF1.09"
+                     /locus_tag="SCO0267"
                      /note="SCF1.09, possible hydrolase, len: 258 aa; similar to
                      many e.g. TR:O67982 (EMBL:AF003947) 3-oxoadipate
                      enol-lactone hydrolase from Rhodococcus opacus (400 aa)
                      fasta scores; opt: 259, z-score: 300.,1 E(): 2.4e-09,
                      (31.5% identity in 251 aa overlap). Contains Pfam match to
                      entry PF00561 abhydrolase, alpha/beta hydrolase fold"
-                     /db_xref="GI:21218818"
-                     /db_xref="GeneID:1095691"
-                     /codon_start=1
+                     /product="hydrolase"
+                     /protein_id="NP_624597.1"
+                     /sec_met="Type: "
+                     /sec_met="PF12697 (E-value: 4.1e-21, bitscore: 67.6, seeds:
+                     465, tool: rule-based-clusters); PF00561 (E-value: 5.7e-17,
+                     bitscore: 53.2, seeds: 48, tool: rule-based-clusters)"
+                     /sec_met="Kind: biosynthetic"
+                     /transl_table=11
                      /translation="MSTTQHTLVPVYDHRTGTGPTLVFLHYWGGSARTWDLVVDRLPGR
                      AVVAVDFRGWGRSRALPGPYTLGRFADDTLAVLADAGITDYVLVGHSMGGKVAQLVAAT
                      RPAGLRAIVLVGSGPAKPAARVTPEYREALSHAYDSAESVAGARDHVLTATELPAALKA
                      RIVTDSRNVTDAARIEWPLRGIAQDITEHTRRIDVPALVVAGEHDQVEPAGVLRDNLVP
                      YLARADFVVVPRTGHLIPLEAPADLADAVTAFATAV"
-                     /transl_table=11
+     aSDomain        19386..19916
+                     /aSDomain="Thioesterase"
+                     /database="nrpspksdomains.hmm"
+                     /detection="hmmscan"
+                     /domain_id="nrpspksdomains_SCO0267_Xdom1"
+                     /evalue="7.20E-10"
+                     /label="SCO0267_Xdom1"
                      /locus_tag="SCO0267"
-                     /protein_id="NP_624597.1"
-                     /product="hydrolase"
-                     /sec_met="Type: none"
-                     /sec_met="PF12697 (E-value: 1e-18, bitscore: 67.6, seeds:
-                     465); PF00561 (E-value: 1.4e-14, bitscore: 53.2, seeds:
-                     48)"
-                     /sec_met="Kind: biosynthetic"
+                     /score="31.2"
+                     /tool="antismash"
+                     /translation="TLVFLHYWGGSARTWDLVVDRLPGRAVVAVDFRGWGRSRALPGPY
+                     TLGRFADDTLAVLADAGITDYVLVGHSMGGKVAQLVAATRPAGLRAIVLVGSGPAKPAA
+                     RVTPEYREALSHAYDSAESVAGARDHVLTATELPAALKARIVTDSRNVTDAARIEWPLR
+                     GIAQDITEHTRRID"
      misc_feature    19458..20090
-                     /locus_tag="SCO0267"
                      /gene_synonym="SCF1.09"
+                     /locus_tag="SCO0267"
                      /note="Pfam match to entry PF00561 abhydrolase, alpha/beta
                      hydrolase fold, score 82.90, E-value 6.7e-21"
      gene            20296..20457
-                     /locus_tag="SCO0268"
                      /db_xref="GeneID:1095692"
                      /gene_synonym="SCF1.10"
+                     /locus_tag="SCO0268"
      CDS             20296..20457
-                     /gene_synonym="SCF1.10"
-                     /note="SCF1.10, unknown, len:53 aa"
+                     /codon_start=1
                      /db_xref="GI:21218819"
                      /db_xref="GeneID:1095692"
-                     /codon_start=1
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     lanthipeptide: strep_PEQAXS"
+                     /gene_synonym="SCF1.10"
+                     /locus_tag="SCO0268"
+                     /note="SCF1.10, unknown, len:53 aa"
+                     /product="hypothetical protein"
+                     /protein_id="NP_624598.1"
+                     /sec_met="Type: lanthipeptide"
+                     /sec_met="strep_PEQAXS (E-value: 5.2e-43, bitscore: 136.0,
+                     seeds: 4, tool: rule-based-clusters)"
+                     /sec_met="Kind: biosynthetic"
+                     /transl_table=11
                      /translation="MRTEIVLSHEAPELDLDLDLRVSDLPEQAASFGEGTFTSPSSYAI
                      GTRCPICC"
-                     /transl_table=11
-                     /locus_tag="SCO0268"
-                     /protein_id="NP_624598.1"
-                     /product="hypothetical protein"
-                     /sec_met="Type: lanthipeptide"
-                     /sec_met="strep_PEQAXS (E-value: 1.3e-40, bitscore: 136.0,
-                     seeds: 4)"
-                     /sec_met="Kind: biosynthetic"
      gene            20541..23702
-                     /locus_tag="SCO0269"
                      /db_xref="GeneID:1095693"
                      /gene_synonym="SCF1.11"
+                     /locus_tag="SCO0269"
      CDS             20541..23702
+                     /codon_start=1
+                     /db_xref="GI:21218820"
+                     /db_xref="GeneID:1095693"
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     lanthipeptide: Lant_dehydr_C"
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     lanthipeptide: Lant_dehyd_N"
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     lanthipeptide: Lant_dehyd_C"
                      /gene_synonym="SCF1.11"
+                     /locus_tag="SCO0269"
                      /note="SCF1.11, unknown, len: 1053aa; similar to large
                      proteins thought to be involved in the post-translational
                      modification of lantibiotics eg. SW:SPAB_BACSU subtilin
                      modification protein from Bacillus subtilis (1030 aa) fasta
                      scores; opt: 346, z-score: 367.5, E(): 4.2e-13, (22.6%
                      identity in 1041 aa overlap)."
-                     /db_xref="GI:21218820"
-                     /db_xref="GeneID:1095693"
-                     /codon_start=1
+                     /product="hypothetical protein"
+                     /protein_id="NP_624599.1"
+                     /sec_met="Type: lanthipeptide"
+                     /sec_met="Lant_dehyd_N (E-value: 1e-17, bitscore: 55.3,
+                     seeds: 38, tool: rule-based-clusters); Lant_dehyd_C
+                     (E-value: 1.2e-119, bitscore: 390.9, seeds: 37, tool:
+                     rule-based-clusters); Lant_dehydr_C (E-value: 3.3e-35,
+                     bitscore: 113.1, seeds: 35, tool: rule-based-clusters)"
+                     /sec_met="Kind: biosynthetic"
+                     /transl_table=11
                      /translation="MAAESEAHRAAAVFEVREPVLVRMASRPRGAAPATVDAAEPVSGA
                      RQLAADPLLGQAVRVASGSLAHSLARLTTDEGASALGRKRTLSAARTLTRYARRAGARP
                      TPFGLFAGVGTARFGSVAKAGPGTGEVAVRLDGAWLRRRVLAWLEEPSVRRRVDVVLND
@@ -779,30 +863,30 @@ FEATURES             Location/Qualifiers
                      GWVDRMFTKTVEHEVYQRHRAVADRLIGPGRAVSSAAAALGAPSLGALWSESPEPRAYG
                      ELILSAPEADRDEALLSLLHMRHNRLFGIDRAAEARGYAVLRGAVRTHAGRRRHESGSG
                      IGSGR"
-                     /transl_table=11
-                     /locus_tag="SCO0269"
-                     /protein_id="NP_624599.1"
-                     /product="hypothetical protein"
-                     /sec_met="Type: lanthipeptide"
-                     /sec_met="Lant_dehyd_N (E-value: 2.5e-15, bitscore: 55.3,
-                     seeds: 38); Lant_dehyd_C (E-value: 3e-117, bitscore: 390.9,
-                     seeds: 37); Lant_dehydr_C (E-value: 7.9e-33, bitscore:
-                     113.1, seeds: ?)"
-                     /sec_met="Kind: biosynthetic"
      gene            23699..25099
-                     /locus_tag="SCO0270"
                      /db_xref="GeneID:1095694"
                      /gene_synonym="SCF1.12"
+                     /locus_tag="SCO0270"
      CDS             23699..25099
+                     /codon_start=1
+                     /db_xref="GI:21218821"
+                     /db_xref="GeneID:1095694"
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     lanthipeptide: LANC_like"
                      /gene_synonym="SCF1.12"
+                     /locus_tag="SCO0270"
                      /note="SCF1.12, unknown, len: 466 aa; similar to proteins
                      predicted to be involved in lantibiotic biosynthesis eg.
                      SW:SPAC_BACSU subtilin biosynthesis protein from Bacillus
                      subtilis (441 aa) fasta scores; opt: 502, z-score: 549.2,
                      E(): 3.2e-23, (28.9% identity in 405 aa overlap)"
-                     /db_xref="GI:21218821"
-                     /db_xref="GeneID:1095694"
-                     /codon_start=1
+                     /product="hypothetical protein"
+                     /protein_id="NP_624600.1"
+                     /sec_met="Type: lanthipeptide"
+                     /sec_met="LANC_like (E-value: 8.4e-65, bitscore: 209.8,
+                     seeds: 47, tool: rule-based-clusters)"
+                     /sec_met="Kind: biosynthetic"
+                     /transl_table=11
                      /translation="MSGTTEGGSPEHTMDGFSGSGTREAPAGESPRALRERAGAVSAEI
                      LDRLADPAATVAATRIPAQAADDGVAEPIWAELTLGSGSPGLALAFAGASRDAARQVPR
                      AHAYLTAGTRAVSGRPGTAGGVFKGPGALAFAVLLAHRTTGGYVSALQRFDAYQRDLVR
@@ -812,20 +896,16 @@ FEATURES             Location/Qualifiers
                      RALGRADFSDLARASVERLLVLPRPAWGIDDHALCHGWAGALHQLGRLNEGWQDSRLAE
                      LRDGIAADLVSAFDPELPFGLRFTMTKVPFGSDVSGYLDGAAGVALALDSYAAAGTPAD
                      WDMPLLLA"
-                     /transl_table=11
-                     /locus_tag="SCO0270"
-                     /protein_id="NP_624600.1"
-                     /product="hypothetical protein"
-                     /sec_met="Type: lanthipeptide"
-                     /sec_met="LANC_like (E-value: 2e-62, bitscore: 209.8,
-                     seeds: 47)"
-                     /sec_met="Kind: biosynthetic"
      gene            25381..26334
-                     /locus_tag="SCO0271"
                      /db_xref="GeneID:1095695"
                      /gene_synonym="SCF1.13"
+                     /locus_tag="SCO0271"
      CDS             25381..26334
+                     /codon_start=1
+                     /db_xref="GI:21218822"
+                     /db_xref="GeneID:1095695"
                      /gene_synonym="SCF1.13"
+                     /locus_tag="SCO0271"
                      /note="SCF1.13, possible binding-protein-dependent
                      transport protein, len: 317aa; similar to many predicted
                      membrane transporters eg. TR:CAB41203 (EMBL:AL049661)
@@ -838,36 +918,36 @@ FEATURES             Location/Qualifiers
                      Binding-protein-dependent transport systems inner membrane
                      comp sign. and possible membrane spanning hydrophobic
                      regions."
-                     /db_xref="GI:21218822"
-                     /db_xref="GeneID:1095695"
-                     /codon_start=1
+                     /product="binding-protein-dependent transport protein"
+                     /protein_id="NP_624601.1"
+                     /transl_table=11
                      /translation="MGAHTAVAPPHPGAGTSPGGASAPRRTRRPRDDRKAAWLFLAPAL
                      LGFALFYAYPTVRGIYYSLTDYSLIATPDFVGGDNYSRLIGDEQFWNALQVTGYYVLVN
                      IVSQTLLALVLATLMHRLTRSVALRAMLLVPWLVPNVTVGLLWMWLLDTNLGLVNHVLN
                      SMGMGTTGFFTSPDWAMPSVAAVNTWAYTGYTALLLYAGMLQVPQYLYESASLDGAGEW
                      RMFTRITLPLLRPVLSLVLVVSLIGSFQIFDTIAVTTKGGPVSATRVIYYYIYEQAFTN
                      FHMGYASAVAVVLALILGVLTAVQMRLLRASRSDLA"
-                     /transl_table=11
-                     /locus_tag="SCO0271"
-                     /protein_id="NP_624601.1"
-                     /product="binding-protein-dependent transport protein"
      misc_feature    25984..26205
-                     /locus_tag="SCO0271"
                      /gene_synonym="SCF1.13"
+                     /locus_tag="SCO0271"
                      /note="Pfam match to entry PF00528 BPD_transp,
                      Binding-protein-dependent transport systems inner membrane
                      component, score 58.30, E-value 1.7e-13"
      misc_feature    25987..26073
-                     /locus_tag="SCO0271"
                      /gene_synonym="SCF1.13"
+                     /locus_tag="SCO0271"
                      /note="PS00402 Binding-protein-dependent transport systems
                      inner membrane comp sign."
      gene            26345..27235
-                     /locus_tag="SCO0272"
                      /db_xref="GeneID:1095696"
                      /gene_synonym="SCF1.14"
+                     /locus_tag="SCO0272"
      CDS             26345..27235
+                     /codon_start=1
+                     /db_xref="GI:21218823"
+                     /db_xref="GeneID:1095696"
                      /gene_synonym="SCF1.14"
+                     /locus_tag="SCO0272"
                      /note="SCF1.14, possible binding-protein-dependent
                      transport protein, len: 296aa; similar to many predicted
                      membrane transporters eg. TR:O53483 (EMBL:AL021899) sugar
@@ -879,36 +959,36 @@ FEATURES             Location/Qualifiers
                      to PS00402 Binding-protein-dependent transport systems
                      inner membrane comp sign. and possible membrane spanning
                      hydrophobic regions."
-                     /db_xref="GI:21218823"
-                     /db_xref="GeneID:1095696"
-                     /codon_start=1
+                     /product="binding-protein-dependent transport protein"
+                     /protein_id="NP_624602.1"
+                     /transl_table=11
                      /translation="MTHIRTRVSPGRIAAWALLVVALFATVFPFYWMVRTALTPAADLY
                      TDSTGLVPDHPTMINFLRVLGLTSQEEAVAAGGSGAQVDFLRYLLNSVVYSGLIAVLQT
                      LFCAMAGYAFARLRFPGRDLVFGVLIAALMVPPIFTVLPNFVLVKDLGWLNTFVGMVAP
                      SVLMTPFAVFFLRQFFLSVPREVEEAAILDGVGPWGIFWRVVMPMTRGPLLTVGLTTTV
                      WAWKDYLWPLLSGRDEETRVLTVALGIFQQQSPNTQPDWTGLMAGSALSVLPVLVLLIL
                      LGRRLVESLNFTGMK"
-                     /transl_table=11
-                     /locus_tag="SCO0272"
-                     /protein_id="NP_624602.1"
-                     /product="binding-protein-dependent transport protein"
      misc_feature    26876..27106
-                     /locus_tag="SCO0272"
                      /gene_synonym="SCF1.14"
+                     /locus_tag="SCO0272"
                      /note="Pfam match to entry PF00528 BPD_transp,
                      Binding-protein-dependent transport systems inner membrane
                      component, score 64.10, E-value 3.1e-15"
      misc_feature    26879..26965
-                     /locus_tag="SCO0272"
                      /gene_synonym="SCF1.14"
+                     /locus_tag="SCO0272"
                      /note="PS00402 Binding-protein-dependent transport systems
                      inner membrane comp sign."
      gene            27300..28649
-                     /locus_tag="SCO0273"
                      /db_xref="GeneID:1095697"
                      /gene_synonym="SCF1.15; SCF85.01"
+                     /locus_tag="SCO0273"
      CDS             27300..28649
+                     /codon_start=1
+                     /db_xref="GI:32141105"
+                     /db_xref="GeneID:1095697"
                      /gene_synonym="SCF1.15; SCF85.01"
+                     /locus_tag="SCO0273"
                      /note="SCF85.01, unknown, partial CDS, len: >264 aa. Weakly
                      similar to several hypotheticals e.g. Mycobacterium
                      tuberculosis TR:O53485 (EMBL; AL021899) lipoprotein
@@ -926,9 +1006,9 @@ FEATURES             Location/Qualifiers
                      aa) fasta scores; opt: 224, z-score: 276.0, E(): 5.2e-08,
                      (26.1% identity in 161 aa overlap). Contains possible
                      N-terminal signal sequence."
-                     /db_xref="GI:32141105"
-                     /db_xref="GeneID:1095697"
-                     /codon_start=1
+                     /product="substrate binding protein"
+                     /protein_id="NP_733496.1"
+                     /transl_table=11
                      /translation="MRPRHLRAGAALLCLAALTTLVSCGSSDEAGDGRTTVDYWLWDDL
                      QLPAYQECATAFEKANPDIAVRITQTAWNQYWQNLTTQLVSGEAPDVWTNQATYYPQFA
                      AGNQLLDLQPYVERDGLDVSAYQAGLADTWVKDDKRYGLPKDWDTMAVVYNTDMLKRQG
@@ -937,26 +1017,26 @@ FEATURES             Location/Qualifiers
                      RTELLIAGKGAMSLAGSFTVSSFTGPKVKQDFGFAAMPVGPAGRKSALNGLADSVWAGT
                      DHKEEAWKWVKYLASADCQDRVAAHGVVFPALKSSTEKALAAHEADGDDVRAFTDAVGT
                      KGVTFQLPVTEHGTEISPLVQDAIQSAILGQEDAADALESVNGKVNGLFD"
-                     /transl_table=11
-                     /locus_tag="SCO0273"
-                     /protein_id="NP_733496.1"
-                     /product="substrate binding protein"
      regulatory      28769..28774
                      /regulatory_class="ribosome_binding_site"
      gene            28779..30278
-                     /locus_tag="SCO0274"
                      /db_xref="GeneID:1095698"
                      /gene_synonym="SCF85.02"
+                     /locus_tag="SCO0274"
      CDS             28779..30278
+                     /codon_start=1
+                     /db_xref="GI:21218824"
+                     /db_xref="GeneID:1095698"
                      /gene_synonym="SCF85.02"
+                     /locus_tag="SCO0274"
                      /note="SCF85.02, possible alpha-galactosidase, len: 499 aa.
                      Similar to many alpha galactosidases e.g. Thermus aquaticus
                      TR:AAD32628(EMBL; AF135399) alpha-galactosidase (476 aa),
                      fasta scores opt: 1329 z-score: 1530.0 E(): 0 45.8%
                      identity in 487 aa overlap"
-                     /db_xref="GI:21218824"
-                     /db_xref="GeneID:1095698"
-                     /codon_start=1
+                     /product="alpha-galactosidase"
+                     /protein_id="NP_624603.1"
+                     /transl_table=11
                      /translation="MAQLVELGGRTLAVELAGDAPPRAVEGGLLLPPGRTAVLHGLGDA
                      LFYRHGHNSWSPCGWRRLSEAPLRIESAERRLTADDTVWDDPARHHSSAVAALEGPDGR
                      VLLLGALGLDVPRLTADRDTLTGWCERDGAPWFLALGSEEEVFAAYARHLGDRLGRSDK
@@ -966,16 +1046,16 @@ FEATURES             Location/Qualifiers
                      EAAGPDAYLLGSGAPLLPSLGLVDAIRSGPDVAPMWEHYATQDPSDALARNAVVNTVHR
                      LWQSPLLEVDPDVVYFRSRLNLLTEQQQGLLRDLADVCGFRAVSDPPGWLLPEELKAME
                      AYLTGRPEVRRLGRYRFALDGREVDFGAAVTPGDEQRYPLA"
-                     /transl_table=11
-                     /locus_tag="SCO0274"
-                     /protein_id="NP_624603.1"
-                     /product="alpha-galactosidase"
      gene            30371..31528
-                     /locus_tag="SCO0275"
                      /db_xref="GeneID:1095699"
                      /gene_synonym="SCF85.03"
+                     /locus_tag="SCO0275"
      CDS             30371..31528
+                     /codon_start=1
+                     /db_xref="GI:21218825"
+                     /db_xref="GeneID:1095699"
                      /gene_synonym="SCF85.03"
+                     /locus_tag="SCO0275"
                      /note="SCF85.03, possible transcriptional repressor
                      protein, len: 385 aa. Low similarity to many repressor
                      proteins e.g. Anaerocellum thermophilum SW:XYLR_ANATH
@@ -987,9 +1067,9 @@ FEATURES             Location/Qualifiers
                      E(): 1.8e-18 29.7% identity in 404 aa overlap. Contains a
                      Pfam match to entry PF00480 ROK, ROK family and has a
                      possible helix turn helix motif between aa 30..51."
-                     /db_xref="GI:21218825"
-                     /db_xref="GeneID:1095699"
-                     /codon_start=1
+                     /product="transcriptional repressor protein"
+                     /protein_id="NP_624604.1"
+                     /transl_table=11
                      /translation="MATTGTDMSRMREMNQLSIVGALRGNPPSTVTELASRSGLSRPAV
                      DVLVQSLVADGWAEVEEPGASSVVGRPARRYRFRATAGHVLGIDIGVHKILVILSDLEG
                      NLVRTVRHPAAPEAAPAERLAAVDRVVDEVLASAGMAAGDIWAVTVGVTGPVDRSGRTS
@@ -997,21 +1077,21 @@ FEATURES             Location/Qualifiers
                      GAGLILDGTLRRGHGGAAGEIGALKAVRWLTAPDHLQSCPGMPATAAEGEAAAWVFQAA
                      RDGDRDARTAVRRYTRDLAVGVAALVLALDPQVVVYGGGFSRSADVVLGPLHRELTKHC
                      LRMPELRASTLGDESVALGAVRLALDEVDSRLLSDGLAAPTAPRR"
-                     /transl_table=11
-                     /locus_tag="SCO0275"
-                     /protein_id="NP_624604.1"
-                     /product="transcriptional repressor protein"
      misc_feature    30629..31102
-                     /locus_tag="SCO0275"
                      /gene_synonym="SCF85.03"
+                     /locus_tag="SCO0275"
                      /note="Pfam match to entry PF00480 ROK, ROK family, score
                      95.10, E-value 3.4e-27"
      gene            31600..32853
-                     /locus_tag="SCO0276"
                      /db_xref="GeneID:1095700"
                      /gene_synonym="SCF85.04"
+                     /locus_tag="SCO0276"
      CDS             31600..32853
+                     /codon_start=1
+                     /db_xref="GI:21218826"
+                     /db_xref="GeneID:1095700"
                      /gene_synonym="SCF85.04"
+                     /locus_tag="SCO0276"
                      /note="SCF85.04, possible oxidoreductase, len: 417 aa.
                      Weakly similar to many including: Bacillus subtilis
                      TR:O34371 (EMBL:AF008220) YteT (428 aa), fasta scores opt:
@@ -1022,9 +1102,9 @@ FEATURES             Location/Qualifiers
                      300 z-score: 345.3 E(): 7e-12 32.4% identity in 216 aa
                      overlap. Contains a Pfam match to entry PF01408
                      GFO_IDH_MocA, Oxidoreductase family"
-                     /db_xref="GI:21218826"
-                     /db_xref="GeneID:1095700"
-                     /codon_start=1
+                     /product="oxidoreductase"
+                     /protein_id="NP_624605.1"
+                     /transl_table=11
                      /translation="MSTRDQIPDRHLRVGVVGVGQRADMAALVNRSGAARIVSCADPDP
                      RGREDARRLFGADVVVHDRYERMLDDELDAVFVLTPDHLHTEPALCFLAAGVAVFVEKP
                      LTITVADCDALLMAAFRSRTRLYVGHNLRHLPVLRRMRELIDDGAVGRVRAVWCRHFVG
@@ -1033,46 +1113,46 @@ FEATURES             Location/Qualifiers
                      DYWRNYTVIGDEGRLENFGDGIDGDAARVDVWNRRRSGYRADADLSVPVVASDEETHGG
                      ADRALVEEFLRFAAAGGPTETSPVAAREAVAAAVAATTSLRSGSTPVDVPPLDPAIVRH
                      FAEHQPAEGADGSGPQPR"
-                     /transl_table=11
-                     /locus_tag="SCO0276"
-                     /protein_id="NP_624605.1"
-                     /product="oxidoreductase"
      misc_feature    31633..32475
-                     /locus_tag="SCO0276"
                      /gene_synonym="SCF85.04"
+                     /locus_tag="SCO0276"
                      /note="Pfam match to entry PF01408 GFO_IDH_MocA,
                      Oxidoreductase family, score 148.90, E-value 8.6e-41"
      gene            complement(33035..33703)
-                     /locus_tag="SCO0277"
                      /db_xref="GeneID:1095701"
                      /gene_synonym="SCF85.05c"
+                     /locus_tag="SCO0277"
      CDS             complement(33035..33703)
+                     /codon_start=1
+                     /db_xref="GI:21218827"
+                     /db_xref="GeneID:1095701"
                      /gene_synonym="SCF85.05c"
+                     /locus_tag="SCO0277"
                      /note="SCF85.05c, unknown, len:222 aa. Low similarity to
                      Haemophilus influenzae SW:PEPE_HAEIN (EMBL; U32740)
                      peptidase E (EC 3.4.-.-) (alpha-aspartyl dipeptidase) (226
                      aa), fasta scores opt: 134 z-score: 169.6 E(): 0.043 24.4%
                      identity in 209 aa overlap."
-                     /db_xref="GI:21218827"
-                     /db_xref="GeneID:1095701"
-                     /codon_start=1
+                     /product="hypothetical protein"
+                     /protein_id="NP_624606.1"
+                     /transl_table=11
                      /translation="MNFLLTASGLRNETLRDALRDMLGKPFGSANVVFVPTASVADPGD
                      HGWVVADMNRLHGLGWREFDILELNGLPQQMVLDRLLHADVVYVEGGNHYHLARSITGN
                      GLVDGFLEALQSRVYVGVSAGSMIFSRNLTGHSADVIGDATDLHVLGATSVEPPFGLFD
                      WYLKPHLYSPDFPERDDAWADRITARADFPIYFIDDETAVRVRDGKADVVSEGRWRFHP
                      "
-                     /transl_table=11
-                     /locus_tag="SCO0277"
-                     /protein_id="NP_624606.1"
-                     /product="hypothetical protein"
      regulatory      33787..33792
                      /regulatory_class="ribosome_binding_site"
      gene            33798..34412
-                     /locus_tag="SCO0278"
                      /db_xref="GeneID:1095702"
                      /gene_synonym="SCF85.06"
+                     /locus_tag="SCO0278"
      CDS             33798..34412
+                     /codon_start=1
+                     /db_xref="GI:21218828"
+                     /db_xref="GeneID:1095702"
                      /gene_synonym="SCF85.06"
+                     /locus_tag="SCO0278"
                      /note="SCF85.06, MutT domain containing protein, len: 204.
                      Similar to the MutT domains of other proteins e.g. Bacillus
                      subtilis SW:YZGD_BACSU (EMBL:U17168) hypothetical 45.4 KD
@@ -1080,20 +1160,16 @@ FEATURES             Location/Qualifiers
                      z-score: 176.6 E(): 0.017 36.1% identity in 97 aa overlap.
                      Contains a Pfam match to entry PF00293 mutT, Bacterial MutT
                      protein."
-                     /db_xref="GI:21218828"
-                     /db_xref="GeneID:1095702"
-                     /codon_start=1
+                     /product="MutT domain-containing protein"
+                     /protein_id="NP_624607.1"
+                     /transl_table=11
                      /translation="MTSSDHPLKASLDEPRAHLLDLIGAVEPWDDLEHTHLESARHWIA
                      GGAPLYRVRKPDVPPMHLVSYFAVLDDTRGQLLLVAHRKAGLWLPAGGHVESGEDPWAA
                      VVRECREELGIEAVASPVAGELPFFLTVTGTRGQGPHTDVSLWYLLDADAHTVTDYDRG
                      EFSAVRWLTHEQVLAASAELLDPHMHRFARKLAWARAGRGG"
-                     /transl_table=11
-                     /locus_tag="SCO0278"
-                     /protein_id="NP_624607.1"
-                     /product="MutT domain-containing protein"
      misc_feature    34029..34142
-                     /locus_tag="SCO0278"
                      /gene_synonym="SCF85.06"
+                     /locus_tag="SCO0278"
                      /note="Pfam match to entry PF00293 mutT, Bacterial mutT
                      protein, score 22.80, E-value 5.1e-05"
      regulatory      34479..34482

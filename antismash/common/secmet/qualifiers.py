@@ -16,7 +16,9 @@ def parse_format(fmt: str, data: str) -> Sequence[str]:
         positions of {} in a format string. Raises a ValueError if the match
         cannot be found.
     """
-    res = re.search("^{}$".format(fmt.replace("{}", "(.+?)")), data)
+    safe = fmt.replace('(', r'\(').replace(')', r'\)')
+    regex = "^{}$".format(safe.replace("{}", "(.+?)"))
+    res = re.search(regex, data)
     if res is None:
         raise ValueError("Could not match format %r to input %r" % (fmt, data))
     return res.groups()
@@ -180,7 +182,7 @@ class SecMetQualifier(list):
     """
     class Domain:
         """ A simple container for the information needed to create a domain """
-        qualifier_label = "{} E-value: {}, bitscore: {}, seeds: {}, tool: {}"
+        qualifier_label = "{} (E-value: {}, bitscore: {}, seeds: {}, tool: {})"
 
         def __init__(self, name: str, evalue: float, bitscore: float, nseeds: str,
                      tool: str) -> None:

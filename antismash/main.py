@@ -245,15 +245,19 @@ def run_module(record: Record, module: AntismashModule, options: ConfigType,
 
         Returns:
             None
-        """
+    """
+    previous_results = module_results.pop(module.__name__, None)
+    results = None
+    if previous_results is not None:
+        logging.debug("Regenerating results for %s", module.__name__)
+        results = module.regenerate_previous_results(previous_results, record, options)
+        module_results[module.__name__] = results
+    assert results is None or isinstance(results, ModuleResults)
 
     logging.debug("Checking if %s should be run", module.__name__)
     if not module.is_enabled(options):
         return
 
-    results = module_results.get(module.__name__)
-    assert results is None or isinstance(results, ModuleResults)
-    results = cast(ModuleResults, results)
     logging.info("Running %s", module.__name__)
 
     start = time.time()
@@ -444,7 +448,7 @@ def read_data(sequence_file: Optional[str], options: ConfigType) -> serialiser.A
             contents = handle.read()
             if not contents:
                 raise ValueError("No results contained in file: %s" % options.reuse_results)
-        results = serialiser.AntismashResults.from_file(options.reuse_results, options.taxon, get_all_modules())
+        results = serialiser.AntismashResults.from_file(options.reuse_results, options.taxon)
 
     update_config({"input_file": os.path.splitext(results.input_file)[0]})
     return results

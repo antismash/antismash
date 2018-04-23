@@ -9,7 +9,7 @@ SOURCE      cluster1 only
             .
 FEATURES             Location/Qualifiers
      cluster         1..20844
-                     /contig_edge="False"
+                     /contig_edge="True"
                      /cutoff="10000"
                      /extension="10000"
                      /note="Detection rule(s) for this cluster type:
@@ -20,6 +20,7 @@ FEATURES             Location/Qualifiers
                      /locus_tag="ctg1_orf02098"
                      /note="Glimmer score: 10.32"
                      /product="ctg1_orf02098"
+                     /transl_table=Standard
                      /translation="MQHINLKQACARIVASVFLGALMAGVSGAYADETGSRKQNVNIGL
                      GLQPLAAQNGTTQGGAQESHQSASQTFSSNTHSFLSGMAAKAGDVVVGALNMIGVRYRW
                      GGDSPSSGLDCSGFVRYVFQDTLGLTLPRRAEEMSRVGEKVKMSELKPGDLVFFNTMRR
@@ -29,6 +30,7 @@ FEATURES             Location/Qualifiers
                      /locus_tag="ctg1_orf02101"
                      /note="Glimmer score: 12.67"
                      /product="ctg1_orf02101"
+                     /transl_table=Standard
                      /translation="VLEISLKLSAVSPARRRLLGAATAALLAACTGPKTRSNMAAPSLP
                      PAAPARPLKIGLALGAGAARGFAHIGVIKALEARGIDADIVVGTSAGSVIAALYASGMT
                      GLQMNKLALTMNEAAISDWALPLRSRGFLKGVALQNYINTTLNNRPIEKMARPLGIVAT
@@ -39,6 +41,7 @@ FEATURES             Location/Qualifiers
                      /locus_tag="ctg1_orf02102"
                      /note="Glimmer score: 14.39"
                      /product="ctg1_orf02102"
+                     /transl_table=Standard
                      /translation="MAWQWLGLDFDEGPYYQMQRMDRYRDVIKQLLEQGLAYPCYMSPE
                      ELDALRERQREAGLKPRYDGTWRPEPGKVLPMPPAGVQPVVRFKNPLSGTVAWDDAVKG
                      RIEISNDELDDLVIARPDGTPTYNFCVVVDDLDMAITHVIRGDDHVNNTPRQINILRAL
@@ -51,25 +54,24 @@ FEATURES             Location/Qualifiers
                      /locus_tag="ctg1_orf02103"
                      /note="Glimmer score: 6.14"
                      /product="ctg1_orf02103"
+                     /transl_table=Standard
                      /translation="MLYTAEHASHLPDNIDALKRIVASRDETIARLLAEIARLKRWQYG
                      RSSERVAEGNVGP"
      CDS             complement(4402..5175)
-                     /gene_functions="other (smcogs) SMCOG1151:transposase
-                     (Score: 294.8; E-value: 5.8e-90)"
                      /locus_tag="ctg1_orf02106"
                      /note="Glimmer score: 4.18"
                      /product="ctg1_orf02106"
+                     /transl_table=Standard
                      /translation="MNLQQERIDDHCQSLKLEGLMQRYVALASDAAAKQWSFLDFLEHV
                      LAHEREIRQVRSRQTLVRMAAFPAIKTLDDYDYSFAVGAPRKAIDELATLRFIERGENA
                      VLLGPSGVGKTHLAIAIGYAATQAGIKTKFITAADLMLQLEAARRQERYDAVLRHNVLG
                      PRLLIVDEIGYLPLSEDQASHFFQIVAKRYERGSMILTSNLPFTQWDETFGRNATLTAA
                      MLDRILHHAHIIQIKGDSYRLKQQRKAGHVLAPKM"
      CDS             complement(5172..6200)
-                     /gene_functions="other (smcogs) SMCOG1213:transposase
-                     (Score: 317.8; E-value: 1.4e-96)"
                      /locus_tag="ctg1_orf02107"
                      /note="Glimmer score: 6.31"
                      /product="ctg1_orf02107"
+                     /transl_table=Standard
                      /translation="MLQKEQWMQVHVLKAQGLSLREIARRLGVSRNTVTRYLASQDVPR
                      YKQREPRPSKLDQFQAYILERMQAAWPETIAAPALLRELRALGYEGQLRSIQAFMKAHK
                      PVPAPDPLVRFETEPERQMQCDFVVFRRGADPLYAFTATLGFSRWRWARFATNEKAETL
@@ -81,19 +83,19 @@ FEATURES             Location/Qualifiers
                      /locus_tag="ctg1_orf02108"
                      /note="Glimmer score: 0.72"
                      /product="ctg1_orf02108"
+                     /transl_table=Standard
                      /translation="LAETINGLYKAELIHKRGPWKTKADAELATLE"
      CDS             6434..6538
                      /locus_tag="ctg1_orf02110"
                      /note="Glimmer score: 1.16"
                      /product="ctg1_orf02110"
+                     /transl_table=Standard
                      /translation="LQESLGYIPPDKAEANYYRQLMQKSNPSTFTSLP"
      CDS             complement(6601..8400)
-                     /gene_functions="transport (smcogs)
-                     SMCOG1288:ABC_transporter_related_protein (Score: 269.6;
-                     E-value: 9.3e-82)"
                      /locus_tag="ctg1_orf02113"
                      /note="Glimmer score: 7.89"
                      /product="ctg1_orf02113"
+                     /transl_table=Standard
                      /translation="MRHGLFKTIFFLLGCLWTREWRTRLQLIAAIGCTGCSVGLTIVSP
                      MLLKWLIDGLSGASLSATSVYLLCVAYGGAWFLSQATHRCEEYLFVVVNERIKRTITLN
                      YVSRVLGQPAAALSAHQTGASVSELTRVQDSAMRAIIGLFWSLAPICVEIVVVGIVVCS
@@ -108,16 +110,14 @@ FEATURES             Location/Qualifiers
      CDS             complement(8418..10160)
                      /gene_functions="biosynthetic (rule-based-clusters)
                      lassopeptide: PF00733"
-                     /gene_functions="biosynthetic-additional (smcogs)
-                     SMCOG1177:asparagine_synthase_(glutamine-hydrolyzing)
-                     (Score: 84.2; E-value: 1.3e-25)"
                      /locus_tag="ctg1_orf02114"
                      /note="Glimmer score: 4.45"
                      /product="ctg1_orf02114"
                      /sec_met="Type: lassopeptide"
-                     /sec_met="PF00733 E-value: 2.5e-07, bitscore: 28.1, seeds:
-                     104"
+                     /sec_met="PF00733 (E-value: 2.2e-09, bitscore: 28.1, seeds:
+                     104, tool: rule-based-clusters)"
                      /sec_met="Kind: biosynthetic"
+                     /transl_table=Standard
                      /translation="MTLLGIAYPQAQDDWAQKQDWTLVRDPSHRTAGALWHQSEPSTRV
                      LCGRLGTSAYYFYGSAFSKQDHREIQEGELQAMVAEGPARLMAQCWGRYLFISFDLAAK
                      KLICCSDPSNQWPLYWAWSNRDGLLFSDTITCLHQTLVERGERPAWNHAFFTTWLRTGT
@@ -131,10 +131,11 @@ FEATURES             Location/Qualifiers
                      QSWQ"
      cluster_border  8418..10897
                      /aStool="rule-based-clusters"
-                     /cutoff=10000
-                     /extent=10000
-                     /products="lassopeptide"
-                     /rules="(PF13471 and PF00733 or micJ25 or mcjC)"
+                     /contig_edge="False"
+                     /cutoff="10000"
+                     /extent="10000"
+                     /product="lassopeptide"
+                     /rule="(PF13471 and PF00733 or micJ25 or mcjC)"
                      /tool="antismash"
      CDS             complement(10157..10897)
                      /gene_functions="biosynthetic (rule-based-clusters)
@@ -143,9 +144,10 @@ FEATURES             Location/Qualifiers
                      /note="Glimmer score: 6.31"
                      /product="ctg1_orf02115"
                      /sec_met="Type: lassopeptide"
-                     /sec_met="PF13471 E-value: 6.8e-19, bitscore: 65.5, seeds:
-                     84"
+                     /sec_met="PF13471 (E-value: 5.9e-21, bitscore: 65.5, seeds:
+                     84, tool: rule-based-clusters)"
                      /sec_met="Kind: biosynthetic"
+                     /transl_table=Standard
                      /translation="MPHHLMPHVFGACFAQQIILLDVVRDRYAVLTERQSAALAQQLGL
                      SDARFARVEAVQSASILEELKRAQWISVTSFAEADAKLNMLSPSPTTGGMSANGWKLPE
                      DAFARRPAWTRIVKALFLLRSVHRCAARQGLAGLLQLCHQAHREASLRIGLPDDYAPFV
@@ -155,40 +157,47 @@ FEATURES             Location/Qualifiers
                      /locus_tag="ctg1_orf02117"
                      /note="Glimmer score: 8.36"
                      /product="ctg1_orf02117"
+                     /transl_table=Standard
                      /translation="MNKQQQESGLLLAEESLMELCASSETLGGAGQYKEVEAGRWSDRI
                      DSDDE"
      CDS             11699..11905
                      /locus_tag="ctg1_orf02118"
                      /note="Glimmer score: 3.43"
                      /product="ctg1_orf02118"
+                     /transl_table=Standard
                      /translation="MHGMRTYQRLDAAAGIARQPSTATIQRVIGHVRAWVVLPAAPVGT
                      AQGGGALNRAGGQHSNEIALADR"
      CDS             11880..12104
                      /locus_tag="ctg1_orf02119"
                      /note="Glimmer score: 12.22"
                      /product="ctg1_orf02119"
+                     /transl_table=Standard
                      /translation="MKLRLQTAEQALADAYRRMQQLEQDNQALQQQLGQTKGMAQAAQH
                      ALDAHVAPLRATIDAGQHAAQALTPAGRH"
      CDS             12491..12787
                      /locus_tag="ctg1_orf02121"
                      /note="Glimmer score: 8.43"
                      /product="ctg1_orf02121"
+                     /transl_table=Standard
                      /translation="MGIKTTPFDAADYLDVSEAQAEYLRVSFETGDAADIQEAIGTVAR
                      ARGMTQVARAAGVGRESLYKALDEQGNPEFATILSVVRALGLKITVTPAYDYA"
      CDS             12940..13038
                      /locus_tag="ctg1_orf02122"
                      /note="Glimmer score: 4.92"
                      /product="ctg1_orf02122"
+                     /transl_table=Standard
                      /translation="MSRARIHRLLPFFCIAVNDYEACESAQKHIVR"
      CDS             complement(13079..13201)
                      /locus_tag="ctg1_orf02123"
                      /note="Glimmer score: 2.02"
                      /product="ctg1_orf02123"
+                     /transl_table=Standard
                      /translation="VLELIKAERLDAVPAEQWEKALPQIKTLLVVHSAQPAEPV"
      CDS             complement(13266..13802)
                      /locus_tag="ctg1_orf02124"
                      /note="Glimmer score: 6.98"
                      /product="ctg1_orf02124"
+                     /transl_table=Standard
                      /translation="VLRVELQHIKPAIWRQIVVPGSIRLRKLHVILLLAMGWEGGHAHE
                      FVFRNTHYGEPDPDYPSDPPMLDEARVTLVKALGALKSFTYIYDYGDNWQHRIKVEKAL
                      PANAQLRSPLCLDGRNACPPEDVGGAPGYIDFLDAIIDPSHEEHNHFLKWCGGSFDPDA
@@ -197,6 +206,7 @@ FEATURES             Location/Qualifiers
                      /locus_tag="ctg1_orf02125"
                      /note="Glimmer score: 4.35"
                      /product="ctg1_orf02125"
+                     /transl_table=Standard
                      /translation="MLYTAEHAGHLPDDIDALKRIIASRDETIARLLSEIARLKRWQYG
                      RSSKRVAELMGQLQLALCDLPIPEQDFDVPAAAKLSDEDAGLEATGTPKVISLRRKPRQ
                      LPAHLPRETIVHAPTNCGCPKCGAKMRALGEDVSEMLDYVPDYFKVLRHVRPKLSCSRC
@@ -211,11 +221,13 @@ FEATURES             Location/Qualifiers
                      /locus_tag="ctg1_orf02126"
                      /note="Glimmer score: 2.07"
                      /product="ctg1_orf02126"
+                     /transl_table=Standard
                      /translation="VGNRRDELIVALADLLLEALGKVQRQARDQGDLNEPEDHV"
      CDS             17190..18263
                      /locus_tag="ctg1_orf02127"
                      /note="Glimmer score: 1.17"
                      /product="ctg1_orf02127"
+                     /transl_table=Standard
                      /translation="MMRVTYGMRAGHAHRYHCRGDQERAANWVCIGIGGVRIDQAVAAL
                      ILEAVSPHAVEAAILAAHHANAAGDDVKRALQLELEDAHYEVSLAARRYEAVDPTKRLV
                      ARELEARWNAALERVAQLEERLSQFDAEAASRPRIDEAGLMALAADLQLAWNAPDTDAR
@@ -227,18 +239,21 @@ FEATURES             Location/Qualifiers
                      /locus_tag="ctg1_orf02128"
                      /note="Glimmer score: 0.79"
                      /product="ctg1_orf02128"
+                     /transl_table=Standard
                      /translation="MGRYTEQQKLRVVEDYFSCQSGLKTVAKRHDVDISAVRSWVAAYR
                      EHGDPS"
      CDS             18586..18837
                      /locus_tag="ctg1_orf02129"
                      /note="Glimmer score: 0.34"
                      /product="ctg1_orf02129"
+                     /transl_table=Standard
                      /translation="MVEILVKTFTVVEAKSHFSALLVEIEAGEEIAITRHGKIVARMVP
                      NHPSVAADAFRDFWSSQDGIDLQAPEDSPAEAVASMDN"
      CDS             18841..19254
                      /locus_tag="ctg1_orf02131"
                      /note="Glimmer score: 1.83"
                      /product="ctg1_orf02131"
+                     /transl_table=Standard
                      /translation="MAALYLLDINILIAALKGHPDIQQRLETLPLSSMRLSVIVLGELE
                      FGAEKSAHSERNRARLATLAQRLPLVGFDAETTRYYARVRAFLERQGTPIGANDTWIAA
                      QALAIKATLVTDNEREFSRVPDLSLENWLARGQ"
@@ -246,14 +261,14 @@ FEATURES             Location/Qualifiers
                      /locus_tag="ctg1_orf02132"
                      /note="Glimmer score: 5.00"
                      /product="ctg1_orf02132"
+                     /transl_table=Standard
                      /translation="VNKKPSKFSPEVRERVVRLVREQRSESDLNNLPRLVQQGTEAETV
                      LWKLQEAGILV"
      CDS             complement(19723..20418)
-                     /gene_functions="other (smcogs) SMCOG1026:transposase
-                     (Score: 38.6; E-value: 1.2e-11)"
                      /locus_tag="ctg1_orf02133"
                      /note="Glimmer score: 9.84"
                      /product="ctg1_orf02133"
+                     /transl_table=Standard
                      /translation="LKIMPKRLKALEAKSAQQGLVLTEAQLVALERAKRKKKAHGEFES
                      ECPGYCGAQDNTFYVGSLKGVGRIYQQTFVDTYSKVAFAKLYERKTSLPAADLLNDRVV
                      PFFDSFGIPLLRVLTDRGTQYCGNPEHHEYELYLAVEDIDHTRTKAKSPQTNGIVERLH

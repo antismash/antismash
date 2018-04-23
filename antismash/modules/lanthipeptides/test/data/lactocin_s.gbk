@@ -62,81 +62,83 @@ REFERENCE   7  (bases 1 to 15996)
 COMMENT     On Mar 11, 2001 this sequence version replaced gi:1150478.
 FEATURES             Location/Qualifiers
      CDS             <1..237
-                     /db_xref="UniProtKB/TrEMBL:Q9AED5"
                      /codon_start=1
+                     /db_xref="UniProtKB/TrEMBL:Q9AED5"
+                     /locus_tag="CAC33833.1"
                      /note="ORF78"
+                     /product="hypothetical protein"
+                     /protein_id="CAC33833.1"
+                     /transl_table=11
                      /translation="LPVLLKNGAPVDNSTLEVAKELFGSENIFDITIKNMERLKRYDVT
                      GVMFKDQFDHAVQNVYEKVTTEMISRIGAIENG"
-                     /transl_table=11
-                     /locus_tag="CAC33833.1"
-                     /protein_id="CAC33833.1"
-                     /product="hypothetical protein"
      source          1..15996
-                     /strain="L45"
-                     /db_xref="taxon:1599"
-                     /organism="Lactobacillus sakei"
-                     /mol_type="genomic DNA"
                      /country="Norway"
+                     /db_xref="taxon:1599"
+                     /mol_type="genomic DNA"
+                     /organism="Lactobacillus sakei"
+                     /strain="L45"
      cluster         1..15996
+                     /contig_edge="True"
                      /cutoff="20000"
                      /extension="10000"
-                     /contig_edge="True"
-                     /product="lanthipeptide"
                      /note="Detection rule(s) for this cluster type:
-                     lanthipeptide: ((LANC_like and (Flavoprotein or
+                     lanthipeptide: (((LANC_like and (Flavoprotein or
                      Trp_halogenase or p450 or Lant_dehyd_N or Lant_dehyd_C or
-                     adh_short or adh_short_C2) or cds(LANC_like and (Pkinase or
-                     DUF4135)) or TIGR03731 or Antimicr18 or Gallidermin or
-                     L_biotic_A or leader_d or leader_eh or leader_abc or
-                     mature_d or mature_ab or mature_a or mature_b or mature_ha
-                     or mature_h_beta or lacticin_l or lacticin_mat or
-                     LD_lanti_pre or strep_PEQAXS));"
+                     Lant_dehydr_C or tsrC or adh_short or adh_short_C2) or
+                     cds(LANC_like and (Pkinase or DUF4135)) or TIGR03731 or
+                     Antimicr18 or Gallidermin or L_biotic_A or leader_d or
+                     leader_eh or leader_abc or mature_d or mature_ab or
+                     mature_a or mature_b or mature_ha or mature_h_beta or
+                     lacticin_l or lacticin_mat or LD_lanti_pre or strep_PEQAXS)
+                     and not YcaO));"
+                     /product="lanthipeptide"
+                     /tool="antismash"
      regulatory      217..222
+                     /note="ORF116"
                      /regulatory_class="ribosome_binding_site"
-                     /note="ORF116"
      CDS             230..580
-                     /db_xref="UniProtKB/TrEMBL:Q9AED4"
                      /codon_start=1
+                     /db_xref="UniProtKB/TrEMBL:Q9AED4"
+                     /locus_tag="CAC33834.1"
                      /note="ORF116"
+                     /product="hypothetical protein"
+                     /protein_id="CAC33834.1"
+                     /transl_table=11
                      /translation="MGSLLNSNRVKSNSLDRGKRIEPENSMSIKDLSNPGEQSKSSKIE
                      SVTYYANVRINNHIKNKAEALSIIGVAKSQKDAIDRALDSFVEQLSDDEKRSFKNQLAT
                      LEAKDVKMKSEK"
-                     /transl_table=11
-                     /locus_tag="CAC33834.1"
-                     /protein_id="CAC33834.1"
-                     /product="hypothetical protein"
      CDS             complement(799..>1200)
-                     /db_xref="UniProtKB/TrEMBL:Q9AED3"
                      /codon_start=1
+                     /db_xref="UniProtKB/TrEMBL:Q9AED3"
+                     /locus_tag="CAC33835.1"
                      /note="ORF130; N-terminally truncated gene product;coding
                      sequence interrupted by insertion sequence"
+                     /product="hypothetical protein"
+                     /protein_id="CAC33835.1"
+                     /transl_table=11
                      /translation="FAIKYIANSNNPFSIEESNGNVINVYFYPLGIALCERGNHSQLSA
                      KLKGVGETSIERIMNIEHVYDHVNYDGIYFYHIFSENEETNPYRFKAQNRTEFLAGIIF
                      EIGRLLKNYPELFPEEIKFAINNKEKIKQ"
-                     /transl_table=11
-                     /locus_tag="CAC33835.1"
-                     /protein_id="CAC33835.1"
-                     /product="hypothetical protein"
      misc_feature    <1195..>1461
                      /note="insertion sequence IS1517"
      CDS             complement(1209..>1460)
+                     /codon_start=1
                      /db_xref="GOA:Q9AED2"
                      /db_xref="InterPro:IPR001584"
                      /db_xref="InterPro:IPR012337"
                      /db_xref="UniProtKB/TrEMBL:Q9AED2"
-                     /codon_start=1
+                     /locus_tag="CAC33836.1"
                      /note="ORF84; Putative, N-terminally truncated
                      transposase;coding sequence interrupted by insertion
                      sequence"
+                     /product="hypothetical protein"
+                     /protein_id="CAC33836.1"
+                     /transl_table=11
                      /translation="VANYQALEQDYQIKVYFCHPYSPWERGSNEYFNRRLRWFFPKKTN
                      FSQVTTDEILAALELINQRPLKIHHQQTAIERFRACSD"
-                     /transl_table=11
-                     /locus_tag="CAC33836.1"
-                     /protein_id="CAC33836.1"
-                     /product="hypothetical protein"
      repeat_region   1462..1484
-                     /rpt_type=INVERTED
                      /note="IS1519L left inverted repeat"
+                     /rpt_type=INVERTED
      misc_feature    1462..2270
                      /note="insertion sequence IS1519L"
      regulatory      1524..1529
@@ -145,27 +147,27 @@ FEATURES             Location/Qualifiers
      gene            1524..2216
                      /gene="tnp1519L"
      CDS             1536..2216
+                     /codon_start=1
                      /db_xref="GOA:Q9AED1"
                      /db_xref="InterPro:IPR001584"
                      /db_xref="InterPro:IPR012337"
                      /db_xref="UniProtKB/TrEMBL:Q9AED1"
-                     /codon_start=1
+                     /gene="tnp1519L"
+                     /locus_tag="tnp1519L"
+                     /product="putative IS1519L transposase"
+                     /protein_id="CAC33837.1"
+                     /transl_table=11
                      /translation="MNHFKGKQFQQDVIIVAVGYYLRYNLSYREVQEILYDRGINVSHT
                      TIYRWVQEYDKLLYQIWKKKNKKSFYSWKMDETYIKIKGKWHYLYRAIDADGLTLDIWL
                      RKKRDTQAAYAFLKRLVKQFDEPKVVVTDKAPSITSAFKKLKEYGFYQGTEHRTIKYLN
                      NLIEQDHRPVKRSNKFYRSLRTASTTIKGMEAIRGLYKKTRKEGTLFGFSVCTEIKVLL
                      GIPA"
-                     /gene="tnp1519L"
-                     /transl_table=11
-                     /locus_tag="tnp1519L"
-                     /protein_id="CAC33837.1"
-                     /product="putative IS1519L transposase"
      repeat_region   complement(2248..2270)
-                     /rpt_type=INVERTED
                      /note="IS1519L right inverted repeat"
-     repeat_region   2744..2770
                      /rpt_type=INVERTED
+     repeat_region   2744..2770
                      /note="IS1516 left inverted repeat"
+                     /rpt_type=INVERTED
      misc_feature    2744..4217
                      /note="insertion sequence IS1516"
      regulatory      2883..2888
@@ -173,147 +175,147 @@ FEATURES             Location/Qualifiers
      gene            2897..3352
                      /gene="tnp1516delC"
      CDS             2897..3352
-                     /db_xref="UniProtKB/TrEMBL:Q9AED0"
                      /codon_start=1
+                     /db_xref="UniProtKB/TrEMBL:Q9AED0"
+                     /gene="tnp1516delC"
+                     /locus_tag="tnp1516delC"
                      /note="N-terminal part of IS1516 transposase. Coding
                      sequence probably interrupted by nonsense mutation in codon
                      152 of original sequence."
+                     /product="hypothetical protein"
+                     /protein_id="CAC33838.1"
+                     /transl_table=11
                      /translation="MCHDTTKLLLGIADENLKITDGETGEDGVIRLTGHLDYTPKACPK
                      CGIINDQKIINYGWRNTTIRFSKVLSNTVILALKRRYFHCKECHGNFLAQTVAVPKHCT
                      ISNTSRKECLEKLGEPVSLKHIANEVSASDSFVGRQLMRAERDFQTN"
-                     /gene="tnp1516delC"
-                     /transl_table=11
-                     /locus_tag="tnp1516delC"
-                     /protein_id="CAC33838.1"
-                     /product="hypothetical protein"
      gene            <3353..4168
                      /gene="tnp1516delN"
      CDS             <3353..4168
+                     /codon_start=1
                      /db_xref="GOA:Q9AEC9"
                      /db_xref="InterPro:IPR002560"
                      /db_xref="UniProtKB/TrEMBL:Q9AEC9"
-                     /codon_start=1
+                     /gene="tnp1516delN"
+                     /locus_tag="tnp1516delN"
                      /note="C-terminal part of IS1516 transposase. Coding
                      sequence probably interrupted by nonsense mutation in codon
                      152 of original sequence."
+                     /product="putative protein"
+                     /protein_id="CAC33839.1"
+                     /transl_table=11
                      /translation="HYLPEIILMDEVKSTKSATGAMSFEFMNGETHELIDLLPYRTINK
                      LEKYFYRFDQAARENVKIIVTDMNYTYPKLVQTVFPNAMVVMDKFHIINALNRAFNKTR
                      IKVMKKCTSSSREFHALKRYWKLLLVPTEQLNFEQFKKWTNFPYWMAATDVVHQLLSLD
                      SELEQTYQVLNSVRSAVQHQDWHNYNAAFWNNKTYSEEMKNTIKTLESHHDEIRNTFTT
                      HYSNGPLEGSNNKIKAIKRASFAYRSFWRFRTRVLYVFKIKTKRALITK"
-                     /gene="tnp1516delN"
-                     /transl_table=11
-                     /locus_tag="tnp1516delN"
-                     /protein_id="CAC33839.1"
-                     /product="putative protein"
      repeat_region   complement(4191..4217)
-                     /rpt_type=INVERTED
                      /note="IS1516 right inverted repeat"
+                     /rpt_type=INVERTED
      CDS             complement(4573..5475)
+                     /codon_start=1
                      /db_xref="GOA:Q9AEC8"
                      /db_xref="InterPro:IPR003439"
                      /db_xref="InterPro:IPR003593"
                      /db_xref="InterPro:IPR017871"
                      /db_xref="UniProtKB/TrEMBL:Q9AEC8"
-                     /codon_start=1
+                     /gene="lasY"
+                     /locus_tag="lasY"
+                     /product="hypothetical protein"
+                     /protein_id="CAC33840.1"
+                     /transl_table=11
                      /translation="MLEIIDLNKSFKNRKVISHENFSVNNGEILGLIGQNGAGKTTTFK
                      MILDLLKPDSGTILWNKKPLTQKEHNIIGFLPEDRGLYPNLTVEQQIVFFAELRGQSPK
                      VTKLKIQRWMDRFDVKGKPSDKVKLLSKGNQQKVQLISTLIHDPKFIILDEPFSGLDPV
                      NAGLLKKGIKDMKDAGATIIYSSHDMANVEQISDKIIMLKNGRIVLNGTADDIKNSYSK
                      NKIIIQSALTKNDLENINGVMSVKKVADKFHVEIKNDLIGNKIASQAISKGALIEFIKD
                      RSTLEEIFQIKTTEPKTNE"
-                     /gene="lasY"
-                     /transl_table=11
-                     /locus_tag="lasY"
-                     /protein_id="CAC33840.1"
-                     /product="hypothetical protein"
      gene            complement(4573..5487)
                      /gene="lasY"
      regulatory      complement(5482..5487)
                      /gene="lasY"
                      /regulatory_class="ribosome_binding_site"
      CDS             complement(5546..6403)
+                     /citation=[5]
+                     /codon_start=1
                      /db_xref="GOA:Q9AEC7"
                      /db_xref="InterPro:IPR010057"
                      /db_xref="InterPro:IPR010982"
                      /db_xref="UniProtKB/TrEMBL:Q9AEC7"
-                     /citation=[5]
-                     /codon_start=1
+                     /gene="lasX"
+                     /locus_tag="lasX"
                      /note="essential for normal lactocin S production"
+                     /product="putative Rgg-type transcriptional regulator"
+                     /protein_id="CAC33841.1"
+                     /transl_table=11
                      /translation="MRVGELVHLIRESKNIPAINVYNSVMSKNMFYKFEKGNFDTTSEK
                      FMKIMSRLNISLKEFEFLLSEKKCLEYDTEFLKLTNAFYSKDISALQQIHNETKLMYQR
                      TLEIRFNHLSALSQIYYDMCSHNTTDQTNTNIIRNYLLNVENWTYYEWTLFNNSLSIFN
                      IEDVQFLINKSLQSLSIYETHNNFGNENILVLGNIAAMYIKSYNFEKIPSLVNRMETIH
                      LSEIAVFERLIFSFFEGVSLYVLGTDTSLKKSLDVIKVMDNMHLVHLSKDHQELLNIVQ
                      KNIV"
-                     /gene="lasX"
-                     /transl_table=11
-                     /locus_tag="lasX"
-                     /protein_id="CAC33841.1"
-                     /product="putative Rgg-type transcriptional regulator"
      gene            complement(5546..6476)
                      /gene="lasX"
      repeat_region   6405..6411
-                     /rpt_type=DIRECT
                      /citation=[5]
+                     /rpt_type=DIRECT
      regulatory      complement(6408..6413)
                      /gene="lasX"
                      /regulatory_class="ribosome_binding_site"
      repeat_region   6429..6435
-                     /rpt_type=DIRECT
                      /citation=[5]
+                     /rpt_type=DIRECT
      regulatory      6437..6442
-                     /gene="lasA"
                      /citation=[3]
+                     /gene="lasA"
                      /regulatory_class="minus_35_signal"
      gene            6437..6792
                      /gene="lasA"
      regulatory      complement(6446..6451)
+                     /citation=[5]
                      /experiment="experimental evidence, no additional details
                      recorded"
                      /gene="lasX"
-                     /citation=[5]
                      /regulatory_class="minus_10_signal"
      repeat_region   6461..6467
-                     /rpt_type=DIRECT
-                     /gene="lasA"
                      /citation=[5]
+                     /gene="lasA"
+                     /rpt_type=DIRECT
      regulatory      6463..6468
+                     /citation=[3]
                      /experiment="experimental evidence, no additional details
                      recorded"
                      /gene="lasA"
-                     /citation=[3]
                      /regulatory_class="minus_10_signal"
      regulatory      complement(6471..6476)
-                     /gene="lasX"
                      /citation=[5]
+                     /gene="lasX"
                      /regulatory_class="minus_35_signal"
      regulatory      6572..6577
                      /gene="lasA"
                      /regulatory_class="ribosome_binding_site"
      sig_peptide     6586..6678
-                     /gene="lasA"
                      /citation=[2]
                      /citation=[3]
+                     /gene="lasA"
      CDS             6586..6792
-                     /db_xref="GOA:P23826"
-                     /db_xref="UniProtKB/Swiss-Prot:P23826"
                      /citation=[2]
                      /citation=[3]
                      /codon_start=1
+                     /db_xref="GOA:P23826"
+                     /db_xref="UniProtKB/Swiss-Prot:P23826"
+                     /gene="lasA"
+                     /locus_tag="lasA"
+                     /product="pre-lactocin S"
+                     /protein_id="CAA91109.1"
+                     /transl_table=11
                      /translation="MKTEKKVLDELSLHASAKMGARDVESSMNADSTPVLASVAVSMEL
                      LPTASVLYSDVAGCFKYSAKHHC"
-                     /gene="lasA"
-                     /transl_table=11
-                     /locus_tag="lasA"
-                     /protein_id="CAA91109.1"
-                     /product="pre-lactocin S"
      mat_peptide     6679..6789
+                     /citation=[2]
+                     /citation=[3]
                      /experiment="experimental evidence, no additional details
                      recorded"
                      /gene="lasA"
-                     /citation=[2]
-                     /citation=[3]
                      /product="lactocin S"
      stem_loop       6811..6843
                      /citation=[3]
@@ -324,15 +326,45 @@ FEATURES             Location/Qualifiers
                      /regulatory_class="ribosome_binding_site"
      gene            order(6871..6876,6885..9662)
                      /gene="lasM"
+     cluster_border  6885..9662
+                     /aStool="rule-based-clusters"
+                     /contig_edge="False"
+                     /cutoff="20000"
+                     /extent="10000"
+                     /product="lanthipeptide"
+                     /rule="((LANC_like and (Flavoprotein or Trp_halogenase or
+                     p450 or Lant_dehyd_N or Lant_dehyd_C or Lant_dehydr_C or
+                     tsrC or adh_short or adh_short_C2) or cds(LANC_like and
+                     (Pkinase or DUF4135)) or TIGR03731 or Antimicr18 or
+                     Gallidermin or L_biotic_A or leader_d or leader_eh or
+                     leader_abc or mature_d or mature_ab or mature_a or mature_b
+                     or mature_ha or mature_h_beta or lacticin_l or lacticin_mat
+                     or LD_lanti_pre or strep_PEQAXS) and not YcaO)"
+                     /tool="antismash"
      CDS             6885..9662
-                     /db_xref="InterPro:IPR007822"
-                     /db_xref="InterPro:IPR017146"
-                     /db_xref="UniProtKB/TrEMBL:Q48849"
                      /citation=[1]
                      /citation=[3]
                      /codon_start=1
+                     /db_xref="InterPro:IPR007822"
+                     /db_xref="InterPro:IPR017146"
+                     /db_xref="UniProtKB/TrEMBL:Q48849"
+                     /gene="lasM"
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     lanthipeptide: DUF4135"
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     lanthipeptide: LANC_like"
+                     /locus_tag="lasM"
                      /note="essential for lactocin S production; probably
                      involved in post-translational peptide modification"
+                     /product="hypothetical protein"
+                     /protein_id="CAA91110.1"
+                     /sec_met="Type: lanthipeptide"
+                     /sec_met="LANC_like (E-value: 1.2e-24, bitscore: 77.0,
+                     seeds: 47, tool: rule-based-clusters); DUF4135 (E-value:
+                     2.5e-62, bitscore: 201.5, seeds: 79, tool:
+                     rule-based-clusters)"
+                     /sec_met="Kind: biosynthetic"
+                     /transl_table=11
                      /translation="MNEFEKKINELCFHYTLNLIFKDNLINLKKELNKFNNKNEIKMNL
                      YFSISQSIIYPFTDILLDLYHTELKTNSMLGNNSSERLKSFVSEFEQDHWEKINLTYPV
                      FFSTSELIVNDTTEYVSKILSNLINDNAELLSKFKIDYQKLLDIRLGKGDTHSGKSVAK
@@ -349,48 +381,40 @@ FEATURES             Location/Qualifiers
                      KLIGMSVLKLHGVNISNDVEKKCLSKVLNSISRSLEFNSSWCRGTLGILDMLLINNKLN
                      NSLYTSSMTNKFLKKYSYGINRSLECQKNISMCHGLGGIINFITSVNETKHNEIVPENK
                      FFSKLPNLRDTRVIRSSDFHPVSYMLSTTGLVDSILRYKNNMPNMVHLDIPNNV"
-                     /gene="lasM"
-                     /transl_table=11
-                     /locus_tag="lasM"
-                     /protein_id="CAA91110.1"
-                     /product="hypothetical protein"
-                     /sec_met="Type: lanthipeptide"
-                     /sec_met="LANC_like (E-value: 1.2e-24, bitscore: 77.0,
-                     seeds: 47); DUF4135 (E-value: 2.5e-62, bitscore: 201.5,
-                     seeds: 79)"
-                     /sec_met="Kind: biosynthetic"
      regulatory      9662..9667
-                     /gene="lasN"
                      /citation=[3]
+                     /gene="lasN"
                      /regulatory_class="ribosome_binding_site"
      gene            order(9662..9667,9677..10396)
                      /gene="lasN"
      CDS             9677..10396
-                     /db_xref="InterPro:IPR005025"
-                     /db_xref="UniProtKB/TrEMBL:Q48850"
                      /citation=[3]
                      /codon_start=1
+                     /db_xref="InterPro:IPR005025"
+                     /db_xref="UniProtKB/TrEMBL:Q48850"
+                     /gene="lasN"
+                     /locus_tag="lasN"
                      /note="essential for lactocin S production; probably
                      involved in post-translational peptide modification"
+                     /product="hypothetical protein"
+                     /protein_id="CAA91111.1"
+                     /transl_table=11
                      /translation="MKIFAFSGAHHIGGLTNTIIERLVSGLKSGNDSLFFRNPTELSIK
                      YVESTEMFTSGIDTINDDIQMIRDEIASSDVIILGTPVYIRHISGSMKTFLDRLGAWTH
                      TYGLAGKRAIVFAVSSSTGEDTACEYLSYVSQQMGLAVDSELLINTSYQTTEDIFDQVD
                      FSIDKLKRHIADKEYIITDMQRKKFALSQTQLRNNQLFPHEIDVLSEKKLLEFGDFDAF
                      FRHMDNINREQSHYGDD"
-                     /gene="lasN"
-                     /transl_table=11
-                     /locus_tag="lasN"
-                     /protein_id="CAA91111.1"
-                     /product="hypothetical protein"
+     regulatory      10385..10390
+                     /citation=[3]
+                     /gene="lasT"
+                     /regulatory_class="ribosome_binding_site"
      gene            10385..10390
                      /gene="lasT"
-     regulatory      10385..10390
-                     /gene="lasT"
-                     /citation=[3]
-                     /regulatory_class="ribosome_binding_site"
      gene            10399..12006
                      /gene="lasT"
      CDS             10399..12006
+                     /citation=[3]
+                     /codon_start=1
                      /db_xref="GOA:Q48851"
                      /db_xref="InterPro:IPR001140"
                      /db_xref="InterPro:IPR003439"
@@ -398,10 +422,13 @@ FEATURES             Location/Qualifiers
                      /db_xref="InterPro:IPR011527"
                      /db_xref="InterPro:IPR017940"
                      /db_xref="UniProtKB/TrEMBL:Q48851"
-                     /citation=[3]
-                     /codon_start=1
+                     /gene="lasT"
+                     /locus_tag="lasT"
                      /note="probable exporter of mature lactocin S; essential
                      for lactocin S production"
+                     /product="ABC transporter"
+                     /protein_id="CAA91112.1"
+                     /transl_table=11
                      /translation="MHIQNLFGRKKLILIIFFLTILAVSVNAIYPYITKIVIDNVLIGK
                      NVLLMRNIILGLGLIIIIQVLVDFFLSYLSSVWVQKNISDIRNLIFDRFLKIDPFSTNK
                      NGQTLIISDAEVIAANVQSILLTSLNSGLSIIVFGVIAFTISPLLTLVILSALPIFVLA
@@ -412,107 +439,110 @@ FEATURES             Location/Qualifiers
                      FDGSLKFNLTIGLDSYSNCELNTLVTKLNLVGNKLSFNSRLDNSKHTLSTGQIQKIKFI
                      RAILEHPDFLVLDEILENMDLNSRNIAIEIIKENSDETIFLVISHNLFTNLLTNKTKLI
                      EIQNSESGSVIRKEGRII"
-                     /gene="lasT"
-                     /transl_table=11
-                     /locus_tag="lasT"
-                     /protein_id="CAA91112.1"
-                     /product="ABC transporter"
+     regulatory      11989..11994
+                     /citation=[3]
+                     /gene="lasU"
+                     /regulatory_class="ribosome_binding_site"
      gene            11989..11994
                      /gene="lasU"
-     regulatory      11989..11994
-                     /gene="lasU"
-                     /citation=[3]
-                     /regulatory_class="ribosome_binding_site"
      gene            12003..12284
                      /gene="lasU"
      CDS             12003..12284
-                     /db_xref="UniProtKB/TrEMBL:Q48852"
                      /citation=[3]
                      /codon_start=1
+                     /db_xref="UniProtKB/TrEMBL:Q48852"
+                     /gene="lasU"
+                     /locus_tag="lasU"
+                     /product="hypothetical protein"
+                     /protein_id="CAA91113.1"
+                     /transl_table=11
                      /translation="MRRTIAILPTFILITVFMYSLYLKAIHGIWINMFVFSLAGLGVYT
                      PIILFIDSLTLAFRGEKGNDIRSKLFYSYFIIILVAIILLSLYLMTHN"
-                     /gene="lasU"
-                     /transl_table=11
-                     /locus_tag="lasU"
-                     /protein_id="CAA91113.1"
-                     /product="hypothetical protein"
      regulatory      12284..12289
-                     /gene="lasV"
                      /citation=[3]
+                     /gene="lasV"
                      /regulatory_class="ribosome_binding_site"
      gene            order(12284..12289,12297..12674)
                      /gene="lasV"
      CDS             12297..12674
-                     /db_xref="InterPro:IPR007556"
-                     /db_xref="UniProtKB/TrEMBL:Q48853"
                      /citation=[3]
                      /codon_start=1
+                     /db_xref="InterPro:IPR007556"
+                     /db_xref="UniProtKB/TrEMBL:Q48853"
+                     /gene="lasV"
+                     /locus_tag="lasV"
+                     /product="hypothetical protein"
+                     /protein_id="CAA91114.1"
+                     /transl_table=11
                      /translation="MEEQDFIKRQIKSFAQGIGSIINVGHANNGVEIMLPAEQGQNLPF
                      QDTLLRYLNMKHYKEGFIHLLKLESKMSQFDFNQLGIWYVYELNKIPSQLLIKDGLTEN
                      DISTLIHRLNQTPSDNKEMGK"
-                     /gene="lasV"
-                     /transl_table=11
-                     /locus_tag="lasV"
-                     /protein_id="CAA91114.1"
-                     /product="hypothetical protein"
+     regulatory      12659..12664
+                     /citation=[3]
+                     /gene="lasP"
+                     /regulatory_class="ribosome_binding_site"
      gene            12659..12664
                      /gene="lasP"
-     regulatory      12659..12664
-                     /gene="lasP"
-                     /citation=[3]
-                     /regulatory_class="ribosome_binding_site"
      gene            12671..13471
                      /gene="lasP"
      CDS             12671..13471
+                     /citation=[3]
+                     /codon_start=1
                      /db_xref="GOA:Q48854"
                      /db_xref="InterPro:IPR000209"
                      /db_xref="InterPro:IPR015500"
                      /db_xref="UniProtKB/TrEMBL:Q48854"
-                     /citation=[3]
-                     /codon_start=1
+                     /gene="lasP"
+                     /gene_functions="biosynthetic-additional
+                     (rule-based-clusters) Peptidase_S8 (E-value: 3.3e-15,
+                     bitscore: 46.3, seeds: 43, tool: rule-based-clusters)"
+                     /locus_tag="lasP"
                      /note="probably involved in pre-lactocin S processing"
+                     /product="serine protease"
+                     /protein_id="CAA91115.1"
+                     /sec_met="Type: "
+                     /sec_met="Peptidase_S8 (E-value: 3.3e-15, bitscore: 46.3,
+                     seeds: 43, tool: rule-based-clusters)"
+                     /sec_met="Kind: biosynthetic"
+                     /transl_table=11
                      /translation="MTVLLRDINSAILTEYRLHMYSSRYTSSIALLDENINTTHSYLQK
                      HFSSISGHNNTASIHGTAMAGVLSIASLSKQKLTVFNTLDKYHQRTRKSVISALKMAII
                      NNFKLIIFPMSIILPKASNSTQKWVSDFNDVVALAKLNNATILSSAGNDGLNLDTLHPD
                      YIALPQMISSIITIGALGTDWRIASYSNFGKCIDYFFPGGETTSEIITTIGTDAKNIDF
                      QFIENVPRGFIKMIGTSLATGLFAGYALTVGIGSLQRFKSANFY"
-                     /gene="lasP"
-                     /transl_table=11
-                     /locus_tag="lasP"
-                     /protein_id="CAA91115.1"
-                     /product="serine protease"
-                     /sec_met="Type: none"
-                     /sec_met="Peptidase_S8 (E-value: 3.3e-15, bitscore: 46.3,
-                     seeds: ?)"
-                     /sec_met="Kind: biosynthetic"
      regulatory      13480..13485
-                     /gene="lasJ"
                      /citation=[3]
+                     /gene="lasJ"
                      /regulatory_class="ribosome_binding_site"
      gene            13480..13664
                      /gene="lasJ"
      CDS             13491..13664
-                     /db_xref="UniProtKB/TrEMBL:Q48855"
                      /citation=[3]
                      /codon_start=1
+                     /db_xref="UniProtKB/TrEMBL:Q48855"
+                     /gene="lasJ"
+                     /locus_tag="lasJ"
                      /note="probably involved in lactocin S immunity"
+                     /product="hypothetical protein"
+                     /protein_id="CAA91116.1"
+                     /transl_table=11
                      /translation="MKYSNKSVMLTMLFVSVLGTVMSFSFSGMLKAYELILATFFLIVA
                      VIYFFKFRNEKK"
-                     /gene="lasJ"
-                     /transl_table=11
-                     /locus_tag="lasJ"
-                     /protein_id="CAA91116.1"
-                     /product="hypothetical protein"
      regulatory      13689..13694
-                     /gene="lasW"
                      /citation=[3]
+                     /gene="lasW"
                      /regulatory_class="ribosome_binding_site"
      gene            13689..14946
                      /gene="lasW"
      CDS             13702..14946
-                     /db_xref="UniProtKB/TrEMBL:Q48856"
                      /citation=[3]
                      /codon_start=1
+                     /db_xref="UniProtKB/TrEMBL:Q48856"
+                     /gene="lasW"
+                     /locus_tag="lasW"
+                     /product="hypothetical protein"
+                     /protein_id="CAA91117.1"
+                     /transl_table=11
                      /translation="MRTLVIIIKQVYKKKIFSLGYLLMVFSPVVLVAMGILVFSQINTN
                      KNVPSIAIISNNKVTQQIIYKSSKESTFHINNKLRTNGQAQAALKHNKIKGIFDVRINS
                      NATTVNFTGNRKNLKDQWSLITSFLNRINYSTRINESPLNATYKESLYKSIKINVYSKN
@@ -521,46 +551,41 @@ FEATURES             Location/Qualifiers
                      IIFGFLGIYIYIVVSAVIASAVSRQEQVGEAITPVLMLALVSYYGGVLVMSHNTLHFLT
                      VSSYIPLISQNVMPIRFASATASNSEAIISIMISLVFSIILTHFAIYIYKRTVFIYNDN
                      GILQTFKTGLLKMKY"
-                     /gene="lasW"
-                     /transl_table=11
-                     /locus_tag="lasW"
-                     /protein_id="CAA91117.1"
-                     /product="hypothetical protein"
      regulatory      14956..14987
                      /citation=[3]
-                     /regulatory_class="terminator"
                      /note="putative terminator of transcription initiated from
                      lasA promoter"
+                     /regulatory_class="terminator"
      misc_feature    14999..15808
                      /note="insertion sequence IS1519R"
      repeat_region   15000..15022
-                     /rpt_type=INVERTED
                      /citation=[5]
                      /note="IS1519R left inverted repeat"
+                     /rpt_type=INVERTED
      regulatory      15059..15064
                      /gene="tnp1519R"
                      /regulatory_class="ribosome_binding_site"
      gene            15059..15754
                      /gene="tnp1519R"
      CDS             15068..15754
+                     /codon_start=1
                      /db_xref="GOA:Q9AEC6"
                      /db_xref="InterPro:IPR001584"
                      /db_xref="InterPro:IPR012337"
                      /db_xref="UniProtKB/TrEMBL:Q9AEC6"
-                     /codon_start=1
+                     /gene="tnp1519R"
+                     /locus_tag="tnp1519R"
+                     /product="putative IS1519R transposase"
+                     /protein_id="CAC33842.1"
+                     /transl_table=11
                      /translation="MTMSHFKGKQFQQDVIIVAVGYYLRYNLSYREVQEILCDRGINVS
                      HTTIYRWVQEYGKLLYQIWKKKNKKSFYSWKMDETYIKIKGKWHYLYRAIDADGLTLDI
                      WLRKKRDTQAAYAFLKRLVKQFDEPKVVVTDKAPPITSAFKKLKEYGFYQGTEHRTIKY
                      LNNLIEQDHRPVKRRNKFYRSLRTASTTIKGMEAIRGLYKKTRKEGTLFGFSVCTEIKV
                      LLGIPA"
-                     /gene="tnp1519R"
-                     /transl_table=11
-                     /locus_tag="tnp1519R"
-                     /protein_id="CAC33842.1"
-                     /product="putative IS1519R transposase"
      repeat_region   complement(15786..15808)
-                     /rpt_type=INVERTED
                      /note="IS1519R right inverted repeat"
+                     /rpt_type=INVERTED
 ORIGIN
         1 cttccagtcc ttttaaaaaa tggggctcca gttgacaaca gtactttaga ggttgcaaaa
        61 gagttatttg gtagtgaaaa tatttttgat attacaatta aaaatatgga acggcttaaa

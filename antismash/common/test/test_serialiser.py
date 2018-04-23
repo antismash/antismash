@@ -120,7 +120,7 @@ class TestResultsJSON(unittest.TestCase):
         json_handle = StringIO()
         results.write_to_file(json_handle)
         json_handle.seek(0)
-        new_results = serialiser.AntismashResults.from_file(json_handle, taxon="bacteria", modules=[])
+        new_results = serialiser.AntismashResults.from_file(json_handle, taxon="bacteria")
         assert results.to_json() == new_results.to_json()
         # check no records were lost
         assert len(new_results.records) == len(results.records)

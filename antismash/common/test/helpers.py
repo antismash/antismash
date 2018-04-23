@@ -160,18 +160,32 @@ def run_and_regenerate_results_for_module(input_file, module, options,
     # ensure all detection stages add their relevant parts
     modules_to_regenerate = antismash.main.get_detection_modules()
     # don't try and regenerate twice
-    if not module in modules_to_regenerate:
+    if module not in modules_to_regenerate:
         modules_to_regenerate.append(module)
     if expected_record_count == 1:
-        regenerated = antismash.main.regenerate_results_for_record(results.records[0],
-                                     options, modules_to_regenerate,
-                                     results.results[0])
-        final = regenerated[module.__name__]
+        regenerated = regenerate_results_for_record(results.records[0],
+                                                    options, modules_to_regenerate,
+                                                    results.results[0])
+
+        final = regenerated.get(module.__name__)
         assert isinstance(final, module_results.ModuleResults)
     else:
-        regenerated = [antismash.main.regenerate_results_for_record(record, options,
-                        [module], res) for record, res in zip(results.records, results.results)]
+        regenerated = []
+        final = []
+        for record, results in zip(results.records, results.results):
+            regenerated.append(regenerate_results_for_record(record, options, modules_to_regenerate, results))
         final = [result[module.__name__] for result in regenerated]
         for res in final:
             assert isinstance(res, module_results.ModuleResults)
     return final
+
+
+def regenerate_results_for_record(record, options, modules, json_results):
+    module_results = {}
+    for module in modules:
+        json = json_results.get(module.__name__)
+        if not json:
+            continue
+        mod_results = module.regenerate_previous_results(json, record, options)
+        module_results[module.__name__] = mod_results
+    return module_results

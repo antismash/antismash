@@ -28,32 +28,34 @@ FEATURES             Location/Qualifiers
      CDS             complement(<1..30)
                      /codon_start=1
                      /db_xref="UniProtKB/TrEMBL:O54217"
-                     /translation="MNYFRYKQFR"
                      /gene="tnp1"
-                     /transl_table=11
                      /locus_tag="tnp1"
-                     /protein_id="CAA74345.1"
                      /product="transposase"
+                     /protein_id="CAA74345.1"
+                     /transl_table=11
+                     /translation="MNYFRYKQFR"
      source          1..7358
-                     /plasmid="pCH01"
+                     /db_xref="taxon:1282"
                      /mol_type="genomic DNA"
                      /organism="Staphylococcus epidermidis"
+                     /plasmid="pCH01"
                      /strain="BN 280"
-                     /db_xref="taxon:1282"
      cluster         1..7358
+                     /contig_edge="True"
                      /cutoff="20000"
                      /extension="10000"
-                     /contig_edge="True"
-                     /product="lanthipeptide"
                      /note="Detection rule(s) for this cluster type:
-                     lanthipeptide: ((LANC_like and (Flavoprotein or
+                     lanthipeptide: (((LANC_like and (Flavoprotein or
                      Trp_halogenase or p450 or Lant_dehyd_N or Lant_dehyd_C or
-                     adh_short or adh_short_C2) or cds(LANC_like and (Pkinase or
-                     DUF4135)) or TIGR03731 or Antimicr18 or Gallidermin or
-                     L_biotic_A or leader_d or leader_eh or leader_abc or
-                     mature_d or mature_ab or mature_a or mature_b or mature_ha
-                     or mature_h_beta or lacticin_l or lacticin_mat or
-                     LD_lanti_pre or strep_PEQAXS));"
+                     Lant_dehydr_C or tsrC or adh_short or adh_short_C2) or
+                     cds(LANC_like and (Pkinase or DUF4135)) or TIGR03731 or
+                     Antimicr18 or Gallidermin or L_biotic_A or leader_d or
+                     leader_eh or leader_abc or mature_d or mature_ab or
+                     mature_a or mature_b or mature_ha or mature_h_beta or
+                     lacticin_l or lacticin_mat or LD_lanti_pre or strep_PEQAXS)
+                     and not YcaO));"
+                     /product="lanthipeptide"
+                     /tool="antismash"
      repeat_region   60..87
                      /rpt_type=INVERTED
      gene            874..1617
@@ -67,81 +69,130 @@ FEATURES             Location/Qualifiers
                      /db_xref="InterPro:IPR016040"
                      /db_xref="InterPro:IPR020904"
                      /db_xref="UniProtKB/TrEMBL:O54218"
+                     /gene="eciO"
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     lanthipeptide: adh_short_C2"
+                     /locus_tag="eciO"
+                     /product="oxidoreductase"
+                     /protein_id="CAA74346.1"
+                     /sec_met="Type: lanthipeptide"
+                     /sec_met="adh_short_C2 (E-value: 3.8e-35, bitscore: 110.9,
+                     seeds: 47, tool: rule-based-clusters)"
+                     /sec_met="Kind: biosynthetic"
+                     /transl_table=11
                      /translation="MGRTVLITGGCKNIGKQIAQVFAENNYNVIVTSRNNNNKSIITYF
                      KKKNLKVFFYTLNVENEDEVVNVFKEINNDIGKIDILINNAGISQGNTLLEDSKTEDFK
                      SMINTNILGSYYCMKHVIPYMKRNRYGVIINIVSIAALRGIPYSILYGSTKNAVIALTK
                      GAAIENANNGIRVNAIAPGIIKTESLNTEIQNSEDELNEQTIAAIHPMQILGEEKDVAN
                      TAYFIANSSFMTGSIVNLDGGYTAQ"
-                     /gene="eciO"
-                     /transl_table=11
+     cluster_border  874..7191
+                     /aStool="rule-based-clusters"
+                     /contig_edge="False"
+                     /cutoff="20000"
+                     /extent="10000"
+                     /product="lanthipeptide"
+                     /rule="((LANC_like and (Flavoprotein or Trp_halogenase or
+                     p450 or Lant_dehyd_N or Lant_dehyd_C or Lant_dehydr_C or
+                     tsrC or adh_short or adh_short_C2) or cds(LANC_like and
+                     (Pkinase or DUF4135)) or TIGR03731 or Antimicr18 or
+                     Gallidermin or L_biotic_A or leader_d or leader_eh or
+                     leader_abc or mature_d or mature_ab or mature_a or mature_b
+                     or mature_ha or mature_h_beta or lacticin_l or lacticin_mat
+                     or LD_lanti_pre or strep_PEQAXS) and not YcaO)"
+                     /tool="antismash"
+     CDS_motif       883..978
+                     /aSTool="pksnrpsmotif"
+                     /database="abmotifs"
+                     /detection="hmmscan"
+                     /domain_id="nrpspksmotif_eciO_0001"
+                     /evalue="1.10E-03"
+                     /label="PKSI-KR_m1"
                      /locus_tag="eciO"
-                     /protein_id="CAA74346.1"
-                     /product="oxidoreductase"
-                     /sec_met="Type: lanthipeptide"
-                     /sec_met="adh_short_C2 (E-value: 3.8e-35, bitscore: 110.9,
-                     seeds: 47)"
-                     /sec_met="Kind: biosynthetic"
+                     /motif="PKSI-KR_m1"
+                     /note="NRPS/PKS Motif: PKSI-KR_m1 (e-value: 0.0011,
+                     bit-score: 11.6)"
+                     /score="11.6"
+                     /tool="antismash"
+                     /translation="TVLITGGCKNIGKQIAQVFAENNYNVIVTSRN"
+     aSDomain        883..1215
+                     /aSDomain="PKS_KR"
+                     /database="nrpspksdomains.hmm"
+                     /detection="hmmscan"
+                     /domain_id="nrpspksdomains_eciO_KR1"
+                     /evalue="1.20E-09"
+                     /label="eciO_KR1"
+                     /locus_tag="eciO"
+                     /score="29.9"
+                     /tool="antismash"
+                     /translation="TVLITGGCKNIGKQIAQVFAENNYNVIVTSRNNNNKSIITYFKKK
+                     NLKVFFYTLNVENEDEVVNVFKEINNDIGKIDILINNAGISQGNTLLEDSKTEDFKSMI
+                     NTNILGS"
      gene            1690..1878
                      /gene="eciI"
      CDS             1690..1878
-                     /function="producer-self-protection"
                      /codon_start=1
                      /db_xref="UniProtKB/TrEMBL:O54219"
+                     /function="producer-self-protection"
+                     /gene="eciI"
+                     /locus_tag="eciI"
+                     /product="EciI protein"
+                     /protein_id="CAA74347.1"
+                     /transl_table=11
                      /translation="MNIYLKIVITALFFSSIIFTVTYVSSKNLGMSLLFGLLSFIANLV
                      YDYVMGASERKSKKDNK"
-                     /gene="eciI"
-                     /transl_table=11
-                     /locus_tag="eciI"
-                     /protein_id="CAA74347.1"
-                     /product="EciI protein"
      CDS             1940..2110
-                     /function="antimicrobial"
                      /codon_start=1
                      /db_xref="InterPro:IPR012519"
                      /db_xref="UniProtKB/TrEMBL:O54220"
-                     /translation="MENKKDLFDLEIKKDNMENNNELEAQSLGPAIKATRQVCPKATRF
-                     VTVSCKKSDCQ"
+                     /function="antimicrobial"
                      /gene="eciA"
-                     /transl_table=11
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     lanthipeptide: Antimicr18"
                      /locus_tag="eciA"
-                     /protein_id="CAA74348.1"
                      /product="epicidin 280"
+                     /protein_id="CAA74348.1"
                      /sec_met="Type: lanthipeptide"
                      /sec_met="Antimicr18 (E-value: 6.6e-40, bitscore: 124.1,
-                     seeds: 2)"
+                     seeds: 2, tool: rule-based-clusters)"
                      /sec_met="Kind: biosynthetic"
+                     /transl_table=11
+                     /translation="MENKKDLFDLEIKKDNMENNNELEAQSLGPAIKATRQVCPKATRF
+                     VTVSCKKSDCQ"
      gene            1940..2178
                      /gene="eciA"
      mat_peptide     2018..2107
-                     /product="epicidin 280"
                      /function="antimicrobial"
                      /gene="eciA"
+                     /product="epicidin 280"
      stem_loop       2134..2178
                      /gene="eciA"
      gene            2194..3096
                      /gene="eciP"
      CDS             2194..3096
-                     /note="subtilisin-like leader peptidase"
                      /codon_start=1
                      /db_xref="GOA:O54221"
                      /db_xref="InterPro:IPR000209"
                      /db_xref="InterPro:IPR015500"
                      /db_xref="UniProtKB/TrEMBL:O54221"
+                     /gene="eciP"
+                     /gene_functions="biosynthetic-additional
+                     (rule-based-clusters) Peptidase_S8 (E-value: 5.2e-20,
+                     bitscore: 60.7, seeds: 43, tool: rule-based-clusters)"
+                     /locus_tag="eciP"
+                     /note="subtilisin-like leader peptidase"
+                     /product="protease"
+                     /protein_id="CAA74349.1"
+                     /sec_met="Type: "
+                     /sec_met="Peptidase_S8 (E-value: 5.2e-20, bitscore: 60.7,
+                     seeds: 43, tool: rule-based-clusters)"
+                     /sec_met="Kind: biosynthetic"
+                     /transl_table=11
                      /translation="MTNSDYINYTYDDRDFFEKILFIDSGCDYNHSELKNNIDLKNCKS
                      FVDNNLNDYTGHGTQIISVLTGKIYLRGLIPNASIVVYKVTDYRGKTSIEKIYKALSQG
                      VKKGFKVINVSFSGAIDSIFYTKKFQEIIDEARIKNIIICWSPMNNDNRLNNHKNNTNL
                      IPNDFKNLFQIGSINRLNQISNLVCNENEIDFFAPGGDLVSETIPIEESFILLANTQLL
                      CKLSDYYIGIPKGYTINMGNSIATSYASGCFMIIISKFKRKYKYYPSINEVLKLISKYS
                      NSEINLIKITRSVVENALI"
-                     /gene="eciP"
-                     /transl_table=11
-                     /locus_tag="eciP"
-                     /protein_id="CAA74349.1"
-                     /product="protease"
-                     /sec_met="Type: none"
-                     /sec_met="Peptidase_S8 (E-value: 5.2e-20, bitscore: 60.7,
-                     seeds: ?)"
-                     /sec_met="Kind: biosynthetic"
      gene            3083..6013
                      /gene="eciB"
      CDS             3083..6013
@@ -149,6 +200,24 @@ FEATURES             Location/Qualifiers
                      /db_xref="InterPro:IPR006826"
                      /db_xref="InterPro:IPR006827"
                      /db_xref="UniProtKB/TrEMBL:O54222"
+                     /gene="eciB"
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     lanthipeptide: Lant_dehydr_C"
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     lanthipeptide: Lant_dehyd_N"
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     lanthipeptide: Lant_dehyd_C"
+                     /locus_tag="eciB"
+                     /product="EciB protein"
+                     /protein_id="CAA74350.1"
+                     /sec_met="Type: lanthipeptide"
+                     /sec_met="Lant_dehyd_N (E-value: 3.6e-25, bitscore: 77.1,
+                     seeds: 38, tool: rule-based-clusters); Lant_dehyd_C
+                     (E-value: 1.2e-108, bitscore: 352.5, seeds: 37, tool:
+                     rule-based-clusters); Lant_dehydr_C (E-value: 9.3e-20,
+                     bitscore: 60.2, seeds: 35, tool: rule-based-clusters)"
+                     /sec_met="Kind: biosynthetic"
+                     /transl_table=11
                      /translation="MHLFKWYMIREPILEINKLEDIQERRDNNEDKYLNKLIDFIFDNE
                      LALPLYHANSNLFNMINNYKRKELSKKKKKNLILSLYNYITRMIFRATPFGFMSSINIG
                      SIKPNEMTVWNNDTQKYNLDLDNRVLYPLLKNLNKDIKNKIYLRKNYYIYKDYTHYYIP
@@ -166,22 +235,22 @@ FEATURES             Location/Qualifiers
                      GKEIIDIVEECFEKDSKIVSKYYADKNFSSDDALYFNITNIVDILSYLTNSIDAQIDIL
                      SDISHKKENKKIYRKYKNNLMKIVEGDVNKYNIYLNLRKYAYSKLKFVLSDKKINDKKD
                      IILSIVHMFNNRFIGTDRKYEEFVMELLSRTLIDYKNKKEHICNNS"
-                     /gene="eciB"
-                     /transl_table=11
-                     /locus_tag="eciB"
-                     /protein_id="CAA74350.1"
-                     /product="EciB protein"
-                     /sec_met="Type: lanthipeptide"
-                     /sec_met="Lant_dehyd_N (E-value: 3.6e-25, bitscore: 77.1,
-                     seeds: 38); Lant_dehyd_C (E-value: 1.2e-108, bitscore:
-                     352.5, seeds: 37); Lant_dehydr_C (E-value: 9.3e-20,
-                     bitscore: 60.2, seeds: ?)"
-                     /sec_met="Kind: biosynthetic"
      CDS             5998..7191
                      /codon_start=1
                      /db_xref="InterPro:IPR007822"
                      /db_xref="InterPro:IPR020434"
                      /db_xref="UniProtKB/TrEMBL:O54223"
+                     /gene="eciC"
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     lanthipeptide: LANC_like"
+                     /locus_tag="eciC"
+                     /product="EciC protein"
+                     /protein_id="CAA74351.1"
+                     /sec_met="Type: lanthipeptide"
+                     /sec_met="LANC_like (E-value: 1e-82, bitscore: 266.6,
+                     seeds: 47, tool: rule-based-clusters)"
+                     /sec_met="Kind: biosynthetic"
+                     /transl_table=11
                      /translation="MQQFLEAYIKKVENIDIVDDYIHRAYGKEPIYKVSLITGYPGIAM
                      TLFSIYQHTKNFKYYKLANKYLEKTIDLISSVPIYSTSLFEGAFGVIFSLLICSDLGNN
                      YSEIIKSLLSEYKKIASDEIRDLKKNIKEGKVESQDYDIVSGCSGTLSVLLLATDIYPS
@@ -189,15 +258,6 @@ FEATURES             Location/Qualifiers
                      TSKTKDILINSISKLNRSLKIDNGTIYIPTDTNNTNNFRDAWCYGMPSVAYTIYNIAKT
                      FQISSLLELSQNLLYQTWLRKEYETKLISPTLCHGFSGIVIISLIMNNEDLANKYIDKI
                      NNTDVDDKDMLFFDINSNSSIMKDIGLLNGNSGILLTMLSFNNKDIQLNHWSKFLIF"
-                     /gene="eciC"
-                     /transl_table=11
-                     /locus_tag="eciC"
-                     /protein_id="CAA74351.1"
-                     /product="EciC protein"
-                     /sec_met="Type: lanthipeptide"
-                     /sec_met="LANC_like (E-value: 1e-82, bitscore: 266.6,
-                     seeds: 47)"
-                     /sec_met="Kind: biosynthetic"
      gene            order(5998..7191,7217..7245)
                      /gene="eciC"
      stem_loop       7217..7245
