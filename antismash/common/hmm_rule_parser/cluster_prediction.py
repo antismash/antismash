@@ -6,11 +6,11 @@
 
 from collections import defaultdict
 import logging
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Set, Tuple
 
 from Bio.SearchIO._model.hsp import HSP
 
-from antismash.common import fasta, path
+from antismash.common import fasta, path, serialiser
 from antismash.common.secmet import Record, ClusterBorder, CDSFeature
 from antismash.common.secmet.feature import SecMetQualifier, GeneFunction, FeatureLocation
 from antismash.common.subprocessing import run_hmmsearch
@@ -58,6 +58,24 @@ class CDSResults:
             self.cds.gene_functions.add(GeneFunction.ADDITIONAL, secmet_domain.tool,
                                         str(secmet_domain))
 
+    def to_json(self) -> Dict[str, Any]:
+        json = {"cds_name": self.cds.get_name(),
+                "domains": [domain.to_json() for domain in self.domains],
+                "definition_domains": {key: list(val) for key, val in self.definition_domains.items()}
+                }
+        return json
+
+    @staticmethod
+    def from_json(json: Dict[str, Any], record: Record) -> "CDSResults":
+        domains = []
+        for json_domain in json["domains"]:
+            domains.append(SecMetQualifier.Domain.from_json(json_domain))
+
+        cds = record.get_cds_by_name(json["cds_name"])
+        definition_domains = {key: set(val) for key, val in json["definition_domains"].items()}
+
+        return CDSResults(cds, domains, definition_domains)
+
 
 class RuleDetectionResults:
     """ A container for the all results of running the cluster prediction """
@@ -76,6 +94,28 @@ class RuleDetectionResults:
         for border, cds_results in self.cds_by_cluster.items():
             for cds_result in cds_results:
                 cds_result.annotate(border.product, self.tool)
+
+    def to_json(self) -> Dict[str, Any]:
+        cds_results_json = []  # type: List[Tuple[Dict[str, Any], List[Dict[str, Any]]]]
+        json = {"tool": self.tool,
+                "cds_by_cluster": cds_results_json}
+
+        for border, cds_results in self.cds_by_cluster.items():
+            json_border = serialiser.feature_to_json(border.to_biopython()[0])
+            json_cds_results = [result.to_json() for result in cds_results]
+            cds_results_json.append((json_border, json_cds_results))
+
+        return json
+
+    @staticmethod
+    def from_json(json: Dict[str, Any], record: Record) -> "RuleDetectionResults":
+        cds_by_cluster = {}
+        for json_border, json_cds_results in json["cds_by_cluster"]:
+            border = ClusterBorder.from_biopython(serialiser.feature_from_json(json_border))
+            cds_results = [CDSResults.from_json(result_json, record) for result_json in json_cds_results]
+            cds_by_cluster[border] = cds_results
+
+        return RuleDetectionResults(cds_by_cluster, json["tool"])
 
 
 def remove_redundant_borders(borders: List[ClusterBorder],

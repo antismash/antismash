@@ -35,20 +35,19 @@ class HMMDetectionResults(DetectionResults):
         self.enabled_types = enabled_types
 
     def to_json(self) -> Dict[str, Any]:
-        logging.critical("hmm_detection not storing borders or secmet annotation info in results JSON")
         return {"record_id": self.record_id,
                 "schema_version": self.schema_version,
-                "enabled_types": self.enabled_types}
+                "enabled_types": self.enabled_types,
+                "rule_results": self.rule_results.to_json()}
 
     @staticmethod
     def from_json(json: Dict[str, Any], record: Record) -> "HMMDetectionResults":
         if json["schema_version"] != HMMDetectionResults.schema_version:
             raise ValueError("Detection results have changed. No results can be reused.")
+        assert json["record_id"] == record.id
 
-        class Dummy:
-            """ A simple dummy class as part of results regeneration skip"""
-            borders = []  # type: List[ClusterBorder]
-        return HMMDetectionResults(record.id, Dummy(), json["enabled_types"])  # type: ignore
+        return HMMDetectionResults(json["record_id"], RuleDetectionResults.from_json(json["rule_results"], record),
+                                   json["enabled_types"])
 
     def get_predictions(self) -> List[ClusterBorder]:
         return self.rule_results.borders
@@ -93,6 +92,7 @@ def regenerate_previous_results(results: Dict[str, Any], record: Record,
     regenerated = HMMDetectionResults.from_json(results, record)
     if set(regenerated.enabled_types) != set(get_supported_cluster_types()):
         raise RuntimeError("Cluster types supported by HMM detection have changed, all results invalid")
+    regenerated.rule_results.annotate_cds_features()
     return regenerated
 
 
@@ -101,8 +101,7 @@ def run_on_record(record: Record, previous_results: Optional[HMMDetectionResults
     """ Runs hmm_detection on the provided record.
     """
     if previous_results:
-        # TODO: return the results after they're properly stored
-        pass
+        return previous_results
 
     signatures = path.get_full_path(__file__, "data", "hmmdetails.txt")
     seeds = path.get_full_path(__file__, "data", "bgc_seeds.hmm")
