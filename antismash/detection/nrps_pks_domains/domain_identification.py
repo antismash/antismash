@@ -64,11 +64,11 @@ class NRPSPKSDomains(module_results.DetectionResults):
     """ Results tracking for NRPS and PKS domains """
     schema_version = 1
 
-    def __init__(self, record_id: str) -> None:
+    def __init__(self, record_id: str, cds_results: Dict[CDSFeature, CDSResult] = None) -> None:
         super().__init__(record_id)
-        self.cds_results = {}  # type: Dict[CDSFeature, CDSResult]
-        # for protection against double-adds
-        self.added = False
+        if cds_results is None:
+            cds_results = {}
+        self.cds_results = cds_results
 
     def to_json(self) -> Dict[str, Any]:
         return {"cds_results": {cds.get_name(): cds_result.to_json() for cds, cds_result in self.cds_results.items()},
@@ -91,10 +91,7 @@ class NRPSPKSDomains(module_results.DetectionResults):
             cds_result.annotate_domains(record, cds)
             cds_results[cds] = cds_result
 
-        result = NRPSPKSDomains(record.id)
-        result.cds_results = cds_results
-        result.added = True
-        return result
+        return NRPSPKSDomains(record.id, cds_results)
 
 
 def generate_domains(record: Record) -> NRPSPKSDomains:
@@ -127,7 +124,6 @@ def generate_domains(record: Record) -> NRPSPKSDomains:
 
     for cds, cds_result in results.cds_results.items():
         cds_result.annotate_domains(record, cds)
-    results.added = True
     return results
 
 

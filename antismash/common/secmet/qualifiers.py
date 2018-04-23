@@ -7,7 +7,19 @@
 import bisect
 from collections import defaultdict
 from enum import Enum, unique
-from typing import Any, Dict, Iterable, Iterator, List, Set, Tuple, Optional  # pylint: disable=unused-import
+import re
+from typing import Any, Dict, Iterable, Iterator, List, Set, Sequence, Tuple, Optional, Union  # pylint: disable=unused-import
+
+
+def parse_format(fmt: str, data: str) -> Sequence[str]:
+    """ Reverse of str.format(), pulls values from an input string that match
+        positions of {} in a format string. Raises a ValueError if the match
+        cannot be found.
+    """
+    res = re.search("^{}$".format(fmt.replace("{}", "(.+?)")), data)
+    if res is None:
+        raise ValueError("Could not match format %r to input %r" % (fmt, data))
+    return res.groups()
 
 
 class ActiveSiteFinderQualifier:
@@ -168,6 +180,8 @@ class SecMetQualifier(list):
     """
     class Domain:
         """ A simple container for the information needed to create a domain """
+        qualifier_label = "{} E-value: {}, bitscore: {}, seeds: {}, tool: {}"
+
         def __init__(self, name: str, evalue: float, bitscore: float, nseeds: str,
                      tool: str) -> None:
             self.query_id = str(name)
@@ -180,8 +194,22 @@ class SecMetQualifier(list):
             return str(self)
 
         def __str__(self) -> str:
-            ret = "{} E-value: {}, bitscore: {}, seeds: {}"
-            return ret.format(self.query_id, self.evalue, self.bitscore, self.nseeds)
+            return self.qualifier_label.format(self.query_id, self.evalue,
+                                               self.bitscore, self.nseeds, self.tool)
+
+        def to_json(self) -> List[Union[str, float]]:
+            return [self.query_id, self.evalue, self.bitscore, self.nseeds, self.tool]
+
+        @classmethod
+        def from_string(cls, line: str) -> "SecMetQualifier.Domain":
+            """ Rebuilds a Domain from a string (e.g. from a genbank file) """
+            return cls.from_json(parse_format(cls.qualifier_label, line))
+
+        @classmethod
+        def from_json(cls, json: Sequence[Union[str, float]]) -> "SecMetQualifier.Domain":
+            """ Rebuilds a Domain from a JSON representation """
+            assert len(json) == 5, json
+            return cls(str(json[0]), float(json[1]), float(json[2]), str(json[3]), str(json[4]))
 
     def __init__(self, products: Set[str], domains: List["SecMetQualifier.Domain"]) -> None:
         self._domains = domains
@@ -241,9 +269,9 @@ class SecMetQualifier(list):
     @staticmethod
     def from_biopython(qualifier: List[str]) -> "SecMetQualifier":
         """ Converts a BioPython style qualifier into a SecMetQualifier. """
-        domains = None
-        products = None
-        kind = None
+        domains = []
+        products = set()
+        kind = "biosynthetic"
         if len(qualifier) != 3:
             raise ValueError("Cannot parse qualifier: %s" % qualifier)
         for value in qualifier:
@@ -253,7 +281,9 @@ class SecMetQualifier(list):
                 kind = value.split("Kind: ", 1)[1]
                 assert kind == "biosynthetic", kind  # since it's the only kind we have
             else:
-                domains = value.split("; ")
+                domain_strings = value.split("; ")
+                for domain_string in domain_strings:
+                    domains.append(SecMetQualifier.Domain.from_string(domain_string))
         if not (domains and products and kind):
             raise ValueError("Cannot parse qualifier: %s" % qualifier)
         return SecMetQualifier(products, domains)
