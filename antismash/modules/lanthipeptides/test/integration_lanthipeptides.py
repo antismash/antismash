@@ -140,13 +140,13 @@ class IntegrationLanthipeptides(unittest.TestCase):
         "Test lanthipeptide prediction for epicidin 280"
         filename = path.get_full_path(__file__, 'data', 'epicidin_280.gbk')
         rec = Record.from_biopython(seqio.read(filename), taxon="bacteria")
-        assert not rec.get_cds_motifs()
+        assert len(rec.get_cds_motifs()) == 1
         result = run_specific_analysis(rec)
         motifs = self.gather_all_motifs(result)
         assert len(motifs) == 1
-        assert not rec.get_cds_motifs()
-        result.add_to_record(rec)
         assert len(rec.get_cds_motifs()) == 1
+        result.add_to_record(rec)
+        assert len(rec.get_cds_motifs()) == 2
 
         prepeptide = motifs[0]
         self.assertAlmostEqual(3115.7, prepeptide.monoisotopic_mass, delta=0.5)
@@ -202,19 +202,10 @@ class IntegrationLanthipeptides(unittest.TestCase):
         self.assertEqual('Class II', motifs[0].peptide_subclass)
 
     def test_multiple_biosynthetic_enzymes(self):
-        filename = path.get_full_path(__file__, 'data', 'CP013129.1.section.gbk')
-        rec = record_processing.parse_input_sequence(filename, taxon="bacteria")[0]
-        rec.clear_cds_motifs()
-        assert rec.get_cluster(0).products == ("lanthipeptide", "nrps")
-        assert rec.get_cluster(0).cds_children
-        result = run_specific_analysis(rec)
-        assert len(result.clusters) == 1
-        assert result.clusters[1] == set(["AQF52_7190", "AQF52_7168"])
-        motif = result.motifs_by_locus["AQF52_7190"][0]
-        assert motif.peptide_subclass == "Class II"
-        motif = result.motifs_by_locus["AQF52_7168"][0]
-        assert motif.peptide_subclass == "Class III"
-
+        # TODO: find/create an input with both class II and class III lanthipeptides
+        # this was the case in CP013129.1, in a nrps-lanthipeptide hybrid, but
+        # the hybrid was only created due to a bug in cluster formation
+        pass
 
 class IntegrationLanthipeptidesWithoutFimo(IntegrationLanthipeptides):
     def setUp(self):

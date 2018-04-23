@@ -26,89 +26,102 @@ REFERENCE   2  (bases 1 to 36668)
   JOURNAL   Submitted (14-JUN-2010) Department of Molecular Microbiology, The
             John Innes Centre, Colney Lane, Norwich, Norfolk NR4 7UH, UK
 FEATURES             Location/Qualifiers
-     cluster         1..31228
+     cluster         1..30294
+                     /contig_edge="True"
                      /cutoff="20000"
                      /extension="10000"
-                     /contig_edge="True"
-                     /product="lanthipeptide"
                      /note="Detection rule(s) for this cluster type:
-                     lanthipeptide: ((LANC_like and (Flavoprotein or
+                     lanthipeptide: (((LANC_like and (Flavoprotein or
                      Trp_halogenase or p450 or Lant_dehyd_N or Lant_dehyd_C or
-                     adh_short or adh_short_C2) or cds(LANC_like and (Pkinase or
-                     DUF4135)) or TIGR03731 or Antimicr18 or Gallidermin or
-                     L_biotic_A or leader_d or leader_eh or leader_abc or
-                     mature_d or mature_ab or mature_a or mature_b or mature_ha
-                     or mature_h_beta or lacticin_l or lacticin_mat or
-                     LD_lanti_pre or strep_PEQAXS));"
+                     Lant_dehydr_C or tsrC or adh_short or adh_short_C2) or
+                     cds(LANC_like and (Pkinase or DUF4135)) or TIGR03731 or
+                     Antimicr18 or Gallidermin or L_biotic_A or leader_d or
+                     leader_eh or leader_abc or mature_d or mature_ab or
+                     mature_a or mature_b or mature_ha or mature_h_beta or
+                     lacticin_l or lacticin_mat or LD_lanti_pre or strep_PEQAXS)
+                     and not YcaO));"
+                     /product="lanthipeptide"
+                     /tool="antismash"
      source          1..36668
+                     /db_xref="taxon:83302"
                      /mol_type="genomic DNA"
                      /organism="Microbispora corallina"
-                     /db_xref="taxon:83302"
                      /strain="NRRL 30420"
      CDS             572..1462
-                     /note="orf-1"
                      /codon_start=1
+                     /locus_tag="ADK32545.1"
+                     /note="orf-1"
+                     /product="putative DNA-binding protein"
+                     /protein_id="ADK32545.1"
+                     /transl_table=11
                      /translation="MDSDKLLGEFLHARRMATSPRQAGLAHSGPRRTPGLRREEVAVLA
                      GVSLDYYARLEQGRERRPSDQVLNALARVFQMDGDTTDYLYRLAYPGLRSPAPIDMPER
                      VSPTLYGILAGWNHVPAFVLGRRLDVLASNSMADALYGGLTYRDNCLRMIFLSPEAEDF
                      YADWERAAFVKTAQLRRAAATDPDDPALARLVAELRAHSEVFRTMWERHDVGTQVAEDK
                      SFRHPEVGEMSLALHRLIVTSGSGQQLCIMAAPPGSLSEQALARLAATLPDGGSGAARS
                      RWSRPGQARAAEPGF"
-                     /transl_table=11
-                     /locus_tag="ADK32545.1"
-                     /protein_id="ADK32545.1"
-                     /product="putative DNA-binding protein"
      gene            1656..2294
                      /gene="mibJ"
      CDS             1656..2294
                      /codon_start=1
+                     /gene="mibJ"
+                     /locus_tag="mibJ"
+                     /product="MibJ"
+                     /protein_id="ADK32546.1"
+                     /transl_table=11
                      /translation="MEMVSVELWRHEVRRCGLVALVTPLAVVASTTLLSALAGGGMHDF
                      LAVWLPAALLPLVAGVCAVGVVSREVMPELQATFPTPYPVTVRRRLRLLIVAVGAGVVV
                      LAVSAATGAGHDPVTGQGASGPVLSSLFSAASSAAFSLLLIGMGAYAAAGRTRNRGGPA
                      SALVMTAWLAKLLVLDRIPLPPAAVAVAFAAAGVWSMVRGSTRAGGEAV"
-                     /gene="mibJ"
-                     /transl_table=11
-                     /locus_tag="mibJ"
-                     /protein_id="ADK32546.1"
-                     /product="MibJ"
      misc_feature    1656..23062
                      /note="microbisporicin gene cluster"
      gene            2291..3067
                      /gene="mibY"
      CDS             2291..3067
-                     /note="MibY"
                      /codon_start=1
+                     /gene="mibY"
+                     /locus_tag="mibY"
+                     /note="MibY"
+                     /product="putative ABC permease"
+                     /protein_id="ADK32547.1"
+                     /transl_table=11
                      /translation="MTGRWLVPLTASARSEITMILRSRMLWMAVAPLAALSLLLAFTST
                      HGADVGPGGRVADTAVMVNLLAGFGLAMAMADRFRWHRRTGLADLLAATPGSASARMAG
                      TLTGSVAVALAPPAAALLVYAVVTAVREGSLSPVGASLASVVVILLPGGLLIAAFSALA
                      GLVLPVTVARIGAAGVWGWATVLNSRVLPIPTVSYTMFSPAGGFPAVAWLGAPRSNAVL
                      NGREVAASAAAVNILVVLACTLVLLAVARIWTERYR"
-                     /gene="mibY"
-                     /transl_table=11
-                     /locus_tag="mibY"
-                     /protein_id="ADK32547.1"
-                     /product="putative ABC permease"
      gene            3064..3966
                      /gene="mibZ"
      CDS             3064..3966
-                     /note="MibZ"
                      /codon_start=1
+                     /gene="mibZ"
+                     /locus_tag="mibZ"
+                     /note="MibZ"
+                     /product="putative ABC transporter ATP-binding protein"
+                     /protein_id="ADK32548.1"
+                     /transl_table=11
                      /translation="MNTSISITDLTKRYRRGGDRPALNGVSLTVDGGMTALLGANGAGK
                      TTLMRICVGVLRPDGGRVVVGGHDLGTAAGRRAVKRILGYLPQELSMYDDLTGREFLDY
                      IALLKGVDDKRVRRDQIEQMLELTGLSEHAGRRLGGYSGGMKRRLGIAQALLAEPELIV
                      VDEPTAGLDPSERMRFRSLLAGLGGARRTVVLSTHILDDAAQTCPNTIVLHQGRVAYQG
                      STAGLAAVAEGRTYLLPPGAQAPPEAVVVNAAAEVEGTRYRVISARPPIGGTLMTPTLE
                      DGYAALLQLGEPSPTGPRP"
-                     /gene="mibZ"
-                     /transl_table=11
-                     /locus_tag="mibZ"
-                     /protein_id="ADK32548.1"
-                     /product="putative ABC transporter ATP-binding protein"
      gene            3963..5207
                      /gene="mibO"
      CDS             3963..5207
-                     /note="MibO"
                      /codon_start=1
+                     /gene="mibO"
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     lanthipeptide: p450"
+                     /locus_tag="mibO"
+                     /note="MibO"
+                     /product="cytochrome P450"
+                     /protein_id="ADK32549.1"
+                     /sec_met="Type: lanthipeptide"
+                     /sec_met="p450 (E-value: 1.8e-24, bitscore: 77.4, seeds:
+                     50, tool: rule-based-clusters)"
+                     /sec_met="Kind: biosynthetic"
+                     /transl_table=11
                      /translation="MIFGPDFHRDPYPVYRRLRDEAPCHHEPALGLYALSRYEDVLAAL
                      RQPTVFSSAARAVASSAAGAGPYRGADTVSPERETAAEGPARSLLFLDPPEHQVLRQAV
                      SRGFTPQAVLRLEPAVRDIAAGLADRIPDRGGGEFVTEFAAPLAIAVILRLLGVPEADR
@@ -117,94 +130,120 @@ FEATURES             Location/Qualifiers
                      AIPAAFEEVLRYWAPTQHQGRTLTAAVRLHGRLLPAGAHVLLLTGSAGRDERAYPDPDV
                      FDIGRFHPDRRPSTALGFGLGAHFCLGAALARLQARVALRELTRRFPRYRTDEERTVRS
                      EVMNGFGHSRVPFST"
-                     /gene="mibO"
-                     /transl_table=11
-                     /locus_tag="mibO"
-                     /protein_id="ADK32549.1"
-                     /product="cytochrome P450"
-                     /sec_met="Type: lanthipeptide"
-                     /sec_met="p450 (E-value: 1.8e-24, bitscore: 77.4, seeds:
-                     50)"
-                     /sec_met="Kind: biosynthetic"
+     cluster_border  3963..21228
+                     /aStool="rule-based-clusters"
+                     /contig_edge="False"
+                     /cutoff="20000"
+                     /extent="10000"
+                     /product="lanthipeptide"
+                     /rule="((LANC_like and (Flavoprotein or Trp_halogenase or
+                     p450 or Lant_dehyd_N or Lant_dehyd_C or Lant_dehydr_C or
+                     tsrC or adh_short or adh_short_C2) or cds(LANC_like and
+                     (Pkinase or DUF4135)) or TIGR03731 or Antimicr18 or
+                     Gallidermin or L_biotic_A or leader_d or leader_eh or
+                     leader_abc or mature_d or mature_ab or mature_a or mature_b
+                     or mature_ha or mature_h_beta or lacticin_l or lacticin_mat
+                     or LD_lanti_pre or strep_PEQAXS) and not YcaO)"
+                     /tool="antismash"
      gene            5240..5629
                      /gene="mibQ"
      CDS             5240..5629
-                     /note="MibQ"
                      /codon_start=1
+                     /gene="mibQ"
+                     /locus_tag="mibQ"
+                     /note="MibQ"
+                     /product="putative lipoprotein signal peptide-containing
+                     protein"
+                     /protein_id="ADK32550.1"
+                     /transl_table=11
                      /translation="MTNTTRARLSGAGLLAAALLLAGCTGGGRADPAHRSPVPLPSPTS
                      SKQDISEANLAYLWPLTVDHGTIECLPSDNAVFVAPDGTTYALNDRAEKAGHPPITPIR
                      AKGSGGGYISLGALLSTTLNLCGKG"
-                     /gene="mibQ"
-                     /transl_table=11
-                     /locus_tag="mibQ"
-                     /protein_id="ADK32550.1"
-                     /product="putative lipoprotein signal peptide-containing
-                     protein"
      gene            5938..6720
                      /gene="mibR"
      CDS             5938..6720
-                     /note="MibR"
                      /codon_start=1
+                     /gene="mibR"
+                     /locus_tag="mibR"
+                     /note="MibR"
+                     /product="putative DNA-binding protein"
+                     /protein_id="ADK32551.1"
+                     /transl_table=11
                      /translation="MPDRQRTRRATGGSADARGRGEVVVACASLRDTNAPLAEWLGDLD
                      VGCTFCGDVYSAAETYDPRLALLPVLTEAQAQRLGRLMERCPGTSVLGIVMDVTGHHTH
                      RAIQNGASWVLNTLLPAACCRNLLRMVIQAVVLGPTVPEPLVAEPPVPEGVEPPTRPGT
                      ARAEPPAEARKVADAQEEELLALLCGPDSIAEIARRFYCSERSMYRQLRDLYRSYGVTG
                      RRELRRVIALRSVTRHQETLSTHLLAPPRPAGRGGLSC"
-                     /gene="mibR"
-                     /transl_table=11
-                     /locus_tag="mibR"
-                     /protein_id="ADK32551.1"
-                     /product="putative DNA-binding protein"
      gene            complement(7066..7833)
                      /gene="mibW"
      CDS             complement(7066..7833)
-                     /note="MibW"
                      /codon_start=1
+                     /gene="mibW"
+                     /locus_tag="mibW"
+                     /note="MibW"
+                     /product="putative anti-sigma factor"
+                     /protein_id="ADK32552.1"
+                     /transl_table=11
                      /translation="MIDDEDQDALTAAVREADEELIGRLTVPAYDELLGRLPDIAASRK
                      APVSGPTLRASWRLTTGLVAAQARLMPRSLGPLTALGLVAAVLLALTAPTPGAVVQLFS
                      SVVTVVLLLGSVTACSHRSDPRLELLSAMPVSPATAFATRLALVLGIDLALSVVASGVL
                      VSAGATTGMLAVVAGWLGRALLAAGAGAVFAIWRSPAFGTMAGVVVWLLGWVRGPDDAV
                      VSGTHPWMLSCALALLAAAVWLARRPRLSGSDG"
-                     /gene="mibW"
-                     /transl_table=11
-                     /locus_tag="mibW"
-                     /protein_id="ADK32552.1"
-                     /product="putative anti-sigma factor"
      gene            complement(7823..8485)
                      /gene="mibX"
      CDS             complement(7823..8485)
-                     /note="MibX"
                      /codon_start=1
+                     /gene="mibX"
+                     /locus_tag="mibX"
+                     /note="MibX"
+                     /product="RNA polymerase, sigma-24 subunit, ECF subfamily"
+                     /protein_id="ADK32553.1"
+                     /transl_table=11
                      /translation="MPLRRRSPRTGTAADATYERVQQLREPELSAEVSEDAVLMRRVAD
                      GEEVALRMLYERHAAGMLRLIRRLTSQREVAEEILQESWLAVWRSAGSFRGEAPVRAWL
                      LGVARRQAHNRLRRAEPVLVELEKAADVPDLEPAVDEQVLARAERRDLVAAVAELPEHL
                      REVLVLVLAEDLPYPQVAVILGIPTGTVKSRMHMARRLLTEALTKTTNPKGGRTGDR"
-                     /gene="mibX"
-                     /transl_table=11
-                     /locus_tag="mibX"
-                     /protein_id="ADK32553.1"
-                     /product="RNA polymerase, sigma-24 subunit, ECF subfamily"
      gene            8616..8789
                      /gene="mibA"
      CDS             8616..8789
-                     /note="MibA"
                      /codon_start=1
-                     /translation="MPADILETRTSETEDLLDLDLSIGVEEITAGPAVTSWSLCTPGCT
-                     SPGGGSNCSFCC"
                      /gene="mibA"
-                     /transl_table=11
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     lanthipeptide: TIGR03731"
                      /locus_tag="mibA"
-                     /protein_id="ADK32554.1"
+                     /note="MibA"
                      /product="microbisporicin structural preproprotein"
+                     /protein_id="ADK32554.1"
                      /sec_met="Type: lanthipeptide"
                      /sec_met="TIGR03731 (E-value: 1.2e-11, bitscore: 35.6,
-                     seeds: 23)"
+                     seeds: 23, tool: rule-based-clusters)"
                      /sec_met="Kind: biosynthetic"
+                     /transl_table=11
+                     /translation="MPADILETRTSETEDLLDLDLSIGVEEITAGPAVTSWSLCTPGCT
+                     SPGGGSNCSFCC"
      gene            8907..12254
                      /gene="mibB"
      CDS             8907..12254
-                     /note="MibB"
                      /codon_start=1
+                     /gene="mibB"
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     lanthipeptide: Lant_dehydr_C"
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     lanthipeptide: Lant_dehyd_N"
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     lanthipeptide: Lant_dehyd_C"
+                     /locus_tag="mibB"
+                     /note="MibB"
+                     /product="lantibiotic dehydratase"
+                     /protein_id="ADK32555.1"
+                     /sec_met="Type: lanthipeptide"
+                     /sec_met="Lant_dehyd_N (E-value: 4.1e-23, bitscore: 72.7,
+                     seeds: 38, tool: rule-based-clusters); Lant_dehyd_C
+                     (E-value: 4e-115, bitscore: 376.1, seeds: 37, tool:
+                     rule-based-clusters); Lant_dehydr_C (E-value: 4.7e-32,
+                     bitscore: 102.8, seeds: 35, tool: rule-based-clusters)"
+                     /sec_met="Kind: biosynthetic"
+                     /transl_table=11
                      /translation="MTDSPFRAWDVFMVRTPVGYAYPTPLSNSGFDSPASSPGFGEGEF
                      PPDAPVPSDVSGHGAGSSEASVRASGRPPAGDHLSLLRAACEDGPLMEAVELASPSLAG
                      LLARVARGDTGGLKDKRLRRAALALLRYDIRMRTRPTPFGLFAGVSGGRFDTSAKWLAG
@@ -225,22 +264,22 @@ FEATURES             Location/Qualifiers
                      GDPAAAWMSSTGGRRELPPDYRRDPARWQKLIDPTGGWPLLRADEDGCQVLAALESRDE
                      AVRRFGTAYREAFRPTDSPSTQLRLVGSLLHMTCNRLIGGSAERERSVLGLARGAVQDN
                      LNRRRHLA"
-                     /gene="mibB"
-                     /transl_table=11
-                     /locus_tag="mibB"
-                     /protein_id="ADK32555.1"
-                     /product="lantibiotic dehydratase"
-                     /sec_met="Type: lanthipeptide"
-                     /sec_met="Lant_dehyd_N (E-value: 4.1e-23, bitscore: 72.7,
-                     seeds: 38); Lant_dehyd_C (E-value: 4e-115, bitscore: 376.1,
-                     seeds: 37); Lant_dehydr_C (E-value: 4.7e-32, bitscore:
-                     102.8, seeds: ?)"
-                     /sec_met="Kind: biosynthetic"
      gene            12251..13708
                      /gene="mibC"
      CDS             12251..13708
-                     /note="MibC"
                      /codon_start=1
+                     /gene="mibC"
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     lanthipeptide: LANC_like"
+                     /locus_tag="mibC"
+                     /note="MibC"
+                     /product="lantibiotic cyclase"
+                     /protein_id="ADK32556.1"
+                     /sec_met="Type: lanthipeptide"
+                     /sec_met="LANC_like (E-value: 4.2e-49, bitscore: 158.2,
+                     seeds: 47, tool: rule-based-clusters)"
+                     /sec_met="Kind: biosynthetic"
+                     /transl_table=11
                      /translation="MTTVGRTSCGVTSDRHPARFLRGSAARRAARLVRLVAERLADPDA
                      VAGIAARPGNSVPVNGLSMWSPATLSHGFPGIAVFYAELGRIDPAWSAFAHRHLRAAAA
                      AVETAPSGGLFAGPASLLAAAQSCAGPAGHYRGLRRKLTAWLAADHAGRLAVARDRPGP
@@ -250,120 +289,124 @@ FEATURES             Location/Qualifiers
                      LGVTEWREVAVTALLDGLRRDRSAWRVDGSTVCHGYAGLLQVLSRVGAESGDPRLLDGC
                      LDVARMVLGEADESAPFVFPHLVPDSPDGWRNATGYLPLDGAGLLEGAAGVACALLSVI
                      PPSSLCGTDPAPERADLPPWDRCLALC"
-                     /gene="mibC"
-                     /transl_table=11
-                     /locus_tag="mibC"
-                     /protein_id="ADK32556.1"
-                     /product="lantibiotic cyclase"
-                     /sec_met="Type: lanthipeptide"
-                     /sec_met="LANC_like (E-value: 4.2e-49, bitscore: 158.2,
-                     seeds: 47)"
-                     /sec_met="Kind: biosynthetic"
      gene            13737..14420
                      /gene="mibD"
      CDS             13737..14420
-                     /note="MibD"
                      /codon_start=1
+                     /gene="mibD"
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     lanthipeptide: Flavoprotein"
+                     /locus_tag="mibD"
+                     /note="MibD"
+                     /product="flavoprotein decarboxylase"
+                     /protein_id="ADK32557.1"
+                     /sec_met="Type: lanthipeptide"
+                     /sec_met="Flavoprotein (E-value: 4.2e-25, bitscore: 79.3,
+                     seeds: 143, tool: rule-based-clusters)"
+                     /sec_met="Kind: biosynthetic"
+                     /transl_table=11
                      /translation="MTAHSDAGGDPRPPERLLLGVSGSVAALNLPAYIYAFRAAGVARL
                      AVVLTPAAEGFLPAGALRPIVDAVHTEHDQGKGHVALSRWAQHLLVLPATANLLGCAAS
                      GLAPNFLATVLLAADCPITFVPAMNPVMWRKPAVRRNVATLRADGHHVVDPLPGAVYEA
                      ASRSIVEGLAMPRPEALVRLLGGGDDGSPAGPAGPVGRAEHVGAVEAVEAVEAVEAVEA
                      AEALA"
-                     /gene="mibD"
-                     /transl_table=11
-                     /locus_tag="mibD"
-                     /protein_id="ADK32557.1"
-                     /product="flavoprotein decarboxylase"
-                     /sec_met="Type: lanthipeptide"
-                     /sec_met="Flavoprotein (E-value: 4.2e-25, bitscore: 79.3,
-                     seeds: 143)"
-                     /sec_met="Kind: biosynthetic"
      gene            14417..15367
                      /gene="mibT"
      CDS             14417..15367
-                     /note="MibT"
                      /codon_start=1
+                     /gene="mibT"
+                     /locus_tag="mibT"
+                     /note="MibT"
+                     /product="ABC transporter ATP-binding domain"
+                     /protein_id="ADK32558.1"
+                     /transl_table=11
                      /translation="MTVPAFELSDLTVRYGPVTAVDGVSAGSAPGLVTALLGPNGAGKS
                      SLLRVLSTIAPPSSGTARVFGHDTRAEPLAARTRIGLVFQERALDTDLSAEQNLRFHAR
                      LFGVGRARAREDILVLLERFGLAGRGRDRVETLSGGLARRLEIARALLHRPGLLILDEP
                      TNGLDPEARQTVWDDLIRLRSELGVTVLYSTHYMDEAELADQIIILSEGRVAGFGSPGR
                      LKSELRSSRIVLVTHDDDTALARLAEAGFDAVIDSDGVAVRCREPESRMAEVIRAAGPL
                      VRAASVHHPSMNDVFLAHTAANRDREAADGTVSCP"
-                     /gene="mibT"
-                     /transl_table=11
-                     /locus_tag="mibT"
-                     /protein_id="ADK32558.1"
-                     /product="ABC transporter ATP-binding domain"
      gene            15345..16217
                      /gene="mibU"
      CDS             15345..16217
-                     /note="MibU"
                      /codon_start=1
+                     /gene="mibU"
+                     /locus_tag="mibU"
+                     /note="MibU"
+                     /product="ABC-type multidrug transport system permease
+                     component"
+                     /protein_id="ADK32559.1"
+                     /transl_table=11
                      /translation="MALSAVRDTGGTAGSTPGGPTGGGSAGAGEARRLVSAALRSAVRG
                      TLVVAHRDVLRQVRHPGVVVAQAAQIVFFVLVYAVGFRSMIGSVGGVSFGAYVYPGIIA
                      IQVVMLGVGTGLTYAMDREFGVLREMQVAPVPRMCLPLGKILASCVLLTAQAMLMLLPA
                      PLLGLPLTPARYAAGTAVYLATAAAFSLIGLLLAVSVRRIETLQATVQLAMYPLLFLSG
                      SVFRPDAVPGWLAALMRLNPMMYAVDLARHVLLPSAPGVSYLPVWRDLLVIAALVAAAS
                      AALRLRVGR"
-                     /gene="mibU"
-                     /transl_table=11
-                     /locus_tag="mibU"
-                     /protein_id="ADK32559.1"
-                     /product="ABC-type multidrug transport system permease
-                     component"
      gene            16225..17229
                      /gene="mibV"
      CDS             16225..17229
-                     /note="MibV"
                      /codon_start=1
+                     /gene="mibV"
+                     /locus_tag="mibV"
+                     /note="MibV"
+                     /product="hypothetical protein"
+                     /protein_id="ADK32560.1"
+                     /transl_table=11
                      /translation="MTTATTTGPTGRETLLAGAVSWLAARLRWFDPEQWARHLQPRGFA
                      PSALLELLIICRNLNSVYGHPRPPDPEDGSRGSGVRTTGAAGPAVELIGRALDLAEEVV
                      GRPGFGAALYRGDAAFPHHVWLIALLAEGGRPVEPWPAVAQRVIDAGCAEPIRPGRPTA
                      ARLEARYVFDLAGLRHGLPAMDELAGRTALGPGADPLHLTDADLYVITHMLFYLTDFGR
                      RPFSADEAEGRRVRGLVEVLLGRQLAVGDLDLAAELLACAGLTGADDRLSGCAWNRLTA
                      ARRPDGSVPSPLFRQAALDRLSGEKAEAYAFGTCYHTTLAMVLAATLTDGADA"
-                     /gene="mibV"
-                     /transl_table=11
-                     /locus_tag="mibV"
-                     /protein_id="ADK32560.1"
-                     /product="hypothetical protein"
      gene            18028..18777
                      /gene="mibE"
      CDS             18028..18777
-                     /note="MibE"
                      /codon_start=1
+                     /gene="mibE"
+                     /locus_tag="mibE"
+                     /note="MibE"
+                     /product="putative lantibiotic ABC transporter permease
+                     protein"
+                     /protein_id="ADK32561.1"
+                     /transl_table=11
                      /translation="MAALVSTELLRLRSGFVGWYLLLSPIVIAIPLYLGSIFSPEGRSG
                      RLWETFSNVTLEFWGVLIPMTAGLIAALAVRADTEPWRFLFSYAIPRWRYFTAKVAALA
                      VAQLLSATILVVMLAGGALLTGQLSNAASMILKVAYLPWAAGLAATALAVLVCTIWGLG
                      PGIALGVAGMMAGALISDKSFWYAIPPAWPMRVILPLADIRPNGLALDASSPLHDTTVI
                      PLAVALSAAATIVILLIGGRHMARKEV"
-                     /gene="mibE"
-                     /transl_table=11
-                     /locus_tag="mibE"
-                     /protein_id="ADK32561.1"
-                     /product="putative lantibiotic ABC transporter permease
-                     protein"
      gene            18779..19489
                      /gene="mibF"
      CDS             18779..19489
-                     /note="MibF"
                      /codon_start=1
+                     /gene="mibF"
+                     /locus_tag="mibF"
+                     /note="MibF"
+                     /product="putative lantibiotic ABC transporter ATP-binding
+                     protein"
+                     /protein_id="ADK32562.1"
+                     /transl_table=11
                      /translation="MAALEIRDLHKHYDDFHALDGANLTVPDGSLYGLLGPNGAGKTTL
                      MKAVTGLRHPTSGHISLFGRPYERRLLTQVGALLESPGLWTQLDAVSHLRIHARLRGVP
                      ETRIGEVLSLMNLTEVSTRKVAKYSLGMRWRLGIAIALLGRPRLVVLDEPMNGLDPVGI
                      RDMRATLRALTAAGTTVMVSSHQLAEIAHICDHVGVLVAGRTAYEGPLHGLAVDGDLEQ
                      GFFRLLEKAGSAVR"
-                     /gene="mibF"
-                     /transl_table=11
-                     /locus_tag="mibF"
-                     /protein_id="ADK32562.1"
-                     /product="putative lantibiotic ABC transporter ATP-binding
-                     protein"
      gene            19522..21228
                      /gene="mibH"
      CDS             19522..21228
-                     /note="MibH"
                      /codon_start=1
+                     /gene="mibH"
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     lanthipeptide: Trp_halogenase"
+                     /locus_tag="mibH"
+                     /note="MibH"
+                     /product="tryptophan-5-halogenase"
+                     /protein_id="ADK32563.1"
+                     /sec_met="Type: lanthipeptide"
+                     /sec_met="Trp_halogenase (E-value: 8e-115, bitscore: 375.2,
+                     seeds: 23, tool: rule-based-clusters)"
+                     /sec_met="Kind: biosynthetic"
+                     /transl_table=11
                      /translation="MARSEESNTLARLFDVLGDDAAAAREWVTEPHRLIASNERLGTAP
                      EAPADDDPEAIRTVGVIGGGTAGYLTALALKAKRPWLDVALVESADIPIIGVGEATVSY
                      MVMFLHHYLGIDPAEFYQHVRPTWKLGIRFEWGSRPEGFVAPFDWGTGSVGLVGSLRET
@@ -374,34 +417,30 @@ FEATURES             Location/Qualifiers
                      LPSSRRDPLPSNVANQALAHRWDAIRWFLSIHYRFNGRLDTPFWKEARAETDISGIEPL
                      LRLFSAGAPLTGRDSFARYLADGAAPLFYGLEGVDTLLLGQEVPARLLPPRESPEQWRA
                      RAAAARSLASRGLRQSEALDAYAADPCLNAELLSDSDSWAGERVAVRAGLR"
-                     /gene="mibH"
-                     /transl_table=11
-                     /locus_tag="mibH"
-                     /protein_id="ADK32563.1"
-                     /product="tryptophan-5-halogenase"
-                     /sec_met="Type: lanthipeptide"
-                     /sec_met="Trp_halogenase (E-value: 8e-115, bitscore: 375.2,
-                     seeds: 23)"
-                     /sec_met="Kind: biosynthetic"
      gene            21225..21761
                      /gene="mibS"
      CDS             21225..21761
-                     /note="MibS"
                      /codon_start=1
+                     /gene="mibS"
+                     /locus_tag="mibS"
+                     /note="MibS"
+                     /product="flavin reductase"
+                     /protein_id="ADK32564.1"
+                     /transl_table=11
                      /translation="MTTGTTVAHAVEPDGFRAVMATLPAAVAIVTAAAADGRPWGMTCS
                      SVCSVTLTPPTLLVCLRTASPTLAAVVSGRAFSVNLLCARAYPVAELFASAAADRFDRV
                      RWRRPPGTGGPHLADDARAVLDCRLSESAEVGDHVVVFGQVRAIRRLSDEPPLMYGYRR
                      YAPWPADRGPGAAGG"
-                     /gene="mibS"
-                     /transl_table=11
-                     /locus_tag="mibS"
-                     /protein_id="ADK32564.1"
-                     /product="flavin reductase"
      gene            21758..23062
                      /gene="mibN"
      CDS             21758..23062
-                     /note="MibN"
                      /codon_start=1
+                     /gene="mibN"
+                     /locus_tag="mibN"
+                     /note="MibN"
+                     /product="integral membrane ion antiporter"
+                     /protein_id="ADK32565.1"
+                     /transl_table=11
                      /translation="MNAEQLTGVVIADLGMIVVVSALFGALARRCGHPTVIGQIVAGIA
                      LGPTLLGRLPGDPAGWLFPAQVRPSLSVLSQIAIVIFMFAVGYEVDLRLLRRGGRSALC
                      VASLSLAVPMTLGAAVAVLFREVFTVGSLEGPGGPTFVLFMAVAISITALPVLAAIVRE
@@ -410,47 +449,46 @@ FEATURES             Location/Qualifiers
                      DGAPEPEVLRPMEQTAELLLPLFFVMTGLSADISAIEPGGLFLLAVLLVAAIGGKLVPA
                      YAASRLTGLDSGESAVVAVLVNTRGLTELIVLNVGLSAHVIDERLFTVLVVMALITTAM
                      TAPLLSALRRREERRRPAPAIPMPPASVSRRSTMG"
-                     /gene="mibN"
-                     /transl_table=11
-                     /locus_tag="mibN"
-                     /protein_id="ADK32565.1"
-                     /product="integral membrane ion antiporter"
      CDS             complement(23079..23435)
-                     /note="orf-22"
                      /codon_start=1
+                     /locus_tag="ADK32566.1"
+                     /note="orf-22"
+                     /product="hypothetical protein"
+                     /protein_id="ADK32566.1"
+                     /transl_table=11
                      /translation="MPSDEVDEYVRSTLPEHHRSVVAALRDLMREGAPEAAEVISRGSP
                      AWKGDKILAIISHSRTHVTFAFARGAEFDDGHGLLEGVGKTTRHVKIKNLGALDRDALR
                      DYIRQAVALDGGTA"
-                     /transl_table=11
-                     /locus_tag="ADK32566.1"
-                     /protein_id="ADK32566.1"
-                     /product="hypothetical protein"
      CDS             23637..24191
-                     /note="orf-23"
                      /codon_start=1
+                     /locus_tag="ADK32567.1"
+                     /note="orf-23"
+                     /product="pyrimidine reductase"
+                     /protein_id="ADK32567.1"
+                     /transl_table=11
                      /translation="MRKVIVSVFVTLDGVQDDPHEWSLGHWTDEYSGYARDQLFAADAL
                      LMGRVTYEGFAGSWPTMTDEGGAPEGFADRINTMPKYVASTTLRELDWTNSHLIEGDVV
                      DAVRGLRHQPGGDILMYGCGGLARLLTGRGLVDEIRLWVHPVVLGRGEHVFAGWDETPM
                      RLLRTRTFASGVVVLTHEPQR"
-                     /transl_table=11
-                     /locus_tag="ADK32567.1"
-                     /protein_id="ADK32567.1"
-                     /product="pyrimidine reductase"
      CDS             complement(24188..24898)
-                     /note="orf-24"
                      /codon_start=1
+                     /locus_tag="ADK32568.1"
+                     /note="orf-24"
+                     /product="hypothetical protein"
+                     /protein_id="ADK32568.1"
+                     /transl_table=11
                      /translation="MLKVIGAGLPRTGTTSMKAALERLGFGPCYHFFEVMRRPELAERW
                      LPLCAGGPVDWDRVFDGFRSSQDWPASFFWRELAQAYPDAKVVLTVRDPHSWYVSFRML
                      GSINPRGPMSQDEAPEGIRPVLAAIERLRPLLERISGFLFDDDWHFGAPVPDEEKAVEA
                      YRRHVAAVRSAIPAERLLVFDVRKGWGPLCRFLGVAAPPDDPFPHLNDAESIQRMFERM
                      RTEGRVHTPFHAGD"
-                     /transl_table=11
-                     /locus_tag="ADK32568.1"
-                     /protein_id="ADK32568.1"
-                     /product="hypothetical protein"
      CDS             complement(25069..26157)
-                     /note="orf-25"
                      /codon_start=1
+                     /locus_tag="ADK32569.1"
+                     /note="orf-25"
+                     /product="oxidoreductase domain protein"
+                     /protein_id="ADK32569.1"
+                     /transl_table=11
                      /translation="MSAQSAGRFGIVGSGWRSEFFLRLARQLPERMSVSGVVTRTAERG
                      AEVEARWGVPTFRTVAEMLAAGRPEFVIPSVPWPVTPDVTRELVKHDMPVLAETPPAPD
                      LDGLRDLWSAVGSSGLVQVAEQYLLMPGHAARLALLREGVIGRVTSVQMSSTHLYHAVS
@@ -458,23 +496,30 @@ FEATURES             Location/Qualifiers
                      DFTDNQWWNPLRSRRIVIRGSLGELVDDRLVRLADPSTPVESHLIRRQTGIDLNLEGFE
                      LDHISVDGRVVYRNDFKGGRFSEDDLAVVALLDRMTAWCRGRGPEPYPLAEGCQDHLIS
                      LAIGESIETGGPVTTAREAWAG"
-                     /transl_table=11
-                     /locus_tag="ADK32569.1"
-                     /protein_id="ADK32569.1"
-                     /product="oxidoreductase domain protein"
      CDS             complement(26403..26858)
-                     /note="dioxygenase; orf-26"
                      /codon_start=1
+                     /locus_tag="ADK32570.1"
+                     /note="dioxygenase; orf-26"
+                     /product="glyoxalase/bleomycin resistance protein"
+                     /protein_id="ADK32570.1"
+                     /transl_table=11
                      /translation="MTDEASFRLGLRVEDVTEAAAFYRRLGFEQAGSMFSPEGRTIMAI
                      LRRGDLQLLVDALTGMPFPDSDRERMTTAGPRGLGVVIGIRVNDVDATAAYCHSAGCDV
                      TTAPVDAPWGERYAEIVDPYGYAWKFFQLLPEPPQESLRAAYDVWFT"
-                     /transl_table=11
-                     /locus_tag="ADK32570.1"
-                     /protein_id="ADK32570.1"
-                     /product="glyoxalase/bleomycin resistance protein"
      CDS             complement(26998..28380)
-                     /note="PHB depolymerase family protein; orf-27"
                      /codon_start=1
+                     /gene_functions="biosynthetic-additional
+                     (rule-based-clusters) Peptidase_S9 (E-value: 8.5e-12,
+                     bitscore: 36.1, seeds: 64, tool: rule-based-clusters)"
+                     /locus_tag="ADK32571.1"
+                     /note="PHB depolymerase family protein; orf-27"
+                     /product="esterase"
+                     /protein_id="ADK32571.1"
+                     /sec_met="Type: "
+                     /sec_met="Peptidase_S9 (E-value: 8.5e-12, bitscore: 36.1,
+                     seeds: 64, tool: rule-based-clusters)"
+                     /sec_met="Kind: biosynthetic"
+                     /transl_table=11
                      /translation="MIRRLKVIVAAVALSLVAAGVLVGAQTASAASLTRVTNFGTNPTN
                      LNMYIYVPDRVAAHPALLVLVHYCSGSASGIFNGNGHDYVTAADRYGYIIVLPEATRSG
                      SCFDVSTPAALKRNGGSDSTGIMSMVAYARQHYPIDPARIVVSGFSSGAMMTNVLAAEY
@@ -484,17 +529,13 @@ FEATURES             Location/Qualifiers
                      PSPSPSPSPSPSGGSGACRVGANVNAWNNGLTEDITVTNTGSTALNGWSLVFTLPGGQT
                      ITNGWNATYSPTSGQVTARNVSYNGSLAPGASVQIGFQATHTGNAAKPSAFTLNGAACT
                      VA"
-                     /transl_table=11
-                     /locus_tag="ADK32571.1"
-                     /protein_id="ADK32571.1"
-                     /product="esterase"
-                     /sec_met="Type: none"
-                     /sec_met="Peptidase_S9 (E-value: 8.5e-12, bitscore: 36.1,
-                     seeds: ?)"
-                     /sec_met="Kind: biosynthetic"
      CDS             complement(28412..29518)
-                     /note="orf-28"
                      /codon_start=1
+                     /locus_tag="ADK32572.1"
+                     /note="orf-28"
+                     /product="putative xylanase"
+                     /protein_id="ADK32572.1"
+                     /transl_table=11
                      /translation="MRAWRRWLAAASLVVAAIATGTVLAPGAAVAESNGGVRVMPLGDS
                      ITEGTQVPGGYRIGLWQRLANGRYVIDFVGSQYNGPANLGDHDHEGHPGWRIDQIDANI
                      TGWLRTYTPHTVLLHIGTNDVLQNYNLSGAPQRLSTLIDHITAAAPNAEVFVATIIPLA
@@ -502,13 +543,13 @@ FEATURES             Location/Qualifiers
                      AWYSALQSVPGSIGQGPSPSPTPTPSPSPSPSPSPTPSPSPSPSPGGKSCSAAYALAGQ
                      WPGGFQAAVTVTAGGSPISSWTVRWQFGDGQTISQSWSATISTSGSQVTATNVSYNGAL
                      GAGASTQFGFLGNANGANSVPTLTCVAS"
-                     /transl_table=11
-                     /locus_tag="ADK32572.1"
-                     /protein_id="ADK32572.1"
-                     /product="putative xylanase"
      CDS             30295..31782
-                     /note="orf-29"
                      /codon_start=1
+                     /locus_tag="ADK32573.1"
+                     /note="orf-29"
+                     /product="beta-1,4-xylanase"
+                     /protein_id="ADK32573.1"
+                     /transl_table=11
                      /translation="MQPATIRPRRRRQGARGLAAATALTAAGVVTLCAALPAQAATTLK
                      AAAEARGRYFGTALTRGDLGISAETSLAAAQFDMVTPGNEMKWDSTEPSRGGFNFGPGD
                      QIVSFAQSHSMRVRGHTLVWHSQLPAWVSSLPLNQVQSAMENHITNEATHYKGKVYSWD
@@ -518,33 +559,33 @@ FEATURES             Location/Qualifiers
                      KPAYNAALNALNNGTPTPTPTPTPTPTPTPTPTPTPTPTPTPTPTPTPTPSPSPSPVPG
                      ACSATIETTNSWPGGFQSTVTVRAGSAAVSGWTVKWTWPGGQTISSLWSGTQSVSGSSV
                      TVRNASYNGSIAAGGSTTFGFTANGTAATPTATCTSP"
-                     /transl_table=11
-                     /locus_tag="ADK32573.1"
-                     /protein_id="ADK32573.1"
-                     /product="beta-1,4-xylanase"
      CDS             complement(31939..32385)
-                     /note="orf-30"
                      /codon_start=1
+                     /locus_tag="ADK32574.1"
+                     /note="orf-30"
+                     /product="hypothetical protein"
+                     /protein_id="ADK32574.1"
+                     /transl_table=11
                      /translation="MEIAEHKTPARLRTLPSWLINQAAIRANRVTDQALADLGSRRHHF
                      AMLAALEEFGPSSQADLGRCTAIDRSDVVAAIDALAEQGYVQRGPDPSDGRRNVITITA
                      EGTGHLRRLGAVVAAAQDELLRSWSAAERDTLLDLLTRIVSKVP"
-                     /transl_table=11
-                     /locus_tag="ADK32574.1"
-                     /protein_id="ADK32574.1"
-                     /product="hypothetical protein"
      CDS             32504..32956
-                     /note="orf-31"
                      /codon_start=1
+                     /locus_tag="ADK32575.1"
+                     /note="orf-31"
+                     /product="hypothetical protein"
+                     /protein_id="ADK32575.1"
+                     /transl_table=11
                      /translation="MTETATPRPSLGRALGEAARKVGKLHRRALADFDTGFPDWMLLTL
                      LAERTSPMPVHVVVAEMNRRMDLPEAAVISLLKSTAAAGHIDYQPNVPMPTAELTEEGE
                      AHFASLYAHARRTTDAASDGIDPDLLDTAVTVLLAVDERATLLLDS"
-                     /transl_table=11
-                     /locus_tag="ADK32575.1"
-                     /protein_id="ADK32575.1"
-                     /product="hypothetical protein"
      CDS             33656..35098
-                     /note="orf-32"
                      /codon_start=1
+                     /locus_tag="ADK32576.1"
+                     /note="orf-32"
+                     /product="secreted endo-1,4-beta-xylanase"
+                     /protein_id="ADK32576.1"
+                     /transl_table=11
                      /translation="MGESAISAGGGRRSSGGPRRVLIAGAVGVLGVVTALASTTPAGAA
                      ASTLGAAAAQSGRYFGTAIAAGHMNDSTYVATWDREFNAVTPENEMKWDATEPNRGQFT
                      FGGADQIVSHAQSHGMKIRGHTLVWHAQIPSWLNNLSTSDLRTAMVNHINGVMGHYKGK
@@ -554,22 +595,18 @@ FEATURES             Location/Qualifiers
                      SVLDALNAATPNPTPTPTPTPTPTPTPTPTPTPTPSPSPSPVPGACSATIETTNSWPGG
                      FQSTVTVRAGSAAVSGWTVKWTWPGGQTISSLWSGTQSVSGSSVTVRNASYNGSIAAGG
                      STTFGFTANGTAATPTATCTSP"
-                     /transl_table=11
-                     /locus_tag="ADK32576.1"
-                     /protein_id="ADK32576.1"
-                     /product="secreted endo-1,4-beta-xylanase"
      CDS             complement(35520..36362)
-                     /note="orf-33"
                      /codon_start=1
+                     /locus_tag="ADK32577.1"
+                     /note="orf-33"
+                     /product="prephenate dehydratase"
+                     /protein_id="ADK32577.1"
+                     /transl_table=11
                      /translation="MVTIAYQGEPGSNSAAAARDLFPDGRELPCTTFEQALEAVTLGAA
                      DLAVIPMDNSAAGRVADVHHLLPETGLWIVAEYFLPIHFDLMGVPGGSLDQVECVRSHV
                      HALGQCRKILREGGWRTLVSDDTAGAAREIAELGDPRHAALAPPGAASLYGLRVLRGGV
                      EDTPDNTTRFVVLSRDSAVPPDTGAPTMTSLFFSVRNIPSALYKALGGFSSNAVNLTKI
                      ESYQVGAGLKASRFYIEIEGHPDESRVALALEELRFFSSDMRLIGVYPAHAHRVREQD"
-                     /transl_table=11
-                     /locus_tag="ADK32577.1"
-                     /protein_id="ADK32577.1"
-                     /product="prephenate dehydratase"
 ORIGIN
         1 cgacgtgtcg gtgtcccggc gcatgggcct gttcgtggtc ggccgcctgg cgctgcgcca
        61 cggcatccgc gtccagctcc gccgcggtga cgtcgccggc gtcatcgcca tggtgctgtt

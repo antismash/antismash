@@ -53,8 +53,8 @@ FEATURES             Location/Qualifiers
                      /protein_id="ACN52310.1"
                      /sec_met="Type: none"
                      /sec_met="PF12697 (E-value: 6.3e-15, bitscore: 46.8, seeds:
-                     465); PF00561 (E-value: 8.4e-21, bitscore: 65.1, seeds:
-                     48)"
+                     465, tool: .); PF00561 (E-value: 8.4e-21, bitscore: 65.1, seeds:
+                     48, tool: .)"
                      /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MTEETTARRFAGVRHPIHLHVWPPETAPRYLAVFVHGYADHAGRY
@@ -78,8 +78,8 @@ FEATURES             Location/Qualifiers
                      /protein_id="ACN52309.1"
                      /sec_met="Type: thiopeptide"
                      /sec_met="tsrC (E-value: 1.4e-45, bitscore: 144.7, seeds:
-                     312); PF00733 (E-value: 1.5e-67, bitscore: 218.4, seeds:
-                     104)"
+                     312, tool: .); PF00733 (E-value: 1.5e-67, bitscore: 218.4, seeds:
+                     104, tool: .)"
                      /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MCGIAGWVAFGRDLGAERSAVEAMTRTMACRGPDAGGTWYGGPVA
@@ -104,7 +104,7 @@ FEATURES             Location/Qualifiers
                      /protein_id="ACN52308.1"
                      /sec_met="Type: thiopeptide"
                      /sec_met="PF07366 (E-value: 2.6e-33, bitscore: 105.0,
-                     seeds: 29)"
+                     seeds: 29, tool: .)"
                      /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MDRASVQQLMEHFLAAYNEGDPRHLDHCLHPEYRHPNPAVERGIE
@@ -165,7 +165,7 @@ FEATURES             Location/Qualifiers
                      /protein_id="ACN52291.1"
                      /sec_met="Type: thiopeptide"
                      /sec_met="thiostrepton (E-value: 1.6e-37, bitscore: 118.0,
-                     seeds: 4)"
+                     seeds: 4, tool: .)"
                      /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MSNAALEIGVEGLTGLDVDTLEISDYMDETLLDGEDLTVTMIASA
@@ -181,7 +181,7 @@ FEATURES             Location/Qualifiers
                      /protein_id="ACN52292.1"
                      /sec_met="Type: none"
                      /sec_met="PF12697 (E-value: 1.4e-15, bitscore: 49.0, seeds:
-                     465)"
+                     465, tool: .)"
                      /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MRPVILVHGLLGTEDAHYAGCRKWWTRPVTEIRLPGHGTGGEIPP
@@ -203,7 +203,7 @@ FEATURES             Location/Qualifiers
                      /protein_id="ACN52293.1"
                      /sec_met="Type: thiopeptide"
                      /sec_met="Lant_dehyd_C (E-value: 1.5e-22, bitscore: 70.0,
-                     seeds: 37)"
+                     seeds: 37, tool: .)"
                      /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MDSPEITYAGYGVVRVCSQPADIIAQLSSREAARVCDELRDVRRT
@@ -238,7 +238,7 @@ FEATURES             Location/Qualifiers
                      /protein_id="ACN52294.1"
                      /sec_met="Type: none"
                      /sec_met="Lant_dehydr_C (E-value: 1.3e-64, bitscore: 209.1,
-                     seeds: ?)"
+                     seeds: -1, tool: .)"
                      /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MSTAPAHPWLSCHVFHHGDTDPLIAECLLPLVDDLRRAGRVERHF
@@ -259,7 +259,7 @@ FEATURES             Location/Qualifiers
                      /protein_id="ACN52295.1"
                      /sec_met="Type: none"
                      /sec_met="Lant_dehydr_C (E-value: 1.3e-27, bitscore: 87.5,
-                     seeds: ?)"
+                     seeds: -1, tool: .)"
                      /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MSTSEQKDLTVSVPWSVQEDLLLDVAAPLLDESVELGETDSWFYL
@@ -280,7 +280,7 @@ FEATURES             Location/Qualifiers
                      /protein_id="ACN52296.1"
                      /sec_met="Type: none"
                      /sec_met="PF00881 (E-value: 1.1e-08, bitscore: 25.7, seeds:
-                     78)"
+                     78, tool: .)"
                      /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MTAPGTAEATAPVEAAAPAEAAGTGPFDAAGVDGFVRRLRGDFDE
@@ -324,7 +324,7 @@ FEATURES             Location/Qualifiers
                      /protein_id="ACN52298.1"
                      /sec_met="Type: thiopeptide"
                      /sec_met="YcaO (E-value: 2.9e-63, bitscore: 204.9, seeds:
-                     127)"
+                     127, tool: .)"
                      /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MSAPPTTAPHAPEGVDDTAAELRRLLDDVARVVDTPAAITAAAPL
@@ -371,7 +371,7 @@ FEATURES             Location/Qualifiers
                      /protein_id="ACN52300.1"
                      /sec_met="Type: none"
                      /sec_met="AMP-binding (E-value: 2.4e-27, bitscore: 85.9,
-                     seeds: 400)"
+                     seeds: 400, tool: .)"
                      /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MGGLGAWLKQAEPVLRRSRAGVVTERGRHPWPSLLARAERLAAGL
@@ -395,7 +395,7 @@ FEATURES             Location/Qualifiers
                      /protein_id="ACN52301.1"
                      /sec_met="Type: none"
                      /sec_met="p450 (E-value: 2.5e-08, bitscore: 23.5, seeds:
-                     50)"
+                     50, tool: .)"
                      /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MTTTGPSRAAVTEALLKCPAPLYERMRRQGPLVWSRPDRTWVVTG
@@ -419,7 +419,7 @@ FEATURES             Location/Qualifiers
                      /protein_id="ACN52302.1"
                      /sec_met="Type: thiopeptide"
                      /sec_met="Lant_dehyd_C (E-value: 3.2e-18, bitscore: 55.8,
-                     seeds: 37)"
+                     seeds: 37, tool: .)"
                      /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MVRRRCRVPGSVLADLGSDRVWGAAAAWAYAEDAVQRTGTRLADQ
@@ -451,7 +451,7 @@ FEATURES             Location/Qualifiers
                      /protein_id="ACN52303.1"
                      /sec_met="Type: thiopeptide"
                      /sec_met="PF04055 (E-value: 1.1e-15, bitscore: 48.9, seeds:
-                     518)"
+                     518, tool: .)"
                      /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MLRKGTVALINPNQIHPPIAPYALDVLTTALEASGFEAHVLDLTF

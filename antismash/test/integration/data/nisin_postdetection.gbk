@@ -28,55 +28,95 @@ REFERENCE   3  (bases 1 to 15016)
             Slovenia
 FEATURES             Location/Qualifiers
      source          1..15016
+                     /collected_by="John Samelis"
+                     /country="Greece"
                      /db_xref="taxon:1360"
                      /isolation_source="raw milk"
                      /mol_type="genomic DNA"
-                     /sub_species="lactis"
-                     /collected_by="John Samelis"
                      /organism="Lactococcus lactis subsp. lactis"
-                     /country="Greece"
                      /strain="M78"
+                     /sub_species="lactis"
      cluster         1..15016
+                     /contig_edge="True"
                      /cutoff="20000"
                      /extension="10000"
-                     /contig_edge="True"
-                     /product="lanthipeptide"
                      /note="Detection rule(s) for this cluster type:
-                     lanthipeptide: ((LANC_like and (Flavoprotein or
+                     lanthipeptide: (((LANC_like and (Flavoprotein or
                      Trp_halogenase or p450 or Lant_dehyd_N or Lant_dehyd_C or
-                     adh_short or adh_short_C2) or cds(LANC_like and (Pkinase or
-                     DUF4135)) or TIGR03731 or Antimicr18 or Gallidermin or
-                     L_biotic_A or leader_d or leader_eh or leader_abc or
-                     mature_d or mature_ab or mature_a or mature_b or mature_ha
-                     or mature_h_beta or lacticin_l or lacticin_mat or
-                     LD_lanti_pre or strep_PEQAXS));"
+                     Lant_dehydr_C or tsrC or adh_short or adh_short_C2) or
+                     cds(LANC_like and (Pkinase or DUF4135)) or TIGR03731 or
+                     Antimicr18 or Gallidermin or L_biotic_A or leader_d or
+                     leader_eh or leader_abc or mature_d or mature_ab or
+                     mature_a or mature_b or mature_ha or mature_h_beta or
+                     lacticin_l or lacticin_mat or LD_lanti_pre or strep_PEQAXS)
+                     and not YcaO));"
+                     /product="lanthipeptide"
+                     /tool="antismash"
      gene            828..1001
                      /gene="nisA"
      CDS             828..1001
-                     /note="prenisin; nisin A structural protein"
-                     /db_xref="GI:299832737"
                      /codon_start=1
-                     /translation="MSTKDFNLDLVSVSKKDSGASPRITSISLCTPGCKTGALMGCNMK
-                     TATCHCSIHVSK"
+                     /db_xref="GI:299832737"
                      /gene="nisA"
-                     /transl_table=11
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     lanthipeptide: TIGR03731"
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     lanthipeptide: mature_a"
                      /locus_tag="nisA"
-                     /protein_id="ADJ56352.1"
+                     /note="prenisin; nisin A structural protein"
                      /product="NisA"
+                     /protein_id="ADJ56352.1"
                      /sec_met="Type: lanthipeptide"
                      /sec_met="TIGR03731 (E-value: 1.3e-24, bitscore: 75.6,
-                     seeds: 23); mature_a (E-value: 6.5e-08, bitscore: 21.5,
-                     seeds: 5)"
+                     seeds: 23, tool: rule-based-clusters); mature_a (E-value:
+                     6.5e-08, bitscore: 21.5, seeds: 5, tool:
+                     rule-based-clusters)"
                      /sec_met="Kind: biosynthetic"
+                     /transl_table=11
+                     /translation="MSTKDFNLDLVSVSKKDSGASPRITSISLCTPGCKTGALMGCNMK
+                     TATCHCSIHVSK"
+     cluster_border  828..7140
+                     /aStool="rule-based-clusters"
+                     /contig_edge="False"
+                     /cutoff="20000"
+                     /extent="10000"
+                     /product="lanthipeptide"
+                     /rule="((LANC_like and (Flavoprotein or Trp_halogenase or
+                     p450 or Lant_dehyd_N or Lant_dehyd_C or Lant_dehydr_C or
+                     tsrC or adh_short or adh_short_C2) or cds(LANC_like and
+                     (Pkinase or DUF4135)) or TIGR03731 or Antimicr18 or
+                     Gallidermin or L_biotic_A or leader_d or leader_eh or
+                     leader_abc or mature_d or mature_ab or mature_a or mature_b
+                     or mature_ha or mature_h_beta or lacticin_l or lacticin_mat
+                     or LD_lanti_pre or strep_PEQAXS) and not YcaO)"
+                     /tool="antismash"
      misc_feature    828..14152
                      /note="nisin biosynthetic gene cluster"
      gene            1109..4090
                      /gene="nisB"
      CDS             1109..4090
-                     /note="nisin biosynthesis protein"
+                     /codon_start=1
                      /db_xref="GI:299832738"
                      /function="dehydration of serine and threonine"
-                     /codon_start=1
+                     /gene="nisB"
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     lanthipeptide: Lant_dehydr_C"
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     lanthipeptide: Lant_dehyd_N"
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     lanthipeptide: Lant_dehyd_C"
+                     /locus_tag="nisB"
+                     /note="nisin biosynthesis protein"
+                     /product="NisB"
+                     /protein_id="ADJ56353.1"
+                     /sec_met="Type: lanthipeptide"
+                     /sec_met="Lant_dehyd_N (E-value: 4.5e-25, bitscore: 77.4,
+                     seeds: 38, tool: rule-based-clusters); Lant_dehyd_C
+                     (E-value: 6.8e-120, bitscore: 390.3, seeds: 37, tool:
+                     rule-based-clusters); Lant_dehydr_C (E-value: 2.8e-18,
+                     bitscore: 56.0, seeds: 35, tool: rule-based-clusters)"
+                     /sec_met="Kind: biosynthetic"
+                     /transl_table=11
                      /translation="MIKSSFKAQPFLVRNTILSPNDKRSFTEYTQVIETVSKNKVFLEQ
                      LLLANPKLYDVMQKYNAGLLKKKRVKKLFESIYKYYKRSYLRSTPFGLFSETSIGVFSK
                      SSQYKLMGKTTKGIRLDTQWLIRLVHKMEVDFSKKLSFTRNNANYKFGDRVFQVYTINS
@@ -95,24 +135,18 @@ FEATURES             Location/Qualifiers
                      YLYLKCFFENDNKKILNFLNLVSPKKVKENVNEKIEHYLKLLKVNNLGDQIFYDKNFKE
                      LKHAIKNLFLKMIAQDFELQKVYSIIDSIIHVHNNRLIGIERDKEKLIYYTLQRLFVSE
                      EYMK"
-                     /gene="nisB"
-                     /transl_table=11
-                     /locus_tag="nisB"
-                     /protein_id="ADJ56353.1"
-                     /product="NisB"
-                     /sec_met="Type: lanthipeptide"
-                     /sec_met="Lant_dehyd_N (E-value: 4.5e-25, bitscore: 77.4,
-                     seeds: 38); Lant_dehyd_C (E-value: 6.8e-120, bitscore:
-                     390.3, seeds: 37); Lant_dehydr_C (E-value: 2.8e-18,
-                     bitscore: 56.0, seeds: ?)"
-                     /sec_met="Kind: biosynthetic"
      gene            4101..5903
                      /gene="nisT"
      CDS             4101..5903
-                     /note="nisin transport ATP-binding protein"
+                     /codon_start=1
                      /db_xref="GI:299832739"
                      /function="secretion of prenisin"
-                     /codon_start=1
+                     /gene="nisT"
+                     /locus_tag="nisT"
+                     /note="nisin transport ATP-binding protein"
+                     /product="NisT"
+                     /protein_id="ADJ56354.1"
+                     /transl_table=11
                      /translation="MDEVKEFTSKQFFNTLLTLPSTLKLIFQLEKRYAIYLIVLNAITA
                      FVPLASLFIYQDLINSVLGSGRHLINIIIIYFIVQVITTVLGQLESYVSGKFDMRLSYS
                      INMRLMRTTSSLELSDYEQADMYNIIEKVTQDSTYKPFQLFNAIIVVLSSFISLLSSLF
@@ -124,18 +158,24 @@ FEATURES             Location/Qualifiers
                      EKIIKVLDNLGLDFLKTNNQYVLDTQLGNWFQEGHQLSGGQWQKIALARTFFKKASIYI
                      LDEPSAALDPVAEKEIFDYFVALSENNISIFISHSLNAARKANKIVVMKDGQVEDVGSH
                      DVLLRRCQYYQELYYSEQYEDNDE"
-                     /gene="nisT"
-                     /transl_table=11
-                     /locus_tag="nisT"
-                     /protein_id="ADJ56354.1"
-                     /product="NisT"
      gene            5896..7140
                      /gene="nisC"
      CDS             5896..7140
-                     /note="nisin biosynthesis protein"
+                     /codon_start=1
                      /db_xref="GI:299832740"
                      /function="cyclization, formation of (methyl)lantionines"
-                     /codon_start=1
+                     /gene="nisC"
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     lanthipeptide: LANC_like"
+                     /locus_tag="nisC"
+                     /note="nisin biosynthesis protein"
+                     /product="NisC"
+                     /protein_id="ADJ56355.1"
+                     /sec_met="Type: lanthipeptide"
+                     /sec_met="LANC_like (E-value: 8.3e-76, bitscore: 244.5,
+                     seeds: 47, tool: rule-based-clusters)"
+                     /sec_met="Kind: biosynthetic"
+                     /transl_table=11
                      /translation="MNKKNIKRNVEKIIAQWDERTRKNKENFDFGELTLSTGLPGIILM
                      LAELKNKDNSKIYQKKIDNYIEYIVSKLSTYGLLTGSLYSGAAGIALSILHLREDDEKY
                      KNLLDSLNRYIEYFVREKIEGFNLENITPPDYDVIEGLSGILSYLLLINDEQYDDLKIL
@@ -144,39 +184,42 @@ FEATURES             Location/Qualifiers
                      GGPGISLLYLYGGLALDNDYFVDKAEKILESAMQRKLGIDSYMICHGYSGLIEICSLFK
                      RLLNTKKFDSYMEEFNVNSEQILEEYGDESGTGFLEGISGCILVLSKFEYSINFTYWRQ
                      ALLLFDDFLKGGKRK"
-                     /gene="nisC"
-                     /transl_table=11
-                     /locus_tag="nisC"
-                     /protein_id="ADJ56355.1"
-                     /product="NisC"
-                     /sec_met="Type: lanthipeptide"
-                     /sec_met="LANC_like (E-value: 8.3e-76, bitscore: 244.5,
-                     seeds: 47)"
-                     /sec_met="Kind: biosynthetic"
      gene            7137..7874
                      /gene="nisI"
      CDS             7137..7874
-                     /note="nisin immunity protein; nisin-binding lipoprotein"
-                     /db_xref="GI:299832741"
                      /codon_start=1
+                     /db_xref="GI:299832741"
+                     /gene="nisI"
+                     /locus_tag="nisI"
+                     /note="nisin immunity protein; nisin-binding lipoprotein"
+                     /product="NisI"
+                     /protein_id="ADJ56356.1"
+                     /transl_table=11
                      /translation="MRRYLILIVALIGITGLSGCYQTSHKKVRFDEGSYTNFIYDNKSY
                      FVTDKEIPQENVNNSKVKFYKLLIVDMKSEKLLSSSNKNSVTLVLNNIYEASDKSLCMG
                      INDRYYKILPESDKGAVKALRLQNFDVTSDISDDNFVIDKNDSRKIDYMGNIYSISDTT
                      VSDEELGEYQDVLAEVRVFDSVSGKSIPRSEWGRIDKDGSNSKQSRTEWDYGEIHSIRG
                      KSLTEAFAVEINDDFKLATKVGN"
-                     /gene="nisI"
-                     /transl_table=11
-                     /locus_tag="nisI"
-                     /protein_id="ADJ56356.1"
-                     /product="NisI"
      gene            7876..9924
                      /gene="nisP"
      CDS             7876..9924
-                     /note="nisin leader peptide-processing serine protease"
+                     /codon_start=1
                      /db_xref="GI:299832742"
                      /function="cleavage of leader peptide from prenisin and
                      activation of nisin"
-                     /codon_start=1
+                     /gene="nisP"
+                     /gene_functions="biosynthetic-additional
+                     (rule-based-clusters) Peptidase_S8 (E-value: 2.3e-50,
+                     bitscore: 161.0, seeds: 43, tool: rule-based-clusters)"
+                     /locus_tag="nisP"
+                     /note="nisin leader peptide-processing serine protease"
+                     /product="NisP"
+                     /protein_id="ADJ56357.1"
+                     /sec_met="Type: "
+                     /sec_met="Peptidase_S8 (E-value: 2.3e-50, bitscore: 161.0,
+                     seeds: 43, tool: rule-based-clusters)"
+                     /sec_met="Kind: biosynthetic"
+                     /transl_table=11
                      /translation="MKKILGFLFIVCSLGLSATVHGETTNSQQLLSNNINTELINHNSN
                      AILSSTEGSTTDSINLGAQSPAVKSTTRTELDVTGAAKTLLQTSAVQKEMKVSLQETQV
                      SSEFSKRDSVTNKEAVPVSKDELLEQSEVVVSTSSIQKNKILDNKKNRANFVTSSPLIK
@@ -189,41 +232,37 @@ FEATURES             Location/Qualifiers
                      VSGALALVVDKYGIKNPNQLKRFLLMNSPEVNGNRVLNIVDLLNGKNKAFSLDTDKGQD
                      DAINHKSMENLKESRDTMKQEQDKEIQRNTNNNFSIKNDFHNISKEVISVDYNINQKMA
                      NNRNSRGAVSVRSQEILPVTGDGEDFLPALGIVCISILGILKRKTKN"
-                     /gene="nisP"
-                     /transl_table=11
-                     /locus_tag="nisP"
-                     /protein_id="ADJ56357.1"
-                     /product="NisP"
-                     /sec_met="Type: none"
-                     /sec_met="Peptidase_S8 (E-value: 2.3e-50, bitscore: 161.0,
-                     seeds: ?)"
-                     /sec_met="Kind: biosynthetic"
      gene            9993..10679
                      /gene="nisR"
      CDS             9993..10679
-                     /note="nisin biosynthesis regulatory protein"
+                     /codon_start=1
                      /db_xref="GI:299832743"
                      /function="transcriptional activator/response regulator in
                      two-component regulatory system"
-                     /codon_start=1
+                     /gene="nisR"
+                     /locus_tag="nisR"
+                     /note="nisin biosynthesis regulatory protein"
+                     /product="NisR"
+                     /protein_id="ADJ56358.1"
+                     /transl_table=11
                      /translation="MYKILIVDDDQEILKLMKTALEMRNYEVAMHQNISLPLDITDFQG
                      FDLILLDIMMSNIEGTEICKRIRREISTPIIFVSAKDTEEDIINGLGIGGDDYITKPFS
                      LKQLVAKVEANIKREERNKHAVHVFSEIRRDLGPITFYLEERRVCVNGQTIPLTCREYD
                      ILELLSQRTSKVYTREDIYDDVYDEYSNALFRSISEYIYQIRSKFAPYDINPIKTVRGL
                      GYQWHG"
-                     /gene="nisR"
-                     /transl_table=11
-                     /locus_tag="nisR"
-                     /protein_id="ADJ56358.1"
-                     /product="NisR"
      gene            10672..12015
                      /gene="nisK"
      CDS             10672..12015
-                     /note="nisin biosynthesis sensor protein"
+                     /codon_start=1
                      /db_xref="GI:299832744"
                      /function="sensor protein in two-component regulatory
                      system"
-                     /codon_start=1
+                     /gene="nisK"
+                     /locus_tag="nisK"
+                     /note="nisin biosynthesis sensor protein"
+                     /product="NisK"
+                     /protein_id="ADJ56359.1"
+                     /transl_table=11
                      /translation="MGKKYSMRRRIWQAVIEIIIGTCLLILLLLGLTFFLRQIGQISGS
                      ETIRLSLDSDNLTISDIERDMKHYPYDYIIFDNDTSKILGGHYVKSDVPSFVASKQSSH
                      NITEGEITYTYSSNKHFSVVLRQNSMPEFTNHTLRSISYNQFTYLFFFLGEIILIIFSV
@@ -232,64 +271,59 @@ FEATURES             Location/Qualifiers
                      NTMISYTKLLNDENDYKATISLEDFLIDLSVELEELSTTYQVDYQLVKKTDLTTFYGNT
                      LALSRALINIFVNACQYAKEGEKIVSLSIYDDEKYLYFEIWNNGHPFSEQAKKNAGKLF
                      FTEDTGRSGKHYGIGLSFAQGVALKHQGNLILSNPQKGGAEVILKIKK"
-                     /gene="nisK"
-                     /transl_table=11
-                     /locus_tag="nisK"
-                     /protein_id="ADJ56359.1"
-                     /product="NisK"
      gene            12114..12791
                      /gene="nisF"
      CDS             12114..12791
-                     /note="nisin transport/immunity protein; component of
-                     ABC-transporter"
+                     /codon_start=1
                      /db_xref="GI:299832745"
                      /function="secretion of cell-associated nisin"
-                     /codon_start=1
+                     /gene="nisF"
+                     /locus_tag="nisF"
+                     /note="nisin transport/immunity protein; component of
+                     ABC-transporter"
+                     /product="NisF"
+                     /protein_id="ADJ56360.1"
+                     /transl_table=11
                      /translation="MQVKIQNLSKTYKEKQVLQDISFDIKSGTVCGLLGVNGAGKSTLM
                      KILFGLISADTGKIFFDGQEKTNNQLGALIEAPAIYMNLSAFDNLKTKALLFGISDKRI
                      HETLEVIGLAETGKKRAGKFSLGMKQRLGIGMAILTEPQFLILDEPTNGLDPDGIAELL
                      NLILKLKAKGVTILISSHQLHEISKVASQIIILNKGKIRYNHANNKEDDIEQLFFKIVH
                      GGM"
-                     /gene="nisF"
-                     /transl_table=11
-                     /locus_tag="nisF"
-                     /protein_id="ADJ56360.1"
-                     /product="NisF"
      gene            12793..13521
                      /gene="nisE"
      CDS             12793..13521
-                     /note="nisin transport/immunity protein; component of
-                     ABC-transporter"
+                     /codon_start=1
                      /db_xref="GI:299832746"
                      /function="secretion of cell-associated nisin"
-                     /codon_start=1
+                     /gene="nisE"
+                     /locus_tag="nisE"
+                     /note="nisin transport/immunity protein; component of
+                     ABC-transporter"
+                     /product="NisE"
+                     /protein_id="ADJ56361.1"
+                     /transl_table=11
                      /translation="MKRIIASEAIKLKKSGTLRLVLIIPFVTLFIAFLMGGIQIFSVFS
                      IYWWETGFLFLLMSLLFLYDIKSEEQAGNFQNVKWKKLSWKIHLAKMLLIWLRGILASI
                      VLIILLYLVAFVFQGIVVVDFMKVSVALIAILLAASWNLPFIYLIFKWINTYVLLAANT
                      LICLIVAPFVAQTPVWFLLPYTYHYKVTESLLNIKPSGDLLTGKINFSIWEVLLPFGLS
                      IVVTIGVSYLLKGVIEHDKK"
-                     /gene="nisE"
-                     /transl_table=11
-                     /locus_tag="nisE"
-                     /protein_id="ADJ56361.1"
-                     /product="NisE"
      gene            13508..14152
                      /gene="nisG"
      CDS             13508..14152
-                     /note="nisin transport/immunity protein; component of
-                     ABC-transporter"
+                     /codon_start=1
                      /db_xref="GI:299832747"
                      /function="secretion of cell-associated nisin"
-                     /codon_start=1
+                     /gene="nisG"
+                     /locus_tag="nisG"
+                     /note="nisin transport/immunity protein; component of
+                     ABC-transporter"
+                     /product="NisG"
+                     /protein_id="ADJ56362.1"
+                     /transl_table=11
                      /translation="MIRSECLKLKNSLGFYLVFLFTLLELLTVPIYLAFGRSHVSMTDL
                      SLMIFLFFPLLVTILSILIFEQESLANRFQEINVNKKSSRIWLSKLIVVDFLLFFPSAM
                      IWIITGVSQAVGQQGMMIATASWLMAIFLNHFHLLLTFIINRGGSMIIAIIEILLIIFA
                      SNKVLLAAYWCPIALPVNFMITGRCAYLIAAVGWIVLSTIILVALSKKKIR"
-                     /gene="nisG"
-                     /transl_table=11
-                     /locus_tag="nisG"
-                     /protein_id="ADJ56362.1"
-                     /product="NisG"
 ORIGIN
         1 tctcttaact ccgtgtctag tttttcgttg actttccatt atgcttggat tttttattgt
        61 ttaattccct ttttttgtat acaagctcgt attcttaaca aataattggc atatcgggtt

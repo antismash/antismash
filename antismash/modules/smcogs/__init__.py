@@ -45,8 +45,12 @@ class SMCOGResults(ModuleResults):
                 "image_dir": self.relative_tree_path}
 
     @staticmethod
-    def from_json(json: Dict[str, Any], _record: Record) -> "SMCOGResults":
+    def from_json(json: Dict[str, Any], record: Record) -> "SMCOGResults":
         if json.get("schema_version") != SMCOGResults.schema_version:
+            logging.debug("Schema version mismatch, discarding SMCOGs results")
+            return None
+        if record.id != json.get("record_id"):
+            logging.debug("Record ID mismatch, discarding SMCOGs results")
             return None
         results = SMCOGResults(json["record_id"])
         for hit, parts in json["best_hits"].items():
@@ -106,7 +110,7 @@ def regenerate_previous_results(results: Dict[str, Any], record: Record, options
     """ Reconstructs the previous results, unless the trees weren't generated
         previously or a previously generated tree output file is missing.
     """
-    if not results or record.id != results["record_id"]:
+    if not results:
         return None
     if options.smcogs_trees and not results["tree_paths"]:
         # trees have to be regenerated, so don't reuse

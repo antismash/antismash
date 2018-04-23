@@ -65,17 +65,17 @@ class TestIntegration(unittest.TestCase):
         "Test thiopeptide prediction for lactazole - lazA"
         rec = seqio.read(path.get_full_path(__file__, 'data', 'lac_before_analysis.gbk'))
         rec = secmet.Record.from_biopython(rec, "bacteria")
-        assert rec.get_feature_count() == 21
+        before_count = rec.get_feature_count()
         assert not rec.get_cds_motifs()
         results = thiopeptides.specific_analysis(rec)
         assert len(results.motifs) == 1
         # ensure record not adjusted yet
-        assert rec.get_feature_count() == 21
+        assert rec.get_feature_count() == before_count
         assert not rec.get_cds_motifs()
 
         # add and check new motif added
         results.add_to_record(rec)
-        assert rec.get_feature_count() == 22
+        assert rec.get_feature_count() == before_count + 1
         assert len(rec.get_cds_motifs()) == 1
         prepeptide = rec.get_cds_motifs()[0]
         assert prepeptide is results.motifs[0]
@@ -96,17 +96,17 @@ class TestIntegration(unittest.TestCase):
         "Test thiopeptide prediction for thiostrepton"
         rec = seqio.read(path.get_full_path(__file__, 'data', 'thiostrepton_before_analysis.gbk'))
         rec = secmet.Record.from_biopython(rec, "bacteria")
-        assert rec.get_feature_count() == 25
+        before_count = rec.get_feature_count()
         # two existing motifs
         assert not rec.get_cds_motifs()
 
         results = thiopeptides.specific_analysis(rec)
         assert len(results.motifs) == 1
         # ensure record not adjusted yet
-        assert rec.get_feature_count() == 25
+        assert rec.get_feature_count() == before_count
         results.add_to_record(rec)
         # the new motif is added
-        assert rec.get_feature_count() == 26
+        assert rec.get_feature_count() == before_count + 1
         assert len(rec.get_cds_motifs()) == 1
         prepeptides = rec.get_cds_motifs()
         prepeptide = None

@@ -28,7 +28,7 @@ class AntismashResults:
     """ A single repository of all results of an antismash run, including input
         filename, records and individual module results
     """
-    def __init__(self, input_file: str, records: List[Record], results: List[Dict[str, ModuleResults]],
+    def __init__(self, input_file: str, records: List[Record], results: List[Dict[str, Union[ModuleResults, Dict[str, Any]]]],
                  version: str, timings: Dict[str, Dict[str, float]] = None) -> None:
         self.input_file = input_file
         self.records = records
@@ -37,7 +37,7 @@ class AntismashResults:
         self.timings_by_record = timings or {}  # {record_id : {module name: time}}
 
     @staticmethod
-    def from_file(handle: Union[str, IO], taxon: str, modules: List[AntismashModule]) -> "AntismashResults":
+    def from_file(handle: Union[str, IO], taxon: str) -> "AntismashResults":
         """ Regenerates an instance of AntismashResults from JSON representation
             in a file
         """
@@ -47,9 +47,7 @@ class AntismashResults:
         version = data["version"]
         input_file = data["input_file"]
         records = [Record.from_biopython(record_from_json(rec), taxon=taxon) for rec in data["records"]]
-        results = []
-        for record, json_results in zip(records, (rec["modules"] for rec in data["records"])):
-            results.append(regenerate_results_for_record(record, modules, json_results))
+        results = [rec["modules"] for rec in data["records"]]
         return AntismashResults(input_file, records, results, version)
 
     def to_json(self) -> Dict[str, Any]:

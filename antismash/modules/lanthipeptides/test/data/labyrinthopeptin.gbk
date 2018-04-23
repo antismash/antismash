@@ -15,7 +15,23 @@ REFERENCE   1  (bases 1 to 6400)
 FEATURES             Location/Qualifiers
      gene            1..2589
                      /gene="labKC"
+     cluster_border  1..2589
+                     /aStool="rule-based-clusters"
+                     /contig_edge="False"
+                     /cutoff="20000"
+                     /extent="10000"
+                     /product="lanthipeptide"
+                     /rule="((LANC_like and (Flavoprotein or Trp_halogenase or
+                     p450 or Lant_dehyd_N or Lant_dehyd_C or Lant_dehydr_C or
+                     tsrC or adh_short or adh_short_C2) or cds(LANC_like and
+                     (Pkinase or DUF4135)) or TIGR03731 or Antimicr18 or
+                     Gallidermin or L_biotic_A or leader_d or leader_eh or
+                     leader_abc or mature_d or mature_ab or mature_a or mature_b
+                     or mature_ha or mature_h_beta or lacticin_l or lacticin_mat
+                     or LD_lanti_pre or strep_PEQAXS) and not YcaO)"
+                     /tool="antismash"
      CDS             1..2589
+                     /codon_start=1
                      /db_xref="GOA:C0MP58"
                      /db_xref="InterPro:IPR000719"
                      /db_xref="InterPro:IPR007822"
@@ -23,8 +39,22 @@ FEATURES             Location/Qualifiers
                      /db_xref="InterPro:IPR017442"
                      /db_xref="InterPro:IPR020636"
                      /db_xref="UniProtKB/TrEMBL:C0MP58"
-                     /codon_start=1
+                     /gene="labKC"
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     lanthipeptide: LANC_like"
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     lanthipeptide: Pkinase"
+                     /locus_tag="labKC"
                      /note="contains C-terminal lanC-domain"
+                     /product="serine/threonine kinase"
+                     /protein_id="CAX48971.1"
+                     /sec_met="Type: lanthipeptide"
+                     /sec_met="LANC_like (E-value: 5.3e-11, bitscore: 30.2,
+                     seeds: 47, tool: rule-based-clusters); Pkinase (E-value:
+                     4.4e-15, bitscore: 44.1, seeds: 54, tool:
+                     rule-based-clusters)"
+                     /sec_met="Kind: biosynthetic"
+                     /transl_table=11
                      /translation="MDLRYHAYAMADPVFYDSPSSDTRETDGYSDDLPLPDGWERRRVG
                      VWVMQGHDGLTMPDQGWKIHVSAGLDNAWPVLELVAKYCVEQEMPFKFLRSRRTLLARS
                      SKYAERGGSGKFITIYPADEGALEKTLHELGGMLEGQPGPYILSDLRWRSGPLFVRYGA
@@ -40,59 +70,52 @@ FEATURES             Location/Qualifiers
                      TQKDSTLQVDEGWRVLPYVATGSVGIGIALHEFLRHRPAPRFTEAQEGIRRAAAPAYFV
                      QSGLLNGRSGILAYLLHVGAGREDPVVRTHLRNLGWHAVPYPGRGEDAPAPGARRTAFI
                      GDQLLRLSMDLATGSAGVLATVEAALGGHPLRLPFLHPEEGASTRPRGRR"
-                     /gene="labKC"
-                     /transl_table=11
-                     /locus_tag="labKC"
-                     /protein_id="CAX48971.1"
-                     /product="serine/threonine kinase"
-                     /sec_met="Type: lanthipeptide"
-                     /sec_met="LANC_like (E-value: 5.3e-11, bitscore: 30.2,
-                     seeds: 47); Pkinase (E-value: 4.4e-15, bitscore: 44.1,
-                     seeds: 54)"
-                     /sec_met="Kind: biosynthetic"
      source          1..6400
                      /db_xref="taxon:182080"
                      /mol_type="genomic DNA"
                      /organism="Actinomadura namibiensis"
      cluster         1..6400
+                     /contig_edge="True"
                      /cutoff="20000"
                      /extension="10000"
-                     /contig_edge="True"
-                     /product="lanthipeptide"
                      /note="Detection rule(s) for this cluster type:
-                     lanthipeptide: ((LANC_like and (Flavoprotein or
+                     lanthipeptide: (((LANC_like and (Flavoprotein or
                      Trp_halogenase or p450 or Lant_dehyd_N or Lant_dehyd_C or
-                     adh_short or adh_short_C2) or cds(LANC_like and (Pkinase or
-                     DUF4135)) or TIGR03731 or Antimicr18 or Gallidermin or
-                     L_biotic_A or leader_d or leader_eh or leader_abc or
-                     mature_d or mature_ab or mature_a or mature_b or mature_ha
-                     or mature_h_beta or lacticin_l or lacticin_mat or
-                     LD_lanti_pre or strep_PEQAXS));"
+                     Lant_dehydr_C or tsrC or adh_short or adh_short_C2) or
+                     cds(LANC_like and (Pkinase or DUF4135)) or TIGR03731 or
+                     Antimicr18 or Gallidermin or L_biotic_A or leader_d or
+                     leader_eh or leader_abc or mature_d or mature_ab or
+                     mature_a or mature_b or mature_ha or mature_h_beta or
+                     lacticin_l or lacticin_mat or LD_lanti_pre or strep_PEQAXS)
+                     and not YcaO));"
+                     /product="lanthipeptide"
+                     /tool="antismash"
      gene            2599..2721
                      /gene="labA1"
      CDS             2599..2721
-                     /db_xref="UniProtKB/TrEMBL:C0MP59"
                      /codon_start=1
-                     /translation="MASILELQDLEVERASSAADSNASVWECCSTGSWVPFTCC"
+                     /db_xref="UniProtKB/TrEMBL:C0MP59"
                      /gene="labA1"
-                     /transl_table=11
                      /locus_tag="labA1"
-                     /protein_id="CAX48972.1"
                      /product="labyrinthopeptin A1/A3 prepropeptide"
+                     /protein_id="CAX48972.1"
+                     /transl_table=11
+                     /translation="MASILELQDLEVERASSAADSNASVWECCSTGSWVPFTCC"
      gene            2761..2877
                      /gene="labA2"
      CDS             2761..2877
-                     /db_xref="UniProtKB/TrEMBL:C0MP60"
                      /codon_start=1
-                     /translation="MASILELQNLDVEHARGENRSDWSLWECCSTGSLFACC"
+                     /db_xref="UniProtKB/TrEMBL:C0MP60"
                      /gene="labA2"
-                     /transl_table=11
                      /locus_tag="labA2"
-                     /protein_id="CAX48973.1"
                      /product="labyrinthopeptin A2 prepropeptide"
+                     /protein_id="CAX48973.1"
+                     /transl_table=11
+                     /translation="MASILELQNLDVEHARGENRSDWSLWECCSTGSLFACC"
      gene            2988..4688
                      /gene="labT1"
      CDS             2988..4688
+                     /codon_start=1
                      /db_xref="GOA:C0MP61"
                      /db_xref="InterPro:IPR001140"
                      /db_xref="InterPro:IPR003439"
@@ -101,7 +124,11 @@ FEATURES             Location/Qualifiers
                      /db_xref="InterPro:IPR017871"
                      /db_xref="InterPro:IPR017940"
                      /db_xref="UniProtKB/TrEMBL:C0MP61"
-                     /codon_start=1
+                     /gene="labT1"
+                     /locus_tag="labT1"
+                     /product="ABC-transporter"
+                     /protein_id="CAX48974.1"
+                     /transl_table=11
                      /translation="MHADRLLVQALRAGPGWTALLVAATLLNAVCALALPAAIGAVTDA
                      VLARDAGRGAGAPLGWLAAALGGVALGTALSRLAEVYCGTAATRELRTRLVTHVLALGV
                      PGTRAFTPGDLASRAVTGAPQAGAVARSVVSAVAGLLMSVGGVVALWLIDWRLVAAVGG
@@ -112,21 +139,21 @@ FEATURES             Location/Qualifiers
                      ALRAQVAYAFERPDLQGTTIADAIAYGCPSAPPRAVERAAALARADGFVRLLPAGFDTP
                      VADTPLSGGERQRLGLARAFVRNARLIILDDATSSLDSVTEAQVAAALAEAAATRTRLV
                      VAHRAGTAARADLVLWLDSGRVRALRPHRELWADPDYRAMFEPAPAERA"
-                     /gene="labT1"
-                     /transl_table=11
-                     /locus_tag="labT1"
-                     /protein_id="CAX48974.1"
-                     /product="ABC-transporter"
      gene            4685..6400
                      /gene="labT2"
      CDS             4685..6400
+                     /codon_start=1
                      /db_xref="GOA:C0MP62"
                      /db_xref="InterPro:IPR003439"
                      /db_xref="InterPro:IPR003593"
                      /db_xref="InterPro:IPR011527"
                      /db_xref="InterPro:IPR017940"
                      /db_xref="UniProtKB/TrEMBL:C0MP62"
-                     /codon_start=1
+                     /gene="labT2"
+                     /locus_tag="labT2"
+                     /product="ABC-transporter"
+                     /protein_id="CAX48975.1"
+                     /transl_table=11
                      /translation="MTGGAARWFAAQLRTERRGLAGVLAWSVAAALPALVSGRLIALAV
                      DQGFLRGRGTVGLAWLGALAAATAVGALGARQIPRALGGALEPVRDRLVRRIVAGALRR
                      ALAGRPDPGVVAKLTEQTETVRDTGAGLLLGMQQVGMAVVAAAIGLLLLAPVTALLVLP
@@ -137,11 +164,6 @@ FEATURES             Location/Qualifiers
                      ETDPAWRRRSVAIIPQEAYVFSGTLAENLAYLRPDAAEAELDAAVAALGLAPLRARLGG
                      YGAALGPRSGLTPGERQLVALARVWLSPARIVVLDEATCHLDPAAEARVEHAFRDRPGT
                      LVVIAHRLSSARRADRVLVMDGTRPRLGTHGELLRDSPLYADLVGAWTVHPAAR"
-                     /gene="labT2"
-                     /transl_table=11
-                     /locus_tag="labT2"
-                     /protein_id="CAX48975.1"
-                     /product="ABC-transporter"
 ORIGIN
         1 atggatctgc ggtaccacgc ctatgcgatg gccgatcccg tcttttatga ctcgccgtcc
        61 agcgacaccc gggagaccga cggctactcc gacgacctcc ccctgccgga cggctgggaa

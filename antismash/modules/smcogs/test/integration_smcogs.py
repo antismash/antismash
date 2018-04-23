@@ -15,7 +15,7 @@ import antismash
 from antismash.common import secmet, path, subprocessing
 import antismash.common.test.helpers as helpers
 from antismash.config import get_config, update_config, destroy_config, build_config
-from antismash.main import read_data, regenerate_results_for_record
+from antismash.main import read_data
 from antismash.modules import smcogs
 
 
@@ -110,26 +110,33 @@ class TestTreeGeneration(Base):
 
             # test the results function properly
             json = results.to_json()
+            assert json["best_hits"]["nisB"][0] == 'SMCOG1155:Lantibiotic_dehydratase_domain_protein'
             assert smcogs.SMCOGResults.from_json(json, self.record).to_json() == json
-            assert smcogs.regenerate_previous_results(json, self.record, self.options).to_json() == json
+            regenerated = smcogs.regenerate_previous_results(json, self.record, self.options)
+            assert isinstance(regenerated, smcogs.SMCOGResults), json
+            assert regenerated.to_json() == json
 
-            for cds in self.record.get_cluster(0).cds_children:
-                hit = results.best_hits.get(cds.get_name())
-                if hit:
-                    assert not cds.notes
-                    assert cds.gene_function in [secmet.feature.GeneFunction.OTHER,
-                                                 secmet.feature.GeneFunction.CORE]
-            results.add_to_record(self.record)
-            for cds in self.record.get_cluster(0).cds_children:
-                if cds.sec_met:
-                    continue  # no sense checking, because we don't do anything with it
-                hit = results.best_hits.get(cds.get_name())
-                if not hit:
-                    assert cds.gene_function == secmet.feature.GeneFunction.OTHER
-                    continue
-                assert cds.get_name() in results.tree_images
-                assert len(cds.notes) == 1
-                assert cds.gene_function != secmet.feature.GeneFunction.OTHER
+        functions = {"nisP": secmet.feature.GeneFunction.ADDITIONAL,
+                     "nisA": secmet.feature.GeneFunction.CORE,
+                     "nisB": secmet.feature.GeneFunction.CORE,
+                     "nisC": secmet.feature.GeneFunction.CORE}
+
+        for cds in self.record.get_cluster(0).cds_children:
+            hit = results.best_hits.get(cds.get_name())
+            if hit:
+                assert not cds.notes
+                assert cds.gene_function == functions.get(cds.get_name(), secmet.feature.GeneFunction.OTHER)
+        results.add_to_record(self.record)
+        for cds in self.record.get_cluster(0).cds_children:
+            if cds.sec_met:
+                continue  # no sense checking, because we don't do anything with it
+            hit = results.best_hits.get(cds.get_name())
+            if not hit:
+                assert cds.gene_function == secmet.feature.GeneFunction.OTHER
+                continue
+            assert cds.get_name() in results.tree_images
+            assert len(cds.notes) == 1
+            assert cds.gene_function != secmet.feature.GeneFunction.OTHER
 
     def test_trees_complete(self):
         with TemporaryDirectory() as output_dir:
@@ -149,8 +156,7 @@ class TestTreeGeneration(Base):
             prior_results = read_data(None, options)
             record = prior_results.records[0]
             results = prior_results.results[0]
-            regenned = regenerate_results_for_record(record, options, [smcogs], results)
-            smcogs_results = regenned["antismash.modules.smcogs"]
+            smcogs_results = smcogs.regenerate_previous_results(results["antismash.modules.smcogs"], record, options)
             assert len(smcogs_results.tree_images) == 7
             assert os.path.exists(sample_tree)
 
@@ -161,5 +167,5 @@ class TestTreeGeneration(Base):
             prior_results = read_data(None, options)
             record = prior_results.records[0]
             results = prior_results.results[0]
-            regenned = regenerate_results_for_record(record, options, [smcogs], results)
-            assert "antismash.modules.smcogs" not in regenned
+            smcogs_results = smcogs.regenerate_previous_results(results["antismash.modules.smcogs"], record, options)
+            assert smcogs_results is None

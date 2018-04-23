@@ -23,8 +23,8 @@ FEATURES             Location/Qualifiers
                      /protein_id="BAO57433.1"
                      /sec_met="Type: lanthipeptide"
                      /sec_met="LANC_like (E-value: 3.1e-20, bitscore: 61.4,
-                     seeds: 47); Pkinase (E-value: 1.2e-14, bitscore: 43.5,
-                     seeds: 54)"
+                     seeds: 47, tool: .); Pkinase (E-value: 1.2e-14, bitscore: 43.5,
+                     seeds: 54, tool: .)"
                      /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MSTPPDPGSAAVLGQEELRRRAEELAARAPGPHRPLRTDGQWWYL
@@ -96,8 +96,8 @@ FEATURES             Location/Qualifiers
                      /protein_id="BAO57435.1"
                      /sec_met="Type: thiopeptide-lanthipeptide"
                      /sec_met="Lant_dehyd_N (E-value: 2e-08, bitscore: 23.8,
-                     seeds: 38); Lant_dehyd_C (E-value: 6.6e-30, bitscore: 93.1,
-                     seeds: 37)"
+                     seeds: 38, tool: .); Lant_dehyd_C (E-value: 6.6e-30, bitscore: 93.1,
+                     seeds: 37, tool: .)"
                      /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MPNRAAPPRDARAPVPAPAPAAYAARHALVRSTVLAWPAQSAATA
@@ -129,7 +129,7 @@ FEATURES             Location/Qualifiers
                      /protein_id="BAO57436.1"
                      /sec_met="Type: none"
                      /sec_met="Lant_dehydr_C (E-value: 1.1e-17, bitscore: 53.7,
-                     seeds: ?)"
+                     seeds: -1, tool: .)"
                      /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MSDPADGRGAVTAWDVVLYHYRPDKARALREAVLPLARQAAAEGL
@@ -173,7 +173,7 @@ FEATURES             Location/Qualifiers
                      /protein_id="BAO57438.1"
                      /sec_met="Type: thiopeptide"
                      /sec_met="YcaO (E-value: 3.7e-72, bitscore: 233.0, seeds:
-                     127)"
+                     127, tool: .)"
                      /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MSELPVLTPVEALAATSGTAVVHLTEWTLGLAARLSRHALAHPVR
@@ -204,8 +204,8 @@ FEATURES             Location/Qualifiers
                      /protein_id="BAO57439.1"
                      /sec_met="Type: none"
                      /sec_met="PF00881 (E-value: 4e-15, bitscore: 45.5, seeds:
-                     78); Lant_dehydr_C (E-value: 1.5e-48, bitscore: 155.1,
-                     seeds: ?)"
+                     78, tool: .); Lant_dehydr_C (E-value: 1.5e-48, bitscore: 155.1,
+                     seeds: -1, tool: .)"
                      /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MTTHALPATTWHSLHLALPLPAREADAFLTEDLAPLMDGLAGTDW
