@@ -446,7 +446,7 @@ def strip_inferior_domains(cds_domains_by_cluster: Dict[str, Dict[str, Set[str]]
                 domains_by_cluster.pop(product)
 
 
-def get_sequence_counts(details_file: str) -> Dict[str, str]:
+def get_sequence_counts(details_file: str) -> Dict[str, int]:
     """ Gets the number of sequences/seeds used to generate each HMM signature
 
         Arguments:
@@ -460,10 +460,9 @@ def get_sequence_counts(details_file: str) -> Dict[str, str]:
     for hmm in get_signature_profiles(details_file):
         for line in open(path.get_full_path(details_file, hmm.hmm_file), 'r'):
             if line.startswith('NSEQ '):
-                result[hmm.name] = line[6:].strip()
+                result[hmm.name] = int(line[6:].strip())
                 break
-        # TODO: ideally this shouldn't ever happen, clean up inputs and change to error
         if hmm.name not in result:
-            result[hmm.name] = "?"
+            raise ValueError("Unknown number of needs for hmm file: %s" % details_file)
 
     return result
