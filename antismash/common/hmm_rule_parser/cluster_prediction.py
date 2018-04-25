@@ -355,8 +355,7 @@ def apply_cluster_rules(record: Record, results_by_id: Dict[str, List[HSP]],
 
 
 def detect_borders_and_signatures(record: Record, signature_file: str, seeds_file: str,
-                                  rules_file: str, filter_file: str, tool: str,
-                                  options: ConfigType) -> RuleDetectionResults:
+                                  rules_file: str, filter_file: str, tool: str) -> RuleDetectionResults:
     """ Compares all CDS features in a record with HMM signatures and generates
         Cluster features based on those hits and the current cluster detection
         rules.
@@ -369,7 +368,6 @@ def detect_borders_and_signatures(record: Record, signature_file: str, seeds_fil
             rules_file: the file containing all the rules to use for cluster definition
             filter_file: a file containing equivalence sets of HMMs
             tool: the name of the tool providing the HMMs (e.g. clusterfinder, rule_based_clusters)
-            options: antismash Config
     """
     full_fasta = fasta.get_fasta_from_record(record)
     # if there's no CDS features, don't try to do anything
