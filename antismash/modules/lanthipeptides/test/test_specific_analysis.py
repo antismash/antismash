@@ -24,7 +24,7 @@ from antismash.modules.lanthipeptides.specific_analysis import (
 class TestLanthipeptide(unittest.TestCase):
     def test_init(self):
         "Test Lanthipeptide instantiation"
-        lant = Lanthipeptide(23, 42, 17, 23, 'Class-I')
+        lant = Lanthipeptide(CleavageSiteHit(23, 42, 17, 'Class-I'), 23)
         self.assertTrue(isinstance(lant, Lanthipeptide))
         self.assertEqual(23, lant.start)
         self.assertEqual(42, lant.end)
@@ -36,13 +36,13 @@ class TestLanthipeptide(unittest.TestCase):
 
     def test_repr(self):
         "Test Lanthipeptide representation"
-        lant = Lanthipeptide(23, 42, 17, 23, 'Class-I')
+        lant = Lanthipeptide(CleavageSiteHit(23, 42, 17, 'Class-I'), 23)
         expected = "Lanthipeptide(23..42, 17, 'Class-I', '', -1, -1(-1))"
         self.assertEqual(expected, repr(lant))
 
     def test_core(self):
         "Test Lanthipeptide.core"
-        lant = Lanthipeptide(23, 42, 17, 23, 'Class-I')
+        lant = Lanthipeptide(CleavageSiteHit(23, 42, 17, 'Class-I'), 23)
         self.assertEqual('', lant.core)
         assert lant.core_analysis is None
         lant.core = "MAGICHAT"
@@ -51,7 +51,7 @@ class TestLanthipeptide(unittest.TestCase):
 
     def test_core_ignore_invalid(self):
         "Test Lanthipeptide.core ignores invalid amino acids"
-        lant = Lanthipeptide(23, 42, 17, 23, 'Class-I')
+        lant = Lanthipeptide(CleavageSiteHit(23, 42, 17, 'Class-I'), 23)
         self.assertEqual('', lant.core)
         assert lant.core_analysis is None
         lant.core = "MAGICXHAT"
@@ -60,7 +60,7 @@ class TestLanthipeptide(unittest.TestCase):
 
     def test_number_of_lan_bridges(self):
         "Test Lanthipeptide.number_of_lan_bridges"
-        lant = Lanthipeptide(23, 42, 17, 23, 'Class-I')
+        lant = Lanthipeptide(CleavageSiteHit(23, 42, 17, 'Class-I'), 23)
         lant.core = "MAGICHAT"
         self.assertEqual(1, lant.number_of_lan_bridges)
         lant.core = "MAGICHATCS"
@@ -74,7 +74,7 @@ class TestLanthipeptide(unittest.TestCase):
 
     def test_monoisotopic_mass(self):
         "Test Lanthipeptide.monoisotopic_mass"
-        lant = Lanthipeptide(23, 42, 17, 23, 'Class-I')
+        lant = Lanthipeptide(CleavageSiteHit(23, 42, 17, 'Class-I'), 23)
         lant.core = "MAGICHAT"
         analysis = ProteinAnalysis("MAGICHAT", monoisotopic=True)
         weight = analysis.molecular_weight()
@@ -85,7 +85,7 @@ class TestLanthipeptide(unittest.TestCase):
 
     def test_molecular_weight(self):
         "Test Lanthipeptide.molecular_weight"
-        lant = Lanthipeptide(23, 42, 17, 23, 'Class-I')
+        lant = Lanthipeptide(CleavageSiteHit(23, 42, 17, 'Class-I'), 23)
         lant.core = "MAGICHAT"
         analysis = ProteinAnalysis("MAGICHAT", monoisotopic=False)
         weight = analysis.molecular_weight()
@@ -96,7 +96,7 @@ class TestLanthipeptide(unittest.TestCase):
 
     def test_alternative_weights(self):
         "Test Lanthipeptide.alt_weights"
-        lant = Lanthipeptide(23, 42, 17, 23, 'Class-I')
+        lant = Lanthipeptide(CleavageSiteHit(23, 42, 17, 'Class-I'), 23)
         lant.core = "MAGICHATS"
         analysis = ProteinAnalysis("MAGICHATS", monoisotopic=False)
         weight = analysis.molecular_weight()
@@ -132,7 +132,7 @@ class TestSpecificAnalysis(unittest.TestCase):
         "Test lanthipeptides.result_vec_to_features()"
         orig_feature = DummyCDS(0, 165)
         orig_feature.locus_tag = 'FAKE0001'
-        vec = Lanthipeptide(17, 23, 42, 23, 'Class-I')
+        vec = Lanthipeptide(CleavageSiteHit(17, 23, 42, 'Class-I'), 23)
         seq = "TAILTAILTAILTAILTAILTAILTAILTAILTAILCC"
         vec.core = seq
         vec.leader = "HEADHEADHEAD"
@@ -212,11 +212,21 @@ class TestNoCores(unittest.TestCase):
         for part in ["I", "II"]:
             assert run_lanthipred(None, self.cds, "Class-%s" % part, self.domains) is None
 
-    def test_prediction_with_core(self):
+    def test_prediction_with_core_class1(self):
+        # the cleavage result adjusted to leave at least one amino in core
+        cleavage_result = CleavageSiteHit(start=38, end=40, score=-6.8, lantype="Class-I")
+        mock("lanthi.predict_cleavage_site", returns=cleavage_result)
+        results = run_lanthipred(DummyRecord(features=[self.cds]),
+                                 self.cds, "Class-I", self.domains)
+        assert results
+        assert str(results).startswith("Lanthipeptide(38..40, -6, 'Class-I', 'LSQGLGGC', 1, 715")
+
+    def test_prediction_with_core_class2(self):
         # the cleavage result adjusted to leave at least one amino in core
         cleavage_result = CleavageSiteHit(start=38, end=40, score=-6.8, lantype="Class-II")
         mock("lanthi.predict_cleavage_site", returns=cleavage_result)
-        for part in ["I", "II"]:
-            results = run_lanthipred(DummyRecord(features=[self.cds]),
-                                     self.cds, "Class-%s" % part, self.domains)
-            assert results is not None
+        results = run_lanthipred(DummyRecord(features=[self.cds]),
+                                 self.cds, "Class-II", self.domains)
+        assert results is not None
+        assert str(results).startswith("Lanthipeptide(38..40, -6, 'Class-II', 'LSQGLGGC', 1, 715")
+

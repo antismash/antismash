@@ -11,7 +11,7 @@ from collections import defaultdict
 import logging
 import os
 import re
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set
 
 from Bio.SeqFeature import SeqFeature
 
@@ -142,8 +142,8 @@ class PrepeptideBase:
         self._leader = seq
 
     def __repr__(self) -> str:
-        return "PrepeptideBase(%s..%s, %s, %r, %r)" % (self.start, self.end,
-                                      self.score, self.rodeo_score, self._core)
+        base = "PrepeptideBase(%s..%s, %s, %r, %r)"
+        return base % (self.start, self.end, self.score, self.rodeo_score, self._core)
 
     @property
     def number_of_lan_bridges(self) -> int:
@@ -189,21 +189,34 @@ class PrepeptideBase:
         return self._alt_weights
 
 
+class CleavageSiteHit:  # pylint: disable=too-few-public-methods
+    """ A simple container for storing cleavage site information """
+    def __init__(self, start: int, end: int, score: int, lantype: str) -> None:
+        self.start = int(start)
+        self.end = int(end)
+        self.score = int(score)
+        self.lantype = lantype
+
+    def __repr__(self) -> str:
+        return "CleavageSiteHit(start=%s, end=%s, score=%s, lantype='%s')" % (
+                    self.start, self.end, self.score, self.lantype)
+
+
 class Lanthipeptide(PrepeptideBase):
     """ Calculates and stores lanthipeptide information
     """
-    def __init__(self, start: int, end: int, score: int, rodeo_score: int, lantype: str) -> None:
-        super().__init__(start, end, score, rodeo_score)
-        self.lantype = lantype
+    def __init__(self, hit: CleavageSiteHit, rodeo_score: int) -> None:
+        super().__init__(hit.start, hit.end, hit.score, rodeo_score)
+        self.lantype = hit.lantype
         self._aminovinyl = False
         self._chlorinated = False
         self._oxygenated = False
         self._lac = False
 
     def __repr__(self) -> str:
-        return "Lanthipeptide(%s..%s, %s, %r, %r, %s, %s(%s))" % (self.start,
-                    self.end, self.score, self.lantype, self._core,
-                    self._lan_bridges, self._monoisotopic_weight, self._weight)
+        base = "Lanthipeptide(%s..%s, %s, %r, %r, %s, %s(%s))"
+        return base % (self.start, self.end, self.score, self.lantype, self._core,
+                       self._lan_bridges, self._monoisotopic_weight, self._weight)
 
     @property
     def number_of_lan_bridges(self) -> int:
@@ -320,19 +333,6 @@ class Lanthipeptide(PrepeptideBase):
             self._calculate_mw()
 
 
-class CleavageSiteHit:
-    """ A simple container for storing cleavage site information """
-    def __init__(self, start: int, end: int, score: int, lantype: str) -> None:
-        self.start = start
-        self.end = end
-        self.score = int(score)
-        self.lantype = lantype
-
-    def __repr__(self) -> str:
-        return "CleavageSiteHit(start=%s, end=%s, score=%s, lantype='%s')" % (
-                    self.start, self.end, self.score, self.lantype)
-
-
 def get_detected_domains(genes: List[CDSFeature]) -> List[str]:
     """ Gathers all detected domains in a cluster, including some not detected
         by hmm_detection.
@@ -389,7 +389,8 @@ def run_non_biosynthetic_phmms(fasta: str) -> Dict[str, List[str]]:
     return non_biosynthetic_hmms_by_id
 
 
-def predict_cleavage_site(query_hmmfile: str, target_sequence: str, threshold: float = -100.) -> Optional[CleavageSiteHit]:
+def predict_cleavage_site(query_hmmfile: str, target_sequence: str,
+                          threshold: float = -100.) -> Optional[CleavageSiteHit]:
     """ Extracts from HMMER the start position, end position and score
         of the HMM alignment for a cleavage site
 
@@ -446,7 +447,7 @@ def run_cleavage_site_phmm(fasta: str, hmmer_profile: str, threshold: float) -> 
     return predict_cleavage_site(profile, fasta, threshold)
 
 
-def run_cleavage_site_regex(fasta: str) -> Tuple[Optional[int], Optional[int], Optional[int]]:
+def run_cleavage_site_regex(fasta: str) -> Optional[CleavageSiteHit]:
     """ Try to identify cleavage site using regular expressions"""
     # Regular expressions; try 1 first, then 2, etc.
     rex1 = re.compile('F?LD')
@@ -460,54 +461,48 @@ def run_cleavage_site_regex(fasta: str) -> Tuple[Optional[int], Optional[int], O
         start, end = [m.span() for m in rex2.finditer(fasta)][-1]
         end += 15
     else:
-        return None, None, None
-    return start, end, 0
+        return None
+    return CleavageSiteHit(start, end, 0, "lanthipeptide")
 
 
-def determine_precursor_peptide_candidate(record: Record, query: CDSFeature,
-                                          query_sequence: str, domains: List[str],
+def determine_precursor_peptide_candidate(record: Record, query: CDSFeature, domains: List[str],
                                           hmmer_profile: str) -> Optional[Lanthipeptide]:
     """ Identify precursor peptide candidates and split into two,
         only valid for Class-I lanthipeptides
     """
 
     # Skip sequences with >200 AA
-    if len(query_sequence) > 200 or len(query_sequence) < 20:
+    if len(query.translation) > 200 or len(query.translation) < 20:
         return None
 
     # Create FASTA sequence for feature under study
-    lan_a_fasta = ">%s\n%s" % (query.get_name(), query_sequence)
+    lan_a_fasta = ">%s\n%s" % (query.get_name(), query.translation)
 
     # Run sequence against pHMM; if positive, parse into a vector containing START, END and SCORE
     cleavage_result = run_cleavage_site_phmm(lan_a_fasta, hmmer_profile, THRESH_DICT["Class-I"])
 
-    if cleavage_result is not None and cleavage_result.end <= len(query_sequence) - 8:
-        start = cleavage_result.start
-        end = cleavage_result.end
-        score = cleavage_result.score
-        lanthi_type = cleavage_result.lantype
-    else:
+    if cleavage_result is None or cleavage_result.end > len(query.translation) - 8:
         # If no pHMM hit, try regular expression
-        start, end, score = run_cleavage_site_regex(lan_a_fasta)
-        if score is None or end > len(query_sequence) - 8:
-            # abort, since RODEO will predict duplicates based only on cluster
-            # attributes
+        cleavage_result = run_cleavage_site_regex(lan_a_fasta)
+        if cleavage_result is None or cleavage_result.end > len(query.translation) - 8:
+            # still no good, so abort, since RODEO will predict duplicates based
+            # only on cluster attributes
             return None
-        lanthi_type = "lanthipeptide"
 
     # if the cleavage results in no core, that's not valid
-    if end == len(query_sequence):
+    if cleavage_result.end == len(query.translation):
         return None
 
     # Run RODEO to assess whether candidate precursor peptide is judged real
-    rodeo_result = run_rodeo(record, query, query_sequence[:end], query_sequence[end:], domains)
+    rodeo_result = run_rodeo(record, query, query.translation[:cleavage_result.end],
+                             query.translation[cleavage_result.end:], domains)
     if rodeo_result < 14:
         return None
-    lanthipeptide = Lanthipeptide(start, end, score, rodeo_result, lanthi_type)
+    lanthipeptide = Lanthipeptide(cleavage_result, rodeo_result)
 
     # Determine the leader and core peptide
-    lanthipeptide.leader = query_sequence[:end]
-    lanthipeptide.core = query_sequence[end:]
+    lanthipeptide.leader = query.translation[:cleavage_result.end]
+    lanthipeptide.core = query.translation[cleavage_result.end:]
 
     return lanthipeptide
 
@@ -526,10 +521,10 @@ def run_lanthipred(record: Record, query: CDSFeature, lant_class: str, domains: 
                       'Class-II': 'data/class2.hmm',
                       'Class-III': 'data/class3.hmm', }
     query_sequence = query.translation
-    lan_a_fasta = ">%s\n%s" % (query.get_name(), query_sequence)
 
     if lant_class in ("Class-II", "Class-III"):
         profile = path.get_full_path(__file__, hmmer_profiles[lant_class])
+        lan_a_fasta = ">%s\n%s" % (query.get_name(), query_sequence)
         cleavage_result = predict_cleavage_site(profile, lan_a_fasta)
 
         if cleavage_result is None:
@@ -541,15 +536,13 @@ def run_lanthipred(record: Record, query: CDSFeature, lant_class: str, domains: 
         # if the cleavage results in no core, that's not valid
         if cleavage_result.end == len(query_sequence):
             return None
-
-        result = Lanthipeptide(cleavage_result.start, cleavage_result.end,
-                               cleavage_result.score, None, lant_class)
+        cleavage_result.lantype = lant_class
+        result = Lanthipeptide(cleavage_result, None)
         result.leader = query_sequence[:result.end]
         result.core = query_sequence[result.end:]
 
     else:
-        result = determine_precursor_peptide_candidate(record, query, query_sequence,
-                                                       domains, hmmer_profiles[lant_class])
+        result = determine_precursor_peptide_candidate(record, query, domains, hmmer_profiles[lant_class])
         if result is None:
             return None
 
