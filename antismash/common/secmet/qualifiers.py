@@ -184,12 +184,12 @@ class SecMetQualifier(list):
         """ A simple container for the information needed to create a domain """
         qualifier_label = "{} (E-value: {}, bitscore: {}, seeds: {}, tool: {})"
 
-        def __init__(self, name: str, evalue: float, bitscore: float, nseeds: str,
+        def __init__(self, name: str, evalue: float, bitscore: float, nseeds: int,
                      tool: str) -> None:
             self.query_id = str(name)
             self.evalue = float(evalue)
             self.bitscore = float(bitscore)
-            self.nseeds = str(nseeds)  # TODO: will be int once all HMM inputs are cleaned up
+            self.nseeds = int(nseeds)
             self.tool = str(tool)
 
         def __repr__(self) -> str:
@@ -199,7 +199,7 @@ class SecMetQualifier(list):
             return self.qualifier_label.format(self.query_id, self.evalue,
                                                self.bitscore, self.nseeds, self.tool)
 
-        def to_json(self) -> List[Union[str, float]]:
+        def to_json(self) -> List[Union[str, float, int]]:
             return [self.query_id, self.evalue, self.bitscore, self.nseeds, self.tool]
 
         @classmethod
@@ -211,19 +211,14 @@ class SecMetQualifier(list):
         def from_json(cls, json: Sequence[Union[str, float]]) -> "SecMetQualifier.Domain":
             """ Rebuilds a Domain from a JSON representation """
             assert len(json) == 5, json
-            return cls(str(json[0]), float(json[1]), float(json[2]), str(json[3]), str(json[4]))
+            return cls(str(json[0]), float(json[1]), float(json[2]), int(json[3]), str(json[4]))
 
     def __init__(self, products: Set[str], domains: List["SecMetQualifier.Domain"]) -> None:
         self._domains = domains
         self.domain_ids = []  # type: List[str]
-        if domains and not isinstance(domains[0], str):  # SecMetResult
-            for domain in self._domains:
-                assert isinstance(domain, SecMetQualifier.Domain)
-                self.domain_ids.append(domain.query_id)
-        else:  # TODO: regenerate a Domain from the string
-            for domain in self._domains:
-                assert isinstance(domain, str)
-                self.domain_ids.append(domain.split()[0])
+        for domain in self._domains:
+            assert isinstance(domain, SecMetQualifier.Domain)
+            self.domain_ids.append(domain.query_id)
         self._products = set()  # type: Set[str]
         self.add_products(products)
         self.kind = "biosynthetic"

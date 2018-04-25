@@ -575,7 +575,7 @@ def annotate_orfs(cds_features: List[secmet.CDSFeature], hmm_results: Dict[str, 
     domains_by_feature = defaultdict(list)  # type: Dict[str, List[SecMetQualifier.Domain]]
     for hit_id, results in hmm_results.items():
         for result in results:
-            domain = SecMetQualifier.Domain(result.query_id, result.evalue, result.bitscore, "N/A", "sactipeptides")
+            domain = SecMetQualifier.Domain(result.query_id, result.evalue, result.bitscore, 0, "sactipeptides")
             domains_by_feature[hit_id].append(domain)
     for cds in cds_features:
         domains = domains_by_feature[cds.get_name()]
