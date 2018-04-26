@@ -155,6 +155,20 @@ def generate_pfam2go_tooltip(record: Record, feature: CDSFeature) -> List[str]:
     return go_notes
 
 
+def generate_asf_tooltip_section(record: Record, feature: CDSFeature) -> str:
+    """ Construct tooltip text for activesitefinder annotations """
+    asf_notes = []
+    for domain in feature.nrps_pks.domains:
+        for hit in record.get_domain_by_name(domain.feature_name).asf.hits:
+            asf_notes.append("%s (%d..%d): %s" % (domain.name, domain.start, domain.end, hit))
+    for pfam in record.get_pfam_domains_in_cds(feature):
+        for hit in pfam.asf.hits:
+            asf_notes.append("%s (%d..%d): %s" % (pfam.domain, pfam.protein_start, pfam.protein_end, hit))
+    if not asf_notes:
+        return ""
+    return '<span class="bold">Active Site Finder results:</span><br>\n%s<br><br>\n' % "<br>".join(asf_notes)
+
+
 def get_description(record: Record, feature: CDSFeature, type_: str,
                     options: ConfigType, mibig_result: List[clusterblast.results.MibigEntry]) -> str:
     "Get the description text of a CDS feature"
@@ -212,15 +226,8 @@ def get_description(record: Record, feature: CDSFeature, type_: str,
                 template += entry % url
                 break
 
-    asf_notes = []
-    for domain in feature.nrps_pks.domains:
-        for hit in record.get_domain_by_name(domain.feature_name).asf.hits:
-            asf_notes.append("%s (%d..%d): %s" % (domain.name, domain.start, domain.end, hit))
-    for pfam in record.get_pfam_domains_in_cds(feature):
-        for hit in pfam.asf.hits:
-            asf_notes.append("%s (%d..%d): %s" % (pfam.domain, pfam.protein_start, pfam.protein_end, hit))
-    if asf_notes:
-        template += '<span class="bold">Active Site Finder results:</span><br>\n%s<br><br>\n' % "<br>".join(asf_notes)
+    template += generate_asf_tooltip_section(record, feature)
+
     go_notes = generate_pfam2go_tooltip(record, feature)
     if go_notes:
         template += '<br><span class="bold">Gene Ontology terms for PFAM domains:</span><br>\n' \
