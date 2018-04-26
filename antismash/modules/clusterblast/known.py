@@ -110,8 +110,8 @@ def perform_knownclusterblast(options: ConfigType, record: Record,
 
     core_gene_accessions = get_core_gene_ids(record)
     for cluster in record.get_clusters():
-        clusternumber = cluster.get_cluster_number()
-        cluster_names_to_queries = clusters_by_number.get(clusternumber, {})
+        cluster_number = cluster.get_cluster_number()
+        cluster_names_to_queries = clusters_by_number.get(cluster_number, {})
         ranking = score_clusterblast_output(reference_clusters,
                                             core_gene_accessions,
                                             cluster_names_to_queries)

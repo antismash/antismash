@@ -52,7 +52,7 @@ class NRPSPKSQualifier(list):
 
         Can be used directly as a qualifier for Biopython's SeqFeature.
     """
-    class Domain:
+    class Domain:  # pylint: disable=too-few-public-methods
         """ Contains information about a NRPS/PKS domain, including predictions
             made by modules.
 
@@ -121,8 +121,8 @@ class NRPSPKSQualifier(list):
 
     def __iter__(self) -> Iterator[str]:
         for domain in self.domains:
-            yield "NRPS/PKS Domain: %s (%s-%s). E-value: %s. Score: %s;" % (domain.name,
-                    domain.start, domain.end, domain.evalue, domain.bitscore)
+            base = "NRPS/PKS Domain: %s (%s-%s). E-value: %s. Score: %s;"
+            yield base % (domain.name, domain.start, domain.end, domain.evalue, domain.bitscore)
         for subtype in self.subtypes:
             yield "NRPS/PKS subtype: %s" % subtype
 
@@ -200,6 +200,7 @@ class SecMetQualifier(list):
                                                self.bitscore, self.nseeds, self.tool)
 
         def to_json(self) -> List[Union[str, float, int]]:
+            """ Constructs a JSON-friendly representation of a Domain """
             return [self.query_id, self.evalue, self.bitscore, self.nseeds, self.tool]
 
         @classmethod
@@ -267,7 +268,7 @@ class SecMetQualifier(list):
     def from_biopython(qualifier: List[str]) -> "SecMetQualifier":
         """ Converts a BioPython style qualifier into a SecMetQualifier. """
         domains = []
-        products = set()
+        products = set()  # type: Set[str]
         kind = "biosynthetic"
         if len(qualifier) != 3:
             raise ValueError("Cannot parse qualifier: %s" % qualifier)
@@ -327,7 +328,7 @@ class GeneFunctionAnnotations:
     """
     slots = ["_annotations", "_by_tool", "_by_function"]
 
-    class GeneFunctionAnnotation:
+    class GeneFunctionAnnotation:  # pylint: disable=too-few-public-methods
         """ A single instance of an annotation. """
         slots = ["function", "tool", "description"]
 

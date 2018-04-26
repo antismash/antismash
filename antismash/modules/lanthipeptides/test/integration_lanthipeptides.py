@@ -11,7 +11,7 @@ from helperlibs.bio import seqio
 from helperlibs.wrappers.io import TemporaryDirectory
 
 import antismash
-from antismash.common import path, record_processing
+from antismash.common import path
 from antismash.common.test import helpers
 from antismash.common.secmet import Record
 from antismash.config import build_config, update_config, destroy_config
@@ -206,6 +206,7 @@ class IntegrationLanthipeptides(unittest.TestCase):
         # this was the case in CP013129.1, in a nrps-lanthipeptide hybrid, but
         # the hybrid was only created due to a bug in cluster formation
         pass
+
 
 class IntegrationLanthipeptidesWithoutFimo(IntegrationLanthipeptides):
     def setUp(self):

@@ -1,11 +1,21 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+""" Manages commandline/runtime options for antiSMASH
+
+    Options are available at any given moment by use of get_config(), this makes
+    use of a singleton object.
+
+    For the purposes of testing only, update_config() and destroy_config() are
+    provided.
+
+"""
+
+
 from argparse import Namespace
 import os
 import threading
-from types import ModuleType
-from typing import Any, Dict, Iterator, List, Optional, Tuple, TypeVar, Union
+from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
 from antismash.typing import AntismashModule, ConfigType
 
@@ -17,15 +27,24 @@ _INSTANCE_FILE_NAME = 'instance.cfg'
 
 
 class Config:  # since it's a glorified namespace, pylint: disable=too-few-public-methods
+    """ Keeps options values for antiSMASH.
+
+        Really just the constructor for an internal singleton keeping state
+    """
     __singleton = None
     __lock = threading.Lock()
 
-    class _Config(ConfigType):
-        def __init__(self, indict: Dict[str, Any]) -> None:
+    class _Config(ConfigType):  # ConfigType used for typing stub only
+        """ The real options object.
+            Only one of these should exist for the lifetime of an antiSMASH run.
+        """
+        def __init__(self, indict: Dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
             if indict:
                 self.__dict__.update(indict)
 
         def get(self, key: str, default: Any = None) -> Any:
+            """ Returns a value for a key if the key exists, otherwise returns
+                the default value provided or None """
             return self.__dict__.get(key, default)
 
         def __getattr__(self, attr: str) -> Any:
@@ -52,7 +71,7 @@ class Config:  # since it's a glorified namespace, pylint: disable=too-few-publi
         def __len__(self) -> int:
             return len(self.__dict__)
 
-    def __new__(cls, namespace: Union[Namespace, Dict[str, Any]] = None) -> "Config._Config":
+    def __new__(cls, namespace: Union[Namespace, Dict[str, Any]] = None) -> ConfigType:
         if namespace is None:
             values = {}  # type: Dict[str, Any]
         elif isinstance(namespace, dict):
@@ -68,19 +87,19 @@ class Config:  # since it's a glorified namespace, pylint: disable=too-few-publi
         return Config.__singleton
 
 
-def update_config(values: Union[Dict[str, Any], Namespace]) -> Config._Config:
+def update_config(values: Union[Dict[str, Any], Namespace]) -> ConfigType:
     """ Updates the Config singleton with the keys and values provided in the
         given Namespace or dict. Only intended for use in unit testing.
     """
     config = Config(values)
-    assert isinstance(config, Config._Config)
+    assert isinstance(config, ConfigType)
     return config
 
 
-def get_config() -> Config._Config:
+def get_config() -> ConfigType:
     """ Returns the current config """
     config = Config()
-    assert isinstance(config, Config._Config)
+    assert isinstance(config, ConfigType)
     return config
 
 
@@ -93,7 +112,7 @@ def destroy_config() -> None:
 
 
 def build_config(args: List[str], parser: Optional[AntismashParser] = None, isolated: bool = False,
-                 modules: List[AntismashModule] = None) -> Config._Config:
+                 modules: List[AntismashModule] = None) -> ConfigType:
     """ Builds up a Config. Uses, in order of lowest priority, a users config
         file (~/.antismash5.cfg), an instance config file
         (antismash/config/instance.cfg), and the provided command line options.
@@ -112,7 +131,7 @@ def build_config(args: List[str], parser: Optional[AntismashParser] = None, isol
     if isolated and "--databases" in args:
         default.__dict__.update(parser.parse_args(args).__dict__)
         config = Config(default)
-        assert isinstance(config, Config._Config)
+        assert isinstance(config, ConfigType)
         return config
 
     # load from file regardless because we need databases
@@ -131,5 +150,5 @@ def build_config(args: List[str], parser: Optional[AntismashParser] = None, isol
 
     default.__dict__.update(result.__dict__)
     config = Config(default)
-    assert isinstance(config, Config._Config)
+    assert isinstance(config, ConfigType)
     return config

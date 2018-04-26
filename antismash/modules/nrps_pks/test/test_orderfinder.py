@@ -13,7 +13,7 @@ from antismash.detection.nrps_pks_domains import domain_identification
 from antismash.modules.nrps_pks import orderfinder
 
 
-class DummyNRPSQualfier(secmet.qualifiers.NRPSPKSQualifier):
+class DummyNRPSQualfier(secmet.qualifiers.NRPSPKSQualifier):  # pylint: disable=abstract-method
     def __init__(self):
         super().__init__(strand=1)
 

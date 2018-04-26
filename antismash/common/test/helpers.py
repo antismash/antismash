@@ -18,7 +18,8 @@ from Bio.SeqFeature import FeatureLocation
 from helperlibs.wrappers.io import TemporaryDirectory
 
 import antismash
-from antismash.common import serialiser, module_results, path
+from antismash.common import serialiser, path
+from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Cluster, CDSFeature, Feature, Record
 from antismash.config import update_config
 from antismash.config.args import build_parser
@@ -168,7 +169,7 @@ def run_and_regenerate_results_for_module(input_file, module, options,
                                                     results.results[0])
 
         final = regenerated.get(module.__name__)
-        assert isinstance(final, module_results.ModuleResults)
+        assert isinstance(final, ModuleResults)
     else:
         regenerated = []
         final = []
@@ -176,7 +177,7 @@ def run_and_regenerate_results_for_module(input_file, module, options,
             regenerated.append(regenerate_results_for_record(record, options, modules_to_regenerate, results))
         final = [result[module.__name__] for result in regenerated]
         for res in final:
-            assert isinstance(res, module_results.ModuleResults)
+            assert isinstance(res, ModuleResults)
     return final
 
 

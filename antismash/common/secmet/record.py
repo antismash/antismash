@@ -202,7 +202,7 @@ class Record:
         return features
 
     def get_cds_features_within_location(self, location: FeatureLocation,
-                                         with_overlapping: bool =False) -> List[CDSFeature]:
+                                         with_overlapping: bool = False) -> List[CDSFeature]:
         """ Returns all CDS features within the given location
 
             Arguments:
@@ -332,7 +332,8 @@ class Record:
                               'and no nucleotide sequence provided to translate it from.',
                               cds_feature.unique_id)
                 raise ValueError("Missing sequence info for CDS %s" % cds_feature.unique_id)
-            cds_feature.translation = self.get_aa_translation_from_location(cds_feature.location, cds_feature.transl_table)
+            cds_feature.translation = self.get_aa_translation_from_location(cds_feature.location,
+                                                                            cds_feature.transl_table)
         index = bisect.bisect_left(self._cds_features, cds_feature)
         self._cds_features.insert(index, cds_feature)
         self._link_cds_to_parent(cds_feature)
@@ -408,7 +409,7 @@ class Record:
         elif feature.type == 'gene':
             self.add_gene(Gene.from_biopython(feature))
         elif feature.type == 'cluster':
-            self.add_cluster(Cluster.from_biopython(feature))  # TODO: fix performance
+            self.add_cluster(Cluster.from_biopython(feature))
         elif feature.type == 'CDS_motif':
             self.add_cds_motif(CDSMotif.from_biopython(feature))
         elif feature.type == 'PFAM_domain':

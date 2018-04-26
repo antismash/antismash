@@ -229,4 +229,3 @@ class TestNoCores(unittest.TestCase):
                                  self.cds, "Class-II", self.domains)
         assert results is not None
         assert str(results).startswith("Lanthipeptide(38..40, -6, 'Class-II', 'LSQGLGGC', 1, 715")
-

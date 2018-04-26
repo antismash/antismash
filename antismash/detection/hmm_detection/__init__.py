@@ -86,7 +86,6 @@ def is_enabled(_options: ConfigType) -> bool:
 def regenerate_previous_results(results: Dict[str, Any], record: Record,
                                 _options: ConfigType) -> Optional[HMMDetectionResults]:
     """ Regenerate previous results. """
-    # always rerun hmmdetection  # TODO: should clusters be kept?
     if not results:
         return None
     regenerated = HMMDetectionResults.from_json(results, record)
@@ -97,7 +96,7 @@ def regenerate_previous_results(results: Dict[str, Any], record: Record,
 
 
 def run_on_record(record: Record, previous_results: Optional[HMMDetectionResults],
-                  options: ConfigType) -> HMMDetectionResults:
+                  _options: ConfigType) -> HMMDetectionResults:
     """ Runs hmm_detection on the provided record.
     """
     if previous_results:

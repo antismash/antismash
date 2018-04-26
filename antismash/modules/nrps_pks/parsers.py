@@ -10,8 +10,6 @@ from typing import Dict, List, Set, Tuple
 
 from antismash.common.secmet.feature import CDSFeature
 
-from .results import ATSignatureResults
-
 LONG_TO_SHORT = {'Malonyl-CoA': 'mal', 'Methylmalonyl-CoA': 'mmal', 'Methoxymalonyl-CoA': 'mxmal',
                  'Ethylmalonyl-CoA': 'emal', 'Isobutyryl-CoA': 'isobut', '2-Methylbutyryl-CoA': '2metbut',
                  'trans-1,2-CPDA': 'trans-1,2-CPDA', 'Acetyl-CoA': 'Acetyl-CoA', 'Benzoyl-CoA': 'benz',

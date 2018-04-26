@@ -4,10 +4,7 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
-import os
 import unittest
-
-from helperlibs.wrappers.io import TemporaryDirectory
 
 from antismash.modules.nrps_pks import structure_drawer
 

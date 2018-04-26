@@ -25,7 +25,7 @@ class ThiopeptideLayer(ClusterLayer):
         ClusterLayer.__init__(self, record, cluster_feature)
         self.motifs = []  # type: List[ThiopeptideMotif]
         for motif in results.motifs:
-            if motif.is_contained_by(self.cluster_feature):
+            if motif.is_contained_by(self.cluster_feature) and isinstance(motif, ThiopeptideMotif):
                 self.motifs.append(motif)
 
 

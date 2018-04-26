@@ -100,4 +100,4 @@ def run_on_record(record: Record, options: ConfigType) -> None:
         logging.debug("Running prodigal based genefinding")
         return run_prodigal(record, options)
 
-    raise ValueError("Unknown genefinding tool: %s", options.genefinding_tool)
+    raise ValueError("Unknown genefinding tool: %s" % options.genefinding_tool)

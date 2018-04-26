@@ -34,7 +34,8 @@ def is_enable(_options: ConfigType) -> bool:
     return True  # TODO: add an arg to disable
 
 
-def write(records: List[Record], results: List[Dict[str, ModuleResults]], options: ConfigType) -> None:
+def write(records: List[Record], results: List[Dict[str, ModuleResults]],
+          options: ConfigType) -> None:
     """ Writes all results to a webpage, where applicable. Writes to options.output_dir
 
         Arguments:

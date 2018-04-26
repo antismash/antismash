@@ -31,7 +31,7 @@ MAX_GAP_LENGTH = 2  # the maximum gap length between islands
 VERBOSE_DEBUG = False  # whether to show all debugging info or not
 
 
-class CassisResults(module_results.ModuleResults):
+class CassisResults(module_results.DetectionResults):
     """ Contains the borders predicted by cassis """
     def __init__(self, record_id: str) -> None:
         super().__init__(record_id)
@@ -111,7 +111,8 @@ def check_options(options: ConfigType) -> List[str]:
     return problems
 
 
-def regenerate_previous_results(previous: Dict[str, Any], record: Record, _options: ConfigType) -> Optional[CassisResults]:
+def regenerate_previous_results(previous: Dict[str, Any], record: Record,
+                                _options: ConfigType) -> Optional[CassisResults]:
     """ Rebuild the previous run results from a JSON object into this module's
         python results class.
 

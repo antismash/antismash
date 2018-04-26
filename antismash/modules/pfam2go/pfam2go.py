@@ -15,7 +15,7 @@ from antismash.common.secmet.qualifiers import GOQualifier
 from antismash.common.secmet.record import Record
 
 
-class GeneOntology:
+class GeneOntology:  # pylint: disable=too-few-public-methods
     """A single Gene Ontology term; holds Gene Ontology ID and its human-readable description."""
     def __init__(self, _id: str, description: str) -> None:
         if not _id.startswith('GO:'):
@@ -28,7 +28,7 @@ class GeneOntology:
         return self.id
 
 
-class GeneOntologies:
+class GeneOntologies:  # pylint: disable=too-few-public-methods
     """A collection of all Gene Ontology terms (as GeneOntology objects) for a Pfam ID."""
     def __init__(self, pfam: str, gos: List[GeneOntology]) -> None:
         self.pfam = str(pfam)
@@ -77,12 +77,13 @@ class Pfam2GoResults(ModuleResults):
 
     def to_json(self) -> Dict[str, Any]:
         """ Construct a JSON representation of this instance """
-        json_out = {"pfams": {},
+        pfam_ontologies = {}  # type: Dict[str, Dict[str, str]]
+        json_out = {"pfams": pfam_ontologies,
                     "record_id": self.record_id,
                     "schema_version": Pfam2GoResults.schema_version}
         for all_ontologies in self.pfam_domains_with_gos.values():
             for ontologies in all_ontologies:
-                json_out["pfams"][ontologies.pfam] = ontologies.as_dict()
+                pfam_ontologies[ontologies.pfam] = ontologies.as_dict()
         return json_out
 
     @staticmethod

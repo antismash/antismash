@@ -6,7 +6,7 @@
 from collections import defaultdict, OrderedDict
 import logging
 import os
-from typing import Dict, List, Iterable, Set, Tuple, Union  # pylint: disable=unused-import
+from typing import Dict, Iterable, List, Set, Tuple  # pylint: disable=unused-import
 
 from helperlibs.wrappers.io import TemporaryDirectory
 
@@ -552,8 +552,8 @@ def write_raw_clusterblastoutput(output_dir: str, blast_output: str, prefix: str
     return filename
 
 
-def parse_clusterblast_dict(queries: List[Query], clusters: Dict[Union[str, int], ReferenceCluster],
-                            cluster_number: int, allcoregenes: Set[str]
+def parse_clusterblast_dict(queries: List[Query], clusters: Dict[str, ReferenceCluster],
+                            cluster_label: str, allcoregenes: Set[str]
                             ) -> Tuple[Score, List[Tuple[int, int]], List[bool]]:
     """ Generates a score for a cluster, based on the queries and clusters,
         along with the pairings of subjects and queries used to determine that
@@ -562,8 +562,8 @@ def parse_clusterblast_dict(queries: List[Query], clusters: Dict[Union[str, int]
         Arguments:
             queries: the queries to determine the score with
             clusters: the clusters to separate queries by
-                      (a dict of cluster number -> ReferenceCluster)
-            cluster_number: the number of the cluster to score
+                      (a dict of cluster label -> ReferenceCluster)
+            cluster_label: the number of the cluster to score
             allcoregenes: a set of gene ids for bonus scoring
 
         Returns:
@@ -577,11 +577,11 @@ def parse_clusterblast_dict(queries: List[Query], clusters: Dict[Union[str, int]
     result = Score()
     hitpositions = []  # type: List[Tuple[int, int]]
     hitposcorelist = []
-    cluster_locii = clusters[cluster_number].proteins
+    cluster_locii = clusters[cluster_label].proteins
     for query in queries:
         querynrhits = 0
-        for subject in query.get_subjects_by_cluster(str(cluster_number)):
-            assert cluster_number == subject.genecluster
+        for subject in query.get_subjects_by_cluster(cluster_label):
+            assert cluster_label == subject.genecluster
             if subject.locus_tag not in cluster_locii:
                 continue
             index_pair = (query.index, cluster_locii.index(subject.locus_tag))
@@ -655,8 +655,8 @@ def calculate_synteny_score(hitgroups: Dict[int, List[int]],
     return synteny_score
 
 
-def score_clusterblast_output(clusters: Dict[Union[str, int], ReferenceCluster], allcoregenes: Set[str],
-                              cluster_numbers_to_queries: Dict[int, List[Query]]
+def score_clusterblast_output(clusters: Dict[str, ReferenceCluster], allcoregenes: Set[str],
+                              cluster_names_to_queries: Dict[str, List[Query]]
                               ) -> List[Tuple[ReferenceCluster, Score]]:
     """ Generate scores for all cluster matches
 
@@ -674,7 +674,7 @@ def score_clusterblast_output(clusters: Dict[Union[str, int], ReferenceCluster],
         Arguments:
             clusters: a dict mapping reference cluster name to ReferenceCluster
             allcoregenes: a set of all CDS accessions from the current record
-            cluster_numbers_to_queries: a dictionary mapping record cluster number
+            cluster_names_to_queries: a dictionary mapping reference cluster name
                                         to a list of matching Query instances
 
         Returns:
@@ -682,8 +682,8 @@ def score_clusterblast_output(clusters: Dict[Union[str, int], ReferenceCluster],
             decreasing score.
     """
     results = {}
-    for cluster_number, queries in cluster_numbers_to_queries.items():
-        result, hitpositions, hitposcorelist = parse_clusterblast_dict(queries, clusters, cluster_number, allcoregenes)
+    for cluster_label, queries in cluster_names_to_queries.items():
+        result, hitpositions, hitposcorelist = parse_clusterblast_dict(queries, clusters, cluster_label, allcoregenes)
         if result.hits <= 1:
             continue
         hitgroups = find_clusterblast_hitsgroups(hitpositions)
@@ -693,7 +693,7 @@ def score_clusterblast_output(clusters: Dict[Union[str, int], ReferenceCluster],
         initial = hitpositions[0][1]
         for _, subject in hitpositions[1:]:
             if subject != initial:
-                results[clusters[cluster_number]] = result
+                results[clusters[cluster_label]] = result
                 break
     # Sort gene clusters by score
     return sorted(results.items(), reverse=True, key=lambda x: x[1].sort_score())

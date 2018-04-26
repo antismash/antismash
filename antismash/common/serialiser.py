@@ -28,7 +28,8 @@ class AntismashResults:
     """ A single repository of all results of an antismash run, including input
         filename, records and individual module results
     """
-    def __init__(self, input_file: str, records: List[Record], results: List[Dict[str, Union[ModuleResults, Dict[str, Any]]]],
+    def __init__(self, input_file: str, records: List[Record],
+                 results: List[Dict[str, Union[ModuleResults, Dict[str, Any]]]],
                  version: str, timings: Dict[str, Dict[str, float]] = None) -> None:
         self.input_file = input_file
         self.records = records
@@ -69,7 +70,7 @@ class AntismashResults:
         handle.write(json.dumps(self.to_json()))
 
 
-def dump_records(records: List[SeqRecord], results: List[Dict[str, ModuleResults]],
+def dump_records(records: List[SeqRecord], results: List[Dict[str, Union[Dict[str, Any], ModuleResults]]],
                  handle: Union[str, IO] = None) -> List[Dict[str, Any]]:
     """ Converts a list of records and a list of results to a JSON object.
 

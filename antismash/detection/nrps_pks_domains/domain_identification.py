@@ -37,6 +37,9 @@ class CDSResult:
         return CDSResult(domain_hmms, motif_hmms, data["type"])
 
     def annotate_domains(self, record: Record, cds: CDSFeature) -> None:
+        """ Adds domain annotations to CDSFeatures and creates AntismashDomain
+            features for all domains found
+        """
         if not self.domain_hmms:
             return
 
@@ -76,16 +79,16 @@ class NRPSPKSDomains(module_results.DetectionResults):
                 "record_id": self.record_id}
 
     @staticmethod
-    def from_json(data: Dict[str, Any], record: Record) -> Optional["NRPSPKSDomains"]:
-        if NRPSPKSDomains.schema_version != data.get("schema_version"):
+    def from_json(json: Dict[str, Any], record: Record) -> Optional["NRPSPKSDomains"]:
+        if NRPSPKSDomains.schema_version != json.get("schema_version"):
             logging.warning("Schema version mismatch, discarding NRPS PKS domain results")
             return None
-        if record.id != data.get("record_id"):
+        if record.id != json.get("record_id"):
             logging.warning("Record identifier mismatch, discarding NRPS PKS domain results")
             return None
 
         cds_results = {}
-        for cds_name, cds_result in data["cds_results"].items():
+        for cds_name, cds_result in json["cds_results"].items():
             cds = record.get_cds_by_name(cds_name)
             cds_result = CDSResult.from_json(cds_result)
             cds_result.annotate_domains(record, cds)
@@ -293,7 +296,8 @@ def classify_cds(domain_names: List[str]) -> str:
     return classification
 
 
-def generate_domain_features(record: Record, gene: CDSFeature, domains: List[HMMResult]) -> Dict[HMMResult, AntismashDomain]:
+def generate_domain_features(record: Record, gene: CDSFeature,
+                             domains: List[HMMResult]) -> Dict[HMMResult, AntismashDomain]:
     """ Generates AntismashDomain features for each provided HMMResult
 
         Arguments:
@@ -305,12 +309,12 @@ def generate_domain_features(record: Record, gene: CDSFeature, domains: List[HMM
             a dictionary mapping the HMMResult used to the matching AntismashDomain
     """
     new_features = {}
-    nrat = 0
-    nra = 0
-    nrcal = 0
-    nrkr = 0
-    nrks = 0
-    nrXdom = 0
+    at_domains = 0
+    a_domains = 0
+    cal_domains = 0
+    kr_domains = 0
+    ks_domains = 0
+    x_domains = 0
     for domain in domains:
         loc = gene.get_sub_location_from_protein_coordinates(domain.query_start, domain.query_end)
 
@@ -327,23 +331,23 @@ def generate_domain_features(record: Record, gene: CDSFeature, domains: List[HMM
         new_feature.translation = str(new_feature.extract(record.seq).translate(table=transl_table))
 
         if domain.hit_id == "AMP-binding":
-            nra += 1
-            domain_name = "{}_A{}".format(gene.get_name(), nra)
+            a_domains += 1
+            domain_name = "{}_A{}".format(gene.get_name(), a_domains)
         elif domain.hit_id == "PKS_AT":
-            nrat += 1
-            domain_name = "{}_AT{}".format(gene.get_name(), nrat)
+            at_domains += 1
+            domain_name = "{}_AT{}".format(gene.get_name(), at_domains)
         elif domain.hit_id == "CAL_domain":
-            nrcal += 1
-            domain_name = gene.get_name() + "_CAL" + str(nrcal)
+            cal_domains += 1
+            domain_name = gene.get_name() + "_CAL" + str(cal_domains)
         elif domain.hit_id == "PKS_KR":
-            nrkr += 1
-            domain_name = gene.get_name() + "_KR" + str(nrkr)
+            kr_domains += 1
+            domain_name = gene.get_name() + "_KR" + str(kr_domains)
         elif domain.hit_id == "PKS_KS":
-            nrks += 1
-            domain_name = gene.get_name() + "_KS" + str(nrks)
+            ks_domains += 1
+            domain_name = gene.get_name() + "_KS" + str(ks_domains)
         else:
-            nrXdom += 1
-            domain_name = gene.get_name().partition(".")[0] + "_Xdom" + str(nrXdom)
+            x_domains += 1
+            domain_name = gene.get_name().partition(".")[0] + "_Xdom" + str(x_domains)
         new_feature.domain_id = "nrpspksdomains_" + domain_name
         new_feature.label = domain_name
 

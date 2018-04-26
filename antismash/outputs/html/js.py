@@ -1,9 +1,13 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+""" A collection of functions for converting records, features, and domains into
+    JSON for use by the webpage javascript
+"""
+
 import string
 import os
-from typing import cast, Any, Dict, Iterable, List
+from typing import Any, Dict, Iterable, List
 
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import CDSFeature, Cluster, ClusterBorder, Feature, Record
@@ -135,7 +139,7 @@ def convert_tta_codons(tta_codons: List[Feature]) -> List[Dict[str, Any]]:
     return js_codons
 
 
-def generate_pfam2go_tooltip(record, feature):
+def generate_pfam2go_tooltip(record: Record, feature: CDSFeature) -> List[str]:
     """Create tooltip text for Pfam to Gene Ontologies results."""
     go_notes = []
     unique_pfams_with_gos = {}

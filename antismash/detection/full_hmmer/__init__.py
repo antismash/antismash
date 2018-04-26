@@ -69,7 +69,7 @@ def check_prereqs() -> List[str]:
 
 
 def regenerate_previous_results(previous: Dict[str, Any], record: Record,
-                                options: ConfigType) -> hmmer.HmmerResults:
+                                _options: ConfigType) -> hmmer.HmmerResults:
     """ Rebuild previous results """
     if not previous:
         return None

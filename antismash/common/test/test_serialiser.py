@@ -14,7 +14,7 @@ from Bio.SeqFeature import ExactPosition, BeforePosition, AfterPosition, \
                            SeqFeature
 from helperlibs.wrappers.io import TemporaryDirectory
 
-from antismash.common import module_results, serialiser
+from antismash.common import serialiser
 from antismash.common.secmet import Record
 from antismash.common.test.helpers import get_path_to_nisin_genbank
 
