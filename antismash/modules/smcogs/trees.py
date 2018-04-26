@@ -71,7 +71,7 @@ def alignsmcogs(smcog: str, input_number: int) -> str:
                      "-out", output_filename]
     result = subprocessing.execute(musclecommand)
     if result.return_code:
-        raise RuntimeError("Muscle failed to run: %s, %s", musclecommand, result.stderr[-100:])
+        raise RuntimeError("Muscle failed to run: %s, %s" % (musclecommand, result.stderr[-100:]))
     return output_filename
 
 

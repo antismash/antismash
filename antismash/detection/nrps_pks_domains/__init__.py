@@ -25,14 +25,14 @@ def get_arguments() -> ModuleArgs:
     return args
 
 
-def check_options(options: ConfigType) -> List[str]:
+def check_options(_options: ConfigType) -> List[str]:
     """ Checks the options to see if there are any issues before
         running any analyses
     """
     return []
 
 
-def is_enabled(options: ConfigType) -> bool:
+def is_enabled(_options: ConfigType) -> bool:
     """  Uses the supplied options to determine if the module should be run
     """
     # in this case, yes, always
@@ -40,12 +40,14 @@ def is_enabled(options: ConfigType) -> bool:
 
 
 def regenerate_previous_results(results: Dict[str, Any], record: Record, _options: ConfigType) -> NRPSPKSDomains:
+    """ Reconstruct NRPS/PKS domain detection results from a JSON format """
     return NRPSPKSDomains.from_json(results, record)
 
 
 def run_on_record(record: Record, previous_results: Optional[NRPSPKSDomains],
-                  options: ConfigType) -> NRPSPKSDomains:
-    logging.debug('Marking NRPS/PKS genes and domains in clusters')
+                  _options: ConfigType) -> NRPSPKSDomains:
+    """ Find and mark NRPS and PKS domains within CDSFeatures contained in clusters """
+    logging.debug('Marking NRPS/PKS CDS features and domains in clusters')
     if previous_results:
         assert isinstance(previous_results, NRPSPKSDomains)
         return previous_results
@@ -55,6 +57,7 @@ def run_on_record(record: Record, previous_results: Optional[NRPSPKSDomains],
 
 
 def check_prereqs() -> List[str]:
+    """ Ensures the various required hmmer profile files exist """
     failure_messages = []
     for binary_name, optional in [('hmmscan', False), ('hmmpress', False)]:
         if path.locate_executable(binary_name) is None and not optional:

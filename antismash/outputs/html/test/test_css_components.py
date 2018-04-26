@@ -6,9 +6,9 @@
 
 import unittest
 
-import os
 from antismash.common import path
 from antismash.detection import hmm_detection
+
 
 class TestClusterCSS(unittest.TestCase):
     def test_css_matches_rules(self):

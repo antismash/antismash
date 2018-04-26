@@ -8,7 +8,6 @@ import functools
 import logging
 import re
 import os
-from types import ModuleType
 from typing import Any, Callable, List, Set, Tuple, Union
 
 import Bio

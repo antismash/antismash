@@ -139,7 +139,7 @@ def run_on_record(record: Record, results: Optional[ClusterFinderResults],
     return generate_results(record, options)
 
 
-def find_rule_based_clusters(record: Record, options: ConfigType) -> List[ClusterBorder]:
+def find_rule_based_clusters(record: Record, _options: ConfigType) -> List[ClusterBorder]:
     """ Generate cluster predictions using HMM profile base rules.
 
         Arguments:

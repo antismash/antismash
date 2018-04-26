@@ -17,7 +17,7 @@ import pstats
 import shutil
 import time
 import tempfile
-from typing import cast, Any, Dict, List, Optional
+from typing import cast, Any, Dict, List, Optional, Union
 
 from Bio import SeqIO
 
@@ -168,7 +168,7 @@ def verify_options(options: ConfigType, modules: List[AntismashModule]) -> bool:
 
 
 def run_detection(record: Record, options: ConfigType,
-                  module_results: Dict[str, Optional[ModuleResults]]) -> Dict[str, float]:
+                  module_results: Dict[str, Union[ModuleResults, Dict[str, Any]]]) -> Dict[str, float]:
     """ Detect different secondary metabolite clusters, PFAMs, and domains.
 
         Arguments:
@@ -176,6 +176,7 @@ def run_detection(record: Record, options: ConfigType,
             options: antiSMASH config
             module_results: a dictionary mapping a module's name to results from
                             a previous run on this module, as a ModuleResults subclass
+                            or in JSON form
 
         Returns:
             the time taken by each detection module as a dictionary
@@ -229,17 +230,17 @@ def run_detection(record: Record, options: ConfigType,
 
 
 def run_module(record: Record, module: AntismashModule, options: ConfigType,
-               module_results: Dict[str, Optional[ModuleResults]], timings: Dict[str, float]) -> None:
-    """ Run analysis modules on a record
+               module_results: Dict[str, Union[ModuleResults, Dict[str, Any]]],
+               timings: Dict[str, float]) -> None:
+    """ Run a module on a record
 
         Arguments:
             record: the record to run the analysis on
+            module: the module to run, only run if enabled and not reusing results
             options: antismash Config
-            modules: the modules to analyse with
-                     each module will run only if enabled and not reusing all
-                     results
             module_results: a dictionary of module name to ModuleResults
-                            instances
+                            instances or their JSON representations,
+                            updated if the module runs
             timings: a dictionary mapping module name to time taken for that
                      module, will be updated with the module timing
 
@@ -249,6 +250,7 @@ def run_module(record: Record, module: AntismashModule, options: ConfigType,
     previous_results = module_results.pop(module.__name__, None)
     results = None
     if previous_results is not None:
+        assert isinstance(previous_results, dict)
         logging.debug("Regenerating results for %s", module.__name__)
         results = module.regenerate_previous_results(previous_results, record, options)
         module_results[module.__name__] = results
@@ -270,7 +272,7 @@ def run_module(record: Record, module: AntismashModule, options: ConfigType,
 
 
 def analyse_record(record: Record, options: ConfigType, modules: List[AntismashModule],
-                   previous_result: Dict[str, Optional[ModuleResults]]) -> Dict[str, float]:
+                   previous_result: Dict[str, Union[ModuleResults, Dict[str, Any]]]) -> Dict[str, float]:
     """ Run analysis modules on a record
 
         Arguments:
@@ -362,11 +364,20 @@ def write_outputs(results: serialiser.AntismashResults, options: ConfigType) -> 
         Returns:
             None
     """
+    # don't use results for which the module no longer exists to regenerate/calculate
+    module_results_per_record = []
+    for record_results in results.results:
+        record_result = {}
+        for module_name, result in record_results.items():
+            if isinstance(result, ModuleResults):
+                record_result[module_name] = result
+        module_results_per_record.append(record_result)
+
     logging.debug("Creating results page")
-    html.write(results.records, results.results, options)
+    html.write(results.records, module_results_per_record, options)
 
     logging.debug("Creating results SVGs")
-    svg.write(options, results.results)
+    svg.write(options, module_results_per_record)
 
     # convert records to biopython
     bio_records = [record.to_biopython() for record in results.records]

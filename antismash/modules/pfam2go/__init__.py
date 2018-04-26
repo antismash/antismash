@@ -6,8 +6,10 @@
 from typing import Any, Dict, List, Optional
 
 from antismash.common import path
+from antismash.common.secmet import Record
+from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
-from antismash.modules.pfam2go.pfam2go import get_gos_for_pfams, Pfam2GoResults
+from .pfam2go import get_gos_for_pfams, Pfam2GoResults
 
 NAME = "pfam2go"
 SHORT_DESCRIPTION = "Pfam domain to Gene Ontology mapping"
@@ -24,7 +26,7 @@ def get_arguments() -> ModuleArgs:
     return args
 
 
-def check_options(_options) -> List[str]:
+def check_options(_options: ConfigType) -> List[str]:
     """ Checks options for conflicts.
         No extra options, so they can't have conflicts.
     """
@@ -41,22 +43,22 @@ def check_prereqs() -> List[str]:
     return failure_messages
 
 
-def is_enabled(options) -> bool:
+def is_enabled(options: ConfigType) -> bool:
     """ Should the module be run with these options """
     return options.pfam2go
 
 
-def regenerate_previous_results(previous: Dict[str, Any], record, _options) -> Optional[Pfam2GoResults]:
+def regenerate_previous_results(previous: Dict[str, Any], record: Record,
+                                _options: ConfigType) -> Optional[Pfam2GoResults]:
     """ Regenerate the previous results from JSON format. """
     if not previous:
         return None
     return Pfam2GoResults.from_json(previous, record)
 
 
-def run_on_record(record, results: Pfam2GoResults, options) -> Pfam2GoResults:
+def run_on_record(record: Record, results: Pfam2GoResults, options: ConfigType) -> Pfam2GoResults:
     """ Run the analysis, unless the previous results apply to the given record """
     if isinstance(results, Pfam2GoResults) and results.record_id == record.id:
         return results
-    #  otherwise, extract Pfam IDs, do pfam to GO mapping with these
     assert options.pfam2go
     return Pfam2GoResults(record.id, get_gos_for_pfams(record))

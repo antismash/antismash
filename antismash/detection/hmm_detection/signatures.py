@@ -3,7 +3,7 @@
 
 """ Functions and classes for managing the signatures from HMM profiles """
 
-from typing import List, Set
+from typing import List
 
 from antismash.common import path
 from antismash.common import signature

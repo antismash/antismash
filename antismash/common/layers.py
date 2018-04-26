@@ -158,7 +158,8 @@ class ClusterLayer:
         results = []
         for i, label in enumerate(top_hits):
             i += 1  # 1-indexed
-            svg_file = os.path.join('svg', 'clusterblast_r%dc%d_%s.svg' % (self.record.record_index, self.get_cluster_number(), i))
+            svg_file = os.path.join('svg', 'clusterblast_r%dc%d_%s.svg' % (
+                            self.record.record_index, self.get_cluster_number(), i))
             results.append((label, svg_file))
         return results
 
@@ -170,7 +171,8 @@ class ClusterLayer:
         for i, label_pair in enumerate(top_hits):
             i += 1  # 1-indexed
             label = label_pair[0]
-            svg_file = os.path.join('svg', 'knownclusterblast_r%dc%d_%s.svg' % (self.record.record_index, self.get_cluster_number(), i))
+            svg_file = os.path.join('svg', 'knownclusterblast_r%dc%d_%s.svg' % (
+                            self.record.record_index, self.get_cluster_number(), i))
             results.append((label, svg_file))
         return results
 
@@ -182,7 +184,8 @@ class ClusterLayer:
         results = []
         for i, label in enumerate(top_hits):
             i += 1  # since one-indexed
-            svg_file = os.path.join('svg', 'subclusterblast_r%dc%d_%s.svg' % (self.record.record_index, self.get_cluster_number(), i))
+            svg_file = os.path.join('svg', 'subclusterblast_r%dc%d_%s.svg' % (
+                            self.record.record_index, self.get_cluster_number(), i))
             results.append((label, svg_file))
         return results
 

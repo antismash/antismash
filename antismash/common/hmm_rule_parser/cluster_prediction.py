@@ -16,7 +16,6 @@ from antismash.common.secmet.feature import SecMetQualifier, GeneFunction, Featu
 from antismash.common.subprocessing import run_hmmsearch
 from antismash.common.hmm_rule_parser import rule_parser
 from antismash.common.signature import get_signature_profiles
-from antismash.config import ConfigType
 
 
 class CDSResults:
@@ -59,6 +58,7 @@ class CDSResults:
                                         str(secmet_domain))
 
     def to_json(self) -> Dict[str, Any]:
+        """ Constructs a JSON representation of a CDSResults instance"""
         json = {"cds_name": self.cds.get_name(),
                 "domains": [domain.to_json() for domain in self.domains],
                 "definition_domains": {key: list(val) for key, val in self.definition_domains.items()}
@@ -67,6 +67,7 @@ class CDSResults:
 
     @staticmethod
     def from_json(json: Dict[str, Any], record: Record) -> "CDSResults":
+        """ Constructs a CDSResults instance from a JSON representation """
         domains = []
         for json_domain in json["domains"]:
             domains.append(SecMetQualifier.Domain.from_json(json_domain))
@@ -96,6 +97,7 @@ class RuleDetectionResults:
                 cds_result.annotate(border.product, self.tool)
 
     def to_json(self) -> Dict[str, Any]:
+        """ Constructs a JSON representation from the RuleDetectionResults instance """
         cds_results_json = []  # type: List[Tuple[Dict[str, Any], List[Dict[str, Any]]]]
         json = {"tool": self.tool,
                 "cds_by_cluster": cds_results_json}
@@ -109,6 +111,7 @@ class RuleDetectionResults:
 
     @staticmethod
     def from_json(json: Dict[str, Any], record: Record) -> "RuleDetectionResults":
+        """ Constructs a RuleDetectionResults instance from a JSON representation """
         cds_by_cluster = {}
         for json_border, json_cds_results in json["cds_by_cluster"]:
             border = ClusterBorder.from_biopython(serialiser.feature_from_json(json_border))
