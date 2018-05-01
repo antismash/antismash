@@ -92,7 +92,6 @@ class NRPSPKSQualifier(list):
         self.subtypes = []  # type: List[str]
         self._domains = []  # type: List["NRPSPKSQualifier.Domain"]
         self._domain_names = []  # type: List[str]
-        self.predictions = {}  # type: Dict[str, str]
         self.cal_counter = 0
         self.at_counter = 0
         self.kr_counter = 0
