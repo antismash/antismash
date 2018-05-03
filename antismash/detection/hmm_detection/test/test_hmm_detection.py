@@ -75,8 +75,8 @@ class HmmDetectionTest(unittest.TestCase):
             "GENE_5": DummyCDS(130000, 150000, locus_tag="GENE_5")
         }
 
-        test_names = {"modelA", "modelB", "modelC", "modelF", "modelG",
-                      "a", "b", "c", "d"}
+        self.test_names = {"modelA", "modelB", "modelC", "modelF", "modelG",
+                           "a", "b", "c", "d"}
 
         self.rules = rule_parser.Parser("\n".join([
                 "RULE MetaboliteA CUTOFF 10 EXTENT 5 CONDITIONS modelA",
@@ -84,7 +84,7 @@ class HmmDetectionTest(unittest.TestCase):
                 "RULE MetaboliteC CUTOFF 10 EXTENT 5 CONDITIONS (modelA and modelB)",
                 "RULE MetaboliteD CUTOFF 20 EXTENT 5 CONDITIONS minimum(2,[modelC,modelB]) and modelA",
                 "RULE Metabolite0 CUTOFF 1 EXTENT 3 CONDITIONS modelF",
-                "RULE Metabolite1 CUTOFF 1 EXTENT 3 CONDITIONS modelG"]), test_names).rules
+                "RULE Metabolite1 CUTOFF 1 EXTENT 3 CONDITIONS modelG"]), self.test_names).rules
         self.features = []
         for gene_id in self.feature_by_id:
             self.features.append(self.feature_by_id[gene_id])
@@ -97,6 +97,27 @@ class HmmDetectionTest(unittest.TestCase):
     def tearDown(self):
         # clear out any leftover config adjustments
         get_config().__dict__.clear()
+
+    def test_overlaps_but_not_contains(self):
+        # should get gene2 and gene3
+        rules = rule_parser.Parser("\n".join([
+                "RULE Overlap CUTOFF 25 EXTENT 5 CONDITIONS modelB and modelF "
+                "RULE OverlapImpossible CUTOFF 25 EXTENT 5 CONDITIONS modelA and modelF"]), self.test_names).rules
+        detected_types, cluster_type_hits = hmm_detection.apply_cluster_rules(self.record, self.results_by_id,
+                                                           self.feature_by_id, rules)
+        assert detected_types == {"GENE_2": {"Overlap": {"modelB"}},
+                                  "GENE_3": {"Overlap": {"modelF"}}}
+
+        assert cluster_type_hits == {"Overlap": {"GENE_2", "GENE_3"}}
+
+        # only 1 cluster should be found, since it requires both genes
+        # if forming clusters by .is_contained_by(), 2 clusters will be formed
+        # if finding rule hits uses .is_contained_by(), no clusters will be formed
+        rules_by_name = {rule.name: rule for rule in rules}
+        clusters = hmm_detection.find_clusters(self.record, cluster_type_hits, rules_by_name)
+        assert len(clusters) == 1
+        assert clusters[0].location.start == 30000
+        assert clusters[0].location.end == 90000
 
     def test_core(self):
         # should be no failing prerequisites

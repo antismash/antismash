@@ -122,7 +122,7 @@ def find_clusters(record, cds_by_cluster_type, rules_by_name) -> List[ClusterBor
         for cds in cds_features[1:]:
             feature_start, feature_end = sorted([cds.location.start, cds.location.end])
             dummy_location = FeatureLocation(cluster.location.start - cutoff, cluster.location.end + cutoff)
-            if cds.is_contained_by(dummy_location):
+            if cds.overlaps_with(dummy_location):
                 start = min(feature_start, start)
                 end = max(feature_end, end)
                 cluster.location = FeatureLocation(start, end)
