@@ -17,7 +17,7 @@
         <dt>Monomers prediction:</dt>
           <dd>{{cluster.get_monomer_prediction()}}</dd>
           {% for gene_id, predictions in cluster.sidepanel_predictions.items() | sort %}
-            <dt>{{gene_id}}</dt>
+            <dt><strong>{{gene_id}}</strong></dt>
             {% if gene_id in cluster.url_strict %}
               <dd> Search NORINE for peptide:
                 <a href="{{cluster.url_strict[gene_id]}}" target="_new">strict</a>
@@ -26,11 +26,14 @@
               </dd>
               <br>
             {% endif %}
-            {% for domain_preds in predictions %}
-              {% for method, pred in domain_preds | sort %}
-                <dd>{{method}}: {{pred}} </dd>
-              {% endfor %}
-              <br>
+            {% for domain in record.get_cds_by_name(gene_id).nrps_pks.domains %}
+              {% if domain.feature_name in results.consensus %}
+                <dd><strong>{{domain.name}} ({{domain.start}}..{{domain.end}})</strong>: {{results.consensus[domain.feature_name]}}<br>
+                {% for prediction in results.nrps.get(domain.feature_name, {}).values() %}
+                    {{prediction.as_html()}}
+                {% endfor %}
+                </dd>
+              {% endif %}
             {% endfor %}
             <br>
           {% endfor %}

@@ -3,7 +3,7 @@
 
 """ Generates HTML and JSON for the nrps_pks module """
 
-
+from collections import defaultdict
 import logging
 import os
 import re
@@ -108,6 +108,7 @@ def generate_sidepanel(cluster_layer: ClusterLayer, results: NRPS_PKS_Results,
     nrps_layer = NrpspksLayer(results, cluster_layer.cluster_feature, record_layer)
     sidepanel = template.render(record=record_layer,
                                 cluster=nrps_layer,
+                                results=results,
                                 options=options_layer)
     return sidepanel
 
@@ -130,12 +131,6 @@ def parse_substrate_predictions(nrps_predictions: Dict[str, str]) -> List[Tuple[
     predictions = []
 
     for method, pred in sorted(nrps_predictions.items()):
-        if method == "SNN score":
-            pass
-        elif method == "PID to NN":
-            method = "%ID to nearest neighbour"
-        elif pred == "no_call":
-            pred = "N/A"
         predictions.append((method, pred))
 
     return predictions
@@ -247,7 +242,7 @@ class NrpspksLayer(ClusterLayer):
         """ The sidepanel predictions for gene domains, includes URLs for
             related searches
         """
-        sidepanel_predictions = {}  # type: Dict[str, List[List[Tuple[str, str]]]]
+        sidepanel_predictions = defaultdict(list)  # type: Dict[str, List[List[Tuple[str, str]]]]
         features = self.cluster_feature.cds_children
         for feature in features:
             if not feature.nrps_pks:
@@ -263,19 +258,12 @@ class NrpspksLayer(ClusterLayer):
                     continue
 
                 if domain.name == "AMP-binding":
-                    for key, val in preds:
-                        if key in ["SNN score", "%ID to nearest neighbour"]:
-                            continue
-                        if key == "PrediCAT":
-                            val = val.rsplit("-")[-1]
-                        values = filter_norine_as(val.split(","))
+                    for _, val in preds:
+                        values = filter_norine_as(val)
                         if values:
-                            per_a_domain_predictions.extend(val.split(","))
-                    unique_a_domain_predictions = list(set(per_a_domain_predictions))
-                    per_cds_predictions.append(unique_a_domain_predictions)
+                            per_a_domain_predictions.extend(val)
+                    per_cds_predictions.append(list(set(per_a_domain_predictions)))
 
-                if gene_id not in sidepanel_predictions:
-                    sidepanel_predictions[gene_id] = []
                 sidepanel_predictions[gene_id].append(preds)
 
             if per_cds_predictions:
