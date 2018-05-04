@@ -1,0 +1,20 @@
+<project name="NRPSpredictor2" default="build" basedir=".">
+
+ <target name="prepare">
+ 	  <mkdir dir="bin/"/>
+      <mkdir dir="build/"/>
+ </target>
+	
+ <target name="compile" depends="prepare">
+      <javac srcdir="src/" destdir="bin/" includeantruntime="false" classpath="lib/java-getopt-1.0.13.jar:lib/libsvm.jar:lib/Utilities.jar"/>
+ </target>
+	
+ <target name="build" depends="compile">
+	  <jar jarfile="build/NRPSpredictor2.jar" basedir="bin"/>
+ </target>
+	
+ <target name="clean">
+	  <delete dir="build"/>
+ 	  <delete dir="bin"/>
+ </target>
+</project>	

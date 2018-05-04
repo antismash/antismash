@@ -1,0 +1,71 @@
+
+-- Installation --
+
+Please adjust the NRPS2BASEDIR environment variable 
+to point to the directory where THIS README-file is
+located.
+
+Platform specific dependencies :
+
+  libsvmlight.so from the jnisvmlight.jar library
+  The default archive of NRPSpredictor2 comes with
+  64-bit libsvmlight.so
+
+  In case the default one does not fit your needs
+
+  JNI_SVM-light-6.01 can be downloaded here 
+
+    http://www.mpi-inf.mpg.de/~mtb/svmlight/JNI_SVM-light-6.01.zip
+
+  and the libsvmlight.so can eb built by 
+
+    cd JNI_SVM-light-6.01/src/svmlight-6.01
+
+  issuing
+
+    make linux
+
+  and then
+
+    cp libsvmlight.so $NRPS2BASEDIR/lib
+
+
+-- Usage --
+
+Command line switches:
+
+-i input filename of extracted NRPS ADomain signatures with 
+   following line-based and tab-separated format:
+
+   <signature-8-angstrom>\t<signature-name>
+
+   e.g.:
+
+     YWFSFDLGYTSPKLVLGGEINHYGPTETTIGAIA      asp
+     FVLAFDMSIKGSDSLLGGEYNMYGPTECTVDATI      asp
+     FGMTFDASVWQWHFFAGGEVHGYGPTEATVDAAF      glu
+     SDLSFEPFVRQMHAILVGELNEYGFTESAFVTAL      aad
+     SDLSFEPFVRQMNGILVGELNEYGFTESAFVTAL      aad
+     LSLPFDASVKQADGLIGGETNVYGPTETCVDASV      glu
+
+-r absolute filename of output report file. The file
+   has the following line-based and tab-separated format:
+
+   id <tab> 8a_sig <tab> stachelhaus_sig <tab> three_class_predictions_nrps2 <tab> large_cluster_prediction_nrps2 <tab> small_cluster_prediction_nrps2 <tab> single_aa_prediction_nrps2 <tab> nearest_stachelhaus_specificity <tab> large_cluster_prediction_nrps1 <tab> small_cluster_prediction_nrps1 <tab>  isAdomainUnusual? (0|1)
+
+
+-s (0,1) switch whether signatures are given in the inputfile (-s 1)
+   or the output of the NRPS1 predictor (-s 0)
+   -s 1 is recommended, -s 0 behaviour may change
+
+
+ Please use absolute filenames as input for NRPSpredictor2 !
+
+
+Example usage:
+
+./NRPSpredictor2.sh -i example.sigs -r report -s 1
+
+
+
+20-12-2010 Marc Röttig
