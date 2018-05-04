@@ -3,6 +3,7 @@
 
 """ Contains the results classes for the nrps_pks module """
 
+from collections import defaultdict
 import logging
 from typing import Any, Dict, Tuple, Union  # pylint: disable=unused-import
 
@@ -10,7 +11,9 @@ from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record, AntismashDomain
 
 from .at_analysis.at_analysis import ATSignatureResults
-from .parsers import LONG_TO_SHORT
+from .parsers import LONG_TO_SHORT, generate_nrps_consensus
+from .data_structures import Prediction
+from .nrps_predictor import PredictorSVMResult
 
 DOMAIN_TYPE_MAPPING = {'Condensation_DCL': 'Condensation',
                        'Condensation_LCL': 'Condensation',
@@ -64,14 +67,15 @@ class PKSResults:
 class NRPS_PKS_Results(ModuleResults):
     """ The combined results of the nrps_pks module """
     _schema_version = 1
-    __slots__ = ["_pks", "nrps", "consensus", "consensus_transat", "cluster_predictions"]
+    __slots__ = ["_pks", "_nrps", "consensus", "consensus_transat", "cluster_predictions", "domain_predictions"]
 
     def __init__(self, record_id: str) -> None:
         super().__init__(record_id)
         self._pks = PKSResults()
-        self.nrps = {}  # type: Dict[str, Any] # not currently used, but will be
+        self._nrps = defaultdict(dict)  # name -> method -> Prediction  # type: Dict[str, Dict[str, Prediction]]
         self.consensus = {}  # type: Dict[str, str]
         self.cluster_predictions = {}  # type: Dict[int, Tuple[str, bool]]
+        self.domain_predictions = {}  # name -> Predictions # type: Dict[str, List[Predictions]]
         self.consensus_transat = {}  # type: Dict[str, str]
 
     @property
@@ -84,13 +88,19 @@ class NRPS_PKS_Results(ModuleResults):
         assert isinstance(value, PKSResults)
         self._pks = value
 
+    @property
+    def nrps(self) -> Dict[str, Dict[str, Prediction]]:
+        return self._nrps
+
     def to_json(self) -> Dict[str, Any]:
         results = {"schema_version": self._schema_version,
                    "record_id": self.record_id,
                    "pks": self.pks.to_json(),
-                   "nrps": self.nrps,
+                   "nrps": {},
                    "consensus": self.consensus,
                    "cluster_predictions": self.cluster_predictions}
+        for domain, predictions in self.nrps.items():
+            results["nrps"][domain] = {method: val.to_json() for method, val in predictions.items()},
         return results
 
     @staticmethod
@@ -103,7 +113,9 @@ class NRPS_PKS_Results(ModuleResults):
         pks = json.get("pks")
         if pks:
             results.pks = PKSResults.from_json(pks)
-        results.nrps = json.get("nrps", {})
+        nrps = json.get("nrps", {})
+        for key, val in nrps.items():
+            results.nrps[key] = PredictorSVMResult.from_json(val)  # TODO: unbreak
         results.consensus = json["consensus"]
         results.cluster_predictions.update(json["cluster_predictions"])
         return results
@@ -119,9 +131,8 @@ class NRPS_PKS_Results(ModuleResults):
                 assert isinstance(feature, AntismashDomain)
                 domain.predictions.clear()
                 if domain.name == "AMP-binding":
-                    # no NRPS predictors right now, so all A domains are 'nrp'
-                    domain.predictions["consensus"] = "nrp"
-
+                    nrps_pred = generate_nrps_consensus(self.nrps[domain.feature_name])
+                    domain.predictions["consensus"] = nrps_pred
                 elif domain.name == "PKS_AT":
                     # For t1pks, t2pks and t3pks
                     if 'transatpks' not in cds_feature.cluster.products:

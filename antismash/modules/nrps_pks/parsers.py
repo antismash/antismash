@@ -5,10 +5,14 @@
     predictions into a final, potentially modified, result.
 """
 
+from collections import defaultdict
 import logging
+import string
 from typing import Dict, List, Set, Tuple
 
 from antismash.common.secmet.feature import CDSFeature
+
+from .data_structures import Prediction
 
 LONG_TO_SHORT = {'Malonyl-CoA': 'mal', 'Methylmalonyl-CoA': 'mmal', 'Methoxymalonyl-CoA': 'mxmal',
                  'Ethylmalonyl-CoA': 'emal', 'Isobutyryl-CoA': 'isobut', '2-Methylbutyryl-CoA': '2metbut',
@@ -17,6 +21,8 @@ LONG_TO_SHORT = {'Malonyl-CoA': 'mal', 'Methylmalonyl-CoA': 'mmal', 'Methoxymalo
                  'CE-Malonyl-CoA': 'cemal', '2-Rhyd-Malonyl-CoA': '2Rhydmal', 'CHC-CoA': 'CHC-CoA',
                  'inactive': 'inactive'}
 SHORT_TO_LONG = {val: key for key, val in LONG_TO_SHORT.items()}
+
+ALLOWABLE_PREDICTION_CHARACTERS = set(string.ascii_letters).union({'-'})
 
 
 def calculate_individual_consensus(predictions: List[str], available_smiles_parts: Set[str]) -> str:
@@ -43,14 +49,37 @@ def calculate_individual_consensus(predictions: List[str], available_smiles_part
     return best
 
 
-def calculate_consensus_prediction(cds_features: List[CDSFeature], results: Dict[str, Dict[str, str]]
+def generate_nrps_consensus(results: Dict[str, Prediction]):
+    assert isinstance(results, dict), results
+    hit_counts = defaultdict(int)
+    for method, prediction in results.items():
+        assert isinstance(method, str), method
+        assert isinstance(prediction, Prediction), prediction
+        if len(prediction.get_classification()) == 1:
+            best = prediction.get_classification()[0]
+            assert set(best).issubset(ALLOWABLE_PREDICTION_CHARACTERS), "%s generated bad prediction string: %s" % (method, best)
+            hit_counts[best] += 1
+
+    consensus = "nrp"
+    # only really care about the first two for checking if it was a tie
+    best_hits = sorted((count, name) for name, count in hit_counts.items())[:2]
+    # if the best hit isn't tie, use that
+    if best_hits and len({count for count, _ in best_hits}) == 1:
+        consensus = best_hits[0][1]
+    return consensus
+
+
+def calculate_consensus_prediction(cds_features: List[CDSFeature], pks_results: Dict[str, Dict[str, str]],
+                                   nrps_results: Dict[str, Dict[str, Prediction]]
                                    ) -> Tuple[Dict[str, str], Dict[str, str]]:
     """ Uses all calculations to generate smiles parts to use
 
         Arguments:
             cds_features: a list of CDSFeature to calculate consensus for
-            results: a dictionary mapping PKS analysis method to the prediction
-                     for that method
+            pks_results: a dictionary mapping domain feature name to
+                            a dictionary PKS analysis method to the prediction
+                            for that method
+            nrps_results: a dictionary mapping NRPS analysis method to a Prediction
 
         Returns:
             a tuple of dicts mapping domain label to prediction
@@ -81,11 +110,11 @@ def calculate_consensus_prediction(cds_features: List[CDSFeature], results: Dict
                 continue
             if domain.name == "PKS_AT":
                 preds = []
-                at_results = results["minowa_at"].get(domain.feature_name)
+                at_results = pks_results["minowa_at"].get(domain.feature_name)
                 if at_results:
-                    pred = results["minowa_at"][domain.feature_name][0][0]
+                    pred = pks_results["minowa_at"][domain.feature_name][0][0]
                     preds.append(LONG_TO_SHORT.get(pred))
-                sig_results = results["signature"].get(domain.feature_name)
+                sig_results = pks_results["signature"].get(domain.feature_name)
                 if sig_results:
                     preds.append(sig_results[0].name.rsplit("_", 1)[-1])
                     consensus = calculate_individual_consensus(preds, available_smiles_parts)
@@ -101,9 +130,9 @@ def calculate_consensus_prediction(cds_features: List[CDSFeature], results: Dict
                 cis_at[domain.feature_name] = "mal"
 
             if domain.name in ["AMP-binding", "A-OX"]:
-                cis_at[domain.feature_name] = "nrp"
+                cis_at[domain.feature_name] = generate_nrps_consensus(nrps_results.get(domain.feature_name))
             elif domain.name == "CAL_domain":
-                pred = results["minowa_cal"][domain.feature_name][0][0]
+                pred = pks_results["minowa_cal"][domain.feature_name][0][0]
                 pred = LONG_TO_SHORT.get(pred, pred)
                 if pred in available_smiles_parts:
                     cis_at[domain.feature_name] = pred
