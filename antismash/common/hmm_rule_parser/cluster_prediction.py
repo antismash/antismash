@@ -464,6 +464,6 @@ def get_sequence_counts(details_file: str) -> Dict[str, int]:
                 result[hmm.name] = int(line[6:].strip())
                 break
         if hmm.name not in result:
-            raise ValueError("Unknown number of needs for hmm file: %s" % details_file)
+            raise ValueError("Unknown number of seeds for hmm file: %s" % details_file)
 
     return result
