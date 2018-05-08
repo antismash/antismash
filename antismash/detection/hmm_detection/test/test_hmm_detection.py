@@ -103,8 +103,7 @@ class HmmDetectionTest(unittest.TestCase):
         rules = rule_parser.Parser("\n".join([
                 "RULE Overlap CUTOFF 25 EXTENT 5 CONDITIONS modelB and modelF "
                 "RULE OverlapImpossible CUTOFF 25 EXTENT 5 CONDITIONS modelA and modelF"]), self.test_names).rules
-        detected_types, cluster_type_hits = hmm_detection.apply_cluster_rules(self.record, self.results_by_id,
-                                                           self.feature_by_id, rules)
+        detected_types, cluster_type_hits = hmm_detection.apply_cluster_rules(self.record, self.results_by_id, rules)
         assert detected_types == {"GENE_2": {"Overlap": {"modelB"}},
                                   "GENE_3": {"Overlap": {"modelF"}}}
 
