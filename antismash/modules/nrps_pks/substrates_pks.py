@@ -10,6 +10,8 @@ from helperlibs.wrappers.io import TemporaryDirectory
 
 from antismash.common.secmet import CDSFeature
 
+
+from .data_structures import Prediction
 from .minowa import minowa_cal, minowa_at, base as minowa_base
 from .kr_analysis import kr_analysis
 from .at_analysis import at_analysis
@@ -39,21 +41,20 @@ def extract_at_domains(cds_features: List[CDSFeature]) -> Dict[str, str]:
 
 
 def run_minowa_predictor_pks_at(at_domains: Dict[str, str]
-                                ) -> Tuple[at_analysis.ATSignatureResults, minowa_base.MinowaResults]:
+                                ) -> Tuple[Dict[str, Prediction], Dict[str, Prediction]]:
     """ analyses AT domains with Minowa and signature based detection """
-    # Predict PKS AT domain specificities with Minowa et al. method and PKS code (NP searcher / ClustScan / own?)
     # Run PKS signature analysis
     logging.info("Predicting PKS AT domain substrate specificities by Yadav et al. PKS signature sequences")
     signature_results = at_analysis.run_at_domain_analysis(at_domains)
 
-    # Minowa method: run Minowa_AT
+    # Minowa method
     logging.info("Predicting PKS AT domain substrate specificities by Minowa et al. method")
     with TemporaryDirectory(change=True):
         minowa_results = minowa_at.run_minowa_at(at_domains)
     return signature_results, minowa_results
 
 
-def run_minowa_predictor_pks_cal(cds_features: List[CDSFeature]) -> minowa_base.MinowaResults:
+def run_minowa_predictor_pks_cal(cds_features: List[CDSFeature]) -> Dict[str, minowa_base.MinowaPrediction]:
     """ Predict PKS CAL domain specificities with Minowa et al. method. """
     cal_domains = {}
     logging.info("Predicting CAL domain substrate specificities by Minowa et al. method")
@@ -67,7 +68,8 @@ def run_minowa_predictor_pks_cal(cds_features: List[CDSFeature]) -> minowa_base.
     return minowa_results
 
 
-def run_kr_stereochemistry_predictions(cds_features: List[CDSFeature]) -> Tuple[Dict[str, bool], Dict[str, str]]:
+def run_kr_stereochemistry_predictions(cds_features: List[CDSFeature]) -> Tuple[Dict[str, Prediction],
+                                                                                Dict[str, Prediction]]:
     """ Predict PKS KR domain stereochemistry using pattern as published in ClustScan
     """
     queries = {}

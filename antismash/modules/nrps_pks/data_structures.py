@@ -3,7 +3,7 @@
 
 """ Contains data structures for the nrps_pks module """
 
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from jinja2 import Markup
 
@@ -25,6 +25,13 @@ class Prediction:
         """
         raise NotImplementedError("Prediction subclass %s "
                                   "did not implement to_domain_prediction_qualifier()" % type(self))
+
+    def get_classification(self) -> List[str]:
+        """ Returns a list of equally likely predictions. If no prediction could
+            be made, an empty list is returned.
+        """
+        raise NotImplementedError("Prediction subclass %s "
+                                  "did not implement get_classification()" % type(self))
 
     def as_html(self) -> Markup:
         """ Returns a jinja2.Markup object containing HTML to use when representing
@@ -50,6 +57,9 @@ class SimplePrediction(Prediction):
 
     def to_domain_prediction_qualifier(self) -> qualifiers.DomainPrediction:
         return qualifiers.DomainPrediction(self.prediction, self.method)
+
+    def get_classification(self) -> List[str]:
+        return [self.prediction]
 
     def as_html(self) -> Markup:
         return Markup("%s: %s" % (self.method, self.prediction))

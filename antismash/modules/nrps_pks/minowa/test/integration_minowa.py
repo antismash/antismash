@@ -17,6 +17,7 @@ class TestMinowaAT(unittest.TestCase):
         results = run_minowa_at(self.query_data)
         assert len(results) == len(self.query_data)
         assert set(results) == set(self.query_data)
+        results = {key: val.predictions for key, val in results.items()}
         assert results == {'SCO0126_AT1': [('Malonyl-CoA', 81.1),
                                            ('Methoxymalonyl-CoA', 30.9),
                                            ('Methylmalonyl-CoA', 25.6),
@@ -176,4 +177,4 @@ class TestMinowaCAL(unittest.TestCase):
         expected = [("NH2", 118.5), ("fatty_acid", 37.5), ("AHBA", 6.5), ("shikimic_acid", 0.0), ("Acetyl-CoA", -1.6)]
         results = run_minowa_cal(self.query_data)
         assert len(results) == 1
-        assert results['SCO5892_CAL1'] == expected
+        assert results['SCO5892_CAL1'].predictions == expected

@@ -3,9 +3,12 @@
 
 """ Provides analysis of AT domain signatures """
 
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Tuple
+
+from jinja2 import Markup
 
 from antismash.common import path, subprocessing, utils, fasta
+from antismash.modules.nrps_pks.data_structures import Prediction
 
 _SIGNATURE_LENGTH = 24
 _AT_DOMAINS_FILENAME = path.get_full_path(__file__, "data", "AT_domains_muscle.fasta")
@@ -43,28 +46,36 @@ class ATResult:
         return ATResult(*json)
 
 
-class ATSignatureResults(dict):
-    """ Holds a list of ATResult for each gene name """
-    def __setitem__(self, key: str, val: List[ATResult]) -> None:
-        assert isinstance(val, list)
-        for sub in val:
-            assert isinstance(sub, ATResult)
-        super().__setitem__(key, val)
+class ATPrediction(Prediction):
+    def __init__(self, predictions: List[ATResult]) -> None:
+        super().__init__("ATSignature")
+        self.predictions = predictions
 
-    def to_json(self) -> Dict[str, List[Tuple[str, str, float]]]:
-        """ Serialises the instance """
-        results = {}
-        for key, value in self.items():
-            results[key] = [result.to_json() for result in value]
+    def get_classification(self) -> List[str]:
+        results = []
+        if not self.predictions:
+            return results
+        best_score = self.predictions[0].score
+        for pred in self.predictions:
+            if pred.score < best_score:
+                break
+            results.append(pred.name.rsplit("_", 1)[-1])
         return results
+
+    def as_html(self) -> Markup:
+        pred = "(unknown)"
+        if self.predictions:
+            pred = self.get_classification()[0]
+        return Markup("%s: %s" % (self.method, pred))
+
+    def to_json(self):
+        return {"method": "ATSignature",
+                "predictions": [pred.to_json() for pred in self.predictions]}
 
     @staticmethod
-    def from_json(json: Dict[str, List[Tuple[str, str, float]]]) -> "ATSignatureResults":
-        """ Deserialises an ATSignatureResults instance """
-        results = ATSignatureResults()
-        for key, value in json.items():
-            results[key] = [ATResult.from_json(val) for val in value]
-        return results
+    def from_json(json: Dict[str, Any]) -> "ATPrediction":
+        assert json["method"] == "ATSignature"
+        return ATPrediction([ATResult.from_json(pred) for pred in json["predictions"]])
 
 
 def get_at_positions(startpos: int = 7) -> List[int]:
@@ -78,7 +89,7 @@ def get_at_positions(startpos: int = 7) -> List[int]:
 
 
 def score_signatures(query_signatures: Dict[str, str],
-                     reference_signatures: Dict[str, str]) -> ATSignatureResults:
+                     reference_signatures: Dict[str, str]) -> Dict[str, ATPrediction]:
     """ Scores PKS signature by comparing against database of signatures.
 
         The score is calculated as a percentage of pairwise matches for the
@@ -89,10 +100,9 @@ def score_signatures(query_signatures: Dict[str, str],
             reference_signatures: a dictionary mapping reference name to signature
 
         Returns:
-            a wrapped dictionary mapping query name to at most 10 ATResult instances,
-            sorted in order of decreasing score
+            a dictionary mapping query name to an ATPrediction
     """
-    results = ATSignatureResults()
+    results = {}
     for key, query_sig_seq in sorted(query_signatures.items()):
         scores = []
         for sig_name, sig_seq in reference_signatures.items():
@@ -105,11 +115,11 @@ def score_signatures(query_signatures: Dict[str, str],
             if score > 50.:
                 scores.append(ATResult(sig_name, reference_signatures[sig_name], score))
         # limit to 10 best hits, scores descending, names ascending for ties
-        results[key] = sorted(scores, key=lambda x: x.score, reverse=True)[:10]
+        results[key] = ATPrediction(sorted(scores, key=lambda x: x.score, reverse=True)[:10])
     return results
 
 
-def run_at_domain_analysis(domains: Dict[str, str]) -> ATSignatureResults:
+def run_at_domain_analysis(domains: Dict[str, str]) -> Dict[str, ATPrediction]:
     """ Analyses PKS signature of AT domains
 
         Arguments:

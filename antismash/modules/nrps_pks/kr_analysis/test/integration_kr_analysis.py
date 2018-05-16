@@ -16,21 +16,23 @@ class TestKRAnalysis(unittest.TestCase):
 
     def test_full_run(self):
         active, stereo = run_kr_analysis(self.query_data)
-        assert active == {'SCO0111_KR1': False,
-                          'SCO0126_KR1': True,
-                          'SCO0256_KR1': False,
-                          'SCO5086_KR1': False,
-                          'SCO5097_KR1': False,
-                          'SCO6249_KR1': False,
-                          'SCO6264_KR1': False,
-                          'SCO6273_KR1': True,
-                          'SCO6274_KR1': True,
-                          'SCO6274_KR2': True,
-                          'SCO6275_KR1': True,
-                          'SCO6275_KR2': True,
-                          'SCO6282_KR1': False,
-                          'SCO6827_KR1': True,
-                          'SCO6829_KR1': False}
+        active = {key: val.prediction for key, val in active.items()}
+        assert active == {'SCO0111_KR1': "inactive",
+                          'SCO0126_KR1': "active",
+                          'SCO0256_KR1': "inactive",
+                          'SCO5086_KR1': "inactive",
+                          'SCO5097_KR1': "inactive",
+                          'SCO6249_KR1': "inactive",
+                          'SCO6264_KR1': "inactive",
+                          'SCO6273_KR1': "active",
+                          'SCO6274_KR1': "active",
+                          'SCO6274_KR2': "active",
+                          'SCO6275_KR1': "active",
+                          'SCO6275_KR2': "active",
+                          'SCO6282_KR1': "inactive",
+                          'SCO6827_KR1': "active",
+                          'SCO6829_KR1': "inactive"}
+        stereo = {key: val.prediction for key, val in stereo.items()}
         assert stereo == {'SCO0111_KR1': 'C2',
                           'SCO0256_KR1': 'C1',
                           'SCO5086_KR1': 'C1',

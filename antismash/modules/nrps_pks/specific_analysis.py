@@ -6,7 +6,7 @@ In-depth analysis and annotation of NRPS/PKS gene clusters.
 '''
 
 import logging
-from typing import List
+from typing import Dict, List
 
 from antismash.common.secmet import Record, CDSFeature, AntismashDomain
 from antismash.config import ConfigType
@@ -14,19 +14,18 @@ from antismash.config import ConfigType
 from .orderfinder import analyse_biosynthetic_order
 from .parsers import calculate_consensus_prediction, modify_monomer_predictions
 from .results import NRPS_PKS_Results
-from .structure_drawer import generate_chemical_structure_preds
+from .smiles_generator import generate_chemical_structure_preds
 from .substrates import run_pks_substr_spec_predictions
 
 from .nrps_predictor import run_nrpspredictor
 
 
-def generate_structure_images(record: Record, results: NRPS_PKS_Results, options: ConfigType) -> None:
+def generate_structure_images(record: Record, results: NRPS_PKS_Results, options: ConfigType) -> Dict[int, str]:
     """ Generate the structure images based on monomers prediction for all
         cluster features
     """
     compound_predictions = {key: val[0] for key, val in results.cluster_predictions.items()}
-    if compound_predictions:
-        generate_chemical_structure_preds(compound_predictions, record, options)
+    return generate_chemical_structure_preds(compound_predictions, record, options)
 
 
 def get_a_domains_from_cds_features(record: Record, cds_features: List[CDSFeature]) -> List[AntismashDomain]:
@@ -43,7 +42,7 @@ def get_a_domains_from_cds_features(record: Record, cds_features: List[CDSFeatur
     a_domains = []
     for cds in cds_features:
         for domain in cds.nrps_pks.domains:
-            if domain.name == "AMP-binding":
+            if domain.name in ["AMP-binding", "A-OX"]:
                 a_domains.append(record.get_domain_by_name(domain.feature_name))
     return a_domains
 
@@ -58,16 +57,16 @@ def specific_analysis(record: Record, results: NRPS_PKS_Results, options: Config
 
     a_domains = get_a_domains_from_cds_features(record, nrps_pks_genes)
     if a_domains:
-        nrpspred_results = run_nrpspredictor(a_domains, options)
-        for domain, res in zip(a_domains, nrpspred_results):
-            results.nrps[domain.get_name()]["NRPSPredictor2"] = res
+        logging.info("Predicting A domain substrate specificities with NRPSPredictor2")
+        results.add_method_results("NRPSPredictor2", run_nrpspredictor(a_domains, options))
 
-    results.pks = run_pks_substr_spec_predictions(nrps_pks_genes)
-    results.consensus, results.consensus_transat = calculate_consensus_prediction(nrps_pks_genes,
-                                                         results.pks.method_results, results.nrps)
+    pks_results = run_pks_substr_spec_predictions(nrps_pks_genes)
+    for method, method_results in pks_results.items():
+        results.add_method_results(method, method_results)
+    results.consensus, results.consensus_transat = calculate_consensus_prediction(nrps_pks_genes, results.domain_predictions)
 
     modify_monomer_predictions(nrps_pks_genes, results.consensus)
 
     results.cluster_predictions = analyse_biosynthetic_order(nrps_pks_genes, results.consensus, record)
-    generate_structure_images(record, results, options)
+    results.smiles_strings.update(generate_structure_images(record, results, options))
     return results

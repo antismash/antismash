@@ -48,32 +48,55 @@ class IntegrationNRPSPKS(unittest.TestCase):
     def test_balhymicin(self):
         filename = helpers.get_path_to_balhymicin_genbank()
         results = helpers.run_and_regenerate_results_for_module(filename, nrps_pks, self.options)
-        for key, val in results.pks.method_results.items():
-            if key != "minowa_cal":
-                assert not val
+        assert len(results.domain_predictions) == 9
+        a_domains = ["bpsA_A1", "bpsA_A2", "bpsA_A3", "bpsB_A1", "bpsB_A2", "bpsB_A3",
+                     "bpsC_A1", "bpsD_A1"]
+        feature_names = ['nrpspksdomains_%s' % a_dom for a_dom in a_domains]
+        feature_names.append("nrpspksdomains_pks_CAL1")
+        assert set(results.domain_predictions) == set(feature_names)
+
+        assert set(results.domain_predictions[feature_names[0]]) == {"NRPSPredictor2"}
+        nrpspred2_results = {}
+        for domain, methods in results.domain_predictions.items():
+            if "CAL" in domain:
                 continue
-            assert len(val) == 1
-            assert len(val["nrpspksdomains_pks_CAL1"]) == 5
-            assert val["nrpspksdomains_pks_CAL1"][0] == ["AHBA", 167.0]
-        # when the NRPS subsections are added, this needs to change
-        assert results.nrps == {}
+            nrpspred2_results[domain] = methods["NRPSPredictor2"].get_classification()
+        expected_preds = [["leu"], ["bht"], ["asn"], ["hpg"], ["hpg"], ["bht"], ["dhpg"], ["tyr"], ["pk"]]
+        expected_nrps2 = {name: pred for name, pred in zip(feature_names, expected_preds) if name[-2] == "A"}
+        assert nrpspred2_results == expected_nrps2
+
+        cal = results.domain_predictions["nrpspksdomains_pks_CAL1"]["minowa_cal"]
+        assert len(cal.predictions) == 5
+        assert cal.predictions[0] == ["AHBA", 167.0]
+
         # as does this, though it still won't use domain docking
-        assert results.cluster_predictions == {'1': [
-                '(nrp-nrp-nrp) + (nrp-nrp-nrp) + (nrp) + (nrp) + (pk)', False]}
+        monomers = '(leu-bht-asn) + (hpg-hpg-bht) + (dhpg) + (tyr) + (pk)'
+        assert results.cluster_predictions == {1: [monomers, False]}
 
     def test_cp002271_c19(self):
         filename = path.get_full_path(__file__, 'data', 'CP002271.1.cluster019.gbk')
         results = helpers.run_and_regenerate_results_for_module(filename, nrps_pks, self.options)
         # catch ordering changes along with ensuring ATResults are there
-        assert results.pks.method_results["signature"]["nrpspksdomains_STAUR_3982_AT1"][0].score == 87.5
+        assert results.domain_predictions["nrpspksdomains_STAUR_3982_AT1"]["signature"].predictions[0].score == 87.5
         # ensure all genes are present and have the right consensus
         assert results.consensus == {'nrpspksdomains_STAUR_3982_AT1': 'ohmmal',
                                      'nrpspksdomains_STAUR_3983_AT1': 'ccmmal',
                                      'nrpspksdomains_STAUR_3984_AT1': 'ccmmal',
-                                     'nrpspksdomains_STAUR_3985_AT1': 'pk',
+                                     'nrpspksdomains_STAUR_3985_AT1': 'mmal',
                                      'nrpspksdomains_STAUR_3985_AT2': 'pk'}
         # check the gene ordering and, in this case, that it used domain docking
-        assert results.cluster_predictions == {'1': [
-                '(ccmmal) + (ccmmal) + (pk-pk) + (ohmmal)', True]}
-        # no A domains in the cluster, so make sure no NRPS results
-        assert results.nrps == {}
+        assert results.cluster_predictions == {1: [
+                '(ccmmal) + (ccmmal) + (mmal-pk) + (ohmmal)', True]}
+        assert len(results.domain_predictions) == 10
+        expected_domains = {'nrpspksdomains_STAUR_3982_AT1',
+                            'nrpspksdomains_STAUR_3983_AT1',
+                            'nrpspksdomains_STAUR_3984_AT1',
+                            'nrpspksdomains_STAUR_3985_AT1',
+                            'nrpspksdomains_STAUR_3985_AT2',
+                            'nrpspksdomains_STAUR_3972_KR1',
+                            'nrpspksdomains_STAUR_3984_KR1',
+                            'nrpspksdomains_STAUR_3985_KR1',
+                            'nrpspksdomains_STAUR_3983_KR1',
+                            'nrpspksdomains_STAUR_3983_KR1',
+                            'nrpspksdomains_STAUR_3982_KR1'}
+        assert set(results.domain_predictions) == expected_domains

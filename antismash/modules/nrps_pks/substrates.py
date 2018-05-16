@@ -2,34 +2,41 @@
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
 """
-    Runs minowa and kr_streochem over PKS domains
+    Contains a runner for all PKS-based prediction methods
 """
 
-from typing import List
+from typing import Dict, List
 
 from antismash.common.secmet import CDSFeature
 
-from .results import PKSResults
+from .data_structures import Prediction
 from .substrates_pks import count_pks_genes, run_minowa_predictor_pks_at, \
                             run_minowa_predictor_pks_cal, run_kr_stereochemistry_predictions, \
                             extract_at_domains
 
 
-def run_pks_substr_spec_predictions(genes: List[CDSFeature]) -> PKSResults:
-    """ Runs the PKS analyses on the given genes and returns the various predictions
-        as a PKSResults object
+def run_pks_substr_spec_predictions(cds_features: List[CDSFeature]) -> Dict[str, Dict[str, Prediction]]:
+    """ Runs all PKS analyses on the given CDS features
+
+        Arguments:
+            cds_features: a list of CDSFeature to run predictions on
+
+        Returns:
+            a dictionary mapping
+                analysis method name to a dictionary mapping
+                    AntismashDomain name to Prediction
     """
-    at_domains = extract_at_domains(genes)
-    counted = count_pks_genes(genes)
-    results = PKSResults()
+    at_domains = extract_at_domains(cds_features)
+    counted = count_pks_genes(cds_features)
+    method_results = {}
     if at_domains:
         signature_results, minowa_at_results = run_minowa_predictor_pks_at(at_domains)
-        results.method_results["signature"] = signature_results
-        results.method_results["minowa_at"] = minowa_at_results
+        method_results["signature"] = signature_results
+        method_results["minowa_at"] = minowa_at_results
     if counted:
-        minowa_cal_results = run_minowa_predictor_pks_cal(genes)
-        kr_activity, kr_stereo = run_kr_stereochemistry_predictions(genes)
-        results.method_results["minowa_cal"] = minowa_cal_results
-        results.method_results["kr_activity"] = kr_activity
-        results.method_results["kr_stereochem"] = kr_stereo
-    return results
+        minowa_cal_results = run_minowa_predictor_pks_cal(cds_features)
+        kr_activity, kr_stereo = run_kr_stereochemistry_predictions(cds_features)
+        method_results["minowa_cal"] = minowa_cal_results
+        method_results["kr_activity"] = kr_activity
+        method_results["kr_stereochem"] = kr_stereo
+    return method_results
