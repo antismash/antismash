@@ -5,15 +5,17 @@
 
 from collections import defaultdict
 import logging
-from typing import Any, Dict, Tuple, Union  # pylint: disable=unused-import
+from typing import Any, Dict, List, Tuple  # pylint: disable=unused-import
 
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record, AntismashDomain
+from antismash.common.secmet.qualifiers import NRPSPKSQualifier
 
-from .at_analysis.at_analysis import ATSignatureResults
 from .parsers import LONG_TO_SHORT, generate_nrps_consensus
-from .data_structures import Prediction
+from .data_structures import Prediction, SimplePrediction
+from .minowa.base import MinowaPrediction
 from .nrps_predictor import PredictorSVMResult
+from .at_analysis.at_analysis import ATPrediction
 
 DOMAIN_TYPE_MAPPING = {'Condensation_DCL': 'Condensation',
                        'Condensation_LCL': 'Condensation',
@@ -28,79 +30,36 @@ DOMAIN_TYPE_MAPPING = {'Condensation_DCL': 'Condensation',
                        'Polyketide_cyc2': 'Polyketide_cyc'}
 
 
-_UNKNOWN = "(unknown)"
-
-
-class PKSResults:
-    """ Results for the PKS section of the nrps_pks module """
-    __slots__ = ["method_results"]
-
-    class EnforcedDict(dict):
-        """ Enforces the value of the key 'signature' to be a consistent type """
-        def __setitem__(self, key: str, val: Union[Dict[str, str], Dict[str, bool]]) -> None:
-            if key == "signature":
-                assert isinstance(val, ATSignatureResults)
-            return super().__setitem__(key, val)
-
-    def __init__(self) -> None:
-        self.method_results = PKSResults.EnforcedDict()
-
-    def to_json(self) -> Dict[str, Any]:
-        """ Store results as a JSON object """
-        results = {}
-        for key, value in self.method_results.items():
-            if key == "signature":
-                value = value.to_json()
-            results[key] = value
-        return results
-
-    @staticmethod
-    def from_json(json: Dict[str, Any]) -> "PKSResults":
-        """ Reconstruct a PKSResults instance from JSON object """
-        assert isinstance(json, dict)
-        results = PKSResults()
-        results.method_results.update(json)
-        results.method_results["signature"] = ATSignatureResults.from_json(json.get("signature", {}))
-        return results
+UNKNOWN = "(unknown)"
 
 
 class NRPS_PKS_Results(ModuleResults):
     """ The combined results of the nrps_pks module """
     _schema_version = 1
-    __slots__ = ["_pks", "_nrps", "consensus", "consensus_transat", "cluster_predictions", "domain_predictions"]
+    __slots__ = ["consensus", "consensus_transat", "cluster_predictions", "domain_predictions",
+                 "smiles_strings"]
 
     def __init__(self, record_id: str) -> None:
         super().__init__(record_id)
-        self._pks = PKSResults()
-        self._nrps = defaultdict(dict)  # name -> method -> Prediction  # type: Dict[str, Dict[str, Prediction]]
-        self.consensus = {}  # type: Dict[str, str]
+        self.domain_predictions = defaultdict(dict)  # type: Dict[str, Dict[str, Prediction]] # domain name -> method -> Prediction
+        self.consensus = {}  # type: Dict[str, str]  # domain name -> consensus
         self.cluster_predictions = {}  # type: Dict[int, Tuple[str, bool]]
-        self.domain_predictions = {}  # name -> Predictions # type: Dict[str, List[Predictions]]
         self.consensus_transat = {}  # type: Dict[str, str]
+        self.smiles_strings = {}  # type: Dict[int, str]  # cluster number -> SMILES
 
-    @property
-    def pks(self) -> PKSResults:
-        """ The result of the PKS analyses """
-        return self._pks
-
-    @pks.setter
-    def pks(self, value: PKSResults) -> None:
-        assert isinstance(value, PKSResults)
-        self._pks = value
-
-    @property
-    def nrps(self) -> Dict[str, Dict[str, Prediction]]:
-        return self._nrps
+    def add_method_results(self, method: str, results: Dict[str, Prediction]) -> None:
+        for domain_name, prediction in results.items():
+            self.domain_predictions[domain_name][method] = prediction
 
     def to_json(self) -> Dict[str, Any]:
         results = {"schema_version": self._schema_version,
                    "record_id": self.record_id,
-                   "pks": self.pks.to_json(),
-                   "nrps": {},
+                   "domain_predictions": defaultdict(dict),
                    "consensus": self.consensus,
-                   "cluster_predictions": self.cluster_predictions}
-        for domain, predictions in self.nrps.items():
-            results["nrps"][domain] = {method: val.to_json() for method, val in predictions.items()},
+                   "cluster_predictions": self.cluster_predictions,
+                   "smiles_strings": self.smiles_strings}
+        for domain, predictions in self.domain_predictions.items():
+            results["domain_predictions"][domain] = {method: val.to_json() for method, val in predictions.items()}
         return results
 
     @staticmethod
@@ -110,53 +69,92 @@ class NRPS_PKS_Results(ModuleResults):
             logging.warning("Mismatching schema version, dropping results")
             return None
         results = NRPS_PKS_Results(json["record_id"])
-        pks = json.get("pks")
-        if pks:
-            results.pks = PKSResults.from_json(pks)
-        nrps = json.get("nrps", {})
-        for key, val in nrps.items():
-            results.nrps[key] = PredictorSVMResult.from_json(val)  # TODO: unbreak
+        predictions = json.get("domain_predictions", {})
+        for domain_name, method_predictions in predictions.items():
+            for method, prediction in method_predictions.items():
+                if method == "NRPSPredictor2":
+                    rebuilt = PredictorSVMResult.from_json(prediction)
+                elif method.startswith("minowa"):
+                    rebuilt = MinowaPrediction.from_json(prediction)
+                elif method == "signature":
+                    rebuilt = ATPrediction.from_json(prediction)
+                else:
+                    rebuilt = SimplePrediction.from_json(prediction)
+                results.domain_predictions[domain_name][method] = rebuilt
         results.consensus = json["consensus"]
-        results.cluster_predictions.update(json["cluster_predictions"])
+        for cluster_number, prediction in json["cluster_predictions"].items():
+            # the int conversion is important, since json can't use int keys
+            results.cluster_predictions[int(cluster_number)] = prediction
+        for cluster_number, smiles in json["smiles_strings"].items():
+            # again with the ints
+            results.smiles_strings[int(cluster_number)] = smiles
         return results
+
+    def _annotate_a_domain(self, domain: NRPSPKSQualifier.Domain) -> None:
+        assert domain.name in ["AMP-binding", "A-OX"]
+        predictions = self.domain_predictions[domain.feature_name]
+        domain.predictions["consensus"] = generate_nrps_consensus(predictions)
+
+    def _annotate_at_domain(self, domain: NRPSPKSQualifier.Domain, cluster_products: List[str]) -> None:
+        assert domain.name == "PKS_AT"
+        predictions = self.domain_predictions[domain.feature_name]
+
+        if 'transatpks' in cluster_products:
+            consensus = self.consensus_transat[domain.feature_name]
+        else:
+            consensus = self.consensus[domain.feature_name]
+        domain.predictions["consensus"] = consensus
+
+        sig = UNKNOWN
+        pks_sig = predictions["signature"]
+        if pks_sig and pks_sig.get_classification():
+            sig = pks_sig.get_classification()[0]
+        domain.predictions["PKS signature"] = sig
+
+        minowa = predictions["minowa_at"].get_classification()[0]
+        domain.predictions["Minowa"] = LONG_TO_SHORT.get(minowa, minowa)
+
+    def _annotate_cal_domain(self, domain: NRPSPKSQualifier.Domain) -> None:
+        assert domain.name == "CAL_domain"
+        minowa = self.domain_predictions[domain.feature_name]["minowa_cal"].get_classification()[0]
+        domain.predictions["Minowa"] = LONG_TO_SHORT.get(minowa, minowa)
+
+    def _annotate_kr_domain(self, domain: NRPSPKSQualifier.Domain) -> None:
+        assert domain.name == "PKS_KR"
+        predictions = self.domain_predictions[domain.feature_name]
+
+        activity = predictions["kr_activity"].get_classification()[0]
+        domain.predictions["KR activity"] = activity
+
+        stereo_chem = UNKNOWN
+        stereo_pred = predictions.get("kr_stereochem")
+        if stereo_pred:
+            stereo_chem = stereo_pred.get_classification()[0]
+        domain.predictions["KR stereochemistry"] = stereo_chem
 
     def add_to_record(self, record: Record) -> None:
         """ Save substrate specificity predictions in NRPS/PKS domain sec_met info of record
         """
+        for cluster_number, smiles in self.smiles_strings.items():
+            record.get_cluster(cluster_number).smiles_structure = smiles
 
         for cds_feature in record.get_nrps_pks_cds_features():
             nrps_qualifier = cds_feature.nrps_pks
             for domain in nrps_qualifier.domains:
                 feature = record.get_domain_by_name(domain.feature_name)
                 assert isinstance(feature, AntismashDomain)
+
                 domain.predictions.clear()
-                if domain.name == "AMP-binding":
-                    nrps_pred = generate_nrps_consensus(self.nrps[domain.feature_name])
-                    domain.predictions["consensus"] = nrps_pred
+                if domain.name in ["AMP-binding", "A-OX"]:
+                    self._annotate_a_domain(domain)
                 elif domain.name == "PKS_AT":
-                    # For t1pks, t2pks and t3pks
-                    if 'transatpks' not in cds_feature.cluster.products:
-                        consensus = self.consensus[domain.feature_name]
-                    else:  # for transatpks
-                        consensus = self.consensus_transat[domain.feature_name]
-                    pks_sig = self.pks.method_results["signature"][domain.feature_name]
-                    if pks_sig:
-                        domain.predictions["PKS signature"] = pks_sig[0].name.rsplit("_", 1)[1]
-                    else:
-                        domain.predictions["PKS signature"] = _UNKNOWN
-                    minowa = self.pks.method_results["minowa_at"][domain.feature_name][0][0]
-                    domain.predictions["Minowa"] = LONG_TO_SHORT.get(minowa, minowa)
-                    domain.predictions["consensus"] = consensus
-
+                    self._annotate_at_domain(domain, cds_feature.cluster.products)
                 elif domain.name == "CAL_domain":
-                    minowa = self.pks.method_results["minowa_cal"][domain.feature_name][0][0]
-                    domain.predictions["Minowa"] = LONG_TO_SHORT.get(minowa, minowa)
-
+                    self._annotate_cal_domain(domain)
                 elif domain.name == "PKS_KR":
-                    domain.predictions["KR activity"] = \
-                            "active" if self.pks.method_results["kr_activity"][domain.feature_name] else "inactive"
-                    domain.predictions["KR stereochemistry"] = \
-                            self.pks.method_results["kr_stereochem"].get(domain.feature_name, _UNKNOWN)
+                    self._annotate_kr_domain(domain)
+                # otherwise one of many without prediction methods/relevance (PCP, Cglyc, etc)
+
                 for method, pred in domain.predictions.items():
                     feature.specificity.append("%s: %s" % (method, pred))
 

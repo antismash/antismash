@@ -19,10 +19,10 @@ class TestScoring(unittest.TestCase):
         result = at_analysis.score_signatures(query_sigs, ref_sigs)
         assert len(result) == 1
         assert list(result) == ["Q1"]
-        assert len(result["Q1"]) == 1
-        assert result["Q1"][0].name == "A"
-        assert result["Q1"][0].signature == "A"*24
-        self.assertAlmostEqual(result["Q1"][0].score, 100*14/24)
+        assert len(result["Q1"].predictions) == 1
+        assert result["Q1"].predictions[0].name == "A"
+        assert result["Q1"].predictions[0].signature == "A"*24
+        self.assertAlmostEqual(result["Q1"].predictions[0].score, 100*14/24)
 
     def test_hit_limit(self):
         ref_sigs = {str(i): "A"*24 for i in range(11)}
@@ -30,8 +30,8 @@ class TestScoring(unittest.TestCase):
         query_sigs = {"Q1": "".join(query_sig)}
         result = at_analysis.score_signatures(query_sigs, ref_sigs)
         assert len(result) == 1
-        assert len(result["Q1"]) == 10
-        assert set([res.name for res in result["Q1"]]).issubset(set(ref_sigs))
+        assert len(result["Q1"].predictions) == 10
+        assert set([res.name for res in result["Q1"].predictions]).issubset(set(ref_sigs))
 
 
 class TestATPositions(unittest.TestCase):

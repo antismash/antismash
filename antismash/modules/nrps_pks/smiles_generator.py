@@ -5,13 +5,13 @@
     image format, where possible
 """
 
-import os
 import logging
 from typing import Dict
 
 import antismash.common.path as path
 from antismash.common.secmet import Record
 from antismash.config import ConfigType
+
 
 def gen_smiles_from_pksnrps(compound_pred: str, cluster_number: int) -> str:
     """ Generates the SMILES string for a specific compound prediction """
@@ -51,12 +51,9 @@ def gen_smiles_from_pksnrps(compound_pred: str, cluster_number: int) -> str:
 
 
 def generate_chemical_structure_preds(compound_predictions: Dict[int, str],
-                                      record: Record, options: ConfigType) -> None:
+                                      record: Record, options: ConfigType) -> Dict[int, str]:
     """ Generates the SMILES strings for each cluster """
-    # Create directory to store structures
-    structures_dir = os.path.abspath(os.path.join(options.output_dir, "structures"))
-    if not os.path.exists(structures_dir):
-        os.mkdir(structures_dir)
+    smiles = {}
 
     # Combine predictions into a prediction of the final chemical structure and generate images
     for cluster in record.get_clusters():
@@ -71,8 +68,9 @@ def generate_chemical_structure_preds(compound_predictions: Dict[int, str],
 
         if not smiles_string:
             continue
+        smiles[cluster_number] = smiles_string
 
-        cluster.smiles_structure = smiles_string
+    return smiles
 
 
 def load_smiles() -> Dict[str, str]:

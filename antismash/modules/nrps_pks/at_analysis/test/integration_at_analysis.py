@@ -73,7 +73,7 @@ class TestKRAnalysis(unittest.TestCase):
     def test_full_run(self):
         results = run_at_domain_analysis(self.query_data)
         # check best hits only
-        best = {key: (val[0].name, val[0].score) for key, val in results.items() if val}
+        best = {key: (val.predictions[0].name, val.predictions[0].score) for key, val in results.items() if val.predictions}
         assert best == {'SCO0126_AT1': ('Q83Y48_AT1__mal', 79.16666666666667),
                         'SCO5892_AT1': ('D3Y1I5_AT1__mal', 95.83333333333333),
                         'SCO6273_AT1': ('Q9EWA1_AT4__mal', 91.66666666666667),
@@ -84,4 +84,4 @@ class TestKRAnalysis(unittest.TestCase):
                         'SCO6275_AT3': ('Q53840_AT1__mal', 100.0),
                         'SCO6827_AT1': ('Q93TW8_AT1__mmal', 91.66666666666667)}
         # ensure that 127 made it in, but that it had no hits
-        assert results['SCO0127_AT1'] == []
+        assert results['SCO0127_AT1'].predictions == []

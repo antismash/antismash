@@ -6,12 +6,12 @@
 
 import unittest
 
-from antismash.modules.nrps_pks import structure_drawer
+from antismash.modules.nrps_pks import smiles_generator
 
 
 class TestLoadSmiles(unittest.TestCase):
     def test_load(self):
-        smiles = structure_drawer.load_smiles()
+        smiles = smiles_generator.load_smiles()
         assert len(smiles) == 152
         # test a random selection
         assert smiles['23DHB'] == 'Oc1c(O)cccc1C(=O)'

@@ -40,7 +40,7 @@ class PredictorSVMResult(Prediction):
         self.uncertain = bool(uncertain)
 
     def get_classification(self) -> List[str]:
-        classification = ["N/A"]
+        classification = []
         if self.uncertain:
             return classification
         for prediction in [self.single_amino_pred, self.small_cluster_pred,  # TODO: include stach code?
@@ -54,6 +54,9 @@ class PredictorSVMResult(Prediction):
         return classification
 
     def as_html(self) -> Markup:
+        note = ""
+        if self.uncertain:
+            note = "<strong>NOTE: outside applicability domain</strong><br>\n"
         raw = ("\n"
                "<dl><dt>NRPSPredictor2 SVM prediction details:</dt>\n"
                " <dd>"
@@ -71,8 +74,7 @@ class PredictorSVMResult(Prediction):
                "   <dd>%s</dd>\n"
                "  </dl>\n"
                "  </dd>\n"
-               "</dl>\n" % ("NOTE: outside applicability domain<br>\n" if self.uncertain else "",
-                            self.physicochemical_class, ", ".join(self.large_cluster_pred),
+               "</dl>\n" % (note, self.physicochemical_class, ", ".join(self.large_cluster_pred),
                             ", ".join(self.small_cluster_pred), self.single_amino_pred,
                             self.stachelhaus_code))
         return Markup(raw)
@@ -211,7 +213,7 @@ def get_34_aa_signature(domain: AntismashDomain) -> str:
     return extract(domain_alignment, poslist)
 
 
-def run_nrpspredictor(a_domains: List[AntismashDomain], options: ConfigType) -> List[PredictorSVMResult]:
+def run_nrpspredictor(a_domains: List[AntismashDomain], options: ConfigType) -> Dict[str, PredictorSVMResult]:
     # NRPSPredictor: extract AMP-binding + 120 residues N-terminal of this domain,
     # extract 8 Angstrom residues and insert this into NRPSPredictor
     nrps_predictor_dir = path.get_full_path(__file__, "external", "NRPSPredictor2")
@@ -252,4 +254,8 @@ def run_nrpspredictor(a_domains: List[AntismashDomain], options: ConfigType) -> 
         with open(output_filename) as handle:
             lines = handle.read().splitlines()[1:]
 
-    return [PredictorSVMResult.from_line(line) for line in lines]
+    results = {}
+    for domain, line in zip(a_domains, lines):
+        assert line.startswith(domain.get_name())
+        results[domain.get_name()] = PredictorSVMResult.from_line(line)
+    return results
