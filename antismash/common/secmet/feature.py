@@ -1039,7 +1039,7 @@ class Cluster(Feature):
     __slots__ = ["_extent", "_cutoff", "_products", "contig_edge",
                  "detection_rules", "smiles_structure",
                  "clusterblast", "knownclusterblast", "subclusterblast",
-                 "parent_record", "cds_children", "borders", "monomers_prediction"]
+                 "parent_record", "cds_children", "borders"]
 
     def __init__(self, location: FeatureLocation, cutoff: int, extent: int, products: List[str]) -> None:
         super().__init__(location, feature_type="cluster",
@@ -1054,7 +1054,6 @@ class Cluster(Feature):
         self.contig_edge = None  # type: Optional[bool] # hmm_detection borderpredict
         self.detection_rules = []  # type: List[str]
         self.smiles_structure = None  # type: Optional[str] # SMILES string
-        self.monomers_prediction = None
 
         self.clusterblast = None  # type: Any  # TODO: actually a clusterblast result, remove
         self.knownclusterblast = None  # type: Any  # TODO: actually a clusterblast result, remove
