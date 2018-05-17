@@ -12,7 +12,7 @@
       <h3>Prediction details</h3>
       <dl class="prediction-text">
         <dt>Monomers prediction:</dt> <dd>{{cluster.get_monomer_prediction()}}</dd>
-        {% for gene_id in cluster.sidepanel_features %}
+        {% for gene_id in cluster.sidepanel_features if record.get_cds_by_name(gene_id).motifs %}
           <dt><strong>{{gene_id}}</strong></dt>
           {% if gene_id in cluster.url_strict %}
             <dd> Search NORINE for peptide:
