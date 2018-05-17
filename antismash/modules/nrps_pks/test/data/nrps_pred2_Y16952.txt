@@ -1,0 +1,9 @@
+#sequence-id<tab>8A-signature<tab>stachelhaus-code<tab>3class-pred<tab>large-class-pred<tab>small-class-pred<tab>single-class-pred<tab>nearest stachelhaus code<tab>NRPS1pred-large-class-pred<tab>NRPS2pred-large-class-pred<tab>outside applicability domain?<tab>coords<tab>pfam-score
+nrpspksdomains_bpsA_A1	L--SFDASLFEMYLLTGGDRNMYGPTEATMCATW	DAFYLGMMCK	hydrophobic-aliphatic	N/A	val,leu,ile,abu,iva	leu	leu	orn,lys,arg	orn,horn	0	0:0	0.000000e+00
+nrpspksdomains_bpsA_A2	LAHAFDTIVSEMKAVAAGEINAYGPTETTICATM	DTSKVAAICK	hydrophobic-aromatic	phe,trp,phg,tyr,bht	tyr,bht	bht	bht	phe,trp,phg,tyr,bht	tyr,bht	0	0:0	0.000000e+00
+nrpspksdomains_bpsA_A3	YHCSFDLTVTATKALLGGEVNEYGPTEATVGCVE	DLTKLGEVGK	hydrophilic	asp,asn,glu,gln,aad	asp,asn	asn	asn	asp,asn,glu,gln,aad	asp,asn	0	0:0	0.000000e+00
+nrpspksdomains_bpsB_A1	L--AFDISLFEVHLLTGGDRHLYGPTEATLCATW	DIFHLGLLCK	hydrophobic-aliphatic	ser,thr,dhpg,hpg	dhpg,hpg	hpg	hpg	orn,lys,arg	orn,horn	0	0:0	0.000000e+00
+nrpspksdomains_bpsB_A2	L--AFDASLVEVHLLTGGDRQLYGPTEITLCATW	DAVHLGLLCK	hydrophobic-aliphatic	ser,thr,dhpg,hpg	dhpg,hpg	hpg	hpg	orn,lys,arg	orn,horn	0	0:0	0.000000e+00
+nrpspksdomains_bpsB_A3	LAHSFDAIVSEMTVLTGGEIQAYGPTETTICSTM	DASTLGAICK	hydrophobic-aromatic	phe,trp,phg,tyr,bht	tyr,bht	bht	bht	phe,trp,phg,tyr,bht	tyr,bht	0	0:0	0.000000e+00
+nrpspksdomains_bpsC_A1	L--AFDPSLYAVHLEIGGDRNTYGPTETTLCATW	DPYHEGTLCK	hydrophobic-aliphatic	ser,thr,dhpg,hpg	dhpg,hpg	dhpg	dhpg	orn,lys,arg	orn,horn	0	0:0	0.000000e+00
+nrpspksdomains_bpsD_A1	LDHAFDAAVAEPTLLVAGEINAYGPTEATVAVTA	DAATLAAVAK	hydrophobic-aromatic	phe,trp,phg,tyr,bht	tyr,bht	tyr	tyr	phe,trp,phg,tyr,bht	tyr,bht	0	0:0	0.000000e+00
