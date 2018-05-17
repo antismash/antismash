@@ -10,9 +10,13 @@ from typing import Dict, List
 from antismash.common.secmet import CDSFeature
 
 from .data_structures import Prediction
-from .substrates_pks import count_pks_genes, run_minowa_predictor_pks_at, \
-                            run_minowa_predictor_pks_cal, run_kr_stereochemistry_predictions, \
-                            extract_at_domains
+from .substrates_pks import (
+    count_pks_genes,
+    extract_at_domains,
+    run_minowa_predictor_pks_at,
+    run_minowa_predictor_pks_cal,
+    run_kr_stereochemistry_predictions,
+)
 
 
 def run_pks_substr_spec_predictions(cds_features: List[CDSFeature]) -> Dict[str, Dict[str, Prediction]]:
@@ -27,13 +31,12 @@ def run_pks_substr_spec_predictions(cds_features: List[CDSFeature]) -> Dict[str,
                     AntismashDomain name to Prediction
     """
     at_domains = extract_at_domains(cds_features)
-    counted = count_pks_genes(cds_features)
-    method_results = {}
+    method_results = {}  # type: Dict[str, Dict[str, Prediction]]
     if at_domains:
         signature_results, minowa_at_results = run_minowa_predictor_pks_at(at_domains)
         method_results["signature"] = signature_results
         method_results["minowa_at"] = minowa_at_results
-    if counted:
+    if count_pks_genes(cds_features):
         minowa_cal_results = run_minowa_predictor_pks_cal(cds_features)
         kr_activity, kr_stereo = run_kr_stereochemistry_predictions(cds_features)
         method_results["minowa_cal"] = minowa_cal_results

@@ -10,7 +10,6 @@ from typing import Dict
 
 import antismash.common.path as path
 from antismash.common.secmet import Record
-from antismash.config import ConfigType
 
 
 def gen_smiles_from_pksnrps(compound_pred: str, cluster_number: int) -> str:
@@ -51,7 +50,7 @@ def gen_smiles_from_pksnrps(compound_pred: str, cluster_number: int) -> str:
 
 
 def generate_chemical_structure_preds(compound_predictions: Dict[int, str],
-                                      record: Record, options: ConfigType) -> Dict[int, str]:
+                                      record: Record) -> Dict[int, str]:
     """ Generates the SMILES strings for each cluster """
     smiles = {}
 

@@ -4,7 +4,7 @@
 """ The section of nrps_pks responsible for analysing PKS components """
 
 import logging
-from typing import Dict, List, Tuple
+from typing import cast, Dict, List, Tuple
 
 from helperlibs.wrappers.io import TemporaryDirectory
 
@@ -41,7 +41,8 @@ def extract_at_domains(cds_features: List[CDSFeature]) -> Dict[str, str]:
 
 
 def run_minowa_predictor_pks_at(at_domains: Dict[str, str]
-                                ) -> Tuple[Dict[str, Prediction], Dict[str, Prediction]]:
+                                ) -> Tuple[Dict[str, Prediction],
+                                           Dict[str, Prediction]]:
     """ analyses AT domains with Minowa and signature based detection """
     # Run PKS signature analysis
     logging.info("Predicting PKS AT domain substrate specificities by Yadav et al. PKS signature sequences")
@@ -54,7 +55,7 @@ def run_minowa_predictor_pks_at(at_domains: Dict[str, str]
     return signature_results, minowa_results
 
 
-def run_minowa_predictor_pks_cal(cds_features: List[CDSFeature]) -> Dict[str, minowa_base.MinowaPrediction]:
+def run_minowa_predictor_pks_cal(cds_features: List[CDSFeature]) -> Dict[str, Prediction]:
     """ Predict PKS CAL domain specificities with Minowa et al. method. """
     cal_domains = {}
     logging.info("Predicting CAL domain substrate specificities by Minowa et al. method")
@@ -64,8 +65,8 @@ def run_minowa_predictor_pks_cal(cds_features: List[CDSFeature]) -> Dict[str, mi
                 seq = str(cds.translation)[domain.start:domain.end]
                 cal_domains[domain.feature_name] = seq
     with TemporaryDirectory(change=True):
-        minowa_results = minowa_cal.run_minowa_cal(cal_domains)
-    return minowa_results
+        results = minowa_cal.run_minowa_cal(cal_domains)
+    return results
 
 
 def run_kr_stereochemistry_predictions(cds_features: List[CDSFeature]) -> Tuple[Dict[str, Prediction],

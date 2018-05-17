@@ -47,50 +47,6 @@ class ActiveSiteFinderQualifier:
         return bool(self._hits)
 
 
-class DomainPrediction:
-    def __init__(self, prediction: str, tool: str) -> None:
-        if not isinstance(prediction, str):
-            raise TypeError("prediction must be a string, not %s" % type(prediction))
-        if not isinstance(tool, str):
-            raise TypeError("tool must be a string, not %s" % type(tool))
-        self.prediction = prediction
-        self.tool = tool
-
-    def to_biopython(self) -> str:
-        return "%s: %s" % (self.tool, ",".join(self.prediction))
-
-    @staticmethod
-    def from_biopython(line: str) -> "DomainPrediction":
-        assert line.count(":") == 1, line
-        tool, prediction = line.split(":")
-        return DomainPrediction(prediction, tool)
-
-
-class DomainPredictions:
-    def __init__(self) -> None:
-        self._by_tool = {}  # type: Dict[str, DomainPrediction]
-        self._all = []  # type: List[DomainPrediction]
-
-    def add(self, prediction: DomainPrediction) -> None:
-        if not isinstance(prediction, DomainPrediction):
-            raise TypeError("Only DomainPrediction predictions can be added, not %s" % type(prediction))
-        self._by_tool[prediction.tool] = prediction
-        self._all.append(prediction)
-
-    def get_predictions_by_tool(self, tool: str) -> Optional[DomainPrediction]:
-        return self._by_tool.get(tool, None)
-
-    def to_biopython(self) -> List[str]:
-        return [pred.to_biopython() for pred in self._all]
-
-    @staticmethod
-    def from_biopython(bio: List[str]) -> "DomainPredictions":
-        qual = DomainPredictions()
-        for part in bio:
-            qual.add(DomainPrediction.from_biopython(part))
-        return qual
-
-
 class NRPSPKSQualifier(list):
     """ A qualifier for tracking information about NRPS/PKS domains within a CDS.
 

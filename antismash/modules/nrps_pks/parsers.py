@@ -43,8 +43,7 @@ def calculate_individual_consensus(predictions: List[str]) -> str:
     """ Finds the most frequent prediction in the list of predictions that is
         also in the set of available smiles parts.
 
-        In the case of a tie, the first prediction in the list with the highest
-        score is used.
+        Defaults to 'pk' in the case of no valid predictions or a tie.
 
         Arguments:
             predictions: the list of predictions
@@ -67,6 +66,17 @@ def calculate_individual_consensus(predictions: List[str]) -> str:
 
 
 def generate_nrps_consensus(results: Dict[str, Prediction]) -> str:
+    """ Finds the most frequent prediction in the list of predictions that is
+        also in the set of available smiles parts.
+
+        Defaults to 'nrp' in the case of no valid predictions or a tie.
+
+        Arguments:
+            predictions: the list of predictions
+
+        Returns:
+            the most frequent prediction
+    """
     assert isinstance(results, dict), type(results)
     hit_counts = defaultdict(int)  # type: Dict[str, int]
     for method, prediction in results.items():
