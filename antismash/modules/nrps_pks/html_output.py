@@ -209,7 +209,8 @@ class NrpspksLayer(ClusterLayer):
     @property
     def warning(self) -> str:
         """ A caveat for structure prediction accuracy """
-        # TODO: don't create warning if no structure image provided
+        if not self.monomer:
+            return ""
         core = ("Rough prediction of core scaffold based on assumed %s;"
                 " tailoring reactions not taken into account")
         if self.used_domain_docking:
@@ -237,16 +238,17 @@ class NrpspksLayer(ClusterLayer):
                 if domain.name not in ["AMP-binding", "A-OX"]:
                     continue
                 per_a_domain_predictions = set()
-                for method, possibilities in domain.predictions.items():
+                for possibilities in domain.predictions.values():
                     for possibility in filter_norine_as(possibilities.split(","), be_strict=False):
                         per_a_domain_predictions.add(map_as_name_to_norine(possibility))
                 per_cds_predictions.append(list(per_a_domain_predictions))
 
-            if per_cds_predictions:
-                self.url_strict[feature_name] = get_norine_url_for_specificities(per_cds_predictions)
-                if self.url_strict[feature_name]:
-                    self.url_relaxed[feature_name] = get_norine_url_for_specificities(per_cds_predictions,
-                                                                                 be_strict=False)
+            if not per_cds_predictions:
+                continue
+            self.url_strict[feature_name] = get_norine_url_for_specificities(per_cds_predictions)
+            if self.url_strict[feature_name]:
+                self.url_relaxed[feature_name] = get_norine_url_for_specificities(per_cds_predictions,
+                                                                                  be_strict=False)
 
     def is_nrps(self) -> bool:
         """ is the cluster a NRPS or NRPS hybrid """

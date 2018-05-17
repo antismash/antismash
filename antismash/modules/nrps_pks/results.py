@@ -5,7 +5,7 @@
 
 from collections import defaultdict
 import logging
-from typing import Any, Dict, List, Tuple  # pylint: disable=unused-import
+from typing import Any, Dict, Iterable, Tuple  # pylint: disable=unused-import
 
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record, AntismashDomain
@@ -41,25 +41,36 @@ class NRPS_PKS_Results(ModuleResults):
 
     def __init__(self, record_id: str) -> None:
         super().__init__(record_id)
-        self.domain_predictions = defaultdict(dict)  # type: Dict[str, Dict[str, Prediction]] # domain name -> method -> Prediction
+        # keep a mapping of domain name -> method -> Prediction
+        self.domain_predictions = defaultdict(dict)  # type: Dict[str, Dict[str, Prediction]]
         self.consensus = {}  # type: Dict[str, str]  # domain name -> consensus
         self.cluster_predictions = {}  # type: Dict[int, Tuple[str, bool]]
         self.consensus_transat = {}  # type: Dict[str, str]
         self.smiles_strings = {}  # type: Dict[int, str]  # cluster number -> SMILES
 
     def add_method_results(self, method: str, results: Dict[str, Prediction]) -> None:
+        """ Add per-domain results for a single prediction method
+
+            Arguments:
+                method: the name of the method that generated the results
+                results: a dictionary mapping the domain name to a Prediction subclass
+
+            Returns:
+                None
+        """
         for domain_name, prediction in results.items():
             self.domain_predictions[domain_name][method] = prediction
 
     def to_json(self) -> Dict[str, Any]:
+        domain_predictions = defaultdict(dict)  # type: Dict[str, Dict[str, Any]]
+        for domain, predictions in self.domain_predictions.items():
+            domain_predictions[domain] = {method: val.to_json() for method, val in predictions.items()}
         results = {"schema_version": self._schema_version,
                    "record_id": self.record_id,
-                   "domain_predictions": defaultdict(dict),
+                   "domain_predictions": domain_predictions,
                    "consensus": self.consensus,
                    "cluster_predictions": self.cluster_predictions,
                    "smiles_strings": self.smiles_strings}
-        for domain, predictions in self.domain_predictions.items():
-            results["domain_predictions"][domain] = {method: val.to_json() for method, val in predictions.items()}
         return results
 
     @staticmethod
@@ -72,6 +83,7 @@ class NRPS_PKS_Results(ModuleResults):
         predictions = json.get("domain_predictions", {})
         for domain_name, method_predictions in predictions.items():
             for method, prediction in method_predictions.items():
+                rebuilt = None  # type: Prediction
                 if method == "NRPSPredictor2":
                     rebuilt = PredictorSVMResult.from_json(prediction)
                 elif method.startswith("minowa"):
@@ -80,6 +92,7 @@ class NRPS_PKS_Results(ModuleResults):
                     rebuilt = ATPrediction.from_json(prediction)
                 else:
                     rebuilt = SimplePrediction.from_json(prediction)
+                assert rebuilt is not None
                 results.domain_predictions[domain_name][method] = rebuilt
         results.consensus = json["consensus"]
         for cluster_number, prediction in json["cluster_predictions"].items():
@@ -95,7 +108,7 @@ class NRPS_PKS_Results(ModuleResults):
         predictions = self.domain_predictions[domain.feature_name]
         domain.predictions["consensus"] = generate_nrps_consensus(predictions)
 
-    def _annotate_at_domain(self, domain: NRPSPKSQualifier.Domain, cluster_products: List[str]) -> None:
+    def _annotate_at_domain(self, domain: NRPSPKSQualifier.Domain, cluster_products: Iterable[str]) -> None:
         assert domain.name == "PKS_AT"
         predictions = self.domain_predictions[domain.feature_name]
 

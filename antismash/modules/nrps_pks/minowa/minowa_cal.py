@@ -6,10 +6,10 @@
 from typing import Dict
 
 from antismash.common import path
-from .base import run_minowa, MinowaPrediction
+from .base import run_minowa, Prediction
 
 
-def run_minowa_cal(sequence_info: Dict[str, str]) -> Dict[str, MinowaPrediction]:
+def run_minowa_cal(sequence_info: Dict[str, str]) -> Dict[str, Prediction]:
     """ Predicts CAL domain specificities by Minowa et al. method"""
     return run_minowa(sequence_info=sequence_info,
                       startpos=43,

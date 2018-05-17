@@ -51,6 +51,7 @@ class TestATPositions(unittest.TestCase):
         positions = at_analysis.get_at_positions()
         assert positions[0] == 4
 
+
 class TestATResult(unittest.TestCase):
     def test_bad_inputs(self):
         with self.assertRaises(AssertionError):

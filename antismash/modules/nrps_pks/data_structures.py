@@ -7,8 +7,6 @@ from typing import Any, Dict, List
 
 from jinja2 import Markup
 
-from antismash.common.secmet import qualifiers
-
 
 class Prediction:
     """ The base of all predictions for a domain. Must be provided with the method
@@ -18,13 +16,6 @@ class Prediction:
     """
     def __init__(self, method: str) -> None:
         self.method = method
-
-    def to_domain_prediction_qualifier(self) -> qualifiers.DomainPrediction:
-        """ Creates a DomainPrediction from this Prediction, not intended to be
-            reversible.
-        """
-        raise NotImplementedError("Prediction subclass %s "
-                                  "did not implement to_domain_prediction_qualifier()" % type(self))
 
     def get_classification(self) -> List[str]:
         """ Returns a list of equally likely predictions. If no prediction could
@@ -54,9 +45,6 @@ class SimplePrediction(Prediction):
     def __init__(self, method: str, prediction: str) -> None:
         super().__init__(method)
         self.prediction = prediction
-
-    def to_domain_prediction_qualifier(self) -> qualifiers.DomainPrediction:
-        return qualifiers.DomainPrediction(self.prediction, self.method)
 
     def get_classification(self) -> List[str]:
         return [self.prediction]

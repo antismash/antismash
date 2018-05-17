@@ -1,18 +1,20 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
-import logging
+""" Provides a collection of functions and classes to run the external Java program
+    NRPSPredictor2 and interpret the results
+"""
+
+
 import os
 import sys
-import tempfile
 from typing import Any, Dict, List
 
 from helperlibs.wrappers.io import TemporaryDirectory
 from jinja2 import Markup
 
-from antismash.common import fasta, path, subprocessing
+from antismash.common import path, subprocessing
 from antismash.common.secmet import AntismashDomain
-from antismash.common.secmet.qualifiers import DomainPrediction
 from antismash.config import ConfigType
 
 from .data_structures import Prediction
@@ -27,8 +29,10 @@ START_POSITION = 66
 
 
 class PredictorSVMResult(Prediction):
+    """ Holds all the relevant results from NRPSPredictor2 for a domain """
     def __init__(self, angstrom_code: str, physicochemical_class: str, large_cluster_pred: List[str],
                  small_cluster_pred: List[str], single_amino_pred: str, stachelhaus_code: str, uncertain: bool) -> None:
+        super().__init__("NRPSPredictor2")
         self.angstrom_code = str(angstrom_code)
         self.physicochemical_class = str(physicochemical_class)
         self.large_cluster_pred = list(large_cluster_pred)
@@ -40,7 +44,7 @@ class PredictorSVMResult(Prediction):
         self.uncertain = bool(uncertain)
 
     def get_classification(self) -> List[str]:
-        classification = []
+        classification = []  # type: List[str]
         if self.uncertain:
             return classification
         for prediction in [self.single_amino_pred, self.small_cluster_pred,  # TODO: include stach code?
@@ -79,9 +83,6 @@ class PredictorSVMResult(Prediction):
                             self.stachelhaus_code))
         return Markup(raw)
 
-    def to_domain_prediction_qualifier(self) -> DomainPrediction:
-        return DomainPrediction(",".join(self.get_classification()), "NRPSPredictor2")
-
     @classmethod
     def from_line(cls, line: str) -> "PredictorSVMResult":
         """ Generates a PredictorSVMResult from a line of NRPSPredictor2 output """
@@ -119,6 +120,15 @@ class PredictorSVMResult(Prediction):
 
 
 def read_positions(filename: str, start_position: int) -> List[int]:
+    """ Loads positions from a tab-separated file. Positions are relative to the start_position.
+
+        Arguments:
+            filename: the path to the file containing the positions
+            start_position: a relative start position to adjust all positions by
+
+        Returns:
+            a list of ints, one for each position found in the file
+    """
     data = open(filename, "r")
     text = data.read().strip()
     results = []
@@ -129,6 +139,16 @@ def read_positions(filename: str, start_position: int) -> List[int]:
 
 
 def build_position_list(positions: List[int], reference_seq: str) -> List[int]:
+    """ Adjusts a list of positions to account for gaps in the reference sequence
+
+        Arguments:
+            positions: a list of ints that represent positions of interest in
+                       the reference sequence
+            reference_seq: the (aligned) reference sequence
+
+        Returns:
+            a new list of positions, each >= the original position
+    """
     poslist = []
     position = 0
     for i, ref in enumerate(reference_seq):
@@ -140,51 +160,35 @@ def build_position_list(positions: List[int], reference_seq: str) -> List[int]:
 
 
 def verify_good_sequence(sequence: str) -> bool:
+    """ Ensures a sequence is valid """
     for char in ILLEGAL_CHARS:
         if char in sequence:
             return False
     return True
 
 
-def extract(query_seq: str, poslist: List[int]) -> str:
+def extract(sequence: str, positions: List[int]) -> str:
+    """ Extracts a signature from an aligned sequence based on the provided
+        positions. Accounts for gaps by looking behind or, if behind is already
+        in the position list, ahead.
+
+        Arguments:
+            sequence: the aligned sequence to extract a signature from
+            positions: the list of positions within the sequence to use
+
+        Returns:
+            the extracted signature as a string
+    """
     seq = []
-    for position in poslist:
-        aa = query_seq[position]
+    for position in positions:
+        aa = sequence[position]
         if aa == "-":
-            if position - 1 not in poslist:
-                aa = query_seq[position - 1]
-            elif position + 1 not in poslist:
-                aa = query_seq[position + 1]
+            if position - 1 not in positions:
+                aa = sequence[position - 1]
+            elif position + 1 not in positions:
+                aa = sequence[position + 1]
         seq.append(aa)
     return "".join(seq)
-
-
-def run_muscle(domain: AntismashDomain) -> Dict[str, str]:
-    """ run muscle over the query and known A domains """
-    # using mkstemp() here because NamedTemporaryFiles cause muscle
-    # to think the file is infinite and use > 20Gb of RAM per invocation
-    in_fd, in_filename = tempfile.mkstemp(prefix="antismash_musc")
-    in_handle = os.fdopen(in_fd, "w")
-    in_handle.write(">{}\n{}\n".format(domain.get_name(), domain.translation))
-    in_handle.close()
-    out_fd, out_filename = tempfile.mkstemp(prefix="antismash_musc")
-    os.close(out_fd)
-    try:
-        res = subprocessing.execute(["muscle", "-profile", "-quiet",
-                                     "-in1", ADOMAINS_FILENAME,
-                                     "-in2", in_filename,
-                                     "-out", out_filename])
-        if not res.successful():
-            logging.error(res.stderr)
-            raise RuntimeError("Error while running muscle: %s" % res.stderr)
-    except:
-        raise
-    else:
-        results = fasta.read_fasta(out_filename)
-    finally:
-        os.unlink(in_filename)
-        os.unlink(out_filename)
-    return results
 
 
 def get_34_aa_signature(domain: AntismashDomain) -> str:
@@ -192,7 +196,7 @@ def get_34_aa_signature(domain: AntismashDomain) -> str:
     assert " " not in domain.get_name()
     assert verify_good_sequence(domain.translation)
     # Run muscle and collect sequence positions from file
-    alignments = run_muscle(domain)
+    alignments = subprocessing.run_muscle_single(domain.get_name(), domain.translation, ADOMAINS_FILENAME)
 
     domain_alignment = alignments[domain.get_name()]
     reference_alignment = alignments[REF_SEQUENCE]
@@ -213,7 +217,31 @@ def get_34_aa_signature(domain: AntismashDomain) -> str:
     return extract(domain_alignment, poslist)
 
 
-def run_nrpspredictor(a_domains: List[AntismashDomain], options: ConfigType) -> Dict[str, PredictorSVMResult]:
+def read_output(lines: List[str]) -> Dict[str, Prediction]:
+    """ Converts NRPSPredictor2 output lines to Predictions
+
+        Arguments:
+            lines: a list of result lines (without the header) from NRPSPredictor2
+
+        Returns:
+            a dictionary mapping each domain name to a PredictorSVMResult
+    """
+    results = {}  # type: Dict[str, Prediction]
+    for line in lines:
+        results[line.split('\t')[0]] = PredictorSVMResult.from_line(line)
+    return results
+
+
+def run_nrpspredictor(a_domains: List[AntismashDomain], options: ConfigType) -> Dict[str, Prediction]:
+    """ Runs NRPSPredictor2 over the provided A domains.
+
+        Arguments:
+            a_domains: a list of AntismashDomains, one for each A domain
+            options: antismash options
+
+        Returns:
+            a dictionary mapping each domain name to a PredictorSVMResult
+    """
     # NRPSPredictor: extract AMP-binding + 120 residues N-terminal of this domain,
     # extract 8 Angstrom residues and insert this into NRPSPredictor
     nrps_predictor_dir = path.get_full_path(__file__, "external", "NRPSPredictor2")
@@ -252,10 +280,6 @@ def run_nrpspredictor(a_domains: List[AntismashDomain], options: ConfigType) -> 
             raise RuntimeError("NRPSPredictor2 failed: %s" % result.stderr)
 
         with open(output_filename) as handle:
-            lines = handle.read().splitlines()[1:]
+            lines = handle.read().splitlines()[1:]  # strip the header
 
-    results = {}
-    for domain, line in zip(a_domains, lines):
-        assert line.startswith(domain.get_name())
-        results[domain.get_name()] = PredictorSVMResult.from_line(line)
-    return results
+    return read_output(lines)

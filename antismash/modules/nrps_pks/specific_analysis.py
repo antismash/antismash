@@ -25,7 +25,7 @@ def generate_structure_images(record: Record, results: NRPS_PKS_Results, options
         cluster features
     """
     compound_predictions = {key: val[0] for key, val in results.cluster_predictions.items()}
-    return generate_chemical_structure_preds(compound_predictions, record, options)
+    return generate_chemical_structure_preds(compound_predictions, record)
 
 
 def get_a_domains_from_cds_features(record: Record, cds_features: List[CDSFeature]) -> List[AntismashDomain]:
@@ -43,7 +43,9 @@ def get_a_domains_from_cds_features(record: Record, cds_features: List[CDSFeatur
     for cds in cds_features:
         for domain in cds.nrps_pks.domains:
             if domain.name in ["AMP-binding", "A-OX"]:
-                a_domains.append(record.get_domain_by_name(domain.feature_name))
+                as_domain = record.get_domain_by_name(domain.feature_name)
+                assert isinstance(as_domain, AntismashDomain), type(as_domain)
+                a_domains.append(as_domain)
     return a_domains
 
 

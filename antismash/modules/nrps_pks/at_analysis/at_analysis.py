@@ -47,12 +47,13 @@ class ATResult:
 
 
 class ATPrediction(Prediction):
+    """ Holds the signature-based predictions for a domain"""
     def __init__(self, predictions: List[ATResult]) -> None:
         super().__init__("ATSignature")
         self.predictions = predictions
 
     def get_classification(self) -> List[str]:
-        results = []
+        results = []  # type: List[str]
         if not self.predictions:
             return results
         best_score = self.predictions[0].score
@@ -68,7 +69,7 @@ class ATPrediction(Prediction):
             pred = self.get_classification()[0]
         return Markup("%s: %s" % (self.method, pred))
 
-    def to_json(self):
+    def to_json(self) -> Dict[str, Any]:
         return {"method": "ATSignature",
                 "predictions": [pred.to_json() for pred in self.predictions]}
 
@@ -89,7 +90,7 @@ def get_at_positions(startpos: int = 7) -> List[int]:
 
 
 def score_signatures(query_signatures: Dict[str, str],
-                     reference_signatures: Dict[str, str]) -> Dict[str, ATPrediction]:
+                     reference_signatures: Dict[str, str]) -> Dict[str, Prediction]:
     """ Scores PKS signature by comparing against database of signatures.
 
         The score is calculated as a percentage of pairwise matches for the
@@ -102,7 +103,7 @@ def score_signatures(query_signatures: Dict[str, str],
         Returns:
             a dictionary mapping query name to an ATPrediction
     """
-    results = {}
+    results = {}  # type: Dict[str, Prediction]
     for key, query_sig_seq in sorted(query_signatures.items()):
         scores = []
         for sig_name, sig_seq in reference_signatures.items():
@@ -119,7 +120,7 @@ def score_signatures(query_signatures: Dict[str, str],
     return results
 
 
-def run_at_domain_analysis(domains: Dict[str, str]) -> Dict[str, ATPrediction]:
+def run_at_domain_analysis(domains: Dict[str, str]) -> Dict[str, Prediction]:
     """ Analyses PKS signature of AT domains
 
         Arguments:
