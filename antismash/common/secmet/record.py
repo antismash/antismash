@@ -475,8 +475,13 @@ class Record:
         if not seq:
             # go past stop codons and hope for something to work with
             seq = extracted.translate(table=transl_table)
-        if "*" in str(seq):
-            seq = Seq(str(seq).replace("*", "X"), Bio.Alphabet.generic_protein)
+
+        # replace ambiguous proteins with an explicit unknown
+        string_version = str(seq)
+        for invalid in "*BJOUZ":
+            string_version = string_version.replace(invalid, "X")
+        seq = Seq(string_version, Bio.Alphabet.generic_protein)
+
         if "-" in str(seq):
             seq = Seq(str(seq).replace("-", ""), Bio.Alphabet.generic_protein)
         return seq
