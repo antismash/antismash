@@ -68,3 +68,10 @@ class TestATResult(unittest.TestCase):
         assert result.score == 0.9
         assert result.name == "a"
         assert result.signature == "b"
+
+    def test_json(self):
+        result = at_analysis.ATResult("a", "b", 0.9)
+        regenned = at_analysis.ATResult.from_json(result.to_json())
+        assert result.score == regenned.score
+        assert result.name == regenned.name
+        assert result.signature == regenned.signature
