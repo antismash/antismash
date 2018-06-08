@@ -26,9 +26,7 @@ class TestActivity(unittest.TestCase):
         chunks = "".join(valid_chars)
         for i in range(len(chunks) - 3):
             sig = chunks[i:i+4]
-            if sig in good:
-                sig.reverse()
-            assert not kr_analysis.is_active(sig)
+            assert sig in good or not kr_analysis.is_active(sig)
 
 
 class TestStereochemistry(unittest.TestCase):
