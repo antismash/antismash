@@ -14,14 +14,6 @@ from .helpers import DummyRecord
 
 
 class TestOrfCounts(unittest.TestCase):
-    def reverse_starts_and_stops(self, seq):
-        # replace for reverse direction testing
-        for start, comp in [('ATG', 'TCA'), ('GTG', 'CAC'), ('TTG', 'AAC')]:
-            seq = seq.replace(start, comp)
-        for stop, comp in [('TAA', 'ATT'), ('TAG', 'ATC'), ('TGA', 'ACT')]:
-            seq = seq.replace(stop, comp)
-        return seq
-
     def run_both_dirs(self, expected, seq):
         def reverse_location(location, length):
             return location._flip(length)
