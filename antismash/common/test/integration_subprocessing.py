@@ -31,6 +31,15 @@ class TestParallelPython(unittest.TestCase):
     def tearDown(self):
         destroy_config()
 
+    def test_dummy(self):
+        # checks that the dummy function actually works as expected
+        assert dummy() == os.getpid()
+        assert dummy(0) == os.getpid()
+        with self.assertRaisesRegex(ValueError, "Lucky number"):
+            dummy(1)
+        for i in range(2, 10):
+            assert dummy(i) == os.getpid()
+
     def test_actually_parallel(self):
         results = subprocessing.parallel_function(dummy, [[0]]*2)
         assert len(set(results)) == self.config_cpus
@@ -67,9 +76,12 @@ class TestParallelPython(unittest.TestCase):
             subprocessing.parallel_function(dummy, [[i] for i in range(5)])
 
     def test_local_funcs(self):
+        # this test is mostly to let us know if something changes in pool/pickle
         def local(value):
             return value + 1
-        # this test is mostly to let us know if something changes in pool/pickle
+        # ensure the function works as expected when called directly
+        assert local(1) == 2
+        # check if it still fails within a parallel pool
         with self.assertRaisesRegex(AttributeError, "Can't pickle local object"):
             subprocessing.parallel_function(local, [[i] for i in range(3)])
 
