@@ -108,9 +108,7 @@ class TestOrdering(unittest.TestCase):
         genes = {name: DummyCDS(locus_tag=name) for name in orders[0]}
         gene_orders = [[genes[k] for k in order] for order in orders]
         res = orderfinder.rank_biosynthetic_orders(n_terms, c_terms, gene_orders)
-        if isinstance(orders[0], str):
-            return "".join(gene.locus_tag for gene in res)
-        return [gene.get_name() for gene in res]
+        return "".join(gene.locus_tag for gene in res)
 
     def test_permutations_no_start_no_end(self):
         perms = self.run_ordering_simple("", "")
