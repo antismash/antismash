@@ -31,7 +31,7 @@ class Base(unittest.TestCase):
         """ override with the args you'll need to use in setUp(),
             format is as on the commandline, e.g. ["--tta", "--minimal"]
         """
-        self.fail()  # not overridden
+        raise NotImplementedError("get_args not overridden")
 
     def tearDown(self):
         destroy_config()
