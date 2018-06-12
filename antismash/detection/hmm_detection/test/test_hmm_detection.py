@@ -19,25 +19,6 @@ import antismash.detection.hmm_detection as core
 from antismash.detection.hmm_detection import signatures
 
 
-def create_rule(name, cutoff, extent, conditions):
-    text = "RULE {} CUTOFF {} EXTENT {} CONDITIONS {}".format(name, cutoff,
-                                                              extent, conditions)
-    return rule_parser.Parser(text, set()).rules[0]
-
-
-class TestArgs(unittest.TestCase):
-    def setUp(self):
-        self.parser = args.build_parser(modules=[core])
-
-    def tearDown(self):
-        destroy_config()
-
-    def build_options(self, options):
-        destroy_config()
-        options = self.parser.parse_args(options)
-        return update_config(options)
-
-
 class HmmDetectionTest(unittest.TestCase):
     def setUp(self):
         self.rules_file = path.get_full_path(__file__, "..", "cluster_rules.txt")
