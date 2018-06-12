@@ -51,9 +51,7 @@ class DetectionTest(unittest.TestCase):
         cds_with_hits = sorted(self.results_by_id,
                                key=lambda gene_id: self.feature_by_id[gene_id].location.start)
         for cds in cds_with_hits:
-            detected_type = detected_types.get(cds)
-            if detected_type:
-                continue
+            assert cds not in detected_types
             rule_results = []
             for rule in rules:
                 rule_results.append(rule.detect(cds, self.feature_by_id, self.results_by_id))
