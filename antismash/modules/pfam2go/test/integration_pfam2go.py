@@ -8,6 +8,7 @@ import unittest
 
 import antismash
 from antismash.common import record_processing
+from antismash.common.secmet import PFAMDomain, FeatureLocation
 from antismash.common.test import helpers
 from antismash.config import build_config, destroy_config
 from antismash.modules import pfam2go
@@ -21,14 +22,32 @@ class PfamToGoTest(unittest.TestCase):
     def tearDown(self):
         destroy_config()
 
-    def check_add_to_record(self, input_file, results):
-        record = record_processing.parse_input_sequence(input_file)[0]
-        results.add_to_record(record)
-        for domain in record.get_pfam_domains():
-            if domain.gene_ontologies:
-                assert sorted(domain.gene_ontologies.ids) == sorted(results.get_all_gos())
+    def test_add_to_record(self):
+        nisin = helpers.get_path_to_nisin_genbank()
+        record = record_processing.parse_input_sequence(nisin)[0]
+        assert len(record.get_pfam_domains()) == 0
 
-        # test it's been added to the record correctly
+        # add a test PFAM
+        pfam = PFAMDomain(FeatureLocation(2, 5), description="test",
+                          protein_start=5, protein_end=10,
+                          domain="PF00005")
+        pfam.domain_id = "test"
+        pfam.db_xref = ["PF00005"]
+        record.add_pfam_domain(pfam)
+        assert len(record.get_pfam_domains()) == 1
+
+        # run pfam2go and add the results
+        results = pfam2go.run_on_record(record, None, self.options)
+        assert pfam in results.pfam_domains_with_gos
+
+        assert not pfam.gene_ontologies
+        results.add_to_record(record)
+        assert pfam.gene_ontologies
+
+        # check the contents of the annotation
+        for domain in record.get_pfam_domains():
+            assert domain.gene_ontologies
+            assert sorted(domain.gene_ontologies.ids) == sorted(results.get_all_gos(domain))
 
     def test_reuse(self):
         nisin = helpers.get_path_to_nisin_genbank()
@@ -56,5 +75,3 @@ class PfamToGoTest(unittest.TestCase):
                         assert go_id in expected_pfams_and_gos_with_descs[ontologies.pfam]
         # make sure all expected pfams have been found
         assert len(expected_pfams_found) == len(expected_pfams_and_gos_with_descs)
-
-        self.check_add_to_record(nisin, results)
