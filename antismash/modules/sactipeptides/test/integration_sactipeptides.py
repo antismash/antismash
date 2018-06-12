@@ -22,16 +22,6 @@ class IntegrationSactipeptides(unittest.TestCase):
     def tearDown(self):
         destroy_config()
 
-    def set_fimo_enabled(self, val):
-        update_config({"without_fimo": not val})
-
-    def gather_all_motifs(self, result):
-        motifs = []
-        for locii in result.clusters.values():
-            for locus in locii:
-                motifs.extend(result.motifs_by_locus[locus])
-        return motifs
-
     def run_analyis(self, filename):
         data_file = path.get_full_path(__file__, "data", filename)
         return helpers.run_and_regenerate_results_for_module(data_file, sactipeptides, self.options)
