@@ -219,9 +219,3 @@ class PfamToGoTest(unittest.TestCase):
             from_broken_json = pfam2go.Pfam2GoResults.from_json(broken_json, fake_record)
             assert "Schema version mismatch, discarding Pfam2GO results" in str(log_cm.output)
             assert not from_broken_json
-
-
-
-
-if __name__ == '__main__':
-    unittest.main()
