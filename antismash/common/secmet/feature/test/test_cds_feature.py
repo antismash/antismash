@@ -20,6 +20,15 @@ class TestCDSFeature(unittest.TestCase):
         assert CDSFeature(FeatureLocation(1, 5, 1), protein_id="foo")
         assert CDSFeature(FeatureLocation(1, 5, 1), gene="foo")
 
+    def test_bad_strand(self):
+        with self.assertRaisesRegex(ValueError, "Strand must be"):
+            CDSFeature(FeatureLocation(1, 5, 0), locus_tag="test")
+
+    def test_invalid_qualifier(self):
+        cds = CDSFeature(FeatureLocation(1, 5, 1), locus_tag="test")
+        for bad in ["bad", ["stuff"], {}, 1]:
+            with self.assertRaisesRegex(TypeError, "can only be set to an instance of SecMetQualifier"):
+                cds.sec_met = bad
 
 class TestCDSProteinLocation(unittest.TestCase):
     def setUp(self):

@@ -27,8 +27,6 @@ class AntismashDomain(Domain):
             mine["domain_subtype"] = [self.domain_subtype]
         if self.specificity:
             mine["specificity"] = self.specificity
-        if self.asf:
-            mine["ASF"] = self.asf.to_biopython()
         if qualifiers:
             mine.update(qualifiers)
         return super().to_biopython(mine)
