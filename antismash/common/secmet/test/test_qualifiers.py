@@ -7,7 +7,7 @@
 import unittest
 
 from antismash.common.hmmscan_refinement import HMMResult
-from antismash.common.secmet.feature import CDSFeature, FeatureLocation
+from antismash.common.secmet.features import CDSFeature, FeatureLocation
 from antismash.common.secmet.qualifiers import NRPSPKSQualifier, GOQualifier, GeneFunction
 
 

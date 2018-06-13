@@ -9,7 +9,7 @@ from typing import Any, Dict, Iterable, List, Optional
 
 from antismash.common import fasta, module_results, pfamdb, serialiser, subprocessing
 from antismash.common.secmet import Record, CDSFeature
-from antismash.common.secmet.feature import PFAMDomain
+from antismash.common.secmet.features import PFAMDomain
 
 
 class HmmerResults(module_results.ModuleResults):

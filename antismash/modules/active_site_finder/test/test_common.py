@@ -11,7 +11,7 @@ from minimock import mock, restore
 
 from antismash.common import subprocessing  # mocked, pylint: disable=unused-import
 from antismash.common import fasta, path
-from antismash.common.secmet.feature import AntismashDomain, PFAMDomain, FeatureLocation
+from antismash.common.secmet.features import AntismashDomain, PFAMDomain, FeatureLocation
 from antismash.modules.active_site_finder.common import ActiveSiteAnalysis, Alignment, get_signature
 
 

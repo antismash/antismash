@@ -14,7 +14,7 @@ from Bio.Seq import Seq
 from Bio.SeqFeature import FeatureLocation
 
 from antismash.common import path
-from antismash.common.secmet.feature import PFAMDomain
+from antismash.common.secmet.features import PFAMDomain
 from antismash.common.secmet.record import Record
 from antismash.common.test.helpers import DummyRecord
 from antismash.modules.pfam2go import pfam2go

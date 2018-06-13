@@ -11,9 +11,9 @@ from antismash.common import fasta, path, secmet, subprocessing, utils
 
 class Alignment:
     """ An analog for a hmmer HSP. """
-    def __init__(self, domain: secmet.feature.Domain, query: str,
+    def __init__(self, domain: secmet.features.Domain, query: str,
                  profile: str, hit_start: int, hit_end: int) -> None:
-        assert isinstance(domain, secmet.feature.Domain)
+        assert isinstance(domain, secmet.features.Domain)
         self.domain = domain
         self.query = str(query)
         self.profile = str(profile)
@@ -45,7 +45,7 @@ class Alignment:
 
 class ActiveSiteAnalysis:
     """ A generic analysis framework. """
-    def __init__(self, target_domain: str, candidates: Tuple[secmet.feature.Domain, ...],
+    def __init__(self, target_domain: str, candidates: Tuple[secmet.features.Domain, ...],
                  database: str, positions: List[int],
                  expected_values: List[str], emissions: Optional[List[float]] = None) -> None:
         self.target_domain = str(target_domain)
@@ -62,9 +62,9 @@ class ActiveSiteAnalysis:
             if len(self.emissions) != len(positions):
                 raise ValueError("Number of emissions must match number of positions")
 
-        self.domains_of_interest = []  # type: List[secmet.feature.Domain]
+        self.domains_of_interest = []  # type: List[secmet.features.Domain]
         for candidate in candidates:
-            if not isinstance(candidate, secmet.feature.Domain):
+            if not isinstance(candidate, secmet.features.Domain):
                 raise TypeError("Candidates must be Domains, not %s" % type(candidate))
             if candidate.domain == self.target_domain:
                 self.domains_of_interest.append(candidate)

@@ -10,7 +10,7 @@ from Bio.Alphabet import generic_dna
 from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation
 from antismash.common.secmet.record import Record
-from antismash.common.secmet.feature import Cluster
+from antismash.common.secmet.features import Cluster
 from antismash.common.test.helpers import DummyCDS, get_simple_options
 from antismash.modules import tta
 

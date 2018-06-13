@@ -14,7 +14,7 @@ import numpy as np
 
 from antismash.common import path
 from antismash.common.secmet import Record
-from antismash.common.secmet.feature import FeatureLocation
+from antismash.common.secmet.features import FeatureLocation
 from antismash.config import ConfigType
 
 

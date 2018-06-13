@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional
 
 from antismash.common import path
 from antismash.common.module_results import ModuleResults
-from antismash.common.secmet.feature import PFAMDomain
+from antismash.common.secmet.features import PFAMDomain
 from antismash.common.secmet.qualifiers import GOQualifier
 from antismash.common.secmet.record import Record
 

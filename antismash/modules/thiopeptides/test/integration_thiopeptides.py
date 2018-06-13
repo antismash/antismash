@@ -111,7 +111,7 @@ class TestIntegration(unittest.TestCase):
         prepeptides = rec.get_cds_motifs()
         prepeptide = None
         for feature in prepeptides:
-            if isinstance(feature, secmet.feature.Prepeptide):
+            if isinstance(feature, secmet.features.Prepeptide):
                 prepeptide = feature
                 break
         # and the motif that was added is exactly the one in results

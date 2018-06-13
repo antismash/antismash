@@ -9,7 +9,7 @@ import unittest
 from Bio.Seq import Seq
 
 from antismash.common.secmet import CDSFeature, FeatureLocation, Record
-from antismash.common.secmet.feature.cluster import Cluster
+from antismash.common.secmet.features.cluster import Cluster
 
 
 class TestCluster(unittest.TestCase):

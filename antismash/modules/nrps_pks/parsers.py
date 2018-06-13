@@ -10,7 +10,7 @@ import logging
 import string
 from typing import Dict, List, Tuple
 
-from antismash.common.secmet.feature import CDSFeature
+from antismash.common.secmet.features import CDSFeature
 
 from .data_structures import Prediction
 

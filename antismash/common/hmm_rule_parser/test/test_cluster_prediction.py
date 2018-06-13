@@ -7,7 +7,7 @@
 import unittest
 
 from antismash.common.hmm_rule_parser import cluster_prediction, rule_parser
-from antismash.common.secmet.feature import ClusterBorder, FeatureLocation
+from antismash.common.secmet.features import ClusterBorder, FeatureLocation
 
 
 class DummyConditions(rule_parser.Conditions):

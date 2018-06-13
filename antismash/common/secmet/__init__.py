@@ -9,7 +9,7 @@
 """
 
 from .record import Record
-from .feature import (
+from .features import (
     AntismashDomain,
     CDSFeature,
     CDSMotif,

@@ -6,7 +6,7 @@
 
 import unittest
 
-from antismash.common.secmet.feature import PFAMDomain, FeatureLocation
+from antismash.common.secmet.features import PFAMDomain, FeatureLocation
 from antismash.common.secmet.qualifiers import GOQualifier
 
 

@@ -8,7 +8,7 @@
 from typing import Any, Dict, List
 
 from .secmet import Record
-from .secmet.feature import ClusterBorder
+from .secmet.features import ClusterBorder
 
 
 class ModuleResults:

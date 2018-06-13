@@ -8,8 +8,8 @@ import unittest
 
 from Bio.Seq import Seq
 
-from antismash.common.secmet.feature import FeatureLocation, CDSFeature
-from antismash.common.secmet.feature.feature import CompoundLocation
+from antismash.common.secmet.features import FeatureLocation, CDSFeature
+from antismash.common.secmet.features.feature import CompoundLocation
 
 
 class TestCDSFeature(unittest.TestCase):

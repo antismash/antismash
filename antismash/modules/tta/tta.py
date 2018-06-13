@@ -12,7 +12,7 @@ import logging
 from typing import Any, Dict, List, Tuple  # used in comment type hints #pylint: disable=unused-import
 
 from antismash.common.secmet import Record
-from antismash.common.secmet.feature import Feature, FeatureLocation
+from antismash.common.secmet.features import Feature, FeatureLocation
 from antismash.common.module_results import ModuleResults
 from antismash.config import ConfigType
 

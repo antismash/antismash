@@ -8,7 +8,7 @@ import unittest
 
 from Bio.Seq import Seq
 
-from antismash.common.secmet.feature import CDSFeature, PFAMDomain, ClusterBorder, FeatureLocation
+from antismash.common.secmet.features import CDSFeature, PFAMDomain, ClusterBorder, FeatureLocation
 from antismash.common.test.helpers import DummyRecord
 from antismash.config import build_config, update_config, destroy_config
 from antismash.detection import clusterfinder
