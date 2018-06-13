@@ -41,6 +41,8 @@ class Domain(AntismashFeature):
             mine["aSTool"] = [self.tool]
         if self.domain:
             mine["aSDomain"] = [self.domain]
+        if self._asf:
+            mine["ASF"] = self.asf.to_biopython()
         if qualifiers:
             mine.update(qualifiers)
         return super().to_biopython(mine)
@@ -58,6 +60,8 @@ class Domain(AntismashFeature):
         # grab optional qualifiers
         feature.tool = leftovers.pop("aSTool", [None])[0]
         feature.domain = leftovers.pop("aSDomain", [None])[0]
+        for asf_label in leftovers.pop("ASF", []):
+            feature._asf.add(asf_label)
 
         # grab parent optional qualifiers
         updated = super(Domain, feature).from_biopython(bio_feature, feature=feature, leftovers=leftovers)
