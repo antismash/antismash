@@ -35,6 +35,8 @@ class Record:
                  "_genes", "_transl_table", "_domains_by_name", "_pfams_by_cds_name"]
 
     def __init__(self, seq: str = "", transl_table: int = 1, **kwargs: Any) -> None:
+        # prevent paths from being used as a sequence
+        assert not set("./\\").issubset(set(seq)), "Invalid sequence provided"
         self._record = SeqRecord(seq, **kwargs)
         self.record_index = None  # type: Optional[int]
         self.original_id = None
