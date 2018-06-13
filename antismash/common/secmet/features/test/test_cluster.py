@@ -4,9 +4,12 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
+from tempfile import NamedTemporaryFile
 import unittest
 
+from Bio.Alphabet import generic_dna
 from Bio.Seq import Seq
+from helperlibs.bio import seqio
 
 from antismash.common.secmet import CDSFeature, FeatureLocation, Record
 from antismash.common.secmet.features.cluster import Cluster
@@ -102,3 +105,35 @@ class TestCluster(unittest.TestCase):
             self.cluster.add_product(None)
         with self.assertRaises(AssertionError):
             self.cluster.add_product(["C"])
+
+
+class TestConversion(unittest.TestCase):
+    def test_core(self):
+        cluster = Cluster(FeatureLocation(3, 71, strand=1),
+                          cutoff=17, extent=5, products=['a', 'c'])
+
+        bio = cluster.to_biopython()
+        assert len(bio) == 1
+        new = Cluster.from_biopython(bio[0])
+        assert new is not cluster
+        assert new.cutoff == cluster.cutoff == 17
+        assert new.extent == cluster.extent == 5
+        assert new.products == cluster.products == ('a', 'c')
+        assert new.location.start == cluster.location.start == 3
+
+    def test_genbank(self):
+        dummy_record = Record(Seq("A"*100, generic_dna))
+        cluster = Cluster(FeatureLocation(3, 71, strand=1),
+                          cutoff=17, extent=5, products=['a', 'c'])
+        dummy_record.add_cluster(cluster)
+        with NamedTemporaryFile(suffix=".gbk") as output:
+            cluster.write_to_genbank(output.name)
+            bio = list(seqio.parse(output.name))
+        assert len(bio) == 1
+        rec = Record.from_biopython(bio[0], taxon="bacteria")
+        assert len(rec.get_clusters()) == 1
+        new = rec.get_cluster(0)
+        assert new.cutoff == cluster.cutoff
+        assert new.products == cluster.products
+        assert new.location.start == 0
+        assert new.location.end == cluster.location.end - cluster.location.start
