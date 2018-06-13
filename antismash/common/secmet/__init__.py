@@ -9,5 +9,16 @@
 """
 
 from .record import Record
-from .feature import CDSMotif, PFAMDomain, AntismashDomain, Cluster, \
-                     CDSFeature, Feature, Prepeptide, GeneFunction, Gene, ClusterBorder, FeatureLocation
+from .feature import (
+    AntismashDomain,
+    CDSFeature,
+    CDSMotif,
+    Cluster,
+    ClusterBorder,
+    Feature,
+    FeatureLocation,
+    Gene,
+    PFAMDomain,
+    Prepeptide,
+)
+from .qualifiers import GeneFunction

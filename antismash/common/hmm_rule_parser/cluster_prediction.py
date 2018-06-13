@@ -11,8 +11,8 @@ from typing import Any, Dict, List, Set, Tuple
 from Bio.SearchIO._model.hsp import HSP
 
 from antismash.common import fasta, path, serialiser
-from antismash.common.secmet import Record, ClusterBorder, CDSFeature
-from antismash.common.secmet.feature import SecMetQualifier, GeneFunction, FeatureLocation
+from antismash.common.secmet import Record, ClusterBorder, CDSFeature, FeatureLocation
+from antismash.common.secmet.qualifiers import GeneFunction, SecMetQualifier
 from antismash.common.subprocessing import run_hmmsearch
 from antismash.common.hmm_rule_parser import rule_parser
 from antismash.common.signature import get_signature_profiles

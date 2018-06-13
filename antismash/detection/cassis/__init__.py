@@ -11,8 +11,7 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 from Bio.SeqFeature import SeqFeature
 
 from antismash.common import path, module_results
-from antismash.common.secmet.feature import ClusterBorder, Feature, FeatureLocation, GeneFunction, Gene
-from antismash.common.secmet.record import Record
+from antismash.common.secmet import ClusterBorder, Feature, FeatureLocation, GeneFunction, Gene, Record
 from antismash.common.serialiser import feature_to_json, feature_from_json
 from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
