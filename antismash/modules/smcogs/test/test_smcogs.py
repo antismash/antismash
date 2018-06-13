@@ -6,7 +6,7 @@
 
 import unittest
 
-from antismash.common.secmet.feature import GeneFunction
+from antismash.common.secmet.qualifiers import GeneFunction
 from antismash.common.test import helpers
 from antismash.common.hmmscan_refinement import HMMResult
 from antismash.modules.smcogs import classify, SMCOGResults

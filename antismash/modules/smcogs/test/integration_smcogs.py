@@ -116,27 +116,27 @@ class TestTreeGeneration(Base):
             assert isinstance(regenerated, smcogs.SMCOGResults), json
             assert regenerated.to_json() == json
 
-        functions = {"nisP": secmet.feature.GeneFunction.ADDITIONAL,
-                     "nisA": secmet.feature.GeneFunction.CORE,
-                     "nisB": secmet.feature.GeneFunction.CORE,
-                     "nisC": secmet.feature.GeneFunction.CORE}
+        functions = {"nisP": secmet.qualifiers.GeneFunction.ADDITIONAL,
+                     "nisA": secmet.qualifiers.GeneFunction.CORE,
+                     "nisB": secmet.qualifiers.GeneFunction.CORE,
+                     "nisC": secmet.qualifiers.GeneFunction.CORE}
 
         for cds in self.record.get_cluster(0).cds_children:
             hit = results.best_hits.get(cds.get_name())
             if hit:
                 assert not cds.notes
-                assert cds.gene_function == functions.get(cds.get_name(), secmet.feature.GeneFunction.OTHER)
+                assert cds.gene_function == functions.get(cds.get_name(), secmet.qualifiers.GeneFunction.OTHER)
         results.add_to_record(self.record)
         for cds in self.record.get_cluster(0).cds_children:
             if cds.sec_met:
                 continue  # no sense checking, because we don't do anything with it
             hit = results.best_hits.get(cds.get_name())
             if not hit:
-                assert cds.gene_function == secmet.feature.GeneFunction.OTHER
+                assert cds.gene_function == secmet.qualifiers.GeneFunction.OTHER
                 continue
             assert cds.get_name() in results.tree_images
             assert len(cds.notes) == 1
-            assert cds.gene_function != secmet.feature.GeneFunction.OTHER
+            assert cds.gene_function != secmet.qualifiers.GeneFunction.OTHER
 
     def test_trees_complete(self):
         with TemporaryDirectory() as output_dir:

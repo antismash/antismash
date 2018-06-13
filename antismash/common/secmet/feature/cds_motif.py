@@ -1,0 +1,44 @@
+# License: GNU Affero General Public License v3 or later
+# A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
+
+""" A class for CDS motif features """
+
+from collections import OrderedDict
+from typing import Dict, List, Optional
+
+from Bio.SeqFeature import SeqFeature
+
+from .domain import Domain
+from .feature import Feature, FeatureLocation
+
+
+class CDSMotif(Domain):
+    """ A base class for features that represent a motif within a CDSFeature """
+    __slots__ = ["motif"]
+
+    def __init__(self, location: FeatureLocation) -> None:
+        super().__init__(location, feature_type="CDS_motif")
+        self.motif = None  # type: Optional[str]
+
+    @staticmethod
+    def from_biopython(bio_feature: SeqFeature, feature: Optional["CDSMotif"] = None,  # type: ignore
+                       leftovers: Optional[Dict[str, List[str]]] = None) -> "CDSMotif":
+        if leftovers is None:
+            leftovers = Feature.make_qualifiers_copy(bio_feature)
+        if not feature:
+            feature = CDSMotif(bio_feature.location)
+
+        if "motif" in leftovers:
+            feature.motif = leftovers.pop("motif")[0]
+        updated = super(CDSMotif, feature).from_biopython(bio_feature, feature, leftovers)
+        assert updated is feature
+        assert isinstance(updated, CDSMotif)
+        return updated
+
+    def to_biopython(self, qualifiers: Dict[str, List] = None) -> List[SeqFeature]:
+        mine = OrderedDict()  # type: Dict[str, List[str]]
+        if self.motif:
+            mine["motif"] = [self.motif]
+        if qualifiers:
+            mine.update(qualifiers)
+        return super().to_biopython(mine)
