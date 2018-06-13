@@ -12,7 +12,7 @@ from antismash.common import module_results, path, subprocessing, utils
 from antismash.common.fasta import get_fasta_from_features
 from antismash.common.hmmscan_refinement import refine_hmmscan_results, HMMResult
 from antismash.common.secmet.record import Record
-from antismash.common.secmet.feature import AntismashDomain, CDSFeature, CDSMotif
+from antismash.common.secmet.features import AntismashDomain, CDSFeature, CDSMotif
 
 
 class CDSResult:

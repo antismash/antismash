@@ -6,7 +6,7 @@
 
 import unittest
 
-from antismash.common.secmet.feature import Gene, FeatureLocation
+from antismash.common.secmet.features import Gene, FeatureLocation
 from antismash.detection.cassis.cluster_prediction import check_cluster_predictions, \
                     ClusterMarker, ClusterPrediction, create_predictions
 from antismash.detection.cassis.islands import Island

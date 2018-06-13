@@ -24,7 +24,7 @@ class ASFResults(module_results.ModuleResults):
     """ Results for active site finder """
     schema_version = 1
 
-    def __init__(self, record_id: str, pairings: List[Tuple[secmet.feature.Domain, List[str]]]) -> None:
+    def __init__(self, record_id: str, pairings: List[Tuple[secmet.features.Domain, List[str]]]) -> None:
         # pairing features will be either AntismashDomain or PFAMDomain
         super().__init__(record_id)
         self.pairings = pairings

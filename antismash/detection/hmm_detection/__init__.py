@@ -18,7 +18,7 @@ from antismash.common.hmm_rule_parser import rule_parser
 from antismash.common.hmm_rule_parser.cluster_prediction import detect_borders_and_signatures, RuleDetectionResults
 from antismash.common.module_results import DetectionResults
 from antismash.common.secmet.record import Record
-from antismash.common.secmet.feature import ClusterBorder
+from antismash.common.secmet.features import ClusterBorder
 from antismash.detection.hmm_detection.signatures import get_signature_profiles
 
 NAME = "hmmdetection"

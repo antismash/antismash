@@ -12,7 +12,7 @@ from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 from antismash.common.test import helpers
 from antismash.common import secmet
-from antismash.common.secmet.feature import Cluster, CDSFeature, Feature, ClusterBorder, PFAMDomain
+from antismash.common.secmet.features import Cluster, CDSFeature, Feature, ClusterBorder, PFAMDomain
 from antismash.common.secmet.qualifiers import GeneFunction, GOQualifier
 from antismash.common.secmet.record import _build_products_from_borders, Record
 

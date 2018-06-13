@@ -81,7 +81,7 @@ class SactiResults(module_results.ModuleResults):
 
 class SactipeptideMotif(secmet.Prepeptide):
     """ A Sactipeptide-specific feature """
-    def __init__(self, location: secmet.feature.FeatureLocation, name: str,
+    def __init__(self, location: secmet.features.FeatureLocation, name: str,
                  score: float, leader: str, core: str) -> None:  # pylint: disable=too-many-arguments
         super().__init__(location, "sactipeptide", core, name, leader=leader, score=score)
 

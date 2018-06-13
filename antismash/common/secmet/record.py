@@ -21,8 +21,18 @@ from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation
 from Bio.SeqRecord import SeqRecord
 
-from .feature import Feature, CDSFeature, CDSMotif, AntismashDomain, Cluster, \
-                     PFAMDomain, ClusterBorder, Prepeptide, Gene, Domain
+from .features import (
+    AntismashDomain,
+    CDSFeature,
+    CDSMotif,
+    Cluster,
+    ClusterBorder,
+    Domain,
+    Feature,
+    Gene,
+    PFAMDomain,
+    Prepeptide,
+)
 
 
 class Record:

@@ -18,7 +18,7 @@ from sklearn.externals import joblib
 
 from antismash.common import all_orfs, module_results, path, serialiser, subprocessing, utils
 from antismash.common.secmet import Record, CDSFeature, Prepeptide, GeneFunction, Cluster
-from antismash.common.secmet.feature import FeatureLocation, SeqFeature
+from antismash.common.secmet.features import FeatureLocation, SeqFeature
 from antismash.config import get_config as get_global_config
 
 from .config import get_config as get_lasso_config

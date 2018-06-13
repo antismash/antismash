@@ -9,7 +9,7 @@ import logging
 from typing import Dict, Iterable, List, Union
 
 from antismash.common.secmet import Record
-from antismash.common.secmet.feature import CDSFeature, Domain
+from antismash.common.secmet.features import CDSFeature, Domain
 
 
 def get_fasta_from_features(features: Union[Iterable[CDSFeature], Iterable[Domain]], numeric_names: bool = False) -> str:

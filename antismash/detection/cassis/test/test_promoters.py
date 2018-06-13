@@ -28,7 +28,7 @@ class TestGetPromoters(unittest.TestCase):
         restore()
 
     def add_gene(self, name, start, end, strand=1):
-        gene = secmet.feature.Gene(FeatureLocation(start, end, strand), locus_tag=name)
+        gene = secmet.features.Gene(FeatureLocation(start, end, strand), locus_tag=name)
         self.record.add_gene(gene)
         return gene
 

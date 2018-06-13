@@ -26,10 +26,10 @@ def parse_hmmpfam_results(filename):
 def rebuild_domains(filename, domain_type):
     full_path = path.get_full_path(__file__, 'data', filename)
     domain_fasta = fasta.read_fasta(full_path)
-    dummy_location = secmet.feature.FeatureLocation(1, 100)
+    dummy_location = secmet.features.FeatureLocation(1, 100)
     domains = []
     for name, translation in domain_fasta.items():
-        domain = secmet.feature.AntismashDomain(dummy_location)
+        domain = secmet.features.AntismashDomain(dummy_location)
         domain.domain = domain_type
         domain.domain_id = domain_type + name
         domain.translation = translation
@@ -64,10 +64,10 @@ class TestAnalyses(unittest.TestCase):
                 self.record.add_antismash_domain(domain)
         # these PFAMs found in BN001301.1 with clusterhmmer, one was excluded
         # to avoid a Biopython SearchIO bug
-        dummy_location = secmet.feature.FeatureLocation(1, 100)
+        dummy_location = secmet.features.FeatureLocation(1, 100)
         domain_fasta = fasta.read_fasta(path.get_full_path(__file__, 'data', "p450.input"))
         for name, translation in domain_fasta.items():
-            pfam_domain = secmet.feature.PFAMDomain(dummy_location, protein_start=5, protein_end=10, description="test")
+            pfam_domain = secmet.features.PFAMDomain(dummy_location, protein_start=5, protein_end=10, description="test")
             pfam_domain.translation = translation
             pfam_domain.domain_id = "PFAM_p450_" + name
             pfam_domain.domain = "p450"

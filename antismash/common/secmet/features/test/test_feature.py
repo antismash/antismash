@@ -8,7 +8,7 @@ import unittest
 
 from antismash.common.test import helpers
 
-from antismash.common.secmet.feature.feature import (
+from antismash.common.secmet.features.feature import (
     _convert_protein_position_to_dna,
     CompoundLocation,
     Feature,
