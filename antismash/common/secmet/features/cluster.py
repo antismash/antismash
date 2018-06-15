@@ -236,6 +236,8 @@ class Cluster(Feature):
         mine["extension"] = [str(self.extent)]
         if self.contig_edge is not None:
             mine["contig_edge"] = [str(self.contig_edge)]
+        if self.smiles_structure is not None:
+            mine["structure"] = [self.smiles_structure]
         assert isinstance(self._products, list), type(self.products)
         mine["product"] = [self.get_product_string()]
         rule_text = ["Detection rule(s) for this cluster type:"]

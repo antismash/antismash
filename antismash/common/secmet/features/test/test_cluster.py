@@ -111,6 +111,9 @@ class TestConversion(unittest.TestCase):
     def test_core(self):
         cluster = Cluster(FeatureLocation(3, 71, strand=1),
                           cutoff=17, extent=5, products=['a', 'c'])
+        cluster.smiles_structure = "NOTSMILES"
+        cluster.detection_rules = ["some rule text", "for products"]
+        cluster.contig_edge = True
 
         bio = cluster.to_biopython()
         assert len(bio) == 1
@@ -120,6 +123,9 @@ class TestConversion(unittest.TestCase):
         assert new.extent == cluster.extent == 5
         assert new.products == cluster.products == ('a', 'c')
         assert new.location.start == cluster.location.start == 3
+        assert new.detection_rules == cluster.detection_rules
+        assert new.contig_edge == cluster.contig_edge
+        assert new.smiles_structure == cluster.smiles_structure
 
     def test_genbank(self):
         dummy_record = Record(Seq("A"*100, generic_dna))
