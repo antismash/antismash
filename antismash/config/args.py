@@ -577,6 +577,11 @@ def debug_options() -> ModuleArgs:
                      action='store_true',
                      default=False,
                      help="Skip input record sanitisation. Use with care.")
+    group.add_option('--skip-zip-file',
+                     dest='skip_zip_file',
+                     action='store_true',
+                     default=False,
+                     help="Do not create a zip of the output")
     return group
 
 
