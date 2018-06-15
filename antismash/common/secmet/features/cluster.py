@@ -172,9 +172,6 @@ class Cluster(Feature):
     def probability(self) -> Optional[float]:
         """ The cluster probability, if relevant. """
         probabilities = {border.probability for border in self.borders}
-        # one border ignores probabilities, then don't use a probability
-        if None in probabilities:
-            return None
         # if all agree on the probability
         if len(probabilities) == 1:
             return list(probabilities)[0]
