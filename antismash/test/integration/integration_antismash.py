@@ -10,8 +10,8 @@ from tempfile import NamedTemporaryFile, TemporaryDirectory
 import unittest
 
 from antismash.main import run_antismash, get_all_modules
-from antismash.config import build_config, get_config, update_config
-from antismash.detection import hmm_detection  # mocked.. pylint: disable=unused-import
+from antismash.common.test.helpers import get_path_to_nisin_genbank
+from antismash.config import build_config, update_config, destroy_config
 
 
 class TestAntismash(unittest.TestCase):
@@ -28,19 +28,27 @@ class TestAntismash(unittest.TestCase):
         self.default_options.output_dir = self.temp_dir.name
 
     def tearDown(self):
-        get_config().__dict__.clear()
+        destroy_config()
         self.temp_dir.cleanup()
 
     def test_nisin_minimal(self):
-        path = os.path.abspath(os.path.join(os.path.dirname(__file__), "data", "nisin.gbk"))
-        run_antismash(path, self.default_options)
+        run_antismash(get_path_to_nisin_genbank(), self.default_options)
         self.check_output_files()
 
     def check_output_files(self):
         out_dir = self.default_options.output_dir
         assert os.path.exists(out_dir)
-        for filename in ["nisin.zip", "nisin.json", "index.html"]:
+        for filename in ["nisin.json", "index.html"]:
             assert os.path.exists(os.path.join(out_dir, filename))
+
+
+class TestSkipZip(TestAntismash):
+    def get_args(self):
+        return ["--minimal", "--skip-zip-file"]
+
+    def check_output_files(self):
+        super().check_output_files()
+        assert not os.path.exists(os.path.join(self.default_options.output_dir, "nisin.zip"))
 
 
 class TestProfiling(TestAntismash):

@@ -404,14 +404,14 @@ def write_outputs(results: serialiser.AntismashResults, options: ConfigType) -> 
     SeqIO.write(bio_records, combined_filename, "genbank")
 
     zipfile = base_filename + ".zip"
-    logging.debug("Zipping output to '%s'", zipfile)
     if os.path.exists(zipfile):
         os.remove(zipfile)
-
-    with tempfile.NamedTemporaryFile(prefix="as_zip_tmp", suffix=".zip") as temp:
-        shutil.make_archive(temp.name.replace(".zip", ""), "zip", root_dir=options.output_dir)
-        shutil.copy(temp.name, zipfile)
-    assert os.path.exists(zipfile)
+    if not options.skip_zip_file:
+        logging.debug("Zipping output to '%s'", zipfile)
+        with tempfile.NamedTemporaryFile(prefix="as_zip_tmp", suffix=".zip") as temp:
+            shutil.make_archive(temp.name.replace(".zip", ""), "zip", root_dir=options.output_dir)
+            shutil.copy(temp.name, zipfile)
+        assert os.path.exists(zipfile)
 
 
 def annotate_records(results: serialiser.AntismashResults) -> None:
