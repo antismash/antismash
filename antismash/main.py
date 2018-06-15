@@ -11,6 +11,7 @@ from collections import defaultdict
 import cProfile
 from datetime import datetime
 from io import StringIO
+import glob
 import logging
 import os
 import pstats
@@ -299,7 +300,8 @@ def analyse_record(record: Record, options: ConfigType, modules: List[AntismashM
 def prepare_output_directory(name: str, input_file: str) -> None:
     """ Ensure the ouptut directory exists and is usable
 
-        Raises an exception if the directory is unusable
+        Raises an exception if the directory is unusable,
+        or if results not being reused and directory not empty
 
         Arguments:
             name: the path of the directory
@@ -309,13 +311,21 @@ def prepare_output_directory(name: str, input_file: str) -> None:
             None
     """
     # if not supplied, set the output directory to be the sequence name
+    input_prefix = os.path.splitext(os.path.basename(input_file))[0]
     if not name:
-        name = os.path.abspath(os.path.splitext(os.path.basename(input_file))[0])
+        name = os.path.abspath(input_prefix)
         update_config({"output_dir": name})
 
     if os.path.exists(name):
         if not os.path.isdir(name):
             raise RuntimeError("Output directory %s exists and is not a directory" % name)
+        # not empty, and not reusing it's results
+        if not input_file.endswith(".json") and glob.glob(os.path.join(name, "*")):
+            raise RuntimeError("Output directory contains other files, aborting for safety")
+        else:  # --reuse
+            logging.debug("Removing existing cluster genbank files")
+            for genbank in glob.glob(os.path.join(name, "*.cluster???.gbk")):
+                os.remove(genbank)
         logging.debug("Reusing output directory: %s", name)
     else:
         logging.debug("Creating output directory: %s", name)
