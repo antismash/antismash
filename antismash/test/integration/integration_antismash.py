@@ -6,7 +6,7 @@
 
 import glob
 import os
-from tempfile import TemporaryDirectory
+from tempfile import NamedTemporaryFile, TemporaryDirectory
 import unittest
 
 from antismash.main import run_antismash, get_all_modules
@@ -58,14 +58,22 @@ class TestVerbose(TestAntismash):
         return ["--minimal", "-v"]
 
 
-class TestLogfile(TestAntismash):
-    def get_args(self):
-        # add verbose so something will get logged
-        return ["--minimal", "-v", "--logfile", os.path.join(self.temp_dir.name, "logfile")]
+class TestLogging(TestAntismash):
+    def setUp(self):
+        self.logfile = NamedTemporaryFile()
+        super().setUp()
 
-    def test_nisin_minimal(self):
-        super().test_nisin_minimal()
-        assert os.path.exists(os.path.join(self.temp_dir.name, "logfile"))
+    def tearDown(self):
+        super().tearDown()
+        self.logfile.close()
+
+    def get_args(self):
+        return ["--minimal", "-v", "--logfile", os.path.join(self.logfile.name)]
+
+    def check_output_files(self):
+        super().check_output_files()
+        log_path = self.get_args()[-1]
+        assert os.path.exists(self.logfile.name)
 
 
 class TestResultsReuse(TestAntismash):
