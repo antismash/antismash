@@ -445,6 +445,13 @@ class Record:
         record = Record(transl_table=transl_table)
         record._record = seq_record
         for feature in seq_record.features:
+            if feature.ref or feature.ref_db:
+                for ref in [feature.ref, feature.ref_db]:
+                    if ref and ref != seq_record.id:
+                        raise ValueError("Feature references another sequence: (%s)" % feature.ref)
+                # to handle a biopython issue, set the references to None
+                feature.ref = None
+                feature.ref_db = None
             record.add_biopython_feature(feature)
         return record
 
