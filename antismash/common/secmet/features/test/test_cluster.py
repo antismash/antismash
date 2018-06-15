@@ -11,8 +11,8 @@ from Bio.Alphabet import generic_dna
 from Bio.Seq import Seq
 from helperlibs.bio import seqio
 
-from antismash.common.secmet import CDSFeature, FeatureLocation, Record
-from antismash.common.secmet.features.cluster import Cluster
+from antismash.common.secmet import FeatureLocation, Record
+from antismash.common.secmet.features import CDSFeature, Cluster, ClusterBorder
 
 
 class TestCluster(unittest.TestCase):
@@ -32,6 +32,24 @@ class TestCluster(unittest.TestCase):
         self.record.add_cluster(self.cluster)
         assert self.cluster.location.start == self.start
         assert self.cluster.location.end == self.end
+
+    def test_probability(self):
+        def create_border(prob):
+            return ClusterBorder(FeatureLocation(0, 10), tool="rule-based-clusters", probability=prob)
+        # default
+        assert self.cluster.probability is None
+
+        # single value
+        self.cluster.borders.append(create_border(9.5))
+        assert self.cluster.probability == 9.5
+
+        # multiple agreeing values
+        self.cluster.borders.append(create_border(9.5))
+        assert self.cluster.probability == 9.5
+
+        # multiple disagreeing values
+        self.cluster.borders.append(create_border(.5))
+        assert self.cluster.probability is None
 
     def test_trim_unattached(self):
         cluster = self.create_cluster(1, 2)
