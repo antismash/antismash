@@ -144,11 +144,11 @@ class CDSFeature(Feature):
         gene = leftovers.pop("gene", [None])[0]
         if not (gene or protein_id or locus_tag):
             if "pseudo" in leftovers or "pseudogene" in leftovers:
-                locus_tag = "pseudo_%d" % int(bio_feature.location.start + 1)  # 1-indexed
+                gene = "pseudo%s_%s"
             else:
-                # TODO solve somehow?
-                logging.critical("CDS feature created from biopython without identifier: %s", bio_feature)
-                raise ValueError("CDSFeature requires at least one of: gene, protein_id, locus_tag")
+                gene = "cds%s_%s"
+            gene = gene % (bio_feature.location.start, bio_feature.location.end)
+
         translation = leftovers.pop("translation", [None])[0]
         if translation and "-" in translation:
             logging.warning("Translation for CDS %s (at %s) has a gap. Discarding and regenerating.",
