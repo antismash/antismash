@@ -290,6 +290,8 @@ class Record:
         assert isinstance(cluster, Cluster)
         assert cluster.location.start >= 0, cluster
         assert cluster.location.end <= len(self), "%s > %d" % (cluster, len(self))
+        if cluster.contig_edge is None:
+            cluster.contig_edge = cluster.location.start == 0 or cluster.location.end == len(self)
         index = 0
         for i, existing_cluster in enumerate(self._clusters):  # TODO: fix performance
             if cluster.overlaps_with(existing_cluster):
