@@ -81,3 +81,9 @@ class TestFeature(unittest.TestCase):
                 feature = Feature(FeatureLocation(start, end, strand=-1),
                                   feature_type=feature_type)
                 assert str(feature) == "%s([%d:%d](-))" % (feature_type, start, end)
+
+    def test_bridging_fails(self):
+        parts = [FeatureLocation(9, 12, strand=1), FeatureLocation(0, 3, strand=1)]
+        with self.assertRaisesRegex(ValueError, "bridge the record origin"):
+            Feature(CompoundLocation(parts, operator="join"), feature_type="test")
+        Feature(CompoundLocation(parts[::-1], operator="join"), feature_type="test")

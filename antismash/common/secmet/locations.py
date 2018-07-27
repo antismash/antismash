@@ -60,3 +60,33 @@ def convert_protein_position_to_dna(start: int, end: int, location: FeatureLocat
         raise ValueError(("Converted coordinates %d..%d "
                           "out of bounds for location %s") % (dna_start, dna_end, location))
     return dna_start, dna_end
+
+
+def location_bridges_origin(location: CompoundLocation) -> bool:
+    """ Determines if a CompoundLocation would cross the origin of a record.
+
+        Arguments:
+            location: the CompoundLocation to check
+
+        Returns:
+            False if the location does not bridge the origin or if the location
+            is of indeterminate strand, otherwise True
+    """
+    assert isinstance(location, (FeatureLocation, CompoundLocation)), type(location)
+
+    # if it's not compound, it can't bridge at all
+    if not isinstance(location, CompoundLocation):
+        return False
+
+    # invalid strands mean direction can't be determined, may need to be an error
+    if location.strand not in [1, -1]:
+        return False
+
+    for i, part in enumerate(location.parts[1:]):
+        if location.strand == 1:
+            if part.start <= location.parts[i].end:
+                return True
+        else:
+            if part.start >= location.parts[i].end:
+                return True
+    return False

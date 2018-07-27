@@ -30,6 +30,7 @@ class TestCDSFeature(unittest.TestCase):
             with self.assertRaisesRegex(TypeError, "can only be set to an instance of SecMetQualifier"):
                 cds.sec_met = bad
 
+
 class TestCDSProteinLocation(unittest.TestCase):
     def setUp(self):
         self.magic_split = Seq("ATGGCAxxxxxxGGTxxxxxxATTTGT")
@@ -44,8 +45,8 @@ class TestCDSProteinLocation(unittest.TestCase):
     def reverse_strand(self):
         self.magic = self.magic.reverse_complement()
         self.magic_split = self.magic_split.reverse_complement()
-        self.sub_locations = [FeatureLocation(loc.start, loc.end, strand=-1) for loc in self.sub_locations]
-        self.location = CompoundLocation(self.sub_locations)
+        self.sub_locations = [FeatureLocation(loc.start, loc.end, strand=loc.strand*-1) for loc in self.sub_locations]
+        self.location = CompoundLocation(self.sub_locations[::self.sub_locations[0].strand])
         self.cds = CDSFeature(self.location, locus_tag="compound")
 
     def test_simple_location_forward_complete(self):
@@ -107,54 +108,48 @@ class TestCDSProteinLocation(unittest.TestCase):
 
     def test_compound_location_reverse_full(self):
         self.reverse_strand()
-        for direction in [1, -1]:
-            print("sub locations sorted in direction:", direction)
-            cds = CDSFeature(CompoundLocation(self.sub_locations[::direction]), locus_tag="compound")
-            new = cds.get_sub_location_from_protein_coordinates(0, 5)
-            assert isinstance(new, CompoundLocation)
-            assert len(new.parts) == 3
-            print(list(map(str, cds.location.parts)))
-            print(list(map(str, new.parts)))
-            assert len(new) == len(cds.location)
-            assert new.extract(self.magic_split).translate() == self.translation[0:5]
+        cds = CDSFeature(self.location, locus_tag="compound")
+        new = cds.get_sub_location_from_protein_coordinates(0, 5)
+        assert isinstance(new, CompoundLocation)
+        assert len(new.parts) == 3
+        print(list(map(str, cds.location.parts)))
+        print(list(map(str, new.parts)))
+        assert len(new) == len(cds.location)
+        assert new.extract(self.magic_split).translate() == self.translation[0:5]
 
     def test_compound_location_reverse_single(self):
         self.reverse_strand()
-        for direction in [1, -1]:
-            print("sub locations sorted in direction:", direction)
-            cds = CDSFeature(CompoundLocation(self.sub_locations[::direction]), locus_tag="compound")
+        cds = CDSFeature(self.location, locus_tag="compound")
 
-            new = cds.get_sub_location_from_protein_coordinates(0, 2)
-            assert isinstance(new, FeatureLocation)
-            assert len(new) == 6
-            assert new.start == 21
-            assert new.end == 27
-            assert new.extract(self.magic_split).translate() == self.translation[0:2]
+        new = cds.get_sub_location_from_protein_coordinates(0, 2)
+        assert isinstance(new, FeatureLocation)
+        assert len(new) == 6
+        assert new.start == 21
+        assert new.end == 27
+        assert new.extract(self.magic_split).translate() == self.translation[0:2]
 
-            new = cds.get_sub_location_from_protein_coordinates(2, 3)
-            assert isinstance(new, FeatureLocation)
-            assert len(new) == 3
-            assert new.start == 12
-            assert new.end == 15
-            assert new.extract(self.magic_split).translate() == self.translation[2:3]
+        new = cds.get_sub_location_from_protein_coordinates(2, 3)
+        assert isinstance(new, FeatureLocation)
+        assert len(new) == 3
+        assert new.start == 12
+        assert new.end == 15
+        assert new.extract(self.magic_split).translate() == self.translation[2:3]
 
     def test_compound_location_reverse_multiple(self):
         self.reverse_strand()
-        for direction in [1, -1]:
-            print("sub locations sorted in direction:", direction)
-            cds = CDSFeature(CompoundLocation(self.sub_locations[::direction]), locus_tag="compound")
+        cds = CDSFeature(self.location, locus_tag="compound")
 
-            new = cds.get_sub_location_from_protein_coordinates(2, 4)
-            assert isinstance(new, CompoundLocation)
-            print(list(map(str, cds.location.parts)))
-            print(list(map(str, new.parts)))
-            assert len(new.parts) == 2
-            assert len(new) == 6
-            assert new.parts[0].start == 12
-            assert new.parts[0].end == 15
-            assert new.parts[1].start == 3
-            assert new.parts[1].end == 6
-            assert new.extract(self.magic_split).translate() == self.translation[2:4]
+        new = cds.get_sub_location_from_protein_coordinates(2, 4)
+        assert isinstance(new, CompoundLocation)
+        print(list(map(str, cds.location.parts)))
+        print(list(map(str, new.parts)))
+        assert len(new.parts) == 2
+        assert len(new) == 6
+        assert new.parts[0].start == 12
+        assert new.parts[0].end == 15
+        assert new.parts[1].start == 3
+        assert new.parts[1].end == 6
+        assert new.extract(self.magic_split).translate() == self.translation[2:4]
 
     def test_complicated(self):
         parts = [FeatureLocation(121124, 122061, 1), FeatureLocation(122339, 122383, 1),
