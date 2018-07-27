@@ -62,13 +62,13 @@ class CDSFeature(Feature):
         self._sec_met = None  # type: SecMetQualifier
         self._nrps_pks = NRPSPKSQualifier(self.location.strand)
 
-        self.motifs = []  # type: List[feature.CDSMotif]
+        self.motifs = []  # type: List[features.CDSMotif]
 
         if not (protein_id or locus_tag or gene):
             raise ValueError("CDSFeature requires at least one of: gene, protein_id, locus_tag")
 
         # runtime-only data
-        self.cluster = None  # type: Optional[feature.Cluster]
+        self.cluster = None  # type: Optional[features.Cluster]
         self.unique_id = None  # type: Optional[str] # set only when added to a record
 
     @property
