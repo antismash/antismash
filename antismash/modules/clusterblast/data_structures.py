@@ -19,7 +19,7 @@ class ReferenceCluster:
         self.accession = accession
         self.cluster_label = cluster_label
         self.proteins = proteins
-        self.description = description
+        self.description = description.replace('biosynthetic_gene_cluster', '')
         self.cluster_type = cluster_type
         self.tags = tags
 
