@@ -85,7 +85,7 @@
                 <td>
                   {% set dash = joiner("-") %}
                   {% for subtype in cluster.products -%}
-                    {{dash()}}<a href="http://antismash.secondarymetabolites.org/help#{{subtype}}" target="_blank">{{subtype | title}}</a>
+                    {{dash()}}<a href="https://antismash.secondarymetabolites.org/help#{{subtype}}" target="_blank">{{subtype | title}}</a>
                   {%- endfor %}
 
                 </td>
@@ -93,7 +93,7 @@
                 <td class="digits">{{cluster.location.end}}</td>
                 <td>{{cluster.best_knowncluster_name}}</td>
                 {% if cluster.bgc_id != "-"  -%}
-                  <td><a href="http://mibig.secondarymetabolites.org/repository/{{cluster.bgc_id}}/index.html" target="_blank">{{cluster.bgc_id}}</a></td>
+                  <td><a href="https://mibig.secondarymetabolites.org/repository/{{cluster.bgc_id}}/index.html" target="_blank">{{cluster.bgc_id}}</a></td>
                 {%- else -%}
                   <td>-</td>
                 {%- endif %}

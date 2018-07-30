@@ -85,7 +85,7 @@
         </table>
       </div>
       <div id="copyright">
-        If you have found antiSMASH useful, please <a href="http://antismash.secondarymetabolites.org/about">cite us</a>.
+        If you have found antiSMASH useful, please <a href="https://antismash.secondarymetabolites.org/about">cite us</a>.
       </div>
     </div>
 
