@@ -29,7 +29,7 @@ install_requires = [
     'pandas',
     'matplotlib',
     'scipy',
-    'scikit-learn',
+    'scikit-learn == 0.19.0', # until pickles are rebuilt automatically
 ]
 
 tests_require = [
