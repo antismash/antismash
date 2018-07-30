@@ -44,8 +44,6 @@ class CDSFeature(Feature):
         if location.strand not in [1, -1]:
             raise ValueError("Strand must be 1 or -1 for a CDS, not %s" % location.strand)
         # mandatory
-        #  codon_start
-        #  db_xref
         self._gene_functions = GeneFunctionAnnotations()
 
         # semi-optional

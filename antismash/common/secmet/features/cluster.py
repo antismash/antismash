@@ -36,7 +36,7 @@ class Cluster(Feature):
         for product in products:
             self.add_product(product)
 
-        self.contig_edge = None  # type: Optional[bool] # hmm_detection borderpredict
+        self.contig_edge = None  # type: Optional[bool]
         self.detection_rules = []  # type: List[str]
         self.smiles_structure = None  # type: Optional[str] # SMILES string
 
