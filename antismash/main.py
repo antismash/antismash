@@ -393,7 +393,16 @@ def write_outputs(results: serialiser.AntismashResults, options: ConfigType) -> 
     bio_records = [record.to_biopython() for record in results.records]
 
     logging.debug("Writing cluster-specific genbank files")
+    antismash_comment = ("##antiSMASH-Data-START##\n"
+                         "Version      :: {version}\n"
+                         "Run date     :: {date}\n"
+                         "##antiSMASH-Data-END##".format(version=options.version,
+                                                         date=str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))))
     for record, bio_record in zip(results.records, bio_records):
+        if 'comment' in bio_record.annotations:
+            bio_record.annotations['comment'] += '\n' + antismash_comment
+        else:
+            bio_record.annotations['comment'] = antismash_comment
         for cluster in record.get_clusters():
             cluster.write_to_genbank(directory=options.output_dir, record=bio_record)
 
