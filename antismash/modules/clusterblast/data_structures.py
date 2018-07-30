@@ -157,6 +157,7 @@ class MibigEntry:
         self.gene_id = gene_id
         self.gene_description = gene_description
         self.mibig_id = mibig_cluster.split("_c")[0]
+        self.mibig_cluster_number = mibig_cluster.rsplit("_c", 1)[1]
         self.mibig_product = mibig_product
         self.percent_id = float(percent_id)
         self.blast_score = float(blast_score)
