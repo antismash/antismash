@@ -10,7 +10,7 @@
 import os
 from typing import Any, List, Optional, Tuple
 
-from antismash.config import ConfigType
+from antismash.config import ConfigType, get_config
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record, Cluster
 from antismash.typing import AntismashModule
@@ -158,7 +158,7 @@ class ClusterLayer:
             + ' - Gene Cluster %s. Type = %s. Location: %s - %s nt. ' % (
                         self.get_cluster_number(), self.get_product_string(),
                         self.location.start + 1, self.location.end)
-        if self.probability != "BROKEN":  # TODO: real value check
+        if get_config().cf_create_clusters:
             description_text += 'ClusterFinder probability: %s. ' % self.probability
         description_text += 'Click on genes for more information.'
 
