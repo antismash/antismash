@@ -376,13 +376,13 @@ class Cluster:
     def _add_label(self, group: Group, v_offset: int) -> Group:
         acc = Text(self.full_description, 5, 20 + v_offset)
         if self.accession.startswith('BGC'):
-            acc = Text('<a xlink:href="https://mibig.secondarymetabolites.org/repository/'
-                       + self.accession + '/index.html#cluster-1" target="_blank">'
+            acc = Text('<a xlink:href="https://mibig.secondarymetabolites.org/go/'
+                       + self.accession + '" target="_blank">'
                        + self.accession + '</a>: '
                        + "%80s (%s)" % (self.description, self.similarity), 5, 20 + v_offset)
         elif self.accession.split("_")[0] in get_antismash_db_accessions():
-            acc = Text('<a xlink:href="https://antismash-db.secondarymetabolites.org/output/'
-                       + self.accession + '/index.html#cluster-%s" target="_blank">' % self.ref_cluster_number[1:]
+            acc = Text('<a xlink:href="https://antismash-db.secondarymetabolites.org/go/'
+                       + self.accession + '/%s" target="_blank">' % self.ref_cluster_number[1:]
                        + self.full_description.replace(":", "</a>:"), 5, 20 + v_offset)
         acc.set_class("clusterblast-acc")
         group.addElement(acc)
