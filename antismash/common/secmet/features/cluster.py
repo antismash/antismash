@@ -269,6 +269,19 @@ class Cluster(Feature):
         cluster_record.annotations["organism"] = record.annotations.get("organism", '')
         cluster_record.annotations["taxonomy"] = record.annotations.get("taxonomy", [])
         cluster_record.annotations["data_file_division"] = record.annotations.get("data_file_division", 'UNK')
+        cluster_record.annotations["comment"] = record.annotations.get("comment", '')
+
+        # update the antiSMASH annotation to include some cluster details
+        comment_end_marker = "##antiSMASH-Data-END"
+        cluster_comment = ("NOTE: This is a single cluster extracted from a larger record!\n"
+                           "Orig. start  :: {start}\n"
+                           "Orig. end    :: {end}\n"
+                           "{end_marker}").format(start=self.location.start,
+                                                  end=self.location.end,
+                                                  end_marker=comment_end_marker)
+        original = cluster_record.annotations["comment"]
+        cluster_record.annotations["comment"] = original.replace(comment_end_marker, cluster_comment)
+
         # our cut-out clusters are always linear
         cluster_record.annotations["topology"] = "linear"
 
