@@ -36,7 +36,7 @@ tests_require = [
     'pytest',
     'minimock',
     'coverage',
-    'pylint',
+    'pylint == 1.8.4', # until pylint handles ignore lines the same way
 ]
 
 
