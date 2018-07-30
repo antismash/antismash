@@ -22,6 +22,9 @@
       <div class = 'description-text'>
         {{cluster.description_text()}}
       </div>
+      {% if cluster.contig_edge %}
+        <div class="contig-edge-warning">Cluster on contig edge.</div>
+      {% endif %}
       <a class="cluster-rules-header" id="{{cluster.anchor_id}}-rules-header" href="#{{cluster.anchor_id}}">Show pHMM detection rules used</a>
       <div class = "cluster-rules" id="{{cluster.anchor_id}}-rules">
         {{- cluster.detection_rules|join('<br>'|safe) -}}
