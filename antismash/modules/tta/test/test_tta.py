@@ -4,11 +4,13 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
+from argparse import Namespace
 import unittest
 
 from Bio.Alphabet import generic_dna
 from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation
+
 from antismash.common.secmet.record import Record
 from antismash.common.secmet.features import Cluster
 from antismash.common.test.helpers import DummyCDS, get_simple_options
@@ -39,10 +41,21 @@ class TtaTest(unittest.TestCase):
         """Test tta.check_prereqs()"""
         assert not tta.check_prereqs()
 
+    def test_options(self):
+        options = Namespace()
+        for threshold in [0., 0.5, 1.0]:
+            options.tta_threshold = threshold
+            assert not tta.check_options(options)
+
+        options.tta_threshold = 1.01
+        assert tta.check_options(options) == ["Supplied threshold is out of range 0 to 1: 1.01"]
+        options.tta_threshold = -0.01
+        assert tta.check_options(options) == ["Supplied threshold is out of range 0 to 1: -0.01"]
+
     def test_detect(self):
         """Test tta.detect()"""
         self.assertEqual(len(self.record.get_cds_features()) + len(self.record.get_clusters()), 3)
-        options = get_simple_options(tta, ["--tta"])
+        options = get_simple_options(tta, ["--tta", "--tta-threshold", "0"])
 
         detected = tta.detect(self.record, options)
         self.assertEqual(len(detected), 2)
@@ -69,7 +82,7 @@ class TtaTest(unittest.TestCase):
     def test_feature_creation(self):
         fw_loc = FeatureLocation(210, 300, strand=1)
         fw_feature = SeqFeature(fw_loc, type='CDS')
-        results = tta.tta.TTAResults('dummy')
+        results = tta.tta.TTAResults('dummy', gc_content=1)
         ret = results.new_feature_from_other(fw_feature, 12)
         self.assertEqual(ret.strand, 1)
         self.assertEqual(ret.location.start, 222)
