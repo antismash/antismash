@@ -124,6 +124,7 @@ melC	MelC-like melanin synthase	40	melC.hmm
 NAD_binding_4	NAD-binding domain 4	40	NAD_binding_4.hmm
 LmbU	LmbU-like protein	50	LmbU.hmm
 mmyO	MmyO-like protein	500	mmyO.hmm
+AvrD	Pseudomonas avriulence D protein	50	PF05655.hmm
 goadsporin_like	Goadsporin-like protein	500	goadsporin_like.hmm
 Neocarzinostat	Neocarzinostatin-like protein	28	Neocarzinostat.hmm
 cyanobactin_synth	Cyanobactin protease	80	cyanobactin_synth.hmm
