@@ -55,7 +55,7 @@ class TtaTest(unittest.TestCase):
     def test_detect(self):
         """Test tta.detect()"""
         self.assertEqual(len(self.record.get_cds_features()) + len(self.record.get_clusters()), 3)
-        options = get_simple_options(tta, ["--tta", "--tta-threshold", "0"])
+        options = get_simple_options(tta, ["--tta-threshold", "0"])
 
         detected = tta.detect(self.record, options)
         self.assertEqual(len(detected), 2)
@@ -82,7 +82,7 @@ class TtaTest(unittest.TestCase):
     def test_feature_creation(self):
         fw_loc = FeatureLocation(210, 300, strand=1)
         fw_feature = SeqFeature(fw_loc, type='CDS')
-        results = tta.tta.TTAResults('dummy', gc_content=1)
+        results = tta.tta.TTAResults('dummy', gc_content=1, threshold=0.65)
         ret = results.new_feature_from_other(fw_feature, 12)
         self.assertEqual(ret.strand, 1)
         self.assertEqual(ret.location.start, 222)

@@ -43,7 +43,7 @@
         {{le.legend('legend-type-transport', 'transport-related genes')}}
         {{le.legend('legend-type-regulatory', 'regulatory genes')}}
         {{le.legend('legend-type-other', 'other genes')}}
-        {% if options.tta %}
+        {% if (options.tta_enabled or not options.minimal) and record.get_gc_content() >= options.tta_threshold %}
             {{le.legend('legend-tta-codon', 'TTA codon')}}
         {% endif %}
         {% if options.cassis %}
