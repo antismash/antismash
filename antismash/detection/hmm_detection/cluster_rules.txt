@@ -212,8 +212,8 @@ RULE oligosaccharide
 
 RULE furan
     CUTOFF 20
-    EXTENT 5
-    CONDITIONS mmyO
+    EXTENT 10
+    CONDITIONS mmyO or AvrD
 
 RULE hserlactone
     CUTOFF 20
