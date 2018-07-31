@@ -321,7 +321,7 @@ class Cluster:
                  description: str, features: Union[List[Protein], List[secmet.CDSFeature]], rank: int,
                  hits: int = 0, strand: int = 1) -> None:
         self.query_cluster_number = query_cluster_number
-        self.ref_cluster_number = ref_cluster_number
+        self.ref_cluster_number = int(ref_cluster_number.lstrip('c'))
         self.accession = accession
         self.description = description.replace("_", " ")
         if isinstance(features[0], secmet.CDSFeature):
@@ -345,21 +345,26 @@ class Cluster:
         self.rank = rank
 
     @property
-    def similarity(self) -> str:
+    def similarity(self) -> int:
+        """ Returns the percentage similarity to the query cluster as an int 0-100
+        """
+        return self.unique_hit_count * 100 // len(self.genes)
+
+    @property
+    def similarity_string(self) -> str:
         """ Return a string representing percentage similarity to the query
             cluster
         """
-        perc_sim = self.unique_hit_count * 100 / len(self.genes)
-        return "%d%% of genes show similarity" % perc_sim
+        return "%d%% of genes show similarity" % self.similarity
 
     @property
     def full_description(self) -> str:
         """ Returns a string formatted with accession, cluster number and
             similarity score """
-        desc = "%s_%s: %s" % (self.accession, self.ref_cluster_number, self.description)
+        desc = "%s_c%d: %s" % (self.accession, self.ref_cluster_number, self.description)
         if len(desc) > 80:
             desc = desc[:77] + "..."
-        return "%s (%s)" % (desc, self.similarity)
+        return "%s (%s)" % (desc, self.similarity_string)
 
     def reverse_strand(self) -> None:
         """ Reverses the entire cluster's directionality, useful when the
@@ -377,12 +382,12 @@ class Cluster:
         acc = Text(self.full_description, 5, 20 + v_offset)
         if self.accession.startswith('BGC'):
             acc = Text('<a xlink:href="https://mibig.secondarymetabolites.org/go/'
-                       + self.accession + '" target="_blank">'
+                       + self.accession + '/%s" target="_blank">' % self.ref_cluster_number
                        + self.accession + '</a>: '
-                       + "%80s (%s)" % (self.description, self.similarity), 5, 20 + v_offset)
+                       + "%80s (%s)" % (self.description, self.similarity_string), 5, 20 + v_offset)
         elif self.accession.split("_")[0] in get_antismash_db_accessions():
             acc = Text('<a xlink:href="https://antismash-db.secondarymetabolites.org/go/'
-                       + self.accession + '/%s" target="_blank">' % self.ref_cluster_number[1:]
+                       + self.accession + '/%s" target="_blank">' % self.ref_cluster_number
                        + self.full_description.replace(":", "</a>:"), 5, 20 + v_offset)
         acc.set_class("clusterblast-acc")
         group.addElement(acc)
@@ -577,6 +582,10 @@ class ClusterSVGBuilder:
     def get_cluster_accessions(self) -> List[str]:
         """ Returns all hit cluster accessions """
         return [cluster.accession for cluster in self.hits]
+
+    def get_cluster_similarities(self) -> List[int]:
+        """ Returns all hit cluster similarity percentages """
+        return [cluster.similarity for cluster in self.hits]
 
     def _organise_strands(self) -> None:
         """ Attempt to make all hits have a uniform overall direction """

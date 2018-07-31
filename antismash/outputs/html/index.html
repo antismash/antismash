@@ -56,6 +56,7 @@
           <th>From</th>
           <th>To</th>
           <th>Most similar known cluster</th>
+          <th>Similarity</th>
           <th>MIBiG BGC-ID</th>
         </tr>
       </thead>
@@ -92,8 +93,17 @@
                 <td class="digits">{{cluster.location.start + 1}}</td>
                 <td class="digits">{{cluster.location.end}}</td>
                 <td>{{cluster.best_knowncluster_name}}</td>
+                {% set similarity = cluster.best_knowncluster_similarity %}
+                {% if similarity > 75 %}
+                  {% set colour = "rgba(0, 100, 0, 0.3)" %}
+                {% elif similarity > 50 %}
+                  {% set colour = "rgba(210, 105, 30, 0.3)" %}
+                {% else %}
+                  {% set colour = "rgba(205, 92, 92, 0.3)" %}
+                {% endif %}
+                <td class="digits similarity-text" style="background-image: linear-gradient(to left, {{colour}}, {{colour}} {{similarity}}%, #ffffff00 {{similarity}}%)">{{similarity}}%</td>
                 {% if cluster.bgc_id != "-"  -%}
-                  <td><a href="https://mibig.secondarymetabolites.org/repository/{{cluster.bgc_id}}/index.html" target="_blank">{{cluster.bgc_id}}</a></td>
+                  <td><a href="https://mibig.secondarymetabolites.org/go/{{cluster.bgc_id}}/{{cluster.bgc_cluster_number}}" target="_blank">{{cluster.bgc_id}}</a></td>
                 {%- else -%}
                   <td>-</td>
                 {%- endif %}
