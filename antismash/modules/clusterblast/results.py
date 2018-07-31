@@ -24,6 +24,15 @@ def get_result_limit() -> int:
     return _CLUSTER_LIMIT
 
 
+class KnownHitSummary:
+    """ Stores some information about a hit from known-CB in a handy to access way """
+    def __init__(self, bgc_id: str, name: str, cluster_number: int, similarity: int) -> None:
+        self.bgc_id = str(bgc_id)
+        self.name = str(name)
+        self.cluster_number = int(cluster_number)
+        self.similarity = int(similarity)
+
+
 class ClusterResult:
     """ Stores results for a specific cluster in a record, for a particular
         flavour of clusterblast.
@@ -54,8 +63,12 @@ class ClusterResult:
         if search_type != "knownclusterblast":  # TODO clean this up
             setattr(self.cluster, search_type, self.svg_builder.get_cluster_descriptions())
             return
-        self.cluster.knownclusterblast = list(zip(self.svg_builder.get_cluster_descriptions(),
-                                                  self.svg_builder.get_cluster_accessions()))
+        hits = []
+        for cluster in self.svg_builder.hits:
+            hits.append(KnownHitSummary(cluster.accession, cluster.description,
+                                        cluster.ref_cluster_number,
+                                        cluster.similarity))
+        self.cluster.knownclusterblast = hits
 
     def jsonify(self) -> Dict[str, Any]:
         """ Convert the object into a simple dictionary for use in storing
@@ -252,7 +265,7 @@ class GeneralResults(ModuleResults):
 
 class ClusterBlastResults(ModuleResults):
     """ An aggregate results container for all variants of clusterblast """
-    schema_version = 1
+    schema_version = 2
 
     def __init__(self, record_id: str) -> None:
         super().__init__(record_id)

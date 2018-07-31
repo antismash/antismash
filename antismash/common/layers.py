@@ -122,16 +122,29 @@ class ClusterLayer:
         """ The name of the best hit from knownclusterblast, if it was run """
         if not self.knownclusterblast:
             return "-"
-        full = self.knownclusterblast[0][0]
-        return full.split(": ")[1].replace("_", " ").replace(
-                        " biosynthetic gene cluster", "")
+        return self.knownclusterblast[0].name.replace("_", " ")
+
+    @property
+    def best_knowncluster_similarity(self) -> int:
+        """ The percentage similarity of the best hit from knownclusterblast as
+            an integer """
+        if not self.knownclusterblast:
+            return 0
+        return self.knownclusterblast[0].similarity
 
     @property
     def bgc_id(self) -> str:
         """ The BGC id of the best hit from knownclusterblast, if it was run """
         if not self.cluster_feature.knownclusterblast:
             return "-"
-        return format(self.cluster_feature.knownclusterblast[0][1])
+        return format(self.cluster_feature.knownclusterblast[0].bgc_id)
+
+    @property
+    def bgc_cluster_number(self) -> int:
+        """ The cluster number of the BGC id of the best knownclusterblast hit """
+        if not self.cluster_feature.knownclusterblast:
+            return None
+        return self.cluster_feature.knownclusterblast[0].cluster_number
 
     @property
     def detection_rules(self) -> List[str]:
@@ -168,12 +181,11 @@ class ClusterLayer:
         assert self.cluster_feature.knownclusterblast
         top_hits = self.cluster_feature.knownclusterblast[:self.record.options.cb_nclusters]
         results = []
-        for i, label_pair in enumerate(top_hits):
+        for i, summary in enumerate(top_hits):
             i += 1  # 1-indexed
-            label = label_pair[0]
             svg_file = os.path.join('svg', 'knownclusterblast_r%dc%d_%s.svg' % (
                             self.record.record_index, self.get_cluster_number(), i))
-            results.append((label, svg_file))
+            results.append((summary.name, svg_file))
         return results
 
     def subcluster_blast_generator(self) -> List[Tuple[str, str]]:

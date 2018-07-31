@@ -152,8 +152,9 @@ def mibig_protein_homology(blastoutput: str, record: Record, clusters: Dict[str,
             protein_name = cluster_protein.id
             protein_entries = []
             for subject in cluster_protein.subjects.values():
+                mibig_id, mibig_cluster_number = subject.genecluster.rsplit('_c', 1)
                 entry = MibigEntry(subject.locus_tag, subject.annotation,
-                                   subject.genecluster,
+                                   mibig_id, int(mibig_cluster_number),
                                    clusters[subject.genecluster].cluster_type,
                                    subject.perc_ident, subject.blastscore,
                                    subject.perc_coverage, subject.evalue)

@@ -73,16 +73,8 @@ def convert_clusters(record: Record, options: ConfigType, result: Dict[str, Modu
         js_cluster['tta_codons'] = convert_tta_codons(tta_codons)
         js_cluster['type'] = cluster.get_product_string()
         js_cluster['products'] = cluster.products
-        if cluster.probability is not None:
-            js_cluster['probability'] = cluster.probability
-        js_cluster['knowncluster'] = "-"
-        js_cluster['bgc_id'] = "-"
         js_cluster['anchor'] = "r%dc%d" % (record.record_index, cluster.get_cluster_number())
 
-        if cluster.knownclusterblast:
-            bestcluster = cluster.knownclusterblast[0]
-            js_cluster['knowncluster'] = bestcluster[0]
-            js_cluster['bgc_id'] = bestcluster[1]
         js_clusters.append(js_cluster)
 
     return js_clusters

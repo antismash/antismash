@@ -17,6 +17,7 @@ class ReferenceCluster:
     def __init__(self, accession: str, cluster_label: str, proteins: List[str],
                  description: str, cluster_type: str, tags: List[str]) -> None:
         self.accession = accession
+        assert cluster_label.startswith('c')
         self.cluster_label = cluster_label
         self.proteins = proteins
         self.description = description.replace('biosynthetic_gene_cluster', '')
@@ -151,13 +152,13 @@ class Score:
 
 class MibigEntry:
     """ A container for tracking similarity to a MIBiG entry """
-    def __init__(self, gene_id: str, gene_description: str, mibig_cluster: str,
+    def __init__(self, gene_id: str, gene_description: str, mibig_id: str, mibig_cluster_number: int,
                  mibig_product: str, percent_id: float, blast_score: float,
                  coverage: float, evalue: float) -> None:
         self.gene_id = gene_id
         self.gene_description = gene_description
-        self.mibig_id = mibig_cluster.split("_c")[0]
-        self.mibig_cluster_number = mibig_cluster.rsplit("_c", 1)[1]
+        self.mibig_id = mibig_id
+        self.mibig_cluster_number = mibig_cluster_number
         self.mibig_product = mibig_product
         self.percent_id = float(percent_id)
         self.blast_score = float(blast_score)
@@ -169,7 +170,7 @@ class MibigEntry:
         """ a list of all class member values in constructor arg order, for
             simplifying conversion to and from JSON
         """
-        return [self.gene_id, self.gene_description, self.mibig_id,
+        return [self.gene_id, self.gene_description, self.mibig_id, self.mibig_cluster_number,
                 self.mibig_product, self.percent_id, self.blast_score,
                 self.coverage, self.evalue]
 
