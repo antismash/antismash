@@ -74,7 +74,7 @@ class PredictorSVMResult(Prediction):
                "   <dd>%s</dd>\n"
                "   <dt>Single AA prediction:</dt>\n"
                "   <dd>%s</dd>\n"
-               "   <dt>Nearest stachelhaus code:</dt>\n"
+               "   <dt>Nearest Stachelhaus code:</dt>\n"
                "   <dd>%s</dd>\n"
                "  </dl>\n"
                "  </dd>\n"
