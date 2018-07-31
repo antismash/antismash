@@ -12,7 +12,7 @@
 
 
 import bisect
-from collections import defaultdict
+from collections import Counter, defaultdict
 import logging
 from typing import Any, Dict, List, Optional, Tuple, Union
 
@@ -662,6 +662,14 @@ class Record:
             one NRPS/PKS domain.
         """
         return [feature for feature in self.get_cds_features_within_clusters() if feature.nrps_pks.domains]
+
+    def get_gc_content(self) -> float:
+        """ Calculate the GC content of the record's sequence """
+        if not self.seq:
+            raise ValueError("Cannot calculate GC content of empty sequence")
+        counter = Counter(str(self.seq))
+        gc_count = counter['G'] + counter['C'] + counter['g'] + counter['c']
+        return gc_count / len(self)
 
 
 def _build_products_from_borders(borders: List[ClusterBorder]) -> List[str]:

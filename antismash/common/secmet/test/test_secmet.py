@@ -142,3 +142,19 @@ class TestRecord(unittest.TestCase):
         with self.assertRaises(AttributeError):
             cluster.product = ["c", "d"]
 # pylint: enable=assigning-non-slot
+
+    def test_gc_content(self):
+        # pure
+        for char in "ATatN":
+            assert Record(Seq(char * 100)).get_gc_content() == 0.
+        for char in "CGcg":
+            assert Record(Seq(char * 100)).get_gc_content() == 1.
+
+        # mixed
+        self.assertAlmostEqual(Record(Seq(("A"*50) + ("G"*50))).get_gc_content(), 0.5)
+        self.assertAlmostEqual(Record(Seq(("T"*25) + ("C"*75))).get_gc_content(), 0.75)
+
+        with self.assertRaisesRegex(ValueError, "empty sequence"):
+            Record().get_gc_content()
+        with self.assertRaisesRegex(ValueError, "empty sequence"):
+            Record("").get_gc_content()
