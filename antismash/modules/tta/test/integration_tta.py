@@ -19,8 +19,8 @@ from antismash.modules import tta
 
 class TtaIntegrationTest(unittest.TestCase):
     def setUp(self):
-        options = build_config(["--minimal", "--tta"], isolated=True,
-                                modules=antismash.get_all_modules())
+        options = build_config(["--minimal", "--tta", "--tta-threshold", "0"],
+                               isolated=True, modules=antismash.get_all_modules())
         self.old_config = get_config().__dict__
         self.options = update_config(options)
 
@@ -50,7 +50,8 @@ class TtaIntegrationTest(unittest.TestCase):
 
     def test_nisin_complete(self):
         with TemporaryDirectory() as output_dir:
-            args = ["--minimal", "--tta", "--output-dir", output_dir, helpers.get_path_to_nisin_genbank()]
+            args = ["--minimal", "--tta", "--tta-threshold", "0",
+                    "--output-dir", output_dir, helpers.get_path_to_nisin_genbank()]
             options = build_config(args, isolated=True, modules=antismash.get_all_modules())
             antismash.run_antismash(helpers.get_path_to_nisin_genbank(), options)
 
@@ -62,3 +63,9 @@ class TtaIntegrationTest(unittest.TestCase):
             tta_results = tta.regenerate_previous_results(results.get("antismash.modules.tta"), record, options)
             assert isinstance(tta_results, tta.TTAResults)
             assert len(tta_results.features) == 174
+
+            # raise the threshold above the gc_content and ensure regenned has no hits
+            update_config({"tta_threshold": 0.65})
+            tta_results = tta.regenerate_previous_results(results.get("antismash.modules.tta"), record, options)
+            assert isinstance(tta_results, tta.TTAResults)
+            assert not tta_results.features

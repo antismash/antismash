@@ -22,14 +22,21 @@ def get_arguments() -> ModuleArgs:
                              action='store_true',
                              default=False,
                              help="Run TTA codon detection module.")
+    args.add_option('--tta-threshold',
+                    dest='tta_threshold',
+                    type=float,
+                    default=0.65,
+                    help="Lowest GC content to annotate TTA codons at (default: %(default)s).")
     return args
 
 
-def check_options(_options: ConfigType) -> List[str]:
+def check_options(options: ConfigType) -> List[str]:
     """ Checks options for conflicts.
-        No extra options, so they can't have conflicts.
     """
-    return []
+    issues = []
+    if options.tta_threshold < 0 or options.tta_threshold > 1:
+        issues.append("Supplied threshold is out of range 0 to 1: %s" % options.tta_threshold)
+    return issues
 
 
 def check_prereqs() -> List[str]:
