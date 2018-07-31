@@ -23,11 +23,12 @@ class TTAResults(ModuleResults):
     """ Holds results for the TTA module by tracking locations of TTA codons."""
     schema_version = 2
 
-    def __init__(self, record_id: str, gc_content: float) -> None:
+    def __init__(self, record_id: str, gc_content: float, threshold: float) -> None:
         super().__init__(record_id)
         self.codon_starts = []  # type: List[Codon] # tuples of start and strand for each marker
         self.features = []  # type: List[Feature] # features created for markers
         self.gc_content = float(gc_content)
+        self.threshold = float(threshold)
 
     def new_feature_from_basics(self, start: int, strand: int) -> Feature:
         """ Constructs a new TTA marking feature from a start position and
@@ -57,7 +58,8 @@ class TTAResults(ModuleResults):
         return {"TTA codons": starts,
                 "schema_version": TTAResults.schema_version,
                 "record_id": self.record_id,
-                "gc_content": self.gc_content}
+                "gc_content": self.gc_content,
+                "threshold": self.threshold}
 
     def add_to_record(self, record: Record) -> None:
         """ Adds the found TTA features to the record """
@@ -76,7 +78,13 @@ class TTAResults(ModuleResults):
         """
         if json["schema_version"] != TTAResults.schema_version:
             return None
-        results = TTAResults(json["record_id"], json["gc_content"])
+
+        options = get_config()
+        results = TTAResults(json["record_id"], json["gc_content"], options.tta_threshold)
+        # if old results were excluding based on too low a GC content, rerun
+        if json["threshold"] > results.gc_content and options.tta_threshold <= results.gc_content:
+            return None
+        # otherwise, if the threshold is now too high, skip all the codons
         if json["gc_content"] >= get_config().tta_threshold:
             for info in json["TTA codons"]:
                 start = info["start"]
@@ -95,15 +103,15 @@ def detect(record: Record, options: ConfigType) -> TTAResults:
         Returns:
             a TTAResults instance with all detected TTA codons
     """
-    assert options.tta
     gc_content = record.get_gc_content()
-    results = TTAResults(record.id, gc_content)
+    results = TTAResults(record.id, gc_content, options.tta_threshold)
 
     if gc_content < options.tta_threshold:
-        logging.info("Skipping TTA codon detection, GC content too low: %2.0f%%", (gc_content * 100))
+        logging.info("Skipping TTA codon detection, GC content too low: %2.0f%%", gc_content * 100)
         return results
 
     logging.info("Detecting TTA codons")
+    logging.debug("GC content: %2.0f%%", gc_content * 100)
 
     for feature in record.get_cds_features_within_clusters():
         sequence = feature.extract(record.seq)

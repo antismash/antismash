@@ -16,12 +16,7 @@ SHORT_DESCRIPTION = "TTA detection"
 
 def get_arguments() -> ModuleArgs:
     """ Build and return arguments. No extra options beyond a switch to enable """
-    args = ModuleArgs('Additional analysis', 'tta')
-    args.add_analysis_toggle('--tta',
-                             dest='tta',
-                             action='store_true',
-                             default=False,
-                             help="Run TTA codon detection module.")
+    args = ModuleArgs('Additional analysis', 'tta', enabled_by_default=True)
     args.add_option('--tta-threshold',
                     dest='tta_threshold',
                     type=float,
@@ -47,7 +42,7 @@ def check_prereqs() -> List[str]:
 
 def is_enabled(options: ConfigType) -> bool:
     """ Should the module be run with these options """
-    return options.tta
+    return options.tta_enabled or not options.minimal
 
 
 def regenerate_previous_results(previous: Dict[str, Any], record: Record,
