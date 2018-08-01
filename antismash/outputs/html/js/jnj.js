@@ -19,7 +19,7 @@ function switch_to_cluster() {
     }
 
     if (geneclusters[anchor] !== undefined) {
-      svgene.drawClusters(anchor+"-svg", [geneclusters[anchor]], 20, 700);
+      svgene.drawCluster(anchor+"-svg", geneclusters[anchor], 20, 700);
     }
     if ($("#" + anchor + "-details-svg").length > 0) {
       jsdomain.drawDomains(anchor+ "-details-svg", details_data[anchor], 40, 700);
