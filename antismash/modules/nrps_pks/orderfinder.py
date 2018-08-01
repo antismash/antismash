@@ -32,7 +32,8 @@ def analyse_biosynthetic_order(nrps_pks_features: List[CDSFeature],
     compound_predictions = {}  # type: Dict[int, Tuple[str, bool]]
     # Find NRPS/PKS gene clusters
     nrpspksclusters = [cluster for cluster in record.get_clusters()
-                       if "nrps" in cluster.products or "pks" in "-".join(cluster.products)]
+                       if "nrps" in "-".join(cluster.products)
+                       or "pks" in "-".join(cluster.products)]
     if not nrpspksclusters:
         return {}
     # Predict biosynthetic gene order in gene cluster using starter domains,
