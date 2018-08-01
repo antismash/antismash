@@ -652,7 +652,7 @@ def run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
         log_module_runtimes(results.timings_by_record)
 
     logging.debug("antiSMASH calculation finished at %s; runtime: %s",
-                  str(datetime.now()), str(running_time))
+                  datetime.now().strftime("%Y-%m-%d %H:%M:%S"), str(running_time))
 
     logging.info("antiSMASH status: SUCCESS")
     return 0
