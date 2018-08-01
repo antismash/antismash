@@ -63,8 +63,11 @@ class SecMetQualifier(list):
     def __init__(self, products: Set[str], domains: List["SecMetQualifier.Domain"]) -> None:
         self._domains = domains
         self.domain_ids = []  # type: List[str]
+        self.unique_domain_ids = set()  # type: Set[str]
         for domain in self._domains:
             assert isinstance(domain, SecMetQualifier.Domain)
+            assert domain.query_id not in self.unique_domain_ids, "domains were duplicated"
+            self.unique_domain_ids.add(domain.query_id)
             self.domain_ids.append(domain.query_id)
         self._products = set()  # type: Set[str]
         self.add_products(products)
@@ -91,9 +94,14 @@ class SecMetQualifier(list):
 
     def add_domains(self, domains: List["SecMetQualifier.Domain"]) -> None:
         """ Add a group of Domains to the the qualifier """
+        unique = []
         for domain in domains:
             assert isinstance(domain, SecMetQualifier.Domain)
-        self._domains.extend(domains)
+            if domain.query_id in self.unique_domain_ids:
+                continue  # no sense keeping duplicates
+            self.unique_domain_ids.add(domain.query_id)
+            unique.append(domain)
+        self._domains.extend(unique)
 
     @property
     def domains(self) -> List["SecMetQualifier.Domain"]:
