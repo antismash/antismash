@@ -92,6 +92,8 @@ def regenerate_previous_results(results: Dict[str, Any], record: Record,
     if set(regenerated.enabled_types) != set(get_supported_cluster_types()):
         raise RuntimeError("Cluster types supported by HMM detection have changed, all results invalid")
     regenerated.rule_results.annotate_cds_features()
+    for border in regenerated.get_predictions():
+        record.add_cluster_border(border)
     return regenerated
 
 
