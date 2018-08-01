@@ -352,7 +352,7 @@ def records_contain_shotgun_scaffolds(records: List[Record]) -> bool:
 
 
 def ensure_no_duplicate_cds_gene_ids(sequences: List[Record]) -> None:
-    """ Ensures that every CDS across all sequences has a unique id
+    """ Ensures that every CDS has a unique id within it's Record
 
         Arguments:
             sequences: the secmet.Record instances to process
@@ -360,15 +360,19 @@ def ensure_no_duplicate_cds_gene_ids(sequences: List[Record]) -> None:
         Returns:
             None
     """
-    all_ids = set()  # type: Set[str]
     for sequence in sequences:
+        all_ids = set()  # type: Set[str]
         for cdsfeature in sequence.get_cds_features():
             name = cdsfeature.get_name()
             if name in all_ids:
                 name, _ = generate_unique_id(name[:8], all_ids, start=1)
             if cdsfeature.product is None:
                 cdsfeature.product = name
-            cdsfeature.locus_tag = name
+            # update only the name causing the conflict
+            if cdsfeature.locus_tag == cdsfeature.get_name():
+                cdsfeature.locus_tag = name
+            elif cdsfeature.gene == cdsfeature.get_name():
+                cdsfeature.gene = name
             all_ids.add(name)
 
 
