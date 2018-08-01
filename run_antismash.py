@@ -5,6 +5,7 @@
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 """Run the antiSMASH pipeline"""
 
+import os
 import sys
 from typing import List
 
@@ -66,8 +67,15 @@ def main(args: List[str]) -> int:
     if options.sequences:
         sequence = options.sequences[0]
         options.__dict__.pop("sequences")
+        if not os.path.exists(sequence):
+            parser.error("Input file does not exist: %s" % sequence)
+            return 1
     else:
         sequence = ""
+
+    if options.reuse_results and not os.path.exists(options.reuse_results):
+        parser.error("Input file does not exist: %s" % options.reuse_results)
+        return 1
 
     options.version = get_version()
 
