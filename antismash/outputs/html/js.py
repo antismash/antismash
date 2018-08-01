@@ -104,7 +104,7 @@ def convert_cluster_border_features(borders: Iterable[ClusterBorder]) -> List[Di
     # them into a single row
     putatives = [border for border in borders if border.product == clusterfinder.PUTATIVE_PRODUCT]
     non_putatives = [border for border in borders if border.product != clusterfinder.PUTATIVE_PRODUCT]
-    borders = putatives + sorted(non_putatives, key=lambda x: x.product or "unknown")
+    borders = putatives + sorted(non_putatives, key=lambda x: (x.location.start, -len(x.location), x.product or "unknown"))
     for i, border in enumerate(borders):
         js_border = {"start": border.location.start,
                      "end": border.location.end,
