@@ -29,6 +29,9 @@ CLUSTERBLAST_URL = "https://dl.secondarymetabolites.org/releases/4.0.0/clusterbl
 CLUSTERBLAST_ARCHIVE_CHECKSUM = "c9c1f2c07ce97ea453345034727555928e7b0b8907f700805bb6a912865bb315"
 CLUSTERBLAST_DMND_CHECKSUM = "388df3e711b3049ad851bfc8bd45ec292a3808907f048e6a7e5f4a25b90699f8"
 
+RESFAM_URL = "http://dantaslab.wustl.edu/resfams/Resfams.hmm.gz"
+RESFAM_ARCHIVE_CHECKSUM = "82e9325283b999b1fb1351502b2d12194561c573d9daef3e623e905c1af66fd6"
+
 LOCAL_FILE_PATH = os.path.abspath(os.path.dirname(__file__))
 
 CHUNK = 128 * 1024
@@ -203,6 +206,58 @@ def download_pfam(url, version, archive_checksum, db_checksum):
     delete_file(filename + ".gz")
 
 
+def download_resfam(url: str, archive_checksum: str) -> None:
+    """Download and sanitise the Resfam database."""
+    archive_filename = os.path.join(LOCAL_FILE_PATH, "databases", "resfam", "Resfams.hmm.gz")
+    # checksum of existing not matched because it has a convert timestamp in it
+
+    print("Downloading Resfam database")
+    check_diskspace(url)
+    download_if_not_present(url, archive_filename, archive_checksum)
+    filename = unzip_file(archive_filename, gzip, gzip.zlib.error)
+    delete_file(filename + ".gz")
+    # remove tabs
+    converted = execute(["hmmconvert", filename])
+    print("Ensuring all cutoffs are present")
+    # add TC to those entries missing them
+    # calculated as 10% less than the minimum scoring hit in their own group
+    missing_cutoffs = {'RF0174': int(374 * 0.9),
+                       'RF0172': int(85 * 0.9),
+                       'RF0173': int(295 * 0.9),
+                       'RF0168': int(691 * 0.9)}
+    with open(filename, 'w') as handle:
+        lines = list(converted.stdout)
+        i = 0
+        while i < len(lines):
+            # find an accession accession
+            while i < len(lines) and not lines[i].startswith("ACC"):
+                handle.write(lines[i])
+                i += 1
+            # end of file with no new accession
+            if i >= len(lines):
+                break
+            # write the accession line itself
+            handle.write(lines[i])
+
+            # add the cutoffs if missing
+            acc = lines[i].split()[1]
+            if acc not in missing_cutoffs:
+                continue
+            value = missing_cutoffs[acc]
+            # an accession of interest, so add cutoffs in the same place as others
+            while not lines[i].startswith("CKSUM"):
+                handle.write(lines[i])
+                i += 1
+            # write the CKSUM line
+            handle.write(lines[i])
+            # and finally add the cutoffs
+            for cutoff in ["GA", "TC", "NC"]:
+                handle.write("%s    %d.00 %d.00\n" % (cutoff, value, value))
+            i += 1
+
+    compile_pfam(filename)
+
+
 def download_clusterblast():
     """Download the clusterblast database."""
     database_dir = os.path.join(LOCAL_FILE_PATH, "databases",)
@@ -229,6 +284,8 @@ def main():
 
     # And also grab the latest
     download_pfam(PFAM_LATEST_URL, PFAM_LATEST_VERSION, PFAM_LATEST_ARCHIVE_CHECKSUM, PFAM_LATEST_CHECKSUM)
+
+    download_resfam(RESFAM_URL, RESFAM_ARCHIVE_CHECKSUM)
 
     download_clusterblast()
 
