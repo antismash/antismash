@@ -93,8 +93,7 @@ class ClusterLayer:
         assert isinstance(cluster_feature, Cluster), type(cluster_feature)
         assert cluster_feature.parent_record
         self.record = record  # type: RecordLayer
-        self.anchor_id = "r{}c{}".format(cluster_feature.parent_record.record_index,
-                                         cluster_feature.get_cluster_number())
+        self.anchor_id = self.build_anchor_id(cluster_feature)
         self.handlers = []  # type: List[AntismashModule]
         self.cluster_feature = cluster_feature  # type: Cluster
 
@@ -227,3 +226,9 @@ class ClusterLayer:
             if hasattr(handler, "generate_sidepanel"):
                 return True
         return False
+
+    @staticmethod
+    def build_anchor_id(cluster: Cluster) -> str:
+        """ Builds a consistent HTML anchor identifier for a cluster """
+        return "r{}c{}".format(cluster.parent_record.record_index,
+                               cluster.get_cluster_number())
