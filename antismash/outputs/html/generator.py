@@ -6,7 +6,7 @@
 import json
 import string
 import os
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 import jinja2
 from jinja2 import FileSystemLoader, Environment
@@ -17,6 +17,44 @@ from antismash.common.secmet import Record
 from antismash.config import ConfigType
 from antismash.outputs.html import js
 from antismash.typing import AntismashModule
+
+
+def build_json_data(records: List[Record], results: List[Dict[str, module_results.ModuleResults]],
+                    options: ConfigType) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    """ Builds JSON versions of records and domains for use in drawing SVGs with
+        javascript.
+
+        Arguments:
+            records: a list of Records to convert
+            results: a dictionary mapping record id to a list of ModuleResults to convert
+            options: antiSMASH options
+
+        Returns:
+            a tuple of
+                a list of JSON-friendly dicts representing records
+                a list of JSON-friendly dicts representing domains
+    """
+
+    from antismash import get_all_modules  # TODO break circular dependency
+    js_records = js.convert_records(records, results, options)
+
+    js_domains = []
+
+    for i, record in enumerate(records):
+        json_record = js_records[i]
+        json_record['seq_id'] = "".join(char for char in json_record['seq_id'] if char in string.printable)
+        for cluster, json_cluster in zip(record.get_clusters(), json_record['clusters']):
+            handlers = find_plugins_for_cluster(get_all_modules(), json_cluster)
+            for handler in handlers:
+                # if there's no results for the module, don't let it try
+                if handler.__name__ not in results[i]:
+                    continue
+                if "generate_js_domains" in dir(handler):
+                    domains = handler.generate_js_domains(cluster, record)
+                    if domains:
+                        js_domains.append(domains)
+
+    return js_records, js_domains
 
 
 def write_geneclusters_js(records: List[Dict[str, Any]], output_dir: str,
@@ -40,27 +78,9 @@ def write_geneclusters_js(records: List[Dict[str, Any]], output_dir: str,
 def generate_webpage(records: List[Record], results: List[Dict[str, module_results.ModuleResults]],
                      options: ConfigType) -> None:
     """ Generates and writes the HTML itself """
+
     generate_searchgtr_htmls(records, options)
-
-    json_records = js.convert_records(records, results, options)
-
-    js_domains = []
-
-    for i, record in enumerate(records):
-        json_record = json_records[i]
-        json_record['seq_id'] = "".join(char for char in json_record['seq_id'] if char in string.printable)
-        for cluster, json_cluster in zip(record.get_clusters(), json_record['clusters']):
-            from antismash import get_all_modules  # TODO break circular dependency
-            handlers = find_plugins_for_cluster(get_all_modules(), json_cluster)
-            for handler in handlers:
-                # if there's no results for the module, don't let it try
-                if handler.__name__ not in results[i]:
-                    continue
-                if "generate_js_domains" in dir(handler):
-                    domains = handler.generate_js_domains(cluster, record)
-                    if domains:
-                        js_domains.append(domains)
-
+    json_records, js_domains = build_json_data(records, results, options)
     write_geneclusters_js(json_records, options.output_dir, js_domains)
 
     with open(os.path.join(options.output_dir, 'index.html'), 'w') as result_file:
