@@ -19,6 +19,7 @@ class GeneFunction(Enum):
     ADDITIONAL = 2
     TRANSPORT = 3
     REGULATORY = 4
+    RESISTANCE = 5
 
     def __str__(self) -> str:
         # because this information ends up in the record, make these more

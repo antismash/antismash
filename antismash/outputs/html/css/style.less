@@ -10,6 +10,7 @@
 @gene-type-biosynthetic-additional: #f16d75;
 @gene-type-regulatory: seagreen;
 @gene-type-transport: cornflowerblue;
+@gene-type-resistance: #ed90ed;
 @feature-tta-codon: magenta;
 @tool-cassis: wheat;
 @tool-clusterfinder: teal;
@@ -383,6 +384,10 @@ table {
     fill: @gene-type-regulatory;
     stroke: black;
 }
+.svgene-type-resistance {
+    fill: @gene-type-resistance;
+    stroke: black;
+}
 .svgene-tta-codon {
     fill: @feature-tta-codon;
 }
@@ -435,6 +440,9 @@ table {
 }
 .legend-type-regulatory {
     background-color: @gene-type-regulatory;
+}
+.legend-type-resistance {
+    background-color: @gene-type-resistance;
 }
 
 .legend-border-cassis {
