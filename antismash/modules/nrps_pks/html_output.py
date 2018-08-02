@@ -5,96 +5,22 @@
 
 import logging
 import re
-from typing import Any, Dict, Iterator, Iterable, List, Optional, Tuple, Union
+from typing import Iterable, List, Optional
+from typing import Dict  # in comment type hints  # pylint: disable=unused-import
 
 from jinja2 import FileSystemLoader, Environment, StrictUndefined
 
 from antismash.common import path
 from antismash.common.layers import ClusterLayer, RecordLayer, OptionsLayer
-from antismash.common.secmet import CDSFeature, Record, Cluster
-from antismash.common.secmet.qualifiers import NRPSPKSQualifier
-from antismash.config import ConfigType
+from antismash.common.secmet import CDSFeature, Cluster
 
 from .results import NRPS_PKS_Results, UNKNOWN
-
-
-class JSONBase(dict):
-    """ A base class for JSON-serialisable objects """
-    def __init__(self, keys: List[str]) -> None:
-        super().__init__()
-        self._keys = keys
-
-    def __getitem__(self, key: str) -> Any:
-        return getattr(self, key)
-
-    def items(self) -> Iterator[Tuple[str, Any]]:  # type: ignore
-        for key in self._keys:
-            yield (key, getattr(self, key))
-
-    def values(self) -> Iterator[Any]:  # type: ignore
-        for key in self._keys:
-            yield getattr(self, key)
-
-    def __len__(self) -> int:
-        return len(self._keys)
-
-
-class JSONDomain(JSONBase):
-    """ A JSON-serialisable object for simplifying domain datatypes throughout this file """
-    def __init__(self, domain: NRPSPKSQualifier.Domain, predictions: List[Tuple[str, str]], napdos_link: str,
-                 blast_link: str, sequence: str, dna: str) -> None:
-        super().__init__(['type', 'start', 'end', 'predictions', 'napdoslink',
-                          'blastlink', 'sequence', 'dna_sequence'])
-        self.type = str(domain.name)
-        self.start = int(domain.start)
-        self.end = int(domain.end)
-        self.predictions = predictions
-        self.napdoslink = str(napdos_link)
-        self.blastlink = str(blast_link)
-        self.sequence = str(sequence)
-        self.dna_sequence = str(dna)
-
-
-class JSONOrf(JSONBase):
-    """ A JSON-serialisable object for simplifying ORF datatypes throughout this file """
-    def __init__(self, feature: CDSFeature) -> None:
-        super().__init__(['id', 'sequence', 'domains'])
-        self.sequence = feature.translation
-        self.id = feature.get_name()
-        self.domains = []  # type: List[JSONDomain]
-
-    def add_domain(self, domain: JSONDomain) -> None:
-        """ Add a JSONDomain to the list of domains in this ORF """
-        assert isinstance(domain, JSONDomain)
-        self.domains.append(domain)
 
 
 def will_handle(products: List[str]) -> bool:
     """ Returns true if one or more relevant products are present """
     return bool(set(products).intersection({"nrps", "t1pks", "t2pks", "transatpks",
                                             "nrpsfragment", "otherks"}))
-
-
-def generate_js_domains(cluster_json: Dict[str, Any], record: Record, results: NRPS_PKS_Results,
-                        options: ConfigType) -> Optional[Dict[str, Union[str, List[JSONOrf]]]]:
-    """ Generate """
-    assert isinstance(results, NRPS_PKS_Results), type(results)
-    cluster_feature = record.get_cluster(cluster_json['idx'])
-    cluster = NrpspksLayer(results, cluster_feature, RecordLayer(record, results, OptionsLayer(options)))
-    return cluster.get_domain_details()
-
-
-def generate_details_div(cluster_layer: ClusterLayer, results: NRPS_PKS_Results,
-                         record_layer: RecordLayer, options_layer: OptionsLayer) -> str:
-    """ Generate the main HTML with results from the NRPS/PKS module """
-    env = Environment(loader=FileSystemLoader(path.get_full_path(__file__, 'templates')),
-                      autoescape=True, undefined=StrictUndefined)
-    template = env.get_template('details.html')
-    cluster = NrpspksLayer(results, cluster_layer.cluster_feature, record_layer)
-    details_div = template.render(record=record_layer,
-                                  cluster=cluster,
-                                  options=options_layer)
-    return details_div
 
 
 def generate_sidepanel(cluster_layer: ClusterLayer, results: NRPS_PKS_Results,
@@ -172,8 +98,6 @@ class NrpspksLayer(ClusterLayer):
     """ A wrapper for ClusterLayer that adds some specific sections for NRPS/PKS
         domains and structures.
     """
-    # TODO: some of these need to shift to nrps_pks_domains output, the remainder
-    #       can move into the NRPS_PKS_Results object instead.
     def __init__(self, results: NRPS_PKS_Results, cluster_feature: Cluster, record: RecordLayer) -> None:
         self.url_strict = {}  # type: Dict[str, str]  # gene name -> url
         self.url_relaxed = {}  # type: Dict[str, str]  # gene name -> url
@@ -186,25 +110,6 @@ class NrpspksLayer(ClusterLayer):
         cluster_number = cluster_feature.get_cluster_number()
         default_prediction = ("N/A", False)
         self.monomer, self.used_domain_docking = results.cluster_predictions.get(cluster_number, default_prediction)
-
-    def get_domain_details(self) -> Optional[Dict[str, Union[str, List[JSONOrf]]]]:
-        """ Creates a JSON-like structure for domains, used by javascript in
-            drawing the domains
-        """
-        orfs = []  # type: List[JSONOrf]
-        for feature in self.cluster_feature.cds_children:
-            if not feature.nrps_pks:
-                continue
-            js_orf = JSONOrf(feature)
-            for domain in feature.nrps_pks.domains:
-                js_orf.add_domain(self.parse_domain(domain, feature))
-            orfs.append(js_orf)
-
-        if orfs:
-            return {'id': self.anchor_id,
-                    'orfs': orfs}
-
-        return None
 
     @property
     def warning(self) -> str:
@@ -283,26 +188,3 @@ class NrpspksLayer(ClusterLayer):
             i += 1
         urlstring = "http://bioinfo.lifl.fr/norine/fingerPrintSearch.jsp?"+"&".join(nrpslist)
         return urlstring
-
-    def parse_domain(self, domain: NRPSPKSQualifier.Domain, feature: CDSFeature
-                     ) -> JSONDomain:
-        "Convert a NRPS/PKS domain string to a dict useable by json.dumps"
-        predictions = list(domain.predictions.items())
-
-        # Create url_link to NaPDoS for C and KS domains
-        napdoslink = ""
-        domainseq = str(feature.translation)[domain.start:domain.end]
-        base = ("http://napdos.ucsd.edu/cgi-bin/process_request.cgi?"
-                "query_type=aa&amp;ref_seq_file=all_{0}_public_12062011.faa"
-                "&amp;Sequence=%3E{0}_domain_from_antiSMASH%0D{1}")
-        if domain.name == "PKS_KS":
-            napdoslink = base.format("KS", domainseq)
-        elif "Condensation" in domain.name:
-            napdoslink = base.format("C", domainseq)
-        blastlink = ("http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE=Proteins"
-                     "&amp;PROGRAM=blastp&amp;BLAST_PROGRAMS=blastp"
-                     "&amp;QUERY={}"
-                     "&amp;LINK_LOC=protein&amp;PAGE_TYPE=BlastSearch").format(domainseq)
-
-        dna_sequence = feature.extract(self.record.seq_record.seq)
-        return JSONDomain(domain, predictions, napdoslink, blastlink, domainseq, dna_sequence)

@@ -49,16 +49,15 @@ def generate_webpage(records: List[Record], results: List[Dict[str, module_resul
     for i, record in enumerate(records):
         json_record = json_records[i]
         json_record['seq_id'] = "".join(char for char in json_record['seq_id'] if char in string.printable)
-        for json_cluster in json_record['clusters']:  # json clusters
-            from antismash import get_analysis_modules  # TODO break circular dependency
-            handlers = find_plugins_for_cluster(get_analysis_modules(), json_cluster)
+        for cluster, json_cluster in zip(record.get_clusters(), json_record['clusters']):
+            from antismash import get_all_modules  # TODO break circular dependency
+            handlers = find_plugins_for_cluster(get_all_modules(), json_cluster)
             for handler in handlers:
                 # if there's no results for the module, don't let it try
                 if handler.__name__ not in results[i]:
                     continue
                 if "generate_js_domains" in dir(handler):
-                    domains = handler.generate_js_domains(json_cluster, record,  # type: ignore
-                                                          results[i][handler.__name__], options)
+                    domains = handler.generate_js_domains(cluster, record)
                     if domains:
                         js_domains.append(domains)
 

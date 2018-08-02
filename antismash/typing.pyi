@@ -7,12 +7,13 @@
 # pylint: disable=pointless-statement,unused-argument,missing-docstring,multiple-statements
 
 from types import ModuleType
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from .config.args import ModuleArgs
 
+from .common.json import JSONOrf
 from .common.module_results import ModuleResults
-from .common.secmet import Record
+from .common.secmet import Cluster, Record
 
 
 class ConfigType:
@@ -54,3 +55,7 @@ class AntismashModule(ModuleType):
     # not implemented by every module, but by most
     @staticmethod
     def will_handle(products: List[str]) -> bool: ...
+
+    @staticmethod
+    def generate_js_domains(cluster: Cluster, record: Record
+                            ) -> Optional[Dict[str, Union[str, List[JSONOrf]]]]: ...
