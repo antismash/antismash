@@ -12,6 +12,7 @@ from antismash.common.secmet import Record
 from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
 
+from .domain_drawing import generate_details_div, generate_js_domains, will_handle
 from .domain_identification import generate_domains, NRPSPKSDomains
 
 NAME = "nrps_pks_domains"
