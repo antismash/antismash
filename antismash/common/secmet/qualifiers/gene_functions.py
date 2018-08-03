@@ -140,8 +140,8 @@ class GeneFunctionAnnotations:
         # if any CORE function set, use that
         if self._by_function.get(GeneFunction.CORE):
             return GeneFunction.CORE
-        # then priority for smcogs
-        annotations = self._by_tool.get("smcogs")
+        # then priority for resfam, then smcogs
+        annotations = self._by_tool.get("resfam", self._by_tool.get("smcogs"))
         if annotations:
             return annotations[0].function
         # otherwise check all agree
