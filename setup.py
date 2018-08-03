@@ -74,6 +74,7 @@ setup(
     entry_points={
         'console_scripts': [
             'download-antismash-databases=antismash.download_databases:main',
+            'antismash=antismash.__main__:entrypoint',
         ],
     },
     cmdclass={'test': PyTest},
