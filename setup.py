@@ -10,10 +10,7 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 
-if os.path.exists('README.rst'):
-    long_description = read('README.rst')
-else:
-    long_description = read('README.md')
+long_description = read('README.md')
 
 install_requires = [
     'argparse',
@@ -71,6 +68,7 @@ setup(
     author_email='antismash@secondarymetabolites.org',
     description='The antibiotics and Secondary Metabolites Analysis Shell.',
     long_description=long_description,
+    long_description_content_type='text/markdown',
     install_requires=install_requires,
     tests_require=tests_require,
     entry_points={
