@@ -33,6 +33,7 @@ from antismash.detection import (cassis,
                                  genefinding,
                                  hmm_detection,
                                  nrps_pks_domains,
+                                 genefunctions,
                                  )
 from antismash.modules import (active_site_finder,
                                clusterblast,
@@ -74,7 +75,7 @@ def get_detection_modules() -> List[AntismashModule]:
             a list of modules
     """
     return [genefinding, hmm_detection, nrps_pks_domains, full_hmmer, cassis,  # type: ignore
-            clusterfinder, cluster_hmmer]
+            clusterfinder, cluster_hmmer, genefunctions]
 
 
 def get_analysis_modules() -> List[AntismashModule]:
@@ -219,7 +220,7 @@ def run_detection(record: Record, options: ConfigType,
     logging.info("%d cluster(s) detected in record", len(record.get_clusters()))
 
     # finally, run any detection limited to genes in clusters
-    for module in [nrps_pks_domains, cluster_hmmer]:
+    for module in [nrps_pks_domains, cluster_hmmer, genefunctions]:
         run_module(record, cast(AntismashModule, module), options, module_results, timings)
         results = module_results.get(module.__name__)
         if results:
