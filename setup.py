@@ -1,6 +1,7 @@
 """Setuptools magic to install antiSMASH."""
+import glob
 import os
-from setuptools import setup
+from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 import sys
 
@@ -44,6 +45,26 @@ def read_version():
             return line.split('=')[-1].strip().strip('"')
 
 
+def find_data_files():
+    """Setuptools package_data globbing is stupid, so make this work ourselves."""
+    data_files = []
+    for pathname in glob.glob("antismash/**/*", recursive=True):
+        if pathname.endswith('.pyc'):
+            continue
+        if pathname.endswith('.py'):
+            continue
+        if '__pycache__' in pathname:
+            continue
+        if pathname[:-1].endswith('.hmm.h3'):
+            continue
+        if pathname.endswith('bgc_seeds.hmm'):
+            continue
+        pathname = glob.escape(pathname)
+        pathname = pathname[10:]
+        data_files.append(pathname)
+    return data_files
+
+
 class PyTest(TestCommand):
     """Allow running tests via python setup.py test."""
 
@@ -63,7 +84,10 @@ class PyTest(TestCommand):
 setup(
     name="antismash",
     version=read_version(),
-    packages=['antismash'],
+    packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
+    package_data={
+        'antismash': find_data_files(),
+    },
     author='antiSMASH development team',
     author_email='antismash@secondarymetabolites.org',
     description='The antibiotics and Secondary Metabolites Analysis Shell.',
