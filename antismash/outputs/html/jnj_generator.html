@@ -42,9 +42,7 @@
         {{le.legend('legend-type-biosynthetic-additional', 'additional biosynthetic genes')}}
         {{le.legend('legend-type-transport', 'transport-related genes')}}
         {{le.legend('legend-type-regulatory', 'regulatory genes')}}
-        {% if options.resfam %}
-          {{le.legend('legend-type-resistance', 'resistance genes')}}
-        {% endif %}
+        {{le.legend('legend-type-resistance', 'resistance genes')}}
         {{le.legend('legend-type-other', 'other genes')}}
         {% if (options.tta_enabled or not options.minimal) and record.get_gc_content() >= options.tta_threshold %}
             {{le.legend('legend-tta-codon', 'TTA codon')}}
