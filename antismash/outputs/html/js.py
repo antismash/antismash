@@ -214,7 +214,7 @@ def get_description(record: Record, feature: CDSFeature, type_: str,
         for note in feature.notes:  # TODO find a better way to store image urls
             if note.startswith('smCOG tree PNG image:'):
                 url = note.split(':')[-1]
-                entry = '<a href="%s" target="_new">View smCOG seed phylogenetic tree with this gene</a>\n'
+                entry = '<a href="%s" target="_new">View smCOG seed phylogenetic tree with this gene</a><br>\n'
                 template += entry % url
                 break
 
