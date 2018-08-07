@@ -1,0 +1,33 @@
+# License: GNU Affero General Public License v3 or later
+# A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
+
+# for test files, silence irrelevant and noisy pylint warnings
+# pylint: disable=no-self-use,protected-access,missing-docstring
+
+import unittest
+
+import antismash
+from antismash.common import path
+from antismash.common.test import helpers
+from antismash.config import build_config, destroy_config
+from antismash.modules import t2pks
+
+
+class T2PKSTest(unittest.TestCase):
+    def setUp(self):
+        self.options = build_config(["--t2pks", "--minimal"], isolated=True,
+                                    modules=antismash.get_all_modules())
+
+    def tearDown(self):
+        destroy_config()
+
+    def test_reuse(self):
+        test_file = path.get_full_path(__file__, 'data', 'NC_003888.3.cluster011.gbk')
+        results = helpers.run_and_regenerate_results_for_module(test_file, t2pks, self.options)
+        assert list(results.cluster_predictions) == [1]
+        pred = results.cluster_predictions[1]
+        assert pred.starter_units == [t2pks.results.Prediction('acetyl', 0., 0.)]
+        assert pred.malonyl_elongations == [t2pks.results.Prediction('7', 743.5, 1.2e-226)]
+        assert pred.product_classes == {'benzoisochromanequinone'}
+        assert list(pred.molecular_weights) == ['acetyl_7']
+        self.assertAlmostEqual(pred.molecular_weights['acetyl_7'], 451.22572)

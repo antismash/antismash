@@ -359,3 +359,40 @@ def run_muscle_single(seq_name: str, seq: str, comparison_file: str) -> Dict[str
                                    seq_name))
             fasta = read_fasta(temp_out.name)
     return fasta
+
+
+def run_blastp(target_blastp_database: str, query_sequence: str,
+               opts: List[str] = None, results_file: str = None
+               ) -> List[SearchIO._model.query.QueryResult]:
+    """ Runs blastp over a single sequence against a database and returns the
+        results as parsed by Bio.SearchIO.
+
+        Arguments:
+            target_blastp_database: the blastp database to compare to
+            query_sequence: the sequence being compared
+            opts: a list of extra arguments to pass to blastp, or None
+            results_file: a path to keep a copy of blastp results in, if provided
+
+        Returns:
+            a list of QueryResults as parsed from blast output by SearchIO
+    """
+    if not query_sequence:
+        raise ValueError("Cannot run blastp on empty sequence")
+
+    config = get_config()
+    command = ["blastp", "-num_threads", str(config.cpus), "-db", target_blastp_database]
+
+    if opts is not None:
+        command.extend(opts)
+
+    result = execute(command, stdin=query_sequence)
+    if not result.successful():
+        raise RuntimeError('blastp returned %d: %r while scanning %r' % (
+                           result.return_code, result.stderr.replace("\n", ""),
+                           query_sequence[:100]))
+
+    if results_file is not None:
+        with open(results_file, 'w') as fh:
+            fh.write(result.stdout)
+
+    return list(SearchIO.parse(StringIO(result.stdout), 'blast-text'))

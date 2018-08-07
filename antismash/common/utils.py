@@ -12,6 +12,7 @@ import Bio.Data.IUPACData
 from Bio.SeqUtils.ProtParam import ProteinAnalysis
 from Bio.SeqFeature import FeatureLocation
 
+from .fasta import read_fasta
 from .secmet import Feature, Record
 
 
@@ -136,3 +137,16 @@ def get_hmm_lengths(hmm_file: str) -> Dict[str, int]:
         length = lengthpart.split("\n")[0]
         lengths[name] = int(length)
     return lengths
+
+
+def get_fasta_lengths(fasta_file: str) -> Dict[str, int]:
+    """ Finds the lengths of all sequences in the provided FASTA file.
+
+        Arguments:
+            hmm_file: the FASTA file to read
+
+        Returns:
+            a dictionary mapping sequence identifier to sequence length
+    """
+    fasta = read_fasta(fasta_file)
+    return {key: len(val) for key, val in fasta.items()}

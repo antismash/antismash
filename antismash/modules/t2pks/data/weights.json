@@ -1,0 +1,24 @@
+{
+  "malonyl": 58.01488,
+  "CYC": -15.99,
+  "KR": 1.00794,
+  "MET": 15.03452,
+  "OXY": 15.999,
+  "GT": 180.156,
+  "HAL": {
+    "cl": 35.45
+  },
+  "starter_unit": {
+    "2-methylbutyryl": 85.12396,
+    "acetyl": 43.04422,
+    "anthraniloyl": 120.12854,
+    "aziridinyl": 87.0768,
+    "benzoyl": 105.1136,
+    "butyryl": 71.09738,
+    "hexadienyl": 95.11878,
+    "hexanoyl": 99.15054,
+    "isobutyryl": 71.09738,
+    "malonamyl": 86.06886,
+    "propionyl": 57.0708
+  }
+}

@@ -1,0 +1,58 @@
+<div class="more-details">
+	<h3>Type II PKS gene cluster prediction details</h3>
+	{% for prediction in predictions %}
+	{% if loop.index > 1 %}
+	<hr>
+	{% endif %}
+	<dl class="prediction-text">
+        <dt><strong>Cluster section:</strong></dt>
+        <dd>{{prediction.start}} to {{prediction.end}}</dd>
+		{% if prediction.starter_units %}
+		<dt><strong>Starter unit(s):</strong></dt>
+		<dd>{% for pred in prediction.starter_units | sort(attribute='score', reverse=True) %}
+				{{pred.__str__()}}<br>
+			{% endfor %}
+	    <dd>
+		</tr>
+		{% endif %}
+		{% if prediction.malonyl_elongations %}
+		<dt><strong>Malonyl elongations:</strong></dt>
+        <dd>
+			{% for pred in prediction.malonyl_elongations | sort(attribute='score', reverse=True) %}
+			{{pred.__str__()}}<br>
+			{% endfor %}
+    	</dd>
+		{% endif %}
+		{% if prediction.product_classes %}
+		<dt><strong>Product class(es):</strong></td>
+        <dd>
+				{% for class in prediction.product_classes | sort %}
+				{{ class }}<br>
+				{% endfor %}
+		</dd>
+		{% endif %}
+		{% if prediction.molecular_weights %}
+		<dt><strong>Product molecular weight(s):</strong></dt>
+		<dd>
+			{% for comb, weight in prediction.molecular_weights.items() | sort %}
+			{{ comb }}: {{ '%0.2f'| format(weight|float) }} Da<br>
+			{% endfor %}
+		</dd>
+		{% endif %}
+	</dl>
+	<dl class="prediction-text">
+		{% for cds, predictions in prediction.cds_predictions.items() | sort %}
+		<dt><strong>{{ cds }}</strong></dt>
+			{% for pred in predictions %}
+			<dd>
+				{{pred.ptype}}
+				{% if pred.pfunc %}
+					{{pred.pfunc}}
+				{% endif %}
+				(Score: {{pred.bitscore}}; E-value: {{pred.evalue}})<br>
+			</dd>
+			{% endfor %}
+		{% endfor %}
+	</dl>
+    {% endfor %}
+</div>
