@@ -4,7 +4,7 @@
 # Freely distributed under the GNU General Public License (GPLv3).
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # query sequence file:             SCO1217.fasta
-# target HMM database:             antismash/modules/smcogs/data/smcogs.hmm
+# target HMM database:             antismash/detection/genefunctions/data/smcogs.hmm
 # biased composition HMM filter:   off
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

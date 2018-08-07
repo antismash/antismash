@@ -210,7 +210,7 @@ def get_description(record: Record, feature: CDSFeature, type_: str,
                                      min(feature.location.end + 10000, len(record)))
     template += """<a href="%s" target="_new">View genomic context</a><br>\n""" % context
 
-    if options.smcogs_trees:
+    if options.smcog_trees:
         for note in feature.notes:  # TODO find a better way to store image urls
             if note.startswith('smCOG tree PNG image:'):
                 url = note.split(':')[-1]
