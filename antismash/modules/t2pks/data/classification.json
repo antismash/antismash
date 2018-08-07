@@ -1,0 +1,57 @@
+{
+  "CLF": {
+    "7": [
+      "benzoisochromanequinone"
+    ],
+    "8|9": [
+      "tetracycline",
+      "aureolic acid",
+      "anthracycline",
+      "tetracenomycin",
+      "angucycline"
+    ],
+    "11|12": [
+      "pentangular polyphenol"
+    ]
+  },
+  "CYC": {
+    "C7-C12": [
+      "tetracycline",
+      "aureolic acid",
+      "anthracycline",
+      "angucycline",
+      "benzoisochromanequinone"
+    ],
+    "C5-C14": [
+      "benzoisochromanequinone"
+    ],
+    "C5-C14/C3-C16": [
+      "tetracycline",
+      "aureolic acid",
+      "anthracycline"
+    ],
+    "C4-C17/C2-C19": [
+      "angucycline"
+    ],
+    "C1-C18|C2-C19": [
+      "tetracycline",
+      "aureolic acid",
+      "anthracycline"
+    ],
+    "C2-C19": [
+      "anthracycline"
+    ],
+    "C9-C14": [
+      "pentangular polyphenol",
+      "tetracenomycin"
+    ],
+    "C5-C18": [
+      "pentangular polyphenol",
+      "tetracenomycin"
+    ],
+    "C4-C21/C2-C23|C2-C19": [
+      "tetracenomycin",
+      "pentangular polyphenol"
+    ]
+  }
+}

@@ -11,6 +11,7 @@ from .cds_feature import CDSFeature
 from .cdscollection import CDSCollection
 from .feature import Feature, FeatureLocation
 from ..locations import location_from_string
+from ..qualifiers.t2pks import T2PKSQualifier
 from ..qualifiers.gene_functions import GeneFunction
 
 
@@ -24,7 +25,7 @@ class Cluster(CDSCollection):
     """
     core_seqfeature_type = "cluster_core"
     __slots__ = ["core_location", "detection_rule", "product", "tool", "cutoff",
-                 "_definition_cdses", "neighbourhood_range"]
+                 "_definition_cdses", "neighbourhood_range", "t2pks"]
 
     def __init__(self, core_location: FeatureLocation, surrounding_location: FeatureLocation,
                  tool: str, product: str, cutoff: int, neighbourhood_range: int,
@@ -42,6 +43,9 @@ class Cluster(CDSCollection):
 
         # neighbourhood specific
         self.neighbourhood_range = neighbourhood_range
+
+        # analysis annotations
+        self.t2pks = None  # type: Optional[T2PKSQualifier]
 
     def __str__(self) -> str:
         return "Cluster(%s, product=%s)" % (self.location, self.product)
@@ -81,6 +85,8 @@ class Cluster(CDSCollection):
 
         shared_qualifiers = dict(qualifiers) if qualifiers else {}
         shared_qualifiers.update(common)
+        if self.t2pks:
+            shared_qualifiers.update(self.t2pks.to_biopython_qualifiers())
 
         core_qualifiers = dict(self._qualifiers)
         core_qualifiers.update(shared_qualifiers)
@@ -112,6 +118,9 @@ class Cluster(CDSCollection):
         # remove run-specific info
         leftovers.pop("parent_cluster_number", "")
         leftovers.pop("cluster_number", "")
+
+        # rebuild analysis annotations
+        feature.t2pks = T2PKSQualifier.from_biopython_qualifiers(leftovers)
 
         # grab optional parent qualifiers
         updated = super(Cluster, feature).from_biopython(bio_feature, feature, leftovers)
