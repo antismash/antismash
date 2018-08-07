@@ -68,9 +68,9 @@ def get_arguments() -> ModuleArgs:
         Classification is enabled by default, but an extra option for generating
         trees is also required.
     """
-    group = ModuleArgs("Basic analysis options", "smcogs", basic_help=True)
-    group.add_analysis_toggle('--smcogs-trees',
-                              dest='smcogs_trees',
+    group = ModuleArgs("Basic analysis options", "smcog", basic_help=True)
+    group.add_analysis_toggle('--smcog-trees',
+                              dest='smcog_trees',
                               action='store_true',
                               default=False,
                               help="Generate phylogenetic trees of sec. "
@@ -80,7 +80,7 @@ def get_arguments() -> ModuleArgs:
 
 def is_enabled(options: ConfigType) -> bool:
     """ Enabled if tree generation is requested """
-    return options.smcogs_trees
+    return options.smcog_trees
 
 
 def regenerate_previous_results(results: Dict[str, Any], record: Record, _options: ConfigType

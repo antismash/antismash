@@ -43,7 +43,7 @@ from antismash.modules import (active_site_finder,
                                nrps_pks,
                                pfam2go,
                                sactipeptides,
-                               smcogs,
+                               smcog_trees,
                                thiopeptides,
                                tta,
                                )
@@ -87,7 +87,7 @@ def get_analysis_modules() -> List[AntismashModule]:
         Returns:
             a list of modules
     """
-    return [smcogs, tta, lanthipeptides, thiopeptides, nrps_pks, clusterblast,  # type: ignore
+    return [smcog_trees, tta, lanthipeptides, thiopeptides, nrps_pks, clusterblast,  # type: ignore
             sactipeptides, lassopeptides, active_site_finder, pfam2go, dummy]
 
 
