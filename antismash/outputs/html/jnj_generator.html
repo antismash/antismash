@@ -35,9 +35,6 @@
     <div class="legend">
       <h4>Legend:</h4>
       <div>
-        {%- if not options.smcogs %}
-        Only available when smCOG analysis was run
-        {% endif -%}
         {{le.legend('legend-type-biosynthetic', 'core biosynthetic genes')}}
         {{le.legend('legend-type-biosynthetic-additional', 'additional biosynthetic genes')}}
         {{le.legend('legend-type-transport', 'transport-related genes')}}

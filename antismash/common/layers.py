@@ -33,11 +33,9 @@ class OptionsLayer:
         return get_all_modules()
 
     @property
-    def smcogs(self) -> bool:
-        """ Whether smcogs was enabled or not """
-        return (not self.options.minimal
-                or self.options.smcogs_enabled
-                or self.options.smcogs_trees)  # TODO work out a better way of doing this
+    def gene_functions(self) -> bool:
+        """ Whether gene function detection was enabled or not """
+        return (not self.options.minimal or self.options.genefunctions_enabled)
 
     def download_logfile(self) -> Optional[str]:
         """ Returns the path of the logfile, if it was created (otherwise None) """

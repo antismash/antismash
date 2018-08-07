@@ -11,6 +11,7 @@ from antismash.common.secmet.qualifiers import GeneFunction
 from antismash.config import ConfigType
 
 from .core import FunctionResults, scan_for_functions
+from .smcogs import classify as smcogs_classification
 
 
 def run_tools(record: Record, options: ConfigType) -> List[FunctionResults]:
@@ -26,6 +27,7 @@ def run_tools(record: Record, options: ConfigType) -> List[FunctionResults]:
 
     cds_features = record.get_cds_features_within_clusters()
     functions = [find_resistance,
+                 smcogs_classification,
                  ]
     return [func(record.id, cds_features, options) for func in functions]
 
