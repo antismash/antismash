@@ -15,7 +15,6 @@ from typing import Dict, List  # List used in comment type hints, pylint: disabl
 
 from Bio import Phylo
 from Bio.Phylo.NewickIO import NewickError
-from Bio.SearchIO._model.hsp import HSP
 from helperlibs.wrappers.io import TemporaryDirectory
 import matplotlib
 
@@ -23,21 +22,25 @@ from antismash.common import path, fasta, subprocessing
 from antismash.common.secmet import CDSFeature
 
 
-def generate_trees(smcogs_dir: str, hmm_results: Dict[str, List[HSP]], genes_within_clusters: List[CDSFeature],
+def generate_trees(smcogs_dir: str, genes_within_clusters: List[CDSFeature],
                    nrpspks_genes: List[CDSFeature]) -> Dict[str, str]:
     """ smCOG phylogenetic tree construction """
-    pks_nrps_gene_names = set([feature.get_name() for feature in nrpspks_genes])
+    pks_nrps_cds_names = set([feature.get_name() for feature in nrpspks_genes])
     logging.info("Calculating and drawing phylogenetic trees of cluster genes "
                  "with smCOG members")
+    cds_features = []
+    for cds in genes_within_clusters:
+        cds_name = cds.get_name()
+        if cds_name in pks_nrps_cds_names:
+            continue
+        if not cds.gene_functions.get_by_tool("smcogs"):
+            continue
+        cds_features.append(cds)
+
     with TemporaryDirectory(change=True):
-        cds_features = []
-        for cds in genes_within_clusters:
-            gene_id = cds.get_name()
-            if gene_id not in pks_nrps_gene_names and hmm_results.get(gene_id):
-                cds_features.append(cds)
         args = []
         for index, cds in enumerate(cds_features):
-            smcog = hmm_results[cds.get_name()][0].hit_id.split(":")[0]
+            smcog = cds.gene_functions.get_by_tool("smcogs")[0].description.split(":")[0]
             args.append([cds, index, smcog, smcogs_dir])
         subprocessing.parallel_function(smcog_tree_analysis, args)
 

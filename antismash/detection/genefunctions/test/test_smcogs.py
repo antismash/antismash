@@ -9,15 +9,15 @@ import unittest
 from antismash.common.secmet.qualifiers import GeneFunction
 from antismash.common.test import helpers
 from antismash.common.hmmscan_refinement import HMMResult
-from antismash.modules.smcogs import classify, SMCOGResults
+from antismash.detection.genefunctions import FunctionResults, smcogs
 
 
 class TestSMCOGLoad(unittest.TestCase):
     def test_load(self):
         # this mostly just tests that the cog annotation file isn't corrupted
-        annotations = classify.load_cog_annotations()
-        assert len(annotations) == 301
-        for key, function in annotations.items():
+        mapping = smcogs.build_function_mapping()
+        assert len(mapping) == 301
+        for key, function in mapping.items():
             assert isinstance(function, GeneFunction), "cog annotation %s has bad type" % key
 
 
@@ -28,9 +28,10 @@ class TestAddingToRecord(unittest.TestCase):
         cds = helpers.DummyCDS(locus_tag="test")
         record = helpers.DummyRecord(features=[cds], seq="A"*100)
         record.add_cluster(helpers.DummyCluster(0, 100))
-        results = SMCOGResults(record.id)
-        results.best_hits[cds.get_name()] = HMMResult("SMCOG1212:sodium:dicarboxylate_symporter",
-                                                      0, 100, 2.3e-126, 416)
+        results = FunctionResults(record.id, "smcogs",
+                                  best_hits={cds.get_name(): HMMResult("SMCOG1212:sodium:dicarboxylate_symporter",
+                                                                       0, 100, 2.3e-126, 416)},
+                                  function_mapping={cds.get_name(): GeneFunction.TRANSPORT})
         results.add_to_record(record)
         gene_functions = cds.gene_functions.get_by_tool("smcogs")
         assert len(gene_functions) == 1
