@@ -12,7 +12,7 @@ from helperlibs.bio import seqio
 from helperlibs.wrappers.io import TemporaryDirectory
 
 import antismash
-from antismash.common import secmet, subprocessing
+from antismash.common import secmet
 import antismash.common.test.helpers as helpers
 from antismash.config import get_config, update_config, destroy_config, build_config
 from antismash.detection.genefunctions import smcogs
@@ -22,10 +22,13 @@ from antismash.modules import smcog_trees
 
 class Base(unittest.TestCase):
     def setUp(self):
+        self.old_config = get_config().__dict__
         options = build_config(self.get_args(), isolated=True,
                                modules=antismash.get_all_modules())
-        self.old_config = get_config().__dict__
         self.options = update_config(options)
+        update_config({"cpus": 1})
+        # prevent multiprocess testing from taking place, to stop signals
+        # being caught awkwardly in the test itself
 
         assert smcog_trees.check_prereqs() == []
         assert smcog_trees.check_options(self.options) == []
@@ -33,16 +36,8 @@ class Base(unittest.TestCase):
 
         self.record = self.build_record(helpers.get_path_to_nisin_with_detection())
 
-        def serial_run_func(function, arg_sets, _timeout=None):
-            for arg_set in arg_sets:
-                function(*arg_set)
-        self.old_parallel = subprocessing.parallel_function
-        subprocessing.parallel_function = serial_run_func
-
     def tearDown(self):
-        subprocessing.parallel_function = self.old_parallel
         destroy_config()
-        update_config(self.old_config)
 
     def get_args(self):
         return ["--minimal", "--smcog-trees"]
