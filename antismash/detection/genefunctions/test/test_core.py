@@ -46,11 +46,12 @@ class TestOptions(unittest.TestCase):
         assert genefunctions.is_enabled(options)
 
 
-class SharedComponents:
-    def __init__(self):
-        self.res_class = None  # the results class being tested
-        self.results = None  # an instance of the results class
-        self.record = None  # the record results were constructed with
+class SimpleResultsMixin:
+    """ Requires:
+         self.res_class  # the results class being tested
+         self.results  # an instance of the results class
+         self.record  # the record results were constructed with
+    """
 
     def test_bad_record_id(self):
         json = self.results.to_json()
@@ -69,7 +70,7 @@ class SharedComponents:
         assert self.res_class.from_json(json, self.record) is None
 
 
-class TestFunctionResults(unittest.TestCase, SharedComponents):
+class TestFunctionResults(unittest.TestCase, SimpleResultsMixin):
     def setUp(self):
         self.res_class = genefunctions.core.FunctionResults
         hits = {"cds1": HMMResult("desc1", 0, 100, 2.3e-126, 416),
@@ -112,7 +113,7 @@ class TestFunctionResults(unittest.TestCase, SharedComponents):
         check_results(reconstructed)
 
 
-class TestAllFunctionResults(unittest.TestCase, SharedComponents):
+class TestAllFunctionResults(unittest.TestCase, SimpleResultsMixin):
     def setUp(self):
         self.res_class = genefunctions.AllFunctionResults
         self.record = DummyRecord()
