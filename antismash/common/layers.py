@@ -32,11 +32,6 @@ class OptionsLayer:
         from antismash.main import get_all_modules
         return get_all_modules()
 
-    @property
-    def gene_functions(self) -> bool:
-        """ Whether gene function detection was enabled or not """
-        return (not self.options.minimal or self.options.genefunctions_enabled)
-
     def download_logfile(self) -> Optional[str]:
         """ Returns the path of the logfile, if it was created (otherwise None) """
         logfile_path = os.path.abspath(self.logfile)
