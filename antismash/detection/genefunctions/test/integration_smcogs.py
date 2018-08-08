@@ -9,7 +9,7 @@ import unittest
 from helperlibs.bio import seqio
 
 import antismash
-from antismash.common import secmet, subprocessing
+from antismash.common import secmet
 from antismash.common.secmet.qualifiers import GeneFunction
 from antismash.common.test import helpers
 from antismash.config import build_config, destroy_config, get_config, update_config
@@ -25,14 +25,7 @@ class TestSMCOGs(unittest.TestCase):
 
         self.record = self.build_record(helpers.get_path_to_nisin_with_detection())
 
-        def serial_run_func(function, arg_sets, _timeout=None):
-            for arg_set in arg_sets:
-                function(*arg_set)
-        self.old_parallel = subprocessing.parallel_function
-        subprocessing.parallel_function = serial_run_func
-
     def tearDown(self):
-        subprocessing.parallel_function = self.old_parallel
         destroy_config()
         update_config(self.old_config)
 
