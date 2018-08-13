@@ -7,8 +7,6 @@
 import logging
 from typing import Any, Dict, List, Optional
 
-from antismash.common import path
-from antismash.common.hmm_rule_parser.cluster_prediction import detect_borders_and_signatures
 from antismash.common.module_results import DetectionResults
 from antismash.common.secmet import ClusterBorder, Record
 from antismash.config import ConfigType
@@ -24,10 +22,6 @@ PUTATIVE_PRODUCT = "cf_putative"
 
 def get_arguments() -> ModuleArgs:
     """ Sets up arguments for this module. Must return a ModuleArgs object.
-
-        override_safeties is only set here to allow for the destinations of the
-        arguments to not include the 'dummy' prefix for the placeholder
-        arguments.
     """
     args = ModuleArgs('ClusterFinder options', 'cf')
     args.add_analysis_toggle('borders-only',
@@ -73,6 +67,8 @@ def check_options(options: ConfigType) -> List[str]:
     """ Checks that extra options are valid """
     if not 0. < options.cf_threshold <= 1.:
         return ["probability threshold (--cf-mean-threshold) must be between 0 and 1"]
+    if options.cf_borders_only and options.cf_create_clusters:
+        return ["both cf-borders-only and cf-create-clusters specified, only one can be true"]
     return []
 
 
@@ -115,7 +111,7 @@ def run_on_record(record: Record, results: Optional[ClusterFinderResults],
     if results:
         return results
 
-    logging.info('Running ClusterFinder HMM to detect gene clusters')
+    logging.info('Running ClusterFinder to detect probabilistic gene clusters')
     pfam_features = record.get_pfam_domains()
     if not pfam_features:
         logging.debug("No PFAM domains in record, probabilistic clusters cannot be found")
@@ -139,29 +135,7 @@ def run_on_record(record: Record, results: Optional[ClusterFinderResults],
     return generate_results(record, options)
 
 
-def find_rule_based_clusters(record: Record, _options: ConfigType) -> List[ClusterBorder]:
-    """ Generate cluster predictions using HMM profile base rules.
-
-        Arguments:
-            record: the record to find clusters in
-            options: antismash config
-
-        Returns:
-            a list of ClusterBorders, one for each matching rule
-    """
-    # TODO: don't go directly to hmm_detection's data
-    signatures = path.get_full_path(__file__, "..", "hmm_detection", "data", "hmmdetails.txt")
-    seeds = path.get_full_path(__file__, "..", "hmm_detection", "data", "bgc_seeds.hmm")
-    rules = path.get_full_path(__file__, "cluster_rules.txt")
-    equivalences = path.get_full_path(__file__, "..", "hmm_detection", "filterhmmdetails.txt")
-    results = detect_borders_and_signatures(record, signatures, seeds, rules, equivalences,
-                                            "cluster-finder")
-    results.annotate_cds_features()
-    logging.debug("ClusterFinder detected %d rule-based clusters", len(results.borders))
-    return results.borders
-
-
-def regenerate_previous_results(previous: Dict[str, Any], record: Record,
+def regenerate_previous_results(_previous: Dict[str, Any], _record: Record,
                                 _options: ConfigType) -> Optional[ClusterFinderResults]:
     """ Rebuild the previous run results from a JSON object into this module's
         python results class.
@@ -172,15 +146,13 @@ def regenerate_previous_results(previous: Dict[str, Any], record: Record,
             options: an antismash.Config object
     """
     logging.critical("clusterfinder not regenerating results")
-    None
+    return None
 
 
 def generate_results(record: Record, options: ConfigType) -> ClusterFinderResults:
-    """ Find and construct cluster borders """
-    rule_clusters = find_rule_based_clusters(record, options)
+    """ Find and construct probabilistic cluster borders """
     prob_clusters = find_probabilistic_clusters(record, options)
     new_clusters = []
-    new_clusters.extend(rule_clusters)
     for cluster in prob_clusters:
         new_cluster = ClusterBorder(cluster.location, tool="clusterfinder",
                                     probability=cluster.probability, product=PUTATIVE_PRODUCT,
