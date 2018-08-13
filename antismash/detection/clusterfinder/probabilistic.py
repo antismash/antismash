@@ -102,7 +102,7 @@ def find_probabilistic_clusters(record: Record, options: ConfigType) -> List[Clu
                 cluster_position = (0, 0)
                 pfam_ids = []
         if loop_index == len(pfam_features):
-            if cluster_position:
+            if cluster_position != (0, 0):
                 cluster_position, cds_count = find_nr_cds(cluster_position, record)
                 if is_good_cluster_hit(cds_count, probabilities, pfam_ids, options):
                     cf_clusters.append(ClusterFinderHit(cluster_position, np.mean(probabilities)))
