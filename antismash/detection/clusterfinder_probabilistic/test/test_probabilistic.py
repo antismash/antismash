@@ -6,7 +6,7 @@
 
 import unittest
 
-from antismash.detection.clusterfinder import probabilistic
+from antismash.detection.clusterfinder_probabilistic import probabilistic
 
 class TestForwardBackward(unittest.TestCase):
     def test_forward_backward_short(self):

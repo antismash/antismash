@@ -12,7 +12,7 @@ from typing import Any, Dict, Iterable, List
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import CDSFeature, Cluster, ClusterBorder, Feature, Record
 from antismash.config import ConfigType
-from antismash.detection import clusterfinder
+from antismash.detection import clusterfinder_probabilistic as clusterfinder
 from antismash.modules import clusterblast, tta
 from antismash.outputs.html.generate_html_table import generate_html_table
 
