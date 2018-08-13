@@ -161,6 +161,20 @@ def find_rule_based_clusters(record: Record, _options: ConfigType) -> List[Clust
     return results.borders
 
 
+def regenerate_previous_results(previous: Dict[str, Any], record: Record,
+                                _options: ConfigType) -> Optional[ClusterFinderResults]:
+    """ Rebuild the previous run results from a JSON object into this module's
+        python results class.
+
+        Arguments:
+            previous: the previous results as a dictionary
+            record: the Record that was used to generate the previous results
+            options: an antismash.Config object
+    """
+    logging.critical("clusterfinder not regenerating results")
+    None
+
+
 def generate_results(record: Record, options: ConfigType) -> ClusterFinderResults:
     """ Find and construct cluster borders """
     rule_clusters = find_rule_based_clusters(record, options)
