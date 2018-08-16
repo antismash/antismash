@@ -229,7 +229,7 @@ def download_resfam(url: str, archive_checksum: str) -> None:
         lines = list(converted.stdout)
         i = 0
         while i < len(lines):
-            # find an accession accession
+            # find an accession
             while i < len(lines) and not lines[i].startswith("ACC"):
                 handle.write(lines[i])
                 i += 1
