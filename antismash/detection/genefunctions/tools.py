@@ -26,9 +26,10 @@ def run_tools(record: Record, options: ConfigType) -> List[FunctionResults]:
     """
 
     cds_features = record.get_cds_features_within_clusters()
-    functions = [find_resistance,
-                 smcogs_classification,
-                 ]
+    functions = [
+        find_resistance,
+        smcogs_classification,
+    ]
     return [func(record.id, cds_features, options) for func in functions]
 
 
