@@ -7,7 +7,7 @@
 import unittest
 
 from antismash.common.hmm_rule_parser import cluster_prediction, rule_parser
-from antismash.common.secmet.features import ClusterBorder, FeatureLocation
+from antismash.common.secmet.features import Cluster, FeatureLocation
 
 
 class DummyConditions(rule_parser.Conditions):
@@ -23,57 +23,60 @@ class DummyConditions(rule_parser.Conditions):
 
 class TestRedundancy(unittest.TestCase):
     def setUp(self):
-        superior = rule_parser.DetectionRule("superior", 10000, 10000, DummyConditions())
-        inferior = rule_parser.DetectionRule("inferior", 10000, 10000, DummyConditions(), superiors=["superior"])
-        irrelevant = rule_parser.DetectionRule("irrelevant", 10000, 10000, DummyConditions())
+        superior = rule_parser.DetectionRule("superior", 10, 10, DummyConditions())
+        inferior = rule_parser.DetectionRule("inferior", 10, 10, DummyConditions(), superiors=["superior"])
+        irrelevant = rule_parser.DetectionRule("irrelevant", 10, 10, DummyConditions())
         self.rules_by_name = {rule.name: rule for rule in [superior, inferior, irrelevant]}
 
-    def remove(self, borders):
-        return cluster_prediction.remove_redundant_borders(borders, self.rules_by_name)
+    def remove(self, clusters):
+        return cluster_prediction.remove_redundant_clusters(clusters, self.rules_by_name)
 
-    def create_border(self, rule_name, start, end):
+    def create_cluster(self, rule_name, start, end):
         rule = self.rules_by_name[rule_name]
-        return ClusterBorder(FeatureLocation(start, end), tool="testing",
-                             cutoff=rule.cutoff, extent=rule.extent, product=rule_name)
+        core = FeatureLocation(start, end)
+        surrounds = FeatureLocation(max(0, start - rule.extent), end + rule.extent)
+        return Cluster(core, surrounds, tool="testing", cutoff=rule.cutoff,
+                       neighbourhood_range=rule.extent, product=rule_name)
 
     def test_alone(self):
-        borders = [self.create_border("inferior", 1, 10)]
-        assert borders == self.remove(borders)
+        clusters = [self.create_cluster("inferior", 101, 110)]
+        assert clusters == self.remove(clusters)
 
     def test_non_overlap(self):
-        borders = [self.create_border("inferior", 1, 10),
-                   self.create_border("superior", 100, 110)]
-        assert borders == self.remove(borders)
+        clusters = [self.create_cluster("inferior", 101, 110),
+                    self.create_cluster("superior", 200, 210)]
+        assert clusters == self.remove(clusters)
 
     def test_not_relevant_equal(self):
-        borders = [self.create_border("inferior", 1, 10),
-                   self.create_border("irrelevant", 1, 10)]
-        assert borders == self.remove(borders)
+        clusters = [self.create_cluster("inferior", 101, 110),
+                    self.create_cluster("irrelevant", 101, 110)]
+        assert clusters == self.remove(clusters)
 
     def test_not_relevant_contained(self):
-        borders = [self.create_border("inferior", 5, 8),
-                   self.create_border("irrelevant", 1, 10)]
-        assert borders == self.remove(borders)
+        clusters = [self.create_cluster("inferior", 105, 108),
+                    self.create_cluster("irrelevant", 101, 110)]
+        assert clusters == self.remove(clusters)
 
     def test_not_relevant_larger(self):
-        borders = [self.create_border("inferior", 1, 10),
-                   self.create_border("irrelevant", 5, 8)]
-        assert borders == self.remove(borders)
+        clusters = [self.create_cluster("inferior", 101, 110),
+                    self.create_cluster("irrelevant", 105, 108)]
+        assert clusters == self.remove(clusters)
 
     def test_contained(self):
-        borders = [self.create_border("inferior", 10, 110),
-                   self.create_border("superior", 1, 210)]
-        assert self.remove(borders) == [borders[1]]
+        clusters = [self.create_cluster("inferior", 110, 210),
+                    self.create_cluster("superior", 101, 310)]
+        assert self.remove(clusters) == [clusters[1]]
 
     def test_equal(self):
-        borders = [self.create_border("inferior", 1, 10),
-                   self.create_border("superior", 1, 10)]
-        assert self.remove(borders) == [borders[1]]
+        clusters = [self.create_cluster("inferior", 101, 110),
+                    self.create_cluster("superior", 101, 110)]
+        assert self.remove(clusters) == [clusters[1]]
 
     def test_larger(self):
-        borders = [self.create_border("inferior", 1, 10),
-                   self.create_border("superior", 2, 9)]
-        assert self.remove(borders) == borders
+        clusters = [self.create_cluster("inferior", 101, 110),
+                    self.create_cluster("superior", 102, 109)]
+        print("testing clusters:", clusters)
+        assert self.remove(clusters) == clusters
 
     def test_extents_dont_matter(self):
         extent = self.rules_by_name["superior"].extent

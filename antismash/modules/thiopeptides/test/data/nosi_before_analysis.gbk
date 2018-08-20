@@ -3,9 +3,13 @@ DEFINITION  Nosiheptide biosynthetic gene cluster.
 ACCESSION   BGC0000610
 VERSION     BGC0000610.1
 KEYWORDS    .
-SOURCE      .
+SOURCE      
   ORGANISM  .
             .
+COMMENT     ##antiSMASH-Data-START##
+            Version      :: 5.0.0alpha-43c8f43
+            Run date     :: 2018-08-20 16:49:26
+            ##antiSMASH-Data-END##
 FEATURES             Location/Qualifiers
      gene            complement(<1..978)
                      /gene="nos1"
@@ -25,15 +29,48 @@ FEATURES             Location/Qualifiers
                      EAVAENDEEIMELYLEGEEPSEEQLYAAIRRITIASGKGQGTTVTPVFCGTAFKNKGVQ
                      PLLDAVVRYLPSPVDIEAIEGHAVDNAEEVIKRKPSDEEPLAALA"
      cluster         1..30078
-                     /contig_edge="True"
+                     /aStool="rule-based-clusters"
+                     /cluster_number="1"
+                     /core_location="[2248:20078]"
                      /cutoff="20000"
-                     /extension="10000"
-                     /note="Detection rule(s) for this cluster type:
-                     thiopeptide: ((YcaO and ((thio_amide and (PF06968 or
+                     /detection_rule="(YcaO and ((thio_amide and (PF06968 or
                      PF04055 or PF07366)) or Lant_dehyd_C or Lant_dehyd_N or
                      PF07366 or PF06968 or PF04055) or (thiostrepton and tsrC)
-                     or thiostrepton));"
+                     or thiostrepton)"
+                     /neighbourhood="10000"
+                     /parent_cluster_number="1"
                      /product="thiopeptide"
+                     /tool="antismash"
+     cluster_core    2249..20078
+                     /aStool="rule-based-clusters"
+                     /cluster_number="1"
+                     /cutoff="20000"
+                     /detection_rule="(YcaO and ((thio_amide and (PF06968 or
+                     PF04055 or PF07366)) or Lant_dehyd_C or Lant_dehyd_N or
+                     PF07366 or PF06968 or PF04055) or (thiostrepton and tsrC)
+                     or thiostrepton)"
+                     /neighbourhood="10000"
+                     /parent_cluster_number="1"
+                     /product="thiopeptide"
+     supercluster    1..30078
+                     /child_cluster="1"
+                     /detection_rules="(YcaO and ((thio_amide and (PF06968 or
+                     PF04055 or PF07366)) or Lant_dehyd_C or Lant_dehyd_N or
+                     PF07366 or PF06968 or PF04055) or (thiostrepton and tsrC)
+                     or thiostrepton)"
+                     /kind="single"
+                     /product="thiopeptide"
+                     /supercluster_number="1"
+                     /tool="antismash"
+     region          1..30078
+                     /product="thiopeptide"
+                     /region_number="1"
+                     /rules="(YcaO and ((thio_amide and (PF06968 or PF04055 or
+                     PF07366)) or Lant_dehyd_C or Lant_dehyd_N or PF07366 or
+                     PF06968 or PF04055) or (thiostrepton and tsrC) or
+                     thiostrepton)"
+                     /supercluster_numbers="1"
+                     /tool="antismash"
      misc_feature    <1..34546
                      /note="nosiheptide biosynthetic gene cluster"
      source          1..34713
@@ -76,7 +113,7 @@ FEATURES             Location/Qualifiers
                      /codon_start=1
                      /db_xref="GI:238626051"
                      /gene="nosA"
-                     /gene_functions="biosynthetic (cluster_definition)
+                     /gene_functions="biosynthetic (rule-based-clusters)
                      thiopeptide: thio_amide"
                      /locus_tag="nosA"
                      /note="hypothetical protein"
@@ -84,7 +121,7 @@ FEATURES             Location/Qualifiers
                      /protein_id="ACR48330.1"
                      /sec_met="Type: thiopeptide"
                      /sec_met="thio_amide (E-value: 2.5e-37, bitscore: 117.7,
-                     seeds: 5, tool: .)"
+                     seeds: 5, tool: rule-based-clusters)"
                      /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MTEHPAQQLYCTVVLWDLSRSAATVASLRAYLRDHAVDAYTTVPG
@@ -96,15 +133,16 @@ FEATURES             Location/Qualifiers
                      /codon_start=1
                      /db_xref="GI:238626052"
                      /gene="nosB"
-                     /gene_functions="biosynthetic-additional (hmm_detection)
-                     p450 (E-value: 2.8e-21, bitscore: 66.4, seeds: 50)"
+                     /gene_functions="biosynthetic-additional
+                     (rule-based-clusters) p450 (E-value: 2.8e-21, bitscore:
+                     66.4, seeds: 50, tool: rule-based-clusters)"
                      /locus_tag="nosB"
                      /note="cytochrome P450"
                      /product="NosB"
                      /protein_id="ACR48331.1"
-                     /sec_met="Type: none"
+                     /sec_met="Type: "
                      /sec_met="p450 (E-value: 2.8e-21, bitscore: 66.4, seeds:
-                     50, tool: .)"
+                     50, tool: rule-based-clusters)"
                      /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MDESPTYPFEQKCPFAPPDELVRRRDEAPVSQIRLANGATAWLVT
@@ -121,15 +159,16 @@ FEATURES             Location/Qualifiers
                      /codon_start=1
                      /db_xref="GI:238626053"
                      /gene="nosC"
-                     /gene_functions="biosynthetic-additional (hmm_detection)
-                     p450 (E-value: 2.8e-32, bitscore: 102.7, seeds: 50)"
+                     /gene_functions="biosynthetic-additional
+                     (rule-based-clusters) p450 (E-value: 2.8e-32, bitscore:
+                     102.7, seeds: 50, tool: rule-based-clusters)"
                      /locus_tag="nosC"
                      /note="cytochrome P450"
                      /product="NosC"
                      /protein_id="ACR48332.1"
-                     /sec_met="Type: none"
+                     /sec_met="Type: "
                      /sec_met="p450 (E-value: 2.8e-32, bitscore: 102.7, seeds:
-                     50, tool: .)"
+                     50, tool: rule-based-clusters)"
                      /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MDIEARTYPFTRHTPFEMPEEFAWLRENRPIAQVRLATGDTAWLI
@@ -146,15 +185,16 @@ FEATURES             Location/Qualifiers
                      /codon_start=1
                      /db_xref="GI:238626054"
                      /gene="nosD"
-                     /gene_functions="biosynthetic-additional (hmm_detection)
-                     Lant_dehydr_C (E-value: 3e-54, bitscore: 175.4, seeds: ?)"
+                     /gene_functions="biosynthetic-additional
+                     (rule-based-clusters) Lant_dehydr_C (E-value: 3e-54,
+                     bitscore: 175.4, seeds: 35, tool: rule-based-clusters)"
                      /locus_tag="nosD"
                      /note="dehydratase"
                      /product="NosD"
                      /protein_id="ACR48333.1"
-                     /sec_met="Type: none"
+                     /sec_met="Type: "
                      /sec_met="Lant_dehydr_C (E-value: 3e-54, bitscore: 175.4,
-                     seeds: -1, tool: .)"
+                     seeds: 35, tool: rule-based-clusters)"
                      /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MPAPETGPWHSLHLHRYAGQDAFLVDGLAPVLAPLHASGALESSF
@@ -170,18 +210,19 @@ FEATURES             Location/Qualifiers
                      /codon_start=1
                      /db_xref="GI:238626055"
                      /gene="nosE"
-                     /gene_functions="biosynthetic (cluster_definition)
-                     thiopeptide: Lant_dehyd_N"
-                     /gene_functions="biosynthetic (cluster_definition)
+                     /gene_functions="biosynthetic (rule-based-clusters)
                      thiopeptide: Lant_dehyd_C"
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     thiopeptide: Lant_dehyd_N"
                      /locus_tag="nosE"
                      /note="dehydratase"
                      /product="NosE"
                      /protein_id="ACR48334.1"
                      /sec_met="Type: thiopeptide"
                      /sec_met="Lant_dehyd_N (E-value: 1.6e-07, bitscore: 22.4,
-                     seeds: 38, tool: .); Lant_dehyd_C (E-value: 4.4e-51, bitscore:
-                     164.5, seeds: 37, tool: .)"
+                     seeds: 38, tool: rule-based-clusters); Lant_dehyd_C
+                     (E-value: 4.4e-51, bitscore: 164.5, seeds: 37, tool:
+                     rule-based-clusters)"
                      /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MPGAPDAAGAPDGFSPYYLYRRGTLGPSELAALTPARTWALLAEA
@@ -206,15 +247,16 @@ FEATURES             Location/Qualifiers
                      /codon_start=1
                      /db_xref="GI:238626056"
                      /gene="nosF"
-                     /gene_functions="biosynthetic-additional (hmm_detection)
-                     PF00881 (E-value: 9e-08, bitscore: 23.1, seeds: 78)"
+                     /gene_functions="biosynthetic-additional
+                     (rule-based-clusters) PF00881 (E-value: 9e-08, bitscore:
+                     23.1, seeds: 78, tool: rule-based-clusters)"
                      /locus_tag="nosF"
                      /note="NADH oxidase"
                      /product="NosF"
                      /protein_id="ACR48335.1"
-                     /sec_met="Type: none"
+                     /sec_met="Type: "
                      /sec_met="PF00881 (E-value: 9e-08, bitscore: 23.1, seeds:
-                     78, tool: .)"
+                     78, tool: rule-based-clusters)"
                      /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MTTDEAYTYTTGLRLDPRSANPDGWRVDWADGPWPVKVYSGARRL
@@ -233,7 +275,7 @@ FEATURES             Location/Qualifiers
                      /codon_start=1
                      /db_xref="GI:238626057"
                      /gene="nosG"
-                     /gene_functions="biosynthetic (cluster_definition)
+                     /gene_functions="biosynthetic (rule-based-clusters)
                      thiopeptide: YcaO"
                      /locus_tag="nosG"
                      /note="putative cyclodehydratase"
@@ -241,7 +283,7 @@ FEATURES             Location/Qualifiers
                      /protein_id="ACR48336.1"
                      /sec_met="Type: thiopeptide"
                      /sec_met="YcaO (E-value: 3.2e-73, bitscore: 238.0, seeds:
-                     127, tool: .)"
+                     127, tool: rule-based-clusters)"
                      /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MSTATTPQPRTGPAGPPVVVGRGVLAEHLVRRLGRDDTPDPDGGA
@@ -285,15 +327,16 @@ FEATURES             Location/Qualifiers
                      /codon_start=1
                      /db_xref="GI:238626059"
                      /gene="nosI"
-                     /gene_functions="biosynthetic-additional (hmm_detection)
-                     AMP-binding (E-value: 4.7e-27, bitscore: 85.3, seeds: 400)"
+                     /gene_functions="biosynthetic-additional
+                     (rule-based-clusters) AMP-binding (E-value: 4.7e-27,
+                     bitscore: 85.3, seeds: 400, tool: rule-based-clusters)"
                      /locus_tag="nosI"
                      /note="putative acyl-CoA synthetase"
                      /product="NosI"
                      /protein_id="ACR48338.1"
-                     /sec_met="Type: none"
+                     /sec_met="Type: "
                      /sec_met="AMP-binding (E-value: 4.7e-27, bitscore: 85.3,
-                     seeds: 400, tool: .)"
+                     seeds: 400, tool: rule-based-clusters)"
                      /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MGDMGRPAFQRFLTPRHLPAGRAGAVTGVRWGGDFAAWDDLLTAG
@@ -304,6 +347,21 @@ FEATURES             Location/Qualifiers
                      GHNRHVGRPIPGKSVWLTGTDERGIGTVAVAGPGCCRRTWRPGSPPSAPADHVTGTDYG
                      RFDADGNLCLEGRLDGAEKLAGVLVRPREIERHVLALDGVSDVRVTVETAPTGLEFLAA
                      TVVGSVDADTVRAHCAALPEQHRPSRISCASEQEAATVYSAHGKL"
+     aSDomain        complement(14946..15749)
+                     /aSDomain="AMP-binding"
+                     /database="nrpspksdomains.hmm"
+                     /detection="hmmscan"
+                     /domain_id="nrpspksdomains_nosI_A1"
+                     /evalue="8.30E-27"
+                     /label="nosI_A1"
+                     /locus_tag="nosI"
+                     /score="85.3"
+                     /tool="antismash"
+                     /translation="ERPLWGVCTSGSSGAPKVAVGPADEWEQIALHAEAAMYADAFPAG
+                     PPEALATCLPLGFSAAFFMCVLPALYLKRDLVVHPPHDWSPLYDLARDRRVLALGVPAL
+                     AAAACLSAPAATDLGSVALFLGGGHLSAPRVELIRRHFTGAAVSNLYGTAETGAIALDH
+                     DPGHNRHVGRPIPGKSVWLTGTDERGIGTVAVAGPGCCRRTWRPGSPPSAPADHVTGTD
+                     YGRFDADGNLCLEGRLDGAEKLAGVLVRPREIERHVLALDGVSDVR"
      gene            complement(16058..16297)
                      /gene="nosJ"
      CDS             complement(16058..16297)
@@ -323,18 +381,20 @@ FEATURES             Location/Qualifiers
                      /codon_start=1
                      /db_xref="GI:238626061"
                      /gene="nosK"
-                     /gene_functions="biosynthetic-additional (hmm_detection)
-                     PF12697 (E-value: 1.7e-16, bitscore: 52.2, seeds: 465)"
-                     /gene_functions="biosynthetic-additional (hmm_detection)
-                     PF00561 (E-value: 2.5e-10, bitscore: 31.2, seeds: 48)"
+                     /gene_functions="biosynthetic-additional
+                     (rule-based-clusters) PF12697 (E-value: 1.7e-16, bitscore:
+                     52.2, seeds: 465, tool: rule-based-clusters)"
+                     /gene_functions="biosynthetic-additional
+                     (rule-based-clusters) PF00561 (E-value: 2.5e-10, bitscore:
+                     31.2, seeds: 48, tool: rule-based-clusters)"
                      /locus_tag="nosK"
                      /note="putative hydrolase"
                      /product="NosK"
                      /protein_id="ACR48340.1"
-                     /sec_met="Type: none"
+                     /sec_met="Type: "
                      /sec_met="PF12697 (E-value: 1.7e-16, bitscore: 52.2, seeds:
-                     465, tool: .); PF00561 (E-value: 2.5e-10, bitscore: 31.2, seeds:
-                     48, tool: .)"
+                     465, tool: rule-based-clusters); PF00561 (E-value: 2.5e-10,
+                     bitscore: 31.2, seeds: 48, tool: rule-based-clusters)"
                      /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MDAETPMDTETPRDTETPMHTGMSTGPETPTVYLVHGLLGTGHGH
@@ -348,7 +408,7 @@ FEATURES             Location/Qualifiers
                      /codon_start=1
                      /db_xref="GI:238626062"
                      /gene="nosL"
-                     /gene_functions="biosynthetic (cluster_definition)
+                     /gene_functions="biosynthetic (rule-based-clusters)
                      thiopeptide: PF06968"
                      /locus_tag="nosL"
                      /note="radical SAM:biotin and thiamin synthesis-associated
@@ -357,7 +417,7 @@ FEATURES             Location/Qualifiers
                      /protein_id="ACR48341.1"
                      /sec_met="Type: thiopeptide"
                      /sec_met="PF06968 (E-value: 6.5e-09, bitscore: 26.7, seeds:
-                     824, tool: .)"
+                     824, tool: rule-based-clusters)"
                      /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MTQNSQAMTSHAMTGDFVLPELEDVRAEAATVDTRAVLALAEGEE
@@ -374,7 +434,7 @@ FEATURES             Location/Qualifiers
                      /codon_start=1
                      /db_xref="GI:238626063"
                      /gene="nosM"
-                     /gene_functions="biosynthetic (cluster_definition)
+                     /gene_functions="biosynthetic (rule-based-clusters)
                      thiopeptide: thiostrepton"
                      /locus_tag="nosM"
                      /note="nosiheptide propeptide"
@@ -382,7 +442,7 @@ FEATURES             Location/Qualifiers
                      /protein_id="ACR48342.1"
                      /sec_met="Type: thiopeptide"
                      /sec_met="thiostrepton (E-value: 1.5e-15, bitscore: 47.9,
-                     seeds: 4, tool: .)"
+                     seeds: 4, tool: rule-based-clusters)"
                      /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MDAAHLSDLDIDALEISEFLDESRLEDSEVVAKVMSASCTTCECC
@@ -393,7 +453,7 @@ FEATURES             Location/Qualifiers
                      /codon_start=1
                      /db_xref="GI:238626064"
                      /gene="nosN"
-                     /gene_functions="biosynthetic (cluster_definition)
+                     /gene_functions="biosynthetic (rule-based-clusters)
                      thiopeptide: PF04055"
                      /locus_tag="nosN"
                      /note="putative methyltransferase"
@@ -401,7 +461,7 @@ FEATURES             Location/Qualifiers
                      /protein_id="ACR48343.1"
                      /sec_met="Type: thiopeptide"
                      /sec_met="PF04055 (E-value: 6.6e-19, bitscore: 59.7, seeds:
-                     518, tool: .)"
+                     518, tool: rule-based-clusters)"
                      /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MRQNLLMIYVHIPFCHSKCTFCDWVQAIPTKDLLRKPGDSVRQKY
@@ -417,15 +477,16 @@ FEATURES             Location/Qualifiers
                      /codon_start=1
                      /db_xref="GI:238626065"
                      /gene="nosO"
-                     /gene_functions="biosynthetic-additional (hmm_detection)
-                     Lant_dehydr_C (E-value: 8.5e-12, bitscore: 35.9, seeds: ?)"
+                     /gene_functions="biosynthetic-additional
+                     (rule-based-clusters) Lant_dehydr_C (E-value: 8.5e-12,
+                     bitscore: 35.9, seeds: 35, tool: rule-based-clusters)"
                      /locus_tag="nosO"
                      /note="hypothetical protein"
                      /product="NosO"
                      /protein_id="ACR48344.1"
-                     /sec_met="Type: none"
+                     /sec_met="Type: "
                      /sec_met="Lant_dehydr_C (E-value: 8.5e-12, bitscore: 35.9,
-                     seeds: -1, tool: .)"
+                     seeds: 35, tool: rule-based-clusters)"
                      /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MTSGPGQAPAEAAHAAGAAWLEIGLDAPADAVPALVAGVVRPLLR

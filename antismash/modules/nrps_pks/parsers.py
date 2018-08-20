@@ -116,7 +116,7 @@ def calculate_consensus_prediction(cds_features: List[CDSFeature], results: Dict
     trans_at = {}  # type: Dict[str, str]  # feature name -> prediction
 
     for cds in cds_features:
-        assert cds.cluster, "Orphaned CDS found: %s" % cds
+        assert cds.region, "Orphaned CDS found: %s" % cds
         for domain in cds.nrps_pks.domains:
             predictions = results[domain.feature_name]
             if 'OTHER' in domain.label:
@@ -129,12 +129,12 @@ def calculate_consensus_prediction(cds_features: List[CDSFeature], results: Dict
                 preds.extend(sig_results.get_classification()[:1])
                 consensus = calculate_individual_consensus(preds)
 
-                if 'transatpks' not in cds.cluster.products:
+                if 'transatpks' not in cds.region.products:
                     cis_at[domain.feature_name] = consensus
                 else:
                     trans_at[domain.feature_name] = consensus
 
-            if 'transatpks' in cds.cluster.products and domain.name == "PKS_KS":
+            if 'transatpks' in cds.region.products and domain.name == "PKS_KS":
                 # For chemical display purpose for chemicals from trans-AT PKS gene cluster
                 # mal is always assumed for trans-AT
                 cis_at[domain.feature_name] = "mal"
@@ -228,13 +228,13 @@ def modify_monomer_predictions(cds_features: List[CDSFeature], predictions: Dict
                 {"ccmal": "redmal", "ccmmal": "redmmal", "ccmxmal": "redmxmal", "ccemal": "redemal"}]  # ER
 
     for cds in cds_features:
-        assert cds.cluster, "Orphaned CDS found"
+        assert cds.region, "Orphaned CDS found"
         domain_names = cds.nrps_pks.domain_names
         lists = [find_duplicate_position(domain_names, 'PKS_KR'),
                  find_duplicate_position(domain_names, 'PKS_DH'),
                  find_duplicate_position(domain_names, 'PKS_ER')]
 
-        if 'transatpks' not in cds.cluster.products:
+        if 'transatpks' not in cds.region.products:
             label = "_AT"
             data = find_duplicate_position(domain_names, 'PKS_AT')
         else:

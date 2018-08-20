@@ -11,7 +11,8 @@ from Bio.Seq import Seq
 
 from antismash.common.secmet.locations import (
     convert_protein_position_to_dna,
-    location_bridges_origin
+    location_bridges_origin,
+    locations_overlap,
 )
 
 
@@ -126,10 +127,7 @@ class Feature:
             location = other
         else:
             raise TypeError("Container must be a Feature or a FeatureLocation, not %s" % type(other))
-        return (self.location.start in location
-                or self.location.end - 1 in location
-                or location.start in self.location
-                or location.end - 1 in self.location)
+        return locations_overlap(self.location, location)
 
     def is_contained_by(self, other: Union["Feature", FeatureLocation]) -> bool:
         """ Returns True if the given feature is wholly contained by this

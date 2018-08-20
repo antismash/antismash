@@ -11,8 +11,8 @@ from typing import Dict  # in comment type hints  # pylint: disable=unused-impor
 from jinja2 import FileSystemLoader, Environment, StrictUndefined
 
 from antismash.common import path
-from antismash.common.layers import ClusterLayer, RecordLayer, OptionsLayer
-from antismash.common.secmet import CDSFeature, Cluster
+from antismash.common.layers import RegionLayer, RecordLayer, OptionsLayer
+from antismash.common.secmet import CDSFeature, Region
 
 from .results import NRPS_PKS_Results, UNKNOWN
 
@@ -23,15 +23,15 @@ def will_handle(products: List[str]) -> bool:
                                             "nrpsfragment", "otherks"}))
 
 
-def generate_sidepanel(cluster_layer: ClusterLayer, results: NRPS_PKS_Results,
+def generate_sidepanel(region_layer: RegionLayer, results: NRPS_PKS_Results,
                        record_layer: RecordLayer, options_layer: OptionsLayer) -> str:
     """ Generate the sidepanel HTML with results from the NRPS/PKS module """
     env = Environment(loader=FileSystemLoader(path.get_full_path(__file__, 'templates')),
                       autoescape=True, undefined=StrictUndefined)
     template = env.get_template('sidepanel.html')
-    nrps_layer = NrpspksLayer(results, cluster_layer.cluster_feature, record_layer)
+    nrps_layer = NrpspksLayer(results, region_layer.region_feature, record_layer)
     sidepanel = template.render(record=record_layer,
-                                cluster=nrps_layer,
+                                region=nrps_layer,
                                 results=results,
                                 options=options_layer)
     return sidepanel
@@ -94,27 +94,27 @@ def get_norine_url_for_specificities(specificities: List[List[str]],
     return "http://bioinfo.lifl.fr/norine/fingerPrintSearch.jsp?nrps1=" + ",".join(modules)
 
 
-class NrpspksLayer(ClusterLayer):
-    """ A wrapper for ClusterLayer that adds some specific sections for NRPS/PKS
+class NrpspksLayer(RegionLayer):
+    """ A wrapper for RegionLayer that adds some specific sections for NRPS/PKS
         domains and structures.
     """
-    def __init__(self, results: NRPS_PKS_Results, cluster_feature: Cluster, record: RecordLayer) -> None:
+    def __init__(self, results: NRPS_PKS_Results, region_feature: Region, record: RecordLayer) -> None:
         self.url_strict = {}  # type: Dict[str, str]  # gene name -> url
         self.url_relaxed = {}  # type: Dict[str, str]  # gene name -> url
-        self._build_urls(cluster_feature.cds_children)
-        super().__init__(record, cluster_feature)
+        self._build_urls(region_feature.cds_children)
+        super().__init__(record, region_feature)
         self.transatpks = False
         assert isinstance(results, NRPS_PKS_Results), type(results)
         self.results = results
 
-        cluster_number = cluster_feature.get_cluster_number()
+        region_number = region_feature.get_region_number()
         default_prediction = ("N/A", False)
-        self.monomer, self.used_domain_docking = results.cluster_predictions.get(cluster_number, default_prediction)
+        self.polymer, self.used_domain_docking = results.region_predictions.get(region_number, default_prediction)
 
     @property
     def warning(self) -> str:
         """ A caveat for structure prediction accuracy """
-        if not self.monomer:
+        if not self.polymer:
             return ""
         core = ("Rough prediction of core scaffold based on assumed %s;"
                 " tailoring reactions not taken into account")
@@ -128,7 +128,7 @@ class NrpspksLayer(ClusterLayer):
     @property
     def sidepanel_features(self) -> List[str]:
         """ Returns a list of relevant CDSFeature names """
-        return sorted(feature.get_name() for feature in self.cluster_feature.cds_children if feature.nrps_pks)
+        return sorted(feature.get_name() for feature in self.region_feature.cds_children if feature.nrps_pks)
 
     def _build_urls(self, cds_features: Iterable[CDSFeature]) -> None:
         for feature in cds_features:
@@ -156,19 +156,15 @@ class NrpspksLayer(ClusterLayer):
                                                                                   be_strict=False)
 
     def is_nrps(self) -> bool:
-        """ is the cluster a NRPS or NRPS hybrid """
-        return 'nrps' in self.cluster_feature.products
+        """ is the region a NRPS or NRPS hybrid """
+        return 'nrps' in self.region_feature.products
 
-    def get_monomer_prediction(self) -> str:
-        "Get the monomer prediction of the cluster"
-        return self.monomer
-
-    def get_norine_url_for_cluster(self, be_strict: bool = True) -> str:
+    def get_norine_url(self, be_strict: bool = True) -> str:
         """ Get a NORINE URL string for direct querying
             use be_strict=False to add * after each monomer"""
 
-        monomer_string = self.get_monomer_prediction()
-        monomers_per_protein_list = re.findall("\\(.*?\\)", monomer_string)
+        polymer = self.polymer
+        monomers_per_protein_list = re.findall("\\(.*?\\)", polymer)
         i = 1
         nrpslist = []
         for monomers_per_protein in monomers_per_protein_list:

@@ -5,7 +5,6 @@
     clusters based on domains detected
 """
 
-import logging
 import os
 from typing import Any, Dict, List, Optional
 
@@ -15,10 +14,10 @@ from antismash.common.subprocessing import run_hmmpress
 from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
 from antismash.common.hmm_rule_parser import rule_parser
-from antismash.common.hmm_rule_parser.cluster_prediction import detect_borders_and_signatures, RuleDetectionResults
+from antismash.common.hmm_rule_parser.cluster_prediction import detect_clusters_and_signatures, RuleDetectionResults
 from antismash.common.module_results import DetectionResults
 from antismash.common.secmet.record import Record
-from antismash.common.secmet.features import ClusterBorder
+from antismash.common.secmet.features import Cluster
 from antismash.detection.hmm_detection.signatures import get_signature_profiles
 
 NAME = "hmmdetection"
@@ -49,8 +48,8 @@ class HMMDetectionResults(DetectionResults):
         return HMMDetectionResults(json["record_id"], RuleDetectionResults.from_json(json["rule_results"], record),
                                    json["enabled_types"])
 
-    def get_predictions(self) -> List[ClusterBorder]:
-        return self.rule_results.borders
+    def get_predicted_clusters(self) -> List[Cluster]:
+        return self.rule_results.clusters
 
 
 def get_supported_cluster_types() -> List[str]:
@@ -92,8 +91,6 @@ def regenerate_previous_results(results: Dict[str, Any], record: Record,
     if set(regenerated.enabled_types) != set(get_supported_cluster_types()):
         raise RuntimeError("Cluster types supported by HMM detection have changed, all results invalid")
     regenerated.rule_results.annotate_cds_features()
-    for border in regenerated.get_predictions():
-        record.add_cluster_border(border)
     return regenerated
 
 
@@ -108,8 +105,8 @@ def run_on_record(record: Record, previous_results: Optional[HMMDetectionResults
     seeds = path.get_full_path(__file__, "data", "bgc_seeds.hmm")
     rules = path.get_full_path(__file__, "cluster_rules.txt")
     equivalences = path.get_full_path(__file__, "filterhmmdetails.txt")
-    results = detect_borders_and_signatures(record, signatures, seeds, rules, equivalences,
-                                            "rule-based-clusters")
+    results = detect_clusters_and_signatures(record, signatures, seeds, rules, equivalences,
+                                             "rule-based-clusters")
     results.annotate_cds_features()
     return HMMDetectionResults(record.id, results, get_supported_cluster_types())
 

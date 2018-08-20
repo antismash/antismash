@@ -4,22 +4,22 @@ function toggle_downloadmenu(event) {
   $("#downloadmenu").fadeToggle("fast", "linear");
 }
 
-function switch_to_cluster() {
+function switch_to_region() {
   setTimeout(function() {
     var url = $.url();
     $(".page").hide();
-    $("li.clbutton").removeClass("active");
+    $("li.regbutton").removeClass("active");
     var anchor = url.data.attr.fragment;
     if (anchor == "") {
       anchor = "overview";
     }
     $("#" + anchor).show();
     if (anchor != "overview") {
-      $("li.clbutton." + anchor).addClass("active");
+      $("li.regbutton." + anchor).addClass("active");
     }
 
-    if (geneclusters[anchor] !== undefined) {
-      svgene.drawCluster(anchor+"-svg", geneclusters[anchor], 20, 700);
+    if (all_regions[anchor] !== undefined) {
+      svgene.drawRegion(anchor+"-svg", all_regions[anchor], 20, 700);
     }
     if ($("#" + anchor + "-details-svg").length > 0) {
       jsdomain.drawDomains(anchor+ "-details-svg", details_data[anchor], 40, 700);
@@ -28,38 +28,38 @@ function switch_to_cluster() {
   }, 1);
 }
 
-function next_cluster() {
-  var clusters = geneclusters['order'];
+function next_region() {
+  var regions = all_regions['order'];
   var current = $.url().data.attr.fragment;
   if (current == "" || current == "overview") {
     next = "r0c1";
   } else {
-    current_index = clusters.indexOf(current);
-    if (current_index == clusters.length - 1) {
+    current_index = regions.indexOf(current);
+    if (current_index == regions.length - 1) {
       next = "overview";
     } else {
-      next = clusters[current_index + 1];
+      next = regions[current_index + 1];
     }
   }
   window.location.href = "#" + next;
-  switch_to_cluster();
+  switch_to_region();
 }
 
-function previous_cluster() {
-  var clusters = geneclusters['order'];
+function previous_region() {
+  var regions = all_regions['order'];
   var current = $.url().data.attr.fragment;
   if (current == "" || current == "overview") {
-    prev = clusters[clusters.length - 1];
+    prev = regions[regions.length - 1];
   } else {
-    current_index = clusters.indexOf(current);
+    current_index = regions.indexOf(current);
     if (current_index == 0) {
       prev = "overview";
     } else {
-      prev = clusters[current_index - 1];
+      prev = regions[current_index - 1];
     }
   }
   window.location.href = "#" + prev;
-  switch_to_cluster();
+  switch_to_region();
 }
 
 function toggle_cluster_rules(ev) {
@@ -93,10 +93,10 @@ $(document).ready(function() {
 
   $("#download").click(toggle_downloadmenu);
 
-  $("#next-cluster").click(next_cluster);
-  $("#prev-cluster").click(previous_cluster);
+  $("#next-region").click(next_region);
+  $("#prev-region").click(previous_region);
 
-  $(".clbutton").click(function() {
+  $(".regbutton").click(function() {
     /* Make sure that even if user missed the link and clicked the
     background we still have the correct anchor */
     var href = $(this).children().first().attr('href');
@@ -106,9 +106,9 @@ $(document).ready(function() {
     }
     window.location.href = href;
 
-    switch_to_cluster();
+    switch_to_region();
   }).mouseover(function() {
-    /* Set the select cluster label text to cluster type */
+    /* Set the select region label text to region type */
     var classes = $(this).attr('class').split(' ');
     if (classes.length < 2) {
       return;
@@ -116,13 +116,13 @@ $(document).ready(function() {
     if (classes[1] == 'separator') {
       return;
     }
-    var cluster_type = map_type_to_desc(classes[1]);
-    var label = $('#cluster-type');
+    var region_type = map_type_to_desc(classes[1]);
+    var label = $('#region-type');
     label.data("orig_text", label.text());
-    label.text(cluster_type + ":");
+    label.text(region_type + ":");
   }).mouseout(function() {
-    /* and reset the select cluster label text */
-    var label = $('#cluster-type');
+    /* and reset the select region label text */
+    var label = $('#region-type');
     label.text(label.data("orig_text"));
   });
 
@@ -143,7 +143,7 @@ $(document).ready(function() {
 
   $('.cluster-rules-header').click(toggle_cluster_rules);
 
-  switch_to_cluster();
+  switch_to_region();
   draw_structures();
 });
 

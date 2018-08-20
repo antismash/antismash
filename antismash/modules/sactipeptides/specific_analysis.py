@@ -16,8 +16,9 @@ from typing import Any, Dict, Set, List, Optional, Tuple, Union
 from Bio.SearchIO._model.hsp import HSP
 from sklearn.externals import joblib
 
-from antismash.common import utils, all_orfs, module_results, secmet, serialiser, subprocessing, path, fasta
+from antismash.common import utils, all_orfs, module_results, secmet, subprocessing, path, fasta
 from antismash.common.secmet.qualifiers import SecMetQualifier
+from antismash.common.secmet.locations import location_from_string
 from antismash.common.signature import HmmSignature
 
 # Cys chain limits (for CnnnC style sections)
@@ -38,12 +39,12 @@ class SactiResults(module_results.ModuleResults):
         # keep new CDSMotifs by the gene they match to
         # e.g. self.motifs_by_locus[gene_locus] = [motif1, motif2..]
         self.motifs_by_locus = defaultdict(list)  # type: Dict[str, List[SactipeptideMotif]]
-        # keep clusters and which genes in them had precursor hits
-        # e.g. self.clusters[cluster_number] = {gene1_locus, gene2_locus}
-        self.clusters = defaultdict(set)  # type: Dict[int, Set[str]]
+        # keep regions and which genes in them had precursor hits
+        # e.g. self.regions[region_number] = {gene1_locus, gene2_locus}
+        self.regions = defaultdict(set)  # type: Dict[int, Set[str]]
 
     def to_json(self) -> Dict[str, Any]:
-        cds_features = [(serialiser.location_to_json(feature.location),
+        cds_features = [(str(feature.location),
                          feature.get_name()) for feature in self.new_cds_features]
         motifs = {}
         for locus, locus_motifs in self.motifs_by_locus.items():
@@ -52,7 +53,7 @@ class SactiResults(module_results.ModuleResults):
                 "schema_version": SactiResults.schema_version,
                 "motifs": motifs,
                 "new_cds_features": cds_features,
-                "clusters": {key: list(val) for key, val in self.clusters.items()}}
+                "regions": {key: list(val) for key, val in self.regions.items()}}
 
     @staticmethod
     def from_json(json: Dict[str, Any], record: secmet.Record) -> "SactiResults":
@@ -63,9 +64,9 @@ class SactiResults(module_results.ModuleResults):
         for locus, motifs in json["motifs"].items():
             for motif in motifs:
                 results.motifs_by_locus[locus].append(SactipeptideMotif.from_json(motif))
-        results.clusters = {int(key): set(val) for key, val in json["clusters"].items()}
+        results.regions = {int(key): set(val) for key, val in json["regions"].items()}
         for location, name in json["new_cds_features"]:
-            loc = serialiser.location_from_json(location)
+            loc = location_from_string(location)
             cds = all_orfs.create_feature_from_location(record, loc, label=name)
             results.new_cds_features.add(cds)
         return results
@@ -86,7 +87,7 @@ class SactipeptideMotif(secmet.Prepeptide):
         super().__init__(location, "sactipeptide", core, name, leader=leader, score=score)
 
     def to_json(self) -> Dict[str, Any]:
-        return {"location": serialiser.location_to_json(self.location),
+        return {"location": str(self.location),
                 "name": self.get_name(),
                 "score": self.score,
                 "core": self.core,
@@ -95,30 +96,30 @@ class SactipeptideMotif(secmet.Prepeptide):
     @staticmethod
     def from_json(json: Dict[str, Any]) -> "SactipeptideMotif":
         """ Regenerate an instance of the class from a JSON representation """
-        location = serialiser.location_from_json(json["location"])
+        location = location_from_string(json["location"])
         return SactipeptideMotif(location, json["name"], json["score"], json["leader"], json["core"])
 
 
-def get_detected_domains(cluster: secmet.Cluster) -> Dict[str, int]:
-    """ Gathers all detected domain ids from a cluster. Includes detection of
+def get_detected_domains(region: secmet.Region) -> Dict[str, int]:
+    """ Gathers all detected domain ids from a region. Includes detection of
         some extra HMM profiles specific to sactipeptides.
 
         Arguments:
-            cluster: the Cluster to gather domains from
+            region: the Region to gather domains from
 
         Returns:
             a dictionary mapping domain ids to number of times that domain was found
     """
     found_domains = {}  # type: Dict[str, int]
     # Gather biosynthetic domains
-    for feature in cluster.cds_children:
+    for feature in region.cds_children:
         if not feature.sec_met:
             continue
         for domain_id in feature.sec_met.domain_ids:
             found_domains[domain_id] = found_domains.get(domain_id, 0) + 1
 
     # Gather non-biosynthetic domains
-    non_biosynthetic_hmms_by_id = run_non_biosynthetic_phmms(fasta.get_fasta_from_features(cluster.cds_children))
+    non_biosynthetic_hmms_by_id = run_non_biosynthetic_phmms(fasta.get_fasta_from_features(region.cds_children))
     for hsps_found_for_this_id in non_biosynthetic_hmms_by_id.values():
         for hsp in hsps_found_for_this_id:
             found_domains[hsp.query_id] = found_domains.get(hsp.query_id, 0) + 1
@@ -126,7 +127,7 @@ def get_detected_domains(cluster: secmet.Cluster) -> Dict[str, int]:
     return found_domains
 
 
-def run_non_biosynthetic_phmms(cluster_fasta: str) -> Dict[str, List[HSP]]:
+def run_non_biosynthetic_phmms(region_fasta: str) -> Dict[str, List[HSP]]:
     """ Try to identify cleavage site using pHMM """
     with open(path.get_full_path(__file__, "data", "non_biosyn_hmms", "hmmdetails.txt"), "r") as handle:
         hmmdetails = [line.split("\t") for line in handle.read().splitlines() if line.count("\t") == 3]
@@ -135,7 +136,7 @@ def run_non_biosynthetic_phmms(cluster_fasta: str) -> Dict[str, List[HSP]]:
     non_biosynthetic_hmms_by_id = defaultdict(list)  # type: Dict[str, Any]
     for sig in signature_profiles:
         sig.path = path.get_full_path(__file__, "data", "non_biosyn_hmms", sig.path)
-        runresults = subprocessing.run_hmmsearch(sig.path, cluster_fasta)
+        runresults = subprocessing.run_hmmsearch(sig.path, region_fasta)
         for runresult in runresults:
             # Store result if it is above cut-off
             for hsp in runresult.hsps:
@@ -157,7 +158,7 @@ def cds_has_domains(cds: secmet.CDSFeature, domains: Set[str]) -> bool:
     return bool(cds.sec_met and set(cds.sec_met.domain_ids).intersection(domains))
 
 
-def acquire_rodeo_heuristics(cluster: secmet.Cluster, query: secmet.CDSFeature,
+def acquire_rodeo_heuristics(region: secmet.Region, query: secmet.CDSFeature,
                              leader: str, core: str,
                              domains: Dict[str, int]) -> Tuple[int, List[float], List[int]]:
     """Calculate heuristic scores for RODEO"""
@@ -175,23 +176,23 @@ def acquire_rodeo_heuristics(cluster: secmet.Cluster, query: secmet.CDSFeature,
     tabs.append(float(core_analysis.molecular_weight()))
     # Distance to any biosynthetic protein (E, B, C)
     hmmer_profiles = ['PF04055']
-    distance = utils.distance_to_pfam(cluster.parent_record, query, hmmer_profiles)
+    distance = utils.distance_to_pfam(region.parent_record, query, hmmer_profiles)
     tabs.append(distance)
     # rSAM within 500 nt?
-    if utils.distance_to_pfam(cluster.parent_record, query, ['PF04055']) < 500:
+    if utils.distance_to_pfam(region.parent_record, query, ['PF04055']) < 500:
         score += 1
         tabs.append(1)
     else:
         tabs.append(0)
     # rSAM within 150 nt?
-    if utils.distance_to_pfam(cluster.parent_record, query, ['PF04055']) < 150:
+    if utils.distance_to_pfam(region.parent_record, query, ['PF04055']) < 150:
         score += 1
         tabs.append(1)
     else:
         tabs.append(0)
     # rSAM further than 1000 nt?
-    if utils.distance_to_pfam(cluster.parent_record, query, ['PF04055']) == -1 or \
-       utils.distance_to_pfam(cluster.parent_record, query, ['PF04055']) > 10000:
+    if utils.distance_to_pfam(region.parent_record, query, ['PF04055']) == -1 or \
+       utils.distance_to_pfam(region.parent_record, query, ['PF04055']) > 10000:
         score -= 2
         tabs.append(1)
     else:
@@ -256,13 +257,13 @@ def acquire_rodeo_heuristics(cluster: secmet.Cluster, query: secmet.CDSFeature,
         tabs.append(1)
     else:
         tabs.append(0)
-    # Cluster has PqqD/RRE (PF05402)
+    # region has PqqD/RRE (PF05402)
     if "PF05402" in domains:
         score += 1
         tabs.append(1)
     else:
         tabs.append(0)
-    # Cluster has SPASM domain (PF13186)
+    # region has SPASM domain (PF13186)
     if "PF13186" in domains:
         score += 1
         tabs.append(1)
@@ -270,7 +271,7 @@ def acquire_rodeo_heuristics(cluster: secmet.Cluster, query: secmet.CDSFeature,
         tabs.append(0)
     # PF04055 (rSAM) domain start > 80
     runresults = subprocessing.run_hmmsearch(path.get_full_path(__file__, "data", "PF04055.hmm"),
-                                             fasta.get_fasta_from_features(cluster.cds_children))
+                                             fasta.get_fasta_from_features(region.cds_children))
     max_start = 0
     hitstarts = []
     hitends = []
@@ -286,7 +287,7 @@ def acquire_rodeo_heuristics(cluster: secmet.Cluster, query: secmet.CDSFeature,
         tabs.append(1)
     else:
         tabs.append(0)
-    # Cluster has peptidase
+    # region has peptidase
     peptidase_domains = ["Peptidase_M16_C", "Peptidase_S8", "Peptidase_M16", "Peptidase_S41"]
     no_peptidase = True
     for pepdom in peptidase_domains:
@@ -296,7 +297,7 @@ def acquire_rodeo_heuristics(cluster: secmet.Cluster, query: secmet.CDSFeature,
             no_peptidase = False
         else:
             tabs.append(0)
-    # Cluster has transporter
+    # region has transporter
     transport_domains = ["PF00005", "PF00664"]
     for transpdom in transport_domains:
         if transpdom in domains:
@@ -304,37 +305,37 @@ def acquire_rodeo_heuristics(cluster: secmet.Cluster, query: secmet.CDSFeature,
             tabs.append(1)
         else:
             tabs.append(0)
-    # Cluster has response regulator (PF00072)
+    # region has response regulator (PF00072)
     if "PF00072" in domains:
         score += 1
         tabs.append(1)
     else:
         tabs.append(0)
-    # Cluster has major facilitator (PF07690)
+    # region has major facilitator (PF07690)
     if "PF07690" in domains:
         score += 1
         tabs.append(1)
     else:
         tabs.append(0)
-    # Cluster has ATPase (PF13304)
+    # region has ATPase (PF13304)
     if "PF13304" in domains:
         score += 1
         tabs.append(1)
     else:
         tabs.append(0)
-    # Cluster has Fer4_12 (PF13353)
+    # region has Fer4_12 (PF13353)
     if "PF13353" in domains:
         score += 1
         tabs.append(1)
     else:
         tabs.append(0)
-    # Cluster has rSAM (PF04055)
+    # region has rSAM (PF04055)
     if "PF04055" in domains or "TIGR03975" in domains:
         score += 2
         tabs.append(1)
     else:
         tabs.append(0)
-    # Cluster has no recognized peptidase
+    # region has no recognized peptidase
     if no_peptidase:
         score -= 2
         tabs.append(1)
@@ -512,13 +513,13 @@ def run_rodeo_svm(csv_columns: List[float]) -> int:
     return 0
 
 
-def run_rodeo(cluster: secmet.Cluster, query: secmet.CDSFeature,
+def run_rodeo(region: secmet.Region, query: secmet.CDSFeature,
               leader: str, core: str, domains: Dict[str, int]) -> Tuple[bool, float]:
     """Run RODEO heuristics + SVM to assess precursor peptide candidate"""
     rodeo_score = 0
 
     # Incorporate heuristic scores
-    heuristic_score, partial_csv, hitends = acquire_rodeo_heuristics(cluster, query, leader, core, domains)
+    heuristic_score, partial_csv, hitends = acquire_rodeo_heuristics(region, query, leader, core, domains)
     rodeo_score += heuristic_score
 
     # Incorporate SVM scores
@@ -528,7 +529,7 @@ def run_rodeo(cluster: secmet.Cluster, query: secmet.CDSFeature,
     return rodeo_score >= 26, rodeo_score
 
 
-def determine_precursor_peptide_candidate(cluster: secmet.Cluster, query: secmet.CDSFeature,
+def determine_precursor_peptide_candidate(region: secmet.Region, query: secmet.CDSFeature,
                                           query_sequence: str, domains: Dict[str, int]
                                           ) -> Optional[SactipeptideMotif]:
     """Identify precursor peptide candidates and split into two"""
@@ -544,19 +545,19 @@ def determine_precursor_peptide_candidate(cluster: secmet.Cluster, query: secmet
     core = query_sequence[end:]
 
     # Run RODEO to assess whether candidate precursor peptide is judged real
-    valid, score = run_rodeo(cluster, query, leader, core, domains)
+    valid, score = run_rodeo(region, query, leader, core, domains)
     if not valid:
         return None
 
     return SactipeptideMotif(query.location, query.get_name(), score, leader, core)
 
 
-def run_sactipred(cluster: secmet.Cluster, query: secmet.CDSFeature,
+def run_sactipred(region: secmet.Region, query: secmet.CDSFeature,
                   domains: Dict[str, int]) -> Optional[SactipeptideMotif]:
     """General function to predict and analyse sacti peptides"""
 
     # Run checks to determine whether an ORF encodes a precursor peptide
-    result = determine_precursor_peptide_candidate(cluster, query,
+    result = determine_precursor_peptide_candidate(region, query,
                                                    query.translation, domains)
     if result is None:
         return None
@@ -584,7 +585,7 @@ def annotate_orfs(cds_features: List[secmet.CDSFeature], hmm_results: Dict[str, 
 
 
 def specific_analysis(record: secmet.Record) -> SactiResults:
-    """ Analyse each sactipeptide cluster and find precursors within it.
+    """ Analyse each sactipeptide region and find precursors within it.
         If an unannotated ORF would contain the precursor, it will be annotated.
 
         Arguments:
@@ -596,30 +597,30 @@ def specific_analysis(record: secmet.Record) -> SactiResults:
     results = SactiResults(record.id)
     new_feature_hits = 0
     motif_count = 0
-    for cluster in record.get_clusters():
-        if 'sactipeptide' not in cluster.products:
+    for region in record.get_regions():
+        if 'sactipeptide' not in region.products:
             continue
 
         # Find candidate ORFs that are not yet annotated
-        new_orfs = all_orfs.find_all_orfs(record, cluster)
+        new_orfs = all_orfs.find_all_orfs(record, region)
         hmm_results = run_non_biosynthetic_phmms(fasta.get_fasta_from_features(new_orfs))
         annotate_orfs(new_orfs, hmm_results)
 
         # Get all CDS features to evaluate for RiPP-likeness
-        candidates = list(cluster.cds_children) + new_orfs
-        domains = get_detected_domains(cluster)
+        candidates = list(region.cds_children) + new_orfs
+        domains = get_detected_domains(region)
 
         # Evaluate each candidate precursor peptide
         for candidate in candidates:
-            motif = run_sactipred(cluster, candidate, domains)
+            motif = run_sactipred(region, candidate, domains)
             if motif is None:
                 continue
 
             results.motifs_by_locus[candidate.get_name()].append(motif)
             motif_count += 1
-            results.clusters[cluster.get_cluster_number()].add(candidate.get_name())
+            results.regions[region.get_region_number()].add(candidate.get_name())
             # track new CDSFeatures if found with all_orfs
-            if candidate.cluster is None:
+            if candidate.region is None:
                 results.new_cds_features.add(candidate)
                 new_feature_hits += 1
 

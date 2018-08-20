@@ -317,10 +317,10 @@ class Gene:
 class Cluster:
     """ For constructing all SVG components required to represent a cluster
     """
-    def __init__(self, query_cluster_number: int, ref_cluster_number: str, accession: str,
+    def __init__(self, region_number: int, ref_cluster_number: str, accession: str,
                  description: str, features: Union[List[Protein], List[secmet.CDSFeature]], rank: int,
                  hits: int = 0, strand: int = 1) -> None:
-        self.query_cluster_number = query_cluster_number
+        self.region_number = region_number
         self.ref_cluster_number = int(ref_cluster_number.lstrip('c'))
         self.accession = accession
         self.description = description.replace("_", " ")
@@ -424,21 +424,21 @@ class Cluster:
                 label = "all_"
             else:
                 label = "h"
-            arrow.set_id("%s-%d_%s%d_%s_%s" % (prefix, self.query_cluster_number, label,
-                                               self.query_cluster_number, self.rank, i))
+            arrow.set_id("%s-%d_%s%d_%s_%s" % (prefix, self.region_number, label,
+                                               self.region_number, self.rank, i))
             group.addElement(arrow)
             # Can be used for domains
-            group.set_id("a%s_00%s" % (self.query_cluster_number, i))
+            group.set_id("a%s_00%s" % (self.region_number, i))
             groups.append(group)
         return groups
 
     @staticmethod
-    def from_reference_cluster(cluster: ReferenceCluster, query_cluster_number: int, score: Score,
+    def from_reference_cluster(cluster: ReferenceCluster, region_number: int, score: Score,
                                reference_proteins: Dict[str, Protein], rank: int, num_hits: int,
                                strand: int) -> "Cluster":
         """ Constructs a Cluster instance from a ReferenceCluster instance """
         proteins = [reference_proteins[protein] for protein in cluster.proteins]
-        svg_cluster = Cluster(query_cluster_number, str(cluster.cluster_label),
+        svg_cluster = Cluster(region_number, str(cluster.cluster_label),
                               cluster.accession, cluster.description, proteins,
                               rank, num_hits, strand)
         for query, subject in score.scored_pairings:
@@ -448,16 +448,16 @@ class Cluster:
         return svg_cluster
 
 
-class QueryCluster(Cluster):
-    """ A special case of Cluster for the query, with slightly different info
-        in the SVG components
+class QueryRegion(Cluster):
+    """ A special case of Cluster for the query region, with slightly different
+        info in the SVG components
     """
-    def __init__(self, cluster_feature: secmet.Cluster) -> None:
-        cluster_number = cluster_feature.get_cluster_number()
-        super().__init__(cluster_number, str(cluster_number),
-                         "%s_%d" % (cluster_feature.parent_record.id, cluster_number),
+    def __init__(self, region_feature: secmet.Region) -> None:
+        region_number = region_feature.get_region_number()
+        super().__init__(region_number, str(region_number),
+                         "%s_%d" % (region_feature.parent_record.id, region_number),
                          "Query sequence",
-                         list(cluster_feature.cds_children), rank=0)
+                         list(region_feature.cds_children), rank=0)
 
     def get_svg_groups(self, h_offset: int = 0, v_offset: int = 0, scaling: float = 1.,
                        screenwidth: int = 1024, colours: Dict[str, str] = None,
@@ -482,12 +482,12 @@ class QueryCluster(Cluster):
         for index, gene in enumerate(self.genes):
             arrow = gene.get_arrow_polygon(scaling=scaling, offset=offset,
                                            base=base, colour=colours.get(gene.name, "white"))
-            arrow.set_id("%s-%s_q%s_%s_%s" % (prefix, self.query_cluster_number, index, self.rank, "all"))
+            arrow.set_id("%s-%s_q%s_%s_%s" % (prefix, self.region_number, index, self.rank, "all"))
             group.addElement(arrow)
         return groups
 
 
-def determine_strand_of_cluster(cluster: secmet.Cluster, pairings: List[Tuple[Query, Subject]]) -> int:
+def determine_strand_of_cluster(region: secmet.Region, pairings: List[Tuple[Query, Subject]]) -> int:
     """ Determines the strand of a cluster relative to the query cluster.
         Calculated by using the median strand of all linked genes.
 
@@ -498,14 +498,14 @@ def determine_strand_of_cluster(cluster: secmet.Cluster, pairings: List[Tuple[Qu
         used.
 
         Arguments:
-            cluster: the secmet.Cluster feature to operate on
+            cluster: the secmet.Region feature to operate on
             pairings: a list of Query,Subject pairs for determining matches
 
         Returns:
             an int in -1, 0, 1
     """
     name_to_feature = {}
-    for cds in cluster.cds_children:
+    for cds in region.cds_children:
         name_to_feature[cds.get_accession()] = cds
 
     counted = set()  # type: Set[str]
@@ -539,17 +539,17 @@ class ClusterSVGBuilder:
     """ Constructs SVGs for both query cluster and matching clusters, in both
         pairwise and combined forms
     """
-    def __init__(self, cluster_feature: secmet.Cluster, ranking: List[Tuple[ReferenceCluster, Score]],
+    def __init__(self, region: secmet.Region, ranking: List[Tuple[ReferenceCluster, Score]],
                  reference_proteins: Dict[str, Protein], prefix: str) -> None:
         if ranking:
             assert reference_proteins
         self.prefix = prefix
-        self.query_cluster = QueryCluster(cluster_feature)
-        query_cluster_number = cluster_feature.get_cluster_number()
+        self.query_cluster = QueryRegion(region)
+        region_number = region.get_region_number()
         cluster_limit = get_config().cb_nclusters
-        self.colour_lookup = build_colour_groups(list(cluster_feature.cds_children), ranking[:cluster_limit])
+        self.colour_lookup = build_colour_groups(list(region.cds_children), ranking[:cluster_limit])
         self.hits = []  # type: List[Cluster]
-        record_prefix = cluster_feature.parent_record.id.split(".", 1)[0]
+        record_prefix = region.parent_record.id.split(".", 1)[0]
         num_added = 0
         queries = set()
 
@@ -558,11 +558,11 @@ class ClusterSVGBuilder:
                 continue
             # determine overall strand direction of hits
             hit_genes = set()
-            strand = determine_strand_of_cluster(cluster_feature, score.scored_pairings)
+            strand = determine_strand_of_cluster(region, score.scored_pairings)
             for query, subject in score.scored_pairings:
                 queries.add(query.id)
                 hit_genes.add(subject.name)
-            svg_cluster = Cluster.from_reference_cluster(cluster, query_cluster_number,
+            svg_cluster = Cluster.from_reference_cluster(cluster, region_number,
                                                          score, reference_proteins,
                                                          num_added + 1, len(hit_genes),
                                                          strand)

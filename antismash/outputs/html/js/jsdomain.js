@@ -5,21 +5,21 @@ var jsdomain = {
     unique_id: 0
 };
 
-jsdomain.drawDomains = function(id, cluster, height, width) {
+jsdomain.drawDomains = function(id, region, height, width) {
     var container = d3.select('#' + id);
     var single_orf_height = height + jsdomain.label_height;
     container.selectAll("svg").remove();
     var chart = container.append("svg")
-        .attr("height", single_orf_height * cluster['orfs'].length + 10)
+        .attr("height", single_orf_height * region["orfs"].length + 10)
         .attr("width", width);
 
     max_orf_len = 0;
-    for (i=0; i < cluster['orfs'].length; i++) {
-        max_orf_len = Math.max(max_orf_len, cluster['orfs'][i].sequence.length);
+    for (i=0; i < region["orfs"].length; i++) {
+        max_orf_len = Math.max(max_orf_len, region["orfs"][i].sequence.length);
     }
 
-    for (i=0; i < cluster['orfs'].length; i++) {
-        var orf = cluster['orfs'][i];
+    for (i=0; i < region["orfs"].length; i++) {
+        var orf = region["orfs"][i];
         var idx = jsdomain.unique_id++;
         var offset = height/10;
         var x = d3.scale.linear()

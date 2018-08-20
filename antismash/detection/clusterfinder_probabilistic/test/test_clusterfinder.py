@@ -8,7 +8,7 @@ import unittest
 
 from Bio.Seq import Seq
 
-from antismash.common.secmet.features import CDSFeature, PFAMDomain, ClusterBorder, FeatureLocation
+from antismash.common.secmet.features import CDSFeature, PFAMDomain, FeatureLocation
 from antismash.common.test.helpers import DummyRecord
 from antismash.config import build_config, update_config, destroy_config
 from antismash.detection import clusterfinder_probabilistic as clusterfinder
@@ -92,42 +92,18 @@ class ClusterFinderTest(unittest.TestCase):
 
     def test_no_overlaps(self):
         results = clusterfinder.generate_results(self.record, self.config)
-        borders = self.record.get_cluster_borders()
+        areas = self.record.get_subregions()
 
-        assert len(results.borders) == 2
-        assert len(borders) == 2
-        assert list(borders) == results.borders
+        assert len(results.areas) == 2
+        assert len(areas) == 2
+        assert list(areas) == results.areas
 
-        cluster = borders[0]
-        assert cluster.location.start == 30
-        assert cluster.location.end == 120
-        assert not cluster.high_priority_product
-        self.assertAlmostEqual(0.6429, cluster.probability, places=4)
+        area = areas[0]
+        assert area.location.start == 30
+        assert area.location.end == 120
+        self.assertAlmostEqual(0.6429, area.probability, places=4)
 
-        cluster = borders[1]
-        assert cluster.location.start == 1030
-        assert cluster.location.end == 1120
-        assert not cluster.high_priority_product
-        self.assertAlmostEqual(0.6429, cluster.probability, places=4)
-
-    def test_merges(self):
-        clusterfinder.generate_results(self.record, self.config)
-        assert len(self.record.get_cluster_borders()) == 2
-
-        for start, end in [(10, 40), (1040, 1050), (110, 400)]:
-            loc = FeatureLocation(start, end)
-            self.record.add_cluster_border(ClusterBorder(loc, "testtool", product=str(start)))
-
-        assert not self.record.get_clusters()
-
-        self.record.create_clusters_from_borders()
-
-        clusters = self.record.get_clusters()
-        assert len(clusters) == 2
-
-        assert clusters[0].location.start == 10
-        assert clusters[0].location.end == 400
-        assert clusters[0].products == ("10", "110")
-        assert clusters[1].location.start == 1030
-        assert clusters[1].location.end == 1120
-        assert clusters[1].products == ("1040",)
+        area = areas[1]
+        assert area.location.start == 1030
+        assert area.location.end == 1120
+        self.assertAlmostEqual(0.6429, area.probability, places=4)

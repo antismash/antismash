@@ -71,7 +71,7 @@ class IntegrationNRPSPKS(unittest.TestCase):
 
         # as does this, though it still won't use domain docking
         monomers = '(leu-bht-asn) + (hpg-hpg-bht) + (dhpg) + (tyr) + (pk)'
-        assert results.cluster_predictions == {1: [monomers, False]}
+        assert results.region_predictions == {1: [monomers, False]}
 
     def test_cp002271_c19(self):
         filename = path.get_full_path(__file__, 'data', 'CP002271.1.cluster019.gbk')
@@ -85,7 +85,7 @@ class IntegrationNRPSPKS(unittest.TestCase):
                                      'nrpspksdomains_STAUR_3985_AT1': 'mmal',
                                      'nrpspksdomains_STAUR_3985_AT2': 'pk'}
         # check the gene ordering and, in this case, that it used domain docking
-        assert results.cluster_predictions == {1: [
+        assert results.region_predictions == {1: [
                 '(ccmmal) + (ccmmal) + (mmal-pk) + (ohmmal)', True]}
         assert len(results.domain_predictions) == 10
         expected_domains = {'nrpspksdomains_STAUR_3982_AT1',

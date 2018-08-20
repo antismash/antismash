@@ -8,7 +8,7 @@ import logging
 from typing import Any, Dict, List, Optional
 
 from antismash.common.module_results import DetectionResults
-from antismash.common.secmet import ClusterBorder, Record
+from antismash.common.secmet import SubRegion, Record
 from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
 
@@ -74,11 +74,11 @@ def check_options(options: ConfigType) -> List[str]:
 
 class ClusterFinderResults(DetectionResults):
     """ Storage for predictions """
-    def __init__(self, record_id: str, borders: List[ClusterBorder], create: bool = False) -> None:
+    def __init__(self, record_id: str, areas: List[SubRegion], create: bool = False) -> None:
         super().__init__(record_id)
         self.create_new_clusters = create
-        assert isinstance(borders, list), type(borders)
-        self.borders = borders
+        assert isinstance(areas, list), type(areas)
+        self.areas = areas
 
     def to_json(self) -> Dict[str, Any]:  # TODO: implement to/from json
         logging.critical("cluster_finder results always empty")
@@ -89,15 +89,15 @@ class ClusterFinderResults(DetectionResults):
         raise NotImplementedError("No conversion exists yet for ClusterFinderResults from JSON")
 
     def add_to_record(self, record: Record) -> None:
-        if self.create_new_clusters:  # then get_predictions covered it already
+        if self.create_new_clusters:  # then get_predicted_subregions covered it already
             return
-        for border in self.borders:
-            record.add_cluster_border(border)
+        for area in self.areas:
+            record.add_subregion(area)
 
-    def get_predictions(self) -> List[ClusterBorder]:
+    def get_predicted_subregions(self) -> List[SubRegion]:
         if not self.create_new_clusters:  # then don't predict, just annotate
             return []
-        return self.borders
+        return self.areas
 
 
 def check_prereqs() -> List[str]:
@@ -129,8 +129,8 @@ def run_on_record(record: Record, results: Optional[ClusterFinderResults],
 
     # annotate ClusterFinder probabilities within PFAM features
     probabilities = get_pfam_probabilities(pfam_ids)
-    for pfam, probabilitiy in zip(pfam_features_with_ids, probabilities):
-        pfam.probability = probabilitiy
+    for pfam, probability in zip(pfam_features_with_ids, probabilities):
+        pfam.probability = probability
 
     return generate_results(record, options)
 
@@ -150,15 +150,13 @@ def regenerate_previous_results(_previous: Dict[str, Any], _record: Record,
 
 
 def generate_results(record: Record, options: ConfigType) -> ClusterFinderResults:
-    """ Find and construct probabilistic cluster borders """
-    prob_clusters = find_probabilistic_clusters(record, options)
-    new_clusters = []
-    for cluster in prob_clusters:
-        new_cluster = ClusterBorder(cluster.location, tool="clusterfinder",
-                                    probability=cluster.probability, product=PUTATIVE_PRODUCT,
-                                    high_priority_product=False)
-        new_clusters.append(new_cluster)
+    """ Find and construct probabilistic cluster areas """
+    predictions = find_probabilistic_clusters(record, options)
+    new_areas = []
+    for prediction in predictions:
+        new_areas.append(SubRegion(prediction.location, tool="clusterfinder",
+                                   probability=prediction.probability))
     if options.cf_create_clusters:
-        for border in new_clusters:
-            record.add_cluster_border(border)
-    return ClusterFinderResults(record.id, new_clusters, create=options.cf_create_clusters)
+        for area in new_areas:
+            record.add_subregion(area)
+    return ClusterFinderResults(record.id, new_areas, create=options.cf_create_clusters)

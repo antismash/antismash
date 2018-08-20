@@ -195,8 +195,6 @@ class TestCassisStorageMethods(unittest.TestCase):
 
         record_without_promoters = create_fake_record()  # just the same, without adding promoters
 
-        # test if store_promoters changed any non-promoter feature (should not!)  # TODO
-
         # test promoter features
         expected_count = record_without_promoters.get_feature_count() + len(promoters)
         assert expected_count == record_with_promoters.get_feature_count()
@@ -210,7 +208,7 @@ class TestCassisStorageMethods(unittest.TestCase):
         assert last_promoter.get_qualifier("locus_tag") == ("gene3", "gene4")
         assert last_promoter.notes == ["bidirectional promoter"]
 
-    def test_store_clusters(self):
+    def test_store_subregions(self):
         # this test is similar to test_store_promoters
         anchor = "gene3"
 
@@ -234,30 +232,30 @@ class TestCassisStorageMethods(unittest.TestCase):
         second_cluster.promoters = 3
         second_cluster.genes = 4
 
-        clusters = [first_cluster, second_cluster]
+        # order reversed because subregions are ordered by length when starts are the same
+        region_predictions = [second_cluster, first_cluster]
 
-        record_with_clusters = create_fake_record()
-        record_without_clusters = create_fake_record()  # just the same, without adding clusters
+        record_with_subregions = create_fake_record()
+        record_without_subregions = create_fake_record()  # just the same, without adding subregions
 
-        borders = cassis.create_cluster_borders(anchor, clusters, record_with_clusters)
-        assert record_with_clusters.get_feature_count() == record_without_clusters.get_feature_count()
+        subregions = cassis.create_subregions(anchor, region_predictions, record_with_subregions)
+        assert record_with_subregions.get_feature_count() == record_without_subregions.get_feature_count()
 
-        for border in borders:
-            record_with_clusters.add_cluster_border(border)
+        for region in subregions:
+            record_with_subregions.add_subregion(region)
 
-        # test if store_clusters changed any non-cluster feature (should not!)  # TODO
-
-        # test cluster features
-        assert record_without_clusters.get_feature_count() + len(clusters) == record_with_clusters.get_feature_count()
-        for i, cluster in enumerate(clusters):
-            cluster_border = record_with_clusters.get_cluster_borders()[i]
-            self.assertEqual(cluster_border.type, "cluster_border")
-            self.assertEqual(cluster_border.tool, "cassis")
-            self.assertEqual(cluster_border.get_qualifier("anchor"), (anchor,))
-            self.assertEqual(cluster_border.get_qualifier("genes"), (cluster.genes,))
-            self.assertEqual(cluster_border.get_qualifier("promoters"), (cluster.promoters,))
-            self.assertEqual(cluster_border.get_qualifier("gene_left"), (cluster.start.gene,))
-            self.assertEqual(cluster_border.get_qualifier("gene_right"), (cluster.end.gene,))
+        # test subregion features
+        expected_count = record_without_subregions.get_feature_count() + len(subregions)
+        assert record_with_subregions.get_feature_count() == expected_count
+        for i, region in enumerate(region_predictions):
+            subregion = record_with_subregions.get_subregions()[i]
+            self.assertEqual(subregion.type, "subregion")
+            self.assertEqual(subregion.tool, "cassis")
+            self.assertEqual(subregion.anchor, anchor)
+            self.assertEqual(subregion.get_qualifier("genes"), (region.genes,))
+            self.assertEqual(subregion.get_qualifier("promoters"), (region.promoters,))
+            self.assertEqual(subregion.get_qualifier("gene_left"), (region.start.gene,))
+            self.assertEqual(subregion.get_qualifier("gene_right"), (region.end.gene,))
             # don't test all feature qualifiers, only some
 
 
@@ -274,7 +272,7 @@ class TestResults(unittest.TestCase):
     def test_base(self):
         results = cassis.CassisResults("test")
         assert results.record_id == "test"
-        assert results.borders == []
+        assert results.subregions == []
         assert results.promoters == []
 
     def test_regeneration(self):
@@ -288,8 +286,8 @@ class TestResults(unittest.TestCase):
         end_marker.promoter = "gene3+gene4"
         assert end_marker.abundance == 1
         cluster = cassis.ClusterPrediction(start_marker, end_marker)
-        results.borders = cassis.create_cluster_borders("gene1", [cluster], record)
-        assert results.borders
+        results.subregions = cassis.create_subregions("gene1", [cluster], record)
+        assert results.subregions
 
         results.promoters = [Promoter("gene1", 10, 20, seq=Seq("cgtacgtacgt")),
                              Promoter("gene2", 30, 40, seq=Seq("cgtacgtacgt")),
@@ -297,8 +295,8 @@ class TestResults(unittest.TestCase):
 
         round_trip = cassis.regenerate_previous_results(results.to_json(), record, None)
         assert isinstance(round_trip, cassis.CassisResults)
-        assert len(results.borders) == len(round_trip.borders)
-        for old, new in zip(results.borders, round_trip.borders):
+        assert len(results.subregions) == len(round_trip.subregions)
+        for old, new in zip(results.subregions, round_trip.subregions):
             assert old.location == new.location
             assert old.to_biopython()[0].qualifiers == new.to_biopython()[0].qualifiers
         assert round_trip.promoters == results.promoters

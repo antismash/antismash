@@ -47,12 +47,12 @@ def get_all_features_of_type(_seq_record, _types):
 
 @no_type_check
 def get_cds_features_within_clusters(_seq_record):
-    raise RuntimeError("get_withincluster_cds_features(record) called, use record.get_cds_features_within_clusters()")
+    raise RuntimeError("get_withincluster_cds_features(record) called, use record.get_cds_features_within_regions()")
 
 
 @no_type_check
 def get_withincluster_cds_features(_seq_record):
-    raise RuntimeError("get_withincluster_cds_features(record) called, use record.get_cds_features_within_clusters()")
+    raise RuntimeError("get_withincluster_cds_features(record) called, use record.get_cds_features_within_regions()")
 
 
 @no_type_check

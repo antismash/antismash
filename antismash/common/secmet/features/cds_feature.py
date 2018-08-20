@@ -10,7 +10,7 @@ from typing import Union  # comment hints  # pylint: disable=unused-import
 
 from Bio.SeqFeature import SeqFeature
 
-from antismash.common.secmet import features
+from antismash.common.secmet import features  # comment hints  # pylint:disable=unused-import
 from antismash.common.secmet.qualifiers import (
     GeneFunction,
     GeneFunctionAnnotations,
@@ -35,8 +35,8 @@ def _sanitise_id_value(name: Optional[str]) -> Optional[str]:
 class CDSFeature(Feature):
     """ A feature representing a single CDS/gene. """
     __slots__ = ["_translation", "protein_id", "locus_tag", "gene", "product",
-                 "transl_table", "_sec_met", "cluster", "_gene_functions",
-                 "unique_id", "_nrps_pks", "motifs"]
+                 "transl_table", "_sec_met", "_gene_functions",
+                 "unique_id", "_nrps_pks", "motifs", "region"]
 
     def __init__(self, location: FeatureLocation, translation: str = None, locus_tag: str = None,
                  protein_id: str = None, product: str = None, gene: str = None) -> None:
@@ -66,7 +66,7 @@ class CDSFeature(Feature):
             raise ValueError("CDSFeature requires at least one of: gene, protein_id, locus_tag")
 
         # runtime-only data
-        self.cluster = None  # type: Optional[features.Cluster]
+        self.region = None  # type: Optional[features.Region]
         self.unique_id = None  # type: Optional[str] # set only when added to a record
 
     @property

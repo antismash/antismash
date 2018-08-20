@@ -7,14 +7,41 @@ KEYWORDS    .
 SOURCE      cluster1 only
   ORGANISM  .
             .
+COMMENT     ##antiSMASH-Data-START##
+            Version      :: 5.0.0alpha-43c8f43
+            Run date     :: 2018-08-20 16:36:54
+            ##antiSMASH-Data-END##
 FEATURES             Location/Qualifiers
      cluster         1..20844
-                     /contig_edge="True"
+                     /aStool="rule-based-clusters"
+                     /cluster_number="1"
+                     /core_location="[8417:10897]"
                      /cutoff="10000"
-                     /extension="10000"
-                     /note="Detection rule(s) for this cluster type:
-                     lassopeptide: ((PF13471 and PF00733 or micJ25 or mcjC));"
+                     /detection_rule="(PF13471 and PF00733 or micJ25 or mcjC)"
+                     /neighbourhood="10000"
+                     /parent_cluster_number="1"
                      /product="lassopeptide"
+                     /tool="antismash"
+     cluster_core    8418..10897
+                     /aStool="rule-based-clusters"
+                     /cluster_number="1"
+                     /cutoff="10000"
+                     /detection_rule="(PF13471 and PF00733 or micJ25 or mcjC)"
+                     /neighbourhood="10000"
+                     /parent_cluster_number="1"
+                     /product="lassopeptide"
+     supercluster    1..20844
+                     /child_cluster="1"
+                     /detection_rules="(PF13471 and PF00733 or micJ25 or mcjC)"
+                     /kind="single"
+                     /product="lassopeptide"
+                     /supercluster_number="1"
+                     /tool="antismash"
+     region          1..20844
+                     /product="lassopeptide"
+                     /region_number="1"
+                     /rules="(PF13471 and PF00733 or micJ25 or mcjC)"
+                     /supercluster_numbers="1"
                      /tool="antismash"
      CDS             138..821
                      /locus_tag="ctg1_orf02098"
@@ -129,14 +156,6 @@ FEATURES             Location/Qualifiers
                      QPKHYPFLCQPMVEFALSTPSYDHFEGAHNRIVLRKSVAAATGYPNLWRRNKGETSGID
                      LLGLRDHREHVMAVCLEGWLAKAGYIDVARTHDAIQQSSKGNSKHFMDLLHLYAAELFI
                      QSWQ"
-     cluster_border  8418..10897
-                     /aStool="rule-based-clusters"
-                     /contig_edge="False"
-                     /cutoff="10000"
-                     /extent="10000"
-                     /product="lassopeptide"
-                     /rule="(PF13471 and PF00733 or micJ25 or mcjC)"
-                     /tool="antismash"
      CDS             complement(10157..10897)
                      /gene_functions="biosynthetic (rule-based-clusters)
                      lassopeptide: PF13471"

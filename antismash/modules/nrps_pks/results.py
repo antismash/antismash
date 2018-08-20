@@ -36,7 +36,7 @@ UNKNOWN = "(unknown)"
 class NRPS_PKS_Results(ModuleResults):
     """ The combined results of the nrps_pks module """
     _schema_version = 1
-    __slots__ = ["consensus", "consensus_transat", "cluster_predictions", "domain_predictions",
+    __slots__ = ["consensus", "consensus_transat", "region_predictions", "domain_predictions",
                  "smiles_strings"]
 
     def __init__(self, record_id: str) -> None:
@@ -44,9 +44,9 @@ class NRPS_PKS_Results(ModuleResults):
         # keep a mapping of domain name -> method -> Prediction
         self.domain_predictions = defaultdict(dict)  # type: Dict[str, Dict[str, Prediction]]
         self.consensus = {}  # type: Dict[str, str]  # domain name -> consensus
-        self.cluster_predictions = {}  # type: Dict[int, Tuple[str, bool]]
+        self.region_predictions = {}  # type: Dict[int, Tuple[str, bool]]
         self.consensus_transat = {}  # type: Dict[str, str]
-        self.smiles_strings = {}  # type: Dict[int, str]  # cluster number -> SMILES
+        self.smiles_strings = {}  # type: Dict[int, str]  # region number -> SMILES
 
     def add_method_results(self, method: str, results: Dict[str, Prediction]) -> None:
         """ Add per-domain results for a single prediction method
@@ -69,7 +69,7 @@ class NRPS_PKS_Results(ModuleResults):
                    "record_id": self.record_id,
                    "domain_predictions": domain_predictions,
                    "consensus": self.consensus,
-                   "cluster_predictions": self.cluster_predictions,
+                   "region_predictions": self.region_predictions,
                    "smiles_strings": self.smiles_strings}
         return results
 
@@ -95,12 +95,12 @@ class NRPS_PKS_Results(ModuleResults):
                 assert rebuilt is not None
                 results.domain_predictions[domain_name][method] = rebuilt
         results.consensus = json["consensus"]
-        for cluster_number, prediction in json["cluster_predictions"].items():
+        for region_number, prediction in json["region_predictions"].items():
             # the int conversion is important, since json can't use int keys
-            results.cluster_predictions[int(cluster_number)] = prediction
-        for cluster_number, smiles in json["smiles_strings"].items():
+            results.region_predictions[int(region_number)] = prediction
+        for region_number, smiles in json["smiles_strings"].items():
             # again with the ints
-            results.smiles_strings[int(cluster_number)] = smiles
+            results.smiles_strings[int(region_number)] = smiles
         return results
 
     def _annotate_a_domain(self, domain: NRPSPKSQualifier.Domain) -> None:
@@ -108,11 +108,11 @@ class NRPS_PKS_Results(ModuleResults):
         predictions = self.domain_predictions[domain.feature_name]
         domain.predictions["consensus"] = generate_nrps_consensus(predictions)
 
-    def _annotate_at_domain(self, domain: NRPSPKSQualifier.Domain, cluster_products: Iterable[str]) -> None:
+    def _annotate_at_domain(self, domain: NRPSPKSQualifier.Domain, region_products: Iterable[str]) -> None:
         assert domain.name == "PKS_AT"
         predictions = self.domain_predictions[domain.feature_name]
 
-        if 'transatpks' in cluster_products:
+        if 'transatpks' in region_products:
             consensus = self.consensus_transat[domain.feature_name]
         else:
             consensus = self.consensus[domain.feature_name]
@@ -148,8 +148,8 @@ class NRPS_PKS_Results(ModuleResults):
     def add_to_record(self, record: Record) -> None:
         """ Save substrate specificity predictions in NRPS/PKS domain sec_met info of record
         """
-        for cluster_number, smiles in self.smiles_strings.items():
-            record.get_cluster(cluster_number).smiles_structure = smiles
+        for region_number, smiles in self.smiles_strings.items():
+            record.get_region(region_number).smiles_structure = smiles
 
         for cds_feature in record.get_nrps_pks_cds_features():
             nrps_qualifier = cds_feature.nrps_pks
@@ -161,7 +161,7 @@ class NRPS_PKS_Results(ModuleResults):
                 if domain.name in ["AMP-binding", "A-OX"]:
                     self._annotate_a_domain(domain)
                 elif domain.name == "PKS_AT":
-                    self._annotate_at_domain(domain, cds_feature.cluster.products)
+                    self._annotate_at_domain(domain, cds_feature.region.products)
                 elif domain.name == "CAL_domain":
                     self._annotate_cal_domain(domain)
                 elif domain.name == "PKS_KR":

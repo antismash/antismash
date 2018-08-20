@@ -27,11 +27,10 @@ class TestIntegration(unittest.TestCase):
         "Test thiopeptide prediction for nosiheptide - nosM"
         rec = seqio.read(path.get_full_path(__file__, 'data', 'nosi_before_analysis.gbk'))
         rec = secmet.Record.from_biopython(rec, "bacteria")
-        rec.get_cluster(1).trim_overlapping()
-        assert rec.get_feature_count() == 56
+        existing_feature_count = rec.get_feature_count()
         assert not rec.get_cds_motifs()
         result = thiopeptides.specific_analysis(rec)
-        assert rec.get_feature_count() == 56
+        assert rec.get_feature_count() == existing_feature_count
 
         assert len(result.motifs) == 1
 
@@ -39,7 +38,7 @@ class TestIntegration(unittest.TestCase):
         for i in rec.get_cds_motifs():
             print(i, i.leader, i.score, i.rodeo_score)
         assert len(rec.get_cds_motifs()) == 1, rec.get_cds_motifs()
-        assert rec.get_feature_count() == 57
+        assert rec.get_feature_count() == existing_feature_count + 1
 
         # check the motif in an existing CDS
         prepeptide = rec.get_cds_motifs()[0]
@@ -98,8 +97,9 @@ class TestIntegration(unittest.TestCase):
         rec = secmet.Record.from_biopython(rec, "bacteria")
         before_count = rec.get_feature_count()
         # two existing motifs
-        assert not rec.get_cds_motifs()
-
+        for motif in rec.get_cds_motifs():
+            assert motif.tool != "thiopeptides"
+        existing_motif_count = len(rec.get_cds_motifs())
         results = thiopeptides.specific_analysis(rec)
         assert len(results.motifs) == 1
         # ensure record not adjusted yet
@@ -107,13 +107,10 @@ class TestIntegration(unittest.TestCase):
         results.add_to_record(rec)
         # the new motif is added
         assert rec.get_feature_count() == before_count + 1
-        assert len(rec.get_cds_motifs()) == 1
-        prepeptides = rec.get_cds_motifs()
-        prepeptide = None
-        for feature in prepeptides:
-            if isinstance(feature, secmet.features.Prepeptide):
-                prepeptide = feature
-                break
+        assert len(rec.get_cds_motifs()) == existing_motif_count + 1
+        prepeptides = [motif for motif in rec.get_cds_motifs() if motif.tool == "thiopeptides"]
+        assert len(prepeptides) == 1
+        prepeptide = prepeptides[0]
         # and the motif that was added is exactly the one in results
         assert prepeptide is results.motifs[0]
         self.check_thiostrepton_values(prepeptide)

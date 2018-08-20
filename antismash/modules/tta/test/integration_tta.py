@@ -30,11 +30,11 @@ class TtaIntegrationTest(unittest.TestCase):
 
     def test_nisin(self):
         record = parse_input_sequence(helpers.get_path_to_nisin_with_detection())[0]
-        clusters = record.get_clusters()
-        assert clusters
-        for cluster in clusters:
-            assert cluster.cds_children
-        assert record.get_cds_features_within_clusters()
+        regions = record.get_regions()
+        assert regions
+        for region in regions:
+            assert region.cds_children
+        assert record.get_cds_features_within_regions()
         before_count = record.get_feature_count()
 
         assert tta.check_prereqs() == []

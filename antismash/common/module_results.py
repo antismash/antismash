@@ -8,7 +8,7 @@
 from typing import Any, Dict, List
 
 from .secmet import Record
-from .secmet.features import ClusterBorder
+from .secmet.features import Cluster, SubRegion
 
 
 class ModuleResults:
@@ -57,13 +57,20 @@ class DetectionResults(ModuleResults):  # keeping abstract is deliberate, pylint
     """ Stores results for detection modules.
 
         add_to_record() no longer requires overriding
-        get_predictions() should be overridden if the module predicts cluster borders
+        get_predicted_clusters() should be overridden if the module predicts clusters
+        get_predicted_subregions() should be overridden if the module predicts clusters
     """
     def add_to_record(self, record: Record) -> None:
         pass
 
-    def get_predictions(self) -> List[ClusterBorder]:  # pylint: disable=no-self-use
-        """ Returns a list of ClusterBorder features predicted by the module.
+    def get_predicted_clusters(self) -> List[Cluster]:  # pylint: disable=no-self-use
+        """ Returns a list of Cluster features predicted by the module.
             Should be overridden by any subclass that makes cluster predictions.
+        """
+        return []
+
+    def get_predicted_subregions(self) -> List[SubRegion]:  # pylint: disable=no-self-use
+        """ Returns a list of SubRegion features predicted by the module.
+            Should be overridden by any subclass that makes region predictions.
         """
         return []

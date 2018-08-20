@@ -16,9 +16,10 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union  # pylint: disab
 from helperlibs.wrappers.io import TemporaryFile
 from sklearn.externals import joblib
 
-from antismash.common import all_orfs, module_results, path, serialiser, subprocessing, utils
-from antismash.common.secmet import Record, CDSFeature, Prepeptide, GeneFunction, Cluster
+from antismash.common import all_orfs, module_results, path, subprocessing, utils
+from antismash.common.secmet import Record, CDSFeature, Prepeptide, GeneFunction, Region
 from antismash.common.secmet.features import FeatureLocation, SeqFeature
+from antismash.common.secmet.locations import location_from_string
 from antismash.config import get_config as get_global_config
 
 from .config import get_config as get_lasso_config
@@ -37,12 +38,12 @@ class LassoResults(module_results.ModuleResults):
         # keep new CDSMotifs by the gene they match to
         # e.g. self.motifs_by_locus[gene_locus] = [motif1, motif2..]
         self.motifs_by_locus = defaultdict(list)  # type: Dict[str, List[LassopeptideMotif]]
-        # keep clusters and which genes in them had precursor hits
-        # e.g. self.clusters[cluster_number] = {gene1_locus, gene2_locus}
-        self.clusters = defaultdict(set)  # type: Dict[int, Set[str]]
+        # keep regions and which genes in them had precursor hits
+        # e.g. self.regions[region_number] = {gene1_locus, gene2_locus}
+        self.regions = defaultdict(set)  # type: Dict[int, Set[str]]
 
     def to_json(self) -> Dict[str, Any]:
-        cds_features = [(serialiser.location_to_json(feature.location),
+        cds_features = [(str(feature.location),
                          feature.get_name()) for feature in self.new_cds_features]
         motifs = {}
         for locus, locus_motifs in self.motifs_by_locus.items():
@@ -51,7 +52,7 @@ class LassoResults(module_results.ModuleResults):
                 "schema_version": LassoResults.schema_version,
                 "motifs": motifs,
                 "new_cds_features": cds_features,
-                "clusters": {key: list(val) for key, val in self.clusters.items()}}
+                "regions": {key: list(val) for key, val in self.regions.items()}}
 
     @staticmethod
     def from_json(json: Dict[str, Any], record: Record) -> "LassoResults":
@@ -62,9 +63,9 @@ class LassoResults(module_results.ModuleResults):
         for locus, motifs in json["motifs"].items():
             for motif in motifs:
                 results.motifs_by_locus[locus].append(LassopeptideMotif.from_json(motif))
-        results.clusters = {int(key): set(val) for key, val in json["clusters"].items()}
+        results.regions = {int(key): set(val) for key, val in json["regions"].items()}
         for location, name in json["new_cds_features"]:
-            loc = serialiser.location_from_json(location)
+            loc = location_from_string(location)
             cds = all_orfs.create_feature_from_location(record, loc, label=name)
             results.new_cds_features.add(cds)
         return results
@@ -120,7 +121,7 @@ class LassopeptideMotif(Prepeptide):
             of LassopeptideMotif
         """
         args = []
-        args.append(serialiser.location_from_json(data["location"]))
+        args.append(location_from_string(data["location"]))
         for arg_name in ["leader", "core", "tail", "locus_tag", "monoisotopic_mass",
                          "molecular_weight", "cut_mass", "cut_weight",
                          "num_bridges", "peptide_subclass",
@@ -320,9 +321,9 @@ def run_cleavage_site_regex(fasta: str) -> Tuple[Optional[int], Optional[int], O
     return start, end, 0
 
 
-def is_on_same_strand_as(cluster: Cluster, query: CDSFeature, profile_name: str) -> bool:
+def is_on_same_strand_as(region: Region, query: CDSFeature, profile_name: str) -> bool:
     """Check if a query CDS is on same strand as gene with pHMM hit"""
-    for cds in cluster.cds_children:
+    for cds in region.cds_children:
         if not cds.sec_met:
             continue
         if query.strand != cds.strand:
@@ -332,7 +333,7 @@ def is_on_same_strand_as(cluster: Cluster, query: CDSFeature, profile_name: str)
     return False
 
 
-def acquire_rodeo_heuristics(record: Record, cluster: Cluster, query: CDSFeature,
+def acquire_rodeo_heuristics(record: Record, region: Region, query: CDSFeature,
                              leader: str, core: str) -> Tuple[int, List[Union[float, int]]]:
     """Calculate heuristic scores for RODEO"""
     tabs = []  # type: List[Union[float, int]]
@@ -394,7 +395,7 @@ def acquire_rodeo_heuristics(record: Record, cluster: Cluster, query: CDSFeature
     else:
         tabs.append(0)
     # Peptide and lasso cyclase are on same strand	+1
-    if is_on_same_strand_as(cluster, query, 'PF00733'):
+    if is_on_same_strand_as(region, query, 'PF00733'):
         score += 1
         tabs.append(1)
     else:
@@ -453,7 +454,7 @@ def acquire_rodeo_heuristics(record: Record, cluster: Cluster, query: CDSFeature
         tabs.append(1)
     else:
         tabs.append(0)
-    # Gene cluster does not contain PF13471	-2
+    # Region does not contain PF13471	-2
     if utils.distance_to_pfam(record, query, ['PF13471']) == -1 or \
        utils.distance_to_pfam(record, query, ['PF13471']) > 10000:
         score -= 2
@@ -498,19 +499,19 @@ def generate_rodeo_svm_csv(record: Record, query: CDSFeature, leader: str, core:
     # classification
     columns.append(0)
     columns += previously_gathered_tabs
-    # Cluster has PF00733?
+    # region has PF00733?
     if utils.distance_to_pfam(record, query, ['PF00733']) == -1 or \
        utils.distance_to_pfam(record, query, ['PF00733']) > 10000:
         columns.append(0)
     else:
         columns.append(1)
-    # Cluster has PF05402?
+    # region has PF05402?
     if utils.distance_to_pfam(record, query, ['PF05402']) == -1 or \
        utils.distance_to_pfam(record, query, ['PF05402']) > 10000:
         columns.append(0)
     else:
         columns.append(1)
-    # Cluster has PF13471?
+    # region has PF13471?
     if utils.distance_to_pfam(record, query, ['PF13471']) == -1 or \
        utils.distance_to_pfam(record, query, ['PF13471']) > 10000:
         columns.append(0)
@@ -629,12 +630,12 @@ def run_rodeo_svm(csv_columns: List[float]) -> int:
     return 0
 
 
-def run_rodeo(record: Record, cluster: Cluster, query: CDSFeature, leader: str, core: str) -> Tuple[bool, float]:
+def run_rodeo(record: Record, region: Region, query: CDSFeature, leader: str, core: str) -> Tuple[bool, float]:
     """Run RODEO heuristics + SVM to assess precursor peptide candidate"""
     rodeo_score = 0.
 
     # Incorporate heuristic scores
-    heuristic_score, gathered_tabs_for_csv = acquire_rodeo_heuristics(record, cluster, query, leader, core)
+    heuristic_score, gathered_tabs_for_csv = acquire_rodeo_heuristics(record, region, query, leader, core)
     rodeo_score += heuristic_score
 
     fimo_motifs = []  # type: List[int]
@@ -653,7 +654,7 @@ def run_rodeo(record: Record, cluster: Cluster, query: CDSFeature, leader: str, 
     return rodeo_score >= 15, rodeo_score
 
 
-def determine_precursor_peptide_candidate(record: Record, cluster: Cluster,
+def determine_precursor_peptide_candidate(record: Record, region: Region,
                                           query: CDSFeature, query_sequence: str) -> Optional[Lassopeptide]:
     """Identify precursor peptide candidates and split into two"""
 
@@ -674,7 +675,7 @@ def determine_precursor_peptide_candidate(record: Record, cluster: Cluster,
             start, end, score = 0, len(query_sequence) // 2 - 5, 0.
 
     # Run RODEO to assess whether candidate precursor peptide is judged real
-    valid, rodeo_score = run_rodeo(record, cluster, query, query_sequence[:end], query_sequence[end:])
+    valid, rodeo_score = run_rodeo(record, region, query, query_sequence[:end], query_sequence[end:])
     if not valid:
         return None
 
@@ -684,11 +685,11 @@ def determine_precursor_peptide_candidate(record: Record, cluster: Cluster,
     return Lassopeptide(start, end + 1, score, rodeo_score, leader, core)
 
 
-def run_lassopred(record: Record, cluster: Cluster, query: CDSFeature) -> Optional[LassopeptideMotif]:
+def run_lassopred(record: Record, region: Region, query: CDSFeature) -> Optional[LassopeptideMotif]:
     """General function to predict and analyse lasso peptides"""
 
     # Run checks to determine whether an ORF encodes a precursor peptide
-    result = determine_precursor_peptide_candidate(record, cluster, query, query.translation)
+    result = determine_precursor_peptide_candidate(record, region, query, query.translation)
     if result is None:
         return None
 
@@ -753,26 +754,26 @@ def specific_analysis(record: Record) -> LassoResults:
     """
     results = LassoResults(record.id)
     motif_count = 0
-    for cluster in record.get_clusters():
-        if 'lassopeptide' not in cluster.products:
+    for region in record.get_regions():
+        if 'lassopeptide' not in region.products:
             continue
 
-        precursor_candidates = list(cluster.cds_children)
+        precursor_candidates = list(region.cds_children)
 
         # Find candidate ORFs that are not yet annotated
-        extra_orfs = all_orfs.find_all_orfs(record, cluster)
+        extra_orfs = all_orfs.find_all_orfs(record, region)
         precursor_candidates.extend(extra_orfs)
 
         for candidate in precursor_candidates:
-            motif = run_lassopred(record, cluster, candidate)
+            motif = run_lassopred(record, region, candidate)
             if motif is None:
                 continue
 
             results.motifs_by_locus[candidate.get_name()].append(motif)
             motif_count += 1
-            results.clusters[cluster.get_cluster_number()].add(candidate.get_name())
+            results.regions[region.get_region_number()].add(candidate.get_name())
             # track new CDSFeatures if found with all_orfs
-            if candidate.cluster is None:
+            if candidate.region is None:
                 results.new_cds_features.add(candidate)
 
     logging.debug("Lassopeptide module marked %d motifs", motif_count)

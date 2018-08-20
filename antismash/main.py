@@ -201,25 +201,29 @@ def run_detection(record: Record, options: ConfigType,
 
     # generate cluster predictions
     logging.info("Detecting secondary metabolite clusters")
-    predictions = []
     for module in [hmm_detection, cassis, clusterfinder_probabilistic, clusterfinder_rule]:
         run_module(record, cast(AntismashModule, module), options, module_results, timings)
         results = module_results.get(module.__name__)
         if results:
             assert isinstance(results, DetectionResults)
-            predictions.extend(results.get_predictions())
+            for cluster in results.get_predicted_clusters():
+                record.add_cluster(cluster)
+            for region in results.get_predicted_subregions():
+                record.add_subregion(region)
 
-    # create merged clusters
-    record.create_clusters_from_borders(predictions)
-    for cluster in record.get_clusters():
-        cluster.trim_overlapping()
+    logging.debug("%d clusters found", len(record.get_clusters()))
+    logging.debug("%d subregions found", len(record.get_subregions()))
 
-    if not record.get_clusters():
-        logging.debug("No clusters detected, skipping record")
-        record.skip = "No clusters detected"
+    # create superclusters and regions
+    record.create_superclusters()
+    record.create_regions()
+
+    if not record.get_regions():
+        logging.info("No regions detected, skipping record")
+        record.skip = "No regions detected"
         return None
 
-    logging.info("%d cluster(s) detected in record", len(record.get_clusters()))
+    logging.info("%d region(s) detected in record", len(record.get_regions()))
 
     # finally, run any detection limited to genes in clusters
     for module in [nrps_pks_domains, cluster_hmmer, genefunctions]:
@@ -235,7 +239,8 @@ def run_detection(record: Record, options: ConfigType,
 
 def run_module(record: Record, module: AntismashModule, options: ConfigType,
                module_results: Dict[str, Union[ModuleResults, Dict[str, Any]]],
-               timings: Dict[str, float]) -> None:
+               timings: Dict[str, float]
+               ) -> None:
     """ Run a module on a record
 
         Arguments:
@@ -406,8 +411,8 @@ def write_outputs(results: serialiser.AntismashResults, options: ConfigType) -> 
             bio_record.annotations['comment'] += '\n' + antismash_comment
         else:
             bio_record.annotations['comment'] = antismash_comment
-        for cluster in record.get_clusters():
-            cluster.write_to_genbank(directory=options.output_dir, record=bio_record)
+        for region in record.get_regions():
+            region.write_to_genbank(directory=options.output_dir, record=bio_record)
 
     # write records to an aggregate output
     base_filename = os.path.splitext(os.path.join(options.output_dir, results.input_file))[0]
@@ -623,7 +628,7 @@ def run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
             continue
         timings = run_detection(record, options, module_results)
         # and skip analysis if detection didn't find anything
-        if not record.get_clusters():
+        if not record.get_regions():
             continue
         analysis_timings = analyse_record(record, options, analysis_modules, module_results)
         timings.update(analysis_timings)

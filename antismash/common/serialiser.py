@@ -13,13 +13,12 @@ from typing import Any, Dict, IO, List, Optional, Union
 import Bio.Alphabet
 import Bio.Alphabet.IUPAC
 from Bio.Seq import Seq
-from Bio.SeqFeature import ExactPosition, BeforePosition, AfterPosition, \
-                           UnknownPosition, FeatureLocation, CompoundLocation, \
-                           SeqFeature, Reference, AbstractPosition
+from Bio.SeqFeature import SeqFeature, Reference
 from Bio.SeqRecord import SeqRecord
 
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record
+from antismash.common.secmet.locations import location_from_string
 from antismash.config import get_config
 from antismash.typing import AntismashModule
 
@@ -131,7 +130,7 @@ def record_to_json(record: SeqRecord) -> Dict[str, Any]:
         res["references"] = []
         for reference in annotations.get("references", []):
             ref = dict(reference.__dict__)
-            ref["location"] = [location_to_json(loc) for loc in ref["location"]]
+            ref["location"] = [str(loc) for loc in ref["location"]]
             res["references"].append(ref)
         return res
 
@@ -160,7 +159,7 @@ def record_from_json(data: Union[str, Dict]) -> SeqRecord:
         for ref in bases:
             new_reference = Reference()
             new_reference.__dict__ = ref
-            new_reference.location = [location_from_json(loc) for loc in ref["location"]]
+            new_reference.location = [location_from_string(loc) for loc in ref["location"]]
             refs.append(new_reference)
         annotations["references"] = refs
         return annotations
@@ -196,7 +195,7 @@ def sequence_from_json(data: Union[str, Dict]) -> Seq:
 
 def feature_to_json(feature: SeqFeature) -> Dict[str, Any]:
     """ Creates a JSON representation of a SeqFeature """
-    return {"location": location_to_json(feature.location),
+    return {"location": str(feature.location),
             "type": feature.type,
             "id": feature.id,
             "qualifiers": feature.qualifiers}
@@ -207,62 +206,10 @@ def feature_from_json(data: Union[str, Dict]) -> SeqFeature:
     if isinstance(data, str):
         data = json.loads(data, object_pairs_hook=OrderedDict)
     assert isinstance(data, dict)
-    return SeqFeature(location=location_from_json(data["location"]),
+    return SeqFeature(location=location_from_string(data["location"]),
                       type=data["type"],
                       id=data["id"],
                       qualifiers=data["qualifiers"])
-
-
-def location_to_json(location: FeatureLocation) -> str:
-    """ Converts a FeatureLocation to a string """
-    return str(location)
-
-
-def location_from_json(data: str) -> FeatureLocation:
-    """
-        Converts from json representation (a string), e.g. [<1:6](-), to a
-        FeatureLocation or CompoundLocation
-    """
-    def parse_position(string: str) -> AbstractPosition:
-        """ Converts a positiong from a string into a Position subclass """
-        if string[0] == '<':
-            return BeforePosition(int(string[1:]))
-        if string[0] == '>':
-            return AfterPosition(int(string[1:]))
-        if string == "UnknownPosition()":
-            return UnknownPosition()
-        return ExactPosition(int(string))
-
-    def parse_single_location(string: str) -> FeatureLocation:
-        """ Converts a single location from a string to a FeatureLocation """
-        start = parse_position(string[1:].split(':', 1)[0])  # [<1:6](-) -> <1
-        end = parse_position(string.split(':', 1)[1].split(']', 1)[0])  # [<1:6](-) -> 6
-
-        strand_text = string[-2]  # [<1:6](-) -> -
-        if strand_text == '-':
-            strand = -1
-        elif strand_text == '+':
-            strand = 1
-        elif strand_text == '?':
-            strand = 0
-        elif '(' not in string:
-            strand = None
-        else:
-            raise ValueError("Cannot identify strand in location: %s" % string)
-
-        return FeatureLocation(start, end, strand=strand)
-
-    assert isinstance(data, str), "%s, %r" % (type(data), data)
-
-    if '{' not in data:
-        return parse_single_location(data)
-
-    # otherwise it's a compound location
-    # join{[1:6](+), [10:16](+)} -> ("join", "[1:6](+), [10:16](+)")
-    operator, combined_location = data[:-1].split('{', 1)
-
-    locations = [parse_single_location(part) for part in combined_location.split(', ')]
-    return CompoundLocation(locations, operator=operator)
 
 
 def regenerate_results_for_record(record: Record, modules: List[AntismashModule],

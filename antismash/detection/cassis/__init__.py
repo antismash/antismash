@@ -1,7 +1,7 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
-"""Implementation of the CASSIS method for the motif-based prediction of SM gene clusters"""
+"""Implementation of the CASSIS method for the motif-based prediction of SM cluster regions"""
 
 import logging
 import os
@@ -11,7 +11,7 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 from Bio.SeqFeature import SeqFeature
 
 from antismash.common import path, module_results
-from antismash.common.secmet import ClusterBorder, Feature, FeatureLocation, GeneFunction, Gene, Record
+from antismash.common.secmet import SubRegion, Feature, FeatureLocation, GeneFunction, Gene, Record
 from antismash.common.serialiser import feature_to_json, feature_from_json
 from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
@@ -31,23 +31,23 @@ VERBOSE_DEBUG = False  # whether to show all debugging info or not
 
 
 class CassisResults(module_results.DetectionResults):
-    """ Contains the borders predicted by cassis """
+    """ Contains the subregions predicted by cassis """
     def __init__(self, record_id: str) -> None:
         super().__init__(record_id)
-        self.borders = []  # type: List[ClusterBorder]
+        self.subregions = []  # type: List[SubRegion]
         self.promoters = []  # type: List[Promoter]
 
     def to_json(self) -> Dict[str, Any]:
-        borders = []
+        subregions = []
         promoters = []
 
-        for border in self.borders:
-            borders.append(feature_to_json(border.to_biopython()[0]))
+        for cluster in self.subregions:
+            subregions.append(feature_to_json(cluster.to_biopython()[0]))
 
         for promoter in self.promoters:
             promoters.append(promoter.to_json())
 
-        return {"record_id": self.record_id, "borders": borders, "promoters": promoters,
+        return {"record_id": self.record_id, "subregions": subregions, "promoters": promoters,
                 "max_percentage": MAX_PERCENTAGE, "max_gap_length": MAX_GAP_LENGTH}
 
     @staticmethod
@@ -63,27 +63,27 @@ class CassisResults(module_results.DetectionResults):
             logging.debug("CASSIS maximum island length changed, discarding previous results")
             return None
 
-        borders = []
+        subregions = []
         promoters = []  # type: List[Promoter]
-        for border in json["borders"]:
-            borders.append(ClusterBorder.from_biopython(feature_from_json(border)))
+        for cluster in json["subregions"]:
+            subregions.append(SubRegion.from_biopython(feature_from_json(cluster)))
         for promoter in json["promoters"]:
             if promoter["type"] == "CombinedPromoter":
                 promoters.append(CombinedPromoter.from_json(promoter))
             else:
                 promoters.append(Promoter.from_json(promoter))
         results = CassisResults(record.id)
-        results.borders = borders
+        results.subregions = subregions
         results.promoters = promoters
         return results
 
     def add_to_record(self, record: Record) -> None:
         store_promoters(self.promoters, record)
-        for border in self.borders:
-            record.add_cluster_border(border)
+        for cluster in self.subregions:
+            record.add_subregion(cluster)
 
-    def get_predictions(self) -> List[ClusterBorder]:
-        return self.borders
+    def get_predicted_subregions(self) -> List[SubRegion]:
+        return self.subregions
 
 
 def get_arguments() -> ModuleArgs:
@@ -93,7 +93,7 @@ def get_arguments() -> ModuleArgs:
                              dest='cassis',
                              action='store_true',
                              default=False,
-                             help="Motif based prediction of SM gene clusters.")
+                             help="Motif based prediction of SM gene cluster regions.")
     return args
 
 
@@ -106,7 +106,7 @@ def check_options(options: ConfigType) -> List[str]:
     """ Make sure the options are sane """
     problems = []
     if options.taxon != "fungi" and is_enabled(options):
-        problems.append("CASSIS cluster border prediction only works for fungal sequences.")
+        problems.append("CASSIS cluster prediction only works for fungal sequences.")
     return problems
 
 
@@ -140,10 +140,10 @@ def run_on_record(record: Record, results: CassisResults, options: ConfigType) -
                 antismash.common.module_results.ModuleResults
     """
     if results:
-        logging.debug("Cassis reusing %d cluster border(s)", len(results.borders))
+        logging.debug("Cassis reusing %d cluster(s)", len(results.subregions))
     else:
         results = detect(record, options)
-        logging.debug("Cassis detected %d cluster border(s)", len(results.borders))
+        logging.debug("Cassis detected %d cluster(s)", len(results.subregions))
     results.add_to_record(record)
     return results
 
@@ -160,8 +160,10 @@ def check_prereqs() -> List[str]:
 
 
 def detect(record: Record, options: ConfigType) -> CassisResults:
-    """Use core genes (anchor genes) from hmmdetect as seeds to detect gene clusters"""
-    logging.info("Detecting gene clusters using CASSIS")
+    """Use core genes (anchor genes) from hmmdetect as seeds to detect gene
+       cluster regions
+    """
+    logging.info("Detecting gene cluster regions using CASSIS")
 
     results = CassisResults(record.id)
 
@@ -200,20 +202,20 @@ def detect(record: Record, options: ConfigType) -> CassisResults:
         logging.debug("Sequence %r yields only %d promoter regions", record.name, len(promoters))
         logging.debug("Cluster detection on small sequences may lead to incomplete cluster predictions")
 
-    predicted_borders = []
+    predicted_subregions = []
     cluster_predictions = {}  # {anchor gene: cluster predictions}
     for i, anchor in enumerate(anchor_gene_names):
         logging.debug("Detecting cluster around anchor gene %r (%d of %d)", anchor, i + 1, len(anchor_gene_names))
-        # get cluster predictions sorted by border abundance
+        # get cluster predictions sorted by cluster abundance
         # (most abundant --> "best" prediction)
         predictions = get_predictions_for_anchor(anchor, promoters, record, ignored_genes, options)
         if predictions:
             cluster_predictions[anchor] = predictions
-            predicted_borders.extend(create_cluster_borders(anchor, predictions, record))
+            predicted_subregions.extend(create_subregions(anchor, predictions, record))
 
     logging.debug("Cleaning up MEME and FIMO output directories")
     cleanup_outdir(anchor_gene_names, cluster_predictions, options)
-    results.borders = predicted_borders
+    results.subregions = predicted_subregions
     return results
 
 
@@ -311,17 +313,17 @@ def store_promoters(promoters: Iterable[Promoter], record: Record) -> None:
         record.add_feature(secmet_version)
 
 
-def create_cluster_borders(anchor: str, clusters: List[ClusterPrediction],
-                           record: Record) -> List[ClusterBorder]:
-    """ Create the predicted ClusterBorders """
-    if not clusters:
-        return []
-    borders = []
-    for i, cluster in enumerate(clusters):
-        # cluster borders returned by hmmdetect are based on CDS features
-        # in contrast, cluster borders returned by cassis are based on gene features
+def create_subregions(anchor: str, cluster_preds: List[ClusterPrediction],
+                      record: Record) -> List[SubRegion]:
+    """ Create the predicted subregions """
+    subregions = []  # type: List[SubRegion]
+    if not cluster_preds:
+        return subregions
+    for i, cluster in enumerate(cluster_preds):
+        # clusters returned by hmmdetect are based on CDS features
+        # in contrast, subregions returned by cassis are based on gene features
         # --> hmmdetect derived clusters have exact loctions, like the CDSs have
-        # --> cassis derived clusters may have fuzzy locations, like the genes have
+        # --> cassis derived subregions may have fuzzy locations, like the genes have
         left_name = cluster.start.gene
         right_name = cluster.end.gene
         left = None
@@ -335,7 +337,7 @@ def create_cluster_borders(anchor: str, clusters: List[ClusterPrediction],
                 break
 
         new_feature = SeqFeature(
-            FeatureLocation(left.location.start, right.location.end), type="cluster_border")
+            FeatureLocation(left.location.start, right.location.end), type="subregion")
         new_feature.qualifiers = {
             "aStool": ["cassis"],
             "anchor": [anchor],
@@ -360,6 +362,6 @@ def create_cluster_borders(anchor: str, clusters: List[ClusterPrediction],
         else:
             new_feature.qualifiers["note"] = ["alternative prediction ({}) for anchor gene {}".format(i, anchor)]
 
-        new_feature = ClusterBorder.from_biopython(new_feature)
-        borders.append(new_feature)
-    return borders
+        new_feature = SubRegion.from_biopython(new_feature)
+        subregions.append(new_feature)
+    return subregions

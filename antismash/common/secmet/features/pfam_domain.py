@@ -35,7 +35,7 @@ class PFAMDomain(Domain):
         if not description:
             raise ValueError("PFAMDomain description cannot be empty")
         self.description = description
-        self.probability = None
+        self.probability = None  # type: Optional[float]
         self.db_xref = []  # type: List[str]
         self.protein_start = int(protein_start)
         self.protein_end = int(protein_end)
@@ -49,7 +49,7 @@ class PFAMDomain(Domain):
         mine["protein_start"] = [str(self.protein_start)]
         mine["protein_end"] = [str(self.protein_end)]
         if self.probability is not None:
-            mine["probability"] = [self.probability]
+            mine["probability"] = [str(self.probability)]
         if self.db_xref:
             mine["db_xref"] = self.db_xref
         if self.gene_ontologies:  # should only be the case if db_xrefs present, since those are needed for mapping
@@ -73,6 +73,8 @@ class PFAMDomain(Domain):
         # grab optional qualifiers
         feature.db_xref = leftovers.pop("db_xref", [])
         feature.gene_ontologies = GOQualifier.from_biopython(leftovers.pop("gene_ontologies", []))
+        if "probability" in leftovers:
+            feature.probability = float(leftovers["probability"][0])
 
         # grab parent optional qualifiers
         updated = super(PFAMDomain, feature).from_biopython(bio_feature, feature=feature, leftovers=leftovers)
