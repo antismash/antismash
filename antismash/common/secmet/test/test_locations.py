@@ -10,8 +10,14 @@ from antismash.common.secmet.locations import (
     convert_protein_position_to_dna,
     location_bridges_origin as is_bridged,
     split_origin_bridging_location as splitter,
+    location_from_string,
+    combine_locations,
     FeatureLocation,
-    CompoundLocation
+    CompoundLocation,
+    AfterPosition,
+    BeforePosition,
+    ExactPosition,
+    UnknownPosition,
 )
 
 
@@ -42,7 +48,7 @@ class TestProteinPositionConversion(unittest.TestCase):
         assert self.func(0, 2, location) == (15, 21)
         assert self.func(1, 4, location) == (9, 18)
 
-    def test_position_conversion_nonzero_start_compound(self):
+    def test_position_conversion_nonzero_compound(self):
         location = CompoundLocation([FeatureLocation(6, 18, strand=1),
                                      FeatureLocation(24, 27, strand=1)])
         assert len(location) == 15
@@ -181,3 +187,103 @@ class TestBridgedSplit(unittest.TestCase):
         assert loc.strand is None
         with self.assertRaisesRegex(ValueError, "Cannot separate bridged location without a valid strand"):
             print(splitter(loc))
+
+
+class TestLocationSerialiser(unittest.TestCase):
+    def convert(self, location, expected_type=FeatureLocation):
+        assert isinstance(location, expected_type)
+
+        before_string = str(location)
+        print(before_string)  # just for help when debugging a failing test
+        after_string = str(location)
+        assert isinstance(after_string, str)
+        assert before_string == after_string
+
+        new_location = location_from_string(after_string)
+        assert isinstance(new_location, expected_type)
+
+        return new_location
+
+    def test_before_position(self):
+        location = FeatureLocation(BeforePosition(1), ExactPosition(6), strand=-1)
+        new_location = self.convert(location)
+
+        assert isinstance(new_location.start, BeforePosition)
+        assert new_location.start == 1
+
+        assert isinstance(new_location.end, ExactPosition)
+        assert new_location.end == 6
+
+    def test_after_position(self):
+        location = FeatureLocation(ExactPosition(1), AfterPosition(6), strand=1)
+        new_location = self.convert(location)
+
+        assert isinstance(new_location.start, ExactPosition)
+        assert new_location.start == 1
+
+        assert isinstance(new_location.end, AfterPosition)
+        assert new_location.end == 6
+
+    def test_unknown_position(self):
+        location = FeatureLocation(ExactPosition(1), UnknownPosition(), strand=1)
+        new_location = self.convert(location)
+
+        assert isinstance(new_location.start, ExactPosition)
+        assert new_location.start == 1
+
+        assert isinstance(new_location.end, UnknownPosition)
+
+    def test_compound(self):
+        first = FeatureLocation(1, 6, strand=1)
+        second = FeatureLocation(10, 16, strand=1)
+        location = CompoundLocation([first, second], operator="join")
+        assert 5 in location
+        assert 7 not in location
+        assert 15 in location
+
+        new_location = self.convert(location, expected_type=CompoundLocation)
+        assert location.start == 1
+        assert 5 in new_location
+        assert 7 not in new_location
+        assert 15 in new_location
+        assert location.end == 16
+        assert new_location.operator == "join"
+
+    def test_strands(self):
+        for strand in [1, 0, -1, None]:
+            location = FeatureLocation(1, 6, strand=strand)
+            new_location = self.convert(location)
+            assert new_location.strand == strand
+
+
+class TestCombiner(unittest.TestCase):
+    def make(self, start, end):
+        return FeatureLocation(start, end)
+
+    def test_individual(self):
+        loc = combine_locations(self.make(3, 7), self.make(5, 9))
+        assert loc.start == 3 and loc.end == 9
+        loc = combine_locations(self.make(3, 5), self.make(7, 9))
+        assert loc.start == 3 and loc.end == 9
+        loc = combine_locations(self.make(7, 9), self.make(3, 5))
+        assert loc.start == 3 and loc.end == 9
+
+        # it's silly, but since it theoretically is useful for CompoundLocation condensing
+        loc = combine_locations(self.make(0, 5))
+        assert loc.start == 0 and loc.end == 5
+        loc = combine_locations(CompoundLocation([self.make(0, 3), self.make(6, 9)]))
+        assert loc.start == 0 and loc.end == 9 and len(loc.parts) == 1
+
+    def test_list(self):
+        loc = combine_locations([self.make(i, i+1) for i in range(10, 20)])
+        assert loc.start == 10 and loc.end == 20
+
+    def test_generator(self):
+        loc = combine_locations(i for i in [self.make(i, i+1) for i in range(10, 20)])
+        assert loc.start == 10 and loc.end == 20
+
+    def test_invalid(self):
+        with self.assertRaisesRegex(TypeError, "object is not iterable"):
+            combine_locations(0)
+        with self.assertRaisesRegex(AttributeError, "has no attribute 'start'"):
+            combine_locations(0, 1)

@@ -148,6 +148,7 @@ class Prepeptide(CDSMotif):
             tail.translation = self.tail
             tail.qualifiers['locus_tag'] = [self.locus_tag]
             tail.qualifiers['note'] = ['tail peptide', self.peptide_class]
+            tail.qualifiers['aStool'] = self.tool
             features.append(tail)
 
         return features

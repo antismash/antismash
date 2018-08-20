@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional
 from antismash.common import path
 from antismash.common.hmm_rule_parser import cluster_prediction
 from antismash.common.module_results import DetectionResults
-from antismash.common.secmet import ClusterBorder, Record
+from antismash.common.secmet import Cluster, Record
 from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
 
@@ -63,8 +63,8 @@ class ClusterFinderRuleResults(DetectionResults):
 
         return ClusterFinderRuleResults(json["record_id"], rule_parser_results)
 
-    def get_predictions(self) -> List[ClusterBorder]:
-        return self.rule_results.borders
+    def get_predicted_clusters(self) -> List[Cluster]:
+        return self.rule_results.clusters
 
 
 def check_prereqs() -> List[str]:
@@ -79,8 +79,8 @@ def regenerate_previous_results(results: Dict[str, Any], record: Record,
         return None
 
     regenerated = ClusterFinderRuleResults.from_json(results, record)
-    for border in regenerated.get_predictions():
-        record.add_cluster_border(border)
+    for cluster in regenerated.get_predicted_clusters():
+        record.add_cluster(cluster)
     return regenerated
 
 
@@ -107,8 +107,8 @@ def find_rule_based_clusters(record: Record) -> cluster_prediction.RuleDetection
     seeds = path.get_full_path(__file__, "..", "hmm_detection", "data", "bgc_seeds.hmm")
     rules = path.get_full_path(__file__, "cluster_rules.txt")
     equivalences = path.get_full_path(__file__, "..", "hmm_detection", "filterhmmdetails.txt")
-    results = cluster_prediction.detect_borders_and_signatures(record, signatures, seeds,
-                                                               rules, equivalences, "cluster-finder")
+    results = cluster_prediction.detect_clusters_and_signatures(record, signatures, seeds,
+                                                                rules, equivalences, "cluster-finder")
     results.annotate_cds_features()
-    logging.debug("ClusterFinder detected %d rule-based clusters", len(results.borders))
+    logging.debug("ClusterFinder detected %d rule-based clusters", len(results.clusters))
     return results

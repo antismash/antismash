@@ -113,7 +113,7 @@ def detect(record: Record, options: ConfigType) -> TTAResults:
     logging.info("Detecting TTA codons")
     logging.debug("GC content: %2.0f%%", gc_content * 100)
 
-    for feature in record.get_cds_features_within_clusters():
+    for feature in record.get_cds_features_within_regions():
         sequence = feature.extract(record.seq)
         for i in range(0, len(sequence), 3):
             codon = sequence[i:i+3].lower()

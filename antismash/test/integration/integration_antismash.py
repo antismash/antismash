@@ -80,7 +80,6 @@ class TestLogging(TestAntismash):
 
     def check_output_files(self):
         super().check_output_files()
-        log_path = self.get_args()[-1]
         assert os.path.exists(self.logfile.name)
 
 

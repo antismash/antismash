@@ -17,7 +17,7 @@ from antismash.config import ConfigType
 from .core import write_raw_clusterblastoutput, write_fastas_with_all_genes, \
                   blastparse, score_clusterblast_output, \
                   run_blast, load_clusterblast_database, get_core_gene_ids
-from .results import ClusterResult, GeneralResults
+from .results import RegionResult, GeneralResults
 from .data_structures import ReferenceCluster, Protein
 
 
@@ -141,9 +141,9 @@ def perform_subclusterblast(options: ConfigType, record: Record, clusters: Dict[
     results = GeneralResults(record.id, search_type="subclusterblast")
     with TemporaryDirectory(change=True):
         allcoregenes = get_core_gene_ids(record)
-        for cluster in record.get_clusters():
+        for region in record.get_regions():
             # prepare and run diamond
-            write_fastas_with_all_genes([cluster], "input.fasta",
+            write_fastas_with_all_genes([region], "input.fasta",
                                         partitions=options.cpus)
             run_clusterblast_processes(options)
             blastoutput = read_clusterblast_output(options)
@@ -153,8 +153,8 @@ def perform_subclusterblast(options: ConfigType, record: Record, clusters: Dict[
                                                      min_seq_coverage=40,
                                                      min_perc_identity=45)
             ranking = score_clusterblast_output(clusters, allcoregenes, cluster_names_to_queries)
-            logging.debug("Cluster at %s has %d subclusterblast results", cluster.location, len(ranking))
+            logging.debug("Cluster at %s has %d subclusterblast results", region.location, len(ranking))
             # store results
-            cluster_result = ClusterResult(cluster, ranking, proteins, "subclusterblast")
-            results.add_cluster_result(cluster_result, clusters, proteins)
+            region_result = RegionResult(region, ranking, proteins, "subclusterblast")
+            results.add_region_result(region_result, clusters, proteins)
     return results

@@ -7,12 +7,12 @@
   <script src="js/svgene.js"></script>
   <script src="js/jsdomain.js"></script>
   <script src="js/clusterblast.js"></script>
-  <script src="geneclusters.js"></script>
+  <script src="regions.js"></script>
   <script src="js/smiles-drawer.min.js"></script>
   <script src="js/jnj.js"></script>
 
   {% for record in records %}
-  <title>{{record.id}} - {{record.get_clusters() | length}} cluster(s) - antiSMASH results</title>
+  <title>{{record.id}} - {{record.regions | length}} region(s) - antiSMASH results</title>
   <link rel="stylesheet" type="text/css" href="css/{{options.taxon}}.css">
   <meta charset="utf-8" />
   {% endfor %}
@@ -21,22 +21,22 @@
   <div id="header">
     {% include 'top_header.html' %}
     <div id="buttons">
-      <span id="cluster-type">Select Gene Cluster:</span>
-      <ul id="clusterbuttons">
-        <li><div class="arrow-left" id="prev-cluster"></div></li>
-        <li class="clbutton"><a href="#">Overview</a></li>
+      <span id="region-type">Select genomic region:</span>
+      <ul id="regionbuttons">
+        <li><div class="arrow-left" id="prev-region"></div></li>
+        <li class="regbutton"><a href="#">Overview</a></li>
         {% for record in records %}
-          {% for cluster in record.clusters %}
+          {% for region in record.regions %}
             {% set hybrid_text = "" %}
-            {% if cluster.products | length > 1 %}
+            {% if region.products | length > 1 %}
                 {% set hybrid_text = "hybrid " %}
             {% endif %}
-            <li class="clbutton {{cluster.get_product_string()}} {{hybrid_text}}{{cluster.anchor_id}}">
-              <a href="#{{cluster.anchor_id}}">{{cluster.get_cluster_number()}}</a>
+            <li class="regbutton {{region.get_product_string()}} {{hybrid_text}}{{region.anchor_id}}">
+              <a href="#{{region.anchor_id}}">{{region.get_region_number()}}</a>
             </li>
           {% endfor %}
         {% endfor %}
-        <li id="last-clbutton"><div class="arrow-right" id="next-cluster"></div></li>
+        <li id="last-regbutton"><div class="arrow-right" id="next-region"></div></li>
       </ul>
     </div>
   </div>
@@ -44,14 +44,14 @@
   <!-- overview page -->
   <div class="page" id="overview">
     {% if options.triggered_limit %}
-      <h3>Identified secondary metabolite clusters (truncated to the first {{options.limit}} record(s)) <span id="truncated"></span></h3>
+      <h3>Identified secondary metabolite regions (truncated to the first {{options.limit}} record(s)) <span id="truncated"></span></h3>
     {% else %}
-      <h3>Identified secondary metabolite clusters<span id="truncated"></span></h3>
+      <h3>Identified secondary metabolite regions<span id="truncated"></span></h3>
     {% endif %}
-    <table id="cluster-overview">
+    <table id="region-overview">
       <thead>
         <tr>
-          <th>Cluster</th>
+          <th>Region</th>
           <th>Type</th>
           <th>From</th>
           <th>To</th>
@@ -63,37 +63,37 @@
 
       <tbody>
         {% for record in records -%}
-          {% if not record.clusters %}
+          {% if not record.regions %}
             <tr class = 'separator-row'>
               <td class = 'separator-text' colspan = 5>{{record.get_from_record()}}</td>
             </tr>
             <tr>
-              <td></td><td colspan = 5)>No secondary metabolite clusters found</td>
+              <td></td><td colspan = 5)>No secondary metabolite regions found</td>
             </tr>
           {% else %}
             <tr class = 'separator-row'>
               <td class = 'separator-text' colspan = 5>{{record.get_from_record()}}</td>
             </tr>
-            {% for cluster in record.clusters -%}
+            {% for region in record.regions -%}
               <tr class = '{{loop.cycle('odd', 'even')}}'>
                 {% set hybrid_text = "" %}
-                {% if cluster.products | length > 1 %}
+                {% if region.products | length > 1 %}
                     {% set hybrid_text = "hybrid " %}
                 {% endif %}
-                <td class="clbutton {{cluster.get_product_string()}} {{hybrid_text}}{{cluster.anchor_id}}">
-                  <a href="#{{cluster.anchor_id}}">Cluster {{cluster.get_cluster_number()}}</a>
+                <td class="regbutton {{region.get_product_string()}} {{hybrid_text}}{{region.anchor_id}}">
+                  <a href="#{{region.anchor_id}}">Region {{region.get_region_number()}}</a>
                 </td>
                 <td>
                   {% set dash = joiner("-") %}
-                  {% for subtype in cluster.products -%}
+                  {% for subtype in region.products -%}
                     {{dash()}}<a href="https://antismash.secondarymetabolites.org/help#{{subtype}}" target="_blank">{{subtype | title}}</a>
                   {%- endfor %}
 
                 </td>
-                <td class="digits">{{cluster.location.start + 1}}</td>
-                <td class="digits">{{cluster.location.end}}</td>
-                <td>{{cluster.best_knowncluster_name}}</td>
-                {% set similarity = cluster.best_knowncluster_similarity %}
+                <td class="digits">{{region.location.start + 1}}</td>
+                <td class="digits">{{region.location.end}}</td>
+                <td>{{region.best_knowncluster_name}}</td>
+                {% set similarity = region.best_knowncluster_similarity %}
                 {% if similarity > 75 %}
                   {% set colour = "rgba(0, 100, 0, 0.3)" %}
                 {% elif similarity > 50 %}
@@ -102,8 +102,8 @@
                   {% set colour = "rgba(205, 92, 92, 0.3)" %}
                 {% endif %}
                 <td class="digits similarity-text" style="background-image: linear-gradient(to left, {{colour}}, {{colour}} {{similarity}}%, #ffffff00 {{similarity}}%)">{{similarity}}%</td>
-                {% if cluster.bgc_id != "-"  -%}
-                  <td><a href="https://mibig.secondarymetabolites.org/go/{{cluster.bgc_id}}/{{cluster.bgc_cluster_number}}" target="_blank">{{cluster.bgc_id}}</a></td>
+                {% if region.bgc_id != "-"  -%}
+                  <td><a href="https://mibig.secondarymetabolites.org/go/{{region.bgc_id}}/{{region.bgc_cluster_number}}" target="_blank">{{region.bgc_id}}</a></td>
                 {%- else -%}
                   <td>-</td>
                 {%- endif %}

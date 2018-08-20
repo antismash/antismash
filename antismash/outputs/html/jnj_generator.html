@@ -1,35 +1,35 @@
 {% import 'legend_entry_macro.html' as le %}
 
 {% for record in records %}
-{% for cluster in record.clusters %}
-<div class= "page" id='{{cluster.anchor_id}}'>
-  <h3> {{record.seq_record.name}} - Cluster {{cluster.get_cluster_number()}} - {{cluster.get_product_string() | capitalize }}</h3>
-  {% if cluster.has_sidepanel %}
+{% for region in record.regions %}
+<div class= "page" id='{{region.anchor_id}}'>
+  <h3> {{record.seq_record.name}} - Region {{region.get_region_number()}} - {{region.get_product_string() | capitalize }}</h3>
+  {% if region.has_sidepanel %}
   <div class="sidepanel">
-    {% for handler in cluster.handlers %}
+    {% for handler in region.handlers %}
       {% if handler.generate_sidepanel is defined and handler.__name__ in record.results %}
-        {{handler.generate_sidepanel(cluster, record.results[handler.__name__], record, options) | safe }}
+        {{handler.generate_sidepanel(region, record.results[handler.__name__], record, options) | safe }}
       {% endif %}
     {% endfor %}
   </div>
   {% endif %}
   <div class = "content">
     <div class ="description-container">
-      <h3> Gene cluster description </h3>
-      <div class = "cluster-download">
-        <a href = {{ '%s.cluster%03d.gbk' % (record.id, cluster.get_cluster_number()) }}>Download cluster GenBank file</a>
+      <h3> Region description </h3>
+      <div class = "region-download">
+        <a href = {{ '%s.region%03d.gbk' % (record.id, region.get_region_number()) }}>Download region GenBank file</a>
       </div>
       <div class = 'description-text'>
-        {{cluster.description_text()}}
+        {{region.description_text()}}
       </div>
-      {% if cluster.contig_edge %}
-        <div class="contig-edge-warning">Cluster on contig edge.</div>
+      {% if region.contig_edge %}
+        <div class="contig-edge-warning">Region on contig edge.</div>
       {% endif %}
-      <a class="cluster-rules-header" id="{{cluster.anchor_id}}-rules-header" href="#{{cluster.anchor_id}}">Show pHMM detection rules used</a>
-      <div class = "cluster-rules" id="{{cluster.anchor_id}}-rules">
-        {{- cluster.detection_rules|join('<br>'|safe) -}}
+      <a class="cluster-rules-header" id="{{region.anchor_id}}-rules-header" href="#{{region.anchor_id}}">Show pHMM detection rules used</a>
+      <div class = "cluster-rules" id="{{region.anchor_id}}-rules">
+        {{- region.detection_rules|join('<br>'|safe) -}}
       </div>
-      <div id='{{cluster.anchor_id}}-svg'>
+      <div id='{{region.anchor_id}}-svg'>
       </div>
     </div>
     <div class="legend">
@@ -52,9 +52,9 @@
         {% endif %}
       </div>
     </div>
-    {% for handler in cluster.handlers %}
+    {% for handler in region.handlers %}
       {% if handler.generate_details_div is defined and handler.__name__ in record.results %}
-        {{handler.generate_details_div(cluster, record.results[handler.__name__], record, options) | safe}}
+        {{handler.generate_details_div(region, record.results[handler.__name__], record, options) | safe}}
       {% endif %}
     {% endfor %}
   </div>

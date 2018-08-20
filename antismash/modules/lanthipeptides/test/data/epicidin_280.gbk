@@ -22,6 +22,10 @@ REFERENCE   2  (bases 1 to 7358)
   JOURNAL   Submitted (21-JUN-1997) Heidrich C., Abteilung Prof. Sahl, Institut
             fuer Medizinische Mikrobiologie und Immunologie, Sigmund-Freud-Str.
             25; 53105 Bonn 53105, GERMANY
+COMMENT     ##antiSMASH-Data-START##
+            Version      :: 5.0.0alpha-43c8f43
+            Run date     :: 2018-08-20 16:34:19
+            ##antiSMASH-Data-END##
 FEATURES             Location/Qualifiers
      gene            complement(<1..30)
                      /gene="tnp1"
@@ -41,11 +45,11 @@ FEATURES             Location/Qualifiers
                      /plasmid="pCH01"
                      /strain="BN 280"
      cluster         1..7358
-                     /contig_edge="True"
+                     /aStool="rule-based-clusters"
+                     /cluster_number="1"
+                     /core_location="[873:7191]"
                      /cutoff="20000"
-                     /extension="10000"
-                     /note="Detection rule(s) for this cluster type:
-                     lanthipeptide: (((LANC_like and (Flavoprotein or
+                     /detection_rule="((LANC_like and (Flavoprotein or
                      Trp_halogenase or p450 or Lant_dehyd_N or Lant_dehyd_C or
                      Lant_dehydr_C or tsrC or adh_short or adh_short_C2) or
                      cds(LANC_like and (Pkinase or DUF4135)) or TIGR03731 or
@@ -53,8 +57,54 @@ FEATURES             Location/Qualifiers
                      leader_eh or leader_abc or mature_d or mature_ab or
                      mature_a or mature_b or mature_ha or mature_h_beta or
                      lacticin_l or lacticin_mat or LD_lanti_pre or strep_PEQAXS)
-                     and not YcaO));"
+                     and not YcaO)"
+                     /neighbourhood="10000"
+                     /parent_cluster_number="1"
                      /product="lanthipeptide"
+                     /tool="antismash"
+     cluster_core    874..7191
+                     /aStool="rule-based-clusters"
+                     /cluster_number="1"
+                     /cutoff="20000"
+                     /detection_rule="((LANC_like and (Flavoprotein or
+                     Trp_halogenase or p450 or Lant_dehyd_N or Lant_dehyd_C or
+                     Lant_dehydr_C or tsrC or adh_short or adh_short_C2) or
+                     cds(LANC_like and (Pkinase or DUF4135)) or TIGR03731 or
+                     Antimicr18 or Gallidermin or L_biotic_A or leader_d or
+                     leader_eh or leader_abc or mature_d or mature_ab or
+                     mature_a or mature_b or mature_ha or mature_h_beta or
+                     lacticin_l or lacticin_mat or LD_lanti_pre or strep_PEQAXS)
+                     and not YcaO)"
+                     /neighbourhood="10000"
+                     /parent_cluster_number="1"
+                     /product="lanthipeptide"
+     supercluster    1..7358
+                     /child_cluster="1"
+                     /detection_rules="((LANC_like and (Flavoprotein or
+                     Trp_halogenase or p450 or Lant_dehyd_N or Lant_dehyd_C or
+                     Lant_dehydr_C or tsrC or adh_short or adh_short_C2) or
+                     cds(LANC_like and (Pkinase or DUF4135)) or TIGR03731 or
+                     Antimicr18 or Gallidermin or L_biotic_A or leader_d or
+                     leader_eh or leader_abc or mature_d or mature_ab or
+                     mature_a or mature_b or mature_ha or mature_h_beta or
+                     lacticin_l or lacticin_mat or LD_lanti_pre or strep_PEQAXS)
+                     and not YcaO)"
+                     /kind="single"
+                     /product="lanthipeptide"
+                     /supercluster_number="1"
+                     /tool="antismash"
+     region          1..7358
+                     /product="lanthipeptide"
+                     /region_number="1"
+                     /rules="((LANC_like and (Flavoprotein or Trp_halogenase or
+                     p450 or Lant_dehyd_N or Lant_dehyd_C or Lant_dehydr_C or
+                     tsrC or adh_short or adh_short_C2) or cds(LANC_like and
+                     (Pkinase or DUF4135)) or TIGR03731 or Antimicr18 or
+                     Gallidermin or L_biotic_A or leader_d or leader_eh or
+                     leader_abc or mature_d or mature_ab or mature_a or mature_b
+                     or mature_ha or mature_h_beta or lacticin_l or lacticin_mat
+                     or LD_lanti_pre or strep_PEQAXS) and not YcaO)"
+                     /supercluster_numbers="1"
                      /tool="antismash"
      repeat_region   60..87
                      /rpt_type=INVERTED
@@ -85,21 +135,6 @@ FEATURES             Location/Qualifiers
                      SMINTNILGSYYCMKHVIPYMKRNRYGVIINIVSIAALRGIPYSILYGSTKNAVIALTK
                      GAAIENANNGIRVNAIAPGIIKTESLNTEIQNSEDELNEQTIAAIHPMQILGEEKDVAN
                      TAYFIANSSFMTGSIVNLDGGYTAQ"
-     cluster_border  874..7191
-                     /aStool="rule-based-clusters"
-                     /contig_edge="False"
-                     /cutoff="20000"
-                     /extent="10000"
-                     /product="lanthipeptide"
-                     /rule="((LANC_like and (Flavoprotein or Trp_halogenase or
-                     p450 or Lant_dehyd_N or Lant_dehyd_C or Lant_dehydr_C or
-                     tsrC or adh_short or adh_short_C2) or cds(LANC_like and
-                     (Pkinase or DUF4135)) or TIGR03731 or Antimicr18 or
-                     Gallidermin or L_biotic_A or leader_d or leader_eh or
-                     leader_abc or mature_d or mature_ab or mature_a or mature_b
-                     or mature_ha or mature_h_beta or lacticin_l or lacticin_mat
-                     or LD_lanti_pre or strep_PEQAXS) and not YcaO)"
-                     /tool="antismash"
      CDS_motif       883..978
                      /aSTool="pksnrpsmotif"
                      /database="abmotifs"
@@ -204,9 +239,9 @@ FEATURES             Location/Qualifiers
                      /gene_functions="biosynthetic (rule-based-clusters)
                      lanthipeptide: Lant_dehydr_C"
                      /gene_functions="biosynthetic (rule-based-clusters)
-                     lanthipeptide: Lant_dehyd_N"
-                     /gene_functions="biosynthetic (rule-based-clusters)
                      lanthipeptide: Lant_dehyd_C"
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     lanthipeptide: Lant_dehyd_N"
                      /locus_tag="eciB"
                      /product="EciB protein"
                      /protein_id="CAA74350.1"

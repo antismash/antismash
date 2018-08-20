@@ -1,6 +1,6 @@
 <div class="details">
+  {% if has_domain_details %}
   <h3>Detailed annotation</h3>
-    {% if has_domain_details %}
-      <div class="details-svg" id="{{cluster.anchor_id}}-details-svg"></div>
-    {% endif %}
+    <div class="details-svg" id="{{region.anchor_id}}-details-svg"></div>
+  {% endif %}
 </div>

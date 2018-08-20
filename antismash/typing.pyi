@@ -13,7 +13,7 @@ from .config.args import ModuleArgs
 
 from .common.json import JSONOrf
 from .common.module_results import ModuleResults
-from .common.secmet import Cluster, Record
+from .common.secmet import Region, Record
 
 
 class ConfigType:
@@ -57,5 +57,5 @@ class AntismashModule(ModuleType):
     def will_handle(products: List[str]) -> bool: ...
 
     @staticmethod
-    def generate_js_domains(cluster: Cluster, record: Record
+    def generate_js_domains(region: Region, record: Record
                             ) -> Optional[Dict[str, Union[str, List[JSONOrf]]]]: ...

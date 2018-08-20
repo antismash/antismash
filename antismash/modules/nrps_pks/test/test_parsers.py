@@ -6,19 +6,22 @@
 
 import unittest
 
+from antismash.common.secmet import Region
 from antismash.common.test import helpers
 from antismash.modules.nrps_pks import parsers
 
 from .test_orderfinder import DummyNRPSQualfier
 
+
 class TestNRPSParserMonomerModification(unittest.TestCase):
     def setUp(self):
         self.genes = []
-        self.clusters = []
+        self.regions = []
         domain_names = self.gen_domain_names()
         for product in ['not_atpks', 'transatpks']:
-            cluster = helpers.DummyCluster(1, 2, products=[product])
-            assert cluster.products == (product,)
+            cluster = helpers.DummyCluster(1, 2, product=product)
+            supercluster = helpers.DummySuperCluster([cluster])
+            self.regions.append(Region(superclusters=[supercluster]))
             for i in range(7):
                 locus_tag = chr(ord('a') + i)
                 if i == 6:
@@ -30,7 +33,8 @@ class TestNRPSParserMonomerModification(unittest.TestCase):
                 cds.cluster = cluster
                 cluster.add_cds(cds)
                 self.genes.append(cds)
-            self.clusters.append(cluster)
+                self.regions[-1].add_cds(cds)
+                assert cds.region == self.regions[-1]
         self.predictions = ['redmxmal', 'ccmal', 'ohemal', 'ohmxmal', 'ohmmal',
                             'ccmmal', 'emal', 'redmmal', 'mmal', 'ccmxmal',
                             'mxmal', 'redemal', 'ohmal', 'mal', 'ccemal']
@@ -69,7 +73,8 @@ class TestNRPSParserMonomerModification(unittest.TestCase):
 
     def test_insert_modified_monomers(self):
         # in pairs of (at, trans-at)
-        expected_changes = [(set(), set()),  # redmxmal
+        expected_changes = [
+            (set(), set()),  # redmxmal
             ({('nrpspksdomains_all_AT3', 'redmal'), ('nrpspksdomains_all_AT1', 'redmal'), ('nrpspksdomains_all_AT2', 'redmal')},
              {('nrpspksdomains_all_KS2', 'redmal'), ('nrpspksdomains_all_KS3', 'redmal'), ('nrpspksdomains_all_KS1', 'redmal')}),  # ccmal
             ({('nrpspksdomains_all_AT3', 'redemal'), ('nrpspksdomains_all_AT1', 'redemal'), ('nrpspksdomains_all_AT2', 'redemal')},
@@ -95,11 +100,12 @@ class TestNRPSParserMonomerModification(unittest.TestCase):
             ({('nrpspksdomains_all_AT3', 'redmal'), ('nrpspksdomains_all_AT1', 'redmal'), ('nrpspksdomains_all_AT2', 'redmal')},
              {('nrpspksdomains_all_KS2', 'redmal'), ('nrpspksdomains_all_KS1', 'redmal')}),   # mal
             ({('nrpspksdomains_all_AT3', 'redemal'), ('nrpspksdomains_all_AT1', 'redemal'), ('nrpspksdomains_all_AT2', 'redemal')},
-             {('nrpspksdomains_all_KS2', 'redemal'), ('nrpspksdomains_all_KS3', 'redemal'), ('nrpspksdomains_all_KS1', 'redemal')})]  # ccemal
+             {('nrpspksdomains_all_KS2', 'redemal'), ('nrpspksdomains_all_KS3', 'redemal'), ('nrpspksdomains_all_KS1', 'redemal')}),  # ccemal
+        ]
 
         for pred, expected in zip(self.predictions, expected_changes):
             for index in [0, 1]:  # AT and transAT
-                for gene in self.clusters[index].cds_children:
+                for gene in self.regions[index].cds_children:
                     predictions = self.gen_predictions(gene.get_name(), gene.nrps_pks.domain_names, pred)
                     modified = dict(predictions)
                     parsers.modify_monomer_predictions([gene], modified)

@@ -110,14 +110,14 @@ def generate_domains(record: Record) -> NRPSPKSDomains:
     """
     results = NRPSPKSDomains(record.id)
 
-    cds_within_clusters = record.get_cds_features_within_clusters()
-    assert cds_within_clusters  # because every cluster should have genes
+    cds_within_regions = record.get_cds_features_within_regions()
+    assert cds_within_regions  # because every cluster should have genes
 
-    fasta = get_fasta_from_features(cds_within_clusters)
+    fasta = get_fasta_from_features(cds_within_regions)
     cds_domains = find_domains(fasta, record)
     cds_motifs = find_ab_motifs(fasta)
 
-    for cds in cds_within_clusters:
+    for cds in cds_within_regions:
         domains = cds_domains.get(cds.get_name(), [])
         motifs = cds_motifs.get(cds.get_name(), [])
         if not (domains or motifs):

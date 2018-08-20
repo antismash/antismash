@@ -11,8 +11,8 @@ import os
 from minimock import mock, restore
 from helperlibs.wrappers.io import TemporaryDirectory
 
-from antismash.common.secmet import Record
-from antismash.common.test.helpers import DummyCDS, DummyCluster
+from antismash.common.secmet import Record, Region
+from antismash.common.test.helpers import DummyCDS, DummyCluster, DummySuperCluster
 import antismash.modules.clusterblast.core as core
 
 
@@ -396,7 +396,9 @@ class TestInputGeneration(unittest.TestCase):
         self.old_blast_inputs = core.create_blast_inputs
         core.create_blast_inputs = self.dummy_blast_inputs
         self.dummy_cluster = DummyCluster(1, 100)
-        self.clusters = [self.dummy_cluster, self.dummy_cluster]
+        self.supercluster = DummySuperCluster([self.dummy_cluster])
+        self.region = Region([self.supercluster], [])
+        self.regions = [self.region, self.region]
 
     def tearDown(self):
         core.create_blast_inputs = self.old_blast_inputs
@@ -411,45 +413,49 @@ class TestInputGeneration(unittest.TestCase):
             seqs.append("S%d" % index)
         return names, seqs
 
+    def add_cdses_to_region(self, cdses):
+        for cds in cdses:
+            self.region.add_cds(cds)
+
     def test_empty(self):
         with TemporaryDirectory(change=True):
             with self.assertRaisesRegex(ValueError, "Diamond search space contains no sequences"):
-                core.write_fastas_with_all_genes(self.clusters, "test")
+                core.write_fastas_with_all_genes(self.regions, "test")
 
     def test_bad_partitions(self):
         with TemporaryDirectory(change=True):
             for i in [-10, -1, 0]:
                 with self.assertRaisesRegex(ValueError, "Partitions must be greater than 0"):
-                    core.write_fastas_with_all_genes(self.clusters, "test", partitions=i)
+                    core.write_fastas_with_all_genes(self.regions, "test", partitions=i)
             for i in ["str", None, 1.5]:
                 with self.assertRaisesRegex(TypeError, "Partitions must be an int greater than 0"):
-                    core.write_fastas_with_all_genes(self.clusters, "test", partitions=i)
+                    core.write_fastas_with_all_genes(self.regions, "test", partitions=i)
 
     def test_single_file(self):
-        self.dummy_cluster.cds_children = [DummyCDS(1, 3)] * 3
+        self.add_cdses_to_region([DummyCDS(1, i) for i in range(3, 6)])
         with TemporaryDirectory(change=True):
-            files = core.write_fastas_with_all_genes(self.clusters, "test.fasta")
+            files = core.write_fastas_with_all_genes(self.regions, "test.fasta")
             assert files == ["test.fasta"]
             assert os.path.exists("test.fasta")
-            expected = "".join(">L{0}\nS{0}\n".format(i) for i in range(len(self.clusters)*3))
+            expected = "".join(">L{0}\nS{0}\n".format(i) for i in range(len(self.regions)*3))
             assert open("test.fasta").read() == expected
 
     def test_single_partition(self):
-        self.dummy_cluster.cds_children = [DummyCDS(1, 3)] * 3
+        self.add_cdses_to_region([DummyCDS(1, i) for i in range(3, 6)])
         with TemporaryDirectory(change=True):
-            files = core.write_fastas_with_all_genes(self.clusters, "test.fasta", partitions=1)
+            files = core.write_fastas_with_all_genes(self.regions, "test.fasta", partitions=1)
             assert files == ["test.fasta"]
             assert os.path.exists("test.fasta")
-            expected = "".join(">L{0}\nS{0}\n".format(i) for i in range(len(self.clusters)*3))
+            expected = "".join(">L{0}\nS{0}\n".format(i) for i in range(len(self.regions)*3))
             assert open("test.fasta").read() == expected
 
     def test_multiple_files(self):
-        self.dummy_cluster.cds_children = [DummyCDS(1, 3)] * 3
+        self.add_cdses_to_region([DummyCDS(1, i) for i in range(3, 6)])
         for partitions in [2, 3]:
             with TemporaryDirectory(change=True):
                 self.index = 0
-                chunk_size = (len(self.clusters) * 3) // partitions
-                files = core.write_fastas_with_all_genes(self.clusters, "test.fasta", partitions=partitions)
+                chunk_size = (len(self.regions) * 3) // partitions
+                files = core.write_fastas_with_all_genes(self.regions, "test.fasta", partitions=partitions)
                 assert files == ["test%d.fasta" % i for i in range(partitions)]
                 for index in range(partitions):
                     assert os.path.exists("test%d.fasta" % index)

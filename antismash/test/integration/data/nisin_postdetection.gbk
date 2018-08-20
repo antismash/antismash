@@ -26,6 +26,10 @@ REFERENCE   3  (bases 1 to 15016)
   JOURNAL   Submitted (12-MAY-2010) Department of Animal Science - Chair of
             Dairy Science, Biotechnical Faculty, Groblje 3, Domzale 1230,
             Slovenia
+COMMENT     ##antiSMASH-Data-START##
+            Version      :: 5.0.0alpha-43c8f43
+            Run date     :: 2018-08-20 16:29:00
+            ##antiSMASH-Data-END##
 FEATURES             Location/Qualifiers
      source          1..15016
                      /collected_by="John Samelis"
@@ -37,11 +41,11 @@ FEATURES             Location/Qualifiers
                      /strain="M78"
                      /sub_species="lactis"
      cluster         1..15016
-                     /contig_edge="True"
+                     /aStool="rule-based-clusters"
+                     /cluster_number="1"
+                     /core_location="[827:7140]"
                      /cutoff="20000"
-                     /extension="10000"
-                     /note="Detection rule(s) for this cluster type:
-                     lanthipeptide: (((LANC_like and (Flavoprotein or
+                     /detection_rule="((LANC_like and (Flavoprotein or
                      Trp_halogenase or p450 or Lant_dehyd_N or Lant_dehyd_C or
                      Lant_dehydr_C or tsrC or adh_short or adh_short_C2) or
                      cds(LANC_like and (Pkinase or DUF4135)) or TIGR03731 or
@@ -49,8 +53,54 @@ FEATURES             Location/Qualifiers
                      leader_eh or leader_abc or mature_d or mature_ab or
                      mature_a or mature_b or mature_ha or mature_h_beta or
                      lacticin_l or lacticin_mat or LD_lanti_pre or strep_PEQAXS)
-                     and not YcaO));"
+                     and not YcaO)"
+                     /neighbourhood="10000"
+                     /parent_cluster_number="1"
                      /product="lanthipeptide"
+                     /tool="antismash"
+     cluster_core    828..7140
+                     /aStool="rule-based-clusters"
+                     /cluster_number="1"
+                     /cutoff="20000"
+                     /detection_rule="((LANC_like and (Flavoprotein or
+                     Trp_halogenase or p450 or Lant_dehyd_N or Lant_dehyd_C or
+                     Lant_dehydr_C or tsrC or adh_short or adh_short_C2) or
+                     cds(LANC_like and (Pkinase or DUF4135)) or TIGR03731 or
+                     Antimicr18 or Gallidermin or L_biotic_A or leader_d or
+                     leader_eh or leader_abc or mature_d or mature_ab or
+                     mature_a or mature_b or mature_ha or mature_h_beta or
+                     lacticin_l or lacticin_mat or LD_lanti_pre or strep_PEQAXS)
+                     and not YcaO)"
+                     /neighbourhood="10000"
+                     /parent_cluster_number="1"
+                     /product="lanthipeptide"
+     supercluster    1..15016
+                     /child_cluster="1"
+                     /detection_rules="((LANC_like and (Flavoprotein or
+                     Trp_halogenase or p450 or Lant_dehyd_N or Lant_dehyd_C or
+                     Lant_dehydr_C or tsrC or adh_short or adh_short_C2) or
+                     cds(LANC_like and (Pkinase or DUF4135)) or TIGR03731 or
+                     Antimicr18 or Gallidermin or L_biotic_A or leader_d or
+                     leader_eh or leader_abc or mature_d or mature_ab or
+                     mature_a or mature_b or mature_ha or mature_h_beta or
+                     lacticin_l or lacticin_mat or LD_lanti_pre or strep_PEQAXS)
+                     and not YcaO)"
+                     /kind="single"
+                     /product="lanthipeptide"
+                     /supercluster_number="1"
+                     /tool="antismash"
+     region          1..15016
+                     /product="lanthipeptide"
+                     /region_number="1"
+                     /rules="((LANC_like and (Flavoprotein or Trp_halogenase or
+                     p450 or Lant_dehyd_N or Lant_dehyd_C or Lant_dehydr_C or
+                     tsrC or adh_short or adh_short_C2) or cds(LANC_like and
+                     (Pkinase or DUF4135)) or TIGR03731 or Antimicr18 or
+                     Gallidermin or L_biotic_A or leader_d or leader_eh or
+                     leader_abc or mature_d or mature_ab or mature_a or mature_b
+                     or mature_ha or mature_h_beta or lacticin_l or lacticin_mat
+                     or LD_lanti_pre or strep_PEQAXS) and not YcaO)"
+                     /supercluster_numbers="1"
                      /tool="antismash"
      gene            828..1001
                      /gene="nisA"
@@ -59,10 +109,9 @@ FEATURES             Location/Qualifiers
                      /db_xref="GI:299832737"
                      /gene="nisA"
                      /gene_functions="biosynthetic (rule-based-clusters)
-                     lanthipeptide: TIGR03731"
-                     /gene_functions="biosynthetic (rule-based-clusters)
                      lanthipeptide: mature_a"
-                     /locus_tag="nisA"
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     lanthipeptide: TIGR03731"
                      /note="prenisin; nisin A structural protein"
                      /product="NisA"
                      /protein_id="ADJ56352.1"
@@ -75,21 +124,6 @@ FEATURES             Location/Qualifiers
                      /transl_table=11
                      /translation="MSTKDFNLDLVSVSKKDSGASPRITSISLCTPGCKTGALMGCNMK
                      TATCHCSIHVSK"
-     cluster_border  828..7140
-                     /aStool="rule-based-clusters"
-                     /contig_edge="False"
-                     /cutoff="20000"
-                     /extent="10000"
-                     /product="lanthipeptide"
-                     /rule="((LANC_like and (Flavoprotein or Trp_halogenase or
-                     p450 or Lant_dehyd_N or Lant_dehyd_C or Lant_dehydr_C or
-                     tsrC or adh_short or adh_short_C2) or cds(LANC_like and
-                     (Pkinase or DUF4135)) or TIGR03731 or Antimicr18 or
-                     Gallidermin or L_biotic_A or leader_d or leader_eh or
-                     leader_abc or mature_d or mature_ab or mature_a or mature_b
-                     or mature_ha or mature_h_beta or lacticin_l or lacticin_mat
-                     or LD_lanti_pre or strep_PEQAXS) and not YcaO)"
-                     /tool="antismash"
      misc_feature    828..14152
                      /note="nisin biosynthetic gene cluster"
      gene            1109..4090
@@ -100,12 +134,11 @@ FEATURES             Location/Qualifiers
                      /function="dehydration of serine and threonine"
                      /gene="nisB"
                      /gene_functions="biosynthetic (rule-based-clusters)
-                     lanthipeptide: Lant_dehydr_C"
-                     /gene_functions="biosynthetic (rule-based-clusters)
                      lanthipeptide: Lant_dehyd_N"
                      /gene_functions="biosynthetic (rule-based-clusters)
+                     lanthipeptide: Lant_dehydr_C"
+                     /gene_functions="biosynthetic (rule-based-clusters)
                      lanthipeptide: Lant_dehyd_C"
-                     /locus_tag="nisB"
                      /note="nisin biosynthesis protein"
                      /product="NisB"
                      /protein_id="ADJ56353.1"
@@ -142,7 +175,6 @@ FEATURES             Location/Qualifiers
                      /db_xref="GI:299832739"
                      /function="secretion of prenisin"
                      /gene="nisT"
-                     /locus_tag="nisT"
                      /note="nisin transport ATP-binding protein"
                      /product="NisT"
                      /protein_id="ADJ56354.1"
@@ -167,7 +199,6 @@ FEATURES             Location/Qualifiers
                      /gene="nisC"
                      /gene_functions="biosynthetic (rule-based-clusters)
                      lanthipeptide: LANC_like"
-                     /locus_tag="nisC"
                      /note="nisin biosynthesis protein"
                      /product="NisC"
                      /protein_id="ADJ56355.1"
@@ -190,7 +221,6 @@ FEATURES             Location/Qualifiers
                      /codon_start=1
                      /db_xref="GI:299832741"
                      /gene="nisI"
-                     /locus_tag="nisI"
                      /note="nisin immunity protein; nisin-binding lipoprotein"
                      /product="NisI"
                      /protein_id="ADJ56356.1"
@@ -211,7 +241,6 @@ FEATURES             Location/Qualifiers
                      /gene_functions="biosynthetic-additional
                      (rule-based-clusters) Peptidase_S8 (E-value: 2.3e-50,
                      bitscore: 161.0, seeds: 43, tool: rule-based-clusters)"
-                     /locus_tag="nisP"
                      /note="nisin leader peptide-processing serine protease"
                      /product="NisP"
                      /protein_id="ADJ56357.1"
@@ -240,7 +269,6 @@ FEATURES             Location/Qualifiers
                      /function="transcriptional activator/response regulator in
                      two-component regulatory system"
                      /gene="nisR"
-                     /locus_tag="nisR"
                      /note="nisin biosynthesis regulatory protein"
                      /product="NisR"
                      /protein_id="ADJ56358.1"
@@ -258,7 +286,6 @@ FEATURES             Location/Qualifiers
                      /function="sensor protein in two-component regulatory
                      system"
                      /gene="nisK"
-                     /locus_tag="nisK"
                      /note="nisin biosynthesis sensor protein"
                      /product="NisK"
                      /protein_id="ADJ56359.1"
@@ -278,7 +305,6 @@ FEATURES             Location/Qualifiers
                      /db_xref="GI:299832745"
                      /function="secretion of cell-associated nisin"
                      /gene="nisF"
-                     /locus_tag="nisF"
                      /note="nisin transport/immunity protein; component of
                      ABC-transporter"
                      /product="NisF"
@@ -296,7 +322,6 @@ FEATURES             Location/Qualifiers
                      /db_xref="GI:299832746"
                      /function="secretion of cell-associated nisin"
                      /gene="nisE"
-                     /locus_tag="nisE"
                      /note="nisin transport/immunity protein; component of
                      ABC-transporter"
                      /product="NisE"
@@ -314,7 +339,6 @@ FEATURES             Location/Qualifiers
                      /db_xref="GI:299832747"
                      /function="secretion of cell-associated nisin"
                      /gene="nisG"
-                     /locus_tag="nisG"
                      /note="nisin transport/immunity protein; component of
                      ABC-transporter"
                      /product="NisG"

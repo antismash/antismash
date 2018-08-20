@@ -8,9 +8,11 @@
 import string
 import os
 from typing import Any, Dict, Iterable, List
+from typing import Set  # comment hints, # pylint: disable=unused-import
 
 from antismash.common.module_results import ModuleResults
-from antismash.common.secmet import CDSFeature, Cluster, ClusterBorder, Feature, Record
+from antismash.common.secmet import CDSFeature, Feature, Record, Region, SuperCluster
+from antismash.common.secmet import Cluster  # comment hints, # pylint: disable=unused-import
 from antismash.config import ConfigType
 from antismash.detection import clusterfinder_probabilistic as clusterfinder
 from antismash.modules import clusterblast, tta
@@ -31,11 +33,11 @@ def convert_records(records: List[Record], results: List[Dict[str, ModuleResults
 def convert_record(record: Record, options: ConfigType, result: Dict[str, ModuleResults] = None) -> Dict[str, Any]:
     """ Convert a Record to JSON """
     return {'seq_id': record.id,
-            'clusters': convert_clusters(record, options, result)}
+            'regions': convert_regions(record, options, result)}
 
 
-def fetch_tta_features(cluster: Cluster, result: Dict[str, ModuleResults]) -> List[Feature]:
-    """ Returns a list of all TTA features that overlap with the cluster """
+def fetch_tta_features(region: Region, result: Dict[str, ModuleResults]) -> List[Feature]:
+    """ Returns a list of all TTA features that overlap with the region """
     hits = []  # type: List[Feature]
     tta_results = result.get(tta.__name__)
     if not tta_results:
@@ -43,15 +45,15 @@ def fetch_tta_features(cluster: Cluster, result: Dict[str, ModuleResults]) -> Li
 
     assert isinstance(tta_results, tta.TTAResults), type(tta_results)
     for feature in tta_results.features:
-        if feature.overlaps_with(cluster):
+        if feature.overlaps_with(region):
             hits.append(feature)
 
     return hits
 
 
-def convert_clusters(record: Record, options: ConfigType, result: Dict[str, ModuleResults]) -> List[Dict[str, Any]]:
-    """Convert Cluster features to JSON"""
-    js_clusters = []
+def convert_regions(record: Record, options: ConfigType, result: Dict[str, ModuleResults]) -> List[Dict[str, Any]]:
+    """Convert Region features to JSON"""
+    js_regions = []
     mibig_results = {}  # type: Dict[int, Dict[str, List[clusterblast.results.MibigEntry]]]
 
     clusterblast_results = result.get(clusterblast.__name__)
@@ -60,24 +62,24 @@ def convert_clusters(record: Record, options: ConfigType, result: Dict[str, Modu
         if clusterblast_results.knowncluster:
             mibig_results = clusterblast_results.knowncluster.mibig_entries
 
-    for cluster in record.get_clusters():
-        tta_codons = fetch_tta_features(cluster, result)
+    for region in record.get_regions():
+        tta_codons = fetch_tta_features(region, result)
 
-        js_cluster = {}  # type: Dict[str, Any]
-        js_cluster['start'] = int(cluster.location.start) + 1
-        js_cluster['end'] = int(cluster.location.end)
-        js_cluster['idx'] = cluster.get_cluster_number()
-        mibig_entries = mibig_results.get(js_cluster['idx'], {})
-        js_cluster['orfs'] = convert_cds_features(record, cluster.cds_children, options, mibig_entries)
-        js_cluster['borders'] = convert_cluster_border_features(cluster.borders)
-        js_cluster['tta_codons'] = convert_tta_codons(tta_codons)
-        js_cluster['type'] = cluster.get_product_string()
-        js_cluster['products'] = cluster.products
-        js_cluster['anchor'] = "r%dc%d" % (record.record_index, cluster.get_cluster_number())
+        js_region = {}  # type: Dict[str, Any]
+        js_region['start'] = int(region.location.start) + 1
+        js_region['end'] = int(region.location.end)
+        js_region['idx'] = region.get_region_number()
+        mibig_entries = mibig_results.get(js_region['idx'], {})
+        js_region['orfs'] = convert_cds_features(record, region.cds_children, options, mibig_entries)
+        js_region['clusters'] = get_clusters_from_superclusters(region.superclusters)
+        js_region['tta_codons'] = convert_tta_codons(tta_codons)
+        js_region['type'] = "-".join(region.products)
+        js_region['products'] = region.products
+        js_region['anchor'] = "r%dc%d" % (record.record_index, region.get_region_number())
 
-        js_clusters.append(js_cluster)
+        js_regions.append(js_region)
 
-    return js_clusters
+    return js_regions
 
 
 def convert_cds_features(record: Record, features: Iterable[CDSFeature], options: ConfigType,
@@ -97,28 +99,32 @@ def convert_cds_features(record: Record, features: Iterable[CDSFeature], options
     return js_orfs
 
 
-def convert_cluster_border_features(borders: Iterable[ClusterBorder]) -> List[Dict[str, Any]]:
-    """ Converts ClusterBorder features to JSON """
-    js_borders = []
-    # clusterfinder's putative borders can never overlap, so if they exist, collapse
+def get_clusters_from_superclusters(superclusters: Iterable[SuperCluster]) -> List[Dict[str, Any]]:
+    """ Converts all Clusters in a collection of SuperCluster features to JSON """
+    unique_clusters = set()  # type: Set[Cluster]
+    for supercluster in superclusters:
+        unique_clusters.update(supercluster.clusters)
+    js_clusters = []
+    # clusterfinder's putative regions can never overlap, so if they exist, collapse
     # them into a single row
-    putatives = [border for border in borders if border.product == clusterfinder.PUTATIVE_PRODUCT]
-    non_putatives = [border for border in borders if border.product != clusterfinder.PUTATIVE_PRODUCT]
-    borders = putatives + sorted(non_putatives, key=lambda x: (x.location.start, -len(x.location), x.product or "unknown"))
-    for i, border in enumerate(borders):
-        js_border = {"start": border.location.start,
-                     "end": border.location.end,
-                     "tool": border.tool,
-                     "extent": border.extent,
-                     "product": border.product or "unknown"}
-        if border.product == "cf_putative":
-            js_border['height'] = 0
+    putatives = [cluster for cluster in unique_clusters if cluster.product == clusterfinder.PUTATIVE_PRODUCT]
+    non_putatives = [cluster for cluster in unique_clusters if cluster.product != clusterfinder.PUTATIVE_PRODUCT]
+    clusters = putatives + sorted(non_putatives,
+                                  key=lambda x: (x.location.start, -len(x.location), x.product or "unknown"))
+    for i, cluster in enumerate(clusters):
+        js_cluster = {"start": cluster.core_location.start,
+                      "end": cluster.core_location.end,
+                      "tool": cluster.tool,
+                      "extent": cluster.neighbourhood_range,
+                      "product": cluster.product or "unknown"}
+        if cluster.product == "cf_putative":
+            js_cluster['height'] = 0
         else:
-            js_border['height'] = i - len(putatives) + 1
-        if border.tool == "cassis":
-            js_border['product'] = border.get_qualifier("anchor")[0]
-        js_borders.append(js_border)
-    return js_borders
+            js_cluster['height'] = i - len(putatives) + 1
+        if cluster.tool == "cassis":
+            js_cluster['product'] = cluster.get_qualifier("anchor")[0]
+        js_clusters.append(js_cluster)
+    return js_clusters
 
 
 def convert_tta_codons(tta_codons: List[Feature]) -> List[Dict[str, Any]]:
@@ -184,9 +190,9 @@ def get_description(record: Record, feature: CDSFeature, type_: str,
                                                  feature.location.end)
 
     if mibig_result:
-        cluster_number = feature.cluster.get_cluster_number()
+        region_number = feature.region.get_region_number()
         mibig_homology_file = os.path.join(options.output_dir, "knownclusterblast",
-                                           "cluster%d" % cluster_number,
+                                           "region%d" % region_number,
                                            feature.get_accession() + '_mibig_hits.html')
         generate_html_table(mibig_homology_file, mibig_result)
         mibig_path = mibig_homology_file[len(options.output_dir) + 1:]

@@ -53,8 +53,8 @@ def regenerate_previous_results(results: Dict[str, Any], record: Record, _option
     if not results:
         return None
     regenned = ThioResults.from_json(results, record)
-    logging.debug("Reusing Thiopeptide results: %d clusters contained %d total motifs",
-                  len(regenned.clusters_with_motifs), len(regenned.motifs))
+    logging.debug("Reusing Thiopeptide results: %d regions contained %d total motifs",
+                  len(regenned.regions_with_motifs), len(regenned.motifs))
     return regenned
 
 

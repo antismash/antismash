@@ -2,7 +2,7 @@
 #  A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
 '''
-In-depth analysis and annotation of NRPS/PKS gene clusters.
+In-depth analysis and annotation of NRPS/PKS regions.
 '''
 
 import logging
@@ -21,10 +21,9 @@ from .nrps_predictor import run_nrpspredictor
 
 
 def generate_structure_images(record: Record, results: NRPS_PKS_Results, options: ConfigType) -> Dict[int, str]:
-    """ Generate the structure images based on monomers prediction for all
-        cluster features
+    """ Generate the structure images based on monomers prediction for all regions
     """
-    compound_predictions = {key: val[0] for key, val in results.cluster_predictions.items()}
+    compound_predictions = {key: val[0] for key, val in results.region_predictions.items()}
     return generate_chemical_structure_preds(compound_predictions, record)
 
 
@@ -69,6 +68,6 @@ def specific_analysis(record: Record, results: NRPS_PKS_Results, options: Config
 
     modify_monomer_predictions(nrps_pks_genes, results.consensus)
 
-    results.cluster_predictions = analyse_biosynthetic_order(nrps_pks_genes, results.consensus, record)
+    results.region_predictions = analyse_biosynthetic_order(nrps_pks_genes, results.consensus, record)
     results.smiles_strings.update(generate_structure_images(record, results, options))
     return results

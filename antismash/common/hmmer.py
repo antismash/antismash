@@ -7,9 +7,10 @@ import logging
 import os
 from typing import Any, Dict, Iterable, List, Optional
 
-from antismash.common import fasta, module_results, pfamdb, serialiser, subprocessing
+from antismash.common import fasta, module_results, pfamdb, subprocessing
 from antismash.common.secmet import Record, CDSFeature
 from antismash.common.secmet.features import PFAMDomain
+from antismash.common.secmet.locations import location_from_string
 
 
 class HmmerResults(module_results.ModuleResults):
@@ -74,7 +75,7 @@ class HmmerResults(module_results.ModuleResults):
     def add_to_record(self, record: Record) -> None:
         db_version = pfamdb.get_db_version_from_path(self.database)
         for i, hit in enumerate(self.hits):
-            pfam_feature = PFAMDomain(serialiser.location_from_json(hit["location"]),
+            pfam_feature = PFAMDomain(location_from_string(hit["location"]),
                                       description=hit["description"], protein_start=hit["protein_start"],
                                       protein_end=hit["protein_end"])
             for key in ["label", "locus_tag", "domain", "evalue",

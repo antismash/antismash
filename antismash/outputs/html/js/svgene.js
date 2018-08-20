@@ -45,9 +45,9 @@ svgene.ttaCodonPoints = function (codon, height, offset, border, scale) {
     return points;
 }
 
-svgene.drawOrderedClusterOrfs = function(cluster, chart, all_orfs, borders, tta_codons,
+svgene.drawOrderedRegionOrfs = function(region, chart, all_orfs, borders, tta_codons,
                                          scale, idx, height, width, offset) {
-  /* cluster: the cluster JSON object created in python
+  /* region: the region JSON object created in python
      chart:
      all_orfs: the ORF JSON objects created in python
      borders: the ClusterBorder JSON objects created in python
@@ -68,7 +68,7 @@ svgene.drawOrderedClusterOrfs = function(cluster, chart, all_orfs, borders, tta_
     .attr("y2", orf_y + svgene.label_height + height / 2)
     .attr("class", "svgene-line");
 
-  // cluster borders
+  // clusters
   var bar_size = 10;
   var vertical_bar_gap = 2;
   var cluster_bars = chart.selectAll("g")
@@ -95,7 +95,7 @@ svgene.drawOrderedClusterOrfs = function(cluster, chart, all_orfs, borders, tta_
     .attr("y", function(d) { return (d.height + 2) * (bar_size) + d.height + offset - (2 - d.height)})
     .attr("dy", "-1em")
     .style("font-size", "xx-small")
-    .attr("class", "clusterborderlabel")
+    .attr("class", "clusterlabel")
     .text(function(d) { return d.product; });
 
   // ORFs
@@ -104,7 +104,7 @@ svgene.drawOrderedClusterOrfs = function(cluster, chart, all_orfs, borders, tta_
   .enter().append("polygon")
     .attr("points", function(d) { return svgene.geneArrowPoints(d, height, orf_y, offset, scale); })
     .attr("class", function(d) { return "svgene-type-" + d.type + " svgene-orf"; })
-    .attr("id", function(d) { return idx + "-cluster" + cluster.idx + "-" + svgene.tag_to_id(d.locus_tag) + "-orf"; })
+    .attr("id", function(d) { return idx + "-region" + region.idx + "-" + svgene.tag_to_id(d.locus_tag) + "-orf"; })
     .attr("style", function(d) { if (d.color !== undefined) { return "fill:" + d.color; } });
 
   // TTA codons
@@ -121,43 +121,43 @@ svgene.drawOrderedClusterOrfs = function(cluster, chart, all_orfs, borders, tta_
     .attr("x", function(d) { return scale(d.start); })
     .attr("y", orf_y + svgene.label_height)
     .attr("class", "svgene-locustag")
-    .attr("id", function(d) { return idx + "-cluster" + cluster.idx + "-" + svgene.tag_to_id(d.locus_tag) + "-label"; })
+    .attr("id", function(d) { return idx + "-region" + region.idx + "-" + svgene.tag_to_id(d.locus_tag) + "-label"; })
     .text(function(d) { return d.locus_tag; });
 };
 
-svgene.drawCluster = function(id, cluster, height, width) {
+svgene.drawRegion = function(id, region, height, width) {
   var container = d3.select("#" + id);
   container.selectAll("svg").remove();
   container.selectAll("div").remove();
   var chart = container.append("svg")
-    .attr("height", 2 * height + (2 * svgene.label_height) + cluster.borders.length * 12)
+    .attr("height", 2 * height + (2 * svgene.label_height) + region.clusters.length * 12)
     .attr("width", width + svgene.extra_label_width);
 
   var all_orfs = [];
   var all_borders = [];
   var all_ttas = [];
-  all_orfs.push.apply(all_orfs, cluster.orfs.sort(svgene.sort_biosynthetic_orfs_last));
-  all_borders.push.apply(all_borders, cluster.borders ? cluster.borders : []);
-  all_ttas.push.apply(all_ttas, cluster.tta_codons ? cluster.tta_codons: []);
+  all_orfs.push.apply(all_orfs, region.orfs.sort(svgene.sort_biosynthetic_orfs_last));
+  all_borders.push.apply(all_borders, region.clusters ? region.clusters : []);
+  all_ttas.push.apply(all_ttas, region.tta_codons ? region.tta_codons: []);
 
   var idx = svgene.unique_id++;
   var offset = height/10;
   var x = d3.scale.linear()
-    .domain([cluster.start, cluster.end])
+    .domain([region.start, region.end])
     .range([0, width]);
-  svgene.drawOrderedClusterOrfs(cluster, chart, all_orfs, all_borders, all_ttas,
+  svgene.drawOrderedRegionOrfs(region, chart, all_orfs, all_borders, all_ttas,
                                 x, idx, height, width, offset);
   container.selectAll("div")
     .data(all_orfs)
   .enter().append("div")
     .attr("class", "svgene-tooltip")
-    .attr("id", function(d) { return idx + "-cluster" + cluster.idx + "-" + svgene.tag_to_id(d.locus_tag) + "-tooltip"; })
+    .attr("id", function(d) { return idx + "-region" + region.idx + "-" + svgene.tag_to_id(d.locus_tag) + "-tooltip"; })
     .html(function(d) { return d.description});
 
-  if (cluster.label !== undefined) {
+  if (region.label !== undefined) {
     chart.append("text")
-        .text(cluster.label)
-        .attr("class", "svgene-clusterlabel")
+        .text(region.label)
+        .attr("class", "svgene-regionlabel")
         .attr("x", function() { return width + svgene.extra_label_width - this.getComputedTextLength() - 5})
         .attr("y", function() { return svgene.label_height } )
         .attr("font-size", svgene.label_height);

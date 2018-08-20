@@ -18,7 +18,7 @@ from .core import parse_all_clusters, write_fastas_with_all_genes, \
                   load_clusterblast_database, run_diamond, \
                   write_raw_clusterblastoutput, score_clusterblast_output, \
                   get_core_gene_ids
-from .results import ClusterResult, GeneralResults, write_clusterblast_output
+from .results import RegionResult, GeneralResults, write_clusterblast_output
 from .data_structures import MibigEntry, ReferenceCluster, Protein
 
 
@@ -97,7 +97,7 @@ def perform_knownclusterblast(options: ConfigType, record: Record,
     results = GeneralResults(record.id, search_type="knownclusterblast")
 
     with TemporaryDirectory(change=True) as tempdir:
-        write_fastas_with_all_genes(record.get_clusters(), "input.fasta")
+        write_fastas_with_all_genes(record.get_regions(), "input.fasta")
         run_diamond("input.fasta", _get_datafile_path('knownclusterprots'),
                     tempdir, options)
         with open("input.out", 'r') as handle:
@@ -109,17 +109,17 @@ def perform_knownclusterblast(options: ConfigType, record: Record,
                                                min_perc_identity=45)
 
     core_gene_accessions = get_core_gene_ids(record)
-    for cluster in record.get_clusters():
-        cluster_number = cluster.get_cluster_number()
-        cluster_names_to_queries = clusters_by_number.get(cluster_number, {})
+    for region in record.get_regions():
+        region_number = region.get_region_number()
+        cluster_names_to_queries = clusters_by_number.get(region_number, {})
         ranking = score_clusterblast_output(reference_clusters,
                                             core_gene_accessions,
                                             cluster_names_to_queries)
         # store results
-        cluster_result = ClusterResult(cluster, ranking, proteins, "knownclusterblast")
-        results.add_cluster_result(cluster_result, reference_clusters, proteins)
+        region_result = RegionResult(region, ranking, proteins, "knownclusterblast")
+        results.add_region_result(region_result, reference_clusters, proteins)
 
-        write_clusterblast_output(options, record, cluster_result, proteins,
+        write_clusterblast_output(options, record, region_result, proteins,
                                   searchtype="knownclusterblast")
     results.mibig_entries = mibig_protein_homology(blastoutput, record,
                                                    reference_clusters)
@@ -139,14 +139,14 @@ def mibig_protein_homology(blastoutput: str, record: Record, clusters: Dict[str,
             a dict of dicts of lists, accessed by:
                 mibig_entries[cluster_number][gene_accession] = list of MibigEntry
     """
-    _, queries_by_cluster = parse_all_clusters(blastoutput, record,
-                                               min_seq_coverage=20,
-                                               min_perc_identity=20)
+    _, queries_by_region = parse_all_clusters(blastoutput, record,
+                                              min_seq_coverage=20,
+                                              min_perc_identity=20)
     mibig_entries = {}
 
-    for cluster in record.get_clusters():
-        cluster_number = cluster.get_cluster_number()
-        queries = queries_by_cluster.get(cluster_number, {})
+    for region in record.get_regions():
+        region_number = region.get_region_number()
+        queries = queries_by_region.get(region_number, {})
         cluster_entries = {}
         for cluster_protein in queries.values():
             protein_name = cluster_protein.id
@@ -161,5 +161,5 @@ def mibig_protein_homology(blastoutput: str, record: Record, clusters: Dict[str,
                 protein_entries.append(entry)
             cluster_entries[protein_name] = protein_entries
         if cluster_entries:
-            mibig_entries[cluster_number] = cluster_entries
+            mibig_entries[region_number] = cluster_entries
     return mibig_entries

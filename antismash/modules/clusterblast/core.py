@@ -27,7 +27,7 @@ def get_core_gene_ids(record: secmet.Record) -> Set[str]:  # TODO: consider movi
             a set containing all core gene names
     """
     cores = set()
-    for gene in record.get_cds_features_within_clusters():
+    for gene in record.get_cds_features_within_regions():
         if gene.gene_function == secmet.GeneFunction.CORE:
             cores.add(gene.get_accession())
     return cores
@@ -216,11 +216,11 @@ def load_clusterblast_database(record: secmet.Record, searchtype: str = "cluster
     return clusters, proteins
 
 
-def create_blast_inputs(cluster: secmet.Cluster) -> Tuple[List[str], List[str]]:
+def create_blast_inputs(region: secmet.Region) -> Tuple[List[str], List[str]]:
     """ Creates fasta file contents for the cluster's CDS features
 
         Arguments:
-            cluster: the secmet.Cluster to pull data from
+            region: the secmet.Region to pull data from
 
         Returns:
             a tuple of:
@@ -229,12 +229,12 @@ def create_blast_inputs(cluster: secmet.Cluster) -> Tuple[List[str], List[str]]:
     """
     names = []
     seqs = []
-    for cds in cluster.cds_children:
+    for cds in region.cds_children:
         if cds.strand == 1:
             strand = "+"
         else:
             strand = "-"
-        fullname = "|".join(["input", "c%d" % cluster.get_cluster_number(),
+        fullname = "|".join(["input", "c%d" % region.get_region_number(),
                              "%d-%d" % (cds.location.start, cds.location.end),
                              strand, cds.get_accession(), cds.product])
         names.append(fullname)
@@ -350,7 +350,7 @@ def parse_all_clusters(blasttext: str, record: secmet.Record, min_seq_coverage: 
     """
     seqlengths = get_cds_lengths(record)
     # TODO: should this use cds.get_name() instead?
-    genes_within_clusters = set(cds.get_accession() for cds in record.get_cds_features_within_clusters())
+    genes_within_clusters = set(cds.get_accession() for cds in record.get_cds_features_within_regions())
     queries = OrderedDict()  # type: Dict[str, Query]
     clusters = OrderedDict()  # type: Dict[str, List[Query]]
     blastlines = remove_duplicate_hits([line.split("\t") for line in blasttext.rstrip().splitlines()])
@@ -414,7 +414,7 @@ def blastparse(blasttext: str, record: secmet.Record, min_seq_coverage: float = 
                     a list of Query instances from that cluster
     """
     seqlengths = get_cds_lengths(record)
-    names = set(cds.get_name() for cds in record.get_cds_features_within_clusters())
+    names = set(cds.get_name() for cds in record.get_cds_features_within_regions())
     queries = OrderedDict()  # type: Dict[str, Query]
     clusters = OrderedDict()  # type: Dict[str, List[Query]]
     blastlines = remove_duplicate_hits([line.split("\t") for line in blasttext.rstrip().split("\n")])
@@ -518,16 +518,16 @@ def internal_homology_blast(record: secmet.Record) -> Dict[int, List[List[str]]]
     with TemporaryDirectory(change=True):
         logging.info("Finding internal homologs in each gene cluster...")
         internalhomologygroups = {}
-        for cluster in record.get_clusters():
-            cluster_number = cluster.get_cluster_number()
-            iquerycluster_names, iqueryclusterseqs = create_blast_inputs(cluster)
+        for region in record.get_regions():
+            region_number = region.get_region_number()
+            iquerycluster_names, iqueryclusterseqs = create_blast_inputs(region)
             query_filename = "internal_input.fasta"
             fasta.write_fasta(iquerycluster_names, iqueryclusterseqs, query_filename)
             blastoutput = run_internal_blastsearch(query_filename)
             queries, _ = blastparse(blastoutput, record, min_seq_coverage=25,
                                     min_perc_identity=30)
             groups = find_internal_orthologous_groups(queries, iquerycluster_names)
-            internalhomologygroups[cluster_number] = groups
+            internalhomologygroups[region_number] = groups
     return internalhomologygroups
 
 
@@ -699,7 +699,7 @@ def score_clusterblast_output(clusters: Dict[str, ReferenceCluster], allcoregene
     return sorted(results.items(), reverse=True, key=lambda x: x[1].sort_score())
 
 
-def write_fastas_with_all_genes(clusters: Iterable[secmet.Cluster], filename: str,
+def write_fastas_with_all_genes(regions: Iterable[secmet.Region], filename: str,
                                 partitions: int = 1) -> List[str]:
     """ Write fasta files containing all genes in all clusters in a
         blast friendly form.
@@ -709,9 +709,9 @@ def write_fastas_with_all_genes(clusters: Iterable[secmet.Cluster], filename: st
         input.fasta -> input0.fasta, input1.fasta, ...
 
         Arguments:
-            clusters - an iterable of clusters to find genes in
-            filename - the filename to use for the file
-            partitions - the number of files to create (approx. equally sized)
+            regions: an iterable of clusters to find genes in
+            filename: the filename to use for the file
+            partitions: the number of files to create (approx. equally sized)
 
         Returns:
             a list containing filenames of the written files
@@ -721,8 +721,8 @@ def write_fastas_with_all_genes(clusters: Iterable[secmet.Cluster], filename: st
     elif partitions < 1:
         raise ValueError("Partitions must be greater than 0")
     all_names, all_seqs = [], []
-    for cluster in clusters:
-        names, seqs = create_blast_inputs(cluster)
+    for region in regions:
+        names, seqs = create_blast_inputs(region)
         all_names.extend(names)
         all_seqs.extend(seqs)
     if not (all_names and all_seqs):

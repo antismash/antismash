@@ -53,7 +53,7 @@ class SMCOGTreeResults(ModuleResults):
     def add_to_record(self, record: Record) -> None:
         """ Annotate smCOG tree paths in CDS features """
         logging.debug("annotating genes with SMCOG trees: %d genes", len(self.tree_images))
-        for feature in record.get_cds_features_within_clusters():
+        for feature in record.get_cds_features_within_regions():
             if feature.get_name() in self.tree_images:
                 feature.notes.append("smCOG tree PNG image: smcogs/%s" % self.tree_images[feature.get_name()])
 
@@ -123,7 +123,7 @@ def run_on_record(record: Record, results: Optional[SMCOGTreeResults],
     nrpspks_genes = record.get_nrps_pks_cds_features()
     original_dir = os.getcwd()
     os.chdir(smcogs_dir)  # TODO make a context manager
-    trees = generate_trees(smcogs_dir, record.get_cds_features_within_clusters(), nrpspks_genes)
+    trees = generate_trees(smcogs_dir, record.get_cds_features_within_regions(), nrpspks_genes)
     os.chdir(original_dir)
 
     return SMCOGTreeResults(record.id, relative_output_dir, trees)

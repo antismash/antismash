@@ -4,160 +4,42 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
-from tempfile import NamedTemporaryFile
 import unittest
 
-from Bio.Alphabet import generic_dna
-from Bio.Seq import Seq
-from helperlibs.bio import seqio
+from antismash.common.secmet import FeatureLocation
+from antismash.common.secmet.features import Cluster
 
-from antismash.common.secmet import FeatureLocation, Record
-from antismash.common.secmet.features import CDSFeature, Cluster, ClusterBorder
+
+def create_cluster():
+    cluster = Cluster(FeatureLocation(8, 71, strand=1),
+                      FeatureLocation(3, 76, strand=1), tool="test",
+                      cutoff=17, neighbourhood_range=5, product='a')
+    cluster.detection_rule = "some rule text"
+    return cluster
 
 
 class TestCluster(unittest.TestCase):
-    def create_cluster(self, start, end):
-        return Cluster(FeatureLocation(start, end, strand=1),
-                       cutoff=1, extent=1, products=['a'])
-
-    def create_cds(self, start, end, strand=1):
-        return CDSFeature(FeatureLocation(start, end, strand),
-                          locus_tag="%d-%d" % (start, end))
-
     def setUp(self):
-        self.record = Record(Seq("A" * 1000))
-        self.start = 100
-        self.end = 900
-        self.cluster = self.create_cluster(self.start, self.end)
-        self.record.add_cluster(self.cluster)
-        assert self.cluster.location.start == self.start
-        assert self.cluster.location.end == self.end
+        self.cluster = create_cluster()
 
-    def test_probability(self):
-        def create_border(prob):
-            return ClusterBorder(FeatureLocation(0, 10), tool="rule-based-clusters", probability=prob)
-        # default
-        assert self.cluster.probability is None
+    def test_orphaned_numbering(self):
+        with self.assertRaisesRegex(ValueError, "Cluster not in a record"):
+            print(self.cluster.get_cluster_number())
 
-        # single value
-        self.cluster.borders.append(create_border(9.5))
-        assert self.cluster.probability == 9.5
-
-        # multiple agreeing values
-        self.cluster.borders.append(create_border(9.5))
-        assert self.cluster.probability == 9.5
-
-        # multiple disagreeing values
-        self.cluster.borders.append(create_border(.5))
-        assert self.cluster.probability is None
-
-    def test_trim_unattached(self):
-        cluster = self.create_cluster(1, 2)
-        cluster.trim_overlapping()
-        assert self.cluster.location.start == self.start
-        assert self.cluster.location.end == self.end
-
-    def test_trim_empty(self):
-        self.cluster.trim_overlapping()
-        assert self.cluster.location.start == self.start
-        assert self.cluster.location.end == self.end
-
-    def test_trim_contained(self):
-        starts = [200, 300, 500]
-        ends = [250, 350, 600]
-        for start, end in zip(starts, ends):
-            feature = self.create_cds(start, end)
-            self.record.add_cds_feature(feature)
-            assert feature.cluster == self.cluster
-        self.cluster.trim_overlapping()
-        assert self.cluster.location.start == self.start
-        assert self.cluster.location.end == self.end
-
-        for cds in self.record.get_cds_features():
-            self.record.remove_cds_feature(cds)
-        assert not self.cluster.cds_children
-
-        for start, end in zip(starts, ends):
-            feature = self.create_cds(start, end, strand=-1)
-            self.record.add_cds_feature(feature)
-            assert feature.cluster == self.cluster
-        self.cluster.trim_overlapping()
-        assert self.cluster.location.start == self.start
-        assert self.cluster.location.end == self.end
-
-    def test_trim_leading_overlap(self):
-        self.record.add_cds_feature(self.create_cds(self.start - 3, self.start + 3))
-        self.record.add_cds_feature(self.create_cds(self.start + 20, self.end - 20))
-        self.cluster.trim_overlapping()
-        assert self.cluster.location.start == self.start + 3
-        assert self.cluster.location.end == self.end
-
-    def test_trim_leading_overlap_with_overlapping_contained(self):  # pylint: disable=invalid-name
-        self.record.add_cds_feature(self.create_cds(self.start - 3, self.start + 3))
-        self.record.add_cds_feature(self.create_cds(self.start + 1, self.start + 10))
-        self.cluster.trim_overlapping()
-        assert self.cluster.location.start == self.start + 1
-        assert self.cluster.location.end == self.end
-
-    def test_trim_trailing_overlap(self):
-        self.record.add_cds_feature(self.create_cds(self.end - 3, self.end + 3))
-        self.record.add_cds_feature(self.create_cds(self.start + 20, self.end - 20))
-        self.cluster.trim_overlapping()
-        assert self.cluster.location.start == self.start
-        assert self.cluster.location.end == self.end - 3
-
-    def test_trim_trailing_overlap_with_overlapping_contained(self):  # pylint: disable=invalid-name
-        self.record.add_cds_feature(self.create_cds(self.end - 3, self.end + 3))
-        self.record.add_cds_feature(self.create_cds(self.end - 10, self.end - 1))
-        self.cluster.trim_overlapping()
-        assert self.cluster.location.start == self.start
-        assert self.cluster.location.end == self.end - 1
-
-    def test_products(self):
-        assert self.cluster.products == ("a",)
-        self.cluster.add_product("b")
-        assert self.cluster.products == ("a", "b")
-        with self.assertRaises(AttributeError):
-            self.cluster.products.append("c")  # pylint: disable=no-member
-        with self.assertRaises(AssertionError):
-            self.cluster.add_product(None)
-        with self.assertRaises(AssertionError):
-            self.cluster.add_product(["C"])
-
-
-class TestConversion(unittest.TestCase):
-    def test_core(self):
-        cluster = Cluster(FeatureLocation(3, 71, strand=1),
-                          cutoff=17, extent=5, products=['a', 'c'])
-        cluster.smiles_structure = "NOTSMILES"
-        cluster.detection_rules = ["some rule text", "for products"]
-        cluster.contig_edge = True
-
-        bio = cluster.to_biopython()
-        assert len(bio) == 1
+    def test_biopython_conversion(self):
+        bio = self.cluster.to_biopython()
+        assert len(bio) == 2
+        assert bio[0].type == "cluster" and bio[1].type == "cluster_core"
         new = Cluster.from_biopython(bio[0])
-        assert new is not cluster
-        assert new.cutoff == cluster.cutoff == 17
-        assert new.extent == cluster.extent == 5
-        assert new.products == cluster.products == ('a', 'c')
-        assert new.location.start == cluster.location.start == 3
-        assert new.detection_rules == cluster.detection_rules
-        assert new.contig_edge == cluster.contig_edge
-        assert new.smiles_structure == cluster.smiles_structure
-
-    def test_genbank(self):
-        dummy_record = Record(Seq("A"*100, generic_dna))
-        cluster = Cluster(FeatureLocation(3, 71, strand=1),
-                          cutoff=17, extent=5, products=['a', 'c'])
-        dummy_record.add_cluster(cluster)
-        with NamedTemporaryFile(suffix=".gbk") as output:
-            cluster.write_to_genbank(output.name)
-            bio = list(seqio.parse(output.name))
-        assert len(bio) == 1
-        rec = Record.from_biopython(bio[0], taxon="bacteria")
-        assert len(rec.get_clusters()) == 1
-        new = rec.get_cluster(0)
-        assert new.cutoff == cluster.cutoff
-        assert new.products == cluster.products
-        assert new.location.start == 0
-        assert new.location.end == cluster.location.end - cluster.location.start
+        assert new is not self.cluster
+        assert new.cutoff == self.cluster.cutoff == 17
+        assert new.neighbourhood_range == self.cluster.neighbourhood_range == 5
+        assert new.product == self.cluster.product == 'a'
+        assert new.location.start == self.cluster.location.start == 3
+        assert new.core_location.start == self.cluster.core_location.start == 8
+        assert new.detection_rule == self.cluster.detection_rule == "some rule text"
+        assert new.tool == self.cluster.tool == "test"
+        assert new.location.start == self.cluster.location.start == 3
+        assert new.location.end == self.cluster.location.end == 76
+        assert new.core_location.start == self.cluster.core_location.start == 8
+        assert new.core_location.end == self.cluster.core_location.end == 71

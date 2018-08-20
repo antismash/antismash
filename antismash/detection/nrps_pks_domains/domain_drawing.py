@@ -14,9 +14,9 @@ from jinja2 import FileSystemLoader, Environment, StrictUndefined
 
 from antismash.common import path
 from antismash.common.json import JSONDomain, JSONOrf
-from antismash.common.layers import ClusterLayer, RecordLayer, OptionsLayer
+from antismash.common.layers import RegionLayer, RecordLayer, OptionsLayer
 from antismash.common.module_results import ModuleResults
-from antismash.common.secmet import CDSFeature, Cluster, Record
+from antismash.common.secmet import CDSFeature, Record, Region
 from antismash.common.secmet.qualifiers import NRPSPKSQualifier
 
 
@@ -24,6 +24,7 @@ def will_handle(products: List[str]) -> bool:
     """ Returns true if one or more relevant products are present """
     return bool(set(products).intersection({"nrps", "t1pks", "t2pks", "transatpks",
                                             "nrpsfragment", "otherks"}))
+
 
 def _parse_domain(record: Record, domain: NRPSPKSQualifier.Domain,
                   feature: CDSFeature) -> JSONDomain:
@@ -58,12 +59,12 @@ def _parse_domain(record: Record, domain: NRPSPKSQualifier.Domain,
     return JSONDomain(domain, predictions, napdoslink, blastlink, domainseq, dna_sequence)
 
 
-def generate_js_domains(cluster: Cluster, record: Record) -> Optional[Dict[str, Union[str, List[JSONOrf]]]]:
+def generate_js_domains(region: Region, record: Record) -> Optional[Dict[str, Union[str, List[JSONOrf]]]]:
     """ Creates a JSON-like structure for domains, used by javascript in
         drawing the domains
     """
     orfs = []  # type: List[JSONOrf]
-    for feature in cluster.cds_children:
+    for feature in region.cds_children:
         if not feature.nrps_pks:
             continue
         js_orf = JSONOrf(feature)
@@ -71,27 +72,24 @@ def generate_js_domains(cluster: Cluster, record: Record) -> Optional[Dict[str, 
             js_orf.add_domain(_parse_domain(record, domain, feature))
         orfs.append(js_orf)
 
-    if orfs:
-        return {'id': ClusterLayer.build_anchor_id(cluster),
-                'orfs': orfs}
-
-    return None
+    return {'id': RegionLayer.build_anchor_id(region),
+            'orfs': orfs}
 
 
-def has_domain_details(cluster: Cluster) -> bool:
+def has_domain_details(region: Region) -> bool:
     """ Returns True if there are domain details to be had for the given cluster """
-    for cds in cluster.cds_children:
+    for cds in region.cds_children:
         if cds.nrps_pks:
             return True
     return False
 
 
-def generate_details_div(cluster_layer: ClusterLayer, _void: ModuleResults,
-                         record_layer: RecordLayer, options_layer: OptionsLayer) -> str:
+def generate_details_div(region_layer: RegionLayer, _void: ModuleResults,
+                         _record_layer: RecordLayer, _options_layer: OptionsLayer) -> str:
     """ Generate the details section of NRPS/PKS domains in the main HTML output """
     env = Environment(loader=FileSystemLoader(path.get_full_path(__file__, 'templates')),
                       autoescape=True, undefined=StrictUndefined)
     template = env.get_template('details.html')
     details_div = template.render(has_domain_details=has_domain_details,
-                                  cluster=cluster_layer)
+                                  region=region_layer)
     return details_div

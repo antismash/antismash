@@ -79,7 +79,9 @@ def strip_record(record: Record) -> None:
     """ Discard antismash specific features and feature qualifiers """
     logging.debug("Stripping antiSMASH features and annotations from record: %s", record.id)
     record.clear_clusters()
-    record.clear_cluster_borders()
+    record.clear_superclusters()
+    record.clear_subregions()
+    record.clear_regions()
     record.clear_cds_motifs()
     record.clear_antismash_domains()
     record.clear_pfam_domains()

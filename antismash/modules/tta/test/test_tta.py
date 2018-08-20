@@ -12,8 +12,7 @@ from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation
 
 from antismash.common.secmet.record import Record
-from antismash.common.secmet.features import Cluster
-from antismash.common.test.helpers import DummyCDS, get_simple_options
+from antismash.common.test.helpers import DummyCDS, DummyCluster, get_simple_options
 from antismash.modules import tta
 
 
@@ -25,14 +24,15 @@ class TtaTest(unittest.TestCase):
         record.add_cds_feature(DummyCDS(0, 9, strand=1))
         record.add_cds_feature(DummyCDS(12, 21, strand=-1))
 
-        cluster_loc = FeatureLocation(0, 21)
-        cluster = Cluster(cluster_loc, 0, 0, [])
+        cluster = DummyCluster(start=0, end=21)
         record.add_cluster(cluster)
+        record.create_superclusters()
+        record.create_regions()
         # if these aren't correct, the tests will fail
         assert len(cluster.cds_children) == 2
+        assert len(record.get_regions()) == 1
         for cds in record.get_cds_features():
-            assert cds.overlaps_with(cluster)
-            assert cds.cluster == cluster, str(cds.location)
+            assert cds.is_contained_by(cluster)
             assert cds.extract(record.seq) == "ATGTTATGA", str(cds.location)
 
         self.record = record

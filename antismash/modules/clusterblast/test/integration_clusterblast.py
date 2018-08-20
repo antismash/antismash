@@ -58,8 +58,8 @@ class Base(unittest.TestCase):
             results = helpers.run_and_regenerate_results_for_module(filename, clusterblast, self.options)
             update_config({"output_dir": ""})
             results, global_results = self.get_results(results)
-            assert len(results.cluster_results) == 1
-            cluster = results.cluster_results[0]
+            assert len(results.region_results) == 1
+            cluster = results.region_results[0]
             if expected > clusterblast.get_result_limit():
                 assert cluster.total_hits == expected
                 expected = clusterblast.get_result_limit()

@@ -14,11 +14,13 @@ from .features import (
     CDSFeature,
     CDSMotif,
     Cluster,
-    ClusterBorder,
     Feature,
     FeatureLocation,
     Gene,
     PFAMDomain,
     Prepeptide,
+    Region,
+    SubRegion,
+    SuperCluster,
 )
 from .qualifiers import GeneFunction

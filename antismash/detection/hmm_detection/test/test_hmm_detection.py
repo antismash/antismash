@@ -14,7 +14,7 @@ from antismash.common.hmm_rule_parser import rule_parser, cluster_prediction as 
 from antismash.common.hmm_rule_parser.test.helpers import check_hmm_signatures
 from antismash.common.secmet import Record
 from antismash.common.test.helpers import DummyCDS, FakeHSPHit
-from antismash.config import get_config, update_config, destroy_config, args
+from antismash.config import get_config
 import antismash.detection.hmm_detection as core
 from antismash.detection.hmm_detection import signatures
 
@@ -96,8 +96,9 @@ class HmmDetectionTest(unittest.TestCase):
         rules_by_name = {rule.name: rule for rule in rules}
         clusters = hmm_detection.find_clusters(self.record, cluster_type_hits, rules_by_name)
         assert len(clusters) == 1
-        assert clusters[0].location.start == 30000
-        assert clusters[0].location.end == 90000
+        assert clusters[0].product == "Overlap"
+        assert clusters[0].core_location.start == 30000
+        assert clusters[0].core_location.end == 90000
 
     def test_core(self):
         # should be no failing prerequisites
@@ -134,19 +135,25 @@ class HmmDetectionTest(unittest.TestCase):
                                 'Metabolite0': {'GENE_3'},
                                 'Metabolite1': {'GENE_5'}}
         rules = {rule.name: rule for rule in self.rules}
-        for border in hmm_detection.find_clusters(self.record, cds_features_by_type, rules):
-            self.record.add_cluster_border(border)
-        self.record.create_clusters_from_borders()
-        result_clusters = []
-        for cluster in self.record.get_clusters():
-            result_clusters.append(sorted(cds.get_name() for cds in cluster.cds_children))
+        for cluster in hmm_detection.find_clusters(self.record, cds_features_by_type, rules):
+            self.record.add_cluster(cluster)
+        assert len(self.record.get_clusters()) == 7
+        cluster_products = sorted([cluster.product for cluster in self.record.get_clusters()])
+        assert cluster_products == sorted(["Metabolite%s" % i for i in "01AABCD"])
+        self.record.create_superclusters()
+        assert len(self.record.get_superclusters()) == 3
+        self.record.create_regions()
+        assert len(self.record.get_regions()) == 3
+        result_regions = []
+        for region in self.record.get_regions():
+            result_regions.append(sorted(cds.get_name() for cds in region.cds_children))
 
-        expected_clusters = [
+        expected_regions = [
             ["GENE_1", "GENE_2"],
             ["GENE_3"],
             ["GENE_4", "GENE_5"]
         ]
-        assert result_clusters == expected_clusters
+        assert result_regions == expected_regions
 
     def test_create_rules(self):
         rules = hmm_detection.create_rules(self.rules_file, self.signature_names)

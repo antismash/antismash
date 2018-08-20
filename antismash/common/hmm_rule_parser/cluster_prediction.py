@@ -11,7 +11,8 @@ from typing import Any, Dict, List, Set, Tuple
 from Bio.SearchIO._model.hsp import HSP
 
 from antismash.common import fasta, path, serialiser
-from antismash.common.secmet import Record, ClusterBorder, CDSFeature, FeatureLocation
+from antismash.common.secmet import Record, Cluster, CDSFeature, FeatureLocation
+from antismash.common.secmet.locations import location_contains_other
 from antismash.common.secmet.qualifiers import GeneFunction, SecMetQualifier
 from antismash.common.subprocessing import run_hmmsearch
 from antismash.common.hmm_rule_parser import rule_parser
@@ -80,21 +81,21 @@ class CDSResults:
 
 class RuleDetectionResults:
     """ A container for the all results of running the cluster prediction """
-    def __init__(self, cds_by_cluster: Dict[ClusterBorder, List[CDSResults]],
+    def __init__(self, cds_by_cluster: Dict[Cluster, List[CDSResults]],
                  tool: str) -> None:
         self.cds_by_cluster = cds_by_cluster
         self.tool = str(tool)
 
     @property
-    def borders(self) -> List[ClusterBorder]:
-        """ A list of ClusterBorders predicted """
+    def clusters(self) -> List[Cluster]:
+        """ A list of Clusters predicted """
         return list(self.cds_by_cluster)
 
     def annotate_cds_features(self) -> None:
         """ Annotate relevant CDS features with the HMM information detected """
-        for border, cds_results in self.cds_by_cluster.items():
+        for cluster, cds_results in self.cds_by_cluster.items():
             for cds_result in cds_results:
-                cds_result.annotate(border.product, self.tool)
+                cds_result.annotate(cluster.product, self.tool)
 
     def to_json(self) -> Dict[str, Any]:
         """ Constructs a JSON representation from the RuleDetectionResults instance """
@@ -102,10 +103,10 @@ class RuleDetectionResults:
         json = {"tool": self.tool,
                 "cds_by_cluster": cds_results_json}
 
-        for border, cds_results in self.cds_by_cluster.items():
-            json_border = serialiser.feature_to_json(border.to_biopython()[0])
+        for cluster, cds_results in self.cds_by_cluster.items():
+            json_cluster = serialiser.feature_to_json(cluster.to_biopython()[0])
             json_cds_results = [result.to_json() for result in cds_results]
-            cds_results_json.append((json_border, json_cds_results))
+            cds_results_json.append((json_cluster, json_cds_results))
 
         return json
 
@@ -113,43 +114,43 @@ class RuleDetectionResults:
     def from_json(json: Dict[str, Any], record: Record) -> "RuleDetectionResults":
         """ Constructs a RuleDetectionResults instance from a JSON representation """
         cds_by_cluster = {}
-        for json_border, json_cds_results in json["cds_by_cluster"]:
-            border = ClusterBorder.from_biopython(serialiser.feature_from_json(json_border))
+        for json_cluster, json_cds_results in json["cds_by_cluster"]:
+            cluster = Cluster.from_biopython(serialiser.feature_from_json(json_cluster))
             cds_results = [CDSResults.from_json(result_json, record) for result_json in json_cds_results]
-            cds_by_cluster[border] = cds_results
+            cds_by_cluster[cluster] = cds_results
 
         return RuleDetectionResults(cds_by_cluster, json["tool"])
 
 
-def remove_redundant_borders(borders: List[ClusterBorder],
-                             rules_by_name: Dict[str, rule_parser.DetectionRule]
-                             ) -> List[ClusterBorder]:
+def remove_redundant_clusters(clusters: List[Cluster],
+                              rules_by_name: Dict[str, rule_parser.DetectionRule]
+                              ) -> List[Cluster]:
     """ Removes clusters which have superiors covering the same (or larger) region
     """
-    borders_by_rule = defaultdict(list)  # type: Dict[str, List[ClusterBorder]]
-    for border in borders:
-        borders_by_rule[border.product].append(border)
+    clusters_by_rule = defaultdict(list)  # type: Dict[str, List[Cluster]]
+    for cluster in clusters:
+        clusters_by_rule[cluster.product].append(cluster)
 
-    trimmed_borders = []
-    for border in borders:
-        rule_name = border.product
+    trimmed_clusters = []
+    for cluster in clusters:
+        rule_name = cluster.product
         is_redundant = False
         for superior in rules_by_name[rule_name].superiors:
-            for other_border in borders_by_rule.get(superior, []):
-                if border.is_contained_by(other_border):
+            for other_cluster in clusters_by_rule.get(superior, []):
+                if location_contains_other(other_cluster.core_location, cluster.core_location):
                     is_redundant = True
                     break
             if is_redundant:
                 break
         if not is_redundant:
-            trimmed_borders.append(border)
-    return trimmed_borders
+            trimmed_clusters.append(cluster)
+    return trimmed_clusters
 
 
 def find_clusters(record: Record, cds_by_cluster_type: Dict[str, Set[str]],
-                  rules_by_name: Dict[str, rule_parser.DetectionRule]) -> List[ClusterBorder]:
+                  rules_by_name: Dict[str, rule_parser.DetectionRule]) -> List[Cluster]:
     """ Detects gene clusters based on the identified core genes """
-    clusters = []  # type: List[ClusterBorder]
+    clusters = []  # type: List[Cluster]
 
     cds_feature_by_name = record.get_cds_name_mapping()
 
@@ -157,37 +158,39 @@ def find_clusters(record: Record, cds_by_cluster_type: Dict[str, Set[str]],
         cds_features = sorted([cds_feature_by_name[cds] for cds in cds_names])
         rule = rules_by_name[cluster_type]
         cutoff = rule.cutoff
-        extent = rule.extent
-        start, end = sorted([cds_features[0].location.start, cds_features[0].location.end])
-        cluster = ClusterBorder(FeatureLocation(start, end), tool="rule-based-clusters",
-                                cutoff=cutoff, extent=extent, product=cluster_type)
-        assert cds_features[0].is_contained_by(cluster)
-        assert cds_features[0] in record.get_cds_features_within_location(cluster.location)
-        clusters.append(cluster)
+        core_location = cds_features[0].location
         for cds in cds_features[1:]:
-            feature_start, feature_end = sorted([cds.location.start, cds.location.end])
-            dummy_location = FeatureLocation(cluster.location.start - cutoff, cluster.location.end + cutoff)
-            if cds.overlaps_with(dummy_location):
-                start = min(feature_start, start)
-                end = max(feature_end, end)
-                cluster.location = FeatureLocation(start, end)
-            else:
-                start = feature_start
-                end = feature_end
-                cluster = ClusterBorder(FeatureLocation(start, end), tool="rule-based-clusters",
-                                        cutoff=cutoff, extent=extent, product=cluster_type)
-                clusters.append(cluster)
+            if cds.overlaps_with(FeatureLocation(core_location.start - cutoff,
+                                                 core_location.end + cutoff)):
+                core_location = FeatureLocation(min(cds.location.start, core_location.start),
+                                                max(cds.location.end, core_location.end))
+                assert core_location.start >= 0 and core_location.end <= len(record)
+                continue
+            # create the previous cluster and start a new location
+            surrounds = FeatureLocation(max(0, core_location.start - rule.extent),
+                                        min(core_location.end + rule.extent, len(record)))
+            clusters.append(Cluster(core_location, surrounding_location=surrounds,
+                                    tool="rule-based-clusters", cutoff=cutoff,
+                                    neighbourhood_range=rule.extent, product=cluster_type))
+            clusters[-1].detection_rule = str(rule.conditions)
+            core_location = cds.location
 
+        # finalise the last cluster
+        surrounds = FeatureLocation(max(0, core_location.start - rule.extent),
+                                    min(core_location.end + rule.extent, len(record)))
+        clusters.append(Cluster(core_location, surrounding_location=surrounds,
+                                tool="rule-based-clusters", cutoff=cutoff,
+                                neighbourhood_range=rule.extent, product=cluster_type))
+        clusters[-1].detection_rule = str(rule.conditions)
+
+    # fit to record if outside
     for cluster in clusters:
-        cluster.rule = str(rules_by_name[cluster.product].conditions)
-        if cluster.location.start < 0:
-            cluster.location = FeatureLocation(0, cluster.location.end)
-            cluster.contig_edge = True
-        if cluster.location.end > len(record):
-            cluster.location = FeatureLocation(cluster.location.start, len(record))
-            cluster.contig_edge = True
+        contained = FeatureLocation(max(0, cluster.location.start),
+                                    min(cluster.location.end, len(record)))
+        if contained != cluster.location:
+            cluster.location = contained
 
-    clusters = remove_redundant_borders(clusters, rules_by_name)
+    clusters = remove_redundant_clusters(clusters, rules_by_name)
 
     logging.debug("%d rule-based cluster(s) found in record", len(clusters))
     return clusters
@@ -354,8 +357,8 @@ def apply_cluster_rules(record: Record, results_by_id: Dict[str, List[HSP]],
     return cds_domains_by_cluster_type, cluster_type_hits
 
 
-def detect_borders_and_signatures(record: Record, signature_file: str, seeds_file: str,
-                                  rules_file: str, filter_file: str, tool: str) -> RuleDetectionResults:
+def detect_clusters_and_signatures(record: Record, signature_file: str, seeds_file: str,
+                                   rules_file: str, filter_file: str, tool: str) -> RuleDetectionResults:
     """ Compares all CDS features in a record with HMM signatures and generates
         Cluster features based on those hits and the current cluster detection
         rules.
@@ -416,11 +419,8 @@ def detect_borders_and_signatures(record: Record, signature_file: str, seeds_fil
 
     cds_results_by_cluster = {}
     for cluster in clusters:
-        record.add_cluster_border(cluster)
         cds_results = []
-        cluster_extent = FeatureLocation(cluster.location.start - cluster.extent,
-                                         cluster.location.end + cluster.extent)
-        for cds in record.get_cds_features_within_location(cluster_extent):
+        for cds in record.get_cds_features_within_location(cluster.location):
             domains = []
             for hsp in results_by_id.get(cds.get_name(), []):
                 domains.append(SecMetQualifier.Domain(hsp.query_id, hsp.evalue, hsp.bitscore,

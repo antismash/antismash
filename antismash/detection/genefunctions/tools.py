@@ -15,7 +15,7 @@ from .smcogs import classify as smcogs_classification
 
 
 def run_tools(record: Record, options: ConfigType) -> List[FunctionResults]:
-    """ Runs all tools over CDS features within clusters
+    """ Runs all tools over CDS features within regions
 
         Arguments:
             record: the record to check
@@ -25,7 +25,7 @@ def run_tools(record: Record, options: ConfigType) -> List[FunctionResults]:
             a list of FunctionResults objects, one for each tool
     """
 
-    cds_features = record.get_cds_features_within_clusters()
+    cds_features = record.get_cds_features_within_regions()
     functions = [
         find_resistance,
         smcogs_classification,
