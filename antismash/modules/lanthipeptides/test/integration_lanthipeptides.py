@@ -35,7 +35,7 @@ class IntegrationLanthipeptides(unittest.TestCase):
 
     def gather_all_motifs(self, result):
         motifs = []
-        for locii in result.regions.values():
+        for locii in result.clusters.values():
             for locus in locii:
                 motifs.extend(result.motifs_by_locus[locus])
         return motifs
@@ -56,7 +56,7 @@ class IntegrationLanthipeptides(unittest.TestCase):
         rec = Record.from_biopython(seqio.read(helpers.get_path_to_nisin_with_detection()), taxon="bacteria")
         assert not rec.get_cds_motifs()
         result = run_specific_analysis(rec)
-        assert len(result.regions) == 1
+        assert len(result.clusters) == 1
         motifs = self.gather_all_motifs(result)
         assert len(motifs) == 1
         assert not rec.get_cds_motifs()
@@ -79,7 +79,7 @@ class IntegrationLanthipeptides(unittest.TestCase):
         regenerated = LanthiResults.from_json(initial_json, rec)
         assert list(result.motifs_by_locus) == ["nisB"]
         assert str(result.motifs_by_locus) == str(regenerated.motifs_by_locus)
-        assert result.regions == regenerated.regions
+        assert result.clusters == regenerated.clusters
         assert initial_json == regenerated.to_json()
 
     def test_nisin_complete(self):
@@ -197,8 +197,8 @@ class IntegrationLanthipeptides(unittest.TestCase):
             assert motif.tool == "pksnrpsmotif"
         existing_count = len(rec.get_cds_motifs())
         result = run_specific_analysis(rec)
-        assert len(result.regions) == 1
-        assert result.regions[1] == set(["lasM"])
+        assert len(result.clusters) == 1
+        assert result.clusters[1] == set(["lasM"])
         assert len(result.motifs_by_locus["lasM"]) == 1
         motifs = result.motifs_by_locus["lasM"]
         assert len(motifs) == 1
