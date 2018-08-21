@@ -44,8 +44,10 @@ def generate_details_div(region_layer: RegionLayer, results: LanthiResults,
                       autoescape=True, undefined=StrictUndefined)
     template = env.get_template('details.html')
     motifs_in_region = {}
-    for locus in results.regions.get(region_layer.get_region_number(), []):
-        motifs_in_region[locus] = results.motifs_by_locus[locus]
+    for supercluster in region_layer.superclusters:
+        for cluster in supercluster.clusters:
+            for locus in results.clusters.get(cluster.get_cluster_number(), []):
+                motifs_in_region[locus] = results.motifs_by_locus[locus]
     details_div = template.render(record=record_layer,
                                   region=lanthi_layer,
                                   options=options_layer,
@@ -63,7 +65,7 @@ def generate_sidepanel(region_layer: RegionLayer, results: LanthiResults,
     if not results:
         return ""
     motifs_in_region = {}
-    for locus in results.regions.get(region_layer.get_region_number(), []):
+    for locus in results.clusters.get(region_layer.get_region_number(), []):
         motifs_in_region[locus] = results.motifs_by_locus[locus]
     sidepanel = template.render(record=record_layer,
                                 region=region,

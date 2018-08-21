@@ -11,14 +11,14 @@ from collections import defaultdict
 import logging
 import os
 import re
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Iterable, Optional, Set
 
 from Bio.SeqFeature import SeqFeature
 
 from antismash.common.signature import HmmSignature
 from antismash.common import all_orfs, path, subprocessing, module_results, utils
 from antismash.common.fasta import get_fasta_from_features
-from antismash.common.secmet import CDSFeature, Record, Prepeptide, GeneFunction, FeatureLocation
+from antismash.common.secmet import CDSFeature, Record, Prepeptide, GeneFunction, FeatureLocation, Cluster
 from antismash.common.secmet.features.cdscollection import CDSCollection
 from antismash.common.secmet.locations import location_from_string
 
@@ -66,8 +66,8 @@ class LanthiResults(module_results.ModuleResults):
         # e.g. self.motifs_by_locus[gene_locus] = [motif1, motif2..]
         self.motifs_by_locus = defaultdict(list)  # type: Dict[str, List[LanthipeptideMotif]]
         # keep clusters and which genes in them had precursor hits
-        # e.g. self.regions[region_number] = {gene1_locus, gene2_locus}
-        self.regions = defaultdict(set)  # type: Dict[int, Set[str]]
+        # e.g. self.clusters[cluster_number] = {gene1_locus, gene2_locus}
+        self.clusters = defaultdict(set)  # type: Dict[int, Set[str]]
 
     def to_json(self) -> Dict[str, Any]:
         cds_features = [(str(feature.location),
@@ -79,7 +79,7 @@ class LanthiResults(module_results.ModuleResults):
                 "schema_version": LanthiResults.schema_version,
                 "motifs": motifs,
                 "new_cds_features": cds_features,
-                "clusters": {key: list(val) for key, val in self.regions.items()}}
+                "clusters": {key: list(val) for key, val in self.clusters.items()}}
 
     @staticmethod
     def from_json(json: Dict[str, Any], record: Record) -> "LanthiResults":
@@ -90,7 +90,7 @@ class LanthiResults(module_results.ModuleResults):
         for locus, motifs in json["motifs"].items():
             for motif in motifs:
                 results.motifs_by_locus[locus].append(LanthipeptideMotif.from_json(motif))
-        results.regions = {int(key): set(val) for key, val in json["clusters"].items()}
+        results.clusters = {int(key): set(val) for key, val in json["clusters"].items()}
         for location, name in json["new_cds_features"]:
             cds = all_orfs.create_feature_from_location(record, location, label=name)
             results.new_cds_features.add(cds)
@@ -690,7 +690,7 @@ def result_vec_to_feature(orig_feature: CDSFeature, res_vec: Lanthipeptide) -> L
 
 
 def find_neighbours_in_range(center: CDSFeature,
-                             candidates: List[CDSFeature]) -> List[CDSFeature]:
+                             candidates: Iterable[CDSFeature]) -> List[CDSFeature]:
     """ Restrict a set of genes to those within precursor range of a central
         gene.
 
@@ -715,7 +715,7 @@ def find_neighbours_in_range(center: CDSFeature,
     return neighbours
 
 
-def run_lanthi_on_genes(record: Record, focus: CDSFeature,
+def run_lanthi_on_genes(record: Record, focus: CDSFeature, cluster: Cluster,
                         genes: List[CDSFeature], results: LanthiResults) -> None:
     """ Runs lanthipeptide around a single focus gene which is a core biosynthetic
         enzyme for lanthipeptides.
@@ -724,6 +724,7 @@ def run_lanthi_on_genes(record: Record, focus: CDSFeature,
         Arguments:
             record: the Record instance containing the genes
             focus: a core lanthipeptide gene
+            cluster: the Cluster being analysed
             genes: a list of candidate precursor genes
             results: a LanthiResults object to update
 
@@ -731,7 +732,7 @@ def run_lanthi_on_genes(record: Record, focus: CDSFeature,
             None
     """
     domains = get_detected_domains(genes)
-    non_candidate_neighbours = find_neighbours_in_range(focus, list(focus.region.cds_children))
+    non_candidate_neighbours = find_neighbours_in_range(focus, cluster.cds_children)
     flavoprotein_found = contains_feature_with_single_domain(non_candidate_neighbours, {"Flavoprotein"})
     halogenase_found = contains_feature_with_single_domain(non_candidate_neighbours, {"Trp_halogenase"})
     oxygenase_found = contains_feature_with_single_domain(non_candidate_neighbours, {"p450"})
@@ -751,7 +752,7 @@ def run_lanthi_on_genes(record: Record, focus: CDSFeature,
         result_vec.lactonated = dehydrogenase_found and result_vec.core.startswith('S')
         motif = result_vec_to_feature(candidate, result_vec)
         results.motifs_by_locus[focus.get_name()].append(motif)
-        results.regions[focus.region.get_region_number()].add(focus.get_name())
+        results.clusters[cluster.get_cluster_number()].add(focus.get_name())
         # track new CDSFeatures if found with all_orfs
         if candidate.region is None:
             results.new_cds_features.add(candidate)
@@ -767,29 +768,29 @@ def run_specific_analysis(record: Record) -> LanthiResults:
             A populated LanthiResults object
     """
     results = LanthiResults(record.id)
-    for region in record.get_regions():
-        if 'lanthipeptide' not in region.products:
+    for cluster in record.get_clusters():
+        if cluster.product != 'lanthipeptide':
             continue
 
         # find core biosynthetic enzyme locations
         core_domain_names = {'Lant_dehyd_N', 'Lant_dehyd_C', 'DUF4135', 'Pkinase'}
         core_genes = []
-        for gene in region.cds_children:
+        for gene in cluster.cds_children:
             if not gene.sec_met:
                 continue
             if core_domain_names.intersection(set(gene.sec_met.domain_ids)):
                 core_genes.append(gene)
 
-        precursor_candidates = find_lan_a_features(region)
+        precursor_candidates = find_lan_a_features(cluster)
         # Find candidate ORFs that are not yet annotated
-        extra_orfs = all_orfs.find_all_orfs(record, region)
+        extra_orfs = all_orfs.find_all_orfs(record, cluster)
         for orf in extra_orfs:
             if len(orf.translation) < 80:
                 precursor_candidates.append(orf)
 
         for gene in core_genes:
             neighbours = find_neighbours_in_range(gene, precursor_candidates)
-            run_lanthi_on_genes(record, gene, neighbours, results)
+            run_lanthi_on_genes(record, gene, cluster, neighbours, results)
 
     logging.debug("Lanthipeptide module marked %d motifs", sum(map(len, results.motifs_by_locus)))
     return results
