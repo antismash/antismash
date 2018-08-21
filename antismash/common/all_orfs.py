@@ -10,10 +10,12 @@
 
 
 from typing import List, Optional
+from typing import Iterable  # comment hints, pylint: disable=unused-import
 
 from Bio.SeqFeature import FeatureLocation, BeforePosition, AfterPosition
 
-from antismash.common.secmet import CDSFeature, Feature, Record, Region
+from antismash.common.secmet import CDSFeature, Feature, Record
+from antismash.common.secmet.features import CDSCollection
 
 
 def scan_orfs(seq: str, direction: int, offset: int = 0) -> List[FeatureLocation]:
@@ -111,15 +113,15 @@ def create_feature_from_location(record: Record, location: FeatureLocation,
     return feature
 
 
-def find_all_orfs(record: Record, region: Optional[Region] = None) -> List[CDSFeature]:
+def find_all_orfs(record: Record, area: Optional[CDSCollection] = None) -> List[CDSFeature]:
     """ Find all ORFs of at least 60 bases that don't overlap with existing
         CDS features.
 
-        Can (and should) be limited to just within a region.
+        Can (and should) be limited to just within a specific section of the record.
 
         Arguments:
             record: the record to search
-            region: the specific Region to search within, or None
+            area: the specific CDSCollection to search within, or None
 
         Returns:
             a list of CDSFeatures, one for each ORF
@@ -127,11 +129,11 @@ def find_all_orfs(record: Record, region: Optional[Region] = None) -> List[CDSFe
     # Get sequence for the range
     offset = 0
     seq = record.seq
-    existing = record.get_cds_features()
-    if region:
-        seq = record.seq[region.location.start:region.location.end]
-        offset = region.location.start
-        existing = record.get_cds_features_within_location(region.location,
+    existing = record.get_cds_features()  # type: Iterable[CDSFeature]
+    if area:
+        seq = area.extract(seq)
+        offset = area.location.start
+        existing = record.get_cds_features_within_location(area.location,
                                                            with_overlapping=True)
 
     # Find orfs throughout the range
@@ -143,7 +145,7 @@ def find_all_orfs(record: Record, region: Optional[Region] = None) -> List[CDSFe
     new_features = []
 
     for location in locations:
-        if region:
+        if area:
             if isinstance(location.start, (BeforePosition, AfterPosition)):
                 continue
             if isinstance(location.end, (BeforePosition, AfterPosition)):
@@ -155,8 +157,8 @@ def find_all_orfs(record: Record, region: Optional[Region] = None) -> List[CDSFe
 
         feature = create_feature_from_location(record, location, orfnr)
 
-        # skip if not wholly contained in the region
-        if region and not feature.is_contained_by(region):
+        # skip if not wholly contained in the area
+        if area and not feature.is_contained_by(area):
             continue
 
         new_features.append(feature)
