@@ -608,54 +608,67 @@ class Record:
         if not borders:
             return 0
 
+        clusters = []
         borders = sorted(borders)
-        cluster_location = FeatureLocation(max(0, borders[0].location.start - borders[0].extent),
-                                           min(borders[0].location.end + borders[0].extent, len(self)))
-        # create without products initially, add based on the border naming attributes
-        borders_within_cluster = [borders[0]]
-        cluster = Cluster(cluster_location, borders[0].cutoff, borders[0].extent, [])
-        if borders[0].rule:
-            cluster.detection_rules.append(borders[0].rule)
 
-        clusters_added = 0
-        for border in borders[1:]:
-            dummy_border_location = FeatureLocation(max(0, border.location.start - border.extent),
-                                                    min(border.location.end + border.extent, len(self)))
-            if cluster.overlaps_with(dummy_border_location):
-                cluster.extent = max(cluster.extent, border.extent)
-                cluster.cutoff = max(cluster.cutoff, border.cutoff)
-                start = min(cluster.location.start, border.location.start - border.extent)
-                if start < 0:
-                    start = 0
-                end = max(cluster.location.end, border.location.end + border.extent)
-                if end > len(self):
-                    end = len(self)
-                cluster.location = FeatureLocation(start, end)
-                borders_within_cluster.append(border)
-                if border.rule:
-                    cluster.detection_rules.append(border.rule)
+        for border in borders:
+            for border_sublocation in sorted( border.location.parts, key=lambda border_sublocation: border_sublocation.start ):
+                dummy_border_feature = Feature(FeatureLocation(border_sublocation.start - border.extent, border_sublocation.end + border.extent), feature_type="dummy")
+                if len(clusters) > 0:
+                    if dummy_border_feature.overlaps_with(clusters[-1]):
+                        clusters[-1].extent = max(clusters[-1].extent, border.extent)
+                        clusters[-1].cutoff = max(clusters[-1].cutoff, border.cutoff)
+                        clusters[-1].location = FeatureLocation(min(clusters[-1].location.start, dummy_border_feature.location.start), max(clusters[-1].location.end, dummy_border_feature.location.end))
+                        if border.rule:
+                            clusters[-1].detection_rules.append(border.rule)
+                        clusters[-1].borders.append(border)
+                    # no overlap with previous clusters
+                    else:
+                        cluster = Cluster(FeatureLocation(dummy_border_feature.location.start, dummy_border_feature.location.end), border.cutoff, border.extent, [])
+                        cluster.borders.append(border)
+                        clusters.append(cluster)
+
+                # first cycle, clusters empty
+                else:
+                    cluster = Cluster(FeatureLocation(dummy_border_feature.location.start, dummy_border_feature.location.end), border.cutoff, border.extent, [])
+                    cluster.borders.append(border)
+                    clusters.append(cluster)
+
+        # check if first and last clusters were supposed to be together
+        if self.is_circular and len(self.seq) - clusters[-1].location.end + clusters[0].location.start < max(clusters[0].extent,clusters[-1].extent):
+            clusters[0].location = CompoundLocation([clusters[-1].location,clusters[0].location])
+            clusters[0].borders += clusters[-1].borders
+            clusters[0].extent = max(clusters[0].extent,clusters[-1].extent)
+            clusters[0].cutoff = max(clusters[0].cutoff,clusters[-1].cutoff)
+            # if this was not just a single cluster on circular plasmid/chromosome
+            if len(clusters) > 1:
+                clusters.pop()
+
+        for cluster in clusters:
+            cluster_sublocations = []
+            for cluster_sublocation in cluster.location.parts:
+                # if at least one sublocation is on the contig's edge
+                if not self.is_circular and cluster_sublocation.start < 0 or cluster_sublocation.end > len(self.seq):
+                    cluster.contig_edge = True
+                elif not cluster.contig_edge:
+                    cluster.contig_edge = False
+                if cluster_sublocation.start < 0 and cluster_sublocation.end > len(self.seq):
+                    cluster_sublocations.append(FeatureLocation(0, len(self.seq)))
+                elif cluster_sublocation.start < 0:
+                    cluster_sublocations.append(FeatureLocation(0, cluster_sublocation.end))
+                elif cluster_sublocation.end > len(self.seq):
+                    cluster_sublocations.append(FeatureLocation(cluster_sublocation.start, len(self.seq)))
+                else:
+                    cluster_sublocations.append(FeatureLocation(cluster_sublocation.start, cluster_sublocation.end))
+            if len(cluster_sublocations) > 1:
+                cluster.location = CompoundLocation(cluster_sublocations)
             else:
-                cluster.contig_edge = cluster.location.start == 0 or cluster.location.end == len(self.seq)
-                for product in _build_products_from_borders(borders_within_cluster):
-                    cluster.add_product(product)
-                self.add_cluster(cluster)
-                borders_within_cluster.clear()
-                clusters_added += 1
-                cluster_location = FeatureLocation(max(0, border.location.start - border.extent),
-                                                   min(border.location.end + border.extent, len(self)))
-                cluster = Cluster(cluster_location, border.cutoff, border.extent, [])
-                borders_within_cluster.append(border)
-                if border.rule:
-                    cluster.detection_rules.append(border.rule)
+                cluster.location = cluster_sublocations
+            for product in _build_products_from_borders(cluster.borders):
+                cluster.add_product(product)
+            self.add_cluster(cluster)
 
-        # add the final cluster being built if it wasn't added already
-        cluster.contig_edge = cluster.location.start == 0 or cluster.location.end == len(self.seq)
-        for product in _build_products_from_borders(borders_within_cluster):
-            cluster.add_product(product)
-        self.add_cluster(cluster)
-        clusters_added += 1
-
-        return clusters_added
+        return len(clusters)
 
     def get_nrps_pks_cds_features(self) -> List[CDSFeature]:
         """ Returns a list of all CDS features within Clusters that contain at least

@@ -209,8 +209,8 @@ def run_detection(record: Record, options: ConfigType,
 
     # create merged clusters
     record.create_clusters_from_borders(predictions)
-    for cluster in record.get_clusters():
-        cluster.trim_overlapping()
+    #for cluster in record.get_clusters():
+        # cluster.trim_overlapping()
 
     if not record.get_clusters():
         logging.debug("No clusters detected, skipping record")
