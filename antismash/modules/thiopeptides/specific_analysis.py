@@ -26,21 +26,21 @@ class ThioResults(module_results.ModuleResults):
 
     def __init__(self, record_id: str) -> None:
         super().__init__(record_id)
-        self.regions_with_motifs = set()  # type: Set[secmet.Region]
-        # to track CDSs found with find_all_orfs and within which regions they were found
+        self.clusters_with_motifs = set()  # type: Set[secmet.Cluster]
+        # to track CDSs found with find_all_orfs and within which clusters they were found
         self.cds_features = defaultdict(list)  # type: Dict[int, List[secmet.CDSFeature]]
         # to track the motifs created
         self.motifs = []  # type: List[ThiopeptideMotif]
 
     def to_json(self) -> Dict[str, Any]:
         """ Converts the results to JSON format """
-        cds_features_by_region = {key: [(str(feature.location), feature.get_name()) for feature in features]
-                                  for key, features in self.cds_features.items()}
+        cds_features_by_cluster = {key: [(str(feature.location), feature.get_name()) for feature in features]
+                                   for key, features in self.cds_features.items()}
         return {"record_id": self.record_id,
                 "schema_version": ThioResults.schema_version,
-                "regions with motifs": [region.get_region_number() for region in self.regions_with_motifs],
+                "clusters with motifs": [cluster.get_cluster_number() for cluster in self.clusters_with_motifs],
                 "motifs": [motif.to_json() for motif in self.motifs],
-                "cds_features": cds_features_by_region}
+                "cds_features": cds_features_by_cluster}
 
     @staticmethod
     def from_json(json: Dict, record: secmet.Record) -> "ThioResults":
@@ -51,12 +51,12 @@ class ThioResults(module_results.ModuleResults):
         results = ThioResults(json["record_id"])
         for motif in json["motifs"]:
             results.motifs.append(ThiopeptideMotif.from_json(motif, record))
-        for region in json["regions with motifs"]:
-            results.regions_with_motifs.add(record.get_region(region))
-        for region, features in json["cds_features"]:
+        for cluster in json["clusters with motifs"]:
+            results.clusters_with_motifs.add(record.get_cluster(cluster))
+        for cluster, features in json["cds_features"]:
             for location, name in features:
                 cds = all_orfs.create_feature_from_location(record, location, label=name)
-                results.cds_features[region].append(cds)
+                results.cds_features[cluster].append(cds)
         return results
 
     def add_to_record(self, record: secmet.Record) -> None:
@@ -332,11 +332,11 @@ def predict_cleavage_site(query_hmmfile: str, target_sequence: str, threshold: f
     return None, None, best_score
 
 
-def predict_type_from_region(found_domains: Set[str]) -> str:
-    """ Predict the thiopeptide type from the region domains
+def predict_type_from_cluster(found_domains: Set[str]) -> str:
+    """ Predict the thiopeptide type from the cluster domains
 
         Arguments:
-            found_domains: the set of domain ids found in the region
+            found_domains: the set of domain ids found in the cluster
 
         Returns:
             the thiopeptide type as a string
@@ -351,27 +351,26 @@ def predict_type_from_region(found_domains: Set[str]) -> str:
     return 'Type III'
 
 
-def get_detected_domains(region: secmet.Region) -> Set[str]:
-    """ Gathers all detected domain ids from a region. Includes detection of
+def get_detected_domains(cluster: secmet.Cluster) -> Set[str]:
+    """ Gathers all detected domain ids from a cluster. Includes detection of
         some extra HMM profiles specific to thiopeptides.
 
         Arguments:
-            region: the Region to gather domains from
+            cluster: the Cluster to gather domains from
 
         Return:
             a set of domain ids
     """
     found_domains = []  # type: List[str]
     # Gather biosynthetic domains
-    for feature in region.cds_children:
+    for feature in cluster.cds_children:
         if not feature.sec_met:
             continue
         found_domains.extend(feature.sec_met.domain_ids)
 
     # Gather non-biosynthetic domains
-    region_features = region.cds_children
-    region_fasta = fasta.get_fasta_from_features(region_features)
-    non_biosynthetic_hmms_by_id = run_non_biosynthetic_phmms(region_fasta)
+    cluster_fasta = fasta.get_fasta_from_features(cluster.cds_children)
+    non_biosynthetic_hmms_by_id = run_non_biosynthetic_phmms(cluster_fasta)
     non_biosynthetic_hmms_found = []  # type: List[str]
     for hsps_found_for_this_id in non_biosynthetic_hmms_by_id.values():
         for hsp in hsps_found_for_this_id:
@@ -382,7 +381,7 @@ def get_detected_domains(region: secmet.Region) -> Set[str]:
     return set(found_domains)
 
 
-def run_non_biosynthetic_phmms(region_fasta: str) -> Dict[str, Any]:
+def run_non_biosynthetic_phmms(cluster_fasta: str) -> Dict[str, Any]:
     """ Try to identify cleavage site using pHMM """
     with open(path.get_full_path(__file__, "data", "non_biosyn_hmms", "hmmdetails.txt"), "r") as handle:
         hmmdetails = [line.split("\t") for line in handle.read().splitlines() if line.count("\t") == 3]
@@ -390,7 +389,7 @@ def run_non_biosynthetic_phmms(region_fasta: str) -> Dict[str, Any]:
     non_biosynthetic_hmms_by_id = defaultdict(list)  # type: Dict[str, Any]
     for sig in signature_profiles:
         sig.path = path.get_full_path(__file__, "data", "non_biosyn_hmms", sig.path.rpartition(os.sep)[2])
-        runresults = subprocessing.run_hmmsearch(sig.path, region_fasta)
+        runresults = subprocessing.run_hmmsearch(sig.path, cluster_fasta)
         for runresult in runresults:
             # Store result if it is above cut-off
             for hsp in runresult.hsps:
@@ -431,7 +430,7 @@ def determine_precursor_peptide_candidate(query: secmet.CDSFeature, domains: Set
 
         Arguments:
             query: the CDS feature to check for motifs
-            domains: the set of domain ids found in the region
+            domains: the set of domain ids found in the cluster
 
         Returns:
             a Thiopeptide instance if a valid precursor found, otherwise None
@@ -505,7 +504,7 @@ def run_thiopred(query: secmet.CDSFeature, thio_type: str, domains: Set[str]) ->
         Arguments:
             query: the CDS feature to analyse
             thio_type: the suspected type of the thiopeptide
-            domains: the set of domains found within the region containing the query
+            domains: the set of domains found within the cluster containing the query
 
         Returns:
             A Thiopeptide instance if a precursor is found, otherwise None
@@ -631,20 +630,20 @@ def result_vec_to_feature(orig_feature: secmet.CDSFeature, res_vec: Thiopeptide)
 
 
 def specific_analysis(record: secmet.Record) -> ThioResults:
-    """ Runs thiopeptide prediction over all region features and any extra ORFs
+    """ Runs thiopeptide prediction over all cluster features and any extra ORFs
         that are found not overlapping with existing features
     """
     results = ThioResults(record.id)
-    for region in record.get_regions():
-        if "thiopeptide" not in region.products:
+    for cluster in record.get_clusters():
+        if cluster.product != "thiopeptide":
             continue
 
         # Find candidate ORFs that are not yet annotated
-        new_orfs = all_orfs.find_all_orfs(record, region)
+        new_orfs = all_orfs.find_all_orfs(record, cluster)
 
-        thio_features = list(region.cds_children) + new_orfs
-        domains = get_detected_domains(region)
-        thio_type = predict_type_from_region(domains)
+        thio_features = list(cluster.cds_children) + new_orfs
+        domains = get_detected_domains(cluster)
+        thio_type = predict_type_from_cluster(domains)
 
         amidation = predict_amidation(domains)
 
@@ -658,8 +657,8 @@ def specific_analysis(record: secmet.Record) -> ThioResults:
                 result_vec.amidation = True
             new_feature = result_vec_to_feature(thio_feature, result_vec)
             if thio_feature in new_orfs:
-                results.cds_features[region.get_region_number()].append(thio_feature)
+                results.cds_features[cluster.get_cluster_number()].append(thio_feature)
             results.motifs.append(new_feature)
-            results.regions_with_motifs.add(region)
+            results.clusters_with_motifs.add(cluster)
     logging.debug("Thiopeptides marked %d motifs", len(results.motifs))
     return results
