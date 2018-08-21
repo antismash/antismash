@@ -9,7 +9,6 @@ import unittest
 from antismash.common.secmet.locations import (
     convert_protein_position_to_dna,
     location_bridges_origin as is_bridged,
-    split_origin_bridging_location as splitter,
     FeatureLocation,
     CompoundLocation
 )
@@ -124,60 +123,3 @@ class TestBridgeDetection(unittest.TestCase):
         pairs = [(9, 12), (0, 3)]
         assert is_bridged(build_compound(pairs, 1))
         assert not is_bridged(build_compound(pairs, None))
-
-
-class TestBridgedSplit(unittest.TestCase):
-    def check_pairs(self, parts, pairs):
-        assert [(int(part.start), int(part.end)) for part in parts] == pairs
-
-    def test_simple_forward(self):
-        loc = build_compound([(9, 12), (0, 3)], 1)
-        lower, upper = splitter(loc)
-        self.check_pairs(lower, [(0, 3)])
-        self.check_pairs(upper, [(9, 12)])
-
-    def test_simple_reverse(self):
-        loc = build_compound([(0, 3), (9, 12)], -1)
-        lower, upper = splitter(loc)
-        self.check_pairs(lower, [(0, 3)])
-        self.check_pairs(upper, [(9, 12)])
-
-    def test_extras_forward(self):
-        loc = build_compound([(15, 18), (0, 3), (6, 9)], 1)
-        lower, upper = splitter(loc)
-        self.check_pairs(lower, [(0, 3), (6, 9)])
-        self.check_pairs(upper, [(15, 18)])
-
-        loc = build_compound([(6, 9), (15, 18), (0, 3)], 1)
-        lower, upper = splitter(loc)
-        self.check_pairs(lower, [(0, 3)])
-        self.check_pairs(upper, [(6, 9), (15, 18)])
-
-    def test_extras_reverse(self):
-        loc = build_compound([(6, 9), (0, 3), (15, 18)], -1)
-        lower, upper = splitter(loc)
-        self.check_pairs(lower, [(6, 9), (0, 3)])
-        self.check_pairs(upper, [(15, 18)])
-
-        loc = build_compound([(0, 3), (15, 18), (6, 9)], -1)
-        lower, upper = splitter(loc)
-        self.check_pairs(lower, [(0, 3)])
-        self.check_pairs(upper, [(15, 18), (6, 9)])
-
-    def test_not_bridging_forward(self):
-        loc = build_compound([(0, 3), (9, 12)], 1)
-        with self.assertRaisesRegex(ValueError, "Location does not bridge origin"):
-            print(splitter(loc))
-
-    def test_not_bridging_reverse(self):
-        loc = build_compound([(9, 12), (0, 3)], -1)
-        with self.assertRaisesRegex(ValueError, "Location does not bridge origin"):
-            print(splitter(loc))
-
-    def test_bad_strand(self):
-        loc = build_compound([(9, 12), (0, 3)], -1)
-        loc.parts[0].strand = 1
-        loc.parts[1].strand = -1
-        assert loc.strand is None
-        with self.assertRaisesRegex(ValueError, "Cannot separate bridged location without a valid strand"):
-            print(splitter(loc))

@@ -90,38 +90,3 @@ def location_bridges_origin(location: CompoundLocation) -> bool:
             if part.start >= location.parts[i].end:
                 return True
     return False
-
-
-def split_origin_bridging_location(location: CompoundLocation) -> Tuple[
-                                                      List[FeatureLocation], List[FeatureLocation]]:
-    """ Splits a CompoundLocation into two sections.
-        The first contains the low-position parts (immediately after the origin
-        in a forward direction), the second handles the high-position parts.
-
-        Arguments:
-            location: the CompoundLocation to split
-
-        Returns:
-            a tuple of lists, each list containing one or more FeatureLocations
-    """
-    lower = []  # type: List[FeatureLocation]
-    upper = []  # type: List[FeatureLocation]
-    if location.strand == 1:
-        for part in location.parts:
-            if not upper or part.start > upper[-1].end:
-                upper.append(part)
-            else:
-                lower.append(part)
-    elif location.strand == -1:
-        for part in location.parts:
-            if not lower or part.start < lower[-1].end:
-                lower.append(part)
-            else:
-                upper.append(part)
-    else:
-        raise ValueError("Cannot separate bridged location without a valid strand")
-
-    if not (lower and upper):
-        raise ValueError("Location does not bridge origin: %s" % location)
-
-    return lower, upper
