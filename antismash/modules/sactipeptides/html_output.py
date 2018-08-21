@@ -3,12 +3,15 @@
 
 """ Handles HTML output for sactipeptides """
 
+from collections import defaultdict
 from typing import List
+from typing import Dict  # comment hint, pylint: disable=unused-import
 
 from jinja2 import FileSystemLoader, Environment, StrictUndefined
 
 from antismash.common import path
 from antismash.common.secmet import Prepeptide, Region
+from antismash.common.secmet import CDSMotif # comment hint, pylint: disable=unused-import
 from antismash.common.layers import RegionLayer, RecordLayer, OptionsLayer
 
 from .specific_analysis import SactiResults
@@ -26,9 +29,11 @@ def generate_details_div(region_layer: RegionLayer, results: SactiResults,
     env = Environment(loader=FileSystemLoader(path.get_full_path(__file__, 'templates')),
                       autoescape=True, undefined=StrictUndefined)
     template = env.get_template('details.html')
-    motifs_in_region = {}
-    for locus in results.regions.get(region_layer.get_region_number(), []):
-        motifs_in_region[locus] = results.motifs_by_locus[locus]
+    motifs_in_region = defaultdict(list)  # type: Dict[str, List[CDSMotif]]
+    for locus, motifs in results.motifs_by_locus.items():
+        for motif in motifs:
+            if motif.is_contained_by(region_layer.region_feature):
+                motifs_in_region[locus].append(motif)
     details_div = template.render(record=record_layer,
                                   region=SactipeptideLayer(record_layer, region_layer.region_feature),
                                   options=options_layer,
@@ -44,9 +49,11 @@ def generate_sidepanel(region_layer: RegionLayer, results: SactiResults,
                       autoescape=True, undefined=StrictUndefined)
     template = env.get_template('sidepanel.html')
     region = SactipeptideLayer(record_layer, region_layer.region_feature)
-    motifs_in_region = {}
-    for locus in results.regions.get(region_layer.get_region_number(), []):
-        motifs_in_region[locus] = results.motifs_by_locus[locus]
+    motifs_in_region = defaultdict(list)  # type: Dict[str, List[CDSMotif]]
+    for locus, motifs in results.motifs_by_locus.items():
+        for motif in motifs:
+            if motif.is_contained_by(region_layer.region_feature):
+                motifs_in_region[locus].append(motif)
     sidepanel = template.render(record=record_layer,
                                 region=region,
                                 options=options_layer,
