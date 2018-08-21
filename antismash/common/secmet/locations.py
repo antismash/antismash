@@ -27,45 +27,31 @@ def convert_protein_position_to_dna(start: int, end: int, location: FeatureLocat
     """
     if not 0 <= start < end <= len(location) // 3:
         raise ValueError("Protein positions %d and %d must be contained by %s" % (start, end, location))
-    if location.strand == -1:
-        dna_start = location.start + len(location) - end * 3
-        dna_end = location.start + len(location) - start * 3
-    else:
-        dna_start = location.start + start * 3
-        dna_end = location.start + end * 3
+    dna_start = start * 3
+    dna_end = end * 3
 
-    # only CompoundLocations are complicated
-    if not isinstance(location, CompoundLocation):
-        if not location.start <= dna_start < dna_end <= location.end:
-            raise ValueError(("Converted coordinates %d..%d "
-                              "out of bounds for location %s") % (dna_start, dna_end, location))
-        return dna_start, dna_end
-
-    parts = sorted(location.parts, key=lambda x: x.start)
-    gap = 0
-    last_end = parts[0].start
+    processed = 0
+    last_end = location.bio_start
     start_found = False
     end_found = False
-    for part in parts:
+    for part in location.parts:
         if start_found and end_found:
             break
-        gap += part.start - last_end
-        if not start_found and dna_start + gap in part:
+        if not start_found and dna_start <= len(part) + processed:
             start_found = True
-            dna_start = dna_start + gap
-        if not end_found and dna_end + gap - 1 in part:
+            dna_start = part.bio_start - dna_start + processed if location.strand == -1 else part.bio_start + dna_start - processed
+        if not end_found and dna_end <= len(part) + processed:
             end_found = True
-            dna_end = dna_end + gap
-
-        last_end = part.end
+            dna_end = part.bio_start - dna_end + processed if location.strand == -1 else part.bio_start + dna_end - processed
+        processed += len(part)
 
     assert start_found
     assert end_found
 
-    if not location.start <= dna_start < dna_end <= location.end:
-        raise ValueError(("Converted coordinates %d..%d "
-                          "out of bounds for location %s") % (dna_start, dna_end, location))
-    return dna_start, dna_end
+    if location.strand == -1:
+        return dna_end, dna_start
+    else:
+        return dna_start, dna_end
 
 
 def location_bridges_origin(location: CompoundLocation) -> bool:
