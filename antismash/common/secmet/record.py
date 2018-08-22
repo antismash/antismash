@@ -89,6 +89,7 @@ class Record:
         except AttributeError:
             raise AttributeError("Record does not support dynamically adding attributes")
 
+    @property
     def is_circular(self) -> bool:
         """ Returns True if the genome is circular """
         return self._record.annotations.get("topology", "").lower() == "circular"

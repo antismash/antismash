@@ -1,0 +1,232 @@
+/* colour definitions for secondary metabolite types */
+
+.secmet (@fg: black, @bg: white, @highlight: orangered) {
+    background-color: @bg;
+    a, a:link, a:visited {
+        color: @fg;
+    }
+    &.active {
+        border-color: @highlight;
+        border-width: 2px;
+        border-style: solid;
+    }
+    &:hover {
+        background-color: screen(@bg, #666666);
+    }
+}
+
+.hybrid {
+    .secmet(midnightblue, lightsteelblue, midnightblue);
+}
+
+.pks {
+    .secmet(purple, sandybrown, purple);
+}
+
+.pigment {
+    .secmet(white, peru);
+}
+
+.hydrocarbon {
+    .secmet(white, purple);
+}
+
+.ripp {
+    .secmet(white, royalblue);
+}
+
+.t1pks {
+    .pks;
+}
+
+.transatpks {
+    .pks;
+}
+
+.t2pks {
+    .pks;
+}
+
+.t3pks {
+    .pks;
+}
+
+.otherks {
+    .pks;
+}
+
+.ppysks {
+    .pks;
+}
+
+.arylpolyene {
+    .pigment;
+}
+
+.resorcinol {
+    .hydrocarbon;
+}
+
+.ladderane {
+    .hydrocarbon;
+}
+
+.pufa {
+    .hydrocarbon;
+}
+
+.nrps {
+    .secmet(white, seagreen);
+}
+
+.nrpsfragment {
+    .nrps;
+}
+
+.terpene {
+    .hydrocarbon;
+}
+
+.lantibiotic {
+    .secmet(blue, #ffff77, blue);
+}
+
+.lanthipeptide {
+    .lantibiotic
+}
+
+.bacteriocin {
+    .ripp;
+}
+
+.thiopeptide {
+    .secmet(black, gold, black);
+}
+
+.linaridin {
+    .ripp;
+}
+
+.cyanobactin {
+    .ripp;
+}
+
+.glycocin {
+    .ripp;
+}
+
+.lap {
+    .ripp;
+}
+
+.lassopeptide {
+    .ripp;
+}
+
+.sactipeptide {
+    .ripp;
+}
+
+.bottromycin {
+    .ripp;
+}
+
+.head_to_tail {
+    .ripp;
+}
+
+.microviridin {
+    .ripp;
+}
+
+.proteusin {
+    .ripp;
+}
+
+.blactam {
+    .secmet(black, aliceblue, black);
+}
+
+.amglyccycl {
+    .secmet(black, yellowgreen, black);
+}
+
+.aminocoumarin {
+    .secmet(black, yellowgreen, black);
+}
+
+.siderophore {
+    .secmet(white, crimson, blue);
+}
+
+.ectoine {
+    .secmet(firebrick, yellowgreen, firebrick);
+}
+
+.butyrolactone {
+    .secmet(white, mediumpurple);
+}
+
+.indole {
+    .secmet(black, peachpuff, black);
+}
+
+.nucleoside {
+    .secmet(black, antiquewhite, black);
+}
+
+.phosphoglycolipid {
+    .secmet(black, yellowgreen, black);
+}
+
+.melanin {
+    .pigment;
+}
+
+.oligosaccharide {
+    .secmet(black, burlywood, black);
+}
+
+.furan {
+    .hydrocarbon;
+}
+
+.hserlactone {
+    .secmet(black, tan, black);
+}
+
+.acyl_amino_acids {
+    .secmet(black, tan, black);
+}
+
+.phenazine {
+    .secmet(black, plum, black);
+}
+
+.phosphonate {
+    .secmet(black, mediumaquamarine, black);
+}
+
+.fused {
+    .ripp;
+}
+
+.pbde {
+    .hydrocarbon;
+}
+
+.other {
+    .secmet(lightsteelblue, midnightblue);
+}
+
+.cf_putative {
+    .secmet(black, #f2f2f2, black);
+}
+
+.cf_saccharide {
+    .cf_putative;
+}
+
+.cf_fatty_acid {
+    .cf_putative;
+}
