@@ -550,28 +550,29 @@ class Record:
         clusters = []
         borders = sorted(borders)
 
-        for border in borders:
-            for border_sublocation in sorted( border.location.parts, key=lambda border_sublocation: border_sublocation.start ):
-                dummy_border_feature = Feature(FeatureLocation(border_sublocation.start - border.extent, border_sublocation.end + border.extent), feature_type="dummy")
-                if len(clusters) > 0:
-                    if dummy_border_feature.overlaps_with(clusters[-1]):
-                        clusters[-1].extent = max(clusters[-1].extent, border.extent)
-                        clusters[-1].cutoff = max(clusters[-1].cutoff, border.cutoff)
-                        clusters[-1].location = FeatureLocation(min(clusters[-1].location.start, dummy_border_feature.location.start), max(clusters[-1].location.end, dummy_border_feature.location.end))
-                        if border.rule:
-                            clusters[-1].detection_rules.append(border.rule)
-                        clusters[-1].borders.append(border)
-                    # no overlap with previous clusters
-                    else:
-                        cluster = Cluster(FeatureLocation(dummy_border_feature.location.start, dummy_border_feature.location.end), border.cutoff, border.extent, [])
-                        cluster.borders.append(border)
-                        clusters.append(cluster)
-
-                # first cycle, clusters empty
+        for (border, border_sublocation) in sorted ([ (border, border_sublocation) for border in borders for border_sublocation in border.location.parts ], key=lambda border_sublocation: border_sublocation[1].start ):
+            dummy_border_feature = Feature(FeatureLocation(border_sublocation.start - border.extent, border_sublocation.end + border.extent), feature_type="dummy")
+            if len(clusters) > 0:
+                if dummy_border_feature.overlaps_with(clusters[-1]):
+                    clusters[-1].extent = max(clusters[-1].extent, border.extent)
+                    clusters[-1].cutoff = max(clusters[-1].cutoff, border.cutoff)
+                    clusters[-1].location = FeatureLocation(min(clusters[-1].location.start, dummy_border_feature.location.start), max(clusters[-1].location.end, dummy_border_feature.location.end))
+                    if border.rule:
+                        clusters[-1].detection_rules.append(border.rule)
+                    clusters[-1].borders.append(border)
+                # no overlap with previous clusters
                 else:
                     cluster = Cluster(FeatureLocation(dummy_border_feature.location.start, dummy_border_feature.location.end), border.cutoff, border.extent, [])
+                    cluster.location = FeatureLocation(dummy_border_feature.location.start, dummy_border_feature.location.end)
                     cluster.borders.append(border)
                     clusters.append(cluster)
+
+            # first cycle, clusters empty
+            else:
+                cluster = Cluster(FeatureLocation(dummy_border_feature.location.start, dummy_border_feature.location.end), border.cutoff, border.extent, [])
+                cluster.location = FeatureLocation(dummy_border_feature.location.start, dummy_border_feature.location.end)
+                cluster.borders.append(border)
+                clusters.append(cluster)
 
         # check if first and last clusters were supposed to be together
         if self.is_circular and len(self.seq) - clusters[-1].location.end + clusters[0].location.start < max(clusters[0].extent,clusters[-1].extent):
@@ -602,7 +603,7 @@ class Record:
             if len(cluster_sublocations) > 1:
                 cluster.location = CompoundLocation(cluster_sublocations)
             else:
-                cluster.location = cluster_sublocations
+                cluster.location = FeatureLocation(cluster_sublocations[0].start, cluster_sublocations[0].end)
             for product in _build_products_from_borders(cluster.borders):
                 cluster.add_product(product)
             self.add_cluster(cluster)
