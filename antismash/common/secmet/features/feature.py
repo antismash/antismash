@@ -129,16 +129,30 @@ class Feature:
                 or location.start in self.location
                 or location.end - 1 in self.location)
 
-    def is_contained_by(self, other: Union["Feature", FeatureLocation]) -> bool:
+    def is_contained_by(self, other: Union["Feature", FeatureLocation, CompoundLocation]) -> bool:
         """ Returns True if the given feature is wholly contained by this
             feature.
         """
-        end = self.location.end - 1  # to account for the non-inclusive end
+        sublocations_found = 0
         if isinstance(other, Feature):
-            return self.location.start in other.location and end in other.location
+            for self_sublocation in self.location.parts:
+                for other_sublocation in other.location.parts:
+                    # -1 to account for the non-inclusive end
+                    if self_sublocation.start in other_sublocation and self_sublocation.end - 1 in other_sublocation:
+                        sublocations_found = sublocations_found + 1
+                        break # break in order to avoid scoring the query sublocation twice in weirdly overlapping subjects
+            return len(self.location.parts) == sublocations_found
+
         if isinstance(other, FeatureLocation):
-            return self.location.start in other and end in other
-        raise TypeError("Container must be a Feature or a FeatureLocation, not %s" % type(other))
+            for self_sublocation in self.location.parts:
+                for other_sublocation in other.parts:
+                    # -1 to account for the non-inclusive end
+                    if self_sublocation.start in other_sublocation and self_sublocation.end - 1 in other_sublocation:
+                        sublocations_found += 1
+                        break # break in order to avoid scoring the query sublocation twice in weirdly overlapping subjects
+            return len(self.location.parts) == sublocations_found
+
+        raise TypeError("Container must be a Feature or a FeatureLocation or a CompoundLocation, not %s" % type(other))
 
     def to_biopython(self, qualifiers: Dict[str, Any] = None) -> List[SeqFeature]:
         """ Converts this feature into one or more SeqFeature instances.
