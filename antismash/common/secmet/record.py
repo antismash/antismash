@@ -34,11 +34,6 @@ from .features import (
     Prepeptide,
 )
 
-from .locations import (
-    location_bridges_origin,
-    split_origin_bridging_location
-)
-
 
 class Record:
     """A record containing secondary metabolite clusters"""
@@ -464,64 +459,8 @@ class Record:
                 feature.ref = None
                 feature.ref_db = None
 
-            locations_adjusted = False
-            name_modified = False
-
-            if record.is_circular() and location_bridges_origin(feature.location):
-                locations_adjusted = True
-                original_location = feature.location
-                lower, upper = split_origin_bridging_location(feature.location)
-
-                if feature.type in ['CDS', 'gene']:
-                    name_modified = True
-                    original_gene_name = feature.qualifiers.get("gene", [None])[0]
-                    gene_name = original_gene_name
-                    locus_tag = feature.qualifiers.get("locus_tag", [None])[0]
-                    # if neither exist, set the gene name as it is less precise
-                    # in meaning
-                    if not gene_name and not locus_tag:
-                        gene_name = "bridge"
-
-                # nuke any translation, since it's now out of date
-                feature.qualifiers.pop('translation', None)
-
-                # add a separate feature for the upper section
-                if len(upper) > 1:
-                    feature.location = CompoundLocation(upper, original_location.operator)
-                else:
-                    feature.location = upper[0]
-                if name_modified:
-                    if gene_name:
-                        feature.qualifiers["gene"] = [gene_name + "_UPPER"]
-                    if locus_tag:
-                        feature.qualifiers["locus_tag"] = [locus_tag + "_UPPER"]
-                record.add_biopython_feature(feature)
-
-                # adjust the current feature to only be the lower section
-                if len(lower) > 1:
-                    feature.location = CompoundLocation(lower, original_location.operator)
-                else:
-                    feature.location = lower[0]
-                if name_modified:
-                    if gene_name:
-                        feature.qualifiers["gene"] = [gene_name + "_LOWER"]
-                    if locus_tag:
-                        feature.qualifiers["locus_tag"] = [locus_tag + "_LOWER"]
-
             record.add_biopython_feature(feature)
 
-            # reset back to how the feature looked originally
-            if locations_adjusted:
-                feature.location = original_location
-                if name_modified:
-                    if not locus_tag:
-                        feature.qualifiers.pop("locus_tag", "")
-                    else:
-                        feature.qualifiers["locus_tag"][0] = locus_tag
-                    if not original_gene_name:
-                        feature.qualifiers.pop("gene", "")
-                    else:
-                        feature.qualifiers["gene"][0] = original_gene_name
         return record
 
     def _link_cds_to_parent(self, cds: CDSFeature) -> None:
@@ -537,19 +476,10 @@ class Record:
     def _link_cluster_to_cds_features(self, cluster: Cluster) -> None:
         """ connect the given cluster to every CDS feature within it's range """
         assert isinstance(cluster, Cluster)
-        # quickly find the first cds with equal start
-        index = bisect.bisect_left(self._cds_features, cluster)
-        # move backwards until we find one that doesn't overlap
-        while index >= 1 and self._cds_features[index - 1].is_contained_by(cluster):
-            index -= 1
-        # move forwards, adding to the cluster until a cds doesn't overlap
-        while index < len(self._cds_features):
-            cds = self._cds_features[index]
-            if not cds.is_contained_by(cluster):
-                break
-            cluster.add_cds(cds)
-            cds.cluster = cluster  # TODO: allow for multiple parent clusters?
-            index += 1
+        for cds in self._cds_features:
+            if cds.is_contained_by(cluster):
+                cluster.add_cds(cds)
+                cds.cluster = cluster  # TODO: allow for multiple parent clusters?
 
     def get_aa_translation_from_location(self, location: FeatureLocation,
                                          transl_table: Union[str, int] = None) -> Seq:
@@ -608,54 +538,68 @@ class Record:
         if not borders:
             return 0
 
+        clusters = []
         borders = sorted(borders)
-        cluster_location = FeatureLocation(max(0, borders[0].location.start - borders[0].extent),
-                                           min(borders[0].location.end + borders[0].extent, len(self)))
-        # create without products initially, add based on the border naming attributes
-        borders_within_cluster = [borders[0]]
-        cluster = Cluster(cluster_location, borders[0].cutoff, borders[0].extent, [])
-        if borders[0].rule:
-            cluster.detection_rules.append(borders[0].rule)
 
-        clusters_added = 0
-        for border in borders[1:]:
-            dummy_border_location = FeatureLocation(max(0, border.location.start - border.extent),
-                                                    min(border.location.end + border.extent, len(self)))
-            if cluster.overlaps_with(dummy_border_location):
-                cluster.extent = max(cluster.extent, border.extent)
-                cluster.cutoff = max(cluster.cutoff, border.cutoff)
-                start = min(cluster.location.start, border.location.start - border.extent)
-                if start < 0:
-                    start = 0
-                end = max(cluster.location.end, border.location.end + border.extent)
-                if end > len(self):
-                    end = len(self)
-                cluster.location = FeatureLocation(start, end)
-                borders_within_cluster.append(border)
-                if border.rule:
-                    cluster.detection_rules.append(border.rule)
+        for (border, border_sublocation) in sorted ([ (border, border_sublocation) for border in borders for border_sublocation in border.location.parts ], key=lambda border_sublocation: border_sublocation[1].start ):
+            dummy_border_feature = Feature(FeatureLocation(border_sublocation.start - border.extent, border_sublocation.end + border.extent), feature_type="dummy")
+            if len(clusters) > 0:
+                if dummy_border_feature.overlaps_with(clusters[-1]):
+                    clusters[-1].extent = max(clusters[-1].extent, border.extent)
+                    clusters[-1].cutoff = max(clusters[-1].cutoff, border.cutoff)
+                    clusters[-1].location = FeatureLocation(min(clusters[-1].location.start, dummy_border_feature.location.start), max(clusters[-1].location.end, dummy_border_feature.location.end))
+                    if border.rule:
+                        clusters[-1].detection_rules.append(border.rule)
+                    clusters[-1].borders.append(border)
+                # no overlap with previous clusters
+                else:
+                    cluster = Cluster(FeatureLocation(dummy_border_feature.location.start, dummy_border_feature.location.end), border.cutoff, border.extent, [])
+                    cluster.location = FeatureLocation(dummy_border_feature.location.start, dummy_border_feature.location.end)
+                    cluster.borders.append(border)
+                    clusters.append(cluster)
+
+            # first cycle, clusters empty
             else:
-                cluster.contig_edge = cluster.location.start == 0 or cluster.location.end == len(self.seq)
-                for product in _build_products_from_borders(borders_within_cluster):
-                    cluster.add_product(product)
-                self.add_cluster(cluster)
-                borders_within_cluster.clear()
-                clusters_added += 1
-                cluster_location = FeatureLocation(max(0, border.location.start - border.extent),
-                                                   min(border.location.end + border.extent, len(self)))
-                cluster = Cluster(cluster_location, border.cutoff, border.extent, [])
-                borders_within_cluster.append(border)
-                if border.rule:
-                    cluster.detection_rules.append(border.rule)
+                cluster = Cluster(FeatureLocation(dummy_border_feature.location.start, dummy_border_feature.location.end), border.cutoff, border.extent, [])
+                cluster.location = FeatureLocation(dummy_border_feature.location.start, dummy_border_feature.location.end)
+                cluster.borders.append(border)
+                clusters.append(cluster)
 
-        # add the final cluster being built if it wasn't added already
-        cluster.contig_edge = cluster.location.start == 0 or cluster.location.end == len(self.seq)
-        for product in _build_products_from_borders(borders_within_cluster):
-            cluster.add_product(product)
-        self.add_cluster(cluster)
-        clusters_added += 1
+        # check if first and last clusters were supposed to be together
+        if self.is_circular() and len(self.seq) - clusters[-1].location.end + clusters[0].location.start < max(clusters[0].extent,clusters[-1].extent):
+            clusters[0].location = CompoundLocation([clusters[-1].location,clusters[0].location])
+            clusters[0].borders += clusters[-1].borders
+            clusters[0].extent = max(clusters[0].extent,clusters[-1].extent)
+            clusters[0].cutoff = max(clusters[0].cutoff,clusters[-1].cutoff)
+            # if this was not just a single cluster on circular plasmid/chromosome
+            if len(clusters) > 1:
+                clusters.pop()
 
-        return clusters_added
+        for cluster in clusters:
+            cluster_sublocations = []
+            for cluster_sublocation in cluster.location.parts:
+                # if at least one sublocation is on the contig's edge
+                if not self.is_circular() and cluster_sublocation.start < 0 or cluster_sublocation.end > len(self.seq):
+                    cluster.contig_edge = True
+                elif not cluster.contig_edge:
+                    cluster.contig_edge = False
+                if cluster_sublocation.start < 0 and cluster_sublocation.end > len(self.seq):
+                    cluster_sublocations.append(FeatureLocation(0, len(self.seq)))
+                elif cluster_sublocation.start < 0:
+                    cluster_sublocations.append(FeatureLocation(0, cluster_sublocation.end))
+                elif cluster_sublocation.end > len(self.seq):
+                    cluster_sublocations.append(FeatureLocation(cluster_sublocation.start, len(self.seq)))
+                else:
+                    cluster_sublocations.append(FeatureLocation(cluster_sublocation.start, cluster_sublocation.end))
+            if len(cluster_sublocations) > 1:
+                cluster.location = CompoundLocation(cluster_sublocations)
+            else:
+                cluster.location = FeatureLocation(cluster_sublocations[0].start, cluster_sublocations[0].end)
+            for product in _build_products_from_borders(cluster.borders):
+                cluster.add_product(product)
+            self.add_cluster(cluster)
+
+        return len(clusters)
 
     def get_nrps_pks_cds_features(self) -> List[CDSFeature]:
         """ Returns a list of all CDS features within Clusters that contain at least

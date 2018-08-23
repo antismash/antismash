@@ -7,6 +7,12 @@ from typing import List, Tuple
 
 from Bio.SeqFeature import FeatureLocation, CompoundLocation
 
+# extend FeatureLocation and CompoundLocation with bio_start / bio_end until upstream implementation
+FeatureLocation.bio_start = property(lambda self: self.end if self.strand == -1 else self.start )
+FeatureLocation.bio_end = property(lambda self: self.start if self.strand == -1 else self.end )
+CompoundLocation.bio_start = property(lambda self: self.parts[0].bio_start )
+CompoundLocation.bio_end = property(lambda self: self.parts[-1].bio_end )
+
 
 def convert_protein_position_to_dna(start: int, end: int, location: FeatureLocation) -> Tuple[int, int]:
     """ Convert a protein position to a nucleotide sequence position for use in generating
@@ -21,45 +27,31 @@ def convert_protein_position_to_dna(start: int, end: int, location: FeatureLocat
     """
     if not 0 <= start < end <= len(location) // 3:
         raise ValueError("Protein positions %d and %d must be contained by %s" % (start, end, location))
-    if location.strand == -1:
-        dna_start = location.start + len(location) - end * 3
-        dna_end = location.start + len(location) - start * 3
-    else:
-        dna_start = location.start + start * 3
-        dna_end = location.start + end * 3
+    dna_start = start * 3
+    dna_end = end * 3
 
-    # only CompoundLocations are complicated
-    if not isinstance(location, CompoundLocation):
-        if not location.start <= dna_start < dna_end <= location.end:
-            raise ValueError(("Converted coordinates %d..%d "
-                              "out of bounds for location %s") % (dna_start, dna_end, location))
-        return dna_start, dna_end
-
-    parts = sorted(location.parts, key=lambda x: x.start)
-    gap = 0
-    last_end = parts[0].start
+    processed = 0
+    last_end = location.bio_start
     start_found = False
     end_found = False
-    for part in parts:
+    for part in location.parts:
         if start_found and end_found:
             break
-        gap += part.start - last_end
-        if not start_found and dna_start + gap in part:
+        if not start_found and dna_start < len(part) + processed:
             start_found = True
-            dna_start = dna_start + gap
-        if not end_found and dna_end + gap - 1 in part:
+            dna_start = part.bio_start - dna_start + processed if location.strand == -1 else part.bio_start + dna_start - processed
+        if not end_found and dna_end <= len(part) + processed:
             end_found = True
-            dna_end = dna_end + gap
-
-        last_end = part.end
+            dna_end = part.bio_start - dna_end + processed if location.strand == -1 else part.bio_start + dna_end - processed
+        processed += len(part)
 
     assert start_found
     assert end_found
 
-    if not location.start <= dna_start < dna_end <= location.end:
-        raise ValueError(("Converted coordinates %d..%d "
-                          "out of bounds for location %s") % (dna_start, dna_end, location))
-    return dna_start, dna_end
+    if location.strand == -1:
+        return dna_end, dna_start
+    else:
+        return dna_start, dna_end
 
 
 def location_bridges_origin(location: CompoundLocation) -> bool:
@@ -90,38 +82,3 @@ def location_bridges_origin(location: CompoundLocation) -> bool:
             if part.start >= location.parts[i].end:
                 return True
     return False
-
-
-def split_origin_bridging_location(location: CompoundLocation) -> Tuple[
-                                                      List[FeatureLocation], List[FeatureLocation]]:
-    """ Splits a CompoundLocation into two sections.
-        The first contains the low-position parts (immediately after the origin
-        in a forward direction), the second handles the high-position parts.
-
-        Arguments:
-            location: the CompoundLocation to split
-
-        Returns:
-            a tuple of lists, each list containing one or more FeatureLocations
-    """
-    lower = []  # type: List[FeatureLocation]
-    upper = []  # type: List[FeatureLocation]
-    if location.strand == 1:
-        for part in location.parts:
-            if not upper or part.start > upper[-1].end:
-                upper.append(part)
-            else:
-                lower.append(part)
-    elif location.strand == -1:
-        for part in location.parts:
-            if not lower or part.start < lower[-1].end:
-                lower.append(part)
-            else:
-                upper.append(part)
-    else:
-        raise ValueError("Cannot separate bridged location without a valid strand")
-
-    if not (lower and upper):
-        raise ValueError("Location does not bridge origin: %s" % location)
-
-    return lower, upper

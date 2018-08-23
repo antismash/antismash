@@ -9,14 +9,14 @@ import logging
 from typing import Any, Dict, List, Set, Tuple
 
 from Bio.SearchIO._model.hsp import HSP
+from Bio.SeqFeature import CompoundLocation
 
 from antismash.common import fasta, path, serialiser
-from antismash.common.secmet import Record, ClusterBorder, CDSFeature, FeatureLocation
+from antismash.common.secmet import Record, ClusterBorder, CDSFeature, Feature, FeatureLocation
 from antismash.common.secmet.qualifiers import GeneFunction, SecMetQualifier
 from antismash.common.subprocessing import run_hmmsearch
 from antismash.common.hmm_rule_parser import rule_parser
 from antismash.common.signature import get_signature_profiles
-
 
 class CDSResults:
     """ Tracks the detection results for a single CDS """
@@ -148,8 +148,8 @@ def remove_redundant_borders(borders: List[ClusterBorder],
 
 def find_clusters(record: Record, cds_by_cluster_type: Dict[str, Set[str]],
                   rules_by_name: Dict[str, rule_parser.DetectionRule]) -> List[ClusterBorder]:
-    """ Detects gene clusters based on the identified core genes """
-    clusters = []  # type: List[ClusterBorder]
+    """ Detects gene borders based on the identified core genes """
+    borders = []  # type: List[ClusterBorder]
 
     cds_feature_by_name = record.get_cds_name_mapping()
 
@@ -158,39 +158,42 @@ def find_clusters(record: Record, cds_by_cluster_type: Dict[str, Set[str]],
         rule = rules_by_name[cluster_type]
         cutoff = rule.cutoff
         extent = rule.extent
-        start, end = sorted([cds_features[0].location.start, cds_features[0].location.end])
-        cluster = ClusterBorder(FeatureLocation(start, end), tool="rule-based-clusters",
-                                cutoff=cutoff, extent=extent, product=cluster_type)
-        assert cds_features[0].is_contained_by(cluster)
-        assert cds_features[0] in record.get_cds_features_within_location(cluster.location)
-        clusters.append(cluster)
-        for cds in cds_features[1:]:
-            feature_start, feature_end = sorted([cds.location.start, cds.location.end])
-            dummy_location = FeatureLocation(cluster.location.start - cutoff, cluster.location.end + cutoff)
-            if cds.overlaps_with(dummy_location):
-                start = min(feature_start, start)
-                end = max(feature_end, end)
-                cluster.location = FeatureLocation(start, end)
+        for cds_feature_sublocation in sorted ([ cds_feature_sublocation for cds_feature in cds_features for cds_feature_sublocation in cds_feature.location.parts ], key=lambda cds_feature_sublocation: cds_feature_sublocation.start ):
+            if len(borders) > 0:
+                for dummy_sub_location in borders[-1].location.parts:
+                    dummy_sub_location_feature = Feature(FeatureLocation(dummy_sub_location.start - cutoff, dummy_sub_location.end + cutoff), feature_type="dummy")
+                    if dummy_sub_location_feature.overlaps_with(cds_feature_sublocation) and borders[-1].product == cluster_type:
+                        # no need to have CompoundLocation here, the only exception would be ori-split borders, but they are handled elsewhere
+                        borders[-1].location = FeatureLocation(min(dummy_sub_location.start, cds_feature_sublocation.start), max(dummy_sub_location.end, cds_feature_sublocation.end))
+                    else:
+                        borders.append(ClusterBorder(FeatureLocation(cds_feature_sublocation.start, cds_feature_sublocation.end), tool="rule-based-clusters",
+                                                cutoff=cutoff, extent=extent, product=cluster_type))
             else:
-                start = feature_start
-                end = feature_end
-                cluster = ClusterBorder(FeatureLocation(start, end), tool="rule-based-clusters",
-                                        cutoff=cutoff, extent=extent, product=cluster_type)
-                clusters.append(cluster)
+                borders.append(ClusterBorder(FeatureLocation(cds_feature_sublocation.start, cds_feature_sublocation.end), tool="rule-based-clusters",
+                                        cutoff=cutoff, extent=extent, product=cluster_type))
 
-    for cluster in clusters:
-        cluster.rule = str(rules_by_name[cluster.product].conditions)
-        if cluster.location.start < 0:
-            cluster.location = FeatureLocation(0, cluster.location.end)
-            cluster.contig_edge = True
-        if cluster.location.end > len(record):
-            cluster.location = FeatureLocation(cluster.location.start, len(record))
-            cluster.contig_edge = True
+    for border in borders:
+        border.rule = str(rules_by_name[border.product].conditions)
+        if border.location.start < 0:
+            border.location = FeatureLocation(0, border.location.end)
+            border.contig_edge = True
+        if border.location.end > len(record):
+            border.location = FeatureLocation(border.location.start, len(record))
+            border.contig_edge = True
 
-    clusters = remove_redundant_borders(clusters, rules_by_name)
+    borders = remove_redundant_borders(borders, rules_by_name)
 
-    logging.debug("%d rule-based cluster(s) found in record", len(clusters))
-    return clusters
+    # check if first and last borders of each metabolite were supposed to be together
+    if len(borders) > 1 and record.is_circular():
+        for i, border in enumerate(borders):
+            for j, border in enumerate(borders):
+                if len(record) - borders[j].location.end + borders[i].location.start < max(borders[i].cutoff,borders[j].cutoff) and borders[j].product == borders[i].product:
+                    borders[i].location = CompoundLocation([part for part in borders[j].location.parts] + [part for part in borders[i].location.parts])
+                    if len(borders) > 1:
+                        borders.remove(borders[j])
+
+    logging.debug("%d rule-based border(s) found in record", len(borders))
+    return borders
 
 
 def hsp_overlap_size(first: HSP, second: HSP) -> int:
