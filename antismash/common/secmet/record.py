@@ -566,7 +566,7 @@ class Record:
                 clusters.append(cluster)
 
         # check if first and last clusters were supposed to be together
-        if self.is_circular and len(self.seq) - clusters[-1].location.end + clusters[0].location.start < max(clusters[0].extent,clusters[-1].extent):
+        if self.is_circular() and len(self.seq) - clusters[-1].location.end + clusters[0].location.start < max(clusters[0].extent,clusters[-1].extent):
             clusters[0].location = CompoundLocation([clusters[-1].location,clusters[0].location])
             clusters[0].borders += clusters[-1].borders
             clusters[0].extent = max(clusters[0].extent,clusters[-1].extent)
@@ -579,7 +579,7 @@ class Record:
             cluster_sublocations = []
             for cluster_sublocation in cluster.location.parts:
                 # if at least one sublocation is on the contig's edge
-                if not self.is_circular and cluster_sublocation.start < 0 or cluster_sublocation.end > len(self.seq):
+                if not self.is_circular() and cluster_sublocation.start < 0 or cluster_sublocation.end > len(self.seq):
                     cluster.contig_edge = True
                 elif not cluster.contig_edge:
                     cluster.contig_edge = False
