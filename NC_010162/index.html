@@ -1,0 +1,2144 @@
+<!doctype html>
+<html>
+<head>
+  <script src="js/jquery.js"></script>
+  <script src="js/purl.js"></script>
+  <script src="js/d3.v2.js"></script>
+  <script src="js/svgene.js"></script>
+  <script src="js/jsdomain.js"></script>
+  <script src="js/clusterblast.js"></script>
+  <script src="geneclusters.js"></script>
+  <script src="js/smiles-drawer.min.js"></script>
+  <script src="js/jnj.js"></script>
+
+  <title>NC_010162 - 31 cluster(s) - antiSMASH results</title>
+  <link rel="stylesheet" type="text/css" href="css/bacteria.css">
+  <meta charset="utf-8" />
+</head>
+<body>
+  <div id="header">
+<div class="top-header">
+  <img class="antismash-logo" src="images/bacteria_logo.png" alt="antiSMASH">
+  <span class="antismash-title"><a class="main-link" href="https://antismash.secondarymetabolites.org/">antibiotics & Secondary Metabolite Analysis SHell</a><br>
+    <span class="white">Version <span id="antismash-version">5.0.0alpha-8f849ee</span></span>
+  </span>
+  <div id="icons">
+    <a class="main-link" href="https://antismash.secondarymetabolites.org/"><img src="images/bacteria_home.png" alt="home" title="Go to start page"></a>
+    <a class="help-link" href="https://antismash.secondarymetabolites.org/#!/help"><img src="images/bacteria_help.png" alt="help" title="Get help using antiSMASH"></a>
+    <a class="about-link" href="https://antismash.secondarymetabolites.org/#!/about"><img src="images/bacteria_about.png" alt="about" title="About antiSMASH"></a>
+    <a href="#" id="download"><img src="images/bacteria_download.png" alt="download" title="Download results"></a>
+    <div id="downloadmenu">
+      <ul id="downloadoptions">
+        <li><a href=NC_010162.zip>Download all results</a></li>
+        <li><a href=NC_010162.gbk> Download GenBank summary file</a></li>
+      </ul>
+    </div>
+  </div>
+</div>    <div id="buttons">
+      <span id="cluster-type">Select Gene Cluster:</span>
+      <ul id="clusterbuttons">
+        <li><div class="arrow-left" id="prev-cluster"></div></li>
+        <li class="clbutton"><a href="#">Overview</a></li>
+            <li class="clbutton bacteriocin r0c1">
+              <a href="#r0c1">1</a>
+            </li>
+            <li class="clbutton bacteriocin r0c2">
+              <a href="#r0c2">2</a>
+            </li>
+            <li class="clbutton nrps-t1pks hybrid r0c3">
+              <a href="#r0c3">3</a>
+            </li>
+            <li class="clbutton terpene r0c4">
+              <a href="#r0c4">4</a>
+            </li>
+            <li class="clbutton terpene r0c5">
+              <a href="#r0c5">5</a>
+            </li>
+            <li class="clbutton phenazine r0c6">
+              <a href="#r0c6">6</a>
+            </li>
+            <li class="clbutton otherks r0c7">
+              <a href="#r0c7">7</a>
+            </li>
+            <li class="clbutton terpene r0c8">
+              <a href="#r0c8">8</a>
+            </li>
+            <li class="clbutton bacteriocin r0c9">
+              <a href="#r0c9">9</a>
+            </li>
+            <li class="clbutton t3pks r0c10">
+              <a href="#r0c10">10</a>
+            </li>
+            <li class="clbutton t3pks r0c11">
+              <a href="#r0c11">11</a>
+            </li>
+            <li class="clbutton nrps r0c12">
+              <a href="#r0c12">12</a>
+            </li>
+            <li class="clbutton otherks-transatpks hybrid r0c13">
+              <a href="#r0c13">13</a>
+            </li>
+            <li class="clbutton ladderane r0c14">
+              <a href="#r0c14">14</a>
+            </li>
+            <li class="clbutton bacteriocin r0c15">
+              <a href="#r0c15">15</a>
+            </li>
+            <li class="clbutton nrps r0c16">
+              <a href="#r0c16">16</a>
+            </li>
+            <li class="clbutton nrps-transatpks-t1pks hybrid r0c17">
+              <a href="#r0c17">17</a>
+            </li>
+            <li class="clbutton t1pks-otherks hybrid r0c18">
+              <a href="#r0c18">18</a>
+            </li>
+            <li class="clbutton bacteriocin r0c19">
+              <a href="#r0c19">19</a>
+            </li>
+            <li class="clbutton arylpolyene r0c20">
+              <a href="#r0c20">20</a>
+            </li>
+            <li class="clbutton bacteriocin r0c21">
+              <a href="#r0c21">21</a>
+            </li>
+            <li class="clbutton terpene r0c22">
+              <a href="#r0c22">22</a>
+            </li>
+            <li class="clbutton nrps-t1pks hybrid r0c23">
+              <a href="#r0c23">23</a>
+            </li>
+            <li class="clbutton microviridin r0c24">
+              <a href="#r0c24">24</a>
+            </li>
+            <li class="clbutton phosphonate r0c25">
+              <a href="#r0c25">25</a>
+            </li>
+            <li class="clbutton bacteriocin r0c26">
+              <a href="#r0c26">26</a>
+            </li>
+            <li class="clbutton nrpsfragment r0c27">
+              <a href="#r0c27">27</a>
+            </li>
+            <li class="clbutton nrps-t1pks hybrid r0c28">
+              <a href="#r0c28">28</a>
+            </li>
+            <li class="clbutton resorcinol r0c29">
+              <a href="#r0c29">29</a>
+            </li>
+            <li class="clbutton terpene r0c30">
+              <a href="#r0c30">30</a>
+            </li>
+            <li class="clbutton thiopeptide r0c31">
+              <a href="#r0c31">31</a>
+            </li>
+        <li id="last-clbutton"><div class="arrow-right" id="next-cluster"></div></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- overview page -->
+  <div class="page" id="overview">
+      <h3>Identified secondary metabolite clusters<span id="truncated"></span></h3>
+    <table id="cluster-overview">
+      <thead>
+        <tr>
+          <th>Cluster</th>
+          <th>Type</th>
+          <th>From</th>
+          <th>To</th>
+          <th>Most similar known cluster</th>
+          <th>Similarity</th>
+          <th>MIBiG BGC-ID</th>
+        </tr>
+      </thead>
+
+      <tbody>
+            <tr class = 'separator-row'>
+              <td class = 'separator-text' colspan = 5>The following clusters are from record NC_010162:</td>
+            </tr>
+<tr class = 'odd'>
+                <td class="clbutton bacteriocin r0c1">
+                  <a href="#r0c1">Cluster 1</a>
+                </td>
+                <td>
+<a href="https://antismash.secondarymetabolites.org/help#bacteriocin" target="_blank">Bacteriocin</a>
+                </td>
+                <td class="digits">189309</td>
+                <td class="digits">200211</td>
+                <td>-</td>
+                <td class="digits similarity-text" style="background-image: linear-gradient(to left, rgba(205, 92, 92, 0.3), rgba(205, 92, 92, 0.3) 0%, #ffffff00 0%)">0%</td>
+<td>-</td>              </tr><tr class = 'even'>
+                <td class="clbutton bacteriocin r0c2">
+                  <a href="#r0c2">Cluster 2</a>
+                </td>
+                <td>
+<a href="https://antismash.secondarymetabolites.org/help#bacteriocin" target="_blank">Bacteriocin</a>
+                </td>
+                <td class="digits">305955</td>
+                <td class="digits">320650</td>
+                <td>-</td>
+                <td class="digits similarity-text" style="background-image: linear-gradient(to left, rgba(205, 92, 92, 0.3), rgba(205, 92, 92, 0.3) 0%, #ffffff00 0%)">0%</td>
+<td>-</td>              </tr><tr class = 'odd'>
+                <td class="clbutton nrps-t1pks hybrid r0c3">
+                  <a href="#r0c3">Cluster 3</a>
+                </td>
+                <td>
+<a href="https://antismash.secondarymetabolites.org/help#nrps" target="_blank">Nrps</a>-<a href="https://antismash.secondarymetabolites.org/help#t1pks" target="_blank">T1pks</a>
+                </td>
+                <td class="digits">468146</td>
+                <td class="digits">519710</td>
+                <td>-</td>
+                <td class="digits similarity-text" style="background-image: linear-gradient(to left, rgba(205, 92, 92, 0.3), rgba(205, 92, 92, 0.3) 0%, #ffffff00 0%)">0%</td>
+<td>-</td>              </tr><tr class = 'even'>
+                <td class="clbutton terpene r0c4">
+                  <a href="#r0c4">Cluster 4</a>
+                </td>
+                <td>
+<a href="https://antismash.secondarymetabolites.org/help#terpene" target="_blank">Terpene</a>
+                </td>
+                <td class="digits">611281</td>
+                <td class="digits">632282</td>
+                <td>-</td>
+                <td class="digits similarity-text" style="background-image: linear-gradient(to left, rgba(205, 92, 92, 0.3), rgba(205, 92, 92, 0.3) 0%, #ffffff00 0%)">0%</td>
+<td>-</td>              </tr><tr class = 'odd'>
+                <td class="clbutton terpene r0c5">
+                  <a href="#r0c5">Cluster 5</a>
+                </td>
+                <td>
+<a href="https://antismash.secondarymetabolites.org/help#terpene" target="_blank">Terpene</a>
+                </td>
+                <td class="digits">821883</td>
+                <td class="digits">842839</td>
+                <td>-</td>
+                <td class="digits similarity-text" style="background-image: linear-gradient(to left, rgba(205, 92, 92, 0.3), rgba(205, 92, 92, 0.3) 0%, #ffffff00 0%)">0%</td>
+<td>-</td>              </tr><tr class = 'even'>
+                <td class="clbutton phenazine r0c6">
+                  <a href="#r0c6">Cluster 6</a>
+                </td>
+                <td>
+<a href="https://antismash.secondarymetabolites.org/help#phenazine" target="_blank">Phenazine</a>
+                </td>
+                <td class="digits">997085</td>
+                <td class="digits">1017540</td>
+                <td>-</td>
+                <td class="digits similarity-text" style="background-image: linear-gradient(to left, rgba(205, 92, 92, 0.3), rgba(205, 92, 92, 0.3) 0%, #ffffff00 0%)">0%</td>
+<td>-</td>              </tr><tr class = 'odd'>
+                <td class="clbutton otherks r0c7">
+                  <a href="#r0c7">Cluster 7</a>
+                </td>
+                <td>
+<a href="https://antismash.secondarymetabolites.org/help#otherks" target="_blank">Otherks</a>
+                </td>
+                <td class="digits">1132079</td>
+                <td class="digits">1187578</td>
+                <td>-</td>
+                <td class="digits similarity-text" style="background-image: linear-gradient(to left, rgba(205, 92, 92, 0.3), rgba(205, 92, 92, 0.3) 0%, #ffffff00 0%)">0%</td>
+<td>-</td>              </tr><tr class = 'even'>
+                <td class="clbutton terpene r0c8">
+                  <a href="#r0c8">Cluster 8</a>
+                </td>
+                <td>
+<a href="https://antismash.secondarymetabolites.org/help#terpene" target="_blank">Terpene</a>
+                </td>
+                <td class="digits">1971415</td>
+                <td class="digits">1993730</td>
+                <td>-</td>
+                <td class="digits similarity-text" style="background-image: linear-gradient(to left, rgba(205, 92, 92, 0.3), rgba(205, 92, 92, 0.3) 0%, #ffffff00 0%)">0%</td>
+<td>-</td>              </tr><tr class = 'odd'>
+                <td class="clbutton bacteriocin r0c9">
+                  <a href="#r0c9">Cluster 9</a>
+                </td>
+                <td>
+<a href="https://antismash.secondarymetabolites.org/help#bacteriocin" target="_blank">Bacteriocin</a>
+                </td>
+                <td class="digits">2553055</td>
+                <td class="digits">2564542</td>
+                <td>-</td>
+                <td class="digits similarity-text" style="background-image: linear-gradient(to left, rgba(205, 92, 92, 0.3), rgba(205, 92, 92, 0.3) 0%, #ffffff00 0%)">0%</td>
+<td>-</td>              </tr><tr class = 'even'>
+                <td class="clbutton t3pks r0c10">
+                  <a href="#r0c10">Cluster 10</a>
+                </td>
+                <td>
+<a href="https://antismash.secondarymetabolites.org/help#t3pks" target="_blank">T3pks</a>
+                </td>
+                <td class="digits">2875496</td>
+                <td class="digits">2916587</td>
+                <td>-</td>
+                <td class="digits similarity-text" style="background-image: linear-gradient(to left, rgba(205, 92, 92, 0.3), rgba(205, 92, 92, 0.3) 0%, #ffffff00 0%)">0%</td>
+<td>-</td>              </tr><tr class = 'odd'>
+                <td class="clbutton t3pks r0c11">
+                  <a href="#r0c11">Cluster 11</a>
+                </td>
+                <td>
+<a href="https://antismash.secondarymetabolites.org/help#t3pks" target="_blank">T3pks</a>
+                </td>
+                <td class="digits">2924992</td>
+                <td class="digits">2966107</td>
+                <td>-</td>
+                <td class="digits similarity-text" style="background-image: linear-gradient(to left, rgba(205, 92, 92, 0.3), rgba(205, 92, 92, 0.3) 0%, #ffffff00 0%)">0%</td>
+<td>-</td>              </tr><tr class = 'even'>
+                <td class="clbutton nrps r0c12">
+                  <a href="#r0c12">Cluster 12</a>
+                </td>
+                <td>
+<a href="https://antismash.secondarymetabolites.org/help#nrps" target="_blank">Nrps</a>
+                </td>
+                <td class="digits">3186225</td>
+                <td class="digits">3236562</td>
+                <td>-</td>
+                <td class="digits similarity-text" style="background-image: linear-gradient(to left, rgba(205, 92, 92, 0.3), rgba(205, 92, 92, 0.3) 0%, #ffffff00 0%)">0%</td>
+<td>-</td>              </tr><tr class = 'odd'>
+                <td class="clbutton otherks-transatpks hybrid r0c13">
+                  <a href="#r0c13">Cluster 13</a>
+                </td>
+                <td>
+<a href="https://antismash.secondarymetabolites.org/help#otherks" target="_blank">Otherks</a>-<a href="https://antismash.secondarymetabolites.org/help#transatpks" target="_blank">Transatpks</a>
+                </td>
+                <td class="digits">4349542</td>
+                <td class="digits">4481851</td>
+                <td>-</td>
+                <td class="digits similarity-text" style="background-image: linear-gradient(to left, rgba(205, 92, 92, 0.3), rgba(205, 92, 92, 0.3) 0%, #ffffff00 0%)">0%</td>
+<td>-</td>              </tr><tr class = 'even'>
+                <td class="clbutton ladderane r0c14">
+                  <a href="#r0c14">Cluster 14</a>
+                </td>
+                <td>
+<a href="https://antismash.secondarymetabolites.org/help#ladderane" target="_blank">Ladderane</a>
+                </td>
+                <td class="digits">4668186</td>
+                <td class="digits">4710249</td>
+                <td>-</td>
+                <td class="digits similarity-text" style="background-image: linear-gradient(to left, rgba(205, 92, 92, 0.3), rgba(205, 92, 92, 0.3) 0%, #ffffff00 0%)">0%</td>
+<td>-</td>              </tr><tr class = 'odd'>
+                <td class="clbutton bacteriocin r0c15">
+                  <a href="#r0c15">Cluster 15</a>
+                </td>
+                <td>
+<a href="https://antismash.secondarymetabolites.org/help#bacteriocin" target="_blank">Bacteriocin</a>
+                </td>
+                <td class="digits">4786578</td>
+                <td class="digits">4797417</td>
+                <td>-</td>
+                <td class="digits similarity-text" style="background-image: linear-gradient(to left, rgba(205, 92, 92, 0.3), rgba(205, 92, 92, 0.3) 0%, #ffffff00 0%)">0%</td>
+<td>-</td>              </tr><tr class = 'even'>
+                <td class="clbutton nrps r0c16">
+                  <a href="#r0c16">Cluster 16</a>
+                </td>
+                <td>
+<a href="https://antismash.secondarymetabolites.org/help#nrps" target="_blank">Nrps</a>
+                </td>
+                <td class="digits">5379428</td>
+                <td class="digits">5434381</td>
+                <td>-</td>
+                <td class="digits similarity-text" style="background-image: linear-gradient(to left, rgba(205, 92, 92, 0.3), rgba(205, 92, 92, 0.3) 0%, #ffffff00 0%)">0%</td>
+<td>-</td>              </tr><tr class = 'odd'>
+                <td class="clbutton nrps-transatpks-t1pks hybrid r0c17">
+                  <a href="#r0c17">Cluster 17</a>
+                </td>
+                <td>
+<a href="https://antismash.secondarymetabolites.org/help#nrps" target="_blank">Nrps</a>-<a href="https://antismash.secondarymetabolites.org/help#transatpks" target="_blank">Transatpks</a>-<a href="https://antismash.secondarymetabolites.org/help#t1pks" target="_blank">T1pks</a>
+                </td>
+                <td class="digits">5774481</td>
+                <td class="digits">5873706</td>
+                <td>-</td>
+                <td class="digits similarity-text" style="background-image: linear-gradient(to left, rgba(205, 92, 92, 0.3), rgba(205, 92, 92, 0.3) 0%, #ffffff00 0%)">0%</td>
+<td>-</td>              </tr><tr class = 'even'>
+                <td class="clbutton t1pks-otherks hybrid r0c18">
+                  <a href="#r0c18">Cluster 18</a>
+                </td>
+                <td>
+<a href="https://antismash.secondarymetabolites.org/help#t1pks" target="_blank">T1pks</a>-<a href="https://antismash.secondarymetabolites.org/help#otherks" target="_blank">Otherks</a>
+                </td>
+                <td class="digits">6840778</td>
+                <td class="digits">6887494</td>
+                <td>-</td>
+                <td class="digits similarity-text" style="background-image: linear-gradient(to left, rgba(205, 92, 92, 0.3), rgba(205, 92, 92, 0.3) 0%, #ffffff00 0%)">0%</td>
+<td>-</td>              </tr><tr class = 'odd'>
+                <td class="clbutton bacteriocin r0c19">
+                  <a href="#r0c19">Cluster 19</a>
+                </td>
+                <td>
+<a href="https://antismash.secondarymetabolites.org/help#bacteriocin" target="_blank">Bacteriocin</a>
+                </td>
+                <td class="digits">7422498</td>
+                <td class="digits">7433307</td>
+                <td>-</td>
+                <td class="digits similarity-text" style="background-image: linear-gradient(to left, rgba(205, 92, 92, 0.3), rgba(205, 92, 92, 0.3) 0%, #ffffff00 0%)">0%</td>
+<td>-</td>              </tr><tr class = 'even'>
+                <td class="clbutton arylpolyene r0c20">
+                  <a href="#r0c20">Cluster 20</a>
+                </td>
+                <td>
+<a href="https://antismash.secondarymetabolites.org/help#arylpolyene" target="_blank">Arylpolyene</a>
+                </td>
+                <td class="digits">8295110</td>
+                <td class="digits">8340240</td>
+                <td>-</td>
+                <td class="digits similarity-text" style="background-image: linear-gradient(to left, rgba(205, 92, 92, 0.3), rgba(205, 92, 92, 0.3) 0%, #ffffff00 0%)">0%</td>
+<td>-</td>              </tr><tr class = 'odd'>
+                <td class="clbutton bacteriocin r0c21">
+                  <a href="#r0c21">Cluster 21</a>
+                </td>
+                <td>
+<a href="https://antismash.secondarymetabolites.org/help#bacteriocin" target="_blank">Bacteriocin</a>
+                </td>
+                <td class="digits">8481664</td>
+                <td class="digits">8492545</td>
+                <td>-</td>
+                <td class="digits similarity-text" style="background-image: linear-gradient(to left, rgba(205, 92, 92, 0.3), rgba(205, 92, 92, 0.3) 0%, #ffffff00 0%)">0%</td>
+<td>-</td>              </tr><tr class = 'even'>
+                <td class="clbutton terpene r0c22">
+                  <a href="#r0c22">Cluster 22</a>
+                </td>
+                <td>
+<a href="https://antismash.secondarymetabolites.org/help#terpene" target="_blank">Terpene</a>
+                </td>
+                <td class="digits">8872134</td>
+                <td class="digits">8893081</td>
+                <td>-</td>
+                <td class="digits similarity-text" style="background-image: linear-gradient(to left, rgba(205, 92, 92, 0.3), rgba(205, 92, 92, 0.3) 0%, #ffffff00 0%)">0%</td>
+<td>-</td>              </tr><tr class = 'odd'>
+                <td class="clbutton nrps-t1pks hybrid r0c23">
+                  <a href="#r0c23">Cluster 23</a>
+                </td>
+                <td>
+<a href="https://antismash.secondarymetabolites.org/help#nrps" target="_blank">Nrps</a>-<a href="https://antismash.secondarymetabolites.org/help#t1pks" target="_blank">T1pks</a>
+                </td>
+                <td class="digits">9482480</td>
+                <td class="digits">9533516</td>
+                <td>-</td>
+                <td class="digits similarity-text" style="background-image: linear-gradient(to left, rgba(205, 92, 92, 0.3), rgba(205, 92, 92, 0.3) 0%, #ffffff00 0%)">0%</td>
+<td>-</td>              </tr><tr class = 'even'>
+                <td class="clbutton microviridin r0c24">
+                  <a href="#r0c24">Cluster 24</a>
+                </td>
+                <td>
+<a href="https://antismash.secondarymetabolites.org/help#microviridin" target="_blank">Microviridin</a>
+                </td>
+                <td class="digits">10015800</td>
+                <td class="digits">10036036</td>
+                <td>-</td>
+                <td class="digits similarity-text" style="background-image: linear-gradient(to left, rgba(205, 92, 92, 0.3), rgba(205, 92, 92, 0.3) 0%, #ffffff00 0%)">0%</td>
+<td>-</td>              </tr><tr class = 'odd'>
+                <td class="clbutton phosphonate r0c25">
+                  <a href="#r0c25">Cluster 25</a>
+                </td>
+                <td>
+<a href="https://antismash.secondarymetabolites.org/help#phosphonate" target="_blank">Phosphonate</a>
+                </td>
+                <td class="digits">10170936</td>
+                <td class="digits">10212600</td>
+                <td>-</td>
+                <td class="digits similarity-text" style="background-image: linear-gradient(to left, rgba(205, 92, 92, 0.3), rgba(205, 92, 92, 0.3) 0%, #ffffff00 0%)">0%</td>
+<td>-</td>              </tr><tr class = 'even'>
+                <td class="clbutton bacteriocin r0c26">
+                  <a href="#r0c26">Cluster 26</a>
+                </td>
+                <td>
+<a href="https://antismash.secondarymetabolites.org/help#bacteriocin" target="_blank">Bacteriocin</a>
+                </td>
+                <td class="digits">10730172</td>
+                <td class="digits">10741032</td>
+                <td>-</td>
+                <td class="digits similarity-text" style="background-image: linear-gradient(to left, rgba(205, 92, 92, 0.3), rgba(205, 92, 92, 0.3) 0%, #ffffff00 0%)">0%</td>
+<td>-</td>              </tr><tr class = 'odd'>
+                <td class="clbutton nrpsfragment r0c27">
+                  <a href="#r0c27">Cluster 27</a>
+                </td>
+                <td>
+<a href="https://antismash.secondarymetabolites.org/help#nrpsfragment" target="_blank">Nrpsfragment</a>
+                </td>
+                <td class="digits">11124127</td>
+                <td class="digits">11168719</td>
+                <td>-</td>
+                <td class="digits similarity-text" style="background-image: linear-gradient(to left, rgba(205, 92, 92, 0.3), rgba(205, 92, 92, 0.3) 0%, #ffffff00 0%)">0%</td>
+<td>-</td>              </tr><tr class = 'even'>
+                <td class="clbutton nrps-t1pks hybrid r0c28">
+                  <a href="#r0c28">Cluster 28</a>
+                </td>
+                <td>
+<a href="https://antismash.secondarymetabolites.org/help#nrps" target="_blank">Nrps</a>-<a href="https://antismash.secondarymetabolites.org/help#t1pks" target="_blank">T1pks</a>
+                </td>
+                <td class="digits">11466109</td>
+                <td class="digits">11549102</td>
+                <td>-</td>
+                <td class="digits similarity-text" style="background-image: linear-gradient(to left, rgba(205, 92, 92, 0.3), rgba(205, 92, 92, 0.3) 0%, #ffffff00 0%)">0%</td>
+<td>-</td>              </tr><tr class = 'odd'>
+                <td class="clbutton resorcinol r0c29">
+                  <a href="#r0c29">Cluster 29</a>
+                </td>
+                <td>
+<a href="https://antismash.secondarymetabolites.org/help#resorcinol" target="_blank">Resorcinol</a>
+                </td>
+                <td class="digits">11773771</td>
+                <td class="digits">11814901</td>
+                <td>-</td>
+                <td class="digits similarity-text" style="background-image: linear-gradient(to left, rgba(205, 92, 92, 0.3), rgba(205, 92, 92, 0.3) 0%, #ffffff00 0%)">0%</td>
+<td>-</td>              </tr><tr class = 'even'>
+                <td class="clbutton terpene r0c30">
+                  <a href="#r0c30">Cluster 30</a>
+                </td>
+                <td>
+<a href="https://antismash.secondarymetabolites.org/help#terpene" target="_blank">Terpene</a>
+                </td>
+                <td class="digits">11907026</td>
+                <td class="digits">11928015</td>
+                <td>-</td>
+                <td class="digits similarity-text" style="background-image: linear-gradient(to left, rgba(205, 92, 92, 0.3), rgba(205, 92, 92, 0.3) 0%, #ffffff00 0%)">0%</td>
+<td>-</td>              </tr><tr class = 'odd'>
+                <td class="clbutton thiopeptide r0c31">
+                  <a href="#r0c31">Cluster 31</a>
+                </td>
+                <td>
+<a href="https://antismash.secondarymetabolites.org/help#thiopeptide" target="_blank">Thiopeptide</a>
+                </td>
+                <td class="digits">12614304</td>
+                <td class="digits">12645413</td>
+                <td>-</td>
+                <td class="digits similarity-text" style="background-image: linear-gradient(to left, rgba(205, 92, 92, 0.3), rgba(205, 92, 92, 0.3) 0%, #ffffff00 0%)">0%</td>
+<td>-</td>              </tr>      </tbody>
+    </table>
+  </div>
+
+
+<div class= "page" id='r0c1'>
+  <h3> NC_010162 - Cluster 1 - Bacteriocin</h3>
+  <div class = "content">
+    <div class ="description-container">
+      <h3> Gene cluster description </h3>
+      <div class = "cluster-download">
+        <a href = NC_010162.cluster001.gbk>Download cluster GenBank file</a>
+      </div>
+      <div class = 'description-text'>
+        NC_010162 - Gene Cluster 1. Type = bacteriocin. Location: 189309 - 200211 nt. Click on genes for more information.
+      </div>
+      <a class="cluster-rules-header" id="r0c1-rules-header" href="#r0c1">Show pHMM detection rules used</a>
+      <div class = "cluster-rules" id="r0c1-rules"></div>
+      <div id='r0c1-svg'>
+      </div>
+    </div>
+    <div class="legend">
+      <h4>Legend:</h4>
+      <div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic"></div>
+      <div class="legend-label">core biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic-additional"></div>
+      <div class="legend-label">additional biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-transport"></div>
+      <div class="legend-label">transport-related genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-regulatory"></div>
+      <div class="legend-label">regulatory genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-resistance"></div>
+      <div class="legend-label">resistance genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-other"></div>
+      <div class="legend-label">other genes</div>
+    </div>
+      </div>
+    </div>
+  </div>
+
+
+</div>
+<div class= "page" id='r0c2'>
+  <h3> NC_010162 - Cluster 2 - Bacteriocin</h3>
+  <div class = "content">
+    <div class ="description-container">
+      <h3> Gene cluster description </h3>
+      <div class = "cluster-download">
+        <a href = NC_010162.cluster002.gbk>Download cluster GenBank file</a>
+      </div>
+      <div class = 'description-text'>
+        NC_010162 - Gene Cluster 2. Type = bacteriocin. Location: 305955 - 320650 nt. Click on genes for more information.
+      </div>
+      <a class="cluster-rules-header" id="r0c2-rules-header" href="#r0c2">Show pHMM detection rules used</a>
+      <div class = "cluster-rules" id="r0c2-rules"></div>
+      <div id='r0c2-svg'>
+      </div>
+    </div>
+    <div class="legend">
+      <h4>Legend:</h4>
+      <div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic"></div>
+      <div class="legend-label">core biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic-additional"></div>
+      <div class="legend-label">additional biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-transport"></div>
+      <div class="legend-label">transport-related genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-regulatory"></div>
+      <div class="legend-label">regulatory genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-resistance"></div>
+      <div class="legend-label">resistance genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-other"></div>
+      <div class="legend-label">other genes</div>
+    </div>
+      </div>
+    </div>
+  </div>
+
+
+</div>
+<div class= "page" id='r0c3'>
+  <h3> NC_010162 - Cluster 3 - Nrps-t1pks</h3>
+  <div class="sidepanel">
+  </div>
+  <div class = "content">
+    <div class ="description-container">
+      <h3> Gene cluster description </h3>
+      <div class = "cluster-download">
+        <a href = NC_010162.cluster003.gbk>Download cluster GenBank file</a>
+      </div>
+      <div class = 'description-text'>
+        NC_010162 - Gene Cluster 3. Type = nrps-t1pks. Location: 468146 - 519710 nt. Click on genes for more information.
+      </div>
+      <a class="cluster-rules-header" id="r0c3-rules-header" href="#r0c3">Show pHMM detection rules used</a>
+      <div class = "cluster-rules" id="r0c3-rules">nrps: cds(PKS_AT and (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS))</div>
+      <div id='r0c3-svg'>
+      </div>
+    </div>
+    <div class="legend">
+      <h4>Legend:</h4>
+      <div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic"></div>
+      <div class="legend-label">core biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic-additional"></div>
+      <div class="legend-label">additional biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-transport"></div>
+      <div class="legend-label">transport-related genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-regulatory"></div>
+      <div class="legend-label">regulatory genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-resistance"></div>
+      <div class="legend-label">resistance genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-other"></div>
+      <div class="legend-label">other genes</div>
+    </div>
+      </div>
+    </div>
+        <div class="details">
+  <h3>Detailed annotation</h3>
+    
+      <div class="details-svg" id="r0c3-details-svg"></div>
+    
+</div>
+  </div>
+
+
+</div>
+<div class= "page" id='r0c4'>
+  <h3> NC_010162 - Cluster 4 - Terpene</h3>
+  <div class = "content">
+    <div class ="description-container">
+      <h3> Gene cluster description </h3>
+      <div class = "cluster-download">
+        <a href = NC_010162.cluster004.gbk>Download cluster GenBank file</a>
+      </div>
+      <div class = 'description-text'>
+        NC_010162 - Gene Cluster 4. Type = terpene. Location: 611281 - 632282 nt. Click on genes for more information.
+      </div>
+      <a class="cluster-rules-header" id="r0c4-rules-header" href="#r0c4">Show pHMM detection rules used</a>
+      <div class = "cluster-rules" id="r0c4-rules"></div>
+      <div id='r0c4-svg'>
+      </div>
+    </div>
+    <div class="legend">
+      <h4>Legend:</h4>
+      <div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic"></div>
+      <div class="legend-label">core biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic-additional"></div>
+      <div class="legend-label">additional biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-transport"></div>
+      <div class="legend-label">transport-related genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-regulatory"></div>
+      <div class="legend-label">regulatory genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-resistance"></div>
+      <div class="legend-label">resistance genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-other"></div>
+      <div class="legend-label">other genes</div>
+    </div>
+      </div>
+    </div>
+  </div>
+
+
+</div>
+<div class= "page" id='r0c5'>
+  <h3> NC_010162 - Cluster 5 - Terpene</h3>
+  <div class = "content">
+    <div class ="description-container">
+      <h3> Gene cluster description </h3>
+      <div class = "cluster-download">
+        <a href = NC_010162.cluster005.gbk>Download cluster GenBank file</a>
+      </div>
+      <div class = 'description-text'>
+        NC_010162 - Gene Cluster 5. Type = terpene. Location: 821883 - 842839 nt. Click on genes for more information.
+      </div>
+      <a class="cluster-rules-header" id="r0c5-rules-header" href="#r0c5">Show pHMM detection rules used</a>
+      <div class = "cluster-rules" id="r0c5-rules"></div>
+      <div id='r0c5-svg'>
+      </div>
+    </div>
+    <div class="legend">
+      <h4>Legend:</h4>
+      <div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic"></div>
+      <div class="legend-label">core biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic-additional"></div>
+      <div class="legend-label">additional biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-transport"></div>
+      <div class="legend-label">transport-related genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-regulatory"></div>
+      <div class="legend-label">regulatory genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-resistance"></div>
+      <div class="legend-label">resistance genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-other"></div>
+      <div class="legend-label">other genes</div>
+    </div>
+      </div>
+    </div>
+  </div>
+
+
+</div>
+<div class= "page" id='r0c6'>
+  <h3> NC_010162 - Cluster 6 - Phenazine</h3>
+  <div class = "content">
+    <div class ="description-container">
+      <h3> Gene cluster description </h3>
+      <div class = "cluster-download">
+        <a href = NC_010162.cluster006.gbk>Download cluster GenBank file</a>
+      </div>
+      <div class = 'description-text'>
+        NC_010162 - Gene Cluster 6. Type = phenazine. Location: 997085 - 1017540 nt. Click on genes for more information.
+      </div>
+      <a class="cluster-rules-header" id="r0c6-rules-header" href="#r0c6">Show pHMM detection rules used</a>
+      <div class = "cluster-rules" id="r0c6-rules"></div>
+      <div id='r0c6-svg'>
+      </div>
+    </div>
+    <div class="legend">
+      <h4>Legend:</h4>
+      <div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic"></div>
+      <div class="legend-label">core biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic-additional"></div>
+      <div class="legend-label">additional biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-transport"></div>
+      <div class="legend-label">transport-related genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-regulatory"></div>
+      <div class="legend-label">regulatory genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-resistance"></div>
+      <div class="legend-label">resistance genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-other"></div>
+      <div class="legend-label">other genes</div>
+    </div>
+      </div>
+    </div>
+  </div>
+
+
+</div>
+<div class= "page" id='r0c7'>
+  <h3> NC_010162 - Cluster 7 - Otherks</h3>
+  <div class="sidepanel">
+  </div>
+  <div class = "content">
+    <div class ="description-container">
+      <h3> Gene cluster description </h3>
+      <div class = "cluster-download">
+        <a href = NC_010162.cluster007.gbk>Download cluster GenBank file</a>
+      </div>
+      <div class = 'description-text'>
+        NC_010162 - Gene Cluster 7. Type = otherks. Location: 1132079 - 1187578 nt. Click on genes for more information.
+      </div>
+      <a class="cluster-rules-header" id="r0c7-rules-header" href="#r0c7">Show pHMM detection rules used</a>
+      <div class = "cluster-rules" id="r0c7-rules"></div>
+      <div id='r0c7-svg'>
+      </div>
+    </div>
+    <div class="legend">
+      <h4>Legend:</h4>
+      <div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic"></div>
+      <div class="legend-label">core biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic-additional"></div>
+      <div class="legend-label">additional biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-transport"></div>
+      <div class="legend-label">transport-related genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-regulatory"></div>
+      <div class="legend-label">regulatory genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-resistance"></div>
+      <div class="legend-label">resistance genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-other"></div>
+      <div class="legend-label">other genes</div>
+    </div>
+      </div>
+    </div>
+        <div class="details">
+  <h3>Detailed annotation</h3>
+    
+      <div class="details-svg" id="r0c7-details-svg"></div>
+    
+</div>
+  </div>
+
+
+</div>
+<div class= "page" id='r0c8'>
+  <h3> NC_010162 - Cluster 8 - Terpene</h3>
+  <div class = "content">
+    <div class ="description-container">
+      <h3> Gene cluster description </h3>
+      <div class = "cluster-download">
+        <a href = NC_010162.cluster008.gbk>Download cluster GenBank file</a>
+      </div>
+      <div class = 'description-text'>
+        NC_010162 - Gene Cluster 8. Type = terpene. Location: 1971415 - 1993730 nt. Click on genes for more information.
+      </div>
+      <a class="cluster-rules-header" id="r0c8-rules-header" href="#r0c8">Show pHMM detection rules used</a>
+      <div class = "cluster-rules" id="r0c8-rules"></div>
+      <div id='r0c8-svg'>
+      </div>
+    </div>
+    <div class="legend">
+      <h4>Legend:</h4>
+      <div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic"></div>
+      <div class="legend-label">core biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic-additional"></div>
+      <div class="legend-label">additional biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-transport"></div>
+      <div class="legend-label">transport-related genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-regulatory"></div>
+      <div class="legend-label">regulatory genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-resistance"></div>
+      <div class="legend-label">resistance genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-other"></div>
+      <div class="legend-label">other genes</div>
+    </div>
+      </div>
+    </div>
+  </div>
+
+
+</div>
+<div class= "page" id='r0c9'>
+  <h3> NC_010162 - Cluster 9 - Bacteriocin</h3>
+  <div class = "content">
+    <div class ="description-container">
+      <h3> Gene cluster description </h3>
+      <div class = "cluster-download">
+        <a href = NC_010162.cluster009.gbk>Download cluster GenBank file</a>
+      </div>
+      <div class = 'description-text'>
+        NC_010162 - Gene Cluster 9. Type = bacteriocin. Location: 2553055 - 2564542 nt. Click on genes for more information.
+      </div>
+      <a class="cluster-rules-header" id="r0c9-rules-header" href="#r0c9">Show pHMM detection rules used</a>
+      <div class = "cluster-rules" id="r0c9-rules"></div>
+      <div id='r0c9-svg'>
+      </div>
+    </div>
+    <div class="legend">
+      <h4>Legend:</h4>
+      <div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic"></div>
+      <div class="legend-label">core biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic-additional"></div>
+      <div class="legend-label">additional biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-transport"></div>
+      <div class="legend-label">transport-related genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-regulatory"></div>
+      <div class="legend-label">regulatory genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-resistance"></div>
+      <div class="legend-label">resistance genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-other"></div>
+      <div class="legend-label">other genes</div>
+    </div>
+      </div>
+    </div>
+  </div>
+
+
+</div>
+<div class= "page" id='r0c10'>
+  <h3> NC_010162 - Cluster 10 - T3pks</h3>
+  <div class = "content">
+    <div class ="description-container">
+      <h3> Gene cluster description </h3>
+      <div class = "cluster-download">
+        <a href = NC_010162.cluster010.gbk>Download cluster GenBank file</a>
+      </div>
+      <div class = 'description-text'>
+        NC_010162 - Gene Cluster 10. Type = t3pks. Location: 2875496 - 2916587 nt. Click on genes for more information.
+      </div>
+      <a class="cluster-rules-header" id="r0c10-rules-header" href="#r0c10">Show pHMM detection rules used</a>
+      <div class = "cluster-rules" id="r0c10-rules"></div>
+      <div id='r0c10-svg'>
+      </div>
+    </div>
+    <div class="legend">
+      <h4>Legend:</h4>
+      <div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic"></div>
+      <div class="legend-label">core biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic-additional"></div>
+      <div class="legend-label">additional biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-transport"></div>
+      <div class="legend-label">transport-related genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-regulatory"></div>
+      <div class="legend-label">regulatory genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-resistance"></div>
+      <div class="legend-label">resistance genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-other"></div>
+      <div class="legend-label">other genes</div>
+    </div>
+      </div>
+    </div>
+  </div>
+
+
+</div>
+<div class= "page" id='r0c11'>
+  <h3> NC_010162 - Cluster 11 - T3pks</h3>
+  <div class = "content">
+    <div class ="description-container">
+      <h3> Gene cluster description </h3>
+      <div class = "cluster-download">
+        <a href = NC_010162.cluster011.gbk>Download cluster GenBank file</a>
+      </div>
+      <div class = 'description-text'>
+        NC_010162 - Gene Cluster 11. Type = t3pks. Location: 2924992 - 2966107 nt. Click on genes for more information.
+      </div>
+      <a class="cluster-rules-header" id="r0c11-rules-header" href="#r0c11">Show pHMM detection rules used</a>
+      <div class = "cluster-rules" id="r0c11-rules"></div>
+      <div id='r0c11-svg'>
+      </div>
+    </div>
+    <div class="legend">
+      <h4>Legend:</h4>
+      <div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic"></div>
+      <div class="legend-label">core biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic-additional"></div>
+      <div class="legend-label">additional biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-transport"></div>
+      <div class="legend-label">transport-related genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-regulatory"></div>
+      <div class="legend-label">regulatory genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-resistance"></div>
+      <div class="legend-label">resistance genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-other"></div>
+      <div class="legend-label">other genes</div>
+    </div>
+      </div>
+    </div>
+  </div>
+
+
+</div>
+<div class= "page" id='r0c12'>
+  <h3> NC_010162 - Cluster 12 - Nrps</h3>
+  <div class="sidepanel">
+  </div>
+  <div class = "content">
+    <div class ="description-container">
+      <h3> Gene cluster description </h3>
+      <div class = "cluster-download">
+        <a href = NC_010162.cluster012.gbk>Download cluster GenBank file</a>
+      </div>
+      <div class = 'description-text'>
+        NC_010162 - Gene Cluster 12. Type = nrps. Location: 3186225 - 3236562 nt. Click on genes for more information.
+      </div>
+      <a class="cluster-rules-header" id="r0c12-rules-header" href="#r0c12">Show pHMM detection rules used</a>
+      <div class = "cluster-rules" id="r0c12-rules"></div>
+      <div id='r0c12-svg'>
+      </div>
+    </div>
+    <div class="legend">
+      <h4>Legend:</h4>
+      <div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic"></div>
+      <div class="legend-label">core biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic-additional"></div>
+      <div class="legend-label">additional biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-transport"></div>
+      <div class="legend-label">transport-related genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-regulatory"></div>
+      <div class="legend-label">regulatory genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-resistance"></div>
+      <div class="legend-label">resistance genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-other"></div>
+      <div class="legend-label">other genes</div>
+    </div>
+      </div>
+    </div>
+        <div class="details">
+  <h3>Detailed annotation</h3>
+    
+      <div class="details-svg" id="r0c12-details-svg"></div>
+    
+</div>
+  </div>
+
+
+</div>
+<div class= "page" id='r0c13'>
+  <h3> NC_010162 - Cluster 13 - Otherks-transatpks</h3>
+  <div class="sidepanel">
+  </div>
+  <div class = "content">
+    <div class ="description-container">
+      <h3> Gene cluster description </h3>
+      <div class = "cluster-download">
+        <a href = NC_010162.cluster013.gbk>Download cluster GenBank file</a>
+      </div>
+      <div class = 'description-text'>
+        NC_010162 - Gene Cluster 13. Type = otherks-transatpks. Location: 4349542 - 4481851 nt. Click on genes for more information.
+      </div>
+      <a class="cluster-rules-header" id="r0c13-rules-header" href="#r0c13">Show pHMM detection rules used</a>
+      <div class = "cluster-rules" id="r0c13-rules">otherks: (cds(ATd and (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS)) and cds(PKS_AT and not (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS)))<br>transatpks: (cds(ATd and (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS)) and cds(PKS_AT and not (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS)))</div>
+      <div id='r0c13-svg'>
+      </div>
+    </div>
+    <div class="legend">
+      <h4>Legend:</h4>
+      <div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic"></div>
+      <div class="legend-label">core biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic-additional"></div>
+      <div class="legend-label">additional biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-transport"></div>
+      <div class="legend-label">transport-related genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-regulatory"></div>
+      <div class="legend-label">regulatory genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-resistance"></div>
+      <div class="legend-label">resistance genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-other"></div>
+      <div class="legend-label">other genes</div>
+    </div>
+      </div>
+    </div>
+        <div class="details">
+  <h3>Detailed annotation</h3>
+    
+      <div class="details-svg" id="r0c13-details-svg"></div>
+    
+</div>
+  </div>
+
+
+</div>
+<div class= "page" id='r0c14'>
+  <h3> NC_010162 - Cluster 14 - Ladderane</h3>
+  <div class = "content">
+    <div class ="description-container">
+      <h3> Gene cluster description </h3>
+      <div class = "cluster-download">
+        <a href = NC_010162.cluster014.gbk>Download cluster GenBank file</a>
+      </div>
+      <div class = 'description-text'>
+        NC_010162 - Gene Cluster 14. Type = ladderane. Location: 4668186 - 4710249 nt. Click on genes for more information.
+      </div>
+      <a class="cluster-rules-header" id="r0c14-rules-header" href="#r0c14">Show pHMM detection rules used</a>
+      <div class = "cluster-rules" id="r0c14-rules"></div>
+      <div id='r0c14-svg'>
+      </div>
+    </div>
+    <div class="legend">
+      <h4>Legend:</h4>
+      <div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic"></div>
+      <div class="legend-label">core biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic-additional"></div>
+      <div class="legend-label">additional biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-transport"></div>
+      <div class="legend-label">transport-related genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-regulatory"></div>
+      <div class="legend-label">regulatory genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-resistance"></div>
+      <div class="legend-label">resistance genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-other"></div>
+      <div class="legend-label">other genes</div>
+    </div>
+      </div>
+    </div>
+  </div>
+
+
+</div>
+<div class= "page" id='r0c15'>
+  <h3> NC_010162 - Cluster 15 - Bacteriocin</h3>
+  <div class = "content">
+    <div class ="description-container">
+      <h3> Gene cluster description </h3>
+      <div class = "cluster-download">
+        <a href = NC_010162.cluster015.gbk>Download cluster GenBank file</a>
+      </div>
+      <div class = 'description-text'>
+        NC_010162 - Gene Cluster 15. Type = bacteriocin. Location: 4786578 - 4797417 nt. Click on genes for more information.
+      </div>
+      <a class="cluster-rules-header" id="r0c15-rules-header" href="#r0c15">Show pHMM detection rules used</a>
+      <div class = "cluster-rules" id="r0c15-rules"></div>
+      <div id='r0c15-svg'>
+      </div>
+    </div>
+    <div class="legend">
+      <h4>Legend:</h4>
+      <div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic"></div>
+      <div class="legend-label">core biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic-additional"></div>
+      <div class="legend-label">additional biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-transport"></div>
+      <div class="legend-label">transport-related genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-regulatory"></div>
+      <div class="legend-label">regulatory genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-resistance"></div>
+      <div class="legend-label">resistance genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-other"></div>
+      <div class="legend-label">other genes</div>
+    </div>
+      </div>
+    </div>
+  </div>
+
+
+</div>
+<div class= "page" id='r0c16'>
+  <h3> NC_010162 - Cluster 16 - Nrps</h3>
+  <div class="sidepanel">
+  </div>
+  <div class = "content">
+    <div class ="description-container">
+      <h3> Gene cluster description </h3>
+      <div class = "cluster-download">
+        <a href = NC_010162.cluster016.gbk>Download cluster GenBank file</a>
+      </div>
+      <div class = 'description-text'>
+        NC_010162 - Gene Cluster 16. Type = nrps. Location: 5379428 - 5434381 nt. Click on genes for more information.
+      </div>
+      <a class="cluster-rules-header" id="r0c16-rules-header" href="#r0c16">Show pHMM detection rules used</a>
+      <div class = "cluster-rules" id="r0c16-rules"></div>
+      <div id='r0c16-svg'>
+      </div>
+    </div>
+    <div class="legend">
+      <h4>Legend:</h4>
+      <div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic"></div>
+      <div class="legend-label">core biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic-additional"></div>
+      <div class="legend-label">additional biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-transport"></div>
+      <div class="legend-label">transport-related genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-regulatory"></div>
+      <div class="legend-label">regulatory genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-resistance"></div>
+      <div class="legend-label">resistance genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-other"></div>
+      <div class="legend-label">other genes</div>
+    </div>
+      </div>
+    </div>
+        <div class="details">
+  <h3>Detailed annotation</h3>
+    
+      <div class="details-svg" id="r0c16-details-svg"></div>
+    
+</div>
+  </div>
+
+
+</div>
+<div class= "page" id='r0c17'>
+  <h3> NC_010162 - Cluster 17 - Nrps-transatpks-t1pks</h3>
+  <div class="sidepanel">
+  </div>
+  <div class = "content">
+    <div class ="description-container">
+      <h3> Gene cluster description </h3>
+      <div class = "cluster-download">
+        <a href = NC_010162.cluster017.gbk>Download cluster GenBank file</a>
+      </div>
+      <div class = 'description-text'>
+        NC_010162 - Gene Cluster 17. Type = nrps-transatpks-t1pks. Location: 5774481 - 5873706 nt. Click on genes for more information.
+      </div>
+      <a class="cluster-rules-header" id="r0c17-rules-header" href="#r0c17">Show pHMM detection rules used</a>
+      <div class = "cluster-rules" id="r0c17-rules">nrps: (cds(ATd and (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS)) and cds(PKS_AT and not (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS)))<br>transatpks: cds(PKS_AT and (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS))</div>
+      <div id='r0c17-svg'>
+      </div>
+    </div>
+    <div class="legend">
+      <h4>Legend:</h4>
+      <div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic"></div>
+      <div class="legend-label">core biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic-additional"></div>
+      <div class="legend-label">additional biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-transport"></div>
+      <div class="legend-label">transport-related genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-regulatory"></div>
+      <div class="legend-label">regulatory genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-resistance"></div>
+      <div class="legend-label">resistance genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-other"></div>
+      <div class="legend-label">other genes</div>
+    </div>
+      </div>
+    </div>
+        <div class="details">
+  <h3>Detailed annotation</h3>
+    
+      <div class="details-svg" id="r0c17-details-svg"></div>
+    
+</div>
+  </div>
+
+
+</div>
+<div class= "page" id='r0c18'>
+  <h3> NC_010162 - Cluster 18 - T1pks-otherks</h3>
+  <div class="sidepanel">
+  </div>
+  <div class = "content">
+    <div class ="description-container">
+      <h3> Gene cluster description </h3>
+      <div class = "cluster-download">
+        <a href = NC_010162.cluster018.gbk>Download cluster GenBank file</a>
+      </div>
+      <div class = 'description-text'>
+        NC_010162 - Gene Cluster 18. Type = t1pks-otherks. Location: 6840778 - 6887494 nt. Click on genes for more information.
+      </div>
+      <a class="cluster-rules-header" id="r0c18-rules-header" href="#r0c18">Show pHMM detection rules used</a>
+      <div class = "cluster-rules" id="r0c18-rules">t1pks: (t2pks2 or hglE or hglD or ksIII)</div>
+      <div id='r0c18-svg'>
+      </div>
+    </div>
+    <div class="legend">
+      <h4>Legend:</h4>
+      <div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic"></div>
+      <div class="legend-label">core biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic-additional"></div>
+      <div class="legend-label">additional biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-transport"></div>
+      <div class="legend-label">transport-related genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-regulatory"></div>
+      <div class="legend-label">regulatory genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-resistance"></div>
+      <div class="legend-label">resistance genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-other"></div>
+      <div class="legend-label">other genes</div>
+    </div>
+      </div>
+    </div>
+        <div class="details">
+  <h3>Detailed annotation</h3>
+    
+      <div class="details-svg" id="r0c18-details-svg"></div>
+    
+</div>
+  </div>
+
+
+</div>
+<div class= "page" id='r0c19'>
+  <h3> NC_010162 - Cluster 19 - Bacteriocin</h3>
+  <div class = "content">
+    <div class ="description-container">
+      <h3> Gene cluster description </h3>
+      <div class = "cluster-download">
+        <a href = NC_010162.cluster019.gbk>Download cluster GenBank file</a>
+      </div>
+      <div class = 'description-text'>
+        NC_010162 - Gene Cluster 19. Type = bacteriocin. Location: 7422498 - 7433307 nt. Click on genes for more information.
+      </div>
+      <a class="cluster-rules-header" id="r0c19-rules-header" href="#r0c19">Show pHMM detection rules used</a>
+      <div class = "cluster-rules" id="r0c19-rules"></div>
+      <div id='r0c19-svg'>
+      </div>
+    </div>
+    <div class="legend">
+      <h4>Legend:</h4>
+      <div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic"></div>
+      <div class="legend-label">core biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic-additional"></div>
+      <div class="legend-label">additional biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-transport"></div>
+      <div class="legend-label">transport-related genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-regulatory"></div>
+      <div class="legend-label">regulatory genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-resistance"></div>
+      <div class="legend-label">resistance genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-other"></div>
+      <div class="legend-label">other genes</div>
+    </div>
+      </div>
+    </div>
+  </div>
+
+
+</div>
+<div class= "page" id='r0c20'>
+  <h3> NC_010162 - Cluster 20 - Arylpolyene</h3>
+  <div class = "content">
+    <div class ="description-container">
+      <h3> Gene cluster description </h3>
+      <div class = "cluster-download">
+        <a href = NC_010162.cluster020.gbk>Download cluster GenBank file</a>
+      </div>
+      <div class = 'description-text'>
+        NC_010162 - Gene Cluster 20. Type = arylpolyene. Location: 8295110 - 8340240 nt. Click on genes for more information.
+      </div>
+      <a class="cluster-rules-header" id="r0c20-rules-header" href="#r0c20">Show pHMM detection rules used</a>
+      <div class = "cluster-rules" id="r0c20-rules"></div>
+      <div id='r0c20-svg'>
+      </div>
+    </div>
+    <div class="legend">
+      <h4>Legend:</h4>
+      <div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic"></div>
+      <div class="legend-label">core biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic-additional"></div>
+      <div class="legend-label">additional biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-transport"></div>
+      <div class="legend-label">transport-related genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-regulatory"></div>
+      <div class="legend-label">regulatory genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-resistance"></div>
+      <div class="legend-label">resistance genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-other"></div>
+      <div class="legend-label">other genes</div>
+    </div>
+      </div>
+    </div>
+  </div>
+
+
+</div>
+<div class= "page" id='r0c21'>
+  <h3> NC_010162 - Cluster 21 - Bacteriocin</h3>
+  <div class = "content">
+    <div class ="description-container">
+      <h3> Gene cluster description </h3>
+      <div class = "cluster-download">
+        <a href = NC_010162.cluster021.gbk>Download cluster GenBank file</a>
+      </div>
+      <div class = 'description-text'>
+        NC_010162 - Gene Cluster 21. Type = bacteriocin. Location: 8481664 - 8492545 nt. Click on genes for more information.
+      </div>
+      <a class="cluster-rules-header" id="r0c21-rules-header" href="#r0c21">Show pHMM detection rules used</a>
+      <div class = "cluster-rules" id="r0c21-rules"></div>
+      <div id='r0c21-svg'>
+      </div>
+    </div>
+    <div class="legend">
+      <h4>Legend:</h4>
+      <div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic"></div>
+      <div class="legend-label">core biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic-additional"></div>
+      <div class="legend-label">additional biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-transport"></div>
+      <div class="legend-label">transport-related genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-regulatory"></div>
+      <div class="legend-label">regulatory genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-resistance"></div>
+      <div class="legend-label">resistance genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-other"></div>
+      <div class="legend-label">other genes</div>
+    </div>
+      </div>
+    </div>
+  </div>
+
+
+</div>
+<div class= "page" id='r0c22'>
+  <h3> NC_010162 - Cluster 22 - Terpene</h3>
+  <div class = "content">
+    <div class ="description-container">
+      <h3> Gene cluster description </h3>
+      <div class = "cluster-download">
+        <a href = NC_010162.cluster022.gbk>Download cluster GenBank file</a>
+      </div>
+      <div class = 'description-text'>
+        NC_010162 - Gene Cluster 22. Type = terpene. Location: 8872134 - 8893081 nt. Click on genes for more information.
+      </div>
+      <a class="cluster-rules-header" id="r0c22-rules-header" href="#r0c22">Show pHMM detection rules used</a>
+      <div class = "cluster-rules" id="r0c22-rules"></div>
+      <div id='r0c22-svg'>
+      </div>
+    </div>
+    <div class="legend">
+      <h4>Legend:</h4>
+      <div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic"></div>
+      <div class="legend-label">core biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic-additional"></div>
+      <div class="legend-label">additional biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-transport"></div>
+      <div class="legend-label">transport-related genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-regulatory"></div>
+      <div class="legend-label">regulatory genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-resistance"></div>
+      <div class="legend-label">resistance genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-other"></div>
+      <div class="legend-label">other genes</div>
+    </div>
+      </div>
+    </div>
+  </div>
+
+
+</div>
+<div class= "page" id='r0c23'>
+  <h3> NC_010162 - Cluster 23 - Nrps-t1pks</h3>
+  <div class="sidepanel">
+  </div>
+  <div class = "content">
+    <div class ="description-container">
+      <h3> Gene cluster description </h3>
+      <div class = "cluster-download">
+        <a href = NC_010162.cluster023.gbk>Download cluster GenBank file</a>
+      </div>
+      <div class = 'description-text'>
+        NC_010162 - Gene Cluster 23. Type = nrps-t1pks. Location: 9482480 - 9533516 nt. Click on genes for more information.
+      </div>
+      <a class="cluster-rules-header" id="r0c23-rules-header" href="#r0c23">Show pHMM detection rules used</a>
+      <div class = "cluster-rules" id="r0c23-rules">nrps: cds(PKS_AT and (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS))</div>
+      <div id='r0c23-svg'>
+      </div>
+    </div>
+    <div class="legend">
+      <h4>Legend:</h4>
+      <div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic"></div>
+      <div class="legend-label">core biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic-additional"></div>
+      <div class="legend-label">additional biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-transport"></div>
+      <div class="legend-label">transport-related genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-regulatory"></div>
+      <div class="legend-label">regulatory genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-resistance"></div>
+      <div class="legend-label">resistance genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-other"></div>
+      <div class="legend-label">other genes</div>
+    </div>
+      </div>
+    </div>
+        <div class="details">
+  <h3>Detailed annotation</h3>
+    
+      <div class="details-svg" id="r0c23-details-svg"></div>
+    
+</div>
+  </div>
+
+
+</div>
+<div class= "page" id='r0c24'>
+  <h3> NC_010162 - Cluster 24 - Microviridin</h3>
+  <div class = "content">
+    <div class ="description-container">
+      <h3> Gene cluster description </h3>
+      <div class = "cluster-download">
+        <a href = NC_010162.cluster024.gbk>Download cluster GenBank file</a>
+      </div>
+      <div class = 'description-text'>
+        NC_010162 - Gene Cluster 24. Type = microviridin. Location: 10015800 - 10036036 nt. Click on genes for more information.
+      </div>
+      <a class="cluster-rules-header" id="r0c24-rules-header" href="#r0c24">Show pHMM detection rules used</a>
+      <div class = "cluster-rules" id="r0c24-rules"></div>
+      <div id='r0c24-svg'>
+      </div>
+    </div>
+    <div class="legend">
+      <h4>Legend:</h4>
+      <div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic"></div>
+      <div class="legend-label">core biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic-additional"></div>
+      <div class="legend-label">additional biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-transport"></div>
+      <div class="legend-label">transport-related genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-regulatory"></div>
+      <div class="legend-label">regulatory genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-resistance"></div>
+      <div class="legend-label">resistance genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-other"></div>
+      <div class="legend-label">other genes</div>
+    </div>
+      </div>
+    </div>
+  </div>
+
+
+</div>
+<div class= "page" id='r0c25'>
+  <h3> NC_010162 - Cluster 25 - Phosphonate</h3>
+  <div class = "content">
+    <div class ="description-container">
+      <h3> Gene cluster description </h3>
+      <div class = "cluster-download">
+        <a href = NC_010162.cluster025.gbk>Download cluster GenBank file</a>
+      </div>
+      <div class = 'description-text'>
+        NC_010162 - Gene Cluster 25. Type = phosphonate. Location: 10170936 - 10212600 nt. Click on genes for more information.
+      </div>
+      <a class="cluster-rules-header" id="r0c25-rules-header" href="#r0c25">Show pHMM detection rules used</a>
+      <div class = "cluster-rules" id="r0c25-rules"></div>
+      <div id='r0c25-svg'>
+      </div>
+    </div>
+    <div class="legend">
+      <h4>Legend:</h4>
+      <div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic"></div>
+      <div class="legend-label">core biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic-additional"></div>
+      <div class="legend-label">additional biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-transport"></div>
+      <div class="legend-label">transport-related genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-regulatory"></div>
+      <div class="legend-label">regulatory genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-resistance"></div>
+      <div class="legend-label">resistance genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-other"></div>
+      <div class="legend-label">other genes</div>
+    </div>
+      </div>
+    </div>
+  </div>
+
+
+</div>
+<div class= "page" id='r0c26'>
+  <h3> NC_010162 - Cluster 26 - Bacteriocin</h3>
+  <div class = "content">
+    <div class ="description-container">
+      <h3> Gene cluster description </h3>
+      <div class = "cluster-download">
+        <a href = NC_010162.cluster026.gbk>Download cluster GenBank file</a>
+      </div>
+      <div class = 'description-text'>
+        NC_010162 - Gene Cluster 26. Type = bacteriocin. Location: 10730172 - 10741032 nt. Click on genes for more information.
+      </div>
+      <a class="cluster-rules-header" id="r0c26-rules-header" href="#r0c26">Show pHMM detection rules used</a>
+      <div class = "cluster-rules" id="r0c26-rules"></div>
+      <div id='r0c26-svg'>
+      </div>
+    </div>
+    <div class="legend">
+      <h4>Legend:</h4>
+      <div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic"></div>
+      <div class="legend-label">core biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic-additional"></div>
+      <div class="legend-label">additional biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-transport"></div>
+      <div class="legend-label">transport-related genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-regulatory"></div>
+      <div class="legend-label">regulatory genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-resistance"></div>
+      <div class="legend-label">resistance genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-other"></div>
+      <div class="legend-label">other genes</div>
+    </div>
+      </div>
+    </div>
+  </div>
+
+
+</div>
+<div class= "page" id='r0c27'>
+  <h3> NC_010162 - Cluster 27 - Nrpsfragment</h3>
+  <div class="sidepanel">
+  </div>
+  <div class = "content">
+    <div class ="description-container">
+      <h3> Gene cluster description </h3>
+      <div class = "cluster-download">
+        <a href = NC_010162.cluster027.gbk>Download cluster GenBank file</a>
+      </div>
+      <div class = 'description-text'>
+        NC_010162 - Gene Cluster 27. Type = nrpsfragment. Location: 11124127 - 11168719 nt. Click on genes for more information.
+      </div>
+      <a class="cluster-rules-header" id="r0c27-rules-header" href="#r0c27">Show pHMM detection rules used</a>
+      <div class = "cluster-rules" id="r0c27-rules"></div>
+      <div id='r0c27-svg'>
+      </div>
+    </div>
+    <div class="legend">
+      <h4>Legend:</h4>
+      <div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic"></div>
+      <div class="legend-label">core biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic-additional"></div>
+      <div class="legend-label">additional biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-transport"></div>
+      <div class="legend-label">transport-related genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-regulatory"></div>
+      <div class="legend-label">regulatory genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-resistance"></div>
+      <div class="legend-label">resistance genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-other"></div>
+      <div class="legend-label">other genes</div>
+    </div>
+      </div>
+    </div>
+        <div class="details">
+  <h3>Detailed annotation</h3>
+    
+      <div class="details-svg" id="r0c27-details-svg"></div>
+    
+</div>
+  </div>
+
+
+</div>
+<div class= "page" id='r0c28'>
+  <h3> NC_010162 - Cluster 28 - Nrps-t1pks</h3>
+  <div class="sidepanel">
+  </div>
+  <div class = "content">
+    <div class ="description-container">
+      <h3> Gene cluster description </h3>
+      <div class = "cluster-download">
+        <a href = NC_010162.cluster028.gbk>Download cluster GenBank file</a>
+      </div>
+      <div class = 'description-text'>
+        NC_010162 - Gene Cluster 28. Type = nrps-t1pks. Location: 11466109 - 11549102 nt. Click on genes for more information.
+      </div>
+      <a class="cluster-rules-header" id="r0c28-rules-header" href="#r0c28">Show pHMM detection rules used</a>
+      <div class = "cluster-rules" id="r0c28-rules">nrps: cds(PKS_AT and (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS))</div>
+      <div id='r0c28-svg'>
+      </div>
+    </div>
+    <div class="legend">
+      <h4>Legend:</h4>
+      <div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic"></div>
+      <div class="legend-label">core biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic-additional"></div>
+      <div class="legend-label">additional biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-transport"></div>
+      <div class="legend-label">transport-related genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-regulatory"></div>
+      <div class="legend-label">regulatory genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-resistance"></div>
+      <div class="legend-label">resistance genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-other"></div>
+      <div class="legend-label">other genes</div>
+    </div>
+      </div>
+    </div>
+        <div class="details">
+  <h3>Detailed annotation</h3>
+    
+      <div class="details-svg" id="r0c28-details-svg"></div>
+    
+</div>
+  </div>
+
+
+</div>
+<div class= "page" id='r0c29'>
+  <h3> NC_010162 - Cluster 29 - Resorcinol</h3>
+  <div class = "content">
+    <div class ="description-container">
+      <h3> Gene cluster description </h3>
+      <div class = "cluster-download">
+        <a href = NC_010162.cluster029.gbk>Download cluster GenBank file</a>
+      </div>
+      <div class = 'description-text'>
+        NC_010162 - Gene Cluster 29. Type = resorcinol. Location: 11773771 - 11814901 nt. Click on genes for more information.
+      </div>
+      <a class="cluster-rules-header" id="r0c29-rules-header" href="#r0c29">Show pHMM detection rules used</a>
+      <div class = "cluster-rules" id="r0c29-rules"></div>
+      <div id='r0c29-svg'>
+      </div>
+    </div>
+    <div class="legend">
+      <h4>Legend:</h4>
+      <div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic"></div>
+      <div class="legend-label">core biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic-additional"></div>
+      <div class="legend-label">additional biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-transport"></div>
+      <div class="legend-label">transport-related genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-regulatory"></div>
+      <div class="legend-label">regulatory genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-resistance"></div>
+      <div class="legend-label">resistance genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-other"></div>
+      <div class="legend-label">other genes</div>
+    </div>
+      </div>
+    </div>
+  </div>
+
+
+</div>
+<div class= "page" id='r0c30'>
+  <h3> NC_010162 - Cluster 30 - Terpene</h3>
+  <div class = "content">
+    <div class ="description-container">
+      <h3> Gene cluster description </h3>
+      <div class = "cluster-download">
+        <a href = NC_010162.cluster030.gbk>Download cluster GenBank file</a>
+      </div>
+      <div class = 'description-text'>
+        NC_010162 - Gene Cluster 30. Type = terpene. Location: 11907026 - 11928015 nt. Click on genes for more information.
+      </div>
+      <a class="cluster-rules-header" id="r0c30-rules-header" href="#r0c30">Show pHMM detection rules used</a>
+      <div class = "cluster-rules" id="r0c30-rules"></div>
+      <div id='r0c30-svg'>
+      </div>
+    </div>
+    <div class="legend">
+      <h4>Legend:</h4>
+      <div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic"></div>
+      <div class="legend-label">core biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic-additional"></div>
+      <div class="legend-label">additional biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-transport"></div>
+      <div class="legend-label">transport-related genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-regulatory"></div>
+      <div class="legend-label">regulatory genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-resistance"></div>
+      <div class="legend-label">resistance genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-other"></div>
+      <div class="legend-label">other genes</div>
+    </div>
+      </div>
+    </div>
+  </div>
+
+
+</div>
+<div class= "page" id='r0c31'>
+  <h3> NC_010162 - Cluster 31 - Thiopeptide</h3>
+  <div class="sidepanel">
+  </div>
+  <div class = "content">
+    <div class ="description-container">
+      <h3> Gene cluster description </h3>
+      <div class = "cluster-download">
+        <a href = NC_010162.cluster031.gbk>Download cluster GenBank file</a>
+      </div>
+      <div class = 'description-text'>
+        NC_010162 - Gene Cluster 31. Type = thiopeptide. Location: 12614304 - 12645413 nt. Click on genes for more information.
+      </div>
+      <a class="cluster-rules-header" id="r0c31-rules-header" href="#r0c31">Show pHMM detection rules used</a>
+      <div class = "cluster-rules" id="r0c31-rules"></div>
+      <div id='r0c31-svg'>
+      </div>
+    </div>
+    <div class="legend">
+      <h4>Legend:</h4>
+      <div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic"></div>
+      <div class="legend-label">core biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-biosynthetic-additional"></div>
+      <div class="legend-label">additional biosynthetic genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-transport"></div>
+      <div class="legend-label">transport-related genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-regulatory"></div>
+      <div class="legend-label">regulatory genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-resistance"></div>
+      <div class="legend-label">resistance genes</div>
+    </div>
+        <div>
+      <div class="legend-field legend-type-other"></div>
+      <div class="legend-label">other genes</div>
+    </div>
+      </div>
+    </div>
+  </div>
+
+
+</div>
+<div id="footer">
+  <div id="logos">
+    <table id="logo-table">
+      <tr>
+        <td>
+          <img src="images/tueblogo.gif">
+        </td>
+        <td>
+          <img src="images/ruglogo.gif">
+        </td>
+        <td>
+          <img src="images/ucsflogo.gif">
+        </td>
+        <td>
+          <img src="images/wur-logo.png">
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <img src="images/uomlogo.jpg">
+        </td>
+        <td>
+          <img src="images/dziflogo.png">
+        </td>
+        <td>
+          <img src="images/cfb-logo.png">
+        </td>
+        <td>
+        </td>
+      </tr>
+    </table>
+  </div>
+  <div id="copyright">
+    If you have found antiSMASH useful, please <a href="https://antismash.secondarymetabolites.org/about">cite us</a>.
+  </div>
+</div>
+</body>
+</html>
