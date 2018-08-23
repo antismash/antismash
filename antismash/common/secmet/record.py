@@ -476,19 +476,10 @@ class Record:
     def _link_cluster_to_cds_features(self, cluster: Cluster) -> None:
         """ connect the given cluster to every CDS feature within it's range """
         assert isinstance(cluster, Cluster)
-        # quickly find the first cds with equal start
-        index = bisect.bisect_left(self._cds_features, cluster)
-        # move backwards until we find one that doesn't overlap
-        while index >= 1 and self._cds_features[index - 1].is_contained_by(cluster):
-            index -= 1
-        # move forwards, adding to the cluster until a cds doesn't overlap
-        while index < len(self._cds_features):
-            cds = self._cds_features[index]
-            if not cds.is_contained_by(cluster):
-                break
-            cluster.add_cds(cds)
-            cds.cluster = cluster  # TODO: allow for multiple parent clusters?
-            index += 1
+        for cds in self._cds_features:
+            if cds.is_contained_by(cluster):
+                cluster.add_cds(cds)
+                cds.cluster = cluster  # TODO: allow for multiple parent clusters?
 
     def get_aa_translation_from_location(self, location: FeatureLocation,
                                          transl_table: Union[str, int] = None) -> Seq:
