@@ -162,7 +162,7 @@ def find_clusters(record: Record, cds_by_cluster_type: Dict[str, Set[str]],
             if len(borders) > 0:
                 for dummy_sub_location in borders[-1].location.parts:
                     dummy_sub_location_feature = Feature(FeatureLocation(dummy_sub_location.start - cutoff, dummy_sub_location.end + cutoff), feature_type="dummy")
-                    if dummy_sub_location_feature.overlaps_with(cds_feature_sublocation) and borders[-1].product == cluster_type:
+                    if dummy_sub_location_feature.overlaps_with(cds_feature_sublocation):
                         # no need to have CompoundLocation here, the only exception would be ori-split borders, but they are handled elsewhere
                         borders[-1].location = FeatureLocation(min(dummy_sub_location.start, cds_feature_sublocation.start), max(dummy_sub_location.end, cds_feature_sublocation.end))
                     else:
@@ -171,6 +171,23 @@ def find_clusters(record: Record, cds_by_cluster_type: Dict[str, Set[str]],
             else:
                 borders.append(ClusterBorder(FeatureLocation(cds_feature_sublocation.start, cds_feature_sublocation.end), tool="rule-based-clusters",
                                         cutoff=cutoff, extent=extent, product=cluster_type))
+
+    # because the cds_features were input ordered by cluster_type, not start, we have to reorder
+    borders = sorted (borders, key=lambda border: border.location.start)
+
+    # check if first and last borders were supposed to be together
+    if len(borders) > 0 and record.is_circular and len(record) - borders[-1].location.end + borders[0].location.start < max(borders[0].cutoff,borders[-1].cutoff):
+        new_compound_components = []
+        for subfeature in borders[-1].location.parts:
+            new_compound_components.append(subfeature)
+        for subfeature in borders[0].location.parts:
+            new_compound_components.append(subfeature)
+        borders[0].location = CompoundLocation(new_compound_components)
+        borders[0].product = "-".join(list(set(borders[-1].product.split('-')) | set(borders[0].product.split('-'))))
+        borders[0].extent = borders[0].extent if borders[0].extent > borders[-1].extent else borders[-1].extent
+        borders[0].cutoff = borders[0].cutoff if borders[0].cutoff > borders[-1].cutoff else borders[-1].cutoff
+        if len(borders) > 1:
+            borders.pop()
 
     for border in borders:
         border.rule = str(rules_by_name[border.product].conditions)
@@ -181,16 +198,8 @@ def find_clusters(record: Record, cds_by_cluster_type: Dict[str, Set[str]],
             border.location = FeatureLocation(border.location.start, len(record))
             border.contig_edge = True
 
+    # todo: is this still needed?
     borders = remove_redundant_borders(borders, rules_by_name)
-
-    # check if first and last borders of each metabolite were supposed to be together
-    if len(borders) > 1 and record.is_circular():
-        for i, border in enumerate(borders):
-            for j, border in enumerate(borders):
-                if len(record) - borders[j].location.end + borders[i].location.start < max(borders[i].cutoff,borders[j].cutoff) and borders[j].product == borders[i].product:
-                    borders[i].location = CompoundLocation([part for part in borders[j].location.parts] + [part for part in borders[i].location.parts])
-                    if len(borders) > 1:
-                        borders.remove(borders[j])
 
     logging.debug("%d rule-based border(s) found in record", len(borders))
     return borders
