@@ -148,6 +148,29 @@ class HmmDetectionTest(unittest.TestCase):
         ]
         assert result_clusters == expected_clusters
 
+    def test_find_clusters_circular_with_ori_split(self):
+        self.record.add_annotation("topology", "circular")
+        cds_features_by_type = {"MetaboliteA": {"GENE_1", "GENE_4", "GENE_5"},
+                                "MetaboliteB": {"GENE_1"},
+                                "MetaboliteC": {"GENE_1", "GENE_2"},
+                                'MetaboliteD': {'GENE_1', 'GENE_2'},
+                                'Metabolite0': {'GENE_3'},
+                                'Metabolite1': {'GENE_5'}}
+        rules = {rule.name: rule for rule in self.rules}
+        for border in hmm_detection.find_clusters(self.record, cds_features_by_type, rules):
+            self.record.add_cluster_border(border)
+        self.record.create_clusters_from_borders()
+
+        result_clusters = []
+        for cluster in self.record.get_clusters():
+            result_clusters.append(sorted(cds.get_name() for cds in cluster.cds_children))
+
+        expected_clusters = [
+            ["GENE_1", "GENE_2", "GENE_4", "GENE_5"],
+            ["GENE_3"]
+        ]
+        assert result_clusters == expected_clusters
+
     def test_create_rules(self):
         rules = hmm_detection.create_rules(self.rules_file, self.signature_names)
         assert len(rules) == 45
