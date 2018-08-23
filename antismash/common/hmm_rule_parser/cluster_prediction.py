@@ -184,7 +184,7 @@ def find_clusters(record: Record, cds_by_cluster_type: Dict[str, Set[str]],
     borders = remove_redundant_borders(borders, rules_by_name)
 
     # check if first and last borders of each metabolite were supposed to be together
-    if len(borders) > 1 and record.is_circular:
+    if len(borders) > 1 and record.is_circular():
         for i, border in enumerate(borders):
             for j, border in enumerate(borders):
                 if len(record) - borders[j].location.end + borders[i].location.start < max(borders[i].cutoff,borders[j].cutoff) and borders[j].product == borders[i].product:
