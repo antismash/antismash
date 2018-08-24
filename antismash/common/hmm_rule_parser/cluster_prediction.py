@@ -169,6 +169,10 @@ def find_clusters(record: Record, cds_by_cluster_type: Dict[str, Set[str]],
             # create the previous cluster and start a new location
             surrounds = FeatureLocation(max(0, core_location.start - rule.extent),
                                         min(core_location.end + rule.extent, len(record)))
+            surrounding_cdses = record.get_cds_features_within_location(surrounds, with_overlapping=False)
+            real_start = min(contained.location.start for contained in surrounding_cdses)
+            real_end = max(contained.location.end for contained in surrounding_cdses)
+            surrounds = FeatureLocation(real_start, real_end)
             clusters.append(Cluster(core_location, surrounding_location=surrounds,
                                     tool="rule-based-clusters", cutoff=cutoff,
                                     neighbourhood_range=rule.extent, product=cluster_type))
