@@ -77,9 +77,9 @@ svgene.drawOrderedRegionOrfs = function(region, chart, all_orfs, borders, tta_co
     .attr("transform", function(d, i) { return "translate(0,0)"});
   // extent lines
   cluster_bars.append("line")
-    .attr("x1", function(d){ return scale(d.start - d.extent)})
+    .attr("x1", function(d){ return scale(d.neighbouring_start); })
     .attr("y1", function(d){ return d.height * (bar_size + vertical_bar_gap) + offset + bar_size/2})
-    .attr("x2", function(d){ return scale(d.end + d.extent)})
+    .attr("x2", function(d){ return scale(d.neighbouring_end); })
     .attr("y2", function(d){ return d.height * (bar_size + vertical_bar_gap) + offset + bar_size/2})
     .attr("class", "svgene-line");
   // rect containing first and last ORF triggering border detection
