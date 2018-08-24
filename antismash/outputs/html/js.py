@@ -115,7 +115,8 @@ def get_clusters_from_superclusters(superclusters: Iterable[SuperCluster]) -> Li
         js_cluster = {"start": cluster.core_location.start,
                       "end": cluster.core_location.end,
                       "tool": cluster.tool,
-                      "extent": cluster.neighbourhood_range,
+                      "neighbouring_start": cluster.location.start,
+                      "neighbouring_end": cluster.location.end,
                       "product": cluster.product or "unknown"}
         if cluster.product == "cf_putative":
             js_cluster['height'] = 0
