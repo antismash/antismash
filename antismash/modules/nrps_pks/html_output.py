@@ -5,16 +5,16 @@
 
 import logging
 import re
-from typing import Iterable, List, Optional
+from typing import Any, Iterable, List, Optional
 from typing import Dict  # in comment type hints  # pylint: disable=unused-import
 
 from jinja2 import FileSystemLoader, Environment, StrictUndefined
 
 from antismash.common import path
 from antismash.common.layers import RegionLayer, RecordLayer, OptionsLayer
-from antismash.common.secmet import CDSFeature, Region
+from antismash.common.secmet import CDSFeature, Region, SuperCluster
 
-from .results import NRPS_PKS_Results, UNKNOWN
+from .results import NRPS_PKS_Results, SuperClusterPrediction, UNKNOWN
 
 
 def will_handle(products: List[str]) -> bool:
@@ -94,6 +94,59 @@ def get_norine_url_for_specificities(specificities: List[List[str]],
     return "http://bioinfo.lifl.fr/norine/fingerPrintSearch.jsp?nrps1=" + ",".join(modules)
 
 
+class SuperClusterLayer:
+    """ A helper for the HTML output for a supercluster """
+    def __init__(self, supercluster: SuperCluster, result: SuperClusterPrediction) -> None:
+        self.location = supercluster.location
+        self.number = supercluster.get_supercluster_number()
+        self.transatpks = "transatpks" in supercluster.products
+        self.result = result
+        self.products = "-".join(supercluster.products)
+
+    def __getattr__(self, attr: str) -> Any:
+        if hasattr(self.result, attr):
+            return getattr(self.result, attr)
+        return super().__getattribute__(attr)
+
+    def get_warning(self) -> str:
+        """ A caveat for structure prediction accuracy """
+        if not self.polymer:
+            return ""
+        core = ("Rough prediction of core scaffold based on assumed %s;"
+                " tailoring reactions not taken into account")
+        if self.domain_docking_used:
+            detail = "PKS linker matching"
+        else:
+            detail = "PKS/NRPS colinearity"
+
+        return core % detail
+
+    def get_norine_url(self, be_strict: bool = True) -> str:
+        """ Get a NORINE URL string for direct querying
+            use be_strict=False to add * after each monomer"""
+
+        monomers_per_protein_list = re.findall("\\(.*?\\)", self.polymer)
+        i = 1
+        nrpslist = []
+        for monomers_per_protein in monomers_per_protein_list:
+            monomers = monomers_per_protein[1:-1].split("-")
+
+            if be_strict:
+                monomers = [map_as_name_to_norine(element.lower())
+                            for element in filter_norine_as(monomers, be_strict=True)]
+            else:
+                monomers = [map_as_name_to_norine(element.lower()) + "*"
+                            for element in filter_norine_as(monomers)]
+            # Norine doesn't allow "x*" as a "relaxed" monomer, so we have to replace this with "x"
+            monomers = list(map(lambda x: "x" if x == "x*" else x, monomers))
+
+            if monomers:
+                nrpslist.append("nrps" + str(i) + "=" + ",".join(monomers))
+            i += 1
+        urlstring = "http://bioinfo.lifl.fr/norine/fingerPrintSearch.jsp?"+"&".join(nrpslist)
+        return urlstring
+
+
 class NrpspksLayer(RegionLayer):
     """ A wrapper for RegionLayer that adds some specific sections for NRPS/PKS
         domains and structures.
@@ -103,32 +156,19 @@ class NrpspksLayer(RegionLayer):
         self.url_relaxed = {}  # type: Dict[str, str]  # gene name -> url
         self._build_urls(region_feature.cds_children)
         super().__init__(record, region_feature)
-        self.transatpks = False
         assert isinstance(results, NRPS_PKS_Results), type(results)
         self.results = results
 
         region_number = region_feature.get_region_number()
-        default_prediction = ("N/A", False)
-        self.polymer, self.used_domain_docking = results.region_predictions.get(region_number, default_prediction)
-
-    @property
-    def warning(self) -> str:
-        """ A caveat for structure prediction accuracy """
-        if not self.polymer:
-            return ""
-        core = ("Rough prediction of core scaffold based on assumed %s;"
-                " tailoring reactions not taken into account")
-        if self.used_domain_docking:
-            detail = "PKS linker matching"
-        else:
-            detail = "PKS/NRPS colinearity"
-
-        return core % detail
+        self.superclusters = []  # type: List[SuperClusterLayer]
+        for supercluster_pred in results.region_predictions.get(region_number, []):
+            supercluster = record.get_supercluster(supercluster_pred.supercluster_number)
+            self.superclusters.append(SuperClusterLayer(supercluster, supercluster_pred))
 
     @property
     def sidepanel_features(self) -> List[str]:
         """ Returns a list of relevant CDSFeature names """
-        return sorted(feature.get_name() for feature in self.region_feature.cds_children if feature.nrps_pks)
+        return [feature.get_name() for feature in self.region_feature.cds_children if feature.nrps_pks]
 
     def _build_urls(self, cds_features: Iterable[CDSFeature]) -> None:
         for feature in cds_features:
@@ -155,32 +195,6 @@ class NrpspksLayer(RegionLayer):
                 self.url_relaxed[feature_name] = get_norine_url_for_specificities(per_cds_predictions,
                                                                                   be_strict=False)
 
-    def is_nrps(self) -> bool:
-        """ is the region a NRPS or NRPS hybrid """
-        return 'nrps' in self.region_feature.products
-
-    def get_norine_url(self, be_strict: bool = True) -> str:
-        """ Get a NORINE URL string for direct querying
-            use be_strict=False to add * after each monomer"""
-
-        polymer = self.polymer
-        monomers_per_protein_list = re.findall("\\(.*?\\)", polymer)
-        i = 1
-        nrpslist = []
-        for monomers_per_protein in monomers_per_protein_list:
-            monomers = monomers_per_protein[1:-1].split("-")
-
-            if be_strict:
-                monomers = [map_as_name_to_norine(element.lower())
-                            for element in filter_norine_as(monomers, be_strict=True)]
-            else:
-                monomers = [map_as_name_to_norine(element.lower()) + "*"
-                            for element in filter_norine_as(monomers)]
-            # Norine doesn't allow "x*" as a "relaxed" monomer, so we have to replace this with "x"
-            monomers = list(map(lambda x: "x" if x == "x*" else x, monomers))
-
-            if monomers:
-                nrpslist.append("nrps" + str(i) + "=" + ",".join(monomers))
-            i += 1
-        urlstring = "http://bioinfo.lifl.fr/norine/fingerPrintSearch.jsp?"+"&".join(nrpslist)
-        return urlstring
+    def has_any_polymer(self) -> bool:
+        """ Does the region contain at least one supercluster with a polymer set """
+        return any(sup.polymer for sup in self.superclusters)

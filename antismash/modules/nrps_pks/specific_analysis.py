@@ -6,25 +6,18 @@ In-depth analysis and annotation of NRPS/PKS regions.
 '''
 
 import logging
-from typing import Dict, List
+from typing import List
 
-from antismash.common.secmet import Record, CDSFeature, AntismashDomain
+from antismash.common.secmet import Record, CDSFeature, AntismashDomain, Region
 from antismash.config import ConfigType
 
 from .orderfinder import analyse_biosynthetic_order
 from .parsers import calculate_consensus_prediction, modify_monomer_predictions
 from .results import NRPS_PKS_Results
-from .smiles_generator import generate_chemical_structure_preds
+from .smiles_generator import gen_smiles_from_pksnrps
 from .substrates import run_pks_substr_spec_predictions
 
 from .nrps_predictor import run_nrpspredictor
-
-
-def generate_structure_images(record: Record, results: NRPS_PKS_Results, options: ConfigType) -> Dict[int, str]:
-    """ Generate the structure images based on monomers prediction for all regions
-    """
-    compound_predictions = {key: val[0] for key, val in results.region_predictions.items()}
-    return generate_chemical_structure_preds(compound_predictions, record)
 
 
 def get_a_domains_from_cds_features(record: Record, cds_features: List[CDSFeature]) -> List[AntismashDomain]:
@@ -68,6 +61,11 @@ def specific_analysis(record: Record, results: NRPS_PKS_Results, options: Config
 
     modify_monomer_predictions(nrps_pks_genes, results.consensus)
 
-    results.region_predictions = analyse_biosynthetic_order(nrps_pks_genes, results.consensus, record)
-    results.smiles_strings.update(generate_structure_images(record, results, options))
+    supercluster_predictions = analyse_biosynthetic_order(nrps_pks_genes, results.consensus, record)
+    for prediction in supercluster_predictions:
+        prediction.smiles = gen_smiles_from_pksnrps(prediction.polymer)
+        supercluster = record.get_supercluster(prediction.supercluster_number)
+        region = supercluster.parent
+        assert isinstance(region, Region), type(region)
+        results.region_predictions[region.get_region_number()].append(prediction)
     return results

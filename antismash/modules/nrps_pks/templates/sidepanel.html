@@ -1,52 +1,64 @@
 <div class="structure">
-  {% if region.polymer %}
-    <h3>Predicted core structure</h3>
-      {% if region.smiles_structure %}
-      <canvas id="smiles-canvas-{{region.get_region_number()}}" class="smiles-canvas" data-smiles="{{region.smiles_structure}}" width="250" height="250"></canvas>
-      {% endif %}
-      <div class="as-structure-warning">
-        {{region.warning}}
-      </div>
-    </div>
-    <div class="more-details">
-      <h3>Prediction details</h3>
-      <dl class="prediction-text">
-        <dt>Polymer prediction:</dt> <dd>{{region.polymer}}</dd>
-        {% for gene_id in region.sidepanel_features if record.get_cds_by_name(gene_id).motifs %}
-          <dt><strong>{{gene_id}}</strong></dt>
-          {% if gene_id in region.url_strict %}
-            <dd> Search NORINE for peptide:
-              <a href="{{region.url_strict[gene_id]}}" target="_new">strict</a>
-                or
-              <a href="{{region.url_relaxed[gene_id]}}" target="_new">relaxed</a>
-            </dd>
-            <br>
+  {% if region.has_any_polymer() %}
+    <h3>Predicted core structure(s)</h3>
+    {% for supercluster in region.superclusters %}
+      {% if supercluster.smiles or supercluster.polymer %}
+        <div>
+          <div class="prediction-text">
+            For supercluster {{supercluster.number}}, location {{supercluster.location.start}} - {{supercluster.location.end}}:<br>
+          </div>
+          {% if supercluster.smiles %}
+            <canvas id="smiles-canvas-{{supercluster.number}}" class="smiles-canvas" data-smiles="{{supercluster.smiles}}" width="250" height="250"></canvas>
+            <div class="as-structure-warning">
+              {{supercluster.get_warning()}}
+            </div>
           {% endif %}
-          {% for domain in record.get_cds_by_name(gene_id).nrps_pks.domains %}
-            {% if domain.feature_name in results.consensus %}
-              <dd><strong>{{domain.name}} ({{domain.start}}..{{domain.end}})</strong>: {{results.consensus[domain.feature_name]}}<br>
-              {% for prediction in results.domain_predictions.get(domain.feature_name, {}).values() %}
-                  {{prediction.as_html()}}<br>
-              {% endfor %}
-              </dd>
+          {% if supercluster.polymer %}
+            <div class="prediction-text">
+              <dl>
+                <dt><b>Polymer prediction:</b></dt><dd>{{supercluster.polymer}}</dd>
+              </dl>
+              <br>Direct lookup in NORINE database:
+              <a href="{{supercluster.get_norine_url()}}" target="_new">strict</a>
+                or
+              <a href="{{supercluster.get_norine_url(be_strict = False)}}" target="_new">relaxed</a><br>
+            </div>
             {% endif %}
-          {% endfor %}
-          <br>
-        {% endfor %}
+        </div>
+      {% if loop.index < region.superclusters | length %}
+        <hr>
       {% endif %}
-    </dl>
-  </div>
-
-
-
-  {% if region.is_nrps() %}
-  <div>
-    <h3>Database cross-links</h3>
+      {% endif %}
+    {% endfor %}
     <div class="prediction-text">
+      <br>
       <a href="http://bioinfo.lifl.fr/norine/form2.jsp" target="_new">Link to NORINE database query form</a>
-      <br>Direct lookup in NORINE database:
-      <a href="{{region.get_norine_url()}}" target="_new">strict</a> or
-        <a href="{{region.get_norine_url(be_strict = False)}}" target="_new">relaxed</a>
     </div>
-  </div>
   {% endif %}
+</div>
+<div class="more-details">
+  <h3>Prediction details</h3>
+  <dl class="prediction-text">
+    {% for gene_id in region.sidepanel_features if record.get_cds_by_name(gene_id).motifs %}
+      <dt><strong>{{gene_id}}</strong></dt>
+      {% if gene_id in region.url_strict %}
+        <dd> Search NORINE for peptide:
+          <a href="{{region.url_strict[gene_id]}}" target="_new">strict</a>
+            or
+          <a href="{{region.url_relaxed[gene_id]}}" target="_new">relaxed</a>
+        </dd>
+        <br>
+      {% endif %}
+      {% for domain in record.get_cds_by_name(gene_id).nrps_pks.domains %}
+        {% if domain.feature_name in results.consensus %}
+          <dd><strong>{{domain.name}} ({{domain.start}}..{{domain.end}})</strong>: {{results.consensus[domain.feature_name]}}<br>
+          {% for prediction in results.domain_predictions.get(domain.feature_name, {}).values() %}
+              {{prediction.as_html()}}<br>
+          {% endfor %}
+          </dd>
+        {% endif %}
+      {% endfor %}
+      <br>
+    {% endfor %}
+  </dl>
+</div>

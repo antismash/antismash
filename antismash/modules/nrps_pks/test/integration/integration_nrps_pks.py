@@ -69,9 +69,17 @@ class IntegrationNRPSPKS(unittest.TestCase):
         assert len(cal.predictions) == 5
         assert cal.predictions[0] == ["AHBA", 167.0]
 
+
+        assert len(results.region_predictions[1]) == 2
         # as does this, though it still won't use domain docking
+        pred = results.region_predictions[1][0]
         monomers = '(leu-bht-asn) + (hpg-hpg-bht) + (dhpg) + (tyr) + (pk)'
-        assert results.region_predictions == {1: [monomers, False]}
+        assert pred.polymer == monomers
+        assert not pred.domain_docking_used
+
+        pred = results.region_predictions[1][1]
+        assert pred.polymer == "(tyr) + (pk)"
+        assert not pred.domain_docking_used
 
     def test_cp002271_c19(self):
         filename = path.get_full_path(__file__, 'data', 'CP002271.1.cluster019.gbk')
@@ -84,9 +92,13 @@ class IntegrationNRPSPKS(unittest.TestCase):
                                      'nrpspksdomains_STAUR_3984_AT1': 'ccmmal',
                                      'nrpspksdomains_STAUR_3985_AT1': 'mmal',
                                      'nrpspksdomains_STAUR_3985_AT2': 'pk'}
+        assert len(results.region_predictions) == 1
+        assert list(results.region_predictions) == [1]
+        assert len(results.region_predictions[1]) == 1
         # check the gene ordering and, in this case, that it used domain docking
-        assert results.region_predictions == {1: [
-                '(ccmmal) + (ccmmal) + (mmal-pk) + (ohmmal)', True]}
+        sc_pred = results.region_predictions[1][0]
+        assert sc_pred.polymer == '(ccmmal) + (ccmmal) + (mmal-pk) + (ohmmal)'
+        assert sc_pred.domain_docking_used
         assert len(results.domain_predictions) == 10
         expected_domains = {'nrpspksdomains_STAUR_3982_AT1',
                             'nrpspksdomains_STAUR_3983_AT1',

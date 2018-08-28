@@ -9,10 +9,9 @@ import logging
 from typing import Dict
 
 import antismash.common.path as path
-from antismash.common.secmet import Record
 
 
-def gen_smiles_from_pksnrps(compound_pred: str, region_number: int) -> str:
+def gen_smiles_from_pksnrps(compound_pred: str) -> str:
     """ Generates the SMILES string for a specific compound prediction """
     smiles = ""
     residues = compound_pred.replace("(", "").replace(")", "").replace(" + ", " ").replace("-", " ").split(" ")
@@ -45,30 +44,6 @@ def gen_smiles_from_pksnrps(compound_pred: str, region_number: int) -> str:
                 smiles += aa_smiles['nrp']
             else:
                 logging.debug("No SMILES mapping for unknown monomer %r", monomer)
-        logging.debug("Region %s SMILES: %s", region_number, smiles)
-    return smiles
-
-
-def generate_chemical_structure_preds(compound_predictions: Dict[int, str],
-                                      record: Record) -> Dict[int, str]:
-    """ Generates the SMILES strings for each region """
-    smiles = {}
-
-    # Combine predictions into a prediction of the final chemical structure and generate images
-    for region in record.get_regions():
-        region_number = region.get_region_number()
-        smiles_string = ""
-        is_ectoine = region.products == ["ectoine"]
-        if region_number in compound_predictions:
-            smiles_string = gen_smiles_from_pksnrps(compound_predictions[region_number], region_number)
-        elif is_ectoine:
-            smiles_string = "CC1=NCCC(N1)C(=O)O"
-            compound_predictions[region_number] = "ectoine"
-
-        if not smiles_string:
-            continue
-        smiles[region_number] = smiles_string
-
     return smiles
 
 
