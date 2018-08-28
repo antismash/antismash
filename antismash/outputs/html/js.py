@@ -11,10 +11,9 @@ from typing import Any, Dict, Iterable, List
 from typing import Set  # comment hints, # pylint: disable=unused-import
 
 from antismash.common.module_results import ModuleResults
-from antismash.common.secmet import CDSFeature, Feature, Record, Region, SuperCluster
+from antismash.common.secmet import CDSFeature, Feature, Record, Region, SuperCluster, SubRegion
 from antismash.common.secmet import Cluster  # comment hints, # pylint: disable=unused-import
 from antismash.config import ConfigType
-from antismash.detection import clusterfinder_probabilistic as clusterfinder
 from antismash.modules import clusterblast, tta
 from antismash.outputs.html.generate_html_table import generate_html_table
 
@@ -71,7 +70,7 @@ def convert_regions(record: Record, options: ConfigType, result: Dict[str, Modul
         js_region['idx'] = region.get_region_number()
         mibig_entries = mibig_results.get(js_region['idx'], {})
         js_region['orfs'] = convert_cds_features(record, region.cds_children, options, mibig_entries)
-        js_region['clusters'] = get_clusters_from_superclusters(region.superclusters)
+        js_region['clusters'] = get_clusters_from_region_parts(region.superclusters, region.subregions)
         js_region['tta_codons'] = convert_tta_codons(tta_codons)
         js_region['type'] = "-".join(region.products)
         js_region['products'] = region.products
@@ -99,31 +98,47 @@ def convert_cds_features(record: Record, features: Iterable[CDSFeature], options
     return js_orfs
 
 
-def get_clusters_from_superclusters(superclusters: Iterable[SuperCluster]) -> List[Dict[str, Any]]:
+def get_clusters_from_region_parts(superclusters: Iterable[SuperCluster],
+                                   subregions: Iterable[SubRegion]) -> List[Dict[str, Any]]:
     """ Converts all Clusters in a collection of SuperCluster features to JSON """
     unique_clusters = set()  # type: Set[Cluster]
     for supercluster in superclusters:
         unique_clusters.update(supercluster.clusters)
     js_clusters = []
-    # clusterfinder's putative regions can never overlap, so if they exist, collapse
-    # them into a single row
-    putatives = [cluster for cluster in unique_clusters if cluster.product == clusterfinder.PUTATIVE_PRODUCT]
-    non_putatives = [cluster for cluster in unique_clusters if cluster.product != clusterfinder.PUTATIVE_PRODUCT]
-    clusters = putatives + sorted(non_putatives,
-                                  key=lambda x: (x.location.start, -len(x.location), x.product or "unknown"))
+    clusters = sorted(unique_clusters, key=lambda x: (x.location.start, -len(x.location), x.product))
+    subregions = sorted(subregions, key=lambda x: (x.location.start, -len(x.location), x.tool))
+    for i, subregion in enumerate(subregions):
+        js_cluster = {"start": subregion.location.start,
+                      "end": subregion.location.end,
+                      "tool": subregion.tool,
+                      "neighbouring_start": subregion.location.start,
+                      "neighbouring_end": subregion.location.end,
+                      "product": subregion.anchor,
+                      "height": i}
+        js_clusters.append(js_cluster)
     for i, cluster in enumerate(clusters):
         js_cluster = {"start": cluster.core_location.start,
                       "end": cluster.core_location.end,
                       "tool": cluster.tool,
                       "neighbouring_start": cluster.location.start,
                       "neighbouring_end": cluster.location.end,
-                      "product": cluster.product or "unknown"}
-        if cluster.product == "cf_putative":
-            js_cluster['height'] = 0
-        else:
-            js_cluster['height'] = i - len(putatives) + 1
-        if cluster.tool == "cassis":
-            js_cluster['product'] = cluster.get_qualifier("anchor")[0]
+                      "product": cluster.product,
+                      "height": i + len(subregions)}
+        js_clusters.append(js_cluster)
+
+    for i, supercluster in enumerate(superclusters):
+        # if it's the only supercluster in the region and it's single, don't draw it to minimise noise
+        parent = supercluster.parent
+        assert isinstance(parent, Region), type(parent)
+        if len(parent.superclusters) == 1 and not parent.subregions and len(supercluster.clusters) == 1:
+            continue
+        js_cluster = {"start": supercluster.location.start + 1,
+                      "end": supercluster.location.end - 1,
+                      "tool": "rule-based-clusters",
+                      "neighbouring_start": supercluster.location.start,
+                      "neighbouring_end": supercluster.location.end,
+                      "product": "SC %d: %s" % (supercluster.get_supercluster_number(), supercluster.kind)}
+        js_cluster['height'] = i + len(clusters) + len(subregions) + 1
         js_clusters.append(js_cluster)
     return js_clusters
 
