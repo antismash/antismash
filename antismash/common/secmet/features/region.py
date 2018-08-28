@@ -59,7 +59,7 @@ class Region(CDSCollection):
         Region features cannot overlap.
     """
     __slots__ = ["_subregions", "_superclusters", "clusterblast",
-                 "knownclusterblast", "subclusterblast", "smiles_structure"]
+                 "knownclusterblast", "subclusterblast"]
 
     def __init__(self, superclusters: List[SuperCluster] = None,
                  subregions: List[SubRegion] = None) -> None:
@@ -89,10 +89,6 @@ class Region(CDSCollection):
         self.clusterblast = None  # type: List[str]
         self.knownclusterblast = None  # type: Any
         self.subclusterblast = None  # type: List[str]
-
-        # temporary due to refactoring, will end up in SuperCluster once
-        # modules are modified
-        self.smiles_structure = None  # type: str
 
     @property
     def subregions(self) -> Tuple[SubRegion, ...]:
