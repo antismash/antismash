@@ -193,8 +193,7 @@ class IntegrationLanthipeptides(unittest.TestCase):
         """Test lanthipeptide prediction for lactocin S"""
         filename = path.get_full_path(__file__, 'data', 'lactocin_s.gbk')
         rec = Record.from_biopython(seqio.read(filename), taxon="bacteria")
-        for motif in rec.get_cds_motifs():
-            assert motif.tool == "pksnrpsmotif"
+        assert not rec.get_cds_motifs()
         existing_count = len(rec.get_cds_motifs())
         result = run_specific_analysis(rec)
         assert len(result.clusters) == 1
