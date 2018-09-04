@@ -9,14 +9,40 @@ from typing import Any, Iterable, Iterator, List, Sequence, Set, Union
 
 def _parse_format(fmt: str, data: str) -> Sequence[str]:
     """ Reverse of str.format(), pulls values from an input string that match
-        positions of {} in a format string. Raises a ValueError if the match
-        cannot be found.
+        positions of {} in a format string. Raises a ValueError if no matches
+        are found.
+
+        If the {} sections have a specific formatter, those specifics will be ignored
+
+        Arguments:
+            fmt: the format to parse with
+            data: the string that was formatted with fmt and specific values
+
+        Returns:
+            a sequence of strings, one for each value found
     """
-    safe = fmt.replace('(', r'\(').replace(')', r'\)')
-    regex = "^{}$".format(safe.replace("{}", "(.+?)"))
+    # escape anything that might cause issues when using it as a regex later
+    safe = re.escape(fmt)
+    # the simple search here would be {.*?} for a non-greedy brace pair, but
+    # because python format strings use {{ and }} as literal braces, they need to be excluded
+    # e.g. "{{{{{:g}}}}}".format(1e-5) == "{{1e-5}}"
+    # so, step 1: unescape all braces
+    safe = safe.replace(r"\{", "{").replace(r"\}", "}")
+    # step 2: combine all double braces to an escaped brace
+    safe = safe.replace("{{", r"\{")
+    # but from the outside in, so reverse the search and reverse the replacement
+    safe = safe[::-1].replace("}}", "}\\")[::-1]  # not a raw string because that breaks the interpreter
+    # step 3: replace all unescaped brace pairs with a capture group
+    sub_search = r"(?<!\\)({.*?(?<!\\)})"
+    # core    "({.*?})" any brace pair and its contents
+    # special "(?<!\\)" disallows any core starting or ending with an escaped brace
+    # this combo allows capturing the nested parts correctly
+    regex = "^{}$".format(re.sub(sub_search, r"(.+?)", safe))
+
     res = re.search(regex, data)
     if res is None:
-        raise ValueError("Could not match format %r to input %r" % (fmt, data))
+        raise ValueError("could not match format %r to input %r" % (fmt, data))
+    # don't return matches, since that includes the braces, just use the groups
     return res.groups()
 
 
