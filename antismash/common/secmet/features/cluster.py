@@ -60,7 +60,7 @@ class Cluster(CDSCollection):
 
     def add_cds(self, cds: CDSFeature) -> None:
         super().add_cds(cds)
-        if cds.sec_met and self.product in cds.sec_met.products:
+        if cds.sec_met and self.product in cds.sec_met.products and cds.is_contained_by(self.core_location):
             self._definition_cdses.add(cds)
 
     def to_biopython(self, qualifiers: Optional[Dict[str, List[str]]] = None) -> List[SeqFeature]:
