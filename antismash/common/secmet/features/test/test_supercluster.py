@@ -15,13 +15,15 @@ from antismash.common.secmet.features.supercluster import (
     TemporarySuperCluster,
     create_superclusters_from_clusters as creator,
 )
-from antismash.common.secmet.qualifiers import SecMetQualifier
+from antismash.common.secmet.qualifiers import SecMetQualifier, GeneFunction
 
 
 def create_cds(start, end, products):
     cds = CDSFeature(FeatureLocation(start, end, strand=1),
                      locus_tag="%s-%s-%s" % (start, end, "-".join(products)))
     cds.sec_met = SecMetQualifier(set(products), [])
+    for product in products:
+        cds.gene_functions.add(GeneFunction.CORE, "test", "dummy", product)
     return cds
 
 

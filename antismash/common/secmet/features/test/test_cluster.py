@@ -8,7 +8,7 @@ import unittest
 
 from antismash.common.secmet import FeatureLocation
 from antismash.common.secmet.features import Cluster, CDSFeature
-from antismash.common.secmet.qualifiers import SecMetQualifier
+from antismash.common.secmet.qualifiers import GeneFunction
 
 
 def create_cluster():
@@ -56,8 +56,9 @@ class TestDefinitionCDS(unittest.TestCase):
         assert not self.cluster.cds_children
         assert not self.cluster.definition_cdses
 
-        self.matching_qual = SecMetQualifier(set(["a", "b"]), [SecMetQualifier.Domain("a-b", 1e-5, 1., 2, "test")])
-        self.mismatch_qual = SecMetQualifier(set(["b", "c"]), [SecMetQualifier.Domain("b-c", 1e-5, 1., 2, "test")])
+    def add_core_function(self, cds, cluster_product=True):
+        product = self.cluster.product if cluster_product else "not%s" % self.cluster.product
+        cds.gene_functions.add(GeneFunction.CORE, "test", "dummy", product)
 
     def test_no_secmet_qual_inside(self):
         self.cluster.add_cds(self.inside_cds)
@@ -65,35 +66,35 @@ class TestDefinitionCDS(unittest.TestCase):
         assert not self.cluster.definition_cdses
 
     def test_matching_secmet_inside(self):
-        self.inside_cds.sec_met = self.matching_qual
+        self.add_core_function(self.inside_cds)
         self.cluster.add_cds(self.inside_cds)
         assert self.cluster.cds_children
         assert self.cluster.definition_cdses == {self.inside_cds}
 
     def test_matching_secmet_neighbour(self):
-        self.neighbour_cds.sec_met = self.matching_qual
+        self.add_core_function(self.neighbour_cds)
         self.cluster.add_cds(self.neighbour_cds)
         assert self.cluster.cds_children
         assert not self.cluster.definition_cdses
 
     def test_matching_secmet_outside(self):
-        self.outside_cds.sec_met = self.matching_qual
+        self.add_core_function(self.outside_cds)
         with self.assertRaisesRegex(ValueError, "not contained by"):
             self.cluster.add_cds(self.outside_cds)
 
     def test_mismatching_secmet_inside(self):
-        self.inside_cds.sec_met = self.mismatch_qual
+        self.add_core_function(self.inside_cds, cluster_product=False)
         self.cluster.add_cds(self.inside_cds)
         assert self.cluster.cds_children
         assert not self.cluster.definition_cdses
 
     def test_mismatching_secmet_neighbour(self):
-        self.neighbour_cds.sec_met = self.mismatch_qual
+        self.add_core_function(self.neighbour_cds, cluster_product=False)
         self.cluster.add_cds(self.neighbour_cds)
         assert self.cluster.cds_children
         assert not self.cluster.definition_cdses
 
     def test_mismatching_secmet_outside(self):
-        self.outside_cds.sec_met = self.mismatch_qual
+        self.add_core_function(self.outside_cds, cluster_product=False)
         with self.assertRaisesRegex(ValueError, "not contained by"):
             self.cluster.add_cds(self.outside_cds)

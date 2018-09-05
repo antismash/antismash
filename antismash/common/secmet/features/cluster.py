@@ -11,6 +11,7 @@ from .cds_feature import CDSFeature
 from .cdscollection import CDSCollection
 from .feature import Feature, FeatureLocation
 from ..locations import location_from_string
+from ..qualifiers.gene_functions import GeneFunction
 
 
 class Cluster(CDSCollection):
@@ -60,7 +61,10 @@ class Cluster(CDSCollection):
 
     def add_cds(self, cds: CDSFeature) -> None:
         super().add_cds(cds)
-        if cds.sec_met and self.product in cds.sec_met.products and cds.is_contained_by(self.core_location):
+        if not cds.is_contained_by(self.core_location):
+            return
+        cores = cds.gene_functions.get_by_function(GeneFunction.CORE)
+        if any(core.product == self.product for core in cores):
             self._definition_cdses.add(cds)
 
     def to_biopython(self, qualifiers: Optional[Dict[str, List[str]]] = None) -> List[SeqFeature]:
