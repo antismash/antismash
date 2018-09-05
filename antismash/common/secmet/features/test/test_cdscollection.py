@@ -41,5 +41,5 @@ class TestCDSCollection(unittest.TestCase):
         assert cds in collection.cds_children
 
         cds = CDSFeature(FeatureLocation(120, 140, strand=1), locus_tag="test")
-        with self.assertRaises(AssertionError):
+        with self.assertRaisesRegex(ValueError, "not contained by"):
             collection.add_cds(cds)

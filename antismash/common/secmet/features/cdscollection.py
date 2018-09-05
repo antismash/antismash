@@ -97,7 +97,10 @@ class CDSCollection(Feature):
         """ Add a CDS to the collection covered by this feature, also adds to
             any child collections which also contain the CDS feature
         """
-        assert isinstance(cds, CDSFeature) and cds.is_contained_by(self), "%s not in %s" % (cds, self)
+        if not isinstance(cds, CDSFeature):
+            raise TypeError("CDS to add not a CDSFeature")
+        if not cds.is_contained_by(self):
+            raise ValueError("CDS added is not contained by collection")
         self._cdses[cds] = None
         if not self._children:
             return
