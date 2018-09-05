@@ -92,7 +92,7 @@ class TestRegionChildren(unittest.TestCase):
     def test_adding_invalid_cds(self):
         cds = CDSFeature(FeatureLocation(50, 60, 1), locus_tag="test_cds")
         assert not cds.is_contained_by(self.region)
-        with self.assertRaises(AssertionError):
+        with self.assertRaisesRegex(ValueError, "not contained by"):
             self.region.add_cds(cds)
 
 
