@@ -86,7 +86,7 @@ class TestGeneFunction(unittest.TestCase):
         cds.gene_functions.add(GeneFunction.REGULATORY, "smcogs", "dummy")
         assert cds.gene_functions.get_classification() == GeneFunction.REGULATORY
         # and cluster definition overrides even that
-        cds.gene_functions.add(GeneFunction.CORE, "cluster_definition", "dummy")
+        cds.gene_functions.add(GeneFunction.CORE, "cluster_definition", "dummy", "product")
         assert cds.gene_functions.get_classification() == GeneFunction.CORE
 
         # and that we still have tracked these
@@ -106,6 +106,10 @@ class TestGeneFunction(unittest.TestCase):
         assert cds.gene_function == GeneFunction.ADDITIONAL
         assert CDSFeature.from_biopython(cds.to_biopython()[0]).gene_function == GeneFunction.ADDITIONAL
 
+    def test_core_requiring_product(self):
+        cds = CDSFeature(FeatureLocation(1, 5, 1), locus_tag="foo")
+        with self.assertRaisesRegex(ValueError, "CORE functions require a product"):
+            cds.gene_functions.add(GeneFunction.CORE, "cluster_definition", "dummy")
 
 class TestGOQualifier(unittest.TestCase):
     def test_go_entries(self):

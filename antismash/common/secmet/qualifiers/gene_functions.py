@@ -5,8 +5,10 @@
 
 from collections import defaultdict
 from enum import Enum, unique
-from typing import Iterator, List, Optional
+from typing import Any, Iterator, List, Optional
 from typing import Dict  # comment hints  # pylint: disable=unused-import
+
+from .secmet import _parse_format
 
 
 @unique
@@ -43,21 +45,52 @@ class GeneFunction(Enum):
 
 class _GeneFunctionAnnotation:  # pylint: disable=too-few-public-methods
     """ A single instance of an annotation. """
-    slots = ["function", "tool", "description"]
+    slots = ["function", "tool", "description", "product"]
 
-    def __init__(self, function: GeneFunction, tool: str, description: str) -> None:
+    def __init__(self, function: GeneFunction, tool: str, description: str,
+                 product: Optional[str]) -> None:
         assert isinstance(function, GeneFunction), "wrong type: %s" % type(function)
         assert tool and len(tool.split()) == 1, tool  # no whitespace allowed in tool name
         assert description
+        if function == GeneFunction.CORE and not product:
+            raise ValueError("CORE functions require a product to be specified")
         self.function = function
         self.tool = str(tool)
         self.description = str(description)
+        self.product = product
 
     def __str__(self) -> str:
-        return "%s (%s) %s" % (self.function, self.tool, self.description)
+        if not self.product:
+            return "%s (%s) %s" % (self.function, self.tool, self.description)
+        return "%s (%s) %s: %s" % (self.function, self.tool, self.product, self.description)
 
     def __repr__(self) -> str:
-        return "GeneFunctionAnnotation(function=%r, tool='%s', '%s')" % (self.function, self.tool, self.description)
+        fmt = "GeneFunctionAnnotation(function=%r, tool='%s', product='%s', '%s')"
+        return fmt % (self.function, self.tool, self.product, self.description)
+
+    def __eq__(self, other: Any) -> bool:
+        return (isinstance(other, _GeneFunctionAnnotation)
+                and self.function == other.function
+                and self.tool == other.tool
+                and self.description == other.description
+                and self.product == other.product)
+
+    @classmethod
+    def from_string(cls, text: str) -> "_GeneFunctionAnnotation":
+        """ Regenerates a GeneFunctionAnnotation from a string version """
+        try:
+            parts = _parse_format("{} ({}) {}: {}", text)
+        except ValueError:
+            try:
+                parts = _parse_format("{} ({}) {}", text)
+            except ValueError:
+                raise ValueError("cannot parse GeneFunctionAnnotation from %s" % text)
+        if len(parts) == 4:
+            function, tool, product, description = parts
+        else:
+            function, tool, description = parts
+            product = None
+        return cls(GeneFunction.from_string(function), tool, description, product)
 
 
 class GeneFunctionAnnotations:
@@ -79,8 +112,8 @@ class GeneFunctionAnnotations:
     def __len__(self) -> int:
         return len(self._annotations)
 
-    def add(self, function: GeneFunction, tool: str, description: str
-            ) -> "_GeneFunctionAnnotation":
+    def add(self, function: GeneFunction, tool: str, description: str,
+            product: Optional[str] = None) -> "_GeneFunctionAnnotation":
         """ Adds a gene function annotation. If an existing annotation has all
             the same values as those provided, a duplicate will not be added.
 
@@ -88,6 +121,8 @@ class GeneFunctionAnnotations:
                 function: a GeneFunction value
                 tool: a string naming the tool that determined the gene function
                 description: description text for storing extra information
+                product: the name of the product the annotation is related to,
+                         required only if the function is CORE
 
             Returns:
                 the GeneFunction added (or the existing one if duplicated)
@@ -95,11 +130,11 @@ class GeneFunctionAnnotations:
         tool = str(tool)
         description = str(description)
         # if there's already an exactly similar function annotation, skip adding
+        new = _GeneFunctionAnnotation(function, tool, description, product)
         existing_functions = self._by_function.get(function, [])
         for existing in existing_functions:
-            if existing.tool == tool and existing.description == description:
+            if existing == new:
                 return existing
-        new = _GeneFunctionAnnotation(function, tool, description)
         self._by_tool[tool].append(new)
         self._by_function[function].append(new)
         self._annotations.append(new)
@@ -111,9 +146,8 @@ class GeneFunctionAnnotations:
             Expected format will be as per str(GeneFunctionAnnotation).
         """
         for section in qualifier:
-            function, tool, description = section.split(maxsplit=2)
-            tool = tool[1:-1]  # strip the ()
-            self.add(GeneFunction.from_string(function), tool, description)
+            annotation = _GeneFunctionAnnotation.from_string(section)
+            self.add(annotation.function, annotation.tool, annotation.description, annotation.product)
 
     def get_by_tool(self, tool: str) -> Optional[List]:
         """ Returns a list of all GeneFunctionAnnotations which were added with
@@ -121,11 +155,11 @@ class GeneFunctionAnnotations:
         """
         return self._by_tool.get(tool)
 
-    def get_by_function(self, function: GeneFunction) -> Optional[List]:
+    def get_by_function(self, function: GeneFunction) -> List[_GeneFunctionAnnotation]:
         """ Returns a list of GeneFunctionAnnotations which have the same
             gene function as that provided.
         """
-        return self._by_function.get(function)
+        return self._by_function.get(function, [])
 
     def get_classification(self) -> GeneFunction:
         """ Returns the function of the gene, in the priority order of priority:

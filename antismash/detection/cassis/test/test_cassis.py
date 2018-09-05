@@ -46,7 +46,7 @@ def create_fake_record():
         seq_record.add_gene(secmet.Gene(locations[i], locus_tag="gene" + str(i+1)))
         if i == 3 or i == 5:
             cds.sec_met = secmet.qualifiers.SecMetQualifier({"faked"}, [])
-            cds.gene_functions.add(secmet.qualifiers.GeneFunction.CORE, "testtool", "dummy")
+            cds.gene_functions.add(secmet.qualifiers.GeneFunction.CORE, "testtool", "dummy", "product")
 
     return seq_record
 
