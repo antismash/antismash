@@ -48,8 +48,7 @@ class CDSResults:
         for cluster_type, matching_domains in self.definition_domains.items():
             all_matching.update(matching_domains)
             for domain in matching_domains:
-                self.cds.gene_functions.add(GeneFunction.CORE, tool,
-                                            "%s: %s" % (cluster_type, domain))
+                self.cds.gene_functions.add(GeneFunction.CORE, tool, domain, cluster_type)
 
         # and add all detected domains as ADDITIONAL if not CORE
         for secmet_domain in self.cds.sec_met.domains:
