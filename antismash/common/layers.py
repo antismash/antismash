@@ -113,7 +113,7 @@ class RegionLayer:
     def best_knowncluster_name(self) -> str:
         """ The name of the best hit from knownclusterblast, if it was run """
         if not self.knownclusterblast:
-            return "-"
+            return ""
         return self.knownclusterblast[0].name.replace("_", " ")
 
     @property
@@ -128,7 +128,7 @@ class RegionLayer:
     def bgc_id(self) -> str:
         """ The BGC id of the best hit from knownclusterblast, if it was run """
         if not self.region_feature.knownclusterblast:
-            return "-"
+            return ""
         return format(self.region_feature.knownclusterblast[0].bgc_id)
 
     @property

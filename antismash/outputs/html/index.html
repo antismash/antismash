@@ -101,11 +101,15 @@
                 {% else %}
                   {% set colour = "rgba(205, 92, 92, 0.3)" %}
                 {% endif %}
+                {% if similarity > 0 %}
                 <td class="digits similarity-text" style="background-image: linear-gradient(to left, {{colour}}, {{colour}} {{similarity}}%, #ffffff00 {{similarity}}%)">{{similarity}}%</td>
-                {% if region.bgc_id != "-"  -%}
+                {% else %}
+                <td></td>
+                {% endif %}
+                {% if region.bgc_id != "" -%}
                   <td><a href="https://mibig.secondarymetabolites.org/go/{{region.bgc_id}}/{{region.bgc_cluster_number}}" target="_blank">{{region.bgc_id}}</a></td>
                 {%- else -%}
-                  <td>-</td>
+                  <td></td>
                 {%- endif %}
               </tr>
               {%- endfor %}
