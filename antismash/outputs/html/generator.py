@@ -17,7 +17,7 @@ from antismash.common.secmet import Record
 from antismash.common.json import JSONOrf
 from antismash.config import ConfigType
 from antismash.outputs.html import js
-from antismash.typing import AntismashModule
+from antismash.custom_typing import AntismashModule
 
 
 def build_json_data(records: List[Record], results: List[Dict[str, module_results.ModuleResults]],

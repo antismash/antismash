@@ -6,12 +6,12 @@
 
 
 class ConfigType:  # pylint: disable=too-few-public-methods
-    """ Exists only to allow mypy to use the stub by this name in typing.pyi """
+    """ Exists only to allow mypy to use the stub by this name in custom_typing.pyi """
     def __init__(self) -> None:
         raise NotImplementedError("ConfigType is a stub for typing purposes only")
 
 
 class AntismashModule:  # pylint: disable=too-few-public-methods
-    """ Intended only for type hints of antiSMASH modules, see typing.pyi """
+    """ Intended only for type hints of antiSMASH modules, see custom_typing.pyi """
     def __init__(self) -> None:
         raise NotImplementedError("AntismashModule is a stub for typing purposes only")

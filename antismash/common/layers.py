@@ -13,7 +13,7 @@ from typing import Any, List, Optional, Tuple
 from antismash.config import ConfigType, get_config
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record, Region
-from antismash.typing import AntismashModule
+from antismash.custom_typing import AntismashModule
 
 
 class OptionsLayer:

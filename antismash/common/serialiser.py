@@ -20,7 +20,7 @@ from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record
 from antismash.common.secmet.locations import location_from_string
 from antismash.config import get_config
-from antismash.typing import AntismashModule
+from antismash.custom_typing import AntismashModule
 
 
 class AntismashResults:
