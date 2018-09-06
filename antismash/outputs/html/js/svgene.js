@@ -104,7 +104,7 @@ svgene.drawOrderedRegionOrfs = function(region, chart, all_orfs, borders, tta_co
   .enter().append("polygon")
     .attr("points", function(d) { return svgene.geneArrowPoints(d, height, orf_y, offset, scale); })
     .attr("class", function(d) { return "svgene-type-" + d.type + " svgene-orf"; })
-    .attr("id", function(d) { return idx + "-region" + region.idx + "-" + svgene.tag_to_id(d.locus_tag) + "-orf"; })
+    .attr("id", function(d) { return idx + "-region" + region.idx + "-" + svgene.tag_to_id(d.locus_tag) + "-svgeneorf"; })
     .attr("style", function(d) { if (d.color !== undefined) { return "fill:" + d.color; } });
 
   // TTA codons
@@ -178,12 +178,12 @@ svgene.sort_biosynthetic_orfs_last = function(a, b) {
 };
 
 svgene.tag_to_id = function(tag) {
-    return tag.replace(/(:|\.)/g, '-').replace(/-orf/g, '_orf');
+    return tag.replace(/(:|\.)/g, '-').replace(/-svgeneorf/g, '_orf');
 }
 
 
 svgene.tooltip_handler = function(ev) {
-    var id = $(this).attr("id").replace("-orf", "-tooltip");
+    var id = $(this).attr("id").replace("-svgeneorf", "-tooltip");
     var tooltip = $("#"+id);
 
     if (svgene.active_tooltip) {
@@ -214,10 +214,10 @@ svgene.tooltip_handler = function(ev) {
 
 svgene.init = function() {
     $(".svgene-orf").mouseover(function(e) {
-        var id = $(this).attr("id").replace("-orf", "-label");
+        var id = $(this).attr("id").replace("-svgeneorf", "-label");
         $("#"+id).show();
     }).mouseout(function(e) {
-        var id = $(this).attr("id").replace("-orf", "-label");
+        var id = $(this).attr("id").replace("-svgeneorf", "-label");
         $("#"+id).hide();
     }).click(svgene.tooltip_handler);
     $(".svgene-textarea").click(function(event) {
