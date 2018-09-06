@@ -25,7 +25,7 @@ Making changes
 - Please don't work on the `master` branch directly
 - Make commits in logical units
 - Please follow the PEP8 guidelines when writing python code
-- Make sure your code works on Python 2.7 and the current 3.x versions.
+- Make sure your code works on Python 3.5 and later versions.
 - Check for unnecessary whitespace with `git diff --check`
 - Make sure you use commit messages in the proper format
 
@@ -43,7 +43,7 @@ have the issue # link up to the pull request automatically.
 
 - Make sure all changes are backed up by the necessary tests
 - Run all tests to ensure nothing else broke accidentally
-  You can install the test requirements by running `pip install -r antismash/tests/requirements.txt`
+  You can install the test requirements by running `pip install -e .[testing]`
   and then run the test by running `make unit`. You can also generate some code coverage statistics
   by running `make coverage`. Please ensure that your changes make the coverage numbers go up, not down.
   Lastly, run the integration tests using `make integration` to ensure the antiSMASH output is still sane
@@ -55,4 +55,5 @@ Submitting changes
 - Push your changes to a topic branch in your fork of the repository
 - Submit a pull request to the antiSMASH team repository
 - Update your ticket to include a link to your pull request if the automatic linking did not work.
-- The antiSMASH team tries to at least provide initial comments on your pull request within three business days.
+- The antiSMASH team will try to at least provide initial comments on your pull
+  request within three business days.
