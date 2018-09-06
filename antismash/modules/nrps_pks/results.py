@@ -95,6 +95,7 @@ class NRPS_PKS_Results(ModuleResults):
                    "record_id": self.record_id,
                    "domain_predictions": domain_predictions,
                    "consensus": self.consensus,
+                   "consensus_transat": self.consensus_transat,
                    "region_predictions": region_json,
                    }
         return results
@@ -121,6 +122,7 @@ class NRPS_PKS_Results(ModuleResults):
                 assert rebuilt is not None
                 results.domain_predictions[domain_name][method] = rebuilt
         results.consensus = json["consensus"]
+        results.consensus_transat = json["consensus_transat"]
         for region_number, predictions in json["region_predictions"].items():
             for pred in predictions:
                 prediction = SuperClusterPrediction.from_json(pred)
