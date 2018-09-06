@@ -46,12 +46,6 @@ class ModuleResults:
         """
         raise NotImplementedError()
 
-    def generate_images(self, image_dir: str) -> None:
-        """
-            Generates svgs and saves them to the output image directory
-        """
-        pass
-
 
 class DetectionResults(ModuleResults):  # keeping abstract is deliberate, pylint: disable=abstract-method
     """ Stores results for detection modules.
