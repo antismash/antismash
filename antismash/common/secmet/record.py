@@ -17,6 +17,7 @@ import logging
 from typing import Any, Dict, List, Tuple, Union, cast
 from typing import Optional, Sequence, Set  # comment hints # pylint: disable=unused-import
 
+from Bio import SeqIO
 import Bio.Alphabet
 from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
@@ -667,6 +668,16 @@ class Record:
         for feature in postponed_features["region"]:
             record.add_feature(Region.from_biopython(feature).convert_to_real_feature(record))
         return record
+
+    @staticmethod
+    def from_genbank(filepath: str, taxon: str = "bacteria") -> List["Record"]:
+        """ Reads a genbank file and creates a Record instance for each record
+            contained in the file.
+        """
+        records = []
+        for bio in SeqIO.parse(filepath, "genbank"):
+            records.append(Record.from_biopython(bio, taxon))
+        return records
 
     def _link_cds_to_parent(self, cds: CDSFeature) -> None:
         """ connect the given CDS to any collection that contains it, if any """

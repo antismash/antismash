@@ -184,6 +184,15 @@ class TestRecord(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "empty sequence"):
             Record("").get_gc_content()
 
+    def test_read_from_file(self):
+        # very basic testing to ensure that the file IO itself functions
+        recs = Record.from_genbank(helpers.get_path_to_nisin_genbank())
+        assert len(recs) == 1
+        rec = recs[0]
+        assert rec.get_feature_count() == 24
+        assert len(rec.get_cds_features()) == 11
+        assert isinstance(rec.get_cds_by_name("nisB"), CDSFeature)
+
 
 class TestClusterManipulation(unittest.TestCase):
     def setUp(self):
