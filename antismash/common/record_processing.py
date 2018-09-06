@@ -18,7 +18,7 @@ from helperlibs.bio import seqio
 from antismash.common import gff_parser
 from antismash.common.secmet import Record
 from antismash.config import get_config, update_config, ConfigType
-from antismash.typing import AntismashModule
+from antismash.custom_typing import AntismashModule
 
 from .subprocessing import parallel_function
 

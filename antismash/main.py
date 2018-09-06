@@ -49,7 +49,7 @@ from antismash.modules import (active_site_finder,
                                tta,
                                )
 from antismash.outputs import html, svg
-from antismash.typing import AntismashModule
+from antismash.custom_typing import AntismashModule
 
 __version__ = "5.0.0alpha"
 

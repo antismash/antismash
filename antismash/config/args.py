@@ -14,7 +14,7 @@ import os
 from typing import (Any, AnyStr, IO, List, Optional,   # pylint: disable=unused-import
                     Dict, Set, Tuple)
 
-from antismash.typing import AntismashModule
+from antismash.custom_typing import AntismashModule
 
 # There are some issues with mypy's typeshed for argparse, so there's a lot of
 # ignores sprinkled throughout. Most deal with ArgumentParser methods

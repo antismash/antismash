@@ -17,7 +17,7 @@ import os
 import threading
 from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
-from antismash.typing import AntismashModule, ConfigType
+from antismash.custom_typing import AntismashModule, ConfigType
 
 from .args import build_parser, AntismashParser
 from .loader import load_config_from_file
