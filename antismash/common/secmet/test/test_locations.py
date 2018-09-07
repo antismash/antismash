@@ -8,6 +8,7 @@ import unittest
 
 from antismash.common.secmet.locations import (
     convert_protein_position_to_dna,
+    build_location_from_others,
     location_bridges_origin as is_bridged,
     split_origin_bridging_location as splitter,
     location_from_string,
@@ -103,6 +104,49 @@ class TestProteinPositionConversion(unittest.TestCase):
                                      FeatureLocation(5741, 5877, strand=-1),
                                      FeatureLocation(4952, 5682, strand=-1)])
         assert self.func(97, 336, location) == (5078, 5854)
+
+
+class TestCompoundCombination(unittest.TestCase):
+    def test_separate(self):
+        locations = [FeatureLocation(6, 9, 1), FeatureLocation(12, 16, 1)]
+        new = build_location_from_others(locations)
+        assert isinstance(new, CompoundLocation)
+        assert new == CompoundLocation(locations)
+
+    def test_single(self):
+        for strand in [1, -1]:
+            location = FeatureLocation(6, 9, strand)
+            new = build_location_from_others([location])
+            assert isinstance(new, FeatureLocation) and not isinstance(new, CompoundLocation)
+            assert new == location
+
+    def test_single_compound(self):
+        for strand in [1, -1]:
+            location = CompoundLocation([FeatureLocation(6, 9, strand),
+                                         FeatureLocation(12, 16, strand)])
+            new = build_location_from_others([location])
+            assert new == location
+
+    def test_all_merged(self):
+        for strand in [1, -1]:
+            locations = [FeatureLocation(6, 9, strand),
+                         FeatureLocation(9, 12, strand),
+                         FeatureLocation(12, 16, strand)]
+            new = build_location_from_others(locations)
+            assert isinstance(new, FeatureLocation) and not isinstance(new, CompoundLocation)
+            assert new == FeatureLocation(6, 16, strand)
+
+    def test_some_merged(self):
+        for strand in [1, -1]:
+            locations = [FeatureLocation(1, 4, strand),
+                         FeatureLocation(6, 9, strand),
+                         FeatureLocation(9, 12, strand),
+                         FeatureLocation(15, 18, strand)]
+            new = build_location_from_others(locations)
+            assert isinstance(new, CompoundLocation)
+            assert new == CompoundLocation([FeatureLocation(1, 4, strand),
+                                            FeatureLocation(6, 12, strand),
+                                            FeatureLocation(15, 18, strand)])
 
 
 def build_compound(pairs, strand, operator="join"):
