@@ -154,7 +154,8 @@ def run_and_regenerate_results_for_module(input_file, module, options,
     with TemporaryDirectory(change=True) as tempdir:
         orig_output = options.output_dir
         update_config({"output_dir": tempdir})
-        json_filename = os.path.join(options.output_dir, os.path.basename(input_file).rsplit('.', 1)[0] + ".json")
+        base_filename = os.path.join(options.output_dir, os.path.basename(input_file).rsplit('.', 1)[0])
+        json_filename = base_filename + ".json"
         assert not os.path.exists(json_filename)
         try:
             antismash.main.run_antismash(input_file, options)
@@ -171,6 +172,8 @@ def run_and_regenerate_results_for_module(input_file, module, options,
             record.clear_cds_motifs()
         if callback:
             callback(tempdir)
+        # and while the genbank output still exists, grab that and check it's readable
+        assert len(Record.from_genbank(base_filename + ".gbk")) == expected_record_count
     # not the responsibility of modules, but if it's wrong then everything is
     assert len(results.results) == expected_record_count
     assert len(results.records) == expected_record_count
