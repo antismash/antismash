@@ -3,7 +3,7 @@
 
 """ Helper functions for location operations """
 
-from typing import Iterable, List, Tuple
+from typing import Iterable, List, Sequence, Tuple
 
 from Bio.SeqFeature import (
     AbstractPosition,
@@ -68,6 +68,33 @@ def convert_protein_position_to_dna(start: int, end: int, location: FeatureLocat
         raise ValueError(("Converted coordinates %d..%d "
                           "out of bounds for location %s") % (dna_start, dna_end, location))
     return dna_start, dna_end
+
+
+def build_location_from_others(locations: Sequence[FeatureLocation]) -> FeatureLocation:
+    """ Builds a new location from non-overlapping others.
+        If location boundaries are equal, they will be merged.
+        If at least one provided location is a CompoundLocation or the locations
+            are not continuous, the resulting location will be a CompoundLocation.
+
+        Arguments:
+            locations: a sequence of FeatureLocations to merge
+
+        Returns:
+            a FeatureLocation if the locations are continuous, otherwise a CompoundLocation
+    """
+    if not locations:
+        raise ValueError("at least one FeatureLocation required")
+    location = locations[0]
+    for loc in locations[1:]:
+        if loc.start == location.end:
+            new_sub = FeatureLocation(location.parts[-1].start, loc.parts[0].end, location.strand)
+            if len(location.parts) > 1 or len(loc.parts) > 1:
+                location = CompoundLocation(location.parts[:-1] + [new_sub] + loc.parts[1:])
+            else:
+                location = new_sub
+        else:
+            location = CompoundLocation(location.parts + loc.parts)
+    return location
 
 
 def location_bridges_origin(location: CompoundLocation) -> bool:
