@@ -9,7 +9,7 @@ from Bio.SeqFeature import SeqFeature
 
 from .cds_motif import CDSMotif
 from .feature import Feature
-from ..locations import FeatureLocation, build_location_from_others
+from ..locations import FeatureLocation, build_location_from_others, location_from_string
 from ..qualifiers.prepeptide_qualifiers import RiPPQualifier  # comment hints, pylint: disable=unused-import
 from ..qualifiers.prepeptide_qualifiers import rebuild_qualifier
 
@@ -189,11 +189,11 @@ class Prepeptide(CDSMotif):  # pylint: disable=too-many-instance-attributes
         leader = leftovers.pop("leader_sequence", [""])[0]
         locations = [bio_feature.location]
         if leader:
-            leader_location = serialiser.location_from_json(leftovers.pop("leader_location")[0])
+            leader_location = location_from_string(leftovers.pop("leader_location")[0])
             locations.insert(0, leader_location)
         tail = leftovers.pop("tail_sequence", [""])[0]
         if tail:
-            tail_location = serialiser.location_from_json(leftovers.pop("tail_location")[0])
+            tail_location = location_from_string(leftovers.pop("tail_location")[0])
             locations.append(tail_location)
 
         location = build_location_from_others(locations)
@@ -227,5 +227,5 @@ class Prepeptide(CDSMotif):  # pylint: disable=too-many-instance-attributes
         details = data.pop("detailed_info", None)
         data["location"] = location_from_string(data["location"])
         peptide = cls(**data)
-        peptide.detailed_information = rebuild_qualifier(details)
+        peptide.detailed_information = rebuild_qualifier(details, peptide.peptide_class)
         return peptide
