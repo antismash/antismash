@@ -13,14 +13,12 @@ import os
 import re
 from typing import Any, Dict, List, Iterable, Optional, Set
 
-from Bio.SeqFeature import SeqFeature
-
 from antismash.common.signature import HmmSignature
 from antismash.common import all_orfs, path, subprocessing, module_results, utils
 from antismash.common.fasta import get_fasta_from_features
-from antismash.common.secmet import CDSFeature, Record, Prepeptide, GeneFunction, FeatureLocation, Cluster
-from antismash.common.secmet.features.cdscollection import CDSCollection
-from antismash.common.secmet.locations import location_from_string
+from antismash.common.secmet import CDSFeature, Record, Cluster, Prepeptide, GeneFunction
+from antismash.common.secmet.features import CDSCollection
+from antismash.common.secmet.qualifiers.prepeptide_qualifiers import LanthiQualifier
 
 from .rodeo import run_rodeo
 
@@ -64,14 +62,13 @@ class LanthiResults(module_results.ModuleResults):
         self.new_cds_features = set()  # type: Set[CDSFeature]
         # keep new CDSMotifs by the gene they match to
         # e.g. self.motifs_by_locus[gene_locus] = [motif1, motif2..]
-        self.motifs_by_locus = defaultdict(list)  # type: Dict[str, List[LanthipeptideMotif]]
+        self.motifs_by_locus = defaultdict(list)  # type: Dict[str, List[Prepeptide]]
         # keep clusters and which genes in them had precursor hits
         # e.g. self.clusters[cluster_number] = {gene1_locus, gene2_locus}
         self.clusters = defaultdict(set)  # type: Dict[int, Set[str]]
 
     def to_json(self) -> Dict[str, Any]:
-        cds_features = [(str(feature.location),
-                         feature.get_name()) for feature in self.new_cds_features]
+        cds_features = [(str(feature.location), feature.get_name()) for feature in self.new_cds_features]
         motifs = {}
         for locus, locus_motifs in self.motifs_by_locus.items():
             motifs[locus] = [motif.to_json() for motif in locus_motifs]
@@ -89,7 +86,7 @@ class LanthiResults(module_results.ModuleResults):
         results = LanthiResults(json["record_id"])
         for locus, motifs in json["motifs"].items():
             for motif in motifs:
-                results.motifs_by_locus[locus].append(LanthipeptideMotif.from_json(motif))
+                results.motifs_by_locus[locus].append(Prepeptide.from_json(motif))
         results.clusters = {int(key): set(val) for key, val in json["clusters"].items()}
         for location, name in json["new_cds_features"]:
             cds = all_orfs.create_feature_from_location(record, location, label=name)
@@ -591,101 +588,24 @@ def contains_feature_with_single_domain(genes: List[CDSFeature], domains: Set[st
     return False
 
 
-class LanthipeptideMotif(Prepeptide):
-    """ A lanthipeptide-specific feature """
-    def __init__(self, location: FeatureLocation, core_seq: str, leader_seq: str,
-                 locus_tag: str, monoisotopic_mass: float, molecular_weight: float, alternative_weights: List[float],
-                 lan_bridges: int, lanthi_class: str, score: float, rodeo_score: int, aminovinyl: bool,
-                 chlorinated: bool, oxygenated: bool, lactonated: bool) -> None:
-        super().__init__(location, "lanthipeptide", core_seq, locus_tag, lanthi_class,
-                         score=score, monoisotopic_mass=monoisotopic_mass,
-                         molecular_weight=molecular_weight,
-                         alternative_weights=alternative_weights,
-                         leader=leader_seq)
-        self.lan_bridges = lan_bridges
-        self.rodeo_score = rodeo_score
-        self.aminovinyl_group = aminovinyl  # bool
-        self.chlorinated = chlorinated  # bool
-        self.oxygenated = oxygenated  # bool
-        self.lactonated = lactonated  # bool
-        self._notes_appended = False
-
-    def get_modifications(self) -> List[str]:
-        """ Returns the various modifications of the lanthipeptide, if they exist
-        """
-        mods = []
-        if self.aminovinyl_group:
-            mods.append("AviCys")
-        if self.chlorinated:
-            mods.append("Cl")
-        if self.oxygenated:
-            mods.append("OH")
-        if self.lactonated:
-            mods.append("Lac")
-        return mods
-
-    def to_biopython(self, qualifiers: Dict[str, List] = None) -> List[SeqFeature]:
-        notes = []
-        if not qualifiers:
-            qualifiers = {}
-        notes.append('number of bridges: %s' % self.lan_bridges)
-        notes.append('RODEO score: %s' % str(self.rodeo_score))
-        if self.aminovinyl_group:
-            notes.append('predicted additional modification: AviCys')
-        if self.chlorinated:
-            notes.append('predicted additional modification: Cl')
-        if self.oxygenated:
-            notes.append('predicted additional modification: OH')
-        if self.lactonated:
-            notes.append('predicted additional modification: Lac')
-        if "note" not in qualifiers:
-            qualifiers["note"] = notes
-        else:
-            qualifiers["note"].extend(notes)
-        return super().to_biopython(qualifiers=qualifiers)
-
-    def to_json(self) -> Dict[str, Any]:
-        json = super().to_json()
-        json["locus_tag"] = self.locus_tag  # not in vars() due to __slots__
-        try:
-            assert json["locus_tag"]
-        except KeyError:
-            logging.critical("bad locus tag on motif %s: %s ... %s", self.location, self.locus_tag, json)
-        return json
-
-    @staticmethod
-    def from_json(data: Dict[str, Any]) -> "LanthipeptideMotif":
-        """ Converts a JSON representation of the motif back into an instance
-            of LanthipeptideMotif
-        """
-        args = []
-        args.append(location_from_string(data["location"]))
-        args.append(data["core"])
-        for arg_name in ["leader", "locus_tag", "monoisotopic_mass",
-                         "molecular_weight", "alternative_weights", "lan_bridges",
-                         "peptide_subclass", "score", "rodeo_score", "aminovinyl_group",
-                         "chlorinated", "oxygenated", "lactonated"]:
-            args.append(data[arg_name])
-        # pylint doesn't do well with the splat op, so don't report errors
-        return LanthipeptideMotif(*args)  # pylint: disable=no-value-for-parameter
-
-
-def result_vec_to_feature(orig_feature: CDSFeature, res_vec: Lanthipeptide) -> LanthipeptideMotif:
-    """ Generates a LanthipeptideMotif feature from a CDSFeature and a Lanthipeptide
+def result_vec_to_feature(orig_feature: CDSFeature, res_vec: Lanthipeptide) -> Prepeptide:
+    """ Generates a Prepeptide feature from a CDSFeature and a Lanthipeptide
 
         Arguments:
             orig_feature: the CDSFeature the lanthipeptide was found in
             res_vec: the Lanthipeptide instance that was calculated
 
         Returns:
-            a LanthipeptideMotif instance
+            a Prepeptide instance
     """
-    feature = LanthipeptideMotif(orig_feature.location, res_vec.core, res_vec.leader,
-                                 orig_feature.get_name(), res_vec.monoisotopic_mass,
-                                 res_vec.molecular_weight, res_vec.alternative_weights,
-                                 res_vec.number_of_lan_bridges, res_vec.lantype,
-                                 res_vec.score, res_vec.rodeo_score, res_vec.aminovinyl_group,
-                                 res_vec.chlorinated, res_vec.oxygenated, res_vec.lactonated)
+    feature = Prepeptide(orig_feature.location, "lanthipeptide", res_vec.core,
+                         orig_feature.get_name(), res_vec.lantype, res_vec.score,
+                         res_vec.monoisotopic_mass, res_vec.molecular_weight,
+                         res_vec.alternative_weights, res_vec.leader)
+    qual = LanthiQualifier(res_vec.number_of_lan_bridges,
+                           res_vec.rodeo_score, res_vec.aminovinyl_group,
+                           res_vec.chlorinated, res_vec.oxygenated, res_vec.lactonated)
+    feature.detailed_information = qual
     return feature
 
 

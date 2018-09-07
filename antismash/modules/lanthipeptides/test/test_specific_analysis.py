@@ -142,10 +142,10 @@ class TestSpecificAnalysis(unittest.TestCase):
         assert motif.location.strand == 1
         assert motif.locus_tag == orig_feature.locus_tag
         assert motif.score == 42
-        assert motif.rodeo_score == 23
+        assert motif.detailed_information.rodeo_score == 23
         assert motif.peptide_class == "lanthipeptide"
         assert motif.peptide_subclass == "Class I"
-        assert motif.lan_bridges == 2
+        assert motif.detailed_information.lan_bridges == 2
         self.assertAlmostEqual(motif.molecular_weight, 3648.6, places=1)
         self.assertAlmostEqual(motif.monoisotopic_mass, 3646.3, places=1)
         for calc, expected in zip(motif.alternative_weights,

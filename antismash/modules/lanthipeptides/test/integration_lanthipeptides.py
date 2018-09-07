@@ -4,6 +4,7 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
+import json
 import os
 import unittest
 
@@ -70,17 +71,20 @@ class IntegrationLanthipeptides(unittest.TestCase):
         for expected, calculated in zip([3354.0, 3372.1, 3390.1, 3408.1],
                                         prepeptide.alternative_weights):
             self.assertAlmostEqual(expected, calculated, delta=0.05)
-        assert prepeptide.lan_bridges == 5
+        assert prepeptide.detailed_information.lan_bridges == 5
         self.assertEqual("MSTKDFNLDLVSVSKKDSGASPR", prepeptide.leader)
         self.assertEqual("ITSISLCTPGCKTGALMGCNMKTATCHCSIHVSK", prepeptide.core)
         self.assertEqual('Class I', prepeptide.peptide_subclass)
 
-        initial_json = result.to_json()
-        regenerated = LanthiResults.from_json(initial_json, rec)
+        initial_json = json.dumps(result.to_json())
+        regenerated = LanthiResults.from_json(json.loads(initial_json), rec)
         assert list(result.motifs_by_locus) == ["nisB"]
         assert str(result.motifs_by_locus) == str(regenerated.motifs_by_locus)
+        regenned_motifs = self.gather_all_motifs(regenerated)
+        assert len(regenned_motifs) == 1
+        assert regenned_motifs[0].detailed_information.lan_bridges == 5
         assert result.clusters == regenerated.clusters
-        assert initial_json == regenerated.to_json()
+        assert initial_json == json.dumps(regenerated.to_json())
 
     def test_nisin_complete(self):
         with TemporaryDirectory() as output_dir:
@@ -107,11 +111,11 @@ class IntegrationLanthipeptides(unittest.TestCase):
         prepeptide = motifs[0]
         self.assertAlmostEqual(2164, prepeptide.monoisotopic_mass, delta=0.5)
         self.assertAlmostEqual(2165.6, prepeptide.molecular_weight, delta=0.5)
-        self.assertEqual(3, prepeptide.lan_bridges)
+        self.assertEqual(3, prepeptide.detailed_information.lan_bridges)
         self.assertEqual("MEAVKEKNDLFNLDVKVNAKESNDSGAEPR", prepeptide.leader)
         self.assertEqual("IASKFICTPGCAKTGSFNSYCC", prepeptide.core)
         self.assertEqual('Class I', prepeptide.peptide_subclass)
-        self.assertEqual(['AviCys'], prepeptide.get_modifications())
+        self.assertEqual(['AviCys'], prepeptide.detailed_information.get_modifications())
 
     def test_microbisporicin(self):
         "Test lanthipeptide prediction for microbisporicin"
@@ -130,11 +134,11 @@ class IntegrationLanthipeptides(unittest.TestCase):
         # there are some additional modifications we do not predict yet
         self.assertAlmostEqual(2212.9, prepeptide.monoisotopic_mass, delta=0.5)
         self.assertAlmostEqual(2214.5, prepeptide.molecular_weight, delta=0.5)
-        self.assertEqual(4, prepeptide.lan_bridges)
+        self.assertEqual(4, prepeptide.detailed_information.lan_bridges)
         self.assertEqual("MPADILETRTSETEDLLDLDLSIGVEEITAGPA", prepeptide.leader)
         self.assertEqual("VTSWSLCTPGCTSPGGGSNCSFCC", prepeptide.core)
         self.assertEqual('Class I', prepeptide.peptide_subclass)
-        self.assertEqual(['AviCys', 'Cl', 'OH'], prepeptide.get_modifications())
+        self.assertEqual(['AviCys', 'Cl', 'OH'], prepeptide.detailed_information.get_modifications())
 
     def test_epicidin(self):
         "Test lanthipeptide prediction for epicidin 280"
@@ -154,11 +158,11 @@ class IntegrationLanthipeptides(unittest.TestCase):
         for expected, calculated in zip([3135.7, 3153.7, 3171.7],
                                         prepeptide.alternative_weights):
             self.assertAlmostEqual(expected, calculated, delta=0.05)
-        self.assertEqual(3, prepeptide.lan_bridges)
+        self.assertEqual(3, prepeptide.detailed_information.lan_bridges)
         self.assertEqual("MENKKDLFDLEIKKDNMENNNELEAQ", prepeptide.leader)
         self.assertEqual("SLGPAIKATRQVCPKATRFVTVSCKKSDCQ", prepeptide.core)
         self.assertEqual('Class I', prepeptide.peptide_subclass)
-        self.assertEqual(['Lac'], prepeptide.get_modifications())
+        self.assertEqual(['Lac'], prepeptide.detailed_information.get_modifications())
 
     def test_labyrinthopeptin(self):
         "Test lanthipeptide prediction for labyrinthopeptin"
