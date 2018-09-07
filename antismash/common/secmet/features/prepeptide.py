@@ -3,15 +3,18 @@
 
 """ A class for representing RiPP prepeptides """
 
-from typing import Dict, List
+from typing import Any, Dict, List
 
 from Bio.SeqFeature import SeqFeature
 
 from .cds_motif import CDSMotif
-from .feature import FeatureLocation
+from .feature import Feature
+from ..locations import FeatureLocation, build_location_from_others
+from ..qualifiers.prepeptide_qualifiers import RiPPQualifier  # comment hints, pylint: disable=unused-import
+from ..qualifiers.prepeptide_qualifiers import rebuild_qualifier
 
 
-class Prepeptide(CDSMotif):
+class Prepeptide(CDSMotif):  # pylint: disable=too-many-instance-attributes
     """ A class representing a prepeptide. Used for tracking a multi-feature
         construction with a leader, core and tail. To allow for multiple types
         of prepeptide (e.g. lanthi- or sacti-peptides), only the core must exist.
@@ -40,7 +43,6 @@ class Prepeptide(CDSMotif):
         self._core = core
         self._tail = tail
         self.locus_tag = locus_tag
-        self.type = "CDS_motif"
         self.peptide_class = peptide_class
         if peptide_subclass:
             peptide_subclass = peptide_subclass.replace("-", " ")  # "Type-II" > "Type II"
@@ -51,6 +53,8 @@ class Prepeptide(CDSMotif):
         self.alternative_weights = []  # type: List[float]
         if alternative_weights is not None:
             self.alternative_weights = [float(weight) for weight in alternative_weights]
+
+        self.detailed_information = None  # type: RiPPQualifier
 
     @property
     def translation(self) -> str:
@@ -101,59 +105,108 @@ class Prepeptide(CDSMotif):
         """ Generates up to three SeqFeatures, depending if leader and tail exist.
             Any qualifiers given will be used as a base for all SeqFeatures created.
         """
-        # calculate core location
-        core_start = self.location.start
-        core_end = self.location.end
-        if self.leader:
-            core_start += len(self.leader) * 3
-        if self.tail:
-            core_end -= len(self.tail) * 3
-        core_location = FeatureLocation(core_start, core_end, self.location.strand)
-
-        # add qualifiers
-        if not qualifiers:
-            qualifiers = {'note': []}
-        if 'note' not in qualifiers:
-            qualifiers['note'] = []
+        # calculate locations
+        get_sub = self.get_sub_location_from_protein_coordinates
+        total_length = len(self.location) // 3
+        if self._leader:
+            leader_location = get_sub(0, len(self._leader))
+        core_location = get_sub(len(self._leader), total_length - len(self._tail))
+        if self._tail:
+            tail_location = get_sub(total_length - len(self._tail), total_length)
 
         # build features
         features = []
         if self.leader:
-            start = self.location.start
-            leader_location = FeatureLocation(start, core_location.start, self.location.strand)
-            leader = SeqFeature(leader_location, type="CDS_motif", qualifiers={"note": []})
+            leader_qualifiers = {
+                "prepeptide": ["leader"],
+                "note": [
+                    "peptide class: %s" % self.peptide_class,
+                    "predicted sequence: %s", self.leader,
+                ],
+                "locus_tag": [self.locus_tag],
+            }
+            leader = SeqFeature(leader_location, type=self.type)
+            leader.qualifiers.update(leader_qualifiers)
             leader.translation = self.leader
-            leader.qualifiers['locus_tag'] = [self.locus_tag]
-            leader.qualifiers['note'].extend(['leader peptide', self.peptide_class,
-                                              'predicted leader seq: %s' % self.leader])
             features.append(leader)
 
-        core = SeqFeature(core_location, type="CDS_motif", qualifiers=qualifiers)
-        core.qualifiers['locus_tag'] = [self.locus_tag]
-        core.qualifiers['note'].extend(['core peptide', self.peptide_class,
-                                        'predicted class: %s' % self.peptide_subclass,
-                                        "predicted core seq: %s" % self.core,
-                                        "score: %0.2f" % self.score,
-                                        "molecular weight: %0.1f" % self.molecular_weight,
-                                        "monoisotopic mass: %0.1f" % self.monoisotopic_mass])
+        # use provided qualifiers, if exists
+        if not qualifiers:
+            qualifiers = {'note': []}
+        if 'note' not in qualifiers:
+            qualifiers['note'] = []
+        core = SeqFeature(core_location, type=self.type, qualifiers=qualifiers)
+        core.qualifiers.update({
+            "prepeptide": ["core"],
+            "locus_tag": [self.locus_tag],
+            "peptide": [self.peptide_class],
+            "predicted_class": [self.peptide_subclass],
+            "score": ["{:.2f}".format(self.score)],
+            "molecular_weight": ["{:.1f}".format(self.molecular_weight)],
+            "monoisotopic_mass": ["{:.1f}".format(self.monoisotopic_mass)],
+            "core_sequence": [self._core],
+        })
+        if self._leader:
+            core.qualifiers.update({
+                "leader_sequence": [self._leader],
+                "leader_location": [str(leader_location)],
+            })
+        if self._tail:
+            core.qualifiers.update({
+                "tail_sequence": [self._tail],
+                "tail_location": [str(tail_location)],
+            })
         if self.alternative_weights:
             weights = map(lambda x: "%0.1f" % x, self.alternative_weights)
-            core.qualifiers['note'].append('alternative weights: %s' % "; ".join(weights))
+            core.qualifiers['alternative_weights'] = list(weights)
 
         features.append(core)
 
         if self.tail:
-            tail_location = FeatureLocation(core_location.end, self.location.end, self.location.strand)
             tail = SeqFeature(tail_location, type="CDS_motif")
             tail.translation = self.tail
             tail.qualifiers['locus_tag'] = [self.locus_tag]
             tail.qualifiers['note'] = ['tail peptide', self.peptide_class]
-            tail.qualifiers['aStool'] = self.tool
+            tail.qualifiers['prepeptide'] = ['tail']
             features.append(tail)
 
         return features
 
-    def to_json(self) -> Dict:
+    @staticmethod
+    def from_biopython(bio_feature: SeqFeature, feature: "Prepeptide" = None,  # type: ignore
+                       leftovers: Dict[str, Any] = None) -> "Prepeptide":
+        if leftovers is None:
+            leftovers = Feature.make_qualifiers_copy(bio_feature)
+
+        section = leftovers.pop("prepeptide", [""])[0]
+        if not section:
+            raise ValueError("cannot reconstruct Prepeptide from biopython feature %s" % bio_feature)
+        elif section != "core":
+            raise ValueError("Prepeptide can only be reconstructed from core feature")
+        peptide_class = leftovers.pop("peptide")[0]
+        core = leftovers.pop("core_sequence")[0]
+        alt_weights = [float(weight) for weight in leftovers.pop("alternative_weights", [])]
+        leader = leftovers.pop("leader_sequence", [""])[0]
+        locations = [bio_feature.location]
+        if leader:
+            leader_location = serialiser.location_from_json(leftovers.pop("leader_location")[0])
+            locations.insert(0, leader_location)
+        tail = leftovers.pop("tail_sequence", [""])[0]
+        if tail:
+            tail_location = serialiser.location_from_json(leftovers.pop("tail_location")[0])
+            locations.append(tail_location)
+
+        location = build_location_from_others(locations)
+
+        return Prepeptide(location, peptide_class, core,
+                          leftovers.pop("locus_tag")[0],
+                          leftovers.pop("predicted_class")[0],
+                          float(leftovers.pop("score")[0]),
+                          float(leftovers.pop("monoisotopic_mass")[0]),
+                          float(leftovers.pop("molecular_weight")[0]), alt_weights,
+                          leader, tail)
+
+    def to_json(self) -> Dict[str, Any]:
         """ Converts the qualifier to a dictionary for storing in JSON results.
         """
         data = dict(vars(self))
@@ -162,4 +215,17 @@ class Prepeptide(CDSMotif):
             del data[var]
         data["location"] = str(self.location)
         data["score"] = self.score
+        data["locus_tag"] = self.locus_tag
+        del data["detailed_information"]
+        if self.detailed_information:
+            data["detailed_info"] = self.detailed_information.to_biopython_qualifiers()
         return data
+
+    @classmethod
+    def from_json(cls, data: Dict[str, Any]) -> "Prepeptide":
+        """ Rebuilds a Prepeptide instance from a JSON representation """
+        details = data.pop("detailed_info", None)
+        data["location"] = location_from_string(data["location"])
+        peptide = cls(**data)
+        peptide.detailed_information = rebuild_qualifier(details)
+        return peptide

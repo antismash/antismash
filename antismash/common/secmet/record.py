@@ -563,6 +563,13 @@ class Record:
             # discard this, as info contained in it is in "cluster" features
             pass
         elif feature.type == 'CDS_motif':
+            # skip component parts of prepeptides and regenerate from the core
+            prepeptide = feature.qualifiers.get("prepeptide", [""])[0]
+            if prepeptide:
+                if prepeptide != "core":
+                    return
+                self.add_cds_motif(Prepeptide.from_biopython(feature))
+                return
             self.add_cds_motif(CDSMotif.from_biopython(feature))
         elif feature.type == 'PFAM_domain':
             self.add_pfam_domain(PFAMDomain.from_biopython(feature))

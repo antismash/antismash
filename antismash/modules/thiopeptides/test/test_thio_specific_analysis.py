@@ -135,8 +135,8 @@ class TestSpecificAnalysis(unittest.TestCase):
 
     def test_result_vec_to_feature(self):
         "Test thiopeptides.result_vec_to_features()"
-        loc = FeatureLocation(0, 165, strand=1)
-        orig_feature = DummyCDS(0, 165, locus_tag='FAKE0001')
+        loc = FeatureLocation(0, 66, strand=1)
+        orig_feature = DummyCDS(0, 66, locus_tag='FAKE0001')
         vec = Thiopeptide(17, 23, 42, 51)
         seq = 'SCTSSCTSS'
         vec.thio_type = 'Type III'
