@@ -154,33 +154,6 @@ class TestSpecificAnalysis(unittest.TestCase):
         assert motif.core == seq
         assert motif.leader == vec.leader
 
-        new_features = motif.to_biopython()
-        self.assertEqual(2, len(new_features))
-        leader, core = new_features
-
-        self.assertEqual(0, leader.location.start)
-        self.assertEqual((12 * 3), leader.location.end)
-        self.assertEqual(leader.location.strand, 1)
-        self.assertEqual('CDS_motif', leader.type)
-        self.assertEqual(orig_feature.locus_tag, leader.qualifiers['locus_tag'][0])
-        self.assertEqual(set(['leader peptide', 'lanthipeptide',
-                          'predicted leader seq: HEADHEADHEAD']), set(leader.qualifiers['note']))
-
-        self.assertEqual(leader.location.end, core.location.start)
-        self.assertEqual(165, core.location.end)
-        self.assertEqual(1, core.location.strand)
-        self.assertEqual('CDS_motif', core.type)
-        expected = ['core peptide', 'lanthipeptide', 'monoisotopic mass: 3646.3',
-                    'molecular weight: 3648.6',
-                    'alternative weights: 3666.6; 3684.6; 3702.7; 3720.7; 3738.7; 3756.7; 3774.7',
-                    'number of bridges: 2',
-                    'predicted core seq: TAILTAILTAILTAILTAILTAILTAILTAILTAILCC',
-                    'predicted class: Class I',
-                    'score: 42.00',
-                    'RODEO score: 23']
-        self.assertEqual(set(expected), set(core.qualifiers['note']))
-        self.assertEqual(orig_feature.locus_tag, core.qualifiers['locus_tag'][0])
-
 
 class TestNoCores(unittest.TestCase):
     """ Ensure that cleavage sites that result in no prepeptide core don't
