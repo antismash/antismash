@@ -10,7 +10,7 @@ RULE t2pks
     COMMENT Type-II PKS
     CUTOFF 20
     EXTENT 20
-    CONDITIONS t2ks or t2clf
+    CONDITIONS t2ks and t2clf
 
 RULE t3pks
     COMMENT Type-III PKS
