@@ -36,7 +36,7 @@ class TestIntegration(unittest.TestCase):
 
         result.add_to_record(rec)
         for i in rec.get_cds_motifs():
-            print(i, i.leader, i.score, i.rodeo_score)
+            print(i, i.leader, i.score, i.detailed_information.rodeo_score)
         assert len(rec.get_cds_motifs()) == 1, rec.get_cds_motifs()
         assert rec.get_feature_count() == existing_feature_count + 1
 
@@ -48,17 +48,15 @@ class TestIntegration(unittest.TestCase):
         self.assertAlmostEqual(1316.5, prepeptide.molecular_weight, places=1)
         assert prepeptide.leader == "MDAAHLSDLDIDALEISEFLDESRLEDSEVVAKVMSA"
         assert prepeptide.core == "SCTTCECCCSCSS"
-        assert prepeptide.macrocycle == "26-member"
+        assert prepeptide.detailed_information.macrocycle == "26-member"
         assert prepeptide.peptide_subclass == "Type I"
-        self.assertAlmostEqual(1222.4, prepeptide.mature_weights[0], places=1)
-        self.assertAlmostEqual(1221.2, prepeptide.mature_weights[1], places=1)
-        for calc, expected in zip(prepeptide.mature_weights[2:],
-                                  [1240.4, 1258.4, 1276.5, 1294.5, 1312.5, 1330.5]):
+        for calc, expected in zip(prepeptide.detailed_information.mature_weights,
+                                  [1222.4, 1221.2, 1240.4, 1258.4, 1276.5, 1294.5, 1312.5, 1330.5]):
             self.assertAlmostEqual(calc, expected, places=1)
         expected_core_features = ("Central ring: pyridine tetrasubstituted (hydroxyl group present);"
                                   " second macrocycle")
-        assert prepeptide.core_features == expected_core_features
-        assert prepeptide.tail_reaction == 'dealkylation of C-Terminal residue; amidation'
+        assert prepeptide.detailed_information.core_features == expected_core_features
+        assert prepeptide.detailed_information.amidation
 
     def test_lactazole(self):
         "Test thiopeptide prediction for lactazole - lazA"
@@ -82,9 +80,9 @@ class TestIntegration(unittest.TestCase):
         self.assertAlmostEqual(1363.5, prepeptide.molecular_weight, places=1)
         assert prepeptide.leader == "MSDITASRVESLDLQDLDLSELTVTSLRDTVALPENGA"
         assert prepeptide.core == "SWGSCSCQASSSCA"
-        assert not prepeptide.macrocycle
+        assert not prepeptide.detailed_information.macrocycle
         assert prepeptide.peptide_subclass == "Type III"
-        assert prepeptide.core_features == 'Central ring: pyridine trisubstituted'
+        assert prepeptide.detailed_information.core_features == 'Central ring: pyridine trisubstituted'
         assert prepeptide.tail == 'QPQDM'
         for calc, expected in zip(prepeptide.alternative_weights,
                                   [1381.5, 1399.5, 1417.5, 1435.5, 1453.6, 1471.6]):
@@ -121,15 +119,14 @@ class TestIntegration(unittest.TestCase):
         self.assertAlmostEqual(1640.9, prepeptide.molecular_weight, places=1)
         assert prepeptide.leader == "MSNAALEIGVEGLTGLDVDTLEISDYMDETLLDGEDLTVTM"
         assert prepeptide.core == "IASASCTTCICTCSCSS"
-        assert prepeptide.macrocycle == "26-member"
+        assert prepeptide.detailed_information.macrocycle == "26-member"
         assert prepeptide.peptide_subclass == "Type II"
         expected_features = ("Central ring: piperidine;"
                              " second macrocycle containing a quinaldic acid moiety")
-        assert prepeptide.core_features == expected_features
-        self.assertAlmostEqual(1646.8, prepeptide.mature_weights[0], places=1)
-        self.assertAlmostEqual(1645.5, prepeptide.mature_weights[1], places=1)
-        for calc, expect in zip(prepeptide.mature_weights[2:],
-                                [1664.8, 1682.8, 1700.8, 1718.8, 1736.9, 1754.9, 1772.9, 1790.9]):
+        assert prepeptide.detailed_information.core_features == expected_features
+        for calc, expect in zip(prepeptide.detailed_information.mature_weights,
+                                [1646.8, 1645.5, 1664.8, 1682.8, 1700.8, 1718.8,
+                                 1736.9, 1754.9, 1772.9, 1790.9]):
             self.assertAlmostEqual(calc, expect, places=1)
 
     def test_thiostrepton_full(self):
@@ -161,9 +158,9 @@ class TestIntegration(unittest.TestCase):
         self.assertAlmostEqual(1936.0, prepeptide.molecular_weight, places=1)
         assert prepeptide.leader == "MVKSIIKARESGRFYETKYLKGGEEMKEQKELKNEEFELDVEFLDLDEVSAIPETTA"
         assert prepeptide.core == "SSGTSSCSASSTCGSSSCCGSC"
-        assert not prepeptide.macrocycle
+        assert not prepeptide.detailed_information.macrocycle
         assert prepeptide.peptide_subclass == "Type III"
-        assert prepeptide.core_features == 'Central ring: pyridine trisubstituted'
+        assert prepeptide.detailed_information.core_features == 'Central ring: pyridine trisubstituted'
         assert prepeptide.tail == ''
         for calc, expected in zip(prepeptide.alternative_weights,
                                   [1954.0, 1972.1, 1990.1, 2008.1, 2026.1, 2044.1,

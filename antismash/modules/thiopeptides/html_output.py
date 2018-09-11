@@ -9,9 +9,9 @@ from jinja2 import FileSystemLoader, Environment, StrictUndefined
 
 from antismash.common import path
 from antismash.common.layers import RegionLayer, RecordLayer, OptionsLayer
-from antismash.common.secmet import Region
+from antismash.common.secmet import Region, Prepeptide
 
-from .specific_analysis import ThioResults, ThiopeptideMotif
+from .specific_analysis import ThioResults
 
 
 def will_handle(products: List[str]) -> bool:
@@ -23,9 +23,9 @@ class ThiopeptideLayer(RegionLayer):
     """ A wrapper of RegionLayer to allow for tracking the ThiopeptideMotifs """
     def __init__(self, record: RecordLayer, results: ThioResults, region_feature: Region) -> None:
         RegionLayer.__init__(self, record, region_feature)
-        self.motifs = []  # type: List[ThiopeptideMotif]
+        self.motifs = []  # type: List[Prepeptide]
         for motif in results.motifs:
-            if motif.is_contained_by(self.region_feature) and isinstance(motif, ThiopeptideMotif):
+            if motif.is_contained_by(self.region_feature) and isinstance(motif, Prepeptide):
                 self.motifs.append(motif)
 
 

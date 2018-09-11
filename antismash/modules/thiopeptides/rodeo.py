@@ -237,7 +237,7 @@ def run_rodeo_svm(csv_columns: List[float]) -> int:
     return 0
 
 
-def run_rodeo(leader: str, core: str, domains: Set[str]) -> Tuple[bool, float]:
+def run_rodeo(leader: str, core: str, domains: Set[str]) -> Tuple[bool, int]:
     """Run RODEO heuristics + SVM to assess precursor peptide candidate"""
     rodeo_score = 0
 
