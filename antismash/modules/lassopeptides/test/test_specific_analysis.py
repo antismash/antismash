@@ -140,7 +140,7 @@ class TestSpecificAnalysis(unittest.TestCase):
         assert motif.rodeo_score == 51
         assert motif.score == 42
         assert motif.macrolactam == ""
-        self.assertAlmostEqual(motif.monoisotopic_mass, 4101.4, delta=1)
-        self.assertAlmostEqual(motif.molecular_weight, 4104.1, delta=1)
-        self.assertAlmostEqual(motif.cut_mass, 3790.3, delta=1)
-        self.assertAlmostEqual(motif.cut_weight, 3792.7, delta=1)
+        self.assertAlmostEqual(motif.monoisotopic_mass, 4103.5, delta=1)
+        self.assertAlmostEqual(motif.molecular_weight, 4106.1, delta=1)
+        self.assertAlmostEqual(motif.cut_mass, 3792.3, delta=1)
+        self.assertAlmostEqual(motif.cut_weight, 3794.7, delta=1)

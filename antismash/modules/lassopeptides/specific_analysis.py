@@ -146,7 +146,7 @@ class Lassopeptide:
         self.core = str(core)
         self._weight = -1
         self._monoisotopic_weight = -1
-        self._num_bridges = 0
+        self.number_bridges = self._calculate_number_of_bridges()
         self._macrolactam = ''
         self._c_cut = ''
         self._cut_weight = -1
@@ -160,6 +160,7 @@ class Lassopeptide:
     @core.setter
     def core(self, seq: str) -> None:
         self._core = str(seq)
+        self.number_bridges = self._calculate_number_of_bridges()
 
     @property
     def leader(self) -> str:
@@ -182,13 +183,13 @@ class Lassopeptide:
     def __repr__(self) -> str:
         return "Lassopeptide(%s..%s, %s, %r, %r, %s, %s(%s), %s, %s)" % (
                         self.start, self.end, self.score, self._lassotype,
-                        self._core, self._num_bridges, self._monoisotopic_weight,
+                        self._core, self.number_bridges, self._monoisotopic_weight,
                         self._weight, self._macrolactam, self.c_cut)
 
     def _calculate_weight(self, analysis: utils.RobustProteinAnalysis) -> float:
         """ Calculate the molecular weight/monoisotopic mass from the given input
         """
-        cc_mass = 2 * self._num_bridges
+        cc_mass = 2 * self.number_bridges
         mw = analysis.molecular_weight()
         bond = 18.02
         return mw + cc_mass - bond
@@ -232,7 +233,7 @@ class Lassopeptide:
         """
 
         if not self._core:
-            raise ValueError()
+            raise ValueError("no core to base macrolactam prediction on")
 
         seq = self._core[6:9]
         for i, res in enumerate(seq):
@@ -241,18 +242,17 @@ class Lassopeptide:
 
         return self._macrolactam
 
-    @property
-    def number_bridges(self)-> int:
+    def _calculate_number_of_bridges(self)-> int:
         """
         Predict the lassopeptide number of disulfide bridges
         """
 
         aas = utils.RobustProteinAnalysis(self.core, monoisotopic=True).count_amino_acids()
         if aas['C'] >= 4:
-            self._num_bridges = 2
+            return 2
         elif aas['C'] >= 2:
-            self._num_bridges = 1
-        return self._num_bridges
+            return 1
+        return 0
 
     @property
     def lasso_class(self) -> str:
@@ -260,13 +260,13 @@ class Lassopeptide:
         Predict the lassopeptide class based on disulfide bridges
         """
         if not self._core:
-            raise ValueError()
+            raise ValueError("no core to base class prediction on")
 
-        if self._num_bridges == 1:
-            self._lassotype = 'Class III'
-        if self._num_bridges == 2:
-            self._lassotype = 'Class I'
-        return self._lassotype
+        if self.number_bridges == 1:
+            return 'Class III'
+        if self.number_bridges == 2:
+            return 'Class I'
+        return 'Class II'
 
 
 def predict_cleavage_site(query_hmmfile: str, target_sequence: str, threshold: float
