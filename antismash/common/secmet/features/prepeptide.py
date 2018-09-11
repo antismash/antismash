@@ -40,6 +40,8 @@ class Prepeptide(CDSMotif):  # pylint: disable=too-many-instance-attributes
         for arg in [peptide_class, core, leader, tail]:
             assert isinstance(arg, str), type(arg)
         self._leader = leader
+        if not core:
+            raise ValueError("Prepeptides must have a core")
         self._core = core
         self._tail = tail
         self.locus_tag = locus_tag
