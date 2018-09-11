@@ -38,7 +38,7 @@ class SactiResults(module_results.ModuleResults):
         self.new_cds_features = set()  # type: Set[secmet.CDSFeature]
         # keep new CDSMotifs by the gene they match to
         # e.g. self.motifs_by_locus[gene_locus] = [motif1, motif2..]
-        self.motifs_by_locus = defaultdict(list)  # type: Dict[str, List[SactipeptideMotif]]
+        self.motifs_by_locus = defaultdict(list)  # type: Dict[str, List[secmet.Prepeptide]]
         # keep clusters and which genes in them had precursor hits
         # e.g. self.clusters[cluster_number] = {gene1_locus, gene2_locus}
         self.clusters = defaultdict(set)  # type: Dict[int, Set[str]]
@@ -63,7 +63,7 @@ class SactiResults(module_results.ModuleResults):
         results = SactiResults(json["record_id"])
         for locus, motifs in json["motifs"].items():
             for motif in motifs:
-                results.motifs_by_locus[locus].append(SactipeptideMotif.from_json(motif))
+                results.motifs_by_locus[locus].append(secmet.Prepeptide.from_json(motif))
         results.clusters = {int(key): set(val) for key, val in json["clusters"].items()}
         for location, name in json["new_cds_features"]:
             loc = location_from_string(location)
@@ -78,26 +78,6 @@ class SactiResults(module_results.ModuleResults):
         for motifs in self.motifs_by_locus.values():
             for motif in motifs:
                 record.add_cds_motif(motif)
-
-
-class SactipeptideMotif(secmet.Prepeptide):
-    """ A Sactipeptide-specific feature """
-    def __init__(self, location: secmet.features.FeatureLocation, name: str,
-                 score: float, leader: str, core: str) -> None:  # pylint: disable=too-many-arguments
-        super().__init__(location, "sactipeptide", core, name, leader=leader, score=score)
-
-    def to_json(self) -> Dict[str, Any]:
-        return {"location": str(self.location),
-                "name": self.get_name(),
-                "score": self.score,
-                "core": self.core,
-                "leader": self.leader}
-
-    @staticmethod
-    def from_json(json: Dict[str, Any]) -> "SactipeptideMotif":
-        """ Regenerate an instance of the class from a JSON representation """
-        location = location_from_string(json["location"])
-        return SactipeptideMotif(location, json["name"], json["score"], json["leader"], json["core"])
 
 
 def get_detected_domains(cluster: secmet.Cluster) -> Dict[str, int]:
@@ -531,7 +511,7 @@ def run_rodeo(cluster: secmet.Cluster, query: secmet.CDSFeature,
 
 def determine_precursor_peptide_candidate(cluster: secmet.Cluster, query: secmet.CDSFeature,
                                           query_sequence: str, domains: Dict[str, int]
-                                          ) -> Optional[SactipeptideMotif]:
+                                          ) -> Optional[secmet.Prepeptide]:
     """Identify precursor peptide candidates and split into two"""
 
     # Skip sequences with >100 AA
@@ -548,12 +528,12 @@ def determine_precursor_peptide_candidate(cluster: secmet.Cluster, query: secmet
     valid, score = run_rodeo(cluster, query, leader, core, domains)
     if not valid:
         return None
-
-    return SactipeptideMotif(query.location, query.get_name(), score, leader, core)
+    return secmet.Prepeptide(query.location, "sactipeptide", core, query.get_name(),
+                             leader=leader, score=score)
 
 
 def run_sactipred(cluster: secmet.Cluster, query: secmet.CDSFeature,
-                  domains: Dict[str, int]) -> Optional[SactipeptideMotif]:
+                  domains: Dict[str, int]) -> Optional[secmet.Prepeptide]:
     """General function to predict and analyse sacti peptides"""
 
     # Run checks to determine whether an ORF encodes a precursor peptide
