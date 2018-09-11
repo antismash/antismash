@@ -78,6 +78,47 @@ class LanthiQualifier(RiPPQualifier):
                    int(qualifiers.pop("RODEO_score")[0]),
                    aminovinyl, chlorinated, oxygenated, lactonated)
 
+
+class ThioQualifier(RiPPQualifier):
+    """ A qualifier for thiopeptide-specific annotations """
+    __slots__ = ["amidation", "macrocycle", "core_features", "mature_weights"]
+
+    def __init__(self, rodeo_score: int, amidation: bool, macrocycle: str,  # pylint: disable=too-many-arguments
+                 core_features: str, mature_weights: List[float]) -> None:
+        super().__init__(rodeo_score)
+        self.amidation = amidation
+        self.macrocycle = macrocycle
+        self.core_features = core_features
+        self.mature_weights = mature_weights
+
+    @property
+    def tail_reaction(self) -> str:
+        """ The tail reaction of a thiopeptide if present """
+        if self.amidation:
+            return "dealkylation of C-Terminal residue; amidation"
+        return ''
+
+    def to_biopython_qualifiers(self) -> Dict[str, List[str]]:
+        qualifiers = super().to_biopython_qualifiers()
+        qualifiers.update({
+            "macrocycle": [self.macrocycle],
+            "core_features": [self.core_features],
+            "mature_weights": [str(weight) for weight in self.mature_weights],
+        })
+        if self.amidation:
+            qualifiers["tail_reaction"] = [self.tail_reaction]
+        return qualifiers
+
+    @classmethod
+    def from_biopython_qualifiers(cls, qualifiers: Dict[str, List[str]]) -> "ThioQualifier":
+        weights = [float(weight) for weight in qualifiers.pop("mature_weights")]
+        return cls(int(qualifiers.pop("RODEO_score")[0]),
+                   qualifiers.pop("tail_reaction", [""])[0].endswith("amidation"),
+                   qualifiers.pop("macrocycle")[0],
+                   qualifiers.pop("core_features")[0],
+                   weights)
+
+
 def rebuild_qualifier(data: Dict[str, List[str]], kind: str) -> Optional[RiPPQualifier]:
     """ Rebuilds a relevant RiPPQualifier for the given kind from the provided
         biopython qualifiers.
@@ -95,6 +136,7 @@ def rebuild_qualifier(data: Dict[str, List[str]], kind: str) -> Optional[RiPPQua
         return None
     classes = {
         "lanthipeptide": LanthiQualifier,
+        "thiopeptide": ThioQualifier,
     }  # type: Dict[str, Type[RiPPQualifier]]
     if kind not in classes:
         raise ValueError("no known qualifier builder for prepeptide kind: %s" % kind)

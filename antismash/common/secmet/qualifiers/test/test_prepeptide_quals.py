@@ -9,6 +9,7 @@ import unittest
 from ..prepeptide_qualifiers import (
     RiPPQualifier,
     LanthiQualifier,
+    ThioQualifier,
     rebuild_qualifier,
 )
 
@@ -86,3 +87,29 @@ class TestLanthi(unittest.TestCase):
         assert isinstance(new, LanthiQualifier)
         assert new.rodeo_score == 5
         assert new.lan_bridges == 2
+
+
+class TestThio(unittest.TestCase):
+    def test_rebuilder(self):
+        qual = ThioQualifier(5, True, "test macro", "core feats", [2.5, 5.7])
+        bio = qual.to_biopython_qualifiers()
+        assert bio
+        bio["unrelated"] = ["qualifiers"]
+        new = rebuild_qualifier(bio, "thiopeptide")
+        assert isinstance(new, ThioQualifier)
+        assert list(bio) == ["unrelated"]  # related ones should have been consumed
+        assert new.rodeo_score == qual.rodeo_score
+        assert new.macrocycle == qual.macrocycle
+        assert new.core_features == qual.core_features
+        assert new.mature_weights == qual.mature_weights
+        assert new.amidation == qual.amidation
+
+    def test_tail(self):
+        qual = ThioQualifier(5, False, "test macro", "core feats", [2.5, 5.7])
+        assert qual.tail_reaction == ""
+        assert "tail_reaction" not in qual.to_biopython_qualifiers()
+        qual.amidation = True
+        assert qual.amidation
+        assert qual.tail_reaction == "dealkylation of C-Terminal residue; amidation"
+        bio = qual.to_biopython_qualifiers()
+        assert bio["tail_reaction"] == [qual.tail_reaction]

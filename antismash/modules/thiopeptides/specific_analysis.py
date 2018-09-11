@@ -13,8 +13,7 @@ import os
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 from antismash.common import all_orfs, fasta, module_results, path, secmet, subprocessing, utils
-from antismash.common.secmet.features import FeatureLocation
-from antismash.common.secmet.locations import location_from_string
+from antismash.common.secmet.qualifiers.prepeptide_qualifiers import ThioQualifier
 from antismash.common.signature import HmmSignature
 
 from .rodeo import run_rodeo
@@ -30,7 +29,7 @@ class ThioResults(module_results.ModuleResults):
         # to track CDSs found with find_all_orfs and within which clusters they were found
         self.cds_features = defaultdict(list)  # type: Dict[int, List[secmet.CDSFeature]]
         # to track the motifs created
-        self.motifs = []  # type: List[ThiopeptideMotif]
+        self.motifs = []  # type: List[secmet.Prepeptide]
 
     def to_json(self) -> Dict[str, Any]:
         """ Converts the results to JSON format """
@@ -50,7 +49,7 @@ class ThioResults(module_results.ModuleResults):
             return None
         results = ThioResults(json["record_id"])
         for motif in json["motifs"]:
-            results.motifs.append(ThiopeptideMotif.from_json(motif, record))
+            results.motifs.append(secmet.Prepeptide.from_json(motif))
         for cluster in json["clusters with motifs"]:
             results.clusters_with_motifs.add(record.get_cluster(cluster))
         for cluster, features in json["cds_features"]:
@@ -72,7 +71,7 @@ class ThioResults(module_results.ModuleResults):
 class Thiopeptide:
     """ Class to calculate and store thiopeptide information
     """
-    def __init__(self, start: int, end: int, score: float, rodeo_score: float) -> None:
+    def __init__(self, start: int, end: int, score: float, rodeo_score: int) -> None:
         self.start = start
         self.end = end
         self.score = score
@@ -552,59 +551,8 @@ def run_thiopred(query: secmet.CDSFeature, thio_type: str, domains: Set[str]) ->
     return result
 
 
-class ThiopeptideMotif(secmet.Prepeptide):
-    """ A thiopeptide-specific motif feature """
-    def __init__(self, location: FeatureLocation, core_seq: str, leader_seq: str,
-                 locus_tag: str, monoisotopic_mass: float, molecular_weight: float, alternative_weights: List[float],
-                 thio_class: str, score: float, rodeo_score: float, macrocycle: str, cleaved_residues: str,
-                 core_features: str, mature_weights: List[float], amidation: bool) -> None:
-        super().__init__(location, "thiopeptide", core_seq, locus_tag, thio_class, score,
-                         monoisotopic_mass, molecular_weight, alternative_weights,
-                         leader=leader_seq, tail=cleaved_residues)
-        self.rodeo_score = rodeo_score
-        self.amidation = amidation
-        self.macrocycle = macrocycle
-        self.core_features = core_features
-        if thio_class == "Type III":
-            assert not mature_weights
-        self.mature_weights = mature_weights
-        self.tail_reaction = ''
-        if self.amidation:
-            self.tail_reaction = "dealkylation of C-Terminal residue; amidation"
-        self.tool = "thiopeptides"
-
-    def to_biopython(self, qualifiers: Dict[str, List] = None) -> List:
-        """ Converts a ThiopeptideMotif into one or more BioPython SeqFeatures """
-        notes = ['RODEO score: %s' % str(self.rodeo_score)]
-        if self.amidation:
-            notes.append('predicted tail reaction: %s' % self.tail_reaction)
-        return super().to_biopython(qualifiers={"note": notes})
-
-    def to_json(self) -> Dict:
-        """ Converts a ThiopeptideMotif to JSON. Required because these motifs
-            are stored in the module results.
-        """
-        json = super().to_json()
-        json["locus_tag"] = self.locus_tag
-        return json
-
-    @staticmethod
-    def from_json(data: Dict, _record: secmet.Record) -> "ThiopeptideMotif":
-        """ Builds a ThiopeptideMotif from a JSON object"""
-        args = []
-        args.append(location_from_string(data["location"]))
-        for arg_name in ["core", "leader", "locus_tag", "monoisotopic_mass",
-                         "molecular_weight", "alternative_weights",
-                         "peptide_subclass", "score", "rodeo_score", "macrocycle",
-                         "tail", "core_features", "mature_weights",
-                         "amidation"]:
-            args.append(data[arg_name])
-        # pylint doesn't do well with the splat op, so don't report errors
-        return ThiopeptideMotif(*args)  # pylint: disable=no-value-for-parameter
-
-
-def result_vec_to_feature(orig_feature: secmet.CDSFeature, res_vec: Thiopeptide) -> ThiopeptideMotif:
-    """ Converts a Thiopeptide object to a ThiopeptideMotif, based on an original
+def result_vec_to_feature(orig_feature: secmet.CDSFeature, res_vec: Thiopeptide) -> secmet.Prepeptide:
+    """ Converts a Thiopeptide object to a Prepeptide, based on an original
         CDSFeature.
 
         Arguments:
@@ -612,7 +560,7 @@ def result_vec_to_feature(orig_feature: secmet.CDSFeature, res_vec: Thiopeptide)
             res_vec: a Thiopeptide object containing results
 
         Returns:
-            a ThiopeptideMotif
+            a Prepeptide
     """
     if res_vec.c_cut:
         res_vec.core = res_vec.core[:-len(res_vec.c_cut)]
@@ -620,12 +568,12 @@ def result_vec_to_feature(orig_feature: secmet.CDSFeature, res_vec: Thiopeptide)
     mature_weights = []  # type: List[float]
     if res_vec.thio_type != "Type III":
         mature_weights = res_vec.mature_alt_weights
-    feature = ThiopeptideMotif(orig_feature.location, res_vec.core, res_vec.leader,
-                               orig_feature.get_name(), res_vec.monoisotopic_mass,
-                               res_vec.molecular_weight, res_vec.alternative_weights,
-                               res_vec.thio_type, res_vec.score, res_vec.rodeo_score,
-                               res_vec.macrocycle, res_vec.c_cut, res_vec.mature_features,
-                               mature_weights, res_vec.amidation)
+    feature = secmet.Prepeptide(orig_feature.location, "thiopeptide", res_vec.core, orig_feature.get_name(),
+                                res_vec.thio_type, res_vec.score, res_vec.monoisotopic_mass,
+                                res_vec.molecular_weight, res_vec.alternative_weights,
+                                leader=res_vec.leader, tail=res_vec.c_cut)
+    feature.detailed_information = ThioQualifier(res_vec.rodeo_score, res_vec.amidation,
+                                                 res_vec.macrocycle, res_vec.mature_features, mature_weights)
     return feature
 
 
