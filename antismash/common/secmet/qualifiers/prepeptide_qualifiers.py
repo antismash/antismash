@@ -119,6 +119,35 @@ class ThioQualifier(RiPPQualifier):
                    weights)
 
 
+class LassoQualifier(RiPPQualifier):
+    """ A qualifier for lassopeptide-specific annotations """
+    def __init__(self, rodeo_score: int, num_bridges: int,  # pylint: disable=too-many-arguments
+                 macrolactam: str, cut_mass: float, cut_weight: float) -> None:
+        super().__init__(rodeo_score)
+        self.num_bridges = num_bridges
+        self.macrolactam = macrolactam
+        self.cut_mass = cut_mass
+        self.cut_weight = cut_weight
+
+    def to_biopython_qualifiers(self) -> Dict[str, List[str]]:
+        qualifiers = super().to_biopython_qualifiers()
+        qualifiers.update({
+            "number_of_bridges": [str(self.num_bridges)],
+            "macrolactam": [self.macrolactam],
+            "cut_mass": [str(self.cut_mass)],
+            "cut_weight": [str(self.cut_weight)],
+        })
+        return qualifiers
+
+    @classmethod
+    def from_biopython_qualifiers(cls, qualifiers: Dict[str, List[str]]) -> "LassoQualifier":
+        return cls(int(qualifiers.pop("RODEO_score")[0]),
+                   int(qualifiers.pop("number_of_bridges")[0]),
+                   qualifiers.pop("macrolactam")[0],
+                   float(qualifiers.pop("cut_mass")[0]),
+                   float(qualifiers.pop("cut_weight")[0]))
+
+
 def rebuild_qualifier(data: Dict[str, List[str]], kind: str) -> Optional[RiPPQualifier]:
     """ Rebuilds a relevant RiPPQualifier for the given kind from the provided
         biopython qualifiers.
@@ -137,6 +166,7 @@ def rebuild_qualifier(data: Dict[str, List[str]], kind: str) -> Optional[RiPPQua
     classes = {
         "lanthipeptide": LanthiQualifier,
         "thiopeptide": ThioQualifier,
+        "lassopeptide": LassoQualifier,
     }  # type: Dict[str, Type[RiPPQualifier]]
     if kind not in classes:
         raise ValueError("no known qualifier builder for prepeptide kind: %s" % kind)

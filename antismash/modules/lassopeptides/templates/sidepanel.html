@@ -6,10 +6,10 @@
     {%- for motif in motifs -%}
     <dt>{{motif.get_name()}} - {{motif.peptide_subclass}}</dt>
       <dd>Cleavage pHMM score: {{'%0.2f' | format(motif.score)}}</dd>
-      <dd>RODEO score: {{motif.rodeo_score}}</dd>
-      <dd>Monoisotopic mass: {{'%0.1f' | format(motif.cut_mass)}} Da</dd>
-      <dd>Molecular weight: {{'%0.1f' | format(motif.cut_weight)}} Da</dd>
-      <dd>Number of bridges: {{motif.num_bridges}}</dd>
+      <dd>RODEO score: {{motif.detailed_information.rodeo_score}}</dd>
+      <dd>Monoisotopic mass: {{'%0.1f' | format(motif.detailed_information.cut_mass)}} Da</dd>
+      <dd>Molecular weight: {{'%0.1f' | format(motif.detailed_information.cut_weight)}} Da</dd>
+      <dd>Number of bridges: {{motif.detailed_information.num_bridges}}</dd>
     {% if motif.tail -%}
     <dl>
       <dt>Weights before cleavage:</dt>

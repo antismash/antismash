@@ -35,13 +35,13 @@ class IntegrationLasso(unittest.TestCase):
         assert len(result.motifs_by_locus["ctg1_orf03094"]) == 1
         motif = result.motifs_by_locus["ctg1_orf03094"][0]
         # values considering tail cut
-        self.assertAlmostEqual(motif.cut_mass, 2093.0, delta=1)
-        self.assertAlmostEqual(motif.cut_weight, 2094.2, delta=1)
-        assert motif.num_bridges == 0
+        self.assertAlmostEqual(motif.detailed_information.cut_mass, 2093.0, delta=1)
+        self.assertAlmostEqual(motif.detailed_information.cut_weight, 2094.2, delta=1)
+        assert motif.detailed_information.num_bridges == 0
         assert motif.leader == "MHTPIISETVQPKTAGLIVLGKASAETR"
         assert motif.core == "GLSQGVEPDIGQTYFEESR"
         assert motif.tail == "INQD"
-        assert motif.macrolactam == 'GLSQGVEPD'
+        assert motif.detailed_information.macrolactam == 'GLSQGVEPD'
         assert motif.peptide_subclass == "Class II"
         self.assertAlmostEqual(motif.monoisotopic_mass, 2563.2, delta=1)
         self.assertAlmostEqual(motif.molecular_weight, 2564.7, delta=1)
@@ -54,13 +54,13 @@ class IntegrationLasso(unittest.TestCase):
         assert len(result.motifs_by_locus["ctg1_orf02117"]) == 1
         motif = result.motifs_by_locus["ctg1_orf02117"][0]
 
-        self.assertAlmostEqual(motif.cut_mass, 1846.9, delta=1)
-        self.assertAlmostEqual(motif.cut_weight, 1847.9, delta=1)
-        self.assertEqual(motif.num_bridges, 0)
+        self.assertAlmostEqual(motif.detailed_information.cut_mass, 1846.9, delta=1)
+        self.assertAlmostEqual(motif.detailed_information.cut_weight, 1847.9, delta=1)
+        self.assertEqual(motif.detailed_information.num_bridges, 0)
         self.assertEqual(motif.leader, "MNKQQQESGLLLAEESLMELCASSETL")
         self.assertEqual(motif.core, "GGAGQYKEVEAGRWSDR")
         self.assertEqual(motif.peptide_subclass, 'Class II')
-        self.assertEqual(motif.macrolactam, 'GGAGQYKE')
+        self.assertEqual(motif.detailed_information.macrolactam, 'GGAGQYKE')
         self.assertEqual(motif.tail, 'IDSDDE')
         self.assertAlmostEqual(motif.monoisotopic_mass, 2521.1, delta=1)
         self.assertAlmostEqual(motif.molecular_weight, 2522.5, delta=1)
@@ -73,11 +73,11 @@ class IntegrationLasso(unittest.TestCase):
         assert len(result.motifs_by_locus["ctg1_orf11610"]) == 1
         motif = result.motifs_by_locus["ctg1_orf11610"][0]
 
-        self.assertAlmostEqual(motif.cut_mass, 2086.8, delta=1)
-        self.assertAlmostEqual(motif.cut_weight, 2088.4, delta=1)
-        self.assertEqual(motif.num_bridges, 2)
+        self.assertAlmostEqual(motif.detailed_information.cut_mass, 2090.8, delta=1)
+        self.assertAlmostEqual(motif.detailed_information.cut_weight, 2092.4, delta=1)
+        self.assertEqual(motif.detailed_information.num_bridges, 2)
         self.assertEqual(motif.leader, "VLISTTNGQGTPMTSTDELYEAPELIEIGDYAELTR")
         self.assertEqual(motif.core, "CVWGGDCTDFLGCGTAWICV")
-        assert motif.macrolactam == "CVWGGDCTD"
+        assert motif.detailed_information.macrolactam == "CVWGGDCTD"
         self.assertEqual(motif.tail, "")
         self.assertEqual(motif.peptide_subclass, 'Class I')

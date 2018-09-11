@@ -135,12 +135,12 @@ class TestSpecificAnalysis(unittest.TestCase):
         assert motif.leader == "HEADHEADHEAD"
         assert motif.tail == "TIP"
         assert motif.core == seq[:-len(motif.tail)]
-        assert motif.num_bridges == 1
+        assert motif.detailed_information.num_bridges == 1
         assert motif.peptide_subclass == "Class III"
-        assert motif.rodeo_score == 51
+        assert motif.detailed_information.rodeo_score == 51
         assert motif.score == 42
-        assert motif.macrolactam == ""
+        assert motif.detailed_information.macrolactam == ""
         self.assertAlmostEqual(motif.monoisotopic_mass, 4103.5, delta=1)
         self.assertAlmostEqual(motif.molecular_weight, 4106.1, delta=1)
-        self.assertAlmostEqual(motif.cut_mass, 3792.3, delta=1)
-        self.assertAlmostEqual(motif.cut_weight, 3794.7, delta=1)
+        self.assertAlmostEqual(motif.detailed_information.cut_mass, 3792.3, delta=1)
+        self.assertAlmostEqual(motif.detailed_information.cut_weight, 3794.7, delta=1)

@@ -9,6 +9,7 @@ import unittest
 from ..prepeptide_qualifiers import (
     RiPPQualifier,
     LanthiQualifier,
+    LassoQualifier,
     ThioQualifier,
     rebuild_qualifier,
 )
@@ -113,3 +114,28 @@ class TestThio(unittest.TestCase):
         assert qual.tail_reaction == "dealkylation of C-Terminal residue; amidation"
         bio = qual.to_biopython_qualifiers()
         assert bio["tail_reaction"] == [qual.tail_reaction]
+
+
+class TestLasso(unittest.TestCase):
+    def test_rebuilder(self):
+        def check_values(qual):
+            assert isinstance(qual, LassoQualifier)
+            assert qual.rodeo_score == 7
+            assert qual.num_bridges == 2
+            assert qual.macrolactam == "test macro"
+            assert qual.cut_mass == 5.6
+            assert qual.cut_weight == 8.3
+
+        old = LassoQualifier(7, 2, "test macro", 5.6, 8.3)
+        check_values(old)
+        bio = old.to_biopython_qualifiers()
+        bio["unrelated"] = ["qualifiers"]
+        new = LassoQualifier.from_biopython_qualifiers(bio)
+        assert list(bio) == ["unrelated"]  # related ones should have been consumed
+        check_values(new)
+
+        bio = old.to_biopython_qualifiers()
+        bio["unrelated"] = ["qualifiers"]
+        new = rebuild_qualifier(bio, "lassopeptide")
+        assert list(bio) == ["unrelated"]
+        check_values(new)

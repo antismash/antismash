@@ -14,7 +14,7 @@
           <dd>
             {{ motif.leader }}
             -
-            {% for aa in motif.macrolactam -%}
+            {% for aa in motif.detailed_information.macrolactam -%}
               {%- if aa == 'C' -%}
                 <span class="cys">C</span>
               {%- else -%}
@@ -22,7 +22,7 @@
               {%- endif -%}
             {% endfor -%}
 
-            {%- for aa in (motif.core | replace (motif.macrolactam, '')) -%}
+            {%- for aa in (motif.core | replace (motif.detailed_information.macrolactam, '')) -%}
               {%- if aa == 'C' -%}
                 <span class="cys">C</span>
               {%- else -%}
