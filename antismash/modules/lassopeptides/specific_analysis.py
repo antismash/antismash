@@ -18,8 +18,8 @@ from sklearn.externals import joblib
 
 from antismash.common import all_orfs, module_results, path, subprocessing, utils
 from antismash.common.secmet import Record, CDSFeature, Cluster, Prepeptide, GeneFunction
-from antismash.common.secmet.features import FeatureLocation, SeqFeature
 from antismash.common.secmet.locations import location_from_string
+from antismash.common.secmet.qualifiers.prepeptide_qualifiers import LassoQualifier
 from antismash.config import get_config as get_global_config
 
 from .config import get_config as get_lasso_config
@@ -37,7 +37,7 @@ class LassoResults(module_results.ModuleResults):
         self.new_cds_features = set()  # type: Set[CDSFeature]
         # keep new CDSMotifs by the gene they match to
         # e.g. self.motifs_by_locus[gene_locus] = [motif1, motif2..]
-        self.motifs_by_locus = defaultdict(list)  # type: Dict[str, List[LassopeptideMotif]]
+        self.motifs_by_locus = defaultdict(list)  # type: Dict[str, List[Prepeptide]]
         # keep clusters and which genes in them had precursor hits
         # e.g. self.clusters[cluster_number] = {gene1_locus, gene2_locus}
         self.clusters = defaultdict(set)  # type: Dict[int, Set[str]]
@@ -62,7 +62,7 @@ class LassoResults(module_results.ModuleResults):
         results = LassoResults(json["record_id"])
         for locus, motifs in json["motifs"].items():
             for motif in motifs:
-                results.motifs_by_locus[locus].append(LassopeptideMotif.from_json(motif))
+                results.motifs_by_locus[locus].append(Prepeptide.from_json(motif))
         results.clusters = {int(key): set(val) for key, val in json["clusters"].items()}
         for location, name in json["new_cds_features"]:
             loc = location_from_string(location)
@@ -79,62 +79,10 @@ class LassoResults(module_results.ModuleResults):
                 record.add_cds_motif(motif)
 
 
-class LassopeptideMotif(Prepeptide):
-    """ A lanthipeptide-specific feature """
-    def __init__(self, location: FeatureLocation, leader: str, core: str, tail: str, locus_tag: str,
-                 monoisotopic_mass: float, molecular_weight: float, cut_mass: float, cut_weight: float,
-                 num_bridges: int, lasso_class: str, score: float, rodeo_score: float, macrolactam: str) -> None:
-        super().__init__(location, "lassopeptide", core, locus_tag, peptide_subclass=lasso_class,
-                         score=score, monoisotopic_mass=monoisotopic_mass,
-                         molecular_weight=molecular_weight,
-                         leader=leader, tail=tail)
-        self.num_bridges = int(num_bridges)
-        self.rodeo_score = float(rodeo_score)
-        self.macrolactam = str(macrolactam)
-        self.cut_mass = float(cut_mass)
-        self.cut_weight = float(cut_weight)
-
-    def to_biopython(self, qualifiers: Dict[str, List] = None) -> List[SeqFeature]:
-        notes = []
-        if not qualifiers:
-            qualifiers = {}
-        notes.append('number of bridges: %s' % self.num_bridges)
-        notes.append('RODEO score: %s' % str(self.rodeo_score))
-        if "note" not in qualifiers:
-            qualifiers["note"] = notes
-        else:
-            qualifiers["note"].extend(notes)
-        return super().to_biopython(qualifiers=qualifiers)
-
-    def to_json(self) -> Dict[str, Any]:
-        json = super().to_json()
-        json["locus_tag"] = self.locus_tag  # not in vars() due to __slots__
-        try:
-            assert json["locus_tag"]
-        except KeyError:
-            logging.critical("bad locus tag on motif %s: %s ... %s", self.location, self.locus_tag, json)
-        return json
-
-    @staticmethod
-    def from_json(data: Dict[str, Any]) -> "LassopeptideMotif":
-        """ Converts a JSON representation of the motif back into an instance
-            of LassopeptideMotif
-        """
-        args = []
-        args.append(location_from_string(data["location"]))
-        for arg_name in ["leader", "core", "tail", "locus_tag", "monoisotopic_mass",
-                         "molecular_weight", "cut_mass", "cut_weight",
-                         "num_bridges", "peptide_subclass",
-                         "score", "rodeo_score", "macrolactam"]:
-            args.append(data[arg_name])
-        # pylint doesn't do well with the splat op, so don't report errors
-        return LassopeptideMotif(*args)  # pylint: disable=no-value-for-parameter
-
-
 class Lassopeptide:
     """ Class to calculate and store lassopeptide information
     """
-    def __init__(self, start: int, end: int, score: float, rodeo_score: float,
+    def __init__(self, start: int, end: int, score: float, rodeo_score: int,
                  leader: str, core: str) -> None:
         self.start = start
         self.end = end
@@ -630,9 +578,9 @@ def run_rodeo_svm(csv_columns: List[float]) -> int:
     return 0
 
 
-def run_rodeo(record: Record, cluster: Cluster, query: CDSFeature, leader: str, core: str) -> Tuple[bool, float]:
+def run_rodeo(record: Record, cluster: Cluster, query: CDSFeature, leader: str, core: str) -> Tuple[bool, int]:
     """Run RODEO heuristics + SVM to assess precursor peptide candidate"""
-    rodeo_score = 0.
+    rodeo_score = 0
 
     # Incorporate heuristic scores
     heuristic_score, gathered_tabs_for_csv = acquire_rodeo_heuristics(record, cluster, query, leader, core)
@@ -640,7 +588,7 @@ def run_rodeo(record: Record, cluster: Cluster, query: CDSFeature, leader: str, 
 
     fimo_motifs = []  # type: List[int]
     fimo_scores = {}  # type: Dict[int, float]
-    motif_score = 0.
+    motif_score = 0
 
     if not get_global_config().without_fimo and get_lasso_config().fimo_present:
         # Incorporate motif scores
@@ -685,7 +633,7 @@ def determine_precursor_peptide_candidate(record: Record, cluster: Cluster,
     return Lassopeptide(start, end + 1, score, rodeo_score, leader, core)
 
 
-def run_lassopred(record: Record, cluster: Cluster, query: CDSFeature) -> Optional[LassopeptideMotif]:
+def run_lassopred(record: Record, cluster: Cluster, query: CDSFeature) -> Optional[Prepeptide]:
     """General function to predict and analyse lasso peptides"""
 
     # Run checks to determine whether an ORF encodes a precursor peptide
@@ -719,28 +667,23 @@ def run_lassopred(record: Record, cluster: Cluster, query: CDSFeature) -> Option
     return result_vec_to_motif(query, result)
 
 
-def result_vec_to_motif(query: CDSFeature, result: Lassopeptide) -> LassopeptideMotif:
-    """ Converts a Lassopeptide to a LassopeptideMotif """
-    leader = result.leader
+def result_vec_to_motif(query: CDSFeature, result: Lassopeptide) -> Prepeptide:
+    """ Converts a Lassopeptide to a Prepeptide """
     core = result.core
     tail = result.c_cut
     if tail:
         core = result.core[:-len(tail)]
-    mass = result.monoisotopic_mass
     weight = result.molecular_weight
     cut_mass = result.cut_mass
     cut_weight = result.cut_weight
-    bridges = result.number_bridges
-    lasso_class = result.lasso_class
-    score = result.score
-    rodeo_score = result.rodeo_score
-    macrolactam = result.macrolactam
-    locus_tag = query.get_name()
-    location = query.location
 
-    return LassopeptideMotif(location, leader, core, tail, locus_tag, mass, weight,
-                             cut_mass, cut_weight, bridges, lasso_class, score,
-                             rodeo_score, macrolactam)
+    feature = Prepeptide(query.location, "lassopeptide", core, query.get_name(), peptide_subclass=result.lasso_class,
+                         score=result.score, monoisotopic_mass=result.monoisotopic_mass,
+                         molecular_weight=weight,
+                         leader=result.leader, tail=tail)
+    feature.detailed_information = LassoQualifier(result.rodeo_score, result.number_bridges,
+                                                  result.macrolactam, cut_mass, cut_weight)
+    return feature
 
 
 def specific_analysis(record: Record) -> LassoResults:
