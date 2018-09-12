@@ -25,7 +25,7 @@ class PfamToGoTest(unittest.TestCase):
     def test_add_to_record(self):
         nisin = helpers.get_path_to_nisin_genbank()
         record = record_processing.parse_input_sequence(nisin)[0]
-        assert len(record.get_pfam_domains()) == 0
+        assert not record.get_pfam_domains()
 
         # add a test PFAM
         pfam = PFAMDomain(FeatureLocation(2, 5), description="test",

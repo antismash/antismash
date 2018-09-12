@@ -4,15 +4,14 @@
 """ The section of nrps_pks responsible for analysing PKS components """
 
 import logging
-from typing import cast, Dict, List, Tuple
+from typing import Dict, List, Tuple
 
 from helperlibs.wrappers.io import TemporaryDirectory
 
 from antismash.common.secmet import CDSFeature
 
-
 from .data_structures import Prediction
-from .minowa import minowa_cal, minowa_at, base as minowa_base
+from .minowa import minowa_cal, minowa_at
 from .kr_analysis import kr_analysis
 from .at_analysis import at_analysis
 
