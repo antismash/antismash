@@ -9,7 +9,7 @@ import unittest
 import antismash
 from antismash.common import path
 from antismash.common.test import helpers
-from antismash.config import build_config, update_config, destroy_config
+from antismash.config import build_config, destroy_config
 from antismash.modules import sactipeptides
 from antismash.modules.sactipeptides import SactiResults
 

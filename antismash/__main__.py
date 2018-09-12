@@ -10,7 +10,6 @@ from typing import List
 
 import antismash
 from antismash.common.subprocessing import execute
-from antismash.config import ConfigType
 
 
 def get_git_version() -> str:
@@ -34,6 +33,16 @@ def get_version() -> str:
 
 
 def main(args: List[str]) -> int:
+    """ The entrypoint of antiSMASH as if it was on the command line
+
+        Arguments:
+            args: a list of args as would be given on the command line
+                    e.g. ["inputfile", "--minimal", "--enable-nrps_pks"]
+
+        Returns:
+            zero if successful, non-zero otherwise
+
+    """
     all_modules = antismash.get_detection_modules() + antismash.get_analysis_modules()
     parser = antismash.config.args.build_parser(from_config_file=True, modules=all_modules)
 

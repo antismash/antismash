@@ -212,7 +212,7 @@ class PfamToGoTest(unittest.TestCase):
                                                             "with incorporation or reduction of molecular oxygen, "
                                                             "reduced pteridine as one donor, and incorporation of "
                                                             "one atom of oxygen"),
-                                 "GO:0055114": "oxidation-reduction process"}},
+                                             "GO:0055114": "oxidation-reduction process"}},
                        "record_id": fake_record.id,
                        "schema_version": 2}
         with self.assertLogs() as log_cm:
