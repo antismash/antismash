@@ -210,6 +210,13 @@ def predict_molecular_weight(preds_by_protein: Dict[str, List[CDSPrediction]],
             continue
         if ptype == "HAL":
             tailoring_mw += WEIGHTS["HAL"]['cl'] * len(predictions)
+        elif ptype == "CYC":
+            cyc_weight = WEIGHTS["CYC"]
+            for pred in predictions:
+                if pred.pfunc and '/' in pred.pfunc:
+                    tailoring_mw += 2 * cyc_weight
+                else:
+                    tailoring_mw += cyc_weight
         else:
             tailoring_mw += WEIGHTS[ptype] * len(predictions)
 
