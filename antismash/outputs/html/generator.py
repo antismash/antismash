@@ -59,7 +59,7 @@ def build_json_data(records: List[Record], results: List[Dict[str, module_result
 
 
 def write_regions_js(records: List[Dict[str, Any]], output_dir: str,
-                     js_domains: List[List[Dict[str, Any]]]) -> None:
+                     js_domains: List[Dict[str, Any]]) -> None:
     """ Writes out the cluster and domain JSONs to file for the javascript sections
         of code"""
     with open(os.path.join(output_dir, 'regions.js'), 'w') as handle:
@@ -91,13 +91,16 @@ def generate_webpage(records: List[Record], results: List[Dict[str, module_resul
         template = env.get_template('index.html')
         options_layer = OptionsLayer(options)
         record_layers = []
+        results_by_record_id = {}  # type: Dict[str, Dict[str, module_results.ModuleResults]]
         for record, record_results in zip(records, results):
-            record_layers.append(RecordLayer(record, record_results, options_layer))
+            record_layers.append(RecordLayer(record, None, options_layer))
+            results_by_record_id[record.id] = record_results
 
         records_written = sum(len(record.get_regions()) for record in records)
         aux = template.render(records=record_layers, options=options_layer,
                               version=options.version, extra_data=js_domains,
                               records_written=records_written,
+                              results_by_record_id=results_by_record_id,
                               config=options)
         result_file.write(aux)
 
