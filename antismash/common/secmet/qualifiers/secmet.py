@@ -71,6 +71,15 @@ class SecMetQualifier(list):
             return self.qualifier_label.format(self.query_id, self.evalue,
                                                self.bitscore, self.nseeds, self.tool)
 
+        def __eq__(self, other: Any) -> bool:
+            if not isinstance(other, type(self)):
+                return False
+            return (self.query_id == other.query_id
+                    and self.evalue == other.evalue
+                    and self.bitscore == other.bitscore
+                    and self.nseeds == other.nseeds
+                    and self.tool == other.tool)
+
         def to_json(self) -> List[Union[str, float, int]]:
             """ Constructs a JSON-friendly representation of a Domain """
             return [self.query_id, self.evalue, self.bitscore, self.nseeds, self.tool]
@@ -87,14 +96,10 @@ class SecMetQualifier(list):
             return cls(str(json[0]), float(json[1]), float(json[2]), int(json[3]), str(json[4]))
 
     def __init__(self, products: Set[str], domains: List["SecMetQualifier.Domain"]) -> None:
-        self._domains = domains
+        self._domains = []  # type: List["SecMetQualifier.Domain"]
         self.domain_ids = []  # type: List[str]
         self.unique_domain_ids = set()  # type: Set[str]
-        for domain in self._domains:
-            assert isinstance(domain, SecMetQualifier.Domain)
-            assert domain.query_id not in self.unique_domain_ids, "domains were duplicated"
-            self.unique_domain_ids.add(domain.query_id)
-            self.domain_ids.append(domain.query_id)
+        self.add_domains(domains)
         self._products = set()  # type: Set[str]
         self.add_products(products)
         self.kind = "biosynthetic"
@@ -104,6 +109,9 @@ class SecMetQualifier(list):
         yield "Type: %s" % self.clustertype
         yield "; ".join(map(str, self._domains))
         yield "Kind: %s" % self.kind
+
+    def __getitem__(self, selection: Union[slice, int]) -> str:  # type: ignore
+        return list(self)[selection]
 
     def append(self, _item: Any) -> None:
         raise NotImplementedError("Appending to this list won't work")
@@ -127,6 +135,7 @@ class SecMetQualifier(list):
                 continue  # no sense keeping duplicates
             self.unique_domain_ids.add(domain.query_id)
             unique.append(domain)
+            self.domain_ids.append(domain.query_id)
         self._domains.extend(unique)
 
     @property
@@ -142,7 +151,7 @@ class SecMetQualifier(list):
     @property
     def clustertype(self) -> str:
         """ A string hypen-separated products """
-        return "-".join(sorted(self.products))
+        return "-".join(self.products)
 
     @staticmethod
     def from_biopython(qualifier: List[str]) -> "SecMetQualifier":
