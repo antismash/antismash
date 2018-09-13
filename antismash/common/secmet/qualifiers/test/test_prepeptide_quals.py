@@ -28,15 +28,14 @@ class TestRebuilder(unittest.TestCase):
 
 
 class TestRiPP(unittest.TestCase):
-    def test_no_rodeo(self):
-        qual = RiPPQualifier()
-        assert qual.rodeo_score == 0
-        assert qual.to_biopython_qualifiers() == {}
-
     def test_rodeo(self):
-        qual = RiPPQualifier(rodeo_score=5)
-        assert qual.rodeo_score == 5
-        assert qual.to_biopython_qualifiers() == {"RODEO_score": ["5"]}
+        for score in [-2, 0, 5]:
+            qual = RiPPQualifier(rodeo_score=score)
+            assert qual.rodeo_score == score
+            bio = qual.to_biopython_qualifiers()
+            assert bio == {"RODEO_score": [str(score)]}
+            assert RiPPQualifier.from_biopython_qualifiers(bio).rodeo_score == score
+            assert not bio
 
     def test_regeneration(self):
         old = RiPPQualifier(rodeo_score=3)

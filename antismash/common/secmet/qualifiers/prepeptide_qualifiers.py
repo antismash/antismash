@@ -13,16 +13,15 @@ class RiPPQualifier:
     __slots__ = ["rodeo_score"]
 
     def __init__(self, rodeo_score: int = 0) -> None:
+        if not isinstance(rodeo_score, int):
+            raise TypeError("RODEO score must be an int, not %s" % type(rodeo_score))
         self.rodeo_score = rodeo_score
 
     def to_biopython_qualifiers(self) -> Dict[str, List[str]]:
         """ Generate a biopython-like dictionary of qualifiers containing the
             information from this qualifier
         """
-        qualifiers = {}
-        if self.rodeo_score is not 0:
-            qualifiers["RODEO_score"] = [str(self.rodeo_score)]
-        return qualifiers
+        return {"RODEO_score": [str(self.rodeo_score)]}
 
     @classmethod
     def from_biopython_qualifiers(cls, qualifiers: Dict[str, List[str]]) -> "RiPPQualifier":
