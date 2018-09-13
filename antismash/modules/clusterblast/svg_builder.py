@@ -91,13 +91,13 @@ def generate_distinct_colours(count: int) -> List[str]:
     return colours
 
 
-def sort_groups(query_ids: Iterable[T], groups: Iterable[Iterable[T]]) -> List[Iterable[T]]:
+def sort_groups(query_ids: Iterable[T], groups: Set[Tuple[T, ...]]) -> List[Tuple[T, ...]]:
     """ Sorts groups into the same order as query_ids. If multiple query_ids are
         in the same group, the earlier id is used for ordering.
 
         Args:
             query_ids: An iterable of group members defining the sort order.
-            groups: The groups to sort, must have a __contains__ method.
+            groups: The groups to sort
 
         Returns:
             A new list containing the groups in sorted order.
@@ -132,7 +132,7 @@ def make_neighbours_distinct(groups: List[T]) -> List[T]:
 
 
 def arrange_colour_groups(query_cds_features: List[secmet.CDSFeature],
-                          groups: Iterable[Iterable[T]]) -> List[Iterable[T]]:
+                          groups: Set[Tuple[str, ...]]) -> List[Tuple[str, ...]]:
     """ Arrange provided groups to be maximally distant from each other.
 
         Arguments:
