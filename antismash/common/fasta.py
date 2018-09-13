@@ -12,7 +12,8 @@ from antismash.common.secmet import Record
 from antismash.common.secmet.features import CDSFeature, Domain
 
 
-def get_fasta_from_features(features: Union[Iterable[CDSFeature], Iterable[Domain]], numeric_names: bool = False) -> str:
+def get_fasta_from_features(features: Union[Iterable[CDSFeature], Iterable[Domain]],
+                            numeric_names: bool = False) -> str:
     """ Extract multi-protein FASTA from provided features
 
         Arguments:
@@ -29,7 +30,7 @@ def get_fasta_from_features(features: Union[Iterable[CDSFeature], Iterable[Domai
         for feature in features:
             all_fastas.append(">%s\n%s" % (feature.get_name(), feature.translation))
     else:
-        for i, feature in enumerate(features):
+        for i, feature in enumerate(features):  # type: ignore # because mypy can't handle the union in enumerate
             all_fastas.append(">%d\n%s" % (i, feature.translation))
     return "\n".join(all_fastas)
 
