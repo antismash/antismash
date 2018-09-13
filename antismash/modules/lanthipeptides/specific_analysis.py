@@ -104,11 +104,11 @@ class LanthiResults(module_results.ModuleResults):
 
 class PrepeptideBase:
     """ A generic prepeptide class for tracking various typical components """
-    def __init__(self, start: int, end: int, score: int, rodeo_score: int = None) -> None:
+    def __init__(self, start: int, end: int, score: int, rodeo_score: int = 0) -> None:
         self.start = int(start)  # same as CDS
         self.end = int(end)  # same as CDS
         self.score = int(score)  # of cleavage site
-        self.rodeo_score = int(rodeo_score) if rodeo_score is not None else None
+        self.rodeo_score = int(rodeo_score)
         self._leader = None  # type: str
         self._core = ''
         self._tail = None  # type: str
@@ -536,7 +536,7 @@ def run_lanthipred(record: Record, query: CDSFeature, lant_class: str, domains: 
         if cleavage_result.end == len(query_sequence):
             return None
         cleavage_result.lantype = lant_class
-        result = Lanthipeptide(cleavage_result, None)
+        result = Lanthipeptide(cleavage_result, 0)
         result.leader = query_sequence[:result.end]
         result.core = query_sequence[result.end:]
 
