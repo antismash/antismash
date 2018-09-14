@@ -23,8 +23,8 @@ from antismash.modules.pfam2go import pfam2go
 def set_dummy_with_pfams(pfam_ids: Dict[str, FeatureLocation]) -> DummyRecord:
     pfam_domains = []
     for pfam_id, pfam_location in pfam_ids.items():
-        pfam_domain = PFAMDomain(location=pfam_location, description='FAKE', protein_start=0, protein_end=5)
-        pfam_domain.db_xref = [pfam_id]
+        pfam_domain = PFAMDomain(location=pfam_location, description='FAKE', protein_start=0, protein_end=5,
+                                 identifier=pfam_id)
         pfam_domain.domain_id = '%s.%d.%d' % (pfam_id, pfam_location.start, pfam_location.end)
         pfam_domains.append(pfam_domain)
     return DummyRecord(features=pfam_domains)
@@ -103,23 +103,13 @@ class PfamToGoTest(unittest.TestCase):
         blank_no_pfams = DummyRecord()
         blank_no_ids = Record(Seq("ATGTTATGAGGGTCATAACAT", generic_dna))
         fake_pfam_location = FeatureLocation(0, 12)
-        fake_pfam = PFAMDomain(location=fake_pfam_location, description='MCPsignal', protein_start=0, protein_end=5)
+        fake_pfam = PFAMDomain(location=fake_pfam_location, description='MCPsignal', protein_start=0, protein_end=5,
+                               identifier="PF00000")
         fake_pfam.domain_id = 'BLANK'
         blank_no_ids.add_pfam_domain(fake_pfam)
-        with self.assertLogs(level='DEBUG') as log_cm:
-            gos_for_no_pfams = pfam2go.get_gos_for_pfams(blank_no_pfams)
-            assert 'No Pfam domains found' in str(log_cm.output)
-            assert not gos_for_no_pfams
-            gos_for_no_ids = pfam2go.get_gos_for_pfams(blank_no_ids)
-            assert 'No Pfam ids found' in str(log_cm.output)
-            assert not gos_for_no_ids
 
-    def test_get_gos_id_handling(self):
-        pfams = {'PF00015.42': FeatureLocation(0, 3),
-                 'PF0015.42': FeatureLocation(0, 3)}
-        fake_record = set_dummy_with_pfams(pfams)
-        with self.assertRaisesRegex(ValueError, 'Pfam id PF0015 is not a valid Pfam id'):
-            pfam2go.get_gos_for_pfams(fake_record)
+        assert not pfam2go.get_gos_for_pfams(blank_no_pfams)
+        assert not pfam2go.get_gos_for_pfams(blank_no_ids)
 
     def test_results(self):
         pfams = {'PF00015': FeatureLocation(0, 3)}
@@ -129,30 +119,28 @@ class PfamToGoTest(unittest.TestCase):
         assert gos_for_fake_pfam == fake_results.pfam_domains_with_gos
         assert fake_record.id == fake_results.record_id
         for pfam, all_ontologies in fake_results.pfam_domains_with_gos.items():
-            pfam_ids_without_versions = [pfam_id.partition('.')[0] for pfam_id in pfam.db_xref]
             for ontologies in all_ontologies:
-                assert ontologies.pfam in pfam_ids_without_versions
+                assert ontologies.pfam == pfam.identifier
 
     def test_add_results_to_record(self):
         pfams = {'PF00015.2': FeatureLocation(0, 3), 'PF00351.1': FeatureLocation(0, 3),
                  'PF00015.27': FeatureLocation(3, 6)}
         fake_record = set_dummy_with_pfams(pfams)
         fake_duplicate_pfam = PFAMDomain(location=FeatureLocation(6, 9), description='DUPLICATE', protein_start=0,
-                                         protein_end=5)
-        fake_duplicate_pfam.db_xref = ['PF00015.2']
+                                         protein_end=5, identifier="PF00015.2")
         fake_duplicate_pfam.domain_id = 'DUPLICATE'
         fake_record.add_pfam_domain(fake_duplicate_pfam)
         assert fake_duplicate_pfam in fake_record.get_pfam_domains()
         gos_for_fake_pfam = pfam2go.get_gos_for_pfams(fake_record)
         fake_results = pfam2go.Pfam2GoResults(fake_record.id, gos_for_fake_pfam)
         fake_results.add_to_record(fake_record)
-        assert fake_duplicate_pfam.db_xref == ['PF00015.2']
+        assert fake_duplicate_pfam.full_identifier == 'PF00015.2'
         for pfam in fake_record.get_pfam_domains():
             assert sorted(pfam.gene_ontologies.ids) == sorted(fake_results.get_all_gos(pfam))
             # make sure identical pfams (with different version numbers) all have the same gene ontologies
-            for pfam_id in pfam.db_xref:
-                if pfam_id.startswith('PF00015'):
-                    assert sorted(pfam.gene_ontologies.ids) == sorted(fake_results.get_all_gos(fake_duplicate_pfam))
+            if pfam.identifier == "PF00015":
+                assert pfam.version in [2, 27]
+                assert sorted(pfam.gene_ontologies.ids) == sorted(fake_results.get_all_gos(fake_duplicate_pfam))
 
     def test_adding_to_wrong_record(self):
         pfams = {'PF00015': FeatureLocation(0, 3)}
@@ -184,7 +172,6 @@ class PfamToGoTest(unittest.TestCase):
         for pfam in expected_result["pfams"]:
             assert expected_result["pfams"][pfam] == result_json["pfams"][pfam]
 
-
     def test_from_json(self):
         fake_pfam_location = FeatureLocation(0, 12)
         pfams = {'PF00015': fake_pfam_location, 'PF00351': fake_pfam_location, 'PF05147': fake_pfam_location}
@@ -195,8 +182,7 @@ class PfamToGoTest(unittest.TestCase):
         results_from_json = pfam2go.Pfam2GoResults.from_json(result_json, fake_record)
         assert 'PF05147' not in result_json["pfams"]
         for pfam in results_from_json.pfam_domains_with_gos:
-            for pfam_id in pfam.db_xref:
-                assert pfam_id in result_json["pfams"]
+            assert pfam.identifier in result_json["pfams"]
         from_json_to_json = results_from_json.to_json()
         assert result_json == from_json_to_json
         assert from_json_to_json["schema_version"] == 1
