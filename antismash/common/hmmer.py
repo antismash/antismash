@@ -77,9 +77,9 @@ class HmmerResults(module_results.ModuleResults):
         for i, hit in enumerate(self.hits):
             pfam_feature = PFAMDomain(location_from_string(hit["location"]),
                                       description=hit["description"], protein_start=hit["protein_start"],
-                                      protein_end=hit["protein_end"])
+                                      protein_end=hit["protein_end"], identifier=hit["identifier"])
             for key in ["label", "locus_tag", "domain", "evalue",
-                        "score", "translation", "db_xref"]:
+                        "score", "translation"]:
                 setattr(pfam_feature, key, hit[key])
             pfam_feature.tool = self.tool
             pfam_feature.database = db_version
@@ -122,7 +122,7 @@ def build_hits(record: Record, hmmscan_results: List, min_score: float,
                    "label": result.id, "locus_tag": feature.locus_tag,
                    "domain": hsp.hit_id, "evalue": hsp.evalue, "score": hsp.bitscore,
                    "translation": str(location.extract(record.seq).translate(table=feature.transl_table)),
-                   "db_xref": [pfamdb.get_pfam_id_from_name(hsp.hit_id, database)],
+                   "identifier": pfamdb.get_pfam_id_from_name(hsp.hit_id, database),
                    "description": hsp.hit_description, "protein_start": hsp.query_start, "protein_end": hsp.query_end}
             hits.append(hit)
     return hits

@@ -161,8 +161,8 @@ def generate_pfam2go_tooltip(record: Record, feature: CDSFeature) -> List[str]:
     go_info_line = "{pf_id}: <a href='{url}{go_id}' target='_blank'> {go_id}:</a> {go_desc}"
     for pfam in record.get_pfam_domains_in_cds(feature):
         if pfam.gene_ontologies:
-            pfam_ids = ", ".join([xref for xref in pfam.db_xref if xref.startswith('PF')])
-            unique_pfams_with_gos[pfam_ids] = pfam.gene_ontologies
+            pfam_id = pfam.full_identifier
+            unique_pfams_with_gos[pfam_id] = pfam.gene_ontologies
     for unique_id, go_qualifier in sorted(unique_pfams_with_gos.items()):
         for go_id, go_description in sorted(go_qualifier.go_entries.items()):
             go_notes.append(go_info_line.format(pf_id=unique_id, url=go_url, go_id=go_id, go_desc=go_description))

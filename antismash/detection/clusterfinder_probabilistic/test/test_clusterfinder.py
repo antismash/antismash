@@ -24,7 +24,7 @@ class ClusterFinderTest(unittest.TestCase):
         update_config({"enabled_cluster_types": []})
 
         self.record = DummyRecord(seq=Seq("A" * 2000))
-        for start, end, probability, pfam_id in [(10, 20, 0.1, 'FAKE007'),
+        for start, end, probability, pfam_id in [(10, 20, 0.1, 'PF77777'),
                                                  (30, 40, 0.3, 'PF00106'),
                                                  (50, 60, 0.4, 'PF00107'),
                                                  (60, 70, 0.7, 'PF00109'),
@@ -32,9 +32,9 @@ class ClusterFinderTest(unittest.TestCase):
                                                  (90, 100, 0.8, 'PF02401'),
                                                  (100, 110, 0.32, 'PF04369'),
                                                  (110, 120, 1.0, 'PF00128'),
-                                                 (130, 140, 0.2, 'FAKE234'),
-                                                 (500, 505, None, 'FAKE505'),
-                                                 (1010, 1020, 0.1, 'FAKE007'),
+                                                 (130, 140, 0.2, 'PF77776'),
+                                                 (500, 505, None, 'PF77775'),
+                                                 (1010, 1020, 0.1, 'PF77774'),
                                                  (1030, 1040, 0.3, 'PF00106'),
                                                  (1050, 1060, 0.4, 'PF00107'),
                                                  (1060, 1070, 0.7, 'PF00109'),
@@ -44,9 +44,9 @@ class ClusterFinderTest(unittest.TestCase):
                                                  (1110, 1120, 1.0, 'PF00128')]:
             location = FeatureLocation(start, end, strand=1)
             self.record.add_cds_feature(CDSFeature(location, locus_tag=str(start)))
-            pfam = PFAMDomain(location, "dummy_description", protein_start=start + 1, protein_end=end-1)
+            pfam = PFAMDomain(location, "dummy_description", protein_start=start + 1,
+                              protein_end=end-1, identifier=pfam_id)
             pfam.domain_id = "pfam_%d" % start
-            pfam.db_xref.append(pfam_id)
             pfam.probability = probability
             self.record.add_pfam_domain(pfam)
 

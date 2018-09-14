@@ -119,17 +119,14 @@ def run_on_record(record: Record, results: Optional[ClusterFinderResults],
 
     pfam_ids = []  # type: List[str]
     for pfam in pfam_features:
-        pfam_ids.extend(pfam.db_xref)
+        pfam_ids.append(pfam.identifier)
     if not pfam_ids:
         logging.debug("No valid PFAM ids in record, probabilistic clusters cannot be found")
         return ClusterFinderResults(record.id, [])
 
-    # TODO: change when PFAMs have enforced ID attributes
-    pfam_features_with_ids = [feature for feature in pfam_features if feature.db_xref]
-
     # annotate ClusterFinder probabilities within PFAM features
     probabilities = get_pfam_probabilities(pfam_ids)
-    for pfam, probability in zip(pfam_features_with_ids, probabilities):
+    for pfam, probability in zip(pfam_features, probabilities):
         pfam.probability = probability
 
     return generate_results(record, options)

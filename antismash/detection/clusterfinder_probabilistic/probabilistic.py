@@ -92,7 +92,7 @@ def find_probabilistic_clusters(record: Record, options: ConfigType) -> List[Clu
                 probabilities.append(feature.probability)
                 if max(feature_position) > cluster_position[1]:
                     cluster_position = (cluster_position[0], max(feature_position))
-            pfam_ids.extend(list(feature.db_xref))
+            pfam_ids.append(feature.identifier)
         else:
             if state == "extend":
                 state = "seed"

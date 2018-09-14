@@ -29,10 +29,9 @@ class PfamToGoTest(unittest.TestCase):
 
         # add a test PFAM
         pfam = PFAMDomain(FeatureLocation(2, 5), description="test",
-                          protein_start=5, protein_end=10,
+                          protein_start=5, protein_end=10, identifier="PF00005",
                           domain="PF00005")
         pfam.domain_id = "test"
-        pfam.db_xref = ["PF00005"]
         record.add_pfam_domain(pfam)
         assert len(record.get_pfam_domains()) == 1
 
@@ -60,12 +59,11 @@ class PfamToGoTest(unittest.TestCase):
                                                          "GO:0006355": "regulation of transcription, DNA-templated"}}
         expected_pfams_found = set()
         for pfam, all_ontologies in results.pfam_domains_with_gos.items():
-            pfam_ids_without_versions = [pfam_id.partition(".")[0] for pfam_id in pfam.db_xref]
             # make sure the Pfams without gos aren't in the results
-            assert "PF05147" not in pfam_ids_without_versions and "PF04738" not in pfam_ids_without_versions
+            assert pfam.identifier not in ["PF05147", "PF04738"]
             for ontologies in all_ontologies:
                 # make sure GeneOntologies' pfam id actually is one found in the domain's ids
-                assert ontologies.pfam in pfam_ids_without_versions
+                assert ontologies.pfam == pfam.identifier
                 # did it find the right amount of GO IDs for the sample Pfams, and did it find the right ones?
                 if ontologies.pfam in expected_pfams_and_gos_with_descs:
                     expected_pfams_found.add(ontologies.pfam)

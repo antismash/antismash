@@ -103,12 +103,11 @@ class Pfam2GoResults(ModuleResults):
             return None
         all_pfam_ids_to_ontologies = defaultdict(list)  # type: Dict[PFAMDomain, List[GeneOntologies]]
         for domain in record.get_pfam_domains():
-            for pfam_id in domain.db_xref:
-                id_without_version = pfam_id.partition('.')[0]
-                if id_without_version in json["pfams"]:
-                    all_ontology = [GeneOntology(go_id, go_description)
-                                    for go_id, go_description in json["pfams"][id_without_version].items()]
-                    all_pfam_ids_to_ontologies[domain].append(GeneOntologies(id_without_version, all_ontology))
+            id_without_version = domain.identifier
+            if id_without_version in json["pfams"]:
+                all_ontology = [GeneOntology(go_id, go_description)
+                                for go_id, go_description in json["pfams"][id_without_version].items()]
+                all_pfam_ids_to_ontologies[domain].append(GeneOntologies(id_without_version, all_ontology))
         results = Pfam2GoResults(record.id, all_pfam_ids_to_ontologies)
         return results
 
@@ -161,14 +160,7 @@ def get_gos_for_pfams(record: Record) -> Dict[PFAMDomain, List[GeneOntologies]]:
     if not pfams:
         logging.debug('No Pfam domains found in record, cannot create Pfam to Gene Ontology mapping')
     for pfam in pfams:
-        pfam_ids = pfam.db_xref
-        if not pfam_ids:
-            logging.debug('No Pfam ids found in Pfam domain %s, cannot create Pfam to Gene Ontology mapping', pfam)
-        for pfam_id in pfam_ids:
-            pfam_id = pfam_id.partition('.')[0]  # strip out version number
-            if not (len(pfam_id) == 7 and pfam_id[:2] == 'PF' and pfam_id[2:].isdecimal()):
-                raise ValueError('Pfam id {} is not a valid Pfam id'.format(pfam_id))
-            gene_ontologies_for_pfam = full_gomap_as_ontologies.get(pfam_id)
-            if gene_ontologies_for_pfam:
-                pfam_domains_with_gos[pfam].append(gene_ontologies_for_pfam)
+        gene_ontologies_for_pfam = full_gomap_as_ontologies.get(pfam.identifier)
+        if gene_ontologies_for_pfam:
+            pfam_domains_with_gos[pfam].append(gene_ontologies_for_pfam)
     return pfam_domains_with_gos
