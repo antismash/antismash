@@ -17,6 +17,7 @@ class TestConversion(unittest.TestCase):
             peptide_class="test_class",
             core="coreseq...",
             locus_tag="loc",
+            tool="test tool",
             peptide_subclass="test_subclass",
             score=20.4,
             monoisotopic_mass=6.7,
@@ -66,6 +67,7 @@ class TestConversion(unittest.TestCase):
             peptide_class="test_class",
             core="coreseq...",
             locus_tag="loc",
+            tool="test tool",
             leader="10chleader",
             tail="10chartail"
         )

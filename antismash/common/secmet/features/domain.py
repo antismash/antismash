@@ -19,9 +19,9 @@ class Domain(AntismashFeature):
     __slots__ = ["tool", "domain", "_asf"]
 
     def __init__(self, location: FeatureLocation, feature_type: str,
-                 domain: Optional[str] = None) -> None:
+                 domain: Optional[str] = None, tool: str = None) -> None:
         super().__init__(location, feature_type)
-        self.tool = None  # type: Optional[str]
+        self.tool = tool
         if domain is not None:
             if not isinstance(domain, str):
                 raise TypeError("Domain must be given domain as a string, not %s" % type(domain))

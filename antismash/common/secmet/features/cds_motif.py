@@ -16,8 +16,8 @@ class CDSMotif(Domain):
     """ A base class for features that represent a motif within a CDSFeature """
     __slots__ = ["motif"]
 
-    def __init__(self, location: FeatureLocation) -> None:
-        super().__init__(location, feature_type="CDS_motif")
+    def __init__(self, location: FeatureLocation, tool: str = None) -> None:
+        super().__init__(location, feature_type="CDS_motif", tool=tool)
         self.motif = None  # type: Optional[str]
 
     @staticmethod
