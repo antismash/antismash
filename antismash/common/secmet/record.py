@@ -502,6 +502,8 @@ class Record:
             raise ValueError("Multiple Domain features have the same name for mapping: %s" %
                              motif.get_name())
         self._domains_by_name[motif.get_name()] = motif
+        if isinstance(motif, Prepeptide):
+            assert motif.tool is not None
 
     def add_pfam_domain(self, pfam_domain: PFAMDomain) -> None:
         """ Add the given PFAMDomain to the record and links it in the parent CDS """

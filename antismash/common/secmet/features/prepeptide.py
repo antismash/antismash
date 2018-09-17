@@ -20,7 +20,7 @@ class Prepeptide(CDSMotif):  # pylint: disable=too-many-instance-attributes
         of prepeptide (e.g. lanthi- or sacti-peptides), only the core must exist.
     """
     def __init__(self, location: FeatureLocation, peptide_class: str, core: str, locus_tag: str,
-                 peptide_subclass: str = None, score: float = 0., monoisotopic_mass: float = 0.,
+                 tool: str, peptide_subclass: str = None, score: float = 0., monoisotopic_mass: float = 0.,
                  molecular_weight: float = 0., alternative_weights: List[float] = None,
                  leader: str = "", tail: str = "") -> None:
         """
@@ -28,6 +28,7 @@ class Prepeptide(CDSMotif):  # pylint: disable=too-many-instance-attributes
                 peptide_class: the kind of prepeptide, e.g. 'lanthipeptide', 'thiopeptide'
                 core: the sequence of the core
                 locus_tag: the locus tag to use for the feature
+                tool: the name of the tool responsible for creating the prepeptide
                 prepeptide_subclass: the subclass of the prepeptide, e.g. 'Type II'
                 score: the prepeptide score
                 monoisotopic_mass: the monoisotopic mass of the prepeptide
@@ -36,7 +37,9 @@ class Prepeptide(CDSMotif):  # pylint: disable=too-many-instance-attributes
                 leader: the sequence of the leader, if it exists
                 tail: the sequence of the tail, if it exists
         """
-        super().__init__(location)
+        if not tool:
+            raise ValueError("tool must not be empty or None")
+        super().__init__(location, tool=tool)
         for arg in [peptide_class, core, leader, tail]:
             assert isinstance(arg, str), type(arg)
         self._leader = leader
@@ -126,6 +129,7 @@ class Prepeptide(CDSMotif):  # pylint: disable=too-many-instance-attributes
                     "predicted sequence: %s", self.leader,
                 ],
                 "locus_tag": [self.locus_tag],
+                "aSTool": [self.tool],
             }
             leader = SeqFeature(leader_location, type=self.type)
             leader.qualifiers.update(leader_qualifiers)
@@ -147,6 +151,7 @@ class Prepeptide(CDSMotif):  # pylint: disable=too-many-instance-attributes
             "molecular_weight": ["{:.1f}".format(self.molecular_weight)],
             "monoisotopic_mass": ["{:.1f}".format(self.monoisotopic_mass)],
             "core_sequence": [self._core],
+            "aSTool": [self.tool],
         })
         if self._leader:
             core.qualifiers.update({
@@ -170,6 +175,7 @@ class Prepeptide(CDSMotif):  # pylint: disable=too-many-instance-attributes
             tail.qualifiers['locus_tag'] = [self.locus_tag]
             tail.qualifiers['note'] = ['tail peptide', self.peptide_class]
             tail.qualifiers['prepeptide'] = ['tail']
+            tail.qualifiers['aSTool'] = [self.tool]
             features.append(tail)
 
         return features
@@ -202,6 +208,7 @@ class Prepeptide(CDSMotif):  # pylint: disable=too-many-instance-attributes
 
         return Prepeptide(location, peptide_class, core,
                           leftovers.pop("locus_tag")[0],
+                          leftovers.pop("aSTool")[0],
                           leftovers.pop("predicted_class")[0],
                           float(leftovers.pop("score")[0]),
                           float(leftovers.pop("monoisotopic_mass")[0]),
@@ -218,6 +225,7 @@ class Prepeptide(CDSMotif):  # pylint: disable=too-many-instance-attributes
         data["location"] = str(self.location)
         data["score"] = self.score
         data["locus_tag"] = self.locus_tag
+        data["tool"] = self.tool
         del data["detailed_information"]
         if self.detailed_information:
             data["detailed_info"] = self.detailed_information.to_biopython_qualifiers()
