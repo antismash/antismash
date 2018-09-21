@@ -201,7 +201,7 @@ ubiA	UbiA prenyltransferase of lipoquinone biosynthesis	50	UbiA.hmm
 pgm1	Pgm1-like peptide ligase	300	pgm1.hmm
 pgm_amidino	Pgm-related amidinotransferase	300	pgm_amidino.hmm
 PF00881	TOMM dehydrogenase	20	PF00881.hmm
-PF12697	Abhydrolase	20	PF12697.hmm
+Abhydrolase_6	Alpha/beta hydrolase family	27	PF12697.hmm
 PF00561	Abhydrolase	20	PF00561.hmm
 PF13186	SPASM	20	PF13186.hmm
 TIGR04404	SCIFF	45	TIGR04404.hmm
@@ -221,3 +221,5 @@ NasY	Long-chain N-acyl amino acid synthase	20	NasY.hmm
 FMO-like	Flavin-dependent monooxygenase	150	PF00743.hmm
 DUF98	Chorismate lyase	50	PF01947.hmm
 PpyS	PPY synthase	300	ppys.hmm
+HMGL-like	HMGL-like Pyruvate carboxylase	30	PF00682.hmm
+RimK	RimK-like ATP-grasp domain	21	PF08443.hmm

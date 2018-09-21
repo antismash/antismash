@@ -249,3 +249,10 @@ RULE ppysks
     CUTOFF 10
     EXTENT 10
     CONDITIONS PpyS
+
+RULE betalactone
+    COMMENT beta-lactone containing protease inhibitor such as KY249118
+    RELATED RimK, Abhydrolase_6
+    CUTOFF 10
+    EXTENT 10
+    CONDITIONS HMGL-like and AMP-binding
