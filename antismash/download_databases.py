@@ -4,26 +4,27 @@
 """Script to download and install Pfam and ClusterBlast databases."""
 
 import argparse
-from urllib import request, error as urlerror
-import tarfile
+import ctypes
 import gzip
 import hashlib
 import lzma
 import os
 import platform
-import ctypes
+import tarfile
+from urllib import error as urlerror
+from urllib import request
 
 import antismash
 from antismash.common.subprocessing import execute
-
 
 PFAM27_URL = "ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam27.0/Pfam-A.hmm.gz"
 PFAM27_ARCHIVE_CHECKSUM = "b29bc2c54db8090531df0361a781b8d7397f60ebedc0c36a16e7d45e999cc329"
 PFAM27_CHECKSUM = "ea35d7e4029b9d34eb8422ae69a230a2a5d25a52a8e207425791e8fdeb38aac8"
 
 PFAM_LATEST_VERSION = "31.0"
-PFAM_LATEST_URL = "ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/" \
-                  "Pfam{}/Pfam-A.hmm.gz".format(PFAM_LATEST_VERSION)
+PFAM_LATEST_URL = "ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam{}/Pfam-A.hmm.gz".format(
+    PFAM_LATEST_VERSION
+)
 PFAM_LATEST_ARCHIVE_CHECKSUM = "33f2dfab4d695fc3d2337119debbfcd8c801aaf8e2c312bd738c105a84007973"
 PFAM_LATEST_CHECKSUM = "40b742a1bebca10f6b86c1364624dbdc34f79890954777eb95f8a48428de39d3"
 
@@ -48,10 +49,10 @@ class DownloadError(RuntimeError):
 def get_remote_filesize(url):
     """Get the file size of the remote file."""
     try:
-        usock = request.urlopen(request.Request(url, method='HEAD'))
-        dbfilesize = usock.info().get('Content-Length', '0')
+        usock = request.urlopen(request.Request(url, method="HEAD"))
+        dbfilesize = usock.info().get("Content-Length", "0")
     except urlerror.URLError:
-        dbfilesize = '0'
+        dbfilesize = "0"
 
     dbfilesize = int(dbfilesize)  # db file size in bytes
     return dbfilesize
@@ -59,9 +60,11 @@ def get_remote_filesize(url):
 
 def get_free_space(folder):
     """Return folder/drive free space (in bytes)."""
-    if platform.system() == 'Windows':
+    if platform.system() == "Windows":
         free_bytes = ctypes.c_ulonglong(0)
-        ctypes.windll.kernel32.GetDiskFreeSpaceExW(ctypes.c_wchar_p(folder), None, None, ctypes.pointer(free_bytes))
+        ctypes.windll.kernel32.GetDiskFreeSpaceExW(
+            ctypes.c_wchar_p(folder), None, None, ctypes.pointer(free_bytes)
+        )
         return free_bytes.value
     return os.statvfs(folder).f_bfree * os.statvfs(folder).f_frsize
 
@@ -71,8 +74,9 @@ def check_diskspace(file_url):
     dbfilesize = get_remote_filesize(file_url)
     free_space = get_free_space(".")
     if free_space < dbfilesize:
-        raise DownloadError('ERROR: Insufficient disk space available (required: %d, free: %d).' %
-                            (dbfilesize, free_space))
+        raise DownloadError(
+            "ERROR: Insufficient disk space available (required: %d, free: %d)." % (dbfilesize, free_space)
+        )
 
 
 def download_file(url, filename):
@@ -80,10 +84,10 @@ def download_file(url, filename):
     try:
         req = request.urlopen(url)
     except urlerror.URLError:
-        raise DownloadError('ERROR: File not found on server.\nPlease check your internet connection.')
+        raise DownloadError("ERROR: File not found on server.\nPlease check your internet connection.")
 
     # use 1 because we want to divide by the expected size, can't use 0
-    expected_size = int(req.info().get('Content-Length', '1'))
+    expected_size = int(req.info().get("Content-Length", "1"))
 
     basename = os.path.basename(filename)
     dirname = os.path.dirname(filename)
@@ -91,27 +95,31 @@ def download_file(url, filename):
         os.makedirs(dirname)
 
     overall = 0
-    with open(filename, 'wb') as fp:
+    with open(filename, "wb") as fp:
         while True:
             try:
                 chunk = req.read(CHUNK)
                 if not chunk:
-                    print('')
+                    print("")
                     break
                 overall += len(chunk)
-                print("\rDownloading {}: {:5.2f}% downloaded.".format(
-                      basename, (overall / expected_size) * 100), end='')
+                print(
+                    "\rDownloading {}: {:5.2f}% downloaded.".format(
+                        basename, (overall / expected_size) * 100
+                    ),
+                    end="",
+                )
                 fp.write(chunk)
             except IOError:
-                raise DownloadError('ERROR: Download interrupted.')
+                raise DownloadError("ERROR: Download interrupted.")
     return filename
 
 
 def checksum(filename, chunksize=2 ** 20):
     """Get the SHA256 checksum of a file."""
     sha = hashlib.sha256()
-    with open(filename, 'rb') as fh:
-        for chunk in iter(lambda: fh.read(chunksize), b''):
+    with open(filename, "rb") as fh:
+        for chunk in iter(lambda: fh.read(chunksize), b""):
             sha.update(chunk)
 
     return sha.hexdigest()
@@ -121,9 +129,9 @@ def unzip_file(filename, decompressor, error_type):
     """Decompress a compressed file."""
     newfilename, _ = os.path.splitext(filename)
     try:
-        zipfile = decompressor.open(filename, 'rb')
+        zipfile = decompressor.open(filename, "rb")
         chunksize = 128 * 1024
-        with open(newfilename, 'wb') as fp:
+        with open(newfilename, "wb") as fp:
             while True:
                 try:
                     chunk = zipfile.read(chunksize)
@@ -131,10 +139,9 @@ def unzip_file(filename, decompressor, error_type):
                         break
                     fp.write(chunk)
                 except IOError:
-                    raise DownloadError('ERROR: Unzipping interrupted.')
+                    raise DownloadError("ERROR: Unzipping interrupted.")
     except error_type:
-        print("ERROR: Error extracting %s. Please try to extract it manually." %
-              (os.path.basename(filename)))
+        print("ERROR: Error extracting %s. Please try to extract it manually." % (os.path.basename(filename)))
         return
     print("Extraction of %s finished successfully." % (os.path.basename(filename)))
     return newfilename
@@ -147,8 +154,10 @@ def untar_file(filename):
         tar.extractall(path=filename.rpartition(os.sep)[0])
         tar.close()
     except tarfile.ReadError:
-        print("ERROR: Error extracting %s. Please try to extract it manually." %
-              (filename.rpartition(os.sep)[2]))
+        print(
+            "ERROR: Error extracting %s. Please try to extract it manually."
+            % (filename.rpartition(os.sep)[2])
+        )
         return
     print("Extraction of %s finished successfully." % (filename.rpartition(os.sep)[2]))
 
@@ -156,7 +165,7 @@ def untar_file(filename):
 # TODO: use common function?
 def compile_pfam(filename):
     """Compile a HMMer database with hmmpress."""
-    command = ['hmmpress', '-f', filename]
+    command = ["hmmpress", "-f", filename]
     execute(command)
 
 
@@ -187,8 +196,9 @@ def download_if_not_present(url, filename, sha256sum):
     print("Creating checksum of %s" % os.path.basename(filename))
     csum = checksum(filename)
     if csum != sha256sum:
-        raise DownloadError("Error downloading %s, sha256sum mismatch. Expected %s, got %s." %
-                            (filename, sha256sum, csum))
+        raise DownloadError(
+            "Error downloading %s, sha256sum mismatch. Expected %s, got %s." % (filename, sha256sum, csum)
+        )
 
 
 def download_pfam(db_dir, url, version, archive_checksum, db_checksum):
@@ -223,11 +233,13 @@ def download_resfam(db_dir: str, url: str, archive_checksum: str) -> None:
     print("Ensuring all cutoffs are present")
     # add TC to those entries missing them
     # calculated as 10% less than the minimum scoring hit in their own group
-    missing_cutoffs = {'RF0174': int(374 * 0.9),
-                       'RF0172': int(85 * 0.9),
-                       'RF0173': int(295 * 0.9),
-                       'RF0168': int(691 * 0.9)}
-    with open(filename, 'w') as handle:
+    missing_cutoffs = {
+        "RF0174": int(374 * 0.9),
+        "RF0172": int(85 * 0.9),
+        "RF0173": int(295 * 0.9),
+        "RF0168": int(691 * 0.9),
+    }
+    with open(filename, "w") as handle:
         lines = list(converted.stdout)
         i = 0
         while i < len(lines):
@@ -262,7 +274,7 @@ def download_resfam(db_dir: str, url: str, archive_checksum: str) -> None:
 
 def download_clusterblast(db_dir):
     """Download the clusterblast database."""
-    archive_filename = os.path.join(db_dir, CLUSTERBLAST_URL.rpartition('/')[2])
+    archive_filename = os.path.join(db_dir, CLUSTERBLAST_URL.rpartition("/")[2])
     dmnd_filename = os.path.join(db_dir, "clusterblast", "geneclusterprots.dmnd")
 
     if present_and_checksum_matches(dmnd_filename, CLUSTERBLAST_DMND_CHECKSUM):
@@ -287,8 +299,12 @@ def main():
     config = antismash.config.build_config(args=[], parser=None, isolated=True, modules=all_modules)
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--database-dir', default=config.database_dir, metavar="DIR",
-                        help="Base directory for the antiSMASH databases (default: %(default)s).")
+    parser.add_argument(
+        "--database-dir",
+        default=config.database_dir,
+        metavar="DIR",
+        help="Base directory for the antiSMASH databases (default: %(default)s).",
+    )
 
     args = parser.parse_args()
 
@@ -296,8 +312,13 @@ def main():
     download_pfam(args.database_dir, PFAM27_URL, "27.0", PFAM27_ARCHIVE_CHECKSUM, PFAM27_CHECKSUM)
 
     # And also grab the latest
-    download_pfam(args.database_dir, PFAM_LATEST_URL, PFAM_LATEST_VERSION,
-                  PFAM_LATEST_ARCHIVE_CHECKSUM, PFAM_LATEST_CHECKSUM)
+    download_pfam(
+        args.database_dir,
+        PFAM_LATEST_URL,
+        PFAM_LATEST_VERSION,
+        PFAM_LATEST_ARCHIVE_CHECKSUM,
+        PFAM_LATEST_CHECKSUM,
+    )
 
     download_resfam(args.database_dir, RESFAM_URL, RESFAM_ARCHIVE_CHECKSUM)
 
