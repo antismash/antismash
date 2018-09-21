@@ -27,5 +27,6 @@ def generate_sidepanel(region_layer: RegionLayer, results: T2PKSResults,
     predictions = []
     for supercluster in region_layer.superclusters:
         for cluster in supercluster.clusters:
-            predictions.append(results.cluster_predictions[cluster.get_cluster_number()])
+            if cluster.product == "t2pks":
+                predictions.append(results.cluster_predictions[cluster.get_cluster_number()])
     return template.render(predictions=predictions)
