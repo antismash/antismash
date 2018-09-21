@@ -3,6 +3,7 @@
 
 """Script to download and install Pfam and ClusterBlast databases."""
 
+import argparse
 from urllib import request, error as urlerror
 import tarfile
 import gzip
@@ -12,6 +13,7 @@ import os
 import platform
 import ctypes
 
+import antismash
 from antismash.common.subprocessing import execute
 
 
@@ -189,9 +191,9 @@ def download_if_not_present(url, filename, sha256sum):
                             (filename, sha256sum, csum))
 
 
-def download_pfam(url, version, archive_checksum, db_checksum):
+def download_pfam(db_dir, url, version, archive_checksum, db_checksum):
     """Download and compile the PFAM database."""
-    archive_filename = os.path.join(LOCAL_FILE_PATH, "databases", "pfam", version, "Pfam-A.hmm.gz")
+    archive_filename = os.path.join(db_dir, "pfam", version, "Pfam-A.hmm.gz")
     db_filename = os.path.splitext(archive_filename)[0]
 
     if present_and_checksum_matches(db_filename, db_checksum):
@@ -206,9 +208,9 @@ def download_pfam(url, version, archive_checksum, db_checksum):
     delete_file(filename + ".gz")
 
 
-def download_resfam(url: str, archive_checksum: str) -> None:
+def download_resfam(db_dir: str, url: str, archive_checksum: str) -> None:
     """Download and sanitise the Resfam database."""
-    archive_filename = os.path.join(LOCAL_FILE_PATH, "databases", "resfam", "Resfams.hmm.gz")
+    archive_filename = os.path.join(db_dir, "resfam", "Resfams.hmm.gz")
     # checksum of existing not matched because it has a convert timestamp in it
 
     print("Downloading Resfam database")
@@ -258,11 +260,10 @@ def download_resfam(url: str, archive_checksum: str) -> None:
     compile_pfam(filename)
 
 
-def download_clusterblast():
+def download_clusterblast(db_dir):
     """Download the clusterblast database."""
-    database_dir = os.path.join(LOCAL_FILE_PATH, "databases",)
-    archive_filename = os.path.join(database_dir, CLUSTERBLAST_URL.rpartition('/')[2])
-    dmnd_filename = os.path.join(database_dir, "clusterblast", "geneclusterprots.dmnd")
+    archive_filename = os.path.join(db_dir, CLUSTERBLAST_URL.rpartition('/')[2])
+    dmnd_filename = os.path.join(db_dir, "clusterblast", "geneclusterprots.dmnd")
 
     if present_and_checksum_matches(dmnd_filename, CLUSTERBLAST_DMND_CHECKSUM):
         print("ClusterBlast databse present and checked")
@@ -279,21 +280,35 @@ def download_clusterblast():
 
 def main():
     """Download and compile all the large external databases needed."""
+    # Small dance to grab the antiSMASH config for the database dir.
+    # We don't actually want to keep anything else, but we need to load all the
+    # modules to make sure we can parse the file.
+    all_modules = antismash.get_detection_modules() + antismash.get_analysis_modules()
+    config = antismash.config.build_config(args=[], parser=None, isolated=True, modules=all_modules)
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--database-dir', default=config.database_dir, metavar="DIR",
+                        help="Base directory for the antiSMASH databases (default: %(default)s).")
+
+    args = parser.parse_args()
+
     # ClusterFinder is stuck to PFAM 27.0, so always grab that
-    download_pfam(PFAM27_URL, "27.0", PFAM27_ARCHIVE_CHECKSUM, PFAM27_CHECKSUM)
+    download_pfam(args.database_dir, PFAM27_URL, "27.0", PFAM27_ARCHIVE_CHECKSUM, PFAM27_CHECKSUM)
 
     # And also grab the latest
-    download_pfam(PFAM_LATEST_URL, PFAM_LATEST_VERSION, PFAM_LATEST_ARCHIVE_CHECKSUM, PFAM_LATEST_CHECKSUM)
+    download_pfam(args.database_dir, PFAM_LATEST_URL, PFAM_LATEST_VERSION,
+                  PFAM_LATEST_ARCHIVE_CHECKSUM, PFAM_LATEST_CHECKSUM)
 
-    download_resfam(RESFAM_URL, RESFAM_ARCHIVE_CHECKSUM)
+    download_resfam(args.database_dir, RESFAM_URL, RESFAM_ARCHIVE_CHECKSUM)
 
-    download_clusterblast()
+    download_clusterblast(args.database_dir)
 
     # hmmpress the NRPS/PKS specific databases
-    compile_pfam(os.path.join(LOCAL_FILE_PATH, "detection", "nrps_pks_domains", "data", "abmotifs.hmm"))
-    compile_pfam(os.path.join(LOCAL_FILE_PATH, "detection", "nrps_pks_domains", "data", "dockingdomains.hmm"))
-    compile_pfam(os.path.join(LOCAL_FILE_PATH, "detection", "nrps_pks_domains", "data", "ksdomains.hmm"))
-    compile_pfam(os.path.join(LOCAL_FILE_PATH, "detection", "nrps_pks_domains", "data", "nrpspksdomains.hmm"))
+    nrpspksdir = os.path.join(LOCAL_FILE_PATH, "detection", "nrps_pks_domains", "data")
+    compile_pfam(os.path.join(nrpspksdir, "abmotifs.hmm"))
+    compile_pfam(os.path.join(nrpspksdir, "dockingdomains.hmm"))
+    compile_pfam(os.path.join(nrpspksdir, "ksdomains.hmm"))
+    compile_pfam(os.path.join(nrpspksdir, "nrpspksdomains.hmm"))
     # TODO: re-add a compile call for SANDPUMA once that is in
 
     # hmmpress the smcog specific database
