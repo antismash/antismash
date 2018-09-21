@@ -4,12 +4,10 @@
 """Script to download and install Pfam and ClusterBlast databases."""
 
 import argparse
-import ctypes
 import gzip
 import hashlib
 import lzma
 import os
-import platform
 import tarfile
 from typing import Any, Type
 from urllib import error as urlerror
@@ -61,12 +59,6 @@ def get_remote_filesize(url: str) -> int:
 
 def get_free_space(folder: str) -> int:
     """Return folder/drive free space (in bytes)."""
-    if platform.system() == "Windows":
-        free_bytes = ctypes.c_ulonglong(0)
-        ctypes.windll.kernel32.GetDiskFreeSpaceExW(
-            ctypes.c_wchar_p(folder), None, None, ctypes.pointer(free_bytes)
-        )
-        return free_bytes.value
     return os.statvfs(folder).f_bfree * os.statvfs(folder).f_frsize
 
 
