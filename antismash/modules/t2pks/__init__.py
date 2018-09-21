@@ -16,19 +16,14 @@ from .results import T2PKSResults
 from .t2pks_analysis import analyse_cluster
 from .html_output import will_handle, generate_sidepanel
 
-NAME = "t2_pks"
+NAME = "t2pks"
 SHORT_DESCRIPTION = "type II PKS analysis"
 
 
 def get_arguments() -> ModuleArgs:
-    """ Constucts T2 PKS module arguments
+    """ Constucts T2PKS module arguments
     """
-    args = ModuleArgs("T2 PKS", "t2pks", enabled_by_default=False)
-    args.add_analysis_toggle('--t2pks',
-                             dest='t2pks',
-                             action='store_true',
-                             default=False,
-                             help="Run specific analyses for type II PKS.")
+    args = ModuleArgs("Advanced options", "t2pks", enabled_by_default=True)
     return args
 
 
@@ -84,7 +79,7 @@ def check_prereqs() -> List[str]:
 
 def is_enabled(options: ConfigType) -> bool:
     """ Returns True if the module is enabled by the given options """
-    return options.t2pks
+    return options.t2pks_enabled or not options.minimal
 
 
 def regenerate_previous_results(previous: Dict[str, Any], record: Record,

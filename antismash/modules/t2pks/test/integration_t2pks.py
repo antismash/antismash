@@ -15,7 +15,7 @@ from antismash.modules import t2pks
 
 class T2PKSTest(unittest.TestCase):
     def setUp(self):
-        self.options = build_config(["--t2pks", "--minimal"], isolated=True,
+        self.options = build_config(["--minimal", "--enable-t2pks"], isolated=True,
                                     modules=antismash.get_all_modules())
 
     def tearDown(self):
