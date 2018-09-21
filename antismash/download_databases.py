@@ -11,6 +11,7 @@ import lzma
 import os
 import platform
 import tarfile
+from typing import Any, Type
 from urllib import error as urlerror
 from urllib import request
 
@@ -46,11 +47,11 @@ class DownloadError(RuntimeError):
     pass
 
 
-def get_remote_filesize(url):
+def get_remote_filesize(url: str) -> int:
     """Get the file size of the remote file."""
     try:
         usock = request.urlopen(request.Request(url, method="HEAD"))
-        dbfilesize = usock.info().get("Content-Length", "0")
+        dbfilesize = usock.info().get("Content-Length", "0")  # type: ignore
     except urlerror.URLError:
         dbfilesize = "0"
 
@@ -58,7 +59,7 @@ def get_remote_filesize(url):
     return dbfilesize
 
 
-def get_free_space(folder):
+def get_free_space(folder: str) -> int:
     """Return folder/drive free space (in bytes)."""
     if platform.system() == "Windows":
         free_bytes = ctypes.c_ulonglong(0)
@@ -69,7 +70,7 @@ def get_free_space(folder):
     return os.statvfs(folder).f_bfree * os.statvfs(folder).f_frsize
 
 
-def check_diskspace(file_url):
+def check_diskspace(file_url: str) -> None:
     """Check if sufficient disk space is available."""
     dbfilesize = get_remote_filesize(file_url)
     free_space = get_free_space(".")
@@ -79,7 +80,7 @@ def check_diskspace(file_url):
         )
 
 
-def download_file(url, filename):
+def download_file(url: str, filename: str) -> str:
     """Download a file."""
     try:
         req = request.urlopen(url)
@@ -87,7 +88,7 @@ def download_file(url, filename):
         raise DownloadError("ERROR: File not found on server.\nPlease check your internet connection.")
 
     # use 1 because we want to divide by the expected size, can't use 0
-    expected_size = int(req.info().get("Content-Length", "1"))
+    expected_size = int(req.info().get("Content-Length", "1"))  # type: ignore
 
     basename = os.path.basename(filename)
     dirname = os.path.dirname(filename)
@@ -115,7 +116,7 @@ def download_file(url, filename):
     return filename
 
 
-def checksum(filename, chunksize=2 ** 20):
+def checksum(filename: str, chunksize: int=2 ** 20) -> str:
     """Get the SHA256 checksum of a file."""
     sha = hashlib.sha256()
     with open(filename, "rb") as fh:
@@ -125,7 +126,7 @@ def checksum(filename, chunksize=2 ** 20):
     return sha.hexdigest()
 
 
-def unzip_file(filename, decompressor, error_type):
+def unzip_file(filename: str, decompressor: Any, error_type: Type[Exception]) -> str:
     """Decompress a compressed file."""
     newfilename, _ = os.path.splitext(filename)
     try:
@@ -141,13 +142,14 @@ def unzip_file(filename, decompressor, error_type):
                 except IOError:
                     raise DownloadError("ERROR: Unzipping interrupted.")
     except error_type:
-        print("ERROR: Error extracting %s. Please try to extract it manually." % (os.path.basename(filename)))
-        return
+        raise RuntimeError(
+            "Error extracting %s. Please try to extract it manually." % (os.path.basename(filename))
+        )
     print("Extraction of %s finished successfully." % (os.path.basename(filename)))
     return newfilename
 
 
-def untar_file(filename):
+def untar_file(filename: str) -> None:
     """Extract a TAR/GZ file."""
     try:
         tar = tarfile.open(filename)
@@ -163,13 +165,13 @@ def untar_file(filename):
 
 
 # TODO: use common function?
-def compile_pfam(filename):
+def compile_pfam(filename: str) -> None:
     """Compile a HMMer database with hmmpress."""
     command = ["hmmpress", "-f", filename]
     execute(command)
 
 
-def delete_file(filename):
+def delete_file(filename: str) -> None:
     """Delete a file."""
     try:
         os.remove(filename)
@@ -177,7 +179,7 @@ def delete_file(filename):
         pass
 
 
-def present_and_checksum_matches(filename, sha256sum):
+def present_and_checksum_matches(filename: str, sha256sum: str) -> bool:
     """Check if a file is present and the checksum matches."""
     if os.path.exists(filename):
         print("Creating checksum of %s" % os.path.basename(filename))
@@ -187,7 +189,7 @@ def present_and_checksum_matches(filename, sha256sum):
     return False
 
 
-def download_if_not_present(url, filename, sha256sum):
+def download_if_not_present(url: str, filename: str, sha256sum: str) -> None:
     """Download a file if it's not present or checksum doesn't match."""
     # If we are missing the archive file, go and download
     if not present_and_checksum_matches(filename, sha256sum):
@@ -201,7 +203,7 @@ def download_if_not_present(url, filename, sha256sum):
         )
 
 
-def download_pfam(db_dir, url, version, archive_checksum, db_checksum):
+def download_pfam(db_dir: str, url: str, version: str, archive_checksum: str, db_checksum: str) -> None:
     """Download and compile the PFAM database."""
     archive_filename = os.path.join(db_dir, "pfam", version, "Pfam-A.hmm.gz")
     db_filename = os.path.splitext(archive_filename)[0]
@@ -213,7 +215,7 @@ def download_pfam(db_dir, url, version, archive_checksum, db_checksum):
     print("Downloading PFAM version", version)
     check_diskspace(url)
     download_if_not_present(url, archive_filename, archive_checksum)
-    filename = unzip_file(archive_filename, gzip, gzip.zlib.error)
+    filename = unzip_file(archive_filename, gzip, gzip.zlib.error)  # type: ignore
     compile_pfam(filename)
     delete_file(filename + ".gz")
 
@@ -226,7 +228,7 @@ def download_resfam(db_dir: str, url: str, archive_checksum: str) -> None:
     print("Downloading Resfam database")
     check_diskspace(url)
     download_if_not_present(url, archive_filename, archive_checksum)
-    filename = unzip_file(archive_filename, gzip, gzip.zlib.error)
+    filename = unzip_file(archive_filename, gzip, gzip.zlib.error)  # type: ignore
     delete_file(filename + ".gz")
     # remove tabs
     converted = execute(["hmmconvert", filename])
@@ -272,7 +274,7 @@ def download_resfam(db_dir: str, url: str, archive_checksum: str) -> None:
     compile_pfam(filename)
 
 
-def download_clusterblast(db_dir):
+def download_clusterblast(db_dir: str) -> None:
     """Download the clusterblast database."""
     archive_filename = os.path.join(db_dir, CLUSTERBLAST_URL.rpartition("/")[2])
     dmnd_filename = os.path.join(db_dir, "clusterblast", "geneclusterprots.dmnd")
@@ -290,7 +292,7 @@ def download_clusterblast(db_dir):
     delete_file(filename + ".xz")
 
 
-def main():
+def main() -> None:
     """Download and compile all the large external databases needed."""
     # Small dance to grab the antiSMASH config for the database dir.
     # We don't actually want to keep anything else, but we need to load all the
