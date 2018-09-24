@@ -236,10 +236,11 @@ def download_pfam(db_dir: str, url: str, version: str, archive_checksum: str, db
     delete_file(filename + ".gz")
 
 
-def download_resfam(db_dir: str, url: str, archive_checksum: str) -> None:
+def download_resfam(db_dir: str) -> None:
     """Download and sanitise the Resfam database."""
     archive_filename = os.path.join(db_dir, "resfam", "Resfams.hmm.gz")
     filename = os.path.splitext(archive_filename)[0]
+    url = RESFAM_URL
 
     # checksum of existing not matched because it has a convert timestamp in it
     # So check size and line count as an approximation
@@ -250,7 +251,7 @@ def download_resfam(db_dir: str, url: str, archive_checksum: str) -> None:
 
     print("Downloading Resfam database")
     check_diskspace(url)
-    download_if_not_present(url, archive_filename, archive_checksum)
+    download_if_not_present(url, archive_filename, RESFAM_ARCHIVE_CHECKSUM)
     filename = unzip_file(archive_filename, gzip, gzip.zlib.error)  # type: ignore
     delete_file(filename + ".gz")
     # remove tabs
@@ -345,7 +346,7 @@ def main() -> None:
         PFAM_LATEST_CHECKSUM,
     )
 
-    download_resfam(args.database_dir, RESFAM_URL, RESFAM_ARCHIVE_CHECKSUM)
+    download_resfam(args.database_dir)
 
     download_clusterblast(args.database_dir)
 
