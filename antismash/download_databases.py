@@ -316,24 +316,8 @@ def download_clusterblast(db_dir: str) -> None:
     delete_file(filename + ".xz")
 
 
-def main() -> None:
-    """Download and compile all the large external databases needed."""
-    # Small dance to grab the antiSMASH config for the database dir.
-    # We don't actually want to keep anything else, but we need to load all the
-    # modules to make sure we can parse the file.
-    all_modules = antismash.get_detection_modules() + antismash.get_analysis_modules()
-    config = antismash.config.build_config(args=[], parser=None, isolated=True, modules=all_modules)
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--database-dir",
-        default=config.database_dir,
-        metavar="DIR",
-        help="Base directory for the antiSMASH databases (default: %(default)s).",
-    )
-
-    args = parser.parse_args()
-
+def download(args: argparse.Namespace) -> None:
+    """Download all the large external databases needed."""
     # ClusterFinder is stuck to PFAM 27.0, so always grab that
     download_pfam(args.database_dir, PFAM27_URL, "27.0", PFAM27_ARCHIVE_CHECKSUM, PFAM27_CHECKSUM)
 
@@ -350,6 +334,9 @@ def main() -> None:
 
     download_clusterblast(args.database_dir)
 
+
+def press() -> None:
+    """Press all the hmm databases shipped with antiSMASH."""
     # hmmpress the NRPS/PKS specific databases
     nrpspksdir = os.path.join(LOCAL_FILE_PATH, "detection", "nrps_pks_domains", "data")
     compile_pfam(os.path.join(nrpspksdir, "abmotifs.hmm"))
@@ -362,6 +349,26 @@ def main() -> None:
     compile_pfam(os.path.join(LOCAL_FILE_PATH, "modules", "smcogs", "data", "smcogs.hmm"))
 
     # TODO: Press the bgc_seeds once there is an antismash.common function for it
+
+
+def main() -> None:
+    # Small dance to grab the antiSMASH config for the database dir.
+    # We don't actually want to keep anything else, but we need to load all the
+    # modules to make sure we can parse the file.
+    all_modules = antismash.get_detection_modules() + antismash.get_analysis_modules()
+    config = antismash.config.build_config(args=[], parser=None, isolated=True, modules=all_modules)
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--database-dir",
+        default=config.database_dir,
+        metavar="DIR",
+        help="Base directory for the antiSMASH databases (default: %(default)s).",
+    )
+
+    args = parser.parse_args()
+    download(args)
+    press()
 
 
 if __name__ == "__main__":
