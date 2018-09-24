@@ -88,7 +88,7 @@ def download_file(url: str, filename: str) -> str:
         os.makedirs(dirname)
 
     overall = 0
-    with open(filename, "wb") as fp:
+    with open(filename, "wb") as handle:
         while True:
             try:
                 chunk = req.read(CHUNK)
@@ -102,17 +102,17 @@ def download_file(url: str, filename: str) -> str:
                     ),
                     end="",
                 )
-                fp.write(chunk)
+                handle.write(chunk)
             except IOError:
                 raise DownloadError("ERROR: Download interrupted.")
     return filename
 
 
-def checksum(filename: str, chunksize: int=2 ** 20) -> str:
+def checksum(filename: str, chunksize: int = 2 ** 20) -> str:
     """Get the SHA256 checksum of a file."""
     sha = hashlib.sha256()
-    with open(filename, "rb") as fh:
-        for chunk in iter(lambda: fh.read(chunksize), b""):
+    with open(filename, "rb") as handle:
+        for chunk in iter(lambda: handle.read(chunksize), b""):
             sha.update(chunk)
 
     return sha.hexdigest()
@@ -124,13 +124,13 @@ def unzip_file(filename: str, decompressor: Any, error_type: Type[Exception]) ->
     try:
         zipfile = decompressor.open(filename, "rb")
         chunksize = 128 * 1024
-        with open(newfilename, "wb") as fp:
+        with open(newfilename, "wb") as handle:
             while True:
                 try:
                     chunk = zipfile.read(chunksize)
                     if not chunk:
                         break
-                    fp.write(chunk)
+                    handle.write(chunk)
                 except IOError:
                     raise DownloadError("ERROR: Unzipping interrupted.")
     except error_type:
