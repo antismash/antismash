@@ -33,6 +33,8 @@ CLUSTERBLAST_DMND_CHECKSUM = "388df3e711b3049ad851bfc8bd45ec292a3808907f048e6a7e
 
 RESFAM_URL = "http://dantaslab.wustl.edu/resfams/Resfams.hmm.gz"
 RESFAM_ARCHIVE_CHECKSUM = "82e9325283b999b1fb1351502b2d12194561c573d9daef3e623e905c1af66fd6"
+RESFAM_LINES = 132214
+RESFAM_SIZE = 20123005
 
 LOCAL_FILE_PATH = os.path.abspath(os.path.dirname(__file__))
 
@@ -181,6 +183,28 @@ def present_and_checksum_matches(filename: str, sha256sum: str) -> bool:
     return False
 
 
+def present_and_line_count_matches(filename: str, lines: int) -> bool:
+    """Check if a file is present and the number of lines matches."""
+    if not os.path.exists(filename):
+        return False
+
+    _count = -1
+    for _count, _ in enumerate(open(filename, "r")):
+        pass
+    _count += 1
+
+    return _count == lines
+
+
+def present_and_size_matches(filename: str, size: int) -> bool:
+    """Check if a file is present and the file size matches."""
+    if not os.path.exists(filename):
+        return False
+
+    read_size = os.stat(filename).st_size
+    return size == read_size
+
+
 def download_if_not_present(url: str, filename: str, sha256sum: str) -> None:
     """Download a file if it's not present or checksum doesn't match."""
     # If we are missing the archive file, go and download
@@ -215,7 +239,14 @@ def download_pfam(db_dir: str, url: str, version: str, archive_checksum: str, db
 def download_resfam(db_dir: str, url: str, archive_checksum: str) -> None:
     """Download and sanitise the Resfam database."""
     archive_filename = os.path.join(db_dir, "resfam", "Resfams.hmm.gz")
+    filename = os.path.splitext(archive_filename)[0]
+
     # checksum of existing not matched because it has a convert timestamp in it
+    # So check size and line count as an approximation
+    if present_and_size_matches(filename, RESFAM_SIZE) and \
+       present_and_line_count_matches(filename, RESFAM_LINES):
+        print("Resfams database present and cheked")
+        return
 
     print("Downloading Resfam database")
     check_diskspace(url)
