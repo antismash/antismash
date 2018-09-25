@@ -396,3 +396,33 @@ def run_blastp(target_blastp_database: str, query_sequence: str,
             fh.write(result.stdout)
 
     return list(SearchIO.parse(StringIO(result.stdout), 'blast-text'))
+
+
+def run_diamond(query_file: str, database_file: str, mode: str = "blastp",
+                opts: Optional[List[str]] = None) -> str:
+    """ Runs diamond, comparing the given query to the given database
+
+        Arguments:
+            query_file: the path of query sequence file
+            database_file: the path of the database to compare to
+            mode: the mode to use (defaults to blastp)
+            opts: any extra options to pass to diamond
+
+        Returns:
+            the output from running diamond
+    """
+    with TemporaryDirectory() as temp_dir:
+        command = [
+            "diamond",
+            mode,
+            "--db", database_file,
+            "--threads", str(get_config().cpus),
+            "--query", query_file,
+            "--tmpdir", temp_dir,
+        ]
+        if opts:
+            command.extend(opts)
+        result = execute(command)
+        if not result.successful():
+            raise RuntimeError("diamond failed to run: %s -> %s" % (command, result.stderr[-100:]))
+    return result.stdout
