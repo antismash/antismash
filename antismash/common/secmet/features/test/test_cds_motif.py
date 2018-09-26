@@ -10,10 +10,10 @@ from antismash.common.secmet.features import CDSMotif, FeatureLocation
 
 class TestConversion(unittest.TestCase):
     def test_motif_conversion(self):
-        original = CDSMotif(FeatureLocation(2, 5))
-        original.motif = "some motif info"
+        original = CDSMotif(FeatureLocation(2, 5), tool="test")
+        assert original.tool == "test"
 
         bio_features = original.to_biopython()
         assert len(bio_features) == 1
         new = CDSMotif.from_biopython(bio_features[0])
-        assert new.motif == original.motif == "some motif info"
+        assert new.tool == original.tool == "test"
