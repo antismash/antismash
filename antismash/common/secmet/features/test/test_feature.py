@@ -72,6 +72,16 @@ class TestFeature(unittest.TestCase):
         assert sec.get_qualifier("foo") == tuple(["bar"])
         assert sec.get_qualifier("bar") is None
 
+    def test_created_by_antismash_conversion(self):
+        for created in [True, False]:
+            old = Feature(FeatureLocation(1, 5), feature_type="testtype", created_by_antismash=created)
+            assert old.created_by_antismash == created
+            assert old.type == "testtype"
+
+            new = Feature.from_biopython(old.to_biopython()[0])
+            assert new.created_by_antismash == old.created_by_antismash == created
+            assert new.type == old.type == "testtype"
+
     def test_string_conversion(self):
         for feature_type in ["cluster", "cds_motif", "test"]:
             for start, end in [(1, 5), (3, 8), (10, 15)]:

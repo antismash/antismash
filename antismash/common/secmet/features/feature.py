@@ -202,7 +202,10 @@ class Feature:
         else:
             assert isinstance(feature, Feature)
         if leftovers:
+            feature.created_by_antismash = leftovers.get("tool") == ["antismash"]
             feature._qualifiers.update(leftovers)
+        else:
+            feature.created_by_antismash = False
         return feature
 
     @staticmethod
