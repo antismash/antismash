@@ -6,12 +6,13 @@
 from collections import defaultdict, OrderedDict
 import logging
 import os
-from typing import Dict, Iterable, List, Set, Tuple  # pylint: disable=unused-import
+from tempfile import NamedTemporaryFile
+from typing import Dict, Iterable, List, Set, Sequence, Tuple  # pylint: disable=unused-import
 
 from helperlibs.wrappers.io import TemporaryDirectory
 
 from antismash.common import path, subprocessing, fasta, secmet
-from antismash.config import get_config, ConfigType
+from antismash.config import get_config
 
 from .data_structures import Subject, Query, Protein, ReferenceCluster, Score
 
@@ -56,35 +57,26 @@ def run_blast(query: str, database: str) -> str:
     return out_file
 
 
-def run_diamond(query: str, database: str, tempdir: str, options: ConfigType) -> str:
-    """ Runs diamond, comparing the given query to the given database
+def run_diamond_on_all_regions(regions: Sequence[secmet.Region], database: str) -> str:
+    """ Runs diamond, comparing all features in the given regions to the given database
 
         Arguments:
-            query: the path of query sequence file
-            target: the path of the database to compare to
-            tempdir: the path of a temporary directory for diamond to use
-            options: antismash Config
+            regions: the regions to use features from
+            database: the path of the database to compare to
 
         Returns:
-            the name of the output file created
+            diamond's output from stdout
     """
-    logging.debug("Running external command: diamond")
-    command = [
-        "diamond", "blastp",
-        "--db", database,
-        "--threads", str(options.cpus),
-        "--query", query,
+    extra_args = [
         "--compress", "0",
         "--max-target-seqs", "10000",
         "--evalue", "1e-05",
-        "--out", "input.out",
         "--outfmt", "6",  # 6 is blast tabular format, just as in blastp
-        "--tmpdir", tempdir
     ]
-    result = subprocessing.execute(command)
-    if not result.successful():
-        raise RuntimeError("diamond failed to run: %s -> %s" % (command, result.stderr[-100:]))
-    return "input.out"
+    with NamedTemporaryFile() as temp_file:
+        write_fastas_with_all_genes(regions, temp_file.name)
+        stdout = subprocessing.run_diamond(temp_file.name, database, mode="blastp", opts=extra_args)
+    return stdout
 
 
 def make_blastdb(inputfile: str, db_prefix: str) -> subprocessing.RunResult:

@@ -8,13 +8,16 @@
 import os
 from typing import Dict
 
-from helperlibs.wrappers.io import TemporaryDirectory
-
 from antismash.config import ConfigType
 from antismash.common.secmet import Record
 
-from .core import write_fastas_with_all_genes, run_diamond, write_raw_clusterblastoutput, \
-                  parse_all_clusters, score_clusterblast_output, get_core_gene_ids
+from .core import (
+    get_core_gene_ids,
+    parse_all_clusters,
+    run_diamond_on_all_regions,
+    score_clusterblast_output,
+    write_raw_clusterblastoutput,
+)
 from .data_structures import ReferenceCluster, Protein
 from .results import RegionResult, GeneralResults
 
@@ -35,14 +38,8 @@ def perform_clusterblast(options: ConfigType, record: Record,
             a GeneralResults instance with results for each cluster in the record
     """
     regions = record.get_regions()
-    with TemporaryDirectory(change=True) as tempdir:
-        write_fastas_with_all_genes(regions, "input.fasta")
-        run_diamond("input.fasta",
-                    os.path.join(options.database_dir, 'clusterblast', 'geneclusterprots'),
-                    tempdir, options)
-
-        with open("input.out", 'r') as handle:
-            blastoutput = handle.read()
+    database = os.path.join(options.database_dir, 'clusterblast', 'geneclusterprots')
+    blastoutput = run_diamond_on_all_regions(regions, database)
 
     write_raw_clusterblastoutput(options.output_dir, blastoutput)
 

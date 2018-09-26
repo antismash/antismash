@@ -8,16 +8,18 @@
 import logging
 from typing import Dict, List
 
-from helperlibs.wrappers.io import TemporaryDirectory
-
 from antismash.common import path
 from antismash.common.secmet import Record
 from antismash.config import ConfigType
 
-from .core import parse_all_clusters, write_fastas_with_all_genes, \
-                  load_clusterblast_database, run_diamond, \
-                  write_raw_clusterblastoutput, score_clusterblast_output, \
-                  get_core_gene_ids
+from .core import (
+    get_core_gene_ids,
+    load_clusterblast_database,
+    parse_all_clusters,
+    run_diamond_on_all_regions,
+    score_clusterblast_output,
+    write_raw_clusterblastoutput,
+)
 from .results import RegionResult, GeneralResults, write_clusterblast_output
 from .data_structures import MibigEntry, ReferenceCluster, Protein
 
@@ -96,14 +98,9 @@ def perform_knownclusterblast(options: ConfigType, record: Record,
     logging.debug("Running DIAMOND knowncluster searches..")
     results = GeneralResults(record.id, search_type="knownclusterblast")
 
-    with TemporaryDirectory(change=True) as tempdir:
-        write_fastas_with_all_genes(record.get_regions(), "input.fasta")
-        run_diamond("input.fasta", _get_datafile_path('knownclusterprots'),
-                    tempdir, options)
-        with open("input.out", 'r') as handle:
-            blastoutput = handle.read()
-        write_raw_clusterblastoutput(options.output_dir, blastoutput,
-                                     prefix="knownclusterblast")
+    blastoutput = run_diamond_on_all_regions(record.get_regions(), _get_datafile_path('knownclusterprots'))
+    write_raw_clusterblastoutput(options.output_dir, blastoutput,
+                                 prefix="knownclusterblast")
     clusters_by_number, _ = parse_all_clusters(blastoutput, record,
                                                min_seq_coverage=40,
                                                min_perc_identity=45)
