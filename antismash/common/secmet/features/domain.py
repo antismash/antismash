@@ -61,7 +61,7 @@ class Domain(AntismashFeature):
         feature.tool = leftovers.pop("aSTool", [None])[0]
         feature.domain = leftovers.pop("aSDomain", [None])[0]
         for asf_label in leftovers.pop("ASF", []):
-            feature._asf.add(asf_label)
+            feature.asf.add(asf_label)
 
         # grab parent optional qualifiers
         updated = super(Domain, feature).from_biopython(bio_feature, feature=feature, leftovers=leftovers)
