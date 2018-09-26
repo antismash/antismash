@@ -5,6 +5,7 @@
 
 import os
 from typing import Any, Dict, List, Optional, Tuple
+from typing import Set  # used in comment hints, pylint: disable=unused-import
 import warnings
 
 from Bio.SeqFeature import SeqFeature
@@ -12,6 +13,7 @@ from Bio.SeqRecord import SeqRecord
 from helperlibs.bio import seqio
 
 from .cdscollection import CDSCollection, CDSFeature
+from .cluster import Cluster
 from .feature import Feature, FeatureLocation
 from .subregion import SubRegion
 from .supercluster import SuperCluster
@@ -149,6 +151,16 @@ class Region(CDSCollection):
         if not self._parent_record:
             raise ValueError("Region not in a record")
         return self._parent_record.get_region_number(self)
+
+    def get_unique_clusters(self) -> List[Cluster]:
+        """ Returns all Clusters contained by SuperClusters in this region,
+            without duplicating them if multiple SuperClusters contain the same
+            Cluster
+        """
+        clusters = set()  # type: Set[Cluster]
+        for supercluster in self._superclusters:
+            clusters.update(supercluster.clusters)
+        return sorted(clusters)
 
     def write_to_genbank(self, filename: str = None, directory: str = None, record: SeqRecord = None) -> None:
         """ Writes a genbank file containing only the information contained

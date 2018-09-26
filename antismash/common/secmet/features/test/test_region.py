@@ -95,6 +95,17 @@ class TestRegionChildren(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "not contained by"):
             self.region.add_cds(cds)
 
+    def test_unique_clusters(self):
+        clusters = [create_cluster(i, 10, product=prod) for i, prod in enumerate("ABC")]
+        superclusters = [SuperCluster(SuperCluster.kinds.INTERLEAVED, clusters[:2]),
+                         SuperCluster(SuperCluster.kinds.INTERLEAVED, clusters[1:])]
+        assert clusters[1] in superclusters[0].clusters and clusters[1] in superclusters[1].clusters
+        region = Region(superclusters=superclusters)
+        unique_clusters = region.get_unique_clusters()
+        # if the cluster in both superclusters is repeated, there'll be an extra
+        assert len(unique_clusters) == 3
+        assert unique_clusters == clusters
+
 
 class TestRegion(unittest.TestCase):
     def test_products(self):
