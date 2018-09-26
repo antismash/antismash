@@ -18,7 +18,6 @@ class CDSMotif(Domain):
 
     def __init__(self, location: FeatureLocation, tool: str = None) -> None:
         super().__init__(location, feature_type="CDS_motif", tool=tool)
-        self.motif = None  # type: Optional[str]
 
     @staticmethod
     def from_biopython(bio_feature: SeqFeature, feature: Optional["CDSMotif"] = None,  # type: ignore
@@ -28,8 +27,6 @@ class CDSMotif(Domain):
         if not feature:
             feature = CDSMotif(bio_feature.location)
 
-        if "motif" in leftovers:
-            feature.motif = leftovers.pop("motif")[0]
         updated = super(CDSMotif, feature).from_biopython(bio_feature, feature, leftovers)
         assert updated is feature
         assert isinstance(updated, CDSMotif)
@@ -37,8 +34,6 @@ class CDSMotif(Domain):
 
     def to_biopython(self, qualifiers: Dict[str, List] = None) -> List[SeqFeature]:
         mine = OrderedDict()  # type: Dict[str, List[str]]
-        if self.motif:
-            mine["motif"] = [self.motif]
         if qualifiers:
             mine.update(qualifiers)
         return super().to_biopython(mine)

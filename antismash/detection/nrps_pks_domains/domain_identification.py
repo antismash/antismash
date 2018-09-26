@@ -373,7 +373,6 @@ def generate_motif_features(record: Record, feature: CDSFeature, motifs: List[HM
         loc = feature.get_sub_location_from_protein_coordinates(motif.query_start, motif.query_end)
         new_motif = CDSMotif(loc)
         new_motif.label = motif.hit_id
-        new_motif.motif = motif.hit_id  # TODO: why both label AND motif?
         new_motif.domain_id = 'nrpspksmotif_{}_{:04d}'.format(locus_tag, i)
         new_motif.evalue = motif.evalue
         new_motif.score = motif.bitscore
