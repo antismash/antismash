@@ -82,7 +82,7 @@ class TestAnalysisCore(unittest.TestCase):
             domains.append(domain)
             domain.domain = "PKS_KS"
 
-        location = FeatureLocation(last_end + 10, last_end + len(translation)*3 + 16)
+        location = FeatureLocation(last_end + 10, last_end + len(domains[-1].translation)*3 + 16)
         domains.append(AntismashDomain(location, tool="test"))
         domains[-1].domain = "PKS_KR"
         return domains
