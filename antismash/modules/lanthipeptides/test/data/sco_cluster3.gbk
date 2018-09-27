@@ -415,6 +415,7 @@ FEATURES             Location/Qualifiers
                      /note="Pfam match to entry PF00106 adh_short, short chain
                      dehydrogenase, score 245.80, E-value 6e-70"
      aSDomain        10030..10371
+                     /aSTool="nrps_pks_domains"
                      /aSDomain="PKS_KR"
                      /database="nrpspksdomains.hmm"
                      /detection="hmmscan"
@@ -549,6 +550,7 @@ FEATURES             Location/Qualifiers
                      /note="PS00059 Zinc-containing alcohol dehydrogenases
                      signature."
      aSDomain        13048..13422
+                     /aSTool="nrps_pks_domains"
                      /aSDomain="PKS_ER"
                      /database="nrpspksdomains.hmm"
                      /detection="hmmscan"
@@ -819,6 +821,7 @@ FEATURES             Location/Qualifiers
                      RIVTDSRNVTDAARIEWPLRGIAQDITEHTRRIDVPALVVAGEHDQVEPAGVLRDNLVP
                      YLARADFVVVPRTGHLIPLEAPADLADAVTAFATAV"
      aSDomain        19385..19915
+                     /aSTool="nrps_pks_domains"
                      /aSDomain="Thioesterase"
                      /database="nrpspksdomains.hmm"
                      /detection="hmmscan"

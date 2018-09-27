@@ -21,16 +21,19 @@ class PFAMDomain(Domain):
                  "gene_ontologies", "identifier", "version"]
 
     def __init__(self, location: FeatureLocation, description: str, protein_start: int,
-                 protein_end: int, identifier: str, domain: Optional[str] = None) -> None:
+                 protein_end: int, identifier: str, tool: str, domain: Optional[str] = None,
+                 ) -> None:
         """ Arguments:
                 location: the DNA location of the feature
                 description: a string with a description
                 protein_start: the start point within the parent CDS translation
                 protein_end: the end point within the parent CDS translation
                 identifier: the Pfam identifier (e.g. PF00067 or PF00067.14)
+                tool: the name of the tool used to find/create the feature
                 domain: the name for the domain (e.g. p450 or 'Type III restriction enzyme')
         """
-        super().__init__(location, feature_type="PFAM_domain", domain=domain)
+        assert tool in ["test", "clusterhmmer", "fullhmmer", "toolname"], tool
+        super().__init__(location, feature_type="PFAM_domain", domain=domain, tool=tool)
         if not isinstance(description, str):
             raise TypeError("PFAMDomain description must be a string, not %s" % type(description))
         if not description:
@@ -92,8 +95,10 @@ class PFAMDomain(Domain):
                 name = ref
             xref.pop(i)
             break
+        tool = leftovers.pop("aSTool", [None])[0]
+
         feature = PFAMDomain(bio_feature.location, description, p_start, p_end,
-                             identifier=name)
+                             identifier=name, tool=tool)
 
         # grab optional qualifiers
         feature.gene_ontologies = GOQualifier.from_biopython(leftovers.pop("gene_ontologies", []))

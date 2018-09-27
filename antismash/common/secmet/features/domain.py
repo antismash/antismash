@@ -16,12 +16,12 @@ from .antismash_feature import AntismashFeature
 
 class Domain(AntismashFeature):
     """ A base class for features which represent a domain type """
-    __slots__ = ["tool", "domain", "_asf"]
+    __slots__ = ["domain", "_asf"]
 
     def __init__(self, location: FeatureLocation, feature_type: str,
-                 domain: Optional[str] = None, tool: str = None) -> None:
-        super().__init__(location, feature_type)
-        self.tool = tool
+                 domain: Optional[str] = None, tool: str = None,
+                 created_by_antismash: bool = True) -> None:
+        super().__init__(location, feature_type, tool=tool, created_by_antismash=created_by_antismash)
         if domain is not None:
             if not isinstance(domain, str):
                 raise TypeError("Domain must be given domain as a string, not %s" % type(domain))
@@ -37,8 +37,6 @@ class Domain(AntismashFeature):
 
     def to_biopython(self, qualifiers: Dict[str, List[str]] = None) -> List[SeqFeature]:
         mine = OrderedDict()  # type: Dict[str, List[str]]
-        if self.tool:
-            mine["aSTool"] = [self.tool]
         if self.domain:
             mine["aSDomain"] = [self.domain]
         if self._asf:
@@ -58,7 +56,6 @@ class Domain(AntismashFeature):
             assert isinstance(feature, Domain), type(feature)
 
         # grab optional qualifiers
-        feature.tool = leftovers.pop("aSTool", [None])[0]
         feature.domain = leftovers.pop("aSDomain", [None])[0]
         for asf_label in leftovers.pop("ASF", []):
             feature.asf.add(asf_label)

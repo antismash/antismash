@@ -82,6 +82,7 @@ FEATURES             Location/Qualifiers
      misc_feature    16..29374
                      /note="thiostrepton biosynthesis gene cluster"
      aSDomain        complement(118..1005)
+                     /aSTool="nrps_pks_domains"
                      /aSDomain="Aminotran_1_2"
                      /database="nrpspksdomains.hmm"
                      /detection="hmmscan"
@@ -432,6 +433,7 @@ FEATURES             Location/Qualifiers
                      VLDGRADDLVKVDGVSVYPREITAAVRALPGVRDASVSVDRSRTGDRLTVIVMGTDAVT
                      EDRVRDACARLPVPVTPHRVLCRPADETAYDARGKVLR"
      aSDomain        21632..22459
+                     /aSTool="nrps_pks_domains"
                      /aSDomain="AMP-binding"
                      /database="nrpspksdomains.hmm"
                      /detection="hmmscan"
@@ -551,6 +553,7 @@ FEATURES             Location/Qualifiers
                      NSRLAVQGDPRYSAYCGSKATLLALDAVAAEPLRDRGVHLFDISPGMVRTDMTLSMAVC
                      AGRDDWTDPALFLAAILRVAHGDLDPLAGRFLHVGADDFDALLSERRLAV"
      aSDomain        28589..29119
+                     /aSTool="nrps_pks_domains"
                      /aSDomain="PKS_KR"
                      /database="nrpspksdomains.hmm"
                      /detection="hmmscan"

@@ -348,6 +348,7 @@ FEATURES             Location/Qualifiers
                      RFDADGNLCLEGRLDGAEKLAGVLVRPREIERHVLALDGVSDVRVTVETAPTGLEFLAA
                      TVVGSVDADTVRAHCAALPEQHRPSRISCASEQEAATVYSAHGKL"
      aSDomain        complement(14946..15749)
+                     /aSTool="nrps_pks_domains"
                      /aSDomain="AMP-binding"
                      /database="nrpspksdomains.hmm"
                      /detection="hmmscan"

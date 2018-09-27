@@ -12,12 +12,16 @@ from .feature import Feature, FeatureLocation
 
 
 class AntismashFeature(Feature):
-    """ A base class for all sub-CDS Antismash features """
+    """ A base class for all sub-CDS antiSMASH features along with CDS_motif """
     __slots__ = ["domain_id", "database", "detection", "_evalue", "label",
-                 "locus_tag", "_score", "_translation"]
+                 "locus_tag", "_score", "_translation", "tool"]
 
-    def __init__(self, location: FeatureLocation, feature_type: str) -> None:
-        super().__init__(location, feature_type, created_by_antismash=True)
+    def __init__(self, location: FeatureLocation, feature_type: str, tool: str = None,
+                 created_by_antismash: bool = True) -> None:
+        if created_by_antismash and not tool:
+            raise ValueError("an AntismashFeature created by antiSMASH must have a tool supplied")
+        super().__init__(location, feature_type, created_by_antismash=created_by_antismash)
+        self.tool = tool
         self.domain_id = None  # type: str
         self.database = None  # type: str
         self.detection = None  # type: str
@@ -82,6 +86,8 @@ class AntismashFeature(Feature):
             mine["detection"] = [self.detection]
         if self.domain_id:
             mine["domain_id"] = [self.domain_id]
+        if self.tool:
+            mine["aSTool"] = [self.tool]
         if qualifiers:
             mine.update(qualifiers)
         return super().to_biopython(mine)
@@ -95,6 +101,11 @@ class AntismashFeature(Feature):
             raise ValueError("AntismashFeature shouldn't be instantiated directly")
         else:
             assert isinstance(feature, AntismashFeature)
+
+        # semi-optional qualifiers
+        if leftovers.get("tool") == ["antismash"] and not feature.tool:
+            raise ValueError("an AntismashFeature created by antiSMASH must have a tool supplied")
+
         # grab optional qualifiers
         feature.domain_id = leftovers.pop("domain_id", [None])[0]
         feature.database = leftovers.pop("database", [None])[0]

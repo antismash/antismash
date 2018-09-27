@@ -30,7 +30,7 @@ class PfamToGoTest(unittest.TestCase):
         # add a test PFAM
         pfam = PFAMDomain(FeatureLocation(2, 5), description="test",
                           protein_start=5, protein_end=10, identifier="PF00005",
-                          domain="PF00005")
+                          domain="PF00005", tool="test")
         pfam.domain_id = "test"
         record.add_pfam_domain(pfam)
         assert len(record.get_pfam_domains()) == 1

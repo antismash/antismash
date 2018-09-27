@@ -16,8 +16,8 @@ class AntismashDomain(Domain):
     """ A class to represent a Domain with extra specificities and type information """
     __slots__ = ["domain_subtype", "specificity"]
 
-    def __init__(self, location: FeatureLocation) -> None:
-        super().__init__(location, feature_type="aSDomain")
+    def __init__(self, location: FeatureLocation, tool: str) -> None:
+        super().__init__(location, feature_type="aSDomain", tool=tool, created_by_antismash=True)
         self.domain_subtype = None  # type: str
         self.specificity = []  # type: List[str]
 
@@ -37,7 +37,8 @@ class AntismashDomain(Domain):
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
         # grab mandatory qualifiers and create the class
-        feature = AntismashDomain(bio_feature.location)
+        tool = leftovers.pop("aSTool")[0]
+        feature = AntismashDomain(bio_feature.location, tool=tool)
 
         # grab optional qualifiers
         feature.domain_subtype = leftovers.pop("domain_subtype", [None])[0]

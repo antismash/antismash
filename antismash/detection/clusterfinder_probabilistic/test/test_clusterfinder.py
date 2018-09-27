@@ -45,7 +45,7 @@ class ClusterFinderTest(unittest.TestCase):
             location = FeatureLocation(start, end, strand=1)
             self.record.add_cds_feature(CDSFeature(location, locus_tag=str(start)))
             pfam = PFAMDomain(location, "dummy_description", protein_start=start + 1,
-                              protein_end=end-1, identifier=pfam_id)
+                              protein_end=end-1, identifier=pfam_id, tool="test")
             pfam.domain_id = "pfam_%d" % start
             pfam.probability = probability
             self.record.add_pfam_domain(pfam)

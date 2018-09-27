@@ -77,11 +77,11 @@ class HmmerResults(module_results.ModuleResults):
         for i, hit in enumerate(self.hits):
             pfam_feature = PFAMDomain(location_from_string(hit["location"]),
                                       description=hit["description"], protein_start=hit["protein_start"],
-                                      protein_end=hit["protein_end"], identifier=hit["identifier"])
+                                      protein_end=hit["protein_end"], identifier=hit["identifier"],
+                                      tool=self.tool)
             for key in ["label", "locus_tag", "domain", "evalue",
                         "score", "translation"]:
                 setattr(pfam_feature, key, hit[key])
-            pfam_feature.tool = self.tool
             pfam_feature.database = db_version
             pfam_feature.detection = "hmmscan"
             pfam_feature.domain_id = "{}_{}_{:04d}".format(self.tool, pfam_feature.locus_tag, i + 1)
