@@ -348,7 +348,8 @@ def press() -> None:
     # hmmpress the smcog specific database
     compile_pfam(os.path.join(LOCAL_FILE_PATH, "detection", "genefunctions", "data", "smcogs.hmm"))
 
-    # TODO: Press the bgc_seeds once there is an antismash.common function for it
+    for error in antismash.detection.hmm_detection.check_prereqs():
+        print(error)
 
 
 def main() -> None:
