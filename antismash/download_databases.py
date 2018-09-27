@@ -346,7 +346,7 @@ def press() -> None:
     # TODO: re-add a compile call for SANDPUMA once that is in
 
     # hmmpress the smcog specific database
-    compile_pfam(os.path.join(LOCAL_FILE_PATH, "modules", "smcogs", "data", "smcogs.hmm"))
+    compile_pfam(os.path.join(LOCAL_FILE_PATH, "detection", "genefunctions", "data", "smcogs.hmm"))
 
     # TODO: Press the bgc_seeds once there is an antismash.common function for it
 
