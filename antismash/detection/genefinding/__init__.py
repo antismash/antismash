@@ -49,7 +49,9 @@ def check_prereqs() -> List[str]:
     if options.genefinding_tool in ['none']:
         return failure_messages
     binaries = []  # type: List[str]
-    if options.genefinding_tool in ['prodigal', 'prodigal-m']:
+    if options.check_prereqs_only:
+        binaries = ["prodigal", "glimmerhmm"]
+    elif options.genefinding_tool in ['prodigal', 'prodigal-m']:
         binaries = ['prodigal']
     elif options.taxon == 'fungi':
         binaries = ['glimmerhmm']
