@@ -51,7 +51,7 @@ def get_arguments() -> ModuleArgs:
                     type=int,
                     default=10,
                     help="Number of clusters from ClusterBlast to display,"
-                         " cannot be greater than %d." % get_result_limit())
+                         " cannot be greater than %d. (default: %%(default)s)" % get_result_limit())
     args.add_option('min-homology-scale',
                     dest='min_homology_scale',
                     metavar="LIMIT",
@@ -59,7 +59,8 @@ def get_arguments() -> ModuleArgs:
                     default=0.0,
                     help="A minimum scaling factor for the query BGC in ClusterBlast results."
                          " Valid range: 0.0 - 1.0.   "
-                         " Warning: some homologous genes may no longer be visible!")
+                         " Warning: some homologous genes may no longer be visible!"
+                         " (default: %(default)s)")
     return args
 
 
