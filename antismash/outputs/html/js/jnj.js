@@ -62,6 +62,15 @@ function previous_region() {
   switch_to_region();
 }
 
+function keyUpEvent(event) {
+    var key = event.keyCode;
+    if (key == 37) {  // left arrow
+        previous_region();
+    } else if (key == 39) {  // right arrow
+        next_region();
+    }
+}
+
 function toggle_cluster_rules(ev) {
   ev.preventDefault();
   var id = $(this).attr('id').replace(/-header/, '');
@@ -90,7 +99,7 @@ function copyToClipboard (text) {
 }
 
 $(document).ready(function() {
-
+  document.addEventListener('keyup', keyUpEvent, false);
   $("#download").click(toggle_downloadmenu);
 
   $("#next-region").click(next_region);
