@@ -19,3 +19,7 @@ function-rgx=[a-z_][a-z0-9_]{2,40}$
 method-rgx=[a-z_][a-z0-9_]{2,40}$
 # same is true for variables
 variable-rgx=[a-z_][a-z0-9_]{1,40}$
+
+[DESIGN]
+# having details provided as args is common, bump from default of 5
+max-args=7
