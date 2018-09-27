@@ -4,6 +4,7 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
+import glob
 import os
 import unittest
 
@@ -267,6 +268,21 @@ class HmmDetectionTest(unittest.TestCase):
         first.hit_end = 50
         with self.assertRaises(AssertionError):
             overlap_size(first, second)
+
+    def test_hmm_files_and_details_match(self):
+        data_dir = path.get_full_path(os.path.dirname(__file__), "data", "")
+        details_files = {prof.path for prof in signatures.get_signature_profiles()}
+        details_files = {filepath.replace(data_dir, "") for filepath in details_files}
+        data_dir_contents = set(glob.glob(data_dir + "*.hmm"))
+        data_dir_contents = {filepath.replace(data_dir, "") for filepath in data_dir_contents}
+        # ignore bgc_seeds.hmm for the sake of comparison, it's a generated aggregate
+        data_dir_contents.discard("bgc_seeds.hmm")
+        missing_files = details_files - data_dir_contents
+        assert not missing_files
+        extra_files = data_dir_contents - details_files
+        assert not extra_files
+        # finally, just to be sure
+        assert data_dir_contents == details_files
 
 
 class TestSignatureFile(unittest.TestCase):
