@@ -23,7 +23,7 @@ from .args import build_parser, AntismashParser
 from .loader import load_config_from_file
 
 _USER_FILE_NAME = os.path.expanduser('~/.antismash5.cfg')
-_INSTANCE_FILE_NAME = 'instance.cfg'
+_INSTANCE_FILE_NAME = os.path.abspath(os.path.join(os.path.dirname(__file__), 'instance.cfg'))
 
 
 class Config:  # since it's a glorified namespace, pylint: disable=too-few-public-methods
