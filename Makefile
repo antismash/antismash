@@ -17,6 +17,11 @@ clean:
 	find . -name '*.pyc' | xargs rm -f
 	find . -name '__pycache__' | xargs rm -rf
 
+squeakyclean: clean
+	find . -name "*.h3?" -exec rm {} +
+	find . -name "*.tar.*" -exec rm {} +
+	bash -c 'for d in $$(find . -maxdepth 2 -name "index.html"); do DIR=$$(dirname $$d); rm -r $$DIR; done'
+
 cover: coverage
 
 combined-coverage: coverage
@@ -30,5 +35,9 @@ coverage:
 	rm -rf cover .coverage $(integration_coverage)
 	coverage run $(omit),'*integration_*.py' --source antismash -m pytest antismash
 	coverage html -d cover
-	coverage report 
+	coverage report
 
+docker: squeakyclean
+	docker build -t antismash5-dev .
+
+.PHONY:	unit integration clean squeakyclean cover coverage combined-coverage docker
