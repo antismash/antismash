@@ -16,6 +16,7 @@ import logging
 import os
 import pstats
 import shutil
+import sys
 import time
 import tempfile
 from typing import cast, Any, Dict, List, Optional, Union
@@ -122,7 +123,7 @@ def setup_logging(logfile: str = None, verbose: bool = False, debug: bool = Fals
     def new_critical(*args: Any) -> None:  # TODO: temporary to make alpha issues more obvious
         """ make critical messages yellow and without the normal timestamp """
         msg = "\033[1;33m{}\033[0m".format(args[0])
-        print(msg % args[1:])
+        print(msg % args[1:], file=sys.stderr)
     logging.critical = new_critical  # type: ignore
 
     log_level = logging.WARNING
