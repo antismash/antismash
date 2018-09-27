@@ -348,6 +348,9 @@ def press() -> None:
     # hmmpress the smcog specific database
     compile_pfam(os.path.join(LOCAL_FILE_PATH, "detection", "genefunctions", "data", "smcogs.hmm"))
 
+    # hmmpress the t2pks specific database
+    compile_pfam(os.path.join(LOCAL_FILE_PATH, "modules", "t2pks", "data", "t2pks.hmm"))
+
     for error in antismash.detection.hmm_detection.check_prereqs():
         print(error)
 
