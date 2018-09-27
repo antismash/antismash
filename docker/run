@@ -1,0 +1,15 @@
+#!/bin/bash
+set -o nounset
+
+readonly INFILE=$1
+shift
+
+export MPLCONFIGDIR=/matplotlib
+
+antismash $@ /input/${INFILE}
+exitcode=$?
+
+if [ $exitcode -ne 0 ]; then
+    echo "Running antiSMASH FAILED"
+fi
+exit $exitcode
