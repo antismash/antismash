@@ -203,7 +203,7 @@ class Feature:
             assert isinstance(feature, Feature)
         if leftovers:
             feature.created_by_antismash = leftovers.get("tool") == ["antismash"]
-            feature._qualifiers.update(leftovers)
+            feature._qualifiers.update(leftovers)  # shouldn't be a public thing, so pylint: disable=protected-access
         else:
             feature.created_by_antismash = False
         return feature
