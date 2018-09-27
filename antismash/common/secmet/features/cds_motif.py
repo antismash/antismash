@@ -17,7 +17,9 @@ class CDSMotif(Domain):
     __slots__ = ["motif"]
 
     def __init__(self, location: FeatureLocation, tool: str = None) -> None:
-        super().__init__(location, feature_type="CDS_motif", tool=tool)
+        # if there's a tool, it was created by antismash
+        created = tool is not None
+        super().__init__(location, feature_type="CDS_motif", tool=tool, created_by_antismash=created)
 
     @staticmethod
     def from_biopython(bio_feature: SeqFeature, feature: Optional["CDSMotif"] = None,  # type: ignore
@@ -25,7 +27,7 @@ class CDSMotif(Domain):
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
         if not feature:
-            feature = CDSMotif(bio_feature.location)
+            feature = CDSMotif(bio_feature.location, leftovers.pop("aSTool", [None])[0])
 
         updated = super(CDSMotif, feature).from_biopython(bio_feature, feature, leftovers)
         assert updated is feature

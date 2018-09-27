@@ -24,7 +24,7 @@ def set_dummy_with_pfams(pfam_ids: Dict[str, FeatureLocation]) -> DummyRecord:
     pfam_domains = []
     for pfam_id, pfam_location in pfam_ids.items():
         pfam_domain = PFAMDomain(location=pfam_location, description='FAKE', protein_start=0, protein_end=5,
-                                 identifier=pfam_id)
+                                 identifier=pfam_id, tool="test")
         pfam_domain.domain_id = '%s.%d.%d' % (pfam_id, pfam_location.start, pfam_location.end)
         pfam_domains.append(pfam_domain)
     return DummyRecord(features=pfam_domains)
@@ -104,7 +104,7 @@ class PfamToGoTest(unittest.TestCase):
         blank_no_ids = Record(Seq("ATGTTATGAGGGTCATAACAT", generic_dna))
         fake_pfam_location = FeatureLocation(0, 12)
         fake_pfam = PFAMDomain(location=fake_pfam_location, description='MCPsignal', protein_start=0, protein_end=5,
-                               identifier="PF00000")
+                               identifier="PF00000", tool="test")
         fake_pfam.domain_id = 'BLANK'
         blank_no_ids.add_pfam_domain(fake_pfam)
 
@@ -127,7 +127,7 @@ class PfamToGoTest(unittest.TestCase):
                  'PF00015.27': FeatureLocation(3, 6)}
         fake_record = set_dummy_with_pfams(pfams)
         fake_duplicate_pfam = PFAMDomain(location=FeatureLocation(6, 9), description='DUPLICATE', protein_start=0,
-                                         protein_end=5, identifier="PF00015.2")
+                                         protein_end=5, identifier="PF00015.2", tool="test")
         fake_duplicate_pfam.domain_id = 'DUPLICATE'
         fake_record.add_pfam_domain(fake_duplicate_pfam)
         assert fake_duplicate_pfam in fake_record.get_pfam_domains()

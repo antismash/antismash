@@ -29,7 +29,7 @@ def rebuild_domains(filename, domain_type):
     dummy_location = secmet.features.FeatureLocation(1, 100)
     domains = []
     for name, translation in domain_fasta.items():
-        domain = secmet.features.AntismashDomain(dummy_location)
+        domain = secmet.features.AntismashDomain(dummy_location, tool="test")
         domain.domain = domain_type
         domain.domain_id = domain_type + name
         domain.translation = translation
@@ -68,7 +68,8 @@ class TestAnalyses(unittest.TestCase):
         domain_fasta = fasta.read_fasta(path.get_full_path(__file__, 'data', "p450.input"))
         for name, translation in domain_fasta.items():
             pfam_domain = secmet.features.PFAMDomain(dummy_location, protein_start=5, protein_end=10,
-                                                     description="test", identifier="PF00001")
+                                                     description="test", identifier="PF00001",
+                                                     tool="test")
             pfam_domain.translation = translation
             pfam_domain.domain_id = "PFAM_p450_" + name
             pfam_domain.domain = "p450"

@@ -144,7 +144,7 @@ class TestAngstromGeneration(unittest.TestCase):
         restore()
 
     def test_angstrom(self):
-        domain = AntismashDomain(FeatureLocation(1, 2))
+        domain = AntismashDomain(FeatureLocation(1, 2), "test")
         domain.domain_id = "query"
         domain.translation = self.aligns[domain.domain_id].replace("-", "")
 

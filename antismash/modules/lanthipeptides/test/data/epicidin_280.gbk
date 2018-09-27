@@ -150,6 +150,7 @@ FEATURES             Location/Qualifiers
                      /tool="antismash"
                      /translation="TVLITGGCKNIGKQIAQVFAENNYNVIVTSRN"
      aSDomain        883..1215
+                     /aSTool="nrps_pks_domains"
                      /aSDomain="PKS_KR"
                      /database="nrpspksdomains.hmm"
                      /detection="hmmscan"

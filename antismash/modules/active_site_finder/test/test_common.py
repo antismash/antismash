@@ -34,7 +34,8 @@ class TestCommon(unittest.TestCase):
 class TestAlignment(unittest.TestCase):
     def setUp(self):
         self.domain = PFAMDomain(FeatureLocation(1, 6), "description",
-                                 protein_start=3, protein_end=5, domain="p450", identifier="PF00001")
+                                 protein_start=3, protein_end=5, domain="p450",
+                                 identifier="PF00001", tool="test")
         self.alignment = Alignment(self.domain, "WLAD-QGAR", "WLaer.rGA", 10, 19)
 
     def test_extract_position(self):
@@ -64,7 +65,8 @@ class TestAlignment(unittest.TestCase):
 class TestAnalysisCore(unittest.TestCase):
     def setUp(self):
         self.domain = PFAMDomain(FeatureLocation(1, 6), "description",
-                                 protein_start=3, protein_end=5, domain="p450", identifier="PF00001")
+                                 protein_start=3, protein_end=5, domain="p450",
+                                 identifier="PF00001", tool="test")
 
     def tearDown(self):
         restore()
@@ -74,12 +76,14 @@ class TestAnalysisCore(unittest.TestCase):
         domains = []
         last_end = 0
         for translation in inputs.values():
-            domain = AntismashDomain(FeatureLocation(last_end + 10, last_end + len(translation)*3 + 16))
+            location = FeatureLocation(last_end + 10, last_end + len(translation)*3 + 16)
+            domain = AntismashDomain(location, tool="test")
             domain.translation = translation
             domains.append(domain)
             domain.domain = "PKS_KS"
 
-        domains.append(AntismashDomain(FeatureLocation(last_end + 10, last_end + len(domains[-1].translation)*3 + 16)))
+        location = FeatureLocation(last_end + 10, last_end + len(translation)*3 + 16)
+        domains.append(AntismashDomain(location, tool="test"))
         domains[-1].domain = "PKS_KR"
         return domains
 
@@ -138,7 +142,8 @@ class TestAnalysisCore(unittest.TestCase):
 class TestScaffoldMatching(unittest.TestCase):
     def setUp(self):
         domain = PFAMDomain(FeatureLocation(1, 6), "description",
-                            protein_start=3, protein_end=5, domain="p450", identifier="PF00001")
+                            protein_start=3, protein_end=5, domain="p450",
+                            identifier="PF00001", tool="test")
         self.alignment = Alignment(domain, "WLAD-QGAR", "WLae.rGAR", 10, 19)
 
     def create_analysis(self, positions, expected):
