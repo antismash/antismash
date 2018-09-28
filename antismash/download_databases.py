@@ -335,27 +335,10 @@ def download(args: argparse.Namespace) -> None:
     download_clusterblast(args.database_dir)
 
 
-def press() -> None:
-    """Press all the hmm databases shipped with antiSMASH."""
-    # hmmpress the NRPS/PKS specific databases
-    nrpspksdir = os.path.join(LOCAL_FILE_PATH, "detection", "nrps_pks_domains", "data")
-    compile_pfam(os.path.join(nrpspksdir, "abmotifs.hmm"))
-    compile_pfam(os.path.join(nrpspksdir, "dockingdomains.hmm"))
-    compile_pfam(os.path.join(nrpspksdir, "ksdomains.hmm"))
-    compile_pfam(os.path.join(nrpspksdir, "nrpspksdomains.hmm"))
-    # TODO: re-add a compile call for SANDPUMA once that is in
-
-    # hmmpress the smcog specific database
-    compile_pfam(os.path.join(LOCAL_FILE_PATH, "detection", "genefunctions", "data", "smcogs.hmm"))
-
-    # hmmpress the t2pks specific database
-    compile_pfam(os.path.join(LOCAL_FILE_PATH, "modules", "t2pks", "data", "t2pks.hmm"))
-
-    for error in antismash.detection.hmm_detection.check_prereqs():
-        print(error)
-
-
 def main() -> None:
+    """ Downloads, decompresses, and compiles large databases. Also ensures
+        antiSMASH's module data is prepared.
+    """
     # Small dance to grab the antiSMASH config for the database dir.
     # We don't actually want to keep anything else, but we need to load all the
     # modules to make sure we can parse the file.
@@ -372,7 +355,7 @@ def main() -> None:
 
     args = parser.parse_args()
     download(args)
-    press()
+    antismash.main.prepare_module_data()
 
 
 if __name__ == "__main__":
