@@ -23,9 +23,9 @@ svgene.geneArrowPoints = function (orf, height, offset, border, scale) {
       return points;
   }
   if (orf.strand == -1) {
-      var point_start = scale(orf.start);
-      var end = scale(orf.end);
-      var box_start = Math.min(scale(orf.start) + (2*border), end);
+      var point_start = scale(orf.end);
+      var end = scale(orf.start);
+      var box_start = Math.min(scale(orf.end) + (2*border), end);
       points = "" + point_start + "," + middle;
       points += " " + box_start + "," + top_;
       points += " " + end + "," + top_;
@@ -145,6 +145,23 @@ svgene.drawCluster = function(id, cluster, height, width) {
   var x = d3.scale.linear()
     .domain([cluster.start, cluster.end])
     .range([0, width]);
+  // only in rare cases, reassign the scale to a divergent function
+  if (cluster.start > cluster.end) {
+      x = function(position) {
+          // pre-ori scale
+          if (position < cluster.start) {
+            return d3.scale.linear()
+                  .domain([1, cluster.end])
+                  .range([(cluster.sequence_length - cluster.start + cluster.end)/width, width])(position);
+          }
+          // post-ori scale
+          else {
+            return d3.scale.linear()
+                  .domain([cluster.start, cluster.sequence_length])
+                  .range([0, (cluster.sequence_length - cluster.start + cluster.end)/width])(position);
+          }
+      };
+  }
   svgene.drawOrderedClusterOrfs(cluster, chart, all_orfs, all_borders, all_ttas,
                                 x, idx, height, width, offset);
   container.selectAll("div")

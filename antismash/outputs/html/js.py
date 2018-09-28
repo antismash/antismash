@@ -64,8 +64,8 @@ def convert_clusters(record: Record, options: ConfigType, result: Dict[str, Modu
         tta_codons = fetch_tta_features(cluster, result)
 
         js_cluster = {}  # type: Dict[str, Any]
-        js_cluster['start'] = int(cluster.location.start) + 1
-        js_cluster['end'] = int(cluster.location.end)
+        js_cluster['start'] = int(cluster.location.bio_start) + 1
+        js_cluster['end'] = int(cluster.location.bio_end)
         js_cluster['idx'] = cluster.get_cluster_number()
         mibig_entries = mibig_results.get(js_cluster['idx'], {})
         js_cluster['orfs'] = convert_cds_features(record, cluster.cds_children, options, mibig_entries)
@@ -74,6 +74,7 @@ def convert_clusters(record: Record, options: ConfigType, result: Dict[str, Modu
         js_cluster['type'] = cluster.get_product_string()
         js_cluster['products'] = cluster.products
         js_cluster['anchor'] = "r%dc%d" % (record.record_index, cluster.get_cluster_number())
+        js_cluster['sequence_length'] = len(record.seq)
 
         js_clusters.append(js_cluster)
 
@@ -87,8 +88,8 @@ def convert_cds_features(record: Record, features: Iterable[CDSFeature], options
     js_orfs = []
     for feature in features:
         gene_function = str(feature.gene_function)
-        js_orfs.append({"start": feature.location.start + 1,
-                        "end": feature.location.end,
+        js_orfs.append({"start": int(feature.location.bio_start) + 1,
+                        "end": int(feature.location.bio_end),
                         "strand": feature.strand or 1,
                         "locus_tag": feature.get_name(),
                         "type": gene_function,
@@ -104,10 +105,10 @@ def convert_cluster_border_features(borders: Iterable[ClusterBorder]) -> List[Di
     # them into a single row
     putatives = [border for border in borders if border.product == clusterfinder.PUTATIVE_PRODUCT]
     non_putatives = [border for border in borders if border.product != clusterfinder.PUTATIVE_PRODUCT]
-    borders = putatives + sorted(non_putatives, key=lambda x: (x.location.start, -len(x.location), x.product or "unknown"))
+    borders = putatives + sorted(non_putatives, key=lambda x: (x.location.bio_start, -len(x.location), x.product or "unknown"))
     for i, border in enumerate(borders):
-        js_border = {"start": border.location.start,
-                     "end": border.location.end,
+        js_border = {"start": int(border.location.bio_start) + 1,
+                     "end": int(border.location.bio_end),
                      "tool": border.tool,
                      "extent": border.extent,
                      "product": border.product or "unknown"}
@@ -125,8 +126,8 @@ def convert_tta_codons(tta_codons: List[Feature]) -> List[Dict[str, Any]]:
     """Convert found TTA codon features to JSON"""
     js_codons = []
     for codon in tta_codons:
-        js_codons.append({'start': codon.location.start + 1,
-                          'end': codon.location.end,
+        js_codons.append({'start': int(codon.location.bio_start + 1),
+                          'end': int(codon.location.bio_end),
                           'strand': codon.strand if codon.strand is not None else 1})
     return js_codons
 
@@ -180,8 +181,8 @@ def get_description(record: Record, feature: CDSFeature, type_: str,
     for gene_function in feature.gene_functions:
         template += "%s<br>\n" % str(gene_function)
 
-    template += "Location: %d - %d<br><br>\n" % (feature.location.start + 1,  # 1-indexed
-                                                 feature.location.end)
+    template += "Location: %d - %d<br><br>\n" % (feature.location.bio_start + 1,  # 1-indexed
+                                                 feature.location.bio_end)
 
     if mibig_result:
         cluster_number = feature.cluster.get_cluster_number()
