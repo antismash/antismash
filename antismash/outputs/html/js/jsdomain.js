@@ -22,7 +22,7 @@ jsdomain.drawDomains = function(id, cluster, height, width) {
         var orf = cluster['orfs'][i];
         var idx = jsdomain.unique_id++;
         var offset = height/10;
-        var x = d3.scale.linear()
+        var x = d3.scaleLinear()
           .domain([1, max_orf_len])
           .range([0, width]);
         chart.append("text")
