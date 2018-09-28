@@ -495,6 +495,22 @@ def read_data(sequence_file: Optional[str], options: ConfigType) -> serialiser.A
     return results
 
 
+def prepare_module_data(modules: Optional[List[AntismashModule]] = None) -> None:
+    """ Calls all given modules' data preparation methods.
+
+        Arguments:
+            modules: a list of modules to use, if None all module will be used
+
+        Returns:
+            None
+    """
+    if modules is None:
+        modules = get_all_modules()
+    for module in modules:
+        if hasattr(module, "prepare_data"):
+            module.prepare_data()
+
+
 def check_prerequisites(modules: List[AntismashModule]) -> None:
     """ Checks that each module's prerequisites are satisfied. If not satisfied,
         a RuntimeError is raised.
