@@ -240,7 +240,7 @@ def download_resfam(db_dir: str) -> None:
     # So check size and line count as an approximation
     if present_and_size_matches(filename, RESFAM_SIZE) and \
        present_and_line_count_matches(filename, RESFAM_LINES):
-        print("Resfams database present and cheked")
+        print("Resfams database present and checked")
         return
 
     print("Downloading Resfam database")
@@ -298,7 +298,7 @@ def download_clusterblast(db_dir: str) -> None:
     dmnd_filename = os.path.join(db_dir, "clusterblast", "geneclusterprots.dmnd")
 
     if present_and_checksum_matches(dmnd_filename, CLUSTERBLAST_DMND_CHECKSUM):
-        print("ClusterBlast databse present and checked")
+        print("ClusterBlast database present and checked")
         return
 
     print("Downloading ClusterBlast database.")
