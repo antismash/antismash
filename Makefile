@@ -14,11 +14,11 @@ integration: clean
 
 clean:
 	rm -f antismash/detection/hmm_detection/data/bgc_seeds.hmm*
+	find . -name "*.h3?" -exec rm {} +
 	find . -name '*.pyc' | xargs rm -f
 	find . -name '__pycache__' | xargs rm -rf
 
 squeakyclean: clean
-	find . -name "*.h3?" -exec rm {} +
 	find . -name "*.tar.*" -exec rm {} +
 	bash -c 'for d in $$(find . -maxdepth 2 -name "index.html"); do DIR=$$(dirname $$d); rm -r $$DIR; done'
 
