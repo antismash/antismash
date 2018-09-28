@@ -14,6 +14,7 @@ from urllib import error as urlerror
 from urllib import request
 
 import antismash
+from antismash.common.hmmer import ensure_database_pressed
 from antismash.common.subprocessing import execute
 
 PFAM27_URL = "ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam27.0/Pfam-A.hmm.gz"
@@ -158,13 +159,6 @@ def untar_file(filename: str) -> None:
     print("Extraction of %s finished successfully." % (filename.rpartition(os.sep)[2]))
 
 
-# TODO: use common function?
-def compile_pfam(filename: str) -> None:
-    """Compile a HMMer database with hmmpress."""
-    command = ["hmmpress", "-f", filename]
-    execute(command)
-
-
 def delete_file(filename: str) -> None:
     """Delete a file."""
     try:
@@ -232,7 +226,7 @@ def download_pfam(db_dir: str, url: str, version: str, archive_checksum: str, db
     check_diskspace(url)
     download_if_not_present(url, archive_filename, archive_checksum)
     filename = unzip_file(archive_filename, gzip, gzip.zlib.error)  # type: ignore
-    compile_pfam(filename)
+    ensure_database_pressed(filename)
     delete_file(filename + ".gz")
 
 
@@ -295,7 +289,7 @@ def download_resfam(db_dir: str) -> None:
                 handle.write("%s    %d.00 %d.00\n" % (cutoff, value, value))
             i += 1
 
-    compile_pfam(filename)
+    ensure_database_pressed(filename)
 
 
 def download_clusterblast(db_dir: str) -> None:
