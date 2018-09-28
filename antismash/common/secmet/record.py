@@ -313,9 +313,6 @@ class Record:
             self._cluster_numbering[self._clusters[i]] = i + 1  # 1-indexed
         # link any relevant CDS features
         self._link_cluster_to_cds_features(cluster)
-        for cluster_border in self._cluster_borders:
-            if cluster_border.is_contained_by(cluster):
-                cluster.borders.append(cluster_border)
 
     def add_cluster_border(self, cluster_border: ClusterBorder) -> None:
         """ Add the given cluster_border to the record and to the cluster it
@@ -555,6 +552,8 @@ class Record:
                 else:
                     cluster = Cluster(FeatureLocation(dummy_border_feature.location.start, dummy_border_feature.location.end), border.cutoff, border.extent, [])
                     cluster.location = FeatureLocation(dummy_border_feature.location.start, dummy_border_feature.location.end)
+                    if border.rule:
+                        cluster.detection_rules.append(border.rule)
                     cluster.borders.append(border)
                     clusters.append(cluster)
 
@@ -562,13 +561,16 @@ class Record:
             else:
                 cluster = Cluster(FeatureLocation(dummy_border_feature.location.start, dummy_border_feature.location.end), border.cutoff, border.extent, [])
                 cluster.location = FeatureLocation(dummy_border_feature.location.start, dummy_border_feature.location.end)
+                if border.rule:
+                    cluster.detection_rules.append(border.rule)
                 cluster.borders.append(border)
                 clusters.append(cluster)
 
         # check if first and last clusters were supposed to be together
         if self.is_circular() and len(self.seq) - clusters[-1].location.end + clusters[0].location.start < max(clusters[0].extent,clusters[-1].extent):
             clusters[0].location = CompoundLocation([clusters[-1].location,clusters[0].location])
-            clusters[0].borders += clusters[-1].borders
+            # add borders from the across-ori cluster, but skip the duplicates (caused by split-ori cds)
+            clusters[0].borders.extend(border for border in clusters[-1].borders if border not in clusters[0].borders)
             clusters[0].extent = max(clusters[0].extent,clusters[-1].extent)
             clusters[0].cutoff = max(clusters[0].cutoff,clusters[-1].cutoff)
             # if this was not just a single cluster on circular plasmid/chromosome
@@ -581,7 +583,7 @@ class Record:
                 # if at least one sublocation is on the contig's edge
                 if not self.is_circular() and cluster_sublocation.start < 0 or cluster_sublocation.end > len(self.seq):
                     cluster.contig_edge = True
-                elif not cluster.contig_edge:
+                else:
                     cluster.contig_edge = False
                 if cluster_sublocation.start < 0 and cluster_sublocation.end > len(self.seq):
                     cluster_sublocations.append(FeatureLocation(0, len(self.seq)))
