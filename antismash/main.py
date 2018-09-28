@@ -50,7 +50,7 @@ from antismash.modules import (active_site_finder,
                                thiopeptides,
                                tta,
                                )
-from antismash.outputs import html, svg
+from antismash.outputs import html, svg, biosynml
 from antismash.custom_typing import AntismashModule
 
 __version__ = "5.0.0alpha"
@@ -422,6 +422,10 @@ def write_outputs(results: serialiser.AntismashResults, options: ConfigType) -> 
     combined_filename = base_filename + ".gbk"
     logging.debug("Writing final genbank file to '%s'", combined_filename)
     SeqIO.write(bio_records, combined_filename, "genbank")
+
+    combined_filename = base_filename + ".xml"
+    logging.debug("Writing final BiosynML file to '%s'", combined_filename)
+    biosynml.write(results, options, combined_filename)
 
     zipfile = base_filename + ".zip"
     if os.path.exists(zipfile):

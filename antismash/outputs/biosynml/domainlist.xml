@@ -1,0 +1,645 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<biosynml_domains>
+    <domain>
+        <dlid>1</dlid>
+        <default_context>Polyketide</default_context>
+        <class>carrier</class>
+        <function>ACP</function>
+        <subtypes/>
+        <name>Acyl-carrier protein</name>
+        <chemistry>thioester</chemistry>
+        <substrate>building block</substrate>
+        <icon>Domain_ACP.png</icon>
+        <keywords>ACP</keywords>
+        <qualifier name="smcog" ori="predicted" style="antismash">SMCOG1047</qualifier>
+        <qualifier name="hmm-NAME" ori="model" style="antismash">ACP</qualifier>
+    </domain>
+    <domain>
+        <dlid>2</dlid>
+        <default_context>Polyketide</default_context>
+        <class>activation</class>
+        <function>AT</function>
+        <subtypes/>
+        <name>Acyltransferase</name>
+        <chemistry>acyl transfer</chemistry>
+        <substrate>building block</substrate>
+        <icon>Domain_AT.png</icon>
+        <keywords>AT</keywords>
+        <qualifier name="hmm-NAME" ori="model" style="antismash">PKS_AT</qualifier>
+    </domain>
+    <domain>
+        <dlid>3</dlid>
+        <default_context>Polyketide</default_context>
+        <class>linkage</class>
+        <function>KS</function>
+        <subtypes>KS,KSa,KSb,KS0,unknown</subtypes>
+        <name>Ketosynthase</name>
+        <chemistry>condensation</chemistry>
+        <substrate>intermediate</substrate>
+        <icon>Domain_KS.png</icon>
+        <keywords>KS</keywords>
+        <qualifier name="smcog" ori="predicted" style="antismash">SMCOG1022</qualifier>
+        <qualifier name="hmm-NAME" ori="model" style="antismash">PKS_KS</qualifier>
+    </domain>
+    <domain>
+        <dlid>6</dlid>
+        <default_context>Polyketide</default_context>
+        <class>modification</class>
+        <function>ER</function>
+        <subtypes/>
+        <name>Enoylreductase</name>
+        <chemistry>enoylreduction</chemistry>
+        <substrate>intermediate</substrate>
+        <icon>Domain_ER.png</icon>
+        <keywords>ER</keywords>
+        <qualifier name="hmm-NAME" ori="model" style="antismash">PKS_ER</qualifier>
+    </domain>
+    <domain>
+        <dlid>7</dlid>
+        <default_context>NRP</default_context>
+        <class>carrier</class>
+        <function>PCP</function>
+        <subtypes/>
+        <name>Peptidyl-carrier protein</name>
+        <chemistry>thioester</chemistry>
+        <substrate>building block</substrate>
+        <icon>Domain_PCP.png</icon>
+        <keywords>PCP</keywords>
+        <qualifier name="hmm-NAME" ori="model" style="antismash">PCP</qualifier>
+    </domain>
+    <domain>
+        <dlid>8</dlid>
+        <default_context>NRP</default_context>
+        <class>activation</class>
+        <function>A</function>
+        <subtypes/>
+        <name>Adenylation domain</name>
+        <chemistry>adenylation</chemistry>
+        <substrate>building block</substrate>
+        <icon>Domain_A.png</icon>
+        <keywords>A,AMP-binding,adenylation</keywords>
+        <qualifier name="hmm-NAME" ori="model" style="antismash">AMP-binding</qualifier>
+    </domain>
+    <domain>
+        <dlid>10</dlid>
+        <default_context>NRP</default_context>
+        <class>modification</class>
+        <function>E</function>
+        <subtypes/>
+        <name>Epimerase domain</name>
+        <chemistry>epimerization</chemistry>
+        <substrate>intermediate</substrate>
+        <icon>Domain_E.png</icon>
+        <keywords>E</keywords>
+        <qualifier name="hmm-NAME" ori="model" style="antismash">Epimerization</qualifier>
+    </domain>
+    <domain>
+        <dlid>11</dlid>
+        <default_context>Unspecified</default_context>
+        <class>modification</class>
+        <function>Ox</function>
+        <subtypes/>
+        <name>Oxidation domain</name>
+        <chemistry>oxidation</chemistry>
+        <substrate>intermediate</substrate>
+        <icon>Domain_OX.png</icon>
+        <keywords>Ox</keywords>
+    </domain>
+    <domain>
+        <dlid>12</dlid>
+        <default_context>Unspecified</default_context>
+        <class>modification</class>
+        <function>MT</function>
+        <subtypes>N-MT,C-MT,O-MT</subtypes>
+        <name>Methyltransferase</name>
+        <chemistry>methyl transfer</chemistry>
+        <substrate>intermediate,building block</substrate>
+        <icon>Domain_MT.png</icon>
+        <keywords>nMT,oMT,cMT, mehylation</keywords>
+        <qualifier name="smcog" ori="predicted" style="antismash">SMCOG1089</qualifier>
+        <qualifier name="hmm-NAME" ori="model" style="antismash">cMT</qualifier>
+        <qualifier name="hmm-NAME" ori="model" style="antismash">oMT</qualifier>
+        <qualifier name="hmm-NAME" ori="model" style="antismash">nMT</qualifier>
+    </domain>
+    <domain>
+        <dlid>13</dlid>
+        <default_context>NRP</default_context>
+        <class>modification</class>
+        <function>HC</function>
+        <subtypes/>
+        <name>Heterocyclization domain</name>
+        <chemistry>condensation-heterocyclization</chemistry>
+        <substrate>intermediate</substrate>
+        <icon>Domain_HC.png</icon>
+        <keywords>HC</keywords>
+        <qualifier name="hmm-NAME" ori="model" style="antismash">Heterocyclization</qualifier>
+    </domain>
+    <domain>
+        <dlid>14</dlid>
+        <default_context>Unspecified</default_context>
+        <class>termination</class>
+        <function>TE</function>
+        <subtypes>Type I,Type II,Both,Unknown,None,macrocycle-forming</subtypes>
+        <name>Thioesterase</name>
+        <chemistry>thioesterase</chemistry>
+        <substrate>intermediate</substrate>
+        <icon>Domain_TE.png</icon>
+        <keywords>TE</keywords>
+        <qualifier name="hmm-NAME" ori="model" style="antismash">Thioesterase</qualifier>
+    </domain>
+    <domain>
+        <dlid>15</dlid>
+        <default_context>Unspecified</default_context>
+        <class>modification</class>
+        <function>HALO</function>
+        <subtypes>aromatic,non-aromatic</subtypes>
+        <name>Halogenase</name>
+        <chemistry>halogenation</chemistry>
+        <substrate>intermediate,building block</substrate>
+        <icon>Domain_Halo.png</icon>
+        <keywords>halogenase,chlorinating</keywords>
+        <qualifier name="smcog" ori="predicted" style="antismash">SMCOG1119</qualifier>
+    </domain>
+    <domain>
+        <dlid>17</dlid>
+        <default_context>Polyketide</default_context>
+        <class>modification</class>
+        <function>ALy</function>
+        <subtypes>PAL,TAL,HAL</subtypes>
+        <name>Ammoniumlyase</name>
+        <chemistry>non-oxidative deamination</chemistry>
+        <substrate>building block</substrate>
+        <icon>Domain_ALy.png</icon>
+        <keywords>ammoniumlyase,ammonialyase</keywords>
+    </domain>
+    <domain>
+        <dlid>18</dlid>
+        <default_context>Unspecified</default_context>
+        <class>modification</class>
+        <function>Glyc</function>
+        <subtypes>C-glyc,O-Glyc,N-Glyc</subtypes>
+        <name>Glycosyltransferase</name>
+        <chemistry>glycosylation</chemistry>
+        <substrate>intermediate</substrate>
+        <icon>Domain_Glyc.png</icon>
+        <keywords>glycosyl,glycosylation</keywords>
+        <qualifier name="hmm-NAME" ori="model" style="antismash">Cglyc</qualifier>
+        <qualifier name="hmm-NAME" ori="model" style="antismash">CXglyc</qualifier>
+    </domain>
+    <domain>
+        <dlid>19</dlid>
+        <default_context>Polyketide</default_context>
+        <class>modification</class>
+        <function>Pren</function>
+        <subtypes/>
+        <name>Prenyltransferase</name>
+        <chemistry>prenylation</chemistry>
+        <substrate>intermediate</substrate>
+        <icon>Domain_Pren.png</icon>
+        <keywords>prenyl,prenylation,prenyltransferase</keywords>
+    </domain>
+    <domain>
+        <dlid>21</dlid>
+        <default_context>Polyketide</default_context>
+        <class>activation</class>
+        <function>ACL</function>
+        <subtypes/>
+        <name>Acyl-CoA ligase</name>
+        <chemistry>acyl-CoA ligation</chemistry>
+        <substrate>building block</substrate>
+        <icon>Domain_ACL.png</icon>
+        <keywords>CAL,CoA-ligase</keywords>
+        <qualifier name="hmm-NAME" ori="model" style="antismash">CAL_domain</qualifier>
+    </domain>
+    <domain>
+        <dlid>22</dlid>
+        <default_context>Unspecified</default_context>
+        <class>modification</class>
+        <function>AUX</function>
+        <subtypes/>
+        <name>Auxiliary function</name>
+        <chemistry>Unspecified</chemistry>
+        <substrate>intermediate</substrate>
+        <icon>Domain_AUX.png</icon>
+        <keywords/>
+    </domain>
+    <domain>
+        <dlid>27</dlid>
+        <default_context>Unspecified</default_context>
+        <class>Unspecified</class>
+        <function>?</function>
+        <subtypes/>
+        <name>Domain of unknown function</name>
+        <chemistry>unknown</chemistry>
+        <substrate>unknown</substrate>
+        <icon>Domain_UNK.png</icon>
+        <keywords/>
+    </domain>
+    <domain>
+        <dlid>29</dlid>
+        <default_context>Unspecified</default_context>
+        <class>transport</class>
+        <function>Tra</function>
+        <subtypes/>
+        <name>Transport-related function</name>
+        <chemistry>Unspecified</chemistry>
+        <substrate>Unspecified</substrate>
+        <icon>Domain_Tra.png</icon>
+        <keywords>transport,efflux,ABC</keywords>
+    </domain>
+    <domain>
+        <dlid>30</dlid>
+        <default_context>Polyketide</default_context>
+        <class>linkage</class>
+        <function>CLF</function>
+        <subtypes/>
+        <name>Chain length factor</name>
+        <chemistry>condensation</chemistry>
+        <substrate>intermdiate</substrate>
+        <icon>Domain_CLF.png</icon>
+        <keywords>clf,chain length factor</keywords>
+    </domain>
+    <domain>
+        <dlid>31</dlid>
+        <default_context>Polyketide</default_context>
+        <class>activation</class>
+        <function>AGPAT</function>
+        <subtypes/>
+        <name>Acylglycerolphosphat-acyltransferase</name>
+        <chemistry>acyltransfer</chemistry>
+        <substrate>building block</substrate>
+        <icon>Domain_Agpat.png</icon>
+        <keywords>Acylglycerolphosphat-acyltransferase</keywords>
+    </domain>
+    <domain>
+        <dlid>32</dlid>
+        <default_context>Polyketide</default_context>
+        <class>activation</class>
+        <function>MAT</function>
+        <subtypes/>
+        <name>Malonyltransferase</name>
+        <chemistry>acyltransfer</chemistry>
+        <substrate>building block</substrate>
+        <icon>Domain_MAT.png</icon>
+        <keywords>Malonyl-transferase</keywords>
+    </domain>
+    <domain>
+        <dlid>33</dlid>
+        <default_context>Polyketide</default_context>
+        <class>modification</class>
+        <function>ECH</function>
+        <subtypes>ECH1,ECH2</subtypes>
+        <name>Enoyl-CoA-dehydratase</name>
+        <chemistry>dehydratase</chemistry>
+        <substrate>intermediate</substrate>
+        <icon>Domain_ECH.png</icon>
+        <keywords>Enoyl-CoA-dehydratase</keywords>
+    </domain>
+    <domain>
+        <dlid>34</dlid>
+        <default_context>NRP</default_context>
+        <class>modification</class>
+        <function>CT</function>
+        <subtypes/>
+        <name>Carbamoyltransferase</name>
+        <chemistry>carbamoylation</chemistry>
+        <substrate>intermediate</substrate>
+        <icon>Domain_CT.png</icon>
+        <keywords>carbamoyl</keywords>
+    </domain>
+    <domain>
+        <dlid>35</dlid>
+        <default_context>NRP</default_context>
+        <class>modification</class>
+        <function>F</function>
+        <subtypes/>
+        <name>Formylation domain</name>
+        <chemistry>formylation</chemistry>
+        <substrate>intermediate</substrate>
+        <icon>Domain_F.png</icon>
+        <keywords>formyl</keywords>
+    </domain>
+    <domain>
+        <dlid>37</dlid>
+        <default_context>Unspecified</default_context>
+        <class>modification</class>
+        <function>CYP</function>
+        <subtypes/>
+        <name>Cytochrome-dependent oxidase</name>
+        <chemistry>oxidation</chemistry>
+        <substrate>intermediate</substrate>
+        <icon>Domain_CYP.png</icon>
+        <keywords>cyp,P450</keywords>
+    </domain>
+    <domain>
+        <dlid>38</dlid>
+        <default_context>Unspecified</default_context>
+        <class>Unspecified</class>
+        <function>DHC</function>
+        <subtypes>E1a,E1b,E2</subtypes>
+        <name>Dehydrogenase complex</name>
+        <chemistry>dehydrogenation</chemistry>
+        <substrate>building block</substrate>
+        <icon>Domain_DHC.png</icon>
+        <keywords>PDH,PDHC,BCOADHC</keywords>
+    </domain>
+    <domain>
+        <dlid>25</dlid>
+        <default_context>NRP</default_context>
+        <class>docking</class>
+        <function>Dck-nrps</function>
+        <subtypes>N-term,C-term</subtypes>
+        <name>NRPS Docking domain</name>
+        <chemistry>protein-protein interaction</chemistry>
+        <substrate>Unspecified</substrate>
+        <icon>Domain_NRPSdock.png</icon>
+        <keywords>COM,docking</keywords>
+        <qualifier name="hmm-NAME" ori="model" style="antismash">NRPS-COM_Nterm</qualifier>
+        <qualifier name="hmm-NAME" ori="model" style="antismash">NRPS-COM_Cterm</qualifier>
+    </domain>
+    <domain>
+        <dlid>26</dlid>
+        <default_context>Polyketide</default_context>
+        <class>docking</class>
+        <function>Dck-pks</function>
+        <subtypes>N-term,C-term,trans-AT</subtypes>
+        <name>PKS Docking domain</name>
+        <chemistry>protein-protein interaction</chemistry>
+        <substrate>Unspecified</substrate>
+        <icon>Domain_PKSdock.png</icon>
+        <keywords>docking</keywords>
+        <qualifier name="hmm-NAME" ori="model" style="antismash">PKS_Docking_Nterm</qualifier>
+        <qualifier name="hmm-NAME" ori="model" style="antismash">PKS_Docking_Cterm</qualifier>
+        <qualifier name="hmm-NAME" ori="model" style="antismash">Trans-AT_docking</qualifier>
+    </domain>
+    <domain>
+        <dlid>9</dlid>
+        <default_context>NRP</default_context>
+        <class>linkage</class>
+        <function>C</function>
+        <subtypes>unknown,LCL,DCL,Dual,Starter,Heterocyclization,Other</subtypes>
+        <name>Condensation domain</name>
+        <chemistry>condensation</chemistry>
+        <substrate>intermediate</substrate>
+        <icon>Domain_C.png</icon>
+        <keywords>DCL,LCL,C,Dual</keywords>
+        <qualifier name="hmm-NAME" ori="model" style="antismash">Condensation_LCL</qualifier>
+        <qualifier name="hmm-NAME" ori="model" style="antismash">Condensation_DCL</qualifier>
+        <qualifier name="hmm-NAME" ori="model" style="antismash">Condensation_Dual</qualifier>
+        <qualifier name="hmm-NAME" ori="model" style="antismash">Condensation_Starter</qualifier>
+    </domain>
+    <domain>
+        <dlid>39</dlid>
+        <default_context>Polyketide</default_context>
+        <class>activation</class>
+        <function>GAT</function>
+        <subtypes/>
+        <name>Glyceryl transferase phosphatase</name>
+        <chemistry>dephosphorylase</chemistry>
+        <substrate>building block</substrate>
+        <icon>Domain_GAT.png</icon>
+        <keywords>GAT</keywords>
+    </domain>
+    <domain>
+        <dlid>23</dlid>
+        <default_context>NRP</default_context>
+        <class>Unspecified</class>
+        <function>Any-NRPS</function>
+        <subtypes/>
+        <name>Unspecified NRPS-related domain</name>
+        <chemistry>other</chemistry>
+        <substrate>other</substrate>
+        <icon>Domain_NRPS.png</icon>
+        <keywords/>
+    </domain>
+    <domain>
+        <dlid>24</dlid>
+        <default_context>Polyketide</default_context>
+        <class>Unspecified</class>
+        <function>Any-PKS</function>
+        <subtypes/>
+        <name>Unspecified PKS-related domain</name>
+        <chemistry>other</chemistry>
+        <substrate>other</substrate>
+        <icon>Domain_PKS.png</icon>
+        <keywords/>
+    </domain>
+    <domain>
+        <dlid>28</dlid>
+        <default_context>Unspecified</default_context>
+        <class>regulation</class>
+        <function>Reg</function>
+        <subtypes>LuxR-like,LysR-like</subtypes>
+        <name>Regulatory function</name>
+        <chemistry>Unspecified</chemistry>
+        <substrate>Unspecified</substrate>
+        <icon>Domain_Reg.png</icon>
+        <keywords>regulator</keywords>
+    </domain>
+    <domain>
+        <dlid>40</dlid>
+        <default_context>Polyketide</default_context>
+        <class>linkage</class>
+        <function>HCS</function>
+        <subtypes/>
+        <name>HMG-CoA-Synthase</name>
+        <chemistry>Aldol Addition</chemistry>
+        <substrate>intermediate</substrate>
+        <icon>Domain_HCS.png</icon>
+        <keywords>HMG-CoA</keywords>
+    </domain>
+    <domain>
+        <dlid>41</dlid>
+        <default_context>Unspecified</default_context>
+        <class>modification</class>
+        <function>GCT</function>
+        <subtypes>A, B</subtypes>
+        <name>Glutaconate-CoA-transferasee</name>
+        <chemistry>decarboxylation</chemistry>
+        <substrate>intermediate</substrate>
+        <icon>Domain_GCT.png</icon>
+        <keywords>Gluconate</keywords>
+    </domain>
+    <domain>
+        <dlid>43</dlid>
+        <default_context>Unspecified</default_context>
+        <class>modification</class>
+        <function>Pph</function>
+        <subtypes/>
+        <name>Phosphatase</name>
+        <chemistry>dephosphorylation</chemistry>
+        <substrate>intermediate</substrate>
+        <icon>Domain_Pph.png</icon>
+        <keywords>phosphatase</keywords>
+    </domain>
+    <domain>
+        <dlid>44</dlid>
+        <default_context>Unspecified</default_context>
+        <class>modification</class>
+        <function>Dec</function>
+        <subtypes/>
+        <name>Decarboxylase</name>
+        <chemistry>decarboxylation</chemistry>
+        <substrate>intermediate</substrate>
+        <icon>Domain_Dec.png</icon>
+        <keywords>decarboxylase</keywords>
+    </domain>
+    <domain>
+        <dlid>45</dlid>
+        <default_context>Polyketide</default_context>
+        <class>activation</class>
+        <function>ACT</function>
+        <subtypes/>
+        <name>Acetyl-transferase</name>
+        <chemistry>acetyl transfer</chemistry>
+        <substrate>building block</substrate>
+        <icon>Domain_ACT.png</icon>
+        <keywords>acetyltransferase</keywords>
+    </domain>
+    <domain>
+        <dlid>46</dlid>
+        <default_context>Unspecified</default_context>
+        <class>modification</class>
+        <function>GNAT</function>
+        <subtypes/>
+        <name>Gen5-related N-acetyltransferase</name>
+        <chemistry>N-acetylation</chemistry>
+        <substrate>unspecified</substrate>
+        <icon>Domain_GNAT.png</icon>
+        <keywords>GNAT</keywords>
+    </domain>
+    <domain>
+        <dlid>4</dlid>
+        <default_context>Polyketide</default_context>
+        <class>modification</class>
+        <function>KR</function>
+        <subtypes>unknown,A-type,B-type,A1,A2,B1,B2,C1,C2</subtypes>
+        <name>Ketoreductase</name>
+        <chemistry>ketoreduction</chemistry>
+        <substrate>intermediate</substrate>
+        <icon>Domain_KR.png</icon>
+        <keywords>KR</keywords>
+        <qualifier name="hmm-NAME" ori="model" style="antismash">PKS_KR</qualifier>
+    </domain>
+    <domain>
+        <dlid>47</dlid>
+        <default_context>Polyketide,NRP</default_context>
+        <class>activation</class>
+        <function>Ppt</function>
+        <subtypes/>
+        <name>4-phosphopantetheinyl transferase</name>
+        <chemistry>transfer of phosphopantetheinyl moiety to apo-ACP</chemistry>
+        <substrate>unspecified</substrate>
+        <icon>Domain_Ppt.png</icon>
+        <keywords>Ppant</keywords>
+        <qualifier name="hmm-NAME" ori="model" style="antismash">ACPS</qualifier>
+    </domain>
+    <domain>
+        <dlid>49</dlid>
+        <default_context>NRP</default_context>
+        <class>modification</class>
+        <function>A-Ox</function>
+        <subtypes/>
+        <name>adenylation-oxidation domain</name>
+        <chemistry>adenylation and oxidation</chemistry>
+        <substrate>building block</substrate>
+        <icon>Domain_AOx.png</icon>
+        <keywords/>
+        <qualifier name="hmm-NAME" ori="model" style="antismash">A-OX</qualifier>
+    </domain>
+    <domain>
+        <dlid>48</dlid>
+        <default_context>Polyketide</default_context>
+        <class>modification</class>
+        <function>Cy</function>
+        <subtypes/>
+        <name>aromatic ring cyclase</name>
+        <chemistry>chromone ring formation</chemistry>
+        <substrate>intermediate</substrate>
+        <icon>Domain_Cy.png</icon>
+        <keywords>chromone,cyclase,aromatase</keywords>
+        <qualifier name="hmm-NAME" ori="model" style="antismash">Polyketide_cyc2</qualifier>
+        <qualifier name="hmm-NAME" ori="model" style="antismash">Polyketide_cyc</qualifier>
+    </domain>
+    <domain>
+        <dlid>20</dlid>
+        <default_context>Polyketide,NRP</default_context>
+        <class>termination</class>
+        <function>Red</function>
+        <subtypes/>
+        <name>Terminal reductase domain</name>
+        <chemistry>reductive release</chemistry>
+        <substrate>intermediate</substrate>
+        <icon>Domain_RED.png</icon>
+        <keywords>Red,TD</keywords>
+        <qualifier name="hmm-NAME" ori="model" style="antismash">TD</qualifier>
+    </domain>
+    <domain>
+        <dlid>42</dlid>
+        <default_context>Unspecified</default_context>
+        <class>modification</class>
+        <function>Deh</function>
+        <subtypes/>
+        <name>Dehydrogenase</name>
+        <chemistry>dehydrogenation</chemistry>
+        <substrate>intermediate</substrate>
+        <icon>Domain_Deh.png</icon>
+        <keywords>dehydrogenase</keywords>
+        <qualifier name="hmm-NAME" ori="model" style="antismash">NAD_binding_4</qualifier>
+    </domain>
+    <domain>
+        <dlid>5</dlid>
+        <default_context>Polyketide</default_context>
+        <class>modification</class>
+        <function>DH</function>
+        <subtypes>DH,DHt</subtypes>
+        <name>Dehydratase</name>
+        <chemistry>dehydration</chemistry>
+        <substrate>intermediate</substrate>
+        <icon>Domain_DH.png</icon>
+        <keywords>DH,DHt,DH2,PS</keywords>
+        <qualifier name="hmm-NAME" ori="model" style="antismash">PKS_DH</qualifier>
+        <qualifier name="hmm-NAME" ori="model" style="antismash">PKS_DHt</qualifier>
+    </domain>
+    <domain>
+        <dlid>16</dlid>
+        <default_context>NRP</default_context>
+        <class>modification</class>
+        <function>Amut</function>
+        <subtypes>TAM,PAM,LAM</subtypes>
+        <name>Aminomutase</name>
+        <chemistry>amino group migration</chemistry>
+        <substrate>building block</substrate>
+        <icon>Domain_Amut.png</icon>
+        <keywords>aminomutase</keywords>
+    </domain>
+    <domain>
+        <dlid>50</dlid>
+        <default_context>RIP</default_context>
+        <class>precursor</class>
+        <function>Citp</function>
+        <subtypes/>
+        <name>cittilin precursor</name>
+        <chemistry>precursor peptide</chemistry>
+        <substrate>building block</substrate>
+        <icon>Domain_Citp.png</icon>
+        <keywords>cittilin</keywords>
+    </domain>
+    <domain>
+        <dlid>36</dlid>
+        <default_context>NRP</default_context>
+        <class>modification</class>
+        <function>AMT</function>
+        <subtypes>class-1/2,class-3,class-4,class-5</subtypes>
+        <name>aminotransferase</name>
+        <chemistry>amino group transfer</chemistry>
+        <substrate>intermediate</substrate>
+        <icon>Domain_AMT.png</icon>
+        <keywords>aminotransfer,Aminotran</keywords>
+        <qualifier name="hmm-NAME" ori="model" style="antismash">Aminotran_1_2</qualifier>
+        <qualifier name="hmm-NAME" ori="model" style="antismash">Aminotran_3</qualifier>
+        <qualifier name="hmm-NAME" ori="model" style="antismash">Aminotran_4</qualifier>
+        <qualifier name="hmm-NAME" ori="model" style="antismash">Aminotran_5</qualifier>
+    </domain>
+    <version>30</version>
+</biosynml_domains>
