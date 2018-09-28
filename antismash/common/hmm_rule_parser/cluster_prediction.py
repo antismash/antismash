@@ -158,7 +158,10 @@ def find_clusters(record: Record, cds_by_cluster_type: Dict[str, Set[str]],
         rule = rules_by_name[cluster_type]
         cutoff = rule.cutoff
         extent = rule.extent
-        for cds_feature_sublocation in sorted ([ cds_feature_sublocation for cds_feature in cds_features for cds_feature_sublocation in cds_feature.location.parts ], key=lambda cds_feature_sublocation: cds_feature_sublocation.start ):
+        # get all cds feature sublocations into one list
+        cds_feature_sublocations = [ cds_feature_sublocation for cds_feature in cds_features for cds_feature_sublocation in cds_feature.location.parts ]
+        # iterate through cds sublocations to build borders
+        for cds_feature_sublocation in sorted (cds_feature_sublocations, key=lambda cds_feature_sublocation: cds_feature_sublocation.start ):
             if len(borders) > 0:
                 for dummy_sub_location in borders[-1].location.parts:
                     dummy_sub_location_feature = Feature(FeatureLocation(dummy_sub_location.start - cutoff, dummy_sub_location.end + cutoff), feature_type="dummy")
@@ -186,9 +189,10 @@ def find_clusters(record: Record, cds_by_cluster_type: Dict[str, Set[str]],
     # check if first and last borders of each metabolite were supposed to be together on a circular record
     if len(borders) > 1 and record.is_circular():
         for i in reversed(range(len(borders))): # changed according to https://stackoverflow.com/a/1207485
-            for j in reversed(range(len(borders)-1)):
+            for j in reversed(range(len(borders))):
+                # combine borders closer that the cutoff across the ori if they represent the same product
                 if len(record) - borders[j].location.end + borders[i].location.start < max(borders[i].cutoff,borders[j].cutoff) and borders[j].product == borders[i].product:
-                    borders[i].location = CompoundLocation([part for part in borders[j].location.parts] + [part for part in borders[i].location.parts])
+                    borders[j].location = CompoundLocation([part for part in borders[j].location.parts] + [part for part in borders[i].location.parts])
                     # we can safely remove, because we will be never returning to [i] in none of the loops, inner or outer
                     borders.remove(borders[i])
 
