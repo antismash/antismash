@@ -6,7 +6,7 @@
 from collections import OrderedDict
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
+from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation, BeforePosition, AfterPosition
 from Bio.Seq import Seq
 
 from antismash.common.secmet.locations import (
@@ -59,13 +59,24 @@ class Feature:
         if not 0 <= start <= len(self.location) // 3 - 1:
             raise ValueError("Protein start coordinate must be contained by the feature")
 
-        if not 1 <= end <= len(self.location) // 3:
-            raise ValueError("Protein end coordinate must be contained by the feature")
+        if end > len(self.location) // 3: # othewise fails on NZ_QUMU01000015.1 and similar records
+            fuzzy_end = True
+            end = len(self.location) // 3
+        elif end <= start:
+            raise ValueError("Protein end coordinate can not less than the start position")
+        else:
+            fuzzy_end = False
 
         if start >= end:
             raise ValueError("Protein start coordinate must be less than the end coordinate")
 
         dna_start, dna_end = convert_protein_position_to_dna(start, end, self.location)
+
+        if fuzzy_end == True:
+            if self.location.strand == -1:
+                dna_start = BeforePosition(dna_start)
+            else:
+                dna_end = AfterPosition(dna_end)
 
         if not 0 <= dna_start - self.location.start < self.location.end - 2:
             raise ValueError("Protein coordinate start %d (nucl %d) is outside feature %s" % (start, dna_start, self))
