@@ -44,6 +44,9 @@ class AntismashModule(ModuleType):
     def is_enabled(options: ConfigType) -> bool: ...
 
     @staticmethod
+    def prepare_data() -> List[str]: ...
+
+    @staticmethod
     def check_prereqs() -> List[str]: ...
 
     @staticmethod

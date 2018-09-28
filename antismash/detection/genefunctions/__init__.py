@@ -8,7 +8,7 @@ import logging
 import os
 from typing import Any, Dict, List, Optional
 
-from antismash.common import path, module_results, subprocessing
+from antismash.common import hmmer, module_results, path
 from antismash.common.secmet import Record
 from antismash.config import ConfigType, get_config
 from antismash.config.args import ModuleArgs
@@ -74,6 +74,12 @@ def check_options(_options: ConfigType) -> List[str]:
     return []
 
 
+def prepare_data() -> List[str]:
+    """ Ensures packaged data is fully prepared """
+    database = path.get_full_path(__file__, 'data', 'smcogs.hmm')
+    return hmmer.ensure_database_pressed(database, return_not_raise=True)
+
+
 def check_prereqs() -> List[str]:
     """Check for prerequisites
     """
@@ -87,21 +93,8 @@ def check_prereqs() -> List[str]:
     if path.locate_file(database) is None:
         failure_messages.append('Failed to locate Resfam database in %s' % database)
 
-    database = path.get_full_path(__file__, 'data', 'smcogs.hmm')
-    if path.locate_file(database) is None:
-        failure_messages.append('Failed to locate smCOG database at %s' % database)
+    failure_messages.extend(prepare_data())
 
-    for ext in ['.h3f', '.h3i', '.h3m', '.h3p']:
-        binary = "%s%s" % (database, ext)
-        if path.locate_file(binary) is None:
-            # regenerate them
-            if not path.locate_executable('hmmpress'):
-                failure_messages.append("smCOG database requires hmmpress, but hmmpress not available")
-                break
-            result = subprocessing.run_hmmpress(database)
-            if not result.successful():
-                failure_messages.append("Failed to hmmpress %s: %s" % (database, result.stderr.rstrip()))
-            break
     return failure_messages
 
 
