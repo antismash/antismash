@@ -31,7 +31,6 @@ def convert_protein_position_to_dna(start: int, end: int, location: FeatureLocat
     dna_end = end * 3
 
     processed = 0
-    last_end = location.bio_start
     start_found = False
     end_found = False
     for part in location.parts:
@@ -39,10 +38,10 @@ def convert_protein_position_to_dna(start: int, end: int, location: FeatureLocat
             break
         if not start_found and dna_start < len(part) + processed:
             start_found = True
-            dna_start = part.bio_start - dna_start + processed if location.strand == -1 else part.bio_start + dna_start - processed
+            dna_start = part.bio_start - dna_start + processed if part.strand == -1 else part.bio_start + dna_start - processed
         if not end_found and dna_end <= len(part) + processed:
             end_found = True
-            dna_end = part.bio_start - dna_end + processed if location.strand == -1 else part.bio_start + dna_end - processed
+            dna_end = part.bio_start - dna_end + processed if part.strand == -1 else part.bio_start + dna_end - processed
         processed += len(part)
 
     assert start_found
