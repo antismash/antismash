@@ -7,7 +7,7 @@ import logging
 import os
 from typing import Any, Dict, Iterable, List, Optional
 
-from antismash.common import fasta, module_results, pfamdb, subprocessing
+from antismash.common import fasta, module_results, path, pfamdb, subprocessing
 from antismash.common.secmet import Record, CDSFeature
 from antismash.common.secmet.features import PFAMDomain
 from antismash.common.secmet.locations import location_from_string
@@ -146,3 +146,39 @@ def run_hmmer(record: Record, features: Iterable[CDSFeature], max_evalue: float,
     hmmscan_results = subprocessing.run_hmmscan(database, query_sequence, opts=["--cut_tc"])
     hits = build_hits(record, hmmscan_results, min_score, max_evalue, database)
     return HmmerResults(record.id, max_evalue, min_score, database, tool, hits)
+
+
+def ensure_database_pressed(filepath: str, return_not_raise: bool = False) -> List[str]:
+    """ Ensures that the given HMMer database exists and that the hmmpress
+        generated files aren't out of date.
+
+        Arguments:
+            filepath: the path to the HMMer database
+            return_not_raise: whether to catch errors and return their messages as strings
+
+        Returns:
+            any encountered error messages, will never be populated without return_not_raise == True
+    """
+    try:
+        modified_time = os.path.getmtime(filepath)
+    except FileNotFoundError as err:
+        if not return_not_raise:
+            raise
+        return [str(err)]
+    components = ["{}{}".format(filepath, ext) for ext in ['.h3f', '.h3i', '.h3m', '.h3p']]
+    outdated = False
+    for component in components:
+        if not path.locate_file(component) or os.path.getmtime(component) < modified_time:
+            logging.info("%s does not exist or is out of date, hmmpressing %s",
+                         component, filepath)
+            outdated = True
+            break
+
+    if outdated:
+        result = subprocessing.run_hmmpress(filepath)
+        if not result.successful():
+            msg = "Failed to hmmpress {!r}: {}".format(filepath, result.stderr)
+            if not return_not_raise:
+                raise RuntimeError(msg)
+            return [msg]
+    return []
