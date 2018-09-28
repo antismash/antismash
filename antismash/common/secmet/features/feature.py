@@ -129,30 +129,24 @@ class Feature:
                 or location.start in self.location
                 or location.end - 1 in self.location)
 
-    def is_contained_by(self, other: Union["Feature", FeatureLocation, CompoundLocation]) -> bool:
+    def is_contained_by(self, other: Union["Feature", FeatureLocation]) -> bool:
         """ Returns True if the given feature is wholly contained by this
             feature.
         """
-        sublocations_found = 0
         if isinstance(other, Feature):
-            for self_sublocation in self.location.parts:
-                for other_sublocation in other.location.parts:
-                    # -1 to account for the non-inclusive end
-                    if self_sublocation.start in other_sublocation and self_sublocation.end - 1 in other_sublocation:
-                        sublocations_found = sublocations_found + 1
-                        break # break in order to avoid scoring the query sublocation twice in weirdly overlapping subjects
-            return len(self.location.parts) == sublocations_found
-
-        if isinstance(other, FeatureLocation):
-            for self_sublocation in self.location.parts:
-                for other_sublocation in other.parts:
-                    # -1 to account for the non-inclusive end
-                    if self_sublocation.start in other_sublocation and self_sublocation.end - 1 in other_sublocation:
-                        sublocations_found += 1
-                        break # break in order to avoid scoring the query sublocation twice in weirdly overlapping subjects
-            return len(self.location.parts) == sublocations_found
-
-        raise TypeError("Container must be a Feature or a FeatureLocation or a CompoundLocation, not %s" % type(other))
+            other_location = other.location
+        elif isinstance(other, FeatureLocation):
+            other_location = other
+        else:
+            raise TypeError("Container must be a Feature or a FeatureLocation, not %s" % type(other))
+        sublocations_found = 0
+        for self_sublocation in self.location.parts:
+            for other_sublocation in other_location.parts:
+                # -1 to account for the non-inclusive end
+                if self_sublocation.start in other_sublocation and self_sublocation.end - 1 in other_sublocation:
+                    sublocations_found = sublocations_found + 1
+                    break # break in order to avoid scoring the query sublocation twice in weirdly overlapping subjects
+        return len(self.location.parts) == sublocations_found
 
     def to_biopython(self, qualifiers: Dict[str, Any] = None) -> List[SeqFeature]:
         """ Converts this feature into one or more SeqFeature instances.
