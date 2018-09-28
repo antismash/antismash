@@ -90,8 +90,8 @@
                   {%- endfor %}
 
                 </td>
-                <td class="digits">{{cluster.location.start + 1}}</td>
-                <td class="digits">{{cluster.location.end}}</td>
+                <td class="digits">{{cluster.location.bio_start + 1}}</td>
+                <td class="digits">{{cluster.location.bio_end}}</td>
                 <td>{{cluster.best_knowncluster_name}}</td>
                 {% set similarity = cluster.best_knowncluster_similarity %}
                 {% if similarity > 75 %}
