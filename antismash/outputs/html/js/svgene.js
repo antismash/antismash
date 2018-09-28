@@ -23,9 +23,9 @@ svgene.geneArrowPoints = function (orf, height, offset, border, scale) {
       return points;
   }
   if (orf.strand == -1) {
-      var point_start = scale(orf.start);
-      var end = scale(orf.end);
-      var box_start = Math.min(scale(orf.start) + (2*border), end);
+      var point_start = scale(orf.end);
+      var end = scale(orf.start);
+      var box_start = Math.min(scale(orf.end) + (2*border), end);
       points = "" + point_start + "," + middle;
       points += " " + box_start + "," + top_;
       points += " " + end + "," + top_;
@@ -84,14 +84,14 @@ svgene.drawOrderedRegionOrfs = function(region, chart, all_orfs, borders, tta_co
     .attr("class", "svgene-line");
   // rect containing first and last ORF triggering border detection
   cluster_bars.append("rect")
-    .attr("width", function(d){ return scale(d.end) - scale(d.start)})
+    .attr("width", function(d){ return Math.abs(scale(d.end) - scale(d.start))})
     .attr("height", bar_size)
-    .attr("x", function(d){ return scale(d.start)})
+    .attr("x", function(d){ return Math.min(scale(d.start), scale(d.end))})
     .attr("y", function(d){ return d.height * (bar_size + vertical_bar_gap) + offset})
     .attr("class", function(d){ return "svgene-border-" + d.tool});
   // cluster name
   cluster_bars.append("text")
-    .attr("x", function(d) { return scale(d.start) + 1 })
+    .attr("x", function(d) { return Math.min(scale(d.start), scale(d.end)) + 1 })
     .attr("y", function(d) { return (d.height + 2) * (bar_size) + d.height + offset - (2 - d.height)})
     .attr("dy", "-1em")
     .style("font-size", "xx-small")
@@ -145,6 +145,23 @@ svgene.drawRegion = function(id, region, height, width) {
   var x = d3.scale.linear()
     .domain([region.start, region.end])
     .range([0, width]);
+  // only in rare cases, reassign the scale to a divergent function
+  if (region.start > region.end) {
+      x = function(position) {
+          // pre-ori scale
+          if (position < region.start) {
+            return d3.scale.linear()
+                  .domain([1, region.end])
+                  .range([(region.sequence_length - region.start + region.end)/width, width])(position);
+          }
+          // post-ori scale
+          else {
+            return d3.scale.linear()
+                  .domain([region.start, region.sequence_length])
+                  .range([0, (region.sequence_length - region.start + region.end)/width])(position);
+          }
+      };
+  }
   svgene.drawOrderedRegionOrfs(region, chart, all_orfs, all_borders, all_ttas,
                                 x, idx, height, width, offset);
   container.selectAll("div")

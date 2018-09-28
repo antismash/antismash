@@ -65,8 +65,8 @@ def convert_regions(record: Record, options: ConfigType, result: Dict[str, Modul
         tta_codons = fetch_tta_features(region, result)
 
         js_region = {}  # type: Dict[str, Any]
-        js_region['start'] = int(region.location.start) + 1
-        js_region['end'] = int(region.location.end)
+        js_region['start'] = int(region.location.bio_start) + 1
+        js_region['end'] = int(region.location.bio_end)
         js_region['idx'] = region.get_region_number()
         mibig_entries = mibig_results.get(js_region['idx'], {})
         js_region['orfs'] = convert_cds_features(record, region.cds_children, options, mibig_entries)
@@ -75,6 +75,7 @@ def convert_regions(record: Record, options: ConfigType, result: Dict[str, Modul
         js_region['type'] = "-".join(region.products)
         js_region['products'] = region.products
         js_region['anchor'] = "r%dc%d" % (record.record_index, region.get_region_number())
+        js_region['sequence_length'] = len(record.seq)
 
         js_regions.append(js_region)
 
@@ -88,8 +89,8 @@ def convert_cds_features(record: Record, features: Iterable[CDSFeature], options
     js_orfs = []
     for feature in features:
         gene_function = str(feature.gene_function)
-        js_orfs.append({"start": feature.location.start + 1,
-                        "end": feature.location.end,
+        js_orfs.append({"start": int(feature.location.bio_start) + 1,
+                        "end": int(feature.location.bio_end),
                         "strand": feature.strand or 1,
                         "locus_tag": feature.get_name(),
                         "type": gene_function,
@@ -105,23 +106,23 @@ def get_clusters_from_region_parts(superclusters: Iterable[SuperCluster],
     for supercluster in superclusters:
         unique_clusters.update(supercluster.clusters)
     js_clusters = []
-    clusters = sorted(unique_clusters, key=lambda x: (x.location.start, -len(x.location), x.product))
-    subregions = sorted(subregions, key=lambda x: (x.location.start, -len(x.location), x.tool))
+    clusters = sorted(unique_clusters, key=lambda x: (x.location.bio_start, -len(x.location), x.product))
+    subregions = sorted(subregions, key=lambda x: (x.location.bio_start, -len(x.location), x.tool))
     for i, subregion in enumerate(subregions):
-        js_cluster = {"start": subregion.location.start,
-                      "end": subregion.location.end,
+        js_cluster = {"start": int(subregion.location.bio_start) + 1,
+                      "end": int(subregion.location.bio_end),
                       "tool": subregion.tool,
-                      "neighbouring_start": subregion.location.start,
-                      "neighbouring_end": subregion.location.end,
+                      "neighbouring_start": int(subregion.location.bio_start) + 1,
+                      "neighbouring_end": int(subregion.location.bio_end),
                       "product": subregion.anchor,
                       "height": i}
         js_clusters.append(js_cluster)
     for i, cluster in enumerate(clusters):
-        js_cluster = {"start": cluster.core_location.start,
-                      "end": cluster.core_location.end,
+        js_cluster = {"start": int(cluster.core_location.bio_start) + 1,
+                      "end": int(cluster.core_location.bio_end),
                       "tool": cluster.tool,
-                      "neighbouring_start": cluster.location.start,
-                      "neighbouring_end": cluster.location.end,
+                      "neighbouring_start": int(cluster.location.bio_start) + 1,
+                      "neighbouring_end": int(cluster.location.bio_end),
                       "product": cluster.product,
                       "height": i + len(subregions)}
         js_clusters.append(js_cluster)
@@ -132,11 +133,11 @@ def get_clusters_from_region_parts(superclusters: Iterable[SuperCluster],
         assert isinstance(parent, Region), type(parent)
         if len(parent.superclusters) == 1 and not parent.subregions and len(supercluster.clusters) == 1:
             continue
-        js_cluster = {"start": supercluster.location.start + 1,
-                      "end": supercluster.location.end - 1,
+        js_cluster = {"start": int(supercluster.location.bio_start) + 1,
+                      "end": int(supercluster.location.bio_end),
                       "tool": "rule-based-clusters",
-                      "neighbouring_start": supercluster.location.start,
-                      "neighbouring_end": supercluster.location.end,
+                      "neighbouring_start": int(supercluster.location.bio_start) + 1,
+                      "neighbouring_end": int(supercluster.location.bio_end),
                       "product": "SC %d: %s" % (supercluster.get_supercluster_number(), supercluster.kind)}
         js_cluster['height'] = i + len(clusters) + len(subregions) + 1
         js_clusters.append(js_cluster)
@@ -147,8 +148,8 @@ def convert_tta_codons(tta_codons: List[Feature]) -> List[Dict[str, Any]]:
     """Convert found TTA codon features to JSON"""
     js_codons = []
     for codon in tta_codons:
-        js_codons.append({'start': codon.location.start + 1,
-                          'end': codon.location.end,
+        js_codons.append({'start': int(codon.location.bio_start) + 1,
+                          'end': int(codon.location.bio_end),
                           'strand': codon.strand if codon.strand is not None else 1})
     return js_codons
 
