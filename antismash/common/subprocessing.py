@@ -235,7 +235,8 @@ def run_hmmsearch(query_hmmfile: str, target_sequence: str, use_tempfile: bool =
 
 
 def run_hmmpress(hmmfile: str) -> RunResult:
-    """ Run hmmpress on a HMMer model
+    """ Run hmmpress on a HMMer model, overwriting any previous generated files
+        (e.g. '.h3i').
 
         Arguments:
             hmmfile: the path to the HMMer model
@@ -243,7 +244,7 @@ def run_hmmpress(hmmfile: str) -> RunResult:
         Returns:
             a RunResult instance
     """
-    return execute(["hmmpress", hmmfile])
+    return execute(["hmmpress", "-f", hmmfile])
 
 
 def run_hmmpfam2(query_hmmfile: str, target_sequence: str, extra_args: List[str] = None
