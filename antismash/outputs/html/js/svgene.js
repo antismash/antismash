@@ -142,7 +142,7 @@ svgene.drawRegion = function(id, region, height, width) {
 
   var idx = svgene.unique_id++;
   var offset = height/10;
-  var x = d3.scale.linear()
+  var x = d3.scaleLinear()
     .domain([region.start, region.end])
     .range([0, width]);
   // only in rare cases, reassign the scale to a divergent function
@@ -150,13 +150,13 @@ svgene.drawRegion = function(id, region, height, width) {
       x = function(position) {
           // pre-ori scale
           if (position < region.start) {
-            return d3.scale.linear()
+            return d3.scaleLinear()
                   .domain([1, region.end])
                   .range([(region.sequence_length - region.start + region.end)/width, width])(position);
           }
           // post-ori scale
           else {
-            return d3.scale.linear()
+            return d3.scaleLinear()
                   .domain([region.start, region.sequence_length])
                   .range([0, (region.sequence_length - region.start + region.end)/width])(position);
           }
