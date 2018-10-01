@@ -128,9 +128,13 @@ def locations_overlap(first: FeatureLocation, second: FeatureLocation) -> bool:
         Returns:
             True if the locations overlap, otherwise False
     """
-    return (first.start in second or first.end - 1 in second
-            or second.start in first or second.end - 1 in first)
-
+    for primary in first.parts:
+        for secondary in second.parts:
+            # -1 to account for the non-inclusive end
+            if primary.start in secondary or primary.end - 1 in secondary or secondary.start in primary or secondary.end - 1 in primary:
+                return True
+    # none of sublocations overlap
+    return False
 
 def location_contains_other(outer: FeatureLocation, inner: FeatureLocation) -> bool:
     """ Returns True if the first of two provided FeatureLocations contains the
