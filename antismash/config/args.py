@@ -67,7 +67,7 @@ class AntismashParser(argparse.ArgumentParser):
         # with the same label
         if basic:
             self._basic_help_groups.add(title)
-        return super().add_argument_group(title, description, **kwargs)  # type: ignore
+        return super().add_argument_group(title, description, **kwargs)
 
     def print_help(self, file_handle: IO = None, show_all: bool = False
                    ) -> None:
@@ -154,7 +154,7 @@ class AntismashParser(argparse.ArgumentParser):
             for arg in parent.parser.get_actions():
                 titles[parent.title][parent.prefix].extend(construct_arg_text(arg, dests, values))
 
-        for arg in self._actions:  # type: ignore
+        for arg in self._actions:
             titles["Core options"]["core"].extend(construct_arg_text(arg, dests, values))
 
         for title, prefixes in titles.items():
@@ -184,15 +184,15 @@ Options
     def format_usage(self) -> str:
         """ Custom usage generator """
         if self._show_all:
-            formatter = self._get_formatter()  # type: ignore
+            formatter = self._get_formatter()
             formatter.add_usage(self.usage, self._actions, self._mutually_exclusive_groups)  # type: ignore
             return formatter.format_help()
         return "usage: {prog} [-h] [options ..] sequence".format(prog=self.prog) + "\n"
 
     def _get_args_text(self) -> str:
         # fetch arg lists using formatter
-        formatter = self._get_formatter()  # type: ignore
-        for action_group in self._action_groups:  # type: ignore
+        formatter = self._get_formatter()
+        for action_group in self._action_groups:
             if action_group.title == "positional arguments":
                 formatter.start_section("arguments")
                 formatter.add_arguments(action_group._group_actions)  # pylint: disable=protected-access
@@ -202,11 +202,11 @@ Options
 
     def _get_opts_text(self) -> str:
         """ fetch opt lists using formatter """
-        formatter = self._get_formatter()  # type: ignore
-        for action_group in self._action_groups:  # type: ignore
+        formatter = self._get_formatter()
+        for action_group in self._action_groups:
             if action_group.title in ["optional arguments"]:
                 formatter.add_arguments(action_group._group_actions)  # pylint: disable=protected-access
-        for action_group in self._action_groups:  # type: ignore
+        for action_group in self._action_groups:
             if action_group.title not in ["optional arguments", "positional arguments"]:
                 show_opt = self._show_all
                 if not show_opt:
@@ -237,7 +237,7 @@ Options
     def get_actions(self) -> Tuple[argparse.Action, ...]:
         """ a getter for _actions operated on by ArgumentParser, which may
             change behaviour """
-        return tuple(self._actions)  # type: ignore
+        return tuple(self._actions)
 
 
 class FullPathAction(argparse.Action):  # pylint: disable=too-few-public-methods
