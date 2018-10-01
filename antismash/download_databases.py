@@ -8,6 +8,7 @@ import gzip
 import hashlib
 import lzma
 import os
+import sys
 import tarfile
 from typing import Any, Type
 from urllib import error as urlerror
@@ -349,7 +350,11 @@ def _main() -> None:
 
     args = parser.parse_args()
     download(args)
-    antismash.main.prepare_module_data()
+    try:
+        antismash.main.prepare_module_data()
+    except Exception as err:  # pylint: disable=broad-except
+        print("Error encountered while preparing module data:", str(err), file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
