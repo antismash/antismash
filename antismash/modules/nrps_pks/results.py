@@ -110,16 +110,14 @@ class NRPS_PKS_Results(ModuleResults):
         predictions = json.get("domain_predictions", {})
         for domain_name, method_predictions in predictions.items():
             for method, prediction in method_predictions.items():
-                rebuilt = None  # type: Prediction
                 if method == "NRPSPredictor2":
-                    rebuilt = PredictorSVMResult.from_json(prediction)
+                    rebuilt = PredictorSVMResult.from_json(prediction)  # type: Prediction
                 elif method.startswith("minowa"):
                     rebuilt = MinowaPrediction.from_json(prediction)
                 elif method == "signature":
                     rebuilt = ATPrediction.from_json(prediction)
                 else:
                     rebuilt = SimplePrediction.from_json(prediction)
-                assert rebuilt is not None
                 results.domain_predictions[domain_name][method] = rebuilt
         results.consensus = json["consensus"]
         results.consensus_transat = json["consensus_transat"]
