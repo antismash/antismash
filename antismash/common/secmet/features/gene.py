@@ -32,7 +32,11 @@ class Gene(Feature):
 
     def get_name(self) -> str:
         """ Returns the locus tag or gene name of the gene, in that order """
-        return self.locus_tag or self.gene_name
+        if self.locus_tag is not None:
+            return self.locus_tag
+        if self.gene_name is not None:
+            return self.gene_name
+        raise ValueError("names removed after construction")
 
     def is_pseudo_gene(self) -> bool:
         """ Was the gene marked as a pseudo-gene """
