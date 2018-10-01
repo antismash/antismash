@@ -86,23 +86,27 @@ def acquire_rodeo_heuristics(record: secmet.Record, query: secmet.CDSFeature,
     else:
         tabs.append(0)
     # Core residue position of Sx4C motif
-    if re.search('S[ARNDBCEQZGHILKMFPSTWYV]{4}C', core):
-        tabs.append(re.search('S[ARNDBCEQZGHILKMFPSTWYV]{4}C', core).span()[0])
+    match = re.search('S[ARNDBCEQZGHILKMFPSTWYV]{4}C', core)
+    if match:
+        tabs.append(match.span()[0])
     else:
         tabs.append(0)
     # Core residue position of Tx4C motif
-    if re.search('T[ARNDBCEQZGHILKMFPSTWYV]{4}C', core):
-        tabs.append(re.search('T[ARNDBCEQZGHILKMFPSTWYV]{4}C', core).span()[0])
+    match = re.search('T[ARNDBCEQZGHILKMFPSTWYV]{4}C', core)
+    if match:
+        tabs.append(match.span()[0])
     else:
         tabs.append(0)
     # Core residue position of Sx5C motif
-    if re.search('S[ARNDBCEQZGHILKMFPSTWYV]{5}C', core):
-        tabs.append(re.search('S[ARNDBCEQZGHILKMFPSTWYV]{5}C', core).span()[0])
+    match = re.search('S[ARNDBCEQZGHILKMFPSTWYV]{5}C', core)
+    if match:
+        tabs.append(match.span()[0])
     else:
         tabs.append(0)
     # Core residue position of Tx5C motif
-    if re.search('T[ARNDBCEQZGHILKMFPSTWYV]{5}C', core):
-        tabs.append(re.search('T[ARNDBCEQZGHILKMFPSTWYV]{5}C', core).span()[0])
+    match = re.search('T[ARNDBCEQZGHILKMFPSTWYV]{5}C', core)
+    if match:
+        tabs.append(match.span()[0])
     else:
         tabs.append(0)
     # Precursor is within 500 nt?
