@@ -196,8 +196,9 @@ def get_description(record: Record, feature: CDSFeature, type_: str,
     template = '<span class="svgene-tooltip-bold">%s</span><br>\n' % feature.product or feature.get_name()
     template += 'Locus-tag: %s; Protein-ID: %s<br>\n' % (feature.locus_tag, feature.protein_id)
 
-    if feature.get_qualifier('EC_number'):
-        template += "EC-number(s): %s<br>\n" % ",".join(feature.get_qualifier('EC_number'))
+    ec_number = feature.get_qualifier('EC_number')
+    if ec_number is not None:
+        template += "EC-number(s): %s<br>\n" % ",".join(ec_number)
 
     for gene_function in feature.gene_functions:
         template += "%s<br>\n" % str(gene_function)
