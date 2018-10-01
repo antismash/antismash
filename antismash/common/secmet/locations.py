@@ -4,6 +4,7 @@
 """ Helper functions for location operations """
 
 from typing import Iterable, List, Sequence, Tuple
+from typing import Optional  # in comment hints, pylint: disable=unused-import
 
 from Bio.SeqFeature import (
     AbstractPosition,
@@ -210,7 +211,7 @@ def location_from_string(data: str) -> FeatureLocation:
 
         strand_text = string[-2]  # [<1:6](-) -> -
         if strand_text == '-':
-            strand = -1
+            strand = -1  # type: Optional[int]
         elif strand_text == '+':
             strand = 1
         elif strand_text == '?':
