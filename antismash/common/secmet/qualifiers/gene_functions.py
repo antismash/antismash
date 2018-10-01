@@ -149,11 +149,11 @@ class GeneFunctionAnnotations:
             annotation = _GeneFunctionAnnotation.from_string(section)
             self.add(annotation.function, annotation.tool, annotation.description, annotation.product)
 
-    def get_by_tool(self, tool: str) -> Optional[List]:
+    def get_by_tool(self, tool: str) -> List:
         """ Returns a list of all GeneFunctionAnnotations which were added with
             the tool name provided.
         """
-        return self._by_tool.get(tool)
+        return self._by_tool.get(tool, [])
 
     def get_by_function(self, function: GeneFunction) -> List[_GeneFunctionAnnotation]:
         """ Returns a list of GeneFunctionAnnotations which have the same
