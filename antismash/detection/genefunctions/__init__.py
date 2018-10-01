@@ -74,10 +74,17 @@ def check_options(_options: ConfigType) -> List[str]:
     return []
 
 
-def prepare_data() -> List[str]:
-    """ Ensures packaged data is fully prepared """
+def prepare_data(logging_only: bool = False) -> List[str]:
+    """ Ensures packaged data is fully prepared
+
+        Arguments:
+            logging_only: whether to return error messages instead of raising exceptions
+
+        Returns:
+            a list of error messages (only if logging_only is True)
+    """
     database = path.get_full_path(__file__, 'data', 'smcogs.hmm')
-    return hmmer.ensure_database_pressed(database, return_not_raise=True)
+    return hmmer.ensure_database_pressed(database, return_not_raise=logging_only)
 
 
 def check_prereqs() -> List[str]:
@@ -93,7 +100,7 @@ def check_prereqs() -> List[str]:
     if path.locate_file(database) is None:
         failure_messages.append('Failed to locate Resfam database in %s' % database)
 
-    failure_messages.extend(prepare_data())
+    failure_messages.extend(prepare_data(logging_only=True))
 
     return failure_messages
 
