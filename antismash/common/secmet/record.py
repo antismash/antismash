@@ -42,7 +42,6 @@ from .features.supercluster import create_superclusters_from_clusters
 
 from .locations import (
     location_bridges_origin,
-    split_origin_bridging_location,
     combine_locations,
 )
 
@@ -591,10 +590,6 @@ class Record:
         """ Constructs a new Record instance from a biopython SeqRecord,
             also replaces biopython SeqFeatures with Feature subclasses
         """
-        postponed_features = {
-            "region": [],
-            "supercluster": [],
-        }  # type: Dict[str, SeqFeature]
 
         assert isinstance(seq_record, SeqRecord)
         transl_table = 1
@@ -611,71 +606,8 @@ class Record:
                 feature.ref = None
                 feature.ref_db = None
 
-            locations_adjusted = False
-            name_modified = False
-
-            if record.is_circular() and location_bridges_origin(feature.location):
-                locations_adjusted = True
-                original_location = feature.location
-                lower, upper = split_origin_bridging_location(feature.location)
-
-                if feature.type in ['CDS', 'gene']:
-                    name_modified = True
-                    original_gene_name = feature.qualifiers.get("gene", [None])[0]
-                    gene_name = original_gene_name
-                    locus_tag = feature.qualifiers.get("locus_tag", [None])[0]
-                    # if neither exist, set the gene name as it is less precise
-                    # in meaning
-                    if not gene_name and not locus_tag:
-                        gene_name = "bridge"
-
-                # nuke any translation, since it's now out of date
-                feature.qualifiers.pop('translation', None)
-
-                # add a separate feature for the upper section
-                if len(upper) > 1:
-                    feature.location = CompoundLocation(upper, original_location.operator)
-                else:
-                    feature.location = upper[0]
-                if name_modified:
-                    if gene_name:
-                        feature.qualifiers["gene"] = [gene_name + "_UPPER"]
-                    if locus_tag:
-                        feature.qualifiers["locus_tag"] = [locus_tag + "_UPPER"]
-                record.add_biopython_feature(feature)
-
-                # adjust the current feature to only be the lower section
-                if len(lower) > 1:
-                    feature.location = CompoundLocation(lower, original_location.operator)
-                else:
-                    feature.location = lower[0]
-                if name_modified:
-                    if gene_name:
-                        feature.qualifiers["gene"] = [gene_name + "_LOWER"]
-                    if locus_tag:
-                        feature.qualifiers["locus_tag"] = [locus_tag + "_LOWER"]
-
-            if feature.type in postponed_features:
-                postponed_features[feature.type].append(feature)
-                continue
             record.add_biopython_feature(feature)
 
-            # reset back to how the feature looked originally
-            if locations_adjusted:
-                feature.location = original_location
-                if name_modified:
-                    if not locus_tag:
-                        feature.qualifiers.pop("locus_tag", "")
-                    else:
-                        feature.qualifiers["locus_tag"][0] = locus_tag
-                    if not original_gene_name:
-                        feature.qualifiers.pop("gene", "")
-                    else:
-                        feature.qualifiers["gene"][0] = original_gene_name
-        for feature in postponed_features["supercluster"]:
-            record.add_feature(SuperCluster.from_biopython(feature).convert_to_real_feature(record))
-        for feature in postponed_features["region"]:
-            record.add_feature(Region.from_biopython(feature).convert_to_real_feature(record))
         return record
 
     @staticmethod
