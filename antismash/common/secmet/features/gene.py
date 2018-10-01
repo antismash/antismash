@@ -60,8 +60,8 @@ class Gene(Feature):
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
         # grab mandatory qualifiers and create the class
-        locus = leftovers.pop("locus_tag", [None])[0]
-        name = leftovers.pop("gene", [None])[0]
+        locus = leftovers.pop("locus_tag", [""])[0] or None
+        name = leftovers.pop("gene", [""])[0] or None
         if not (locus or name):
             name = "gene%s_%s" % (bio_feature.location.start, bio_feature.location.end)
         pseudo = "pseudo" in leftovers
