@@ -78,7 +78,8 @@ class Feature:
             return FeatureLocation(dna_start, dna_end, self.location.strand)
 
         new_locations = []
-        for location in sorted(self.location.parts, key=lambda x: x.start):
+        # do not sort here either way, as we want biological order. instead, reverse the location parts if needed
+        for location in reversed(self.location.parts) if self.location.strand == -1 else self.location.parts:
             if dna_start in location:
                 new = FeatureLocation(dna_start, location.end, self.location.strand)
                 # the end could also be in this part
