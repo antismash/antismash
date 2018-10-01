@@ -122,10 +122,10 @@ class Feature:
         """
         if isinstance(other, Feature):
             location = other.location
-        elif isinstance(other, FeatureLocation):
+        elif isinstance(other, (FeatureLocation, CompoundLocation)):
             location = other
         else:
-            raise TypeError("Container must be a Feature or a FeatureLocation, not %s" % type(other))
+            raise TypeError("Container must be a Feature or a FeatureLocation or a CompoundLocation, not %s" % type(other))
         return locations_overlap(self.location, location)
 
     def is_contained_by(self, other: Union["Feature", FeatureLocation]) -> bool:
@@ -134,10 +134,10 @@ class Feature:
         """
         if isinstance(other, Feature):
             other_location = other.location
-        elif isinstance(other, FeatureLocation):
+        elif isinstance(other, (FeatureLocation, CompoundLocation)):
             other_location = other
         else:
-            raise TypeError("Container must be a Feature or a FeatureLocation, not %s" % type(other))
+            raise TypeError("Container must be a Feature or a FeatureLocation or a CompoundLocation, not %s" % type(other))
         sublocations_found = 0
         for self_sublocation in self.location.parts:
             for other_sublocation in other_location.parts:
