@@ -107,6 +107,7 @@ class AntismashParser(argparse.ArgumentParser):
             processed_destinations.add(arg.dest)
             flag = sorted(arg.option_strings, key=len, reverse=True)[0].lstrip('-')
             # fill in the current default if relevant
+            assert arg.help is not None
             if "%(default)" in arg.help:
                 help_text = arg.help % {"default": arg.default}
             else:
@@ -585,7 +586,7 @@ def debug_options() -> ModuleArgs:
     return group
 
 
-def specific_debugging(modules: List[AntismashModule]) -> Optional[ModuleArgs]:
+def specific_debugging(modules: Optional[List[AntismashModule]]) -> Optional[ModuleArgs]:
     """ Inserts a --minimal option, along with --enable-X for all modules which
         specified enabled_by_default as True.
 
