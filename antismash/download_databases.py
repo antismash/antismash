@@ -329,7 +329,7 @@ def download(args: argparse.Namespace) -> None:
     download_clusterblast(args.database_dir)
 
 
-def main() -> None:
+def _main() -> None:
     """ Downloads, decompresses, and compiles large databases. Also ensures
         antiSMASH's module data is prepared.
     """
@@ -353,4 +353,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    _main()
