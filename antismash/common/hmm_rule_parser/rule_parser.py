@@ -794,9 +794,9 @@ class Parser:  # pylint: disable=too-few-public-methods
             raise ValueError("Rules contained identifers without signatures: %s" % ", ".join(sorted(list(unknown))))
 
     def _consume(self, expected: TokenTypes) -> Token:
-        self.current_line = self.current_token.line_number
         if self.current_token is None:
             raise RuleSyntaxError("Unexpected end of rule, expected %s" % expected)
+        self.current_line = self.current_token.line_number
         if self.current_token.type != expected:
             raise RuleSyntaxError("Expected %s but found %s (%s)\n%s\n%s%s" % (
                     expected, self.current_token.type, self.current_token,
