@@ -57,19 +57,19 @@ def run_on_record(record: Record, previous_results: Optional[NRPSPKSDomains],
     return results
 
 
-def prepare_data() -> List[str]:
-    """ Ensure all data required is ready for use.
+def prepare_data(logging_only: bool = False) -> List[str]:
+    """ Ensures packaged data is fully prepared
 
         Arguments:
-            None
+            logging_only: whether to return error messages instead of raising exceptions
 
         Returns:
-            a list of error messages as strings
+            a list of error messages (only if logging_only is True)
     """
     failure_messages = []
     for model in ['abmotifs.hmm', 'dockingdomains.hmm', 'ksdomains.hmm', 'nrpspksdomains.hmm']:
         full_path = path.get_full_path(__file__, "data", model)
-        failure_messages.extend(hmmer.ensure_database_pressed(full_path, return_not_raise=True))
+        failure_messages.extend(hmmer.ensure_database_pressed(full_path, return_not_raise=logging_only))
     return failure_messages
 
 
@@ -85,6 +85,6 @@ def check_prereqs() -> List[str]:
     if failure_messages:
         return failure_messages
 
-    failure_messages.extend(prepare_data())
+    failure_messages.extend(prepare_data(logging_only=True))
 
     return failure_messages

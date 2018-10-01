@@ -111,14 +111,14 @@ def run_on_record(record: Record, previous_results: Optional[HMMDetectionResults
     return HMMDetectionResults(record.id, results, get_supported_cluster_types())
 
 
-def prepare_data() -> List[str]:
-    """ Ensure all data required is ready for use.
+def prepare_data(logging_only: bool = False) -> List[str]:
+    """ Ensures packaged data is fully prepared
 
         Arguments:
-            None
+            logging_only: whether to return error messages instead of raising exceptions
 
         Returns:
-            a list of error messages as strings
+            a list of error messages (only if logging_only is True)
     """
     failure_messages = []
 
@@ -126,6 +126,8 @@ def prepare_data() -> List[str]:
     try:
         profiles = get_signature_profiles()
     except ValueError as err:
+        if not logging_only:
+            raise
         return [str(err)]
 
     # the path to the markov model
@@ -152,13 +154,15 @@ def prepare_data() -> List[str]:
                     with open(path.get_full_path(__file__, hmm_file), 'r') as handle:
                         all_hmms_handle.write(handle.read())
         except OSError:
+            if not logging_only:
+                raise
             failure_messages.append('Failed to generate file {!r}'.format(seeds_hmm))
 
     # if regeneration failed, don't try to run hmmpress
     if failure_messages:
         return failure_messages
 
-    failure_messages.extend(hmmer.ensure_database_pressed(seeds_hmm, return_not_raise=True))
+    failure_messages.extend(hmmer.ensure_database_pressed(seeds_hmm, return_not_raise=logging_only))
 
     return failure_messages
 
@@ -176,6 +180,6 @@ def check_prereqs() -> List[str]:
     if failure_messages:
         return failure_messages
 
-    failure_messages.extend(prepare_data())
+    failure_messages.extend(prepare_data(logging_only=True))
 
     return failure_messages
