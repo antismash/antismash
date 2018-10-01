@@ -29,6 +29,7 @@ class ClusterMarker(Pairing):
         super().__init__(motif.plus, motif.minus)
         self.gene = str(gene)
         self.abundance = 1
+        assert motif.score is not None
         self.score = float(motif.score)
         self.promoter = None  # type: Optional[str]
 
@@ -36,7 +37,7 @@ class ClusterMarker(Pairing):
         """ Uses the given motif's values instead of the old ones, if the given
             motif has a better (lower) score.
         """
-        if self.score > float(motif.score):
+        if motif.score is not None and self.score > float(motif.score):
             self.score = float(motif.score)
             self.plus = int(motif.plus)
             self.minus = int(motif.minus)
