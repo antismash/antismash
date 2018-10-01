@@ -39,7 +39,7 @@ class CDSFeature(Feature):
                  "unique_id", "_nrps_pks", "motifs", "region"]
 
     def __init__(self, location: FeatureLocation, translation: str = None, locus_tag: str = None,
-                 protein_id: str = None, product: str = None, gene: str = None) -> None:
+                 protein_id: str = None, product: str = "", gene: str = None) -> None:
         super().__init__(location, feature_type="CDS")
         if location.strand not in [1, -1]:
             raise ValueError("Strand must be 1 or -1 for a CDS, not %s" % location.strand)
@@ -55,6 +55,8 @@ class CDSFeature(Feature):
             self.translation = translation
 
         # optional
+        if not isinstance(product, str):
+            raise TypeError("product must be a string, not %s", type(product))
         self.product = product
         self.transl_table = "Standard"  # type: Union[str, int]
         self._sec_met = None  # type: SecMetQualifier
@@ -157,7 +159,7 @@ class CDSFeature(Feature):
                              locus_tag=locus_tag, protein_id=protein_id)
 
         # grab optional qualifiers
-        feature.product = leftovers.pop("product", [None])[0]
+        feature.product = leftovers.pop("product", [""])[0]
         feature.transl_table = leftovers.pop("transl_table", ["Standard"])[0]
         sec_met = leftovers.pop("sec_met", None)
         if sec_met:
