@@ -80,31 +80,31 @@ def acquire_rodeo_heuristics(record: secmet.Record, query: secmet.CDSFeature,
     score = 0
     precursor = leader + core
     # Leader peptide contains FxLD motif
-    if re.search('F[ARNDBCEQZGHILKMFPSTWYV]LD', leader):
+    if re.search('F.LD', leader):
         score += 2
         tabs.append(1)
     else:
         tabs.append(0)
     # Core residue position of Sx4C motif
-    match = re.search('S[ARNDBCEQZGHILKMFPSTWYV]{4}C', core)
+    match = re.search('S....C', core)
     if match:
         tabs.append(match.span()[0])
     else:
         tabs.append(0)
     # Core residue position of Tx4C motif
-    match = re.search('T[ARNDBCEQZGHILKMFPSTWYV]{4}C', core)
+    match = re.search('T....C', core)
     if match:
         tabs.append(match.span()[0])
     else:
         tabs.append(0)
     # Core residue position of Sx5C motif
-    match = re.search('S[ARNDBCEQZGHILKMFPSTWYV]{5}C', core)
+    match = re.search('S.....C', core)
     if match:
         tabs.append(match.span()[0])
     else:
         tabs.append(0)
     # Core residue position of Tx5C motif
-    match = re.search('T[ARNDBCEQZGHILKMFPSTWYV]{5}C', core)
+    match = re.search('T.....C', core)
     if match:
         tabs.append(match.span()[0])
     else:
@@ -298,8 +298,9 @@ def acquire_rodeo_heuristics(record: secmet.Record, query: secmet.CDSFeature,
     else:
         tabs.append(0)
     # Leader residue position of FxLD motif
-    if re.search('F[ARNDBCEQZGHILKMFPSTWYV]LD', leader):
-        tabs.append(re.search('F[ARNDBCEQZGHILKMFPSTWYV]LD', leader).span()[0])
+    match = re.search('F.LD', leader)
+    if match:
+        tabs.append(match.span()[0])
     else:
         tabs.append(0)
     # Core peptide contains C-terminal CC (within last 3 residues)
@@ -309,11 +310,11 @@ def acquire_rodeo_heuristics(record: secmet.Record, query: secmet.CDSFeature,
     else:
         tabs.append(0)
     # Core peptide contains DGCGxTC / SFNS / SxxLC / CTxGC / TPGC / SFNSxC motifs
-    motifs = (('DGCG[ARNDBCEQZGHILKMFPSTWYV]TC', 2), ('SFNS', 2),
-              ('S[ARNDBCEQZGHILKMFPSTWYV]{2}LC', 2), ('CT[ARNDBCEQZGHILKMFPSTWYV]{1}GC', 1),
-              ('TPGC', 1), ('SFNS[ARNDBCEQZGHILKMFPSTWYV]C', 1))
+    motifs = (('DGCG.TC', 2), ('SFNS', 2),
+              ('S..LC', 2), ('CT.GC', 1),
+              ('TPGC', 1), ('SFNS.C', 1))
     for motif, motif_score in motifs:
-        if motif in core:
+        if re.search(motif, core):
             score += motif_score
             tabs.append(1)
         else:
