@@ -45,7 +45,8 @@ def is_enabled(options: ConfigType) -> bool:
     return not options.minimal or options.sactipeptides_enabled
 
 
-def regenerate_previous_results(previous: Dict[Any, str], record: Record, _options: ConfigType) -> SactiResults:
+def regenerate_previous_results(previous: Dict[Any, str], record: Record,
+                                _options: ConfigType) -> Optional[SactiResults]:
     """ Regenerate a SactiResults object from a JSON-like dict """
     return SactiResults.from_json(previous, record)
 

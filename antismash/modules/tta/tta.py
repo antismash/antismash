@@ -9,7 +9,8 @@
 """
 
 import logging
-from typing import Any, Dict, List, Tuple  # used in comment type hints #pylint: disable=unused-import
+from typing import Any, Dict, Tuple, Optional
+from typing import List  # used in comment hints, pylint: disable=unused-import
 
 from antismash.common.secmet import Record
 from antismash.common.secmet.features import Feature, FeatureLocation
@@ -72,7 +73,7 @@ class TTAResults(ModuleResults):
         return len(self.features)
 
     @staticmethod
-    def from_json(json: Dict[str, Any], record: Record) -> "TTAResults":
+    def from_json(json: Dict[str, Any], record: Record) -> Optional["TTAResults"]:
         """ Constructs a new TTAResults instance from a json format and the
             original record analysed.
         """

@@ -46,7 +46,8 @@ def check_options(_options: ConfigType) -> List[str]:
     return []
 
 
-def regenerate_previous_results(json: Dict[str, Any], record: Record, _options: ConfigType) -> NRPS_PKS_Results:
+def regenerate_previous_results(json: Dict[str, Any], record: Record,
+                                _options: ConfigType) -> Optional[NRPS_PKS_Results]:
     """ Regenerate results from previous run """
     return NRPS_PKS_Results.from_json(json, record)
 

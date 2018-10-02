@@ -5,7 +5,7 @@
 
 from collections import defaultdict
 import logging
-from typing import Any, Dict, List  # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional  # pylint: disable=unused-import
 
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record, AntismashDomain
@@ -101,7 +101,7 @@ class NRPS_PKS_Results(ModuleResults):
         return results
 
     @staticmethod
-    def from_json(json: Dict[str, Any], _record: Record) -> "NRPS_PKS_Results":
+    def from_json(json: Dict[str, Any], _record: Record) -> Optional["NRPS_PKS_Results"]:
         assert "record_id" in json
         if json.get("schema_version") != NRPS_PKS_Results._schema_version:
             logging.warning("Mismatching schema version, dropping results")

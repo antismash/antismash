@@ -40,7 +40,8 @@ def is_enabled(_options: ConfigType) -> bool:
     return True
 
 
-def regenerate_previous_results(results: Dict[str, Any], record: Record, _options: ConfigType) -> NRPSPKSDomains:
+def regenerate_previous_results(results: Dict[str, Any], record: Record,
+                                _options: ConfigType) -> Optional[NRPSPKSDomains]:
     """ Reconstruct NRPS/PKS domain detection results from a JSON format """
     return NRPSPKSDomains.from_json(results, record)
 

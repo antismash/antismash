@@ -16,7 +16,7 @@
 
 """
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from antismash.common import path
 from antismash.common.secmet import Record
@@ -63,7 +63,8 @@ def is_enabled(options: ConfigType) -> bool:
     return not options.minimal or options.lassopeptides_enabled
 
 
-def regenerate_previous_results(previous: Dict[str, Any], record: Record, _options: ConfigType) -> LassoResults:
+def regenerate_previous_results(previous: Dict[str, Any], record: Record,
+                                _options: ConfigType) -> Optional[LassoResults]:
     """ Regenerate a results object from the given data """
     return LassoResults.from_json(previous, record)
 

@@ -67,7 +67,8 @@ def is_enabled(options: ConfigType) -> bool:
     return False
 
 
-def regenerate_previous_results(previous: Dict[str, Any], record: Record, options: ConfigType) -> ModuleResults:
+def regenerate_previous_results(previous: Dict[str, Any], record: Record,
+                                options: ConfigType) -> Optional[ModuleResults]:
     """ Rebuild the previous run results from a JSON object into this module's
         python results class. If the current options are incompatible with the
         previous results, None should be returned.

@@ -55,7 +55,7 @@ class LassoResults(module_results.ModuleResults):
                 "clusters": {key: list(val) for key, val in self.clusters.items()}}
 
     @staticmethod
-    def from_json(json: Dict[str, Any], record: Record) -> "LassoResults":
+    def from_json(json: Dict[str, Any], record: Record) -> Optional["LassoResults"]:
         if json.get("schema_version") != LassoResults.schema_version:
             logging.warning("Discarding Lassopeptide results, schema version mismatch")
             return None

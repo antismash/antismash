@@ -84,7 +84,7 @@ def is_enabled(options: ConfigType) -> bool:
 
 
 def regenerate_previous_results(previous: Dict[str, Any], record: Record,
-                                _options: ConfigType) -> T2PKSResults:
+                                _options: ConfigType) -> Optional[T2PKSResults]:
     """ Rebuild the previous run results from a JSON object into this module's
         python results class. If the current options are incompatible with the
         previous results, None should be returned.

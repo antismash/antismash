@@ -167,7 +167,7 @@ class T2PKSResults(ModuleResults):
         return results
 
     @staticmethod
-    def from_json(json: Dict[str, Any], _record: Record) -> "T2PKSResults":
+    def from_json(json: Dict[str, Any], _record: Record) -> Optional["T2PKSResults"]:
         assert "record_id" in json
         if json.get("schema_version") != T2PKSResults._schema_version:
             logging.warning("Mismatching schema version, dropping T2PKS results")

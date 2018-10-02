@@ -42,7 +42,7 @@ class ThioResults(module_results.ModuleResults):
                 "cds_features": cds_features_by_cluster}
 
     @staticmethod
-    def from_json(json: Dict, record: secmet.Record) -> "ThioResults":
+    def from_json(json: Dict, record: secmet.Record) -> Optional["ThioResults"]:
         """ Builds a results object from JSON """
         if json.get("schema_version") != ThioResults.schema_version:
             logging.warning("Discarding Thiopeptide results, schema version mismatch")

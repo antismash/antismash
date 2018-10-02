@@ -35,7 +35,7 @@ class FunctionResults(DetectionResults):
                                             result.hit_id, result.bitscore, result.evalue))
 
     @staticmethod
-    def from_json(json: Dict[str, Any], record: Record) -> "FunctionResults":
+    def from_json(json: Dict[str, Any], record: Record) -> Optional["FunctionResults"]:
         if json.get("schema_version") != FunctionResults.schema_version:
             logging.debug("Schema version mismatch, discarding FunctionResults for tool: %s",
                           json.get("tool", "unknown"))

@@ -6,7 +6,7 @@
 
 from collections import defaultdict
 import logging
-from typing import Any, Dict, List, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from Bio.SearchIO._model.hsp import HSP
 
@@ -361,7 +361,7 @@ def apply_cluster_rules(record: Record, results_by_id: Dict[str, List[HSP]],
 
 
 def detect_clusters_and_signatures(record: Record, signature_file: str, seeds_file: str,
-                                   rules_file: str, filter_file: str, tool: str) -> RuleDetectionResults:
+                                   rules_file: str, filter_file: str, tool: str) -> Optional[RuleDetectionResults]:
     """ Compares all CDS features in a record with HMM signatures and generates
         Cluster features based on those hits and the current cluster detection
         rules.

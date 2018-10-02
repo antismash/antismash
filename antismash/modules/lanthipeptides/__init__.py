@@ -6,7 +6,7 @@
 """
 
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from antismash.common import path
 from antismash.common.secmet import Record
@@ -37,7 +37,8 @@ def is_enabled(options: ConfigType) -> bool:
     return options.lanthipeptides_enabled or not options.minimal
 
 
-def regenerate_previous_results(results: Dict[str, Any], record: Record, _options: ConfigType) -> LanthiResults:
+def regenerate_previous_results(results: Dict[str, Any], record: Record,
+                                _options: ConfigType) -> Optional[LanthiResults]:
     """ Rebuilds the results from a prior run.
 
         Options aren't used here as the lanthipeptide module has no extra options.
@@ -45,6 +46,8 @@ def regenerate_previous_results(results: Dict[str, Any], record: Record, _option
     if not results:
         return None
     regenned = LanthiResults.from_json(results, record)
+    if not regenned:
+        return None
     logging.debug("Reusing Lanthipeptide results: %d clusters contained %d total motifs",
                   len(regenned.clusters), sum(len(motifs) for motifs in regenned.motifs_by_locus.values()))
     return regenned
