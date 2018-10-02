@@ -79,6 +79,8 @@ def regenerate_previous_results(results: Dict[str, Any], record: Record,
         return None
 
     regenerated = ClusterFinderRuleResults.from_json(results, record)
+    if not regenerated:
+        return None
     for cluster in regenerated.get_predicted_clusters():
         record.add_cluster(cluster)
     return regenerated
