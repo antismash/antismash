@@ -243,11 +243,10 @@ def run_cleavage_site_phmm(fasta: str, hmmer_profile: str, threshold: float) -> 
 def run_cleavage_site_regex(fasta: str) -> Optional[int]:
     """Try to identify cleavage site using regular expressions"""
     # Regular expressions; try 1 first, then 2, etc.
-    rex1 = re.compile('(Y[ARNDBCEQZGHILKMFPSTWYV]{2}P[ARNDBCEQZGHILKMFPSTWYV]'
-                      'L[ARNDBCEQZGHILKMFPSTWYV]{3}G[ARNDBCEQZGHILKMFPSTWYV]{5}T)')
-    rex2 = re.compile('(G[ARNDBCEQZGHILKMFPSTWYV]{5}T)')
-    rex3 = re.compile('(Y[ARNDBCEQZGHILKMFPSTWYV]{2}P[ARNDBCEQZGHILKMFPSTWYV]L)')
-    rex4 = re.compile('(Y[ARNDBCEQZGHILKMFPSTWYV]{2}P)')
+    rex1 = re.compile('(Y..P.L...G.....T)')
+    rex2 = re.compile('(G.....T)')
+    rex3 = re.compile('(Y..P.L)')
+    rex4 = re.compile('(Y..P)')
 
     end = -1
 
@@ -333,7 +332,7 @@ def acquire_rodeo_heuristics(record: Record, cluster: Cluster, query: CDSFeature
     else:
         tabs.append(0)
     # Leader cluster contains GxxxxxT	+3
-    if re.search('(G[ARNDBCEQZGHILKMFPSTWYV]{5}T)', leader):
+    if re.search('(G.....T)', leader):
         score += 3
         tabs.append(1)
     else:
@@ -468,7 +467,7 @@ def generate_rodeo_svm_csv(record: Record, query: CDSFeature, leader: str, core:
     else:
         columns.append(1)
     # Leader has LxxxxxT motif?
-    if re.search('(L[ARNDBCEQZGHILKMFPSTWYV]{5}T)', leader):
+    if re.search('(L.....T)', leader):
         columns.append(1)
     else:
         columns.append(0)
