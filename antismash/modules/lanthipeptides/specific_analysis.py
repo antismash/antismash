@@ -121,15 +121,15 @@ class PrepeptideBase:
         self.end = int(end)  # cleavage site position
         self.score = int(score)  # of cleavage site
         self.rodeo_score = int(rodeo_score)
-        self._leader = None  # type: str
+        self._leader = None  # type: Optional[str]
         self._core = ''
-        self._tail = None  # type: str
+        self._tail = None  # type: Optional[str]
         self._lan_bridges = -1
         self._weight = -1
         self._monoisotopic_weight = -1
-        self._alt_weights = None  # type: List[float]
-        self.core_analysis_monoisotopic = None  # type: utils.RobustProteinAnalysis
-        self.core_analysis = None  # type: utils.RobustProteinAnalysis
+        self._alt_weights = []  # type: List[float]
+        self.core_analysis_monoisotopic = None  # type: Optional[utils.RobustProteinAnalysis]
+        self.core_analysis = None  # type: Optional[utils.RobustProteinAnalysis]
 
     @property
     def core(self) -> str:
@@ -234,6 +234,7 @@ class Lanthipeptide(PrepeptideBase):
         """
         if not self._core:
             raise ValueError("No core to calculate bridges from")
+        assert self.core_analysis is not None
 
         amino_counts = self.core_analysis.count_amino_acids()
         no_cys = amino_counts['C']
@@ -247,6 +248,7 @@ class Lanthipeptide(PrepeptideBase):
         """ (re)calculates the monoisotopic mass and molecular weight
         """
         assert self._core, "calculating weight without a core"
+        assert self.core_analysis is not None
 
         amino_counts = self.core_analysis.count_amino_acids()
         no_thr_ser = amino_counts['T'] + amino_counts['S']

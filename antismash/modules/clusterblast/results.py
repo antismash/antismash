@@ -8,6 +8,7 @@ from collections import OrderedDict
 import logging
 import os
 from typing import Any, Dict, List, Tuple
+from typing import Optional  # comment hints, pylint: disable=unused-import
 
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record, Region
@@ -216,7 +217,7 @@ class GeneralResults(ModuleResults):
 
     def to_json(self) -> Dict[str, Any]:
         if not self.region_results:
-            return None
+            return {}
         data = {"record_id": self.record_id,
                 "schema_version": self.schema_version,
                 "results": [res.jsonify() for res in self.region_results],
@@ -267,9 +268,9 @@ class ClusterBlastResults(ModuleResults):
 
     def __init__(self, record_id: str) -> None:
         super().__init__(record_id)
-        self.general = None  # type: GeneralResults
-        self.subcluster = None  # type: GeneralResults
-        self.knowncluster = None  # type: GeneralResults
+        self.general = None  # type: Optional[GeneralResults]
+        self.subcluster = None  # type: Optional[GeneralResults]
+        self.knowncluster = None  # type: Optional[GeneralResults]
         self.internal_homology_groups = {}  # type: Dict[int, List[List[str]]]
 
     def to_json(self) -> Dict[str, Any]:

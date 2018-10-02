@@ -21,7 +21,7 @@ class DuplicatePromoterError(Exception):
 
 class Promoter:
     """ Contains all the relevant info and helpers for promoters """
-    def __init__(self, gene_name: str, start: int, end: int, seq: Union[Seq, str] = None) -> None:
+    def __init__(self, gene_name: str, start: int, end: int, seq: str = "") -> None:
         self.gene_name = str(gene_name)
         self.start = int(start)
         self.end = int(end)
@@ -66,7 +66,7 @@ class Promoter:
 
 class CombinedPromoter(Promoter):
     """ A promoter class for cases where two genes are involved """
-    def __init__(self, first_gene: str, second_gene: str, start: int, end: int, seq: Union[Seq, str] = None) -> None:
+    def __init__(self, first_gene: str, second_gene: str, start: int, end: int, seq: str = "") -> None:
         super().__init__(first_gene, start, end, seq=seq)
         self.second_gene = str(second_gene)
 

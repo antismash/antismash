@@ -78,8 +78,8 @@ def execute(commands: List[str], stdin: Optional[str] = None, stdout: Union[int,
     """
 
     if stdin is not None:
-        stdin_redir = PIPE
-        input_bytes = stdin.encode("utf-8")
+        stdin_redir = PIPE  # type: Optional[int]
+        input_bytes = stdin.encode("utf-8")  # type: Optional[bytes]
     else:
         stdin_redir = None
         input_bytes = None
@@ -89,6 +89,7 @@ def execute(commands: List[str], stdin: Optional[str] = None, stdout: Union[int,
         out, err = proc.communicate(input=input_bytes, timeout=timeout)
     except TimeoutExpired:
         proc.kill()
+        assert isinstance(timeout, int)
         raise RuntimeError("Child process '%s' timed out after %d seconds" % (
                 commands, timeout))
 
@@ -172,6 +173,7 @@ def parallel_execute(commands: List[List[str]], cpus: Optional[int] = None,
     os.setpgid(0, 0)
     if not cpus:
         cpus = get_config().cpus
+    assert isinstance(cpus, int)
     pool = multiprocessing.Pool(cpus)
     jobs = pool.map_async(runner, commands)
 
@@ -179,8 +181,10 @@ def parallel_execute(commands: List[List[str]], cpus: Optional[int] = None,
         errors = jobs.get(timeout=timeout)
     except multiprocessing.TimeoutError:
         pool.terminate()
+        assert isinstance(timeout, int)
         raise RuntimeError("One of %d child processes timed out after %d seconds" % (
                 cpus, timeout))
+
     except KeyboardInterrupt:
         logging.error("Interrupted by user")
         pool.terminate()

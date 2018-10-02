@@ -109,7 +109,7 @@ class Cluster(CDSCollection):
         cutoff = int(leftovers.pop("cutoff")[0])
         product = leftovers.pop("product")[0]
         tool = leftovers.pop("aStool")[0]
-        rule = leftovers.pop("detection_rule", [None])[0]
+        rule = leftovers.pop("detection_rule", [""])[0] or None
         core_location = location_from_string(leftovers.pop("core_location")[0])
         if not feature:
             feature = Cluster(core_location, bio_feature.location,

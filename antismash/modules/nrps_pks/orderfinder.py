@@ -274,7 +274,7 @@ def rank_biosynthetic_orders(n_terminal_residues: Dict[str, str],
     negatively_charged = {"D", "E"}
     # find best scoring order
     best_score = -2 * len(possible_orders[0])
-    best_order = None
+    best_order = possible_orders[0]
     for order in possible_orders:
         score = 0
         interactions = [order[i:i + 2] for i in range(len(order) - 1)]

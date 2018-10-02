@@ -109,6 +109,7 @@ def find_rule_based_clusters(record: Record) -> cluster_prediction.RuleDetection
     equivalences = path.get_full_path(__file__, "..", "hmm_detection", "filterhmmdetails.txt")
     results = cluster_prediction.detect_clusters_and_signatures(record, signatures, seeds,
                                                                 rules, equivalences, "cluster-finder")
+    assert results is not None
     results.annotate_cds_features()
     logging.debug("ClusterFinder detected %d rule-based clusters", len(results.clusters))
     return results

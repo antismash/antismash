@@ -88,9 +88,9 @@ class Region(CDSCollection):
         self._subregions = subregions
         self._superclusters = superclusters
 
-        self.clusterblast = None  # type: List[str]
+        self.clusterblast = None  # type: Optional[List[str]]
         self.knownclusterblast = None  # type: Any
-        self.subclusterblast = None  # type: List[str]
+        self.subclusterblast = None  # type: Optional[List[str]]
 
     @property
     def subregions(self) -> Tuple[SubRegion, ...]:

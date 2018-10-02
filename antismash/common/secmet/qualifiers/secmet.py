@@ -111,7 +111,7 @@ class SecMetQualifier(list):
         yield "Kind: %s" % self.kind
 
     def __getitem__(self, selection: Union[slice, int]) -> str:  # type: ignore
-        return list(self)[selection]
+        return str(list(self)[selection])
 
     def append(self, _item: Any) -> None:
         raise NotImplementedError("Appending to this list won't work")

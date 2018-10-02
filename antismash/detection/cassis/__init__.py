@@ -335,7 +335,7 @@ def create_subregions(anchor: str, cluster_preds: List[ClusterPrediction],
                 right = gene
             if left and right:
                 break
-
+        assert left and right, "boundary genes no longer present in Record"
         new_feature = SeqFeature(
             FeatureLocation(left.location.start, right.location.end), type="subregion")
         new_feature.qualifiers = {

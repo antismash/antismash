@@ -146,6 +146,9 @@ def check_cluster_predictions(cluster_predictions: List[ClusterPrediction],
         # find indices of first and last GENE of the cluster prediction in all genes
         all_gene_names = [gene.get_name() for gene in sorted(record.get_genes(), key=lambda x: x.location.start)]
 
+        if not all_gene_names:
+            continue
+
         start_index_genes = None
         end_index_genes = None
         for i, gene_name in enumerate(all_gene_names):
@@ -155,6 +158,9 @@ def check_cluster_predictions(cluster_predictions: List[ClusterPrediction],
                 end_index_genes = i
             if start_index_genes and end_index_genes:
                 break
+        assert start_index_genes is not None
+        assert end_index_genes is not None
+
 
         # find indices of first and last PROMOTER of the cluster prediction in all promoters
         start_index_promoters = None
@@ -166,6 +172,8 @@ def check_cluster_predictions(cluster_predictions: List[ClusterPrediction],
                 end_index_promoters = i
             if start_index_promoters and end_index_promoters:
                 break
+        assert start_index_promoters is not None
+        assert end_index_promoters is not None
 
         prediction.start.promoter = promoters[start_index_promoters].get_id()
         prediction.end.promoter = promoters[end_index_promoters].get_id()

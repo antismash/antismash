@@ -49,7 +49,7 @@ class OptionsLayer:
 
 class RecordLayer:
     """ A layer for Record instances """
-    def __init__(self, record: Record, results: ModuleResults, options: OptionsLayer) -> None:
+    def __init__(self, record: Record, results: Optional[ModuleResults], options: OptionsLayer) -> None:
         self.results = results
         self.seq_record = record
         self.options = options
@@ -132,7 +132,7 @@ class RegionLayer:
         return format(self.region_feature.knownclusterblast[0].bgc_id)
 
     @property
-    def bgc_cluster_number(self) -> int:
+    def bgc_cluster_number(self) -> Optional[int]:
         """ The cluster number of the BGC id of the best knownclusterblast hit """
         if not self.region_feature.knownclusterblast:
             return None
