@@ -12,6 +12,7 @@ from Bio.Seq import Seq
 from antismash.common.secmet.locations import (
     convert_protein_position_to_dna,
     locations_overlap,
+    location_contains_other,
 )
 
 
@@ -137,14 +138,7 @@ class Feature:
             other_location = other
         else:
             raise TypeError("Container must be a Feature or a FeatureLocation or a CompoundLocation, not %s" % type(other))
-        sublocations_found = 0
-        for self_sublocation in self.location.parts:
-            for other_sublocation in other_location.parts:
-                # -1 to account for the non-inclusive end
-                if self_sublocation.start in other_sublocation and self_sublocation.end - 1 in other_sublocation:
-                    sublocations_found += 1
-                    break # break in order to avoid scoring the query sublocation twice in weirdly overlapping subjects
-        return len(self.location.parts) == sublocations_found
+        return location_contains_other(other_location, self.location)
 
     def to_biopython(self, qualifiers: Dict[str, Any] = None) -> List[SeqFeature]:
         """ Converts this feature into one or more SeqFeature instances.

@@ -117,7 +117,14 @@ def location_contains_other(outer: FeatureLocation, inner: FeatureLocation) -> b
         Returns:
             True if outer contains inner, otherwise False
     """
-    return inner.start in outer and inner.end - 1 in outer
+    sublocations_found = 0
+    for inner_sublocation in inner.parts:
+        for outer_sublocation in outer.parts:
+            # -1 to account for the non-inclusive end
+            if inner_sublocation.start in outer_sublocation and inner_sublocation.end - 1 in outer_sublocation:
+                sublocations_found += 1
+                break # break in order to avoid scoring the query sublocation twice in weirdly overlapping subjects
+    return len(inner.parts) == sublocations_found
 
 
 def location_from_string(data: str) -> FeatureLocation:
