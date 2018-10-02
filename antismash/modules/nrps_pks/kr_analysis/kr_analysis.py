@@ -11,7 +11,7 @@ compares the generated signatures to a few string options to generate whether
 writes an outfile file in the tab-separated form: name, activity, stereochem
 """
 
-from typing import Dict, Tuple
+from typing import Dict, Optional, Tuple
 
 from antismash.common import path, subprocessing, utils
 from antismash.modules.nrps_pks.data_structures import SimplePrediction, Prediction
@@ -28,7 +28,7 @@ def is_active(signature: str) -> bool:
     return False
 
 
-def predict_stereochemistry(signature: str) -> str:
+def predict_stereochemistry(signature: str) -> Optional[str]:
     """ Predicts stereochemistry of a KR domain from its signature """
     stereochemistry = None
     if signature[0:3] != "LDD" and signature[3] == "W" and signature[5:] == "YAN":

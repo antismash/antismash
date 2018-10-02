@@ -85,12 +85,16 @@ class _GeneFunctionAnnotation:  # pylint: disable=too-few-public-methods
                 parts = _parse_format("{} ({}) {}", text)
             except ValueError:
                 raise ValueError("cannot parse GeneFunctionAnnotation from %s" % text)
+
+        if len(parts) not in [3, 4]:
+            raise ValueError("cannot parse GeneFunctionAnnotation from %s" % text)
+
         if len(parts) == 4:
             function, tool, product, description = parts
-        else:
-            function, tool, description = parts
-            product = None
-        return cls(GeneFunction.from_string(function), tool, description, product)
+            return cls(GeneFunction.from_string(function), tool, description, product)
+
+        function, tool, description = parts
+        return cls(GeneFunction.from_string(function), tool, description, product=None)
 
 
 class GeneFunctionAnnotations:

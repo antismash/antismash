@@ -217,13 +217,13 @@ class Lassopeptide:
 
 
 def predict_cleavage_site(query_hmmfile: str, target_sequence: str, threshold: float
-                          ) -> Union[Tuple[None, None], Tuple[int, float]]:
+                          ) -> Tuple[Optional[int], float]:
     """
     Function extracts from HMMER the start position, end position and score
     of the HMM alignment
     """
     hmmer_res = subprocessing.run_hmmpfam2(query_hmmfile, target_sequence)
-    resvec = (None, None)
+    resvec = (None, 0.)
     for res in hmmer_res:
         for hits in res:
             for hsp in hits:
@@ -234,7 +234,7 @@ def predict_cleavage_site(query_hmmfile: str, target_sequence: str, threshold: f
     return resvec
 
 
-def run_cleavage_site_phmm(fasta: str, hmmer_profile: str, threshold: float) -> Tuple[int, float]:
+def run_cleavage_site_phmm(fasta: str, hmmer_profile: str, threshold: float) -> Tuple[Optional[int], float]:
     """Try to identify cleavage site using pHMM"""
     profile = path.get_full_path(__file__, 'data', hmmer_profile)
     return predict_cleavage_site(profile, fasta, threshold)
@@ -618,11 +618,14 @@ def determine_precursor_peptide_candidate(record: Record, cluster: Cluster,
     # Run sequence against pHMM to find the cleavage site position
     end, score = run_cleavage_site_phmm(lasso_a_fasta, 'precursor_2637.hmm', -20.00)
 
-    # If no pHMM hit, try regular expressions
+    # If no pHMM hit, try regular expression
     if end is None:
+        score = 0
         end = run_cleavage_site_regex(lasso_a_fasta)
         if end is None or end > len(query_sequence) - 3:
-            end, score = len(query_sequence) // 2 - 5, 0.
+            end = len(query_sequence) // 2 - 5
+
+    assert end is not None
 
     # Run RODEO to assess whether candidate precursor peptide is judged real
     valid, rodeo_score = run_rodeo(record, cluster, query, query_sequence[:end], query_sequence[end:])

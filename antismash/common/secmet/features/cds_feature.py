@@ -59,7 +59,7 @@ class CDSFeature(Feature):
             raise TypeError("product must be a string, not %s", type(product))
         self.product = product
         self.transl_table = "Standard"  # type: Union[str, int]
-        self._sec_met = None  # type: SecMetQualifier
+        self._sec_met = None  # type: Optional[SecMetQualifier]
         self._nrps_pks = NRPSPKSQualifier(self.location.strand)
 
         self.motifs = []  # type: List[features.CDSMotif]
@@ -84,7 +84,7 @@ class CDSFeature(Feature):
         return self._gene_functions.get_classification()
 
     @property
-    def sec_met(self) -> SecMetQualifier:
+    def sec_met(self) -> Optional[SecMetQualifier]:
         """ The qualifier containing secondary metabolite information for the
             CDSFeature.
         """

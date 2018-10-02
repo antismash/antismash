@@ -376,6 +376,8 @@ def parse_all_clusters(blasttext: str, record: secmet.Record, min_seq_coverage: 
             # finally, add the query to the current tracker
             queries[query] = current_query
 
+        assert current_query is not None
+
         if subject.genecluster not in clusters:
             clusters[subject.genecluster] = []
         clusters[subject.genecluster].append(current_query)
@@ -427,6 +429,7 @@ def blastparse(blasttext: str, record: secmet.Record, min_seq_coverage: float = 
         if new_query:
             current_query = Query(query, len(queries))
             queries[query] = current_query
+        assert current_query is not None
 
         if new_hit:
             clusters[subject.genecluster] = []

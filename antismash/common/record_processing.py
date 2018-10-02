@@ -404,6 +404,7 @@ def fix_record_name_id(record: Record, all_record_ids: Set[str]) -> None:
             contig_no = int(contigstrmatch.group(1))
         else:
             # if the contig number cannot be parsed out, just count the contigs from 1 to n
+            assert isinstance(record.record_index, int)
             contig_no = record.record_index
 
         return "c{ctg:05d}_{origid}..".format(ctg=contig_no, origid=idstring[:7])

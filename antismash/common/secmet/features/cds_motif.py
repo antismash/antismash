@@ -16,7 +16,7 @@ class CDSMotif(Domain):
     """ A base class for features that represent a motif within a CDSFeature """
     __slots__ = ["motif"]
 
-    def __init__(self, location: FeatureLocation, tool: str = None) -> None:
+    def __init__(self, location: FeatureLocation, tool: Optional[str] = None) -> None:
         # if there's a tool, it was created by antismash
         created = tool is not None
         super().__init__(location, feature_type="CDS_motif", tool=tool, created_by_antismash=created)
@@ -27,7 +27,7 @@ class CDSMotif(Domain):
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
         if not feature:
-            feature = CDSMotif(bio_feature.location, leftovers.pop("aSTool", [None])[0])
+            feature = CDSMotif(bio_feature.location, leftovers.pop("aSTool", [""])[0] or None)
 
         updated = super(CDSMotif, feature).from_biopython(bio_feature, feature, leftovers)
         assert updated is feature

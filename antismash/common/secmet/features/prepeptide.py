@@ -4,6 +4,7 @@
 """ A class for representing RiPP prepeptides """
 
 from typing import Any, Dict, List
+from typing import Optional  # comment hints, pylint: disable=unused-import
 
 from Bio.SeqFeature import SeqFeature
 
@@ -59,7 +60,7 @@ class Prepeptide(CDSMotif):  # pylint: disable=too-many-instance-attributes
         if alternative_weights is not None:
             self.alternative_weights = [float(weight) for weight in alternative_weights]
 
-        self.detailed_information = None  # type: RiPPQualifier
+        self.detailed_information = None  # type: Optional[RiPPQualifier]
 
     @property
     def translation(self) -> str:
@@ -104,6 +105,7 @@ class Prepeptide(CDSMotif):  # pylint: disable=too-many-instance-attributes
 
             Uses the same function name as the CDSFeature for consistency.
         """
+        assert isinstance(self.locus_tag, str) and self.locus_tag
         return self.locus_tag
 
     def to_biopython(self, qualifiers: Dict[str, List] = None) -> List[SeqFeature]:

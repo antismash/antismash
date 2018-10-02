@@ -302,6 +302,7 @@ class ThioStatistics:
         """ The number of blocks of heterocyclizable residues in the core """
         if self._heteroblocks is None:
             self._calculate_heteroblocks()
+        assert isinstance(self._heteroblocks, int)
         return self._heteroblocks
 
     @property
@@ -309,6 +310,7 @@ class ThioStatistics:
         """ The average length of blocks of heterocyclizable residues in the core """
         if self._average_heteroblock_length is None:
             self._calculate_heteroblocks()
+        assert isinstance(self._average_heteroblock_length, float)
         return self._average_heteroblock_length
 
     def _calculate_heteroblocks(self) -> None:

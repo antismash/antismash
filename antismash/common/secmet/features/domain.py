@@ -56,7 +56,7 @@ class Domain(AntismashFeature):
             assert isinstance(feature, Domain), type(feature)
 
         # grab optional qualifiers
-        feature.domain = leftovers.pop("aSDomain", [None])[0]
+        feature.domain = leftovers.pop("aSDomain", [""])[0] or None
         for asf_label in leftovers.pop("ASF", []):
             feature.asf.add(asf_label)
 

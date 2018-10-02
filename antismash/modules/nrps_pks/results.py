@@ -179,6 +179,7 @@ class NRPS_PKS_Results(ModuleResults):
                 record.get_supercluster(cluster_pred.supercluster_number).smiles_structure = cluster_pred.smiles
 
         for cds_feature in record.get_nrps_pks_cds_features():
+            assert cds_feature.region, "CDS parent region removed since analysis"
             nrps_qualifier = cds_feature.nrps_pks
             for domain in nrps_qualifier.domains:
                 feature = record.get_domain_by_name(domain.feature_name)

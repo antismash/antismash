@@ -5,6 +5,7 @@
 
 from collections import OrderedDict
 from typing import Dict, List
+from typing import Optional  # comment hints, pylint: disable=unused-import
 
 from Bio.SeqFeature import SeqFeature
 
@@ -18,7 +19,7 @@ class AntismashDomain(Domain):
 
     def __init__(self, location: FeatureLocation, tool: str) -> None:
         super().__init__(location, feature_type="aSDomain", tool=tool, created_by_antismash=True)
-        self.domain_subtype = None  # type: str
+        self.domain_subtype = None  # type: Optional[str]
         self.specificity = []  # type: List[str]
 
     def to_biopython(self, qualifiers: Dict[str, List[str]] = None) -> List[SeqFeature]:
@@ -41,7 +42,7 @@ class AntismashDomain(Domain):
         feature = AntismashDomain(bio_feature.location, tool=tool)
 
         # grab optional qualifiers
-        feature.domain_subtype = leftovers.pop("domain_subtype", [None])[0]
+        feature.domain_subtype = leftovers.pop("domain_subtype", [""])[0] or None
         feature.specificity = leftovers.pop("specificity", [])
 
         # grab parent optional qualifiers

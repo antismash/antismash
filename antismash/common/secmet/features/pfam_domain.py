@@ -97,7 +97,7 @@ class PFAMDomain(Domain):
             break
         if name is None:
             raise ValueError("PFAMDomain missing identifier")
-        tool = leftovers.pop("aSTool", [None])[0]
+        tool = leftovers.pop("aSTool")[0]
 
         feature = PFAMDomain(bio_feature.location, description, p_start, p_end,
                              identifier=name, tool=tool)

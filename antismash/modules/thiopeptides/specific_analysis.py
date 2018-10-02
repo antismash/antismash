@@ -196,6 +196,7 @@ class Thiopeptide:
         (re)calculate the monoisotopic mass and molecular weight
         """
         assert self._core, "calculating weight without a core"
+        assert self.core_analysis and self.core_analysis_monoisotopic, "missing core analyses in weight calculation"
 
         amino_counts = self.core_analysis.count_amino_acids()
         no_thr_ser = amino_counts['T'] + amino_counts['S']
@@ -318,7 +319,7 @@ def predict_cleavage_site(query_hmmfile: str, target_sequence: str, threshold: f
     """
     hmmer_res = subprocessing.run_hmmpfam2(query_hmmfile, target_sequence)
 
-    best_score = None
+    best_score = 0.
     for res in hmmer_res:
         for hits in res:
             for hsp in hits:
@@ -445,9 +446,13 @@ def determine_precursor_peptide_candidate(query: secmet.CDSFeature, domains: Set
 
     # If no pHMM hit, try regular expression
     if end is None:
+        score = 0.
         end = run_cleavage_site_regex(query_sequence)
         if end is None or end > len(query_sequence) - 5:
             end = int(len(query_sequence)*0.60) - 14
+
+    # ensure there's a valid value for end before trying to use it
+    assert isinstance(end, int) and end > 0
 
     # Run RODEO to assess whether candidate precursor peptide is judged real
     rodeo_result = run_rodeo(query_sequence[:end], query_sequence[end:], domains)

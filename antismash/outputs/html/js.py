@@ -7,7 +7,7 @@
 
 import string
 import os
-from typing import Any, Dict, Iterable, List
+from typing import Any, Dict, Iterable, List, Optional
 from typing import Set  # comment hints, # pylint: disable=unused-import
 
 from antismash.common.module_results import ModuleResults
@@ -29,8 +29,11 @@ def convert_records(records: List[Record], results: List[Dict[str, ModuleResults
     return json_records
 
 
-def convert_record(record: Record, options: ConfigType, result: Dict[str, ModuleResults] = None) -> Dict[str, Any]:
+def convert_record(record: Record, options: ConfigType, result: Optional[Dict[str, ModuleResults]] = None
+                   ) -> Dict[str, Any]:
     """ Convert a Record to JSON """
+    if result is None:
+        result = {}
     return {'seq_id': record.id,
             'regions': convert_regions(record, options, result)}
 
@@ -61,6 +64,7 @@ def convert_regions(record: Record, options: ConfigType, result: Dict[str, Modul
         if clusterblast_results.knowncluster:
             mibig_results = clusterblast_results.knowncluster.mibig_entries
 
+    assert record.record_index  # shouldn't get here without ensuring this
     for region in record.get_regions():
         tta_codons = fetch_tta_features(region, result)
 
@@ -88,13 +92,16 @@ def convert_cds_features(record: Record, features: Iterable[CDSFeature], options
     js_orfs = []
     for feature in features:
         gene_function = str(feature.gene_function)
+        mibig_hits = []  # type: List[clusterblast.results.MibigEntry]
+        if feature.protein_id:
+            mibig_hits = mibig_entries.get(feature.protein_id, [])
+        description = get_description(record, feature, gene_function, options, mibig_hits)
         js_orfs.append({"start": feature.location.start + 1,
                         "end": feature.location.end,
                         "strand": feature.strand or 1,
                         "locus_tag": feature.get_name(),
                         "type": gene_function,
-                        "description": get_description(record, feature, gene_function, options,
-                                                       mibig_entries.get(feature.protein_id, []))})
+                        "description": description})
     return js_orfs
 
 
@@ -207,6 +214,7 @@ def get_description(record: Record, feature: CDSFeature, type_: str,
                                                  feature.location.end)
 
     if mibig_result:
+        assert feature.region
         region_number = feature.region.get_region_number()
         mibig_homology_file = os.path.join(options.output_dir, "knownclusterblast",
                                            "region%d" % region_number,

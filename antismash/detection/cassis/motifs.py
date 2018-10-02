@@ -109,10 +109,18 @@ def generate_motifs(meme_dir: str, anchor_promoter: int, promoters: List[Promote
 
 def filter_meme_results(meme_dir: str, promoter_sets: List[Motif], anchor: str) -> List[Motif]:
     """Analyse and filter MEME results"""
+
+    def fetch_node_text(root: ElementTree.Element, search_string: str) -> str:
+        """ Finds the text of a node with the given search string label """
+        node = root.find(search_string)
+        if node is None or not hasattr(node, "text") or node.text is None:
+            raise ValueError("unknown MEME output format")
+        return node.text
+
     for motif in promoter_sets:
         xml_file = os.path.join(meme_dir, motif.pairing_string, "meme.xml")
         root = ElementTree.parse(xml_file).getroot()
-        reason = root.find("model/reason_for_stopping").text
+        reason = fetch_node_text(root, "model/reason_for_stopping")
         anchor_seq_id = ""
 
         # no motif found for given e-value cutoff :-(
@@ -133,7 +141,10 @@ def filter_meme_results(meme_dir: str, promoter_sets: List[Motif], anchor: str) 
             contributing_sites = root.findall("motifs/motif/contributing_sites/contributing_site")
             if anchor_seq_id in map(lambda site: site.attrib["sequence_id"], contributing_sites):
                 # save motif score
-                motif.score = float(root.find("motifs/motif").attrib["e_value"])  # one motif, didn't ask MEME for more
+                node = root.find("motifs/motif")
+                if not node:
+                    raise ValueError("unknown MEME output format")
+                motif.score = float(node.attrib["e_value"])  # one motif, didn't ask MEME for more
 
                 # save sequence sites which represent the motif
                 motif.seqs = ["".join(map(lambda letter: letter.attrib["letter_id"],

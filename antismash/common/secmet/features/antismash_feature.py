@@ -4,7 +4,7 @@
 """ A base class for all antiSMASH-specific features """
 
 from collections import OrderedDict
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from Bio.SeqFeature import SeqFeature
 
@@ -16,19 +16,19 @@ class AntismashFeature(Feature):
     __slots__ = ["domain_id", "database", "detection", "_evalue", "label",
                  "locus_tag", "_score", "_translation", "tool"]
 
-    def __init__(self, location: FeatureLocation, feature_type: str, tool: str = None,
+    def __init__(self, location: FeatureLocation, feature_type: str, tool: Optional[str] = None,
                  created_by_antismash: bool = True) -> None:
         if created_by_antismash and not tool:
             raise ValueError("an AntismashFeature created by antiSMASH must have a tool supplied")
         super().__init__(location, feature_type, created_by_antismash=created_by_antismash)
         self.tool = tool
-        self.domain_id = None  # type: str
-        self.database = None  # type: str
-        self.detection = None  # type: str
-        self._evalue = None  # type: float
-        self.label = None  # type: str
-        self.locus_tag = None  # type: str
-        self._score = None  # type: float
+        self.domain_id = None  # type: Optional[str]
+        self.database = None  # type: Optional[str]
+        self.detection = None  # type: Optional[str]
+        self._evalue = None  # type: Optional[float]
+        self.label = None  # type: Optional[str]
+        self.locus_tag = None  # type: Optional[str]
+        self._score = None  # type: Optional[float]
 
         self._translation = ""
 
@@ -47,7 +47,7 @@ class AntismashFeature(Feature):
         self._translation = translation
 
     @property
-    def score(self) -> float:
+    def score(self) -> Optional[float]:
         """ The bitscore reported by a tool when locating the feature """
         return self._score
 
@@ -56,7 +56,7 @@ class AntismashFeature(Feature):
         self._score = float(score)
 
     @property
-    def evalue(self) -> float:
+    def evalue(self) -> Optional[float]:
         """ The e-value reported by a tool when locating the feature """
         return self._evalue
 
@@ -66,6 +66,7 @@ class AntismashFeature(Feature):
 
     def get_name(self) -> str:
         """ Returns the domain's identifier """
+        assert self.domain_id is not None
         return self.domain_id
 
     def to_biopython(self, qualifiers: Dict[str, List[str]] = None) -> List[SeqFeature]:
@@ -107,12 +108,12 @@ class AntismashFeature(Feature):
             raise ValueError("an AntismashFeature created by antiSMASH must have a tool supplied")
 
         # grab optional qualifiers
-        feature.domain_id = leftovers.pop("domain_id", [None])[0]
-        feature.database = leftovers.pop("database", [None])[0]
-        feature.detection = leftovers.pop("detection", [None])[0]
-        feature.label = leftovers.pop("label", [None])[0]
-        feature.locus_tag = leftovers.pop("locus_tag", [None])[0]
-        translation = leftovers.pop("translation", [None])[0]
+        feature.domain_id = leftovers.pop("domain_id", [""])[0] or None
+        feature.database = leftovers.pop("database", [""])[0] or None
+        feature.detection = leftovers.pop("detection", [""])[0] or None
+        feature.label = leftovers.pop("label", [""])[0] or None
+        feature.locus_tag = leftovers.pop("locus_tag", [""])[0] or None
+        translation = leftovers.pop("translation", [""])[0] or None
         if translation is not None:
             feature.translation = translation
         if "evalue" in leftovers:
