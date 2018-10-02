@@ -50,7 +50,12 @@ class AllFunctionResults(module_results.DetectionResults):
 
         all_results = AllFunctionResults(record.id)
         for json_result in json["tools"]:
-            all_results.add_tool_results(FunctionResults.from_json(json_result, record))
+            result = FunctionResults.from_json(json_result, record)
+            if not result:
+                # abort, since all should be rerun if one can't regenerate
+                logging.debug("FunctionResult could not be regenerated, discarding %s results", NAME)
+                return None
+            all_results.add_tool_results(result)
 
         return all_results
 
