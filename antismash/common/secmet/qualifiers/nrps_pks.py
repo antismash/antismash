@@ -31,10 +31,9 @@ class NRPSPKSQualifier(list):
             self.end = int(end)
             self.evalue = float(evalue)
             self.bitscore = float(bitscore)
-            if feature_name:
-                self.feature_name = str(feature_name)
-            else:
-                self.feature_name = None
+            if not feature_name:
+                raise ValueError("a Domain must belong to a feature, feature_name is required")
+            self.feature_name = str(feature_name)
             self.predictions = {}  # type: Dict[str, str] # method to prediction name
 
         def __lt__(self, other: "NRPSPKSQualifier.Domain") -> bool:
