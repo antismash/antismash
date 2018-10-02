@@ -88,36 +88,6 @@ def build_location_from_others(locations: Sequence[FeatureLocation]) -> FeatureL
     return location
 
 
-def location_bridges_origin(location: CompoundLocation) -> bool:
-    """ Determines if a CompoundLocation would cross the origin of a record.
-
-        Arguments:
-            location: the CompoundLocation to check
-
-        Returns:
-            False if the location does not bridge the origin or if the location
-            is of indeterminate strand, otherwise True
-    """
-    assert isinstance(location, (FeatureLocation, CompoundLocation)), type(location)
-
-    # if it's not compound, it can't bridge at all
-    if not isinstance(location, CompoundLocation):
-        return False
-
-    # invalid strands mean direction can't be determined, may need to be an error
-    if location.strand not in [1, -1]:
-        return False
-
-    for i, part in enumerate(location.parts[1:]):
-        if location.strand == 1:
-            if part.start <= location.parts[i].end:
-                return True
-        else:
-            if part.start >= location.parts[i].end:
-                return True
-    return False
-
-
 def locations_overlap(first: FeatureLocation, second: FeatureLocation) -> bool:
     """ Returns True if the two provided FeatureLocations overlap
 

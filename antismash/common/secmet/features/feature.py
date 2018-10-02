@@ -11,7 +11,6 @@ from Bio.Seq import Seq
 
 from antismash.common.secmet.locations import (
     convert_protein_position_to_dna,
-    location_bridges_origin,
     locations_overlap,
 )
 

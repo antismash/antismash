@@ -41,7 +41,6 @@ from .features import CDSCollection  # comment hints, pylint: disable=unused-imp
 from .features.supercluster import create_superclusters_from_clusters
 
 from .locations import (
-    location_bridges_origin,
     combine_locations,
 )
 
