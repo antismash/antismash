@@ -41,7 +41,7 @@ class SMCOGTreeResults(ModuleResults):
                 "image_dir": self.relative_tree_path}
 
     @staticmethod
-    def from_json(json: Dict[str, Any], record: Record) -> "SMCOGTreeResults":
+    def from_json(json: Dict[str, Any], record: Record) -> Optional["SMCOGTreeResults"]:
         if json.get("schema_version") != SMCOGTreeResults.schema_version:
             logging.debug("Schema version mismatch, discarding SMCOGs results")
             return None

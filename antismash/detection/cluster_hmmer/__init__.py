@@ -69,7 +69,7 @@ def check_options(options: ConfigType) -> List[str]:
 
 
 def regenerate_previous_results(previous: Dict[str, Any], record: Record,
-                                _options: ConfigType) -> hmmer.HmmerResults:
+                                _options: ConfigType) -> Optional[hmmer.HmmerResults]:
     """ Rebuild previous results """
     if not previous:
         return None

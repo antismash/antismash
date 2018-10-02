@@ -40,7 +40,7 @@ class AllFunctionResults(module_results.DetectionResults):
             results.add_to_record(record)
 
     @staticmethod
-    def from_json(json: Dict[str, Any], record: Record) -> "AllFunctionResults":
+    def from_json(json: Dict[str, Any], record: Record) -> Optional["AllFunctionResults"]:
         if json.get("schema_version") != FunctionResults.schema_version:
             logging.debug("Schema version mismatch, discarding %s results", NAME)
             return None

@@ -5,7 +5,7 @@
     antismash run results.
 """
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from .secmet import Record
 from .secmet.features import Cluster, SubRegion
@@ -31,12 +31,16 @@ class ModuleResults:
         raise NotImplementedError()
 
     @staticmethod
-    def from_json(json: Dict[str, Any], record: Record) -> "ModuleResults":
+    def from_json(json: Dict[str, Any], record: Record) -> Optional["ModuleResults"]:
         """
             Converts a json structure back to a ModuleResults instance
 
             The ModuleResults instance returned should be able to regenerate the
             provided json by use of .to_json()
+
+            Returns:
+                the rebuilt instance, or None if the previous results are invalidated by
+                the current config
         """
         raise NotImplementedError()
 

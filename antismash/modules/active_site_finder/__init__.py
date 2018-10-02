@@ -36,7 +36,7 @@ class ASFResults(module_results.ModuleResults):
         return json
 
     @staticmethod
-    def from_json(json: Dict[str, Any], record: secmet.Record) -> "ASFResults":
+    def from_json(json: Dict[str, Any], record: secmet.Record) -> Optional["ASFResults"]:
         if ASFResults.schema_version != json.pop("schema version", None):
             logging.warning("Dropping ASF results, schema version has changed")
             return None
@@ -139,7 +139,7 @@ def is_enabled(options: ConfigType) -> bool:
 
 
 def regenerate_previous_results(results: Dict[str, Any], record: secmet.Record,
-                                _options: ConfigType) -> ASFResults:
+                                _options: ConfigType) -> Optional[ASFResults]:
     """ Regenerate the previous results from JSON format. """
     return ASFResults.from_json(results, record)
 

@@ -56,7 +56,7 @@ class SactiResults(module_results.ModuleResults):
                 "clusters": {key: list(val) for key, val in self.clusters.items()}}
 
     @staticmethod
-    def from_json(json: Dict[str, Any], record: secmet.Record) -> "SactiResults":
+    def from_json(json: Dict[str, Any], record: secmet.Record) -> Optional["SactiResults"]:
         if json.get("schema_version") != SactiResults.schema_version:
             logging.warning("Discarding Sactipeptide results, schema version mismatch")
             return None

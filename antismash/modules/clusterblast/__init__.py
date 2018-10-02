@@ -79,7 +79,7 @@ def check_options(options: ConfigType) -> List[str]:
 
 
 def regenerate_previous_results(previous: Dict[str, Any], record: Record,
-                                _options: ConfigType) -> ClusterBlastResults:
+                                _options: ConfigType) -> Optional[ClusterBlastResults]:
     """ Regenerates previous results """
     if not previous:
         logging.debug("No previous clusterblast results to reuse")

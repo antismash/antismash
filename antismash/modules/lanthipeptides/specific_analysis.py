@@ -79,7 +79,7 @@ class LanthiResults(module_results.ModuleResults):
                 "clusters": {key: list(val) for key, val in self.clusters.items()}}
 
     @staticmethod
-    def from_json(json: Dict[str, Any], record: Record) -> "LanthiResults":
+    def from_json(json: Dict[str, Any], record: Record) -> Optional["LanthiResults"]:
         if json.get("schema_version") != LanthiResults.schema_version:
             logging.warning("Discarding Lanthipeptide results, schema version mismatch")
             return None
