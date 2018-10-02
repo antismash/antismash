@@ -430,16 +430,17 @@ class Record:
         # shortcut if no CDS features exist
         if not self._cds_features:
             return results
-        index = find_start_in_list(location, self._cds_features, with_overlapping)
-        while index < len(self._cds_features):
-            feature = self._cds_features[index]
-            if feature.is_contained_by(location):
-                results.append(feature)
-            elif with_overlapping and feature.overlaps_with(location):
-                results.append(feature)
-            else:
-                break
-            index += 1
+        for sublocation in location.parts:
+            index = find_start_in_list(sublocation, self._cds_features, with_overlapping)
+            while index < len(self._cds_features):
+                feature = self._cds_features[index]
+                if feature.is_contained_by(location):
+                    results.append(feature)
+                elif with_overlapping and feature.overlaps_with(location):
+                    results.append(feature)
+                else:
+                    break
+                index += 1
         return results
 
     def to_biopython(self) -> SeqRecord:
