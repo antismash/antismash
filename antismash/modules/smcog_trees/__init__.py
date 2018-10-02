@@ -91,6 +91,9 @@ def regenerate_previous_results(results: Dict[str, Any], record: Record, _option
     if not results:
         return None
     parsed = SMCOGTreeResults.from_json(results, record)
+    if not parsed:
+        return None
+
     for tree_filename in parsed.tree_images.values():
         if not os.path.exists(os.path.join(parsed.relative_tree_path, tree_filename)):
             logging.debug("Tree image files missing and must be regenerated")
