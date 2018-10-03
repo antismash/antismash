@@ -117,9 +117,8 @@ class LanthiResults(module_results.ModuleResults):
 
 class PrepeptideBase:
     """ A generic prepeptide class for tracking various typical components """
-    def __init__(self, start: int, end: int, score: int, rodeo_score: int = 0) -> None:
-        self.start = int(start)  # same as CDS
-        self.end = int(end)  # same as CDS
+    def __init__(self, end: int, score: int, rodeo_score: int = 0) -> None:
+        self.end = int(end)  # cleavage site position
         self.score = int(score)  # of cleavage site
         self.rodeo_score = int(rodeo_score)
         self._leader = None  # type: str
@@ -154,8 +153,8 @@ class PrepeptideBase:
         self._leader = seq
 
     def __repr__(self) -> str:
-        base = "PrepeptideBase(%s..%s, %s, %r, %r)"
-        return base % (self.start, self.end, self.score, self.rodeo_score, self._core)
+        base = "PrepeptideBase(..%s, %s, %r, %r)"
+        return base % (self.end, self.score, self.rodeo_score, self._core)
 
     @property
     def number_of_lan_bridges(self) -> int:
@@ -203,22 +202,21 @@ class PrepeptideBase:
 
 class CleavageSiteHit:  # pylint: disable=too-few-public-methods
     """ A simple container for storing cleavage site information """
-    def __init__(self, start: int, end: int, score: int, lantype: str) -> None:
-        self.start = int(start)
+    def __init__(self, end: int, score: int, lantype: str) -> None:
         self.end = int(end)
         self.score = int(score)
         self.lantype = lantype
 
     def __repr__(self) -> str:
-        return "CleavageSiteHit(start=%s, end=%s, score=%s, lantype='%s')" % (
-                    self.start, self.end, self.score, self.lantype)
+        return ("CleavageSiteHit(end=%s, score=%s, lantype='%s')"
+                % (self.end, self.score, self.lantype))
 
 
 class Lanthipeptide(PrepeptideBase):
     """ Calculates and stores lanthipeptide information
     """
     def __init__(self, hit: CleavageSiteHit, rodeo_score: int) -> None:
-        super().__init__(hit.start, hit.end, hit.score, rodeo_score)
+        super().__init__(hit.end, hit.score, rodeo_score)
         self.lantype = hit.lantype
         self._aminovinyl = False
         self._chlorinated = False
@@ -226,8 +224,8 @@ class Lanthipeptide(PrepeptideBase):
         self._lac = False
 
     def __repr__(self) -> str:
-        base = "Lanthipeptide(%s..%s, %s, %r, %r, %s, %s(%s))"
-        return base % (self.start, self.end, self.score, self.lantype, self._core,
+        base = "Lanthipeptide(..%s, %s, %r, %r, %s, %s(%s))"
+        return base % (self.end, self.score, self.lantype, self._core,
                        self._lan_bridges, self._monoisotopic_weight, self._weight)
 
     @property
@@ -422,7 +420,7 @@ def predict_cleavage_site(query_hmmfile: str, target_sequence: str,
             lanthi_type = hits.description
             for hsp in hits:
                 if hsp.bitscore > threshold:
-                    return CleavageSiteHit(hsp.query_start - 1, hsp.query_end, hsp.bitscore, lanthi_type)
+                    return CleavageSiteHit(hsp.query_end, hsp.bitscore, lanthi_type)
     return None
 
 
@@ -467,14 +465,14 @@ def run_cleavage_site_regex(fasta: str) -> Optional[CleavageSiteHit]:
 
     # For regular expression, check if there is a match that is <10 AA from the end
     if re.search(rex1, fasta) and len(re.split(rex1, fasta)[-1]) > 10:
-        start, end = [m.span() for m in rex1.finditer(fasta)][-1]
+        _, end = [m.span() for m in rex1.finditer(fasta)][-1]
         end += 16
     elif re.search(rex2, fasta) and len(re.split(rex2, fasta)[-1]) > 10:
-        start, end = [m.span() for m in rex2.finditer(fasta)][-1]
+        _, end = [m.span() for m in rex2.finditer(fasta)][-1]
         end += 15
     else:
         return None
-    return CleavageSiteHit(start, end, 0, "lanthipeptide")
+    return CleavageSiteHit(end, 0, "lanthipeptide")
 
 
 def determine_precursor_peptide_candidate(record: Record, query: CDSFeature, domains: List[str],
