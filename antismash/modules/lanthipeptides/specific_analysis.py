@@ -441,7 +441,7 @@ def predict_class_from_genes(focus: CDSFeature, genes: List[CDSFeature]) -> Opti
             continue
         found_domains.update(set(feature.sec_met.domain_ids))
 
-    if 'Lant_dehyd_N' in found_domains or 'Lant_dehyd_C' in found_domains:
+    if 'Lant_dehydr_N' in found_domains or 'Lant_dehydr_C' in found_domains:
         return 'Class-I'
     if 'DUF4135' in found_domains:
         return 'Class-II'
@@ -706,7 +706,7 @@ def run_specific_analysis(record: Record) -> LanthiResults:
             continue
 
         # find core biosynthetic enzyme locations
-        core_domain_names = {'Lant_dehyd_N', 'Lant_dehyd_C', 'DUF4135', 'Pkinase'}
+        core_domain_names = {'Lant_dehydr_N', 'Lant_dehydr_C', 'DUF4135', 'Pkinase'}
         core_genes = []
         for gene in cluster.cds_children:
             if not gene.sec_met:
