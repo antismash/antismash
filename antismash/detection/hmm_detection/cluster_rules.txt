@@ -72,14 +72,8 @@ RULE terpene
 RULE lanthipeptide
     CUTOFF 20
     EXTENT 10
-    CONDITIONS (LANC_like and (Flavoprotein or Trp_halogenase or p450
-                                or Lant_dehydr_N or Lant_dehydr_C
-                                or adh_short or adh_short_C2)
-                   or cds(LANC_like and (Pkinase or DUF4135))
-                   or TIGR03731 or Antimicr18 or Gallidermin or L_biotic_A or leader_d
-                   or leader_eh or leader_abc or mature_d or mature_ab or mature_a
-                   or mature_b or mature_ha or mature_h_beta or lacticin_l
-                   or lacticin_mat or LD_lanti_pre or strep_PEQAXS)
+    CONDITIONS (LANC_like and (Lant_dehydr_N or Lant_dehydr_C)  # Class I
+                   or cds(LANC_like and (Pkinase or DUF4135)))  # Classes II, III and IV
                and not YcaO  # because then it'd be a thiopeptide
 
 RULE bacteriocin
