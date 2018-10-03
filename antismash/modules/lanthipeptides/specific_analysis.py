@@ -16,7 +16,7 @@ from typing import Any, Dict, List, Iterable, Optional, Set
 from antismash.common.signature import HmmSignature
 from antismash.common import all_orfs, path, subprocessing, module_results, utils
 from antismash.common.fasta import get_fasta_from_features
-from antismash.common.secmet import CDSFeature, Record, Cluster, Prepeptide, GeneFunction
+from antismash.common.secmet import CDSFeature, Cluster, GeneFunction, Prepeptide, Record, Region
 from antismash.common.secmet.features import CDSCollection
 from antismash.common.secmet.qualifiers.prepeptide_qualifiers import LanthiQualifier
 
@@ -103,6 +103,16 @@ class LanthiResults(module_results.ModuleResults):
                 if motif.get_name() not in motifs_added:
                     record.add_cds_motif(motif)
                     motifs_added.add(motif.get_name())
+
+    def get_motifs_for_region(self, region: Region) -> Dict[str, List[Prepeptide]]:
+        """ Given a region, return a subset of motifs_by_locus for hits within
+            that region
+        """
+        results = {}
+        for cluster in region.get_unique_clusters():
+            for locus in self.clusters.get(cluster.get_cluster_number(), []):
+                results[locus] = self.motifs_by_locus[locus]
+        return results
 
 
 class PrepeptideBase:
