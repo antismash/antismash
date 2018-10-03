@@ -97,9 +97,12 @@ class LanthiResults(module_results.ModuleResults):
         for feature in self.new_cds_features:
             record.add_cds_feature(feature)
 
+        motifs_added = set()  # type: Set[str]
         for motifs in self.motifs_by_locus.values():
             for motif in motifs:
-                record.add_cds_motif(motif)
+                if motif.get_name() not in motifs_added:
+                    record.add_cds_motif(motif)
+                    motifs_added.add(motif.get_name())
 
 
 class PrepeptideBase:
