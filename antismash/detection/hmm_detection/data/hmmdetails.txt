@@ -41,6 +41,7 @@ p450	P450 oxygenase	21	PF00067.hmm
 Pkinase	Protein kinase domain	30	PF00069.hmm
 adh_short	Short-chain dehydrogenase	100	PF00106.hmm
 adh_short_C2	Short-chain dehydrogenase, C-terminus	100	PF13561.hmm
+PCMT	Protein-L-isoaspartate(D-aspartate) O-methyltransferase (PCMT)	20	PF01135.hmm
 Antimicr18	Lantibiotic antimicrobial peptide 18	20	Antimicrobial18.hmm
 Gallidermin	Gallidermin	20	Gallidermin.hmm
 L_biotic_A	Lantibiotic, type A	20	L_biotic_typeA.hmm

@@ -711,6 +711,9 @@ def run_specific_analysis(record: Record) -> LanthiResults:
         for gene in cluster.cds_children:
             if not gene.sec_met:
                 continue
+            # We seem to hit Lant_dehydr_C on some O-Methyltranferases that also hit PCMT
+            if 'PCMT' in gene.sec_met.domain_ids:
+                continue
             if core_domain_names.intersection(set(gene.sec_met.domain_ids)):
                 core_genes.append(gene)
 
