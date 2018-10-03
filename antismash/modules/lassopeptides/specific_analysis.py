@@ -82,9 +82,8 @@ class LassoResults(module_results.ModuleResults):
 class Lassopeptide:
     """ Class to calculate and store lassopeptide information
     """
-    def __init__(self, start: int, end: int, score: float, rodeo_score: int,
+    def __init__(self, end: int, score: float, rodeo_score: int,
                  leader: str, core: str) -> None:
-        self.start = start
         self.end = end
         self.score = score
         self.rodeo_score = rodeo_score
@@ -129,8 +128,8 @@ class Lassopeptide:
         self._c_cut = str(ccut)
 
     def __repr__(self) -> str:
-        return "Lassopeptide(%s..%s, %s, %r, %r, %s, %s(%s), %s, %s)" % (
-                        self.start, self.end, self.score, self._lassotype,
+        return "Lassopeptide(..%s, %s, %r, %r, %s, %s(%s), %s, %s)" % (
+                        self.end, self.score, self._lassotype,
                         self._core, self.number_bridges, self._monoisotopic_weight,
                         self._weight, self._macrolactam, self.c_cut)
 
@@ -218,30 +217,30 @@ class Lassopeptide:
 
 
 def predict_cleavage_site(query_hmmfile: str, target_sequence: str, threshold: float
-                          ) -> Union[Tuple[None, None, None], Tuple[int, int, float]]:
+                          ) -> Union[Tuple[None, None], Tuple[int, float]]:
     """
     Function extracts from HMMER the start position, end position and score
     of the HMM alignment
     """
     hmmer_res = subprocessing.run_hmmpfam2(query_hmmfile, target_sequence)
-    resvec = (None, None, None)
+    resvec = (None, None)
     for res in hmmer_res:
         for hits in res:
             for hsp in hits:
                 # when hmm includes 1st macrolactam residue: end-2
                 if hsp.bitscore > threshold:
-                    resvec = (hsp.query_start - 1, hsp.query_end - 1, hsp.bitscore)
+                    resvec = (hsp.query_end - 1, hsp.bitscore)
                     break
     return resvec
 
 
-def run_cleavage_site_phmm(fasta: str, hmmer_profile: str, threshold: float) -> Tuple[int, int, float]:
+def run_cleavage_site_phmm(fasta: str, hmmer_profile: str, threshold: float) -> Tuple[int, float]:
     """Try to identify cleavage site using pHMM"""
     profile = path.get_full_path(__file__, 'data', hmmer_profile)
     return predict_cleavage_site(profile, fasta, threshold)
 
 
-def run_cleavage_site_regex(fasta: str) -> Tuple[Optional[int], Optional[int], Optional[int]]:
+def run_cleavage_site_regex(fasta: str) -> Optional[int]:
     """Try to identify cleavage site using regular expressions"""
     # Regular expressions; try 1 first, then 2, etc.
     rex1 = re.compile('(Y[ARNDBCEQZGHILKMFPSTWYV]{2}P[ARNDBCEQZGHILKMFPSTWYV]'
@@ -250,23 +249,26 @@ def run_cleavage_site_regex(fasta: str) -> Tuple[Optional[int], Optional[int], O
     rex3 = re.compile('(Y[ARNDBCEQZGHILKMFPSTWYV]{2}P[ARNDBCEQZGHILKMFPSTWYV]L)')
     rex4 = re.compile('(Y[ARNDBCEQZGHILKMFPSTWYV]{2}P)')
 
+    end = -1
+
     # For each regular expression, check if there is a match that is <10 AA from the end
     if re.search(rex1, fasta) and len(re.split(rex1, fasta)[-1]) > 14:
-        start, end = [m.span() for m in rex1.finditer(fasta)][-1]
+        _, end = [m.span() for m in rex1.finditer(fasta)][-1]
         end -= 5
     elif re.search(rex2, fasta) and len(re.split(rex2, fasta)[-1]) > 14:
-        start, end = [m.span() for m in rex2.finditer(fasta)][-1]
+        _, end = [m.span() for m in rex2.finditer(fasta)][-1]
         end -= 5
     elif re.search(rex3, fasta) and len(re.split(rex3, fasta)[-1]) > 14:
-        start, end = [m.span() for m in rex3.finditer(fasta)][-1]
+        _, end = [m.span() for m in rex3.finditer(fasta)][-1]
         end += 5
     elif re.search(rex4, fasta) and len(re.split(rex4, fasta)[-1]) > 14:
-        start, end = [m.span() for m in rex4.finditer(fasta)][-1]
+        _, end = [m.span() for m in rex4.finditer(fasta)][-1]
         end += 7
-    else:
-        return None, None, None
 
-    return start, end, 0
+    if end <= 0:
+        return None
+
+    return end
 
 
 def is_on_same_strand_as(cluster: Cluster, query: CDSFeature, profile_name: str) -> bool:
@@ -613,14 +615,14 @@ def determine_precursor_peptide_candidate(record: Record, cluster: Cluster,
     # Create FASTA sequence for feature under study
     lasso_a_fasta = ">%s\n%s" % (query.get_name(), query_sequence)
 
-    # Run sequence against pHMM; if positive, parse into a vector containing START, END and SCORE
-    start, end, score = run_cleavage_site_phmm(lasso_a_fasta, 'precursor_2637.hmm', -20.00)
+    # Run sequence against pHMM to find the cleavage site position
+    end, score = run_cleavage_site_phmm(lasso_a_fasta, 'precursor_2637.hmm', -20.00)
 
-    # If no pHMM hit, try regular expression
-    if score is None:
-        start, end, score = run_cleavage_site_regex(lasso_a_fasta)
-        if score is None or end > len(query_sequence) - 3:
-            start, end, score = 0, len(query_sequence) // 2 - 5, 0.
+    # If no pHMM hit, try regular expressions
+    if end is None:
+        end = run_cleavage_site_regex(lasso_a_fasta)
+        if end is None or end > len(query_sequence) - 3:
+            end, score = len(query_sequence) // 2 - 5, 0.
 
     # Run RODEO to assess whether candidate precursor peptide is judged real
     valid, rodeo_score = run_rodeo(record, cluster, query, query_sequence[:end], query_sequence[end:])
@@ -630,7 +632,7 @@ def determine_precursor_peptide_candidate(record: Record, cluster: Cluster,
     # Determine the leader and core peptide
     leader = query_sequence[:end]
     core = query_sequence[end:]
-    return Lassopeptide(start, end + 1, score, rodeo_score, leader, core)
+    return Lassopeptide(end + 1, score, rodeo_score, leader, core)
 
 
 def run_lassopred(record: Record, cluster: Cluster, query: CDSFeature) -> Optional[Prepeptide]:
