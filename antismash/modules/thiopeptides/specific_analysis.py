@@ -71,8 +71,7 @@ class ThioResults(module_results.ModuleResults):
 class Thiopeptide:
     """ Class to calculate and store thiopeptide information
     """
-    def __init__(self, start: int, end: int, score: float, rodeo_score: int) -> None:
-        self.start = start
+    def __init__(self, end: int, score: float, rodeo_score: int) -> None:
         self.end = end
         self.score = score
         self.rodeo_score = rodeo_score
@@ -186,8 +185,8 @@ class Thiopeptide:
         self._c_cut = ccut
 
     def __repr__(self) -> str:
-        return "Thiopeptide(%s..%s, %s, %r, %r, %s(%s), %s, %s, %s, %s)" % (
-                        self.start, self.end, self.score, self._core,
+        return "Thiopeptide(..%s, %s, %r, %r, %s(%s), %s, %s, %s, %s)" % (
+                        self.end, self.score, self._core,
                         self.thio_type, self._monoisotopic_weight, self._weight,
                         self.macrocycle, self.amidation, self.mature_features,
                         self.c_cut)
@@ -301,7 +300,7 @@ def predict_amidation(found_domains: Set[str]) -> bool:
 
 
 def predict_cleavage_site(query_hmmfile: str, target_sequence: str, threshold: float
-                          ) -> Tuple[Optional[int], Optional[int], float]:
+                          ) -> Tuple[Optional[int], float]:
     """ Extracts the start position, end position and score
         of the HMM alignment from HMMER results.
 
@@ -324,11 +323,11 @@ def predict_cleavage_site(query_hmmfile: str, target_sequence: str, threshold: f
         for hits in res:
             for hsp in hits:
                 if hsp.bitscore > threshold:
-                    return hsp.query_start, hsp.query_end - 14, hsp.bitscore
+                    return hsp.query_end - 14, hsp.bitscore
                 if best_score is None or hsp.bitscore > best_score:
                     best_score = hsp.bitscore
 
-    return None, None, best_score
+    return None, best_score
 
 
 def predict_type_from_cluster(found_domains: Set[str]) -> str:
@@ -398,29 +397,27 @@ def run_non_biosynthetic_phmms(cluster_fasta: str) -> Dict[str, Any]:
 
 
 def run_cleavage_site_phmm(input_fasta: str, hmmer_profile: str, threshold: float
-                           ) -> Tuple[Optional[int], Optional[int], float]:
+                           ) -> Tuple[Optional[int], float]:
     """Try to identify cleavage site using pHMM"""
     profile = path.get_full_path(__file__, "data", hmmer_profile)
     return predict_cleavage_site(profile, input_fasta, threshold)
 
 
-def run_cleavage_site_regex(sequence: str) -> Tuple[Optional[int], Optional[int]]:
+def run_cleavage_site_regex(sequence: str) -> Optional[int]:
     """Try to identify cleavage site using regular expressions"""
-    # Regular expressions; try 1 first, then 2, etc.
-    rex1 = re.compile('([IV]AS)')
-    rex2 = re.compile('([GAS]AS)')
+    regex = re.compile('([IVGAS]AS)')
+
+    end = -1
 
     # For each regular expression, check if there is a match that is <10 AA from the end
-    if re.search(rex1, sequence) and len(re.split(rex1, sequence)[-1]) > 10:
-        start, end = [m.span() for m in rex1.finditer(sequence)][-1]
+    if re.search(regex, sequence) and len(re.split(regex, sequence)[-1]) > 10:
+        _, end = [m.span() for m in regex.finditer(sequence)][-1]
         end -= 5
-    elif re.search(rex2, sequence) and len(re.split(rex2, sequence)[-1]) > 10:
-        start, end = [m.span() for m in rex2.finditer(sequence)][-1]
-        end -= 5
-    else:
-        return None, None
 
-    return start, end
+    if end <= 0:
+        return None
+
+    return end
 
 
 def determine_precursor_peptide_candidate(query: secmet.CDSFeature, domains: Set[str]
@@ -444,20 +441,20 @@ def determine_precursor_peptide_candidate(query: secmet.CDSFeature, domains: Set
     thio_a_fasta = ">%s\n%s" % (query.get_name(), query_sequence)
 
     # Run sequence against pHMM; if positive, parse into a vector containing START, END and SCORE
-    start, end, score = run_cleavage_site_phmm(thio_a_fasta, 'thio_cleave.hmm', -3.00)
+    end, score = run_cleavage_site_phmm(thio_a_fasta, 'thio_cleave.hmm', -3.00)
 
     # If no pHMM hit, try regular expression
-    if start is None:
-        start, end = run_cleavage_site_regex(query_sequence)
-        if start is None or end > len(query_sequence) - 5:
-            start, end = 0, int(len(query_sequence)*0.60) - 14
+    if end is None:
+        end = run_cleavage_site_regex(query_sequence)
+        if end is None or end > len(query_sequence) - 5:
+            end = int(len(query_sequence)*0.60) - 14
 
     # Run RODEO to assess whether candidate precursor peptide is judged real
     rodeo_result = run_rodeo(query_sequence[:end], query_sequence[end:], domains)
     if not rodeo_result[0]:
-        return Thiopeptide(start, end + 1, score, 0)
+        return Thiopeptide(end + 1, score, 0)
 
-    thiopeptide = Thiopeptide(start, end + 1, score, rodeo_result[1])
+    thiopeptide = Thiopeptide(end + 1, score, rodeo_result[1])
 
     # Determine the leader and core peptide
     thiopeptide.leader = query_sequence[:end]
