@@ -22,87 +22,81 @@ from antismash.modules.lanthipeptides.specific_analysis import (
 
 
 class TestLanthipeptide(unittest.TestCase):
+    def setUp(self):
+        self.lant = Lanthipeptide(CleavageSiteHit(42, 17, 'Class-I'), 23)
+
     def test_init(self):
         "Test Lanthipeptide instantiation"
-        lant = Lanthipeptide(CleavageSiteHit(23, 42, 17, 'Class-I'), 23)
-        self.assertTrue(isinstance(lant, Lanthipeptide))
-        self.assertEqual(23, lant.start)
-        self.assertEqual(42, lant.end)
-        self.assertEqual(17, lant.score)
-        self.assertEqual('Class-I', lant.lantype)
-        self.assertEqual('', lant.core)
+        assert isinstance(self.lant, Lanthipeptide)
+        assert self.lant.end == 42
+        assert self.lant.score == 17
+        assert self.lant.lantype == "Class-I"
+        assert self.lant.core == ""
         with self.assertRaisesRegex(AssertionError, "calculating weight without a core"):
-            print(lant.molecular_weight)
+            print(self.lant.molecular_weight)
 
     def test_repr(self):
         "Test Lanthipeptide representation"
-        lant = Lanthipeptide(CleavageSiteHit(23, 42, 17, 'Class-I'), 23)
-        expected = "Lanthipeptide(23..42, 17, 'Class-I', '', -1, -1(-1))"
-        self.assertEqual(expected, repr(lant))
+        expected = "Lanthipeptide(..42, 17, 'Class-I', '', -1, -1(-1))"
+        assert repr(self.lant) == expected
 
     def test_core(self):
         "Test Lanthipeptide.core"
-        lant = Lanthipeptide(CleavageSiteHit(23, 42, 17, 'Class-I'), 23)
-        self.assertEqual('', lant.core)
-        assert lant.core_analysis is None
-        lant.core = "MAGICHAT"
-        self.assertEqual('MAGICHAT', lant.core)
-        assert lant.core_analysis
+        assert self.lant.core == ""
+        assert self.lant.core_analysis is None
+        self.lant.core = "MAGICHAT"
+        assert self.lant.core == "MAGICHAT"
+        assert self.lant.core_analysis
 
     def test_core_ignore_invalid(self):
         "Test Lanthipeptide.core ignores invalid amino acids"
-        lant = Lanthipeptide(CleavageSiteHit(23, 42, 17, 'Class-I'), 23)
-        self.assertEqual('', lant.core)
-        assert lant.core_analysis is None
-        lant.core = "MAGICXHAT"
-        self.assertEqual('MAGICXHAT', lant.core)
-        assert lant.core_analysis
+        assert self.lant.core == ""
+        assert self.lant.core_analysis is None
+        self.lant.core = "MAGICXHAT"
+        assert self.lant.core == "MAGICXHAT"
+        assert self.lant.core_analysis
 
     def test_number_of_lan_bridges(self):
         "Test Lanthipeptide.number_of_lan_bridges"
-        lant = Lanthipeptide(CleavageSiteHit(23, 42, 17, 'Class-I'), 23)
-        lant.core = "MAGICHAT"
-        self.assertEqual(1, lant.number_of_lan_bridges)
-        lant.core = "MAGICHATCS"
-        self.assertEqual(2, lant.number_of_lan_bridges)
-        lant.core = "MAGICHATCSS"
-        self.assertEqual(2, lant.number_of_lan_bridges)
-        lant.core = "MAGICHATCT"
-        self.assertEqual(2, lant.number_of_lan_bridges)
-        lant.core = "MAGICHATCCS"
-        self.assertEqual(2, lant.number_of_lan_bridges)
+        self.lant.core = "MAGICHAT"
+        assert self.lant.number_of_lan_bridges == 1
+        self.lant.core = "MAGICHATCS"
+        assert self.lant.number_of_lan_bridges == 2
+        self.lant.core = "MAGICHATCSS"
+        assert self.lant.number_of_lan_bridges == 2
+        self.lant.core = "MAGICHATCT"
+        assert self.lant.number_of_lan_bridges == 2
+        self.lant.core = "MAGICHATCCS"
+        assert self.lant.number_of_lan_bridges == 2
 
     def test_monoisotopic_mass(self):
         "Test Lanthipeptide.monoisotopic_mass"
-        lant = Lanthipeptide(CleavageSiteHit(23, 42, 17, 'Class-I'), 23)
-        lant.core = "MAGICHAT"
+        self.lant.core = "MAGICHAT"
         analysis = ProteinAnalysis("MAGICHAT", monoisotopic=True)
         weight = analysis.molecular_weight()
         # Thr is assumed to be dehydrated
         weight -= 18
-        self.assertAlmostEqual(weight, lant.monoisotopic_mass)
-        self.assertAlmostEqual(weight, lant._monoisotopic_weight)
+        self.assertAlmostEqual(weight, self.lant.monoisotopic_mass)
+        self.assertAlmostEqual(weight, self.lant._monoisotopic_weight)
 
     def test_molecular_weight(self):
         "Test Lanthipeptide.molecular_weight"
-        lant = Lanthipeptide(CleavageSiteHit(23, 42, 17, 'Class-I'), 23)
-        lant.core = "MAGICHAT"
+        self.lant.core = "MAGICHAT"
         analysis = ProteinAnalysis("MAGICHAT", monoisotopic=False)
         weight = analysis.molecular_weight()
         # Thr is assumed to be dehydrated
         weight -= 18.02
-        self.assertAlmostEqual(weight, lant.molecular_weight)
-        self.assertAlmostEqual(weight, lant._weight)
+        self.assertAlmostEqual(weight, self.lant.molecular_weight)
+        self.assertAlmostEqual(weight, self.lant._weight)
 
     def test_alternative_weights(self):
         "Test Lanthipeptide.alt_weights"
-        lant = Lanthipeptide(CleavageSiteHit(23, 42, 17, 'Class-I'), 23)
-        lant.core = "MAGICHATS"
+        self.lant.core = "MAGICHATS"
         analysis = ProteinAnalysis("MAGICHATS", monoisotopic=False)
         weight = analysis.molecular_weight()
         # One Ser/Thr is assumed to be dehydrated, but not the other
         weight -= 18.02
-        self.assertEqual([weight], lant.alternative_weights)
+        self.assertEqual([weight], self.lant.alternative_weights)
 
 
 class TestSpecificAnalysis(unittest.TestCase):
@@ -123,7 +117,6 @@ class TestSpecificAnalysis(unittest.TestCase):
         self.hmmpfam_return_vals.append([fake_hit])
 
         res = predict_cleavage_site('foo', 'bar')
-        self.assertEqual(23, res.start)
         self.assertEqual(42, res.end)
         self.assertEqual(17, res.score)
         self.assertEqual('fake', res.lantype)
@@ -132,7 +125,7 @@ class TestSpecificAnalysis(unittest.TestCase):
         "Test lanthipeptides.result_vec_to_features()"
         orig_feature = DummyCDS(0, 165)
         orig_feature.locus_tag = 'FAKE0001'
-        vec = Lanthipeptide(CleavageSiteHit(17, 23, 42, 'Class-I'), 23)
+        vec = Lanthipeptide(CleavageSiteHit(23, 42, 'Class-I'), 23)
         seq = "TAILTAILTAILTAILTAILTAILTAILTAILTAILCC"
         vec.core = seq
         vec.leader = "HEADHEADHEAD"
@@ -179,7 +172,7 @@ class TestNoCores(unittest.TestCase):
 
     def test_prediction_with_no_core(self):
         # the real cleavage site result (+1 at end for the C)
-        cleavage_result = CleavageSiteHit(start=38, end=48, score=-6.8, lantype="Class-II")
+        cleavage_result = CleavageSiteHit(end=48, score=-6.8, lantype="Class-II")
         mock("lanthi.predict_cleavage_site", returns=cleavage_result)
 
         for part in ["I", "II"]:
@@ -187,18 +180,18 @@ class TestNoCores(unittest.TestCase):
 
     def test_prediction_with_core_class1(self):
         # the cleavage result adjusted to leave at least one amino in core
-        cleavage_result = CleavageSiteHit(start=38, end=40, score=-6.8, lantype="Class-I")
+        cleavage_result = CleavageSiteHit(end=40, score=-6.8, lantype="Class-I")
         mock("lanthi.predict_cleavage_site", returns=cleavage_result)
         results = run_lanthipred(DummyRecord(features=[self.cds]),
                                  self.cds, "Class-I", self.domains)
         assert results
-        assert str(results).startswith("Lanthipeptide(38..40, -6, 'Class-I', 'LSQGLGGC', 1, 715")
+        assert str(results).startswith("Lanthipeptide(..40, -6, 'Class-I', 'LSQGLGGC', 1, 715")
 
     def test_prediction_with_core_class2(self):
         # the cleavage result adjusted to leave at least one amino in core
-        cleavage_result = CleavageSiteHit(start=38, end=40, score=-6.8, lantype="Class-II")
+        cleavage_result = CleavageSiteHit(end=40, score=-6.8, lantype="Class-II")
         mock("lanthi.predict_cleavage_site", returns=cleavage_result)
         results = run_lanthipred(DummyRecord(features=[self.cds]),
                                  self.cds, "Class-II", self.domains)
         assert results is not None
-        assert str(results).startswith("Lanthipeptide(38..40, -6, 'Class-II', 'LSQGLGGC', 1, 715")
+        assert str(results).startswith("Lanthipeptide(..40, -6, 'Class-II', 'LSQGLGGC', 1, 715")
