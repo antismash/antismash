@@ -50,19 +50,19 @@ def populate_sequencelist(root, results, domains, buildingblocks):
             SubElement(source, "db_xref").text = str(dbxref)
         SubElement(source, "Sequence").text = str(record.seq)
         SubElement(source, "is_circular").text = "1" if record.is_circular() else "0"
-        for cluster in record.get_clusters():
-            nodelist = add_model(root, cluster)
+        for region in record.get_regions():
+            nodelist = add_model(root, region)
         populate_genelist(root, record, nodelist, domains, buildingblocks)
 
-def add_model(root, cluster):
-    model = SubElement(root, "model", attrib={"id": str(cluster.parent_record.get_cluster_number(cluster))})
-    SubElement(model, "title").text = "Biosynthetic pathway" + str(cluster.parent_record.get_cluster_number(cluster))
+def add_model(root, region):
+    model = SubElement(root, "model", attrib={"id": str(region.parent_record.get_region_number(region))})
+    SubElement(model, "title").text = "Biosynthetic pathway" + str(region.parent_record.get_region_number(region))
     SubElement(model, "confidence").text = "Sequence-based prediction"
     SubElement(model, "generator").text = "antiSMASH"
-    SubElement(model, "label").text = "model " + str(cluster.parent_record.get_cluster_number(cluster))
+    SubElement(model, "label").text = "model " + str(region.parent_record.get_region_number(region))
     organism = SubElement(model, "organism")
-    SubElement(organism, "name").text = cluster.parent_record.description
-    SubElement(organism, "strain").text = cluster.parent_record.annotations.get("organism", "")
+    SubElement(organism, "name").text = region.parent_record.description
+    SubElement(organism, "strain").text = region.parent_record.annotations.get("organism", "")
     SubElement(organism, "identifier", attrib={"source": ""})
     SubElement(organism, "status")
     compound = SubElement(model, "compound")
@@ -74,13 +74,13 @@ def add_model(root, cluster):
     SubElement(genecluster, "name").text = "Biosynthetic genecluster"
     SubElement(genecluster, "shortname")
     SubElement(genecluster, "status")
-    SubElement(genecluster, "type").text = cluster.product
+    SubElement(genecluster, "type").text = "-".join(region.products)
     SubElement(genecluster, "identifier", attrib={"source": ""})
     SubElement(genecluster, "citation", attrib={"type": ""})
-    SubElement(genecluster, "sequence", attrib={"source": "sequencelist"}).text = str(cluster.parent_record.record_index + 1)
-    region = SubElement(genecluster, "region")
-    SubElement(region, "begin").text = str(int(cluster.location.bio_start) + 1)
-    SubElement(region, "end").text = str(int(cluster.location.bio_end))
+    SubElement(genecluster, "sequence", attrib={"source": "sequencelist"}).text = str(region.parent_record.record_index + 1)
+    region_tag = SubElement(genecluster, "region")
+    SubElement(region_tag, "begin").text = str(int(region.location.bio_start) + 1)
+    SubElement(region_tag, "end").text = str(int(region.location.bio_end))
     nodelist = SubElement(model, "nodelist")
     return nodelist
 
