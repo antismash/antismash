@@ -12,7 +12,7 @@ from Bio.SearchIO._model.hsp import HSP
 
 from antismash.common import fasta, path, serialiser
 from antismash.common.secmet import Record, Cluster, CDSFeature, FeatureLocation
-from antismash.common.secmet.locations import location_contains_other
+from antismash.common.secmet.locations import location_contains_other, extend_location_by, merge_within_container
 from antismash.common.secmet.qualifiers import GeneFunction, SecMetQualifier
 from antismash.common.subprocessing import run_hmmsearch
 from antismash.common.hmm_rule_parser import rule_parser
@@ -156,42 +156,40 @@ def find_clusters(record: Record, cds_by_cluster_type: Dict[str, Set[str]],
     for cluster_type, cds_names in cds_by_cluster_type.items():
         cds_features = sorted([cds_feature_by_name[cds] for cds in cds_names])
         rule = rules_by_name[cluster_type]
-        cutoff = rule.cutoff
         core_location = cds_features[0].location
         for cds in cds_features[1:]:
-            if cds.overlaps_with(FeatureLocation(core_location.start - cutoff,
-                                                 core_location.end + cutoff)):
-                core_location = FeatureLocation(min(cds.location.start, core_location.start),
-                                                max(cds.location.end, core_location.end))
+            if cds.overlaps_with(extend_location_by(core_location, rule.cutoff, record)):
+                core_location = merge_within_container(core_location, cds.location, extend_location_by(core_location, rule.cutoff, record))
                 assert core_location.start >= 0 and core_location.end <= len(record)
                 continue
-            # create the previous cluster and start a new location
-            surrounds = FeatureLocation(max(0, core_location.start - rule.extent),
-                                        min(core_location.end + rule.extent, len(record)))
-            surrounding_cdses = record.get_cds_features_within_location(surrounds, with_overlapping=False)
-            real_start = min(contained.location.start for contained in surrounding_cdses)
-            real_end = max(contained.location.end for contained in surrounding_cdses)
-            surrounds = FeatureLocation(real_start, real_end)
-            clusters.append(Cluster(core_location, surrounding_location=surrounds,
-                                    tool="rule-based-clusters", cutoff=cutoff,
+            # create the previous cluster and start a new core location
+            surrounds_inexact = extend_location_by(core_location, rule.extent, record)
+            surrounding_cdses = record.get_cds_features_within_location(surrounds_inexact, with_overlapping=False)
+            surrounds_exact = surrounding_cdses[0].location
+            for surrounding_cds in surrounding_cdses[1:]:
+                surrounds_exact = merge_within_container(surrounding_cds.location, surrounds_exact, surrounds_inexact)
+            clusters.append(Cluster(core_location, surrounding_location=surrounds_exact,
+                                    tool="rule-based-clusters", cutoff=rule.cutoff,
                                     neighbourhood_range=rule.extent, product=cluster_type))
             clusters[-1].detection_rule = str(rule.conditions)
             core_location = cds.location
 
         # finalise the last cluster
-        surrounds = FeatureLocation(max(0, core_location.start - rule.extent),
-                                    min(core_location.end + rule.extent, len(record)))
-        clusters.append(Cluster(core_location, surrounding_location=surrounds,
-                                tool="rule-based-clusters", cutoff=cutoff,
+        surrounds_inexact = extend_location_by(core_location, rule.extent, record)
+        surrounding_cdses = record.get_cds_features_within_location(surrounds_inexact, with_overlapping=False)
+        surrounds_exact = surrounding_cdses[0].location
+        for surrounding_cds in surrounding_cdses[1:]:
+            surrounds_exact = merge_within_container(surrounding_cds.location, surrounds_exact, surrounds_inexact)
+        clusters.append(Cluster(core_location, surrounding_location=surrounds_exact,
+                                tool="rule-based-clusters", cutoff=rule.cutoff,
                                 neighbourhood_range=rule.extent, product=cluster_type))
         clusters[-1].detection_rule = str(rule.conditions)
 
-    # fit to record if outside
+    # assert record is inside. if not -> bugs!
     for cluster in clusters:
         contained = FeatureLocation(max(0, cluster.location.start),
                                     min(cluster.location.end, len(record)))
-        if contained != cluster.location:
-            cluster.location = contained
+        assert contained == cluster.location
 
     clusters = remove_redundant_clusters(clusters, rules_by_name)
 
