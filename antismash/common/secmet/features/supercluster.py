@@ -268,9 +268,9 @@ def create_superclusters_from_clusters(clusters: List[Cluster]) -> List[SuperClu
         if len(hybrid_clusters) == 1:
             return
         supercluster = SuperCluster(SuperClusterKind.CHEMICAL_HYBRID, hybrid_clusters)
-        if (supercluster.location.start, supercluster.location.end) in existing_locations:
+        if (supercluster.location.bio_start, supercluster.location.bio_end) in existing_locations:
             return
-        existing_locations.add((supercluster.location.start, supercluster.location.end))
+        existing_locations.add((supercluster.location.bio_start, supercluster.location.bio_end))
         superclusters.append(supercluster)
 
     def finalise_nonhybrid(kind: SuperClusterKind, clusters: List[Cluster]) -> None:
@@ -282,9 +282,9 @@ def create_superclusters_from_clusters(clusters: List[Cluster]) -> List[SuperClu
             if clusters[0] in clusters_in_hybrids_and_overlaps:
                 return
         supercluster = SuperCluster(kind, clusters)
-        if (supercluster.location.start, supercluster.location.end) in existing_locations:
+        if (supercluster.location.bio_start, supercluster.location.bio_end) in existing_locations:
             return
-        existing_locations.add((supercluster.location.start, supercluster.location.end))
+        existing_locations.add((supercluster.location.bio_start, supercluster.location.bio_end))
         superclusters.append(supercluster)
 
     for cluster in clusters[1:]:
