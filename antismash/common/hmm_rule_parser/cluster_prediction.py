@@ -185,11 +185,11 @@ def find_clusters(record: Record, cds_by_cluster_type: Dict[str, Set[str]],
                                 neighbourhood_range=rule.extent, product=cluster_type))
         clusters[-1].detection_rule = str(rule.conditions)
 
-    # assert record is inside. if not -> bugs!
+    # assert record is inside
     for cluster in clusters:
         contained = FeatureLocation(max(0, cluster.location.start),
                                     min(cluster.location.end, len(record)))
-        assert contained == cluster.location
+        assert contained.start == cluster.location.start and contained.end == cluster.location.end
 
     clusters = remove_redundant_clusters(clusters, rules_by_name)
 
