@@ -35,14 +35,15 @@ def _sanitise_id_value(name: Optional[str]) -> Optional[str]:
 class CDSFeature(Feature):
     """ A feature representing a single CDS/gene. """
     __slots__ = ["_translation", "protein_id", "locus_tag", "gene", "product",
-                 "transl_table", "_sec_met", "_gene_functions",
+                 "transl_table", "_pseudo", "_sec_met", "_gene_functions",
                  "unique_id", "_nrps_pks", "motifs", "region"]
 
     def __init__(self, location: FeatureLocation, translation: str = None, locus_tag: str = None,
-                 protein_id: str = None, product: str = None, gene: str = None) -> None:
+                 protein_id: str = None, product: str = None, gene: str = None, pseudo_cds: bool = False) -> None:
         super().__init__(location, feature_type="CDS")
         if location.strand not in [1, -1]:
             raise ValueError("Strand must be 1 or -1 for a CDS, not %s" % location.strand)
+        self._pseudo = bool(pseudo_cds)
         # mandatory
         self._gene_functions = GeneFunctionAnnotations()
 
@@ -115,6 +116,10 @@ class CDSFeature(Feature):
         assert "-" not in translation, "%s contains - in translation" % self.get_name()
         self._translation = str(translation)
 
+    def is_pseudo_cds(self) -> bool:
+        """ Was the CDS marked as a pseudo-cds """
+        return self._pseudo
+
     def get_accession(self) -> str:
         "Get the gene ID from protein id, gene name or locus_tag, in that order"
         for val in [self.protein_id, self.gene, self.locus_tag]:
@@ -165,6 +170,9 @@ class CDSFeature(Feature):
         gene_functions = leftovers.pop("gene_functions", [])
         if gene_functions:
             feature.gene_functions.add_from_qualifier(gene_functions)
+        pseudo = leftovers.pop("pseudo", False)
+        if pseudo:
+            feature._pseudo = True
 
         # grab parent optional qualifiers
         super(CDSFeature, feature).from_biopython(bio_feature, feature=feature, leftovers=leftovers)
@@ -183,6 +191,8 @@ class CDSFeature(Feature):
                 mine[attr] = [str(val)]
         if self._gene_functions:
             mine["gene_functions"] = list(map(str, self._gene_functions))
+        if self._pseudo:
+            mine["pseudo"] = None
         # since it's already a list
         if self.sec_met:
             mine["sec_met"] = self.sec_met
