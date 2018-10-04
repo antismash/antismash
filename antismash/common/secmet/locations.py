@@ -5,6 +5,10 @@
 
 from typing import Iterable, List, Sequence, Tuple
 
+from Bio.SeqRecord import (
+    SeqRecord,
+)
+
 from Bio.SeqFeature import (
     AbstractPosition,
     AfterPosition,
@@ -170,6 +174,76 @@ def location_from_string(data: str) -> FeatureLocation:
 
     locations = [parse_single_location(part) for part in combined_location.split(', ')]
     return CompoundLocation(locations, operator=operator)
+
+
+def extend_location_by(location: FeatureLocation, by: int, record: SeqRecord) -> FeatureLocation:
+    """ Extends a single FeatureLocation by N bp, both ways and returns the extended FeatureLocation
+
+        Arguments:
+            location: one FeatureLocation instance
+            by: integer, to be extended by
+            record: parent record of the location
+
+        Returns:
+            a new FeatureLocation that will be extended
+    """
+    # simple features on linear records are straightforward
+    if isinstance(location, (FeatureLocation)) and not record.is_circular():
+         return FeatureLocation(max(0, location.start - by),
+                                min(location.end + by, len(record)))
+
+    bio_start_by = None
+    bio_end_by = None
+    upstream_part = None
+    downstream_part = None
+    #
+    # todo: # extension would overlap itself on a circular record -> shrink extension to an acceptable value
+    # <code here>
+
+    # first part's end (bio_start) on reverse strand of circular record is overflowing the ori -> create an overflow feature
+    if location.parts[0].strand == -1 and record.is_circular() and location.parts[0].end + by > len(record):
+        bio_start_by = len(record) - location.parts[0].end
+        upstream_part = FeatureLocation(0, by - end_by, strand=location.parts[0].strand)
+    # first part's start (bio_start) on forward or unspecified strand of a circular record is overflowing the ori -> create an overflow feature
+    elif location.parts[0].strand != -1 and record.is_circular() and location.parts[0].start - by < 0:
+        bio_start_by = -location.parts[0].start
+        upstream_part = FeatureLocation(len(record) - by - bio_start_by, len(record), strand=location.parts[0].strand)
+    # else no overflow
+    else:
+        bio_start_by = by if location.parts[0].strand == -1 else -by
+
+    # last part's start (bio_end) on reverse strand of circular record is overflowing the ori -> create an overflow feature
+    if location.parts[-1].strand == -1 and record.is_circular() and location.parts[-1].start - by < 0:
+        bio_end_by = -location.parts[-1].start
+        downstream_part = FeatureLocation(len(record) - by - bio_end_by, len(record), strand=location.parts[-1].strand)
+    # last part's end (bio_end) on forward or unspecified strand of a circular record is overflowing the ori -> create an overflow feature
+    if location.parts[-1].strand != -1 and record.is_circular() and location.parts[-1].end + by > len(record):
+        bio_end_by = len(record) - location.parts[-1].end
+        downstream_part = FeatureLocation(0, by - bio_end_by, strand=location.parts[-1].strand)
+    # else no overflow
+    else:
+        bio_end_by = -by if location.parts[0].strand == -1 else by
+
+    parts = []
+    for part in location.parts:
+        start = part.start
+        if part.start is location.bio_start:
+            start = part.start + bio_start_by
+        elif part.start is location.bio_end:
+            start = part.start + bio_end_by
+        end = part.end
+        if part.end is location.bio_start:
+            end = part.end + bio_start_by
+        elif part.end is location.bio_end:
+            end = part.end + bio_end_by
+        parts.append(FeatureLocation( start, end, strand=part.strand))
+    if upstream_part:
+        parts.insert(0, upstream_part)
+    if downstream_part:
+        parts.append(downstream_part)
+
+    return CompoundLocation(parts) if len(parts) > 1 else parts[0]
+
 
 
 def combine_locations(*locations: Iterable[FeatureLocation]) -> FeatureLocation:
