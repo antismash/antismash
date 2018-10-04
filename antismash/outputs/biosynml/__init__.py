@@ -96,8 +96,9 @@ def populate_genelist(root, record, nodelist, domains, buildingblocks):
         SubElement(gene_location, "end").text = str(int(cds_biopython_feature.location.bio_end) + (1 if cds_biopython_feature.location.strand == -1 else 0))
         gene_qualifiers = SubElement(gene, "gene_qualifiers")
         for qualifier_type in cds_biopython_feature.qualifiers:
-            for qualifier_value in cds_biopython_feature.qualifiers[qualifier_type]:
-                SubElement(gene_qualifiers, "qualifier", attrib={"name": qualifier_type, "ori": "auto-annotation", "style": "genbank"}).text = qualifier_value
+            if cds_biopython_feature.qualifiers[qualifier_type]:
+                for qualifier_value in cds_biopython_feature.qualifiers[qualifier_type]:
+                    SubElement(gene_qualifiers, "qualifier", attrib={"name": qualifier_type, "ori": "auto-annotation", "style": "genbank"}).text = qualifier_value
         SubElement(gene_qualifiers, "qualifier", attrib={"name": "gene_location", "ori": "auto-annotation", "style": "genbank"}).text = str(int(cds_biopython_feature.location.bio_start) + (0 if cds_biopython_feature.location.strand == -1 else 1)) + " - " + str(int(cds_biopython_feature.location.bio_end) + (1 if cds_biopython_feature.location.strand == -1 else 0))
         SubElement(gene, "operon").text = str(1)
         populate_domainlist(root, cds_feature, record, nodelist, domains, buildingblocks)
