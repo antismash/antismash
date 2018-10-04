@@ -38,6 +38,7 @@ def get_arguments() -> ModuleArgs:
                     dest='gff3',
                     default="",
                     type=str,
+                    metavar="GFF3_FILE",
                     help="Specify GFF3 file to extract features from.")
     return args
 
