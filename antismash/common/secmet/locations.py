@@ -247,12 +247,20 @@ def extend_location_by(location: FeatureLocation, by: int, record: SeqRecord) ->
 
 def merge_within_container(first: FeatureLocation, second: FeatureLocation, container: FeatureLocation) -> FeatureLocation:
     """ Merges two locations, but only if the merge location would still be fully contained in a container location
+
+        Strand will be set to None.
+
+        Arguments:
+            first: first locations to be merged within the container
+            second: second locations to be merged within the container
+            container: a reference container where the merging is allowed
+
         Returns:
             a new, merged FeatureLocation, which is similar to FeatureLocation(min(first.start, second.start),max(first.end, second.end)),
             but allows for cross-ori locations, both as first, second or container
     """
     parts = []
-    for container_subpart in container.parts: #only one for most cases, two for ori-split
+    for container_subpart in reversed(container.parts): #only one for most cases, two for ori-split or a cluster with multiple loci
         contained_parts = [part for part in first.parts + second.parts if locations_overlap(container_subpart, part)]
         parts.append(FeatureLocation(min(part.start for part in contained_parts), max(part.end for part in contained_parts)))
 
@@ -260,9 +268,10 @@ def merge_within_container(first: FeatureLocation, second: FeatureLocation, cont
 
 
 def combine_locations(*locations: Iterable[FeatureLocation]) -> FeatureLocation:
-    """ Combines multiple FeatureLocations into a single location using the
-        minimum start and maximum end. Will not create a CompoundLocation if any
-        of the inputs are CompoundLocations.
+    """ Combines one or more FeatureLocations into one or more location, based on their overlap, always using the sublocations
+        If any two sublocations overlap, they will be merged
+        if only one sublocation remains in the end, a FeatureLocation will be returned
+        if two or more sublocations remain at the end of the merge, a CompoundLocation will be returned
 
         Strand will be set to None.
 
@@ -275,16 +284,20 @@ def combine_locations(*locations: Iterable[FeatureLocation]) -> FeatureLocation:
     # ensure we have a list of featureLocations
     if len(locations) == 1:
         if isinstance(locations[0], CompoundLocation):
-            locs = locations[0].parts
+            locations = locations[0].parts
         # it's silly to combine a single location, but don't iterate over it
         elif isinstance(locations[0], FeatureLocation):
-            locs = [locations[0]]
+            locations = [locations[0]]
         else:  # some kind of iterable, hopefully containing locations
-            locs = list(locations[0])
-    else:
-        locs = list(locations)
+            locations = list(locations[0])
+    # flatten, in any case
+    locations = [part for location in locations for part in location.parts]
 
-    # build the result
-    start = min(loc.start for loc in locs)
-    end = max(loc.end for loc in locs)
-    return FeatureLocation(start, end, strand=None)
+    #inspired by https://stackoverflow.com/a/1207485 # should work (but do nothing) even on one-element lists
+    for i in reversed(range(len(locations)-1)): # never check the last element in this loop
+        for j in reversed(range(i+1, len(locations))): # never check the <=i element in this loop
+            if locations_overlap(locations[i], locations[j]): # remove ExactPosition if you want striped Cluster/SuperCluster/Region ends
+                locations[i] = FeatureLocation(ExactPosition(min(locations[i].start, locations[j].start)), ExactPosition(max(locations[i].end, locations[j].end)), strand=None)
+                del locations[j]
+
+    return CompoundLocation(locations) if len(locations) > 1 else FeatureLocation(ExactPosition(locations[0].start), ExactPosition(locations[0].end), strand=None)
