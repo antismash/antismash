@@ -43,11 +43,11 @@ class CDSResults:
             self.cds.sec_met = SecMetQualifier(set(self.definition_domains if self.definition_domains else ["unknown"]), self.domains)
         else:
             all_matching.update(set(self.cds.sec_met.domain_ids))
-            self.cds.sec_met.add_products({product})
             self.cds.sec_met.add_domains(self.domains)
         for cluster_type, matching_domains in self.definition_domains.items():
             all_matching.update(matching_domains)
             for domain in matching_domains:
+                self.cds.sec_met.add_products({cluster_type})
                 self.cds.gene_functions.add(GeneFunction.CORE, tool, domain, cluster_type)
 
         # and add all detected domains as ADDITIONAL if not CORE
