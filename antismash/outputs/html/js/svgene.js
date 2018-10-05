@@ -36,7 +36,7 @@ svgene.geneArrowPoints = function (orf, height, offset, border, scale) {
 };
 
 svgene.ttaCodonPoints = function (codon, height, offset, border, scale) {
-    var top_ = offset + svgene.label_height + height;;
+    var top_ = offset + svgene.label_height + height;
     var bottom = offset + (2 * svgene.label_height) + height - border;
     var tip = Math.floor(scale(codon.start), scale(codon.end));
     var points = "" + tip + "," + top_;
@@ -129,8 +129,9 @@ svgene.drawRegion = function(id, region, height, width) {
   var container = d3.select("#" + id);
   container.selectAll("svg").remove();
   container.selectAll("div").remove();
+  var body_height = ((2 * svgene.label_height) + region.clusters.length * 12);
   var chart = container.append("svg")
-    .attr("height", 2 * height + (2 * svgene.label_height) + region.clusters.length * 12)
+    .attr("height", 2 * height + body_height)
     .attr("width", width + svgene.extra_label_width);
 
   var all_orfs = [];
@@ -148,19 +149,33 @@ svgene.drawRegion = function(id, region, height, width) {
   // only in rare cases, reassign the scale to a divergent function
   if (region.start > region.end) {
       x = function(position) {
-          // pre-ori scale
+          // post-ori scale
           if (position < region.start) {
             return d3.scaleLinear()
                   .domain([1, region.end])
-                  .range([(region.sequence_length - region.start + region.end)/width, width])(position);
+                  .range([width - (region.sequence_length - region.start + region.end)/width, width])(position);
           }
-          // post-ori scale
+          // pre-ori scale
           else {
             return d3.scaleLinear()
                   .domain([region.start, region.sequence_length])
-                  .range([0, (region.sequence_length - region.start + region.end)/width])(position);
+                  .range([0, width - (region.sequence_length - region.start + region.end)/width])(position);
           }
       };
+      // draw an 0-bp line and text
+      chart.append("line")
+        .attr("x1", x(0))
+        .attr("y1", height + body_height)
+        .attr("x2", x(0))
+        .attr("y2", 1.5 * height + body_height)
+        .attr("class", "svgene-line");
+      // draw an ori line and text
+      chart.append("text")
+        .text("0")
+        .attr("x", x(0) - 3 )
+        .attr("y", 2 * height + body_height)
+        .style("font-size", "xx-small")
+        .attr("class", "clusterlabel");
   }
   svgene.drawOrderedRegionOrfs(region, chart, all_orfs, all_borders, all_ttas,
                                 x, idx, height, width, offset);
