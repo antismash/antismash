@@ -266,7 +266,8 @@ def merge_within_container(first: FeatureLocation, second: FeatureLocation, cont
     #only one for most cases, two for ori-split or a cluster with multiple loci
     for container_subpart in container.parts if container.bio_start > container.bio_end else reversed(container.parts):
         contained_parts = [part for part in first.parts + second.parts if locations_overlap(container_subpart, part)]
-        parts.append(FeatureLocation(min(part.start for part in contained_parts), max(part.end for part in contained_parts)))
+        if contained_parts:
+            parts.append(FeatureLocation(min(part.start for part in contained_parts), max(part.end for part in contained_parts), strand=None))
 
     return CompoundLocation(parts) if len(parts) > 1 else parts[0]
 
