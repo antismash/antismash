@@ -186,7 +186,7 @@ def update_prediction(locus: str, preds: Dict[str, str], target: str,
             locus: the name of the gene
             preds: a dict mapping domain label (e.g. nrpspksdomains_SCO123_AT1)
                    to a prediction for that domain
-            target: "_KS" or "_AT" for checking AT vs trans-AT
+            target: "PKS_KS" or "PKS_AT" for checking AT vs trans-AT
             target_list: a list of positions in the gene's domains where target is found
             lists: a list of lists of positions for KR, DH and ER domains
             mappings: a list of dictionaries mapping a prediction to an altered prediction
@@ -196,7 +196,7 @@ def update_prediction(locus: str, preds: Dict[str, str], target: str,
     """
     assert len(lists) == len(mappings)
     for idx, target_element in enumerate(target_list):
-        key = "nrpspksdomains_" + locus + target + str(idx + 1)
+        key = "nrpspksdomains_{}_{}.{}".format(locus, target, idx + 1)
         for sublist, mapping in zip(lists, mappings):
             for position in sublist:
                 if not target_element < position:
@@ -235,10 +235,10 @@ def modify_monomer_predictions(cds_features: List[CDSFeature], predictions: Dict
                  find_duplicate_position(domain_names, 'PKS_ER')]
 
         if 'transatpks' not in cds.region.products:
-            label = "_AT"
+            label = "PKS_AT"
             data = find_duplicate_position(domain_names, 'PKS_AT')
         else:
-            label = "_KS"
+            label = "PKS_KS"
             data = find_duplicate_position(domain_names, 'PKS_KS')
         # TODO: should the transat predictions be used if relevant?
         update_prediction(cds.get_name(), predictions, label, data, lists, mappings)

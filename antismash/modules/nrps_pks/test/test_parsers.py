@@ -4,6 +4,7 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
+import functools
 import unittest
 
 from antismash.common.secmet import Region
@@ -39,6 +40,10 @@ class TestNRPSParserMonomerModification(unittest.TestCase):
                             'ccmmal', 'emal', 'redmmal', 'mmal', 'ccmxmal',
                             'mxmal', 'redemal', 'ohmal', 'mal', 'ccemal']
 
+    @staticmethod
+    def gen_specific_domain_name(locus, pks_variant, counter):
+        return "nrpspksdomains_{}_PKS_{}.{}".format(locus, pks_variant, counter)
+
     def gen_domain_names(self):
         # generates a dict with values containing
         # - each type in a list once alone
@@ -61,7 +66,7 @@ class TestNRPSParserMonomerModification(unittest.TestCase):
             for domain in gene_domains:
                 if domain == "PKS_" + pks_type:
                     counter += 1
-                    res["nrpspksdomains_{}_{}{}".format(gene_name, pks_type, counter)] = pred
+                    res[self.gen_specific_domain_name(gene_name, pks_type, counter)] = pred
         return res
 
     def detect_change(self, preds, original, expected):
@@ -72,35 +77,52 @@ class TestNRPSParserMonomerModification(unittest.TestCase):
         assert changed == expected
 
     def test_insert_modified_monomers(self):
+        dom_name = functools.partial(self.gen_specific_domain_name, "all")
+
         # in pairs of (at, trans-at)
         expected_changes = [
-            (set(), set()),  # redmxmal
-            ({('nrpspksdomains_all_AT3', 'redmal'), ('nrpspksdomains_all_AT1', 'redmal'), ('nrpspksdomains_all_AT2', 'redmal')},
-             {('nrpspksdomains_all_KS2', 'redmal'), ('nrpspksdomains_all_KS3', 'redmal'), ('nrpspksdomains_all_KS1', 'redmal')}),  # ccmal
-            ({('nrpspksdomains_all_AT3', 'redemal'), ('nrpspksdomains_all_AT1', 'redemal'), ('nrpspksdomains_all_AT2', 'redemal')},
-             {('nrpspksdomains_all_KS2', 'redemal'), ('nrpspksdomains_all_KS3', 'redemal'), ('nrpspksdomains_all_KS1', 'redemal')}),  # ohemal
-            ({('nrpspksdomains_all_AT3', 'redmxmal'), ('nrpspksdomains_all_AT1', 'redmxmal'), ('nrpspksdomains_all_AT2', 'redmxmal')},
-             {('nrpspksdomains_all_KS2', 'redmxmal'), ('nrpspksdomains_all_KS3', 'redmxmal'), ('nrpspksdomains_all_KS1', 'redmxmal')}),  # ohmxmal
-            ({('nrpspksdomains_all_AT3', 'redmmal'), ('nrpspksdomains_all_AT1', 'redmmal'), ('nrpspksdomains_all_AT2', 'redmmal')},
-             {('nrpspksdomains_all_KS2', 'redmmal'), ('nrpspksdomains_all_KS3', 'redmmal'), ('nrpspksdomains_all_KS1', 'redmmal')}),  # ohmmal
-            ({('nrpspksdomains_all_AT3', 'redmmal'), ('nrpspksdomains_all_AT1', 'redmmal'), ('nrpspksdomains_all_AT2', 'redmmal')},
-             {('nrpspksdomains_all_KS2', 'redmmal'), ('nrpspksdomains_all_KS3', 'redmmal'), ('nrpspksdomains_all_KS1', 'redmmal')}),  # ccmmal
-            ({('nrpspksdomains_all_AT3', 'redemal'), ('nrpspksdomains_all_AT1', 'redemal'), ('nrpspksdomains_all_AT2', 'redemal')},
-             {('nrpspksdomains_all_KS2', 'redemal'), ('nrpspksdomains_all_KS1', 'redemal')}),  # emal
-            (set(), set()),  # redmmal
-            ({('nrpspksdomains_all_AT3', 'redmmal'), ('nrpspksdomains_all_AT1', 'redmmal'), ('nrpspksdomains_all_AT2', 'redmmal')},
-             {('nrpspksdomains_all_KS2', 'redmmal'), ('nrpspksdomains_all_KS1', 'redmmal')}),  # mmal
-            ({('nrpspksdomains_all_AT3', 'redmxmal'), ('nrpspksdomains_all_AT1', 'redmxmal'), ('nrpspksdomains_all_AT2', 'redmxmal')},
-             {('nrpspksdomains_all_KS2', 'redmxmal'), ('nrpspksdomains_all_KS3', 'redmxmal'), ('nrpspksdomains_all_KS1', 'redmxmal')}),  # ccmxmal
-            ({('nrpspksdomains_all_AT3', 'redmxmal'), ('nrpspksdomains_all_AT1', 'redmxmal'), ('nrpspksdomains_all_AT2', 'redmxmal')},
-             {('nrpspksdomains_all_KS2', 'redmxmal'), ('nrpspksdomains_all_KS1', 'redmxmal')}),  # mxmal
-            (set(), set()),  # redemal
-            ({('nrpspksdomains_all_AT3', 'redmal'), ('nrpspksdomains_all_AT1', 'redmal'), ('nrpspksdomains_all_AT2', 'redmal')},
-             {('nrpspksdomains_all_KS2', 'redmal'), ('nrpspksdomains_all_KS3', 'redmal'), ('nrpspksdomains_all_KS1', 'redmal')}),  # ohmal
-            ({('nrpspksdomains_all_AT3', 'redmal'), ('nrpspksdomains_all_AT1', 'redmal'), ('nrpspksdomains_all_AT2', 'redmal')},
-             {('nrpspksdomains_all_KS2', 'redmal'), ('nrpspksdomains_all_KS1', 'redmal')}),   # mal
-            ({('nrpspksdomains_all_AT3', 'redemal'), ('nrpspksdomains_all_AT1', 'redemal'), ('nrpspksdomains_all_AT2', 'redemal')},
-             {('nrpspksdomains_all_KS2', 'redemal'), ('nrpspksdomains_all_KS3', 'redemal'), ('nrpspksdomains_all_KS1', 'redemal')}),  # ccemal
+            # redmxmal
+            (set(), set()),
+            # ccmal
+            ({(dom_name("AT", 3), 'redmal'), (dom_name("AT", 1), 'redmal'), (dom_name("AT", 2), 'redmal')},
+             {(dom_name("KS", 2), 'redmal'), (dom_name("KS", 3), 'redmal'), (dom_name("KS", 1), 'redmal')}),
+            # ohemal
+            ({(dom_name("AT", 3), 'redemal'), (dom_name("AT", 1), 'redemal'), (dom_name("AT", 2), 'redemal')},
+             {(dom_name("KS", 2), 'redemal'), (dom_name("KS", 3), 'redemal'), (dom_name("KS", 1), 'redemal')}),
+            # ohmxmal
+            ({(dom_name("AT", 3), 'redmxmal'), (dom_name("AT", 1), 'redmxmal'), (dom_name("AT", 2), 'redmxmal')},
+             {(dom_name("KS", 2), 'redmxmal'), (dom_name("KS", 3), 'redmxmal'), (dom_name("KS", 1), 'redmxmal')}),
+            # ohmmal
+            ({(dom_name("AT", 3), 'redmmal'), (dom_name("AT", 1), 'redmmal'), (dom_name("AT", 2), 'redmmal')},
+             {(dom_name("KS", 2), 'redmmal'), (dom_name("KS", 3), 'redmmal'), (dom_name("KS", 1), 'redmmal')}),
+            # ccmal
+            ({(dom_name("AT", 3), 'redmmal'), (dom_name("AT", 1), 'redmmal'), (dom_name("AT", 2), 'redmmal')},
+             {(dom_name("KS", 2), 'redmmal'), (dom_name("KS", 3), 'redmmal'), (dom_name("KS", 1), 'redmmal')}),
+            # emal
+            ({(dom_name("AT", 3), 'redemal'), (dom_name("AT", 1), 'redemal'), (dom_name("AT", 2), 'redemal')},
+             {(dom_name("KS", 2), 'redemal'), (dom_name("KS", 1), 'redemal')}),
+            # redmmal
+            (set(), set()),
+            # mmal
+            ({(dom_name("AT", 3), 'redmmal'), (dom_name("AT", 1), 'redmmal'), (dom_name("AT", 2), 'redmmal')},
+             {(dom_name("KS", 2), 'redmmal'), (dom_name("KS", 1), 'redmmal')}),
+            # ccmxmal
+            ({(dom_name("AT", 3), 'redmxmal'), (dom_name("AT", 1), 'redmxmal'), (dom_name("AT", 2), 'redmxmal')},
+             {(dom_name("KS", 2), 'redmxmal'), (dom_name("KS", 3), 'redmxmal'), (dom_name("KS", 1), 'redmxmal')}),
+            # mxmal
+            ({(dom_name("AT", 3), 'redmxmal'), (dom_name("AT", 1), 'redmxmal'), (dom_name("AT", 2), 'redmxmal')},
+             {(dom_name("KS", 2), 'redmxmal'), (dom_name("KS", 1), 'redmxmal')}),
+            # redemal
+            (set(), set()),
+            # ohmal
+            ({(dom_name("AT", 3), 'redmal'), (dom_name("AT", 1), 'redmal'), (dom_name("AT", 2), 'redmal')},
+             {(dom_name("KS", 2), 'redmal'), (dom_name("KS", 3), 'redmal'), (dom_name("KS", 1), 'redmal')}),
+            # mal
+            ({(dom_name("AT", 3), 'redmal'), (dom_name("AT", 1), 'redmal'), (dom_name("AT", 2), 'redmal')},
+             {(dom_name("KS", 2), 'redmal'), (dom_name("KS", 1), 'redmal')}),
+            # ccemal
+            ({(dom_name("AT", 3), 'redemal'), (dom_name("AT", 1), 'redemal'), (dom_name("AT", 2), 'redemal')},
+             {(dom_name("KS", 2), 'redemal'), (dom_name("KS", 3), 'redemal'), (dom_name("KS", 1), 'redemal')}),
         ]
 
         for pred, expected in zip(self.predictions, expected_changes):
