@@ -259,6 +259,11 @@ class TestOrdering(unittest.TestCase):
         best = [gene.get_name() for gene in best]
         assert best == ['STAUR_3983', 'STAUR_3972', 'STAUR_3984', 'STAUR_3985', 'STAUR_3982']
 
+    def test_order_finding_size(self):
+        cdss = [DummyCDS() for i in range(11)]
+        with self.assertRaisesRegex(AssertionError, "input too large"):
+            orderfinder.find_possible_orders(cdss, None, None)
+
 
 class TestEnzymeCounter(unittest.TestCase):
     def run_finder(self, names, all_domains, types=None):

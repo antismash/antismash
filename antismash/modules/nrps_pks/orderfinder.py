@@ -230,7 +230,7 @@ def find_possible_orders(cds_features: List[CDSFeature], start_cds: Optional[CDS
             a list of lists, each sublist being a unique ordering of the
             provided CDSFeatures
     """
-    assert cds_features
+    assert len(cds_features) < 11, "input too large, function is O(n!)"
     assert start_cds is None or isinstance(start_cds, CDSFeature)
     assert end_cds is None or isinstance(end_cds, CDSFeature)
     if start_cds or end_cds:
