@@ -49,7 +49,10 @@ def analyse_biosynthetic_order(nrps_pks_features: List[CDSFeature],
         # If more than three PKS cds features, use dock_dom_analysis if possible to identify order
         if 3 < pks_count < 11 and not nrps_count and not hybrid_count:
             logging.debug("SuperCluster %d monomer ordering method: domain docking analysis", supercluster_number)
-            geneorder = perform_docking_domain_analysis(cds_in_supercluster)
+            # since this will grow as n!, limit to only the relevant CDSes
+            pks_cdses = list(filter(lambda cds: "PKS" in cds.nrps_pks.type, cds_in_supercluster))
+            assert 3 < len(pks_cdses) < 11
+            geneorder = perform_docking_domain_analysis(pks_cdses)
             docking = True
         else:
             logging.debug("SuperCluster %d monomer ordering method: colinear", supercluster_number)
