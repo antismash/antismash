@@ -125,7 +125,7 @@ class Feature:
         elif isinstance(other, (FeatureLocation, CompoundLocation)):
             location = other
         else:
-            raise TypeError("Container must be a Feature or a FeatureLocation or a CompoundLocation, not %s" % type(other))
+            raise TypeError("Container must be a Feature or a FeatureLocation, not %s" % type(other))
         return locations_overlap(self.location, location)
 
     def is_contained_by(self, other: Union["Feature", FeatureLocation]) -> bool:
@@ -137,7 +137,7 @@ class Feature:
         elif isinstance(other, (FeatureLocation, CompoundLocation)):
             other_location = other
         else:
-            raise TypeError("Container must be a Feature or a FeatureLocation or a CompoundLocation, not %s" % type(other))
+            raise TypeError("Container must be a Feature or a FeatureLocation, not %s" % type(other))
         return location_contains_other(other_location, self.location)
 
     def to_biopython(self, qualifiers: Dict[str, Any] = None) -> List[SeqFeature]:

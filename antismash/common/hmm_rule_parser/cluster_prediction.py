@@ -40,7 +40,10 @@ class CDSResults:
         """ Annotates a CDSFeature with the results gathered """
         all_matching = set()
         if not self.cds.sec_met:
-            self.cds.sec_met = SecMetQualifier(set(self.definition_domains if self.definition_domains else ["unknown"]), self.domains)
+            if self.definition_domains:
+                self.cds.sec_met = SecMetQualifier(set(self.definition_domains), self.domains)
+            else:
+                self.cds.sec_met = SecMetQualifier(set(["unknown"]), self.domains)
         else:
             all_matching.update(set(self.cds.sec_met.domain_ids))
             self.cds.sec_met.add_domains(self.domains)
@@ -158,8 +161,9 @@ def find_clusters(record: Record, cds_by_cluster_type: Dict[str, Set[str]],
         rule = rules_by_name[cluster_type]
         core_location = cds_features[0].location
         for cds in cds_features[1:]:
-            if cds.overlaps_with(extend_location_by(core_location, rule.cutoff, record)):
-                core_location = merge_within_container(core_location, cds.location, extend_location_by(core_location, rule.cutoff, record))
+            core_with_cutoff = extend_location_by(core_location, rule.cutoff, record)
+            if cds.overlaps_with(core_with_cutoff):
+                core_location = merge_within_container(core_location, cds.location, core_with_cutoff)
                 assert core_location.start >= 0 and core_location.end <= len(record)
                 continue
             # create the previous cluster and start a new core location
@@ -193,7 +197,6 @@ def find_clusters(record: Record, cds_by_cluster_type: Dict[str, Set[str]],
         assert contained.start == cluster.location.start and contained.end == cluster.location.end
 
     clusters = remove_redundant_clusters(clusters, rules_by_name)
-
     logging.debug("%d rule-based cluster(s) found in record", len(clusters))
     return clusters
 
@@ -430,6 +433,7 @@ def detect_clusters_and_signatures(record: Record, signature_file: str, seeds_fi
             if domains:
                 cds_results.append(CDSResults(cds, domains, cds_domains_by_cluster.get(cds.get_name(), {})))
         cds_results_by_cluster[cluster] = cds_results
+
 
     return RuleDetectionResults(cds_results_by_cluster, tool)
 
