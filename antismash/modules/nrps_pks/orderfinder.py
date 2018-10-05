@@ -248,7 +248,7 @@ def find_possible_orders(cds_features: List[CDSFeature], start_cds: Optional[CDS
     end = []  # type: List[CDSFeature]
     if end_cds:
         end = [end_cds]
-    for order in list(itertools.permutations(cds_to_order, len(cds_to_order))):
+    for order in itertools.permutations(cds_to_order, len(cds_to_order)):
         possible_orders.append(start + list(order) + end)
     # ensure the list of possible orders is itself ordered for reliability
     return sorted(possible_orders, key=lambda x: [g.location.start for g in x])
