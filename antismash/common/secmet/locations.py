@@ -198,9 +198,10 @@ def extend_location_by(location: FeatureLocation, by: int, record: SeqRecord) ->
     bio_end_by = None
     upstream_part = None
     downstream_part = None
-    #
-    # todo: # extension would overlap itself on a circular record -> shrink extension to an acceptable value
-    # <code here>
+
+    # extension would overlap itself on a circular record -> return the location that covers the full record
+    if record.is_circular() and 2*by > len(record) - len(location):
+        return FeatureLocation( 0, len(record), strand=None)
 
     # first part's end (bio_start) on reverse strand of circular record is overflowing the ori -> create an overflow feature
     if location.parts[0].strand == -1 and record.is_circular() and location.parts[0].end + by > len(record):
