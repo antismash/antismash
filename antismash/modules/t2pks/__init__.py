@@ -10,7 +10,7 @@ from antismash.common import path
 from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
 from antismash.common.secmet import Record
-from antismash.common import subprocessing
+from antismash.common import hmmer
 
 from .results import T2PKSResults
 from .t2pks_analysis import analyse_cluster
@@ -40,6 +40,19 @@ def check_options(_options: ConfigType) -> List[str]:
     return []
 
 
+def prepare_data(logging_only: bool = False) -> List[str]:
+    """ Ensures packaged data is fully prepared
+
+        Arguments:
+            logging_only: whether to return error messages instead of raising exceptions
+
+        Returns:
+            a list of error messages (only if logging_only is True)
+    """
+    database = path.get_full_path(__file__, "data", "t2pks.hmm")
+    return hmmer.ensure_database_pressed(database, return_not_raise=logging_only)
+
+
 def check_prereqs() -> List[str]:
     """ Check the prerequisites.
             hmmscan: domain detection
@@ -50,29 +63,17 @@ def check_prereqs() -> List[str]:
             a list of strings describing any errors, if they occurred
     """
     failure_messages = []
-    for binary_name in ['hmmscan', 'blastp']:
+    for binary_name in ['hmmscan', "hmmpress", 'blastp']:
         if path.locate_executable(binary_name) is None:
             failure_messages.append("Failed to locate file: %r" % binary_name)
-
-    for hmm in ['t2pks.hmm']:
-        hmm = path.get_full_path(__file__, 'data', hmm)
-        if path.locate_file(hmm) is None:
-            failure_messages.append("Failed to locate file %r" % hmm)
-            continue
-        for ext in ['.h3f', '.h3i', '.h3m', '.h3p']:
-            binary = "%s%s" % (hmm, ext)
-            if path.locate_file(binary) is None:
-                # regenerate them
-                result = subprocessing.run_hmmpress(hmm)
-                if not result.successful():
-                    failure_messages.append("Failed to hmmpress %s: %s" % (hmm, result.stderr.rstrip()))
-                break
 
     for blastdb in ['KSIII', 'AT', 'LIG']:
         for ext in ['.fasta', '.phr', '.pin', '.psq']:
             dbfile = path.get_full_path(__file__, 'data', blastdb + ext)
             if path.locate_file(dbfile) is None:
                 failure_messages.append("Failed to locate file %r" % dbfile)
+
+    failure_messages.extend(prepare_data(logging_only=True))
 
     return failure_messages
 

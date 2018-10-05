@@ -14,6 +14,7 @@ from antismash.config import build_config, destroy_config
 from antismash.config.args import build_parser
 from antismash.detection import cluster_hmmer, full_hmmer
 
+
 class TestAntismash(unittest.TestCase):
     def setUp(self):
         self.all_modules = main.get_all_modules()
@@ -37,6 +38,20 @@ class TestAntismash(unittest.TestCase):
             options = build_config([option], isolated=False, modules=self.all_modules)
             ret_val = main.run_antismash("", options)
             assert ret_val == 0
+
+    def test_prepare(self):
+        class DummyModule:  # pylint: disable=too-few-public-methods
+            def __init__(self):
+                self.prep_called = False
+
+            def prepare_data(self):
+                self.prep_called = True
+
+        dummy = DummyModule()
+        assert not dummy.prep_called
+        main.prepare_module_data([dummy])
+        assert dummy.prep_called
+
 
 class TestTimingsLog(unittest.TestCase):
     def setUp(self):

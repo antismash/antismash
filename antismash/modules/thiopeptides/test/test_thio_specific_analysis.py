@@ -22,9 +22,8 @@ from antismash.modules.thiopeptides.specific_analysis import (
 class TestThiopeptide(unittest.TestCase):
     def test_init(self):
         "Test Thiopeptide instantiation"
-        thio = Thiopeptide(20, 31, 32, 51)
+        thio = Thiopeptide(31, 32, 51)
         assert isinstance(thio, Thiopeptide)
-        self.assertEqual(20, thio.start)
         self.assertEqual(31, thio.end)
         self.assertEqual(32, thio.score)
         self.assertEqual('', thio.thio_type)
@@ -35,19 +34,19 @@ class TestThiopeptide(unittest.TestCase):
 
     def test_repr(self):
         "Test Thiopeptide representation"
-        thio = Thiopeptide(20, 31, 32, 51)
+        thio = Thiopeptide(31, 32, 51)
         thio.core = "MAGIC"
         thio.thio_type = "Type I"
         thio.c_cut = "DUMMYC"
         thio.macrocycle = "dummy macro"
-        expected = ("Thiopeptide(20..31, 32, 'MAGIC', 'Type I', -1.0(-1.0), dummy macro, False, "
+        expected = ("Thiopeptide(..31, 32, 'MAGIC', 'Type I', -1.0(-1.0), dummy macro, False, "
                     "Central ring: pyridine tetrasubstituted (hydroxyl group present); second macrocycle, "
                     "DUMMYC)")
         self.assertEqual(expected, repr(thio))
 
     def test_core(self):
         "Test Thiopeptide.core"
-        thio = Thiopeptide(20, 31, 32, 51)
+        thio = Thiopeptide(31, 32, 51)
         thio.core = "MAGICHAT"
         self.assertEqual('MAGICHAT', thio.core)
         assert thio.core_analysis
@@ -57,7 +56,7 @@ class TestThiopeptide(unittest.TestCase):
 
     def test_macrocycle_size(self):
         "Test Thiopeptide._predict_macrocycle"
-        thio = Thiopeptide(20, 31, 32, 51)
+        thio = Thiopeptide(31, 32, 51)
         thio.core = "SAAAAAAAASC"
         self.assertEqual('26-member', thio.macrocycle)
         thio.core = "SAAAAAAAAASSSSSS"
@@ -70,7 +69,7 @@ class TestThiopeptide(unittest.TestCase):
     def test_weights(self):
         "Test Thiopeptide.alt_mature_weights"
         # includes all weights (even after maturation)
-        thio = Thiopeptide(23, 42, 17, 51)
+        thio = Thiopeptide(42, 17, 51)
         thio.core = "MAGICCHATS"
         thio.amidation = True
         thio.thio_type = "Type I"
@@ -123,13 +122,12 @@ class TestSpecificAnalysis(unittest.TestCase):
     def test_predict_cleavage_site(self):
         "Test thiopeptides.predict_cleavage_site()"
         resvec = predict_cleavage_site('foo', 'bar', 51)
-        self.assertEqual((None, None, None), resvec)
+        assert resvec == (None, None)
         fake_hit = FakeHit(24, 42, 17, 'fake')
         self.hmmpfam_return_vals.append([fake_hit])
 
-        start, end, score = predict_cleavage_site('foo', 'bar', 15)
+        end, score = predict_cleavage_site('foo', 'bar', 15)
 
-        self.assertEqual(24, start)
         self.assertEqual(28, end)
         self.assertEqual(17, score)
 
@@ -137,7 +135,7 @@ class TestSpecificAnalysis(unittest.TestCase):
         "Test thiopeptides.result_vec_to_features()"
         loc = FeatureLocation(0, 66, strand=1)
         orig_feature = DummyCDS(0, 66, locus_tag='FAKE0001')
-        vec = Thiopeptide(17, 23, 42, 51)
+        vec = Thiopeptide(23, 42, 51)
         seq = 'SCTSSCTSS'
         vec.thio_type = 'Type III'
         vec.core = seq

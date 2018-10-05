@@ -1,6 +1,6 @@
 HMMER3/f [3.1b2 | February 2015]
 NAME  Lant_dehydr_C
-ACC   PF14028.4
+ACC   PF14028.5
 DESC  Lantibiotic biosynthesis dehydratase C-term
 LENG  312
 ALPH  amino
@@ -9,15 +9,15 @@ MM    no
 CONS  yes
 CS    no
 MAP   yes
-DATE  Tue Apr 19 20:30:31 2016
+DATE  Thu Jan 19 06:27:53 2017
 NSEQ  35
 EFFN  4.780884
 CKSUM 4120237574
 GA    27.00 27.00;
-TC    29.00 27.50;
+TC    27.30 27.40;
 NC    26.70 26.50;
 BM    hmmbuild HMM.ann SEED.ann
-SM    hmmsearch -Z 17690987 -E 1000 --cpu 4 HMM pfamseq
+SM    hmmsearch -Z 26740544 -E 1000 --cpu 4 HMM pfamseq
 STATS LOCAL MSV      -11.2000  0.70097
 STATS LOCAL VITERBI  -11.8024  0.70097
 STATS LOCAL FORWARD   -5.1042  0.70097

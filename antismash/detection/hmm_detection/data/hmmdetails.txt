@@ -33,14 +33,15 @@ dmat	Dimethylallyl tryptophan synthase	200	dmat.hmm
 trichodiene_synth	Trichodiene synthase	150	trichodiene_synth.hmm
 LANC_like	LanC-like lantibiotics biosynthesis protein	17	LANC_like.hmm
 DUF4135	Lantibiotic-associated domain	150	PF13575.hmm
-Lant_dehyd_N	Lantibiotic dehydratase, N-terminus	20	Lant_dehyd_N.hmm
-Lant_dehyd_C	Lantibiotic dehydratase, C-terminus	20	Lant_dehyd_C.hmm
+Lant_dehydr_N	Lantibiotic dehydratase, N-terminus	27	PF04738.hmm
+Lant_dehydr_C	Lantibiotic dehydratase, C-terminus	27	PF14028.hmm
 Flavoprotein	Lantibiotic aminovinly flavoprotein	20	PF02441.hmm
 Trp_halogenase	Tryptophan halogenase	20	PF04820.hmm
 p450	P450 oxygenase	21	PF00067.hmm
 Pkinase	Protein kinase domain	30	PF00069.hmm
 adh_short	Short-chain dehydrogenase	100	PF00106.hmm
 adh_short_C2	Short-chain dehydrogenase, C-terminus	100	PF13561.hmm
+PCMT	Protein-L-isoaspartate(D-aspartate) O-methyltransferase (PCMT)	20	PF01135.hmm
 Antimicr18	Lantibiotic antimicrobial peptide 18	20	Antimicrobial18.hmm
 Gallidermin	Gallidermin	20	Gallidermin.hmm
 L_biotic_A	Lantibiotic, type A	20	L_biotic_typeA.hmm
@@ -147,7 +148,6 @@ PF06968	BATS family	20	PF06968.hmm
 PF04055	radical SAM superfamily	40	PF04055.hmm
 PF07366	SnoaL family	20	PF07366.hmm
 thio_amide	nosA tpdK nocA berI pbtH	20	thio_amide.hmm
-tsrC	Lant_dehydr_N (tsrC)	20	tsrC.hmm
 phzB	Phenazine biosynthesis gene	80	phzB.hmm
 phosphonates	Phosphonate biosynthesis PEP mutase	275	phosphonates.hmm
 bacilysin	Bacilysin-related amino acid ligase	160	bacilysin.hmm
@@ -214,7 +214,6 @@ Fer4_12	4Fe-4S single cluster domain	22	PF13353.hmm
 Abi	CAAX protease self-immunity	21	PF02517.hmm
 Peptidase_M50	Peptidase family M50	27	PF02163.hmm
 Peptidase_S9	Prolyl oligopeptidase family	22	PF00326.hmm
-Lant_dehydr_C	Lant_dehydr_C	27	PF14028.hmm
 Peptidase_C39	Peptidase C39 family	21	PF03412.hmm
 ThiF	ThiF family	22	PF00899.hmm
 TRI5	Trichodiene synthase	25	TRI5.hmm

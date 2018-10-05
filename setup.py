@@ -98,7 +98,7 @@ setup(
     tests_require=tests_require,
     entry_points={
         'console_scripts': [
-            'download-antismash-databases=antismash.download_databases:main',
+            'download-antismash-databases=antismash.download_databases:_main',
             'antismash=antismash.__main__:entrypoint',
         ],
     },
