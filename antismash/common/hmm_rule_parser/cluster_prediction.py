@@ -163,6 +163,7 @@ def find_clusters(record: Record, cds_by_cluster_type: Dict[str, Set[str]],
                 assert core_location.start >= 0 and core_location.end <= len(record)
                 continue
             # create the previous cluster and start a new core location
+            core_location = merge_within_container(core_location, core_location, core_location)
             surrounds_inexact = extend_location_by(core_location, rule.extent, record)
             surrounding_cdses = record.get_cds_features_within_location(surrounds_inexact, with_overlapping=False)
             surrounds_exact = surrounding_cdses[0].location
