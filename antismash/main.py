@@ -228,7 +228,7 @@ def run_detection(record: Record, options: ConfigType,
     if not record.get_regions():
         logging.info("No regions detected, skipping record")
         record.skip = "No regions detected"
-        return None
+        return timings
 
     logging.info("%d region(s) detected in record", len(record.get_regions()))
 
