@@ -215,13 +215,15 @@ class CleavageSiteHit:  # pylint: disable=too-few-public-methods
 class Lanthipeptide(PrepeptideBase):
     """ Calculates and stores lanthipeptide information
     """
-    def __init__(self, hit: CleavageSiteHit, rodeo_score: int) -> None:
+    def __init__(self, hit: CleavageSiteHit, rodeo_score: int, leader: str, core: str) -> None:
         super().__init__(hit.end, hit.score, rodeo_score)
         self.lantype = hit.lantype
         self._aminovinyl = False
         self._chlorinated = False
         self._oxygenated = False
         self._lac = False
+        self.leader = leader
+        self.core = core
 
     def __repr__(self) -> str:
         base = "Lanthipeptide(..%s, %s, %r, %r, %s, %s(%s))"
@@ -249,6 +251,7 @@ class Lanthipeptide(PrepeptideBase):
         """
         assert self._core, "calculating weight without a core"
         assert self.core_analysis is not None
+        assert self.core_analysis_monoisotopic is not None
 
         amino_counts = self.core_analysis.count_amino_acids()
         no_thr_ser = amino_counts['T'] + amino_counts['S']
@@ -510,13 +513,12 @@ def determine_precursor_peptide_candidate(record: Record, query: CDSFeature, dom
                              query.translation[cleavage_result.end:], domains)
     if rodeo_result < 14:
         return None
-    lanthipeptide = Lanthipeptide(cleavage_result, rodeo_result)
 
     # Determine the leader and core peptide
-    lanthipeptide.leader = query.translation[:cleavage_result.end]
-    lanthipeptide.core = query.translation[cleavage_result.end:]
+    leader = query.translation[:cleavage_result.end]
+    core = query.translation[cleavage_result.end:]
 
-    return lanthipeptide
+    return Lanthipeptide(cleavage_result, rodeo_result, leader, core)
 
 
 def run_lanthipred(record: Record, query: CDSFeature, lant_class: str, domains: List[str]) -> Optional[Lanthipeptide]:
@@ -549,14 +551,15 @@ def run_lanthipred(record: Record, query: CDSFeature, lant_class: str, domains: 
         if cleavage_result.end == len(query_sequence):
             return None
         cleavage_result.lantype = lant_class
-        result = Lanthipeptide(cleavage_result, 0)
-        result.leader = query_sequence[:result.end]
-        result.core = query_sequence[result.end:]
+        leader = query_sequence[:cleavage_result.end]
+        core = query_sequence[cleavage_result.end:]
+        result = Lanthipeptide(cleavage_result, 0, leader, core)
 
     else:
-        result = determine_precursor_peptide_candidate(record, query, domains, hmmer_profiles[lant_class])
-        if result is None:
+        candidate = determine_precursor_peptide_candidate(record, query, domains, hmmer_profiles[lant_class])
+        if candidate is None:
             return None
+        result = candidate
 
     # extract now (that class is known and thus the END component) the core peptide
     if result.number_of_lan_bridges == 0:
@@ -611,6 +614,7 @@ def result_vec_to_feature(orig_feature: CDSFeature, res_vec: Lanthipeptide) -> P
         Returns:
             a Prepeptide instance
     """
+    assert res_vec.leader is not None
     feature = Prepeptide(orig_feature.location, "lanthipeptide", res_vec.core,
                          orig_feature.get_name(), "lanthipeptides", res_vec.lantype, res_vec.score,
                          res_vec.monoisotopic_mass, res_vec.molecular_weight,

@@ -23,7 +23,7 @@ from antismash.modules.lanthipeptides.specific_analysis import (
 
 class TestLanthipeptide(unittest.TestCase):
     def setUp(self):
-        self.lant = Lanthipeptide(CleavageSiteHit(42, 17, 'Class-I'), 23)
+        self.lant = Lanthipeptide(CleavageSiteHit(42, 17, 'Class-I'), 23, "HEAD", "MAGICHAT")
 
     def test_init(self):
         "Test Lanthipeptide instantiation"
@@ -31,27 +31,20 @@ class TestLanthipeptide(unittest.TestCase):
         assert self.lant.end == 42
         assert self.lant.score == 17
         assert self.lant.lantype == "Class-I"
-        assert self.lant.core == ""
-        with self.assertRaisesRegex(AssertionError, "calculating weight without a core"):
-            print(self.lant.molecular_weight)
-
-    def test_repr(self):
-        "Test Lanthipeptide representation"
-        expected = "Lanthipeptide(..42, 17, 'Class-I', '', -1, -1(-1))"
-        assert repr(self.lant) == expected
-
-    def test_core(self):
-        "Test Lanthipeptide.core"
-        assert self.lant.core == ""
-        assert self.lant.core_analysis is None
-        self.lant.core = "MAGICHAT"
+        assert self.lant.leader == "HEAD"
         assert self.lant.core == "MAGICHAT"
         assert self.lant.core_analysis
 
+    def test_repr(self):
+        "Test Lanthipeptide representation"
+        expected = "Lanthipeptide(..42, 17, 'Class-I', 'MAGICHAT', -1, " #  skip weights
+        assert repr(self.lant).startswith(expected)
+
     def test_core_ignore_invalid(self):
         "Test Lanthipeptide.core ignores invalid amino acids"
-        assert self.lant.core == ""
-        assert self.lant.core_analysis is None
+        with self.assertRaisesRegex(AssertionError, "calculating weight without a core"):
+            self.lant.core = ""
+
         self.lant.core = "MAGICXHAT"
         assert self.lant.core == "MAGICXHAT"
         assert self.lant.core_analysis
@@ -71,7 +64,7 @@ class TestLanthipeptide(unittest.TestCase):
 
     def test_monoisotopic_mass(self):
         "Test Lanthipeptide.monoisotopic_mass"
-        self.lant.core = "MAGICHAT"
+        assert self.lant.core == "MAGICHAT"
         analysis = ProteinAnalysis("MAGICHAT", monoisotopic=True)
         weight = analysis.molecular_weight()
         # Thr is assumed to be dehydrated
@@ -81,7 +74,7 @@ class TestLanthipeptide(unittest.TestCase):
 
     def test_molecular_weight(self):
         "Test Lanthipeptide.molecular_weight"
-        self.lant.core = "MAGICHAT"
+        assert self.lant.core == "MAGICHAT"
         analysis = ProteinAnalysis("MAGICHAT", monoisotopic=False)
         weight = analysis.molecular_weight()
         # Thr is assumed to be dehydrated
@@ -125,10 +118,8 @@ class TestSpecificAnalysis(unittest.TestCase):
         "Test lanthipeptides.result_vec_to_features()"
         orig_feature = DummyCDS(0, 165)
         orig_feature.locus_tag = 'FAKE0001'
-        vec = Lanthipeptide(CleavageSiteHit(23, 42, 'Class-I'), 23)
         seq = "TAILTAILTAILTAILTAILTAILTAILTAILTAILCC"
-        vec.core = seq
-        vec.leader = "HEADHEADHEAD"
+        vec = Lanthipeptide(CleavageSiteHit(23, 42, 'Class-I'), 23, "HEADHEADHEAD", seq)
         motif = result_vec_to_feature(orig_feature, vec)
         assert motif.location.start == 0
         assert motif.location.end == 165
