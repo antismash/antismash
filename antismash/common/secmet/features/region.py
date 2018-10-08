@@ -28,7 +28,7 @@ class TemporaryRegion:
         Converts to a real Region feature with the convert_to_real_feature method.
     """
     def __init__(self, location: FeatureLocation, supercluster_numbers: List[int],
-                 subregion_numbers: List[int], region_number: int,
+                 subregion_numbers: List[int],
                  rules: List[str] = None, products: List[str] = None,
                  probabilities: List[float] = None) -> None:
         self.type = "region"
@@ -36,7 +36,6 @@ class TemporaryRegion:
         self.superclusters = supercluster_numbers
         self.subregions = subregion_numbers
         self.detection_rules = rules
-        self._region_number = region_number
         self.products = products
         self.probabilities = probabilities
 
@@ -204,8 +203,6 @@ class Region(CDSCollection):
     def to_biopython(self, qualifiers: Optional[Dict[str, List[str]]] = None) -> List[SeqFeature]:
         if not qualifiers:
             qualifiers = {}
-        if self._parent_record:
-            qualifiers["region_number"] = [str(self.get_region_number())]
         qualifiers["product"] = self.products
         qualifiers["rules"] = self.detection_rules
         qualifiers["probabilities"] = ["%.4f" % prob for prob in self.probabilities]
@@ -222,7 +219,6 @@ class Region(CDSCollection):
         return TemporaryRegion(bio_feature.location,
                                [int(num) for num in leftovers.pop("supercluster_numbers", [])],
                                [int(num) for num in leftovers.pop("subregion_numbers", [])],
-                               int(leftovers.pop("region_number", [None])[0]),
                                leftovers["rules"],
                                leftovers["product"],
                                [float(prob) for prob in leftovers.pop("probabilities", [])],
