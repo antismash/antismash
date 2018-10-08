@@ -513,7 +513,8 @@ class Record:
             raise ValueError("Multiple Domain features have the same name for mapping: %s" %
                              pfam_domain.get_name())
         self._domains_by_name[pfam_domain.get_name()] = pfam_domain
-        self._pfams_by_cds_name[pfam_domain.locus_tag].append(pfam_domain)
+        if pfam_domain.locus_tag:
+            self._pfams_by_cds_name[pfam_domain.locus_tag].append(pfam_domain)
 
     def add_antismash_domain(self, antismash_domain: AntismashDomain) -> None:
         """ Add the given AntismashDomain to the record """
