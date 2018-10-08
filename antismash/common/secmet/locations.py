@@ -5,6 +5,10 @@
 
 from typing import Iterable, List, Sequence, Tuple
 
+from Bio.SeqRecord import (
+    SeqRecord,
+)
+
 from Bio.SeqFeature import (
     AbstractPosition,
     AfterPosition,
@@ -14,6 +18,12 @@ from Bio.SeqFeature import (
     FeatureLocation,
     UnknownPosition,
 )
+
+# extend FeatureLocation and CompoundLocation with bio_start / bio_end until upstream implementation
+FeatureLocation.bio_start = property(lambda self: self.end if self.strand == -1 else self.start)
+FeatureLocation.bio_end = property(lambda self: self.start if self.strand == -1 else self.end)
+CompoundLocation.bio_start = property(lambda self: self.parts[0].bio_start)
+CompoundLocation.bio_end = property(lambda self: self.parts[-1].bio_end)
 
 
 def convert_protein_position_to_dna(start: int, end: int, location: FeatureLocation) -> Tuple[int, int]:
@@ -29,45 +39,36 @@ def convert_protein_position_to_dna(start: int, end: int, location: FeatureLocat
     """
     if not 0 <= start < end <= len(location) // 3:
         raise ValueError("Protein positions %d and %d must be contained by %s" % (start, end, location))
-    if location.strand == -1:
-        dna_start = location.start + len(location) - end * 3
-        dna_end = location.start + len(location) - start * 3
-    else:
-        dna_start = location.start + start * 3
-        dna_end = location.start + end * 3
+    dna_start = start * 3
+    dna_end = end * 3
 
-    # only CompoundLocations are complicated
-    if not isinstance(location, CompoundLocation):
-        if not location.start <= dna_start < dna_end <= location.end:
-            raise ValueError(("Converted coordinates %d..%d "
-                              "out of bounds for location %s") % (dna_start, dna_end, location))
-        return dna_start, dna_end
-
-    parts = sorted(location.parts, key=lambda x: x.start)
-    gap = 0
-    last_end = parts[0].start
+    processed = 0
     start_found = False
     end_found = False
-    for part in parts:
+    for part in location.parts:
         if start_found and end_found:
             break
-        gap += part.start - last_end
-        if not start_found and dna_start + gap in part:
+        if not start_found and dna_start < len(part) + processed:
             start_found = True
-            dna_start = dna_start + gap
-        if not end_found and dna_end + gap - 1 in part:
+            if part.strand == -1:
+                dna_start = part.bio_start - dna_start + processed
+            else:
+                dna_start = part.bio_start + dna_start - processed
+        if not end_found and dna_end <= len(part) + processed:
             end_found = True
-            dna_end = dna_end + gap
-
-        last_end = part.end
+            if part.strand == -1:
+                dna_end = part.bio_start - dna_end + processed
+            else:
+                dna_end = part.bio_start + dna_end - processed
+        processed += len(part)
 
     assert start_found
     assert end_found
 
-    if not location.start <= dna_start < dna_end <= location.end:
-        raise ValueError(("Converted coordinates %d..%d "
-                          "out of bounds for location %s") % (dna_start, dna_end, location))
-    return dna_start, dna_end
+    if location.strand == -1:
+        return dna_end, dna_start
+    else:
+        return dna_start, dna_end
 
 
 def build_location_from_others(locations: Sequence[FeatureLocation]) -> FeatureLocation:
@@ -97,71 +98,6 @@ def build_location_from_others(locations: Sequence[FeatureLocation]) -> FeatureL
     return location
 
 
-def location_bridges_origin(location: CompoundLocation) -> bool:
-    """ Determines if a CompoundLocation would cross the origin of a record.
-
-        Arguments:
-            location: the CompoundLocation to check
-
-        Returns:
-            False if the location does not bridge the origin or if the location
-            is of indeterminate strand, otherwise True
-    """
-    assert isinstance(location, (FeatureLocation, CompoundLocation)), type(location)
-
-    # if it's not compound, it can't bridge at all
-    if not isinstance(location, CompoundLocation):
-        return False
-
-    # invalid strands mean direction can't be determined, may need to be an error
-    if location.strand not in [1, -1]:
-        return False
-
-    for i, part in enumerate(location.parts[1:]):
-        if location.strand == 1:
-            if part.start <= location.parts[i].end:
-                return True
-        else:
-            if part.start >= location.parts[i].end:
-                return True
-    return False
-
-
-def split_origin_bridging_location(location: CompoundLocation) -> Tuple[
-                                                      List[FeatureLocation], List[FeatureLocation]]:
-    """ Splits a CompoundLocation into two sections.
-        The first contains the low-position parts (immediately after the origin
-        in a forward direction), the second handles the high-position parts.
-
-        Arguments:
-            location: the CompoundLocation to split
-
-        Returns:
-            a tuple of lists, each list containing one or more FeatureLocations
-    """
-    lower = []  # type: List[FeatureLocation]
-    upper = []  # type: List[FeatureLocation]
-    if location.strand == 1:
-        for part in location.parts:
-            if not upper or part.start > upper[-1].end:
-                upper.append(part)
-            else:
-                lower.append(part)
-    elif location.strand == -1:
-        for part in location.parts:
-            if not lower or part.start < lower[-1].end:
-                lower.append(part)
-            else:
-                upper.append(part)
-    else:
-        raise ValueError("Cannot separate bridged location without a valid strand")
-
-    if not (lower and upper):
-        raise ValueError("Location does not bridge origin: %s" % location)
-
-    return lower, upper
-
-
 def locations_overlap(first: FeatureLocation, second: FeatureLocation) -> bool:
     """ Returns True if the two provided FeatureLocations overlap
 
@@ -172,9 +108,13 @@ def locations_overlap(first: FeatureLocation, second: FeatureLocation) -> bool:
         Returns:
             True if the locations overlap, otherwise False
     """
-    return (first.start in second or first.end - 1 in second
-            or second.start in first or second.end - 1 in first)
-
+    for f_part in first.parts:
+        for s_part in second.parts:
+            # -1 to account for the non-inclusive end
+            if f_part.start in s_part or f_part.end - 1 in s_part or s_part.start in f_part or s_part.end - 1 in f_part:
+                return True
+    # none of sublocations overlap
+    return False
 
 def location_contains_other(outer: FeatureLocation, inner: FeatureLocation) -> bool:
     """ Returns True if the first of two provided FeatureLocations contains the
@@ -187,7 +127,14 @@ def location_contains_other(outer: FeatureLocation, inner: FeatureLocation) -> b
         Returns:
             True if outer contains inner, otherwise False
     """
-    return inner.start in outer and inner.end - 1 in outer
+    sublocations_found = 0
+    for inner_sublocation in inner.parts:
+        for outer_sublocation in outer.parts:
+            # -1 to account for the non-inclusive end
+            if inner_sublocation.start in outer_sublocation and inner_sublocation.end - 1 in outer_sublocation:
+                sublocations_found += 1
+                break # break in order to avoid scoring the query sublocation twice in weirdly overlapping subjects
+    return len(inner.parts) == sublocations_found
 
 
 def location_from_string(data: str) -> FeatureLocation:
@@ -235,10 +182,109 @@ def location_from_string(data: str) -> FeatureLocation:
     return CompoundLocation(locations, operator=operator)
 
 
+def extend_location_by(location: FeatureLocation, extension: int, record: SeqRecord) -> FeatureLocation:
+    """ Extends a single FeatureLocation by N bp, both ways and returns the extended FeatureLocation
+
+        Strand will be set to None
+
+        Arguments:
+            location: one FeatureLocation instance
+            extension: integer, to be extended by
+            record: parent record of the location
+
+        Returns:
+            a new FeatureLocation that will be extended
+    """
+    # simple features on linear records are straightforward
+    if isinstance(location, (FeatureLocation)) and not record.is_circular():
+        return FeatureLocation(max(0, location.start - extension), min(location.end + extension, len(record)))
+
+    bio_start_extension = None
+    bio_end_extension = None
+    upstream_part = None
+    downstream_part = None
+
+    # extension would overlap itself on a circular record -> return the location that covers the full record
+    if record.is_circular() and 2*extension > len(record) - len(location):
+        return FeatureLocation( 0, len(record), strand=None)
+
+    # first part's end (bio_start) on reverse strand of circular record is overflowing the ori
+    if location.parts[0].strand == -1 and record.is_circular() and location.parts[0].end + extension > len(record):
+        bio_start_extension = len(record) - location.parts[0].end
+        upstream_part = FeatureLocation(0, extension - end_extension, strand=None)
+    # first part's start (bio_start) on forward or unspecified strand of a circular record is overflowing the ori
+    elif location.parts[0].strand != -1 and record.is_circular() and location.parts[0].start - extension < 0:
+        bio_start_extension = -location.parts[0].start
+        upstream_part = FeatureLocation(len(record) - extension - bio_start_extension, len(record), strand=None)
+    # else no overflow
+    else:
+        bio_start_extension = extension if location.parts[0].strand == -1 else -extension
+
+    # last part's start (bio_end) on reverse strand of circular record is overflowing the ori
+    if location.parts[-1].strand == -1 and record.is_circular() and location.parts[-1].start - extension < 0:
+        bio_end_extension = -location.parts[-1].start
+        downstream_part = FeatureLocation(len(record) - extension - bio_end_extension, len(record), strand=None)
+    # last part's end (bio_end) on forward or unspecified strand of a circular record is overflowing the ori
+    if location.parts[-1].strand != -1 and record.is_circular() and location.parts[-1].end + extension > len(record):
+        bio_end_extension = len(record) - location.parts[-1].end
+        downstream_part = FeatureLocation(0, extension - bio_end_extension, strand=None)
+    # else no overflow
+    else:
+        bio_end_extension = -extension if location.parts[0].strand == -1 else extension
+
+    parts = []
+    for part in location.parts:
+        start = part.start
+        if part.start is location.bio_start:
+            start = part.start + bio_start_extension
+        elif part.start is location.bio_end:
+            start = part.start + bio_end_extension
+        end = part.end
+        if part.end is location.bio_start:
+            end = part.end + bio_start_extension
+        elif part.end is location.bio_end:
+            end = part.end + bio_end_extension
+        parts.append(FeatureLocation(start, end, strand=None))
+    if upstream_part:
+        parts.insert(0, upstream_part)
+    if downstream_part:
+        parts.append(downstream_part)
+
+    return CompoundLocation(parts) if len(parts) > 1 else parts[0]
+
+
+def merge_within_container(first: FeatureLocation, second: FeatureLocation, ref: FeatureLocation) -> FeatureLocation:
+    """ Merges two locations, but only if the merge location would still be fully contained in a container location
+
+        Strand will be set to None.
+
+        Arguments:
+            first: first locations to be merged within the container
+            second: second locations to be merged within the container
+            ref: a reference container where the merging is allowed
+
+        Returns:
+            a new, merged FeatureLocation, which is similar to
+            FeatureLocation(min(first.start, second.start),max(first.end, second.end), strand=None),
+            but allows for cross-ori locations, both as first, second or container
+    """
+    parts = []
+    #only one for most cases, two for ori-split or a cluster with multiple loci
+    for ref_subpart in ref.parts if ref.bio_start > ref.bio_end else reversed(ref.parts):
+        contained_parts = [part for part in first.parts + second.parts if locations_overlap(ref_subpart, part)]
+        if contained_parts:
+            part_start = min(part.start for part in contained_parts)
+            part_end = max(part.end for part in contained_parts)
+            parts.append(FeatureLocation(part_start, part_end, strand=None))
+
+    return CompoundLocation(parts) if len(parts) > 1 else parts[0]
+
+
 def combine_locations(*locations: Iterable[FeatureLocation]) -> FeatureLocation:
-    """ Combines multiple FeatureLocations into a single location using the
-        minimum start and maximum end. Will not create a CompoundLocation if any
-        of the inputs are CompoundLocations.
+    """ Combines one or more FeatureLocations into one or more location, based on their overlap,
+        always using the sublocations. If any two sublocations overlap, they will be merged.
+        If only one sublocation remains in the end, a FeatureLocation will be returned.
+        If two or more sublocations remain at the end of the merge, a CompoundLocation will be returned
 
         Strand will be set to None.
 
@@ -251,16 +297,25 @@ def combine_locations(*locations: Iterable[FeatureLocation]) -> FeatureLocation:
     # ensure we have a list of featureLocations
     if len(locations) == 1:
         if isinstance(locations[0], CompoundLocation):
-            locs = locations[0].parts
+            locations = locations[0].parts
         # it's silly to combine a single location, but don't iterate over it
         elif isinstance(locations[0], FeatureLocation):
-            locs = [locations[0]]
+            locations = [locations[0]]
         else:  # some kind of iterable, hopefully containing locations
-            locs = list(locations[0])
-    else:
-        locs = list(locations)
+            locations = list(locations[0])
+    # flatten, in any case
+    locations = [part for location in locations for part in location.parts]
 
-    # build the result
-    start = min(loc.start for loc in locs)
-    end = max(loc.end for loc in locs)
-    return FeatureLocation(start, end, strand=None)
+    #inspired by https://stackoverflow.com/a/1207485 # should work (but do nothing) even on one-element lists
+    for i in reversed(range(len(locations)-1)): # never check the last element in this loop
+        for j in reversed(range(i+1, len(locations))): # never check the <=i element in this loop
+            if locations_overlap(locations[i], locations[j]):
+                location_start = ExactPosition(min(locations[i].start, locations[j].start)) # enforcing exact locations
+                location_end = ExactPosition(max(locations[i].end, locations[j].end)) # enforcing exact locations
+                locations[i] = FeatureLocation(location_start, location_end, strand=None)
+                del locations[j]
+
+    if len(locations) > 1:
+        return CompoundLocation(locations)
+    else:                     # enforcing exact locations
+        return FeatureLocation(ExactPosition(locations[0].start), ExactPosition(locations[0].end), strand=None)

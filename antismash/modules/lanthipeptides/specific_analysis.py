@@ -18,6 +18,7 @@ from antismash.common import all_orfs, path, subprocessing, module_results, util
 from antismash.common.fasta import get_fasta_from_features
 from antismash.common.secmet import CDSFeature, Cluster, GeneFunction, Prepeptide, Record, Region
 from antismash.common.secmet.features import CDSCollection
+from antismash.common.secmet.locations import extend_location_by
 from antismash.common.secmet.qualifiers.prepeptide_qualifiers import LanthiQualifier
 
 from .rodeo import run_rodeo
@@ -621,7 +622,7 @@ def result_vec_to_feature(orig_feature: CDSFeature, res_vec: Lanthipeptide) -> P
 
 
 def find_neighbours_in_range(center: CDSFeature,
-                             candidates: Iterable[CDSFeature]) -> List[CDSFeature]:
+                             candidates: Iterable[CDSFeature], record: Record) -> List[CDSFeature]:
     """ Restrict a set of genes to those within precursor range of a central
         gene.
 
@@ -634,15 +635,8 @@ def find_neighbours_in_range(center: CDSFeature,
     """
     neighbours = []
     for candidate in candidates:
-        if candidate < center:
-            if center.location.start - candidate.location.start <= MAX_PRECURSOR_DISTANCE:
-                neighbours.append(candidate)
-        else:
-            if candidate.location.end - center.location.end <= MAX_PRECURSOR_DISTANCE:
-                neighbours.append(candidate)
-            else:
-                # skip looking further to the right if the previous one was too far away
-                break
+        if candidate.overlaps_with(extend_location_by(center.location, MAX_PRECURSOR_DISTANCE, record)):
+            neighbours.append(candidate)
     return neighbours
 
 
@@ -663,7 +657,7 @@ def run_lanthi_on_genes(record: Record, focus: CDSFeature, cluster: Cluster,
             None
     """
     domains = get_detected_domains(genes)
-    non_candidate_neighbours = find_neighbours_in_range(focus, cluster.cds_children)
+    non_candidate_neighbours = find_neighbours_in_range(focus, cluster.cds_children, record)
     flavoprotein_found = contains_feature_with_single_domain(non_candidate_neighbours, {"Flavoprotein"})
     halogenase_found = contains_feature_with_single_domain(non_candidate_neighbours, {"Trp_halogenase"})
     oxygenase_found = contains_feature_with_single_domain(non_candidate_neighbours, {"p450"})
@@ -723,7 +717,7 @@ def run_specific_analysis(record: Record) -> LanthiResults:
                 precursor_candidates.append(orf)
 
         for gene in core_genes:
-            neighbours = find_neighbours_in_range(gene, precursor_candidates)
+            neighbours = find_neighbours_in_range(gene, precursor_candidates, record)
             run_lanthi_on_genes(record, gene, cluster, neighbours, results)
 
     logging.debug("Lanthipeptide module marked %d motifs", sum(map(len, results.motifs_by_locus)))

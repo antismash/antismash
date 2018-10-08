@@ -47,7 +47,7 @@ class Gene(Feature):
         if self.gene_name:
             qualifiers["gene"] = [self.gene_name]
         if self._pseudo:
-            qualifiers["pseudo"] = []
+            qualifiers["pseudo"] = None
         return super().to_biopython(qualifiers)
 
     @staticmethod

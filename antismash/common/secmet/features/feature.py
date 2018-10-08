@@ -11,8 +11,8 @@ from Bio.Seq import Seq
 
 from antismash.common.secmet.locations import (
     convert_protein_position_to_dna,
-    location_bridges_origin,
     locations_overlap,
+    location_contains_other,
 )
 
 
@@ -26,8 +26,6 @@ class Feature:
     def __init__(self, location: FeatureLocation, feature_type: str,
                  created_by_antismash: bool = False) -> None:
         assert isinstance(location, (FeatureLocation, CompoundLocation)), type(location)
-        if location_bridges_origin(location):
-            raise ValueError("Features that bridge the record origin cannot be directly created: %s" % location)
         assert location.start < location.end, "Feature location invalid"
         self.location = location
         self.notes = []  # type: List[str]
@@ -80,7 +78,8 @@ class Feature:
             return FeatureLocation(dna_start, dna_end, self.location.strand)
 
         new_locations = []
-        for location in sorted(self.location.parts, key=lambda x: x.start):
+        # do not sort here either way, as we want biological order. instead, reverse the location parts if needed
+        for location in reversed(self.location.parts) if self.location.strand == -1 else self.location.parts:
             if dna_start in location:
                 new = FeatureLocation(dna_start, location.end, self.location.strand)
                 # the end could also be in this part
@@ -123,22 +122,23 @@ class Feature:
         """
         if isinstance(other, Feature):
             location = other.location
-        elif isinstance(other, FeatureLocation):
+        elif isinstance(other, (FeatureLocation, CompoundLocation)):
             location = other
         else:
             raise TypeError("Container must be a Feature or a FeatureLocation, not %s" % type(other))
         return locations_overlap(self.location, location)
 
     def is_contained_by(self, other: Union["Feature", FeatureLocation]) -> bool:
-        """ Returns True if the given feature is wholly contained by this
-            feature.
+        """ Returns True if the given feature's all sublocations are wholly contained by at least one
+            of the feature's sublocations.
         """
-        end = self.location.end - 1  # to account for the non-inclusive end
         if isinstance(other, Feature):
-            return self.location.start in other.location and end in other.location
-        if isinstance(other, FeatureLocation):
-            return self.location.start in other and end in other
-        raise TypeError("Container must be a Feature or a FeatureLocation, not %s" % type(other))
+            other_location = other.location
+        elif isinstance(other, (FeatureLocation, CompoundLocation)):
+            other_location = other
+        else:
+            raise TypeError("Container must be a Feature or a FeatureLocation, not %s" % type(other))
+        return location_contains_other(other_location, self.location)
 
     def to_biopython(self, qualifiers: Dict[str, Any] = None) -> List[SeqFeature]:
         """ Converts this feature into one or more SeqFeature instances.
