@@ -181,7 +181,7 @@ def pre_process_sequences(sequences: List[Record], options: ConfigType, genefind
     matching_filter = 0
 
     for i, seq in enumerate(sequences):
-        seq.record_index = i
+        seq.record_index = i + 1  # 1-indexed
 
     checking_required = not (options.reuse_results or options.skip_sanitisation)
 
