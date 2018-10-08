@@ -38,8 +38,9 @@ class CDSFeature(Feature):
                  "transl_table", "_sec_met", "_gene_functions",
                  "unique_id", "_nrps_pks", "motifs", "region"]
 
-    def __init__(self, location: FeatureLocation, translation: str = None, locus_tag: str = None,
-                 protein_id: str = None, product: str = "", gene: str = None) -> None:
+    def __init__(self, location: FeatureLocation, translation: str, locus_tag: str = None,
+                 protein_id: str = None, product: str = "", gene: str = None,
+                 translation_table: int = 1) -> None:
         super().__init__(location, feature_type="CDS")
         if location.strand not in [1, -1]:
             raise ValueError("Strand must be 1 or -1 for a CDS, not %s" % location.strand)
@@ -58,7 +59,7 @@ class CDSFeature(Feature):
         if not isinstance(product, str):
             raise TypeError("product must be a string, not %s", type(product))
         self.product = product
-        self.transl_table = "Standard"  # type: Union[str, int]
+        self.transl_table = int(translation_table)
         self._sec_met = None  # type: Optional[SecMetQualifier]
         self._nrps_pks = NRPSPKSQualifier(self.location.strand)
 
@@ -137,6 +138,9 @@ class CDSFeature(Feature):
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
         # grab mandatory qualifiers and create the class
+        transl_table = 1
+        if "transl_table" in leftovers:
+            transl_table = int(leftovers.pop("transl_table")[0])
 
         # semi-optional qualifiers
         protein_id = leftovers.pop("protein_id", [None])[0]
@@ -156,11 +160,11 @@ class CDSFeature(Feature):
             translation = None
 
         feature = CDSFeature(bio_feature.location, translation, gene=gene,
-                             locus_tag=locus_tag, protein_id=protein_id)
+                             locus_tag=locus_tag, protein_id=protein_id,
+                             translation_table=transl_table)
 
         # grab optional qualifiers
         feature.product = leftovers.pop("product", [""])[0]
-        feature.transl_table = leftovers.pop("transl_table", ["Standard"])[0]
         sec_met = leftovers.pop("sec_met", None)
         if sec_met:
             feature.sec_met = SecMetQualifier.from_biopython(sec_met)

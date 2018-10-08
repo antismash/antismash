@@ -47,7 +47,7 @@ FEATURES             Location/Qualifiers
                      /locus_tag="ctg1_orf02098"
                      /note="Glimmer score: 10.32"
                      /product="ctg1_orf02098"
-                     /transl_table=Standard
+                     /transl_table=1
                      /translation="MQHINLKQACARIVASVFLGALMAGVSGAYADETGSRKQNVNIGL
                      GLQPLAAQNGTTQGGAQESHQSASQTFSSNTHSFLSGMAAKAGDVVVGALNMIGVRYRW
                      GGDSPSSGLDCSGFVRYVFQDTLGLTLPRRAEEMSRVGEKVKMSELKPGDLVFFNTMRR
@@ -57,7 +57,7 @@ FEATURES             Location/Qualifiers
                      /locus_tag="ctg1_orf02101"
                      /note="Glimmer score: 12.67"
                      /product="ctg1_orf02101"
-                     /transl_table=Standard
+                     /transl_table=1
                      /translation="VLEISLKLSAVSPARRRLLGAATAALLAACTGPKTRSNMAAPSLP
                      PAAPARPLKIGLALGAGAARGFAHIGVIKALEARGIDADIVVGTSAGSVIAALYASGMT
                      GLQMNKLALTMNEAAISDWALPLRSRGFLKGVALQNYINTTLNNRPIEKMARPLGIVAT
@@ -68,7 +68,7 @@ FEATURES             Location/Qualifiers
                      /locus_tag="ctg1_orf02102"
                      /note="Glimmer score: 14.39"
                      /product="ctg1_orf02102"
-                     /transl_table=Standard
+                     /transl_table=1
                      /translation="MAWQWLGLDFDEGPYYQMQRMDRYRDVIKQLLEQGLAYPCYMSPE
                      ELDALRERQREAGLKPRYDGTWRPEPGKVLPMPPAGVQPVVRFKNPLSGTVAWDDAVKG
                      RIEISNDELDDLVIARPDGTPTYNFCVVVDDLDMAITHVIRGDDHVNNTPRQINILRAL
@@ -81,14 +81,14 @@ FEATURES             Location/Qualifiers
                      /locus_tag="ctg1_orf02103"
                      /note="Glimmer score: 6.14"
                      /product="ctg1_orf02103"
-                     /transl_table=Standard
+                     /transl_table=1
                      /translation="MLYTAEHASHLPDNIDALKRIVASRDETIARLLAEIARLKRWQYG
                      RSSERVAEGNVGP"
      CDS             complement(4402..5175)
                      /locus_tag="ctg1_orf02106"
                      /note="Glimmer score: 4.18"
                      /product="ctg1_orf02106"
-                     /transl_table=Standard
+                     /transl_table=1
                      /translation="MNLQQERIDDHCQSLKLEGLMQRYVALASDAAAKQWSFLDFLEHV
                      LAHEREIRQVRSRQTLVRMAAFPAIKTLDDYDYSFAVGAPRKAIDELATLRFIERGENA
                      VLLGPSGVGKTHLAIAIGYAATQAGIKTKFITAADLMLQLEAARRQERYDAVLRHNVLG
@@ -98,7 +98,7 @@ FEATURES             Location/Qualifiers
                      /locus_tag="ctg1_orf02107"
                      /note="Glimmer score: 6.31"
                      /product="ctg1_orf02107"
-                     /transl_table=Standard
+                     /transl_table=1
                      /translation="MLQKEQWMQVHVLKAQGLSLREIARRLGVSRNTVTRYLASQDVPR
                      YKQREPRPSKLDQFQAYILERMQAAWPETIAAPALLRELRALGYEGQLRSIQAFMKAHK
                      PVPAPDPLVRFETEPERQMQCDFVVFRRGADPLYAFTATLGFSRWRWARFATNEKAETL
@@ -110,19 +110,19 @@ FEATURES             Location/Qualifiers
                      /locus_tag="ctg1_orf02108"
                      /note="Glimmer score: 0.72"
                      /product="ctg1_orf02108"
-                     /transl_table=Standard
+                     /transl_table=1
                      /translation="LAETINGLYKAELIHKRGPWKTKADAELATLE"
      CDS             6434..6538
                      /locus_tag="ctg1_orf02110"
                      /note="Glimmer score: 1.16"
                      /product="ctg1_orf02110"
-                     /transl_table=Standard
+                     /transl_table=1
                      /translation="LQESLGYIPPDKAEANYYRQLMQKSNPSTFTSLP"
      CDS             complement(6601..8400)
                      /locus_tag="ctg1_orf02113"
                      /note="Glimmer score: 7.89"
                      /product="ctg1_orf02113"
-                     /transl_table=Standard
+                     /transl_table=1
                      /translation="MRHGLFKTIFFLLGCLWTREWRTRLQLIAAIGCTGCSVGLTIVSP
                      MLLKWLIDGLSGASLSATSVYLLCVAYGGAWFLSQATHRCEEYLFVVVNERIKRTITLN
                      YVSRVLGQPAAALSAHQTGASVSELTRVQDSAMRAIIGLFWSLAPICVEIVVVGIVVCS
@@ -144,7 +144,7 @@ FEATURES             Location/Qualifiers
                      /sec_met="PF00733 (E-value: 2.2e-09, bitscore: 28.1, seeds:
                      104, tool: rule-based-clusters)"
                      /sec_met="Kind: biosynthetic"
-                     /transl_table=Standard
+                     /transl_table=1
                      /translation="MTLLGIAYPQAQDDWAQKQDWTLVRDPSHRTAGALWHQSEPSTRV
                      LCGRLGTSAYYFYGSAFSKQDHREIQEGELQAMVAEGPARLMAQCWGRYLFISFDLAAK
                      KLICCSDPSNQWPLYWAWSNRDGLLFSDTITCLHQTLVERGERPAWNHAFFTTWLRTGT
@@ -166,7 +166,7 @@ FEATURES             Location/Qualifiers
                      /sec_met="PF13471 (E-value: 5.9e-21, bitscore: 65.5, seeds:
                      84, tool: rule-based-clusters)"
                      /sec_met="Kind: biosynthetic"
-                     /transl_table=Standard
+                     /transl_table=1
                      /translation="MPHHLMPHVFGACFAQQIILLDVVRDRYAVLTERQSAALAQQLGL
                      SDARFARVEAVQSASILEELKRAQWISVTSFAEADAKLNMLSPSPTTGGMSANGWKLPE
                      DAFARRPAWTRIVKALFLLRSVHRCAARQGLAGLLQLCHQAHREASLRIGLPDDYAPFV
@@ -176,47 +176,47 @@ FEATURES             Location/Qualifiers
                      /locus_tag="ctg1_orf02117"
                      /note="Glimmer score: 8.36"
                      /product="ctg1_orf02117"
-                     /transl_table=Standard
+                     /transl_table=1
                      /translation="MNKQQQESGLLLAEESLMELCASSETLGGAGQYKEVEAGRWSDRI
                      DSDDE"
      CDS             11699..11905
                      /locus_tag="ctg1_orf02118"
                      /note="Glimmer score: 3.43"
                      /product="ctg1_orf02118"
-                     /transl_table=Standard
+                     /transl_table=1
                      /translation="MHGMRTYQRLDAAAGIARQPSTATIQRVIGHVRAWVVLPAAPVGT
                      AQGGGALNRAGGQHSNEIALADR"
      CDS             11880..12104
                      /locus_tag="ctg1_orf02119"
                      /note="Glimmer score: 12.22"
                      /product="ctg1_orf02119"
-                     /transl_table=Standard
+                     /transl_table=1
                      /translation="MKLRLQTAEQALADAYRRMQQLEQDNQALQQQLGQTKGMAQAAQH
                      ALDAHVAPLRATIDAGQHAAQALTPAGRH"
      CDS             12491..12787
                      /locus_tag="ctg1_orf02121"
                      /note="Glimmer score: 8.43"
                      /product="ctg1_orf02121"
-                     /transl_table=Standard
+                     /transl_table=1
                      /translation="MGIKTTPFDAADYLDVSEAQAEYLRVSFETGDAADIQEAIGTVAR
                      ARGMTQVARAAGVGRESLYKALDEQGNPEFATILSVVRALGLKITVTPAYDYA"
      CDS             12940..13038
                      /locus_tag="ctg1_orf02122"
                      /note="Glimmer score: 4.92"
                      /product="ctg1_orf02122"
-                     /transl_table=Standard
+                     /transl_table=1
                      /translation="MSRARIHRLLPFFCIAVNDYEACESAQKHIVR"
      CDS             complement(13079..13201)
                      /locus_tag="ctg1_orf02123"
                      /note="Glimmer score: 2.02"
                      /product="ctg1_orf02123"
-                     /transl_table=Standard
+                     /transl_table=1
                      /translation="VLELIKAERLDAVPAEQWEKALPQIKTLLVVHSAQPAEPV"
      CDS             complement(13266..13802)
                      /locus_tag="ctg1_orf02124"
                      /note="Glimmer score: 6.98"
                      /product="ctg1_orf02124"
-                     /transl_table=Standard
+                     /transl_table=1
                      /translation="VLRVELQHIKPAIWRQIVVPGSIRLRKLHVILLLAMGWEGGHAHE
                      FVFRNTHYGEPDPDYPSDPPMLDEARVTLVKALGALKSFTYIYDYGDNWQHRIKVEKAL
                      PANAQLRSPLCLDGRNACPPEDVGGAPGYIDFLDAIIDPSHEEHNHFLKWCGGSFDPDA
@@ -225,7 +225,7 @@ FEATURES             Location/Qualifiers
                      /locus_tag="ctg1_orf02125"
                      /note="Glimmer score: 4.35"
                      /product="ctg1_orf02125"
-                     /transl_table=Standard
+                     /transl_table=1
                      /translation="MLYTAEHAGHLPDDIDALKRIIASRDETIARLLSEIARLKRWQYG
                      RSSKRVAELMGQLQLALCDLPIPEQDFDVPAAAKLSDEDAGLEATGTPKVISLRRKPRQ
                      LPAHLPRETIVHAPTNCGCPKCGAKMRALGEDVSEMLDYVPDYFKVLRHVRPKLSCSRC
@@ -240,13 +240,13 @@ FEATURES             Location/Qualifiers
                      /locus_tag="ctg1_orf02126"
                      /note="Glimmer score: 2.07"
                      /product="ctg1_orf02126"
-                     /transl_table=Standard
+                     /transl_table=1
                      /translation="VGNRRDELIVALADLLLEALGKVQRQARDQGDLNEPEDHV"
      CDS             17190..18263
                      /locus_tag="ctg1_orf02127"
                      /note="Glimmer score: 1.17"
                      /product="ctg1_orf02127"
-                     /transl_table=Standard
+                     /transl_table=1
                      /translation="MMRVTYGMRAGHAHRYHCRGDQERAANWVCIGIGGVRIDQAVAAL
                      ILEAVSPHAVEAAILAAHHANAAGDDVKRALQLELEDAHYEVSLAARRYEAVDPTKRLV
                      ARELEARWNAALERVAQLEERLSQFDAEAASRPRIDEAGLMALAADLQLAWNAPDTDAR
@@ -258,21 +258,21 @@ FEATURES             Location/Qualifiers
                      /locus_tag="ctg1_orf02128"
                      /note="Glimmer score: 0.79"
                      /product="ctg1_orf02128"
-                     /transl_table=Standard
+                     /transl_table=1
                      /translation="MGRYTEQQKLRVVEDYFSCQSGLKTVAKRHDVDISAVRSWVAAYR
                      EHGDPS"
      CDS             18586..18837
                      /locus_tag="ctg1_orf02129"
                      /note="Glimmer score: 0.34"
                      /product="ctg1_orf02129"
-                     /transl_table=Standard
+                     /transl_table=1
                      /translation="MVEILVKTFTVVEAKSHFSALLVEIEAGEEIAITRHGKIVARMVP
                      NHPSVAADAFRDFWSSQDGIDLQAPEDSPAEAVASMDN"
      CDS             18841..19254
                      /locus_tag="ctg1_orf02131"
                      /note="Glimmer score: 1.83"
                      /product="ctg1_orf02131"
-                     /transl_table=Standard
+                     /transl_table=1
                      /translation="MAALYLLDINILIAALKGHPDIQQRLETLPLSSMRLSVIVLGELE
                      FGAEKSAHSERNRARLATLAQRLPLVGFDAETTRYYARVRAFLERQGTPIGANDTWIAA
                      QALAIKATLVTDNEREFSRVPDLSLENWLARGQ"
@@ -280,14 +280,14 @@ FEATURES             Location/Qualifiers
                      /locus_tag="ctg1_orf02132"
                      /note="Glimmer score: 5.00"
                      /product="ctg1_orf02132"
-                     /transl_table=Standard
+                     /transl_table=1
                      /translation="VNKKPSKFSPEVRERVVRLVREQRSESDLNNLPRLVQQGTEAETV
                      LWKLQEAGILV"
      CDS             complement(19723..20418)
                      /locus_tag="ctg1_orf02133"
                      /note="Glimmer score: 9.84"
                      /product="ctg1_orf02133"
-                     /transl_table=Standard
+                     /transl_table=1
                      /translation="LKIMPKRLKALEAKSAQQGLVLTEAQLVALERAKRKKKAHGEFES
                      ECPGYCGAQDNTFYVGSLKGVGRIYQQTFVDTYSKVAFAKLYERKTSLPAADLLNDRVV
                      PFFDSFGIPLLRVLTDRGTQYCGNPEHHEYELYLAVEDIDHTRTKAKSPQTNGIVERLH
