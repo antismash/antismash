@@ -824,8 +824,16 @@ class Parser:  # pylint: disable=too-few-public-methods
         self._consume(TokenTypes.RULE)
         rule_name = self._consume_identifier()
         comments = ""
+        if not self.current_token:
+            raise RuleSyntaxError("expected %s, %s, or %s sections after %s"
+                                  % (TokenTypes.COMMENT, TokenTypes.SUPERIORS,
+                                     TokenTypes.CUTOFF, TokenTypes.RULE))
         if self.current_token.type == TokenTypes.COMMENT:
             comments = self._parse_comments()
+        if not self.current_token:
+            raise RuleSyntaxError("expected %s or %s sections after %s"
+                                  % (TokenTypes.SUPERIORS, TokenTypes.CUTOFF,
+                                     TokenTypes.COMMENT))
         superiors = None
         if self.current_token.type == TokenTypes.SUPERIORS:
             superiors = self._parse_superiors()
@@ -848,15 +856,21 @@ class Parser:  # pylint: disable=too-few-public-methods
         """
         comment_tokens = []
         self._consume(TokenTypes.COMMENT)
+        err = RuleSyntaxError("Unexpected end of input in %s block" % TokenTypes.COMMENT)
+        if not self.current_token:
+            raise err
         while not self.current_token.type.is_a_rule_keyword():
             comment_tokens.append(self.current_token)
-            self.current_token = next(self.tokens)
+            try:
+                self.current_token = next(self.tokens)
+            except StopIteration:
+                raise err
         return " ".join([token.token_text for token in comment_tokens])
 
     def _is_not(self) -> bool:
         """ [UNARY_OP]
         """
-        negated = self.current_token.type == TokenTypes.NOT
+        negated = self.current_token is not None and self.current_token.type == TokenTypes.NOT
         if negated:
             self._consume(TokenTypes.NOT)
         return negated
@@ -954,6 +968,7 @@ class Parser:  # pylint: disable=too-few-public-methods
             CDS = GROUP_OPEN CDS_CONDITION GROUP_CLOSE;
         """
         cds_token = self.current_token
+        assert cds_token and cds_token.type == TokenTypes.CDS
         self._consume(TokenTypes.CDS)
         self._consume(TokenTypes.GROUP_OPEN)
         conditions = self._parse_conditions(allow_cds=False, is_group=True)
@@ -981,6 +996,7 @@ class Parser:  # pylint: disable=too-few-public-methods
                   GROUP_CLOSE;
         """
         initial_token = self.current_token
+        assert initial_token and initial_token.type == TokenTypes.MINIMUM
         self._consume(TokenTypes.MINIMUM)
         self._consume(TokenTypes.GROUP_OPEN)
         count = self._consume_int()
@@ -1007,7 +1023,7 @@ class Parser:  # pylint: disable=too-few-public-methods
             COMMA_SEPARATED_IDS = ID {COMMA ID}*;
         """
         contents = [self._consume_identifier()]
-        while self.current_token.type == TokenTypes.COMMA:
+        while self.current_token and self.current_token.type == TokenTypes.COMMA:
             self._consume(TokenTypes.COMMA)
             contents.append(self._consume_identifier())
         return contents
