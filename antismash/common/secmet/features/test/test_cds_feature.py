@@ -15,20 +15,26 @@ from antismash.common.secmet.features.feature import CompoundLocation
 class TestCDSFeature(unittest.TestCase):
     def test_required_identifiers(self):
         with self.assertRaises(ValueError):
-            CDSFeature(FeatureLocation(1, 5, 1))
-        assert CDSFeature(FeatureLocation(1, 5, 1), locus_tag="foo")
-        assert CDSFeature(FeatureLocation(1, 5, 1), protein_id="foo")
-        assert CDSFeature(FeatureLocation(1, 5, 1), gene="foo")
+            CDSFeature(FeatureLocation(1, 5, 1), translation="A")
+        assert CDSFeature(FeatureLocation(1, 5, 1), locus_tag="foo", translation="A")
+        assert CDSFeature(FeatureLocation(1, 5, 1), protein_id="foo", translation="A")
+        assert CDSFeature(FeatureLocation(1, 5, 1), gene="foo", translation="A")
 
     def test_bad_strand(self):
         with self.assertRaisesRegex(ValueError, "Strand must be"):
-            CDSFeature(FeatureLocation(1, 5, 0), locus_tag="test")
+            CDSFeature(FeatureLocation(1, 5, 0), locus_tag="test", translation="A")
 
     def test_invalid_qualifier(self):
-        cds = CDSFeature(FeatureLocation(1, 5, 1), locus_tag="test")
+        cds = CDSFeature(FeatureLocation(1, 5, 1), locus_tag="test", translation="A")
         for bad in ["bad", ["stuff"], {}, 1]:
             with self.assertRaisesRegex(TypeError, "can only be set to an instance of SecMetQualifier"):
                 cds.sec_met = bad
+
+    def test_bad_translation(self):
+        loc = FeatureLocation(1, 5, 1)
+        for trans in [None, ""]:
+            with self.assertRaisesRegex(ValueError, "requires a valid translation"):
+                CDSFeature(loc, locus_tag="test", translation=trans)
 
 
 class TestCDSProteinLocation(unittest.TestCase):
@@ -40,24 +46,24 @@ class TestCDSProteinLocation(unittest.TestCase):
                               FeatureLocation(12, 15, strand=1),
                               FeatureLocation(21, 27, strand=1)]
         self.location = CompoundLocation(self.sub_locations)
-        self.cds = CDSFeature(self.location, locus_tag="compound")
+        self.cds = CDSFeature(self.location, locus_tag="compound", translation="A")
 
     def reverse_strand(self):
         self.magic = self.magic.reverse_complement()
         self.magic_split = self.magic_split.reverse_complement()
         self.sub_locations = [FeatureLocation(loc.start, loc.end, strand=loc.strand*-1) for loc in self.sub_locations]
         self.location = CompoundLocation(self.sub_locations[::self.sub_locations[0].strand])
-        self.cds = CDSFeature(self.location, locus_tag="compound")
+        self.cds = CDSFeature(self.location, locus_tag="compound", translation="A")
 
     def test_simple_location_forward_complete(self):
-        cds = CDSFeature(FeatureLocation(0, 15, 1), locus_tag="simple")
+        cds = CDSFeature(FeatureLocation(0, 15, 1), locus_tag="simple", translation="A")
         new = cds.get_sub_location_from_protein_coordinates(0, 5)
         extracted = new.extract(self.magic)
         assert extracted == self.magic
         assert extracted.translate() == self.translation
 
     def test_simple_location_forward_partial(self):
-        cds = CDSFeature(FeatureLocation(0, 15, 1), locus_tag="simple")
+        cds = CDSFeature(FeatureLocation(0, 15, 1), locus_tag="simple", translation="A")
         for start, end in [(1, 5), (0, 3), (2, 3), (1, 4)]:
             print("testing", start, end)
             new = cds.get_sub_location_from_protein_coordinates(start, end)
@@ -108,7 +114,7 @@ class TestCDSProteinLocation(unittest.TestCase):
 
     def test_compound_location_reverse_full(self):
         self.reverse_strand()
-        cds = CDSFeature(self.location, locus_tag="compound")
+        cds = CDSFeature(self.location, locus_tag="compound", translation="A")
         new = cds.get_sub_location_from_protein_coordinates(0, 5)
         assert isinstance(new, CompoundLocation)
         assert len(new.parts) == 3
@@ -119,7 +125,7 @@ class TestCDSProteinLocation(unittest.TestCase):
 
     def test_compound_location_reverse_single(self):
         self.reverse_strand()
-        cds = CDSFeature(self.location, locus_tag="compound")
+        cds = CDSFeature(self.location, locus_tag="compound", translation="A")
 
         new = cds.get_sub_location_from_protein_coordinates(0, 2)
         assert isinstance(new, FeatureLocation)
@@ -137,7 +143,7 @@ class TestCDSProteinLocation(unittest.TestCase):
 
     def test_compound_location_reverse_multiple(self):
         self.reverse_strand()
-        cds = CDSFeature(self.location, locus_tag="compound")
+        cds = CDSFeature(self.location, locus_tag="compound", translation="A")
 
         new = cds.get_sub_location_from_protein_coordinates(2, 4)
         assert isinstance(new, CompoundLocation)
@@ -158,7 +164,7 @@ class TestCDSProteinLocation(unittest.TestCase):
                  FeatureLocation(123809, 124032, 1), FeatureLocation(124091, 124193, 1),
                  FeatureLocation(124236, 124401, 1), FeatureLocation(124684, 124724, 1)]
         location = CompoundLocation(parts, operator="join")
-        cds = CDSFeature(location, locus_tag="complicated")
+        cds = CDSFeature(location, locus_tag="complicated", translation="A")
         seq = ("ATGAGCCCTCGTCTAGACTACAATGAAGGATACGATTCCGAAGACGAGGAGATCCCCCGTTACGTACACCAT"
                "TCTAGAGGAAAGAGTCATAGATCCGTGAGGACGTCAGGTCGCTCACGCACGTTGGATTACGACGGGGATGAT"
                "GAAGCTAGTGACCACGCTGCCCCCTCCGGGATTGATCGGGACGCTCGAGCCTGTCCAACATCTCGCAGATAT"

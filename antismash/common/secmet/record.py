@@ -483,13 +483,7 @@ class Record:
                                               cds_feature.location.end)
         # ensure it has a translation
         if not cds_feature.translation:
-            if not self.seq:
-                logging.error('No amino acid sequence in input entry for CDS %s, '
-                              'and no nucleotide sequence provided to translate it from.',
-                              cds_feature.unique_id)
-                raise ValueError("Missing sequence info for CDS %s" % cds_feature.unique_id)
-            cds_feature.translation = self.get_aa_translation_from_location(cds_feature.location,
-                                                                            cds_feature.transl_table)
+            raise ValueError("Missing translation info for %s" % cds_feature)
         index = bisect.bisect_left(self._cds_features, cds_feature)
         self._cds_features.insert(index, cds_feature)
         self._link_cds_to_parent(cds_feature)
@@ -561,7 +555,7 @@ class Record:
         """
         if feature.type == 'CDS':
             # TODO: check insertion order of clusters
-            self.add_cds_feature(CDSFeature.from_biopython(feature))
+            self.add_cds_feature(CDSFeature.from_biopython(feature, record=self))
         elif feature.type == 'gene':
             self.add_gene(Gene.from_biopython(feature))
         elif feature.type == 'cluster':

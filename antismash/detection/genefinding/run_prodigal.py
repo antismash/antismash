@@ -65,7 +65,9 @@ def run_prodigal(record: Record, options: ConfigType) -> None:
                 start, end = end, start
 
             loc = FeatureLocation(start-1, end, strand=strand)
-            feature = CDSFeature(loc, locus_tag='ctg%s_%s' % (record.record_index, name))
+            translation = record.get_aa_translation_from_location(loc)
+            feature = CDSFeature(loc, locus_tag='ctg%s_%s' % (record.record_index, name),
+                                 translation=translation, translation_table=record.transl_table)
             record.add_cds_feature(feature)
             found += 1
     logging.debug("prodigal found %d CDS features", found)

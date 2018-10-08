@@ -12,7 +12,8 @@ from Bio.Seq import Seq
 from helperlibs.bio import seqio
 
 from antismash.common.secmet import FeatureLocation, Record
-from antismash.common.secmet.features import CDSFeature, Cluster, SuperCluster, SubRegion, Region
+from antismash.common.secmet.features import Cluster, SuperCluster, SubRegion, Region
+from antismash.common.secmet.test.helpers import DummyCDS
 
 
 def create_cluster(start, end, product='a'):
@@ -54,7 +55,7 @@ class TestRegionChildren(unittest.TestCase):
             Region(superclusters=[], subregions=[])
 
     def test_add_cds_propagation(self):
-        cds = CDSFeature(FeatureLocation(0, 10, 1), locus_tag="test_cds")
+        cds = DummyCDS(0, 10)
         assert cds.is_contained_by(self.region)
         # ensure all empty to start with
         assert not self.cluster.cds_children
@@ -71,7 +72,7 @@ class TestRegionChildren(unittest.TestCase):
         assert cds.region is self.region
 
     def test_limited_add_cds_propagation(self):
-        cds = CDSFeature(FeatureLocation(0, 10, 1), locus_tag="test_cds")
+        cds = DummyCDS(0, 10)
         self.sub = SubRegion(FeatureLocation(20, 30), "testtool")
         self.region = Region(superclusters=[self.super], subregions=[self.sub])
 
@@ -90,7 +91,7 @@ class TestRegionChildren(unittest.TestCase):
         assert cds.region is self.region
 
     def test_adding_invalid_cds(self):
-        cds = CDSFeature(FeatureLocation(50, 60, 1), locus_tag="test_cds")
+        cds = DummyCDS(50, 60)
         assert not cds.is_contained_by(self.region)
         with self.assertRaisesRegex(ValueError, "not contained by"):
             self.region.add_cds(cds)
