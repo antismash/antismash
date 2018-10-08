@@ -200,7 +200,7 @@ class TestClusterManipulation(unittest.TestCase):
         self.record = Record(Seq("A" * 1000))
         self.cluster = Cluster(FeatureLocation(8, 71, strand=1),
                                FeatureLocation(3, 76, strand=1), tool="test",
-                               cutoff=17, neighbourhood_range=5, product='a')
+                               cutoff=17, neighbourhood_range=5, product='a', detection_rule="a")
 
     def add_cds_features(self):
         outside = DummyCDS(100, 120, locus_tag="outside")
@@ -258,7 +258,7 @@ class TestSuperClusterManipulation(unittest.TestCase):
     def setUp(self):
         self.record = Record(Seq("A" * 1000))
         self.cluster = Cluster(FeatureLocation(8, 71), FeatureLocation(3, 76), tool="test",
-                               cutoff=17, neighbourhood_range=5, product='a')
+                               cutoff=17, neighbourhood_range=5, product='a', detection_rule="a")
         self.record.add_cluster(self.cluster)
         self.supercluster = SuperCluster(SuperCluster.kinds.SINGLE, [self.cluster])
 
@@ -392,7 +392,7 @@ class TestRegionManipulation(unittest.TestCase):
         self.cds = DummyCDS(8, 71, locus_tag="test")
         self.record.add_cds_feature(self.cds)
         self.cluster = Cluster(FeatureLocation(8, 71), FeatureLocation(3, 76), tool="test",
-                               cutoff=17, neighbourhood_range=5, product='a')
+                               cutoff=17, neighbourhood_range=5, product='a', detection_rule="a")
         self.record.add_cluster(self.cluster)
         self.supercluster = SuperCluster(SuperCluster.kinds.SINGLE, [self.cluster])
         self.record.add_supercluster(self.supercluster)

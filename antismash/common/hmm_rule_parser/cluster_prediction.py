@@ -174,8 +174,8 @@ def find_clusters(record: Record, cds_by_cluster_type: Dict[str, Set[str]],
             surrounds = FeatureLocation(real_start, real_end)
             clusters.append(Cluster(core_location, surrounding_location=surrounds,
                                     tool="rule-based-clusters", cutoff=cutoff,
-                                    neighbourhood_range=rule.extent, product=cluster_type))
-            clusters[-1].detection_rule = str(rule.conditions)
+                                    neighbourhood_range=rule.extent, product=cluster_type,
+                                    detection_rule=str(rule.conditions)))
             core_location = cds.location
 
         # finalise the last cluster
@@ -183,8 +183,8 @@ def find_clusters(record: Record, cds_by_cluster_type: Dict[str, Set[str]],
                                     min(core_location.end + rule.extent, len(record)))
         clusters.append(Cluster(core_location, surrounding_location=surrounds,
                                 tool="rule-based-clusters", cutoff=cutoff,
-                                neighbourhood_range=rule.extent, product=cluster_type))
-        clusters[-1].detection_rule = str(rule.conditions)
+                                neighbourhood_range=rule.extent, product=cluster_type,
+                                detection_rule=str(rule.conditions)))
 
     # fit to record if outside
     for cluster in clusters:

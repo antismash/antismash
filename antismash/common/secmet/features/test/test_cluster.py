@@ -15,8 +15,8 @@ from antismash.common.secmet.test.helpers import DummyCDS
 def create_cluster():
     cluster = Cluster(FeatureLocation(8, 71, strand=1),
                       FeatureLocation(3, 76, strand=1), tool="test",
-                      cutoff=17, neighbourhood_range=5, product='a')
-    cluster.detection_rule = "some rule text"
+                      cutoff=17, neighbourhood_range=5, product='a',
+                      detection_rule="some rule text")
     return cluster
 
 

@@ -36,7 +36,8 @@ class TestRedundancy(unittest.TestCase):
         core = FeatureLocation(start, end)
         surrounds = FeatureLocation(max(0, start - rule.extent), end + rule.extent)
         return Cluster(core, surrounds, tool="testing", cutoff=rule.cutoff,
-                       neighbourhood_range=rule.extent, product=rule_name)
+                       neighbourhood_range=rule.extent, product=rule_name,
+                       detection_rule="rule text")
 
     def test_alone(self):
         clusters = [self.create_cluster("inferior", 101, 110)]
