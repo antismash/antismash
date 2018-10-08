@@ -190,10 +190,12 @@ class NrpspksLayer(RegionLayer):
 
             if not per_cds_predictions:
                 continue
-            self.url_strict[feature_name] = get_norine_url_for_specificities(per_cds_predictions)
-            if self.url_strict[feature_name]:
-                self.url_relaxed[feature_name] = get_norine_url_for_specificities(per_cds_predictions,
-                                                                                  be_strict=False)
+            url = get_norine_url_for_specificities(per_cds_predictions)
+            if url:
+                self.url_strict[feature_name] = url
+                url = get_norine_url_for_specificities(per_cds_predictions, be_strict=False)
+                if url:
+                    self.url_relaxed[feature_name] = url
 
     def has_any_polymer(self) -> bool:
         """ Does the region contain at least one supercluster with a polymer set """
