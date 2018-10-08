@@ -21,6 +21,7 @@ import antismash
 from antismash.common import serialiser, path
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Cluster, CDSFeature, Feature, Record, SuperCluster
+from antismash.common.secmet.test.helpers import DummyCDS  # for import by others, pylint: disable=unused-import
 from antismash.common.secmet.features.supercluster import SuperClusterKind
 from antismash.config import update_config
 from antismash.config.args import build_parser
@@ -30,20 +31,6 @@ from antismash.main import get_all_modules
 class DummyFeature(Feature):
     def __init__(self, start, end, strand=1, feature_type="none"):
         super().__init__(FeatureLocation(start, end, strand), feature_type=feature_type)
-
-
-class DummyCDS(CDSFeature):
-    counter = 0
-
-    def __init__(self, start=0, end=7, strand=1, locus_tag=None, translation=None):
-        if not translation:
-            translation = "A"*(abs(start-end))
-        if not locus_tag:
-            locus_tag = "dummy_locus_tag_%d" % DummyCDS.counter
-            DummyCDS.counter += 1
-        super().__init__(FeatureLocation(start, end, strand), translation=translation,
-                         locus_tag=locus_tag)
-        assert self.get_accession() == locus_tag, self.get_accession()
 
 
 class DummyCluster(Cluster):
