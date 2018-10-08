@@ -360,6 +360,8 @@ def get_detected_domains(genes: List[CDSFeature]) -> List[str]:
             cluster
     """
     found_domains = []  # type: List[str]
+    if not genes:
+        return found_domains
     # Gather biosynthetic domains
     for feature in genes:
         if not feature.sec_met:
@@ -668,6 +670,8 @@ def run_lanthi_on_genes(record: Record, focus: CDSFeature, cluster: Cluster,
         Returns:
             None
     """
+    if not genes:
+        return
     domains = get_detected_domains(genes)
     non_candidate_neighbours = find_neighbours_in_range(focus, cluster.cds_children)
     flavoprotein_found = contains_feature_with_single_domain(non_candidate_neighbours, {"Flavoprotein"})
@@ -730,6 +734,8 @@ def run_specific_analysis(record: Record) -> LanthiResults:
 
         for gene in core_genes:
             neighbours = find_neighbours_in_range(gene, precursor_candidates)
+            if not neighbours:
+                continue
             run_lanthi_on_genes(record, gene, cluster, neighbours, results)
 
     logging.debug("Lanthipeptide module marked %d motifs", sum(map(len, results.motifs_by_locus)))
