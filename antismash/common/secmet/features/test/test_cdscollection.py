@@ -6,7 +6,8 @@
 
 import unittest
 
-from antismash.common.secmet.features import CDSCollection, CDSFeature, FeatureLocation
+from antismash.common.secmet.features import CDSCollection, FeatureLocation
+from antismash.common.secmet.test.helpers import DummyCDS
 
 
 class TestCDSCollection(unittest.TestCase):
@@ -22,7 +23,7 @@ class TestCDSCollection(unittest.TestCase):
             CDSCollection(FeatureLocation(20, 40), feature_type="test", child_collections=[child])
 
         with self.assertRaises(AssertionError):
-            cds = CDSFeature(FeatureLocation(25, 35, strand=1), locus_tag="test")
+            cds = DummyCDS(25, 35)
             CDSCollection(FeatureLocation(20, 40), feature_type="test", child_collections=[cds])
 
     def test_root(self):
@@ -36,10 +37,10 @@ class TestCDSCollection(unittest.TestCase):
 
     def test_add_cds(self):
         collection = CDSCollection(FeatureLocation(20, 40), feature_type="test", child_collections=[])
-        cds = CDSFeature(FeatureLocation(20, 40, strand=1), locus_tag="test")
+        cds = DummyCDS(20, 40)
         collection.add_cds(cds)
         assert cds in collection.cds_children
 
-        cds = CDSFeature(FeatureLocation(120, 140, strand=1), locus_tag="test")
+        cds = DummyCDS(120, 140)
         with self.assertRaisesRegex(ValueError, "not contained by"):
             collection.add_cds(cds)

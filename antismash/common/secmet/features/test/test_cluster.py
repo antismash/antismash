@@ -7,8 +7,9 @@
 import unittest
 
 from antismash.common.secmet import FeatureLocation
-from antismash.common.secmet.features import Cluster, CDSFeature
+from antismash.common.secmet.features import Cluster
 from antismash.common.secmet.qualifiers import GeneFunction
+from antismash.common.secmet.test.helpers import DummyCDS
 
 
 def create_cluster():
@@ -50,9 +51,9 @@ class TestDefinitionCDS(unittest.TestCase):
     def setUp(self):
         self.cluster = create_cluster()
         self.cluster.core_location = FeatureLocation(30, 50)
-        self.inside_cds = CDSFeature(FeatureLocation(40, 45, strand=1), locus_tag="test1")
-        self.neighbour_cds = CDSFeature(FeatureLocation(20, 25, strand=1), locus_tag="test2")
-        self.outside_cds = CDSFeature(FeatureLocation(120, 125, strand=1), locus_tag="test3")
+        self.inside_cds = DummyCDS(40, 45)
+        self.neighbour_cds = DummyCDS(20, 25)
+        self.outside_cds = DummyCDS(120, 125)
         assert not self.cluster.cds_children
         assert not self.cluster.definition_cdses
 

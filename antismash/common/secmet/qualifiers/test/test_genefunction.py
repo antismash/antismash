@@ -30,7 +30,7 @@ class TestGeneFunction(unittest.TestCase):
             assert str(getattr(GeneFunction, member)) == member.lower()
 
     def test_cds_function(self):
-        cds = CDSFeature(FeatureLocation(1, 5, 1), locus_tag="foo")
+        cds = CDSFeature(FeatureLocation(1, 5, 1), locus_tag="foo", translation="A")
         # default value
         assert cds.gene_functions.get_classification() == GeneFunction.OTHER
         assert cds.gene_function == GeneFunction.OTHER
@@ -64,7 +64,7 @@ class TestGeneFunction(unittest.TestCase):
         assert adds[0].tool == "first_tool"
 
     def test_cds_function_conversion(self):
-        cds = CDSFeature(FeatureLocation(1, 5, 1), locus_tag="foo")
+        cds = CDSFeature(FeatureLocation(1, 5, 1), locus_tag="foo", translation="A")
         assert cds.gene_function == GeneFunction.OTHER
         assert CDSFeature.from_biopython(cds.to_biopython()[0]).gene_function == GeneFunction.OTHER
         cds.gene_functions.add(GeneFunction.ADDITIONAL, "tool", "desc")

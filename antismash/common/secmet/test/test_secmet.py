@@ -20,6 +20,7 @@ from ..features import (
     SubRegion,
     SuperCluster,
 )
+from .helpers import DummyCDS
 from ..record import Record
 
 
@@ -121,7 +122,7 @@ class TestRecord(unittest.TestCase):
     def test_cds_cluster_linkage(self):
         record = Record("A"*200)
         for start, end in [(50, 100), (10, 90), (0, 9), (150, 200)]:
-            record.add_cds_feature(helpers.DummyCDS(start, end))
+            record.add_cds_feature(DummyCDS(start, end))
         for start, end in [(10, 120), (5, 110), (10, 160), (45, 200)]:
             record.clear_clusters()
             cluster = helpers.DummyCluster(start, end)
@@ -202,9 +203,9 @@ class TestClusterManipulation(unittest.TestCase):
                                cutoff=17, neighbourhood_range=5, product='a')
 
     def add_cds_features(self):
-        outside = CDSFeature(FeatureLocation(100, 120, strand=1), locus_tag="outside")
-        inside = CDSFeature(FeatureLocation(20, 40, strand=1), locus_tag="inside")
-        partial = CDSFeature(FeatureLocation(50, 140, strand=1), locus_tag="partial")
+        outside = DummyCDS(100, 120, locus_tag="outside")
+        inside = DummyCDS(20, 40, locus_tag="inside")
+        partial = DummyCDS(50, 140, locus_tag="partial")
         self.record.add_cds_feature(outside)
         self.record.add_cds_feature(inside)
         self.record.add_cds_feature(partial)
@@ -262,9 +263,9 @@ class TestSuperClusterManipulation(unittest.TestCase):
         self.supercluster = SuperCluster(SuperCluster.kinds.SINGLE, [self.cluster])
 
     def add_cds_features(self):
-        outside = CDSFeature(FeatureLocation(100, 120, strand=1), locus_tag="outside")
-        inside = CDSFeature(FeatureLocation(20, 40, strand=1), locus_tag="inside")
-        partial = CDSFeature(FeatureLocation(50, 140, strand=1), locus_tag="partial")
+        outside = DummyCDS(100, 120, locus_tag="outside")
+        inside = DummyCDS(20, 40, locus_tag="inside")
+        partial = DummyCDS(50, 140, locus_tag="partial")
         self.record.add_cds_feature(outside)
         self.record.add_cds_feature(inside)
         self.record.add_cds_feature(partial)
@@ -336,9 +337,9 @@ class TestSubRegionManipulation(unittest.TestCase):
         self.subregion = SubRegion(FeatureLocation(100, 200), tool="test")
 
     def add_cds_features(self):
-        outside = CDSFeature(FeatureLocation(20, 40, strand=1), locus_tag="outside")
-        inside = CDSFeature(FeatureLocation(120, 140, strand=1), locus_tag="inside")
-        partial = CDSFeature(FeatureLocation(120, 240, strand=1), locus_tag="partial")
+        outside = DummyCDS(20, 40, locus_tag="outside")
+        inside = DummyCDS(120, 140, locus_tag="inside")
+        partial = DummyCDS(120, 240, locus_tag="partial")
         self.record.add_cds_feature(outside)
         self.record.add_cds_feature(inside)
         self.record.add_cds_feature(partial)
@@ -388,7 +389,7 @@ class TestSubRegionManipulation(unittest.TestCase):
 class TestRegionManipulation(unittest.TestCase):
     def setUp(self):
         self.record = Record(Seq("A" * 1000))
-        self.cds = CDSFeature(FeatureLocation(8, 71, strand=1), locus_tag="test")
+        self.cds = DummyCDS(8, 71, locus_tag="test")
         self.record.add_cds_feature(self.cds)
         self.cluster = Cluster(FeatureLocation(8, 71), FeatureLocation(3, 76), tool="test",
                                cutoff=17, neighbourhood_range=5, product='a')
@@ -414,7 +415,7 @@ class TestRegionManipulation(unittest.TestCase):
         assert not self.cds.is_contained_by(self.region_sub)
         self.record.add_region(self.region_sub)
         assert self.cds.region is None
-        new_cds = CDSFeature(FeatureLocation(220, 240, strand=1), locus_tag="add_test")
+        new_cds = DummyCDS(220, 240, locus_tag="add_test")
         assert new_cds.region is None
         self.record.add_cds_feature(new_cds)
         assert new_cds.region is self.region_sub

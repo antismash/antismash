@@ -5,7 +5,7 @@
 
 from collections import OrderedDict
 import logging
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 from typing import Union  # comment hints  # pylint: disable=unused-import
 
 from Bio.SeqFeature import SeqFeature
@@ -51,9 +51,9 @@ class CDSFeature(Feature):
         self.protein_id = _sanitise_id_value(protein_id)
         self.locus_tag = _sanitise_id_value(locus_tag)
         self.gene = _sanitise_id_value(gene)
-        self._translation = None  # type: Optional[str]
-        if translation is not None:
-            self.translation = translation
+        if not translation:
+            raise ValueError("CDSFeature requires a valid translation, not '%s'" % translation)
+        self.translation = translation
 
         # optional
         if not isinstance(product, str):
@@ -134,13 +134,16 @@ class CDSFeature(Feature):
 
     @staticmethod
     def from_biopython(bio_feature: SeqFeature, feature: "CDSFeature" = None,  # type: ignore
-                       leftovers: Optional[Dict] = None) -> "CDSFeature":
+                       leftovers: Optional[Dict] = None, record: Any = None) -> "CDSFeature":
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
-        # grab mandatory qualifiers and create the class
+        # grab mandatory qualifiers
         transl_table = 1
+        if record:
+            transl_table = record.transl_table
         if "transl_table" in leftovers:
             transl_table = int(leftovers.pop("transl_table")[0])
+        translation = leftovers.pop("translation", [""])[0]
 
         # semi-optional qualifiers
         protein_id = leftovers.pop("protein_id", [None])[0]
@@ -153,11 +156,15 @@ class CDSFeature(Feature):
                 gene = "cds%s_%s"
             gene = gene % (bio_feature.location.start, bio_feature.location.end)
 
-        translation = leftovers.pop("translation", [None])[0]
+        # ensure translation exists
         if translation and "-" in translation:
             logging.warning("Translation for CDS %s (at %s) has a gap. Discarding and regenerating.",
                             locus_tag or protein_id or gene, bio_feature.location)
-            translation = None
+            translation = ""
+        if not translation:
+            if not record:
+                raise ValueError("no translation in CDS and no record to generate it with")
+            translation = record.get_aa_translation_from_location(bio_feature.location, transl_table)
 
         feature = CDSFeature(bio_feature.location, translation, gene=gene,
                              locus_tag=locus_tag, protein_id=protein_id,
