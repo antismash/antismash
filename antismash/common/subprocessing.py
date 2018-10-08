@@ -235,12 +235,16 @@ def run_hmmsearch(query_hmmfile: str, target_sequence: str, use_tempfile: bool =
 
 
 def run_hmmpress(hmmfile: str) -> RunResult:
-    "Run hmmpress"
-    command = ['hmmpress', hmmfile]
-    run_result = execute(command)
-    if not run_result.successful():
-        logging.error("hmmpress failed for file: %s", hmmfile)
-    return run_result
+    """ Run hmmpress on a HMMer model, overwriting any previous generated files
+        (e.g. '.h3i').
+
+        Arguments:
+            hmmfile: the path to the HMMer model
+
+        Returns:
+            a RunResult instance
+    """
+    return execute(["hmmpress", "-f", hmmfile])
 
 
 def run_hmmpfam2(query_hmmfile: str, target_sequence: str, extra_args: List[str] = None

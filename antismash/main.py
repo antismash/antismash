@@ -23,7 +23,11 @@ from typing import cast, Any, Dict, List, Optional, Union
 
 from Bio import SeqIO
 
-from antismash.config import update_config, ConfigType
+from antismash.config import (
+    ConfigType,
+    get_config,
+    update_config,
+)
 from antismash.common import serialiser, record_processing
 from antismash.common.module_results import ModuleResults, DetectionResults
 from antismash.common.secmet import Record
@@ -330,8 +334,9 @@ def prepare_output_directory(name: str, input_file: str) -> None:
     if os.path.exists(name):
         if not os.path.isdir(name):
             raise RuntimeError("Output directory %s exists and is not a directory" % name)
-        # not empty, and not reusing it's results
-        if not input_file.endswith(".json") and glob.glob(os.path.join(name, "*")):
+        # not empty (apart from a possible input dir), and not reusing its results
+        if not input_file.endswith(".json") and \
+                list(filter(_ignore_patterns, glob.glob(os.path.join(name, "*")))):
             raise RuntimeError("Output directory contains other files, aborting for safety")
         else:  # --reuse
             logging.debug("Removing existing cluster genbank files")
@@ -341,6 +346,17 @@ def prepare_output_directory(name: str, input_file: str) -> None:
     else:
         logging.debug("Creating output directory: %s", name)
         os.mkdir(name)
+
+
+def _ignore_patterns(entry: str) -> bool:
+    """File name patterns that we want to ignore for the "outdir is empty" check."""
+    config = get_config()
+    if entry.endswith('/input') and os.path.isdir(entry):
+        return False
+    if os.path.abspath(entry) == os.path.abspath(config.logfile):
+        return False
+
+    return True
 
 
 def write_profiling_results(profiler: cProfile.Profile, target: str) -> None:
@@ -497,6 +513,22 @@ def read_data(sequence_file: Optional[str], options: ConfigType) -> serialiser.A
 
     update_config({"input_file": os.path.splitext(results.input_file)[0]})
     return results
+
+
+def prepare_module_data(modules: Optional[List[AntismashModule]] = None) -> None:
+    """ Calls all given modules' data preparation methods.
+
+        Arguments:
+            modules: a list of modules to use, if None all module will be used
+
+        Returns:
+            None
+    """
+    if modules is None:
+        modules = get_all_modules()
+    for module in modules:
+        if hasattr(module, "prepare_data"):
+            module.prepare_data()
 
 
 def check_prerequisites(modules: List[AntismashModule]) -> None:

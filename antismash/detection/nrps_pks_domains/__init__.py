@@ -7,7 +7,7 @@
 import logging
 from typing import Any, Dict, List, Optional
 
-from antismash.common import path, subprocessing
+from antismash.common import hmmer, path
 from antismash.common.secmet import Record
 from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
@@ -57,6 +57,22 @@ def run_on_record(record: Record, previous_results: Optional[NRPSPKSDomains],
     return results
 
 
+def prepare_data(logging_only: bool = False) -> List[str]:
+    """ Ensures packaged data is fully prepared
+
+        Arguments:
+            logging_only: whether to return error messages instead of raising exceptions
+
+        Returns:
+            a list of error messages (only if logging_only is True)
+    """
+    failure_messages = []
+    for model in ['abmotifs.hmm', 'dockingdomains.hmm', 'ksdomains.hmm', 'nrpspksdomains.hmm']:
+        full_path = path.get_full_path(__file__, "data", model)
+        failure_messages.extend(hmmer.ensure_database_pressed(full_path, return_not_raise=logging_only))
+    return failure_messages
+
+
 def check_prereqs() -> List[str]:
     """ Ensures the various required hmmer profile files exist """
     failure_messages = []
@@ -65,22 +81,10 @@ def check_prereqs() -> List[str]:
             failure_messages.append("Failed to locate executable for %r" %
                                     binary_name)
 
-    markov_models = [path.get_full_path(__file__, 'data', filename) for filename in [
-                                'abmotifs.hmm', 'dockingdomains.hmm',
-                                'ksdomains.hmm', 'nrpspksdomains.hmm']]
+    # skip trying to press files if there's missing binaries
+    if failure_messages:
+        return failure_messages
 
-    binary_extensions = ['.h3f', '.h3i', '.h3m', '.h3p']
-
-    for hmm in markov_models:
-        if path.locate_file(hmm) is None:
-            failure_messages.append("Failed to locate file %r" % hmm)
-            continue
-        for ext in binary_extensions:
-            binary = "{}{}".format(hmm, ext)
-            if path.locate_file(binary) is None:
-                result = subprocessing.run_hmmpress(hmm)
-                if not result.successful():
-                    failure_messages.append('Failed to hmmpress {!r}: {}'.format(hmm, result.stderr))
-                break
+    failure_messages.extend(prepare_data(logging_only=True))
 
     return failure_messages

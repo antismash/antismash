@@ -8,12 +8,14 @@ import gzip
 import hashlib
 import lzma
 import os
+import sys
 import tarfile
 from typing import Any, Type
 from urllib import error as urlerror
 from urllib import request
 
 import antismash
+from antismash.common.hmmer import ensure_database_pressed
 from antismash.common.subprocessing import execute
 
 PFAM27_URL = "ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam27.0/Pfam-A.hmm.gz"
@@ -158,13 +160,6 @@ def untar_file(filename: str) -> None:
     print("Extraction of %s finished successfully." % (filename.rpartition(os.sep)[2]))
 
 
-# TODO: use common function?
-def compile_pfam(filename: str) -> None:
-    """Compile a HMMer database with hmmpress."""
-    command = ["hmmpress", "-f", filename]
-    execute(command)
-
-
 def delete_file(filename: str) -> None:
     """Delete a file."""
     try:
@@ -232,7 +227,7 @@ def download_pfam(db_dir: str, url: str, version: str, archive_checksum: str, db
     check_diskspace(url)
     download_if_not_present(url, archive_filename, archive_checksum)
     filename = unzip_file(archive_filename, gzip, gzip.zlib.error)  # type: ignore
-    compile_pfam(filename)
+    ensure_database_pressed(filename)
     delete_file(filename + ".gz")
 
 
@@ -246,7 +241,7 @@ def download_resfam(db_dir: str) -> None:
     # So check size and line count as an approximation
     if present_and_size_matches(filename, RESFAM_SIZE) and \
        present_and_line_count_matches(filename, RESFAM_LINES):
-        print("Resfams database present and cheked")
+        print("Resfams database present and checked")
         return
 
     print("Downloading Resfam database")
@@ -295,7 +290,7 @@ def download_resfam(db_dir: str) -> None:
                 handle.write("%s    %d.00 %d.00\n" % (cutoff, value, value))
             i += 1
 
-    compile_pfam(filename)
+    ensure_database_pressed(filename)
 
 
 def download_clusterblast(db_dir: str) -> None:
@@ -304,7 +299,7 @@ def download_clusterblast(db_dir: str) -> None:
     dmnd_filename = os.path.join(db_dir, "clusterblast", "geneclusterprots.dmnd")
 
     if present_and_checksum_matches(dmnd_filename, CLUSTERBLAST_DMND_CHECKSUM):
-        print("ClusterBlast databse present and checked")
+        print("ClusterBlast database present and checked")
         return
 
     print("Downloading ClusterBlast database.")
@@ -335,27 +330,10 @@ def download(args: argparse.Namespace) -> None:
     download_clusterblast(args.database_dir)
 
 
-def press() -> None:
-    """Press all the hmm databases shipped with antiSMASH."""
-    # hmmpress the NRPS/PKS specific databases
-    nrpspksdir = os.path.join(LOCAL_FILE_PATH, "detection", "nrps_pks_domains", "data")
-    compile_pfam(os.path.join(nrpspksdir, "abmotifs.hmm"))
-    compile_pfam(os.path.join(nrpspksdir, "dockingdomains.hmm"))
-    compile_pfam(os.path.join(nrpspksdir, "ksdomains.hmm"))
-    compile_pfam(os.path.join(nrpspksdir, "nrpspksdomains.hmm"))
-    # TODO: re-add a compile call for SANDPUMA once that is in
-
-    # hmmpress the smcog specific database
-    compile_pfam(os.path.join(LOCAL_FILE_PATH, "detection", "genefunctions", "data", "smcogs.hmm"))
-
-    # hmmpress the t2pks specific database
-    compile_pfam(os.path.join(LOCAL_FILE_PATH, "modules", "t2pks", "data", "t2pks.hmm"))
-
-    for error in antismash.detection.hmm_detection.check_prereqs():
-        print(error)
-
-
-def main() -> None:
+def _main() -> None:
+    """ Downloads, decompresses, and compiles large databases. Also ensures
+        antiSMASH's module data is prepared.
+    """
     # Small dance to grab the antiSMASH config for the database dir.
     # We don't actually want to keep anything else, but we need to load all the
     # modules to make sure we can parse the file.
@@ -372,8 +350,12 @@ def main() -> None:
 
     args = parser.parse_args()
     download(args)
-    press()
+    try:
+        antismash.main.prepare_module_data()
+    except Exception as err:  # pylint: disable=broad-except
+        print("Error encountered while preparing module data:", str(err), file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
-    main()
+    _main()

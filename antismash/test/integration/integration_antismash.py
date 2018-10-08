@@ -9,7 +9,9 @@ import os
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 import unittest
 
-from antismash.main import run_antismash, get_all_modules
+import antismash
+from antismash.main import run_antismash, get_all_modules, prepare_module_data
+from antismash.common import path
 from antismash.common.test.helpers import get_path_to_nisin_genbank
 from antismash.config import build_config, update_config, destroy_config
 
@@ -85,8 +87,6 @@ class TestLogging(TestAntismash):
 
 class TestResultsReuse(TestAntismash):
     def test_nisin_minimal(self):
-        path = os.path.abspath(os.path.join(os.path.dirname(__file__), "data", "nisin.gbk"))
-
         # make sure the output directory isn't filled
         out_dir = self.default_options.output_dir
         assert not list(glob.glob(os.path.join(out_dir, "*")))
@@ -99,7 +99,7 @@ class TestResultsReuse(TestAntismash):
         assert not list(glob.glob(os.path.join(out_dir, "*")))
 
         # do a normal run
-        run_antismash(path, self.default_options)
+        run_antismash(get_path_to_nisin_genbank(), self.default_options)
         self.check_output_files()
 
         # remove html file and make sure it's recreated
@@ -107,3 +107,22 @@ class TestResultsReuse(TestAntismash):
         update_config({"reuse_results": os.path.join(self.default_options.output_dir, "nisin.json")})
         run_antismash(None, self.default_options)
         self.check_output_files()
+
+
+class TestModuleData(unittest.TestCase):
+    def test_prepare_module_data(self):
+        # make sure there's some to start with
+        search = path.get_full_path(antismash.__file__, '**', "*.h3?")
+        existing_press_files = glob.glob(search, recursive=True)
+        assert existing_press_files
+
+        # then remove them all
+        for pressed in existing_press_files:
+            os.unlink(pressed)
+        current_press_files = glob.glob(search, recursive=True)
+        assert not current_press_files
+
+        # and make sure they're all regenerated properly
+        prepare_module_data()
+        current_press_files = glob.glob(search, recursive=True)
+        assert current_press_files == existing_press_files

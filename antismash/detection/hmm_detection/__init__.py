@@ -5,19 +5,19 @@
     clusters based on domains detected
 """
 
+import logging
 import os
 from typing import Any, Dict, List, Optional
 
-import antismash.common.path as path
-from antismash.common.subprocessing import run_hmmpress
 
-from antismash.config import ConfigType
-from antismash.config.args import ModuleArgs
+from antismash.common import hmmer, path
 from antismash.common.hmm_rule_parser import rule_parser
 from antismash.common.hmm_rule_parser.cluster_prediction import detect_clusters_and_signatures, RuleDetectionResults
 from antismash.common.module_results import DetectionResults
 from antismash.common.secmet.record import Record
 from antismash.common.secmet.features import Cluster
+from antismash.config import ConfigType
+from antismash.config.args import ModuleArgs
 from antismash.detection.hmm_detection.signatures import get_signature_profiles
 
 NAME = "hmmdetection"
@@ -111,47 +111,75 @@ def run_on_record(record: Record, previous_results: Optional[HMMDetectionResults
     return HMMDetectionResults(record.id, results, get_supported_cluster_types())
 
 
+def prepare_data(logging_only: bool = False) -> List[str]:
+    """ Ensures packaged data is fully prepared
+
+        Arguments:
+            logging_only: whether to return error messages instead of raising exceptions
+
+        Returns:
+            a list of error messages (only if logging_only is True)
+    """
+    failure_messages = []
+
+    # Check that hmmdetails.txt is readable and well-formatted
+    try:
+        profiles = get_signature_profiles()
+    except ValueError as err:
+        if not logging_only:
+            raise
+        return [str(err)]
+
+    # the path to the markov model
+    seeds_hmm = path.get_full_path(__file__, 'data', 'bgc_seeds.hmm')
+    hmm_files = [os.path.join("data", sig.hmm_file) for sig in profiles]
+    outdated = False
+    if not path.locate_file(seeds_hmm):
+        logging.debug("%s: %s doesn't exist, regenerating", NAME, seeds_hmm)
+        outdated = True
+    else:
+        seeds_timestamp = os.path.getmtime(seeds_hmm)
+        for component in hmm_files:
+            if os.path.getmtime(component) > seeds_timestamp:
+                logging.debug("%s out of date, regenerating", seeds_hmm)
+                outdated = True
+                break
+
+    # regenerate if missing or out of date
+    if outdated:
+        # try to generate file from all specified profiles in hmmdetails
+        try:
+            with open(seeds_hmm, 'w') as all_hmms_handle:
+                for hmm_file in hmm_files:
+                    with open(path.get_full_path(__file__, hmm_file), 'r') as handle:
+                        all_hmms_handle.write(handle.read())
+        except OSError:
+            if not logging_only:
+                raise
+            failure_messages.append('Failed to generate file {!r}'.format(seeds_hmm))
+
+    # if regeneration failed, don't try to run hmmpress
+    if failure_messages:
+        return failure_messages
+
+    failure_messages.extend(hmmer.ensure_database_pressed(seeds_hmm, return_not_raise=logging_only))
+
+    return failure_messages
+
+
 def check_prereqs() -> List[str]:
     """ Check that prereqs are satisfied. hmmpress is only required if the
         databases have not yet been generated.
     """
     failure_messages = []
-    for binary_name, optional in [('hmmsearch', False), ('hmmpress', False)]:
-        if path.locate_executable(binary_name) is None and not optional:
-            failure_messages.append("Failed to locate executable for %r" %
-                                    binary_name)
+    for binary_name in ["hmmsearch", "hmmpress"]:
+        if not path.locate_executable(binary_name):
+            failure_messages.append("Failed to locate executable for %r" % binary_name)
 
-    profiles = None
-    # Check that hmmdetails.txt is readable and well-formatted
-    try:
-        profiles = get_signature_profiles()
-    except ValueError as err:
-        failure_messages.append(str(err))
-
-    # the path to the markov model
-    hmm = path.get_full_path(__file__, 'data', 'bgc_seeds.hmm')
-    hmm_files = [os.path.join("data", sig.hmm_file) for sig in profiles]
-    if path.locate_file(hmm) is None:
-        # try to generate file from all specified profiles in hmmdetails
-        try:
-            with open(hmm, 'w') as all_hmms_handle:
-                for hmm_file in hmm_files:
-                    with open(path.get_full_path(__file__, hmm_file), 'r') as handle:
-                        all_hmms_handle.write(handle.read())
-        except OSError:
-            failure_messages.append('Failed to generate file {!r}'.format(hmm))
-
-    # if previous steps have failed, the remainder will too, so don't try
+    # no point checking the data if we can't use it
     if failure_messages:
         return failure_messages
 
-    binary_extensions = ['.h3f', '.h3i', '.h3m', '.h3p']
-    for ext in binary_extensions:
-        binary = "{}{}".format(hmm, ext)
-        if path.locate_file(binary) is None:
-            result = run_hmmpress(hmm)
-            if not result.successful():
-                failure_messages.append('Failed to hmmpress {!r}: {}'.format(hmm, result.stderr))
-            break
+    failure_messages.extend(prepare_data(logging_only=True))
 
     return failure_messages

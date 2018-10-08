@@ -22,9 +22,8 @@ from antismash.modules.lassopeptides.specific_analysis import (
 class TestLassopeptide(unittest.TestCase):
     def test_init(self):
         "Test Lassopeptide instantiation"
-        lasso = Lassopeptide(23, 42, 17, 51, "", "")
+        lasso = Lassopeptide(42, 17, 51, "", "")
         self.assertTrue(isinstance(lasso, Lassopeptide))
-        self.assertEqual(23, lasso.start)
         self.assertEqual(42, lasso.end)
         self.assertEqual(17, lasso.score)
         self.assertEqual('Class II', lasso._lassotype)
@@ -35,25 +34,25 @@ class TestLassopeptide(unittest.TestCase):
 
     def test_repr(self):
         "Test Lassopeptide representation"
-        lasso = Lassopeptide(23, 42, 17, 51, "lead", "ABCDEFGHIJKLM")
-        expected = "Lassopeptide(23..42, 17, 'Class II', 'ABCDEFGHIJKLM', 0, -1(-1), , )"
+        lasso = Lassopeptide(42, 17, 51, "lead", "ABCDEFGHIJKLM")
+        expected = "Lassopeptide(..42, 17, 'Class II', 'ABCDEFGHIJKLM', 0, -1(-1), , )"
         self.assertEqual(expected, repr(lasso))
 
     def test_core(self):
         "Test Lassopeptide.core"
-        lasso = Lassopeptide(23, 42, 17, 51, "lead", "MAGICHAT")
+        lasso = Lassopeptide(42, 17, 51, "lead", "MAGICHAT")
         assert lasso.core == "MAGICHAT"
         self.assertAlmostEqual(lasso.monoisotopic_mass, 784.3, delta=1)
 
     def test_core_ignore_invalid(self):
         "Test Lassopeptide.core ignores invalid amino acids"
-        lasso = Lassopeptide(23, 42, 17, 51, "lead", "MAGICXHAT")
+        lasso = Lassopeptide(42, 17, 51, "lead", "MAGICXHAT")
         assert lasso.core == "MAGICXHAT"
         self.assertAlmostEqual(lasso.monoisotopic_mass, 784.3, delta=1)
 
     def test_number_bridges_class(self):
         "Test Lassopeptide.number_bridges"
-        lasso = Lassopeptide(23, 42, 20, 51, "lead", "MAGIXHAT")
+        lasso = Lassopeptide(42, 20, 51, "lead", "MAGIXHAT")
         self.assertEqual(0, lasso.number_bridges)
         self.assertEqual('Class II', lasso.lasso_class)
         lasso.core = "CAGIMHAC"
@@ -65,7 +64,7 @@ class TestLassopeptide(unittest.TestCase):
 
     def test_monoisotopic_mass(self):
         "Test Lassopeptide.monoisotopic_mass"
-        lasso = Lassopeptide(23, 42, 17, 51, "lead", "MAGICHATTIP")
+        lasso = Lassopeptide(42, 17, 51, "lead", "MAGICHATTIP")
         lasso.c_cut = "TIP"
         analysis = ProteinAnalysis("MAGICHATTIP", monoisotopic=True)
         cut_analysis = ProteinAnalysis("MAGICHAT", monoisotopic=True)
@@ -76,7 +75,7 @@ class TestLassopeptide(unittest.TestCase):
 
     def test_molecular_weight(self):
         "Test Lassopeptide.molecular_weight"
-        lasso = Lassopeptide(23, 42, 17, 51, "lead", "MAGICHATTIP")
+        lasso = Lassopeptide(42, 17, 51, "lead", "MAGICHATTIP")
         lasso.c_cut = "TIP"
         analysis = ProteinAnalysis("MAGICHATTIP", monoisotopic=False)
         cut_analysis = ProteinAnalysis("MAGICHAT", monoisotopic=False)
@@ -87,7 +86,7 @@ class TestLassopeptide(unittest.TestCase):
 
     def test_macrolactam(self):
         "Test Lassopeptide.macrolactam"
-        lasso = Lassopeptide(23, 42, 20, 51, "lead", "GAAAAADLLLLLLLLL")
+        lasso = Lassopeptide(42, 20, 51, "lead", "GAAAAADLLLLLLLLL")
         self.assertEqual("GAAAAAD", lasso.macrolactam)
 
 
@@ -110,16 +109,15 @@ class TestSpecificAnalysis(unittest.TestCase):
     def test_predict_cleavage_site(self):
         "Test lassopeptides.predict_cleavage_site()"
         resvec = predict_cleavage_site('foo', 'bar', 51)
-        self.assertEqual((None, None, None), resvec)
+        assert resvec == (None, None)
         fake_hit = self.FakeHit(24, 42, 17, 'Class II')
         self.hmmpfam_return_vals.append([fake_hit, fake_hit])
 
         resvec = predict_cleavage_site('foo', 'bar', 51)
-        self.assertEqual((None, None, None), resvec)
+        assert resvec == (None, None)
 
-        start, end, score = predict_cleavage_site('foo', 'bar', 15)
+        end, score = predict_cleavage_site('foo', 'bar', 15)
 
-        self.assertEqual(23, start)
         self.assertEqual(41, end)
         self.assertEqual(17, score)
 
@@ -127,7 +125,7 @@ class TestSpecificAnalysis(unittest.TestCase):
         "Test lassopeptides.result_vec_to_features()"
         orig_feature = DummyCDS(0, 165, strand=1, locus_tag='FAKE0001')
         seq = "TAILTAILTAILTAILTAILTAILTAILTAILTAILCCTIP"
-        vec = Lassopeptide(17, 23, 42, 51, "HEADHEADHEAD", seq)
+        vec = Lassopeptide(23, 42, 51, "HEADHEADHEAD", seq)
         vec.c_cut = "TIP"
         motif = result_vec_to_motif(orig_feature, vec)
         assert motif.locus_tag == "FAKE0001"

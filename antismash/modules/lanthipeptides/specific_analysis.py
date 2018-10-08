@@ -16,7 +16,7 @@ from typing import Any, Dict, List, Iterable, Optional, Set
 from antismash.common.signature import HmmSignature
 from antismash.common import all_orfs, path, subprocessing, module_results, utils
 from antismash.common.fasta import get_fasta_from_features
-from antismash.common.secmet import CDSFeature, Record, Cluster, Prepeptide, GeneFunction
+from antismash.common.secmet import CDSFeature, Cluster, GeneFunction, Prepeptide, Record, Region
 from antismash.common.secmet.features import CDSCollection
 from antismash.common.secmet.locations import extend_location_by
 from antismash.common.secmet.qualifiers.prepeptide_qualifiers import LanthiQualifier
@@ -98,16 +98,28 @@ class LanthiResults(module_results.ModuleResults):
         for feature in self.new_cds_features:
             record.add_cds_feature(feature)
 
+        motifs_added = set()  # type: Set[str]
         for motifs in self.motifs_by_locus.values():
             for motif in motifs:
-                record.add_cds_motif(motif)
+                if motif.get_name() not in motifs_added:
+                    record.add_cds_motif(motif)
+                    motifs_added.add(motif.get_name())
+
+    def get_motifs_for_region(self, region: Region) -> Dict[str, List[Prepeptide]]:
+        """ Given a region, return a subset of motifs_by_locus for hits within
+            that region
+        """
+        results = {}
+        for cluster in region.get_unique_clusters():
+            for locus in self.clusters.get(cluster.get_cluster_number(), []):
+                results[locus] = self.motifs_by_locus[locus]
+        return results
 
 
 class PrepeptideBase:
     """ A generic prepeptide class for tracking various typical components """
-    def __init__(self, start: int, end: int, score: int, rodeo_score: int = 0) -> None:
-        self.start = int(start)  # same as CDS
-        self.end = int(end)  # same as CDS
+    def __init__(self, end: int, score: int, rodeo_score: int = 0) -> None:
+        self.end = int(end)  # cleavage site position
         self.score = int(score)  # of cleavage site
         self.rodeo_score = int(rodeo_score)
         self._leader = None  # type: str
@@ -142,8 +154,8 @@ class PrepeptideBase:
         self._leader = seq
 
     def __repr__(self) -> str:
-        base = "PrepeptideBase(%s..%s, %s, %r, %r)"
-        return base % (self.start, self.end, self.score, self.rodeo_score, self._core)
+        base = "PrepeptideBase(..%s, %s, %r, %r)"
+        return base % (self.end, self.score, self.rodeo_score, self._core)
 
     @property
     def number_of_lan_bridges(self) -> int:
@@ -191,22 +203,21 @@ class PrepeptideBase:
 
 class CleavageSiteHit:  # pylint: disable=too-few-public-methods
     """ A simple container for storing cleavage site information """
-    def __init__(self, start: int, end: int, score: int, lantype: str) -> None:
-        self.start = int(start)
+    def __init__(self, end: int, score: int, lantype: str) -> None:
         self.end = int(end)
         self.score = int(score)
         self.lantype = lantype
 
     def __repr__(self) -> str:
-        return "CleavageSiteHit(start=%s, end=%s, score=%s, lantype='%s')" % (
-                    self.start, self.end, self.score, self.lantype)
+        return ("CleavageSiteHit(end=%s, score=%s, lantype='%s')"
+                % (self.end, self.score, self.lantype))
 
 
 class Lanthipeptide(PrepeptideBase):
     """ Calculates and stores lanthipeptide information
     """
     def __init__(self, hit: CleavageSiteHit, rodeo_score: int) -> None:
-        super().__init__(hit.start, hit.end, hit.score, rodeo_score)
+        super().__init__(hit.end, hit.score, rodeo_score)
         self.lantype = hit.lantype
         self._aminovinyl = False
         self._chlorinated = False
@@ -214,8 +225,8 @@ class Lanthipeptide(PrepeptideBase):
         self._lac = False
 
     def __repr__(self) -> str:
-        base = "Lanthipeptide(%s..%s, %s, %r, %r, %s, %s(%s))"
-        return base % (self.start, self.end, self.score, self.lantype, self._core,
+        base = "Lanthipeptide(..%s, %s, %r, %r, %s, %s(%s))"
+        return base % (self.end, self.score, self.lantype, self._core,
                        self._lan_bridges, self._monoisotopic_weight, self._weight)
 
     @property
@@ -410,7 +421,7 @@ def predict_cleavage_site(query_hmmfile: str, target_sequence: str,
             lanthi_type = hits.description
             for hsp in hits:
                 if hsp.bitscore > threshold:
-                    return CleavageSiteHit(hsp.query_start - 1, hsp.query_end, hsp.bitscore, lanthi_type)
+                    return CleavageSiteHit(hsp.query_end, hsp.bitscore, lanthi_type)
     return None
 
 
@@ -429,7 +440,7 @@ def predict_class_from_genes(focus: CDSFeature, genes: List[CDSFeature]) -> Opti
             continue
         found_domains.update(set(feature.sec_met.domain_ids))
 
-    if 'Lant_dehyd_N' in found_domains or 'Lant_dehyd_C' in found_domains:
+    if 'Lant_dehydr_N' in found_domains or 'Lant_dehydr_C' in found_domains:
         return 'Class-I'
     if 'DUF4135' in found_domains:
         return 'Class-II'
@@ -455,14 +466,14 @@ def run_cleavage_site_regex(fasta: str) -> Optional[CleavageSiteHit]:
 
     # For regular expression, check if there is a match that is <10 AA from the end
     if re.search(rex1, fasta) and len(re.split(rex1, fasta)[-1]) > 10:
-        start, end = [m.span() for m in rex1.finditer(fasta)][-1]
+        _, end = [m.span() for m in rex1.finditer(fasta)][-1]
         end += 16
     elif re.search(rex2, fasta) and len(re.split(rex2, fasta)[-1]) > 10:
-        start, end = [m.span() for m in rex2.finditer(fasta)][-1]
+        _, end = [m.span() for m in rex2.finditer(fasta)][-1]
         end += 15
     else:
         return None
-    return CleavageSiteHit(start, end, 0, "lanthipeptide")
+    return CleavageSiteHit(end, 0, "lanthipeptide")
 
 
 def determine_precursor_peptide_candidate(record: Record, query: CDSFeature, domains: List[str],
@@ -687,10 +698,13 @@ def run_specific_analysis(record: Record) -> LanthiResults:
             continue
 
         # find core biosynthetic enzyme locations
-        core_domain_names = {'Lant_dehyd_N', 'Lant_dehyd_C', 'DUF4135', 'Pkinase'}
+        core_domain_names = {'Lant_dehydr_N', 'Lant_dehydr_C', 'DUF4135', 'Pkinase'}
         core_genes = []
         for gene in cluster.cds_children:
             if not gene.sec_met:
+                continue
+            # We seem to hit Lant_dehydr_C on some O-Methyltranferases that also hit PCMT
+            if 'PCMT' in gene.sec_met.domain_ids:
                 continue
             if core_domain_names.intersection(set(gene.sec_met.domain_ids)):
                 core_genes.append(gene)
