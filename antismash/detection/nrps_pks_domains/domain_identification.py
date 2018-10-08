@@ -5,6 +5,7 @@
     features.
 """
 
+from collections import defaultdict
 import logging
 from typing import Any, Dict, List, Optional
 
@@ -309,12 +310,7 @@ def generate_domain_features(record: Record, gene: CDSFeature,
             a dictionary mapping the HMMResult used to the matching AntismashDomain
     """
     new_features = {}
-    at_domains = 0
-    a_domains = 0
-    cal_domains = 0
-    kr_domains = 0
-    ks_domains = 0
-    x_domains = 0
+    domain_counts = defaultdict(int)  # type: Dict[str, int]
     for domain in domains:
         loc = gene.get_sub_location_from_protein_coordinates(domain.query_start, domain.query_end)
 
@@ -330,24 +326,9 @@ def generate_domain_features(record: Record, gene: CDSFeature,
         transl_table = gene.transl_table or 1
         new_feature.translation = str(new_feature.extract(record.seq).translate(table=transl_table))
 
-        if domain.hit_id == "AMP-binding":
-            a_domains += 1
-            domain_name = "{}_A{}".format(gene.get_name(), a_domains)
-        elif domain.hit_id == "PKS_AT":
-            at_domains += 1
-            domain_name = "{}_AT{}".format(gene.get_name(), at_domains)
-        elif domain.hit_id == "CAL_domain":
-            cal_domains += 1
-            domain_name = gene.get_name() + "_CAL" + str(cal_domains)
-        elif domain.hit_id == "PKS_KR":
-            kr_domains += 1
-            domain_name = gene.get_name() + "_KR" + str(kr_domains)
-        elif domain.hit_id == "PKS_KS":
-            ks_domains += 1
-            domain_name = gene.get_name() + "_KS" + str(ks_domains)
-        else:
-            x_domains += 1
-            domain_name = gene.get_name().partition(".")[0] + "_Xdom" + str(x_domains)
+        domain_counts[domain.hit_id] += 1  # 1-indexed, so increment before use
+        domain_name = "{}_{}.{}".format(gene.get_name(), domain.hit_id, domain_counts[domain.hit_id])
+
         new_feature.domain_id = "nrpspksdomains_" + domain_name
         new_feature.label = domain_name
 

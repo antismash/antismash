@@ -49,7 +49,10 @@ def analyse_biosynthetic_order(nrps_pks_features: List[CDSFeature],
         # If more than three PKS cds features, use dock_dom_analysis if possible to identify order
         if 3 < pks_count < 11 and not nrps_count and not hybrid_count:
             logging.debug("SuperCluster %d monomer ordering method: domain docking analysis", supercluster_number)
-            geneorder = perform_docking_domain_analysis(cds_in_supercluster)
+            # since this will grow as n!, limit to only the relevant CDSes
+            pks_cdses = list(filter(lambda cds: "PKS" in cds.nrps_pks.type, cds_in_supercluster))
+            assert 3 < len(pks_cdses) < 11
+            geneorder = perform_docking_domain_analysis(pks_cdses)
             docking = True
         else:
             logging.debug("SuperCluster %d monomer ordering method: colinear", supercluster_number)
@@ -227,7 +230,7 @@ def find_possible_orders(cds_features: List[CDSFeature], start_cds: Optional[CDS
             a list of lists, each sublist being a unique ordering of the
             provided CDSFeatures
     """
-    assert cds_features
+    assert len(cds_features) < 11, "input too large, function is O(n!)"
     assert start_cds is None or isinstance(start_cds, CDSFeature)
     assert end_cds is None or isinstance(end_cds, CDSFeature)
     if start_cds or end_cds:
@@ -245,7 +248,7 @@ def find_possible_orders(cds_features: List[CDSFeature], start_cds: Optional[CDS
     end = []  # type: List[CDSFeature]
     if end_cds:
         end = [end_cds]
-    for order in list(itertools.permutations(cds_to_order, len(cds_to_order))):
+    for order in itertools.permutations(cds_to_order, len(cds_to_order)):
         possible_orders.append(start + list(order) + end)
     # ensure the list of possible orders is itself ordered for reliability
     return sorted(possible_orders, key=lambda x: [g.location.start for g in x])

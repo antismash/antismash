@@ -49,10 +49,12 @@ class IntegrationNRPSPKS(unittest.TestCase):
         filename = helpers.get_path_to_balhymicin_genbank()
         results = helpers.run_and_regenerate_results_for_module(filename, nrps_pks, self.options)
         assert len(results.domain_predictions) == 9
-        a_domains = ["bpsA_A1", "bpsA_A2", "bpsA_A3", "bpsB_A1", "bpsB_A2", "bpsB_A3",
-                     "bpsC_A1", "bpsD_A1"]
-        feature_names = ['nrpspksdomains_%s' % a_dom for a_dom in a_domains]
-        feature_names.append("nrpspksdomains_pks_CAL1")
+        a_domains = [("bpsA", 1), ("bpsA", 2), ("bpsA", 3),
+                     ("bpsB", 1), ("bpsB", 2), ("bpsB", 3),
+                     ("bpsC", 1),
+                     ("bpsD", 1)]
+        nrps_names = ['nrpspksdomains_%s_AMP-binding.%d' % a_dom for a_dom in a_domains]
+        feature_names = nrps_names + ["nrpspksdomains_pks_CAL_domain.1"]
         assert set(results.domain_predictions) == set(feature_names)
 
         assert set(results.domain_predictions[feature_names[0]]) == {"NRPSPredictor2"}
@@ -62,10 +64,10 @@ class IntegrationNRPSPKS(unittest.TestCase):
                 continue
             nrpspred2_results[domain] = methods["NRPSPredictor2"].get_classification()
         expected_preds = [["leu"], ["bht"], ["asn"], ["hpg"], ["hpg"], ["bht"], ["dhpg"], ["tyr"], ["pk"]]
-        expected_nrps2 = {name: pred for name, pred in zip(feature_names, expected_preds) if name[-2] == "A"}
+        expected_nrps2 = {name: pred for name, pred in zip(nrps_names, expected_preds)}
         assert nrpspred2_results == expected_nrps2
 
-        cal = results.domain_predictions["nrpspksdomains_pks_CAL1"]["minowa_cal"]
+        cal = results.domain_predictions["nrpspksdomains_pks_CAL_domain.1"]["minowa_cal"]
         assert len(cal.predictions) == 5
         assert cal.predictions[0] == ["AHBA", 167.0]
 
@@ -85,13 +87,14 @@ class IntegrationNRPSPKS(unittest.TestCase):
         filename = path.get_full_path(__file__, 'data', 'CP002271.1.cluster019.gbk')
         results = helpers.run_and_regenerate_results_for_module(filename, nrps_pks, self.options)
         # catch ordering changes along with ensuring ATResults are there
-        assert results.domain_predictions["nrpspksdomains_STAUR_3982_AT1"]["signature"].predictions[0].score == 87.5
+        pred = results.domain_predictions["nrpspksdomains_STAUR_3982_PKS_AT.1"]
+        assert pred["signature"].predictions[0].score == 87.5
         # ensure all genes are present and have the right consensus
-        assert results.consensus == {'nrpspksdomains_STAUR_3982_AT1': 'ohmmal',
-                                     'nrpspksdomains_STAUR_3983_AT1': 'ccmmal',
-                                     'nrpspksdomains_STAUR_3984_AT1': 'ccmmal',
-                                     'nrpspksdomains_STAUR_3985_AT1': 'mmal',
-                                     'nrpspksdomains_STAUR_3985_AT2': 'pk'}
+        assert results.consensus == {'nrpspksdomains_STAUR_3982_PKS_AT.1': 'ohmmal',
+                                     'nrpspksdomains_STAUR_3983_PKS_AT.1': 'ccmmal',
+                                     'nrpspksdomains_STAUR_3984_PKS_AT.1': 'ccmmal',
+                                     'nrpspksdomains_STAUR_3985_PKS_AT.1': 'mmal',
+                                     'nrpspksdomains_STAUR_3985_PKS_AT.2': 'pk'}
         assert len(results.region_predictions) == 1
         assert list(results.region_predictions) == [1]
         assert len(results.region_predictions[1]) == 1
@@ -100,15 +103,15 @@ class IntegrationNRPSPKS(unittest.TestCase):
         assert sc_pred.polymer == '(ccmmal) + (ccmmal) + (mmal-pk) + (ohmmal)'
         assert sc_pred.domain_docking_used
         assert len(results.domain_predictions) == 10
-        expected_domains = {'nrpspksdomains_STAUR_3982_AT1',
-                            'nrpspksdomains_STAUR_3983_AT1',
-                            'nrpspksdomains_STAUR_3984_AT1',
-                            'nrpspksdomains_STAUR_3985_AT1',
-                            'nrpspksdomains_STAUR_3985_AT2',
-                            'nrpspksdomains_STAUR_3972_KR1',
-                            'nrpspksdomains_STAUR_3984_KR1',
-                            'nrpspksdomains_STAUR_3985_KR1',
-                            'nrpspksdomains_STAUR_3983_KR1',
-                            'nrpspksdomains_STAUR_3983_KR1',
-                            'nrpspksdomains_STAUR_3982_KR1'}
+        expected_domains = {'nrpspksdomains_STAUR_3982_PKS_AT.1',
+                            'nrpspksdomains_STAUR_3983_PKS_AT.1',
+                            'nrpspksdomains_STAUR_3984_PKS_AT.1',
+                            'nrpspksdomains_STAUR_3985_PKS_AT.1',
+                            'nrpspksdomains_STAUR_3985_PKS_AT.2',
+                            'nrpspksdomains_STAUR_3972_PKS_KR.1',
+                            'nrpspksdomains_STAUR_3984_PKS_KR.1',
+                            'nrpspksdomains_STAUR_3985_PKS_KR.1',
+                            'nrpspksdomains_STAUR_3983_PKS_KR.1',
+                            'nrpspksdomains_STAUR_3983_PKS_KR.1',
+                            'nrpspksdomains_STAUR_3982_PKS_KR.1'}
         assert set(results.domain_predictions) == expected_domains
