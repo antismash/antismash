@@ -269,7 +269,8 @@ def run_module(record: Record, module: AntismashModule, options: ConfigType,
         assert isinstance(previous_results, dict)
         logging.debug("Regenerating results for %s", module.__name__)
         results = module.regenerate_previous_results(previous_results, record, options)
-        module_results[module.__name__] = results
+        if results:
+            module_results[module.__name__] = results
     assert results is None or isinstance(results, ModuleResults)
 
     logging.debug("Checking if %s should be run", module.__name__)
