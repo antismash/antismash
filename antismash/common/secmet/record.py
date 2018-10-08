@@ -121,6 +121,11 @@ class Record:
         except AttributeError:
             raise AttributeError("Record does not support dynamically adding attributes")
 
+    @property
+    def transl_table(self) -> int:
+        """ Returns the default translation table used throughout the Record """
+        return self._transl_table
+
     def is_circular(self) -> bool:
         """ Returns True if the genome is circular """
         return self._record.annotations.get("topology", "").lower() == "circular"
@@ -597,9 +602,9 @@ class Record:
         }  # type: Dict[str, SeqFeature]
 
         assert isinstance(seq_record, SeqRecord)
-        transl_table = 1
+        transl_table = 1  # standard
         if str(taxon) == "bacteria":
-            transl_table = 11
+            transl_table = 11  # bacterial, archea, plant plastid code
         record = Record(transl_table=transl_table)
         record._record = seq_record
         for feature in seq_record.features:
