@@ -175,6 +175,10 @@ class TestBridgeDetection(unittest.TestCase):
         assert is_bridged(build_compound(pairs, 1))
         assert not is_bridged(build_compound(pairs, None))
 
+    def test_not_bridged(self):
+        assert not is_bridged(build_compound([(1, 6), (5, 10)], 1))
+        assert not is_bridged(build_compound([(5, 10), (1, 6)], -1))
+
 
 class TestBridgedSplit(unittest.TestCase):
     def check_pairs(self, parts, pairs):
