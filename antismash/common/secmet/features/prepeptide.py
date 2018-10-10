@@ -158,6 +158,7 @@ class Prepeptide(CDSMotif):  # pylint: disable=too-many-instance-attributes
             "locus_tag": [self.locus_tag],
             "peptide": [self.peptide_class],
             "predicted_class": [self.peptide_subclass],
+            "codon_start": [self.codon_start],
             "score": ["{:.2f}".format(self.score)],
             "molecular_weight": ["{:.1f}".format(self.molecular_weight)],
             "monoisotopic_mass": ["{:.1f}".format(self.monoisotopic_mass)],
