@@ -35,12 +35,12 @@ def _sanitise_id_value(name: Optional[str]) -> Optional[str]:
 class CDSFeature(Feature):
     """ A feature representing a single CDS/gene. """
     __slots__ = ["_translation", "protein_id", "locus_tag", "gene", "product",
-                 "transl_table", "_sec_met", "_gene_functions",
+                 "transl_table", "codon_start", "_sec_met", "_gene_functions",
                  "unique_id", "_nrps_pks", "motifs", "region"]
 
     def __init__(self, location: FeatureLocation, translation: str, locus_tag: str = None,
                  protein_id: str = None, product: str = "", gene: str = None,
-                 translation_table: int = 1) -> None:
+                 translation_table: int = 1, codon_start: int = 1) -> None:
         super().__init__(location, feature_type="CDS")
         if location.strand not in [1, -1]:
             raise ValueError("Strand must be 1 or -1 for a CDS, not %s" % location.strand)
@@ -60,6 +60,7 @@ class CDSFeature(Feature):
             raise TypeError("product must be a string, not %s", type(product))
         self.product = product
         self.transl_table = int(translation_table)
+        self.codon_start = int(codon_start)
         self._sec_met = None  # type: Optional[SecMetQualifier]
         self._nrps_pks = NRPSPKSQualifier(self.location.strand)
 
@@ -118,6 +119,10 @@ class CDSFeature(Feature):
         assert "-" not in translation, "%s contains - in translation" % self.get_name()
         self._translation = str(translation)
 
+    def get_codon_start(self) -> int:
+        """ Get the relative codon start """
+        return self.codon_start
+
     def get_accession(self) -> str:
         "Get the gene ID from protein id, gene name or locus_tag, in that order"
         for val in [self.protein_id, self.gene, self.locus_tag]:
@@ -166,9 +171,11 @@ class CDSFeature(Feature):
                 raise ValueError("no translation in CDS and no record to generate it with")
             translation = record.get_aa_translation_from_location(bio_feature.location, transl_table)
 
+        codon_start = int(leftovers.pop("codon_start", [1])[0])
+
         feature = CDSFeature(bio_feature.location, translation, gene=gene,
                              locus_tag=locus_tag, protein_id=protein_id,
-                             translation_table=transl_table)
+                             translation_table=transl_table, codon_start=codon_start)
 
         # grab optional qualifiers
         feature.product = leftovers.pop("product", [""])[0]
@@ -190,7 +197,7 @@ class CDSFeature(Feature):
         mine["translation"] = [self.translation]
         # optional
         for attr in ["gene", "transl_table", "locus_tag",
-                     "protein_id", "product"]:
+                     "protein_id", "product", "codon_start"]:
             val = getattr(self, attr)
             if val:
                 mine[attr] = [str(val)]
