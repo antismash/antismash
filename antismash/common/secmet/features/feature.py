@@ -69,7 +69,7 @@ class Feature:
         if start >= end:
             raise ValueError("Protein start coordinate must be less than the end coordinate")
 
-        dna_start, dna_end = convert_protein_position_to_dna(start, end, self.location)
+        dna_start, dna_end = convert_protein_position_to_dna(start, end, self.location, self.get_codon_start())
 
         if not 0 <= dna_start - self.location.start < self.location.end - 2:
             raise ValueError("Protein coordinate start %d (nucl %d) is outside feature %s" % (start, dna_start, self))
