@@ -40,7 +40,6 @@ class PredictorSVMResult(Prediction):
         self.single_amino_pred = str(single_amino_pred)
         assert ',' not in self.single_amino_pred
         self.stachelhaus_code = str(stachelhaus_code)
-        assert ',' not in self.stachelhaus_code
         self.uncertain = bool(uncertain)
 
     def get_classification(self) -> List[str]:
