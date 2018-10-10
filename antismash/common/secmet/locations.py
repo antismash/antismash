@@ -16,6 +16,12 @@ from Bio.SeqFeature import (
     UnknownPosition,
 )
 
+# extend FeatureLocation and CompoundLocation with bio_start / bio_end until upstream implementation
+FeatureLocation.bio_start = property(lambda self: self.end if self.strand == -1 else self.start)
+FeatureLocation.bio_end = property(lambda self: self.start if self.strand == -1 else self.end)
+CompoundLocation.bio_start = property(lambda self: self.parts[0].bio_start)
+CompoundLocation.bio_end = property(lambda self: self.parts[-1].bio_end)
+
 
 def convert_protein_position_to_dna(start: int, end: int, location: FeatureLocation) -> Tuple[int, int]:
     """ Convert a protein position to a nucleotide sequence position for use in generating
