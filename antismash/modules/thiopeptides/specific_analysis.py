@@ -571,7 +571,7 @@ def result_vec_to_feature(orig_feature: secmet.CDSFeature, res_vec: Thiopeptide)
     if res_vec.thio_type != "Type III":
         mature_weights = res_vec.mature_alt_weights
     feature = secmet.Prepeptide(orig_feature.location, "thiopeptide", res_vec.core, orig_feature.get_name(),
-                                orig_feature.get_codon_start(), "thiopeptides", res_vec.thio_type, res_vec.score,
+                                "thiopeptides", orig_feature.get_codon_start(), res_vec.thio_type, res_vec.score,
                                 res_vec.monoisotopic_mass, res_vec.molecular_weight, res_vec.alternative_weights,
                                 leader=res_vec.leader, tail=res_vec.c_cut)
     feature.detailed_information = ThioQualifier(res_vec.rodeo_score, res_vec.amidation,
