@@ -21,7 +21,7 @@ class Prepeptide(CDSMotif):  # pylint: disable=too-many-instance-attributes
         of prepeptide (e.g. lanthi- or sacti-peptides), only the core must exist.
     """
     def __init__(self, location: FeatureLocation, peptide_class: str, core: str, locus_tag: str,
-                 tool: str, peptide_subclass: str = None, score: float = 0., monoisotopic_mass: float = 0.,
+                 tool: str, codon_start: int = 1, peptide_subclass: str = None, score: float = 0., monoisotopic_mass: float = 0.,
                  molecular_weight: float = 0., alternative_weights: List[float] = None,
                  leader: str = "", tail: str = "") -> None:
         """
@@ -29,6 +29,7 @@ class Prepeptide(CDSMotif):  # pylint: disable=too-many-instance-attributes
                 peptide_class: the kind of prepeptide, e.g. 'lanthipeptide', 'thiopeptide'
                 core: the sequence of the core
                 locus_tag: the locus tag to use for the feature
+                codon_start: the codon_start of the parent CDS feature
                 tool: the name of the tool responsible for creating the prepeptide
                 prepeptide_subclass: the subclass of the prepeptide, e.g. 'Type II'
                 score: the prepeptide score
@@ -49,6 +50,7 @@ class Prepeptide(CDSMotif):  # pylint: disable=too-many-instance-attributes
         self._core = core
         self._tail = tail
         self.locus_tag = locus_tag
+        self.codon_start = codon_start
         self.peptide_class = peptide_class
         if peptide_subclass:
             peptide_subclass = peptide_subclass.replace("-", " ")  # "Type-II" > "Type II"
@@ -108,6 +110,13 @@ class Prepeptide(CDSMotif):  # pylint: disable=too-many-instance-attributes
         assert isinstance(self.locus_tag, str) and self.locus_tag
         return self.locus_tag
 
+    def get_codon_start(self) -> str:
+        """ Returns the codon_start tag of the parent CDS.
+
+            Uses the same function name as the CDSFeature for consistency.
+        """
+        return self.codon_start
+
     def to_biopython(self, qualifiers: Dict[str, List] = None) -> List[SeqFeature]:
         """ Generates up to three SeqFeatures, depending if leader and tail exist.
             Any qualifiers given will be used as a base for all SeqFeatures created.
@@ -149,6 +158,7 @@ class Prepeptide(CDSMotif):  # pylint: disable=too-many-instance-attributes
             "locus_tag": [self.locus_tag],
             "peptide": [self.peptide_class],
             "predicted_class": [self.peptide_subclass],
+            "codon_start": [self.codon_start],
             "score": ["{:.2f}".format(self.score)],
             "molecular_weight": ["{:.1f}".format(self.molecular_weight)],
             "monoisotopic_mass": ["{:.1f}".format(self.monoisotopic_mass)],
@@ -211,6 +221,7 @@ class Prepeptide(CDSMotif):  # pylint: disable=too-many-instance-attributes
         return Prepeptide(location, peptide_class, core,
                           leftovers.pop("locus_tag")[0],
                           leftovers.pop("aSTool")[0],
+                          int(leftovers.pop("codon_start")[0]),
                           leftovers.pop("predicted_class")[0],
                           float(leftovers.pop("score")[0]),
                           float(leftovers.pop("monoisotopic_mass")[0]),

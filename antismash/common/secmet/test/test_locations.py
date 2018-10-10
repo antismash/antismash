@@ -29,81 +29,117 @@ class TestProteinPositionConversion(unittest.TestCase):
     def test_position_conversion_simple_forward(self):
         location = FeatureLocation(0, 15, strand=1)
         assert len(location) == 15
-        assert self.func(0, 2, location) == (0, 6)
-        assert self.func(1, 4, location) == (3, 12)
+        assert self.func(0, 2, location, 1) == (0, 6)
+        assert self.func(1, 4, location, 1) == (3, 12)
+        assert self.func(0, 2, location, 2) == (1, 7) # /codon_start=2
+        assert self.func(1, 4, location, 2) == (4, 13) # /codon_start=2
+        assert self.func(0, 2, location, 3) == (2, 8) # /codon_start=3
+        assert self.func(1, 4, location, 3) == (5, 14) # /codon_start=3
 
     def test_position_conversion_simple_reverse(self):
         location = FeatureLocation(0, 15, strand=-1)
         assert len(location) == 15
-        assert self.func(0, 2, location) == (9, 15)
-        assert self.func(1, 4, location) == (3, 12)
+        assert self.func(0, 2, location, 1) == (9, 15)
+        assert self.func(1, 4, location, 1) == (3, 12)
+        assert self.func(0, 2, location, 2) == (8, 14) # /codon_start=2
+        assert self.func(1, 4, location, 2) == (2, 11) # /codon_start=2
+        assert self.func(0, 2, location, 3) == (7, 13) # /codon_start=3
+        assert self.func(1, 4, location, 3) == (1, 10) # /codon_start=3
 
     def test_position_conversion_nonzero_start(self):
         location = FeatureLocation(6, 21, strand=1)
         assert len(location) == 15
-        assert self.func(0, 2, location) == (6, 12)
-        assert self.func(1, 4, location) == (9, 18)
+        assert self.func(0, 2, location, 1) == (6, 12)
+        assert self.func(1, 4, location, 1) == (9, 18)
+        assert self.func(0, 2, location, 2) == (7, 13) # /codon_start=2
+        assert self.func(1, 4, location, 2) == (10, 19) # /codon_start=2
+        assert self.func(0, 2, location, 3) == (8, 14) # /codon_start=3
+        assert self.func(1, 4, location, 3) == (11, 20) # /codon_start=3
 
         location = FeatureLocation(6, 21, strand=-1)
         assert len(location) == 15
-        assert self.func(0, 2, location) == (15, 21)
-        assert self.func(1, 4, location) == (9, 18)
+        assert self.func(0, 2, location, 1) == (15, 21)
+        assert self.func(1, 4, location, 1) == (9, 18)
+        assert self.func(0, 2, location, 2) == (14, 20) # /codon_start=2
+        assert self.func(1, 4, location, 2) == (8, 17) # /codon_start=2
+        assert self.func(0, 2, location, 3) == (13, 19) # /codon_start=3
+        assert self.func(1, 4, location, 3) == (7, 16) # /codon_start=3
 
     def test_position_conversion_nonzero_compound(self):
         location = CompoundLocation([FeatureLocation(6, 18, strand=1),
                                      FeatureLocation(24, 27, strand=1)])
         assert len(location) == 15
-        assert self.func(0, 2, location) == (6, 12)
-        assert self.func(1, 4, location) == (9, 18)
-        assert self.func(3, 5, location) == (15, 27)
+        assert self.func(0, 2, location, 1) == (6, 12)
+        assert self.func(1, 4, location, 1) == (9, 18)
+        assert self.func(3, 5, location, 1) == (15, 27)
 
         location = CompoundLocation([FeatureLocation(6, 15, strand=-1),
                                      FeatureLocation(21, 27, strand=-1)])
         assert len(location) == 15
-        assert self.func(0, 2, location) == (21, 27)
-        assert self.func(1, 4, location) == (9, 24)
-        assert self.func(3, 5, location) == (6, 12)
+        assert self.func(0, 2, location, 1) == (9, 15)
+        assert self.func(1, 4, location, 1) == (24, 12)
+        assert self.func(3, 5, location, 1) == (21, 27)
 
     def test_position_conversion_compound_forward(self):
         location = CompoundLocation([FeatureLocation(0, 6, strand=1),
                                      FeatureLocation(9, 18, strand=1)])
         assert len(location) == 15
-        assert self.func(0, 4, location) == (0, 15)
-        assert self.func(1, 5, location) == (3, 18)
+        assert self.func(0, 4, location, 1) == (0, 15)
+        assert self.func(0, 4, location, 2) == (1, 16) # /codon_start=2
+        assert self.func(0, 4, location, 3) == (2, 17) # /codon_start=3
+        assert self.func(1, 5, location, 1) == (3, 18)
 
         location = CompoundLocation([FeatureLocation(0, 6, strand=1),
                                      FeatureLocation(12, 15, strand=1),
                                      FeatureLocation(21, 27, strand=1)])
         assert len(location) == 15
-        assert self.func(0, 4, location) == (0, 24)
-        assert self.func(1, 5, location) == (3, 27)
-        assert self.func(2, 3, location) == (12, 15)
+        assert self.func(0, 4, location, 1) == (0, 24)
+        assert self.func(0, 4, location, 2) == (1, 25) # /codon_start=2
+        assert self.func(0, 4, location, 3) == (2, 26) # /codon_start=3
+        assert self.func(1, 5, location, 1) == (3, 27)
+        assert self.func(2, 3, location, 1) == (12, 15)
+        assert self.func(2, 3, location, 2) == (13, 16) # /codon_start=2
+        assert self.func(2, 3, location, 3) == (14, 17) # /codon_start=3
 
     def test_position_conversion_compound_reverse(self):
         location = CompoundLocation([FeatureLocation(0, 6, strand=-1),
                                      FeatureLocation(9, 18, strand=-1)])
         assert len(location) == 15
-        assert self.func(0, 4, location) == (3, 18)
-        assert self.func(1, 5, location) == (0, 15)
+        assert self.func(0, 4, location, 1) == (12, 6)
+        assert self.func(1, 5, location, 1) == (9, 3)
+        assert self.func(0, 4, location, 2) == (11, 5) # /codon_start=2
+        assert self.func(1, 5, location, 2) == (8, 2) # /codon_start=2
+        assert self.func(0, 4, location, 3) == (10, 4) # /codon_start=3
+        assert self.func(1, 5, location, 3) == (7, 1) # /codon_start=3
 
         location = CompoundLocation([FeatureLocation(0, 6, strand=-1),
                                      FeatureLocation(12, 15, strand=-1),
                                      FeatureLocation(21, 27, strand=-1)])
         assert len(location) == 15
-        assert self.func(0, 4, location) == (3, 27)
-        assert self.func(1, 5, location) == (0, 24)
-        assert self.func(2, 3, location) == (12, 15)
+        assert self.func(0, 4, location, 1) == (24, 6)
+        assert self.func(1, 5, location, 1) == (21, 3)
+        assert self.func(2, 3, location, 1) == (12, 15)
+        assert self.func(0, 4, location, 2) == (23, 5) # /codon_start=2
+        assert self.func(1, 5, location, 2) == (20, 2) # /codon_start=2
+        assert self.func(2, 3, location, 2) == (11, 14) # /codon_start=2
+        assert self.func(0, 4, location, 3) == (22, 4) # /codon_start=3
+        assert self.func(1, 5, location, 3) == (19, 1) # /codon_start=3
+        assert self.func(2, 3, location, 3) == (10, 13) # /codon_start=3
 
     def test_other(self):
         location = CompoundLocation([FeatureLocation(5922, 6190, strand=1),
                                      FeatureLocation(5741, 5877, strand=1),
                                      FeatureLocation(4952, 5682, strand=1)])
-        assert self.func(97, 336, location) == (5243, 6064)
+        assert self.func(97, 336, location, 1) == (5764, 5556)
+        assert self.func(97, 336, location, 2) == (5765, 5557) # /codon_start=2
+        assert self.func(97, 336, location, 3) == (5766, 5558) # /codon_start=3
 
         location = CompoundLocation([FeatureLocation(5922, 6190, strand=-1),
                                      FeatureLocation(5741, 5877, strand=-1),
                                      FeatureLocation(4952, 5682, strand=-1)])
-        assert self.func(97, 336, location) == (5078, 5854)
+        assert self.func(97, 336, location, 1) == (5078, 5854)
+        assert self.func(97, 336, location, 2) == (5077, 5853) # /codon_start=2
+        assert self.func(97, 336, location, 3) == (5076, 5852) # /codon_start=3
 
 
 class TestCompoundCombination(unittest.TestCase):
