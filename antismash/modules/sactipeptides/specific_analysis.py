@@ -529,7 +529,8 @@ def determine_precursor_peptide_candidate(cluster: secmet.Cluster, query: secmet
     if not valid:
         return None
     return secmet.Prepeptide(query.location, "sactipeptide", core, query.get_name(),
-                             tool="sactipeptides", leader=leader, score=score)
+                             query.get_codon_start(), tool="sactipeptides", leader=leader,
+                             score=score)
 
 
 def run_sactipred(cluster: secmet.Cluster, query: secmet.CDSFeature,
