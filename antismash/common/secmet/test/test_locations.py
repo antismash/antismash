@@ -60,9 +60,9 @@ class TestProteinPositionConversion(unittest.TestCase):
         location = CompoundLocation([FeatureLocation(6, 15, strand=-1),
                                      FeatureLocation(21, 27, strand=-1)])
         assert len(location) == 15
-        assert self.func(0, 2, location) == (21, 27)
-        assert self.func(1, 4, location) == (9, 24)
-        assert self.func(3, 5, location) == (6, 12)
+        assert self.func(0, 2, location) == (9, 15)
+        assert self.func(1, 4, location) == (24, 12)
+        assert self.func(3, 5, location) == (21, 27)
 
     def test_position_conversion_compound_forward(self):
         location = CompoundLocation([FeatureLocation(0, 6, strand=1),
@@ -83,22 +83,22 @@ class TestProteinPositionConversion(unittest.TestCase):
         location = CompoundLocation([FeatureLocation(0, 6, strand=-1),
                                      FeatureLocation(9, 18, strand=-1)])
         assert len(location) == 15
-        assert self.func(0, 4, location) == (3, 18)
-        assert self.func(1, 5, location) == (0, 15)
+        assert self.func(0, 4, location) == (12, 6)
+        assert self.func(1, 5, location) == (9, 3)
 
         location = CompoundLocation([FeatureLocation(0, 6, strand=-1),
                                      FeatureLocation(12, 15, strand=-1),
                                      FeatureLocation(21, 27, strand=-1)])
         assert len(location) == 15
-        assert self.func(0, 4, location) == (3, 27)
-        assert self.func(1, 5, location) == (0, 24)
+        assert self.func(0, 4, location) == (24, 6)
+        assert self.func(1, 5, location) == (21, 3)
         assert self.func(2, 3, location) == (12, 15)
 
     def test_other(self):
         location = CompoundLocation([FeatureLocation(5922, 6190, strand=1),
                                      FeatureLocation(5741, 5877, strand=1),
                                      FeatureLocation(4952, 5682, strand=1)])
-        assert self.func(97, 336, location) == (5243, 6064)
+        assert self.func(97, 336, location) == (5764, 5556)
 
         location = CompoundLocation([FeatureLocation(5922, 6190, strand=-1),
                                      FeatureLocation(5741, 5877, strand=-1),
