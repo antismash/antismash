@@ -131,6 +131,14 @@ class NRPS_PKS_Results(ModuleResults):
     def _annotate_a_domain(self, domain: NRPSPKSQualifier.Domain) -> None:
         assert domain.name in ["AMP-binding", "A-OX"]
         predictions = self.domain_predictions[domain.feature_name]
+        for prediction_name, prediction in predictions.items():
+            if isinstance(prediction, PredictorSVMResult):
+                domain.predictions["physicochemical_class"] = prediction.physicochemical_class
+                domain.predictions["large_cluster_pred"] = ",".join(prediction.large_cluster_pred)
+                domain.predictions["small_cluster_pred"] = ",".join(prediction.small_cluster_pred)
+                domain.predictions["single_amino_pred"] = prediction.single_amino_pred
+                domain.predictions["stachelhaus_code"] = prediction.stachelhaus_code
+                domain.predictions["angstrom_code"] = prediction.angstrom_code
         domain.predictions["consensus"] = generate_nrps_consensus(predictions)
 
     def _annotate_at_domain(self, domain: NRPSPKSQualifier.Domain, transat_cluster: bool) -> None:
