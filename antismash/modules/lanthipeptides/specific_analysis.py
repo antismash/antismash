@@ -89,7 +89,7 @@ class LanthiResults(module_results.ModuleResults):
                 results.motifs_by_locus[locus].append(Prepeptide.from_json(motif))
         results.clusters = {int(key): set(val) for key, val in json["clusters"].items()}
         for location, name in json["new_cds_features"]:
-            cds = all_orfs.create_feature_from_location(record, location, label=name)
+            cds = all_orfs.create_feature_from_location(record, location, name)
             results.new_cds_features.add(cds)
         return results
 

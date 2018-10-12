@@ -66,7 +66,7 @@ class LassoResults(module_results.ModuleResults):
         results.clusters = {int(key): set(val) for key, val in json["clusters"].items()}
         for location, name in json["new_cds_features"]:
             loc = location_from_string(location)
-            cds = all_orfs.create_feature_from_location(record, loc, label=name)
+            cds = all_orfs.create_feature_from_location(record, loc, name)
             results.new_cds_features.add(cds)
         return results
 

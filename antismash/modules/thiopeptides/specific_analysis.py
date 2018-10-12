@@ -54,7 +54,7 @@ class ThioResults(module_results.ModuleResults):
             results.clusters_with_motifs.add(record.get_cluster(cluster))
         for cluster, features in json["cds_features"]:
             for location, name in features:
-                cds = all_orfs.create_feature_from_location(record, location, label=name)
+                cds = all_orfs.create_feature_from_location(record, location, name)
                 results.cds_features[cluster].append(cds)
         return results
 

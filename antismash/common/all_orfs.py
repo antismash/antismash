@@ -89,26 +89,24 @@ def scan_orfs(seq: str, direction: int, offset: int = 0) -> List[FeatureLocation
     return sorted(matches, key=lambda x: min(x.start, x.end))
 
 
-def create_feature_from_location(record: Record, location: FeatureLocation,
-                                 counter: int = 1, label: Optional[str] = None) -> CDSFeature:
+def create_feature_from_location(record: Record, location: FeatureLocation, name: str) -> CDSFeature:
     """ Creates a CDS feature covering the provided location.
 
         Arguments:
             record: The Record the CDSFeature will belong to, used to generate
                     the feature translation
             location: The FeatureLocation specifying the location of the CDSFeature
-            counter: An integer to use to format a default label 'allorf' with,
-                     used only if label not provided
-            label: The locus tag, protein id, and gene name to use for the new
-                   CDSFeature
+            name: The locus tag, protein id, and gene name to use for the new
+                  CDSFeature
 
         Returns:
             The CDSFeature created.
     """
-    if label is None:
-        label = 'allorf%03d' % counter
+    if not name or not isinstance(name, str):
+        raise ValueError("name must be a non-empty string")
+
     feature = CDSFeature(location, str(record.get_aa_translation_from_location(location)),
-                         locus_tag=label, protein_id=label, gene=label)
+                         locus_tag=name, protein_id=name, gene=name)
     feature.created_by_antismash = True
     return feature
 
@@ -141,7 +139,6 @@ def find_all_orfs(record: Record, area: Optional[CDSCollection] = None) -> List[
     reverse_matches = scan_orfs(seq.reverse_complement(), -1, offset)
     locations = forward_matches + reverse_matches
 
-    orfnr = 1
     new_features = []
 
     for location in locations:
@@ -154,14 +151,12 @@ def find_all_orfs(record: Record, area: Optional[CDSCollection] = None) -> List[
         # skip if overlaps with existing CDSs
         if any(dummy_feature.overlaps_with(cds) for cds in existing):
             continue
-
-        feature = create_feature_from_location(record, location, orfnr)
+        feature = create_feature_from_location(record, location, "allorf_%d_%d" % (location.start + 1, location.end))
 
         # skip if not wholly contained in the area
         if area and not feature.is_contained_by(area):
             continue
 
         new_features.append(feature)
-        orfnr += 1
 
     return new_features
