@@ -16,7 +16,6 @@ import logging
 import os
 import pstats
 import shutil
-import sys
 import time
 import tempfile
 from typing import cast, Any, Dict, List, Optional, Union
@@ -28,7 +27,7 @@ from antismash.config import (
     get_config,
     update_config,
 )
-from antismash.common import serialiser, record_processing
+from antismash.common import logs, record_processing, serialiser
 from antismash.common.module_results import ModuleResults, DetectionResults
 from antismash.common.secmet import Record
 from antismash.detection import (cassis,
@@ -110,46 +109,6 @@ def get_output_modules() -> List[AntismashModule]:
             a list of modules
     """
     return [html]  # type: ignore  # a lot of casting avoided
-
-
-def setup_logging(logfile: str = None, verbose: bool = False, debug: bool = False) -> None:
-    """ Define the logging format, levels and outputs
-
-        Arguments:
-            logfile: None or the path to a file to write logging messages to
-            verbose: whether to show INFO level messages and above
-            debug: whether to show DEBUG level messages and above
-
-        Returns:
-            None
-    """
-
-    def new_critical(*args: Any) -> None:  # TODO: temporary to make alpha issues more obvious
-        """ make critical messages yellow and without the normal timestamp """
-        msg = "\033[1;33m{}\033[0m".format(args[0])
-        print(msg % args[1:], file=sys.stderr)
-    logging.critical = new_critical  # type: ignore
-
-    log_level = logging.WARNING
-    if debug:
-        log_level = logging.DEBUG
-    elif verbose:
-        log_level = logging.INFO
-
-    log_format = '%(levelname)-8s %(asctime)s   %(message)s'
-    logging.basicConfig(format=log_format, level=log_level, datefmt="%d/%m %H:%M:%S")
-
-    if not logfile:
-        return
-
-    if not (os.path.dirname(logfile) == "" or os.path.exists(os.path.dirname(logfile))):
-        os.mkdir(os.path.dirname(logfile))
-    handler = logging.FileHandler(logfile)
-    if log_level == logging.WARNING:
-        log_level = logging.INFO
-    handler.setLevel(log_level)
-    handler.setFormatter(logging.Formatter(fmt=log_format, datefmt="%d/%m %H:%M:%S"))
-    logging.getLogger('').addHandler(handler)
 
 
 def verify_options(options: ConfigType, modules: List[AntismashModule]) -> bool:
@@ -610,9 +569,15 @@ def run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
             0 if requested operations completed succesfully, otherwise 1
             Exceptions may also be raised
     """
-    setup_logging(logfile=options.logfile, verbose=options.verbose,
-                  debug=options.debug)
 
+    with logs.changed_logging(logfile=options.logfile, verbose=options.verbose,
+                              debug=options.debug):
+        result = _run_antismash(sequence_file, options)
+    return result
+
+
+def _run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
+    """ The real run_antismash, assumes logging is set up around it """
     detection_modules = get_detection_modules()
     analysis_modules = get_analysis_modules()
     modules = detection_modules + analysis_modules
