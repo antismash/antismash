@@ -109,6 +109,8 @@ def get_detected_domains(cluster: secmet.Cluster) -> Dict[str, int]:
 
 def run_non_biosynthetic_phmms(cluster_fasta: str) -> Dict[str, List[HSP]]:
     """ Try to identify cleavage site using pHMM """
+    if not cluster_fasta:
+        return {}
     with open(path.get_full_path(__file__, "data", "non_biosyn_hmms", "hmmdetails.txt"), "r") as handle:
         hmmdetails = [line.split("\t") for line in handle.read().splitlines() if line.count("\t") == 3]
     signature_profiles = [HmmSignature(details[0], details[1], int(details[2]), details[3]) for details in hmmdetails]
