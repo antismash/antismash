@@ -28,7 +28,7 @@ class Feature:
         assert isinstance(location, (FeatureLocation, CompoundLocation)), type(location)
         if location_bridges_origin(location):
             raise ValueError("Features that bridge the record origin cannot be directly created: %s" % location)
-        assert location.start < location.end, "Feature location invalid"
+        assert location.start <= location.end, "Feature location invalid: %s" % location
         self.location = location
         self.notes = []  # type: List[str]
         assert feature_type

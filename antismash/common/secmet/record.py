@@ -642,7 +642,10 @@ class Record:
                         feature.qualifiers["gene"] = [gene_name + "_UPPER"]
                     if locus_tag:
                         feature.qualifiers["locus_tag"] = [locus_tag + "_UPPER"]
-                record.add_biopython_feature(feature)
+
+                # since CDSs need translations, skip if too small or not a CDS
+                if feature.type != "CDS" or len(feature) >= 3:
+                    record.add_biopython_feature(feature)
 
                 # adjust the current feature to only be the lower section
                 if len(lower) > 1:
@@ -656,9 +659,13 @@ class Record:
                         feature.qualifiers["locus_tag"] = [locus_tag + "_LOWER"]
 
             if feature.type in postponed_features:
-                postponed_features[feature.type].append(feature)
+                # again, since CDSs need translations, skip if too small or not a CDS
+                if feature.type != "CDS" or len(feature) >= 3:
+                    postponed_features[feature.type].append(feature)
                 continue
-            record.add_biopython_feature(feature)
+            # again, since CDSs need translations, skip if too small or not a CDS
+            if feature.type != "CDS" or len(feature) >= 3:
+                record.add_biopython_feature(feature)
 
             # reset back to how the feature looked originally
             if locations_adjusted:

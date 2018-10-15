@@ -119,12 +119,14 @@ def location_bridges_origin(location: CompoundLocation) -> bool:
         return False
 
     for i, part in enumerate(location.parts[1:]):
+        prev = location.parts[i]
         if location.strand == 1:
-            if part.start <= location.parts[i].end:
+            if prev.start > part.start:
                 return True
         else:
-            if part.start >= location.parts[i].end:
+            if part.end > prev.end:
                 return True
+
     return False
 
 

@@ -157,6 +157,23 @@ class TestCDSProteinLocation(unittest.TestCase):
         assert new.parts[1].end == 6
         assert new.extract(self.magic_split).translate() == self.translation[2:4]
 
+    def test_frameshifted_location(self):
+        location = CompoundLocation([FeatureLocation(3, 9, 1), FeatureLocation(8, 14, 1)])
+        assert len(location) == 12
+        seq = Seq("ATGATGAGCCCTCGTCTAGACTACAATGA")
+        extracted = location.extract(seq)
+        assert extracted == "ATGAGCCCCTCG"
+        assert len(extracted) == len(location)
+        translation = extracted.translate()
+        assert translation == "MSPS"
+
+        cds = CDSFeature(location, locus_tag="test", translation=translation)
+        new = cds.get_sub_location_from_protein_coordinates(1, 3)
+        assert isinstance(new, CompoundLocation)
+        assert len(new.parts) == 2
+        assert new.start == 6
+        assert new.end == 11
+
     def test_complicated(self):
         parts = [FeatureLocation(121124, 122061, 1), FeatureLocation(122339, 122383, 1),
                  FeatureLocation(122559, 122666, 1), FeatureLocation(122712, 122874, 1),
