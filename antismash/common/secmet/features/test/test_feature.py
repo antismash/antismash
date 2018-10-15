@@ -14,8 +14,14 @@ from antismash.common.secmet.features.feature import (
     Feature,
     FeatureLocation,
     SeqFeature,
+    _adjust_location_by_offset as adjust,
 )
 from antismash.common.secmet.features import feature  # mocked, pylint: disable=unused-import
+from antismash.common.secmet.locations import (
+    ExactPosition,
+    BeforePosition,
+    AfterPosition,
+)
 
 
 class TestFeature(unittest.TestCase):
@@ -100,6 +106,69 @@ class TestFeature(unittest.TestCase):
             Feature(CompoundLocation(parts, operator="join"), feature_type="test")
         Feature(CompoundLocation(parts[::-1], operator="join"), feature_type="test")
 
+    def test_conversion_with_codon_start(self):
+        seqf = SeqFeature(FeatureLocation(BeforePosition(5), 12))
+        seqf.type = "test"
+        for codon_start in "123":
+            seqf.qualifiers["codon_start"] = [codon_start]
+            feature = Feature.from_biopython(seqf)
+            assert feature._original_codon_start == int(codon_start) - 1
+            assert feature.location.start == BeforePosition(5 + feature._original_codon_start)
+            new = feature.to_biopython()[0]
+            assert new.qualifiers["codon_start"] == [codon_start]
+
+        for codon_start in ["-1", "4"]:
+            seqf.qualifiers["codon_start"] = [codon_start]
+            with self.assertRaisesRegex(ValueError, "invalid codon_start"):
+                Feature.from_biopython(seqf)
+
+
+class TestLocationAdjustment(unittest.TestCase):
+    def setUp(self):
+        # not all of these really make sense biologically, but they're all valid computationally
+        self.position_types = [ExactPosition, AfterPosition, BeforePosition, int]
+
+    def test_single_forward(self):
+        for position_type in self.position_types:
+            old = FeatureLocation(position_type(5), 12, 1)
+            for offset in range(-2, 3):
+                new = adjust(old, offset)
+                assert isinstance(new.start, position_type)
+                assert new.start == old.start + offset
+                assert new.end is old.end
+
+    def test_single_reverse(self):
+        for position_type in self.position_types:
+            old = FeatureLocation(5, position_type(12), -1)
+            for offset in range(-2, 3):
+                new = adjust(old, offset)
+                assert isinstance(new.end, position_type)
+                assert new.end == old.end + offset
+                assert new.start is old.start
+
+    def test_compound_forward(self):
+        for position_type in self.position_types:
+            old = CompoundLocation([FeatureLocation(position_type(5), 12, 1),
+                                    FeatureLocation(15, 17, 1)])
+            for offset in range(-2, 3):
+                new = adjust(old, offset)
+                assert isinstance(new.start, position_type)
+                assert new.start == old.start + offset
+                assert new.parts[0].end is old.parts[0].end
+                for old_part, new_part in zip(old.parts[1:], new.parts[1:]):
+                    assert old_part is new_part
+
+    def test_compound_reverse(self):
+        for position_type in self.position_types:
+            old = CompoundLocation([FeatureLocation(15, position_type(17), -1),
+                                    FeatureLocation(5, 12, -1)])
+            for offset in range(-2, 3):
+                new = adjust(old, offset)
+                assert isinstance(new.end, position_type)
+                assert new.end == old.end + offset
+                assert new.parts[0].start is old.parts[0].start
+                for old_part, new_part in zip(old.parts[1:], new.parts[1:]):
+                    assert old_part is new_part
 
 class TestSubLocation(unittest.TestCase):
     def setUp(self):
