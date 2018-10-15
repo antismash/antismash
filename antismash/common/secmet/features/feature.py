@@ -70,10 +70,17 @@ class Feature:
             raise ValueError("Protein start coordinate must be less than the end coordinate")
 
         dna_start, dna_end = convert_protein_position_to_dna(start, end, self.location)
-
-        if not 0 <= dna_start - self.location.start < self.location.end - 2:
+        if not dna_start < dna_end:
+            raise ValueError("Invalid protein coordinate conversion (start %d, end %d)" % (dna_start, dna_end))
+        if dna_start not in self.location:
             raise ValueError("Protein coordinate start %d (nucl %d) is outside feature %s" % (start, dna_start, self))
-        if not 2 < dna_end - self.location.start - 1 <= self.location.end:
+        # end check is more complicated as 'in' is inclusive and end is exclusive
+        end_contained = dna_end in self.location or dna_end == self.location.end
+        for part in self.location.parts:
+            if dna_end in part or dna_end == part.end:
+                end_contained = True
+                break
+        if not end_contained:
             raise ValueError("Protein coordinate end %d (nucl %d) is outside feature %s" % (end, dna_end, self))
 
         if not isinstance(self.location, CompoundLocation):
