@@ -10,9 +10,9 @@ from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 from Bio.Seq import Seq
 
 from antismash.common.secmet.locations import (
-    convert_protein_position_to_dna,
     location_bridges_origin,
     locations_overlap,
+    location_contains_other,
 )
 
 
@@ -88,8 +88,8 @@ class Feature:
             The start position is inclusive and the end position is exclusive.
 
             Arguments:
-                start: a position between 0 and len(feature.location) // 3 - 1, inclusive
-                end: a position between 1 and len(feature.location) // 3, inclusive
+                start: a position between 0 and len(self.location) // 3 - 1, inclusive
+                end: a position between 1 and len(self.location) // 3, inclusive
         """
         if not 0 <= start <= len(self.location) // 3 - 1:
             raise ValueError("Protein start coordinate must be contained by the feature")
@@ -100,50 +100,49 @@ class Feature:
         if start >= end:
             raise ValueError("Protein start coordinate must be less than the end coordinate")
 
-        dna_start, dna_end = convert_protein_position_to_dna(start, end, self.location)
-        if not dna_start < dna_end:
-            raise ValueError("Invalid protein coordinate conversion (start %d, end %d)" % (dna_start, dna_end))
-        if dna_start not in self.location:
-            raise ValueError("Protein coordinate start %d (nucl %d) is outside feature %s" % (start, dna_start, self))
-        # end check is more complicated as 'in' is inclusive and end is exclusive
-        end_contained = dna_end in self.location or dna_end == self.location.end
-        for part in self.location.parts:
-            if dna_end in part or dna_end == part.end:
-                end_contained = True
-                break
-        if not end_contained:
-            raise ValueError("Protein coordinate end %d (nucl %d) is outside feature %s" % (end, dna_end, self))
-
-        if not isinstance(self.location, CompoundLocation):
-            return FeatureLocation(dna_start, dna_end, self.location.strand)
-
+        processed = 0
         new_locations = []
-        for location in sorted(self.location.parts, key=lambda x: x.start):
-            if dna_start in location:
-                new = FeatureLocation(dna_start, location.end, self.location.strand)
-                # the end could also be in this part
-                if dna_end - 1 in location:
-                    # can't be a compound location with only one, so return a simple one
-                    return FeatureLocation(new.start, dna_end, new.strand)
-                new_locations.append(new)
-            elif dna_end - 1 in location:  # 'in' uses start <= value < end
-                new = FeatureLocation(location.start, dna_end, self.location.strand)
-                new_locations.append(new)
+        for part in self.location.parts:
+            rc = True if part.strand == -1 else False
+            five_prime_end = False
+            three_prime_end = False
+            if start * 3 < processed + len(part):
+                # either start directly at the edge (part.start/end), or include offset
+                if rc:
+                    five_prime_end = min(part.end, part.end - start * 3 + processed)
+                else:
+                    five_prime_end = max(part.start, part.start + start * 3 - processed)
+            if end * 3 <= processed + len(part):
+                # either end directly at the edge (part.start/end), or include offset
+                if rc:
+                    three_prime_end = max(part.start, part.start + len(part) + processed - end * 3)
+                else:
+                    three_prime_end = min(part.end, part.end - len(part) + end * 3 - processed)
+            # 5' is in this part, 3' is not
+            if five_prime_end is not False and three_prime_end is False:
+                new_locations.append(FeatureLocation(part.start if rc else five_prime_end,
+                                                     five_prime_end if rc else part.end,
+                                                     part.strand))
+            # both start and end are here
+            elif five_prime_end is not False and three_prime_end is not False:
+                new_locations.append(FeatureLocation(three_prime_end if rc else five_prime_end,
+                                                     five_prime_end if rc else three_prime_end,
+                                                     part.strand))
                 break
-            elif new_locations:  # found a start, but haven't yet found an end
-                new_locations.append(location)
+
+            # increment processed in any case, whether part was included or not
+            processed = processed + len(part)
+
+            # todo: do this check just once outside the subpart loop, once location_contains_other is CompoundLocation-aware
+            if len(new_locations) > 0 and not location_contains_other(self.location, new_locations[-1]):
+                raise ValueError(("New location %s is outside its parent location %s") % (new_locations[-1], self.location))
 
         if not new_locations:
             raise ValueError(("Could not create compound location from"
-                              " %s and internal protein coordinates %d..%d (dna %d..%d)") % (
-                                str(self.location), start, end, dna_start, dna_end))
-        if self.location.strand == -1:
-            new_locations.reverse()
+                              " %s and internal protein coordinates %d..%d") % (
+                                str(self.location), start, end))
 
-        if len(new_locations) == 1:
-            return new_locations[0]
-
-        return CompoundLocation(new_locations)
+        return new_locations[0] if len(new_locations) == 1 else CompoundLocation(new_locations)
 
     def get_qualifier(self, key: str) -> Optional[Tuple]:
         """ Fetches a qualifier by key and returns a tuple of items stored under

@@ -187,15 +187,6 @@ class TestSubLocation(unittest.TestCase):
                 self.get_sub(bad_start, bad_end)
         with self.assertRaisesRegex(ValueError, "must be less than the end"):
             self.get_sub(5, 1)
-        mock("feature.convert_protein_position_to_dna", returns=(9, 15))
-        with self.assertRaisesRegex(ValueError, "Protein coordinate start .* is outside feature"):
-            self.get_sub(1, 5)
-        mock("feature.convert_protein_position_to_dna", returns=(15, 41))
-        with self.assertRaisesRegex(ValueError, "Protein coordinate end .* is outside feature"):
-            self.get_sub(1, 5)
-        mock("feature.convert_protein_position_to_dna", returns=(10, 3))
-        with self.assertRaisesRegex(ValueError, "Invalid protein coordinate conversion"):
-            self.get_sub(1, 5)
 
     def test_simple_forward(self):
         assert self.get_sub(0, 1) == FeatureLocation(10, 13, 1)
