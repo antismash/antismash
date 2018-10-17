@@ -16,12 +16,42 @@ from antismash.common.secmet.locations import (
 )
 
 
+def _adjust_location_by_offset(location: FeatureLocation, offset: int) -> FeatureLocation:
+    """ Adjusts the given location to account for an offset (e.g. start_codon)
+    """
+    assert -2 <= offset <= 2, "invalid offset %d" % offset
+
+    def adjust_single_location(part: FeatureLocation) -> FeatureLocation:
+        """ only functions on FeatureLocation """
+        assert not isinstance(part, CompoundLocation)
+        start = part.start
+        end = part.end
+        if part.strand == -1:
+            end = type(end)(end + offset)
+        else:
+            start = type(start)(start + offset)
+        return FeatureLocation(start, end, part.strand)
+
+    if isinstance(location, CompoundLocation):
+        part = location.parts[0]
+        if location.strand == -1:
+            assert part.end == location.end
+        else:
+            assert part.start == location.start
+        location = CompoundLocation([adjust_single_location(part)] + location.parts[1:])
+    else:
+        location = adjust_single_location(location)
+
+    return location
+
+
 class Feature:
     """ The base class of any feature. Contains only a location, the label of the
         subclass, the 'notes' qualifier, and other qualifiers not tracked by any
         subclass.
     """
-    __slots__ = ["location", "notes", "type", "_qualifiers", "created_by_antismash"]
+    __slots__ = ["location", "notes", "type", "_qualifiers", "created_by_antismash",
+                 "_original_codon_start"]
 
     def __init__(self, location: FeatureLocation, feature_type: str,
                  created_by_antismash: bool = False) -> None:
@@ -35,6 +65,7 @@ class Feature:
         self.type = str(feature_type)
         self._qualifiers = OrderedDict()  # type: Dict[str, List[str]]
         self.created_by_antismash = bool(created_by_antismash)
+        self._original_codon_start = None  # type: Optional[int]
 
     @property
     def strand(self) -> int:
@@ -70,10 +101,17 @@ class Feature:
             raise ValueError("Protein start coordinate must be less than the end coordinate")
 
         dna_start, dna_end = convert_protein_position_to_dna(start, end, self.location)
-
-        if not 0 <= dna_start - self.location.start < self.location.end - 2:
+        if not dna_start < dna_end:
+            raise ValueError("Invalid protein coordinate conversion (start %d, end %d)" % (dna_start, dna_end))
+        if dna_start not in self.location:
             raise ValueError("Protein coordinate start %d (nucl %d) is outside feature %s" % (start, dna_start, self))
-        if not 2 < dna_end - self.location.start - 1 <= self.location.end:
+        # end check is more complicated as 'in' is inclusive and end is exclusive
+        end_contained = dna_end in self.location or dna_end == self.location.end
+        for part in self.location.parts:
+            if dna_end in part or dna_end == part.end:
+                end_contained = True
+                break
+        if not end_contained:
             raise ValueError("Protein coordinate end %d (nucl %d) is outside feature %s" % (end, dna_end, self))
 
         if not isinstance(self.location, CompoundLocation):
@@ -157,6 +195,12 @@ class Feature:
             quals["note"] = sorted(notes)
         if self.created_by_antismash:
             quals["tool"] = ["antismash"]
+        if self._original_codon_start is not None:
+            start = int(self._original_codon_start)
+            quals["codon_start"] = [str(start + 1)]
+            # adjust location back if neccessary
+            if self._original_codon_start != 0:
+                feature.location = _adjust_location_by_offset(feature.location, -start)
         # sorted here to match the behaviour of biopython
         for key, val in sorted(quals.items()):
             feature.qualifiers[key] = val
@@ -203,6 +247,15 @@ class Feature:
             assert isinstance(feature, Feature)
         if leftovers:
             feature.created_by_antismash = leftovers.get("tool") == ["antismash"]
+            if "codon_start" in leftovers:
+                codon_start = int(leftovers.pop("codon_start")[0]) - 1
+                if not 0 <= codon_start <= 2:
+                    raise ValueError("invalid codon_start qualifier: %d" % (codon_start + 1))
+                feature._original_codon_start = codon_start  # very much private, so pylint: disable=protected-access
+                if codon_start != 0:
+                    # adjust the location for now until converting back to biopython if required
+                    feature.location = _adjust_location_by_offset(feature.location, codon_start)
+
             feature._qualifiers.update(leftovers)  # shouldn't be a public thing, so pylint: disable=protected-access
         else:
             feature.created_by_antismash = False

@@ -146,13 +146,13 @@ def split_origin_bridging_location(location: CompoundLocation) -> Tuple[
     upper = []  # type: List[FeatureLocation]
     if location.strand == 1:
         for part in location.parts:
-            if not upper or part.start > upper[-1].end:
+            if not upper or part.start > upper[-1].start:
                 upper.append(part)
             else:
                 lower.append(part)
     elif location.strand == -1:
         for part in location.parts:
-            if not lower or part.start < lower[-1].end:
+            if not lower or part.start < lower[-1].start:
                 lower.append(part)
             else:
                 upper.append(part)

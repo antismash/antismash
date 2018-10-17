@@ -80,7 +80,8 @@ def get_cds_predictions_by_protein_type(cds_predictions: Dict[str, List[CDSPredi
                                         ) -> Dict[str, List[CDSPrediction]]:
     """ Generates a new dictionary of CDS name to CDSPredictions, removing all
         CDS entries that do not have at least one prediction with a desired
-        protein type.
+        protein type. All predictions with protein types not in the given list
+        will be removed.
 
         Arguments:
             cds_predictions: a dictionary mapping CDS name to a
@@ -94,9 +95,12 @@ def get_cds_predictions_by_protein_type(cds_predictions: Dict[str, List[CDSPredi
     ret = {}
     desired = set(protein_types)
     for cds, predictions in cds_predictions.items():
-        cds_predicted_protein_types = {pred.ptype for pred in predictions}
-        if desired.intersection(cds_predicted_protein_types):
-            ret[cds] = predictions
+        applicable = []
+        for pred in predictions:
+            if pred.ptype in desired:
+                applicable.append(pred)
+        if applicable:
+            ret[cds] = applicable
     return ret
 
 

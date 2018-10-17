@@ -12,7 +12,7 @@ from antismash.common import path, record_processing
 from antismash.common.hmmscan_refinement import HMMResult
 from antismash.common.secmet.features.cluster import Cluster, FeatureLocation
 from antismash.modules.t2pks import t2pks_analysis
-from antismash.modules.t2pks.results import ClusterPrediction, Prediction
+from antismash.modules.t2pks.results import CDSPrediction, ClusterPrediction, Prediction
 
 
 class TestCoelicolorAnalysis(unittest.TestCase):
@@ -52,3 +52,46 @@ class TestCoelicolorAnalysis(unittest.TestCase):
         assert results.malonyl_elongations == [Prediction("7", 743.5, 1.2e-226)]
         assert list(results.molecular_weights) == ["acetyl_7"]
         self.assertAlmostEqual(results.molecular_weights["acetyl_7"], 451.22572)
+
+
+class TestPredictionFiltering(unittest.TestCase):
+    def make_preds(self, ptypes):
+        return [CDSPrediction(ptype, "test", 0., 0.) for ptype in ptypes]
+
+    def test_no_match(self):
+        cds_preds = {"dummy": self.make_preds(["a", "b"])}
+        assert t2pks_analysis.get_cds_predictions_by_protein_type(cds_preds, ["c"]) == {}
+
+    def test_partial_match(self):
+        cds_preds = {"dummy": self.make_preds(["a", "b"])}
+        results = t2pks_analysis.get_cds_predictions_by_protein_type(cds_preds, ["a"])
+        assert list(results) == ["dummy"]
+        assert len(results["dummy"]) == 1
+        assert results["dummy"][0].ptype == "a"
+
+    def test_full_match(self):
+        cds_preds = {"dummy": self.make_preds(["a", "b"])}
+        results = t2pks_analysis.get_cds_predictions_by_protein_type(cds_preds, ["a", "b"])
+        assert list(results) == ["dummy"]
+        assert len(results["dummy"]) == 2
+        assert results["dummy"][0].ptype == "a"
+        assert results["dummy"][1].ptype == "b"
+
+    def test_mixed(self):
+        cds_preds = {
+            "partial": self.make_preds(["a", "b"]),
+            "full": self.make_preds(["a"]),
+            "none": self.make_preds(["c"]),
+            "empty": [],
+        }
+        results = t2pks_analysis.get_cds_predictions_by_protein_type(cds_preds, ["a"])
+        assert sorted(results) == ["full", "partial"]
+        assert len(results["full"]) == 1
+        assert results["full"][0].ptype == "a"
+
+    def test_empty_preds(self):
+        assert t2pks_analysis.get_cds_predictions_by_protein_type({}, ["a", "b"]) == {}
+
+    def test_empty_filter(self):
+        cds_preds = {"dummy": self.make_preds(["a", "b"])}
+        assert t2pks_analysis.get_cds_predictions_by_protein_type(cds_preds, []) == {}

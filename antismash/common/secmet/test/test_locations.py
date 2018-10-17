@@ -236,6 +236,12 @@ class TestBridgedSplit(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Cannot separate bridged location without a valid strand"):
             print(splitter(loc))
 
+    def test_frameshifts(self):
+        loc = build_compound([(4772224, 4772573), (4772572, 4773186), (0, 258)], 1)
+        low, high = splitter(loc)
+        assert low == loc.parts[2:]
+        assert high == loc.parts[0:2]
+
 
 class TestLocationSerialiser(unittest.TestCase):
     def convert(self, location, expected_type=FeatureLocation):

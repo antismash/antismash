@@ -42,6 +42,8 @@ class AntismashFeature(Feature):
     @translation.setter
     def translation(self, translation: str) -> None:
         assert isinstance(translation, str)
+        if "*" in translation:
+            raise ValueError("Domain translations cannot contain stop codons")
         if not translation:
             raise ValueError("Domain translation cannot be empty")
         self._translation = translation

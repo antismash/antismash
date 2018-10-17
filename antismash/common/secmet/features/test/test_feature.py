@@ -4,6 +4,7 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
+from minimock import mock, restore
 import unittest
 
 from antismash.common.test import helpers
@@ -13,6 +14,13 @@ from antismash.common.secmet.features.feature import (
     Feature,
     FeatureLocation,
     SeqFeature,
+    _adjust_location_by_offset as adjust,
+)
+from antismash.common.secmet.features import feature  # mocked, pylint: disable=unused-import
+from antismash.common.secmet.locations import (
+    ExactPosition,
+    BeforePosition,
+    AfterPosition,
 )
 
 
@@ -97,3 +105,127 @@ class TestFeature(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "bridge the record origin"):
             Feature(CompoundLocation(parts, operator="join"), feature_type="test")
         Feature(CompoundLocation(parts[::-1], operator="join"), feature_type="test")
+
+    def test_conversion_with_codon_start(self):
+        seqf = SeqFeature(FeatureLocation(BeforePosition(5), 12))
+        seqf.type = "test"
+        for codon_start in "123":
+            seqf.qualifiers["codon_start"] = [codon_start]
+            feature = Feature.from_biopython(seqf)
+            assert feature._original_codon_start == int(codon_start) - 1
+            assert feature.location.start == BeforePosition(5 + feature._original_codon_start)
+            new = feature.to_biopython()[0]
+            assert new.qualifiers["codon_start"] == [codon_start]
+
+        for codon_start in ["-1", "4"]:
+            seqf.qualifiers["codon_start"] = [codon_start]
+            with self.assertRaisesRegex(ValueError, "invalid codon_start"):
+                Feature.from_biopython(seqf)
+
+
+class TestLocationAdjustment(unittest.TestCase):
+    def setUp(self):
+        # not all of these really make sense biologically, but they're all valid computationally
+        self.position_types = [ExactPosition, AfterPosition, BeforePosition, int]
+
+    def test_single_forward(self):
+        for position_type in self.position_types:
+            old = FeatureLocation(position_type(5), 12, 1)
+            for offset in range(-2, 3):
+                new = adjust(old, offset)
+                assert isinstance(new.start, position_type)
+                assert new.start == old.start + offset
+                assert new.end is old.end
+
+    def test_single_reverse(self):
+        for position_type in self.position_types:
+            old = FeatureLocation(5, position_type(12), -1)
+            for offset in range(-2, 3):
+                new = adjust(old, offset)
+                assert isinstance(new.end, position_type)
+                assert new.end == old.end + offset
+                assert new.start is old.start
+
+    def test_compound_forward(self):
+        for position_type in self.position_types:
+            old = CompoundLocation([FeatureLocation(position_type(5), 12, 1),
+                                    FeatureLocation(15, 17, 1)])
+            for offset in range(-2, 3):
+                new = adjust(old, offset)
+                assert isinstance(new.start, position_type)
+                assert new.start == old.start + offset
+                assert new.parts[0].end is old.parts[0].end
+                for old_part, new_part in zip(old.parts[1:], new.parts[1:]):
+                    assert old_part is new_part
+
+    def test_compound_reverse(self):
+        for position_type in self.position_types:
+            old = CompoundLocation([FeatureLocation(15, position_type(17), -1),
+                                    FeatureLocation(5, 12, -1)])
+            for offset in range(-2, 3):
+                new = adjust(old, offset)
+                assert isinstance(new.end, position_type)
+                assert new.end == old.end + offset
+                assert new.parts[0].start is old.parts[0].start
+                for old_part, new_part in zip(old.parts[1:], new.parts[1:]):
+                    assert old_part is new_part
+
+class TestSubLocation(unittest.TestCase):
+    def setUp(self):
+        self.feature = Feature(FeatureLocation(10, 40, 1), feature_type="test")
+        self.get_sub = self.feature.get_sub_location_from_protein_coordinates
+
+    def tearDown(self):
+        restore()
+
+    def test_invalid(self):
+        for bad_start, bad_end in [(-1, 1), (1, -1), (1, 11)]:
+            with self.assertRaisesRegex(ValueError, "must be contained by the feature"):
+                self.get_sub(bad_start, bad_end)
+        for bad_start, bad_end in [("test", 5), (5, "test"), (None, 5)]:
+            with self.assertRaisesRegex(TypeError, "unorderable types"):
+                self.get_sub(bad_start, bad_end)
+        with self.assertRaisesRegex(ValueError, "must be less than the end"):
+            self.get_sub(5, 1)
+        mock("feature.convert_protein_position_to_dna", returns=(9, 15))
+        with self.assertRaisesRegex(ValueError, "Protein coordinate start .* is outside feature"):
+            self.get_sub(1, 5)
+        mock("feature.convert_protein_position_to_dna", returns=(15, 41))
+        with self.assertRaisesRegex(ValueError, "Protein coordinate end .* is outside feature"):
+            self.get_sub(1, 5)
+        mock("feature.convert_protein_position_to_dna", returns=(10, 3))
+        with self.assertRaisesRegex(ValueError, "Invalid protein coordinate conversion"):
+            self.get_sub(1, 5)
+
+    def test_simple_forward(self):
+        assert self.get_sub(0, 1) == FeatureLocation(10, 13, 1)
+        assert self.get_sub(2, 4) == FeatureLocation(16, 22, 1)
+        assert self.get_sub(9, 10) == FeatureLocation(37, 40, 1)
+
+    def test_simple_reverse(self):
+        self.feature.location = FeatureLocation(10, 40, -1)
+        assert self.get_sub(0, 1) == FeatureLocation(37, 40, -1)
+        assert self.get_sub(2, 4) == FeatureLocation(28, 34, -1)
+        assert self.get_sub(9, 10) == FeatureLocation(10, 13, -1)
+
+    def test_compound_reverse(self):
+        self.feature.location = CompoundLocation([FeatureLocation(21, 27, -1),
+                                                  FeatureLocation(12, 15, -1),
+                                                  FeatureLocation(0, 6, -1)])
+        assert self.get_sub(2, 3) == FeatureLocation(12, 15, -1)
+
+    def test_compound_overlap_forward(self):
+        self.feature.location = CompoundLocation([FeatureLocation(10, 16, 1),
+                                                  FeatureLocation(15, 24, 1)])
+        assert self.get_sub(0, 1) == FeatureLocation(10, 13, 1)
+        assert self.get_sub(1, 3) == CompoundLocation([FeatureLocation(13, 16, 1),
+                                                       FeatureLocation(15, 18, 1)])
+        assert self.get_sub(4, 5) == FeatureLocation(21, 24, 1)
+
+    def test_compound_overlap_reverse(self):
+        self.feature.location = CompoundLocation([FeatureLocation(15, 24, -1),
+                                                  FeatureLocation(10, 16, -1)])
+        assert self.get_sub(0, 1) == FeatureLocation(21, 24, -1)
+        assert self.get_sub(2, 4) == CompoundLocation([FeatureLocation(15, 18, -1),
+                                                       FeatureLocation(13, 16, -1)])
+        assert self.get_sub(4, 5) == FeatureLocation(10, 13, -1)
