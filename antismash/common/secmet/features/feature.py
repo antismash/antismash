@@ -51,19 +51,20 @@ class Feature:
         subclass.
     """
     __slots__ = ["location", "notes", "type", "_qualifiers", "created_by_antismash",
-                 "_original_codon_start"]
+                 "_original_codon_start", "_pseudo"]
 
     def __init__(self, location: FeatureLocation, feature_type: str,
                  created_by_antismash: bool = False) -> None:
         assert isinstance(location, (FeatureLocation, CompoundLocation)), type(location)
         if location_bridges_origin(location):
             raise ValueError("Features that bridge the record origin cannot be directly created: %s" % location)
+        self._pseudo = False # only ever set to True in from_biopython() when relevant
         assert location.start <= location.end, "Feature location invalid: %s" % location
         self.location = location
         self.notes = []  # type: List[str]
         assert feature_type
         self.type = str(feature_type)
-        self._qualifiers = OrderedDict()  # type: Dict[str, List[str]]
+        self._qualifiers = OrderedDict()  # type: Dict[str, Optional[List[str]]]
         self.created_by_antismash = bool(created_by_antismash)
         self._original_codon_start = None  # type: Optional[int]
 
@@ -178,6 +179,10 @@ class Feature:
             return self.location.start in other and end in other
         raise TypeError("Container must be a Feature or a FeatureLocation, not %s" % type(other))
 
+    def is_pseudo(self) -> bool:
+        """ Was the feature marked as a pseudo feature"""
+        return self._pseudo
+
     def to_biopython(self, qualifiers: Dict[str, Any] = None) -> List[SeqFeature]:
         """ Converts this feature into one or more SeqFeature instances.
 
@@ -201,6 +206,8 @@ class Feature:
             # adjust location back if neccessary
             if self._original_codon_start != 0:
                 feature.location = _adjust_location_by_offset(feature.location, -start)
+        if self._pseudo:
+            quals["pseudo"] = None
         # sorted here to match the behaviour of biopython
         for key, val in sorted(quals.items()):
             feature.qualifiers[key] = val
@@ -255,6 +262,9 @@ class Feature:
                 if codon_start != 0:
                     # adjust the location for now until converting back to biopython if required
                     feature.location = _adjust_location_by_offset(feature.location, codon_start)
+            if "pseudo" in leftovers:
+                leftovers.pop("pseudo")
+                feature._pseudo = True  # very much private, so pylint: disable=protected-access
 
             feature._qualifiers.update(leftovers)  # shouldn't be a public thing, so pylint: disable=protected-access
         else:
