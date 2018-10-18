@@ -40,7 +40,10 @@ class CDSResults:
         """ Annotates a CDSFeature with the results gathered """
         all_matching = set()
         if not self.cds.sec_met:
-            self.cds.sec_met = SecMetQualifier(set(self.definition_domains), self.domains)
+            if self.definition_domains:
+                self.cds.sec_met = SecMetQualifier(set(self.definition_domains), self.domains)
+            else:
+                self.cds.sec_met = SecMetQualifier(set(["unknown"]), self.domains)
         else:
             all_matching.update(set(self.cds.sec_met.domain_ids))
             self.cds.sec_met.add_products({product})
