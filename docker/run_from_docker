@@ -31,6 +31,6 @@ docker run \
     --detach=false \
     --rm \
     --user=$(id -u):$(id -g) \
-    antismash5-dev:latest \
+    antismash/antismash-dev:latest \
     ${INPUT_FILE} \
     $@

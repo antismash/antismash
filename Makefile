@@ -38,6 +38,6 @@ coverage:
 	coverage report
 
 docker: squeakyclean
-	docker build -t antismash5-dev .
+	docker build -t antismash/antismash-dev .
 
 .PHONY:	unit integration clean squeakyclean cover coverage combined-coverage docker
