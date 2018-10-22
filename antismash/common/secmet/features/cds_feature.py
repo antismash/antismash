@@ -161,6 +161,16 @@ class CDSFeature(Feature):
             logging.warning("Translation for CDS %s (at %s) has a gap. Discarding and regenerating.",
                             locus_tag or protein_id or gene, bio_feature.location)
             translation = ""
+        # ensure translation is not longer than the feature
+        elif translation and len(translation) > len(bio_feature.location) // 3:
+            logging.warning("Translation for CDS %s (at %s) is longer than expected. Discarding and regenerating.",
+                            locus_tag or protein_id or gene, bio_feature.location)
+            translation = ""
+        # ensure translation is not shorter than the feature, allow for 1 aa difference (stop codon)
+        elif translation and len(translation) < len(bio_feature.location) // 3 - 1:
+            logging.warning("Translation for CDS %s (at %s) is shorter than expected. Discarding and regenerating.",
+                            locus_tag or protein_id or gene, bio_feature.location)
+            translation = ""
         if not translation:
             if not record:
                 raise ValueError("no translation in CDS and no record to generate it with")
