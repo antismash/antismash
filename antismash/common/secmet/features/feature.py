@@ -27,7 +27,7 @@ def _adjust_location_by_offset(location: FeatureLocation, offset: int) -> Featur
         start = part.start
         end = part.end
         if part.strand == -1:
-            end = type(end)(end + offset)
+            end = type(end)(end - offset)
         else:
             start = type(start)(start + offset)
         return FeatureLocation(start, end, part.strand)
