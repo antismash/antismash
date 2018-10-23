@@ -106,8 +106,8 @@ class TestFeature(unittest.TestCase):
             Feature(CompoundLocation(parts, operator="join"), feature_type="test")
         Feature(CompoundLocation(parts[::-1], operator="join"), feature_type="test")
 
-    def test_conversion_with_codon_start(self):
-        seqf = SeqFeature(FeatureLocation(BeforePosition(5), 12))
+    def test_conversion_with_codon_start_forward(self):
+        seqf = SeqFeature(FeatureLocation(BeforePosition(5), 12), 1)
         seqf.type = "test"
         for codon_start in "123":
             seqf.qualifiers["codon_start"] = [codon_start]
@@ -117,6 +117,20 @@ class TestFeature(unittest.TestCase):
             new = feature.to_biopython()[0]
             assert new.qualifiers["codon_start"] == [codon_start]
 
+    def test_conversion_with_codon_start_reverse(self):
+        seqf = SeqFeature(FeatureLocation(5, AfterPosition(12), -1))
+        seqf.type = "test"
+        for codon_start in "123":
+            seqf.qualifiers["codon_start"] = [codon_start]
+            feature = Feature.from_biopython(seqf)
+            assert feature._original_codon_start == -(int(codon_start) - 1)
+            assert feature.location.end == AfterPosition(12 + feature._original_codon_start)
+            new = feature.to_biopython()[0]
+            assert new.qualifiers["codon_start"] == [codon_start]
+
+    def test_invalid_codon_start(self):
+        seqf = SeqFeature(FeatureLocation(5, AfterPosition(12), -1))
+        seqf.type = "test"
         for codon_start in ["-1", "4"]:
             seqf.qualifiers["codon_start"] = [codon_start]
             with self.assertRaisesRegex(ValueError, "invalid codon_start"):
