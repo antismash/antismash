@@ -197,6 +197,8 @@ class Feature:
             quals["tool"] = ["antismash"]
         if self._original_codon_start is not None:
             start = int(self._original_codon_start)
+            if self.location.strand == -1:
+                start *= -1
             quals["codon_start"] = [str(start + 1)]
             # adjust location back if neccessary
             if self._original_codon_start != 0:
@@ -251,6 +253,8 @@ class Feature:
                 codon_start = int(leftovers.pop("codon_start")[0]) - 1
                 if not 0 <= codon_start <= 2:
                     raise ValueError("invalid codon_start qualifier: %d" % (codon_start + 1))
+                if feature.location.strand == -1:
+                    codon_start *= -1
                 feature._original_codon_start = codon_start  # very much private, so pylint: disable=protected-access
                 if codon_start != 0:
                     # adjust the location for now until converting back to biopython if required
