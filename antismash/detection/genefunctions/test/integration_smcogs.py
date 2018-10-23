@@ -87,6 +87,6 @@ class TestSMCOGs(unittest.TestCase):
         results.add_to_record(self.record)
 
         for cds in self.record.get_cds_features():
-            if cds.sec_met:
+            if cds.gene_functions.get_by_tool("rule-based-clusters"):
                 continue
             assert cds.gene_function == results.function_mapping.get(cds.get_name(), GeneFunction.OTHER)
