@@ -113,14 +113,12 @@ class TestSecMetQualifier(unittest.TestCase):
         self.domains.append(SecMetQualifier.Domain("name test", 5e-235, 20.17, 30, "tool test"))
 
     def test_basics(self):
-        qual = SecMetQualifier({"prodB", "prodA"}, self.domains)
-        assert qual.products == ["prodA", "prodB"]
-        assert qual.clustertype == "prodA-prodB"
+        qual = SecMetQualifier(self.domains)
         assert qual.domains == self.domains
         assert qual.domains is not self.domains
 
     def test_add_domains(self):
-        qual = SecMetQualifier({"prodB", "prodA"}, [])
+        qual = SecMetQualifier([])
         qual.add_domains(self.domains)
         assert qual.domains == self.domains
         qual.add_domains(self.domains)  # duplicates ignored
@@ -132,26 +130,23 @@ class TestSecMetQualifier(unittest.TestCase):
 
     def test_biopython_suitability(self):
         # must behave as a list of strings or have conversion methods used
-        qual = SecMetQualifier({"prodA", "prodB"}, self.domains)
+        qual = SecMetQualifier(self.domains)
         assert isinstance(qual, list)
         for item in qual:
             assert isinstance(item, str)
-        assert len(qual) == 3
-        assert qual[0] == "Type: prodA-prodB"
-        assert qual[1] == "; ".join(map(str, self.domains))
-        assert qual[2] == "Kind: biosynthetic"
+        assert len(qual) == 2
+        assert qual[0] == "; ".join(map(str, self.domains))
+        assert qual[1] == "Kind: biosynthetic"
 
     def test_regeneration(self):
-        qual = SecMetQualifier({"prodB", "prodA"}, self.domains)
+        qual = SecMetQualifier(self.domains)
         bio = list(qual)
         new = SecMetQualifier.from_biopython(bio)
         assert list(new) == bio
-        assert new.products == ["prodA", "prodB"]
         for domain in new.domains:
             assert isinstance(domain, SecMetQualifier.Domain)
         assert new.domains == qual.domains
         assert new.domain_ids == qual.domain_ids
-        assert new.clustertype == qual.clustertype
 
         with self.assertRaisesRegex(ValueError, "Cannot parse qualifier"):
             SecMetQualifier.from_biopython(bio + ["something else"])

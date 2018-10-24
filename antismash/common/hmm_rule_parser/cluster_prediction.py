@@ -40,10 +40,9 @@ class CDSResults:
         """ Annotates a CDSFeature with the results gathered """
         all_matching = set()
         if not self.cds.sec_met:
-            self.cds.sec_met = SecMetQualifier(set(self.definition_domains), self.domains)
+            self.cds.sec_met = SecMetQualifier(self.domains)
         else:
             all_matching.update(set(self.cds.sec_met.domain_ids))
-            self.cds.sec_met.add_products({product})
             self.cds.sec_met.add_domains(self.domains)
         for cluster_type, matching_domains in self.definition_domains.items():
             all_matching.update(matching_domains)
