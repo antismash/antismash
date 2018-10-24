@@ -95,18 +95,15 @@ class SecMetQualifier(list):
             assert len(json) == 5, json
             return cls(str(json[0]), float(json[1]), float(json[2]), int(json[3]), str(json[4]))
 
-    def __init__(self, products: Set[str], domains: List["SecMetQualifier.Domain"]) -> None:
+    def __init__(self, domains: List["SecMetQualifier.Domain"]) -> None:
         self._domains = []  # type: List["SecMetQualifier.Domain"]
         self.domain_ids = []  # type: List[str]
         self.unique_domain_ids = set()  # type: Set[str]
         self.add_domains(domains)
-        self._products = set()  # type: Set[str]
-        self.add_products(products)
         self.kind = "biosynthetic"
         super().__init__()
 
     def __iter__(self) -> Iterator[str]:
-        yield "Type: %s" % self.clustertype
         yield "; ".join(map(str, self._domains))
         yield "Kind: %s" % self.kind
 
@@ -118,13 +115,6 @@ class SecMetQualifier(list):
 
     def extend(self, _items: Iterable[Any]) -> None:
         raise NotImplementedError("Extending this list won't work")
-
-    def add_products(self, products: Set[str]) -> None:
-        """ Adds one or more products to the qualifier """
-        assert isinstance(products, set), type(products)
-        for product in products:
-            assert isinstance(product, str) and "-" not in product, product
-        self._products.update(products)
 
     def add_domains(self, domains: List["SecMetQualifier.Domain"]) -> None:
         """ Add a group of Domains to the the qualifier """
@@ -143,37 +133,24 @@ class SecMetQualifier(list):
         """ A list of domains stored in the qualifier"""
         return list(self._domains)
 
-    @property
-    def products(self) -> List[str]:
-        """ A list of all products a feature is involved in"""
-        return sorted(self._products)
-
-    @property
-    def clustertype(self) -> str:
-        """ A string hypen-separated products """
-        return "-".join(self.products)
-
     @staticmethod
     def from_biopython(qualifier: List[str]) -> "SecMetQualifier":
         """ Converts a BioPython style qualifier into a SecMetQualifier. """
         domains = []
-        products = set()  # type: Set[str]
         kind = "biosynthetic"
-        if len(qualifier) != 3:
+        if len(qualifier) != 2:
             raise ValueError("Cannot parse qualifier: %s" % qualifier)
         for value in qualifier:
-            if value.startswith("Type: "):
-                products = set(value.split("Type: ", 1)[1].split("-"))
-            elif value.startswith("Kind: "):
+            if value.startswith("Kind: "):
                 kind = value.split("Kind: ", 1)[1]
                 assert kind == "biosynthetic", kind  # since it's the only kind we have
             else:
                 domain_strings = value.split("; ")
                 for domain_string in domain_strings:
                     domains.append(SecMetQualifier.Domain.from_string(domain_string))
-        if not (domains and products and kind):
+        if not (domains and kind):
             raise ValueError("Cannot parse qualifier: %s" % qualifier)
-        return SecMetQualifier(products, domains)
+        return SecMetQualifier(domains)
 
     def __len__(self) -> int:
-        return 3
+        return 2

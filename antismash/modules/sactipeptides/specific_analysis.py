@@ -563,7 +563,7 @@ def annotate_orfs(cds_features: List[secmet.CDSFeature], hmm_results: Dict[str, 
     for cds in cds_features:
         domains = domains_by_feature[cds.get_name()]
         if domains:
-            cds.sec_met = SecMetQualifier(set(), domains)
+            cds.sec_met = SecMetQualifier(domains)
 
 
 def specific_analysis(record: secmet.Record) -> SactiResults:
