@@ -128,7 +128,7 @@ class Prepeptide(CDSMotif):  # pylint: disable=too-many-instance-attributes
                 "prepeptide": ["leader"],
                 "note": [
                     "peptide class: %s" % self.peptide_class,
-                    "predicted sequence: %s", self.leader,
+                    "predicted sequence: %s" % self.leader,
                 ],
                 "locus_tag": [self.locus_tag],
                 "aSTool": [self.tool],
