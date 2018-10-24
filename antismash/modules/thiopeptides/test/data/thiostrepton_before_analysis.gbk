@@ -6,14 +6,6 @@ KEYWORDS    .
 SOURCE      
   ORGANISM  .
             .
-COMMENT     ##antiSMASH-Data-START##
-            Version  :: 5.0.0alpha-43c8f43
-            Run date :: 2018-08-20 16:38:32
-            ##antiSMASH-Data-END##
-            ##antiSMASH-Data-START##
-            Version      :: 5.0.0alpha-43c8f43
-            Run date     :: 2018-08-20 17:20:44
-            ##antiSMASH-Data-END##
 FEATURES             Location/Qualifiers
      source          1..29379
                      /culture_collection="ATCC:31255"
@@ -21,49 +13,6 @@ FEATURES             Location/Qualifiers
                      /mol_type="genomic DNA"
                      /organism="Streptomyces laurentii"
                      /strain="ATCC 31255"
-     cluster         1..29379
-                     /aStool="rule-based-clusters"
-                     /cluster_number="1"
-                     /core_location="[2014:28559]"
-                     /cutoff="20000"
-                     /detection_rule="(YcaO and ((thio_amide and (PF06968 or
-                     PF04055 or PF07366)) or Lant_dehyd_C or Lant_dehyd_N or
-                     PF07366 or PF06968 or PF04055) or (thiostrepton and tsrC)
-                     or thiostrepton)"
-                     /neighbourhood="10000"
-                     /parent_cluster_number="1"
-                     /product="thiopeptide"
-                     /tool="antismash"
-     cluster_core    2015..28559
-                     /aStool="rule-based-clusters"
-                     /cluster_number="1"
-                     /cutoff="20000"
-                     /detection_rule="(YcaO and ((thio_amide and (PF06968 or
-                     PF04055 or PF07366)) or Lant_dehyd_C or Lant_dehyd_N or
-                     PF07366 or PF06968 or PF04055) or (thiostrepton and tsrC)
-                     or thiostrepton)"
-                     /neighbourhood="10000"
-                     /parent_cluster_number="1"
-                     /product="thiopeptide"
-     supercluster    1..29379
-                     /child_cluster="1"
-                     /detection_rules="(YcaO and ((thio_amide and (PF06968 or
-                     PF04055 or PF07366)) or Lant_dehyd_C or Lant_dehyd_N or
-                     PF07366 or PF06968 or PF04055) or (thiostrepton and tsrC)
-                     or thiostrepton)"
-                     /kind="single"
-                     /product="thiopeptide"
-                     /supercluster_number="1"
-                     /tool="antismash"
-     region          1..29379
-                     /product="thiopeptide"
-                     /region_number="1"
-                     /rules="(YcaO and ((thio_amide and (PF06968 or PF04055 or
-                     PF07366)) or Lant_dehyd_C or Lant_dehyd_N or PF07366 or
-                     PF06968 or PF04055) or (thiostrepton and tsrC) or
-                     thiostrepton)"
-                     /supercluster_numbers="1"
-                     /tool="antismash"
      CDS             complement(16..1104)
                      /codon_start=1
                      /db_xref="GI:224495626"
@@ -81,41 +30,13 @@ FEATURES             Location/Qualifiers
                      EEPVGPAASVEGPTEPGEAPGD"
      misc_feature    16..29374
                      /note="thiostrepton biosynthesis gene cluster"
-     aSDomain        complement(118..1005)
-                     /aSTool="nrps_pks_domains"
-                     /aSDomain="Aminotran_1_2"
-                     /database="nrpspksdomains.hmm"
-                     /detection="hmmscan"
-                     /domain_id="nrpspksdomains_ACN52311_Xdom1"
-                     /evalue="1.10E-46"
-                     /label="ACN52311_Xdom1"
-                     /locus_tag="ACN52311.1"
-                     /score="151.1"
-                     /tool="antismash"
-                     /translation="RDALRGAHRYPDPFARELTAAIAATHSVPEHDVVTGPGSAVILQH
-                     VIQWAAPRRGEVVYARPSFDAYPLAVAAAGATAVEIPLRDHRHDLPRMLAAVTPDTRAL
-                     VVCNPHNPTGTALGADALLAFLRAVPEHVVVVLDEAYREFAGDKDTLDGPDVYRGLPNV
-                     VVLRSFSKAYGLAGLRVGFALARREVADVLRTRLLPFAVGTVAEAAARTVLARRSEVYA
-                     RVDRVVAERDRLTAELRGQGWEVAPSAANFCWLPLGSRSAAFVAAAAREGILVRAVAGE
-                     GVRVTVGDPAANDAV"
      CDS             complement(1126..1956)
                      /codon_start=1
                      /db_xref="GI:224495625"
-                     /gene_functions="biosynthetic-additional
-                     (rule-based-clusters) PF12697 (E-value: 6.3e-15, bitscore:
-                     46.8, seeds: 465, tool: rule-based-clusters)"
-                     /gene_functions="biosynthetic-additional
-                     (rule-based-clusters) PF00561 (E-value: 8.4e-21, bitscore:
-                     65.1, seeds: 48, tool: rule-based-clusters)"
                      /locus_tag="ACN52310.1"
                      /note="putative lipase"
                      /product="TsrU"
                      /protein_id="ACN52310.1"
-                     /sec_met="Type: "
-                     /sec_met="PF12697 (E-value: 6.3e-15, bitscore: 46.8, seeds:
-                     465, tool: rule-based-clusters); PF00561 (E-value: 8.4e-21,
-                     bitscore: 65.1, seeds: 48, tool: rule-based-clusters)"
-                     /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MTEETTARRFAGVRHPIHLHVWPPETAPRYLAVFVHGYADHAGRY
                      GRLADALTRHGAAVYAPDHAGSGRSGGARALVTDHDEQVADLATVVERARADHPGLPVV
@@ -125,20 +46,10 @@ FEATURES             Location/Qualifiers
      CDS             complement(2015..3871)
                      /codon_start=1
                      /db_xref="GI:224495624"
-                     /gene_functions="biosynthetic (rule-based-clusters)
-                     thiopeptide: tsrC"
-                     /gene_functions="biosynthetic-additional
-                     (rule-based-clusters) PF00733 (E-value: 1.5e-67, bitscore:
-                     218.4, seeds: 104, tool: rule-based-clusters)"
                      /locus_tag="ACN52309.1"
                      /note="putative amidotransferase"
                      /product="TsrT"
                      /protein_id="ACN52309.1"
-                     /sec_met="Type: thiopeptide"
-                     /sec_met="tsrC (E-value: 1.4e-45, bitscore: 144.7, seeds:
-                     312, tool: rule-based-clusters); PF00733 (E-value: 1.5e-67,
-                     bitscore: 218.4, seeds: 104, tool: rule-based-clusters)"
-                     /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MCGIAGWVAFGRDLGAERSAVEAMTRTMACRGPDAGGTWYGGPVA
                      LGHRRLAVIDIAGGAQPMLAEENGQVTAALSYSGEIYGFDELRARLVSAGHTFRTRSDT
@@ -154,16 +65,10 @@ FEATURES             Location/Qualifiers
      CDS             complement(4011..4418)
                      /codon_start=1
                      /db_xref="GI:224495623"
-                     /gene_functions="biosynthetic (rule-based-clusters)
-                     thiopeptide: PF07366"
                      /locus_tag="ACN52308.1"
                      /note="putative NTF-2 family protein"
                      /product="TsrS"
                      /protein_id="ACN52308.1"
-                     /sec_met="Type: thiopeptide"
-                     /sec_met="PF07366 (E-value: 2.6e-33, bitscore: 105.0,
-                     seeds: 29, tool: rule-based-clusters)"
-                     /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MDRASVQQLMEHFLAAYNEGDPRHLDHCLHPEYRHPNPAVERGIE
                      GMRAAIRRWASTVEDLSLTLDDLVVEGDKAVARMTFSGRQVGPILGIPASGRRFSVGLI
@@ -213,33 +118,20 @@ FEATURES             Location/Qualifiers
      CDS             7900..8076
                      /codon_start=1
                      /db_xref="GI:224495606"
-                     /gene_functions="biosynthetic (rule-based-clusters)
-                     thiopeptide: thiostrepton"
                      /locus_tag="ACN52291.1"
                      /note="thiostrepton prepeptide"
                      /product="TsrA"
                      /protein_id="ACN52291.1"
-                     /sec_met="Type: thiopeptide"
-                     /sec_met="thiostrepton (E-value: 1.6e-37, bitscore: 118.0,
-                     seeds: 4, tool: rule-based-clusters)"
-                     /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MSNAALEIGVEGLTGLDVDTLEISDYMDETLLDGEDLTVTMIASA
                      SCTTCICTCSCSS"
      CDS             8593..9384
                      /codon_start=1
                      /db_xref="GI:224495607"
-                     /gene_functions="biosynthetic-additional
-                     (rule-based-clusters) PF12697 (E-value: 1.4e-15, bitscore:
-                     49.0, seeds: 465, tool: rule-based-clusters)"
                      /locus_tag="ACN52292.1"
                      /note="putative alpha-beta hydrolase fold protein"
                      /product="TsrB"
                      /protein_id="ACN52292.1"
-                     /sec_met="Type: "
-                     /sec_met="PF12697 (E-value: 1.4e-15, bitscore: 49.0, seeds:
-                     465, tool: rule-based-clusters)"
-                     /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MRPVILVHGLLGTEDAHYAGCRKWWTRPVTEIRLPGHGTGGEIPP
                      HPAAAAIDRVREAIREQPEPPVVVGLSYLGAAVAFRAAAGFPATVAGIVMSGYSFLVSP
@@ -249,16 +141,10 @@ FEATURES             Location/Qualifiers
      CDS             9377..12178
                      /codon_start=1
                      /db_xref="GI:224495608"
-                     /gene_functions="biosynthetic (rule-based-clusters)
-                     thiopeptide: Lant_dehyd_C"
                      /locus_tag="ACN52293.1"
                      /note="putative lantibiotic dehydratase"
                      /product="TsrC"
                      /protein_id="ACN52293.1"
-                     /sec_met="Type: thiopeptide"
-                     /sec_met="Lant_dehyd_C (E-value: 1.5e-22, bitscore: 70.0,
-                     seeds: 37, tool: rule-based-clusters)"
-                     /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MDSPEITYAGYGVVRVCSQPADIIAQLSSREAARVCDELRDVRRT
                      WQDLAPRVAEELTEVVPLLTDRDERRTVLALRRRLHRAADVPAADLDVLNLAYGTSADG
@@ -280,17 +166,10 @@ FEATURES             Location/Qualifiers
      CDS             12175..13215
                      /codon_start=1
                      /db_xref="GI:224495609"
-                     /gene_functions="biosynthetic-additional
-                     (rule-based-clusters) Lant_dehydr_C (E-value: 1.3e-64,
-                     bitscore: 209.1, seeds: 35, tool: rule-based-clusters)"
                      /locus_tag="ACN52294.1"
                      /note="similar to lantibiotic biosynthesis protein"
                      /product="TsrD"
                      /protein_id="ACN52294.1"
-                     /sec_met="Type: "
-                     /sec_met="Lant_dehydr_C (E-value: 1.3e-64, bitscore: 209.1,
-                     seeds: 35, tool: rule-based-clusters)"
-                     /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MSTAPAHPWLSCHVFHHGDTDPLIAECLLPLVDDLRRAGRVERHF
                      YLRHWERGPHVRLRMRVPAEHHDAVRAETERRVLDYLGRRPGPVDTDPARLRDALRRLS
@@ -302,17 +181,10 @@ FEATURES             Location/Qualifiers
      CDS             13202..14308
                      /codon_start=1
                      /db_xref="GI:224495610"
-                     /gene_functions="biosynthetic-additional
-                     (rule-based-clusters) Lant_dehydr_C (E-value: 1.3e-27,
-                     bitscore: 87.5, seeds: 35, tool: rule-based-clusters)"
                      /locus_tag="ACN52295.1"
                      /note="hypothetical protein"
                      /product="TsrE"
                      /protein_id="ACN52295.1"
-                     /sec_met="Type: "
-                     /sec_met="Lant_dehydr_C (E-value: 1.3e-27, bitscore: 87.5,
-                     seeds: 35, tool: rule-based-clusters)"
-                     /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MSTSEQKDLTVSVPWSVQEDLLLDVAAPLLDESVELGETDSWFYL
                      RENHGGRPFLRLRFASRSPSVERRLKSRILAHVGPTIDAGDVFTYQPYNHEHDWLGGTA
@@ -324,17 +196,10 @@ FEATURES             Location/Qualifiers
      CDS             14305..16074
                      /codon_start=1
                      /db_xref="GI:224495611"
-                     /gene_functions="biosynthetic-additional
-                     (rule-based-clusters) PF00881 (E-value: 1.1e-08, bitscore:
-                     25.7, seeds: 78, tool: rule-based-clusters)"
                      /locus_tag="ACN52296.1"
                      /note="McbC-like protein"
                      /product="TsrF"
                      /protein_id="ACN52296.1"
-                     /sec_met="Type: "
-                     /sec_met="PF00881 (E-value: 1.1e-08, bitscore: 25.7, seeds:
-                     78, tool: rule-based-clusters)"
-                     /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MTAPGTAEATAPVEAAAPAEAAGTGPFDAAGVDGFVRRLRGDFDE
                      VHPDQWQIDWRSIPSPFRWYVDLPRRDLPALSRAAAAGGPAAAAAFAAAGPLGRLGMLL
@@ -369,16 +234,10 @@ FEATURES             Location/Qualifiers
      CDS             17906..19951
                      /codon_start=1
                      /db_xref="GI:224495613"
-                     /gene_functions="biosynthetic (rule-based-clusters)
-                     thiopeptide: YcaO"
                      /locus_tag="ACN52298.1"
                      /note="putative cyclodehydratase"
                      /product="TsrH"
                      /protein_id="ACN52298.1"
-                     /sec_met="Type: thiopeptide"
-                     /sec_met="YcaO (E-value: 2.9e-63, bitscore: 204.9, seeds:
-                     127, tool: rule-based-clusters)"
-                     /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MSAPPTTAPHAPEGVDDTAAELRRLLDDVARVVDTPAAITAAAPL
                      HAGLPAEGDGRPVVLVNLGWDADLSGLPAAGTTVLPVYGLRGRVVVGPVTRPGLPGCPH
@@ -412,17 +271,10 @@ FEATURES             Location/Qualifiers
      CDS             21329..22642
                      /codon_start=1
                      /db_xref="GI:224495615"
-                     /gene_functions="biosynthetic-additional
-                     (rule-based-clusters) AMP-binding (E-value: 2.4e-27,
-                     bitscore: 85.9, seeds: 400, tool: rule-based-clusters)"
                      /locus_tag="ACN52300.1"
                      /note="acyl-CoA ligase family protein"
                      /product="TsrJ"
                      /protein_id="ACN52300.1"
-                     /sec_met="Type: "
-                     /sec_met="AMP-binding (E-value: 2.4e-27, bitscore: 85.9,
-                     seeds: 400, tool: rule-based-clusters)"
-                     /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MGGLGAWLKQAEPVLRRSRAGVVTERGRHPWPSLLARAERLAAGL
                      PDAPYGWVVPADGGERSIVGLLALGLLGPAPRWVLGDPAAWAADGHKPLGDGELTAAGP
@@ -432,50 +284,13 @@ FEATURES             Location/Qualifiers
                      PLPGKPVWLEDVGPDGVGTLWTRGPDTRFAVTGGRLTTGPDGAVTTGDLAHRADGGGGF
                      VLDGRADDLVKVDGVSVYPREITAAVRALPGVRDASVSVDRSRTGDRLTVIVMGTDAVT
                      EDRVRDACARLPVPVTPHRVLCRPADETAYDARGKVLR"
-     aSDomain        21632..22459
-                     /aSTool="nrps_pks_domains"
-                     /aSDomain="AMP-binding"
-                     /database="nrpspksdomains.hmm"
-                     /detection="hmmscan"
-                     /domain_id="nrpspksdomains_ACN52300.1_A1"
-                     /evalue="5.40E-27"
-                     /label="ACN52300.1_A1"
-                     /locus_tag="ACN52300.1"
-                     /score="85.9"
-                     /tool="antismash"
-                     /translation="AGPQAAPPPEVAGPTYATASSGTTGQPKLLFGRPHAIPSAVRLYA
-                     DGMPEYAAAEVFATCSAIDFAAAFYMVAAPAMTLGRDLVLFRPGSWATAVPELAGRPGV
-                     CLAPPALAALGARTAAGRHDFRGTSFVPAGGGLTPERAGRIRAGFPGCDFLTMLGSTET
-                     GLVTVGRTVRADGHVGAPLPGKPVWLEDVGPDGVGTLWTRGPDTRFAVTGGRLTTGPDG
-                     AVTTGDLAHRADGGGGFVLDGRADDLVKVDGVSVYPREITAAVRALPGVRDASV"
-     CDS_motif       22358..22414
-                     /aSTool="pksnrpsmotif"
-                     /database="abmotifs"
-                     /detection="hmmscan"
-                     /domain_id="nrpspksmotif_ACN52300.1_0001"
-                     /evalue="1.00E-04"
-                     /label="NRPS-A_a8"
-                     /locus_tag="ACN52300.1"
-                     /motif="NRPS-A_a8"
-                     /note="NRPS/PKS Motif: NRPS-A_a8 (e-value: 0.0001,
-                     bit-score: 15.0)"
-                     /score="15.0"
-                     /tool="antismash"
-                     /translation="GRADDLVKVDGVSVYPREI"
      CDS             22752..23942
                      /codon_start=1
                      /db_xref="GI:224495616"
-                     /gene_functions="biosynthetic-additional
-                     (rule-based-clusters) p450 (E-value: 2.5e-08, bitscore:
-                     23.5, seeds: 50, tool: rule-based-clusters)"
                      /locus_tag="ACN52301.1"
                      /note="cytochrome P450"
                      /product="TsrK"
                      /protein_id="ACN52301.1"
-                     /sec_met="Type: "
-                     /sec_met="p450 (E-value: 2.5e-08, bitscore: 23.5, seeds:
-                     50, tool: rule-based-clusters)"
-                     /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MTTTGPSRAAVTEALLKCPAPLYERMRRQGPLVWSRPDRTWVVTG
                      YELARLVLRDPRFSLPGPPPGSQWSADGSHAGFFQSMLLACEGERHARLRRFLGRLFTP
@@ -487,16 +302,10 @@ FEATURES             Location/Qualifiers
      CDS             24005..26743
                      /codon_start=1
                      /db_xref="GI:224495617"
-                     /gene_functions="biosynthetic (rule-based-clusters)
-                     thiopeptide: Lant_dehyd_C"
                      /locus_tag="ACN52302.1"
                      /note="putative lantibiotic dehydratase"
                      /product="TsrL"
                      /protein_id="ACN52302.1"
-                     /sec_met="Type: thiopeptide"
-                     /sec_met="Lant_dehyd_C (E-value: 3.2e-18, bitscore: 55.8,
-                     seeds: 37, tool: rule-based-clusters)"
-                     /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MVRRRCRVPGSVLADLGSDRVWGAAAAWAYAEDAVQRTGTRLADQ
                      VGESVPTVRQEERRDLLRVRRAAFNSRPLPADSGAVLGGPAAALAEEYTRALTARDTNR
@@ -517,16 +326,10 @@ FEATURES             Location/Qualifiers
      CDS             26760..28559
                      /codon_start=1
                      /db_xref="GI:224495618"
-                     /gene_functions="biosynthetic (rule-based-clusters)
-                     thiopeptide: PF04055"
                      /locus_tag="ACN52303.1"
                      /note="putative radical-SAM domain containing protein"
                      /product="TsrM"
                      /protein_id="ACN52303.1"
-                     /sec_met="Type: thiopeptide"
-                     /sec_met="PF04055 (E-value: 1.1e-15, bitscore: 48.9, seeds:
-                     518, tool: rule-based-clusters)"
-                     /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MLRKGTVALINPNQIHPPIAPYALDVLTTALEASGFEAHVLDLTF
                      HLDDWRQTLRDYFRAERPLLVGVTCRNTDTVYALEQRPFVDGYKAVIDEVRRLTAAPVV
@@ -552,35 +355,6 @@ FEATURES             Location/Qualifiers
                      VDLLVNNAGLVDQGELPFWEADPERWWEVFETNVRGTVNTCRAVLPEMTRRGSGRVVNV
                      NSRLAVQGDPRYSAYCGSKATLLALDAVAAEPLRDRGVHLFDISPGMVRTDMTLSMAVC
                      AGRDDWTDPALFLAAILRVAHGDLDPLAGRFLHVGADDFDALLSERRLAV"
-     aSDomain        28589..29119
-                     /aSTool="nrps_pks_domains"
-                     /aSDomain="PKS_KR"
-                     /database="nrpspksdomains.hmm"
-                     /detection="hmmscan"
-                     /domain_id="nrpspksdomains_ACN52304.1_KR1"
-                     /evalue="3.50E-11"
-                     /label="ACN52304.1_KR1"
-                     /locus_tag="ACN52304.1"
-                     /score="34.9"
-                     /tool="antismash"
-                     /translation="VALVTGAGRGIGRMVAVALAEAGMTVGLVGRNRRLLDVTARACAA
-                     AREAASGDGSGDGSGGGPEAGVAVAVADVRAPAEIREAAEAVRAALGPVDLLVNNAGLV
-                     DQGELPFWEADPERWWEVFETNVRGTVNTCRAVLPEMTRRGSGRVVNVNSRLAVQGDPR
-                     YSAYCGSKATLLAL"
-     CDS_motif       28595..28681
-                     /aSTool="pksnrpsmotif"
-                     /database="abmotifs"
-                     /detection="hmmscan"
-                     /domain_id="nrpspksmotif_ACN52304.1_0001"
-                     /evalue="8.40E-04"
-                     /label="PKSI-KR_m1"
-                     /locus_tag="ACN52304.1"
-                     /motif="PKSI-KR_m1"
-                     /note="NRPS/PKS Motif: PKSI-KR_m1 (e-value: 0.00084,
-                     bit-score: 12.0)"
-                     /score="12.0"
-                     /tool="antismash"
-                     /translation="LVTGAGRGIGRMVAVALAEAGMTVGLVGR"
 ORIGIN
         1 tctgcgtgtg cccgctcagt ctcccggcgc ctcccccggc tccgtcggcc cctccactga
        61 tgccgccggc cccaccggct cctcgcgctc cttggccaga cgggcggtca gccggaggac

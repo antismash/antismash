@@ -25,73 +25,7 @@ REFERENCE   2  (bases 1 to 36668)
   TITLE     Direct Submission
   JOURNAL   Submitted (14-JUN-2010) Department of Molecular Microbiology, The
             John Innes Centre, Colney Lane, Norwich, Norfolk NR4 7UH, UK
-COMMENT     ##antiSMASH-Data-START##
-            Version      :: 5.0.0alpha-43c8f43
-            Run date     :: 2018-08-20 16:30:05
-            ##antiSMASH-Data-END##
 FEATURES             Location/Qualifiers
-     cluster         1..31228
-                     /aStool="rule-based-clusters"
-                     /cluster_number="1"
-                     /core_location="[3962:21228]"
-                     /cutoff="20000"
-                     /detection_rule="((LANC_like and (Flavoprotein or
-                     Trp_halogenase or p450 or Lant_dehyd_N or Lant_dehyd_C or
-                     Lant_dehydr_C or tsrC or adh_short or adh_short_C2) or
-                     cds(LANC_like and (Pkinase or DUF4135)) or TIGR03731 or
-                     Antimicr18 or Gallidermin or L_biotic_A or leader_d or
-                     leader_eh or leader_abc or mature_d or mature_ab or
-                     mature_a or mature_b or mature_ha or mature_h_beta or
-                     lacticin_l or lacticin_mat or LD_lanti_pre or strep_PEQAXS)
-                     and not YcaO)"
-                     /neighbourhood="10000"
-                     /parent_cluster_number="1"
-                     /product="lanthipeptide"
-                     /tool="antismash"
-     cluster_core    3963..21228
-                     /aStool="rule-based-clusters"
-                     /cluster_number="1"
-                     /cutoff="20000"
-                     /detection_rule="((LANC_like and (Flavoprotein or
-                     Trp_halogenase or p450 or Lant_dehyd_N or Lant_dehyd_C or
-                     Lant_dehydr_C or tsrC or adh_short or adh_short_C2) or
-                     cds(LANC_like and (Pkinase or DUF4135)) or TIGR03731 or
-                     Antimicr18 or Gallidermin or L_biotic_A or leader_d or
-                     leader_eh or leader_abc or mature_d or mature_ab or
-                     mature_a or mature_b or mature_ha or mature_h_beta or
-                     lacticin_l or lacticin_mat or LD_lanti_pre or strep_PEQAXS)
-                     and not YcaO)"
-                     /neighbourhood="10000"
-                     /parent_cluster_number="1"
-                     /product="lanthipeptide"
-     supercluster    1..31228
-                     /child_cluster="1"
-                     /detection_rules="((LANC_like and (Flavoprotein or
-                     Trp_halogenase or p450 or Lant_dehyd_N or Lant_dehyd_C or
-                     Lant_dehydr_C or tsrC or adh_short or adh_short_C2) or
-                     cds(LANC_like and (Pkinase or DUF4135)) or TIGR03731 or
-                     Antimicr18 or Gallidermin or L_biotic_A or leader_d or
-                     leader_eh or leader_abc or mature_d or mature_ab or
-                     mature_a or mature_b or mature_ha or mature_h_beta or
-                     lacticin_l or lacticin_mat or LD_lanti_pre or strep_PEQAXS)
-                     and not YcaO)"
-                     /kind="single"
-                     /product="lanthipeptide"
-                     /supercluster_number="1"
-                     /tool="antismash"
-     region          1..31228
-                     /product="lanthipeptide"
-                     /region_number="1"
-                     /rules="((LANC_like and (Flavoprotein or Trp_halogenase or
-                     p450 or Lant_dehyd_N or Lant_dehyd_C or Lant_dehydr_C or
-                     tsrC or adh_short or adh_short_C2) or cds(LANC_like and
-                     (Pkinase or DUF4135)) or TIGR03731 or Antimicr18 or
-                     Gallidermin or L_biotic_A or leader_d or leader_eh or
-                     leader_abc or mature_d or mature_ab or mature_a or mature_b
-                     or mature_ha or mature_h_beta or lacticin_l or lacticin_mat
-                     or LD_lanti_pre or strep_PEQAXS) and not YcaO)"
-                     /supercluster_numbers="1"
-                     /tool="antismash"
      source          1..36668
                      /db_xref="taxon:83302"
                      /mol_type="genomic DNA"
@@ -161,16 +95,10 @@ FEATURES             Location/Qualifiers
      CDS             3963..5207
                      /codon_start=1
                      /gene="mibO"
-                     /gene_functions="biosynthetic (rule-based-clusters)
-                     lanthipeptide: p450"
                      /locus_tag="mibO"
                      /note="MibO"
                      /product="cytochrome P450"
                      /protein_id="ADK32549.1"
-                     /sec_met="Type: lanthipeptide"
-                     /sec_met="p450 (E-value: 1.8e-24, bitscore: 77.4, seeds:
-                     50, tool: rule-based-clusters)"
-                     /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MIFGPDFHRDPYPVYRRLRDEAPCHHEPALGLYALSRYEDVLAAL
                      RQPTVFSSAARAVASSAAGAGPYRGADTVSPERETAAEGPARSLLFLDPPEHQVLRQAV
@@ -243,16 +171,10 @@ FEATURES             Location/Qualifiers
      CDS             8616..8789
                      /codon_start=1
                      /gene="mibA"
-                     /gene_functions="biosynthetic (rule-based-clusters)
-                     lanthipeptide: TIGR03731"
                      /locus_tag="mibA"
                      /note="MibA"
                      /product="microbisporicin structural preproprotein"
                      /protein_id="ADK32554.1"
-                     /sec_met="Type: lanthipeptide"
-                     /sec_met="TIGR03731 (E-value: 1.2e-11, bitscore: 35.6,
-                     seeds: 23, tool: rule-based-clusters)"
-                     /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MPADILETRTSETEDLLDLDLSIGVEEITAGPAVTSWSLCTPGCT
                      SPGGGSNCSFCC"
@@ -261,23 +183,10 @@ FEATURES             Location/Qualifiers
      CDS             8907..12254
                      /codon_start=1
                      /gene="mibB"
-                     /gene_functions="biosynthetic (rule-based-clusters)
-                     lanthipeptide: Lant_dehyd_N"
-                     /gene_functions="biosynthetic (rule-based-clusters)
-                     lanthipeptide: Lant_dehyd_C"
-                     /gene_functions="biosynthetic (rule-based-clusters)
-                     lanthipeptide: Lant_dehydr_C"
                      /locus_tag="mibB"
                      /note="MibB"
                      /product="lantibiotic dehydratase"
                      /protein_id="ADK32555.1"
-                     /sec_met="Type: lanthipeptide"
-                     /sec_met="Lant_dehyd_N (E-value: 4.1e-23, bitscore: 72.7,
-                     seeds: 38, tool: rule-based-clusters); Lant_dehyd_C
-                     (E-value: 4e-115, bitscore: 376.1, seeds: 37, tool:
-                     rule-based-clusters); Lant_dehydr_C (E-value: 4.7e-32,
-                     bitscore: 102.8, seeds: 35, tool: rule-based-clusters)"
-                     /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MTDSPFRAWDVFMVRTPVGYAYPTPLSNSGFDSPASSPGFGEGEF
                      PPDAPVPSDVSGHGAGSSEASVRASGRPPAGDHLSLLRAACEDGPLMEAVELASPSLAG
@@ -304,16 +213,10 @@ FEATURES             Location/Qualifiers
      CDS             12251..13708
                      /codon_start=1
                      /gene="mibC"
-                     /gene_functions="biosynthetic (rule-based-clusters)
-                     lanthipeptide: LANC_like"
                      /locus_tag="mibC"
                      /note="MibC"
                      /product="lantibiotic cyclase"
                      /protein_id="ADK32556.1"
-                     /sec_met="Type: lanthipeptide"
-                     /sec_met="LANC_like (E-value: 4.2e-49, bitscore: 158.2,
-                     seeds: 47, tool: rule-based-clusters)"
-                     /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MTTVGRTSCGVTSDRHPARFLRGSAARRAARLVRLVAERLADPDA
                      VAGIAARPGNSVPVNGLSMWSPATLSHGFPGIAVFYAELGRIDPAWSAFAHRHLRAAAA
@@ -329,16 +232,10 @@ FEATURES             Location/Qualifiers
      CDS             13737..14420
                      /codon_start=1
                      /gene="mibD"
-                     /gene_functions="biosynthetic (rule-based-clusters)
-                     lanthipeptide: Flavoprotein"
                      /locus_tag="mibD"
                      /note="MibD"
                      /product="flavoprotein decarboxylase"
                      /protein_id="ADK32557.1"
-                     /sec_met="Type: lanthipeptide"
-                     /sec_met="Flavoprotein (E-value: 4.2e-25, bitscore: 79.3,
-                     seeds: 143, tool: rule-based-clusters)"
-                     /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MTAHSDAGGDPRPPERLLLGVSGSVAALNLPAYIYAFRAAGVARL
                      AVVLTPAAEGFLPAGALRPIVDAVHTEHDQGKGHVALSRWAQHLLVLPATANLLGCAAS
@@ -431,16 +328,10 @@ FEATURES             Location/Qualifiers
      CDS             19522..21228
                      /codon_start=1
                      /gene="mibH"
-                     /gene_functions="biosynthetic (rule-based-clusters)
-                     lanthipeptide: Trp_halogenase"
                      /locus_tag="mibH"
                      /note="MibH"
                      /product="tryptophan-5-halogenase"
                      /protein_id="ADK32563.1"
-                     /sec_met="Type: lanthipeptide"
-                     /sec_met="Trp_halogenase (E-value: 8e-115, bitscore: 375.2,
-                     seeds: 23, tool: rule-based-clusters)"
-                     /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MARSEESNTLARLFDVLGDDAAAAREWVTEPHRLIASNERLGTAP
                      EAPADDDPEAIRTVGVIGGGTAGYLTALALKAKRPWLDVALVESADIPIIGVGEATVSY
@@ -543,17 +434,10 @@ FEATURES             Location/Qualifiers
                      TTAPVDAPWGERYAEIVDPYGYAWKFFQLLPEPPQESLRAAYDVWFT"
      CDS             complement(26998..28380)
                      /codon_start=1
-                     /gene_functions="biosynthetic-additional
-                     (rule-based-clusters) Peptidase_S9 (E-value: 8.5e-12,
-                     bitscore: 36.1, seeds: 64, tool: rule-based-clusters)"
                      /locus_tag="ADK32571.1"
                      /note="PHB depolymerase family protein; orf-27"
                      /product="esterase"
                      /protein_id="ADK32571.1"
-                     /sec_met="Type: "
-                     /sec_met="Peptidase_S9 (E-value: 8.5e-12, bitscore: 36.1,
-                     seeds: 64, tool: rule-based-clusters)"
-                     /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MIRRLKVIVAAVALSLVAAGVLVGAQTASAASLTRVTNFGTNPTN
                      LNMYIYVPDRVAAHPALLVLVHYCSGSASGIFNGNGHDYVTAADRYGYIIVLPEATRSG

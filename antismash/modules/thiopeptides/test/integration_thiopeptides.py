@@ -7,29 +7,29 @@
 import os
 import unittest
 
-from helperlibs.bio import seqio
-
 import antismash
 from antismash.common import path, secmet
 from antismash.common.test import helpers
-from antismash.config import update_config, destroy_config, build_config
+from antismash.config import destroy_config, build_config
 from antismash.modules import thiopeptides
 
 
 class TestIntegration(unittest.TestCase):
     def setUp(self):
-        update_config({"cpus": 1})
+        self.config = build_config(["--minimal", "--enable-thiopeptides", "--cpus", "1"],
+                                   isolated=True, modules=antismash.get_all_modules())
 
     def tearDown(self):
         destroy_config()
 
     def test_nosiheptide(self):
         "Test thiopeptide prediction for nosiheptide - nosM"
-        rec = seqio.read(path.get_full_path(__file__, 'data', 'nosi_before_analysis.gbk'))
-        rec = secmet.Record.from_biopython(rec, "bacteria")
+        genbank = path.get_full_path(__file__, 'data', 'nosi_before_analysis.gbk')
+        result = helpers.run_and_regenerate_results_for_module(genbank, thiopeptides, self.config)
+        rec = secmet.Record.from_genbank(genbank, "bacteria")[0]
         existing_feature_count = rec.get_feature_count()
+        assert result.motifs[0].peptide_subclass == "Type I"
         assert not rec.get_cds_motifs()
-        result = thiopeptides.specific_analysis(rec)
         assert rec.get_feature_count() == existing_feature_count
 
         assert len(result.motifs) == 1
@@ -60,14 +60,13 @@ class TestIntegration(unittest.TestCase):
 
     def test_lactazole(self):
         "Test thiopeptide prediction for lactazole - lazA"
-        rec = seqio.read(path.get_full_path(__file__, 'data', 'lac_before_analysis.gbk'))
-        rec = secmet.Record.from_biopython(rec, "bacteria")
-        before_count = rec.get_feature_count()
-        assert not rec.get_cds_motifs()
-        results = thiopeptides.specific_analysis(rec)
+        genbank = path.get_full_path(__file__, 'data', 'lac_before_analysis.gbk')
+
+        results = helpers.run_and_regenerate_results_for_module(genbank, thiopeptides, self.config)
         assert len(results.motifs) == 1
-        # ensure record not adjusted yet
-        assert rec.get_feature_count() == before_count
+
+        rec = secmet.Record.from_genbank(genbank, "bacteria")[0]
+        before_count = rec.get_feature_count()
         assert not rec.get_cds_motifs()
 
         # add and check new motif added
@@ -76,6 +75,8 @@ class TestIntegration(unittest.TestCase):
         assert len(rec.get_cds_motifs()) == 1
         prepeptide = rec.get_cds_motifs()[0]
         assert prepeptide is results.motifs[0]
+
+        # check prepeptide values
         self.assertAlmostEqual(1362.5, prepeptide.monoisotopic_mass, places=1)
         self.assertAlmostEqual(1363.5, prepeptide.molecular_weight, places=1)
         assert prepeptide.leader == "MSDITASRVESLDLQDLDLSELTVTSLRDTVALPENGA"
@@ -90,31 +91,22 @@ class TestIntegration(unittest.TestCase):
         assert len(prepeptide.to_biopython()) == 3  # leader, core, tail
 
     def test_thiostrepton(self):
-        "Test thiopeptide prediction for thiostrepton"
-        rec = seqio.read(path.get_full_path(__file__, 'data', 'thiostrepton_before_analysis.gbk'))
-        rec = secmet.Record.from_biopython(rec, "bacteria")
-        before_count = rec.get_feature_count()
-        # two existing motifs
-        for motif in rec.get_cds_motifs():
-            assert motif.tool != "thiopeptides"
-        existing_motif_count = len(rec.get_cds_motifs())
-        results = thiopeptides.specific_analysis(rec)
-        assert len(results.motifs) == 1
-        # ensure record not adjusted yet
-        assert rec.get_feature_count() == before_count
-        results.add_to_record(rec)
-        # the new motif is added
-        assert rec.get_feature_count() == before_count + 1
-        assert len(rec.get_cds_motifs()) == existing_motif_count + 1
-        prepeptides = [motif for motif in rec.get_cds_motifs() if motif.tool == "thiopeptides"]
-        assert len(prepeptides) == 1
-        prepeptide = prepeptides[0]
-        # and the motif that was added is exactly the one in results
-        assert prepeptide is results.motifs[0]
-        self.check_thiostrepton_values(prepeptide)
+        def callback(outdir):
+            # make sure the html_output section was tested
+            with open(os.path.join(outdir, "index.html")) as handle:
+                content = handle.read()
+                assert "ACN52291.1 leader / core peptide, putative Type II" in content
 
-    def check_thiostrepton_values(self, prepeptide):
-        # check the values are as expected
+        genbank = path.get_full_path(__file__, 'data', 'thiostrepton_before_analysis.gbk')
+        result = helpers.run_and_regenerate_results_for_module(genbank, thiopeptides,
+                                                               self.config, callback=callback)
+
+        result = helpers.run_and_regenerate_results_for_module(genbank, thiopeptides, self.config)
+
+        assert len(result.motifs) == 1
+        prepeptide = result.motifs[0]
+
+        # check prepeptide values
         self.assertAlmostEqual(1639.6, prepeptide.monoisotopic_mass, places=1)
         self.assertAlmostEqual(1640.9, prepeptide.molecular_weight, places=1)
         assert prepeptide.leader == "MSNAALEIGVEGLTGLDVDTLEISDYMDETLLDGEDLTVTM"
@@ -129,28 +121,10 @@ class TestIntegration(unittest.TestCase):
                                  1736.9, 1754.9, 1772.9, 1790.9]):
             self.assertAlmostEqual(calc, expect, places=1)
 
-    def test_thiostrepton_full(self):
-        def callback(outdir):
-            # make sure the html_output section was tested
-            with open(os.path.join(outdir, "index.html")) as handle:
-                content = handle.read()
-                assert "ACN52291.1 leader / core peptide, putative Type II" in content
-        config = build_config(["--minimal", "--enable-thiopeptides"],
-                              isolated=True, modules=antismash.get_all_modules())
-
-        record_path = path.get_full_path(__file__, 'data', 'thiostrepton_before_analysis.gbk')
-        regenned_results = helpers.run_and_regenerate_results_for_module(record_path, thiopeptides,
-                                                                         config, callback=callback)
-        assert regenned_results
-        assert len(regenned_results.motifs) == 1
-        self.check_thiostrepton_values(regenned_results.motifs[0])
-
     def test_CP009369(self):  # pylint: disable=invalid-name
         " tests the special case HMM files for rodeo "
-        config = build_config(["--minimal", "--enable-thiopeptides"],
-                              isolated=True, modules=antismash.get_all_modules())
         record_path = path.get_full_path(__file__, 'data', 'CP009369.1.gbk')
-        results = helpers.run_and_regenerate_results_for_module(record_path, thiopeptides, config)
+        results = helpers.run_and_regenerate_results_for_module(record_path, thiopeptides, self.config)
         assert results
         assert len(results.motifs) == 1
         prepeptide = results.motifs[0]

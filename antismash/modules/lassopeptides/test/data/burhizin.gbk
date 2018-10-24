@@ -7,42 +7,7 @@ KEYWORDS    .
 SOURCE      cluster1 only
   ORGANISM  .
             .
-COMMENT     ##antiSMASH-Data-START##
-            Version      :: 5.0.0alpha-43c8f43
-            Run date     :: 2018-08-20 16:36:54
-            ##antiSMASH-Data-END##
 FEATURES             Location/Qualifiers
-     cluster         1..20844
-                     /aStool="rule-based-clusters"
-                     /cluster_number="1"
-                     /core_location="[8417:10897]"
-                     /cutoff="10000"
-                     /detection_rule="(PF13471 and PF00733 or micJ25 or mcjC)"
-                     /neighbourhood="10000"
-                     /parent_cluster_number="1"
-                     /product="lassopeptide"
-                     /tool="antismash"
-     cluster_core    8418..10897
-                     /aStool="rule-based-clusters"
-                     /cluster_number="1"
-                     /cutoff="10000"
-                     /detection_rule="(PF13471 and PF00733 or micJ25 or mcjC)"
-                     /neighbourhood="10000"
-                     /parent_cluster_number="1"
-                     /product="lassopeptide"
-     supercluster    1..20844
-                     /child_cluster="1"
-                     /detection_rules="(PF13471 and PF00733 or micJ25 or mcjC)"
-                     /kind="single"
-                     /product="lassopeptide"
-                     /supercluster_number="1"
-                     /tool="antismash"
-     region          1..20844
-                     /product="lassopeptide"
-                     /region_number="1"
-                     /rules="(PF13471 and PF00733 or micJ25 or mcjC)"
-                     /supercluster_numbers="1"
-                     /tool="antismash"
      CDS             138..821
                      /locus_tag="ctg1_orf02098"
                      /note="Glimmer score: 10.32"
@@ -135,15 +100,9 @@ FEATURES             Location/Qualifiers
                      DIFKHLYERYRHTTRLVIAHRLAAIQQADLILVMQEGAIVETGTHRSFWRNRAFMPICG
                      INKLIHRQHDLTASIRQKQSMRR"
      CDS             complement(8418..10160)
-                     /gene_functions="biosynthetic (rule-based-clusters)
-                     lassopeptide: PF00733"
                      /locus_tag="ctg1_orf02114"
                      /note="Glimmer score: 4.45"
                      /product="ctg1_orf02114"
-                     /sec_met="Type: lassopeptide"
-                     /sec_met="PF00733 (E-value: 2.2e-09, bitscore: 28.1, seeds:
-                     104, tool: rule-based-clusters)"
-                     /sec_met="Kind: biosynthetic"
                      /transl_table=1
                      /translation="MTLLGIAYPQAQDDWAQKQDWTLVRDPSHRTAGALWHQSEPSTRV
                      LCGRLGTSAYYFYGSAFSKQDHREIQEGELQAMVAEGPARLMAQCWGRYLFISFDLAAK
@@ -157,15 +116,9 @@ FEATURES             Location/Qualifiers
                      LLGLRDHREHVMAVCLEGWLAKAGYIDVARTHDAIQQSSKGNSKHFMDLLHLYAAELFI
                      QSWQ"
      CDS             complement(10157..10897)
-                     /gene_functions="biosynthetic (rule-based-clusters)
-                     lassopeptide: PF13471"
                      /locus_tag="ctg1_orf02115"
                      /note="Glimmer score: 6.31"
                      /product="ctg1_orf02115"
-                     /sec_met="Type: lassopeptide"
-                     /sec_met="PF13471 (E-value: 5.9e-21, bitscore: 65.5, seeds:
-                     84, tool: rule-based-clusters)"
-                     /sec_met="Kind: biosynthetic"
                      /transl_table=1
                      /translation="MPHHLMPHVFGACFAQQIILLDVVRDRYAVLTERQSAALAQQLGL
                      SDARFARVEAVQSASILEELKRAQWISVTSFAEADAKLNMLSPSPTTGGMSANGWKLPE

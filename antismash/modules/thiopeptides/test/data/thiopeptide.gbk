@@ -1,9 +1,9 @@
 LOCUS       BGC0001155.1           26287 bp    DNA              UNK 01-JAN-1980
-DEFINITION  GE2270 biosynthetic gene cluster
+DEFINITION  GE2270 biosynthetic gene cluster.
 ACCESSION   BGC0001155
 VERSION     BGC0001155.1
 KEYWORDS    .
-SOURCE      .
+SOURCE      
   ORGANISM  . .
             .
 FEATURES             Location/Qualifiers
@@ -130,8 +130,6 @@ FEATURES             Location/Qualifiers
                      /transl_table=11
                      /note="coproporphyrinogen III oxidase-related Fe-S
                      oxidoreductase"
-                     /note="smCOG: SMCOG1277:Radical_SAM_domain_protein (Score:
-                     57.5; E-value: 1.7e-17);"
                      /db_xref="GI:552968826"
                      /translation="MLIYVNVPFCNSKCHFCDWVTEVPLADLRLTPDSSPRQRYIAALV
                      QQIETHAPVLTGFGYRPEIMYWGGGTASILSIDEIEAVAGALSSRFDMSGLTEATIEGS
@@ -289,8 +287,6 @@ FEATURES             Location/Qualifiers
                      /transl_table=11
                      /note="coproporphyrinogen III oxidase-related Fe-S
                      oxidoreductase"
-                     /note="smCOG: SMCOG1277:Radical_SAM_domain_protein (Score:
-                     56.0; E-value: 4.6e-17);"
                      /db_xref="GI:552968835"
                      /translation="MLLYVNVPFCNSKCHFCDWVVDVPVSDLRLTPVSAGRIDYLEALR
                      TQIRIHAPALREAGYRSEVMYWGGGTATVLTEREIEQTYACLAAELDLSSLAEATIEGS
@@ -308,8 +304,6 @@ FEATURES             Location/Qualifiers
                      /codon_start=1
                      /transl_table=11
                      /note="O-methyl transferase"
-                     /note="smCOG: SMCOG1042:O-methyltransferase (Score: 295.5;
-                     E-value: 8.7e-90);"
                      /db_xref="GI:552968836"
                      /translation="MRTVLAAADLATPMAVRVAATLRLADRIAAGTDSAAALAAAAGAD
                      EAALTRLLRYLVARDIFREPSPGRFALSPAAELLRGDRPERLRDWLDLTGPIGRADLAF
@@ -352,8 +346,6 @@ FEATURES             Location/Qualifiers
                      /codon_start=1
                      /transl_table=11
                      /note="translation elongation factor; GTPase"
-                     /note="smCOG: SMCOG1190:GTP-binding_protein_LepA (Score:
-                     231.0; E-value: 4.9e-70);"
                      /db_xref="GI:552968839"
                      /translation="MATTLDLAKVRNIGIMAHIDAGKTTTTERILFYTGITYKIGEVHE
                      GAATMDWMEQEQERGITITSAATTCEWLGHTINIIDTPGHVDFTIEVERSLRVLDGAVA
@@ -377,8 +369,6 @@ FEATURES             Location/Qualifiers
                      /codon_start=1
                      /transl_table=11
                      /note="translation elongation factor; GTPase"
-                     /note="smCOG: SMCOG1190:GTP-binding_protein_LepA (Score:
-                     354.8; E-value: 7.425e-107);"
                      /db_xref="GI:552968840"
                      /translation="MAKAKFERTKPHMNIGTIGHIDHGKTTLTAAITKVLHDRYPELNK
                      ATPFDKIDKAPEEKARGITISIAHVEYQTEKRHYAHVDCPGHADYVKNMITGAAQMDGA

@@ -1,5 +1,5 @@
 LOCUS       BGC0000535.1           15016 bp    DNA              UNK 01-JAN-1980
-DEFINITION  Nisin A biosynthetic gene cluster
+DEFINITION  Nisin A biosynthetic gene cluster.
 ACCESSION   BGC0000535
 VERSION     BGC0000535.1
 KEYWORDS    .
@@ -16,30 +16,6 @@ FEATURES             Location/Qualifiers
                      /isolation_source="raw milk"
                      /strain="M78"
                      /organism="Lactococcus lactis subsp. lactis"
-     cluster         1..15016
-                     /note="Cluster number: 1"
-                     /note="Detection rule(s) for this cluster type:
-                     lanthipeptide: (cluster(LANC_like,Flavoprotein) or
-                     cluster(LANC_like,Trp_halogenase) or
-                     cluster(LANC_like,p450) or (LANC_like & Pkinase) or
-                     (LANC_like & DUF4135) or cluster(LANC_like,Lant_dehyd_N) or
-                     cluster(LANC_like,Lant_dehyd_C) or
-                     cluster(LANC_like,adh_short) or
-                     cluster(LANC_like,adh_short_C2) or TIGR03731 or Antimicr18
-                     or Gallidermin or L_biotic_A or TIGR03731 or leader_d or
-                     leader_eh or leader_abc or mature_d or mature_ab or
-                     mature_a or mature_b or mature_ha or mature_h_beta or
-                     lacticin_l or lacticin_mat or LD_lanti_pre or
-                     strep_PEQAXS);"
-                     /cutoff=20000
-                     /product="lanthipeptide"
-                     /contig_edge="True"
-                     /extension=10000
-     CDS_motif       828..896
-                     /note="leader peptide"
-                     /note="lanthipeptide"
-                     /note="predicted leader seq: MSTKDFNLDLVSVSKKDSGASPR"
-                     /locus_tag="nisA"
      gene            828..1001
                      /gene="nisA"
      CDS             828..1001
@@ -48,30 +24,12 @@ FEATURES             Location/Qualifiers
                      /transl_table=11
                      /note="prenisin; nisin A structural protein"
                      /db_xref="GI:299832737"
-                     /sec_met="Type: lanthipeptide"
-                     /sec_met="Domains detected: TIGR03731 (E-value: 1.3e-24,
-                     bitscore: 75.6, seeds: 23); mature_a (E-value: 6.5e-08,
-                     bitscore: 21.5, seeds: 5)"
-                     /sec_met="Kind: biosynthetic"
                      /translation="MSTKDFNLDLVSVSKKDSGASPRITSISLCTPGCKTGALMGCNMK
                      TATCHCSIHVSK"
                      /gene="nisA"
                      /protein_id="ADJ56352.1"
      misc_feature    828..14152
                      /note="nisin biosynthetic gene cluster"
-     CDS_motif       897..1001
-                     /note="core peptide"
-                     /note="lanthipeptide"
-                     /note="monoisotopic mass: 3333.6"
-                     /note="molecular weight: 3336.0"
-                     /note="alternative weights: 3354.0; 3372.1; 3390.1; 3408.1"
-                     /note="number of bridges: 5"
-                     /note="predicted core seq:
-                     ITSISLCTPGCKTGALMGCNMKTATCHCSIHVSK"
-                     /note="predicted class: Class-I"
-                     /note="score: 26.70"
-                     /note="RODEO score: 32"
-                     /locus_tag="nisA"
      gene            1109..4090
                      /gene="nisB"
      CDS             1109..4090
@@ -80,16 +38,7 @@ FEATURES             Location/Qualifiers
                      /codon_start=1
                      /transl_table=11
                      /note="nisin biosynthesis protein"
-                     /note="smCOG:
-                     SMCOG1155:Lantibiotic_dehydratase_domain_protein (Score:
-                     859.9; E-value: 3.6e-260);"
                      /db_xref="GI:299832738"
-                     /sec_met="Type: lanthipeptide"
-                     /sec_met="Domains detected: Lant_dehyd_N (E-value: 4.5e-25,
-                     bitscore: 77.4, seeds: 38); Lant_dehyd_C (E-value:
-                     6.8e-120, bitscore: 390.3, seeds: 37); Lant_dehydr_C
-                     (E-value: 2.8e-18, bitscore: 56.0, seeds: ?)"
-                     /sec_met="Kind: biosynthetic"
                      /translation="MIKSSFKAQPFLVRNTILSPNDKRSFTEYTQVIETVSKNKVFLEQ
                      LLLANPKLYDVMQKYNAGLLKKKRVKKLFESIYKYYKRSYLRSTPFGLFSETSIGVFSK
                      SSQYKLMGKTTKGIRLDTQWLIRLVHKMEVDFSKKLSFTRNNANYKFGDRVFQVYTINS
@@ -118,8 +67,6 @@ FEATURES             Location/Qualifiers
                      /codon_start=1
                      /transl_table=11
                      /note="nisin transport ATP-binding protein"
-                     /note="smCOG: SMCOG1000:ABC_transporter_ATP-binding_protein
-                     (Score: 163.7; E-value: 9.5e-50);"
                      /db_xref="GI:299832739"
                      /translation="MDEVKEFTSKQFFNTLLTLPSTLKLIFQLEKRYAIYLIVLNAITA
                      FVPLASLFIYQDLINSVLGSGRHLINIIIIYFIVQVITTVLGQLESYVSGKFDMRLSYS
@@ -142,14 +89,7 @@ FEATURES             Location/Qualifiers
                      /codon_start=1
                      /transl_table=11
                      /note="nisin biosynthesis protein"
-                     /note="smCOG:
-                     SMCOG1140:Lanthionine_synthetase_C_family_protein (Score:
-                     337.0; E-value: 2.6e-102);"
                      /db_xref="GI:299832740"
-                     /sec_met="Type: lanthipeptide"
-                     /sec_met="Domains detected: LANC_like (E-value: 8.3e-76,
-                     bitscore: 244.5, seeds: 47)"
-                     /sec_met="Kind: biosynthetic"
                      /translation="MNKKNIKRNVEKIIAQWDERTRKNKENFDFGELTLSTGLPGIILM
                      LAELKNKDNSKIYQKKIDNYIEYIVSKLSTYGLLTGSLYSGAAGIALSILHLREDDEKY
                      KNLLDSLNRYIEYFVREKIEGFNLENITPPDYDVIEGLSGILSYLLLINDEQYDDLKIL
@@ -184,14 +124,7 @@ FEATURES             Location/Qualifiers
                      /codon_start=1
                      /transl_table=11
                      /note="nisin leader peptide-processing serine protease"
-                     /note="smCOG:
-                     SMCOG1075:alkaline_serine_protease,_subtilase_family
-                     (Score: 249.7; E-value: 1.2e-75);"
                      /db_xref="GI:299832742"
-                     /sec_met="Type: none"
-                     /sec_met="Domains detected: Peptidase_S8 (E-value: 2.3e-50,
-                     bitscore: 161.0, seeds: ?)"
-                     /sec_met="Kind: biosynthetic"
                      /translation="MKKILGFLFIVCSLGLSATVHGETTNSQQLLSNNINTELINHNSN
                      AILSSTEGSTTDSINLGAQSPAVKSTTRTELDVTGAAKTLLQTSAVQKEMKVSLQETQV
                      SSEFSKRDSVTNKEAVPVSKDELLEQSEVVVSTSSIQKNKILDNKKNRANFVTSSPLIK
@@ -215,8 +148,6 @@ FEATURES             Location/Qualifiers
                      /codon_start=1
                      /transl_table=11
                      /note="nisin biosynthesis regulatory protein"
-                     /note="smCOG: SMCOG1008:response_regulator (Score: 180.3;
-                     E-value: 6.6e-55);"
                      /db_xref="GI:299832743"
                      /translation="MYKILIVDDDQEILKLMKTALEMRNYEVAMHQNISLPLDITDFQG
                      FDLILLDIMMSNIEGTEICKRIRREISTPIIFVSAKDTEEDIINGLGIGGDDYITKPFS
@@ -234,8 +165,6 @@ FEATURES             Location/Qualifiers
                      /codon_start=1
                      /transl_table=11
                      /note="nisin biosynthesis sensor protein"
-                     /note="smCOG: SMCOG1003:sensor_histidine_kinase (Score:
-                     102.5; E-value: 5e-31);"
                      /db_xref="GI:299832744"
                      /translation="MGKKYSMRRRIWQAVIEIIIGTCLLILLLLGLTFFLRQIGQISGS
                      ETIRLSLDSDNLTISDIERDMKHYPYDYIIFDNDTSKILGGHYVKSDVPSFVASKQSSH
@@ -256,8 +185,6 @@ FEATURES             Location/Qualifiers
                      /transl_table=11
                      /note="nisin transport/immunity protein; component of
                      ABC-transporter"
-                     /note="smCOG: SMCOG1000:ABC_transporter_ATP-binding_protein
-                     (Score: 173.7; E-value: 8.2e-53);"
                      /db_xref="GI:299832745"
                      /translation="MQVKIQNLSKTYKEKQVLQDISFDIKSGTVCGLLGVNGAGKSTLM
                      KILFGLISADTGKIFFDGQEKTNNQLGALIEAPAIYMNLSAFDNLKTKALLFGISDKRI
