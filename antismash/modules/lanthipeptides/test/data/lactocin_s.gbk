@@ -60,10 +60,6 @@ REFERENCE   7  (bases 1 to 15996)
   JOURNAL   Submitted (21-FEB-2001) Morten Skaugen, Agricultural University of
             Norway, Chemistry and Biotechnology, P.O.Box 5051, N-1432 As, Norway
 COMMENT     On Mar 11, 2001 this sequence version replaced gi:1150478.
-            ##antiSMASH-Data-START##
-            Version      :: 5.0.0alpha-43c8f43
-            Run date     :: 2018-08-20 16:31:27
-            ##antiSMASH-Data-END##
 FEATURES             Location/Qualifiers
      CDS             <1..237
                      /codon_start=1
@@ -81,68 +77,6 @@ FEATURES             Location/Qualifiers
                      /mol_type="genomic DNA"
                      /organism="Lactobacillus sakei"
                      /strain="L45"
-     cluster         1..15996
-                     /aStool="rule-based-clusters"
-                     /cluster_number="1"
-                     /core_location="[6884:9662](+)"
-                     /cutoff="20000"
-                     /detection_rule="((LANC_like and (Flavoprotein or
-                     Trp_halogenase or p450 or Lant_dehyd_N or Lant_dehyd_C or
-                     Lant_dehydr_C or tsrC or adh_short or adh_short_C2) or
-                     cds(LANC_like and (Pkinase or DUF4135)) or TIGR03731 or
-                     Antimicr18 or Gallidermin or L_biotic_A or leader_d or
-                     leader_eh or leader_abc or mature_d or mature_ab or
-                     mature_a or mature_b or mature_ha or mature_h_beta or
-                     lacticin_l or lacticin_mat or LD_lanti_pre or strep_PEQAXS)
-                     and not YcaO)"
-                     /neighbourhood="10000"
-                     /parent_cluster_number="1"
-                     /product="lanthipeptide"
-                     /tool="antismash"
-     cluster_core    6885..9662
-                     /aStool="rule-based-clusters"
-                     /cluster_number="1"
-                     /cutoff="20000"
-                     /detection_rule="((LANC_like and (Flavoprotein or
-                     Trp_halogenase or p450 or Lant_dehyd_N or Lant_dehyd_C or
-                     Lant_dehydr_C or tsrC or adh_short or adh_short_C2) or
-                     cds(LANC_like and (Pkinase or DUF4135)) or TIGR03731 or
-                     Antimicr18 or Gallidermin or L_biotic_A or leader_d or
-                     leader_eh or leader_abc or mature_d or mature_ab or
-                     mature_a or mature_b or mature_ha or mature_h_beta or
-                     lacticin_l or lacticin_mat or LD_lanti_pre or strep_PEQAXS)
-                     and not YcaO)"
-                     /neighbourhood="10000"
-                     /parent_cluster_number="1"
-                     /product="lanthipeptide"
-     supercluster    1..15996
-                     /child_cluster="1"
-                     /detection_rules="((LANC_like and (Flavoprotein or
-                     Trp_halogenase or p450 or Lant_dehyd_N or Lant_dehyd_C or
-                     Lant_dehydr_C or tsrC or adh_short or adh_short_C2) or
-                     cds(LANC_like and (Pkinase or DUF4135)) or TIGR03731 or
-                     Antimicr18 or Gallidermin or L_biotic_A or leader_d or
-                     leader_eh or leader_abc or mature_d or mature_ab or
-                     mature_a or mature_b or mature_ha or mature_h_beta or
-                     lacticin_l or lacticin_mat or LD_lanti_pre or strep_PEQAXS)
-                     and not YcaO)"
-                     /kind="single"
-                     /product="lanthipeptide"
-                     /supercluster_number="1"
-                     /tool="antismash"
-     region          1..15996
-                     /product="lanthipeptide"
-                     /region_number="1"
-                     /rules="((LANC_like and (Flavoprotein or Trp_halogenase or
-                     p450 or Lant_dehyd_N or Lant_dehyd_C or Lant_dehydr_C or
-                     tsrC or adh_short or adh_short_C2) or cds(LANC_like and
-                     (Pkinase or DUF4135)) or TIGR03731 or Antimicr18 or
-                     Gallidermin or L_biotic_A or leader_d or leader_eh or
-                     leader_abc or mature_d or mature_ab or mature_a or mature_b
-                     or mature_ha or mature_h_beta or lacticin_l or lacticin_mat
-                     or LD_lanti_pre or strep_PEQAXS) and not YcaO)"
-                     /supercluster_numbers="1"
-                     /tool="antismash"
      regulatory      217..222
                      /note="ORF116"
                      /regulatory_class="ribosome_binding_site"
@@ -384,21 +318,11 @@ FEATURES             Location/Qualifiers
                      /db_xref="InterPro:IPR017146"
                      /db_xref="UniProtKB/TrEMBL:Q48849"
                      /gene="lasM"
-                     /gene_functions="biosynthetic (rule-based-clusters)
-                     lanthipeptide: DUF4135"
-                     /gene_functions="biosynthetic (rule-based-clusters)
-                     lanthipeptide: LANC_like"
                      /locus_tag="lasM"
                      /note="essential for lactocin S production; probably
                      involved in post-translational peptide modification"
                      /product="hypothetical protein"
                      /protein_id="CAA91110.1"
-                     /sec_met="Type: lanthipeptide"
-                     /sec_met="LANC_like (E-value: 1.2e-24, bitscore: 77.0,
-                     seeds: 47, tool: rule-based-clusters); DUF4135 (E-value:
-                     2.5e-62, bitscore: 201.5, seeds: 79, tool:
-                     rule-based-clusters)"
-                     /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MNEFEKKINELCFHYTLNLIFKDNLINLKKELNKFNNKNEIKMNL
                      YFSISQSIIYPFTDILLDLYHTELKTNSMLGNNSSERLKSFVSEFEQDHWEKINLTYPV
@@ -528,17 +452,10 @@ FEATURES             Location/Qualifiers
                      /db_xref="InterPro:IPR015500"
                      /db_xref="UniProtKB/TrEMBL:Q48854"
                      /gene="lasP"
-                     /gene_functions="biosynthetic-additional
-                     (rule-based-clusters) Peptidase_S8 (E-value: 3.3e-15,
-                     bitscore: 46.3, seeds: 43, tool: rule-based-clusters)"
                      /locus_tag="lasP"
                      /note="probably involved in pre-lactocin S processing"
                      /product="serine protease"
                      /protein_id="CAA91115.1"
-                     /sec_met="Type: "
-                     /sec_met="Peptidase_S8 (E-value: 3.3e-15, bitscore: 46.3,
-                     seeds: 43, tool: rule-based-clusters)"
-                     /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MTVLLRDINSAILTEYRLHMYSSRYTSSIALLDENINTTHSYLQK
                      HFSSISGHNNTASIHGTAMAGVLSIASLSKQKLTVFNTLDKYHQRTRKSVISALKMAII

@@ -12,10 +12,6 @@ REFERENCE   1  (bases 1 to 6400)
   TITLE     Direct Submission
   JOURNAL   Submitted (21-FEB-2009) TU Berlin, Strasse des 17. Juni 124, 10623
             Berlin, Germany
-COMMENT     ##antiSMASH-Data-START##
-            Version      :: 5.0.0alpha-43c8f43
-            Run date     :: 2018-08-20 16:32:29
-            ##antiSMASH-Data-END##
 FEATURES             Location/Qualifiers
      gene            1..2589
                      /gene="labKC"
@@ -29,20 +25,10 @@ FEATURES             Location/Qualifiers
                      /db_xref="InterPro:IPR020636"
                      /db_xref="UniProtKB/TrEMBL:C0MP58"
                      /gene="labKC"
-                     /gene_functions="biosynthetic (rule-based-clusters)
-                     lanthipeptide: Pkinase"
-                     /gene_functions="biosynthetic (rule-based-clusters)
-                     lanthipeptide: LANC_like"
                      /locus_tag="labKC"
                      /note="contains C-terminal lanC-domain"
                      /product="serine/threonine kinase"
                      /protein_id="CAX48971.1"
-                     /sec_met="Type: lanthipeptide"
-                     /sec_met="LANC_like (E-value: 5.3e-11, bitscore: 30.2,
-                     seeds: 47, tool: rule-based-clusters); Pkinase (E-value:
-                     4.4e-15, bitscore: 44.1, seeds: 54, tool:
-                     rule-based-clusters)"
-                     /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MDLRYHAYAMADPVFYDSPSSDTRETDGYSDDLPLPDGWERRRVG
                      VWVMQGHDGLTMPDQGWKIHVSAGLDNAWPVLELVAKYCVEQEMPFKFLRSRRTLLARS
@@ -63,68 +49,6 @@ FEATURES             Location/Qualifiers
                      /db_xref="taxon:182080"
                      /mol_type="genomic DNA"
                      /organism="Actinomadura namibiensis"
-     cluster         1..6400
-                     /aStool="rule-based-clusters"
-                     /cluster_number="1"
-                     /core_location="[0:2589](+)"
-                     /cutoff="20000"
-                     /detection_rule="((LANC_like and (Flavoprotein or
-                     Trp_halogenase or p450 or Lant_dehyd_N or Lant_dehyd_C or
-                     Lant_dehydr_C or tsrC or adh_short or adh_short_C2) or
-                     cds(LANC_like and (Pkinase or DUF4135)) or TIGR03731 or
-                     Antimicr18 or Gallidermin or L_biotic_A or leader_d or
-                     leader_eh or leader_abc or mature_d or mature_ab or
-                     mature_a or mature_b or mature_ha or mature_h_beta or
-                     lacticin_l or lacticin_mat or LD_lanti_pre or strep_PEQAXS)
-                     and not YcaO)"
-                     /neighbourhood="10000"
-                     /parent_cluster_number="1"
-                     /product="lanthipeptide"
-                     /tool="antismash"
-     cluster_core    1..2589
-                     /aStool="rule-based-clusters"
-                     /cluster_number="1"
-                     /cutoff="20000"
-                     /detection_rule="((LANC_like and (Flavoprotein or
-                     Trp_halogenase or p450 or Lant_dehyd_N or Lant_dehyd_C or
-                     Lant_dehydr_C or tsrC or adh_short or adh_short_C2) or
-                     cds(LANC_like and (Pkinase or DUF4135)) or TIGR03731 or
-                     Antimicr18 or Gallidermin or L_biotic_A or leader_d or
-                     leader_eh or leader_abc or mature_d or mature_ab or
-                     mature_a or mature_b or mature_ha or mature_h_beta or
-                     lacticin_l or lacticin_mat or LD_lanti_pre or strep_PEQAXS)
-                     and not YcaO)"
-                     /neighbourhood="10000"
-                     /parent_cluster_number="1"
-                     /product="lanthipeptide"
-     supercluster    1..6400
-                     /child_cluster="1"
-                     /detection_rules="((LANC_like and (Flavoprotein or
-                     Trp_halogenase or p450 or Lant_dehyd_N or Lant_dehyd_C or
-                     Lant_dehydr_C or tsrC or adh_short or adh_short_C2) or
-                     cds(LANC_like and (Pkinase or DUF4135)) or TIGR03731 or
-                     Antimicr18 or Gallidermin or L_biotic_A or leader_d or
-                     leader_eh or leader_abc or mature_d or mature_ab or
-                     mature_a or mature_b or mature_ha or mature_h_beta or
-                     lacticin_l or lacticin_mat or LD_lanti_pre or strep_PEQAXS)
-                     and not YcaO)"
-                     /kind="single"
-                     /product="lanthipeptide"
-                     /supercluster_number="1"
-                     /tool="antismash"
-     region          1..6400
-                     /product="lanthipeptide"
-                     /region_number="1"
-                     /rules="((LANC_like and (Flavoprotein or Trp_halogenase or
-                     p450 or Lant_dehyd_N or Lant_dehyd_C or Lant_dehydr_C or
-                     tsrC or adh_short or adh_short_C2) or cds(LANC_like and
-                     (Pkinase or DUF4135)) or TIGR03731 or Antimicr18 or
-                     Gallidermin or L_biotic_A or leader_d or leader_eh or
-                     leader_abc or mature_d or mature_ab or mature_a or mature_b
-                     or mature_ha or mature_h_beta or lacticin_l or lacticin_mat
-                     or LD_lanti_pre or strep_PEQAXS) and not YcaO)"
-                     /supercluster_numbers="1"
-                     /tool="antismash"
      gene            2599..2721
                      /gene="labA1"
      CDS             2599..2721

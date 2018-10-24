@@ -3,7 +3,7 @@ DEFINITION  Bacillus cereus strain FM1, complete genome.
 ACCESSION   CP009369
 VERSION     CP009369.1
 KEYWORDS    .
-SOURCE      .
+SOURCE      
   ORGANISM  .
             .
 FEATURES             Location/Qualifiers
@@ -106,10 +106,6 @@ FEATURES             Location/Qualifiers
                      /locus_tag="BG03_4576"
                      /note="thiopep_ocin: thiopeptide-type bacteriocin
                      biosynthesis domain protein"
-                     /note="smCOG:
-                     SMCOG1155:Lantibiotic_dehydratase_domain_protein (Score:
-                     71.6; E-value: 1.092e-21);"
-                     /note="smCOG tree PNG image: smcogs/BG03_4576.png"
                      /product="thiopeptide-type bacteriocin biosynthesis domain
                      protein"
                      /protein_id="AJG92769.1"
@@ -185,9 +181,6 @@ FEATURES             Location/Qualifiers
                      /codon_start=1
                      /db_xref="GI:753362163"
                      /locus_tag="BG03_4580"
-                     /note="smCOG: SMCOG1065:ABC-2_type_transporter (Score:
-                     45.0; E-value: 1.3e-13);"
-                     /note="smCOG tree PNG image: smcogs/BG03_4580.png"
                      /product="ABC-2 type transporter family protein"
                      /protein_id="AJG95087.1"
                      /transl_table=11
@@ -202,9 +195,6 @@ FEATURES             Location/Qualifiers
                      /codon_start=1
                      /db_xref="GI:753361428"
                      /locus_tag="BG03_4581"
-                     /note="smCOG: SMCOG1000:ABC_transporter_ATP-binding_protein
-                     (Score: 179.6; E-value: 1.3e-54);"
-                     /note="smCOG tree PNG image: smcogs/BG03_4581.png"
                      /product="ABC transporter family protein"
                      /protein_id="AJG94352.1"
                      /transl_table=11
@@ -220,10 +210,6 @@ FEATURES             Location/Qualifiers
                      /db_xref="GI:753360026"
                      /locus_tag="BG03_4582"
                      /note="lantibiotic dehydratase, C terminus family protein"
-                     /note="smCOG:
-                     SMCOG1155:Lantibiotic_dehydratase_domain_protein (Score:
-                     53.6; E-value: 2.944e-16);"
-                     /note="smCOG tree PNG image: smcogs/BG03_4582.png"
                      /product="hypothetical protein"
                      /protein_id="AJG92950.1"
                      /transl_table=11
@@ -329,9 +315,6 @@ FEATURES             Location/Qualifiers
                      /codon_start=1
                      /db_xref="GI:753359520"
                      /locus_tag="BG03_4589"
-                     /note="smCOG: SMCOG1000:ABC_transporter_ATP-binding_protein
-                     (Score: 157.2; E-value: 9.3e-48);"
-                     /note="smCOG tree PNG image: smcogs/BG03_4589.png"
                      /product="ABC transporter family protein"
                      /protein_id="AJG92444.1"
                      /transl_table=11

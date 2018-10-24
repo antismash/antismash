@@ -3,76 +3,10 @@ DEFINITION  Streptomyces coelicolor A3(2) chromosome, complete genome.
 ACCESSION   NC_003888
 VERSION     NC_003888.3
 KEYWORDS    .
-SOURCE      .
+SOURCE      
   ORGANISM  .
             .
-COMMENT     ##antiSMASH-Data-START##
-            Version      :: 5.0.0alpha-43c8f43
-            Run date     :: 2018-08-20 16:11:10
-            ##antiSMASH-Data-END##
 FEATURES             Location/Qualifiers
-     cluster         1..35098
-                     /aStool="rule-based-clusters"
-                     /cluster_number="1"
-                     /core_location="[9999:25098]"
-                     /cutoff="20000"
-                     /detection_rule="((LANC_like and (Flavoprotein or
-                     Trp_halogenase or p450 or Lant_dehyd_N or Lant_dehyd_C or
-                     Lant_dehydr_C or tsrC or adh_short or adh_short_C2) or
-                     cds(LANC_like and (Pkinase or DUF4135)) or TIGR03731 or
-                     Antimicr18 or Gallidermin or L_biotic_A or leader_d or
-                     leader_eh or leader_abc or mature_d or mature_ab or
-                     mature_a or mature_b or mature_ha or mature_h_beta or
-                     lacticin_l or lacticin_mat or LD_lanti_pre or strep_PEQAXS)
-                     and not YcaO)"
-                     /neighbourhood="10000"
-                     /parent_cluster_number="1"
-                     /product="lanthipeptide"
-                     /tool="antismash"
-     cluster_core    10000..25098
-                     /aStool="rule-based-clusters"
-                     /cluster_number="1"
-                     /cutoff="20000"
-                     /detection_rule="((LANC_like and (Flavoprotein or
-                     Trp_halogenase or p450 or Lant_dehyd_N or Lant_dehyd_C or
-                     Lant_dehydr_C or tsrC or adh_short or adh_short_C2) or
-                     cds(LANC_like and (Pkinase or DUF4135)) or TIGR03731 or
-                     Antimicr18 or Gallidermin or L_biotic_A or leader_d or
-                     leader_eh or leader_abc or mature_d or mature_ab or
-                     mature_a or mature_b or mature_ha or mature_h_beta or
-                     lacticin_l or lacticin_mat or LD_lanti_pre or strep_PEQAXS)
-                     and not YcaO)"
-                     /neighbourhood="10000"
-                     /parent_cluster_number="1"
-                     /product="lanthipeptide"
-     supercluster    1..35098
-                     /child_cluster="1"
-                     /detection_rules="((LANC_like and (Flavoprotein or
-                     Trp_halogenase or p450 or Lant_dehyd_N or Lant_dehyd_C or
-                     Lant_dehydr_C or tsrC or adh_short or adh_short_C2) or
-                     cds(LANC_like and (Pkinase or DUF4135)) or TIGR03731 or
-                     Antimicr18 or Gallidermin or L_biotic_A or leader_d or
-                     leader_eh or leader_abc or mature_d or mature_ab or
-                     mature_a or mature_b or mature_ha or mature_h_beta or
-                     lacticin_l or lacticin_mat or LD_lanti_pre or strep_PEQAXS)
-                     and not YcaO)"
-                     /kind="single"
-                     /product="lanthipeptide"
-                     /supercluster_number="1"
-                     /tool="antismash"
-     region          1..35098
-                     /product="lanthipeptide"
-                     /region_number="1"
-                     /rules="((LANC_like and (Flavoprotein or Trp_halogenase or
-                     p450 or Lant_dehyd_N or Lant_dehyd_C or Lant_dehydr_C or
-                     tsrC or adh_short or adh_short_C2) or cds(LANC_like and
-                     (Pkinase or DUF4135)) or TIGR03731 or Antimicr18 or
-                     Gallidermin or L_biotic_A or leader_d or leader_eh or
-                     leader_abc or mature_d or mature_ab or mature_a or mature_b
-                     or mature_ha or mature_h_beta or lacticin_l or lacticin_mat
-                     or LD_lanti_pre or strep_PEQAXS) and not YcaO)"
-                     /supercluster_numbers="1"
-                     /tool="antismash"
      gene            796..1821
                      /db_xref="GeneID:1095671"
                      /gene_synonym="SCJ9A.26"
@@ -383,8 +317,6 @@ FEATURES             Location/Qualifiers
                      /codon_start=1
                      /db_xref="GI:21218808"
                      /db_xref="GeneID:1095680"
-                     /gene_functions="biosynthetic (rule-based-clusters)
-                     lanthipeptide: adh_short"
                      /gene_synonym="SCF20.02"
                      /locus_tag="SCO0256"
                      /note="SCF20.02, possible short chain oxidoreductase, len:
@@ -399,10 +331,6 @@ FEATURES             Location/Qualifiers
                      family signature"
                      /product="short chain oxidoreductase"
                      /protein_id="NP_624587.1"
-                     /sec_met="Type: lanthipeptide"
-                     /sec_met="adh_short (E-value: 3.1e-34, bitscore: 109.6,
-                     seeds: 230, tool: rule-based-clusters)"
-                     /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MTSVDNATPRTAVVTGAARGIGRGIAERLAEDGLDVVVADLPSMA
                      EELSAVAAGIEKTGRRALAVHADVTSKEQTDALVAAAADRFGRIDVYVANAGIARVTPL
@@ -414,34 +342,6 @@ FEATURES             Location/Qualifiers
                      /locus_tag="SCO0256"
                      /note="Pfam match to entry PF00106 adh_short, short chain
                      dehydrogenase, score 245.80, E-value 6e-70"
-     aSDomain        10030..10371
-                     /aSTool="nrps_pks_domains"
-                     /aSDomain="PKS_KR"
-                     /database="nrpspksdomains.hmm"
-                     /detection="hmmscan"
-                     /domain_id="nrpspksdomains_SCO0256_KR1"
-                     /evalue="5.60E-11"
-                     /label="SCO0256_KR1"
-                     /locus_tag="SCO0256"
-                     /score="34.2"
-                     /tool="antismash"
-                     /translation="TAVVTGAARGIGRGIAERLAEDGLDVVVADLPSMAEELSAVAAGI
-                     EKTGRRALAVHADVTSKEQTDALVAAAADRFGRIDVYVANAGIARVTPLLETDLDEFEQ
-                     VMAVNLRGVF"
-     CDS_motif       10036..10098
-                     /aSTool="pksnrpsmotif"
-                     /database="abmotifs"
-                     /detection="hmmscan"
-                     /domain_id="nrpspksmotif_SCO0256_0001"
-                     /evalue="1.50E-04"
-                     /label="PKSI-KR_m1"
-                     /locus_tag="SCO0256"
-                     /motif="PKSI-KR_m1"
-                     /note="NRPS/PKS Motif: PKSI-KR_m1 (e-value: 0.00015,
-                     bit-score: 14.5)"
-                     /score="14.5"
-                     /tool="antismash"
-                     /translation="VVTGAARGIGRGIAERLAEDG"
      misc_feature    10441..10527
                      /gene_synonym="SCF20.02"
                      /locus_tag="SCO0256"
@@ -549,20 +449,6 @@ FEATURES             Location/Qualifiers
                      /locus_tag="SCO0259"
                      /note="PS00059 Zinc-containing alcohol dehydrogenases
                      signature."
-     aSDomain        13048..13422
-                     /aSTool="nrps_pks_domains"
-                     /aSDomain="PKS_ER"
-                     /database="nrpspksdomains.hmm"
-                     /detection="hmmscan"
-                     /domain_id="nrpspksdomains_SCO0259_Xdom1"
-                     /evalue="3.50E-09"
-                     /label="SCO0259_Xdom1"
-                     /locus_tag="SCO0259"
-                     /score="27.7"
-                     /tool="antismash"
-                     /translation="GGYAEYLKTSARSVVRLDDSLEPADVAALADAGLTAYHAAAKAAR
-                     RLRPGDRCVVIGAGGLGHIGIQVLGALTAAEIVVVDRNPDAVDLAVSVGADHGVLADGG
-                     HVDRVRELTGGHGAEAVIDFV"
      gene            13769..14098
                      /db_xref="GeneID:1095684"
                      /gene_synonym="SCF1.02"
@@ -793,12 +679,6 @@ FEATURES             Location/Qualifiers
                      /codon_start=1
                      /db_xref="GI:21218818"
                      /db_xref="GeneID:1095691"
-                     /gene_functions="biosynthetic-additional
-                     (rule-based-clusters) PF12697 (E-value: 4.1e-21, bitscore:
-                     67.6, seeds: 465, tool: rule-based-clusters)"
-                     /gene_functions="biosynthetic-additional
-                     (rule-based-clusters) PF00561 (E-value: 5.7e-17, bitscore:
-                     53.2, seeds: 48, tool: rule-based-clusters)"
                      /gene_synonym="SCF1.09"
                      /locus_tag="SCO0267"
                      /note="SCF1.09, possible hydrolase, len: 258 aa; similar to
@@ -809,51 +689,17 @@ FEATURES             Location/Qualifiers
                      entry PF00561 abhydrolase, alpha/beta hydrolase fold"
                      /product="hydrolase"
                      /protein_id="NP_624597.1"
-                     /sec_met="Type: "
-                     /sec_met="PF12697 (E-value: 4.1e-21, bitscore: 67.6, seeds:
-                     465, tool: rule-based-clusters); PF00561 (E-value: 5.7e-17,
-                     bitscore: 53.2, seeds: 48, tool: rule-based-clusters)"
-                     /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MSTTQHTLVPVYDHRTGTGPTLVFLHYWGGSARTWDLVVDRLPGR
                      AVVAVDFRGWGRSRALPGPYTLGRFADDTLAVLADAGITDYVLVGHSMGGKVAQLVAAT
                      RPAGLRAIVLVGSGPAKPAARVTPEYREALSHAYDSAESVAGARDHVLTATELPAALKA
                      RIVTDSRNVTDAARIEWPLRGIAQDITEHTRRIDVPALVVAGEHDQVEPAGVLRDNLVP
                      YLARADFVVVPRTGHLIPLEAPADLADAVTAFATAV"
-     aSDomain        19385..19915
-                     /aSTool="nrps_pks_domains"
-                     /aSDomain="Thioesterase"
-                     /database="nrpspksdomains.hmm"
-                     /detection="hmmscan"
-                     /domain_id="nrpspksdomains_SCO0267_Xdom1"
-                     /evalue="7.20E-10"
-                     /label="SCO0267_Xdom1"
-                     /locus_tag="SCO0267"
-                     /score="31.2"
-                     /tool="antismash"
-                     /translation="TLVFLHYWGGSARTWDLVVDRLPGRAVVAVDFRGWGRSRALPGPY
-                     TLGRFADDTLAVLADAGITDYVLVGHSMGGKVAQLVAATRPAGLRAIVLVGSGPAKPAA
-                     RVTPEYREALSHAYDSAESVAGARDHVLTATELPAALKARIVTDSRNVTDAARIEWPLR
-                     GIAQDITEHTRRID"
      misc_feature    19457..20089
                      /gene_synonym="SCF1.09"
                      /locus_tag="SCO0267"
                      /note="Pfam match to entry PF00561 abhydrolase, alpha/beta
                      hydrolase fold, score 82.90, E-value 6.7e-21"
-     CDS_motif       19580..19633
-                     /aSTool="pksnrpsmotif"
-                     /database="abmotifs"
-                     /detection="hmmscan"
-                     /domain_id="nrpspksmotif_SCO0267_0001"
-                     /evalue="4.90E-07"
-                     /label="NRPS-te1"
-                     /locus_tag="SCO0267"
-                     /motif="NRPS-te1"
-                     /note="NRPS/PKS Motif: NRPS-te1 (e-value: 4.9e-07,
-                     bit-score: 22.3)"
-                     /score="22.3"
-                     /tool="antismash"
-                     /translation="YVLVGHSMGGKVAQLVAA"
      gene            20295..20456
                      /db_xref="GeneID:1095692"
                      /gene_synonym="SCF1.10"
@@ -862,17 +708,11 @@ FEATURES             Location/Qualifiers
                      /codon_start=1
                      /db_xref="GI:21218819"
                      /db_xref="GeneID:1095692"
-                     /gene_functions="biosynthetic (rule-based-clusters)
-                     lanthipeptide: strep_PEQAXS"
                      /gene_synonym="SCF1.10"
                      /locus_tag="SCO0268"
                      /note="SCF1.10, unknown, len:53 aa"
                      /product="hypothetical protein"
                      /protein_id="NP_624598.1"
-                     /sec_met="Type: lanthipeptide"
-                     /sec_met="strep_PEQAXS (E-value: 5.2e-43, bitscore: 136.0,
-                     seeds: 4, tool: rule-based-clusters)"
-                     /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MRTEIVLSHEAPELDLDLDLRVSDLPEQAASFGEGTFTSPSSYAI
                      GTRCPICC"
@@ -884,12 +724,6 @@ FEATURES             Location/Qualifiers
                      /codon_start=1
                      /db_xref="GI:21218820"
                      /db_xref="GeneID:1095693"
-                     /gene_functions="biosynthetic (rule-based-clusters)
-                     lanthipeptide: Lant_dehyd_C"
-                     /gene_functions="biosynthetic (rule-based-clusters)
-                     lanthipeptide: Lant_dehydr_C"
-                     /gene_functions="biosynthetic (rule-based-clusters)
-                     lanthipeptide: Lant_dehyd_N"
                      /gene_synonym="SCF1.11"
                      /locus_tag="SCO0269"
                      /note="SCF1.11, unknown, len: 1053aa; similar to large
@@ -900,13 +734,6 @@ FEATURES             Location/Qualifiers
                      identity in 1041 aa overlap)."
                      /product="hypothetical protein"
                      /protein_id="NP_624599.1"
-                     /sec_met="Type: lanthipeptide"
-                     /sec_met="Lant_dehyd_N (E-value: 1e-17, bitscore: 55.3,
-                     seeds: 38, tool: rule-based-clusters); Lant_dehyd_C
-                     (E-value: 1.2e-119, bitscore: 390.9, seeds: 37, tool:
-                     rule-based-clusters); Lant_dehydr_C (E-value: 3.3e-35,
-                     bitscore: 113.1, seeds: 35, tool: rule-based-clusters)"
-                     /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MAAESEAHRAAAVFEVREPVLVRMASRPRGAAPATVDAAEPVSGA
                      RQLAADPLLGQAVRVASGSLAHSLARLTTDEGASALGRKRTLSAARTLTRYARRAGARP
@@ -935,8 +762,6 @@ FEATURES             Location/Qualifiers
                      /codon_start=1
                      /db_xref="GI:21218821"
                      /db_xref="GeneID:1095694"
-                     /gene_functions="biosynthetic (rule-based-clusters)
-                     lanthipeptide: LANC_like"
                      /gene_synonym="SCF1.12"
                      /locus_tag="SCO0270"
                      /note="SCF1.12, unknown, len: 466 aa; similar to proteins
@@ -946,10 +771,6 @@ FEATURES             Location/Qualifiers
                      E(): 3.2e-23, (28.9% identity in 405 aa overlap)"
                      /product="hypothetical protein"
                      /protein_id="NP_624600.1"
-                     /sec_met="Type: lanthipeptide"
-                     /sec_met="LANC_like (E-value: 8.4e-65, bitscore: 209.8,
-                     seeds: 47, tool: rule-based-clusters)"
-                     /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MSGTTEGGSPEHTMDGFSGSGTREAPAGESPRALRERAGAVSAEI
                      LDRLADPAATVAATRIPAQAADDGVAEPIWAELTLGSGSPGLALAFAGASRDAARQVPR

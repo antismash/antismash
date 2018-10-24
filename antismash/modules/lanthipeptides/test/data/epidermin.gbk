@@ -26,10 +26,6 @@ REFERENCE   3  (bases 1 to 8700)
   JOURNAL   Submitted (18-DEC-1991) G. Engelke, Institut f. Mikrobiologie,
             Theodor-Stern Kai 7, Haus 75a, 6Frankfurt 70, FRG
 COMMENT     On Jun 21, 2005 this sequence version replaced gi:245669.
-            ##antiSMASH-Data-START##
-            Version      :: 5.0.0alpha-43c8f43
-            Run date     :: 2018-08-20 16:33:29
-            ##antiSMASH-Data-END##
 FEATURES             Location/Qualifiers
      gene            complement(<1..827)
                      /gene="epiY'"
@@ -60,68 +56,6 @@ FEATURES             Location/Qualifiers
                      /mol_type="genomic DNA"
                      /organism="Staphylococcus epidermidis"
                      /strain="Tu 3298"
-     cluster         1..8700
-                     /aStool="rule-based-clusters"
-                     /cluster_number="1"
-                     /core_location="[1380:6369]"
-                     /cutoff="20000"
-                     /detection_rule="((LANC_like and (Flavoprotein or
-                     Trp_halogenase or p450 or Lant_dehyd_N or Lant_dehyd_C or
-                     Lant_dehydr_C or tsrC or adh_short or adh_short_C2) or
-                     cds(LANC_like and (Pkinase or DUF4135)) or TIGR03731 or
-                     Antimicr18 or Gallidermin or L_biotic_A or leader_d or
-                     leader_eh or leader_abc or mature_d or mature_ab or
-                     mature_a or mature_b or mature_ha or mature_h_beta or
-                     lacticin_l or lacticin_mat or LD_lanti_pre or strep_PEQAXS)
-                     and not YcaO)"
-                     /neighbourhood="10000"
-                     /parent_cluster_number="1"
-                     /product="lanthipeptide"
-                     /tool="antismash"
-     cluster_core    1381..6369
-                     /aStool="rule-based-clusters"
-                     /cluster_number="1"
-                     /cutoff="20000"
-                     /detection_rule="((LANC_like and (Flavoprotein or
-                     Trp_halogenase or p450 or Lant_dehyd_N or Lant_dehyd_C or
-                     Lant_dehydr_C or tsrC or adh_short or adh_short_C2) or
-                     cds(LANC_like and (Pkinase or DUF4135)) or TIGR03731 or
-                     Antimicr18 or Gallidermin or L_biotic_A or leader_d or
-                     leader_eh or leader_abc or mature_d or mature_ab or
-                     mature_a or mature_b or mature_ha or mature_h_beta or
-                     lacticin_l or lacticin_mat or LD_lanti_pre or strep_PEQAXS)
-                     and not YcaO)"
-                     /neighbourhood="10000"
-                     /parent_cluster_number="1"
-                     /product="lanthipeptide"
-     supercluster    1..8700
-                     /child_cluster="1"
-                     /detection_rules="((LANC_like and (Flavoprotein or
-                     Trp_halogenase or p450 or Lant_dehyd_N or Lant_dehyd_C or
-                     Lant_dehydr_C or tsrC or adh_short or adh_short_C2) or
-                     cds(LANC_like and (Pkinase or DUF4135)) or TIGR03731 or
-                     Antimicr18 or Gallidermin or L_biotic_A or leader_d or
-                     leader_eh or leader_abc or mature_d or mature_ab or
-                     mature_a or mature_b or mature_ha or mature_h_beta or
-                     lacticin_l or lacticin_mat or LD_lanti_pre or strep_PEQAXS)
-                     and not YcaO)"
-                     /kind="single"
-                     /product="lanthipeptide"
-                     /supercluster_number="1"
-                     /tool="antismash"
-     region          1..8700
-                     /product="lanthipeptide"
-                     /region_number="1"
-                     /rules="((LANC_like and (Flavoprotein or Trp_halogenase or
-                     p450 or Lant_dehyd_N or Lant_dehyd_C or Lant_dehydr_C or
-                     tsrC or adh_short or adh_short_C2) or cds(LANC_like and
-                     (Pkinase or DUF4135)) or TIGR03731 or Antimicr18 or
-                     Gallidermin or L_biotic_A or leader_d or leader_eh or
-                     leader_abc or mature_d or mature_ab or mature_a or mature_b
-                     or mature_ha or mature_h_beta or lacticin_l or lacticin_mat
-                     or LD_lanti_pre or strep_PEQAXS) and not YcaO)"
-                     /supercluster_numbers="1"
-                     /tool="antismash"
      gene            complement(781..1227)
                      /gene="epiY"
      CDS             complement(781..1227)
@@ -152,19 +86,9 @@ FEATURES             Location/Qualifiers
                      /db_xref="PDB:1G5Q"
                      /db_xref="UniProtKB/Swiss-Prot:P08136"
                      /gene="epiA"
-                     /gene_functions="biosynthetic (rule-based-clusters)
-                     lanthipeptide: Gallidermin"
-                     /gene_functions="biosynthetic (rule-based-clusters)
-                     lanthipeptide: mature_b"
                      /locus_tag="epiA"
                      /product="Epidermin prepeptide"
                      /protein_id="CAA44252.1"
-                     /sec_met="Type: lanthipeptide"
-                     /sec_met="Gallidermin (E-value: 4.7e-40, bitscore: 125.0,
-                     seeds: 3, tool: rule-based-clusters); mature_b (E-value:
-                     7.5e-16, bitscore: 46.8, seeds: 5, tool:
-                     rule-based-clusters)"
-                     /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MEAVKEKNDLFNLDVKVNAKESNDSGAEPRIASKFICTPGCAKTG
                      SFNSYCC"
@@ -178,22 +102,9 @@ FEATURES             Location/Qualifiers
                      /db_xref="UniProtKB/Swiss-Prot:P30195"
                      /function="modifying enzyme"
                      /gene="epiB"
-                     /gene_functions="biosynthetic (rule-based-clusters)
-                     lanthipeptide: Lant_dehyd_C"
-                     /gene_functions="biosynthetic (rule-based-clusters)
-                     lanthipeptide: Lant_dehydr_C"
-                     /gene_functions="biosynthetic (rule-based-clusters)
-                     lanthipeptide: Lant_dehyd_N"
                      /locus_tag="epiB"
                      /product="epiB"
                      /protein_id="CAA44253.1"
-                     /sec_met="Type: lanthipeptide"
-                     /sec_met="Lant_dehyd_N (E-value: 1.9e-28, bitscore: 87.8,
-                     seeds: 38, tool: rule-based-clusters); Lant_dehyd_C
-                     (E-value: 2.2e-130, bitscore: 424.4, seeds: 37, tool:
-                     rule-based-clusters); Lant_dehydr_C (E-value: 3.9e-19,
-                     bitscore: 58.3, seeds: 35, tool: rule-based-clusters)"
-                     /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MDNIFVPSNIYMVRTPIFSIELYNQFLKSDNIDYDLILQNDIFKE
                      SIMTTTYNLYQSIGKIDWEKDNKKTRNVKESLLKYLIRMSTRSTPYGMLSGVALGEFSE
@@ -221,15 +132,9 @@ FEATURES             Location/Qualifiers
                      /db_xref="UniProtKB/Swiss-Prot:P30196"
                      /function="modifying enzyme"
                      /gene="epiC"
-                     /gene_functions="biosynthetic (rule-based-clusters)
-                     lanthipeptide: LANC_like"
                      /locus_tag="epiC"
                      /product="epiC"
                      /protein_id="CAA44254.1"
-                     /sec_met="Type: lanthipeptide"
-                     /sec_met="LANC_like (E-value: 1.5e-85, bitscore: 276.1,
-                     seeds: 47, tool: rule-based-clusters)"
-                     /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MAVLYTCVVIEYSVLILKKKNLFYLFLMKLQKLKNIGMVVININN
                      IKKILENKITFLSDIEKATYIIENQSEYWDPYTLSHGYPGIILFLSASEKVFHKDLEKV
@@ -250,15 +155,9 @@ FEATURES             Location/Qualifiers
                      /db_xref="UniProtKB/Swiss-Prot:P30197"
                      /function="modifying enzyme"
                      /gene="epiD"
-                     /gene_functions="biosynthetic (rule-based-clusters)
-                     lanthipeptide: Flavoprotein"
                      /locus_tag="epiD"
                      /product="epiD"
                      /protein_id="CAA44255.1"
-                     /sec_met="Type: lanthipeptide"
-                     /sec_met="Flavoprotein (E-value: 3.8e-28, bitscore: 87.1,
-                     seeds: 143, tool: rule-based-clusters)"
-                     /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MYGKLLICATASINVININHYIVELKQHFDEVNILFSPSSKNFIN
                      TDVLKLFCDNLYDEIKDPLLNHINIVENHEYILVLPASANTINKIANGICDNLLTTVCL
@@ -295,16 +194,9 @@ FEATURES             Location/Qualifiers
                      /db_xref="UniProtKB/Swiss-Prot:P30199"
                      /function="serine protease"
                      /gene="epiP"
-                     /gene_functions="biosynthetic-additional
-                     (rule-based-clusters) Peptidase_S8 (E-value: 5.1e-50,
-                     bitscore: 159.4, seeds: 43, tool: rule-based-clusters)"
                      /locus_tag="epiP"
                      /product="epiP"
                      /protein_id="CAA44257.1"
-                     /sec_met="Type: "
-                     /sec_met="Peptidase_S8 (E-value: 5.1e-50, bitscore: 159.4,
-                     seeds: 43, tool: rule-based-clusters)"
-                     /sec_met="Kind: biosynthetic"
                      /transl_table=11
                      /translation="MNKFKFFIVFLILSLVFLQNEYAFGSSLNEELSYYSVEYDNAKTF
                      KESIKQKNIELTYKIPELHTAQIKTSKSKLNSLIKSNKNVKFVNPTCSTCVVEKSVKTG
