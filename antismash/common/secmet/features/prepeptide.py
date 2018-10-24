@@ -101,12 +101,10 @@ class Prepeptide(CDSMotif):  # pylint: disable=too-many-instance-attributes
         self._tail = tail
 
     def get_name(self) -> str:
-        """ Returns the locus tag of the parent CDS.
-
-            Uses the same function name as the CDSFeature for consistency.
-        """
+        """ Returns the name of the motif. """
+        assert isinstance(self.tool, str) and self.tool
         assert isinstance(self.locus_tag, str) and self.locus_tag
-        return self.locus_tag
+        return "%s_%s" % (self.tool, self.locus_tag)
 
     def to_biopython(self, qualifiers: Dict[str, List] = None) -> List[SeqFeature]:
         """ Generates up to three SeqFeatures, depending if leader and tail exist.
