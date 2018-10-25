@@ -69,6 +69,7 @@ class TestCDSBiopythonConversion(unittest.TestCase):
     def test_without_genefunctions(self):
         bio = self.convert()
         assert "gene_functions" not in bio.qualifiers
+        assert "gene_kind" not in bio.qualifiers
 
         regen = CDSFeature.from_biopython(bio)
         assert not regen.gene_functions
@@ -77,6 +78,7 @@ class TestCDSBiopythonConversion(unittest.TestCase):
         self.cds.gene_functions.add(GeneFunction.ADDITIONAL, "testtool", "dummy")
         bio = self.convert()
         assert "gene_functions" in bio.qualifiers
+        assert bio.qualifiers["gene_kind"] == [str(self.cds.gene_function)] == ["biosynthetic-additional"]
 
         regen = CDSFeature.from_biopython(bio)
         assert regen.gene_function == self.cds.gene_function

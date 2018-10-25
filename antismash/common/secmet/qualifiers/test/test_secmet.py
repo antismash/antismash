@@ -134,9 +134,8 @@ class TestSecMetQualifier(unittest.TestCase):
         assert isinstance(qual, list)
         for item in qual:
             assert isinstance(item, str)
-        assert len(qual) == 2
+        assert len(qual) == 1
         assert qual[0] == "; ".join(map(str, self.domains))
-        assert qual[1] == "Kind: biosynthetic"
 
     def test_regeneration(self):
         qual = SecMetQualifier(self.domains)
