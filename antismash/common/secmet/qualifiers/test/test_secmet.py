@@ -128,23 +128,21 @@ class TestSecMetQualifier(unittest.TestCase):
         assert len(qual.domains) == 3
         assert qual.domain_ids == ["test name", "name test", "new name"]
 
-    def test_biopython_suitability(self):
-        # must behave as a list of strings or have conversion methods used
+    def test_iter(self):
         qual = SecMetQualifier(self.domains)
         for item in qual:
-            assert isinstance(item, str)
-        assert len(qual) == 1
-        assert list(qual)[0] == "; ".join(map(str, self.domains))
+            assert isinstance(item, SecMetQualifier.Domain)
+        for itered, direct in zip(qual, qual.domains):
+            assert itered is direct
 
     def test_regeneration(self):
         qual = SecMetQualifier(self.domains)
-        bio = list(qual)
+        bio = list(map(str, qual))
         new = SecMetQualifier.from_biopython(bio)
-        assert list(new) == bio
         for domain in new.domains:
             assert isinstance(domain, SecMetQualifier.Domain)
         assert new.domains == qual.domains
         assert new.domain_ids == qual.domain_ids
 
-        with self.assertRaisesRegex(ValueError, "Cannot parse qualifier"):
+        with self.assertRaisesRegex(ValueError, "could not match format"):
             SecMetQualifier.from_biopython(bio + ["something else"])
