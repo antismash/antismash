@@ -127,8 +127,6 @@ class SecMetQualifier:
         domains = []
         for value in qualifier:
             domains.append(SecMetQualifier.Domain.from_string(value))
-        if not domains:
-            raise ValueError("Cannot parse qualifier: %s" % qualifier)
         return SecMetQualifier(domains)
 
     def __len__(self) -> int:
