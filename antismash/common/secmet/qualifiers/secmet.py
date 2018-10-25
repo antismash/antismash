@@ -85,6 +85,7 @@ class SecMetQualifier:
         @classmethod
         def from_string(cls, line: str) -> "SecMetQualifier.Domain":
             """ Rebuilds a Domain from a string (e.g. from a genbank file) """
+            assert isinstance(line, str), type(line)
             return cls.from_json(_parse_format(cls.qualifier_label, line))
 
         @classmethod
@@ -100,8 +101,8 @@ class SecMetQualifier:
         self.add_domains(domains)
         super().__init__()
 
-    def __iter__(self) -> Iterator[str]:
-        yield "; ".join(map(str, self._domains))
+    def __iter__(self) -> Iterator["SecMetQualifier.Domain"]:
+        return iter(self._domains)
 
     def add_domains(self, domains: List["SecMetQualifier.Domain"]) -> None:
         """ Add a group of Domains to the the qualifier """
@@ -124,15 +125,11 @@ class SecMetQualifier:
     def from_biopython(qualifier: List[str]) -> "SecMetQualifier":
         """ Converts a BioPython style qualifier into a SecMetQualifier. """
         domains = []
-        if len(qualifier) != 1:
-            raise ValueError("Cannot parse qualifier: %s" % qualifier)
         for value in qualifier:
-            domain_strings = value.split("; ")
-            for domain_string in domain_strings:
-                domains.append(SecMetQualifier.Domain.from_string(domain_string))
+            domains.append(SecMetQualifier.Domain.from_string(value))
         if not domains:
             raise ValueError("Cannot parse qualifier: %s" % qualifier)
         return SecMetQualifier(domains)
 
     def __len__(self) -> int:
-        return 1
+        return len(self._domains)

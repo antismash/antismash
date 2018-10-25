@@ -172,7 +172,7 @@ class CDSFeature(Feature):
 
         # grab optional qualifiers
         feature.product = leftovers.pop("product", [""])[0]
-        sec_met = leftovers.pop("sec_met", None)
+        sec_met = leftovers.pop("sec_met_domain", None)
         if sec_met:
             feature.sec_met = SecMetQualifier.from_biopython(sec_met)
         gene_functions = leftovers.pop("gene_functions", [])

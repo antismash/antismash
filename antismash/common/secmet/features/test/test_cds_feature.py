@@ -10,6 +10,7 @@ from Bio.Seq import Seq
 
 from antismash.common.secmet.features import FeatureLocation, CDSFeature
 from antismash.common.secmet.features.feature import CompoundLocation
+from antismash.common.secmet.qualifiers import SecMetQualifier
 from antismash.common.secmet.qualifiers.gene_functions import GeneFunction
 
 
@@ -83,6 +84,29 @@ class TestCDSBiopythonConversion(unittest.TestCase):
         regen = CDSFeature.from_biopython(bio)
         assert regen.gene_function == self.cds.gene_function
         assert regen.gene_functions.get_by_tool("testtool") == self.cds.gene_functions.get_by_tool("testtool")
+
+    def test_without_secmet(self):
+        assert not self.cds.sec_met
+        bio = self.convert()
+        assert "sec_met" not in bio.qualifiers  # for detecting legacy versions
+        assert "sec_met_domain" not in bio.qualifiers
+
+        regen = CDSFeature.from_biopython(bio)
+        assert not regen.sec_met
+
+    def test_with_secmet(self):
+        domains = [SecMetQualifier.Domain("testA", 0.1, 1.1, 3, "test"),
+                   SecMetQualifier.Domain("testB", 5.1, 3.9, 5, "dummy")]
+        self.cds.sec_met = SecMetQualifier(domains)
+        bio = self.convert()
+        assert "sec_met" not in bio.qualifiers  # again, detecting leftover legacy versions
+        assert len(bio.qualifiers["sec_met_domain"]) == 2
+        assert bio.qualifiers["sec_met_domain"] == list(map(str, domains))
+
+        regen = CDSFeature.from_biopython(bio)
+        assert regen.sec_met
+        assert len(regen.sec_met.domains) == len(domains)
+        assert regen.sec_met.domains == domains
 
 
 class TestCDSProteinLocation(unittest.TestCase):
