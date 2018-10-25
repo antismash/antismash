@@ -131,11 +131,10 @@ class TestSecMetQualifier(unittest.TestCase):
     def test_biopython_suitability(self):
         # must behave as a list of strings or have conversion methods used
         qual = SecMetQualifier(self.domains)
-        assert isinstance(qual, list)
         for item in qual:
             assert isinstance(item, str)
         assert len(qual) == 1
-        assert qual[0] == "; ".join(map(str, self.domains))
+        assert list(qual)[0] == "; ".join(map(str, self.domains))
 
     def test_regeneration(self):
         qual = SecMetQualifier(self.domains)

@@ -46,11 +46,9 @@ def _parse_format(fmt: str, data: str) -> Sequence[str]:
     return res.groups()
 
 
-class SecMetQualifier(list):
+class SecMetQualifier:
     """ A qualifier for tracking various secondary metabolite information about
         a CDS.
-
-        Can be directly used as a qualifier for BioPython's SeqFeature.
     """
     class Domain:
         """ A simple container for the information needed to create a domain """
@@ -104,15 +102,6 @@ class SecMetQualifier(list):
 
     def __iter__(self) -> Iterator[str]:
         yield "; ".join(map(str, self._domains))
-
-    def __getitem__(self, selection: Union[slice, int]) -> str:  # type: ignore
-        return str(list(self)[selection])
-
-    def append(self, _item: Any) -> None:
-        raise NotImplementedError("Appending to this list won't work")
-
-    def extend(self, _items: Iterable[Any]) -> None:
-        raise NotImplementedError("Extending this list won't work")
 
     def add_domains(self, domains: List["SecMetQualifier.Domain"]) -> None:
         """ Add a group of Domains to the the qualifier """

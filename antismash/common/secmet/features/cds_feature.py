@@ -197,9 +197,8 @@ class CDSFeature(Feature):
         if self._gene_functions:
             mine["gene_functions"] = list(map(str, self._gene_functions))
             mine["gene_kind"] = [str(self.gene_function)]
-        # since it's already a list
         if self.sec_met:
-            mine["sec_met"] = self.sec_met
+            mine["sec_met_domain"] = list(map(str, self.sec_met))
         # respect qualifiers given to us
         if qualifiers:
             mine.update(qualifiers)
