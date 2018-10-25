@@ -319,11 +319,12 @@ class Cluster:
     """
     def __init__(self, region_number: int, ref_cluster_number: str, accession: str,
                  description: str, features: Union[List[Protein], List[secmet.CDSFeature]], rank: int,
-                 hits: int = 0, strand: int = 1) -> None:
+                 cluster_type: str, hits: int = 0, strand: int = 1) -> None:
         self.region_number = region_number
         self.ref_cluster_number = int(ref_cluster_number.lstrip('c'))
         self.accession = accession
         self.description = description.replace("_", " ")
+        self.cluster_type = cluster_type
         if isinstance(features[0], secmet.CDSFeature):
             genes = []
             for feature in features:
@@ -364,7 +365,7 @@ class Cluster:
         desc = "%s_c%d: %s" % (self.accession, self.ref_cluster_number, self.description)
         if len(desc) > 80:
             desc = desc[:77] + "..."
-        return "%s (%s)" % (desc, self.similarity_string)
+        return "%s (%s), %s" % (desc, self.similarity_string, self.cluster_type)
 
     def reverse_strand(self) -> None:
         """ Reverses the entire cluster's directionality, useful when the
@@ -381,10 +382,11 @@ class Cluster:
     def _add_label(self, group: Group, v_offset: int) -> Group:
         acc = Text(self.full_description, 5, 20 + v_offset)
         if self.accession.startswith('BGC'):
+            desc = "%80s (%s), %s" % (self.description, self.similarity_string, self.cluster_type)
             acc = Text('<a xlink:href="https://mibig.secondarymetabolites.org/go/'
                        + self.accession + '/%s" target="_blank">' % self.ref_cluster_number
                        + self.accession + '</a>: '
-                       + "%80s (%s)" % (self.description, self.similarity_string), 5, 20 + v_offset)
+                       + desc, 5, 20 + v_offset)
         elif self.accession.split("_")[0] in get_antismash_db_accessions():
             acc = Text('<a xlink:href="https://antismash-db.secondarymetabolites.org/go/'
                        + self.accession + '/%s" target="_blank">' % self.ref_cluster_number
@@ -440,7 +442,7 @@ class Cluster:
         proteins = [reference_proteins[protein] for protein in cluster.proteins]
         svg_cluster = Cluster(region_number, str(cluster.cluster_label),
                               cluster.accession, cluster.description, proteins,
-                              rank, num_hits, strand)
+                              rank, cluster.cluster_type, num_hits, strand)
         for query, subject in score.scored_pairings:
             for gene in svg_cluster.genes:
                 if gene.name in [subject.name, query.id]:
@@ -457,7 +459,7 @@ class QueryRegion(Cluster):
         super().__init__(region_number, str(region_number),
                          "%s_%d" % (region_feature.parent_record.id, region_number),
                          "Query sequence",
-                         list(region_feature.cds_children), rank=0)
+                         list(region_feature.cds_children), rank=0, cluster_type="query")
 
     def get_svg_groups(self, h_offset: int = 0, v_offset: int = 0, scaling: float = 1.,
                        screenwidth: int = 1024, colours: Dict[str, str] = None,
