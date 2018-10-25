@@ -17,6 +17,7 @@ from helperlibs.bio import seqio
 
 from antismash.common import gff_parser
 from antismash.common.secmet import Record
+from antismash.common.secmet.qualifiers import SecMetQualifier
 from antismash.config import get_config, update_config, ConfigType
 from antismash.custom_typing import AntismashModule
 
@@ -88,7 +89,7 @@ def strip_record(record: Record) -> None:
 
     # clean up antiSMASH annotations in CDS features
     for feature in record.get_cds_features():
-        feature.sec_met = None
+        feature.sec_met = SecMetQualifier()
         feature.gene_functions.clear()
 
 

@@ -118,7 +118,7 @@ class TestSecMetQualifier(unittest.TestCase):
         assert qual.domains is not self.domains
 
     def test_add_domains(self):
-        qual = SecMetQualifier([])
+        qual = SecMetQualifier()
         qual.add_domains(self.domains)
         assert qual.domains == self.domains
         qual.add_domains(self.domains)  # duplicates ignored
