@@ -10,6 +10,7 @@ from Bio.Seq import Seq
 
 from antismash.common.secmet.features import FeatureLocation, CDSFeature
 from antismash.common.secmet.features.feature import CompoundLocation
+from antismash.common.secmet.qualifiers.gene_functions import GeneFunction
 
 
 class TestCDSFeature(unittest.TestCase):
@@ -35,6 +36,51 @@ class TestCDSFeature(unittest.TestCase):
         for trans in [None, ""]:
             with self.assertRaisesRegex(ValueError, "requires a valid translation"):
                 CDSFeature(loc, locus_tag="test", translation=trans)
+
+
+class TestCDSBiopythonConversion(unittest.TestCase):
+    def setUp(self):
+        self.cds = CDSFeature(FeatureLocation(1, 12, 1),
+                              translation="A"*4,
+                              locus_tag="loctag",
+                              gene="gene",
+                              protein_id="prot_id")
+
+    def convert(self):
+        bio_features = self.cds.to_biopython()
+        assert isinstance(bio_features, list)
+        assert len(bio_features) == 1
+        return bio_features[0]
+
+    def test_basics(self):
+        bio = self.convert()
+        assert bio.location == self.cds.location
+        assert bio.qualifiers["locus_tag"] == ["loctag"]
+        assert bio.qualifiers["gene"] == ["gene"]
+        assert bio.qualifiers["protein_id"] == ["prot_id"]
+        assert bio.qualifiers["translation"] == ["A"*4]
+
+        regen = CDSFeature.from_biopython(bio)
+        assert regen.location == self.cds.location
+        assert regen.locus_tag == self.cds.locus_tag
+        assert regen.gene == self.cds.gene
+        assert regen.protein_id == self.cds.protein_id
+
+    def test_without_genefunctions(self):
+        bio = self.convert()
+        assert "gene_functions" not in bio.qualifiers
+
+        regen = CDSFeature.from_biopython(bio)
+        assert not regen.gene_functions
+
+    def test_with_genefunctions(self):
+        self.cds.gene_functions.add(GeneFunction.ADDITIONAL, "testtool", "dummy")
+        bio = self.convert()
+        assert "gene_functions" in bio.qualifiers
+
+        regen = CDSFeature.from_biopython(bio)
+        assert regen.gene_function == self.cds.gene_function
+        assert regen.gene_functions.get_by_tool("testtool") == self.cds.gene_functions.get_by_tool("testtool")
 
 
 class TestCDSProteinLocation(unittest.TestCase):
