@@ -60,7 +60,7 @@ class CDSFeature(Feature):
             raise TypeError("product must be a string, not %s", type(product))
         self.product = product
         self.transl_table = int(translation_table)
-        self._sec_met = None  # type: Optional[SecMetQualifier]
+        self._sec_met = SecMetQualifier()
         self._nrps_pks = NRPSPKSQualifier(self.location.strand)
 
         self.motifs = []  # type: List[features.CDSMotif]

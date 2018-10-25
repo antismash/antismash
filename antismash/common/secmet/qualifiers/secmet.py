@@ -94,11 +94,12 @@ class SecMetQualifier:
             assert len(json) == 5, json
             return cls(str(json[0]), float(json[1]), float(json[2]), int(json[3]), str(json[4]))
 
-    def __init__(self, domains: List["SecMetQualifier.Domain"]) -> None:
+    def __init__(self, domains: List["SecMetQualifier.Domain"] = None) -> None:
         self._domains = []  # type: List["SecMetQualifier.Domain"]
         self.domain_ids = []  # type: List[str]
         self.unique_domain_ids = set()  # type: Set[str]
-        self.add_domains(domains)
+        if domains is not None:
+            self.add_domains(domains)
         super().__init__()
 
     def __iter__(self) -> Iterator["SecMetQualifier.Domain"]:
