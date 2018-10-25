@@ -100,12 +100,10 @@ class SecMetQualifier(list):
         self.domain_ids = []  # type: List[str]
         self.unique_domain_ids = set()  # type: Set[str]
         self.add_domains(domains)
-        self.kind = "biosynthetic"
         super().__init__()
 
     def __iter__(self) -> Iterator[str]:
         yield "; ".join(map(str, self._domains))
-        yield "Kind: %s" % self.kind
 
     def __getitem__(self, selection: Union[slice, int]) -> str:  # type: ignore
         return str(list(self)[selection])
@@ -137,20 +135,15 @@ class SecMetQualifier(list):
     def from_biopython(qualifier: List[str]) -> "SecMetQualifier":
         """ Converts a BioPython style qualifier into a SecMetQualifier. """
         domains = []
-        kind = "biosynthetic"
-        if len(qualifier) != 2:
+        if len(qualifier) != 1:
             raise ValueError("Cannot parse qualifier: %s" % qualifier)
         for value in qualifier:
-            if value.startswith("Kind: "):
-                kind = value.split("Kind: ", 1)[1]
-                assert kind == "biosynthetic", kind  # since it's the only kind we have
-            else:
-                domain_strings = value.split("; ")
-                for domain_string in domain_strings:
-                    domains.append(SecMetQualifier.Domain.from_string(domain_string))
-        if not (domains and kind):
+            domain_strings = value.split("; ")
+            for domain_string in domain_strings:
+                domains.append(SecMetQualifier.Domain.from_string(domain_string))
+        if not domains:
             raise ValueError("Cannot parse qualifier: %s" % qualifier)
         return SecMetQualifier(domains)
 
     def __len__(self) -> int:
-        return 2
+        return 1
