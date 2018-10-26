@@ -7,6 +7,7 @@
           <div class="prediction-text">
             For supercluster {{supercluster.number}}, location {{supercluster.location.start}} - {{supercluster.location.end}}:<br>
           </div>
+          {{collapser_start("SC%s" % supercluster.number, level="supercluster")}}
           {% if supercluster.smiles %}
             <canvas id="smiles-canvas-{{supercluster.number}}" class="smiles-canvas" data-smiles="{{supercluster.smiles}}" width="250" height="250"></canvas>
             <div class="as-structure-warning">
@@ -24,6 +25,7 @@
               <a href="{{supercluster.get_norine_url(be_strict = False)}}" target="_new">relaxed</a><br>
             </div>
             {% endif %}
+            {{collapser_end()}}
         </div>
       {% if loop.index < region.superclusters | length %}
         <hr>
@@ -37,9 +39,9 @@
   {% endif %}
 </div>
 <div class="more-details">
-  <h3>Prediction details</h3>
+  <h3>NRPS/PKS domain predictions</h3>
   <dl class="prediction-text">
-    {% for gene_id in region.sidepanel_features if record.get_cds_by_name(gene_id).motifs %}
+    {% for gene_id in region.sidepanel_features if gene_id in relevant_features %}
       <dt><strong>{{gene_id}}</strong></dt>
       {% if gene_id in region.url_strict %}
         <dd> Search NORINE for peptide:
@@ -51,10 +53,15 @@
       {% endif %}
       {% for domain in record.get_cds_by_name(gene_id).nrps_pks.domains %}
         {% if domain.feature_name in results.consensus %}
-          <dd><strong>{{domain.name}} ({{domain.start}}..{{domain.end}})</strong>: {{results.consensus[domain.feature_name]}}<br>
+          <dd><strong>{{domain.name}} ({{domain.start}}..{{domain.end}})</strong>: {{results.consensus[domain.feature_name]}}
+          {{collapser_start(gene_id, level="supercluster")}}
           {% for prediction in results.domain_predictions.get(domain.feature_name, {}).values() %}
-              {{prediction.as_html()}}<br>
+              {{prediction.method}}:  {{prediction.get_classification() | join(", ")}}
+              {{collapser_start(gene_id + "-" + prediction.method, level="none")}}
+                {{prediction.as_html()}}
+              {{collapser_end()}}<br>
           {% endfor %}
+          {{collapser_end()}}
           </dd>
         {% endif %}
       {% endfor %}

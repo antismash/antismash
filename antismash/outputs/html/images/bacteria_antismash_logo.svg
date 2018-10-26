@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="801.94592"
+   height="751.66669"
+   id="svg2890"
+   version="1.1"
+   inkscape:version="0.47 r22583"
+   sodipodi:docname="antismash_logo.svg">
+  <defs
+     id="defs2892">
+    <linearGradient
+       id="linearGradient3744">
+      <stop
+         style="stop-color:#700000;stop-opacity:1;"
+         offset="0"
+         id="stop3746" />
+      <stop
+         id="stop3790"
+         offset="0.09731334"
+         style="stop-color:#aa0000;stop-opacity:1;" />
+      <stop
+         style="stop-color:#aa0000;stop-opacity:1;"
+         offset="0.8870402"
+         id="stop3792" />
+      <stop
+         style="stop-color:#700000;stop-opacity:1;"
+         offset="1"
+         id="stop3748" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient2956">
+      <stop
+         style="stop-color:#bbbbbb;stop-opacity:1;"
+         offset="0"
+         id="stop2958" />
+      <stop
+         style="stop-color:#eeeeee;stop-opacity:1;"
+         offset="1"
+         id="stop2960" />
+    </linearGradient>
+    <inkscape:perspective
+       sodipodi:type="inkscape:persp3d"
+       inkscape:vp_x="0 : 300 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_z="800 : 300 : 1"
+       inkscape:persp3d-origin="400 : 200 : 1"
+       id="perspective2898" />
+    <inkscape:perspective
+       id="perspective2914"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective2942"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient2956"
+       id="linearGradient2962"
+       x1="400.75006"
+       y1="600"
+       x2="400.75"
+       y2="545"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient3744"
+       id="linearGradient3750"
+       x1="21.666666"
+       y1="333.33334"
+       x2="800"
+       y2="332.98871"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(0.99931419,0,0,1,0.54865885,0)" />
+    <inkscape:perspective
+       id="perspective3760"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient3744-9"
+       id="linearGradient3750-1"
+       x1="21.666666"
+       y1="333.33334"
+       x2="140"
+       y2="327.98871"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       id="linearGradient3744-9">
+      <stop
+         style="stop-color:#700000;stop-opacity:1;"
+         offset="0"
+         id="stop3746-1" />
+      <stop
+         style="stop-color:#aa0000;stop-opacity:1;"
+         offset="1"
+         id="stop3748-2" />
+    </linearGradient>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.6"
+     inkscape:cx="191.82606"
+     inkscape:cy="242.50319"
+     inkscape:current-layer="layer1"
+     inkscape:document-units="px"
+     showgrid="false"
+     inkscape:snap-page="false"
+     inkscape:snap-grids="false"
+     inkscape:window-width="1082"
+     inkscape:window-height="886"
+     inkscape:window-x="421"
+     inkscape:window-y="115"
+     inkscape:window-maximized="0"
+     borderlayer="false"
+     showborder="false"
+     inkscape:snap-to-guides="false" />
+  <metadata
+     id="metadata2895">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     id="layer1"
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     transform="translate(1.2191081,151.66667)">
+    <rect
+       style="fill:url(#linearGradient2962);fill-opacity:1;fill-rule:evenodd;stroke:none"
+       id="logo-background"
+       width="677.5"
+       height="751.66669"
+       x="62.000011"
+       y="-151.66667"
+       inkscape:label="logo-background"
+       ry="38.33334"
+       rx="38.333332" />
+    <rect
+       style="fill:url(#linearGradient3750);fill-opacity:1;fill-rule:evenodd;stroke:none"
+       id="rect2904"
+       width="799.45135"
+       height="242.24644"
+       x="0.54865885"
+       y="206.86548" />
+    <path
+       style="fill:#800000;stroke:none"
+       d="m 31.01655,470.55225 c -17.196124,-12.4451 -31.19884989,-22.6643 -31.11717007,-22.70934 0.08167967,-0.0451 13.87118307,-0.071 30.64334207,-0.0579 l 30.494835,0.024 0.680673,22.56707 c 0.374369,12.41189 0.654421,22.62031 0.622337,22.68538 -0.0321,0.0651 -14.127891,-10.06405 -31.324017,-22.50917 l 0,0 z"
+       id="path2932" />
+    <path
+       style="fill:#800000;stroke:none"
+       d="m 769.90323,471.26907 c 17.03502,-12.66472 30.90548,-23.06275 30.82323,-23.10673 -0.0823,-0.044 -13.87096,0.10695 -30.64157,0.33529 l -30.49202,0.41523 -0.39106,22.57394 c -0.21508,12.41567 -0.36412,22.62685 -0.33121,22.6915 0.0329,0.0647 13.9976,-10.24449 31.03263,-22.90923 l 0,0 z"
+       id="path2932-2" />
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot3796"
+       style="font-size:160px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#ececec;fill-opacity:1;stroke:none;font-family:DejaVu Serif;-inkscape-font-specification:DejaVu Serif"
+       transform="translate(0,-200)"><flowRegion
+         id="flowRegion3798"><rect
+           id="rect3800"
+           width="666.66669"
+           height="171.66667"
+           x="65"
+           y="445"
+           style="font-size:160px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#ececec;font-family:DejaVu Serif;-inkscape-font-specification:DejaVu Serif" /></flowRegion><flowPara
+         id="flowPara3802">SMASHSs</flowPara></flowRoot>    <text
+       xml:space="preserve"
+       style="font-size:160px;font-style:normal;font-weight:normal;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+       x="98.333336"
+       y="496.66666"
+       id="text3804"
+       transform="translate(0,-200)"><tspan
+         sodipodi:role="line"
+         id="tspan3806"
+         x="98.333336"
+         y="496.66666" /></text>
+    <text
+       xml:space="preserve"
+       style="font-size:160px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;text-anchor:middle;fill:#ececec;fill-opacity:1;stroke:none;font-family:DejaVu Serif;-inkscape-font-specification:DejaVu Serif Bold"
+       x="398"
+       y="384.33331"
+       id="text3808"><tspan
+         sodipodi:role="line"
+         id="tspan3810"
+         x="398"
+         y="384.33331"
+         style="font-size:180px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Waree;-inkscape-font-specification:Waree Bold">SMASH</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:180px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Waree;-inkscape-font-specification:Waree"
+       x="406"
+       y="152.66666"
+       id="text3816"><tspan
+         sodipodi:role="line"
+         id="tspan3818"
+         x="406"
+         y="152.66666"
+         style="font-size:200px;font-weight:bold;fill:#aa0000;fill-opacity:1;-inkscape-font-specification:Aurek-Besh Hand Bold">anti</tspan></text>
+  </g>
+</svg>

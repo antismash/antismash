@@ -1,5 +1,5 @@
 {% macro legend(css_class, description) -%}
-    <div>
+    <div class="button-like legend-selector" data-id="{{css_class}}">
       <div class="legend-field {{css_class}}"></div>
       <div class="legend-label">{{description}}</div>
     </div>

@@ -116,7 +116,7 @@ class PredictorSVMResult(Prediction):
         if self.uncertain:
             note = "<strong>NOTE: outside applicability domain</strong><br>\n"
         raw = ("\n"
-               "<dl><dt>NRPSPredictor2 SVM prediction details:</dt>\n"
+               "<dl><dt>SVM prediction details:</dt>\n"
                " <dd>"
                "  %s"
                "  <dl>"

@@ -1,0 +1,61 @@
+<div class="focus-intro">
+ <strong>{{feature.get_name()}}</strong><br>
+ {% if feature.product %}
+  {{feature.product}}<br>
+ {% endif %}
+ <br>
+ Locus-tag: feature.locus_tag<br>
+ Protein-ID: feature.protein_id<br>
+ {% if ec_numbers %}
+  EC-Number(s): {{ec_numbers}}<br>
+ {% endif %}
+ Location: {{ feature.location.start + 1 }} - {{ feature.location.end }}<br>
+ <br>
+ {% for gene_function in feature.gene_functions %}
+  {{ gene_function }}<br>
+ {% endfor %}
+</div>
+<div class="focus-info">
+ {% if asf_notes %}
+  Active site details: {{collapser_start(feature.get_name(), level="none")}}
+  <dl>
+  {% for domain, hits in asf_notes.items() %}
+   <dt><strong>{{ domain[0] }}</strong> ({{domain[1]}}..{{domain[2]}})</dt>
+   <dd>
+   {% for hit in hits %}
+    {{ hit }}<br>
+   {% endfor %}
+   </dd>
+  {% endfor %}
+  </dl>
+  {{collapser_end()}}<br>
+ {% endif %}
+
+ {% if go_notes %}
+  <br>
+  <span class="bold"> Gene Ontology terms for PFAM domains:</span><br>
+  {% for note in go_notes %}
+   {{note}}<br><br>
+  {% endfor %}
+ {% endif %}
+</div>
+<div class="focus-urls">
+ <a href="{{urls['blastp']}}" target="_new">NCBI BlastP on this gene</a><br>
+ <a href="{{urls['context']}}" target="_new">View genomic context</a><br>
+ {% if urls['mibig'] %}
+  <a href="{{urls['mibig']}} target="_new">MiBIG Hits</a><br>
+ {% endif %}
+ {% if urls['transport'] %}
+  <a href="{{urls['transport']}}" target="_new">TransportDB BLAST on this gene</a><br>
+ {% endif %}
+ {% if urls['searchgtr'] %}
+  <a href="{{urls['searchgtr']}}" target="_new">SEARCHGTr on this gene</a><br>
+ {% endif %}
+ {% if urls['smcog_tree'] %}
+  <a href="{{urls['smcog_tree']}}" target="_new">View smCOG seed phylogenetic tree with this gene</a><br>
+ {% endif %}
+</div>
+<div class="focus-clipboard">
+ AA sequence: <a href="javascript:copyToClipboard('{{feature.translation}}')">Copy to clipboard</a><br>
+ Nucleotide sequence: <a href="javascript:copyToClipboard('{{feature.extract(record.seq)}}')">Copy to clipboard</a><br>
+</div>

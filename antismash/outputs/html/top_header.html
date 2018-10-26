@@ -1,23 +1,30 @@
-<div class="top-header">
-  <img class="antismash-logo" src="images/{{options.taxon}}_logo.png" alt="antiSMASH">
-  <span class="antismash-title"><a class="main-link" href="{{options.base_url}}">antibiotics & Secondary Metabolite Analysis SHell</a><br>
-    <span class="white">Version <span id="antismash-version">{{version}}</span></span>
-  </span>
-  <div id="icons">
-    <a class="main-link" href="{{options.base_url}}"><img src="images/{{options.taxon}}_home.png" alt="home" title="Go to start page"></a>
-    <a class="help-link" href="{{options.base_url}}#!/help"><img src="images/{{options.taxon}}_help.png" alt="help" title="Get help using antiSMASH"></a>
-    <a class="about-link" href="{{options.base_url}}#!/about"><img src="images/{{options.taxon}}_about.png" alt="about" title="About antiSMASH"></a>
-    <a href="#" id="download"><img src="images/{{options.taxon}}_download.png" alt="download" title="Download results"></a>
-    <div id="downloadmenu">
-      <ul id="downloadoptions">
+  <nav>
+    <div class="main-link">
+     <div>
+        <a href="{{options.base_url}}">
+          <img src="images/{{options.taxon}}_antismash_logo.svg" alt="antiSMASH logo" width="40px">
+        </a>
+       </div>
+       <div>
+        <a href="{{options.base_url}}">
+          antiSMASH version {{options.version}}
+        </a>
+      </div>
+    </div>
+    <div class="ancillary-links">
+      <div class="ancillary-link dropdown-menu" id="download-dropdown"><a href="#" id="download-dropdown-link"><img src="images/download.svg" alt="download"> &nbsp; Download</a>
+        <ul class="dropdown-options">
         {% if not options.skip_zip_file %}
         <li><a href={{options.input_file}}.zip>Download all results</a></li>
         {% endif %}
-        <li><a href={{options.input_file}}.gbk> Download GenBank summary file</a></li>
+          <li><a href={{options.input_file}}.gbk> Download GenBank summary file</a></li>
         {% if options.logfile and options.download_logfile() != None %}
           <li><a href={{options.download_logfile()}}> Download log file</a></li>
         {% endif %}
-      </ul>
+        </ul>
+      </div>
+      <div class="ancillary-link"><a href="{{options.base_url}}#!/about"><img src="images/about.svg" alt="about"> &nbsp; About</a></div>
+      <div class="ancillary-link"><a href="https://docs.antismash.secondarymetabolites.org"><img src="images/help.svg" alt="help"> &nbsp; Help</a></div>
+      <div class="ancillary-link"><a href="#!/contact"><img src="images/contact.svg" alt="contact"> &nbsp; Contact</a></div>
     </div>
-  </div>
-</div>
+  </nav>
