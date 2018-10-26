@@ -11,6 +11,7 @@ import unittest
 from helperlibs.wrappers.io import TemporaryDirectory
 
 from antismash.main import get_all_modules
+from antismash.common import path
 from antismash.common.module_results import ModuleResults
 import antismash.common.test.helpers as helpers
 from antismash.config import build_config, get_config, update_config, destroy_config
@@ -108,6 +109,19 @@ class KnownIntegrationTest(Base):
 
     def test_balhymicin(self):
         self.check_balhymicin(102)
+
+    def test_fusariam_scirpi(self):
+        # this is a special case where it's a single CDS cluster that matches
+        # against other single CDS clusters, before this test they were all
+        # discarded
+        genbank = path.get_full_path(__file__, "data", "Z18755.3.gbk")
+        results = self.run_antismash(genbank, 2)
+        assert list(results.mibig_entries) == [1]  # only one region in record
+        assert list(results.mibig_entries[1]) == ["CAA79245.2"]  # and only one CDS
+        # 2 hits against single-CDS MiBIG clusters, only those are reported
+        # as multi-CDS reference clusters need multiple query CDSs to hit
+        for ref_cluster, _ in results.region_results[0].ranking:
+            assert len(ref_cluster.proteins) == 1
 
 
 class SubIntegrationTest(Base):

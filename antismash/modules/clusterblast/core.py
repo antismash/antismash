@@ -678,14 +678,20 @@ def score_clusterblast_output(clusters: Dict[str, ReferenceCluster], allcoregene
     """
     results = {}
     for cluster_label, queries in cluster_names_to_queries.items():
+        single_gene_reference = len(clusters[cluster_label].proteins) == 1
         result, hitpositions, hitposcorelist = parse_clusterblast_dict(queries, clusters, cluster_label, allcoregenes)
-        if result.hits <= 1:
+        if not result.hits:
+            continue
+        if not single_gene_reference and result.hits <= 1:
             continue
         hitgroups = find_clusterblast_hitsgroups(hitpositions)
         # combines both synteny scores
         result.synteny_score = calculate_synteny_score(hitgroups, hitpositions, hitposcorelist)
-        # ensure at least two different subjects were found
         initial = hitpositions[0][1]
+        # if only one gene in reference, use it
+        if single_gene_reference and len(hitpositions) == 1:
+            results[clusters[cluster_label]] = result
+        # otherwise ensure at least two different subjects were found
         for _, subject in hitpositions[1:]:
             if subject != initial:
                 results[clusters[cluster_label]] = result

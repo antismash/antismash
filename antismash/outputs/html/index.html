@@ -55,7 +55,7 @@
           <th>Type</th>
           <th>From</th>
           <th>To</th>
-          <th>Most similar known cluster</th>
+          <th colspan="2">Most similar known cluster</th>
           <th>Similarity</th>
           <th>MIBiG BGC-ID</th>
         </tr>
@@ -65,14 +65,14 @@
         {% for record in records -%}
           {% if not record.regions %}
             <tr class = 'separator-row'>
-              <td class = 'separator-text' colspan = 5>{{record.get_from_record()}}</td>
+              <td class='separator-text' colspan="6">{{record.get_from_record()}}</td>
             </tr>
             <tr>
-              <td></td><td colspan = 5)>No secondary metabolite regions found</td>
+              <td></td><td colspan="6")>No secondary metabolite regions found</td>
             </tr>
           {% else %}
-            <tr class = 'separator-row'>
-              <td class = 'separator-text' colspan = 5>{{record.get_from_record()}}</td>
+            <tr class='separator-row'>
+              <td class='separator-text' colspan="6">{{record.get_from_record()}}</td>
             </tr>
             {% for region in record.regions -%}
               <tr class = '{{loop.cycle('odd', 'even')}}'>
@@ -93,6 +93,7 @@
                 <td class="digits">{{region.location.start + 1}}</td>
                 <td class="digits">{{region.location.end}}</td>
                 <td>{{region.best_knowncluster_name}}</td>
+                <td>{{region.best_knowncluster_type}}</td>
                 {% set similarity = region.best_knowncluster_similarity %}
                 {% if similarity > 75 %}
                   {% set colour = "rgba(0, 100, 0, 0.3)" %}

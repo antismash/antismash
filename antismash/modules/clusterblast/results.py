@@ -27,11 +27,13 @@ def get_result_limit() -> int:
 
 class KnownHitSummary:
     """ Stores some information about a hit from known-CB in a handy to access way """
-    def __init__(self, bgc_id: str, name: str, cluster_number: int, similarity: int) -> None:
+    def __init__(self, bgc_id: str, name: str, cluster_number: int, similarity: int,
+                 cluster_type: str) -> None:
         self.bgc_id = str(bgc_id)
         self.name = str(name)
         self.cluster_number = int(cluster_number)
         self.similarity = int(similarity)
+        self.cluster_type = cluster_type
 
 
 class RegionResult:
@@ -68,7 +70,7 @@ class RegionResult:
         for cluster in self.svg_builder.hits:
             hits.append(KnownHitSummary(cluster.accession, cluster.description,
                                         cluster.ref_cluster_number,
-                                        cluster.similarity))
+                                        cluster.similarity, cluster.cluster_type))
         self.region.knownclusterblast = hits
 
     def jsonify(self) -> Dict[str, Any]:
