@@ -54,7 +54,7 @@ class CDSResults:
             if secmet_domain.name in all_matching:
                 continue
             self.cds.gene_functions.add(GeneFunction.ADDITIONAL, secmet_domain.tool,
-                                        str(secmet_domain))
+                                        secmet_domain.name)
 
     def to_json(self) -> Dict[str, Any]:
         """ Constructs a JSON representation of a CDSResults instance"""
