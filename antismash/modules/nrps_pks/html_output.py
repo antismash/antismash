@@ -10,7 +10,7 @@ from typing import Dict  # in comment type hints  # pylint: disable=unused-impor
 
 from jinja2 import FileSystemLoader, Environment, StrictUndefined
 
-from antismash.common import path
+from antismash.common import path, html_renderer
 from antismash.common.layers import RegionLayer, RecordLayer, OptionsLayer
 from antismash.common.secmet import CDSFeature, Region, SuperCluster
 
@@ -26,13 +26,20 @@ def will_handle(products: List[str]) -> bool:
 def generate_sidepanel(region_layer: RegionLayer, results: NRPS_PKS_Results,
                        record_layer: RecordLayer, options_layer: OptionsLayer) -> str:
     """ Generate the sidepanel HTML with results from the NRPS/PKS module """
-    env = Environment(loader=FileSystemLoader(path.get_full_path(__file__, 'templates')),
-                      autoescape=True, undefined=StrictUndefined)
-    template = env.get_template('sidepanel.html')
+    template = html_renderer.FileTemplate(path.get_full_path(__file__, 'templates', 'sidepanel.html'))
     nrps_layer = NrpspksLayer(results, region_layer.region_feature, record_layer)
+
+    features_with_domain_predictions = set()
+    for domain_name, consensus in results.consensus.items():
+        if not consensus:
+            continue
+        domain = record_layer.get_domain_by_name(domain_name)
+        features_with_domain_predictions.add(domain.locus_tag)
+
     sidepanel = template.render(record=record_layer,
                                 region=nrps_layer,
                                 results=results,
+                                relevant_features=features_with_domain_predictions,
                                 options=options_layer)
     return sidepanel
 

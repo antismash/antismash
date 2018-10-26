@@ -1,21 +1,18 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <script src="js/jquery.js"></script>
-  <script src="js/purl.js"></script>
-  <script src="js/d3.v2.js"></script>
-  <script src="js/svgene.js"></script>
-  <script src="js/jsdomain.js"></script>
-  <script src="js/clusterblast.js"></script>
+  <script src="js/antismash.js"></script>
   <script src="regions.js"></script>
-  <script src="js/smiles-drawer.min.js"></script>
-  <script src="js/jnj.js"></script>
+  <script>
+    $(document).ready(function() {
+        viewer["start"](all_regions, details_data);
+    })
+  </script>
 
-  {% for record in records %}
-  <title>{{record.id}} - {{record.regions | length}} region(s) - antiSMASH results</title>
+  <title>{{records[0].id}} - {{records[0].regions | length}} region(s) - antiSMASH results</title>
   <link rel="stylesheet" type="text/css" href="css/{{options.taxon}}.css">
   <meta charset="utf-8" />
-  {% endfor %}
 </head>
 <body>
   <div id="header">
@@ -74,6 +71,7 @@
             <tr class='separator-row'>
               <td class='separator-text' colspan="6">{{record.get_from_record()}}</td>
             </tr>
+            <tr><td colspan="8"><svg id="record-minimap-{{record.record_index}}" class="record-overview-svg" height="1" width="1"></svg></td></tr>
             {% for region in record.regions -%}
               <tr class = '{{loop.cycle('odd', 'even')}}'>
                 {% set hybrid_text = "" %}

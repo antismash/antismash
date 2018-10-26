@@ -3,39 +3,32 @@
 {% for record in records %}
 {% set results = results_by_record_id[record.id] %}
 {% for region in record.regions %}
-<div class= "page" id='{{region.anchor_id}}'>
+<div class="page" id='{{region.anchor_id}}'>
   <h3> {{record.seq_record.name}} - Region {{region.get_region_number()}} - {{region.get_product_string() | capitalize }}</h3>
-  {% if region.has_sidepanel %}
-  <div class="sidepanel">
-    {% for handler in region.handlers %}
-      {% if handler.generate_sidepanel is defined and handler.__name__ in results %}
-        {{handler.generate_sidepanel(region, results[handler.__name__], record, options) | safe }}
-      {% endif %}
-    {% endfor %}
-  </div>
-  {% endif %}
+ <div class="region-grid" style="display: grid; grid-template-columns: auto 25%; grid-gap: 1px;">
   <div class = "content">
     <div class ="description-container">
-      <h3> Region description </h3>
-      <div class = "region-download">
+      <div class="region-download">
         <a href = {{ '%s.region%03d.gbk' % (record.id, region.get_region_number()) }}>Download region GenBank file</a>
       </div>
       <div class = 'description-text'>
         {{region.description_text()}}
+        <a class="cluster-rules-header" id="{{region.anchor_id}}-rules-header" href="#{{region.anchor_id}}">Show pHMM detection rules used</a>
+        {% if region.contig_edge %}
+          <div class="contig-edge-warning">Region on contig edge.</div>
+        {% endif %}
       </div>
-      {% if region.contig_edge %}
-        <div class="contig-edge-warning">Region on contig edge.</div>
-      {% endif %}
-      <a class="cluster-rules-header" id="{{region.anchor_id}}-rules-header" href="#{{region.anchor_id}}">Show pHMM detection rules used</a>
-      <div class = "cluster-rules" id="{{region.anchor_id}}-rules">
+      <div class="cluster-rules" id="{{region.anchor_id}}-rules">
         {{- region.detection_rules|join('<br>'|safe) -}}
       </div>
-      <div id='{{region.anchor_id}}-svg'>
+      <div class="region-svg-container">
+       <div id='{{region.anchor_id}}-svg'>
+       </div>
       </div>
     </div>
     <div class="legend">
       <h4>Legend:</h4>
-      <div>
+      <div class="legend-items">
         {{le.legend('legend-type-biosynthetic', 'core biosynthetic genes')}}
         {{le.legend('legend-type-biosynthetic-additional', 'additional biosynthetic genes')}}
         {{le.legend('legend-type-transport', 'transport-related genes')}}
@@ -53,6 +46,22 @@
         {% endif %}
       </div>
     </div>
+    <div class="zoom-buttons">
+      <div class="button-like zoom-button zoom-reset"><img src="images/expand-arrows-alt-solid.svg" alt="reset zoom">reset view</div>
+      <div class="button-like zoom-button zoom-in"><img src="images/search-solid.svg" alt="zoom">zoom to selection</div>
+    </div>
+  </div>
+
+  <div class="focus-panel">
+    <h3>Gene details</h3>
+    <div class="focus-panel-content" style="margin-left: 2em; margin-right: 2em; font-size: 0.8em; display: flex; flex-wrap: nowrap; flex-direction: column; justify-content: space-between; height: 95%">
+        <div style="text-align: center; margin-top: 30%;">
+            Select a gene to view the details available for it
+        </div>
+    </div>
+  </div>
+
+  <div class="body-details">
     {% for handler in region.handlers %}
       {% if handler.generate_details_div is defined and handler.__name__ in results %}
         {{handler.generate_details_div(region, results[handler.__name__], record, options) | safe}}
@@ -60,6 +69,19 @@
     {% endfor %}
   </div>
 
+  <div class="sidepanel">
+   {% if region.has_sidepanel %}
+    <div class="general-details">
+        {% for handler in region.handlers %}
+          {% if handler.generate_sidepanel is defined and handler.__name__ in results %}
+            {{handler.generate_sidepanel(region, results[handler.__name__], record, options) | safe }}
+          {% endif %}
+        {% endfor %}
+    </div>
+   {% endif %}
+  </div>
+
+ </div>
 
 </div>
 {% endfor %}

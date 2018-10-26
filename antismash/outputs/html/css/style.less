@@ -17,8 +17,8 @@
 @tool-rule-based-clusters: white;
 
 body {
-    font-family: Verdana, Tahoma, Sans-Serif;
-    color: @antismash-main;
+    font-family: Helvetica, Verdana, Tahoma, Sans-Serif;
+    color: #555;
     background-color: white;
     text-align: left;
     margin: 0;
@@ -27,6 +27,9 @@ body {
 
 a {
     text-decoration: none;
+    background-color: #eee;
+    border-radius: 2px;
+    color: black;
     &:active {
         color: @antismash-main
     }
@@ -39,6 +42,10 @@ a {
     &:visited {
         color: @antismash-gray
     }
+}
+
+.regbutton a {
+    background: none;
 }
 
 dd {
@@ -75,15 +82,75 @@ dd {
     border-top: @width solid @antismash-light;
 }
 
-.top-header {
-    display: block;
-    overflow: hidden;
-    background-color: @medium-gray;
+nav {
+    display: flex;
+    justify-content: space-between;
     .line-bottom;
+    background-image: linear-gradient(to bottom, #5e5e5e 0, #444 100%);
+    background-repeat: repeat-x;
+    color: #e1e1e1;
+    font-size: 14px;
+    border-bottom: 4px solid #810e15;
+    height: 50px;
+    & a {
+        background: none;
+        color: #e1e1e1;
+        &:visited, &:link {
+            color: #e1e1e1;
+        }
+        &:hover {
+            color: white;
+            text-decoration: none;
+        }
+    }
+    & .main-link {
+        font-size: 18px;
+        padding-right: 15px;
+        & div {
+            display: block;
+            float: left;
+            padding-left: 15px;
+            padding-top: 9px;
+            line-height: 200%;
+        }
+    }
+    & .ancillary-links {
+        display: block;
+        padding-right: 15px;
+        padding-top: 15px;
+        & .ancillary-link {
+            display: block;
+            position: relative;
+            float: left;
+            & a {
+                padding-left: 2em;
+                & img {
+                    height: 1em;
+                }
+            }
+        }
+    }
 }
 
 .footer {
     .line-top(1px);
+    display: flex;
+    justify-content: center;
+    .container {
+        display: flex;
+        justify-content: space-between;
+        & .cite-me {
+            margin-top: 1em;
+            margin-left: 1em;
+            height: 1.5em;
+            background-image: linear-gradient(to bottom, #e8e8e8 0, #f5f5f5 100%);
+            background-repeat: repeat-x;
+            border-color: #dcdcdc;
+            border-radius: 4px;
+            padding: 19px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05),0 1px 0 rgba(255,255,255,0.1);
+        }
+    }
 }
 
 .antismash-logo {
@@ -122,16 +189,6 @@ dd {
     border-left: 0.75em solid @antismash-main;
     &:hover {
         border-left-color: screen(@antismash-main, #666666);
-    }
-}
-
-#header {
-    margin: 0px auto;
-    display: block;
-    border-bottom: 2px solid @antismash-main;
-    img {
-        border: 0px;
-        padding-left: 0.5em;
     }
 }
 
@@ -182,11 +239,15 @@ dd {
     }
 }
 
+.focus-panel {
+    display: block;
+    border-left: 2px solid @antismash-main;
+    padding-bottom: 1em;
+}
+
 .sidepanel {
     display: block;
-    float: right;
     border-left: 2px solid @antismash-main;
-    width: 20%;
 }
 
 .structure img {
@@ -212,7 +273,6 @@ dd {
 
 .content {
     display: block;
-    max-width: 79%;
 }
 
 
@@ -221,12 +281,19 @@ dd {
     padding: 0;
 }
 
+.region-svg-container {
+    margin: 0 2% 0 2%;
+}
+
 #regionbuttons {
     margin: 0 0 0 0.5em;
     padding: 0;
     list-style-type: none;
     min-height: 1.1em;
-    min-height: 2em;
+    max-height: 2em;
+    a {
+        background: none;
+    }
     a:hover {
         text-decoration: none;
     }
@@ -237,8 +304,7 @@ dd {
         margin-right: 0.2em;
         border-radius: 50%;
         padding: 0.25em;
-        min-width: 1.25em;
-        min-height: 1.25em;
+        min-width: 1.5em;
         text-align: center;
         vertical-align: middle;
     }
@@ -278,12 +344,11 @@ dd {
 }
 
 .description-text, .cluster-rules-header {
-    font-size: 70%;
+    font-size: 85%;
 }
 
 .alt-weight-desc {
     .description-text;
-    color: @antismash-gray;
 }
 
 .alt-weight-n {
@@ -292,29 +357,33 @@ dd {
 }
 
 .region-download {
-    font-size: 70%;
+    font-size: 75%;
     float: right;
+    padding: 5px;
+    margin-right: 20px;
+    border-radius: 5px;
+    background-color: #eee;
 }
 
 .cluster-rules {
-    font-size: 70%;
+    font-size: 75%;
     display: none;
     border: 1px solid @tooltip-border;
     background-color: @tooltip-background;
 }
 
 .description-container {
-    padding-bottom: 1em;
     .left-padding;
 }
 
 .contig-edge-warning {
-    font-size: 70%;
+    font-size: 75%;
     font-weight: bold;
     float: right;
     color: black;
     background-color: orange;
     padding: 5px;
+    margin-right: 20px;
     border-radius: 5px;
 }
 
@@ -391,7 +460,7 @@ table {
 .svgene-tta-codon {
     fill: @feature-tta-codon;
 }
-.svgene-line {
+.cluster-line, .centerline {
     stroke-width: 1px;
     stroke: #888;
 }
@@ -420,10 +489,62 @@ table {
     fill: @tool-clusterfinder;
 }
 
-.svgene-border-rule-based-clusters {
+.cluster-core {
     stroke: black;
     stroke-width: 1px;
     fill: @tool-rule-based-clusters;
+}
+
+.svgene-orf, .svgene-minimap-orf{
+    stroke-width: 0;
+}
+
+.svgene-selected-orf {
+    stroke: #000;
+    stroke-width: 1px;
+}
+
+.legend-items, .zoom-buttons {
+    display: flex;
+    justify-content: center;
+}
+
+.button-like {
+    display: flex;
+    align-items: center;
+    border: 1px solid lightgrey;
+    border-radius: 0.5em;
+    margin-left: 1em;
+    padding: 0.5em;
+    padding-top: 0.3em;
+    box-shadow: inset 0 -2px 2px grey;
+    cursor: default;
+
+    &:hover {
+        background-color: #fcfcfc;
+        box-shadow: inset 0 2px 5px grey;
+    }
+
+    &:active {
+        background-color: #eee;
+        box-shadow: inset 0 2px 5px grey;
+    }
+    & * {
+        cursor: default;
+    }
+    & img {
+        height: 1.5em;
+        padding-right: 0.5em;
+    }
+}
+
+.legend-selected {
+    background-color: #eee;
+    box-shadow: inset 0 2px 5px grey;
+}
+
+.legend-selector * {
+    cursor: default;
 }
 
 .legend-type-other {
@@ -462,22 +583,51 @@ table {
         margin-bottom: 0.5em;
     }
     font-size: 80%;
-    overflow: hidden;
+
     margin-bottom: 0.5em;
     .left-padding;
+    bottom-padding: 1em;
 }
 
 .legend-field {
     float: left;
     width: 1em;
     height: 1em;
-    margin-left: 1em;
     margin-right: 0.25em;
     border: 1px solid black;
 }
 
 .legend-label {
     float: left;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.zoom-button {
+    background-color: white;
+    border: 1px solid lightgrey;
+    border-radius: 0.5em;
+    box-shadow: inset 0 -2px 2px grey;
+    font-size: 80%;
+    margin-left: 1em;
+    padding: 0.5em;
+
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+
+    &:hover {
+        background-color: #fcfcfc;
+        box-shadow: inset 0 2px 5px grey;
+    }
+
+    &:active {
+        background-color: #eee;
+        box-shadow: inset 0 2px 5px grey;
+    }
 }
 
 .details, .clusterblast, .subclusterblast, .knownclusterblast {
@@ -546,4 +696,100 @@ table {
     width: 40%;
     margin-right: 1.5em;
     padding: 0.5em;
+}
+
+.collapser {
+    border: none;
+    display: inline;
+    border-radius: 50%;
+}
+
+.collapser-decorator {
+    content: '';
+    background-size: 1em 1em;
+    height: 1em;
+    width: 1em;
+    background-repeat: no-repeat;
+    display: inline-block;
+}
+
+.collapser:before {
+    .collapser-decorator;
+    background-image: url(../images/plus-circle.svg);
+}
+
+.expanded:before {
+    .collapser-decorator;
+    background-image: url(../images/minus-circle.svg);
+}
+
+.collapser-content {
+    display: none;
+    padding-left: 1em;
+}
+
+.supercluster-hybrid {
+    & rect {
+        fill: #282268;
+    }
+    & text {
+        fill: lightgrey;
+    }
+}
+
+.supercluster-interleaved {
+    & rect {
+        fill: #4b4596;
+    }
+    & text {
+        fill: lightgrey;
+    }
+}
+
+.supercluster-neighbouring {
+    & rect {
+        fill: #8680cc;
+    }
+    & text {
+        fill: #ddd;
+    }
+}
+
+.supercluster-single {
+    & rect {
+        fill: #c6c1f5;
+    }
+    & text {
+        fill: black;
+    }
+}
+
+ul.dropdown-options {
+    display: none;
+    position: relative;
+    top: -55px;
+    padding: 70px 0 0 0;
+    margin: 0;
+    &:hover {
+        display: block;
+    }
+    & li {
+        background-image: linear-gradient(to bottom,#5e5e5e 0,#444 100%);
+        background-repeat: repeat-x;
+        padding: 10px;
+        list-style: none;
+        &:hover {
+            cursor: pointer;
+        }
+    }
+}
+
+.dropdown-menu {
+    text-align: right;
+    &:active ul {
+        display: block;
+    }
+    &:active #download-dropdown-link{
+        display: block;
+    }
 }

@@ -156,13 +156,9 @@ class RegionLayer:
 
     def description_text(self) -> str:
         """ returns the Region description """
-        description_text = self.record.name \
-            + ' - Genomic region %s. Type = %s. Location: %s - %s nt. ' % (
-                        self.get_region_number(), self.get_product_string(),
-                        self.location.start + 1, self.location.end)
+        description_text = 'Location: %s - %s nt. ' % (self.location.start + 1, self.location.end)
         if get_config().cf_create_clusters and self.probabilities:
             description_text += 'ClusterFinder probabilities: %s. ' % self.probabilities
-        description_text += 'Click on genes for more information.'
 
         return description_text
 

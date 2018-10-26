@@ -38,3 +38,8 @@ License
 antiSMASH is an open source tool available under the GNU Affero General Public
 License version 3.0 or greater. See the [`LICENSE.txt`](LICENSE.txt) file for
 details.
+
+Acknowledgements
+----------------
+
+Some icons used courtesy of fontawesome.com
