@@ -56,7 +56,7 @@ class SecMetQualifier:
 
         def __init__(self, name: str, evalue: float, bitscore: float, nseeds: int,
                      tool: str) -> None:
-            self.query_id = str(name)
+            self.name = str(name)
             self.evalue = float(evalue)
             self.bitscore = float(bitscore)
             self.nseeds = int(nseeds)
@@ -66,13 +66,13 @@ class SecMetQualifier:
             return str(self)
 
         def __str__(self) -> str:
-            return self.qualifier_label.format(self.query_id, self.evalue,
+            return self.qualifier_label.format(self.name, self.evalue,
                                                self.bitscore, self.nseeds, self.tool)
 
         def __eq__(self, other: Any) -> bool:
             if not isinstance(other, type(self)):
                 return False
-            return (self.query_id == other.query_id
+            return (self.name == other.name
                     and self.evalue == other.evalue
                     and self.bitscore == other.bitscore
                     and self.nseeds == other.nseeds
@@ -80,7 +80,7 @@ class SecMetQualifier:
 
         def to_json(self) -> List[Union[str, float, int]]:
             """ Constructs a JSON-friendly representation of a Domain """
-            return [self.query_id, self.evalue, self.bitscore, self.nseeds, self.tool]
+            return [self.name, self.evalue, self.bitscore, self.nseeds, self.tool]
 
         @classmethod
         def from_string(cls, line: str) -> "SecMetQualifier.Domain":
@@ -110,11 +110,11 @@ class SecMetQualifier:
         unique = []
         for domain in domains:
             assert isinstance(domain, SecMetQualifier.Domain)
-            if domain.query_id in self.unique_domain_ids:
+            if domain.name in self.unique_domain_ids:
                 continue  # no sense keeping duplicates
-            self.unique_domain_ids.add(domain.query_id)
+            self.unique_domain_ids.add(domain.name)
             unique.append(domain)
-            self.domain_ids.append(domain.query_id)
+            self.domain_ids.append(domain.name)
         self._domains.extend(unique)
 
     @property

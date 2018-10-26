@@ -53,7 +53,7 @@ class TestReverseParse(unittest.TestCase):
 class TestDomain(unittest.TestCase):
     def test_construction(self):
         dom = SecMetQualifier.Domain("test name", 1e-5, 120.7, 57, "test tool")
-        assert dom.query_id == "test name"
+        assert dom.name == "test name"
         assert dom.evalue == 1e-5
         assert dom.bitscore == 120.7
         assert dom.nseeds == 57
@@ -63,7 +63,7 @@ class TestDomain(unittest.TestCase):
         old = SecMetQualifier.Domain("test name", 1e-5, 120.7, 57, "test tool")
         dump = json.dumps(old.to_json())
         new = SecMetQualifier.Domain.from_json(json.loads(dump))
-        assert new.query_id == old.query_id == "test name"
+        assert new.name == old.name == "test name"
         assert new.evalue == old.evalue == 1e-5
         assert new.bitscore == old.bitscore == 120.7
         assert new.nseeds == old.nseeds == 57
@@ -74,7 +74,7 @@ class TestDomain(unittest.TestCase):
         assert repr(old) == str(old)
         dump = str(old)
         new = SecMetQualifier.Domain.from_string(dump)
-        assert new.query_id == old.query_id == "name test"
+        assert new.name == old.name == "name test"
         assert new.evalue == old.evalue == 5e-235
         assert new.bitscore == old.bitscore == 20.17
         assert new.nseeds == old.nseeds == 30
@@ -85,9 +85,9 @@ class TestDomain(unittest.TestCase):
         second = SecMetQualifier.Domain("name test", 5e-235, 20.17, 30, "tool test")
 
         assert first == second
-        second.query_id = "tmp"
+        second.name = "tmp"
         assert first != second
-        second.query_id = first.query_id
+        second.name = first.name
 
         assert first == second
         second.evalue = 1e-5
@@ -123,7 +123,7 @@ class TestSecMetQualifier(unittest.TestCase):
         assert qual.domains == self.domains
         qual.add_domains(self.domains)  # duplicates ignored
         assert qual.domains == self.domains
-        self.domains[0].query_id = "new name"
+        self.domains[0].name = "new name"
         qual.add_domains(self.domains)  # non-duplicate now
         assert len(qual.domains) == 3
         assert qual.domain_ids == ["test name", "name test", "new name"]
