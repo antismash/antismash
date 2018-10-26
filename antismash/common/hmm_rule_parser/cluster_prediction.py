@@ -51,7 +51,7 @@ class CDSResults:
 
         # and add all detected domains as ADDITIONAL if not CORE
         for secmet_domain in self.cds.sec_met.domains:
-            if secmet_domain.query_id in all_matching:
+            if secmet_domain.name in all_matching:
                 continue
             self.cds.gene_functions.add(GeneFunction.ADDITIONAL, secmet_domain.tool,
                                         str(secmet_domain))
