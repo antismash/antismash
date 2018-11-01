@@ -5,12 +5,13 @@
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
 from collections import OrderedDict
-import unittest
 import os
+import unittest
 
 from minimock import mock, restore
 from helperlibs.wrappers.io import TemporaryDirectory
 
+from antismash import config
 from antismash.common.secmet import Record, Region
 from antismash.common.test.helpers import DummyCDS, DummyCluster, DummySuperCluster
 import antismash.modules.clusterblast.core as core
@@ -551,3 +552,35 @@ class TestOrthologousGroups(unittest.TestCase):
         assert groups == [['CAG25751.1', 'a1', 'a2', 'a3'],
                           ['CAG25751.2', 'b1', 'b2', 'b3'],
                           ['CAG25751.3', '_c1', 'c2', 'c_3']]
+
+
+class TestReferenceProteinLoading(unittest.TestCase):
+    def mock_with(self, content):
+        # unittest.mock.mock_open doesn't handle the __iter__ case, so work around it
+        mocked_open = unittest.mock.mock_open(read_data=content)
+        mocked_open.return_value.__iter__ = lambda self: iter(self.readline, '')
+        return mocked_open
+
+    def setUp(self):
+        config.build_config({})
+
+    def tearDown(self):
+        config.destroy_config()
+
+    def test_standard(self):
+        hit = ">CVNH01000008|c1|65549-69166|-|BN1184_AH_00620|Urea_carboxylase_{ECO:0000313}|CRH36422"
+        with unittest.mock.patch("builtins.open", self.mock_with(hit)):
+            proteins = core.load_reference_proteins(set(), "clusterblast")
+        assert len(proteins) == 1
+        protein = proteins["CRH36422"]
+        assert protein.name == "CRH36422"
+        assert protein.annotations == "Urea_carboxylase_{ECO:0000313}"
+
+    def test_non_standard(self):
+        hit = ">CVNH01000008|c1|65549-69166|-|BN1184_AH_00620|Urea_carboxylase_{ECO:0000313|EMBL:CCF11062.1}|CRH36422"
+        with unittest.mock.patch("builtins.open", self.mock_with(hit)):
+            proteins = core.load_reference_proteins(set(), "clusterblast")
+        assert len(proteins) == 1
+        protein = proteins["CRH36422"]
+        assert protein.name == "CRH36422"
+        assert protein.annotations == "Urea_carboxylase_{ECO:0000313|EMBL:CCF11062.1}"

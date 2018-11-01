@@ -174,14 +174,15 @@ def load_reference_proteins(accessions: Set[str], searchtype: str) -> Dict[str, 
             line = line.rstrip("\n")
             if not line or line[0] != ">":
                 continue
-            tabs = line.split("|")
+            # some lines are malformed, so always split the name off the annotation
+            # e.g. >x|y|1-2|-|z|Urea_carboxylase_{ECO:0000313|EMBL:CCF11062.1}|CRH36422
+            tabs = line.split("|", 5)
+            annotations, name = tabs[5].rsplit("|", 1)
             locustag = tabs[4]
             if locustag in accessions:
                 locustag = "h_" + locustag  # TODO: needs to be actually unique
             location = tabs[2]
             strand = tabs[3]
-            annotations = tabs[5]
-            name = tabs[6]
             proteins[name] = Protein(name, locustag, location, strand, annotations)
     return proteins
 
