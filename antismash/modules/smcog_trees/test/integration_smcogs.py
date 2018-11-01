@@ -76,7 +76,7 @@ class TestTreeGeneration(Base):
 
         results.add_to_record(self.record)
         for cds in self.record.get_cds_features():
-            if cds.sec_met:
+            if cds.gene_functions.get_by_tool("rule-based-clusters"):
                 continue  # no sense checking, because we don't do anything with it
             if not cds.gene_functions.get_by_tool("smcogs"):
                 continue

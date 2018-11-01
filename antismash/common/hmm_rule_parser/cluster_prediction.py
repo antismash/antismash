@@ -40,10 +40,9 @@ class CDSResults:
         """ Annotates a CDSFeature with the results gathered """
         all_matching = set()
         if not self.cds.sec_met:
-            self.cds.sec_met = SecMetQualifier(set(self.definition_domains), self.domains)
+            self.cds.sec_met = SecMetQualifier(self.domains)
         else:
             all_matching.update(set(self.cds.sec_met.domain_ids))
-            self.cds.sec_met.add_products({product})
             self.cds.sec_met.add_domains(self.domains)
         for cluster_type, matching_domains in self.definition_domains.items():
             all_matching.update(matching_domains)
@@ -52,10 +51,10 @@ class CDSResults:
 
         # and add all detected domains as ADDITIONAL if not CORE
         for secmet_domain in self.cds.sec_met.domains:
-            if secmet_domain.query_id in all_matching:
+            if secmet_domain.name in all_matching:
                 continue
             self.cds.gene_functions.add(GeneFunction.ADDITIONAL, secmet_domain.tool,
-                                        str(secmet_domain))
+                                        secmet_domain.name)
 
     def to_json(self) -> Dict[str, Any]:
         """ Constructs a JSON representation of a CDSResults instance"""

@@ -10,6 +10,8 @@ from Bio.Seq import Seq
 
 from antismash.common.secmet.features import FeatureLocation, CDSFeature
 from antismash.common.secmet.features.feature import CompoundLocation
+from antismash.common.secmet.qualifiers import SecMetQualifier
+from antismash.common.secmet.qualifiers.gene_functions import GeneFunction
 
 
 class TestCDSFeature(unittest.TestCase):
@@ -35,6 +37,76 @@ class TestCDSFeature(unittest.TestCase):
         for trans in [None, ""]:
             with self.assertRaisesRegex(ValueError, "requires a valid translation"):
                 CDSFeature(loc, locus_tag="test", translation=trans)
+
+
+class TestCDSBiopythonConversion(unittest.TestCase):
+    def setUp(self):
+        self.cds = CDSFeature(FeatureLocation(1, 12, 1),
+                              translation="A"*4,
+                              locus_tag="loctag",
+                              gene="gene",
+                              protein_id="prot_id")
+
+    def convert(self):
+        bio_features = self.cds.to_biopython()
+        assert isinstance(bio_features, list)
+        assert len(bio_features) == 1
+        return bio_features[0]
+
+    def test_basics(self):
+        bio = self.convert()
+        assert bio.location == self.cds.location
+        assert bio.qualifiers["locus_tag"] == ["loctag"]
+        assert bio.qualifiers["gene"] == ["gene"]
+        assert bio.qualifiers["protein_id"] == ["prot_id"]
+        assert bio.qualifiers["translation"] == ["A"*4]
+
+        regen = CDSFeature.from_biopython(bio)
+        assert regen.location == self.cds.location
+        assert regen.locus_tag == self.cds.locus_tag
+        assert regen.gene == self.cds.gene
+        assert regen.protein_id == self.cds.protein_id
+
+    def test_without_genefunctions(self):
+        bio = self.convert()
+        assert "gene_functions" not in bio.qualifiers
+        assert "gene_kind" not in bio.qualifiers
+
+        regen = CDSFeature.from_biopython(bio)
+        assert not regen.gene_functions
+
+    def test_with_genefunctions(self):
+        self.cds.gene_functions.add(GeneFunction.ADDITIONAL, "testtool", "dummy")
+        bio = self.convert()
+        assert "gene_functions" in bio.qualifiers
+        assert bio.qualifiers["gene_kind"] == [str(self.cds.gene_function)] == ["biosynthetic-additional"]
+
+        regen = CDSFeature.from_biopython(bio)
+        assert regen.gene_function == self.cds.gene_function
+        assert regen.gene_functions.get_by_tool("testtool") == self.cds.gene_functions.get_by_tool("testtool")
+
+    def test_without_secmet(self):
+        assert not self.cds.sec_met
+        bio = self.convert()
+        assert "sec_met" not in bio.qualifiers  # for detecting legacy versions
+        assert "sec_met_domain" not in bio.qualifiers
+
+        regen = CDSFeature.from_biopython(bio)
+        assert not regen.sec_met
+
+    def test_with_secmet(self):
+        domains = [SecMetQualifier.Domain("testA", 0.1, 1.1, 3, "test"),
+                   SecMetQualifier.Domain("testB", 5.1, 3.9, 5, "dummy")]
+        self.cds.sec_met = SecMetQualifier(domains)
+        bio = self.convert()
+        assert "sec_met" not in bio.qualifiers  # again, detecting leftover legacy versions
+        assert len(bio.qualifiers["sec_met_domain"]) == 2
+        assert bio.qualifiers["sec_met_domain"] == list(map(str, domains))
+
+        regen = CDSFeature.from_biopython(bio)
+        assert regen.sec_met
+        assert len(regen.sec_met.domains) == len(domains)
+        assert regen.sec_met.domains == domains
 
 
 class TestCDSProteinLocation(unittest.TestCase):

@@ -60,7 +60,7 @@ class CDSFeature(Feature):
             raise TypeError("product must be a string, not %s", type(product))
         self.product = product
         self.transl_table = int(translation_table)
-        self._sec_met = None  # type: Optional[SecMetQualifier]
+        self._sec_met = SecMetQualifier()
         self._nrps_pks = NRPSPKSQualifier(self.location.strand)
 
         self.motifs = []  # type: List[features.CDSMotif]
@@ -172,7 +172,7 @@ class CDSFeature(Feature):
 
         # grab optional qualifiers
         feature.product = leftovers.pop("product", [""])[0]
-        sec_met = leftovers.pop("sec_met", None)
+        sec_met = leftovers.pop("sec_met_domain", None)
         if sec_met:
             feature.sec_met = SecMetQualifier.from_biopython(sec_met)
         gene_functions = leftovers.pop("gene_functions", [])
@@ -196,9 +196,9 @@ class CDSFeature(Feature):
                 mine[attr] = [str(val)]
         if self._gene_functions:
             mine["gene_functions"] = list(map(str, self._gene_functions))
-        # since it's already a list
+            mine["gene_kind"] = [str(self.gene_function)]
         if self.sec_met:
-            mine["sec_met"] = self.sec_met
+            mine["sec_met_domain"] = list(map(str, self.sec_met))
         # respect qualifiers given to us
         if qualifiers:
             mine.update(qualifiers)
