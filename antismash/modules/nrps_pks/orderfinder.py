@@ -109,7 +109,7 @@ def generate_substrates_order(geneorder: List[CDSFeature], consensus_predictions
             if consensus:
                 consensuses.append(consensus)
         if consensuses:
-            predictions.append("(%s)" % ("-".join(consensuses)))
+            predictions.append("(%s)" % (" - ".join(consensuses)))
 
     if not predictions:
         return ""
