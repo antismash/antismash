@@ -17,6 +17,9 @@ antismash/detection/hmm_detection/data/bgc_seeds.hmm
 antismash/databases/*
 antismash.egg-info/*
 **/.ropeproject/*
+antismash/git_hash
+pip-delete-this-directory.txt
+pip-egg-info/*
 
 # keep these, even in locations that are ignored
 !antismash/databases/README
