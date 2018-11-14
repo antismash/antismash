@@ -22,7 +22,7 @@ LONG_TO_SHORT = {'Malonyl-CoA': 'mal', 'Methylmalonyl-CoA': 'mmal', 'Methoxymalo
                  'inactive': 'inactive'}
 SHORT_TO_LONG = {val: key for key, val in LONG_TO_SHORT.items()}
 
-ALLOWABLE_PREDICTION_CHARACTERS = set(string.ascii_letters).union({'-'})
+ALLOWABLE_PREDICTION_CHARACTERS = set(string.ascii_letters + string.digits).union(set('-,()'))
 
 AVAILABLE_SMILES_PARTS = {'GLY', 'ALA', 'VAL', 'LEU', 'ILE', 'MET', 'PRO', 'PHE', 'TRP', 'SER', 'THR', 'ASN', 'GLN',
                           'TYR', 'CYS', 'LYS', 'ARG',
