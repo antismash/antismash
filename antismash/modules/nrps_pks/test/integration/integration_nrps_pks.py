@@ -75,7 +75,7 @@ class IntegrationNRPSPKS(unittest.TestCase):
         assert len(results.region_predictions[1]) == 2
         # as does this, though it still won't use domain docking
         pred = results.region_predictions[1][0]
-        monomers = '(leu-bht-asn) + (hpg-hpg-bht) + (dhpg) + (tyr) + (pk)'
+        monomers = '(leu - bht - asn) + (hpg - hpg - bht) + (dhpg) + (tyr) + (pk)'
         assert pred.polymer == monomers
         assert not pred.domain_docking_used
 
@@ -100,7 +100,7 @@ class IntegrationNRPSPKS(unittest.TestCase):
         assert len(results.region_predictions[1]) == 1
         # check the gene ordering and, in this case, that it used domain docking
         sc_pred = results.region_predictions[1][0]
-        assert sc_pred.polymer == '(ccmmal) + (ccmmal) + (mmal-pk) + (ohmmal)'
+        assert sc_pred.polymer == '(ccmmal) + (ccmmal) + (mmal - pk) + (ohmmal)'
         assert sc_pred.domain_docking_used
         assert len(results.domain_predictions) == 10
         expected_domains = {'nrpspksdomains_STAUR_3982_PKS_AT.1',

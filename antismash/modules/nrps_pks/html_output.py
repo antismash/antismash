@@ -129,7 +129,7 @@ class SuperClusterLayer:
         i = 1
         nrpslist = []
         for monomers_per_protein in monomers_per_protein_list:
-            monomers = monomers_per_protein[1:-1].split("-")
+            monomers = monomers_per_protein[1:-1].split(" - ")
 
             if be_strict:
                 monomers = [map_as_name_to_norine(element.lower())
