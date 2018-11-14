@@ -197,7 +197,7 @@ class TestSubLocation(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "must be contained by the feature"):
                 self.get_sub(bad_start, bad_end)
         for bad_start, bad_end in [("test", 5), (5, "test"), (None, 5)]:
-            with self.assertRaisesRegex(TypeError, "unorderable types"):
+            with self.assertRaisesRegex(TypeError, "(unorderable types|not supported)"):
                 self.get_sub(bad_start, bad_end)
         with self.assertRaisesRegex(ValueError, "must be less than the end"):
             self.get_sub(5, 1)
