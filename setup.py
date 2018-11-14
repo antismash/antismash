@@ -3,6 +3,7 @@ import glob
 import os
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
+import subprocess
 import sys
 
 
@@ -62,6 +63,20 @@ def find_data_files():
         pathname = glob.escape(pathname)
         pathname = pathname[10:]
         data_files.append(pathname)
+    if "HARDCODE_ANTISMASH_GIT_VERSION" in os.environ:
+        version_file = os.path.join('antismash', 'git_hash')
+        with open(version_file, 'wt') as handle:
+            try:
+                git_version = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'],
+                                                      universal_newlines=True).strip()
+                changes = subprocess.check_output(['git', 'status', '--porcelain'],
+                                                  universal_newlines=True).splitlines()
+                if len(changes) != 0:
+                    git_version += "(changed)"
+                handle.write(git_version)
+            except (OSError, subprocess.CalledProcessError):
+                pass
+        data_files.append(version_file)
     return data_files
 
 
