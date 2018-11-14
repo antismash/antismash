@@ -6,20 +6,37 @@
 
 import os
 import sys
-from typing import List
+from typing import List, Optional
 
 import antismash
+from antismash.common.path import (
+    get_full_path,
+    locate_file,
+)
 from antismash.common.subprocessing import execute
 
+GIT_VERSION_FALLBACK_FILENAME = get_full_path(__file__, "git_hash")
 
-def get_git_version() -> str:
+
+def get_git_version(fallback_filename: Optional[str] = GIT_VERSION_FALLBACK_FILENAME) -> str:
     """Get the sha1 of the current git version"""
-    args = ['git', 'rev-parse', '--short', 'HEAD']
+    git_version = ""
     try:
-        return execute(args).stdout.strip()
+        version_cmd = execute(['git', 'rev-parse', '--short', 'HEAD'])
+        status_cmd = execute(['git', 'status', '--porcelain'])
+        if version_cmd.successful() and status_cmd.successful():
+            git_version = version_cmd.stdout.strip()
+            changes = status_cmd.stdout.splitlines()
+            if len(changes) > 0:
+                print(changes)
+                git_version += "(changed)"
     except OSError:
         pass
-    return ""
+    if git_version == "" and fallback_filename:
+        if locate_file(fallback_filename, silent=True):
+            with open(fallback_filename, 'rt') as handle:
+                git_version = handle.read().strip()
+    return git_version
 
 
 def get_version() -> str:
