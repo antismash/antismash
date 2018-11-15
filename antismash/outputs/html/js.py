@@ -204,7 +204,7 @@ def get_description(record: Record, feature: CDSFeature, type_: str,
     template += 'Locus-tag: %s; Protein-ID: %s<br>\n' % (feature.locus_tag, feature.protein_id)
 
     ec_number = feature.get_qualifier('EC_number')
-    if ec_number is not None:
+    if isinstance(ec_number, tuple):
         template += "EC-number(s): %s<br>\n" % ",".join(ec_number)
 
     for gene_function in feature.gene_functions:

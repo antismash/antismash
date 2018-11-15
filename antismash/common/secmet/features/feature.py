@@ -4,7 +4,8 @@
 """ The base class of all secmet features """
 
 from collections import OrderedDict
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Tuple, Union
+from typing import Optional  # comment hints  # pylint: disable=unused-import
 
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 from Bio.Seq import Seq
@@ -65,7 +66,7 @@ class Feature:
         self.notes = []  # type: List[str]
         assert feature_type
         self.type = str(feature_type)
-        self._qualifiers = OrderedDict()  # type: Dict[str, List[str]]
+        self._qualifiers = OrderedDict()  # type: Dict[str, Optional[List[str]]]
         self.created_by_antismash = bool(created_by_antismash)
         self._original_codon_start = None  # type: Optional[int]
 
@@ -147,14 +148,22 @@ class Feature:
 
         return CompoundLocation(new_locations)
 
-    def get_qualifier(self, key: str) -> Optional[Tuple]:
-        """ Fetches a qualifier by key and returns a tuple of items stored under
-            that key or None if the key was not present.
+    def get_qualifier(self, key: str) -> Union[None, Tuple[str, ...], bool]:
+        """ Fetches a qualifier by key and returns
+            - a tuple of items stored under that key,
+            - True if the key is present without a value,
+            - or None if the key was not present.
         """
-        qualifier = self._qualifiers.get(key)
+        # not present
+        if key not in self._qualifiers:
+            return None
+        qualifier = self._qualifiers[key]
+        # present with value(s) (e.g. /key=value)
         if qualifier:
             return tuple(qualifier)
-        return None
+        # present without value (e.g. /pseudo)
+        assert qualifier is None
+        return True
 
     def overlaps_with(self, other: Union["Feature", FeatureLocation]) -> bool:
         """ Returns True if the given feature overlaps with this feature.
@@ -188,7 +197,9 @@ class Feature:
         """
         feature = SeqFeature(self.location, type=self.type)
         quals = self._qualifiers.copy()
-        notes = self._qualifiers.get("note", []) + self.notes
+        notes = self._qualifiers.get("note", [])
+        assert notes is not None
+        notes.extend(self.notes)
         if qualifiers:
             notes += qualifiers.pop("note", [])
             quals.update(qualifiers)

@@ -72,6 +72,7 @@ class TestFeature(unittest.TestCase):
     def test_biopython_conversion(self):
         bio = SeqFeature(FeatureLocation(1, 5))
         bio.qualifiers["foo"] = ["bar"]
+        bio.qualifiers["key_only"] = None
         # check that features without types are caught
         with self.assertRaises(AssertionError):
             sec = Feature.from_biopython(bio)
@@ -79,6 +80,7 @@ class TestFeature(unittest.TestCase):
         sec = Feature.from_biopython(bio)
         assert sec.get_qualifier("foo") == tuple(["bar"])
         assert sec.get_qualifier("bar") is None
+        assert sec.get_qualifier("key_only") is True
 
     def test_created_by_antismash_conversion(self):
         for created in [True, False]:
