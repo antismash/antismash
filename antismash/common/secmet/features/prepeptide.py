@@ -8,6 +8,7 @@ from typing import Optional  # comment hints, pylint: disable=unused-import
 
 from Bio.SeqFeature import SeqFeature
 
+from ..errors import SecmetInvalidInputError
 from .cds_motif import CDSMotif
 from .feature import Feature
 from ..locations import FeatureLocation, build_location_from_others, location_from_string
@@ -190,9 +191,9 @@ class Prepeptide(CDSMotif):  # pylint: disable=too-many-instance-attributes
 
         section = leftovers.pop("prepeptide", [""])[0]
         if not section:
-            raise ValueError("cannot reconstruct Prepeptide from biopython feature %s" % bio_feature)
+            raise SecmetInvalidInputError("cannot reconstruct Prepeptide from biopython feature %s" % bio_feature)
         elif section != "core":
-            raise ValueError("Prepeptide can only be reconstructed from core feature")
+            raise SecmetInvalidInputError("Prepeptide can only be reconstructed from core feature")
         peptide_class = leftovers.pop("peptide")[0]
         core = leftovers.pop("core_sequence")[0]
         alt_weights = [float(weight) for weight in leftovers.pop("alternative_weights", [])]

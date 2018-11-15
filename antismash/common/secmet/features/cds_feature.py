@@ -18,6 +18,7 @@ from antismash.common.secmet.qualifiers import (
     SecMetQualifier,
 )
 
+from ..errors import SecmetInvalidInputError
 from .feature import Feature, FeatureLocation
 
 
@@ -163,7 +164,7 @@ class CDSFeature(Feature):
             translation = ""
         if not translation:
             if not record:
-                raise ValueError("no translation in CDS and no record to generate it with")
+                raise SecmetInvalidInputError("no translation in CDS and no record to generate it with")
             translation = record.get_aa_translation_from_location(bio_feature.location, transl_table)
 
         feature = CDSFeature(bio_feature.location, translation, gene=gene,

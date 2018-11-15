@@ -8,6 +8,7 @@ from typing import Dict, List, Optional
 
 from Bio.SeqFeature import SeqFeature
 
+from ..errors import SecmetInvalidInputError
 from .feature import Feature, FeatureLocation
 
 
@@ -101,13 +102,13 @@ class AntismashFeature(Feature):
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
         if not feature:
-            raise ValueError("AntismashFeature shouldn't be instantiated directly")
+            raise SecmetInvalidInputError("AntismashFeature shouldn't be instantiated directly")
         else:
             assert isinstance(feature, AntismashFeature)
 
         # semi-optional qualifiers
         if leftovers.get("tool") == ["antismash"] and not feature.tool:
-            raise ValueError("an AntismashFeature created by antiSMASH must have a tool supplied")
+            raise SecmetInvalidInputError("an AntismashFeature created by antiSMASH must have a tool supplied")
 
         # grab optional qualifiers
         feature.domain_id = leftovers.pop("domain_id", [""])[0] or None

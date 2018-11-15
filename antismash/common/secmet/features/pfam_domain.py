@@ -10,6 +10,7 @@ from Bio.SeqFeature import SeqFeature
 
 from antismash.common.secmet.qualifiers import GOQualifier
 
+from ..errors import SecmetInvalidInputError
 from .feature import Feature, FeatureLocation
 from .domain import Domain
 
@@ -96,7 +97,7 @@ class PFAMDomain(Domain):
             xref.pop(i)
             break
         if name is None:
-            raise ValueError("PFAMDomain missing identifier")
+            raise SecmetInvalidInputError("PFAMDomain missing identifier")
         tool = leftovers.pop("aSTool")[0]
 
         feature = PFAMDomain(bio_feature.location, description, p_start, p_end,

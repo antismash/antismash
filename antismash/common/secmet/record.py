@@ -23,6 +23,7 @@ from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 from Bio.SeqRecord import SeqRecord
 
+from .errors import SecmetInvalidInputError
 from .features import (
     AntismashDomain,
     CDSFeature,
@@ -488,7 +489,7 @@ class Record:
         self._cds_features.insert(index, cds_feature)
         self._link_cds_to_parent(cds_feature)
         if cds_feature.get_name() in self._cds_by_name:
-            raise ValueError("Multiple CDS features have the same name for mapping: %s" %
+            raise SecmetInvalidInputError("multiple CDS features have the same name for mapping: %s" %
                              cds_feature.get_name())
         self._cds_by_name[cds_feature.get_name()] = cds_feature
 
@@ -498,7 +499,7 @@ class Record:
         self._cds_motifs.append(motif)
         assert motif.get_name(), "motif %s has no identifiers" % motif
         if motif.get_name() in self._domains_by_name:
-            raise ValueError("Multiple Domain features have the same name for mapping: %s" %
+            raise SecmetInvalidInputError("multiple Domain features have the same name for mapping: %s" %
                              motif.get_name())
         self._domains_by_name[motif.get_name()] = motif
         if isinstance(motif, Prepeptide):
@@ -510,7 +511,7 @@ class Record:
         assert pfam_domain.get_name()
         self._pfam_domains.append(pfam_domain)
         if pfam_domain.get_name() in self._domains_by_name:
-            raise ValueError("Multiple Domain features have the same name for mapping: %s" %
+            raise SecmetInvalidInputError("multiple Domain features have the same name for mapping: %s" %
                              pfam_domain.get_name())
         self._domains_by_name[pfam_domain.get_name()] = pfam_domain
         if pfam_domain.locus_tag:
@@ -522,7 +523,7 @@ class Record:
         assert antismash_domain.get_name()
         self._antismash_domains.append(antismash_domain)
         if antismash_domain.get_name() in self._domains_by_name:
-            raise ValueError("Multiple Domain features have the same name for mapping: %s" %
+            raise SecmetInvalidInputError("multiple Domain features have the same name for mapping: %s" %
                              antismash_domain.get_name())
         self._domains_by_name[antismash_domain.get_name()] = antismash_domain
 
@@ -599,7 +600,7 @@ class Record:
         assert isinstance(seq_record, SeqRecord)
         if seq_record.seq and isinstance(seq_record.seq, Seq):
             if isinstance(seq_record.seq.alphabet, Alphabet.ProteinAlphabet):
-                raise ValueError("protein records are not supported")
+                raise SecmetInvalidInputError("protein records are not supported")
         transl_table = 1  # standard
         if str(taxon) == "bacteria":
             transl_table = 11  # bacterial, archea, plant plastid code
@@ -609,7 +610,7 @@ class Record:
             if feature.ref or feature.ref_db:
                 for ref in [feature.ref, feature.ref_db]:
                     if ref and ref != seq_record.id:
-                        raise ValueError("Feature references another sequence: (%s)" % feature.ref)
+                        raise SecmetInvalidInputError("feature references another sequence: (%s)" % feature.ref)
                 # to handle a biopython issue, set the references to None
                 feature.ref = None
                 feature.ref_db = None
