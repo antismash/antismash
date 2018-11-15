@@ -58,7 +58,7 @@ class CDSFeature(Feature):
 
         # optional
         if not isinstance(product, str):
-            raise TypeError("product must be a string, not %s", type(product))
+            raise TypeError("product must be a string, not %s" % type(product))
         self.product = product
         self.transl_table = int(translation_table)
         self._sec_met = SecMetQualifier()
