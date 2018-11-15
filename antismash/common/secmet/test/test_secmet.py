@@ -8,6 +8,7 @@ from collections import defaultdict
 import unittest
 
 import Bio.SeqIO
+from Bio.Alphabet.IUPAC import IUPACProtein
 from Bio.Seq import Seq
 from Bio.SeqFeature import FeatureLocation
 
@@ -56,6 +57,17 @@ class TestConversion(unittest.TestCase):
         assert type_counts["PFAM_domain"] == len(record.get_pfam_domains())
         assert type_counts["cluster"] == len(record.get_clusters())
         assert type_counts["aSDomain"] == len(record.get_antismash_domains())
+
+    def test_protein_sequences_caught(self):
+        before = list(Bio.SeqIO.parse(helpers.get_path_to_nisin_genbank(), "genbank"))[0]
+
+        # as a sanity check, make sure it's a seq and it functions as expected
+        assert isinstance(before.seq, Seq)
+        after = Record.from_biopython(before, taxon="bacteria")
+
+        before.seq = Seq("AAAA", IUPACProtein())
+        with self.assertRaisesRegex(ValueError, "protein records are not supported"):
+            Record.from_biopython(before, taxon="bacteria")
 
 
 class TestRecordFeatureNumbering(unittest.TestCase):
