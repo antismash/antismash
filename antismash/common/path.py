@@ -5,9 +5,10 @@
     Common functions for path manipulation and use
 """
 
+import contextlib
 import logging
 import os
-from typing import List, Optional, Union
+from typing import Generator, List, Optional, Union
 
 
 def get_full_path(current_file: str, *args: Union[str, List[str]]) -> str:
@@ -76,3 +77,27 @@ def locate_file(path: str, silent: bool = False) -> Optional[str]:
                 logging.debug("Found file %r", path)
             return path
     return None
+
+
+@contextlib.contextmanager
+def changed_directory(path: str) -> Generator:
+    """ Changes working directory for the duration of the context
+        e.g.:
+
+        # in /foo/bar
+        with changed_directory("/foo/baz"):
+            # do some work in /foo/baz
+        # automatically back to /foo/bar
+
+        Arguments:
+            path: the path of the directory to change into
+
+        Returns:
+            None
+    """
+    current_path = os.getcwd()
+    try:
+        os.chdir(path)
+        yield
+    finally:
+        os.chdir(current_path)
