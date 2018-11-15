@@ -12,20 +12,17 @@ from .feature import Feature, FeatureLocation
 
 class Gene(Feature):
     """ A feature representing a Gene (more general than a CDS) """
-    __slots__ = ["_pseudo", "locus_tag", "gene_name"]
+    __slots__ = ["locus_tag", "gene_name"]
 
     def __init__(self, location: FeatureLocation, locus_tag: Optional[str] = None,
-                 gene_name: Optional[str] = None, pseudo_gene: bool = False,
-                 created_by_antismash: bool = False, qualifiers: Optional[Dict[str, List[str]]] = None) -> None:
+                 gene_name: Optional[str] = None, created_by_antismash: bool = False,
+                 qualifiers: Optional[Dict[str, List[str]]] = None) -> None:
         super().__init__(location, feature_type="gene",
                          created_by_antismash=created_by_antismash)
         self.locus_tag = str(locus_tag) if locus_tag else None
         self.gene_name = str(gene_name) if gene_name else None
         if not self.locus_tag and not self.gene_name:
             raise ValueError("Gene instances must have a locus tag or name")
-        self._pseudo = bool(pseudo_gene)
-        if self._pseudo:
-            assert not created_by_antismash, "pseudo genes can only come from input files"
         if qualifiers:
             assert isinstance(qualifiers, dict)
             self._qualifiers.update(qualifiers)
@@ -40,7 +37,7 @@ class Gene(Feature):
 
     def is_pseudo_gene(self) -> bool:
         """ Was the gene marked as a pseudo-gene """
-        return self._pseudo
+        return self.get_qualifier("pseudo") is not None
 
     def to_biopython(self, qualifiers: Dict[str, Any] = None) -> SeqFeature:
         """ Construct a matching SeqFeature for this Gene """
@@ -50,8 +47,6 @@ class Gene(Feature):
             qualifiers["locus_tag"] = [self.locus_tag]
         if self.gene_name:
             qualifiers["gene"] = [self.gene_name]
-        if self._pseudo:
-            qualifiers["pseudo"] = []
         return super().to_biopython(qualifiers)
 
     @staticmethod
@@ -64,9 +59,6 @@ class Gene(Feature):
         name = leftovers.pop("gene", [""])[0] or None
         if not (locus or name):
             name = "gene%s_%s" % (bio_feature.location.start, bio_feature.location.end)
-        pseudo = "pseudo" in leftovers
-        if pseudo:
-            leftovers.pop("pseudo")
-        feature = Gene(bio_feature.location, locus_tag=locus, gene_name=name, pseudo_gene=pseudo)
+        feature = Gene(bio_feature.location, locus_tag=locus, gene_name=name)
         super(Gene, feature).from_biopython(bio_feature, feature=feature, leftovers=leftovers)
         return feature
