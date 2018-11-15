@@ -5,10 +5,10 @@
     NRPSPredictor2 and interpret the results
 """
 
-
+from collections import defaultdict
 import os
 import sys
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Set
 
 from helperlibs.wrappers.io import TemporaryDirectory
 from jinja2 import Markup
@@ -28,10 +28,30 @@ ADOMAINS_FILENAME = path.get_full_path(__file__, "external", "NRPSPredictor2", "
 START_POSITION = 66
 
 
+def _build_stach_codes() -> Dict[str, Set[str]]:
+    """ Builds a mapping of Stachelhaus prediction to code from NRPSPredictor2's
+        data for use in checking how good a hit it really is
+    """
+    data_file = path.get_full_path(__file__, "external/NRPSPredictor2/data/labeled_sigs")
+    results = defaultdict(set)  # type: Dict[str, Set[str]]
+    with open(data_file) as handle:
+        for line in handle:
+            # in the form: prediction angstrom_code stach_code
+            # with the stach code's 8th character always being '-'
+            pred, _, stach = line.strip().rsplit(maxsplit=2)
+            assert len(stach) == 10, "malformed NRPSPredictor data file"
+            results[pred].add(stach)
+    return results
+
+
+KNOWN_STACH_CODES = _build_stach_codes()
+
+
 class PredictorSVMResult(Prediction):
     """ Holds all the relevant results from NRPSPredictor2 for a domain """
     def __init__(self, angstrom_code: str, physicochemical_class: str, large_cluster_pred: List[str],
-                 small_cluster_pred: List[str], single_amino_pred: str, stachelhaus_code: str, uncertain: bool) -> None:
+                 small_cluster_pred: List[str], single_amino_pred: str, stachelhaus_predictions: List[str],
+                 uncertain: bool, stachelhaus_match_count: int) -> None:
         super().__init__("NRPSPredictor2")
         self.angstrom_code = str(angstrom_code)
         self.physicochemical_class = str(physicochemical_class)
@@ -39,22 +59,56 @@ class PredictorSVMResult(Prediction):
         self.small_cluster_pred = list(small_cluster_pred)
         self.single_amino_pred = str(single_amino_pred)
         assert ',' not in self.single_amino_pred
-        self.stachelhaus_code = str(stachelhaus_code)
-        assert ',' not in self.stachelhaus_code
+        self.stachelhaus_predictions = list(stachelhaus_predictions)
+        for pred in stachelhaus_predictions:
+            assert '|' not in pred
         self.uncertain = bool(uncertain)
+        self.stachelhaus_match_count = int(stachelhaus_match_count)
 
     def get_classification(self) -> List[str]:
+        # comparing number of stach matches (n) to which category of SVM prediction
+        # was made, and also to whether the SVM registered being outside of applicability domain
+        # < = take stach, ^ = take SVM, & = take intersection of both, . = neither
+        #    n   | single small/large/physico outside
+        #    10      <            <              <
+        #     9      &            &              <
+        #     8      ^            &              <
+        #  <= 7      ^            ^              .
         classification = []  # type: List[str]
+
         if self.uncertain:
+            if self.stachelhaus_match_count >= 8:
+                classification.extend(self.stachelhaus_predictions)
             return classification
-        for prediction in [self.single_amino_pred, self.small_cluster_pred,  # TODO: include stach code?
-                           self.large_cluster_pred, self.physicochemical_class]:
-            if prediction not in ["N/A", ["N/A"]]:
-                if isinstance(prediction, str):
-                    classification = [prediction]
-                else:
-                    classification = list(prediction)
-                break
+
+        def stach_intersection_with_best_group() -> Set[str]:
+            """ Finds the intersection of stach predictions with the tightest
+                group of SVM predictions. If no SVM prediction, returns stach preds instead.
+            """
+            stach_preds = set(self.stachelhaus_predictions)
+            for group in [self.small_cluster_pred, self.large_cluster_pred, [self.physicochemical_class]]:
+                if group == ["N/A"]:
+                    continue
+                return stach_preds.intersection(set(group))
+            return stach_preds
+
+        stach_preds = set(self.stachelhaus_predictions)
+        if self.stachelhaus_match_count == 10:
+            classification.extend(sorted(stach_preds))
+        elif self.single_amino_pred != "N/A":
+            if self.stachelhaus_match_count == 9:
+                if self.single_amino_pred in self.stachelhaus_predictions:
+                    classification.append(self.single_amino_pred)
+            else:
+                classification.append(self.single_amino_pred)
+        elif self.stachelhaus_match_count >= 8:
+            classification.extend(stach_intersection_with_best_group())
+        else:  # < 8 and not uncertain
+            for group in [[self.single_amino_pred], self.small_cluster_pred,
+                          self.large_cluster_pred, [self.physicochemical_class]]:
+                if group != ["N/A"]:
+                    classification.extend(group)
+                    break
         return classification
 
     def as_html(self) -> Markup:
@@ -76,11 +130,13 @@ class PredictorSVMResult(Prediction):
                "   <dd>%s</dd>\n"
                "   <dt>Nearest Stachelhaus code:</dt>\n"
                "   <dd>%s</dd>\n"
+               "   <dt>Stachelhaus code match:</dt>\n"
+               "   <dd>%d%%</dd>\n"
                "  </dl>\n"
                "  </dd>\n"
                "</dl>\n" % (note, self.physicochemical_class, ", ".join(self.large_cluster_pred),
                             ", ".join(self.small_cluster_pred), self.single_amino_pred,
-                            self.stachelhaus_code))
+                            ", ".join(self.stachelhaus_predictions), self.stachelhaus_match_count * 10))
         return Markup(raw)
 
     @classmethod
@@ -102,8 +158,15 @@ class PredictorSVMResult(Prediction):
         # 12: pfam-score
         if not len(parts) == 13:
             raise ValueError("Invalid SVM result line: %s" % line)
+        query_stach = parts[2]
+        pred_from_stach = parts[7]
+        stach_count = 0
+        for possible_hit in KNOWN_STACH_CODES[pred_from_stach]:
+            # the datafile sometimes has - for the trailing char, but not all the time
+            matches = sum(a == b for a, b in list(zip(query_stach, possible_hit))[:9]) + 1
+            stach_count = max(stach_count, matches)
         return cls(parts[1], parts[3], parts[4].split(","), parts[5].split(","),
-                   parts[6], parts[7], parts[10] == "1")
+                   parts[6], pred_from_stach.split("|"), parts[10] == "1", stach_count)
 
     def __str__(self) -> str:
         return "PredictorSVMResult: " + str(vars(self))
@@ -115,8 +178,8 @@ class PredictorSVMResult(Prediction):
     def from_json(cls, json: Dict[str, Any]) -> "PredictorSVMResult":
         return PredictorSVMResult(json["angstrom_code"], json["physicochemical_class"],
                                   json["large_cluster_pred"], json["small_cluster_pred"],
-                                  json["single_amino_pred"], json["stachelhaus_code"],
-                                  json["uncertain"])
+                                  json["single_amino_pred"], json["stachelhaus_predictions"],
+                                  json["uncertain"], json["stachelhaus_match_count"])
 
 
 def read_positions(filename: str, start_position: int) -> List[int]:

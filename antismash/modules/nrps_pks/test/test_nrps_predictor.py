@@ -37,7 +37,7 @@ class TestResultsReading(unittest.TestCase):
         assert pred.large_cluster_pred == ["N/A"]
         assert pred.small_cluster_pred == ['val', 'leu', 'ile', 'abu', 'iva']
         assert pred.single_amino_pred == "leu"
-        assert pred.stachelhaus_code == "leu"
+        assert pred.stachelhaus_predictions == ["leu"]
         assert pred.uncertain is False
 
         assert pred.get_classification() == [pred.single_amino_pred]
@@ -62,7 +62,7 @@ class TestPrediction(unittest.TestCase):
                                                       "hydrophobic-aliphatic",
                                                       ['asp', 'asn', 'glu', 'gln', 'aad'],  # arbitrary
                                                       ['val', 'leu', 'ile', 'abu', 'iva'],
-                                                      "leu", "leu", False)
+                                                      "leu", ["ile"], False, 5)
 
     def test_valid(self):
         pred = self.pred
@@ -73,8 +73,9 @@ class TestPrediction(unittest.TestCase):
         assert pred.large_cluster_pred == ['asp', 'asn', 'glu', 'gln', 'aad']
         assert pred.small_cluster_pred == ['val', 'leu', 'ile', 'abu', 'iva']
         assert pred.single_amino_pred == "leu"
-        assert pred.stachelhaus_code == "leu"
+        assert pred.stachelhaus_predictions == ["ile"]
         assert pred.uncertain is False
+        assert pred.stachelhaus_match_count == 5
 
     def test_bad_line(self):
         line = (
@@ -85,6 +86,16 @@ class TestPrediction(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Invalid SVM result line:"):
             nrps_predictor.PredictorSVMResult.from_line(line)
 
+    def test_stach_scoring(self):
+        for i in range(10):
+            stach = "X" * i + "DAFYLGMMCK"[i:]
+            line = (
+                "nrpspksdomains_bpsA_AMP-binding.1	L--SFDASLFEMYLLTGGDRNMYGPTEATMCATW	"
+                "%s	hydrophobic-aliphatic	N/A	val,leu,ile,abu,iva	leu	leu	"
+                "orn,lys,arg	gly,ala	0	0:0	0.000000e+00"
+            ) % stach
+            pred = nrps_predictor.PredictorSVMResult.from_line(line)
+            assert pred.stachelhaus_match_count == 10 - i
 
     def test_classification_certain(self):
         pred = self.pred
@@ -118,6 +129,60 @@ class TestPrediction(unittest.TestCase):
 
         pred.large_cluster_pred = ["N/A"]
         assert pred.get_classification() == []
+
+        for i in range(10):
+            pred.stachelhaus_match_count = i
+            if i < 8:
+                assert pred.get_classification() == []
+            else:
+                assert pred.get_classification() == pred.stachelhaus_predictions
+
+    def test_classification_stach_and_single(self):
+        assert not self.pred.uncertain
+
+        # stach 10 wins
+        self.pred.stachelhaus_match_count = 10
+        assert self.pred.get_classification() == ["ile"]
+
+        # stach 8 loses
+        self.pred.stachelhaus_match_count = 8
+        assert self.pred.get_classification() == ["leu"]
+
+        self.pred.stachelhaus_match_count = 9
+        # mismatch, so none
+        assert self.pred.single_amino_pred not in self.pred.stachelhaus_predictions
+        assert self.pred.get_classification() == []
+        # single in stach, result is intersection
+        self.pred.single_amino_pred = "ile"
+        self.pred.stachelhause_predictions = ["ile", "leu"]
+        assert self.pred.get_classification() == ["ile"]
+
+    def test_classification_stach_and_groups(self):
+        assert not self.pred.uncertain
+        self.pred.single_amino_pred = "N/A"
+        self.pred.physicochemical_class = "N/A"
+
+        old_small = self.pred.small_cluster_pred
+        old_large = self.pred.large_cluster_pred
+
+        assert self.pred.stachelhaus_predictions[0] in old_small
+        assert old_large != ["N/A"] and self.pred.stachelhaus_predictions[0] not in old_large
+
+        for stach_count in [8, 9]:
+            self.pred.stachelhaus_match_count = stach_count
+            self.pred.small_cluster_pred = old_small
+            assert self.pred.get_classification() == ["ile"]  # overlap with small
+
+            self.pred.small_cluster_pred = ["N/A"]
+            self.pred.large_cluster_pred = old_large
+            assert self.pred.get_classification() == []  # no overlap with large, but predicted
+
+            self.pred.large_cluster_pred = ["N/A"]
+            assert self.pred.get_classification() == ["ile"]  # no pred from SVM at all
+
+            # and check there's no classification when no SVM pred and stach < 8
+            self.pred.stachelhaus_match_count = 7
+            assert self.pred.get_classification() == []
 
     def test_json(self):
         json = self.pred.to_json()
