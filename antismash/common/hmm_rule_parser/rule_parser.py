@@ -50,6 +50,11 @@ Examples of rules with positive requirements:
     (a or c)
     (a or not c) # an 'or not' combination is effectively ignored for anchoring
 
+The optional RELATED section of a rule is intended to contain a list of profile
+identifiers that are not required for detection but are considered related. This
+aims to have every profile either belonging to a CONDITIONS section or
+RELATED section of at least one rule.
+
 Rule can optionally specify an SUPERIORS flag with a list of other rule identifiers
 to which the current rule is considered inferior to. If an inferior rule does
 not cover more than one or more of its superiors, then it will be discarded.
@@ -79,12 +84,15 @@ The grammar itself:
 
     RULE_MARKER = "RULE"
     COMMENT_MARKER = "COMMENT"
+    RELATED_MARKER = "RELATED"
     CUTOFF_MARKER = "CUTOFF"
     EXTENT_MARKER = "EXTENT"
     CONDITIONS_MARKER = "CONDITIONS"
     SUPERIORS_MARKER = "SUPERIORS"
 
-    RULE = RULE_MARKER classification:ID [COMMENT_MARKER:COMMENTS]
+    RULE = RULE_MARKER classification:ID
+            [COMMENT_MARKER:COMMENTS]
+            [RELATED_MARKER related_profiles:COMMA_SEPARATED_IDS]
             [SUPERIORS_MARKER superiors:COMMA_SEPARATED_IDS]
             CUTOFF_MARKER cutoff:INT EXTENT_MARKER extension:INT
             CONDITIONS_MARKER conditions:CONDITIONS
@@ -182,6 +190,7 @@ class TokenTypes(IntEnum):
     EXTENT = 19
     CONDITIONS = 20
     SUPERIORS = 21
+    RELATED = 22
 
     def __repr__(self) -> str:
         return self.__str__()
@@ -226,7 +235,8 @@ class Tokeniser:  # pylint: disable=too-few-public-methods
                "minscore": TokenTypes.SCORE, "RULE": TokenTypes.RULE,
                "CONDITIONS": TokenTypes.CONDITIONS,
                "COMMENT": TokenTypes.COMMENT, "CUTOFF": TokenTypes.CUTOFF,
-               "EXTENT": TokenTypes.EXTENT, "SUPERIORS": TokenTypes.SUPERIORS}
+               "EXTENT": TokenTypes.EXTENT, "SUPERIORS": TokenTypes.SUPERIORS,
+               "RELATED": TokenTypes.RELATED}
 
     def __init__(self, text: str) -> None:
         self.text = text
@@ -686,9 +696,10 @@ class DetectionRule:
             conditions: the conditions that potential clusters have to satisfy
             comments: any comments provided in the rule
             superiors: a list of other rule names superior to this one
+            related: a list of profile identifiers related to, but not required by, this rule
         """
     def __init__(self, name: str, cutoff: int, extent: int, conditions: Conditions,
-                 comments: str = "", superiors: List[str] = None) -> None:
+                 comments: str = "", superiors: List[str] = None, related: List[str] = None) -> None:
         self.name = name
         self.cutoff = cutoff
         self.extent = extent
@@ -701,6 +712,7 @@ class DetectionRule:
             superiors = []
         assert isinstance(superiors, list)
         self.superiors = superiors
+        self.related = related or []
 
     def contains_positive_condition(self) -> bool:
         """ Returns True if at least one non-negated condition of the rule is
@@ -830,10 +842,15 @@ class Parser:  # pylint: disable=too-few-public-methods
                                      TokenTypes.CUTOFF, TokenTypes.RULE))
         if self.current_token.type == TokenTypes.COMMENT:
             comments = self._parse_comments()
+            prev = TokenTypes.COMMENT
+        related = []  # type: List[str]
+        if self.current_token.type == TokenTypes.RELATED:
+            related = self._parse_related()
+            prev = TokenTypes.RELATED
         if not self.current_token:
             raise RuleSyntaxError("expected %s or %s sections after %s"
                                   % (TokenTypes.SUPERIORS, TokenTypes.CUTOFF,
-                                     TokenTypes.COMMENT))
+                                     prev))
         superiors = None
         if self.current_token.type == TokenTypes.SUPERIORS:
             superiors = self._parse_superiors()
@@ -849,7 +866,7 @@ class Parser:  # pylint: disable=too-few-public-methods
                     "\n".join(self.lines[self.current_line - 5:self.current_line]),
                     " "*self.current_token.position, "^"))
         return DetectionRule(rule_name, cutoff, extent, conditions,
-                             comments=comments, superiors=superiors)
+                             comments=comments, superiors=superiors, related=related)
 
     def _parse_comments(self) -> str:
         """ COMMENTS = COMMENTS_MARKER comments
@@ -866,6 +883,12 @@ class Parser:  # pylint: disable=too-few-public-methods
             except StopIteration:
                 raise err
         return " ".join([token.token_text for token in comment_tokens])
+
+    def _parse_related(self) -> List[str]:
+        """ RELATED = RELATED_MARKER related:COMMA_SEPARATED_IDS
+        """
+        self._consume(TokenTypes.RELATED)
+        return self._parse_comma_separated_ids()
 
     def _is_not(self) -> bool:
         """ [UNARY_OP]
