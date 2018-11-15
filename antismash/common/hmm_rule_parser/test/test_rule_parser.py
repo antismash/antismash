@@ -321,6 +321,17 @@ class RuleParserTest(unittest.TestCase):
                        "RULE second SUPERIORS first CUTOFF 20 EXTENT 20 CONDITIONS b "
                        "RULE sub SUPERIORS second CUTOFF 20 EXTENT 20 CONDITIONS c")
 
+    def test_related(self):
+        rules = self.parse("RULE name RELATED b, c CUTOFF 20 EXTENT 20 CONDITIONS a").rules
+        assert rules[0].related == ["b", "c"]
+
+    def test_empty_related(self):
+        with self.assertRaises(rule_parser.RuleSyntaxError):
+            self.parse("RULE name RELATED CUTOFF 20 EXTENT 20 CONDITIONS a")
+
+        with self.assertRaises(rule_parser.RuleSyntaxError):
+            self.parse("RULE name RELATED")
+
     def test_missing_group_close(self):
         with self.assertRaises(rule_parser.RuleSyntaxError):
             self.parse(format_as_rule("A", 10, 10, "(a or b"))
