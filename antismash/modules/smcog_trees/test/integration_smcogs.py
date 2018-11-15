@@ -15,7 +15,7 @@ import antismash
 from antismash.common import secmet
 import antismash.common.test.helpers as helpers
 from antismash.config import get_config, update_config, destroy_config, build_config
-from antismash.detection.genefunctions import smcogs
+from antismash.detection import genefunctions
 from antismash.main import read_data
 from antismash.modules import smcog_trees
 
@@ -29,6 +29,9 @@ class Base(unittest.TestCase):
         update_config({"cpus": 1})
         # prevent multiprocess testing from taking place, to stop signals
         # being caught awkwardly in the test itself
+
+        # as smcogs_trees depends on genefunctions.smcogs' data, ensure that's ready to go
+        assert genefunctions.prepare_data() == []
 
         assert smcog_trees.check_prereqs() == []
         assert smcog_trees.check_options(self.options) == []
@@ -59,8 +62,8 @@ class TestTreeGeneration(Base):
     def test_trees(self):
         with TemporaryDirectory(change=True):
             # add the classifications to work with
-            smcogs.classify(self.record.id, self.record.get_cds_features(),
-                            self.options).add_to_record(self.record)
+            genefunctions.smcogs.classify(self.record.id, self.record.get_cds_features(),
+                                          self.options).add_to_record(self.record)
 
             results = smcog_trees.run_on_record(self.record, None, self.options)
             assert len(results.tree_images) == 7
