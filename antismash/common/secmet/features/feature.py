@@ -15,6 +15,8 @@ from antismash.common.secmet.locations import (
     locations_overlap,
 )
 
+from ..errors import SecmetInvalidInputError
+
 
 def _adjust_location_by_offset(location: FeatureLocation, offset: int) -> FeatureLocation:
     """ Adjusts the given location to account for an offset (e.g. start_codon)
@@ -252,7 +254,7 @@ class Feature:
             if "codon_start" in leftovers:
                 codon_start = int(leftovers.pop("codon_start")[0]) - 1
                 if not 0 <= codon_start <= 2:
-                    raise ValueError("invalid codon_start qualifier: %d" % (codon_start + 1))
+                    raise SecmetInvalidInputError("invalid codon_start qualifier: %d" % (codon_start + 1))
                 if feature.location.strand == -1:
                     codon_start *= -1
                 feature._original_codon_start = codon_start  # very much private, so pylint: disable=protected-access
