@@ -17,7 +17,7 @@ import logging
 from typing import Any, Dict, List, Tuple, Union, cast
 from typing import Optional, Sequence, Set  # comment hints # pylint: disable=unused-import
 
-from Bio import SeqIO
+from Bio import Alphabet, SeqIO
 import Bio.Alphabet
 from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
@@ -597,6 +597,9 @@ class Record:
         }  # type: Dict[str, SeqFeature]
 
         assert isinstance(seq_record, SeqRecord)
+        if seq_record.seq and isinstance(seq_record.seq, Seq):
+            if isinstance(seq_record.seq.alphabet, Alphabet.ProteinAlphabet):
+                raise ValueError("protein records are not supported")
         transl_table = 1  # standard
         if str(taxon) == "bacteria":
             transl_table = 11  # bacterial, archea, plant plastid code
