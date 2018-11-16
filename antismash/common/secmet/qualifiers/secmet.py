@@ -4,7 +4,8 @@
 """ Annotations for secondary metabolites """
 
 import re
-from typing import Any, Iterable, Iterator, List, Sequence, Set, Union
+from typing import Any, Iterator, List, Sequence, Union
+from typing import Set  # comment hints  # pylint: disable=unused-import
 
 
 def _parse_format(fmt: str, data: str) -> Sequence[str]:

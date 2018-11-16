@@ -16,7 +16,7 @@ class TestDomain(unittest.TestCase):
         assert domain.type == "test_type"
         assert domain.location == loc
         assert domain.created_by_antismash
-        assert domain.tool is "test"
+        assert domain.tool == "test"
         assert domain.domain is None
 
     def test_translation(self):

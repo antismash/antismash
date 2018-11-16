@@ -27,8 +27,7 @@ def get_git_version(fallback_filename: Optional[str] = GIT_VERSION_FALLBACK_FILE
         if version_cmd.successful() and status_cmd.successful():
             git_version = version_cmd.stdout.strip()
             changes = status_cmd.stdout.splitlines()
-            if len(changes) > 0:
-                print(changes)
+            if changes:
                 git_version += "(changed)"
     except OSError:
         pass

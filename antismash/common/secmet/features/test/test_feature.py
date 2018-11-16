@@ -4,8 +4,9 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
-from minimock import mock, restore
 import unittest
+
+from minimock import mock, restore
 
 from antismash.common.test import helpers
 
@@ -16,7 +17,7 @@ from antismash.common.secmet.features.feature import (
     SeqFeature,
     _adjust_location_by_offset as adjust,
 )
-from antismash.common.secmet.features import feature  # mocked, pylint: disable=unused-import
+from antismash.common.secmet import features  # mocked, pylint: disable=unused-import
 from antismash.common.secmet.locations import (
     ExactPosition,
     BeforePosition,
@@ -186,6 +187,7 @@ class TestLocationAdjustment(unittest.TestCase):
                 for old_part, new_part in zip(old.parts[1:], new.parts[1:]):
                     assert old_part is new_part
 
+
 class TestSubLocation(unittest.TestCase):
     def setUp(self):
         self.feature = Feature(FeatureLocation(10, 40, 1), feature_type="test")
@@ -203,13 +205,13 @@ class TestSubLocation(unittest.TestCase):
                 self.get_sub(bad_start, bad_end)
         with self.assertRaisesRegex(ValueError, "must be less than the end"):
             self.get_sub(5, 1)
-        mock("feature.convert_protein_position_to_dna", returns=(9, 15))
+        mock("features.feature.convert_protein_position_to_dna", returns=(9, 15))
         with self.assertRaisesRegex(ValueError, "Protein coordinate start .* is outside feature"):
             self.get_sub(1, 5)
-        mock("feature.convert_protein_position_to_dna", returns=(15, 41))
+        mock("features.feature.convert_protein_position_to_dna", returns=(15, 41))
         with self.assertRaisesRegex(ValueError, "Protein coordinate end .* is outside feature"):
             self.get_sub(1, 5)
-        mock("feature.convert_protein_position_to_dna", returns=(10, 3))
+        mock("features.feature.convert_protein_position_to_dna", returns=(10, 3))
         with self.assertRaisesRegex(ValueError, "Invalid protein coordinate conversion"):
             self.get_sub(1, 5)
 

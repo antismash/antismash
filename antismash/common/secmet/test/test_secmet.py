@@ -63,7 +63,7 @@ class TestConversion(unittest.TestCase):
 
         # as a sanity check, make sure it's a seq and it functions as expected
         assert isinstance(before.seq, Seq)
-        after = Record.from_biopython(before, taxon="bacteria")
+        Record.from_biopython(before, taxon="bacteria")
 
         before.seq = Seq("AAAA", IUPACProtein())
         with self.assertRaisesRegex(ValueError, "protein records are not supported"):
