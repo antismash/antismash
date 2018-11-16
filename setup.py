@@ -15,17 +15,12 @@ def read(fname):
 long_description = read('README.md')
 
 install_requires = [
-    'argparse',
-    'cssselect',
     'numpy',
     'biopython >= 1.71',
     'helperlibs',
     'jinja2',
     'pysvg-py3',
-    'pyExcelerator',
     'bcbio-gff',
-    'networkx',
-    'pandas',
     'matplotlib',
     'scipy',
     'scikit-learn == 0.19.0', # until pickles are rebuilt automatically
