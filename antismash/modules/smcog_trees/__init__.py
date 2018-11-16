@@ -124,9 +124,7 @@ def run_on_record(record: Record, results: Optional[SMCOGTreeResults],
         os.mkdir(smcogs_dir)
 
     nrpspks_genes = record.get_nrps_pks_cds_features()
-    original_dir = os.getcwd()
-    os.chdir(smcogs_dir)  # TODO make a context manager
-    trees = generate_trees(smcogs_dir, record.get_cds_features_within_regions(), nrpspks_genes)
-    os.chdir(original_dir)
+    with path.changed_directory(smcogs_dir):
+        trees = generate_trees(smcogs_dir, record.get_cds_features_within_regions(), nrpspks_genes)
 
     return SMCOGTreeResults(record.id, relative_output_dir, trees)
