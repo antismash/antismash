@@ -54,7 +54,7 @@ class CDSFeature(Feature):
         self.gene = _sanitise_id_value(gene)
         if not translation or "-" in translation:
             raise ValueError("CDSFeature requires a valid translation, not '%s'" % translation)
-        self._translation = translation
+        self._translation = str(translation)
 
         # optional
         if not isinstance(product, str):
