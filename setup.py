@@ -27,7 +27,7 @@ install_requires = [
 ]
 
 tests_require = [
-    'pytest',
+    'pytest >= 3.3.0',
     'minimock',
     'coverage',
     'pylint == 1.8.4', # until pylint handles ignore lines the same way
