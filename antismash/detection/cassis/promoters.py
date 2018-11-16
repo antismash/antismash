@@ -8,7 +8,6 @@ import os
 from typing import Any, Dict, List, Union, Set, Tuple  # pylint: disable=unused-import
 
 from Bio import SeqIO
-from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
 from antismash.common.secmet import Record, Gene

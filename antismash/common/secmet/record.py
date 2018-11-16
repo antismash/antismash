@@ -18,7 +18,6 @@ from typing import Any, Dict, List, Tuple, Union, cast
 from typing import Optional, Sequence, Set  # comment hints # pylint: disable=unused-import
 
 from Bio import Alphabet, SeqIO
-import Bio.Alphabet
 from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 from Bio.SeqRecord import SeqRecord
@@ -753,10 +752,10 @@ class Record:
         string_version = str(seq)
         for invalid in "*BJOUZ":
             string_version = string_version.replace(invalid, "X")
-        seq = Seq(string_version, Bio.Alphabet.generic_protein)
+        seq = Seq(string_version, Alphabet.generic_protein)
 
         if "-" in str(seq):
-            seq = Seq(str(seq).replace("-", ""), Bio.Alphabet.generic_protein)
+            seq = Seq(str(seq).replace("-", ""), Alphabet.generic_protein)
         return seq
 
     def get_cds_features_within_regions(self) -> List[CDSFeature]:  # pylint: disable=invalid-name

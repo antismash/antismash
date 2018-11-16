@@ -36,7 +36,7 @@ class CDSResults:
         # empty definition domains is ok
         self.definition_domains = definition_domains
 
-    def annotate(self, product: str, tool: str) -> None:
+    def annotate(self, tool: str) -> None:
         """ Annotates a CDSFeature with the results gathered """
         all_matching = set()
         if not self.cds.sec_met:
@@ -91,9 +91,9 @@ class RuleDetectionResults:
 
     def annotate_cds_features(self) -> None:
         """ Annotate relevant CDS features with the HMM information detected """
-        for cluster, cds_results in self.cds_by_cluster.items():
+        for cds_results in self.cds_by_cluster.values():
             for cds_result in cds_results:
-                cds_result.annotate(cluster.product, self.tool)
+                cds_result.annotate(self.tool)
 
     def to_json(self) -> Dict[str, Any]:
         """ Constructs a JSON representation from the RuleDetectionResults instance """
@@ -339,7 +339,6 @@ def apply_cluster_rules(record: Record, results_by_id: Dict[str, List[HSP]],
         domains_by_cluster = {}  # type: Dict[str, Set[str]]
         for rule in rules:
             if rule.cutoff not in info_by_range:
-                # TODO: improve performance
                 location = FeatureLocation(feature_start - rule.cutoff, feature_end + rule.cutoff)
                 nearby = record.get_cds_features_within_location(location, with_overlapping=True)
                 nearby_features = {neighbour.get_name(): neighbour for neighbour in nearby}
