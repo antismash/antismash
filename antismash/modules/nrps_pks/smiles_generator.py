@@ -14,6 +14,10 @@ import antismash.common.path as path
 def gen_smiles_from_pksnrps(compound_pred: str) -> str:
     """ Generates the SMILES string for a specific compound prediction """
     smiles = ""
+
+    if not compound_pred:
+        return smiles
+
     residues = compound_pred.replace("(", "").replace(")", "").replace(" + ", " ").replace(" - ", " ").split()
     # Counts the number of malonate and its derivatives in polyketides
     mal_count = 0
