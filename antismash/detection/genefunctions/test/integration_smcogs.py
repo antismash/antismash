@@ -13,7 +13,7 @@ from antismash.common import secmet
 from antismash.common.secmet.qualifiers import GeneFunction
 from antismash.common.test import helpers
 from antismash.config import build_config, destroy_config, get_config, update_config
-from antismash.detection.genefunctions import core, smcogs
+from antismash.detection.genefunctions import core, smcogs, prepare_data
 
 
 class TestSMCOGs(unittest.TestCase):
@@ -24,6 +24,8 @@ class TestSMCOGs(unittest.TestCase):
         self.options = update_config(options)
 
         self.record = self.build_record(helpers.get_path_to_nisin_with_detection())
+
+        prepare_data()
 
     def tearDown(self):
         destroy_config()
