@@ -21,6 +21,9 @@ import matplotlib
 from antismash.common import path, fasta, subprocessing
 from antismash.common.secmet import CDSFeature
 
+# silence the matplotlib noisy logging (relevant when options.debug is set)
+logging.getLogger('matplotlib').setLevel(logging.WARNING)
+
 
 def generate_trees(smcogs_dir: str, genes_within_clusters: List[CDSFeature],
                    nrpspks_genes: List[CDSFeature]) -> Dict[str, str]:
