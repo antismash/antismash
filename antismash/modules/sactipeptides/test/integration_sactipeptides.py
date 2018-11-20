@@ -36,7 +36,7 @@ class IntegrationSactipeptides(unittest.TestCase):
         assert prepeptide.get_name() == "BEST7613_6887"
         assert prepeptide.leader == "MKKAVIVENK"
         assert prepeptide.core == "GCATCSIGAACLVDGPIPDFEIAGATGLFGLWG"
-        self.assertAlmostEqual(prepeptide.score, 31.)
+        self.assertAlmostEqual(prepeptide.score, 33.)
 
     def test_ap012495_end_to_end_all_orfs(self):
         # make sure that unannotated orfs are found if they are the precursor
@@ -49,4 +49,4 @@ class IntegrationSactipeptides(unittest.TestCase):
         assert prepeptide.get_name() == "allorf041"
         assert prepeptide.leader == "MKKAVIVENK"
         assert prepeptide.core == "GCATCSIGAACLVDGPIPDFEIAGATGLFGLWG"
-        self.assertAlmostEqual(prepeptide.score, 31.)
+        self.assertAlmostEqual(prepeptide.score, 33.)
