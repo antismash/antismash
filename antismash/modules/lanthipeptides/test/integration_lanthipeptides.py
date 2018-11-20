@@ -147,7 +147,7 @@ class IntegrationLanthipeptides(unittest.TestCase):
         prepeptide = rec.get_cds_motifs()[0]
         assert prepeptide.peptide_subclass == 'Class I'
         assert prepeptide.detailed_information.lan_bridges == 3
-        assert prepeptide.detailed_information.rodeo_score == 15
+        assert prepeptide.detailed_information.rodeo_score == 14
 
     def test_lactocin_s(self):
         """Test lanthipeptide prediction for lactocin S"""
