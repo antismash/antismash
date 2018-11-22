@@ -348,7 +348,7 @@ class Lanthipeptide(PrepeptideBase):
             self._calculate_mw()
 
 
-def get_detected_domains(genes: List[CDSFeature]) -> List[str]:
+def get_detected_domains(genes: Iterable[CDSFeature]) -> List[str]:
     """ Gathers all detected domains in a cluster, including some not detected
         by hmm_detection.
 
@@ -431,7 +431,7 @@ def predict_cleavage_site(query_hmmfile: str, target_sequence: str,
     return None
 
 
-def predict_class_from_genes(focus: CDSFeature, genes: List[CDSFeature]) -> Optional[str]:
+def predict_class_from_genes(focus: CDSFeature, genes: Iterable[CDSFeature]) -> Optional[str]:
     """ Predict the lanthipeptide class from the gene cluster
 
         Arguments:
@@ -441,10 +441,12 @@ def predict_class_from_genes(focus: CDSFeature, genes: List[CDSFeature]) -> Opti
             a string representing the class, or None if no class predicted
     """
     found_domains = set()
-    for feature in genes + [focus]:
+    for feature in genes:
         if not feature.sec_met:
             continue
         found_domains.update(set(feature.sec_met.domain_ids))
+    if focus.sec_met:
+        found_domains.update(set(focus.sec_met.domain_ids))
 
     if 'Lant_dehydr_N' in found_domains or 'Lant_dehydr_C' in found_domains:
         return 'Class-I'
@@ -672,14 +674,14 @@ def run_lanthi_on_genes(record: Record, focus: CDSFeature, cluster: Cluster,
     """
     if not genes:
         return
-    domains = get_detected_domains(genes)
+    domains = get_detected_domains(cluster.cds_children)
     non_candidate_neighbours = find_neighbours_in_range(focus, cluster.cds_children)
     flavoprotein_found = contains_feature_with_single_domain(non_candidate_neighbours, {"Flavoprotein"})
     halogenase_found = contains_feature_with_single_domain(non_candidate_neighbours, {"Trp_halogenase"})
     oxygenase_found = contains_feature_with_single_domain(non_candidate_neighbours, {"p450"})
     dehydrogenase_found = contains_feature_with_single_domain(non_candidate_neighbours, {"adh_short", "adh_short_C2"})
 
-    lant_class = predict_class_from_genes(focus, genes)
+    lant_class = predict_class_from_genes(focus, cluster.cds_children)
     if not lant_class:
         return
 
