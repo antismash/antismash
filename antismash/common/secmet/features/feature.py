@@ -180,16 +180,15 @@ class Feature:
             raise TypeError("Container must be a Feature, CompoundLocation, or FeatureLocation, not %s" % type(other))
         return locations_overlap(self.location, location)
 
-    def is_contained_by(self, other: Union["Feature", FeatureLocation]) -> bool:
+    def is_contained_by(self, other: Union["Feature", Location]) -> bool:
         """ Returns True if the given feature is wholly contained by this
             feature.
         """
-        end = self.location.end - 1  # to account for the non-inclusive end
         if isinstance(other, Feature):
-            return self.location.start in other.location and end in other.location
-        if isinstance(other, FeatureLocation):
-            return self.location.start in other and end in other
-        raise TypeError("Container must be a Feature or a FeatureLocation, not %s" % type(other))
+            return location_contains_other(other.location, self.location)
+        if isinstance(other, (CompoundLocation, FeatureLocation)):
+            return location_contains_other(other, self.location)
+        raise TypeError("Container must be a Feature, CompoundLocation or FeatureLocation, not %s" % type(other))
 
     def to_biopython(self, qualifiers: Dict[str, Any] = None) -> List[SeqFeature]:
         """ Converts this feature into one or more SeqFeature instances.

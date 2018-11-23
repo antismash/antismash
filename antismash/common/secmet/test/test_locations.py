@@ -11,6 +11,7 @@ from antismash.common.secmet.locations import (
     build_location_from_others,
     location_bridges_origin as is_bridged,
     split_origin_bridging_location as splitter,
+    location_contains_other,
     location_from_string,
     locations_overlap,
     combine_locations,
@@ -380,3 +381,45 @@ class TestOverlaps(unittest.TestCase):
         second = build_compound([(12, 18), (32, 38), (42, 58)], strand=-1)
         assert locations_overlap(first, second)
         assert locations_overlap(second, first)
+
+
+class TestContainsOther(unittest.TestCase):
+    def test_simple_in_simple(self):
+        inner = FeatureLocation(5, 10)
+        outer = FeatureLocation(1, 20)
+
+        # clear contains
+        assert location_contains_other(outer, inner)
+        assert not location_contains_other(inner, outer)
+
+        # on one edge
+        outer = FeatureLocation(5, 20)
+        assert location_contains_other(outer, inner)
+        assert not location_contains_other(inner, outer)
+
+        # on both edges
+        outer = FeatureLocation(1, 20)
+        assert location_contains_other(outer, inner)
+        assert not location_contains_other(inner, outer)
+
+    def test_simple_in_compound(self):
+        simple = FeatureLocation(5, 10)
+        compound = build_compound([(1, 4), (12, 20)], strand=1)
+        assert not location_contains_other(compound, simple)
+
+        simple = FeatureLocation(1, 20)
+        assert not location_contains_other(compound, simple)
+
+        simple = FeatureLocation(15, 18)
+        assert location_contains_other(compound, simple)
+
+        for part in compound.parts:
+            assert location_contains_other(compound, part)
+
+    def test_compound_in_simple(self):
+        simple = FeatureLocation(10, 40)
+        compound = build_compound([(10, 20), (20, 40)], strand=1)
+        assert location_contains_other(simple, compound)
+
+        compound = build_compound([(10, 20), (20, 40), (50, 60)], strand=1)
+        assert not location_contains_other(simple, compound)
