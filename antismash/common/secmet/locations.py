@@ -19,7 +19,7 @@ from Bio.SeqFeature import (
 Location = Union[CompoundLocation, FeatureLocation]  # pylint: disable=invalid-name
 
 
-def convert_protein_position_to_dna(start: int, end: int, location: FeatureLocation) -> Tuple[int, int]:
+def convert_protein_position_to_dna(start: int, end: int, location: Location) -> Tuple[int, int]:
     """ Convert a protein position to a nucleotide sequence position for use in generating
         new FeatureLocations from existing FeatureLocations and/or CompoundLocations.
 
@@ -73,7 +73,7 @@ def convert_protein_position_to_dna(start: int, end: int, location: FeatureLocat
     return dna_start, dna_end
 
 
-def build_location_from_others(locations: Sequence[FeatureLocation]) -> FeatureLocation:
+def build_location_from_others(locations: Sequence[Location]) -> FeatureLocation:
     """ Builds a new location from non-overlapping others.
         If location boundaries are equal, they will be merged.
         If at least one provided location is a CompoundLocation or the locations
@@ -100,7 +100,7 @@ def build_location_from_others(locations: Sequence[FeatureLocation]) -> FeatureL
     return location
 
 
-def location_bridges_origin(location: CompoundLocation) -> bool:
+def location_bridges_origin(location: Location) -> bool:
     """ Determines if a CompoundLocation would cross the origin of a record.
 
         Arguments:
@@ -203,7 +203,7 @@ def location_contains_other(outer: Location, inner: Location) -> bool:
     return inner.start in outer and inner.end - 1 in outer
 
 
-def location_from_string(data: str) -> FeatureLocation:
+def location_from_string(data: str) -> Location:
     """ Converts a string, e.g. [<1:6](-), to a FeatureLocation or CompoundLocation
     """
     def parse_position(string: str) -> AbstractPosition:
@@ -248,7 +248,7 @@ def location_from_string(data: str) -> FeatureLocation:
     return CompoundLocation(locations, operator=operator)
 
 
-def combine_locations(*locations: Iterable[FeatureLocation]) -> FeatureLocation:
+def combine_locations(*locations: Iterable[Location]) -> Location:
     """ Combines multiple FeatureLocations into a single location using the
         minimum start and maximum end. Will not create a CompoundLocation if any
         of the inputs are CompoundLocations.
