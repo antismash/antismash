@@ -10,8 +10,8 @@ from Bio.SeqFeature import SeqFeature
 
 from ..errors import SecmetInvalidInputError
 from .cds_motif import CDSMotif
-from .feature import Feature
-from ..locations import FeatureLocation, build_location_from_others, location_from_string
+from .feature import Feature, Location
+from ..locations import build_location_from_others, location_from_string
 from ..qualifiers.prepeptide_qualifiers import RiPPQualifier  # comment hints, pylint: disable=unused-import
 from ..qualifiers.prepeptide_qualifiers import rebuild_qualifier
 
@@ -21,7 +21,7 @@ class Prepeptide(CDSMotif):  # pylint: disable=too-many-instance-attributes
         construction with a leader, core and tail. To allow for multiple types
         of prepeptide (e.g. lanthi- or sacti-peptides), only the core must exist.
     """
-    def __init__(self, location: FeatureLocation, peptide_class: str, core: str, locus_tag: str,
+    def __init__(self, location: Location, peptide_class: str, core: str, locus_tag: str,
                  tool: str, peptide_subclass: str = None, score: float = 0., monoisotopic_mass: float = 0.,
                  molecular_weight: float = 0., alternative_weights: List[float] = None,
                  leader: str = "", tail: str = "") -> None:

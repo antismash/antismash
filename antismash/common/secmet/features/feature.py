@@ -21,7 +21,7 @@ from ..errors import SecmetInvalidInputError
 from ..locations import Location
 
 
-def _adjust_location_by_offset(location: FeatureLocation, offset: int) -> FeatureLocation:
+def _adjust_location_by_offset(location: Location, offset: int) -> Location:
     """ Adjusts the given location to account for an offset (e.g. start_codon)
     """
     assert -2 <= offset <= 2, "invalid offset %d" % offset
@@ -58,7 +58,7 @@ class Feature:
     __slots__ = ["location", "notes", "type", "_qualifiers", "created_by_antismash",
                  "_original_codon_start"]
 
-    def __init__(self, location: FeatureLocation, feature_type: str,
+    def __init__(self, location: Location, feature_type: str,
                  created_by_antismash: bool = False) -> None:
         assert isinstance(location, (FeatureLocation, CompoundLocation)), type(location)
         if location_bridges_origin(location):
@@ -86,7 +86,7 @@ class Feature:
         assert isinstance(sequence, Seq)
         return self.location.extract(sequence)
 
-    def get_sub_location_from_protein_coordinates(self, start: int, end: int) -> FeatureLocation:
+    def get_sub_location_from_protein_coordinates(self, start: int, end: int) -> Location:
         """ Generates a FeatureLocation for a protein sequence based on the start
             and end positions within the features protein sequence.
 

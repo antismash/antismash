@@ -7,14 +7,14 @@ from typing import Any, Dict, List, Optional
 
 from Bio.SeqFeature import SeqFeature
 
-from .feature import Feature, FeatureLocation
+from .feature import Feature, Location
 
 
 class Gene(Feature):
     """ A feature representing a Gene (more general than a CDS) """
     __slots__ = ["locus_tag", "gene_name"]
 
-    def __init__(self, location: FeatureLocation, locus_tag: Optional[str] = None,
+    def __init__(self, location: Location, locus_tag: Optional[str] = None,
                  gene_name: Optional[str] = None, created_by_antismash: bool = False,
                  qualifiers: Optional[Dict[str, List[str]]] = None) -> None:
         super().__init__(location, feature_type="gene",
