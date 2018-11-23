@@ -13,10 +13,12 @@ from Bio.Seq import Seq
 from antismash.common.secmet.locations import (
     convert_protein_position_to_dna,
     location_bridges_origin,
+    location_contains_other,
     locations_overlap,
 )
 
 from ..errors import SecmetInvalidInputError
+from ..locations import Location
 
 
 def _adjust_location_by_offset(location: FeatureLocation, offset: int) -> FeatureLocation:
@@ -165,17 +167,17 @@ class Feature:
         assert qualifier is None
         return True
 
-    def overlaps_with(self, other: Union["Feature", FeatureLocation]) -> bool:
+    def overlaps_with(self, other: Union["Feature", Location]) -> bool:
         """ Returns True if the given feature overlaps with this feature.
             This operation is commutative, a.overlaps_with(b) is equivalent to
             b.overlaps_with(a).
         """
         if isinstance(other, Feature):
             location = other.location
-        elif isinstance(other, FeatureLocation):
+        elif isinstance(other, (CompoundLocation, FeatureLocation)):
             location = other
         else:
-            raise TypeError("Container must be a Feature or a FeatureLocation, not %s" % type(other))
+            raise TypeError("Container must be a Feature, CompoundLocation, or FeatureLocation, not %s" % type(other))
         return locations_overlap(self.location, location)
 
     def is_contained_by(self, other: Union["Feature", FeatureLocation]) -> bool:
