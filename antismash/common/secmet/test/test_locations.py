@@ -12,6 +12,7 @@ from antismash.common.secmet.locations import (
     location_bridges_origin as is_bridged,
     split_origin_bridging_location as splitter,
     location_from_string,
+    locations_overlap,
     combine_locations,
     FeatureLocation,
     CompoundLocation,
@@ -341,3 +342,41 @@ class TestCombiner(unittest.TestCase):
             combine_locations(0)
         with self.assertRaisesRegex(AttributeError, "has no attribute 'start'"):
             combine_locations(0, 1)
+
+
+class TestOverlaps(unittest.TestCase):
+    def test_simple_simple(self):
+        assert not locations_overlap(FeatureLocation(1, 5, strand=1), FeatureLocation(10, 15, strand=1))
+        assert locations_overlap(FeatureLocation(1, 25, strand=1), FeatureLocation(10, 15, strand=1))
+        assert locations_overlap(FeatureLocation(1, 12, strand=1), FeatureLocation(10, 15, strand=1))
+
+        assert locations_overlap(FeatureLocation(12, 22, strand=-1), FeatureLocation(10, 15, strand=1))
+        assert not locations_overlap(FeatureLocation(12, 22, strand=-1), FeatureLocation(10, 12, strand=1))
+
+    def test_mixed(self):
+        compound = build_compound([(0, 10), (20, 30), (40, 50)], strand=1)
+        simple = FeatureLocation(15, 17)
+        assert not locations_overlap(simple, compound)
+        assert not locations_overlap(compound, simple)
+
+        simple = FeatureLocation(22, 25)
+        assert locations_overlap(simple, compound)
+        assert locations_overlap(compound, simple)
+
+        simple = FeatureLocation(35, 45)
+        assert locations_overlap(simple, compound)
+        assert locations_overlap(compound, simple)
+
+    def test_compound_compound(self):
+        first = build_compound([(0, 10), (20, 30), (40, 50)], strand=1)
+        second = build_compound([(12, 18), (32, 38), (52, 58)], strand=1)
+        assert not locations_overlap(first, second)
+        assert not locations_overlap(second, first)
+
+        second = build_compound([(12, 18), (28, 38), (52, 58)], strand=1)
+        assert locations_overlap(first, second)
+        assert locations_overlap(second, first)
+
+        second = build_compound([(12, 18), (32, 38), (42, 58)], strand=-1)
+        assert locations_overlap(first, second)
+        assert locations_overlap(second, first)

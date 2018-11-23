@@ -3,7 +3,7 @@
 
 """ Helper functions for location operations """
 
-from typing import Iterable, List, Sequence, Tuple
+from typing import Iterable, List, Sequence, Tuple, Union
 from typing import Optional  # in comment hints, pylint: disable=unused-import
 
 from Bio.SeqFeature import (
@@ -15,6 +15,8 @@ from Bio.SeqFeature import (
     FeatureLocation,
     UnknownPosition,
 )
+
+Location = Union[CompoundLocation, FeatureLocation]  # pylint: disable=invalid-name
 
 
 def convert_protein_position_to_dna(start: int, end: int, location: FeatureLocation) -> Tuple[int, int]:
@@ -165,16 +167,20 @@ def split_origin_bridging_location(location: CompoundLocation) -> Tuple[
     return lower, upper
 
 
-def locations_overlap(first: FeatureLocation, second: FeatureLocation) -> bool:
+def locations_overlap(first: Location, second: Location) -> bool:
     """ Returns True if the two provided FeatureLocations overlap
 
         Arguments:
-            first: the first FeatureLocation
-            second: the second FeatureLocation
+            first: the first FeatureLocation or CompoundLocation
+            second: the second FeatureLocation or CompoundLocation
 
         Returns:
             True if the locations overlap, otherwise False
     """
+    if isinstance(first, CompoundLocation):
+        return any(locations_overlap(part, second) for part in first.parts)
+    if isinstance(second, CompoundLocation):
+        return any(locations_overlap(first, part) for part in second.parts)
     return (first.start in second or first.end - 1 in second
             or second.start in first or second.end - 1 in first)
 
