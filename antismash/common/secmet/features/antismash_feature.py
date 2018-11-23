@@ -9,7 +9,7 @@ from typing import Dict, List, Optional
 from Bio.SeqFeature import SeqFeature
 
 from ..errors import SecmetInvalidInputError
-from .feature import Feature, FeatureLocation
+from .feature import Feature, Location
 
 
 class AntismashFeature(Feature):
@@ -17,7 +17,7 @@ class AntismashFeature(Feature):
     __slots__ = ["domain_id", "database", "detection", "_evalue", "label",
                  "locus_tag", "_score", "_translation", "tool"]
 
-    def __init__(self, location: FeatureLocation, feature_type: str, tool: Optional[str] = None,
+    def __init__(self, location: Location, feature_type: str, tool: Optional[str] = None,
                  created_by_antismash: bool = True) -> None:
         if created_by_antismash and not tool:
             raise ValueError("an AntismashFeature created by antiSMASH must have a tool supplied")

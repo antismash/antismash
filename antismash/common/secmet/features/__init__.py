@@ -10,7 +10,7 @@ from .cds_feature import CDSFeature
 from .cds_motif import CDSMotif
 from .cluster import Cluster
 from .domain import Domain
-from .feature import Feature, FeatureLocation, SeqFeature
+from .feature import Feature, FeatureLocation, Location, SeqFeature
 from .gene import Gene
 from .pfam_domain import PFAMDomain
 from .prepeptide import Prepeptide

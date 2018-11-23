@@ -11,7 +11,7 @@ from Bio.SeqFeature import SeqFeature
 from antismash.common.secmet.qualifiers import GOQualifier
 
 from ..errors import SecmetInvalidInputError
-from .feature import Feature, FeatureLocation
+from .feature import Feature, Location
 from .domain import Domain
 
 
@@ -21,7 +21,7 @@ class PFAMDomain(Domain):
     __slots__ = ["description", "probability", "protein_start", "protein_end",
                  "gene_ontologies", "identifier", "version"]
 
-    def __init__(self, location: FeatureLocation, description: str, protein_start: int,
+    def __init__(self, location: Location, description: str, protein_start: int,
                  protein_end: int, identifier: str, tool: str, domain: Optional[str] = None,
                  ) -> None:
         """ Arguments:
