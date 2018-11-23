@@ -185,17 +185,21 @@ def locations_overlap(first: Location, second: Location) -> bool:
             or second.start in first or second.end - 1 in first)
 
 
-def location_contains_other(outer: FeatureLocation, inner: FeatureLocation) -> bool:
+def location_contains_other(outer: Location, inner: Location) -> bool:
     """ Returns True if the first of two provided FeatureLocations contains the
         second
 
         Arguments:
-            outer: a FeatureLocation that should contain the other
-            inner: a FeatureLocation to test
+            outer: a FeatureLocation or CompoundLocation that should contain the other
+            inner: a FeatureLocation or CompoundLocation to test
 
         Returns:
             True if outer contains inner, otherwise False
     """
+    if isinstance(inner, CompoundLocation):
+        return all(location_contains_other(outer, part) for part in inner.parts)
+    if isinstance(outer, CompoundLocation):
+        return any(location_contains_other(part, inner) for part in outer.parts)
     return inner.start in outer and inner.end - 1 in outer
 
 
