@@ -481,7 +481,7 @@ def run_cleavage_site_regex(fasta: str) -> Optional[CleavageSiteHit]:
         end += 15
     else:
         return None
-    return CleavageSiteHit(end, 0, "lanthipeptide")
+    return CleavageSiteHit(end, -100., "lanthipeptide")
 
 
 def determine_precursor_peptide_candidate(record: Record, query: CDSFeature, domains: List[str],
