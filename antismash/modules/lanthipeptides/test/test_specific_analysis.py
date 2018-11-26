@@ -37,7 +37,7 @@ class TestLanthipeptide(unittest.TestCase):
 
     def test_repr(self):
         "Test Lanthipeptide representation"
-        expected = "Lanthipeptide(..42, 17, 'Class-I', 'MAGICHAT', -1, " #  skip weights
+        expected = "Lanthipeptide(..42, 17.0, 'Class-I', 'MAGICHAT', -1, " #  skip weights
         assert repr(self.lant).startswith(expected)
 
     def test_core_ignore_invalid(self):
@@ -176,7 +176,7 @@ class TestNoCores(unittest.TestCase):
         results = run_lanthipred(DummyRecord(features=[self.cds]),
                                  self.cds, "Class-I", self.domains)
         assert results
-        assert str(results).startswith("Lanthipeptide(..40, -6, 'Class-I', 'LSQGLGGC', 1, 715")
+        assert str(results).startswith("Lanthipeptide(..40, -6.8, 'Class-I', 'LSQGLGGC', 1, 715")
 
     def test_prediction_with_core_class2(self):
         # the cleavage result adjusted to leave at least one amino in core
@@ -185,4 +185,4 @@ class TestNoCores(unittest.TestCase):
         results = run_lanthipred(DummyRecord(features=[self.cds]),
                                  self.cds, "Class-II", self.domains)
         assert results is not None
-        assert str(results).startswith("Lanthipeptide(..40, -6, 'Class-II', 'LSQGLGGC', 1, 715")
+        assert str(results).startswith("Lanthipeptide(..40, -6.8, 'Class-II', 'LSQGLGGC', 1, 715")
