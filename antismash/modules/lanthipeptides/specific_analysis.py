@@ -117,9 +117,9 @@ class LanthiResults(module_results.ModuleResults):
 
 class PrepeptideBase:
     """ A generic prepeptide class for tracking various typical components """
-    def __init__(self, end: int, score: int, rodeo_score: int = 0) -> None:
+    def __init__(self, end: int, score: float, rodeo_score: int = 0) -> None:
         self.end = int(end)  # cleavage site position
-        self.score = int(score)  # of cleavage site
+        self.score = float(score)  # of cleavage site
         self.rodeo_score = int(rodeo_score)
         self._leader = None  # type: Optional[str]
         self._core = ''
@@ -202,9 +202,9 @@ class PrepeptideBase:
 
 class CleavageSiteHit:  # pylint: disable=too-few-public-methods
     """ A simple container for storing cleavage site information """
-    def __init__(self, end: int, score: int, lantype: str) -> None:
+    def __init__(self, end: int, score: float, lantype: str) -> None:
         self.end = int(end)
-        self.score = int(score)
+        self.score = float(score)
         self.lantype = lantype
 
     def __repr__(self) -> str:
