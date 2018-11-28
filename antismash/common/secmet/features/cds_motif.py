@@ -9,14 +9,14 @@ from typing import Dict, List, Optional
 from Bio.SeqFeature import SeqFeature
 
 from .domain import Domain
-from .feature import Feature, FeatureLocation
+from .feature import Feature, Location
 
 
 class CDSMotif(Domain):
     """ A base class for features that represent a motif within a CDSFeature """
     __slots__ = ["motif"]
 
-    def __init__(self, location: FeatureLocation, tool: Optional[str] = None) -> None:
+    def __init__(self, location: Location, tool: Optional[str] = None) -> None:
         # if there's a tool, it was created by antismash
         created = tool is not None
         super().__init__(location, feature_type="CDS_motif", tool=tool, created_by_antismash=created)

@@ -3,7 +3,7 @@
 
 """ Helper functions for location operations """
 
-from typing import Iterable, List, Sequence, Tuple
+from typing import Iterable, List, Sequence, Tuple, Union
 from typing import Optional  # in comment hints, pylint: disable=unused-import
 
 from Bio.SeqFeature import (
@@ -16,8 +16,10 @@ from Bio.SeqFeature import (
     UnknownPosition,
 )
 
+Location = Union[CompoundLocation, FeatureLocation]  # pylint: disable=invalid-name
 
-def convert_protein_position_to_dna(start: int, end: int, location: FeatureLocation) -> Tuple[int, int]:
+
+def convert_protein_position_to_dna(start: int, end: int, location: Location) -> Tuple[int, int]:
     """ Convert a protein position to a nucleotide sequence position for use in generating
         new FeatureLocations from existing FeatureLocations and/or CompoundLocations.
 
@@ -71,7 +73,7 @@ def convert_protein_position_to_dna(start: int, end: int, location: FeatureLocat
     return dna_start, dna_end
 
 
-def build_location_from_others(locations: Sequence[FeatureLocation]) -> FeatureLocation:
+def build_location_from_others(locations: Sequence[Location]) -> FeatureLocation:
     """ Builds a new location from non-overlapping others.
         If location boundaries are equal, they will be merged.
         If at least one provided location is a CompoundLocation or the locations
@@ -98,7 +100,7 @@ def build_location_from_others(locations: Sequence[FeatureLocation]) -> FeatureL
     return location
 
 
-def location_bridges_origin(location: CompoundLocation) -> bool:
+def location_bridges_origin(location: Location) -> bool:
     """ Determines if a CompoundLocation would cross the origin of a record.
 
         Arguments:
@@ -165,35 +167,43 @@ def split_origin_bridging_location(location: CompoundLocation) -> Tuple[
     return lower, upper
 
 
-def locations_overlap(first: FeatureLocation, second: FeatureLocation) -> bool:
+def locations_overlap(first: Location, second: Location) -> bool:
     """ Returns True if the two provided FeatureLocations overlap
 
         Arguments:
-            first: the first FeatureLocation
-            second: the second FeatureLocation
+            first: the first FeatureLocation or CompoundLocation
+            second: the second FeatureLocation or CompoundLocation
 
         Returns:
             True if the locations overlap, otherwise False
     """
+    if isinstance(first, CompoundLocation):
+        return any(locations_overlap(part, second) for part in first.parts)
+    if isinstance(second, CompoundLocation):
+        return any(locations_overlap(first, part) for part in second.parts)
     return (first.start in second or first.end - 1 in second
             or second.start in first or second.end - 1 in first)
 
 
-def location_contains_other(outer: FeatureLocation, inner: FeatureLocation) -> bool:
+def location_contains_other(outer: Location, inner: Location) -> bool:
     """ Returns True if the first of two provided FeatureLocations contains the
         second
 
         Arguments:
-            outer: a FeatureLocation that should contain the other
-            inner: a FeatureLocation to test
+            outer: a FeatureLocation or CompoundLocation that should contain the other
+            inner: a FeatureLocation or CompoundLocation to test
 
         Returns:
             True if outer contains inner, otherwise False
     """
+    if isinstance(inner, CompoundLocation):
+        return all(location_contains_other(outer, part) for part in inner.parts)
+    if isinstance(outer, CompoundLocation):
+        return any(location_contains_other(part, inner) for part in outer.parts)
     return inner.start in outer and inner.end - 1 in outer
 
 
-def location_from_string(data: str) -> FeatureLocation:
+def location_from_string(data: str) -> Location:
     """ Converts a string, e.g. [<1:6](-), to a FeatureLocation or CompoundLocation
     """
     def parse_position(string: str) -> AbstractPosition:
@@ -238,7 +248,7 @@ def location_from_string(data: str) -> FeatureLocation:
     return CompoundLocation(locations, operator=operator)
 
 
-def combine_locations(*locations: Iterable[FeatureLocation]) -> FeatureLocation:
+def combine_locations(*locations: Iterable[Location]) -> Location:
     """ Combines multiple FeatureLocations into a single location using the
         minimum start and maximum end. Will not create a CompoundLocation if any
         of the inputs are CompoundLocations.

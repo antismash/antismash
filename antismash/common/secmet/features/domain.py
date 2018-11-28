@@ -10,7 +10,7 @@ from Bio.SeqFeature import SeqFeature
 
 from antismash.common.secmet.qualifiers import ActiveSiteFinderQualifier
 
-from .feature import Feature, FeatureLocation
+from .feature import Feature, Location
 from .antismash_feature import AntismashFeature
 
 
@@ -18,7 +18,7 @@ class Domain(AntismashFeature):
     """ A base class for features which represent a domain type """
     __slots__ = ["domain", "_asf"]
 
-    def __init__(self, location: FeatureLocation, feature_type: str,
+    def __init__(self, location: Location, feature_type: str,
                  domain: Optional[str] = None, tool: str = None,
                  created_by_antismash: bool = True) -> None:
         super().__init__(location, feature_type, tool=tool, created_by_antismash=created_by_antismash)

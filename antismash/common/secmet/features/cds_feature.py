@@ -19,7 +19,8 @@ from antismash.common.secmet.qualifiers import (
 )
 
 from ..errors import SecmetInvalidInputError
-from .feature import Feature, FeatureLocation
+from ..locations import Location
+from .feature import Feature
 
 
 def _sanitise_id_value(name: Optional[str]) -> Optional[str]:
@@ -39,7 +40,7 @@ class CDSFeature(Feature):
                  "transl_table", "_sec_met", "_gene_functions",
                  "unique_id", "_nrps_pks", "motifs", "region"]
 
-    def __init__(self, location: FeatureLocation, translation: str, locus_tag: str = None,
+    def __init__(self, location: Location, translation: str, locus_tag: str = None,
                  protein_id: str = None, product: str = "", gene: str = None,
                  translation_table: int = 1) -> None:
         super().__init__(location, feature_type="CDS")

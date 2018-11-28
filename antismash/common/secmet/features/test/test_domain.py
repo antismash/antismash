@@ -6,7 +6,8 @@
 
 import unittest
 
-from antismash.common.secmet.features.domain import Domain, FeatureLocation
+from antismash.common.secmet import FeatureLocation
+from antismash.common.secmet.features.domain import Domain
 
 
 class TestDomain(unittest.TestCase):

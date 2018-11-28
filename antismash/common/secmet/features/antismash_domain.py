@@ -10,14 +10,14 @@ from typing import Optional  # comment hints, pylint: disable=unused-import
 from Bio.SeqFeature import SeqFeature
 
 from .domain import Domain
-from .feature import Feature, FeatureLocation
+from .feature import Feature, Location
 
 
 class AntismashDomain(Domain):
     """ A class to represent a Domain with extra specificities and type information """
     __slots__ = ["domain_subtype", "specificity"]
 
-    def __init__(self, location: FeatureLocation, tool: str) -> None:
+    def __init__(self, location: Location, tool: str) -> None:
         super().__init__(location, feature_type="aSDomain", tool=tool, created_by_antismash=True)
         self.domain_subtype = None  # type: Optional[str]
         self.specificity = []  # type: List[str]

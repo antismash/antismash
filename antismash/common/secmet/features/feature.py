@@ -13,13 +13,15 @@ from Bio.Seq import Seq
 from antismash.common.secmet.locations import (
     convert_protein_position_to_dna,
     location_bridges_origin,
+    location_contains_other,
     locations_overlap,
 )
 
 from ..errors import SecmetInvalidInputError
+from ..locations import Location
 
 
-def _adjust_location_by_offset(location: FeatureLocation, offset: int) -> FeatureLocation:
+def _adjust_location_by_offset(location: Location, offset: int) -> Location:
     """ Adjusts the given location to account for an offset (e.g. start_codon)
     """
     assert -2 <= offset <= 2, "invalid offset %d" % offset
@@ -56,7 +58,7 @@ class Feature:
     __slots__ = ["location", "notes", "type", "_qualifiers", "created_by_antismash",
                  "_original_codon_start"]
 
-    def __init__(self, location: FeatureLocation, feature_type: str,
+    def __init__(self, location: Location, feature_type: str,
                  created_by_antismash: bool = False) -> None:
         assert isinstance(location, (FeatureLocation, CompoundLocation)), type(location)
         if location_bridges_origin(location):
@@ -84,7 +86,7 @@ class Feature:
         assert isinstance(sequence, Seq)
         return self.location.extract(sequence)
 
-    def get_sub_location_from_protein_coordinates(self, start: int, end: int) -> FeatureLocation:
+    def get_sub_location_from_protein_coordinates(self, start: int, end: int) -> Location:
         """ Generates a FeatureLocation for a protein sequence based on the start
             and end positions within the features protein sequence.
 
@@ -165,29 +167,28 @@ class Feature:
         assert qualifier is None
         return True
 
-    def overlaps_with(self, other: Union["Feature", FeatureLocation]) -> bool:
+    def overlaps_with(self, other: Union["Feature", Location]) -> bool:
         """ Returns True if the given feature overlaps with this feature.
             This operation is commutative, a.overlaps_with(b) is equivalent to
             b.overlaps_with(a).
         """
         if isinstance(other, Feature):
             location = other.location
-        elif isinstance(other, FeatureLocation):
+        elif isinstance(other, (CompoundLocation, FeatureLocation)):
             location = other
         else:
-            raise TypeError("Container must be a Feature or a FeatureLocation, not %s" % type(other))
+            raise TypeError("Container must be a Feature, CompoundLocation, or FeatureLocation, not %s" % type(other))
         return locations_overlap(self.location, location)
 
-    def is_contained_by(self, other: Union["Feature", FeatureLocation]) -> bool:
+    def is_contained_by(self, other: Union["Feature", Location]) -> bool:
         """ Returns True if the given feature is wholly contained by this
             feature.
         """
-        end = self.location.end - 1  # to account for the non-inclusive end
         if isinstance(other, Feature):
-            return self.location.start in other.location and end in other.location
-        if isinstance(other, FeatureLocation):
-            return self.location.start in other and end in other
-        raise TypeError("Container must be a Feature or a FeatureLocation, not %s" % type(other))
+            return location_contains_other(other.location, self.location)
+        if isinstance(other, (CompoundLocation, FeatureLocation)):
+            return location_contains_other(other, self.location)
+        raise TypeError("Container must be a Feature, CompoundLocation or FeatureLocation, not %s" % type(other))
 
     def to_biopython(self, qualifiers: Dict[str, Any] = None) -> List[SeqFeature]:
         """ Converts this feature into one or more SeqFeature instances.
