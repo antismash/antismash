@@ -191,6 +191,8 @@ jsdomain.get_label = function(type) {
         case "Aminotran_4":
         case "Aminotran_5":
         case "Polyketide_cyc2":
+        case "TIGR01720":
+        case "TIGR02353":
             return ""
         case "Cglyc":
         case "CXglyc":
