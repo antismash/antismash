@@ -87,6 +87,14 @@ RULE lanthipeptide
                    or cds(LANC_like and (Pkinase or DUF4135)))  # Classes II, III and IV
                and not (YcaO or TIGR03882) # because then it'd be a thiopeptide
 
+RULE lipolanthine
+    COMMENT Lanthipeptide class containing N-terminal fatty acids such as MG673929
+            See https://doi.org/10.1038/s41589-018-0068-6
+    RELATED PKS_KS, AMP-binding, PP-binding
+    CUTOFF 20
+    EXTENT 10
+    CONDITIONS micKC and Flavoprotein
+
 RULE bacteriocin
     CUTOFF 20
     EXTENT 5
