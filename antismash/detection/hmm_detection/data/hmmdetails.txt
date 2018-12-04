@@ -231,3 +231,4 @@ DUF3328	UstYa/UstYb-like monooxygenase	25	DUF3328.hmm
 pop	fungal prolyl oligopeptidase	950	pop.hmm
 ustH	fungal ustH-type gamma peptidase	450	ustH.hmm
 truD	TruD pseudouridine synthase	120	truD.hmm
+micKC	Lipolanthine biosynthesis protein	400	micKC.hmm
