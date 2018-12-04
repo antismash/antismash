@@ -103,6 +103,13 @@ RULE lipolanthine
     NEIGHBOURHOOD 10
     CONDITIONS micKC and Flavoprotein
 
+RULE lanthidin
+    COMMENT Glycosylated lanthipeptide/linaridin hybrids like MT210103
+    RELATED Flavoprotein, Glycos_transf_1, Glycos_transf_2
+    CUTOFF 20
+    NEIGHBOURHOOD 20
+    CONDITIONS APH and HopA1
+
 RULE bacteriocin
     CUTOFF 20
     NEIGHBOURHOOD 5

@@ -250,3 +250,5 @@ Acyl-CoA_dh_M	Acyl-CoA dehydrogenase, middle domain	33	PF02770.hmm
 Acyl-CoA_dh_1	Acyl-CoA dehydrogenase, C-terminal domain	22	PF00441.hmm
 TIGR02278	PaaN-DH: phenylacetic acid degradation protein paaN	563	TIGR02278.hmm
 TfuA	TfuA-like protein	26	PF07812.hmm
+HopA1	HopA1 effector protein family	23	PF17914.hmm
+APH	Phosphotransferase enzyme family	23	PF01636.hmm

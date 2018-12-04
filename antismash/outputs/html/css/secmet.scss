@@ -119,6 +119,10 @@
     @include lantibiotic;
 }
 
+.lanthidin {
+    @include lantibiotic;
+}
+
 .bacteriocin {
     @include RiPP;
 }
