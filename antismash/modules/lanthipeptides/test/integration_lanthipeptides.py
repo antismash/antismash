@@ -147,7 +147,7 @@ class IntegrationLanthipeptides(unittest.TestCase):
         prepeptide = rec.get_cds_motifs()[0]
         assert prepeptide.peptide_subclass == 'Class I'
         assert prepeptide.detailed_information.lan_bridges == 3
-        assert prepeptide.detailed_information.rodeo_score == 15
+        assert prepeptide.detailed_information.rodeo_score == 18
 
     def test_lactocin_s(self):
         """Test lanthipeptide prediction for lactocin S"""
@@ -157,10 +157,11 @@ class IntegrationLanthipeptides(unittest.TestCase):
 
         assert len(result.clusters) == 1
         assert result.clusters[1] == set(["lasM"])
-        assert len(result.motifs_by_locus["lasM"]) == 1
         motifs = result.motifs_by_locus["lasM"]
+        assert len(motifs) == 1
 
         assert motifs[0].peptide_subclass == "Class II"
+        assert motifs[0].locus_tag == "lasA"
 
     def test_multiple_biosynthetic_enzymes(self):
         # TODO: find/create an input with both class II and class III lanthipeptides

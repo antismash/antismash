@@ -117,9 +117,9 @@ class LanthiResults(module_results.ModuleResults):
 
 class PrepeptideBase:
     """ A generic prepeptide class for tracking various typical components """
-    def __init__(self, end: int, score: int, rodeo_score: int = 0) -> None:
+    def __init__(self, end: int, score: float, rodeo_score: int = 0) -> None:
         self.end = int(end)  # cleavage site position
-        self.score = int(score)  # of cleavage site
+        self.score = float(score)  # of cleavage site
         self.rodeo_score = int(rodeo_score)
         self._leader = None  # type: Optional[str]
         self._core = ''
@@ -202,9 +202,9 @@ class PrepeptideBase:
 
 class CleavageSiteHit:  # pylint: disable=too-few-public-methods
     """ A simple container for storing cleavage site information """
-    def __init__(self, end: int, score: int, lantype: str) -> None:
+    def __init__(self, end: int, score: float, lantype: str) -> None:
         self.end = int(end)
-        self.score = int(score)
+        self.score = float(score)
         self.lantype = lantype
 
     def __repr__(self) -> str:
@@ -348,7 +348,7 @@ class Lanthipeptide(PrepeptideBase):
             self._calculate_mw()
 
 
-def get_detected_domains(genes: List[CDSFeature]) -> List[str]:
+def get_detected_domains(genes: Iterable[CDSFeature]) -> List[str]:
     """ Gathers all detected domains in a cluster, including some not detected
         by hmm_detection.
 
@@ -431,7 +431,7 @@ def predict_cleavage_site(query_hmmfile: str, target_sequence: str,
     return None
 
 
-def predict_class_from_genes(focus: CDSFeature, genes: List[CDSFeature]) -> Optional[str]:
+def predict_class_from_genes(focus: CDSFeature, genes: Iterable[CDSFeature]) -> Optional[str]:
     """ Predict the lanthipeptide class from the gene cluster
 
         Arguments:
@@ -441,10 +441,12 @@ def predict_class_from_genes(focus: CDSFeature, genes: List[CDSFeature]) -> Opti
             a string representing the class, or None if no class predicted
     """
     found_domains = set()
-    for feature in genes + [focus]:
+    for feature in genes:
         if not feature.sec_met:
             continue
         found_domains.update(set(feature.sec_met.domain_ids))
+    if focus.sec_met:
+        found_domains.update(set(focus.sec_met.domain_ids))
 
     if 'Lant_dehydr_N' in found_domains or 'Lant_dehydr_C' in found_domains:
         return 'Class-I'
@@ -479,7 +481,7 @@ def run_cleavage_site_regex(fasta: str) -> Optional[CleavageSiteHit]:
         end += 15
     else:
         return None
-    return CleavageSiteHit(end, 0, "lanthipeptide")
+    return CleavageSiteHit(end, -100., "lanthipeptide")
 
 
 def determine_precursor_peptide_candidate(record: Record, query: CDSFeature, domains: List[str],
@@ -672,14 +674,14 @@ def run_lanthi_on_genes(record: Record, focus: CDSFeature, cluster: Cluster,
     """
     if not genes:
         return
-    domains = get_detected_domains(genes)
+    domains = get_detected_domains(cluster.cds_children)
     non_candidate_neighbours = find_neighbours_in_range(focus, cluster.cds_children)
     flavoprotein_found = contains_feature_with_single_domain(non_candidate_neighbours, {"Flavoprotein"})
     halogenase_found = contains_feature_with_single_domain(non_candidate_neighbours, {"Trp_halogenase"})
     oxygenase_found = contains_feature_with_single_domain(non_candidate_neighbours, {"p450"})
     dehydrogenase_found = contains_feature_with_single_domain(non_candidate_neighbours, {"adh_short", "adh_short_C2"})
 
-    lant_class = predict_class_from_genes(focus, genes)
+    lant_class = predict_class_from_genes(focus, cluster.cds_children)
     if not lant_class:
         return
 

@@ -89,30 +89,27 @@ def distance_to_pfam(record: Record, query: Feature, hmmer_profiles: List[str]) 
             or -1 if no gene matching was found
     """
     max_range = 40000
-    # Get all CDS features in record
-    cds_features = record.get_cds_features()
-    # Get all CDS features within <X nt distances
-    close_cds_features = []
-    distance = {}
-    # TODO: change from O(n) to binary search for start position
-    for cds in cds_features:
-        search_range = FeatureLocation(query.location.start - max_range,
-                                       query.location.end - max_range)
-        if cds.is_contained_by(search_range):
-            close_cds_features.append(cds)
-            distance[cds.get_name()] = min([
-                                abs(cds.location.start - query.location.end),
-                                abs(cds.location.end - query.location.start),
-                                abs(cds.location.start - query.location.start),
-                                abs(cds.location.end - query.location.end)])
+    search_range = FeatureLocation(query.location.start - max_range,
+                                   query.location.end + max_range)
+    close_cds_features = record.get_cds_features_within_location(search_range, with_overlapping=True)
+    def distance_between(first: Feature, second: Feature) -> int:
+        """ Calculates smallest distance between two feature endpoints """
+        return min([abs(first.location.start - second.location.end),
+                    abs(first.location.end - second.location.start),
+                    abs(first.location.start - second.location.start),
+                    abs(first.location.end - second.location.end)
+                    ])
+
     # For nearby CDS features, check if they have hits to the pHMM
+    profiles = set(hmmer_profiles)
     closest_distance = -1
     for cds in close_cds_features:
-        if cds.sec_met:
-            for profile in hmmer_profiles:
-                if profile in cds.sec_met.domains:
-                    if closest_distance == -1 or distance[cds.get_name()] < closest_distance:
-                        closest_distance = distance[cds.get_name()]
+        if cds.sec_met is None:
+            continue
+        if set(cds.sec_met.domain_ids).intersection(profiles):
+            distance = distance_between(query, cds)
+            if closest_distance == -1 or distance < closest_distance:
+                closest_distance = distance
     return closest_distance
 
 
