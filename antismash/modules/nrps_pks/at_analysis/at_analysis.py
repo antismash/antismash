@@ -65,10 +65,9 @@ class ATPrediction(Prediction):
         return list(results)
 
     def as_html(self) -> Markup:
-        pred = "(unknown)"
         if self.predictions:
-            pred = self.get_classification()[0]
-        return Markup("%s: %s" % (self.method, pred))
+            return Markup(self.predictions[0].name)
+        return Markup("unknown")
 
     def to_json(self) -> Dict[str, Any]:
         return {"method": "ATSignature",
