@@ -88,7 +88,7 @@ class IntegrationNRPSPKS(unittest.TestCase):
         results = helpers.run_and_regenerate_results_for_module(filename, nrps_pks, self.options)
         # catch ordering changes along with ensuring ATResults are there
         pred = results.domain_predictions["nrpspksdomains_STAUR_3982_PKS_AT.1"]
-        assert pred["signature"].predictions[0].score == 87.5
+        assert pred["signature"].predictions[0][1].score == 87.5
         # ensure all genes are present and have the right consensus
         assert results.consensus == {'nrpspksdomains_STAUR_3982_PKS_AT.1': 'ohmmal',
                                      'nrpspksdomains_STAUR_3983_PKS_AT.1': 'ccmmal',

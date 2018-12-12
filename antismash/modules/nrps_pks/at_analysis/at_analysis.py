@@ -33,7 +33,7 @@ class ATResult:
         return str(self)
 
     def __str__(self) -> str:
-        return "ATResult(query=%s, signature=%s, score=%.1f)" % (self.name, self.signature, self.score)
+        return "ATResult(name=%s, signature=%s, score=%.1f)" % (self.name, self.signature, self.score)
 
     def to_json(self) -> Tuple[str, str, float]:
         """ Serialises the instance """
@@ -48,35 +48,42 @@ class ATResult:
 
 class ATPrediction(Prediction):
     """ Holds the signature-based predictions for a domain"""
-    def __init__(self, predictions: List[ATResult]) -> None:
+    def __init__(self, predictions: Dict[str, ATResult]) -> None:
         super().__init__("ATSignature")
-        self.predictions = predictions
+        self.predictions = sorted(predictions.items(), key=lambda x: (-x[1].score, x[1].name))
 
     def get_classification(self) -> List[str]:
+        results = []  # type: List[str]
         if not self.predictions:
-            return []
-        results = set()
-        best_score = self.predictions[0].score
-        for pred in self.predictions:
+            return results
+        best_score = self.predictions[0][1].score
+        for monomer, pred in self.predictions:
             if pred.score < best_score:
                 break
-            monomer = pred.name.rsplit("_", 1)[-1]
-            results.add(monomer)
-        return list(results)
+            results.append(monomer)
+        return results
 
     def as_html(self) -> Markup:
-        if self.predictions:
-            return Markup(self.predictions[0].name)
-        return Markup("unknown")
+        if not self.predictions:
+            return Markup("No matches above 50%")
+        html = ((
+            "<dl>\n"
+            " <dt>Top 3 matches:</dt>\n"
+            "%s"
+            "</dl>\n"
+        ) % "".join("<dd>%s: %.1f%%</dd>\n" % (monomer, pred.score) for (monomer, pred) in self.predictions[:3]))
+        return Markup(html)
 
     def to_json(self) -> Dict[str, Any]:
-        return {"method": "ATSignature",
-                "predictions": [pred.to_json() for pred in self.predictions]}
+        return {
+            "method": "ATSignature",
+            "predictions": {monomer: pred.to_json() for monomer, pred in self.predictions},
+        }
 
     @staticmethod
     def from_json(json: Dict[str, Any]) -> "ATPrediction":
         assert json["method"] == "ATSignature"
-        return ATPrediction([ATResult.from_json(pred) for pred in json["predictions"]])
+        return ATPrediction({monomer: ATResult.from_json(pred) for monomer, pred in json["predictions"].items()})
 
 
 def get_at_positions(startpos: int = 7) -> List[int]:
@@ -101,22 +108,23 @@ def score_signatures(query_signatures: Dict[str, str],
             reference_signatures: a dictionary mapping reference name to signature
 
         Returns:
-            a dictionary mapping query name to an ATPrediction
+            a dictionary mapping each query identifier to an ATPrediction
     """
     results = {}  # type: Dict[str, Prediction]
     for key, query_sig_seq in sorted(query_signatures.items()):
-        scores = []
+        # keep a single best prediction for each monomer type
+        scores = {}  # type: Dict[str, ATResult]
         for sig_name, sig_seq in reference_signatures.items():
+            monomer = sig_name.rsplit('_', 1)[-1]
             score = 0.
             for query_amino, sig_amino in zip(query_sig_seq, sig_seq):
                 if query_amino == sig_amino:
                     score += 1.
             score = 100 * score / _SIGNATURE_LENGTH
             # ignore scores <= 50%
-            if score > 50.:
-                scores.append(ATResult(sig_name, reference_signatures[sig_name], score))
-        # limit to 10 best hits, scores descending, names ascending for ties
-        results[key] = ATPrediction(sorted(scores, key=lambda x: x.score, reverse=True)[:10])
+            if score > (scores[monomer].score if monomer in scores else 50.):
+                scores[monomer] = ATResult(sig_name, reference_signatures[sig_name], score)
+        results[key] = ATPrediction(scores)
     return results
 
 

@@ -42,7 +42,9 @@
   <h3>NRPS/PKS domain predictions</h3>
   <dl class="prediction-text">
     {% for gene_id in region.sidepanel_features if gene_id in relevant_features %}
-      <dt><strong>{{gene_id}}</strong></dt>
+      <strong>{{gene_id}}</strong>: {{relevant_features[gene_id] | join(" - ")}}
+      {{collapser_start(target=gene_id, level="cds")}}
+      <dt></dt>
       {% if gene_id in region.url_strict %}
         <dd> Search NORINE for peptide:
           <a href="{{region.url_strict[gene_id]}}" target="_new">strict</a>
@@ -65,6 +67,7 @@
           </dd>
         {% endif %}
       {% endfor %}
+      {{collapser_end()}}
       <br>
     {% endfor %}
   </dl>
