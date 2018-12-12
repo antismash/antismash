@@ -14,8 +14,7 @@ def collapser_start(target: str, level: str = "all") -> str:
     if level not in ["all", "supercluster", "cluster", "cds", "none"]:
         raise ValueError("unknown collapser level: %s" % level)
     classes = ["collapser", "collapser-target-%s" % target]
-    if level != "none":
-        classes.append("collapser-level-%s" % level)
+    classes.append("collapser-level-%s" % level)
     child = '<div class="collapser-content">'
     if level == "all":
         classes.append("expanded")
