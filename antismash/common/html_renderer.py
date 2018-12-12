@@ -11,6 +11,17 @@ from typing import Any, Optional
 import jinja2 as _jinja2
 from jinja2 import Markup
 
+
+def _safe_selector(name: str) -> str:
+    """ Returns a valid HTML-selector from the provided name
+
+        NOTE: needs to be kept in sync with antismash-js
+    """
+    # . is a class separator
+    # : is a state separator
+    return name.replace(":", "-").replace(".", "-")
+
+
 def collapser_start(target: str, level: str = "all") -> Markup:
     """ Builds the start of a collapser specific to the target. Must be matched
         with a collapser_end() call.
@@ -30,7 +41,7 @@ def collapser_start(target: str, level: str = "all") -> Markup:
     """
     if level not in ["all", "supercluster", "cluster", "cds", "none"]:
         raise ValueError("unknown collapser level: %s" % level)
-    classes = ["collapser", "collapser-target-%s" % target]
+    classes = ["collapser", "collapser-target-%s" % _safe_selector(target)]
     classes.append("collapser-level-%s" % level)
     child = '<div class="collapser-content">'
     if level == "all":
