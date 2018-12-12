@@ -30,7 +30,20 @@ class MinowaPrediction(Prediction):
                 "predictions": self.predictions}
 
     def as_html(self) -> Markup:
-        return Markup("%s: %s" % (self.method, self.predictions[0][0]))
+        raw_start = (
+            "\n"
+            "<dl><dt>Prediction, score:</dt>\n"
+            " <dd>\n"
+            "  <dl>\n"
+        )
+        core = "\n".join("  <dd></dd><dt>%s: %.1f</dt>\n" % (name, score) for name, score in self.predictions)
+        raw_end = (
+            "\n"
+            "  </dl>\n"
+            " </dd>\n"
+            "</dl>\n"
+        )
+        return Markup("%s%s%s" % (raw_start, core, raw_end))
 
     @staticmethod
     def from_json(json: Dict[str, Any]) -> "MinowaPrediction":
