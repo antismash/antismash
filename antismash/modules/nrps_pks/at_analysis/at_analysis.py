@@ -53,15 +53,16 @@ class ATPrediction(Prediction):
         self.predictions = predictions
 
     def get_classification(self) -> List[str]:
-        results = []  # type: List[str]
         if not self.predictions:
-            return results
+            return []
+        results = set()
         best_score = self.predictions[0].score
         for pred in self.predictions:
             if pred.score < best_score:
                 break
-            results.append(pred.name.rsplit("_", 1)[-1])
-        return results
+            monomer = pred.name.rsplit("_", 1)[-1]
+            results.add(monomer)
+        return list(results)
 
     def as_html(self) -> Markup:
         pred = "(unknown)"
