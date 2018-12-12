@@ -59,7 +59,7 @@ class TestSMCOGs(unittest.TestCase):
         cds = helpers.DummyCDS(0, len(translation))
         cds.translation = translation
         results = smcogs.classify("test", [cds], get_config())
-        assert results.best_hits[cds.get_name()].hit_id == "SMCOG1212:sodium:dicarboxylate_symporter"
+        assert results.best_hits[cds.get_name()].hit_id == "SMCOG1212:sodium:dicarboxylate symporter"
         record = helpers.DummyRecord(seq=translation)
         record.add_cds_feature(cds)
         record.add_cluster(helpers.DummyCluster(0, len(translation)))
@@ -68,20 +68,20 @@ class TestSMCOGs(unittest.TestCase):
         results.add_to_record(record)
         gene_functions = cds.gene_functions.get_by_tool("smcogs")
         assert len(gene_functions) == 1
-        assert str(gene_functions[0]).startswith("transport (smcogs) SMCOG1212:sodium:dicarboxylate_symporter"
+        assert str(gene_functions[0]).startswith("transport (smcogs) SMCOG1212:sodium:dicarboxylate symporter"
                                                  " (Score: 416; E-value: 2.3e-126)")
 
     def test_results_reconstruction(self):
         results = smcogs.classify(self.record.id, self.record.get_cds_features(), self.options)
         assert results.tool == "smcogs"
-        assert results.best_hits["nisB"].hit_id == 'SMCOG1155:Lantibiotic_dehydratase_domain_protein'
+        assert results.best_hits["nisB"].hit_id == 'SMCOG1155:Lantibiotic dehydratase domain protein'
 
         json = results.to_json()
-        assert json["best_hits"]["nisB"][0] == 'SMCOG1155:Lantibiotic_dehydratase_domain_protein'
+        assert json["best_hits"]["nisB"][0] == 'SMCOG1155:Lantibiotic dehydratase domain protein'
 
         reconstructed = core.FunctionResults.from_json(json, self.record)
         assert reconstructed.tool == "smcogs"
-        assert reconstructed.best_hits["nisB"].hit_id == 'SMCOG1155:Lantibiotic_dehydratase_domain_protein'
+        assert reconstructed.best_hits["nisB"].hit_id == 'SMCOG1155:Lantibiotic dehydratase domain protein'
         assert reconstructed.to_json() == json
 
     def test_annotations(self):

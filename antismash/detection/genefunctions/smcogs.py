@@ -33,6 +33,7 @@ def classify(record_id: str, cds_features: List[CDSFeature],  # an API, so hide 
     for cds_name, result in hits.items():
         smcog_id = result.hit_id.split(":", 1)[0]
         cds_name_to_function[cds_name] = ids_to_function[smcog_id]
+        result.hit_id = result.hit_id.replace('_', ' ')
     return FunctionResults(record_id, "smcogs", hits, cds_name_to_function)
 
 
