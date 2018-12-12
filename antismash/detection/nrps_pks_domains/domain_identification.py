@@ -317,7 +317,7 @@ def generate_domain_features(record: Record, gene: CDSFeature,
         # set up new feature
         new_feature = AntismashDomain(loc, tool="nrps_pks_domains")
         new_feature.domain = domain.hit_id
-        new_feature.locus_tag = gene.locus_tag
+        new_feature.locus_tag = gene.locus_tag or gene.get_name()
         new_feature.detection = "hmmscan"
         new_feature.database = "nrpspksdomains.hmm"
         new_feature.evalue = domain.evalue
