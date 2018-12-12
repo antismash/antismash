@@ -56,7 +56,7 @@
           <dd><strong>{{domain.name}} ({{domain.start}}..{{domain.end}})</strong>: {{results.consensus[domain.feature_name]}}
           {{collapser_start(gene_id, level="supercluster")}}
           {% for prediction in results.domain_predictions.get(domain.feature_name, {}).values() %}
-              {{prediction.method}}:  {{prediction.get_classification() | join(", ")}}
+              {{prediction.method}}:  {{prediction.get_classification() | join(", ") or "(unknown)"}}
               {{collapser_start(gene_id + "-" + prediction.method, level="none")}}
                 {{prediction.as_html()}}
               {{collapser_end()}}<br>
