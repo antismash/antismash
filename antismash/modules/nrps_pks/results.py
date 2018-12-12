@@ -60,7 +60,7 @@ class SuperClusterPrediction:
 
 class NRPS_PKS_Results(ModuleResults):
     """ The combined results of the nrps_pks module """
-    _schema_version = 2
+    _schema_version = 3
     __slots__ = ["consensus", "consensus_transat", "region_predictions", "domain_predictions"]
 
     def __init__(self, record_id: str) -> None:

@@ -29,12 +29,18 @@ def generate_sidepanel(region_layer: RegionLayer, results: NRPS_PKS_Results,
     template = html_renderer.FileTemplate(path.get_full_path(__file__, 'templates', 'sidepanel.html'))
     nrps_layer = NrpspksLayer(results, region_layer.region_feature, record_layer)
 
-    features_with_domain_predictions = set()
+    features_with_domain_predictions = {}  # type: Dict[str, List[str]]
     for domain_name, consensus in results.consensus.items():
         if not consensus:
             continue
         domain = record_layer.get_domain_by_name(domain_name)
-        features_with_domain_predictions.add(domain.locus_tag)
+        features_with_domain_predictions[domain.locus_tag] = []
+
+    for feature_name, monomers in features_with_domain_predictions.items():
+        for domain in record_layer.get_cds_by_name(feature_name).nrps_pks.domains:
+            monomer = results.consensus.get(domain.feature_name)
+            if monomer:
+                monomers.append(monomer)
 
     sidepanel = template.render(record=record_layer,
                                 region=nrps_layer,

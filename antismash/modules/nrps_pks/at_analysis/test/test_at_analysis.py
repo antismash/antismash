@@ -11,7 +11,7 @@ from antismash.modules.nrps_pks.at_analysis import at_analysis
 
 class TestScoring(unittest.TestCase):
     def test_score_threshold(self):
-        ref_sigs = {i: i*24 for i in "ABC"}
+        ref_sigs = {"%s_%s" % (i, mon): i*24 for i, mon in zip("ABC", ["mal", "mmal", "emal"])}
         query_sig = ["A"] * 24
         query_sig[3:7] = "B"
         query_sig[7:13] = "C"
@@ -20,9 +20,11 @@ class TestScoring(unittest.TestCase):
         assert len(result) == 1
         assert list(result) == ["Q1"]
         assert len(result["Q1"].predictions) == 1
-        assert result["Q1"].predictions[0].name == "A"
-        assert result["Q1"].predictions[0].signature == "A"*24
-        self.assertAlmostEqual(result["Q1"].predictions[0].score, 100*14/24)
+        monomer, prediction = result["Q1"].predictions[0]
+        assert monomer == "mal"
+        assert prediction.name == "A_mal"
+        assert prediction.signature == "A"*24
+        self.assertAlmostEqual(prediction.score, 100*14/24)
 
     def test_hit_limit(self):
         ref_sigs = {str(i): "A"*24 for i in range(11)}
@@ -30,8 +32,8 @@ class TestScoring(unittest.TestCase):
         query_sigs = {"Q1": "".join(query_sig)}
         result = at_analysis.score_signatures(query_sigs, ref_sigs)
         assert len(result) == 1
-        assert len(result["Q1"].predictions) == 10
-        assert set([res.name for res in result["Q1"].predictions]).issubset(set(ref_sigs))
+        assert len(result["Q1"].predictions) == 11
+        assert set([res.name for _, res in result["Q1"].predictions]).issubset(set(ref_sigs))
 
 
 class TestATPositions(unittest.TestCase):

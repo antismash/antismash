@@ -77,7 +77,7 @@ class TestKRAnalysis(unittest.TestCase):
         for key, val in results.items():
             if not val.predictions:
                 continue
-            best[key] = (val.predictions[0].name, val.predictions[0].score)
+            best[key] = (val.predictions[0][1].name, val.predictions[0][1].score)
         assert best == {'SCO0126_AT1': ('Q83Y48_AT1__mal', 79.16666666666667),
                         'SCO5892_AT1': ('D3Y1I5_AT1__mal', 95.83333333333333),
                         'SCO6273_AT1': ('Q9EWA1_AT4__mal', 91.66666666666667),
