@@ -253,7 +253,7 @@ class Gene:
 
     def _get_description(self) -> str:
         """ Returns a HTML fragment describing the Gene """
-        description = ['%s[br]Location: %s - %s' % (self.label, self.start, self.end)]
+        description = ['<b>%s</b>[br]%s[br]Location: %s - %s' % (self.name, self.label, self.start, self.end)]
         format_string = ("<br><br><b>BlastP hit with %s</b><br>Percentage identity: %s<br>"
                          "Percentage coverage: %.0f<br>BLAST bit score: %s<br>E-value: %s")
         for query, subject in self.pairings:
