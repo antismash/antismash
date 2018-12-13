@@ -56,6 +56,6 @@
  {% endif %}
 </div>
 <div class="focus-clipboard">
- AA sequence: <a href="javascript:copyToClipboard('{{feature.translation}}')">Copy to clipboard</a><br>
- Nucleotide sequence: <a href="javascript:copyToClipboard('{{feature.extract(record.seq)}}')">Copy to clipboard</a><br>
+ AA sequence: <span class="clipboard-copy" data-seq="{{feature.translation}}">Copy to clipboard</span><br>
+ Nucleotide sequence: <span class="clipboard-copy" data-seq="{{feature.extract(record.seq)}}">Copy to clipboard</span><br>
 </div>
