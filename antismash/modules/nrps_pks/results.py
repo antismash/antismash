@@ -11,10 +11,11 @@ from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record, AntismashDomain
 from antismash.common.secmet.qualifiers import NRPSPKSQualifier
 
-from .parsers import LONG_TO_SHORT, generate_nrps_consensus
+from .parsers import generate_nrps_consensus
 from .data_structures import Prediction, SimplePrediction
 from .minowa.base import MinowaPrediction
 from .nrps_predictor import PredictorSVMResult
+from .pks_names import get_short_form
 from .at_analysis.at_analysis import ATPrediction
 
 DOMAIN_TYPE_MAPPING = {'Condensation_DCL': 'Condensation',
@@ -150,12 +151,12 @@ class NRPS_PKS_Results(ModuleResults):
         domain.predictions["PKS signature"] = sig
 
         minowa = predictions["minowa_at"].get_classification()[0]
-        domain.predictions["Minowa"] = LONG_TO_SHORT.get(minowa, minowa)
+        domain.predictions["Minowa"] = get_short_form(minowa)
 
     def _annotate_cal_domain(self, domain: NRPSPKSQualifier.Domain) -> None:
         assert domain.name == "CAL_domain"
         minowa = self.domain_predictions[domain.feature_name]["minowa_cal"].get_classification()[0]
-        domain.predictions["Minowa"] = LONG_TO_SHORT.get(minowa, minowa)
+        domain.predictions["Minowa"] = get_short_form(minowa)
 
     def _annotate_kr_domain(self, domain: NRPSPKSQualifier.Domain) -> None:
         assert domain.name == "PKS_KR"

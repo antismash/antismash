@@ -13,14 +13,7 @@ from typing import Dict, List, Tuple
 from antismash.common.secmet.features import CDSFeature
 
 from .data_structures import Prediction
-
-LONG_TO_SHORT = {'Malonyl-CoA': 'mal', 'Methylmalonyl-CoA': 'mmal', 'Methoxymalonyl-CoA': 'mxmal',
-                 'Ethylmalonyl-CoA': 'emal', 'Isobutyryl-CoA': 'isobut', '2-Methylbutyryl-CoA': '2metbut',
-                 'trans-1,2-CPDA': 'trans-1,2-CPDA', 'Acetyl-CoA': 'Acetyl-CoA', 'Benzoyl-CoA': 'benz',
-                 'Propionyl-CoA': 'prop', '3-Methylbutyryl-CoA': '3metbut',
-                 'CE-Malonyl-CoA': 'cemal', '2-Rhyd-Malonyl-CoA': '2Rhydmal', 'CHC-CoA': 'CHC-CoA',
-                 'inactive': 'inactive'}
-SHORT_TO_LONG = {val: key for key, val in LONG_TO_SHORT.items()}
+from .pks_names import get_short_form
 
 ALLOWABLE_PREDICTION_CHARACTERS = set(string.ascii_letters + string.digits).union(set('-,()'))
 
@@ -124,7 +117,7 @@ def calculate_consensus_prediction(cds_features: List[CDSFeature], results: Dict
             if domain.name == "PKS_AT":
                 preds = []
                 minowa_preds = predictions["minowa_at"].get_classification()
-                preds.append(LONG_TO_SHORT.get(minowa_preds[0], minowa_preds[0]))
+                preds.append(get_short_form(minowa_preds[0]))
                 sig_results = predictions["signature"]
                 preds.extend(sig_results.get_classification()[:1])
                 consensus = calculate_individual_consensus(preds)
@@ -143,7 +136,7 @@ def calculate_consensus_prediction(cds_features: List[CDSFeature], results: Dict
                 cis_at[domain.feature_name] = generate_nrps_consensus(predictions)
             elif domain.name == "CAL_domain":
                 preds = predictions["minowa_cal"].get_classification()
-                pred = LONG_TO_SHORT.get(preds[0], preds[0])
+                pred = get_short_form(preds[0])
                 assert isinstance(pred, str)
                 if pred in AVAILABLE_SMILES_PARTS:
                     cis_at[domain.feature_name] = pred
