@@ -35,12 +35,11 @@ class T2PKSTest(unittest.TestCase):
     def test_full_blastp_use(self):
         test_file = path.get_full_path(__file__, 'data', 'GQ409537.1.gbk')
         results = helpers.run_and_regenerate_results_for_module(test_file, t2pks, self.options)
-        assert list(results.cluster_predictions) == [2]
-        pred = results.cluster_predictions[2]
-        assert pred.starter_units == [t2pks.results.Prediction('malonamyl', 1250., 0.)]
+        assert list(results.cluster_predictions) == [1]
+        pred = results.cluster_predictions[1]
+        assert pred.starter_units == [t2pks.results.Prediction('malonamyl', 2319., 0.)]
         assert pred.malonyl_elongations == [t2pks.results.Prediction('8|9', 661.0, 1.3e-201)]
-        assert pred.product_classes == {'angucycline', 'tetracycline', 'aureolic acid',
-                                        'tetracenomycin', 'anthracycline'}
+        assert pred.product_classes == {'angucycline', 'tetracycline', 'aureolic acid', 'anthracycline'}
         assert set(pred.molecular_weights) == {'malonamyl_8', 'malonamyl_9'}
-        self.assertAlmostEqual(pred.molecular_weights['malonamyl_8'], 747.3943)
-        self.assertAlmostEqual(pred.molecular_weights['malonamyl_9'], 805.40918)
+        self.assertAlmostEqual(pred.molecular_weights['malonamyl_8'], 763.44576)
+        self.assertAlmostEqual(pred.molecular_weights['malonamyl_9'], 821.46064)
