@@ -48,10 +48,10 @@ class TestCoelicolorAnalysis(unittest.TestCase):
         results = t2pks_analysis.analyse_cluster(self.cluster, self.record)
         assert isinstance(results, ClusterPrediction)
         assert results.product_classes == {"benzoisochromanequinone"}
-        assert results.starter_units == [Prediction("acetyl", 0., 0.)]
+        assert results.starter_units == [Prediction("acetyl-CoA", 0., 0.)]
         assert results.malonyl_elongations == [Prediction("7", 743.5, 1.2e-226)]
-        assert list(results.molecular_weights) == ["acetyl_7"]
-        self.assertAlmostEqual(results.molecular_weights["acetyl_7"], 342.3845)
+        assert list(results.molecular_weights) == ["acetyl-CoA_7"]
+        self.assertAlmostEqual(results.molecular_weights["acetyl-CoA_7"], 342.3845)
 
 
 class TestPredictionFiltering(unittest.TestCase):
