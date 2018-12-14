@@ -115,11 +115,9 @@ def calculate_consensus_prediction(cds_features: List[CDSFeature], results: Dict
             if 'OTHER' in domain.label:
                 continue
             if domain.name == "PKS_AT":
-                preds = []
-                minowa_preds = predictions["minowa_at"].get_classification()
-                preds.append(get_short_form(minowa_preds[0]))
-                sig_results = predictions["signature"]
-                preds.extend(map(get_short_form, sig_results.get_classification()[:1]))
+                preds = []  # type: List[str]
+                preds.extend(map(get_short_form, predictions["minowa_at"].get_classification()))
+                preds.extend(map(get_short_form, predictions["signature"].get_classification()))
                 consensus = calculate_individual_consensus(preds)
 
                 if 'transatpks' not in cds.region.products:
