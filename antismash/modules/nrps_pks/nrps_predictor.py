@@ -61,7 +61,7 @@ class PredictorSVMResult(Prediction):
         assert ',' not in self.single_amino_pred
         self.stachelhaus_predictions = list(stachelhaus_predictions)
         for pred in stachelhaus_predictions:
-            assert '|' not in pred
+            assert '/' not in pred
         self.uncertain = bool(uncertain)
         self.stachelhaus_match_count = int(stachelhaus_match_count)
 
@@ -166,7 +166,7 @@ class PredictorSVMResult(Prediction):
             matches = sum(a == b for a, b in list(zip(query_stach, possible_hit))[:9]) + 1
             stach_count = max(stach_count, matches)
         return cls(parts[1], parts[3], parts[4].split(","), parts[5].split(","),
-                   parts[6], pred_from_stach.split("|"), parts[10] == "1", stach_count)
+                   parts[6], pred_from_stach.split("/"), parts[10] == "1", stach_count)
 
     def __str__(self) -> str:
         return "PredictorSVMResult: " + str(vars(self))
