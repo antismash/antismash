@@ -30,7 +30,7 @@ class T2PKSTest(unittest.TestCase):
         assert pred.malonyl_elongations == [t2pks.results.Prediction('7', 743.5, 1.2e-226)]
         assert pred.product_classes == {'benzoisochromanequinone'}
         assert list(pred.molecular_weights) == ['acetyl_7']
-        self.assertAlmostEqual(pred.molecular_weights['acetyl_7'], 451.22572)
+        self.assertAlmostEqual(pred.molecular_weights['acetyl_7'], 342.3845)
 
     def test_full_blastp_use(self):
         test_file = path.get_full_path(__file__, 'data', 'GQ409537.1.gbk')
@@ -41,5 +41,5 @@ class T2PKSTest(unittest.TestCase):
         assert pred.malonyl_elongations == [t2pks.results.Prediction('8|9', 661.0, 1.3e-201)]
         assert pred.product_classes == {'angucycline', 'tetracycline', 'aureolic acid', 'anthracycline'}
         assert set(pred.molecular_weights) == {'malonamyl_8', 'malonamyl_9'}
-        self.assertAlmostEqual(pred.molecular_weights['malonamyl_8'], 763.44576)
-        self.assertAlmostEqual(pred.molecular_weights['malonamyl_9'], 821.46064)
+        self.assertAlmostEqual(pred.molecular_weights['malonamyl_8'], 638.63534)
+        self.assertAlmostEqual(pred.molecular_weights['malonamyl_9'], 680.67202)
