@@ -51,7 +51,7 @@ class TestCoelicolorAnalysis(unittest.TestCase):
         assert results.starter_units == [Prediction("acetyl", 0., 0.)]
         assert results.malonyl_elongations == [Prediction("7", 743.5, 1.2e-226)]
         assert list(results.molecular_weights) == ["acetyl_7"]
-        self.assertAlmostEqual(results.molecular_weights["acetyl_7"], 451.22572)
+        self.assertAlmostEqual(results.molecular_weights["acetyl_7"], 342.3845)
 
 
 class TestPredictionFiltering(unittest.TestCase):
