@@ -9,7 +9,7 @@ RULE t1pks
 RULE t2pks
     COMMENT Type-II PKS
     CUTOFF 20
-    EXTENT 20
+    EXTENT 35  # lysolipin (AM492533) has a range of ~33kb
     CONDITIONS t2ks and t2clf
 
 RULE t3pks
