@@ -72,7 +72,12 @@ def run_starter_unit_blastp(cds_hmm_hits: Dict[CDSFeature, List[HMMResult]]
     for fasta_file in blastp_fasta_files:
         fasta_lengths.update(get_fasta_lengths(fasta_file))
 
-    return refine_hmmscan_results(blastp_results, fasta_lengths)
+    results = refine_hmmscan_results(blastp_results, fasta_lengths)
+    for hits in results.values():
+        for hit in hits:
+            if not hit.hit_id.endswith("-CoA"):
+                hit.hit_id += "-CoA"
+    return results
 
 
 def get_cds_predictions_by_protein_type(cds_predictions: Dict[str, List[CDSPrediction]],
@@ -291,7 +296,7 @@ def analyse_cluster(cluster: Cluster, record: Record) -> ClusterPrediction:
 
     starter_units = sum_predictions(get_predictions_by_protein_type(preds_by_protein, ['KSIII', 'AT', 'AMID', 'LIG']))
     if not starter_units:
-        starter_units = [Prediction('acetyl', 0., 0.)]
+        starter_units = [Prediction('acetyl-CoA', 0., 0.)]
     malonyl_elongations = sum_predictions(preds_by_protein['CLF'])
     product_classes = predict_product_class(preds_by_cds)
     weights = {}

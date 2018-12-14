@@ -9,16 +9,16 @@
     "cl": 35.45
   },
   "starter_unit": {
-    "2-methylbutyryl": 85.12396,
-    "acetyl": 43.04422,
-    "anthraniloyl": 120.12854,
-    "aziridinyl": 87.0768,
-    "benzoyl": 105.1136,
-    "butyryl": 71.09738,
-    "hexadienyl": 95.11878,
-    "hexanoyl": 99.15054,
-    "isobutyryl": 71.09738,
-    "malonamyl": 86.06886,
-    "propionyl": 57.0708
+    "2-methylbutyryl-CoA": 85.12396,
+    "acetyl-CoA": 43.04422,
+    "anthraniloyl-CoA": 120.12854,
+    "aziridinyl-CoA": 87.0768,
+    "benzoyl-CoA": 105.1136,
+    "butyryl-CoA": 71.09738,
+    "hexadienyl-CoA": 95.11878,
+    "hexanoyl-CoA": 99.15054,
+    "isobutyryl-CoA": 71.09738,
+    "malonamyl-CoA": 86.06886,
+    "propionyl-CoA": 57.0708
   }
 }
