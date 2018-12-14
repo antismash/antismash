@@ -93,14 +93,14 @@ class IntegrationNRPSPKS(unittest.TestCase):
         assert results.consensus == {'nrpspksdomains_STAUR_3982_PKS_AT.1': 'ohmmal',
                                      'nrpspksdomains_STAUR_3983_PKS_AT.1': 'ccmmal',
                                      'nrpspksdomains_STAUR_3984_PKS_AT.1': 'ccmmal',
-                                     'nrpspksdomains_STAUR_3985_PKS_AT.1': 'mmal',
-                                     'nrpspksdomains_STAUR_3985_PKS_AT.2': 'pk'}
+                                     'nrpspksdomains_STAUR_3985_PKS_AT.1': 'pk',
+                                     'nrpspksdomains_STAUR_3985_PKS_AT.2': 'ccmmal'}
         assert len(results.region_predictions) == 1
         assert list(results.region_predictions) == [1]
         assert len(results.region_predictions[1]) == 1
         # check the gene ordering and, in this case, that it used domain docking
         sc_pred = results.region_predictions[1][0]
-        assert sc_pred.polymer == '(ccmmal) + (ccmmal) + (mmal - pk) + (ohmmal)'
+        assert sc_pred.polymer == '(ccmmal) + (ccmmal) + (pk - ccmmal) + (ohmmal)'
         assert sc_pred.domain_docking_used
         assert len(results.domain_predictions) == 10
         expected_domains = {'nrpspksdomains_STAUR_3982_PKS_AT.1',
