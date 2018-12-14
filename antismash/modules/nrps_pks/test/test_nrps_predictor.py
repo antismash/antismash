@@ -154,7 +154,7 @@ class TestPrediction(unittest.TestCase):
         assert self.pred.get_classification() == []
         # single in stach, result is intersection
         self.pred.single_amino_pred = "ile"
-        self.pred.stachelhause_predictions = ["ile", "leu"]
+        self.pred.stachelhaus_predictions = ["ile", "leu"]
         assert self.pred.get_classification() == ["ile"]
 
     def test_classification_stach_and_groups(self):
