@@ -139,7 +139,7 @@ def calculate_consensus_prediction(cds_features: List[CDSFeature], results: Dict
                 if pred in AVAILABLE_SMILES_PARTS:
                     cis_at[domain.feature_name] = pred
                 else:
-                    logging.critical("missing %s from SMILES parts for domain %s", pred, domain.feature_name)
+                    logging.debug("missing %s from SMILES parts for domain %s", pred, domain.feature_name)
                     cis_at[domain.feature_name] = "pk"
 
     return cis_at, trans_at
