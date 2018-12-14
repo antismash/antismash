@@ -119,7 +119,7 @@ def calculate_consensus_prediction(cds_features: List[CDSFeature], results: Dict
                 minowa_preds = predictions["minowa_at"].get_classification()
                 preds.append(get_short_form(minowa_preds[0]))
                 sig_results = predictions["signature"]
-                preds.extend(sig_results.get_classification()[:1])
+                preds.extend(map(get_short_form, sig_results.get_classification()[:1]))
                 consensus = calculate_individual_consensus(preds)
 
                 if 'transatpks' not in cds.region.products:

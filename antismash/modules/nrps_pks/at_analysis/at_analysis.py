@@ -9,6 +9,7 @@ from jinja2 import Markup
 
 from antismash.common import path, subprocessing, utils, fasta
 from antismash.modules.nrps_pks.data_structures import Prediction
+from antismash.modules.nrps_pks.pks_names import get_long_form
 
 _SIGNATURE_LENGTH = 24
 _AT_DOMAINS_FILENAME = path.get_full_path(__file__, "data", "AT_domains_muscle.fasta")
@@ -60,18 +61,21 @@ class ATPrediction(Prediction):
         for monomer, pred in self.predictions:
             if pred.score < best_score:
                 break
-            results.append(monomer)
+            results.append(get_long_form(monomer))
         return results
 
     def as_html(self) -> Markup:
         if not self.predictions:
             return Markup("No matches above 50%")
+        lines = []
+        for monomer, pred in self.predictions[:3]:
+            lines.append("<dd>%s: %.1f%%</dd>\n" % (get_long_form(monomer), pred.score))
         html = ((
             "<dl>\n"
             " <dt>Top 3 matches:</dt>\n"
             "%s"
             "</dl>\n"
-        ) % "".join("<dd>%s: %.1f%%</dd>\n" % (monomer, pred.score) for (monomer, pred) in self.predictions[:3]))
+        ) % "".join(lines))
         return Markup(html)
 
     def to_json(self) -> Dict[str, Any]:
