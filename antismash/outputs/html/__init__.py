@@ -21,7 +21,19 @@ SHORT_DESCRIPTION = "HTML output"
 
 def get_arguments() -> ModuleArgs:
     """ Builds the arguments for the HMTL output module """
-    return ModuleArgs("Output options", "html", enabled_by_default=True)
+    args = ModuleArgs("Output options", "html", enabled_by_default=True)
+    args.add_option("--html-title",
+                    dest="html_title",
+                    type=str,
+                    default="",
+                    help=("Custom title for the HTML output page "
+                          "(default is input filename)."))
+    args.add_option("--html-description",
+                    dest="html_description",
+                    type=str,
+                    default="",
+                    help="Custom description to add to the output.")
+    return args
 
 
 def check_options(_options: ConfigType) -> List[str]:
