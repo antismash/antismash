@@ -96,12 +96,20 @@ def generate_webpage(records: List[Record], results: List[Dict[str, module_resul
             record_layers.append(RecordLayer(record, None, options_layer))
             results_by_record_id[record.id] = record_results
 
-        records_written = sum(len(record.get_regions()) for record in records)
+        regions_written = sum(len(record.get_regions()) for record in records)
+        job_id = os.path.basename(options.output_dir)
+        page_title = ""
+        if options.html_title:
+            page_title = options.html_title
+        elif options.sequences:
+            page_title, _ = os.path.splitext(os.path.basename(options.sequences[0]))
+        elif options.reuse_results:
+            page_title, _ = os.path.splitext(os.path.basename(options.reuse_results))
         aux = template.render(records=record_layers, options=options_layer,
                               version=options.version, extra_data=js_domains,
-                              records_written=records_written,
+                              regions_written=regions_written,
                               results_by_record_id=results_by_record_id,
-                              config=options)
+                              config=options, job_id=job_id, page_title=page_title)
         result_file.write(aux)
 
 

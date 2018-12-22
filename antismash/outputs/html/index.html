@@ -2,17 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <script src="js/jquery.js"></script>
-  <script src="js/antismash.js"></script>
-  <script src="regions.js"></script>
-  <script>
-    $(document).ready(function() {
-        viewer["start"](all_regions, details_data);
-    })
-  </script>
-
-  <title>{{records[0].id}} - {{records[0].regions | length}} region(s) - antiSMASH results</title>
+  <title>{{page_title}} - {{regions_written}} region(s) - antiSMASH results</title>
   <link rel="stylesheet" type="text/css" href="css/{{options.taxon}}.css">
+  <meta property="og:title" content="{{page_title}} - {{records | length}} record(s) - {{regions_written}} region(s)" />
+  <meta property="og:description" content="{{options.html_description}}">
+  <meta property="og:image" content="https://antismash.secondarymetabolites.org/images/{{options.taxon}}_logo.png" />
+  <meta property="og:image:alt" content="antiSMASH logo" />
+  <meta property="og:image:width" content="600" />
+  <meta property="og:image:height" content="600" />
+  <meta property="og:url" content="{{options.base_url}}upload/{{job_id}}/index.html" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:site" content="@antismash_dev" />
 </head>
 <body>
   <div id="header">
@@ -120,6 +121,15 @@
 
 {% include 'jnj_generator.html' %}
 {% include 'footer.html' %}
+
+  <script src="js/jquery.js"></script>
+  <script src="js/antismash.js"></script>
+  <script src="regions.js"></script>
+  <script>
+    $(document).ready(function() {
+        viewer["start"](all_regions, details_data);
+    })
+  </script>
 
 </body>
 </html>

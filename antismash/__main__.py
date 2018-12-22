@@ -59,7 +59,7 @@ def main(args: List[str]) -> int:
             zero if successful, non-zero otherwise
 
     """
-    all_modules = antismash.get_detection_modules() + antismash.get_analysis_modules()
+    all_modules = antismash.get_all_modules()
     parser = antismash.config.args.build_parser(from_config_file=True, modules=all_modules)
 
     # if --help, show help texts and exit
@@ -90,7 +90,6 @@ def main(args: List[str]) -> int:
         return 1
     if options.sequences:
         sequence = options.sequences[0]
-        options.__dict__.pop("sequences")
         if not os.path.exists(sequence):
             parser.error("Input file does not exist: %s" % sequence)
             return 1
