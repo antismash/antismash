@@ -40,6 +40,7 @@
   </div>
 
   <!-- overview page -->
+  {% if records %}
   <div class="page" id="overview">
     {% if options.triggered_limit %}
       <h3>Identified secondary metabolite regions (truncated to the first {{options.limit}} record(s)) <span id="truncated"></span></h3>
@@ -118,6 +119,11 @@
       </tbody>
     </table>
   </div>
+  {% else %}
+  <div class="page" id="overview">
+    <div class="no-results">No results found on input.</div>
+  </div>
+  {% endif %}
 
 {% include 'jnj_generator.html' %}
 {% include 'footer.html' %}
