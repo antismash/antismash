@@ -90,15 +90,13 @@ def scan_orfs(seq: str, direction: int, offset: int = 0) -> List[FeatureLocation
 
 
 def create_feature_from_location(record: Record, location: FeatureLocation,
-                                 counter: int = 1, label: Optional[str] = None) -> CDSFeature:
+                                 label: Optional[str] = None) -> CDSFeature:
     """ Creates a CDS feature covering the provided location.
 
         Arguments:
             record: The Record the CDSFeature will belong to, used to generate
                     the feature translation
             location: The FeatureLocation specifying the location of the CDSFeature
-            counter: An integer to use to format a default label 'allorf' with,
-                     used only if label not provided
             label: The locus tag, protein id, and gene name to use for the new
                    CDSFeature
 
@@ -106,7 +104,10 @@ def create_feature_from_location(record: Record, location: FeatureLocation,
             The CDSFeature created.
     """
     if label is None:
-        label = 'allorf%03d' % counter
+        digits = len(str(len(record)))
+        label = 'allorf_{start:0{digits}}_{end:0{digits}}'.format(
+            digits=digits, start=(location.start + 1), end=location.end
+        )
     feature = CDSFeature(location, str(record.get_aa_translation_from_location(location)),
                          locus_tag=label, protein_id=label, gene=label)
     feature.created_by_antismash = True
@@ -141,7 +142,6 @@ def find_all_orfs(record: Record, area: Optional[CDSCollection] = None) -> List[
     reverse_matches = scan_orfs(seq.reverse_complement(), -1, offset)
     locations = forward_matches + reverse_matches
 
-    orfnr = 1
     new_features = []
 
     for location in locations:
@@ -155,13 +155,12 @@ def find_all_orfs(record: Record, area: Optional[CDSCollection] = None) -> List[
         if any(dummy_feature.overlaps_with(cds) for cds in existing):
             continue
 
-        feature = create_feature_from_location(record, location, orfnr)
+        feature = create_feature_from_location(record, location)
 
         # skip if not wholly contained in the area
         if area and not feature.is_contained_by(area):
             continue
 
         new_features.append(feature)
-        orfnr += 1
 
     return new_features
