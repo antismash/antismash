@@ -42,11 +42,11 @@ class IntegrationSactipeptides(unittest.TestCase):
         # make sure that unannotated orfs are found if they are the precursor
         result = self.run_analyis("AP012495.1_c14_missing_precursor.gbk")
         assert isinstance(result, SactiResults)
-        assert list(result.motifs_by_locus) == ["allorf041"]
-        prepeptide = result.motifs_by_locus["allorf041"][0]
+        assert list(result.motifs_by_locus) == ["allorf_09736_09867"]
+        prepeptide = result.motifs_by_locus["allorf_09736_09867"][0]
         assert prepeptide.location.start == 9735
         assert prepeptide.location.end == 9867
-        assert prepeptide.get_name() == "allorf041"
+        assert prepeptide.get_name() == "allorf_09736_09867"
         assert prepeptide.leader == "MKKAVIVENK"
         assert prepeptide.core == "GCATCSIGAACLVDGPIPDFEIAGATGLFGLWG"
         self.assertAlmostEqual(prepeptide.score, 33.)
