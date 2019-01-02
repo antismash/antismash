@@ -8,6 +8,7 @@ import logging
 from typing import Any, Dict, List, Optional
 from typing import Union  # comment hints  # pylint: disable=unused-import
 
+from Bio.Data import IUPACData
 from Bio.SeqFeature import SeqFeature
 
 from antismash.common.secmet import features  # comment hints  # pylint:disable=unused-import
@@ -159,10 +160,14 @@ class CDSFeature(Feature):
             gene = gene % (bio_feature.location.start, bio_feature.location.end)
 
         # ensure translation exists
-        if translation and "-" in translation:
-            logging.warning("Translation for CDS %s (at %s) has a gap. Discarding and regenerating.",
-                            locus_tag or protein_id or gene, bio_feature.location)
-            translation = ""
+        if translation:
+            translated_letters = set(translation)
+            protein_letters = set(IUPACData.protein_letters)
+            remaining = translated_letters.difference(protein_letters)
+            if remaining:
+                logging.warning("Translation for CDS %s (at %s) has invalid characters: %s. Discarding and regenerating.",
+                                locus_tag or protein_id or gene, bio_feature.location, remaining)
+                translation = ""
         if not translation:
             if not record:
                 raise SecmetInvalidInputError("no translation in CDS and no record to generate it with")
