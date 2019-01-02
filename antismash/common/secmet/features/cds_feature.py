@@ -8,6 +8,7 @@ import logging
 from typing import Any, Dict, List, Optional
 from typing import Union  # comment hints  # pylint: disable=unused-import
 
+from Bio.Data import IUPACData
 from Bio.SeqFeature import SeqFeature
 
 from antismash.common.secmet import features  # comment hints  # pylint:disable=unused-import
@@ -21,6 +22,9 @@ from antismash.common.secmet.qualifiers import (
 from ..errors import SecmetInvalidInputError
 from ..locations import Location
 from .feature import Feature
+
+
+_VALID_TRANSLATION_CHARS = set(IUPACData.protein_letters)
 
 
 def _sanitise_id_value(name: Optional[str]) -> Optional[str]:
@@ -158,11 +162,13 @@ class CDSFeature(Feature):
                 gene = "cds%s_%s"
             gene = gene % (bio_feature.location.start, bio_feature.location.end)
 
-        # ensure translation exists
-        if translation and "-" in translation:
-            logging.warning("Translation for CDS %s (at %s) has a gap. Discarding and regenerating.",
-                            locus_tag or protein_id or gene, bio_feature.location)
-            translation = ""
+        # ensure translation is valid if it exists
+        if translation:
+            invalid = set(translation) - _VALID_TRANSLATION_CHARS
+            if invalid:
+                logging.warning("Regenerating translation for CDS %s (at %s) containing invalid characters: %s",
+                                locus_tag or protein_id or gene, bio_feature.location, invalid)
+                translation = ""
         if not translation:
             if not record:
                 raise SecmetInvalidInputError("no translation in CDS and no record to generate it with")
