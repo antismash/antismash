@@ -4,6 +4,7 @@
 """ The base class of all secmet features """
 
 from collections import OrderedDict
+import logging
 from typing import Any, Dict, List, Tuple, Union
 from typing import Optional  # comment hints  # pylint: disable=unused-import
 
@@ -18,7 +19,7 @@ from antismash.common.secmet.locations import (
 )
 
 from ..errors import SecmetInvalidInputError
-from ..locations import Location
+from ..locations import AfterPosition, BeforePosition, Location
 
 
 def _adjust_location_by_offset(location: Location, offset: int) -> Location:
@@ -100,7 +101,14 @@ class Feature:
             raise ValueError("Protein start coordinate must be contained by the feature")
 
         if not 1 <= end <= len(self.location) // 3:
-            raise ValueError("Protein end coordinate must be contained by the feature")
+            if end > 0 and (self.location.strand != -1 and isinstance(self.location.end, AfterPosition)
+                            or self.location.strand == -1 and isinstance(self.location.start, BeforePosition)):
+                # since some NCBI records (e.g. CP006567.1 and AWEV00000000.1) infer
+                # an amino from a partial but don't increase the location to match
+                logging.warning("%s protein coordinate %d truncated to match ambiguous end", str(self), end)
+                end = len(self.location) // 3
+            else:
+                raise ValueError("Protein end coordinate must be contained by the feature")
 
         if start >= end:
             raise ValueError("Protein start coordinate must be less than the end coordinate")
