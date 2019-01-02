@@ -9,6 +9,7 @@ import unittest
 from Bio.Seq import Seq
 
 from antismash.common.secmet.features import FeatureLocation, CDSFeature
+from antismash.common.secmet.features.cds_feature import _is_valid_translation_length
 from antismash.common.secmet.features.feature import CompoundLocation
 from antismash.common.secmet.locations import AfterPosition, BeforePosition
 from antismash.common.secmet.qualifiers import SecMetQualifier
@@ -35,14 +36,14 @@ class TestCDSFeature(unittest.TestCase):
 
     def test_bad_translation(self):
         loc = FeatureLocation(1, 5, 1)
-        for trans in [None, ""]:
-            with self.assertRaisesRegex(ValueError, "requires a valid translation"):
-                CDSFeature(loc, locus_tag="test", translation=trans)
+        for trans in [None, "A?", "A!", ""]:
+            with self.assertRaisesRegex(ValueError, "valid translation required|invalid translation characters"):
+                cds = CDSFeature(loc, locus_tag="test", translation=trans)
 
 
 class TestCDSBiopythonConversion(unittest.TestCase):
     def setUp(self):
-        self.cds = CDSFeature(FeatureLocation(1, 12, 1),
+        self.cds = CDSFeature(FeatureLocation(0, 12, 1),
                               translation="A"*4,
                               locus_tag="loctag",
                               gene="gene",
@@ -335,3 +336,24 @@ class TestCDSProteinLocation(unittest.TestCase):
         self.cds.location = CompoundLocation(self.sub_locations[::-1])
         new = self.cds.get_sub_location_from_protein_coordinates(0, 7)
         assert new.start == 3
+
+
+class TestTranslationLength(unittest.TestCase):
+    def test_simple(self):
+        location = FeatureLocation(0, 9)
+        for good in ["AA", "AAA"]:
+            assert _is_valid_translation_length(good, location)
+        assert not _is_valid_translation_length("AAAA", location)
+
+    def test_compound(self):
+        location = CompoundLocation([FeatureLocation(0, 3), FeatureLocation(6, 9)])
+        for good in ["A", "AA"]:
+            assert _is_valid_translation_length(good, location)
+        assert not _is_valid_translation_length("AAA", location)
+        # and with an ambiguous end, that becomes ok
+        location = CompoundLocation([FeatureLocation(0, 3), FeatureLocation(6, AfterPosition(11))])
+        assert _is_valid_translation_length("AAA", location)
+        # and reversed ambiguous end
+        location = CompoundLocation([FeatureLocation(BeforePosition(0), 3, -1), FeatureLocation(6, 9, -1)])
+        for good in ["A", "AA", "AAA"]:
+            assert _is_valid_translation_length(good, location)
