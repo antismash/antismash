@@ -20,11 +20,11 @@ from antismash.common.secmet.qualifiers import (
 )
 
 from ..errors import SecmetInvalidInputError
-from ..locations import Location
+from ..locations import AfterPosition, BeforePosition, Location
 from .feature import Feature
 
 
-_VALID_TRANSLATION_CHARS = set(IUPACData.protein_letters)
+_VALID_TRANSLATION_CHARS = set(IUPACData.protein_letters).union(set("X"))
 
 
 def _sanitise_id_value(name: Optional[str]) -> Optional[str]:
@@ -36,6 +36,17 @@ def _sanitise_id_value(name: Optional[str]) -> Optional[str]:
     for char in set(name).intersection(illegal_chars):
         name = name.replace(char, "_")
     return name
+
+
+def _is_valid_translation_length(translation: str, location: Location) -> bool:
+    """ Returns True if the given translation is contained within an explicit
+        location or the location has an ambiguous end
+    """
+    if len(translation) * 3 <= len(location):
+        return True
+    if location.strand == -1 and isinstance(location.start, BeforePosition):
+        return True
+    return location.strand != -1 and isinstance(location.end, AfterPosition)
 
 
 class CDSFeature(Feature):
@@ -57,9 +68,7 @@ class CDSFeature(Feature):
         self.protein_id = _sanitise_id_value(protein_id)
         self.locus_tag = _sanitise_id_value(locus_tag)
         self.gene = _sanitise_id_value(gene)
-        if not translation or "-" in translation:
-            raise ValueError("CDSFeature requires a valid translation, not '%s'" % translation)
-        self._translation = str(translation)
+        self.translation = str(translation)
 
         # optional
         if not isinstance(product, str):
@@ -121,8 +130,15 @@ class CDSFeature(Feature):
 
     @translation.setter
     def translation(self, translation: str) -> None:
-        assert "-" not in translation, "%s contains - in translation" % self.get_name()
-        self._translation = str(translation)
+        if not translation:
+            raise ValueError("valid translation required")
+        invalid = set(translation) - _VALID_TRANSLATION_CHARS
+        if invalid:
+            raise ValueError("invalid translation characters: %s" % invalid)
+        if not _is_valid_translation_length(translation, self.location):
+            raise ValueError("translation longer than location allows: %s > %s" % (
+                                len(translation) * 3, len(self.location)))
+        self._translation = translation  # pylint: disable=attribute-defined-outside-init
 
     def get_accession(self) -> str:
         "Get the gene ID from protein id, gene name or locus_tag, in that order"
@@ -169,10 +185,17 @@ class CDSFeature(Feature):
                 logging.warning("Regenerating translation for CDS %s (at %s) containing invalid characters: %s",
                                 locus_tag or protein_id or gene, bio_feature.location, invalid)
                 translation = ""
+        # ensure that the translation fits
+        if not _is_valid_translation_length(translation, bio_feature.location):
+            raise SecmetInvalidInputError("translation longer than location allows: %s > %s" % (
+                                len(translation) * 3, len(bio_feature.location)))
+        # finally, generate the translation if it doesn't exist
         if not translation:
             if not record:
                 raise SecmetInvalidInputError("no translation in CDS and no record to generate it with")
             translation = record.get_aa_translation_from_location(bio_feature.location, transl_table)
+
+        assert _is_valid_translation_length(translation, bio_feature.location)
 
         feature = CDSFeature(bio_feature.location, translation, gene=gene,
                              locus_tag=locus_tag, protein_id=protein_id,

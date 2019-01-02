@@ -172,13 +172,13 @@ class TestRecord(unittest.TestCase):
 # since we're about to test assigning to non-slots, shut pylint up
 # pylint: disable=assigning-non-slot
     def test_membership(self):
-        location = FeatureLocation(0, 1, strand=1)
+        location = FeatureLocation(0, 3, strand=1)
         # Features don't have locus tags
         with self.assertRaises(AttributeError):
             Feature(location, feature_type="none").locus_tag = "something"
         # CDSFeatures don't have an 'other_value'
         with self.assertRaises(AttributeError):
-            CDSFeature(location, translation="none", gene="a").other_value = 1
+            CDSFeature(location, translation="A", gene="a").other_value = 1
 # pylint: enable=assigning-non-slot
 
     def test_gc_content(self):

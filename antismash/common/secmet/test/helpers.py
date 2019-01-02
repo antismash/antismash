@@ -22,3 +22,12 @@ class DummyCDS(CDSFeature):
         super().__init__(FeatureLocation(start, end, strand), translation=translation,
                          locus_tag=locus_tag)
         assert self.get_accession() == locus_tag, self.get_accession()
+
+    # bypass translation checks for these artifical CDSs
+    @property
+    def translation(self):
+        return self._translation
+
+    @translation.setter
+    def translation(self, translation):
+        self._translation = translation
