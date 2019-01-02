@@ -10,6 +10,7 @@ from Bio.Seq import Seq
 
 from antismash.common.secmet.features import FeatureLocation, CDSFeature
 from antismash.common.secmet.features.feature import CompoundLocation
+from antismash.common.secmet.locations import AfterPosition, BeforePosition
 from antismash.common.secmet.qualifiers import SecMetQualifier
 from antismash.common.secmet.qualifiers.gene_functions import GeneFunction
 
@@ -320,3 +321,17 @@ class TestCDSProteinLocation(unittest.TestCase):
         new = cds.get_sub_location_from_protein_coordinates(353, 412)
         # pad the beginning to match the location
         assert new.extract(Seq("x" * location.start + seq)).translate() == translation[353:412]
+
+    def test_extends_past_after(self):
+        self.sub_locations[-1] = FeatureLocation(21, AfterPosition(29), strand=1)
+        self.cds.location = CompoundLocation(self.sub_locations)
+
+        new = self.cds.get_sub_location_from_protein_coordinates(0, 7)
+        assert new.end == 27
+
+    def test_extends_past_before(self):
+        self.reverse_strand()
+        self.sub_locations[0] = FeatureLocation(BeforePosition(2), self.sub_locations[0].end, strand=-1)
+        self.cds.location = CompoundLocation(self.sub_locations[::-1])
+        new = self.cds.get_sub_location_from_protein_coordinates(0, 7)
+        assert new.start == 3
