@@ -237,8 +237,6 @@ def check_sub(feature: SeqFeature, sequence: Record) -> List[SeqFeature]:
         new_feature = SeqFeature(new_loc)
         new_feature.qualifiers = qualifiers
         new_feature.type = 'CDS'
-        trans = ''.join([n.extract(sequence.seq).translate(stop_symbol='')._data for n in trans_locations])
-        new_feature.qualifiers['translation'] = [str(trans)]
         new_features.append(new_feature)
 
     return new_features
