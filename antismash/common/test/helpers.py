@@ -150,7 +150,7 @@ def run_and_regenerate_results_for_module(input_file, module, options,
             update_config({"output_dir": orig_output})
             raise
         update_config({"output_dir": orig_output})
-        results = serialiser.AntismashResults.from_file(json_filename, options.taxon)
+        results = serialiser.AntismashResults.from_file(json_filename)
         # remove things that were added by results, because otherwise the add isn't tested by detection
         # result regeneration
         # this should eventually include every feature and qualifier created by antismash
