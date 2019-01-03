@@ -115,9 +115,11 @@ class TestRegion(unittest.TestCase):
         assert region.products == ["a"]
         assert region.get_product_string() == "a"
 
-        supers = [SuperCluster(SuperCluster.kinds.SINGLE, [create_cluster(0, 10, product=prod) for prod in "ba"])]
+        supers = []
+        for i, prod in zip(range(2), "ba"):
+            supers.append(SuperCluster(SuperCluster.kinds.SINGLE, [create_cluster(i*10, (i+1)*10, product=prod)]))
         region = Region(superclusters=supers)
-        assert region.products == ["a", "b"]
+        assert region.products == ["b", "a"]
         assert region.get_product_string() == "a-b"
 
     def test_probabilities(self):
