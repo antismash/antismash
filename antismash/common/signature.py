@@ -45,8 +45,6 @@ def get_signature_profiles(detail_file: str) -> List[HmmSignature]:
         for line in data.read().split("\n"):
             if line.startswith("#") or not line.strip():
                 continue
-            if line.count("\t") != 3:
-                bad_lines.append(line)
             try:
                 name, desc, cutoff, filename = line.split("\t")
             except ValueError:
