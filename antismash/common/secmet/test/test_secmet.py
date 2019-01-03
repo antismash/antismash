@@ -10,7 +10,7 @@ import unittest
 import Bio.SeqIO
 from Bio.Alphabet.IUPAC import IUPACProtein
 from Bio.Seq import Seq
-from Bio.SeqFeature import FeatureLocation
+from Bio.SeqFeature import FeatureLocation, SeqFeature
 
 from antismash.common.test import helpers
 from ..features import (
@@ -21,6 +21,7 @@ from ..features import (
     SubRegion,
     SuperCluster,
 )
+from ..errors import SecmetInvalidInputError
 from .helpers import DummyCDS
 from ..record import Record
 
@@ -68,6 +69,13 @@ class TestConversion(unittest.TestCase):
         before.seq = Seq("AAAA", IUPACProtein())
         with self.assertRaisesRegex(ValueError, "protein records are not supported"):
             Record.from_biopython(before, taxon="bacteria")
+
+    def test_missing_locations_caught(self):
+        rec = list(Bio.SeqIO.parse(helpers.get_path_to_nisin_genbank(), "genbank"))[0]
+        Record.from_biopython(rec, taxon="bacteria")
+        rec.features.append(SeqFeature(None, type="broken"))
+        with self.assertRaisesRegex(SecmetInvalidInputError, "feature is missing location"):
+            Record.from_biopython(rec, taxon="bacteria")
 
 
 class TestRecordFeatureNumbering(unittest.TestCase):
