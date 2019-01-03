@@ -67,6 +67,7 @@ def run_diamond_on_all_regions(regions: Sequence[secmet.Region], database: str) 
         Returns:
             diamond's output from stdout
     """
+    logging.info("Comparing regions to reference database")
     extra_args = [
         "--compress", "0",
         "--max-target-seqs", "10000",
@@ -113,15 +114,15 @@ def load_reference_clusters(searchtype: str) -> Dict[str, ReferenceCluster]:
     options = get_config()
 
     if searchtype == "clusterblast":
-        logging.info("ClusterBlast: Loading gene clusters database into memory...")
+        logging.info("ClusterBlast: Loading gene cluster database into memory...")
         data_dir = os.path.join(options.database_dir, 'clusterblast')
         reference_cluster_file = os.path.join(data_dir, "geneclusters.txt")
     elif searchtype == "subclusterblast":
-        logging.info("SubClusterBlast: Loading gene clusters database into memory...")
+        logging.info("SubClusterBlast: Loading gene cluster database into memory...")
         data_dir = path.get_full_path(__file__, "data", "sub")
         reference_cluster_file = os.path.join(data_dir, "subclusters.txt")
     elif searchtype == "knownclusterblast":
-        logging.info("KnownClusterBlast: Loading gene clusters database into memory...")
+        logging.info("KnownClusterBlast: Loading gene cluster database into memory...")
         data_dir = path.get_full_path(__file__, "data", "known")
         reference_cluster_file = os.path.join(data_dir, "knownclusters.txt")
     with open(reference_cluster_file, "r") as handle:
