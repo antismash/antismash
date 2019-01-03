@@ -44,9 +44,8 @@ class TestParseRecords(unittest.TestCase):
                                                          minimum_length=15016)
         assert len(records) == 1
 
-        records = record_processing.parse_input_sequence(nisin_path,
-                                                         minimum_length=15017)
-        assert not records
+        with self.assertRaisesRegex(ValueError, "no valid records found"):
+            record_processing.parse_input_sequence(nisin_path, minimum_length=15017)
 
         for bad_len in [5.6, None, "5"]:
             with self.assertRaisesRegex(TypeError, "minimum_length must be an int"):

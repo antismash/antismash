@@ -75,6 +75,10 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
         if len(records) > 1:
             raise ValueError("--start and --end options cannot be used with multiple records")
         records[0] = trim_sequence(records[0], max(start, 0), min(len(records[0]), end))
+
+    # if no records are left, that's a problem
+    if not records:
+        raise ValueError("no valid records found in file %r" % filename)
     return [Record.from_biopython(record, taxon) for record in records]
 
 
