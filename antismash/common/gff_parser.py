@@ -143,7 +143,6 @@ def run(record: Record, single_entry: bool, options: ConfigType) -> None:
 
     with open(options.genefinding_gff3) as handle:
         features = get_features_from_file(record, handle, limit_info)
-        logging.critical("gff parsing still generating SeqFeatures")  # TODO: use new secmet features
         for feature in features:
             record.add_biopython_feature(feature)
 
