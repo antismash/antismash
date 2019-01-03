@@ -266,7 +266,6 @@ def analyse_record(record: Record, options: ConfigType, modules: List[AntismashM
     """
     timings = {}  # type: Dict[str, float]
     # try to run the given modules over the record
-    logging.info("Analysing record: %s", record.id)
     for module in modules:
         run_module(record, module, options, previous_result, timings)
     return timings
@@ -632,6 +631,7 @@ def _run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
         # skip if we're not interested in it
         if record.skip:
             continue
+        logging.info("Analysing record: %s", record.id)
         timings = run_detection(record, options, module_results)
         # and skip analysis if detection didn't find anything
         if not record.get_regions():
