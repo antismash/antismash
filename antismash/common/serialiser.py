@@ -27,6 +27,8 @@ class AntismashResults:
     """ A single repository of all results of an antismash run, including input
         filename, records and individual module results
     """
+    SCHEMA_VERSION = 1
+
     def __init__(self, input_file: str, records: List[Record],
                  results: List[Dict[str, Union[ModuleResults, Dict[str, Any]]]],
                  version: str, timings: Dict[str, Dict[str, float]] = None,
@@ -46,6 +48,9 @@ class AntismashResults:
         if isinstance(handle, str):
             handle = open(handle, "r")
         data = json.loads(handle.read())
+        if data.get("schema", 1) != AntismashResults.SCHEMA_VERSION:
+            raise ValueError("schema mismatch in previous results: expected %s, found %s" % (
+                                AntismashResults.SCHEMA_VERSION, data.get("schema")))
         version = data["version"]
         input_file = data["input_file"]
         taxon = data.get("taxon", "bacteria")
@@ -62,6 +67,7 @@ class AntismashResults:
         res["records"] = dump_records(biopython, self.results)
         res["timings"] = self.timings_by_record
         res["taxon"] = self.taxon
+        res["schema"] = self.SCHEMA_VERSION
         return res
 
     def write_to_file(self, handle: Union[str, IO]) -> None:
