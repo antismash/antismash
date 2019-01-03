@@ -9,6 +9,7 @@ from typing import List
 
 from jinja2 import FileSystemLoader, Environment, StrictUndefined
 
+from antismash.common.path import get_full_path
 from antismash.modules.clusterblast.results import MibigEntry
 
 
@@ -27,8 +28,8 @@ def generate_html_table(outfile_name: str, mibig_entries: List[MibigEntry]) -> N
 
     with open(outfile_name, 'w') as handle:
         env = Environment(autoescape=True, undefined=StrictUndefined,
-                          loader=FileSystemLoader(os.path.dirname(__file__)))
-        template = env.get_template('html_table.html')
+                          loader=FileSystemLoader(get_full_path(__file__, "templates")))
+        template = env.get_template('mibig_hits_table.html')
 
         aux = template.render(mibig_homology_file_lines=mibig_entries)
         handle.write(aux)
