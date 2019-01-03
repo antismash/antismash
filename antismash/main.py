@@ -457,7 +457,7 @@ def read_data(sequence_file: Optional[str], options: ConfigType) -> serialiser.A
                                 options.minlength, options.start, options.end)
         results = serialiser.AntismashResults(sequence_file.rsplit(os.sep, 1)[-1],
                                               records, [{} for i in records],
-                                              __version__)
+                                              __version__, taxon=options.taxon)
         update_config({"input_file": os.path.splitext(results.input_file)[1]})
     else:
         logging.debug("Attempting to reuse previous results in: %s", options.reuse_results)
@@ -465,7 +465,10 @@ def read_data(sequence_file: Optional[str], options: ConfigType) -> serialiser.A
             contents = handle.read()
             if not contents:
                 raise ValueError("No results contained in file: %s" % options.reuse_results)
-        results = serialiser.AntismashResults.from_file(options.reuse_results, options.taxon)
+        results = serialiser.AntismashResults.from_file(options.reuse_results)
+        if options.taxon != results.taxon:
+            logging.info("Reusing taxon %s from prior results", results.taxon)
+            update_config({"taxon": results.taxon})
 
     update_config({"input_file": os.path.splitext(results.input_file)[0]})
     return results

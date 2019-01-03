@@ -29,15 +29,17 @@ class AntismashResults:
     """
     def __init__(self, input_file: str, records: List[Record],
                  results: List[Dict[str, Union[ModuleResults, Dict[str, Any]]]],
-                 version: str, timings: Dict[str, Dict[str, float]] = None) -> None:
+                 version: str, timings: Dict[str, Dict[str, float]] = None,
+                 taxon: str = "bacteria") -> None:
         self.input_file = input_file
         self.records = records
         self.results = results
         self.version = version
         self.timings_by_record = timings or {}  # {record_id : {module name: time}}
+        self.taxon = taxon
 
     @staticmethod
-    def from_file(handle: Union[str, IO], taxon: str) -> "AntismashResults":
+    def from_file(handle: Union[str, IO]) -> "AntismashResults":
         """ Regenerates an instance of AntismashResults from JSON representation
             in a file
         """
@@ -46,9 +48,10 @@ class AntismashResults:
         data = json.loads(handle.read())
         version = data["version"]
         input_file = data["input_file"]
-        records = [Record.from_biopython(record_from_json(rec), taxon=taxon) for rec in data["records"]]
+        taxon = data.get("taxon", "bacteria")
+        records = [Record.from_biopython(record_from_json(rec), taxon) for rec in data["records"]]
         results = [rec["modules"] for rec in data["records"]]
-        return AntismashResults(input_file, records, results, version)
+        return AntismashResults(input_file, records, results, version, taxon=taxon)
 
     def to_json(self) -> Dict[str, Any]:
         """ Constructs a JSON representation of the instance """
@@ -58,6 +61,7 @@ class AntismashResults:
         biopython = [rec.to_biopython() for rec in self.records]
         res["records"] = dump_records(biopython, self.results)
         res["timings"] = self.timings_by_record
+        res["taxon"] = self.taxon
         return res
 
     def write_to_file(self, handle: Union[str, IO]) -> None:
