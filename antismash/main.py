@@ -151,7 +151,7 @@ def run_detection(record: Record, options: ConfigType,
         Returns:
             the time taken by each detection module as a dictionary
     """
-    # strip any existing antismash results first  # TODO: don't strip detection stage results if reusing
+    # strip any existing antismash results first
     record_processing.strip_record(record)
 
     timings = {}  # type: Dict[str, float]
@@ -610,7 +610,7 @@ def _run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
 
     # ensure the provided options are valid
     if not verify_options(options, options.all_enabled_modules):
-        return 1  # TODO: change to a raise?
+        return 1
 
     # check that at least one module will run
     if not options.all_enabled_modules:

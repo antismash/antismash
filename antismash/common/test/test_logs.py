@@ -6,12 +6,12 @@
 
 import logging
 import os
-import pytest
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 import unittest
 
-from antismash.common.logs import changed_logging
+import pytest
 
+from antismash.common.logs import changed_logging
 
 
 class LogTest(unittest.TestCase):

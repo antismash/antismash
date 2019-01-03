@@ -8,8 +8,6 @@ import re
 from typing import Any, Iterable, List, Optional
 from typing import Dict  # in comment type hints  # pylint: disable=unused-import
 
-from jinja2 import FileSystemLoader, Environment, StrictUndefined
-
 from antismash.common import path, html_renderer
 from antismash.common.layers import RegionLayer, RecordLayer, OptionsLayer
 from antismash.common.secmet import CDSFeature, Region, SuperCluster

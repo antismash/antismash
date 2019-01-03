@@ -20,7 +20,7 @@ from helperlibs.wrappers.io import TemporaryDirectory
 import antismash
 from antismash.common import serialiser, path
 from antismash.common.module_results import ModuleResults
-from antismash.common.secmet import Cluster, CDSFeature, Feature, Record, SuperCluster
+from antismash.common.secmet import Cluster, Feature, Record, SuperCluster
 from antismash.common.secmet.test.helpers import DummyCDS  # for import by others, pylint: disable=unused-import
 from antismash.common.secmet.features.supercluster import SuperClusterKind
 from antismash.config import update_config
