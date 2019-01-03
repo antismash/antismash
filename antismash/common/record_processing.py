@@ -43,7 +43,7 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
     if not isinstance(minimum_length, int):
         raise TypeError("minimum_length must be an int")
 
-    records = []
+    records = []  # type: List[SeqRecord]
     if not os.path.exists(filename):
         msg = "Sequence file not found: %r" % filename
         logging.error(msg)
@@ -54,6 +54,8 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
         if not record_list:
             raise RuntimeError('No records could be read from file %r' % filename)
         for record in record_list:
+            if isinstance(record.seq.alphabet, Bio.Alphabet.ProteinAlphabet):
+                raise ValueError("protein records are not supported")
             if minimum_length < 1 \
                     or len(record.seq) >= minimum_length \
                     or 'contig' in record.annotations \
