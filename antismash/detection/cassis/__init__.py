@@ -294,14 +294,13 @@ def cleanup_outdir(anchor_gene_names: Iterable[str], cluster_predictions: Dict[s
 
 def store_promoters(promoters: Iterable[Promoter], record: Record) -> None:
     """Store information about promoter sequences to a SeqRecord"""
-    logging.critical("adding promoters based on biopython features")
     for promoter in promoters:
         # remember to account for 0-indexed start location
         new_feature = SeqFeature(FeatureLocation(max(0, promoter.start - 1), promoter.end),
                                  type="promoter")
         new_feature.qualifiers = {
             "locus_tag": promoter.get_gene_names(),  # already a list with one or two elements
-            "seq": [str(promoter.seq)],  # TODO save string or Seq object?
+            "seq": [str(promoter.seq)],
         }
 
         if isinstance(promoter, CombinedPromoter):
