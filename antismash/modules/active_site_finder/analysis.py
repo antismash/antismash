@@ -113,7 +113,7 @@ def asp_ks_c(record: secmet.Record) -> List[SinglePairing]:
 
     for alignment in analyser.get_alignments():
         value = alignment.get_signature([49, 111])  # emissions [0.95, 1.]
-        results.append((alignment.domain, "found active site histindines: %s" % (value == "HH")))
+        results.append((alignment.domain, "found active site histidines: %s" % (value == "HH")))
 
     return results
 
