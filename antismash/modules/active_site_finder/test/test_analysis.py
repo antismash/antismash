@@ -2,7 +2,7 @@
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
 # for test files, silence irrelevant and noisy pylint warnings
-# pylint: disable=no-self-use,protected-access,missing-docstring,invalid-name
+# pylint: disable=no-self-use,protected-access,missing-docstring,invalid-name,too-few-public-methods
 
 import string
 import unittest
@@ -43,11 +43,7 @@ class DummyAlignment:
         self.positions = positions
         self.scaffold_match = scaffold_match
 
-    def extract_position(self, position: int) -> str:
-        print(position, self.positions)
-        return self.positions[position]
-
-    def extract_positions(self, positions):
+    def get_signature(self, positions):
         return "".join([self.positions[position] for position in positions])
 
 
@@ -81,28 +77,28 @@ class TestAnalyses(unittest.TestCase):
     def test_KS_N(self):
         mock("subprocessing.run_hmmpfam2", returns=parse_hmmpfam_results("KS_N.output"))
         results = analysis.asp_ks(self.record)
-        expected = {"PKS_KS0": 'found active site cysteine: False, scaffold matched GSSS: True',
+        expected = {"PKS_KS0": 'found active site cysteine: True, scaffold matched GSSS: True',
                     "PKS_KS1": 'found active site cysteine: False, scaffold matched GSSS: False',
-                    "PKS_KS2": 'found active site cysteine: False, scaffold matched GSSS: False',
-                    "PKS_KS3": 'found active site cysteine: False, scaffold matched GSSS: False'}
+                    "PKS_KS2": 'found active site cysteine: True, scaffold matched GSSS: False',
+                    "PKS_KS3": 'found active site cysteine: True, scaffold matched GSSS: False'}
         assert {dom.domain_id: message for dom, message in results} == expected
 
     def test_KS_C(self):
         mock("subprocessing.run_hmmpfam2", returns=parse_hmmpfam_results("KS_C.output"))
         results = analysis.asp_ks_c(self.record)
-        expected = {"PKS_KS0": 'found active site histindines: False',
-                    "PKS_KS1": 'found active site histindines: False',
-                    "PKS_KS2": 'found active site histindines: False',
-                    "PKS_KS3": 'found active site histindines: False'}
+        expected = {"PKS_KS0": 'found active site histindines: True',
+                    "PKS_KS1": 'found active site histindines: True',
+                    "PKS_KS2": 'found active site histindines: True',
+                    "PKS_KS3": 'found active site histindines: True'}
         assert {dom.domain_id: message for dom, message in results} == expected
 
     def test_AT(self):
         mock("subprocessing.run_hmmpfam2", returns=parse_hmmpfam_results("AT.output"))
         results = analysis.asp_at(self.record)
         expected = {"PKS_AT0": "found active site serine: True, scaffold matched GHGE: False",
-                    "PKS_AT1": "found active site serine: False, scaffold matched GHGE: True",
-                    "PKS_AT2": "found active site serine: False, scaffold matched GHGE: True",
-                    "PKS_AT3": "found active site serine: False, scaffold matched GHGE: False"}
+                    "PKS_AT1": "found active site serine: True, scaffold matched GHGE: True",
+                    "PKS_AT2": "found active site serine: True, scaffold matched GHGE: True",
+                    "PKS_AT3": "found active site serine: True, scaffold matched GHGE: False"}
         assert {dom.domain_id: message for dom, message in results} == expected
 
     def test_ACP_type(self):
