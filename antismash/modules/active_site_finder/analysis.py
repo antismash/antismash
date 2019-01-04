@@ -50,7 +50,7 @@ def pksi_kr_stereo(record: secmet.Record) -> List[SinglePairing]:
     label = "KR domain putatively catalyzing {}-configuration product formation"
     results = []
     for alignment in analyser.get_alignments():
-        value = alignment.extract_position(102)
+        value = alignment.get_signature([102])
         if value == "D":
             results.append((alignment.domain, label.format("D")))
         else:
@@ -83,7 +83,7 @@ def asp_ks(record: secmet.Record) -> List[SinglePairing]:
 
     label = "found active site cysteine: {}, scaffold matched {}: {}"
     for alignment in analyser.get_alignments():
-        value = alignment.extract_position(185)
+        value = alignment.get_signature([185])
         new_label = label.format(value == "C", "".join(expected), analyser.scaffold_matches(alignment))
         results.append((alignment.domain, new_label))
     return results
@@ -112,7 +112,7 @@ def asp_ks_c(record: secmet.Record) -> List[SinglePairing]:
                                   positions, expected, emissions=emissions)
 
     for alignment in analyser.get_alignments():
-        value = alignment.extract_positions([49, 111])  # emissions [0.95, 1.]
+        value = alignment.get_signature([49, 111])  # emissions [0.95, 1.]
         results.append((alignment.domain, "found active site histindines: %s" % (value == "HH")))
 
     return results
@@ -137,7 +137,7 @@ def asp_at(record: secmet.Record) -> List[SinglePairing]:
 
     label = "found active site serine: %s, scaffold matched GHGE: %s"
     for alignment in analyser.get_alignments():
-        value = alignment.extract_position(95)  # emission 1.
+        value = alignment.get_signature([95])  # emission 1.
         results.append((alignment.domain, label % (value == "S", analyser.scaffold_matches(alignment))))
 
     return results
@@ -163,7 +163,7 @@ def acp_type(record: secmet.Record) -> List[SinglePairing]:
     results = []
 
     for alignment in analyser.get_alignments():
-        value = alignment.extract_position(37)  # emission 5.68e-5 for W
+        value = alignment.get_signature([37])  # emission 5.68e-5 for W
         if value == "W":
             label = "beta-branching ACP"
         else:
@@ -194,7 +194,7 @@ def asp_acp(record: secmet.Record) -> List[SinglePairing]:
     results = []
 
     for alignment in analyser.get_alignments():
-        value = alignment.extract_position(31)  # emission 0.98
+        value = alignment.get_signature([31])  # emission 0.98
         results.append((alignment.domain, "found active site serine: %s" % (value == "S")))
 
     return results
@@ -221,7 +221,7 @@ def asp_pksi_dh(record: secmet.Record) -> List[SinglePairing]:
         if not analyser.scaffold_matches(alignment):
             results.append((alignment.domain, "catalytic triad H,G,P inconclusive"))
             continue
-        value = alignment.extract_positions([5, 39, 44])
+        value = alignment.get_signature([5, 39, 44])
         found = value == "HGP"  # emissions 1., 0.62, 097
         results.append((alignment.domain, "catalytic triad H,G,P found: %s" % found))
 
@@ -253,7 +253,7 @@ def asp_pksi_kr(record: secmet.Record) -> List[SinglePairing]:
         if not analyser.scaffold_matches(alignment):
             results.append((alignment.domain, "catalytic triad S,Y,N inconclusive"))
             continue
-        value = alignment.extract_positions([149, 162, 166])
+        value = alignment.get_signature([149, 162, 166])
         found = value == "SYN"
         results.append((alignment.domain, "catalytic triad S,Y,N found: %s" % found))
 
@@ -280,7 +280,7 @@ def asp_thioesterase(record: secmet.Record) -> List[SinglePairing]:
         if not analyser.scaffold_matches(alignment):
             results.append((alignment.domain, "active site serine inconclusive"))
             continue
-        value = alignment.extract_position(81)
+        value = alignment.get_signature([81])
         found = value == "S"
         results.append((alignment.domain, "active site serine present: %s" % found))
 
@@ -310,7 +310,7 @@ def pksi_er_stereo(record: secmet.Record) -> List[SinglePairing]:
         if not analyser.scaffold_matches(alignment):
             results.append((alignment.domain, "ER configuration inconclusive"))
             continue
-        value = alignment.extract_position(39)
+        value = alignment.get_signature([39])
         label = "ER domain putatively catalyzing {}-configuration product formation"
         if value == "Y":
             results.append((alignment.domain, label.format("2S")))
@@ -343,7 +343,7 @@ def pksi_at_spec(record: secmet.Record) -> List[SinglePairing]:
         if not analyser.scaffold_matches(alignment):
             results.append((alignment.domain, "(Methyl)Malonyl-CoA specificity inconclusive"))
             continue
-        value = alignment.extract_positions([195, 197])
+        value = alignment.get_signature([195, 197])
         if value == "HF":
             results.append((alignment.domain, "Malonyl-CoA specific"))
         elif value == "YS":
@@ -377,7 +377,7 @@ def asp_p450_oxy(record: secmet.Record) -> List[SinglePairing]:
         if not analyser.scaffold_matches(alignment):
             results.append((alignment.domain, "active site cysteine inconclusive"))
             continue
-        value = alignment.extract_position(407)
+        value = alignment.get_signature([407])
         found = value == "C"
         results.append((alignment.domain, "active site cysteine present: %s" % found))
     return results

@@ -38,20 +38,6 @@ class TestAlignment(unittest.TestCase):
                                  identifier="PF00001", tool="test")
         self.alignment = Alignment(self.domain, "WLAD-QGAR", "WLaer.rGA", 10, 19)
 
-    def test_extract_position(self):
-        assert self.alignment.extract_position(11) == "W"
-        assert self.alignment.extract_position(13) == "a"
-        assert self.alignment.extract_position(15) == "r"
-        assert self.alignment.extract_position(0) == ""
-        assert self.alignment.extract_position(10) == ""
-        assert self.alignment.extract_position(20) == ""
-
-    def test_extract_positions(self):
-        positions = [11, 13, 15]
-        assert self.alignment.extract_positions(positions) == "War"
-        assert self.alignment.extract_positions([0, 13, 15]) == "ar"
-        assert self.alignment.extract_positions([11, 13, 20]) == "Wa"
-
     def test_get_signature(self):
         assert self.alignment.get_signature([11, 13, 15]) == "WA-"
 

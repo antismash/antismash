@@ -9,7 +9,7 @@ from typing import List, Optional, Tuple
 from antismash.common import fasta, path, secmet, subprocessing, utils
 
 
-class Alignment:
+class Alignment:  # pylint: disable=too-few-public-methods
     """ An analog for a hmmer HSP. """
     def __init__(self, domain: secmet.features.Domain, query: str,
                  profile: str, hit_start: int, hit_end: int) -> None:
@@ -30,17 +30,6 @@ class Alignment:
             Positions should be 1-indexed.
         """
         return get_signature(self.query, self.profile, [position - self.hit_start for position in positions])
-
-    def extract_position(self, position: int) -> str:
-        """ Grabs a reference signature amino, by 1-indexed position in the full profile """
-        position = int(position)
-        if not self.hit_start < position <= self.hit_end:
-            return ""
-        return self.profile[position - self.hit_start - 1]
-
-    def extract_positions(self, positions: List[int]) -> str:
-        """ Grabs multiple reference aminos, one for each 1-indexed position in the full profile """
-        return "".join(self.extract_position(position) for position in positions)
 
 
 class ActiveSiteAnalysis:
