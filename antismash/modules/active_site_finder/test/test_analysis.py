@@ -86,10 +86,10 @@ class TestAnalyses(unittest.TestCase):
     def test_KS_C(self):
         mock("subprocessing.run_hmmpfam2", returns=parse_hmmpfam_results("KS_C.output"))
         results = analysis.asp_ks_c(self.record)
-        expected = {"PKS_KS0": 'found active site histindines: True',
-                    "PKS_KS1": 'found active site histindines: True',
-                    "PKS_KS2": 'found active site histindines: True',
-                    "PKS_KS3": 'found active site histindines: True'}
+        expected = {"PKS_KS0": 'found active site histidines: True',
+                    "PKS_KS1": 'found active site histidines: True',
+                    "PKS_KS2": 'found active site histidines: True',
+                    "PKS_KS3": 'found active site histidines: True'}
         assert {dom.domain_id: message for dom, message in results} == expected
 
     def test_AT(self):
