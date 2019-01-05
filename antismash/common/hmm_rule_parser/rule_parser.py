@@ -99,7 +99,7 @@ The grammar itself:
 
     CONDITIONS = CONDITION {BINARY_OP CONDITIONS}*;
     CONDITION =  [UNARY_OP] ( ID | CDS | MINIMUM | CONDITION_GROUP );
-    CDS_CONDITION = [UNARY_OP] ID {BINARY_OP CDS_CONDITION}*;
+    CDS_CONDITION = [UNARY_OP] ID {BINARY_OP [UNARY_OP] ID}*;
     CONDITION_GROUP = GROUP_OPEN CONDITIONS GROUP_CLOSE;
     MINIMUM = MINIMUM_LABEL GROUP_OPEN
                 count:INT COMMA
@@ -111,7 +111,7 @@ The grammar itself:
               GROUP_CLOSE;
     LIST = LIST_OPEN contents:COMMA_SEPARATED_IDS LIST_CLOSE;
     COMMA_SEPARATED_IDS = ID {COMMA ID}*;
-    CDS = GROUP_OPEN CDS_CONDITION GROUP_CLOSE;
+    CDS = GROUP_OPEN [UNARY_OP] ID BINARY_OP CDS_CONDITION GROUP_CLOSE;
 
 cds(a and b) and not a and not cds(b or c))
 
@@ -997,6 +997,10 @@ class Parser:  # pylint: disable=too-few-public-methods
         conditions = self._parse_conditions(allow_cds=False, is_group=True)
         if not conditions:
             raise RuleSyntaxError("cds conditions must have contents:\n%s\n%s^" % (
+                    self.lines[self.current_line - 1],
+                    " " * cds_token.position))
+        if len(conditions) == 1 and isinstance(conditions[0], SingleCondition):
+            raise RuleSyntaxError("cds conditions must contain more than a single identifier:\n%s\n%s^" % (
                     self.lines[self.current_line - 1],
                     " " * cds_token.position))
         self._consume(TokenTypes.GROUP_CLOSE)

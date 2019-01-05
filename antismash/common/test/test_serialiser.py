@@ -46,11 +46,13 @@ class TestResultsJSON(unittest.TestCase):
         records = list(seqio.parse(open(filename), "genbank"))
         records = [Record.from_biopython(rec, taxon="bacteria") for rec in records]
         rec_results = [{}, {}, {}]
-        results = serialiser.AntismashResults(filename, records, rec_results, "dummy")
+        results = serialiser.AntismashResults(filename, records, rec_results, "dummy", taxon="dummytaxon")
+        assert results.taxon == "dummytaxon"
         json_handle = StringIO()
         results.write_to_file(json_handle)
         json_handle.seek(0)
-        new_results = serialiser.AntismashResults.from_file(json_handle, taxon="bacteria")
+        new_results = serialiser.AntismashResults.from_file(json_handle)
+        assert new_results.taxon == results.taxon
         assert results.to_json() == new_results.to_json()
         # check no records were lost
         assert len(new_results.records) == len(results.records)

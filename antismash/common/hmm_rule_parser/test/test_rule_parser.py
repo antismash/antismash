@@ -189,6 +189,10 @@ class DetectionTest(unittest.TestCase):
         results = self.run_test("A", 15, 20, "c and not cds(a and b)")
         self.expect(results, ["GENE_3"])
 
+    def test_cds_single(self):
+        with self.assertRaisesRegex(rule_parser.RuleSyntaxError, "must contain more than a single identifier"):
+            self.run_test("A", 15, 20, "cds(a)")
+
     def test_negated_singles(self):
         results = self.run_test("A", 10, 20, "c and not a and not e and not f")
         self.expect(results, ["GENE_3"])

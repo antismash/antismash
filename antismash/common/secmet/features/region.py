@@ -3,6 +3,7 @@
 
 """ A class for region features """
 
+from collections import OrderedDict
 import os
 from typing import Any, Dict, List, Optional, Tuple
 from typing import Set  # used in comment hints, pylint: disable=unused-import
@@ -108,26 +109,28 @@ class Region(CDSCollection):
         """ Returns a list of unique products collected from all contained
             SuperClusters
         """
-        products = set()
+        products = OrderedDict()  # type: Dict[str, None]
         for cluster in self._superclusters:
-            products.update(cluster.products)
-        return sorted(products) or ["unknown"]
+            for product in cluster.products:
+                products[product] = None
+        return list(products) or ["unknown"]
 
     def get_product_string(self) -> str:
         """ Returns a string of all unique products collected from all
             contained SuperClusters
         """
-        return "-".join(self.products)
+        return "-".join(sorted(self.products))
 
     @property
     def detection_rules(self) -> List[str]:
         """ Returns a list of unique detection rules collected from all
             contained SuperClusters
         """
-        rules = set()
+        rules = OrderedDict()  # type: Dict[str, str]
         for cluster in self._superclusters:
-            rules.update(cluster.detection_rules)
-        return sorted(rules)
+            for product, rule in zip(cluster.products, cluster.detection_rules):
+                rules[product] = rule
+        return list(rules.values())
 
     @property
     def probabilities(self) -> List[float]:

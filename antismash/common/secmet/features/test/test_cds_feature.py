@@ -38,7 +38,7 @@ class TestCDSFeature(unittest.TestCase):
         loc = FeatureLocation(1, 5, 1)
         for trans in [None, "A?", "A!", ""]:
             with self.assertRaisesRegex(ValueError, "valid translation required|invalid translation characters"):
-                cds = CDSFeature(loc, locus_tag="test", translation=trans)
+                CDSFeature(loc, locus_tag="test", translation=trans)
 
 
 class TestCDSBiopythonConversion(unittest.TestCase):

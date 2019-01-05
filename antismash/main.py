@@ -151,7 +151,7 @@ def run_detection(record: Record, options: ConfigType,
         Returns:
             the time taken by each detection module as a dictionary
     """
-    # strip any existing antismash results first  # TODO: don't strip detection stage results if reusing
+    # strip any existing antismash results first
     record_processing.strip_record(record)
 
     timings = {}  # type: Dict[str, float]
@@ -266,7 +266,6 @@ def analyse_record(record: Record, options: ConfigType, modules: List[AntismashM
     """
     timings = {}  # type: Dict[str, float]
     # try to run the given modules over the record
-    logging.info("Analysing record: %s", record.id)
     for module in modules:
         run_module(record, module, options, previous_result, timings)
     return timings
@@ -457,7 +456,7 @@ def read_data(sequence_file: Optional[str], options: ConfigType) -> serialiser.A
                                 options.minlength, options.start, options.end)
         results = serialiser.AntismashResults(sequence_file.rsplit(os.sep, 1)[-1],
                                               records, [{} for i in records],
-                                              __version__)
+                                              __version__, taxon=options.taxon)
         update_config({"input_file": os.path.splitext(results.input_file)[1]})
     else:
         logging.debug("Attempting to reuse previous results in: %s", options.reuse_results)
@@ -465,7 +464,10 @@ def read_data(sequence_file: Optional[str], options: ConfigType) -> serialiser.A
             contents = handle.read()
             if not contents:
                 raise ValueError("No results contained in file: %s" % options.reuse_results)
-        results = serialiser.AntismashResults.from_file(options.reuse_results, options.taxon)
+        results = serialiser.AntismashResults.from_file(options.reuse_results)
+        if options.taxon != results.taxon:
+            logging.info("Reusing taxon %s from prior results", results.taxon)
+            update_config({"taxon": results.taxon})
 
     update_config({"input_file": os.path.splitext(results.input_file)[0]})
     return results
@@ -608,7 +610,7 @@ def _run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
 
     # ensure the provided options are valid
     if not verify_options(options, options.all_enabled_modules):
-        return 1  # TODO: change to a raise?
+        return 1
 
     # check that at least one module will run
     if not options.all_enabled_modules:
@@ -629,6 +631,7 @@ def _run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
         # skip if we're not interested in it
         if record.skip:
             continue
+        logging.info("Analysing record: %s", record.id)
         timings = run_detection(record, options, module_results)
         # and skip analysis if detection didn't find anything
         if not record.get_regions():

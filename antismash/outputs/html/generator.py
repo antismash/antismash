@@ -87,8 +87,8 @@ def generate_webpage(records: List[Record], results: List[Dict[str, module_resul
     with open(os.path.join(options.output_dir, 'index.html'), 'w') as result_file:
         env = Environment(autoescape=True, trim_blocks=True, lstrip_blocks=True,
                           undefined=jinja2.StrictUndefined,
-                          loader=FileSystemLoader(path.get_full_path(__file__)))
-        template = env.get_template('index.html')
+                          loader=FileSystemLoader(path.get_full_path(__file__, "templates")))
+        template = env.get_template('overview.html')
         options_layer = OptionsLayer(options)
         record_layers = []
         results_by_record_id = {}  # type: Dict[str, Dict[str, module_results.ModuleResults]]
@@ -127,7 +127,7 @@ def find_plugins_for_cluster(plugins: List[AntismashModule], cluster: Dict[str, 
 
 def load_searchgtr_search_form_template() -> List[str]:
     """ for SEARCHGTR HTML files, load search form template """
-    with open(path.get_full_path(__file__, "searchgtr_form.html"), "r") as handle:
+    with open(path.get_full_path(__file__, "templates", "searchgtr_form.html"), "r") as handle:
         template = handle.read().replace("\r", "\n")
     return template.split("FASTASEQUENCE")
 

@@ -606,6 +606,10 @@ class Record:
         record = Record(transl_table=transl_table)
         record._record = seq_record
         for feature in seq_record.features:
+            # biopython drops invalid locations and might leave us with None, catch that first
+            if feature.location is None:
+                raise SecmetInvalidInputError("feature is missing location: %s" % feature)
+
             if feature.ref or feature.ref_db:
                 for ref in [feature.ref, feature.ref_db]:
                     if ref and ref != seq_record.id:

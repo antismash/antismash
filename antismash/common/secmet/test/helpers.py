@@ -30,4 +30,4 @@ class DummyCDS(CDSFeature):
 
     @translation.setter
     def translation(self, translation):
-        self._translation = translation
+        self._translation = translation  # pylint: disable=attribute-defined-outside-init
