@@ -86,9 +86,15 @@ def strip_record(record: Record) -> None:
     record.clear_superclusters()
     record.clear_subregions()
     record.clear_regions()
-    record.clear_cds_motifs()
     record.clear_antismash_domains()
     record.clear_pfam_domains()
+
+    # clean up antiSMASH-created CDSMotifs, but leave the rest
+    motifs = list(record.get_cds_motifs())
+    record.clear_cds_motifs()
+    for motif in motifs:
+        if not motif.created_by_antismash:
+            record.add_cds_motif(motif)
 
     # clean up antiSMASH annotations in CDS features
     for feature in record.get_cds_features():
