@@ -13,6 +13,7 @@ from Bio.SeqRecord import SeqRecord
 
 from antismash import config
 from antismash.common import record_processing, path
+from antismash.common.errors import AntismashInputError
 from antismash.common.secmet import Record
 from antismash.common.test import helpers
 
@@ -44,7 +45,7 @@ class TestParseRecords(unittest.TestCase):
                                                          minimum_length=15016)
         assert len(records) == 1
 
-        with self.assertRaisesRegex(ValueError, "no valid records found"):
+        with self.assertRaisesRegex(AntismashInputError, "no valid records found"):
             record_processing.parse_input_sequence(nisin_path, minimum_length=15017)
 
         for bad_len in [5.6, None, "5"]:
@@ -57,7 +58,7 @@ class TestParseRecords(unittest.TestCase):
 
     def test_empty(self):
         with NamedTemporaryFile(suffix=".gbk") as temp:
-            with self.assertRaisesRegex(RuntimeError, "No records could be read from file"):
+            with self.assertRaisesRegex(AntismashInputError, "no records could be read from file"):
                 record_processing.parse_input_sequence(temp.name)
 
 
@@ -271,7 +272,7 @@ class TestPreprocessRecords(unittest.TestCase):
     def test_limit_to_record_complete(self):
         records = self.read_double_nisin()
         config.update_config({"limit_to_record": "bad_id"})
-        with self.assertRaisesRegex(ValueError, "No sequences matched filter.*"):
+        with self.assertRaisesRegex(AntismashInputError, "no sequences matched filter"):
             record_processing.pre_process_sequences(records, self.options, self.genefinding)
 
 

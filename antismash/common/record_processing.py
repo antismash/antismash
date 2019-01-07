@@ -16,7 +16,9 @@ from Bio.SeqRecord import SeqRecord
 from helperlibs.bio import seqio
 
 from antismash.common import gff_parser
+from antismash.common.errors import AntismashInputError
 from antismash.common.secmet import Record
+from antismash.common.secmet.errors import SecmetInvalidInputError
 from antismash.common.secmet.qualifiers import SecMetQualifier
 from antismash.config import get_config, update_config, ConfigType
 from antismash.custom_typing import AntismashModule
@@ -52,23 +54,25 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
     try:
         record_list = list(seqio.parse(filename))
         if not record_list:
-            raise RuntimeError('No records could be read from file %r' % filename)
+            raise AntismashInputError('no records could be read from file %r' % filename)
         for record in record_list:
             if isinstance(record.seq.alphabet, Bio.Alphabet.ProteinAlphabet):
-                raise ValueError("protein records are not supported")
+                raise AntismashInputError("protein records are not supported")
             if minimum_length < 1 \
                     or len(record.seq) >= minimum_length \
                     or 'contig' in record.annotations \
                     or 'wgs_scafld' in record.annotations \
                     or 'wgs' in record.annotations:
                 records.append(record)
-    except (ValueError, AssertionError) as err:
+    except (ValueError, AssertionError, PermissionError) as err:
         logging.error('Parsing %r failed: %s', filename, err)
+        raise AntismashInputError(str(err)) from err
+    except AntismashInputError:
         raise
     except Exception as err:
         logging.error('Parsing %r failed with unhandled exception: %s',
                       filename, err)
-        raise
+        raise AntismashInputError(str(err)) from err
 
     # before conversion to secmet records, trim if required
     if start > -1 or end > -1:
@@ -78,8 +82,12 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
 
     # if no records are left, that's a problem
     if not records:
-        raise ValueError("no valid records found in file %r" % filename)
-    return [Record.from_biopython(record, taxon) for record in records]
+        raise AntismashInputError("no valid records found in file %r" % filename)
+
+    try:
+        return [Record.from_biopython(record, taxon) for record in records]
+    except SecmetInvalidInputError as err:
+        raise AntismashInputError(str(err)) from err
 
 
 def strip_record(record: Record) -> None:
@@ -217,7 +225,7 @@ def pre_process_sequences(sequences: List[Record], options: ConfigType, genefind
         limit = options.limit_to_record
         if matching_filter == 0:
             logging.error("No sequences matched filter: %s", limit)
-            raise ValueError("No sequences matched filter: %s" % limit)
+            raise AntismashInputError("no sequences matched filter: %s" % limit)
         elif matching_filter != len(sequences):
             logging.info("Skipped %d sequences not matching filter: %s",
                          len(sequences) - matching_filter, limit)
