@@ -213,6 +213,8 @@ def pre_process_sequences(sequences: List[Record], options: ConfigType, genefind
     for record in sequences:
         if record.skip or not record.seq:
             logging.warning("Record %s has no sequence, skipping.", record.id)
+        if not record.id:
+            raise AntismashInputError("record has no name")
 
     if options.limit_to_record:
         logging.debug("Limiting to record id: %s", options.limit_to_record)
