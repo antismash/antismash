@@ -168,6 +168,69 @@ def ensure_cds_info(single_entry: bool, genefinding: Callable[[Record, Any], Non
     return sequence
 
 
+def filter_records_by_name(sequences: List[Record], target: str) -> None:
+    """ Mark records as skipped if their id does not match the given target or
+        they are above .
+
+        If the target is an empty string, all records will match.
+        If not records match, an error will be raised.
+
+        Arguments:
+            sequences: the Records to filter
+            target: the name to match, must be exact
+
+        Returns:
+            None
+    """
+    if not target:
+        return
+
+    logging.debug("Limiting to record id: %s", target)
+
+    # run the filter
+    matching_filter = 0
+    for sequence in sequences:
+        if sequence.id != target:
+            sequence.skip = "did not match filter: %s" % target
+        else:
+            matching_filter += 1
+
+    if matching_filter == 0:
+        logging.error("No sequences matched filter: %s", target)
+        raise AntismashInputError("no sequences matched filter: %s" % target)
+
+    logging.info("Skipped %d sequences not matching filter: %s",
+                 len(sequences) - matching_filter, target)
+
+
+def filter_records_by_count(records: List[Record], maximum: int) -> bool:
+    """ Mark all records after the first 'maximum' non-skipped records as skipped.
+
+        If maximum is -1, no records will be skipped due to count.
+
+    Arguments:
+        records: the Records to filter
+        maximum: the maximum number of records to run
+
+    Returns:
+        True if any records were marked as skipped due to hitting the limit
+    """
+    if maximum == -1:
+        return False
+
+    limit_hit = False
+    meaningful = 0
+    for record in records:
+        if record.skip:  # don't count any records that are already skipped
+            continue
+        meaningful += 1
+        if meaningful > maximum:
+            limit_hit = True
+            record.skip = "skipping all but first {0} meaningful records (--limit {0}) ".format(maximum)
+
+    return limit_hit
+
+
 def pre_process_sequences(sequences: List[Record], options: ConfigType, genefinding: AntismashModule) -> List[Record]:
     """ hmm
 
@@ -192,9 +255,6 @@ def pre_process_sequences(sequences: List[Record], options: ConfigType, genefind
     if records_contain_shotgun_scaffolds(sequences):
         raise RuntimeError("Incomplete whole genome shotgun records are not supported")
 
-    # keep count of how many records matched filter
-    matching_filter = 0
-
     for i, seq in enumerate(sequences):
         seq.record_index = i + 1  # 1-indexed
 
@@ -216,21 +276,8 @@ def pre_process_sequences(sequences: List[Record], options: ConfigType, genefind
         if not record.id:
             raise AntismashInputError("record has no name")
 
-    if options.limit_to_record:
-        logging.debug("Limiting to record id: %s", options.limit_to_record)
-        # run the filter
-        for sequence in sequences:
-            if options.limit_to_record and options.limit_to_record != sequence.id:
-                sequence.skip = "did not match filter: %s" % options.limit_to_record
-            else:
-                matching_filter += 1
-        limit = options.limit_to_record
-        if matching_filter == 0:
-            logging.error("No sequences matched filter: %s", limit)
-            raise AntismashInputError("no sequences matched filter: %s" % limit)
-        elif matching_filter != len(sequences):
-            logging.info("Skipped %d sequences not matching filter: %s",
-                         len(sequences) - matching_filter, limit)
+    # skip anything not matching the filter
+    filter_records_by_name(sequences, options.limit_to_record)
 
     # Now remove small contigs < minimum length again
     logging.debug("Removing sequences smaller than %d bases", options.minlength)
@@ -239,20 +286,10 @@ def pre_process_sequences(sequences: List[Record], options: ConfigType, genefind
             sequence.skip = "smaller than minimum length (%d)" % options.minlength
 
     # Make sure we don't waste weeks of runtime on huge records, unless requested by the user
-    warned = False
-    if options.limit > -1:
-        meaningful = 0
-        for sequence in sequences:
-            if sequence.skip:
-                continue
-            meaningful += 1
-            if meaningful > options.limit:
-                if not warned:
-                    logging.warning("Only analysing the first %d records (increase via --limit)", options.limit)
-                    warned = True
-                sequence.skip = "skipping all but first {0} meaningful records (--limit {0}) ".format(options.limit)
-
-    update_config({"triggered_limit": warned})  # TODO is there a better way
+    limit_hit = filter_records_by_count(sequences, options.limit)
+    if limit_hit:
+        logging.warning("Only analysing the first %d records (increase via --limit)", options.limit)
+    update_config({"triggered_limit": limit_hit})
 
     # Check GFF suitability
     single_entry = False
