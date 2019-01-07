@@ -7,7 +7,7 @@
 from unittest import TestCase
 from Bio.SeqFeature import CompoundLocation
 
-from antismash.common import gff_parser, path
+from antismash.common import errors, gff_parser, path
 from antismash.common.test.helpers import get_simple_options, DummyRecord
 
 
@@ -48,9 +48,9 @@ class GffParserTest(TestCase):
 
     def test_suitability(self):
         self.sequences[0].id = "NOT_CONTIG_1"
-        with self.assertRaises(ValueError) as err:
+        with self.assertRaisesRegex(errors.AntismashInputError,
+                                    "GFF3 record IDs don't match sequence file record IDs"):
             gff_parser.check_gff_suitability(self.config, self.sequences)
-        assert "GFF3 record IDs don't match sequence file record IDs" in str(err.exception)
 
         # doesn't test very much
         self.sequences[0].id = "CONTIG_1"
