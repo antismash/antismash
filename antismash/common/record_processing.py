@@ -7,7 +7,6 @@
 import functools
 import logging
 import re
-import os
 from typing import Any, Callable, List, Set, Tuple, Union
 
 import Bio
@@ -46,43 +45,33 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
         raise TypeError("minimum_length must be an int")
 
     records = []  # type: List[SeqRecord]
-    if not os.path.exists(filename):
-        msg = "Sequence file not found: %r" % filename
-        logging.error(msg)
-        raise ValueError(msg)
-
     try:
         record_list = list(seqio.parse(filename))
-        if not record_list:
-            raise AntismashInputError('no records could be read from file %r' % filename)
-        for record in record_list:
-            if isinstance(record.seq.alphabet, Bio.Alphabet.ProteinAlphabet):
-                raise AntismashInputError("protein records are not supported")
-            if minimum_length < 1 \
-                    or len(record.seq) >= minimum_length \
-                    or 'contig' in record.annotations \
-                    or 'wgs_scafld' in record.annotations \
-                    or 'wgs' in record.annotations:
-                records.append(record)
-    except (ValueError, AssertionError, PermissionError) as err:
+    except Exception as err:
         logging.error('Parsing %r failed: %s', filename, err)
         raise AntismashInputError(str(err)) from err
-    except AntismashInputError:
-        raise
-    except Exception as err:
-        logging.error('Parsing %r failed with unhandled exception: %s',
-                      filename, err)
-        raise AntismashInputError(str(err)) from err
+
+    for record in record_list:
+        if minimum_length < 1 \
+                or len(record.seq) >= minimum_length \
+                or 'contig' in record.annotations \
+                or 'wgs_scafld' in record.annotations \
+                or 'wgs' in record.annotations:
+            records.append(record)
+
+    # if no records are left, that's a problem
+    if not records:
+        raise AntismashInputError("no valid records found in file %r" % filename)
+
+    for record in records:
+        if isinstance(record.seq.alphabet, Bio.Alphabet.ProteinAlphabet):
+            raise AntismashInputError("protein records are not supported")
 
     # before conversion to secmet records, trim if required
     if start > -1 or end > -1:
         if len(records) > 1:
             raise ValueError("--start and --end options cannot be used with multiple records")
         records[0] = trim_sequence(records[0], max(start, 0), min(len(records[0]), end))
-
-    # if no records are left, that's a problem
-    if not records:
-        raise AntismashInputError("no valid records found in file %r" % filename)
 
     try:
         return [Record.from_biopython(record, taxon) for record in records]
