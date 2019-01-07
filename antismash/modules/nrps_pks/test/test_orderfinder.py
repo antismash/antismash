@@ -275,7 +275,8 @@ class TestEnzymeCounter(unittest.TestCase):
                 gene.nrps_pks.type = domain_identification.classify_cds(all_domains[gene.get_name()])
             else:
                 gene.nrps_pks.type = types[gene.get_name()]
-        return orderfinder.find_supercluster_modular_enzymes(genes)
+        results = orderfinder.find_supercluster_modular_enzymes(genes)
+        return ([cds.get_name() for cds in results[0]], results[1], results[2])
 
     def test_C002271_c19(self):  # pylint: disable=invalid-name
         gene_names = ['STAUR_3972', 'STAUR_3982', 'STAUR_3983', 'STAUR_3984', 'STAUR_3985']
@@ -288,27 +289,28 @@ class TestEnzymeCounter(unittest.TestCase):
                       'STAUR_3983': 'PKS-like protein', 'STAUR_3982': 'PKS-like protein',
                       'STAUR_3972': 'other'}
         result = self.run_finder(gene_names, gene_domains, gene_types)
-        assert result == (4, 0, 0)
+        expected_pks = ["STAUR_3982", "STAUR_3983", "STAUR_3984", "STAUR_3985"]
+        assert result == (expected_pks, 0, 0)
 
     def test_none(self):
-        assert orderfinder.find_supercluster_modular_enzymes([]) == (0, 0, 0)
+        assert orderfinder.find_supercluster_modular_enzymes([]) == ([], 0, 0)
 
     def test_blended(self):
         names = list("BC")
         domains = {"B": ["PKS_AT"], "C": ["PKS_KS", "PKS_AT"]}
-        assert self.run_finder(names, domains) == (2, 0, 0)
+        assert self.run_finder(names, domains) == (["B", "C"], 0, 0)
 
         domains = {"B": ["AMP-binding"], "C": ["PKS_AT"]}
-        assert self.run_finder(names, domains) == (1, 1, 0)
+        assert self.run_finder(names, domains) == (["C"], 1, 0)
 
         domains = {"B": ["AMP-binding", "PKS_AT"], "C": ["PKS_AT"]}
-        assert self.run_finder(names, domains) == (1, 0, 0)
+        assert self.run_finder(names, domains) == (["C"], 0, 0)
 
         domains = {"B": ["AMP-binding", "PKS_AT", "PKS_KS"], "C": ["PKS_AT"]}
-        assert self.run_finder(names, domains) == (1, 0, 0)
+        assert self.run_finder(names, domains) == (["C"], 0, 0)
 
         domains = {"B": ["AMP-binding", "Condensation_Dual", "PKS_AT"], "C": ["PKS_AT"]}
-        assert self.run_finder(names, domains) == (1, 0, 1)
+        assert self.run_finder(names, domains) == (["C"], 0, 1)
 
         domains = {"B": ["AMP-binding"], "C": ["PKS_AT"]}
-        assert self.run_finder(names, domains) == (1, 1, 0)
+        assert self.run_finder(names, domains) == (["C"], 1, 0)
