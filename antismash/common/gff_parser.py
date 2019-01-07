@@ -11,6 +11,7 @@ from typing import Dict, IO, List, Set, Union
 from Bio.SeqFeature import FeatureLocation, CompoundLocation, SeqFeature
 from BCBio import GFF
 
+from antismash.common.errors import AntismashInputError
 from antismash.common.secmet import Record
 from antismash.config import ConfigType
 
@@ -46,35 +47,35 @@ def check_gff_suitability(options: ConfigType, sequences: List[Record]) -> bool:
             try:
                 record = next(record_iter)
             except StopIteration:
-                raise ValueError("Could not parse records from GFF3 file")
+                raise AntismashInputError("could not parse records from GFF3 file")
 
             if not record.features:
-                raise ValueError('GFF3 record %s contains no features' % record.id)
+                raise AntismashInputError('GFF3 record %s contains no features' % record.id)
 
             coord_max = max([n.location.end.real for n in record.features])
             if coord_max > len(sequences[0]):
                 logging.error('GFF3 record and sequence coordinates are not compatible.')
-                raise ValueError('Incompatible GFF record and sequence coordinates')
+                raise AntismashInputError('incompatible GFF record and sequence coordinates')
 
             single_entries = True
 
         elif not gff_ids.intersection({seq.id for seq in sequences}):
             logging.error('No GFF3 record IDs match any sequence record IDs.')
-            raise ValueError("GFF3 record IDs don't match sequence file record IDs.")
+            raise AntismashInputError("GFF3 record IDs don't match sequence file record IDs.")
 
         # Check GFF contains CDSs
         if not ('CDS',) in gff_data['gff_type']:
             logging.error('GFF3 does not contain any CDS.')
-            raise ValueError("No CDS features in GFF3 file.")
+            raise AntismashInputError("no CDS features in GFF3 file.")
 
         # Check CDS are childless but not parentless
         if 'CDS' in set([n for key in examiner.parent_child_map(open(options.genefinding_gff3)) for n in key]):
             logging.error('GFF3 structure is not suitable. CDS features must be childless but not parentless.')
-            raise ValueError('GFF3 structure is not suitable.')
+            raise AntismashInputError('GFF3 structure is not suitable.')
 
     except AssertionError as err:
         logging.error('Parsing %r failed: %s', options.genefinding_gff3, err)
-        raise
+        raise AntismashInputError(str(err)) from err
     return single_entries
 
 
