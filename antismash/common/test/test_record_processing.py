@@ -275,6 +275,12 @@ class TestPreprocessRecords(unittest.TestCase):
         with self.assertRaisesRegex(AntismashInputError, "no sequences matched filter"):
             record_processing.pre_process_sequences(records, self.options, self.genefinding)
 
+    def test_no_record_id(self):
+        records = self.read_nisin()
+        records[0].id = ""
+        with self.assertRaisesRegex(AntismashInputError, "record has no name"):
+            self.run_on_records(records)
+
 
 class TestUniqueID(unittest.TestCase):
     def test_bad_starts(self):
