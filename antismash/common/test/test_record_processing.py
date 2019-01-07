@@ -53,12 +53,12 @@ class TestParseRecords(unittest.TestCase):
                 record_processing.parse_input_sequence(path, minimum_length=bad_len)
 
     def test_nonexistant(self):
-        with self.assertRaisesRegex(ValueError, "Sequence file not found: .*"):
+        with self.assertRaisesRegex(AntismashInputError, "No such file or directory"):
             record_processing.parse_input_sequence("does_not_exist.gbk")
 
     def test_empty(self):
         with NamedTemporaryFile(suffix=".gbk") as temp:
-            with self.assertRaisesRegex(AntismashInputError, "no records could be read from file"):
+            with self.assertRaisesRegex(AntismashInputError, "no valid records found"):
                 record_processing.parse_input_sequence(temp.name)
 
 
