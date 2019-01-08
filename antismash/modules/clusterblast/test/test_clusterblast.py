@@ -584,3 +584,19 @@ class TestReferenceProteinLoading(unittest.TestCase):
         protein = proteins["CRH36422"]
         assert protein.name == "CRH36422"
         assert protein.annotations == "Urea_carboxylase_{ECO:0000313|EMBL:CCF11062.1}"
+
+
+class TestMissingProteinCleanup(unittest.TestCase):
+    def test_missing_removed(self):
+        proteins = {}
+        for name in "ABDEFH":
+            proteins[name] = core.Protein(name, "dummylocus", "1-5", "+", "annotation")
+        clusters = {
+            "1": core.ReferenceCluster("1", "c1", ["A", "B", "C"], "desc", "type", ["tag1"]),
+            "2": core.ReferenceCluster("2", "c1", ["D", "E"], "desc", "type", ["tag3"]),
+            "3": core.ReferenceCluster("3", "c1", ["F", "G"], "desc", "type", ["tag2"]),
+            "4": core.ReferenceCluster("4", "c2", ["H"], "desc", "type", ["tag4"])
+        }
+        core.strip_clusters_missing_proteins(clusters, proteins)
+        assert sorted(clusters) == ["2", "4"]
+        assert sorted(proteins) == ["D", "E", "H"]
