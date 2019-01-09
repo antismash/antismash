@@ -7,6 +7,7 @@
 from collections import OrderedDict
 import os
 import unittest
+from unittest import mock as unittest_mock
 
 from minimock import mock, restore
 from helperlibs.wrappers.io import TemporaryDirectory
@@ -556,8 +557,8 @@ class TestOrthologousGroups(unittest.TestCase):
 
 class TestReferenceProteinLoading(unittest.TestCase):
     def mock_with(self, content):
-        # unittest.mock.mock_open doesn't handle the __iter__ case, so work around it
-        mocked_open = unittest.mock.mock_open(read_data=content)
+        # unittest_mock.mock_open doesn't handle the __iter__ case, so work around it
+        mocked_open = unittest_mock.mock_open(read_data=content)
         mocked_open.return_value.__iter__ = lambda self: iter(self.readline, '')
         return mocked_open
 
@@ -569,7 +570,7 @@ class TestReferenceProteinLoading(unittest.TestCase):
 
     def test_standard(self):
         hit = ">CVNH01000008|c1|65549-69166|-|BN1184_AH_00620|Urea_carboxylase_{ECO:0000313}|CRH36422"
-        with unittest.mock.patch("builtins.open", self.mock_with(hit)):
+        with unittest_mock.patch("builtins.open", self.mock_with(hit)):
             proteins = core.load_reference_proteins(set(), "clusterblast")
         assert len(proteins) == 1
         protein = proteins["CRH36422"]
@@ -578,7 +579,7 @@ class TestReferenceProteinLoading(unittest.TestCase):
 
     def test_non_standard(self):
         hit = ">CVNH01000008|c1|65549-69166|-|BN1184_AH_00620|Urea_carboxylase_{ECO:0000313|EMBL:CCF11062.1}|CRH36422"
-        with unittest.mock.patch("builtins.open", self.mock_with(hit)):
+        with unittest_mock.patch("builtins.open", self.mock_with(hit)):
             proteins = core.load_reference_proteins(set(), "clusterblast")
         assert len(proteins) == 1
         protein = proteins["CRH36422"]
