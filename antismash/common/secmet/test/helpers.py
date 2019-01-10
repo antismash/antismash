@@ -6,7 +6,7 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
-from ..features.cds_feature import CDSFeature
+from ..features import CDSFeature, CDSMotif
 from ..locations import FeatureLocation
 
 
@@ -31,3 +31,14 @@ class DummyCDS(CDSFeature):
     @translation.setter
     def translation(self, translation):
         self._translation = translation  # pylint: disable=attribute-defined-outside-init
+
+
+class DummyCDSMotif(CDSMotif):
+    counter = 0
+
+    def __init__(self, start=0, end=6, strand=1, tool=None, domain_id=None):
+        super().__init__(FeatureLocation(start, end, strand), tool)
+        if not domain_id:
+            domain_id = "dummy_domain%d_%d_%d" % (DummyCDSMotif.counter, start, end)
+            DummyCDSMotif.counter += 1
+        self.domain_id = domain_id
