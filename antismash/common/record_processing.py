@@ -7,7 +7,6 @@
 import functools
 import logging
 import re
-import os
 from typing import Any, Callable, List, Set, Tuple, Union
 
 import Bio
@@ -16,7 +15,9 @@ from Bio.SeqRecord import SeqRecord
 from helperlibs.bio import seqio
 
 from antismash.common import gff_parser
+from antismash.common.errors import AntismashInputError
 from antismash.common.secmet import Record
+from antismash.common.secmet.errors import SecmetInvalidInputError
 from antismash.common.secmet.qualifiers import SecMetQualifier
 from antismash.config import get_config, update_config, ConfigType
 from antismash.custom_typing import AntismashModule
@@ -44,31 +45,27 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
         raise TypeError("minimum_length must be an int")
 
     records = []  # type: List[SeqRecord]
-    if not os.path.exists(filename):
-        msg = "Sequence file not found: %r" % filename
-        logging.error(msg)
-        raise ValueError(msg)
-
     try:
         record_list = list(seqio.parse(filename))
-        if not record_list:
-            raise RuntimeError('No records could be read from file %r' % filename)
-        for record in record_list:
-            if isinstance(record.seq.alphabet, Bio.Alphabet.ProteinAlphabet):
-                raise ValueError("protein records are not supported")
-            if minimum_length < 1 \
-                    or len(record.seq) >= minimum_length \
-                    or 'contig' in record.annotations \
-                    or 'wgs_scafld' in record.annotations \
-                    or 'wgs' in record.annotations:
-                records.append(record)
-    except (ValueError, AssertionError) as err:
-        logging.error('Parsing %r failed: %s', filename, err)
-        raise
     except Exception as err:
-        logging.error('Parsing %r failed with unhandled exception: %s',
-                      filename, err)
-        raise
+        logging.error('Parsing %r failed: %s', filename, err)
+        raise AntismashInputError(str(err)) from err
+
+    for record in record_list:
+        if minimum_length < 1 \
+                or len(record.seq) >= minimum_length \
+                or 'contig' in record.annotations \
+                or 'wgs_scafld' in record.annotations \
+                or 'wgs' in record.annotations:
+            records.append(record)
+
+    # if no records are left, that's a problem
+    if not records:
+        raise AntismashInputError("no valid records found in file %r" % filename)
+
+    for record in records:
+        if isinstance(record.seq.alphabet, Bio.Alphabet.ProteinAlphabet):
+            raise AntismashInputError("protein records are not supported")
 
     # before conversion to secmet records, trim if required
     if start > -1 or end > -1:
@@ -76,10 +73,10 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
             raise ValueError("--start and --end options cannot be used with multiple records")
         records[0] = trim_sequence(records[0], max(start, 0), min(len(records[0]), end))
 
-    # if no records are left, that's a problem
-    if not records:
-        raise ValueError("no valid records found in file %r" % filename)
-    return [Record.from_biopython(record, taxon) for record in records]
+    try:
+        return [Record.from_biopython(record, taxon) for record in records]
+    except SecmetInvalidInputError as err:
+        raise AntismashInputError(str(err)) from err
 
 
 def strip_record(record: Record) -> None:
@@ -89,9 +86,15 @@ def strip_record(record: Record) -> None:
     record.clear_superclusters()
     record.clear_subregions()
     record.clear_regions()
-    record.clear_cds_motifs()
     record.clear_antismash_domains()
     record.clear_pfam_domains()
+
+    # clean up antiSMASH-created CDSMotifs, but leave the rest
+    motifs = list(record.get_cds_motifs())
+    record.clear_cds_motifs()
+    for motif in motifs:
+        if not motif.created_by_antismash:
+            record.add_cds_motif(motif)
 
     # clean up antiSMASH annotations in CDS features
     for feature in record.get_cds_features():
@@ -160,6 +163,69 @@ def ensure_cds_info(single_entry: bool, genefinding: Callable[[Record, Any], Non
     return sequence
 
 
+def filter_records_by_name(sequences: List[Record], target: str) -> None:
+    """ Mark records as skipped if their id does not match the given target or
+        they are above .
+
+        If the target is an empty string, all records will match.
+        If not records match, an error will be raised.
+
+        Arguments:
+            sequences: the Records to filter
+            target: the name to match, must be exact
+
+        Returns:
+            None
+    """
+    if not target:
+        return
+
+    logging.debug("Limiting to record id: %s", target)
+
+    # run the filter
+    matching_filter = 0
+    for sequence in sequences:
+        if sequence.id != target:
+            sequence.skip = "did not match filter: %s" % target
+        else:
+            matching_filter += 1
+
+    if matching_filter == 0:
+        logging.error("No sequences matched filter: %s", target)
+        raise AntismashInputError("no sequences matched filter: %s" % target)
+
+    logging.info("Skipped %d sequences not matching filter: %s",
+                 len(sequences) - matching_filter, target)
+
+
+def filter_records_by_count(records: List[Record], maximum: int) -> bool:
+    """ Mark all records after the first 'maximum' non-skipped records as skipped.
+
+        If maximum is -1, no records will be skipped due to count.
+
+    Arguments:
+        records: the Records to filter
+        maximum: the maximum number of records to run
+
+    Returns:
+        True if any records were marked as skipped due to hitting the limit
+    """
+    if maximum == -1:
+        return False
+
+    limit_hit = False
+    meaningful = 0
+    for record in records:
+        if record.skip:  # don't count any records that are already skipped
+            continue
+        meaningful += 1
+        if meaningful > maximum:
+            limit_hit = True
+            record.skip = "skipping all but first {0} meaningful records (--limit {0}) ".format(maximum)
+
+    return limit_hit
+
+
 def pre_process_sequences(sequences: List[Record], options: ConfigType, genefinding: AntismashModule) -> List[Record]:
     """ hmm
 
@@ -184,9 +250,6 @@ def pre_process_sequences(sequences: List[Record], options: ConfigType, genefind
     if records_contain_shotgun_scaffolds(sequences):
         raise RuntimeError("Incomplete whole genome shotgun records are not supported")
 
-    # keep count of how many records matched filter
-    matching_filter = 0
-
     for i, seq in enumerate(sequences):
         seq.record_index = i + 1  # 1-indexed
 
@@ -205,22 +268,11 @@ def pre_process_sequences(sequences: List[Record], options: ConfigType, genefind
     for record in sequences:
         if record.skip or not record.seq:
             logging.warning("Record %s has no sequence, skipping.", record.id)
+        if not record.id:
+            raise AntismashInputError("record has no name")
 
-    if options.limit_to_record:
-        logging.debug("Limiting to record id: %s", options.limit_to_record)
-        # run the filter
-        for sequence in sequences:
-            if options.limit_to_record and options.limit_to_record != sequence.id:
-                sequence.skip = "did not match filter: %s" % options.limit_to_record
-            else:
-                matching_filter += 1
-        limit = options.limit_to_record
-        if matching_filter == 0:
-            logging.error("No sequences matched filter: %s", limit)
-            raise ValueError("No sequences matched filter: %s" % limit)
-        elif matching_filter != len(sequences):
-            logging.info("Skipped %d sequences not matching filter: %s",
-                         len(sequences) - matching_filter, limit)
+    # skip anything not matching the filter
+    filter_records_by_name(sequences, options.limit_to_record)
 
     # Now remove small contigs < minimum length again
     logging.debug("Removing sequences smaller than %d bases", options.minlength)
@@ -229,20 +281,10 @@ def pre_process_sequences(sequences: List[Record], options: ConfigType, genefind
             sequence.skip = "smaller than minimum length (%d)" % options.minlength
 
     # Make sure we don't waste weeks of runtime on huge records, unless requested by the user
-    warned = False
-    if options.limit > -1:
-        meaningful = 0
-        for sequence in sequences:
-            if sequence.skip:
-                continue
-            meaningful += 1
-            if meaningful > options.limit:
-                if not warned:
-                    logging.warning("Only analysing the first %d records (increase via --limit)", options.limit)
-                    warned = True
-                sequence.skip = "skipping all but first {0} meaningful records (--limit {0}) ".format(options.limit)
-
-    update_config({"triggered_limit": warned})  # TODO is there a better way
+    limit_hit = filter_records_by_count(sequences, options.limit)
+    if limit_hit:
+        logging.warning("Only analysing the first %d records (increase via --limit)", options.limit)
+    update_config({"triggered_limit": limit_hit})
 
     # Check GFF suitability
     single_entry = False

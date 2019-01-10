@@ -45,14 +45,12 @@ def analyse_biosynthetic_order(nrps_pks_features: List[CDSFeature],
         cds_in_supercluster = [gene for gene in nrps_pks_features if gene.overlaps_with(supercluster)]
         if not cds_in_supercluster:
             continue
-        pks_count, nrps_count, hybrid_count = find_supercluster_modular_enzymes(cds_in_supercluster)
+        pks_features, nrps_count, hybrid_count = find_supercluster_modular_enzymes(cds_in_supercluster)
         # If more than three PKS cds features, use dock_dom_analysis if possible to identify order
-        if 3 < pks_count < 11 and not nrps_count and not hybrid_count:
+        # since this will grow as n!, an upper limit is also required
+        if 3 < len(pks_features) < 11 and not nrps_count and not hybrid_count:
             logging.debug("SuperCluster %d monomer ordering method: domain docking analysis", supercluster_number)
-            # since this will grow as n!, limit to only the relevant CDSes
-            pks_cdses = list(filter(lambda cds: "PKS" in cds.nrps_pks.type, cds_in_supercluster))
-            assert 3 < len(pks_cdses) < 11
-            geneorder = perform_docking_domain_analysis(pks_cdses)
+            geneorder = perform_docking_domain_analysis(pks_features)
             docking = True
         else:
             logging.debug("SuperCluster %d monomer ordering method: colinear", supercluster_number)
@@ -64,29 +62,40 @@ def analyse_biosynthetic_order(nrps_pks_features: List[CDSFeature],
     return compound_predictions
 
 
-def find_supercluster_modular_enzymes(cds_features: List[CDSFeature]) -> Tuple[int, int, int]:
-    """ counts number of PKS domains, NRPS domains and hybrid domains in a supercluster
+def find_supercluster_modular_enzymes(cds_features: List[CDSFeature]) -> Tuple[List[CDSFeature], int, int]:
+    """ Finds PKS-only features and counts the NRPS-only features and
+        hybrid (not a combination of individual PKS and NRPS domains)
+        features in a set of CDS features.
+
+        Arguments:
+            cds_features: the CDS features to process
+
+        Returns:
+            a tuple of
+                a list of PKS-only CDS features
+                a count of NRPS-only features
+                a count of hybrid features
     """
-    pkscds_features = 0
-    nrpscds_features = 0
-    hybridcds_features = 0
-    for gene in cds_features:
-        classification = gene.nrps_pks.type
+    pks_features = []
+    nrps_count = 0
+    hybrid_count = 0
+    for cds in cds_features:
+        classification = cds.nrps_pks.type
         if "PKS" in classification and "NRPS" not in classification:
-            pkscds_features += 1
+            pks_features.append(cds)
         elif "PKS" not in classification and "NRPS" in classification:
-            nrpscds_features += 1
+            nrps_count += 1
         elif "PKS/NRPS" in classification:
-            domain_names = set(gene.nrps_pks.domain_names)
+            domain_names = set(cds.nrps_pks.domain_names)
             contains_nrps = domain_names.intersection({"AMP-binding", "A-OX", "Condensation"})
             contains_pks = domain_names.intersection({"PKS_KS", "PKS_AT"})
             if contains_pks and not contains_nrps:
-                pkscds_features += 1
+                pks_features.append(cds)
             # the case of both single pks domain and nrps domain(s) is ignored
             # because that construction isn't meaningful
         elif "Hybrid" in classification:
-            hybridcds_features += 1
-    return pkscds_features, nrpscds_features, hybridcds_features
+            hybrid_count += 1
+    return pks_features, nrps_count, hybrid_count
 
 
 def generate_substrates_order(geneorder: List[CDSFeature], consensus_predictions: Dict[str, str]) -> str:

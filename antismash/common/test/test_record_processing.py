@@ -13,7 +13,9 @@ from Bio.SeqRecord import SeqRecord
 
 from antismash import config
 from antismash.common import record_processing, path
+from antismash.common.errors import AntismashInputError
 from antismash.common.secmet import Record
+from antismash.common.secmet.test.helpers import DummyCDSMotif
 from antismash.common.test import helpers
 
 
@@ -44,7 +46,7 @@ class TestParseRecords(unittest.TestCase):
                                                          minimum_length=15016)
         assert len(records) == 1
 
-        with self.assertRaisesRegex(ValueError, "no valid records found"):
+        with self.assertRaisesRegex(AntismashInputError, "no valid records found"):
             record_processing.parse_input_sequence(nisin_path, minimum_length=15017)
 
         for bad_len in [5.6, None, "5"]:
@@ -52,12 +54,12 @@ class TestParseRecords(unittest.TestCase):
                 record_processing.parse_input_sequence(path, minimum_length=bad_len)
 
     def test_nonexistant(self):
-        with self.assertRaisesRegex(ValueError, "Sequence file not found: .*"):
+        with self.assertRaisesRegex(AntismashInputError, "No such file or directory"):
             record_processing.parse_input_sequence("does_not_exist.gbk")
 
     def test_empty(self):
         with NamedTemporaryFile(suffix=".gbk") as temp:
-            with self.assertRaisesRegex(RuntimeError, "No records could be read from file"):
+            with self.assertRaisesRegex(AntismashInputError, "no valid records found"):
                 record_processing.parse_input_sequence(temp.name)
 
 
@@ -271,8 +273,14 @@ class TestPreprocessRecords(unittest.TestCase):
     def test_limit_to_record_complete(self):
         records = self.read_double_nisin()
         config.update_config({"limit_to_record": "bad_id"})
-        with self.assertRaisesRegex(ValueError, "No sequences matched filter.*"):
+        with self.assertRaisesRegex(AntismashInputError, "no sequences matched filter"):
             record_processing.pre_process_sequences(records, self.options, self.genefinding)
+
+    def test_no_record_id(self):
+        records = self.read_nisin()
+        records[0].id = ""
+        with self.assertRaisesRegex(AntismashInputError, "record has no name"):
+            self.run_on_records(records)
 
 
 class TestUniqueID(unittest.TestCase):
@@ -314,3 +322,19 @@ class TestUniqueID(unittest.TestCase):
         # the generated number is too long
         with self.assertRaisesRegex(RuntimeError, "Could not generate .*"):
             record_processing.generate_unique_id("a", existing, start=140, max_length=4)
+
+
+class TestStripRecord(unittest.TestCase):
+    def test_cds_motifs(self):
+        record = helpers.DummyRecord()
+
+        non_as_motif = DummyCDSMotif()
+        non_as_motif.created_by_antismash = False
+        record.add_cds_motif(non_as_motif)
+
+        as_motif = DummyCDSMotif()
+        as_motif.created_by_antismash = True
+        record.add_cds_motif(as_motif)
+
+        record_processing.strip_record(record)
+        assert record.get_cds_motifs() == (non_as_motif,)
