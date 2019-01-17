@@ -56,6 +56,29 @@ def collapser_end() -> Markup:
     return Markup("</div>")
 
 
+_TOOLTIP_COUNTER = 0
+
+
+def help_tooltip(text: str, name: str) -> Markup:
+    """ Constructs a help icon with tooltip, each will have a unique ID generated
+        based on the given name.
+
+        Arguments:
+            text: the content of the tooltip
+            name: a prefix for id generation
+
+        Returns:
+            A Markup instance with the constructed HTML
+    """
+    global _TOOLTIP_COUNTER
+    _TOOLTIP_COUNTER += 1
+    unique_id = "%s-help-%d" % (name, _TOOLTIP_COUNTER)
+    return Markup(('<div class="help-container">'
+                   ' <div class="help-icon" data-id="{0}"></div>'
+                   ' <span class="help-tooltip" id="{0}">{1}</span>'
+                   '</div>').format(unique_id, text))
+
+
 def switch(label: str, classname: str, id_attr: str = "", starts_on: bool = False) -> Markup:
     """ Creates a checkbox construct with the given class name on the construct
         and (along with id, if given) on the checkbox input itself
@@ -101,6 +124,7 @@ class _Template:
         defaults = {
             "collapser_start": collapser_start,
             "collapser_end": collapser_end,
+            "help_tooltip": help_tooltip,
             "switch": switch,
         }
         defaults.update(kwargs)

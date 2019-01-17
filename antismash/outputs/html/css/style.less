@@ -898,3 +898,50 @@ ul.dropdown-options {
       transform: translateX(60%);
     }
 }
+
+.help-container {
+    position: relative;
+    display: inline;
+    float: right;
+
+    .help-icon {
+        display: inline-block;
+        float: right;
+        -webkit-mask: url(../images/question-circle-solid.svg) no-repeat center;  /* opera, chrome, and safari */
+        mask: url(../images/question-circle-solid.svg) no-repeat center;
+        background-color: white;
+        width: 1.3em;
+        height: 1.3em;
+        margin-top: 1px;
+        margin-right: 2px;
+
+        &:hover {
+            background-color: #ddd;
+        }
+        &:active,&.active {
+            background-color: #bbb;
+        }
+    }
+
+    .help-tooltip {
+        /* match style of nav */
+        background-image: linear-gradient(to bottom, #5e5e5e 0, #444 100%);
+        background-repeat: repeat-x;
+        color: #e1e1e1;
+        font-weight: normal;
+
+        display: none;
+        border-radius: 0.2em;
+        width: 35em;
+        padding: 0.5em;
+
+        /* start halfway down and keep to the left of the container */
+        position: absolute;
+        top: 50%;
+        right: 105%;
+
+        z-index: 1; /* otherwise switches and other ':after' styles can display on top */
+
+        .unselectable();
+    }
+}
