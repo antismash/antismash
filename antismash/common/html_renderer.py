@@ -56,6 +56,29 @@ def collapser_end() -> Markup:
     return Markup("</div>")
 
 
+def switch(label: str, classname: str, id_attr: str = "", starts_on: bool = False) -> Markup:
+    """ Creates a checkbox construct with the given class name on the construct
+        and (along with id, if given) on the checkbox input itself
+
+        Arguments:
+            label: the text to use as a label for the switch
+            classname: the class name to give to the checkbox
+            id_attr: an optional id to specify, must be unique
+            starts_on: whether the switch should be on by default
+    """
+    if id_attr:
+        if not id_attr.startswith("#"):
+            id_attr = "#" + id_attr
+        id_attr = ' id="%s"' % id_attr
+    check_attr = " checked" if starts_on else ""
+    return Markup(('<div class="{0} switch-container"><span class="switch-desc">{1}</span>'
+                   ' <label class="switch">'
+                   '  <input class="{0}" type="checkbox"{2}{3}>'
+                   '  <span class="slider"></span>'
+                   ' </label>'
+                   '</div>').format(classname, label, id_attr, check_attr))
+
+
 class _Template:
     """ A jinja-based template rendered with extra builtins available.
 
@@ -78,6 +101,7 @@ class _Template:
         defaults = {
             "collapser_start": collapser_start,
             "collapser_end": collapser_end,
+            "switch": switch,
         }
         defaults.update(kwargs)
         return self.template.render(**defaults)
