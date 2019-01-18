@@ -243,12 +243,17 @@ nav {
 
 .page {
     overflow: hidden;
-    h3 {
+    h3, .heading {
         font-size: 90%;
         background-color: @antismash-main;
         color: white;
         margin: 0.1em 0 0.4em 0.1em;
         padding-left: 0.5em;
+    }
+    .heading {
+        font-weight: bold;
+        margin-left: 0;
+        margin-top: 0;
     }
 }
 
@@ -848,6 +853,14 @@ ul.dropdown-options {
     }
 }
 
+.body-details-section {
+    margin-left: 0.5em;
+
+    & * h3 {
+        margin-top: 0;
+        margin-left: 0;
+    }
+}
 
 .switch-container {
     & span.switch-desc {
