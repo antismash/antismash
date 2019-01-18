@@ -116,7 +116,7 @@ class _Template:
         self.env = _jinja2.Environment(loader=loader, autoescape=True,
                                        undefined=_jinja2.StrictUndefined)
 
-    def render(self, **kwargs: Any) -> str:
+    def render(self, **kwargs: Any) -> Markup:
         """ Renders the template HTML, providing any given arguments to the renderer """
         if not self.template:
             raise ValueError("attempting to render without a template")
@@ -128,7 +128,7 @@ class _Template:
             "switch": switch,
         }
         defaults.update(kwargs)
-        return self.template.render(**defaults)
+        return Markup(self.template.render(**defaults))
 
 
 class StringTemplate(_Template):
