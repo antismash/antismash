@@ -111,7 +111,7 @@ RULE glycocin
     EXTENT 10
     CONDITIONS glycocin or sublancin
 
-RULE LAP
+RULE lap
     COMMENT Linear azol(in)e-containing peptides like goadsporin (AB205012) or
             microcin B17 (FM877811)
     RELATED TIGR04424
