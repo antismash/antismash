@@ -44,7 +44,7 @@ RULE ladderane
     EXTENT 20
     CONDITIONS ladderane
 
-RULE PUFA
+RULE pufa
     CUTOFF 20
     EXTENT 20
     CONDITIONS PUFA_KS
