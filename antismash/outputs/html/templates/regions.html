@@ -5,7 +5,7 @@
 {% for region in record.regions %}
 <div class="page" id='{{region.anchor_id}}'>
   <h3> {{record.seq_record.name}} - Region {{region.get_region_number()}} - {{region.get_product_string() | capitalize }}</h3>
- <div class="region-grid" style="display: grid; grid-template-columns: auto 25%; grid-gap: 1px;">
+ <div class="region-grid">
   <div class = "content">
     <div class ="description-container">
       <div class="region-download">
@@ -54,7 +54,7 @@
 
   <div class="focus-panel">
     <h3>Gene details</h3>
-    <div class="focus-panel-content-{{region.anchor_id}}" style="margin-left: 2em; margin-right: 2em; font-size: 0.8em; display: flex; flex-wrap: nowrap; flex-direction: column; justify-content: space-between; height: 95%">
+    <div class="focus-panel-content focus-panel-content-{{region.anchor_id}}">
         <div style="text-align: center; margin-top: 30%;">
             Select a gene to view the details available for it
         </div>
@@ -73,7 +73,7 @@
       {% if handler.generate_details_div is defined and handler.__name__ in results %}
       <div class="body-details-section {{handler.NAME}}">
         {{handler.generate_details_div(region, results[handler.__name__], record, options) | safe}}
-      </div>  
+      </div>
       {% endif %}
     {% endfor %}
   </div>
