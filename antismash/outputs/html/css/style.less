@@ -543,6 +543,9 @@ table {
     padding-top: 0.3em;
     box-shadow: inset 0 -2px 2px grey;
     cursor: default;
+    font-size: 80%;
+
+    .unselectable();
 
     &:hover {
         background-color: #fcfcfc;
@@ -555,6 +558,7 @@ table {
     }
     & * {
         cursor: default;
+        .unselectable();
     }
     & img {
         height: 1.5em;
@@ -606,11 +610,8 @@ table {
     h4 {
         margin-bottom: 0.5em;
     }
-    font-size: 80%;
-
     margin-bottom: 0.5em;
     .left-padding;
-    bottom-padding: 1em;
 }
 
 .legend-field {
@@ -648,10 +649,6 @@ table {
     }
 }
 
-.details, .clusterblast, .subclusterblast, .knownclusterblast {
-    .left-padding;
-}
-
 .details-text {
     padding-bottom: 0.5em;
 }
@@ -669,6 +666,9 @@ table {
 }
 .jsdomain-tooltip {
     .tooltip
+}
+.jsdomain-text {
+    pointer-events: none;
 }
 
 .clusterblast-locustag {
@@ -818,13 +818,14 @@ ul.dropdown-options {
 
 .body-details-headers {
     display: flex;
+    flex-wrap: wrap;
     margin-left: 0.5em;
 
     & .body-details-header {
         font-size: 90%;
         background-color: @antismash-main;
         color: white;
-        margin: 0.1em 0 0.4em 0.1em;
+        margin-right: 0.1em;
         padding-left: 0.5em;
         padding-right: 0.5em;
 
