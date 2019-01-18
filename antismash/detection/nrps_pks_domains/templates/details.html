@@ -1,6 +1,12 @@
 <div class="details">
   {% if has_domain_details %}
-  <h3>Detailed annotation</h3>
+    <div class="heading">
+      <span>Detailed domain annotation</span>
+      {{help_tooltip("Shows <a href='https://docs.antismash.secondarymetabolites.org/glossary/#nrps' target='_blank'>NRPS</a>- and <a href='https://docs.antismash.secondarymetabolites.org/glossary/#pks' target='_blank'>PKS</a>-related domains for each feature that contains them. Click on each domain for more information about the domain's location, consensus monomer prediction, and other details.", "nrps-domain")}}
+    </div>
+    <div class="nrps-pks-domain-buttons">
+      {{switch("Selected features only", "domains-selected-only")}}
+    </div>
     <div class="details-svg" id="{{region.anchor_id}}-details-svg"></div>
   {% endif %}
 </div>
