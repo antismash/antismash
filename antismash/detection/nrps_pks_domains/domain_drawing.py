@@ -10,9 +10,7 @@
 
 from typing import Dict, List, Optional, Union
 
-from jinja2 import FileSystemLoader, Environment, StrictUndefined
-
-from antismash.common import path
+from antismash.common import html_renderer, path
 from antismash.common.json import JSONDomain, JSONOrf
 from antismash.common.layers import RegionLayer, RecordLayer, OptionsLayer
 from antismash.common.module_results import ModuleResults
@@ -87,9 +85,6 @@ def has_domain_details(region: Region) -> bool:
 def generate_details_div(region_layer: RegionLayer, _void: ModuleResults,
                          _record_layer: RecordLayer, _options_layer: OptionsLayer) -> str:
     """ Generate the details section of NRPS/PKS domains in the main HTML output """
-    env = Environment(loader=FileSystemLoader(path.get_full_path(__file__, 'templates')),
-                      autoescape=True, undefined=StrictUndefined)
-    template = env.get_template('details.html')
-    details_div = template.render(has_domain_details=has_domain_details,
-                                  region=region_layer)
-    return details_div
+    template = html_renderer.FileTemplate(path.get_full_path(__file__, 'templates', 'details.html'))
+    return template.render(has_domain_details=has_domain_details,
+                           region=region_layer)
