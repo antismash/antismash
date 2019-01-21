@@ -8,7 +8,7 @@
             For supercluster {{supercluster.number}}, location {{supercluster.location.start}} - {{supercluster.location.end}}:
           {{collapser_start("SC%s" % supercluster.number, level="supercluster")}}
           {% if supercluster.smiles %}
-            <canvas id="smiles-canvas-{{supercluster.number}}" class="smiles-canvas" data-smiles="{{supercluster.smiles}}" width="250" height="250"></canvas>
+            <canvas id="smiles-canvas-{{region.anchor_id}}-{{supercluster.number}}" class="smiles-canvas" data-smiles="{{supercluster.smiles}}"></canvas>
             <div class="as-structure-warning">
               {{supercluster.get_warning()}}
             </div>
@@ -27,6 +27,13 @@
             {{collapser_end()}}
             </div>
         </div>
+        {% if supercluster.smiles %}
+            <div id="smiles-canvas-{{region.anchor_id}}-{{supercluster.number}}-modal" class="modal-container">
+              <div class="modal-content">
+                <canvas class="smiles-canvas-modal" data-smiles="{{supercluster.smiles}}"></canvas>
+              </div>
+            </div>
+        {% endif %}
       {% if loop.index < region.superclusters | length %}
         <hr>
       {% endif %}
