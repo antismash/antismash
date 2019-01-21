@@ -1,11 +1,12 @@
 <div class="focus-intro">
  <strong>{{feature.get_name()}}</strong><br>
- {% if feature.product %}
+ {% if feature.product and feature.gene != feature.get_name() %}
   {{feature.product}}<br>
  {% endif %}
  <br>
  Locus tag: {{feature.locus_tag}}<br>
  Protein ID: {{feature.protein_id}}<br>
+ Gene: {{feature.gene}}<br>
  {% if ec_numbers %}
   EC-Number(s): {{ec_numbers}}<br>
  {% endif %}
