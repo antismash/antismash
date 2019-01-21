@@ -5,9 +5,8 @@
 
 from typing import List
 
-from jinja2 import FileSystemLoader, Environment, StrictUndefined
-
 from antismash.common import path
+from antismash.common.html_renderer import FileTemplate, HTMLSections
 from antismash.common.layers import RegionLayer, RecordLayer, OptionsLayer
 
 from .results import T2PKSResults
@@ -18,14 +17,17 @@ def will_handle(products: List[str]) -> bool:
     return "t2pks" in products
 
 
-def generate_sidepanel(region_layer: RegionLayer, results: T2PKSResults,
-                       _record_layer: RecordLayer, _options_layer: OptionsLayer) -> str:
+def generate_html(region_layer: RegionLayer, results: T2PKSResults,
+                  _record_layer: RecordLayer, _options_layer: OptionsLayer) -> HTMLSections:
     """ Generate the sidepanel HTML with results from the type II PKS module """
-    env = Environment(loader=FileSystemLoader(path.get_full_path(__file__, 'templates')),
-                      autoescape=True, undefined=StrictUndefined)
-    template = env.get_template('sidepanel.html')
+    html = HTMLSections("t2pks")
+
     predictions = []
     for cluster in region_layer.get_unique_clusters():
         if cluster.product == "t2pks":
             predictions.append(results.cluster_predictions[cluster.get_cluster_number()])
-    return template.render(predictions=predictions)
+
+    template = FileTemplate(path.get_full_path(__file__, "templates", "sidepanel.html"))
+    html.add_sidepanel_section("Type II PKS", template.render(predictions=predictions))
+
+    return html

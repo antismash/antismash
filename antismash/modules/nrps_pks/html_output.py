@@ -8,7 +8,8 @@ import re
 from typing import Any, Iterable, List, Optional
 from typing import Dict  # in comment type hints  # pylint: disable=unused-import
 
-from antismash.common import path, html_renderer
+from antismash.common import path
+from antismash.common.html_renderer import HTMLSections, FileTemplate
 from antismash.common.layers import RegionLayer, RecordLayer, OptionsLayer
 from antismash.common.secmet import CDSFeature, Region, SuperCluster
 
@@ -21,10 +22,12 @@ def will_handle(products: List[str]) -> bool:
                                             "nrpsfragment", "otherks"}))
 
 
-def generate_sidepanel(region_layer: RegionLayer, results: NRPS_PKS_Results,
-                       record_layer: RecordLayer, options_layer: OptionsLayer) -> str:
+def generate_html(region_layer: RegionLayer, results: NRPS_PKS_Results,
+                  record_layer: RecordLayer, options_layer: OptionsLayer) -> HTMLSections:
     """ Generate the sidepanel HTML with results from the NRPS/PKS module """
-    template = html_renderer.FileTemplate(path.get_full_path(__file__, 'templates', 'sidepanel.html'))
+    html = HTMLSections("nrps_pks")
+
+    template = FileTemplate(path.get_full_path(__file__, 'templates', 'sidepanel.html'))
     nrps_layer = NrpspksLayer(results, region_layer.region_feature, record_layer)
 
     features_with_domain_predictions = {}  # type: Dict[str, List[str]]
@@ -45,7 +48,9 @@ def generate_sidepanel(region_layer: RegionLayer, results: NRPS_PKS_Results,
                                 results=results,
                                 relevant_features=features_with_domain_predictions,
                                 options=options_layer)
-    return sidepanel
+    html.add_sidepanel_section("NRPS/PKS monomers", sidepanel)
+
+    return html
 
 
 def map_as_name_to_norine(as_name: str) -> str:

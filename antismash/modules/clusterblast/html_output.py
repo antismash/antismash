@@ -5,9 +5,8 @@
 
 from typing import List
 
-from jinja2 import FileSystemLoader, Environment, StrictUndefined
-
 from antismash.common import path
+from antismash.common.html_renderer import HTMLSections, FileTemplate, Markup
 from antismash.common.layers import RegionLayer, RecordLayer, OptionsLayer
 
 from .results import ClusterBlastResults
@@ -19,32 +18,32 @@ def will_handle(_products: List[str]) -> bool:
     return True
 
 
-def generate_details_div(region_layer: RegionLayer, results: ClusterBlastResults,
-                         record_layer: RecordLayer, options_layer: OptionsLayer) -> str:
-    """ Generates the HTML sections of the body details for all variants
-        of clusterblast
+def generate_html(region_layer: RegionLayer, _results: ClusterBlastResults,
+                  record_layer: RecordLayer, options_layer: OptionsLayer
+                  ) -> HTMLSections:
+    """ Generates the HTML sections for all variants of clusterblast
     """
+
+    html = HTMLSections("clusterblast")
     region = region_layer.region_feature
-    divs = []
+
     if options_layer.cb_general or region.clusterblast is not None:
-        divs.append(generate_div(region_layer, results, record_layer, options_layer, "clusterblast"))
+        div = generate_div(region_layer, record_layer, options_layer, "clusterblast")
+        html.add_detail_section("ClusterBlast", div, "clusterblast")
     if options_layer.cb_knownclusters or region.knownclusterblast is not None:
-        divs.append(generate_div(region_layer, results, record_layer, options_layer, "knownclusterblast"))
+        div = generate_div(region_layer, record_layer, options_layer, "knownclusterblast")
+        html.add_detail_section("KnownClusterBlast", div, "knownclusterblast")
     if options_layer.cb_subclusters or region.subclusterblast is not None:
-        divs.append(generate_div(region_layer, results, record_layer, options_layer, "subclusterblast"))
-    return "\n".join(divs)
+        div = generate_div(region_layer, record_layer, options_layer, "subclusterblast")
+        html.add_detail_section("SubClusterBlast", div, "subclusterblast")
+
+    return html
 
 
-def generate_div(region_layer: RegionLayer, _results: ClusterBlastResults,
-                 record_layer: RecordLayer, options_layer: OptionsLayer, search_type: str) -> str:
+def generate_div(region_layer: RegionLayer, record_layer: RecordLayer,
+                 options_layer: OptionsLayer, search_type: str) -> Markup:
     """ Generates the specific HTML section of the body for a given variant of
         clusterblast
     """
-    template_path = path.get_full_path(__file__, "templates")
-    env = Environment(loader=FileSystemLoader(template_path), autoescape=True,
-                      undefined=StrictUndefined)
-    template = env.get_template('%s.html' % search_type)
-    details_div = template.render(record=record_layer,
-                                  region=region_layer,
-                                  options=options_layer)
-    return details_div
+    template = FileTemplate(path.get_full_path(__file__, "templates", "%s.html" % search_type))
+    return template.render(record=record_layer, region=region_layer, options=options_layer)

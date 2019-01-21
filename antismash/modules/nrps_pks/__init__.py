@@ -11,7 +11,7 @@ from antismash.common.secmet import Record
 from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
 
-from .html_output import will_handle, generate_sidepanel
+from .html_output import generate_html, will_handle
 from .results import NRPS_PKS_Results
 from .specific_analysis import specific_analysis
 

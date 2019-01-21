@@ -8,10 +8,8 @@ import string
 import os
 from typing import Any, Dict, List, Tuple, Union
 
-import jinja2
-from jinja2 import FileSystemLoader, Environment
-
 from antismash.common import path, module_results
+from antismash.common.html_renderer import FileTemplate, HTMLSections
 from antismash.common.layers import RecordLayer, OptionsLayer
 from antismash.common.secmet import Record
 from antismash.common.json import JSONOrf
@@ -76,6 +74,38 @@ def write_regions_js(records: List[Dict[str, Any]], output_dir: str,
         handle.write('var details_data = %s;\n' % json.dumps(clustered_domains, indent=4))
 
 
+def generate_html_sections(records: List[RecordLayer], results: List[Dict[str, module_results.ModuleResults]],
+                           options: ConfigType) -> Dict[str, Dict[int, List[HTMLSections]]]:
+    """ Generates a mapping of record->region->HTMLSections for each record, region and module
+
+        Arguments:
+            records: a list of RecordLayers to pass through to the modules
+            results: a list of
+                        a dictionary mapping each module name to its results object
+                     one for each record
+            options: the current antiSMASH config
+
+        Returns:
+            a dictionary mapping record id to
+                a dictionary mapping region number to
+                    a list of HTMLSections, one for each module
+    """
+    details = {}
+    for record, record_result in zip(records, results):
+        record_details = {}
+        for region in record.regions:
+            sections = []
+            for handler in region.handlers:
+                if handler.will_handle(region.products):
+                    handler_results = record_result.get(handler.__name__)
+                    if handler_results is None:
+                        continue
+                    sections.append(handler.generate_html(region, handler_results, record, options))
+            record_details[region.get_region_number()] = sections
+        details[record.id] = record_details
+    return details
+
+
 def generate_webpage(records: List[Record], results: List[Dict[str, module_results.ModuleResults]],
                      options: ConfigType) -> None:
     """ Generates and writes the HTML itself """
@@ -85,10 +115,8 @@ def generate_webpage(records: List[Record], results: List[Dict[str, module_resul
     write_regions_js(json_records, options.output_dir, js_domains)
 
     with open(os.path.join(options.output_dir, 'index.html'), 'w') as result_file:
-        env = Environment(autoescape=True, trim_blocks=True, lstrip_blocks=True,
-                          undefined=jinja2.StrictUndefined,
-                          loader=FileSystemLoader(path.get_full_path(__file__, "templates")))
-        template = env.get_template('overview.html')
+        template = FileTemplate(path.get_full_path(__file__, "templates", "overview.html"))
+
         options_layer = OptionsLayer(options)
         record_layers = []
         results_by_record_id = {}  # type: Dict[str, Dict[str, module_results.ModuleResults]]
@@ -105,9 +133,12 @@ def generate_webpage(records: List[Record], results: List[Dict[str, module_resul
             page_title, _ = os.path.splitext(os.path.basename(options.sequences[0]))
         elif options.reuse_results:
             page_title, _ = os.path.splitext(os.path.basename(options.reuse_results))
+
+        html_sections = generate_html_sections(record_layers, results, options)
+
         aux = template.render(records=record_layers, options=options_layer,
                               version=options.version, extra_data=js_domains,
-                              regions_written=regions_written,
+                              regions_written=regions_written, sections=html_sections,
                               results_by_record_id=results_by_record_id,
                               config=options, job_id=job_id, page_title=page_title)
         result_file.write(aux)

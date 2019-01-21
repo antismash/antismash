@@ -25,7 +25,7 @@ from antismash.config.args import ModuleArgs
 
 from .config import get_config
 from .specific_analysis import specific_analysis, LassoResults
-from .html_output import generate_details_div, generate_sidepanel, will_handle
+from .html_output import generate_html, will_handle
 
 NAME = "lassopeptides"
 SHORT_DESCRIPTION = "lassopeptide precursor prediction"

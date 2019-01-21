@@ -15,7 +15,7 @@ from antismash.config.args import ModuleArgs
 
 from .config import get_config  # local config for fimo presence
 from .specific_analysis import run_specific_analysis, LanthiResults
-from .html_output import generate_details_div, generate_sidepanel, will_handle
+from .html_output import generate_html, will_handle
 
 NAME = "lanthipeptides"
 SHORT_DESCRIPTION = NAME.capitalize()

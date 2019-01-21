@@ -6,9 +6,8 @@
 
 from typing import List
 
-from jinja2 import FileSystemLoader, Environment, StrictUndefined
-
 from antismash.common import path
+from antismash.common.html_renderer import HTMLSections, FileTemplate
 from antismash.common.layers import RecordLayer, RegionLayer, OptionsLayer
 
 from .specific_analysis import LassoResults
@@ -19,33 +18,20 @@ def will_handle(products: List[str]) -> bool:
     return 'lassopeptide' in products
 
 
-def generate_details_div(region_layer: RegionLayer, results: LassoResults,
-                         record_layer: RecordLayer, _options_layer: OptionsLayer) -> str:
-    """ Generates a HTML div for the main page of results """
-    if not results:
-        return ""
-    env = Environment(loader=FileSystemLoader(path.get_full_path(__file__, "templates")),
-                      autoescape=True, undefined=StrictUndefined)
-    template = env.get_template('details.html')
+def generate_html(region_layer: RegionLayer, results: LassoResults,
+                  record_layer: RecordLayer, _options_layer: OptionsLayer) -> HTMLSections:
+    """ Generates HTML for the module """
+    html = HTMLSections("lassopeptides")
+
     motifs_in_region = {}
     for locus in results.motifs_by_locus:
         if record_layer.get_cds_by_name(locus).is_contained_by(region_layer.region_feature):
             motifs_in_region[locus] = results.motifs_by_locus[locus]
-    details_div = template.render(results=motifs_in_region)
-    return details_div
 
+    template = FileTemplate(path.get_full_path(__file__, "templates", "details.html"))
+    html.add_detail_section("Lasso peptides", template.render(results=motifs_in_region))
 
-def generate_sidepanel(region_layer: RegionLayer, results: LassoResults,
-                       record_layer: RecordLayer, _options_layer: OptionsLayer) -> str:
-    """ Generates a div for the sidepanel results """
-    if not results:
-        return ""
-    env = Environment(loader=FileSystemLoader(path.get_full_path(__file__, "templates")),
-                      autoescape=True, undefined=StrictUndefined)
-    template = env.get_template('sidepanel.html')
-    motifs_in_region = {}
-    for locus in results.motifs_by_locus:
-        if record_layer.get_cds_by_name(locus).is_contained_by(region_layer.region_feature):
-            motifs_in_region[locus] = results.motifs_by_locus[locus]
-    sidepanel = template.render(results=motifs_in_region)
-    return sidepanel
+    template = FileTemplate(path.get_full_path(__file__, "templates", "sidepanel.html"))
+    html.add_sidepanel_section("Lasso peptides", template.render(results=motifs_in_region))
+
+    return html

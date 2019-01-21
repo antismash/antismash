@@ -5,9 +5,8 @@
 
 from typing import List
 
-from jinja2 import FileSystemLoader, Environment, StrictUndefined
-
 from antismash.common import path
+from antismash.common.html_renderer import HTMLSections, FileTemplate
 from antismash.common.layers import RegionLayer, RecordLayer, OptionsLayer
 from antismash.common.secmet import Region, Prepeptide
 
@@ -29,29 +28,26 @@ class ThiopeptideLayer(RegionLayer):
                 self.motifs.append(motif)
 
 
-def generate_details_div(region_layer: RegionLayer, results: ThioResults,
-                         record_layer: RecordLayer, options_layer: OptionsLayer) -> str:
-    """ Generates the HTML details section from the ThioResults instance """
-    env = Environment(loader=FileSystemLoader(path.get_full_path(__file__, "templates")),
-                      autoescape=True, undefined=StrictUndefined)
-    template = env.get_template('details.html')
-    details_div = template.render(record=record_layer,
-                                  cluster=ThiopeptideLayer(record_layer, results, region_layer.region_feature),
-                                  options=options_layer)
-    return details_div
+def generate_html(region_layer: RegionLayer, results: ThioResults,
+                  record_layer: RecordLayer, options_layer: OptionsLayer
+                  ) -> HTMLSections:
+    """ Generates HTML for the module """
+    html = HTMLSections("thiopeptides")
 
+    if not results:
+        return html
 
-def generate_sidepanel(region_layer: RegionLayer, results: ThioResults,
-                       record_layer: RecordLayer, options_layer: OptionsLayer) -> str:
-    """ Generates the HTML sidepanel section from the ThioResults instance """
-    env = Environment(loader=FileSystemLoader(path.get_full_path(__file__, "templates")),
-                      autoescape=True, undefined=StrictUndefined)
-    template = env.get_template('sidepanel.html')
-    cluster = ThiopeptideLayer(record_layer, results, region_layer.region_feature)
-    record = record_layer
-    sidepanel = template.render(record=record,
-                                cluster=cluster,
+    thio_layer = ThiopeptideLayer(record_layer, results, region_layer.region_feature)
+
+    template = FileTemplate(path.get_full_path(__file__, "templates", "details.html"))
+    details = template.render(record=record_layer,
+                              cluster=thio_layer,
+                              options=options_layer)
+    html.add_detail_section("Thiopeptides", details)
+
+    template = FileTemplate(path.get_full_path(__file__, "templates", "sidepanel.html"))
+    sidepanel = template.render(record=record_layer,
+                                cluster=thio_layer,
                                 options=options_layer)
-    if cluster.motifs:
-        return sidepanel
-    return ""
+    html.add_sidepanel_section("Thiopeptides", sidepanel)
+    return html

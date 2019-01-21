@@ -6,9 +6,8 @@
 
 from typing import List
 
-from jinja2 import FileSystemLoader, Environment, StrictUndefined
-
 from antismash.common import path
+from antismash.common.html_renderer import HTMLSections, FileTemplate
 from antismash.common.layers import RegionLayer, RecordLayer, OptionsLayer
 
 from .specific_analysis import LanthiResults
@@ -19,27 +18,18 @@ def will_handle(products: List[str]) -> bool:
     return 'lanthipeptide' in products
 
 
-def generate_details_div(region_layer: RegionLayer, results: LanthiResults,
-                         _record_layer: RecordLayer, _options_layer: OptionsLayer) -> str:
-    """ Generates a HTML div for the main page of results """
-    if not results:
-        return ""
-    env = Environment(loader=FileSystemLoader(path.get_full_path(__file__, "templates")),
-                      autoescape=True, undefined=StrictUndefined)
-    template = env.get_template('details.html')
-    motifs = results.get_motifs_for_region(region_layer.region_feature)
-    details_div = template.render(results=motifs)
-    return details_div
+def generate_html(region_layer: RegionLayer, results: LanthiResults,
+                  _record_layer: RecordLayer, _options_layer: OptionsLayer
+                  ) -> HTMLSections:
+    """ Generates HTML output for the module """
+    html = HTMLSections("lanthipeptides")
 
-
-def generate_sidepanel(region_layer: RegionLayer, results: LanthiResults,
-                       _record_layer: RecordLayer, _options_layer: OptionsLayer) -> str:
-    """ Generates a div for the sidepanel results """
-    env = Environment(loader=FileSystemLoader(path.get_full_path(__file__, "templates")),
-                      autoescape=True, undefined=StrictUndefined)
-    template = env.get_template('sidepanel.html')
-    if not results:
-        return ""
+    template = FileTemplate(path.get_full_path(__file__, "templates", "details.html"))
     motifs = results.get_motifs_for_region(region_layer.region_feature)
-    sidepanel = template.render(results=motifs)
-    return sidepanel
+    html.add_detail_section("Lanthipeptides", template.render(results=motifs))
+
+    template = FileTemplate(path.get_full_path(__file__, "templates", "sidepanel.html"))
+    motifs = results.get_motifs_for_region(region_layer.region_feature)
+    html.add_sidepanel_section("Lanthipeptides", template.render(results=motifs))
+
+    return html

@@ -14,7 +14,7 @@ from antismash.common import hmmer
 
 from .results import T2PKSResults
 from .t2pks_analysis import analyse_cluster
-from .html_output import will_handle, generate_sidepanel
+from .html_output import generate_html, will_handle
 
 NAME = "t2pks"
 SHORT_DESCRIPTION = "type II PKS analysis"

@@ -61,33 +61,43 @@
     </div>
   </div>
 
+  {% set all_module_sections = sections[record.id][region.get_region_number()] %}
   <div class="body-details">
     <div class="body-details-headers">
-    {% for handler in region.handlers %}
-      {% if handler.generate_details_div is defined and handler.__name__ in results %}
-      <div class="body-details-header" data-name="{{handler.NAME}}">{{handler.NAME}}</div>
-      {% endif %}
+    {% for module_sections in all_module_sections %}
+     {% for section in module_sections.detail_sections %}
+      <div class="body-details-header {{region.anchor_id}}-{{section.class_name}}" data-name="{{region.anchor_id}}-{{section.class_name}}">
+        {{section.label}}
+      </div>
+     {% endfor %}
     {% endfor %}
     </div>
-    {% for handler in region.handlers %}
-      {% if handler.generate_details_div is defined and handler.__name__ in results %}
-      <div class="body-details-section {{handler.NAME}}">
-        {{handler.generate_details_div(region, results[handler.__name__], record, options) | safe}}
-      </div>
-      {% endif %}
+    {% for module_sections in all_module_sections %}
+     {% for section in module_sections.detail_sections %}
+    <div class="body-details-section {{region.anchor_id}}-{{section.class_name}}">
+      {{section.content}}
+    </div>
+     {% endfor %}
     {% endfor %}
   </div>
 
   <div class="sidepanel">
-   {% if region.has_sidepanel %}
-    <div class="general-details">
-        {% for handler in region.handlers %}
-          {% if handler.generate_sidepanel is defined and handler.__name__ in results %}
-            {{handler.generate_sidepanel(region, results[handler.__name__], record, options) | safe }}
-          {% endif %}
-        {% endfor %}
+    <div class="sidepanel-details-headers">
+    {% for module_sections in all_module_sections %}
+     {% for section in module_sections.sidepanel_sections %}
+      <div class="sidepanel-details-header {{region.anchor_id}}-{{section.class_name}}" data-name="{{region.anchor_id}}-{{section.class_name}}">
+        {{section.label}}
+      </div>
+     {% endfor %}
+    {% endfor %}
     </div>
-   {% endif %}
+    {% for module_sections in all_module_sections %}
+     {% for section in module_sections.sidepanel_sections %}
+    <div class="sidepanel-details-section {{region.anchor_id}}-{{section.class_name}}">
+      {{section.content}}
+    </div>
+     {% endfor %}
+    {% endfor %}
   </div>
 
  </div>

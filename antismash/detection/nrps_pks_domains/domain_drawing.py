@@ -10,7 +10,8 @@
 
 from typing import Dict, List, Optional, Union
 
-from antismash.common import html_renderer, path
+from antismash.common import path
+from antismash.common.html_renderer import FileTemplate, HTMLSections
 from antismash.common.json import JSONDomain, JSONOrf
 from antismash.common.layers import RegionLayer, RecordLayer, OptionsLayer
 from antismash.common.module_results import ModuleResults
@@ -82,9 +83,12 @@ def has_domain_details(region: Region) -> bool:
     return False
 
 
-def generate_details_div(region_layer: RegionLayer, _void: ModuleResults,
-                         _record_layer: RecordLayer, _options_layer: OptionsLayer) -> str:
+def generate_html(region_layer: RegionLayer, _results: ModuleResults,
+                  _record_layer: RecordLayer, _options_layer: OptionsLayer
+                  ) -> HTMLSections:
     """ Generate the details section of NRPS/PKS domains in the main HTML output """
-    template = html_renderer.FileTemplate(path.get_full_path(__file__, 'templates', 'details.html'))
-    return template.render(has_domain_details=has_domain_details,
-                           region=region_layer)
+    template = FileTemplate(path.get_full_path(__file__, 'templates', 'details.html'))
+    section = template.render(has_domain_details=has_domain_details, region=region_layer)
+    html = HTMLSections("nrps_pks")
+    html.add_detail_section("NRPS/PKS domains", section)
+    return html
