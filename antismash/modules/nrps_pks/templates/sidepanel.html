@@ -1,6 +1,6 @@
 <div class="structure">
   {% if region.has_any_polymer() %}
-    <h3>Predicted core structure(s)</h3>
+    <div class="heading">Predicted core structure(s)</div>
     {% for supercluster in region.superclusters %}
       {% if supercluster.smiles or supercluster.polymer %}
         <div>
@@ -39,7 +39,7 @@
   {% endif %}
 </div>
 <div class="more-details">
-  <h3>NRPS/PKS domain predictions</h3>
+  <div class="heading">NRPS/PKS domain predictions</div>
   <dl class="prediction-text">
     {% for gene_id in region.sidepanel_features if gene_id in relevant_features %}
       <strong>{{gene_id}}</strong>: {{relevant_features[gene_id] | join(" - ")}}

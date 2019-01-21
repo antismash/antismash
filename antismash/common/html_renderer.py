@@ -7,9 +7,41 @@
 
 import os
 from typing import Any, Optional
+from typing import List  # comment hints, pylint: disable=unused-import
 
 import jinja2 as _jinja2
 from jinja2 import Markup
+
+
+class HTMLSection:  # pylint: disable=too-few-public-methods
+    def __init__(self, label: str, content: Markup, class_name: str) -> None:
+        self.label = label
+        self.content = content
+        self.class_name = _safe_selector(class_name)
+
+
+class HTMLSections:
+    """ A class for containing all HTML output for a module, separated into
+        zero or more detail panel sections and zero or more side panel sections.
+
+        The name given in the constructor will be used as a prefix for HTML class
+        names to allow for selecting both side and detail panels with a single click.
+    """
+    def __init__(self, name: str) -> None:
+        self.name = name
+        self.sidepanel_sections = []  # type: List[HTMLSection]
+        self.detail_sections = []  # type: List[HTMLSection]
+
+    def add_detail_section(self, label: str, section: Markup, class_name: str = "") -> None:
+        """ Add a detail section with the given tab name, using the markup provided. """
+        self.detail_sections.append(HTMLSection(label, section, class_name or self.name))
+
+    def add_sidepanel_section(self, label: str, section: Markup, class_name: str = "") -> None:
+        """ Add a sidepanel section with the given tab name, using the markup provided. """
+        self.sidepanel_sections.append(HTMLSection(label, section, class_name or self.name))
+
+    def __repr__(self) -> str:
+        return "HTMLSections(%s)" % (self.name)
 
 
 def _safe_selector(name: str) -> str:

@@ -11,7 +11,9 @@ from typing import Any, Dict, List, Optional, Union
 
 from .config.args import ModuleArgs
 
+from .common.html_renderer import HTMLSections
 from .common.json import JSONOrf
+from .common.layers import RecordLayer, RegionLayer
 from .common.module_results import ModuleResults
 from .common.secmet import Region, Record
 
@@ -58,6 +60,10 @@ class AntismashModule(ModuleType):
     # not implemented by every module, but by most
     @staticmethod
     def will_handle(products: List[str]) -> bool: ...
+
+    @staticmethod
+    def generate_html(region_layer: RegionLayer, results: Optional[ModuleResults],
+                      record_layer: RecordLayer, options: ConfigType) -> HTMLSections: ...
 
     @staticmethod
     def generate_js_domains(region: Region, record: Record

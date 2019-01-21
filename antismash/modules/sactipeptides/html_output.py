@@ -7,9 +7,8 @@ from collections import defaultdict
 from typing import List
 from typing import Dict  # comment hint, pylint: disable=unused-import
 
-from jinja2 import FileSystemLoader, Environment, StrictUndefined
-
 from antismash.common import path
+from antismash.common.html_renderer import HTMLSections, FileTemplate
 from antismash.common.secmet import Prepeptide, Region
 from antismash.common.secmet import CDSMotif # comment hint, pylint: disable=unused-import
 from antismash.common.layers import RegionLayer, RecordLayer, OptionsLayer
@@ -22,43 +21,34 @@ def will_handle(products: List[str]) -> bool:
     return 'sactipeptide' in products
 
 
-def generate_details_div(region_layer: RegionLayer, results: SactiResults,
-                         record_layer: RecordLayer, options_layer: OptionsLayer) -> str:
-    """ Generates the main page section of HTML with any results for the given
-        region """
-    env = Environment(loader=FileSystemLoader(path.get_full_path(__file__, 'templates')),
-                      autoescape=True, undefined=StrictUndefined)
-    template = env.get_template('details.html')
+def generate_html(region_layer: RegionLayer, results: SactiResults,
+                  record_layer: RecordLayer, options_layer: OptionsLayer) -> HTMLSections:
+    """ Generates HTML for the module """
+    html = HTMLSections("sactipeptides")
+
     motifs_in_region = defaultdict(list)  # type: Dict[str, List[CDSMotif]]
     for locus, motifs in results.motifs_by_locus.items():
         for motif in motifs:
             if motif.is_contained_by(region_layer.region_feature):
                 motifs_in_region[locus].append(motif)
-    details_div = template.render(record=record_layer,
-                                  region=SactipeptideLayer(record_layer, region_layer.region_feature),
-                                  options=options_layer,
-                                  results=motifs_in_region)
-    return details_div
 
+    sacti_layer = SactipeptideLayer(record_layer, region_layer.region_feature)
 
-def generate_sidepanel(region_layer: RegionLayer, results: SactiResults,
-                       record_layer: RecordLayer, options_layer: OptionsLayer) -> str:
-    """ Generates the sidepanel section of HTML with any results for the given
-        region """
-    env = Environment(loader=FileSystemLoader(path.get_full_path(__file__, 'templates')),
-                      autoescape=True, undefined=StrictUndefined)
-    template = env.get_template('sidepanel.html')
-    region = SactipeptideLayer(record_layer, region_layer.region_feature)
-    motifs_in_region = defaultdict(list)  # type: Dict[str, List[CDSMotif]]
-    for locus, motifs in results.motifs_by_locus.items():
-        for motif in motifs:
-            if motif.is_contained_by(region_layer.region_feature):
-                motifs_in_region[locus].append(motif)
+    template = FileTemplate(path.get_full_path(__file__, "templates", "details.html"))
+    details = template.render(record=record_layer,
+                              region=sacti_layer,
+                              options=options_layer,
+                              results=motifs_in_region)
+    html.add_detail_section("Sactipeptides", details)
+
+    template = FileTemplate(path.get_full_path(__file__, "templates", "sidepanel.html"))
     sidepanel = template.render(record=record_layer,
-                                region=region,
+                                region=sacti_layer,
                                 options=options_layer,
                                 results=motifs_in_region)
-    return sidepanel
+    html.add_sidepanel_section("Sactipeptides", sidepanel)
+
+    return html
 
 
 class SactipeptideLayer(RegionLayer):

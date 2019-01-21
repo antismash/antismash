@@ -14,7 +14,7 @@ from antismash.config.args import ModuleArgs
 
 from .core import load_clusterblast_database, internal_homology_blast
 from .clusterblast import perform_clusterblast
-from .html_output import will_handle, generate_details_div
+from .html_output import generate_html, will_handle
 from .known import run_knownclusterblast_on_record, check_known_prereqs
 from .results import ClusterBlastResults, get_result_limit
 from .sub import run_subclusterblast_on_record, check_sub_prereqs
