@@ -27,7 +27,6 @@ def generate_html(region_layer: RegionLayer, results: NRPS_PKS_Results,
     """ Generate the sidepanel HTML with results from the NRPS/PKS module """
     html = HTMLSections("nrps_pks")
 
-    template = FileTemplate(path.get_full_path(__file__, 'templates', 'sidepanel.html'))
     nrps_layer = NrpspksLayer(results, region_layer.region_feature, record_layer)
 
     features_with_domain_predictions = {}  # type: Dict[str, List[str]]
@@ -43,12 +42,15 @@ def generate_html(region_layer: RegionLayer, results: NRPS_PKS_Results,
             if monomer:
                 monomers.append(monomer)
 
-    sidepanel = template.render(record=record_layer,
-                                region=nrps_layer,
-                                results=results,
-                                relevant_features=features_with_domain_predictions,
-                                options=options_layer)
-    html.add_sidepanel_section("NRPS/PKS monomers", sidepanel)
+    for filename, name, class_name in [("products.html", "NRPS/PKS products", "nrps_pks_products"),
+                                       ("monomers.html", "NRPS/PKS monomers", "")]:
+        template = FileTemplate(path.get_full_path(__file__, "templates", filename))
+        section = template.render(record=record_layer,
+                                  region=nrps_layer,
+                                  results=results,
+                                  relevant_features=features_with_domain_predictions,
+                                  options=options_layer)
+        html.add_sidepanel_section(name, section, class_name)
 
     return html
 
