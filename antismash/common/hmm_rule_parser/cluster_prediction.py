@@ -359,7 +359,7 @@ def apply_cluster_rules(record: Record, results_by_id: Dict[str, List[HSP]],
 
 
 def detect_clusters_and_signatures(record: Record, signature_file: str, seeds_file: str,
-                                   rules_file: str, filter_file: str, tool: str) -> Optional[RuleDetectionResults]:
+                                   rules_file: str, filter_file: str, tool: str) -> RuleDetectionResults:
     """ Compares all CDS features in a record with HMM signatures and generates
         Cluster features based on those hits and the current cluster detection
         rules.
@@ -376,7 +376,7 @@ def detect_clusters_and_signatures(record: Record, signature_file: str, seeds_fi
     full_fasta = fasta.get_fasta_from_record(record)
     # if there's no CDS features, don't try to do anything
     if not full_fasta:
-        return None
+        return RuleDetectionResults({}, tool)
     sig_by_name = {sig.name: sig for sig in get_signature_profiles(signature_file)}
     rules = create_rules(rules_file, set(sig_by_name))
     results = []
