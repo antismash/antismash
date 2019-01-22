@@ -118,10 +118,14 @@ def generate_webpage(records: List[Record], results: List[Dict[str, module_resul
         template = FileTemplate(path.get_full_path(__file__, "templates", "overview.html"))
 
         options_layer = OptionsLayer(options)
-        record_layers = []
+        record_layers_with_regions = []
+        record_layers_without_regions = []
         results_by_record_id = {}  # type: Dict[str, Dict[str, module_results.ModuleResults]]
         for record, record_results in zip(records, results):
-            record_layers.append(RecordLayer(record, None, options_layer))
+            if record.get_regions():
+                record_layers_with_regions.append(RecordLayer(record, None, options_layer))
+            else:
+                record_layers_without_regions.append(RecordLayer(record, None, options_layer))
             results_by_record_id[record.id] = record_results
 
         regions_written = sum(len(record.get_regions()) for record in records)
@@ -134,13 +138,14 @@ def generate_webpage(records: List[Record], results: List[Dict[str, module_resul
         elif options.reuse_results:
             page_title, _ = os.path.splitext(os.path.basename(options.reuse_results))
 
-        html_sections = generate_html_sections(record_layers, results, options)
+        html_sections = generate_html_sections(record_layers_with_regions, results, options)
 
-        aux = template.render(records=record_layers, options=options_layer,
+        aux = template.render(records=record_layers_with_regions, options=options_layer,
                               version=options.version, extra_data=js_domains,
                               regions_written=regions_written, sections=html_sections,
                               results_by_record_id=results_by_record_id,
-                              config=options, job_id=job_id, page_title=page_title)
+                              config=options, job_id=job_id, page_title=page_title,
+                              records_without_regions=record_layers_without_regions)
         result_file.write(aux)
 
 

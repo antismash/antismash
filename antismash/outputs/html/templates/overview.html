@@ -62,60 +62,60 @@
 
       <tbody>
         {% for record in records -%}
-          {% if not record.regions %}
-            <tr class = 'separator-row'>
-              <td class='separator-text' colspan="6">{{record.get_from_record()}}</td>
-            </tr>
-            <tr>
-              <td></td><td colspan="6")>No secondary metabolite regions found</td>
-            </tr>
-          {% else %}
-            <tr class='separator-row'>
-              <td class='separator-text' colspan="6">{{record.get_from_record()}}</td>
-            </tr>
-            <tr><td colspan="8"><svg id="record-minimap-{{record.record_index}}" class="record-overview-svg" height="1" width="1"></svg></td></tr>
-            {% for region in record.regions -%}
-              <tr class = '{{loop.cycle('odd', 'even')}}'>
-                {% set hybrid_text = "" %}
-                {% if region.products | length > 1 %}
-                    {% set hybrid_text = "hybrid " %}
-                {% endif %}
-                <td class="regbutton {{region.get_product_string()}} {{hybrid_text}}{{region.anchor_id}}">
-                  <a href="#{{region.anchor_id}}">Region {{region.get_region_number()}}</a>
-                </td>
-                <td>
-                  {% set dash = joiner("-") %}
-                  {% for subtype in region.products -%}
-                    {{dash()}}<a href="https://docs.antismash.secondarymetabolites.org/glossary/#{{subtype}}" target="_blank">{{subtype | title}}</a>
-                  {%- endfor %}
-
-                </td>
-                <td class="digits">{{region.location.start + 1}}</td>
-                <td class="digits">{{region.location.end}}</td>
-                <td>{{region.best_knowncluster_name}}</td>
-                <td>{{region.best_knowncluster_type}}</td>
-                {% set similarity = region.best_knowncluster_similarity %}
-                {% if similarity > 75 %}
-                  {% set colour = "rgba(0, 100, 0, 0.3)" %}
-                {% elif similarity > 50 %}
-                  {% set colour = "rgba(210, 105, 30, 0.3)" %}
-                {% else %}
-                  {% set colour = "rgba(205, 92, 92, 0.3)" %}
-                {% endif %}
-                {% if similarity > 0 %}
-                <td class="digits similarity-text" style="background-image: linear-gradient(to left, {{colour}}, {{colour}} {{similarity}}%, #ffffff00 {{similarity}}%)">{{similarity}}%</td>
-                {% else %}
+          <tr class='separator-row'>
+            <td class='separator-text' colspan="6">{{record.get_from_record()}}</td>
+          </tr>
+          <tr><td colspan="8"><svg id="record-minimap-{{record.record_index}}" class="record-overview-svg" height="1" width="1"></svg></td></tr>
+          {% for region in record.regions -%}
+            <tr class = '{{loop.cycle('odd', 'even')}}'>
+              {% set hybrid_text = "" %}
+              {% if region.products | length > 1 %}
+                  {% set hybrid_text = "hybrid " %}
+              {% endif %}
+              <td class="regbutton {{region.get_product_string()}} {{hybrid_text}}{{region.anchor_id}}">
+                <a href="#{{region.anchor_id}}">Region {{region.get_region_number()}}</a>
+              </td>
+              <td>
+                {% set dash = joiner("-") %}
+                {% for subtype in region.products -%}
+                  {{dash()}}<a href="https://docs.antismash.secondarymetabolites.org/glossary/#{{subtype}}" target="_blank">{{subtype | title}}</a>
+                {%- endfor %}
+              </td>
+              <td class="digits">{{region.location.start + 1}}</td>
+              <td class="digits">{{region.location.end}}</td>
+              <td>{{region.best_knowncluster_name}}</td>
+              <td>{{region.best_knowncluster_type}}</td>
+              {% set similarity = region.best_knowncluster_similarity %}
+              {% if similarity > 75 %}
+                {% set colour = "rgba(0, 100, 0, 0.3)" %}
+              {% elif similarity > 50 %}
+                {% set colour = "rgba(210, 105, 30, 0.3)" %}
+              {% else %}
+                {% set colour = "rgba(205, 92, 92, 0.3)" %}
+              {% endif %}
+              {% if similarity > 0 %}
+              <td class="digits similarity-text" style="background-image: linear-gradient(to left, {{colour}}, {{colour}} {{similarity}}%, #ffffff00 {{similarity}}%)">{{similarity}}%</td>
+              {% else %}
+              <td></td>
+              {% endif %}
+              {% if region.bgc_id != "" -%}
+                <td><a href="https://mibig.secondarymetabolites.org/go/{{region.bgc_id}}/{{region.bgc_cluster_number}}" target="_blank">{{region.bgc_id}}</a></td>
+              {%- else -%}
                 <td></td>
-                {% endif %}
-                {% if region.bgc_id != "" -%}
-                  <td><a href="https://mibig.secondarymetabolites.org/go/{{region.bgc_id}}/{{region.bgc_cluster_number}}" target="_blank">{{region.bgc_id}}</a></td>
-                {%- else -%}
-                  <td></td>
-                {%- endif %}
-              </tr>
-              {%- endfor %}
-          {%- endif %}
-      {%- endfor %}
+              {%- endif %}
+            </tr>
+            {%- endfor %}
+        {%- endfor %}
+        {% if records_without_regions %}
+            <tr class = 'separator-row'>
+              <td class='separator-text' colspan="6">No secondary metabolite regions were found in these records:</td>
+            </tr>
+          {% for record in records_without_regions %}
+            <tr>
+              <td></td><td colspan="6">{{record.id}}</td>
+            </tr>
+          {% endfor %}
+        {% endif %}
       </tbody>
     </table>
   </div>
