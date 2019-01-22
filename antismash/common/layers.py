@@ -75,7 +75,11 @@ class RecordLayer:
             else:
                 current_id += " (original name was: %s...)" % orig_id[:60]
 
-        return 'The following regions are from record %s:' % current_id
+        source = self.annotations.get("source", "")
+        if source:
+            source = " (%s)" % source
+
+        return 'The following regions are from record %s%s:' % (current_id, source)
 
 
 class RegionLayer:
