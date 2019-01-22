@@ -107,7 +107,6 @@ def run_on_record(record: Record, previous_results: Optional[HMMDetectionResults
     equivalences = path.get_full_path(__file__, "filterhmmdetails.txt")
     results = detect_clusters_and_signatures(record, signatures, seeds, rules, equivalences,
                                              "rule-based-clusters")
-    assert results is not None
     results.annotate_cds_features()
     return HMMDetectionResults(record.id, results, get_supported_cluster_types())
 
