@@ -19,7 +19,7 @@ RULE t3pks
     CONDITIONS Chal_sti_synt_C or Chal_sti_synt_N
 
 RULE transatpks
-    CUTOFF 20
+    CUTOFF 45  # kirromycin (CP006259) has a range of ~42kb
     EXTENT 20
     CONDITIONS cds(ATd and (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS))
                and cds(PKS_AT and not (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS))
