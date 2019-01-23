@@ -15,6 +15,7 @@
   <meta name="twitter:card" content="summary" />
   <meta name="twitter:site" content="@antismash_dev" />
 </head>
+{% set multi_record = records | length + records_without_regions | length > 1 %}
 <body>
   <div id="header">
     {% include 'header.html' %}
@@ -30,7 +31,7 @@
                 {% set hybrid_text = "hybrid " %}
             {% endif %}
             <li class="regbutton {{region.get_product_string()}} {{hybrid_text}}{{region.anchor_id}}">
-              <a href="#{{region.anchor_id}}">{{region.get_region_number()}}</a>
+              <a href="#{{region.anchor_id}}">{{record.record_index}}.{{region.get_region_number()}}</a>
             </li>
           {% endfor %}
         {% endfor %}
@@ -73,7 +74,7 @@
                   {% set hybrid_text = "hybrid " %}
               {% endif %}
               <td class="regbutton {{region.get_product_string()}} {{hybrid_text}}{{region.anchor_id}}">
-                <a href="#{{region.anchor_id}}">Region {{region.get_region_number()}}</a>
+                <a href="#{{region.anchor_id}}">Region {% if multi_record %}{{record.record_index}}.{% endif %}{{region.get_region_number()}}</a>
               </td>
               <td>
                 {% set dash = joiner("-") %}
