@@ -181,28 +181,25 @@ nav {
     }
 }
 
-.arrow-left {
+.arrow() {
     width: 0;
     height: 0;
     cursor: pointer;
-    border-top: 0.75em solid transparent;
-    border-bottom: 0.75em solid transparent;
-    border-right: 0.75em solid @antismash-main;
+    border-top: 1.2em solid transparent;
+    border-bottom: 1.2em solid transparent;
     &:hover {
         border-right-color: screen(@antismash-main, #666666);
     }
 }
 
+.arrow-left {
+    .arrow();
+    border-right: 1.2em solid @antismash-main;
+}
+
 .arrow-right {
-    width: 0;
-    height: 0;
-    cursor: pointer;
-    border-top: 0.75em solid transparent;
-    border-bottom: 0.75em solid transparent;
-    border-left: 0.75em solid @antismash-main;
-    &:hover {
-        border-left-color: screen(@antismash-main, #666666);
-    }
+    .arrow();
+    border-left: 1.2em solid @antismash-main;
 }
 
 #icons {
