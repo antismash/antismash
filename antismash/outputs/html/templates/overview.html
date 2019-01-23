@@ -21,22 +21,24 @@
     {% include 'header.html' %}
     <div id="buttons">
       <span id="region-type">Select genomic region:</span>
-      <ul id="regionbuttons">
-        <li><div class="arrow-left" id="prev-region"></div></li>
-        <li class="regbutton"><a href="#">Overview</a></li>
+      <div id="regionbuttons">
+        <div class="arrow-left" id="prev-region"></div>
+        <div class="regbutton"><a href="#">Overview</a></div>
+        <div style="display: flex; flex-wrap: wrap">
         {% for record in records %}
           {% for region in record.regions %}
             {% set hybrid_text = "" %}
             {% if region.products | length > 1 %}
                 {% set hybrid_text = "hybrid " %}
             {% endif %}
-            <li class="regbutton {{region.get_product_string()}} {{hybrid_text}}{{region.anchor_id}}">
+            <div class="regbutton {{region.get_product_string()}} {{hybrid_text}}{{region.anchor_id}}">
               <a href="#{{region.anchor_id}}">{{record.record_index}}.{{region.get_region_number()}}</a>
-            </li>
+            </div>
           {% endfor %}
         {% endfor %}
-        <li id="last-regbutton"><div class="arrow-right" id="next-region"></div></li>
-      </ul>
+        </div>
+        <div id="last-regbutton"><div class="arrow-right" id="next-region"></div></div>
+      </div>
     </div>
   </div>
 

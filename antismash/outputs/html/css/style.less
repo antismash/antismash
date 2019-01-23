@@ -342,11 +342,10 @@ nav {
 }
 
 #regionbuttons {
+    display: flex;
     margin: 0 0 0 0.5em;
     padding: 0;
-    list-style-type: none;
     min-height: 1.1em;
-    max-height: 2em;
     a {
         background: none;
     }
@@ -354,13 +353,13 @@ nav {
         text-decoration: none;
     }
 
-    li {
-        float: left;
+    .regbutton {
         margin: 0;
         margin-right: 0.2em;
-        border-radius: 50%;
+        margin-bottom: 0.2em;
+        border-radius: 0.5em;
         padding: 0.25em;
-        min-width: 1.5em;
+        min-width: 3em;
         text-align: center;
         vertical-align: middle;
     }
