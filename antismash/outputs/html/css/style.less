@@ -16,6 +16,13 @@
 @tool-clusterfinder: teal;
 @tool-rule-based-clusters: white;
 
+.unselectable() {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
 body {
     font-family: Helvetica, Verdana, Tahoma, Sans-Serif;
     color: #555;
@@ -616,10 +623,7 @@ table {
 
 .legend-label {
     float: left;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
+    .unselectable();
 }
 
 .zoom-button {
@@ -631,10 +635,7 @@ table {
     margin-left: 1em;
     padding: 0.5em;
 
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
+    .unselectable();
 
     &:hover {
         background-color: #fcfcfc;
@@ -810,3 +811,36 @@ ul.dropdown-options {
         display: block;
     }
 }
+
+.body-details-headers {
+    display: flex;
+    margin-left: 0.5em;
+
+    & .body-details-header {
+        font-size: 90%;
+        background-color: @antismash-main;
+        color: white;
+        margin: 0.1em 0 0.4em 0.1em;
+        padding-left: 0.5em;
+        padding-right: 0.5em;
+
+        border-top-left-radius: 1em;
+        border-top-right-radius: 1em;
+        opacity: .5;
+
+        .unselectable();
+
+        &:hover {
+            opacity: .75;
+        }
+    }
+
+    .body-details-header-active {
+        opacity: 1;
+        &:hover {
+            opacity: 1;
+        }
+    }
+}
+
+

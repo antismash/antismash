@@ -62,9 +62,18 @@
   </div>
 
   <div class="body-details">
+    <div class="body-details-headers">
     {% for handler in region.handlers %}
       {% if handler.generate_details_div is defined and handler.__name__ in results %}
+      <div class="body-details-header" data-name="{{handler.NAME}}">{{handler.NAME}}</div>
+      {% endif %}
+    {% endfor %}
+    </div>
+    {% for handler in region.handlers %}
+      {% if handler.generate_details_div is defined and handler.__name__ in results %}
+      <div class="body-details-section {{handler.NAME}}">
         {{handler.generate_details_div(region, results[handler.__name__], record, options) | safe}}
+      </div>  
       {% endif %}
     {% endfor %}
   </div>
