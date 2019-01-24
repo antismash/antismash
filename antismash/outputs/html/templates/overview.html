@@ -115,7 +115,7 @@
             </tr>
           {% for record in records_without_regions %}
             <tr>
-              <td></td><td colspan="6">{{record.id}}</td>
+              <td></td><td colspan="6">{{record.id}}{% if record.annotations.get("source") %} ({{record.annotations["source"]}}){% endif %}</td>
             </tr>
           {% endfor %}
         {% endif %}
