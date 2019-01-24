@@ -34,10 +34,13 @@ body {
 
 a, .clipboard-copy {
     text-decoration: none;
-    background-color: #eee;
+    background-color: rgba(225, 225, 225, 0.9);
     border-radius: 2px;
     color: black;
     cursor: pointer;
+    padding-right: 0.3em;
+    padding-left: 0.3em;
+
     &:active {
         color: @antismash-main
     }
@@ -478,13 +481,23 @@ table {
 }
 
 .tooltip {
-    border: 2px solid @tooltip-border;
-    background-color: @tooltip-background;
+    /* match style of nav */
+    background-image: linear-gradient(to bottom, #5e5e5e 0, #444 100%);
+    background-repeat: repeat-x;
+    color: #e1e1e1;
+    font-weight: normal;
+
     display: none;
-    position: absolute;
-    font-size: 80%;
+    border-radius: 0.2em;
+    width: 35em;
     padding: 0.5em;
-    color: @antismash-main;
+
+    /* start halfway down and keep to the left of the container */
+    position: absolute;
+    top: 50%;
+    right: 105%;
+
+    z-index: 1; /* otherwise switches and other ':after' styles can display on top */
 }
 
 .similarity-text {
@@ -526,14 +539,6 @@ table {
     fill: @antismash-main;
     display: none;
     font-size: 80%;
-}
-.svgene-tooltip {
-    .tooltip;
-}
-
-.svgene-tooltip-bold {
-    .bold;
-    font-size: 120%;
 }
 
 .svgene-border-cassis {
@@ -699,7 +704,8 @@ table {
     fill: #444;
 }
 .jsdomain-tooltip {
-    .tooltip
+    .tooltip;
+    font-size: 90%;
 }
 .jsdomain-text {
     pointer-events: none;
@@ -987,25 +993,7 @@ ul.dropdown-options {
     }
 
     .help-tooltip {
-        /* match style of nav */
-        background-image: linear-gradient(to bottom, #5e5e5e 0, #444 100%);
-        background-repeat: repeat-x;
-        color: #e1e1e1;
-        font-weight: normal;
-
-        display: none;
-        border-radius: 0.2em;
-        width: 35em;
-        padding: 0.5em;
-
-        /* start halfway down and keep to the left of the container */
-        position: absolute;
-        top: 50%;
-        right: 105%;
-
-        z-index: 1; /* otherwise switches and other ':after' styles can display on top */
-
-        .unselectable();
+        .tooltip;
     }
 }
 
