@@ -58,7 +58,7 @@ def _parse_domain(record: Record, domain: NRPSPKSQualifier.Domain,
     return JSONDomain(domain, predictions, napdoslink, blastlink, domainseq, dna_sequence)
 
 
-def generate_js_domains(region: Region, record: Record) -> Optional[Dict[str, Union[str, List[JSONOrf]]]]:
+def generate_js_domains(region: Region, record: Record) -> Dict[str, Union[str, List[JSONOrf]]]:
     """ Creates a JSON-like structure for domains, used by javascript in
         drawing the domains
     """
