@@ -201,6 +201,28 @@ class Region(CDSCollection):
         # our cut-out clusters are always linear
         cluster_record.annotations["topology"] = "linear"
 
+        # renumber clusters, superclusters and regions to reflect changes
+        first_supercluster = min(sc.get_supercluster_number() for sc in self.superclusters)
+        first_cluster = min(cluster.get_cluster_number() for cluster in self.get_unique_clusters())
+        first_subregion = min(sub.get_subregion_number() for sub in self.subregions) if self.subregions else 0
+        for feature in cluster_record.features:
+            if feature.type == "region":
+                supers = feature.qualifiers.get("supercluster_numbers")
+                if not supers:
+                    continue
+                feature.qualifiers["supercluster_numbers"] = [str(int(num) - first_supercluster) for num in supers]
+            elif feature.type == "supercluster":
+                new = str(int(feature.qualifiers["supercluster_number"][0]) - first_supercluster)
+                feature.qualifiers["supercluster_number"] = [new]
+                new_clusters = [str(int(num) - first_cluster) for num in feature.qualifiers["child_cluster"]]
+                feature.qualifiers["child_cluster"] = new_clusters
+            elif feature.type in ["cluster", "cluster_core"]:
+                new = str(int(feature.qualifiers["cluster_number"][0]) - first_cluster)
+                feature.qualifiers["cluster_number"] = [new]
+            elif feature.type == "subregion":
+                new = str(int(feature.qualifiers["subregion_number"][0]) - first_subregion)
+                feature.qualifiers["subregion_number"] = [new]
+
         seqio.write([cluster_record], filename, 'genbank')
 
     def to_biopython(self, qualifiers: Optional[Dict[str, List[str]]] = None) -> List[SeqFeature]:
