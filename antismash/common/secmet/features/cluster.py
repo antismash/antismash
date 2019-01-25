@@ -80,7 +80,6 @@ class Cluster(CDSCollection):
             "detection_rule": [self.detection_rule]
         }
         if self._parent_record:
-            common["parent_cluster_number"] = [str(self.get_cluster_number())]
             common["cluster_number"] = [str(self.get_cluster_number())]
 
         shared_qualifiers = dict(qualifiers) if qualifiers else {}
@@ -116,7 +115,6 @@ class Cluster(CDSCollection):
                               tool, product, cutoff, neighbourhood_range, rule)
 
         # remove run-specific info
-        leftovers.pop("parent_cluster_number", "")
         leftovers.pop("cluster_number", "")
 
         # rebuild analysis annotations
