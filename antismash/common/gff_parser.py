@@ -13,6 +13,7 @@ from BCBio import GFF
 
 from antismash.common.errors import AntismashInputError
 from antismash.common.secmet import Record
+from antismash.common.secmet.errors import SecmetInvalidInputError
 from antismash.config import ConfigType
 
 
@@ -93,7 +94,12 @@ def get_features_from_file(record: Record, handle: IO,
             a list of SeqFeatures parsed from the GFF file
     """
     features = []
-    for gff_record in GFF.parse(handle, limit_info=limit_to_seq_id):
+    try:
+        gff_records = list(GFF.parse(handle, limit_info=limit_to_seq_id))
+    except Exception as err:
+        raise AntismashInputError("could not parse records from GFF3 file") from err
+
+    for gff_record in gff_records:
         for feature in gff_record.features:
             if feature.type == 'CDS':
                 new_features = [feature]
@@ -145,7 +151,10 @@ def run(record: Record, single_entry: bool, options: ConfigType) -> None:
     with open(options.genefinding_gff3) as handle:
         features = get_features_from_file(record, handle, limit_info)
         for feature in features:
-            record.add_biopython_feature(feature)
+            try:
+                record.add_biopython_feature(feature)
+            except SecmetInvalidInputError as err:
+                raise AntismashInputError from err
 
 
 def generate_details_from_subfeature(sub_feature: SeqFeature,

@@ -193,6 +193,9 @@ class CDSFeature(Feature):
         if not translation:
             if not record:
                 raise SecmetInvalidInputError("no translation in CDS and no record to generate it with")
+            if bio_feature.location.end > len(record.seq):
+                raise SecmetInvalidInputError("feature missing translation and sequence too short: %s" % (
+                                              (gene or protein_id or locus_tag)))
             translation = record.get_aa_translation_from_location(bio_feature.location, transl_table)
 
         assert _is_valid_translation_length(translation, bio_feature.location)

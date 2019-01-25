@@ -241,7 +241,7 @@ class TestPreprocessRecords(unittest.TestCase):
     def test_shotgun(self):
         filepath = path.get_full_path(__file__, "data", "wgs.gbk")
         records = record_processing.parse_input_sequence(filepath)
-        with self.assertRaisesRegex(RuntimeError, "Incomplete whole genome shotgun records are not supported"):
+        with self.assertRaisesRegex(AntismashInputError, "incomplete whole genome shotgun records are not supported"):
             record_processing.pre_process_sequences(records, self.options, self.genefinding)
 
     def test_duplicate_record_ids(self):
