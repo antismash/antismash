@@ -55,7 +55,6 @@ FEATURES             Location/Qualifiers
                      lacticin_l or lacticin_mat or LD_lanti_pre or strep_PEQAXS)
                      and not YcaO)"
                      /neighbourhood="10000"
-                     /parent_cluster_number="1"
                      /product="lanthipeptide"
                      /tool="antismash"
      cluster_core    828..7140
@@ -72,7 +71,6 @@ FEATURES             Location/Qualifiers
                      lacticin_l or lacticin_mat or LD_lanti_pre or strep_PEQAXS)
                      and not YcaO)"
                      /neighbourhood="10000"
-                     /parent_cluster_number="1"
                      /product="lanthipeptide"
      supercluster    1..15016
                      /child_cluster="1"
