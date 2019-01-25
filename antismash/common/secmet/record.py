@@ -742,6 +742,8 @@ class Record:
     def get_aa_translation_from_location(self, location: FeatureLocation,
                                          transl_table: Union[str, int] = None) -> Seq:
         """ Obtain the translation for a feature based on its location """
+        if location.end > len(self.seq):
+            raise ValueError("location outside available sequence")
         if transl_table is None:
             transl_table = self._transl_table
         extracted = location.extract(self.seq).ungap('-')

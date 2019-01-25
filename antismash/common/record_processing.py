@@ -248,7 +248,7 @@ def pre_process_sequences(sequences: List[Record], options: ConfigType, genefind
 
     # catch WGS master or supercontig entries
     if records_contain_shotgun_scaffolds(sequences):
-        raise RuntimeError("Incomplete whole genome shotgun records are not supported")
+        raise AntismashInputError("incomplete whole genome shotgun records are not supported")
 
     for i, seq in enumerate(sequences):
         seq.record_index = i + 1  # 1-indexed
@@ -289,7 +289,12 @@ def pre_process_sequences(sequences: List[Record], options: ConfigType, genefind
     # Check GFF suitability
     single_entry = False
     if options.genefinding_gff3:
-        single_entry = gff_parser.check_gff_suitability(options, sequences)
+        try:
+            single_entry = gff_parser.check_gff_suitability(options, sequences)
+        except AntismashInputError:
+            raise
+        except Exception as err:
+            raise AntismashInputError("could not parse records from GFF3 file") from err
 
     if checking_required:
         # ensure CDS features have all relevant information
