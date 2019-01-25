@@ -44,7 +44,7 @@ RULE ladderane
     EXTENT 20
     CONDITIONS ladderane
 
-RULE PUFA
+RULE pufa
     CUTOFF 20
     EXTENT 20
     CONDITIONS PUFA_KS
@@ -74,7 +74,7 @@ RULE lanthipeptide
     EXTENT 10
     CONDITIONS (LANC_like and (Lant_dehydr_N or Lant_dehydr_C)  # Class I
                    or cds(LANC_like and (Pkinase or DUF4135)))  # Classes II, III and IV
-               and not YcaO  # because then it'd be a thiopeptide
+               and not (YcaO or TIGR03882) # because then it'd be a thiopeptide
 
 RULE bacteriocin
     CUTOFF 20
@@ -83,14 +83,15 @@ RULE bacteriocin
                or Bacteriocin_II or Bacteriocin_IIi or Lactococcin
                or Antimicrobial17 or Lactococcin_972 or Bacteriocin_IIc
                or LcnG-beta or Cloacin or Linocin_M18 or TIGR03603 or TIGR03604
-               or TIGR03605 or TIGR03651 or TIGR03678 or TIGR03693 or TIGR03798
-               or TIGR03882 or TIGR03601 or TIGR03602 or TIGR03795 or TIGR03793
+               or TIGR03651 or TIGR03678 or TIGR03693 or TIGR03798
+               or TIGR03601 or TIGR03602 or TIGR03795 or TIGR03793
                or TIGR03975 or DUF692 or TIGR01193
 
 RULE thiopeptide
     CUTOFF 20
     EXTENT 10
-    CONDITIONS YcaO and ((thio_amide and (PF06968 or PF04055 or PF07366))
+    CONDITIONS (YcaO or TIGR03882)
+               and ((thio_amide and (PF06968 or PF04055 or PF07366))
                          or Lant_dehydr_C or Lant_dehydr_N
                          or PF07366 or PF06968 or PF04055)
                or thiostrepton
@@ -110,10 +111,14 @@ RULE glycocin
     EXTENT 10
     CONDITIONS glycocin or sublancin
 
-RULE LAP
+RULE lap
+    COMMENT Linear azol(in)e-containing peptides like goadsporin (AB205012) or
+            microcin B17 (FM877811)
+    RELATED TIGR04424
     CUTOFF 20
     EXTENT 10
-    CONDITIONS goadsporin_like
+    CONDITIONS (goadsporin_like or PF00881 or TIGR03605)
+               and (YcaO or TIGR03882)
 
 RULE lassopeptide
     CUTOFF 10
