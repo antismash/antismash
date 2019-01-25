@@ -124,7 +124,7 @@ class TemporarySuperCluster:  # pylint: disable=too-many-instance-attributes
         """
         if len(record.get_clusters()) < max(self.clusters):
             raise ValueError("Not all referenced clusters are present in the record")
-        relevant_clusters = [record.get_cluster(num) for num in self.clusters]
+        relevant_clusters = sorted([record.get_cluster(num) for num in self.clusters])
         new = SuperCluster(self.kind, relevant_clusters,
                            smiles=self.smiles_structure, polymer=self.polymer)
         return new
