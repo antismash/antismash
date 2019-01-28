@@ -18,7 +18,7 @@ from antismash.common.secmet.qualifiers.gene_functions import GeneFunction
 
 class TestCDSFeature(unittest.TestCase):
     def test_required_identifiers(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegex(ValueError, "requires at least one of: gene, protein_id, locus_tag"):
             CDSFeature(FeatureLocation(1, 5, 1), translation="A")
         assert CDSFeature(FeatureLocation(1, 5, 1), locus_tag="foo", translation="A")
         assert CDSFeature(FeatureLocation(1, 5, 1), protein_id="foo", translation="A")
