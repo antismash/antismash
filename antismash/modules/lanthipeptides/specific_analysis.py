@@ -18,6 +18,7 @@ from antismash.common import all_orfs, path, subprocessing, module_results, util
 from antismash.common.fasta import get_fasta_from_features
 from antismash.common.secmet import CDSFeature, Cluster, GeneFunction, Prepeptide, Record, Region
 from antismash.common.secmet.features import CDSCollection
+from antismash.common.secmet.locations import location_from_string
 from antismash.common.secmet.qualifiers.prepeptide_qualifiers import LanthiQualifier
 
 from .rodeo import run_rodeo
@@ -89,7 +90,7 @@ class LanthiResults(module_results.ModuleResults):
                 results.motifs_by_locus[locus].append(Prepeptide.from_json(motif))
         results.clusters = {int(key): set(val) for key, val in json["clusters"].items()}
         for location, name in json["new_cds_features"]:
-            cds = all_orfs.create_feature_from_location(record, location, label=name)
+            cds = all_orfs.create_feature_from_location(record, location_from_string(location), label=name)
             results.new_cds_features.add(cds)
         return results
 
