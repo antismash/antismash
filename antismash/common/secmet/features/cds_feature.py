@@ -23,8 +23,7 @@ from ..errors import SecmetInvalidInputError
 from ..locations import AfterPosition, BeforePosition, Location
 from .feature import Feature
 
-
-_VALID_TRANSLATION_CHARS = set(IUPACData.protein_letters).union(set("X"))
+_VALID_TRANSLATION_CHARS = set(IUPACData.extended_protein_letters)
 
 
 def _sanitise_id_value(name: Optional[str]) -> Optional[str]:
