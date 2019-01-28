@@ -64,6 +64,8 @@ class CDSFeature(Feature):
         # mandatory
         self._gene_functions = GeneFunctionAnnotations()
 
+        if not (protein_id or locus_tag or gene):
+            raise ValueError("CDSFeature requires at least one of: gene, protein_id, locus_tag")
         # semi-optional
         self.protein_id = _sanitise_id_value(protein_id)
         self.locus_tag = _sanitise_id_value(locus_tag)
@@ -79,9 +81,6 @@ class CDSFeature(Feature):
         self._nrps_pks = NRPSPKSQualifier(self.location.strand)
 
         self.motifs = []  # type: List[features.CDSMotif]
-
-        if not (protein_id or locus_tag or gene):
-            raise ValueError("CDSFeature requires at least one of: gene, protein_id, locus_tag")
 
         # runtime-only data
         self.region = None  # type: Optional[features.Region]
