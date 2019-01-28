@@ -74,15 +74,14 @@ def write_regions_js(records: List[Dict[str, Any]], output_dir: str,
         handle.write('var details_data = %s;\n' % json.dumps(clustered_domains, indent=4))
 
 
-def generate_html_sections(records: List[RecordLayer], results: List[Dict[str, module_results.ModuleResults]],
+def generate_html_sections(records: List[RecordLayer], results: Dict[str, Dict[str, module_results.ModuleResults]],
                            options: ConfigType) -> Dict[str, Dict[int, List[HTMLSections]]]:
     """ Generates a mapping of record->region->HTMLSections for each record, region and module
 
         Arguments:
             records: a list of RecordLayers to pass through to the modules
-            results: a list of
+            results: a dictionary mapping record name to
                         a dictionary mapping each module name to its results object
-                     one for each record
             options: the current antiSMASH config
 
         Returns:
@@ -91,8 +90,9 @@ def generate_html_sections(records: List[RecordLayer], results: List[Dict[str, m
                     a list of HTMLSections, one for each module
     """
     details = {}
-    for record, record_result in zip(records, results):
+    for record in records:
         record_details = {}
+        record_result = results[record.id]
         for region in record.regions:
             sections = []
             for handler in region.handlers:
@@ -138,7 +138,7 @@ def generate_webpage(records: List[Record], results: List[Dict[str, module_resul
         elif options.reuse_results:
             page_title, _ = os.path.splitext(os.path.basename(options.reuse_results))
 
-        html_sections = generate_html_sections(record_layers_with_regions, results, options)
+        html_sections = generate_html_sections(record_layers_with_regions, results_by_record_id, options)
 
         aux = template.render(records=record_layers_with_regions, options=options_layer,
                               version=options.version, extra_data=js_domains,
