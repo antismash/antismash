@@ -119,6 +119,8 @@ class TestFeature(unittest.TestCase):
             assert feature.location.start == BeforePosition(5 + feature._original_codon_start)
             new = feature.to_biopython()[0]
             assert new.qualifiers["codon_start"] == [codon_start]
+            assert new.location.start == seqf.location.start
+            assert new.location.end == seqf.location.end
 
     def test_conversion_with_codon_start_reverse(self):
         seqf = SeqFeature(FeatureLocation(5, AfterPosition(12), -1))
@@ -126,10 +128,12 @@ class TestFeature(unittest.TestCase):
         for codon_start in "123":
             seqf.qualifiers["codon_start"] = [codon_start]
             feature = Feature.from_biopython(seqf)
-            assert feature._original_codon_start == -(int(codon_start) - 1)
-            assert feature.location.end == AfterPosition(12 + feature._original_codon_start)
+            assert feature._original_codon_start == int(codon_start) - 1
+            assert feature.location.end == AfterPosition(12 - feature._original_codon_start)
             new = feature.to_biopython()[0]
             assert new.qualifiers["codon_start"] == [codon_start]
+            assert new.location.start == seqf.location.start
+            assert new.location.end == seqf.location.end
 
     def test_invalid_codon_start(self):
         seqf = SeqFeature(FeatureLocation(5, AfterPosition(12), -1))
