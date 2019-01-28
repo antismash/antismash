@@ -331,7 +331,10 @@ class Record:
 
     def get_domain_by_name(self, name: str) -> Domain:
         """ Return the Domain with the given name """
-        return self._domains_by_name[name]
+        try:
+            return self._domains_by_name[name]
+        except KeyError:
+            raise KeyError("record %s contains no domain named %s" % (self.id, name))
 
     def get_cds_motifs(self) -> Tuple[CDSMotif, ...]:
         """A list of secondary metabolite CDS_motifs present in the record"""
