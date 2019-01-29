@@ -281,8 +281,9 @@ class Tokeniser:  # pylint: disable=too-few-public-methods
                     # no newline after #, so we're finished
                     return
             else:
+                line_text = self.text.splitlines()[line - 1]
                 raise RuleSyntaxError("Unexpected character in rule: %s\n%s\n%s^"
-                                      % (char, self.text, " "*position))
+                                      % (char, line_text, " "*position))
             position += 1
             global_position += 1
         self._finalise(line, len(self.text))
