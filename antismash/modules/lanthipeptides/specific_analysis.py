@@ -467,7 +467,7 @@ def run_cleavage_site_phmm(fasta: str, hmmer_profile: str, threshold: float) -> 
     return predict_cleavage_site(profile, fasta, threshold)
 
 
-def run_cleavage_site_regex(fasta: str) -> Optional[CleavageSiteHit]:
+def run_cleavage_site_regex(fasta: str, lan_class: str) -> Optional[CleavageSiteHit]:
     """ Try to identify cleavage site using regular expressions"""
     # Regular expressions; try 1 first, then 2, etc.
     rex1 = re.compile('F?LD')
@@ -482,11 +482,11 @@ def run_cleavage_site_regex(fasta: str) -> Optional[CleavageSiteHit]:
         end += 15
     else:
         return None
-    return CleavageSiteHit(end, -100., "lanthipeptide")
+    return CleavageSiteHit(end, -100., lan_class)
 
 
 def determine_precursor_peptide_candidate(record: Record, query: CDSFeature, domains: List[str],
-                                          hmmer_profile: str) -> Optional[Lanthipeptide]:
+                                          hmmer_profile: str, lant_class: str) -> Optional[Lanthipeptide]:
     """ Identify precursor peptide candidates and split into two,
         only valid for Class-I lanthipeptides
     """
@@ -499,11 +499,11 @@ def determine_precursor_peptide_candidate(record: Record, query: CDSFeature, dom
     lan_a_fasta = ">%s\n%s" % (query.get_name(), query.translation)
 
     # Run sequence against pHMM; if positive, parse into a vector containing START, END and SCORE
-    cleavage_result = run_cleavage_site_phmm(lan_a_fasta, hmmer_profile, THRESH_DICT["Class-I"])
+    cleavage_result = run_cleavage_site_phmm(lan_a_fasta, hmmer_profile, THRESH_DICT[lant_class])
 
     if cleavage_result is None or cleavage_result.end > len(query.translation) - 8:
         # If no pHMM hit, try regular expression
-        cleavage_result = run_cleavage_site_regex(lan_a_fasta)
+        cleavage_result = run_cleavage_site_regex(lan_a_fasta, lant_class)
         if cleavage_result is None or cleavage_result.end > len(query.translation) - 8:
             # still no good, so abort, since RODEO will predict duplicates based
             # only on cluster attributes
@@ -526,7 +526,8 @@ def determine_precursor_peptide_candidate(record: Record, query: CDSFeature, dom
     return Lanthipeptide(cleavage_result, rodeo_result, leader, core)
 
 
-def run_lanthipred(record: Record, query: CDSFeature, lant_class: str, domains: List[str]) -> Optional[Lanthipeptide]:
+def run_lanthipred(record: Record, query: CDSFeature, lant_class: str,
+                   domains: List[str]) -> Optional[Lanthipeptide]:
     """ Determines if a CDS is a predicted lanthipeptide based on the class
         and any contained domains.
 
@@ -561,7 +562,8 @@ def run_lanthipred(record: Record, query: CDSFeature, lant_class: str, domains: 
         result = Lanthipeptide(cleavage_result, 0, leader, core)
 
     else:
-        candidate = determine_precursor_peptide_candidate(record, query, domains, hmmer_profiles[lant_class])
+        candidate = determine_precursor_peptide_candidate(record, query, domains,
+                                                          hmmer_profiles[lant_class], lant_class)
         if candidate is None:
             return None
         result = candidate
