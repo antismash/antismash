@@ -74,6 +74,7 @@ The grammar itself:
     GROUP_CLOSE = ')'
     INT = [-]{[1-9]}*[0-9]
     ID = [a-zA-Z]{[a-zA-Z0-9_-]}*
+    TEXT = {[a-zA-Z0-9_-.]}*
     MINIMUM_LABEL = 'minimum'
     CDS_LABEL = 'cds'
     SCORE_LABEL = 'minscore'
@@ -191,6 +192,7 @@ class TokenTypes(IntEnum):
     CONDITIONS = 20
     SUPERIORS = 21
     RELATED = 22
+    TEXT = 23  # covers words that aren't valid identifiers for use in rule COMMENT fields
 
     def __repr__(self) -> str:
         return self.__str__()
@@ -214,7 +216,7 @@ class TokenTypes(IntEnum):
             elif is_legal_identifier(text):
                 classification = cls.IDENTIFIER
             else:
-                raise RuleSyntaxError("Unclassifiable token: %s" % text)
+                classification = cls.TEXT
         return classification
 
     def is_a_rule_keyword(self) -> bool:
@@ -267,7 +269,7 @@ class Tokeniser:  # pylint: disable=too-few-public-methods
                 self._finalise(line, position)
                 self.tokens.append(Token(char, line, position))
             # part of a multi-char symbol
-            elif char.isalnum() or char in ['-', '_']:
+            elif char.isalnum() or char in ['-', '_', '.']:
                 self.current_symbol.append(char)
             # a comment, don't parse anything in the line
             elif char == "#":
