@@ -58,7 +58,7 @@ def check_options(_options: ConfigType) -> List[str]:
     """ Checks options for conflicts.
         No extra options, so they can't have conflicts.
     """
-    return []  # TODO: maybe bail if no full_hmmer/cluster_hmmer?
+    return []
 
 
 def check_prereqs() -> List[str]:
