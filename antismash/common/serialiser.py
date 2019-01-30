@@ -8,7 +8,7 @@
 from collections import OrderedDict
 import json
 import logging
-from typing import Any, Dict, IO, List, Optional, Union
+from typing import Any, Dict, IO, List, Union
 
 import Bio.Alphabet
 import Bio.Alphabet.IUPAC
@@ -19,8 +19,6 @@ from Bio.SeqRecord import SeqRecord
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record
 from antismash.common.secmet.locations import location_from_string
-from antismash.config import get_config
-from antismash.custom_typing import AntismashModule
 
 
 class AntismashResults:
@@ -220,41 +218,3 @@ def feature_from_json(data: Union[str, Dict]) -> SeqFeature:
                       type=data["type"],
                       id=data["id"],
                       qualifiers=data["qualifiers"])
-
-
-def regenerate_results_for_record(record: Record, modules: List[AntismashModule],
-                                  previous_result: Dict[str, Dict[str, Any]]
-                                  ) -> Dict[str, Optional[ModuleResults]]:
-    """ Converts a record's JSON results to ModuleResults per module.
-
-        Arguments:
-            record: the record to regenerate results for
-            modules: the modules to regenerate results of
-            previous_result: a dict of the json results to convert, in the form:
-                    {modulename : {module details}}
-
-        Returns:
-            the previous_result dict, with the values of all modules provided
-            as an instance of ModuleResults or None if results don't apply or
-            could not be regenerated
-    """
-    options = get_config()
-
-    # skip if nothing to work with
-    if not previous_result:
-        return {}
-
-    regenerated = {}
-    logging.debug("Regenerating results for record %s", record.id)
-    for module in modules:
-        section = previous_result.pop(module.__name__, None)
-        results = None
-        if section:
-            logging.debug("Regenerating results for module %s", module.__name__)
-            results = module.regenerate_previous_results(section, record, options)
-            if results is None:
-                logging.debug("Results could not be generated for %s", module.__name__)
-            else:
-                assert isinstance(results, ModuleResults), type(results)
-            regenerated[module.__name__] = results
-    return regenerated
