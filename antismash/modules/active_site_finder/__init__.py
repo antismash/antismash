@@ -4,13 +4,10 @@
 Identify conserved active site residues in PFAM_Doman / aSDomain features
 """
 
-import datetime
-import glob
 import logging
-import os
 from typing import Any, Dict, List, Optional, Tuple
 
-from antismash.common import path, subprocessing, module_results, secmet
+from antismash.common import module_results, path, secmet
 from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
 
@@ -66,7 +63,6 @@ def check_options(_options: ConfigType) -> List[str]:
 
 def check_prereqs() -> List[str]:
     "Checks if all required files and applications are around"
-    _binary_extensions = ['.h3f', '.h3i', '.h3m', '.h3p']
 
     failure_messages = []
 
@@ -83,41 +79,6 @@ def check_prereqs() -> List[str]:
         if path.locate_file(full_hmm_path) is None:
             failure_messages.append("Failed to locate file: %s" % profile)
             continue
-
-        if profile.endswith(".hmm2"):
-            continue
-
-        for ext in _binary_extensions:
-            binary = "{hmm}{ext}".format(hmm=full_hmm_path, ext=ext)
-            if not path.locate_file(binary):
-                result = subprocessing.run_hmmpress(full_hmm_path)
-                if not result.successful():
-                    failure_messages.append("Failed to hmmpress {!r}: {!r}".format(profile, result.stderr))
-
-                # hmmpress generates _all_ binary files in one go, so stop the loop
-                break
-
-            binary_mtime = os.path.getmtime(binary)
-            hmm_mtime = os.path.getmtime(full_hmm_path)
-            if hmm_mtime < binary_mtime:
-                # generated file younger than hmm profile, do nothing
-                continue
-            try:
-                for filename in glob.glob("{}.h3?".format(full_hmm_path)):
-                    logging.debug("removing outdated file %r", filename)
-                    os.remove(filename)
-            except OSError as err:
-                failure_messages.append("Failed to remove outdated binary file for %s: %s" %
-                                        (profile, err))
-                break
-            result = subprocessing.run_hmmpress(full_hmm_path)
-            if not result.successful():
-                failure_messages.append("Failed to hmmpress %r: %r" % (profile, result.stderr))
-                failure_messages.append("HMM binary files outdated. %s (changed: %s) vs %s (changed: %s)" %
-                                        (profile, datetime.datetime.fromtimestamp(hmm_mtime),
-                                         binary, datetime.datetime.fromtimestamp(binary_mtime)))
-            # hmmpress generates _all_ binary files in one go, so stop the loop
-            break
 
     return failure_messages
 
