@@ -73,7 +73,7 @@ def check_prereqs() -> List[str]:
     # Get all HMM profile names from XML file
     for profile in ["PKSI-KR.hmm2", "PKSI-KS_N.hmm2", "PKSI-KS_C.hmm2", "PKSI-AT.hmm2",
                     "PKSI-ACP.hmm2", "PKSI-DH.hmm2", "Thioesterase.hmm2", "PKSI-ER.hmm2",
-                    "aa-activating.aroundLys.hmm2", "p450.hmm2"]:
+                    "p450.hmm2"]:
         full_hmm_path = path.get_full_path(__file__, "data", profile)
 
         if path.locate_file(full_hmm_path) is None:
