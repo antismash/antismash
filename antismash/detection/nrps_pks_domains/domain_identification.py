@@ -324,7 +324,7 @@ def generate_domain_features(record: Record, gene: CDSFeature,
         new_feature.score = domain.bitscore
 
         transl_table = gene.transl_table or 1
-        new_feature.translation = str(new_feature.extract(record.seq).translate(table=transl_table))
+        new_feature.translation = gene.translation[domain.query_start:domain.query_end + 1]
 
         domain_counts[domain.hit_id] += 1  # 1-indexed, so increment before use
         domain_name = "{}_{}.{}".format(gene.get_name(), domain.hit_id, domain_counts[domain.hit_id])
@@ -361,7 +361,7 @@ def generate_motif_features(record: Record, feature: CDSFeature, motifs: List[HM
         new_motif.database = "abmotifs"
         new_motif.locus_tag = locus_tag
 
-        new_motif.translation = str(new_motif.extract(record.seq).translate(table=transl_table))
+        new_motif.translation = feature.translation[motif.query_start:motif.query_end + 1]
         new_motif.notes.append("NRPS/PKS Motif: %s (e-value: %s, bit-score: %s)" % (
                                motif.hit_id, motif.evalue, motif.bitscore))  # TODO move to CDSMotif
 

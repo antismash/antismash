@@ -121,7 +121,7 @@ def build_hits(record: Record, hmmscan_results: List, min_score: float,
             hit = {"location": str(location),
                    "label": result.id, "locus_tag": feature.locus_tag,
                    "domain": hsp.hit_id, "evalue": hsp.evalue, "score": hsp.bitscore,
-                   "translation": str(location.extract(record.seq).translate(table=feature.transl_table)),
+                   "translation": feature.translation[hsp.query_start:hsp.query_end + 1],
                    "identifier": pfamdb.get_pfam_id_from_name(hsp.hit_id, database),
                    "description": hsp.hit_description, "protein_start": hsp.query_start, "protein_end": hsp.query_end}
             hits.append(hit)
