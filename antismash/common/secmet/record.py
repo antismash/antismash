@@ -776,17 +776,6 @@ class Record:
             features.extend(region.cds_children)
         return features
 
-    def write_region_specific_genbanks(self, output_dir: str = None) -> None:
-        """ Write out a set genbank files, each containing a single cluster
-
-            Arguments:
-                output_dir: the directory to place the files, if None the
-                            current working directory is used
-        """
-        bio_record = self.to_biopython()
-        for region in self._regions:
-            region.write_to_genbank(directory=output_dir, record=bio_record)
-
     def create_superclusters(self) -> int:
         """ Takes all Cluster instances and constructs SuperClusters that cover
             each Cluster. Each combination of overlapping clusters will create
