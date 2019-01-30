@@ -51,27 +51,6 @@ class MinowaPrediction(Prediction):
         return MinowaPrediction(json["predictions"])
 
 
-class MinowaResults(dict):
-    """ A simple wrapper of a dictionary to allow for writing the results to
-        file without extra work.
-
-        Maps a gene name to a list of tuples containing HMM name and score
-    """
-    def write_to_file(self, filename: str) -> None:
-        """ Save the results to file in a readable format """
-        out_file = open(filename, "w")
-        for query_id, result in self.items():
-            out_file.write("\\\\\n" + query_id + "\n")
-            out_file.write("Substrate:\tScore:\n")
-            for name, score in result.predictions:
-                out_file.write("{}\t{}\n".format(name, score))
-        out_file.close()
-
-    def to_json(self) -> Dict[str, Any]:
-        """ Serialiser to convert all values to JSON-friendly versions """
-        return {key: val.to_json() for key, val in self.items()}
-
-
 def hmmsearch(fasta_format: str, hmm: str) -> float:
     """ Runs hmmsearch, only taking a single value from the output """
     result = subprocessing.execute(["hmmsearch", "--noali", hmm, "-"], stdin=fasta_format)
@@ -119,7 +98,7 @@ def run_minowa(sequence_info: Dict[str, str], startpos: int, muscle_ref: str, re
     """
     positions = get_positions(positions_file, startpos)
 
-    results_by_query = MinowaResults()
+    results_by_query = {}  # type: Dict[str, Prediction]
 
     for query_id, query_seq in sequence_info.items():
         muscle = subprocessing.run_muscle_single(query_id, query_seq, muscle_ref)
