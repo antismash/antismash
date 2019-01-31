@@ -1,5 +1,8 @@
 <div class="more-details">
-	<h3>Type II PKS gene cluster prediction details</h3>
+    <div class="heading">
+      <span>Type II PKS gene cluster prediction details</span>
+      {{help_tooltip(tooltip_content, "t2pks")}}
+    </div>
 	{% for prediction in predictions %}
 	{% if loop.index > 1 %}
 	<hr>
