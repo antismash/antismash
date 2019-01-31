@@ -8,7 +8,7 @@
     to describe in the sidepanel.
 """
 
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Union
 
 from antismash.common import path
 from antismash.common.html_renderer import FileTemplate, HTMLSections
