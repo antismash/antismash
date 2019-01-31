@@ -14,6 +14,13 @@ from jinja2 import Markup
 
 
 class HTMLSection:  # pylint: disable=too-few-public-methods
+    """ A generic container for an HTML section. Requires a label for naming
+        the section, the section content (as Markup), and a class name for the
+        tab element for linking related elements in different areas.
+
+        Sidepanel content shouldn't share class_name with other sidepanel content,
+        the same is true for the body details.
+    """
     def __init__(self, label: str, content: Markup, class_name: str) -> None:
         self.label = label
         self.content = content
@@ -102,7 +109,7 @@ def help_tooltip(text: str, name: str) -> Markup:
         Returns:
             A Markup instance with the constructed HTML
     """
-    global _TOOLTIP_COUNTER
+    global _TOOLTIP_COUNTER  # pylint: disable=global-statement
     _TOOLTIP_COUNTER += 1
     unique_id = "%s-help-%d" % (name, _TOOLTIP_COUNTER)
     return Markup(('<div class="help-container">'
@@ -134,7 +141,7 @@ def switch(label: str, classname: str, id_attr: str = "", starts_on: bool = Fals
                    '</div>').format(classname, label, id_attr, check_attr))
 
 
-class _Template:
+class _Template:  # pylint: disable=too-few-public-methods
     """ A jinja-based template rendered with extra builtins available.
 
         Non-functional on its own, requires self.template to be set to a jinja Template
@@ -163,13 +170,14 @@ class _Template:
         return Markup(self.template.render(**defaults))
 
 
-class StringTemplate(_Template):
+class StringTemplate(_Template):  # pylint: disable=too-few-public-methods
     """ A template renderer for string templates """
     def __init__(self, template: str) -> None:
         super().__init__()
         self.template = self.env.from_string(template)
 
-class FileTemplate(_Template):
+
+class FileTemplate(_Template):  # pylint: disable=too-few-public-methods
     """ A template renderer for file templates """
     def __init__(self, template_file: str) -> None:
         super().__init__(os.path.dirname(template_file))
