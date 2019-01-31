@@ -84,11 +84,12 @@ def has_domain_details(region: Region) -> bool:
 
 
 def generate_html(region_layer: RegionLayer, _results: ModuleResults,
-                  _record_layer: RecordLayer, _options_layer: OptionsLayer
+                  _record_layer: RecordLayer, options_layer: OptionsLayer
                   ) -> HTMLSections:
     """ Generate the details section of NRPS/PKS domains in the main HTML output """
     template = FileTemplate(path.get_full_path(__file__, 'templates', 'details.html'))
-    section = template.render(has_domain_details=has_domain_details, region=region_layer)
+    section = template.render(has_domain_details=has_domain_details, region=region_layer,
+                              docs_url=options_layer.urls.docs_baseurl)
     html = HTMLSections("nrps_pks")
     html.add_detail_section("NRPS/PKS domains", section)
     return html
