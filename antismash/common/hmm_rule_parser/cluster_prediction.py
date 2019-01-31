@@ -6,7 +6,7 @@
 
 from collections import defaultdict
 import logging
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Set, Tuple
 
 from Bio.SearchIO._model.hsp import HSP
 
