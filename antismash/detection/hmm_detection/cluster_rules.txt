@@ -8,6 +8,7 @@ RULE t1pks
 
 RULE t2pks
     COMMENT Type-II PKS
+    RELATED t2pks2, ksIII
     CUTOFF 20
     EXTENT 35  # lysolipin (AM492533) has a range of ~33kb
     CONDITIONS t2ks and t2clf
@@ -24,10 +25,18 @@ RULE transatpks
     CONDITIONS cds(ATd and (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS))
                and cds(PKS_AT and not (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS))
 
-RULE otherks
+RULE hgleks
+    COMMENT heterocyst glycolipid synthase like PKS such as KC489223
     CUTOFF 20
     EXTENT 20
-    CONDITIONS t2pks2 or hglE or hglD or ksIII
+    CONDITIONS hglE or hglD
+
+RULE pksfragment
+    COMMENT Catches PKS-like fragments that are not detected by another PKS rule
+    SUPERIORS t2pks
+    CUTOFF 10
+    EXTENT 20
+    CONDITIONS t2pks2 or ksIII
 
 RULE arylpolyene
     CUTOFF 20
