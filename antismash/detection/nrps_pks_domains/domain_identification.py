@@ -47,7 +47,7 @@ class CDSResult:
         cds.nrps_pks.type = self.type
 
         # generate AntismashDomain features
-        domain_features = generate_domain_features(record, cds, self.domain_hmms)
+        domain_features = generate_domain_features(cds, self.domain_hmms)
         for domain, domain_feature in domain_features.items():
             record.add_antismash_domain(domain_feature)
             # update the CDS' NRPS_PKS qualifier
@@ -57,7 +57,7 @@ class CDSResult:
         if not self.motif_hmms:
             return
 
-        motif_features = generate_motif_features(record, cds, self.motif_hmms)
+        motif_features = generate_motif_features(cds, self.motif_hmms)
 
         for motif in motif_features:
             record.add_cds_motif(motif)
@@ -297,12 +297,10 @@ def classify_cds(domain_names: List[str]) -> str:
     return classification
 
 
-def generate_domain_features(record: Record, gene: CDSFeature,
-                             domains: List[HMMResult]) -> Dict[HMMResult, AntismashDomain]:
+def generate_domain_features(gene: CDSFeature, domains: List[HMMResult]) -> Dict[HMMResult, AntismashDomain]:
     """ Generates AntismashDomain features for each provided HMMResult
 
         Arguments:
-            record: the record the new features will belong to
             gene: the CDSFeature the domains were found in
             domains: a list of HMMResults found in the CDSFeature
 
@@ -323,7 +321,6 @@ def generate_domain_features(record: Record, gene: CDSFeature,
         new_feature.evalue = domain.evalue
         new_feature.score = domain.bitscore
 
-        transl_table = gene.transl_table or 1
         new_feature.translation = gene.translation[domain.query_start:domain.query_end + 1]
 
         domain_counts[domain.hit_id] += 1  # 1-indexed, so increment before use
@@ -336,17 +333,12 @@ def generate_domain_features(record: Record, gene: CDSFeature,
     return new_features
 
 
-def generate_motif_features(record: Record, feature: CDSFeature, motifs: List[HMMResult]) -> List[CDSMotif]:
+def generate_motif_features(feature: CDSFeature, motifs: List[HMMResult]) -> List[CDSMotif]:
     """ Convert a list of HMMResult to a list of CDSMotif features """
     # use a locus tag if one exists
     locus_tag = feature.get_name()
     if feature.locus_tag:
         locus_tag = feature.locus_tag
-    # grab the translation table if it's there
-    if feature.transl_table:
-        transl_table = feature.transl_table
-    else:
-        transl_table = 1
 
     motif_features = []
     for i, motif in enumerate(motifs):
