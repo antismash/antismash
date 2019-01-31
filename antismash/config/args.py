@@ -525,6 +525,11 @@ def advanced_options() -> ModuleArgs:
                      action=FullPathAction,
                      type=str,
                      help="Write a config file to the supplied path")
+    group.add_option('--without-fimo',
+                     dest='without_fimo',
+                     action='store_true',
+                     default=False,
+                     help="Run without FIMO (lowers accuracy of RiPP precursor predictions)")
     return group
 
 
