@@ -4,6 +4,7 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
+import json
 import unittest
 
 from Bio.Seq import Seq
@@ -107,3 +108,35 @@ class ClusterFinderTest(unittest.TestCase):
         assert area.location.start == 1030
         assert area.location.end == 1120
         self.assertAlmostEqual(0.6429, area.probability, places=4)
+
+    def test_full_loop(self):
+        results = clusterfinder.run_on_record(self.record, None, self.config)
+        old_areas = len(results.areas)
+
+        json_string = json.dumps(results.to_json())
+        regenned = clusterfinder.regenerate_previous_results(json.loads(json_string), self.record, self.config)
+        assert len(regenned.areas) == old_areas
+        for old, new in zip(results.areas, regenned.areas):
+            assert old.location == new.location
+            self.assertAlmostEqual(old.probability, new.probability, places=6)
+
+
+class TestResults(unittest.TestCase):
+    def setUp(self):
+        self.config = build_config(["--cf-create-clusters"], modules=[clusterfinder], isolated=True)
+        self.record = DummyRecord()
+
+    def regen(self, results):
+        return clusterfinder.regenerate_previous_results(results, self.record, self.config)
+
+    def test_empty(self):
+        assert self.regen(None) is None
+        assert self.regen({}) is None
+
+    def test_schema_mismatch(self):
+        assert self.regen({"schema": 0}) is None
+
+    def test_creation_change(self):
+        results = clusterfinder.ClusterFinderResults(self.record.id, [], create=False)
+        with self.assertRaisesRegex(ValueError, "detection results have changed"):
+            self.regen(json.loads(json.dumps(results.to_json())))

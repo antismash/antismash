@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional
 
 from antismash.common.module_results import DetectionResults
 from antismash.common.secmet import SubRegion, Record
+from antismash.common.secmet.locations import location_from_string
 from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
 
@@ -74,19 +75,30 @@ def check_options(options: ConfigType) -> List[str]:
 
 class ClusterFinderResults(DetectionResults):
     """ Storage for predictions """
+    schema_version = 1
+
     def __init__(self, record_id: str, areas: List[SubRegion], create: bool = False) -> None:
         super().__init__(record_id)
         self.create_new_clusters = create
         assert isinstance(areas, list), type(areas)
         self.areas = areas
 
-    def to_json(self) -> Dict[str, Any]:  # TODO: implement to/from json
-        logging.critical("cluster_finder results always empty")
-        return {}
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            "schema": self.schema_version,
+            "areas": [(str(area.location), area.probability) for area in self.areas],
+            "created": self.create_new_clusters,
+        }
 
     @staticmethod
-    def from_json(json: Dict[str, Any], record: Record) -> "ClusterFinderResults":
-        raise NotImplementedError("No conversion exists yet for ClusterFinderResults from JSON")
+    def from_json(json: Dict[str, Any], record: Record) -> Optional["ClusterFinderResults"]:
+        if json.get("schema") != ClusterFinderResults.schema_version:
+            logging.warning("Dropping ClusterFinder probabilistic results, schema version has changed")
+            return None
+        areas = []
+        for area in json["areas"]:
+            areas.append(SubRegion(location_from_string(area[0]), tool="clusterfinder", probability=area[1]))
+        return ClusterFinderResults(record.id, areas, create=json["created"])
 
     def add_to_record(self, record: Record) -> None:
         if self.create_new_clusters:  # then get_predicted_subregions covered it already
@@ -132,8 +144,8 @@ def run_on_record(record: Record, results: Optional[ClusterFinderResults],
     return generate_results(record, options)
 
 
-def regenerate_previous_results(_previous: Dict[str, Any], _record: Record,
-                                _options: ConfigType) -> Optional[ClusterFinderResults]:
+def regenerate_previous_results(previous: Dict[str, Any], record: Record,
+                                options: ConfigType) -> Optional[ClusterFinderResults]:
     """ Rebuild the previous run results from a JSON object into this module's
         python results class.
 
@@ -142,8 +154,15 @@ def regenerate_previous_results(_previous: Dict[str, Any], _record: Record,
             record: the Record that was used to generate the previous results
             options: an antismash.Config object
     """
-    logging.critical("clusterfinder not regenerating results")
-    return None
+    if not previous:
+        return None
+    results = ClusterFinderResults.from_json(previous, record)
+    if not results:
+        return None
+    # if new regions would be formed, kill the run as all analysis results are in doubt
+    if not results.create_new_clusters and options.cf_create_clusters:
+        raise ValueError("detection results have changed, no results can be reused")
+    return results
 
 
 def generate_results(record: Record, options: ConfigType) -> ClusterFinderResults:
