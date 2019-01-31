@@ -105,11 +105,6 @@ def dump_records(records: List[SeqRecord], results: List[Dict[str, Union[Dict[st
                 continue
             if isinstance(m_results, ModuleResults):
                 modules[module] = m_results.to_json()
-            elif isinstance(m_results, dict):
-                logging.critical("module %s has dict results", module)
-                # only occurs if the module wasn't run but prior results exist
-                # in which case no conversion required
-                modules[module] = m_results
             else:
                 raise TypeError("Module results for module %s are of invalid type: %s" % (module, type(m_results)))
         json_record["modules"] = modules
