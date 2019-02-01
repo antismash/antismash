@@ -45,6 +45,12 @@ def get_arguments() -> ModuleArgs:
                              default=False,
                              help="Compare identified clusters against known "
                                   "gene clusters from the MIBiG database.")
+    args.add_option('diamond-executable',
+                    dest='diamond_executable',
+                    metavar='filename',
+                    type=str,
+                    default='diamond',
+                    help="The path to the diamond executable. (default: %(default)s)")
     args.add_option('nclusters',
                     dest='nclusters',
                     metavar="count",
@@ -92,9 +98,9 @@ def check_prereqs() -> List[str]:
     options = get_config()
     # Tuple is ( binary_name, optional)
     _required_binaries = [
-        ('blastp', False),
-        ('makeblastdb', False),
-        ('diamond', False),
+        'blastp',
+        'makeblastdb',
+        options.cb_diamond_executable,
     ]
 
     _required_files = [
@@ -106,8 +112,8 @@ def check_prereqs() -> List[str]:
     clusterblastdir = os.path.join(options.database_dir, "clusterblast")
 
     failure_messages = []
-    for binary_name, optional in _required_binaries:
-        if path.locate_executable(binary_name) is None and not optional:
+    for binary_name in _required_binaries:
+        if path.locate_executable(binary_name) is None:
             failure_messages.append("Failed to locate file: %r" % binary_name)
 
     for file_name, optional in _required_files:
