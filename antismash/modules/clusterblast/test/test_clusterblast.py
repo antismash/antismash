@@ -13,6 +13,7 @@ from minimock import mock, restore
 from helperlibs.wrappers.io import TemporaryDirectory
 
 from antismash import config
+from antismash.common import path
 from antismash.common.secmet import Record, Region
 from antismash.common.test.helpers import DummyCDS, DummyCluster, DummySuperCluster
 import antismash.modules.clusterblast.core as core
@@ -601,3 +602,19 @@ class TestMissingProteinCleanup(unittest.TestCase):
         core.strip_clusters_missing_proteins(clusters, proteins)
         assert sorted(clusters) == ["2", "4"]
         assert sorted(proteins) == ["D", "E", "H"]
+
+
+class TestDiamondDatabaseChecks(unittest.TestCase):
+    def setUp(self):
+        self.format0_file = path.get_full_path(__file__, "data", "format0.dmnd")
+        self.format1_file = path.get_full_path(__file__, "data", "format1.dmnd")
+
+    @unittest_mock.patch('antismash.common.subprocessing.run_diamond_version', return_value="0.8.36")
+    def test_check_diamond_db_compatible_v0(self, _mock_diamond_version_call):
+        assert core.check_diamond_db_compatible(self.format0_file)
+        assert not core.check_diamond_db_compatible(self.format1_file)
+
+    @unittest_mock.patch('antismash.common.subprocessing.run_diamond_version', return_value="0.9.17")
+    def test_check_diamond_db_compatible_v1(self, _mock_diamond_version_call):
+        assert not core.check_diamond_db_compatible(self.format0_file)
+        assert core.check_diamond_db_compatible(self.format1_file)

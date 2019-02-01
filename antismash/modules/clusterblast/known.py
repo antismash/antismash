@@ -13,6 +13,7 @@ from antismash.common.secmet import Record
 from antismash.config import ConfigType, get_config
 
 from .core import (
+    check_clusterblast_files,
     get_core_gene_ids,
     load_clusterblast_database,
     parse_all_clusters,
@@ -52,11 +53,10 @@ def check_known_prereqs(_options: ConfigType) -> List[str]:
         if path.locate_executable(binary_name) is None:
             failure_messages.append("Failed to locate file: %r" % binary_name)
 
-    for file_name, optional in [('knownclusterprots.fasta', False),
-                                ('knownclusterprots.dmnd', False),
-                                ('knownclusters.txt', False)]:
-        if path.locate_file(_get_datafile_path(file_name)) is None and not optional:
-            failure_messages.append("Failed to locate file: %r" % file_name)
+    cluster_defs = _get_datafile_path('knownclusters.txt')
+    protein_seqs = _get_datafile_path("knownclusterprots.fasta")
+    db_file = _get_datafile_path("knownclusterprots.dmnd")
+    failure_messages.extend(check_clusterblast_files(cluster_defs, protein_seqs, db_file))
 
     return failure_messages
 
