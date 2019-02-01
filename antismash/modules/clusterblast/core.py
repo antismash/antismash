@@ -76,7 +76,7 @@ def run_diamond_on_all_regions(regions: Sequence[secmet.Region], database: str) 
     ]
     with NamedTemporaryFile() as temp_file:
         write_fastas_with_all_genes(regions, temp_file.name)
-        stdout = subprocessing.run_diamond(temp_file.name, database, mode="blastp", opts=extra_args)
+        stdout = subprocessing.run_diamond_search(temp_file.name, database, mode="blastp", opts=extra_args)
     return stdout
 
 
