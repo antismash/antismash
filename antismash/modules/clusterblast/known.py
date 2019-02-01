@@ -10,7 +10,7 @@ from typing import Dict, List
 
 from antismash.common import path
 from antismash.common.secmet import Record
-from antismash.config import ConfigType
+from antismash.config import ConfigType, get_config
 
 from .core import (
     get_core_gene_ids,
@@ -47,10 +47,9 @@ def check_known_prereqs(_options: ConfigType) -> List[str]:
             a list of error messages, one for each failing prequisite check
     """
     failure_messages = []
-    for binary_name, optional in [('blastp', False),
-                                  ('makeblastdb', False),
-                                  ('diamond', False)]:
-        if path.locate_executable(binary_name) is None and not optional:
+    options = get_config()
+    for binary_name in ['blastp', 'makeblastdb', options.cb_diamond_executable]:
+        if path.locate_executable(binary_name) is None:
             failure_messages.append("Failed to locate file: %r" % binary_name)
 
     for file_name, optional in [('knownclusterprots.fasta', False),
