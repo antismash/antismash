@@ -1,5 +1,8 @@
 <div class="more-details">
-  <div class="heading">NRPS/PKS domain predictions</div>
+    <div class="heading">
+      <span>NRPS/PKS monomer predictions</span>
+      {{help_tooltip(tooltip, "nrps-monomers")}}
+    </div>
   <dl class="prediction-text">
     {% for gene_id in region.sidepanel_features if gene_id in relevant_features %}
       <strong>{{gene_id}}</strong>: {{relevant_features[gene_id] | join(" - ")}}

@@ -1,6 +1,9 @@
 <div class="structure">
   {% if region.has_any_polymer() %}
-    <div class="heading">Predicted core structure(s)</div>
+    <div class="heading">
+      <span>Predicted core structure(s)</span>
+      {{help_tooltip(tooltip, "nrps-structures")}}
+    </div>
     {% for supercluster in region.superclusters %}
       {% if supercluster.smiles or supercluster.polymer %}
         <div>
