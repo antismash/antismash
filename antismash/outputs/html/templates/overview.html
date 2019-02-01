@@ -81,7 +81,7 @@
               <td>
                 {% set dash = joiner("-") %}
                 {% for subtype in region.products -%}
-                  {{dash()}}<a href="https://docs.antismash.secondarymetabolites.org/glossary/#{{subtype}}" target="_blank">{{subtype | title}}</a>
+                  {{dash()}}<a href="{{options.urls.docs_baseurl}}glossary/#{{subtype}}" target="_blank">{{subtype | title}}</a>
                 {%- endfor %}
               </td>
               <td class="digits">{{region.location.start + 1}}</td>
