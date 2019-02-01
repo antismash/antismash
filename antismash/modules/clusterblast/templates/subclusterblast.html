@@ -1,5 +1,8 @@
 <div class = "subclusterblast">
-  <h3>Similar subclusters</h3>
+    <div class="heading">
+      <span>Similar subclusters</span>
+      {{help_tooltip(tooltip, "cb-sub")}}
+    </div>
   {% if region.subcluster_blast %}
   <div>
     <select id= "subclusterblast-{{region.anchor_id}}-select" class= "clusterblast-selector">

@@ -1,5 +1,8 @@
 <div class = "clusterblast">
-  <h3>Similar gene clusters</h3>
+    <div class="heading">
+      <span>Similar gene clusters</span>
+      {{help_tooltip(tooltip, "cb-general")}}
+    </div>
   {% if region.cluster_blast %}
   <div>
     <select id= "clusterblast-{{region.anchor_id}}-select" class= "clusterblast-selector">

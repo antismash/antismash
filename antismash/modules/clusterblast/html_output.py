@@ -27,23 +27,34 @@ def generate_html(region_layer: RegionLayer, _results: ClusterBlastResults,
     html = HTMLSections("clusterblast")
     region = region_layer.region_feature
 
+    base_tooltip = ("Shows %s that are similar to the current region. Genes marked with the "
+                    "same colour are interrelated. White genes have no relationship.<br>"
+                    "Click on reference genes to show details of similarities to "
+                    "genes within the current region.")
+
     if options_layer.cb_general or region.clusterblast is not None:
-        div = generate_div(region_layer, record_layer, options_layer, "clusterblast")
+        tooltip = base_tooltip % "clusters from the antiSMASH database and other clusters of interest"
+        tooltip += "<br>Click on an accession to open that entry in the antiSMASH database (if applicable)."
+        div = generate_div(region_layer, record_layer, options_layer, "clusterblast", tooltip)
         html.add_detail_section("ClusterBlast", div, "clusterblast")
     if options_layer.cb_knownclusters or region.knownclusterblast is not None:
-        div = generate_div(region_layer, record_layer, options_layer, "knownclusterblast")
+        tooltip = base_tooltip % "clusters from the MiBIG database"
+        tooltip += "<br>Click on an accession to open that entry in the MiBIG database."
+        div = generate_div(region_layer, record_layer, options_layer, "knownclusterblast", tooltip)
         html.add_detail_section("KnownClusterBlast", div, "knownclusterblast")
     if options_layer.cb_subclusters or region.subclusterblast is not None:
-        div = generate_div(region_layer, record_layer, options_layer, "subclusterblast")
+        tooltip = base_tooltip % "sub-cluster units"
+        div = generate_div(region_layer, record_layer, options_layer, "subclusterblast", tooltip)
         html.add_detail_section("SubClusterBlast", div, "subclusterblast")
 
     return html
 
 
 def generate_div(region_layer: RegionLayer, record_layer: RecordLayer,
-                 options_layer: OptionsLayer, search_type: str) -> Markup:
+                 options_layer: OptionsLayer, search_type: str,
+                 tooltip: str) -> Markup:
     """ Generates the specific HTML section of the body for a given variant of
         clusterblast
     """
     template = FileTemplate(path.get_full_path(__file__, "templates", "%s.html" % search_type))
-    return template.render(record=record_layer, region=region_layer, options=options_layer)
+    return template.render(record=record_layer, region=region_layer, options=options_layer, tooltip=tooltip)
