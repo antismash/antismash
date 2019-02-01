@@ -1,5 +1,8 @@
 <div class="more-details">
-  <h3> Prediction details </h3>
+    <div class="heading">
+      <span>Core peptide predictions</span>
+      {{help_tooltip(tooltip, "thio-side")}}
+    </div>
   {% if cluster.motifs %}
   <dl class ="prediction-text">
   {% for motif in cluster.motifs %}
