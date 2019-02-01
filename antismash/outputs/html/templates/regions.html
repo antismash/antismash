@@ -53,7 +53,10 @@
   </div>
 
   <div class="focus-panel">
-    <h3>Gene details</h3>
+    <div class="heading">
+      <span>Gene details</span>
+      {{help_tooltip("Shows details of the most recently selected gene, including names, products, location, and other annotations.", "focus-panel")}}
+    </div>
     <div class="focus-panel-content focus-panel-content-{{region.anchor_id}}">
         <div style="text-align: center; margin-top: 30%;">
             Select a gene to view the details available for it
