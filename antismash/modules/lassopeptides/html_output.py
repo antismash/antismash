@@ -28,10 +28,16 @@ def generate_html(region_layer: RegionLayer, results: LassoResults,
         if record_layer.get_cds_by_name(locus).is_contained_by(region_layer.region_feature):
             motifs_in_region[locus] = results.motifs_by_locus[locus]
 
-    template = FileTemplate(path.get_full_path(__file__, "templates", "details.html"))
-    html.add_detail_section("Lasso peptides", template.render(results=motifs_in_region))
+    detail_tooltip = ("Lists the possible core peptides for each biosynthetic enzyme, including the predicted class. "
+                      "Each core peptide shows the leader and core peptide sequences, separated by a dash.")
 
+    template = FileTemplate(path.get_full_path(__file__, "templates", "details.html"))
+    html.add_detail_section("Lasso peptides", template.render(results=motifs_in_region, tooltip=detail_tooltip))
+
+    side_tooltip = ("Lists the possible core peptides in the region. "
+                    "Each core peptide lists the number of disulfide bridges, possible molecular weights, "
+                    "and the scores for cleavage site prediction and RODEO.")
     template = FileTemplate(path.get_full_path(__file__, "templates", "sidepanel.html"))
-    html.add_sidepanel_section("Lasso peptides", template.render(results=motifs_in_region))
+    html.add_sidepanel_section("Lasso peptides", template.render(results=motifs_in_region, tooltip=side_tooltip))
 
     return html
