@@ -24,12 +24,17 @@ def generate_html(region_layer: RegionLayer, results: LanthiResults,
     """ Generates HTML output for the module """
     html = HTMLSections("lanthipeptides")
 
+    detail_tooltip = ("Lists the possible core peptides for each biosynthetic enzyme, including the predicted class. "
+                      "Each core peptide shows the leader and core peptide sequences, separated by a dash.")
     template = FileTemplate(path.get_full_path(__file__, "templates", "details.html"))
     motifs = results.get_motifs_for_region(region_layer.region_feature)
-    html.add_detail_section("Lanthipeptides", template.render(results=motifs))
+    html.add_detail_section("Lanthipeptides", template.render(results=motifs, tooltip=detail_tooltip))
 
+    side_tooltip = ("Lists the possible core peptides in the region. "
+                    "Each core peptide lists the number of lanthionine bridges, possible molecular weights, "
+                    "and the scores for cleavage site prediction and RODEO.")
     template = FileTemplate(path.get_full_path(__file__, "templates", "sidepanel.html"))
     motifs = results.get_motifs_for_region(region_layer.region_feature)
-    html.add_sidepanel_section("Lanthipeptides", template.render(results=motifs))
+    html.add_sidepanel_section("Lanthipeptides", template.render(results=motifs, tooltip=side_tooltip))
 
     return html

@@ -1,5 +1,8 @@
 <div class="more-details">
-<h3> Prediction details </h3>
+  <div class="heading">
+    <span>Core peptide predictions</span>
+    {{help_tooltip(tooltip, "lanthi-side")}}
+  </div>
 {% if results | length != 0 %}
     <dl class ="prediction-text">
     {% for motifs in results.values() %}
