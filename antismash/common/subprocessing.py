@@ -458,3 +458,16 @@ def run_diamond_search(query_file: str, database_file: str, mode: str = "blastp"
         args.extend(opts)
 
     return run_diamond(mode, args).stdout
+
+
+def run_diamond_version() -> str:
+    """ Get the version of the diamond executable
+
+        Returns:
+            The numeric part of "diamond version"
+    """
+
+    version_string = run_diamond("version").stdout
+    # Get rid of the "diamond version" prefix
+    assert version_string.startswith("diamond version ")
+    return version_string[16:]

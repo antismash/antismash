@@ -111,6 +111,7 @@ class TestResultsReuse(TestAntismash):
 
 class TestModuleData(unittest.TestCase):
     def test_prepare_module_data(self):
+        self.default_options = build_config([], isolated=True, modules=get_all_modules())
         # make sure there's some to start with
         search = path.get_full_path(antismash.__file__, '**', "*.h3?")
         existing_press_files = glob.glob(search, recursive=True)

@@ -6,6 +6,7 @@
 from collections import defaultdict, OrderedDict
 import logging
 import os
+import struct
 from tempfile import NamedTemporaryFile
 from typing import Dict, Iterable, List, Set, Sequence, Tuple  # pylint: disable=unused-import
 
@@ -16,6 +17,10 @@ from antismash.config import get_config
 
 from .data_structures import Subject, Query, Protein, ReferenceCluster, Score
 
+VERSION_FORMAT_MAP = {
+    "0.8": 0,
+    "0.9": 1,
+}
 
 def get_core_gene_ids(record: secmet.Record) -> Set[str]:  # TODO: consider moving into secmet
     """ Fetches all gene accessions of genes with CORE gene function from all
@@ -776,3 +781,59 @@ def write_fastas_with_all_genes(regions: Iterable[secmet.Region], filename: str,
             chunk_seqs = all_seqs[i * size:]
         fasta.write_fasta(chunk_names, chunk_seqs, chunk_filename % i)
     return [chunk_filename % i for i in range(partitions)]
+
+
+def check_diamond_db_compatible(database_file: str) -> bool:
+    """ Check if the given diamond database is compatible with the installed diamond version.
+
+        Arguments:
+            database_file: the path to the database file to check
+
+        Returns:
+            True if the database file is compatible, False otherwise
+    """
+    diamond_version = subprocessing.run_diamond_version()
+    # We don't care about patch versions for now
+    major, minor, _ = diamond_version.split(".")
+    compatible_format = VERSION_FORMAT_MAP[".".join([major, minor])]
+
+    with open(database_file, 'rb') as handle:
+        chunk = handle.read(16)
+
+    # The uint32 in front of the format version is the build ID, we don't care
+    # about it yet, but might need to care in future.
+
+    _, db_format = struct.unpack_from("II", chunk, offset=8)
+
+    if db_format != compatible_format:
+        logging.debug("Incompatible database format for %s. Expected %s but found %s.",
+            database_file, compatible_format, db_format
+        )
+        return False
+    return True
+
+
+def check_clusterblast_files(definition_file: str, fasta_file: str, db_file: str) -> List[str]:
+    """ Check if the clusterblast files exist in the right version.
+
+        Arguments:
+            definition_file: the path to the cluster definition TSV file
+            fasta_file: the path to the cluster proteins fasta file
+            db_file: the path to the diamond databse file
+
+        Returns:
+            A list of error strings the way `check_prereqs` does
+    """
+    failure_messages = []  # type: List[str]
+
+    if path.locate_file(definition_file) is None:
+        failure_messages.append("Failed to locate cluster definition file: {!r}".format(definition_file))
+
+    if path.locate_file(fasta_file) is None:
+        failure_messages.append("Failed to locate cluster proteins: {!r}".format(fasta_file))
+    elif path.locate_file(db_file) is None:
+        failure_messages.append("Failed to locate cluster database: {!r}".format(db_file))
+    elif not check_diamond_db_compatible(db_file):
+        failure_messages.append("Incompatible diamond database format.")
+
+    return failure_messages

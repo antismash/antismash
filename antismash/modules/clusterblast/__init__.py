@@ -12,7 +12,11 @@ from antismash.common.secmet import Record
 from antismash.config import get_config, ConfigType
 from antismash.config.args import ModuleArgs
 
-from .core import load_clusterblast_database, internal_homology_blast
+from .core import (
+    check_clusterblast_files,
+    internal_homology_blast,
+    load_clusterblast_database,
+)
 from .clusterblast import perform_clusterblast
 from .html_output import generate_html, will_handle
 from .known import run_knownclusterblast_on_record, check_known_prereqs
@@ -103,12 +107,6 @@ def check_prereqs() -> List[str]:
         options.cb_diamond_executable,
     ]
 
-    _required_files = [
-        ('geneclusterprots.dmnd', False),
-        ('geneclusterprots.fasta', False),
-        ('geneclusters.txt', False),
-    ]
-
     clusterblastdir = os.path.join(options.database_dir, "clusterblast")
 
     failure_messages = []
@@ -116,9 +114,10 @@ def check_prereqs() -> List[str]:
         if path.locate_executable(binary_name) is None:
             failure_messages.append("Failed to locate file: %r" % binary_name)
 
-    for file_name, optional in _required_files:
-        if path.locate_file(os.path.join(clusterblastdir, file_name)) is None and not optional:
-            failure_messages.append("Failed to locate file: %r" % file_name)
+    cluster_defs = os.path.join(clusterblastdir, 'geneclusters.txt')
+    protein_seqs = os.path.join(clusterblastdir, "geneclusterprots.fasta")
+    db_file = os.path.join(clusterblastdir, "geneclusterprots.dmnd")
+    failure_messages.extend(check_clusterblast_files(cluster_defs, protein_seqs, db_file))
 
     failure_messages.extend(check_known_prereqs(options))
     failure_messages.extend(check_sub_prereqs(options))
