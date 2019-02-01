@@ -34,18 +34,24 @@ def generate_html(region_layer: RegionLayer, results: SactiResults,
 
     sacti_layer = SactipeptideLayer(record_layer, region_layer.region_feature)
 
+    detail_tooltip = ("Lists the possible core peptides for each biosynthetic enzyme, including the predicted class. "
+                      "Each core peptide shows the leader and core peptide sequences, separated by a dash.")
     template = FileTemplate(path.get_full_path(__file__, "templates", "details.html"))
     details = template.render(record=record_layer,
                               region=sacti_layer,
                               options=options_layer,
-                              results=motifs_in_region)
+                              results=motifs_in_region,
+                              tooltip=detail_tooltip)
     html.add_detail_section("Sactipeptides", details)
 
+    side_tooltip = ("Lists the possible core peptides in the region. "
+                    "Each core peptide lists its RODEO score and predicted core sequence.")
     template = FileTemplate(path.get_full_path(__file__, "templates", "sidepanel.html"))
     sidepanel = template.render(record=record_layer,
                                 region=sacti_layer,
                                 options=options_layer,
-                                results=motifs_in_region)
+                                results=motifs_in_region,
+                                tooltip=side_tooltip)
     html.add_sidepanel_section("Sactipeptides", sidepanel)
 
     return html
