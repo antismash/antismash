@@ -406,8 +406,37 @@ def run_blastp(target_blastp_database: str, query_sequence: str,
     return list(SearchIO.parse(StringIO(result.stdout), 'blast-text'))
 
 
-def run_diamond(query_file: str, database_file: str, mode: str = "blastp",
-                opts: Optional[List[str]] = None) -> str:
+def run_diamond(subcommand: str,
+                opts: Optional[List[str]] = None) -> RunResult:
+    """ Run a diamond subcommand, possibly with further options.
+
+        Arguments:
+            subcommand: the diamond subcommand to run
+            opts: a list of additional argument strings to pass to diamond
+
+        Returns:
+            RunResult of running diamond
+    """
+    config = get_config()
+    with TemporaryDirectory() as temp_dir:
+        params = [
+            config.cb_diamond_executable,
+            subcommand,
+            "--threads", str(config.cpus),
+            "--tmpdir", temp_dir,
+        ]
+
+        if opts:
+            params.extend(opts)
+
+        result = execute(params)
+        if not result.successful():
+            raise RuntimeError("diamond failed to run: %s -> %s" % (subcommand, result.stderr[-100:]))
+    return result
+
+
+def run_diamond_search(query_file: str, database_file: str, mode: str = "blastp",
+                       opts: Optional[List[str]] = None) -> str:
     """ Runs diamond, comparing the given query to the given database
 
         Arguments:
@@ -419,18 +448,13 @@ def run_diamond(query_file: str, database_file: str, mode: str = "blastp",
         Returns:
             the output from running diamond
     """
-    with TemporaryDirectory() as temp_dir:
-        command = [
-            "diamond",
-            mode,
-            "--db", database_file,
-            "--threads", str(get_config().cpus),
-            "--query", query_file,
-            "--tmpdir", temp_dir,
-        ]
-        if opts:
-            command.extend(opts)
-        result = execute(command)
-        if not result.successful():
-            raise RuntimeError("diamond failed to run: %s -> %s" % (command, result.stderr[-100:]))
-    return result.stdout
+
+    args = [
+        "--db", database_file,
+        "--query", query_file,
+    ]
+
+    if opts:
+        args.extend(opts)
+
+    return run_diamond(mode, args).stdout
