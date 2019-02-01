@@ -42,14 +42,24 @@ def generate_html(region_layer: RegionLayer, results: NRPS_PKS_Results,
             if monomer:
                 monomers.append(monomer)
 
-    for filename, name, class_name in [("products.html", "NRPS/PKS products", "nrps_pks_products"),
-                                       ("monomers.html", "NRPS/PKS monomers", "")]:
+    prod_tt = ("Shows estimated product structure and polymer for each supercluster in the region. "
+               "To show the product, click on the expander or the supercluster feature drawn in the overview. "
+               )
+    mon_tt = ("Shows the predicted monomers for each adynelation domain and acyltransferase within genes. "
+              "Each gene prediction can be expanded to view detailed predictions of each domain. "
+              "Each prediction can be expanded to view the predictions by tool "
+              " (and, for some tools, further expanded for extra details). "
+              )
+
+    for filename, name, class_name, tooltip in [("products.html", "NRPS/PKS products", "nrps_pks_products", prod_tt),
+                                                ("monomers.html", "NRPS/PKS monomers", "", mon_tt)]:
         template = FileTemplate(path.get_full_path(__file__, "templates", filename))
         section = template.render(record=record_layer,
                                   region=nrps_layer,
                                   results=results,
                                   relevant_features=features_with_domain_predictions,
-                                  options=options_layer)
+                                  options=options_layer,
+                                  tooltip=tooltip)
         html.add_sidepanel_section(name, section, class_name)
 
     return html
