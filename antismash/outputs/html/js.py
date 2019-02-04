@@ -213,7 +213,7 @@ def convert_tta_codons(tta_codons: List[Feature], record: Record) -> List[Dict[s
     return js_codons
 
 
-def generate_pfam2go_tooltip(record: Record, feature: CDSFeature) -> List[str]:
+def generate_pfam2go_tooltip(record: Record, feature: CDSFeature) -> List[html_renderer.Markup]:
     """Create tooltip text for Pfam to Gene Ontologies results."""
     go_notes = []
     unique_pfams_with_gos = {}
@@ -226,7 +226,7 @@ def generate_pfam2go_tooltip(record: Record, feature: CDSFeature) -> List[str]:
     for unique_id, go_qualifier in sorted(unique_pfams_with_gos.items()):
         for go_id, go_description in sorted(go_qualifier.go_entries.items()):
             go_notes.append(go_info_line.format(pf_id=unique_id, url=go_url, go_id=go_id, go_desc=go_description))
-    return go_notes
+    return list(map(html_renderer.Markup, go_notes))
 
 
 def generate_asf_tooltip_section(record: Record, feature: CDSFeature) -> Dict[Tuple[str, int, int], List[str]]:
