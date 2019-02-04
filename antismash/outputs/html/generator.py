@@ -140,12 +140,22 @@ def generate_webpage(records: List[Record], results: List[Dict[str, module_resul
 
         html_sections = generate_html_sections(record_layers_with_regions, results_by_record_id, options)
 
+        doc_url = options.urls.docs_baseurl + "understanding_output/#the-antismash-5-region-concept"
+        svg_tooltip = ("Shows the layout of the region, marking coding sequences and areas of interest. "
+                       "Clicking a gene will select it and show any relevant details. "
+                       "Clicking an area feature (e.g. a candidate cluster) will select all coding "
+                       "sequences within that area. Double clicking an area feature will zoom to that area. "
+                       "Multiple genes and area features can be selected by clicking them while holding the Ctrl key."
+                       )
+        svg_tooltip += "<br>More detailed help is available <a href='%s' target='_blank'>here</a>." % doc_url
+
         aux = template.render(records=record_layers_with_regions, options=options_layer,
                               version=options.version, extra_data=js_domains,
                               regions_written=regions_written, sections=html_sections,
                               results_by_record_id=results_by_record_id,
                               config=options, job_id=job_id, page_title=page_title,
-                              records_without_regions=record_layers_without_regions)
+                              records_without_regions=record_layers_without_regions,
+                              svg_tooltip=svg_tooltip)
         result_file.write(aux)
 
 
