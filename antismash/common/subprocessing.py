@@ -460,6 +460,24 @@ def run_diamond_search(query_file: str, database_file: str, mode: str = "blastp"
     return run_diamond(mode, args).stdout
 
 
+def run_diamond_makedb(database_file: str, sequence_file: str) -> RunResult:
+    """ Generate a new diamond database from a fasta file.Optional
+
+        Arguments:
+            database_file: the path to the database to generate
+            sequence_file: the path to a protein FASTA file to generate the database from
+
+        Returns:
+            the RunResult running diamond
+    """
+    args = [
+        "--db", database_file,
+        "--in", sequence_file,
+    ]
+
+    return run_diamond("makedb", args)
+
+
 def run_diamond_version() -> str:
     """ Get the version of the diamond executable
 
