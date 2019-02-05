@@ -230,3 +230,4 @@ TP_methylase	Tetrapyrrole (Corrin/Porphyrin) methylases	28	TP_methylase.hmm
 DUF3328	UstYa/UstYb-like monooxygenase	25	DUF3328.hmm
 pop	fungal prolyl oligopeptidase	950	pop.hmm
 ustH	fungal ustH-type gamma peptidase	450	ustH.hmm
+truD	TruD pseudouridine synthase	120	truD.hmm
