@@ -198,7 +198,7 @@ RULE indole
 RULE nucleoside
     CUTOFF 20
     EXTENT 10
-    CONDITIONS LipM or LipV or LipU or ToyB or TunD or pur6 or pur10 or nikJ or nikO
+    CONDITIONS LipM or LipV or LipU or ToyB or TunD or pur6 or pur10 or nikJ or nikO or truD
 
 RULE phosphoglycolipid
     CUTOFF 20
