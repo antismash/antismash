@@ -19,7 +19,7 @@ from .core import (
 )
 from .clusterblast import perform_clusterblast
 from .html_output import generate_html, will_handle
-from .known import run_knownclusterblast_on_record, check_known_prereqs
+from .known import run_knownclusterblast_on_record, check_known_prereqs, prepare_known_data
 from .results import ClusterBlastResults, get_result_limit
 from .sub import run_subclusterblast_on_record, check_sub_prereqs
 
@@ -107,20 +107,32 @@ def check_prereqs() -> List[str]:
         options.cb_diamond_executable,
     ]
 
-    clusterblastdir = os.path.join(options.database_dir, "clusterblast")
-
     failure_messages = []
     for binary_name in _required_binaries:
         if path.locate_executable(binary_name) is None:
             failure_messages.append("Failed to locate file: %r" % binary_name)
 
-    cluster_defs = os.path.join(clusterblastdir, 'geneclusters.txt')
-    protein_seqs = os.path.join(clusterblastdir, "geneclusterprots.fasta")
-    db_file = os.path.join(clusterblastdir, "geneclusterprots.dmnd")
-    failure_messages.extend(check_clusterblast_files(cluster_defs, protein_seqs, db_file))
+    failure_messages.extend(prepare_data(logging_only=True))
 
     failure_messages.extend(check_known_prereqs(options))
     failure_messages.extend(check_sub_prereqs(options))
+
+    return failure_messages
+
+
+def prepare_data(logging_only: bool = False) -> List[str]:
+    """ Prepare the databases. """
+    failure_messages = []
+    options = get_config()
+    clusterblastdir = os.path.join(options.database_dir, "clusterblast")
+
+    cluster_defs = os.path.join(clusterblastdir, 'geneclusters.txt')
+    protein_seqs = os.path.join(clusterblastdir, "geneclusterprots.fasta")
+    db_file = os.path.join(clusterblastdir, "geneclusterprots.dmnd")
+
+    failure_messages.extend(check_clusterblast_files(cluster_defs, protein_seqs, db_file, logging_only=logging_only))
+    failure_messages.extend(prepare_known_data(logging_only))
+
     return failure_messages
 
 

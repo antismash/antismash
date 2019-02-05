@@ -38,7 +38,7 @@ def _get_datafile_path(filename: str) -> str:
     return path.get_full_path(__file__, 'data', 'known', filename)
 
 
-def check_known_prereqs(_options: ConfigType) -> List[str]:
+def check_known_prereqs(options: ConfigType) -> List[str]:
     """ Determines if any prerequisite data files or executables are missing
 
         Arguments:
@@ -48,15 +48,28 @@ def check_known_prereqs(_options: ConfigType) -> List[str]:
             a list of error messages, one for each failing prequisite check
     """
     failure_messages = []
-    options = get_config()
     for binary_name in ['blastp', 'makeblastdb', options.cb_diamond_executable]:
         if path.locate_executable(binary_name) is None:
             failure_messages.append("Failed to locate file: %r" % binary_name)
 
+    return failure_messages
+
+
+def prepare_known_data(logging_only: bool = False) -> List[str]:
+    """ Prepare diamond database for KnownClusterBlast.
+
+        Arguments:
+            logging_omly: Only log errors, don't try to regenerate databases
+
+        Returns:
+            a list of error messages, one for each failing prerequisite check
+    """
+    failure_messages = []
+
     cluster_defs = _get_datafile_path('knownclusters.txt')
     protein_seqs = _get_datafile_path("knownclusterprots.fasta")
     db_file = _get_datafile_path("knownclusterprots.dmnd")
-    failure_messages.extend(check_clusterblast_files(cluster_defs, protein_seqs, db_file))
+    failure_messages.extend(check_clusterblast_files(cluster_defs, protein_seqs, db_file, logging_only=logging_only))
 
     return failure_messages
 
