@@ -210,6 +210,7 @@ Peptidase_S8	Subtilase family	21	PF00082.hmm
 Peptidase_M16	Insulinase (Peptidase family M16)	22	PF00675.hmm
 Peptidase_S41	Peptidase family S41	21	PF03572.hmm
 Peptidase_M16_C	Peptidase M16 inactive domain	20	PF05193.hmm
+Peptidase_S28	Peptidase S28 serine carboxypeptiase	20	Peptidase_S28.hmm
 Fer4_12	4Fe-4S single cluster domain	22	PF13353.hmm
 Abi	CAAX protease self-immunity	21	PF02517.hmm
 Peptidase_M50	Peptidase family M50	27	PF02163.hmm
@@ -225,3 +226,7 @@ HMGL-like	HMGL-like Pyruvate carboxylase	30	PF00682.hmm
 RimK	RimK-like ATP-grasp domain	21	PF08443.hmm
 TIGR04424	Microcin B17-processing protein McbB	65	TIGR04424.hmm
 TIGR01716	RGG quorum sensing regulator	37	TIGR01716.hmm
+TP_methylase	Tetrapyrrole (Corrin/Porphyrin) methylases	28	TP_methylase.hmm
+DUF3328	UstYa/UstYb-like monooxygenase	25	DUF3328.hmm
+pop	fungal prolyl oligopeptidase	950	pop.hmm
+ustH	fungal ustH-type gamma peptidase	450	ustH.hmm

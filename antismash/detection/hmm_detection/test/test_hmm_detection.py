@@ -158,7 +158,7 @@ class HmmDetectionTest(unittest.TestCase):
 
     def test_create_rules(self):
         rules = hmm_detection.create_rules(self.rules_file, self.signature_names)
-        assert len(rules) == 48
+        assert len(rules) == 49
         t1pks_rules = [rule for rule in rules if rule.name == "t1pks"]
         assert len(t1pks_rules) == 1
         rule = t1pks_rules[0]
@@ -168,7 +168,7 @@ class HmmDetectionTest(unittest.TestCase):
 
     def test_profiles_parsing(self):
         profiles = signatures.get_signature_profiles()
-        assert len(profiles) == 227  # ensures we don't delete any by accident
+        assert len(profiles) == 232  # ensures we don't delete any by accident
 
     def test_filter(self):
         # fake HSPs all in one CDS with overlap > 20 and query_ids from the same equivalence group
