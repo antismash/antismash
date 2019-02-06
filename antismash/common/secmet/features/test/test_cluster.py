@@ -31,7 +31,7 @@ class TestCluster(unittest.TestCase):
     def test_biopython_conversion(self):
         bio = self.cluster.to_biopython()
         assert len(bio) == 2
-        assert bio[0].type == "cluster" and bio[1].type == "cluster_core"
+        assert bio[0].type == "protocluster" and bio[1].type == "proto_core"
         new = Cluster.from_biopython(bio[0])
         assert new is not self.cluster
         assert new.cutoff == self.cluster.cutoff == 17

@@ -387,7 +387,7 @@ class Record:
 
     def get_misc_feature_by_type(self, label: str) -> Tuple[Feature, ...]:
         """Returns a tuple of all generic features with a type matching label"""
-        if label in ["cluster", "supercluster", "CDS", "CDSmotif", "subregion",
+        if label in ["protocluster", SuperCluster.FEATURE_TYPE, "CDS", "CDSmotif", "subregion",
                      "region", "PFAM_domain", "aSDomain", "aSProdPred"]:
             raise ValueError("Use the appropriate get_* type instead for %s" % label)
         return tuple(i for i in self.get_generics() if i.type == label)
@@ -562,10 +562,10 @@ class Record:
             self.add_cds_feature(CDSFeature.from_biopython(feature, record=self))
         elif feature.type == 'gene':
             self.add_gene(Gene.from_biopython(feature))
-        elif feature.type == 'cluster':
+        elif feature.type == "protocluster":
             self.add_cluster(Cluster.from_biopython(feature))
-        elif feature.type == "cluster_core":
-            # discard this, as info contained in it is in "cluster" features
+        elif feature.type == "proto_core":
+            # discard this, as info contained in it is in "protocluster" features
             pass
         elif feature.type == 'CDS_motif':
             # skip component parts of prepeptides and regenerate from the core
@@ -580,7 +580,7 @@ class Record:
             self.add_pfam_domain(PFAMDomain.from_biopython(feature))
         elif feature.type == 'aSDomain':
             self.add_antismash_domain(AntismashDomain.from_biopython(feature))
-        elif feature.type == 'supercluster':
+        elif feature.type == SuperCluster.FEATURE_TYPE:
             raise ValueError("SuperCluster features cannot be directly added from biopython")
         elif feature.type == 'region':
             raise ValueError("Region features cannot be directly added from biopython")
@@ -596,7 +596,7 @@ class Record:
         """
         postponed_features = {
             "region": [],
-            "supercluster": [],
+            SuperCluster.FEATURE_TYPE: [],
         }  # type: Dict[str, SeqFeature]
 
         assert isinstance(seq_record, SeqRecord)
@@ -689,7 +689,7 @@ class Record:
                         feature.qualifiers.pop("gene", "")
                     else:
                         feature.qualifiers["gene"][0] = original_gene_name
-        for feature in postponed_features["supercluster"]:
+        for feature in postponed_features[SuperCluster.FEATURE_TYPE]:
             record.add_feature(SuperCluster.from_biopython(feature).convert_to_real_feature(record))
         for feature in postponed_features["region"]:
             record.add_feature(Region.from_biopython(feature).convert_to_real_feature(record))

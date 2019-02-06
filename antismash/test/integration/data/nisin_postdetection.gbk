@@ -40,9 +40,9 @@ FEATURES             Location/Qualifiers
                      /organism="Lactococcus lactis subsp. lactis"
                      /strain="M78"
                      /sub_species="lactis"
-     cluster         1..15016
+     protocluster    1..15016
                      /aStool="rule-based-clusters"
-                     /cluster_number="1"
+                     /protocluster_number="1"
                      /core_location="[827:7140]"
                      /cutoff="20000"
                      /detection_rule="((LANC_like and (Flavoprotein or
@@ -57,7 +57,7 @@ FEATURES             Location/Qualifiers
                      /neighbourhood="10000"
                      /product="lanthipeptide"
                      /tool="antismash"
-     cluster_core    828..7140
+     proto_core      828..7140
                      /aStool="rule-based-clusters"
                      /cluster_number="1"
                      /cutoff="20000"
@@ -72,8 +72,8 @@ FEATURES             Location/Qualifiers
                      and not YcaO)"
                      /neighbourhood="10000"
                      /product="lanthipeptide"
-     supercluster    1..15016
-                     /child_cluster="1"
+     cand_cluster    1..15016
+                     /protoclusters="1"
                      /detection_rules="((LANC_like and (Flavoprotein or
                      Trp_halogenase or p450 or Lant_dehyd_N or Lant_dehyd_C or
                      Lant_dehydr_C or tsrC or adh_short or adh_short_C2) or
@@ -85,7 +85,7 @@ FEATURES             Location/Qualifiers
                      and not YcaO)"
                      /kind="single"
                      /product="lanthipeptide"
-                     /supercluster_number="1"
+                     /candidate_cluster_number="1"
                      /tool="antismash"
      region          1..15016
                      /product="lanthipeptide"
@@ -98,7 +98,7 @@ FEATURES             Location/Qualifiers
                      leader_abc or mature_d or mature_ab or mature_a or mature_b
                      or mature_ha or mature_h_beta or lacticin_l or lacticin_mat
                      or LD_lanti_pre or strep_PEQAXS) and not YcaO)"
-                     /supercluster_numbers="1"
+                     /candidate_cluster_numbers="1"
                      /tool="antismash"
      gene            828..1001
                      /gene="nisA"

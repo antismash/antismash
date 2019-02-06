@@ -150,6 +150,7 @@ class TestRegion(unittest.TestCase):
             region.write_to_genbank(output.name)
             bio = list(seqio.parse(output.name))
         assert len(bio) == 1
+        print(bio[0].features)
         rec = Record.from_biopython(bio[0], taxon="bacteria")
         assert len(rec.get_regions()) == 1
         new = rec.get_region(0)

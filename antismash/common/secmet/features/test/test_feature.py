@@ -94,7 +94,7 @@ class TestFeature(unittest.TestCase):
             assert new.type == old.type == "testtype"
 
     def test_string_conversion(self):
-        for feature_type in ["cluster", "cds_motif", "test"]:
+        for feature_type in ["protocluster", "cds_motif", "test"]:
             for start, end in [(1, 5), (3, 8), (10, 15)]:
                 feature = Feature(FeatureLocation(start, end, strand=1),
                                   feature_type=feature_type)

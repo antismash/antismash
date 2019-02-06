@@ -66,6 +66,7 @@ from .feature import FeatureLocation, Feature
 from ..locations import locations_overlap, combine_locations
 
 
+
 @unique
 class SuperClusterKind(Enum):
     """ An Enum representing the kind of a SuperCluster.
@@ -100,7 +101,7 @@ class TemporarySuperCluster:  # pylint: disable=too-many-instance-attributes
     def __init__(self, location: FeatureLocation, kind: SuperClusterKind, cluster_numbers: List[int],
                  products: List[str], detection_rules: List[str], own_number: int, contig_edge: bool,
                  smiles: str = None, polymer: str = None) -> None:  # pylint: disable=too-many-arguments
-        self.type = "supercluster"
+        self.type = SuperCluster.FEATURE_TYPE
         self.location = location
         self.kind = kind
         self.clusters = cluster_numbers
@@ -136,6 +137,7 @@ class SuperCluster(CDSCollection):
         contain all of the child Clusters.
     """
     kinds = SuperClusterKind
+    FEATURE_TYPE = "cand_cluster"  # max length for biopython conversion
     __slots__ = ["_clusters", "_kind", "smiles_structure", "polymer"]
 
     def __init__(self, kind: SuperClusterKind, clusters: List[Cluster],
@@ -147,7 +149,7 @@ class SuperCluster(CDSCollection):
         if not isinstance(kind, SuperClusterKind):
             raise TypeError("argument 1 should be SuperClusterKind, had %s" % type(kind))
         location = combine_locations(cluster.location for cluster in clusters)
-        super().__init__(location, feature_type="supercluster", child_collections=clusters)
+        super().__init__(location, feature_type=SuperCluster.FEATURE_TYPE, child_collections=clusters)
         self._clusters = clusters
         self._kind = kind
         self.smiles_structure = smiles
@@ -193,10 +195,10 @@ class SuperCluster(CDSCollection):
         if qualifiers is None:
             qualifiers = {}
         if self._parent_record:
-            qualifiers["supercluster_number"] = [str(self.get_supercluster_number())]
+            qualifiers["candidate_cluster_number"] = [str(self.get_supercluster_number())]
         qualifiers["kind"] = [str(self.kind)]
         qualifiers["product"] = self.products
-        qualifiers["child_cluster"] = [str(cluster.get_cluster_number()) for cluster in self._clusters]
+        qualifiers["protoclusters"] = [str(cluster.get_cluster_number()) for cluster in self._clusters]
         qualifiers["detection_rules"] = [cluster.detection_rule for cluster in self._clusters]
         if self.smiles_structure is not None:
             qualifiers["SMILES"] = [self.smiles_structure]
@@ -217,8 +219,8 @@ class SuperCluster(CDSCollection):
         smiles = leftovers.pop("SMILES", [None])[0]
         polymer = leftovers.pop("polymer", [None])[0]
         products = leftovers.pop("product")
-        own_number = leftovers.pop("supercluster_number", "")
-        children = [int(num) for num in leftovers.pop("child_cluster")]
+        own_number = leftovers.pop("candidate_cluster_number", "")
+        children = [int(num) for num in leftovers.pop("protoclusters")]
         rules = leftovers.pop("detection_rules")
         edge = leftovers.pop("contig_edge", [None])[0] == "True"
         return TemporarySuperCluster(bio_feature.location, kind, children, products,

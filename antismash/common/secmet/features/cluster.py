@@ -23,14 +23,14 @@ class Cluster(CDSCollection):
         The core location covers the first and last CDS feature that caused the
         cluster to be formed, while the surrounding location includes the context.
     """
-    core_seqfeature_type = "cluster_core"
+    core_seqfeature_type = "proto_core"
     __slots__ = ["core_location", "detection_rule", "product", "tool", "cutoff",
                  "_definition_cdses", "neighbourhood_range", "t2pks"]
 
     def __init__(self, core_location: FeatureLocation, surrounding_location: FeatureLocation,
                  tool: str, product: str, cutoff: int, neighbourhood_range: int,
                  detection_rule: str) -> None:
-        super().__init__(surrounding_location, feature_type="cluster")
+        super().__init__(surrounding_location, feature_type="protocluster")
         # cluster-wide
         self.detection_rule = detection_rule
         self.product = product
@@ -80,7 +80,7 @@ class Cluster(CDSCollection):
             "detection_rule": [self.detection_rule]
         }
         if self._parent_record:
-            common["cluster_number"] = [str(self.get_cluster_number())]
+            common["protocluster_number"] = [str(self.get_cluster_number())]
 
         shared_qualifiers = dict(qualifiers) if qualifiers else {}
         shared_qualifiers.update(common)
@@ -100,7 +100,7 @@ class Cluster(CDSCollection):
     @staticmethod
     def from_biopython(bio_feature: SeqFeature, feature: "Cluster" = None,  # type: ignore
                        leftovers: Dict[str, List[str]] = None) -> "Cluster":
-        assert bio_feature.type == "cluster"
+        assert bio_feature.type == "protocluster"
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
         # grab mandatory qualifiers and create the class
@@ -115,7 +115,7 @@ class Cluster(CDSCollection):
                               tool, product, cutoff, neighbourhood_range, rule)
 
         # remove run-specific info
-        leftovers.pop("cluster_number", "")
+        leftovers.pop("protocluster_number", "")
 
         # rebuild analysis annotations
         feature.t2pks = T2PKSQualifier.from_biopython_qualifiers(leftovers)
