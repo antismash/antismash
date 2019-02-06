@@ -66,9 +66,9 @@ def prepare_known_data(logging_only: bool = False) -> List[str]:
     """
     failure_messages = []
 
-    cluster_defs = _get_datafile_path('knownclusters.txt')
-    protein_seqs = _get_datafile_path("knownclusterprots.fasta")
-    db_file = _get_datafile_path("knownclusterprots.dmnd")
+    cluster_defs = _get_datafile_path('clusters.txt')
+    protein_seqs = _get_datafile_path("proteins.fasta")
+    db_file = _get_datafile_path("proteins.dmnd")
     failure_messages.extend(check_clusterblast_files(cluster_defs, protein_seqs, db_file, logging_only=logging_only))
 
     return failure_messages
@@ -110,7 +110,7 @@ def perform_knownclusterblast(options: ConfigType, record: Record,
     logging.debug("Running DIAMOND knowncluster searches..")
     results = GeneralResults(record.id, search_type="knownclusterblast")
 
-    blastoutput = run_diamond_on_all_regions(record.get_regions(), _get_datafile_path('knownclusterprots'))
+    blastoutput = run_diamond_on_all_regions(record.get_regions(), _get_datafile_path('proteins'))
     write_raw_clusterblastoutput(options.output_dir, blastoutput,
                                  prefix="knownclusterblast")
     clusters_by_number, _ = parse_all_clusters(blastoutput, record,

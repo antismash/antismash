@@ -129,7 +129,7 @@ def load_reference_clusters(searchtype: str) -> Dict[str, ReferenceCluster]:
     elif searchtype == "knownclusterblast":
         logging.info("KnownClusterBlast: Loading gene cluster database into memory...")
         data_dir = path.get_full_path(__file__, "data", "known")
-        reference_cluster_file = os.path.join(data_dir, "knownclusters.txt")
+        reference_cluster_file = os.path.join(data_dir, "clusters.txt")
     with open(reference_cluster_file, "r") as handle:
         filetext = handle.read()
     lines = [line for line in filetext.splitlines() if "\t" in line]
@@ -172,7 +172,7 @@ def load_reference_proteins(accessions: Set[str], searchtype: str) -> Dict[str, 
     elif searchtype == "knownclusterblast":
         logging.info("KnownClusterBlast: Loading gene cluster database proteins into memory...")
         data_dir = path.get_full_path(__file__, "data", "known")
-        protein_file = os.path.join(data_dir, "knownclusterprots.fasta")
+        protein_file = os.path.join(data_dir, "proteins.fasta")
 
     proteins = {}
     with open(protein_file, 'r') as handle:
