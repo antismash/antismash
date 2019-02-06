@@ -224,3 +224,4 @@ PpyS	PPY synthase	300	ppys.hmm
 HMGL-like	HMGL-like Pyruvate carboxylase	30	PF00682.hmm
 RimK	RimK-like ATP-grasp domain	21	PF08443.hmm
 TIGR04424	Microcin B17-processing protein McbB	65	TIGR04424.hmm
+TIGR01716	RGG quorum sensing regulator	37	TIGR01716.hmm
