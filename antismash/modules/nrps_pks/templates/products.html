@@ -8,7 +8,7 @@
       {% if supercluster.smiles or supercluster.polymer %}
         <div>
           <div class="prediction-text">
-            For supercluster {{supercluster.number}}, location {{supercluster.location.start}} - {{supercluster.location.end}}:
+            For candidate cluster {{supercluster.number}}, location {{supercluster.location.start}} - {{supercluster.location.end}}:
           {{collapser_start("SC%s" % supercluster.number, level="supercluster")}}
           {% if supercluster.smiles %}
             <canvas id="smiles-canvas-{{region.anchor_id}}-{{supercluster.number}}" class="smiles-canvas" data-smiles="{{supercluster.smiles}}"></canvas>
