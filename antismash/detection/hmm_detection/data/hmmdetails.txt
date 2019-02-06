@@ -227,4 +227,4 @@ TIGR04424	Microcin B17-processing protein McbB	65	TIGR04424.hmm
 TP_methylase	Tetrapyrrole (Corrin/Porphyrin) methylases	28	TP_methylase.hmm
 DUF3328	UstYa/UstYb-like monooxygenase	25	DUF3328.hmm
 pop	fungal prolyl oligopeptidase	950	pop.hmm
-kex2	fungal kex2-type gamma peptidase	450	kex2.hmm
+ustH	fungal ustH-type gamma peptidase	450	ustH.hmm
