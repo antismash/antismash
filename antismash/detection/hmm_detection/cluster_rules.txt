@@ -278,3 +278,12 @@ RULE RaS-RiPP
     CUTOFF 5
     EXTENT 10
     CONDITIONS PF04055 and TIGR01716
+
+RULE fungal-RiPP
+    COMMENT fungal RiPP with POP or UstH peptidase types and a modification
+    CUTOFF 15
+    EXTENT 15
+    CONDITIONS (pop or ustH) and (p450 or TP_methylase)
+               or
+               #DUF3228 seems to be quite specific and also co-occurs with these peptidases
+               DUF3328 and (Peptidase_S41 or Peptidase_S28 or pop or ustH)
