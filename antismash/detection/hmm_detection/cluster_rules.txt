@@ -270,3 +270,11 @@ RULE betalactone
     CUTOFF 10
     EXTENT 10
     CONDITIONS HMGL-like and AMP-binding
+
+RULE RaS-RiPP
+    COMMENT streptide-like thioether-bond RiPPs such as FR875178
+            See https://pubs.acs.org/doi/10.1021/jacs.8b11060 and
+            https://pubs.acs.org/doi/full/10.1021/jacs.8b10266
+    CUTOFF 5
+    EXTENT 10
+    CONDITIONS PF04055 and TIGR01716
