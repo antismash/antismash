@@ -165,7 +165,7 @@ def get_clusters_from_region_parts(superclusters: Iterable[SuperCluster],
                       "tool": "rule-based-clusters",
                       "neighbouring_start": supercluster.location.start,
                       "neighbouring_end": supercluster.location.end,
-                      "product": "SC %d: %s" % (supercluster.get_supercluster_number(), supercluster.kind),
+                      "product": "CC %d: %s" % (supercluster.get_supercluster_number(), supercluster.kind),
                       "isSuperCluster": True}
         js_cluster['height'] = supercluster_groupings[supercluster]
         js_clusters.append(js_cluster)
