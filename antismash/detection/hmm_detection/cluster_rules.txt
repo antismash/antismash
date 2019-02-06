@@ -275,5 +275,5 @@ RULE fungalRiPP
     COMMENT fungal RiPP with POP or UstH peptidase types and a modification
     CUTOFF 15
     EXTENT 15
-    CONDITIONS (pop or ustH) and (p450 or DUF3328 or TP_methylase)
-               or ((Peptidase_S41 or Peptidase_S28) and DUF3328) #DUF3228 seems to be quite specific and also cooccurs with these peptidases
+    CONDITIONS (pop or ustH) and (p450 or TP_methylase)
+               or ((Peptidase_S41 or Peptidase_S28 or pop or ustH) and DUF3328) #DUF3228 seems to be quite specific and also cooccurs with these peptidases
