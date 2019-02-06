@@ -243,7 +243,7 @@ class TestClusterManipulation(unittest.TestCase):
         with self.assertRaises(AssertionError):
             self.record.add_cluster(None)
         with self.assertRaises(AssertionError):
-            self.record.add_cluster(Feature(self.cluster.location, feature_type="cluster"))
+            self.record.add_cluster(Feature(self.cluster.location, feature_type="protocluster"))
 
     def test_add_feature(self):
         assert not self.record.get_clusters()

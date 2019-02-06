@@ -207,17 +207,17 @@ class Region(CDSCollection):
         first_subregion = min(sub.get_subregion_number() for sub in self.subregions) if self.subregions else 0
         for feature in cluster_record.features:
             if feature.type == "region":
-                supers = feature.qualifiers.get("supercluster_numbers")
+                supers = feature.qualifiers.get("candidate_cluster_numbers")
                 if not supers:
                     continue
-                feature.qualifiers["supercluster_numbers"] = [str(int(num) - first_supercluster) for num in supers]
-            elif feature.type == "supercluster":
-                new = str(int(feature.qualifiers["supercluster_number"][0]) - first_supercluster)
-                feature.qualifiers["supercluster_number"] = [new]
-                new_clusters = [str(int(num) - first_cluster) for num in feature.qualifiers["child_cluster"]]
-                feature.qualifiers["child_cluster"] = new_clusters
-            elif feature.type in ["cluster", "cluster_core"]:
-                new = str(int(feature.qualifiers["cluster_number"][0]) - first_cluster)
+                feature.qualifiers["candidate_cluster_numbers"] = [str(int(num) - first_supercluster) for num in supers]
+            elif feature.type == SuperCluster.FEATURE_TYPE:
+                new = str(int(feature.qualifiers["candidate_cluster_number"][0]) - first_supercluster)
+                feature.qualifiers["candidate_cluster_number"] = [new]
+                new_clusters = [str(int(num) - first_cluster) for num in feature.qualifiers["protoclusters"]]
+                feature.qualifiers["protoclusters"] = new_clusters
+            elif feature.type in ["protocluster", "protocluster_core"]:
+                new = str(int(feature.qualifiers["protocluster_number"][0]) - first_cluster)
                 feature.qualifiers["cluster_number"] = [new]
             elif feature.type == "subregion":
                 new = str(int(feature.qualifiers["subregion_number"][0]) - first_subregion)
@@ -232,7 +232,7 @@ class Region(CDSCollection):
         qualifiers["rules"] = self.detection_rules
         qualifiers["probabilities"] = ["%.4f" % prob for prob in self.probabilities]
         qualifiers["subregion_numbers"] = [str(sub.get_subregion_number()) for sub in self._subregions]
-        qualifiers["supercluster_numbers"] = [str(sup.get_supercluster_number()) for sup in self._superclusters]
+        qualifiers["candidate_cluster_numbers"] = [str(sup.get_supercluster_number()) for sup in self._superclusters]
 
         return super().to_biopython(qualifiers)
 
@@ -242,7 +242,7 @@ class Region(CDSCollection):
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
         return TemporaryRegion(bio_feature.location,
-                               [int(num) for num in leftovers.pop("supercluster_numbers", [])],
+                               [int(num) for num in leftovers.pop("candidate_cluster_numbers", [])],
                                [int(num) for num in leftovers.pop("subregion_numbers", [])],
                                leftovers["rules"],
                                leftovers["product"],
