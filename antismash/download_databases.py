@@ -31,7 +31,7 @@ PFAM_LATEST_CHECKSUM = "40b742a1bebca10f6b86c1364624dbdc34f79890954777eb95f8a484
 
 CLUSTERBLAST_URL = "https://dl.secondarymetabolites.org/releases/4.0.0/clusterblast_20170105_v8_31.tar.xz"
 CLUSTERBLAST_ARCHIVE_CHECKSUM = "c9c1f2c07ce97ea453345034727555928e7b0b8907f700805bb6a912865bb315"
-CLUSTERBLAST_DMND_CHECKSUM = "388df3e711b3049ad851bfc8bd45ec292a3808907f048e6a7e5f4a25b90699f8"
+CLUSTERBLAST_FASTA_CHECKSUM = "dc4ddaa4ec3cd966737bf35e286271c6bb41b2dcba49d4f78ee3143588753f42"
 
 RESFAM_URL = "http://dantaslab.wustl.edu/resfams/Resfams.hmm.gz"
 RESFAM_ARCHIVE_CHECKSUM = "82e9325283b999b1fb1351502b2d12194561c573d9daef3e623e905c1af66fd6"
@@ -296,10 +296,10 @@ def download_resfam(db_dir: str) -> None:
 def download_clusterblast(db_dir: str) -> None:
     """Download the clusterblast database."""
     archive_filename = os.path.join(db_dir, CLUSTERBLAST_URL.rpartition("/")[2])
-    dmnd_filename = os.path.join(db_dir, "clusterblast", "geneclusterprots.dmnd")
+    fasta_filename = os.path.join(db_dir, "clusterblast", "geneclusterprots.fasta")
 
-    if present_and_checksum_matches(dmnd_filename, CLUSTERBLAST_DMND_CHECKSUM):
-        print("ClusterBlast database present and checked")
+    if present_and_checksum_matches(fasta_filename, CLUSTERBLAST_FASTA_CHECKSUM):
+        print("ClusterBlast fasta file present and checked")
         return
 
     print("Downloading ClusterBlast database.")
@@ -351,7 +351,9 @@ def _main() -> None:
     args = parser.parse_args()
     download(args)
     try:
+        print("Pre-building all databases...")
         antismash.main.prepare_module_data()
+        print("done.")
     except Exception as err:  # pylint: disable=broad-except
         print("Error encountered while preparing module data:", str(err), file=sys.stderr)
         sys.exit(1)
