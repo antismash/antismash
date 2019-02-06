@@ -270,3 +270,10 @@ RULE betalactone
     CUTOFF 10
     EXTENT 10
     CONDITIONS HMGL-like and AMP-binding
+
+RULE fungalRiPP
+    COMMENT fungal RiPP with POP or Kex2 peptidase types and a modification
+    CUTOFF 15
+    EXTENT 15
+    CONDITIONS (pop or kex2)
+               and (p450 or DUF3328 or TP_methylase)
