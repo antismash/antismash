@@ -31,7 +31,7 @@ RULE hgleks
     EXTENT 20
     CONDITIONS hglE or hglD
 
-RULE pksfragment
+RULE pks-like
     COMMENT Catches PKS-like fragments that are not detected by another PKS rule
     SUPERIORS t2pks
     CUTOFF 10
@@ -64,7 +64,7 @@ RULE nrps
     CONDITIONS cds(Condensation and (AMP-binding or A-OX))
                or (Condensation and AMP-binding)  #TODO: dubious
 
-RULE nrpsfragment
+RULE nrps-like
     COMMENT Catches NRPS-like fragments that are not detected by the NRPS rule
     SUPERIORS nrps
     CUTOFF 0  # since we're really looking at single CDS fragments
