@@ -50,8 +50,8 @@ class Base(unittest.TestCase):
         with open(genbank) as handle:
             seq_record = seqio.read(handle, "genbank")
         record = secmet.Record.from_biopython(seq_record, taxon="bacteria")
-        assert record.get_clusters()
-        assert record.get_cluster(0).cds_children
+        assert record.get_protoclusters()
+        assert record.get_protocluster(0).cds_children
         return record
 
 

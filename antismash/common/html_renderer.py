@@ -72,15 +72,15 @@ def collapser_start(target: str, level: str = "all") -> Markup:
             level: the interaction level at which this collapser will be expanded,
                    possible levels are:
                 all: always expanded, must be manually collapsed
-                supercluster: expands when the relevant supercluster is selected
-                cluster: expands when the relevant cluster is selected
+                candidate: expands when the relevant candidate_cluster is selected
+                protocluster: expands when the relevant protocluster is selected
                 cds: expands when the relevant CDS is selected
                 none: never expands automatically, must be manually expanded
 
         Returns:
             HTML fragments as a Markup instance
     """
-    if level not in ["all", "supercluster", "cluster", "cds", "none"]:
+    if level not in ["all", "candidate", "protocluster", "cds", "none"]:
         raise ValueError("unknown collapser level: %s" % level)
     classes = ["collapser", "collapser-target-%s" % _safe_selector(target)]
     classes.append("collapser-level-%s" % level)

@@ -4,40 +4,40 @@
       <span>Predicted core structure(s)</span>
       {{help_tooltip(tooltip, "nrps-structures")}}
     </div>
-    {% for supercluster in region.superclusters %}
-      {% if supercluster.smiles or supercluster.polymer %}
+    {% for candidate in region.candidate_clusters %}
+      {% if candidate.smiles or candidate.polymer %}
         <div>
           <div class="prediction-text">
-            For candidate cluster {{supercluster.number}}, location {{supercluster.location.start}} - {{supercluster.location.end}}:
-          {{collapser_start("SC%s" % supercluster.number, level="supercluster")}}
-          {% if supercluster.smiles %}
-            <canvas id="smiles-canvas-{{region.anchor_id}}-{{supercluster.number}}" class="smiles-canvas" data-smiles="{{supercluster.smiles}}"></canvas>
+            For candidate cluster {{candidate.number}}, location {{candidate.location.start}} - {{candidate.location.end}}:
+          {{collapser_start("CC%s" % candidate.number, level="candidate")}}
+          {% if candidate.smiles %}
+            <canvas id="smiles-canvas-{{region.anchor_id}}-{{candidate.number}}" class="smiles-canvas" data-smiles="{{candidate.smiles}}"></canvas>
             <div class="as-structure-warning">
-              {{supercluster.get_warning()}}
+              {{candidate.get_warning()}}
             </div>
           {% endif %}
-          {% if supercluster.polymer %}
+          {% if candidate.polymer %}
             <div>
               <dl>
-                <dt><b>Polymer prediction:</b></dt><dd>{{supercluster.polymer}}</dd>
+                <dt><b>Polymer prediction:</b></dt><dd>{{candidate.polymer}}</dd>
               </dl>
               <br>Direct lookup in NORINE database:
-              <a class="external-link" href="{{supercluster.get_norine_url()}}" target="_new">strict</a>
+              <a class="external-link" href="{{candidate.get_norine_url()}}" target="_new">strict</a>
                 or
-              <a class="external-link" href="{{supercluster.get_norine_url(be_strict = False)}}" target="_new">relaxed</a><br>
+              <a class="external-link" href="{{candidate.get_norine_url(be_strict = False)}}" target="_new">relaxed</a><br>
             </div>
             {% endif %}
             {{collapser_end()}}
             </div>
         </div>
-        {% if supercluster.smiles %}
-            <div id="smiles-canvas-{{region.anchor_id}}-{{supercluster.number}}-modal" class="modal-container">
+        {% if candidate.smiles %}
+            <div id="smiles-canvas-{{region.anchor_id}}-{{candidate.number}}-modal" class="modal-container">
               <div class="modal-content">
-                <canvas class="smiles-canvas-modal" data-smiles="{{supercluster.smiles}}"></canvas>
+                <canvas class="smiles-canvas-modal" data-smiles="{{candidate.smiles}}"></canvas>
               </div>
             </div>
         {% endif %}
-      {% if loop.index < region.superclusters | length %}
+      {% if loop.index < region.candidate_clusters | length %}
         <hr>
       {% endif %}
       {% endif %}

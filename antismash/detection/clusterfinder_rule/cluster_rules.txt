@@ -1,6 +1,6 @@
 RULE cf_saccharide
     CUTOFF 20
-    EXTENT 10
+    NEIGHBOURHOOD 10
     CONDITIONS minimum(2,[Alpha-amylase, Alpha-amylase_C, Bac_transf,
                           Capsule_synth, CBM_48, DegT_DnrJ_EryC1, dTDP_sugar_isom,
                           Epimerase_2, Glycos_transf_1, Glycos_transf_2,
@@ -11,5 +11,5 @@ RULE cf_saccharide
 
 RULE cf_fatty_acid
     CUTOFF 20
-    EXTENT 10
+    NEIGHBOURHOOD 10
     CONDITIONS  bt1fas or ft1fas or t2fas or fabH

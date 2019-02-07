@@ -11,8 +11,8 @@ from typing import Set  # comment hints, # pylint: disable=unused-import
 
 from antismash.common import html_renderer, path
 from antismash.common.module_results import ModuleResults
-from antismash.common.secmet import CDSFeature, Feature, Record, Region, SuperCluster, SubRegion
-from antismash.common.secmet import Cluster  # comment hints, # pylint: disable=unused-import
+from antismash.common.secmet import CDSFeature, Feature, Record, Region, CandidateCluster, SubRegion
+from antismash.common.secmet import Protocluster  # comment hints, # pylint: disable=unused-import
 from antismash.common.secmet.features.cdscollection import CDSCollection
 from antismash.config import ConfigType
 from antismash.modules import clusterblast, tta
@@ -78,7 +78,7 @@ def convert_regions(record: Record, options: ConfigType, result: Dict[str, Modul
         js_region['idx'] = region.get_region_number()
         mibig_entries = mibig_results.get(js_region['idx'], {})
         js_region['orfs'] = convert_cds_features(record, region.cds_children, options, mibig_entries)
-        js_region['clusters'] = get_clusters_from_region_parts(region.superclusters, region.subregions)
+        js_region['clusters'] = get_clusters_from_region_parts(region.candidate_clusters, region.subregions)
         js_region['ttaCodons'] = convert_tta_codons(tta_codons, record)
         js_region['type'] = region.get_product_string()
         js_region['products'] = region.products
@@ -147,34 +147,35 @@ def _find_non_overlapping_cluster_groups(collections: Iterable[CDSCollection],
     return results
 
 
-def get_clusters_from_region_parts(superclusters: Iterable[SuperCluster],
+def get_clusters_from_region_parts(candidate_clusters: Iterable[CandidateCluster],
                                    subregions: Iterable[SubRegion]) -> List[Dict[str, Any]]:
-    """ Converts all Clusters in a collection of SuperCluster features to JSON """
-    unique_clusters = set()  # type: Set[Cluster]
-    for supercluster in superclusters:
-        unique_clusters.update(supercluster.clusters)
+    """ Converts all Protoclusters in a collection of CandidateCluster features to JSON """
+    unique_clusters = set()  # type: Set[Protocluster]
+    for candidate_cluster in candidate_clusters:
+        unique_clusters.update(candidate_cluster.protoclusters)
     js_clusters = []
-    superclusters = sorted(superclusters, key=lambda x: (x.location.start, -len(x.location)))
-    supercluster_groupings = _find_non_overlapping_cluster_groups(superclusters)
+    candidate_clusters = sorted(candidate_clusters, key=lambda x: (x.location.start, -len(x.location)))
+    candidate_cluster_groupings = _find_non_overlapping_cluster_groups(candidate_clusters)
     start_index = 0
-    for supercluster in superclusters:
-        # if it's the only supercluster in the region and it's single, don't draw it to minimise noise
-        parent = supercluster.parent
+    for candidate_cluster in candidate_clusters:
+        # if it's the only candidate_cluster in the region and it's single, don't draw it to minimise noise
+        parent = candidate_cluster.parent
         assert isinstance(parent, Region), type(parent)
-        if len(parent.superclusters) == 1 and not parent.subregions and len(supercluster.clusters) == 1:
+        if len(parent.candidate_clusters) == 1 and not parent.subregions and len(candidate_cluster.protoclusters) == 1:
             continue
-        js_cluster = {"start": supercluster.location.start + 1,
-                      "end": supercluster.location.end - 1,
+        js_cluster = {"start": candidate_cluster.location.start + 1,
+                      "end": candidate_cluster.location.end - 1,
                       "tool": "",
-                      "neighbouring_start": supercluster.location.start,
-                      "neighbouring_end": supercluster.location.end,
-                      "product": "CC %d: %s" % (supercluster.get_supercluster_number(), supercluster.kind),
-                      "isSuperCluster": True}
-        js_cluster['height'] = supercluster_groupings[supercluster]
+                      "neighbouring_start": candidate_cluster.location.start,
+                      "neighbouring_end": candidate_cluster.location.end,
+                      "product": "CC %d: %s" % (candidate_cluster.get_candidate_cluster_number(),
+                                                candidate_cluster.kind),
+                      "isCandidateCluster": True}
+        js_cluster['height'] = candidate_cluster_groupings[candidate_cluster]
         js_clusters.append(js_cluster)
 
-    if supercluster_groupings:
-        start_index += max(supercluster_groupings.values())
+    if candidate_cluster_groupings:
+        start_index += max(candidate_cluster_groupings.values())
     subregions = sorted(subregions, key=lambda x: (x.location.start, -len(x.location), x.tool))
     for subregion in subregions:
         start_index += 1
@@ -198,7 +199,7 @@ def get_clusters_from_region_parts(superclusters: Iterable[SuperCluster],
                       "neighbouring_end": cluster.location.end,
                       "product": cluster.product,
                       "height": cluster_groupings[cluster] * 2 + start_index,
-                      "isSuperCluster": False}
+                      "isCandidateCluster": False}
         js_clusters.append(js_cluster)
 
     return js_clusters

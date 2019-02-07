@@ -65,7 +65,7 @@ class TestSafeSelector(unittest.TestCase):
 
 class TestCollapser(unittest.TestCase):
     def test_simple(self):
-        for level in ["all", "supercluster", "cluster", "cds", "none"]:
+        for level in ["all", "candidate", "protocluster", "cds", "none"]:
             html = str(renderer.collapser_start("dummy", level)) + str(renderer.collapser_end())
             _verify_html_tags_match(html)
             assert "collapser-target-dummy" in html

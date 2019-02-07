@@ -61,12 +61,12 @@ class HmmDetectionTest(unittest.TestCase):
                            "a", "b", "c", "d"}
 
         self.rules = rule_parser.Parser("\n".join([
-                "RULE MetaboliteA CUTOFF 10 EXTENT 5 CONDITIONS modelA",
-                "RULE MetaboliteB CUTOFF 10 EXTENT 5 CONDITIONS cds(modelA and modelB)",
-                "RULE MetaboliteC CUTOFF 10 EXTENT 5 CONDITIONS (modelA and modelB)",
-                "RULE MetaboliteD CUTOFF 20 EXTENT 5 CONDITIONS minimum(2,[modelC,modelB]) and modelA",
-                "RULE Metabolite0 CUTOFF 1 EXTENT 3 CONDITIONS modelF",
-                "RULE Metabolite1 CUTOFF 1 EXTENT 3 CONDITIONS modelG"]), self.test_names).rules
+                "RULE MetaboliteA CUTOFF 10 NEIGHBOURHOOD 5 CONDITIONS modelA",
+                "RULE MetaboliteB CUTOFF 10 NEIGHBOURHOOD 5 CONDITIONS cds(modelA and modelB)",
+                "RULE MetaboliteC CUTOFF 10 NEIGHBOURHOOD 5 CONDITIONS (modelA and modelB)",
+                "RULE MetaboliteD CUTOFF 20 NEIGHBOURHOOD 5 CONDITIONS minimum(2,[modelC,modelB]) and modelA",
+                "RULE Metabolite0 CUTOFF 1 NEIGHBOURHOOD 3 CONDITIONS modelF",
+                "RULE Metabolite1 CUTOFF 1 NEIGHBOURHOOD 3 CONDITIONS modelG"]), self.test_names).rules
         self.features = []
         for gene_id in self.feature_by_id:
             self.features.append(self.feature_by_id[gene_id])
@@ -83,8 +83,9 @@ class HmmDetectionTest(unittest.TestCase):
     def test_overlaps_but_not_contains(self):
         # should get gene2 and gene3
         rules = rule_parser.Parser("\n".join([
-                "RULE Overlap CUTOFF 25 EXTENT 5 CONDITIONS modelB and modelF "
-                "RULE OverlapImpossible CUTOFF 25 EXTENT 5 CONDITIONS modelA and modelF"]), self.test_names).rules
+                "RULE Overlap CUTOFF 25 NEIGHBOURHOOD 5 CONDITIONS modelB and modelF "
+                "RULE OverlapImpossible CUTOFF 25 NEIGHBOURHOOD 5 CONDITIONS modelA and modelF"]),
+                self.test_names).rules
         detected_types, cluster_type_hits = hmm_detection.apply_cluster_rules(self.record, self.results_by_id, rules)
         assert detected_types == {"GENE_2": {"Overlap": {"modelB"}},
                                   "GENE_3": {"Overlap": {"modelF"}}}
@@ -137,12 +138,12 @@ class HmmDetectionTest(unittest.TestCase):
                                 'Metabolite1': {'GENE_5'}}
         rules = {rule.name: rule for rule in self.rules}
         for cluster in hmm_detection.find_clusters(self.record, cds_features_by_type, rules):
-            self.record.add_cluster(cluster)
-        assert len(self.record.get_clusters()) == 7
-        cluster_products = sorted([cluster.product for cluster in self.record.get_clusters()])
+            self.record.add_protocluster(cluster)
+        assert len(self.record.get_protoclusters()) == 7
+        cluster_products = sorted([cluster.product for cluster in self.record.get_protoclusters()])
         assert cluster_products == sorted(["Metabolite%s" % i for i in "01AABCD"])
-        self.record.create_superclusters()
-        assert len(self.record.get_superclusters()) == 3
+        self.record.create_candidate_clusters()
+        assert len(self.record.get_candidate_clusters()) == 3
         self.record.create_regions()
         assert len(self.record.get_regions()) == 3
         result_regions = []
@@ -163,7 +164,7 @@ class HmmDetectionTest(unittest.TestCase):
         assert len(t1pks_rules) == 1
         rule = t1pks_rules[0]
         assert rule.cutoff == 20000
-        assert rule.extent == 20000
+        assert rule.neighbourhood == 20000
 
     def test_profiles_parsing(self):
         profiles = signatures.get_signature_profiles()

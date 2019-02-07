@@ -12,7 +12,7 @@ from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation
 
 from antismash.common.secmet.record import Record
-from antismash.common.test.helpers import DummyCDS, DummyCluster, get_simple_options
+from antismash.common.test.helpers import DummyCDS, DummyProtocluster, get_simple_options
 from antismash.modules import tta
 
 
@@ -24,9 +24,9 @@ class TtaTest(unittest.TestCase):
         record.add_cds_feature(DummyCDS(0, 9, strand=1))
         record.add_cds_feature(DummyCDS(12, 21, strand=-1))
 
-        cluster = DummyCluster(start=0, end=21)
-        record.add_cluster(cluster)
-        record.create_superclusters()
+        cluster = DummyProtocluster(start=0, end=21)
+        record.add_protocluster(cluster)
+        record.create_candidate_clusters()
         record.create_regions()
         # if these aren't correct, the tests will fail
         assert len(cluster.cds_children) == 2
@@ -54,7 +54,7 @@ class TtaTest(unittest.TestCase):
 
     def test_detect(self):
         """Test tta.detect()"""
-        self.assertEqual(len(self.record.get_cds_features()) + len(self.record.get_clusters()), 3)
+        self.assertEqual(len(self.record.get_cds_features()) + len(self.record.get_protoclusters()), 3)
         options = get_simple_options(tta, ["--tta-threshold", "0"])
 
         detected = tta.detect(self.record, options)

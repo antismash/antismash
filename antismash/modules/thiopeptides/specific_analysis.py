@@ -25,7 +25,7 @@ class ThioResults(module_results.ModuleResults):
 
     def __init__(self, record_id: str) -> None:
         super().__init__(record_id)
-        self.clusters_with_motifs = set()  # type: Set[secmet.Cluster]
+        self.clusters_with_motifs = set()  # type: Set[secmet.Protocluster]
         # to track CDSs found with find_all_orfs and within which clusters they were found
         self.cds_features = defaultdict(list)  # type: Dict[int, List[secmet.CDSFeature]]
         # to track the motifs created
@@ -37,7 +37,7 @@ class ThioResults(module_results.ModuleResults):
                                    for key, features in self.cds_features.items()}
         return {"record_id": self.record_id,
                 "schema_version": ThioResults.schema_version,
-                "clusters with motifs": [cluster.get_cluster_number() for cluster in self.clusters_with_motifs],
+                "clusters with motifs": [cluster.get_protocluster_number() for cluster in self.clusters_with_motifs],
                 "motifs": [motif.to_json() for motif in self.motifs],
                 "cds_features": cds_features_by_cluster}
 
@@ -51,7 +51,7 @@ class ThioResults(module_results.ModuleResults):
         for motif in json["motifs"]:
             results.motifs.append(secmet.Prepeptide.from_json(motif))
         for cluster in json["clusters with motifs"]:
-            results.clusters_with_motifs.add(record.get_cluster(cluster))
+            results.clusters_with_motifs.add(record.get_protocluster(cluster))
         for cluster, features in json["cds_features"]:
             for location, name in features:
                 cds = all_orfs.create_feature_from_location(record, location, label=name)
@@ -350,7 +350,7 @@ def predict_type_from_cluster(found_domains: Set[str]) -> str:
     return 'Type III'
 
 
-def get_detected_domains(cluster: secmet.Cluster) -> Set[str]:
+def get_detected_domains(cluster: secmet.Protocluster) -> Set[str]:
     """ Gathers all detected domain ids from a cluster. Includes detection of
         some extra HMM profiles specific to thiopeptides.
 
@@ -584,7 +584,7 @@ def specific_analysis(record: secmet.Record) -> ThioResults:
         that are found not overlapping with existing features
     """
     results = ThioResults(record.id)
-    for cluster in record.get_clusters():
+    for cluster in record.get_protoclusters():
         if cluster.product != "thiopeptide":
             continue
 
@@ -607,7 +607,7 @@ def specific_analysis(record: secmet.Record) -> ThioResults:
                 result_vec.amidation = True
             new_feature = result_vec_to_feature(thio_feature, result_vec)
             if thio_feature in new_orfs:
-                results.cds_features[cluster.get_cluster_number()].append(thio_feature)
+                results.cds_features[cluster.get_protocluster_number()].append(thio_feature)
             results.motifs.append(new_feature)
             results.clusters_with_motifs.add(cluster)
     logging.debug("Thiopeptides marked %d motifs", len(results.motifs))

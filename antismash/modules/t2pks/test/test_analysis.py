@@ -10,21 +10,21 @@ from minimock import mock, restore
 
 from antismash.common import path, record_processing
 from antismash.common.hmmscan_refinement import HMMResult
-from antismash.common.secmet.features.cluster import Cluster, FeatureLocation
+from antismash.common.secmet.features.protocluster import Protocluster, FeatureLocation
 from antismash.modules.t2pks import t2pks_analysis
-from antismash.modules.t2pks.results import CDSPrediction, ClusterPrediction, Prediction
+from antismash.modules.t2pks.results import CDSPrediction, ProtoclusterPrediction, Prediction
 
 
 class TestCoelicolorAnalysis(unittest.TestCase):
     def setUp(self):
         test_file = path.get_full_path(__file__, 'data', 'NC_003888.3.cluster011.gbk')
         self.record = record_processing.parse_input_sequence(test_file)[0]
-        self.cluster = Cluster(FeatureLocation(0, len(self.record.seq)),
-                               surrounding_location=FeatureLocation(0, len(self.record.seq)),
-                               cutoff=20, neighbourhood_range=0, tool="test", product="T2PKS",
-                               detection_rule="dummy rule")
-        self.record.add_cluster(self.cluster)
-        self.record.create_superclusters()
+        self.cluster = Protocluster(FeatureLocation(0, len(self.record.seq)),
+                                    surrounding_location=FeatureLocation(0, len(self.record.seq)),
+                                    cutoff=20, neighbourhood_range=0, tool="test", product="T2PKS",
+                                    detection_rule="dummy rule")
+        self.record.add_protocluster(self.cluster)
+        self.record.create_candidate_clusters()
         self.record.create_regions()
         hmm_results = {'SCO5072': [HMMResult("KR", 1, 265, evalue=3.1e-49, bitscore=159.4)],
                        'SCO5079': [HMMResult("DIMER", 4, 293, evalue=8.7e-131, bitscore=426.8)],
@@ -46,7 +46,7 @@ class TestCoelicolorAnalysis(unittest.TestCase):
 
     def test_coelicolor_c11(self):
         results = t2pks_analysis.analyse_cluster(self.cluster, self.record)
-        assert isinstance(results, ClusterPrediction)
+        assert isinstance(results, ProtoclusterPrediction)
         assert results.product_classes == {"benzoisochromanequinone"}
         assert results.starter_units == [Prediction("acetyl-CoA", 0., 0.)]
         assert results.malonyl_elongations == [Prediction("7", 743.5, 1.2e-226)]

@@ -61,11 +61,11 @@ def specific_analysis(record: Record, results: NRPS_PKS_Results, options: Config
 
     modify_monomer_predictions(nrps_pks_genes, results.consensus)
 
-    supercluster_predictions = analyse_biosynthetic_order(nrps_pks_genes, results.consensus, record)
-    for prediction in supercluster_predictions:
+    candidate_cluster_predictions = analyse_biosynthetic_order(nrps_pks_genes, results.consensus, record)
+    for prediction in candidate_cluster_predictions:
         prediction.smiles = gen_smiles_from_pksnrps(prediction.polymer)
-        supercluster = record.get_supercluster(prediction.supercluster_number)
-        region = supercluster.parent
+        candidate_cluster = record.get_candidate_cluster(prediction.candidate_cluster_number)
+        region = candidate_cluster.parent
         assert isinstance(region, Region), type(region)
         results.region_predictions[region.get_region_number()].append(prediction)
     return results

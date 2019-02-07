@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Set, Tuple
 from Bio.SearchIO._model.hsp import HSP
 
 from antismash.common import fasta, path, serialiser
-from antismash.common.secmet import Record, Cluster, CDSFeature, FeatureLocation
+from antismash.common.secmet import Record, Protocluster, CDSFeature, FeatureLocation
 from antismash.common.secmet.locations import location_contains_other
 from antismash.common.secmet.qualifiers import GeneFunction, SecMetQualifier
 from antismash.common.subprocessing import run_hmmsearch
@@ -79,14 +79,14 @@ class CDSResults:
 
 class RuleDetectionResults:
     """ A container for the all results of running the cluster prediction """
-    def __init__(self, cds_by_cluster: Dict[Cluster, List[CDSResults]],
+    def __init__(self, cds_by_cluster: Dict[Protocluster, List[CDSResults]],
                  tool: str) -> None:
         self.cds_by_cluster = cds_by_cluster
         self.tool = str(tool)
 
     @property
-    def clusters(self) -> List[Cluster]:
-        """ A list of Clusters predicted """
+    def protoclusters(self) -> List[Protocluster]:
+        """ A list of Protoclusters predicted """
         return list(self.cds_by_cluster)
 
     def annotate_cds_features(self) -> None:
@@ -113,19 +113,19 @@ class RuleDetectionResults:
         """ Constructs a RuleDetectionResults instance from a JSON representation """
         cds_by_cluster = {}
         for json_cluster, json_cds_results in json["cds_by_cluster"]:
-            cluster = Cluster.from_biopython(serialiser.feature_from_json(json_cluster))
+            cluster = Protocluster.from_biopython(serialiser.feature_from_json(json_cluster))
             cds_results = [CDSResults.from_json(result_json, record) for result_json in json_cds_results]
             cds_by_cluster[cluster] = cds_results
 
         return RuleDetectionResults(cds_by_cluster, json["tool"])
 
 
-def remove_redundant_clusters(clusters: List[Cluster],
+def remove_redundant_clusters(clusters: List[Protocluster],
                               rules_by_name: Dict[str, rule_parser.DetectionRule]
-                              ) -> List[Cluster]:
+                              ) -> List[Protocluster]:
     """ Removes clusters which have superiors covering the same (or larger) region
     """
-    clusters_by_rule = defaultdict(list)  # type: Dict[str, List[Cluster]]
+    clusters_by_rule = defaultdict(list)  # type: Dict[str, List[Protocluster]]
     for cluster in clusters:
         clusters_by_rule[cluster.product].append(cluster)
 
@@ -146,9 +146,9 @@ def remove_redundant_clusters(clusters: List[Cluster],
 
 
 def find_clusters(record: Record, cds_by_cluster_type: Dict[str, Set[str]],
-                  rules_by_name: Dict[str, rule_parser.DetectionRule]) -> List[Cluster]:
+                  rules_by_name: Dict[str, rule_parser.DetectionRule]) -> List[Protocluster]:
     """ Detects gene clusters based on the identified core genes """
-    clusters = []  # type: List[Cluster]
+    clusters = []  # type: List[Protocluster]
 
     cds_feature_by_name = record.get_cds_name_mapping()
 
@@ -165,24 +165,24 @@ def find_clusters(record: Record, cds_by_cluster_type: Dict[str, Set[str]],
                 assert core_location.start >= 0 and core_location.end <= len(record)
                 continue
             # create the previous cluster and start a new location
-            surrounds = FeatureLocation(max(0, core_location.start - rule.extent),
-                                        min(core_location.end + rule.extent, len(record)))
+            surrounds = FeatureLocation(max(0, core_location.start - rule.neighbourhood),
+                                        min(core_location.end + rule.neighbourhood, len(record)))
             surrounding_cdses = record.get_cds_features_within_location(surrounds, with_overlapping=False)
             real_start = min(contained.location.start for contained in surrounding_cdses)
             real_end = max(contained.location.end for contained in surrounding_cdses)
             surrounds = FeatureLocation(real_start, real_end)
-            clusters.append(Cluster(core_location, surrounding_location=surrounds,
+            clusters.append(Protocluster(core_location, surrounding_location=surrounds,
                                     tool="rule-based-clusters", cutoff=cutoff,
-                                    neighbourhood_range=rule.extent, product=cluster_type,
+                                    neighbourhood_range=rule.neighbourhood, product=cluster_type,
                                     detection_rule=str(rule.conditions)))
             core_location = cds.location
 
         # finalise the last cluster
-        surrounds = FeatureLocation(max(0, core_location.start - rule.extent),
-                                    min(core_location.end + rule.extent, len(record)))
-        clusters.append(Cluster(core_location, surrounding_location=surrounds,
+        surrounds = FeatureLocation(max(0, core_location.start - rule.neighbourhood),
+                                    min(core_location.end + rule.neighbourhood, len(record)))
+        clusters.append(Protocluster(core_location, surrounding_location=surrounds,
                                 tool="rule-based-clusters", cutoff=cutoff,
-                                neighbourhood_range=rule.extent, product=cluster_type,
+                                neighbourhood_range=rule.neighbourhood, product=cluster_type,
                                 detection_rule=str(rule.conditions)))
 
     # fit to record if outside
@@ -361,7 +361,7 @@ def apply_cluster_rules(record: Record, results_by_id: Dict[str, List[HSP]],
 def detect_clusters_and_signatures(record: Record, signature_file: str, seeds_file: str,
                                    rules_file: str, filter_file: str, tool: str) -> RuleDetectionResults:
     """ Compares all CDS features in a record with HMM signatures and generates
-        Cluster features based on those hits and the current cluster detection
+        Protocluster features based on those hits and the current cluster detection
         rules.
 
         Arguments:

@@ -11,16 +11,16 @@
 from .record import Record
 from .features import (
     AntismashDomain,
+    CandidateCluster,
     CDSFeature,
     CDSMotif,
-    Cluster,
     Feature,
     FeatureLocation,
     Gene,
     PFAMDomain,
     Prepeptide,
+    Protocluster,
     Region,
     SubRegion,
-    SuperCluster,
 )
 from .qualifiers import GeneFunction

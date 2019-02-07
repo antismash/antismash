@@ -1,7 +1,7 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
-""" A class for cluster features """
+""" A class for protocluster features """
 
 from typing import Dict, List, Optional, Set
 
@@ -15,13 +15,13 @@ from ..qualifiers.t2pks import T2PKSQualifier
 from ..qualifiers.gene_functions import GeneFunction
 
 
-class Cluster(CDSCollection):
+class Protocluster(CDSCollection):
     """ A feature which marks a specific region of a record as interesting.
-        Clusters are only those determined by a rule-based method of detection
+        Protoclusters are only those determined by a rule-based method of detection
         and with a defined product.
 
         The core location covers the first and last CDS feature that caused the
-        cluster to be formed, while the surrounding location includes the context.
+        protocluster to be formed, while the surrounding location includes the context.
     """
     core_seqfeature_type = "proto_core"
     __slots__ = ["core_location", "detection_rule", "product", "tool", "cutoff",
@@ -48,19 +48,19 @@ class Cluster(CDSCollection):
         self.t2pks = None  # type: Optional[T2PKSQualifier]
 
     def __str__(self) -> str:
-        return "Cluster(%s, product=%s)" % (self.location, self.product)
+        return "Protocluster(%s, product=%s)" % (self.location, self.product)
 
-    def get_cluster_number(self) -> int:
-        """ Returns the clusters's numeric ID, only guaranteed to be consistent
-            when the same clusters are defined in the parent record
+    def get_protocluster_number(self) -> int:
+        """ Returns the protoclusters's numeric ID, only guaranteed to be consistent
+            when the same protoclusters are defined in the parent record
         """
         if not self._parent_record:
-            raise ValueError("Cluster not in a record")
-        return self._parent_record.get_cluster_number(self)
+            raise ValueError("Protocluster not in a record")
+        return self._parent_record.get_protocluster_number(self)
 
     @property
     def definition_cdses(self) -> Set[CDSFeature]:
-        """ Returns the set of CDSFeatures responsible for the creation of this cluster """
+        """ Returns the set of CDSFeatures responsible for the creation of this protocluster """
         return set(self._definition_cdses)
 
     def add_cds(self, cds: CDSFeature) -> None:
@@ -80,7 +80,7 @@ class Cluster(CDSCollection):
             "detection_rule": [self.detection_rule]
         }
         if self._parent_record:
-            common["protocluster_number"] = [str(self.get_cluster_number())]
+            common["protocluster_number"] = [str(self.get_protocluster_number())]
 
         shared_qualifiers = dict(qualifiers) if qualifiers else {}
         shared_qualifiers.update(common)
@@ -98,8 +98,8 @@ class Cluster(CDSCollection):
         return [neighbourhood_feature, core_feature]
 
     @staticmethod
-    def from_biopython(bio_feature: SeqFeature, feature: "Cluster" = None,  # type: ignore
-                       leftovers: Dict[str, List[str]] = None) -> "Cluster":
+    def from_biopython(bio_feature: SeqFeature, feature: "Protocluster" = None,  # type: ignore
+                       leftovers: Dict[str, List[str]] = None) -> "Protocluster":
         assert bio_feature.type == "protocluster"
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
@@ -111,7 +111,7 @@ class Cluster(CDSCollection):
         rule = leftovers.pop("detection_rule")[0]
         core_location = location_from_string(leftovers.pop("core_location")[0])
         if not feature:
-            feature = Cluster(core_location, bio_feature.location,
+            feature = Protocluster(core_location, bio_feature.location,
                               tool, product, cutoff, neighbourhood_range, rule)
 
         # remove run-specific info
@@ -121,7 +121,7 @@ class Cluster(CDSCollection):
         feature.t2pks = T2PKSQualifier.from_biopython_qualifiers(leftovers)
 
         # grab optional parent qualifiers
-        updated = super(Cluster, feature).from_biopython(bio_feature, feature, leftovers)
+        updated = super(Protocluster, feature).from_biopython(bio_feature, feature, leftovers)
         assert updated is feature, "feature changed: %s -> %s" % (feature, updated)
-        assert isinstance(updated, Cluster)
+        assert isinstance(updated, Protocluster)
         return updated

@@ -23,9 +23,9 @@ def generate_html(region_layer: RegionLayer, results: T2PKSResults,
     html = HTMLSections("t2pks")
 
     predictions = []
-    for cluster in region_layer.get_unique_clusters():
+    for cluster in region_layer.get_unique_protoclusters():
         if cluster.product == "T2PKS":
-            predictions.append(results.cluster_predictions[cluster.get_cluster_number()])
+            predictions.append(results.cluster_predictions[cluster.get_protocluster_number()])
 
     template = FileTemplate(path.get_full_path(__file__, "templates", "sidepanel.html"))
 

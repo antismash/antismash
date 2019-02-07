@@ -76,7 +76,7 @@ class CDSPrediction:
         return CDSPrediction(str(json[0]), func, float(json[2]), float(json[3]))
 
 
-class ClusterPrediction:
+class ProtoclusterPrediction:
     """ A prediction for a single Cluster, including starter units, elongations,
         weights and classes.
     """
@@ -128,16 +128,16 @@ class ClusterPrediction:
                 }
 
     @staticmethod
-    def from_json(json: Dict[str, Any]) -> "ClusterPrediction":
-        """ Rebuilds a ClusterPrediction from JSON """
+    def from_json(json: Dict[str, Any]) -> "ProtoclusterPrediction":
+        """ Rebuilds a ProtoclusterPrediction from JSON """
         assert isinstance(json, dict), json
         cds_predictions = {name: list(map(CDSPrediction.from_json, preds)) for name, preds in json["cds_preds"].items()}
         # JSON doesn't do tuples, so convert back to tuples
         starters = [Prediction.from_json(start) for start in json["starter_units"]]
         elongations = [Prediction.from_json(elong) for elong in json["elongations"]]
-        return ClusterPrediction(cds_predictions, starters, elongations,
-                                 set(json["product_classes"]), json["mol_weights"],
-                                 int(json["start"]), int(json["end"]))
+        return ProtoclusterPrediction(cds_predictions, starters, elongations,
+                                      set(json["product_classes"]), json["mol_weights"],
+                                      int(json["start"]), int(json["end"]))
 
 
 class T2PKSResults(ModuleResults):
@@ -147,7 +147,7 @@ class T2PKSResults(ModuleResults):
 
     def __init__(self, record_id: str) -> None:
         super().__init__(record_id)
-        self.cluster_predictions = {}  # type: Dict[int, ClusterPrediction]
+        self.cluster_predictions = {}  # type: Dict[int, ProtoclusterPrediction]
 
     def __repr__(self) -> str:
         return "T2PKSResults(clusters=%s)" % list(self.cluster_predictions)
@@ -175,7 +175,7 @@ class T2PKSResults(ModuleResults):
         results = T2PKSResults(json["record_id"])
 
         for cluster_id, json_prediction in json["cluster_predictions"].items():
-            cluster_prediction = ClusterPrediction.from_json(json_prediction)
+            cluster_prediction = ProtoclusterPrediction.from_json(json_prediction)
             # int is required because JSON keys are strings
             results.cluster_predictions[int(cluster_id)] = cluster_prediction
 
@@ -188,7 +188,7 @@ class T2PKSResults(ModuleResults):
             Gene functions are added to each CDSFeature.
         """
         for cluster_number, prediction in self.cluster_predictions.items():
-            cluster = record.get_cluster(cluster_number)
+            cluster = record.get_protocluster(cluster_number)
             cluster.t2pks = T2PKSQualifier(list(map(str, prediction.starter_units)),
                                            list(map(str, prediction.malonyl_elongations)),
                                            sorted(prediction.product_classes),

@@ -7,7 +7,7 @@
 import unittest
 
 from antismash.common.hmm_rule_parser import cluster_prediction, rule_parser
-from antismash.common.secmet.features import Cluster, FeatureLocation
+from antismash.common.secmet.features import Protocluster, FeatureLocation
 
 
 class DummyConditions(rule_parser.Conditions):
@@ -34,10 +34,10 @@ class TestRedundancy(unittest.TestCase):
     def create_cluster(self, rule_name, start, end):
         rule = self.rules_by_name[rule_name]
         core = FeatureLocation(start, end)
-        surrounds = FeatureLocation(max(0, start - rule.extent), end + rule.extent)
-        return Cluster(core, surrounds, tool="testing", cutoff=rule.cutoff,
-                       neighbourhood_range=rule.extent, product=rule_name,
-                       detection_rule="rule text")
+        surrounds = FeatureLocation(max(0, start - rule.neighbourhood), end + rule.neighbourhood)
+        return Protocluster(core, surrounds, tool="testing", cutoff=rule.cutoff,
+                            neighbourhood_range=rule.neighbourhood, product=rule_name,
+                            detection_rule="rule text")
 
     def test_alone(self):
         clusters = [self.create_cluster("inferior", 101, 110)]
@@ -79,10 +79,10 @@ class TestRedundancy(unittest.TestCase):
         print("testing clusters:", clusters)
         assert self.remove(clusters) == clusters
 
-    def test_extents_dont_matter(self):
-        extent = self.rules_by_name["superior"].extent
-        for new_extent in [extent - 10, extent + 10]:
-            self.rules_by_name["inferior"].extent = new_extent
+    def test_neighbourhoods_dont_matter(self):
+        neighbourhood = self.rules_by_name["superior"].neighbourhood
+        for new_neighbourhood in [neighbourhood - 10, neighbourhood + 10]:
+            self.rules_by_name["inferior"].neighbourhood = new_neighbourhood
             self.test_larger()
             self.test_equal()
             self.test_contained()

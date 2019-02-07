@@ -16,22 +16,22 @@ from antismash.common.test.helpers import get_path_to_nisin_genbank
 
 from ..features import (
     CDSFeature,
-    Cluster,
+    CandidateCluster,
     Feature,
     Region,
+    Protocluster,
     SubRegion,
-    SuperCluster,
 )
 from ..errors import SecmetInvalidInputError
 from .helpers import (
     DummyAntismashDomain,
+    DummyCandidateCluster,
     DummyCDS,
     DummyCDSMotif,
-    DummyCluster,
     DummyPFAMDomain,
+    DummyProtocluster,
     DummyRegion,
     DummySubRegion,
-    DummySuperCluster,
 )
 from ..qualifiers import SecMetQualifier, GeneFunction
 from ..record import Record
@@ -67,7 +67,7 @@ class TestConversion(unittest.TestCase):
         # ensure that the counts of each match
         assert type_counts["CDS"] == len(record.get_cds_features())
         assert type_counts["PFAM_domain"] == len(record.get_pfam_domains())
-        assert type_counts["cluster"] == len(record.get_clusters())
+        assert type_counts["cluster"] == len(record.get_protoclusters())
         assert type_counts["aSDomain"] == len(record.get_antismash_domains())
 
     def test_protein_sequences_caught(self):
@@ -95,19 +95,19 @@ class TestStripping(unittest.TestCase):
         self.cds = DummyCDS(locus_tag="test")
         self.rec.add_cds_feature(self.cds)
 
-    def test_clusters(self):
-        assert not self.rec.get_clusters()
-        self.rec.add_cluster(DummyCluster())
-        assert self.rec.get_clusters()
+    def test_protoclusters(self):
+        assert not self.rec.get_protoclusters()
+        self.rec.add_protocluster(DummyProtocluster())
+        assert self.rec.get_protoclusters()
         self.rec.strip_antismash_annotations()
-        assert not self.rec.get_clusters()
+        assert not self.rec.get_protoclusters()
 
-    def test_superclusters(self):
-        assert not self.rec.get_superclusters()
-        self.rec.add_supercluster(DummySuperCluster())
-        assert self.rec.get_superclusters()
+    def test_candidate_clusters(self):
+        assert not self.rec.get_candidate_clusters()
+        self.rec.add_candidate_cluster(DummyCandidateCluster())
+        assert self.rec.get_candidate_clusters()
         self.rec.strip_antismash_annotations()
-        assert not self.rec.get_superclusters()
+        assert not self.rec.get_candidate_clusters()
 
     def test_subregions(self):
         assert not self.rec.get_subregions()
@@ -187,28 +187,28 @@ class TestRecordFeatureNumbering(unittest.TestCase):
         self.locations = [FeatureLocation(start, end) for start, end in self.pairs]
         self.record = Record(Seq("A"*1000))
 
-    def test_cluster_numbering(self):
+    def test_protocluster_numbering(self):
         features = []
         for start, end in self.pairs:
-            cluster = DummyCluster(start, end)
-            self.record.add_cluster(cluster)
+            cluster = DummyProtocluster(start, end)
+            self.record.add_protocluster(cluster)
             features.append(cluster)
         features = sorted(features)
-        for i, cluster in enumerate(self.record.get_clusters()):
-            assert cluster.get_cluster_number() == i + 1
-            assert self.record.get_cluster(i + 1) is features[i]
+        for i, cluster in enumerate(self.record.get_protoclusters()):
+            assert cluster.get_protocluster_number() == i + 1
+            assert self.record.get_protocluster(i + 1) is features[i]
 
-    def test_supercluster_numbering(self):
+    def test_candidate_cluster_numbering(self):
         features = []
         for location in self.locations:
-            supercluster = SuperCluster(SuperCluster.kinds.SINGLE,
-                                        [DummyCluster(location.start, location.end)])
-            self.record.add_supercluster(supercluster)
-            features.append(supercluster)
+            candidate_cluster = CandidateCluster(CandidateCluster.kinds.SINGLE,
+                                                 [DummyProtocluster(location.start, location.end)])
+            self.record.add_candidate_cluster(candidate_cluster)
+            features.append(candidate_cluster)
         features = sorted(features)
-        for i, cluster in enumerate(self.record.get_superclusters()):
-            assert cluster.get_supercluster_number() == i + 1
-            assert self.record.get_supercluster(i + 1) is features[i]
+        for i, cluster in enumerate(self.record.get_candidate_clusters()):
+            assert cluster.get_candidate_cluster_number() == i + 1
+            assert self.record.get_candidate_cluster(i + 1) is features[i]
 
     def test_subregion_numbering(self):
         features = []
@@ -245,30 +245,30 @@ class TestRecord(unittest.TestCase):
         # ok, since ends aren't inclusive
         record.add_region(Region(subregions=[SubRegion(FeatureLocation(0, 10), "test")]))
 
-    def test_cds_cluster_linkage(self):
+    def test_cds_protocluster_linkage(self):
         record = Record("A"*200)
         for start, end in [(50, 100), (10, 90), (0, 9), (150, 200)]:
             record.add_cds_feature(DummyCDS(start, end))
         for start, end in [(10, 120), (5, 110), (10, 160), (45, 200)]:
-            record.clear_clusters()
-            cluster = DummyCluster(start, end)
-            record.add_cluster(cluster)
+            record.clear_protoclusters()
+            cluster = DummyProtocluster(start, end)
+            record.add_protocluster(cluster)
             assert len(cluster.cds_children) == 2
             for cds in cluster.cds_children:
                 assert cds.overlaps_with(cluster)
 
-    def test_orphaned_cluster_number(self):
+    def test_orphaned_protocluster_number(self):
         record = Record("A"*1000)
-        cluster = DummyCluster(0, 1000)
-        with self.assertRaisesRegex(ValueError, "Cluster not contained in record"):
-            print(record.get_cluster_number(cluster))
+        cluster = DummyProtocluster(0, 1000)
+        with self.assertRaisesRegex(ValueError, "Protocluster not contained in record"):
+            print(record.get_protocluster_number(cluster))
 
-    def test_orphaned_supercluster_number(self):
+    def test_orphaned_candidate_cluster_number(self):
         record = Record("A"*1000)
-        cluster = DummyCluster(0, 1000)
-        supercluster = SuperCluster(SuperCluster.kinds.SINGLE, [cluster])
-        with self.assertRaisesRegex(ValueError, "SuperCluster not contained in record"):
-            print(record.get_supercluster_number(supercluster))
+        cluster = DummyProtocluster(0, 1000)
+        candidate_cluster = CandidateCluster(CandidateCluster.kinds.SINGLE, [cluster])
+        with self.assertRaisesRegex(ValueError, "CandidateCluster not contained in record"):
+            print(record.get_candidate_cluster_number(candidate_cluster))
 
     def test_orphaned_subregion_number(self):
         record = Record(Seq("A" * 1000))
@@ -371,9 +371,9 @@ class TestCDSFetchByLocation(unittest.TestCase):
 class TestClusterManipulation(unittest.TestCase):
     def setUp(self):
         self.record = Record(Seq("A" * 1000))
-        self.cluster = Cluster(FeatureLocation(8, 71, strand=1),
-                               FeatureLocation(3, 76, strand=1), tool="test",
-                               cutoff=17, neighbourhood_range=5, product='a', detection_rule="a")
+        self.protocluster = Protocluster(FeatureLocation(8, 71, strand=1),
+                                         FeatureLocation(3, 76, strand=1), tool="test",
+                                         cutoff=17, neighbourhood_range=5, product='a', detection_rule="a")
 
     def add_cds_features(self):
         outside = DummyCDS(100, 120, locus_tag="outside")
@@ -384,56 +384,56 @@ class TestClusterManipulation(unittest.TestCase):
         self.record.add_cds_feature(partial)
         return inside
 
-    def test_add_cluster(self):
-        assert not self.record.get_clusters()
-        self.record.add_cluster(self.cluster)
-        assert self.record.get_clusters() == (self.cluster,)
-        assert self.record.get_cluster_number(self.cluster) == 1
+    def test_add_protocluster(self):
+        assert not self.record.get_protoclusters()
+        self.record.add_protocluster(self.protocluster)
+        assert self.record.get_protoclusters() == (self.protocluster,)
+        assert self.record.get_protocluster_number(self.protocluster) == 1
 
     def test_add_invalid(self):
         with self.assertRaises(AssertionError):
-            self.record.add_cluster(self.record)
+            self.record.add_protocluster(self.record)
         with self.assertRaises(AssertionError):
-            self.record.add_cluster(None)
+            self.record.add_protocluster(None)
         with self.assertRaises(AssertionError):
-            self.record.add_cluster(Feature(self.cluster.location, feature_type="protocluster"))
+            self.record.add_protocluster(Feature(self.protocluster.location, feature_type="protocluster"))
 
     def test_add_feature(self):
-        assert not self.record.get_clusters()
-        self.record.add_feature(self.cluster)
-        assert self.record.get_clusters() == (self.cluster,)
-        assert self.record.get_cluster_number(self.cluster) == 1
+        assert not self.record.get_protoclusters()
+        self.record.add_feature(self.protocluster)
+        assert self.record.get_protoclusters() == (self.protocluster,)
+        assert self.record.get_protocluster_number(self.protocluster) == 1
 
-    def test_clear_clusters(self):
-        self.record.add_cluster(self.cluster)
-        assert self.record.get_clusters()
-        self.record.clear_clusters()
-        assert not self.record.get_clusters()
+    def test_clear_protoclusters(self):
+        self.record.add_protocluster(self.protocluster)
+        assert self.record.get_protoclusters()
+        self.record.clear_protoclusters()
+        assert not self.record.get_protoclusters()
 
     def test_cds_linking_cds_first(self):
         inside = self.add_cds_features()
 
-        assert not self.cluster.cds_children
-        assert self.cluster.parent_record is None
-        self.record.add_cluster(self.cluster)
-        assert self.cluster.parent_record is self.record
-        assert self.cluster.cds_children == (inside,)
+        assert not self.protocluster.cds_children
+        assert self.protocluster.parent_record is None
+        self.record.add_protocluster(self.protocluster)
+        assert self.protocluster.parent_record is self.record
+        assert self.protocluster.cds_children == (inside,)
 
     def test_cds_linking_cluster_first(self):
-        self.record.add_cluster(self.cluster)
-        assert not self.cluster.cds_children
+        self.record.add_protocluster(self.protocluster)
+        assert not self.protocluster.cds_children
 
         inside = self.add_cds_features()
-        assert self.cluster.cds_children == (inside,)
+        assert self.protocluster.cds_children == (inside,)
 
 
-class TestSuperClusterManipulation(unittest.TestCase):
+class TestCandidateClusterManipulation(unittest.TestCase):
     def setUp(self):
         self.record = Record(Seq("A" * 1000))
-        self.cluster = Cluster(FeatureLocation(8, 71), FeatureLocation(3, 76), tool="test",
-                               cutoff=17, neighbourhood_range=5, product='a', detection_rule="a")
-        self.record.add_cluster(self.cluster)
-        self.supercluster = SuperCluster(SuperCluster.kinds.SINGLE, [self.cluster])
+        self.protocluster = Protocluster(FeatureLocation(8, 71), FeatureLocation(3, 76), tool="test",
+                                         cutoff=17, neighbourhood_range=5, product='a', detection_rule="a")
+        self.record.add_protocluster(self.protocluster)
+        self.candidate_cluster = CandidateCluster(CandidateCluster.kinds.SINGLE, [self.protocluster])
 
     def add_cds_features(self):
         outside = DummyCDS(100, 120, locus_tag="outside")
@@ -444,64 +444,64 @@ class TestSuperClusterManipulation(unittest.TestCase):
         self.record.add_cds_feature(partial)
         return inside
 
-    def test_add_supercluster(self):
-        assert not self.record.get_superclusters()
-        self.record.add_supercluster(self.supercluster)
-        assert self.record.get_superclusters() == (self.supercluster,)
-        assert self.record.get_supercluster_number(self.supercluster) == 1
+    def test_add_candidate_cluster(self):
+        assert not self.record.get_candidate_clusters()
+        self.record.add_candidate_cluster(self.candidate_cluster)
+        assert self.record.get_candidate_clusters() == (self.candidate_cluster,)
+        assert self.record.get_candidate_cluster_number(self.candidate_cluster) == 1
 
     def test_add_invalid(self):
         with self.assertRaises(AssertionError):
-            self.record.add_supercluster(self.record)
+            self.record.add_candidate_cluster(self.record)
         with self.assertRaises(AssertionError):
-            self.record.add_supercluster(None)
+            self.record.add_candidate_cluster(None)
         with self.assertRaises(AssertionError):
-            self.record.add_supercluster(self.cluster)
+            self.record.add_candidate_cluster(self.protocluster)
 
     def test_add_feature(self):
-        assert not self.record.get_superclusters()
-        self.record.add_feature(self.supercluster)
-        assert self.record.get_superclusters() == (self.supercluster,)
-        assert self.record.get_supercluster_number(self.supercluster) == 1
+        assert not self.record.get_candidate_clusters()
+        self.record.add_feature(self.candidate_cluster)
+        assert self.record.get_candidate_clusters() == (self.candidate_cluster,)
+        assert self.record.get_candidate_cluster_number(self.candidate_cluster) == 1
 
     def test_clear(self):
-        assert self.cluster.parent == self.supercluster
-        self.record.add_supercluster(self.supercluster)
-        assert self.record.get_superclusters()
-        self.record.clear_superclusters()
-        assert not self.record.get_superclusters()
-        assert self.cluster.parent is None
+        assert self.protocluster.parent == self.candidate_cluster
+        self.record.add_candidate_cluster(self.candidate_cluster)
+        assert self.record.get_candidate_clusters()
+        self.record.clear_candidate_clusters()
+        assert not self.record.get_candidate_clusters()
+        assert self.protocluster.parent is None
 
     def test_creation_empty(self):
         empty_record = Record(Seq("A" * 100))
-        assert not empty_record.get_superclusters()
-        assert empty_record.create_superclusters() == 0
-        assert not empty_record.get_superclusters()
+        assert not empty_record.get_candidate_clusters()
+        assert empty_record.create_candidate_clusters() == 0
+        assert not empty_record.get_candidate_clusters()
 
     def test_creation_single(self):
-        assert self.record.create_superclusters() == 1
-        supercluster = self.cluster.parent
-        assert supercluster.location == self.supercluster.location
-        assert supercluster.kind == SuperCluster.kinds.SINGLE
+        assert self.record.create_candidate_clusters() == 1
+        candidate_cluster = self.protocluster.parent
+        assert candidate_cluster.location == self.candidate_cluster.location
+        assert candidate_cluster.kind == CandidateCluster.kinds.SINGLE
 
     def test_add_biopython(self):
-        bio = self.supercluster.to_biopython()[0]
+        bio = self.candidate_cluster.to_biopython()[0]
         with self.assertRaisesRegex(ValueError, "cannot be directly added from biopython"):
             self.record.add_biopython_feature(bio)
 
     def test_cds_linking_cds_first(self):
         inside = self.add_cds_features()
 
-        assert not self.supercluster.cds_children
-        self.record.add_supercluster(self.supercluster)
-        assert self.supercluster.cds_children == (inside,)
+        assert not self.candidate_cluster.cds_children
+        self.record.add_candidate_cluster(self.candidate_cluster)
+        assert self.candidate_cluster.cds_children == (inside,)
 
-    def test_cds_linking_supercluster_first(self):
-        self.record.add_supercluster(self.supercluster)
-        assert not self.supercluster.cds_children
+    def test_cds_linking_candidate_cluster_first(self):
+        self.record.add_candidate_cluster(self.candidate_cluster)
+        assert not self.candidate_cluster.cds_children
 
         inside = self.add_cds_features()
-        assert self.supercluster.cds_children == (inside,)
+        assert self.candidate_cluster.cds_children == (inside,)
 
 
 class TestSubRegionManipulation(unittest.TestCase):
@@ -534,7 +534,7 @@ class TestSubRegionManipulation(unittest.TestCase):
         with self.assertRaises(AssertionError):
             self.record.add_subregion(self.record)
         with self.assertRaises(AssertionError):
-            self.record.add_supercluster(None)
+            self.record.add_candidate_cluster(None)
         with self.assertRaises(AssertionError):
             self.record.add_subregion(Feature(FeatureLocation(100, 200), feature_type="subregion"))
 
@@ -564,16 +564,16 @@ class TestRegionManipulation(unittest.TestCase):
         self.record = Record(Seq("A" * 1000))
         self.cds = DummyCDS(8, 71, locus_tag="test")
         self.record.add_cds_feature(self.cds)
-        self.cluster = Cluster(FeatureLocation(8, 71), FeatureLocation(3, 76), tool="test",
-                               cutoff=17, neighbourhood_range=5, product='a', detection_rule="a")
-        self.record.add_cluster(self.cluster)
-        self.supercluster = SuperCluster(SuperCluster.kinds.SINGLE, [self.cluster])
-        self.record.add_supercluster(self.supercluster)
+        self.protocluster = Protocluster(FeatureLocation(8, 71), FeatureLocation(3, 76), tool="test",
+                                         cutoff=17, neighbourhood_range=5, product='a', detection_rule="a")
+        self.record.add_protocluster(self.protocluster)
+        self.candidate_cluster = CandidateCluster(CandidateCluster.kinds.SINGLE, [self.protocluster])
+        self.record.add_candidate_cluster(self.candidate_cluster)
         self.subregion = SubRegion(FeatureLocation(200, 300), tool="test")
         self.record.add_subregion(self.subregion)
-        self.region_sup = Region(superclusters=[self.supercluster])
+        self.region_sup = Region(candidate_clusters=[self.candidate_cluster])
         self.region_sub = Region(subregions=[self.subregion])
-        self.region_both = Region(superclusters=[self.supercluster],
+        self.region_both = Region(candidate_clusters=[self.candidate_cluster],
                                   subregions=[self.subregion])
 
     def test_add_region(self):
@@ -619,9 +619,9 @@ class TestRegionManipulation(unittest.TestCase):
         with self.assertRaises(AssertionError):
             self.record.add_subregion(self.record)
         with self.assertRaises(AssertionError):
-            self.record.add_supercluster(None)
+            self.record.add_candidate_cluster(None)
         with self.assertRaises(AssertionError):
-            self.record.add_supercluster(self.subregion)
+            self.record.add_candidate_cluster(self.subregion)
 
     def test_clear(self):
         self.record.add_region(self.region_sup)
@@ -629,20 +629,20 @@ class TestRegionManipulation(unittest.TestCase):
         self.record.clear_regions()
         assert not self.record.get_regions()
 
-    def test_superclusters_cleared(self):
+    def test_candidate_clusters_cleared(self):
         self.record.add_region(self.region_sup)
         self.record.add_region(self.region_sub)
-        assert self.record.get_superclusters()
+        assert self.record.get_candidate_clusters()
         assert self.record.get_subregions()
         assert len(self.record.get_regions()) == 2
-        self.record.clear_superclusters()
+        self.record.clear_candidate_clusters()
         assert len(self.record.get_regions()) == 1
         assert self.record.get_regions()[0].location == self.region_sub.location
 
     def test_subregions_cleared(self):
         self.record.add_region(self.region_sup)
         self.record.add_region(self.region_sub)
-        assert self.record.get_superclusters()
+        assert self.record.get_candidate_clusters()
         assert self.record.get_subregions()
         assert len(self.record.get_regions()) == 2
         self.record.clear_subregions()
@@ -663,16 +663,16 @@ class TestRegionManipulation(unittest.TestCase):
         assert len(regions) == 2
 
         assert regions[0].location == self.region_sup.location
-        assert regions[0].superclusters == (self.supercluster,)
+        assert regions[0].candidate_clusters == (self.candidate_cluster,)
         assert not regions[0].subregions
 
         assert regions[1].location == self.region_sub.location
-        assert not regions[1].superclusters
+        assert not regions[1].candidate_clusters
         assert regions[1].subregions == (self.subregion,)
 
     def test_creation_overlapping(self):
-        extra_sup = SuperCluster(SuperCluster.kinds.SINGLE, [self.cluster])
-        self.record.add_supercluster(extra_sup)
+        extra_sup = CandidateCluster(CandidateCluster.kinds.SINGLE, [self.protocluster])
+        self.record.add_candidate_cluster(extra_sup)
         extra_sub = SubRegion(FeatureLocation(50, 250), tool="test")
         self.record.add_subregion(extra_sub)
         assert not self.record.get_regions()
@@ -680,19 +680,19 @@ class TestRegionManipulation(unittest.TestCase):
         assert len(self.record.get_regions()) == 1
         region = self.record.get_regions()[0]
         assert region.location == FeatureLocation(3, 300)
-        assert region.superclusters == (extra_sup, self.supercluster)
+        assert region.candidate_clusters == (extra_sup, self.candidate_cluster)
         assert region.subregions == (extra_sub, self.subregion)
 
     def test_creation_ordering(self):
-        extra_cluster = Cluster(FeatureLocation(820, 850), FeatureLocation(800, 870), tool="test",
-                                cutoff=17, neighbourhood_range=5, product='a', detection_rule="a")
-        extra_sup = SuperCluster(SuperCluster.kinds.SINGLE, [extra_cluster])
+        extra_cluster = Protocluster(FeatureLocation(820, 850), FeatureLocation(800, 870), tool="test",
+                                     cutoff=17, neighbourhood_range=5, product='a', detection_rule="a")
+        extra_sup = CandidateCluster(CandidateCluster.kinds.SINGLE, [extra_cluster])
         self.subregion.location = FeatureLocation(50, 100)
-        # make sure the subregion overlaps with the first supercluster, but not the second
+        # make sure the subregion overlaps with the first candidate cluster, but not the second
         # otherwise the test is no good
-        assert self.record.get_subregion(0).overlaps_with(self.supercluster)
+        assert self.record.get_subregion(0).overlaps_with(self.candidate_cluster)
         assert not self.record.get_subregion(0).overlaps_with(extra_sup)
-        self.record.add_supercluster(extra_sup)
+        self.record.add_candidate_cluster(extra_sup)
 
         assert not self.record.get_regions()
         self.record.create_regions()
@@ -700,12 +700,12 @@ class TestRegionManipulation(unittest.TestCase):
 
         region = self.record.get_regions()[0]
         assert region.location == FeatureLocation(3, 100)
-        assert region.superclusters == (self.supercluster,)
+        assert region.candidate_clusters == (self.candidate_cluster,)
         assert region.subregions == (self.subregion,)
 
         region = self.record.get_regions()[1]
         assert region.location == FeatureLocation(800, 870)
-        assert region.superclusters == (extra_sup,)
+        assert region.candidate_clusters == (extra_sup,)
         assert region.subregions == tuple()
 
     def test_add_biopython(self):

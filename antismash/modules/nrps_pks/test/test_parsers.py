@@ -20,9 +20,9 @@ class TestNRPSParserMonomerModification(unittest.TestCase):
         self.regions = []
         domain_names = self.gen_domain_names()
         for product in ['not_atpks', 'transatpks']:
-            cluster = helpers.DummyCluster(1, 2, product=product)
-            supercluster = helpers.DummySuperCluster([cluster])
-            self.regions.append(Region(superclusters=[supercluster]))
+            cluster = helpers.DummyProtocluster(1, 2, product=product)
+            candidate_cluster = helpers.DummyCandidateCluster([cluster])
+            self.regions.append(Region(candidate_clusters=[candidate_cluster]))
             for i in range(7):
                 locus_tag = chr(ord('a') + i)
                 if i == 6:

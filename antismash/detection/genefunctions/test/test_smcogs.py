@@ -27,8 +27,8 @@ class TestAddingToRecord(unittest.TestCase):
         # ensure that descriptions containing : are properly handled
         cds = helpers.DummyCDS(locus_tag="test")
         record = helpers.DummyRecord(features=[cds], seq="A"*100)
-        record.add_cluster(helpers.DummyCluster(0, 100))
-        record.create_superclusters()
+        record.add_protocluster(helpers.DummyProtocluster(0, 100))
+        record.create_candidate_clusters()
         record.create_regions()
         results = FunctionResults(record.id, "smcogs",
                                   best_hits={cds.get_name(): HMMResult("SMCOG1212:sodium:dicarboxylate_symporter",

@@ -10,8 +10,8 @@ from antismash.common.hmm_rule_parser import rule_parser
 from antismash.common.test.helpers import DummyCDS, DummyRecord, FakeHSPHit
 
 
-def format_as_rule(name, cutoff, extent, conditions):
-    return "RULE {} CUTOFF {} EXTENT {} CONDITIONS {}".format(name, cutoff, extent, conditions)
+def format_as_rule(name, cutoff, neighbourhood, conditions):
+    return "RULE {} CUTOFF {} NEIGHBOURHOOD {} CONDITIONS {}".format(name, cutoff, neighbourhood, conditions)
 
 
 class DetectionTest(unittest.TestCase):
@@ -41,8 +41,8 @@ class DetectionTest(unittest.TestCase):
                        FakeHSPHit("g", "GENE_1", 0, 10, 50, 0)]}
         self.signature_names = set(["a", "b", "c", "d", "e", "f", "g", "modelA", "modelB"])
 
-    def run_test(self, name, cutoff, extent, conditions):
-        rules = format_as_rule(name, cutoff, extent, conditions)
+    def run_test(self, name, cutoff, neighbourhood, conditions):
+        rules = format_as_rule(name, cutoff, neighbourhood, conditions)
         rules = rule_parser.Parser(rules, self.signature_names).rules
         for rule in rules:
             assert rule.contains_positive_condition()
@@ -248,15 +248,15 @@ class RuleParserTest(unittest.TestCase):
         assert rule_lines == [rule.reconstruct_rule_text() for rule in rules]
 
     def test_extra_whitespace(self):
-        rules = self.parse("RULE A     CUTOFF 10\tEXTENT\t20\n CONDITIONS \t  a").rules
+        rules = self.parse("RULE A     CUTOFF 10\tNEIGHBOURHOOD\t20\n CONDITIONS \t  a").rules
         assert len(rules) == 1
         assert str(rules[0]) == "A\t10\t20\ta"
 
-    def test_cutoff_extent_parsing(self):
+    def test_cutoff_neighbourhood_parsing(self):
         rules = self.parse(format_as_rule("A", 10, 20, "a")).rules
         assert len(rules) == 1
         assert rules[0].cutoff == 10000
-        assert rules[0].extent == 20000
+        assert rules[0].neighbourhood == 20000
 
         with self.assertRaises(rule_parser.RuleSyntaxError):
             self.parse("A 10 a or b")
@@ -266,10 +266,10 @@ class RuleParserTest(unittest.TestCase):
         with self.assertRaises(rule_parser.RuleSyntaxError):
             self.parse("RULE A CUTOFF 10 CONDITIONS a or b")
         with self.assertRaises(rule_parser.RuleSyntaxError):
-            self.parse("RULE A CUTOFF b EXTENT 10 CONDITIONS a or b")
+            self.parse("RULE A CUTOFF b NEIGHBOURHOOD 10 CONDITIONS a or b")
 
     def test_inline_comments(self):
-        rule_chunk = "RULE name CUTOFF 20 EXTENT 20 CONDITIONS a"
+        rule_chunk = "RULE name CUTOFF 20 NEIGHBOURHOOD 20 CONDITIONS a"
         rules = self.parse("# comment line\n" + rule_chunk).rules
         assert len(rules) == 1 and rules[0].name == "name"
 
@@ -278,21 +278,21 @@ class RuleParserTest(unittest.TestCase):
 
     def test_section_comments(self):
         rules = self.parse("RULE name COMMENT this is a section comment CUTOFF 20"
-                           " EXTENT 20 CONDITIONS a").rules
+                           " NEIGHBOURHOOD 20 CONDITIONS a").rules
         assert len(rules) == 1 and rules[0].comments == "this is a section comment"
 
     def test_single_superior(self):
-        rules = self.parse("RULE first CUTOFF 20 EXTENT 20 CONDITIONS a "
-                           "RULE sub SUPERIORS first CUTOFF 20 EXTENT 20 CONDITIONS c"
+        rules = self.parse("RULE first CUTOFF 20 NEIGHBOURHOOD 20 CONDITIONS a "
+                           "RULE sub SUPERIORS first CUTOFF 20 NEIGHBOURHOOD 20 CONDITIONS c"
                            ).rules_by_name
         assert len(rules) == 2
         assert rules["sub"].superiors == ["first"]
         assert rules["first"].superiors == []
 
     def test_multiple_superiors(self):
-        rules = self.parse("RULE first CUTOFF 20 EXTENT 20 CONDITIONS a "
-                           "RULE second CUTOFF 20 EXTENT 20 CONDITIONS b "
-                           "RULE sub SUPERIORS first,second CUTOFF 20 EXTENT 20 CONDITIONS c"
+        rules = self.parse("RULE first CUTOFF 20 NEIGHBOURHOOD 20 CONDITIONS a "
+                           "RULE second CUTOFF 20 NEIGHBOURHOOD 20 CONDITIONS b "
+                           "RULE sub SUPERIORS first,second CUTOFF 20 NEIGHBOURHOOD 20 CONDITIONS c"
                            ).rules_by_name
         assert len(rules) == 3 and rules["sub"].superiors == ["first", "second"]
         assert not rules["first"].superiors and not rules["second"].superiors
@@ -300,38 +300,38 @@ class RuleParserTest(unittest.TestCase):
     def test_unknown_superiors(self):
         # bad ordering
         with self.assertRaisesRegex(ValueError, "Unknown rule name: second"):
-            self.parse("RULE first CUTOFF 20 EXTENT 20 CONDITIONS a "
-                       "RULE sub SUPERIORS first,second CUTOFF 20 EXTENT 20 CONDITIONS c"
-                       "RULE second CUTOFF 20 EXTENT 20 CONDITIONS b ")
+            self.parse("RULE first CUTOFF 20 NEIGHBOURHOOD 20 CONDITIONS a "
+                       "RULE sub SUPERIORS first,second CUTOFF 20 NEIGHBOURHOOD 20 CONDITIONS c"
+                       "RULE second CUTOFF 20 NEIGHBOURHOOD 20 CONDITIONS b ")
         # completely undefined
         with self.assertRaisesRegex(ValueError, "Unknown rule name: second"):
-            self.parse("RULE first CUTOFF 20 EXTENT 20 CONDITIONS a "
-                       "RULE sub SUPERIORS first,second CUTOFF 20 EXTENT 20 CONDITIONS c")
+            self.parse("RULE first CUTOFF 20 NEIGHBOURHOOD 20 CONDITIONS a "
+                       "RULE sub SUPERIORS first,second CUTOFF 20 NEIGHBOURHOOD 20 CONDITIONS c")
 
     def test_self_referential_superiors(self):
         with self.assertRaisesRegex(ValueError, "Unknown rule name: sub"):
-            self.parse("RULE first CUTOFF 20 EXTENT 20 CONDITIONS a "
-                       "RULE sub SUPERIORS sub,first CUTOFF 20 EXTENT 20 CONDITIONS c")
+            self.parse("RULE first CUTOFF 20 NEIGHBOURHOOD 20 CONDITIONS a "
+                       "RULE sub SUPERIORS sub,first CUTOFF 20 NEIGHBOURHOOD 20 CONDITIONS c")
 
     def test_empty_superiors(self):
         with self.assertRaisesRegex(rule_parser.RuleSyntaxError,
                                     "Expected identifier but found cutoff"):
-            self.parse("RULE first CUTOFF 20 EXTENT 20 CONDITIONS a "
-                       "RULE sub SUPERIORS CUTOFF 20 EXTENT 20 CONDITIONS c")
+            self.parse("RULE first CUTOFF 20 NEIGHBOURHOOD 20 CONDITIONS a "
+                       "RULE sub SUPERIORS CUTOFF 20 NEIGHBOURHOOD 20 CONDITIONS c")
 
     def test_chained_superiors(self):
         with self.assertRaisesRegex(ValueError, "A rule cannot have a superior which has its own superior"):
-            self.parse("RULE first CUTOFF 20 EXTENT 20 CONDITIONS a "
-                       "RULE second SUPERIORS first CUTOFF 20 EXTENT 20 CONDITIONS b "
-                       "RULE sub SUPERIORS second CUTOFF 20 EXTENT 20 CONDITIONS c")
+            self.parse("RULE first CUTOFF 20 NEIGHBOURHOOD 20 CONDITIONS a "
+                       "RULE second SUPERIORS first CUTOFF 20 NEIGHBOURHOOD 20 CONDITIONS b "
+                       "RULE sub SUPERIORS second CUTOFF 20 NEIGHBOURHOOD 20 CONDITIONS c")
 
     def test_related(self):
-        rules = self.parse("RULE name RELATED b, c CUTOFF 20 EXTENT 20 CONDITIONS a").rules
+        rules = self.parse("RULE name RELATED b, c CUTOFF 20 NEIGHBOURHOOD 20 CONDITIONS a").rules
         assert rules[0].related == ["b", "c"]
 
     def test_empty_related(self):
         with self.assertRaises(rule_parser.RuleSyntaxError):
-            self.parse("RULE name RELATED CUTOFF 20 EXTENT 20 CONDITIONS a")
+            self.parse("RULE name RELATED CUTOFF 20 NEIGHBOURHOOD 20 CONDITIONS a")
 
         with self.assertRaises(rule_parser.RuleSyntaxError):
             self.parse("RULE name RELATED")
@@ -449,7 +449,7 @@ class RuleParserTest(unittest.TestCase):
         self.parse(format_as_rule("A", 10, 10, "a and b or a"))
 
     def test_emptylines(self):
-        rules = self.parse("\nRULE name CUTOFF 20 EXTENT 20 CONDITIONS a").rules
+        rules = self.parse("\nRULE name CUTOFF 20 NEIGHBOURHOOD 20 CONDITIONS a").rules
         assert len(rules) == 1 and rules[0].name == "name"
 
     def test_single_no_positive(self):

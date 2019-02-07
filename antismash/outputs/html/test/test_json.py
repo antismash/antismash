@@ -6,7 +6,7 @@
 
 import unittest
 
-from antismash.common.test.helpers import DummyCluster
+from antismash.common.test.helpers import DummyProtocluster
 from antismash.outputs.html import js as jsonify
 
 class TestClusterPacking(unittest.TestCase):
@@ -20,20 +20,20 @@ class TestClusterPacking(unittest.TestCase):
         self.check([], {})
 
     def test_single(self):
-        cluster = DummyCluster()
+        cluster = DummyProtocluster()
         self.check([cluster], {cluster: 0})
 
     def test_overlap(self):
-        clusters = [DummyCluster(start=100, end=500), DummyCluster(start=300, end=700)]
+        clusters = [DummyProtocluster(start=100, end=500), DummyProtocluster(start=300, end=700)]
         self.check(clusters, {clusters[0]: 0, clusters[1]: 1})
 
     def test_non_overlap(self):
-        clusters = [DummyCluster(start=100, end=500), DummyCluster(start=800, end=900)]
+        clusters = [DummyProtocluster(start=100, end=500), DummyProtocluster(start=800, end=900)]
         self.check(clusters, {clusters[0]: 0, clusters[1]: 0})
 
     def test_padding(self):
         # default of 100
-        clusters = [DummyCluster(start=100, end=500), DummyCluster(start=550, end=900)]
+        clusters = [DummyProtocluster(start=100, end=500), DummyProtocluster(start=550, end=900)]
         self.check(clusters, {clusters[0]: 0, clusters[1]: 1})
         self.check(clusters, {clusters[0]: 0, clusters[1]: 1}, padding=100)
 
@@ -43,12 +43,12 @@ class TestClusterPacking(unittest.TestCase):
 
     def test_mixed(self):
         clusters = [
-            DummyCluster(start=100, end=190),
-            DummyCluster(start=150, end=800),
-            DummyCluster(start=200, end=300),
-            DummyCluster(start=250, end=500),
-            DummyCluster(start=400, end=800),
-            DummyCluster(start=750, end=900),
+            DummyProtocluster(start=100, end=190),
+            DummyProtocluster(start=150, end=800),
+            DummyProtocluster(start=200, end=300),
+            DummyProtocluster(start=250, end=500),
+            DummyProtocluster(start=400, end=800),
+            DummyProtocluster(start=750, end=900),
         ]
         expected = {
             clusters[0]: 0,

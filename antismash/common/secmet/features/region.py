@@ -14,27 +14,27 @@ from Bio.SeqRecord import SeqRecord
 from helperlibs.bio import seqio
 
 from .cdscollection import CDSCollection, CDSFeature
-from .cluster import Cluster
+from .protocluster import Protocluster
 from .feature import Feature, FeatureLocation
 from .subregion import SubRegion
-from .supercluster import SuperCluster
+from .candidate_cluster import CandidateCluster
 from ..locations import combine_locations
 
 
 class TemporaryRegion:
     """ A construction for the delayed conversion of a Region from biopython,
-        as it requires that other feature types (SubRegion and SuperCluster)
+        as it requires that other feature types (SubRegion and CandidateCluster)
         have already been rebuilt.
 
         Converts to a real Region feature with the convert_to_real_feature method.
     """
-    def __init__(self, location: FeatureLocation, supercluster_numbers: List[int],
+    def __init__(self, location: FeatureLocation, candidate_cluster_numbers: List[int],
                  subregion_numbers: List[int],
                  rules: List[str] = None, products: List[str] = None,
                  probabilities: List[float] = None) -> None:
         self.type = "region"
         self.location = location
-        self.superclusters = supercluster_numbers
+        self.candidate_clusters = candidate_cluster_numbers
         self.subregions = subregion_numbers
         self.detection_rules = rules
         self.products = products
@@ -45,48 +45,48 @@ class TemporaryRegion:
         """ Constructs a Region from this TemporaryRegion, requires the parent
             Record instance containing all the expected children of the Region
         """
-        all_supers = record.get_superclusters()
-        supers = [all_supers[num - 1] for num in self.superclusters]
+        all_candidates = record.get_candidate_clusters()
+        candidates = [all_candidates[num - 1] for num in self.candidate_clusters]
         all_subs = record.get_subregions()
         subs = [all_subs[num - 1] for num in self.subregions]
-        return Region(supers, subs)
+        return Region(candidates, subs)
 
 
 class Region(CDSCollection):
     """ A feature that represents a region of interest made up of overlapping
-        SuperCluster features and/or SubRegion features.
+        CandidateCluster features and/or SubRegion features.
 
-        At least one SuperCluster or SubRegion is required to make up a Region.
+        At least one CandidateCluster or SubRegion is required to make up a Region.
 
         Region features cannot overlap.
     """
-    __slots__ = ["_subregions", "_superclusters", "clusterblast",
+    __slots__ = ["_subregions", "_candidate_clusters", "clusterblast",
                  "knownclusterblast", "subclusterblast"]
 
-    def __init__(self, superclusters: List[SuperCluster] = None,
+    def __init__(self, candidate_clusters: List[CandidateCluster] = None,
                  subregions: List[SubRegion] = None) -> None:
-        if not superclusters and not subregions:
-            raise ValueError("A Region requires at least one child SubRegion or SuperCluster")
+        if not candidate_clusters and not subregions:
+            raise ValueError("A Region requires at least one child SubRegion or CandidateCluster")
 
         children = []  # type: List[CDSCollection]
 
         if subregions is None:
             subregions = []
-        if superclusters is None:
-            superclusters = []
+        if candidate_clusters is None:
+            candidate_clusters = []
 
         for region in subregions:
             assert isinstance(region, SubRegion), type(region)
             children.append(region)
-        for cluster in superclusters:
-            assert isinstance(cluster, SuperCluster), type(cluster)
+        for cluster in candidate_clusters:
+            assert isinstance(cluster, CandidateCluster), type(cluster)
             children.append(cluster)
 
         location = combine_locations(child.location for child in children)
 
         super().__init__(location, feature_type="region", child_collections=children)
         self._subregions = subregions
-        self._superclusters = superclusters
+        self._candidate_clusters = candidate_clusters
 
         self.clusterblast = None  # type: Optional[List[str]]
         self.knownclusterblast = None  # type: Any
@@ -99,35 +99,35 @@ class Region(CDSCollection):
         return tuple(self._subregions)
 
     @property
-    def superclusters(self) -> Tuple[SuperCluster, ...]:
-        """ Returns a list of SuperCluster features used to create this region
+    def candidate_clusters(self) -> Tuple[CandidateCluster, ...]:
+        """ Returns a list of CandidateCluster features used to create this region
         """
-        return tuple(self._superclusters)
+        return tuple(self._candidate_clusters)
 
     @property
     def products(self) -> List[str]:
         """ Returns a list of unique products collected from all contained
-            SuperClusters
+            CandidateClusters
         """
         products = OrderedDict()  # type: Dict[str, None]
-        for cluster in self._superclusters:
+        for cluster in self._candidate_clusters:
             for product in cluster.products:
                 products[product] = None
         return list(products) or ["unknown"]
 
     def get_product_string(self) -> str:
         """ Returns a string of all unique products collected from all
-            contained SuperClusters
+            contained CandidateClusters
         """
         return ",".join(sorted(self.products))
 
     @property
     def detection_rules(self) -> List[str]:
         """ Returns a list of unique detection rules collected from all
-            contained SuperClusters
+            contained CandidateClusters
         """
         rules = OrderedDict()  # type: Dict[str, str]
-        for cluster in self._superclusters:
+        for cluster in self._candidate_clusters:
             for product, rule in zip(cluster.products, cluster.detection_rules):
                 rules[product] = rule
         return list(rules.values())
@@ -154,14 +154,14 @@ class Region(CDSCollection):
             raise ValueError("Region not in a record")
         return self._parent_record.get_region_number(self)
 
-    def get_unique_clusters(self) -> List[Cluster]:
-        """ Returns all Clusters contained by SuperClusters in this region,
-            without duplicating them if multiple SuperClusters contain the same
-            Cluster
+    def get_unique_protoclusters(self) -> List[Protocluster]:
+        """ Returns all Protoclusters contained by CandidateClusters in this region,
+            without duplicating them if multiple CandidateClusters contain the same
+            Protocluster
         """
-        clusters = set()  # type: Set[Cluster]
-        for supercluster in self._superclusters:
-            clusters.update(supercluster.clusters)
+        clusters = set()  # type: Set[Protocluster]
+        for candidate_cluster in self._candidate_clusters:
+            clusters.update(candidate_cluster.protoclusters)
         return sorted(clusters)
 
     def write_to_genbank(self, filename: str = None, directory: str = None, record: SeqRecord = None) -> None:
@@ -201,22 +201,23 @@ class Region(CDSCollection):
         # our cut-out clusters are always linear
         cluster_record.annotations["topology"] = "linear"
 
-        # renumber clusters, superclusters and regions to reflect changes
-        first_supercluster = min(sc.get_supercluster_number() for sc in self.superclusters)
-        first_cluster = min(cluster.get_cluster_number() for cluster in self.get_unique_clusters())
+        # renumber clusters, candidate_clusters and regions to reflect changes
+        first_candidate_cluster = min(sc.get_candidate_cluster_number() for sc in self.candidate_clusters)
+        first_cluster = min(cluster.get_protocluster_number() for cluster in self.get_unique_protoclusters())
         first_subregion = min(sub.get_subregion_number() for sub in self.subregions) if self.subregions else 0
         for feature in cluster_record.features:
             if feature.type == "region":
-                supers = feature.qualifiers.get("candidate_cluster_numbers")
-                if not supers:
+                candidates = feature.qualifiers.get("candidate_cluster_numbers")
+                if not candidates:
                     continue
-                feature.qualifiers["candidate_cluster_numbers"] = [str(int(num) - first_supercluster) for num in supers]
-            elif feature.type == SuperCluster.FEATURE_TYPE:
-                new = str(int(feature.qualifiers["candidate_cluster_number"][0]) - first_supercluster)
+                candidates = [str(int(num) - first_candidate_cluster) for num in candidates]
+                feature.qualifiers["candidate_cluster_numbers"] = candidates
+            elif feature.type == CandidateCluster.FEATURE_TYPE:
+                new = str(int(feature.qualifiers["candidate_cluster_number"][0]) - first_candidate_cluster)
                 feature.qualifiers["candidate_cluster_number"] = [new]
                 new_clusters = [str(int(num) - first_cluster) for num in feature.qualifiers["protoclusters"]]
                 feature.qualifiers["protoclusters"] = new_clusters
-            elif feature.type in ["protocluster", "protocluster_core"]:
+            elif feature.type in ["protocluster", "proto_core"]:
                 new = str(int(feature.qualifiers["protocluster_number"][0]) - first_cluster)
                 feature.qualifiers["cluster_number"] = [new]
             elif feature.type == "subregion":
@@ -234,7 +235,8 @@ class Region(CDSCollection):
         qualifiers["rules"] = self.detection_rules
         qualifiers["probabilities"] = ["%.4f" % prob for prob in self.probabilities]
         qualifiers["subregion_numbers"] = [str(sub.get_subregion_number()) for sub in self._subregions]
-        qualifiers["candidate_cluster_numbers"] = [str(sup.get_supercluster_number()) for sup in self._superclusters]
+        candidates = [str(cand.get_candidate_cluster_number()) for cand in self._candidate_clusters]
+        qualifiers["candidate_cluster_numbers"] = candidates
 
         return super().to_biopython(qualifiers)
 

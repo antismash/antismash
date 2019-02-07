@@ -5,15 +5,15 @@
 
 from .antismash_domain import AntismashDomain
 from .antismash_feature import AntismashFeature
+from .candidate_cluster import CandidateCluster
 from .cdscollection import CDSCollection
 from .cds_feature import CDSFeature
 from .cds_motif import CDSMotif
-from .cluster import Cluster
 from .domain import Domain
 from .feature import Feature, FeatureLocation, Location, SeqFeature
 from .gene import Gene
 from .pfam_domain import PFAMDomain
 from .prepeptide import Prepeptide
+from .protocluster import Protocluster
 from .region import Region
-from .supercluster import SuperCluster
 from .subregion import SubRegion
