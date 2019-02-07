@@ -75,7 +75,7 @@ class TestFeature(unittest.TestCase):
         bio.qualifiers["foo"] = ["bar"]
         bio.qualifiers["key_only"] = None
         # check that features without types are caught
-        with self.assertRaises(AssertionError):
+        with self.assertRaisesRegex(ValueError, "invalid length"):
             sec = Feature.from_biopython(bio)
         bio.type = "test"
         sec = Feature.from_biopython(bio)
@@ -142,6 +142,15 @@ class TestFeature(unittest.TestCase):
             seqf.qualifiers["codon_start"] = [codon_start]
             with self.assertRaisesRegex(ValueError, "invalid codon_start"):
                 Feature.from_biopython(seqf)
+
+    def test_feature_type(self):
+        loc = FeatureLocation(1, 4, strand=1)
+        with self.assertRaisesRegex(ValueError, "invalid length"):
+            Feature(loc, feature_type="")
+        assert Feature(loc, feature_type="A")
+        assert Feature(loc, feature_type="A"*15)
+        with self.assertRaisesRegex(ValueError, "invalid length"):
+            Feature(loc, feature_type="A"*16)
 
 
 class TestLocationAdjustment(unittest.TestCase):
