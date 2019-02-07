@@ -48,7 +48,9 @@ class Config:  # since it's a glorified namespace, pylint: disable=too-few-publi
             return self.__dict__.get(key, default)
 
         def __getattr__(self, attr: str) -> Any:
-            return self.__dict__[attr]
+            if attr in self.__dict__:
+                return self.__dict__[attr]
+            raise AttributeError("Config has no attribute: %s" % attr)
 
         def __setattr__(self, attr: str, value: Any) -> None:
             # special exceptions for those arguments we must update after
