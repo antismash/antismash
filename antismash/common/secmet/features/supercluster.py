@@ -191,6 +191,12 @@ class SuperCluster(CDSCollection):
             unique_products[cluster.product] = None
         return list(unique_products)
 
+    def get_product_string(self) -> str:
+        """ Returns all unique products from contained clusters in the order
+            they are found as a string, each product separated by a comma
+        """
+        return ",".join(self.products)
+
     def to_biopython(self, qualifiers: Optional[Dict[str, List[str]]] = None) -> List[SeqFeature]:
         if qualifiers is None:
             qualifiers = {}

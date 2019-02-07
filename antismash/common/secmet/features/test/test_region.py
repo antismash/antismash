@@ -120,7 +120,7 @@ class TestRegion(unittest.TestCase):
             supers.append(SuperCluster(SuperCluster.kinds.SINGLE, [create_cluster(i*10, (i+1)*10, product=prod)]))
         region = Region(superclusters=supers)
         assert region.products == ["b", "a"]
-        assert region.get_product_string() == "a-b"
+        assert region.get_product_string() == "a,b"
 
     def test_probabilities(self):
         loc = FeatureLocation(0, 10)
