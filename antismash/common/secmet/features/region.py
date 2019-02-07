@@ -119,7 +119,7 @@ class Region(CDSCollection):
         """ Returns a string of all unique products collected from all
             contained SuperClusters
         """
-        return "-".join(sorted(self.products))
+        return ",".join(sorted(self.products))
 
     @property
     def detection_rules(self) -> List[str]:

@@ -34,8 +34,8 @@ def analyse_biosynthetic_order(nrps_pks_features: List[CDSFeature],
     compound_predictions = []  # type: List[SuperClusterPrediction]
     # Find NRPS/PKS gene superclusters
     superclusters = [cluster for cluster in record.get_superclusters()
-                             if "nrps" in "-".join(cluster.products)
-                             or "pks" in "-".join(cluster.products)]
+                             if "nrps" in cluster.get_product_string()
+                             or "pks" in cluster.get_product_string()]
     if not superclusters:
         return []
     # Predict biosynthetic gene order in superclusters using starter domains,

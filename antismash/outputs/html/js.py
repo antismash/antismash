@@ -77,7 +77,7 @@ def convert_regions(record: Record, options: ConfigType, result: Dict[str, Modul
         js_region['orfs'] = convert_cds_features(record, region.cds_children, options, mibig_entries)
         js_region['clusters'] = get_clusters_from_region_parts(region.superclusters, region.subregions)
         js_region['ttaCodons'] = convert_tta_codons(tta_codons, record)
-        js_region['type'] = "-".join(region.products)
+        js_region['type'] = region.get_product_string()
         js_region['products'] = region.products
         js_region['anchor'] = "r%dc%d" % (record.record_index, region.get_region_number())
 

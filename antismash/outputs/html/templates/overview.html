@@ -79,9 +79,9 @@
                 <a href="#{{region.anchor_id}}">Region {% if multi_record %}{{record.record_index}}.{% endif %}{{region.get_region_number()}}</a>
               </td>
               <td>
-                {% set dash = joiner("-") %}
+                {% set join = joiner(",") %}
                 {% for subtype in region.products -%}
-                  {{dash()}}<a href="{{options.urls.docs_baseurl}}glossary/#{{subtype}}" target="_blank">{{subtype | title}}</a>
+                  {{join()}}<a href="{{options.urls.docs_baseurl}}glossary/#{{subtype}}" target="_blank">{{subtype | title}}</a>
                 {%- endfor %}
               </td>
               <td class="digits">{{region.location.start + 1}}</td>
