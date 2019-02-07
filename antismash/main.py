@@ -167,16 +167,15 @@ def run_detection(record: Record, options: ConfigType,
         results = module_results.get(module.__name__)
         if results:
             assert isinstance(results, DetectionResults)
-            for cluster in results.get_predicted_clusters():
-                record.add_cluster(cluster)
+            for protocluster in results.get_predicted_protoclusters():
+                record.add_protocluster(protocluster)
             for region in results.get_predicted_subregions():
                 record.add_subregion(region)
 
-    logging.debug("%d clusters found", len(record.get_clusters()))
+    logging.debug("%d protoclusters found", len(record.get_protoclusters()))
     logging.debug("%d subregions found", len(record.get_subregions()))
 
-    # create superclusters and regions
-    record.create_superclusters()
+    record.create_candidate_clusters()
     record.create_regions()
 
     if not record.get_regions():

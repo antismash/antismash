@@ -16,7 +16,7 @@ from typing import Any, Dict, List, Iterable, Optional, Set
 from antismash.common.signature import HmmSignature
 from antismash.common import all_orfs, path, subprocessing, module_results, utils
 from antismash.common.fasta import get_fasta_from_features
-from antismash.common.secmet import CDSFeature, Cluster, GeneFunction, Prepeptide, Record, Region
+from antismash.common.secmet import CDSFeature, Protocluster, GeneFunction, Prepeptide, Record, Region
 from antismash.common.secmet.features import CDSCollection
 from antismash.common.secmet.locations import location_from_string
 from antismash.common.secmet.qualifiers.prepeptide_qualifiers import LanthiQualifier
@@ -110,8 +110,8 @@ class LanthiResults(module_results.ModuleResults):
             that region
         """
         results = {}
-        for cluster in region.get_unique_clusters():
-            for locus in self.clusters.get(cluster.get_cluster_number(), []):
+        for cluster in region.get_unique_protoclusters():
+            for locus in self.clusters.get(cluster.get_protocluster_number(), []):
                 results[locus] = self.motifs_by_locus[locus]
         return results
 
@@ -659,7 +659,7 @@ def find_neighbours_in_range(center: CDSFeature,
     return neighbours
 
 
-def run_lanthi_on_genes(record: Record, focus: CDSFeature, cluster: Cluster,
+def run_lanthi_on_genes(record: Record, focus: CDSFeature, cluster: Protocluster,
                         genes: List[CDSFeature], results: LanthiResults) -> None:
     """ Runs lanthipeptide around a single focus gene which is a core biosynthetic
         enzyme for lanthipeptides.
@@ -668,7 +668,7 @@ def run_lanthi_on_genes(record: Record, focus: CDSFeature, cluster: Cluster,
         Arguments:
             record: the Record instance containing the genes
             focus: a core lanthipeptide gene
-            cluster: the Cluster being analysed
+            cluster: the Protocluster being analysed
             genes: a list of candidate precursor genes
             results: a LanthiResults object to update
 
@@ -698,7 +698,7 @@ def run_lanthi_on_genes(record: Record, focus: CDSFeature, cluster: Cluster,
         result_vec.lactonated = dehydrogenase_found and result_vec.core.startswith('S')
         motif = result_vec_to_feature(candidate, result_vec)
         results.motifs_by_locus[focus.get_name()].append(motif)
-        results.clusters[cluster.get_cluster_number()].add(focus.get_name())
+        results.clusters[cluster.get_protocluster_number()].add(focus.get_name())
         # track new CDSFeatures if found with all_orfs
         if candidate.region is None:
             results.new_cds_features.add(candidate)
@@ -714,7 +714,7 @@ def run_specific_analysis(record: Record) -> LanthiResults:
             A populated LanthiResults object
     """
     results = LanthiResults(record.id)
-    for cluster in record.get_clusters():
+    for cluster in record.get_protoclusters():
         if cluster.product != 'lanthipeptide':
             continue
 

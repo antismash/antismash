@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional
 from antismash.common import path
 from antismash.common.hmm_rule_parser import cluster_prediction
 from antismash.common.module_results import DetectionResults
-from antismash.common.secmet import Cluster, Record
+from antismash.common.secmet import Protocluster, Record
 from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
 
@@ -63,8 +63,8 @@ class ClusterFinderRuleResults(DetectionResults):
 
         return ClusterFinderRuleResults(json["record_id"], rule_parser_results)
 
-    def get_predicted_clusters(self) -> List[Cluster]:
-        return self.rule_results.clusters
+    def get_predicted_protoclusters(self) -> List[Protocluster]:
+        return self.rule_results.protoclusters
 
 
 def check_prereqs() -> List[str]:
@@ -81,7 +81,7 @@ def regenerate_previous_results(results: Dict[str, Any], record: Record,
     regenerated = ClusterFinderRuleResults.from_json(results, record)
     if not regenerated:
         return None
-    for cluster in regenerated.get_predicted_clusters():
+    for cluster in regenerated.get_predicted_protoclusters():
         record.add_cluster(cluster)
     return regenerated
 
@@ -113,5 +113,5 @@ def find_rule_based_clusters(record: Record) -> cluster_prediction.RuleDetection
                                                                 rules, equivalences, "cluster-finder")
     assert results is not None
     results.annotate_cds_features()
-    logging.debug("ClusterFinder detected %d rule-based clusters", len(results.clusters))
+    logging.debug("ClusterFinder detected %d rule-based clusters", len(results.protoclusters))
     return results

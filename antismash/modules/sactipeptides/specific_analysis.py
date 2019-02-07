@@ -80,12 +80,12 @@ class SactiResults(module_results.ModuleResults):
                 record.add_cds_motif(motif)
 
 
-def get_detected_domains(cluster: secmet.Cluster) -> Dict[str, int]:
+def get_detected_domains(cluster: secmet.Protocluster) -> Dict[str, int]:
     """ Gathers all detected domain ids from a cluster. Includes detection of
         some extra HMM profiles specific to sactipeptides.
 
         Arguments:
-            cluster: the Cluster to gather domains from
+            cluster: the Protocluster to gather domains from
 
         Returns:
             a dictionary mapping domain ids to number of times that domain was found
@@ -140,7 +140,7 @@ def cds_has_domains(cds: secmet.CDSFeature, domains: Set[str]) -> bool:
     return bool(cds.sec_met and set(cds.sec_met.domain_ids).intersection(domains))
 
 
-def acquire_rodeo_heuristics(cluster: secmet.Cluster, query: secmet.CDSFeature,
+def acquire_rodeo_heuristics(cluster: secmet.Protocluster, query: secmet.CDSFeature,
                              leader: str, core: str,
                              domains: Dict[str, int]) -> Tuple[int, List[float], List[int]]:
     """Calculate heuristic scores for RODEO"""
@@ -495,7 +495,7 @@ def run_rodeo_svm(csv_columns: List[float]) -> int:
     return 0
 
 
-def run_rodeo(cluster: secmet.Cluster, query: secmet.CDSFeature,
+def run_rodeo(cluster: secmet.Protocluster, query: secmet.CDSFeature,
               leader: str, core: str, domains: Dict[str, int]) -> Tuple[bool, float]:
     """Run RODEO heuristics + SVM to assess precursor peptide candidate"""
     rodeo_score = 0
@@ -511,7 +511,7 @@ def run_rodeo(cluster: secmet.Cluster, query: secmet.CDSFeature,
     return rodeo_score >= 26, rodeo_score
 
 
-def determine_precursor_peptide_candidate(cluster: secmet.Cluster, query: secmet.CDSFeature,
+def determine_precursor_peptide_candidate(cluster: secmet.Protocluster, query: secmet.CDSFeature,
                                           query_sequence: str, domains: Dict[str, int]
                                           ) -> Optional[secmet.Prepeptide]:
     """Identify precursor peptide candidates and split into two"""
@@ -534,7 +534,7 @@ def determine_precursor_peptide_candidate(cluster: secmet.Cluster, query: secmet
                              tool="sactipeptides", leader=leader, score=score)
 
 
-def run_sactipred(cluster: secmet.Cluster, query: secmet.CDSFeature,
+def run_sactipred(cluster: secmet.Protocluster, query: secmet.CDSFeature,
                   domains: Dict[str, int]) -> Optional[secmet.Prepeptide]:
     """General function to predict and analyse sacti peptides"""
 
@@ -579,7 +579,7 @@ def specific_analysis(record: secmet.Record) -> SactiResults:
     results = SactiResults(record.id)
     new_feature_hits = 0
     motif_count = 0
-    for cluster in record.get_clusters():
+    for cluster in record.get_protoclusters():
         if cluster.product != 'sactipeptide':
             continue
 
@@ -600,7 +600,7 @@ def specific_analysis(record: secmet.Record) -> SactiResults:
 
             results.motifs_by_locus[candidate.get_name()].append(motif)
             motif_count += 1
-            results.clusters[cluster.get_cluster_number()].add(candidate.get_name())
+            results.clusters[cluster.get_protocluster_number()].add(candidate.get_name())
             # track new CDSFeatures if found with all_orfs
             if candidate.region is None:
                 results.new_cds_features.add(candidate)

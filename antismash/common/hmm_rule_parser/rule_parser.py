@@ -87,7 +87,7 @@ The grammar itself:
     COMMENT_MARKER = "COMMENT"
     RELATED_MARKER = "RELATED"
     CUTOFF_MARKER = "CUTOFF"
-    EXTENT_MARKER = "EXTENT"
+    NEIGHBOURHOOD_MARKER = "NEIGHBOURHOOD"
     CONDITIONS_MARKER = "CONDITIONS"
     SUPERIORS_MARKER = "SUPERIORS"
 
@@ -95,7 +95,7 @@ The grammar itself:
             [COMMENT_MARKER:COMMENTS]
             [RELATED_MARKER related_profiles:COMMA_SEPARATED_IDS]
             [SUPERIORS_MARKER superiors:COMMA_SEPARATED_IDS]
-            CUTOFF_MARKER cutoff:INT EXTENT_MARKER extension:INT
+            CUTOFF_MARKER cutoff:INT NEIGHBOURHOOD_MARKER neighbourhood:INT
             CONDITIONS_MARKER conditions:CONDITIONS
 
     CONDITIONS = CONDITION {BINARY_OP CONDITIONS}*;
@@ -144,7 +144,7 @@ SUPERIORS examples:
 Complete examples:
     RULE t1pks
         CUTOFF 20
-        EXTENT 20
+        NEIGHBOURHOOD 20
         CONDITIONS cds(PKS_AT and (PKS_KS or ene_KS
                                    or mod_KS or hyb_KS
                                    or itr_KS or tra_KS))
@@ -188,7 +188,7 @@ class TokenTypes(IntEnum):
     RULE = 15
     COMMENT = 17
     CUTOFF = 18
-    EXTENT = 19
+    NEIGHBOURHOOD = 19
     CONDITIONS = 20
     SUPERIORS = 21
     RELATED = 22
@@ -237,7 +237,7 @@ class Tokeniser:  # pylint: disable=too-few-public-methods
                "minscore": TokenTypes.SCORE, "RULE": TokenTypes.RULE,
                "CONDITIONS": TokenTypes.CONDITIONS,
                "COMMENT": TokenTypes.COMMENT, "CUTOFF": TokenTypes.CUTOFF,
-               "EXTENT": TokenTypes.EXTENT, "SUPERIORS": TokenTypes.SUPERIORS,
+               "NEIGHBOURHOOD": TokenTypes.NEIGHBOURHOOD, "SUPERIORS": TokenTypes.SUPERIORS,
                "RELATED": TokenTypes.RELATED}
 
     def __init__(self, text: str) -> None:
@@ -698,17 +698,17 @@ class DetectionRule:
     """ Contains all information about a rule, i.e.
             name: the label given for the rule
             cutoff: the cutoff used to construct clusters (in bases)
-            extent: the extent to use to include nearby CDS features (in bases)
+            neighbourhood: the neighbourhood to use to include nearby CDS features (in bases)
             conditions: the conditions that potential clusters have to satisfy
             comments: any comments provided in the rule
             superiors: a list of other rule names superior to this one
             related: a list of profile identifiers related to, but not required by, this rule
         """
-    def __init__(self, name: str, cutoff: int, extent: int, conditions: Conditions,
+    def __init__(self, name: str, cutoff: int, neighbourhood: int, conditions: Conditions,
                  comments: str = "", superiors: List[str] = None, related: List[str] = None) -> None:
         self.name = name
         self.cutoff = cutoff
-        self.extent = extent
+        self.neighbourhood = neighbourhood
         self.conditions = conditions
         if not conditions.contains_positive_condition():
             raise ValueError("A rule's conditions must contain at least one positive requirement")
@@ -749,7 +749,7 @@ class DetectionRule:
         if condition_text[0] == "(" and condition_text[-1] == ')':
             condition_text = condition_text[1:-1]
         return "{}\t{}\t{}\t{}".format(self.name, self.cutoff // 1000,
-                                       self.extent // 1000, condition_text)
+                                       self.neighbourhood // 1000, condition_text)
 
     def reconstruct_rule_text(self) -> str:
         """ Generate a string that can be tokenised and parsed to recreate this
@@ -762,8 +762,8 @@ class DetectionRule:
         comments = ""
         if self.comments:
             comments = "COMMENTS" + self.comments + " "
-        return "RULE {} {}CUTOFF {} EXTENT {} CONDITIONS {}".format(self.name,
-                    comments, self.cutoff // 1000, self.extent // 1000, condition_text)
+        return "RULE {} {}CUTOFF {} NEIGHBOURHOOD {} CONDITIONS {}".format(self.name,
+                    comments, self.cutoff // 1000, self.neighbourhood // 1000, condition_text)
 
     def get_hit_string(self) -> str:
         """ Returns a string representation of the rule, marking how many times
@@ -836,7 +836,7 @@ class Parser:  # pylint: disable=too-few-public-methods
 
     def _parse_rule(self) -> DetectionRule:
         """ RULE = RULE_MARKER classification:ID [COMMENT_MARKER:COMMENTS]
-                    CUTOFF_MARKER cutoff:INT EXTENT_MARKER extension:INT
+                    CUTOFF_MARKER cutoff:INT NEIGHBOURHOOD_MARKER neighbourhood:INT
                     CONDITIONS_MARKER conditions:CONDITIONS
         """
         self._consume(TokenTypes.RULE)
@@ -862,8 +862,8 @@ class Parser:  # pylint: disable=too-few-public-methods
             superiors = self._parse_superiors()
         self._consume(TokenTypes.CUTOFF)
         cutoff = self._consume_int() * 1000  # convert from kilobases
-        self._consume(TokenTypes.EXTENT)
-        extent = self._consume_int() * 1000
+        self._consume(TokenTypes.NEIGHBOURHOOD)
+        neighbourhood = self._consume_int() * 1000
         self._consume(TokenTypes.CONDITIONS)
         conditions = Conditions(False, self._parse_conditions())
         if self.current_token is not None and self.current_token.type != TokenTypes.RULE:
@@ -871,7 +871,7 @@ class Parser:  # pylint: disable=too-few-public-methods
                     self.current_token.type,
                     "\n".join(self.lines[self.current_line - 5:self.current_line]),
                     " "*self.current_token.position, "^"))
-        return DetectionRule(rule_name, cutoff, extent, conditions,
+        return DetectionRule(rule_name, cutoff, neighbourhood, conditions,
                              comments=comments, superiors=superiors, related=related)
 
     def _parse_comments(self) -> str:

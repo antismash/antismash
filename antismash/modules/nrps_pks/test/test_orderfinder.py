@@ -275,7 +275,7 @@ class TestEnzymeCounter(unittest.TestCase):
                 gene.nrps_pks.type = domain_identification.classify_cds(all_domains[gene.get_name()])
             else:
                 gene.nrps_pks.type = types[gene.get_name()]
-        results = orderfinder.find_supercluster_modular_enzymes(genes)
+        results = orderfinder.find_candidate_cluster_modular_enzymes(genes)
         return ([cds.get_name() for cds in results[0]], results[1], results[2])
 
     def test_C002271_c19(self):  # pylint: disable=invalid-name
@@ -293,7 +293,7 @@ class TestEnzymeCounter(unittest.TestCase):
         assert result == (expected_pks, 0, 0)
 
     def test_none(self):
-        assert orderfinder.find_supercluster_modular_enzymes([]) == ([], 0, 0)
+        assert orderfinder.find_candidate_cluster_modular_enzymes([]) == ([], 0, 0)
 
     def test_blended(self):
         names = list("BC")

@@ -12,61 +12,62 @@ from Bio.Seq import Seq
 from helperlibs.bio import seqio
 
 from antismash.common.secmet import FeatureLocation, Record
-from antismash.common.secmet.features import Cluster, SuperCluster, SubRegion, Region
-from antismash.common.secmet.test.helpers import DummyCDS
+from antismash.common.secmet.features import CandidateCluster, SubRegion, Region
+from antismash.common.secmet.test.helpers import (
+    DummyCandidateCluster,
+    DummyCDS,
+    DummyProtocluster,
+)
 
 
-def create_cluster(start, end, product='a'):
-    return Cluster(FeatureLocation(start, end),
-                   FeatureLocation(start, end),
-                   tool="testing", product=product, cutoff=1,
-                   neighbourhood_range=0, detection_rule="some rule text")
+def create_protocluster(start, end, product='a'):
+    return DummyProtocluster(start, end, product=product)
 
 
 class TestRegionChildren(unittest.TestCase):
     def setUp(self):
-        self.cluster = create_cluster(0, 10)
-        self.super = SuperCluster(SuperCluster.kinds.SINGLE, [self.cluster])
-        self.sub = SubRegion(self.cluster.location, "testtool")
-        self.region = Region(superclusters=[self.super], subregions=[self.sub])
+        self.protocluster = DummyProtocluster()
+        self.candidate = DummyCandidateCluster([self.protocluster])
+        self.sub = SubRegion(self.protocluster.location, "testtool")
+        self.region = Region(candidate_clusters=[self.candidate], subregions=[self.sub])
 
     def test_children_accessible(self):
         assert self.region.subregions == (self.sub,)
-        assert self.region.superclusters == (self.super,)
+        assert self.region.candidate_clusters == (self.candidate,)
 
     def test_children_immutable(self):
         with self.assertRaisesRegex(AttributeError, "can't set attribute"):
-            self.region.subregions = (self.super,)
+            self.region.subregions = (self.candidate,)
         with self.assertRaisesRegex(AttributeError, "can't set attribute"):
-            self.region.superclusters = (self.sub,)
+            self.region.candidate_clusters = (self.sub,)
         with self.assertRaisesRegex(AttributeError, "can't set attribute"):
             self.region.cds_children = []
 
     def test_incorrect_args(self):
         with self.assertRaises(AssertionError):
-            Region(superclusters=[self.sub])
+            Region(candidate_clusters=[self.sub])
         with self.assertRaises(AssertionError):
-            Region(subregions=[self.super])
+            Region(subregions=[self.candidate])
 
     def test_missing_children(self):
         with self.assertRaisesRegex(ValueError, "at least one"):
             Region()
         with self.assertRaisesRegex(ValueError, "at least one"):
-            Region(superclusters=[], subregions=[])
+            Region(candidate_clusters=[], subregions=[])
 
     def test_add_cds_propagation(self):
         cds = DummyCDS(0, 10)
         assert cds.is_contained_by(self.region)
         # ensure all empty to start with
-        assert not self.cluster.cds_children
-        assert not self.super.cds_children
+        assert not self.protocluster.cds_children
+        assert not self.candidate.cds_children
         assert not self.sub.cds_children
         assert not self.region.cds_children
         assert not cds.region
 
         self.region.add_cds(cds)
-        assert self.cluster.cds_children == (cds,)
-        assert self.super.cds_children == (cds,)
+        assert self.protocluster.cds_children == (cds,)
+        assert self.candidate.cds_children == (cds,)
         assert self.sub.cds_children == (cds,)
         assert self.region.cds_children == (cds,)
         assert cds.region is self.region
@@ -74,18 +75,18 @@ class TestRegionChildren(unittest.TestCase):
     def test_limited_add_cds_propagation(self):
         cds = DummyCDS(0, 10)
         self.sub = SubRegion(FeatureLocation(20, 30), "testtool")
-        self.region = Region(superclusters=[self.super], subregions=[self.sub])
+        self.region = Region(candidate_clusters=[self.candidate], subregions=[self.sub])
 
         # ensure all empty to start with
-        assert not self.cluster.cds_children
-        assert not self.super.cds_children
+        assert not self.protocluster.cds_children
+        assert not self.candidate.cds_children
         assert not self.sub.cds_children
         assert not self.region.cds_children
         assert not cds.region
 
         self.region.add_cds(cds)
-        assert self.cluster.cds_children == (cds,)
-        assert self.super.cds_children == (cds,)
+        assert self.protocluster.cds_children == (cds,)
+        assert self.candidate.cds_children == (cds,)
         assert not self.sub.cds_children
         assert self.region.cds_children == (cds,)
         assert cds.region is self.region
@@ -97,53 +98,53 @@ class TestRegionChildren(unittest.TestCase):
             self.region.add_cds(cds)
 
     def test_unique_clusters(self):
-        clusters = [create_cluster(i, 10, product=prod) for i, prod in enumerate("ABC")]
-        superclusters = [SuperCluster(SuperCluster.kinds.INTERLEAVED, clusters[:2]),
-                         SuperCluster(SuperCluster.kinds.INTERLEAVED, clusters[1:])]
-        assert clusters[1] in superclusters[0].clusters and clusters[1] in superclusters[1].clusters
-        region = Region(superclusters=superclusters)
-        unique_clusters = region.get_unique_clusters()
-        # if the cluster in both superclusters is repeated, there'll be an extra
+        protoclusters = [create_protocluster(i, 10, product=prod) for i, prod in enumerate("ABC")]
+        candidates = [CandidateCluster(CandidateCluster.kinds.INTERLEAVED, protoclusters[:2]),
+                      CandidateCluster(CandidateCluster.kinds.INTERLEAVED, protoclusters[1:])]
+        assert protoclusters[1] in candidates[0].protoclusters and protoclusters[1] in candidates[1].protoclusters
+        region = Region(candidate_clusters=candidates)
+        unique_clusters = region.get_unique_protoclusters()
+        # if the protocluster in both candidates is repeated, there'll be an extra
         assert len(unique_clusters) == 3
-        assert unique_clusters == clusters
+        assert unique_clusters == protoclusters
 
 
 class TestRegion(unittest.TestCase):
     def test_products(self):
-        supers = [SuperCluster(SuperCluster.kinds.SINGLE, [create_cluster(0, 10)])]
-        region = Region(superclusters=supers)
+        candidates = [DummyCandidateCluster([create_protocluster(0, 10)])]
+        region = Region(candidate_clusters=candidates)
         assert region.products == ["a"]
         assert region.get_product_string() == "a"
 
-        supers = []
+        candidates = []
         for i, prod in zip(range(2), "ba"):
-            supers.append(SuperCluster(SuperCluster.kinds.SINGLE, [create_cluster(i*10, (i+1)*10, product=prod)]))
-        region = Region(superclusters=supers)
+            candidates.append(DummyCandidateCluster([create_protocluster(i*10, (i+1)*10, product=prod)]))
+        region = Region(candidate_clusters=candidates)
         assert region.products == ["b", "a"]
         assert region.get_product_string() == "a,b"
 
     def test_probabilities(self):
         loc = FeatureLocation(0, 10)
-        supers = [SuperCluster(SuperCluster.kinds.SINGLE, [create_cluster(0, 10)])]
-        assert Region(superclusters=supers).probabilities == []
+        candidates = [DummyCandidateCluster([create_protocluster(0, 10)])]
+        assert Region(candidate_clusters=candidates).probabilities == []
         subs = [SubRegion(loc, "testtool", probability=None)]
-        assert Region(superclusters=supers, subregions=subs).probabilities == []
+        assert Region(candidate_clusters=candidates, subregions=subs).probabilities == []
         subs.append(SubRegion(loc, "testtool", probability=0.1))
-        assert Region(superclusters=supers, subregions=subs).probabilities == [0.1]
+        assert Region(candidate_clusters=candidates, subregions=subs).probabilities == [0.1]
         subs.append(SubRegion(loc, "testtool", probability=0.7))
-        assert Region(superclusters=supers, subregions=subs).probabilities == [0.1, 0.7]
+        assert Region(candidate_clusters=candidates, subregions=subs).probabilities == [0.1, 0.7]
 
     def test_genbank(self):
         dummy_record = Record(Seq("A"*100, generic_dna))
-        clusters = [create_cluster(3, 20, "prodA"),
-                    create_cluster(25, 41, "prodB")]
+        clusters = [create_protocluster(3, 20, "prodA"),
+                    create_protocluster(25, 41, "prodB")]
         for cluster in clusters:
-            dummy_record.add_cluster(cluster)
+            dummy_record.add_protocluster(cluster)
         subregion = SubRegion(FeatureLocation(35, 71), "test", 0.7)
         dummy_record.add_subregion(subregion)
-        supercluster = SuperCluster(SuperCluster.kinds.NEIGHBOURING, clusters)
-        dummy_record.add_supercluster(supercluster)
-        region = Region(superclusters=[supercluster],
+        candidate = CandidateCluster(CandidateCluster.kinds.NEIGHBOURING, clusters)
+        dummy_record.add_candidate_cluster(candidate)
+        region = Region(candidate_clusters=[candidate],
                         subregions=[subregion])
         dummy_record.add_region(region)
         with NamedTemporaryFile(suffix=".gbk") as output:

@@ -34,29 +34,29 @@ DOMAIN_TYPE_MAPPING = {'Condensation_DCL': 'Condensation',
 UNKNOWN = "(unknown)"
 
 
-class SuperClusterPrediction:
-    """ Contains prediction information for a SuperCluster """
-    def __init__(self, supercluster_number: int, polymer: str,
+class CandidateClusterPrediction:
+    """ Contains prediction information for a CandidateCluster """
+    def __init__(self, candidate_cluster_number: int, polymer: str,
                  domain_docking_used: bool, smiles: str = "") -> None:
-        self.supercluster_number = supercluster_number
+        self.candidate_cluster_number = candidate_cluster_number
         self.polymer = polymer
         self.domain_docking_used = domain_docking_used
         self.smiles = smiles
 
     def to_json(self) -> Dict[str, Any]:
-        """ Creates a JSON representation of a SuperClusterPrediction """
+        """ Creates a JSON representation of a CandidateClusterPrediction """
         return {
-            "sc_number": self.supercluster_number,
+            "sc_number": self.candidate_cluster_number,
             "polymer": self.polymer,
             "docking_used": self.domain_docking_used,
             "smiles": self.smiles
         }
 
     @staticmethod
-    def from_json(json: Dict[str, Any]) -> "SuperClusterPrediction":
-        """ Rebuilds a SuperClusterPrediction from a JSON dictionary """
-        return SuperClusterPrediction(json["sc_number"], json["polymer"],
-                                      json["docking_used"], json["smiles"])
+    def from_json(json: Dict[str, Any]) -> "CandidateClusterPrediction":
+        """ Rebuilds a CandidateClusterPrediction from a JSON dictionary """
+        return CandidateClusterPrediction(json["sc_number"], json["polymer"],
+                                          json["docking_used"], json["smiles"])
 
 
 class NRPS_PKS_Results(ModuleResults):
@@ -69,7 +69,7 @@ class NRPS_PKS_Results(ModuleResults):
         # keep a mapping of domain name -> method -> Prediction
         self.domain_predictions = defaultdict(dict)  # type: Dict[str, Dict[str, Prediction]]
         self.consensus = {}  # type: Dict[str, str]  # domain name -> consensus
-        self.region_predictions = defaultdict(list)  # type: Dict[int, List[SuperClusterPrediction]]
+        self.region_predictions = defaultdict(list)  # type: Dict[int, List[CandidateClusterPrediction]]
         self.consensus_transat = {}  # type: Dict[str, str]
 
     def add_method_results(self, method: str, results: Dict[str, Prediction]) -> None:
@@ -124,7 +124,7 @@ class NRPS_PKS_Results(ModuleResults):
         results.consensus_transat = json["consensus_transat"]
         for region_number, predictions in json["region_predictions"].items():
             for pred in predictions:
-                prediction = SuperClusterPrediction.from_json(pred)
+                prediction = CandidateClusterPrediction.from_json(pred)
                 # the int conversion is important, since json can't use int keys
                 results.region_predictions[int(region_number)].append(prediction)
         return results
@@ -174,10 +174,11 @@ class NRPS_PKS_Results(ModuleResults):
     def add_to_record(self, record: Record) -> None:
         """ Save substrate specificity predictions in NRPS/PKS domain sec_met info of record
         """
-        for supercluster_preds in self.region_predictions.values():
-            for cluster_pred in supercluster_preds:
-                assert isinstance(cluster_pred, SuperClusterPrediction), type(cluster_pred)
-                record.get_supercluster(cluster_pred.supercluster_number).smiles_structure = cluster_pred.smiles
+        for candidate_cluster_preds in self.region_predictions.values():
+            for cluster_pred in candidate_cluster_preds:
+                assert isinstance(cluster_pred, CandidateClusterPrediction), type(cluster_pred)
+                candidate = record.get_candidate_cluster(cluster_pred.candidate_cluster_number)
+                candidate.smiles_structure = cluster_pred.smiles
 
         for cds_feature in record.get_nrps_pks_cds_features():
             assert cds_feature.region, "CDS parent region removed since analysis"

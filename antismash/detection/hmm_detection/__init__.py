@@ -15,7 +15,7 @@ from antismash.common.hmm_rule_parser import rule_parser
 from antismash.common.hmm_rule_parser.cluster_prediction import detect_clusters_and_signatures, RuleDetectionResults
 from antismash.common.module_results import DetectionResults
 from antismash.common.secmet.record import Record
-from antismash.common.secmet.features import Cluster
+from antismash.common.secmet.features import Protocluster
 from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
 from antismash.detection.hmm_detection.signatures import get_signature_profiles
@@ -48,8 +48,8 @@ class HMMDetectionResults(DetectionResults):
         return HMMDetectionResults(json["record_id"], RuleDetectionResults.from_json(json["rule_results"], record),
                                    json["enabled_types"])
 
-    def get_predicted_clusters(self) -> List[Cluster]:
-        return self.rule_results.clusters
+    def get_predicted_protoclusters(self) -> List[Protocluster]:
+        return self.rule_results.protoclusters
 
 
 def get_supported_cluster_types() -> List[str]:
@@ -89,7 +89,7 @@ def regenerate_previous_results(results: Dict[str, Any], record: Record,
         return None
     regenerated = HMMDetectionResults.from_json(results, record)
     if set(regenerated.enabled_types) != set(get_supported_cluster_types()):
-        raise RuntimeError("Cluster types supported by HMM detection have changed, all results invalid")
+        raise RuntimeError("Protocluster types supported by HMM detection have changed, all results invalid")
     regenerated.rule_results.annotate_cds_features()
     return regenerated
 

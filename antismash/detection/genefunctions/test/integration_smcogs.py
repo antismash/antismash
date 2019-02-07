@@ -39,8 +39,8 @@ class TestSMCOGs(unittest.TestCase):
         with open(genbank) as handle:
             seq_record = seqio.read(handle, "genbank")
         record = secmet.Record.from_biopython(seq_record, taxon="bacteria")
-        assert record.get_clusters()
-        assert record.get_cluster(0).cds_children
+        assert record.get_protoclusters()
+        assert record.get_protocluster(0).cds_children
         return record
 
     def test_classification_with_colon(self):
@@ -62,7 +62,7 @@ class TestSMCOGs(unittest.TestCase):
         assert results.best_hits[cds.get_name()].hit_id == "SMCOG1212:sodium:dicarboxylate symporter"
         record = helpers.DummyRecord(seq=translation)
         record.add_cds_feature(cds)
-        record.add_cluster(helpers.DummyCluster(0, len(translation)))
+        record.add_protocluster(helpers.DummyProtocluster(0, len(translation)))
 
         # if we don't handle multiple semicolons right, this line will crash
         results.add_to_record(record)

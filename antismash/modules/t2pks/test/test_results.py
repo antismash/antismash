@@ -9,7 +9,7 @@ import unittest
 
 from antismash.modules.t2pks.results import (
     CDSPrediction,
-    ClusterPrediction,
+    ProtoclusterPrediction,
     Prediction,
     T2PKSResults
 )
@@ -85,7 +85,7 @@ def build_dummy_cds_predictions():
     return {"cds_name": preds}
 
 
-class TestClusterPrediction(unittest.TestCase):
+class TestProtoclusterPrediction(unittest.TestCase):
     def test_reconstruction(self):
         preds_by_cds = build_dummy_cds_predictions()
 
@@ -93,7 +93,7 @@ class TestClusterPrediction(unittest.TestCase):
         elongations = [Prediction('7', 743.5, 1.2e-226)]
         classes = {"benzoisochromanequinone"}
         weights = {"acetyl_7": 451.23}
-        cluster_pred = ClusterPrediction(preds_by_cds,
+        cluster_pred = ProtoclusterPrediction(preds_by_cds,
                                          starter_units=starters,
                                          malonyl_elongations=elongations,
                                          product_classes=classes,
@@ -108,7 +108,7 @@ class TestClusterPrediction(unittest.TestCase):
         assert cluster_pred.molecular_weights == weights
         assert cluster_pred.start == 100
         assert cluster_pred.end == 2000
-        reconstructed = ClusterPrediction.from_json(json.loads(json.dumps(cluster_pred.to_json())))
+        reconstructed = ProtoclusterPrediction.from_json(json.loads(json.dumps(cluster_pred.to_json())))
         assert cluster_pred.cds_predictions == preds_by_cds
         assert reconstructed.starter_units == starters
         assert reconstructed.malonyl_elongations == elongations
@@ -119,7 +119,7 @@ class TestClusterPrediction(unittest.TestCase):
 
 
 def build_dummy_cluster_prediction():
-    return ClusterPrediction(build_dummy_cds_predictions(),
+    return ProtoclusterPrediction(build_dummy_cds_predictions(),
                              [Prediction('acetyl', 0., 0.)],
                              [Prediction('7', 743.5, 1.2e-226)],
                              {"benzoisochromanequinone"},

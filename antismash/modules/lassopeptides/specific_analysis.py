@@ -17,7 +17,7 @@ from helperlibs.wrappers.io import TemporaryFile
 from sklearn.externals import joblib
 
 from antismash.common import all_orfs, module_results, path, subprocessing, utils
-from antismash.common.secmet import Record, CDSFeature, Cluster, Prepeptide, GeneFunction
+from antismash.common.secmet import Record, CDSFeature, Protocluster, Prepeptide, GeneFunction
 from antismash.common.secmet.locations import location_from_string
 from antismash.common.secmet.qualifiers.prepeptide_qualifiers import LassoQualifier
 from antismash.config import get_config as get_global_config
@@ -270,7 +270,7 @@ def run_cleavage_site_regex(fasta: str) -> Optional[int]:
     return end
 
 
-def is_on_same_strand_as(cluster: Cluster, query: CDSFeature, profile_name: str) -> bool:
+def is_on_same_strand_as(cluster: Protocluster, query: CDSFeature, profile_name: str) -> bool:
     """Check if a query CDS is on same strand as gene with pHMM hit"""
     for cds in cluster.cds_children:
         if not cds.sec_met:
@@ -282,7 +282,7 @@ def is_on_same_strand_as(cluster: Cluster, query: CDSFeature, profile_name: str)
     return False
 
 
-def acquire_rodeo_heuristics(record: Record, cluster: Cluster, query: CDSFeature,
+def acquire_rodeo_heuristics(record: Record, cluster: Protocluster, query: CDSFeature,
                              leader: str, core: str) -> Tuple[int, List[Union[float, int]]]:
     """Calculate heuristic scores for RODEO"""
     tabs = []  # type: List[Union[float, int]]
@@ -579,7 +579,7 @@ def run_rodeo_svm(csv_columns: List[float]) -> int:
     return 0
 
 
-def run_rodeo(record: Record, cluster: Cluster, query: CDSFeature, leader: str, core: str) -> Tuple[bool, int]:
+def run_rodeo(record: Record, cluster: Protocluster, query: CDSFeature, leader: str, core: str) -> Tuple[bool, int]:
     """Run RODEO heuristics + SVM to assess precursor peptide candidate"""
     rodeo_score = 0
 
@@ -603,7 +603,7 @@ def run_rodeo(record: Record, cluster: Cluster, query: CDSFeature, leader: str, 
     return rodeo_score >= 15, rodeo_score
 
 
-def determine_precursor_peptide_candidate(record: Record, cluster: Cluster,
+def determine_precursor_peptide_candidate(record: Record, cluster: Protocluster,
                                           query: CDSFeature, query_sequence: str) -> Optional[Lassopeptide]:
     """Identify precursor peptide candidates and split into two"""
 
@@ -637,7 +637,7 @@ def determine_precursor_peptide_candidate(record: Record, cluster: Cluster,
     return Lassopeptide(end + 1, score, rodeo_score, leader, core)
 
 
-def run_lassopred(record: Record, cluster: Cluster, query: CDSFeature) -> Optional[Prepeptide]:
+def run_lassopred(record: Record, cluster: Protocluster, query: CDSFeature) -> Optional[Prepeptide]:
     """General function to predict and analyse lasso peptides"""
 
     # Run checks to determine whether an ORF encodes a precursor peptide
@@ -702,7 +702,7 @@ def specific_analysis(record: Record) -> LassoResults:
     """
     results = LassoResults(record.id)
     motif_count = 0
-    for cluster in record.get_clusters():
+    for cluster in record.get_protoclusters():
         if cluster.product != 'lassopeptide':
             continue
 
@@ -719,7 +719,7 @@ def specific_analysis(record: Record) -> LassoResults:
 
             results.motifs_by_locus[candidate.get_name()].append(motif)
             motif_count += 1
-            results.clusters[cluster.get_cluster_number()].add(candidate.get_name())
+            results.clusters[cluster.get_protocluster_number()].add(candidate.get_name())
             # track new CDSFeatures if found with all_orfs
             if candidate.region is None:
                 results.new_cds_features.add(candidate)

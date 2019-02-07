@@ -7,32 +7,32 @@
 import unittest
 
 from antismash.common.secmet import FeatureLocation
-from antismash.common.secmet.features import Cluster
+from antismash.common.secmet.features import Protocluster
 from antismash.common.secmet.qualifiers import GeneFunction
 from antismash.common.secmet.test.helpers import DummyCDS
 
 
 def create_cluster():
-    cluster = Cluster(FeatureLocation(8, 71, strand=1),
-                      FeatureLocation(3, 76, strand=1), tool="test",
-                      cutoff=17, neighbourhood_range=5, product='a',
-                      detection_rule="some rule text")
+    cluster = Protocluster(FeatureLocation(8, 71, strand=1),
+                           FeatureLocation(3, 76, strand=1), tool="test",
+                           cutoff=17, neighbourhood_range=5, product='a',
+                           detection_rule="some rule text")
     return cluster
 
 
-class TestCluster(unittest.TestCase):
+class TestProtocluster(unittest.TestCase):
     def setUp(self):
         self.cluster = create_cluster()
 
     def test_orphaned_numbering(self):
-        with self.assertRaisesRegex(ValueError, "Cluster not in a record"):
-            print(self.cluster.get_cluster_number())
+        with self.assertRaisesRegex(ValueError, "Protocluster not in a record"):
+            print(self.cluster.get_protocluster_number())
 
     def test_biopython_conversion(self):
         bio = self.cluster.to_biopython()
         assert len(bio) == 2
         assert bio[0].type == "protocluster" and bio[1].type == "proto_core"
-        new = Cluster.from_biopython(bio[0])
+        new = Protocluster.from_biopython(bio[0])
         assert new is not self.cluster
         assert new.cutoff == self.cluster.cutoff == 17
         assert new.neighbourhood_range == self.cluster.neighbourhood_range == 5

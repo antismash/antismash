@@ -25,20 +25,20 @@ from Bio.SeqRecord import SeqRecord
 from .errors import SecmetInvalidInputError
 from .features import (
     AntismashDomain,
+    CandidateCluster,
     CDSFeature,
     CDSMotif,
-    Cluster,
     Domain,
     Feature,
     Gene,
     PFAMDomain,
     Prepeptide,
+    Protocluster,
     Region,
     SubRegion,
-    SuperCluster,
 )
 from .features import CDSCollection  # comment hints, pylint: disable=unused-import
-from .features.supercluster import create_superclusters_from_clusters
+from .features.candidate_cluster import create_candidates_from_protoclusters
 
 from .locations import (
     location_bridges_origin,
@@ -51,11 +51,11 @@ class Record:
     """A record containing secondary metabolite clusters"""
     # slots not for space, but to stop use as a horrible global
     __slots__ = ["_record", "_seq", "skip", "_cds_features", "_cds_by_name",
-                 "_clusters", "original_id", "_cds_motifs", "_pfam_domains",
-                 "_antismash_domains", "_cluster_numbering", "_nonspecific_features",
+                 "_protoclusters", "original_id", "_cds_motifs", "_pfam_domains",
+                 "_antismash_domains", "_protocluster_numbering", "_nonspecific_features",
                  "record_index", "_genes", "_transl_table", "_domains_by_name",
                  "_pfams_by_cds_name",
-                 "_superclusters", "_supercluster_numbering",
+                 "_candidate_clusters", "_candidate_clusters_numbering",
                  "_subregions", "_subregion_numbering",
                  "_regions", "_region_numbering"]
 
@@ -83,11 +83,11 @@ class Record:
 
         self._nonspecific_features = []  # type: List[Feature]
 
-        self._clusters = []  # type: List[Cluster]
-        self._cluster_numbering = {}  # type: Dict[Cluster, int]
+        self._protoclusters = []  # type: List[Protocluster]
+        self._protocluster_numbering = {}  # type: Dict[Protocluster, int]
 
-        self._superclusters = []  # type: List[SuperCluster]
-        self._supercluster_numbering = {}  # type: Dict[SuperCluster, int]
+        self._candidate_clusters = []  # type: List[CandidateCluster]
+        self._candidate_clusters_numbering = {}  # type: Dict[CandidateCluster, int]
 
         self._subregions = []  # type: List[SubRegion]
         self._subregion_numbering = {}  # type: Dict[SubRegion, int]
@@ -139,83 +139,83 @@ class Record:
     def __len__(self) -> int:
         return len(self._record)
 
-    # cluster manipulation
-    def add_cluster(self, cluster: Cluster) -> None:
+    # protocluster manipulation
+    def add_protocluster(self, cluster: Protocluster) -> None:
         """ Add the given cluster to the record,
             causes cluster-CDS pairing to be recalculated """
-        assert isinstance(cluster, Cluster), type(cluster)
+        assert isinstance(cluster, Protocluster), type(cluster)
         assert cluster.location.start >= 0, cluster
         assert cluster.location.end <= len(self), "%s > %d" % (cluster, len(self))
-        index = bisect.bisect_left(self._clusters, cluster)
-        self._clusters.insert(index, cluster)
+        index = bisect.bisect_left(self._protoclusters, cluster)
+        self._protoclusters.insert(index, cluster)
         cluster.parent_record = self
         # update numbering
-        for i in range(index, len(self._clusters)):
-            self._cluster_numbering[self._clusters[i]] = i + 1  # 1-indexed
+        for i in range(index, len(self._protoclusters)):
+            self._protocluster_numbering[self._protoclusters[i]] = i + 1  # 1-indexed
         for cds in self.get_cds_features_within_location(cluster.location):
             cluster.add_cds(cds)
 
-    def get_clusters(self) -> Tuple[Cluster, ...]:
+    def get_protoclusters(self) -> Tuple[Protocluster, ...]:
         """A list of secondary metabolite clusters present in the record"""
-        return tuple(self._clusters)
+        return tuple(self._protoclusters)
 
-    def get_cluster(self, index: int) -> Cluster:
+    def get_protocluster(self, index: int) -> Protocluster:
         """ Get the cluster with the given cluster number """
-        return self._clusters[index - 1]  # change from 1-indexed to 0-indexed
+        return self._protoclusters[index - 1]  # change from 1-indexed to 0-indexed
 
-    def get_cluster_number(self, cluster: Cluster) -> int:
-        """Returns cluster number of a cluster feature (1-indexed)
+    def get_protocluster_number(self, protocluster: Protocluster) -> int:
+        """Returns protocluster number of a protocluster feature (1-indexed)
         """
-        number = self._cluster_numbering.get(cluster)
+        number = self._protocluster_numbering.get(protocluster)
         if number is None:
-            raise ValueError("Cluster not contained in record")
+            raise ValueError("Protocluster not contained in record")
         return number
 
-    def clear_clusters(self) -> None:
-        """ Removes all Cluster features.
-            This also removes SuperCluster features and resets all Regions.
+    def clear_protoclusters(self) -> None:
+        """ Removes all Protocluster features.
+            This also removes CandidateCluster features and resets all Regions.
         """
-        self._clusters.clear()
-        self.clear_superclusters()
+        self._protoclusters.clear()
+        self.clear_candidate_clusters()
 
-    # supercluster manipulation
-    def add_supercluster(self, cluster: SuperCluster) -> None:
-        """ Add the given SuperCluster to the record """
-        assert isinstance(cluster, SuperCluster), type(cluster)
+    # candidate cluster manipulation
+    def add_candidate_cluster(self, cluster: CandidateCluster) -> None:
+        """ Add the given CandidateCluster to the record """
+        assert isinstance(cluster, CandidateCluster), type(cluster)
         assert cluster.location.start >= 0, cluster
         assert cluster.location.end <= len(self), "%s > %d" % (cluster, len(self))
-        index = bisect.bisect_left(self._superclusters, cluster)
-        self._superclusters.insert(index, cluster)
+        index = bisect.bisect_left(self._candidate_clusters, cluster)
+        self._candidate_clusters.insert(index, cluster)
         cluster.parent_record = self
         # update numbering
-        for i in range(index, len(self._superclusters)):
-            self._supercluster_numbering[self._superclusters[i]] = i + 1  # 1-indexed
+        for i in range(index, len(self._candidate_clusters)):
+            self._candidate_clusters_numbering[self._candidate_clusters[i]] = i + 1  # 1-indexed
         for cds in self.get_cds_features_within_location(cluster.location):
             cluster.add_cds(cds)
 
-    def get_superclusters(self) -> Tuple[SuperCluster, ...]:
+    def get_candidate_clusters(self) -> Tuple[CandidateCluster, ...]:
         """A list of secondary metabolite clusters present in the record"""
-        return tuple(self._superclusters)
+        return tuple(self._candidate_clusters)
 
-    def get_supercluster(self, index: int) -> SuperCluster:
+    def get_candidate_cluster(self, index: int) -> CandidateCluster:
         """ Get the cluster with the given cluster number """
-        return self._superclusters[index - 1]  # change from 1-indexed to 0-indexed
+        return self._candidate_clusters[index - 1]  # change from 1-indexed to 0-indexed
 
-    def get_supercluster_number(self, cluster: SuperCluster) -> int:
-        """Returns supercluster number of a SuperCluster feature (1-indexed)
+    def get_candidate_cluster_number(self, cluster: CandidateCluster) -> int:
+        """Returns candidate_clusters number of a CandidateCluster feature (1-indexed)
         """
-        number = self._supercluster_numbering.get(cluster)
+        number = self._candidate_clusters_numbering.get(cluster)
         if number is None:
-            raise ValueError("SuperCluster not contained in record")
+            raise ValueError("CandidateCluster not contained in record")
         return number
 
-    def clear_superclusters(self) -> None:
-        """ Removes all SuperCluster features and resets all Regions
+    def clear_candidate_clusters(self) -> None:
+        """ Removes all CandidateCluster features and resets all Regions
         """
-        for supercluster in self._superclusters:
-            for cluster in supercluster.clusters:
+        for candidate_clusters in self._candidate_clusters:
+            for cluster in candidate_clusters.protoclusters:
                 cluster.parent = None
-        self._superclusters.clear()
+        self._candidate_clusters.clear()
         if self._regions:  # only recreate if they existed to start with
             self.clear_regions()
             self.create_regions()
@@ -306,7 +306,7 @@ class Record:
         for region in self._regions:
             for cds in region.cds_children:
                 cds.region = None
-            for cluster in region.superclusters:
+            for cluster in region.candidate_clusters:
                 cluster.parent = None
             for subregion in region.subregions:
                 subregion.parent = None
@@ -387,7 +387,7 @@ class Record:
 
     def get_misc_feature_by_type(self, label: str) -> Tuple[Feature, ...]:
         """Returns a tuple of all generic features with a type matching label"""
-        if label in ["protocluster", SuperCluster.FEATURE_TYPE, "CDS", "CDSmotif", "subregion",
+        if label in ["protocluster", CandidateCluster.FEATURE_TYPE, "CDS", "CDSmotif", "subregion",
                      "region", "PFAM_domain", "aSDomain", "aSProdPred"]:
             raise ValueError("Use the appropriate get_* type instead for %s" % label)
         return tuple(i for i in self.get_generics() if i.type == label)
@@ -399,8 +399,8 @@ class Record:
         """
         features = list(self.get_generics())
         features.extend(self._genes)
-        features.extend(self.get_clusters())
-        features.extend(self.get_superclusters())
+        features.extend(self.get_protoclusters())
+        features.extend(self.get_candidate_clusters())
         features.extend(self.get_subregions())
         features.extend(self.get_regions())
         features.extend(self.get_cds_features())
@@ -467,8 +467,8 @@ class Record:
 
     def get_feature_count(self) -> int:
         """ Returns the total number of features contained in the record. """
-        collections = [self._cds_features, self._clusters,
-                       self._superclusters, self._cds_motifs,
+        collections = [self._cds_features, self._protoclusters,
+                       self._candidate_clusters, self._cds_motifs,
                        self._pfam_domains, self._antismash_domains,
                        self._nonspecific_features,
                        self._genes, self._regions, self._subregions]
@@ -534,10 +534,10 @@ class Record:
     def add_feature(self, feature: Feature) -> None:
         """ Adds a Feature or any subclass to the relevant list """
         assert isinstance(feature, Feature), type(feature)
-        if isinstance(feature, Cluster):
-            self.add_cluster(feature)
-        elif isinstance(feature, SuperCluster):
-            self.add_supercluster(feature)
+        if isinstance(feature, Protocluster):
+            self.add_protocluster(feature)
+        elif isinstance(feature, CandidateCluster):
+            self.add_candidate_cluster(feature)
         elif isinstance(feature, SubRegion):
             self.add_subregion(feature)
         elif isinstance(feature, Region):
@@ -565,7 +565,7 @@ class Record:
         elif feature.type == 'gene':
             self.add_gene(Gene.from_biopython(feature))
         elif feature.type == "protocluster":
-            self.add_cluster(Cluster.from_biopython(feature))
+            self.add_protocluster(Protocluster.from_biopython(feature))
         elif feature.type == "proto_core":
             # discard this, as info contained in it is in "protocluster" features
             pass
@@ -585,8 +585,8 @@ class Record:
             self.add_pfam_domain(PFAMDomain.from_biopython(feature))
         elif feature.type == 'aSDomain':
             self.add_antismash_domain(AntismashDomain.from_biopython(feature))
-        elif feature.type == SuperCluster.FEATURE_TYPE:
-            raise ValueError("SuperCluster features cannot be directly added from biopython")
+        elif feature.type == CandidateCluster.FEATURE_TYPE:
+            raise ValueError("CandidateCluster features cannot be directly added from biopython")
         elif feature.type == 'region':
             raise ValueError("Region features cannot be directly added from biopython")
         elif feature.type == 'subregion':
@@ -601,7 +601,7 @@ class Record:
         """
         postponed_features = {
             "region": [],
-            SuperCluster.FEATURE_TYPE: [],
+            CandidateCluster.FEATURE_TYPE: [],
         }  # type: Dict[str, SeqFeature]
 
         assert isinstance(seq_record, SeqRecord), type(seq_record)
@@ -694,8 +694,8 @@ class Record:
                         feature.qualifiers.pop("gene", "")
                     else:
                         feature.qualifiers["gene"][0] = original_gene_name
-        for feature in postponed_features[SuperCluster.FEATURE_TYPE]:
-            record.add_feature(SuperCluster.from_biopython(feature).convert_to_real_feature(record))
+        for feature in postponed_features[CandidateCluster.FEATURE_TYPE]:
+            record.add_feature(CandidateCluster.from_biopython(feature).convert_to_real_feature(record))
         for feature in postponed_features["region"]:
             record.add_feature(Region.from_biopython(feature).convert_to_real_feature(record))
         return record
@@ -723,7 +723,7 @@ class Record:
                 cds.region = region
 
         # for other collections, since they may overlap heavily, exhaustive search required
-        other_collections = [self._clusters, self._superclusters,
+        other_collections = [self._protoclusters, self._candidate_clusters,
                              self._subregions]  # type: Sequence[Sequence[CDSCollection]]
         for collections in other_collections:
             for collection in collections:
@@ -781,52 +781,52 @@ class Record:
             features.extend(region.cds_children)
         return features
 
-    def create_superclusters(self) -> int:
-        """ Takes all Cluster instances and constructs SuperClusters that cover
+    def create_candidate_clusters(self) -> int:
+        """ Takes all Cluster instances and constructs CandidateClusters that cover
             each Cluster. Each combination of overlapping clusters will create
-            a SuperCluster, including a single cluster.
+            a CandidateCluster, including a single cluster.
 
             Returns:
-                the number of superclusters created
+                the number of candidate_clusters created
         """
-        if not self._clusters:
+        if not self._protoclusters:
             return 0
 
-        superclusters = create_superclusters_from_clusters(self._clusters)
+        candidate_clusters = create_candidates_from_protoclusters(self._protoclusters)
 
-        for supercluster in sorted(superclusters):
-            self.add_supercluster(supercluster)
+        for candidate_cluster in sorted(candidate_clusters):
+            self.add_candidate_cluster(candidate_cluster)
 
-        return len(superclusters)
+        return len(candidate_clusters)
 
-    def create_regions(self, superclusters: List[SuperCluster] = None,
+    def create_regions(self, candidate_clusters: List[CandidateCluster] = None,
                        subregions: List[SubRegion] = None) -> int:
-        """ Creates Region features based on contained SuperClusters and SubRegions
+        """ Creates Region features based on contained CandidateClusters and SubRegions
             and returns the number of regions created. Regions will not overlap.
 
-            If supplied, parameters will override the Records own superclusters
+            If supplied, parameters will override the Records own candidate_clusters
             and subregions.
         """
-        if superclusters is None:
-            superclusters = self._superclusters
+        if candidate_clusters is None:
+            candidate_clusters = self._candidate_clusters
         if subregions is None:
             subregions = self._subregions
 
-        if not superclusters and not subregions:
+        if not candidate_clusters and not subregions:
             return 0
 
         areas = []  # type: List[CDSCollection]
-        areas.extend(superclusters)
+        areas.extend(candidate_clusters)
         areas.extend(subregions)
         areas.sort()
 
         region_location = FeatureLocation(max(0, areas[0].location.start),
                                           min(areas[0].location.end, len(self)))
 
-        supers = []
+        candidates = []
         subs = []
-        if isinstance(areas[0], SuperCluster):
-            supers.append(areas[0])
+        if isinstance(areas[0], CandidateCluster):
+            candidates.append(areas[0])
         else:
             assert isinstance(areas[0], SubRegion), type(areas[0])
             subs.append(areas[0])
@@ -835,26 +835,26 @@ class Record:
         for area in areas[1:]:
             if area.overlaps_with(region_location):
                 region_location = combine_locations(area.location, region_location)
-                if isinstance(area, SuperCluster):
-                    supers.append(area)
+                if isinstance(area, CandidateCluster):
+                    candidates.append(area)
                 else:
                     assert isinstance(area, SubRegion), type(area)
                     subs.append(area)
                 continue
             # no overlap means new region
-            self.add_region(Region(supers, subs))
+            self.add_region(Region(candidates, subs))
             regions_added += 1
             region_location = area.location
-            supers = []
+            candidates = []
             subs = []
-            if isinstance(area, SuperCluster):
-                supers.append(area)
+            if isinstance(area, CandidateCluster):
+                candidates.append(area)
             else:
                 assert isinstance(area, SubRegion), type(area)
                 subs.append(area)
 
         # add the final region being built
-        self.add_region(Region(supers, subs))
+        self.add_region(Region(candidates, subs))
         regions_added += 1
 
         return regions_added
@@ -876,8 +876,8 @@ class Record:
     def strip_antismash_annotations(self) -> None:
         """ Removes all antismash features and annotations from the record """
         logging.debug("Stripping antiSMASH features and annotations from record: %s", self.id)
-        self.clear_clusters()
-        self.clear_superclusters()
+        self.clear_protoclusters()
+        self.clear_candidate_clusters()
         self.clear_subregions()
         self.clear_regions()
         self.clear_antismash_domains()

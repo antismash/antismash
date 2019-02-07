@@ -115,13 +115,13 @@ def run_on_record(record: Record, results: Optional[T2PKSResults], _options: Con
 
     results = T2PKSResults(record.id)
 
-    t2pks_clusters = [cluster for cluster in record.get_clusters() if cluster.product == 'T2PKS']
+    t2pks_clusters = [cluster for cluster in record.get_protoclusters() if cluster.product == 'T2PKS']
     if not t2pks_clusters:
         logging.debug("No type II PKS clusters to analyze")
         return results
 
     logging.info("Anlysing type II PKS clusters")
     for cluster in t2pks_clusters:
-        results.cluster_predictions[cluster.get_cluster_number()] = analyse_cluster(cluster, record)
+        results.cluster_predictions[cluster.get_protocluster_number()] = analyse_cluster(cluster, record)
 
     return results

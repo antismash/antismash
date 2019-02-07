@@ -2,7 +2,7 @@
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
 """ A specific subclass of Feature for features which themselves contain
-    multiple CDS features, such as clusters and superclusters
+    multiple CDS features, such as clusters and candidate clusters
 """
 
 from collections import OrderedDict
@@ -17,7 +17,7 @@ from .cds_feature import CDSFeature
 
 class CDSCollection(Feature):
     """ A specific subclass of Feature for features which themselves contain
-        multiple CDS features, such as clusters and superclusters.
+        multiple CDS features, such as clusters and candidate clusters.
 
         A location is required and may extend beyond any CDSFeatures contained
         by the CDSCollection, but cannot be smaller than any CDS added.

@@ -10,14 +10,14 @@ from ..features import (
     AntismashDomain,
     CDSFeature,
     CDSMotif,
-    Cluster,
+    Protocluster,
     Feature,
     PFAMDomain,
     Region,
     SubRegion,
-    SuperCluster,
+    CandidateCluster,
 )
-from ..features.supercluster import SuperClusterKind
+from ..features.candidate_cluster import CandidateClusterKind
 from ..locations import FeatureLocation
 
 
@@ -73,7 +73,7 @@ class DummyFeature(Feature):
         super().__init__(FeatureLocation(start, end, strand), feature_type=feature_type)
 
 
-class DummyCluster(Cluster):
+class DummyProtocluster(Protocluster):
     def __init__(self, start=None, end=None, core_start=0, core_end=1,  # pylint: disable=too-many-arguments
                  core_location=None, tool="test", product="test product",
                  cutoff=10, neighbourhood_range=10, high_priority_product=True):
@@ -104,12 +104,12 @@ class DummyPFAMDomain(PFAMDomain):
 
 
 class DummyRegion(Region):
-    def __init__(self, superclusters=None, subregions=None):
-        if superclusters is None:
-            superclusters = [DummySuperCluster()]
+    def __init__(self, candidate_clusters=None, subregions=None):
+        if candidate_clusters is None:
+            candidate_clusters = [DummyCandidateCluster()]
         if subregions is None:
             subregions = [DummySubRegion()]
-        super().__init__(superclusters, subregions)
+        super().__init__(candidate_clusters, subregions)
 
 
 class DummySubRegion(SubRegion):
@@ -120,13 +120,13 @@ class DummySubRegion(SubRegion):
         super().__init__(location, anchor=anchor, tool=tool, probability=probability)
 
 
-class DummySuperCluster(SuperCluster):
+class DummyCandidateCluster(CandidateCluster):
     def __init__(self, clusters=None, kind=None):
         if clusters is None:
-            clusters = [DummyCluster()]
+            clusters = [DummyProtocluster()]
         if not kind:
             if len(clusters) == 1:
-                kind = SuperClusterKind.SINGLE
+                kind = CandidateClusterKind.SINGLE
             else:
-                kind = SuperClusterKind.INTERLEAVED
+                kind = CandidateClusterKind.INTERLEAVED
         super().__init__(kind, clusters)

@@ -11,9 +11,9 @@ from typing import Dict  # in comment type hints  # pylint: disable=unused-impor
 from antismash.common import path
 from antismash.common.html_renderer import HTMLSections, FileTemplate
 from antismash.common.layers import RegionLayer, RecordLayer, OptionsLayer
-from antismash.common.secmet import CDSFeature, Region, SuperCluster
+from antismash.common.secmet import CDSFeature, Region, CandidateCluster
 
-from .results import NRPS_PKS_Results, SuperClusterPrediction, UNKNOWN
+from .results import NRPS_PKS_Results, CandidateClusterPrediction, UNKNOWN
 
 
 def will_handle(products: List[str]) -> bool:
@@ -43,8 +43,8 @@ def generate_html(region_layer: RegionLayer, results: NRPS_PKS_Results,
             if monomer:
                 monomers.append(monomer)
 
-    prod_tt = ("Shows estimated product structure and polymer for each supercluster in the region. "
-               "To show the product, click on the expander or the supercluster feature drawn in the overview. "
+    prod_tt = ("Shows estimated product structure and polymer for each candidate cluster in the region. "
+               "To show the product, click on the expander or the candidate cluster feature drawn in the overview. "
                )
     mon_tt = ("Shows the predicted monomers for each adynelation domain and acyltransferase within genes. "
               "Each gene prediction can be expanded to view detailed predictions of each domain. "
@@ -126,14 +126,14 @@ def get_norine_url_for_specificities(specificities: List[List[str]],
     return "http://bioinfo.lifl.fr/norine/fingerPrintSearch.jsp?nrps1=" + ",".join(modules)
 
 
-class SuperClusterLayer:
-    """ A helper for the HTML output for a supercluster """
-    def __init__(self, supercluster: SuperCluster, result: SuperClusterPrediction) -> None:
-        self.location = supercluster.location
-        self.number = supercluster.get_supercluster_number()
-        self.transatpks = "transatpks" in supercluster.products
+class CandidateClusterLayer:
+    """ A helper for the HTML output for a candidate_cluster """
+    def __init__(self, candidate_cluster: CandidateCluster, result: CandidateClusterPrediction) -> None:
+        self.location = candidate_cluster.location
+        self.number = candidate_cluster.get_candidate_cluster_number()
+        self.transatpks = "transatpks" in candidate_cluster.products
         self.result = result
-        self.products = "-".join(supercluster.products)
+        self.products = "-".join(candidate_cluster.products)
 
     def __getattr__(self, attr: str) -> Any:
         if hasattr(self.result, attr):
@@ -192,10 +192,10 @@ class NrpspksLayer(RegionLayer):
         self.results = results
 
         region_number = region_feature.get_region_number()
-        self.superclusters = []  # type: List[SuperClusterLayer]
-        for supercluster_pred in results.region_predictions.get(region_number, []):
-            supercluster = record.get_supercluster(supercluster_pred.supercluster_number)
-            self.superclusters.append(SuperClusterLayer(supercluster, supercluster_pred))
+        self.candidate_clusters = []  # type: List[CandidateClusterLayer]
+        for candidate_cluster_pred in results.region_predictions.get(region_number, []):
+            candidate_cluster = record.get_candidate_cluster(candidate_cluster_pred.candidate_cluster_number)
+            self.candidate_clusters.append(CandidateClusterLayer(candidate_cluster, candidate_cluster_pred))
 
     @property
     def sidepanel_features(self) -> List[str]:
@@ -230,5 +230,5 @@ class NrpspksLayer(RegionLayer):
                     self.url_relaxed[feature_name] = url
 
     def has_any_polymer(self) -> bool:
-        """ Does the region contain at least one supercluster with a polymer set """
-        return any(sup.polymer for sup in self.superclusters)
+        """ Does the region contain at least one candidate_cluster with a polymer set """
+        return any(candidate.polymer for candidate in self.candidate_clusters)

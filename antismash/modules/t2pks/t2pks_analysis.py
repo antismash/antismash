@@ -17,9 +17,9 @@ from collections import defaultdict
 from antismash.common import fasta, path, subprocessing
 from antismash.common.hmmscan_refinement import refine_hmmscan_results, HMMResult
 from antismash.common.utils import get_hmm_lengths, get_fasta_lengths
-from antismash.common.secmet import Cluster, CDSFeature, Record
+from antismash.common.secmet import Protocluster, CDSFeature, Record
 
-from .results import ClusterPrediction, CDSPrediction, Prediction
+from .results import ProtoclusterPrediction, CDSPrediction, Prediction
 
 with open(path.get_full_path(__file__, "data", "weights.json"), 'r') as handle:
     WEIGHTS = json.load(handle)
@@ -32,7 +32,7 @@ def run_t2pks_hmmscan(cds_features: Iterable[CDSFeature]) -> Dict[str, List[HMMR
     """ Runs hmmscan for type II PKS proteins on the given CDSFeatures
 
         Arguments:
-            cluster: Cluster on which to run the type II PKS hmmscan
+            cluster: Protocluster on which to run the type II PKS hmmscan
 
         Returns:
             a dictionary of key: cds and value: list of HMMResults, for hmmscan results of the cluster
@@ -275,15 +275,15 @@ def make_cds_predictions(cds_hmm_hits: Dict[str, List[HMMResult]],
     return preds_by_cds, preds_by_protein
 
 
-def analyse_cluster(cluster: Cluster, record: Record) -> ClusterPrediction:
+def analyse_cluster(cluster: Protocluster, record: Record) -> ProtoclusterPrediction:
     """ Analyse a type II PKS cluster
 
         Arguments:
-            cluster: the Cluster to analyse
+            cluster: the Protocluster to analyse
             record: the Record the given cluster belongs to
 
         Returns:
-            a single ClusterPrediction instance with analysis results
+            a single ProtoclusterPrediction instance with analysis results
     """
     assert cluster.product == "T2PKS"
     scan_area = cluster.location
@@ -305,5 +305,5 @@ def analyse_cluster(cluster: Cluster, record: Record) -> ClusterPrediction:
         elong_names = [elong.name for elong in malonyl_elongations]
         weights.update(predict_molecular_weight(preds_by_protein, starter_names, elong_names))
 
-    return ClusterPrediction(preds_by_cds, starter_units, malonyl_elongations,
+    return ProtoclusterPrediction(preds_by_cds, starter_units, malonyl_elongations,
                              product_classes, weights, scan_area.start, scan_area.end)

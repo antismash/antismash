@@ -12,13 +12,13 @@ from antismash.common import path, subprocessing, utils
 from antismash.common.secmet import CDSFeature, Record
 
 from .html_output import will_handle
-from .results import SuperClusterPrediction
+from .results import CandidateClusterPrediction
 
 
 def analyse_biosynthetic_order(nrps_pks_features: List[CDSFeature],
                                consensus_predictions: Dict[str, str],
-                               record: Record) -> List[SuperClusterPrediction]:
-    """ For each NRPS or PKS supercluster, determines if that supercluster is
+                               record: Record) -> List[CandidateClusterPrediction]:
+    """ For each NRPS or PKS candidate cluster, determines if that candidate cluster is
         docking or not then determines the monomer ordering
 
         Arguments:
@@ -27,42 +27,43 @@ def analyse_biosynthetic_order(nrps_pks_features: List[CDSFeature],
             record: the Record being analysed
 
         Returns:
-            a dictionary mapping supercluster number to
+            a dictionary mapping candidate cluster number to
                 a tuple of
                     prediction string
                     and whether docking domain analysis was used for the prediction
     """
-    compound_predictions = []  # type: List[SuperClusterPrediction]
-    # Find NRPS/PKS gene superclusters
-    superclusters = [cluster for cluster in record.get_superclusters()
+    compound_predictions = []  # type: List[CandidateClusterPrediction]
+    # Find NRPS/PKS gene candidate_clusters
+    candidate_clusters = [cluster for cluster in record.get_candidate_clusters()
                              if will_handle(cluster.products)]
-    if not superclusters:
+    if not candidate_clusters:
         return []
-    # Predict biosynthetic gene order in superclusters using starter domains,
+    # Predict biosynthetic gene order in candidate clusters using starter domains,
     # thioesterase domains, gene order and docking domains
-    for supercluster in superclusters:
-        supercluster_number = supercluster.get_supercluster_number()
-        cds_in_supercluster = [gene for gene in nrps_pks_features if gene.overlaps_with(supercluster)]
-        if not cds_in_supercluster:
+    for candidate_cluster in candidate_clusters:
+        candidate_cluster_number = candidate_cluster.get_candidate_cluster_number()
+        cds_in_candidate_cluster = [gene for gene in nrps_pks_features if gene.overlaps_with(candidate_cluster)]
+        if not cds_in_candidate_cluster:
             continue
-        pks_features, nrps_count, hybrid_count = find_supercluster_modular_enzymes(cds_in_supercluster)
+        pks_features, nrps_count, hybrid_count = find_candidate_cluster_modular_enzymes(cds_in_candidate_cluster)
         # If more than three PKS cds features, use dock_dom_analysis if possible to identify order
         # since this will grow as n!, an upper limit is also required
         if 3 < len(pks_features) < 11 and not nrps_count and not hybrid_count:
-            logging.debug("SuperCluster %d monomer ordering method: domain docking analysis", supercluster_number)
+            logging.debug("CandidateCluster %d monomer ordering method: domain docking analysis",
+                          candidate_cluster_number)
             geneorder = perform_docking_domain_analysis(pks_features)
             docking = True
         else:
-            logging.debug("SuperCluster %d monomer ordering method: colinear", supercluster_number)
-            geneorder = find_colinear_order(cds_in_supercluster)
+            logging.debug("CandidateCluster %d monomer ordering method: colinear", candidate_cluster_number)
+            geneorder = find_colinear_order(cds_in_candidate_cluster)
             docking = False
 
         prediction = generate_substrates_order(geneorder, consensus_predictions)
-        compound_predictions.append(SuperClusterPrediction(supercluster_number, prediction, docking))
+        compound_predictions.append(CandidateClusterPrediction(candidate_cluster_number, prediction, docking))
     return compound_predictions
 
 
-def find_supercluster_modular_enzymes(cds_features: List[CDSFeature]) -> Tuple[List[CDSFeature], int, int]:
+def find_candidate_cluster_modular_enzymes(cds_features: List[CDSFeature]) -> Tuple[List[CDSFeature], int, int]:
     """ Finds PKS-only features and counts the NRPS-only features and
         hybrid (not a combination of individual PKS and NRPS domains)
         features in a set of CDS features.

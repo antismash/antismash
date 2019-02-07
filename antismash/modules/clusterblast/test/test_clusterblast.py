@@ -14,8 +14,8 @@ from helperlibs.wrappers.io import TemporaryDirectory
 
 from antismash import config
 from antismash.common import path
-from antismash.common.secmet import Record, Region
-from antismash.common.test.helpers import DummyCDS, DummyCluster, DummySuperCluster
+from antismash.common.secmet import Record
+from antismash.common.secmet.test.helpers import DummyCDS, DummyRegion
 import antismash.modules.clusterblast.core as core
 
 
@@ -398,9 +398,7 @@ class TestInputGeneration(unittest.TestCase):
         self.index = 0
         self.old_blast_inputs = core.create_blast_inputs
         core.create_blast_inputs = self.dummy_blast_inputs
-        self.dummy_cluster = DummyCluster(1, 100)
-        self.supercluster = DummySuperCluster([self.dummy_cluster])
-        self.region = Region([self.supercluster], [])
+        self.region = DummyRegion()
         self.regions = [self.region, self.region]
 
     def tearDown(self):
