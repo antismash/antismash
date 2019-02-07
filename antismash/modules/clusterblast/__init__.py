@@ -123,15 +123,18 @@ def check_prereqs() -> List[str]:
 def prepare_data(logging_only: bool = False) -> List[str]:
     """ Prepare the databases. """
     failure_messages = []
-    options = get_config()
-    clusterblastdir = os.path.join(options.database_dir, "clusterblast")
+    # known
+    failure_messages.extend(prepare_known_data(logging_only))
 
+    # general
+    clusterblastdir = os.path.join(get_config().database_dir, "clusterblast")
+    if clusterblastdir == "mounted_at_runtime":  # can't prepare these
+        return failure_messages
     cluster_defs = os.path.join(clusterblastdir, 'geneclusters.txt')
     protein_seqs = os.path.join(clusterblastdir, "geneclusterprots.fasta")
     db_file = os.path.join(clusterblastdir, "geneclusterprots.dmnd")
 
     failure_messages.extend(check_clusterblast_files(cluster_defs, protein_seqs, db_file, logging_only=logging_only))
-    failure_messages.extend(prepare_known_data(logging_only))
 
     return failure_messages
 
