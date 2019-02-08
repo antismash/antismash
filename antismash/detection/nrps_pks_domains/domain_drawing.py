@@ -21,8 +21,8 @@ from antismash.common.secmet.qualifiers import NRPSPKSQualifier
 
 def will_handle(products: List[str]) -> bool:
     """ Returns true if one or more relevant products are present """
-    return bool(set(products).intersection({"nrps", "t1pks", "t2pks", "transatpks",
-                                            "nrps-like", "pks-like"}))
+    return bool(set(products).intersection({"NRPS", "T1PKS", "T2PKS", "transAT-PKS",
+                                            "NRPS-like", "PKS-like"}))
 
 
 def _parse_domain(record: Record, domain: NRPSPKSQualifier.Domain,

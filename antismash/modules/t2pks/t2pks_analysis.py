@@ -285,7 +285,7 @@ def analyse_cluster(cluster: Cluster, record: Record) -> ClusterPrediction:
         Returns:
             a single ClusterPrediction instance with analysis results
     """
-    assert cluster.product == "t2pks"
+    assert cluster.product == "T2PKS"
     scan_area = cluster.location
     cds_features = record.get_cds_features_within_location(scan_area, with_overlapping=True)
     hmm_results_by_name = run_t2pks_hmmscan(cds_features)

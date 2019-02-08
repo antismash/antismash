@@ -14,7 +14,7 @@ from .results import T2PKSResults
 
 def will_handle(products: List[str]) -> bool:
     """ Returns true if one or more relevant products are present """
-    return "t2pks" in products
+    return "T2PKS" in products
 
 
 def generate_html(region_layer: RegionLayer, results: T2PKSResults,
@@ -24,7 +24,7 @@ def generate_html(region_layer: RegionLayer, results: T2PKSResults,
 
     predictions = []
     for cluster in region_layer.get_unique_clusters():
-        if cluster.product == "t2pks":
+        if cluster.product == "T2PKS":
             predictions.append(results.cluster_predictions[cluster.get_cluster_number()])
 
     template = FileTemplate(path.get_full_path(__file__, "templates", "sidepanel.html"))
