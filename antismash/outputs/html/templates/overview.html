@@ -84,8 +84,8 @@
                   {{join()}}<a href="{{options.urls.docs_baseurl}}glossary/#{{subtype.lower()}}" target="_blank">{{subtype}}</a>
                 {%- endfor %}
               </td>
-              <td class="digits">{{region.location.start + 1}}</td>
-              <td class="digits">{{region.location.end}}</td>
+              <td class="digits">{{"{:,d}".format(region.location.start + 1)}}</td>
+              <td class="digits">{{"{:,d}".format(region.location.end)}}</td>
               <td>{{region.best_knowncluster_name}}</td>
               <td>{{region.best_knowncluster_type}}</td>
               {% set similarity = region.best_knowncluster_similarity %}
