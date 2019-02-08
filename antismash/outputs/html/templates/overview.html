@@ -81,7 +81,7 @@
               <td>
                 {% set join = joiner(",") %}
                 {% for subtype in region.products -%}
-                  {{join()}}<a href="{{options.urls.docs_baseurl}}glossary/#{{subtype}}" target="_blank">{{subtype | title}}</a>
+                  {{join()}}<a href="{{options.urls.docs_baseurl}}glossary/#{{subtype.lower()}}" target="_blank">{{subtype | title}}</a>
                 {%- endfor %}
               </td>
               <td class="digits">{{region.location.start + 1}}</td>
