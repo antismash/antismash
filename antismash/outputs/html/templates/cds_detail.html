@@ -10,7 +10,7 @@
  {% if ec_numbers %}
   EC-Number(s): {{ec_numbers}}<br>
  {% endif %}
- Location: {{ feature.location.start + 1 }} - {{ feature.location.end }}<br>
+ Location: {{ "{:,d}".format(feature.location.start + 1) }} - {{ "{:,d}".format(feature.location.end) }}<br>
  <br>
  {% for gene_function in feature.gene_functions %}
   {{ gene_function }}<br>
