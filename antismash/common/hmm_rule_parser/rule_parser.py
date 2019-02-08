@@ -282,6 +282,9 @@ class Tokeniser:  # pylint: disable=too-few-public-methods
                 except ValueError:
                     # no newline after #, so we're finished
                     return
+            # handle URLs in comments
+            elif self.current_symbol and char in ":/":
+                self.current_symbol.append(char)
             else:
                 line_text = self.text.splitlines()[line - 1]
                 raise RuleSyntaxError("Unexpected character in rule: %s\n%s\n%s^"
