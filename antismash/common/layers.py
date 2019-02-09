@@ -160,7 +160,8 @@ class RegionLayer:
 
     def description_text(self) -> str:
         """ returns the Region description """
-        description_text = 'Location: %s - %s nt. ' % (self.location.start + 1, self.location.end)
+        description_text = 'Location: {:,d} - {:,d} nt. (total: {:,d} nt)'.format(
+            self.location.start + 1, self.location.end, len(self.location))
         if get_config().cf_create_clusters and self.probabilities:
             description_text += 'ClusterFinder probabilities: %s. ' % self.probabilities
 
