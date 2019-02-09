@@ -21,7 +21,7 @@ class TestCoelicolorAnalysis(unittest.TestCase):
         self.record = record_processing.parse_input_sequence(test_file)[0]
         self.cluster = Cluster(FeatureLocation(0, len(self.record.seq)),
                                surrounding_location=FeatureLocation(0, len(self.record.seq)),
-                               cutoff=20, neighbourhood_range=0, tool="test", product="t2pks",
+                               cutoff=20, neighbourhood_range=0, tool="test", product="T2PKS",
                                detection_rule="dummy rule")
         self.record.add_cluster(self.cluster)
         self.record.create_superclusters()

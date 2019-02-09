@@ -1,39 +1,39 @@
 # Cutoffs and extents are given in kilobases
-RULE t1pks
+RULE T1PKS
     COMMENT Type-I PKS
             Comments can cover multiple lines.
     CUTOFF 20
     EXTENT 20
     CONDITIONS cds(PKS_AT and (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS))
 
-RULE t2pks
+RULE T2PKS
     COMMENT Type-II PKS
     RELATED t2pks2, ksIII
     CUTOFF 20
     EXTENT 35  # lysolipin (AM492533) has a range of ~33kb
     CONDITIONS t2ks and t2clf
 
-RULE t3pks
+RULE T3PKS
     COMMENT Type-III PKS
     CUTOFF 20
     EXTENT 20
     CONDITIONS Chal_sti_synt_C or Chal_sti_synt_N
 
-RULE transatpks
+RULE transAT-PKS
     CUTOFF 45  # kirromycin (CP006259) has a range of ~42kb
     EXTENT 20
     CONDITIONS cds(ATd and (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS))
                and cds(PKS_AT and not (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS))
 
-RULE hgleks
+RULE hglE-KS
     COMMENT heterocyst glycolipid synthase like PKS such as KC489223
     CUTOFF 20
     EXTENT 20
     CONDITIONS hglE or hglD
 
-RULE pks-like
+RULE PKS-like
     COMMENT Catches PKS-like fragments that are not detected by another PKS rule
-    SUPERIORS t2pks
+    SUPERIORS T2PKS
     CUTOFF 10
     EXTENT 20
     CONDITIONS t2pks2 or ksIII
@@ -53,20 +53,22 @@ RULE ladderane
     EXTENT 20
     CONDITIONS ladderane
 
-RULE pufa
+RULE PUFA
+    COMMENT PolyUnsaturated Fatty Acid
     CUTOFF 20
     EXTENT 20
     CONDITIONS PUFA_KS
 
-RULE nrps
+RULE NRPS
+    COMMENT non-ribosomal peptide synthase
     CUTOFF 20
     EXTENT 20
     CONDITIONS cds(Condensation and (AMP-binding or A-OX))
                or (Condensation and AMP-binding)  #TODO: dubious
 
-RULE nrps-like
+RULE NRPS-like
     COMMENT Catches NRPS-like fragments that are not detected by the NRPS rule
-    SUPERIORS nrps
+    SUPERIORS NRPS
     CUTOFF 0  # since we're really looking at single CDS fragments
     EXTENT 20
     CONDITIONS cds((PP-binding or NAD_binding_4) and (AMP-binding or A-OX))
@@ -120,7 +122,7 @@ RULE glycocin
     EXTENT 10
     CONDITIONS glycocin or sublancin
 
-RULE lap
+RULE LAP
     COMMENT Linear azol(in)e-containing peptides like goadsporin (AB205012) or
             microcin B17 (FM877811)
     RELATED TIGR04424
@@ -160,6 +162,7 @@ RULE proteusin
     CONDITIONS PoyD
 
 RULE blactam
+    COMMENT beta-lactam
     CUTOFF 20
     EXTENT 10
     CONDITIONS BLS or CAS or tabtoxin
@@ -252,13 +255,13 @@ RULE acyl_amino_acids
     EXTENT 30
     CONDITIONS NasY
 
-RULE pbde
+RULE PBDE
     COMMENT polybrominated diphenyl ethers (PBDEs) such as KX588877
     CUTOFF 10
     EXTENT 10
     CONDITIONS FMO-like and p450 and DUF98
 
-RULE ppysks
+RULE PpyS-KS
     COMMENT PPY-like specific ketosynthases (PPYSKS) such as KT373879
     CUTOFF 10
     EXTENT 10

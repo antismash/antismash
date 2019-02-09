@@ -18,8 +18,8 @@ from .results import NRPS_PKS_Results, SuperClusterPrediction, UNKNOWN
 
 def will_handle(products: List[str]) -> bool:
     """ Returns true if one or more relevant products are present """
-    return bool(set(products).intersection({"nrps", "t1pks", "t2pks", "transatpks",
-                                            "nrps-like", "pks-like"}))
+    return bool(set(products).intersection({"NRPS", "T1PKS", "T2PKS", "T3PKS", "transAT-PKS",
+                                            "NRPS-like", "PKS-like", "hglE-like", "PpyS-KS"}))
 
 
 def generate_html(region_layer: RegionLayer, results: NRPS_PKS_Results,

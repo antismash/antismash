@@ -11,6 +11,7 @@ from typing import Dict, List, Optional, Tuple
 from antismash.common import path, subprocessing, utils
 from antismash.common.secmet import CDSFeature, Record
 
+from .html_output import will_handle
 from .results import SuperClusterPrediction
 
 
@@ -34,8 +35,7 @@ def analyse_biosynthetic_order(nrps_pks_features: List[CDSFeature],
     compound_predictions = []  # type: List[SuperClusterPrediction]
     # Find NRPS/PKS gene superclusters
     superclusters = [cluster for cluster in record.get_superclusters()
-                             if "nrps" in cluster.get_product_string()
-                             or "pks" in cluster.get_product_string()]
+                             if will_handle(cluster.products)]
     if not superclusters:
         return []
     # Predict biosynthetic gene order in superclusters using starter domains,
