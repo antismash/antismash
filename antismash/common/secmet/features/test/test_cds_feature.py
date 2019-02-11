@@ -25,8 +25,9 @@ class TestCDSFeature(unittest.TestCase):
         assert CDSFeature(FeatureLocation(1, 5, 1), gene="foo", translation="A")
 
     def test_bad_strand(self):
-        with self.assertRaisesRegex(ValueError, "Strand must be"):
-            CDSFeature(FeatureLocation(1, 5, 0), locus_tag="test", translation="A")
+        for strand in [0, None]:
+            with self.assertRaisesRegex(ValueError, "invalid strand"):
+                CDSFeature(FeatureLocation(1, 5, strand), locus_tag="test", translation="A")
 
     def test_invalid_qualifier(self):
         cds = CDSFeature(FeatureLocation(1, 5, 1), locus_tag="test", translation="A")
@@ -110,6 +111,14 @@ class TestCDSBiopythonConversion(unittest.TestCase):
         assert len(regen.sec_met.domains) == len(domains)
         assert regen.sec_met.domains == domains
 
+    def test_mixed_strand(self):
+        bio = self.cds.to_biopython()[0]
+        for location in [CompoundLocation([FeatureLocation(1, 5, strand=-1), FeatureLocation(8, 10, strand=1)]),
+                         CompoundLocation([FeatureLocation(1, 5, strand=1), FeatureLocation(8, 10, strand=None)])]:
+            bio.location = location
+            with self.assertRaisesRegex(ValueError, "compound locations with mixed strands"):
+                CDSFeature.from_biopython(bio)
+        # compound locations starting with an invalid strand will be treated as per a non-compound wtih a bad strand
 
 class TestCDSProteinLocation(unittest.TestCase):
     def setUp(self):

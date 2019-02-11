@@ -49,6 +49,14 @@ def _is_valid_translation_length(translation: str, location: Location) -> bool:
     return location.strand != -1 and isinstance(location.end, AfterPosition)
 
 
+def _verify_location(location: Location) -> None:
+    """ Raises a relevant exception if the location is invalid for a CDS """
+    if location.strand not in [1, -1]:
+        if len(location.parts) > 1 and location.parts[0].strand in [1, -1]:
+            raise ValueError("compound locations with mixed strands are not supported")
+        raise ValueError("invalid strand: %s" % location.strand)
+
+
 class CDSFeature(Feature):
     """ A feature representing a single CDS/gene. """
     __slots__ = ["_translation", "protein_id", "locus_tag", "gene", "product",
@@ -59,8 +67,7 @@ class CDSFeature(Feature):
                  protein_id: str = None, product: str = "", gene: str = None,
                  translation_table: int = 1) -> None:
         super().__init__(location, feature_type="CDS")
-        if location.strand not in [1, -1]:
-            raise ValueError("Strand must be 1 or -1 for a CDS, not %s" % location.strand)
+        _verify_location(location)
         # mandatory
         self._gene_functions = GeneFunctionAnnotations()
 
@@ -176,6 +183,12 @@ class CDSFeature(Feature):
             else:
                 gene = "cds%s_%s"
             gene = gene % (bio_feature.location.start, bio_feature.location.end)
+
+        try:
+            _verify_location(bio_feature.location)
+        except Exception as err:
+            message = "invalid location for %s: %s" % (gene or protein_id or locus_tag, str(err))
+            raise SecmetInvalidInputError(message) from err
 
         # ensure translation is valid if it exists
         if translation:
