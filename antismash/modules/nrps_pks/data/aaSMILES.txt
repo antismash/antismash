@@ -118,7 +118,7 @@ pks-start1 C
 pks-end1 C(C)C(=O)(O)
 pks-end2 C(=O)(O)
 
-nrp NC([*])C(=O)
+X NC([*])C(=O)
 pk C([*])C(-O)
 Gly NCC(=O)
 Ala N[C@@H](C)C(=O)

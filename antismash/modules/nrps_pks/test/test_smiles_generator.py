@@ -13,7 +13,7 @@ class TestGenerator(unittest.TestCase):
         assert gen_smiles("") == ""
 
     def test_single_nrp(self):
-        assert gen_smiles("(nrp)") == ""
+        assert gen_smiles("(X)") == ""
 
     def test_single_ala(self):
         assert gen_smiles("(ala)") == ""
@@ -31,9 +31,9 @@ class TestGenerator(unittest.TestCase):
 
         # pk in polymer and last is a mal variant removes the monomer after
         # the first pk and adds a pks-end1 at the end
-        polymer = "(pk - nrp - pk - nrp - mal)"
+        polymer = "(pk - X - pk - X - mal)"
         assert gen_smiles(polymer) == "C([*])C(-O)C([*])C(-O)NC([*])C(=O)CC(=O)C(C)C(=O)(O)"
-        assert gen_smiles("(pk - pk - nrp - mal - pks-end1)") == gen_smiles(polymer)
+        assert gen_smiles("(pk - pk - X - mal - pks-end1)") == gen_smiles(polymer)
 
     def test_mixed_mal(self):
-        assert gen_smiles("(mal - nrp - mal)") == "CC(=O)NC([*])C(=O)CC(=O)"
+        assert gen_smiles("(mal - X - mal)") == "CC(=O)NC([*])C(=O)CC(=O)"
