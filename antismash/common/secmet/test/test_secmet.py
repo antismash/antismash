@@ -121,13 +121,16 @@ class TestRecordFeatureNumbering(unittest.TestCase):
     def test_region_numbering(self):
         features = []
         for location in self.locations:
-            region = Region(subregions=[SubRegion(location, "test")])
+            subregion = SubRegion(location, "test")
+            self.record.add_subregion(subregion)
+            region = Region(subregions=[subregion])
             self.record.add_region(region)
             features.append(region)
         features = sorted(features)
         for i, cluster in enumerate(self.record.get_regions()):
             assert cluster.get_region_number() == i + 1
             assert self.record.get_region(i + 1) is features[i]
+            assert cluster.to_biopython()[0].qualifiers["region_number"] == [str(i + 1)]
 
 
 class TestRecord(unittest.TestCase):
@@ -532,5 +535,7 @@ class TestRegionManipulation(unittest.TestCase):
 
     def test_add_biopython(self):
         bio = self.region_sup.to_biopython()[0]
+        # it can be converted with a record, but it won't have a region number
+        assert "region_number" not in bio.qualifiers
         with self.assertRaisesRegex(ValueError, "cannot be directly added from biopython"):
             self.record.add_biopython_feature(bio)
