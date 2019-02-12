@@ -81,7 +81,7 @@ def generate_nrps_consensus(results: Dict[str, Prediction]) -> str:
                 raise ValueError("%s generated bad prediction string: %s" % (method, best))
             hit_counts[best] += 1
 
-    consensus = "nrp"
+    consensus = "X"
     # only really care about the first two for checking if it was a tie
     best_hits = sorted((count, name) for name, count in hit_counts.items())[:2]
     # if the best hit isn't tie, use that

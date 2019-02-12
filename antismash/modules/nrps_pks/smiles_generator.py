@@ -44,8 +44,8 @@ def gen_smiles_from_pksnrps(compound_pred: str) -> str:
             if monomer in aa_smiles:
                 smiles += aa_smiles[monomer]
             elif '|' in monomer:
-                logging.debug("Substituting 'nrp' for combined monomer %r", monomer)
-                smiles += aa_smiles['nrp']
+                logging.debug("Substituting 'X' for combined monomer %r", monomer)
+                smiles += aa_smiles['X']
             else:
                 logging.debug("No SMILES mapping for unknown monomer %r", monomer)
     return smiles
