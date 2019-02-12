@@ -1,6 +1,6 @@
 Condensation	Condensation domain	20	Condensation.hmm
 AMP-binding	Adenylation domain	20	AMP-binding.hmm
-A-OX	Adenylation domain with integrated oxidase	50	A-OX.hmm
+A-OX	Adenylation domain with integrated oxidase	500	A-OX.hmm
 PP-binding	Thiolation domain	20	PP-binding.hmm
 PKS_KS	Ketosynthase domain	50	PKS_KS.hmm
 PKS_AT	Acyltransferase domain	50	PKS_AT.hmm
