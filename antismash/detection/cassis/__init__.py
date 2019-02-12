@@ -169,13 +169,13 @@ def detect(record: Record, options: ConfigType) -> CassisResults:
 
     # get core genes from hmmdetect --> necessary CASSIS input, aka "anchor genes"
     anchor_gene_names = get_anchor_gene_names(record)
-    logging.info("Record has %d anchor genes", len(anchor_gene_names))
+    logging.debug("Record has %d anchor genes", len(anchor_gene_names))
     if not anchor_gene_names:
         return results
 
     # filter all genes in record for neighbouring genes with overlapping annotations
     genes = record.get_genes()
-    logging.info("Record has %d features of type 'gene'", len(genes))
+    logging.debug("Record has %d features of type 'gene'", len(genes))
     if not genes:
         return results
     candidate_genes, ignored_genes = ignore_overlapping(list(genes))
