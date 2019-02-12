@@ -228,6 +228,8 @@ class Region(CDSCollection):
     def to_biopython(self, qualifiers: Optional[Dict[str, List[str]]] = None) -> List[SeqFeature]:
         if not qualifiers:
             qualifiers = {}
+        if self._parent_record:
+            qualifiers["region_number"] = [str(self.get_region_number())]
         qualifiers["product"] = self.products
         qualifiers["rules"] = self.detection_rules
         qualifiers["probabilities"] = ["%.4f" % prob for prob in self.probabilities]
