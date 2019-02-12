@@ -16,11 +16,11 @@
       <div class="ancillary-link dropdown-menu" id="download-dropdown"><a href="#" id="download-dropdown-link"><img src="images/download.svg" alt="download"> &nbsp; Download</a>
         <ul class="dropdown-options">
         {% if not options.skip_zip_file %}
-        <li><a href={{options.input_file}}.zip>Download all results</a></li>
+        <li><a href="{{options.input_file}}.zip">Download all results</a></li>
         {% endif %}
-          <li><a href={{options.input_file}}.gbk> Download GenBank summary file</a></li>
+          <li><a href="{{options.input_file}}.gbk">Download GenBank summary file</a></li>
         {% if options.logfile and options.download_logfile() != None %}
-          <li><a href={{options.download_logfile()}}> Download log file</a></li>
+          <li><a href="{{options.download_logfile()}}">Download log file</a></li>
         {% endif %}
         </ul>
       </div>
