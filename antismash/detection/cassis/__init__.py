@@ -79,8 +79,6 @@ class CassisResults(module_results.DetectionResults):
 
     def add_to_record(self, record: Record) -> None:
         store_promoters(self.promoters, record)
-        for cluster in self.subregions:
-            record.add_subregion(cluster)
 
     def get_predicted_subregions(self) -> List[SubRegion]:
         return self.subregions
