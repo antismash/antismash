@@ -34,7 +34,7 @@ def get_a_domains_from_cds_features(record: Record, cds_features: List[CDSFeatur
     a_domains = []
     for cds in cds_features:
         for domain in cds.nrps_pks.domains:
-            if domain.name in ["AMP-binding", "A-OX"]:
+            if domain.name in ["AMP-binding"]:
                 as_domain = record.get_domain_by_name(domain.feature_name)
                 assert isinstance(as_domain, AntismashDomain), type(as_domain)
                 a_domains.append(as_domain)
