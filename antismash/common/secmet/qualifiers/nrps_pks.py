@@ -115,7 +115,7 @@ class NRPSPKSQualifier(list):
         elif domain.hit_id == "CAL_domain":
             self.cal_counter += 1
             suffix = "_CAL%d" % self.cal_counter
-        elif domain.hit_id == "AMP-binding":
+        elif domain.hit_id in ["AMP-binding", "A-OX"]:
             self.a_counter += 1
             suffix = "_A%d" % self.a_counter
         elif domain.hit_id == "PKS_KS":
