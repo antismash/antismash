@@ -162,7 +162,7 @@ def get_clusters_from_region_parts(superclusters: Iterable[SuperCluster],
             continue
         js_cluster = {"start": supercluster.location.start + 1,
                       "end": supercluster.location.end - 1,
-                      "tool": "rule-based-clusters",
+                      "tool": "",
                       "neighbouring_start": supercluster.location.start,
                       "neighbouring_end": supercluster.location.end,
                       "product": "CC %d: %s" % (supercluster.get_supercluster_number(), supercluster.kind),
@@ -170,19 +170,21 @@ def get_clusters_from_region_parts(superclusters: Iterable[SuperCluster],
         js_cluster['height'] = supercluster_groupings[supercluster]
         js_clusters.append(js_cluster)
 
-    start_index += max(supercluster_groupings.values())
+    if supercluster_groupings:
+        start_index += max(supercluster_groupings.values())
     subregions = sorted(subregions, key=lambda x: (x.location.start, -len(x.location), x.tool))
-    for i, subregion in enumerate(subregions):
+    for subregion in subregions:
+        start_index += 1
         js_cluster = {"start": subregion.location.start,
                       "end": subregion.location.end,
                       "tool": subregion.tool,
                       "neighbouring_start": subregion.location.start,
                       "neighbouring_end": subregion.location.end,
                       "product": subregion.anchor,
-                      "height": start_index + i}
+                      "height": start_index}
         js_clusters.append(js_cluster)
 
-    start_index += len(subregions) + 2  # allow for label above
+    start_index += 2  # allow for label above
     clusters = sorted(unique_clusters, key=lambda x: (x.location.start, -len(x.location), x.product))
     cluster_groupings = _find_non_overlapping_cluster_groups(clusters)
     for cluster in clusters:
