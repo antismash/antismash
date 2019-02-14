@@ -231,6 +231,12 @@ class RegionLayer:
                 return True
         return False
 
+    def has_subregion_by_tool(self, tool: str) -> bool:
+        """ Returns True if any subregion in the region was created with the
+            given tool name
+        """
+        return any(sub.tool == tool for sub in self.subregions)
+
     @staticmethod
     def build_anchor_id(region: Region) -> str:
         """ Builds a consistent HTML anchor identifier for a Region """
