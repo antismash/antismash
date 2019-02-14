@@ -38,10 +38,10 @@
         {% if (options.tta_enabled or not options.minimal) and record.get_gc_content() >= options.tta_threshold %}
             {{le.legend('legend-tta-codon', 'TTA codons')}}
         {% endif %}
-        {% if options.cassis %}
+        {% if region.has_subregion_by_tool("cassis") %}
             {{le.static_legend('legend-border-cassis', 'cluster extent as predicted by CASSIS')}}
         {% endif %}
-        {% if options.cf_create_clusters or options.cf_borders_only %}
+        {% if region.has_subregion_by_tool("clusterfinder") %}
             {{le.static_legend('legend-border-clusterfinder', 'cluster extent as predicted by ClusterFinder')}}
         {% endif %}
       </div>
