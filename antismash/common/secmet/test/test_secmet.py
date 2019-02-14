@@ -533,6 +533,31 @@ class TestRegionManipulation(unittest.TestCase):
         assert region.superclusters == (extra_sup, self.supercluster)
         assert region.subregions == (extra_sub, self.subregion)
 
+    def test_creation_ordering(self):
+        extra_cluster = Cluster(FeatureLocation(820, 850), FeatureLocation(800, 870), tool="test",
+                                cutoff=17, neighbourhood_range=5, product='a', detection_rule="a")
+        extra_sup = SuperCluster(SuperCluster.kinds.SINGLE, [extra_cluster])
+        self.subregion.location = FeatureLocation(50, 100)
+        # make sure the subregion overlaps with the first supercluster, but not the second
+        # otherwise the test is no good
+        assert self.record.get_subregion(0).overlaps_with(self.supercluster)
+        assert not self.record.get_subregion(0).overlaps_with(extra_sup)
+        self.record.add_supercluster(extra_sup)
+
+        assert not self.record.get_regions()
+        self.record.create_regions()
+        assert len(self.record.get_regions()) == 2
+
+        region = self.record.get_regions()[0]
+        assert region.location == FeatureLocation(3, 100)
+        assert region.superclusters == (self.supercluster,)
+        assert region.subregions == (self.subregion,)
+
+        region = self.record.get_regions()[1]
+        assert region.location == FeatureLocation(800, 870)
+        assert region.superclusters == (extra_sup,)
+        assert region.subregions == tuple()
+
     def test_add_biopython(self):
         bio = self.region_sup.to_biopython()[0]
         # it can be converted with a record, but it won't have a region number
