@@ -813,6 +813,7 @@ class Record:
         areas = []  # type: List[CDSCollection]
         areas.extend(superclusters)
         areas.extend(subregions)
+        areas.sort()
 
         region_location = FeatureLocation(max(0, areas[0].location.start),
                                           min(areas[0].location.end, len(self)))
