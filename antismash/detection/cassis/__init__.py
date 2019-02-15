@@ -3,7 +3,10 @@
 
 """Implementation of the CASSIS method for the motif-based prediction of SM cluster regions"""
 
+from collections import defaultdict
+from functools import reduce
 import logging
+import operator
 import os
 import shutil
 from typing import Any, Dict, Iterable, List, Optional, Tuple
@@ -81,7 +84,11 @@ class CassisResults(module_results.DetectionResults):
         store_promoters(self.promoters, record)
 
     def get_predicted_subregions(self) -> List[SubRegion]:
-        return self.subregions
+        # for the purposes of the record, don't return all possible matches,
+        # only return non-contained ones
+        for sub in self.subregions:
+            print(sub.location, sub.anchor)
+        return filter_subregions(self.subregions)
 
 
 def get_arguments() -> ModuleArgs:
@@ -310,6 +317,39 @@ def store_promoters(promoters: Iterable[Promoter], record: Record) -> None:
         record.add_feature(secmet_version)
 
 
+def filter_subregions(subregions: List[SubRegion]) -> List[SubRegion]:
+    """ Strips any subregion that is fully contained by another for the same anchor
+
+        Arguments:
+            subregions: the subregions to filter
+
+        Returns:
+            a sorted list of SubRegions
+    """
+    if not subregions:
+        return subregions
+
+    by_anchor = defaultdict(list)  # type: Dict[str, List[SubRegion]]
+    # sort from largest to smallest to avoid complicated replacement logic
+    # any sharing an anchor will overlap on that gene anyway
+    for sub in sorted(subregions, key=lambda x: x.location.end - x.location.start, reverse=True):
+        contained = False
+        print(sub, sub.anchor)
+        for other in by_anchor[sub.anchor]:
+            if sub.is_contained_by(other):
+                print(sub, sub.anchor, "contained by", other, other.anchor)
+                contained = True
+                break
+            else:
+                print(sub, sub.anchor, "not contained by", other, other.anchor)
+        if not contained:
+            by_anchor[sub.anchor].append(sub)
+    # flatten the lists and sort back into location order, then anchor
+    # mypy doesn't handle this reduce well
+    flattened = reduce(operator.concat, by_anchor.values())  # type: ignore
+    return sorted(flattened, key=lambda x: (x.location.start, x.location.end, x.anchor))
+
+
 def create_subregions(anchor: str, cluster_preds: List[ClusterPrediction],
                       record: Record) -> List[SubRegion]:
     """ Create the predicted subregions """
@@ -361,4 +401,5 @@ def create_subregions(anchor: str, cluster_preds: List[ClusterPrediction],
 
         new_feature = SubRegion.from_biopython(new_feature)
         subregions.append(new_feature)
+
     return subregions
