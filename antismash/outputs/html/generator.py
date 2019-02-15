@@ -61,6 +61,7 @@ def write_regions_js(records: List[Dict[str, Any]], output_dir: str,
     """ Writes out the cluster and domain JSONs to file for the javascript sections
         of code"""
     with open(os.path.join(output_dir, 'regions.js'), 'w') as handle:
+        handle.write("var recordData = %s;\n" % json.dumps(records, indent=4))
         regions = {"order": []}  # type: Dict[str, Any]
         for record in records:
             for region in record['regions']:

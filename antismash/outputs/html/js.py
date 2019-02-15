@@ -35,8 +35,11 @@ def convert_record(record: Record, options: ConfigType, result: Optional[Dict[st
     """ Convert a Record to JSON """
     if result is None:
         result = {}
-    return {'seq_id': record.id,
-            'regions': convert_regions(record, options, result)}
+    return {
+        'length': len(record.seq),
+        'seq_id': record.id,
+        'regions': convert_regions(record, options, result)
+    }
 
 
 def fetch_tta_features(region: Region, result: Dict[str, ModuleResults]) -> List[Feature]:
