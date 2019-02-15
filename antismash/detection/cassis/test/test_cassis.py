@@ -258,6 +258,44 @@ class TestCassisStorageMethods(unittest.TestCase):
             # don't test all feature qualifiers, only some
 
 
+class TestSubRegionFiltering(unittest.TestCase):
+    def create_sub(self, start, end, anchor):
+        return secmet.SubRegion(FeatureLocation(start, end), anchor=anchor, tool="cassis")
+
+    def test_empty(self):
+        assert cassis.filter_subregions([]) == []
+
+    def test_unrelated_overlap(self):
+        subs = [self.create_sub(300, 500, "A"),
+                self.create_sub(400, 600, "B")]
+        assert cassis.filter_subregions(subs) == subs
+
+    def test_unrelated_contains(self):
+        subs = [self.create_sub(300, 500, "A"),
+                self.create_sub(400, 450, "B")]
+        assert cassis.filter_subregions(subs) == subs
+
+    def test_related_overlap(self):
+        subs = [self.create_sub(300, 500, "A"),
+                self.create_sub(400, 600, "A")]
+        assert cassis.filter_subregions(subs) == subs
+
+    def test_related_contains(self):
+        subs = [self.create_sub(300, 600, "A"),
+                self.create_sub(400, 500, "A")]
+        assert cassis.filter_subregions(subs) == [subs[0]]
+
+    def test_multiple(self):
+        subs = [self.create_sub(300, 600, "A"),
+                self.create_sub(400, 500, "A"),
+                self.create_sub(400, 700, "A"),
+                self.create_sub(400, 500, "B"),
+                self.create_sub(300, 600, "B")]
+
+        res = cassis.filter_subregions(subs)
+        assert res == [subs[0], subs[4], subs[2]]
+
+
 class TestResults(unittest.TestCase):
     def setUp(self):
         self.old_max_perc = cassis.MAX_PERCENTAGE
