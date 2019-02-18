@@ -601,7 +601,7 @@ class Record:
             SuperCluster.FEATURE_TYPE: [],
         }  # type: Dict[str, SeqFeature]
 
-        assert isinstance(seq_record, SeqRecord)
+        assert isinstance(seq_record, SeqRecord), type(seq_record)
         if seq_record.seq and isinstance(seq_record.seq, Seq):
             if isinstance(seq_record.seq.alphabet, Alphabet.ProteinAlphabet):
                 raise SecmetInvalidInputError("protein records are not supported")
@@ -869,3 +869,24 @@ class Record:
         counter = Counter(str(self.seq))
         gc_count = counter['G'] + counter['C'] + counter['g'] + counter['c']
         return gc_count / len(self)
+
+    def strip_antismash_annotations(self) -> None:
+        """ Removes all antismash features and annotations from the record """
+        logging.debug("Stripping antiSMASH features and annotations from record: %s", self.id)
+        self.clear_clusters()
+        self.clear_superclusters()
+        self.clear_subregions()
+        self.clear_regions()
+        self.clear_antismash_domains()
+        self.clear_pfam_domains()
+
+        # clean up antiSMASH-created CDSMotifs, but leave the rest
+        motifs = self.get_cds_motifs()
+        self.clear_cds_motifs()
+        for motif in motifs:
+            if not motif.created_by_antismash:
+                self.add_cds_motif(motif)
+
+        # clean up antiSMASH annotations in CDS features
+        for feature in self.get_cds_features():
+            feature.strip_antismash_annotations()

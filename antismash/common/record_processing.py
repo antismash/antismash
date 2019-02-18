@@ -18,7 +18,6 @@ from antismash.common import gff_parser
 from antismash.common.errors import AntismashInputError
 from antismash.common.secmet import Record
 from antismash.common.secmet.errors import SecmetInvalidInputError
-from antismash.common.secmet.qualifiers import SecMetQualifier
 from antismash.config import get_config, update_config, ConfigType
 from antismash.custom_typing import AntismashModule
 
@@ -73,33 +72,73 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
             raise ValueError("--start and --end options cannot be used with multiple records")
         records[0] = trim_sequence(records[0], max(start, 0), min(len(records[0]), end))
 
+    # remove any previous or obselete antiSMASH features so conversion can be clean
+    for record in records:
+        strip_record(record)
+
+    logging.debug("Converting records from biopython to secmet")
     try:
         return [Record.from_biopython(record, taxon) for record in records]
     except SecmetInvalidInputError as err:
         raise AntismashInputError(str(err)) from err
 
 
-def strip_record(record: Record) -> None:
-    """ Discard antismash specific features and feature qualifiers """
+def strip_record(record: SeqRecord) -> SeqRecord:
+    """ Discard antismash specific features and feature qualifiers
+
+        Arguments:
+            record: the SeqRecord object to clean
+
+        Returns
+            the same SeqRecord instance that was given
+    """
     logging.debug("Stripping antiSMASH features and annotations from record: %s", record.id)
-    record.clear_clusters()
-    record.clear_superclusters()
-    record.clear_subregions()
-    record.clear_regions()
-    record.clear_antismash_domains()
-    record.clear_pfam_domains()
+    old_as_types = {"cluster", "cluster_border", "cluster_core"}
+    current_as_types = {"protocluster", "proto_core", "cand_cluster", "subregion",
+                        "region", "PFAM_domain", "aSDomain", "promoter"}
 
-    # clean up antiSMASH-created CDSMotifs, but leave the rest
-    motifs = list(record.get_cds_motifs())
-    record.clear_cds_motifs()
-    for motif in motifs:
-        if not motif.created_by_antismash:
-            record.add_cds_motif(motif)
+    as_cds_qualifiers = {
+        "aSProdPred",  # <= aS4
+        "sec_met",  # <= aS4, aS5-alpha
+        "gene_functions",  # aS5-beta
+        "sec_met_domains",  # aS5-beta
+        "gene_kind",  # aS5-beta
+    }
 
-    # clean up antiSMASH annotations in CDS features
-    for feature in record.get_cds_features():
-        feature.sec_met = SecMetQualifier()
-        feature.gene_functions.clear()
+    # remove any record-level comment
+    if "structured_comment" in record.annotations:
+        record.annotations["structured_comment"].pop("antiSMASH-Data", None)
+        if not record.annotations["structured_comment"]:
+            record.annotations.pop("structured_comment")
+
+    # remove relevant features and qualifiers
+    kept_features = []
+    for feature in record.features:
+        # remove anything explicitly added by antismash, this will catch shared types (e.g. CDS_motif)
+        if "antismash" in [tool.lower() for tool in feature.qualifiers.get("tool", [])]:
+            continue
+        if feature.qualifiers.get("aSTool"):
+            continue
+        # then check types explicity as they can be too old to contain the tool
+        if feature.type in old_as_types:
+            continue  # remove to avoid confusion
+        if feature.type in current_as_types:
+            continue
+
+        # since CDS features can have a lot of old annotations, clean them up too
+        if feature.type == "CDS":
+            for qual in as_cds_qualifiers:
+                feature.qualifiers.pop(qual, None)
+            notes = feature.qualifiers.get("note")
+            if notes:  # smcogs
+                notes = [note for note in notes if not note.startswith("smCOG")]
+                feature.qualifiers["note"] = notes
+
+        kept_features.append(feature)
+
+    record.features = kept_features
+
+    return record
 
 
 def check_content(sequence: Record) -> Record:
