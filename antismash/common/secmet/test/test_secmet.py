@@ -218,6 +218,53 @@ class TestRecord(unittest.TestCase):
         assert isinstance(rec.get_cds_by_name("nisB"), CDSFeature)
 
 
+class TestCDSFetchByLocation(unittest.TestCase):
+    def setUp(self):
+        self.record = Record(Seq("A"*140))
+        self.record.add_cds_feature(DummyCDS(10, 40, strand=1))
+        self.record.add_cds_feature(DummyCDS(110, 140, strand=-1))
+        self.func = self.record.get_cds_features_within_location
+
+    def test_no_hits(self):
+        assert not self.func(FeatureLocation(50, 90))
+
+    def test_multiple_hits(self):
+        assert self.func(FeatureLocation(10, 140)) == list(self.record.get_cds_features())
+
+    def test_self_hits_same_strand(self):
+        for cds in self.record.get_cds_features():
+            assert self.func(cds.location, with_overlapping=False) == [cds]
+            assert self.func(cds.location, with_overlapping=True) == [cds]
+
+    def test_self_hits_opposite_strand(self):
+        for cds in self.record.get_cds_features():
+            loc = FeatureLocation(cds.location.start, cds.location.end, cds.location.strand * -1)
+            assert self.func(loc, with_overlapping=False) == [cds]
+            assert self.func(loc, with_overlapping=True) == [cds]
+
+    def test_self_hits_no_strand(self):
+        for cds in self.record.get_cds_features():
+            loc = FeatureLocation(cds.location.start, cds.location.end)
+            assert self.func(loc, with_overlapping=False) == [cds]
+            assert self.func(loc, with_overlapping=True) == [cds]
+
+    def test_shared_starts(self):
+        starter = self.record.get_cds_features()[0]
+        longer = DummyCDS(10, 80)
+        shorter = DummyCDS(10, 20)
+        self.record.add_cds_feature(longer)
+        self.record.add_cds_feature(shorter)
+        assert self.func(starter.location, with_overlapping=False) == [shorter, starter]
+        assert self.func(starter.location, with_overlapping=True) == list(self.record.get_cds_features()[:3])
+
+    def test_inception_cds(self):
+        inner = self.record.get_cds_features()[1]
+        outer = DummyCDS(90, 200, strand=1)
+        self.record.add_cds_feature(outer)
+        loc = FeatureLocation(110, 140)
+        assert self.func(loc, with_overlapping=False) == [inner]
+
+
 class TestClusterManipulation(unittest.TestCase):
     def setUp(self):
         self.record = Record(Seq("A" * 1000))
