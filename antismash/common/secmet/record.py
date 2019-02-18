@@ -446,6 +446,8 @@ class Record:
                 results.append(feature)
             elif with_overlapping and feature.overlaps_with(location):
                 results.append(feature)
+            elif index + 1 < len(self._cds_features) and self._cds_features[index + 1].is_contained_by(feature):
+                pass
             else:
                 break
             index += 1
