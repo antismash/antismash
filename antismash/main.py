@@ -149,9 +149,6 @@ def run_detection(record: Record, options: ConfigType,
         Returns:
             the time taken by each detection module as a dictionary
     """
-    # strip any existing antismash results first
-    record_processing.strip_record(record)
-
     timings = {}  # type: Dict[str, float]
 
     # run full genome detections
@@ -463,6 +460,8 @@ def read_data(sequence_file: Optional[str], options: ConfigType) -> serialiser.A
             if not contents:
                 raise ValueError("No results contained in file: %s" % options.reuse_results)
         results = serialiser.AntismashResults.from_file(options.reuse_results)
+        for record in results.records:
+            record.strip_antismash_annotations()
         if options.taxon != results.taxon:
             logging.info("Reusing taxon %s from prior results", results.taxon)
             update_config({"taxon": results.taxon})

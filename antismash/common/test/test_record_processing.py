@@ -328,13 +328,20 @@ class TestStripRecord(unittest.TestCase):
     def test_cds_motifs(self):
         record = helpers.DummyRecord()
 
-        non_as_motif = DummyCDSMotif()
+        non_as_motif = DummyCDSMotif(domain_id="non-as")
         non_as_motif.created_by_antismash = False
         record.add_cds_motif(non_as_motif)
 
-        as_motif = DummyCDSMotif()
+        as_motif = DummyCDSMotif(domain_id="as")
         as_motif.created_by_antismash = True
         record.add_cds_motif(as_motif)
 
-        record_processing.strip_record(record)
-        assert record.get_cds_motifs() == (non_as_motif,)
+        bio = record.to_biopython()
+        assert len(bio.features) == 2
+        assert record_processing.strip_record(bio) is bio  # strips and returns
+        assert len(bio.features) == 1
+        record = Record.from_biopython(bio, taxon="bacteria")
+
+        motifs = record.get_cds_motifs()
+        assert len(motifs) == 1
+        assert motifs[0].domain_id == "non-as"

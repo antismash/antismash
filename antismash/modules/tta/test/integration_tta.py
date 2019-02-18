@@ -11,7 +11,7 @@ import unittest
 import antismash
 from antismash.main import read_data
 from antismash.common.module_results import ModuleResults
-from antismash.common.record_processing import parse_input_sequence
+from antismash.common.secmet import Record
 import antismash.common.test.helpers as helpers
 from antismash.config import get_config, update_config, destroy_config, build_config
 from antismash.modules import tta
@@ -29,7 +29,7 @@ class TtaIntegrationTest(unittest.TestCase):
         update_config(self.old_config)
 
     def test_nisin(self):
-        record = parse_input_sequence(helpers.get_path_to_nisin_with_detection())[0]
+        record = Record.from_genbank(helpers.get_path_to_nisin_with_detection(), taxon="bacteria")[0]
         regions = record.get_regions()
         assert regions
         for region in regions:

@@ -24,12 +24,16 @@ from ..features import (
 )
 from ..errors import SecmetInvalidInputError
 from .helpers import (
+    DummyAntismashDomain,
     DummyCDS,
+    DummyCDSMotif,
     DummyCluster,
+    DummyPFAMDomain,
     DummyRegion,
     DummySubRegion,
     DummySuperCluster,
 )
+from ..qualifiers import SecMetQualifier, GeneFunction
 from ..record import Record
 
 
@@ -83,6 +87,98 @@ class TestConversion(unittest.TestCase):
         rec.features.append(SeqFeature(None, type="broken"))
         with self.assertRaisesRegex(SecmetInvalidInputError, "feature is missing location"):
             Record.from_biopython(rec, taxon="bacteria")
+
+
+class TestStripping(unittest.TestCase):
+    def setUp(self):
+        self.rec = Record(Seq("A"*20))
+        self.cds = DummyCDS(locus_tag="test")
+        self.rec.add_cds_feature(self.cds)
+
+    def test_clusters(self):
+        assert not self.rec.get_clusters()
+        self.rec.add_cluster(DummyCluster())
+        assert self.rec.get_clusters()
+        self.rec.strip_antismash_annotations()
+        assert not self.rec.get_clusters()
+
+    def test_superclusters(self):
+        assert not self.rec.get_superclusters()
+        self.rec.add_supercluster(DummySuperCluster())
+        assert self.rec.get_superclusters()
+        self.rec.strip_antismash_annotations()
+        assert not self.rec.get_superclusters()
+
+    def test_subregions(self):
+        assert not self.rec.get_subregions()
+        self.rec.add_subregion(DummySubRegion())
+        assert self.rec.get_subregions()
+        self.rec.strip_antismash_annotations()
+        assert not self.rec.get_subregions()
+
+    def test_regions(self):
+        assert not self.rec.get_regions()
+        self.rec.add_region(DummyRegion())
+        assert self.rec.get_regions()
+        self.rec.strip_antismash_annotations()
+        assert not self.rec.get_regions()
+
+    def test_antismash_domains(self):
+        assert not self.rec.get_antismash_domains()
+        self.rec.add_antismash_domain(DummyAntismashDomain())
+        assert self.rec.get_antismash_domains()
+        self.rec.strip_antismash_annotations()
+        assert not self.rec.get_antismash_domains()
+
+    def test_pfams(self):
+        assert not self.rec.get_pfam_domains()
+        self.rec.add_pfam_domain(DummyPFAMDomain())
+        assert self.rec.get_pfam_domains()
+        self.rec.strip_antismash_annotations()
+        assert not self.rec.get_pfam_domains()
+
+    def test_cds_motifs(self):
+        assert not self.rec.get_cds_motifs()
+        motif = DummyCDSMotif()
+        self.rec.add_cds_motif(motif)
+        motif.created_by_antismash = False
+        assert self.rec.get_cds_motifs()
+        self.rec.strip_antismash_annotations()
+        assert self.rec.get_cds_motifs()
+        motif.created_by_antismash = True
+        self.rec.strip_antismash_annotations()
+        assert not self.rec.get_cds_motifs()
+
+    def test_cds_secmet(self):
+        domain = SecMetQualifier.Domain("test", 1e-2, 10., 1, "tool")
+        self.cds.sec_met.add_domains([domain])
+        assert self.cds.sec_met.domains == [domain]
+        self.rec.strip_antismash_annotations()
+        assert self.cds.sec_met.domains == []
+
+    def test_cds_nrps_pks(self):  # pylint: disable=attribute-defined-outside-init
+        class HSP:  # pylint: disable=too-few-public-methods
+            def __init__(self, attrs):
+                self.__dict__.update(attrs)
+
+        raw_domain = HSP({
+            "hit_id": "test",
+            "query_start": 1,
+            "query_end": 2,
+            "evalue": 1e-5,
+            "bitscore": 10,
+        })
+        self.cds.nrps_pks.add_domain(raw_domain, "test")
+        assert self.cds.nrps_pks.domains
+        self.rec.strip_antismash_annotations()
+        assert not self.cds.nrps_pks.domains
+
+    def test_cds_gene_functions(self):
+        assert not self.cds.gene_functions
+        self.cds.gene_functions.add(GeneFunction.OTHER, "tool", "desc")
+        assert self.cds.gene_functions
+        self.rec.strip_antismash_annotations()
+        assert not self.cds.gene_functions
 
 
 class TestRecordFeatureNumbering(unittest.TestCase):

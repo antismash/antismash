@@ -255,3 +255,9 @@ class CDSFeature(Feature):
 
     def __str__(self) -> str:
         return "CDS(%s, %s)" % (self.get_name(), self.location)
+
+    def strip_antismash_annotations(self) -> None:
+        """ Remove all antiSMASH-specific annotations from the feature """
+        self.sec_met = SecMetQualifier()
+        self.gene_functions.clear()
+        self.nrps_pks = NRPSPKSQualifier(self.location.strand)
