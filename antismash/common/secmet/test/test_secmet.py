@@ -12,7 +12,8 @@ from Bio.Alphabet.IUPAC import IUPACProtein
 from Bio.Seq import Seq
 from Bio.SeqFeature import FeatureLocation, SeqFeature
 
-from antismash.common.test import helpers
+from antismash.common.test.helpers import get_path_to_nisin_genbank
+
 from ..features import (
     CDSFeature,
     Cluster,
@@ -22,13 +23,19 @@ from ..features import (
     SuperCluster,
 )
 from ..errors import SecmetInvalidInputError
-from .helpers import DummyCDS
+from .helpers import (
+    DummyCDS,
+    DummyCluster,
+    DummyRegion,
+    DummySubRegion,
+    DummySuperCluster,
+)
 from ..record import Record
 
 
 class TestConversion(unittest.TestCase):
     def test_record_conversion_from_biopython(self):
-        before = list(Bio.SeqIO.parse(helpers.get_path_to_nisin_genbank(), "genbank"))[0]
+        before = list(Bio.SeqIO.parse(get_path_to_nisin_genbank(), "genbank"))[0]
         # sort notes, because direct comparisons otherwise are awful
         for feature in before.features:
             if "note" in feature.qualifiers:
@@ -60,7 +67,7 @@ class TestConversion(unittest.TestCase):
         assert type_counts["aSDomain"] == len(record.get_antismash_domains())
 
     def test_protein_sequences_caught(self):
-        before = list(Bio.SeqIO.parse(helpers.get_path_to_nisin_genbank(), "genbank"))[0]
+        before = list(Bio.SeqIO.parse(get_path_to_nisin_genbank(), "genbank"))[0]
 
         # as a sanity check, make sure it's a seq and it functions as expected
         assert isinstance(before.seq, Seq)
@@ -71,7 +78,7 @@ class TestConversion(unittest.TestCase):
             Record.from_biopython(before, taxon="bacteria")
 
     def test_missing_locations_caught(self):
-        rec = list(Bio.SeqIO.parse(helpers.get_path_to_nisin_genbank(), "genbank"))[0]
+        rec = list(Bio.SeqIO.parse(get_path_to_nisin_genbank(), "genbank"))[0]
         Record.from_biopython(rec, taxon="bacteria")
         rec.features.append(SeqFeature(None, type="broken"))
         with self.assertRaisesRegex(SecmetInvalidInputError, "feature is missing location"):
@@ -87,7 +94,7 @@ class TestRecordFeatureNumbering(unittest.TestCase):
     def test_cluster_numbering(self):
         features = []
         for start, end in self.pairs:
-            cluster = helpers.DummyCluster(start, end)
+            cluster = DummyCluster(start, end)
             self.record.add_cluster(cluster)
             features.append(cluster)
         features = sorted(features)
@@ -99,7 +106,7 @@ class TestRecordFeatureNumbering(unittest.TestCase):
         features = []
         for location in self.locations:
             supercluster = SuperCluster(SuperCluster.kinds.SINGLE,
-                                        [helpers.DummyCluster(location.start, location.end)])
+                                        [DummyCluster(location.start, location.end)])
             self.record.add_supercluster(supercluster)
             features.append(supercluster)
         features = sorted(features)
@@ -148,7 +155,7 @@ class TestRecord(unittest.TestCase):
             record.add_cds_feature(DummyCDS(start, end))
         for start, end in [(10, 120), (5, 110), (10, 160), (45, 200)]:
             record.clear_clusters()
-            cluster = helpers.DummyCluster(start, end)
+            cluster = DummyCluster(start, end)
             record.add_cluster(cluster)
             assert len(cluster.cds_children) == 2
             for cds in cluster.cds_children:
@@ -156,13 +163,13 @@ class TestRecord(unittest.TestCase):
 
     def test_orphaned_cluster_number(self):
         record = Record("A"*1000)
-        cluster = helpers.DummyCluster(0, 1000)
+        cluster = DummyCluster(0, 1000)
         with self.assertRaisesRegex(ValueError, "Cluster not contained in record"):
             print(record.get_cluster_number(cluster))
 
     def test_orphaned_supercluster_number(self):
         record = Record("A"*1000)
-        cluster = helpers.DummyCluster(0, 1000)
+        cluster = DummyCluster(0, 1000)
         supercluster = SuperCluster(SuperCluster.kinds.SINGLE, [cluster])
         with self.assertRaisesRegex(ValueError, "SuperCluster not contained in record"):
             print(record.get_supercluster_number(supercluster))
@@ -210,7 +217,7 @@ class TestRecord(unittest.TestCase):
 
     def test_read_from_file(self):
         # very basic testing to ensure that the file IO itself functions
-        recs = Record.from_genbank(helpers.get_path_to_nisin_genbank())
+        recs = Record.from_genbank(get_path_to_nisin_genbank())
         assert len(recs) == 1
         rec = recs[0]
         assert rec.get_feature_count() == 24
