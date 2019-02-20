@@ -14,48 +14,21 @@
 import os
 
 from Bio.Seq import Seq
-from Bio.SeqFeature import FeatureLocation
 from helperlibs.wrappers.io import TemporaryDirectory
 
 import antismash
 from antismash.common import serialiser, path
 from antismash.common.module_results import ModuleResults
-from antismash.common.secmet import Cluster, Feature, Record, SuperCluster
-from antismash.common.secmet.test.helpers import DummyCDS  # for import by others, pylint: disable=unused-import
-from antismash.common.secmet.features.supercluster import SuperClusterKind
+from antismash.common.secmet import Record
+from antismash.common.secmet.test.helpers import (  # for import by others, pylint: disable=unused-import
+    DummyCDS,
+    DummyCluster,
+    DummyFeature,
+    DummySuperCluster,
+)
 from antismash.config import update_config
 from antismash.config.args import build_parser
 from antismash.main import get_all_modules
-
-
-class DummyFeature(Feature):
-    def __init__(self, start, end, strand=1, feature_type="none"):
-        super().__init__(FeatureLocation(start, end, strand), feature_type=feature_type)
-
-
-class DummyCluster(Cluster):
-    def __init__(self, start=None, end=None, core_start=0, core_end=1,
-                 core_location=None, tool="test", product="test product",
-                 cutoff=10, neighbourhood_range=10, high_priority_product=True):
-        if core_location is None:
-            core_location = FeatureLocation(core_start, core_end)
-        if start is None:
-            start = max(0, core_location.start - neighbourhood_range)
-        if end is None:
-            end = core_location.end + neighbourhood_range
-        surrounds = FeatureLocation(start, end)
-        super().__init__(core_location, surrounds, tool, product, cutoff,
-                         neighbourhood_range, high_priority_product)
-
-
-class DummySuperCluster(SuperCluster):
-    def __init__(self, clusters, kind=None):
-        if not kind:
-            if len(clusters) == 1:
-                kind = SuperClusterKind.SINGLE
-            else:
-                kind = SuperClusterKind.INTERLEAVED
-        super().__init__(kind, clusters)
 
 
 def get_simple_options(module, args):
