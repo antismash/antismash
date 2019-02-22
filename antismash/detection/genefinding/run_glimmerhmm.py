@@ -44,9 +44,6 @@ def run_external(fasta_filename: str) -> str:
     if run_result.stderr.find('ERROR') > -1:
         logging.error("Failed to run GlimmerHMM: %r", run_result.stderr)
         raise RuntimeError("Failed to run GlimmerHMM: %s" % run_result.stderr)
-    if "CDS" not in run_result.stdout:
-        logging.error("GlimmerHMM gene prediction failed: no genes found.")
-        raise RuntimeError("GlimmerHMM found no genes")
     return run_result.stdout
 
 
@@ -58,6 +55,9 @@ def run_glimmerhmm(record: Record) -> None:
         # Write FASTA file and run GlimmerHMM
         fasta_file = write_search_fasta(record)
         results_text = run_external(fasta_file)
+
+    if not "CDS" in results_text:
+        return
 
     handle = StringIO(results_text)
     features = get_features_from_file(record, handle)
