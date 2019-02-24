@@ -232,3 +232,8 @@ pop	fungal prolyl oligopeptidase	950	pop.hmm
 ustH	fungal ustH-type gamma peptidase	450	ustH.hmm
 truD	TruD pseudouridine synthase	120	truD.hmm
 micKC	Lipolanthine biosynthesis protein	400	micKC.hmm
+GATase_7	Glutamine amidotransferase domain	25	PF13537.hmm
+TIGR03103	GNAT-family acetyltransferase	569	TIGR03103.hmm
+TIGR03104	asparagine synthase family amidotransferase	570	TIGR03104.hmm
+TIGR03106	hydrolase, peptidase M42 family	398	TIGR03106.hmm
+Peptidase_M42	M42 glutamyl aminopeptidase	20	PF05343.hmm

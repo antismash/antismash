@@ -196,6 +196,15 @@ RULE ectoine
     EXTENT 5
     CONDITIONS ectoine_synt
 
+RULE NAGGN
+    COMMENT N-acetylglutaminylglutamine amide cluster (Psyr_3747-Psyr_3749 in NC_007005.1)
+            see https://doi.org/10.1128/AEM.00686-10
+    CUTOFF 10
+    EXTENT 5
+    CONDITIONS (TIGR03104 or cds(GATase_7 and Asn_synthase))  # amidotransferase ggnA
+               and TIGR03103                                  # acetyltransferase ggnB
+               and (TIGR03106 or Peptidase_M42)               # aminopeptidase ggnC
+
 RULE butyrolactone
     CUTOFF 20
     EXTENT 5
