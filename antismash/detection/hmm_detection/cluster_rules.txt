@@ -142,7 +142,7 @@ RULE LAP
 RULE lassopeptide
     CUTOFF 10
     EXTENT 10
-    CONDITIONS PF13471 and PF00733 or micJ25 or mcjC
+    CONDITIONS PF13471 and Asn_synthase or micJ25 or mcjC
 
 RULE sactipeptide
     CUTOFF 20
