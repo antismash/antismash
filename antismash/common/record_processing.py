@@ -189,7 +189,7 @@ def ensure_cds_info(single_entry: bool, genefinding: Callable[[Record, Any], Non
             logging.info("No CDS features found in record %r but GFF3 file provided, running GFF parser.", sequence.id)
             gff_parser.run(sequence, single_entry, options)
             if not sequence.get_cds_features():
-                logging.error("Record %s has no genes even after running GFF parser, skipping.", sequence.id)
+                logging.warning("Record %s has no genes even after running GFF parser, skipping.", sequence.id)
                 sequence.skip = "No genes found"
                 return sequence
         elif options.genefinding_tool != "none":
