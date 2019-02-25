@@ -62,7 +62,7 @@ class TestPrediction(unittest.TestCase):
                                                       "hydrophobic-aliphatic",
                                                       ['asp', 'asn', 'glu', 'gln', 'aad'],  # arbitrary
                                                       ['val', 'leu', 'ile', 'abu', 'iva'],
-                                                      "leu", ["ile"], False, 5)
+                                                      "leu", ["ile"], False, "DPYHeGTLCK", 5)
 
     def test_valid(self):
         pred = self.pred

@@ -51,7 +51,7 @@ class PredictorSVMResult(Prediction):
     """ Holds all the relevant results from NRPSPredictor2 for a domain """
     def __init__(self, angstrom_code: str, physicochemical_class: str, large_cluster_pred: List[str],
                  small_cluster_pred: List[str], single_amino_pred: str, stachelhaus_predictions: List[str],
-                 uncertain: bool, stachelhaus_match_count: int) -> None:
+                 uncertain: bool, stachelhaus_seq: str, stachelhaus_match_count: int) -> None:
         super().__init__("NRPSPredictor2")
         self.angstrom_code = str(angstrom_code)
         self.physicochemical_class = str(physicochemical_class)
@@ -63,6 +63,7 @@ class PredictorSVMResult(Prediction):
         for pred in stachelhaus_predictions:
             assert '/' not in pred
         self.uncertain = bool(uncertain)
+        self.stachelhaus_seq = str(stachelhaus_seq)
         self.stachelhaus_match_count = int(stachelhaus_match_count)
 
     def get_classification(self) -> List[str]:
@@ -115,6 +116,12 @@ class PredictorSVMResult(Prediction):
         note = ""
         if self.uncertain:
             note = "<strong>NOTE: outside applicability domain</strong><br>\n"
+        qualifier = "weak"
+        if self.stachelhaus_match_count == 10:
+            qualifier = "strong"
+        elif self.stachelhaus_match_count > 7:
+            qualifier = "moderate"
+
         raw = ("\n"
                "<dl><dt>SVM prediction details:</dt>\n"
                " <dd>"
@@ -128,15 +135,24 @@ class PredictorSVMResult(Prediction):
                "   <dd>%s</dd>\n"
                "   <dt>Single AA prediction:</dt>\n"
                "   <dd>%s</dd>\n"
+               "  </dl>\n"
+               " </dd>\n"
+               "</dl>\n"
+               "<dl><dt>Stachelhaus prediction details:</dt>\n"
+               " <dd>\n"
+               "  <dl>\n"
+               "   <dt>Stachelhaus sequence:</dt>\n"
+               "   <dd>%s</dd>\n"
                "   <dt>Nearest Stachelhaus code:</dt>\n"
                "   <dd>%s</dd>\n"
                "   <dt>Stachelhaus code match:</dt>\n"
-               "   <dd>%d%%</dd>\n"
+               "   <dd>%d%% (%s)</dd>\n"
                "  </dl>\n"
-               "  </dd>\n"
+               " </dd>\n"
                "</dl>\n" % (note, self.physicochemical_class, ", ".join(self.large_cluster_pred),
                             ", ".join(self.small_cluster_pred), self.single_amino_pred,
-                            ", ".join(self.stachelhaus_predictions), self.stachelhaus_match_count * 10))
+                            self.stachelhaus_seq, ", ".join(self.stachelhaus_predictions),
+                            self.stachelhaus_match_count * 10, qualifier))
         return Markup(raw)
 
     @classmethod
@@ -160,13 +176,18 @@ class PredictorSVMResult(Prediction):
             raise ValueError("Invalid SVM result line: %s" % line)
         query_stach = parts[2]
         pred_from_stach = parts[7]
+        best_stach_match = query_stach.lower()
         stach_count = 0
         for possible_hit in KNOWN_STACH_CODES[pred_from_stach]:
             # the datafile sometimes has - for the trailing char, but not all the time
-            matches = sum(a == b for a, b in list(zip(query_stach, possible_hit))[:9]) + 1
-            stach_count = max(stach_count, matches)
+            matches = [int(a == b) for a, b in list(zip(query_stach, possible_hit))[:9]] + [1]
+            count = sum(matches)
+            if count > stach_count:
+                stach_count = count
+                best_stach_match = "".join(c if match else c.lower() for (c, match) in zip(query_stach, matches))
+
         return cls(parts[1], parts[3], parts[4].split(","), parts[5].split(","),
-                   parts[6], pred_from_stach.split("/"), parts[10] == "1", stach_count)
+                   parts[6], pred_from_stach.split("/"), parts[10] == "1", best_stach_match, stach_count)
 
     def __str__(self) -> str:
         return "PredictorSVMResult: " + str(vars(self))
@@ -179,7 +200,8 @@ class PredictorSVMResult(Prediction):
         return PredictorSVMResult(json["angstrom_code"], json["physicochemical_class"],
                                   json["large_cluster_pred"], json["small_cluster_pred"],
                                   json["single_amino_pred"], json["stachelhaus_predictions"],
-                                  json["uncertain"], json["stachelhaus_match_count"])
+                                  json["uncertain"], json["stachelhaus_seq"],
+                                  json["stachelhaus_match_count"])
 
 
 def read_positions(filename: str, start_position: int) -> List[int]:
