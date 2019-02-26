@@ -94,6 +94,8 @@ def main(args: List[str]) -> int:
         if not os.path.exists(sequence):
             parser.error("Input file does not exist: %s" % sequence)
             return 1
+        if not os.path.isfile(sequence):
+            raise parser.error("input %s is not a file" % sequence)
     else:
         sequence = ""
 
