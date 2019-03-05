@@ -577,7 +577,10 @@ class Record:
                     return
                 self.add_cds_motif(Prepeptide.from_biopython(feature))
                 return
-            self.add_cds_motif(CDSMotif.from_biopython(feature))
+            motif = CDSMotif.from_biopython(feature)
+            if not motif.domain_id and not motif.created_by_antismash:
+                motif.domain_id = "non_aS_motif_%d_%d" % (motif.location.start, motif.location.end)
+            self.add_cds_motif(motif)
         elif feature.type == 'PFAM_domain':
             self.add_pfam_domain(PFAMDomain.from_biopython(feature))
         elif feature.type == 'aSDomain':
