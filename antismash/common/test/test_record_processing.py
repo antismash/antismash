@@ -15,7 +15,7 @@ from antismash import config
 from antismash.common import record_processing, path
 from antismash.common.errors import AntismashInputError
 from antismash.common.secmet import Record
-from antismash.common.secmet.test.helpers import DummyCDSMotif
+from antismash.common.secmet.test.helpers import DummyCDSMotif, DummyFeature
 from antismash.common.test import helpers
 
 
@@ -328,9 +328,9 @@ class TestStripRecord(unittest.TestCase):
     def test_cds_motifs(self):
         record = helpers.DummyRecord()
 
-        non_as_motif = DummyCDSMotif(domain_id="non-as")
-        non_as_motif.created_by_antismash = False
-        record.add_cds_motif(non_as_motif)
+        non_as_motif = DummyFeature(feature_type="CDS_motif")
+        non_as_motif._qualifiers["stuff"] = ["thing"]
+        record.add_feature(non_as_motif)
 
         as_motif = DummyCDSMotif(domain_id="as")
         as_motif.created_by_antismash = True
@@ -338,10 +338,11 @@ class TestStripRecord(unittest.TestCase):
 
         bio = record.to_biopython()
         assert len(bio.features) == 2
+        assert set(feat.type for feat in bio.features) == {"CDS_motif"}
         assert record_processing.strip_record(bio) is bio  # strips and returns
         assert len(bio.features) == 1
         record = Record.from_biopython(bio, taxon="bacteria")
 
         motifs = record.get_cds_motifs()
         assert len(motifs) == 1
-        assert motifs[0].domain_id == "non-as"
+        assert motifs[0].domain_id.startswith("non_aS_motif")

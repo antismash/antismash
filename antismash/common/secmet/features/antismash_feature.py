@@ -88,7 +88,7 @@ class AntismashFeature(Feature):
             mine["database"] = [self.database]
         if self.detection:
             mine["detection"] = [self.detection]
-        if self.domain_id:
+        if self.domain_id and self.created_by_antismash:
             mine["domain_id"] = [self.domain_id]
         if self.tool:
             mine["aSTool"] = [self.tool]
