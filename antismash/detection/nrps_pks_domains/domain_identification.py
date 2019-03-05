@@ -354,8 +354,6 @@ def generate_motif_features(feature: CDSFeature, motifs: List[HMMResult]) -> Lis
         new_motif.locus_tag = locus_tag
 
         new_motif.translation = feature.translation[motif.query_start:motif.query_end + 1]
-        new_motif.notes.append("NRPS/PKS Motif: %s (e-value: %s, bit-score: %s)" % (
-                               motif.hit_id, motif.evalue, motif.bitscore))  # TODO move to CDSMotif
 
         motif_features.append(new_motif)
     return motif_features
