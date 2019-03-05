@@ -69,7 +69,7 @@ class DummyCDSMotif(CDSMotif):
 
 
 class DummyFeature(Feature):
-    def __init__(self, start, end, strand=1, feature_type="none"):
+    def __init__(self, start=0, end=3, strand=1, feature_type="none"):
         super().__init__(FeatureLocation(start, end, strand), feature_type=feature_type)
 
 
