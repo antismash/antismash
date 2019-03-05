@@ -119,11 +119,24 @@ def strip_record(record: SeqRecord) -> SeqRecord:
             continue
         if feature.qualifiers.get("aSTool"):
             continue
-        # then check types explicity as they can be too old to contain the tool
+        # then check types explicitly as they can be too old to contain the tool
         if feature.type in old_as_types:
             continue  # remove to avoid confusion
         if feature.type in current_as_types:
             continue
+
+        # old CDS_motif annotations didn't include a "tool" qualifier, so clean them up
+        if feature.type == "CDS_motif":
+            # remove NRPS/PKS domain annotations
+            notes = [note for note in feature.qualifiers.get("note", []) if not note.startswith("NRPS/PKS Motif")]
+            # ensure notes isn't left in but empty
+            if not notes:
+                feature.qualifiers.pop("note", [])
+            else:
+                feature.qualifiers["note"] = notes
+            # remove any feature that now has no qualifiers
+            if not feature.qualifiers:
+                continue
 
         # since CDS features can have a lot of old annotations, clean them up too
         if feature.type == "CDS":
