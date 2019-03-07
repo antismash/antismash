@@ -73,6 +73,14 @@ RULE NRPS-like
     EXTENT 20
     CONDITIONS cds((PP-binding or NAD_binding_4) and (AMP-binding or A-OX))
 
+RULE CDPS
+    COMMENT tRNA-dependent cyclodipeptide synthases like BGC0001468 aka
+            bicyclomycin
+    RELATED Flavoprotein, 2OG-FeII_Oxy, p450
+    CUTOFF 5
+    EXTENT 10
+    CONDITIONS CDPS
+
 RULE terpene
     CUTOFF 20
     EXTENT 10
