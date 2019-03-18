@@ -1,7 +1,6 @@
 # Cutoffs and extents are given in kilobases
 RULE T1PKS
     COMMENT Type-I PKS
-            Comments can cover multiple lines.
     CUTOFF 20
     EXTENT 20
     CONDITIONS cds(PKS_AT and (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS))
