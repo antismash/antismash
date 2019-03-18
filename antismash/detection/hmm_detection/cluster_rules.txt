@@ -25,6 +25,14 @@ RULE transAT-PKS
     CONDITIONS cds(ATd and (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS))
                and cds(PKS_AT and not (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS))
 
+RULE transAT-PKS-like
+    COMMENT Marks partial transAT-PKS clusters, specifically those with an AT-docking domain,
+            but no AT domain.
+    SUPERIORS transAT-PKS
+    CUTOFF 45
+    EXTENT 20
+    CONDITIONS cds(ATd and (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS) and not PKS_AT)
+
 RULE hglE-KS
     COMMENT heterocyst glycolipid synthase like PKS such as KC489223
     CUTOFF 20

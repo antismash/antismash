@@ -158,7 +158,7 @@ class HmmDetectionTest(unittest.TestCase):
 
     def test_create_rules(self):
         rules = hmm_detection.create_rules(self.rules_file, self.signature_names)
-        assert len(rules) == 52
+        assert len(rules) == open(self.rules_file).read().count("\nRULE")
         t1pks_rules = [rule for rule in rules if rule.name == "T1PKS"]
         assert len(t1pks_rules) == 1
         rule = t1pks_rules[0]
