@@ -16,6 +16,11 @@ from antismash.common.secmet import Record
 from antismash.common.secmet.errors import SecmetInvalidInputError
 from antismash.config import ConfigType
 
+# whether to use phase (codon start) to modify reported locations
+# Augustus, NCBI, and glimmerhmm report phase but have already adjusted the
+# locations and since they're the bulk of inputs, disable further modification
+MODIFY_LOCATIONS_BY_PHASE = False
+
 
 def check_gff_suitability(options: ConfigType, sequences: List[Record]) -> bool:
     """
@@ -179,11 +184,12 @@ def generate_details_from_subfeature(sub_feature: SeqFeature,
     mismatching_qualifiers = set()
     start = sub_feature.location.start.real
     end = sub_feature.location.end.real
-    phase = int(sub_feature.qualifiers.get('phase', [0])[0])
-    if sub_feature.strand == 1:
-        start += phase
-    else:
-        end -= phase
+    if MODIFY_LOCATIONS_BY_PHASE:
+        phase = int(sub_feature.qualifiers.get('phase', [0])[0])
+        if sub_feature.strand == 1:
+            start += phase
+        else:
+            end -= phase
     locations.append(FeatureLocation(start, end, strand=sub_feature.strand))
     # Make sure CDSs lengths are multiple of three. Otherwise extend to next full codon.
     # This only applies for translation.
