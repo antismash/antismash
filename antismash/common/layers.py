@@ -11,6 +11,7 @@ import os
 from typing import Any, List, Optional, Tuple
 
 from antismash.config import ConfigType, get_config
+from antismash.common.html_renderer import Markup
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record, Region
 from antismash.custom_typing import AntismashModule
@@ -62,10 +63,10 @@ class RecordLayer:
             return super().__getattribute__(attr)
         return getattr(self.seq_record, attr)
 
-    def get_from_record(self) -> str:
-        " returns the text to be displayed in the overview table > separator-text "
+    def get_from_record(self) -> Markup:
+        """ Returns the text to be displayed in the HTML overview page """
 
-        current_id = self.seq_record.id
+        current_id = "<strong>%s</strong>" % self.seq_record.id
 
         orig_id = self.seq_record.original_id
 
@@ -79,7 +80,7 @@ class RecordLayer:
         if source:
             source = " (%s)" % source
 
-        return 'The following regions are from record %s%s:' % (current_id, source)
+        return Markup('%s%s' % (current_id, source))
 
 
 class RegionLayer:
