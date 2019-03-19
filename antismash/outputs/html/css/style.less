@@ -12,6 +12,7 @@
 @gene-type-transport: cornflowerblue;
 @gene-type-resistance: #ed90ed;
 @feature-tta-codon: magenta;
+@table-background: #f1f1f1;
 @tool-cassis: wheat;
 @tool-clusterfinder: teal;
 @tool-rule-based-clusters: white;
@@ -451,23 +452,30 @@ nav {
 table {
     border-collapse: collapse;
 }
-#region-overview {
+
+.overview-layout {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    padding-left: 0.5em;
+
+    & .overview-switches {
+        padding-left: 0.5em;
+        padding-right: 0.5em;
+        min-width: 10em;
+    }
+}
+
+table.region-table {
     padding: 0;
-    .left-padding;
     th {
         margin: 0.2em 0.5em;
         padding: 0 0.5em;
     }
 
-
-    .separator-row {
-        background-color: #ddd;
-        td {
-            padding-top: 1em;
-        }
-    }
     .even {
-        background-color: #f1f1f1;
+        background-color: @table-background;
     }
 
     td {
@@ -478,6 +486,17 @@ table {
     .digits {
         text-align: right;
     }
+}
+
+.record-overview-header {
+    background-color: #ddd;
+    padding-top: 0.5em;
+}
+
+.record-overview-details {
+    padding-left: 1em;
+    padding-bottom: 1em;
+    margin-top: 0.5em;
 }
 
 .tooltip {
@@ -1030,4 +1049,8 @@ ul.dropdown-options {
     display: grid;
     grid-template-columns: auto 25%;
     grid-gap: 1px;
+}
+
+.table-split-left {
+    border-right: 5px solid @table-background;
 }

@@ -1,0 +1,72 @@
+{% macro table_header() -%}
+ <thead>
+  <tr>
+   <th>Region</th>
+   <th>Type</th>
+   <th>From</th>
+   <th>To</th>
+   <th colspan="2">Most similar known cluster</th>
+   <th>Similarity</th>
+  </tr>
+ </thead>
+{%- endmacro %}
+
+{% macro region_row(region, cycle, record_index, options) -%}
+   <tr class = '{{cycle}}'>
+     {% set hybrid_text = "" %}
+     {% if region.products | length > 1 %}
+         {% set hybrid_text = "hybrid " %}
+     {% endif %}
+     <td class="regbutton {{region.get_product_string()}} {{hybrid_text}}{{region.anchor_id}}">
+      <a href="#{{region.anchor_id}}">Region&nbsp{% if record_index %}{{record_index}}.{% endif %}{{region.get_region_number()}}</a>
+     </td>
+     <td>
+       {% set join = joiner(",") %}
+       {% for subtype in region.products -%}
+         {{join()}}<a href="{{options.urls.docs_baseurl}}glossary/#{{subtype.lower()}}" target="_blank">{{subtype}}</a>
+       {%- endfor %}
+     </td>
+     <td class="digits">{{"{:,d}".format(region.location.start + 1)}}</td>
+     <td class="digits table-split-left">{{"{:,d}".format(region.location.end)}}</td>
+     {% if region.bgc_id != "" -%}
+      {% set similarity = region.best_knowncluster_similarity %}
+      {% if similarity > 75 %}
+        {% set colour = "rgba(0, 100, 0, 0.3)" %}
+      {% elif similarity > 50 %}
+        {% set colour = "rgba(210, 105, 30, 0.3)" %}
+      {% else %}
+        {% set colour = "rgba(205, 92, 92, 0.3)" %}
+      {% endif %}
+      <td><a href="https://mibig.secondarymetabolites.org/go/{{region.bgc_id}}/{{region.bgc_cluster_number}}" target="_blank">{{region.best_knowncluster_name}}</a></td>
+      <td>{{region.best_knowncluster_type}}</td>
+      <td class="digits similarity-text" style="background-image: linear-gradient(to left, {{colour}}, {{colour}} {{similarity}}%, #ffffff00 {{similarity}}%)">{{similarity}}%</td>
+     {% else %}
+      <td colspan="3"></td>
+     {% endif %}
+   </tr>
+{%- endmacro %}
+
+{% macro single_record_table(record, multi_record, options) -%}
+<table class="region-table">
+ {{ table_header() }}
+ <tbody>
+ {% for region in record.regions -%}
+  {{ region_row(region, loop.cycle('odd', 'even'), (multi_record and record.record_index) or 0, options) }}
+ {% endfor %}
+ </tbody>
+</table>
+{%- endmacro %}
+
+{% macro compact_records_table(records, options) -%}
+<table class="region-table">
+ {{ table_header() }}
+ <tbody>
+ {% set style = cycler('odd', 'even') %}
+ {% for record in records %}
+  {% for region in record.regions -%}
+   {{ region_row(region, style.next(), record.record_index, options) }}
+  {% endfor %}
+ {% endfor %}
+ </tbody>
+</table>
+{%- endmacro %}
