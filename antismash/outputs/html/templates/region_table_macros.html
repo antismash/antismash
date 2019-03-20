@@ -12,7 +12,7 @@
 {%- endmacro %}
 
 {% macro region_row(region, cycle, record_index, options) -%}
-   <tr class = '{{cycle}}'>
+   <tr class="linked-row {{cycle}}" data-anchor="#{{region.anchor_id}}">
      {% set hybrid_text = "" %}
      {% if region.products | length > 1 %}
          {% set hybrid_text = "hybrid " %}
