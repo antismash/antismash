@@ -52,6 +52,9 @@ def generate_html(region_layer: RegionLayer, results: NRPS_PKS_Results,
               " (and, for some tools, further expanded for extra details). "
               )
 
+    if not nrps_layer.has_any_polymer():
+        return html
+
     for filename, name, class_name, tooltip in [("products.html", "NRPS/PKS products", "nrps_pks_products", prod_tt),
                                                 ("monomers.html", "NRPS/PKS monomers", "", mon_tt)]:
         template = FileTemplate(path.get_full_path(__file__, "templates", filename))
