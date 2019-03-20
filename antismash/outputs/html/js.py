@@ -223,7 +223,7 @@ def generate_pfam2go_tooltip(record: Record, feature: CDSFeature) -> List[html_r
     go_notes = []
     unique_pfams_with_gos = {}
     go_url = 'http://amigo.geneontology.org/amigo/term/'
-    go_info_line = "{pf_id}: <a href='{url}{go_id}' target='_blank'> {go_id}:</a> {go_desc}"
+    go_info_line = "{pf_id}: <a class='external-link' href='{url}{go_id}' target='_blank'>{go_id}</a>: {go_desc}"
     for pfam in record.get_pfam_domains_in_cds(feature):
         if pfam.gene_ontologies:
             pfam_id = pfam.full_identifier

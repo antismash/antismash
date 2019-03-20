@@ -8,6 +8,8 @@ import re
 import unittest
 
 from antismash.common import html_renderer as renderer
+from antismash.config import build_config
+
 
 def _verify_html_tags_match(html):
     regex = re.compile(r"<(/?)(.*?)>")
@@ -78,3 +80,22 @@ class TestCollapser(unittest.TestCase):
     def test_bad_level(self):
         with self.assertRaisesRegex(ValueError, "unknown collapser level"):
             renderer.collapser_start("dummy", "invalid")
+
+
+class TestDocsLink(unittest.TestCase):
+    def setUp(self):
+        self.url = build_config([]).urls.docs_baseurl
+
+    def test_no_subtarget(self):
+        result = renderer.docs_link("label")
+        assert isinstance(result, renderer.Markup)
+        expected = "<a class='external-link' href='%s' target='_blank'>label</a>" % self.url
+        assert str(result) == expected
+
+    def test_subtarget(self):
+        target = "modules/modulename"
+        result = renderer.docs_link("label", target)
+        assert isinstance(result, renderer.Markup)
+        url = self.url + target
+        expected = "<a class='external-link' href='%s' target='_blank'>label</a>" % url
+        assert str(result) == expected

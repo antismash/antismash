@@ -12,6 +12,8 @@ from typing import List  # comment hints, pylint: disable=unused-import
 import jinja2 as _jinja2
 from jinja2 import Markup
 
+from antismash.config import get_config
+
 
 class HTMLSection:  # pylint: disable=too-few-public-methods
     """ A generic container for an HTML section. Requires a label for naming
@@ -116,6 +118,23 @@ def help_tooltip(text: str, name: str) -> Markup:
                    ' <div class="help-icon" data-id="{0}"></div>'
                    ' <span class="help-tooltip" id="{0}">{1}</span>'
                    '</div>').format(unique_id, text))
+
+
+def docs_link(label: str, subtarget: str = "") -> Markup:
+    """ Constructs a link to the documentation website specified in the antiSMASH
+        config
+
+        Arguments:
+            label: the text that will be used as the link text
+            subtarget: the page within the docs that the link should be targeted at,
+                       e.g. "modules/t2pks"
+
+        Returns:
+            a Markup instance with the constructed HTML
+    """
+    base = "<a class='external-link' href='{url}' target='_blank'>{label}</a>"
+    url = get_config().urls.docs_baseurl + subtarget
+    return Markup(base.format(url=url, label=label))
 
 
 def switch(label: str, classname: str, id_attr: str = "", starts_on: bool = False) -> Markup:

@@ -805,14 +805,18 @@ table.region-table {
     border-radius: 50%;
 }
 
-.collapser-decorator {
-    content: '';
+.decorator() {
     background-size: 1.1em 1.1em;
     height: 1.1em;
     width: 1.1em;
     background-repeat: no-repeat;
     display: inline-block;
     margin-left: 0.5em;
+    content: '';
+}
+
+.collapser-decorator {
+    .decorator();
 }
 
 .collapser:before {
@@ -823,6 +827,12 @@ table.region-table {
 .expanded:before {
     .collapser-decorator;
     background-image: url(../images/minus-circle.svg);
+}
+
+.external-link:after {
+    .decorator();
+    font-size: 75%;
+    background-image: url(../images/external-link-alt-solid.svg);
 }
 
 .collapser-content {
