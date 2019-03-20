@@ -13,7 +13,7 @@
     <hr>
       <dl class="details-text">
         {% for motif in results[locus] %}
-          <dt>{{motif.get_name()}} leader / core peptide</dt>
+          <dt>{{motif.get_name()}} leader / core peptide / cleaved tail</dt>
           <dd>
             {{ motif.leader }}
             -
@@ -32,7 +32,9 @@
                 {{ aa }}
               {%- endif -%}
             {% endfor -%}
-            <span class="cut">{{motif.tail}}</span>
+            {% if motif.tail %}
+              - <span class="cut">{{motif.tail}}</span>
+            {% endif %}
           </dd>
         {% endfor %}
       </dl>
