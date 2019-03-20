@@ -9,7 +9,7 @@ import os
 from typing import Any, Dict, List, Tuple, Union
 
 from antismash.common import path, module_results
-from antismash.common.html_renderer import FileTemplate, HTMLSections
+from antismash.common.html_renderer import FileTemplate, HTMLSections, docs_link
 from antismash.common.layers import RecordLayer, OptionsLayer
 from antismash.common.secmet import Record
 from antismash.common.json import JSONOrf
@@ -141,14 +141,14 @@ def generate_webpage(records: List[Record], results: List[Dict[str, module_resul
 
         html_sections = generate_html_sections(record_layers_with_regions, results_by_record_id, options)
 
-        doc_url = options.urls.docs_baseurl + "understanding_output/#the-antismash-5-region-concept"
         svg_tooltip = ("Shows the layout of the region, marking coding sequences and areas of interest. "
                        "Clicking a gene will select it and show any relevant details. "
                        "Clicking an area feature (e.g. a candidate cluster) will select all coding "
                        "sequences within that area. Double clicking an area feature will zoom to that area. "
                        "Multiple genes and area features can be selected by clicking them while holding the Ctrl key."
                        )
-        svg_tooltip += "<br>More detailed help is available <a href='%s' target='_blank'>here</a>." % doc_url
+        doc_target = "understanding_output/#the-antismash-5-region-concept"
+        svg_tooltip += "<br>More detailed help is available %s." % docs_link("here", doc_target)
 
         aux = template.render(records=record_layers_with_regions, options=options_layer,
                               version=options.version, extra_data=js_domains,
