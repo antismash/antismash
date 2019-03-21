@@ -22,7 +22,7 @@ from antismash.detection.hmm_detection import signatures
 
 class HmmDetectionTest(unittest.TestCase):
     def setUp(self):
-        self.rules_file = path.get_full_path(__file__, "..", "cluster_rules.txt")
+        self.rules_file = path.get_full_path(__file__, "..", "cluster_rules", "strict.txt")
         self.signature_file = path.get_full_path(__file__, "..", "data", "hmmdetails.txt")
         self.signature_names = {sig.name for sig in core.get_signature_profiles()}
         self.filter_file = path.get_full_path(__file__, "..", "filterhmmdetails.txt")

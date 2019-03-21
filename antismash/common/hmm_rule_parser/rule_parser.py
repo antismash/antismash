@@ -780,10 +780,13 @@ class Parser:  # pylint: disable=too-few-public-methods
     """ Responsible for parsing an entire block of text. Rules parsed from the
         text are stored in the .rules member.
     """
-    def __init__(self, text: str, signature_names: Set[str]) -> None:
+    def __init__(self, text: str, signature_names: Set[str],
+                 existing_rules: List[DetectionRule] = None) -> None:
         self.lines = text.splitlines()
-        self.rules = []  # type: List[DetectionRule]
-        self.rules_by_name = {}  # type: Dict[str, DetectionRule]
+        if not existing_rules:
+            existing_rules = []
+        self.rules = list(existing_rules)
+        self.rules_by_name = {rule.name: rule for rule in self.rules}
         self.current_line = 1
         self.current_token = None
         tokens = Tokeniser(text.expandtabs()).tokens
