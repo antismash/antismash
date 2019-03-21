@@ -1,0 +1,25 @@
+# Contains rules for partially present clusters, missing one or more functional parts
+
+# Cutoffs and neighbourhoods are given in kilobases
+
+RULE NRPS-like
+    COMMENT Catches NRPS-like fragments that are not detected by the NRPS rule
+    SUPERIORS NRPS
+    CUTOFF 0  # since we're really looking at single CDS fragments
+    NEIGHBOURHOOD 20
+    CONDITIONS cds((PP-binding or NAD_binding_4) and (AMP-binding or A-OX))
+
+RULE PKS-like
+    COMMENT Catches PKS-like fragments that are not detected by another PKS rule
+    SUPERIORS T2PKS
+    CUTOFF 10
+    NEIGHBOURHOOD 20
+    CONDITIONS t2pks2 or ksIII
+
+RULE transAT-PKS-like
+    COMMENT Marks partial transAT-PKS clusters, specifically those with an AT-docking domain,
+            but no AT domain.
+    SUPERIORS transAT-PKS
+    CUTOFF 45
+    NEIGHBOURHOOD 20
+    CONDITIONS cds(ATd and (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS) and not PKS_AT)

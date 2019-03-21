@@ -12,7 +12,7 @@ from antismash.detection import hmm_detection
 
 class TestClusterCSS(unittest.TestCase):
     def test_css_matches_rules(self):
-        defined_clusters = set(name for name in hmm_detection.get_supported_cluster_types())
+        defined_clusters = set(name for name in hmm_detection.get_supported_cluster_types("loose"))
         available_classes = set()
         base_classes = {"hybrid"}  # a special case used at the javascript level
         less = path.get_full_path(__file__, "..", "css", "secmet.less")

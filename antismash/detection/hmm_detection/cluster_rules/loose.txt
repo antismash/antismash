@@ -1,4 +1,10 @@
+# Contains rules for poorly defined clusters and/or clusters which are likely to
+# match primary metabolism
+
+# Cutoffs and neighbourhoods are given in kilobases
+
 RULE cf_saccharide
+    COMMENT from clusterfinder
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS minimum(2,[Alpha-amylase, Alpha-amylase_C, Bac_transf,
@@ -10,6 +16,7 @@ RULE cf_saccharide
                           Polysacc_synt_2, RmlD_sub_bind, Wzy_C])
 
 RULE cf_fatty_acid
+    COMMENT from clusterfinder
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS  bt1fas or ft1fas or t2fas or fabH

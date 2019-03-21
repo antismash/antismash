@@ -9,7 +9,6 @@ import logging
 import os
 from typing import Any, Dict, List, Optional
 
-
 from antismash.common import hmmer, path
 from antismash.common.hmm_rule_parser import rule_parser
 from antismash.common.hmm_rule_parser.cluster_prediction import (
@@ -26,21 +25,37 @@ from antismash.detection.hmm_detection.signatures import get_signature_profiles
 NAME = "hmmdetection"
 SHORT_DESCRIPTION = "HMM signature detection"
 
+_STRICTNESS_LEVELS = ["strict", "relaxed", "loose"]
+
+
+def _get_rule_files_for_strictness(strictness: str) -> List[str]:
+    """ Returns a list of appropriate rule files for the given strictness level """
+    assert strictness in _STRICTNESS_LEVELS, strictness
+    files = []
+    for level in _STRICTNESS_LEVELS[:_STRICTNESS_LEVELS.index(strictness) + 1]:
+        files.append(path.get_full_path(__file__, "cluster_rules", "%s.txt" % level))
+    return files
+
 
 class HMMDetectionResults(DetectionResults):
     """ A container for clusters predicted by rules in this module """
-    schema_version = 1
+    schema_version = 2
 
-    def __init__(self, record_id: str, rule_results: RuleDetectionResults, enabled_types: List[str]) -> None:
+    def __init__(self, record_id: str, rule_results: RuleDetectionResults, enabled_types: List[str],
+                 strictness: str) -> None:
         super().__init__(record_id)
         self.rule_results = rule_results
         self.enabled_types = enabled_types
+        if strictness not in _STRICTNESS_LEVELS:
+            raise ValueError("unknown strictness level: %s" % strictness)
+        self.strictness = strictness
 
     def to_json(self) -> Dict[str, Any]:
         return {"record_id": self.record_id,
                 "schema_version": self.schema_version,
                 "enabled_types": self.enabled_types,
-                "rule_results": self.rule_results.to_json()}
+                "rule_results": self.rule_results.to_json(),
+                "strictness": self.strictness}
 
     @staticmethod
     def from_json(json: Dict[str, Any], record: Record) -> "HMMDetectionResults":
@@ -52,32 +67,44 @@ class HMMDetectionResults(DetectionResults):
         if rule_results is None:
             raise ValueError("Detection results have changed. No results can be reused")
 
-        return HMMDetectionResults(json["record_id"], rule_results, json["enabled_types"])
+        return HMMDetectionResults(json["record_id"], rule_results, json["enabled_types"], json.get("strictness", "relaxed"))
 
     def get_predicted_protoclusters(self) -> List[Protocluster]:
         return self.rule_results.protoclusters
 
 
-def get_supported_cluster_types() -> List[str]:
+def get_supported_cluster_types(strictness: str) -> List[str]:
     """ Returns a list of all cluster types for which there are rules
     """
     signature_names = {sig.name for sig in get_signature_profiles()}
-    with open(path.get_full_path(__file__, 'cluster_rules.txt'), "r") as rulefile:
-        rules = rule_parser.Parser("".join(rulefile.readlines()), signature_names).rules
-        clustertypes = [rule.name for rule in rules]
+    rules = []  # type: List[rule_parser.DetectionRule]
+    for rule_file in _get_rule_files_for_strictness(strictness):
+        with open(rule_file) as rulefile:
+            rules = rule_parser.Parser("".join(rulefile.readlines()), signature_names, rules).rules
+    clustertypes = [rule.name for rule in rules]
     return clustertypes
 
 
 def get_arguments() -> ModuleArgs:
     """ Constructs commandline arguments and options for this module
     """
-    return ModuleArgs('Advanced options', 'hmmdetection')
+    args = ModuleArgs('Advanced options', 'hmmdetection')
+    args.add_option('strictness',
+                    dest='strictness',
+                    type=str,
+                    choices=["strict", "relaxed", "loose"],
+                    default="relaxed",
+                    help=("Defines which level of strictness to use for "
+                          "HMM-based cluster detection, (default: %(default)s)."))
+    return args
 
 
-def check_options(_options: ConfigType) -> List[str]:
+def check_options(options: ConfigType) -> List[str]:
     """ Checks the options to see if there are any issues before
         running any analyses
     """
+    if options.hmmdetection_strictness not in _STRICTNESS_LEVELS:
+        return ["Unknown strictness level: %s" % options.strictness]
     return []
 
 
@@ -89,32 +116,33 @@ def is_enabled(_options: ConfigType) -> bool:
 
 
 def regenerate_previous_results(results: Dict[str, Any], record: Record,
-                                _options: ConfigType) -> Optional[HMMDetectionResults]:
+                                options: ConfigType) -> Optional[HMMDetectionResults]:
     """ Regenerate previous results. """
     if not results:
         return None
     regenerated = HMMDetectionResults.from_json(results, record)
-    if set(regenerated.enabled_types) != set(get_supported_cluster_types()):
+    if set(regenerated.enabled_types) != set(get_supported_cluster_types(options.hmmdetection_strictness)):
         raise RuntimeError("Protocluster types supported by HMM detection have changed, all results invalid")
     regenerated.rule_results.annotate_cds_features()
     return regenerated
 
 
 def run_on_record(record: Record, previous_results: Optional[HMMDetectionResults],
-                  _options: ConfigType) -> HMMDetectionResults:
+                  options: ConfigType) -> HMMDetectionResults:
     """ Runs hmm_detection on the provided record.
     """
     if previous_results:
         return previous_results
 
+    strictness = options.hmmdetection_strictness
     signatures = path.get_full_path(__file__, "data", "hmmdetails.txt")
     seeds = path.get_full_path(__file__, "data", "bgc_seeds.hmm")
-    rules = path.get_full_path(__file__, "cluster_rules.txt")
+    rules = _get_rule_files_for_strictness(strictness)
     equivalences = path.get_full_path(__file__, "filterhmmdetails.txt")
     results = detect_protoclusters_and_signatures(record, signatures, seeds, rules, equivalences,
                                                   "rule-based-clusters")
     results.annotate_cds_features()
-    return HMMDetectionResults(record.id, results, get_supported_cluster_types())
+    return HMMDetectionResults(record.id, results, get_supported_cluster_types(strictness), strictness)
 
 
 def prepare_data(logging_only: bool = False) -> List[str]:
