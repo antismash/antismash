@@ -202,8 +202,12 @@ class Region(CDSCollection):
         cluster_record.annotations["topology"] = "linear"
 
         # renumber clusters, candidate_clusters and regions to reflect changes
-        first_candidate_cluster = min(sc.get_candidate_cluster_number() for sc in self.candidate_clusters)
-        first_cluster = min(cluster.get_protocluster_number() for cluster in self.get_unique_protoclusters())
+        if self.candidate_clusters:
+            first_candidate_cluster = min(sc.get_candidate_cluster_number() for sc in self.candidate_clusters)
+            first_cluster = min(cluster.get_protocluster_number() for cluster in self.get_unique_protoclusters())
+        else:
+            first_candidate_cluster = 0
+            first_cluster = 0
         first_subregion = min(sub.get_subregion_number() for sub in self.subregions) if self.subregions else 0
         for feature in cluster_record.features:
             if feature.type == "region":
