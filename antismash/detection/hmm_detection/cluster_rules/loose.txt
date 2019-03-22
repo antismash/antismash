@@ -20,3 +20,9 @@ RULE fatty_acid
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS  bt1fas or ft1fas or t2fas or fabH
+
+RULE halogenated
+    COMMENT Halogenases are frequently involved in secondary metabolite biosynthesis
+    CUTOFF 5
+    NEIGHBOURHOOD 10
+    CONDITIONS Trp_halogenase
