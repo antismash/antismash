@@ -3,7 +3,7 @@
 
 # Cutoffs and neighbourhoods are given in kilobases
 
-RULE cf_saccharide
+RULE saccharide
     COMMENT from clusterfinder
     CUTOFF 20
     NEIGHBOURHOOD 10
@@ -15,7 +15,7 @@ RULE cf_saccharide
                           MannoseP_isomer, PIG-L, Poly_export, Polysacc_synt,
                           Polysacc_synt_2, RmlD_sub_bind, Wzy_C])
 
-RULE cf_fatty_acid
+RULE fatty_acid
     COMMENT from clusterfinder
     CUTOFF 20
     NEIGHBOURHOOD 10
