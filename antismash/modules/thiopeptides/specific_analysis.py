@@ -21,7 +21,7 @@ from .rodeo import run_rodeo
 
 class ThioResults(module_results.ModuleResults):
     """ Results container for thiopeptides """
-    schema_version = 1
+    schema_version = 2
 
     def __init__(self, record_id: str) -> None:
         super().__init__(record_id)
@@ -37,7 +37,7 @@ class ThioResults(module_results.ModuleResults):
                                    for key, features in self.cds_features.items()}
         return {"record_id": self.record_id,
                 "schema_version": ThioResults.schema_version,
-                "clusters with motifs": [cluster.get_protocluster_number() for cluster in self.clusters_with_motifs],
+                "protoclusters with motifs": [cluster.get_protocluster_number() for cluster in self.clusters_with_motifs],
                 "motifs": [motif.to_json() for motif in self.motifs],
                 "cds_features": cds_features_by_cluster}
 
@@ -50,7 +50,7 @@ class ThioResults(module_results.ModuleResults):
         results = ThioResults(json["record_id"])
         for motif in json["motifs"]:
             results.motifs.append(secmet.Prepeptide.from_json(motif))
-        for cluster in json["clusters with motifs"]:
+        for cluster in json["protoclusters with motifs"]:
             results.clusters_with_motifs.add(record.get_protocluster(cluster))
         for cluster, features in json["cds_features"]:
             for location, name in features:

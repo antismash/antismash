@@ -6,7 +6,7 @@
 
 from collections import defaultdict
 import logging
-from typing import Any, Dict, List, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from Bio.SearchIO._model.hsp import HSP
 
@@ -79,6 +79,9 @@ class CDSResults:
 
 class RuleDetectionResults:
     """ A container for the all results of running the cluster prediction """
+
+    schema_version = 2
+
     def __init__(self, cds_by_cluster: Dict[Protocluster, List[CDSResults]],
                  tool: str) -> None:
         self.cds_by_cluster = cds_by_cluster
@@ -98,8 +101,11 @@ class RuleDetectionResults:
     def to_json(self) -> Dict[str, Any]:
         """ Constructs a JSON representation from the RuleDetectionResults instance """
         cds_results_json = []  # type: List[Tuple[Dict[str, Any], List[Dict[str, Any]]]]
-        json = {"tool": self.tool,
-                "cds_by_cluster": cds_results_json}
+        json = {
+            "schema_version": self.schema_version,
+            "tool": self.tool,
+            "cds_by_protocluster": cds_results_json,
+        }
 
         for cluster, cds_results in self.cds_by_cluster.items():
             json_cluster = serialiser.feature_to_json(cluster.to_biopython()[0])
@@ -109,10 +115,13 @@ class RuleDetectionResults:
         return json
 
     @staticmethod
-    def from_json(json: Dict[str, Any], record: Record) -> "RuleDetectionResults":
+    def from_json(json: Dict[str, Any], record: Record) -> Optional["RuleDetectionResults"]:
         """ Constructs a RuleDetectionResults instance from a JSON representation """
+        if RuleDetectionResults.schema_version != json.get("schema_version", 1):
+            return None
+
         cds_by_cluster = {}
-        for json_cluster, json_cds_results in json["cds_by_cluster"]:
+        for json_cluster, json_cds_results in json["cds_by_protocluster"]:
             cluster = Protocluster.from_biopython(serialiser.feature_from_json(json_cluster))
             cds_results = [CDSResults.from_json(result_json, record) for result_json in json_cds_results]
             cds_by_cluster[cluster] = cds_results

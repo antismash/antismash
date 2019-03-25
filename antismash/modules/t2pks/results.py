@@ -142,7 +142,7 @@ class ProtoclusterPrediction:
 
 class T2PKSResults(ModuleResults):
     """ The combined results of the type 2 PKS module """
-    _schema_version = 2
+    _schema_version = 3
     __slots__ = ["cluster_predictions"]
 
     def __init__(self, record_id: str) -> None:
@@ -155,7 +155,7 @@ class T2PKSResults(ModuleResults):
     def __str__(self) -> str:
         string = ''
         for cluster_id, prediction in self.cluster_predictions.items():
-            string += 'Cluster {}\n'.format(cluster_id)
+            string += 'Protocluster {}\n'.format(cluster_id)
             string += str(prediction)
         return string
 
@@ -163,7 +163,7 @@ class T2PKSResults(ModuleResults):
         clusters = {cluster_number: pred.to_json() for cluster_number, pred in self.cluster_predictions.items()}
         results = {"schema_version": self._schema_version,
                    "record_id": self.record_id,
-                   "cluster_predictions": clusters}
+                   "protocluster_predictions": clusters}
         return results
 
     @staticmethod
@@ -174,7 +174,7 @@ class T2PKSResults(ModuleResults):
             return None
         results = T2PKSResults(json["record_id"])
 
-        for cluster_id, json_prediction in json["cluster_predictions"].items():
+        for cluster_id, json_prediction in json["protocluster_predictions"].items():
             cluster_prediction = ProtoclusterPrediction.from_json(json_prediction)
             # int is required because JSON keys are strings
             results.cluster_predictions[int(cluster_id)] = cluster_prediction

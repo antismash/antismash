@@ -29,7 +29,7 @@ class LassoResults(module_results.ModuleResults):
     """ Holds the results of lassopeptide analysis for a record
 
     """
-    schema_version = 1
+    schema_version = 2
 
     def __init__(self, record_id: str) -> None:
         super().__init__(record_id)
@@ -52,7 +52,7 @@ class LassoResults(module_results.ModuleResults):
                 "schema_version": LassoResults.schema_version,
                 "motifs": motifs,
                 "new_cds_features": cds_features,
-                "clusters": {key: list(val) for key, val in self.clusters.items()}}
+                "protoclusters": {key: list(val) for key, val in self.clusters.items()}}
 
     @staticmethod
     def from_json(json: Dict[str, Any], record: Record) -> Optional["LassoResults"]:
@@ -63,7 +63,7 @@ class LassoResults(module_results.ModuleResults):
         for locus, motifs in json["motifs"].items():
             for motif in motifs:
                 results.motifs_by_locus[locus].append(Prepeptide.from_json(motif))
-        results.clusters = {int(key): set(val) for key, val in json["clusters"].items()}
+        results.clusters = {int(key): set(val) for key, val in json["protoclusters"].items()}
         for location, name in json["new_cds_features"]:
             loc = location_from_string(location)
             cds = all_orfs.create_feature_from_location(record, loc, label=name)
