@@ -388,22 +388,32 @@ def run_blastp(target_blastp_database: str, query_sequence: str,
         raise ValueError("Cannot run blastp on empty sequence")
 
     config = get_config()
-    command = ["blastp", "-num_threads", str(config.cpus), "-db", target_blastp_database]
+    command = [
+        "blastp",
+        "-num_threads", str(config.cpus),
+        "-db", target_blastp_database,
+        "-outfmt", "6",  # use tabular format for biopython's parsing
+    ]
 
     if opts is not None:
         command.extend(opts)
 
-    result = execute(command, stdin=query_sequence)
+    if results_file is not None:
+        handle = open(results_file)  # type: IO[Any]
+    else:
+        handle = NamedTemporaryFile()
+
+
+    result = execute(command, stdin=query_sequence, stdout=handle)
     if not result.successful():
         raise RuntimeError('blastp returned %d: %r while scanning %r' % (
                            result.return_code, result.stderr.replace("\n", ""),
                            query_sequence[:100]))
-
-    if results_file is not None:
-        with open(results_file, 'w') as fh:
-            fh.write(result.stdout)
-
-    return list(SearchIO.parse(StringIO(result.stdout), 'blast-text'))
+    filename = results_file or handle.name
+    with open(filename) as read_handle:
+        parsed = list(SearchIO.parse(read_handle, 'blast-tab'))
+    handle.close()
+    return parsed
 
 
 def run_diamond(subcommand: str,
