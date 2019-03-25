@@ -120,9 +120,9 @@ class RuleDetectionResults:
         return RuleDetectionResults(cds_by_cluster, json["tool"])
 
 
-def remove_redundant_clusters(clusters: List[Protocluster],
-                              rules_by_name: Dict[str, rule_parser.DetectionRule]
-                              ) -> List[Protocluster]:
+def remove_redundant_protoclusters(clusters: List[Protocluster],
+                                   rules_by_name: Dict[str, rule_parser.DetectionRule]
+                                   ) -> List[Protocluster]:
     """ Removes clusters which have superiors covering the same (or larger) region
     """
     clusters_by_rule = defaultdict(list)  # type: Dict[str, List[Protocluster]]
@@ -145,8 +145,8 @@ def remove_redundant_clusters(clusters: List[Protocluster],
     return trimmed_clusters
 
 
-def find_clusters(record: Record, cds_by_cluster_type: Dict[str, Set[str]],
-                  rules_by_name: Dict[str, rule_parser.DetectionRule]) -> List[Protocluster]:
+def find_protoclusters(record: Record, cds_by_cluster_type: Dict[str, Set[str]],
+                       rules_by_name: Dict[str, rule_parser.DetectionRule]) -> List[Protocluster]:
     """ Detects gene clusters based on the identified core genes """
     clusters = []  # type: List[Protocluster]
 
@@ -192,7 +192,7 @@ def find_clusters(record: Record, cds_by_cluster_type: Dict[str, Set[str]],
         if contained != cluster.location:
             cluster.location = contained
 
-    clusters = remove_redundant_clusters(clusters, rules_by_name)
+    clusters = remove_redundant_protoclusters(clusters, rules_by_name)
 
     logging.debug("%d rule-based cluster(s) found in record", len(clusters))
     return clusters
@@ -358,10 +358,10 @@ def apply_cluster_rules(record: Record, results_by_id: Dict[str, List[HSP]],
     return cds_domains_by_cluster_type, cluster_type_hits
 
 
-def detect_clusters_and_signatures(record: Record, signature_file: str, seeds_file: str,
-                                   rules_file: str, filter_file: str, tool: str) -> RuleDetectionResults:
+def detect_protoclusters_and_signatures(record: Record, signature_file: str, seeds_file: str,
+                                        rules_file: str, filter_file: str, tool: str) -> RuleDetectionResults:
     """ Compares all CDS features in a record with HMM signatures and generates
-        Protocluster features based on those hits and the current cluster detection
+        Protocluster features based on those hits and the current protocluster detection
         rules.
 
         Arguments:
@@ -415,7 +415,7 @@ def detect_clusters_and_signatures(record: Record, signature_file: str, seeds_fi
 
     # Save final results to record
     rules_by_name = {rule.name: rule for rule in rules}
-    clusters = find_clusters(record, cluster_type_hits, rules_by_name)
+    clusters = find_protoclusters(record, cluster_type_hits, rules_by_name)
     strip_inferior_domains(cds_domains_by_cluster, rules_by_name)
 
     cds_results_by_cluster = {}

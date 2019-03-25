@@ -96,7 +96,7 @@ class HmmDetectionTest(unittest.TestCase):
         # if forming clusters by .is_contained_by(), 2 clusters will be formed
         # if finding rule hits uses .is_contained_by(), no clusters will be formed
         rules_by_name = {rule.name: rule for rule in rules}
-        clusters = hmm_detection.find_clusters(self.record, cluster_type_hits, rules_by_name)
+        clusters = hmm_detection.find_protoclusters(self.record, cluster_type_hits, rules_by_name)
         assert len(clusters) == 1
         assert clusters[0].product == "Overlap"
         assert clusters[0].core_location.start == 30000
@@ -129,7 +129,7 @@ class HmmDetectionTest(unittest.TestCase):
                                      'Metabolite0': {'GENE_3'},
                                      'Metabolite1': {'GENE_5'}}
 
-    def test_find_clusters(self):
+    def test_find_protoclusters(self):
         cds_features_by_type = {"MetaboliteA": {"GENE_1", "GENE_4", "GENE_5"},
                                 "MetaboliteB": {"GENE_1"},
                                 "MetaboliteC": {"GENE_1", "GENE_2"},
@@ -137,7 +137,7 @@ class HmmDetectionTest(unittest.TestCase):
                                 'Metabolite0': {'GENE_3'},
                                 'Metabolite1': {'GENE_5'}}
         rules = {rule.name: rule for rule in self.rules}
-        for cluster in hmm_detection.find_clusters(self.record, cds_features_by_type, rules):
+        for cluster in hmm_detection.find_protoclusters(self.record, cds_features_by_type, rules):
             self.record.add_protocluster(cluster)
         assert len(self.record.get_protoclusters()) == 7
         cluster_products = sorted([cluster.product for cluster in self.record.get_protoclusters()])

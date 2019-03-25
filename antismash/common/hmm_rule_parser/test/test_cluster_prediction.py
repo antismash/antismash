@@ -29,7 +29,7 @@ class TestRedundancy(unittest.TestCase):
         self.rules_by_name = {rule.name: rule for rule in [superior, inferior, irrelevant]}
 
     def remove(self, clusters):
-        return cluster_prediction.remove_redundant_clusters(clusters, self.rules_by_name)
+        return cluster_prediction.remove_redundant_protoclusters(clusters, self.rules_by_name)
 
     def create_cluster(self, rule_name, start, end):
         rule = self.rules_by_name[rule_name]

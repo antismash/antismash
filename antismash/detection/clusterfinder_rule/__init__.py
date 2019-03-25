@@ -109,8 +109,8 @@ def find_rule_based_clusters(record: Record) -> cluster_prediction.RuleDetection
     seeds = path.get_full_path(__file__, "..", "hmm_detection", "data", "bgc_seeds.hmm")
     rules = path.get_full_path(__file__, "cluster_rules.txt")
     equivalences = path.get_full_path(__file__, "..", "hmm_detection", "filterhmmdetails.txt")
-    results = cluster_prediction.detect_clusters_and_signatures(record, signatures, seeds,
-                                                                rules, equivalences, "cluster-finder")
+    results = cluster_prediction.detect_protoclusters_and_signatures(record, signatures, seeds,
+                                                                     rules, equivalences, "cluster-finder")
     assert results is not None
     results.annotate_cds_features()
     logging.debug("ClusterFinder detected %d rule-based clusters", len(results.protoclusters))

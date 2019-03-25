@@ -12,7 +12,10 @@ from typing import Any, Dict, List, Optional
 
 from antismash.common import hmmer, path
 from antismash.common.hmm_rule_parser import rule_parser
-from antismash.common.hmm_rule_parser.cluster_prediction import detect_clusters_and_signatures, RuleDetectionResults
+from antismash.common.hmm_rule_parser.cluster_prediction import (
+    detect_protoclusters_and_signatures,
+    RuleDetectionResults,
+)
 from antismash.common.module_results import DetectionResults
 from antismash.common.secmet.record import Record
 from antismash.common.secmet.features import Protocluster
@@ -105,8 +108,8 @@ def run_on_record(record: Record, previous_results: Optional[HMMDetectionResults
     seeds = path.get_full_path(__file__, "data", "bgc_seeds.hmm")
     rules = path.get_full_path(__file__, "cluster_rules.txt")
     equivalences = path.get_full_path(__file__, "filterhmmdetails.txt")
-    results = detect_clusters_and_signatures(record, signatures, seeds, rules, equivalences,
-                                             "rule-based-clusters")
+    results = detect_protoclusters_and_signatures(record, signatures, seeds, rules, equivalences,
+                                                  "rule-based-clusters")
     results.annotate_cds_features()
     return HMMDetectionResults(record.id, results, get_supported_cluster_types())
 
