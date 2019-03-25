@@ -60,6 +60,8 @@ class ClusterFinderRuleResults(DetectionResults):
         assert json["record_id"] == record.id
 
         rule_parser_results = cluster_prediction.RuleDetectionResults.from_json(json["rule_results"], record)
+        if rule_parser_results is None:
+            raise ValueError("Detection results have changed. No results can be reused.")
 
         return ClusterFinderRuleResults(json["record_id"], rule_parser_results)
 
