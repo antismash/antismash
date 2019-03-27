@@ -190,7 +190,10 @@ def generate_details_from_subfeature(sub_feature: SeqFeature,
             start += phase
         else:
             end -= phase
-    locations.append(FeatureLocation(start, end, strand=sub_feature.strand))
+    try:
+        locations.append(FeatureLocation(start, end, strand=sub_feature.strand))
+    except ValueError as err:
+        raise AntismashInputError(str(err)) from err
     # Make sure CDSs lengths are multiple of three. Otherwise extend to next full codon.
     # This only applies for translation.
     modulus = (end - start) % 3
