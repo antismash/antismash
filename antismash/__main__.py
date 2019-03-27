@@ -108,6 +108,8 @@ def main(args: List[str]) -> int:
     try:
         antismash.run_antismash(sequence, options)
     except antismash.common.errors.AntismashInputError as err:
+        if not str(err):
+            raise
         logging.error(str(err))
         return 1
 
