@@ -159,7 +159,7 @@ def run(record: Record, single_entry: bool, options: ConfigType) -> None:
             try:
                 record.add_biopython_feature(feature)
             except SecmetInvalidInputError as err:
-                raise AntismashInputError from err
+                raise AntismashInputError(str(err)) from err
 
 
 def generate_details_from_subfeature(sub_feature: SeqFeature,
