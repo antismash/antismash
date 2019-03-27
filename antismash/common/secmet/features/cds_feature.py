@@ -182,11 +182,12 @@ class CDSFeature(Feature):
             else:
                 gene = "cds%s_%s"
             gene = gene % (bio_feature.location.start, bio_feature.location.end)
+        name = locus_tag or protein_id or gene
 
         try:
             _verify_location(bio_feature.location)
         except Exception as err:
-            message = "invalid location for %s: %s" % (gene or protein_id or locus_tag, str(err))
+            message = "invalid location for %s: %s" % (name, str(err))
             raise SecmetInvalidInputError(message) from err
 
         # ensure translation is valid if it exists
@@ -194,7 +195,7 @@ class CDSFeature(Feature):
             invalid = set(translation) - _VALID_TRANSLATION_CHARS
             if invalid:
                 logging.warning("Regenerating translation for CDS %s (at %s) containing invalid characters: %s",
-                                locus_tag or protein_id or gene, bio_feature.location, invalid)
+                                name, bio_feature.location, invalid)
                 translation = ""
         # ensure that the translation fits
         if not _is_valid_translation_length(translation, bio_feature.location):
@@ -205,8 +206,9 @@ class CDSFeature(Feature):
             if not record:
                 raise SecmetInvalidInputError("no translation in CDS and no record to generate it with")
             if bio_feature.location.end > len(record.seq):
-                raise SecmetInvalidInputError("feature missing translation and sequence too short: %s" % (
-                                              (gene or protein_id or locus_tag)))
+                raise SecmetInvalidInputError("feature missing translation and sequence too short: %s" % name)
+            if len(bio_feature.location) < 3:
+                raise SecmetInvalidInputError("CDS too short to generate translation: %s" % name)
             translation = record.get_aa_translation_from_location(bio_feature.location, transl_table)
 
         assert _is_valid_translation_length(translation, bio_feature.location)
