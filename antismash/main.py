@@ -579,7 +579,8 @@ def _run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
 
     detection_modules = get_detection_modules()
     analysis_modules = get_analysis_modules()
-    modules = detection_modules + analysis_modules
+    output_modules = get_output_modules()
+    modules = detection_modules + analysis_modules + output_modules
 
     if options.list_plugins:
         list_plugins(modules)

@@ -15,17 +15,12 @@ class TestClusterCSS(unittest.TestCase):
         defined_clusters = set(name for name in hmm_detection.get_supported_cluster_types("loose"))
         available_classes = set()
         base_classes = {"hybrid"}  # a special case used at the javascript level
-        less = path.get_full_path(__file__, "..", "css", "secmet.less")
+        less = path.get_full_path(__file__, "..", "css", "secmet.scss")
         with open(less) as handle:
             for line in handle.readlines():
                 if line.startswith('.'):
                     class_ = line[1:].split()[0]
                     available_classes.add(class_)
-                elif line.strip().startswith('.'):  # a reference/base class
-                    class_ = line[1:].split()[0].split('(', 1)[0]
-                    # now it's .thing, with a possible trailing ;
-                    class_ = class_[1:].strip(";")
-                    base_classes.add(class_)
         missing_css = defined_clusters - available_classes
         assert not missing_css
         # allow for the extra base classes and hybrids

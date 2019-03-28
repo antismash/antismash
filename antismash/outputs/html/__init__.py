@@ -6,9 +6,12 @@
 """
 
 import glob
+import logging
 import os
 import shutil
 from typing import Dict, List, Optional
+
+import scss
 
 from antismash.common import path
 from antismash.common.module_results import ModuleResults
@@ -38,12 +41,37 @@ def get_arguments() -> ModuleArgs:
     return args
 
 
+def prepare_data(logging_only: bool = False) -> List[str]:
+    """ Rebuild any dynamically buildable data """
+    flavours = ["bacteria", "fungi", "plants"]
+
+    with path.changed_directory(path.get_full_path(__file__, "css")):
+        built_files = [os.path.abspath("%s.css" % flavour) for flavour in flavours]
+
+        if path.is_outdated(built_files, glob.glob("*.scss")):
+            logging.info("CSS files out of date, rebuilding")
+
+            for flavour in flavours:
+                target = "%s.css" % flavour
+                assert os.path.exists(flavour + ".scss"), flavour
+                result = scss.Compiler(output_style="expanded").compile(flavour + ".scss")
+                assert result
+                with open(target, "w") as out:
+                    out.write(result)
+    return []
+
+
+def check_prereqs() -> List[str]:
+    """ Check prerequisites """
+    return prepare_data()
+
+
 def check_options(_options: ConfigType) -> List[str]:
     """ Check options, but none to check """
     return []
 
 
-def is_enable(_options: ConfigType) -> bool:
+def is_enabled(_options: ConfigType) -> bool:
     """ Is the HMTL module enabled (currently always enabled) """
     return True  # TODO: add an arg to disable
 

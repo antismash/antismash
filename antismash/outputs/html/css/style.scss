@@ -1,23 +1,23 @@
 @import 'secmet';
-@medium-gray: #444;
-@light-gray: #eee;
-@light-red: orangered;
-@tooltip-border: slategray;
-@tooltip-background: #ddd;
+$medium-gray: #444;
+$light-gray: #eee;
+$light-red: orangered;
+$tooltip-border: slategray;
+$tooltip-background: #ddd;
 // svgene genetype colors
-@gene-type-other: gray;
-@gene-type-biosynthetic: #810e15;
-@gene-type-biosynthetic-additional: #f16d75;
-@gene-type-regulatory: seagreen;
-@gene-type-transport: cornflowerblue;
-@gene-type-resistance: #ed90ed;
-@feature-tta-codon: magenta;
-@table-background: #f1f1f1;
-@tool-cassis: wheat;
-@tool-clusterfinder: teal;
-@tool-rule-based-clusters: white;
+$gene-type-other: gray;
+$gene-type-biosynthetic: #810e15;
+$gene-type-biosynthetic-additional: #f16d75;
+$gene-type-regulatory: seagreen;
+$gene-type-transport: cornflowerblue;
+$gene-type-resistance: #ed90ed;
+$feature-tta-codon: magenta;
+$table-background: #f1f1f1;
+$tool-cassis: wheat;
+$tool-clusterfinder: teal;
+$tool-rule-based-clusters: white;
 
-.unselectable() {
+@mixin unselectable(){
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
@@ -44,16 +44,16 @@ a, .clipboard-copy {
     font-size: 95%;  /* just enough to have background between links in text */
 
     &:active {
-        color: @antismash-main
+        color: $antismash-main
     }
     &:hover {
         text-decoration: underline
     }
     &:link {
-        color: @antismash-gray
+        color: $antismash-gray
     }
     &:visited {
-        color: @antismash-gray
+        color: $antismash-gray
     }
 }
 
@@ -65,7 +65,7 @@ dd {
     margin-left: 1.5em;
 }
 
-.bold {
+@mixin bold() {
     font-weight: 600;
 }
 
@@ -78,28 +78,28 @@ dd {
 }
 
 .as-icon-active {
-    box-shadow: 0 3px 6px fadeout(white, 40%), inset 0 -3px 3px fadeout(white, 60%);
+    box-shadow: 0 3px 6px rgba(white, 40%), inset 0 -3px 3px rgba(white, 60%);
 }
 
-.left-padding(@width: 0.5em) {
-    margin-left: @width;
+@mixin left-padding($width: 0.5em){
+    margin-left: $width;
 }
 
-.line-bottom(@width: 2px) {
+@mixin line-bottom($width: 2px){
     padding-bottom: 0.25em;
-    border-bottom: @width solid @antismash-light;
+    border-bottom: $width solid $antismash-light;
 }
 
-.line-top(@width: 2px) {
+@mixin line-top($width: 2px){
     padding-top: 0.25em;
-    border-top: @width solid @antismash-light;
+    border-top: $width solid $antismash-light;
 }
 
 nav {
     display: flex;
     justify-content: space-between;
-    .line-bottom;
-    background-image: linear-gradient(to bottom, #5e5e5e 0, #444 100%);
+    @include line-bottom;
+    background-image: linear-gradient(to bottom, #5e5e5e 0%, #444 100%);
     background-repeat: repeat-x;
     color: #e1e1e1;
     font-size: 14px;
@@ -152,7 +152,7 @@ nav {
 }
 
 .footer {
-    .line-top(1px);
+    @include line-top(1px);
     display: flex;
     justify-content: center;
     .container {
@@ -162,7 +162,7 @@ nav {
             margin-top: 1em;
             margin-left: 1em;
             height: 1.5em;
-            background-image: linear-gradient(to bottom, #e8e8e8 0, #f5f5f5 100%);
+            background-image: linear-gradient(to bottom, #e8e8e8 0%, #f5f5f5 100%);
             background-repeat: repeat-x;
             border-color: #dcdcdc;
             border-radius: 4px;
@@ -182,30 +182,30 @@ nav {
     a {
         color: white;
         font-size: 120%;
-        .bold;
+        @include bold;
         &:hover { text-decoration: none; }
     }
 }
 
-.arrow() {
+@mixin arrow(){
     width: 0;
     height: 0;
     cursor: pointer;
     border-top: 1.2em solid transparent;
     border-bottom: 1.2em solid transparent;
     &:hover {
-        border-right-color: screen(@antismash-main, #666666);
+        border-right-color: lighten($antismash-main, 9%);
     }
 }
 
 .arrow-left {
-    .arrow();
-    border-right: 1.2em solid @antismash-main;
+    @include arrow();
+    border-right: 1.2em solid $antismash-main;
 }
 
 .arrow-right {
-    .arrow();
-    border-left: 1.2em solid @antismash-main;
+    @include arrow();
+    border-left: 1.2em solid $antismash-main;
 }
 
 #icons {
@@ -240,14 +240,14 @@ nav {
 }
 
 #region-type {
-    .left-padding;
+    @include left-padding;
 }
 
 .page {
     overflow: hidden;
     h3, .heading {
         font-size: 90%;
-        background-color: @antismash-main;
+        background-color: $antismash-main;
         color: white;
         margin: 0.1em 0 0.4em 0.1em;
         padding-left: 0.5em;
@@ -256,7 +256,7 @@ nav {
         vertical-align: middle;
     }
     .heading {
-        .bold;
+        @include bold;
         margin-left: 0;
         margin-top: 0;
     }
@@ -265,8 +265,8 @@ nav {
 .no-results {
     text-align: center;
     padding: 1em 0;
-    .bold;
-    background-image: linear-gradient(to bottom, #e8e8e8 0, #f5f5f5 100%);
+    @include bold;
+    background-image: linear-gradient(to bottom, #e8e8e8 0%, #f5f5f5 100%);
     background-repeat: repeat-x;
     border-color: #dcdcdc;
     border-radius: 4px;
@@ -275,13 +275,13 @@ nav {
 
 .focus-panel {
     display: block;
-    border-left: 2px solid @antismash-main;
+    border-left: 2px solid $antismash-main;
     padding-bottom: 1em;
 }
 
 .sidepanel {
     display: block;
-    border-left: 2px solid @antismash-main;
+    border-left: 2px solid $antismash-main;
 }
 
 .structure img {
@@ -329,7 +329,7 @@ nav {
 
 .prediction-text {
     font-size: 75%;
-    .left-padding;
+    @include left-padding;
 }
 
 .content {
@@ -376,27 +376,27 @@ nav {
 }
 
 .dha {
-    .bold;
+    @include bold;
     color: mediumseagreen;
 }
 
 .dhb {
-    .bold;
+    @include bold;
     color: mediumorchid;
 }
 
 .cys {
-    .bold;
+    @include bold;
     color: royalblue;
 }
 
 .macrolactam {
-    .bold;
+    @include bold;
     color: red;
 }
 
 .cut {
-    .bold;
+    @include bold;
     color: purple;
 }
 
@@ -410,11 +410,11 @@ nav {
 }
 
 .alt-weight-desc {
-    .description-text;
+    @extend .description-text;
 }
 
 .alt-weight-n {
-    .alt-weight-desc;
+    @extend .alt-weight-desc;
     padding-left: 2.5em;
 }
 
@@ -430,17 +430,17 @@ nav {
 .cluster-rules {
     font-size: 75%;
     display: none;
-    border: 1px solid @tooltip-border;
-    background-color: @tooltip-background;
+    border: 1px solid $tooltip-border;
+    background-color: $tooltip-background;
 }
 
 .description-container {
-    .left-padding;
+    @include left-padding;
 }
 
 .contig-edge-warning {
     font-size: 75%;
-    .bold;
+    @include bold;
     float: right;
     color: black;
     background-color: orange;
@@ -475,7 +475,7 @@ table.region-table {
     }
 
     .even {
-        background-color: @table-background;
+        background-color: $table-background;
     }
 
     td {
@@ -505,7 +505,7 @@ table.region-table {
 
 .tooltip {
     /* match style of nav */
-    background-image: linear-gradient(to bottom, #5e5e5e 0, #444 100%);
+    background-image: linear-gradient(to bottom, #5e5e5e 0%, #444 100%);
     background-repeat: repeat-x;
     color: #e1e1e1;
     font-weight: normal;
@@ -524,42 +524,42 @@ table.region-table {
 }
 
 .similarity-text {
-    color: @antismash-gray;
+    color: $antismash-gray;
 }
 
 .svgene-type-other {
-    fill: @gene-type-other;
+    fill: $gene-type-other;
     stroke: black;
 }
 .svgene-type-biosynthetic {
-    fill: @gene-type-biosynthetic;
+    fill: $gene-type-biosynthetic;
     stroke: black;
 }
 .svgene-type-biosynthetic-additional {
-    fill: @gene-type-biosynthetic-additional;
+    fill: $gene-type-biosynthetic-additional;
     stroke: black;
 }
 .svgene-type-transport {
-    fill: @gene-type-transport;
+    fill: $gene-type-transport;
     stroke: black;
 }
 .svgene-type-regulatory {
-    fill: @gene-type-regulatory;
+    fill: $gene-type-regulatory;
     stroke: black;
 }
 .svgene-type-resistance {
-    fill: @gene-type-resistance;
+    fill: $gene-type-resistance;
     stroke: black;
 }
 .svgene-tta-codon {
-    fill: @feature-tta-codon;
+    fill: $feature-tta-codon;
 }
 .cluster-line, .centerline {
     stroke-width: 1px;
     stroke: #888;
 }
 .svgene-locustag {
-    fill: @antismash-main;
+    fill: $antismash-main;
     display: none;
     font-size: 80%;
 }
@@ -567,18 +567,18 @@ table.region-table {
 .cluster-core {
     stroke: black;
     stroke-width: 1px;
-    fill: @tool-rule-based-clusters;
+    fill: $tool-rule-based-clusters;
 }
 
 .svgene-border-cassis .cluster-core {
     stroke: black;
     stroke-width: 1px;
-    fill: @tool-cassis;
+    fill: $tool-cassis;
 }
 
 .svgene-border-clusterfinder .cluster-core {
     stroke-width: 0px;
-    fill: @tool-clusterfinder;
+    fill: $tool-clusterfinder;
 }
 
 .svgene-orf, .svgene-minimap-orf{
@@ -607,7 +607,7 @@ table.region-table {
     cursor: default;
     font-size: 80%;
 
-    .unselectable();
+    @include unselectable();
 
     &:hover {
         background-color: #fcfcfc;
@@ -620,7 +620,7 @@ table.region-table {
     }
     & * {
         cursor: default;
-        .unselectable();
+        @include unselectable();
     }
     & img {
         height: 1.5em;
@@ -653,34 +653,34 @@ table.region-table {
 }
 
 .legend-type-other {
-    background-color: @gene-type-other;
+    background-color: $gene-type-other;
 }
 .legend-type-biosynthetic {
-    background-color: @gene-type-biosynthetic;
+    background-color: $gene-type-biosynthetic;
 }
 .legend-type-biosynthetic-additional {
-    background-color: @gene-type-biosynthetic-additional;
+    background-color: $gene-type-biosynthetic-additional;
 }
 .legend-type-transport {
-    background-color: @gene-type-transport;
+    background-color: $gene-type-transport;
 }
 .legend-type-regulatory {
-    background-color: @gene-type-regulatory;
+    background-color: $gene-type-regulatory;
 }
 .legend-type-resistance {
-    background-color: @gene-type-resistance;
+    background-color: $gene-type-resistance;
 }
 
 .legend-border-cassis {
-    background-color: @tool-cassis;
+    background-color: $tool-cassis;
 }
 
 .legend-border-clusterfinder {
-    background-color: @tool-clusterfinder;
+    background-color: $tool-clusterfinder;
 }
 
 .legend-tta-codon {
-    background-color: @feature-tta-codon;
+    background-color: $feature-tta-codon;
 }
 
 .legend {
@@ -688,7 +688,7 @@ table.region-table {
         margin-bottom: 0.5em;
     }
     margin-bottom: 0.5em;
-    .left-padding;
+    @include left-padding;
 }
 
 .legend-field {
@@ -701,7 +701,7 @@ table.region-table {
 
 .legend-label {
     float: left;
-    .unselectable();
+    @include unselectable();
 }
 
 .zoom-button {
@@ -713,7 +713,7 @@ table.region-table {
     margin-left: 1em;
     padding: 0.5em;
 
-    .unselectable();
+    @include unselectable();
 
     &:hover {
         background-color: #fcfcfc;
@@ -742,7 +742,7 @@ table.region-table {
     fill: #444;
 }
 .jsdomain-tooltip {
-    .tooltip;
+    @extend .tooltip;
     font-size: 90%;
 }
 .jsdomain-text {
@@ -750,29 +750,29 @@ table.region-table {
 }
 
 .clusterblast-locustag {
-    fill: @antismash-main;
+    fill: $antismash-main;
     display: none;
     font-size: 80%;
     position: absolute;
 }
 .clusterblast-tooltip {
-    .tooltip;
+    @extend .tooltip;
     font-size: 90%;
 }
 .clusterblast-acc {
-  fill: @antismash-main;
+  fill: $antismash-main;
   font-size: 80%;
   font-family: Verdana, Tahoma, Sans-Serif;
 }
 .clusterblast-desc {
-    .clusterblast-acc;
+    @extend .clusterblast-acc;
     font-size: 75%;
 }
 .clusterborderlabel {
     font-size: 25%;
 }
 #footer {
-    border-top: 2px solid @antismash-main;
+    border-top: 2px solid $antismash-main;
 }
 
 #logos {
@@ -805,7 +805,7 @@ table.region-table {
     border-radius: 50%;
 }
 
-.decorator() {
+@mixin decorator(){
     background-size: 1.1em 1.1em;
     height: 1.1em;
     width: 1.1em;
@@ -815,22 +815,22 @@ table.region-table {
     content: '';
 }
 
-.collapser-decorator {
-    .decorator();
+@mixin collapser-decorator() {
+    @include decorator();
 }
 
 .collapser:before {
-    .collapser-decorator;
+    @include collapser-decorator();
     background-image: url(../images/plus-circle.svg);
 }
 
 .expanded:before {
-    .collapser-decorator;
+    @include collapser-decorator();
     background-image: url(../images/minus-circle.svg);
 }
 
 .external-link:after {
-    .decorator();
+    @include decorator();
     font-size: 75%;
     background-image: url(../images/external-link-alt-solid.svg);
 }
@@ -886,7 +886,7 @@ ul.dropdown-options {
         display: block;
     }
     & li {
-        background-image: linear-gradient(to bottom,#5e5e5e 0,#444 100%);
+        background-image: linear-gradient(to bottom,#5e5e5e 0%,#444 100%);
         background-repeat: repeat-x;
         padding: 10px;
         list-style: none;
@@ -916,7 +916,7 @@ ul.dropdown-options {
     & .body-details-header,
     & .sidepanel-details-header {
         font-size: 90%;
-        background-color: fade(@antismash-main, 60%);
+        background-color: rgba($antismash-main, 60%);
         color: white;
         margin-right: 0.1em;
         padding-left: 0.5em;
@@ -925,18 +925,18 @@ ul.dropdown-options {
         border-top-left-radius: 1em;
         border-top-right-radius: 1em;
 
-        .unselectable();
+        @include unselectable();
 
         &:hover {
-            background-color: fade(@antismash-main, 80%);
+            background-color: rgba($antismash-main, 80%);
         }
     }
 
     .body-details-header-active,
     .sidepanel-details-header-active {
-        background-color: @antismash-main;
+        background-color: $antismash-main;
         &:hover {
-            background-color: @antismash-main;
+            background-color: $antismash-main;
         }
     }
 }
@@ -948,7 +948,7 @@ ul.dropdown-options {
 .body-details-section {
     margin-left: 0.5em;
 
-    & * h3 {
+    * h3 {
         margin-top: 0;
         margin-left: 0;
     }
@@ -957,7 +957,7 @@ ul.dropdown-options {
 .sidepanel-details-section {
     margin-left: 0;
 
-    & * h3 {
+    * h3 {
         margin-top: 0;
         margin-left: 0;
     }
@@ -1011,7 +1011,7 @@ ul.dropdown-options {
     }
 
     & input:checked + .slider {
-      background-color: @antismash-main;
+      background-color: $antismash-main;
     }
 
     & input:checked + .slider:before {
@@ -1044,7 +1044,7 @@ ul.dropdown-options {
     }
 
     .help-tooltip {
-        .tooltip;
+        @extend .tooltip;
     }
 }
 
@@ -1066,5 +1066,5 @@ ul.dropdown-options {
 }
 
 .table-split-left {
-    border-right: 5px solid @table-background;
+    border-right: 5px solid $table-background;
 }
