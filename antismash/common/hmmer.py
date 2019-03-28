@@ -159,22 +159,10 @@ def ensure_database_pressed(filepath: str, return_not_raise: bool = False) -> Li
         Returns:
             any encountered error messages, will never be populated without return_not_raise == True
     """
-    try:
-        modified_time = os.path.getmtime(filepath)
-    except FileNotFoundError as err:
-        if not return_not_raise:
-            raise
-        return [str(err)]
     components = ["{}{}".format(filepath, ext) for ext in ['.h3f', '.h3i', '.h3m', '.h3p']]
-    outdated = False
-    for component in components:
-        if not path.locate_file(component) or os.path.getmtime(component) < modified_time:
-            logging.info("%s does not exist or is out of date, hmmpressing %s",
-                         component, filepath)
-            outdated = True
-            break
 
-    if outdated:
+    if path.is_outdated(components, filepath):
+        logging.info("%s components missing or obsolete, re-pressing database", filepath)
         result = subprocessing.run_hmmpress(filepath)
         if not result.successful():
             msg = "Failed to hmmpress {!r}: {}".format(filepath, result.stderr)
