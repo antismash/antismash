@@ -101,3 +101,30 @@ def changed_directory(path: str) -> Generator:
         yield
     finally:
         os.chdir(current_path)
+
+
+def is_outdated(built_files: Union[str, List[str]], source_files: Union[str, List[str]]) -> bool:
+    """ Returns True if the oldest of built_files is older than the newest of source_files
+
+        Arguments:
+            built_files: a filename, or list of filenames, of built targets
+            source_files: a filename, or list of filenames, of source files used to build targets
+
+        Returns:
+            whether the oldest of built_files is older than the newest of source_files
+    """
+    if not built_files or not source_files:
+        raise ValueError("at least one built file and one source file must be provided")
+
+    if isinstance(built_files, str):
+        built_files = [built_files]
+    if isinstance(source_files, str):
+        source_files = [source_files]
+
+    for filename in built_files:
+        if not locate_file(filename):
+            return True
+
+    built_time = min(os.path.getmtime(filename) for filename in built_files)
+    source_time = max(os.path.getmtime(filename) for filename in source_files)
+    return built_time < source_time
