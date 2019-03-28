@@ -21,6 +21,7 @@ install_requires = [
     'jinja2',
     'pysvg-py3',
     'bcbio-gff',
+    'pyScss',
     'matplotlib',
     'scipy',
     'scikit-learn == 0.19.0', # until pickles are rebuilt automatically

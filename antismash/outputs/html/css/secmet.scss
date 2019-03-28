@@ -1,0 +1,276 @@
+/* colour definitions for secondary metabolite types */
+
+@mixin secmet($fg: black, $bg: white, $highlight: orangered){
+    background-color: $bg;
+    a, a:link, a:visited {
+        color: $fg;
+    }
+    rect& {
+        fill: $bg;
+        stroke: $highlight;
+    }
+    &.active {
+        border-color: $highlight;
+        border-width: 2px;
+        border-style: solid;
+    }
+    &:hover {
+        background-color: lighten($bg, 9%);
+    }
+}
+
+.hybrid {
+    @include secmet(midnightblue, lightsteelblue, midnightblue);
+}
+
+@mixin PKS {
+    @include secmet(purple, sandybrown, purple);
+}
+
+@mixin pigment {
+    @include secmet(white, peru);
+}
+
+@mixin hydrocarbon {
+    @include secmet(white, purple);
+}
+
+@mixin RiPP {
+    @include secmet(white, royalblue);
+}
+
+@mixin osmolyte {
+    @include secmet(firebrick, yellowgreen, firebrick);
+}
+
+.T1PKS {
+    @include PKS;
+}
+
+.transAT-PKS {
+    @include PKS;
+}
+
+.transAT-PKS-like {
+    @extend .transAT-PKS;
+}
+
+.T2PKS {
+    @include PKS;
+}
+
+.T3PKS {
+    @include PKS;
+}
+
+.hglE-KS {
+    @include PKS;
+}
+
+.PpyS-KS {
+    @include PKS;
+}
+
+.PKS-like {
+    @include PKS;
+}
+
+.arylpolyene {
+    @include pigment;
+}
+
+.resorcinol {
+    @include hydrocarbon;
+}
+
+.ladderane {
+    @include hydrocarbon;
+}
+
+.PUFA {
+    @include hydrocarbon;
+}
+
+.NRPS {
+    @include secmet(white, seagreen);
+}
+
+.NRPS-like {
+    @extend .NRPS;
+}
+
+.CDPS {
+    @extend .NRPS;
+}
+
+.terpene {
+    @include hydrocarbon;
+}
+
+@mixin lantibiotic {
+    @include secmet(blue, #ffff77, blue);
+}
+
+.lanthipeptide {
+    @include lantibiotic;
+}
+
+.bacteriocin {
+    @include RiPP;
+}
+
+.RaS-RiPP {
+    @include RiPP;
+}
+
+.fungal-RiPP {
+    @include RiPP;
+}
+
+.thiopeptide {
+    @include secmet(black, gold, black);
+}
+
+.linaridin {
+    @include RiPP;
+}
+
+.cyanobactin {
+    @include RiPP;
+}
+
+.glycocin {
+    @include RiPP;
+}
+
+.LAP {
+    @include RiPP;
+}
+
+.lassopeptide {
+    @include RiPP;
+}
+
+.sactipeptide {
+    @include RiPP;
+}
+
+.bottromycin {
+    @include RiPP;
+}
+
+.head_to_tail {
+    @include RiPP;
+}
+
+.microviridin {
+    @include RiPP;
+}
+
+.proteusin {
+    @include RiPP;
+}
+
+.lipolanthine {
+    @include RiPP;
+}
+
+.blactam {
+    @include secmet(black, aliceblue, black);
+}
+
+.amglyccycl {
+    @include secmet(black, yellowgreen, black);
+}
+
+.aminocoumarin {
+    @include secmet(black, yellowgreen, black);
+}
+
+.siderophore {
+    @include secmet(white, crimson, blue);
+}
+
+.ectoine {
+    @include osmolyte;
+}
+
+.NAGGN {
+    @include osmolyte;
+}
+
+.butyrolactone {
+    @include secmet(white, mediumpurple);
+}
+
+.indole {
+    @include secmet(black, peachpuff, black);
+}
+
+.nucleoside {
+    @include secmet(black, antiquewhite, black);
+}
+
+.phosphoglycolipid {
+    @include secmet(black, yellowgreen, black);
+}
+
+.melanin {
+    @include pigment;
+}
+
+.oligosaccharide {
+    @include secmet(black, burlywood, black);
+}
+
+.furan {
+    @include hydrocarbon;
+}
+
+.hserlactone {
+    @include secmet(black, tan, black);
+}
+
+.acyl_amino_acids {
+    @include secmet(black, tan, black);
+}
+
+.phenazine {
+    @include secmet(black, plum, black);
+}
+
+.phosphonate {
+    @include secmet(black, mediumaquamarine, black);
+}
+
+.fused {
+    @include RiPP;
+}
+
+.PBDE {
+    @include hydrocarbon;
+}
+
+.other {
+    @include secmet(lightsteelblue, midnightblue);
+}
+
+.betalactone {
+    @include hydrocarbon;
+}
+
+@mixin unknown {
+    @include secmet(black, #f2f2f2, black);
+}
+
+.saccharide {
+    @include unknown;
+}
+
+.fatty_acid {
+    @include unknown;
+}
+
+.halogenated {
+    @include unknown;
+}
