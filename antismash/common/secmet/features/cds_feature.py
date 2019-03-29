@@ -48,6 +48,28 @@ def _is_valid_translation_length(translation: str, location: Location) -> bool:
     return location.strand != -1 and isinstance(location.end, AfterPosition)
 
 
+def _translation_fits_in_record(translation_length: int, location: Location,
+                                record_length: int) -> bool:
+    """ Checks that a translation fits within a record based on the feature location
+
+        Arguments:
+            translation_length: length of translation in nucleotides
+            location: the Location of the feature
+            record_length: the length of the record in nucleotides
+
+        Returns:
+            True if location and translation length fit into the given record length
+    """
+    extra_length = translation_length - len(location)
+    if extra_length <= 0:
+        return True  # assumes the feature is contained by the record, of course
+
+    if location.strand == -1:
+        return location.start - extra_length >= 0
+
+    return extra_length + location.end <= record_length
+
+
 def _verify_location(location: Location) -> None:
     """ Raises a relevant exception if the location is invalid for a CDS """
     if location.strand not in [1, -1]:
@@ -201,6 +223,9 @@ class CDSFeature(Feature):
         if not _is_valid_translation_length(translation, bio_feature.location):
             raise SecmetInvalidInputError("translation longer than location allows: %s > %s" % (
                                 len(translation) * 3, len(bio_feature.location)))
+        # if an arbitrary section of a record is used, the record can be too short for a given translation
+        if record and not _translation_fits_in_record(len(translation)*3, bio_feature.location, len(record.seq)):
+            raise SecmetInvalidInputError("feature translation extends out of record: %s" % name)
         # finally, generate the translation if it doesn't exist
         if not translation:
             if not record:

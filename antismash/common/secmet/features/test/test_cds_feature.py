@@ -7,13 +7,19 @@
 import unittest
 
 from Bio.Seq import Seq
+from Bio.SeqFeature import SeqFeature
 
+from antismash.common.secmet.errors import SecmetInvalidInputError
 from antismash.common.secmet.features import FeatureLocation, CDSFeature
-from antismash.common.secmet.features.cds_feature import _is_valid_translation_length
+from antismash.common.secmet.features.cds_feature import (
+    _is_valid_translation_length,
+    _translation_fits_in_record,
+)
 from antismash.common.secmet.features.feature import CompoundLocation
 from antismash.common.secmet.locations import AfterPosition, BeforePosition
 from antismash.common.secmet.qualifiers import SecMetQualifier
 from antismash.common.secmet.qualifiers.gene_functions import GeneFunction
+from antismash.common.test.helpers import DummyRecord
 
 
 class TestCDSFeature(unittest.TestCase):
@@ -119,6 +125,16 @@ class TestCDSBiopythonConversion(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "compound locations with mixed strands"):
                 CDSFeature.from_biopython(bio)
         # compound locations starting with an invalid strand will be treated as per a non-compound wtih a bad strand
+
+    def test_translation_outside_record(self):
+        rec = DummyRecord(seq="A" * 10)
+        for location in [FeatureLocation(0, AfterPosition(6), strand=1),
+                         FeatureLocation(BeforePosition(4), 10, strand=-1)]:
+            bio = SeqFeature(location, type="CDS")
+            bio.qualifiers["translation"] = ["M" * 5]
+            with self.assertRaisesRegex(SecmetInvalidInputError, "translation extends out of record"):
+                CDSFeature.from_biopython(bio, record=rec)
+
 
 class TestCDSProteinLocation(unittest.TestCase):
     def setUp(self):
@@ -366,3 +382,20 @@ class TestTranslationLength(unittest.TestCase):
         location = CompoundLocation([FeatureLocation(BeforePosition(0), 3, -1), FeatureLocation(6, 9, -1)])
         for good in ["A", "AA", "AAA"]:
             assert _is_valid_translation_length(good, location)
+
+
+class TestTranslationInRecord(unittest.TestCase):
+    def setUp(self):
+        self.run = _translation_fits_in_record
+
+    def test_simple(self):
+        location = FeatureLocation(0, AfterPosition(3), 1)
+        size = 9
+        assert not self.run(size, location, size - 1)
+        assert self.run(size, location, size)
+        assert self.run(size, location, size + 1)
+
+        location = FeatureLocation(BeforePosition(3), 9, -1)
+        assert not self.run(size + 1, location, size)
+        assert self.run(size, location, size)
+        assert self.run(size - 1, location, size)
