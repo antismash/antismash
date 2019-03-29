@@ -70,6 +70,48 @@ def _translation_fits_in_record(translation_length: int, location: Location,
     return extra_length + location.end <= record_length
 
 
+def _ensure_valid_translation(translation: str, location: Location, transl_table: int,
+                              record: Optional[Any]) -> str:
+    """ Ensures that a given translation is valid for the matching location
+        and record (if given). If a record is given and a translation is invalid,
+        an attempt will be made to generate a valid translation.
+
+        Arguments:
+            translation: the existing translation, if any
+            location: the location of the feature owning the translation
+            record: the Record the feature belongs to, or None to skip those checks and regeneration
+
+        Returns:
+            a valid translation
+    """
+    # ensure translation is valid if it exists
+    if translation:
+        invalid = set(translation) - _VALID_TRANSLATION_CHARS
+        if invalid:
+            logging.warning("Regenerating translation for CDS at %s containing invalid characters: %s",
+                            location, invalid)
+            translation = ""
+    # ensure that the translation fits
+    if not _is_valid_translation_length(translation, location):
+        raise ValueError("translation longer than location allows: %s > %s" % (
+                         len(translation) * 3, len(location)))
+    # if an arbitrary section of a record is used, the record can be too short for a given translation
+    if record and not _translation_fits_in_record(len(translation)*3, location, len(record.seq)):
+        raise ValueError("feature translation extends out of record")
+    # finally, generate the translation if it doesn't exist
+    if not translation:
+        if not record:
+            raise ValueError("no translation in CDS and no record to generate it with")
+        if location.end > len(record.seq):
+            raise ValueError("feature missing translation and sequence too short")
+        if len(location) < 3:
+            raise ValueError("CDS too short to generate translation")
+        translation = record.get_aa_translation_from_location(location, transl_table)
+
+    assert _is_valid_translation_length(translation, location)
+    return translation
+
+
 def _verify_location(location: Location) -> None:
     """ Raises a relevant exception if the location is invalid for a CDS """
     if location.strand not in [1, -1]:
@@ -192,7 +234,6 @@ class CDSFeature(Feature):
             transl_table = record.transl_table
         if "transl_table" in leftovers:
             transl_table = int(leftovers.pop("transl_table")[0])
-        translation = leftovers.pop("translation", [""])[0]
 
         # semi-optional qualifiers
         protein_id = leftovers.pop("protein_id", [None])[0]
@@ -212,31 +253,11 @@ class CDSFeature(Feature):
             message = "invalid location for %s: %s" % (name, str(err))
             raise SecmetInvalidInputError(message) from err
 
-        # ensure translation is valid if it exists
-        if translation:
-            invalid = set(translation) - _VALID_TRANSLATION_CHARS
-            if invalid:
-                logging.warning("Regenerating translation for CDS %s (at %s) containing invalid characters: %s",
-                                name, bio_feature.location, invalid)
-                translation = ""
-        # ensure that the translation fits
-        if not _is_valid_translation_length(translation, bio_feature.location):
-            raise SecmetInvalidInputError("translation longer than location allows: %s > %s" % (
-                                len(translation) * 3, len(bio_feature.location)))
-        # if an arbitrary section of a record is used, the record can be too short for a given translation
-        if record and not _translation_fits_in_record(len(translation)*3, bio_feature.location, len(record.seq)):
-            raise SecmetInvalidInputError("feature translation extends out of record: %s" % name)
-        # finally, generate the translation if it doesn't exist
-        if not translation:
-            if not record:
-                raise SecmetInvalidInputError("no translation in CDS and no record to generate it with")
-            if bio_feature.location.end > len(record.seq):
-                raise SecmetInvalidInputError("feature missing translation and sequence too short: %s" % name)
-            if len(bio_feature.location) < 3:
-                raise SecmetInvalidInputError("CDS too short to generate translation: %s" % name)
-            translation = record.get_aa_translation_from_location(bio_feature.location, transl_table)
-
-        assert _is_valid_translation_length(translation, bio_feature.location)
+        try:
+            translation = _ensure_valid_translation(leftovers.pop("translation", [""])[0],
+                                                    bio_feature.location, transl_table, record)
+        except ValueError as err:
+            raise SecmetInvalidInputError(str(err) + ": %s" % name) from err
 
         feature = CDSFeature(bio_feature.location, translation, gene=gene,
                              locus_tag=locus_tag, protein_id=protein_id,
