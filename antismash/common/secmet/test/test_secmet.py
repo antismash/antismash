@@ -320,6 +320,21 @@ class TestRecord(unittest.TestCase):
         assert len(rec.get_cds_features()) == 11
         assert isinstance(rec.get_cds_by_name("nisB"), CDSFeature)
 
+    def test_multiple_colocated_non_as_motifs(self):
+        rec = Record(Seq("A" * 100))
+        assert not rec.get_cds_motifs()
+        domain = SeqFeature(FeatureLocation(0, 6, -1), type="CDS_motif")
+        rec.add_biopython_feature(domain)
+        motifs = rec.get_cds_motifs()
+        assert len(motifs) == 1
+        assert motifs[0].domain_id == "non_aS_motif_0_6_1"
+
+        rec.add_biopython_feature(domain)
+        motifs = rec.get_cds_motifs()
+        assert len(motifs) == 2
+        for i, motif in enumerate(motifs):
+            assert motif.domain_id == "non_aS_motif_0_6_%s" % (i + 1)
+
 
 class TestCDSFetchByLocation(unittest.TestCase):
     def setUp(self):
