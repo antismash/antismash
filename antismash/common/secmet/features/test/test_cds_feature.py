@@ -391,11 +391,11 @@ class TestTranslationInRecord(unittest.TestCase):
     def test_simple(self):
         location = FeatureLocation(0, AfterPosition(3), 1)
         size = 9
-        assert not self.run(size, location, size - 1)
+        assert not self.run(size, location, size - 3)
+        assert self.run(size, location, size - 2)  # single ambiguous amino
         assert self.run(size, location, size)
-        assert self.run(size, location, size + 1)
 
         location = FeatureLocation(BeforePosition(3), 9, -1)
-        assert not self.run(size + 1, location, size)
+        assert not self.run(size + 3, location, size)
+        assert self.run(size + 2, location, size)  # single ambiguous amino
         assert self.run(size, location, size)
-        assert self.run(size - 1, location, size)

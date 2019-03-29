@@ -51,6 +51,7 @@ def _is_valid_translation_length(translation: str, location: Location) -> bool:
 def _translation_fits_in_record(translation_length: int, location: Location,
                                 record_length: int) -> bool:
     """ Checks that a translation fits within a record based on the feature location
+        Allows for a single ambiguous amino to overlap the edges of a record
 
         Arguments:
             translation_length: length of translation in nucleotides
@@ -65,9 +66,9 @@ def _translation_fits_in_record(translation_length: int, location: Location,
         return True  # assumes the feature is contained by the record, of course
 
     if location.strand == -1:
-        return location.start - extra_length >= 0
+        return location.start - extra_length >= -2
 
-    return extra_length + location.end <= record_length
+    return extra_length + location.end <= record_length + 2
 
 
 def _ensure_valid_translation(translation: str, location: Location, transl_table: int,
