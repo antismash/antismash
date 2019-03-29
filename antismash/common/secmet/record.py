@@ -579,7 +579,11 @@ class Record:
                 return
             motif = CDSMotif.from_biopython(feature)
             if not motif.domain_id and not motif.created_by_antismash:
-                motif.domain_id = "non_aS_motif_%d_%d" % (motif.location.start, motif.location.end)
+                counter = 1
+                template = "non_aS_motif_%d_%d_{}" % (motif.location.start, motif.location.end)
+                while template.format(counter) in self._domains_by_name:
+                    counter += 1
+                motif.domain_id = template.format(counter)
             self.add_cds_motif(motif)
         elif feature.type == 'PFAM_domain':
             self.add_pfam_domain(PFAMDomain.from_biopython(feature))
