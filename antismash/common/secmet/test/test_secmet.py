@@ -729,3 +729,32 @@ class TestRegionManipulation(unittest.TestCase):
         assert "region_number" not in bio.qualifiers
         with self.assertRaisesRegex(ValueError, "cannot be directly added from biopython"):
             self.record.add_biopython_feature(bio)
+
+
+class TestCDSUniqueness(unittest.TestCase):
+    def test_same_location(self):
+        record = Record("A" * 100)
+        cds = CDSFeature(FeatureLocation(0, 6, 1), locus_tag="test", translation="MA")
+        record.add_cds_feature(cds)
+        with self.assertRaisesRegex(ValueError, "same name for mapping"):
+            record.add_cds_feature(cds)
+
+        cds = CDSFeature(FeatureLocation(3, 9, 1), locus_tag="test", protein_id="prot", translation="MA")
+        record.add_cds_feature(cds)
+        assert cds.locus_tag == "test_prot"
+
+        # still a duplicate
+        cds = CDSFeature(FeatureLocation(3, 9, 1), locus_tag="test", protein_id="prot", translation="MA")
+        with self.assertRaisesRegex(ValueError, "same name for mapping"):
+            record.add_cds_feature(cds)
+
+    def test_nonoverlapping_location(self):
+        record = Record("A" * 100)
+        cds = CDSFeature(FeatureLocation(0, 6, 1), locus_tag="test", translation="MA")
+        record.add_cds_feature(cds)
+        with self.assertRaisesRegex(ValueError, "same name for mapping"):
+            record.add_cds_feature(cds)
+
+        cds = CDSFeature(FeatureLocation(12, 18, 1), locus_tag="test", protein_id="prot", translation="MA")
+        with self.assertRaisesRegex(ValueError, "same name for mapping"):
+            record.add_cds_feature(cds)

@@ -483,9 +483,6 @@ class Record:
         """ Add the given CDSFeature to the record,
             causes cluster-CDS pairing to be recalculated """
         assert isinstance(cds_feature, CDSFeature), type(cds_feature)
-        # provide a unique id over all records
-        cds_feature.unique_id = "%s.%d-%d" % (self.id, cds_feature.location.start,
-                                              cds_feature.location.end)
         # ensure it has a translation
         if not cds_feature.translation:
             raise ValueError("Missing translation info for %s" % cds_feature)
@@ -493,8 +490,18 @@ class Record:
         self._cds_features.insert(index, cds_feature)
         self._link_cds_to_parent(cds_feature)
         if cds_feature.get_name() in self._cds_by_name:
-            raise SecmetInvalidInputError("multiple CDS features have the same name for mapping: %s" %
-                             cds_feature.get_name())
+            error = SecmetInvalidInputError("multiple CDS features have the same name for mapping: %s" %
+                                            cds_feature.get_name())
+            # handle cases like splice variants
+            if not cds_feature.locus_tag or not cds_feature.protein_id:
+                raise error
+            if not cds_feature.overlaps_with(self._cds_by_name[cds_feature.get_name()]):
+                raise error
+            new = "%s_%s" % (cds_feature.locus_tag, cds_feature.protein_id)
+            if new in self._cds_by_name:
+                raise error
+            cds_feature.locus_tag = new
+            assert cds_feature.get_name() not in self._cds_by_name
         self._cds_by_name[cds_feature.get_name()] = cds_feature
 
     def add_cds_motif(self, motif: Union[CDSMotif, Prepeptide]) -> None:
