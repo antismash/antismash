@@ -202,7 +202,7 @@ class GeneralResults(ModuleResults):
         # keep data on proteins relevant to this cluster
         for cluster, _ in result.ranking:
             cluster_label = cluster.get_name()
-            protein_names = reference_clusters[cluster_label].proteins
+            protein_names = reference_clusters[cluster_label].tags
             for protein_name in protein_names:
                 self.proteins_of_interest[protein_name] = reference_proteins[protein_name]
 
@@ -251,7 +251,7 @@ class GeneralResults(ModuleResults):
         for prot in json["proteins"]:
             protein = Protein(prot["name"], prot["locus_tag"], prot["location"],
                               prot["strand"], prot["annotations"])
-            result.proteins_of_interest[protein.name] = protein
+            result.proteins_of_interest[protein.locus_tag] = protein
         for region_result in json["results"]:
             result.region_results.append(RegionResult.from_json(region_result,
                                          record, result.proteins_of_interest))
@@ -349,7 +349,7 @@ def _write_output(filename: str, record: Record, cluster_result: RegionResult,
             strand = "+"
         else:
             strand = "-"
-        out_file.write("\t".join([cds.get_accession(), str(int(cds.location.start)),
+        out_file.write("\t".join([cds.get_name(), str(int(cds.location.start)),
                                   str(int(cds.location.end)), strand, cds.product]) + "\t\n")
     out_file.write("\n\nSignificant hits: \n")
     for i, cluster_and_score in enumerate(ranking):
