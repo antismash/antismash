@@ -117,7 +117,7 @@ class KnownIntegrationTest(Base):
         genbank = path.get_full_path(__file__, "data", "Z18755.3.gbk")
         results = self.run_antismash(genbank, 2)
         assert list(results.mibig_entries) == [1]  # only one region in record
-        assert list(results.mibig_entries[1]) == ["CAA79245.2"]  # and only one CDS
+        assert list(results.mibig_entries[1]) == ["esyn1"]  # and only one CDS
         # 2 hits against single-CDS MiBIG clusters, only those are reported
         # as multi-CDS reference clusters need multiple query CDSs to hit
         for ref_cluster, _ in results.region_results[0].ranking:
