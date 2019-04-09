@@ -22,6 +22,7 @@ VERSION_FORMAT_MAP = {
     "0.9": 1,
 }
 
+
 def get_core_gene_ids(record: secmet.Record) -> Set[str]:  # TODO: consider moving into secmet
     """ Fetches all gene accessions of genes with CORE gene function from all
         clusters in a record
@@ -35,7 +36,7 @@ def get_core_gene_ids(record: secmet.Record) -> Set[str]:  # TODO: consider movi
     cores = set()
     for gene in record.get_cds_features_within_regions():
         if gene.gene_function == secmet.GeneFunction.CORE:
-            cores.add(gene.get_accession())
+            cores.add(gene.get_name())
     return cores
 
 
@@ -150,11 +151,10 @@ def load_reference_clusters(searchtype: str) -> Dict[str, ReferenceCluster]:
     return clusters
 
 
-def load_reference_proteins(accessions: Set[str], searchtype: str) -> Dict[str, Protein]:
+def load_reference_proteins(searchtype: str) -> Dict[str, Protein]:
     """ Load protein database
 
         Arguments:
-            accessions: a set of all CDS names in the record to avoid collisions
             searchtype: determines which database to use, allowable values:
                             clusterblast, subclusterblast, knownclusterblast
         Returns:
@@ -185,11 +185,9 @@ def load_reference_proteins(accessions: Set[str], searchtype: str) -> Dict[str, 
             tabs = line.split("|", 5)
             annotations, name = tabs[5].rsplit("|", 1)
             locustag = tabs[4]
-            if locustag in accessions:
-                locustag = "h_" + locustag  # TODO: needs to be actually unique
             location = tabs[2]
             strand = tabs[3]
-            proteins[name] = Protein(name, locustag, location, strand, annotations)
+            proteins[locustag] = Protein(name, locustag, location, strand, annotations)
     return proteins
 
 
@@ -208,16 +206,10 @@ def strip_clusters_missing_proteins(clusters: Dict[str, ReferenceCluster],
         Returns:
             None
     """
-    for cluster_name, cluster in list(clusters.items()):
-        valid = True
-        for protein in cluster.proteins:
+    for cluster in clusters.values():
+        for protein in cluster.tags:
             if protein not in proteins:
-                valid = False
-                break
-        if not valid:
-            for protein in cluster.proteins:
-                proteins.pop(protein, None)  # pop and not del, since they may not exist
-            del clusters[cluster_name]
+                raise ValueError("bad database")
 
 
 def load_clusterblast_database(record: secmet.Record, searchtype: str = "clusterblast"
@@ -233,12 +225,8 @@ def load_clusterblast_database(record: secmet.Record, searchtype: str = "cluster
                 a dictionary mapping cluster name to Cluster instance
                 a dictionary mapping protein name to Protein instance
     """
-    accessions = set()
-    for cds in record.get_cds_features():
-        acc = cds.get_accession()
-        accessions.add(acc)
     clusters = load_reference_clusters(searchtype)
-    proteins = load_reference_proteins(accessions, searchtype)
+    proteins = load_reference_proteins(searchtype)
     # some clusters refer to proteins that are missing, so remove them here
     strip_clusters_missing_proteins(clusters, proteins)
 
@@ -265,7 +253,7 @@ def create_blast_inputs(region: secmet.Region) -> Tuple[List[str], List[str]]:
             strand = "-"
         fullname = "|".join(["input", "c%d" % region.get_region_number(),
                              "%d-%d" % (cds.location.start, cds.location.end),
-                             strand, cds.get_accession(), cds.product])
+                             strand, cds.get_name(), cds.product])
         names.append(fullname)
         seqs.append(cds.translation)
 
@@ -335,8 +323,6 @@ def parse_subject(line_parts: List[str], seqlengths: Dict[str, int], names: Set[
     subject = subject_parts[4]
     if subject == "no_locus_tag":
         subject = subject_parts[6]
-    if subject in names:
-        subject = "h_" + subject  # TODO should be changed when the other h_ alteration is
     if len(subject_parts) > 6:
         locustag = subject_parts[6]
     else:
@@ -378,8 +364,7 @@ def parse_all_clusters(blasttext: str, record: secmet.Record, min_seq_coverage: 
                         dictionary of query name to Query instance
     """
     seqlengths = get_cds_lengths(record)
-    # TODO: should this use cds.get_name() instead?
-    genes_within_clusters = set(cds.get_accession() for cds in record.get_cds_features_within_regions())
+    genes_within_clusters = set(cds.get_name() for cds in record.get_cds_features_within_regions())
     queries = OrderedDict()  # type: Dict[str, Query]
     clusters = OrderedDict()  # type: Dict[str, List[Query]]
     blastlines = remove_duplicate_hits([line.split("\t") for line in blasttext.rstrip().splitlines()])
@@ -489,7 +474,7 @@ def get_cds_lengths(record: secmet.Record) -> Dict[str, int]:
     """
     lengths = {}
     for cds in record.get_cds_features():
-        lengths[cds.get_accession()] = len(cds.translation)
+        lengths[cds.get_name()] = len(cds.translation)
     return lengths
 
 
@@ -609,14 +594,14 @@ def parse_clusterblast_dict(queries: List[Query], clusters: Dict[str, ReferenceC
     result = Score()
     hitpositions = []  # type: List[Tuple[int, int]]
     hitposcorelist = []
-    cluster_locii = clusters[cluster_label].proteins
+    cluster_locii = clusters[cluster_label].tags
     for query in queries:
         querynrhits = 0
         for subject in query.get_subjects_by_cluster(cluster_label):
             assert cluster_label == subject.genecluster
-            if subject.locus_tag not in cluster_locii:
+            if subject.name not in cluster_locii:
                 continue
-            index_pair = (query.index, cluster_locii.index(subject.locus_tag))
+            index_pair = (query.index, cluster_locii.index(subject.name))
             if index_pair in hitpositions:
                 continue
             querynrhits += 1

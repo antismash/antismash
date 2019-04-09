@@ -97,8 +97,7 @@ def convert_cds_features(record: Record, features: Iterable[CDSFeature], options
     for feature in features:
         gene_function = str(feature.gene_function)
         mibig_hits = []  # type: List[clusterblast.results.MibigEntry]
-        if feature.protein_id:
-            mibig_hits = mibig_entries.get(feature.protein_id, [])
+        mibig_hits = mibig_entries.get(feature.get_name(), [])
         description = get_description(record, feature, gene_function, options, mibig_hits)
         js_orfs.append({"start": feature.location.start + 1,
                         "end": feature.location.end,

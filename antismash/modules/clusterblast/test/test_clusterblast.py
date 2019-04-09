@@ -320,11 +320,6 @@ class TestSubjectParsing(unittest.TestCase):
         # TEST has sequence length of 300 after our mocking
         self.assertAlmostEqual(sub.perc_coverage, (253./300)*100)
 
-        # and check the name change for a name in our dummy geneclustergenes
-        subject_line[1] = subject_line[1].replace("CAG25751", "CAG25752")
-        sub = self.parse_subject_wrapper(subject_line)
-        self.assertEqual(sub.name, "h_CAG25752")
-
     def test_locus_tag_redirect(self):
         # no_locus_tag normally goes to position 6 instead, but
         subject_line = ["input|c1|0-759|-|CAG25751.1|putative",
@@ -570,7 +565,7 @@ class TestReferenceProteinLoading(unittest.TestCase):
     def test_standard(self):
         hit = ">CVNH01000008|c1|65549-69166|-|BN1184_AH_00620|Urea_carboxylase_{ECO:0000313}|CRH36422"
         with unittest_mock.patch("builtins.open", self.mock_with(hit)):
-            proteins = core.load_reference_proteins(set(), "clusterblast")
+            proteins = core.load_reference_proteins("clusterblast")
         assert len(proteins) == 1
         protein = proteins["CRH36422"]
         assert protein.name == "CRH36422"
@@ -579,7 +574,7 @@ class TestReferenceProteinLoading(unittest.TestCase):
     def test_non_standard(self):
         hit = ">CVNH01000008|c1|65549-69166|-|BN1184_AH_00620|Urea_carboxylase_{ECO:0000313|EMBL:CCF11062.1}|CRH36422"
         with unittest_mock.patch("builtins.open", self.mock_with(hit)):
-            proteins = core.load_reference_proteins(set(), "clusterblast")
+            proteins = core.load_reference_proteins("clusterblast")
         assert len(proteins) == 1
         protein = proteins["CRH36422"]
         assert protein.name == "CRH36422"

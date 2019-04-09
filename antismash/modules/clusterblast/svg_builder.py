@@ -110,7 +110,7 @@ def arrange_colour_groups(query_cds_features: List[secmet.CDSFeature],
             a list ordering the original members of groups
     """
     # first sort them
-    accessions = [cds.get_accession() for cds in query_cds_features]
+    accessions = [cds.get_name() for cds in query_cds_features]
     ordered_groups = sort_groups(accessions, groups)
     return make_neighbours_distinct(ordered_groups)
 
@@ -131,7 +131,7 @@ def build_colour_groups(query_cds_features: List[secmet.CDSFeature],
             the group the gene belongs to
     """
     # start with a set per query gene with only itself
-    groups = {cds.get_accession(): set() for cds in query_cds_features}  # type: Dict[str, Set[str]]
+    groups = {cds.get_name(): set() for cds in query_cds_features}  # type: Dict[str, Set[str]]
     # populate the sets with the id of any hits matching a query gene
     for _, score in ranking:
         for query, subject in score.scored_pairings:
@@ -193,7 +193,7 @@ class Gene:
         start = int(feature.location.start)
         end = int(feature.location.end)
         strand = feature.location.strand
-        name = feature.get_accession()
+        name = feature.get_name()
         return Gene(start, end, strand, name, product=feature.product)
 
     @staticmethod
@@ -409,7 +409,7 @@ class Cluster:
                                reference_proteins: Dict[str, Protein], rank: int, num_hits: int,
                                strand: int, prefix: str) -> "Cluster":
         """ Constructs a Cluster instance from a ReferenceCluster instance """
-        proteins = [reference_proteins[protein] for protein in cluster.proteins]
+        proteins = [reference_proteins[protein] for protein in cluster.tags]
         svg_cluster = Cluster(region_number, str(cluster.cluster_label),
                               cluster.accession, cluster.description, proteins,
                               rank, cluster.cluster_type, num_hits, strand, prefix)
@@ -478,7 +478,7 @@ def determine_strand_of_cluster(region: secmet.Region, pairings: List[Tuple[Quer
     """
     name_to_feature = {}
     for cds in region.cds_children:
-        name_to_feature[cds.get_accession()] = cds
+        name_to_feature[cds.get_name()] = cds
 
     counted = set()  # type: Set[str]
     strand = 0
