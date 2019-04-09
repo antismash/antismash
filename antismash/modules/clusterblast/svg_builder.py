@@ -24,7 +24,6 @@
 """
 
 import colorsys
-import os
 from typing import Dict, Iterable, List, Set, Tuple, TypeVar, Union
 
 from pysvg.builders import ShapeBuilder
@@ -32,44 +31,12 @@ from pysvg.shape import Polygon
 from pysvg.structure import Svg, G as Group
 from pysvg.text import Text
 
-from antismash.common import path, secmet
+from antismash.common import secmet
 from antismash.config import get_config
 
 from .data_structures import Protein, Query, Subject, ReferenceCluster, Score
 
 T = TypeVar('T')
-
-
-def get_antismash_db_accessions() -> Set[str]:
-    """ Find all accession numbers available in the antiSMASH database
-
-        Caches return value for reuse
-
-        Arguments:
-            None
-
-        Returns:
-            a set of all accessions
-    """
-    # have we generated them previously
-    results = getattr(get_antismash_db_accessions, "result", None)
-    if results is not None:
-        assert isinstance(results, set)
-        return results
-
-    filename = path.get_full_path(__file__, os.path.join('data', 'accessions_in_db.txt'))
-    with open(filename, 'r') as handle:
-        text = handle.read()
-
-    accessions = text.split('\n')
-    if accessions[-1] == '':
-        accessions.pop()
-
-    # cache the results, silencing mypy warnings because it can't handle this
-    results = set(accessions)
-    get_antismash_db_accessions.result = results  # type: ignore
-
-    return results
 
 
 def generate_distinct_colours(count: int) -> List[str]:
@@ -319,7 +286,7 @@ class Cluster:
     """
     def __init__(self, region_number: int, ref_cluster_number: str, accession: str,
                  description: str, features: Union[List[Protein], List[secmet.CDSFeature]], rank: int,
-                 cluster_type: str, hits: int = 0, strand: int = 1) -> None:
+                 cluster_type: str, hits: int = 0, strand: int = 1, prefix: str ="general") -> None:
         self.region_number = region_number
         self.ref_cluster_number = int(ref_cluster_number.lstrip('c'))
         self.accession = accession
@@ -344,6 +311,7 @@ class Cluster:
         self.start = int(self.genes[0].get_start())
         self.end = int(self.genes[-1].get_end())
         self.rank = rank
+        self.prefix = prefix
 
     @property
     def similarity(self) -> int:
@@ -381,16 +349,18 @@ class Cluster:
 
     def _add_label(self, group: Group, v_offset: int) -> Group:
         acc = Text(self.full_description, 5, 20 + v_offset)
-        if self.accession.startswith('BGC'):
+        if self.prefix == "knownclusterblast":
             desc = "%80s (%s), %s" % (self.description, self.similarity_string, self.cluster_type)
             acc = Text('<a xlink:href="https://mibig.secondarymetabolites.org/go/'
                        + self.accession + '/%s" target="_blank">' % self.ref_cluster_number
                        + self.accession + '</a>: '
                        + desc, 5, 20 + v_offset)
-        elif self.accession.split("_")[0] in get_antismash_db_accessions():
+        elif self.prefix == "general":
             acc = Text('<a xlink:href="https://antismash-db.secondarymetabolites.org/go/'
                        + self.accession + '/%s" target="_blank">' % self.ref_cluster_number
                        + self.full_description.replace(":", "</a>:"), 5, 20 + v_offset)
+        # Don't do any linking for subclusterblast
+
         acc.set_class("clusterblast-acc")
         group.addElement(acc)
         group.setAttribute('label', self.accession)
@@ -437,12 +407,12 @@ class Cluster:
     @staticmethod
     def from_reference_cluster(cluster: ReferenceCluster, region_number: int, score: Score,
                                reference_proteins: Dict[str, Protein], rank: int, num_hits: int,
-                               strand: int) -> "Cluster":
+                               strand: int, prefix: str) -> "Cluster":
         """ Constructs a Cluster instance from a ReferenceCluster instance """
         proteins = [reference_proteins[protein] for protein in cluster.proteins]
         svg_cluster = Cluster(region_number, str(cluster.cluster_label),
                               cluster.accession, cluster.description, proteins,
-                              rank, cluster.cluster_type, num_hits, strand)
+                              rank, cluster.cluster_type, num_hits, strand, prefix)
         for query, subject in score.scored_pairings:
             for gene in svg_cluster.genes:
                 if gene.name in [subject.name, query.id]:
@@ -567,7 +537,7 @@ class ClusterSVGBuilder:
             svg_cluster = Cluster.from_reference_cluster(cluster, region_number,
                                                          score, reference_proteins,
                                                          num_added + 1, len(hit_genes),
-                                                         strand)
+                                                         strand, self.prefix)
             self.hits.append(svg_cluster)
             num_added += 1
             # obey the cluster display limit from options
