@@ -337,7 +337,7 @@ def apply_cluster_rules(record: Record, results_by_id: Dict[str, List[HSP]],
 
     cds_with_hits = sorted(results_by_id, key=lambda gene_id: record.get_cds_by_name(gene_id).location.start)
 
-    cds_domains_by_cluster_type = {}
+    cds_domains_by_cluster_type = defaultdict(lambda: defaultdict(set))  # type: Dict[str, Dict[str, Set[str]]]
     cluster_type_hits = defaultdict(set)  # type: Dict[str, Set[str]]
     for cds_name in cds_with_hits:
         feature = record.get_cds_by_name(cds_name)
@@ -346,7 +346,6 @@ def apply_cluster_rules(record: Record, results_by_id: Dict[str, List[HSP]],
         rule_texts = []
         info_by_range = {}  # type: Dict[int, Tuple[Dict[str, CDSFeature], Dict[str, List[HSP]]]]
         domain_matches = set()  # type: Set[str]
-        domains_by_cluster = {}  # type: Dict[str, Set[str]]
         for rule in rules:
             if rule.cutoff not in info_by_range:
                 location = FeatureLocation(feature_start - rule.cutoff, feature_end + rule.cutoff)
@@ -358,13 +357,14 @@ def apply_cluster_rules(record: Record, results_by_id: Dict[str, List[HSP]],
             nearby_features, nearby_results = info_by_range[rule.cutoff]
             matching = rule.detect(cds_name, nearby_features, nearby_results)
             if matching.met and matching.matches:
-                domains_by_cluster[rule.name] = matching.matches
+                cds_domains_by_cluster_type[cds_name][rule.name].update(matching.matches)
                 results.append(rule.name)
                 rule_texts.append(rule.reconstruct_rule_text())
                 domain_matches.update(matching.matches)
                 cluster_type_hits[rule.name].add(cds_name)
-        if domains_by_cluster:
-            cds_domains_by_cluster_type[cds_name] = domains_by_cluster
+                for other_cds, other_matches in matching.ancillary_hits.items():
+                    cluster_type_hits[rule.name].add(other_cds)
+                    cds_domains_by_cluster_type[other_cds][rule.name].update(other_matches)
     return cds_domains_by_cluster_type, cluster_type_hits
 
 

@@ -151,6 +151,7 @@ Complete examples:
 
 """
 
+from collections import defaultdict
 from enum import IntEnum
 from operator import xor  # so type hints can be bool and not int
 import string
@@ -349,10 +350,13 @@ class Details:
             this may be redundant if inputs are already limited, but here
             for safety
         """
-        cds_start, cds_end = sorted([cds.start, cds.end])
-        other_start, other_end = sorted([other.start, other.end])
-        distance = min(abs(cds_end - other_start), abs(other_end - cds_start),
-                       abs(cds_end - other_end), abs(other_start - cds_start))
+        if other.start < cds.start:
+            cds, other = other, cds
+
+        distance = min(abs(cds.end - other.start),
+                       abs(cds.end - other.end),
+                       abs(cds.start - other.start),
+                       abs(cds.start - other.end))
         return distance < self.cutoff
 
     def just_cds(self, cds_of_interest: str) -> "Details":
@@ -371,10 +375,12 @@ class ConditionMet:  # pylint: disable=too-few-public-methods
     """ A container for tracking whether a condition was satisfied along with
         what specific subsections of the condition were matched
     """
-    def __init__(self, met: bool, matches: Union[Set, "ConditionMet"] = None) -> None:
+    def __init__(self, met: bool, matches: Union[Set, "ConditionMet"] = None,
+                 ancillary_hits: Dict[str, Set[str]] = None) -> None:
         assert isinstance(met, bool)
         self.met = met
         self.matches = set()  # type: Set[str]
+        self.ancillary_hits = ancillary_hits or defaultdict(set)
         if isinstance(matches, ConditionMet):
             self.matches = matches.matches
         elif matches:
@@ -385,7 +391,11 @@ class ConditionMet:  # pylint: disable=too-few-public-methods
         return self.met
 
     def __str__(self) -> str:
-        return "%s %s" % (self.met, self.matches)
+        return ", ".join([
+            "satisfied: %s" % self.met,
+            "with hits: %s" % self.matches or "none",
+            "and with others: %s" % self.ancillary_hits or "none",
+        ])
 
 
 class Conditions:
@@ -439,8 +449,7 @@ class Conditions:
         """
         if len(self.sub_conditions) == 1:
             assert isinstance(self.sub_conditions[0], Conditions)
-            sub = self.sub_conditions[0].get_satisfied(details, local_only)
-            return ConditionMet(sub.met, sub)
+            return self.sub_conditions[0].get_satisfied(details, local_only)
 
         # since ANDs are bound together, all subconditions we have here are ORs
         assert all(operator == TokenTypes.OR for operator in self.operators)
@@ -448,10 +457,13 @@ class Conditions:
         sub_results = [sub.get_satisfied(details, local_only) for sub in self.operands]
         matching = set()  # type: Set[str]
         met = False
+        ancillary_hits = defaultdict(set)  # type: Dict[str, Set[str]]
         for sub_result in sub_results:
             matching |= sub_result.matches
             met |= sub_result.met
-        return ConditionMet(met, matching)
+            for name, anc_hits in sub_result.ancillary_hits.items():
+                ancillary_hits[name].update(anc_hits)
+        return ConditionMet(met, matching, ancillary_hits)
 
     def get_satisfied(self, details: Details, local_only: bool = False) -> ConditionMet:
         """ Increments hit counter if satisfied and returns whether or not all
@@ -467,7 +479,7 @@ class Conditions:
             Should be overridden in subclasses to suit their specific case.
         """
         subs = self.are_subconditions_satisfied(details, local_only)
-        return ConditionMet(xor(self.negated, subs.met), subs)
+        return ConditionMet(xor(self.negated, subs.met), subs, subs.ancillary_hits)
 
     def get_hit_string(self) -> str:
         """ Returns a string representation of the condition marking how many
@@ -516,10 +528,13 @@ class AndCondition(Conditions):
         results = [sub.get_satisfied(details, local_only) for sub in self.operands]
         matched = set()  # type: Set[str]
         met = True
+        ancillary_hits = defaultdict(set)  # type: Dict[str, Set[str]]
         for result in results:
             matched |= result.matches
             met = met and result.met
-        return ConditionMet(met, matched)
+            for name, anc_hits in result.ancillary_hits.items():
+                ancillary_hits[name].update(anc_hits)
+        return ConditionMet(met, matched, ancillary_hits)
 
     def get_hit_string(self) -> str:
         return "{}*({})".format(self.hits, " and ".join(op.get_hit_string() for op in self.operands))
@@ -550,16 +565,25 @@ class MinimumCondition(Conditions):
 
         current_cds = details.features_by_id[details.cds]
 
+        # track other CDS hits in case the minimum is part of another condition
+        # that would extend the search distance
+        other_cds_hits = defaultdict(set)  # type: Dict[str, Set[str]]
+
         # check to see if the remaining hits are in nearby CDSs
         for other_id, other_feature in details.features_by_id.items():
             if other_id == details.cds:
                 continue
             if not details.in_range(current_cds.location, other_feature.location):
                 continue
-            other_options = [r.query_id for r in details.results_by_id.get(other_id, [])]
-            hit_count += len(self.options.intersection(set(other_options)))
-            if hit_count >= self.count:
-                return ConditionMet(not self.negated, hits)
+            other_options = {r.query_id for r in details.results_by_id.get(other_id, [])}
+            other_hits = self.options.intersection(other_options)
+            if other_hits:
+                other_cds_hits[other_id] = other_hits
+                hit_count += len(other_hits)
+
+        if hit_count >= self.count:
+            return ConditionMet(not self.negated, hits, other_cds_hits)
+
         return ConditionMet(self.negated, hits)
 
     def get_hit_string(self) -> str:
