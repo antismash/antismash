@@ -71,3 +71,7 @@ class DetectionResults(ModuleResults):  # keeping abstract is deliberate, pylint
             Should be overridden by any subclass that makes region predictions.
         """
         return []
+
+    @staticmethod
+    def from_json(json: Dict[str, Any], record: Record) -> Optional["DetectionResults"]:
+        raise NotImplementedError()
