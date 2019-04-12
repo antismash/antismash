@@ -63,7 +63,7 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
         raise AntismashInputError("no valid records found in file %r" % filename)
 
     for record in records:
-        if isinstance(record.seq.alphabet, Bio.Alphabet.ProteinAlphabet):
+        if isinstance(record.seq.alphabet, Bio.Alphabet.ProteinAlphabet) or not is_nucl_seq(record.seq):
             raise AntismashInputError("protein records are not supported")
 
     # before conversion to secmet records, trim if required
