@@ -434,7 +434,7 @@ def is_nucl_seq(sequence: Union[Seq, str]) -> bool:
             sequence: the sequence to check, either a string or Bio.Seq
 
         Returns:
-            True if less than 20% of bases are not a,c,g,t or n
+            True if more than 80% of characters are nucleotide bases
     """
     other = str(sequence).lower()
     for char in "acgtn":
