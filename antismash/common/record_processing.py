@@ -372,6 +372,8 @@ def pre_process_sequences(sequences: List[Record], options: ConfigType, genefind
         logging.debug("Ensuring CDS features do not have duplicate IDs")
         ensure_no_duplicate_cds_gene_ids(sequences)
 
+    if all(sequence.skip for sequence in sequences):
+        raise AntismashInputError("all records skipped")
 
     return sequences
 
