@@ -217,17 +217,23 @@ class TestPreprocessRecords(unittest.TestCase):
         assert len(records) == 1
         assert not records[0].get_cds_features()
         # make sure genefinding wasn't run with default options
-        record_processing.pre_process_sequences(records, self.options, self.genefinding)
+        with self.assertRaisesRegex(AntismashInputError, "all records skipped"):
+            record_processing.pre_process_sequences(records, self.options, self.genefinding)
         assert not self.genefinding.was_run
         assert not records[0].get_cds_features()
 
         # make sure genefinding was run when not 'none'
         records[0].skip = False
         config.update_config({"genefinding_tool": "not-none"})
-        record_processing.pre_process_sequences(records, self.options, self.genefinding)
+        # due to no genes actually being marked, it'll raise an error
+        with self.assertRaisesRegex(AntismashInputError, "all records skipped"):
+            record_processing.pre_process_sequences(records, self.options, self.genefinding)
+        # but genefinding was still run
         assert self.genefinding.was_run
         # still no features because we used dummy genefinding
-        assert not records[0].get_cds_features()
+        for record in records:
+            assert not record.get_cds_features()
+            assert record.skip.lower() == "no genes found"
 
     def test_nisin_fasta_gff(self):
         fasta = path.get_full_path(__file__, "data", "nisin.fasta")
