@@ -154,28 +154,6 @@ def strip_record(record: SeqRecord) -> SeqRecord:
     return record
 
 
-def check_content(sequence: Record) -> Record:
-    """ Checks if the sequence of a record is correct for the input type. If not
-        the record's skip flag will be marked.
-
-        Arguments:
-            record: the Record instance to check
-
-        Returns:
-            the Record instance provided
-    """
-    cdsfeatures = sequence.get_cds_features()
-    cdsfeatures_with_translations = len([cds for cds in cdsfeatures if cds.translation])
-    assert cdsfeatures_with_translations == len(cdsfeatures)
-    if not isinstance(sequence.seq.alphabet, Bio.Alphabet.NucleotideAlphabet)\
-            and not is_nucl_seq(sequence.seq):
-        logging.error("Record %s is a protein record, skipping.", sequence.id)
-        sequence.skip = "protein record"
-    else:
-        sequence.seq.alphabet = Bio.Alphabet.generic_dna
-    return sequence
-
-
 def ensure_cds_info(single_entry: bool, genefinding: Callable[[Record, Any], None], sequence: Record) -> Record:
     """ Ensures the given record has CDS features with unique locus tags.
         CDS features are retrieved from GFF file or via genefinding, depending
@@ -325,10 +303,10 @@ def pre_process_sequences(sequences: List[Record], options: ConfigType, genefind
             fix_record_name_id(record, all_record_ids)
         if len(sequences) == 1:
             sequences = [sanitise_sequence(sequences[0])]
-            sequences = [check_content(sequences[0])]
         else:
             sequences = parallel_function(sanitise_sequence, ([record] for record in sequences))
-            sequences = parallel_function(check_content, ([sequence] for sequence in sequences))
+        for sequence in sequences:
+            sequence.seq.alphabet = Bio.Alphabet.generic_dna
 
     for record in sequences:
         if record.skip or not record.seq:
