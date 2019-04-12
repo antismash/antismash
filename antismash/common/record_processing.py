@@ -309,7 +309,20 @@ def pre_process_sequences(sequences: List[Record], options: ConfigType, genefind
 
     # keep sequences as clean as possible and make sure they're valid
     if checking_required:
-        logging.debug("Sanitising record sequences")
+        logging.debug("Sanitising record ids and sequences")
+        # Ensure all records have unique names
+        all_record_ids = {seq.id for seq in sequences}
+        if len(all_record_ids) < len(sequences):
+            all_record_ids = set()
+            for record in sequences:
+                if record.id in all_record_ids:
+                    record.original_id = record.id
+                    record.id = generate_unique_id(record.id, all_record_ids)[0]
+                all_record_ids.add(record.id)
+            assert len(all_record_ids) == len(sequences), "%d != %d" % (len(all_record_ids), len(sequences))
+        # Ensure all records have valid names
+        for record in sequences:
+            fix_record_name_id(record, all_record_ids)
         if len(sequences) == 1:
             sequences = [sanitise_sequence(sequences[0])]
             sequences = [check_content(sequences[0])]
@@ -359,19 +372,6 @@ def pre_process_sequences(sequences: List[Record], options: ConfigType, genefind
         logging.debug("Ensuring CDS features do not have duplicate IDs")
         ensure_no_duplicate_cds_gene_ids(sequences)
 
-        all_record_ids = {seq.id for seq in sequences}
-        # Ensure all records have unique names
-        if len(all_record_ids) < len(sequences):
-            all_record_ids = set()
-            for record in sequences:
-                if record.id in all_record_ids:
-                    record.original_id = record.id
-                    record.id = generate_unique_id(record.id, all_record_ids)[0]
-                all_record_ids.add(record.id)
-            assert len(all_record_ids) == len(sequences), "%d != %d" % (len(all_record_ids), len(sequences))
-        # Ensure all records have valid names
-        for record in sequences:
-            fix_record_name_id(record, all_record_ids)
 
     return sequences
 
