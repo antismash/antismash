@@ -4,6 +4,7 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=no-self-use,protected-access,missing-docstring,too-many-public-methods
 
+from collections import defaultdict
 import unittest
 
 from antismash.common.hmm_rule_parser import rule_parser
@@ -47,33 +48,37 @@ class DetectionTest(unittest.TestCase):
         for rule in rules:
             assert rule.contains_positive_condition()
 
-        detected_types = {}
+        detected_types = defaultdict(set)
         cds_with_hits = sorted(self.results_by_id,
                                key=lambda gene_id: self.feature_by_id[gene_id].location.start)
         for cds in cds_with_hits:
-            assert cds not in detected_types
             rule_results = []
             for rule in rules:
-                rule_results.append(rule.detect(cds, self.feature_by_id, self.results_by_id))
-                if rule_results[-1]:
-                    # check that we have something interesting to report
-                    hit_string = rule.get_hit_string().replace("0*", "")
-                    assert "*" in hit_string
-            results = [rule.name for rule, res in zip(rules, rule_results) if res.met and res.matches]
-            if results:
-                detected_types[cds] = results
+                result = rule.detect(cds, self.feature_by_id, self.results_by_id)
+                if not result or not result.matches:
+                    continue
+                rule_results.append(result)
+                # check that we have something interesting to report
+                hit_string = rule.get_hit_string().replace("0*", "")
+                assert "*" in hit_string, str(result)
 
-        for gid in detected_types:
-            detected_types[gid] = set(detected_types[gid])
+                if result.met and result.matches:
+                    detected_types[cds].add(rule.name)
+                    for other_cds, matches in result.ancillary_hits.items():
+                        detected_types[other_cds].add(rule.name)
+
         return detected_types
 
     def expect(self, results, genes_to_hit):
         expected = {gene: set("A") for gene in genes_to_hit}
-        assert results == expected
+        assert results == expected, "%s != %s" % (set(results), set(expected))
 
     def test_single(self):
         results = self.run_test("A", 10, 20, "a")
         self.expect(results, ["GENE_1", "GENE_2"])
+
+        results = self.run_test("A", 40, 10, "e")
+        self.expect(results, ["GENE_4"])
 
     def test_simple_or(self):
         results = self.run_test("A", 10, 20, "a or c")
@@ -123,6 +128,31 @@ class DetectionTest(unittest.TestCase):
 
         results = self.run_test("A", 100, 20, "minimum(2, [b, e])")
         self.expect(results, ["GENE_1", "GENE_3", "GENE_4"])
+
+    def test_minimum_in_and(self):
+        # ensures cluster rules using a MinimumCondition inside an AndCondition
+        # report the minimum hits properly if another condition is the one
+        # triggering on the current search gene
+        # specifically for minimum components are too far from each other,
+        # but within range of a hit for another condition
+
+        # first, remove complications
+        for noise in ["GENE_1", "GENE_2"]:
+            self.results_by_id.pop(noise)
+
+        # ensure the minimum isn't valid on its own
+        results = self.run_test("A", 20, 10, "minimum(2, [g, c])")
+        assert not results
+        # ensure minimum works properly by itself
+        results = self.run_test("A", 80, 10, "minimum(2, [g, c])")
+        self.expect(results, ["GENE_3", "GENE_5"])
+        # the second condition is valid and hits gene 4
+        results = self.run_test("A", 10, 10, "e")
+        self.expect(results, ["GENE_4"])
+        # so the combination of rules should be all three
+        # (or no hit, if minimums have to internally obey cutoff checks)
+        results = self.run_test("A", 40, 10, "e and minimum(2, [g, c])")
+        self.expect(results, ["GENE_3", "GENE_4", "GENE_5"])
 
     def test_single_gene(self):
         self.results_by_id = {
@@ -211,7 +241,6 @@ class DetectionTest(unittest.TestCase):
 
         # below the cutoff
         results = self.run_test("A", 10, 20, "minscore(e, 49)")
-        print(self.results_by_id["GENE_4"])
         self.expect(results, ["GENE_4"])
 
     def test_negated_minscore(self):
