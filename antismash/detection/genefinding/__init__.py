@@ -23,7 +23,8 @@ SHORT_DESCRIPTION = "Genefinding with GlimmerHMM or Prodigal"
 def get_arguments() -> ModuleArgs:
     """ Construct args with options for which genefinding method to use (if any)
     """
-    args = ModuleArgs('Gene finding options (ignored when ORFs are annotated)', 'genefinding')
+    args = ModuleArgs('Gene finding options (ignored when ORFs are annotated)',
+                      'genefinding', basic_help=True)
     args.add_option('tool',
                     dest='tool',
                     default='error',
