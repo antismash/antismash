@@ -17,11 +17,6 @@ from antismash.config import get_config
 
 from .data_structures import Subject, Query, Protein, ReferenceCluster, Score
 
-VERSION_FORMAT_MAP = {
-    "0.8": 0,
-    "0.9": 1,
-}
-
 
 def get_core_gene_ids(record: secmet.Record) -> Set[str]:  # TODO: consider moving into secmet
     """ Fetches all gene accessions of genes with CORE gene function from all
@@ -777,22 +772,19 @@ def check_diamond_db_compatible(database_file: str) -> bool:
         Returns:
             True if the database file is compatible, False otherwise
     """
-    diamond_version = subprocessing.run_diamond_version()
-    # We don't care about patch versions for now
-    major, minor, _ = diamond_version.split(".")
-    compatible_format = VERSION_FORMAT_MAP[".".join([major, minor])]
 
-    with open(database_file, 'rb') as handle:
-        chunk = handle.read(16)
+    with TemporaryDirectory(change=True):
+        dummy_fasta = "dummy.fa"
+        dummy_db = "dummy.dmnd"
+        with open(dummy_fasta, "w") as handle:
+            handle.write(">test\nM\n")
+        subprocessing.run_diamond_makedb(dummy_db, dummy_fasta)
+        compatible_format = _extract_db_format(dummy_db)
 
-    if len(chunk) != 16:
-        logging.debug("Database %s appears corrupted.", database_file)
+    try:
+        db_format = _extract_db_format(database_file)
+    except ValueError:
         return False
-
-    # The uint32 in front of the format version is the build ID, we don't care
-    # about it yet, but might need to care in future.
-
-    _, db_format = struct.unpack_from("II", chunk, offset=8)
 
     if db_format != compatible_format:
         logging.debug("Incompatible database format for %s. Expected %s but found %s.",
@@ -800,6 +792,30 @@ def check_diamond_db_compatible(database_file: str) -> bool:
         )
         return False
     return True
+
+
+def _extract_db_format(database_file: str) -> int:
+    """ Extract version from a diamond database file
+
+        Arguments:
+            database_file: the path to the database file to extract the version from
+
+        Returns:
+            The database version as an integer
+    """
+    with open(database_file, 'rb') as handle:
+        chunk = handle.read(16)
+
+    if len(chunk) != 16:
+        logging.debug("Database %s appears corrupted.", database_file)
+        raise ValueError()
+
+    # The uint32 in front of the format version is the build ID, we don't care
+    # about it yet, but might need to care in future.
+
+    _, db_format = struct.unpack_from("II", chunk, offset=8)
+
+    return db_format
 
 
 def check_clusterblast_files(definition_file: str,
