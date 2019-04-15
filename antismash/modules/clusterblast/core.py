@@ -122,7 +122,7 @@ def load_reference_clusters(searchtype: str) -> Dict[str, ReferenceCluster]:
     if searchtype == "clusterblast":
         logging.info("ClusterBlast: Loading gene cluster database into memory...")
         data_dir = os.path.join(options.database_dir, 'clusterblast')
-        reference_cluster_file = os.path.join(data_dir, "geneclusters.txt")
+        reference_cluster_file = os.path.join(data_dir, "clusters.txt")
     elif searchtype == "subclusterblast":
         logging.info("SubClusterBlast: Loading gene cluster database into memory...")
         data_dir = path.get_full_path(__file__, "data", "sub")
@@ -164,7 +164,7 @@ def load_reference_proteins(searchtype: str) -> Dict[str, Protein]:
     if searchtype == "clusterblast":
         logging.info("ClusterBlast: Loading gene cluster database proteins into memory...")
         data_dir = os.path.join(options.database_dir, 'clusterblast')
-        protein_file = os.path.join(data_dir, "geneclusterprots.fasta")
+        protein_file = os.path.join(data_dir, "proteins.fasta")
     elif searchtype == "subclusterblast":
         logging.info("SubClusterBlast: Loading gene cluster database proteins into memory...")
         data_dir = path.get_full_path(__file__, "data", "sub")
