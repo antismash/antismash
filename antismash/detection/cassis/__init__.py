@@ -13,10 +13,10 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from Bio.SeqFeature import SeqFeature
 
-from antismash.common import path, module_results
+from antismash.common import module_results
 from antismash.common.secmet import SubRegion, Feature, FeatureLocation, GeneFunction, Gene, Record
 from antismash.common.serialiser import feature_to_json, feature_from_json
-from antismash.config import ConfigType
+from antismash.config import ConfigType, get_config
 from antismash.config.args import ModuleArgs
 
 from .cluster_prediction import get_predictions_for_anchor, ClusterPrediction
@@ -155,9 +155,10 @@ def run_on_record(record: Record, results: CassisResults, options: ConfigType) -
 
 def check_prereqs() -> List[str]:
     """Check for prerequisites"""
+    options = get_config()
     failure_messages = []
     for binary_name, _ in [("meme", "4.11.1"), ("fimo", "4.11.1")]:
-        if path.locate_executable(binary_name) is None:
+        if binary_name not in options.executables:
             failure_messages.append("Failed to locate executable for {!r}".format(binary_name))
         # TODO: Check binary version here
 

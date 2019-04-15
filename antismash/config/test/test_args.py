@@ -7,11 +7,12 @@
 from argparse import ArgumentError, Namespace
 import os
 import unittest
+from unittest.mock import patch
 
 from helperlibs.wrappers.io import TemporaryDirectory
 
 from antismash import get_all_modules
-from antismash.config import get_config, update_config, destroy_config
+from antismash.config import get_config, update_config, destroy_config, executables
 from antismash.config import args
 
 
@@ -84,6 +85,36 @@ class TestConfig(unittest.TestCase):
     def test_paths(self):
         options = self.core_parser.parse_args(["--reuse-results", "local"])
         assert os.sep in options.reuse_results
+
+
+class TestExecutableArg(unittest.TestCase):
+    def setUp(self):
+        self.core_parser = args.build_parser()
+        self.default_parser = args.build_parser(modules=[])
+        self.old_executable_mapping = dict(executables._ALTERNATE_EXECUTABLE_NAMES)
+        executables._ALTERNATE_EXECUTABLE_NAMES.clear()
+
+    def tearDown(self):
+        executables._ALTERNATE_EXECUTABLE_NAMES.update(self.old_executable_mapping)
+        destroy_config()
+
+    def test_executables_default(self):
+        options = self.core_parser.parse_args([])
+        assert isinstance(options.executables, Namespace)
+        assert vars(options.executables)
+        assert options.executables.hmmscan
+
+    @patch.object(executables, "find_executable_path")
+    def test_executables_override(self, mocked_find):
+        executables._ALTERNATE_EXECUTABLE_NAMES["diamond"] = "/path/to/diamond"
+        executables._ALTERNATE_EXECUTABLE_NAMES["hmmscan"] = "/path/to/hmmscan"
+        mocked_find.side_effect = ["/path/to/alt_diamond", "/path/to/alt_hmmscan"]
+
+        options = self.core_parser.parse_args(["--executable-paths", "diamond=alt_diamond",
+                                               "--executable-paths", "hmmscan=alt_hmmscan"])
+        print(options.executables.__dict__)
+        assert options.executables.diamond == "/path/to/alt_diamond"
+        assert options.executables.hmmscan == "/path/to/alt_hmmscan"
 
 
 class TestModuleArgs(unittest.TestCase):

@@ -51,12 +51,13 @@ def is_enabled(options: ConfigType) -> bool:
 
 def check_prereqs() -> List[str]:
     """ Ensure at least one database exists and is valid """
+    options = get_config()
     failure_messages = []
     for binary_name in ['hmmscan']:
-        if not path.locate_executable(binary_name):
+        if not binary_name in options.executables:
             failure_messages.append("Failed to locate executable: %r" % binary_name)
 
-    data_dir = get_config().database_dir
+    data_dir = options.database_dir
     try:
         version = pfamdb.find_latest_database_version(data_dir)
     except ValueError as err:

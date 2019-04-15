@@ -821,4 +821,7 @@ def check_clusterblast_files(definition_file: str,
                 raise
             failure_messages.append("Failed to regenerate diamond database %r" % db_file)
 
+    if failure_messages:
+        failure_messages.append("with diamond executable: %s" % get_config().executables.diamond)
+
     return failure_messages

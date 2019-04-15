@@ -8,9 +8,8 @@
 import logging
 from typing import Any, Dict, List, Optional
 
-from antismash.common import path
 from antismash.common.secmet import Record
-from antismash.config import ConfigType
+from antismash.config import ConfigType, get_config
 from antismash.config.args import ModuleArgs
 
 from .specific_analysis import specific_analysis, ThioResults
@@ -40,9 +39,10 @@ def check_prereqs() -> List[str]:
     """ Check prereqs
             hmmpfam2: used to find extra HMM hits not in hmm_detection
     """
+    options = get_config()
     failure_messages = []
     for binary_name in ['hmmpfam2']:
-        if path.locate_executable(binary_name) is None:
+        if binary_name not in options.executables:
             failure_messages.append("Failed to locate executable for %r" %
                                     binary_name)
     return failure_messages
