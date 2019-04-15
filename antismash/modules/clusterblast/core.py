@@ -785,6 +785,10 @@ def check_diamond_db_compatible(database_file: str) -> bool:
     with open(database_file, 'rb') as handle:
         chunk = handle.read(16)
 
+    if len(chunk) != 16:
+        logging.debug("Database %s appears corrupted.", database_file)
+        return False
+
     # The uint32 in front of the format version is the build ID, we don't care
     # about it yet, but might need to care in future.
 
