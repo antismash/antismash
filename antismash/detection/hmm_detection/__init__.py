@@ -18,7 +18,7 @@ from antismash.common.hmm_rule_parser.cluster_prediction import (
 from antismash.common.module_results import DetectionResults
 from antismash.common.secmet.record import Record
 from antismash.common.secmet.features import Protocluster
-from antismash.config import ConfigType
+from antismash.config import ConfigType, get_config
 from antismash.config.args import ModuleArgs
 from antismash.detection.hmm_detection.signatures import get_signature_profiles
 
@@ -205,9 +205,10 @@ def check_prereqs() -> List[str]:
     """ Check that prereqs are satisfied. hmmpress is only required if the
         databases have not yet been generated.
     """
+    options = get_config()
     failure_messages = []
     for binary_name in ["hmmsearch", "hmmpress"]:
-        if not path.locate_executable(binary_name):
+        if binary_name not in options.executables:
             failure_messages.append("Failed to locate executable for %r" % binary_name)
 
     # no point checking the data if we can't use it

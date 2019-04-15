@@ -26,7 +26,7 @@ def _get_datafile_path(filename: str) -> str:
     return path.get_full_path(__file__, 'data', 'sub', filename)
 
 
-def check_sub_prereqs(_options: ConfigType) -> List[str]:
+def check_sub_prereqs(options: ConfigType) -> List[str]:
     """ Check if all required applications and datafiles are present.
         options is irrelevant here
     """
@@ -41,7 +41,7 @@ def check_sub_prereqs(_options: ConfigType) -> List[str]:
     ]
     failure_messages = []
     for binary_name in _required_binaries:
-        if path.locate_executable(binary_name) is None:
+        if binary_name not in options.executables:
             failure_messages.append("Failed to locate file: %r" % binary_name)
 
     for file_name in _required_files:

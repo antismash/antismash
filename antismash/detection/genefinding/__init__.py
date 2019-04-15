@@ -7,7 +7,6 @@ import logging
 import os
 from typing import List
 
-from antismash.common.path import locate_executable
 from antismash.common.secmet import Record
 from antismash.config import get_config, ConfigType
 from antismash.config.args import ModuleArgs
@@ -58,7 +57,7 @@ def check_prereqs() -> List[str]:
     elif options.taxon == 'fungi':
         binaries = ['glimmerhmm']
     for binary_name in binaries:
-        if not locate_executable(binary_name):
+        if binary_name not in options.executables:
             failure_messages.append("Failed to locate executable for %r" % binary_name)
 
     return failure_messages

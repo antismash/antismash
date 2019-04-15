@@ -95,13 +95,14 @@ def prepare_data(logging_only: bool = False) -> List[str]:
 def check_prereqs() -> List[str]:
     """Check for prerequisites
     """
+    options = get_config()
     failure_messages = []
 
     for binary_name in ['hmmscan', 'hmmpress']:
-        if path.locate_executable(binary_name) is None:
+        if binary_name not in options.executables:
             failure_messages.append("Failed to locate file: %r" % binary_name)
 
-    database = os.path.join(get_config().database_dir, 'resfam', 'Resfams.hmm')
+    database = os.path.join(options.database_dir, 'resfam', 'Resfams.hmm')
     if path.locate_file(database) is None:
         failure_messages.append('Failed to locate Resfam database in %s' % database)
 

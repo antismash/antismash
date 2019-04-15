@@ -428,9 +428,11 @@ def run_diamond(subcommand: str,
             RunResult of running diamond
     """
     config = get_config()
+    if not config.executables.diamond:
+        raise RuntimeError("no available diamond executable")
     with TemporaryDirectory() as temp_dir:
         params = [
-            config.cb_diamond_executable,
+            config.executables.diamond,
             subcommand,
             "--threads", str(config.cpus),
             "--tmpdir", temp_dir,
@@ -496,6 +498,8 @@ def run_diamond_version() -> str:
     """
 
     version_string = run_diamond("version").stdout
+    if not version_string.startswith("diamond version "):
+        msg = "unexpected output from diamond-executable: %s, check path"
+        raise RuntimeError(msg % get_config().executables.diamond)
     # Get rid of the "diamond version" prefix
-    assert version_string.startswith("diamond version ")
     return version_string[16:]

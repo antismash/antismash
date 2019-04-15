@@ -35,31 +35,6 @@ def get_full_path(current_file: str, *args: Union[str, List[str]]) -> str:
     return os.path.join(base, extra)
 
 
-def locate_executable(name: str, silent: bool = False) -> Optional[str]:
-    """ Find an executable in the path and return the full path
-
-        Arguments:
-            name: the name of the executable to find
-            silent: if True, debug messages won't be logged
-
-        Returns:
-            The absolute path to the executable as a string or None if not found
-    """
-    if os.path.split(name)[0]:
-        if os.path.isfile(name) and os.access(name, os.X_OK):
-            if not silent:
-                logging.debug("Found executable %r", name)
-            return name
-    for path in os.environ["PATH"].split(os.pathsep):
-        full_name = os.path.join(path, name)
-        if os.path.isfile(full_name) and os.access(full_name, os.X_OK):
-            if not silent:
-                logging.debug("Found executable %r", full_name)
-            return full_name
-
-    return None
-
-
 def locate_file(path: str, silent: bool = False) -> Optional[str]:
     """ Checks that a given file path is valid and that read permissions exist
         for the file

@@ -7,7 +7,7 @@ import logging
 from typing import Any, Dict, List, Optional
 
 from antismash.common import path
-from antismash.config import ConfigType
+from antismash.config import ConfigType, get_config
 from antismash.config.args import ModuleArgs
 from antismash.common.secmet import Record
 from antismash.common import hmmer
@@ -62,9 +62,10 @@ def check_prereqs() -> List[str]:
         Returns:
             a list of strings describing any errors, if they occurred
     """
+    options = get_config()
     failure_messages = []
     for binary_name in ['hmmscan', "hmmpress", 'blastp']:
-        if path.locate_executable(binary_name) is None:
+        if binary_name not in options.executables:
             failure_messages.append("Failed to locate file: %r" % binary_name)
 
     for blastdb in ['KSIII', 'AT', 'LIG']:

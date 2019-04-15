@@ -14,7 +14,7 @@ from typing import Any, Dict, List, Optional
 from antismash.common import path
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record
-from antismash.config import ConfigType
+from antismash.config import ConfigType, get_config
 from antismash.config.args import ModuleArgs
 
 from .trees import generate_trees
@@ -103,9 +103,10 @@ def regenerate_previous_results(results: Dict[str, Any], record: Record, _option
 
 def check_prereqs() -> List[str]:
     "Check if all required applications are around"
+    options = get_config()
     failure_messages = []
     for binary_name in ['muscle', 'fasttree']:
-        if path.locate_executable(binary_name) is None:
+        if binary_name not in options.executables:
             failure_messages.append("Failed to locate file: %r" % binary_name)
 
     return failure_messages

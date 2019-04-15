@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional
 
 from antismash.common import path
 from antismash.common.secmet import Record
-from antismash.config import ConfigType
+from antismash.config import ConfigType, get_config
 from antismash.config.args import ModuleArgs
 
 from .html_output import generate_html, will_handle
@@ -26,9 +26,10 @@ def check_prereqs() -> List[str]:
             muscle: sandpuma, at_analysis, kr_analysis, minowa, orderfinder
             hmmsearch: minowa
     """
+    options = get_config()
     failure_messages = []
     for binary_name in ["hmmsearch", "muscle", "java"]:
-        if path.locate_executable(binary_name) is None:
+        if binary_name not in options.executables:
             failure_messages.append("Failed to locate executable for %r" %
                                     binary_name)
 
