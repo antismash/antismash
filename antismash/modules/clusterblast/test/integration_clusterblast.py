@@ -89,7 +89,7 @@ class GeneralIntegrationTest(Base):
         return results.general, results
 
     def test_nisin(self):
-        self.check_nisin(2452)
+        self.check_nisin(635)
 
 
 class KnownIntegrationTest(Base):

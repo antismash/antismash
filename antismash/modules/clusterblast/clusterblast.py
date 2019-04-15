@@ -38,7 +38,7 @@ def perform_clusterblast(options: ConfigType, record: Record,
             a GeneralResults instance with results for each cluster in the record
     """
     regions = record.get_regions()
-    database = os.path.join(options.database_dir, 'clusterblast', 'geneclusterprots')
+    database = os.path.join(options.database_dir, 'clusterblast', 'proteins')
     blastoutput = run_diamond_on_all_regions(regions, database)
 
     write_raw_clusterblastoutput(options.output_dir, blastoutput)

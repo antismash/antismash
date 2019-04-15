@@ -296,7 +296,7 @@ def download_resfam(db_dir: str) -> None:
 def download_clusterblast(db_dir: str) -> None:
     """Download the clusterblast database."""
     archive_filename = os.path.join(db_dir, CLUSTERBLAST_URL.rpartition("/")[2])
-    fasta_filename = os.path.join(db_dir, "clusterblast", "geneclusterprots.fasta")
+    fasta_filename = os.path.join(db_dir, "clusterblast", "proteins.fasta")
 
     if present_and_checksum_matches(fasta_filename, CLUSTERBLAST_FASTA_CHECKSUM):
         print("ClusterBlast fasta file present and checked")
