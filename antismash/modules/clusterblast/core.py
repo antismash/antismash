@@ -117,15 +117,14 @@ def load_reference_clusters(searchtype: str) -> Dict[str, ReferenceCluster]:
     if searchtype == "clusterblast":
         logging.info("ClusterBlast: Loading gene cluster database into memory...")
         data_dir = os.path.join(options.database_dir, 'clusterblast')
-        reference_cluster_file = os.path.join(data_dir, "clusters.txt")
     elif searchtype == "subclusterblast":
         logging.info("SubClusterBlast: Loading gene cluster database into memory...")
         data_dir = path.get_full_path(__file__, "data", "sub")
-        reference_cluster_file = os.path.join(data_dir, "subclusters.txt")
     elif searchtype == "knownclusterblast":
         logging.info("KnownClusterBlast: Loading gene cluster database into memory...")
         data_dir = path.get_full_path(__file__, "data", "known")
-        reference_cluster_file = os.path.join(data_dir, "clusters.txt")
+
+    reference_cluster_file = os.path.join(data_dir, "clusters.txt")
     with open(reference_cluster_file, "r") as handle:
         filetext = handle.read()
     lines = [line for line in filetext.splitlines() if "\t" in line]
@@ -159,15 +158,14 @@ def load_reference_proteins(searchtype: str) -> Dict[str, Protein]:
     if searchtype == "clusterblast":
         logging.info("ClusterBlast: Loading gene cluster database proteins into memory...")
         data_dir = os.path.join(options.database_dir, 'clusterblast')
-        protein_file = os.path.join(data_dir, "proteins.fasta")
     elif searchtype == "subclusterblast":
         logging.info("SubClusterBlast: Loading gene cluster database proteins into memory...")
         data_dir = path.get_full_path(__file__, "data", "sub")
-        protein_file = os.path.join(data_dir, "subclusterprots.fasta")
     elif searchtype == "knownclusterblast":
         logging.info("KnownClusterBlast: Loading gene cluster database proteins into memory...")
         data_dir = path.get_full_path(__file__, "data", "known")
-        protein_file = os.path.join(data_dir, "proteins.fasta")
+
+    protein_file = os.path.join(data_dir, "proteins.fasta")
 
     proteins = {}
     with open(protein_file, 'r') as handle:

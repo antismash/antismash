@@ -30,26 +30,22 @@ def check_sub_prereqs(_options: ConfigType) -> List[str]:
     """ Check if all required applications and datafiles are present.
         options is irrelevant here
     """
-    # Tuple is ( binary_name, optional)
-    _required_binaries = [
-        ('blastp', False),
-        ('makeblastdb', False),
-    ]
+    _required_binaries = ['blastp', 'makeblastdb']
 
     _required_files = [
-        ('subclusterprots.fasta', False),
-        ('subclusterprots.fasta.phr', False),
-        ('subclusterprots.fasta.pin', False),
-        ('subclusterprots.fasta.psq', False),
-        ('subclusters.txt', False)
+        'proteins.fasta',
+        'proteins.fasta.phr',
+        'proteins.fasta.pin',
+        'proteins.fasta.psq',
+        'clusters.txt'
     ]
     failure_messages = []
-    for binary_name, optional in _required_binaries:
-        if path.locate_executable(binary_name) is None and not optional:
+    for binary_name in _required_binaries:
+        if path.locate_executable(binary_name) is None:
             failure_messages.append("Failed to locate file: %r" % binary_name)
 
-    for file_name, optional in _required_files:
-        if path.locate_file(_get_datafile_path(file_name)) is None and not optional:
+    for file_name in _required_files:
+        if path.locate_file(_get_datafile_path(file_name)) is None:
             failure_messages.append("Failed to locate file: %r" % file_name)
 
     return failure_messages
@@ -98,7 +94,7 @@ def run_clusterblast_processes(options: ConfigType) -> None:
         Returns:
             None
     """
-    database = _get_datafile_path('subclusterprots.fasta')
+    database = _get_datafile_path('proteins.fasta')
     # set the first arg to always be database
     partial = functools.partial(_run_blast_helper, database)
     # run in parallel
