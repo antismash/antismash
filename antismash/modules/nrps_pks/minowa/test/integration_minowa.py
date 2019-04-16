@@ -9,10 +9,17 @@ import unittest
 from antismash.modules.nrps_pks.minowa.minowa_at import run_minowa_at
 from antismash.modules.nrps_pks.minowa.minowa_cal import run_minowa_cal
 from antismash.common import path, fasta
+from antismash.config import build_config, destroy_config
 
 
 class TestMinowaAT(unittest.TestCase):
     query_data = fasta.read_fasta(path.get_full_path(__file__, "data", "SCO.fasta"))
+
+    def setUp(self):
+        build_config([])
+
+    def tearDown(self):
+        destroy_config()
 
     def test_full_run(self):
         results = run_minowa_at(self.query_data)
@@ -173,6 +180,12 @@ class TestMinowaCAL(unittest.TestCase):
                                    'DVEVAVVDAATGRRVPDGTVAEIRVSGPGVARGYWGRPEAAAE'
                                    'VFGTRIDGEPGNAWLRTGDVGFRHDGQLYVVGRTKDVIIVQGR'
                                    'NIHPQDVEQTAERVGAGL')}
+
+    def setUp(self):
+        build_config([])
+
+    def tearDown(self):
+        destroy_config()
 
     def test_full_run(self):
         expected = [("NH2", 118.5), ("fatty_acid", 37.5), ("AHBA", 6.5), ("shikimic_acid", 0.0), ("Acetyl-CoA", -1.6)]

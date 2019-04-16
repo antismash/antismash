@@ -9,6 +9,7 @@ import unittest
 
 from antismash.common import path
 from antismash.common.test.helpers import DummyCDS
+from antismash.config import build_config, destroy_config
 from antismash.modules.nrps_pks import orderfinder
 
 
@@ -31,6 +32,10 @@ class TestCTerminalExtract(unittest.TestCase):
 
         self.features = [DummyCDS(1, 200, translation=seq, locus_tag=seq_id) for seq_id, seq in self.seqs.items()]
         self.features_by_id = {feature.locus_tag: feature for feature in self.features}
+        build_config([])
+
+    def tearDown(self):
+        destroy_config()
 
     def test_c_terminals_no_end(self):
         residues = orderfinder.extract_cterminus(self.data_dir, self.features, "")
@@ -57,6 +62,10 @@ class TestNTerminalExtract(unittest.TestCase):
 
         self.features = [DummyCDS(1, 200, translation=seq, locus_tag=seq_id) for seq_id, seq in self.seqs.items()]
         self.features_by_id = {feature.locus_tag: feature for feature in self.features}
+        build_config([])
+
+    def tearDown(self):
+        destroy_config()
 
     def test_n_terminals_no_start(self):
         residues = orderfinder.extract_nterminus(self.data_dir, self.features, None)

@@ -76,6 +76,9 @@ def execute(commands: List[str], stdin: Optional[str] = None, stdout: Union[int,
         Returns:
             a RunResult object containing any piped output
     """
+    options = get_config()
+    if commands[0] in options.executables:
+        commands[0] = getattr(options.executables, commands[0])
 
     if stdin is not None:
         stdin_redir = PIPE  # type: Optional[int]
@@ -209,7 +212,7 @@ def run_hmmsearch(query_hmmfile: str, target_sequence: str, use_tempfile: bool =
             a list of hmmsearch results as parsed by SearchIO
     """
     config = get_config()
-    command = ["hmmsearch", "--cpu", str(config.cpus),
+    command = [config.executables.hmmsearch, "--cpu", str(config.cpus),
                "-o", os.devnull,  # throw away the verbose output
                "--domtblout", "result.domtab",
                query_hmmfile]
@@ -248,7 +251,7 @@ def run_hmmpress(hmmfile: str) -> RunResult:
         Returns:
             a RunResult instance
     """
-    return execute(["hmmpress", "-f", hmmfile])
+    return execute([get_config().executables.hmmpress, "-f", hmmfile])
 
 
 def run_hmmpfam2(query_hmmfile: str, target_sequence: str, extra_args: List[str] = None
@@ -263,7 +266,7 @@ def run_hmmpfam2(query_hmmfile: str, target_sequence: str, extra_args: List[str]
             a list of results as parsed by SearchIO
     """
     config = get_config()
-    command = ["hmmpfam2"]
+    command = [config.executables.hmmpfam2]
 
     # Allow to disable multithreading for HMMer2 calls in the command line #TODO fix options for this
     if config.get('hmmer2') and 'multithreading' in config.hmmer2 and \
@@ -319,7 +322,7 @@ def run_hmmscan(target_hmmfile: str, query_sequence: str, opts: List[str] = None
         raise ValueError("Cannot run hmmscan on empty sequence")
 
     config = get_config()
-    command = ["hmmscan", "--cpu", str(config.cpus), "--nobias"]
+    command = [config.executables.hmmscan, "--cpu", str(config.cpus), "--nobias"]
 
     # Allow to disable multithreading for HMMer3 calls in the command line
     if config.get('hmmer3') and 'multithreading' in config.hmmer3 and \
@@ -357,7 +360,8 @@ def run_muscle_single(seq_name: str, seq: str, comparison_file: str) -> Dict[str
         with NamedTemporaryFile(mode="w+") as temp_out:
             write_fasta([seq_name], [seq], temp_in.name)
             # Run muscle and collect sequence positions from file
-            result = execute(["muscle", "-profile", "-quiet",
+            result = execute([get_config().executables.muscle,
+                              "-profile", "-quiet",
                               "-in1", comparison_file,
                               "-in2", temp_in.name,
                               "-out", temp_out.name])
@@ -389,7 +393,7 @@ def run_blastp(target_blastp_database: str, query_sequence: str,
 
     config = get_config()
     command = [
-        "blastp",
+        config.executables.blastp,
         "-num_threads", str(config.cpus),
         "-db", target_blastp_database,
         "-outfmt", "6",  # use tabular format for biopython's parsing
