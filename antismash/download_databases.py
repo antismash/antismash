@@ -84,7 +84,7 @@ def download_file(url: str, filename: str) -> str:
         raise DownloadError("ERROR: File not found on server.\nPlease check your internet connection.")
 
     # use 1 because we want to divide by the expected size, can't use 0
-    expected_size = int(req.info().get("Content-Length", "1"))
+    expected_size = int(req.info().get("Content-Length", "1"))  # type: ignore
 
     basename = os.path.basename(filename)
     dirname = os.path.dirname(filename)
