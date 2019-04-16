@@ -172,3 +172,30 @@ class TestDiamondDatabaseChecks(unittest.TestCase):
 
         assert not core.check_diamond_db_compatible(broken_file)
         assert not core.check_diamond_db_compatible(self.empty)
+
+
+class TestDatabaseValidity(unittest.TestCase):
+    def setUp(self):
+        options = build_config([], isolated=True, modules=get_all_modules())
+        self.old_config = get_config().__dict__
+        self.options = update_config(options)
+
+    def tearDown(self):
+        destroy_config()
+        update_config(self.old_config)
+
+    def _check_proteins_match_clusters(self, searchtype):
+        clusters = core.load_reference_clusters(searchtype)
+        proteins = core.load_reference_proteins(searchtype)
+        for cluster in clusters.values():
+            for protein in cluster.tags:
+                assert protein in proteins, "missing: %s" % protein
+
+    def test_general(self):
+        self._check_proteins_match_clusters("clusterblast")
+
+    def test_known(self):
+        self._check_proteins_match_clusters("knownclusterblast")
+
+    def test_sub(self):
+        self._check_proteins_match_clusters("subclusterblast")
