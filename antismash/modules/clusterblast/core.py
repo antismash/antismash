@@ -184,27 +184,6 @@ def load_reference_proteins(searchtype: str) -> Dict[str, Protein]:
     return proteins
 
 
-def strip_clusters_missing_proteins(clusters: Dict[str, ReferenceCluster],
-                                    proteins: Dict[str, Protein]) -> None:
-    """ Checks all reference clusters and ensures that all proteins mentioned
-        have a matching reference protein. Any clusters with missing proteins
-        will be removed, along with the other proteins belonging to that cluster.
-
-        Modifies both clusters and proteins in place.
-
-        Arguments:
-            clusters: the clusters to check
-            proteins: the matching protein database
-
-        Returns:
-            None
-    """
-    for cluster in clusters.values():
-        for protein in cluster.tags:
-            if protein not in proteins:
-                raise ValueError("bad database")
-
-
 def load_clusterblast_database(record: secmet.Record, searchtype: str = "clusterblast"
                                ) -> Tuple[Dict[str, ReferenceCluster], Dict[str, Protein]]:
     """ Load clusterblast database
@@ -220,8 +199,6 @@ def load_clusterblast_database(record: secmet.Record, searchtype: str = "cluster
     """
     clusters = load_reference_clusters(searchtype)
     proteins = load_reference_proteins(searchtype)
-    # some clusters refer to proteins that are missing, so remove them here
-    strip_clusters_missing_proteins(clusters, proteins)
 
     return clusters, proteins
 
@@ -693,8 +670,6 @@ def score_clusterblast_output(clusters: Dict[str, ReferenceCluster], allcoregene
     """
     results = {}
     for cluster_label, queries in cluster_names_to_queries.items():
-        if cluster_label not in clusters:  # only relevant when strip_clusters_missing_proteins had some affect
-            continue
         single_gene_reference = len(clusters[cluster_label].proteins) == 1
         result, hitpositions, hitposcorelist = parse_clusterblast_dict(queries, clusters, cluster_label, allcoregenes)
         if not result.hits:
