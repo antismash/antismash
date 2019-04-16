@@ -7,6 +7,7 @@
 import unittest
 
 from antismash.modules.nrps_pks.at_analysis.at_analysis import run_at_domain_analysis
+from antismash.config import build_config, destroy_config
 
 
 class TestKRAnalysis(unittest.TestCase):
@@ -69,6 +70,12 @@ class TestKRAnalysis(unittest.TestCase):
                      'RLAEAGRRTKRLTVSHAFHSPLMDGMLKEFHKVAKELTYHAPRIPVVSTLTGALASG'
                      'DDLRTPCYWTDQVRHAVRFADAVRTLGELGATVLLEVGPDAVLSSLADATPTL'
       }
+
+    def setUp(self):
+        build_config([])
+
+    def tearDown(self):
+        destroy_config()
 
     def test_full_run(self):
         results = run_at_domain_analysis(self.query_data)

@@ -7,12 +7,17 @@
 import unittest
 
 from antismash.common import path, fasta
+from antismash.config import build_config, destroy_config
 from antismash.modules.nrps_pks.kr_analysis.kr_analysis import run_kr_analysis
 
 
 class TestKRAnalysis(unittest.TestCase):
     def setUp(self):
+        build_config([])
         self.query_data = fasta.read_fasta(path.get_full_path(__file__, 'data', 'SCO_genes.fasta'))
+
+    def tearDown(self):
+        destroy_config()
 
     def test_full_run(self):
         active, stereo = run_kr_analysis(self.query_data)
