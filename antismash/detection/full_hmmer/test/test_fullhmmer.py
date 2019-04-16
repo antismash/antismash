@@ -49,7 +49,7 @@ Called antismash.common.path.locate_file(
     def test_check_prereqs(self):
         "Test fullhmmer.check_prereqs()"
         expected = []
-        returned = full_hmmer.check_prereqs()
+        returned = full_hmmer.check_prereqs(self.config)
 
         self.assertListEqual(expected, returned)
         assert_same_trace(self.tracer, self.expected_trace)
@@ -58,7 +58,7 @@ Called antismash.common.path.locate_file(
         "Test fullhmmer.check_prereqs() with a missing executable"
         self.config.executables.__dict__.pop("hmmscan")
         expected = ["Failed to locate executable: 'hmmscan'"]
-        returned = full_hmmer.check_prereqs()
+        returned = full_hmmer.check_prereqs(self.config)
 
         self.assertListEqual(expected, returned)
 
@@ -67,7 +67,7 @@ Called antismash.common.path.locate_file(
         self.file_list[0] = None
         path.locate_file.mock_returns_iter = self.file_list
         expected = ["Failed to locate file: 'Pfam-A.hmm' in %s/pfam/%s" % (self.config.database_dir, self.latest_pfam)]
-        returned = full_hmmer.check_prereqs()
+        returned = full_hmmer.check_prereqs(self.config)
 
         self.assertListEqual(expected, returned)
         assert_same_trace(self.tracer, self.expected_trace)

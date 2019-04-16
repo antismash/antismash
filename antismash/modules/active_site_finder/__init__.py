@@ -8,7 +8,7 @@ import logging
 from typing import Any, Dict, List, Optional, Tuple
 
 from antismash.common import module_results, path, secmet
-from antismash.config import ConfigType, get_config
+from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
 
 from .analysis import run_all_analyses
@@ -61,9 +61,8 @@ def check_options(_options: ConfigType) -> List[str]:
     return []
 
 
-def check_prereqs() -> List[str]:
+def check_prereqs(options: ConfigType) -> List[str]:
     "Checks if all required files and applications are around"
-    options = get_config()
     failure_messages = []
 
     for binary_name in ['hmmpfam2', 'hmmscan', 'hmmpress']:

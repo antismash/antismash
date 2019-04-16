@@ -34,7 +34,7 @@ def check_options(options: ConfigType) -> List[str]:
     return issues
 
 
-def check_prereqs() -> List[str]:
+def check_prereqs(_options: ConfigType) -> List[str]:
     """Check for prerequisites"""
     # No external dependencies
     return []

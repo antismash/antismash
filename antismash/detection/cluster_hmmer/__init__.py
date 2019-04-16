@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional
 
 from antismash.common import hmmer, pfamdb
 from antismash.common.secmet import Record
-from antismash.config import get_config, ConfigType
+from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
 
 NAME = "cluster_hmmer"
@@ -40,9 +40,8 @@ def is_enabled(options: ConfigType) -> bool:
     return options.clusterhmmer
 
 
-def check_prereqs() -> List[str]:
+def check_prereqs(options: ConfigType) -> List[str]:
     """ Ensure at least one database exists and is valid """
-    options = get_config()
     failure_messages = []
     for binary_name in ['hmmscan']:
         if binary_name not in options.executables:

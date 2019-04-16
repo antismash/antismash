@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional
 
 from antismash.common import path
 from antismash.common.secmet import Record
-from antismash.config import ConfigType, get_config
+from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
 
 from .html_output import generate_html, will_handle
@@ -20,13 +20,12 @@ NAME = "nrps_pks"
 SHORT_DESCRIPTION = "NRPS/PKS analysis"
 
 
-def check_prereqs() -> List[str]:
+def check_prereqs(options: ConfigType) -> List[str]:
     """ Check the prerequisites.
             java: NRPSPredictor, sandpuma
             muscle: sandpuma, at_analysis, kr_analysis, minowa, orderfinder
             hmmsearch: minowa
     """
-    options = get_config()
     failure_messages = []
     for binary_name in ["hmmsearch", "muscle", "java"]:
         if binary_name not in options.executables:

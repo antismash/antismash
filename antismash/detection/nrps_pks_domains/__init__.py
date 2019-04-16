@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional
 
 from antismash.common import hmmer, path
 from antismash.common.secmet import Record
-from antismash.config import ConfigType, get_config
+from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
 
 from .domain_drawing import generate_html, generate_js_domains, will_handle
@@ -74,10 +74,9 @@ def prepare_data(logging_only: bool = False) -> List[str]:
     return failure_messages
 
 
-def check_prereqs() -> List[str]:
+def check_prereqs(options: ConfigType) -> List[str]:
     """ Ensures the various required hmmer profile files exist """
     failure_messages = []
-    options = get_config()
     for binary_name in ['hmmscan', 'hmmpress']:
         if binary_name not in options.executables:
             failure_messages.append("Failed to locate executable for %r" %

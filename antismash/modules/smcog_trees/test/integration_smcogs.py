@@ -33,7 +33,7 @@ class Base(unittest.TestCase):
         # as smcogs_trees depends on genefunctions.smcogs' data, ensure that's ready to go
         assert genefunctions.prepare_data() == []
 
-        assert smcog_trees.check_prereqs() == []
+        assert smcog_trees.check_prereqs(self.options) == []
         assert smcog_trees.check_options(self.options) == []
         assert smcog_trees.is_enabled(self.options)
 

@@ -25,7 +25,7 @@ class Base(unittest.TestCase):
         self.old_config = get_config().__dict__
         self.options = update_config(options)
 
-        assert clusterblast.check_prereqs() == []
+        assert clusterblast.check_prereqs(self.options) == []
         assert clusterblast.check_options(self.options) == []
         assert clusterblast.is_enabled(self.options)
 

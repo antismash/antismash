@@ -13,13 +13,12 @@ from antismash.config import build_config, destroy_config
 from antismash.modules import lassopeptides
 from antismash.modules.lassopeptides import check_prereqs
 
-check_prereqs()  # ensure fimo detected
-
 
 class IntegrationLasso(unittest.TestCase):
     def setUp(self):
         self.options = build_config(["--minimal", "--enable-lassopeptides"],
                                     isolated=True, modules=antismash.get_all_modules())
+        check_prereqs(self.options)
 
     def tearDown(self):
         destroy_config()

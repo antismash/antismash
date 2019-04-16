@@ -19,7 +19,7 @@
 from typing import Any, Dict, List, Optional
 
 from antismash.common.secmet import Record
-from antismash.config import ConfigType, get_config
+from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
 
 from .config import get_config as local_config
@@ -30,9 +30,8 @@ NAME = "lassopeptides"
 SHORT_DESCRIPTION = "lassopeptide precursor prediction"
 
 
-def check_prereqs() -> List[str]:
+def check_prereqs(options: ConfigType) -> List[str]:
     """ Checks if the required external programs are available """
-    options = get_config()
     failure_messages = []
     for binary_name, optional in [('hmmpfam2', False), ('fimo', True)]:
         present = True

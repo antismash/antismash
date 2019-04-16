@@ -39,7 +39,7 @@ class TtaTest(unittest.TestCase):
 
     def test_check_prereqs(self):
         """Test tta.check_prereqs()"""
-        assert not tta.check_prereqs()
+        assert not tta.check_prereqs(None)
 
     def test_options(self):
         options = Namespace()
