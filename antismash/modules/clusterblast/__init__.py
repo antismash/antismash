@@ -90,10 +90,8 @@ def regenerate_previous_results(previous: Dict[str, Any], record: Record,
     return ClusterBlastResults.from_json(previous, record)
 
 
-def check_prereqs() -> List[str]:
+def check_prereqs(options: ConfigType) -> List[str]:
     "Check if all required applications are around"
-    options = get_config()
-    # Tuple is ( binary_name, optional)
     _required_binaries = [
         'blastp',
         'makeblastdb',

@@ -7,7 +7,7 @@ import logging
 from typing import Any, Dict, List, Optional
 
 from antismash.common import path
-from antismash.config import ConfigType, get_config
+from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
 from antismash.common.secmet import Record
 from antismash.common import hmmer
@@ -53,7 +53,7 @@ def prepare_data(logging_only: bool = False) -> List[str]:
     return hmmer.ensure_database_pressed(database, return_not_raise=logging_only)
 
 
-def check_prereqs() -> List[str]:
+def check_prereqs(options: ConfigType) -> List[str]:
     """ Check the prerequisites.
             hmmscan: domain detection
             blastp: CLF and starter unit analysis
@@ -62,7 +62,6 @@ def check_prereqs() -> List[str]:
         Returns:
             a list of strings describing any errors, if they occurred
     """
-    options = get_config()
     failure_messages = []
     for binary_name in ['hmmscan', "hmmpress", 'blastp']:
         if binary_name not in options.executables:

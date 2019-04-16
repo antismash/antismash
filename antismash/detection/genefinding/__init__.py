@@ -8,7 +8,7 @@ import os
 from typing import List
 
 from antismash.common.secmet import Record
-from antismash.config import get_config, ConfigType
+from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
 
 from .run_prodigal import run_prodigal
@@ -43,10 +43,9 @@ def get_arguments() -> ModuleArgs:
     return args
 
 
-def check_prereqs() -> List[str]:
+def check_prereqs(options: ConfigType) -> List[str]:
     """ Make sure the external tools to use are available """
     failure_messages = []  # type: List[str]
-    options = get_config()
     if options.genefinding_tool in ['none']:
         return failure_messages
     binaries = []  # type: List[str]

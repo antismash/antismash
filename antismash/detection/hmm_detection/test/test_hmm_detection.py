@@ -22,7 +22,7 @@ from antismash.detection.hmm_detection import signatures
 
 class HmmDetectionTest(unittest.TestCase):
     def setUp(self):
-        build_config([])
+        self.config = build_config([])
         self.rules_file = path.get_full_path(__file__, "..", "cluster_rules", "strict.txt")
         self.signature_file = path.get_full_path(__file__, "..", "data", "hmmdetails.txt")
         self.signature_names = {sig.name for sig in core.get_signature_profiles()}
@@ -105,7 +105,7 @@ class HmmDetectionTest(unittest.TestCase):
 
     def test_core(self):
         # should be no failing prerequisites
-        assert core.check_prereqs() == []
+        assert core.check_prereqs(self.config) == []
         # always runs
         assert core.is_enabled(None)
 

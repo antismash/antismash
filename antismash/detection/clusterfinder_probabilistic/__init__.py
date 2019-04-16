@@ -112,7 +112,7 @@ class ClusterFinderResults(DetectionResults):
         return self.areas
 
 
-def check_prereqs() -> List[str]:
+def check_prereqs(_options: ConfigType) -> List[str]:
     """Don't check for prerequisites, we don't have any"""
     return []
 

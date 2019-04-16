@@ -8,7 +8,7 @@
 from typing import Any, Dict, List, Optional
 
 from antismash.common.secmet import Record
-from antismash.config import ConfigType, get_config
+from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
 
 from .specific_analysis import specific_analysis, SactiResults
@@ -18,9 +18,8 @@ NAME = "sactipeptides"
 SHORT_DESCRIPTION = "sactipeptide detection"
 
 
-def check_prereqs() -> List[str]:
+def check_prereqs(options: ConfigType) -> List[str]:
     """ Ensures all required external programs are available """
-    options = get_config()
     failure_messages = []
     for binary_name in ['hmmpfam2']:
         if binary_name not in options.executables:

@@ -33,7 +33,7 @@ def check_options(_options: ConfigType) -> List[str]:
     return []
 
 
-def check_prereqs() -> List[str]:
+def check_prereqs(_options: ConfigType) -> List[str]:
     """Check for prerequisites
         pfam2go-march-2018.txt: mapping file for Pfam to Gene Ontology mapping
     """

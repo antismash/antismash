@@ -12,13 +12,13 @@ from antismash.modules.lassopeptides import check_prereqs, local_config
 
 class TestCheckPrereqs(unittest.TestCase):
     def setUp(self):
-        build_config([])
+        self.options = build_config([])
 
     def tearDown(self):
         destroy_config()
 
     def test_check_prereqs(self):
         "Test lassopeptides.check_prereqs()"
-        ret = check_prereqs()
+        ret = check_prereqs(self.options)
         self.assertEqual(ret, [])
         self.assertTrue(local_config().fimo_present)

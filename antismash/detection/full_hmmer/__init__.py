@@ -7,7 +7,7 @@ import logging
 import os
 from typing import Any, Dict, List, Optional
 
-from antismash.config import get_config, ConfigType
+from antismash.config import ConfigType
 from antismash.common import path, pfamdb, hmmer
 from antismash.common.secmet import Record
 from antismash.config.args import ModuleArgs
@@ -49,9 +49,8 @@ def is_enabled(options: ConfigType) -> bool:
     return options.fullhmmer
 
 
-def check_prereqs() -> List[str]:
+def check_prereqs(options: ConfigType) -> List[str]:
     """ Ensure at least one database exists and is valid """
-    options = get_config()
     failure_messages = []
     for binary_name in ['hmmscan']:
         if not binary_name in options.executables:

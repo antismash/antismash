@@ -37,7 +37,7 @@ class TtaIntegrationTest(unittest.TestCase):
         assert record.get_cds_features_within_regions()
         before_count = record.get_feature_count()
 
-        assert tta.check_prereqs() == []
+        assert tta.check_prereqs(self.options) == []
         assert tta.check_options(self.options) == []
         assert tta.is_enabled(self.options)
         prior_results = None

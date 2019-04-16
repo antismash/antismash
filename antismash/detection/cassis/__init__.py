@@ -16,7 +16,7 @@ from Bio.SeqFeature import SeqFeature
 from antismash.common import module_results
 from antismash.common.secmet import SubRegion, Feature, FeatureLocation, GeneFunction, Gene, Record
 from antismash.common.serialiser import feature_to_json, feature_from_json
-from antismash.config import ConfigType, get_config
+from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
 
 from .cluster_prediction import get_predictions_for_anchor, ClusterPrediction
@@ -153,9 +153,8 @@ def run_on_record(record: Record, results: CassisResults, options: ConfigType) -
     return results
 
 
-def check_prereqs() -> List[str]:
+def check_prereqs(options: ConfigType) -> List[str]:
     """Check for prerequisites"""
-    options = get_config()
     failure_messages = []
     for binary_name, _ in [("meme", "4.11.1"), ("fimo", "4.11.1")]:
         if binary_name not in options.executables:

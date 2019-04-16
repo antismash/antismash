@@ -60,7 +60,7 @@ class ClusterFinderTest(unittest.TestCase):
             assert len(clusterfinder.check_options(self.config)) == 1
 
     def test_check_prereqs(self):
-        self.assertEqual([], clusterfinder.check_prereqs())
+        self.assertEqual([], clusterfinder.check_prereqs(self.config))
 
     def test_find_nr_cds(self):
         left = (0, 5)
