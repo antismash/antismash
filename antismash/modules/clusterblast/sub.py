@@ -149,7 +149,6 @@ def perform_subclusterblast(options: ConfigType, record: Record, clusters: Dict[
                                                      min_seq_coverage=40,
                                                      min_perc_identity=45)
             ranking = score_clusterblast_output(clusters, allcoregenes, cluster_names_to_queries)
-            logging.debug("Cluster at %s has %d subclusterblast results", region.location, len(ranking))
             # store results
             region_result = RegionResult(region, ranking, proteins, "subclusterblast")
             results.add_region_result(region_result, clusters, proteins)
