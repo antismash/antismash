@@ -4,10 +4,9 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
-import os
 import unittest
 
-from antismash.common import path, secmet
+from antismash.common import secmet
 from antismash.common.test.helpers import DummyCDS
 from antismash.detection.nrps_pks_domains import domain_identification
 from antismash.modules.nrps_pks import orderfinder
@@ -24,64 +23,6 @@ class DummyNRPSQualfier(secmet.qualifiers.NRPSPKSQualifier):  # pylint: disable=
     @domain_names.setter
     def domain_names(self, names):
         self._domain_names = names
-
-
-class TestCTerminalExtract(unittest.TestCase):
-    def setUp(self):
-        # 110 long, since only the last 100 will be used
-        self.seqs = {"STAUR_3982": ("FLEFTRQRGFISEEFGREHDSELMKTYLPTLRKDLVLLESYSYAEEAPLDMPLTV"
-                                    "FASTRDRIIPSTQLESWGELTREKPSIHLFEGDHFFARDAGGPLLALIREKLGLG"),
-                     "STAUR_3984": ("LARVLRMEASRIDRLRALGELGLDSLMSLELRNRLEASLGLKLSVTLLFTYPNLA"
-                                    "GLAEYLHGELLPAAAREQPAAQSQTHAAPSQIAEQVEQLSKDELLAFFDKSFGIA"),
-                     "STAUR_3983": ("TNMGLDSLMSLELRNRLEATLGLKLSATLLFTYPNLAALADHLLGKLSSVDEAPA"
-                                    "KTAPTAAAPPPPPTLKPQAALPAELDQLGKDELLSLFDESLTESLKRTRMTRTSR"),
-                     "STAUR_3985": ("PSKIDRLRALGELGLDSLMSLELRNRLEAALGMKLSATLLFTYPNLASLAQHVVG"
-                                    "RMEFPSEATVAPITASPGAVEGQAERLAEVEQMSDDEAEQLLLASLESLSTELLK"),
-                     "STAUR_3972": ("SEAALRGSAAGVAYTASKHALIGFTKNTAFMYGAKGVRVNIVAPGPVRTSISGAS"
-                                    "RSDHGWSRIAPVMNVLAVPVAESATLAGHILWLMSDEAENINGAVLPSDGGWSTF")
-                     }
-
-        self.data_dir = path.get_full_path(os.path.dirname(__file__), "data", "terminals")
-
-        self.features = [DummyCDS(1, 200, translation=seq, locus_tag=seq_id) for seq_id, seq in self.seqs.items()]
-        self.features_by_id = {feature.locus_tag: feature for feature in self.features}
-
-    def test_c_terminals_no_end(self):  # TODO: move to integration or mock muscle
-        residues = orderfinder.extract_cterminus(self.data_dir, self.features, "")
-        assert residues == {'STAUR_3972': 'ES', 'STAUR_3982': 'GK',
-                            'STAUR_3983': 'DS', 'STAUR_3984': 'DS',
-                            'STAUR_3985': 'DS'}
-
-    def test_c_terminals_with_end(self):  # TODO: move to integration or mock muscle
-        residues = orderfinder.extract_cterminus(self.data_dir, self.features, self.features_by_id["STAUR_3982"])
-        assert residues == {'STAUR_3972': 'ES', 'STAUR_3983': 'DS',
-                            'STAUR_3984': 'DS', 'STAUR_3985': 'DS'}
-
-
-class TestNTerminalExtract(unittest.TestCase):
-    def setUp(self):
-        # 60 long, only the first 50 should be used
-        self.seqs = {"STAUR_3972": "MQPLEGRFAGRTVVVTGAGAGIGHATASRLMREGARVVASDIAQDRLAALEAESPRGALV",
-                     "STAUR_3982": "MSQPENEYLSRLRNAVVALREMQQEIDALNHARTEPIAIVGMGCRFPGGASTPEAFWKLL",
-                     "STAUR_3985": "MRQAGSPSSPEALQSLVISLVAARTALPVRSIDVREPLSRHGLDSAGAMGLLAELSADLG",
-                     "STAUR_3983": "MSVSEADYIARLRKAAITLKEMEGKLGALERARTEPIAIIGMGCRLPGGASTPEAFWKLL",
-                     "STAUR_3984": "MNDASSMSTVKRALLAVQEMKARLDAVTRAQTEPIAIIGLGCRLPGGASTPEAFWKLIES"}
-
-        self.data_dir = path.get_full_path(os.path.dirname(__file__), "data", "terminals")
-
-        self.features = [DummyCDS(1, 200, translation=seq, locus_tag=seq_id) for seq_id, seq in self.seqs.items()]
-        self.features_by_id = {feature.locus_tag: feature for feature in self.features}
-
-    def test_n_terminals_no_start(self):  # TODO: move to integration or mock muscle
-        residues = orderfinder.extract_nterminus(self.data_dir, self.features, None)
-        assert residues == {'STAUR_3972': 'L-', 'STAUR_3982': 'ER',
-                            'STAUR_3983': 'DK', 'STAUR_3984': 'SQ',
-                            'STAUR_3985': 'SV'}
-
-    def test_n_terminals_with_start(self):  # TODO: move to integration or mock muscle
-        residues = orderfinder.extract_nterminus(self.data_dir, self.features, self.features_by_id["STAUR_3982"])
-        assert residues == {'STAUR_3972': 'L-', 'STAUR_3983': 'DK',
-                            'STAUR_3984': 'SQ', 'STAUR_3985': 'SV'}
 
 
 class TestOrdering(unittest.TestCase):

@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional
 
 from antismash.common import hmmer, module_results, path
 from antismash.common.secmet import Record
-from antismash.config import ConfigType, get_config
+from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
 
 from .core import FunctionResults
@@ -92,16 +92,16 @@ def prepare_data(logging_only: bool = False) -> List[str]:
     return hmmer.ensure_database_pressed(database, return_not_raise=logging_only)
 
 
-def check_prereqs() -> List[str]:
+def check_prereqs(options: ConfigType) -> List[str]:
     """Check for prerequisites
     """
     failure_messages = []
 
     for binary_name in ['hmmscan', 'hmmpress']:
-        if path.locate_executable(binary_name) is None:
+        if binary_name not in options.executables:
             failure_messages.append("Failed to locate file: %r" % binary_name)
 
-    database = os.path.join(get_config().database_dir, 'resfam', 'Resfams.hmm')
+    database = os.path.join(options.database_dir, 'resfam', 'Resfams.hmm')
     if path.locate_file(database) is None:
         failure_messages.append('Failed to locate Resfam database in %s' % database)
 

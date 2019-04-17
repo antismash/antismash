@@ -8,7 +8,7 @@ import os
 import time
 import unittest
 
-from antismash.config import update_config, destroy_config, get_config
+from antismash.config import build_config, destroy_config, get_config
 from antismash.common import subprocessing
 
 
@@ -25,7 +25,8 @@ def dummy(value=None):
 class TestParallelPython(unittest.TestCase):
     def setUp(self):
         self.config_cpus = 2
-        update_config({"cpus": self.config_cpus})
+        build_config(["--cpus", str(self.config_cpus)])
+        assert get_config().executables
         assert get_config().cpus == 2
 
     def tearDown(self):
@@ -87,6 +88,12 @@ class TestParallelPython(unittest.TestCase):
 
 
 class TestExecute(unittest.TestCase):
+    def setUp(self):
+        build_config([])
+
+    def tearDown(self):
+        destroy_config()
+
     def test_piping(self):
         result = subprocessing.execute(["pwd"])
         assert result.stdout.strip() == os.getcwd()
@@ -128,7 +135,7 @@ class TestExecute(unittest.TestCase):
 class TestParallelExecute(unittest.TestCase):
     def setUp(self):
         self.config_cpus = 2
-        update_config({"cpus": self.config_cpus})
+        build_config(["--cpus", str(self.config_cpus)])
         assert get_config().cpus == 2
 
     def tearDown(self):

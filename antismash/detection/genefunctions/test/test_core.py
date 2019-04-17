@@ -22,8 +22,8 @@ class TestOptions(unittest.TestCase):
         destroy_config()
 
     def test_prereqs(self):
-        self.setup_options([])  # required to setup database_dir and others
-        assert genefunctions.check_prereqs() == []
+        self.options = self.setup_options([])  # required to setup database_dir and others
+        assert genefunctions.check_prereqs(self.options) == []
 
     def test_default(self):
         options = self.setup_options([])

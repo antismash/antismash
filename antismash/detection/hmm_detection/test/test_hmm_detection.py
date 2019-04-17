@@ -15,13 +15,14 @@ from antismash.common.hmm_rule_parser import rule_parser, cluster_prediction as 
 from antismash.common.hmm_rule_parser.test.helpers import check_hmm_signatures
 from antismash.common.secmet import Record
 from antismash.common.test.helpers import DummyCDS, FakeHSPHit
-from antismash.config import get_config
+from antismash.config import build_config, destroy_config
 import antismash.detection.hmm_detection as core
 from antismash.detection.hmm_detection import signatures
 
 
 class HmmDetectionTest(unittest.TestCase):
     def setUp(self):
+        self.config = build_config([])
         self.rules_file = path.get_full_path(__file__, "..", "cluster_rules", "strict.txt")
         self.signature_file = path.get_full_path(__file__, "..", "data", "hmmdetails.txt")
         self.signature_names = {sig.name for sig in core.get_signature_profiles()}
@@ -78,7 +79,7 @@ class HmmDetectionTest(unittest.TestCase):
 
     def tearDown(self):
         # clear out any leftover config adjustments
-        get_config().__dict__.clear()
+        destroy_config()
 
     def test_overlaps_but_not_contains(self):
         # should get gene2 and gene3
@@ -104,7 +105,7 @@ class HmmDetectionTest(unittest.TestCase):
 
     def test_core(self):
         # should be no failing prerequisites
-        assert core.check_prereqs() == []
+        assert core.check_prereqs(self.config) == []
         # always runs
         assert core.is_enabled(None)
 

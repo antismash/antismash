@@ -7,7 +7,6 @@ import logging
 import os
 from typing import Any, Dict, List, Optional
 
-from antismash.common import path
 from antismash.common.secmet import Record
 from antismash.config import get_config, ConfigType
 from antismash.config.args import ModuleArgs
@@ -49,12 +48,6 @@ def get_arguments() -> ModuleArgs:
                              default=False,
                              help="Compare identified clusters against known "
                                   "gene clusters from the MIBiG database.")
-    args.add_option('diamond-executable',
-                    dest='diamond_executable',
-                    metavar='filename',
-                    type=str,
-                    default='diamond',
-                    help="The path to the diamond executable. (default: %(default)s)")
     args.add_option('nclusters',
                     dest='nclusters',
                     metavar="count",
@@ -97,19 +90,17 @@ def regenerate_previous_results(previous: Dict[str, Any], record: Record,
     return ClusterBlastResults.from_json(previous, record)
 
 
-def check_prereqs() -> List[str]:
+def check_prereqs(options: ConfigType) -> List[str]:
     "Check if all required applications are around"
-    options = get_config()
-    # Tuple is ( binary_name, optional)
     _required_binaries = [
         'blastp',
         'makeblastdb',
-        options.cb_diamond_executable,
+        'diamond'
     ]
 
     failure_messages = []
     for binary_name in _required_binaries:
-        if path.locate_executable(binary_name) is None:
+        if binary_name not in options.executables:
             failure_messages.append("Failed to locate file: %r" % binary_name)
 
     failure_messages.extend(prepare_data(logging_only=True))
@@ -130,9 +121,9 @@ def prepare_data(logging_only: bool = False) -> List[str]:
     clusterblastdir = os.path.join(get_config().database_dir, "clusterblast")
     if clusterblastdir == "mounted_at_runtime":  # can't prepare these
         return failure_messages
-    cluster_defs = os.path.join(clusterblastdir, 'geneclusters.txt')
-    protein_seqs = os.path.join(clusterblastdir, "geneclusterprots.fasta")
-    db_file = os.path.join(clusterblastdir, "geneclusterprots.dmnd")
+    cluster_defs = os.path.join(clusterblastdir, 'clusters.txt')
+    protein_seqs = os.path.join(clusterblastdir, "proteins.fasta")
+    db_file = os.path.join(clusterblastdir, "proteins.dmnd")
 
     failure_messages.extend(check_clusterblast_files(cluster_defs, protein_seqs, db_file, logging_only=logging_only))
 

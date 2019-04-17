@@ -201,13 +201,13 @@ def prepare_data(logging_only: bool = False) -> List[str]:
     return failure_messages
 
 
-def check_prereqs() -> List[str]:
+def check_prereqs(options: ConfigType) -> List[str]:
     """ Check that prereqs are satisfied. hmmpress is only required if the
         databases have not yet been generated.
     """
     failure_messages = []
     for binary_name in ["hmmsearch", "hmmpress"]:
-        if not path.locate_executable(binary_name):
+        if binary_name not in options.executables:
             failure_messages.append("Failed to locate executable for %r" % binary_name)
 
     # no point checking the data if we can't use it

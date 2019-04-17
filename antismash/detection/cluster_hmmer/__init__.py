@@ -7,9 +7,9 @@ import logging
 import os
 from typing import Any, Dict, List, Optional
 
-from antismash.common import hmmer, path, pfamdb
+from antismash.common import hmmer, pfamdb
 from antismash.common.secmet import Record
-from antismash.config import get_config, ConfigType
+from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
 
 NAME = "cluster_hmmer"
@@ -40,14 +40,14 @@ def is_enabled(options: ConfigType) -> bool:
     return options.clusterhmmer
 
 
-def check_prereqs() -> List[str]:
+def check_prereqs(options: ConfigType) -> List[str]:
     """ Ensure at least one database exists and is valid """
     failure_messages = []
     for binary_name in ['hmmscan']:
-        if not path.locate_executable(binary_name):
+        if binary_name not in options.executables:
             failure_messages.append("Failed to locate executable: %r" % binary_name)
 
-    data_dir = get_config().database_dir
+    data_dir = options.database_dir
     try:
         version = pfamdb.find_latest_database_version(data_dir)
     except ValueError as err:

@@ -53,7 +53,7 @@ def prepare_data(logging_only: bool = False) -> List[str]:
     return hmmer.ensure_database_pressed(database, return_not_raise=logging_only)
 
 
-def check_prereqs() -> List[str]:
+def check_prereqs(options: ConfigType) -> List[str]:
     """ Check the prerequisites.
             hmmscan: domain detection
             blastp: CLF and starter unit analysis
@@ -64,7 +64,7 @@ def check_prereqs() -> List[str]:
     """
     failure_messages = []
     for binary_name in ['hmmscan', "hmmpress", 'blastp']:
-        if path.locate_executable(binary_name) is None:
+        if binary_name not in options.executables:
             failure_messages.append("Failed to locate file: %r" % binary_name)
 
     for blastdb in ['KSIII', 'AT', 'LIG']:

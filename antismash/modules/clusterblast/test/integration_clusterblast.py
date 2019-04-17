@@ -11,11 +11,12 @@ import unittest
 from helperlibs.wrappers.io import TemporaryDirectory
 
 from antismash.main import get_all_modules
-from antismash.common import path
+from antismash.common import path, subprocessing
 from antismash.common.module_results import ModuleResults
 import antismash.common.test.helpers as helpers
 from antismash.config import build_config, get_config, update_config, destroy_config
 from antismash.modules import clusterblast
+import antismash.modules.clusterblast.core as core
 
 
 class Base(unittest.TestCase):
@@ -24,7 +25,7 @@ class Base(unittest.TestCase):
         self.old_config = get_config().__dict__
         self.options = update_config(options)
 
-        assert clusterblast.check_prereqs() == []
+        assert clusterblast.check_prereqs(self.options) == []
         assert clusterblast.check_options(self.options) == []
         assert clusterblast.is_enabled(self.options)
 
@@ -89,7 +90,7 @@ class GeneralIntegrationTest(Base):
         return results.general, results
 
     def test_nisin(self):
-        self.check_nisin(2452)
+        self.check_nisin(635)
 
 
 class KnownIntegrationTest(Base):
@@ -117,7 +118,7 @@ class KnownIntegrationTest(Base):
         genbank = path.get_full_path(__file__, "data", "Z18755.3.gbk")
         results = self.run_antismash(genbank, 2)
         assert list(results.mibig_entries) == [1]  # only one region in record
-        assert list(results.mibig_entries[1]) == ["CAA79245.2"]  # and only one CDS
+        assert list(results.mibig_entries[1]) == ["esyn1"]  # and only one CDS
         # 2 hits against single-CDS MiBIG clusters, only those are reported
         # as multi-CDS reference clusters need multiple query CDSs to hit
         for ref_cluster, _ in results.region_results[0].ranking:
@@ -141,3 +142,60 @@ class SubIntegrationTest(Base):
 
     def test_balhymicin(self):
         self.check_balhymicin(21)
+
+
+class TestDiamondDatabaseChecks(unittest.TestCase):
+    def setUp(self):
+        self.format0_file = path.get_full_path(__file__, "data", "format0.dmnd")
+        self.format1_file = path.get_full_path(__file__, "data", "format1.dmnd")
+        self.empty = path.get_full_path(__file__, "data", "empty.dmnd")
+
+        options = build_config([], isolated=True, modules=get_all_modules())
+        self.old_config = get_config().__dict__
+        self.options = update_config(options)
+
+    def tearDown(self):
+        destroy_config()
+        update_config(self.old_config)
+
+    def test_check_diamond_db_compatible(self):
+        with TemporaryDirectory(change=True):
+            dummy_fasta = "dummy.fa"
+            dummy_db = "dummy.dmnd"
+            with open(dummy_fasta, "w") as handle:
+                handle.write(">test\nM\n")
+            subprocessing.run_diamond_makedb(dummy_db, dummy_fasta)
+            compatible_format = core._extract_db_format(dummy_db)
+            assert core.check_diamond_db_compatible(dummy_db)
+
+        broken_file = self.format0_file if compatible_format > 0 else self.format1_file
+
+        assert not core.check_diamond_db_compatible(broken_file)
+        assert not core.check_diamond_db_compatible(self.empty)
+
+
+class TestDatabaseValidity(unittest.TestCase):
+    def setUp(self):
+        options = build_config([], isolated=True, modules=get_all_modules())
+        self.old_config = get_config().__dict__
+        self.options = update_config(options)
+
+    def tearDown(self):
+        destroy_config()
+        update_config(self.old_config)
+
+    def _check_proteins_match_clusters(self, searchtype):
+        clusters = core.load_reference_clusters(searchtype)
+        proteins = core.load_reference_proteins(searchtype)
+        for cluster in clusters.values():
+            for protein in cluster.tags:
+                assert protein in proteins, "missing: %s" % protein
+
+    def test_general(self):
+        self._check_proteins_match_clusters("clusterblast")
+
+    def test_known(self):
+        self._check_proteins_match_clusters("knownclusterblast")
+
+    def test_sub(self):
+        self._check_proteins_match_clusters("subclusterblast")

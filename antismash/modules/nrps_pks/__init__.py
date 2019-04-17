@@ -20,7 +20,7 @@ NAME = "nrps_pks"
 SHORT_DESCRIPTION = "NRPS/PKS analysis"
 
 
-def check_prereqs() -> List[str]:
+def check_prereqs(options: ConfigType) -> List[str]:
     """ Check the prerequisites.
             java: NRPSPredictor, sandpuma
             muscle: sandpuma, at_analysis, kr_analysis, minowa, orderfinder
@@ -28,7 +28,7 @@ def check_prereqs() -> List[str]:
     """
     failure_messages = []
     for binary_name in ["hmmsearch", "muscle", "java"]:
-        if path.locate_executable(binary_name) is None:
+        if binary_name not in options.executables:
             failure_messages.append("Failed to locate executable for %r" %
                                     binary_name)
 

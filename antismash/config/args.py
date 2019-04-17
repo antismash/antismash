@@ -16,6 +16,8 @@ from typing import (Any, AnyStr, IO, List, Optional,   # pylint: disable=unused-
 
 from antismash.custom_typing import AntismashModule
 
+from .executables import AlternateExecutablesAction, get_default_paths
+
 # There are some issues with mypy's typeshed for argparse, so there's a lot of
 # ignores sprinkled throughout. Most deal with ArgumentParser methods
 # not being picked up or argparse's liberal use of *kwargs.
@@ -530,6 +532,14 @@ def advanced_options() -> ModuleArgs:
                      action='store_true',
                      default=False,
                      help="Run without FIMO (lowers accuracy of RiPP precursor predictions)")
+    group.add_option('--executable-paths',
+                     dest='executables',
+                     metavar="EXECUTABLE:PATH,EXECUTABLE2:PATH2,...",
+                     action=AlternateExecutablesAction,
+                     default=argparse.Namespace(**get_default_paths()),
+                     help=("A comma separated list of executable name->path pairs "
+                           "to override any on the system path."
+                           "E.g. diamond=/alternate/path/to/diamond,hmmpfam2=hmm2pfam"))
     return group
 
 

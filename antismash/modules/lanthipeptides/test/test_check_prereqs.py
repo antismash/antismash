@@ -5,36 +5,29 @@
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
 import unittest
-from minimock import Mock, mock, restore, TraceTracker, assert_same_trace
 
-import antismash  # used in mocking # pylint: disable=unused-import
+from antismash.config import build_config, destroy_config
 from antismash.modules.lanthipeptides import check_prereqs, get_config
 
 
 class TestCheckPrereqs(unittest.TestCase):
     def setUp(self):
-        self.tracker = TraceTracker()
-        self.locate_exe = Mock('antismash.common.path.locate_executable',
-                               tracker=self.tracker, returns="/fake/path/to/binary")
-        mock('antismash.common.path.locate_executable',
-             mock_obj=self.locate_exe, tracker=self.tracker)
+        self.config = build_config([])
 
     def tearDown(self):
-        restore()
+        destroy_config()
 
     def test_check_prereqs(self):
         "Test lanthipeptides.check_prereqs()"
-        ret = check_prereqs()
+        ret = check_prereqs(self.config)
         self.assertEqual(ret, [])
-        expected = """    Called antismash.common.path.locate_executable('hmmpfam2')
-    Called antismash.common.path.locate_executable('fimo')"""
-        assert_same_trace(self.tracker, expected)
         self.assertTrue(get_config().fimo_present)
 
     def test_check_binary_prereqs_failing(self):
         "Test lanthipeptides.check_prereqs() returns 'missing binary' error"
-        self.locate_exe.mock_returns = None
-        ret = check_prereqs()
+        self.config.executables.__dict__.pop("hmmpfam2")
+        self.config.executables.__dict__.pop("fimo")
+        ret = check_prereqs(self.config)
         self.assertEqual(len(ret), 1)
         self.assertIn("Failed to locate executable for 'hmmpfam2'", ret)
         self.assertFalse(get_config().fimo_present)

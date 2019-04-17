@@ -32,6 +32,14 @@ See http://antismash.secondarymetabolites.org/#!/about for information on citing
 antiSMASH.
 
 
+Installation
+------------
+
+There are multiple options on how to get your own copy of antiSMASH up and running.
+See [our install documentation](https://docs.antismash.secondarymetabolites.org/install/)
+for detailed information.
+
+
 License
 -------
 

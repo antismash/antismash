@@ -21,10 +21,10 @@ class Pfam2GoPrereqsTest(unittest.TestCase):
         restore()
 
     def test_check_prereqs(self):
-        ret = check_prereqs()
+        ret = check_prereqs(None)
         assert ret == []
 
     def test_check_missing_file(self):
         self.locate_file.mock_returns = None
-        ret = check_prereqs()
+        ret = check_prereqs(None)
         assert 'Failed to locate Pfam to Gene Ontology mapping file' in ret

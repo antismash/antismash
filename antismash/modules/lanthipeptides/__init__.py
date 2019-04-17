@@ -53,7 +53,7 @@ def regenerate_previous_results(results: Dict[str, Any], record: Record,
     return regenned
 
 
-def check_prereqs() -> List[str]:
+def check_prereqs(options: ConfigType) -> List[str]:
     """ Checks the prereqs for the lanthipeptide module.
 
         fimo is optional, having it available increases accuracy in the RODEO
@@ -62,7 +62,7 @@ def check_prereqs() -> List[str]:
     failure_messages = []
     for binary_name, optional in [('hmmpfam2', False), ('fimo', True)]:
         present = True
-        if path.locate_executable(binary_name) is None:
+        if binary_name not in options.executables:
             present = False
             if not optional:
                 failure_messages.append("Failed to locate executable for %r" %

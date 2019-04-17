@@ -74,11 +74,11 @@ def prepare_data(logging_only: bool = False) -> List[str]:
     return failure_messages
 
 
-def check_prereqs() -> List[str]:
+def check_prereqs(options: ConfigType) -> List[str]:
     """ Ensures the various required hmmer profile files exist """
     failure_messages = []
-    for binary_name, optional in [('hmmscan', False), ('hmmpress', False)]:
-        if path.locate_executable(binary_name) is None and not optional:
+    for binary_name in ['hmmscan', 'hmmpress']:
+        if binary_name not in options.executables:
             failure_messages.append("Failed to locate executable for %r" %
                                     binary_name)
 

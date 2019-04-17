@@ -26,30 +26,26 @@ def _get_datafile_path(filename: str) -> str:
     return path.get_full_path(__file__, 'data', 'sub', filename)
 
 
-def check_sub_prereqs(_options: ConfigType) -> List[str]:
+def check_sub_prereqs(options: ConfigType) -> List[str]:
     """ Check if all required applications and datafiles are present.
         options is irrelevant here
     """
-    # Tuple is ( binary_name, optional)
-    _required_binaries = [
-        ('blastp', False),
-        ('makeblastdb', False),
-    ]
+    _required_binaries = ['blastp', 'makeblastdb']
 
     _required_files = [
-        ('subclusterprots.fasta', False),
-        ('subclusterprots.fasta.phr', False),
-        ('subclusterprots.fasta.pin', False),
-        ('subclusterprots.fasta.psq', False),
-        ('subclusters.txt', False)
+        'proteins.fasta',
+        'proteins.fasta.phr',
+        'proteins.fasta.pin',
+        'proteins.fasta.psq',
+        'clusters.txt'
     ]
     failure_messages = []
-    for binary_name, optional in _required_binaries:
-        if path.locate_executable(binary_name) is None and not optional:
+    for binary_name in _required_binaries:
+        if binary_name not in options.executables:
             failure_messages.append("Failed to locate file: %r" % binary_name)
 
-    for file_name, optional in _required_files:
-        if path.locate_file(_get_datafile_path(file_name)) is None and not optional:
+    for file_name in _required_files:
+        if path.locate_file(_get_datafile_path(file_name)) is None:
             failure_messages.append("Failed to locate file: %r" % file_name)
 
     return failure_messages
@@ -98,7 +94,7 @@ def run_clusterblast_processes(options: ConfigType) -> None:
         Returns:
             None
     """
-    database = _get_datafile_path('subclusterprots.fasta')
+    database = _get_datafile_path('proteins.fasta')
     # set the first arg to always be database
     partial = functools.partial(_run_blast_helper, database)
     # run in parallel
@@ -153,7 +149,6 @@ def perform_subclusterblast(options: ConfigType, record: Record, clusters: Dict[
                                                      min_seq_coverage=40,
                                                      min_perc_identity=45)
             ranking = score_clusterblast_output(clusters, allcoregenes, cluster_names_to_queries)
-            logging.debug("Cluster at %s has %d subclusterblast results", region.location, len(ranking))
             # store results
             region_result = RegionResult(region, ranking, proteins, "subclusterblast")
             results.add_region_result(region_result, clusters, proteins)

@@ -61,13 +61,12 @@ def check_options(_options: ConfigType) -> List[str]:
     return []
 
 
-def check_prereqs() -> List[str]:
+def check_prereqs(options: ConfigType) -> List[str]:
     "Checks if all required files and applications are around"
-
     failure_messages = []
 
     for binary_name in ['hmmpfam2', 'hmmscan', 'hmmpress']:
-        if not path.locate_executable(binary_name):
+        if binary_name not in options.executables:
             failure_messages.append("Failed to locate file: %r" % binary_name)
 
     # Get all HMM profile names from XML file

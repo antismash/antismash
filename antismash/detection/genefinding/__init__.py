@@ -7,9 +7,8 @@ import logging
 import os
 from typing import List
 
-from antismash.common.path import locate_executable
 from antismash.common.secmet import Record
-from antismash.config import get_config, ConfigType
+from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
 
 from .run_prodigal import run_prodigal
@@ -23,7 +22,8 @@ SHORT_DESCRIPTION = "Genefinding with GlimmerHMM or Prodigal"
 def get_arguments() -> ModuleArgs:
     """ Construct args with options for which genefinding method to use (if any)
     """
-    args = ModuleArgs('Gene finding options (ignored when ORFs are annotated)', 'genefinding')
+    args = ModuleArgs('Gene finding options (ignored when ORFs are annotated)',
+                      'genefinding', basic_help=True)
     args.add_option('tool',
                     dest='tool',
                     default='error',
@@ -43,10 +43,9 @@ def get_arguments() -> ModuleArgs:
     return args
 
 
-def check_prereqs() -> List[str]:
+def check_prereqs(options: ConfigType) -> List[str]:
     """ Make sure the external tools to use are available """
     failure_messages = []  # type: List[str]
-    options = get_config()
     if options.genefinding_tool in ['none']:
         return failure_messages
     binaries = []  # type: List[str]
@@ -57,7 +56,7 @@ def check_prereqs() -> List[str]:
     elif options.taxon == 'fungi':
         binaries = ['glimmerhmm']
     for binary_name in binaries:
-        if not locate_executable(binary_name):
+        if binary_name not in options.executables:
             failure_messages.append("Failed to locate executable for %r" % binary_name)
 
     return failure_messages

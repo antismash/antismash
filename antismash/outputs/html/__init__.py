@@ -61,7 +61,7 @@ def prepare_data(logging_only: bool = False) -> List[str]:
     return []
 
 
-def check_prereqs() -> List[str]:
+def check_prereqs(_options: ConfigType) -> List[str]:
     """ Check prerequisites """
     return prepare_data()
 

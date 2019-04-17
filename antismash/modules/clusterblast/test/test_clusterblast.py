@@ -320,11 +320,6 @@ class TestSubjectParsing(unittest.TestCase):
         # TEST has sequence length of 300 after our mocking
         self.assertAlmostEqual(sub.perc_coverage, (253./300)*100)
 
-        # and check the name change for a name in our dummy geneclustergenes
-        subject_line[1] = subject_line[1].replace("CAG25751", "CAG25752")
-        sub = self.parse_subject_wrapper(subject_line)
-        self.assertEqual(sub.name, "h_CAG25752")
-
     def test_locus_tag_redirect(self):
         # no_locus_tag normally goes to position 6 instead, but
         subject_line = ["input|c1|0-759|-|CAG25751.1|putative",
@@ -570,49 +565,30 @@ class TestReferenceProteinLoading(unittest.TestCase):
     def test_standard(self):
         hit = ">CVNH01000008|c1|65549-69166|-|BN1184_AH_00620|Urea_carboxylase_{ECO:0000313}|CRH36422"
         with unittest_mock.patch("builtins.open", self.mock_with(hit)):
-            proteins = core.load_reference_proteins(set(), "clusterblast")
+            proteins = core.load_reference_proteins("clusterblast")
         assert len(proteins) == 1
-        protein = proteins["CRH36422"]
+        protein = proteins["BN1184_AH_00620"]
         assert protein.name == "CRH36422"
         assert protein.annotations == "Urea_carboxylase_{ECO:0000313}"
 
     def test_non_standard(self):
         hit = ">CVNH01000008|c1|65549-69166|-|BN1184_AH_00620|Urea_carboxylase_{ECO:0000313|EMBL:CCF11062.1}|CRH36422"
         with unittest_mock.patch("builtins.open", self.mock_with(hit)):
-            proteins = core.load_reference_proteins(set(), "clusterblast")
+            proteins = core.load_reference_proteins("clusterblast")
         assert len(proteins) == 1
-        protein = proteins["CRH36422"]
+        protein = proteins["BN1184_AH_00620"]
         assert protein.name == "CRH36422"
         assert protein.annotations == "Urea_carboxylase_{ECO:0000313|EMBL:CCF11062.1}"
-
-
-class TestMissingProteinCleanup(unittest.TestCase):
-    def test_missing_removed(self):
-        proteins = {}
-        for name in "ABDEFH":
-            proteins[name] = core.Protein(name, "dummylocus", "1-5", "+", "annotation")
-        clusters = {
-            "1": core.ReferenceCluster("1", "c1", ["A", "B", "C"], "desc", "type", ["tag1"]),
-            "2": core.ReferenceCluster("2", "c1", ["D", "E"], "desc", "type", ["tag3"]),
-            "3": core.ReferenceCluster("3", "c1", ["F", "G"], "desc", "type", ["tag2"]),
-            "4": core.ReferenceCluster("4", "c2", ["H"], "desc", "type", ["tag4"])
-        }
-        core.strip_clusters_missing_proteins(clusters, proteins)
-        assert sorted(clusters) == ["2", "4"]
-        assert sorted(proteins) == ["D", "E", "H"]
 
 
 class TestDiamondDatabaseChecks(unittest.TestCase):
     def setUp(self):
         self.format0_file = path.get_full_path(__file__, "data", "format0.dmnd")
         self.format1_file = path.get_full_path(__file__, "data", "format1.dmnd")
+        self.empty = path.get_full_path(__file__, "data", "empty.dmnd")
 
-    @unittest_mock.patch('antismash.common.subprocessing.run_diamond_version', return_value="0.8.36")
-    def test_check_diamond_db_compatible_v0(self, _mock_diamond_version_call):
-        assert core.check_diamond_db_compatible(self.format0_file)
-        assert not core.check_diamond_db_compatible(self.format1_file)
-
-    @unittest_mock.patch('antismash.common.subprocessing.run_diamond_version', return_value="0.9.17")
-    def test_check_diamond_db_compatible_v1(self, _mock_diamond_version_call):
-        assert not core.check_diamond_db_compatible(self.format0_file)
-        assert core.check_diamond_db_compatible(self.format1_file)
+    def test_extract_db_format(self):
+        assert core._extract_db_format(self.format0_file) == 0
+        assert core._extract_db_format(self.format1_file) == 1
+        with self.assertRaises(ValueError):
+            core._extract_db_format(self.empty)

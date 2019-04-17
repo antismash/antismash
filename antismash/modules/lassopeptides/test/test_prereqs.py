@@ -6,36 +6,19 @@
 
 import unittest
 
-from minimock import Mock, mock, restore, TraceTracker, assert_same_trace
-
-import antismash  # used in mocks  # pylint: disable=unused-import
-from antismash.modules.lassopeptides import check_prereqs, get_config
+from antismash.config import destroy_config, build_config
+from antismash.modules.lassopeptides import check_prereqs, local_config
 
 
 class TestCheckPrereqs(unittest.TestCase):
     def setUp(self):
-        self.tracker = TraceTracker()
-        self.locate_exe = Mock('antismash.common.path.locate_executable',
-                               tracker=self.tracker, returns="/fake/path/to/binary")
-        mock('antismash.common.path.locate_executable',
-             mock_obj=self.locate_exe, tracker=self.tracker)
+        self.options = build_config([])
 
     def tearDown(self):
-        restore()
+        destroy_config()
 
     def test_check_prereqs(self):
         "Test lassopeptides.check_prereqs()"
-        ret = check_prereqs()
+        ret = check_prereqs(self.options)
         self.assertEqual(ret, [])
-        expected = """    Called antismash.common.path.locate_executable('hmmpfam2')
-    Called antismash.common.path.locate_executable('fimo')"""
-        assert_same_trace(self.tracker, expected)
-        self.assertTrue(get_config().fimo_present)
-
-    def test_check_binary_prereqs_failing(self):
-        "Test lassopeptides.check_prereqs() returns 'missing binary' error"
-        self.locate_exe.mock_returns = None
-        ret = check_prereqs()
-        self.assertEqual(len(ret), 1)
-        self.assertIn("Failed to locate executable for 'hmmpfam2'", ret)
-        self.assertFalse(get_config().fimo_present)
+        self.assertTrue(local_config().fimo_present)

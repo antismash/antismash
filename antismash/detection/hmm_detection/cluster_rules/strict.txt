@@ -67,7 +67,7 @@ RULE CDPS
     RELATED Flavoprotein, 2OG-FeII_Oxy, p450
     CUTOFF 5
     NEIGHBOURHOOD 10
-    CONDITIONS CDPS
+    CONDITIONS CDPS or cycdipepsynth
 
 RULE terpene
     CUTOFF 20
@@ -260,7 +260,7 @@ RULE fused
 RULE other
     CUTOFF 20
     NEIGHBOURHOOD 20
-    CONDITIONS LmbU or Neocarzinostat or cycdipepsynth or fom1 or bcpB
+    CONDITIONS LmbU or Neocarzinostat or fom1 or bcpB
                or frbD or mitE or vlmB or prnB or CaiA or bacilysin or orf2_PTase
 
 RULE acyl_amino_acids

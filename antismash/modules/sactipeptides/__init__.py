@@ -7,7 +7,6 @@
 
 from typing import Any, Dict, List, Optional
 
-from antismash.common import path
 from antismash.common.secmet import Record
 from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
@@ -19,11 +18,11 @@ NAME = "sactipeptides"
 SHORT_DESCRIPTION = "sactipeptide detection"
 
 
-def check_prereqs() -> List[str]:
+def check_prereqs(options: ConfigType) -> List[str]:
     """ Ensures all required external programs are available """
     failure_messages = []
     for binary_name in ['hmmpfam2']:
-        if not path.locate_executable(binary_name):
+        if binary_name not in options.executables:
             failure_messages.append("Failed to locate executable for %r" %
                                     binary_name)
     return failure_messages

@@ -484,7 +484,7 @@ def prepare_module_data(modules: Optional[List[AntismashModule]] = None) -> None
             module.prepare_data()
 
 
-def check_prerequisites(modules: List[AntismashModule]) -> None:
+def check_prerequisites(modules: List[AntismashModule], options: ConfigType) -> None:
     """ Checks that each module's prerequisites are satisfied. If not satisfied,
         a RuntimeError is raised.
 
@@ -499,7 +499,7 @@ def check_prerequisites(modules: List[AntismashModule]) -> None:
     errors_by_module = {}
     for module in modules:
         logging.debug("Checking prerequisites for %s", module.__name__)
-        res = module.check_prereqs()
+        res = module.check_prereqs(options)
         if res:
             errors_by_module[module.__name__] = res
     if errors_by_module:
@@ -576,6 +576,8 @@ def run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
 def _run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
     """ The real run_antismash, assumes logging is set up around it """
     logging.debug("antiSMASH version: %s", options.version)
+    for binary, path in vars(options.executables).items():
+        logging.info("%s using executable: %s", binary, path)
 
     detection_modules = get_detection_modules()
     analysis_modules = get_analysis_modules()
@@ -590,14 +592,14 @@ def _run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
 
     if options.check_prereqs_only:
         try:
-            check_prerequisites(modules)
+            check_prerequisites(modules, options)
         except RuntimeError:
             print("Some module prerequisites not satisfied")
             return 1
         print("All prerequisites satisfied")
         return 0
     else:
-        check_prerequisites(options.all_enabled_modules)
+        check_prerequisites(options.all_enabled_modules, options)
 
     # start up profiling if relevant
     if options.profile:

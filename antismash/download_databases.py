@@ -29,9 +29,9 @@ PFAM_LATEST_URL = "ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam{}/Pfam-A
 PFAM_LATEST_ARCHIVE_CHECKSUM = "33f2dfab4d695fc3d2337119debbfcd8c801aaf8e2c312bd738c105a84007973"
 PFAM_LATEST_CHECKSUM = "40b742a1bebca10f6b86c1364624dbdc34f79890954777eb95f8a48428de39d3"
 
-CLUSTERBLAST_URL = "https://dl.secondarymetabolites.org/releases/4.0.0/clusterblast_20170105_v8_31.tar.xz"
-CLUSTERBLAST_ARCHIVE_CHECKSUM = "c9c1f2c07ce97ea453345034727555928e7b0b8907f700805bb6a912865bb315"
-CLUSTERBLAST_FASTA_CHECKSUM = "dc4ddaa4ec3cd966737bf35e286271c6bb41b2dcba49d4f78ee3143588753f42"
+CLUSTERBLAST_URL = "https://dl.secondarymetabolites.org/releases/clusterblast/clusterblast_20190415.tar.xz"
+CLUSTERBLAST_ARCHIVE_CHECKSUM = "160970350d2d7dd585889040518db60599b0af0c58cb08c6b64564215c5452b3"
+CLUSTERBLAST_FASTA_CHECKSUM = "e49741f7f49a5807a6430af5f288f4aad003ed4fc2c69438dadae3cf957e61f6"
 
 RESFAM_URL = "http://dantaslab.wustl.edu/resfams/Resfams.hmm.gz"
 RESFAM_ARCHIVE_CHECKSUM = "82e9325283b999b1fb1351502b2d12194561c573d9daef3e623e905c1af66fd6"
@@ -84,7 +84,7 @@ def download_file(url: str, filename: str) -> str:
         raise DownloadError("ERROR: File not found on server.\nPlease check your internet connection.")
 
     # use 1 because we want to divide by the expected size, can't use 0
-    expected_size = int(req.info().get("Content-Length", "1"))
+    expected_size = int(req.info().get("Content-Length", "1"))  # type: ignore
 
     basename = os.path.basename(filename)
     dirname = os.path.dirname(filename)
@@ -296,7 +296,7 @@ def download_resfam(db_dir: str) -> None:
 def download_clusterblast(db_dir: str) -> None:
     """Download the clusterblast database."""
     archive_filename = os.path.join(db_dir, CLUSTERBLAST_URL.rpartition("/")[2])
-    fasta_filename = os.path.join(db_dir, "clusterblast", "geneclusterprots.fasta")
+    fasta_filename = os.path.join(db_dir, "clusterblast", "proteins.fasta")
 
     if present_and_checksum_matches(fasta_filename, CLUSTERBLAST_FASTA_CHECKSUM):
         print("ClusterBlast fasta file present and checked")
