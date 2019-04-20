@@ -506,4 +506,4 @@ def run_diamond_version() -> str:
         msg = "unexpected output from diamond-executable: %s, check path"
         raise RuntimeError(msg % get_config().executables.diamond)
     # Get rid of the "diamond version" prefix
-    return version_string[16:]
+    return version_string[16:].strip()
