@@ -436,6 +436,22 @@ def run_blastp_version() -> str:
     return version_string.split('\n')[0][8:]
 
 
+def run_makeblastdb_version() -> str:
+    """ Get the version of the makeblastdb binary """
+    makeblastdb = get_config().executables.makeblastdb
+    command = [
+        makeblastdb,
+        "-version",
+    ]
+
+    version_string = execute(command).stdout
+    if not version_string.startswith("makeblastdb: "):
+        msg = "unexpected output from makeblastdb: %s, check path"
+        raise RuntimeError(msg % makeblastdb)
+    # get rid of the non-version stuff in the output
+    return version_string.split('\n')[0][13:]
+
+
 def run_diamond(subcommand: str,
                 opts: Optional[List[str]] = None) -> RunResult:
     """ Run a diamond subcommand, possibly with further options.
