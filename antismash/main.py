@@ -30,6 +30,7 @@ from antismash.config import (
 from antismash.common import logs, record_processing, serialiser
 from antismash.common.module_results import ModuleResults, DetectionResults
 from antismash.common.secmet import Record
+from antismash.common import subprocessing
 from antismash.detection import (cassis,
                                  cluster_hmmer,
                                  clusterfinder_probabilistic,
@@ -576,8 +577,7 @@ def run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
 def _run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
     """ The real run_antismash, assumes logging is set up around it """
     logging.debug("antiSMASH version: %s", options.version)
-    for binary, path in vars(options.executables).items():
-        logging.info("%s using executable: %s", binary, path)
+    _log_found_executables(options)
 
     detection_modules = get_detection_modules()
     analysis_modules = get_analysis_modules()
@@ -668,3 +668,13 @@ def _run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
 
     logging.info("antiSMASH status: SUCCESS")
     return 0
+
+
+def _log_found_executables(options: ConfigType) -> None:
+    for binary, path in vars(options.executables).items():
+        version = ""
+        version_getter = getattr(subprocessing, "run_{}_version".format(binary), None)
+        if callable(version_getter):
+            # pylint doesn't seem to understand this
+            version = " ({})".format(version_getter())  # pylint: disable=not-callable
+        logging.info("%s using executable: %s%s", binary, path, version)
