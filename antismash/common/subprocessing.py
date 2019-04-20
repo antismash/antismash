@@ -420,6 +420,22 @@ def run_blastp(target_blastp_database: str, query_sequence: str,
     return parsed
 
 
+def run_blastp_version() -> str:
+    """ Get the version of the blastp binary """
+    blastp = get_config().executables.blastp
+    command = [
+        blastp,
+        "-version",
+    ]
+
+    version_string = execute(command).stdout
+    if not version_string.startswith("blastp: "):
+        msg = "unexpected output from blastp: %s, check path"
+        raise RuntimeError(msg % blastp)
+    # get rid of the non-version stuff in the output
+    return version_string.split('\n')[0][8:]
+
+
 def run_diamond(subcommand: str,
                 opts: Optional[List[str]] = None) -> RunResult:
     """ Run a diamond subcommand, possibly with further options.
