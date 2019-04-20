@@ -285,6 +285,27 @@ def run_hmmpfam2(query_hmmfile: str, target_sequence: str, extra_args: List[str]
     return list(SearchIO.parse(res_stream, 'hmmer2-text'))
 
 
+def run_hmmpfam2_help() -> str:
+    """ Get the help output of hmmpfam2 """
+    hmmpfam2 = get_config().executables.hmmpfam2
+    command = [
+        hmmpfam2,
+        "-h",
+    ]
+
+    help_text = execute(command).stdout
+    if not help_text:
+        msg = "unexpected output from hmmpfam2: %s, check path"
+        raise RuntimeError(msg % hmmpfam2)
+    return help_text
+
+
+def run_hmmpfam2_version() -> str:
+    """ Get the version of the hmmpfam2 binary """
+    version_line = run_hmmpfam2_help().split('\n')[1]
+    return version_line.split()[1]
+
+
 def run_fimo_simple(query_motif_file: str, target_sequence: str) -> str:
     """ Runs FIMO on the provided inputs
 
