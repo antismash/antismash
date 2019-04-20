@@ -389,6 +389,22 @@ def run_muscle_version() -> str:
     return version_string.split()[1]
 
 
+def run_prodigal_version() -> str:
+    """ Get the version of the prodigal binary """
+    prodigal = get_config().executables.prodigal
+    command = [
+        prodigal,
+        "-v",
+    ]
+
+    version_string = execute(command).stderr.strip()
+    if not version_string.startswith("Prodigal"):
+        msg = "unexpected output from prodigal: %s, check path"
+        raise RuntimeError(msg % prodigal)
+    # get rid of the non-version stuff in the output
+    return version_string.split()[1][:-1]
+
+
 def run_blastp(target_blastp_database: str, query_sequence: str,
                opts: List[str] = None, results_file: str = None
                ) -> List[SearchIO._model.query.QueryResult]:
