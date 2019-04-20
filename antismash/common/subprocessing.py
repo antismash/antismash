@@ -373,6 +373,22 @@ def run_muscle_single(seq_name: str, seq: str, comparison_file: str) -> Dict[str
     return fasta
 
 
+def run_muscle_version() -> str:
+    """ Get the version of the muscle binary """
+    muscle = get_config().executables.muscle
+    command = [
+        muscle,
+        "-version",
+    ]
+
+    version_string = execute(command).stdout
+    if not version_string.startswith("MUSCLE"):
+        msg = "unexpected output from muscle: %s, check path"
+        raise RuntimeError(msg % muscle)
+    # get rid of the non-version stuff in the output
+    return version_string.split()[1]
+
+
 def run_blastp(target_blastp_database: str, query_sequence: str,
                opts: List[str] = None, results_file: str = None
                ) -> List[SearchIO._model.query.QueryResult]:
