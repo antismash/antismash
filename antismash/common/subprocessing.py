@@ -268,9 +268,8 @@ def run_hmmpfam2(query_hmmfile: str, target_sequence: str, extra_args: List[str]
     config = get_config()
     command = [config.executables.hmmpfam2]
 
-    # Allow to disable multithreading for HMMer2 calls in the command line #TODO fix options for this
-    if config.get('hmmer2') and 'multithreading' in config.hmmer2 and \
-            config.hmmer2.multithreading:
+    # Only use multithreading in hmmpfam2 if supported in the hmmpfam2 build
+    if " --cpu " in run_hmmpfam2_help():
         command.extend(["--cpu", str(config.cpus)])
     if extra_args:
         command.extend(extra_args)
@@ -287,6 +286,12 @@ def run_hmmpfam2(query_hmmfile: str, target_sequence: str, extra_args: List[str]
 
 def run_hmmpfam2_help() -> str:
     """ Get the help output of hmmpfam2 """
+
+    # cache results
+    help_text = getattr(run_hmmpfam2_help, 'help_text', '')
+    if help_text:
+        return help_text
+
     hmmpfam2 = get_config().executables.hmmpfam2
     command = [
         hmmpfam2,
@@ -294,9 +299,11 @@ def run_hmmpfam2_help() -> str:
     ]
 
     help_text = execute(command).stdout
-    if not help_text:
+    if not help_text.startswith("hmmpfam"):
         msg = "unexpected output from hmmpfam2: %s, check path"
         raise RuntimeError(msg % hmmpfam2)
+
+    setattr(run_hmmpfam2_help, 'help_text', help_text)
     return help_text
 
 
