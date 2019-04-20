@@ -405,6 +405,22 @@ def run_prodigal_version() -> str:
     return version_string.split()[1][:-1]
 
 
+def run_java_version() -> str:
+    """ Get the version of the java binary """
+    java = get_config().executables.java
+    command = [
+        java,
+        "-version",
+    ]
+
+    version_string = execute(command).stderr
+    if not version_string.startswith("openjdk"):
+        msg = "unexpected output from java: %s, check path"
+        raise RuntimeError(msg % java)
+    # get rid of the non-version stuff in the output
+    return version_string.split()[2].strip('"')
+
+
 def run_blastp(target_blastp_database: str, query_sequence: str,
                opts: List[str] = None, results_file: str = None
                ) -> List[SearchIO._model.query.QueryResult]:
