@@ -304,6 +304,38 @@ def run_fimo_simple(query_motif_file: str, target_sequence: str) -> str:
     return result.stdout
 
 
+def run_fimo_version() -> str:
+    """ Get the version of the fimo binary """
+    fimo = get_config().executables.fimo
+    command = [
+        fimo,
+        "-version",
+    ]
+
+    version_string = execute(command).stdout.strip()
+    if not version_string:
+        msg = "unexpected output from fimo: %s, check path"
+        raise RuntimeError(msg % fimo)
+    # get rid of the non-version stuff in the output
+    return version_string
+
+
+def run_meme_version() -> str:
+    """ Get the version of the meme binary """
+    meme = get_config().executables.meme
+    command = [
+        meme,
+        "-version",
+    ]
+
+    version_string = execute(command).stdout.strip()
+    if not version_string:
+        msg = "unexpected output from meme: %s, check path"
+        raise RuntimeError(msg % meme)
+    # get rid of the non-version stuff in the output
+    return version_string
+
+
 def run_hmmscan(target_hmmfile: str, query_sequence: str, opts: List[str] = None,
                 results_file: str = None) -> List[SearchIO._model.query.QueryResult]:  # pylint: disable=protected-access
     """ Runs hmmscan on the inputs and return a list of QueryResults
