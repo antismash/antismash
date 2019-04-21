@@ -440,6 +440,34 @@ def run_hmmscan(target_hmmfile: str, query_sequence: str, opts: List[str] = None
     return list(SearchIO.parse(StringIO(result.stdout), 'hmmer3-text'))
 
 
+def run_hmmscan_help() -> str:
+    """ Get the help output of hmmscan """
+    # cache results
+    help_text = getattr(run_hmmscan_help, 'help_text', '')
+    if help_text:
+        return help_text
+
+    hmmscan = get_config().executables.hmmscan
+    command = [
+        hmmscan,
+        "-h",
+    ]
+
+    help_text = execute(command).stdout
+    if not help_text.startswith("# hmmscan"):
+        msg = "unexpected output from hmmscan: %s, check path"
+        raise RuntimeError(msg % hmmscan)
+
+    setattr(run_hmmscan_help, 'help_text', help_text)
+    return help_text
+
+
+def run_hmmscan_version() -> str:
+    """ Get the version of the hmmscan """
+    version_line = run_hmmscan_help().split('\n')[1]
+    return version_line.split()[2]
+
+
 def run_muscle_single(seq_name: str, seq: str, comparison_file: str) -> Dict[str, str]:
     """ Runs muscle over a single sequence against a comparison file in profile
         mode and returns a dictionary of the resulting alignments
