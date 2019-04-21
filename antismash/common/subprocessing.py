@@ -420,9 +420,8 @@ def run_hmmscan(target_hmmfile: str, query_sequence: str, opts: List[str] = None
     config = get_config()
     command = [config.executables.hmmscan, "--cpu", str(config.cpus), "--nobias"]
 
-    # Allow to disable multithreading for HMMer3 calls in the command line
-    if config.get('hmmer3') and 'multithreading' in config.hmmer3 and \
-            not config.hmmer3.multithreading:  # TODO: ensure working
+    # Only run multithreaded when the binary supports it
+    if " --cpu " not in run_hmmscan_help():
         command = command[0:1] + command[3:]
 
     if opts is not None:
