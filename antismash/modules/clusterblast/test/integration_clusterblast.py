@@ -90,7 +90,7 @@ class GeneralIntegrationTest(Base):
         return results.general, results
 
     def test_nisin(self):
-        self.check_nisin(635)
+        self.check_nisin(805)
 
 
 class KnownIntegrationTest(Base):
@@ -106,10 +106,10 @@ class KnownIntegrationTest(Base):
         return results.knowncluster, results
 
     def test_nisin(self):
-        self.check_nisin(8)
+        self.check_nisin(9)
 
     def test_balhymicin(self):
-        self.check_balhymicin(136)
+        self.check_balhymicin(140)
 
     def test_fusariam_scirpi(self):
         # this is a special case where it's a single CDS cluster that matches
