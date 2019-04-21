@@ -241,6 +241,24 @@ def run_hmmsearch(query_hmmfile: str, target_sequence: str, use_tempfile: bool =
         return list(SearchIO.parse("result.domtab", 'hmmsearch3-domtab'))
 
 
+def run_hmmsearch_version() -> str:
+    """ Get the version of the hmmsearch """
+
+    hmmsearch = get_config().executables.hmmsearch
+    command = [
+        hmmsearch,
+        "-h",
+    ]
+
+    help_text = execute(command).stdout
+    if not help_text.startswith("# hmmsearch"):
+        msg = "unexpected output from hmmsearch: %s, check path"
+        raise RuntimeError(msg % hmmsearch)
+
+    version_line = help_text.split('\n')[1]
+    return version_line.split()[2]
+
+
 def run_hmmpress(hmmfile: str) -> RunResult:
     """ Run hmmpress on a HMMer model, overwriting any previous generated files
         (e.g. '.h3i').
