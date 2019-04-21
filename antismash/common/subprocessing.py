@@ -254,6 +254,24 @@ def run_hmmpress(hmmfile: str) -> RunResult:
     return execute([get_config().executables.hmmpress, "-f", hmmfile])
 
 
+def run_hmmpress_version() -> str:
+    """ Get the version of the hmmpress """
+
+    hmmpress = get_config().executables.hmmpress
+    command = [
+        hmmpress,
+        "-h",
+    ]
+
+    help_text = execute(command).stdout
+    if not help_text.startswith("# hmmpress"):
+        msg = "unexpected output from hmmpress: %s, check path"
+        raise RuntimeError(msg % hmmpress)
+
+    version_line = help_text.split('\n')[1]
+    return version_line.split()[2]
+
+
 def run_hmmpfam2(query_hmmfile: str, target_sequence: str, extra_args: List[str] = None
                  ) -> List[SearchIO._model.query.QueryResult]:  # pylint: disable=protected-access
     """ Run hmmpfam2 over the provided HMM file and fasta input
