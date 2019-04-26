@@ -77,9 +77,8 @@ class Base(unittest.TestCase):
 
 
 class GeneralIntegrationTest(Base):
-    # TODO: test with a small sequence instead (grab a CDS that hit and take it's translation)
     def get_args(self):
-        return ["--cb-general", "--minimal"]
+        return ["--cb-general", "--minimal", "--data", path.get_full_path(__file__, "data")]
 
     def get_results(self, results):
         assert isinstance(results, ModuleResults)
@@ -90,7 +89,36 @@ class GeneralIntegrationTest(Base):
         return results.general, results
 
     def test_nisin(self):
-        self.check_nisin(635)
+        results = self.check_nisin(2)
+        ranking = results.region_results[0].ranking
+        assert len(ranking) == 2
+        match, score = ranking[0]
+        assert match.accession == "NC_017486"
+        assert match.cluster_label == "c2"
+        assert score.score == 30
+        assert score.hits == 11
+        assert score.core_gene_hits == 2
+        assert score.blast_score == 8401.0
+        assert score.synteny_score == 14
+        assert score.core_bonus == 3
+        assert len(score.scored_pairings) == score.hits
+        query, subject = score.scored_pairings[0]
+        assert query.id == "nisA"
+        assert subject.name == "CVCAS_RS03115"
+
+        match, score = ranking[1]
+        assert match.accession == "ALTERED_NC_017486"
+        assert match.cluster_label == "c2"
+        assert score.score == 24
+        assert score.hits == 10
+        assert score.core_gene_hits == 1
+        assert score.blast_score == 7579.0
+        assert score.synteny_score == 10
+        assert score.core_bonus == 3
+        assert len(score.scored_pairings) == score.hits
+        query, subject = score.scored_pairings[0]
+        assert query.id == "nisA"
+        assert subject.name == "CVCAS_RS03115"
 
 
 class KnownIntegrationTest(Base):
