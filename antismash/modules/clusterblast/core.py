@@ -17,6 +17,8 @@ from antismash.config import get_config
 
 from .data_structures import Subject, Query, Protein, ReferenceCluster, Score
 
+_SHIPPED_DATA_DIR = path.get_full_path(__file__, "data")
+
 
 def get_core_gene_ids(record: secmet.Record) -> Set[str]:  # TODO: consider moving into secmet
     """ Fetches all gene accessions of genes with CORE gene function from all
@@ -119,10 +121,10 @@ def load_reference_clusters(searchtype: str) -> Dict[str, ReferenceCluster]:
         data_dir = os.path.join(options.database_dir, 'clusterblast')
     elif searchtype == "subclusterblast":
         logging.info("SubClusterBlast: Loading gene cluster database into memory...")
-        data_dir = path.get_full_path(__file__, "data", "sub")
+        data_dir = os.path.join(_SHIPPED_DATA_DIR, "sub")
     elif searchtype == "knownclusterblast":
         logging.info("KnownClusterBlast: Loading gene cluster database into memory...")
-        data_dir = path.get_full_path(__file__, "data", "known")
+        data_dir = os.path.join(_SHIPPED_DATA_DIR, "known")
 
     reference_cluster_file = os.path.join(data_dir, "clusters.txt")
     with open(reference_cluster_file, "r") as handle:
@@ -160,13 +162,12 @@ def load_reference_proteins(searchtype: str) -> Dict[str, Protein]:
         data_dir = os.path.join(options.database_dir, 'clusterblast')
     elif searchtype == "subclusterblast":
         logging.info("SubClusterBlast: Loading gene cluster database proteins into memory...")
-        data_dir = path.get_full_path(__file__, "data", "sub")
+        data_dir = os.path.join(_SHIPPED_DATA_DIR, "sub")
     elif searchtype == "knownclusterblast":
         logging.info("KnownClusterBlast: Loading gene cluster database proteins into memory...")
-        data_dir = path.get_full_path(__file__, "data", "known")
+        data_dir = os.path.join(_SHIPPED_DATA_DIR, "known")
 
     protein_file = os.path.join(data_dir, "proteins.fasta")
-
     proteins = {}
     with open(protein_file, 'r') as handle:
         for line in handle:
