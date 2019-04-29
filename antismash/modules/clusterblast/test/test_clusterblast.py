@@ -538,16 +538,6 @@ class TestOrthologousGroups(unittest.TestCase):
         groups = self.run_base_comparison(self.query_lines)
         assert groups == [['CAG25751.1', 'CAG25751.2', 'CAG25751.3', 'a1', 'a2', 'a3', 'b1', 'c1', 'c2', 'c3']]
 
-    def test_with_uniqueness_modifier(self):
-        # tests that the 'h_' prefix used to differentiate names is removed
-        # if this test breaks because a better naming system is implemented, that's fine
-        self.set_independent_subjects()
-        self.set_query_subjects(2, ["_c1", "h_c2", "c_3"])
-        groups = self.run_base_comparison(self.query_lines)
-        assert groups == [['CAG25751.1', 'a1', 'a2', 'a3'],
-                          ['CAG25751.2', 'b1', 'b2', 'b3'],
-                          ['CAG25751.3', '_c1', 'c2', 'c_3']]
-
 
 class TestReferenceProteinLoading(unittest.TestCase):
     def mock_with(self, content):

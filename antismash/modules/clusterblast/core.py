@@ -469,13 +469,7 @@ def find_internal_orthologous_groups(queries: Dict[str, Query], cluster_names: L
             groups.append(set([name.split("|")[4]]))
             continue
         query = queries[name]
-        new_group = {query.id}
-        for hit in query.subjects:
-            if hit.startswith("h_"):  # TODO: when the unique naming hack changes, this must too
-                new_group.add(hit[2:])
-            else:
-                new_group.add(hit)
-
+        new_group = {query.id}.union(set(query.subjects))
         redundant_groups = []
         for i, other_group in enumerate(groups):
             if new_group.intersection(other_group):
