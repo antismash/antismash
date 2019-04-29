@@ -232,7 +232,8 @@ def create_blast_inputs(region: secmet.Region) -> Tuple[List[str], List[str]]:
 
 
 def run_internal_blastsearch(query_filename: str) -> str:
-    """ Constructs a blast database from the query and runs blastp on it
+    """ Constructs a blast database from the query and runs blastp on it to
+        find internal matches
 
         Arguments:
             query_filename: the path of the query fasta file
@@ -240,7 +241,6 @@ def run_internal_blastsearch(query_filename: str) -> str:
         Returns:
             a string containing all blastp output
     """
-    # TODO... why are query and database the same?
     make_blastdb(query_filename, "internal_input.fasta")
     run_blast("internal_input.fasta", "internal_input.fasta")
     with open("internal_input.out", "r") as handle:
