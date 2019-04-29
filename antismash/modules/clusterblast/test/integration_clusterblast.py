@@ -7,6 +7,7 @@
 import glob
 import os
 import unittest
+from unittest.mock import patch
 
 from helperlibs.wrappers.io import TemporaryDirectory
 
@@ -16,7 +17,9 @@ from antismash.common.module_results import ModuleResults
 import antismash.common.test.helpers as helpers
 from antismash.config import build_config, get_config, update_config, destroy_config
 from antismash.modules import clusterblast
-import antismash.modules.clusterblast.core as core
+from antismash.modules.clusterblast import core, known
+
+MOCKED_DATA = path.get_full_path(__file__, "data")
 
 
 class Base(unittest.TestCase):
@@ -121,6 +124,7 @@ class GeneralIntegrationTest(Base):
         assert subject.name == "CVCAS_RS03115"
 
 
+@patch.object(known, "_SHIPPED_DATA_DIR", MOCKED_DATA)
 class KnownIntegrationTest(Base):
     def get_args(self):
         return ["--cb-knowncluster", "--minimal"]
@@ -134,10 +138,62 @@ class KnownIntegrationTest(Base):
         return results.knowncluster, results
 
     def test_nisin(self):
-        self.check_nisin(8)
+        # blast scores not checked due to diamond versions having different results
+        results = self.check_nisin(2)
+        ranking = results.region_results[0].ranking
+        assert len(ranking) == 2
+        match, score = ranking[0]
+        assert match.accession == "BGC0000536"
+        assert match.cluster_label == "c1"
+        assert score.score == 30
+        assert score.hits == 11
+        assert score.core_gene_hits == 2
+        assert score.synteny_score == 14
+        assert score.core_bonus == 3
+        assert len(score.scored_pairings) == score.hits
+        query, subject = score.scored_pairings[0]
+        assert query.id == "nisA"
+        assert subject.name == "BAG71479.1"
+
+        match, score = ranking[1]
+        assert match.accession == "BGC0000549"
+        assert match.cluster_label == "c1"
+        assert score.score == 23
+        assert score.hits == 9
+        assert score.core_gene_hits == 2
+        assert score.synteny_score == 9
+        assert score.core_bonus == 3
+        assert len(score.scored_pairings) == 10  # some having shared hits
+        query, subject = score.scored_pairings[0]
+        assert query.id == "nisA"
+        assert subject.name == "AEX55166.1"
 
     def test_balhymicin(self):
-        self.check_balhymicin(136)
+        # blast scores and derivative values not checked due to diamond versions having different results
+        results = self.check_balhymicin(2)
+        ranking = results.region_results[0].ranking
+        assert len(ranking) == 2
+        match, score = ranking[0]
+        assert match.accession == "BGC0000455"
+        assert match.cluster_label == "c1"
+        assert score.hits == 31
+        assert score.core_gene_hits == 5
+        assert score.core_bonus == 3
+        assert len(score.scored_pairings) >= 31  # some having shared hits
+        query, subject = score.scored_pairings[0]
+        assert query.id == "bbr"
+        assert subject.name == "AEI58862.1"
+
+        match, score = ranking[1]
+        assert match.accession == "BGC0001178"
+        assert match.cluster_label == "c1"
+        assert score.hits == 29
+        assert score.core_gene_hits == 5
+        assert score.core_bonus == 3
+        assert len(score.scored_pairings) >= score.hits
+        query, subject = score.scored_pairings[0]
+        assert query.id == "vanS"
+        assert subject.name == "AGS77301.1"
 
     def test_fusariam_scirpi(self):
         # this is a special case where it's a single CDS cluster that matches
