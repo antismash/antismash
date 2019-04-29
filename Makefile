@@ -15,6 +15,7 @@ integration: clean
 clean:
 	rm -f antismash/detection/hmm_detection/data/bgc_seeds.hmm*
 	rm -f antismash/modules/clusterblast/data/known/*.dmnd
+	rm -f antismash/modules/clusterblast/test/data/*/*.dmnd
 	rm -f antismash/outputs/html/css/*.css
 	find . -name "*.h3?" -exec rm {} +
 	find . -name '*.pyc' | xargs rm -f
