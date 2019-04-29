@@ -6,6 +6,7 @@
 
 import functools
 import logging
+import os
 from typing import Dict, List
 
 from helperlibs.wrappers.io import TemporaryDirectory
@@ -14,16 +15,23 @@ from antismash.common import path, subprocessing
 from antismash.common.secmet import Record
 from antismash.config import ConfigType
 
-from .core import write_raw_clusterblastoutput, write_fastas_with_all_genes, \
-                  blastparse, score_clusterblast_output, \
-                  run_blast, load_clusterblast_database, get_core_gene_ids
+from .core import (
+    _SHIPPED_DATA_DIR,
+    blastparse,
+    get_core_gene_ids,
+    load_clusterblast_database,
+    run_blast,
+    score_clusterblast_output,
+    write_fastas_with_all_genes,
+    write_raw_clusterblastoutput,
+)
 from .results import RegionResult, GeneralResults
 from .data_structures import ReferenceCluster, Protein
 
 
 def _get_datafile_path(filename: str) -> str:
     """ A simple helper to get the full path of subclusterblast datafile """
-    return path.get_full_path(__file__, 'data', 'sub', filename)
+    return os.path.join(_SHIPPED_DATA_DIR, 'sub', filename)
 
 
 def check_sub_prereqs(options: ConfigType) -> List[str]:

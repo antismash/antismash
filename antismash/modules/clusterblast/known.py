@@ -6,13 +6,14 @@
 """
 
 import logging
+import os
 from typing import Dict, List
 
-from antismash.common import path
 from antismash.common.secmet import Record
 from antismash.config import ConfigType
 
 from .core import (
+    _SHIPPED_DATA_DIR,
     check_clusterblast_files,
     get_core_gene_ids,
     load_clusterblast_database,
@@ -35,7 +36,7 @@ def _get_datafile_path(filename: str) -> str:
         Returns:
             the absolute path of the file
     """
-    return path.get_full_path(__file__, 'data', 'known', filename)
+    return os.path.join(_SHIPPED_DATA_DIR, 'known', filename)
 
 
 def check_known_prereqs(options: ConfigType) -> List[str]:
