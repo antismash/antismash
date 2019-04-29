@@ -65,9 +65,6 @@ class Base(unittest.TestCase):
             results, global_results = self.get_results(results)
             assert len(results.region_results) == 1
             cluster = results.region_results[0]
-            if expected > clusterblast.get_result_limit():
-                assert cluster.total_hits == expected
-                expected = clusterblast.get_result_limit()
             assert len(cluster.ranking) == expected  # will change if database does
             self.check_svgs(global_results, expected, output_dir)
         return results
