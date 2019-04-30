@@ -171,8 +171,9 @@ class AntismashParser(argparse.ArgumentParser):
 
     def format_help(self) -> str:
         """Custom help formatter"""
+        from antismash.main import __version__
         help_text = """
-########### antiSMASH ver. {version} #############
+########### antiSMASH {version} #############
 
 {usage}
 
@@ -181,7 +182,7 @@ class AntismashParser(argparse.ArgumentParser):
 Options
 --------
 {opts}
-""".format(version="5 alpha", usage=self.format_usage(), args=self._get_args_text(), opts=self._get_opts_text())
+""".format(version=__version__, usage=self.format_usage(), args=self._get_args_text(), opts=self._get_opts_text())
         return help_text
 
     def format_usage(self) -> str:
