@@ -537,7 +537,7 @@ def run_java_version() -> str:
     ]
 
     version_string = execute(command).stderr
-    if not version_string.startswith("openjdk"):
+    if not version_string.startswith("openjdk") and not version_string.startswith("java"):
         msg = "unexpected output from java: %s, check path"
         raise RuntimeError(msg % java)
     # get rid of the non-version stuff in the output
