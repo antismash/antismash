@@ -628,6 +628,8 @@ class Record:
             # biopython drops invalid locations and might leave us with None, catch that first
             if feature.location is None:
                 raise SecmetInvalidInputError("feature is missing location: %s" % feature)
+            if feature.location.end > len(seq_record.seq):
+                raise SecmetInvalidInputError("feature outside record sequence: %s" % feature.location)
 
             if feature.ref or feature.ref_db:
                 for ref in [feature.ref, feature.ref_db]:
