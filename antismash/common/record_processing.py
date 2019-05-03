@@ -346,10 +346,6 @@ def pre_process_sequences(sequences: List[Record], options: ConfigType, genefind
         partial = functools.partial(ensure_cds_info, single_entry, genefinding.run_on_record)
         sequences = parallel_function(partial, ([sequence] for sequence in sequences))
 
-        # Check if no duplicate locus tags / gene IDs are found
-        logging.debug("Ensuring CDS features do not have duplicate IDs")
-        ensure_no_duplicate_cds_gene_ids(sequences)
-
     if all(sequence.skip for sequence in sequences):
         raise AntismashInputError("all records skipped")
 
@@ -437,31 +433,6 @@ def records_contain_shotgun_scaffolds(records: List[Record]) -> bool:
                                                    or 'contig' in record.annotations):
             return True
     return False
-
-
-def ensure_no_duplicate_cds_gene_ids(sequences: List[Record]) -> None:
-    """ Ensures that every CDS has a unique id within it's Record
-
-        Arguments:
-            sequences: the secmet.Record instances to process
-
-        Returns:
-            None
-    """
-    for sequence in sequences:
-        all_ids = set()  # type: Set[str]
-        for cdsfeature in sequence.get_cds_features():
-            name = cdsfeature.get_name()
-            if name in all_ids:
-                name, _ = generate_unique_id(name[:8], all_ids, start=1)
-            if cdsfeature.product is None:
-                cdsfeature.product = name
-            # update only the name causing the conflict
-            if cdsfeature.locus_tag == cdsfeature.get_name():
-                cdsfeature.locus_tag = name
-            elif cdsfeature.gene == cdsfeature.get_name():
-                cdsfeature.gene = name
-            all_ids.add(name)
 
 
 def fix_record_name_id(record: Record, all_record_ids: Set[str]) -> None:
