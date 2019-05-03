@@ -60,6 +60,6 @@ def run_glimmerhmm(record: Record) -> None:
         return
 
     handle = StringIO(results_text)
-    features = get_features_from_file(record, handle)
+    features = get_features_from_file(handle)
     for feature in features:
         record.add_biopython_feature(feature)

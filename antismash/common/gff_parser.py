@@ -85,8 +85,7 @@ def check_gff_suitability(options: ConfigType, sequences: List[Record]) -> bool:
     return single_entries
 
 
-def get_features_from_file(record: Record, handle: IO,
-                           limit_to_seq_id: Union[bool, Dict[str, List[str]]] = False
+def get_features_from_file(handle: IO, limit_to_seq_id: Union[bool, Dict[str, List[str]]] = False
                            ) -> List[SeqFeature]:
     """ Generates new SeqFeatures from a GFF file.
 
@@ -109,7 +108,7 @@ def get_features_from_file(record: Record, handle: IO,
             if feature.type == 'CDS':
                 new_features = [feature]
             else:
-                new_features = check_sub(feature, record)
+                new_features = check_sub(feature)
                 if not new_features:
                     continue
 
@@ -154,7 +153,7 @@ def run(record: Record, single_entry: bool, options: ConfigType) -> None:
         limit_info = {'gff_id': [record.id]}
 
     with open(options.genefinding_gff3) as handle:
-        features = get_features_from_file(record, handle, limit_info)
+        features = get_features_from_file(handle, limit_info)
         for feature in features:
             try:
                 record.add_biopython_feature(feature)
@@ -212,7 +211,7 @@ def generate_details_from_subfeature(sub_feature: SeqFeature,
     return mismatching_qualifiers
 
 
-def check_sub(feature: SeqFeature, sequence: Record) -> List[SeqFeature]:
+def check_sub(feature: SeqFeature) -> List[SeqFeature]:
     """ Recursively checks a GFF feature for any subfeatures and generates any
         appropriate SeqFeature instances from them.
     """
@@ -223,7 +222,7 @@ def check_sub(feature: SeqFeature, sequence: Record) -> List[SeqFeature]:
     mismatching_qualifiers = set()  # type: Set[str]
     for sub in feature.sub_features:
         if sub.sub_features:  # If there are sub_features, go deeper
-            new_features.extend(check_sub(sub, sequence))
+            new_features.extend(check_sub(sub))
         elif sub.type == 'CDS':
             sub_mismatch = generate_details_from_subfeature(sub, qualifiers,
                                                             locations, trans_locations)
