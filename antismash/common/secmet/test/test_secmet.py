@@ -85,7 +85,7 @@ class TestConversion(unittest.TestCase):
         rec = list(Bio.SeqIO.parse(get_path_to_nisin_genbank(), "genbank"))[0]
         Record.from_biopython(rec, taxon="bacteria")
         rec.features.append(SeqFeature(None, type="broken"))
-        with self.assertRaisesRegex(SecmetInvalidInputError, "feature is missing location"):
+        with self.assertRaisesRegex(SecmetInvalidInputError, "missing or invalid location"):
             Record.from_biopython(rec, taxon="bacteria")
 
 
