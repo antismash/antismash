@@ -9,12 +9,10 @@ import logging
 from typing import Dict, IO, List, Set, Union
 
 from Bio.SeqFeature import FeatureLocation, CompoundLocation, SeqFeature
+from Bio.SeqRecord import SeqRecord
 from BCBio import GFF
 
 from antismash.common.errors import AntismashInputError
-from antismash.common.secmet import Record
-from antismash.common.secmet.errors import SecmetInvalidInputError
-from antismash.config import ConfigType
 
 # whether to use phase (codon start) to modify reported locations
 # Augustus, NCBI, and glimmerhmm report phase but have already adjusted the
@@ -22,12 +20,16 @@ from antismash.config import ConfigType
 MODIFY_LOCATIONS_BY_PHASE = False
 
 
-def check_gff_suitability(options: ConfigType, sequences: List[Record]) -> bool:
+def check_gff_suitability(gff_file: str, sequences: List[SeqRecord]) -> bool:
     """
         Checks that the provided GFF3 file is acceptable
 
         If only a single record is contained in both sequences and GFF, they
         are assumed to be the same.
+
+        Arguments:
+            gff_file: the path of the GFF file to check
+            sequences: a list of SeqRecords
 
         Returns:
             True if only a single entry is contained by both inputs and
@@ -36,7 +38,7 @@ def check_gff_suitability(options: ConfigType, sequences: List[Record]) -> bool:
     try:
         examiner = GFF.GFFExaminer()
         # file handle is automatically closed by GFF lib
-        gff_data = examiner.available_limits(open(options.genefinding_gff3))
+        gff_data = examiner.available_limits(open(gff_file))
         # Check if at least one GFF locus appears in sequence
         gff_ids = set([n[0] for n in gff_data['gff_id']])
 
@@ -49,7 +51,7 @@ def check_gff_suitability(options: ConfigType, sequences: List[Record]) -> bool:
                          "the same as long as coordinates are compatible.")
             limit_info = dict(gff_type=['CDS'])
 
-            record_iter = GFF.parse(open(options.genefinding_gff3), limit_info=limit_info)
+            record_iter = GFF.parse(open(gff_file), limit_info=limit_info)
             try:
                 record = next(record_iter)
             except StopIteration:
@@ -75,12 +77,12 @@ def check_gff_suitability(options: ConfigType, sequences: List[Record]) -> bool:
             raise AntismashInputError("no CDS features in GFF3 file.")
 
         # Check CDS are childless but not parentless
-        if 'CDS' in set([n for key in examiner.parent_child_map(open(options.genefinding_gff3)) for n in key]):
+        if 'CDS' in set([n for key in examiner.parent_child_map(open(gff_file)) for n in key]):
             logging.error('GFF3 structure is not suitable. CDS features must be childless but not parentless.')
             raise AntismashInputError('GFF3 structure is not suitable.')
 
     except AssertionError as err:
-        logging.error('Parsing %r failed: %s', options.genefinding_gff3, err)
+        logging.error('Parsing %r failed: %s', gff_file, err)
         raise AntismashInputError(str(err)) from err
     return single_entries
 
@@ -135,12 +137,12 @@ def get_features_from_file(handle: IO, limit_to_seq_id: Union[bool, Dict[str, Li
     return features
 
 
-def run(record: Record, single_entry: bool, options: ConfigType) -> None:
+def run(record_id: str, single_entry: bool, gff_file: str) -> List[SeqFeature]:
     """ The entry point of gff_parser.
         Generates new features and adds them to the provided record.
 
         Arguments:
-            record: the secmet.Record instance to alter
+            record_id: the name of the record to extract features of
             single_entry: if True, record and GFF ids must match
             options: an antismash.Config object, used only for fetching the GFF path
 
@@ -150,15 +152,10 @@ def run(record: Record, single_entry: bool, options: ConfigType) -> None:
     # If there's only one sequence in both, read all, otherwise, read only appropriate part of GFF3.
     limit_info = False  # type: Union[bool, Dict[str, List[str]]]
     if not single_entry:
-        limit_info = {'gff_id': [record.id]}
+        limit_info = {'gff_id': [record_id]}
 
-    with open(options.genefinding_gff3) as handle:
-        features = get_features_from_file(handle, limit_info)
-        for feature in features:
-            try:
-                record.add_biopython_feature(feature)
-            except SecmetInvalidInputError as err:
-                raise AntismashInputError(str(err)) from err
+    with open(gff_file) as handle:
+        return get_features_from_file(handle, limit_info)
 
 
 def generate_details_from_subfeature(sub_feature: SeqFeature,
@@ -250,7 +247,6 @@ def check_sub(feature: SeqFeature) -> List[SeqFeature]:
             else:
                 new_loc = CompoundLocation(list(reversed(locations)))
                 trans_locations = list(reversed(trans_locations))
-        # TODO: use new secmet features
         new_feature = SeqFeature(new_loc)
         new_feature.qualifiers = qualifiers
         new_feature.type = 'CDS'

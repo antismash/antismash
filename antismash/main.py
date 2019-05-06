@@ -447,7 +447,8 @@ def read_data(sequence_file: Optional[str], options: ConfigType) -> serialiser.A
 
     if sequence_file:
         records = record_processing.parse_input_sequence(sequence_file, options.taxon,
-                                options.minlength, options.start, options.end)
+                                options.minlength, options.start, options.end,
+                                gff_file=options.genefinding_gff3)
         results = serialiser.AntismashResults(sequence_file.rsplit(os.sep, 1)[-1],
                                               records, [{} for i in records],
                                               __version__, taxon=options.taxon)

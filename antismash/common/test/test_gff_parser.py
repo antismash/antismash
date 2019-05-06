@@ -5,37 +5,33 @@
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
 from unittest import TestCase
-from Bio.SeqFeature import CompoundLocation
+from Bio.SeqFeature import CompoundLocation, SeqFeature
+from Bio.SeqRecord import SeqRecord
 
 from antismash.common import errors, gff_parser, path
-from antismash.common.test.helpers import get_simple_options, DummyRecord
 
 
 class GffParserTest(TestCase):
     def setUp(self):
-        self.config = get_simple_options(None, [])
-        self.config.genefinding_gff3 = path.get_full_path(__file__, "data", "test_gff.gff")
+        self.gff_file = path.get_full_path(__file__, "data", "test_gff.gff")
         self.single_entry = False
-        contig1 = DummyRecord(seq="A"*2000)
+        contig1 = SeqRecord(seq="A"*2000)
         contig1.id = "CONTIG_1"
-        contig2 = DummyRecord(seq="A"*2000)
+        contig2 = SeqRecord(seq="A"*2000)
         contig2.id = "CONTIG_2"
         self.sequences = [contig1, contig2]
 
     def test_run(self):
-        for sequence in self.sequences:
-            gff_parser.run(sequence, self.single_entry, self.config)
-        len_cds_1 = len(self.sequences[0].get_cds_features())
-        len_cds_2 = len(self.sequences[1].get_cds_features())
-        detected_result = (len_cds_1, len_cds_2)
-        expected_result = (1, 0)
-        self.assertEqual(detected_result, expected_result,
-                         msg="\nResult : %s\nExpected : %s" % (detected_result, expected_result))
+        first = gff_parser.run("CONTIG_1", self.single_entry, self.gff_file)
+        assert len(first) == 1
+        assert isinstance(first[0], SeqFeature)
+
+        assert not gff_parser.run("CONTIG_2", self.single_entry, self.gff_file)
 
     def test_top_level_cds(self):
-        self.config.genefinding_gff3 = path.get_full_path(__file__, "data", "single_cds.gff")
-        gff_parser.run(self.sequences[0], self.single_entry, self.config)
-        assert len(self.sequences[0].get_cds_features()) == 1
+        self.gff_file = path.get_full_path(__file__, "data", "single_cds.gff")
+        cds_features = gff_parser.run("CONTIG_1", self.single_entry, self.gff_file)
+        assert len(cds_features) == 1
 
     def test_features_from_file(self):
         filename = path.get_full_path(__file__, 'data', 'fumigatus.cluster1.gff')
@@ -49,13 +45,13 @@ class GffParserTest(TestCase):
         self.sequences[0].id = "NOT_CONTIG_1"
         with self.assertRaisesRegex(errors.AntismashInputError,
                                     "GFF3 record IDs don't match sequence file record IDs"):
-            gff_parser.check_gff_suitability(self.config, self.sequences)
+            gff_parser.check_gff_suitability(self.gff_file, self.sequences)
 
-        # doesn't test very much
         self.sequences[0].id = "CONTIG_1"
-        gff_parser.run(self.sequences[0], self.single_entry, self.config)  # insert the features
-        assert not gff_parser.check_gff_suitability(self.config, self.sequences)
+        cdses = gff_parser.run("CONTIG_1", self.single_entry, self.gff_file)
+        self.sequences[0].features.extend(cdses)
+        assert not gff_parser.check_gff_suitability(self.gff_file, self.sequences)
 
         # test force correlation
         self.sequences = self.sequences[1:]  # CONTIG_2
-        assert gff_parser.check_gff_suitability(self.config, self.sequences)
+        assert gff_parser.check_gff_suitability(self.gff_file, self.sequences)
