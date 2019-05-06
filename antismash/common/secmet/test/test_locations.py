@@ -230,6 +230,10 @@ class TestBridgedSplit(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Location does not bridge origin"):
             print(splitter(loc))
 
+        loc = build_compound([(15, 18), (9, 12), (0, 3)], -1)
+        with self.assertRaisesRegex(ValueError, "Location does not bridge origin"):
+            print(splitter(loc))
+
     def test_bad_strand(self):
         loc = build_compound([(9, 12), (0, 3)], -1)
         loc.parts[0].strand = 1
