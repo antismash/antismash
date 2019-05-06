@@ -645,7 +645,10 @@ class Record:
             if record.is_circular() and location_bridges_origin(feature.location):
                 locations_adjusted = True
                 original_location = feature.location
-                lower, upper = split_origin_bridging_location(feature.location)
+                try:
+                    lower, upper = split_origin_bridging_location(feature.location)
+                except ValueError as err:
+                    raise SecmetInvalidInputError(str(err)) from err
 
                 if feature.type in ['CDS', 'gene']:
                     name_modified = True
