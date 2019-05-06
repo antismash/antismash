@@ -103,6 +103,10 @@
     @extend .NRPS;
 }
 
+.thioamide-NRP {
+    @extend .NRPS;
+}
+
 .terpene {
     @include hydrocarbon;
 }

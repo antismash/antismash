@@ -69,6 +69,13 @@ RULE CDPS
     NEIGHBOURHOOD 10
     CONDITIONS CDPS or cycdipepsynth
 
+RULE thioamide-NRP
+    COMMENT thioamide-containing non-ribosomal peptides (https://doi.org/10.1002/anie.201807970)
+    RELATED Chor_lyase
+    CUTOFF 20
+    NEIGHBOURHOOD 20
+    CONDITIONS ATP-grasp and AMP-binding and PP-binding and DUF98
+
 RULE terpene
     CUTOFF 20
     NEIGHBOURHOOD 10

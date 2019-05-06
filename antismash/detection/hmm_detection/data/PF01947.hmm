@@ -1,7 +1,7 @@
 HMMER3/f [3.1b2 | February 2015]
 NAME  DUF98
-ACC   PF01947.15
-DESC  Protein of unknown function (DUF98)
+ACC   PF01947.16
+DESC  p-hydroxybenzoic acid synthase
 LENG  149
 ALPH  amino
 RF    no
@@ -9,19 +9,19 @@ MM    no
 CONS  yes
 CS    yes
 MAP   yes
-DATE  Thu Jan 19 11:08:09 2017
+DATE  Sat Aug  4 11:32:57 2018
 NSEQ  20
 EFFN  1.372070
 CKSUM 4173140297
 GA    20.80 20.80;
 TC    20.80 20.80;
-NC    20.70 20.60;
+NC    20.70 20.70;
 BM    hmmbuild HMM.ann SEED.ann
-SM    hmmsearch -Z 26740544 -E 1000 --cpu 4 HMM pfamseq
+SM    hmmsearch -Z 45638612 -E 1000 --cpu 4 HMM pfamseq
 STATS LOCAL MSV       -9.7113  0.70954
 STATS LOCAL VITERBI  -10.9378  0.70954
 STATS LOCAL FORWARD   -4.4561  0.70954
-HMM          A        C        D        E        F        G        H        I        K        L        M        N        P        Q        R        S        T        V        W        Y   
+HMM          A        C        D        E        F        G        H        I        K        L        M        N        P        Q        R        S        T        V        W        Y
             m->m     m->i     m->d     i->m     i->i     d->m     d->d
   COMPO   2.57892  4.60301  3.04355  2.56015  3.25707  3.05428  3.67903  2.80644  2.74043  2.36204  3.72156  3.13337  3.42368  3.04104  2.72163  2.67345  2.83859  2.67394  4.05540  3.46327
           2.68618  4.42225  2.77519  2.73123  3.46354  2.40513  3.72494  3.29354  2.67741  2.69355  4.24690  2.90347  2.73739  3.18146  2.89801  2.37887  2.77519  2.98518  4.58477  3.61503

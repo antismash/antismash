@@ -220,7 +220,7 @@ ThiF	ThiF family	22	PF00899.hmm
 TRI5	Trichodiene synthase	25	TRI5.hmm
 NasY	Long-chain N-acyl amino acid synthase	20	NasY.hmm
 FMO-like	Flavin-dependent monooxygenase	150	PF00743.hmm
-DUF98	Chorismate lyase	50	PF01947.hmm
+DUF98	p-hydroxybenzoic acid synthase	21	PF01947.hmm
 PpyS	PPY synthase	300	ppys.hmm
 HMGL-like	HMGL-like Pyruvate carboxylase	30	PF00682.hmm
 RimK	RimK-like ATP-grasp domain	21	PF08443.hmm
@@ -239,3 +239,5 @@ TIGR03106	hydrolase, peptidase M42 family	398	TIGR03106.hmm
 Peptidase_M42	M42 glutamyl aminopeptidase	20	PF05343.hmm
 CDPS	Cyclodipeptide synthase	27	PF16715.hmm
 2OG-FeII_Oxy	2OG-Fe(II) oxygenase superfamily	22	PF03171.hmm
+ATP-grasp	ATP-grasp domain	21	PF02222.hmm
+Chor_lyase	Chorismate lyase	24	PF04345.hmm
