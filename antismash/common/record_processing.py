@@ -24,6 +24,16 @@ from antismash.custom_typing import AntismashModule
 from .subprocessing import parallel_function
 
 
+def _add_gff_features(single_entry: bool, gff_file: str, record: SeqRecord) -> SeqRecord:
+    """ A helper function for parallel annotations of sequences with GFF input
+    """
+    if any(feature.type == "CDS" for feature in record.features):
+        return record
+    gff_features = gff_parser.run(record.id, single_entry, gff_file)
+    record.features.extend(gff_features)
+    return record
+
+
 def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length: int = -1,
                          start: int = -1, end: int = -1, gff_file: str = "") -> List[Record]:
     """ Parse input records contained in a file
@@ -85,6 +95,8 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
         except Exception as err:
             raise AntismashInputError("could not parse records from GFF3 file") from err
         # then add any features found for any record with no CDS features
+        partial = functools.partial(_add_gff_features, single_entry, gff_file)
+        records = parallel_function(partial, ([record] for record in records))
         for record in records:
             if any(feature.type == "CDS" for feature in record.features):
                 continue
