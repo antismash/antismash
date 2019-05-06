@@ -239,7 +239,7 @@ class TestPreprocessRecords(unittest.TestCase):
         fasta = path.get_full_path(__file__, "data", "nisin.fasta")
         gff = path.get_full_path(__file__, "data", "nisin.gff3")
         config.update_config({"genefinding_gff3": gff})
-        records = record_processing.parse_input_sequence(fasta)
+        records = record_processing.parse_input_sequence(fasta, gff_file=gff)
         record_processing.pre_process_sequences(records, self.options, self.genefinding)
         assert not self.genefinding.was_run
         assert len(records[0].get_cds_features()) == 11

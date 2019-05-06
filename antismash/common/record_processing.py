@@ -25,7 +25,7 @@ from .subprocessing import parallel_function
 
 
 def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length: int = -1,
-                         start: int = -1, end: int = -1) -> List[Record]:
+                         start: int = -1, end: int = -1, gff_file: str = "") -> List[Record]:
     """ Parse input records contained in a file
 
         Arguments:
@@ -35,6 +35,7 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
                             if not positive, all records are included
             start: a start location for trimming the sequence, or -1 to use all
             end: an end location for trimming the sequence, or -1 to use all
+            gff_file: a GFF file to use for gene/CDS annotations
 
         Returns:
             A list of secmet.Record instances, one for each record in the file
@@ -71,6 +72,24 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
         if len(records) > 1:
             raise ValueError("--start and --end options cannot be used with multiple records")
         records[0] = trim_sequence(records[0], max(start, 0), min(len(records[0]), end))
+
+    # add GFF features before conversion, if relevant
+    if gff_file:
+        logging.debug("Loading annotations from GFF file")
+        # check GFF suitability first
+        single_entry = False
+        try:
+            single_entry = gff_parser.check_gff_suitability(gff_file, records)
+        except AntismashInputError:
+            raise
+        except Exception as err:
+            raise AntismashInputError("could not parse records from GFF3 file") from err
+        # then add any features found for any record with no CDS features
+        for record in records:
+            if any(feature.type == "CDS" for feature in record.features):
+                continue
+            gff_features = gff_parser.run(record.id, single_entry, gff_file)
+            record.features.extend(gff_features)
 
     # remove any previous or obselete antiSMASH features so conversion can be clean
     for record in records:
@@ -154,7 +173,7 @@ def strip_record(record: SeqRecord) -> SeqRecord:
     return record
 
 
-def ensure_cds_info(single_entry: bool, genefinding: Callable[[Record, Any], None], sequence: Record) -> Record:
+def ensure_cds_info(genefinding: Callable[[Record, Any], None], sequence: Record) -> Record:
     """ Ensures the given record has CDS features with unique locus tags.
         CDS features are retrieved from GFF file or via genefinding, depending
         on antismash options.
@@ -162,9 +181,6 @@ def ensure_cds_info(single_entry: bool, genefinding: Callable[[Record, Any], Non
         Records without CDS features will have their skip flag marked.
 
         Arguments:
-            single_entry: whether gff_parser can ignore mismatching record ids
-                          provided there's only one record provided here and in
-                          the GFF file
             genefinding: the relevant run_on_record(record, options) function to
                          use for finding genes if no GFF file being used
             record: the Record instance to ensure CDS features for
@@ -176,14 +192,7 @@ def ensure_cds_info(single_entry: bool, genefinding: Callable[[Record, Any], Non
     if sequence.skip:
         return sequence
     if not sequence.get_cds_features():
-        if options.genefinding_gff3:
-            logging.info("No CDS features found in record %r but GFF3 file provided, running GFF parser.", sequence.id)
-            gff_parser.run(sequence, single_entry, options)
-            if not sequence.get_cds_features():
-                logging.warning("Record %s has no genes even after running GFF parser, skipping.", sequence.id)
-                sequence.skip = "No genes found"
-                return sequence
-        elif options.genefinding_tool != "none":
+        if not options.genefinding_gff3 and options.genefinding_tool != "none":
             logging.info("No CDS features found in record %r, running gene finding.", sequence.id)
             genefinding(sequence, options)
         if not sequence.get_cds_features():
@@ -329,21 +338,11 @@ def pre_process_sequences(sequences: List[Record], options: ConfigType, genefind
         logging.warning("Only analysing the first %d records (increase via --limit)", options.limit)
     update_config({"triggered_limit": limit_hit})
 
-    # Check GFF suitability
-    single_entry = False
-    if options.genefinding_gff3:
-        try:
-            single_entry = gff_parser.check_gff_suitability(options, sequences)
-        except AntismashInputError:
-            raise
-        except Exception as err:
-            raise AntismashInputError("could not parse records from GFF3 file") from err
-
     if checking_required:
         # ensure CDS features have all relevant information
-        logging.debug("Ensuring CDS features have all required information")
+        logging.debug("Ensuring records have CDS features with all required information")
         assert hasattr(genefinding, "run_on_record")
-        partial = functools.partial(ensure_cds_info, single_entry, genefinding.run_on_record)
+        partial = functools.partial(ensure_cds_info, genefinding.run_on_record)
         sequences = parallel_function(partial, ([sequence] for sequence in sequences))
 
     if all(sequence.skip for sequence in sequences):
