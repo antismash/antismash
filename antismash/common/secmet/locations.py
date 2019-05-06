@@ -132,6 +132,26 @@ def location_bridges_origin(location: Location) -> bool:
     return False
 
 
+def _is_valid_split(lower: List[Location], upper: List[Location], strand: int) -> bool:
+    """ Returns True if the results of a split are valid:
+        - mutually exclusive areas covered
+        - each section must be ordered correctly for the strand
+    """
+    if not lower or not upper:
+        return False
+
+    # check that both sections cover a mutually exclusive area
+    if locations_overlap(combine_locations(lower), combine_locations(upper)):
+        return False
+
+    # check that all components in each section are correctly ordered
+    for section in [upper, lower]:
+        starts = [part.start for part in section]
+        if sorted(starts, reverse=(strand == -1)) != starts:
+            return False
+    return True
+
+
 def split_origin_bridging_location(location: CompoundLocation) -> Tuple[
                                                       List[FeatureLocation], List[FeatureLocation]]:
     """ Splits a CompoundLocation into two sections.
@@ -147,22 +167,27 @@ def split_origin_bridging_location(location: CompoundLocation) -> Tuple[
     lower = []  # type: List[FeatureLocation]
     upper = []  # type: List[FeatureLocation]
     if location.strand == 1:
-        for part in location.parts:
+        for i, part in enumerate(location.parts):
             if not upper or part.start > upper[-1].start:
                 upper.append(part)
             else:
-                lower.append(part)
+                lower.extend(location.parts[i:])
+                break
     elif location.strand == -1:
-        for part in location.parts:
+        for i, part in enumerate(location.parts):
             if not lower or part.start < lower[-1].start:
                 lower.append(part)
             else:
-                upper.append(part)
+                upper.extend(location.parts[i:])
+                break
     else:
         raise ValueError("Cannot separate bridged location without a valid strand")
 
     if not (lower and upper):
         raise ValueError("Location does not bridge origin: %s" % location)
+
+    if not _is_valid_split(lower, upper, location.strand):
+        raise ValueError("cannot determine correct ordering of bridged location: %s" % str(location))
 
     return lower, upper
 
