@@ -220,6 +220,27 @@ class TestBridgedSplit(unittest.TestCase):
         self.check_pairs(lower, [(0, 3)])
         self.check_pairs(upper, [(15, 18), (6, 9)])
 
+    def test_unusable(self):
+        # this format crosses the origin multiple times and can't be interpreted
+        raw_loc_parts = [(0, 3), (6, 9), (12, 15), (18, 21)]
+        # test a variety of badly ordered parts
+        for ordering in [[0, 2, 1, 3], [0, 1, 3, 2], [0, 3, 1, 2]]:
+            # cycle them around to test position independence
+            for i in range(len(ordering)):
+                loc_parts = [raw_loc_parts[i] for i in ordering[i:] + ordering[:i]]
+
+                # forward
+                loc = build_compound(loc_parts, 1)
+                assert is_bridged(loc)
+                with self.assertRaisesRegex(ValueError, "cannot determine correct ordering"):
+                    splitter(loc)
+
+                # reverse
+                loc = build_compound(loc_parts[::-1], -1)
+                assert is_bridged(loc)
+                with self.assertRaisesRegex(ValueError, "cannot determine correct ordering"):
+                    splitter(loc)
+
     def test_not_bridging_forward(self):
         loc = build_compound([(0, 3), (9, 12)], 1)
         with self.assertRaisesRegex(ValueError, "Location does not bridge origin"):
