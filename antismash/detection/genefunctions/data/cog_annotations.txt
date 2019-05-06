@@ -257,7 +257,7 @@ SMCOG1255	cold-shock_DNA-binding_domain_protein	R
 SMCOG1256	FkbH_like_protein	B
 SMCOG1257	Alpha-glucosidase	B
 SMCOG1258	Antibiotic_biosynthesis_monooxygenase	B
-SMCOG1259	hypothetical_protein	O
+SMCOG1259	hypothetical_protein	B
 SMCOG1260	AraC_family_transcriptional_regulator	R
 SMCOG1261	hypothetical_protein	O
 SMCOG1262	haloalkane_dehalogenase	B
