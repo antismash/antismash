@@ -74,7 +74,7 @@ class Feature:
         assert location.start <= location.end, "Feature location invalid: %s" % location
         self.location = location
         self.notes = []  # type: List[str]
-        if not 0 < len(feature_type) < 16:  # at 16 the name merges with location in genbanks
+        if not 1 <= len(feature_type) < 16:  # at 16 the name merges with location in genbanks
             raise ValueError("feature type has invalid length: '%s'" % feature_type)
         self.type = str(feature_type)
         self._qualifiers = OrderedDict()  # type: Dict[str, Optional[List[str]]]
