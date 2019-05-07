@@ -286,7 +286,7 @@ class Cluster:
     """
     def __init__(self, region_number: int, ref_cluster_number: str, accession: str,
                  description: str, features: Union[List[Protein], List[secmet.CDSFeature]], rank: int,
-                 cluster_type: str, hits: int = 0, strand: int = 1, prefix: str ="general") -> None:
+                 cluster_type: str, hits: int = 0, strand: int = 1, prefix: str = "general") -> None:
         self.region_number = region_number
         self.ref_cluster_number = int(ref_cluster_number.lstrip('c'))
         self.accession = accession
