@@ -64,7 +64,7 @@ class DetectionTest(unittest.TestCase):
 
                 if result.met and result.matches:
                     detected_types[cds].add(rule.name)
-                    for other_cds, matches in result.ancillary_hits.items():
+                    for other_cds in result.ancillary_hits:
                         detected_types[other_cds].add(rule.name)
 
         return detected_types
