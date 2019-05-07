@@ -138,7 +138,7 @@ def run_on_record(record: Record, results: Optional[ClusterBlastResults],
         results.internal_homology_groups = internal_homology_blast(record)
     if options.cb_general and not results.general:
         logging.info('Running ClusterBlast')
-        clusters, proteins = load_clusterblast_database(record)
+        clusters, proteins = load_clusterblast_database()
         results.general = perform_clusterblast(options, record, clusters, proteins)
     if options.cb_subclusters and not results.subcluster:
         results.subcluster = run_subclusterblast_on_record(record, options)

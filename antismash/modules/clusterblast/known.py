@@ -86,7 +86,7 @@ def run_knownclusterblast_on_record(record: Record, options: ConfigType) -> Gene
             an instance of GeneralResults with a result for each cluster in the record
     """
     logging.info('Running known cluster search')
-    clusters, proteins = load_clusterblast_database(record, searchtype="knownclusterblast")
+    clusters, proteins = load_clusterblast_database(searchtype="knownclusterblast")
     return perform_knownclusterblast(options, record, clusters, proteins)
 
 

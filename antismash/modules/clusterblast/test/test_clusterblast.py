@@ -31,11 +31,9 @@ class TestBlastParsing(unittest.TestCase):
         restore()
 
     def parse_subject_wrapper(self, subject_line):
-        geneclustergenes = {}
         seq_record = Record("dummy")
         seqlengths = {}
-        return core.parse_subject(subject_line, seqlengths,
-                                  geneclustergenes, seq_record)
+        return core.parse_subject(subject_line, seqlengths, seq_record)
 
     def read_sample_data(self, filename="data/diamond_output_sample.txt"):
         path = os.path.join(__file__.rsplit(os.sep, 1)[0], filename)
@@ -291,8 +289,7 @@ class TestSubjectParsing(unittest.TestCase):
         restore()
 
     def parse_subject_wrapper(self, subject_line):
-        return core.parse_subject(subject_line, self.seqlengths,
-                                  self.geneclustergenes, self.seq_record)
+        return core.parse_subject(subject_line, self.seqlengths, self.seq_record)
 
     def test_all_parsing(self):
         # test known good input

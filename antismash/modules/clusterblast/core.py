@@ -185,7 +185,7 @@ def load_reference_proteins(searchtype: str) -> Dict[str, Protein]:
     return proteins
 
 
-def load_clusterblast_database(record: secmet.Record, searchtype: str = "clusterblast"
+def load_clusterblast_database(searchtype: str = "clusterblast"
                                ) -> Tuple[Dict[str, ReferenceCluster], Dict[str, Protein]]:
     """ Load clusterblast database
 
@@ -273,7 +273,7 @@ def remove_duplicate_hits(blast_lines: List[List[str]]) -> List[List[str]]:
     return deduplicated
 
 
-def parse_subject(line_parts: List[str], seqlengths: Dict[str, int], names: Set[str],
+def parse_subject(line_parts: List[str], seqlengths: Dict[str, int],
                   record: secmet.Record) -> Subject:
     """ Parses a blast-formatted subject line and converts to Subject instance
 
@@ -335,7 +335,6 @@ def parse_all_clusters(blasttext: str, record: secmet.Record, min_seq_coverage: 
                         dictionary of query name to Query instance
     """
     seqlengths = get_cds_lengths(record)
-    genes_within_clusters = set(cds.get_name() for cds in record.get_cds_features_within_regions())
     queries = OrderedDict()  # type: Dict[str, Query]
     clusters = OrderedDict()  # type: Dict[str, List[Query]]
     blastlines = remove_duplicate_hits([line.split("\t") for line in blasttext.rstrip().splitlines()])
@@ -345,7 +344,7 @@ def parse_all_clusters(blasttext: str, record: secmet.Record, min_seq_coverage: 
 
     for tabs in blastlines:
         query = tabs[0]
-        subject = parse_subject(tabs, seqlengths, genes_within_clusters, record)
+        subject = parse_subject(tabs, seqlengths, record)
 
         # only process the pairing if limits met
         if subject.perc_ident <= min_perc_identity \
@@ -401,7 +400,6 @@ def blastparse(blasttext: str, record: secmet.Record, min_seq_coverage: float = 
                     a list of Query instances from that cluster
     """
     seqlengths = get_cds_lengths(record)
-    names = set(cds.get_name() for cds in record.get_cds_features_within_regions())
     queries = OrderedDict()  # type: Dict[str, Query]
     clusters = OrderedDict()  # type: Dict[str, List[Query]]
     blastlines = remove_duplicate_hits([line.split("\t") for line in blasttext.rstrip().split("\n")])
@@ -409,7 +407,7 @@ def blastparse(blasttext: str, record: secmet.Record, min_seq_coverage: float = 
 
     for tabs in blastlines:
         query = tabs[0]
-        subject = parse_subject(tabs, seqlengths, names, record)
+        subject = parse_subject(tabs, seqlengths, record)
 
         # only process the pairing if limits met
         if subject.perc_ident <= min_perc_identity \
