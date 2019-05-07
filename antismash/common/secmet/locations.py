@@ -3,6 +3,7 @@
 
 """ Helper functions for location operations """
 
+import logging
 from typing import Iterable, List, Sequence, Tuple, Union
 from typing import Optional  # in comment hints, pylint: disable=unused-import
 
@@ -100,7 +101,7 @@ def build_location_from_others(locations: Sequence[Location]) -> FeatureLocation
     return location
 
 
-def location_bridges_origin(location: Location) -> bool:
+def location_bridges_origin(location: Location, allow_reversing: bool = False) -> bool:
     """ Determines if a CompoundLocation would cross the origin of a record.
 
         Arguments:
@@ -120,14 +121,29 @@ def location_bridges_origin(location: Location) -> bool:
     if location.strand not in [1, -1]:
         return False
 
-    for i, part in enumerate(location.parts[1:]):
-        prev = location.parts[i]
-        if location.strand == 1:
-            if prev.start > part.start:
-                return True
-        else:
-            if part.end > prev.end:
-                return True
+    def check(location: Location) -> bool:
+        """ Returns True if the exon ordering is invalid for the strand """
+        for i, part in enumerate(location.parts[1:]):
+            prev = location.parts[i]
+            if location.strand == 1:
+                if prev.start > part.start:
+                    return True
+            else:
+                if prev.start < part.start:
+                    return True
+        return False
+
+    if check(location):
+        # due to annotations having two alternate orders for reverse strand parts:
+        # 1, 2, 3, 4 and 4, 3, 2, 1, reverse the order and try again
+        if allow_reversing and location.strand == -1:
+            location.parts.reverse()
+            if not check(location):
+                logging.warning("reversed exon order for location: %s", location)
+                return False
+            # swap back so it will be reported as it was
+            location.parts.reverse()
+        return True
 
     return False
 

@@ -173,6 +173,20 @@ class TestBridgeDetection(unittest.TestCase):
         assert is_bridged(build_compound([(0, 3), (15, 18), (6, 9)], -1))
         assert not is_bridged(build_compound([(9, 12), (0, 3)], -1))
 
+    def test_alternate_orderings(self):
+        loc = build_compound([(0, 3), (6, 9), (12, 15)], -1)
+        assert loc.parts[0].start == 0
+        assert is_bridged(loc)
+        assert loc.parts[0].start == 0
+
+        assert not is_bridged(loc, allow_reversing=True)
+        assert loc.parts[0].start == 12
+
+        loc = build_compound([(12, 15), (6, 9), (0, 3)], -1)
+        assert loc.parts[0].start == 12
+        assert not is_bridged(loc, allow_reversing=True)
+        assert loc.parts[0].start == 12
+
     def test_bad_strand(self):
         pairs = [(9, 12), (0, 3)]
         assert is_bridged(build_compound(pairs, 1))
@@ -181,6 +195,9 @@ class TestBridgeDetection(unittest.TestCase):
     def test_not_bridged(self):
         assert not is_bridged(build_compound([(1, 6), (5, 10)], 1))
         assert not is_bridged(build_compound([(5, 10), (1, 6)], -1))
+
+    def test_indeterminate(self):
+        assert is_bridged(build_compound([(0, 3), (12, 15), (6, 9)], -1), allow_reversing=True)
 
 
 class TestBridgedSplit(unittest.TestCase):
