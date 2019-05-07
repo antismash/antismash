@@ -459,7 +459,7 @@ def find_internal_orthologous_groups(queries: Dict[str, Query], cluster_names: L
         Returns:
             a list of groups, each list being
                 a list of query ids in alphabetical order
-    """  # TODO check description
+    """
 
     groups = []
     for name in cluster_names:
@@ -753,7 +753,8 @@ def check_diamond_db_compatible(database_file: str) -> bool:
         return False
 
     if db_format != compatible_format:
-        logging.debug("Incompatible database format for %s. Expected %s but found %s.",
+        logging.debug(
+            "Incompatible database format for %s. Expected %s but found %s.",
             database_file, compatible_format, db_format
         )
         return False
