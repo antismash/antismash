@@ -12,6 +12,7 @@ from antismash.common.secmet.locations import (
     location_bridges_origin as is_bridged,
     split_origin_bridging_location as splitter,
     location_contains_other,
+    location_contains_overlapping_exons as overlapping_exons,
     location_from_string,
     locations_overlap,
     combine_locations,
@@ -448,3 +449,24 @@ class TestContainsOther(unittest.TestCase):
 
         compound = build_compound([(10, 20), (20, 40), (50, 60)], strand=1)
         assert not location_contains_other(simple, compound)
+
+
+class TestOverlappingExons(unittest.TestCase):
+    def test_non_compound(self):
+        assert not overlapping_exons(FeatureLocation(10, 40))
+
+    def test_not_overlapping(self):
+        assert not overlapping_exons(build_compound([(10, 30), (40, 70)], strand=1))
+
+    def test_overlapping(self):
+        assert overlapping_exons(build_compound([(10, 30), (20, 30)], strand=1))
+        assert overlapping_exons(build_compound([(10, 30), (70, 100), (20, 30)], strand=1))
+        assert overlapping_exons(build_compound([(70, 100), (20, 30), (10, 30)], strand=1))
+
+    def test_frameshifted(self):
+        assert not overlapping_exons(build_compound([(10, 30), (29, 59)], strand=1))
+
+    def test_bad_types(self):
+        for bad in [None, "loc", [FeatureLocation(10, 40)], 5]:
+            with self.assertRaises(TypeError):
+                overlapping_exons(bad)

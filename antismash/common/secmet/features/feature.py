@@ -19,7 +19,12 @@ from antismash.common.secmet.locations import (
 )
 
 from ..errors import SecmetInvalidInputError
-from ..locations import AfterPosition, BeforePosition, Location
+from ..locations import (
+    AfterPosition,
+    BeforePosition,
+    Location,
+    location_contains_overlapping_exons,
+)
 
 
 def _adjust_location_by_offset(location: Location, offset: int) -> Location:
@@ -64,6 +69,8 @@ class Feature:
         assert isinstance(location, (FeatureLocation, CompoundLocation)), type(location)
         if location_bridges_origin(location):
             raise ValueError("Features that bridge the record origin cannot be directly created: %s" % location)
+        if location_contains_overlapping_exons(location):
+            raise ValueError("location contains overlapping exons: %s" % location)
         assert location.start <= location.end, "Feature location invalid: %s" % location
         self.location = location
         self.notes = []  # type: List[str]

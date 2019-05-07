@@ -302,3 +302,29 @@ def combine_locations(*locations: Iterable[Location]) -> Location:
     start = min(loc.start for loc in locs)
     end = max(loc.end for loc in locs)
     return FeatureLocation(start, end, strand=None)
+
+
+def location_contains_overlapping_exons(location: Location) -> bool:
+    """ Checks for overlapping exons in CompoundLocations, with an allowance
+        for frameshifts of up to 3 bases before it is considered an overlap
+
+        Arguments:
+            location: the location to check
+
+        Returns:
+            True if the location contains exons overlapping by more than 3 bases
+    """
+    if isinstance(location, FeatureLocation):
+        return False
+    if not isinstance(location, CompoundLocation):
+        raise TypeError("expected CompoundLocation, not %s" % type(location))
+
+    # sorting by start first
+    parts = sorted(location.parts, key=lambda x: (x.start, x.end))
+    for i, part in enumerate(parts[1:]):
+        prev = parts[i]
+        # allow for frameshifts
+        if locations_overlap(part, FeatureLocation(prev.start, prev.end - 3, prev.strand)):
+            return True
+
+    return False
