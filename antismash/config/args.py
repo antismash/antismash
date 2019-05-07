@@ -22,6 +22,8 @@ from .executables import AlternateExecutablesAction, get_default_paths
 # ignores sprinkled throughout. Most deal with ArgumentParser methods
 # not being picked up or argparse's liberal use of *kwargs.
 
+ANTISMASH_VERSION = ""  # needs to be set on module import, avoids cyclic imports
+
 
 class AntismashParser(argparse.ArgumentParser):
     """ Custom argument parser for antiSMASH to override default help output
@@ -171,7 +173,6 @@ class AntismashParser(argparse.ArgumentParser):
 
     def format_help(self) -> str:
         """Custom help formatter"""
-        from antismash.main import __version__
         help_text = """
 ########### antiSMASH {version} #############
 
@@ -182,7 +183,8 @@ class AntismashParser(argparse.ArgumentParser):
 Options
 --------
 {opts}
-""".format(version=__version__, usage=self.format_usage(), args=self._get_args_text(), opts=self._get_opts_text())
+""".format(version=ANTISMASH_VERSION, usage=self.format_usage(),
+           args=self._get_args_text(), opts=self._get_opts_text())
         return help_text
 
     def format_usage(self) -> str:
