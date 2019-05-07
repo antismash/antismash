@@ -678,7 +678,10 @@ class Record:
 
                 # since CDSs need translations, skip if too small or not a CDS
                 if feature.type != "CDS" or len(feature) >= 3:
-                    record.add_biopython_feature(feature)
+                    try:
+                        record.add_biopython_feature(feature)
+                    except ValueError as err:
+                        raise SecmetInvalidInputError(str(err)) from err
 
                 # adjust the current feature to only be the lower section
                 if len(lower) > 1:
@@ -698,7 +701,10 @@ class Record:
                 continue
             # again, since CDSs need translations, skip if too small or not a CDS
             if feature.type != "CDS" or len(feature) >= 3:
-                record.add_biopython_feature(feature)
+                try:
+                    record.add_biopython_feature(feature)
+                except ValueError as err:
+                    raise SecmetInvalidInputError(str(err)) from err
 
             # reset back to how the feature looked originally
             if locations_adjusted:
@@ -712,10 +718,13 @@ class Record:
                         feature.qualifiers.pop("gene", "")
                     else:
                         feature.qualifiers["gene"][0] = original_gene_name
-        for feature in postponed_features[CandidateCluster.FEATURE_TYPE]:
-            record.add_feature(CandidateCluster.from_biopython(feature).convert_to_real_feature(record))
-        for feature in postponed_features["region"]:
-            record.add_feature(Region.from_biopython(feature).convert_to_real_feature(record))
+        try:
+            for feature in postponed_features[CandidateCluster.FEATURE_TYPE]:
+                record.add_feature(CandidateCluster.from_biopython(feature).convert_to_real_feature(record))
+            for feature in postponed_features["region"]:
+                record.add_feature(Region.from_biopython(feature).convert_to_real_feature(record))
+        except ValueError as err:
+            raise SecmetInvalidInputError(str(err)) from err
         return record
 
     @staticmethod
