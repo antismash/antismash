@@ -77,7 +77,8 @@ def execute(commands: List[str], stdin: Optional[str] = None, stdout: Union[int,
             a RunResult object containing any piped output
     """
     options = get_config()
-    if commands[0] in options.executables:
+    # if config has been set up and if there is an override, use that instead
+    if commands[0] in options.get("executables", {}):
         commands[0] = getattr(options.executables, commands[0])
 
     if stdin is not None:
