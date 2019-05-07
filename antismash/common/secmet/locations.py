@@ -14,6 +14,7 @@ from Bio.SeqFeature import (
     CompoundLocation,
     ExactPosition,
     FeatureLocation,
+    SeqFeature,
     UnknownPosition,
 )
 
@@ -344,3 +345,68 @@ def location_contains_overlapping_exons(location: Location) -> bool:
             return True
 
     return False
+
+
+def ensure_valid_locations(features: List[SeqFeature], can_be_circular: bool, sequence_length: int) -> None:
+    """ Checks all features for valid locations, raising a ValueError if they are not
+
+        For a location to be considered invalid, it will be one of:
+            - missing a location (biopython may strip invalid locations)
+            - outside the sequence provided
+            - be a CDS and contain an exon with exact positions that is less than 3 bases
+            - contain exons that overlap by 3 or more bases (allows for frameshifts)
+            - contain exons in an order that isn't consistent with other features
+                 (barring cross-origin features in records that can be circular)
+
+        Arguments:
+            features: a list of SeqFeatures (no secmet Feature should have these issues)
+            can_be_circular: whether the record containing the features can be a circular genome
+            sequence_length: the length of the sequence the features belong to
+
+        Returns:
+            None
+    """
+    for feature in features:
+        # biopython drops invalid locations, so catch that first
+        if feature.location is None:
+            raise ValueError("one or more features with missing or invalid locations")
+        # features outside the sequence cause problems with motifs and translations
+        if feature.location.end > sequence_length:
+            raise ValueError("feature outside record sequence: %s" % feature.location)
+        # CDS features with exons of less than 3 bases are invalid
+        if feature.type in ["CDS", "gene"]:
+            for part in feature.location.parts:
+                if len(part) < 3 and not any(isinstance(pos, (BeforePosition, AfterPosition))
+                                             for pos in (part.start, part.end)):
+                    raise ValueError("exons must be at least 3 nucleotides long: %s" % feature.location)
+        # features with overlapping exons cause translation problems
+        if location_contains_overlapping_exons(feature.location):
+            raise ValueError("location contains overlapping exons: %s" % feature.location)
+
+    # non-circular records with compound locations need to have the right part ordering
+    # for translations, only really relevant for reverse strand features
+    # first find what pattern has been used for locations
+    standard = 0
+    non_standard = 0
+    for feature in features:
+        if not feature.location.strand or feature.type not in ["CDS", "gene"]:
+            continue
+
+        if location_bridges_origin(feature.location):
+            non_standard += 1
+        else:
+            standard += 1
+
+    if can_be_circular:
+        if non_standard > 2:  # allowing for a cross origin CDS and its containing gene
+            raise ValueError("inconsistent exon ordering for features")
+        return
+
+    if standard and non_standard:
+        raise ValueError("inconsistent exon ordering for features in non-circular record")
+    elif non_standard:
+        for feature in features:
+            if not feature.location.strand:
+                continue
+            if location_bridges_origin(feature.location, allow_reversing=True):
+                raise ValueError("cannot determine correct exon ordering for location: %s" % feature.location)

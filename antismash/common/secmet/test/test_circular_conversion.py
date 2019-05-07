@@ -11,7 +11,7 @@ from Bio.SeqFeature import SeqFeature
 from Bio.SeqRecord import SeqRecord
 
 from antismash.common.secmet.locations import FeatureLocation, CompoundLocation
-from antismash.common.secmet.record import Record
+from antismash.common.secmet.record import Record, SecmetInvalidInputError
 
 
 class TestBridgeConversion(unittest.TestCase):
@@ -29,11 +29,11 @@ class TestBridgeConversion(unittest.TestCase):
     def test_bridge_in_linear_record(self):
         self.seqrec.annotations["topology"] = "linear"
         self.seqrec.features.append(self.seqcds)
-        with self.assertRaisesRegex(ValueError, "Features that bridge"):
-            Record.from_biopython(self.seqrec, taxon='bacteria')
+        with self.assertRaisesRegex(SecmetInvalidInputError, "cannot determine correct exon ordering"):
+            Record.from_biopython(self.seqrec, taxon='fungi')
         self.seqrec.features[0] = self.seqgene
-        with self.assertRaisesRegex(ValueError, "Features that bridge"):
-            Record.from_biopython(self.seqrec, taxon='bacteria')
+        with self.assertRaisesRegex(SecmetInvalidInputError, "cannot determine correct exon ordering"):
+            Record.from_biopython(self.seqrec, taxon='fungi')
 
     def test_cds_split(self):
         self.seqrec.features.append(self.seqcds)

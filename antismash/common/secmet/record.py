@@ -42,9 +42,9 @@ from .features.candidate_cluster import create_candidates_from_protoclusters
 
 from .locations import (
     location_bridges_origin,
-    location_contains_overlapping_exons,
     split_origin_bridging_location,
     combine_locations,
+    ensure_valid_locations,
 )
 
 
@@ -625,15 +625,14 @@ class Record:
             transl_table = 11  # bacterial, archea, plant plastid code
         record = Record(transl_table=transl_table)
         record._record = seq_record
-        for feature in seq_record.features:
-            # biopython drops invalid locations and might leave us with None, catch that first
-            if feature.location is None:
-                raise SecmetInvalidInputError("one or more features with missing or invalid locations")
-            if feature.location.end > len(seq_record.seq):
-                raise SecmetInvalidInputError("feature outside record sequence: %s" % feature.location)
-            if location_contains_overlapping_exons(feature.location):
-                raise SecmetInvalidInputError("location contains overlapping exons: %s" % feature.location)
+        # because is_circular() can't be used reliably at this stage due to fasta files
+        can_be_circular = taxon == "bacteria"
+        try:
+            ensure_valid_locations(seq_record.features, can_be_circular, len(seq_record.seq))
+        except ValueError as err:
+            raise SecmetInvalidInputError(str(err))
 
+        for feature in seq_record.features:
             if feature.ref or feature.ref_db:
                 for ref in [feature.ref, feature.ref_db]:
                     if ref and ref != seq_record.id:
@@ -645,7 +644,7 @@ class Record:
             locations_adjusted = False
             name_modified = False
 
-            if record.is_circular() and location_bridges_origin(feature.location):
+            if can_be_circular and location_bridges_origin(feature.location, allow_reversing=False):
                 locations_adjusted = True
                 original_location = feature.location
                 try:

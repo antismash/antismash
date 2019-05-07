@@ -5,10 +5,13 @@
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
 import unittest
+from unittest.mock import patch
 
+from antismash.common import secmet
 from antismash.common.secmet.locations import (
     convert_protein_position_to_dna,
     build_location_from_others,
+    ensure_valid_locations,
     location_bridges_origin as is_bridged,
     split_origin_bridging_location as splitter,
     location_contains_other,
@@ -21,6 +24,7 @@ from antismash.common.secmet.locations import (
     AfterPosition,
     BeforePosition,
     ExactPosition,
+    SeqFeature,
     UnknownPosition,
 )
 
@@ -487,3 +491,49 @@ class TestOverlappingExons(unittest.TestCase):
         for bad in [None, "loc", [FeatureLocation(10, 40)], 5]:
             with self.assertRaises(TypeError):
                 overlapping_exons(bad)
+
+
+class TestEnsureValid(unittest.TestCase):
+    def check(self, features, circular=False, seq_len=100):
+        return ensure_valid_locations(features, circular, seq_len)
+
+    def test_reversed(self):
+        features = [SeqFeature(build_compound([(10, 30), (40, 70)], -1), type="CDS"),
+                    SeqFeature(build_compound([(10, 30), (40, 70)], -1), type="gene"),
+                    SeqFeature(build_compound([(40, 70), (10, 30)], None), type="other")]
+        self.check(features)
+        for feature in features:
+            assert feature.location.parts[0].start == 40
+
+    def test_inconsistent(self):
+        features = [SeqFeature(build_compound([(10, 30), (40, 70)], -1), type="CDS"),
+                    SeqFeature(build_compound([(40, 70), (10, 30)], -1), type="gene"),
+                    SeqFeature(build_compound([(40, 70), (10, 30)], None), type="other")]
+        with self.assertRaisesRegex(ValueError, "inconsistent exon ordering"):
+            self.check(features)
+
+    def test_exon_too_short(self):
+        features = [SeqFeature(build_compound([(10, 11), (15, 18)], 1), type="CDS"),
+                    SeqFeature(FeatureLocation(10, 11, 1), type="CDS")]
+        for feature in features:
+            with self.assertRaisesRegex(ValueError, "exons must be at least 3 nucl"):
+                self.check([feature])
+
+    def test_outside_seq(self):
+        features = [SeqFeature(FeatureLocation(50, 140, 1))]
+        with self.assertRaisesRegex(ValueError, "feature outside record sequence"):
+            self.check(features)
+
+    @patch.object(secmet.locations, "location_contains_overlapping_exons", return_value=True)
+    def test_overlapping_exons(self, _patched_overlap):
+        features = [SeqFeature(FeatureLocation(5, 8, 1))]
+        with self.assertRaisesRegex(ValueError, "contains overlapping exons"):
+            self.check(features)
+
+    @patch.object(secmet.locations, "location_bridges_origin", return_value=True)
+    def test_too_many_in_circular(self, _patched_bridge):
+        features = [SeqFeature(build_compound([(10, 30), (0, 9)], -1), type="CDS"),
+                    SeqFeature(build_compound([(10, 30), (0, 9)], -1), type="gene"),
+                    SeqFeature(build_compound([(10, 30), (0, 9)], -1), type="CDS")]
+        with self.assertRaisesRegex(ValueError, "inconsistent exon ordering"):
+            self.check(features, circular=True)
