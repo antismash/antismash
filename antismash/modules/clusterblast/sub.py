@@ -70,7 +70,7 @@ def run_subclusterblast_on_record(record: Record, options: ConfigType) -> Genera
             a GeneralResults with results for each cluster in the record
     """
     logging.info('Running subcluster search')
-    clusters, proteins = load_clusterblast_database(record, "subclusterblast")
+    clusters, proteins = load_clusterblast_database("subclusterblast")
     return perform_subclusterblast(options, record, clusters, proteins)
 
 
