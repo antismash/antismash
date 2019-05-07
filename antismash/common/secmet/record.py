@@ -42,6 +42,7 @@ from .features.candidate_cluster import create_candidates_from_protoclusters
 
 from .locations import (
     location_bridges_origin,
+    location_contains_overlapping_exons,
     split_origin_bridging_location,
     combine_locations,
 )
@@ -630,6 +631,8 @@ class Record:
                 raise SecmetInvalidInputError("one or more features with missing or invalid locations")
             if feature.location.end > len(seq_record.seq):
                 raise SecmetInvalidInputError("feature outside record sequence: %s" % feature.location)
+            if location_contains_overlapping_exons(feature.location):
+                raise SecmetInvalidInputError("location contains overlapping exons: %s" % feature.location)
 
             if feature.ref or feature.ref_db:
                 for ref in [feature.ref, feature.ref_db]:
