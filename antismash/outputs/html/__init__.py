@@ -41,7 +41,7 @@ def get_arguments() -> ModuleArgs:
     return args
 
 
-def prepare_data(logging_only: bool = False) -> List[str]:
+def prepare_data(_logging_only: bool = False) -> List[str]:
     """ Rebuild any dynamically buildable data """
     flavours = ["bacteria", "fungi", "plants"]
 
