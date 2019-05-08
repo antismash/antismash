@@ -13,7 +13,7 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from Bio.SeqFeature import SeqFeature
 
-from antismash.common import module_results
+from antismash.common import module_results, subprocessing
 from antismash.common.secmet import SubRegion, Feature, FeatureLocation, GeneFunction, Gene, Record
 from antismash.common.serialiser import feature_to_json, feature_from_json
 from antismash.config import ConfigType
@@ -156,10 +156,24 @@ def run_on_record(record: Record, results: CassisResults, options: ConfigType) -
 def check_prereqs(options: ConfigType) -> List[str]:
     """Check for prerequisites"""
     failure_messages = []
-    for binary_name, _ in [("meme", "4.11.1"), ("fimo", "4.11.1")]:
-        if binary_name not in options.executables:
-            failure_messages.append("Failed to locate executable for {!r}".format(binary_name))
-        # TODO: Check binary version here
+
+    expected_memesuite_version = "4.11.2"
+    missing_message = "Failed to locate executable for %r"
+    incompatible_message = "Incompatible %s version, expected %s but found %s"
+
+    if "meme" in options.executables:
+        meme_version = subprocessing.run_meme_version()
+        if meme_version != expected_memesuite_version:
+            failure_messages.append(incompatible_message % ("MEME", expected_memesuite_version, meme_version))
+    else:
+        failure_messages.append(missing_message % "meme")
+
+    if "fimo" in options.executables:
+        fimo_version = subprocessing.run_fimo_version()
+        if fimo_version != expected_memesuite_version:
+            failure_messages.append(incompatible_message % ("FIMO", expected_memesuite_version, meme_version))
+    else:
+        failure_messages.append(missing_message % "fimo")
 
     return failure_messages
 
