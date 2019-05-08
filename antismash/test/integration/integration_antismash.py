@@ -19,26 +19,22 @@ from antismash.config import build_config, update_config, destroy_config
 class TestAntismash(unittest.TestCase):
     def setUp(self):
         self.temp_dir = TemporaryDirectory()
-        self.build_config(self.get_args())
+        self.config = build_config(self.get_args() + ["--out", self.temp_dir.name],
+                                   isolated=True, modules=get_all_modules())
 
     def get_args(self):
         return ["--minimal"]
-
-    def build_config(self, args):
-        self.default_options = build_config(args, isolated=True, modules=get_all_modules())
-        self.default_options.all_enabled_modules = []
-        self.default_options.output_dir = self.temp_dir.name
 
     def tearDown(self):
         destroy_config()
         self.temp_dir.cleanup()
 
     def test_nisin_minimal(self):
-        run_antismash(get_path_to_nisin_genbank(), self.default_options)
+        run_antismash(get_path_to_nisin_genbank(), self.config)
         self.check_output_files()
 
     def check_output_files(self):
-        out_dir = self.default_options.output_dir
+        out_dir = self.config.output_dir
         assert os.path.exists(out_dir)
         for filename in ["nisin.json", "index.html"]:
             assert os.path.exists(os.path.join(out_dir, filename))
@@ -50,7 +46,7 @@ class TestSkipZip(TestAntismash):
 
     def check_output_files(self):
         super().check_output_files()
-        assert not os.path.exists(os.path.join(self.default_options.output_dir, "nisin.zip"))
+        assert not os.path.exists(os.path.join(self.config.output_dir, "nisin.zip"))
 
 
 class TestProfiling(TestAntismash):
@@ -88,30 +84,35 @@ class TestLogging(TestAntismash):
 class TestResultsReuse(TestAntismash):
     def test_nisin_minimal(self):
         # make sure the output directory isn't filled
-        out_dir = self.default_options.output_dir
+        out_dir = self.config.output_dir
         assert not list(glob.glob(os.path.join(out_dir, "*")))
 
         # die with neither inputs provided
         with self.assertRaisesRegex(ValueError, "No sequence file or prior results to read"):
-            run_antismash(None, self.default_options)
+            run_antismash(None, self.config)
 
         # make sure no files created
         assert not list(glob.glob(os.path.join(out_dir, "*")))
 
         # do a normal run
-        run_antismash(get_path_to_nisin_genbank(), self.default_options)
+        run_antismash(get_path_to_nisin_genbank(), self.config)
         self.check_output_files()
 
         # remove html file and make sure it's recreated
-        os.unlink(os.path.join(self.default_options.output_dir, "index.html"))
-        update_config({"reuse_results": os.path.join(self.default_options.output_dir, "nisin.json")})
-        run_antismash(None, self.default_options)
+        os.unlink(os.path.join(self.config.output_dir, "index.html"))
+        update_config({"reuse_results": os.path.join(self.config.output_dir, "nisin.json")})
+        run_antismash(None, self.config)
         self.check_output_files()
 
 
 class TestModuleData(unittest.TestCase):
+    def setUp(self):
+        build_config([], isolated=True, modules=get_all_modules())
+
+    def tearDown(self):
+        destroy_config()
+
     def test_prepare_module_data(self):
-        self.default_options = build_config([], isolated=True, modules=get_all_modules())
         # make sure there's some to start with
         search = path.get_full_path(antismash.__file__, '**', "*.h3?")
         existing_press_files = glob.glob(search, recursive=True)
