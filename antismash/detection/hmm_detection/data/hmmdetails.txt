@@ -241,3 +241,9 @@ CDPS	Cyclodipeptide synthase	27	PF16715.hmm
 2OG-FeII_Oxy	2OG-Fe(II) oxygenase superfamily	22	PF03171.hmm
 ATP-grasp	ATP-grasp domain	21	PF02222.hmm
 Chor_lyase	Chorismate lyase	24	PF04345.hmm
+GST_N_3	Glutathione S-transferase, N-terminal domain	22	PF13417.hmm
+GST_C	Glutathione S-transferase, C-terminal domain	21	PF00043.hmm
+Acyl-CoA_dh_N	Acyl-CoA dehydrogenase, N-terminal domain	23	PF02771.hmm
+Acyl-CoA_dh_M	Acyl-CoA dehydrogenase, middle domain	33	PF02770.hmm
+Acyl-CoA_dh_1	Acyl-CoA dehydrogenase, C-terminal domain	22	PF00441.hmm
+TIGR02278	PaaN-DH: phenylacetic acid degradation protein paaN	563	TIGR02278.hmm
