@@ -6,6 +6,7 @@
 """
 
 import argparse
+from collections import OrderedDict
 import os
 from typing import AnyStr, Dict
 
@@ -50,7 +51,7 @@ def get_default_paths() -> Dict[str, str]:
     """ Builds a default set of paths, one for each
         executable in _ALTERNATE_EXECUTABLE_NAMES.
     """
-    binaries = {}  # type: Dict[str, str]
+    binaries = OrderedDict()  # type: Dict[str, str]
     for name, alternates in _ALTERNATE_EXECUTABLE_NAMES.items():
         if name in binaries:
             continue
