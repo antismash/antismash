@@ -310,3 +310,11 @@ RULE fungal-RiPP
                or
                #DUF3228 seems to be quite specific and also co-occurs with these peptidases
                DUF3328 and (Peptidase_S41 or Peptidase_S28 or pop or ustH)
+
+RULE tropodithietic-acid
+    COMMENT tropodithietic acid like cluster as described in DOI: 10.1039/C4CC01924E
+    CUTOFF 20
+    NEIGHBOURHOOD 10
+    CONDITIONS (GST_N_3 or GST_C)
+               and (Acyl-CoA_dh_N or Acyl-CoA_dh_M or Acyl-CoA_dh_1)
+               and TIGR02278
