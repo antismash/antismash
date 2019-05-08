@@ -67,7 +67,8 @@ class HMMDetectionResults(DetectionResults):
         if rule_results is None:
             raise ValueError("Detection results have changed. No results can be reused")
 
-        return HMMDetectionResults(json["record_id"], rule_results, json["enabled_types"], json.get("strictness", "relaxed"))
+        return HMMDetectionResults(json["record_id"], rule_results, json["enabled_types"],
+                                   json.get("strictness", "relaxed"))
 
     def get_predicted_protoclusters(self) -> List[Protocluster]:
         return self.rule_results.protoclusters
