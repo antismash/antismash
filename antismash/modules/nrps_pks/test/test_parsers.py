@@ -51,10 +51,10 @@ class TestNRPSParserMonomerModification(unittest.TestCase):
         # - all types in a list, each type repeated 3 times
         res = {}
         possible_values = ['nomatch', 'PKS_AT', 'PKS_KR', 'PKS_KS', 'PKS_DH', 'PKS_ER']
-        for n, v in enumerate(possible_values):
-            key = ord('a') + n
-            res['nrpspksdomains_' + chr(key)] = [v]
-            res['nrpspksdomains_' + chr(key + len(possible_values))] = [v]*3
+        for i, val in enumerate(possible_values):
+            key = ord('a') + i
+            res['nrpspksdomains_' + chr(key)] = [val]
+            res['nrpspksdomains_' + chr(key + len(possible_values))] = [val]*3
         res['nrpspksdomains_all'] = possible_values*3
         return res
 
