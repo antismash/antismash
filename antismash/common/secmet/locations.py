@@ -340,6 +340,9 @@ def location_contains_overlapping_exons(location: Location) -> bool:
     parts = sorted(location.parts, key=lambda x: (x.start, x.end))
     for i, part in enumerate(parts[1:]):
         prev = parts[i]
+        # skip tiny exons
+        if len(prev) < 3:
+            continue
         # allow for frameshifts
         if locations_overlap(part, FeatureLocation(prev.start, prev.end - 3, prev.strand)):
             return True
@@ -373,12 +376,6 @@ def ensure_valid_locations(features: List[SeqFeature], can_be_circular: bool, se
         # features outside the sequence cause problems with motifs and translations
         if feature.location.end > sequence_length:
             raise ValueError("feature outside record sequence: %s" % feature.location)
-        # CDS features with exons of less than 3 bases are invalid
-        if feature.type in ["CDS", "gene"]:
-            for part in feature.location.parts:
-                if len(part) < 3 and not any(isinstance(pos, (BeforePosition, AfterPosition))
-                                             for pos in (part.start, part.end)):
-                    raise ValueError("exons must be at least 3 nucleotides long: %s" % feature.location)
         # features with overlapping exons cause translation problems
         if location_contains_overlapping_exons(feature.location):
             raise ValueError("location contains overlapping exons: %s" % feature.location)
