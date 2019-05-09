@@ -484,6 +484,9 @@ class TestOverlappingExons(unittest.TestCase):
         assert overlapping_exons(build_compound([(10, 30), (70, 100), (20, 30)], strand=1))
         assert overlapping_exons(build_compound([(70, 100), (20, 30), (10, 30)], strand=1))
 
+    def test_small_exons(self):
+        assert not overlapping_exons(build_compound([(10, 30), (29, 30), (50, 80)], strand=1))
+
     def test_frameshifted(self):
         assert not overlapping_exons(build_compound([(10, 30), (29, 59)], strand=1))
 
@@ -511,13 +514,6 @@ class TestEnsureValid(unittest.TestCase):
                     SeqFeature(build_compound([(40, 70), (10, 30)], None), type="other")]
         with self.assertRaisesRegex(ValueError, "inconsistent exon ordering"):
             self.check(features)
-
-    def test_exon_too_short(self):
-        features = [SeqFeature(build_compound([(10, 11), (15, 18)], 1), type="CDS"),
-                    SeqFeature(FeatureLocation(10, 11, 1), type="CDS")]
-        for feature in features:
-            with self.assertRaisesRegex(ValueError, "exons must be at least 3 nucl"):
-                self.check([feature])
 
     def test_outside_seq(self):
         features = [SeqFeature(FeatureLocation(50, 140, 1))]
