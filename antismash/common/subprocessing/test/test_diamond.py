@@ -13,14 +13,14 @@ class DummyResult(subprocessing.RunResult):
         super().__init__(["dummy"], stdout.encode(), b"", 0, True, True)
 
 
-@patch("antismash.common.subprocessing.run_diamond", return_value=DummyResult("diamond version 1.2.3"))
+@patch("antismash.common.subprocessing.diamond.run_diamond", return_value=DummyResult("diamond version 1.2.3"))
 def test_diamond_version(mock_run_diamond):
     version = subprocessing.run_diamond_version()
     assert version == "1.2.3"
     mock_run_diamond.assert_called_once_with("version")
 
 
-@patch("antismash.common.subprocessing.run_diamond", return_value=DummyResult("lots of useless text"))
+@patch("antismash.common.subprocessing.diamond.run_diamond", return_value=DummyResult("lots of useless text"))
 def test_diamond_makedb(mock_run_diamond):
     subprocessing.run_diamond_makedb("fake.dmnd", "fake.fasta")
     mock_run_diamond.assert_called_once_with("makedb",

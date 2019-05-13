@@ -512,7 +512,7 @@ class Record:
         assert motif.get_name(), "motif %s has no identifiers" % motif
         if motif.get_name() in self._domains_by_name:
             raise SecmetInvalidInputError("multiple Domain features have the same name for mapping: %s" %
-                             motif.get_name())
+                                          motif.get_name())
         self._domains_by_name[motif.get_name()] = motif
         if isinstance(motif, Prepeptide):
             assert motif.tool is not None
@@ -524,7 +524,7 @@ class Record:
         self._pfam_domains.append(pfam_domain)
         if pfam_domain.get_name() in self._domains_by_name:
             raise SecmetInvalidInputError("multiple Domain features have the same name for mapping: %s" %
-                             pfam_domain.get_name())
+                                          pfam_domain.get_name())
         self._domains_by_name[pfam_domain.get_name()] = pfam_domain
         if pfam_domain.locus_tag:
             self._pfams_by_cds_name[pfam_domain.locus_tag].append(pfam_domain)
@@ -536,7 +536,7 @@ class Record:
         self._antismash_domains.append(antismash_domain)
         if antismash_domain.get_name() in self._domains_by_name:
             raise SecmetInvalidInputError("multiple Domain features have the same name for mapping: %s" %
-                             antismash_domain.get_name())
+                                          antismash_domain.get_name())
         self._domains_by_name[antismash_domain.get_name()] = antismash_domain
 
     def add_feature(self, feature: Feature) -> None:
@@ -568,7 +568,6 @@ class Record:
             record.
         """
         if feature.type == 'CDS':
-            # TODO: check insertion order of clusters
             self.add_cds_feature(CDSFeature.from_biopython(feature, record=self))
         elif feature.type == 'gene':
             self.add_gene(Gene.from_biopython(feature))
@@ -624,7 +623,7 @@ class Record:
         if str(taxon) == "bacteria":
             transl_table = 11  # bacterial, archea, plant plastid code
         record = Record(transl_table=transl_table)
-        record._record = seq_record
+        record._record = seq_record  # pylint: disable=protected-access
         # because is_circular() can't be used reliably at this stage due to fasta files
         can_be_circular = taxon == "bacteria"
         try:

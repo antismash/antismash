@@ -6,9 +6,11 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
+from argparse import Namespace
 import os
 from tempfile import TemporaryDirectory
 import unittest
+from unittest.mock import patch
 
 from Bio.Seq import Seq
 from Bio.SeqFeature import FeatureLocation
@@ -372,3 +374,32 @@ class TestResults(unittest.TestCase):
         mock("cassis.detect", returns=cassis.CassisResults("fake"))
         assert cassis.run_on_record(record, results, None).record_id == "real"
         assert cassis.run_on_record(record, None, None).record_id == "fake"
+
+
+class TestVersioning(unittest.TestCase):
+    def setUp(self):
+        self.config = Namespace()
+        self.config.executables = Namespace()
+
+    def check_with_version(self, version):
+        self.config.executables.meme = "meme"
+        self.config.executables.fimo = "fimo"
+        with patch.object(cassis.subprocessing, "run_meme_version", return_value=version):
+            with patch.object(cassis.subprocessing, "run_fimo_version", return_value=version):
+                return cassis.check_prereqs(self.config)
+
+    def test_missing(self):
+        messages = cassis.check_prereqs(self.config)
+        assert len(messages) == 2
+        for message in messages:
+            assert "Failed to locate executable" in message
+
+    def test_correct_version(self):
+        messages = self.check_with_version("4.11.2")
+        assert not messages
+
+    def test_incorrect_version(self):
+        messages = self.check_with_version("4.11.4")
+        assert len(messages) == 2
+        for message in messages:
+            assert "expected 4.11.2 but found 4.11.4" in message

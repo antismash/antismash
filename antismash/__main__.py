@@ -49,6 +49,10 @@ def get_version() -> str:
     return version
 
 
+# set arg version to avoid cyclic imports
+antismash.config.args.ANTISMASH_VERSION = get_version()
+
+
 def main(args: List[str]) -> int:
     """ The entrypoint of antiSMASH as if it was on the command line
 
