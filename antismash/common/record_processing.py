@@ -8,6 +8,7 @@ import functools
 import logging
 import re
 from typing import Any, Callable, List, Set, Tuple, Union
+import warnings
 
 import Bio
 from Bio.Seq import Seq, UnknownSeq
@@ -56,10 +57,20 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
 
     records = []  # type: List[SeqRecord]
     try:
+        # prepend warning filters to raise exceptions on certain messages
+        warnings.filterwarnings("error", message=r".*invalid location.*")
+        warnings.filterwarnings("error", message=r".*Expected sequence length.*")
         record_list = list(seqio.parse(filename))
     except Exception as err:
-        logging.error('Parsing %r failed: %s', filename, err)
-        raise AntismashInputError(str(err)) from err
+        message = str(err)
+        # strip the "Ignoring" part, since it's not being ignored
+        if message.startswith("Ignoring invalid location"):
+            message = message[9:]
+        logging.error('Parsing %r failed: %s', filename, message)
+        raise AntismashInputError(message) from err
+    finally:
+        # remove the new warning filters (functions in at least 3.5 and 3.6)
+        warnings.filters = warnings.filters[2:]   # type: ignore # since mypy doesn't recognise this attribute
 
     for record in record_list:
         if minimum_length < 1 \
