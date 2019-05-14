@@ -484,12 +484,6 @@ class TestOverlappingExons(unittest.TestCase):
         assert overlapping_exons(build_compound([(10, 30), (70, 100), (20, 30)], strand=1))
         assert overlapping_exons(build_compound([(70, 100), (20, 30), (10, 30)], strand=1))
 
-    def test_small_exons(self):
-        assert not overlapping_exons(build_compound([(10, 30), (29, 30), (50, 80)], strand=1))
-
-    def test_frameshifted(self):
-        assert not overlapping_exons(build_compound([(10, 30), (29, 59)], strand=1))
-
     def test_bad_types(self):
         for bad in [None, "loc", [FeatureLocation(10, 40)], 5]:
             with self.assertRaises(TypeError):
