@@ -35,6 +35,39 @@ def _add_gff_features(single_entry: bool, gff_file: str, record: SeqRecord) -> S
     return record
 
 
+def _strict_parse(filename: str) -> List[SeqRecord]:
+    """ Parses the input record with extra wrappers to catch biopython warnings
+        as errors.
+
+        Arguments:
+            filename: the name of the file to parse
+
+        Returns:
+            a list of SeqRecords parsed
+    """
+    filter_messages = [
+        r".*invalid location.*",
+        r".*Expected sequence length.*",
+    ]
+    try:
+        # prepend warning filters to raise exceptions on certain messages
+        for message in filter_messages:
+            warnings.filterwarnings("error", message=message)
+        records = list(seqio.parse(filename))
+    except Exception as err:
+        message = str(err)
+        # strip the "Ignoring" part, since it's not being ignored
+        if message.startswith("Ignoring invalid location"):
+            message = message[9:]
+        logging.error('Parsing %r failed: %s', filename, message)
+        raise AntismashInputError(message) from err
+    finally:
+        # remove the new warning filters (functions in at least 3.5 and 3.6)
+        # since mypy doesn't recognise this attribute, ignore the type
+        warnings.filters = warnings.filters[len(filter_messages):]   # type: ignore
+    return records
+
+
 def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length: int = -1,
                          start: int = -1, end: int = -1, gff_file: str = "") -> List[Record]:
     """ Parse input records contained in a file
@@ -56,23 +89,8 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
         raise TypeError("minimum_length must be an int")
 
     records = []  # type: List[SeqRecord]
-    try:
-        # prepend warning filters to raise exceptions on certain messages
-        warnings.filterwarnings("error", message=r".*invalid location.*")
-        warnings.filterwarnings("error", message=r".*Expected sequence length.*")
-        record_list = list(seqio.parse(filename))
-    except Exception as err:
-        message = str(err)
-        # strip the "Ignoring" part, since it's not being ignored
-        if message.startswith("Ignoring invalid location"):
-            message = message[9:]
-        logging.error('Parsing %r failed: %s', filename, message)
-        raise AntismashInputError(message) from err
-    finally:
-        # remove the new warning filters (functions in at least 3.5 and 3.6)
-        warnings.filters = warnings.filters[2:]   # type: ignore # since mypy doesn't recognise this attribute
 
-    for record in record_list:
+    for record in _strict_parse(filename):
         if minimum_length < 1 \
                 or len(record.seq) >= minimum_length \
                 or 'contig' in record.annotations \
