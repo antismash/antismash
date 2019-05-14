@@ -48,6 +48,7 @@ def _strict_parse(filename: str) -> List[SeqRecord]:
     filter_messages = [
         r".*invalid location.*",
         r".*Expected sequence length.*",
+        r".*Couldn't parse feature location.*",
     ]
     try:
         # prepend warning filters to raise exceptions on certain messages
