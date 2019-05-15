@@ -13,14 +13,18 @@
       </div>
       <div class = 'description-text'>
         {{region.description_text()}}
+        {% if region.detection_rules %}
         <a class="cluster-rules-header" id="{{region.anchor_id}}-rules-header" href="#{{region.anchor_id}}">Show pHMM detection rules used</a>
+        {% endif %}
         {% if region.contig_edge %}
           <div class="contig-edge-warning">Region on contig edge.</div>
         {% endif %}
       </div>
+      {% if region.detection_rules %}
       <div class="cluster-rules" id="{{region.anchor_id}}-rules">
         {{- region.detection_rules|join('<br>'|safe) -}}
       </div>
+      {% endif %}
       <div class="region-svg-container">
        <div id='{{region.anchor_id}}-svg'>
        </div>
