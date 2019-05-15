@@ -14,7 +14,7 @@ $feature-resistance: #bbb;
 $feature-tta-codon: #444;
 $table-background: #f1f1f1;
 $tool-cassis: wheat;
-$tool-rule-based-clusters: white;
+$kind-protoclusters: white;
 
 @mixin unselectable(){
     -webkit-user-select: none;
@@ -570,7 +570,7 @@ table.region-table {
 .cluster-core {
     stroke: black;
     stroke-width: 1px;
-    fill: $tool-rule-based-clusters;
+    fill: $kind-protoclusters;
 }
 
 .svgene-border-cassis .cluster-core {

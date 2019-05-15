@@ -14,6 +14,8 @@ from antismash.common.secmet import CDSFeature, Feature, Record, Region
 from antismash.common.secmet.qualifiers.gene_functions import GeneFunction
 from antismash.common.secmet.qualifiers.go import GOQualifier
 from antismash.common.secmet.features.cdscollection import CDSCollection
+from antismash.common.secmet.features.protocluster import SideloadedProtocluster
+from antismash.common.secmet.features.subregion import SideloadedSubRegion
 from antismash.config import ConfigType
 from antismash.modules import clusterblast, tta
 from antismash.outputs.html.generate_html_table import generate_html_table
@@ -173,7 +175,8 @@ def get_clusters_from_region(region: Region) -> List[Dict[str, Any]]:
                       "neighbouring_end": candidate_cluster.location.end,
                       "product": "CC %d: %s" % (candidate_cluster.get_candidate_cluster_number(),
                                                 candidate_cluster.kind),
-                      "isCandidateCluster": True}
+                      "kind": "candidatecluster",
+                      "prefix": ""}
         js_cluster['height'] = candidate_cluster_groupings[candidate_cluster]
         js_clusters.append(js_cluster)
 
@@ -182,19 +185,30 @@ def get_clusters_from_region(region: Region) -> List[Dict[str, Any]]:
 
     for subregion in sorted(region.subregions, key=lambda x: (x.location.start, -len(x.location), x.tool)):
         start_index += 1
+        prefix = ""
+        tool = ""
+        if isinstance(subregion, SideloadedSubRegion):
+            prefix = subregion.tool + (":" if subregion.label else "")
+        else:
+            tool = subregion.tool
         js_cluster = {"start": subregion.location.start,
                       "end": subregion.location.end,
-                      "tool": subregion.tool,
+                      "tool": tool,
                       "neighbouring_start": subregion.location.start,
                       "neighbouring_end": subregion.location.end,
                       "product": subregion.label,
-                      "height": start_index}
+                      "height": start_index,
+                      "prefix": prefix,
+                      "kind": "subregion"}
         js_clusters.append(js_cluster)
 
     start_index += 2  # allow for label above
     clusters = region.get_unique_protoclusters()
     cluster_groupings = _find_non_overlapping_cluster_groups(clusters)
     for cluster in clusters:
+        prefix = ""
+        if isinstance(cluster, SideloadedProtocluster):
+            prefix = f"{cluster.tool}:"
         js_cluster = {"start": cluster.core_location.start,
                       "end": cluster.core_location.end,
                       "tool": cluster.tool,
@@ -202,7 +216,8 @@ def get_clusters_from_region(region: Region) -> List[Dict[str, Any]]:
                       "neighbouring_end": cluster.location.end,
                       "product": cluster.product,
                       "height": cluster_groupings[cluster] * 2 + start_index,
-                      "isCandidateCluster": False}
+                      "kind": "protocluster",
+                      "prefix": prefix}
         js_clusters.append(js_cluster)
 
     return js_clusters
