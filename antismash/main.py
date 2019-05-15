@@ -292,8 +292,8 @@ def prepare_output_directory(name: str, input_file: str) -> None:
                 list(filter(_ignore_patterns, glob.glob(os.path.join(name, "*")))):
             raise RuntimeError("Output directory contains other files, aborting for safety")
         else:  # --reuse
-            logging.debug("Removing existing cluster genbank files")
-            for genbank in glob.glob(os.path.join(name, "*.cluster???.gbk")):
+            logging.debug("Removing existing region genbank files")
+            for genbank in glob.glob(os.path.join(name, "*.region???.gbk")):
                 os.remove(genbank)
         logging.debug("Reusing output directory: %s", name)
     else:
