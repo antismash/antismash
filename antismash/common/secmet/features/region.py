@@ -5,7 +5,7 @@
 
 from collections import OrderedDict
 import os
-from typing import Any, Dict, List, Optional, Set, Tuple, Type, TypeVar
+from typing import Any, Dict, List, Optional, Set, Tuple, Type, TypeVar, Union
 import warnings
 
 from Bio.SeqFeature import SeqFeature
@@ -13,9 +13,9 @@ from Bio.SeqRecord import SeqRecord
 from helperlibs.bio import seqio
 
 from .cdscollection import CDSCollection, CDSFeature
-from .protocluster import Protocluster
-from .feature import Feature
-from .subregion import SubRegion
+from .protocluster import Protocluster, SideloadedProtocluster
+from .feature import Feature, FeatureLocation
+from .subregion import SideloadedSubRegion, SubRegion
 from .candidate_cluster import CandidateCluster
 from ..locations import (
     build_location_from_others,
@@ -134,6 +134,21 @@ class Region(CDSCollection):
         for candidate_cluster in self._candidate_clusters:
             clusters.update(candidate_cluster.protoclusters)
         return sorted(clusters, key=lambda x: (x.location.start, -len(x.location), x.product))
+
+    def get_sideloaded_areas(self) -> List[Union[SideloadedProtocluster, SideloadedSubRegion]]:
+        """ Returns all protoclusters and subregions that were created by
+            sideloaded annotations
+
+            Result is sorted by location start, then by decreasing size
+        """
+        areas: List[Union[SideloadedProtocluster, SideloadedSubRegion]] = []
+        for proto in self.get_unique_protoclusters():
+            if isinstance(proto, SideloadedProtocluster):
+                areas.append(proto)
+        for sub in self._subregions:
+            if isinstance(sub, SideloadedSubRegion):
+                areas.append(sub)
+        return sorted(areas, key=lambda x: (x.location.start, -len(x.location), x.tool))
 
     def write_to_genbank(self, filename: str = None, directory: str = None, record: SeqRecord = None) -> None:
         """ Writes a genbank file containing only the information contained
