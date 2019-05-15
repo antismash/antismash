@@ -204,7 +204,7 @@ class CandidateCluster(CDSCollection):
         qualifiers["kind"] = [str(self.kind)]
         qualifiers["product"] = self.products
         qualifiers["protoclusters"] = [str(cluster.get_protocluster_number()) for cluster in self._protoclusters]
-        qualifiers["detection_rules"] = [cluster.detection_rule for cluster in self._protoclusters]
+        qualifiers["detection_rules"] = self.detection_rules
         if self.smiles_structure is not None:
             qualifiers["SMILES"] = [self.smiles_structure]
         if self.polymer is not None:
