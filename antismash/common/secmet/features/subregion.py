@@ -11,6 +11,7 @@ from .cdscollection import CDSCollection
 from .feature import FeatureLocation, Feature
 
 T = TypeVar("T", bound="SubRegion")
+S = TypeVar("S", bound="SideloadedSubRegion")  # pylint: disable=invalid-name
 
 
 class SubRegion(CDSCollection):
@@ -49,16 +50,60 @@ class SubRegion(CDSCollection):
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
 
+        if leftovers["aStool"][0].startswith("externally annotated"):
+            external = SideloadedSubRegion.from_biopython(bio_feature)
+            assert isinstance(external, cls)
+            return external
+
         tool = leftovers.pop("aStool")[0]
         label = leftovers.pop("label", [""])[0]
         if not label:
             label = leftovers.pop("anchor", [""])[0]  # backwards compatibility
         if not feature:
             feature = cls(bio_feature.location, tool, label)
+        else:
+            feature.label = label
 
         # remove the subregion_number, as it's not relevant
         leftovers.pop("subregion_number", "")
 
         # grab parent optional qualifiers
         super().from_biopython(bio_feature, feature=feature, leftovers=leftovers, record=record)
+        return feature
+
+
+class SideloadedSubRegion(SubRegion):
+    """ A variant of SubRegion specifically for sideloaded features
+    """
+    __slots__ = ["extra_qualifiers"]
+
+    def __init__(self, location: FeatureLocation, tool: str, label: str = "",
+                 extra_qualifiers: Dict[str, List[str]] = None) -> None:
+        super().__init__(location, tool, label=label)
+        self.extra_qualifiers = extra_qualifiers or {}
+
+    def to_biopython(self, qualifiers: Optional[Dict[str, List[str]]] = None) -> List[SeqFeature]:
+        features = super().to_biopython(qualifiers)
+        for feature in features:
+            feature.qualifiers["aStool"] = ["externally annotated by: %s" % self.tool]
+            if self.extra_qualifiers:
+                feature.qualifiers["external_qualifier_ids"] = list(self.extra_qualifiers)
+                feature.qualifiers.update(self.extra_qualifiers)
+        return features
+
+    @classmethod
+    def from_biopython(cls: Type[S], bio_feature: SeqFeature, feature: S = None,
+                       leftovers: Optional[Dict] = None, record: Any = None) -> S:
+        if leftovers is None:
+            leftovers = Feature.make_qualifiers_copy(bio_feature)
+        tool = leftovers.pop("aStool")[0]
+        tool = tool.split(": ", 1)[1]
+        leftovers["aStool"] = [tool]
+        extra_qualifiers: Dict[str, List[str]] = {}
+        for key in leftovers.pop("external_qualifier_ids", []):
+            extra_qualifiers[key] = leftovers.pop(key)
+        if not feature:
+            feature = cls(bio_feature.location, tool, extra_qualifiers=extra_qualifiers)
+        assert isinstance(feature, cls)
+        super().from_biopython(bio_feature, feature=feature, leftovers=leftovers)
         return feature

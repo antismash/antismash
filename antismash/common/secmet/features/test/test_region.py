@@ -12,6 +12,8 @@ from helperlibs.bio import seqio
 
 from antismash.common.secmet import FeatureLocation, Record
 from antismash.common.secmet.features import CandidateCluster, SubRegion, Region
+from antismash.common.secmet.features.subregion import SideloadedSubRegion
+from antismash.common.secmet.features.protocluster import SideloadedProtocluster
 from antismash.common.secmet.locations import CompoundLocation
 from antismash.common.secmet.test.helpers import (
     DummyCandidateCluster,
@@ -181,3 +183,17 @@ class TestRegion(unittest.TestCase):
                 assert tail == ["join{[120:123](-), [127:130](-)}"]
                 found = True
         assert found, "prepeptide feature missing in conversion"
+
+    def test_sideloaded(self):
+        clusters = [create_protocluster(3, 20, "prodA"),
+                    SideloadedProtocluster(FeatureLocation(25, 41), FeatureLocation(25, 41), "external", "prodB")]
+        candidate = CandidateCluster(CandidateCluster.kinds.NEIGHBOURING, clusters)
+
+        subregions = [SubRegion(FeatureLocation(35, 71), "test", 0.7),
+                      SideloadedSubRegion(FeatureLocation(45, 61), "external")]
+
+        region = Region(candidate_clusters=[candidate], subregions=subregions)
+        sideloaded = region.get_sideloaded_areas()
+        assert len(sideloaded) == 2
+        assert sideloaded[0] is clusters[1]
+        assert sideloaded[1] is subregions[1]
