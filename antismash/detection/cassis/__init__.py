@@ -346,16 +346,16 @@ def filter_subregions(subregions: List[SubRegion]) -> List[SubRegion]:
     # any sharing an anchor will overlap on that gene anyway
     for sub in sorted(subregions, key=lambda x: x.location.end - x.location.start, reverse=True):
         contained = False
-        for other in by_anchor[sub.anchor]:
+        for other in by_anchor[sub.label]:
             if sub.is_contained_by(other):
                 contained = True
                 break
         if not contained:
-            by_anchor[sub.anchor].append(sub)
+            by_anchor[sub.label].append(sub)
     # flatten the lists and sort back into location order, then anchor
     # mypy doesn't handle this reduce well
     flattened = reduce(operator.concat, by_anchor.values())  # type: ignore
-    return sorted(flattened, key=lambda x: (x.location.start, x.location.end, x.anchor))
+    return sorted(flattened, key=lambda x: (x.location.start, x.location.end, x.label))
 
 
 def create_subregions(anchor: str, cluster_preds: List[ClusterPrediction],
@@ -385,7 +385,7 @@ def create_subregions(anchor: str, cluster_preds: List[ClusterPrediction],
             FeatureLocation(left.location.start, right.location.end), type="subregion")
         new_feature.qualifiers = {
             "aStool": ["cassis"],
-            "anchor": [anchor],
+            "label": [anchor],
             "abundance": [cluster.start.abundance + cluster.end.abundance],
             "motif_score": ["{:.1e}".format(cluster.start.score + cluster.end.score)],
             "gene_left": [cluster.start.gene],

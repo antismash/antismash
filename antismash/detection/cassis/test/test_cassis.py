@@ -252,7 +252,7 @@ class TestCassisStorageMethods(unittest.TestCase):
             subregion = record_with_subregions.get_subregions()[i]
             self.assertEqual(subregion.type, "subregion")
             self.assertEqual(subregion.tool, "cassis")
-            self.assertEqual(subregion.anchor, anchor)
+            self.assertEqual(subregion.label, anchor)
             self.assertEqual(subregion.get_qualifier("genes"), (region.genes,))
             self.assertEqual(subregion.get_qualifier("promoters"), (region.promoters,))
             self.assertEqual(subregion.get_qualifier("gene_left"), (region.start.gene,))
@@ -262,7 +262,7 @@ class TestCassisStorageMethods(unittest.TestCase):
 
 class TestSubRegionFiltering(unittest.TestCase):
     def create_sub(self, start, end, anchor):
-        return secmet.SubRegion(FeatureLocation(start, end), anchor=anchor, tool="cassis")
+        return secmet.SubRegion(FeatureLocation(start, end), label=anchor, tool="cassis")
 
     def test_empty(self):
         assert cassis.filter_subregions([]) == []

@@ -15,11 +15,11 @@ class SubRegion(CDSCollection):
     """ A feature which marks a specific region of a record as interesting,
         without being considered a cluster.
     """
-    def __init__(self, location: FeatureLocation, tool: str, probability: float = None, anchor: str = "") -> None:
+    def __init__(self, location: FeatureLocation, tool: str, probability: float = None, label: str = "") -> None:
         super().__init__(location, feature_type="subregion")
         self.tool = tool
         self.probability = probability
-        self.anchor = anchor  # if anchored to a gene/CDS, this is the name
+        self.label = label  # if anchored to a gene/CDS, this is the name
 
     def get_subregion_number(self) -> int:
         """ Returns the subregion's numeric ID, only guaranteed to be consistent
@@ -37,8 +37,8 @@ class SubRegion(CDSCollection):
         qualifiers["aStool"] = [self.tool]
         if self.probability is not None:
             qualifiers["probability"] = [str(self.probability)]
-        if self.anchor:
-            qualifiers["anchor"] = [self.anchor]
+        if self.label:
+            qualifiers["label"] = [self.label]
         return super().to_biopython(qualifiers)
 
     @staticmethod
@@ -51,9 +51,11 @@ class SubRegion(CDSCollection):
         probability = None
         if "probability" in leftovers:
             probability = float(leftovers.pop("probability")[0])
-        anchor = leftovers.pop("anchor", [""])[0]
+        label = leftovers.pop("label", [""])[0]
+        if not label:
+            label = leftovers.pop("anchor", [""])[0]  # backwards compatibility
         if not feature:
-            feature = SubRegion(bio_feature.location, tool, probability, anchor)
+            feature = SubRegion(bio_feature.location, tool, probability, label)
 
         # remove the subregion_number, as it's not relevant
         leftovers.pop("subregion_number", "")

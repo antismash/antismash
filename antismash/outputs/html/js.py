@@ -183,7 +183,7 @@ def get_clusters_from_region_parts(candidate_clusters: Iterable[CandidateCluster
                       "tool": subregion.tool,
                       "neighbouring_start": subregion.location.start,
                       "neighbouring_end": subregion.location.end,
-                      "product": subregion.anchor,
+                      "product": subregion.label,
                       "height": start_index}
         js_clusters.append(js_cluster)
 
