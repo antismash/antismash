@@ -86,8 +86,6 @@ class CassisResults(module_results.DetectionResults):
     def get_predicted_subregions(self) -> List[SubRegion]:
         # for the purposes of the record, don't return all possible matches,
         # only return non-contained ones
-        for sub in self.subregions:
-            print(sub.location, sub.anchor)
         return filter_subregions(self.subregions)
 
 
@@ -348,14 +346,10 @@ def filter_subregions(subregions: List[SubRegion]) -> List[SubRegion]:
     # any sharing an anchor will overlap on that gene anyway
     for sub in sorted(subregions, key=lambda x: x.location.end - x.location.start, reverse=True):
         contained = False
-        print(sub, sub.anchor)
         for other in by_anchor[sub.anchor]:
             if sub.is_contained_by(other):
-                print(sub, sub.anchor, "contained by", other, other.anchor)
                 contained = True
                 break
-            else:
-                print(sub, sub.anchor, "not contained by", other, other.anchor)
         if not contained:
             by_anchor[sub.anchor].append(sub)
     # flatten the lists and sort back into location order, then anchor
