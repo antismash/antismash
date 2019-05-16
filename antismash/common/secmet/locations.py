@@ -322,32 +322,21 @@ def combine_locations(*locations: Iterable[Location]) -> Location:
 
 
 def location_contains_overlapping_exons(location: Location) -> bool:
-    """ Checks for overlapping exons in CompoundLocations, with an allowance
-        for frameshifts of up to 3 bases before it is considered an overlap
+    """ Checks for multiple exons with the same end location, meaning they use the
+        same stop codon
 
         Arguments:
             location: the location to check
 
         Returns:
-            True if the location contains exons overlapping by more than 3 bases
+            True if the location contains exons sharing a stop codon
     """
     if isinstance(location, FeatureLocation):
         return False
     if not isinstance(location, CompoundLocation):
         raise TypeError("expected CompoundLocation, not %s" % type(location))
 
-    # sorting by start first
-    parts = sorted(location.parts, key=lambda x: (x.start, x.end))
-    for i, part in enumerate(parts[1:]):
-        prev = parts[i]
-        # skip tiny exons
-        if len(prev) < 3:
-            continue
-        # allow for frameshifts
-        if locations_overlap(part, FeatureLocation(prev.start, prev.end - 3, prev.strand)):
-            return True
-
-    return False
+    return len(set(part.end for part in location.parts)) != len(location.parts)
 
 
 def ensure_valid_locations(features: List[SeqFeature], can_be_circular: bool, sequence_length: int) -> None:
