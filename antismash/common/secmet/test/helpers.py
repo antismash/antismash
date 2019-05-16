@@ -114,10 +114,10 @@ class DummyRegion(Region):
 
 class DummySubRegion(SubRegion):
     def __init__(self, start=0, end=10, location=None, tool="test",
-                 anchor="test_anchor", probability=0.):
+                 label="test_label", probability=0.):
         if location is None:
             location = FeatureLocation(start, end)
-        super().__init__(location, anchor=anchor, tool=tool, probability=probability)
+        super().__init__(location, label=label, tool=tool, probability=probability)
 
 
 class DummyCandidateCluster(CandidateCluster):

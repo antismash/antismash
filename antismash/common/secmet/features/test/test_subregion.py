@@ -19,8 +19,8 @@ class TestSubRegion(unittest.TestCase):
 
     def test_anchor(self):
         loc = FeatureLocation(0, 10)
-        assert SubRegion(loc, tool="test").anchor == ""
-        assert SubRegion(loc, tool="test", anchor="anch").anchor == "anch"
+        assert SubRegion(loc, tool="test").label == ""
+        assert SubRegion(loc, tool="test", label="anch").label == "anch"
 
     def test_orphaned(self):
         sub = SubRegion(FeatureLocation(0, 10), tool="test")
