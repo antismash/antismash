@@ -60,7 +60,8 @@ def get_default_paths() -> Dict[str, str]:
             path = find_executable_path(alternate)
             if path:
                 break
-        binaries[name] = path
+        if path:
+            binaries[name] = path
     return binaries
 
 
