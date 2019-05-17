@@ -22,10 +22,14 @@ _ALTERNATE_EXECUTABLE_NAMES = {
         "hmm2pfam",  # debian/ubuntu default
         "hmmpfam2",  # general
     ],
+    "fasttree": [
+        "fasttree",  # general
+        "Fasttree",  # as per install from source instructions
+    ],
 }
 
 _NO_KNOWN_ALTS = ["hmmsearch", "hmmpress", "hmmscan", "meme", "fimo", "glimmerhmm",
-                  "prodigal", "muscle", "fasttree", "java", "blastp", "makeblastdb"]
+                  "prodigal", "muscle", "java", "blastp", "makeblastdb"]
 for _binary in _NO_KNOWN_ALTS:
     assert _binary not in _ALTERNATE_EXECUTABLE_NAMES, _binary
     _ALTERNATE_EXECUTABLE_NAMES[_binary] = [_binary]
@@ -60,7 +64,8 @@ def get_default_paths() -> Dict[str, str]:
             path = find_executable_path(alternate)
             if path:
                 break
-        binaries[name] = path
+        if path:
+            binaries[name] = path
     return binaries
 
 

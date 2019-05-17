@@ -4,6 +4,7 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
+from collections import OrderedDict
 import os
 import unittest
 from unittest.mock import patch
@@ -44,4 +45,10 @@ class TestGetPaths(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "cannot find"):
             executables.get_executable_paths("diamond=wrong_alias")
 
-    # test mulitple args don't override
+    @patch.object(executables, "_ALTERNATE_EXECUTABLE_NAMES",
+                  OrderedDict([("missing", ["missing"]), ("found", ["found"])]))
+    @patch.object(executables, "find_executable_path", side_effect=["", "/found"])
+    def test_missing_default_path(self, _mocked_find):
+        defaults = executables.get_default_paths()
+        assert "missing" not in defaults
+        assert defaults["found"] == "/found"
