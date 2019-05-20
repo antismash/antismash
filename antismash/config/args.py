@@ -247,9 +247,16 @@ Options
 
 class FullPathAction(argparse.Action):  # pylint: disable=too-few-public-methods
     """ An argparse.Action to ensure provided paths are absolute. """
-    def __call__(self, parser: argparse.ArgumentParser, namespace: argparse.Namespace,  # type: ignore
-                 values: AnyStr, option_string: str = None) -> None:
-        setattr(namespace, self.dest, os.path.abspath(values))
+    def __call__(self, parser: argparse.ArgumentParser, namespace: argparse.Namespace,
+                 values: Any, option_string: str = None) -> None:
+        setattr(namespace, self.dest, os.path.abspath(str(values)))
+
+
+class MultipleFullPathAction(argparse.Action):  # pylint: disable=too-few-public-methods
+    """ An argparse.Action to ensure provided paths are absolute in a comma separated list. """
+    def __call__(self, parser: argparse.ArgumentParser, namespace: argparse.Namespace,
+                 values: Any, option_string: str = None) -> None:
+        setattr(namespace, self.dest, [os.path.abspath(value) for value in str(values).split(",")])
 
 
 class ReadableFullPathAction(FullPathAction):
