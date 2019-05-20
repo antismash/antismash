@@ -103,6 +103,10 @@ def run_clusterblast_processes(options: ConfigType) -> None:
             None
     """
     database = _get_datafile_path('proteins.fasta')
+    if options.cpus == 1:
+        run_blast("input.fasta", database)
+        return
+
     # set the first arg to always be database
     partial = functools.partial(_run_blast_helper, database)
     # run in parallel
@@ -119,6 +123,10 @@ def read_clusterblast_output(options: ConfigType) -> str:
         Returns:
             a string containing all blast run output
     """
+    if options.cpus == 1:
+        with open("input.out") as handle:
+            return handle.read()
+
     blastoutput = []
     for i in range(options.cpus):
         with open("input%d.out" % i, "r") as handle:
