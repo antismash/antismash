@@ -127,11 +127,13 @@ class Region(CDSCollection):
         """ Returns all Protoclusters contained by CandidateClusters in this region,
             without duplicating them if multiple CandidateClusters contain the same
             Protocluster
+
+            Result is sorted by location start, then by decreasing size, then by product
         """
         clusters: Set[Protocluster] = set()
         for candidate_cluster in self._candidate_clusters:
             clusters.update(candidate_cluster.protoclusters)
-        return sorted(clusters)
+        return sorted(clusters, key=lambda x: (x.location.start, -len(x.location), x.product))
 
     def write_to_genbank(self, filename: str = None, directory: str = None, record: SeqRecord = None) -> None:
         """ Writes a genbank file containing only the information contained
