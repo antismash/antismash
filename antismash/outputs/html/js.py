@@ -6,14 +6,13 @@
 """
 
 import os
-from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from antismash.common import html_renderer, path
 from antismash.common.module_results import ModuleResults
-from antismash.common.secmet import CDSFeature, Feature, Record, Region, CandidateCluster, SubRegion
+from antismash.common.secmet import CDSFeature, Feature, Record, Region
 from antismash.common.secmet.qualifiers.gene_functions import GeneFunction
 from antismash.common.secmet.qualifiers.go import GOQualifier
-from antismash.common.secmet import Protocluster
 from antismash.common.secmet.features.cdscollection import CDSCollection
 from antismash.config import ConfigType
 from antismash.modules import clusterblast, tta
@@ -80,7 +79,7 @@ def convert_regions(record: Record, options: ConfigType, result: Dict[str, Modul
         js_region['idx'] = region.get_region_number()
         mibig_entries = mibig_results.get(js_region['idx'], {})
         js_region['orfs'] = convert_cds_features(record, region.cds_children, options, mibig_entries)
-        js_region['clusters'] = get_clusters_from_region_parts(region.candidate_clusters, region.subregions)
+        js_region['clusters'] = get_clusters_from_region(region)
         js_region['ttaCodons'] = convert_tta_codons(tta_codons, record)
         js_region['type'] = region.get_product_string()
         js_region['products'] = region.products
@@ -155,14 +154,10 @@ def _find_non_overlapping_cluster_groups(collections: Iterable[CDSCollection],
     return results
 
 
-def get_clusters_from_region_parts(candidate_clusters: Iterable[CandidateCluster],
-                                   subregions: Iterable[SubRegion]) -> List[Dict[str, Any]]:
+def get_clusters_from_region(region: Region) -> List[Dict[str, Any]]:
     """ Converts all Protoclusters in a collection of CandidateCluster features to JSON """
-    unique_clusters: Set[Protocluster] = set()
-    for candidate_cluster in candidate_clusters:
-        unique_clusters.update(candidate_cluster.protoclusters)
     js_clusters = []
-    candidate_clusters = sorted(candidate_clusters, key=lambda x: (x.location.start, -len(x.location)))
+    candidate_clusters = sorted(region.candidate_clusters, key=lambda x: (x.location.start, -len(x.location)))
     candidate_cluster_groupings = _find_non_overlapping_cluster_groups(candidate_clusters)
     start_index = 0
     for candidate_cluster in candidate_clusters:
@@ -184,8 +179,8 @@ def get_clusters_from_region_parts(candidate_clusters: Iterable[CandidateCluster
 
     if candidate_cluster_groupings:
         start_index += max(candidate_cluster_groupings.values())
-    subregions = sorted(subregions, key=lambda x: (x.location.start, -len(x.location), x.tool))
-    for subregion in subregions:
+
+    for subregion in sorted(region.subregions, key=lambda x: (x.location.start, -len(x.location), x.tool)):
         start_index += 1
         js_cluster = {"start": subregion.location.start,
                       "end": subregion.location.end,
@@ -197,7 +192,7 @@ def get_clusters_from_region_parts(candidate_clusters: Iterable[CandidateCluster
         js_clusters.append(js_cluster)
 
     start_index += 2  # allow for label above
-    clusters = sorted(unique_clusters, key=lambda x: (x.location.start, -len(x.location), x.product))
+    clusters = region.get_unique_protoclusters()
     cluster_groupings = _find_non_overlapping_cluster_groups(clusters)
     for cluster in clusters:
         js_cluster = {"start": cluster.core_location.start,
