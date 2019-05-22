@@ -43,3 +43,22 @@ class TestNRPSPKS(unittest.TestCase):
         assert len(qualifier) == 4
         for i in qualifier:
             assert isinstance(i, str)
+
+    def test_biopython_conversion(self):
+        qualifier = NRPSPKSQualifier(strand=1)
+        for pks in ["PKS_AT", "AMP-binding"]:
+            qualifier.add_domain(HMMResult(pks, 1, 1, 1, 1), "missing")
+            qualifier.add_subtype(pks + "dummy")
+        qualifier.type = "some type"
+
+        bio = list(qualifier)
+        for val in bio:
+            assert isinstance(val, str)
+
+        new = NRPSPKSQualifier(strand=1)
+        new.add_from_qualifier(bio)
+        assert list(qualifier) == list(new)
+
+        for bad in [["mismatching info"], ["Domain: missing info"]]:
+            with self.assertRaisesRegex(ValueError, "unknown NRPS/PKS qualifier|could not match"):
+                new.add_from_qualifier(bad)
