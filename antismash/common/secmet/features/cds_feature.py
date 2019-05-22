@@ -272,6 +272,7 @@ class CDSFeature(Feature):
         gene_functions = leftovers.pop("gene_functions", [])
         if gene_functions:
             feature.gene_functions.add_from_qualifier(gene_functions)
+        feature.nrps_pks.add_from_qualifier(leftovers.pop("NRPS_PKS", []))
 
         # grab parent optional qualifiers
         super(CDSFeature, feature).from_biopython(bio_feature, feature=feature, leftovers=leftovers)
@@ -293,6 +294,8 @@ class CDSFeature(Feature):
             mine["gene_kind"] = [str(self.gene_function)]
         if self.sec_met:
             mine["sec_met_domain"] = list(map(str, self.sec_met))
+        if self.nrps_pks:
+            mine["NRPS_PKS"] = list(map(str, self.nrps_pks))
         # respect qualifiers given to us
         if qualifiers:
             mine.update(qualifiers)
