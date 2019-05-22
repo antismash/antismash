@@ -7,6 +7,25 @@ import bisect
 from typing import Any, Iterator, List, Tuple
 from typing import Dict  # used in comment hints # pylint: disable=unused-import
 
+from .secmet import _parse_format
+
+_DOMAIN_FORMAT = "Domain: {} ({}-{}). E-value: {}. Score: {}. Matches aSDomain: {}"
+_SUBTYPE_FORMAT = "subtype: {}"
+_TYPE_FORMAT = "type: {}"
+
+
+class _HMMResultLike:
+    """ A class that has compatible members with antismash.common.hmmscan_refinement.HMMResult.
+        Used for reconstructing domains from qualifiers
+    """
+    def __init__(self, hit_id: str, query_start: int, query_end: int,
+                 evalue: float, bitscore: float) -> None:
+        self.hit_id = hit_id
+        self.query_start = query_start
+        self.query_end = query_end
+        self.evalue = evalue
+        self.bitscore = bitscore
+
 
 class NRPSPKSQualifier(list):
     """ A qualifier for tracking information about NRPS/PKS domains within a CDS.
@@ -80,10 +99,12 @@ class NRPSPKSQualifier(list):
 
     def __iter__(self) -> Iterator[str]:
         for domain in self.domains:
-            base = "NRPS/PKS Domain: %s (%s-%s). E-value: %s. Score: %s;"
-            yield base % (domain.name, domain.start, domain.end, domain.evalue, domain.bitscore)
+            yield _DOMAIN_FORMAT.format(domain.name, domain.start, domain.end,
+                                        domain.evalue, domain.bitscore, domain.feature_name)
+        if self.type != "uninitialised":
+            yield _TYPE_FORMAT.format(self.type)
         for subtype in self.subtypes:
-            yield "NRPS/PKS subtype: %s" % subtype
+            yield _SUBTYPE_FORMAT.format(subtype)
 
     def add_subtype(self, subtype: str) -> None:
         """ Adds a subtype to the existing list, e.g. 'Glycopeptide NRPS' or
@@ -131,3 +152,20 @@ class NRPSPKSQualifier(list):
         bisect.insort_right(self._domains, new)
         # update the domain name list
         self._domain_names = [domain.name for domain in self._domains]
+
+    def add_from_qualifier(self, qualifiers: List[str]) -> None:
+        """ Adds domains and types from a biopython-style qualifier list """
+        if not qualifiers:
+            return
+        for qualifier in qualifiers:
+            if qualifier.startswith("Domain: "):
+                parts = _parse_format(_DOMAIN_FORMAT, qualifier)
+                domain = _HMMResultLike(parts[0], int(parts[1]), int(parts[2]),
+                                        float(parts[3]), float(parts[4]))
+                self.add_domain(domain, parts[5])
+            elif qualifier.startswith("subtype: "):
+                self.add_subtype(_parse_format(_SUBTYPE_FORMAT, qualifier)[0])
+            elif qualifier.startswith("type: "):
+                self.type = _parse_format(_TYPE_FORMAT, qualifier)[0]
+            else:
+                raise ValueError("unknown NRPS/PKS qualifier: %s" % qualifier)
