@@ -10,6 +10,8 @@ from typing import List
 
 from .base import execute, get_config, SearchIO
 
+_THREADING_SUPPORT = True
+
 
 def run_hmmpfam2(query_hmmfile: str, target_sequence: str, extra_args: List[str] = None
                  ) -> List[SearchIO._model.query.QueryResult]:  # pylint: disable=protected-access
@@ -22,17 +24,25 @@ def run_hmmpfam2(query_hmmfile: str, target_sequence: str, extra_args: List[str]
         Returns:
             a list of results as parsed by SearchIO
     """
+    global _THREADING_SUPPORT  # pylint: disable=global-statement
     config = get_config()
     command = [config.executables.hmmpfam2]
 
-    # Only use multithreading in hmmpfam2 if supported in the hmmpfam2 build
-    if " --cpu " in run_hmmpfam2_help():
-        command.extend(["--cpu", str(config.cpus)])
     if extra_args:
         command.extend(extra_args)
+    base_options = list(command)
+    # Only use multithreading in hmmpfam2 if supported in the hmmpfam2 build
+    if _THREADING_SUPPORT:
+        command.extend(["--cpu", str(config.cpus)])
     command.extend([query_hmmfile, '-'])
 
     result = execute(command, stdin=target_sequence)
+    # if it was an error due to no threading support
+    if not result.successful() and _THREADING_SUPPORT and "threads support is not compiled" in result.stderr:
+        # prevent further runs with threading
+        _THREADING_SUPPORT = False
+        # run again without the cpu option
+        result = execute(base_options + [query_hmmfile, "-"], stdin=target_sequence)
     if not result.successful():
         logging.debug('hmmpfam2 returned %d: %r while searching %r', result.return_code,
                       result.stderr, query_hmmfile)
