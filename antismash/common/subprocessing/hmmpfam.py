@@ -53,12 +53,6 @@ def run_hmmpfam2(query_hmmfile: str, target_sequence: str, extra_args: List[str]
 
 def run_hmmpfam2_help() -> str:
     """ Get the help output of hmmpfam2 """
-
-    # cache results
-    help_text = getattr(run_hmmpfam2_help, 'help_text', '')
-    if help_text:
-        return help_text
-
     hmmpfam2 = get_config().executables.hmmpfam2
     command = [
         hmmpfam2,
@@ -70,7 +64,6 @@ def run_hmmpfam2_help() -> str:
         msg = "unexpected output from hmmpfam2: %s, check path"
         raise RuntimeError(msg % hmmpfam2)
 
-    setattr(run_hmmpfam2_help, 'help_text', help_text)
     return help_text
 
 
