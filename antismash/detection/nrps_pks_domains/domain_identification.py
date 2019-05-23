@@ -270,7 +270,7 @@ def classify_cds(domain_names: List[str], ks_domain_subtypes: List[str]) -> str:
                                          "Condensation_Dual", "AMP-binding"})
     if not pks_domains and not nrps_domains:
         classification = "other"
-    elif {"Cglyc", "Epimerization", "AMP-binding"} in domains and not pks_domains:
+    elif {"Cglyc", "Epimerization", "AMP-binding"}.issubset(domains) and not pks_domains:
         classification = "Glycopeptide NRPS"
     elif len(nrps_domains) >= 2 and "AMP-binding" in domains:
         if pks_domains:
