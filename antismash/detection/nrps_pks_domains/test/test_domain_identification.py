@@ -114,6 +114,18 @@ class TestCDSClassification(unittest.TestCase):
         # three KS, but mod is most
         assert self.func(["PKS_AT"] + ["PKS_KS"]*3, ["Modular-KS"]*3) == mod
 
+    def test_glycopeptide(self):
+        glyc = "Glycopeptide NRPS"
+        base = ["Cglyc", "Epimerization", "AMP-binding"]
+        assert self.func(base) == glyc
+        assert self.func(base + ["PKS_KS"]) != glyc
+        assert self.func(base + ["PKS_AT"]) != glyc
+
+        # all three domains have to be present
+        assert self.func(base[1:]) != glyc
+        assert self.func(base[::2]) != glyc
+        assert self.func(base[:-1]) != glyc
+
 
 class TestKSCounter(unittest.TestCase):
     def setUp(self):

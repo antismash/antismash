@@ -27,7 +27,7 @@ class TestAnalyses(unittest.TestCase):
 
         expected_types = {'bpsC': 'NRPS', 'pks': 'other', 'bpsD': 'NRPS-like protein',
                           'dpgD': 'other', 'pgat': 'other', 'dpgB': 'other',
-                          'bpsA': 'NRPS', 'bpsB': 'NRPS', 'dpgC': 'other'}
+                          'bpsA': 'Glycopeptide NRPS', 'bpsB': 'Glycopeptide NRPS', 'dpgC': 'other'}
 
         for cds, cds_result in results.cds_results.items():
             assert isinstance(cds_result, nrps_pks_domains.domain_identification.CDSResult)
