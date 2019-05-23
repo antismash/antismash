@@ -116,6 +116,7 @@ def generate_domains(record: Record) -> NRPSPKSDomains:
 
     fasta = get_fasta_from_features(cds_within_regions)
     cds_domains = find_domains(fasta, record)
+    ks_subtypes = find_ks_domains(fasta)
     cds_motifs = find_ab_motifs(fasta)
 
     for cds in cds_within_regions:
@@ -123,7 +124,8 @@ def generate_domains(record: Record) -> NRPSPKSDomains:
         motifs = cds_motifs.get(cds.get_name(), [])
         if not (domains or motifs):
             continue
-        domain_type = classify_cds([domain.hit_id for domain in domains])
+        domain_type = classify_cds([domain.hit_id for domain in domains],
+                                   [domain.hit_id for domain in ks_subtypes.get(cds.get_name(), [])])
         results.cds_results[cds] = CDSResult(domains, motifs, domain_type)
 
     for cds, cds_result in results.cds_results.items():
@@ -201,8 +203,7 @@ def find_ks_domains(fasta: str) -> Dict[str, List[HMMResult]]:
     ks_file = path.get_full_path(__file__, "data", "ksdomains.hmm")
     lengths = utils.get_hmm_lengths(ks_file)
     domains = subprocessing.run_hmmscan(ks_file, fasta, opts)
-    refine_hmmscan_results(domains, lengths, neighbour_mode=True)
-    raise NotImplementedError("no return value used from refine_hmmscan_results")
+    return refine_hmmscan_results(domains, lengths, neighbour_mode=True)
 
 
 class KetosynthaseCounter:
@@ -249,7 +250,7 @@ class KetosynthaseCounter:
         return self.iterative > max([self.enediyne, self.trans_at, self.modular])
 
 
-def classify_cds(domain_names: List[str]) -> str:
+def classify_cds(domain_names: List[str], ks_domain_subtypes: List[str]) -> str:
     """ Classifies a CDS based on the type and counts of domains present.
 
         Arguments:
@@ -259,7 +260,7 @@ def classify_cds(domain_names: List[str]) -> str:
             a string of the classification (e.g. 'NRPS-like protein')
     """
     # get the set of domains and count the relevant types
-    counter = KetosynthaseCounter(domain_names)
+    counter = KetosynthaseCounter(domain_names + ks_domain_subtypes)
     domains = set(domain_names)
 
     # which rule does it match
@@ -279,7 +280,7 @@ def classify_cds(domain_names: List[str]) -> str:
     elif not nrps_domains:
         if {"PKS_KS", "Trans-AT_docking"}.issubset(domains) and "PKS_AT" not in domains and counter.trans_is_greatest():
             classification = "Type I Trans-AT PKS"
-        elif len(pks_domains) == 2:
+        elif len(pks_domains) == 2:  # are both KS and AT domains present
             if counter.iterative_is_greatest() and counter.pks < 3:
                 classification = "Type I Iterative PKS"
             elif counter.ene_is_greatest() and counter.pks < 3:
