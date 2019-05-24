@@ -126,10 +126,8 @@ def run_and_regenerate_results_for_module(input_file, module, options,
         results = serialiser.AntismashResults.from_file(json_filename)
         # remove things that were added by results, because otherwise the add isn't tested by detection
         # result regeneration
-        # this should eventually include every feature and qualifier created by antismash
         for record in results.records:
-            record.clear_antismash_domains()
-            record.clear_cds_motifs()
+            record.strip_antismash_annotations()
         if callback:
             callback(tempdir)
         # and while the genbank output still exists, grab that and check it's readable
@@ -139,33 +137,34 @@ def run_and_regenerate_results_for_module(input_file, module, options,
     assert len(results.records) == expected_record_count
     # ensure all detection stages add their relevant parts
     modules_to_regenerate = antismash.main.get_detection_modules()
-    # don't try and regenerate twice
-    if module not in modules_to_regenerate:
-        modules_to_regenerate.append(module)
+    final = []
+    for record, rec_results in zip(results.records, results.results):
+        regenerate_results_for_record(record, options, modules_to_regenerate, module, rec_results)
+        # post (other) detection has run, regenerate (since they may need regions etc)
+        final.append(module.regenerate_previous_results(rec_results.get(module.__name__), record, options))
+    for res in final:
+        assert isinstance(res, ModuleResults)
     if expected_record_count == 1:
-        regenerated = regenerate_results_for_record(results.records[0],
-                                                    options, modules_to_regenerate,
-                                                    results.results[0])
-
-        final = regenerated.get(module.__name__)
-        assert isinstance(final, ModuleResults)
-    else:
-        regenerated = []
-        final = []
-        for record, results in zip(results.records, results.results):
-            regenerated.append(regenerate_results_for_record(record, options, modules_to_regenerate, results))
-        final = [result[module.__name__] for result in regenerated]
-        for res in final:
-            assert isinstance(res, ModuleResults)
+        return final[0]
     return final
 
 
-def regenerate_results_for_record(record, options, modules, json_results):
+def regenerate_results_for_record(record, options, modules, excluded_module, json_results):
     module_results = {}
     for module in modules:
+        if module is excluded_module:
+            continue
         json = json_results.get(module.__name__)
         if not json:
             continue
         mod_results = module.regenerate_previous_results(json, record, options)
+        mod_results.add_to_record(record)
+        if isinstance(mod_results, antismash.common.module_results.DetectionResults):
+            for protocluster in mod_results.get_predicted_protoclusters():
+                record.add_protocluster(protocluster)
+            for region in mod_results.get_predicted_subregions():
+                record.add_subregion(region)
         module_results[module.__name__] = mod_results
+    record.create_candidate_clusters()
+    record.create_regions()
     return module_results
