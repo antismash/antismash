@@ -214,18 +214,18 @@ class Region(CDSCollection):
                 candidates = feature.qualifiers.get("candidate_cluster_numbers")
                 if not candidates:
                     continue
-                candidates = [str(int(num) - first_candidate_cluster) for num in candidates]
+                candidates = [str(int(num) - first_candidate_cluster + 1) for num in candidates]
                 feature.qualifiers["candidate_cluster_numbers"] = candidates
             elif feature.type == CandidateCluster.FEATURE_TYPE:
-                new = str(int(feature.qualifiers["candidate_cluster_number"][0]) - first_candidate_cluster)
+                new = str(int(feature.qualifiers["candidate_cluster_number"][0]) - first_candidate_cluster + 1)
                 feature.qualifiers["candidate_cluster_number"] = [new]
-                new_clusters = [str(int(num) - first_cluster) for num in feature.qualifiers["protoclusters"]]
+                new_clusters = [str(int(num) - first_cluster + 1) for num in feature.qualifiers["protoclusters"]]
                 feature.qualifiers["protoclusters"] = new_clusters
             elif feature.type in ["protocluster", "proto_core"]:
-                new = str(int(feature.qualifiers["protocluster_number"][0]) - first_cluster)
-                feature.qualifiers["cluster_number"] = [new]
+                new = str(int(feature.qualifiers["protocluster_number"][0]) - first_cluster + 1)
+                feature.qualifiers["protocluster_number"] = [new]
             elif feature.type == "subregion":
-                new = str(int(feature.qualifiers["subregion_number"][0]) - first_subregion)
+                new = str(int(feature.qualifiers["subregion_number"][0]) - first_subregion + 1)
                 feature.qualifiers["subregion_number"] = [new]
 
         seqio.write([cluster_record], filename, 'genbank')
