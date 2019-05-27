@@ -98,19 +98,18 @@ def make_neighbours_distinct(groups: List[T]) -> List[T]:
     return spaced_groups
 
 
-def arrange_colour_groups(query_cds_features: List[secmet.CDSFeature],
+def arrange_colour_groups(accessions: List[str],
                           groups: Set[Tuple[str, ...]]) -> List[Tuple[str, ...]]:
     """ Arrange provided groups to be maximally distant from each other.
 
         Arguments:
-            query_cds_features: the CDS features in the query
+            accessions: the names of features in the query
             groups: the groupings to rearrange
 
         Returns:
             a list ordering the original members of groups
     """
     # first sort them
-    accessions = [cds.get_name() for cds in query_cds_features]
     ordered_groups = sort_groups(accessions, groups)
     return make_neighbours_distinct(ordered_groups)
 
@@ -131,17 +130,18 @@ def build_colour_groups(query_cds_features: List[secmet.CDSFeature],
             the group the gene belongs to
     """
     # start with a set per query gene with only itself
-    groups = {cds.get_name(): set() for cds in query_cds_features}  # type: Dict[str, Set[str]]
+    accessions = [cds.get_name() + " QUERY" for cds in query_cds_features]
+    groups = {accession: set() for accession in accessions}  # type: Dict[str, Set[str]]
     # populate the sets with the id of any hits matching a query gene
     for _, score in ranking:
         for query, subject in score.scored_pairings:
-            groups[query.id].add(query.id)
-            groups[query.id].add(subject.name)
+            q_id = query.id + " QUERY"
+            groups[q_id].add(query.id)
+            groups[q_id].add(subject.name)
     # merge intersecting sets so only disjoint sets remain
-    keys = list(groups)
-    for i, accession in enumerate(keys):
+    for i, accession in enumerate(accessions):
         groups[accession].add(accession)  # add the query name to it's group
-        for other in keys[i + 1:]:
+        for other in accessions[i + 1:]:
             if groups[accession].intersection(groups[other]):
                 groups[other].update(groups[accession])  # merge into later hit
                 groups[accession] = groups[other]  # point to merged version
@@ -150,9 +150,11 @@ def build_colour_groups(query_cds_features: List[secmet.CDSFeature],
     disjoints = set(tuple(group) for group in groups.values() if len(group) > 1)
     # build a reverse lookup from id to group_number
     lookup = {}
-    for group, colour in zip(arrange_colour_groups(query_cds_features, disjoints),
+    for group, colour in zip(arrange_colour_groups(accessions, disjoints),
                              generate_distinct_colours(len(disjoints))):
         for name in sorted(group):  # sort to ensure cross-run consistency
+            if name.endswith(" QUERY"):
+                name = name[:-6]
             lookup[name] = colour
     return lookup
 
