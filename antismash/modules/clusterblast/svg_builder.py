@@ -526,9 +526,8 @@ class ClusterSVGBuilder:
         record_prefix = region.parent_record.id.split(".", 1)[0]
         num_added = 0
         queries = set()
-
         for cluster, score in ranking:
-            if record_prefix == cluster.accession.split("_", 1)[0]:
+            if prefix != "subclusterblast" and record_prefix == cluster.accession.split("_", 1)[0]:
                 continue
             # determine overall strand direction of hits
             hit_genes = set()
