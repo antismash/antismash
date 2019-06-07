@@ -164,6 +164,7 @@ def strip_record(record: SeqRecord) -> SeqRecord:
         "gene_functions",  # aS5-beta
         "sec_met_domains",  # aS5-beta
         "gene_kind",  # aS5-beta
+        "NRPS_PKS",  # as5.0.0
     }
 
     # remove any record-level comment
