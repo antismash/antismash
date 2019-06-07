@@ -901,7 +901,6 @@ class Record:
 
     def strip_antismash_annotations(self) -> None:
         """ Removes all antismash features and annotations from the record """
-        logging.debug("Stripping antiSMASH features and annotations from record: %s", self.id)
         self.clear_protoclusters()
         self.clear_candidate_clusters()
         self.clear_subregions()

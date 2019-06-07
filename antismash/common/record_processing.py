@@ -133,15 +133,22 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
             gff_features = gff_parser.run(record.id, single_entry, gff_file)
             record.features.extend(gff_features)
 
-    # remove any previous or obselete antiSMASH features so conversion can be clean
+    # remove any previous or obselete antiSMASH annotations to minimise incompatabilities
     for record in records:
         strip_record(record)
 
     logging.debug("Converting records from biopython to secmet")
     try:
-        return [Record.from_biopython(record, taxon) for record in records]
+        records = [Record.from_biopython(record, taxon) for record in records]
     except SecmetInvalidInputError as err:
         raise AntismashInputError(str(err)) from err
+
+    # if parsable by secmet, it has a better context on what to strip, so run
+    # the secmet stripping to ensure there's no surprises
+    for record in records:
+        record.strip_antismash_annotations()
+
+    return records
 
 
 def strip_record(record: SeqRecord) -> SeqRecord:
