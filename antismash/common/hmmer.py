@@ -112,9 +112,6 @@ def build_hits(record: Record, hmmscan_results: List, min_score: float,
             if hsp.bitscore <= min_score or hsp.evalue >= max_evalue:
                 continue
 
-            if hsp.query_id not in hsp.query_id:
-                continue
-
             feature = feature_by_id[hsp.query_id]
             location = feature.get_sub_location_from_protein_coordinates(hsp.query_start, hsp.query_end)
 
