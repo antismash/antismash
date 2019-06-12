@@ -19,8 +19,8 @@ hglE	Unusual PKS HglE-like	50	hglE.hmm
 t2ks	Type II PKS ketosynthase	50	t2ks.hmm
 t2pks2	Type II PKS ketosynthase, model 2	450	t2ks2.hmm
 t2clf	Type II PKS Chain length factor	50	t2clf.hmm
-Chal_sti_synt_N	Type III PKS N-terminal	63	Chal_sti_synt_N.hmm
-Chal_sti_synt_C	Type III PKS C-terminal	35	Chal_sti_synt_C.hmm
+Chal_sti_synt_N	Type III PKS N-terminal	21	Chal_sti_synt_N.hmm
+Chal_sti_synt_C	Type III PKS C-terminal	21	Chal_sti_synt_C.hmm
 Terpene_synth_C	Terpene synthase, C-terminus	23	Terpene_synth_C.hmm
 Terpene_synth	Terpene synthase	23	Terpene_synth.hmm
 phytoene_synt	Phytoene_synthase	20	phytoene_synt.hmm
