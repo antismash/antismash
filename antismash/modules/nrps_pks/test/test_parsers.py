@@ -19,7 +19,7 @@ class TestNRPSParserMonomerModification(unittest.TestCase):
         self.genes = []
         self.regions = []
         domain_names = self.gen_domain_names()
-        for product in ['not_atpks', 'transatpks']:
+        for product in ['not-atpks', 'transatpks']:
             cluster = helpers.DummyProtocluster(1, 2, product=product)
             candidate_cluster = helpers.DummyCandidateCluster([cluster])
             self.regions.append(Region(candidate_clusters=[candidate_cluster]))

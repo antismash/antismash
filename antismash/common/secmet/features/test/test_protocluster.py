@@ -99,3 +99,12 @@ class TestDefinitionCDS(unittest.TestCase):
         self.add_core_function(self.outside_cds, cluster_product=False)
         with self.assertRaisesRegex(ValueError, "not contained by"):
             self.cluster.add_cds(self.outside_cds)
+
+
+class TestConstruction(unittest.TestCase):
+    def test_product(self):
+        loc = FeatureLocation(1, 6, strand=1)
+        for bad in ["-", "-like", "NRPS-", "NRPS PKS", "NRPS/PKS", "NRPS,PKS", "NRPS.PKS"]:
+            with self.assertRaisesRegex(ValueError, "invalid protocluster product"):
+                Protocluster(loc, loc, tool="test", cutoff=17, neighbourhood_range=5,
+                             product=bad, detection_rule="some rule text")

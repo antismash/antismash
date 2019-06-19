@@ -75,7 +75,7 @@ class DummyFeature(Feature):
 
 class DummyProtocluster(Protocluster):
     def __init__(self, start=None, end=None, core_start=0, core_end=1,  # pylint: disable=too-many-arguments
-                 core_location=None, tool="test", product="test product",
+                 core_location=None, tool="test", product="test-product",
                  cutoff=10, neighbourhood_range=10, high_priority_product=True):
         if core_location is None:
             core_location = FeatureLocation(core_start, core_end)
