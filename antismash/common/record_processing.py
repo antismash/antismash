@@ -452,7 +452,9 @@ def trim_sequence(record: SeqRecord, start: int, end: int) -> SeqRecord:
         start = 0
     if end < 0:
         end = len(record)
-    return record[start:end]
+    new = record[start:end]
+    new.annotations = record.annotations  # preserve old annotations that biopython ignores
+    return new
 
 
 def is_nucl_seq(sequence: Union[Seq, str]) -> bool:
