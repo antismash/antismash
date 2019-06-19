@@ -3,7 +3,7 @@
 {% for record in records %}
 {% set results = results_by_record_id[record.id] %}
 {% for region in record.regions %}
-<div class="page" id='{{region.anchor_id}}'>
+<div class="page" id='{{region.anchor_id}}' style="display: none;">
  <div class="region-grid">
   <div class = "content">
     <div class ="description-container">
