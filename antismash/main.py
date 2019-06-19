@@ -18,9 +18,10 @@ import pstats
 import shutil
 import time
 import tempfile
-from typing import cast, Any, Dict, List, Optional, Union
+from typing import cast, Any, Dict, List, Optional, Tuple, Union
 
 from Bio import SeqIO
+from Bio.SeqRecord import SeqRecord
 
 from antismash.config import (
     ConfigType,
@@ -344,6 +345,53 @@ def write_profiling_results(profiler: cProfile.Profile, target: str) -> None:
         print(stream.getvalue())
 
 
+def add_antismash_comments(records: List[Tuple[Record, SeqRecord]], options: ConfigType) -> None:
+    """ Add antismash meta-annotation to records for genbank output
+
+        Arguments:
+            records: a list of Record, SeqRecord pairs
+            options: antismash options
+
+        Returns:
+            None
+
+    """
+    if not records:
+        return
+    shared = []
+    # include start/end details if relevant
+    if options.start != -1 or options.end != -1:
+        start = 1 if options.start == -1 else options.start
+        # start/end is only valid for single records, as per record_processing
+        assert len(records) == 1
+        end = len(records[0][0].seq) if options.end == -1 else options.end
+        shared.append((
+            "NOTE: This is an extract from the original record!\n"
+            "Starting at  :: {start}\n"
+            "Ending at    :: {end}\n"
+        ).format(start=start, end=end))
+    antismash_comment = (
+        "##antiSMASH-Data-START##\n"
+        "Version      :: {version}\n"
+        "Run date     :: {date}\n"
+        "%s"
+        "##antiSMASH-Data-END##"
+        ).format(
+            version=options.version,
+            date=str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+        )
+    for record, bio_record in records:
+        extras = []  # type: List[str]
+        if record.original_id:
+            extras.append("Original ID  :: %s\n" % record.original_id)
+
+        comment = antismash_comment % "".join(extras + shared)
+        if 'comment' in bio_record.annotations:
+            bio_record.annotations['comment'] += '\n' + comment
+        else:
+            bio_record.annotations['comment'] = comment
+
+
 def write_outputs(results: serialiser.AntismashResults, options: ConfigType) -> None:
     """ Write output files (webpage, genbank files, etc) to the output directory
 
@@ -372,17 +420,11 @@ def write_outputs(results: serialiser.AntismashResults, options: ConfigType) -> 
     # convert records to biopython
     bio_records = [record.to_biopython() for record in results.records]
 
+    # add antismash meta-annotation to records
+    add_antismash_comments(list(zip(results.records, bio_records)), options)
+
     logging.debug("Writing cluster-specific genbank files")
-    antismash_comment = ("##antiSMASH-Data-START##\n"
-                         "Version      :: {version}\n"
-                         "Run date     :: {date}\n"
-                         "##antiSMASH-Data-END##".format(version=options.version,
-                                                         date=str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))))
     for record, bio_record in zip(results.records, bio_records):
-        if 'comment' in bio_record.annotations:
-            bio_record.annotations['comment'] += '\n' + antismash_comment
-        else:
-            bio_record.annotations['comment'] = antismash_comment
         for region in record.get_regions():
             region.write_to_genbank(directory=options.output_dir, record=bio_record)
 

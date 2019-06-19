@@ -4,12 +4,14 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
+from argparse import Namespace
 import logging  # pylint: disable=unused-import
 import unittest
 
 from minimock import mock, restore, TraceTracker, assert_same_trace
 
 from antismash import main
+from antismash.common.test.helpers import DummyRecord
 from antismash.config import build_config, destroy_config
 from antismash.config.args import build_parser
 from antismash.detection import cluster_hmmer, full_hmmer
@@ -51,6 +53,41 @@ class TestAntismash(unittest.TestCase):
         assert not dummy.prep_called
         main.prepare_module_data([dummy])
         assert dummy.prep_called
+
+    def test_antismash_comment(self):
+        rec = DummyRecord()
+        options = Namespace()
+        options.start = -1
+        options.end = -1
+        options.version = "5.dummy"
+        bio = rec.to_biopython()
+
+        main.add_antismash_comments([(rec, bio)], options)
+        assert "##antiSMASH-Data-START##" in bio.annotations["comment"]
+        assert "##antiSMASH-Data-END##" in bio.annotations["comment"]
+        assert "Version" in bio.annotations["comment"] and options.version in bio.annotations["comment"]
+        assert "Original ID" not in bio.annotations["comment"]
+        assert "Starting at" not in bio.annotations["comment"]
+        assert "Ending at" not in bio.annotations["comment"]
+
+        bio.annotations["comment"] = ""
+        options.start = 7
+        main.add_antismash_comments([(rec, bio)], options)
+        assert "Original ID" not in bio.annotations["comment"]
+        assert "Starting at  :: 7\n" in bio.annotations["comment"]
+
+        bio.annotations["comment"] = ""
+        options.start = -1
+        options.end = 1000
+        main.add_antismash_comments([(rec, bio)], options)
+        assert "Original ID" not in bio.annotations["comment"]
+        assert "Ending at    :: 1000\n" in bio.annotations["comment"]
+
+        bio.annotations["comment"] = ""
+        options.end = -1
+        rec.original_id = "something else"
+        main.add_antismash_comments([(rec, bio)], options)
+        assert "Original ID" in bio.annotations["comment"] and "something else" in bio.annotations["comment"]
 
 
 class TestTimingsLog(unittest.TestCase):
