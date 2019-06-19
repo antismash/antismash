@@ -66,6 +66,9 @@ def _strict_parse(filename: str) -> List[SeqRecord]:
         # remove the new warning filters (functions in at least 3.5 and 3.6)
         # since mypy doesn't recognise this attribute, ignore the type
         warnings.filters = warnings.filters[len(filter_messages):]   # type: ignore
+
+    if not records:
+        raise AntismashInputError("no valid records found in file %s" % filename)
     return records
 
 
@@ -101,7 +104,7 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
 
     # if no records are left, that's a problem
     if not records:
-        raise AntismashInputError("no valid records found in file %r" % filename)
+        raise AntismashInputError("all input records smaller than minimum length (%d)" % minimum_length)
 
     for record in records:
         if isinstance(record.seq.alphabet, Bio.Alphabet.ProteinAlphabet) or not is_nucl_seq(record.seq):
