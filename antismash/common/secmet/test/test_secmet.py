@@ -335,6 +335,13 @@ class TestRecord(unittest.TestCase):
         for i, motif in enumerate(motifs):
             assert motif.domain_id == "non_aS_motif_0_6_%s" % (i + 1)
 
+    def test_seq_types(self):
+        first = Record("A" * 20)
+        assert isinstance(first.seq, Seq)
+        second = Record(Seq("A" * 20))
+        assert isinstance(second.seq, Seq)
+        assert first.seq == second.seq
+
 
 class TestCDSFetchByLocation(unittest.TestCase):
     def setUp(self):
