@@ -122,7 +122,10 @@ def regenerate_previous_results(results: Dict[str, Any], record: Record,
     if not results:
         return None
     regenerated = HMMDetectionResults.from_json(results, record)
-    if set(regenerated.enabled_types) != set(get_supported_cluster_types(options.hmmdetection_strictness)):
+    if regenerated.strictness != options.hmmdetection_strictness:
+        logging.warning("Ignoring hmmdetection strictness option %r, reusing %r from results",
+                        options.hmmdetection_strictness, regenerated.strictness)
+    if set(regenerated.enabled_types) != set(get_supported_cluster_types(regenerated.strictness)):
         raise RuntimeError("Protocluster types supported by HMM detection have changed, all results invalid")
     regenerated.rule_results.annotate_cds_features()
     return regenerated
