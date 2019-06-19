@@ -46,7 +46,7 @@ class TestParseRecords(unittest.TestCase):
                                                          minimum_length=15016)
         assert len(records) == 1
 
-        with self.assertRaisesRegex(AntismashInputError, "no valid records found"):
+        with self.assertRaisesRegex(AntismashInputError, "smaller than minimum length"):
             record_processing.parse_input_sequence(nisin_path, minimum_length=15017)
 
         for bad_len in [5.6, None, "5"]:
