@@ -33,6 +33,8 @@ class Protocluster(CDSCollection):
         super().__init__(surrounding_location, feature_type="protocluster")
         # cluster-wide
         self.detection_rule = detection_rule
+        if not product.replace("-", "").replace("_", "").isalnum() or product[0] in "-_" or product[-1] in "-_":
+            raise ValueError("invalid protocluster product: %s" % product)
         self.product = product
         self.tool = tool
 
