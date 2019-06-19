@@ -41,8 +41,6 @@ def get_simple_options(module, args):
 class DummyRecord(Record):
     "class for generating a Record like data structure"
     def __init__(self, features=None, seq='FAKESEQ', taxon='bacteria'):
-        if isinstance(seq, str):
-            seq = Seq(seq)
         super().__init__(seq, transl_table=11 if taxon == 'bacteria' else 1)
         if features:
             for feature in features:

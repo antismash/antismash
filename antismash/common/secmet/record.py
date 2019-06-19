@@ -60,9 +60,11 @@ class Record:
                  "_subregions", "_subregion_numbering",
                  "_regions", "_region_numbering"]
 
-    def __init__(self, seq: str = "", transl_table: int = 1, **kwargs: Any) -> None:
+    def __init__(self, seq: Union[Seq, str] = "", transl_table: int = 1, **kwargs: Any) -> None:
         # prevent paths from being used as a sequence
         assert not set("./\\").issubset(set(seq)), "Invalid sequence provided"
+        if isinstance(seq, str):
+            seq = Seq(seq)
         self._record = SeqRecord(seq, **kwargs)
         self.record_index = None  # type: Optional[int]
         self.original_id = None
