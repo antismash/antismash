@@ -16,9 +16,14 @@ from antismash.config import get_config, update_config, destroy_config, executab
 from antismash.config import args
 
 
+def raise_not_exit(message):
+    raise ValueError(message)
+
+
 class TestConfig(unittest.TestCase):
     def setUp(self):
         self.core_parser = args.build_parser()
+        self.core_parser.error = raise_not_exit
         modules = get_all_modules()
         self.default_parser = args.build_parser(modules=modules)
 
@@ -26,7 +31,7 @@ class TestConfig(unittest.TestCase):
         destroy_config()
 
     def test_invalid_args(self):
-        with self.assertRaises(SystemExit):
+        with self.assertRaisesRegex(ValueError, "unrecognized arguments"):
             self.core_parser.parse_args(["--an-invalid-switch"])
 
     def test_valid_args(self):
