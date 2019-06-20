@@ -253,6 +253,18 @@ class FullPathAction(argparse.Action):  # pylint: disable=too-few-public-methods
         setattr(namespace, self.dest, os.path.abspath(values))
 
 
+class ReadableFullPathAction(FullPathAction):
+    """ An argparse.Action to ensure provided paths are absolute. """
+    def __call__(self, parser: argparse.ArgumentParser, namespace: argparse.Namespace,  # type: ignore
+                 values: AnyStr, option_string: str = None) -> None:
+        path = os.path.abspath(values)
+        if not os.path.isfile(path):
+            raise argparse.ArgumentError(self, "%s does not exist" % values)
+        if not os.access(path, os.R_OK):
+            raise argparse.ArgumentError(self, "%s: permission denied" % values)
+        super().__call__(parser, namespace, values, option_string)
+
+
 class ModuleArgs:
     """ The vehicle for adding module specific arguments in sane groupings.
         Each module should have a unique prefix for their arguments, for clarity
