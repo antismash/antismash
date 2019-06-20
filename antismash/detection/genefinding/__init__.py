@@ -4,12 +4,11 @@
 """ A module to find genes in a record using external tools """
 
 import logging
-import os
 from typing import List
 
 from antismash.common.secmet import Record
 from antismash.config import ConfigType
-from antismash.config.args import ModuleArgs
+from antismash.config.args import ModuleArgs, ReadableFullPathAction
 
 from .run_prodigal import run_prodigal
 from .run_glimmerhmm import run_glimmerhmm
@@ -37,6 +36,7 @@ def get_arguments() -> ModuleArgs:
     args.add_option('gff3',
                     dest='gff3',
                     default="",
+                    action=ReadableFullPathAction,
                     type=str,
                     metavar="GFF3_FILE",
                     help="Specify GFF3 file to extract features from.")
@@ -67,10 +67,6 @@ def check_options(options: ConfigType) -> List[str]:
         and vice versa.
     """
     errors = []
-    if options.genefinding_gff3:
-        if not os.path.exists(options.genefinding_gff3):
-            errors.append("Specified gff file does not exist: %s" % (
-                    options.genefinding_gff3))
     if options.taxon == "fungi" and options.genefinding_tool not in ["glimmerhmm", "none", "error"]:
         errors.append("Fungi taxon must use glimmerhmm for genefinding if using genefinding")
     if options.taxon == "bacteria" and options.genefinding_tool == "glimmerhmm":
