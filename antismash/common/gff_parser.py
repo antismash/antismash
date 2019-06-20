@@ -6,7 +6,7 @@
 
 
 import logging
-from typing import Dict, IO, List, Set, Union
+from typing import Dict, IO, List, Set
 
 from Bio.SeqFeature import FeatureLocation, CompoundLocation, SeqFeature
 from Bio.SeqRecord import SeqRecord
@@ -20,7 +20,7 @@ from antismash.common.errors import AntismashInputError
 MODIFY_LOCATIONS_BY_PHASE = False
 
 
-def check_gff_suitability(gff_file: str, sequences: List[SeqRecord]) -> bool:
+def check_gff_suitability(gff_file: str, sequences: List[SeqRecord]) -> None:
     """
         Checks that the provided GFF3 file is acceptable
 
@@ -32,8 +32,7 @@ def check_gff_suitability(gff_file: str, sequences: List[SeqRecord]) -> bool:
             sequences: a list of SeqRecords
 
         Returns:
-            True if only a single entry is contained by both inputs and
-                    their sequence coordinates match
+            None
     """
     try:
         examiner = GFF.GFFExaminer()
@@ -41,8 +40,6 @@ def check_gff_suitability(gff_file: str, sequences: List[SeqRecord]) -> bool:
         gff_data = examiner.available_limits(open(gff_file))
         # Check if at least one GFF locus appears in sequence
         gff_ids = set([n[0] for n in gff_data['gff_id']])
-
-        single_entries = False
 
         if len(gff_ids) == 1 and len(sequences) == 1:
             # If both inputs only have one record, assume is the same,
@@ -65,8 +62,6 @@ def check_gff_suitability(gff_file: str, sequences: List[SeqRecord]) -> bool:
                 logging.error('GFF3 record and sequence coordinates are not compatible.')
                 raise AntismashInputError('incompatible GFF record and sequence coordinates')
 
-            single_entries = True
-
         elif not gff_ids.intersection({seq.id for seq in sequences}):
             logging.error('No GFF3 record IDs match any sequence record IDs.')
             raise AntismashInputError("GFF3 record IDs don't match sequence file record IDs.")
@@ -84,28 +79,25 @@ def check_gff_suitability(gff_file: str, sequences: List[SeqRecord]) -> bool:
     except AssertionError as err:
         logging.error('Parsing %r failed: %s', gff_file, err)
         raise AntismashInputError(str(err)) from err
-    return single_entries
 
 
-def get_features_from_file(handle: IO, limit_to_seq_id: Union[bool, Dict[str, List[str]]] = False
-                           ) -> List[SeqFeature]:
+def get_features_from_file(handle: IO) -> Dict[str, List[SeqFeature]]:
     """ Generates new SeqFeatures from a GFF file.
 
         Arguments:
-            record: the Record that features belong to
             handle: a file handle/stream with the GFF contents
-            limit_to_seq_id: False or a dictionary of GFF.parse options
 
         Returns:
-            a list of SeqFeatures parsed from the GFF file
+            a dictionary mapping record ID to a list of SeqFeatures for that record
     """
-    features = []
     try:
-        gff_records = list(GFF.parse(handle, limit_info=limit_to_seq_id))
+        gff_records = list(GFF.parse(handle))
     except Exception as err:
         raise AntismashInputError("could not parse records from GFF3 file") from err
 
+    results = {}
     for gff_record in gff_records:
+        features = []
         for feature in gff_record.features:
             if feature.type == 'CDS':
                 new_features = [feature]
@@ -134,28 +126,22 @@ def get_features_from_file(handle: IO, limit_to_seq_id: Union[bool, Dict[str, Li
                 if locus_tag is not None:
                     new_feature.qualifiers["locus_tag"] = locus_tag
                 features.append(new_feature)
-    return features
+        results[gff_record.id] = features
+    return results
 
 
-def run(record_id: str, single_entry: bool, gff_file: str) -> List[SeqFeature]:
+def run(gff_file: str) -> Dict[str, List[SeqFeature]]:
     """ The entry point of gff_parser.
         Generates new features and adds them to the provided record.
 
         Arguments:
-            record_id: the name of the record to extract features of
-            single_entry: if True, record and GFF ids must match
             options: an antismash.Config object, used only for fetching the GFF path
 
         Returns:
-            None
+            a dictionary mapping record ID to a list of SeqFeatures in that record
     """
-    # If there's only one sequence in both, read all, otherwise, read only appropriate part of GFF3.
-    limit_info = False  # type: Union[bool, Dict[str, List[str]]]
-    if not single_entry:
-        limit_info = {'gff_id': [record_id]}
-
     with open(gff_file) as handle:
-        return get_features_from_file(handle, limit_info)
+        return get_features_from_file(handle)
 
 
 def generate_details_from_subfeature(sub_feature: SeqFeature,

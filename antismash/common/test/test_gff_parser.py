@@ -22,20 +22,21 @@ class GffParserTest(TestCase):
         self.sequences = [contig1, contig2]
 
     def test_run(self):
-        first = gff_parser.run("CONTIG_1", self.single_entry, self.gff_file)
+        results = gff_parser.run(self.gff_file)
+        first = results["CONTIG_1"]
         assert len(first) == 1
         assert isinstance(first[0], SeqFeature)
 
-        assert not gff_parser.run("CONTIG_2", self.single_entry, self.gff_file)
+        assert "CONTIG_2" not in results
 
     def test_top_level_cds(self):
         self.gff_file = path.get_full_path(__file__, "data", "single_cds.gff")
-        cds_features = gff_parser.run("CONTIG_1", self.single_entry, self.gff_file)
+        cds_features = gff_parser.run(self.gff_file)["CONTIG_1"]
         assert len(cds_features) == 1
 
     def test_features_from_file(self):
         filename = path.get_full_path(__file__, 'data', 'fumigatus.cluster1.gff')
-        features = gff_parser.get_features_from_file(open(filename))
+        features = gff_parser.get_features_from_file(open(filename))["cluster0"]
         assert len(features) == 11
         for feature in features:
             assert feature.type == 'CDS'
@@ -48,10 +49,8 @@ class GffParserTest(TestCase):
             gff_parser.check_gff_suitability(self.gff_file, self.sequences)
 
         self.sequences[0].id = "CONTIG_1"
-        cdses = gff_parser.run("CONTIG_1", self.single_entry, self.gff_file)
-        self.sequences[0].features.extend(cdses)
-        assert not gff_parser.check_gff_suitability(self.gff_file, self.sequences)
+        gff_parser.check_gff_suitability(self.gff_file, self.sequences)
 
         # test force correlation
         self.sequences = self.sequences[1:]  # CONTIG_2
-        assert gff_parser.check_gff_suitability(self.gff_file, self.sequences)
+        gff_parser.check_gff_suitability(self.gff_file, self.sequences)
