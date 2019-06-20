@@ -88,8 +88,16 @@ class TestConfig(unittest.TestCase):
             assert vars(default_options) == vars(from_file)
 
     def test_paths(self):
-        options = self.core_parser.parse_args(["--reuse-results", "local"])
-        assert os.sep in options.reuse_results
+        with TemporaryDirectory(change=True) as temp_dir:
+            open("local", "w")
+            options = self.core_parser.parse_args(["--reuse-results", "local"])
+            assert options.reuse_results == os.path.join(temp_dir, "local")
+            os.chmod("local", 0)
+            with self.assertRaisesRegex(ValueError, "permission denied"):
+                self.core_parser.parse_args(["--reuse-results", "local"])
+
+        with self.assertRaisesRegex(ValueError, "does not exist"):
+            self.core_parser.parse_args(["--reuse-results", "non-existant"])
 
 
 class TestExecutableArg(unittest.TestCase):
