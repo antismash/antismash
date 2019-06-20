@@ -25,16 +25,6 @@ from antismash.custom_typing import AntismashModule
 from .subprocessing import parallel_function
 
 
-def _add_gff_features(single_entry: bool, gff_file: str, record: SeqRecord) -> SeqRecord:
-    """ A helper function for parallel annotations of sequences with GFF input
-    """
-    if any(feature.type == "CDS" for feature in record.features):
-        return record
-    gff_features = gff_parser.run(record.id, single_entry, gff_file)
-    record.features.extend(gff_features)
-    return record
-
-
 def _strict_parse(filename: str) -> List[SeqRecord]:
     """ Parses the input record with extra wrappers to catch biopython warnings
         as errors.
@@ -120,21 +110,17 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
     if gff_file:
         logging.debug("Loading annotations from GFF file")
         # check GFF suitability first
-        single_entry = False
         try:
-            single_entry = gff_parser.check_gff_suitability(gff_file, records)
+            gff_parser.check_gff_suitability(gff_file, records)
         except AntismashInputError:
             raise
         except Exception as err:
             raise AntismashInputError("could not parse records from GFF3 file") from err
-        # then add any features found for any record with no CDS features
-        partial = functools.partial(_add_gff_features, single_entry, gff_file)
-        records = parallel_function(partial, ([record] for record in records))
+        gff_features = gff_parser.run(gff_file)
         for record in records:
             if any(feature.type == "CDS" for feature in record.features):
                 continue
-            gff_features = gff_parser.run(record.id, single_entry, gff_file)
-            record.features.extend(gff_features)
+            record.features.extend(gff_features.get(record.id, []))
 
     # remove any previous or obselete antiSMASH annotations to minimise incompatabilities
     for record in records:
