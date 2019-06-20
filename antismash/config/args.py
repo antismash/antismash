@@ -505,7 +505,7 @@ def advanced_options() -> ModuleArgs:
     group.add_option('--reuse-results',
                      dest='reuse_results',
                      type=str,
-                     action=FullPathAction,
+                     action=ReadableFullPathAction,
                      default="",
                      metavar="PATH",
                      help="Use the previous results from the specified json datafile")
@@ -533,6 +533,7 @@ def advanced_options() -> ModuleArgs:
                      dest='database_dir',
                      default=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'databases'),
                      metavar="PATH",
+                     action=FullPathAction,
                      type=str,
                      help="Root directory of the databases (default: %(default)s).")
     group.add_option('--write-config-file',
@@ -575,6 +576,7 @@ def debug_options() -> ModuleArgs:
                      dest='logfile',
                      default="",
                      metavar="PATH",
+                     action=FullPathAction,
                      type=str,
                      help="Also write logging output to a file.")
     group.add_option('--list-plugins',

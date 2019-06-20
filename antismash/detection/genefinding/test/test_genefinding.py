@@ -15,12 +15,6 @@ class TestCore(unittest.TestCase):
         options = Namespace()
         options.taxon = 'bacteria'
         options.genefinding_tool = "none"
-        with self.assertRaises(AttributeError):
-            check_options(options)
-        options.genefinding_gff3 = '/nonexistant/path/to.gff'
-        assert len(check_options(options)) == 1
-        options.genefinding_gff3 = '/dev/null'
-        assert not check_options(options)
 
     def test_is_enabled(self):
         options = Namespace()
