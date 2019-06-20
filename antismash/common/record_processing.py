@@ -115,6 +115,9 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
         except AntismashInputError:
             raise
         except Exception as err:
+            # avoid swallowing details if possible
+            if str(err):
+                logging.error(err)
             raise AntismashInputError("could not parse records from GFF3 file") from err
         gff_features = gff_parser.run(gff_file)
         for record in records:
