@@ -11,6 +11,7 @@ from typing import List, Optional
 
 import antismash
 from antismash.common.path import (
+    changed_directory,
     get_full_path,
     locate_file,
 )
@@ -23,8 +24,9 @@ def get_git_version(fallback_filename: Optional[str] = GIT_VERSION_FALLBACK_FILE
     """Get the sha1 of the current git version"""
     git_version = ""
     try:
-        version_cmd = execute(['git', 'rev-parse', '--short', 'HEAD'])
-        status_cmd = execute(['git', 'status', '--porcelain'])
+        with changed_directory(os.path.dirname(__file__)):
+            version_cmd = execute(['git', 'rev-parse', '--short', 'HEAD'])
+            status_cmd = execute(['git', 'status', '--porcelain'])
         if version_cmd.successful() and status_cmd.successful():
             git_version = version_cmd.stdout.strip()
             changes = status_cmd.stdout.splitlines()
