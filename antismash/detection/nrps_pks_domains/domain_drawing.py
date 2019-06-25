@@ -75,7 +75,7 @@ def generate_js_domains(region: Region, record: Record) -> Dict[str, Union[str, 
             'orfs': orfs}
 
 
-def has_domain_details(region: Region) -> bool:
+def has_domain_details(region: Union[Region, RegionLayer]) -> bool:
     """ Returns True if there are domain details to be had for the given cluster """
     for cds in region.cds_children:
         if cds.nrps_pks:
@@ -91,5 +91,6 @@ def generate_html(region_layer: RegionLayer, _results: ModuleResults,
     section = template.render(has_domain_details=has_domain_details, region=region_layer,
                               docs_url=options_layer.urls.docs_baseurl)
     html = HTMLSections("nrps_pks")
-    html.add_detail_section("NRPS/PKS domains", section)
+    if has_domain_details(region_layer):
+        html.add_detail_section("NRPS/PKS domains", section)
     return html
