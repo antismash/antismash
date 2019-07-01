@@ -18,11 +18,89 @@ from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import CDSFeature, Record, Region
 from antismash.common.secmet.qualifiers import NRPSPKSQualifier
 
+_UNLABLED_DOMAINS = set([
+    "PCP",
+    "ACP",
+    "ACP_beta",
+    "ACPS",
+    "NRPS-COM_Nterm",
+    "NRPS-COM_Cterm",
+    "PKS_Docking_Nterm",
+    "PKS_Docking_Cterm",
+    "Trans-AT_docking",
+    "Polyketide_cyc",
+    "Polyketide_cyc2",
+    "TIGR01720",
+    "TIGR02353",
+])
+_ABBREVIATED_DOMAINS = {
+    "AMP-binding": "A",
+    "A-OX": "A-OX",
+    "Cglyc": "C",
+    "Condensation_DCL": "C",
+    "Condensation_LCL": "C",
+    "Condensation_Starter": "C",
+    "Condensation_Dual": "C",
+    "Heterocyclization": "C",
+    "Epimerization": "E",
+    "Thioesterase": "TE",
+    "PKS_KS": "KS",
+    "PKS_AT": "AT",
+    "PKS_KR": "KR",
+    "PKS_DH": "DH",
+    "PKS_DH2": "DH",
+    "PKS_DHt": "DHt",
+    "PKS_ER": "ER",
+}
+_CLASS_BY_ABBREVIATION = {
+    "A": "adenylation",
+    "A-OX": "adenylation",
+    "AT": "acyltransferase",
+    "C": "condensation",
+    "E": "epimerase",
+    "TD": "terminal",
+    "TE": "terminal",
+    "KS": "ketosynthase",
+    "KR": "mod-kr",
+    "DH": "mod-dh",
+    "DHt": "mod-dh",
+    "ER": "mod-er",
+}
+_CLASS_BY_NAME = {
+    "PCP": "transport",
+    "ACP": "transport",
+    "ACP_beta": "transport",
+    "ACPS": "transport",
+    "PP-binding": "transport",
+    "NRPS-COM_Nterm": "docking",
+    "NRPS-COM_Cterm": "docking",
+    "PKS_Docking_Nterm": "docking",
+    "PKS_Docking_Cterm": "docking",
+    "Trans-AT_docking": "docking",
+    "TD": "terminal",
+}
+
 
 def will_handle(products: List[str]) -> bool:
     """ Returns true if one or more relevant products are present """
     return bool(set(products).intersection({"NRPS", "T1PKS", "T2PKS", "transAT-PKS",
                                             "NRPS-like", "PKS-like"}))
+
+
+def _get_domain_abbreviation(domain_name: str) -> str:
+    """ Convert full domain name to abbreviation (if any) for HTML display) """
+    if domain_name in _UNLABLED_DOMAINS:
+        return ""
+    return _ABBREVIATED_DOMAINS.get(domain_name, domain_name.split("_", 1)[0])
+
+
+def _get_domain_class(abbreviation: str, domain_name: str) -> str:
+    """ Convert full abbreviation (if any) or domain name to an HTML class for styling) """
+    if abbreviation:
+        res = _CLASS_BY_ABBREVIATION.get(abbreviation, "other")
+    else:
+        res = _CLASS_BY_NAME.get(domain_name, "other")
+    return "jsdomain-%s" % res
 
 
 def _parse_domain(record: Record, domain: NRPSPKSQualifier.Domain,
@@ -55,7 +133,9 @@ def _parse_domain(record: Record, domain: NRPSPKSQualifier.Domain,
                  "&amp;LINK_LOC=protein&amp;PAGE_TYPE=BlastSearch").format(domainseq)
 
     dna_sequence = feature.extract(record.seq)
-    return JSONDomain(domain, predictions, napdoslink, blastlink, domainseq, dna_sequence)
+    abbreviation = _get_domain_abbreviation(domain.name)
+    return JSONDomain(domain, predictions, napdoslink, blastlink, domainseq, dna_sequence,
+                      abbreviation, _get_domain_class(abbreviation, domain.name))
 
 
 def generate_js_domains(region: Region, record: Record) -> Dict[str, Union[str, List[JSONOrf]]]:

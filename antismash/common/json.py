@@ -34,9 +34,10 @@ class JSONBase(dict):
 class JSONDomain(JSONBase):
     """ A JSON-serialisable object for simplifying domain datatypes throughout this file """
     def __init__(self, domain: NRPSPKSQualifier.Domain, predictions: List[Tuple[str, str]], napdos_link: str,
-                 blast_link: str, sequence: str, dna: str) -> None:
+                 blast_link: str, sequence: str, dna: str, abbreviation: str, html_class: str) -> None:
         super().__init__(['type', 'start', 'end', 'predictions', 'napdoslink',
-                          'blastlink', 'sequence', 'dna_sequence'])
+                          'blastlink', 'sequence', 'dna_sequence', 'abbreviation',
+                          'html_class'])
         self.type = str(domain.full_type)
         self.start = int(domain.start)
         self.end = int(domain.end)
@@ -45,6 +46,8 @@ class JSONDomain(JSONBase):
         self.blastlink = str(blast_link)
         self.sequence = str(sequence)
         self.dna_sequence = str(dna)
+        self.abbreviation = str(abbreviation)
+        self.html_class = str(html_class)
 
 
 class JSONOrf(JSONBase):
