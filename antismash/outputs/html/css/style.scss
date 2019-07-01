@@ -758,6 +758,58 @@ table.region-table {
     pointer-events: none;
 }
 
+.jsdomain-adenylation {
+    stroke: rgb(87,22,128);
+    fill: rgb(188,127,245);
+}
+.jsdomain-transport {
+    stroke: rgb(11,78,199);
+    fill: rgb(129,190,247);
+}
+.jsdomain-condensation {
+    stroke: rgb(59,59,140);
+    fill: rgb(129,129,247);
+}
+.jsdomain-epimerase {
+    @extend .jsdomain-condensation;
+}
+.jsdomain-docking {
+    stroke: rgb(71,71,159);
+    fill: rgb(128,128,245);
+}
+.jsdomain-terminal {
+    stroke: rgb(119,3,116);
+    fill: rgb(245,196,242);
+}
+.jsdomain-ketosynthase {
+    stroke: rgb(9,179,9);
+    fill: rgb(129,247,129);
+}
+.jsdomain-acyltransferase {
+    stroke: rgb(221,6,6);
+    fill: rgb(247,129,129);
+}
+.jsdomain-mod-kr {
+    stroke: rgb(10,160,76);
+    fill: rgb(128,246,128);
+}
+.jsdomain-mod-dh {
+    stroke: rgb(186,103,15);
+    fill: rgb(247,190,129);
+}
+.jsdomain-mod-er {
+    stroke: rgb(12,161,137);
+    fill: rgb(129,247,243);
+}
+.jsdomain-mod-kr {
+    stroke: rgb(10,160,76);
+    fill: rgb(128,246,128);
+}
+.jsdomain-other {
+    stroke: rgb(147,147,147);
+    fill: rgb(218,218,218);
+}
+
 .clusterblast-locustag {
     @extend .serif;
     fill: $antismash-main;
