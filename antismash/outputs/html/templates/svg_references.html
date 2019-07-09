@@ -1,0 +1,20 @@
+{#- This SVG contains items referred to by elements within other SVGs on the page.
+    Required instead of referring to standalone SVGs in images/ because neither
+    Chrome nor Edge (pre-chromium) will render those.
+-#}
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <defs>
+  {# used by NRPS/PKS module lid constructs -#}
+  <filter id="inset-shadow">
+   <feOffset dx="-2" dy="-2"></feOffset>
+   <feGaussianBlur result="offset-blur" stdDeviation="2"></feGaussianBlur>
+   <feComposite operator="out" in="SourceGraphic" in2="offset-blur" result="inverse"></feComposite>
+   <feFlood flood-color="black" result="color" flood-opacity="1"></feFlood>
+   <feComposite operator="in" in="color" in2="inverse" result="shadow"></feComposite>
+   <feComponentTransfer in="shadow" result="shadow">
+    <feFuncA type="linear" slope=".95"></feFuncA>
+   </feComponentTransfer>
+   <feComposite operator="over" in="shadow" in2="SourceGraphic"></feComposite>
+  </filter>
+ </defs>
+</svg>

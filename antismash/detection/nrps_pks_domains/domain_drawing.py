@@ -12,7 +12,7 @@ from typing import Dict, List, Union
 
 from antismash.common import path
 from antismash.common.html_renderer import FileTemplate, HTMLSections
-from antismash.common.json import JSONDomain, JSONOrf
+from antismash.common.json import JSONDomain, JSONOrf, JSONModule
 from antismash.common.layers import RegionLayer, RecordLayer, OptionsLayer
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import CDSFeature, Record, Region
@@ -152,6 +152,15 @@ def generate_js_domains(region: Region, record: Record) -> Dict[str, Union[str, 
         js_orf = JSONOrf(feature)
         for domain in feature.nrps_pks.domains:
             js_orf.add_domain(_parse_domain(record, domain, feature))
+
+        for module in feature.modules:
+            monomer = ""
+            if module.monomers:
+                monomer = module.monomers[0][1]
+            js_module = JSONModule(module.protein_location.start, module.protein_location.end,
+                                   module.is_complete(), module.is_iterative(), monomer)
+            js_orf.add_module(js_module)
+
         orfs.append(js_orf)
 
     return {'id': RegionLayer.build_anchor_id(region),
@@ -166,14 +175,28 @@ def has_domain_details(region: Union[Region, RegionLayer]) -> bool:
     return False
 
 
+def domains_have_predictions(region: Union[Region, RegionLayer]) -> bool:
+    """ Returns True if any domain in the region has a prediction made for it """
+    for feature in region.cds_children:
+        for domain in feature.nrps_pks.domains:
+            if "consensus" in domain.predictions:
+                return True
+    return False
+
+
 def generate_html(region_layer: RegionLayer, _results: ModuleResults,
                   _record_layer: RecordLayer, options_layer: OptionsLayer
                   ) -> HTMLSections:
     """ Generate the details section of NRPS/PKS domains in the main HTML output """
     template = FileTemplate(path.get_full_path(__file__, 'templates', 'details.html'))
-    section = template.render(has_domain_details=has_domain_details, region=region_layer,
-                              docs_url=options_layer.urls.docs_baseurl)
     html = HTMLSections("nrps_pks")
-    if has_domain_details(region_layer):
-        html.add_detail_section("NRPS/PKS domains", section)
+    if not has_domain_details(region_layer):
+        return html
+
+    # hide lids by default if none have predictions (e.g. in a minimal run)
+    hide_lids = not domains_have_predictions(region_layer)
+
+    section = template.render(has_domain_details=has_domain_details, region=region_layer,
+                              docs_url=options_layer.urls.docs_baseurl, hide_lids=hide_lids)
+    html.add_detail_section("NRPS/PKS domains", section)
     return html

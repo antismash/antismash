@@ -103,14 +103,14 @@ def convert_cds_features(record: Record, features: Iterable[CDSFeature], options
         mibig_hits = []  # type: List[clusterblast.results.MibigEntry]
         mibig_hits = mibig_entries.get(feature.get_name(), [])
         description = get_description(record, feature, str(gene_function), options, mibig_hits)
-        js_orfs.append({"start": feature.location.start + 1,
-                        "end": feature.location.end,
-                        "strand": feature.strand or 1,
-                        "locus_tag": feature.get_name(),
-                        "type": str(gene_function),
-                        "description": description})
-        if feature.gene_functions.get_by_tool("resist"):  # don't add to every gene for size reasons
-            js_orfs[-1]["resistance"] = True
+        js_orfs.append({
+            "start": feature.location.start + 1,
+            "end": feature.location.end,
+            "strand": feature.strand or 1,
+            "locus_tag": feature.get_name(),
+            "type": str(gene_function),
+            "description": description,
+        })
     return js_orfs
 
 

@@ -12,7 +12,7 @@ from antismash.common import path, subprocessing, utils
 from antismash.common.secmet import CDSFeature, Record
 
 from .html_output import will_handle
-from .results import CandidateClusterPrediction
+from .results import CandidateClusterPrediction, modify_substrate
 
 
 def analyse_biosynthetic_order(nrps_pks_features: List[CDSFeature],
@@ -113,13 +113,19 @@ def generate_substrates_order(geneorder: List[CDSFeature], consensus_predictions
     predictions = []
 
     for gene in geneorder:
-        consensuses = []
-        for domain in gene.nrps_pks.domains:
-            consensus = consensus_predictions.get(domain.feature_name)
-            if consensus:
-                consensuses.append(consensus)
-        if consensuses:
-            predictions.append("(%s)" % (" - ".join(consensuses)))
+        gene_monomers = []
+        for module in gene.modules:
+            if not module.is_complete():
+                continue
+            substrate = ""
+            for domain in module.domains:
+                consensus = consensus_predictions.get(domain.get_name())
+                if consensus:
+                    substrate = consensus
+                    break
+            gene_monomers.append(modify_substrate(module, substrate))
+        if gene_monomers:
+            predictions.append("(%s)" % (" - ".join(gene_monomers)))
 
     if not predictions:
         return ""
