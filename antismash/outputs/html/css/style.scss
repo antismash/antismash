@@ -740,6 +740,7 @@ table.region-table {
 
 .details-svg {
     margin: 0 2%;
+    margin-top: 2px;
 }
 
 .jsdomain-line {
@@ -757,7 +758,12 @@ table.region-table {
 .jsdomain-text {
     pointer-events: none;
 }
-
+.jsdomain-svg {
+    margin-bottom: -5px;
+}
+.jsdomain-svg-single {
+    margin-bottom: -3px;
+}
 .jsdomain-adenylation {
     stroke: rgb(87,22,128);
     fill: rgb(188,127,245);
