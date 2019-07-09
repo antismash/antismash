@@ -12,7 +12,7 @@ from antismash.common.secmet import Record, CDSFeature, AntismashDomain, Region
 from antismash.config import ConfigType
 
 from .orderfinder import analyse_biosynthetic_order
-from .parsers import calculate_consensus_prediction, modify_monomer_predictions
+from .parsers import calculate_consensus_prediction
 from .results import NRPS_PKS_Results
 from .smiles_generator import gen_smiles_from_pksnrps
 from .substrates import run_pks_substr_spec_predictions
@@ -58,8 +58,6 @@ def specific_analysis(record: Record, results: NRPS_PKS_Results, options: Config
     for method, method_results in pks_results.items():
         results.add_method_results(method, method_results)
     results.consensus, results.consensus_transat = calculate_consensus_prediction(nrps_pks_genes, results.domain_predictions)
-
-    modify_monomer_predictions(nrps_pks_genes, results.consensus)
 
     candidate_cluster_predictions = analyse_biosynthetic_order(nrps_pks_genes, results.consensus, record)
     for prediction in candidate_cluster_predictions:

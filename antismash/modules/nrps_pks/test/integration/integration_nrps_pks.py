@@ -71,16 +71,15 @@ class IntegrationNRPSPKS(unittest.TestCase):
         assert len(cal.predictions) == 5
         assert cal.predictions[0] == ["AHBA", 167.0]
 
-
         assert len(results.region_predictions[1]) == 2
         # as does this, though it still won't use domain docking
         pred = results.region_predictions[1][0]
-        monomers = '(leu - bht - asn) + (hpg - hpg - bht) + (dhpg) + (tyr) + (pk)'
+        monomers = '(leu - D-bht - asn) + (D-hpg - D-hpg - bht) + (dhpg) + (tyr)'
         assert pred.polymer == monomers
         assert not pred.domain_docking_used
 
         pred = results.region_predictions[1][1]
-        assert pred.polymer == "(tyr) + (pk)"
+        assert pred.polymer == "(tyr)"
         assert not pred.domain_docking_used
 
     def test_cp002271_c19(self):
@@ -90,17 +89,17 @@ class IntegrationNRPSPKS(unittest.TestCase):
         pred = results.domain_predictions["nrpspksdomains_STAUR_3982_PKS_AT.1"]
         assert pred["signature"].predictions[0][1].score == 87.5
         # ensure all genes are present and have the right consensus
-        assert results.consensus == {'nrpspksdomains_STAUR_3982_PKS_AT.1': 'ohmmal',
-                                     'nrpspksdomains_STAUR_3983_PKS_AT.1': 'ccmmal',
-                                     'nrpspksdomains_STAUR_3984_PKS_AT.1': 'ccmmal',
+        assert results.consensus == {'nrpspksdomains_STAUR_3982_PKS_AT.1': 'mmal',
+                                     'nrpspksdomains_STAUR_3983_PKS_AT.1': 'mmal',
+                                     'nrpspksdomains_STAUR_3984_PKS_AT.1': 'mmal',
                                      'nrpspksdomains_STAUR_3985_PKS_AT.1': 'pk',
-                                     'nrpspksdomains_STAUR_3985_PKS_AT.2': 'ccmmal'}
+                                     'nrpspksdomains_STAUR_3985_PKS_AT.2': 'mmal'}
         assert len(results.region_predictions) == 1
         assert list(results.region_predictions) == [1]
         assert len(results.region_predictions[1]) == 1
         # check the gene ordering and, in this case, that it used domain docking
         sc_pred = results.region_predictions[1][0]
-        assert sc_pred.polymer == '(ccmmal) + (ccmmal) + (pk - ccmmal) + (ohmmal)'
+        assert sc_pred.polymer == '(Me-ccmal) + (Me-ccmal) + (Me-ccmal)'
         assert sc_pred.domain_docking_used
         assert len(results.domain_predictions) == 10
         expected_domains = {'nrpspksdomains_STAUR_3982_PKS_AT.1',

@@ -5,10 +5,11 @@
 
 from collections import defaultdict
 import logging
-from typing import Any, Dict, List, Optional  # pylint: disable=unused-import
+from typing import Any, Dict, Optional
+from typing import List  # comment hint, pylint: disable=unused-import
 
 from antismash.common.module_results import ModuleResults
-from antismash.common.secmet import Record, AntismashDomain
+from antismash.common.secmet import AntismashDomain, Module, Record
 from antismash.common.secmet.qualifiers import NRPSPKSQualifier
 
 from .parsers import generate_nrps_consensus
@@ -32,6 +33,63 @@ DOMAIN_TYPE_MAPPING = {'Condensation_DCL': 'Condensation',
 
 
 UNKNOWN = "(unknown)"
+
+
+def modify_substrate(module: Module, base: str = "") -> str:  # pylint: disable=too-many-branches
+    """ Builds a monomer including modifications from the given base.
+
+        Arguments:
+            module: the Module holding the relevant domains
+            base: a string of the substate (or an empty string in case of trans-AT)
+
+        Returns:
+            the modified substrate, or an empty string if no appropriate base was
+            given
+    """
+    if not module.is_complete():
+        return ""
+
+    domains = {domain.domain for domain in module.domains}
+
+    if "PKS_KS" in domains and "PKS_AT" not in domains:
+        base = "mal"
+
+    if not base:
+        return ""
+
+    if module.module_type == Module.types.PKS:
+        if "PKS_KR" in domains:
+            conversions = {"mal": "ohmal", "mmal": "ohmmal", "mxmal": "ohmxmal", "emal": "ohemal"}
+            base = conversions.get(base, base)
+
+        if {"PKS_DH", "PKS_DH2", "PKS_DHt"}.intersection(domains):
+            conversions = {"ohmal": "ccmal", "ohmmal": "ccmmal", "ohmxmal": "ccmxmal", "ohemal": "ccemal"}
+            base = conversions.get(base, base)
+
+        if "PKS_ER" in domains:
+            conversions = {"ccmal": "redmal", "ccmmal": "redmmal", "ccmxmal": "redmxmal", "ccemal": "redemal"}
+            base = conversions.get(base, base)
+
+    state = []  # type: List[str]
+    for domain in module.domains:
+        if domain.domain != "MT":
+            continue
+        if domain.domain_subtype == "nMT":
+            state.append("NMe")
+        elif domain.domain_subtype == "cMT":
+            state.append("Me")
+        elif domain.domain_subtype == "oMT":
+            state.append("OMe")
+
+    if base.endswith("mmal"):
+        state.append("Me")
+        base = base.replace("mmal", "mal", 1)
+
+    state.append(base)
+
+    if "Epimerization" in domains:
+        state.insert(0, "D")
+    return "-".join(state)
 
 
 class CandidateClusterPrediction:
@@ -205,3 +263,21 @@ class NRPS_PKS_Results(ModuleResults):
                 if mapping:
                     feature.domain_subtype = domain.name
                     feature.domain = mapping
+
+            for module in cds_feature.modules:
+                if not module.is_complete():
+                    continue
+                substrate = ""
+                for module_domain in module.domains:
+                    consensus = self.consensus.get(module_domain.get_name())
+                    if consensus:
+                        substrate = consensus
+                        break
+                if not substrate:  # probably a trans-AT PKS
+                    domains = {dom.domain for dom in module.domains}
+                    if module.module_type == module.types.PKS and "PKS_AT" not in domains:
+                        substrate = "mal"
+                    else:
+                        raise ValueError("missing substrate in non-transAT module: %s" % module)
+
+                module.add_monomer(substrate, modify_substrate(module, substrate))

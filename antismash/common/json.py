@@ -4,7 +4,7 @@
 """ JSON-friendly classes explicitly for use by the javascript drawing libraries
 """
 
-from typing import Any, Iterator, List, Tuple
+from typing import Any, Dict, Iterator, List, Tuple
 
 from antismash.common.secmet.features import CDSFeature
 from antismash.common.secmet.qualifiers import NRPSPKSQualifier
@@ -50,15 +50,32 @@ class JSONDomain(JSONBase):
         self.html_class = str(html_class)
 
 
+class JSONModule(JSONBase):
+    """ A JSON-serialisable object for simplifying NRPS/PKS module datatypes """
+    def __init__(self, start: int, end: int, complete: bool, iterative: bool, monomer: str) -> None:
+        super().__init__(["start", "end", "complete", "iterative", "monomer"])
+        self.start = start
+        self.end = end
+        self.complete = complete
+        self.iterative = iterative
+        self.monomer = monomer
+
+
 class JSONOrf(JSONBase):
     """ A JSON-serialisable object for simplifying ORF datatypes throughout this file """
     def __init__(self, feature: CDSFeature) -> None:
-        super().__init__(['id', 'sequence', 'domains'])
+        super().__init__(["id", "sequence", "domains", "modules"])
         self.sequence = feature.translation
         self.id = feature.get_name()
         self.domains = []  # type: List[JSONDomain]
+        self.modules = []  # type: List[JSONModule]
 
     def add_domain(self, domain: JSONDomain) -> None:
         """ Add a JSONDomain to the list of domains in this ORF """
         assert isinstance(domain, JSONDomain)
         self.domains.append(domain)
+
+    def add_module(self, module: JSONModule) -> None:
+        """ Add a JSONModule to the list of modules contained by this ORF """
+        assert isinstance(module, JSONModule)
+        self.modules.append(module)

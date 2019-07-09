@@ -13,30 +13,43 @@ from antismash.common import module_results, path, subprocessing, utils
 from antismash.common.fasta import get_fasta_from_features
 from antismash.common.hmmscan_refinement import refine_hmmscan_results, HMMResult
 from antismash.common.secmet.record import Record
-from antismash.common.secmet.features import AntismashDomain, CDSFeature, CDSMotif
+from antismash.common.secmet.features import AntismashDomain, CDSFeature, CDSMotif, Module as ModuleFeature
 from antismash.common.secmet.locations import FeatureLocation
+
+from .module_identification import build_modules_for_cds, Module
 
 
 class CDSResult:
     """ Stores and enables reconstruction of all results for a single CDS """
     def __init__(self, domain_hmms: List[HMMResult], motif_hmms: List[HMMResult],
-                 feature_type: str) -> None:
+                 feature_type: str, modules: List[Module], ks_subtypes: List[str]) -> None:
         self.domain_hmms = domain_hmms
         self.motif_hmms = motif_hmms
         self.type = feature_type
+        self.modules = modules
+        self.ks_subtypes = ks_subtypes
+        self.domain_features = {}  # type: Dict[HMMResult, AntismashDomain]
+        if len(ks_subtypes) != sum(dom.hit_id == "PKS_KS" for dom in self.domain_hmms):
+            raise ValueError("mismatching KS subtypes and PKS_KS counts: %d  %d" % (
+                    len(ks_subtypes), len([dom.hit_id == "PKS_KS" for dom in self.domain_hmms])))
 
     def to_json(self) -> Dict[str, Any]:
         """ Create a JSON representation """
-        return {"domain_hmms": [hmm.to_json() for hmm in self.domain_hmms],
-                "motif_hmms": [hmm.to_json() for hmm in self.motif_hmms],
-                "type": self.type}
+        return {
+            "domain_hmms": [hmm.to_json() for hmm in self.domain_hmms],
+            "motif_hmms": [hmm.to_json() for hmm in self.motif_hmms],
+            "modules": [module.to_json() for module in self.modules],
+            "type": self.type,
+            "ks_subtypes": self.ks_subtypes,
+        }
 
     @staticmethod
     def from_json(data: Dict[str, Any]) -> "CDSResult":
         """ Reconstruct from a JSON representation """
         domain_hmms = [HMMResult.from_json(hmm) for hmm in data["domain_hmms"]]
         motif_hmms = [HMMResult.from_json(hmm) for hmm in data["motif_hmms"]]
-        return CDSResult(domain_hmms, motif_hmms, data["type"])
+        modules = [Module.from_json(module) for module in data["modules"]]
+        return CDSResult(domain_hmms, motif_hmms, data["type"], modules, data["ks_subtypes"])
 
     def annotate_domains(self, record: Record, cds: CDSFeature) -> None:
         """ Adds domain annotations to CDSFeatures and creates AntismashDomain
@@ -48,11 +61,16 @@ class CDSResult:
         cds.nrps_pks.type = self.type
 
         # generate AntismashDomain features
-        domain_features = generate_domain_features(cds, self.domain_hmms)
-        for domain, domain_feature in domain_features.items():
+        self.domain_features = generate_domain_features(cds, self.domain_hmms)
+        ks_sub = iter(self.ks_subtypes)
+        for domain, domain_feature in self.domain_features.items():
+            if domain.hit_id == "PKS_KS":
+                sub = next(ks_sub)
+            else:
+                sub = ""
             record.add_antismash_domain(domain_feature)
             # update the CDS' NRPS_PKS qualifier
-            cds.nrps_pks.add_domain(domain, domain_feature.get_name())
+            cds.nrps_pks.add_domain(domain, domain_feature.get_name(), sub)
 
         # construct CDSMotif features
         if not self.motif_hmms:
@@ -67,7 +85,7 @@ class CDSResult:
 
 class NRPSPKSDomains(module_results.DetectionResults):
     """ Results tracking for NRPS and PKS domains """
-    schema_version = 1
+    schema_version = 2
 
     def __init__(self, record_id: str, cds_results: Dict[CDSFeature, CDSResult] = None) -> None:
         super().__init__(record_id)
@@ -79,6 +97,21 @@ class NRPSPKSDomains(module_results.DetectionResults):
         return {"cds_results": {cds.get_name(): cds_result.to_json() for cds, cds_result in self.cds_results.items()},
                 "schema_version": NRPSPKSDomains.schema_version,
                 "record_id": self.record_id}
+
+    def add_to_record(self, record: Record) -> None:
+        for result in self.cds_results.values():
+            for module in result.modules:
+                domains = [result.domain_features[component.domain] for component in module]
+                mod_type = ModuleFeature.types.UNKNOWN
+                if module.is_nrps():
+                    mod_type = ModuleFeature.types.NRPS
+                elif module.is_pks():
+                    mod_type = ModuleFeature.types.PKS
+                feature = ModuleFeature(domains, mod_type, complete=module.is_complete(),
+                                        starter=module.is_starter_module(),
+                                        final=module.is_termination_module(),
+                                        iterative=module.is_iterative())
+                record.add_module(feature)
 
     @staticmethod
     def from_json(json: Dict[str, Any], record: Record) -> Optional["NRPSPKSDomains"]:
@@ -127,7 +160,9 @@ def generate_domains(record: Record) -> NRPSPKSDomains:
             continue
         domain_type = classify_cds([domain.hit_id for domain in domains],
                                    [domain.hit_id for domain in ks_subtypes.get(cds.get_name(), [])])
-        results.cds_results[cds] = CDSResult(domains, motifs, domain_type)
+        modules = build_modules_for_cds(domains, ks_subtypes.get(cds.get_name(), []))
+        subtype_names = [sub.hit_id for sub in ks_subtypes.get(cds.get_name(), [])]
+        results.cds_results[cds] = CDSResult(domains, motifs, domain_type, modules, subtype_names)
 
     for cds, cds_result in results.cds_results.items():
         cds_result.annotate_domains(record, cds)

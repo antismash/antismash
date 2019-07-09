@@ -547,6 +547,7 @@ class Record:
     def add_module(self, module: Module) -> None:
         """ Add the given Module to the record """
         assert isinstance(module, Module)
+
         parents = set()
         for domain in module.domains:
             if domain.get_name() not in self._domains_by_name:
@@ -560,7 +561,6 @@ class Record:
             if not cds:
                 raise ValueError("domain contained in module refers to missing CDS: %s" % parent)
             cds.add_module(module)
-
         self._modules.append(module)
 
     def clear_modules(self) -> None:

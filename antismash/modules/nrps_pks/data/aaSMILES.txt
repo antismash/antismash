@@ -99,10 +99,10 @@ ohmal CC(O)
 ccmal C=C
 redmal CC
 
-mmal C(C)C(=O)
-ohmmal C(C)C(O)
-ccmmal C(C)=C
-redmmal C(C)C
+Me-mal C(C)C(=O)
+Me-ohmal C(C)C(O)
+Me-ccmal C(C)=C
+Me-redmal C(C)C
 
 mxmal C(OC)C(=O)
 ohmxmal C(OC)C(O)
