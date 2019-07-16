@@ -601,10 +601,6 @@ def run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
             sequence_file: the sequence file to read in records from, can be
                             None if reusing results
             options: command line options
-            detection_modules: None or a list of modules to use for detection,
-                                if None defaults will be used
-            analysis_modules: None or a list of modules to use for analysis,
-                                if None defaults will be used
 
         Returns:
             0 if requested operations completed succesfully, otherwise 1
