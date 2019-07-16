@@ -23,8 +23,7 @@ def generate_html_table(outfile_name: str, mibig_entries: List[MibigEntry]) -> N
         Returns:
             None
     """
-    if not os.path.exists(os.path.dirname(outfile_name)):
-        os.mkdir(os.path.dirname(outfile_name))
+    os.makedirs(os.path.dirname(outfile_name), exist_ok=True)
 
     with open(outfile_name, 'w') as handle:
         env = Environment(autoescape=True, undefined=StrictUndefined,
