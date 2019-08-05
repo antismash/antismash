@@ -178,16 +178,17 @@ class GeneFunctionAnnotations:
         # if any CORE function set, use that
         if self._by_function.get(GeneFunction.CORE):
             return GeneFunction.CORE
-        # then priority for resfam, then smcogs
-        annotations = self._by_tool.get("resfam", self._by_tool.get("smcogs"))
-        if annotations:
+        # then priority for smcogs
+        annotations = self._by_tool.get("smcogs")
+        # but only if not OTHER
+        if annotations and annotations[0].function != GeneFunction.OTHER:
             return annotations[0].function
         # otherwise check all agree
-        function = self._annotations[0].function
-        for annotation in self._annotations[1:]:
-            if annotation.function != function:
-                return GeneFunction.OTHER
-        return function
+        functions = {note.function for note in self._annotations if note.tool != "smcogs"}
+        if len(functions) == 1:
+            return functions.pop()
+        # if they don't, default to other
+        return GeneFunction.OTHER
 
     def clear(self) -> None:
         """ Removes all gene functions from the annotation """

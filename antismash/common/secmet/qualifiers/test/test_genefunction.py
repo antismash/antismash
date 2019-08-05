@@ -7,7 +7,7 @@
 import unittest
 
 from ...features import CDSFeature, FeatureLocation
-from ..gene_functions import GeneFunction
+from ..gene_functions import GeneFunction, GeneFunctionAnnotations
 
 
 class TestGeneFunction(unittest.TestCase):
@@ -62,6 +62,16 @@ class TestGeneFunction(unittest.TestCase):
         adds = cds.gene_functions.get_by_function(GeneFunction.ADDITIONAL)
         assert len(adds) == 1
         assert adds[0].tool == "first_tool"
+
+    def test_function_with_only_smcogs_other(self):
+        # if not core or smcogs is OTHER, other tools should be used if they exist
+        # but if the others don't exist it should be OTHER
+        functions = GeneFunctionAnnotations()
+        assert functions.get_classification() == GeneFunction.OTHER
+        functions.add(GeneFunction.OTHER, "smcogs", "desc")
+        assert functions.get_classification() == GeneFunction.OTHER
+        functions.add(GeneFunction.TRANSPORT, "somethingelse", "desc")
+        assert functions.get_classification() == GeneFunction.TRANSPORT
 
     def test_cds_function_conversion(self):
         cds = CDSFeature(FeatureLocation(1, 5, 1), locus_tag="foo", translation="A")
