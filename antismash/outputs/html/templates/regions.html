@@ -37,10 +37,19 @@
         {{le.legend('legend-type-biosynthetic-additional', 'additional biosynthetic genes')}}
         {{le.legend('legend-type-transport', 'transport-related genes')}}
         {{le.legend('legend-type-regulatory', 'regulatory genes')}}
-        {{le.legend('legend-type-resistance', 'resistance genes')}}
         {{le.legend('legend-type-other', 'other genes')}}
+        <div style="margin-right: 2em;"></div>
+        {% call le.symbol_legend('legend-resistance', 'resistance') %}
+            <svg viewbox="0 0 8 8">
+                <rect x=0 y=2 height=4 width=8 class="svgene-resistance"></rect>
+            </svg>
+        {% endcall %}
         {% if (options.tta_enabled or not options.minimal) and record.get_gc_content() >= options.tta_threshold %}
-            {{le.legend('legend-tta-codon', 'TTA codons')}}
+            {% call le.symbol_legend('legend-tta-codon', 'TTA codons') %}
+                <svg viewbox="0 0 6 6">
+                    <polyline class="svgene-tta-codon" points="3,0 0,6 6,6 3,0"></rect>
+                </svg>
+            {% endcall %}
         {% endif %}
         {% if region.has_subregion_by_tool("cassis") %}
             {{le.static_legend('legend-border-cassis', 'cluster extent as predicted by CASSIS')}}
