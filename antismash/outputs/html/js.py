@@ -12,6 +12,7 @@ from typing import Set  # comment hints, # pylint: disable=unused-import
 from antismash.common import html_renderer, path
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import CDSFeature, Feature, Record, Region, CandidateCluster, SubRegion
+from antismash.common.secmet.qualifiers.gene_functions import GeneFunction
 from antismash.common.secmet import Protocluster  # comment hints, # pylint: disable=unused-import
 from antismash.common.secmet.features.cdscollection import CDSCollection
 from antismash.config import ConfigType
@@ -95,16 +96,21 @@ def convert_cds_features(record: Record, features: Iterable[CDSFeature], options
     """ Convert CDSFeatures to JSON """
     js_orfs = []
     for feature in features:
-        gene_function = str(feature.gene_function)
+        gene_function = feature.gene_function
+        # resistance genes have special markers, not just a colouring, so revert to OTHER
+        if gene_function == GeneFunction.RESISTANCE:
+            gene_function = GeneFunction.OTHER
         mibig_hits = []  # type: List[clusterblast.results.MibigEntry]
         mibig_hits = mibig_entries.get(feature.get_name(), [])
-        description = get_description(record, feature, gene_function, options, mibig_hits)
+        description = get_description(record, feature, str(gene_function), options, mibig_hits)
         js_orfs.append({"start": feature.location.start + 1,
                         "end": feature.location.end,
                         "strand": feature.strand or 1,
                         "locus_tag": feature.get_name(),
-                        "type": gene_function,
+                        "type": str(gene_function),
                         "description": description})
+        if feature.gene_functions.get_by_tool("resist"):  # don't add to every gene for size reasons
+            js_orfs[-1]["resistance"] = True
     return js_orfs
 
 
