@@ -691,11 +691,15 @@ table.region-table {
     @include left-padding;
 }
 
-.legend-field {
+.legend-symbol {
     float: left;
     width: 1em;
     height: 1em;
     margin-right: 0.25em;
+}
+
+.legend-field {
+    @extend .legend-symbol;
     border: 1px solid black;
 }
 
