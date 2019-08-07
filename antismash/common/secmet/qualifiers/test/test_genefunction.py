@@ -80,3 +80,17 @@ class TestGeneFunction(unittest.TestCase):
         cds.gene_functions.add(GeneFunction.ADDITIONAL, "tool", "desc")
         assert cds.gene_function == GeneFunction.ADDITIONAL
         assert CDSFeature.from_biopython(cds.to_biopython()[0]).gene_function == GeneFunction.ADDITIONAL
+
+    def test_qualifier_string_conversion(self):
+        functions = GeneFunctionAnnotations()
+        functions.add(GeneFunction.OTHER, "tool", "desc")
+        functions.add(GeneFunction.TRANSPORT, "somethingelse", "extra description", "prod")
+        annotations = list(map(str, functions))
+
+        regenerated_functions = GeneFunctionAnnotations()
+        regenerated_functions.add_from_qualifier(annotations)
+        for orig, new in zip(functions, regenerated_functions):
+            assert orig.function == new.function
+            assert orig.tool == new.tool
+            assert orig.description == new.description
+            assert orig.product == new.product
