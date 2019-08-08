@@ -1,69 +1,18 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
-""" Classes and helpers for candidate cluster features
-
-CandidateClusters contain one or more Protocluster features.
-
-There are four kinds of candidate cluster:
-    - chemical hybrid:
-        contains clusters which share Cluster-defining CDSFeatures, will also
-        include clusters within that shared range that do not share a CDS provided
-        that they are completely contained within the candidate cluster border,
-        e.g.
-            ---##A###############C#---   <- Cluster 1 with definition CDSes A and C
-             --##A##--                   <- Cluster 2 with definition CDS A
-                      --#B#--            <- Cluster 3 with definition CDS B
-                              --#C#--    <- Cluster 4 with definition CDS C
-                                   -#D#- <- Cluster 5 with definition CDS D
-            Since clusters 1 and 2 share a CDS that defines those clusters, a
-            chemical hybrid candidate cluster exists. Clusters 1 and 4 also share a
-            defining CDS, so the hybrid candidate cluster now contains clusters 1, 2 and 4.
-
-            Cluster 3 does not share a defining CDS with either cluster 1, 2 or 4,
-            but because it is interleaved into a chemical hybrid it is included
-            under the assumption that it is relevant to the other clusters.
-      NOTE: This may change so that there is also an 'interleaved' candidate cluster,
-            where the only difference between the interleaved and the hybrid is
-            that Cluster 3 would contribute it's product to the interleaved and
-            not the hybrid.
-    - interleaved:
-        contains clusters which do not share Cluster-defining CDS features, but
-        their core locations overlap,
-        e.g.
-            ---#A###A###A---      <- Cluster 1 with defining CDSes marked A
-               ---B##B####B---    <- Cluster 2 with defining CDSes marked B
-                      ---C###C--- <- Cluster 3 with defining CDSes marked C
-            Since none of the clusters share any defining CDS with any other cluster,
-            it is not a chemical hybrid. All three clusters would be part of an
-            interleaved candidate cluster, since A overlaps with B and B overlaps with C.
-    - neighbouring:
-        contains clusters which transitively overlap in their neighbourhoods
-        (the '-' sections in the examples above). In the chemical hybrid example,
-        as all clusters overlap in some way, all 5 would be part of a neighbouring
-        candidate cluster (with clusters 1-4 also being part of a hybrid candidate cluster).
-        Every cluster in a 'neighbouring' cluster will also belong to one of the
-        other kinds of candidate cluster.
-    - single:
-        the kind for all candidate clusters where only one cluster is contained,
-        only exists for consistency of access. A 'single' candidate cluster will not
-        exist for a cluster which is contained in either a chemical hybrid or
-        an interleaved candidate cluster. In the chemical hybrid example, only cluster 5
-        would be in a 'single' candidate cluster as well as in the 'neighbouring' candidate cluster
-
-"""
+""" Contains the classes required for candidate clusters """
 
 from collections import OrderedDict
 from enum import Enum, unique
 from typing import Any, Dict, List, Optional, Tuple
-from typing import Set  # comment hint, pylint: disable=unused-import
 
 from Bio.SeqFeature import SeqFeature
 
-from .cdscollection import CDSCollection
-from .protocluster import Protocluster
-from .feature import FeatureLocation, Feature
-from ..locations import locations_overlap, combine_locations
+from ..cdscollection import CDSCollection
+from ..protocluster import Protocluster
+from ..feature import FeatureLocation, Feature
+from ...locations import combine_locations
 
 
 @unique
@@ -142,7 +91,7 @@ class CandidateCluster(CDSCollection):
     def __init__(self, kind: CandidateClusterKind, protoclusters: List[Protocluster],
                  smiles: str = None, polymer: str = None) -> None:
         if not protoclusters:
-            raise ValueError("A CandidateCluster cannot exist without at least one Cluster")
+            raise ValueError("A CandidateCluster cannot exist without at least one Protocluster")
         for protocluster in protoclusters:
             assert isinstance(protocluster, Protocluster), type(protocluster)
         if not isinstance(kind, CandidateClusterKind):
@@ -242,102 +191,3 @@ class CandidateCluster(CDSCollection):
         edge = leftovers.pop("contig_edge", [None])[0] == "True"
         return TemporaryCandidateCluster(bio_feature.location, kind, children, products,
                                          rules, own_number, edge, smiles, polymer)
-
-
-def create_candidates_from_protoclusters(protoclusters: List[Protocluster]) -> List[CandidateCluster]:
-    """ Constructs CandidateCluster features from a collection of Protocluster features
-
-        CandidateClusters created may overlap if they are of different kinds.
-
-        Chemical hybrid CandidateClusters may also contain one or more Protoclusters that
-        do not share a Protocluster-defining CDS with the others, provided that the
-        Protocluster(s) are fully contained within the area covered by other Protoclusters
-        that do shared defining CDS features.
-
-        Arguments:
-            clusters: a list of Protoluster features
-
-        Returns:
-            a list of CandidateCluster features
-    """
-    if not protoclusters:
-        return []
-
-    # the implicit sort is ignored here as the cluster core location is important
-    clusters = sorted(protoclusters, key=lambda x: (x.core_location.start, -len(x.core_location)))
-
-    hybrid_area = clusters[0].core_location
-    core_area = clusters[0].core_location
-    neighbour_area = clusters[0].location
-    # a chemical hybrid and a core overlap cannot have the same location
-    # as the end point would need to use the same CDS, so a single set here is fine
-    existing_locations = set()  # type: Set[Tuple[int, int]]
-    hybrid_cores = set(clusters[0].definition_cdses)
-    hybrid_clusters = [clusters[0]]
-    core_clusters = [clusters[0]]
-    neighbouring_clusters = [clusters[0]]
-
-    # avoid creating singles for any cluster in a hybrid/overlap combo
-    clusters_in_hybrids_and_overlaps = set()  # type: Set[Protocluster]
-
-    candidate_clusters = []
-
-    def finalise_hybrid() -> None:
-        """ Construct a chemical hybrid cluster if unique location and multiple clusters """
-        if len(hybrid_clusters) == 1:
-            return
-        candidate_cluster = CandidateCluster(CandidateClusterKind.CHEMICAL_HYBRID, hybrid_clusters)
-        if (candidate_cluster.location.start, candidate_cluster.location.end) in existing_locations:
-            return
-        existing_locations.add((candidate_cluster.location.start, candidate_cluster.location.end))
-        candidate_clusters.append(candidate_cluster)
-
-    def finalise_nonhybrid(kind: CandidateClusterKind, clusters: List[Protocluster]) -> None:
-        """ Construct a non-hybrid cluster if unique location
-            and not a single cluster already in a hybrid or interleaved candidate cluster
-        """
-        if len(clusters) == 1:
-            kind = CandidateClusterKind.SINGLE
-            if clusters[0] in clusters_in_hybrids_and_overlaps:
-                return
-        candidate_cluster = CandidateCluster(kind, clusters)
-        if (candidate_cluster.location.start, candidate_cluster.location.end) in existing_locations:
-            return
-        existing_locations.add((candidate_cluster.location.start, candidate_cluster.location.end))
-        candidate_clusters.append(candidate_cluster)
-
-    for cluster in clusters[1:]:
-        if (locations_overlap(cluster.core_location, hybrid_area)
-                and hybrid_cores.intersection(cluster.definition_cdses)):
-            hybrid_area = combine_locations(cluster.core_location, hybrid_area)
-            hybrid_clusters.append(cluster)
-            hybrid_cores.update(cluster.definition_cdses)
-            clusters_in_hybrids_and_overlaps.add(cluster)
-        else:
-            finalise_hybrid()
-            hybrid_area = cluster.core_location
-            hybrid_clusters = [cluster]
-            hybrid_cores = set(cluster.definition_cdses)
-
-        if locations_overlap(cluster.core_location, core_area):
-            core_area = combine_locations(cluster.core_location, core_area)
-            core_clusters.append(cluster)
-            clusters_in_hybrids_and_overlaps.add(cluster)
-        else:
-            finalise_nonhybrid(CandidateClusterKind.INTERLEAVED, core_clusters)
-            core_area = cluster.core_location
-            core_clusters = [cluster]
-
-        if locations_overlap(cluster.location, neighbour_area):
-            neighbour_area = combine_locations(cluster.location, neighbour_area)
-            neighbouring_clusters.append(cluster)
-        else:
-            finalise_nonhybrid(CandidateClusterKind.NEIGHBOURING, neighbouring_clusters)
-            neighbour_area = cluster.location
-            neighbouring_clusters = [cluster]
-
-    finalise_hybrid()
-    finalise_nonhybrid(CandidateClusterKind.INTERLEAVED, core_clusters)
-    finalise_nonhybrid(CandidateClusterKind.NEIGHBOURING, neighbouring_clusters)
-
-    return sorted(candidate_clusters)
