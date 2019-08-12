@@ -137,7 +137,7 @@ class CandidateCluster(CDSCollection):
     """
     FEATURE_TYPE = "cand_cluster"
     kinds = CandidateClusterKind
-    __slots__ = ["_protoclusters", "_kind", "smiles_structure", "polymer"]
+    __slots__ = ["_protoclusters", "_kind", "_core_location", "smiles_structure", "polymer"]
 
     def __init__(self, kind: CandidateClusterKind, protoclusters: List[Protocluster],
                  smiles: str = None, polymer: str = None) -> None:
@@ -153,6 +153,7 @@ class CandidateCluster(CDSCollection):
         self._kind = kind
         self.smiles_structure = smiles
         self.polymer = polymer
+        self._core_location = None
 
     def __repr__(self) -> str:
         return "CandidateCluster(%s, %s)" % (self.location, self.kind)
@@ -189,6 +190,17 @@ class CandidateCluster(CDSCollection):
         for cluster in self._protoclusters:
             unique_products[cluster.product] = None
         return list(unique_products)
+
+    @property
+    def core_location(self) -> FeatureLocation:
+        """ Returns a FeatureLocation covering the range of child Protocluster
+            core locations
+        """
+        if not self._core_location:
+            first_core = min(proto.core_location.start for proto in self._protoclusters)
+            last_core = max(proto.core_location.end for proto in self._protoclusters)
+            self._core_location = FeatureLocation(first_core, last_core)
+        return self._core_location
 
     def get_product_string(self) -> str:
         """ Returns all unique products from contained clusters in the order
