@@ -115,6 +115,13 @@ class TestCandidateCluster(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Not all referenced clusters are present"):
             regenerated.convert_to_real_feature(self.record)
 
+    def test_core(self):
+        protos = [create_cluster(5, 10, 20, 25, "a"),
+                  create_cluster(30, 40, 50, 60, "b")]
+        cluster = CandidateCluster(CandidateClusterKind.NEIGHBOURING, protos,
+                                   smiles="dummy", polymer="dummy")
+        assert cluster.core_location == FeatureLocation(10, 50)
+
 
 class TestCreation(unittest.TestCase):
     def test_creation_empty(self):
