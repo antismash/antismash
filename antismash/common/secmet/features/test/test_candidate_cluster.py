@@ -122,6 +122,21 @@ class TestCandidateCluster(unittest.TestCase):
                                    smiles="dummy", polymer="dummy")
         assert cluster.core_location == FeatureLocation(10, 50)
 
+    def test_comparison(self):
+        candidate = CandidateCluster(CandidateClusterKind.NEIGHBOURING, [create_cluster(5, 10, 20, 25, "a")])
+        longer = CandidateCluster(CandidateClusterKind.NEIGHBOURING, [create_cluster(5, 10, 40, 45, "a")])
+        after = CandidateCluster(CandidateClusterKind.NEIGHBOURING, [create_cluster(10, 20, 40, 45, "a")])
+
+        def check(first, second):
+            assert first < second
+            assert first < second.location
+            assert sorted([second, first]) == [first, second]
+
+        check(candidate, after)
+        check(longer, candidate)
+        check(longer, after)
+        assert sorted([after, candidate, longer]) == [longer, candidate, after]
+
 
 class TestCreation(unittest.TestCase):
     def test_creation_empty(self):

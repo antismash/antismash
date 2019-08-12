@@ -152,6 +152,23 @@ class TestFeature(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "invalid length"):
             Feature(loc, feature_type="A"*16)
 
+    def test_ordering(self):
+        feature = Feature(FeatureLocation(10, 40), feature_type="test")
+        before = Feature(FeatureLocation(5, 30), feature_type="test")
+        after = Feature(FeatureLocation(20, 40), feature_type="test")
+        longer = Feature(FeatureLocation(10, 70), feature_type="test")
+
+        def check(first, second):
+            assert first < second
+            assert first < second.location
+            assert sorted([second, first]) == [first, second]
+
+        check(before, feature)
+        check(feature, after)
+        check(feature, longer)
+
+        assert sorted([feature, before, after, longer]) == [before, feature, longer, after]
+
 
 class TestLocationAdjustment(unittest.TestCase):
     def setUp(self):
