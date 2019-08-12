@@ -6,7 +6,7 @@
 """
 
 from collections import OrderedDict
-from typing import Any, List, Optional, Sequence, Tuple
+from typing import Any, List, Optional, Sequence, Tuple, Union
 from typing import Dict  # used in comment hints # pylint: disable=unused-import
 
 from Bio.SeqFeature import SeqFeature
@@ -37,16 +37,22 @@ class CDSCollection(Feature):
                 assert isinstance(child, CDSCollection), type(child)
                 child.parent = self
 
-    def __lt__(self, other: "Feature") -> bool:
+    def __lt__(self, other: Union[Feature, FeatureLocation]) -> bool:
         """ Collections differ from other Features in that start ties are
             resolved in the opposite order, from longest to shortest
         """
-        if self.location.start < other.location.start:
+        if isinstance(other, FeatureLocation):
+            location = other
+        else:
+            assert isinstance(other, Feature)
+            location = other.location
+
+        if self.location.start < location.start:
             return True
-        if self.location.start > other.location.start:
+        if self.location.start > location.start:
             return False
         # when starts are equal, sort by largest collection first
-        return self.location.end > other.location.end
+        return self.location.end > location.end
 
     @property
     def parent_record(self) -> Any:  # again, should be Record
