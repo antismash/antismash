@@ -24,6 +24,10 @@ $tool-rule-based-clusters: white;
     user-select: none;
 }
 
+.serif {
+    font-family: "Courier New", serif;
+}
+
 body {
     font-family: Helvetica, Verdana, Tahoma, Sans-Serif;
     color: #555;
@@ -558,9 +562,10 @@ table.region-table {
     stroke: #888;
 }
 .svgene-locustag {
+    @extend .serif;
     fill: $antismash-main;
     display: none;
-    font-size: 80%;
+    font-size: 85%;
 }
 
 .cluster-core {
@@ -742,6 +747,7 @@ table.region-table {
     stroke: #888;
 }
 .jsdomain-orflabel {
+    @extend .serif;
     fill: #444;
 }
 .jsdomain-tooltip {
@@ -753,6 +759,7 @@ table.region-table {
 }
 
 .clusterblast-locustag {
+    @extend .serif;
     fill: $antismash-main;
     display: none;
     font-size: 80%;

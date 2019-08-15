@@ -7,7 +7,7 @@
     <dl class ="prediction-text">
     {% for motifs in results.values() %}
     {%- for motif in motifs -%}
-      <dt>{{motif.get_name()}} - {{motif.peptide_subclass}}</dt>
+      <dt><span class="serif">{{motif.get_name()}}</span> - {{motif.peptide_subclass}}</dt>
         <dd>Cleavage pHMM score: {{'%0.2f' | format(motif.score)}}</dd>
         <dd>RODEO score: {{motif.detailed_information.rodeo_score}}</dd>
         <dd>Monoisotopic mass: {{'%0.1f' | format(motif.monoisotopic_mass)}} Da</dd>
