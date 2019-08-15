@@ -932,6 +932,10 @@ ul.dropdown-options {
         padding-left: 0.5em;
         padding-right: 0.5em;
 
+        /* solve edge single pixel gap */
+        padding-bottom: 1px;
+        margin-bottom: -1px;
+
         border-top-left-radius: 1em;
         border-top-right-radius: 1em;
 
