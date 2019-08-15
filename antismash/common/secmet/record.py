@@ -631,7 +631,7 @@ class Record:
         try:
             ensure_valid_locations(seq_record.features, can_be_circular, len(seq_record.seq))
         except ValueError as err:
-            raise SecmetInvalidInputError(str(err))
+            raise SecmetInvalidInputError("%s: %s" % (seq_record.id, str(err)))
 
         for feature in seq_record.features:
             if feature.ref or feature.ref_db:
