@@ -258,6 +258,8 @@ class ReadableFullPathAction(FullPathAction):
     def __call__(self, parser: argparse.ArgumentParser, namespace: argparse.Namespace,  # type: ignore
                  values: AnyStr, option_string: str = None) -> None:
         path = os.path.abspath(values)
+        if os.path.isdir(path):
+            raise argparse.ArgumentError(self, "%s is a directory" % values)
         if not os.path.isfile(path):
             raise argparse.ArgumentError(self, "%s does not exist" % values)
         if not os.access(path, os.R_OK):
