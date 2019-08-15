@@ -17,6 +17,7 @@ clean:
 	rm -f antismash/modules/clusterblast/data/known/*.dmnd
 	rm -f antismash/modules/clusterblast/test/data/*/*.dmnd
 	rm -f antismash/outputs/html/css/*.css
+	find antismash -name "*.scaler.pkl" -o -name "*.classifier.pkl" -exec rm {} +
 	find . -name "*.h3?" -exec rm {} +
 	find . -name '*.pyc' | xargs rm -f
 	find . -name '__pycache__' | xargs rm -rf
