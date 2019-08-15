@@ -74,8 +74,8 @@ def _translation_fits_in_record(translation_length: int, location: Location,
 def _ensure_valid_translation(translation: str, location: Location, transl_table: int,
                               record: Optional[Any]) -> str:
     """ Ensures that a given translation is valid for the matching location
-        and record (if given). If a record is given and a translation is invalid,
-        an attempt will be made to generate a valid translation.
+        and record (if given). If a record is given and a translation contains
+        invalid characters, an attempt will be made to generate a valid translation.
 
         Arguments:
             translation: the existing translation, if any
