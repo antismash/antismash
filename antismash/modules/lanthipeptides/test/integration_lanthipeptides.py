@@ -57,7 +57,7 @@ class IntegrationLanthipeptides(unittest.TestCase):
 
     def test_nisin(self):
         "Test lanthipeptide prediction for nisin A"
-        expected_html_snippet = "nisA leader / core peptide"
+        expected_html_snippet = "nisA</span> leader / core peptide"
         genbank = helpers.get_path_to_nisin_genbank()
         rec, _ = self.run_lanthi(genbank, expected_html_snippet)
 

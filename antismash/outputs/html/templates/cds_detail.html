@@ -1,12 +1,20 @@
+{%- macro identifier(id) -%}
+    {%- if identifier -%}
+        <span class="serif">{{id}}</span>
+    {%- else -%}
+        {{id}}
+    {%- endif -%}
+{%- endmacro -%}
+
 <div class="focus-intro">
- <strong>{{feature.get_name()}}</strong><br>
+ <strong>{{identifier(feature.get_name())}}</strong><br>
  {% if feature.product and feature.gene != feature.get_name() %}
   {{feature.product}}<br>
  {% endif %}
  <br>
- Locus tag: {{feature.locus_tag}}<br>
- Protein ID: {{feature.protein_id}}<br>
- Gene: {{feature.gene}}<br>
+ Locus tag: {{identifier(feature.locus_tag)}}<br>
+ Protein ID: <span class="serif">{{feature.protein_id}}</span><br>
+ Gene: <span class="serif">{{feature.gene}}</span><br>
  {% if ec_numbers %}
   EC-Number(s): {{ec_numbers}}<br>
  {% endif %}

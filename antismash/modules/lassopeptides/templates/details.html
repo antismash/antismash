@@ -13,7 +13,7 @@
     <hr>
       <dl class="details-text">
         {% for motif in results[locus] %}
-          <dt>{{motif.get_name()}} leader / core peptide / cleaved tail</dt>
+          <dt><span class="serif">{{motif.get_name()}}</span> leader / core peptide / cleaved tail</dt>
           <dd>
             {{ motif.leader }}
             -
