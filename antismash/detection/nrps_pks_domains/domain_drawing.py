@@ -34,6 +34,10 @@ _UNLABLED_DOMAINS = set([
     "TIGR02353",
 ])
 _ABBREVIATED_DOMAINS = {
+    "Aminotran_1_2": "AmT",
+    "Aminotran_3": "AmT",
+    "Aminotran_4": "AmT",
+    "Aminotran_5": "AmT",
     "AMP-binding": "A",
     "A-OX": "A-OX",
     "Cglyc": "C",
