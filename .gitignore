@@ -17,6 +17,8 @@ __pycache__
 antismash/config/instance.cfg
 antismash/detection/hmm_detection/data/bgc_seeds.hmm
 antismash/databases/*
+antismash/modules/*/data/*.classifier.pkl
+antismash/modules/*/data/*.scaler.pkl
 antismash.egg-info/*
 **/.ropeproject/*
 antismash/git_hash
