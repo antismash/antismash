@@ -59,7 +59,7 @@ def load_smiles() -> Dict[str, str]:
 
     for line in smiles_monomer.readlines():
         line = line.strip()
-        if not line or line.startswith('#') or line == "END":
+        if not line or line.startswith('#'):
             continue
         smiles = line.split()
         assert len(smiles) == 2, "Invalid smiles line {!r}".format(line)

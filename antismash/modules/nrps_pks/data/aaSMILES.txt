@@ -157,4 +157,3 @@ Scy Oc1ccccc1C(=O)
 Pip N1[CH]CCCC1C(=O)
 Bmt NC(C(O)C(C)C/C=C/C)C(=O)
 Adds NC(/C=C/C(/C)=C/C(C)C(OC)CCc1ccccc1)C(C)C(=O)
-END
