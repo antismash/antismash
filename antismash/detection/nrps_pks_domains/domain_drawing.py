@@ -74,7 +74,6 @@ _CLASS_BY_NAME = {
     "PCP": "transport",
     "ACP": "transport",
     "ACP_beta": "transport",
-    "ACPS": "transport",
     "PP-binding": "transport",
     "NRPS-COM_Nterm": "docking",
     "NRPS-COM_Cterm": "docking",
