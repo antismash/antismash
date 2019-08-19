@@ -26,7 +26,7 @@ def gen_smiles_from_pksnrps(compound_pred: str) -> str:
             mal_count += 1
 
     # Reflecting reduction states of ketide groups starting at beta carbon of type 1 polyketide
-    if "pk" in residues and "mal" in residues[-1]:
+    if residues[0] == "pk" and "mal" in residues[-1]:
         residues.pop(residues.index('pk')+1)
         residues.append('pks-end1')
     elif mal_count == len(residues):
