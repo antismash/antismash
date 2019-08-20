@@ -112,6 +112,10 @@ class TestModuleData(unittest.TestCase):
     def tearDown(self):
         destroy_config()
 
+    def test_check_prereqs(self):
+        options = build_config(["--check-prereqs"], isolated=False, modules=get_all_modules())
+        assert run_antismash("", options) == 0
+
     def test_prepare_module_data(self):
         # make sure there's some to start with
         search = path.get_full_path(antismash.__file__, '**', "*.h3?")

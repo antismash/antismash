@@ -36,7 +36,7 @@ class TestAntismash(unittest.TestCase):
         assert main.verify_options(options, modules)
 
     def test_help_options(self):
-        for option in ["--list-plugins", "--check-prereqs"]:
+        for option in ["--list-plugins"]:
             options = build_config([option], isolated=False, modules=self.all_modules)
             ret_val = main.run_antismash("", options)
             assert ret_val == 0
