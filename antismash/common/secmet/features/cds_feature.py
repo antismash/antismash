@@ -5,7 +5,7 @@
 
 from collections import OrderedDict
 import logging
-from typing import Any, Dict, List, Optional, Type, TypeVar
+from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar
 from typing import Union  # comment hints  # pylint: disable=unused-import
 
 from Bio.Data import CodonTable, IUPACData
@@ -22,6 +22,7 @@ from antismash.common.secmet.qualifiers import (
 from ..errors import SecmetInvalidInputError
 from ..locations import AfterPosition, BeforePosition, Location
 from .feature import Feature
+from .module import Module
 
 _VALID_TRANSLATION_CHARS = set(IUPACData.extended_protein_letters)
 T = TypeVar("T", bound="CDSFeature")
@@ -128,7 +129,7 @@ def _verify_location(location: Location) -> None:
 class CDSFeature(Feature):
     """ A feature representing a single CDS/gene. """
     __slots__ = ["_translation", "protein_id", "locus_tag", "gene", "product",
-                 "transl_table", "_sec_met", "_gene_functions",
+                 "transl_table", "_sec_met", "_gene_functions", "_modules",
                  "unique_id", "_nrps_pks", "motifs", "region"]
     FEATURE_TYPE = "CDS"
 
@@ -156,6 +157,7 @@ class CDSFeature(Feature):
         self._sec_met = SecMetQualifier()
         self._nrps_pks = NRPSPKSQualifier(self.location.strand)
 
+        self._modules = []  # type: List[Module]
         self.motifs = []  # type: List[features.CDSMotif]
 
         # runtime-only data
@@ -214,6 +216,18 @@ class CDSFeature(Feature):
             raise ValueError("translation longer than location allows: %s > %s" % (
                                 len(translation) * 3, len(self.location)))
         self._translation = translation  # pylint: disable=attribute-defined-outside-init
+
+    @property
+    def modules(self) -> Tuple[Module, ...]:
+        """ Returns any modules present in the CDS. Modules may be included in
+            more than one CDS feature.
+        """
+        return tuple(self._modules)
+
+    def add_module(self, module: Module) -> None:
+        """ Add a Module feature to the CDS, the module must overlap with the CDS """
+        assert module.overlaps_with(self)
+        self._modules.append(module)
 
     def get_accession(self) -> str:
         "Get the gene ID from protein id, gene name or locus_tag, in that order"
@@ -317,3 +331,4 @@ class CDSFeature(Feature):
         self.sec_met = SecMetQualifier()
         self.gene_functions.clear()
         self.nrps_pks = NRPSPKSQualifier(self.location.strand)
+        self._modules.clear()

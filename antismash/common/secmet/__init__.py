@@ -17,6 +17,7 @@ from .features import (
     Feature,
     FeatureLocation,
     Gene,
+    Module,
     PFAMDomain,
     Prepeptide,
     Protocluster,

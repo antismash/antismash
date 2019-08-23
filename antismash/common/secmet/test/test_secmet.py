@@ -18,6 +18,7 @@ from ..features import (
     CDSFeature,
     CandidateCluster,
     Feature,
+    Module,
     Region,
     Protocluster,
     SubRegion,
@@ -736,6 +737,29 @@ class TestRegionManipulation(unittest.TestCase):
         assert "region_number" not in bio.qualifiers
         self.record.add_biopython_feature(bio)
         assert self.record.get_regions()
+
+
+class TestModuleManipulation(unittest.TestCase):
+    def setUp(self):
+        self.record = Record(Seq("A" * 1000))
+        self.cdses = [DummyCDS(8, 71), DummyCDS(80, 110), DummyCDS(100, 180)]
+        self.domains = [DummyAntismashDomain(start=40, end=61),
+                        DummyAntismashDomain(start=90, end=99)]
+        self.domains[0].locus_tag = self.cdses[0].get_name()
+        self.domains[1].locus_tag = self.cdses[1].get_name()
+
+        for feature in self.cdses + self.domains:
+            self.record.add_feature(feature)
+
+        self.module = Module(domains=self.domains)
+
+    def test_add_biopython(self):
+        bio = self.module.to_biopython()[0]
+        self.record.add_biopython_feature(bio)
+        assert self.record.get_modules()
+        for cds in self.cdses[:2]:
+            assert cds.modules
+        assert not self.cdses[2].modules
 
 
 class TestCDSUniqueness(unittest.TestCase):

@@ -12,6 +12,7 @@ from .cds_motif import CDSMotif
 from .domain import Domain
 from .feature import Feature, FeatureLocation, Location, SeqFeature
 from .gene import Gene
+from .module import Module
 from .pfam_domain import PFAMDomain
 from .prepeptide import Prepeptide
 from .protocluster import Protocluster
