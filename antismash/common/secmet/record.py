@@ -31,6 +31,7 @@ from .features import (
     Domain,
     Feature,
     Gene,
+    Module,
     PFAMDomain,
     Prepeptide,
     Protocluster,
@@ -55,7 +56,7 @@ class Record:
                  "_protoclusters", "original_id", "_cds_motifs", "_pfam_domains",
                  "_antismash_domains", "_protocluster_numbering", "_nonspecific_features",
                  "record_index", "_genes", "_transl_table", "_domains_by_name",
-                 "_pfams_by_cds_name",
+                 "_pfams_by_cds_name", "_modules",
                  "_candidate_clusters", "_candidate_clusters_numbering",
                  "_subregions", "_subregion_numbering",
                  "_regions", "_region_numbering"]
@@ -80,6 +81,7 @@ class Record:
         self._pfams_by_cds_name = defaultdict(list)  # type: Dict[str, List[PFAMDomain]]
 
         self._antismash_domains = []  # type: List[AntismashDomain]
+        self._modules = []  # type: List[Module]
 
         # includes PFAMDomains and AntismashDomains
         self._domains_by_name = {}  # type: Dict[str, Domain]  # for use as x[domain.get_name()] = domain
@@ -410,6 +412,7 @@ class Record:
         features.extend(self.get_cds_motifs())
         features.extend(self.get_antismash_domains())
         features.extend(self.get_pfam_domains())
+        features.extend(self.get_modules())
         return features
 
     def get_cds_features_within_location(self, location: FeatureLocation,
@@ -541,6 +544,33 @@ class Record:
                                           antismash_domain.get_name())
         self._domains_by_name[antismash_domain.get_name()] = antismash_domain
 
+    def add_module(self, module: Module) -> None:
+        """ Add the given Module to the record """
+        assert isinstance(module, Module)
+        parents = set()
+        for domain in module.domains:
+            if domain.get_name() not in self._domains_by_name:
+                raise ValueError("domain contained in module is not contained in record: %s" % domain)
+            if not domain.locus_tag:
+                raise ValueError("domain contained in module does not refer to a CDS: %s" % domain)
+            parents.add(domain.locus_tag)
+
+        for parent in parents:
+            cds = self.get_cds_by_name(parent)
+            if not cds:
+                raise ValueError("domain contained in module refers to missing CDS: %s" % parent)
+            cds.add_module(module)
+
+        self._modules.append(module)
+
+    def clear_modules(self) -> None:
+        """ Removes all Modules from the record """
+        self._modules.clear()
+
+    def get_modules(self) -> Tuple[Module, ...]:
+        """ Returns all Modules in the record """
+        return tuple(self._modules)
+
     def add_feature(self, feature: Feature) -> None:
         """ Adds a Feature or any subclass to the relevant list """
         assert isinstance(feature, Feature), type(feature)
@@ -562,6 +592,8 @@ class Record:
             self.add_pfam_domain(feature)
         elif isinstance(feature, AntismashDomain):
             self.add_antismash_domain(feature)
+        elif isinstance(feature, Module):
+            self.add_module(feature)
         else:
             self._nonspecific_features.append(feature)
 
@@ -604,6 +636,8 @@ class Record:
             self.add_region(Region.from_biopython(feature, record=self))
         elif feature.type == SubRegion.FEATURE_TYPE:
             self.add_subregion(SubRegion.from_biopython(feature, record=self))
+        elif feature.type == Module.FEATURE_TYPE:
+            self.add_module(Module.from_biopython(feature, record=self))
         else:
             self.add_feature(Feature.from_biopython(feature))
 
@@ -613,7 +647,7 @@ class Record:
             also replaces biopython SeqFeatures with Feature subclasses
         """
         postponed_features = OrderedDict()  # type: Dict[str, Tuple[Type[Feature], List[SeqFeature]]]
-        for kind in [CandidateCluster, Region]:  # type: Type[Feature]
+        for kind in [CandidateCluster, Region, Module]:  # type: Type[Feature]
             postponed_features[kind.FEATURE_TYPE] = (kind, [])
 
         assert isinstance(seq_record, SeqRecord), type(seq_record)
@@ -907,6 +941,7 @@ class Record:
         self.clear_regions()
         self.clear_antismash_domains()
         self.clear_pfam_domains()
+        self.clear_modules()
 
         # clean up antiSMASH-created CDSMotifs, but leave the rest
         motifs = self.get_cds_motifs()
