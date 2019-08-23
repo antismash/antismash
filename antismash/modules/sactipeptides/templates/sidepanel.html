@@ -7,7 +7,7 @@
   <dl class ="prediction-text">
   {% for motifs in results.values() %}
     {%- for motif in motifs -%}
-    <dt>{{motif.get_name()}}</dt>
+    <dt><span class="serif">{{motif.get_name()}}</span></dt>
       <dd>Putative sactipeptide</dd>
       <dd>RODEO score: {{motif.score}}</dd>
       <dd>Core sequence, approximate: {{motif.core}}</dd>

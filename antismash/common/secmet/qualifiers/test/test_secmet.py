@@ -80,6 +80,21 @@ class TestDomain(unittest.TestCase):
         assert new.nseeds == old.nseeds == 30
         assert new.tool == old.tool == "tool test"
 
+    def test_string_conversion_post_genbank(self):
+        # occasionally, genbank will split in just the right place (and biopython regenerates just right)
+        # to create a string with missing spaces, like here V
+        string = 'Abhydrolase_6 (E-value: 4.1e-18, bitscore:65.8, seeds: 455, tool: rule-based-clusters)'
+
+        expected = SecMetQualifier.Domain("Abhydrolase_6", 4.1e-18, 65.8, 455, "rule-based-clusters")
+        assert str(expected) == string.replace("bitscore:", "bitscore: ")
+
+        reconstructed = SecMetQualifier.Domain.from_string(string)
+        assert expected == reconstructed
+
+        # and test an aggressive version, just to be sure
+        reconstructed = SecMetQualifier.Domain.from_string(string.replace(" ", ""))
+        assert expected == reconstructed
+
     def test_equality(self):
         first = SecMetQualifier.Domain("name test", 5e-235, 20.17, 30, "tool test")
         second = SecMetQualifier.Domain("name test", 5e-235, 20.17, 30, "tool test")

@@ -8,7 +8,7 @@ import logging
 from typing import Any, Dict, List, Optional
 from typing import Union  # comment hints  # pylint: disable=unused-import
 
-from Bio.Data import IUPACData
+from Bio.Data import CodonTable, IUPACData
 from Bio.SeqFeature import SeqFeature
 
 from antismash.common.secmet import features  # comment hints  # pylint:disable=unused-import
@@ -74,8 +74,8 @@ def _translation_fits_in_record(translation_length: int, location: Location,
 def _ensure_valid_translation(translation: str, location: Location, transl_table: int,
                               record: Optional[Any]) -> str:
     """ Ensures that a given translation is valid for the matching location
-        and record (if given). If a record is given and a translation is invalid,
-        an attempt will be made to generate a valid translation.
+        and record (if given). If a record is given and a translation contains
+        invalid characters, an attempt will be made to generate a valid translation.
 
         Arguments:
             translation: the existing translation, if any
@@ -107,7 +107,10 @@ def _ensure_valid_translation(translation: str, location: Location, transl_table
             raise ValueError("feature missing translation and sequence too short")
         if len(location) < 3:
             raise ValueError("CDS too short to generate translation")
-        translation = record.get_aa_translation_from_location(location, transl_table)
+        try:
+            translation = record.get_aa_translation_from_location(location, transl_table)
+        except CodonTable.TranslationError as err:
+            raise ValueError("invalid codon: %s" % err)
 
     assert _is_valid_translation_length(translation, location)
     return translation

@@ -139,6 +139,8 @@ def run_on_record(record: Record, previous_results: Optional[HMMDetectionResults
         return previous_results
 
     strictness = options.hmmdetection_strictness
+    logging.info("HMM detection using strictness: %s", strictness)
+
     signatures = path.get_full_path(__file__, "data", "hmmdetails.txt")
     seeds = path.get_full_path(__file__, "data", "bgc_seeds.hmm")
     rules = _get_rule_files_for_strictness(strictness)

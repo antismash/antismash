@@ -28,7 +28,7 @@ install_requires = [
 ]
 
 tests_require = [
-    'pytest >= 3.3.0',
+    'pytest >= 3.4.0, < 5', # pytest 5 breaks compatibility with coverage
     'minimock',
     'coverage',
     'pylint == 1.8.4', # until pylint handles ignore lines the same way
