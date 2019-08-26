@@ -18,6 +18,8 @@
 
 from typing import Any, Dict, List, Optional
 
+from antismash.common import path
+from antismash.common.external.rodeo_svm.rebuild import pickle_classifier
 from antismash.common.secmet import Record
 from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
@@ -28,6 +30,24 @@ from .html_output import generate_html, will_handle
 
 NAME = "lassopeptides"
 SHORT_DESCRIPTION = "lassopeptide precursor prediction"
+
+
+def prepare_data(logging_only: bool = False) -> List[str]:
+    """ Ensures packaged data is fully prepared
+
+        Arguments:
+            logging_only: whether to return error messages instead of raising exceptions
+
+        Returns:
+            a list of error messages (only if logging_only is True)
+    """
+    training_set = path.get_full_path(__file__, "data", "training_set.csv")
+    try:
+        pickle_classifier(training_set, prefix="lassopeptide", kernel='rbf', C=2.83e5, gamma=1e-8,
+                          overwrite=not logging_only)
+    except ValueError:
+        return ["failed to rebuild lassopeptide classifier"]
+    return []
 
 
 def check_prereqs(options: ConfigType) -> List[str]:
@@ -42,6 +62,8 @@ def check_prereqs(options: ConfigType) -> List[str]:
                                         binary_name)
         if binary_name == "fimo":
             local_config().fimo_present = present
+
+    failure_messages.extend(prepare_data(logging_only=True))
 
     return failure_messages
 
