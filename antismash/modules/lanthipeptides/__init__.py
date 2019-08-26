@@ -6,9 +6,11 @@
 """
 
 import logging
+import os
 from typing import Any, Dict, List, Optional
 
 from antismash.common import path
+from antismash.common.external.rodeo_svm.rebuild import pickle_classifier
 from antismash.common.secmet import Record
 from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
@@ -53,6 +55,24 @@ def regenerate_previous_results(results: Dict[str, Any], record: Record,
     return regenned
 
 
+def prepare_data(logging_only: bool = False) -> List[str]:
+    """ Ensures packaged data is fully prepared
+
+        Arguments:
+            logging_only: whether to return error messages instead of raising exceptions
+
+        Returns:
+            a list of error messages (only if logging_only is True)
+    """
+    training_set = path.get_full_path(__file__, "data", "training_set.csv")
+    try:
+        pickle_classifier(training_set, prefix="lanthipeptide", kernel='rbf', C=9.77e6, gamma=1.78e-9,
+                          overwrite=not logging_only)
+    except ValueError:
+        return ["failed to rebuild lanthipeptide classifier"]
+    return []
+
+
 def check_prereqs(options: ConfigType) -> List[str]:
     """ Checks the prereqs for the lanthipeptide module.
 
@@ -71,6 +91,11 @@ def check_prereqs(options: ConfigType) -> List[str]:
         conf = get_config()
         if hasattr(conf, slot):
             setattr(conf, slot, present)
+
+    expected = ["lassopeptide.scaler.pkl", "lassopeptide.classifier.pkl"]
+    if not all(os.path.exists(path.get_full_path(__file__, "data", filename)) for filename in expected):
+        logging.debug("missing cached SVM classifiers, rebuilding")
+        failure_messages.extend(prepare_data(logging_only=True))
 
     return failure_messages
 
