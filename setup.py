@@ -24,7 +24,7 @@ install_requires = [
     'pyScss',
     'matplotlib',
     'scipy',
-    'scikit-learn == 0.19.0', # until pickles are rebuilt automatically
+    'scikit-learn >= 0.19.0',
 ]
 
 tests_require = [
