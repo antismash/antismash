@@ -126,7 +126,7 @@ class CDSCollection(Feature):
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
 
-        contig_edge = leftovers.pop("contig_edge", [None])[0] == "True"
+        contig_edge = leftovers.pop("contig_edge", [""])[0] == "True"
         if not feature:
             feature = CDSCollection(bio_feature.location, bio_feature.type)
             feature._contig_edge = contig_edge  # pylint: disable=protected-access
