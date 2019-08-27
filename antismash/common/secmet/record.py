@@ -12,10 +12,10 @@
 
 
 import bisect
-from collections import Counter, defaultdict
+from collections import Counter, defaultdict, OrderedDict
 import logging
 from typing import Any, Dict, List, Tuple, Union, cast
-from typing import Optional, Sequence, Set  # comment hints # pylint: disable=unused-import
+from typing import Optional, Sequence, Set, Type  # comment hints # pylint: disable=unused-import
 
 from Bio import Alphabet, SeqIO
 from Bio.Seq import Seq
@@ -612,10 +612,9 @@ class Record:
         """ Constructs a new Record instance from a biopython SeqRecord,
             also replaces biopython SeqFeatures with Feature subclasses
         """
-        postponed_features = {
-            "region": [],
-            CandidateCluster.FEATURE_TYPE: [],
-        }  # type: Dict[str, SeqFeature]
+        postponed_features = OrderedDict()  # type: Dict[str, Tuple[Type[Feature], List[SeqFeature]]]
+        for kind in [CandidateCluster, Region]:  # type: Type[Feature]
+            postponed_features[kind.FEATURE_TYPE] = (kind, [])
 
         assert isinstance(seq_record, SeqRecord), type(seq_record)
         if seq_record.seq and isinstance(seq_record.seq, Seq):
@@ -698,7 +697,7 @@ class Record:
             if feature.type in postponed_features:
                 # again, since CDSs need translations, skip if too small or not a CDS
                 if feature.type != "CDS" or len(feature) >= 3:
-                    postponed_features[feature.type].append(feature)
+                    postponed_features[feature.type][1].append(feature)
                 continue
             # again, since CDSs need translations, skip if too small or not a CDS
             if feature.type != "CDS" or len(feature) >= 3:
@@ -720,10 +719,9 @@ class Record:
                     else:
                         feature.qualifiers["gene"][0] = original_gene_name
         try:
-            for feature in postponed_features[CandidateCluster.FEATURE_TYPE]:
-                record.add_feature(CandidateCluster.from_biopython(feature).convert_to_real_feature(record))
-            for feature in postponed_features["region"]:
-                record.add_feature(Region.from_biopython(feature).convert_to_real_feature(record))
+            for cls, features in postponed_features.values():
+                for feature in features:
+                    record.add_feature(cls.from_biopython(feature, record=record))
         except ValueError as err:
             raise SecmetInvalidInputError(str(err)) from err
         return record
