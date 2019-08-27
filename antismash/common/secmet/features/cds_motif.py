@@ -4,12 +4,14 @@
 """ A class for CDS motif features """
 
 from collections import OrderedDict
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional, Type, TypeVar
 
 from Bio.SeqFeature import SeqFeature
 
 from .domain import Domain
 from .feature import Feature, Location
+
+T = TypeVar("T", bound="CDSMotif")
 
 
 class CDSMotif(Domain):
@@ -21,15 +23,15 @@ class CDSMotif(Domain):
         created = tool is not None
         super().__init__(location, feature_type="CDS_motif", tool=tool, created_by_antismash=created)
 
-    @staticmethod
-    def from_biopython(bio_feature: SeqFeature, feature: Optional["CDSMotif"] = None,  # type: ignore
-                       leftovers: Optional[Dict[str, List[str]]] = None) -> "CDSMotif":
+    @classmethod
+    def from_biopython(cls: Type[T], bio_feature: SeqFeature, feature: T = None,
+                       leftovers: Optional[Dict[str, List[str]]] = None, record: Any = None) -> T:
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
         if not feature:
-            feature = CDSMotif(bio_feature.location, leftovers.pop("aSTool", [""])[0] or None)
+            feature = cls(bio_feature.location, leftovers.pop("aSTool", [""])[0] or None)
 
-        updated = super(CDSMotif, feature).from_biopython(bio_feature, feature, leftovers)
+        updated = super().from_biopython(bio_feature, feature, leftovers, record=record)
         assert updated is feature
         assert isinstance(updated, CDSMotif)
         return updated

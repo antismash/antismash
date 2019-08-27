@@ -3,12 +3,14 @@
 
 """ A class for subregion features """
 
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional, Type, TypeVar
 
 from Bio.SeqFeature import SeqFeature
 
 from .cdscollection import CDSCollection
 from .feature import FeatureLocation, Feature
+
+T = TypeVar("T", bound="SubRegion")
 
 
 class SubRegion(CDSCollection):
@@ -43,9 +45,9 @@ class SubRegion(CDSCollection):
             qualifiers["label"] = [self.label]
         return super().to_biopython(qualifiers)
 
-    @staticmethod
-    def from_biopython(bio_feature: SeqFeature, feature: "SubRegion" = None,  # type: ignore
-                       leftovers: Optional[Dict] = None) -> "SubRegion":
+    @classmethod
+    def from_biopython(cls: Type[T], bio_feature: SeqFeature, feature: T = None,
+                       leftovers: Optional[Dict] = None, record: Any = None) -> T:
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
 
@@ -57,11 +59,11 @@ class SubRegion(CDSCollection):
         if not label:
             label = leftovers.pop("anchor", [""])[0]  # backwards compatibility
         if not feature:
-            feature = SubRegion(bio_feature.location, tool, probability, label)
+            feature = cls(bio_feature.location, tool, probability, label)
 
         # remove the subregion_number, as it's not relevant
         leftovers.pop("subregion_number", "")
 
         # grab parent optional qualifiers
-        super(SubRegion, feature).from_biopython(bio_feature, feature=feature, leftovers=leftovers)
+        super().from_biopython(bio_feature, feature=feature, leftovers=leftovers, record=record)
         return feature

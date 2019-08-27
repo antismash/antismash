@@ -4,7 +4,7 @@
 """ A feature to represent a Pfam domain """
 
 from collections import OrderedDict
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional, Type, TypeVar
 
 from Bio.SeqFeature import SeqFeature
 
@@ -13,6 +13,8 @@ from antismash.common.secmet.qualifiers import GOQualifier
 from ..errors import SecmetInvalidInputError
 from .feature import Feature, Location
 from .domain import Domain
+
+T = TypeVar("T", bound="PFAMDomain")
 
 
 class PFAMDomain(Domain):
@@ -80,9 +82,9 @@ class PFAMDomain(Domain):
             mine.update(qualifiers)
         return super().to_biopython(mine)
 
-    @staticmethod
-    def from_biopython(bio_feature: SeqFeature, feature: "PFAMDomain" = None,  # type: ignore
-                       leftovers: Dict[str, List[str]] = None) -> "PFAMDomain":
+    @classmethod
+    def from_biopython(cls: Type[T], bio_feature: SeqFeature, feature: T = None,
+                       leftovers: Dict[str, List[str]] = None, record: Any = None) -> T:
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
         # grab mandatory qualifiers and create the class
@@ -100,8 +102,8 @@ class PFAMDomain(Domain):
             raise SecmetInvalidInputError("PFAMDomain missing identifier")
         tool = leftovers.pop("aSTool")[0]
 
-        feature = PFAMDomain(bio_feature.location, description, p_start, p_end,
-                             identifier=name, tool=tool)
+        feature = cls(bio_feature.location, description, p_start, p_end,
+                      identifier=name, tool=tool)
 
         # grab optional qualifiers
         feature.gene_ontologies = GOQualifier.from_biopython(leftovers.pop("gene_ontologies", []))
@@ -109,6 +111,6 @@ class PFAMDomain(Domain):
             feature.probability = float(leftovers["probability"][0])
 
         # grab parent optional qualifiers
-        updated = super(PFAMDomain, feature).from_biopython(bio_feature, feature=feature, leftovers=leftovers)
+        updated = super().from_biopython(bio_feature, feature=feature, leftovers=leftovers, record=record)
         assert isinstance(updated, PFAMDomain)
         return updated

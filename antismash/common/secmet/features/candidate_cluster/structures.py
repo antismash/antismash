@@ -5,7 +5,7 @@
 
 from collections import OrderedDict
 from enum import Enum, unique
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar
 
 from Bio.SeqFeature import SeqFeature
 
@@ -13,6 +13,8 @@ from ..cdscollection import CDSCollection
 from ..protocluster import Protocluster
 from ..feature import FeatureLocation, Feature
 from ...locations import combine_locations
+
+T = TypeVar("T", bound="CandidateCluster")
 
 
 @unique
@@ -37,46 +39,6 @@ class CandidateClusterKind(Enum):
             if str(value) == label:
                 return value
         raise ValueError("unknown candidate cluster kind: %s" % label)
-
-
-class TemporaryCandidateCluster:  # pylint: disable=too-many-instance-attributes
-    """ A construction for the delayed conversion of a CandidateCluster from biopython,
-        as it requires that other feature types (protocluster)
-        have already been rebuilt.
-
-        Converts to a real CandidateCluster feature with the convert_to_real_feature method.
-    """
-    def __init__(self, location: FeatureLocation, kind: CandidateClusterKind, protocluster_numbers: List[int],
-                 products: List[str], detection_rules: List[str], own_number: int, contig_edge: bool,
-                 smiles: str = None, polymer: str = None) -> None:  # pylint: disable=too-many-arguments
-        self.type = CandidateCluster.FEATURE_TYPE
-        self.location = location
-        self.kind = kind
-        self.protoclusters = protocluster_numbers
-        self._own_number = own_number
-        self.products = products
-        self.detection_rules = detection_rules
-        self.contig_edge = contig_edge
-        self.polymer = polymer
-        self.smiles_structure = smiles
-
-    def get_candidate_cluster_number(self) -> int:
-        """ Returns the candidate clusters's numeric ID, only guaranteed to be consistent for
-            when the same clusters and subregions are defined in the parent record
-        """
-        return self._own_number
-
-    # record type should be Record, but that ends up being a circular dependency
-    def convert_to_real_feature(self, record: Any) -> "CandidateCluster":
-        """ Constructs a CandidateCluster from this TemporaryCandidateCluster, requires the parent
-            Record instance containing all the expected children of the CandidateCluster
-        """
-        if len(record.get_protoclusters()) < max(self.protoclusters):
-            raise ValueError("Not all referenced clusters are present in the record")
-        relevant_protoclusters = sorted([record.get_protocluster(num) for num in self.protoclusters])
-        new = CandidateCluster(self.kind, relevant_protoclusters,
-                               smiles=self.smiles_structure, polymer=self.polymer)
-        return new
 
 
 class CandidateCluster(CDSCollection):
@@ -172,22 +134,26 @@ class CandidateCluster(CDSCollection):
             qualifiers["polymer"] = [self.polymer]
         return super().to_biopython(qualifiers)
 
-    @staticmethod
-    def from_biopython(bio_feature: SeqFeature, feature: "CandidateCluster" = None,  # type: ignore
-                       leftovers: Optional[Dict] = None) -> TemporaryCandidateCluster:
+    @classmethod
+    def from_biopython(cls: Type[T], bio_feature: SeqFeature, feature: T = None,
+                       leftovers: Optional[Dict] = None, record: Any = None) -> T:
         """ Does not return a proper CandidateCluster instance as extra information
             is required from the record in order to properly rebuild it
         """
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
 
+        if not record:
+            raise ValueError("record instance required for regenerating CandidateCluster from biopython")
+
+        all_protoclusters = record.get_protoclusters()
+        protocluster_numbers = [int(num) for num in leftovers.pop("protoclusters")]
+
+        if max(protocluster_numbers) > len(all_protoclusters):
+            raise ValueError("record does not contain all expected protoclusters")
+
         kind = CandidateClusterKind.from_string(leftovers.pop("kind")[0])
         smiles = leftovers.pop("SMILES", [None])[0]
         polymer = leftovers.pop("polymer", [None])[0]
-        products = leftovers.pop("product")
-        own_number = leftovers.pop("candidate_cluster_number", "")
-        children = [int(num) for num in leftovers.pop("protoclusters")]
-        rules = leftovers.pop("detection_rules")
-        edge = leftovers.pop("contig_edge", [None])[0] == "True"
-        return TemporaryCandidateCluster(bio_feature.location, kind, children, products,
-                                         rules, own_number, edge, smiles, polymer)
+        children = [all_protoclusters[num - 1] for num in protocluster_numbers]
+        return cls(kind, children, smiles, polymer)

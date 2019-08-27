@@ -5,7 +5,7 @@
 
 from collections import OrderedDict
 import os
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar
 from typing import Set  # used in comment hints, pylint: disable=unused-import
 import warnings
 
@@ -15,41 +15,12 @@ from helperlibs.bio import seqio
 
 from .cdscollection import CDSCollection, CDSFeature
 from .protocluster import Protocluster
-from .feature import Feature, FeatureLocation
+from .feature import Feature
 from .subregion import SubRegion
 from .candidate_cluster import CandidateCluster
 from ..locations import combine_locations
 
-
-class TemporaryRegion:
-    """ A construction for the delayed conversion of a Region from biopython,
-        as it requires that other feature types (SubRegion and CandidateCluster)
-        have already been rebuilt.
-
-        Converts to a real Region feature with the convert_to_real_feature method.
-    """
-    def __init__(self, location: FeatureLocation, candidate_cluster_numbers: List[int],
-                 subregion_numbers: List[int],
-                 rules: List[str] = None, products: List[str] = None,
-                 probabilities: List[float] = None) -> None:
-        self.type = "region"
-        self.location = location
-        self.candidate_clusters = candidate_cluster_numbers
-        self.subregions = subregion_numbers
-        self.detection_rules = rules
-        self.products = products
-        self.probabilities = probabilities
-
-    # record should be of type Record, but that would cause a circular dependency
-    def convert_to_real_feature(self, record: Any) -> "Region":
-        """ Constructs a Region from this TemporaryRegion, requires the parent
-            Record instance containing all the expected children of the Region
-        """
-        all_candidates = record.get_candidate_clusters()
-        candidates = [all_candidates[num - 1] for num in self.candidate_clusters]
-        all_subs = record.get_subregions()
-        subs = [all_subs[num - 1] for num in self.subregions]
-        return Region(candidates, subs)
+T = TypeVar("T", bound="Region")
 
 
 class Region(CDSCollection):
@@ -244,15 +215,27 @@ class Region(CDSCollection):
 
         return super().to_biopython(qualifiers)
 
-    @staticmethod
-    def from_biopython(bio_feature: SeqFeature, feature: TemporaryRegion = None,  # type: ignore
-                       leftovers: Dict[str, List[str]] = None) -> TemporaryRegion:
+    @classmethod
+    def from_biopython(cls: Type[T], bio_feature: SeqFeature, feature: T = None,
+                       leftovers: Dict[str, List[str]] = None, record: Any = None) -> T:
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
-        return TemporaryRegion(bio_feature.location,
-                               [int(num) for num in leftovers.pop("candidate_cluster_numbers", [])],
-                               [int(num) for num in leftovers.pop("subregion_numbers", [])],
-                               leftovers["rules"],
-                               leftovers["product"],
-                               [float(prob) for prob in leftovers.pop("probabilities", [])],
-                               )
+
+        candidate_numbers = [int(num) for num in leftovers.pop("candidate_cluster_numbers", [])]
+        subregion_numbers = [int(num) for num in leftovers.pop("subregion_numbers", [])]
+
+        if not record:
+            raise ValueError("record instance required for regenerating Region from biopython")
+
+        all_candidates = record.get_candidate_clusters()
+        all_subs = record.get_subregions()
+
+        if candidate_numbers and max(candidate_numbers) > len(all_candidates):
+            raise ValueError("record does not contain all expected candidate clusters")
+        if subregion_numbers and max(subregion_numbers) > len(all_subs):
+            raise ValueError("record does not contain all expected subregions")
+
+        candidates = [all_candidates[num - 1] for num in candidate_numbers]
+        subs = [all_subs[num - 1] for num in subregion_numbers]
+
+        return cls(candidates, subs)

@@ -3,11 +3,13 @@
 
 """ A feature to represent a gene """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Type, TypeVar
 
 from Bio.SeqFeature import SeqFeature
 
 from .feature import Feature, Location
+
+T = TypeVar("T", bound="Gene")
 
 
 class Gene(Feature):
@@ -49,9 +51,9 @@ class Gene(Feature):
             qualifiers["gene"] = [self.gene_name]
         return super().to_biopython(qualifiers)
 
-    @staticmethod
-    def from_biopython(bio_feature: SeqFeature, feature: "Gene" = None,  # type: ignore
-                       leftovers: Dict[str, List[str]] = None) -> "Gene":
+    @classmethod
+    def from_biopython(cls: Type[T], bio_feature: SeqFeature, feature: T = None,
+                       leftovers: Dict[str, List[str]] = None, record: Any = None) -> T:
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
         # grab mandatory qualifiers and create the class
@@ -59,6 +61,6 @@ class Gene(Feature):
         name = leftovers.pop("gene", [""])[0] or None
         if not (locus or name):
             name = "gene%s_%s" % (bio_feature.location.start, bio_feature.location.end)
-        feature = Gene(bio_feature.location, locus_tag=locus, gene_name=name)
-        super(Gene, feature).from_biopython(bio_feature, feature=feature, leftovers=leftovers)
+        feature = cls(bio_feature.location, locus_tag=locus, gene_name=name)
+        super().from_biopython(bio_feature, feature=feature, leftovers=leftovers, record=record)
         return feature

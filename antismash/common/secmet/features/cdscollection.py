@@ -6,13 +6,15 @@
 """
 
 from collections import OrderedDict
-from typing import Any, List, Optional, Sequence, Tuple, Union
+from typing import Any, List, Optional, Sequence, Tuple, Type, TypeVar, Union
 from typing import Dict  # used in comment hints # pylint: disable=unused-import
 
 from Bio.SeqFeature import SeqFeature
 
 from .feature import Feature, FeatureLocation
 from .cds_feature import CDSFeature
+
+T = TypeVar("T", bound="CDSCollection")
 
 
 class CDSCollection(Feature):
@@ -120,19 +122,20 @@ class CDSCollection(Feature):
             in the order they were added """
         return tuple(self._cdses)
 
-    @staticmethod
-    def from_biopython(bio_feature: SeqFeature, feature: "CDSCollection" = None,  # type: ignore
-                       leftovers: Optional[Dict] = None) -> "CDSCollection":
+    @classmethod
+    def from_biopython(cls: Type[T], bio_feature: SeqFeature, feature: T = None,
+                       leftovers: Dict[str, List[str]] = None, record: Any = None) -> T:
+        assert issubclass(cls, CDSCollection)
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
 
         contig_edge = leftovers.pop("contig_edge", [""])[0] == "True"
         if not feature:
-            feature = CDSCollection(bio_feature.location, bio_feature.type)
+            feature = cls(bio_feature.location, bio_feature.type)
             feature._contig_edge = contig_edge  # pylint: disable=protected-access
 
         # grab parent optional qualifiers
-        super(CDSCollection, feature).from_biopython(bio_feature, feature=feature, leftovers=leftovers)
+        super().from_biopython(bio_feature, feature=feature, leftovers=leftovers, record=record)
         return feature
 
     def to_biopython(self, qualifiers: Optional[Dict[str, List[str]]] = None) -> List[SeqFeature]:
