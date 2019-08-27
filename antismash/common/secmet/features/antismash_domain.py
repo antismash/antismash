@@ -4,13 +4,15 @@
 """ A more detailed Domain feature """
 
 from collections import OrderedDict
-from typing import Dict, List
+from typing import Any, Dict, List, Type, TypeVar
 from typing import Optional  # comment hints, pylint: disable=unused-import
 
 from Bio.SeqFeature import SeqFeature
 
 from .domain import Domain
 from .feature import Feature, Location
+
+T = TypeVar("T", bound="AntismashDomain")
 
 
 class AntismashDomain(Domain):
@@ -32,20 +34,20 @@ class AntismashDomain(Domain):
             mine.update(qualifiers)
         return super().to_biopython(mine)
 
-    @staticmethod
-    def from_biopython(bio_feature: SeqFeature, feature: "AntismashDomain" = None,  # type: ignore
-                       leftovers: Dict[str, List[str]] = None) -> "AntismashDomain":
+    @classmethod
+    def from_biopython(cls: Type[T], bio_feature: SeqFeature, feature: T = None,
+                       leftovers: Dict[str, List[str]] = None, record: Any = None) -> T:
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
         # grab mandatory qualifiers and create the class
         tool = leftovers.pop("aSTool")[0]
-        feature = AntismashDomain(bio_feature.location, tool=tool)
+        feature = cls(bio_feature.location, tool=tool)
 
         # grab optional qualifiers
         feature.domain_subtype = leftovers.pop("domain_subtype", [""])[0] or None
         feature.specificity = leftovers.pop("specificity", [])
 
         # grab parent optional qualifiers
-        super(AntismashDomain, feature).from_biopython(bio_feature, feature=feature, leftovers=leftovers)
+        super().from_biopython(bio_feature, feature=feature, leftovers=leftovers, record=record)
 
         return feature

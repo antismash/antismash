@@ -5,7 +5,7 @@
 
 from collections import OrderedDict
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Type, TypeVar
 from typing import Union  # comment hints  # pylint: disable=unused-import
 
 from Bio.Data import CodonTable, IUPACData
@@ -24,6 +24,7 @@ from ..locations import AfterPosition, BeforePosition, Location
 from .feature import Feature
 
 _VALID_TRANSLATION_CHARS = set(IUPACData.extended_protein_letters)
+T = TypeVar("T", bound="CDSFeature")
 
 
 def _sanitise_id_value(name: Optional[str]) -> Optional[str]:
@@ -227,9 +228,9 @@ class CDSFeature(Feature):
                 return val
         raise ValueError("%s altered to contain no identifiers" % self)
 
-    @staticmethod
-    def from_biopython(bio_feature: SeqFeature, feature: "CDSFeature" = None,  # type: ignore
-                       leftovers: Optional[Dict] = None, record: Any = None) -> "CDSFeature":
+    @classmethod
+    def from_biopython(cls: Type[T], bio_feature: SeqFeature, feature: T = None,
+                       leftovers: Optional[Dict] = None, record: Any = None) -> T:
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
         # grab mandatory qualifiers
@@ -263,9 +264,9 @@ class CDSFeature(Feature):
         except ValueError as err:
             raise SecmetInvalidInputError(str(err) + ": %s" % name) from err
 
-        feature = CDSFeature(bio_feature.location, translation, gene=gene,
-                             locus_tag=locus_tag, protein_id=protein_id,
-                             translation_table=transl_table)
+        feature = cls(bio_feature.location, translation, gene=gene,
+                      locus_tag=locus_tag, protein_id=protein_id,
+                      translation_table=transl_table)
 
         # grab optional qualifiers
         feature.product = leftovers.pop("product", [""])[0]
@@ -278,7 +279,7 @@ class CDSFeature(Feature):
         feature.nrps_pks.add_from_qualifier(leftovers.pop("NRPS_PKS", []))
 
         # grab parent optional qualifiers
-        super(CDSFeature, feature).from_biopython(bio_feature, feature=feature, leftovers=leftovers)
+        super().from_biopython(bio_feature, feature=feature, leftovers=leftovers, record=record)
 
         return feature
 

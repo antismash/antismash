@@ -3,7 +3,7 @@
 
 """ A class for protocluster features """
 
-from typing import Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set, Type, TypeVar
 
 from Bio.SeqFeature import SeqFeature
 
@@ -13,6 +13,8 @@ from .feature import Feature, FeatureLocation
 from ..locations import location_from_string
 from ..qualifiers.t2pks import T2PKSQualifier
 from ..qualifiers.gene_functions import GeneFunction
+
+T = TypeVar("T", bound="Protocluster")
 
 
 class Protocluster(CDSCollection):
@@ -101,10 +103,10 @@ class Protocluster(CDSCollection):
         neighbourhood_feature = super().to_biopython(shared_qualifiers)[0]
         return [neighbourhood_feature, core_feature]
 
-    @staticmethod
-    def from_biopython(bio_feature: SeqFeature, feature: "Protocluster" = None,  # type: ignore
-                       leftovers: Dict[str, List[str]] = None) -> "Protocluster":
-        assert bio_feature.type == "protocluster"
+    @classmethod
+    def from_biopython(cls: Type[T], bio_feature: SeqFeature, feature: T = None,
+                       leftovers: Dict[str, List[str]] = None, record: Any = None) -> T:
+        assert bio_feature.type == Protocluster.FEATURE_TYPE
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
         # grab mandatory qualifiers and create the class
@@ -115,8 +117,8 @@ class Protocluster(CDSCollection):
         rule = leftovers.pop("detection_rule")[0]
         core_location = location_from_string(leftovers.pop("core_location")[0])
         if not feature:
-            feature = Protocluster(core_location, bio_feature.location,
-                              tool, product, cutoff, neighbourhood_range, rule)
+            feature = cls(core_location, bio_feature.location,
+                          tool, product, cutoff, neighbourhood_range, rule)
 
         # remove run-specific info
         leftovers.pop("protocluster_number", "")
@@ -125,7 +127,7 @@ class Protocluster(CDSCollection):
         feature.t2pks = T2PKSQualifier.from_biopython_qualifiers(leftovers)
 
         # grab optional parent qualifiers
-        updated = super(Protocluster, feature).from_biopython(bio_feature, feature, leftovers)
+        updated = super().from_biopython(bio_feature, feature, leftovers, record=record)
         assert updated is feature, "feature changed: %s -> %s" % (feature, updated)
         assert isinstance(updated, Protocluster)
         return updated

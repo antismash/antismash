@@ -4,7 +4,7 @@
 """ A base class for all domain sub-features """
 
 from collections import OrderedDict
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional, Type, TypeVar
 
 from Bio.SeqFeature import SeqFeature
 
@@ -12,6 +12,8 @@ from antismash.common.secmet.qualifiers import ActiveSiteFinderQualifier
 
 from .feature import Feature, Location
 from .antismash_feature import AntismashFeature
+
+T = TypeVar("T", bound="Domain")
 
 
 class Domain(AntismashFeature):
@@ -45,9 +47,9 @@ class Domain(AntismashFeature):
             mine.update(qualifiers)
         return super().to_biopython(mine)
 
-    @staticmethod
-    def from_biopython(bio_feature: SeqFeature, feature: "Domain" = None,  # type: ignore
-                       leftovers: Dict[str, List[str]] = None) -> "Domain":
+    @classmethod
+    def from_biopython(cls: Type[T], bio_feature: SeqFeature, feature: T = None,
+                       leftovers: Dict[str, List[str]] = None, record: Any = None) -> T:
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
         if not feature:
@@ -61,7 +63,7 @@ class Domain(AntismashFeature):
             feature.asf.add(asf_label)
 
         # grab parent optional qualifiers
-        updated = super(Domain, feature).from_biopython(bio_feature, feature=feature, leftovers=leftovers)
+        updated = super().from_biopython(bio_feature, feature=feature, leftovers=leftovers, record=record)
         assert updated is feature
         assert isinstance(updated, Domain)
         return updated

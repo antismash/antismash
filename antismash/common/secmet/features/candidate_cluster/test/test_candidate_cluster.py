@@ -13,7 +13,6 @@ from antismash.common.secmet.features import Protocluster, CandidateCluster
 from antismash.common.secmet.features.candidate_cluster import (
     CandidateClusterKind,
 )
-from antismash.common.secmet.features.candidate_cluster.structures import TemporaryCandidateCluster
 from antismash.common.secmet.qualifiers import GeneFunction
 from antismash.common.secmet.test.helpers import DummyCDS
 
@@ -91,17 +90,7 @@ class TestCandidateCluster(unittest.TestCase):
         assert bio.qualifiers["SMILES"] == ["dummy smiles"]
         assert bio.qualifiers["polymer"] == ["dummy polymer"]
         assert bio.qualifiers["contig_edge"] == ["True"]
-        regenerated = CandidateCluster.from_biopython(bio)
-        assert isinstance(regenerated, TemporaryCandidateCluster)
-        assert regenerated.products == original.products
-        assert regenerated.location == original.location
-        assert regenerated.smiles_structure == original.smiles_structure
-        assert regenerated.polymer == original.polymer
-        proto_numbers = [cluster.get_protocluster_number() for cluster in self.record.get_protoclusters()]
-        assert regenerated.protoclusters == proto_numbers
-        assert regenerated.kind == original.kind
-
-        real = regenerated.convert_to_real_feature(self.record)
+        real = CandidateCluster.from_biopython(bio, record=self.record)
         assert isinstance(real, CandidateCluster)
         assert len(real.protoclusters) == len(self.record.get_protoclusters())
         for reference, record_cluster in zip(real.protoclusters, self.record.get_protoclusters()):
@@ -109,8 +98,11 @@ class TestCandidateCluster(unittest.TestCase):
 
         # attempt a conversion with a record missing the cluster
         self.record.clear_protoclusters()
-        with self.assertRaisesRegex(ValueError, "Not all referenced clusters are present"):
-            regenerated.convert_to_real_feature(self.record)
+        with self.assertRaisesRegex(ValueError, "record does not contain all expected protoclusters"):
+            CandidateCluster.from_biopython(bio, record=self.record)
+        # and with no record
+        with self.assertRaisesRegex(ValueError, "record instance required"):
+            CandidateCluster.from_biopython(bio)
 
     def test_core(self):
         protos = [create_cluster(5, 10, 20, 25, "a"),

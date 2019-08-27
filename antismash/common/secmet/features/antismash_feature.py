@@ -4,12 +4,14 @@
 """ A base class for all antiSMASH-specific features """
 
 from collections import OrderedDict
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional, Type, TypeVar
 
 from Bio.SeqFeature import SeqFeature
 
 from ..errors import SecmetInvalidInputError
 from .feature import Feature, Location
+
+T = TypeVar("T", bound="AntismashFeature")
 
 
 class AntismashFeature(Feature):
@@ -96,9 +98,9 @@ class AntismashFeature(Feature):
             mine.update(qualifiers)
         return super().to_biopython(mine)
 
-    @staticmethod
-    def from_biopython(bio_feature: SeqFeature, feature: "AntismashFeature" = None,  # type: ignore
-                       leftovers: Dict[str, List[str]] = None) -> "AntismashFeature":
+    @classmethod
+    def from_biopython(cls: Type[T], bio_feature: SeqFeature, feature: T = None,
+                       leftovers: Dict[str, List[str]] = None, record: Any = None) -> T:
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
         if not feature:
@@ -125,6 +127,6 @@ class AntismashFeature(Feature):
             feature.score = float(leftovers.pop("score")[0])
 
         # grab parent optional qualifiers
-        updated = super(AntismashFeature, feature).from_biopython(bio_feature, feature=feature, leftovers=leftovers)
+        updated = super().from_biopython(bio_feature, feature=feature, leftovers=leftovers, record=record)
         assert isinstance(updated, AntismashFeature)
         return updated

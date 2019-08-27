@@ -5,7 +5,7 @@
 
 from collections import OrderedDict
 import logging
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Tuple, Type, TypeVar, Union
 from typing import Optional  # comment hints  # pylint: disable=unused-import
 
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
@@ -25,6 +25,8 @@ from ..locations import (
     Location,
     location_contains_overlapping_exons,
 )
+
+T = TypeVar("T", bound="Feature")
 
 
 def _adjust_location_by_offset(location: Location, offset: int) -> Location:
@@ -259,9 +261,9 @@ class Feature:
     def __repr__(self) -> str:
         return "%s(%s)" % (self.type, self.location)
 
-    @staticmethod
-    def from_biopython(bio_feature: SeqFeature, feature: "Feature" = None,
-                       leftovers: Dict[str, Any] = None) -> "Feature":
+    @classmethod
+    def from_biopython(cls: Type[T], bio_feature: SeqFeature, feature: T = None,
+                       leftovers: Dict[str, List[str]] = None, record: Any = None) -> T:
         """ Converts a SeqFeature into a single Feature instance.
 
             Arguments:
@@ -270,18 +272,20 @@ class Feature:
                          this class tracks
                 leftovers: any qualifiers remaining from the original SeqFeature
                            that have not been used by any subclass
+                record: the parent record instance (required for features containing
+                        references to other features)
 
             Returns:
                 a Feature instance
         """
+        assert issubclass(cls, Feature)
         if feature is None:
-            feature = Feature(bio_feature.location, bio_feature.type)
+            feature = cls(bio_feature.location, bio_feature.type)
             if not leftovers:
                 assert isinstance(bio_feature.qualifiers, dict)
                 leftovers = bio_feature.qualifiers.copy()
             feature.notes = leftovers.pop("note", [])
-        else:
-            assert isinstance(feature, Feature)
+        assert isinstance(feature, cls)
         if leftovers:
             feature.created_by_antismash = leftovers.get("tool") == ["antismash"]
             if "codon_start" in leftovers:
@@ -298,6 +302,7 @@ class Feature:
             feature._qualifiers.update(leftovers)  # shouldn't be a public thing, so pylint: disable=protected-access
         else:
             feature.created_by_antismash = False
+        assert feature
         return feature
 
     @staticmethod
