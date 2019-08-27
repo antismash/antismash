@@ -15,6 +15,8 @@ class SubRegion(CDSCollection):
     """ A feature which marks a specific region of a record as interesting,
         without being considered a cluster.
     """
+    __slots__ = ["tool", "probability", "label"]
+
     def __init__(self, location: FeatureLocation, tool: str, probability: float = None, label: str = "") -> None:
         super().__init__(location, feature_type="subregion")
         self.tool = tool
