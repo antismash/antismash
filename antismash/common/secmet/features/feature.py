@@ -65,6 +65,7 @@ class Feature:
     """
     __slots__ = ["location", "notes", "type", "_qualifiers", "created_by_antismash",
                  "_original_codon_start"]
+    FEATURE_TYPE = ""  # not well defined for the base class
 
     def __init__(self, location: Location, feature_type: str,
                  created_by_antismash: bool = False) -> None:

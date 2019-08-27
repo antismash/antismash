@@ -508,8 +508,8 @@ class TestCandidateClusterManipulation(unittest.TestCase):
 
     def test_add_biopython(self):
         bio = self.candidate_cluster.to_biopython()[0]
-        with self.assertRaisesRegex(ValueError, "cannot be directly added from biopython"):
-            self.record.add_biopython_feature(bio)
+        self.record.add_biopython_feature(bio)
+        assert self.record.get_candidate_clusters()
 
     def test_cds_linking_cds_first(self):
         inside = self.add_cds_features()
@@ -734,8 +734,8 @@ class TestRegionManipulation(unittest.TestCase):
         bio = self.region_sup.to_biopython()[0]
         # it can be converted with a record, but it won't have a region number
         assert "region_number" not in bio.qualifiers
-        with self.assertRaisesRegex(ValueError, "cannot be directly added from biopython"):
-            self.record.add_biopython_feature(bio)
+        self.record.add_biopython_feature(bio)
+        assert self.record.get_regions()
 
 
 class TestCDSUniqueness(unittest.TestCase):

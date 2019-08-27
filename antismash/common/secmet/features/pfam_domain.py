@@ -22,6 +22,7 @@ class PFAMDomain(Domain):
     """
     __slots__ = ["description", "probability", "protein_start", "protein_end",
                  "gene_ontologies", "identifier", "version"]
+    FEATURE_TYPE = "PFAM_domain"
 
     def __init__(self, location: Location, description: str, protein_start: int,
                  protein_end: int, identifier: str, tool: str, domain: Optional[str] = None,
@@ -36,7 +37,7 @@ class PFAMDomain(Domain):
                 domain: the name for the domain (e.g. p450 or 'Type III restriction enzyme')
         """
         assert tool in ["test", "clusterhmmer", "fullhmmer", "toolname"], tool
-        super().__init__(location, feature_type="PFAM_domain", domain=domain, tool=tool)
+        super().__init__(location, feature_type=self.FEATURE_TYPE, domain=domain, tool=tool)
         if not isinstance(description, str):
             raise TypeError("PFAMDomain description must be a string, not %s" % type(description))
         if not description:

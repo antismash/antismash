@@ -569,24 +569,24 @@ class Record:
         """ Convert a biopython feature to SecMet feature, then add it to the
             record.
         """
-        if feature.type == 'CDS':
+        if feature.type == CDSFeature.FEATURE_TYPE:
             self.add_cds_feature(CDSFeature.from_biopython(feature, record=self))
-        elif feature.type == 'gene':
-            self.add_gene(Gene.from_biopython(feature))
-        elif feature.type == "protocluster":
-            self.add_protocluster(Protocluster.from_biopython(feature))
+        elif feature.type == Gene.FEATURE_TYPE:
+            self.add_gene(Gene.from_biopython(feature, record=self))
+        elif feature.type == Protocluster.FEATURE_TYPE:
+            self.add_protocluster(Protocluster.from_biopython(feature, record=self))
         elif feature.type == "proto_core":
             # discard this, as info contained in it is in "protocluster" features
             pass
-        elif feature.type == 'CDS_motif':
+        elif feature.type == CDSMotif.FEATURE_TYPE:
             # skip component parts of prepeptides and regenerate from the core
             prepeptide = feature.qualifiers.get("prepeptide", [""])[0]
             if prepeptide:
                 if prepeptide != "core":
                     return
-                self.add_cds_motif(Prepeptide.from_biopython(feature))
+                self.add_cds_motif(Prepeptide.from_biopython(feature, record=self))
                 return
-            motif = CDSMotif.from_biopython(feature)
+            motif = CDSMotif.from_biopython(feature, record=self)
             if not motif.domain_id and not motif.created_by_antismash:
                 counter = 1
                 template = "non_aS_motif_%d_%d_{}" % (motif.location.start, motif.location.end)
@@ -594,16 +594,16 @@ class Record:
                     counter += 1
                 motif.domain_id = template.format(counter)
             self.add_cds_motif(motif)
-        elif feature.type == 'PFAM_domain':
-            self.add_pfam_domain(PFAMDomain.from_biopython(feature))
-        elif feature.type == 'aSDomain':
-            self.add_antismash_domain(AntismashDomain.from_biopython(feature))
+        elif feature.type == PFAMDomain.FEATURE_TYPE:
+            self.add_pfam_domain(PFAMDomain.from_biopython(feature, record=self))
+        elif feature.type == AntismashDomain.FEATURE_TYPE:
+            self.add_antismash_domain(AntismashDomain.from_biopython(feature, record=self))
         elif feature.type == CandidateCluster.FEATURE_TYPE:
-            raise ValueError("CandidateCluster features cannot be directly added from biopython")
-        elif feature.type == 'region':
-            raise ValueError("Region features cannot be directly added from biopython")
-        elif feature.type == 'subregion':
-            self.add_subregion(SubRegion.from_biopython(feature))
+            self.add_candidate_cluster(CandidateCluster.from_biopython(feature, record=self))
+        elif feature.type == Region.FEATURE_TYPE:
+            self.add_region(Region.from_biopython(feature, record=self))
+        elif feature.type == SubRegion.FEATURE_TYPE:
+            self.add_subregion(SubRegion.from_biopython(feature, record=self))
         else:
             self.add_feature(Feature.from_biopython(feature))
 
