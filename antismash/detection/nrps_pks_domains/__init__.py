@@ -54,7 +54,6 @@ def run_on_record(record: Record, previous_results: Optional[NRPSPKSDomains],
         assert isinstance(previous_results, NRPSPKSDomains)
         return previous_results
     results = generate_domains(record)
-    results.add_to_record(record)
     return results
 
 
