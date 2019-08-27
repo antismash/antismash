@@ -18,9 +18,10 @@ class SubRegion(CDSCollection):
         without being considered a cluster.
     """
     __slots__ = ["tool", "probability", "label"]
+    FEATURE_TYPE = "subregion"
 
     def __init__(self, location: FeatureLocation, tool: str, probability: float = None, label: str = "") -> None:
-        super().__init__(location, feature_type="subregion")
+        super().__init__(location, feature_type=self.FEATURE_TYPE)
         self.tool = tool
         self.probability = probability
         self.label = label  # if anchored to a gene/CDS, this is the name

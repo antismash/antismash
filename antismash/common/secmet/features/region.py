@@ -33,6 +33,7 @@ class Region(CDSCollection):
     """
     __slots__ = ["_subregions", "_candidate_clusters", "clusterblast",
                  "knownclusterblast", "subclusterblast"]
+    FEATURE_TYPE = "region"
 
     def __init__(self, candidate_clusters: List[CandidateCluster] = None,
                  subregions: List[SubRegion] = None) -> None:
@@ -55,7 +56,7 @@ class Region(CDSCollection):
 
         location = combine_locations(child.location for child in children)
 
-        super().__init__(location, feature_type="region", child_collections=children)
+        super().__init__(location, feature_type=self.FEATURE_TYPE, child_collections=children)
         self._subregions = subregions
         self._candidate_clusters = candidate_clusters
 
@@ -181,7 +182,7 @@ class Region(CDSCollection):
             first_cluster = 0
         first_subregion = min(sub.get_subregion_number() for sub in self.subregions) if self.subregions else 0
         for feature in cluster_record.features:
-            if feature.type == "region":
+            if feature.type == Region.FEATURE_TYPE:
                 candidates = feature.qualifiers.get("candidate_cluster_numbers")
                 if not candidates:
                     continue

@@ -17,11 +17,12 @@ T = TypeVar("T", bound="CDSMotif")
 class CDSMotif(Domain):
     """ A base class for features that represent a motif within a CDSFeature """
     __slots__ = ["motif"]
+    FEATURE_TYPE = "CDS_motif"
 
     def __init__(self, location: Location, tool: Optional[str] = None) -> None:
         # if there's a tool, it was created by antismash
         created = tool is not None
-        super().__init__(location, feature_type="CDS_motif", tool=tool, created_by_antismash=created)
+        super().__init__(location, feature_type=self.FEATURE_TYPE, tool=tool, created_by_antismash=created)
 
     @classmethod
     def from_biopython(cls: Type[T], bio_feature: SeqFeature, feature: T = None,

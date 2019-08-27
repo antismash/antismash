@@ -15,11 +15,12 @@ T = TypeVar("T", bound="Gene")
 class Gene(Feature):
     """ A feature representing a Gene (more general than a CDS) """
     __slots__ = ["locus_tag", "gene_name"]
+    FEATURE_TYPE = "gene"
 
     def __init__(self, location: Location, locus_tag: Optional[str] = None,
                  gene_name: Optional[str] = None, created_by_antismash: bool = False,
                  qualifiers: Optional[Dict[str, List[str]]] = None) -> None:
-        super().__init__(location, feature_type="gene",
+        super().__init__(location, feature_type=self.FEATURE_TYPE,
                          created_by_antismash=created_by_antismash)
         self.locus_tag = str(locus_tag) if locus_tag else None
         self.gene_name = str(gene_name) if gene_name else None

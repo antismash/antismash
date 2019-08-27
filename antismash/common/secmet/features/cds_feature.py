@@ -130,11 +130,12 @@ class CDSFeature(Feature):
     __slots__ = ["_translation", "protein_id", "locus_tag", "gene", "product",
                  "transl_table", "_sec_met", "_gene_functions",
                  "unique_id", "_nrps_pks", "motifs", "region"]
+    FEATURE_TYPE = "CDS"
 
     def __init__(self, location: Location, translation: str, locus_tag: str = None,
                  protein_id: str = None, product: str = "", gene: str = None,
                  translation_table: int = 1) -> None:
-        super().__init__(location, feature_type="CDS")
+        super().__init__(location, feature_type=self.FEATURE_TYPE)
         _verify_location(location)
         # mandatory
         self._gene_functions = GeneFunctionAnnotations()

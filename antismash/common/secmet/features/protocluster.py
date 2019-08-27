@@ -28,11 +28,12 @@ class Protocluster(CDSCollection):
     core_seqfeature_type = "proto_core"
     __slots__ = ["core_location", "detection_rule", "product", "tool", "cutoff",
                  "_definition_cdses", "neighbourhood_range", "t2pks"]
+    FEATURE_TYPE = "protocluster"  # primary type only
 
     def __init__(self, core_location: FeatureLocation, surrounding_location: FeatureLocation,
                  tool: str, product: str, cutoff: int, neighbourhood_range: int,
                  detection_rule: str) -> None:
-        super().__init__(surrounding_location, feature_type="protocluster")
+        super().__init__(surrounding_location, feature_type=self.FEATURE_TYPE)
         # cluster-wide
         self.detection_rule = detection_rule
         if not product.replace("-", "").replace("_", "").isalnum() or product[0] in "-_" or product[-1] in "-_":
