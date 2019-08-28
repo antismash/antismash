@@ -105,13 +105,14 @@ def _find_hybrids(clusters: List[Protocluster]) -> Tuple[List[List[Protocluster]
 
     # merge the pairs into larger groups
     merged_groups = _merge_sets(groups)
-    clusters = sorted(unassigned)
+    # sort by core_location to ensure vastly different neighbourhood ranges don't cause issues
+    clusters = sorted(unassigned, key=lambda x: x.core_location.start)
 
     # then find any unassigned cluster that is fully contained by a hybrid group
     for group in merged_groups:
         core = FeatureLocation(min(proto.core_location.start for proto in group),
                                max(proto.core_location.end for proto in group))
-        index = max(0, bisect.bisect_left(clusters, core) - 1)
+        index = max(0, bisect.bisect_left([cluster.core_location.start for cluster in clusters], core.start) - 1)
         for cluster in clusters[index:]:
             if cluster.location.start > core.end:
                 break

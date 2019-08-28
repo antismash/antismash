@@ -181,3 +181,19 @@ class TestCreation(unittest.TestCase):
 
         assert created[1].kind == CandidateCluster.kinds.SINGLE
         assert created[1].location == small.location
+
+    def test_multiple_contained_in_hybrid(self):
+        clusters = [
+            create_cluster(142916, 162916, 191227, 209850, "a"),  # covers whole region
+            create_cluster(142916, 162916, 169708, 189708, "b"),  # causes chem hybrid
+            create_cluster(154261, 174261, 175881, 195881, "c"),  # interleaved
+            create_cluster(160464, 180464, 183155, 203155, "d"),  # interleaved
+        ]
+        cds = create_cds(162916, 169708, ["a", "b"])
+        clusters[0].add_cds(cds)
+        clusters[1].add_cds(cds)
+
+        created = creator(clusters)
+        assert len(created) == 1
+        assert created[0].kind == CandidateCluster.kinds.CHEMICAL_HYBRID
+        assert created[0].protoclusters == tuple(clusters)
