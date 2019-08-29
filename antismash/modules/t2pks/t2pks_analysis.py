@@ -74,9 +74,9 @@ def run_starter_unit_blastp(cds_hmm_hits: Dict[CDSFeature, List[HMMResult]]
 
     results = refine_hmmscan_results(blastp_results, fasta_lengths)
     for hits in results.values():
-        for hit in hits:
+        for i, hit in enumerate(hits):
             if not hit.hit_id.endswith("-CoA"):
-                hit.hit_id += "-CoA"
+                hits[i] = HMMResult(hit.hit_id + "-CoA", hit.query_start, hit.query_end, hit.evalue, hit.bitscore)
     return results
 
 
