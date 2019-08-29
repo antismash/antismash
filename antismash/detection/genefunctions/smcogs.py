@@ -8,6 +8,7 @@
 from typing import Dict, List
 
 from antismash.common import path
+from antismash.common.hmmscan_refinement import HMMResult
 from antismash.common.secmet import GeneFunction, CDSFeature
 from antismash.config import ConfigType
 
@@ -33,7 +34,8 @@ def classify(record_id: str, cds_features: List[CDSFeature],  # an API, so hide 
     for cds_name, result in hits.items():
         smcog_id = result.hit_id.split(":", 1)[0]
         cds_name_to_function[cds_name] = ids_to_function[smcog_id]
-        result.hit_id = result.hit_id.replace('_', ' ')
+        hits[cds_name] = HMMResult(result.hit_id.replace("_", " "), result.query_start,
+                                   result.query_end, result.evalue, result.bitscore)
     return FunctionResults(record_id, "smcogs", hits, cds_name_to_function)
 
 

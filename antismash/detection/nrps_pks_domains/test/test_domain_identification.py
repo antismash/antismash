@@ -33,7 +33,7 @@ class TestTerminalRemoval(unittest.TestCase):
         hits = [dummy_hmm(start=5 + i * 10) for i in range(2)]
         for name in {'NRPS-COM_Nterm', 'NRPS-COM_Cterm', 'PKS_Docking_Cterm',
                      'PKS_Docking_Nterm'}:
-            hits[0].hit_id = name
+            hits[0]._hit_id = name
             results = self.func(self.record, {self.cds.locus_tag: hits})
             assert results[self.cds.locus_tag] == hits
 
@@ -41,18 +41,16 @@ class TestTerminalRemoval(unittest.TestCase):
         hits = [dummy_hmm(start=50 + i * 10) for i in range(2)]
         for name in {'NRPS-COM_Nterm', 'NRPS-COM_Cterm', 'PKS_Docking_Cterm',
                      'PKS_Docking_Nterm'}:
-            hits[0].hit_id = name
+            hits[0]._hit_id = name
             results = self.func(self.record, {self.cds.locus_tag: hits})
             assert results[self.cds.locus_tag] == hits[1:]
 
     def test_trailing_terminal(self):
         hits = [dummy_hmm(start=5 + i * 50) for i in range(4)]
-        print(hits)
         for name in {'NRPS-COM_Nterm', 'NRPS-COM_Cterm', 'PKS_Docking_Cterm',
                      'PKS_Docking_Nterm'}:
-            hits[-1].hit_id = name
+            hits[-1]._hit_id = name
             results = self.func(self.record, {self.cds.locus_tag: hits})
-            print(results)
             assert results[self.cds.locus_tag] == hits
 
 

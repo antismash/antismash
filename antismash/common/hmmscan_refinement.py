@@ -5,7 +5,7 @@
 """
 
 from collections import defaultdict
-from typing import Dict, List, Set, Union
+from typing import Any, Dict, List, Set, Union
 
 from Bio.SearchIO import QueryResult
 from Bio.SearchIO._model.hsp import HSP
@@ -15,15 +15,40 @@ class HMMResult:
     """ A variant of HSP that allows for operations between multiple instances
         along with simplified operations e.g. len()
     """
-    __slots__ = ["hit_id", "query_start", "query_end", "evalue", "bitscore"]
+    __slots__ = ["_hit_id", "_query_start", "_query_end", "_evalue", "_bitscore"]
 
     def __init__(self, hit_id: str, start: int, end: int, evalue: float,
                  bitscore: float) -> None:
-        self.hit_id = hit_id
-        self.query_start = int(start)
-        self.query_end = int(end)
-        self.evalue = float(evalue)
-        self.bitscore = float(bitscore)
+        self._hit_id = hit_id
+        self._query_start = int(start)
+        self._query_end = int(end)
+        self._evalue = float(evalue)
+        self._bitscore = float(bitscore)
+
+    @property
+    def hit_id(self) -> str:
+        """ Returns the name of the matching profile """
+        return self._hit_id
+
+    @property
+    def query_start(self) -> int:
+        """ Returns the start position within the query's translation """
+        return self._query_start
+
+    @property
+    def query_end(self) -> int:
+        """ Returns the end position within the query's translation """
+        return self._query_end
+
+    @property
+    def evalue(self) -> float:
+        """ Returns the e-value of the hit """
+        return self._evalue
+
+    @property
+    def bitscore(self) -> float:
+        """ Returns the bitscore of the hit """
+        return self._bitscore
 
     def __len__(self) -> int:
         return self.query_end - self.query_start
@@ -43,7 +68,7 @@ class HMMResult:
 
     def to_json(self) -> Dict[str, Union[str, int, float]]:
         """ Converts the instance into a dictionary for use in json formats """
-        return {key: getattr(self, key) for key in self.__slots__}
+        return {key.lstrip("_"): getattr(self, key) for key in self.__slots__}
 
     @staticmethod
     def from_json(data: Dict[str, Union[str, int, float]]) -> "HMMResult":
@@ -57,6 +82,17 @@ class HMMResult:
     def __str__(self) -> str:
         return "HMMResult(%s, %d, %d, evalue=%g, bitscore=%g)" % (self.hit_id,
                    self.query_start, self.query_end, self.evalue, self.bitscore)
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, HMMResult):
+            return False
+        for attr in self.__slots__:
+            if getattr(self, attr) != getattr(other, attr):
+                return False
+        return True
+
+    def __hash__(self) -> int:
+        return hash((self._hit_id, self._query_start, self._query_end, self._evalue, self._bitscore))
 
 
 def _remove_overlapping(results: List[HMMResult], hmm_lengths: Dict[str, int]) -> List[HMMResult]:

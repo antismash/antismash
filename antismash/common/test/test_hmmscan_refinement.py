@@ -56,6 +56,31 @@ class TestHMMResult(unittest.TestCase):
         result = refinement.HMMResult("dummy_hit", 1, 5, 3e-10, 53.5)
         assert str(result) == "HMMResult(dummy_hit, 1, 5, evalue=3e-10, bitscore=53.5)"
 
+    def test_equality(self):
+        first = refinement.HMMResult("dummy_hit", 1, 5, 3e-10, 53.5)
+        second = refinement.HMMResult("dummy_hit", 1, 5, 3e-10, 53.5)
+        assert first == second and first is not second
+        second._hit_id = "dummy"
+        assert first != second
+        second._hit_id = first._hit_id
+        second._evalue /= 10
+        assert first != second
+
+    def test_hashability(self):
+        first = refinement.HMMResult("dummy_hit", 1, 5, 3e-10, 53.5)
+        second = refinement.HMMResult("dummy_hit", 1, 5, 3e-10, 53.5)
+        different = refinement.HMMResult("dummy_hit", 1, 5, 3e-1, 53.5)
+
+        assert hash(first) == hash(second) and first is not second
+        assert hash(first) != hash(different)
+
+        used = {}
+        used[first] = 1
+        used[second] = 2
+        used[different] = 3
+
+        assert used == {first: 2, different: 3}
+
 
 class TestRefinement(unittest.TestCase):
     def setUp(self):
@@ -153,11 +178,11 @@ class TestRefinement(unittest.TestCase):
         results = [first, second]
         assert len(refinement._remove_overlapping(results, {"dummy_hit": 20})) == 2
         assert len(refinement._remove_overlapping(results, {"dummy_hit": 100})) == 2
-        first.query_end = 16
+        first._query_end = 16
         assert len(refinement._remove_overlapping(results, {"dummy_hit": 20})) == 1
         assert len(refinement._remove_overlapping(results, {"dummy_hit": 100})) == 2
 
-        first.query_end = 13
+        first._query_end = 13
         assert len(refinement._remove_overlapping(results, {"dummy_hit": 10})) == 1
         assert len(refinement._remove_overlapping(results, {"dummy_hit": 100})) == 2
 
