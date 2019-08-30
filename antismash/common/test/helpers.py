@@ -21,9 +21,12 @@ from antismash.common import serialiser, path
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record
 from antismash.common.secmet.test.helpers import (  # for import by others, pylint: disable=unused-import
+    DummyAntismashDomain,
     DummyCandidateCluster,
     DummyCDS,
+    DummyCDSMotif,
     DummyFeature,
+    DummyPFAMDomain,
     DummyProtocluster,
 )
 from antismash.config import update_config
