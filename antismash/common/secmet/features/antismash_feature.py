@@ -117,7 +117,8 @@ class AntismashFeature(Feature):
         feature.database = leftovers.pop("database", [""])[0] or None
         feature.detection = leftovers.pop("detection", [""])[0] or None
         feature.label = leftovers.pop("label", [""])[0] or None
-        feature.locus_tag = leftovers.pop("locus_tag", [""])[0] or None
+        if not feature.locus_tag:  # may already be populated
+            feature.locus_tag = leftovers.pop("locus_tag", [""])[0] or None
         translation = leftovers.pop("translation", [""])[0] or None
         if translation is not None:
             feature.translation = translation

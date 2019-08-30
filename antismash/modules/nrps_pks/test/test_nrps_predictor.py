@@ -10,7 +10,7 @@ from jinja2 import Markup
 from minimock import mock, restore
 
 from antismash.common import path, fasta, subprocessing  # mocked # pylint: disable=unused-import
-from antismash.common.secmet import AntismashDomain, FeatureLocation
+from antismash.common.test.helpers import DummyAntismashDomain
 from antismash.modules.nrps_pks import nrps_predictor, data_structures
 
 
@@ -209,8 +209,7 @@ class TestAngstromGeneration(unittest.TestCase):
         restore()
 
     def test_angstrom(self):
-        domain = AntismashDomain(FeatureLocation(1, 2), "test")
-        domain.domain_id = "query"
+        domain = DummyAntismashDomain(domain_id="query")
         domain.translation = self.aligns[domain.domain_id].replace("-", "")
 
         sig = nrps_predictor.get_34_aa_signature(domain)

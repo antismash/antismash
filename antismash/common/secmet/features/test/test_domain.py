@@ -13,15 +13,18 @@ from antismash.common.secmet.features.domain import Domain
 class TestDomain(unittest.TestCase):
     def test_construction(self):
         loc = FeatureLocation(1, 15, 1)
-        domain = Domain(loc, "test_type", tool="test")
+        protein_location = FeatureLocation(0, 3)
+        domain = Domain(loc, "test_type", tool="test", protein_location=protein_location, locus_tag="locus")
         assert domain.type == "test_type"
         assert domain.location == loc
         assert domain.created_by_antismash
         assert domain.tool == "test"
         assert domain.domain is None
+        assert domain.protein_location == protein_location
 
     def test_translation(self):
-        domain = Domain(FeatureLocation(1, 15, 1), "test_type", tool="test")
+        domain = Domain(FeatureLocation(1, 15, 1), "test_type", tool="test",
+                        protein_location=FeatureLocation(0, 3), locus_tag="locus")
         with self.assertRaisesRegex(ValueError, "has no translation"):
             assert domain.translation is None
         domain.translation = "AAA"

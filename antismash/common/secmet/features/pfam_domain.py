@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional, Type, TypeVar
 
 from Bio.SeqFeature import SeqFeature
 
+from antismash.common.secmet.locations import FeatureLocation
 from antismash.common.secmet.qualifiers import GOQualifier
 
 from ..errors import SecmetInvalidInputError
@@ -20,24 +21,24 @@ T = TypeVar("T", bound="PFAMDomain")
 class PFAMDomain(Domain):
     """ A feature representing a PFAM domain within a CDS.
     """
-    __slots__ = ["description", "probability", "protein_start", "protein_end",
+    __slots__ = ["description", "probability",
                  "gene_ontologies", "identifier", "version"]
     FEATURE_TYPE = "PFAM_domain"
 
-    def __init__(self, location: Location, description: str, protein_start: int,
-                 protein_end: int, identifier: str, tool: str, domain: Optional[str] = None,
+    def __init__(self, location: Location, description: str, protein_location: Location,
+                 identifier: str, tool: str, locus_tag: str, domain: Optional[str] = None,
                  ) -> None:
         """ Arguments:
                 location: the DNA location of the feature
                 description: a string with a description
-                protein_start: the start point within the parent CDS translation
-                protein_end: the end point within the parent CDS translation
+                protein_location: the location within the parent CDS translation
                 identifier: the Pfam identifier (e.g. PF00067 or PF00067.14)
                 tool: the name of the tool used to find/create the feature
+                locus_tag: the name of the parent CDS feature
                 domain: the name for the domain (e.g. p450 or 'Type III restriction enzyme')
         """
-        assert tool in ["test", "clusterhmmer", "fullhmmer", "toolname"], tool
-        super().__init__(location, feature_type=self.FEATURE_TYPE, domain=domain, tool=tool)
+        super().__init__(location, self.FEATURE_TYPE, protein_location, locus_tag,
+                         domain=domain, tool=tool)
         if not isinstance(description, str):
             raise TypeError("PFAMDomain description must be a string, not %s" % type(description))
         if not description:
@@ -53,10 +54,6 @@ class PFAMDomain(Domain):
         if not (len(identifier) == 7 and identifier.startswith('PF') and identifier[2:].isdecimal()):
             raise ValueError("invalid Pfam identifier: %s" % identifier)
         self.identifier = str(identifier)
-        self.protein_start = int(protein_start)
-        self.protein_end = int(protein_end)
-        if self.protein_start >= self.protein_end:
-            raise ValueError("A PFAMDomain protein location cannot end before it starts")
         self.gene_ontologies = None  # type: Optional[GOQualifier]
 
     @property
@@ -71,8 +68,6 @@ class PFAMDomain(Domain):
     def to_biopython(self, qualifiers: Dict[str, List[str]] = None) -> List[SeqFeature]:
         mine = OrderedDict()  # type: Dict[str, List[str]]
         mine["description"] = [self.description]
-        mine["protein_start"] = [str(self.protein_start)]
-        mine["protein_end"] = [str(self.protein_end)]
         if self.probability is not None:
             mine["probability"] = [str(self.probability)]
         mine["db_xref"] = [self.full_identifier]
@@ -102,9 +97,10 @@ class PFAMDomain(Domain):
         if name is None:
             raise SecmetInvalidInputError("PFAMDomain missing identifier")
         tool = leftovers.pop("aSTool")[0]
+        locus_tag = leftovers.pop("locus_tag", ["(unknown)"])[0]
 
-        feature = cls(bio_feature.location, description, p_start, p_end,
-                      identifier=name, tool=tool)
+        feature = cls(bio_feature.location, description, FeatureLocation(p_start, p_end),
+                      identifier=name, tool=tool, locus_tag=locus_tag)
 
         # grab optional qualifiers
         feature.gene_ontologies = GOQualifier.from_biopython(leftovers.pop("gene_ontologies", []))

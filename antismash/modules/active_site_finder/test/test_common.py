@@ -11,7 +11,8 @@ from minimock import mock, restore
 
 from antismash.common import subprocessing  # mocked, pylint: disable=unused-import
 from antismash.common import fasta, path
-from antismash.common.secmet.features import AntismashDomain, PFAMDomain, FeatureLocation
+from antismash.common.secmet.features import FeatureLocation
+from antismash.common.test.helpers import DummyAntismashDomain, DummyPFAMDomain
 from antismash.modules.active_site_finder.common import ActiveSiteAnalysis, Alignment, get_signature
 
 
@@ -33,9 +34,7 @@ class TestCommon(unittest.TestCase):
 
 class TestAlignment(unittest.TestCase):
     def setUp(self):
-        self.domain = PFAMDomain(FeatureLocation(1, 6), "description",
-                                 protein_start=3, protein_end=5, domain="p450",
-                                 identifier="PF00001", tool="test")
+        self.domain = DummyPFAMDomain(domain="p450")
         self.alignment = Alignment(self.domain, "WLAD-QGAR", "WLaer.rGA", 10, 19)
 
     def test_get_signature(self):
@@ -49,11 +48,6 @@ class TestAlignment(unittest.TestCase):
 
 
 class TestAnalysisCore(unittest.TestCase):
-    def setUp(self):
-        self.domain = PFAMDomain(FeatureLocation(1, 6), "description",
-                                 protein_start=3, protein_end=5, domain="p450",
-                                 identifier="PF00001", tool="test")
-
     def tearDown(self):
         restore()
 
@@ -63,13 +57,13 @@ class TestAnalysisCore(unittest.TestCase):
         last_end = 0
         for translation in inputs.values():
             location = FeatureLocation(last_end + 10, last_end + len(translation)*3 + 16)
-            domain = AntismashDomain(location, tool="test")
+            domain = DummyAntismashDomain(location=location)
             domain.translation = translation
             domains.append(domain)
             domain.domain = "PKS_KS"
 
         location = FeatureLocation(last_end + 10, last_end + len(domains[-1].translation)*3 + 16)
-        domains.append(AntismashDomain(location, tool="test"))
+        domains.append(DummyAntismashDomain(location=location))
         domains[-1].domain = "PKS_KR"
         return domains
 
@@ -91,10 +85,11 @@ class TestAnalysisCore(unittest.TestCase):
         assert analysis.get_alignments() == []
 
     def test_domains_of_interest(self):
-        analysis = ActiveSiteAnalysis("not-p450", (self.domain,), "PKSI-KR.hmm2", [5, 6], ["C", "S"])
+        domain = DummyPFAMDomain(domain="p450")
+        analysis = ActiveSiteAnalysis("not-p450", (domain,), "PKSI-KR.hmm2", [5, 6], ["C", "S"])
         assert analysis.domains_of_interest == []
-        analysis = ActiveSiteAnalysis("p450", (self.domain,), "PKSI-KR.hmm2", [5, 6], ["C", "S"])
-        assert analysis.domains_of_interest == [self.domain]
+        analysis = ActiveSiteAnalysis("p450", (domain,), "PKSI-KR.hmm2", [5, 6], ["C", "S"])
+        assert analysis.domains_of_interest == [domain]
 
     def test_bad_candidates(self):
         with self.assertRaisesRegex(TypeError, "Candidates must be Domains, not"):
@@ -127,9 +122,7 @@ class TestAnalysisCore(unittest.TestCase):
 
 class TestScaffoldMatching(unittest.TestCase):
     def setUp(self):
-        domain = PFAMDomain(FeatureLocation(1, 6), "description",
-                            protein_start=3, protein_end=5, domain="p450",
-                            identifier="PF00001", tool="test")
+        domain = DummyPFAMDomain(domain="p450")
         self.alignment = Alignment(domain, "WLAD-QGAR", "WLae.rGAR", 10, 19)
 
     def create_analysis(self, positions, expected):

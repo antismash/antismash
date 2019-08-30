@@ -13,7 +13,7 @@ from minimock import mock, restore
 
 from antismash.common import subprocessing  # mocked, pylint: disable=unused-import
 from antismash.common import fasta, path, secmet
-from antismash.common.test.helpers import DummyRecord
+from antismash.common.test.helpers import DummyAntismashDomain, DummyRecord, DummyPFAMDomain
 from antismash.modules import active_site_finder
 from antismash.modules.active_site_finder import analysis
 
@@ -26,12 +26,10 @@ def parse_hmmpfam_results(filename):
 def rebuild_domains(filename, domain_type):
     full_path = path.get_full_path(__file__, 'data', filename)
     domain_fasta = fasta.read_fasta(full_path)
-    dummy_location = secmet.features.FeatureLocation(1, 100)
     domains = []
     for name, translation in domain_fasta.items():
-        domain = secmet.features.AntismashDomain(dummy_location, tool="test")
+        domain = DummyAntismashDomain(start=1, end=100, domain_id=domain_type + name)
         domain.domain = domain_type
-        domain.domain_id = domain_type + name
         domain.translation = translation
         domains.append(domain)
     return domains
@@ -60,15 +58,10 @@ class TestAnalyses(unittest.TestCase):
                 self.record.add_antismash_domain(domain)
         # these PFAMs found in BN001301.1 with clusterhmmer, one was excluded
         # to avoid a Biopython SearchIO bug
-        dummy_location = secmet.features.FeatureLocation(1, 100)
         domain_fasta = fasta.read_fasta(path.get_full_path(__file__, 'data', "p450.input"))
         for name, translation in domain_fasta.items():
-            pfam_domain = secmet.features.PFAMDomain(dummy_location, protein_start=5, protein_end=10,
-                                                     description="test", identifier="PF00001",
-                                                     tool="test")
+            pfam_domain = DummyPFAMDomain(domain="p450", domain_id="PFAM_p450_" + name)
             pfam_domain.translation = translation
-            pfam_domain.domain_id = "PFAM_p450_" + name
-            pfam_domain.domain = "p450"
             self.record.add_pfam_domain(pfam_domain)
 
     def tearDown(self):

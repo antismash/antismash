@@ -9,8 +9,8 @@ from typing import Optional  # comment hints, pylint: disable=unused-import
 
 from Bio.SeqFeature import SeqFeature
 
-from .domain import Domain
-from .feature import Feature, Location
+from .domain import Domain, generate_protein_location_from_qualifiers
+from .feature import Feature, FeatureLocation, Location
 
 T = TypeVar("T", bound="AntismashDomain")
 
@@ -20,8 +20,9 @@ class AntismashDomain(Domain):
     __slots__ = ["domain_subtype", "specificity"]
     FEATURE_TYPE = "aSDomain"
 
-    def __init__(self, location: Location, tool: str) -> None:
-        super().__init__(location, feature_type=self.FEATURE_TYPE, tool=tool, created_by_antismash=True)
+    def __init__(self, location: Location, tool: str, protein_location: FeatureLocation, locus_tag: str) -> None:
+        super().__init__(location, self.FEATURE_TYPE, protein_location, locus_tag,
+                         tool=tool, created_by_antismash=True)
         self.domain_subtype = None  # type: Optional[str]
         self.specificity = []  # type: List[str]
 
@@ -42,7 +43,10 @@ class AntismashDomain(Domain):
             leftovers = Feature.make_qualifiers_copy(bio_feature)
         # grab mandatory qualifiers and create the class
         tool = leftovers.pop("aSTool")[0]
-        feature = cls(bio_feature.location, tool=tool)
+        protein_location = generate_protein_location_from_qualifiers(leftovers, record)
+        # locus tag is special, antismash versions <= 5.0 didn't require it, but > 5.0 do
+        locus_tag = leftovers.pop("locus_tag", ["(unknown)"])[0]
+        feature = cls(bio_feature.location, tool, protein_location, locus_tag)
 
         # grab optional qualifiers
         feature.domain_subtype = leftovers.pop("domain_subtype", [""])[0] or None
