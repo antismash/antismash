@@ -24,13 +24,16 @@ from ..locations import FeatureLocation
 class DummyAntismashDomain(AntismashDomain):
     counter = 0
 
-    def __init__(self, start=0, end=3, strand=1, location=None, domain_id=None, tool="test_tool"):
+    def __init__(self, start=0, end=3, strand=1, location=None, domain_id=None, tool="test_tool",
+                 protein_start=0, protein_end=1, protein_location=None, locus_tag="dummyCDS"):
         if location is None:
             location = FeatureLocation(start, end, strand=strand)
+        if protein_location is None:
+            protein_location = FeatureLocation(protein_start, protein_end)
         if not domain_id:
             domain_id = "test_asDom_%d" % DummyAntismashDomain.counter
             DummyAntismashDomain.counter += 1
-        super().__init__(location, tool=tool)
+        super().__init__(location, tool, protein_location, locus_tag)
         self.domain_id = domain_id
 
 
@@ -60,8 +63,11 @@ class DummyCDS(CDSFeature):
 class DummyCDSMotif(CDSMotif):
     counter = 0
 
-    def __init__(self, start=0, end=6, strand=1, tool=None, domain_id=None):
-        super().__init__(FeatureLocation(start, end, strand), tool)
+    def __init__(self, start=0, end=6, strand=1, tool="test", domain_id=None,
+                 protein_start=0, protein_end=1, protein_location=None, locus_tag="dummyCDS"):
+        if not protein_location:
+            protein_location = FeatureLocation(protein_start, protein_end)
+        super().__init__(FeatureLocation(start, end, strand), locus_tag, protein_location, tool)
         if not domain_id:
             domain_id = "dummy_domain%d_%d_%d" % (DummyCDSMotif.counter, start, end)
             DummyCDSMotif.counter += 1
@@ -92,13 +98,15 @@ class DummyPFAMDomain(PFAMDomain):
     counter = 0
 
     def __init__(self, start=0, end=3, location=None, description="desc",  # pylint: disable=too-many-arguments
-                 protein_start=0, protein_end=1, identifier=None, tool="test",
-                 domain_id=None):
+                 protein_start=0, protein_end=1, identifier=None, tool="test", domain=None,
+                 domain_id=None, protein_location=None, locus_tag="dummyCDS"):
         if location is None:
             location = FeatureLocation(start, end)
         if identifier is None:
             identifier = "PF00001"
-        super().__init__(location, description, protein_start, protein_end, identifier, tool)
+        if protein_location is None:
+            protein_location = FeatureLocation(protein_start, protein_end)
+        super().__init__(location, description, protein_location, identifier, tool, locus_tag, domain=domain)
         self.domain_id = domain_id or "dummy_pfam_%d" % DummyPFAMDomain.counter
         DummyPFAMDomain.counter += 1
 

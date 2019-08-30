@@ -14,6 +14,7 @@ from antismash.common.fasta import get_fasta_from_features
 from antismash.common.hmmscan_refinement import refine_hmmscan_results, HMMResult
 from antismash.common.secmet.record import Record
 from antismash.common.secmet.features import AntismashDomain, CDSFeature, CDSMotif
+from antismash.common.secmet.locations import FeatureLocation
 
 
 class CDSResult:
@@ -312,9 +313,11 @@ def generate_domain_features(gene: CDSFeature, domains: List[HMMResult]) -> Dict
     domain_counts = defaultdict(int)  # type: Dict[str, int]
     for domain in domains:
         loc = gene.get_sub_location_from_protein_coordinates(domain.query_start, domain.query_end)
+        prot_loc = FeatureLocation(domain.query_start, domain.query_end)
 
         # set up new feature
-        new_feature = AntismashDomain(loc, tool="nrps_pks_domains")
+        new_feature = AntismashDomain(loc, tool="nrps_pks_domains", protein_location=prot_loc,
+                                      locus_tag=gene.get_name())
         new_feature.domain = domain.hit_id
         new_feature.locus_tag = gene.locus_tag or gene.get_name()
         new_feature.detection = "hmmscan"
@@ -345,7 +348,8 @@ def generate_motif_features(feature: CDSFeature, motifs: List[HMMResult]) -> Lis
     for i, motif in enumerate(motifs):
         i += 1  # user facing, so 1-indexed
         loc = feature.get_sub_location_from_protein_coordinates(motif.query_start, motif.query_end)
-        new_motif = CDSMotif(loc, tool="nrps_pks_domains")
+        prot_loc = FeatureLocation(motif.query_start, motif.query_end)
+        new_motif = CDSMotif(loc, feature.get_name(), prot_loc, tool="nrps_pks_domains")
         new_motif.label = motif.hit_id
         new_motif.domain_id = 'nrpspksmotif_{}_{:04d}'.format(locus_tag, i)
         new_motif.evalue = motif.evalue

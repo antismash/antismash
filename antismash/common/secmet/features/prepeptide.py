@@ -10,7 +10,7 @@ from Bio.SeqFeature import SeqFeature
 
 from ..errors import SecmetInvalidInputError
 from .cds_motif import CDSMotif
-from .feature import Feature, Location
+from .feature import Feature, FeatureLocation, Location
 from ..locations import build_location_from_others, location_from_string
 from ..qualifiers.prepeptide_qualifiers import RiPPQualifier  # comment hints, pylint: disable=unused-import
 from ..qualifiers.prepeptide_qualifiers import rebuild_qualifier
@@ -43,7 +43,7 @@ class Prepeptide(CDSMotif):  # pylint: disable=too-many-instance-attributes
         """
         if not tool:
             raise ValueError("tool must not be empty or None")
-        super().__init__(location, tool=tool)
+        super().__init__(location, locus_tag, protein_location=FeatureLocation(0, len(location)), tool=tool)
         for arg in [peptide_class, core, leader, tail]:
             assert isinstance(arg, str), type(arg)
         self._leader = leader

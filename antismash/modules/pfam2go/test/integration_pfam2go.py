@@ -8,7 +8,6 @@ import unittest
 
 import antismash
 from antismash.common import record_processing
-from antismash.common.secmet import PFAMDomain, FeatureLocation
 from antismash.common.test import helpers
 from antismash.config import build_config, destroy_config
 from antismash.modules import pfam2go
@@ -28,10 +27,7 @@ class PfamToGoTest(unittest.TestCase):
         assert not record.get_pfam_domains()
 
         # add a test PFAM
-        pfam = PFAMDomain(FeatureLocation(2, 5), description="test",
-                          protein_start=5, protein_end=10, identifier="PF00005",
-                          domain="PF00005", tool="test")
-        pfam.domain_id = "test"
+        pfam = helpers.DummyPFAMDomain(identifier="PF00005", domain="PF00005")
         record.add_pfam_domain(pfam)
         assert len(record.get_pfam_domains()) == 1
 

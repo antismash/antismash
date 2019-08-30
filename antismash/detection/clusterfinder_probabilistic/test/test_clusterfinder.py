@@ -9,8 +9,8 @@ import unittest
 
 from Bio.Seq import Seq
 
-from antismash.common.secmet.features import CDSFeature, PFAMDomain, FeatureLocation
-from antismash.common.test.helpers import DummyRecord
+from antismash.common.secmet.features import CDSFeature, FeatureLocation
+from antismash.common.test.helpers import DummyRecord, DummyPFAMDomain
 from antismash.config import build_config, update_config, destroy_config
 from antismash.detection import clusterfinder_probabilistic as clusterfinder
 
@@ -45,8 +45,8 @@ class ClusterFinderTest(unittest.TestCase):
                                                  (1110, 1120, 1.0, 'PF00128')]:
             location = FeatureLocation(start, end, strand=1)
             self.record.add_cds_feature(CDSFeature(location, locus_tag=str(start), translation="A"))
-            pfam = PFAMDomain(location, "dummy_description", protein_start=start + 1,
-                              protein_end=end-1, identifier=pfam_id, tool="test")
+            pfam = DummyPFAMDomain(location=location, protein_start=start + 1,
+                                   protein_end=end-1, identifier=pfam_id)
             pfam.domain_id = "pfam_%d" % start
             pfam.probability = probability
             self.record.add_pfam_domain(pfam)

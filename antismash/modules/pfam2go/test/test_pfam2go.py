@@ -14,18 +14,17 @@ from Bio.Seq import Seq
 from Bio.SeqFeature import FeatureLocation
 
 from antismash.common import path
-from antismash.common.secmet.features import PFAMDomain
 from antismash.common.secmet.record import Record
-from antismash.common.test.helpers import DummyRecord
+from antismash.common.test.helpers import DummyRecord, DummyPFAMDomain
 from antismash.modules.pfam2go import pfam2go
 
 
 def set_dummy_with_pfams(pfam_ids: Dict[str, FeatureLocation]) -> DummyRecord:
     pfam_domains = []
     for pfam_id, pfam_location in pfam_ids.items():
-        pfam_domain = PFAMDomain(location=pfam_location, description='FAKE', protein_start=0, protein_end=5,
-                                 identifier=pfam_id, tool="test")
-        pfam_domain.domain_id = '%s.%d.%d' % (pfam_id, pfam_location.start, pfam_location.end)
+        domain_id = '%s.%d.%d' % (pfam_id, pfam_location.start, pfam_location.end)
+        pfam_domain = DummyPFAMDomain(location=pfam_location, protein_start=0, protein_end=5,
+                                      identifier=pfam_id, domain_id=domain_id)
         pfam_domains.append(pfam_domain)
     return DummyRecord(features=pfam_domains)
 
@@ -102,10 +101,7 @@ class PfamToGoTest(unittest.TestCase):
     def test_blank_records(self):
         blank_no_pfams = DummyRecord()
         blank_no_ids = Record(Seq("ATGTTATGAGGGTCATAACAT", generic_dna))
-        fake_pfam_location = FeatureLocation(0, 12)
-        fake_pfam = PFAMDomain(location=fake_pfam_location, description='MCPsignal', protein_start=0, protein_end=5,
-                               identifier="PF00000", tool="test")
-        fake_pfam.domain_id = 'BLANK'
+        fake_pfam = DummyPFAMDomain(identifier="PF00000")
         blank_no_ids.add_pfam_domain(fake_pfam)
 
         assert not pfam2go.get_gos_for_pfams(blank_no_pfams)
@@ -126,9 +122,7 @@ class PfamToGoTest(unittest.TestCase):
         pfams = {'PF00015.2': FeatureLocation(0, 3), 'PF00351.1': FeatureLocation(0, 3),
                  'PF00015.27': FeatureLocation(3, 6)}
         fake_record = set_dummy_with_pfams(pfams)
-        fake_duplicate_pfam = PFAMDomain(location=FeatureLocation(6, 9), description='DUPLICATE', protein_start=0,
-                                         protein_end=5, identifier="PF00015.2", tool="test")
-        fake_duplicate_pfam.domain_id = 'DUPLICATE'
+        fake_duplicate_pfam = DummyPFAMDomain(identifier="PF00015.2")
         fake_record.add_pfam_domain(fake_duplicate_pfam)
         assert fake_duplicate_pfam in fake_record.get_pfam_domains()
         gos_for_fake_pfam = pfam2go.get_gos_for_pfams(fake_record)

@@ -251,7 +251,7 @@ def generate_asf_tooltip_section(record: Record, feature: CDSFeature) -> Dict[Tu
         if not pfam.domain:
             continue
         if pfam.asf.hits:
-            asf_notes[(pfam.domain, pfam.protein_start, pfam.protein_end)] = pfam.asf.hits
+            asf_notes[(pfam.domain, pfam.protein_location.start, pfam.protein_location.end)] = pfam.asf.hits
     return asf_notes
 
 
