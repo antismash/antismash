@@ -29,6 +29,21 @@ class TestReverseParse(unittest.TestCase):
             assert len(parsed) == 1
             assert float(parsed[0]) == value
 
+    def test_explicit_int(self):
+        fmt = "{:d}"
+        with self.assertRaisesRegex(ValueError, "could not match format"):
+            _parse_format(fmt, "A")
+        assert _parse_format(fmt, "0152")[0] == "0152"
+
+    def test_lookalikes(self):
+        fmt = "{} ({}-{})"  # the problem case
+        parsed = _parse_format(fmt, fmt.format("a(b-c)", 5, 10))
+        assert list(parsed) == ["a", "b", "c) (5-10"]
+        # and that it's fixed by explicit int formatters
+        fmt = "{} ({:d}-{:d})"
+        parsed = _parse_format(fmt, fmt.format("a(b-c)", 5, 10))
+        assert list(parsed) == ["a(b-c)", "5", "10"]
+
     def test_literal_braces(self):
         fmt = "{{{}}}"
         formatted = fmt.format("stuff")
