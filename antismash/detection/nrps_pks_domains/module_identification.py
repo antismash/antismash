@@ -62,6 +62,7 @@ CARRIER_PROTEINS = {
     "ACP",
     "ACP_beta",
     "PCP",
+    "PP-binding"
 }
 ALTERNATE_STARTERS = {
     "CAL_domain",

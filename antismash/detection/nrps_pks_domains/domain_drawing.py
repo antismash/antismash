@@ -27,6 +27,7 @@ _UNLABLED_DOMAINS = set([
     "NRPS-COM_Cterm",
     "PKS_Docking_Nterm",
     "PKS_Docking_Cterm",
+    "PP-binding",
     "Trans-AT_docking",
     "Polyketide_cyc",
     "Polyketide_cyc2",
