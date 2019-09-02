@@ -37,7 +37,7 @@ class JSONDomain(JSONBase):
                  blast_link: str, sequence: str, dna: str) -> None:
         super().__init__(['type', 'start', 'end', 'predictions', 'napdoslink',
                           'blastlink', 'sequence', 'dna_sequence'])
-        self.type = str(domain.name)
+        self.type = str(domain.full_type)
         self.start = int(domain.start)
         self.end = int(domain.end)
         self.predictions = predictions
