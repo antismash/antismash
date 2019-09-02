@@ -9,7 +9,7 @@ from typing import Dict  # used in comment hints # pylint: disable=unused-import
 
 from .secmet import _parse_format
 
-_DOMAIN_FORMAT = "Domain: {} ({}-{}). E-value: {}. Score: {}. Matches aSDomain: {}"
+_DOMAIN_FORMAT = "Domain: {} ({:d}-{:d}). E-value: {}. Score: {}. Matches aSDomain: {}"
 _SUBTYPE_FORMAT = "subtype: {}"
 _TYPE_FORMAT = "type: {}"
 
@@ -40,10 +40,10 @@ class NRPSPKSQualifier(list):
             this same information
         """
         __slots__ = ["name", "label", "start", "end", "evalue", "bitscore",
-                     "predictions", "feature_name"]
+                     "predictions", "feature_name", "subtype"]
 
         def __init__(self, name: str, label: str, start: int, end: int,
-                     evalue: float, bitscore: float, feature_name: str) -> None:
+                     evalue: float, bitscore: float, feature_name: str, subtype: str = "") -> None:
             self.label = str(label)
             self.name = str(name)
             self.start = int(start)
@@ -54,13 +54,21 @@ class NRPSPKSQualifier(list):
                 raise ValueError("a Domain must belong to a feature, feature_name is required")
             self.feature_name = str(feature_name)
             self.predictions = {}  # type: Dict[str, str] # method to prediction name
+            self.subtype = str(subtype)
 
         def __lt__(self, other: "NRPSPKSQualifier.Domain") -> bool:
             return (self.start, self.end) < (other.start, other.end)
 
         def __repr__(self) -> str:
             return "NRPSPKSQualifier.Domain(%s, label=%s, start=%d, end=%d)" % (
-                        self.name, self.label, self.start, self.end)
+                        self.full_type, self.label, self.start, self.end)
+
+        @property
+        def full_type(self) -> str:
+            """ Returns the type of a domain, including subtype, if present """
+            if not self.subtype:
+                return self.name
+            return "{}({})".format(self.name, self.subtype)
 
     def __init__(self, strand: int) -> None:
         super().__init__()
@@ -99,7 +107,7 @@ class NRPSPKSQualifier(list):
 
     def __iter__(self) -> Iterator[str]:
         for domain in self.domains:
-            yield _DOMAIN_FORMAT.format(domain.name, domain.start, domain.end,
+            yield _DOMAIN_FORMAT.format(domain.full_type, domain.start, domain.end,
                                         domain.evalue, domain.bitscore, domain.feature_name)
         if self.type != "uninitialised":
             yield _TYPE_FORMAT.format(self.type)
@@ -114,7 +122,7 @@ class NRPSPKSQualifier(list):
         self.subtypes.append(subtype)
 
     # the domain type Any is only to avoid circular dependencies
-    def add_domain(self, domain: Any, feature_name: str) -> None:
+    def add_domain(self, domain: Any, feature_name: str, subtype: str = "") -> None:
         """ Adds a domain to the current set.
 
             Arguments:
@@ -122,11 +130,14 @@ class NRPSPKSQualifier(list):
             (see: antismash.common.hmmscan_refinement.HMMResult).
                 feature_name: the name of the matching AntismashDomain feature
                               in the same record as this qualifier
+                subtype: a specific subtype of the domain type, if any
 
             Returns:
                 None
         """
         assert not isinstance(domain, str)
+        if subtype:
+            assert domain.hit_id == "PKS_KS", domain.hit_id
         if domain.hit_id == "PKS_AT":
             self.at_counter += 1
             suffix = "_AT%d" % self.at_counter
@@ -148,7 +159,7 @@ class NRPSPKSQualifier(list):
 
         new = NRPSPKSQualifier.Domain(domain.hit_id, suffix,
                                       domain.query_start, domain.query_end,
-                                      domain.evalue, domain.bitscore, feature_name)
+                                      domain.evalue, domain.bitscore, feature_name, subtype)
         bisect.insort_right(self._domains, new)
         # update the domain name list
         self._domain_names = [domain.name for domain in self._domains]
@@ -160,9 +171,15 @@ class NRPSPKSQualifier(list):
         for qualifier in qualifiers:
             if qualifier.startswith("Domain: "):
                 parts = _parse_format(_DOMAIN_FORMAT, qualifier)
-                domain = _HMMResultLike(parts[0], int(parts[1]), int(parts[2]),
+                if parts[0].endswith(")"):
+                    name, sub = parts[0].split("(", 1)
+                    sub = sub.rstrip(")")
+                else:
+                    name = parts[0]
+                    sub = ""
+                domain = _HMMResultLike(name, int(parts[1]), int(parts[2]),
                                         float(parts[3]), float(parts[4]))
-                self.add_domain(domain, parts[5])
+                self.add_domain(domain, parts[5], sub)
             elif qualifier.startswith("subtype: "):
                 self.add_subtype(_parse_format(_SUBTYPE_FORMAT, qualifier)[0])
             elif qualifier.startswith("type: "):
