@@ -35,20 +35,17 @@ def gen_smiles_from_pksnrps(compound_pred: str) -> str:
         if residues[-1] == "ccmal":
             residues.append('pks-end2')
 
-    if len(residues) > 1:
-        # Conventionally aaSMILES was used;
-        # chirality expressed with "@@" causes indigo error
-        aa_smiles = load_smiles()
+    aa_smiles = load_smiles()
 
-        for monomer in residues:
-            lower_monomer = monomer.lower()
-            if lower_monomer in aa_smiles:
-                smiles += aa_smiles[lower_monomer]
-            elif '|' in monomer:
-                logging.debug("Substituting 'X' for combined monomer %r", monomer)
-                smiles += aa_smiles['x']
-            else:
-                logging.debug("No SMILES mapping for unknown monomer %r", monomer)
+    for monomer in residues:
+        lower_monomer = monomer.lower()
+        if lower_monomer in aa_smiles:
+            smiles += aa_smiles[lower_monomer]
+        elif '|' in monomer:
+            logging.debug("Substituting 'X' for combined monomer %r", monomer)
+            smiles += aa_smiles['x']
+        else:
+            logging.debug("No SMILES mapping for unknown monomer %r", monomer)
     return smiles
 
 
