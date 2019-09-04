@@ -41,11 +41,12 @@ def gen_smiles_from_pksnrps(compound_pred: str) -> str:
         aa_smiles = load_smiles()
 
         for monomer in residues:
-            if monomer in aa_smiles:
-                smiles += aa_smiles[monomer]
+            lower_monomer = monomer.lower()
+            if lower_monomer in aa_smiles:
+                smiles += aa_smiles[lower_monomer]
             elif '|' in monomer:
                 logging.debug("Substituting 'X' for combined monomer %r", monomer)
-                smiles += aa_smiles['X']
+                smiles += aa_smiles['x']
             else:
                 logging.debug("No SMILES mapping for unknown monomer %r", monomer)
     return smiles
@@ -63,8 +64,8 @@ def load_smiles() -> Dict[str, str]:
             continue
         smiles = line.split()
         assert len(smiles) == 2, "Invalid smiles line {!r}".format(line)
-        assert smiles[0] not in aa_smiles, "%s contained twice in smiles data" % smiles[0]
-        aa_smiles[smiles[0]] = smiles[1]
+        assert smiles[0].lower() not in aa_smiles, "%s contained twice in smiles data" % smiles[0]
+        aa_smiles[smiles[0].lower()] = smiles[1]
 
     smiles_monomer.close()
     return aa_smiles

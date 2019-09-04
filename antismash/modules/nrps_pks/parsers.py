@@ -14,22 +14,11 @@ from antismash.common.secmet.features import CDSFeature
 
 from .data_structures import Prediction
 from .pks_names import get_short_form
+from .smiles_generator import load_smiles
 
 ALLOWABLE_PREDICTION_CHARACTERS = set(string.ascii_letters + string.digits).union(set('-,()'))
 
-AVAILABLE_SMILES_PARTS = {'GLY', 'ALA', 'VAL', 'LEU', 'ILE', 'MET', 'PRO', 'PHE', 'TRP', 'SER', 'THR', 'ASN', 'GLN',
-                          'TYR', 'CYS', 'LYS', 'ARG',
-                          'HIS', 'ASP', 'GLU', 'MPRO', 'ORN', 'PGLY', 'DAB', 'BALA', 'AEO', 'DHA', 'PIP', 'BMT',
-                          'gly', 'ala', 'val', 'leu', 'ile', 'met', 'pro', 'phe', 'trp', 'ser',
-                          'thr', 'asn', 'gln', 'tyr', 'cys', 'lys', 'arg', 'his', 'asp', 'glu', 'aaa', 'mpro',
-                          'dhb', '2hiva', 'orn', 'pgly', 'dab', 'bala', 'aeo', '4mha', 'pico', 'phg',
-                          'dha', 'scy', 'pip', 'bmt', 'adds', 'aad', 'abu', 'hiv', 'dhpg', 'bht', '3-me-glu',
-                          '4pPro', 'ala-b', 'ala-d', 'dht', 'Sal', 'tcl', 'lys-b', 'hpg', 'hyv-d',
-                          'iva', 'vol', 'mal', 'mmal', 'ohmal', 'redmal', 'mxmal', 'emal', 'nrp', 'pk', 'Gly',
-                          'Ala', 'Val', 'Leu', 'Ile', 'Met', 'Pro', 'Phe', 'Trp', 'Ser', 'Thr', 'Asn', 'Gln', 'Tyr',
-                          'Cys', 'Lys', 'Arg', 'His', 'Asp', 'Glu', 'Mpro', '23Dhb', '34Dhb', '2Hiva', 'Orn',
-                          'Pgly', 'Dab', 'Bala', 'Aeo', '4Mha', 'Pico', 'Aaa', 'Dha', 'Scy', 'Pip',
-                          'Bmt', 'Adds', 'DHpg', 'DHB', 'nrp', 'pk'}
+AVAILABLE_SMILES_PARTS = set(load_smiles())
 
 
 def calculate_individual_consensus(predictions: List[str]) -> str:
@@ -48,7 +37,11 @@ def calculate_individual_consensus(predictions: List[str]) -> str:
     highest_count = -1
     for pred in set(predictions):
         count = predictions.count(pred)
-        if pred not in AVAILABLE_SMILES_PARTS:
+        # for the purposes of smiles
+        smiles_equivalent = pred
+        if "mmal" in pred:
+            smiles_equivalent = "Me-" + pred.replace("mmal", "mal")
+        if smiles_equivalent.lower() not in AVAILABLE_SMILES_PARTS:
             continue
         if count > 0 and count > highest_count:
             best = pred
@@ -87,6 +80,8 @@ def generate_nrps_consensus(results: Dict[str, Prediction]) -> str:
     # if the best hit isn't tie, use that
     if best_hits and len({count for count, _ in best_hits}) == 1:
         consensus = best_hits[0][1]
+    if consensus.lower() not in AVAILABLE_SMILES_PARTS:
+        consensus = "X"
     return consensus
 
 
