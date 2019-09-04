@@ -13,10 +13,10 @@ class TestGenerator(unittest.TestCase):
         assert gen_smiles("") == ""
 
     def test_single_nrp(self):
-        assert gen_smiles("(X)") == ""
+        assert gen_smiles("(X)")
 
     def test_single_ala(self):
-        assert gen_smiles("(ala)") == ""
+        assert gen_smiles("(ala)")
 
     def test_special_cases(self):
         # all mal variants and and end is ccmal appends a pks-end2
