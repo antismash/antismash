@@ -21,8 +21,8 @@ def gen_smiles_from_pksnrps(compound_pred: str) -> str:
     residues = compound_pred.replace("(", "").replace(")", "").replace(" + ", " ").replace(" - ", " ").split()
     # Counts the number of malonate and its derivatives in polyketides
     mal_count = 0
-    for i in residues:
-        if "mal" in i:
+    for residue in residues:
+        if "mal" in residue:
             mal_count += 1
 
     # Reflecting reduction states of ketide groups starting at beta carbon of type 1 polyketide
@@ -37,15 +37,23 @@ def gen_smiles_from_pksnrps(compound_pred: str) -> str:
 
     aa_smiles = load_smiles()
 
-    for monomer in residues:
+    for i, monomer in enumerate(residues):
         lower_monomer = monomer.lower()
+        partial_lower = lower_monomer.split("-")[-1]
         if lower_monomer in aa_smiles:
-            smiles += aa_smiles[lower_monomer]
+            smiles_chunk = aa_smiles[lower_monomer]
+        elif partial_lower in aa_smiles:
+            smiles_chunk = aa_smiles[partial_lower]
         elif '|' in monomer:
             logging.debug("Substituting 'X' for combined monomer %r", monomer)
-            smiles += aa_smiles['x']
+            smile_chunk = aa_smiles['x']
         else:
             logging.debug("No SMILES mapping for unknown monomer %r", monomer)
+            continue
+        # trim the trailing O for all but the last smiles chunk
+        if i < len(residues) - 1 and smiles_chunk.endswith("C(=O)O"):
+            smiles_chunk = smiles_chunk[:-1]
+        smiles += smiles_chunk
     return smiles
 
 
@@ -56,8 +64,8 @@ def load_smiles() -> Dict[str, str]:
     smiles_monomer = open(path.get_full_path(__file__, 'data', 'aaSMILES.txt'), 'r')
 
     for line in smiles_monomer.readlines():
-        line = line.strip()
-        if not line or line.startswith('#'):
+        line = line.split("#", 1)[0].strip()
+        if not line:
             continue
         smiles = line.split()
         assert len(smiles) == 2, "Invalid smiles line {!r}".format(line)
