@@ -21,7 +21,7 @@ class TestGenerator(unittest.TestCase):
     def test_special_cases(self):
         # all mal variants and and end is ccmal appends a pks-end2
         polymer = "(ohmal - mal - ccmal)"
-        assert gen_smiles(polymer) == "CC(O)CC(=O)C=CC(=O)(O)"
+        assert gen_smiles(polymer) == "CC(O)CC(=O)C=CC(=O)O"
         assert gen_smiles("(ohmal - mal - ccmal - pks-end2)") == gen_smiles(polymer)
 
         # all mal variants and start is mal converts the first to pks-start1
@@ -32,7 +32,7 @@ class TestGenerator(unittest.TestCase):
         # pk in polymer and last is a mal variant removes the monomer after
         # the first pk and adds a pks-end1 at the end
         polymer = "(pk - X - pk - X - mal)"
-        assert gen_smiles(polymer) == "C([*])C(-O)C([*])C(-O)NC([*])C(=O)CC(=O)C(C)C(=O)(O)"
+        assert gen_smiles(polymer) == "C([*])C(-O)C([*])C(-O)NC([*])C(=O)CC(=O)C(C)C(=O)O"
         assert gen_smiles("(pk - pk - X - mal - pks-end1)") == gen_smiles(polymer)
 
     def test_mixed_mal(self):

@@ -1,86 +1,106 @@
-gly NCC(=O)
-ala N[C@@H](C)C(=O)
-val N[C@@H](C(C)C)C(=O)
-leu N[C@@H](CC(C)C)C(=O)
-ile N[C@@H](C(C)CC)C(=O)
-met N[C@@H](CCSC)C(=O)
-pro N1[C@@H](CCC1)C(=O)
-phe N[C@@H](Cc1ccccc1)C(=O)
-trp N[C@@H](CC1=CNc2c1cccc2)C(=O)
-ser N[C@@H](CO)C(=O)
-thr N[C@@H](C(O)C)C(=O)
-asn N[C@@H](CC(=O)N)C(=O)
-gln N[C@@H](CCC(=O)N)C(=O)
-tyr N[C@@H](Cc1ccc(O)cc1)C(=O)
-cys N[C@@H](CS)C(=O)
-lys N[C@@H](CCCCN)C(=O)
-arg N[C@@H](CCCNC(N)=N)C(=O)
-his N[C@@H](CC1=CNC=N1)C(=O)
-asp N[C@@H](CC(=O)O)C(=O)
-glu N[C@@H](CCC(=O)O)C(=O)
-aad N[C@@H](CCCC(=O)O)C(=O)
-mpro N1[C@@H](CC(C)C1)C(=O)
-dhb Oc1c(O)cccc1C(=O)
-2hiva O[C@@H](C(C)C)C(=O)
-orn N[C@@H](CCCN)C(=O)
-pgly N[C@@H](c1ccccc1)C(=O)
-dab N[C@@H](CCN)C(=O)
-b-ala N[C@@H]CC(=O)
-aeo N[C@@H](CCCCCC(=O)C1OC1)C(=O)
-4mha Nc1c(O)c(C)ccc1C(=O)
-4-mha Nc1c(O)c(C)ccc1C(=O)
-pico n1ccccc1C(=O)
-phg N[C@@H](c1ccccc1)C(=O)
-dha NC(=C)C(=O)
-scy Oc1ccccc1C(=O)
-pip N1[CH]CCCC1C(=O)
-bmt N[C@@H](C(O)C(C)C/C=C/C)C(=O)
-adds NC(/C=C/C(/C)=C/C(C)C(OC)CCc1ccccc1)C(C)C(=O)
-abu N[C@@H](C(C))C(=O)
-hiv O[C@@H](C(C)C)C(=O)
-dpg N[C@@H](c1cc(O)cc(O)c1)C(=O)
-dhpg N[C@@H](c1cc(O)cc(O)c1)C(=O)
-bht N[C@@H](C(O)c1ccc(O)cc1)C(=O)
-3-me-glu N[C@@H](C(C)CC(=O))C(=O)
-4ppro N1CC(CCC)CC1C(=O)
-ala-b NCCC(=O)
-ala-d N[C@@H](C)C(=O)
-dht NC(C(=O)C)C(=O)
-sal Oc1ccccc1C(=O)
-tcl N[C@@H](CC(C)C(Cl)(Cl)(Cl))C(=O)
-blys NCCCC(N)CC(=O)
-hpg N[C@@H](c1ccc(O)cc1)C(=O)
-hyv-d O[C@@H](C(C)C)C(=O)
-iva N[C@@H](CC)(C)C(=O)
-vol N[C@@H](C(C)C)CO
+# unknowns/wildcards
+x NC([*])C(=O)O # unknown NRP
+pk C([*])C(-O) # unknown polyketide
 
-mal  CC(=O)
+# standard aminos
+ala NC(C)C(=O)O # alanine
+arg NC(CCCNC(N)=N)C(=O)O # arginine
+asn NC(CC(=O)N)C(=O)O # asparagine
+asp NC(CC(=O)O)C(=O)O # aspartic acid
+cys NC(CS)C(=O)O # cysteine
+gln NC(CCC(=O)N)C(=O)O # glutamine
+glu NC(CCC(=O)O)C(=O)O # glutamic acid
+gly NCC(=O)O # glycine
+his NC(CC1=CNC=N1)C(=O)O # histidine
+ile NC(C(C)CC)C(=O)O # isoleucine
+leu NC(CC(C)C)C(=O)O # leucine
+lys NC(CCCCN)C(=O)O # lysine
+met NC(CCSC)C(=O)O # methionine
+phe NC(Cc1ccccc1)C(=O)O # phenylalanine
+pro N1C(CCC1)C(=O)O # proline
+ser NC(CO)C(=O)O # serine
+thr NC(C(O)C)C(=O)O # threonine
+trp NC(CC1=CNc2c1cccc2)C(=O)O # tryptophan
+tyr NC(Cc1ccc(O)cc1)C(=O)O # tyrosine
+val NC(C(C)C)C(=O)O # valine
+
+# other NRPSPredictor predictions
+3-me-glu NC(C(C)CC(=O))C(=O)O # 3-methyl-glutamate
+4ppro N1CC(CCC)CC1C(=O)O # 4-propyl-proline
+aad NC(CCCC(=O)O)C(=O)O # 2-amino-adipic acid
+abu NC(C(C))C(=O)O # 2-amino-butyric acid
+aeo NC(CCCCCC(=O)C1OC1)C(=O)O # 2-amino-8-oxo-9,10-decanoate
+ala-b NCCC(=O)O # beta-alanine (duplicate entry of b-ala)
+ala-d NC(C)C(=O)O # D-alanine
+allo-thr CC(O)C(N)C(=O)O # allo-threonine (a.k.a. aThr)
+b-ala NCCC(=O)O # beta-alanine
+beta-ala NCCC(=O)O # beta-alanine (duplicate entry of b-ala)
+bmt NC(C(O)C(C)CC=CC)C(=O)O # 4-butenyl-4-methyl threonine
+cap NC1=NCCC(N1)C(N)C(=O)O # capreomycidine
+bht NC(C(O)c1ccc(O)cc1)C(=O)O # beta-hydroxy-tyrosine
+dab NC(CCN)C(=O)O # 2,4-diaminobutyric acid
+dhb Oc1c(O)cccc1C(=O)O # 2,3-dihydroxy-benzoic acid
+dhpg NC(c1cc(O)cc(O)c1)C(=O)O # 3,5-dihydroxy-phenyl-glycine
+dht NC(C(=O)C)C(=O)O # dehydro-threonine/2,3-dehydroaminobutyric acid
+dpg NC(c1cc(O)cc(O)c1)C(=O)O # 3,5-dihydroxy-phenyl-glycine (duplicate entry of dhpg)
+hiv OC(C(C)C)C(=O)O # 2-hydroxyisovalerate
+hiv-d OC(C(C)C)C(=O)O # D-2-hydroxyisovalerate
+hmp-d CCC(C)C(O)C(=O)O # 2-hydroxy-3-methyl-pentanoic acid (D-hmp)
+horn NC(CCCNO)C(=O)O # hydroxy ornithine
+hpg NC(c1ccc(O)cc1)C(=O)O # 4-hydroxy-phenyl-glycine
+hyv NC(C(CO)C)C(=O)O # 4-hydroxy-L-valine
+hyv-d OC(C(C)C)C(=O)O # 2-hydroxy-valeric acid
+iva NC(CC)(C)C(=O)O # isovaline
+lys-b NCCCC(N)CC(=O)O # beta-lysine
+orn NC(CCCN)C(=O)O # ornithine
+phg NC(c1ccccc1)C(=O)O # phenyl-glycine
+pip N1C(CCCC1)C(=O)O # pipecolic acid
+sal Oc1ccccc1C(=O)O # salicylic acid
+tcl NC(CC(C)C(Cl)(Cl)(Cl))C(=O)O # (4S)-5,5,5-trichloro-leucine
+vol NC(C(C)C)CO # valinol
+LDAP NC(CCCC(N)C(=O)O)C(=O)O # diaminopimelic acid
+meval NC(C(C)(C)C)C(=O)O # Me-Val
+alle NC(C(C)CC)C(=O)O # actually aIle, allo-isoleucine
+alaninol NC(C)CO
+N-(1,1-dimethyl-1-allyl)Trp NC(CC1=CN(C(C)(C)C=C)c2c1cccc2)C(=O)O
+d-lyserg CN1CC(C=C2C1CC3=CNC4=CC=CC2=C34)C(=O)O # D-lysergic acid
+ser-thr NC(C([*])O)C(=O)O # Serine or Threonine
+mephe NC(C(C)c1ccccc1)C(=O)O # Cmethyl-phenylalanine?
+haorn NC(CCCN(O)C(=O)C)C(=O)O # L-δ-N-acetyl-δ-N-hydroxyornithine/L-Nδ-hydroxy-Nδ-acylornithine
+hasn NC(C(O)C(=O)N)C(=O)O # hydroxyasparagine
+hforn NC(CCCN(O)C(=O))C(=O)O # L-Nδ-hydroxy-Nδ-formylornithine
+s-nmethoxy-trp NC(CC1=CN(OC)c2c1cccc2)C(=O)O
+alpha-hydroxy-isocaproic-acid OC(C(O)CC(C)C)C(=O)O
+MeHOval O=C(C(C)CC)C(=O)O # 3-Methyl-2-oxovaleric acid
+2-oxo-isovaleric-acid O=C(C(C)C)C(=O)O
+aoda NC(CCCCCC(=O)CC)C(=O)O # S-2-amino-8-oxodecanoic acid
+
+# special symbols for PKS chain predictions
+pks-start1 C
+pks-end1 C(C)C(=O)O
+pks-end2 C(=O)O
+
+# malonyl-CoA variants from PKS predictions
+# base
+mal CC(=O) # malonyl-CoA
 ohmal CC(O)
-ccmal C=C
-redmal CC
+ccmal C=C # double-bonded malonyl-CoA
+redmal CC # reduced malonyl-CoA
 
+# methylated variants
 me-mal C(C)C(=O)
 me-ohmal C(C)C(O)
 me-ccmal C(C)=C
 me-redmal C(C)C
 
+# methoxy variants
 mxmal C(OC)C(=O)
 ohmxmal C(OC)C(O)
 ccmxmal C(OC)=C
 redmxmal C(OC)C
 
+# eythl variants
 emal C(CC)C(=O)
 ohemal C(CC)C(O)
 ccemal C(CC)=C
 redemal C(CC)C
-
-pks-start1 C
-pks-end1 C(C)C(=O)(O)
-pks-end2 C(=O)(O)
-
-x NC([*])C(=O)
-pk C([*])C(-O)
-23dhb Oc1c(O)cccc1C(=O)
-34dhb c1c(O)c(O)ccc1C(=O)
-bala NCCC(=O)
-aaa NC(CCCC(=O)O)C(=O)
