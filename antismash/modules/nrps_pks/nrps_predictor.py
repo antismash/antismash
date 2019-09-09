@@ -142,7 +142,7 @@ class PredictorSVMResult(Prediction):
                " <dd>\n"
                "  <dl>\n"
                "   <dt>Stachelhaus sequence:</dt>\n"
-               "   <dd>%s</dd>\n"
+               "   <dd><span class=\"serif\">%s</span></dd>\n"
                "   <dt>Nearest Stachelhaus code:</dt>\n"
                "   <dd>%s</dd>\n"
                "   <dt>Stachelhaus code match:</dt>\n"
