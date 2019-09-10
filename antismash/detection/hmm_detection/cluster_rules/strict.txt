@@ -118,6 +118,14 @@ RULE thiopeptide
                          or PF07366 or PF06968 or PF04055)
                or thiostrepton
 
+RULE TfuA-related
+    COMMENT TfuA-related RiPPs as described in https://doi.org/10.1093/nar/gkz192
+            and found on JOBF01000011
+    CUTOFF 20
+    NEIGHBOURHOOD 10
+    CONDITIONS (YcaO or TIGR03882)
+               and TfuA
+
 RULE linaridin
     CUTOFF 20
     NEIGHBOURHOOD 10

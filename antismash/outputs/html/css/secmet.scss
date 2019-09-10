@@ -131,8 +131,20 @@
     @include RiPP;
 }
 
-.thiopeptide {
+@mixin thiolated_ripp {
     @include secmet(black, gold, black);
+}
+
+.thiopeptide {
+    @include thiolated_ripp;
+}
+
+.LAP {
+    @include thiolated_ripp;
+}
+
+.TfuA-related {
+    @include thiolated_ripp;
 }
 
 .linaridin {
@@ -144,10 +156,6 @@
 }
 
 .glycocin {
-    @include RiPP;
-}
-
-.LAP {
     @include RiPP;
 }
 
