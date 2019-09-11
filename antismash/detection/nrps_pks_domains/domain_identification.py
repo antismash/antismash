@@ -29,9 +29,9 @@ class CDSResult:
         self.modules = modules
         self.ks_subtypes = ks_subtypes
         self.domain_features = {}  # type: Dict[HMMResult, AntismashDomain]
-        if len(ks_subtypes) != sum(dom.hit_id == "PKS_KS" for dom in self.domain_hmms):
-            raise ValueError("mismatching KS subtypes and PKS_KS counts: %d  %d" % (
-                    len(ks_subtypes), len([dom.hit_id == "PKS_KS" for dom in self.domain_hmms])))
+        ks_count = sum(dom.hit_id == "PKS_KS" for dom in self.domain_hmms)
+        if len(ks_subtypes) != ks_count:
+            raise ValueError("mismatching KS subtypes and PKS_KS counts: %d  %d" % (len(ks_subtypes), ks_count))
 
     def to_json(self) -> Dict[str, Any]:
         """ Create a JSON representation """
