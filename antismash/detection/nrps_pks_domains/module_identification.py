@@ -431,12 +431,12 @@ def classify(profile_name: str) -> str:
     raise ValueError("could not classify domain: %s" % profile_name)
 
 
-def build_modules_for_cds(domains: List[HMMResult], ks_subtypes: List[HMMResult]) -> List[Module]:
+def build_modules_for_cds(domains: List[HMMResult], ks_subtypes: List[str]) -> List[Module]:
     """ Constructs a list of modules for a CDS based on the domains provided
 
         Arguments:
             domains: a list of HMMResults, one for each domain found
-            ks_subtypes: a list of HMMResults, one for each PKS_KS domain given in domains
+            ks_subtypes: a list of strings, one for each PKS_KS domain given in domains
 
         Returns:
             a list of modules
@@ -449,7 +449,7 @@ def build_modules_for_cds(domains: List[HMMResult], ks_subtypes: List[HMMResult]
         component = Component(domain)
         assert component.classification, "missing classification for %s" % domain.hit_id
         if component.classification == "KS":
-            sub = next(subtypes).hit_id
+            sub = next(subtypes)
         else:
             sub = ""
         component = Component(domain, sub)

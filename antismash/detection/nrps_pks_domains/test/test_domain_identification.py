@@ -6,13 +6,12 @@
 
 import unittest
 
-from antismash.common.hmmscan_refinement import HMMResult
-from antismash.common.test.helpers import DummyRecord, DummyCDS
+from antismash.common.test.helpers import DummyCDS, DummyHMMResult, DummyRecord
 from antismash.detection.nrps_pks_domains import domain_identification
 
 
 def dummy_hmm(hit_id="dummy", start=1):
-    return HMMResult(hit_id, start, start + 40, 1e-5, 10)
+    return DummyHMMResult(hit_id, start, start + 40, 1e-5, 10)
 
 
 class TestTerminalRemoval(unittest.TestCase):
@@ -161,3 +160,33 @@ class TestKSCounter(unittest.TestCase):
             assert counter.ene_is_greatest() == (ks_name == "Enediyne-KS")
             assert counter.iterative_is_greatest() == (ks_name == "Iterative-KS")
             assert counter.trans_is_greatest() == (ks_name == "Trans-AT-KS")
+
+
+class TestKSSubtypeMatching(unittest.TestCase):
+    def setUp(self):
+        self.func = domain_identification.match_subtypes_to_ks_domains
+
+    def test_empty(self):
+        assert self.func([], []) == []
+
+    def test_non_PKS(self):
+        assert self.func([DummyHMMResult()], []) == []
+
+    def test_PKS_with_hit(self):
+        assert self.func([DummyHMMResult("PKS_KS", start=1, end=40)],
+                         [DummyHMMResult("trans-AT", start=1, end=38)]) == ["trans-AT"]
+
+    def test_PKS_with_no_hit(self):
+        assert self.func([DummyHMMResult("PKS_KS", start=1, end=40)],
+                         [DummyHMMResult("trans-AT", start=41, end=48)]) == [""]
+
+    def test_mixed(self):
+        domains = [
+            DummyHMMResult("PKS_KS", start=1, end=40),
+            DummyHMMResult("PKS_AT", start=50, end=90),
+            DummyHMMResult("PKS_KS", start=100, end=140),
+        ]
+        sub_hits = [
+            DummyHMMResult("trans-AT", start=99, end=139)
+        ]
+        assert self.func(domains, sub_hits) == ["", "trans-AT"]

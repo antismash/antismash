@@ -132,6 +132,33 @@ class NRPSPKSDomains(module_results.DetectionResults):
         return NRPSPKSDomains(record.id, cds_results)
 
 
+def match_subtypes_to_ks_domains(domains: List[HMMResult], subtypes: List[HMMResult]) -> List[str]:
+    """ Returns a subtype name for each PKS_KS domain in the domains provided.
+        If no subtype hit overlaps with a PKS_KS domain, the subtype name will be the
+        empty string.
+
+        Arguments:
+            domains: a list of HMMResults, non-PKS_KS domains will be ignored
+            subtypes: a list of PKS_KS subtypes
+
+        Returns:
+            a list of strings, one for each PKS_KS domain
+    """
+    domains = [dom for dom in domains if dom.hit_id == "PKS_KS"]
+    if not domains:
+        return []
+    subs = []
+    for domain in domains:
+        sub = ""
+        for subtype in subtypes:
+            if domain.query_end >= subtype.query_start and subtype.query_end >= domain.query_start:
+                sub = subtype.hit_id
+                break
+        subs.append(sub)
+    assert len(domains) == len(subs)
+    return subs
+
+
 def generate_domains(record: Record) -> NRPSPKSDomains:
     """ Annotates NRPS/PKS domains on CDS features. The `nrps_pks` member of
         each feature will be updated, along with creating CDSMotif features
@@ -150,7 +177,7 @@ def generate_domains(record: Record) -> NRPSPKSDomains:
 
     fasta = get_fasta_from_features(cds_within_regions)
     cds_domains = find_domains(fasta, record)
-    ks_subtypes = find_ks_domains(fasta)
+    cds_ks_subtypes = find_ks_domains(fasta)
     cds_motifs = find_ab_motifs(fasta)
 
     for cds in cds_within_regions:
@@ -158,10 +185,9 @@ def generate_domains(record: Record) -> NRPSPKSDomains:
         motifs = cds_motifs.get(cds.get_name(), [])
         if not (domains or motifs):
             continue
-        domain_type = classify_cds([domain.hit_id for domain in domains],
-                                   [domain.hit_id for domain in ks_subtypes.get(cds.get_name(), [])])
-        modules = build_modules_for_cds(domains, ks_subtypes.get(cds.get_name(), []))
-        subtype_names = [sub.hit_id for sub in ks_subtypes.get(cds.get_name(), [])]
+        subtype_names = match_subtypes_to_ks_domains(domains, cds_ks_subtypes.get(cds.get_name(), []))
+        domain_type = classify_cds([domain.hit_id for domain in domains], subtype_names)
+        modules = build_modules_for_cds(domains, subtype_names)
         results.cds_results[cds] = CDSResult(domains, motifs, domain_type, modules, subtype_names)
 
     for cds, cds_result in results.cds_results.items():
