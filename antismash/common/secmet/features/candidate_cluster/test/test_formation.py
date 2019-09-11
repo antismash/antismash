@@ -169,6 +169,20 @@ class TestCreation(unittest.TestCase):
         assert created[3].location == FeatureLocation(1000, 1600)
         assert created[3].kind == CandidateCluster.kinds.CHEMICAL_HYBRID
 
+    def test_interleaving_order(self):
+        clusters = [create_cluster(1000, 1100, 1400, 1500, "a"),
+                    create_cluster(1050, 2000, 3000, 4000, "b"), # sorts second due to neighbouring
+                    create_cluster(1100, 1200, 1500, 1600, "c")]
+        assert sorted(clusters) == clusters
+        created = creator(clusters)
+        assert len(created) == 3
+        assert created[0].kind == CandidateCluster.kinds.NEIGHBOURING
+        assert created[0].location == FeatureLocation(1000, 4000)
+        assert created[1].kind == CandidateCluster.kinds.INTERLEAVED
+        assert created[1].location == FeatureLocation(1000, 1600)
+        assert created[2].kind == CandidateCluster.kinds.SINGLE
+        assert created[2].location == FeatureLocation(1050, 4000)
+
     def test_contained_neighbours(self):
         big = create_cluster(0, 100, 130, 230, "a")
         small = create_cluster(10, 20, 30, 40, "b")

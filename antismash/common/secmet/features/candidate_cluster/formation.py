@@ -137,9 +137,12 @@ def _find_interleaved(clusters: List[Protocluster], candidates: List[CandidateCl
             if locations_overlap(candidate.core_location, other_candidate.core_location):
                 groups.append(set(candidate.protoclusters + other_candidate.protoclusters))
 
+    # sort unassigned by core location, as that's the important part
+    unassigned_by_core = sorted(clusters, key=lambda x: x.core_location.start)
+
     # unassigned overlapping with unassigned
-    for i, cluster in enumerate(clusters[:-1]):
-        for other_cluster in clusters[i + 1:]:
+    for i, cluster in enumerate(unassigned_by_core):
+        for other_cluster in unassigned_by_core[i + 1:]:
             if cluster.core_location.end <= other_cluster.core_location.start:
                 break
             if locations_overlap(cluster.core_location, other_cluster.core_location):
@@ -148,7 +151,7 @@ def _find_interleaved(clusters: List[Protocluster], candidates: List[CandidateCl
                 found.add(other_cluster)
 
     # unassigned overlapping with candidates
-    for cluster in clusters:
+    for cluster in unassigned_by_core:
         index = max(0, bisect.bisect_left(candidates, cluster) - 1)
         for candidate in candidates[index:]:
             if candidate.location.start > cluster.location.end:
