@@ -8,12 +8,12 @@ import json
 import unittest
 
 from antismash.common import path
+from antismash.common.test.helpers import DummyHMMResult
 from antismash.detection import nrps_pks_domains
 from antismash.detection.nrps_pks_domains.module_identification import (
     CLASSIFICATIONS,
     Component,
     Module,
-    HMMResult,
     build_modules_for_cds,
     classify,
 )
@@ -25,16 +25,6 @@ PKS_START = "PKS_KS"
 PKS_LOAD = "PKS_AT"
 TRANS_AT_SUBTYPE = "Trans-AT-KS"
 CP = "ACP"
-
-
-class DummyHMMResult(HMMResult):
-    def __init__(self, label, start=1, end=10):
-        super().__init__(label, start, end, 1, 1)
-
-    def __eq__(self, other):
-        return (self.hit_id == other.hit_id
-                and self.query_start == other.query_start
-                and self.query_end == other.query_end)
 
 
 def add_component(module, name, sub="", start=1, end=10):

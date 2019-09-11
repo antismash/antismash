@@ -18,6 +18,7 @@ from helperlibs.wrappers.io import TemporaryDirectory
 
 import antismash
 from antismash.common import serialiser, path
+from antismash.common.hmmscan_refinement import HMMResult
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record
 from antismash.common.secmet.test.helpers import (  # for import by others, pylint: disable=unused-import
@@ -70,6 +71,11 @@ class FakeHSPHit:
 
     def __repr__(self):
         return "FakeHSP({})".format(str(vars(self)))
+
+
+class DummyHMMResult(HMMResult):
+    def __init__(self, label="dummy", start=1, end=10, evalue=1, bitscore=1):
+        super().__init__(label, start, end, evalue, bitscore)
 
 
 class FakeHit:
