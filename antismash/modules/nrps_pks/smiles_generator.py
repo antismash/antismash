@@ -6,9 +6,161 @@
 """
 
 import logging
-from typing import Dict
+from typing import Dict, Iterator, List, Tuple
 
 import antismash.common.path as path
+
+_STARTING_BONDS = {
+    "C": 4,
+    "c": 4,
+    "O": 2,
+    "N": 3,
+}
+
+
+class Atom:
+    """ A construction that represents an atom within a SMILES context.
+
+        Arguments:
+            symbol: the symbol for the atom itself, e.g. "O", "Cl"
+            bonds_to_left: an optional value indicating the number of bonds to the previous
+                           atom in the chain
+            identiifer: an identifier for other atoms to refer to this one
+    """
+    def __init__(self, symbol: str, bonds_to_left: int = 0, identifier: str = "") -> None:
+        self.symbol = symbol
+        self._available_bonds = _STARTING_BONDS.get(symbol, -1)
+        self.bonds_to_left = bonds_to_left
+        self.bonds_to_right = 0
+        self.identifier = identifier
+        self.branches = []  # type: List[List[Atom]]
+        self.references_out = []  # type: List[str]
+        self.references_in = []  # type: List[Atom]
+
+    @property
+    def available_bonds(self) -> int:
+        """ Returns the number of bonds currently used by hydrogen that are available
+            for methylations and so on
+        """
+        # treat aromatic carbon rings differently for now, since it's really hard to split
+        if self.symbol == "c":
+            return 0
+        available = self._available_bonds
+        # reduce by the bond count to the previous atom in line
+        available -= self.bonds_to_left
+        # then to the next atom in line
+        available -= self.bonds_to_right
+        # then reduce by all of the bonds up from all branches
+        available -= sum(atoms[0].bonds_to_left for atoms in self.branches)
+        # and finally, reduce for any circular links
+        available -= len(self.references_out) + len(self.references_in)
+        return available
+
+    def to_smiles(self) -> str:
+        """ Returns a SMILES string to represent this atom and its branches,
+            including any references to atoms not contained within those branches
+        """
+        bond_symbol = {3: "#", 2: '='}.get(self.bonds_to_left, "")
+        smiles = [bond_symbol, self.symbol]
+        if self.identifier:
+            smiles.append(self.identifier)
+        smiles.extend(self.references_out)
+        if not self.branches:
+            return "".join(smiles)
+        for branch in self.branches:
+            smiles.append("(%s)" % "".join(atom.to_smiles() for atom in branch))
+        return "".join(smiles)
+
+    def flatten(self) -> List["Atom"]:
+        """ Returns a list of atoms in branches as if traversed depth-first,
+            always begins with the current atom
+        """
+        res = [self]
+        for branch in self.branches:
+            for atom in branch:
+                res.extend(atom.flatten())
+        return res
+
+
+class Bonds:
+    """ Represents an entire SMILES string with multiple atoms.
+
+        Arguments:
+            smiles: the smiles string to build from
+    """
+    def __init__(self, smiles: str) -> None:
+        self._atoms_by_identifier = {}  # type: Dict[str, Atom]
+        self._top_level_atoms = self._parse_smiles(smiles)  # type: List[Atom]
+
+    def _parse_smiles(self, smiles: str) -> List[Atom]:
+        """ Parse a SMILES string into a list of Atom instances """
+
+        def chain(smiles: str) -> Tuple[List[Atom], str]:
+            """ Recursively parse branches in SMILES and return found Atoms and leftover SMILES """
+            atoms = []  # type: List[Atom]
+            while smiles:
+                symbol = smiles[0]
+                smiles = smiles[1:]
+
+                # handle control structures
+                if symbol == ")":
+                    return atoms, smiles
+
+                if symbol == "(":
+                    subchains, smiles = chain(smiles)
+                    atoms[-1].branches.append(subchains)
+                    continue
+
+                # ring identifiers/references
+                if symbol.isdigit():
+                    if not atoms or isinstance(atoms[-1], list):
+                        raise ValueError("invalid smiles: %s" % (symbol + smiles))
+                    # if it's new, then it's a declaration
+                    if symbol not in self._atoms_by_identifier:
+                        atoms[-1].identifier = symbol
+                        self._atoms_by_identifier[symbol] = atoms[-1]
+                        continue
+                    # otherwise it's a reference
+                    atoms[-1].references_out.append(symbol)
+                    self._atoms_by_identifier[symbol].references_in.append(atoms[-1])
+                    continue
+
+                # multicharacter symbols
+                if symbol == "C" and smiles and smiles[0] == "l":
+                    symbol = "Cl"
+                    smiles = smiles[1:]
+
+                # different bond indicators
+                current_bond = 1
+                if symbol in "#=":
+                    if symbol == "#":
+                        current_bond = 3
+                    elif symbol == "=":
+                        current_bond = 2
+                    symbol = smiles[0]
+                    smiles = smiles[1:]
+                if atoms:
+                    atoms[-1].bonds_to_right = current_bond
+
+                # finally, construct and add the atom
+                atom = Atom(symbol, bonds_to_left=current_bond)
+                atoms.append(atom)
+            return atoms, smiles
+
+        atoms, smiles = chain(smiles)
+        # change the first atom in the smiles to have no bonds to left instead of 1
+        atoms[0].bonds_to_left = 0
+        assert not smiles, smiles
+        return atoms
+
+    def to_smiles(self) -> str:
+        """ Build a new SMILES string from the current state """
+        return "".join(atom.to_smiles() for atom in self._top_level_atoms)
+
+    def __iter__(self) -> Iterator[Atom]:
+        for atom in self._top_level_atoms:
+            for item in atom.flatten():
+                yield item
 
 
 def gen_smiles_from_pksnrps(compound_pred: str) -> str:
