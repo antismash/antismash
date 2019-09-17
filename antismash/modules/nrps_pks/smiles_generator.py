@@ -163,6 +163,36 @@ class Bonds:
                 yield item
 
 
+def methylate(smiles: str, variant: str) -> str:
+    """ Add a methyl group to the given smiles at the first available position.
+        Methylations of the first and last atom will not happen, they are considered
+        the backbone and the methylation should occur on the sidechain.
+
+        If an appropriate attachment point cannot be found, the smiles will be
+        returned unchanged.
+
+        Arguments:
+            smiles: the SMILES string to methylate
+            variant: which methylation variant to use, allowable values: C, N, O
+
+        Returns:
+            the newly methylated smiles, or the original smiles if no methylation
+            is possible
+    """
+    if variant not in "CNO":
+        raise ValueError("expected methylation variant of C, N, or O, not %s" % variant)
+    bonds = Bonds(smiles)
+    atoms = list(bonds)
+    start = 1
+    if atoms[0].symbol == "N" and atoms[1].symbol == "C":
+        start = 2  # skip the C too
+    for atom in atoms[start:-1]:
+        if atom.symbol == variant and atom.available_bonds > 0:
+            atom.branches.append([Atom("C")])
+            break
+    return bonds.to_smiles()
+
+
 def gen_smiles_from_pksnrps(compound_pred: str) -> str:
     """ Generates the SMILES string for a specific compound prediction """
     smiles = ""
