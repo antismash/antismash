@@ -13,6 +13,7 @@ from antismash.common.secmet import CDSFeature, Record
 
 from .html_output import will_handle
 from .results import CandidateClusterPrediction, modify_substrate
+from .smiles_generator import gen_smiles_from_pksnrps
 
 
 def analyse_biosynthetic_order(nrps_pks_features: List[CDSFeature],
@@ -58,8 +59,8 @@ def analyse_biosynthetic_order(nrps_pks_features: List[CDSFeature],
             geneorder = find_colinear_order(cds_in_candidate_cluster)
             docking = False
 
-        prediction = generate_substrates_order(geneorder, consensus_predictions)
-        compound_predictions.append(CandidateClusterPrediction(candidate_cluster_number, prediction, docking))
+        polymer, smiles = generate_substrates_order(geneorder, consensus_predictions)
+        compound_predictions.append(CandidateClusterPrediction(candidate_cluster_number, polymer, docking, smiles))
     return compound_predictions
 
 
@@ -99,8 +100,9 @@ def find_candidate_cluster_modular_enzymes(cds_features: List[CDSFeature]) -> Tu
     return pks_features, nrps_count, hybrid_count
 
 
-def generate_substrates_order(geneorder: List[CDSFeature], consensus_predictions: Dict[str, str]) -> str:
-    """ Generate substrates order from predicted gene order and consensus
+def generate_substrates_order(geneorder: List[CDSFeature], consensus_predictions: Dict[str, str]
+                              ) -> Tuple[str, str]:
+    """ Generate substrates order and SMILES from predicted gene order and consensus
         predictions. E.g. (ala-dpg) + (pk).
 
         Arguments:
@@ -108,12 +110,13 @@ def generate_substrates_order(geneorder: List[CDSFeature], consensus_predictions
             consensus_predictions: a dictionary mapping domain name to prediction
 
         Returns:
-            the resulting monomer prediction string
+            a tuple of the polymer and the smiles for the polymer, both as strings
     """
-    predictions = []
+    components = []
+    monomers_by_cds = []
 
     for gene in geneorder:
-        gene_monomers = []
+        monomers = []
         for module in gene.modules:
             if not module.is_complete():
                 continue
@@ -123,13 +126,19 @@ def generate_substrates_order(geneorder: List[CDSFeature], consensus_predictions
                 if consensus:
                     substrate = consensus
                     break
-            gene_monomers.append(modify_substrate(module, substrate))
-        if gene_monomers:
-            predictions.append("(%s)" % (" - ".join(gene_monomers)))
+            monomer = modify_substrate(module, substrate)
+            if not monomer:
+                continue
+            monomers.append(monomer)
+            components.append((substrate, monomer, [domain.domain or "" for domain in module.domains]))
 
-    if not predictions:
-        return ""
-    return " + ".join(predictions)
+        if monomers:
+            monomers_by_cds.append("(%s)" % (" - ".join([monomer for monomer in monomers])))
+
+    polymer = " + ".join(monomers_by_cds)
+    smiles = gen_smiles_from_pksnrps(components)
+
+    return polymer, smiles
 
 
 def find_first_and_last_cds(cds_features: List[CDSFeature]) -> Tuple[Optional[CDSFeature], Optional[CDSFeature]]:
