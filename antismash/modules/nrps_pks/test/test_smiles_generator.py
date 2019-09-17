@@ -10,6 +10,7 @@ from antismash.modules.nrps_pks.smiles_generator import (
     Bonds,
     gen_smiles_from_pksnrps as gen_smiles,
     load_smiles,
+    methylate,
 )
 
 
@@ -151,3 +152,28 @@ class TestBondCounts(unittest.TestCase):
     def test_aromatic_carbon_rings(self):
         bonds = get_bond_counts(Bonds("c1cccc1"))
         assert bonds == [0, 0, 0, 0, 0]
+
+
+class TestMethylation:
+    def test_c(self):
+        front = "NC(C(=O)C"
+        back = ")C(=O)O"
+        assert methylate(front + back, "C") == front + "(C)" + back
+
+    def test_n(self):
+        front = "NC(CCCN"
+        back = ")C(=O)O"
+        assert methylate(front + back, "N") == front + "(C)" + back
+
+    def test_o(self):
+        front = "NC(CCCC(=O)O"
+        back = ")C(=O)O"
+        assert methylate(front + back, "O") == front + "(C)" + back
+
+    def test_ring_unmethylated(self):
+        ring = "Nc1cccc1C(=O)O"
+        assert methylate(ring, "C") == ring
+
+    def test_last_o_skipped(self):
+        smiles = "NC(CCCN)C(=O)O"
+        assert methylate(smiles, "O") == smiles
