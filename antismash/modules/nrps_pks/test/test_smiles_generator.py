@@ -15,34 +15,33 @@ from antismash.modules.nrps_pks.smiles_generator import (
 
 
 class TestGenerator(unittest.TestCase):
+    components = {
+        "mal": ("mal", "mal", []),
+        "ohmal": ("mal", "ohmal", ["PKS_KR"]),
+        "X": ("X", "X", []),
+    }
+
     def test_empty(self):
-        assert gen_smiles("") == ""
+        assert gen_smiles([]) == ""
 
     def test_single_nrp(self):
-        assert gen_smiles("(X)")
+        assert gen_smiles([self.components["X"]])
 
     def test_single_ala(self):
-        assert gen_smiles("(ala)")
+        assert gen_smiles([("ala", "ala", [])]) == "NC(C)C(=O)O"
+        # and a methylated variant
+        assert gen_smiles([("ala", "me-ala", ["cMT"])]) == "NC(C(C))C(=O)O"
 
     def test_special_cases(self):
-        # all mal variants and and end is ccmal appends a pks-end2
-        polymer = "(ohmal - mal - ccmal)"
-        assert gen_smiles(polymer) == "CC(O)CC(=O)C=CC(=O)O"
-        assert gen_smiles("(ohmal - mal - ccmal - pks-end2)") == gen_smiles(polymer)
-
-        # all mal variants and start is mal converts the first to pks-start1
-        polymer = "(mal - ohmal - mal)"
-        assert gen_smiles(polymer) == "CCC(O)CC(=O)"
-        assert gen_smiles("(pks-start1 - ohmal - mal)") == gen_smiles(polymer)
-
-        # pk in polymer and last is a mal variant removes the monomer after
-        # the first pk and adds a pks-end1 at the end
-        polymer = "(pk - X - pk - X - mal)"
-        assert gen_smiles(polymer) == "C([*])C(-O)C([*])C(-O)NC([*])C(=O)CC(=O)C(C)C(=O)O"
-        assert gen_smiles("(pk - pk - X - mal - pks-end1)") == gen_smiles(polymer)
+        # ending with a mal variant appends a pks-end2
+        components = [self.components["ohmal"], self.components["mal"], ("mal", "ccmal", [])]
+        smiles = gen_smiles(components)
+        components.append(("pks-end2", "pks-end2", []))
+        assert smiles == "CC(O)CC(=O)C=CC(=O)O" == gen_smiles(components)
 
     def test_mixed_mal(self):
-        assert gen_smiles("(mal - X - mal)") == "CC(=O)NC([*])C(=O)CC(=O)"
+        components = [self.components["mal"], self.components["X"], self.components["mal"]]
+        assert gen_smiles(components) == "CC(=O)NC([*])C(=O)CC(=O)C(=O)O"
 
 
 class TestAtom(unittest.TestCase):

@@ -14,7 +14,6 @@ from antismash.config import ConfigType
 from .orderfinder import analyse_biosynthetic_order
 from .parsers import calculate_consensus_prediction
 from .results import NRPS_PKS_Results
-from .smiles_generator import gen_smiles_from_pksnrps
 from .substrates import run_pks_substr_spec_predictions
 
 from .nrps_predictor import run_nrpspredictor
@@ -61,7 +60,6 @@ def specific_analysis(record: Record, results: NRPS_PKS_Results, options: Config
 
     candidate_cluster_predictions = analyse_biosynthetic_order(nrps_pks_genes, results.consensus, record)
     for prediction in candidate_cluster_predictions:
-        prediction.smiles = gen_smiles_from_pksnrps(prediction.polymer)
         candidate_cluster = record.get_candidate_cluster(prediction.candidate_cluster_number)
         region = candidate_cluster.parent
         assert isinstance(region, Region), type(region)

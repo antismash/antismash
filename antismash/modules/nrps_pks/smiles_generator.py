@@ -18,6 +18,28 @@ _STARTING_BONDS = {
 }
 
 
+def load_smiles() -> Dict[str, str]:
+    """Load smiles from a dictionary mapping residues to SMILES string"""
+    aa_smiles = {}  # type: Dict[str, str]
+
+    smiles_monomer = open(path.get_full_path(__file__, 'data', 'aaSMILES.txt'), 'r')
+
+    for line in smiles_monomer.readlines():
+        line = line.split("#", 1)[0].strip()
+        if not line:
+            continue
+        smiles = line.split()
+        assert len(smiles) == 2, "Invalid smiles line {!r}".format(line)
+        assert smiles[0].lower() not in aa_smiles, "%s contained twice in smiles data" % smiles[0]
+        aa_smiles[smiles[0].lower()] = smiles[1]
+
+    smiles_monomer.close()
+    return aa_smiles
+
+
+_SMILES = load_smiles()
+
+
 class Atom:
     """ A construction that represents an atom within a SMILES context.
 
@@ -193,66 +215,54 @@ def methylate(smiles: str, variant: str) -> str:
     return bonds.to_smiles()
 
 
-def gen_smiles_from_pksnrps(compound_pred: str) -> str:
-    """ Generates the SMILES string for a specific compound prediction """
-    smiles = ""
+def gen_smiles_from_pksnrps(components: List[Tuple[str, str, List[str]]]) -> str:
+    """ Generates the SMILES string for a specific compound prediction
 
-    if not compound_pred:
-        return smiles
+        Arguments:
+            a list of tuples, each tuple containing
+                predicated substrate
+                predicated monomer built from the substrate
+                a list of domain names
 
-    residues = compound_pred.replace("(", "").replace(")", "").replace(" + ", " ").replace(" - ", " ").split()
-    # Counts the number of malonate and its derivatives in polyketides
-    mal_count = 0
-    for residue in residues:
-        if "mal" in residue:
-            mal_count += 1
+        Returns:
+            a SMILES string
+    """
+    if not components:
+        return ""
 
-    # Reflecting reduction states of ketide groups starting at beta carbon of type 1 polyketide
-    if residues[0] == "pk" and "mal" in residues[-1]:
-        residues.pop(residues.index('pk')+1)
-        residues.append('pks-end1')
-    elif mal_count == len(residues):
-        if residues[0] == "mal":
-            residues[0] = "pks-start1"  # TODO why replace and not insert?
-        if residues[-1] == "ccmal":
-            residues.append('pks-end2')
+    chunks = []
 
-    aa_smiles = load_smiles()
+    def get_smiles_chunk(substrate: str, monomer: str, domains: List[str]) -> str:
+        """ Fetch (and modify if relevant) the SMILES for a particular monomer/substrate """
+        # if smiles exist for the monomer, use them by preference
+        if monomer.lower() in _SMILES:
+            return _SMILES[monomer.lower()]
 
-    for i, monomer in enumerate(residues):
-        lower_monomer = monomer.lower()
-        partial_lower = lower_monomer.split("-")[-1]
-        if lower_monomer in aa_smiles:
-            smiles_chunk = aa_smiles[lower_monomer]
-        elif partial_lower in aa_smiles:
-            smiles_chunk = aa_smiles[partial_lower]
-        elif '|' in monomer:
-            logging.debug("Substituting 'X' for combined monomer %r", monomer)
-            smiles_chunk = aa_smiles['x']
-        else:
+        # if the substrate doesn't exist in the smiles set, abort
+        if substrate.lower() not in _SMILES:
             logging.debug("No SMILES mapping for unknown monomer %r", monomer)
-            continue
-        # trim the trailing O for all but the last smiles chunk
-        if i < len(residues) - 1 and smiles_chunk.endswith("C(=O)O"):
+            return ""
+
+        # otherwise take the substrate and apply known modifications
+        smiles_chunk = _SMILES[substrate.lower()]
+        for domain in domains:
+            for prefix in "cno":
+                if domain == "%cMT" % prefix:
+                    smiles_chunk = methylate(smiles_chunk, prefix.upper())
+        return smiles_chunk
+
+    # trim the trailing O for all but the last smiles chunk
+    for substrate, monomer, modifications in components[:-1]:
+        smiles_chunk = get_smiles_chunk(substrate, monomer, modifications)
+
+        if smiles_chunk.endswith("C(=O)O"):
             smiles_chunk = smiles_chunk[:-1]
-        smiles += smiles_chunk
-    return smiles
+        chunks.append(smiles_chunk)
 
+    chunks.append(get_smiles_chunk(*components[-1]))
 
-def load_smiles() -> Dict[str, str]:
-    """Load smiles from a dictionary mapping residues to SMILES string"""
-    aa_smiles = {}  # type: Dict[str, str]
+    # if the last chunk was a PKS, add the end
+    if components[-1][1].endswith("mal"):
+        chunks.append(_SMILES["pks-end2"])
 
-    smiles_monomer = open(path.get_full_path(__file__, 'data', 'aaSMILES.txt'), 'r')
-
-    for line in smiles_monomer.readlines():
-        line = line.split("#", 1)[0].strip()
-        if not line:
-            continue
-        smiles = line.split()
-        assert len(smiles) == 2, "Invalid smiles line {!r}".format(line)
-        assert smiles[0].lower() not in aa_smiles, "%s contained twice in smiles data" % smiles[0]
-        aa_smiles[smiles[0].lower()] = smiles[1]
-
-    smiles_monomer.close()
-    return aa_smiles
+    return "".join(chunks)
