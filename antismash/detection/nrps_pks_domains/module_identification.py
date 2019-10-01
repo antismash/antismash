@@ -84,6 +84,7 @@ IGNORED = {
     "PKS_Docking_Nterm",  # external to modules, but important for polymers
     "Polyketide_cyc", "Polyketide_cyc2",  # type-II PKS specific
     "PS",
+    "PT",  # fungal nonreducing PKS product template domain
     "TIGR01720",  # NRPS domain, between an Epimerase and the next Condensation
     "TIGR02353",  # NRPS terminal domain of unknown function
     "X",
