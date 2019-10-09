@@ -37,8 +37,9 @@ def _parse_format(fmt: str, data: str) -> Sequence[str]:
     safe = safe[::-1].replace("}}", "}\\")[::-1]  # not a raw string because that breaks the interpreter
     # step 3: replace all unescaped brace pairs with a capture group
     # first do an integer-only pass
-    sub_search = r"(?<!\\)({\:d})"
-    safe = safe.replace("{\:d}", r"([0-9]+)")
+    fragment = re.escape(":d")
+    sub_search = r"(?<!\\)({%s})" % fragment
+    safe = safe.replace("{%s}" % fragment, r"([0-9]+)")
     # then a generic step
     sub_search = r"(?<!\\)({.*?(?<!\\)})"
     # core    "({.*?})" any brace pair and its contents
