@@ -22,7 +22,7 @@ class TestChangedDir(unittest.TestCase):
         with TemporaryDirectory() as tmpdir:
             assert os.getcwd() != tmpdir
             with path.changed_directory(tmpdir):
-                assert os.getcwd() == tmpdir
+                assert os.getcwd() == os.path.realpath(tmpdir)
             assert os.getcwd() == self.original_dir
 
     def test_with_errors(self):
