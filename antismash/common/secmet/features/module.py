@@ -145,6 +145,10 @@ class Module(Feature):
         """ Returns True if the module contains domains from multiple CDS features """
         return len(self._parent_cds_names) > 1
 
+    def get_substrate_monomer_pairs(self) -> Tuple[Tuple[str, str], ...]:
+        """ Returns the substrate/monomer pairings as a tuple of tuples """
+        return tuple(self._substrate_monomer_pairs)
+
     def to_biopython(self, qualifiers: Dict[str, Any] = None) -> List[SeqFeature]:
         new = {
             "domains": [domain.get_name() for domain in self.domains],
