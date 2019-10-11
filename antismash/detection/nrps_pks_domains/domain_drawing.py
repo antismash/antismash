@@ -160,8 +160,8 @@ def generate_js_domains(region: Region, record: Record) -> Dict[str, Union[str, 
                 monomer = module.monomers[0][1]
                 if monomer.endswith("pk"):
                     monomer = monomer[:-2] + "?"
-                if monomer.endswith("nrp"):
-                    monomer = monomer[:-3] + "?"
+                if monomer.endswith("X"):
+                    monomer = monomer[:-1] + "?"
             js_module = JSONModule(module.protein_location.start, module.protein_location.end,
                                    module.is_complete(), module.is_iterative(), monomer)
             js_orf.add_module(js_module)
