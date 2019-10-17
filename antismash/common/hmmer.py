@@ -11,6 +11,7 @@ from antismash.common import fasta, module_results, path, pfamdb, subprocessing
 from antismash.common.secmet import Record, CDSFeature
 from antismash.common.secmet.features import FeatureLocation, PFAMDomain
 from antismash.common.secmet.locations import location_from_string
+from antismash.config import get_config
 
 
 class HmmerResults(module_results.ModuleResults):
@@ -160,6 +161,12 @@ def ensure_database_pressed(filepath: str, return_not_raise: bool = False) -> Li
 
     if path.is_outdated(components, filepath):
         logging.info("%s components missing or obsolete, re-pressing database", filepath)
+        if "hmmpress" not in get_config().executables:
+            msg = "Failed to hmmpress {!r}: cannot find executable for hmmpress".format(filepath)
+            if not return_not_raise:
+                raise RuntimeError(msg)
+            return [msg]
+
         result = subprocessing.run_hmmpress(filepath)
         if not result.successful():
             msg = "Failed to hmmpress {!r}: {}".format(filepath, result.stderr)
