@@ -111,6 +111,8 @@ def convert_cds_features(record: Record, features: Iterable[CDSFeature], options
             "type": str(gene_function),
             "description": description,
         })
+        if feature.gene_functions.get_by_tool("resist"):  # don't add to every gene for size reasons
+            js_orfs[-1]["resistance"] = True
     return js_orfs
 
 
