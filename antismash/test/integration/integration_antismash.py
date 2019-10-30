@@ -4,16 +4,19 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
+from argparse import Namespace
 import glob
 import os
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 import unittest
 
+from minimock import mock, restore
+
 import antismash
 from antismash.main import run_antismash, get_all_modules, prepare_module_data
 from antismash.common import path
 from antismash.common.test.helpers import get_path_to_nisin_genbank
-from antismash.config import build_config, update_config, destroy_config
+from antismash.config import build_config, destroy_config, get_config, update_config
 
 
 class TestAntismash(unittest.TestCase):
@@ -111,10 +114,21 @@ class TestModuleData(unittest.TestCase):
 
     def tearDown(self):
         destroy_config()
+        restore()
 
     def test_check_prereqs(self):
         options = build_config(["--check-prereqs"], isolated=False, modules=get_all_modules())
         assert run_antismash("", options) == 0
+
+
+    def test_check_prereqs_missing_executables(self):
+        options = build_config(["--check-prereqs"], isolated=True, modules=get_all_modules())
+        update_config({"executables": Namespace()})
+        mock("antismash.config.get_config", returns=options)
+        assert hasattr(get_config(), "executables")
+        assert not get_config().executables.__dict__
+        with self.assertRaisesRegex(RuntimeError, "failing prereq"):
+            antismash.main.check_prerequisites(get_all_modules(), options)
 
     def test_prepare_module_data(self):
         # make sure there's some to start with
