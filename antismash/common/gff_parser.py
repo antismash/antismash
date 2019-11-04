@@ -77,8 +77,10 @@ def check_gff_suitability(gff_file: str, sequences: List[SeqRecord]) -> None:
             raise AntismashInputError('GFF3 structure is not suitable.')
 
     except AssertionError as err:
-        logging.error('Parsing %r failed: %s', gff_file, err)
-        raise AntismashInputError(str(err)) from err
+        # usually the assertion "assert len(parts) >= 8, line"
+        # so strip the newline and improve the error message
+        message = str(err).strip()
+        raise AntismashInputError("parsing GFF failed with invalid format: %r" % message) from err
 
 
 def get_features_from_file(handle: IO) -> Dict[str, List[SeqFeature]]:
