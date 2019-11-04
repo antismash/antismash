@@ -169,6 +169,11 @@ class TestFeature(unittest.TestCase):
 
         assert sorted([feature, before, after, longer]) == [before, feature, longer, after]
 
+    def test_negative_locations(self):
+        loc = FeatureLocation(-2, 500, strand=1)
+        with self.assertRaisesRegex(ValueError, "negative coordinate"):
+            Feature(loc, feature_type="")
+
 
 class TestLocationAdjustment(unittest.TestCase):
     def setUp(self):
