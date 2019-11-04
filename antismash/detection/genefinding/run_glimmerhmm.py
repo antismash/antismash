@@ -25,10 +25,7 @@ def write_search_fasta(record: Record) -> str:
         Returns:
             the name of the file created
     """
-    name = record.id.lstrip('-')
-    if not name:
-        name = "unknown"
-    filename = "{}.fasta".format(name)
+    filename = "{}.fasta".format(record.id)
     with open(filename, 'w') as handle:
         seqio.write([record.to_biopython()], handle, 'fasta')
     return filename
@@ -52,14 +49,18 @@ def run_glimmerhmm(record: Record) -> None:
         genes to the record
     """
     with TemporaryDirectory(change=True):
+        # glimmerHMM/gff_parser handles some record names poorly (e.g. leading - or only '.')
+        orig_id = record.id
+        record.id = "input"
         # Write FASTA file and run GlimmerHMM
         fasta_file = write_search_fasta(record)
+        record.id = orig_id
         results_text = run_external(fasta_file)
 
     if not "CDS" in results_text:
         return
 
     handle = StringIO(results_text)
-    features = get_features_from_file(handle)[record.id]
+    features = get_features_from_file(handle)["input"]
     for feature in features:
         record.add_biopython_feature(feature)
