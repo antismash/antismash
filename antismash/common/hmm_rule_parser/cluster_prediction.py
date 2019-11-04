@@ -167,7 +167,7 @@ def find_protoclusters(record: Record, cds_by_cluster_type: Dict[str, Set[str]],
         cutoff = rule.cutoff
         core_location = cds_features[0].location
         for cds in cds_features[1:]:
-            if cds.overlaps_with(FeatureLocation(core_location.start - cutoff,
+            if cds.overlaps_with(FeatureLocation(max(0, core_location.start - cutoff),
                                                  core_location.end + cutoff)):
                 core_location = FeatureLocation(min(cds.location.start, core_location.start),
                                                 max(cds.location.end, core_location.end))
@@ -346,7 +346,7 @@ def apply_cluster_rules(record: Record, results_by_id: Dict[str, List[HSP]],
         info_by_range = {}  # type: Dict[int, Tuple[Dict[str, CDSFeature], Dict[str, List[HSP]]]]
         for rule in rules:
             if rule.cutoff not in info_by_range:
-                location = FeatureLocation(feature_start - rule.cutoff, feature_end + rule.cutoff)
+                location = FeatureLocation(max(0, feature_start - rule.cutoff), feature_end + rule.cutoff)
                 nearby = record.get_cds_features_within_location(location, with_overlapping=True)
                 nearby_features = {neighbour.get_name(): neighbour for neighbour in nearby}
                 nearby_results = {neighbour: results_by_id[neighbour]
