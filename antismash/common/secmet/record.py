@@ -441,6 +441,10 @@ class Record:
                     index -= 1
             return index
 
+        if location.start < 0:
+            assert isinstance(location, FeatureLocation)
+            location = FeatureLocation(0, max(1, location.end))
+
         results = []  # type: List[CDSFeature]
         # shortcut if no CDS features exist
         if not self._cds_features:

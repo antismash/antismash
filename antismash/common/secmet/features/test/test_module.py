@@ -23,7 +23,8 @@ def add_module_references_to_record(module, record):
         try:
             record.get_cds_by_name(domain.locus_tag)
         except KeyError:
-            record.add_cds_feature(DummyCDS(start=module.location.start - 10, end=module.location.end + 10,
+            record.add_cds_feature(DummyCDS(start=max(0, module.location.start - 10),
+                                            end=module.location.end + 10,
                                             locus_tag=domain.locus_tag))
 
 

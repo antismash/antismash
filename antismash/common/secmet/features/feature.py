@@ -75,6 +75,8 @@ class Feature:
         if location_contains_overlapping_exons(location):
             raise ValueError("location contains overlapping exons: %s" % location)
         assert location.start <= location.end, "Feature location invalid: %s" % location
+        if location.start < 0:
+            raise ValueError("location contains negative coordinate: %s" % location)
         self.location = location
         self.notes = []  # type: List[str]
         if not 1 <= len(feature_type) < 16:  # at 16 the name merges with location in genbanks
