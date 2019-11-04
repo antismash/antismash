@@ -35,3 +35,14 @@ class TestGlimmerHMM(TestCase):
         assert record.get_feature_count() == 11
         # and make sure they're all CDS features
         assert len(record.get_cds_features()) == 11
+
+    def test_records_with_bad_names(self):
+        # reuse fumigatus and change the id to bad ids
+        for bad in [
+            ".",  # changes due to glimmerhmm
+            "-bad",  # could cause a fasta file to be created that is interpreted as an arg
+        ]:
+            record = parse_input_sequence(self.data_file('fumigatus.cluster1.fna'), taxon="fungi")[0]
+            record.id = bad
+            record = pre_process_sequences([record], self.options, genefinding)[0]
+            assert record.get_cds_features()
