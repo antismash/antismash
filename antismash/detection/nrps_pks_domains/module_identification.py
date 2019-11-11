@@ -62,6 +62,7 @@ CARRIER_PROTEINS = {
     "ACP",
     "ACP_beta",
     "PCP",
+    "PKS_PP",
     "PP-binding"
 }
 ALTERNATE_STARTERS = {
