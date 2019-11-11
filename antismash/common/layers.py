@@ -119,10 +119,7 @@ class RegionLayer:
         """ The type of the best hit from knownclusterblast, if it was run """
         if not self.knownclusterblast:
             return ""
-        result = self.knownclusterblast[0].cluster_type
-        if result == "nrps":
-            return "NRPS"
-        return result
+        return self.knownclusterblast[0].cluster_type
 
     @property
     def best_knowncluster_name(self) -> str:
