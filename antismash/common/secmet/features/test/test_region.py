@@ -13,10 +13,13 @@ from helperlibs.bio import seqio
 
 from antismash.common.secmet import FeatureLocation, Record
 from antismash.common.secmet.features import CandidateCluster, SubRegion, Region
+from antismash.common.secmet.locations import CompoundLocation
 from antismash.common.secmet.test.helpers import (
     DummyCandidateCluster,
     DummyCDS,
+    DummyFeature,
     DummyProtocluster,
+    DummySubRegion,
 )
 
 
@@ -159,3 +162,35 @@ class TestRegion(unittest.TestCase):
         assert new.location.end == 71 - region.location.start
         assert new.products == region.products
         assert new.probabilities == region.probabilities
+
+    def test_prepeptide_adjustment(self):
+        dummy_record = Record(Seq("A"*400, generic_dna))
+        subregion = DummySubRegion(start=100, end=300)
+        dummy_record.add_subregion(subregion)
+        region = Region(subregions=[subregion])
+        dummy_record.add_region(region)
+
+        dummy_prepeptide = DummyFeature(200, 230, 1, "CDS_motif")
+        # ensure both FeatureLocation and CompoundLocations are handled appropriately
+        leader_loc = FeatureLocation(200, 210, 1)
+        tail_loc = CompoundLocation([FeatureLocation(220, 223, -1), FeatureLocation(227, 230, -1)])
+        dummy_prepeptide._qualifiers["leader_location"] = [str(leader_loc)]
+        dummy_prepeptide._qualifiers["tail_location"] = [str(tail_loc)]
+        dummy_record.add_feature(dummy_prepeptide)
+        # and add a CDS_motif without either qualifier (e.g. NRPS/PKS motif) to ensure that doesn't break
+        dummy_record.add_feature(DummyFeature(250, 280, 1, "CDS_motif"))
+
+        with NamedTemporaryFile(suffix=".gbk") as output:
+            region.write_to_genbank(output.name)
+            bio = list(seqio.parse(output.name))[0]
+        assert len(bio.features) == 4
+        found = False
+        for feature in bio.features:
+            tail = feature.qualifiers.get("tail_location")
+            leader = feature.qualifiers.get("leader_location")
+            if tail and leader:
+                # the part locations should now be adjusted backwards 100 bases
+                assert leader == ["[100:110](+)"]
+                assert tail == ["join{[120:123](-), [127:130](-)}"]
+                found = True
+        assert found, "prepeptide feature missing in conversion"
