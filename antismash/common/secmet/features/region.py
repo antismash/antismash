@@ -18,7 +18,12 @@ from .protocluster import Protocluster
 from .feature import Feature
 from .subregion import SubRegion
 from .candidate_cluster import CandidateCluster
-from ..locations import combine_locations
+from ..locations import (
+    build_location_from_others,
+    combine_locations,
+    FeatureLocation,
+    location_from_string,
+)
 
 T = TypeVar("T", bound="Region")
 
@@ -174,6 +179,7 @@ class Region(CDSCollection):
         cluster_record.annotations["topology"] = "linear"
 
         # renumber clusters, candidate_clusters and regions to reflect changes
+        # also update positions of RiPP component locations
         if self.candidate_clusters:
             first_candidate_cluster = min(sc.get_candidate_cluster_number() for sc in self.candidate_clusters)
             first_cluster = min(cluster.get_protocluster_number() for cluster in self.get_unique_protoclusters())
@@ -199,6 +205,17 @@ class Region(CDSCollection):
             elif feature.type == "subregion":
                 new = str(int(feature.qualifiers["subregion_number"][0]) - first_subregion + 1)
                 feature.qualifiers["subregion_number"] = [new]
+            elif feature.type == "CDS_motif":
+                for qual in ["leader_location", "tail_location"]:
+                    if qual not in feature.qualifiers:
+                        continue
+                    loc = location_from_string(feature.qualifiers[qual][0])
+                    parts = []
+                    for part in loc.parts:
+                        new_start = part.start - self.location.start
+                        new_end = part.end - self.location.start
+                        parts.append(FeatureLocation(new_start, new_end, part.strand))
+                    feature.qualifiers[qual] = [str(build_location_from_others(parts))]
 
         seqio.write([cluster_record], filename, 'genbank')
 
