@@ -31,8 +31,8 @@ def add_component(module, name, sub="", start=1, end=10):
     module.add_component(Component(DummyHMMResult(name, start, end), sub))
 
 
-def build_module(names, subtypes=None):
-    module = Module()
+def build_module(names, subtypes=None, first_in_cds=True):
+    module = Module(first_in_cds=first_in_cds)
     subs = iter(subtypes or [])
     for domain in names:
         sub = next(subs) if domain == PKS_START and subtypes else ""
@@ -353,3 +353,16 @@ class TestBuildModules(unittest.TestCase):
         modules = build_modules_for_cds([DummyHMMResult(NRPS_LOAD)] * 2, [])
         assert len(modules) == 2
         assert not modules[0].is_complete()
+
+    def test_starters(self):
+        for domain_type in [NRPS_LOAD, PKS_LOAD]:
+            domains = [DummyHMMResult(i) for i in [domain_type, "ACP", domain_type, "ACP"]]
+            modules = build_modules_for_cds(domains, [])
+            print(modules)
+            assert len(modules) == 2
+            assert modules[0]._first_in_cds
+            assert modules[0].is_complete()
+            assert not modules[1]._first_in_cds
+            print(modules[1], modules[1].is_complete())
+            print(modules[1]._starter, modules[1]._loader, modules[1]._carrier_protein, modules[1]._starter is modules[1]._loader)
+            assert not modules[1].is_complete()
