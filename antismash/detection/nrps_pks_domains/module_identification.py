@@ -152,6 +152,7 @@ class Component:
             CONDENSATIONS,
             KETOSYNTHASES,
             ADENYLATIONS,
+            ACYLTRANSFERASES,
             ALTERNATE_STARTERS
         ))
 
