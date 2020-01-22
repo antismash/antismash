@@ -260,11 +260,12 @@ class TestModule(unittest.TestCase):
     def test_completness(self):
         for complete in [[PKS_START, PKS_LOAD, CP],
                          [NRPS_START, NRPS_LOAD, CP],
+                         [PKS_LOAD, CP],
                          [NRPS_LOAD, CP],
                          ]:
             assert build_module(complete).is_complete()
 
-        for incomplete in [[PKS_LOAD, CP],
+        for incomplete in [
                            [PKS_START, CP],
                            [NRPS_START, CP],
                            [NRPS_START, NRPS_LOAD],
