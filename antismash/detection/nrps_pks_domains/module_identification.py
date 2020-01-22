@@ -214,7 +214,7 @@ class Module:
     """ A class for constructing an NRPS/PKS module based on the various domains
         added.
     """
-    def __init__(self) -> None:
+    def __init__(self, first_in_cds: bool = False) -> None:
         self._components = []  # type: List[Component]
         self._starter = None  # type: Optional[Component]
         self._loader = None  # type: Optional[Component]
@@ -222,15 +222,19 @@ class Module:
         self._carrier_protein = None  # type: Optional[Component]
         self._end = None  # type: Optional[Component]
         self._others = []  # type: List[Component]
+        self._first_in_cds = first_in_cds
 
     def to_json(self) -> Dict[str, Any]:
         """ Generate a JSON representation of the module """
-        return {"components": [comp.to_json() for comp in self._components]}
+        return {
+            "components": [comp.to_json() for comp in self._components],
+            "first_in_cds": self._first_in_cds,
+        }
 
     @classmethod
     def from_json(cls, data: Dict[str, Any]) -> "Module":
         """ Construct a module from a JSON representation """
-        module = cls()
+        module = cls(data.get("first_in_cds", True))  # default to true for backwards-compatibility
         for value in data["components"]:
             module.add_component(Component.from_json(value))
         return module
@@ -326,8 +330,13 @@ class Module:
 
     def is_complete(self) -> bool:
         """ Returns True if the module is considered complete """
+        # if missing a proper starter and it would be ok as the first module, ensure it's the first module
+        if self._starter and self._starter is self._loader and not self._first_in_cds:
+            return False
+        # otherwise, if it has the three vital parts
         if self._starter and self._loader and self._carrier_protein:
             return True
+        # lastly, if it's both transAT has no loader, then it's ok
         return bool(not self._loader and self._starter and self._carrier_protein and self.is_trans_at())
 
     def is_terminated(self) -> bool:
@@ -345,7 +354,8 @@ class Module:
             no condensation/KS domain
         """
         return bool(self._starter and self._starter.label in {"Condensation_Starter"}.union(ALTERNATE_STARTERS)
-                    or self._starter and self._starter is self._loader)
+                    # cannot have loader-only module if it's not the first module in the CDS
+                    or self._starter and self._starter is self._loader and self._first_in_cds)
 
     def is_empty(self) -> bool:
         """ Returns True if the module has no components """
@@ -445,7 +455,7 @@ def build_modules_for_cds(domains: List[HMMResult], ks_subtypes: List[str]) -> L
             a list of modules
     """
     domains = sorted(domains, key=lambda x: x.query_start)
-    modules = [Module()]
+    modules = [Module(first_in_cds=True)]
     subtypes = iter(ks_subtypes)
     sub = ""
     for domain in domains:
