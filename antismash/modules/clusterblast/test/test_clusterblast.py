@@ -7,9 +7,8 @@
 from collections import OrderedDict
 import os
 import unittest
-from unittest import mock as unittest_mock
+from unittest.mock import patch, mock_open
 
-from minimock import mock, restore
 from helperlibs.wrappers.io import TemporaryDirectory
 
 from antismash import config
@@ -21,19 +20,16 @@ import antismash.modules.clusterblast.core as core
 
 class TestBlastParsing(unittest.TestCase):
     def setUp(self):
-        # used by parse_subject, every sequence will be 100 long
-        mock('Record.get_cds_by_name', returns=DummyCDS(1, 101))
-        mock('core.get_cds_lengths', returns={})
         self.sample_data = self.read_sample_data()
         self.sample_data_as_lists = self.file_data_to_lists(self.sample_data)
-
-    def tearDown(self):
-        restore()
 
     def parse_subject_wrapper(self, subject_line):
         seq_record = Record("dummy")
         seqlengths = {}
-        return core.parse_subject(subject_line, seqlengths, seq_record)
+        # used by core.parse_subject, but only if locus tag not in self.seqlengths
+        with patch.object(core, 'get_cds_lengths', return_value={}):
+            with patch.object(Record, 'get_cds_by_name', return_value=DummyCDS(1, 101)):
+                return core.parse_subject(subject_line, seqlengths, seq_record)
 
     def read_sample_data(self, filename="data/diamond_output_sample.txt"):
         data_path = os.path.join(__file__.rsplit(os.sep, 1)[0], filename)
@@ -61,7 +57,9 @@ class TestBlastParsing(unittest.TestCase):
             subject_clusters.add(subject.genecluster)
         self.assertEqual(sorted(subject_clusters), sorted(cluster_name_to_queries))
 
-    def test_blastparse(self):
+    @patch.object(core, 'get_cds_lengths', return_value={})
+    @patch.object(Record, 'get_cds_by_name', return_value=DummyCDS(1, 101))
+    def test_blastparse(self, _mocked_record, _mocked_core):
         queries, clusters = core.blastparse(self.sample_data, Record(), 0, 0)
 
         # check we process the right number of queries
@@ -97,7 +95,9 @@ class TestBlastParsing(unittest.TestCase):
             self.assertEqual(len(queries), 0)
             self.assertEqual(len(clusters), 0)
 
-    def test_parse_all_single_cluster(self):
+    @patch.object(core, 'get_cds_lengths', return_value={})
+    @patch.object(Record, 'get_cds_by_name', return_value=DummyCDS(1, 101))
+    def test_parse_all_single_cluster(self, _mocked_record, _mocked_core):
         # single cluster to test the thresholds and content
         def parse_all_wrapper(coverage_threshold, ident_threshold):
             clusters_by_number, queries_by_number = core.parse_all_clusters(self.sample_data,
@@ -142,7 +142,9 @@ class TestBlastParsing(unittest.TestCase):
         assert new_subjects and len(new_subjects) < len(subjects), "combo test has become meaningless"
         self.verify_subjects_and_clusters_represented(new_subjects, clusters)
 
-    def test_parse_all_multi_cluster(self):
+    @patch.object(core, 'get_cds_lengths', return_value={})
+    @patch.object(Record, 'get_cds_by_name', return_value=DummyCDS(1, 101))
+    def test_parse_all_multi_cluster(self, _mocked_record, _mocked_core):
         # test we partition correctly by cluster number
         sample_data = self.read_sample_data("data/diamond_output_sample_multicluster.txt")
         clusters_by_number, queries_by_number = core.parse_all_clusters(sample_data, Record(), 0, 0)
@@ -280,16 +282,16 @@ class TestSubjectParsing(unittest.TestCase):
     def setUp(self):
         self.geneclustergenes = {"CAG25752": ""}
         self.seq_record = Record("dummy")
-        self.seqlengths = {"CAG25751.1": 253}
-        # used by parse_subject, but only if locus tag not in seqlengths
-        mock('core.get_cds_lengths', returns=self.seqlengths)
-        mock('Record.get_cds_by_name', returns=DummyCDS(1, 301))
-
-    def tearDown(self):
-        restore()
+        self.seqlengths = {
+            "CAG25751.1": 253,
+            "TEST": 300,
+        }
 
     def parse_subject_wrapper(self, subject_line):
-        return core.parse_subject(subject_line, self.seqlengths, self.seq_record)
+        # used by core.parse_subject, but only if locus tag not in self.seqlengths
+        with patch.object(core, 'get_cds_lengths', returns=self.seqlengths):
+            with patch.object(Record, 'get_cds_by_name', returns=DummyCDS(1, 301)):
+                return core.parse_subject(subject_line, self.seqlengths, self.seq_record)
 
     def test_all_parsing(self):
         # test known good input
@@ -538,8 +540,8 @@ class TestOrthologousGroups(unittest.TestCase):
 
 class TestReferenceProteinLoading(unittest.TestCase):
     def mock_with(self, content):
-        # unittest_mock.mock_open doesn't handle the __iter__ case, so work around it
-        mocked_open = unittest_mock.mock_open(read_data=content)
+        # mock_open doesn't handle the __iter__ case, so work around it
+        mocked_open = mock_open(read_data=content)
         mocked_open.return_value.__iter__ = lambda self: iter(self.readline, '')
         return mocked_open
 
@@ -551,7 +553,7 @@ class TestReferenceProteinLoading(unittest.TestCase):
 
     def test_standard(self):
         hit = ">CVNH01000008|c1|65549-69166|-|BN1184_AH_00620|Urea_carboxylase_{ECO:0000313}|CRH36422"
-        with unittest_mock.patch("builtins.open", self.mock_with(hit)):
+        with patch("builtins.open", self.mock_with(hit)):
             proteins = core.load_reference_proteins("clusterblast")
         assert len(proteins) == 1
         protein = proteins["BN1184_AH_00620"]
@@ -560,7 +562,7 @@ class TestReferenceProteinLoading(unittest.TestCase):
 
     def test_non_standard(self):
         hit = ">CVNH01000008|c1|65549-69166|-|BN1184_AH_00620|Urea_carboxylase_{ECO:0000313|EMBL:CCF11062.1}|CRH36422"
-        with unittest_mock.patch("builtins.open", self.mock_with(hit)):
+        with patch("builtins.open", self.mock_with(hit)):
             proteins = core.load_reference_proteins("clusterblast")
         assert len(proteins) == 1
         protein = proteins["BN1184_AH_00620"]
