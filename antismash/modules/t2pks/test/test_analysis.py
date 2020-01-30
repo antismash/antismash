@@ -5,8 +5,7 @@
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
 import unittest
-
-from minimock import mock, restore
+from unittest.mock import patch
 
 from antismash.common import path, record_processing
 from antismash.common.hmmscan_refinement import HMMResult
@@ -26,6 +25,8 @@ class TestCoelicolorAnalysis(unittest.TestCase):
         self.record.add_protocluster(self.cluster)
         self.record.create_candidate_clusters()
         self.record.create_regions()
+
+    def hmm_results(self):
         hmm_results = {'SCO5072': [HMMResult("KR", 1, 265, evalue=3.1e-49, bitscore=159.4)],
                        'SCO5079': [HMMResult("DIMER", 4, 293, evalue=8.7e-131, bitscore=426.8)],
                        'SCO5080': [HMMResult("OXY", 8, 377, evalue=2.1e-14, bitscore=44.7)],
@@ -38,14 +39,12 @@ class TestCoelicolorAnalysis(unittest.TestCase):
                        'SCO5094': [HMMResult("MET", 40, 155, evalue=9.8e-11, bitscore=32.7)],
                        'SCO5097': [HMMResult("KR", 3, 247, evalue=3.3e-40, bitscore=129.8)],
                        }
-        mock("t2pks_analysis.run_t2pks_hmmscan", returns=hmm_results)
-        mock("t2pks_analysis.run_starter_unit_blastp", returns={})
+        return hmm_results
 
-    def tearDown(self):
-        restore()
-
-    def test_coelicolor_c11(self):
-        results = t2pks_analysis.analyse_cluster(self.cluster, self.record)
+    @patch.object(t2pks_analysis, "run_starter_unit_blastp", return_value={})
+    def test_coelicolor_c11(self, _mocked_blastp):
+        with patch.object(t2pks_analysis, "run_t2pks_hmmscan", return_value=self.hmm_results()):
+            results = t2pks_analysis.analyse_cluster(self.cluster, self.record)
         assert isinstance(results, ProtoclusterPrediction)
         assert results.product_classes == {"benzoisochromanequinone"}
         assert results.starter_units == [Prediction("acetyl-CoA", 0., 0.)]
