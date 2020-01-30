@@ -5,8 +5,7 @@
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
 import unittest
-
-from minimock import mock, restore
+from unittest.mock import patch
 
 from antismash.common.test import helpers
 
@@ -17,7 +16,7 @@ from antismash.common.secmet.features.feature import (
     SeqFeature,
     _adjust_location_by_offset as adjust,
 )
-from antismash.common.secmet import features  # mocked, pylint: disable=unused-import
+from antismash.common.secmet import features
 from antismash.common.secmet.locations import (
     ExactPosition,
     BeforePosition,
@@ -228,9 +227,6 @@ class TestSubLocation(unittest.TestCase):
         self.feature = Feature(FeatureLocation(10, 40, 1), feature_type="test")
         self.get_sub = self.feature.get_sub_location_from_protein_coordinates
 
-    def tearDown(self):
-        restore()
-
     def test_invalid(self):
         for bad_start, bad_end in [(-1, 1), (1, -1), (1, 11)]:
             with self.assertRaisesRegex(ValueError, "must be contained by the feature"):
@@ -240,13 +236,19 @@ class TestSubLocation(unittest.TestCase):
                 self.get_sub(bad_start, bad_end)
         with self.assertRaisesRegex(ValueError, "must be less than the end"):
             self.get_sub(5, 1)
-        mock("features.feature.convert_protein_position_to_dna", returns=(9, 15))
+
+    @patch.object(features.feature, "convert_protein_position_to_dna", return_value=(9, 15))
+    def test_start_outside(self, _mocked):
         with self.assertRaisesRegex(ValueError, "Protein coordinate start .* is outside feature"):
             self.get_sub(1, 5)
-        mock("features.feature.convert_protein_position_to_dna", returns=(15, 41))
+
+    @patch.object(features.feature, "convert_protein_position_to_dna", return_value=(15, 41))
+    def test_end_outside(self, _mocked):
         with self.assertRaisesRegex(ValueError, "Protein coordinate end .* is outside feature"):
             self.get_sub(1, 5)
-        mock("features.feature.convert_protein_position_to_dna", returns=(10, 3))
+
+    @patch.object(features.feature, "convert_protein_position_to_dna", return_value=(10, 3))
+    def test_inverted(self, _mocked):
         with self.assertRaisesRegex(ValueError, "Invalid protein coordinate conversion"):
             self.get_sub(1, 5)
 
