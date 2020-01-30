@@ -5,9 +5,9 @@
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
 import unittest
+from unittest.mock import patch
 
 from Bio.SeqUtils.ProtParam import ProteinAnalysis
-from minimock import mock, restore, TraceTracker
 
 from antismash.common import subprocessing  # used in mocks # pylint: disable=unused-import
 from antismash.common.test.helpers import DummyCDS, FakeHit, DummyRecord
@@ -93,23 +93,13 @@ class TestLanthipeptide(unittest.TestCase):
 
 
 class TestSpecificAnalysis(unittest.TestCase):
-    def setUp(self):
-        self.trace_tracker = TraceTracker()
-        self.hmmpfam_return_vals = []
-        mock('subprocessing.run_hmmpfam2', tracker=self.trace_tracker,
-             returns=self.hmmpfam_return_vals)
-
-    def tearDown(self):
-        restore()
-
     def test_predict_cleavage_site(self):
-        "Test lanthipeptides.predict_cleavage_site()"
-        resvec = predict_cleavage_site('foo', 'bar')
-        self.assertEqual(None, resvec)
-        fake_hit = FakeHit(24, 42, 17, 'fake')
-        self.hmmpfam_return_vals.append([fake_hit])
+        with patch.object(subprocessing, "run_hmmpfam2", return_value=[]):
+            assert predict_cleavage_site('foo', 'bar') is None
 
-        res = predict_cleavage_site('foo', 'bar')
+        fake_hit = FakeHit(24, 42, 17, 'fake')
+        with patch.object(subprocessing, "run_hmmpfam2", return_value=[[fake_hit]]):
+            res = predict_cleavage_site('foo', 'bar')
         self.assertEqual(42, res.end)
         self.assertEqual(17, res.score)
         self.assertEqual('fake', res.lantype)
@@ -139,6 +129,7 @@ class TestSpecificAnalysis(unittest.TestCase):
         assert motif.leader == vec.leader
 
 
+@patch.object(lanthi, "run_rodeo", return_value=20)
 class TestNoCores(unittest.TestCase):
     """ Ensure that cleavage sites that result in no prepeptide core don't
         generate hits """
@@ -153,36 +144,31 @@ class TestNoCores(unittest.TestCase):
                         'PKS_AT', 'mod_KS', 'adh_short', 'PP-binding', 'PKS_AT',
                         'mod_KS', 'adh_short', 'NAD_binding_4', 'Condensation',
                         'PP-binding']
-        mock("lanthi.run_rodeo", returns=20)
         self.cds = DummyCDS(38, 48)
         # an all_orf detected gene at 7922405:7922549 in CP013129.1, with a C appended
         self.cds.translation = "VCGPRDHGRQRTSAPHAFHSDSMDRAASRPVEYGDYSGSPLSQGLGGC"
 
-    def tearDown(self):
-        restore()
-
-    def test_prediction_with_no_core(self):
+    def test_prediction_with_no_core(self, _patched_rodeo):
         # the real cleavage site result (+1 at end for the C)
         cleavage_result = CleavageSiteHit(end=48, score=-6.8, lantype="Class-II")
-        mock("lanthi.predict_cleavage_site", returns=cleavage_result)
+        with patch.object(lanthi, "predict_cleavage_site", return_value=cleavage_result):
+            for part in ["I", "II"]:
+                assert run_lanthipred(None, self.cds, "Class-%s" % part, self.domains) is None
 
-        for part in ["I", "II"]:
-            assert run_lanthipred(None, self.cds, "Class-%s" % part, self.domains) is None
-
-    def test_prediction_with_core_class1(self):
+    def test_prediction_with_core_class1(self, _patched_rodeo):
         # the cleavage result adjusted to leave at least one amino in core
         cleavage_result = CleavageSiteHit(end=40, score=-6.8, lantype="Class-I")
-        mock("lanthi.predict_cleavage_site", returns=cleavage_result)
-        results = run_lanthipred(DummyRecord(features=[self.cds]),
-                                 self.cds, "Class-I", self.domains)
+        with patch.object(lanthi, "predict_cleavage_site", return_value=cleavage_result):
+            results = run_lanthipred(DummyRecord(features=[self.cds]),
+                                     self.cds, "Class-I", self.domains)
         assert results
         assert str(results).startswith("Lanthipeptide(..40, -6.8, 'Class-I', 'LSQGLGGC', 1, 715")
 
-    def test_prediction_with_core_class2(self):
+    def test_prediction_with_core_class2(self, _patched_rodeo):
         # the cleavage result adjusted to leave at least one amino in core
         cleavage_result = CleavageSiteHit(end=40, score=-6.8, lantype="Class-II")
-        mock("lanthi.predict_cleavage_site", returns=cleavage_result)
-        results = run_lanthipred(DummyRecord(features=[self.cds]),
-                                 self.cds, "Class-II", self.domains)
+        with patch.object(lanthi, "predict_cleavage_site", return_value=cleavage_result):
+            results = run_lanthipred(DummyRecord(features=[self.cds]),
+                                     self.cds, "Class-II", self.domains)
         assert results is not None
         assert str(results).startswith("Lanthipeptide(..40, -6.8, 'Class-II', 'LSQGLGGC', 1, 715")
