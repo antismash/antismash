@@ -5,11 +5,11 @@
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
 import unittest
+from unittest.mock import patch
 
 from Bio.SeqUtils.ProtParam import ProteinAnalysis
-from minimock import mock, restore
 
-from antismash.common import subprocessing  # used in mocking  # pylint: disable=unused-import
+from antismash.common import subprocessing
 from antismash.common.test.helpers import DummyCDS, FakeHSP
 
 from antismash.modules.lassopeptides.specific_analysis import (
@@ -99,27 +99,16 @@ class TestSpecificAnalysis(unittest.TestCase):
         def __iter__(self):
             return iter(self.hsps)
 
-    def setUp(self):
-        self.hmmpfam_return_vals = []
-        mock('subprocessing.run_hmmpfam2', returns=self.hmmpfam_return_vals)
-
-    def tearDown(self):
-        restore()
-
     def test_predict_cleavage_site(self):
         "Test lassopeptides.predict_cleavage_site()"
-        resvec = predict_cleavage_site('foo', 'bar', 51)
-        assert resvec == (None, 0.)
+        with patch.object(subprocessing, "run_hmmpfam2", return_value=[]):
+            assert predict_cleavage_site('foo', 'bar', 51) == (None, 0.)
+
         fake_hit = self.FakeHit(24, 42, 17, 'Class II')
-        self.hmmpfam_return_vals.append([fake_hit, fake_hit])
 
-        resvec = predict_cleavage_site('foo', 'bar', 51)
-        assert resvec == (None, 0.)
-
-        end, score = predict_cleavage_site('foo', 'bar', 15)
-
-        self.assertEqual(41, end)
-        self.assertEqual(17, score)
+        with patch.object(subprocessing, "run_hmmpfam2", return_value=[[fake_hit, fake_hit]]):
+            assert predict_cleavage_site('foo', 'bar', 51) == (None, 0.)
+            assert predict_cleavage_site('foo', 'bar', 15) == (41, 17)
 
     def test_result_vec_to_features(self):
         "Test lassopeptides.result_vec_to_features()"
