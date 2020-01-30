@@ -7,10 +7,10 @@
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
 import unittest
+from unittest.mock import patch
 
 from Bio.Seq import Seq
 from Bio.SeqFeature import FeatureLocation
-from minimock import mock, restore
 
 from antismash.common import secmet
 from antismash.common.test import helpers
@@ -23,9 +23,6 @@ class TestGetPromoters(unittest.TestCase):
         explicit test to ensure its coverage (hence the mocking of enumerate)."""
     def setUp(self):
         self.record = helpers.DummyRecord(seq=Seq("ACGT"*25))
-
-    def tearDown(self):
-        restore()
 
     def add_gene(self, name, start, end, strand=1):
         gene = secmet.features.Gene(FeatureLocation(start, end, strand), locus_tag=name)
@@ -91,10 +88,11 @@ class TestGetPromoters(unittest.TestCase):
         assert len(promoters) == 1
         self.check_single_promoter(promoters[0], "B", 75, 99)
 
-    def test_first_gene_forward(self):
+    @patch("antismash.detection.cassis.promoters.enumerate")
+    def test_first_gene_forward(self, patched_enumerate):
         # ensure coverage only considers this gene of interest
         gene_of_interest = self.add_gene("A", 10, 20, 1)
-        mock("enumerate", returns=[(0, gene_of_interest)])
+        patched_enumerate.return_value = [(0, gene_of_interest)]
         other_gene = self.add_gene("B", 30, 40, 1)
 
         for strand in [1, -1]:
@@ -117,9 +115,10 @@ class TestGetPromoters(unittest.TestCase):
             assert len(promoters) == 1
             self.check_single_promoter(promoters[0], "A", 0, 15)
 
-    def test_first_gene_reverse(self):
+    @patch("antismash.detection.cassis.promoters.enumerate")
+    def test_first_gene_reverse(self, patched_enumerate):
         gene_of_interest = self.add_gene("A", 10, 20, -1)
-        mock("enumerate", returns=[(0, gene_of_interest)])
+        patched_enumerate.return_value = [(0, gene_of_interest)]
         other_gene = self.add_gene("B", 30, 40, 1)
 
         # counts as a shared promoter if strands are opposite and ranges are large
@@ -146,11 +145,12 @@ class TestGetPromoters(unittest.TestCase):
         assert len(promoters) == 1
         self.check_single_promoter(promoters[0], "A", 10, 29)
 
-    def test_last_gene_forward(self):
+    @patch("antismash.detection.cassis.promoters.enumerate")
+    def test_last_gene_forward(self, patched_enumerate):
         other_gene = self.add_gene("A", 10, 20, 1)
         # ensure coverage only considers this gene of interest
         gene_of_interest = self.add_gene("B", 30, 40, 1)
-        mock("enumerate", returns=[(1, gene_of_interest)])
+        patched_enumerate.return_value = [(1, gene_of_interest)]
 
         for strand in [1, -1]:
             other_gene.location = FeatureLocation(10, 20, strand)
@@ -172,11 +172,12 @@ class TestGetPromoters(unittest.TestCase):
             assert len(promoters) == 1
             self.check_single_promoter(promoters[0], "B", 21, 35)
 
-    def test_last_gene_reverse(self):
+    @patch("antismash.detection.cassis.promoters.enumerate")
+    def test_last_gene_reverse(self, patched_enumerate):
         other_gene = self.add_gene("A", 10, 20, 1)
         # ensure coverage only considers this gene of interest
         gene_of_interest = self.add_gene("B", 30, 40, -1)
-        mock("enumerate", returns=[(1, gene_of_interest)])
+        patched_enumerate.return_value = [(1, gene_of_interest)]
 
         for strand in [1, -1]:
             other_gene.location = FeatureLocation(10, 20, strand)
@@ -229,11 +230,12 @@ class TestGetPromoters(unittest.TestCase):
         assert len(promoters) == 1
         self.check_combined_promoter(promoters[0], "A", "B", 10, 60)
 
-    def test_normal_case_forward(self):
+    @patch("antismash.detection.cassis.promoters.enumerate")
+    def test_normal_case_forward(self, patched_enumerate):
         other = self.add_gene("A", 10, 20, 1)
         gene_of_interest = self.add_gene("B", 40, 60, 1)
         self.add_gene("C", 70, 80, 1)
-        mock("enumerate", returns=[(1, gene_of_interest)])
+        patched_enumerate.return_value = [(1, gene_of_interest)]
 
         for strand in [-1, 1]:
             other.location = FeatureLocation(other.location.start, other.location.end, strand)
@@ -254,11 +256,12 @@ class TestGetPromoters(unittest.TestCase):
             assert len(promoters) == 1
             self.check_single_promoter(promoters[0], "B", 21, 60)
 
-    def test_normal_case_reverse(self):
+    @patch("antismash.detection.cassis.promoters.enumerate")
+    def test_normal_case_reverse(self, patched_enumerate):
         self.add_gene("A", 10, 20, 1)
         gene_of_interest = self.add_gene("B", 40, 60, -1)
         other = self.add_gene("C", 70, 80, -1)
-        mock("enumerate", returns=[(1, gene_of_interest)])
+        patched_enumerate.return_value = [(1, gene_of_interest)]
 
         for strand in [-1]:
             other.location = FeatureLocation(other.location.start, other.location.end, strand)
