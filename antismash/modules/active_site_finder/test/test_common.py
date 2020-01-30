@@ -5,11 +5,11 @@
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
 import unittest
+from unittest.mock import patch
 
 from Bio import SearchIO
-from minimock import mock, restore
 
-from antismash.common import subprocessing  # mocked, pylint: disable=unused-import
+from antismash.common import subprocessing
 from antismash.common import fasta, path
 from antismash.common.secmet.features import FeatureLocation
 from antismash.common.test.helpers import DummyAntismashDomain, DummyPFAMDomain
@@ -48,9 +48,6 @@ class TestAlignment(unittest.TestCase):
 
 
 class TestAnalysisCore(unittest.TestCase):
-    def tearDown(self):
-        restore()
-
     def generate_domains(self):
         inputs = fasta.read_fasta(path.get_full_path(__file__, 'data', 'PKS_KS.input'))
         domains = []
@@ -80,9 +77,10 @@ class TestAnalysisCore(unittest.TestCase):
             ActiveSiteAnalysis("test", tuple(), "PKSI-KR.hmm2", [5, 6], ["C", "S"], emissions=[1.0])
 
     def test_no_candidates_doesnt_break(self):
-        mock("subprocessing.run_hmmpfam2", returns=RuntimeError)
         analysis = ActiveSiteAnalysis("test", tuple(), "PKSI-KR.hmm2", [5, 6], ["C", "S"])
-        assert analysis.get_alignments() == []
+        with patch.object(subprocessing, "run_hmmpfam2", side_effect=RuntimeError()) as mocked_run:
+            assert analysis.get_alignments() == []
+            mocked_run.assert_not_called()
 
     def test_domains_of_interest(self):
         domain = DummyPFAMDomain(domain="p450")
@@ -98,26 +96,25 @@ class TestAnalysisCore(unittest.TestCase):
     def test_alignment_generation(self):
         pregenerated = list(SearchIO.parse(open(path.get_full_path(__file__, 'data', 'KS_N.output')),
                                            "hmmer2-text"))
-        mock("subprocessing.run_hmmpfam2", returns=pregenerated)
-
         domains = self.generate_domains()
         analysis = ActiveSiteAnalysis("PKS_KS", domains, "PKSI-KS_N.hmm2",
                                       [176, 186, 187, 188], ['G', 'S', 'S', 'S'])
+        with patch.object(subprocessing, "run_hmmpfam2", return_value=pregenerated):
+            alignments = analysis.get_alignments()
         assert {"PKS_KS"} == {domain.domain for domain in analysis.domains_of_interest}
-        alignments = analysis.get_alignments()
         assert len(alignments) == 4
         assert [align.domain for align in alignments[:4]] == domains[:4]
 
     def test_alignment_generation_no_hits(self):
         no_hits = list(SearchIO.parse(open(path.get_full_path(__file__, 'data', 'no_hits.output')),
                                       "hmmer2-text"))
-        mock("subprocessing.run_hmmpfam2", returns=no_hits)
         for result in no_hits:
             assert not result.hsps, "hits shouldn't exist"
         domains = self.generate_domains()
         analysis = ActiveSiteAnalysis("PKS_KS", domains, "PKSI-KS_N.hmm2",
                                       [176, 186, 187, 188], ['G', 'S', 'S', 'S'])
-        assert analysis.get_alignments() == []
+        with patch.object(subprocessing, "run_hmmpfam2", return_value=no_hits):
+            assert analysis.get_alignments() == []
 
 
 class TestScaffoldMatching(unittest.TestCase):
