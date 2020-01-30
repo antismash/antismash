@@ -5,9 +5,9 @@
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
 import unittest
+from unittest.mock import patch
 
 from helperlibs.wrappers.io import TemporaryDirectory
-import minimock
 
 import antismash
 from antismash.common import path
@@ -20,21 +20,17 @@ class IntegrationWithoutNRPSPKS(unittest.TestCase):
     def setUp(self):
         self.options = build_config(["--minimal"], isolated=True, modules=antismash.get_all_modules())
         assert not nrps_pks.is_enabled(self.options)
-        self.tracker = minimock.TraceTracker()
-        minimock.mock("nrps_pks.run_on_record", tracker=self.tracker)
 
     def tearDown(self):
         destroy_config()
-        minimock.restore()
 
     def test_minimal(self):
         with TemporaryDirectory(change=True) as tempdir:
             self.options = build_config(["--minimal", "--output-dir", tempdir],
                                         isolated=True, modules=antismash.get_all_modules())
-            antismash.main.run_antismash(helpers.get_path_to_balhymicin_genbank(),
-                                         self.options)
-        # make sure it didn't run
-        minimock.assert_same_trace(self.tracker, "")
+            with patch.object(nrps_pks, "run_on_record", side_effect=RuntimeError("shouldn't run")):
+                antismash.main.run_antismash(helpers.get_path_to_balhymicin_genbank(),
+                                             self.options)
 
 
 class IntegrationNRPSPKS(unittest.TestCase):
