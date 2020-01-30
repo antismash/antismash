@@ -98,7 +98,7 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
 
     for record in records:
         if isinstance(record.seq.alphabet, Bio.Alphabet.ProteinAlphabet) or not is_nucl_seq(record.seq):
-            raise AntismashInputError("protein records are not supported")
+            raise AntismashInputError("protein records are not supported: %s" % record.id)
 
     # before conversion to secmet records, trim if required
     if start > -1 or end > -1:
