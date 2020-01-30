@@ -5,16 +5,21 @@
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
 import unittest
-
-from minimock import mock, restore, TraceTracker, assert_same_trace
+from unittest.mock import patch
 
 import antismash
-from antismash.common import path, pfamdb, subprocessing  # mocked, pylint: disable=unused-import
+from antismash.common import path, pfamdb, subprocessing
 from antismash.config import build_config
 from antismash.detection import cluster_hmmer
 
 
-class TestFullhmmer(unittest.TestCase):
+EXPECTED_FILES = ['Pfam-A.hmm', 'Pfam-A.hmm.h3f', 'Pfam-A.hmm.h3i',
+                  'Pfam-A.hmm.h3m', 'Pfam-A.hmm.h3p']
+
+
+@patch.object(subprocessing, "run_hmmscan", return_value=[])
+@patch.object(path, "locate_file", side_effect=EXPECTED_FILES)
+class TestClusterhmmer(unittest.TestCase):
     def setUp(self):
         self._old_max_evalue = cluster_hmmer.MAX_EVALUE
         self._old_min_score = cluster_hmmer.MIN_SCORE
@@ -23,52 +28,27 @@ class TestFullhmmer(unittest.TestCase):
         self.config = build_config([], isolated=True,
                                    modules=antismash.get_all_modules())
         self.latest_pfam = pfamdb.find_latest_database_version(self.config.database_dir)
-        self.tracer = TraceTracker()
-        self.file_list = ['Pfam-A.hmm', 'Pfam-A.hmm.h3f', 'Pfam-A.hmm.h3i',
-                          'Pfam-A.hmm.h3m', 'Pfam-A.hmm.h3p']
-        mock('antismash.common.path.locate_file', returns_iter=self.file_list,
-             tracker=self.tracer)
-        mock('antismash.common.subprocessing.run_hmmscan', returns=[])
-
-        self.expected_trace = """Called antismash.common.path.locate_file(
-    '{0}/pfam/{1}/Pfam-A.hmm')
-Called antismash.common.path.locate_file(
-    '{0}/pfam/{1}/Pfam-A.hmm.h3f')
-Called antismash.common.path.locate_file(
-    '{0}/pfam/{1}/Pfam-A.hmm.h3i')
-Called antismash.common.path.locate_file(
-    '{0}/pfam/{1}/Pfam-A.hmm.h3m')
-Called antismash.common.path.locate_file(
-    '{0}/pfam/{1}/Pfam-A.hmm.h3p')""".format(self.config.database_dir, self.latest_pfam)
 
     def tearDown(self):
         cluster_hmmer.MAX_EVALUE = self._old_max_evalue
         cluster_hmmer.MIN_SCORE = self._old_min_score
-        restore()
 
-    def test_check_prereqs(self):
-        "Test fullhmmer.check_prereqs()"
+    def test_check_prereqs(self, _patched_locate, _patched_run):
         expected = []
         returned = cluster_hmmer.check_prereqs(self.config)
 
         self.assertListEqual(expected, returned)
-        assert_same_trace(self.tracer, self.expected_trace)
 
-    def test_check_prereqs_missing_exe(self):
-        "Test fullhmmer.check_prereqs() with a missing executable"
+    def test_check_prereqs_missing_exe(self, _patched_locate, _patched_run):
         self.config.executables.__dict__.pop("hmmscan")
         expected = ["Failed to locate executable: 'hmmscan'"]
         returned = cluster_hmmer.check_prereqs(self.config)
 
         self.assertListEqual(expected, returned)
-        assert_same_trace(self.tracer, self.expected_trace)
 
-    def test_check_prereqs_missing_file(self):
-        "Test fullhmmer.check_prereqs() with a missing file"
-        self.file_list[0] = None
-        path.locate_file.mock_returns_iter = self.file_list
+    def test_check_prereqs_missing_file(self, patched_locate, _patched_run):
+        patched_locate.side_effect = [None] + EXPECTED_FILES[1:]
         expected = ["Failed to locate file: 'Pfam-A.hmm' in %s/pfam/%s" % (self.config.database_dir, self.latest_pfam)]
         returned = cluster_hmmer.check_prereqs(self.config)
 
         self.assertListEqual(expected, returned)
-        assert_same_trace(self.tracer, self.expected_trace)
