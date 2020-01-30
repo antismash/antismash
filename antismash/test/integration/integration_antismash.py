@@ -10,8 +10,6 @@ import os
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 import unittest
 
-from minimock import mock, restore
-
 import antismash
 from antismash.main import run_antismash, get_all_modules, prepare_module_data
 from antismash.common import path
@@ -114,17 +112,14 @@ class TestModuleData(unittest.TestCase):
 
     def tearDown(self):
         destroy_config()
-        restore()
 
     def test_check_prereqs(self):
         options = build_config(["--check-prereqs"], isolated=False, modules=get_all_modules())
         assert run_antismash("", options) == 0
 
-
     def test_check_prereqs_missing_executables(self):
         options = build_config(["--check-prereqs"], isolated=True, modules=get_all_modules())
         update_config({"executables": Namespace()})
-        mock("antismash.config.get_config", returns=options)
         assert hasattr(get_config(), "executables")
         assert not get_config().executables.__dict__
         with self.assertRaisesRegex(RuntimeError, "failing prereq"):
