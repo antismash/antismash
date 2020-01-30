@@ -615,7 +615,7 @@ def run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
 
 def _run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
     """ The real run_antismash, assumes logging is set up around it """
-    logging.debug("antiSMASH version: %s", options.version)
+    logging.info("antiSMASH version: %s", options.version)
     _log_found_executables(options)
 
     detection_modules = get_detection_modules()
