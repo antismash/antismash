@@ -5,11 +5,11 @@
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
 import unittest
+from unittest.mock import patch
 
 from jinja2 import Markup
-from minimock import mock, restore
 
-from antismash.common import path, fasta, subprocessing  # mocked # pylint: disable=unused-import
+from antismash.common import path, fasta, subprocessing
 from antismash.common.test.helpers import DummyAntismashDomain
 from antismash.modules.nrps_pks import nrps_predictor, data_structures
 
@@ -201,18 +201,12 @@ class TestPrediction(unittest.TestCase):
 
 
 class TestAngstromGeneration(unittest.TestCase):
-    def setUp(self):
-        self.aligns = fasta.read_fasta(path.get_full_path(__file__, 'data', 'nrpspred_aligns.fasta'))
-        mock("subprocessing.run_muscle_single", returns=self.aligns)
-
-    def tearDown(self):
-        restore()
-
     def test_angstrom(self):
+        aligns = fasta.read_fasta(path.get_full_path(__file__, 'data', 'nrpspred_aligns.fasta'))
         domain = DummyAntismashDomain(domain_id="query")
-        domain.translation = self.aligns[domain.domain_id].replace("-", "")
-
-        sig = nrps_predictor.get_34_aa_signature(domain)
+        domain.translation = aligns[domain.domain_id].replace("-", "")
+        with patch.object(subprocessing, "run_muscle_single", return_value=aligns):
+            sig = nrps_predictor.get_34_aa_signature(domain)
         assert sig == "L--SFDASLFEMYLLTGGDRNMYGPTEATMCATW"
 
 
