@@ -5,10 +5,9 @@
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
 from argparse import Namespace
-import logging  # pylint: disable=unused-import
+import logging
 import unittest
-
-from minimock import mock, restore, TraceTracker, assert_same_trace
+from unittest.mock import call, patch
 
 from antismash import main
 from antismash.common.test.helpers import DummyRecord
@@ -90,23 +89,20 @@ class TestAntismash(unittest.TestCase):
         assert "Original ID" in bio.annotations["comment"] and "something else" in bio.annotations["comment"]
 
 
+@patch.object(logging, 'debug')
 class TestTimingsLog(unittest.TestCase):
-    def setUp(self):
-        self.trace_tracker = TraceTracker()
-        mock('logging.debug', tracker=self.trace_tracker, returns=None)
-
-    def tearDown(self):
-        restore()
-
-    def test_multi_record(self):
+    def test_multi_record(self, mocked_logging):
         results = {"r1": {"a": 2, "b": 4}, "r2": {"a": 2}, "r3": {"b": 3}}
-        expected = ("Called logging.debug('Total times taken by modules')\n"
-                    "Called logging.debug('  %s: %.1fs', 'a', 4.0)\n"
-                    "Called logging.debug('  %s: %.1fs', 'b', 7.0)\n")
         main.log_module_runtimes(results)
-        assert_same_trace(self.trace_tracker, expected)
+        assert mocked_logging.call_count == 3
+        expected = [
+            call('Total times taken by modules',),
+            call('  %s: %.1fs', 'a', 4.0),
+            call('  %s: %.1fs', 'b', 7.0),
+        ]
+        assert mocked_logging.call_args_list == expected
 
-    def test_nothing_to_report(self):
+    def test_nothing_to_report(self, mocked_logging):
         results = {"r1": {}}
         main.log_module_runtimes(results)
-        assert_same_trace(self.trace_tracker, "")
+        mocked_logging.assert_not_called()
