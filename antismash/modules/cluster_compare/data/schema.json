@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "description": "Details of a custom dataset for use in ClusterCopmare",
+  "required": [
+    "comparisons",
+    "mode",
+    "name",
+    "path"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "comparisons": {
+        "type": "array",
+        "description": "Which comparisons to make",
+        "minItems": 1,
+        "items": {
+            "type": "string",
+            "description": "Reference Region vs Region, Reference Protocluster vs Region, or Reference Protocluster vs Protocluster",
+            "enum": ["RegionToRegion", "ProtoToRegion", "ProtoToProto"]
+         },
+         "additionalItems": false,
+         "uniqueItems": false
+    },
+    "description": {
+      "type": "string",
+      "description": "A simple description of the dataset to appear in the HTML help tips",
+      "pattern": "^(.+)$"
+    },
+    "mode": {
+        "type": "string",
+        "description": "The mode to search in, e.g. searching for the reference within a query",
+        "enum": ["RiQ", "QiR"]
+    },
+    "name": {
+      "type": "string",
+      "description": "The name of the dataset",
+      "pattern": "^(.+)$"
+    },
+    "path": {
+      "type": "string",
+      "description": "The path to directory containing the parts of the dataset, can use '$datadir' as a placeholder for the commandline option",
+      "pattern": "^(.+)$"
+    },
+    "url": {
+      "type": "string",
+      "description": "A url to a specific result, can use python {format} style placeholders with possible keys: accession, version, start, end",
+      "pattern": "^http(.+)$"
+    }
+  }
+}

@@ -1,0 +1,20 @@
+<div class="comparison-{{class_name}}">
+    <div class="heading">
+      <span>{{description}}</span>
+      {{help_tooltip(tooltip, class_name)}}
+    </div>
+  {% if variants %}
+   <label for="comparison-{{class_name}}-{{anchor}}-selector">Analysis type:</label>
+   <select id="comparison-{{class_name}}-{{anchor}}-selector" class="comparison-selector" data-tag="{{class_name}}">
+   {%- for value, label, chunk in variants %}
+    <option value="{{value}}">{{label}}</option>
+   {% endfor -%}
+   </select>
+   <div id="comparison-{{class_name}}-{{anchor}}"></div>
+   {%- for value, label, chunk in variants %}
+    {{chunk}}
+   {% endfor -%}
+  {% else %}
+   <div><p>No matches found.</p></div>
+  {% endif %}
+</div>
