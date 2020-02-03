@@ -10,10 +10,13 @@ from antismash.common.secmet.features import AntismashDomain, FeatureLocation
 
 
 class TestConversion(unittest.TestCase):
+    def setUp(self):
+        self.protein_location = FeatureLocation(0, 1)
+        self.domain = AntismashDomain(FeatureLocation(1, 3, 1), locus_tag="locus",
+                                      tool="test", protein_location=self.protein_location)
+
     def test_conversion(self):
-        protein_location = FeatureLocation(0, 1)
-        domain = AntismashDomain(FeatureLocation(1, 3, 1), locus_tag="locus",
-                                 tool="test", protein_location=protein_location)
+        domain = self.domain
         domain.domain_subtype = "subtest"
         domain.specificity = ["a", "c", "f"]
         domain.asf.add("first")
@@ -34,4 +37,13 @@ class TestConversion(unittest.TestCase):
         assert new_domain.tool == domain.tool == "test"
         assert new_domain.created_by_antismash
         assert new_domain.locus_tag == "locus"
-        assert new_domain.protein_location == protein_location
+        assert new_domain.protein_location == self.protein_location
+
+    def test_linebreaks(self):
+        self.domain.domain_id = "some-long-name.Condensation.1"
+        bio = self.domain.to_biopython()
+        # pretend a genbank was written and is being read back in
+        # but the line was long enough to cause a line break
+        bio[0].qualifiers["domain_id"][0] = self.domain.domain_id.replace(".", ". ")
+        new = AntismashDomain.from_biopython(bio[0])
+        assert new.domain_id == self.domain.domain_id
