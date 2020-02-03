@@ -43,6 +43,7 @@ from antismash.detection import (cassis,
                                  )
 from antismash.modules import (active_site_finder,
                                clusterblast,
+                               cluster_compare,
                                lanthipeptides,
                                lassopeptides,
                                nrps_pks,
@@ -95,7 +96,9 @@ def get_analysis_modules() -> List[AntismashModule]:
             a list of modules
     """
     return [smcog_trees, tta, lanthipeptides, thiopeptides, nrps_pks, clusterblast,  # type: ignore
-            sactipeptides, lassopeptides, active_site_finder, pfam2go, t2pks, rrefinder]  # type: ignore
+            sactipeptides, lassopeptides, active_site_finder, pfam2go, t2pks, # type: ignore
+            rrefinder, cluster_compare,  # type: ignore
+           ]
 
 
 def get_output_modules() -> List[AntismashModule]:
