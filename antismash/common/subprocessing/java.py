@@ -15,9 +15,11 @@ def run_java_version() -> str:
         "-version",
     ]
 
-    version_string = execute(command).stderr
-    if not version_string.startswith("openjdk") and not version_string.startswith("java"):
-        msg = "unexpected output from java: %s, check path"
-        raise RuntimeError(msg % java)
-    # get rid of the non-version stuff in the output
-    return version_string.split()[2].strip('"')
+    for version_string in execute(command).stderr.splitlines():
+        if not version_string.startswith("openjdk") and not version_string.startswith("java"):
+            continue
+        # get rid of the non-version stuff in the output
+        return version_string.split()[2].strip('"')
+
+    msg = "unexpected output from java: %s, check path"
+    raise RuntimeError(msg % java)
