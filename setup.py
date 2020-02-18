@@ -19,6 +19,7 @@ install_requires = [
     'biopython >= 1.71',
     'helperlibs',
     'jinja2',
+    'joblib',
     'pysvg-py3',
     'bcbio-gff',
     'pyScss',
