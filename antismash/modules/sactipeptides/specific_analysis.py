@@ -14,7 +14,7 @@ import re
 from typing import Any, Dict, Set, List, Optional, Tuple, Union
 
 from Bio.SearchIO._model.hsp import HSP
-from sklearn.externals import joblib
+import joblib
 
 from antismash.common import utils, all_orfs, module_results, secmet, subprocessing, path, fasta
 from antismash.common.secmet.qualifiers import SecMetQualifier
