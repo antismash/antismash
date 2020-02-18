@@ -14,7 +14,7 @@ import os
 from typing import Any, Dict, List, Optional, Set, Tuple, Union  # pylint: disable=unused-import
 
 from helperlibs.wrappers.io import TemporaryFile
-from sklearn.externals import joblib
+import joblib
 
 from antismash.common import all_orfs, module_results, path, subprocessing, utils
 from antismash.common.secmet import Record, CDSFeature, Protocluster, Prepeptide, GeneFunction
