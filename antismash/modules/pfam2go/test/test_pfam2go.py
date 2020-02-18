@@ -30,10 +30,10 @@ def set_dummy_with_pfams(pfam_ids: Dict[str, FeatureLocation]) -> DummyRecord:
 
 
 class PfamToGoTest(unittest.TestCase):
-    known_connections = {'PF00015': ['GO:0004871', 'GO:0007165', 'GO:0016020'],
+    known_connections = {'PF00015': ['GO:0007165', 'GO:0016020'],
                          'PF00351': ['GO:0016714', 'GO:0055114'],
                          'PF02364': ['GO:0003843', 'GO:0006075', 'GO:0000148', 'GO:0016020']}
-    working_descs = {'GO:0004871': 'signal transducer activity', 'GO:0007165': 'signal transduction',
+    working_descs = {
                      'GO:0016020': 'membrane',
                      'GO:0016714': ('oxidoreductase activity, acting on paired donors, with incorporation'
                                     ' or reduction of molecular oxygen, reduced pteridine as one donor,'
@@ -81,8 +81,7 @@ class PfamToGoTest(unittest.TestCase):
             pfam2go.GeneOntology(working_id, fail_description)
 
     def test_construct_mapping(self):
-        data = path.get_full_path(os.path.dirname(__file__), 'data', 'pfam2go-march-2018.txt')
-        ontologies_per_pfam = pfam2go.construct_mapping(data)
+        ontologies_per_pfam = pfam2go.construct_mapping(pfam2go.DATA_FILE)
         for ontology in ontologies_per_pfam.values():
             self.assertIsInstance(ontology, pfam2go.GeneOntologies)
         for pfam, go_ids in self.known_connections.items():
@@ -151,8 +150,7 @@ class PfamToGoTest(unittest.TestCase):
         gos_for_fake_pfam = pfam2go.get_gos_for_pfams(fake_record)
         fake_results = pfam2go.Pfam2GoResults(fake_record.id, gos_for_fake_pfam)
         result_json = fake_results.to_json()
-        expected_result = {"pfams": {"PF00015": {"GO:0004871": "signal transducer activity",
-                                                 "GO:0007165": "signal transduction",
+        expected_result = {"pfams": {"PF00015": {"GO:0007165": "signal transduction",
                                                  "GO:0016020": "membrane"},
                                      "PF00351": {"GO:0016714": ("oxidoreductase activity, acting on paired donors, "
                                                                 "with incorporation or reduction of molecular oxygen, "

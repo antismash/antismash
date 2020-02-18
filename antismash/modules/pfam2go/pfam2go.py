@@ -14,6 +14,8 @@ from antismash.common.secmet.features import PFAMDomain
 from antismash.common.secmet.qualifiers import GOQualifier
 from antismash.common.secmet.record import Record
 
+DATA_FILE = path.get_full_path(__file__, 'data', 'pfam2go.txt')
+
 
 class GeneOntology:  # pylint: disable=too-few-public-methods
     """A single Gene Ontology term; holds Gene Ontology ID and its human-readable description."""
@@ -156,7 +158,7 @@ def get_gos_for_pfams(record: Record) -> Dict[PFAMDomain, List[GeneOntologies]]:
     """
     pfam_domains_with_gos = defaultdict(list)  # type: Dict[PFAMDomain, List[GeneOntologies]]
     pfams = record.get_pfam_domains()
-    full_gomap_as_ontologies = construct_mapping(path.get_full_path(__file__, 'data', 'pfam2go-march-2018.txt'))
+    full_gomap_as_ontologies = construct_mapping(DATA_FILE)
     if not pfams:
         logging.debug('No Pfam domains found in record, cannot create Pfam to Gene Ontology mapping')
     for pfam in pfams:

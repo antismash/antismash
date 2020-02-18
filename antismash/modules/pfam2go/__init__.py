@@ -9,7 +9,7 @@ from antismash.common import path
 from antismash.common.secmet import Record
 from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
-from .pfam2go import get_gos_for_pfams, Pfam2GoResults
+from .pfam2go import DATA_FILE, get_gos_for_pfams, Pfam2GoResults
 
 NAME = "pfam2go"
 SHORT_DESCRIPTION = "Pfam domain to Gene Ontology mapping"
@@ -35,10 +35,10 @@ def check_options(_options: ConfigType) -> List[str]:
 
 def check_prereqs(_options: ConfigType) -> List[str]:
     """Check for prerequisites
-        pfam2go-march-2018.txt: mapping file for Pfam to Gene Ontology mapping
+        data file: mapping file for Pfam to Gene Ontology mapping
     """
     failure_messages = []
-    if path.locate_file(path.get_full_path(__file__, 'data', 'pfam2go-march-2018.txt')) is None:
+    if path.locate_file(DATA_FILE) is None:
         failure_messages.append('Failed to locate Pfam to Gene Ontology mapping file')
     return failure_messages
 
