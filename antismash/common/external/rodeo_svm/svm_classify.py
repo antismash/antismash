@@ -51,10 +51,10 @@
 '''
 import csv
 
+import joblib
 import sklearn
 from sklearn import svm
 from sklearn import preprocessing
-from sklearn.externals import joblib
 
 # CONFIGURATION OPTIONS
 # change these as desired
