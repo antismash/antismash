@@ -252,8 +252,6 @@ class CDSFeature(Feature):
         transl_table = 1
         if record:
             transl_table = record.transl_table
-        if "transl_table" in leftovers:
-            transl_table = int(leftovers.pop("transl_table")[0])
 
         # semi-optional qualifiers
         protein_id = leftovers.pop("protein_id", [None])[0]
@@ -266,6 +264,13 @@ class CDSFeature(Feature):
                 gene = "cds%s_%s"
             gene = gene % (bio_feature.location.start, bio_feature.location.end)
         name = locus_tag or protein_id or gene
+
+        if "transl_table" in leftovers:
+            raw_table = leftovers.pop("transl_table")[0]
+            try:
+                transl_table = int(raw_table)
+            except ValueError:
+                raise SecmetInvalidInputError("invalid translation table '%s' for CDS '%s'" % (raw_table, name))
 
         try:
             _verify_location(bio_feature.location)
