@@ -7,7 +7,7 @@ import os
 import re
 from typing import List, Set, Tuple, Optional  # pylint: disable=unused-import
 
-from sklearn.externals import joblib
+import joblib
 
 from antismash.common import path, utils
 
