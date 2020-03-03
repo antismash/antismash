@@ -26,17 +26,8 @@ class TestNRPSPKS(unittest.TestCase):
         assert len(qualifier.domains) == 3 * len(types)
         assert {domain.label for domain in qualifier.domains} == expected
 
-    def test_no_append(self):
-        qualifier = NRPSPKSQualifier(strand=1)
-        with self.assertRaisesRegex(NotImplementedError, "Appending to this list won't work"):
-            qualifier.append("test")
-
-        with self.assertRaisesRegex(NotImplementedError, "Extending this list won't work"):
-            qualifier.extend(["test"])
-
     def test_biopython_compatibility(self):
         qualifier = NRPSPKSQualifier(strand=1)
-        assert isinstance(qualifier, list)
         for pks in ["PKS_AT", "AMP-binding"]:
             qualifier.add_domain(HMMResult(pks, 1, 1, 1, 1), "missing")
             qualifier.add_subtype(pks + "dummy")
