@@ -45,7 +45,7 @@ class TestClusterHmmer(unittest.TestCase):
 
         results = helpers.run_and_regenerate_results_for_module(nisin, cluster_hmmer, self.options)
         json = results.to_json()
-        assert len(results.hits) == 13
+        assert len(results.hits) == 14
         self.check_add_to_record(nisin, results)
 
         # test regeneration when thresholds are less restrictive
