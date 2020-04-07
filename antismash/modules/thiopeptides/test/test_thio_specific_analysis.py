@@ -5,11 +5,11 @@
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
 import unittest
+from unittest.mock import patch
 
 from Bio.SeqFeature import FeatureLocation
-from minimock import mock, restore
 
-from antismash.common import subprocessing  # mocked, pylint: disable=unused-import
+from antismash.common import subprocessing
 from antismash.common.test.helpers import DummyCDS, FakeHit
 from antismash.modules.thiopeptides.specific_analysis import (
     Thiopeptide,
@@ -112,19 +112,13 @@ class TestThiopeptide(unittest.TestCase):
 
 
 class TestSpecificAnalysis(unittest.TestCase):
-    def setUp(self):
-        self.hmmpfam_return_vals = []
-        mock('subprocessing.run_hmmpfam2', returns=self.hmmpfam_return_vals)
-
-    def tearDown(self):
-        restore()
-
-    def test_predict_cleavage_site(self):
+    @patch.object(subprocessing, 'run_hmmpfam2', return_value=[])
+    def test_predict_cleavage_site(self, mocked_run):
         "Test thiopeptides.predict_cleavage_site()"
         resvec = predict_cleavage_site('foo', 'bar', 51)
         assert resvec == (None, 0.)
         fake_hit = FakeHit(24, 42, 17, 'fake')
-        self.hmmpfam_return_vals.append([fake_hit])
+        mocked_run.return_value = [[fake_hit]]
 
         end, score = predict_cleavage_site('foo', 'bar', 15)
 

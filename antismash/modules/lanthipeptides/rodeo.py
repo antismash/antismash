@@ -15,7 +15,7 @@ import re
 from tempfile import NamedTemporaryFile
 from typing import Dict, List, Set, Tuple
 
-from sklearn.externals import joblib
+import joblib
 
 from antismash.common import path, subprocessing, secmet, utils
 from antismash.config import get_config as get_global_config

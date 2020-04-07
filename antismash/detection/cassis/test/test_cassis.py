@@ -14,7 +14,6 @@ from unittest.mock import patch
 
 from Bio.Seq import Seq
 from Bio.SeqFeature import FeatureLocation
-from minimock import mock, restore
 
 from antismash.common import path, secmet
 from antismash.common.test import helpers
@@ -306,7 +305,6 @@ class TestResults(unittest.TestCase):
     def tearDown(self):
         cassis.MAX_PERCENTAGE = self.old_max_perc
         cassis.MAX_GAP_LENGTH = self.old_max_gap
-        restore()
 
     def test_base(self):
         results = cassis.CassisResults("test")
@@ -371,9 +369,9 @@ class TestResults(unittest.TestCase):
         record.id = "real"
         results = cassis.CassisResults(record.id)
 
-        mock("cassis.detect", returns=cassis.CassisResults("fake"))
-        assert cassis.run_on_record(record, results, None).record_id == "real"
-        assert cassis.run_on_record(record, None, None).record_id == "fake"
+        with patch.object(cassis, "detect", return_value=cassis.CassisResults("fake")):
+            assert cassis.run_on_record(record, results, None).record_id == "real"
+            assert cassis.run_on_record(record, None, None).record_id == "fake"
 
 
 class TestVersioning(unittest.TestCase):

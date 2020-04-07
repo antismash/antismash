@@ -135,6 +135,12 @@ class TestCDSBiopythonConversion(unittest.TestCase):
             with self.assertRaisesRegex(SecmetInvalidInputError, "translation extends out of record"):
                 CDSFeature.from_biopython(bio, record=rec)
 
+    def test_invalid_translation_table(self):
+        bio = self.cds.to_biopython()[0]
+        bio.qualifiers["transl_table"] = ["11a"]
+        with self.assertRaisesRegex(SecmetInvalidInputError, "invalid translation table"):
+            CDSFeature.from_biopython(bio)
+
 
 class TestCDSProteinLocation(unittest.TestCase):
     def setUp(self):

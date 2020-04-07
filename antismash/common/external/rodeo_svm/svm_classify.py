@@ -51,10 +51,10 @@
 '''
 import csv
 
+import joblib
 import sklearn
 from sklearn import svm
 from sklearn import preprocessing
-from sklearn.externals import joblib
 
 # CONFIGURATION OPTIONS
 # change these as desired
@@ -73,7 +73,7 @@ gamma_option = 1.78E-09
 class_weight_option = 'balanced'
 
 # sklearn < 0.17.0 doesn't know 'balanced'
-sklearn_int_versions = list(map(int, sklearn.__version__.split('.')))
+sklearn_int_versions = list(map(int, sklearn.__version__.split('.')[:2]))
 if sklearn_int_versions[0] == 0 and sklearn_int_versions[1] < 17:
     class_weight_option = 'auto'
 

@@ -114,9 +114,16 @@ class AntismashFeature(Feature):
 
         # grab optional qualifiers
         feature.domain_id = leftovers.pop("domain_id", [""])[0] or None
+        if feature.domain_id:
+            # long ids causing linebreaks in genbanks can have spaces inserted
+            # strip them out so id-based lookups can function again
+            feature.domain_id = feature.domain_id.replace(" ", "")
         feature.database = leftovers.pop("database", [""])[0] or None
         feature.detection = leftovers.pop("detection", [""])[0] or None
         feature.label = leftovers.pop("label", [""])[0] or None
+        if feature.label:
+            # again, long ids causing linebreaks in genbanks can have spaces inserted
+            feature.label = feature.label.replace(" ", "")
         if not feature.locus_tag:  # may already be populated
             feature.locus_tag = leftovers.pop("locus_tag", [""])[0] or None
         translation = leftovers.pop("translation", [""])[0] or None

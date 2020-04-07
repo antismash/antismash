@@ -5,26 +5,18 @@
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
 import unittest
+from unittest.mock import patch
 
-from minimock import mock, Mock, restore
-
-from antismash.common import path  # mocked, pylint: disable=unused-import
+from antismash.common import path
 from antismash.modules.pfam2go import check_prereqs
 
 
 class Pfam2GoPrereqsTest(unittest.TestCase):
-    def setUp(self):
-        self.locate_file = Mock('antismash.common.path.locate_file', returns="/fake/path/to/file")
-        mock('path.locate_file', mock_obj=self.locate_file)
-
-    def tearDown(self):
-        restore()
-
     def test_check_prereqs(self):
         ret = check_prereqs(None)
         assert ret == []
 
     def test_check_missing_file(self):
-        self.locate_file.mock_returns = None
-        ret = check_prereqs(None)
+        with patch.object(path, 'locate_file', return_value=None):
+            ret = check_prereqs(None)
         assert 'Failed to locate Pfam to Gene Ontology mapping file' in ret
