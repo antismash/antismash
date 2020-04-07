@@ -27,7 +27,7 @@ class _HMMResultLike:
         self.bitscore = bitscore
 
 
-class NRPSPKSQualifier(list):
+class NRPSPKSQualifier:
     """ A qualifier for tracking information about NRPS/PKS domains within a CDS.
 
         Can be used directly as a qualifier for Biopython's SeqFeature.
@@ -95,12 +95,6 @@ class NRPSPKSQualifier(list):
     def domain_names(self) -> List[str]:
         """ Returns a list of domain names in order first to last position on the strand """
         return self._domain_names
-
-    def append(self, _value: Any) -> None:
-        raise NotImplementedError("Appending to this list won't work, use add_subtype() or add_domain()")
-
-    def extend(self, _values: Any) -> None:
-        raise NotImplementedError("Extending this list won't work")
 
     def __len__(self) -> int:
         return len(self.subtypes) + len(self._domains)
