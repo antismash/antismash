@@ -78,7 +78,8 @@ RULE thioamide-NRP
     RELATED Chor_lyase
     CUTOFF 20
     NEIGHBOURHOOD 20
-    CONDITIONS ATP-grasp and AMP-binding and PP-binding and DUF98
+    CONDITIONS ATP-grasp and AMP-binding and PP-binding and
+                (DUF98 or Orn_Arg_deC_N or Orn_DAP_Arg_deC)
 
 RULE terpene
     CUTOFF 20
