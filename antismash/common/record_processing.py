@@ -351,7 +351,7 @@ def pre_process_sequences(sequences: List[Record], options: ConfigType, genefind
             assert len(all_record_ids) == len(sequences), "%d != %d" % (len(all_record_ids), len(sequences))
         # Ensure all records have valid names
         for record in sequences:
-            fix_record_name_id(record, all_record_ids)
+            fix_record_name_id(record, all_record_ids, options.allow_long_headers)
         if len(sequences) == 1:
             sequences = [sanitise_sequence(sequences[0])]
         else:
@@ -478,7 +478,8 @@ def records_contain_shotgun_scaffolds(records: List[Record]) -> bool:
     return False
 
 
-def fix_record_name_id(record: Record, all_record_ids: Set[str]) -> None:
+def fix_record_name_id(record: Record, all_record_ids: Set[str],
+                       allow_long_names: bool = False) -> None:
     """ Changes a record's name and id to be no more than 16 characters long,
         so it can be used in GenBank files.
 
@@ -487,6 +488,7 @@ def fix_record_name_id(record: Record, all_record_ids: Set[str]) -> None:
         Arguments:
             record: the record to alter
             all_record_ids: a set of all known record ids
+            allow_long_names: whether names longer than 16 characters are allowed
 
         Returns:
             None
@@ -511,7 +513,7 @@ def fix_record_name_id(record: Record, all_record_ids: Set[str]) -> None:
 
     old_id = record.id
 
-    if len(record.id) > 16:
+    if len(record.id) > 16 and not allow_long_names:
         # Check if it is a RefSeq accession number like NZ_AMZN01000079.1 that
         # is too long just because of the version number behind the dot
         if (record.id[-2] == "." and
@@ -530,7 +532,7 @@ def fix_record_name_id(record: Record, all_record_ids: Set[str]) -> None:
 
         logging.warning('Fasta header too long: renamed "%s" to "%s"', old_id, record.id)
 
-    if len(record.name) > 16:
+    if len(record.name) > 16 and not allow_long_names:
         record.name = _shorten_ids(record.name)
 
     if 'accession' in record.annotations and \

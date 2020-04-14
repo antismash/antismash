@@ -558,6 +558,11 @@ def advanced_options() -> ModuleArgs:
                      help=("A comma separated list of executable name->path pairs "
                            "to override any on the system path."
                            "E.g. diamond=/alternate/path/to/diamond,hmmpfam2=hmm2pfam"))
+    group.add_option('--allow-long-headers',
+                     dest='allow_long_headers',
+                     action='store_true',
+                     default=False,
+                     help="Prevents long headers from being renamed")
     return group
 
 
