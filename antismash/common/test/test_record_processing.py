@@ -288,6 +288,25 @@ class TestPreprocessRecords(unittest.TestCase):
         with self.assertRaisesRegex(AntismashInputError, "record has no name"):
             self.run_on_records(records)
 
+    def test_long_names(self):
+        record = self.read_nisin()[0]
+        record.id = "A" * 16
+        record.name = record.id
+        self.run_on_records([record])
+        assert record.id == record.name == "A" * 16
+
+        record.id = "A" * 17
+        record.name = record.id
+        self.run_on_records([record])
+        assert len(record.id) <= 16
+        assert len(record.name) <= 16
+
+        config.update_config({"allow_long_headers": True})
+        record.id = "A" * 17
+        record.name = record.id
+        self.run_on_records([record])
+        assert record.id == record.name == "A" * 17
+
 
 class TestUniqueID(unittest.TestCase):
     def test_bad_starts(self):
