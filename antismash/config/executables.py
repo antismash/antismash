@@ -24,7 +24,7 @@ _ALTERNATE_EXECUTABLE_NAMES = {
     ],
     "fasttree": [
         "fasttree",  # general
-        "Fasttree",  # as per install from source instructions
+        "FastTree",  # as per install from source instructions
     ],
 }
 
