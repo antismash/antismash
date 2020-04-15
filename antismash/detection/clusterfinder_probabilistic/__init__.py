@@ -172,7 +172,4 @@ def generate_results(record: Record, options: ConfigType) -> ClusterFinderResult
     for prediction in predictions:
         new_areas.append(SubRegion(prediction.location, tool="clusterfinder",
                                    probability=prediction.probability))
-    if options.cf_create_clusters:
-        for area in new_areas:
-            record.add_subregion(area)
     return ClusterFinderResults(record.id, new_areas, create=options.cf_create_clusters)

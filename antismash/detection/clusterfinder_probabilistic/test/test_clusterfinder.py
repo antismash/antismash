@@ -93,11 +93,12 @@ class ClusterFinderTest(unittest.TestCase):
 
     def test_no_overlaps(self):
         results = clusterfinder.generate_results(self.record, self.config)
-        areas = self.record.get_subregions()
 
-        assert len(results.areas) == 2
+        # ensure subregions aren't added to record by generation
+        assert not self.record.get_subregions()
+
+        areas = results.areas
         assert len(areas) == 2
-        assert list(areas) == results.areas
 
         area = areas[0]
         assert area.location.start == 30
