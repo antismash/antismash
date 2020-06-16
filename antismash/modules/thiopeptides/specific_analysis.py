@@ -14,6 +14,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 
 from antismash.common import all_orfs, fasta, module_results, path, secmet, subprocessing, utils
 from antismash.common.secmet.qualifiers.prepeptide_qualifiers import ThioQualifier
+from antismash.common.secmet.locations import location_from_string
 from antismash.common.signature import HmmSignature
 
 from .rodeo import run_rodeo
@@ -52,9 +53,9 @@ class ThioResults(module_results.ModuleResults):
             results.motifs.append(secmet.Prepeptide.from_json(motif))
         for cluster in json["protoclusters with motifs"]:
             results.clusters_with_motifs.add(record.get_protocluster(cluster))
-        for cluster, features in json["cds_features"]:
+        for cluster, features in json["cds_features"].items():
             for location, name in features:
-                cds = all_orfs.create_feature_from_location(record, location, label=name)
+                cds = all_orfs.create_feature_from_location(record, location_from_string(location), label=name)
                 results.cds_features[cluster].append(cds)
         return results
 

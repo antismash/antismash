@@ -141,3 +141,23 @@ class TestIntegration(unittest.TestCase):
                                    2062.2, 2080.2, 2098.2, 2116.2, 2134.2, 2152.3, 2170.3]):
             self.assertAlmostEqual(calc, expected, places=1)
         assert len(prepeptide.to_biopython()) == 2  # no tail
+
+    def test_NZ_CP015439(self):  # pylint: disable=invalid-name
+        """ Tests that small ORFs are found and saved in results """
+        record_path = path.get_full_path(__file__, 'data', 'NZ_CP015439_section.gbk')
+        results = helpers.run_and_regenerate_results_for_module(record_path, thiopeptides, self.config)
+        assert results
+
+        # check that the extra orf was found and stored correctly
+        assert len(results.cds_features) == 1
+        additions = list(results.cds_features.values())[0]
+        assert len(additions) == 1
+        assert isinstance(additions[0], secmet.features.CDSFeature)
+
+        # also test the analysis results itself
+        assert len(results.motifs) == 1
+        prepeptide = results.motifs[0]
+        self.assertAlmostEqual(1408.6, prepeptide.monoisotopic_mass, places=1)
+        self.assertAlmostEqual(1409.5, prepeptide.molecular_weight, places=1)
+        assert prepeptide.leader == "MRYMEGGENMQDIMLELYAEELPDITQYTAAGTSTLSTESSVLSASCP"
+        assert prepeptide.core == "TSTASTYTSMSSVS"
