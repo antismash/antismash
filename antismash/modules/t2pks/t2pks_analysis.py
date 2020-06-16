@@ -286,9 +286,7 @@ def analyse_cluster(cluster: Protocluster, record: Record) -> ProtoclusterPredic
             a single ProtoclusterPrediction instance with analysis results
     """
     assert cluster.product == "T2PKS"
-    scan_area = cluster.location
-    cds_features = record.get_cds_features_within_location(scan_area, with_overlapping=True)
-    hmm_results_by_name = run_t2pks_hmmscan(cds_features)
+    hmm_results_by_name = run_t2pks_hmmscan(cluster.cds_children)
 
     hmm_results_by_cds = {record.get_cds_by_name(name): hits for name, hits in hmm_results_by_name.items()}
     t2pks_blastp_results = run_starter_unit_blastp(hmm_results_by_cds)
@@ -306,4 +304,4 @@ def analyse_cluster(cluster: Protocluster, record: Record) -> ProtoclusterPredic
         weights.update(predict_molecular_weight(preds_by_protein, starter_names, elong_names))
 
     return ProtoclusterPrediction(preds_by_cds, starter_units, malonyl_elongations,
-                             product_classes, weights, scan_area.start, scan_area.end)
+                             product_classes, weights, cluster.location.start, cluster.location.end)
