@@ -73,6 +73,7 @@ class IntegrationNRPSPKS(unittest.TestCase):
         monomers = '(leu - D-bht - asn) + (D-hpg - D-hpg - bht) + (dhpg) + (tyr)'
         assert pred.polymer == monomers
         assert not pred.domain_docking_used
+        assert pred.ordering == ['bpsA', 'bpsB', 'bpsC', 'bpsD']
 
         pred = results.region_predictions[1][1]
         assert pred.polymer == "(tyr)"
@@ -97,6 +98,7 @@ class IntegrationNRPSPKS(unittest.TestCase):
         sc_pred = results.region_predictions[1][0]
         assert sc_pred.polymer == '(Me-ccmal) + (Me-ccmal) + (Me-ccmal)'
         assert sc_pred.domain_docking_used
+        assert sc_pred.ordering == ['STAUR_3983', 'STAUR_3984', 'STAUR_3985', 'STAUR_3982']
         assert len(results.domain_predictions) == 10
         expected_domains = {'nrpspksdomains_STAUR_3982_PKS_AT.1',
                             'nrpspksdomains_STAUR_3983_PKS_AT.1',
