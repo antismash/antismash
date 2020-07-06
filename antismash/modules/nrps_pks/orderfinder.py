@@ -62,7 +62,10 @@ def analyse_biosynthetic_order(nrps_pks_features: List[CDSFeature],
             docking = False
 
         polymer, smiles = generate_substrates_order(geneorder, consensus_predictions)
-        compound_predictions.append(CandidateClusterPrediction(candidate_cluster_number, polymer, docking, smiles))
+        gene_names_in_order = [cds.get_name() for cds in geneorder]
+        prediction = CandidateClusterPrediction(candidate_cluster_number, polymer,
+                                                docking, smiles, gene_names_in_order)
+        compound_predictions.append(prediction)
     return compound_predictions
 
 

@@ -95,11 +95,12 @@ def modify_substrate(module: Module, base: str = "") -> str:  # pylint: disable=
 class CandidateClusterPrediction:
     """ Contains prediction information for a CandidateCluster """
     def __init__(self, candidate_cluster_number: int, polymer: str,
-                 domain_docking_used: bool, smiles: str = "") -> None:
+                 domain_docking_used: bool, smiles: str = "", ordering: List[str] = None) -> None:
         self.candidate_cluster_number = candidate_cluster_number
         self.polymer = polymer
         self.domain_docking_used = domain_docking_used
         self.smiles = smiles
+        self.ordering = ordering
 
     def to_json(self) -> Dict[str, Any]:
         """ Creates a JSON representation of a CandidateClusterPrediction """
@@ -107,14 +108,16 @@ class CandidateClusterPrediction:
             "sc_number": self.candidate_cluster_number,
             "polymer": self.polymer,
             "docking_used": self.domain_docking_used,
-            "smiles": self.smiles
+            "smiles": self.smiles,
+            "ordering": self.ordering,
         }
 
     @staticmethod
     def from_json(json: Dict[str, Any]) -> "CandidateClusterPrediction":
         """ Rebuilds a CandidateClusterPrediction from a JSON dictionary """
         return CandidateClusterPrediction(json["sc_number"], json["polymer"],
-                                          json["docking_used"], json["smiles"])
+                                          json["docking_used"], json["smiles"],
+                                          json.get("ordering"))
 
 
 class NRPS_PKS_Results(ModuleResults):
