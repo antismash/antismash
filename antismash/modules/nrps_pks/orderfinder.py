@@ -56,7 +56,9 @@ def analyse_biosynthetic_order(nrps_pks_features: List[CDSFeature],
             docking = True
         else:
             logging.debug("CandidateCluster %d monomer ordering method: colinear", candidate_cluster_number)
-            geneorder = find_colinear_order(cds_in_candidate_cluster)
+            with_complete = filter(lambda cds: any(module.is_complete() for module in cds.modules),
+                                   cds_in_candidate_cluster)
+            geneorder = find_colinear_order(list(with_complete))
             docking = False
 
         polymer, smiles = generate_substrates_order(geneorder, consensus_predictions)
