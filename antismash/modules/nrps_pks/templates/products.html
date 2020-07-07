@@ -20,6 +20,13 @@
             <div>
               <dl>
                 <dt><b>Polymer prediction:</b></dt><dd>{{candidate.polymer}}</dd>
+                {% if candidate.domain_docking_used and candidate.ordering %}
+                    <dt><b>Non-colinear ordering:</b></dt><dd>
+                    {% for name in candidate.ordering %}
+                        {% if not loop.first %} + {% endif %}<span class="serif">{{name}}</span>
+                    {% endfor %}
+                    </dd>
+                {% endif %}
               </dl>
               <br>Direct lookup in NORINE database:
               <a class="external-link" href="{{candidate.get_norine_url()}}" target="_new">strict</a>
