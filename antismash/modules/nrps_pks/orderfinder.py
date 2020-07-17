@@ -358,6 +358,8 @@ def find_colinear_order(cds_features: List[CDSFeature]) -> List[CDSFeature]:
     for gene in cds_features:
         direction += gene.strand
     geneorder = list(cds_features)
+    if not geneorder:
+        return geneorder
     # Reverse if first gene encodes a multidomain protein with a TE/TD domain
     if direction < 0:
         geneorder.reverse()
