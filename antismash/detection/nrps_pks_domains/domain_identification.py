@@ -386,7 +386,7 @@ def generate_domain_features(gene: CDSFeature, domains: List[HMMResult]) -> Dict
         new_feature.evalue = domain.evalue
         new_feature.score = domain.bitscore
 
-        new_feature.translation = gene.translation[domain.query_start:domain.query_end + 1]
+        new_feature.translation = gene.translation[domain.query_start:domain.query_end]
 
         domain_counts[domain.hit_id] += 1  # 1-indexed, so increment before use
         domain_name = "{}_{}.{}".format(gene.get_name(), domain.hit_id, domain_counts[domain.hit_id])
@@ -419,7 +419,7 @@ def generate_motif_features(feature: CDSFeature, motifs: List[HMMResult]) -> Lis
         new_motif.database = "abmotifs"
         new_motif.locus_tag = locus_tag
 
-        new_motif.translation = feature.translation[motif.query_start:motif.query_end + 1]
+        new_motif.translation = feature.translation[motif.query_start:motif.query_end]
 
         motif_features.append(new_motif)
     return motif_features
