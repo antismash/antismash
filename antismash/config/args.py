@@ -496,6 +496,11 @@ def output_options() -> ModuleArgs:
                      type=str,
                      action=FullPathAction,
                      help="Directory to write results to.")
+    group.add_option('--output-basename',
+                     dest='output_basename',
+                     default="",
+                     type=str,
+                     help="Base filename to use for output files within the output directory.")
     return group
 
 
