@@ -109,6 +109,9 @@ def main(args: List[str]) -> int:
         parser.error("Input file does not exist: %s" % options.reuse_results)
         return 1
 
+    if os.sep in options.output_basename:
+        raise parser.error("Output basename cannot contain a path separator character {}".format(os.sep))
+
     options.version = get_version()
 
     try:
