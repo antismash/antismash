@@ -32,7 +32,7 @@ from antismash.common.secmet.test.helpers import (  # for import by others, pyli
 )
 from antismash.config import update_config
 from antismash.config.args import build_parser
-from antismash.main import get_all_modules
+from antismash.main import get_all_modules, canonical_base_filename
 
 
 def get_simple_options(module, args):
@@ -121,7 +121,7 @@ def run_and_regenerate_results_for_module(input_file, module, options,
     with TemporaryDirectory(change=True) as tempdir:
         orig_output = options.output_dir
         update_config({"output_dir": tempdir})
-        base_filename = os.path.join(options.output_dir, os.path.basename(input_file).rsplit('.', 1)[0])
+        base_filename = canonical_base_filename(input_file, tempdir, options)
         json_filename = base_filename + ".json"
         assert not os.path.exists(json_filename)
         try:
