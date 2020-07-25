@@ -1,5 +1,6 @@
 antiSMASH - the antibiotics and Secondary Metabolite Analysis SHell
 ===================================================================
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/rchurt/rchurt.github.io/blob/master/antiSMASH.ipynb)
 
 Development & Funding
 ---------------------
