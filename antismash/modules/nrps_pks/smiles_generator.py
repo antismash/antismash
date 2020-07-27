@@ -22,7 +22,7 @@ def load_smiles() -> Dict[str, str]:
     """Load smiles from a dictionary mapping residues to SMILES string"""
     aa_smiles = {}  # type: Dict[str, str]
 
-    smiles_monomer = open(path.get_full_path(__file__, 'data', 'aaSMILES.txt'), 'r')
+    smiles_monomer = open(path.get_full_path(__file__, 'data', 'aaSMILES.txt'), 'r', encoding='utf-8')
 
     for line in smiles_monomer.readlines():
         line = line.split("#", 1)[0].strip()
