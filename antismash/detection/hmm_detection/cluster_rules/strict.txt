@@ -338,3 +338,9 @@ RULE tropodithietic-acid
     CONDITIONS (GST_N_3 or GST_C)
                and (Acyl-CoA_dh_N or Acyl-CoA_dh_M or Acyl-CoA_dh_1)
                and TIGR02278
+
+RULE butenolide
+    COMMENT BGCs encoding butenolides (e.g. styrolides and acaterins) described in DOI: 10.1002/anie.201914154
+    CUTOFF 20
+    NEIGHBOURHOOD 5
+    CONDITIONS AfsA and Oxidored_FMN and adh_short

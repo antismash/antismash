@@ -108,7 +108,7 @@ novH	NovH-like protein	750	novH.hmm
 SpcDK_cou	SpcD/SpcK-like thymidylyltransferase, aminocoumarins group	600	spcDK_like_cou.hmm
 IucA_IucC	Siderophore synthase	30	IucA_IucC.hmm
 ectoine_synt	Ectoine synthase	35	ectoine_synt.hmm
-AfsA	AfsA-like butyrolactone synthase	25	AfsA.hmm
+AfsA	AfsA-like butyrolactone synthase	21	AfsA.hmm
 indsynth	StaD-like chromopyrrolic acid synthase domain	100	indsynth.hmm
 LipM	LipM-like nucleotidyltransferase	50	LipM.hmm
 LipU	LipU-like protein	30	LipU.hmm
@@ -252,3 +252,4 @@ TIGR02278	PaaN-DH: phenylacetic acid degradation protein paaN	563	TIGR02278.hmm
 TfuA	TfuA-like protein	26	PF07812.hmm
 HopA1	HopA1 effector protein family	23	PF17914.hmm
 APH	Phosphotransferase enzyme family	23	PF01636.hmm
+Oxidored_FMN	NADH:flavin oxidoreductase / NADH oxidase family	20	Oxidored_FMN.hmm
