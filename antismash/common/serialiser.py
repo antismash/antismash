@@ -70,9 +70,16 @@ class AntismashResults:
         """ Writes a JSON representation of the instance to the given filename
             or handle
         """
+        # do the JSON conversions before overwriting the previous file
+        try:
+            converted = json.dumps(self.to_json())
+        except TypeError as error:
+            message = "Failed to convert JSON results: %s" % str(error)
+            logging.error(message)
+            raise TypeError(message) from error
         if isinstance(handle, str):
             handle = open(handle, "w")
-        handle.write(json.dumps(self.to_json()))
+        handle.write(converted)
 
 
 def dump_records(records: List[SeqRecord], results: List[Dict[str, Union[Dict[str, Any], ModuleResults]]],
