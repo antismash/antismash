@@ -71,6 +71,11 @@ class TestModule(unittest.TestCase):
         assert set(bio[0].qualifiers.keys()).issuperset(expected_qualifiers)
         assert bio[0].qualifiers["complete"] is None
         assert "incomplete" not in bio[0].qualifiers
+        assert all(domain and " " not in domain for domain in bio[0].qualifiers["domains"])
+        # fake an inserted space due to length
+        first = bio[0].qualifiers["domains"][0]
+        half = len(first)//2
+        bio[0].qualifiers["domains"][0] = first[:half] + " " + first[half:]
 
         record = DummyRecord()
         add_module_references_to_record(original, record)
