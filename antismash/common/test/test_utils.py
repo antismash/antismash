@@ -8,6 +8,7 @@ import unittest
 
 from antismash.common import utils
 from antismash.common.secmet import FeatureLocation
+from antismash.common.secmet.qualifiers import SecMetQualifier
 from antismash.common.test.helpers import DummyCDS, DummyRecord
 
 
@@ -120,6 +121,6 @@ class TestDistanceCalculations(unittest.TestCase):
 
     def test_with_no_secmet(self):
         cds = self.create_cds(55000, 60000, profiles=[])
-        cds.sec_met = None
+        cds.sec_met = SecMetQualifier()
         self.record.add_cds_feature(cds)
         assert utils.distance_to_pfam(self.record, self.query, ["test"]) == -1
