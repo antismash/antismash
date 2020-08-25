@@ -47,6 +47,11 @@ class OptionsLayer:
             return self.options.urls.fungi_baseurl
         return self.options.urls.bacteria_baseurl
 
+    @property
+    def output_basename(self) -> str:
+        """ Returns the base filename for the output files """
+        return os.path.basename(self.options.output_basename)
+
 
 class RecordLayer:
     """ A layer for Record instances """

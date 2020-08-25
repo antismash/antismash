@@ -6,12 +6,13 @@
 
 from argparse import Namespace
 import logging
+import os
 import unittest
 from unittest.mock import call, patch
 
 from antismash import main
 from antismash.common.test.helpers import DummyRecord
-from antismash.config import build_config, destroy_config
+from antismash.config import build_config, destroy_config, get_config
 from antismash.config.args import build_parser
 from antismash.detection import cluster_hmmer, full_hmmer
 
@@ -87,6 +88,37 @@ class TestAntismash(unittest.TestCase):
         rec.original_id = "something else"
         main.add_antismash_comments([(rec, bio)], options)
         assert "Original ID" in bio.annotations["comment"] and "something else" in bio.annotations["comment"]
+
+    def test_canonical_base_filename(self):
+        options = build_parser(modules=self.all_modules).parse_args([])
+        expected = os.path.join("out", "foo.1_example")
+        res = main.canonical_base_filename("foo.1_example.gbk", "out", options)
+        assert res == expected
+        assert get_config().output_basename == os.path.basename(expected)
+
+        res = main.canonical_base_filename("/some/long/path/foo.1_example.gbff", "out", options)
+        assert res == expected
+
+        res = main.canonical_base_filename("foo.1_example.fa", "out", options)
+        assert res == expected
+
+        res = main.canonical_base_filename("foo.1_example.gbff.gz", "out", options)
+        assert res == expected
+
+        options = build_parser(modules=self.all_modules).parse_args(["--output-basename", "foo.1"])
+        expected = os.path.join("out", "foo.1")
+        res = main.canonical_base_filename("foo.1_example.gbk", "out", options)
+        assert res == expected
+
+        res = main.canonical_base_filename("foo.1_example.gbff", "out", options)
+        assert res == expected
+
+        res = main.canonical_base_filename("foo.1_example.fa", "out", options)
+        assert res == expected
+
+        res = main.canonical_base_filename("foo.1_example.gbff.gz", "out", options)
+        assert res == expected
+
 
 
 @patch.object(logging, 'debug')
