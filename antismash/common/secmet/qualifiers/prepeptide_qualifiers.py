@@ -161,11 +161,11 @@ def rebuild_qualifier(data: Dict[str, List[str]], kind: str) -> Optional[RiPPQua
     """
     if not data or "RODEO_score" not in data:
         return None
-    classes = {
+    classes: Dict[str, Type[RiPPQualifier]] = {
         "lanthipeptide": LanthiQualifier,
         "thiopeptide": ThioQualifier,
         "lassopeptide": LassoQualifier,
-    }  # type: Dict[str, Type[RiPPQualifier]]
+    }
     if kind not in classes:
         raise ValueError("no known qualifier builder for prepeptide kind: %s" % kind)
     return classes[kind].from_biopython_qualifiers(data)

@@ -243,8 +243,8 @@ class Tokeniser:  # pylint: disable=too-few-public-methods
 
     def __init__(self, text: str) -> None:
         self.text = text
-        self.tokens = []  # type: List[Token]
-        self.current_symbol = []  # type: List[str]
+        self.tokens: List[Token] = []
+        self.current_symbol: List[str] = []
         self.tokenise()
 
     def tokenise(self) -> None:
@@ -379,7 +379,7 @@ class ConditionMet:  # pylint: disable=too-few-public-methods
                  ancillary_hits: Dict[str, Set[str]] = None) -> None:
         assert isinstance(met, bool)
         self.met = met
-        self.matches = set()  # type: Set[str]
+        self.matches: Set[str] = set()
         self.ancillary_hits = ancillary_hits or defaultdict(set)
         if isinstance(matches, ConditionMet):
             self.matches = matches.matches
@@ -414,18 +414,18 @@ class Conditions:
         # just make sure that it's empty or that we have binary ops (a OR b..)
         assert not sub_conditions or len(sub_conditions) % 2 == 1
 
-        self._operands = []  # type: List[Conditions]
+        self._operands: List[Conditions] = []
         for sub in self.sub_conditions[::2]:
             assert isinstance(sub, Conditions)
             self._operands.append(sub)
 
-        self._operators = []  # type: List[TokenTypes]
+        self._operators: List[TokenTypes] = []
         for sub in self.sub_conditions[1::2]:
             assert isinstance(sub, TokenTypes)
             assert sub in [TokenTypes.AND, TokenTypes.OR]
             self._operators.append(sub)
 
-        unique_operands = set()  # type: Set[str]
+        unique_operands: Set[str] = set()
         for operand in map(str, self.operands):
             if operand in unique_operands:
                 raise ValueError("Rule contains repeated condition: %s\nfrom rule %s"
@@ -455,9 +455,9 @@ class Conditions:
         assert all(operator == TokenTypes.OR for operator in self.operators)
         # which means a simple any() will cover us
         sub_results = [sub.get_satisfied(details, local_only) for sub in self.operands]
-        matching = set()  # type: Set[str]
+        matching: Set[str] = set()
         met = False
-        ancillary_hits = defaultdict(set)  # type: Dict[str, Set[str]]
+        ancillary_hits: Dict[str, Set[str]] = defaultdict(set)
         for sub_result in sub_results:
             matching |= sub_result.matches
             met |= sub_result.met
@@ -526,9 +526,9 @@ class AndCondition(Conditions):
 
     def is_satisfied(self, details: Details, local_only: bool = False) -> ConditionMet:
         results = [sub.get_satisfied(details, local_only) for sub in self.operands]
-        matched = set()  # type: Set[str]
+        matched: Set[str] = set()
         met = True
-        ancillary_hits = defaultdict(set)  # type: Dict[str, Set[str]]
+        ancillary_hits: Dict[str, Set[str]] = defaultdict(set)
         for result in results:
             matched |= result.matches
             met = met and result.met
@@ -567,7 +567,7 @@ class MinimumCondition(Conditions):
 
         # track other CDS hits in case the minimum is part of another condition
         # that would extend the search distance
-        other_cds_hits = defaultdict(set)  # type: Dict[str, Set[str]]
+        other_cds_hits: Dict[str, Set[str]] = defaultdict(set)
 
         # check to see if the remaining hits are in nearby CDSs
         for other_id, other_feature in details.features_by_id.items():
@@ -876,7 +876,7 @@ class Parser:  # pylint: disable=too-few-public-methods
         if self.current_token.type == TokenTypes.COMMENT:
             comments = self._parse_comments()
             prev = TokenTypes.COMMENT
-        related = []  # type: List[str]
+        related: List[str] = []
         if self.current_token.type == TokenTypes.RELATED:
             related = self._parse_related()
             prev = TokenTypes.RELATED
@@ -935,7 +935,7 @@ class Parser:  # pylint: disable=too-few-public-methods
         """ CONDITION and CONDITION { and CONDITION}
             ^ lvalue being passed in
         """
-        and_conditions = [lvalue]  # type: List[Union[Conditions, TokenTypes]]
+        and_conditions: List[Union[Conditions, TokenTypes]] = [lvalue]
         and_conditions.append(self._consume(TokenTypes.AND).type)
         and_conditions.append(self._parse_single_condition(allow_cds))
         while self.current_token and self.current_token.type == TokenTypes.AND:
@@ -947,7 +947,7 @@ class Parser:  # pylint: disable=too-few-public-methods
     def _parse_conditions(self, allow_cds: bool = True, is_group: bool = False) -> ConditionList:
         """    CONDITIONS = CONDITION {BINARY_OP CONDITIONS}*;
         """
-        conditions = []  # type: List[Union[Conditions, TokenTypes]]
+        conditions: List[Union[Conditions, TokenTypes]] = []
         lvalue = self._parse_single_condition(allow_cds)
         append_lvalue = True  # capture the lvalue if it's the only thing
         while self.current_token and self.current_token.type in [TokenTypes.AND,

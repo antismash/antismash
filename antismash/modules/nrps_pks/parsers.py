@@ -64,7 +64,7 @@ def generate_nrps_consensus(results: Dict[str, Prediction]) -> str:
             the most frequent prediction
     """
     assert isinstance(results, dict), type(results)
-    hit_counts = defaultdict(int)  # type: Dict[str, int]
+    hit_counts: Dict[str, int] = defaultdict(int)
     for method, prediction in results.items():
         assert isinstance(method, str), method
         assert isinstance(prediction, Prediction), prediction
@@ -100,8 +100,8 @@ def calculate_consensus_prediction(cds_features: List[CDSFeature], results: Dict
                 the second for AT domains in trans-AT clusters
     """
     # Combine substrate specificity predictions into consensus prediction
-    cis_at = {}  # type: Dict[str, str]  # feature name -> prediction
-    trans_at = {}  # type: Dict[str, str]  # feature name -> prediction
+    cis_at: Dict[str, str] = {}  # feature name -> prediction
+    trans_at: Dict[str, str] = {}  # feature name -> prediction
 
     for cds in cds_features:
         assert cds.region, "Orphaned CDS found: %s" % cds
@@ -110,7 +110,7 @@ def calculate_consensus_prediction(cds_features: List[CDSFeature], results: Dict
             if 'OTHER' in domain.label:
                 continue
             if domain.name == "PKS_AT":
-                preds = []  # type: List[str]
+                preds: List[str] = []
                 preds.extend(map(get_short_form, predictions["minowa_at"].get_classification()))
                 preds.extend(map(get_short_form, predictions["signature"].get_classification()))
                 consensus = calculate_individual_consensus(preds)

@@ -102,9 +102,9 @@ class SecMetQualifier:
             return cls(str(json[0]), float(json[1]), float(json[2]), int(json[3]), str(json[4]))
 
     def __init__(self, domains: List["SecMetQualifier.Domain"] = None) -> None:
-        self._domains = []  # type: List["SecMetQualifier.Domain"]
-        self.domain_ids = []  # type: List[str]
-        self.unique_domain_ids = set()  # type: Set[str]
+        self._domains: List["SecMetQualifier.Domain"] = []
+        self.domain_ids: List[str] = []
+        self.unique_domain_ids: Set[str] = set()
         if domains is not None:
             self.add_domains(domains)
         super().__init__()

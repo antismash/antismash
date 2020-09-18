@@ -32,7 +32,7 @@ def run_rodeo(record: secmet.Record, query: secmet.CDSFeature, leader: str,
     heuristic_score, gathered_tabs_for_csv = acquire_rodeo_heuristics(record, query, leader, core, domains)
     rodeo_score += heuristic_score
 
-    fimo_scores = {}  # type: Dict[int, float]
+    fimo_scores: Dict[int, float] = {}
 
     if not get_global_config().without_fimo and get_lanthi_config().fimo_present:
         # Find motifs
@@ -76,7 +76,7 @@ def acquire_rodeo_heuristics(record: secmet.Record, query: secmet.CDSFeature,
                 the RODEO score, and
                 a list of floats for use in the RODEO SVM
     """
-    tabs = []  # type: List[float]
+    tabs: List[float] = []
     score = 0
     precursor = leader + core
     # Leader peptide contains FxLD motif
@@ -372,7 +372,7 @@ def generate_rodeo_svm_csv(leader: str, core: str, previously_gathered_tabs: Lis
                            fimo_scores: Dict[int, float]) -> List[float]:
     """Generates all the items for one candidate precursor peptide"""
     precursor = leader + core
-    columns = []  # type: List[float]
+    columns: List[float] = []
     # Precursor Index
     columns.append(1)
     # classification

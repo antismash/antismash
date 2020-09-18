@@ -51,7 +51,7 @@ class ActiveSiteAnalysis:
             if len(self.emissions) != len(positions):
                 raise ValueError("Number of emissions must match number of positions")
 
-        self.domains_of_interest = []  # type: List[secmet.features.Domain]
+        self.domains_of_interest: List[secmet.features.Domain] = []
         for candidate in candidates:
             if not isinstance(candidate, secmet.features.Domain):
                 raise TypeError("Candidates must be Domains, not %s" % type(candidate))

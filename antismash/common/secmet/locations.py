@@ -180,8 +180,8 @@ def split_origin_bridging_location(location: CompoundLocation) -> Tuple[
         Returns:
             a tuple of lists, each list containing one or more FeatureLocations
     """
-    lower = []  # type: List[FeatureLocation]
-    upper = []  # type: List[FeatureLocation]
+    lower: List[FeatureLocation] = []
+    upper: List[FeatureLocation] = []
     if location.strand == 1:
         for i, part in enumerate(location.parts):
             if not upper or part.start > upper[-1].start:
@@ -264,7 +264,7 @@ def location_from_string(data: str) -> Location:
 
         strand_text = string[-2]  # [<1:6](-) -> -
         if strand_text == '-':
-            strand = -1  # type: Optional[int]
+            strand: Optional[int] = -1
         elif strand_text == '+':
             strand = 1
         elif strand_text == '?':

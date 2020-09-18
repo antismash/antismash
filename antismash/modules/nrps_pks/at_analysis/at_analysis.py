@@ -54,7 +54,7 @@ class ATPrediction(Prediction):
         self.predictions = sorted(predictions.items(), key=lambda x: (-x[1].score, x[1].name))
 
     def get_classification(self) -> List[str]:
-        results = []  # type: List[str]
+        results: List[str] = []
         if not self.predictions:
             return results
         best_score = self.predictions[0][1].score
@@ -114,10 +114,10 @@ def score_signatures(query_signatures: Dict[str, str],
         Returns:
             a dictionary mapping each query identifier to an ATPrediction
     """
-    results = {}  # type: Dict[str, Prediction]
+    results: Dict[str, Prediction] = {}
     for key, query_sig_seq in sorted(query_signatures.items()):
         # keep a single best prediction for each monomer type
-        scores = {}  # type: Dict[str, ATResult]
+        scores: Dict[str, ATResult] = {}
         for sig_name, sig_seq in reference_signatures.items():
             monomer = sig_name.rsplit('_', 1)[-1]
             score = 0.

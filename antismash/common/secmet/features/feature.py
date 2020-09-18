@@ -77,13 +77,13 @@ class Feature:
         if location.start < 0:
             raise ValueError("location contains negative coordinate: %s" % location)
         self.location = location
-        self.notes = []  # type: List[str]
+        self.notes: List[str] = []
         if not 1 <= len(feature_type) < 16:  # at 16 the name merges with location in genbanks
             raise ValueError("feature type has invalid length: '%s'" % feature_type)
         self.type = str(feature_type)
-        self._qualifiers = OrderedDict()  # type: Dict[str, Optional[List[str]]]
+        self._qualifiers: Dict[str, Optional[List[str]]] = OrderedDict()
         self.created_by_antismash = bool(created_by_antismash)
-        self._original_codon_start = None  # type: Optional[int]
+        self._original_codon_start: Optional[int] = None
 
     @property
     def strand(self) -> int:

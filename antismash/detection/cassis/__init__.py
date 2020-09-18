@@ -37,8 +37,8 @@ class CassisResults(module_results.DetectionResults):
     """ Contains the subregions predicted by cassis """
     def __init__(self, record_id: str) -> None:
         super().__init__(record_id)
-        self.subregions = []  # type: List[SubRegion]
-        self.promoters = []  # type: List[Promoter]
+        self.subregions: List[SubRegion] = []
+        self.promoters: List[Promoter] = []
 
     def to_json(self) -> Dict[str, Any]:
         subregions = []
@@ -67,7 +67,7 @@ class CassisResults(module_results.DetectionResults):
             return None
 
         subregions = []
-        promoters = []  # type: List[Promoter]
+        promoters: List[Promoter] = []
         for cluster in json["subregions"]:
             subregions.append(SubRegion.from_biopython(feature_from_json(cluster)))
         for promoter in json["promoters"]:
@@ -341,7 +341,7 @@ def filter_subregions(subregions: List[SubRegion]) -> List[SubRegion]:
     if not subregions:
         return subregions
 
-    by_anchor = defaultdict(list)  # type: Dict[str, List[SubRegion]]
+    by_anchor: Dict[str, List[SubRegion]] = defaultdict(list)
     # sort from largest to smallest to avoid complicated replacement logic
     # any sharing an anchor will overlap on that gene anyway
     for sub in sorted(subregions, key=lambda x: x.location.end - x.location.start, reverse=True):
@@ -361,7 +361,7 @@ def filter_subregions(subregions: List[SubRegion]) -> List[SubRegion]:
 def create_subregions(anchor: str, cluster_preds: List[ClusterPrediction],
                       record: Record) -> List[SubRegion]:
     """ Create the predicted subregions """
-    subregions = []  # type: List[SubRegion]
+    subregions: List[SubRegion] = []
     if not cluster_preds:
         return subregions
     for i, cluster in enumerate(cluster_preds):

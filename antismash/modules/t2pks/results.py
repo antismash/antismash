@@ -147,7 +147,7 @@ class T2PKSResults(ModuleResults):
 
     def __init__(self, record_id: str) -> None:
         super().__init__(record_id)
-        self.cluster_predictions = {}  # type: Dict[int, ProtoclusterPrediction]
+        self.cluster_predictions: Dict[int, ProtoclusterPrediction] = {}
 
     def __repr__(self) -> str:
         return "T2PKSResults(clusters=%s)" % list(self.cluster_predictions)

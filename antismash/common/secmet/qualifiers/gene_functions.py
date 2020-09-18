@@ -104,9 +104,9 @@ class GeneFunctionAnnotations:
     slots = ["_annotations", "_by_tool", "_by_function"]
 
     def __init__(self) -> None:
-        self._annotations = []  # type: List["_GeneFunctionAnnotation"]
-        self._by_tool = defaultdict(list)  # type: Dict[str, List["_GeneFunctionAnnotation"]]
-        self._by_function = defaultdict(list)  # type: Dict[GeneFunction, List["_GeneFunctionAnnotation"]]
+        self._annotations: List["_GeneFunctionAnnotation"] = []
+        self._by_tool: Dict[str, List[_GeneFunctionAnnotation]] = defaultdict(list)
+        self._by_function: Dict[GeneFunction, List[_GeneFunctionAnnotation]] = defaultdict(list)
 
     def __iter__(self) -> Iterator["_GeneFunctionAnnotation"]:
         for annotation in self._annotations:

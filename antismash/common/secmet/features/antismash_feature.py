@@ -25,13 +25,13 @@ class AntismashFeature(Feature):
             raise ValueError("an AntismashFeature created by antiSMASH must have a tool supplied")
         super().__init__(location, feature_type, created_by_antismash=created_by_antismash)
         self.tool = tool
-        self.domain_id = None  # type: Optional[str]
-        self.database = None  # type: Optional[str]
-        self.detection = None  # type: Optional[str]
-        self._evalue = None  # type: Optional[float]
-        self.label = None  # type: Optional[str]
-        self.locus_tag = None  # type: Optional[str]
-        self._score = None  # type: Optional[float]
+        self.domain_id: Optional[str] = None
+        self.database: Optional[str] = None
+        self.detection: Optional[str] = None
+        self._evalue: Optional[float] = None
+        self.label: Optional[str] = None
+        self.locus_tag: Optional[str] = None
+        self._score: Optional[float] = None
 
         self._translation = ""
 
@@ -75,7 +75,7 @@ class AntismashFeature(Feature):
         return self.domain_id
 
     def to_biopython(self, qualifiers: Dict[str, List[str]] = None) -> List[SeqFeature]:
-        mine = OrderedDict()  # type: Dict[str, List[str]]
+        mine: Dict[str, List[str]] = OrderedDict()
         if self.label:
             mine["label"] = [self.label]
         if self.score is not None:

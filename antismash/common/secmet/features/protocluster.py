@@ -42,15 +42,15 @@ class Protocluster(CDSCollection):
         self.tool = tool
 
         # core specific
-        self.core_location = core_location  # type: FeatureLocation
+        self.core_location = core_location
         self.cutoff = cutoff
-        self._definition_cdses = set()  # type: Set[CDSFeature]
+        self._definition_cdses: Set[CDSFeature] = set()
 
         # neighbourhood specific
         self.neighbourhood_range = neighbourhood_range
 
         # analysis annotations
-        self.t2pks = None  # type: Optional[T2PKSQualifier]
+        self.t2pks: Optional[T2PKSQualifier] = None
 
     def __str__(self) -> str:
         return "Protocluster(%s, product=%s)" % (self.location, self.product)

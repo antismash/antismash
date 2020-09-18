@@ -201,10 +201,10 @@ def check_sub(feature: SeqFeature) -> List[SeqFeature]:
         appropriate SeqFeature instances from them.
     """
     new_features = []
-    locations = []  # type: List[FeatureLocation]
-    trans_locations = []  # type: List[FeatureLocation]
-    qualifiers = {}  # type: Dict[str, List[str]]
-    mismatching_qualifiers = set()  # type: Set[str]
+    locations: List[FeatureLocation] = []
+    trans_locations: List[FeatureLocation] = []
+    qualifiers: Dict[str, List[str]] = {}
+    mismatching_qualifiers: Set[str] = set()
     for sub in feature.sub_features:
         if sub.sub_features:  # If there are sub_features, go deeper
             new_features.extend(check_sub(sub))

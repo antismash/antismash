@@ -22,11 +22,11 @@ class AntismashDomain(Domain):
     def __init__(self, location: Location, tool: str, protein_location: FeatureLocation, locus_tag: str) -> None:
         super().__init__(location, self.FEATURE_TYPE, protein_location, locus_tag,
                          tool=tool, created_by_antismash=True)
-        self.domain_subtype = None  # type: Optional[str]
-        self.specificity = []  # type: List[str]
+        self.domain_subtype: Optional[str] = None
+        self.specificity: List[str] = []
 
     def to_biopython(self, qualifiers: Dict[str, List[str]] = None) -> List[SeqFeature]:
-        mine = OrderedDict()  # type: Dict[str, List[str]]
+        mine: Dict[str, List[str]] = OrderedDict()
         if self.domain_subtype:
             mine["domain_subtype"] = [self.domain_subtype]
         if self.specificity:

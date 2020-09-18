@@ -40,7 +40,7 @@ def run_blastp(target_blastp_database: str, query_sequence: str,
         command.extend(opts)
 
     if results_file is not None:
-        handle = open(results_file)  # type: IO[Any]
+        handle: IO[Any] = open(results_file)
     else:
         handle = NamedTemporaryFile()
 

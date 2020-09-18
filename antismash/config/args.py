@@ -152,8 +152,8 @@ class AntismashParser(argparse.ArgumentParser):
             values = {}
 
         outfile = open(filename, 'w')
-        dests = set()  # type: Set[str] # set of processed destinations
-        titles = defaultdict(lambda: defaultdict(list))  # type: Dict[str, Dict[str, List[str]]]
+        dests: Set[str] = set()  # set of processed destinations
+        titles: Dict[str, Dict[str, List[str]]] = defaultdict(lambda: defaultdict(list))
         for parent in sorted(self.parents, key=lambda group: group.title):
             for arg in parent.parser.get_actions():
                 titles[parent.title][parent.prefix].extend(construct_arg_text(arg, dests, values))
@@ -316,7 +316,7 @@ class ModuleArgs:
         self.prefix = prefix
 
         self.skip_type_check = self.override
-        self.args = []  # type: List[argparse.Action]
+        self.args: List[argparse.Action] = []
         self.basic = basic_help
 
     def add_option(self, name: str, *args: Any, **kwargs: Any) -> None:

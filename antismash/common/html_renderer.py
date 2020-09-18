@@ -37,8 +37,8 @@ class HTMLSections:
     """
     def __init__(self, name: str) -> None:
         self.name = name
-        self.sidepanel_sections = []  # type: List[HTMLSection]
-        self.detail_sections = []  # type: List[HTMLSection]
+        self.sidepanel_sections: List[HTMLSection] = []
+        self.detail_sections: List[HTMLSection] = []
 
     def add_detail_section(self, label: str, section: Markup, class_name: str = "") -> None:
         """ Add a detail section with the given tab name, using the markup provided. """
@@ -165,7 +165,7 @@ class _Template:  # pylint: disable=too-few-public-methods
         Non-functional on its own, requires self.template to be set to a jinja Template
     """
     def __init__(self, template_dir: Optional[str] = None) -> None:
-        self.template = None  # type: Optional[_jinja2.Template]
+        self.template: Optional[_jinja2.Template] = None
         if not template_dir:
             loader = _jinja2.BaseLoader()
         else:

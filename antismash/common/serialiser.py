@@ -58,7 +58,7 @@ class AntismashResults:
 
     def to_json(self) -> Dict[str, Any]:
         """ Constructs a JSON representation of the instance """
-        res = OrderedDict()  # type: Dict[str, Any]
+        res: Dict[str, Any] = OrderedDict()
         res["version"] = self.version
         res["input_file"] = self.input_file
         biopython = [rec.to_biopython() for rec in self.records]
@@ -94,7 +94,7 @@ def dump_records(records: List[SeqRecord], results: List[Dict[str, Union[Dict[st
     assert isinstance(results, list)
     for record, result in zip(records, results):
         json_record = record_to_json(record)
-        modules = OrderedDict()  # type: Dict[str, Dict]
+        modules: Dict[str, Dict] = OrderedDict()
         if result:
             logging.debug("Record %s has results for modules: %s", record.id,
                           ", ".join([mod.rsplit('.', 1)[-1] for mod, resultv in result.items() if resultv]))
@@ -137,7 +137,7 @@ def record_to_json(record: SeqRecord) -> Dict[str, Any]:
             res["references"].append(ref)
         return res
 
-    result = OrderedDict()  # type: Dict[str, Any]
+    result: Dict[str, Any] = OrderedDict()
     result["id"] = record.id
     result["seq"] = sequence_to_json(record.seq)
     result["features"] = list(map(feature_to_json, record.features))

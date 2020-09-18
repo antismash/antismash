@@ -20,7 +20,7 @@ _STARTING_BONDS = {
 
 def load_smiles() -> Dict[str, str]:
     """Load smiles from a dictionary mapping residues to SMILES string"""
-    aa_smiles = {}  # type: Dict[str, str]
+    aa_smiles: Dict[str, str] = {}
 
     smiles_monomer = open(path.get_full_path(__file__, 'data', 'aaSMILES.txt'), 'r')
 
@@ -55,9 +55,9 @@ class Atom:
         self.bonds_to_left = bonds_to_left
         self.bonds_to_right = 0
         self.identifier = identifier
-        self.branches = []  # type: List[List[Atom]]
-        self.references_out = []  # type: List[str]
-        self.references_in = []  # type: List[Atom]
+        self.branches: List[List[Atom]] = []
+        self.references_out: List[str] = []
+        self.references_in: List[Atom] = []
 
     @property
     def available_bonds(self) -> int:
@@ -111,15 +111,15 @@ class Bonds:
             smiles: the smiles string to build from
     """
     def __init__(self, smiles: str) -> None:
-        self._atoms_by_identifier = {}  # type: Dict[str, Atom]
-        self._top_level_atoms = self._parse_smiles(smiles)  # type: List[Atom]
+        self._atoms_by_identifier: Dict[str, Atom] = {}
+        self._top_level_atoms: List[Atom] = self._parse_smiles(smiles)
 
     def _parse_smiles(self, smiles: str) -> List[Atom]:
         """ Parse a SMILES string into a list of Atom instances """
 
         def chain(smiles: str) -> Tuple[List[Atom], str]:
             """ Recursively parse branches in SMILES and return found Atoms and leftover SMILES """
-            atoms = []  # type: List[Atom]
+            atoms: List[Atom] = []
             while smiles:
                 symbol = smiles[0]
                 smiles = smiles[1:]

@@ -69,8 +69,7 @@ class Domain(AntismashFeature):
             raise TypeError("protein location must be a FeatureLocation, not %s" % type(protein_location))
         if not locus_tag:
             raise ValueError("locus tag cannot be an empty string")
-        # mypy struggles with this next line, considering it an optional string, fixed with a typehint
-        self.locus_tag = str(locus_tag)  # type: str
+        self.locus_tag: str = str(locus_tag)
         self._asf = ActiveSiteFinderQualifier()
 
     @property
@@ -79,7 +78,7 @@ class Domain(AntismashFeature):
         return self._asf
 
     def to_biopython(self, qualifiers: Dict[str, List[str]] = None) -> List[SeqFeature]:
-        mine = OrderedDict()  # type: Dict[str, List[str]]
+        mine: Dict[str, List[str]] = OrderedDict()
         mine["protein_start"] = [str(int(self.protein_location.start))]
         mine["protein_end"] = [str(int(self.protein_location.end))]
         if self.domain:
