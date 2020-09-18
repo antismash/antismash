@@ -4,8 +4,7 @@
 """ NRPS/PKS Module features """
 
 from enum import Enum, unique
-from typing import Any, Dict, List, Tuple, Type, TypeVar
-from typing import Optional  # comment hint, pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar
 
 from .antismash_domain import AntismashDomain
 from .feature import Feature, FeatureLocation, SeqFeature

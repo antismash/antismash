@@ -5,8 +5,7 @@
 """
 
 from tempfile import NamedTemporaryFile
-from typing import List
-from typing import Any, IO  # comment hints, pylint: disable=unused-import
+from typing import Any, IO, List
 
 from .base import execute, get_config, SearchIO
 

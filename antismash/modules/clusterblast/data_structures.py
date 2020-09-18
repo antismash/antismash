@@ -4,7 +4,7 @@
 """ A collection of data structures shared by the clusterblast variants """
 
 from collections import OrderedDict
-from typing import Dict, List, Tuple, Union  # in comment hints: pylint: disable=unused-import
+from typing import Dict, List, Tuple, Union
 
 
 class ReferenceCluster:

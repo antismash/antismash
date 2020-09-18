@@ -5,7 +5,7 @@
 
 import logging
 import os
-from typing import Any, Dict, List, Union, Set, Tuple  # pylint: disable=unused-import
+from typing import Any, Dict, List, Set
 
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord

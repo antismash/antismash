@@ -3,8 +3,7 @@
 
 """ A class for representing RiPP prepeptides """
 
-from typing import Any, Dict, List, Type, TypeVar
-from typing import Optional  # comment hints, pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, Type, TypeVar
 
 from Bio.SeqFeature import SeqFeature
 
@@ -12,7 +11,7 @@ from ..errors import SecmetInvalidInputError
 from .cds_motif import CDSMotif
 from .feature import Feature, FeatureLocation, Location
 from ..locations import build_location_from_others, location_from_string
-from ..qualifiers.prepeptide_qualifiers import RiPPQualifier  # comment hints, pylint: disable=unused-import
+from ..qualifiers.prepeptide_qualifiers import RiPPQualifier
 from ..qualifiers.prepeptide_qualifiers import rebuild_qualifier
 
 T = TypeVar("T", bound="Prepeptide")

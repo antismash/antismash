@@ -20,8 +20,7 @@ Non-carbon methylations are represented as either OMe or NMe, Norine mostly uses
 that form but occasionally has MeO.
 """
 
-from typing import Any, Dict, Iterator, List
-from typing import Optional  # comment hints, pylint: disable=unused-import
+from typing import Any, Dict, Iterator, List, Optional
 
 from antismash.common.hmmscan_refinement import HMMResult
 

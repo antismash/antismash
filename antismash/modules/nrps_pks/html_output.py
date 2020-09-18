@@ -5,8 +5,7 @@
 
 import logging
 import re
-from typing import Any, Iterable, List, Optional
-from typing import Dict  # in comment type hints  # pylint: disable=unused-import
+from typing import Any, Dict, Iterable, List, Optional
 
 from antismash.common import path
 from antismash.common.html_renderer import HTMLSections, FileTemplate

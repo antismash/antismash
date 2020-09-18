@@ -6,8 +6,7 @@
 """
 
 from collections import OrderedDict
-from typing import Any, List, Optional, Sequence, Tuple, Type, TypeVar, Union
-from typing import Dict  # used in comment hints # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, TypeVar, Union
 
 from Bio.SeqFeature import SeqFeature
 

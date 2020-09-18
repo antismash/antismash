@@ -11,8 +11,7 @@ import argparse
 from collections import defaultdict
 import multiprocessing
 import os
-from typing import (Any, AnyStr, IO, List, Optional,   # pylint: disable=unused-import
-                    Dict, Set, Tuple)
+from typing import Any, AnyStr, Dict, IO, List, Optional, Set, Tuple
 
 from antismash.custom_typing import AntismashModule
 

@@ -4,8 +4,7 @@
 """ Helper functions for location operations """
 
 import logging
-from typing import Iterable, List, Sequence, Tuple, Union
-from typing import Optional  # in comment hints, pylint: disable=unused-import
+from typing import Iterable, List, Optional, Sequence, Tuple, Union
 
 from Bio.SeqFeature import (
     AbstractPosition,

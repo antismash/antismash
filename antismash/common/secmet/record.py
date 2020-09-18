@@ -14,8 +14,7 @@
 import bisect
 from collections import Counter, defaultdict, OrderedDict
 import logging
-from typing import Any, Dict, List, Tuple, Union, cast
-from typing import Optional, Sequence, Set, Type  # comment hints # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, Sequence, Type, Tuple, Union, cast
 
 from Bio import Alphabet, SeqIO
 from Bio.Seq import Seq
@@ -38,7 +37,7 @@ from .features import (
     Region,
     SubRegion,
 )
-from .features import CDSCollection  # comment hints, pylint: disable=unused-import
+from .features import CDSCollection
 from .features.candidate_cluster import create_candidates_from_protoclusters
 
 from .locations import (

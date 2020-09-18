@@ -4,8 +4,7 @@
 """ Qualifiers to contain extra annotations for RiPP prepeptides
 """
 
-from typing import Dict, List, Optional
-from typing import Type  # comment hints, pylint: disable=unused-import
+from typing import Dict, List, Optional, Type
 
 
 class RiPPQualifier:

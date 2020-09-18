@@ -5,7 +5,7 @@
 
 import logging
 from typing import Any, Dict, List, Optional, Union
-from typing import Set, Tuple  # used in comment type hints, pylint: disable=unused-import
+from typing import Set, Tuple
 
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record, GeneFunction

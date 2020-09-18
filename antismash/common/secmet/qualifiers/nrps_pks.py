@@ -4,8 +4,7 @@
 """ Annotations for NRPS/PKS domains """
 
 import bisect
-from typing import Any, Iterator, List, Tuple
-from typing import Dict  # used in comment hints # pylint: disable=unused-import
+from typing import Any, Dict, Iterator, List, Tuple
 
 from .secmet import _parse_format
 

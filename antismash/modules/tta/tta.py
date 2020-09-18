@@ -9,8 +9,7 @@
 """
 
 import logging
-from typing import Any, Dict, Tuple, Optional
-from typing import List  # used in comment hints, pylint: disable=unused-import
+from typing import Any, Dict, List, Tuple, Optional
 
 from antismash.common.secmet import Record
 from antismash.common.secmet.features import Feature, FeatureLocation

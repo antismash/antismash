@@ -5,8 +5,7 @@
 
 from collections import defaultdict
 import logging
-from typing import Any, Dict, Optional
-from typing import List  # comment hint, pylint: disable=unused-import
+from typing import Any, Dict, List, Optional
 
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import AntismashDomain, Module, Record

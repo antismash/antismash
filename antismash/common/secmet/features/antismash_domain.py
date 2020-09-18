@@ -4,8 +4,7 @@
 """ A more detailed Domain feature """
 
 from collections import OrderedDict
-from typing import Any, Dict, List, Type, TypeVar
-from typing import Optional  # comment hints, pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, Type, TypeVar
 
 from Bio.SeqFeature import SeqFeature
 

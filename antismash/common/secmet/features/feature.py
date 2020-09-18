@@ -5,8 +5,7 @@
 
 from collections import OrderedDict
 import logging
-from typing import Any, Dict, List, Tuple, Type, TypeVar, Union
-from typing import Optional  # comment hints  # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union
 
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 from Bio.Seq import Seq
