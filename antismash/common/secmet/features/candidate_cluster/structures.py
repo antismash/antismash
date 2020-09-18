@@ -97,7 +97,7 @@ class CandidateCluster(CDSCollection):
         """ Returns all unique products from contained protoclusters
             in the order they are found.
         """
-        unique_products = OrderedDict()  # type: Dict[str, None]
+        unique_products: Dict[str, None] = OrderedDict()
         for cluster in self._protoclusters:
             unique_products[cluster.product] = None
         return list(unique_products)

@@ -15,7 +15,7 @@ from antismash.common import path, utils
 def acquire_rodeo_heuristics(leader: str, core: str,  # pylint: disable=too-many-branches,too-many-statements
                              domains: Set[str]) -> Tuple[int, List[float]]:
     """ Calculate heuristic scores for RODEO """
-    tabs = []  # type: List[float]
+    tabs: List[float] = []
     score = 0
     # Contains TOMM YcaO (PF02624)
     if "YcaO" in domains:
@@ -143,7 +143,7 @@ def acquire_rodeo_heuristics(leader: str, core: str,  # pylint: disable=too-many
 def generate_rodeo_svm_csv(leader: str, core: str, previously_gathered_tabs: List[float]) -> List[float]:
     """Generates all the items for one candidate precursor peptide"""
     precursor = leader + core
-    columns = []  # type: List[float]
+    columns: List[float] = []
     # Precursor Index
     columns.append(1)
     # classification
@@ -257,12 +257,12 @@ class ThioStatistics:
         using lazy evaluation to only calculate when required."""
     def __init__(self, core: str) -> None:
         self._core = core
-        self._c_repeats = None  # type: Optional[int]
-        self._s_repeats = None  # type: Optional[int]
-        self._t_repeats = None  # type: Optional[int]
-        self._block_repeats = None  # type: Optional[int]
-        self._heteroblocks = None  # type: Optional[int]
-        self._average_heteroblock_length = None  # type: Optional[float]
+        self._c_repeats: Optional[int] = None
+        self._s_repeats: Optional[int] = None
+        self._t_repeats: Optional[int] = None
+        self._block_repeats: Optional[int] = None
+        self._heteroblocks: Optional[int] = None
+        self._average_heteroblock_length: Optional[float] = None
 
     @property
     def c_repeats(self) -> int:

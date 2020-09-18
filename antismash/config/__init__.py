@@ -77,7 +77,7 @@ class Config:  # since it's a glorified namespace, pylint: disable=too-few-publi
 
     def __new__(cls, namespace: Union[Namespace, Dict[str, Any]] = None) -> ConfigType:
         if namespace is None:
-            values = {}  # type: Dict[str, Any]
+            values: Dict[str, Any] = {}
         elif isinstance(namespace, dict):
             values = namespace
         else:

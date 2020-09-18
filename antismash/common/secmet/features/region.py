@@ -44,7 +44,7 @@ class Region(CDSCollection):
         if not candidate_clusters and not subregions:
             raise ValueError("A Region requires at least one child SubRegion or CandidateCluster")
 
-        children = []  # type: List[CDSCollection]
+        children: List[CDSCollection] = []
 
         if subregions is None:
             subregions = []
@@ -64,9 +64,9 @@ class Region(CDSCollection):
         self._subregions = subregions
         self._candidate_clusters = candidate_clusters
 
-        self.clusterblast = None  # type: Optional[List[str]]
-        self.knownclusterblast = None  # type: Any
-        self.subclusterblast = None  # type: Optional[List[str]]
+        self.clusterblast: Optional[List[str]] = None
+        self.knownclusterblast: Any = None
+        self.subclusterblast: Optional[List[str]] = None
 
     @property
     def subregions(self) -> Tuple[SubRegion, ...]:
@@ -85,7 +85,7 @@ class Region(CDSCollection):
         """ Returns a list of unique products collected from all contained
             CandidateClusters
         """
-        products = OrderedDict()  # type: Dict[str, None]
+        products: Dict[str, None] = OrderedDict()
         for cluster in self._candidate_clusters:
             for product in cluster.products:
                 products[product] = None
@@ -102,7 +102,7 @@ class Region(CDSCollection):
         """ Returns a list of unique detection rules collected from all
             contained CandidateClusters
         """
-        rules = OrderedDict()  # type: Dict[str, str]
+        rules: Dict[str, str] = OrderedDict()
         for cluster in self._candidate_clusters:
             for product, rule in zip(cluster.products, cluster.detection_rules):
                 rules[product] = rule
@@ -135,7 +135,7 @@ class Region(CDSCollection):
             without duplicating them if multiple CandidateClusters contain the same
             Protocluster
         """
-        clusters = set()  # type: Set[Protocluster]
+        clusters: Set[Protocluster] = set()
         for candidate_cluster in self._candidate_clusters:
             clusters.update(candidate_cluster.protoclusters)
         return sorted(clusters)

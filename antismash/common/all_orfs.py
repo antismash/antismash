@@ -129,7 +129,7 @@ def find_all_orfs(record: Record, area: Optional[CDSCollection] = None) -> List[
     # Get sequence for the range
     offset = 0
     seq = record.seq
-    existing = record.get_cds_features()  # type: Iterable[CDSFeature]
+    existing: Iterable[CDSFeature] = record.get_cds_features()
     if area:
         seq = area.extract(seq)
         offset = area.location.start

@@ -82,7 +82,7 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
     if not isinstance(minimum_length, int):
         raise TypeError("minimum_length must be an int")
 
-    records = []  # type: List[SeqRecord]
+    records: List[SeqRecord] = []
 
     for record in _strict_parse(filename):
         if minimum_length < 1 \

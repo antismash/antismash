@@ -11,7 +11,7 @@ from typing import Dict, List
 
 from antismash.common import path
 
-KNOWN_MAPPINGS = {}  # type: Dict[str, Dict[str, str]] # tracks name mappings per database
+KNOWN_MAPPINGS: Dict[str, Dict[str, str]] = {}  # tracks name mappings per database
 
 
 def find_latest_database_version(database_dir: str) -> str:

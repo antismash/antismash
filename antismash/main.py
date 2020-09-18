@@ -120,7 +120,7 @@ def verify_options(options: ConfigType, modules: List[AntismashModule]) -> bool:
         Returns:
             True if no problems detected, otherwise False
     """
-    errors = []  # type: List[str]
+    errors: List[str] = []
     for module in modules:
         try:
             logging.debug("Checking options for %s", module.__name__)
@@ -150,7 +150,7 @@ def run_detection(record: Record, options: ConfigType,
         Returns:
             the time taken by each detection module as a dictionary
     """
-    timings = {}  # type: Dict[str, float]
+    timings: Dict[str, float] = {}
 
     # run full genome detections
     for module in [full_hmmer]:
@@ -259,7 +259,7 @@ def analyse_record(record: Record, options: ConfigType, modules: List[AntismashM
         Returns:
             a dictionary mapping module name to time taken
     """
-    timings = {}  # type: Dict[str, float]
+    timings: Dict[str, float] = {}
     # try to run the given modules over the record
     for module in modules:
         run_module(record, module, options, previous_result, timings)
@@ -381,7 +381,7 @@ def add_antismash_comments(records: List[Tuple[Record, SeqRecord]], options: Con
             date=str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
         )
     for record, bio_record in records:
-        extras = []  # type: List[str]
+        extras: List[str] = []
         if record.original_id:
             extras.append("Original ID  :: %s\n" % record.original_id)
 
@@ -594,7 +594,7 @@ def log_module_runtimes(timings: Dict[str, Dict[str, float]]) -> None:
         Returns:
             None
     """
-    total_times = defaultdict(lambda: 0.)  # type: Dict[str, float]
+    total_times:Dict[str, float] = defaultdict(lambda: 0.)
     for result in timings.values():
         for module, runtime in result.items():
             total_times[module] += runtime

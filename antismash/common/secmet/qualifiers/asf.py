@@ -10,7 +10,7 @@ class ActiveSiteFinderQualifier:
     """ A qualifier for tracking active sites found (or not found) within a CDS.
     """
     def __init__(self) -> None:
-        self._hits = set()  # type: Set[str]
+        self._hits: Set[str] = set()
 
     @property
     def hits(self) -> List[str]:

@@ -108,7 +108,7 @@ def get_promoters(record: Record, genes: List[Gene],
 
     record_seq_length = len(record.seq)
     promoters = []
-    promoter_ids = set()  # type: Set[str]
+    promoter_ids: Set[str] = set()
     invalid = 0
 
     skip = False  # helper var for shared promoter of bidirectional genes

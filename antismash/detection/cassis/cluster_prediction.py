@@ -31,7 +31,7 @@ class ClusterMarker(Pairing):
         self.abundance = 1
         assert motif.score is not None
         self.score = float(motif.score)
-        self.promoter = None  # type: Optional[str]
+        self.promoter: Optional[str] = None
 
     def update(self, motif: Motif) -> None:
         """ Uses the given motif's values instead of the old ones, if the given
@@ -230,8 +230,8 @@ def create_predictions(islands: List[Island]) -> List[ClusterPrediction]:
     """
     # count border abundance
     # start/end are treated independently!
-    starts = {}  # type: Dict[str, ClusterMarker]
-    ends = {}  # type: Dict[str, ClusterMarker]
+    starts: Dict[str, ClusterMarker] = {}
+    ends: Dict[str, ClusterMarker] = {}
     for island in islands:
         if island.start.gene_name in starts:
             scorer = starts[island.start.gene_name]

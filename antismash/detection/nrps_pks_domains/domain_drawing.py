@@ -148,7 +148,7 @@ def generate_js_domains(region: Region, record: Record) -> Dict[str, Union[str, 
     """ Creates a JSON-like structure for domains, used by javascript in
         drawing the domains
     """
-    orfs = []  # type: List[JSONOrf]
+    orfs: List[JSONOrf] = []
     for feature in region.cds_children:
         if not feature.nrps_pks:
             continue

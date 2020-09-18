@@ -69,7 +69,7 @@ class Module(Feature):
 
         self._parent_cds_names = sorted({dom.locus_tag for dom in domains})
         self._domains = domains
-        self._substrate_monomer_pairs = []  # type: List[Tuple[str, str]]
+        self._substrate_monomer_pairs: List[Tuple[str, str]] = []
         self._complete = complete
         self._is_starter = starter
         self._is_final = final
@@ -149,11 +149,11 @@ class Module(Feature):
         return tuple(self._substrate_monomer_pairs)
 
     def to_biopython(self, qualifiers: Dict[str, Any] = None) -> List[SeqFeature]:
-        new = {
+        new: Dict[str, Optional[List[str]]] = {
             "domains": [domain.get_name() for domain in self.domains],
             "locus_tags": sorted(self._parent_cds_names),
             "type": [str(self.module_type)],
-        }  # type: Dict[str, Optional[List[str]]]
+        }
 
         if self.is_complete():
             new["complete"] = None

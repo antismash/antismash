@@ -129,7 +129,7 @@ def run_on_record(record: Record, results: Optional[ClusterFinderResults],
         logging.debug("No PFAM domains in record, probabilistic clusters cannot be found")
         return ClusterFinderResults(record.id, [])
 
-    pfam_ids = []  # type: List[str]
+    pfam_ids: List[str] = []
     for pfam in pfam_features:
         pfam_ids.append(pfam.identifier)
     if not pfam_ids:

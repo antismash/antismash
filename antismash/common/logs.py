@@ -50,7 +50,7 @@ def changed_logging(logfile: str = None, verbose: bool = False, debug: bool = Fa
         logger.setLevel(log_level)
 
         handler = None
-        original_levels = {}  # type: Dict[logging.Handler, int]
+        original_levels: Dict[logging.Handler, int] = {}
 
         if logfile:
             # since INFO is always wanted in the logfile, set the global level to that

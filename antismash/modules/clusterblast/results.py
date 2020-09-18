@@ -173,13 +173,13 @@ class GeneralResults(ModuleResults):
         assert record_id and isinstance(record_id, str)
         assert search_type and isinstance(search_type, str)
         super().__init__(record_id)
-        self.region_results = []  # type: List[RegionResult]
+        self.region_results: List[RegionResult] = []
         self.search_type = search_type
         # keep here instead of duplicating in clusters
         # and only keep those that are relevant instead of 7 million
-        self.proteins_of_interest = OrderedDict()  # type: Dict[str, Protein]
+        self.proteins_of_interest: Dict[str, Protein] = OrderedDict()
         # hold mappings of cluster number -> protein name -> mibig entries
-        self.mibig_entries = {}  # type: Dict[int, Dict[str, List[MibigEntry]]]
+        self.mibig_entries: Dict[int, Dict[str, List[MibigEntry]]] = {}
 
     def add_region_result(self, result: RegionResult, reference_clusters: Dict[str, ReferenceCluster],
                           reference_proteins: Dict[str, Protein]) -> None:
@@ -255,7 +255,7 @@ class GeneralResults(ModuleResults):
             result.region_results.append(RegionResult.from_json(region_result,
                                          record, result.proteins_of_interest))
         if "mibig_entries" in json:
-            entries = {}  # type: Dict[int, Dict[str, List[MibigEntry]]]
+            entries: Dict[int, Dict[str, List[MibigEntry]]] = {}
             for cluster_number, proteins in json["mibig_entries"].items():
                 entries[int(cluster_number)] = {}
                 for protein_name, protein_entries in proteins.items():
@@ -270,10 +270,10 @@ class ClusterBlastResults(ModuleResults):
 
     def __init__(self, record_id: str) -> None:
         super().__init__(record_id)
-        self.general = None  # type: Optional[GeneralResults]
-        self.subcluster = None  # type: Optional[GeneralResults]
-        self.knowncluster = None  # type: Optional[GeneralResults]
-        self.internal_homology_groups = {}  # type: Dict[int, List[List[str]]]
+        self.general: Optional[GeneralResults] = None
+        self.subcluster: Optional[GeneralResults] = None
+        self.knowncluster: Optional[GeneralResults] = None
+        self.internal_homology_groups: Dict[int, List[List[str]]] = {}
 
     def to_json(self) -> Dict[str, Any]:
         assert self.general or self.subcluster or self.knowncluster

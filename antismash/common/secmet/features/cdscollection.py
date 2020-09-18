@@ -28,11 +28,11 @@ class CDSCollection(Feature):
     def __init__(self, location: FeatureLocation, feature_type: str,
                  child_collections: Sequence["CDSCollection"] = None) -> None:
         super().__init__(location, feature_type, created_by_antismash=True)
-        self._parent_record = None  # type: Any  # should be Record but will cause circular dependencies
+        self._parent_record: Any = None  # should be Record but will cause circular dependencies
         self._contig_edge = False
-        self._cdses = OrderedDict()  # type: Dict[CDSFeature, None]
+        self._cdses: Dict[CDSFeature, None] = OrderedDict()
         self._children = child_collections
-        self._parent = None  # type: Optional["CDSCollection"]
+        self._parent: Optional["CDSCollection"] = None
         if self._children:
             for child in self._children:
                 assert isinstance(child, CDSCollection), type(child)

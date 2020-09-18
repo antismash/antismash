@@ -24,7 +24,7 @@ def generate_html(region_layer: RegionLayer, results: SactiResults,
     """ Generates HTML for the module """
     html = HTMLSections("sactipeptides")
 
-    motifs_in_region = defaultdict(list)  # type: Dict[str, List[CDSMotif]]
+    motifs_in_region: Dict[str, List[CDSMotif]] = defaultdict(list)
     for locus, motifs in results.motifs_by_locus.items():
         for motif in motifs:
             if motif.is_contained_by(region_layer.region_feature):
@@ -59,7 +59,7 @@ class SactipeptideLayer(RegionLayer):
     """ An extended RegionLayer for holding a list of LanthipeptideMotifs """
     def __init__(self, record: RecordLayer, region_feature: Region) -> None:
         RegionLayer.__init__(self, record, region_feature)
-        self.motifs = []  # type: List[Prepeptide]
+        self.motifs: List[Prepeptide] = []
         for motif in self.record.seq_record.get_cds_motifs():
             if not isinstance(motif, Prepeptide):
                 continue

@@ -69,7 +69,7 @@ def modify_substrate(module: Module, base: str = "") -> str:  # pylint: disable=
             conversions = {"ccmal": "redmal", "ccmmal": "redmmal", "ccmxmal": "redmxmal", "ccemal": "redemal"}
             base = conversions.get(base, base)
 
-    state = []  # type: List[str]
+    state: List[str] = []
     for domain in module.domains:
         if domain.domain != "MT":
             continue
@@ -127,10 +127,10 @@ class NRPS_PKS_Results(ModuleResults):
     def __init__(self, record_id: str) -> None:
         super().__init__(record_id)
         # keep a mapping of domain name -> method -> Prediction
-        self.domain_predictions = defaultdict(dict)  # type: Dict[str, Dict[str, Prediction]]
-        self.consensus = {}  # type: Dict[str, str]  # domain name -> consensus
-        self.region_predictions = defaultdict(list)  # type: Dict[int, List[CandidateClusterPrediction]]
-        self.consensus_transat = {}  # type: Dict[str, str]
+        self.domain_predictions: Dict[str, Dict[str, Prediction]] = defaultdict(dict)
+        self.consensus: Dict[str, str] = {}  # domain name -> consensus
+        self.region_predictions: Dict[int, List[CandidateClusterPrediction]] = defaultdict(list)
+        self.consensus_transat: Dict[str, str] = {}
 
     def add_method_results(self, method: str, results: Dict[str, Prediction]) -> None:
         """ Add per-domain results for a single prediction method
@@ -146,7 +146,7 @@ class NRPS_PKS_Results(ModuleResults):
             self.domain_predictions[domain_name][method] = prediction
 
     def to_json(self) -> Dict[str, Any]:
-        domain_predictions = defaultdict(dict)  # type: Dict[str, Dict[str, Any]]
+        domain_predictions: Dict[str, Dict[str, Any]] = defaultdict(dict)
         for domain, predictions in self.domain_predictions.items():
             domain_predictions[domain] = {method: val.to_json() for method, val in predictions.items()}
         region_json = {}
@@ -172,7 +172,7 @@ class NRPS_PKS_Results(ModuleResults):
         for domain_name, method_predictions in predictions.items():
             for method, prediction in method_predictions.items():
                 if method == "NRPSPredictor2":
-                    rebuilt = PredictorSVMResult.from_json(prediction)  # type: Prediction
+                    rebuilt: Prediction = PredictorSVMResult.from_json(prediction)
                 elif method.startswith("minowa"):
                     rebuilt = MinowaPrediction.from_json(prediction)
                 elif method == "signature":

@@ -34,13 +34,13 @@ class LassoResults(module_results.ModuleResults):
     def __init__(self, record_id: str) -> None:
         super().__init__(record_id)
         # keep new CDS features
-        self.new_cds_features = set()  # type: Set[CDSFeature]
+        self.new_cds_features: Set[CDSFeature] = set()
         # keep new CDSMotifs by the gene they match to
         # e.g. self.motifs_by_locus[gene_locus] = [motif1, motif2..]
-        self.motifs_by_locus = defaultdict(list)  # type: Dict[str, List[Prepeptide]]
+        self.motifs_by_locus: Dict[str, List[Prepeptide]] = defaultdict(list)
         # keep clusters and which genes in them had precursor hits
         # e.g. self.clusters[cluster_number] = {gene1_locus, gene2_locus}
-        self.clusters = defaultdict(set)  # type: Dict[int, Set[str]]
+        self.clusters: Dict[int, Set[str]] = defaultdict(set)
 
     def to_json(self) -> Dict[str, Any]:
         cds_features = [(str(feature.location),
@@ -285,7 +285,7 @@ def is_on_same_strand_as(cluster: Protocluster, query: CDSFeature, profile_name:
 def acquire_rodeo_heuristics(record: Record, cluster: Protocluster, query: CDSFeature,
                              leader: str, core: str) -> Tuple[int, List[Union[float, int]]]:
     """Calculate heuristic scores for RODEO"""
-    tabs = []  # type: List[Union[float, int]]
+    tabs: List[Union[float, int]] = []
     score = 0
     # Calcd. lasso peptide mass (Da) (with Xs average out)
     core_analysis = utils.RobustProteinAnalysis(core, monoisotopic=True, ignore_invalid=False)
@@ -442,7 +442,7 @@ def generate_rodeo_svm_csv(record: Record, query: CDSFeature, leader: str, core:
                            previously_gathered_tabs: List[Union[float, int]], fimo_motifs: List[int],
                            fimo_scores: Dict[int, float]) -> List[Union[float, int]]:
     """Generates all the items for a single precursor peptide candidate"""
-    columns = []  # type: List[Union[float, int]]
+    columns: List[Union[float, int]] = []
     # Precursor Index
     columns.append(1)
     # classification
@@ -587,8 +587,8 @@ def run_rodeo(record: Record, cluster: Protocluster, query: CDSFeature, leader: 
     heuristic_score, gathered_tabs_for_csv = acquire_rodeo_heuristics(record, cluster, query, leader, core)
     rodeo_score += heuristic_score
 
-    fimo_motifs = []  # type: List[int]
-    fimo_scores = {}  # type: Dict[int, float]
+    fimo_motifs: List[int] = []
+    fimo_scores: Dict[int, float] = {}
     motif_score = 0
 
     if not get_global_config().without_fimo and get_lasso_config().fimo_present:

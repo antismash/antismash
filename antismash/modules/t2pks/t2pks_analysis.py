@@ -140,7 +140,7 @@ def sum_predictions(predictions: List[CDSPrediction]) -> List[Prediction]:
     """
     if not predictions:
         return []
-    summed_preds = {}  # type: Dict[str, Prediction]
+    summed_preds: Dict[str, Prediction] = {}
     for pred in predictions:
         if pred.pfunc is None:
             continue
@@ -257,8 +257,8 @@ def make_cds_predictions(cds_hmm_hits: Dict[str, List[HMMResult]],
                     that protein type
     """
 
-    preds_by_cds = defaultdict(list)  # type: Dict[str, List[CDSPrediction]]
-    preds_by_protein = defaultdict(list)  # type: Dict[str, List[CDSPrediction]]
+    preds_by_cds: Dict[str, List[CDSPrediction]] = defaultdict(list)
+    preds_by_protein: Dict[str, List[CDSPrediction]] = defaultdict(list)
 
     for cds_name, hmm_hits in cds_hmm_hits.items():
         # combine blast and hmmscan results

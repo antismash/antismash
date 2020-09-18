@@ -194,9 +194,9 @@ class Component:
 
     def to_json(self) -> Dict[str, Any]:
         """ Generate a JSON representation of the component """
-        result = {
+        result: Dict[str, Any] = {
             "domain": self._domain.to_json(),
-        }  # type: Dict[str, Any]
+        }
         if self.subtype:
             result["subtype"] = self.subtype
         return result
@@ -214,13 +214,13 @@ class Module:
         added.
     """
     def __init__(self, first_in_cds: bool = False) -> None:
-        self._components = []  # type: List[Component]
-        self._starter = None  # type: Optional[Component]
-        self._loader = None  # type: Optional[Component]
-        self._modifications = []  # type: List[Component]
-        self._carrier_protein = None  # type: Optional[Component]
-        self._end = None  # type: Optional[Component]
-        self._others = []  # type: List[Component]
+        self._components: List[Component] = []
+        self._starter: Optional[Component] = None
+        self._loader: Optional[Component] = None
+        self._modifications: List[Component] = []
+        self._carrier_protein: Optional[Component] = None
+        self._end: Optional[Component] = None
+        self._others: List[Component] = []
         self._first_in_cds = first_in_cds
 
     def to_json(self) -> Dict[str, Any]:
@@ -385,7 +385,7 @@ class Module:
 
     def get_monomer(self, base: str = "", fallback: bool = False) -> str:  # pylint: disable=too-many-branches
         """ Builds a monomer including modifications from the given base. """
-        state = []  # type: List[str]
+        state: List[str] = []
         if self.is_trans_at() and not base:
             base = "mal"
 

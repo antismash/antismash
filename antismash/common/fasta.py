@@ -83,7 +83,7 @@ def read_fasta(filename: str) -> Dict[str, str]:
     ids = []
     sequence_info = []
     with open(filename, "r") as fasta:
-        current_seq = []  # type: List[str]
+        current_seq: List[str] = []
         for line in fasta:
             line = line.strip()
             if not line:

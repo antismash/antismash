@@ -76,8 +76,8 @@ def execute(commands: List[str], stdin: Optional[str] = None, stdout: Union[int,
         commands[0] = getattr(options.executables, commands[0])
 
     if stdin is not None:
-        stdin_redir = PIPE  # type: Optional[int]
-        input_bytes = stdin.encode("utf-8")  # type: Optional[bytes]
+        stdin_redir: Optional[int] = PIPE
+        input_bytes: Optional[bytes] = stdin.encode("utf-8")
     else:
         stdin_redir = None
         input_bytes = None

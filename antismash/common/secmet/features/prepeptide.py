@@ -5,6 +5,7 @@
 
 from typing import Any, Dict, List, Optional, Type, TypeVar
 
+
 from Bio.SeqFeature import SeqFeature
 
 from ..errors import SecmetInvalidInputError
@@ -58,11 +59,11 @@ class Prepeptide(CDSMotif):  # pylint: disable=too-many-instance-attributes
         self.score = float(score)
         self.monoisotopic_mass = float(monoisotopic_mass)
         self.molecular_weight = float(molecular_weight)
-        self.alternative_weights = []  # type: List[float]
+        self.alternative_weights: List[float] = []
         if alternative_weights is not None:
             self.alternative_weights = [float(weight) for weight in alternative_weights]
 
-        self.detailed_information = None  # type: Optional[RiPPQualifier]
+        self.detailed_information: Optional[RiPPQualifier] = None
 
     @property
     def translation(self) -> str:

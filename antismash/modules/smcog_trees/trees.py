@@ -110,7 +110,7 @@ def trim_alignment(input_number: int, alignment_file: str) -> None:
     seqs = list(contents.values())
 
     # store conservation of residues
-    conservations = [defaultdict(lambda: 0) for i in range(sequence_length)]  # type: List[Dict[str, int]]
+    conservations: List[Dict[str, int]] = [defaultdict(lambda: 0) for i in range(sequence_length)]
     for seq in seqs:
         for position, base in enumerate(seq):
             conservations[position][base] += 1

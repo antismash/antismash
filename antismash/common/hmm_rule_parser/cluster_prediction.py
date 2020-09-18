@@ -100,7 +100,7 @@ class RuleDetectionResults:
 
     def to_json(self) -> Dict[str, Any]:
         """ Constructs a JSON representation from the RuleDetectionResults instance """
-        cds_results_json = []  # type: List[Tuple[Dict[str, Any], List[Dict[str, Any]]]]
+        cds_results_json: List[Tuple[Dict[str, Any], List[Dict[str, Any]]]] = []
         json = {
             "schema_version": self.schema_version,
             "tool": self.tool,
@@ -134,7 +134,7 @@ def remove_redundant_protoclusters(clusters: List[Protocluster],
                                    ) -> List[Protocluster]:
     """ Removes clusters which have superiors covering the same (or larger) region
     """
-    clusters_by_rule = defaultdict(list)  # type: Dict[str, List[Protocluster]]
+    clusters_by_rule: Dict[str, List[Protocluster]] = defaultdict(list)
     for cluster in clusters:
         clusters_by_rule[cluster.product].append(cluster)
 
@@ -157,7 +157,7 @@ def remove_redundant_protoclusters(clusters: List[Protocluster],
 def find_protoclusters(record: Record, cds_by_cluster_type: Dict[str, Set[str]],
                        rules_by_name: Dict[str, rule_parser.DetectionRule]) -> List[Protocluster]:
     """ Detects gene clusters based on the identified core genes """
-    clusters = []  # type: List[Protocluster]
+    clusters: List[Protocluster] = []
 
     cds_feature_by_name = record.get_cds_name_mapping()
 
@@ -233,14 +233,14 @@ def filter_results(results: List[HSP], results_by_id: Dict[str, List[HSP]], filt
         unknown = equivalence_group - signature_names
         if unknown:
             raise ValueError("Equivalence group contains unknown identifiers: %s" % (unknown))
-        removed_ids = set()  # type: Set[int]
+        removed_ids: Set[int] = set()
         for cds, cdsresults in results_by_id.items():
             # Check if multiple competing HMM hits are present
             hits = set(hit.query_id for hit in cdsresults)
             if len(hits & equivalence_group) < 2:
                 continue
             # Identify overlapping hits
-            overlapping_groups = []  # type: List[Set[HSP]]
+            overlapping_groups: List[Set[HSP]] = []
             for hit in cdsresults:
                 for otherhit in cdsresults:
                     if hit == otherhit or hsp_overlap_size(hit, otherhit) <= 20:
@@ -275,7 +275,7 @@ def filter_results(results: List[HSP], results_by_id: Dict[str, List[HSP]], filt
 def filter_result_multiple(results: List[HSP], results_by_id: Dict[str, HSP]) -> Tuple[List[HSP], Dict[str, HSP]]:
     """ Filter multiple results of the same model within a gene """
     for cds, hits in results_by_id.items():
-        query_scores = {}  # type: Dict[str, Tuple[int, HSP, float]]
+        query_scores: Dict[str, Tuple[int, HSP, float]] = {}
         for i, hit in enumerate(hits):
             if query_scores.get(hit.query_id, (0, 0, -1))[2] < hit.bitscore:
                 query_scores[hit.query_id] = (i, hit, hit.bitscore)
@@ -337,13 +337,13 @@ def apply_cluster_rules(record: Record, results_by_id: Dict[str, List[HSP]],
 
     cds_with_hits = sorted(results_by_id, key=lambda gene_id: record.get_cds_by_name(gene_id).location.start)
 
-    cds_domains_by_cluster_type = defaultdict(lambda: defaultdict(set))  # type: Dict[str, Dict[str, Set[str]]]
-    cluster_type_hits = defaultdict(set)  # type: Dict[str, Set[str]]
+    cds_domains_by_cluster_type: Dict[str, Dict[str, Set[str]]] = defaultdict(lambda: defaultdict(set))
+    cluster_type_hits: Dict[str, Set[str]] = defaultdict(set)
     for cds_name in cds_with_hits:
         feature = record.get_cds_by_name(cds_name)
         feature_start, feature_end = sorted([feature.location.start, feature.location.end])
         rule_texts = []
-        info_by_range = {}  # type: Dict[int, Tuple[Dict[str, CDSFeature], Dict[str, List[HSP]]]]
+        info_by_range: Dict[int, Tuple[Dict[str, CDSFeature], Dict[str, List[HSP]]]] = {}
         for rule in rules:
             if rule.cutoff not in info_by_range:
                 location = FeatureLocation(max(0, feature_start - rule.cutoff), feature_end + rule.cutoff)
@@ -386,11 +386,11 @@ def detect_protoclusters_and_signatures(record: Record, signature_file: str, see
     if not full_fasta:
         return RuleDetectionResults({}, tool)
     sig_by_name = {sig.name: sig for sig in get_signature_profiles(signature_file)}
-    rules = []  # type: List[rule_parser.DetectionRule]
+    rules: List[rule_parser.DetectionRule] = []
     for rule_file in rule_files:
         rules = create_rules(rule_file, set(sig_by_name), rules)
     results = []
-    results_by_id = {}  # type: Dict[str, HSP]
+    results_by_id: Dict[str, HSP] = {}
 
     runresults = run_hmmsearch(seeds_file, full_fasta, use_tempfile=True)
     for runresult in runresults:

@@ -25,8 +25,8 @@ class TTAResults(ModuleResults):
 
     def __init__(self, record_id: str, gc_content: float, threshold: float) -> None:
         super().__init__(record_id)
-        self.codon_starts = []  # type: List[Codon] # tuples of start and strand for each marker
-        self.features = []  # type: List[Feature] # features created for markers
+        self.codon_starts: List[Codon] = []  # tuples of start and strand for each marker
+        self.features: List[Feature] = []  # features created for markers
         self.gc_content = float(gc_content)
         self.threshold = float(threshold)
 

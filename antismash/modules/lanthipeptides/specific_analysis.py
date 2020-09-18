@@ -60,13 +60,13 @@ class LanthiResults(module_results.ModuleResults):
     def __init__(self, record_id: str) -> None:
         super().__init__(record_id)
         # keep new CDS features
-        self.new_cds_features = set()  # type: Set[CDSFeature]
+        self.new_cds_features: Set[CDSFeature] = set()
         # keep new CDSMotifs by the gene they match to
         # e.g. self.motifs_by_locus[gene_locus] = [motif1, motif2..]
-        self.motifs_by_locus = defaultdict(list)  # type: Dict[str, List[Prepeptide]]
+        self.motifs_by_locus: Dict[str, List[Prepeptide]] = defaultdict(list)
         # keep clusters and which genes in them had precursor hits
         # e.g. self.clusters[cluster_number] = {gene1_locus, gene2_locus}
-        self.clusters = defaultdict(set)  # type: Dict[int, Set[str]]
+        self.clusters: Dict[int, Set[str]] = defaultdict(set)
 
     def to_json(self) -> Dict[str, Any]:
         cds_features = [(str(feature.location), feature.get_name()) for feature in self.new_cds_features]
@@ -98,7 +98,7 @@ class LanthiResults(module_results.ModuleResults):
         for feature in self.new_cds_features:
             record.add_cds_feature(feature)
 
-        motifs_added = set()  # type: Set[str]
+        motifs_added: Set[str] = set()
         for motifs in self.motifs_by_locus.values():
             for motif in motifs:
                 if motif.get_name() not in motifs_added:
@@ -122,15 +122,15 @@ class PrepeptideBase:
         self.end = int(end)  # cleavage site position
         self.score = float(score)  # of cleavage site
         self.rodeo_score = int(rodeo_score)
-        self._leader = None  # type: Optional[str]
+        self._leader: Optional[str] = None
         self._core = ''
-        self._tail = None  # type: Optional[str]
+        self._tail: Optional[str] = None
         self._lan_bridges = -1
         self._weight = -1
         self._monoisotopic_weight = -1
-        self._alt_weights = []  # type: List[float]
-        self.core_analysis_monoisotopic = None  # type: Optional[utils.RobustProteinAnalysis]
-        self.core_analysis = None  # type: Optional[utils.RobustProteinAnalysis]
+        self._alt_weights: List[float] = []
+        self.core_analysis_monoisotopic: Optional[utils.RobustProteinAnalysis] = None
+        self.core_analysis: Optional[utils.RobustProteinAnalysis] = None
 
     @property
     def core(self) -> str:
@@ -360,7 +360,7 @@ def get_detected_domains(genes: Iterable[CDSFeature]) -> List[str]:
             a list of strings, each string being the name of a domain in the
             cluster
     """
-    found_domains = []  # type: List[str]
+    found_domains: List[str] = []
     if not genes:
         return found_domains
     # Gather biosynthetic domains
@@ -373,7 +373,7 @@ def get_detected_domains(genes: Iterable[CDSFeature]) -> List[str]:
     cluster_fasta = get_fasta_from_features(genes)
     assert cluster_fasta
     non_biosynthetic_hmms_by_id = run_non_biosynthetic_phmms(cluster_fasta)
-    non_biosynthetic_hmms_found = []  # type: List[str]
+    non_biosynthetic_hmms_found: List[str] = []
     for hsps_found in non_biosynthetic_hmms_by_id.values():
         for hsp in hsps_found:
             if hsp not in non_biosynthetic_hmms_found:
@@ -395,7 +395,7 @@ def run_non_biosynthetic_phmms(fasta: str) -> Dict[str, List[str]]:
     with open(path.get_full_path(__file__, "data", "non_biosyn_hmms", "hmmdetails.txt"), "r") as handle:
         hmmdetails = [line.strip().split("\t") for line in handle if line.count("\t") == 3]
     signature_profiles = [HmmSignature(details[0], details[1], int(details[2]), details[3]) for details in hmmdetails]
-    non_biosynthetic_hmms_by_id = defaultdict(list)  # type: Dict[str, List[str]]
+    non_biosynthetic_hmms_by_id: Dict[str, List[str]] = defaultdict(list)
     for sig in signature_profiles:
         sig.path = path.get_full_path(__file__, "data", "non_biosyn_hmms", sig.path.rpartition(os.sep)[2])
         runresults = subprocessing.run_hmmsearch(sig.path, fasta)
