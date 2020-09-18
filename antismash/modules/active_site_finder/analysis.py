@@ -8,7 +8,7 @@
 """
 
 from collections import defaultdict
-from typing import Dict, List, Tuple  # used in comment hints # pylint: disable=unused-import
+from typing import Dict, List, Tuple
 
 from antismash.common import secmet
 

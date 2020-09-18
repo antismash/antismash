@@ -7,8 +7,7 @@
 from collections import OrderedDict
 import logging
 import os
-from typing import Any, Dict, List, Tuple
-from typing import Optional  # comment hints, pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, Tuple
 
 from antismash.common.module_results import ModuleResults
 from antismash.common.path import changed_directory

@@ -11,7 +11,7 @@ from io import StringIO
 import glob
 import logging
 import os
-from typing import Dict, List  # List used in comment type hints, pylint: disable=unused-import
+from typing import Dict, List
 
 from Bio import Phylo
 from Bio.Phylo.NewickIO import NewickError

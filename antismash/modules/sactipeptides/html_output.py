@@ -4,13 +4,11 @@
 """ Handles HTML output for sactipeptides """
 
 from collections import defaultdict
-from typing import List
-from typing import Dict  # comment hint, pylint: disable=unused-import
+from typing import Dict, List
 
 from antismash.common import path
 from antismash.common.html_renderer import HTMLSections, FileTemplate
-from antismash.common.secmet import Prepeptide, Region
-from antismash.common.secmet import CDSMotif # comment hint, pylint: disable=unused-import
+from antismash.common.secmet import CDSMotif, Prepeptide, Region
 from antismash.common.layers import RegionLayer, RecordLayer, OptionsLayer
 
 from .specific_analysis import SactiResults

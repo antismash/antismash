@@ -5,8 +5,7 @@
 
 from collections import defaultdict
 from enum import Enum, unique
-from typing import Any, Iterator, List, Optional
-from typing import Dict  # comment hints  # pylint: disable=unused-import
+from typing import Any, Dict, Iterator, List, Optional
 
 from .secmet import _parse_format
 

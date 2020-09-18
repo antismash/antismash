@@ -6,14 +6,13 @@
 """
 
 import os
-from typing import Any, Dict, Iterable, List, Optional, Tuple
-from typing import Set  # comment hints, # pylint: disable=unused-import
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 
 from antismash.common import html_renderer, path
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import CDSFeature, Feature, Record, Region, CandidateCluster, SubRegion
 from antismash.common.secmet.qualifiers.gene_functions import GeneFunction
-from antismash.common.secmet import Protocluster  # comment hints, # pylint: disable=unused-import
+from antismash.common.secmet import Protocluster
 from antismash.common.secmet.features.cdscollection import CDSCollection
 from antismash.config import ConfigType
 from antismash.modules import clusterblast, tta

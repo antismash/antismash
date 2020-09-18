@@ -5,7 +5,7 @@
 
 import os
 import re
-from typing import List, Set, Tuple, Optional  # pylint: disable=unused-import
+from typing import List, Set, Tuple, Optional
 
 import joblib
 

@@ -7,8 +7,7 @@ import contextlib
 import logging
 import os
 import sys
-from typing import Any, Generator
-from typing import Dict  # comment hints, pylint: disable=unused-import
+from typing import Any, Dict, Generator
 
 
 @contextlib.contextmanager

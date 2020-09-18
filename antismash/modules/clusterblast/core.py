@@ -8,7 +8,7 @@ import logging
 import os
 import struct
 from tempfile import NamedTemporaryFile
-from typing import Dict, Iterable, List, Set, Sequence, Tuple  # pylint: disable=unused-import
+from typing import Dict, Iterable, List, Set, Sequence, Tuple
 
 from helperlibs.wrappers.io import TemporaryDirectory
 

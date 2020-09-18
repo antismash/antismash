@@ -3,8 +3,7 @@
 
 """ A qualifier for ActiveSiteFinder annotations """
 
-from typing import List
-from typing import Set  # comment hint  # pylint: disable=unused-import
+from typing import List, Set
 
 
 class ActiveSiteFinderQualifier:

@@ -6,12 +6,11 @@
 from collections import OrderedDict
 import logging
 from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar
-from typing import Union  # comment hints  # pylint: disable=unused-import
 
 from Bio.Data import CodonTable, IUPACData
 from Bio.SeqFeature import SeqFeature
 
-from antismash.common.secmet import features  # comment hints  # pylint:disable=unused-import
+from antismash.common.secmet import features
 from antismash.common.secmet.qualifiers import (
     GeneFunction,
     GeneFunctionAnnotations,

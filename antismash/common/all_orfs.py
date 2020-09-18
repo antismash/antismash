@@ -9,8 +9,7 @@
 """
 
 
-from typing import List, Optional
-from typing import Iterable  # comment hints, pylint: disable=unused-import
+from typing import Iterable, List, Optional
 
 from Bio.SeqFeature import FeatureLocation, BeforePosition, AfterPosition
 

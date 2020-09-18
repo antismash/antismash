@@ -7,7 +7,7 @@ from collections import defaultdict
 import csv
 import logging
 import os
-from typing import Any, Dict, List, Optional, Set, Tuple  # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, Set, Tuple
 from xml.etree import cElementTree as ElementTree
 
 from Bio import SeqIO

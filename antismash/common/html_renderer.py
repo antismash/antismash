@@ -6,8 +6,7 @@
 """
 
 import os
-from typing import Any, Optional
-from typing import List  # comment hints, pylint: disable=unused-import
+from typing import Any, List, Optional
 
 import jinja2 as _jinja2
 from jinja2 import Markup

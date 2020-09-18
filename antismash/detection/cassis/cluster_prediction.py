@@ -5,7 +5,7 @@
 
 import logging
 import os
-from typing import Any, Dict, List, Optional  # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional
 
 from antismash.common.secmet import Record, Gene
 from antismash.config import ConfigType

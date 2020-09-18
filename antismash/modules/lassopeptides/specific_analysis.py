@@ -11,7 +11,7 @@ from collections import defaultdict
 import logging
 import re
 import os
-from typing import Any, Dict, List, Optional, Set, Tuple, Union  # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 from helperlibs.wrappers.io import TemporaryFile
 import joblib
