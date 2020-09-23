@@ -3,6 +3,7 @@
 
 """ Common functionality for finding and marking PFAMDomains within a record. """
 
+from dataclasses import dataclass
 import logging
 import os
 from typing import Any, Dict, Iterable, List, Optional
@@ -14,12 +15,50 @@ from antismash.common.secmet.locations import location_from_string
 from antismash.config import get_config
 
 
+@dataclass(frozen=True)
+class HmmerHit:  # pylint: disable=too-many-instance-attributes
+    """ A class containing information about a HMMer hit
+
+        Protein locations are expected to be python slice-style coordinates,
+        with an inclusive start and an exclusive end.
+    """
+    location: str
+    label: str
+    locus_tag: str
+    domain: str
+    evalue: float
+    score: float
+    identifier: str
+    description: str
+    protein_start: int
+    protein_end: int
+    translation: str
+
+    def __post_init__(self) -> None:
+        if self.protein_start >= self.protein_end:
+            raise ValueError("HMMer hit has inverted start and end: %r" % self)
+        if len(self.translation) != len(self):
+            raise ValueError("translation length does not match protein location size")
+
+    def __len__(self) -> int:
+        return self.protein_end - self.protein_start
+
+    def to_json(self) -> Dict[str, Any]:
+        """ Returns a JSON-ready representation of the instance """
+        return dict(vars(self))
+
+    @staticmethod
+    def from_json(data: Dict[str, Any]) -> "HmmerHit":
+        """ Reconstructs an instance from a JSON representation """
+        return HmmerHit(**data)
+
+
 class HmmerResults(module_results.ModuleResults):
     """ Results for hmmer-based detection """
     schema_version = 2
 
     def __init__(self, record_id: str, evalue: float, score: float,
-                 database: str, tool: str, hits: List[Dict[str, Any]]) -> None:
+                 database: str, tool: str, hits: List[HmmerHit]) -> None:
         super().__init__(record_id)
         self.hits = list(hits)
         self.evalue = float(evalue)
@@ -28,7 +67,8 @@ class HmmerResults(module_results.ModuleResults):
         self.tool = str(tool)
 
     def to_json(self) -> Dict[str, Any]:
-        json = {"hits": self.hits, "record id": self.record_id,
+        json = {"hits": [hit.to_json() for hit in self.hits],
+                "record id": self.record_id,
                 "schema": self.schema_version, "max evalue": self.evalue,
                 "min score": self.score, "database": self.database,
                 "tool": self.tool}
@@ -68,7 +108,7 @@ class HmmerResults(module_results.ModuleResults):
         if not isinstance(hits, list):
             raise TypeError("FullHmmer results contain unexpected types")
         # if the thresholds changed, trim out any extra hits here
-        hits = [hit for hit in hits if hit["score"] >= min_score and hit["evalue"] <= max_evalue]
+        hits = [HmmerHit(**hit) for hit in hits if hit["score"] >= min_score and hit["evalue"] <= max_evalue]
 
         results = HmmerResults(record.id, max_evalue, min_score, json["database"], json["tool"], hits)
         return results
@@ -76,13 +116,13 @@ class HmmerResults(module_results.ModuleResults):
     def add_to_record(self, record: Record) -> None:
         db_version = pfamdb.get_db_version_from_path(self.database)
         for i, hit in enumerate(self.hits):
-            protein_location = FeatureLocation(hit["protein_start"], hit["protein_end"])
-            pfam_feature = PFAMDomain(location_from_string(hit["location"]),
-                                      description=hit["description"], protein_location=protein_location,
-                                      identifier=hit["identifier"], tool=self.tool, locus_tag=hit["locus_tag"])
+            protein_location = FeatureLocation(hit.protein_start, hit.protein_end)
+            pfam_feature = PFAMDomain(location_from_string(hit.location),
+                                      description=hit.description, protein_location=protein_location,
+                                      identifier=hit.identifier, tool=self.tool, locus_tag=hit.locus_tag)
             for key in ["label", "locus_tag", "domain", "evalue",
                         "score", "translation"]:
-                setattr(pfam_feature, key, hit[key])
+                setattr(pfam_feature, key, getattr(hit, key))
             pfam_feature.database = db_version
             pfam_feature.detection = "hmmscan"
             pfam_feature.domain_id = "{}_{}_{:04d}".format(self.tool, pfam_feature.locus_tag, i + 1)
@@ -90,7 +130,7 @@ class HmmerResults(module_results.ModuleResults):
 
 
 def build_hits(record: Record, hmmscan_results: List, min_score: float,
-               max_evalue: float, database: str) -> List[Dict[str, Any]]:
+               max_evalue: float, database: str) -> List[HmmerHit]:
     """ Builds PFAMDomains from the given hmmscan results
 
         Arguments:
@@ -116,13 +156,16 @@ def build_hits(record: Record, hmmscan_results: List, min_score: float,
             feature = feature_by_id[hsp.query_id]
             location = feature.get_sub_location_from_protein_coordinates(hsp.query_start, hsp.query_end)
 
+            end = hsp.query_end + 1  # converts from inclusive to typical python exclusive
+
             hit = {"location": str(location),
                    "label": result.id, "locus_tag": feature.get_name(),
                    "domain": hsp.hit_id, "evalue": hsp.evalue, "score": hsp.bitscore,
-                   "translation": feature.translation[hsp.query_start:hsp.query_end + 1],
+                   "translation": feature.translation[hsp.query_start:end],
                    "identifier": pfamdb.get_pfam_id_from_name(hsp.hit_id, database),
-                   "description": hsp.hit_description, "protein_start": hsp.query_start, "protein_end": hsp.query_end}
-            hits.append(hit)
+                   "description": hsp.hit_description, "protein_start": hsp.query_start,
+                   "protein_end": end}
+            hits.append(HmmerHit(**hit))
     return hits
 
 
