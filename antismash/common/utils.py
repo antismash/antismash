@@ -37,10 +37,10 @@ class RobustProteinAnalysis(ProteinAnalysis):
         # remove all invalids
         prot_sequence = "".join(filter(lambda x: x in RobustProteinAnalysis.PROTEIN_LETTERS,
                                        self.original_sequence))
-        super(RobustProteinAnalysis, self).__init__(prot_sequence, monoisotopic)
+        super().__init__(prot_sequence, monoisotopic)
 
     def molecular_weight(self) -> float:
-        weight = super(RobustProteinAnalysis, self).molecular_weight()
+        weight = super().molecular_weight()
         if not self._ignore_invalid:
             aa_difference = len(self.original_sequence) - len(self.sequence)
             weight += 110 * aa_difference

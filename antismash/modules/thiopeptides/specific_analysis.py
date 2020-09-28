@@ -36,9 +36,10 @@ class ThioResults(module_results.ModuleResults):
         """ Converts the results to JSON format """
         cds_features_by_cluster = {key: [(str(feature.location), feature.get_name()) for feature in features]
                                    for key, features in self.cds_features.items()}
+        protoclusters = [cluster.get_protocluster_number() for cluster in self.clusters_with_motifs]
         return {"record_id": self.record_id,
                 "schema_version": ThioResults.schema_version,
-                "protoclusters with motifs": [cluster.get_protocluster_number() for cluster in self.clusters_with_motifs],
+                "protoclusters with motifs": protoclusters,
                 "motifs": [motif.to_json() for motif in self.motifs],
                 "cds_features": cds_features_by_cluster}
 

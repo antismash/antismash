@@ -24,7 +24,7 @@ def _parse_format(fmt: str, data: str) -> Sequence[str]:
     # escape anything that might cause issues when using it as a regex later
     safe = re.escape(fmt)
     # treat (escaped) spaces as optional thanks to genbank/biopython conversions
-    safe = safe.replace("\ ", "\ ?")
+    safe = safe.replace(r"\ ", r"\ ?")
     # the simple search here would be {.*?} for a non-greedy brace pair, but
     # because python format strings use {{ and }} as literal braces, they need to be excluded
     # e.g. "{{{{{:g}}}}}".format(1e-5) == "{{1e-5}}"

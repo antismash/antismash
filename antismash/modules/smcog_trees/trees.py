@@ -28,7 +28,7 @@ logging.getLogger('matplotlib').setLevel(logging.WARNING)
 def generate_trees(smcogs_dir: str, genes_within_clusters: List[CDSFeature],
                    nrpspks_genes: List[CDSFeature]) -> Dict[str, str]:
     """ smCOG phylogenetic tree construction """
-    pks_nrps_cds_names = set([feature.get_name() for feature in nrpspks_genes])
+    pks_nrps_cds_names = set(feature.get_name() for feature in nrpspks_genes)
     logging.info("Calculating and drawing phylogenetic trees of cluster genes "
                  "with smCOG members")
     cds_features = []

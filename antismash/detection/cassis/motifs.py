@@ -199,13 +199,13 @@ def filter_fimo_results(motifs: List[Motif], fimo_dir: str, promoters: List[Prom
                 logging.debug("FIMO: motif %s; occurs in %d promoters (no hits)",
                               motif, len(motif.hits))
             continue
-        elif percentage > cassis.MAX_PERCENTAGE:
+        if percentage > cassis.MAX_PERCENTAGE:
             # too high
             if cassis.VERBOSE_DEBUG:
                 logging.debug("FIMO: %s; occurs in %d promoters; %.2f%% of all promoters (too many)",
                               motif, len(motif.hits), percentage)
             continue
-        elif promoters[anchor_promoter].get_id() not in motif.hits:  # not in achor promoter
+        if promoters[anchor_promoter].get_id() not in motif.hits:  # not in achor promoter
             # no site in anchor promoter
             if cassis.VERBOSE_DEBUG:
                 logging.debug("FIMO: motif %s; no hits in the promoter of the anchor gene", motif)

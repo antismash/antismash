@@ -279,8 +279,7 @@ class Record:
             if region < existing_region:
                 index = i  # before
                 break
-            else:
-                index = i + 1  # after
+            index = i + 1  # after
         self._regions.insert(index, region)
         region.parent_record = self
         # update numbering

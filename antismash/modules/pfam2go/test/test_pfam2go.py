@@ -4,7 +4,6 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
-import os
 import unittest
 
 from typing import Dict
@@ -13,7 +12,6 @@ from Bio.Alphabet import generic_dna
 from Bio.Seq import Seq
 from Bio.SeqFeature import FeatureLocation
 
-from antismash.common import path
 from antismash.common.secmet.record import Record
 from antismash.common.test.helpers import DummyRecord, DummyPFAMDomain
 from antismash.modules.pfam2go import pfam2go

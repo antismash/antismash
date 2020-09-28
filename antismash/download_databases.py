@@ -46,7 +46,7 @@ CHUNK = 128 * 1024
 class DownloadError(RuntimeError):
     """Exception to throw when downloads fail."""
 
-    pass
+    pass  # pylint: disable=unnecessary-pass
 
 
 def get_remote_filesize(url: str) -> int:

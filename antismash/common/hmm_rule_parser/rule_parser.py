@@ -166,7 +166,7 @@ class RuleSyntaxError(SyntaxError):
     """ Specifically for errors resulting from bad syntax in the rules being
         parsed.
     """
-    pass
+    pass  # pylint: disable=unnecessary-pass
 
 
 class TokenTypes(IntEnum):
@@ -224,7 +224,7 @@ class TokenTypes(IntEnum):
         """ Returns True if the token is a rule structure keyword such as
             RULE, COMMENT, CONDITIONS, etc
         """
-        return 15 <= self.value <= 21
+        return 15 <= self.value <= 21  # pylint: disable=comparison-with-callable
 
 
 class Tokeniser:  # pylint: disable=too-few-public-methods
@@ -318,7 +318,7 @@ class Token:  # pylint: disable=too-few-public-methods
             if self.type != TokenTypes.INT:
                 raise AttributeError("Token is not numeric")
             return int(self.token_text)
-        elif key == 'identifier':
+        if key == 'identifier':
             if self.type != TokenTypes.IDENTIFIER:
                 raise AttributeError("Token has no identifier")
             return self.token_text
@@ -996,11 +996,11 @@ class Parser:  # pylint: disable=too-few-public-methods
             raise RuleSyntaxError("Rules cannot end in not")
         if self.current_token.type == TokenTypes.GROUP_OPEN:
             return Conditions(negated, self._parse_group(allow_cds))
-        elif allow_cds and self.current_token.type == TokenTypes.MINIMUM:
+        if allow_cds and self.current_token.type == TokenTypes.MINIMUM:
             return self._parse_minimum(negated=negated)
-        elif allow_cds and self.current_token.type == TokenTypes.CDS:
+        if allow_cds and self.current_token.type == TokenTypes.CDS:
             return CDSCondition(negated, self._parse_cds())
-        elif self.current_token.type == TokenTypes.SCORE:
+        if self.current_token.type == TokenTypes.SCORE:
             return self._parse_score(negated=negated)
         return SingleCondition(negated, self._consume_identifier())
 

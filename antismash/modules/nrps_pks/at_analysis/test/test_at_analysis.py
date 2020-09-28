@@ -33,7 +33,7 @@ class TestScoring(unittest.TestCase):
         result = at_analysis.score_signatures(query_sigs, ref_sigs)
         assert len(result) == 1
         assert len(result["Q1"].predictions) == 11
-        assert set([res.name for _, res in result["Q1"].predictions]).issubset(set(ref_sigs))
+        assert set(res.name for _, res in result["Q1"].predictions).issubset(set(ref_sigs))
 
 
 class TestATPositions(unittest.TestCase):

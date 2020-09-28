@@ -114,7 +114,7 @@ def get_norine_url_for_specificities(specificities: List[List[str]],
         if be_strict:
             wildcard = ""
         # always be strict to remove X and nrp
-        chunks = [monomer for monomer in filter_norine_as(domain_specificity_list, be_strict=True)]
+        chunks = filter_norine_as(domain_specificity_list, be_strict=True)
         query = (wildcard + separator).join(chunks) + wildcard
         if len(domain_specificity_list) > 1:
             query = "[" + query + "]"

@@ -389,7 +389,8 @@ def ensure_valid_locations(features: List[SeqFeature], can_be_circular: bool, se
 
     if standard and non_standard:
         raise ValueError("inconsistent exon ordering for features in non-circular record")
-    elif non_standard:
+
+    if non_standard:
         for feature in features:
             if not feature.location.strand:
                 continue

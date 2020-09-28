@@ -45,7 +45,7 @@ def create_fake_record():
         cds.location = locations[i]
         seq_record.add_cds_feature(cds)
         seq_record.add_gene(secmet.Gene(locations[i], locus_tag="gene" + str(i+1)))
-        if i == 3 or i == 5:
+        if i in (3, 5):
             cds.gene_functions.add(secmet.qualifiers.GeneFunction.CORE, "testtool", "dummy", "product")
 
     return seq_record

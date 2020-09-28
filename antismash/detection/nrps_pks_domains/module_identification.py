@@ -109,7 +109,7 @@ CLASSIFICATIONS = {
 
 class IncompatibleComponentError(ValueError):
     """ For better communication when evaluating the addition of a component """
-    pass
+    pass  # pylint: disable=unnecessary-pass
 
 
 class Component:

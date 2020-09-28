@@ -704,8 +704,9 @@ def write_fastas_with_all_genes(regions: Iterable[secmet.Region], filename: str,
     """
     if not isinstance(partitions, int):
         raise TypeError("Partitions must be an int greater than 0")
-    elif partitions < 1:
+    if partitions < 1:
         raise ValueError("Partitions must be greater than 0")
+
     all_names, all_seqs = [], []
     for region in regions:
         names, seqs = create_blast_inputs(region)

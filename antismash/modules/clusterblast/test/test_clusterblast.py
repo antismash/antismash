@@ -64,7 +64,7 @@ class TestBlastParsing(unittest.TestCase):
         queries, clusters = core.blastparse(self.sample_data, Record(), 0, 0)
 
         # check we process the right number of queries
-        self.assertEqual(len(queries), len(set([i[0] for i in self.sample_data_as_lists])))
+        self.assertEqual(len(queries), len(set(i[0] for i in self.sample_data_as_lists)))
 
         # check we have entries for every gene_cluster we found
         subjects = [self.parse_subject_wrapper(i) for i in self.sample_data_as_lists]
@@ -117,7 +117,7 @@ class TestBlastParsing(unittest.TestCase):
         queries, clusters = parse_all_wrapper(0, 0)
 
         # check we process the right number of queries
-        self.assertEqual(len(queries), len(set([i[0] for i in self.sample_data_as_lists])))
+        self.assertEqual(len(queries), len(set(i[0] for i in self.sample_data_as_lists)))
 
         # check we have entries for every gene_cluster we found
         subjects = [self.parse_subject_wrapper(i) for i in self.sample_data_as_lists]

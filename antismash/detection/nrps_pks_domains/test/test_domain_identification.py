@@ -169,14 +169,14 @@ class TestKSSubtypeMatching(unittest.TestCase):
     def test_empty(self):
         assert self.func([], []) == []
 
-    def test_non_PKS(self):
+    def test_non_pks(self):
         assert self.func([DummyHMMResult()], []) == []
 
-    def test_PKS_with_hit(self):
+    def test_pks_with_hit(self):
         assert self.func([DummyHMMResult("PKS_KS", start=1, end=40)],
                          [DummyHMMResult("trans-AT", start=1, end=38)]) == ["trans-AT"]
 
-    def test_PKS_with_no_hit(self):
+    def test_pks_with_no_hit(self):
         assert self.func([DummyHMMResult("PKS_KS", start=1, end=40)],
                          [DummyHMMResult("trans-AT", start=41, end=48)]) == [""]
 

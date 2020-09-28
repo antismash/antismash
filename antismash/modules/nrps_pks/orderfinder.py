@@ -138,7 +138,7 @@ def generate_substrates_order(geneorder: List[CDSFeature], consensus_predictions
             components.append((substrate, monomer, [domain.domain or "" for domain in module.domains]))
 
         if monomers:
-            monomers_by_cds.append("(%s)" % (" - ".join([monomer for monomer in monomers])))
+            monomers_by_cds.append("(%s)" % (" - ".join(monomers)))
 
     polymer = " + ".join(monomers_by_cds)
     smiles = gen_smiles_from_pksnrps(components)
@@ -267,7 +267,7 @@ def find_possible_orders(cds_features: List[CDSFeature], start_cds: Optional[CDS
         assert start_cds != end_cds, "Using same gene for start and end of ordering"
     cds_to_order = []
     for cds in cds_features:
-        if cds == start_cds or cds == end_cds:
+        if cds in (start_cds, end_cds):
             pass
         else:
             cds_to_order.append(cds)
