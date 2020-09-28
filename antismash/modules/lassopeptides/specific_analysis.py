@@ -197,7 +197,7 @@ class Lassopeptide:
         aas = utils.RobustProteinAnalysis(self.core, monoisotopic=True).count_amino_acids()
         if aas['C'] >= 4:
             return 2
-        elif aas['C'] >= 2:
+        if aas['C'] >= 2:
             return 1
         return 0
 

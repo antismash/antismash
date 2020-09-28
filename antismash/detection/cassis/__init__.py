@@ -212,10 +212,11 @@ def detect(record: Record, options: ConfigType) -> CassisResults:
     if not promoters:
         logging.debug("CASSIS found zero promoter regions, skipping CASSIS analysis")
         return results
-    elif len(promoters) < 3:
+    if len(promoters) < 3:
         logging.debug("Sequence %r yields less than 3 promoter regions, skipping CASSIS analysis", record.name)
         return results
-    elif len(promoters) < 40:
+
+    if len(promoters) < 40:
         logging.debug("Sequence %r yields only %d promoter regions", record.name, len(promoters))
         logging.debug("Cluster detection on small sequences may lead to incomplete cluster predictions")
 

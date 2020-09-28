@@ -96,8 +96,7 @@ class Domain(AntismashFeature):
             leftovers = Feature.make_qualifiers_copy(bio_feature)
         if not feature:
             raise ValueError("Domain shouldn't be instantiated directly")
-        else:
-            assert isinstance(feature, Domain), type(feature)
+        assert isinstance(feature, Domain), type(feature)
 
         # clean up qualifiers that must have been used already
         leftovers.pop("protein_start", None)

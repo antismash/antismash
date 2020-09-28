@@ -253,7 +253,7 @@ class Feature:
 
         if self.location.start < location.start:
             return True
-        elif self.location.start == location.start:
+        if self.location.start == location.start:
             return self.location.end < location.end
         return False
 
@@ -265,7 +265,8 @@ class Feature:
 
     @classmethod
     def from_biopython(cls: Type[T], bio_feature: SeqFeature, feature: T = None,
-                       leftovers: Dict[str, List[str]] = None, record: Any = None) -> T:
+                       leftovers: Dict[str, List[str]] = None, record: Any = None,   # pylint: disable=unused-argument
+                       ) -> T:
         """ Converts a SeqFeature into a single Feature instance.
 
             Arguments:

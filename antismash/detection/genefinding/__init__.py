@@ -94,7 +94,8 @@ def run_on_record(record: Record, options: ConfigType) -> None:
         assert options.genefinding_tool == "glimmerhmm"
         logging.debug("Running glimmerhmm genefinding")
         return run_glimmerhmm(record)
-    elif options.genefinding_tool in ["prodigal", "prodigal-m"]:
+
+    if options.genefinding_tool in ["prodigal", "prodigal-m"]:
         logging.debug("Running prodigal based genefinding")
         return run_prodigal(record, options)
 

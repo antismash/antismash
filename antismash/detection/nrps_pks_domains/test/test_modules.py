@@ -364,5 +364,6 @@ class TestBuildModules(unittest.TestCase):
             assert modules[0].is_complete()
             assert not modules[1]._first_in_cds
             print(modules[1], modules[1].is_complete())
-            print(modules[1]._starter, modules[1]._loader, modules[1]._carrier_protein, modules[1]._starter is modules[1]._loader)
+            print(modules[1]._starter, modules[1]._loader, modules[1]._carrier_protein,
+                  modules[1]._starter is modules[1]._loader)
             assert not modules[1].is_complete()

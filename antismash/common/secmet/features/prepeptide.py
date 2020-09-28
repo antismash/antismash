@@ -197,7 +197,7 @@ class Prepeptide(CDSMotif):  # pylint: disable=too-many-instance-attributes
         section = leftovers.pop("prepeptide", [""])[0]
         if not section:
             raise SecmetInvalidInputError("cannot reconstruct Prepeptide from biopython feature %s" % bio_feature)
-        elif section != "core":
+        if section != "core":
             raise SecmetInvalidInputError("Prepeptide can only be reconstructed from core feature")
         alt_weights = [float(weight) for weight in leftovers.pop("alternative_weights", [])]
         leader = leftovers.pop("leader_sequence", [""])[0]

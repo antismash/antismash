@@ -292,10 +292,11 @@ def prepare_output_directory(name: str, input_file: str) -> None:
         if not input_file.endswith(".json") and \
                 list(filter(_ignore_patterns, glob.glob(os.path.join(name, "*")))):
             raise RuntimeError("Output directory contains other files, aborting for safety")
-        else:  # --reuse
-            logging.debug("Removing existing region genbank files")
-            for genbank in glob.glob(os.path.join(name, "*.region???.gbk")):
-                os.remove(genbank)
+
+        # --reuse
+        logging.debug("Removing existing region genbank files")
+        for genbank in glob.glob(os.path.join(name, "*.region???.gbk")):
+            os.remove(genbank)
         logging.debug("Reusing output directory: %s", name)
     else:
         logging.debug("Creating output directory: %s", name)
@@ -650,8 +651,8 @@ def _run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
             return 1
         print("All prerequisites satisfied")
         return 0
-    else:
-        check_prerequisites(options.all_enabled_modules, options)
+
+    check_prerequisites(options.all_enabled_modules, options)
 
     # start up profiling if relevant
     if options.profile:
