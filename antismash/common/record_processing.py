@@ -7,10 +7,9 @@
 import functools
 import logging
 import re
-from typing import Any, Callable, List, Set, Tuple, Union
+from typing import Any, Callable, List, Set, Tuple
 import warnings
 
-import Bio
 from Bio.Seq import Seq, UnknownSeq
 from Bio.SeqRecord import SeqRecord
 from helperlibs.bio import seqio
@@ -97,7 +96,7 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
         raise AntismashInputError("all input records smaller than minimum length (%d)" % minimum_length)
 
     for record in records:
-        if isinstance(record.seq.alphabet, Bio.Alphabet.ProteinAlphabet) or not is_nucl_seq(record.seq):
+        if not Record.is_nucleotide_sequence(record.seq):
             raise AntismashInputError("protein records are not supported: %s" % record.id)
 
     # before conversion to secmet records, trim if required
@@ -356,8 +355,6 @@ def pre_process_sequences(sequences: List[Record], options: ConfigType, genefind
             sequences = [sanitise_sequence(sequences[0])]
         else:
             sequences = parallel_function(sanitise_sequence, ([record] for record in sequences))
-        for sequence in sequences:
-            sequence.seq.alphabet = Bio.Alphabet.generic_dna
 
     for record in sequences:
         if record.skip or not record.seq:
@@ -413,7 +410,7 @@ def sanitise_sequence(record: Record) -> Record:
             has_real_content = True
         else:
             sanitised.append("N")
-    record.seq = Seq("".join(sanitised), alphabet=record.seq.alphabet)
+    record.seq = Seq("".join(sanitised))
     if not has_real_content:
         record.skip = "contains no sequence"
     return record
@@ -444,21 +441,6 @@ def trim_sequence(record: SeqRecord, start: int, end: int) -> SeqRecord:
     new = record[start:end]
     new.annotations = record.annotations  # preserve old annotations that biopython ignores
     return new
-
-
-def is_nucl_seq(sequence: Union[Seq, str]) -> bool:
-    """ Determines if a sequence is a nucleotide sequence based on content.
-
-        Arguments:
-            sequence: the sequence to check, either a string or Bio.Seq
-
-        Returns:
-            True if more than 80% of characters are nucleotide bases
-    """
-    other = str(sequence).lower()
-    for char in "acgtn":
-        other = other.replace(char, "")
-    return len(other) < 0.2 * len(sequence)
 
 
 def records_contain_shotgun_scaffolds(records: List[Record]) -> bool:

@@ -6,7 +6,7 @@
 
 import unittest
 
-from Bio.Seq import UnknownSeq
+from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature
 from Bio.SeqRecord import SeqRecord
 
@@ -16,7 +16,7 @@ from antismash.common.secmet.record import Record, SecmetInvalidInputError
 
 class TestBridgeConversion(unittest.TestCase):
     def setUp(self):
-        self.seqrec = SeqRecord(UnknownSeq(21))
+        self.seqrec = SeqRecord(Seq("A"*21))
         loc = CompoundLocation([FeatureLocation(12, 15, strand=1),
                                 FeatureLocation(18, 21, strand=1),
                                 FeatureLocation(0, 3, strand=1),
@@ -25,6 +25,7 @@ class TestBridgeConversion(unittest.TestCase):
         self.seqcds = SeqFeature(loc, type="CDS")
         self.seqgene = SeqFeature(loc, type="gene")
         self.seqrec.annotations["topology"] = "circular"
+        self.seqrec.annotations["molecule_type"] = "DNA"
 
     def test_bridge_in_linear_record(self):
         self.seqrec.annotations["topology"] = "linear"
@@ -110,7 +111,7 @@ class TestBridgeConversion(unittest.TestCase):
 
 class TestSingleLower(TestBridgeConversion):
     def setUp(self):
-        self.seqrec = SeqRecord(UnknownSeq(21))
+        self.seqrec = SeqRecord(Seq("A"*21))
         loc = CompoundLocation([FeatureLocation(12, 15, strand=1),
                                 FeatureLocation(18, 21, strand=1),
                                 FeatureLocation(0, 9, strand=1)],
@@ -122,7 +123,7 @@ class TestSingleLower(TestBridgeConversion):
 
 class TestSingleUpper(TestBridgeConversion):
     def setUp(self):
-        self.seqrec = SeqRecord(UnknownSeq(21))
+        self.seqrec = SeqRecord(Seq("A"*21))
         loc = CompoundLocation([FeatureLocation(12, 21, strand=1),
                                 FeatureLocation(0, 3, strand=1),
                                 FeatureLocation(6, 9, strand=1)],
@@ -133,7 +134,7 @@ class TestSingleUpper(TestBridgeConversion):
 
 class TestSingleBoth(TestBridgeConversion):
     def setUp(self):
-        self.seqrec = SeqRecord(UnknownSeq(21))
+        self.seqrec = SeqRecord(Seq("A"*21))
         loc = CompoundLocation([FeatureLocation(12, 21, strand=1),
                                 FeatureLocation(0, 9, strand=1)],
                                 operator="join")
