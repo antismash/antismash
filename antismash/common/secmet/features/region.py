@@ -162,6 +162,9 @@ class Region(CDSCollection):
         cluster_record.annotations["taxonomy"] = record.annotations.get("taxonomy", [])
         cluster_record.annotations["data_file_division"] = record.annotations.get("data_file_division", 'UNK')
         cluster_record.annotations["comment"] = record.annotations.get("comment", '')
+        # biopython does not persist the molecule_type annotation in slices,
+        # despite it being required for output to the genbank format
+        cluster_record.annotations["molecule_type"] = record.annotations["molecule_type"]
 
         # update the antiSMASH annotation to include some cluster details
         comment_end_marker = "##antiSMASH-Data-END"
