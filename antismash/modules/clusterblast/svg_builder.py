@@ -290,7 +290,7 @@ class Cluster:
                  description: str, features: Union[List[Protein], List[secmet.CDSFeature]], rank: int,
                  cluster_type: str, hits: int = 0, strand: int = 1, prefix: str = "general") -> None:
         self.region_number = region_number
-        self.ref_cluster_number = int(ref_cluster_number.lstrip('c'))
+        self.ref_cluster_number = ref_cluster_number.lstrip('c')
         self.accession = accession
         self.description = description.replace("_", " ")
         self.cluster_type = cluster_type
@@ -332,7 +332,10 @@ class Cluster:
     def full_description(self) -> str:
         """ Returns a string formatted with accession, cluster number and
             similarity score """
-        desc = "%s_c%d: %s" % (self.accession, self.ref_cluster_number, self.description)
+        if self.prefix == "general":
+            desc = "%s (%s): %s" % (self.accession, self.ref_cluster_number, self.description)
+        else:
+            desc = "%s_c%s: %s" % (self.accession, self.ref_cluster_number, self.description)
         if len(desc) > 80:
             desc = desc[:77] + "..."
         return "%s (%s), %s" % (desc, self.similarity_string, self.cluster_type)
@@ -358,8 +361,10 @@ class Cluster:
                        + self.accession + '</a>: '
                        + desc, 5, 20 + v_offset)
         elif self.prefix == "general":
-            acc = Text('<a xlink:href="https://antismash-db.secondarymetabolites.org/go/'
-                       + self.accession + '/%s" target="_blank">' % self.ref_cluster_number
+            start, end = self.ref_cluster_number.split("-")
+            query = ("record=%s&start=%s&end=%s" % (self.accession, start, end)).replace("&", "&amp;")
+            acc = Text('<a xlink:href="https://antismash-db.secondarymetabolites.org/area.html?%s' % query
+                       + '" target="_blank">'
                        + self.full_description.replace(":", "</a>:", 1), 5, 20 + v_offset)
         # Don't do any linking for subclusterblast
 
@@ -523,11 +528,12 @@ class ClusterSVGBuilder:
         cluster_limit = get_config().cb_nclusters
         self.colour_lookup = build_colour_groups(list(region.cds_children), ranking[:cluster_limit])
         self.hits = []  # type: List[Cluster]
-        record_prefix = region.parent_record.id.split(".", 1)[0]
+        record_prefix = (region.parent_record.original_id or region.parent_record.id).split(".", 1)[0]
+        assert record_prefix
         num_added = 0
         queries = set()
         for cluster, score in ranking:
-            if prefix != "subclusterblast" and record_prefix == cluster.accession.split("_", 1)[0]:
+            if prefix != "subclusterblast" and record_prefix == cluster.accession:
                 continue
             # determine overall strand direction of hits
             hit_genes = set()

@@ -94,7 +94,7 @@ class GeneralIntegrationTest(Base):
         assert len(ranking) == 2
         match, score = ranking[0]
         assert match.accession == "NC_017486"
-        assert match.cluster_label == "c2"
+        assert match.cluster_label == "c1234-56789"
         assert score.score == 30
         assert score.hits == 11
         assert score.core_gene_hits == 2
@@ -108,7 +108,7 @@ class GeneralIntegrationTest(Base):
 
         match, score = ranking[1]
         assert match.accession == "ALTERED_NC_017486"
-        assert match.cluster_label == "c2"
+        assert match.cluster_label == "c1234-56789"
         assert score.score == 24
         assert score.hits == 10
         assert score.core_gene_hits == 1
