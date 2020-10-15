@@ -14,16 +14,38 @@ from .data_structures import Prediction
 from .minowa import minowa_cal, minowa_at
 from .kr_analysis import kr_analysis
 from .at_analysis import at_analysis
-
+from .transat_ks_analysis import transat_ks_analysis
 
 def count_pks_genes(genes: List[CDSFeature]) -> int:
     """ returns the combined count of PKS_AT, PKS_KR, and CAL_domain """
     pkscount = 0
     for gene in genes:
         for domain in gene.nrps_pks.domains:
-            if domain.name in ["PKS_AT", "CAL_domain", "PKS_KR"]:
+            if domain.name in ["PKS_AT", "CAL_domain", "PKS_KR", "PKS_KS"]:
                 pkscount += 1
     return pkscount
+
+
+def extract_ks_domains(cds_features: List[CDSFeature]) -> Dict[str, str]:
+    """ Returns a dictionary mapping domain name to domain sequence
+        for each PKS_KS domain found in the record
+    """
+    results = {}
+    for cds in cds_features:
+        for domain in cds.nrps_pks.domains:
+            if domain.name == "PKS_KS":
+                seq = str(cds.translation)[domain.start:domain.end]
+                results[domain.feature_name] = seq
+    return results
+
+
+def run_transpact_predictor_pks_ks(ks_domains: Dict[str, str]
+                                ) -> Tuple[Dict[str, Prediction],
+                                           Dict[str, Prediction]]:
+    """ analyses KS domains with transPACT """
+    logging.info("Predicting PKS KS domain substrate specificities with transPACT")
+    transpact_results = transat_ks_analysis.run_transpact_ks_analysis(ks_domains)
+    return transpact_results
 
 
 def extract_at_domains(cds_features: List[CDSFeature]) -> Dict[str, str]:

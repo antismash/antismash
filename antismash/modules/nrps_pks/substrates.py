@@ -16,8 +16,9 @@ from .substrates_pks import (
     run_minowa_predictor_pks_at,
     run_minowa_predictor_pks_cal,
     run_kr_stereochemistry_predictions,
+    extract_ks_domains,
+    run_transpact_predictor_pks_ks
 )
-
 
 def run_pks_substr_spec_predictions(cds_features: List[CDSFeature]) -> Dict[str, Dict[str, Prediction]]:
     """ Runs all PKS analyses on the given CDS features
@@ -31,11 +32,17 @@ def run_pks_substr_spec_predictions(cds_features: List[CDSFeature]) -> Dict[str,
                     AntismashDomain name to Prediction
     """
     at_domains = extract_at_domains(cds_features)
+    ks_domains = extract_ks_domains(cds_features)
     method_results = {}  # type: Dict[str, Dict[str, Prediction]]
     if at_domains:
         signature_results, minowa_at_results = run_minowa_predictor_pks_at(at_domains)
         method_results["signature"] = signature_results
         method_results["minowa_at"] = minowa_at_results
+    if ks_domains:
+        transpact_results = run_transpact_predictor_pks_ks(ks_domains)
+        method_results["transpact_ks"] = transpact_results
+        import sys
+        sys.exit("Exited post-transPACT")
     if count_pks_genes(cds_features):
         minowa_cal_results = run_minowa_predictor_pks_cal(cds_features)
         kr_activity, kr_stereo = run_kr_stereochemistry_predictions(cds_features)
