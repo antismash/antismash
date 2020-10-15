@@ -29,7 +29,13 @@ _ALTERNATE_EXECUTABLE_NAMES = {
 }
 
 _NO_KNOWN_ALTS = ["hmmsearch", "hmmpress", "hmmscan", "meme", "fimo", "glimmerhmm",
-                  "prodigal", "muscle", "java", "blastp", "makeblastdb"]
+                  "prodigal", "muscle", "java", "blastp", "makeblastdb", "pplacer", "guppy"]
+
+## NOTE: not sure if this is the right place for this, but this was necessary on my box for pplacer and guppy to run correctly
+if os.getenv('LC_ALL') != 'C':
+    os.environ['LC_ALL'] = 'C'
+assert os.getenv('LC_ALL') == 'C', "LC_ALL not set properly. Run export LC_ALL=C\n"
+
 for _binary in _NO_KNOWN_ALTS:
     assert _binary not in _ALTERNATE_EXECUTABLE_NAMES, _binary
     _ALTERNATE_EXECUTABLE_NAMES[_binary] = [_binary]

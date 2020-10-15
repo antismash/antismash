@@ -1,0 +1,25 @@
+{
+    "files": {
+        "aln_fasta": "649KS_sequences_031218.fasta", 
+        "phylo_model": "phylo_modeloXTi_Y.json", 
+        "tree": "RAxML_bestTree.649KS_sequences_hmmalign_raxml_renamed.tre", 
+        "tree_stats": "RAxML_info.649KS_sequences_hmmalign_raxml.tre"
+    }, 
+    "rollback": null, 
+    "log": [
+        "Stripped refpkg (removed 0 files)", 
+        "Loaded initial files into empty refpkg"
+    ], 
+    "metadata": {
+        "create_date": "2019-05-15 14:52:05", 
+        "format_version": "1.1", 
+        "locus": "649KS"
+    }, 
+    "rollforward": null, 
+    "md5": {
+        "aln_fasta": "de289b508d33c1ecd5ba1262feaa7d07", 
+        "phylo_model": "36004038f925f504776b94783f39f36b", 
+        "tree": "88df01f179346c3f19f412184f0d30ff", 
+        "tree_stats": "f8a9c52463f21ce4187be391445d7f45"
+    }
+}

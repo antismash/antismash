@@ -1,0 +1,79 @@
+
+
+IMPORTANT WARNING: Sequences bryostatin_BryB2_KS5_adiMEbketo and bryostatin_BryC3_KS10_adiMebketo are exactly identical
+
+IMPORTANT WARNING
+Found 1 sequence that is exactly identical to other sequences in the alignment.
+Normally they should be excluded from the analysis.
+
+Just in case you might need it, an alignment file with 
+sequence duplicates removed is printed to file 649KS_sequences_031218.phy.reduced
+
+
+This is RAxML version 8.2.11 released by Alexandros Stamatakis on June 2017.
+
+With greatly appreciated code contributions by:
+Andre Aberer      (HITS)
+Simon Berger      (HITS)
+Alexey Kozlov     (HITS)
+Kassian Kobert    (HITS)
+David Dao         (KIT and HITS)
+Sarah Lutteropp   (KIT and HITS)
+Nick Pattengale   (Sandia)
+Wayne Pfeiffer    (SDSC)
+Akifumi S. Tanabe (NRIFS)
+Charlie Taylor    (UF)
+
+
+Alignment has 606 distinct alignment patterns
+
+Proportion of gaps and completely undetermined characters in this alignment: 36.26%
+
+RAxML rapid hill-climbing mode
+
+Using 1 distinct models/data partitions with joint branch length optimization
+
+
+Executing 1 inferences on the original alignment using 1 distinct randomized MP trees
+
+All free model parameters will be estimated by RAxML
+GAMMA model of rate heterogeneity, ML estimate of alpha-parameter
+
+GAMMA Model parameters will be estimated up to an accuracy of 0.1000000000 Log Likelihood units
+
+Partition: 0
+Alignment Patterns: 606
+Name: No Name Provided
+DataType: AA
+Substitution Matrix: WAG
+Using empirical base frequencies
+
+
+
+
+RAxML was called as follows:
+
+./raxmlHPC -m PROTGAMMAWAGF -n 649KS_sequences_hmmalign_raxml.tre -p 1234 -s 649KS_sequences_031218.phy 
+
+
+Partition: 0 with name: No Name Provided
+Base frequencies: 0.114 0.056 0.035 0.055 0.017 0.033 0.052 0.106 0.031 0.052 0.087 0.032 0.017 0.039 0.051 0.074 0.046 0.011 0.027 0.066 
+
+Inference[0]: Time 60123.558812 GAMMA-based likelihood -295572.803007, best rearrangement setting 15
+alpha[0]: 1.062177 
+
+
+Conducting final model optimizations on all 1 trees under GAMMA-based models ....
+
+Inference[0] final GAMMA-based Likelihood: -295572.789689 tree written to file /home/medem005/standard-RAxML-master/RAxML_result.649KS_sequences_hmmalign_raxml.tre
+
+
+Starting final GAMMA-based thorough Optimization on tree 0 likelihood -295572.789689 .... 
+
+Final GAMMA-based Score of best tree -295572.789689
+
+Program execution info written to /home/medem005/standard-RAxML-master/RAxML_info.649KS_sequences_hmmalign_raxml.tre
+Best-scoring ML tree written to: /home/medem005/standard-RAxML-master/RAxML_bestTree.649KS_sequences_hmmalign_raxml.tre
+
+Overall execution time: 68823.601567 secs or 19.117667 hours or 0.796569 days
+

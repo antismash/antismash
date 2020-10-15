@@ -60,6 +60,11 @@ from .muscle import (
     run_muscle_version,
 )
 
+from .pplacer import (
+    run_pplacer,
+    run_pplacer_version,
+)
+
 from .prodigal import (
     run_prodigal_version,
 )
