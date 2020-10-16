@@ -9,7 +9,6 @@ from jinja2 import Markup
 
 from antismash.common import path, subprocessing, utils, fasta
 from antismash.modules.nrps_pks.data_structures import Prediction
-from antismash.modules.nrps_pks.pks_names import get_long_form
 
 from Bio import Phylo
 from io import StringIO
@@ -23,28 +22,30 @@ _KS_REFERENCE_TREE = '/'.join([_PPLACER_REFERENCE_PKG, 'RAxML_bestTree.649KS_seq
 
 class KSResult:
     """ A result for a specific KS domain """
-    __slots__ = ["clade", "specificity"]
+    __slots__ = ["clade", "specificity", "mass_score"]
 
-    def __init__(self, clade: str, specificity: str) -> None:
+    def __init__(self, clade: str, specificity: str, mass_score: float) -> None:
         assert isinstance(clade, str)
         assert isinstance(specificity, str)
+        assert isinstance(mass_score, float)
         self.clade = clade
         self.specificity = specificity
+        self.mass_score = mass_score
 
     def __repr__(self) -> str:
         return str(self)
 
     def __str__(self) -> str:
-        return "KSResult(clade=%s, specificity=%s)" % (self.clade, self.specificity)
+        return "KSResult(clade=%s, specificity=%s, mass_score=%s)" % (self.clade, self.specificity, self.mass_score)
 
-    def to_json(self) -> Tuple[str, str]:
+    def to_json(self) -> Tuple[str, str, float]:
         """ Serialises the instance """
-        return (self.clade, self.specificity)
+        return (self.clade, self.specificity, self.mass_score)
 
     @staticmethod
-    def from_json(json: Tuple[str, str]) -> "KSResult":
+    def from_json(json: Tuple[str, str, float]) -> "KSResult":
         """ Deserialise an KSResult instance """
-        assert len(json) == 2
+        assert len(json) == 3
         return KSResult(*json)
 
 
@@ -52,7 +53,7 @@ class KSPrediction(Prediction):
     """ Holds the transPACT predictions for a domain"""
     def __init__(self, predictions: Dict[str, KSResult]) -> None:
         super().__init__("transPACT_KS")
-        self.predictions = predictions
+        self.predictions = sorted(predictions.items(), key=lambda x: (-x[1].mass_score, x[1].clade))
 
     def get_classification(self) -> List[str]:
         results = []  # type: List[str]
@@ -66,8 +67,8 @@ class KSPrediction(Prediction):
         if not self.predictions:
             return Markup("No matches")
         lines = []
-        for clade, pred in self.predictions[:2]:
-            lines.append("<dd>%s: %.1f%%</dd>\n" % (clade, pred.specificity))
+        for clade, pred in self.predictions:
+            lines.append("<dd>%s: %.1f%%</dd>\n" % (pred.specificity, pred.mass_score))
         html = ((
             "<dl>\n"
             " <dt>transPACT assigned specificiy:</dt>\n"
@@ -156,10 +157,10 @@ def transpact_tree_prediction(pplacer_tree: str, masscutoff: float, funClades: D
         else:
             totalmass[clade_assignment] = mass
     best_clade = max(totalmass, key=totalmass.get)
-    clade, spec = 'clade_not_conserved', 'NA' ## Talk to Simon about best way to treat non-predictions...maybe 'None'?
+    clade, spec, score = 'clade_not_conserved', 'NA', 0.0 ## Talk to Simon about best way to treat non-predictions...maybe 'None'?
     if totalmass[best_clade] >= masscutoff:
-        clade, spec = best_clade, clade2ann[best_clade]
-    return KSPrediction({spec: KSResult(clade, spec)})
+        clade, spec, score = best_clade, clade2ann[best_clade], totalmass[best_clade]
+    return KSPrediction({spec: KSResult(clade, spec, score)})
 
     
 def run_transpact_pplacer(ks_name: str, alignment: Dict[str, str], reference_pkg: str, reference_aln: str, reference_tree: str, masscutoff: float, funClades: Dict[str, str], clade2ann: Dict[str, str]) -> KSPrediction:
