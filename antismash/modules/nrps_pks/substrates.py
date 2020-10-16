@@ -38,11 +38,9 @@ def run_pks_substr_spec_predictions(cds_features: List[CDSFeature]) -> Dict[str,
         signature_results, minowa_at_results = run_minowa_predictor_pks_at(at_domains)
         method_results["signature"] = signature_results
         method_results["minowa_at"] = minowa_at_results
-    if ks_domains:
+    if ks_domains: ## Note, need to add something here to make sure only run for transAT PKS BGCs
         transpact_results = run_transpact_predictor_pks_ks(ks_domains)
         method_results["transpact_ks"] = transpact_results
-        import sys
-        sys.exit("Exited post-transPACT")
     if count_pks_genes(cds_features):
         minowa_cal_results = run_minowa_predictor_pks_cal(cds_features)
         kr_activity, kr_stereo = run_kr_stereochemistry_predictions(cds_features)
