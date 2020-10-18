@@ -123,7 +123,7 @@ def prepare_data(logging_only: bool = False) -> List[str]:
 
     # general
     clusterblastdir = os.path.join(get_config().database_dir, "clusterblast")
-    if clusterblastdir == "mounted_at_runtime":  # can't prepare these
+    if "mounted_at_runtime" in clusterblastdir:  # can't prepare these
         return failure_messages
     cluster_defs = os.path.join(clusterblastdir, 'clusters.txt')
     protein_seqs = os.path.join(clusterblastdir, "proteins.fasta")
