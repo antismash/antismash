@@ -556,7 +556,7 @@ def advanced_options() -> ModuleArgs:
                      help="Run without FIMO (lowers accuracy of RiPP precursor predictions)")
     group.add_option('--executable-paths',
                      dest='executables',
-                     metavar="EXECUTABLE:PATH,EXECUTABLE2:PATH2,...",
+                     metavar="EXECUTABLE=PATH,EXECUTABLE2=PATH2,...",
                      action=AlternateExecutablesAction,
                      default=argparse.Namespace(**get_default_paths()),
                      help=("A comma separated list of executable name->path pairs "
