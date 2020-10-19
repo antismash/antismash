@@ -83,7 +83,7 @@ def scan_for_functions(cds_features: List[CDSFeature], database: str,
     hmm_lengths = utils.get_hmm_lengths(database)
     hmm_results = refine_hmmscan_results(results, hmm_lengths)
 
-    best_hits = {}  # type: Dict[str, HMMResult]
+    best_hits: Dict[str, HMMResult] = {}
 
     for cds in cds_features:
         cds_name = cds.get_name()

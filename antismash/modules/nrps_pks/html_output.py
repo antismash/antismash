@@ -5,8 +5,7 @@
 
 import logging
 import re
-from typing import Any, Iterable, List, Optional
-from typing import Dict  # in comment type hints  # pylint: disable=unused-import
+from typing import Any, Dict, Iterable, List, Optional
 
 from antismash.common import path
 from antismash.common.html_renderer import HTMLSections, FileTemplate
@@ -30,7 +29,7 @@ def generate_html(region_layer: RegionLayer, results: NRPS_PKS_Results,
 
     nrps_layer = NrpspksLayer(results, region_layer.region_feature, record_layer)
 
-    features_with_domain_predictions = {}  # type: Dict[str, List[str]]
+    features_with_domain_predictions: Dict[str, List[str]] = {}
     for domain_name, consensus in results.consensus.items():
         if not consensus:
             continue
@@ -115,7 +114,7 @@ def get_norine_url_for_specificities(specificities: List[List[str]],
         if be_strict:
             wildcard = ""
         # always be strict to remove X and nrp
-        chunks = [monomer for monomer in filter_norine_as(domain_specificity_list, be_strict=True)]
+        chunks = filter_norine_as(domain_specificity_list, be_strict=True)
         query = (wildcard + separator).join(chunks) + wildcard
         if len(domain_specificity_list) > 1:
             query = "[" + query + "]"
@@ -184,15 +183,15 @@ class NrpspksLayer(RegionLayer):
         domains and structures.
     """
     def __init__(self, results: NRPS_PKS_Results, region_feature: Region, record: RecordLayer) -> None:
-        self.url_strict = {}  # type: Dict[str, str]  # gene name -> url
-        self.url_relaxed = {}  # type: Dict[str, str]  # gene name -> url
+        self.url_strict: Dict[str, str] = {}  # gene name -> url
+        self.url_relaxed: Dict[str, str] = {}  # gene name -> url
         self._build_urls(region_feature.cds_children)
         super().__init__(record, region_feature)
         assert isinstance(results, NRPS_PKS_Results), type(results)
         self.results = results
 
         region_number = region_feature.get_region_number()
-        self.candidate_clusters = []  # type: List[CandidateClusterLayer]
+        self.candidate_clusters: List[CandidateClusterLayer] = []
         for candidate_cluster_pred in results.region_predictions.get(region_number, []):
             candidate_cluster = record.get_candidate_cluster(candidate_cluster_pred.candidate_cluster_number)
             self.candidate_clusters.append(CandidateClusterLayer(candidate_cluster, candidate_cluster_pred))

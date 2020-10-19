@@ -4,7 +4,7 @@
 """ A collection of data structures shared by the clusterblast variants """
 
 from collections import OrderedDict
-from typing import Dict, List, Tuple, Union  # in comment hints: pylint: disable=unused-import
+from typing import Dict, List, Tuple, Union
 
 
 class ReferenceCluster:
@@ -107,8 +107,8 @@ class Query:
         self.cluster_number = int(parts[1][1:])  # c1 -> 1
         self.id = parts[4]  # accession
         self.entry = entry
-        self.subjects = OrderedDict()  # type: Dict[str, Subject]
-        self.cluster_name_to_subjects = {}  # type: Dict[str, List[Subject]]
+        self.subjects: Dict[str, Subject] = OrderedDict()
+        self.cluster_name_to_subjects: Dict[str, List[Subject]] = {}
         self.index = index
 
     def add_subject(self, subject: Subject) -> None:
@@ -134,7 +134,7 @@ class Score:
         self.blast_score = 0.
         self.synteny_score = 0
         self.core_bonus = 0
-        self.scored_pairings = []  # type: List[Tuple[Query, Subject]]
+        self.scored_pairings: List[Tuple[Query, Subject]] = []
 
     @property
     def score(self) -> int:

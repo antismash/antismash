@@ -6,20 +6,19 @@
 """
 
 import os
-from typing import Any, Dict, Iterable, List, Optional, Tuple
-from typing import Set  # comment hints, # pylint: disable=unused-import
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 
 from antismash.common import html_renderer, path
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import CDSFeature, Feature, Record, Region, CandidateCluster, SubRegion
 from antismash.common.secmet.qualifiers.gene_functions import GeneFunction
-from antismash.common.secmet import Protocluster  # comment hints, # pylint: disable=unused-import
+from antismash.common.secmet import Protocluster
 from antismash.common.secmet.features.cdscollection import CDSCollection
 from antismash.config import ConfigType
 from antismash.modules import clusterblast, tta
 from antismash.outputs.html.generate_html_table import generate_html_table
 
-searchgtr_links = {}  # type: Dict[str, str]  # TODO: refactor away from global
+searchgtr_links: Dict[str, str] = {}  # TODO: refactor away from global
 
 
 def convert_records(records: List[Record], results: List[Dict[str, ModuleResults]],
@@ -45,7 +44,7 @@ def convert_record(record: Record, options: ConfigType, result: Optional[Dict[st
 
 def fetch_tta_features(region: Region, result: Dict[str, ModuleResults]) -> List[Feature]:
     """ Returns a list of all TTA features that overlap with the region """
-    hits = []  # type: List[Feature]
+    hits: List[Feature] = []
     tta_results = result.get(tta.__name__)
     if not tta_results:
         return hits
@@ -61,7 +60,7 @@ def fetch_tta_features(region: Region, result: Dict[str, ModuleResults]) -> List
 def convert_regions(record: Record, options: ConfigType, result: Dict[str, ModuleResults]) -> List[Dict[str, Any]]:
     """Convert Region features to JSON"""
     js_regions = []
-    mibig_results = {}  # type: Dict[int, Dict[str, List[clusterblast.results.MibigEntry]]]
+    mibig_results: Dict[int, Dict[str, List[clusterblast.results.MibigEntry]]] = {}
 
     clusterblast_results = result.get(clusterblast.__name__)
     if clusterblast_results is not None:
@@ -73,7 +72,7 @@ def convert_regions(record: Record, options: ConfigType, result: Dict[str, Modul
     for region in record.get_regions():
         tta_codons = fetch_tta_features(region, result)
 
-        js_region = {}  # type: Dict[str, Any]
+        js_region: Dict[str, Any] = {}
         js_region['start'] = int(region.location.start) + 1
         js_region['end'] = int(region.location.end)
         js_region['idx'] = region.get_region_number()
@@ -100,7 +99,7 @@ def convert_cds_features(record: Record, features: Iterable[CDSFeature], options
         # resistance genes have special markers, not just a colouring, so revert to OTHER
         if gene_function == GeneFunction.RESISTANCE:
             gene_function = GeneFunction.OTHER
-        mibig_hits = []  # type: List[clusterblast.results.MibigEntry]
+        mibig_hits: List[clusterblast.results.MibigEntry] = []
         mibig_hits = mibig_entries.get(feature.get_name(), [])
         description = get_description(record, feature, str(gene_function), options, mibig_hits)
         js_orfs.append({
@@ -136,7 +135,7 @@ def _find_non_overlapping_cluster_groups(collections: Iterable[CDSCollection],
         raise ValueError("padding cannot be negative")
     if not collections:
         return {}
-    groups = []  # type: List[List[CDSCollection]]
+    groups: List[List[CDSCollection]] = []
     for collection in collections:
         found_group = False
         for group in groups:
@@ -157,7 +156,7 @@ def _find_non_overlapping_cluster_groups(collections: Iterable[CDSCollection],
 def get_clusters_from_region_parts(candidate_clusters: Iterable[CandidateCluster],
                                    subregions: Iterable[SubRegion]) -> List[Dict[str, Any]]:
     """ Converts all Protoclusters in a collection of CandidateCluster features to JSON """
-    unique_clusters = set()  # type: Set[Protocluster]
+    unique_clusters: Set[Protocluster] = set()
     for candidate_cluster in candidate_clusters:
         unique_clusters.update(candidate_cluster.protoclusters)
     js_clusters = []

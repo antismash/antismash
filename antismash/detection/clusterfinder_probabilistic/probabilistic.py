@@ -74,7 +74,7 @@ def find_probabilistic_clusters(record: Record, options: ConfigType) -> List[Clu
     cf_clusters = []
     state = "seed"
     cluster_position = (0, 0)
-    pfam_ids = []  # type: List[str]
+    pfam_ids: List[str] = []
     loop_index = 1
     probabilities = [0.]
     for feature in pfam_features:

@@ -3,15 +3,14 @@
 
 """ A qualifier for ActiveSiteFinder annotations """
 
-from typing import List
-from typing import Set  # comment hint  # pylint: disable=unused-import
+from typing import List, Set
 
 
 class ActiveSiteFinderQualifier:
     """ A qualifier for tracking active sites found (or not found) within a CDS.
     """
     def __init__(self) -> None:
-        self._hits = set()  # type: Set[str]
+        self._hits: Set[str] = set()
 
     @property
     def hits(self) -> List[str]:

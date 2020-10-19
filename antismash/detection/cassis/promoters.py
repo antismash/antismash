@@ -5,7 +5,7 @@
 
 import logging
 import os
-from typing import Any, Dict, List, Union, Set, Tuple  # pylint: disable=unused-import
+from typing import Any, Dict, List, Set
 
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
@@ -15,7 +15,7 @@ from antismash.common.secmet import Record, Gene
 
 class DuplicatePromoterError(Exception):
     '''Thrown when running into valid but duplicate promoter sequences during runtime'''
-    pass
+    pass  # pylint: disable=unnecessary-pass
 
 
 class Promoter:
@@ -108,7 +108,7 @@ def get_promoters(record: Record, genes: List[Gene],
 
     record_seq_length = len(record.seq)
     promoters = []
-    promoter_ids = set()  # type: Set[str]
+    promoter_ids: Set[str] = set()
     invalid = 0
 
     skip = False  # helper var for shared promoter of bidirectional genes
@@ -245,8 +245,7 @@ def get_promoters(record: Record, genes: List[Gene],
             logging.error("Promoter %r occurs at least twice. This may be caused by overlapping gene annotations",
                           current_promoter.get_id())
             raise DuplicatePromoterError
-        else:
-            promoter_ids.add(current_promoter.get_id())
+        promoter_ids.add(current_promoter.get_id())
 
     if invalid:
         logging.debug("Ignoring %d promoters due to invalid promoter sequences", invalid)

@@ -62,33 +62,33 @@ class TestClusterHmmer(unittest.TestCase):
         self.set_max_evalue(self.original_max_evalue)
 
         # test regeneration when evalue threshold is more restrictive
-        new_evalue_threshold = sorted(hit["evalue"] for hit in results.hits)[6]
+        new_evalue_threshold = sorted(hit.evalue for hit in results.hits)[6]
         assert new_evalue_threshold < self.original_max_evalue
         new_hits = []
         for hit in results.hits:
-            if hit["evalue"] <= new_evalue_threshold:
+            if hit.evalue <= new_evalue_threshold:
                 new_hits.append(hit)
-        new_hits.sort(key=lambda x: x["evalue"])
+        new_hits.sort(key=lambda x: x.evalue)
         assert len(new_hits) < 13
 
         self.set_max_evalue(new_evalue_threshold)
         new_results = cluster_hmmer.regenerate_previous_results(json, record, self.options)
         self.set_max_evalue(self.original_max_evalue)
-        assert sorted(new_results.hits, key=lambda x: x["evalue"]) == new_hits
+        assert sorted(new_results.hits, key=lambda x: x.evalue) == new_hits
         self.check_add_to_record(nisin, results)
 
         # test regeneration when score threshold is more restrictive
-        new_score_threshold = sorted(hit["score"] for hit in results.hits)[6]
+        new_score_threshold = sorted(hit.score for hit in results.hits)[6]
         assert new_score_threshold > cluster_hmmer.MIN_SCORE
         new_hits = []
         for hit in results.hits:
-            if hit["score"] >= new_score_threshold:
+            if hit.score >= new_score_threshold:
                 new_hits.append(hit)
-        new_hits.sort(key=lambda x: x["score"])
+        new_hits.sort(key=lambda x: x.score)
         assert len(new_hits) < 13
 
         self.set_min_score(new_score_threshold)
         new_results = cluster_hmmer.regenerate_previous_results(json, record, self.options)
         self.set_min_score(self.original_min_score)
-        assert sorted(new_results.hits, key=lambda x: x["score"]) == new_hits
+        assert sorted(new_results.hits, key=lambda x: x.score) == new_hits
         self.check_add_to_record(nisin, results)

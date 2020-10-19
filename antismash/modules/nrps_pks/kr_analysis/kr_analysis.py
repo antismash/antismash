@@ -74,7 +74,7 @@ def run_kr_analysis(queries: Dict[str, str]) -> Tuple[Dict[str, Prediction], Dic
         stereochem_signatures.append(utils.extract_by_reference_positions(muscle_dict[name], refseq, positions_ste))
 
     # Check activity
-    activity = {}  # type: Dict[str, Prediction]
+    activity: Dict[str, Prediction] = {}
     for name, signature in zip(querysignames, activity_signatures):
         if is_active(signature):
             activity[name] = SimplePrediction("kr_activity", "active")
@@ -82,7 +82,7 @@ def run_kr_analysis(queries: Dict[str, str]) -> Tuple[Dict[str, Prediction], Dic
             activity[name] = SimplePrediction("kr_activity", "inactive")
 
     # Predict stereochemistry
-    stereochemistry = {}  # type: Dict[str, Prediction]
+    stereochemistry: Dict[str, Prediction] = {}
     for name, signature in zip(querysignames, stereochem_signatures):
         chem = predict_stereochemistry(signature)
         if chem:

@@ -7,7 +7,7 @@ from collections import defaultdict
 import csv
 import logging
 import os
-from typing import Any, Dict, List, Optional, Set, Tuple  # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, Set, Tuple
 from xml.etree import cElementTree as ElementTree
 
 from Bio import SeqIO
@@ -26,11 +26,11 @@ class Motif(Pairing):
     def __init__(self, plus: int, minus: int, score: Optional[float] = None,
                  hits: Optional[Dict[str, int]] = None) -> None:
         super().__init__(plus, minus)
-        self._score = None  # type: Optional[float]
+        self._score: Optional[float] = None
         if score:
             self.score = score
-        self.seqs = []  # type: List[str]
-        self.hits = defaultdict(lambda: 0)  # type: Dict[str, int]
+        self.seqs: List[str] = []
+        self.hits: Dict[str, int] = defaultdict(lambda: 0)
         if hits:
             for key, val in hits.items():
                 self.hits[str(key)] = int(val)
@@ -64,7 +64,7 @@ def generate_motifs(meme_dir: str, anchor_promoter: int, promoters: List[Promote
         os.makedirs(meme_dir)
 
     # prepare sets of promoter sequences (MEME input)
-    indices = set()  # type: Set[Tuple[int, int]] # to monitor unique start_index/end_index
+    indices: Set[Tuple[int, int]] = set()  # to monitor unique start_index/end_index
     for pm in PROMOTER_RANGE:
         start_index = anchor_promoter - pm.minus
         end_index = anchor_promoter + pm.plus
@@ -199,13 +199,13 @@ def filter_fimo_results(motifs: List[Motif], fimo_dir: str, promoters: List[Prom
                 logging.debug("FIMO: motif %s; occurs in %d promoters (no hits)",
                               motif, len(motif.hits))
             continue
-        elif percentage > cassis.MAX_PERCENTAGE:
+        if percentage > cassis.MAX_PERCENTAGE:
             # too high
             if cassis.VERBOSE_DEBUG:
                 logging.debug("FIMO: %s; occurs in %d promoters; %.2f%% of all promoters (too many)",
                               motif, len(motif.hits), percentage)
             continue
-        elif promoters[anchor_promoter].get_id() not in motif.hits:  # not in achor promoter
+        if promoters[anchor_promoter].get_id() not in motif.hits:  # not in achor promoter
             # no site in anchor promoter
             if cassis.VERBOSE_DEBUG:
                 logging.debug("FIMO: motif %s; no hits in the promoter of the anchor gene", motif)

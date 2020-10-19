@@ -56,7 +56,8 @@ def specific_analysis(record: Record, results: NRPS_PKS_Results, options: Config
     pks_results = run_pks_substr_spec_predictions(nrps_pks_genes)
     for method, method_results in pks_results.items():
         results.add_method_results(method, method_results)
-    results.consensus, results.consensus_transat = calculate_consensus_prediction(nrps_pks_genes, results.domain_predictions)
+    consensus_pair = calculate_consensus_prediction(nrps_pks_genes, results.domain_predictions)
+    results.consensus, results.consensus_transat = consensus_pair
 
     candidate_cluster_predictions = analyse_biosynthetic_order(nrps_pks_genes, results.consensus, record)
     for prediction in candidate_cluster_predictions:

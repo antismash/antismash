@@ -82,7 +82,7 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
     if not isinstance(minimum_length, int):
         raise TypeError("minimum_length must be an int")
 
-    records = []  # type: List[SeqRecord]
+    records: List[SeqRecord] = []
 
     for record in _strict_parse(filename):
         if minimum_length < 1 \
@@ -408,7 +408,7 @@ def sanitise_sequence(record: Record) -> Record:
     for char in record.seq.upper():
         if char == "-":
             continue
-        elif char in "ACGT":
+        if char in "ACGT":
             sanitised.append(char)
             has_real_content = True
         else:
@@ -434,7 +434,7 @@ def trim_sequence(record: SeqRecord, start: int, end: int) -> SeqRecord:
         raise ValueError('Specified analysis start point of %r is outside record' % start)
     if end > len(record):
         raise ValueError('Specified analysis end point of %r is outside record' % end)
-    if end > -1 and end <= start:
+    if -1 < end <= start:
         raise ValueError("Trim region start cannot be greater than or equal to end")
 
     if start < 0:
@@ -581,6 +581,6 @@ def generate_unique_id(prefix: str, existing_ids: Set[str], start: int = 0,
     while name in existing_ids:
         counter += 1
         name = format_string % counter
-    if max_length > 0 and len(name) > max_length:
+    if 0 < max_length < len(name):
         raise RuntimeError("Could not generate unique id for %s after %d iterations" % (prefix, counter - start))
     return name, counter

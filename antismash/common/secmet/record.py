@@ -14,8 +14,7 @@
 import bisect
 from collections import Counter, defaultdict, OrderedDict
 import logging
-from typing import Any, Dict, List, Tuple, Union, cast
-from typing import Optional, Sequence, Set, Type  # comment hints # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, Sequence, Type, Tuple, Union, cast
 
 from Bio import Alphabet, SeqIO
 from Bio.Seq import Seq
@@ -38,7 +37,7 @@ from .features import (
     Region,
     SubRegion,
 )
-from .features import CDSCollection  # comment hints, pylint: disable=unused-import
+from .features import CDSCollection
 from .features.candidate_cluster import create_candidates_from_protoclusters
 
 from .locations import (
@@ -67,38 +66,38 @@ class Record:
         if isinstance(seq, str):
             seq = Seq(seq)
         self._record = SeqRecord(seq, **kwargs)
-        self.record_index = None  # type: Optional[int]
+        self.record_index: Optional[int] = None
         self.original_id = None
-        self.skip = None  # type: Optional[str] # TODO: move to yet another abstraction layer?
-        self._genes = []  # type: List[Gene]
+        self.skip: Optional[str] = None  # TODO: move to yet another abstraction layer?
+        self._genes: List[Gene] = []
 
-        self._cds_features = []  # type: List[CDSFeature]
-        self._cds_by_name = {}  # type: Dict[str, CDSFeature]
+        self._cds_features: List[CDSFeature] = []
+        self._cds_by_name: Dict[str, CDSFeature] = {}
 
-        self._cds_motifs = []  # type: List[CDSMotif]
+        self._cds_motifs: List[CDSMotif] = []
 
-        self._pfam_domains = []  # type: List[PFAMDomain]
-        self._pfams_by_cds_name = defaultdict(list)  # type: Dict[str, List[PFAMDomain]]
+        self._pfam_domains: List[PFAMDomain] = []
+        self._pfams_by_cds_name: Dict[str, List[PFAMDomain]] = defaultdict(list)
 
-        self._antismash_domains = []  # type: List[AntismashDomain]
-        self._modules = []  # type: List[Module]
+        self._antismash_domains: List[AntismashDomain] = []
+        self._modules: List[Module] = []
 
         # includes PFAMDomains and AntismashDomains
-        self._domains_by_name = {}  # type: Dict[str, Domain]  # for use as x[domain.get_name()] = domain
+        self._domains_by_name: Dict[str, Domain] = {}  # for use as x[domain.get_name()] = domain
 
-        self._nonspecific_features = []  # type: List[Feature]
+        self._nonspecific_features: List[Feature] = []
 
-        self._protoclusters = []  # type: List[Protocluster]
-        self._protocluster_numbering = {}  # type: Dict[Protocluster, int]
+        self._protoclusters: List[Protocluster] = []
+        self._protocluster_numbering: Dict[Protocluster, int] = {}
 
-        self._candidate_clusters = []  # type: List[CandidateCluster]
-        self._candidate_clusters_numbering = {}  # type: Dict[CandidateCluster, int]
+        self._candidate_clusters: List[CandidateCluster] = []
+        self._candidate_clusters_numbering: Dict[CandidateCluster, int] = {}
 
-        self._subregions = []  # type: List[SubRegion]
-        self._subregion_numbering = {}  # type: Dict[SubRegion, int]
+        self._subregions: List[SubRegion] = []
+        self._subregion_numbering: Dict[SubRegion, int] = {}
 
-        self._regions = []  # type: List[Region]
-        self._region_numbering = {}  # type: Dict[Region, int]
+        self._regions: List[Region] = []
+        self._region_numbering: Dict[Region, int] = {}
 
         self._transl_table = int(transl_table)
 
@@ -280,8 +279,7 @@ class Record:
             if region < existing_region:
                 index = i  # before
                 break
-            else:
-                index = i + 1  # after
+            index = i + 1  # after
         self._regions.insert(index, region)
         region.parent_record = self
         # update numbering
@@ -445,7 +443,7 @@ class Record:
             assert isinstance(location, FeatureLocation)
             location = FeatureLocation(0, max(1, location.end))
 
-        results = []  # type: List[CDSFeature]
+        results: List[CDSFeature] = []
         # shortcut if no CDS features exist
         if not self._cds_features:
             return results
@@ -466,7 +464,7 @@ class Record:
     def to_biopython(self) -> SeqRecord:
         """Returns a Bio.SeqRecord instance of the record"""
         features = self.get_all_features()
-        bio_features = []  # type: List[SeqFeature]
+        bio_features: List[SeqFeature] = []
         for feature in sorted(features):
             bio_features.extend(feature.to_biopython())
         return SeqRecord(self.seq, id=self._record.id, name=self._record.name,
@@ -650,7 +648,7 @@ class Record:
         """ Constructs a new Record instance from a biopython SeqRecord,
             also replaces biopython SeqFeatures with Feature subclasses
         """
-        postponed_features = OrderedDict()  # type: Dict[str, Tuple[Type[Feature], List[SeqFeature]]]
+        postponed_features: Dict[str, Tuple[Type[Feature], List[SeqFeature]]] = OrderedDict()
         for kind in [CandidateCluster, Region, Module]:  # type: Type[Feature]
             postponed_features[kind.FEATURE_TYPE] = (kind, [])
 
@@ -787,8 +785,11 @@ class Record:
                 cds.region = region
 
         # for other collections, since they may overlap heavily, exhaustive search required
-        other_collections = [self._protoclusters, self._candidate_clusters,
-                             self._subregions]  # type: Sequence[Sequence[CDSCollection]]
+        other_collections: Sequence[Sequence[CDSCollection]] = [
+            self._protoclusters,
+            self._candidate_clusters,
+            self._subregions
+        ]
         for collections in other_collections:
             for collection in collections:
                 if cds.is_contained_by(collection):
@@ -840,7 +841,7 @@ class Record:
         """ Returns all CDS features in the record that are located within a
             region of interest
         """
-        features = []  # type: List[CDSFeature]
+        features: List[CDSFeature] = []
         for region in self._regions:
             features.extend(region.cds_children)
         return features
@@ -879,7 +880,7 @@ class Record:
         if not candidate_clusters and not subregions:
             return 0
 
-        areas = []  # type: List[CDSCollection]
+        areas: List[CDSCollection] = []
         areas.extend(candidate_clusters)
         areas.extend(subregions)
         areas.sort()

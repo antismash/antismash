@@ -62,7 +62,7 @@ def write_regions_js(records: List[Dict[str, Any]], output_dir: str,
         of code"""
     with open(os.path.join(output_dir, 'regions.js'), 'w') as handle:
         handle.write("var recordData = %s;\n" % json.dumps(records, indent=4))
-        regions = {"order": []}  # type: Dict[str, Any]
+        regions: Dict[str, Any] = {"order": []}
         for record in records:
             for region in record['regions']:
                 regions[region['anchor']] = region
@@ -121,7 +121,7 @@ def generate_webpage(records: List[Record], results: List[Dict[str, module_resul
         options_layer = OptionsLayer(options)
         record_layers_with_regions = []
         record_layers_without_regions = []
-        results_by_record_id = {}  # type: Dict[str, Dict[str, module_results.ModuleResults]]
+        results_by_record_id: Dict[str, Dict[str, module_results.ModuleResults]] = {}
         for record, record_results in zip(records, results):
             if record.get_regions():
                 record_layers_with_regions.append(RecordLayer(record, None, options_layer))

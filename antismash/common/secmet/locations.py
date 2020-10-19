@@ -4,8 +4,7 @@
 """ Helper functions for location operations """
 
 import logging
-from typing import Iterable, List, Sequence, Tuple, Union
-from typing import Optional  # in comment hints, pylint: disable=unused-import
+from typing import Iterable, List, Optional, Sequence, Tuple, Union
 
 from Bio.SeqFeature import (
     AbstractPosition,
@@ -181,8 +180,8 @@ def split_origin_bridging_location(location: CompoundLocation) -> Tuple[
         Returns:
             a tuple of lists, each list containing one or more FeatureLocations
     """
-    lower = []  # type: List[FeatureLocation]
-    upper = []  # type: List[FeatureLocation]
+    lower: List[FeatureLocation] = []
+    upper: List[FeatureLocation] = []
     if location.strand == 1:
         for i, part in enumerate(location.parts):
             if not upper or part.start > upper[-1].start:
@@ -265,7 +264,7 @@ def location_from_string(data: str) -> Location:
 
         strand_text = string[-2]  # [<1:6](-) -> -
         if strand_text == '-':
-            strand = -1  # type: Optional[int]
+            strand: Optional[int] = -1
         elif strand_text == '+':
             strand = 1
         elif strand_text == '?':
@@ -390,7 +389,8 @@ def ensure_valid_locations(features: List[SeqFeature], can_be_circular: bool, se
 
     if standard and non_standard:
         raise ValueError("inconsistent exon ordering for features in non-circular record")
-    elif non_standard:
+
+    if non_standard:
         for feature in features:
             if not feature.location.strand:
                 continue
