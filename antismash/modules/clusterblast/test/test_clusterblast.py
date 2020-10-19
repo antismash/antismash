@@ -591,3 +591,24 @@ class TestDiamondDatabaseChecks(unittest.TestCase):
         assert core._extract_db_format(self.format1_file) == 1
         with self.assertRaises(ValueError):
             core._extract_db_format(self.empty)
+
+
+class TestDataPreparation(unittest.TestCase):
+    def tearDown(self):
+        config.destroy_config()
+
+    @patch.object(clusterblast, "prepare_known_data", returns=[])
+    @patch("builtins.open", mock_open(read_data="NC_1234|c1234-5678|remainder"))
+    def test_mounted_at_runtime(self, _mocked_prep_known):
+        options = config.update_config({
+            "database_dir": "/mounted_at_runtime",
+            "executables": {"diamond": "/some/path"},
+        })
+        error = RuntimeError("check_clusterblast_files called when it shouldn't have been")
+        with patch.object(clusterblast, "check_clusterblast_files", side_effect=error):
+            clusterblast.check_prereqs(options)
+
+        options = config.update_config({"database_dir": "/path"})
+        with patch.object(clusterblast, "check_clusterblast_files", returns=[]) as check:
+            clusterblast.check_prereqs(options)
+            check.assert_called_once()
