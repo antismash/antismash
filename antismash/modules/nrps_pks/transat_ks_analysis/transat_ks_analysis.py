@@ -158,8 +158,8 @@ def transpact_tree_prediction(pplacer_tree: str, masscutoff: float, funClades: D
             totalmass[clade_assignment] = mass
     best_clade = max(totalmass, key=totalmass.get)
     clade, spec, score = 'clade_not_conserved', 'NA', 0.0 ## Talk to Simon about best way to treat non-predictions...maybe 'None'?
-    if totalmass[best_clade] >= masscutoff:
-        clade, spec, score = best_clade, clade2ann[best_clade], totalmass[best_clade]
+    if totalmass[best_clade] >= masscutoff and best_clade != 'clade_not_conserved':
+        clade, spec, score = best_clade, clade2ann[best_clade], round(totalmass[best_clade], 2)
     return KSPrediction({spec: KSResult(clade, spec, score)})
 
     
@@ -183,10 +183,12 @@ def run_transpact_ks_analysis(domains: Dict[str, str]) -> Dict[str, Prediction]:
     """
     ## Read clade to annotation maps from flat files
     funClades, clade2ann = get_leaf2clade(_LEAF2CLADE_TBL)
-
     results = {}
     for ks_name, ks_seq in domains.items():
         ## Align to reference
         alignment = subprocessing.run_muscle_single(ks_name, ks_seq, _KS_REFERENCE_ALIGNMENT)
         results[ks_name] = run_transpact_pplacer(ks_name, alignment, _PPLACER_REFERENCE_PKG, _KS_REFERENCE_ALIGNMENT, _KS_REFERENCE_TREE, _PPLACER_MASS_CUTOFF, funClades, clade2ann)
+        ## Below for testing only
+        #for p in results[ks_name].predictions:
+            #print("\t".join([ks_name, p[0], p[1].clade, str(p[1].mass_score) ]))
     return results
