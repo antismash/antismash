@@ -529,7 +529,6 @@ class ClusterSVGBuilder:
         self.colour_lookup = build_colour_groups(list(region.cds_children), ranking[:cluster_limit])
         self.hits: List[Cluster] = []
         record_prefix = (region.parent_record.original_id or region.parent_record.id).split(".", 1)[0]
-        assert record_prefix
         num_added = 0
         queries = set()
         for cluster, score in ranking:
