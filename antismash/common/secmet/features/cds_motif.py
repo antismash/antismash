@@ -44,7 +44,7 @@ class CDSMotif(Domain):
         return updated
 
     def to_biopython(self, qualifiers: Dict[str, List] = None) -> List[SeqFeature]:
-        mine = OrderedDict()  # type: Dict[str, List[str]]
+        mine: Dict[str, List[str]] = OrderedDict()
         if qualifiers:
             mine.update(qualifiers)
         return super().to_biopython(mine)

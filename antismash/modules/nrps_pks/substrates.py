@@ -31,7 +31,7 @@ def run_pks_substr_spec_predictions(cds_features: List[CDSFeature]) -> Dict[str,
                     AntismashDomain name to Prediction
     """
     at_domains = extract_at_domains(cds_features)
-    method_results = {}  # type: Dict[str, Dict[str, Prediction]]
+    method_results: Dict[str, Dict[str, Prediction]] = {}
     if at_domains:
         signature_results, minowa_at_results = run_minowa_predictor_pks_at(at_domains)
         method_results["signature"] = signature_results

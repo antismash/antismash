@@ -26,7 +26,7 @@ class AllFunctionResults(module_results.DetectionResults):
 
     def __init__(self, record_id: str) -> None:
         super().__init__(record_id)
-        self._tools = {}  # type: Dict[str, FunctionResults]
+        self._tools: Dict[str, FunctionResults] = {}
 
     def add_tool_results(self, results: FunctionResults) -> None:
         """ Add results for a tool, tool name must be unique and user-friendly """

@@ -11,7 +11,7 @@ from io import StringIO
 import glob
 import logging
 import os
-from typing import Dict, List  # List used in comment type hints, pylint: disable=unused-import
+from typing import Dict, List
 
 from Bio import Phylo
 from Bio.Phylo.NewickIO import NewickError
@@ -28,7 +28,7 @@ logging.getLogger('matplotlib').setLevel(logging.WARNING)
 def generate_trees(smcogs_dir: str, genes_within_clusters: List[CDSFeature],
                    nrpspks_genes: List[CDSFeature]) -> Dict[str, str]:
     """ smCOG phylogenetic tree construction """
-    pks_nrps_cds_names = set([feature.get_name() for feature in nrpspks_genes])
+    pks_nrps_cds_names = set(feature.get_name() for feature in nrpspks_genes)
     logging.info("Calculating and drawing phylogenetic trees of cluster genes "
                  "with smCOG members")
     cds_features = []
@@ -110,7 +110,7 @@ def trim_alignment(input_number: int, alignment_file: str) -> None:
     seqs = list(contents.values())
 
     # store conservation of residues
-    conservations = [defaultdict(lambda: 0) for i in range(sequence_length)]  # type: List[Dict[str, int]]
+    conservations: List[Dict[str, int]] = [defaultdict(lambda: 0) for i in range(sequence_length)]
     for seq in seqs:
         for position, base in enumerate(seq):
             conservations[position][base] += 1

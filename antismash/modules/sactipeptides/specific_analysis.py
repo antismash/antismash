@@ -35,13 +35,13 @@ class SactiResults(module_results.ModuleResults):
     def __init__(self, record_id: str) -> None:
         super().__init__(record_id)
         # keep new CDS features
-        self.new_cds_features = set()  # type: Set[secmet.CDSFeature]
+        self.new_cds_features: Set[secmet.CDSFeature] = set()
         # keep new CDSMotifs by the gene they match to
         # e.g. self.motifs_by_locus[gene_locus] = [motif1, motif2..]
-        self.motifs_by_locus = defaultdict(list)  # type: Dict[str, List[secmet.Prepeptide]]
+        self.motifs_by_locus: Dict[str, List[secmet.Prepeptide]] = defaultdict(list)
         # keep clusters and which genes in them had precursor hits
         # e.g. self.clusters[cluster_number] = {gene1_locus, gene2_locus}
-        self.clusters = defaultdict(set)  # type: Dict[int, Set[str]]
+        self.clusters: Dict[int, Set[str]] = defaultdict(set)
 
     def to_json(self) -> Dict[str, Any]:
         cds_features = [(str(feature.location),
@@ -90,7 +90,7 @@ def get_detected_domains(cluster: secmet.Protocluster) -> Dict[str, int]:
         Returns:
             a dictionary mapping domain ids to number of times that domain was found
     """
-    found_domains = {}  # type: Dict[str, int]
+    found_domains: Dict[str, int] = {}
     # Gather biosynthetic domains
     for feature in cluster.cds_children:
         if not feature.sec_met:
@@ -115,7 +115,7 @@ def run_non_biosynthetic_phmms(cluster_fasta: str) -> Dict[str, List[HSP]]:
         hmmdetails = [line.split("\t") for line in handle.read().splitlines() if line.count("\t") == 3]
     signature_profiles = [HmmSignature(details[0], details[1], int(details[2]), details[3]) for details in hmmdetails]
 
-    non_biosynthetic_hmms_by_id = defaultdict(list)  # type: Dict[str, Any]
+    non_biosynthetic_hmms_by_id: Dict[str, Any] = defaultdict(list)
     for sig in signature_profiles:
         sig.path = path.get_full_path(__file__, "data", "non_biosyn_hmms", sig.path)
         runresults = subprocessing.run_hmmsearch(sig.path, cluster_fasta)
@@ -408,7 +408,7 @@ def structure_analysis(seq: str) -> Tuple[int, float, float, List[int]]:
 def generate_rodeo_svm_csv(leader: str, core: str, previously_gathered_tabs: List[Union[float, int]],
                            hitends: List[int], domain_counts: Dict[str, int]) -> List[float]:
     """Generates all the items for one candidate precursor peptide"""
-    columns = []  # type: List[float]
+    columns: List[float] = []
     precursor = leader + core
     # Precursor Index
     columns.append(1)
@@ -555,7 +555,7 @@ def annotate_orfs(cds_features: List[secmet.CDSFeature], hmm_results: Dict[str, 
         the cluster detection stage of antiSMASH.
     """
 
-    domains_by_feature = defaultdict(list)  # type: Dict[str, List[SecMetQualifier.Domain]]
+    domains_by_feature: Dict[str, List[SecMetQualifier.Domain]] = defaultdict(list)
     for hit_id, results in hmm_results.items():
         for result in results:
             domain = SecMetQualifier.Domain(result.query_id, result.evalue, result.bitscore, 0, "sactipeptides")

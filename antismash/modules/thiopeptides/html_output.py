@@ -22,7 +22,7 @@ class ThiopeptideLayer(RegionLayer):
     """ A wrapper of RegionLayer to allow for tracking the ThiopeptideMotifs """
     def __init__(self, record: RecordLayer, results: ThioResults, region_feature: Region) -> None:
         RegionLayer.__init__(self, record, region_feature)
-        self.motifs = []  # type: List[Prepeptide]
+        self.motifs: List[Prepeptide] = []
         for motif in results.motifs:
             if motif.is_contained_by(self.region_feature) and isinstance(motif, Prepeptide):
                 self.motifs.append(motif)

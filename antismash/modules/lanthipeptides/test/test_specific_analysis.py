@@ -9,9 +9,9 @@ from unittest.mock import patch
 
 from Bio.SeqUtils.ProtParam import ProteinAnalysis
 
-from antismash.common import subprocessing  # used in mocks # pylint: disable=unused-import
+from antismash.common import subprocessing
 from antismash.common.test.helpers import DummyCDS, FakeHit, DummyRecord
-from antismash.modules.lanthipeptides import specific_analysis as lanthi  # mocked # pylint: disable=unused-import
+from antismash.modules.lanthipeptides import specific_analysis as lanthi
 from antismash.modules.lanthipeptides.specific_analysis import (
     Lanthipeptide,
     predict_cleavage_site,

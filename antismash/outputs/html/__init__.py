@@ -38,6 +38,11 @@ def get_arguments() -> ModuleArgs:
                     type=str,
                     default="",
                     help="Custom description to add to the output.")
+    args.add_option("--html-start-compact",
+                    dest="html_start_compact",
+                    action='store_true',
+                    default=False,
+                    help="Use compact view by default for overview page.")
     return args
 
 

@@ -3,6 +3,8 @@
 
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=no-self-use,protected-access,missing-docstring
+# reusing variables in different argument positions seems to trick pylint
+# pylint: disable=arguments-out-of-order
 
 import unittest
 from unittest.mock import patch

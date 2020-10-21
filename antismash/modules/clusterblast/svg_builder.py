@@ -71,7 +71,7 @@ def sort_groups(query_ids: Iterable[T], groups: Set[Tuple[T, ...]]) -> List[Tupl
     """
 
     ordered_groups = []
-    found_groups = set()  # type: Set[int]
+    found_groups: Set[int] = set()
     for query_id in query_ids:
         for group in groups:
             if query_id in group:
@@ -131,7 +131,7 @@ def build_colour_groups(query_cds_features: List[secmet.CDSFeature],
     """
     # start with a set per query gene with only itself
     accessions = [cds.get_name() + " QUERY" for cds in query_cds_features]
-    groups = {accession: set() for accession in accessions}  # type: Dict[str, Set[str]]
+    groups: Dict[str, Set[str]] = {accession: set() for accession in accessions}
     # populate the sets with the id of any hits matching a query gene
     for _, score in ranking:
         for query, subject in score.scored_pairings:
@@ -179,7 +179,7 @@ class Gene:
         self.protein = protein
         self.product = product
         self.label = self._get_label().replace("_", " ")
-        self.pairings = []  # type: List[Tuple[Query, Subject]]
+        self.pairings: List[Tuple[Query, Subject]] = []
         self.reversed = False
 
     def _get_label(self) -> str:
@@ -290,7 +290,7 @@ class Cluster:
                  description: str, features: Union[List[Protein], List[secmet.CDSFeature]], rank: int,
                  cluster_type: str, hits: int = 0, strand: int = 1, prefix: str = "general") -> None:
         self.region_number = region_number
-        self.ref_cluster_number = int(ref_cluster_number.lstrip('c'))
+        self.ref_cluster_number = ref_cluster_number.lstrip('c')
         self.accession = accession
         self.description = description.replace("_", " ")
         self.cluster_type = cluster_type
@@ -307,7 +307,7 @@ class Cluster:
         else:
             raise TypeError("No conversion from type %s to Gene" % type(genes[0]))
         self.unique_hit_count = int(hits)
-        self.genes = sorted(genes, key=lambda gene: gene.start)  # type: List[Gene]
+        self.genes: List[Gene] = sorted(genes, key=lambda gene: gene.start)
         self.overall_strand = strand
         self.reversed = False
         self.start = int(self.genes[0].get_start())
@@ -332,7 +332,10 @@ class Cluster:
     def full_description(self) -> str:
         """ Returns a string formatted with accession, cluster number and
             similarity score """
-        desc = "%s_c%d: %s" % (self.accession, self.ref_cluster_number, self.description)
+        if self.prefix == "general":
+            desc = "%s (%s): %s" % (self.accession, self.ref_cluster_number, self.description)
+        else:
+            desc = "%s_c%s: %s" % (self.accession, self.ref_cluster_number, self.description)
         if len(desc) > 80:
             desc = desc[:77] + "..."
         return "%s (%s), %s" % (desc, self.similarity_string, self.cluster_type)
@@ -358,8 +361,10 @@ class Cluster:
                        + self.accession + '</a>: '
                        + desc, 5, 20 + v_offset)
         elif self.prefix == "general":
-            acc = Text('<a xlink:href="https://antismash-db.secondarymetabolites.org/go/'
-                       + self.accession + '/%s" target="_blank">' % self.ref_cluster_number
+            start, end = self.ref_cluster_number.split("-")
+            query = ("record=%s&start=%s&end=%s" % (self.accession, start, end)).replace("&", "&amp;")
+            acc = Text('<a xlink:href="https://antismash-db.secondarymetabolites.org/area.html?%s' % query
+                       + '" target="_blank">'
                        + self.full_description.replace(":", "</a>:", 1), 5, 20 + v_offset)
         # Don't do any linking for subclusterblast
 
@@ -482,7 +487,7 @@ def determine_strand_of_cluster(region: secmet.Region, pairings: List[Tuple[Quer
     for cds in region.cds_children:
         name_to_feature[cds.get_name()] = cds
 
-    counted = set()  # type: Set[str]
+    counted: Set[str] = set()
     strand = 0
     largest_size = 0
     strand_of_largest = 0
@@ -522,12 +527,13 @@ class ClusterSVGBuilder:
         region_number = region.get_region_number()
         cluster_limit = get_config().cb_nclusters
         self.colour_lookup = build_colour_groups(list(region.cds_children), ranking[:cluster_limit])
-        self.hits = []  # type: List[Cluster]
-        record_prefix = region.parent_record.id.split(".", 1)[0]
+        self.hits: List[Cluster] = []
+        record_prefix = (region.parent_record.original_id or region.parent_record.id).split(".", 1)[0]
+        assert record_prefix
         num_added = 0
         queries = set()
         for cluster, score in ranking:
-            if prefix != "subclusterblast" and record_prefix == cluster.accession.split("_", 1)[0]:
+            if prefix != "subclusterblast" and record_prefix == cluster.accession:
                 continue
             # determine overall strand direction of hits
             hit_genes = set()

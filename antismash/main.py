@@ -56,7 +56,7 @@ from antismash.modules import (active_site_finder,
 from antismash.outputs import html, svg
 from antismash.custom_typing import AntismashModule
 
-__version__ = "5.2.0"
+__version__ = "6.0.0alpha1"
 
 
 def get_all_modules() -> List[AntismashModule]:
@@ -120,7 +120,7 @@ def verify_options(options: ConfigType, modules: List[AntismashModule]) -> bool:
         Returns:
             True if no problems detected, otherwise False
     """
-    errors = []  # type: List[str]
+    errors: List[str] = []
     for module in modules:
         try:
             logging.debug("Checking options for %s", module.__name__)
@@ -150,7 +150,7 @@ def run_detection(record: Record, options: ConfigType,
         Returns:
             the time taken by each detection module as a dictionary
     """
-    timings = {}  # type: Dict[str, float]
+    timings: Dict[str, float] = {}
 
     # run full genome detections
     for module in [full_hmmer]:
@@ -259,7 +259,7 @@ def analyse_record(record: Record, options: ConfigType, modules: List[AntismashM
         Returns:
             a dictionary mapping module name to time taken
     """
-    timings = {}  # type: Dict[str, float]
+    timings: Dict[str, float] = {}
     # try to run the given modules over the record
     for module in modules:
         run_module(record, module, options, previous_result, timings)
@@ -280,7 +280,7 @@ def prepare_output_directory(name: str, input_file: str) -> None:
             None
     """
     # if not supplied, set the output directory to be the sequence name
-    input_prefix = os.path.splitext(os.path.basename(input_file))[0]
+    input_prefix = os.path.basename(canonical_base_filename(input_file, "", get_config()))
     if not name:
         name = os.path.abspath(input_prefix)
         update_config({"output_dir": name})
@@ -292,10 +292,11 @@ def prepare_output_directory(name: str, input_file: str) -> None:
         if not input_file.endswith(".json") and \
                 list(filter(_ignore_patterns, glob.glob(os.path.join(name, "*")))):
             raise RuntimeError("Output directory contains other files, aborting for safety")
-        else:  # --reuse
-            logging.debug("Removing existing region genbank files")
-            for genbank in glob.glob(os.path.join(name, "*.region???.gbk")):
-                os.remove(genbank)
+
+        # --reuse
+        logging.debug("Removing existing region genbank files")
+        for genbank in glob.glob(os.path.join(name, "*.region???.gbk")):
+            os.remove(genbank)
         logging.debug("Reusing output directory: %s", name)
     else:
         logging.debug("Creating output directory: %s", name)
@@ -381,7 +382,7 @@ def add_antismash_comments(records: List[Tuple[Record, SeqRecord]], options: Con
             date=str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
         )
     for record, bio_record in records:
-        extras = []  # type: List[str]
+        extras: List[str] = []
         if record.original_id:
             extras.append("Original ID  :: %s\n" % record.original_id)
 
@@ -429,7 +430,7 @@ def write_outputs(results: serialiser.AntismashResults, options: ConfigType) -> 
             region.write_to_genbank(directory=options.output_dir, record=bio_record)
 
     # write records to an aggregate output
-    base_filename = os.path.splitext(os.path.join(options.output_dir, results.input_file))[0]
+    base_filename = canonical_base_filename(results.input_file, options.output_dir, options)
     combined_filename = base_filename + ".gbk"
     logging.debug("Writing final genbank file to '%s'", combined_filename)
     SeqIO.write(bio_records, combined_filename, "genbank")
@@ -443,6 +444,19 @@ def write_outputs(results: serialiser.AntismashResults, options: ConfigType) -> 
             shutil.make_archive(temp.name.replace(".zip", ""), "zip", root_dir=options.output_dir)
             shutil.copy(temp.name, zipfile)
         assert os.path.exists(zipfile)
+
+
+def canonical_base_filename(input_file: str, directory: str, options: ConfigType) -> str:
+    """Generate a canonical base filename if one isn't specified in the options."""
+    if options.output_basename:
+        base_filename = options.output_basename
+    else:
+        base_filename, ext = os.path.splitext(os.path.basename(input_file))
+        if ext.lower() in (".gz", ".bz", ".xz"):
+            base_filename, _ = os.path.splitext(base_filename)
+        update_config({"output_basename": base_filename})
+
+    return os.path.join(directory, base_filename)
 
 
 def annotate_records(results: serialiser.AntismashResults) -> None:
@@ -581,7 +595,7 @@ def log_module_runtimes(timings: Dict[str, Dict[str, float]]) -> None:
         Returns:
             None
     """
-    total_times = defaultdict(lambda: 0.)  # type: Dict[str, float]
+    total_times:Dict[str, float] = defaultdict(lambda: 0.)
     for result in timings.values():
         for module, runtime in result.items():
             total_times[module] += runtime
@@ -637,8 +651,8 @@ def _run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
             return 1
         print("All prerequisites satisfied")
         return 0
-    else:
-        check_prerequisites(options.all_enabled_modules, options)
+
+    check_prerequisites(options.all_enabled_modules, options)
 
     # start up profiling if relevant
     if options.profile:
@@ -678,8 +692,8 @@ def _run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
         results.timings_by_record[record.id] = timings
 
     # Write results
-    json_filename = os.path.join(options.output_dir, results.input_file)
-    json_filename = os.path.splitext(json_filename)[0] + ".json"
+    json_filename = canonical_base_filename(results.input_file, options.output_dir, options)
+    json_filename += ".json"
     logging.debug("Writing json results to '%s'", json_filename)
     results.write_to_file(json_filename)
 

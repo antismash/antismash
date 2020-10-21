@@ -60,7 +60,7 @@ class IntegrationNRPSPKS(unittest.TestCase):
                 continue
             nrpspred2_results[domain] = methods["NRPSPredictor2"].get_classification()
         expected_preds = [["leu"], ["bht"], ["asn"], ["hpg"], ["hpg"], ["bht"], ["dhpg"], ["tyr"], ["pk"]]
-        expected_nrps2 = {name: pred for name, pred in zip(nrps_names, expected_preds)}
+        expected_nrps2 = dict(zip(nrps_names, expected_preds))
         assert nrpspred2_results == expected_nrps2
 
         cal = results.domain_predictions["nrpspksdomains_pks_CAL_domain.1"]["minowa_cal"]

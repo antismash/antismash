@@ -26,19 +26,20 @@ class ThioResults(module_results.ModuleResults):
 
     def __init__(self, record_id: str) -> None:
         super().__init__(record_id)
-        self.clusters_with_motifs = set()  # type: Set[secmet.Protocluster]
+        self.clusters_with_motifs: Set[secmet.Protocluster] = set()
         # to track CDSs found with find_all_orfs and within which clusters they were found
-        self.cds_features = defaultdict(list)  # type: Dict[int, List[secmet.CDSFeature]]
+        self.cds_features: Dict[int, List[secmet.CDSFeature]] = defaultdict(list)
         # to track the motifs created
-        self.motifs = []  # type: List[secmet.Prepeptide]
+        self.motifs: List[secmet.Prepeptide] = []
 
     def to_json(self) -> Dict[str, Any]:
         """ Converts the results to JSON format """
         cds_features_by_cluster = {key: [(str(feature.location), feature.get_name()) for feature in features]
                                    for key, features in self.cds_features.items()}
+        protoclusters = [cluster.get_protocluster_number() for cluster in self.clusters_with_motifs]
         return {"record_id": self.record_id,
                 "schema_version": ThioResults.schema_version,
-                "protoclusters with motifs": [cluster.get_protocluster_number() for cluster in self.clusters_with_motifs],
+                "protoclusters with motifs": protoclusters,
                 "motifs": [motif.to_json() for motif in self.motifs],
                 "cds_features": cds_features_by_cluster}
 
@@ -81,14 +82,14 @@ class Thiopeptide:
         self._core = ''
         self._weight = -1.
         self._monoisotopic_weight = -1.
-        self._alt_weights = []  # type: List[float]
+        self._alt_weights: List[float] = []
         self._macrocycle = ''
         self.amidation = False
-        self._mature_alt_weights = []  # type: List[float]
+        self._mature_alt_weights: List[float] = []
         self._mature_features = ''
         self._c_cut = ''
-        self.core_analysis_monoisotopic = None  # type: Optional[utils.RobustProteinAnalysis]
-        self.core_analysis = None  # type: Optional[utils.RobustProteinAnalysis]
+        self.core_analysis_monoisotopic: Optional[utils.RobustProteinAnalysis] = None
+        self.core_analysis: Optional[utils.RobustProteinAnalysis] = None
 
     @property
     def core(self) -> str:
@@ -361,7 +362,7 @@ def get_detected_domains(cluster: secmet.Protocluster) -> Set[str]:
         Return:
             a set of domain ids
     """
-    found_domains = []  # type: List[str]
+    found_domains: List[str] = []
     # Gather biosynthetic domains
     for feature in cluster.cds_children:
         if not feature.sec_met:
@@ -371,7 +372,7 @@ def get_detected_domains(cluster: secmet.Protocluster) -> Set[str]:
     # Gather non-biosynthetic domains
     cluster_fasta = fasta.get_fasta_from_features(cluster.cds_children)
     non_biosynthetic_hmms_by_id = run_non_biosynthetic_phmms(cluster_fasta)
-    non_biosynthetic_hmms_found = []  # type: List[str]
+    non_biosynthetic_hmms_found: List[str] = []
     for hsps_found_for_this_id in non_biosynthetic_hmms_by_id.values():
         for hsp in hsps_found_for_this_id:
             if hsp.query_id not in non_biosynthetic_hmms_found:
@@ -386,7 +387,7 @@ def run_non_biosynthetic_phmms(cluster_fasta: str) -> Dict[str, Any]:
     with open(path.get_full_path(__file__, "data", "non_biosyn_hmms", "hmmdetails.txt"), "r") as handle:
         hmmdetails = [line.split("\t") for line in handle.read().splitlines() if line.count("\t") == 3]
     signature_profiles = [HmmSignature(details[0], details[1], int(details[2]), details[3]) for details in hmmdetails]
-    non_biosynthetic_hmms_by_id = defaultdict(list)  # type: Dict[str, Any]
+    non_biosynthetic_hmms_by_id: Dict[str, Any] = defaultdict(list)
     for sig in signature_profiles:
         sig.path = path.get_full_path(__file__, "data", "non_biosyn_hmms", sig.path.rpartition(os.sep)[2])
         runresults = subprocessing.run_hmmsearch(sig.path, cluster_fasta)
@@ -568,7 +569,7 @@ def result_vec_to_feature(orig_feature: secmet.CDSFeature, res_vec: Thiopeptide)
     if res_vec.c_cut:
         res_vec.core = res_vec.core[:-len(res_vec.c_cut)]
 
-    mature_weights = []  # type: List[float]
+    mature_weights: List[float] = []
     if res_vec.thio_type != "Type III":
         mature_weights = res_vec.mature_alt_weights
     feature = secmet.Prepeptide(orig_feature.location, "thiopeptide", res_vec.core, orig_feature.get_name(),

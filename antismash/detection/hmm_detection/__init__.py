@@ -78,7 +78,7 @@ def get_supported_cluster_types(strictness: str) -> List[str]:
     """ Returns a list of all cluster types for which there are rules
     """
     signature_names = {sig.name for sig in get_signature_profiles()}
-    rules = []  # type: List[rule_parser.DetectionRule]
+    rules: List[rule_parser.DetectionRule] = []
     for rule_file in _get_rule_files_for_strictness(strictness):
         with open(rule_file) as rulefile:
             rules = rule_parser.Parser("".join(rulefile.readlines()), signature_names, rules).rules

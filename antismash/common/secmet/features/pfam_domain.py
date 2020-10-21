@@ -44,7 +44,7 @@ class PFAMDomain(Domain):
         if not description:
             raise ValueError("PFAMDomain description cannot be empty")
         self.description = description
-        self.probability = None  # type: Optional[float]
+        self.probability: Optional[float] = None
         self.version = None
         if not identifier:
             raise ValueError("Pfam identifier cannot be empty")
@@ -54,7 +54,7 @@ class PFAMDomain(Domain):
         if not (len(identifier) == 7 and identifier.startswith('PF') and identifier[2:].isdecimal()):
             raise ValueError("invalid Pfam identifier: %s" % identifier)
         self.identifier = str(identifier)
-        self.gene_ontologies = None  # type: Optional[GOQualifier]
+        self.gene_ontologies: Optional[GOQualifier] = None
 
     @property
     def full_identifier(self) -> str:
@@ -66,7 +66,7 @@ class PFAMDomain(Domain):
         return "%s.%d" % (self.identifier, self.version)
 
     def to_biopython(self, qualifiers: Dict[str, List[str]] = None) -> List[SeqFeature]:
-        mine = OrderedDict()  # type: Dict[str, List[str]]
+        mine: Dict[str, List[str]] = OrderedDict()
         mine["description"] = [self.description]
         if self.probability is not None:
             mine["probability"] = [str(self.probability)]

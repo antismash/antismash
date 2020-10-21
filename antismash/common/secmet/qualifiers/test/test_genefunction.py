@@ -14,7 +14,7 @@ class TestGeneFunction(unittest.TestCase):
     def test_membership(self):
         assert GeneFunction.OTHER
         with self.assertRaises(AttributeError):
-            print(GeneFunction.non_existant)
+            print(GeneFunction.non_existant)  # pylint: disable=no-member
 
     def test_equality(self):
         assert GeneFunction.OTHER == GeneFunction.OTHER

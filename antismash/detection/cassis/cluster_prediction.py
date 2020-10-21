@@ -5,7 +5,7 @@
 
 import logging
 import os
-from typing import Any, Dict, List, Optional  # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional
 
 from antismash.common.secmet import Record, Gene
 from antismash.config import ConfigType
@@ -31,7 +31,7 @@ class ClusterMarker(Pairing):
         self.abundance = 1
         assert motif.score is not None
         self.score = float(motif.score)
-        self.promoter = None  # type: Optional[str]
+        self.promoter: Optional[str] = None
 
     def update(self, motif: Motif) -> None:
         """ Uses the given motif's values instead of the old ones, if the given
@@ -230,8 +230,8 @@ def create_predictions(islands: List[Island]) -> List[ClusterPrediction]:
     """
     # count border abundance
     # start/end are treated independently!
-    starts = {}  # type: Dict[str, ClusterMarker]
-    ends = {}  # type: Dict[str, ClusterMarker]
+    starts: Dict[str, ClusterMarker] = {}
+    ends: Dict[str, ClusterMarker] = {}
     for island in islands:
         if island.start.gene_name in starts:
             scorer = starts[island.start.gene_name]
@@ -248,11 +248,11 @@ def create_predictions(islands: List[Island]) -> List[ClusterPrediction]:
             ends[island.end.get_gene_names()[-1]] = ClusterMarker(island.end.get_gene_names()[-1], island.motif)
 
     # compute sum of start and end abundance, remove duplicates, sort descending
-    abundances_sum_sorted = sorted(set([s.abundance + e.abundance
-                                        for s in starts.values() for e in ends.values()]), reverse=True)
+    abundances_sum_sorted = sorted(set(s.abundance + e.abundance
+                                       for s in starts.values() for e in ends.values()), reverse=True)
     # compute sum of start and end motif score, remove duplicates, sort ascending
-    scores_sum_sorted = sorted(set([s.score + e.score
-                                    for s in starts.values() for e in ends.values()]))
+    scores_sum_sorted = sorted(set(s.score + e.score
+                                   for s in starts.values() for e in ends.values()))
     # sort by value (=abundance) of start, descending
     starts_sorted = sorted(starts, key=lambda x: starts[x].abundance, reverse=True)
     # sort by value (=abundance) of end, descending

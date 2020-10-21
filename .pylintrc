@@ -3,6 +3,10 @@ ignore=external
 reports=y
 disable=bad-continuation,too-few-public-methods
 
+[MESSAGES CONTROL]
+# raising 'from' is almost entirely false positives
+disable=raise-missing-from
+
 [TYPECHECK]
 ignored-classes=Config,TestCase,Namespace
 
@@ -20,7 +24,7 @@ method-rgx=[a-z_][a-z0-9_]{2,40}$
 # same is true for variables
 variable-rgx=[a-z_][a-z0-9_]{1,40}$
 # some names are shorter than 3 chars but informative
-good-names=i,j,k,ex,Run,_,id
+good-names=i,j,k,ex,Run,_,id,T
 
 [DESIGN]
 # having details provided as args is common, bump from default of 5

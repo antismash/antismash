@@ -33,7 +33,7 @@ def analyse_biosynthetic_order(nrps_pks_features: List[CDSFeature],
                     prediction string
                     and whether docking domain analysis was used for the prediction
     """
-    compound_predictions = []  # type: List[CandidateClusterPrediction]
+    compound_predictions: List[CandidateClusterPrediction] = []
     # Find NRPS/PKS gene candidate_clusters
     candidate_clusters = [cluster for cluster in record.get_candidate_clusters()
                              if will_handle(cluster.products)]
@@ -138,7 +138,7 @@ def generate_substrates_order(geneorder: List[CDSFeature], consensus_predictions
             components.append((substrate, monomer, [domain.domain or "" for domain in module.domains]))
 
         if monomers:
-            monomers_by_cds.append("(%s)" % (" - ".join([monomer for monomer in monomers])))
+            monomers_by_cds.append("(%s)" % (" - ".join(monomers)))
 
     polymer = " + ".join(monomers_by_cds)
     smiles = gen_smiles_from_pksnrps(components)
@@ -231,7 +231,7 @@ def extract_cterminus(data_dir: str, cds_features: List[CDSFeature], end_cds: Op
             A dictionary mapping gene name to the pair of residues extracted
     """
     c_terminal_residues = {}
-    c_terminals = {}  # type: Dict[str, str]
+    c_terminals: Dict[str, str] = {}
     cterm_file = os.path.join(data_dir, 'cterm.fasta')
     for cds in cds_features:
         if cds is not end_cds:
@@ -267,15 +267,15 @@ def find_possible_orders(cds_features: List[CDSFeature], start_cds: Optional[CDS
         assert start_cds != end_cds, "Using same gene for start and end of ordering"
     cds_to_order = []
     for cds in cds_features:
-        if cds == start_cds or cds == end_cds:
+        if cds in (start_cds, end_cds):
             pass
         else:
             cds_to_order.append(cds)
     possible_orders = []
-    start = []  # type: List[CDSFeature]
+    start: List[CDSFeature] = []
     if start_cds:
         start = [start_cds]
-    end = []  # type: List[CDSFeature]
+    end: List[CDSFeature] = []
     if end_cds:
         end = [end_cds]
     for order in itertools.permutations(cds_to_order, len(cds_to_order)):

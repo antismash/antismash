@@ -28,7 +28,7 @@ class CDSResult:
         self.type = feature_type
         self.modules = modules
         self.ks_subtypes = ks_subtypes
-        self.domain_features = {}  # type: Dict[HMMResult, AntismashDomain]
+        self.domain_features: Dict[HMMResult, AntismashDomain] = {}
         ks_count = sum(dom.hit_id == "PKS_KS" for dom in self.domain_hmms)
         if len(ks_subtypes) != ks_count:
             raise ValueError("mismatching KS subtypes and PKS_KS counts: %d  %d" % (len(ks_subtypes), ks_count))
@@ -371,7 +371,7 @@ def generate_domain_features(gene: CDSFeature, domains: List[HMMResult]) -> Dict
             a dictionary mapping the HMMResult used to the matching AntismashDomain
     """
     new_features = {}
-    domain_counts = defaultdict(int)  # type: Dict[str, int]
+    domain_counts: Dict[str, int] = defaultdict(int)
     for domain in domains:
         loc = gene.get_sub_location_from_protein_coordinates(domain.query_start, domain.query_end)
         prot_loc = FeatureLocation(domain.query_start, domain.query_end)

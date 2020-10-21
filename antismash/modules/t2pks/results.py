@@ -5,7 +5,7 @@
 
 import logging
 from typing import Any, Dict, List, Optional, Union
-from typing import Set, Tuple  # used in comment type hints, pylint: disable=unused-import
+from typing import Set, Tuple
 
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record, GeneFunction
@@ -147,7 +147,7 @@ class T2PKSResults(ModuleResults):
 
     def __init__(self, record_id: str) -> None:
         super().__init__(record_id)
-        self.cluster_predictions = {}  # type: Dict[int, ProtoclusterPrediction]
+        self.cluster_predictions: Dict[int, ProtoclusterPrediction] = {}
 
     def __repr__(self) -> str:
         return "T2PKSResults(clusters=%s)" % list(self.cluster_predictions)

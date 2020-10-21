@@ -8,7 +8,7 @@ import logging
 import os
 import struct
 from tempfile import NamedTemporaryFile
-from typing import Dict, Iterable, List, Set, Sequence, Tuple  # pylint: disable=unused-import
+from typing import Dict, Iterable, List, Set, Sequence, Tuple
 
 from helperlibs.wrappers.io import TemporaryDirectory
 
@@ -258,7 +258,7 @@ def remove_duplicate_hits(blast_lines: List[List[str]]) -> List[List[str]]:
         Returns:
             a subset of the input, keeping only the first hit for each pairing
     """
-    query_subject_combinations = set()  # type: Set[Tuple[str, str]]
+    query_subject_combinations: Set[Tuple[str, str]] = set()
     deduplicated = []
     for tabs in blast_lines:
         # if it doesn't even have both values, it's not a hit so skip it
@@ -335,12 +335,12 @@ def parse_all_clusters(blasttext: str, record: secmet.Record, min_seq_coverage: 
                         dictionary of query name to Query instance
     """
     seqlengths = get_cds_lengths(record)
-    queries = OrderedDict()  # type: Dict[str, Query]
-    clusters = OrderedDict()  # type: Dict[str, List[Query]]
+    queries: Dict[str, Query] = OrderedDict()
+    clusters: Dict[str, List[Query]] = OrderedDict()
     blastlines = remove_duplicate_hits([line.split("\t") for line in blasttext.rstrip().splitlines()])
     current_query = None
-    queries_by_cluster_number = {}  # type: Dict[int, Dict[str, Query]]
-    clusters_by_query_cluster_number = {}  # type: Dict[int, Dict[str, List[Query]]]
+    queries_by_cluster_number: Dict[int, Dict[str, Query]] = {}
+    clusters_by_query_cluster_number: Dict[int, Dict[str, List[Query]]] = {}
 
     for tabs in blastlines:
         query = tabs[0]
@@ -400,8 +400,8 @@ def blastparse(blasttext: str, record: secmet.Record, min_seq_coverage: float = 
                     a list of Query instances from that cluster
     """
     seqlengths = get_cds_lengths(record)
-    queries = OrderedDict()  # type: Dict[str, Query]
-    clusters = OrderedDict()  # type: Dict[str, List[Query]]
+    queries: Dict[str, Query] = OrderedDict()
+    clusters: Dict[str, List[Query]] = OrderedDict()
     blastlines = remove_duplicate_hits([line.split("\t") for line in blasttext.rstrip().split("\n")])
     current_query = None
 
@@ -555,7 +555,7 @@ def parse_clusterblast_dict(queries: List[Query], clusters: Dict[str, ReferenceC
                         a core gene
     """
     result = Score()
-    hitpositions = []  # type: List[Tuple[int, int]]
+    hitpositions: List[Tuple[int, int]] = []
     hitposcorelist = []
     cluster_locii = clusters[cluster_label].tags
     for query in queries:
@@ -591,7 +591,7 @@ def find_clusterblast_hitsgroups(hitpositions: List[Tuple[int, int]]) -> Dict[in
             a dictionary mapping each unique Query to
                 a list of Subjects that hit that Query
     """
-    groups = defaultdict(list)  # type: Dict
+    groups: Dict[int, List[int]] = defaultdict(list)
     for query, subject in hitpositions:
         groups[query].append(subject)
     return groups
@@ -616,8 +616,8 @@ def calculate_synteny_score(hitgroups: Dict[int, List[int]],
         Returns:
             a int representing the synteny score
     """
-    scored_queries = set()  # type: Set[int]
-    scored_hits = set()  # type: Set[int]
+    scored_queries: Set[int] = set()
+    scored_hits: Set[int] = set()
     synteny_score = 0
     for i, pos in enumerate(hitpositions[:-1]):
         query, subject = pos
@@ -704,8 +704,9 @@ def write_fastas_with_all_genes(regions: Iterable[secmet.Region], filename: str,
     """
     if not isinstance(partitions, int):
         raise TypeError("Partitions must be an int greater than 0")
-    elif partitions < 1:
+    if partitions < 1:
         raise ValueError("Partitions must be greater than 0")
+
     all_names, all_seqs = [], []
     for region in regions:
         names, seqs = create_blast_inputs(region)
@@ -799,7 +800,7 @@ def check_clusterblast_files(definition_file: str,
         Returns:
             A list of error strings the way `check_prereqs` does
     """
-    failure_messages = []  # type: List[str]
+    failure_messages: List[str] = []
 
     if path.locate_file(definition_file) is None:
         failure_messages.append("Failed to locate cluster definition file: {!r}".format(definition_file))

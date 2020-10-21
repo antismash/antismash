@@ -15,6 +15,7 @@ from antismash import config
 from antismash.common import path
 from antismash.common.secmet import Record
 from antismash.common.secmet.test.helpers import DummyCDS, DummyRegion
+from antismash.modules import clusterblast
 import antismash.modules.clusterblast.core as core
 
 
@@ -63,7 +64,7 @@ class TestBlastParsing(unittest.TestCase):
         queries, clusters = core.blastparse(self.sample_data, Record(), 0, 0)
 
         # check we process the right number of queries
-        self.assertEqual(len(queries), len(set([i[0] for i in self.sample_data_as_lists])))
+        self.assertEqual(len(queries), len(set(i[0] for i in self.sample_data_as_lists)))
 
         # check we have entries for every gene_cluster we found
         subjects = [self.parse_subject_wrapper(i) for i in self.sample_data_as_lists]
@@ -116,7 +117,7 @@ class TestBlastParsing(unittest.TestCase):
         queries, clusters = parse_all_wrapper(0, 0)
 
         # check we process the right number of queries
-        self.assertEqual(len(queries), len(set([i[0] for i in self.sample_data_as_lists])))
+        self.assertEqual(len(queries), len(set(i[0] for i in self.sample_data_as_lists)))
 
         # check we have entries for every gene_cluster we found
         subjects = [self.parse_subject_wrapper(i) for i in self.sample_data_as_lists]
@@ -568,6 +569,15 @@ class TestReferenceProteinLoading(unittest.TestCase):
         protein = proteins["BN1184_AH_00620"]
         assert protein.name == "CRH36422"
         assert protein.annotations == "Urea_carboxylase_{ECO:0000313|EMBL:CCF11062.1}"
+
+    @patch.object(clusterblast, 'check_clusterblast_files', return_value=[])
+    @patch.object(clusterblast, 'prepare_known_data', return_value=[])
+    def test_previous_format_caught(self, _mocked_check, _mocked_prepare):
+        line = ">CVNH01000008|c1|65549-69166|-|..."
+        with patch("builtins.open", self.mock_with(line)):
+            errors = clusterblast.prepare_data()
+        assert len(errors) == 1
+        assert "clusterblast database out of date" in errors[0]
 
 
 class TestDiamondDatabaseChecks(unittest.TestCase):

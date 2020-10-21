@@ -47,6 +47,11 @@ class OptionsLayer:
             return self.options.urls.fungi_baseurl
         return self.options.urls.bacteria_baseurl
 
+    @property
+    def output_basename(self) -> str:
+        """ Returns the base filename for the output files """
+        return os.path.basename(self.options.output_basename)
+
 
 class RecordLayer:
     """ A layer for Record instances """
@@ -54,7 +59,7 @@ class RecordLayer:
         self.results = results
         self.seq_record = record
         self.options = options
-        self.regions = []  # type: List[RegionLayer]
+        self.regions: List[RegionLayer] = []
         for region in record.get_regions():
             self.regions.append(RegionLayer(self, region))
 
@@ -90,14 +95,14 @@ class RegionLayer:
     def __init__(self, record: RecordLayer, region_feature: Region) -> None:
         assert isinstance(region_feature, Region), type(region_feature)
         assert region_feature.parent_record
-        self.record = record  # type: RecordLayer
+        self.record: RecordLayer = record
         self.anchor_id = self.build_anchor_id(region_feature)
-        self.handlers = []  # type: List[AntismashModule]
-        self.region_feature = region_feature  # type: Region
+        self.handlers: List[AntismashModule] = []
+        self.region_feature: Region = region_feature
 
-        self.cluster_blast = []  # type: List[Tuple[str, str]]
-        self.knowncluster_blast = []  # type: List[Tuple[str, str]]
-        self.subcluster_blast = []  # type: List[Tuple[str, str]]
+        self.cluster_blast: List[Tuple[str, str]] = []
+        self.knowncluster_blast: List[Tuple[str, str]] = []
+        self.subcluster_blast: List[Tuple[str, str]] = []
         if self.region_feature.knownclusterblast:
             self.knowncluster_blast = self.knowncluster_blast_generator()
         if self.region_feature.subclusterblast:

@@ -90,9 +90,8 @@ def run_on_record(record: Record, results: Optional[hmmer.HmmerResults],
         # same version requested, so reuse the results
         if database_version == previous_db:
             return results
-        else:
-            logging.debug("Replacing clusterhmmer results from %s with %s",
-                          previous_db, database_version)
+        logging.debug("Replacing clusterhmmer results from %s with %s",
+                      previous_db, database_version)
 
     logging.info('Running cluster PFAM search')
 

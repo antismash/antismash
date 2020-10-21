@@ -45,10 +45,10 @@ def get_arguments() -> ModuleArgs:
 
 def check_prereqs(options: ConfigType) -> List[str]:
     """ Make sure the external tools to use are available """
-    failure_messages = []  # type: List[str]
+    failure_messages: List[str] = []
     if options.genefinding_tool in ['none']:
         return failure_messages
-    binaries = []  # type: List[str]
+    binaries: List[str] = []
     if options.check_prereqs_only:
         binaries = ["prodigal", "glimmerhmm"]
     elif options.genefinding_tool in ['prodigal', 'prodigal-m']:
@@ -94,7 +94,8 @@ def run_on_record(record: Record, options: ConfigType) -> None:
         assert options.genefinding_tool == "glimmerhmm"
         logging.debug("Running glimmerhmm genefinding")
         return run_glimmerhmm(record)
-    elif options.genefinding_tool in ["prodigal", "prodigal-m"]:
+
+    if options.genefinding_tool in ["prodigal", "prodigal-m"]:
         logging.debug("Running prodigal based genefinding")
         return run_prodigal(record, options)
 

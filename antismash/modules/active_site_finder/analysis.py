@@ -8,7 +8,7 @@
 """
 
 from collections import defaultdict
-from typing import Dict, List, Tuple  # used in comment hints # pylint: disable=unused-import
+from typing import Dict, List, Tuple
 
 from antismash.common import secmet
 
@@ -21,7 +21,7 @@ MultiplePairing = Tuple[secmet.features.Domain, List[str]]  # pylint: disable=in
 
 def run_all_analyses(record: secmet.Record) -> List[MultiplePairing]:
     """ Runs all AFS analyses at once and returns their aggregated results """
-    hits_by_feature = defaultdict(list)  # type: Dict[secmet.features.Domain, List[str]]
+    hits_by_feature: Dict[secmet.features.Domain, List[str]] = defaultdict(list)
     for analysis in [asp_ks, asp_ks_c, asp_at, acp_type, asp_acp, asp_pksi_dh, asp_pksi_kr,
                      asp_thioesterase, pksi_er_stereo, pksi_kr_stereo, pksi_at_spec, asp_p450_oxy]:
         for feature, hit in analysis(record):

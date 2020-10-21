@@ -32,7 +32,7 @@ def create_candidates_from_protoclusters(protoclusters: List[Protocluster]) -> L
         return []
 
     # ensure that only one candidate cluster can be created for each specific start/end combination
-    existing = set()  # type: Set[Tuple[int, int]]
+    existing: Set[Tuple[int, int]] = set()
 
     def build_candidates(groups: List[List[Protocluster]], kind: CandidateClusterKind) -> List[CandidateCluster]:
         """ Creates candidates of the given kind, one for each group

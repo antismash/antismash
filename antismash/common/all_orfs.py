@@ -9,8 +9,7 @@
 """
 
 
-from typing import List, Optional
-from typing import Iterable  # comment hints, pylint: disable=unused-import
+from typing import Iterable, List, Optional
 
 from Bio.SeqFeature import FeatureLocation, BeforePosition, AfterPosition
 
@@ -130,7 +129,7 @@ def find_all_orfs(record: Record, area: Optional[CDSCollection] = None) -> List[
     # Get sequence for the range
     offset = 0
     seq = record.seq
-    existing = record.get_cds_features()  # type: Iterable[CDSFeature]
+    existing: Iterable[CDSFeature] = record.get_cds_features()
     if area:
         seq = area.extract(seq)
         offset = area.location.start

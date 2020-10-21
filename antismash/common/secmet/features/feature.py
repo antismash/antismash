@@ -5,8 +5,7 @@
 
 from collections import OrderedDict
 import logging
-from typing import Any, Dict, List, Tuple, Type, TypeVar, Union
-from typing import Optional  # comment hints  # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union
 
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 from Bio.Seq import Seq
@@ -78,13 +77,13 @@ class Feature:
         if location.start < 0:
             raise ValueError("location contains negative coordinate: %s" % location)
         self.location = location
-        self.notes = []  # type: List[str]
+        self.notes: List[str] = []
         if not 1 <= len(feature_type) < 16:  # at 16 the name merges with location in genbanks
             raise ValueError("feature type has invalid length: '%s'" % feature_type)
         self.type = str(feature_type)
-        self._qualifiers = OrderedDict()  # type: Dict[str, Optional[List[str]]]
+        self._qualifiers: Dict[str, Optional[List[str]]] = OrderedDict()
         self.created_by_antismash = bool(created_by_antismash)
-        self._original_codon_start = None  # type: Optional[int]
+        self._original_codon_start: Optional[int] = None
 
     @property
     def strand(self) -> int:
@@ -254,7 +253,7 @@ class Feature:
 
         if self.location.start < location.start:
             return True
-        elif self.location.start == location.start:
+        if self.location.start == location.start:
             return self.location.end < location.end
         return False
 
@@ -266,7 +265,8 @@ class Feature:
 
     @classmethod
     def from_biopython(cls: Type[T], bio_feature: SeqFeature, feature: T = None,
-                       leftovers: Dict[str, List[str]] = None, record: Any = None) -> T:
+                       leftovers: Dict[str, List[str]] = None, record: Any = None,   # pylint: disable=unused-argument
+                       ) -> T:
         """ Converts a SeqFeature into a single Feature instance.
 
             Arguments:

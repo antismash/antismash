@@ -3,8 +3,8 @@
 
 """ A class for representing RiPP prepeptides """
 
-from typing import Any, Dict, List, Type, TypeVar
-from typing import Optional  # comment hints, pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, Type, TypeVar
+
 
 from Bio.SeqFeature import SeqFeature
 
@@ -12,7 +12,7 @@ from ..errors import SecmetInvalidInputError
 from .cds_motif import CDSMotif
 from .feature import Feature, FeatureLocation, Location
 from ..locations import build_location_from_others, location_from_string
-from ..qualifiers.prepeptide_qualifiers import RiPPQualifier  # comment hints, pylint: disable=unused-import
+from ..qualifiers.prepeptide_qualifiers import RiPPQualifier
 from ..qualifiers.prepeptide_qualifiers import rebuild_qualifier
 
 T = TypeVar("T", bound="Prepeptide")
@@ -59,11 +59,11 @@ class Prepeptide(CDSMotif):  # pylint: disable=too-many-instance-attributes
         self.score = float(score)
         self.monoisotopic_mass = float(monoisotopic_mass)
         self.molecular_weight = float(molecular_weight)
-        self.alternative_weights = []  # type: List[float]
+        self.alternative_weights: List[float] = []
         if alternative_weights is not None:
             self.alternative_weights = [float(weight) for weight in alternative_weights]
 
-        self.detailed_information = None  # type: Optional[RiPPQualifier]
+        self.detailed_information: Optional[RiPPQualifier] = None
 
     @property
     def translation(self) -> str:
@@ -197,7 +197,7 @@ class Prepeptide(CDSMotif):  # pylint: disable=too-many-instance-attributes
         section = leftovers.pop("prepeptide", [""])[0]
         if not section:
             raise SecmetInvalidInputError("cannot reconstruct Prepeptide from biopython feature %s" % bio_feature)
-        elif section != "core":
+        if section != "core":
             raise SecmetInvalidInputError("Prepeptide can only be reconstructed from core feature")
         alt_weights = [float(weight) for weight in leftovers.pop("alternative_weights", [])]
         leader = leftovers.pop("leader_sequence", [""])[0]

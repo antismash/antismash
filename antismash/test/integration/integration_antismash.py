@@ -20,7 +20,7 @@ from antismash.config import build_config, destroy_config, get_config, update_co
 class TestAntismash(unittest.TestCase):
     def setUp(self):
         self.temp_dir = TemporaryDirectory()
-        self.config = build_config(self.get_args() + ["--out", self.temp_dir.name],
+        self.config = build_config(self.get_args() + ["--output-dir", self.temp_dir.name],
                                    isolated=True, modules=get_all_modules())
 
     def get_args(self):
