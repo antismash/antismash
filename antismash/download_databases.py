@@ -18,10 +18,6 @@ import antismash
 from antismash.common.hmmer import ensure_database_pressed
 from antismash.common.subprocessing import execute
 
-PFAM27_URL = "ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam27.0/Pfam-A.hmm.gz"
-PFAM27_ARCHIVE_CHECKSUM = "b29bc2c54db8090531df0361a781b8d7397f60ebedc0c36a16e7d45e999cc329"
-PFAM27_CHECKSUM = "ea35d7e4029b9d34eb8422ae69a230a2a5d25a52a8e207425791e8fdeb38aac8"
-
 PFAM_LATEST_VERSION = "32.0"
 PFAM_LATEST_URL = "ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam{}/Pfam-A.hmm.gz".format(
     PFAM_LATEST_VERSION
@@ -313,10 +309,7 @@ def download_clusterblast(db_dir: str) -> None:
 
 def download(args: argparse.Namespace) -> None:
     """Download all the large external databases needed."""
-    # ClusterFinder is stuck to PFAM 27.0, so always grab that
-    download_pfam(args.database_dir, PFAM27_URL, "27.0", PFAM27_ARCHIVE_CHECKSUM, PFAM27_CHECKSUM)
-
-    # And also grab the latest
+    # grab the latest pfam
     download_pfam(
         args.database_dir,
         PFAM_LATEST_URL,
