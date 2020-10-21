@@ -108,13 +108,6 @@ class Region(CDSCollection):
                 rules[product] = rule
         return list(rules.values())
 
-    @property
-    def probabilities(self) -> List[float]:
-        """ Returns a list of probabilities collected from all contained
-            SubRegions that have a probability
-        """
-        return [sub.probability for sub in self._subregions if sub.probability is not None]
-
     def add_cds(self, cds: CDSFeature) -> None:
         """ Adds a CDS to the Region and all relevant child collections. Links
             the CDS back to this region
@@ -225,7 +218,6 @@ class Region(CDSCollection):
             qualifiers["region_number"] = [str(self.get_region_number())]
         qualifiers["product"] = self.products
         qualifiers["rules"] = self.detection_rules
-        qualifiers["probabilities"] = ["%.4f" % prob for prob in self.probabilities]
         qualifiers["subregion_numbers"] = [str(sub.get_subregion_number()) for sub in self._subregions]
         candidates = [str(cand.get_candidate_cluster_number()) for cand in self._candidate_clusters]
         qualifiers["candidate_cluster_numbers"] = candidates
