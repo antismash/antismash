@@ -377,7 +377,7 @@ def detect_protoclusters_and_signatures(record: Record, signature_file: str, see
             seeds_file: the file containing all HMM profiles
             rule_files: the files containing the rules to use for cluster definition
             filter_file: a file containing equivalence sets of HMMs
-            tool: the name of the tool providing the HMMs (e.g. clusterfinder, rule_based_clusters)
+            tool: the name of the tool providing the HMMs (e.g. rule_based_clusters)
     """
     if not rule_files:
         raise ValueError("rules must be provided")

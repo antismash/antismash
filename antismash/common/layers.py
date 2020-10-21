@@ -90,7 +90,7 @@ class RecordLayer:
 
 class RegionLayer:
     """ A layer for Region instances, contains special members for result of
-        the clusterblast and clusterfinder modules
+        the clusterblast module
     """
     def __init__(self, record: RecordLayer, region_feature: Region) -> None:
         assert isinstance(region_feature, Region), type(region_feature)
@@ -165,8 +165,6 @@ class RegionLayer:
         """ returns the Region description """
         description_text = 'Location: {:,d} - {:,d} nt. (total: {:,d} nt)'.format(
             self.location.start + 1, self.location.end, len(self.location))
-        if get_config().cf_create_clusters and self.probabilities:
-            description_text += 'ClusterFinder probabilities: %s. ' % self.probabilities
 
         return description_text
 
