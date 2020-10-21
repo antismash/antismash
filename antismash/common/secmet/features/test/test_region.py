@@ -125,17 +125,6 @@ class TestRegion(unittest.TestCase):
         assert region.products == ["b", "a"]
         assert region.get_product_string() == "a,b"
 
-    def test_probabilities(self):
-        loc = FeatureLocation(0, 10)
-        candidates = [DummyCandidateCluster([create_protocluster(0, 10)])]
-        assert Region(candidate_clusters=candidates).probabilities == []
-        subs = [SubRegion(loc, "testtool", probability=None)]
-        assert Region(candidate_clusters=candidates, subregions=subs).probabilities == []
-        subs.append(SubRegion(loc, "testtool", probability=0.1))
-        assert Region(candidate_clusters=candidates, subregions=subs).probabilities == [0.1]
-        subs.append(SubRegion(loc, "testtool", probability=0.7))
-        assert Region(candidate_clusters=candidates, subregions=subs).probabilities == [0.1, 0.7]
-
     def test_genbank(self):
         dummy_record = Record(Seq("A"*100))
         clusters = [create_protocluster(3, 20, "prodA"),
@@ -160,7 +149,6 @@ class TestRegion(unittest.TestCase):
         assert new.location.start == 3 - region.location.start
         assert new.location.end == 71 - region.location.start
         assert new.products == region.products
-        assert new.probabilities == region.probabilities
 
     def test_prepeptide_adjustment(self):
         dummy_record = Record(Seq("A"*400))

@@ -21,7 +21,7 @@ T = TypeVar("T", bound="PFAMDomain")
 class PFAMDomain(Domain):
     """ A feature representing a PFAM domain within a CDS.
     """
-    __slots__ = ["description", "probability",
+    __slots__ = ["description",
                  "gene_ontologies", "identifier", "version"]
     FEATURE_TYPE = "PFAM_domain"
 
@@ -44,7 +44,6 @@ class PFAMDomain(Domain):
         if not description:
             raise ValueError("PFAMDomain description cannot be empty")
         self.description = description
-        self.probability: Optional[float] = None
         self.version = None
         if not identifier:
             raise ValueError("Pfam identifier cannot be empty")
@@ -68,8 +67,6 @@ class PFAMDomain(Domain):
     def to_biopython(self, qualifiers: Dict[str, List[str]] = None) -> List[SeqFeature]:
         mine: Dict[str, List[str]] = OrderedDict()
         mine["description"] = [self.description]
-        if self.probability is not None:
-            mine["probability"] = [str(self.probability)]
         mine["db_xref"] = [self.full_identifier]
         if self.gene_ontologies:  # should only be the case if db_xrefs present, since those are needed for mapping
             mine["gene_ontologies"] = self.gene_ontologies.to_biopython()
@@ -104,8 +101,6 @@ class PFAMDomain(Domain):
 
         # grab optional qualifiers
         feature.gene_ontologies = GOQualifier.from_biopython(leftovers.pop("gene_ontologies", []))
-        if "probability" in leftovers:
-            feature.probability = float(leftovers["probability"][0])
 
         # grab parent optional qualifiers
         updated = super().from_biopython(bio_feature, feature=feature, leftovers=leftovers, record=record)

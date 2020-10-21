@@ -11,12 +11,6 @@ from antismash.common.secmet.features import SubRegion
 
 
 class TestSubRegion(unittest.TestCase):
-    def test_probability(self):
-        loc = FeatureLocation(0, 10)
-        assert SubRegion(loc, tool="test").probability is None
-        assert SubRegion(loc, tool="test", probability=9.5).probability == 9.5
-        assert SubRegion(loc, tool="test", probability=.5).probability == .5
-
     def test_anchor(self):
         loc = FeatureLocation(0, 10)
         assert SubRegion(loc, tool="test").label == ""
