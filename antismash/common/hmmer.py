@@ -3,10 +3,11 @@
 
 """ Common functionality for finding and marking PFAMDomains within a record. """
 
+from collections import defaultdict
 from dataclasses import dataclass
 import logging
 import os
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 
 from antismash.common import fasta, module_results, path, pfamdb, subprocessing
 from antismash.common.secmet import Record, CDSFeature
@@ -168,8 +169,87 @@ def build_hits(record: Record, hmmscan_results: List, min_score: float,
     return hits
 
 
+def remove_overlapping(hits: List[HmmerHit], cutoffs: Dict[str, float],
+                       overlap_limit: int = 10) -> List[HmmerHit]:
+    """ Filters a list of HmmerHits so that no overlapping hits remain.
+        If two hits overlap by more than the specified limit, the best is kept
+        based on the following, in order:
+        - highest bitscore (normalised by profile cutoff)
+        - longest hit
+        - earliest start
+        - identifier of the profile hit in ascending order
+
+        Arguments:
+            hits: the list of hits to filter
+            cutoffs: a dictionary mapping profile identifier to cutoff as a float
+            overlap_limit: the number of overlapping aminos required to be filtered
+
+        Returns:
+            a list of HmmerHits, sorted by protein start position
+    """
+
+    if not hits:
+        assert 0
+        return []
+
+    try:
+        normalised = {hit: cutoffs[hit.identifier] / hit.score for hit in hits}
+    except KeyError as err:
+        raise ValueError("cutoff mapping does not contain all hit identifiers") from err
+
+    def ranking_stats(hit: HmmerHit) -> Tuple[float, float, int, str]:
+        """ In order of importance:
+                highest normalised score, longest hit, earliest start, identifier
+
+            Score and hit are inverted in order for all components to sort the
+            same way. An ascending sort will have the highest scoring hit first.
+
+            Hits with the same values for the above are the same hit and can
+            ranked equivalently with no loss of information.
+        """
+        return normalised[hit], 1/len(hit), hit.protein_start, hit.identifier
+
+    # ensure ordering
+    hits = sorted(hits, key=lambda hit: hit.protein_start)
+
+    # build sets of overlapping hits, no two sets should overlap
+    groups: List[Set[HmmerHit]] = []
+    current = {hits[0]}
+    max_current = hits[0].protein_end  # the end point of the set for simple checking
+    for hit in hits:
+        if max_current - overlap_limit < hit.protein_start:
+            groups.append(current)
+            current = {hit}
+            max_current = hit.protein_end
+            continue
+        current.add(hit)
+        max_current = max(max_current, hit.protein_end)
+    # not forgetting to add the in-progress set
+    groups.append(current)
+
+    # the filter stage
+    cleaned = []
+    for group in groups:
+        best_of: List[HmmerHit] = []
+        # start with the highest score and work down
+        for hit in sorted(group, key=ranking_stats):
+            for other in best_of:
+                start = other.protein_start + overlap_limit
+                end = other.protein_end - overlap_limit
+                # abort if its overlap with a higher ranked hit
+                if hit.protein_start <= end and hit.protein_end >= start:
+                    break
+            else:  # no overlap with existing best
+                best_of.append(hit)
+        cleaned.extend(best_of)
+        assert best_of
+    assert cleaned
+    return sorted(cleaned, key=lambda hit: hit.protein_start)
+
+
 def run_hmmer(record: Record, features: Iterable[CDSFeature], max_evalue: float,
-              min_score: float, database: str, tool: str) -> HmmerResults:
+              min_score: float, database: str, tool: str, filter_overlapping: bool = True
+              ) -> HmmerResults:
     """ Build hmmer results for the given features
 
         Arguments:
@@ -185,6 +265,14 @@ def run_hmmer(record: Record, features: Iterable[CDSFeature], max_evalue: float,
     query_sequence = fasta.get_fasta_from_features(features)
     hmmscan_results = subprocessing.run_hmmscan(database, query_sequence, opts=["--cut_tc"])
     hits = build_hits(record, hmmscan_results, min_score, max_evalue, database)
+    if filter_overlapping:
+        results_by_cds = defaultdict(list)
+        for hit in hits:
+            results_by_cds[hit.locus_tag].append(hit)
+        cutoffs = pfamdb.get_pfam_cutoffs(database)
+        hits = []
+        for locus_hits in results_by_cds.values():
+            hits.extend(remove_overlapping(locus_hits, cutoffs))
     return HmmerResults(record.id, max_evalue, min_score, database, tool, hits)
 
 

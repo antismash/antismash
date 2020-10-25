@@ -33,8 +33,6 @@ from antismash.config import update_config
 from antismash.config.args import build_parser
 from antismash.main import get_all_modules, canonical_base_filename
 
-from .test_hmmer import create_hmmer_hit as DummyHmmerHit  # for import by others, pylint: disable=unused-import
-
 
 def get_simple_options(module, args):
     modules = get_all_modules()
