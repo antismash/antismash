@@ -166,9 +166,9 @@ RULE thiopeptide
                          or PF07366 or PF06968 or PF04055)
                or thiostrepton
 
-RULE TfuA-related
+RULE thioamitides
     CATEGORY RiPP
-    COMMENT TfuA-related RiPPs as described in https://doi.org/10.1093/nar/gkz192
+    COMMENT Thioamitide RiPPs as described in https://doi.org/10.1093/nar/gkz192
             and found on JOBF01000011
     CUTOFF 20
     NEIGHBOURHOOD 10
