@@ -95,7 +95,7 @@ class PyTest(TestCommand):
 
 setup(
     name="antismash",
-    python_requires='>=3.5',
+    python_requires='>=3.7',
     version=read_version(),
     packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     package_data={
