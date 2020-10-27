@@ -108,13 +108,6 @@ class Region(CDSCollection):
                 rules[product] = rule
         return list(rules.values())
 
-    @property
-    def probabilities(self) -> List[float]:
-        """ Returns a list of probabilities collected from all contained
-            SubRegions that have a probability
-        """
-        return [sub.probability for sub in self._subregions if sub.probability is not None]
-
     def add_cds(self, cds: CDSFeature) -> None:
         """ Adds a CDS to the Region and all relevant child collections. Links
             the CDS back to this region
@@ -162,6 +155,9 @@ class Region(CDSCollection):
         cluster_record.annotations["taxonomy"] = record.annotations.get("taxonomy", [])
         cluster_record.annotations["data_file_division"] = record.annotations.get("data_file_division", 'UNK')
         cluster_record.annotations["comment"] = record.annotations.get("comment", '')
+        # biopython does not persist the molecule_type annotation in slices,
+        # despite it being required for output to the genbank format
+        cluster_record.annotations["molecule_type"] = record.annotations["molecule_type"]
 
         # update the antiSMASH annotation to include some cluster details
         comment_end_marker = "##antiSMASH-Data-END"
@@ -225,7 +221,6 @@ class Region(CDSCollection):
             qualifiers["region_number"] = [str(self.get_region_number())]
         qualifiers["product"] = self.products
         qualifiers["rules"] = self.detection_rules
-        qualifiers["probabilities"] = ["%.4f" % prob for prob in self.probabilities]
         qualifiers["subregion_numbers"] = [str(sub.get_subregion_number()) for sub in self._subregions]
         candidates = [str(cand.get_candidate_cluster_number()) for cand in self._candidate_clusters]
         qualifiers["candidate_cluster_numbers"] = candidates

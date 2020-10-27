@@ -25,6 +25,4 @@ class TestClusterCSS(unittest.TestCase):
         assert not missing_css
         # allow for the extra base classes and hybrids
         extra_css = available_classes - defined_clusters - base_classes
-        # and clusterfinders clustertypes
-        extra_css -= {'cf_putative', 'cf_fatty_acid', 'cf_saccharide'}
         assert not extra_css

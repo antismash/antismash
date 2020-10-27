@@ -14,7 +14,6 @@ $feature-resistance: #bbb;
 $feature-tta-codon: #444;
 $table-background: #f1f1f1;
 $tool-cassis: wheat;
-$tool-clusterfinder: teal;
 $tool-rule-based-clusters: white;
 
 @mixin unselectable(){
@@ -580,11 +579,6 @@ table.region-table {
     fill: $tool-cassis;
 }
 
-.svgene-border-clusterfinder .cluster-core {
-    stroke-width: 0px;
-    fill: $tool-clusterfinder;
-}
-
 .svgene-orf, .svgene-minimap-orf{
     stroke-width: 0;
 }
@@ -674,10 +668,6 @@ table.region-table {
 
 .legend-border-cassis {
     background-color: $tool-cassis;
-}
-
-.legend-border-clusterfinder {
-    background-color: $tool-clusterfinder;
 }
 
 .legend-tta-codon {

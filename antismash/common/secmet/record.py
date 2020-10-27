@@ -16,7 +16,7 @@ from collections import Counter, defaultdict, OrderedDict
 import logging
 from typing import Any, Dict, List, Optional, Sequence, Type, Tuple, Union, cast
 
-from Bio import Alphabet, SeqIO
+from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 from Bio.SeqRecord import SeqRecord
@@ -467,6 +467,8 @@ class Record:
         bio_features: List[SeqFeature] = []
         for feature in sorted(features):
             bio_features.extend(feature.to_biopython())
+        if "molecule_type" not in self._record.annotations:
+            self._record.annotations["molecule_type"] = "DNA"
         return SeqRecord(self.seq, id=self._record.id, name=self._record.name,
                          description=self._record.description,
                          dbxrefs=self.dbxrefs, features=bio_features,
@@ -653,9 +655,10 @@ class Record:
             postponed_features[kind.FEATURE_TYPE] = (kind, [])
 
         assert isinstance(seq_record, SeqRecord), type(seq_record)
-        if seq_record.seq and isinstance(seq_record.seq, Seq):
-            if isinstance(seq_record.seq.alphabet, Alphabet.ProteinAlphabet):
-                raise SecmetInvalidInputError("protein records are not supported")
+        if seq_record.annotations.get("molecule_type", "DNA") != "DNA":
+            raise SecmetInvalidInputError("protein records are not supported")
+        if seq_record.seq and not Record.is_nucleotide_sequence(seq_record.seq):
+            raise SecmetInvalidInputError("protein records are not supported")
         transl_table = 1  # standard
         if str(taxon) == "bacteria":
             transl_table = 11  # bacterial, archea, plant plastid code
@@ -831,11 +834,11 @@ class Record:
         string_version = str(seq)
         for invalid in "*BJOUZ":
             string_version = string_version.replace(invalid, "X")
-        seq = Seq(string_version, Alphabet.generic_protein)
 
         if "-" in str(seq):
-            seq = Seq(str(seq).replace("-", ""), Alphabet.generic_protein)
-        return seq
+            seq = Seq(str(seq).replace("-", ""))
+
+        return Seq(string_version)
 
     def get_cds_features_within_regions(self) -> List[CDSFeature]:  # pylint: disable=invalid-name
         """ Returns all CDS features in the record that are located within a
@@ -958,3 +961,18 @@ class Record:
         # clean up antiSMASH annotations in CDS features
         for feature in self.get_cds_features():
             feature.strip_antismash_annotations()
+
+    @staticmethod
+    def is_nucleotide_sequence(sequence: Union[Seq, str]) -> bool:
+        """ Determines if a sequence is a nucleotide sequence based on content.
+
+            Arguments:
+                sequence: the sequence to check, either a string or Bio.Seq
+
+            Returns:
+                True if more than 80% of characters are nucleotide bases
+        """
+        other = str(sequence).lower()
+        for char in "acgtn":
+            other = other.replace(char, "")
+        return len(other) < 0.2 * len(sequence)

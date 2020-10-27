@@ -7,7 +7,6 @@
 from argparse import Namespace
 import unittest
 
-from Bio.Alphabet import generic_dna
 from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation
 
@@ -19,7 +18,7 @@ from antismash.modules import tta
 class TtaTest(unittest.TestCase):
     def setUp(self):
         # locations:            VVV         VVV
-        record = Record(Seq("ATGTTATGAGGGTCATAACAT", generic_dna))
+        record = Record(Seq("ATGTTATGAGGGTCATAACAT"))
 
         record.add_cds_feature(DummyCDS(0, 9, strand=1))
         record.add_cds_feature(DummyCDS(12, 21, strand=-1))

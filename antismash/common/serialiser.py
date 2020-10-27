@@ -10,8 +10,6 @@ import json
 import logging
 from typing import Any, Dict, IO, List, Union
 
-import Bio.Alphabet
-import Bio.Alphabet.IUPAC
 from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, Reference
 from Bio.SeqRecord import SeqRecord
@@ -179,8 +177,10 @@ def record_from_json(data: Union[str, Dict]) -> SeqRecord:
 
 def sequence_to_json(sequence: Seq) -> Dict[str, str]:
     """ Constructs a JSON object that represents a Seq sequence """
-    return {"data": str(sequence),
-            "alphabet": str(sequence.alphabet).rsplit('()')[0]}  # DNA() -> DNA
+    return {
+        "data": str(sequence),
+        "alphabet": "DNA",  # for compatibility, removable on schema version change
+    }
 
 
 def sequence_from_json(data: Union[str, Dict]) -> Seq:
@@ -188,12 +188,7 @@ def sequence_from_json(data: Union[str, Dict]) -> Seq:
     if isinstance(data, str):
         data = json.loads(data)
     assert isinstance(data, dict)
-    alphabet = data["alphabet"]
-    if "IUPAC" in alphabet:
-        alphabet_class = getattr(Bio.Alphabet.IUPAC, alphabet)
-    else:
-        alphabet_class = getattr(Bio.Alphabet, alphabet)
-    return Seq(data["data"], alphabet=alphabet_class())
+    return Seq(data["data"])
 
 
 def feature_to_json(feature: SeqFeature) -> Dict[str, Any]:
