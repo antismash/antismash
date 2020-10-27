@@ -8,7 +8,6 @@ import unittest
 
 from typing import Dict
 
-from Bio.Alphabet import generic_dna
 from Bio.Seq import Seq
 from Bio.SeqFeature import FeatureLocation
 
@@ -97,7 +96,7 @@ class PfamToGoTest(unittest.TestCase):
 
     def test_blank_records(self):
         blank_no_pfams = DummyRecord()
-        blank_no_ids = Record(Seq("ATGTTATGAGGGTCATAACAT", generic_dna))
+        blank_no_ids = Record(Seq("ATGTTATGAGGGTCATAACAT"))
         fake_pfam = DummyPFAMDomain(identifier="PF00000")
         blank_no_ids.add_pfam_domain(fake_pfam)
 

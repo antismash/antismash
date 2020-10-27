@@ -7,7 +7,6 @@
 from tempfile import NamedTemporaryFile
 import unittest
 
-from Bio.Alphabet import generic_dna
 from Bio.Seq import Seq
 from helperlibs.bio import seqio
 
@@ -127,7 +126,7 @@ class TestRegion(unittest.TestCase):
         assert region.get_product_string() == "a,b"
 
     def test_genbank(self):
-        dummy_record = Record(Seq("A"*100, generic_dna))
+        dummy_record = Record(Seq("A"*100))
         clusters = [create_protocluster(3, 20, "prodA"),
                     create_protocluster(25, 41, "prodB")]
         for cluster in clusters:
@@ -152,7 +151,7 @@ class TestRegion(unittest.TestCase):
         assert new.products == region.products
 
     def test_prepeptide_adjustment(self):
-        dummy_record = Record(Seq("A"*400, generic_dna))
+        dummy_record = Record(Seq("A"*400))
         subregion = DummySubRegion(start=100, end=300)
         dummy_record.add_subregion(subregion)
         region = Region(subregions=[subregion])
