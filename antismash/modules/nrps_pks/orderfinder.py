@@ -309,8 +309,8 @@ def rank_biosynthetic_orders(n_terminal_residues: Dict[str, str],
         score = 0
         interactions = [order[i:i + 2] for i in range(len(order) - 1)]
         for gene, next_gene in interactions:
-            res1a, res2a = c_terminal_residues[gene.get_name()]
-            res1b, res2b = n_terminal_residues[next_gene.get_name()]
+            res1a, res2a = tuple(c_terminal_residues[gene.get_name()])
+            res1b, res2b = tuple(n_terminal_residues[next_gene.get_name()])
             for pair in [{res1a, res1b}, {res2a, res2b}]:
                 both_hydrophobic = pair.issubset(hydrophobic)
                 same_polarity = pair.issubset(positively_charged) or pair.issubset(negatively_charged)

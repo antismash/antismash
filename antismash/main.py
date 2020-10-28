@@ -80,7 +80,7 @@ def get_detection_modules() -> List[AntismashModule]:
             a list of modules
     """
     return [genefinding, hmm_detection, nrps_pks_domains, full_hmmer, cassis,  # type: ignore
-            cluster_hmmer, genefunctions]
+            cluster_hmmer, genefunctions]  # type: ignore
 
 
 def get_analysis_modules() -> List[AntismashModule]:
@@ -93,7 +93,7 @@ def get_analysis_modules() -> List[AntismashModule]:
             a list of modules
     """
     return [smcog_trees, tta, lanthipeptides, thiopeptides, nrps_pks, clusterblast,  # type: ignore
-            sactipeptides, lassopeptides, active_site_finder, pfam2go, t2pks]
+            sactipeptides, lassopeptides, active_site_finder, pfam2go, t2pks]  # type: ignore
 
 
 def get_output_modules() -> List[AntismashModule]:

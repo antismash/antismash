@@ -49,7 +49,7 @@ def get_remote_filesize(url: str) -> int:
     """Get the file size of the remote file."""
     try:
         usock = request.urlopen(request.Request(url, method="HEAD"))
-        dbfilesize = usock.info().get("Content-Length", "0")  # type: ignore
+        dbfilesize = usock.info().get("Content-Length", "0")
     except urlerror.URLError:
         dbfilesize = "0"
 

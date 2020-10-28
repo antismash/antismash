@@ -56,7 +56,7 @@ class Prepeptide(CDSMotif):  # pylint: disable=too-many-instance-attributes
         if peptide_subclass:
             peptide_subclass = peptide_subclass.replace("-", " ")  # "Type-II" > "Type II"
         self.peptide_subclass = peptide_subclass
-        self.score = float(score)
+        self.score: float = float(score)
         self.monoisotopic_mass = float(monoisotopic_mass)
         self.molecular_weight = float(molecular_weight)
         self.alternative_weights: List[float] = []
