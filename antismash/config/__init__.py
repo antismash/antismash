@@ -75,7 +75,7 @@ class Config:  # since it's a glorified namespace, pylint: disable=too-few-publi
         def __len__(self) -> int:
             return len(self.__dict__)
 
-    def __new__(cls, namespace: Union[Namespace, Dict[str, Any]] = None) -> ConfigType:
+    def __new__(cls, namespace: Union[Namespace, Dict[str, Any]] = None) -> ConfigType:  # type: ignore
         if namespace is None:
             values: Dict[str, Any] = {}
         elif isinstance(namespace, dict):
