@@ -7,11 +7,12 @@
 import glob
 import logging
 import os
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from antismash.common import path
 
 KNOWN_MAPPINGS: Dict[str, Dict[str, str]] = {}  # tracks name mappings per database
+KNOWN_CUTOFFS: Dict[str, Dict[str, float]] = {}  # tracks profile cutoffs per database
 
 
 def find_latest_database_version(database_dir: str) -> str:
@@ -111,6 +112,70 @@ def _build_mapping(database: str) -> Dict[str, str]:
         name, acc = [s.split()[1] for s in entry.splitlines()[1:3]]
         mapping[name] = acc
     return mapping
+
+
+def _build_cutoff_mapping(database: str) -> Dict[str, float]:
+    """ Build a mapping of Pfam ACC field to TC field for a database
+
+        Arguments:
+            database: a path to the database to build a mapping from
+
+        Returns:
+            a dictionary mapping ACC field to TC value
+    """
+    logging.debug("Building mapping for HMMer database %s", database)
+    with open(database) as handle:
+        entries = handle.read().split("\n//\n")
+    mapping = {}
+    for entry in entries:
+        if not entry:
+            continue
+        lines = iter(entry.splitlines())
+        acc: Optional[str] = None
+        cutoff: Optional[float] = None
+        try:
+            while acc is None:
+                line = next(lines)
+                if line.startswith("ACC "):
+                    try:
+                        acc = line.split()[1]
+                    except IndexError:
+                        raise ValueError(f"profile accession line malformed: {line}")
+                    break
+            while cutoff is None:
+                line = next(lines)
+                if line.startswith("TC "):
+                    try:
+                        cutoff = float(line.split()[1])
+                    except IndexError:
+                        raise ValueError(f"profile cutoff line malformed {acc}: {line}")
+                    except TypeError as err:
+                        raise TypeError(f"profile cutoff invalid for {acc}: {line}") from err
+                    break
+        except StopIteration:
+            if acc:
+                raise ValueError(f"profile missing threshold cutoff: {acc}")
+            raise ValueError("profile missing accession")
+        assert acc and cutoff
+        mapping[acc] = cutoff
+    return mapping
+
+
+def get_pfam_cutoffs(database: str) -> Dict[str, float]:
+    """ Returns a mapping of accession to trusted cutoff for the given database.
+
+        Caches results for performance.
+
+        Arguments:
+            database: the path to the database to gather cutoffs from
+
+        Returns:
+            a dictionary mapping ACC field to TC value
+    """
+    if database not in KNOWN_CUTOFFS:
+        KNOWN_CUTOFFS[database] = _build_cutoff_mapping(database)
+
+    return KNOWN_CUTOFFS[database]
 
 
 def get_pfam_id_from_name(name: str, database: str) -> str:
