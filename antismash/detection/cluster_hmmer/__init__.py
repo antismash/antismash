@@ -73,7 +73,13 @@ def regenerate_previous_results(previous: Dict[str, Any], record: Record,
     """ Rebuild previous results """
     if not previous:
         return None
-    return hmmer.HmmerResults.from_json(previous, record, MAX_EVALUE, MIN_SCORE)
+    results = hmmer.HmmerResults.from_json(previous, record)
+    if not results:
+        return None
+    if results.score > MIN_SCORE or results.evalue < MAX_EVALUE:
+        # new values too lenient, discard resuts
+        return None
+    return results.refilter(MAX_EVALUE, MIN_SCORE)
 
 
 def run_on_record(record: Record, results: Optional[hmmer.HmmerResults],

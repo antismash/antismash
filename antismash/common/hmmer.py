@@ -76,8 +76,7 @@ class HmmerResults(module_results.ModuleResults):
         return json
 
     @staticmethod
-    def from_json(json: Dict[str, Any], record: Record, max_evalue: float,  # type: ignore  # pylint: disable=arguments-differ
-                  min_score: float) -> Optional["HmmerResults"]:
+    def from_json(json: Dict[str, Any], record: Record) -> Optional["HmmerResults"]:
         """ Regenerate the results from JSON.
             If max_evalue or min_score aren't equal or narrower than those the
             results were generated with, the results will be discarded.
@@ -97,24 +96,26 @@ class HmmerResults(module_results.ModuleResults):
             raise ValueError("Invalid Hmmer result values")
         assert isinstance(score, float) and isinstance(evalue, float)
 
-        # if the current options have expanded the detection range, rerunning is required
-        if evalue < max_evalue:
-            logging.debug("Discarding Hmmer results, using new evalue threshold")
-            return None
-        if score > min_score:
-            logging.debug("Discarding Hmmer results, using new score threshold")
-            return None
-
         hits = json.get("hits")
         if not isinstance(hits, list):
             raise TypeError("FullHmmer results contain unexpected types")
-        # if the thresholds changed, trim out any extra hits here
-        hits = [HmmerHit(**hit) for hit in hits if hit["score"] >= min_score and hit["evalue"] <= max_evalue]
+        hits = [HmmerHit(**hit) for hit in hits]
 
-        results = HmmerResults(record.id, max_evalue, min_score, json["database"], json["tool"], hits)
-        return results
+        return HmmerResults(record.id, evalue, score, json["database"], json["tool"], hits)
+
+    def refilter(self, max_evalue: float, min_score: float) -> "HmmerResults":
+        """ Trims the results to stricter thresholds for score and E-value """
+        if max_evalue > self.evalue:
+            raise ValueError("cannot refilter to a more lenient evalue: %s -> %s" % (self.evalue, max_evalue))
+        if min_score < self.score:
+            raise ValueError("cannot refilter to a more lenient score: %s -> %s" % (self.score, min_score))
+        self.hits = [hit for hit in self.hits if hit.score >= min_score and hit.evalue <= max_evalue]
+        self.evalue = max_evalue
+        self.score = min_score
+        return self
 
     def add_to_record(self, record: Record) -> None:
+        """ Adds the hits as PFAMDomains to the given record """
         db_version = pfamdb.get_db_version_from_path(self.database)
         for i, hit in enumerate(self.hits):
             protein_location = FeatureLocation(hit.protein_start, hit.protein_end)
