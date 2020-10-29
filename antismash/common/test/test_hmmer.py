@@ -9,8 +9,9 @@ from dataclasses import FrozenInstanceError, dataclass
 import json
 import unittest
 
-from antismash.common.hmmer import HmmerHit, remove_overlapping
+from antismash.common.hmmer import HmmerHit, HmmerResults, remove_overlapping
 
+from .helpers import DummyRecord
 
 def create_hmmer_hit(location="[500:700]", label="ref_name", locus_tag="locus",
                      domain="hit", evalue=1e-10, score=40.5, translation=None,
@@ -147,3 +148,50 @@ class TestOverlaps(unittest.TestCase):
         # should take the longest in case of a tie
         assert remove_overlapping([a, b], self.cutoffs, overlap_limit=10) == [a]
         assert remove_overlapping([b, a], self.cutoffs, overlap_limit=10) == [a]
+
+
+class TestResults(unittest.TestCase):
+    def setUp(self):
+        self.low_score = create_hmmer_hit(score=50., evalue=1e-20)
+        self.high_score = create_hmmer_hit(score=75., evalue=1e-20)
+        self.low_evalue = create_hmmer_hit(score=60., evalue=1e-40)
+        self.high_evalue = create_hmmer_hit(score=60., evalue=1e-10)
+        hits = [self.low_score, self.high_score, self.low_evalue, self.high_evalue]
+
+        self.results = HmmerResults("name", 1e-1, 25., "db", "tool", hits)
+
+    def test_refilter_higher_score(self):
+        assert len(self.results.hits) == 4
+        self.results.refilter(1e-10, 55.)
+        assert len(self.results.hits) == 3
+        self.results.refilter(1e-10, 65.)
+        assert len(self.results.hits) == 1
+        self.results.refilter(1e-10, 85.)
+        assert len(self.results.hits) == 0
+
+    def test_refilter_lower_evalue(self):
+        assert len(self.results.hits) == 4
+        self.results.refilter(1e-15, 50.)
+        assert len(self.results.hits) == 3
+        self.results.refilter(1e-25, 50.)
+        assert len(self.results.hits) == 1
+        self.results.refilter(1e-50, 50.)
+        assert len(self.results.hits) == 0
+
+    def test_refilter_lower_score(self):
+        with self.assertRaisesRegex(ValueError, "more lenient"):
+            self.results.refilter(self.results.evalue, self.results.score / 2)
+
+    def test_refilter_higher_evalue(self):
+        with self.assertRaisesRegex(ValueError, "more lenient"):
+            self.results.refilter(self.results.evalue * 2, self.results.score)
+
+    def test_json_conversion(self):
+        as_string = json.dumps(self.results.to_json())
+        regenerated = HmmerResults.from_json(json.loads(as_string), DummyRecord(record_id="name"))
+        assert isinstance(regenerated, HmmerResults)
+        assert regenerated.hits == self.results.hits
+        assert regenerated.evalue == self.results.evalue
+        assert regenerated.score == self.results.score
+        assert regenerated.database == self.results.database
+        assert regenerated.tool == self.results.tool
