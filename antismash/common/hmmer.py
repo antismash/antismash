@@ -156,15 +156,14 @@ def build_hits(record: Record, hmmscan_results: List, min_score: float,
             feature = feature_by_id[hsp.query_id]
             location = feature.get_sub_location_from_protein_coordinates(hsp.query_start, hsp.query_end)
 
-            end = hsp.query_end + 1  # converts from inclusive to typical python exclusive
-
             hit = {"location": str(location),
                    "label": result.id, "locus_tag": feature.get_name(),
                    "domain": hsp.hit_id, "evalue": hsp.evalue, "score": hsp.bitscore,
-                   "translation": feature.translation[hsp.query_start:end],
+                   "translation": feature.translation[hsp.query_start:hsp.query_end],
                    "identifier": pfamdb.get_pfam_id_from_name(hsp.hit_id, database),
                    "description": hsp.hit_description, "protein_start": hsp.query_start,
-                   "protein_end": end}
+                   "protein_end": hsp.query_end,
+                   }
             hits.append(HmmerHit(**hit))
     return hits
 
