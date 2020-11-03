@@ -12,6 +12,7 @@ from antismash.common import html_renderer, path
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import CDSFeature, Feature, Record, Region, CandidateCluster, SubRegion
 from antismash.common.secmet.qualifiers.gene_functions import GeneFunction
+from antismash.common.secmet.qualifiers.go import GOQualifier
 from antismash.common.secmet import Protocluster
 from antismash.common.secmet.features.cdscollection import CDSCollection
 from antismash.config import ConfigType
@@ -19,6 +20,7 @@ from antismash.modules import clusterblast, tta
 from antismash.outputs.html.generate_html_table import generate_html_table
 
 searchgtr_links: Dict[str, str] = {}  # TODO: refactor away from global
+GO_URL = 'http://amigo.geneontology.org/amigo/term/'
 
 
 def convert_records(records: List[Record], results: List[Dict[str, ModuleResults]],
@@ -225,19 +227,35 @@ def convert_tta_codons(tta_codons: List[Feature], record: Record) -> List[Dict[s
     return js_codons
 
 
+def build_pfam2go_links(go_qualifier: Optional[GOQualifier], prefix: str = "") -> List[str]:
+    """ A helper for generating Pfam2GO HTML fragments with links and descriptions
+
+        Arguments:
+            go_qualifier: the GOQualifier to use for building the links
+            prefix: an optional string to prefix the link with
+
+        Returns:
+            a list of strings, each being an HTML formatted link prefixed by
+            the given prefix and followed by the description of the GO term
+
+    """
+    if go_qualifier is None:  # a pfam may have no matching GO terms
+        return []
+    template = "{prefix}<a class='external-link' href='{url}{go_id}' target='_blank'>{go_id}</a>: {desc}"
+    return [template.format(prefix=prefix, url=GO_URL, go_id=go_id, desc=desc)
+            for go_id, desc in go_qualifier.go_entries.items()]
+
+
 def generate_pfam2go_tooltip(record: Record, feature: CDSFeature) -> List[html_renderer.Markup]:
     """Create tooltip text for Pfam to Gene Ontologies results."""
     go_notes = []
     unique_pfams_with_gos = {}
-    go_url = 'http://amigo.geneontology.org/amigo/term/'
-    go_info_line = "{pf_id}: <a class='external-link' href='{url}{go_id}' target='_blank'>{go_id}</a>: {go_desc}"
     for pfam in record.get_pfam_domains_in_cds(feature):
         if pfam.gene_ontologies:
             pfam_id = pfam.full_identifier
             unique_pfams_with_gos[pfam_id] = pfam.gene_ontologies
     for unique_id, go_qualifier in sorted(unique_pfams_with_gos.items()):
-        for go_id, go_description in sorted(go_qualifier.go_entries.items()):
-            go_notes.append(go_info_line.format(pf_id=unique_id, url=go_url, go_id=go_id, go_desc=go_description))
+        go_notes.extend(build_pfam2go_links(go_qualifier, prefix=f"{unique_id}: "))
     return list(map(html_renderer.Markup, go_notes))
 
 
