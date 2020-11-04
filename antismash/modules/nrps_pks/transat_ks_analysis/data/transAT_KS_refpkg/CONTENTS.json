@@ -1,0 +1,25 @@
+{
+    "metadata": {
+        "create_date": "2020-11-04 14:15:10",
+        "format_version": "1.1",
+        "locus": "transAT_KS"
+    },
+    "files": {
+        "phylo_model": "phylo_model_q0bi9ky.json",
+        "aln_fasta": "transAT_KS_ref.afa",
+        "tree": "transAT_KS_ref.raxml.tre",
+        "tree_stats": "transAT_KS_ref.raxml.info"
+    },
+    "md5": {
+        "phylo_model": "c479ba529a25c128366212cf02ad58db",
+        "aln_fasta": "ad239da3266c914ff05efbb75e22bc32",
+        "tree": "1422d79c173ee43b24bc85e51d0c604d",
+        "tree_stats": "7701949c49f3bdca2399b2e4e1e76771"
+    },
+    "log": [
+        "Stripped refpkg (removed 0 files)",
+        "Loaded initial files into empty refpkg"
+    ],
+    "rollback": null,
+    "rollforward": null
+}

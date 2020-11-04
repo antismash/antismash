@@ -16,9 +16,9 @@ import re, copy
 
 _LEAF2CLADE_TBL = path.get_full_path(__file__, "data", "transPACT_leaf2clade.tsv")
 _PPLACER_MASS_CUTOFF = 0.6 ## transPACT default: 0.6; higher = more stringent
-_PPLACER_REFERENCE_PKG = path.get_full_path(__file__, "data", "RAxML_bestTree.649KS_sequences_hmmalign_raxml_renamed.refpkg") ## Note: Reference package creation: taxit create --aln-fasta reference.fasta --tree-stats reference.log --tree-file reference.nwk -P reference.refpkg
-_KS_REFERENCE_ALIGNMENT = '/'.join([_PPLACER_REFERENCE_PKG, '649KS_sequences_031218.fasta'])
-_KS_REFERENCE_TREE = '/'.join([_PPLACER_REFERENCE_PKG, 'RAxML_bestTree.649KS_sequences_hmmalign_raxml_renamed.tre'])
+_PPLACER_REFERENCE_PKG = path.get_full_path(__file__, "data", "transAT_KS_refpkg") ## Note: Reference package creation with the taxtastic package (install with pip):  taxit create --aln-fasta transAT_KS_ref.afa --tree-stats transAT_KS_ref.raxml.info --tree-file transAT_KS_ref.raxml.tre -P transAT_KS_refpkg -l transAT_KS
+_KS_REFERENCE_ALIGNMENT = '/'.join([_PPLACER_REFERENCE_PKG, 'transAT_KS_ref.afa'])
+_KS_REFERENCE_TREE = '/'.join([_PPLACER_REFERENCE_PKG, 'transAT_KS_ref.raxml.tre'])
 
 class KSResult:
     """ A result for a specific KS domain """
