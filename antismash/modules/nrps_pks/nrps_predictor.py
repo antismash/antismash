@@ -14,8 +14,8 @@ from helperlibs.wrappers.io import TemporaryDirectory
 from jinja2 import Markup
 
 from antismash.common import path, subprocessing
-from antismash.common.secmet import AntismashDomain
 from antismash.config import ConfigType
+from antismash.detection.nrps_pks_domains import ModularDomain
 
 from .data_structures import Prediction
 
@@ -276,7 +276,7 @@ def extract(sequence: str, positions: List[int]) -> str:
     return "".join(seq)
 
 
-def get_34_aa_signature(domain: AntismashDomain) -> str:
+def get_34_aa_signature(domain: ModularDomain) -> str:
     """ Extract 10 / 34 AA NRPS signatures from A domains """
     assert " " not in domain.get_name()
     assert verify_good_sequence(domain.translation)
@@ -317,11 +317,11 @@ def read_output(lines: List[str]) -> Dict[str, Prediction]:
     return results
 
 
-def run_nrpspredictor(a_domains: List[AntismashDomain], options: ConfigType) -> Dict[str, Prediction]:
+def run_nrpspredictor(a_domains: List[ModularDomain], options: ConfigType) -> Dict[str, Prediction]:
     """ Runs NRPSPredictor2 over the provided A domains.
 
         Arguments:
-            a_domains: a list of AntismashDomains, one for each A domain
+            a_domains: a list of ModularDomains, one for each A domain
             options: antismash options
 
         Returns:

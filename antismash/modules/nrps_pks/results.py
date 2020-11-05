@@ -8,8 +8,9 @@ import logging
 from typing import Any, Dict, List, Optional
 
 from antismash.common.module_results import ModuleResults
-from antismash.common.secmet import AntismashDomain, Module, Record
+from antismash.common.secmet import Module, Record
 from antismash.common.secmet.qualifiers import NRPSPKSQualifier
+from antismash.detection.nrps_pks_domains import ModularDomain
 
 from .parsers import generate_nrps_consensus
 from .data_structures import Prediction, SimplePrediction
@@ -71,6 +72,7 @@ def modify_substrate(module: Module, base: str = "") -> str:  # pylint: disable=
 
     state: List[str] = []
     for domain in module.domains:
+        assert isinstance(domain, ModularDomain)
         if domain.domain != "MT":
             continue
         if domain.domain_subtype == "nMT":
@@ -245,7 +247,7 @@ class NRPS_PKS_Results(ModuleResults):
             nrps_qualifier = cds_feature.nrps_pks
             for domain in nrps_qualifier.domains:
                 feature = record.get_domain_by_name(domain.feature_name)
-                assert isinstance(feature, AntismashDomain)
+                assert isinstance(feature, ModularDomain)
 
                 domain.predictions.clear()
                 if domain.name in ["AMP-binding", "A-OX"]:

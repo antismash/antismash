@@ -28,7 +28,7 @@ def run_pks_substr_spec_predictions(cds_features: List[CDSFeature]) -> Dict[str,
         Returns:
             a dictionary mapping
                 analysis method name to a dictionary mapping
-                    AntismashDomain name to Prediction
+                    domain name to Prediction
     """
     at_domains = extract_at_domains(cds_features)
     method_results: Dict[str, Dict[str, Prediction]] = {}

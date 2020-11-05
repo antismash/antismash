@@ -6,36 +6,52 @@
 
 import unittest
 
-from antismash.common.secmet.features import AntismashDomain, Feature, FeatureLocation
-from antismash.common.secmet.features import antismash_domain
+from antismash.common.secmet.features import (
+    AntismashDomain,
+    FeatureLocation,
+)
+
+from antismash.detection.nrps_pks_domains.modular_domain import ModularDomain, TOOL
 
 
 class TestConversion(unittest.TestCase):
     def setUp(self):
         self.protein_location = FeatureLocation(0, 1)
-        self.domain = AntismashDomain(FeatureLocation(1, 3, 1), locus_tag="locus",
-                                      tool="test", protein_location=self.protein_location)
+        self.domain = ModularDomain(FeatureLocation(1, 3, 1), locus_tag="locus",
+                                    protein_location=self.protein_location)
         self.domain.domain_id = "test1"
 
     def test_conversion(self):
         domain = self.domain
+        domain.domain_subtype = "subtest"
+        domain.specificity = ["a", "c", "f"]
         domain.asf.add("first")
         domain.asf.add("second")
-        assert domain.tool == "test"
+        assert domain.tool == TOOL
         assert domain.created_by_antismash
         assert domain.locus_tag == "locus"
 
         bio = domain.to_biopython()
         assert len(bio) == 1
-        assert bio[0].qualifiers["aSTool"] == ["test"]
+        assert bio[0].qualifiers["aSTool"] == ["nrps_pks_domains"]
         assert bio[0].qualifiers["tool"] == ["antismash"]
-        new_domain = AntismashDomain.from_biopython(bio[0])
+        new_domain = ModularDomain.from_biopython(bio[0])
+        assert new_domain.domain_subtype == domain.domain_subtype == "subtest"
+        assert new_domain.specificity == domain.specificity == ["a", "c", "f"]
         assert new_domain.asf.hits == domain.asf.hits
         assert new_domain.asf.hits == ["first", "second"]
-        assert new_domain.tool == domain.tool == "test"
+        assert new_domain.tool == domain.tool == TOOL
         assert new_domain.created_by_antismash
         assert new_domain.locus_tag == "locus"
         assert new_domain.protein_location == self.protein_location
+
+    def test_subtype_recognition(self):
+        assert self.domain.domain_id
+        bio = self.domain.to_biopython()[0]
+        assert bio.qualifiers["aSTool"] == [TOOL]
+        assert bio.qualifiers["domain_id"]
+        new = AntismashDomain.from_biopython(bio)
+        assert isinstance(new, ModularDomain)
 
     def test_linebreaks(self):
         self.domain.domain_id = "some-long-name.Condensation.1"
@@ -43,27 +59,5 @@ class TestConversion(unittest.TestCase):
         # pretend a genbank was written and is being read back in
         # but the line was long enough to cause a line break
         bio[0].qualifiers["domain_id"][0] = self.domain.domain_id.replace(".", ". ")
-        new = AntismashDomain.from_biopython(bio[0])
+        new = ModularDomain.from_biopython(bio[0])
         assert new.domain_id == self.domain.domain_id
-
-
-class TestSubtyping(unittest.TestCase):
-    def setUp(self):
-        self.original = antismash_domain._SUBTYPE_MAPPING
-        antismash_domain._SUBTYPE_MAPPING = {}
-
-    def tearDown(self):
-        antismash_domain._SUBTYPE_MAPPING = self.original
-
-    def register(self, name, subclass):
-        antismash_domain.register_asdomain_variant(name, subclass)
-
-    def test_invalid_class(self):
-        for value in [int, Feature]:
-            with self.assertRaisesRegex(TypeError, "not a subclass"):
-                self.register("test", value)
-
-    def test_duplicate_tools(self):
-        self.register("test", AntismashDomain)
-        with self.assertRaisesRegex(ValueError, "already present as a subtype"):
-            self.register("test", AntismashDomain)
