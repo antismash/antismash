@@ -58,7 +58,7 @@ class Record:
                  "_pfams_by_cds_name", "_modules",
                  "_candidate_clusters", "_candidate_clusters_numbering",
                  "_subregions", "_subregion_numbering",
-                 "_regions", "_region_numbering"]
+                 "_regions", "_region_numbering", "_antismash_domains_by_tool"]
 
     def __init__(self, seq: Union[Seq, str] = "", transl_table: int = 1, **kwargs: Any) -> None:
         # prevent paths from being used as a sequence
@@ -80,6 +80,8 @@ class Record:
         self._pfams_by_cds_name: Dict[str, List[PFAMDomain]] = defaultdict(list)
 
         self._antismash_domains: List[AntismashDomain] = []
+        self._antismash_domains_by_tool: Dict[str, List[AntismashDomain]] = defaultdict(list)
+
         self._modules: List[Module] = []
 
         # includes PFAMDomains and AntismashDomains
@@ -377,12 +379,19 @@ class Record:
         """A list of secondary metabolite aSDomains present in the record"""
         return tuple(self._antismash_domains)
 
+    def get_antismash_domains_by_tool(self, tool: str) -> Tuple[AntismashDomain, ...]:
+        """A list of secondary metabolite aSDomains present in the record
+           filtered by the given tool
+        """
+        return tuple(self._antismash_domains_by_tool.get(tool, []))
+
     def clear_antismash_domains(self) -> None:
         "Remove all AntismashDomain features"
         # remove antismash domains only from the domains mapping
         for domain in self._antismash_domains:
             del self._domains_by_name[domain.get_name()]
         self._antismash_domains.clear()
+        self._antismash_domains_by_tool.clear()
 
     def get_generics(self) -> Tuple:
         """A list of secondary metabolite generics present in the record"""
@@ -542,7 +551,9 @@ class Record:
         """ Add the given AntismashDomain to the record """
         assert isinstance(antismash_domain, AntismashDomain)
         assert antismash_domain.get_name()
+        assert antismash_domain.tool
         self._antismash_domains.append(antismash_domain)
+        self._antismash_domains_by_tool[antismash_domain.tool].append(antismash_domain)
         if antismash_domain.get_name() in self._domains_by_name:
             raise SecmetInvalidInputError("multiple Domain features have the same name for mapping: %s" %
                                           antismash_domain.get_name())

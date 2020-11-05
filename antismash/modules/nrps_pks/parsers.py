@@ -91,7 +91,7 @@ def calculate_consensus_prediction(cds_features: List[CDSFeature], results: Dict
 
         Arguments:
             cds_features: a list of CDSFeature to calculate consensus for
-            results: a dictionary mapping AntismashDomain name to
+            results: a dictionary mapping domain name to
                         a dictionary mapping analysis method to a Prediction
 
         Returns:

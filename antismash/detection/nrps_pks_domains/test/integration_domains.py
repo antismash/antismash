@@ -81,6 +81,7 @@ class TestAnalyses(unittest.TestCase):
         assert len(results.cds_results) == 2
         assert len(record.get_cds_motifs()) == 2
         assert len(record.get_antismash_domains()) == 3
+        assert len(record.get_antismash_domains_by_tool("nrps_pks_domains")) == 3
 
         two_domains = record.get_cds_by_name("two_domains")
         assert two_domains.nrps_pks.type == "NRPS"

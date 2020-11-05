@@ -125,10 +125,12 @@ class TestStripping(unittest.TestCase):
 
     def test_antismash_domains(self):
         assert not self.rec.get_antismash_domains()
-        self.rec.add_antismash_domain(DummyAntismashDomain())
+        self.rec.add_antismash_domain(DummyAntismashDomain(tool="test"))
         assert self.rec.get_antismash_domains()
+        assert self.rec.get_antismash_domains_by_tool("test")
         self.rec.strip_antismash_annotations()
         assert not self.rec.get_antismash_domains()
+        assert not self.rec.get_antismash_domains_by_tool("test")
 
     def test_pfams(self):
         assert not self.rec.get_pfam_domains()
@@ -179,6 +181,19 @@ class TestStripping(unittest.TestCase):
         assert self.cds.gene_functions
         self.rec.strip_antismash_annotations()
         assert not self.cds.gene_functions
+
+    def test_antismash_domains_by_tool(self):
+        assert not self.rec.get_antismash_domains()
+        assert self.rec.get_antismash_domains_by_tool("a") == tuple()
+        assert self.rec.get_antismash_domains_by_tool("b") == tuple()
+        a = DummyAntismashDomain(tool="a")
+        b = DummyAntismashDomain(tool="b")
+        z = DummyAntismashDomain(tool="a")
+        for i in [a, b, z]:
+            self.rec.add_antismash_domain(i)
+        assert self.rec.get_antismash_domains() == (a, b, z)
+        assert self.rec.get_antismash_domains_by_tool("a") == (a, z)
+        assert self.rec.get_antismash_domains_by_tool("b") == (b,)
 
 
 class TestRecordFeatureNumbering(unittest.TestCase):

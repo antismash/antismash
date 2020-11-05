@@ -13,10 +13,16 @@ from antismash.common import module_results, path, subprocessing, utils
 from antismash.common.fasta import get_fasta_from_features
 from antismash.common.hmmscan_refinement import refine_hmmscan_results, HMMResult
 from antismash.common.secmet.record import Record
-from antismash.common.secmet.features import AntismashDomain, CDSFeature, CDSMotif, Module as ModuleFeature
+from antismash.common.secmet.features import (
+    AntismashDomain,
+    CDSFeature,
+    CDSMotif,
+    Module as ModuleFeature,
+)
 from antismash.common.secmet.locations import FeatureLocation
 
 from .module_identification import build_modules_for_cds, Module
+from .modular_domain import ModularDomain
 
 
 class CDSResult:
@@ -28,7 +34,7 @@ class CDSResult:
         self.type = feature_type
         self.modules = modules
         self.ks_subtypes = ks_subtypes
-        self.domain_features: Dict[HMMResult, AntismashDomain] = {}
+        self.domain_features: Dict[HMMResult, ModularDomain] = {}
         ks_count = sum(dom.hit_id == "PKS_KS" for dom in self.domain_hmms)
         if len(ks_subtypes) != ks_count:
             raise ValueError("mismatching KS subtypes and PKS_KS counts: %d  %d" % (len(ks_subtypes), ks_count))
@@ -52,7 +58,7 @@ class CDSResult:
         return CDSResult(domain_hmms, motif_hmms, data["type"], modules, data["ks_subtypes"])
 
     def annotate_domains(self, record: Record, cds: CDSFeature) -> None:
-        """ Adds domain annotations to CDSFeatures and creates AntismashDomain
+        """ Adds domain annotations to CDSFeatures and creates ModularDomain
             features for all domains found
         """
         if not self.domain_hmms:
@@ -60,7 +66,7 @@ class CDSResult:
 
         cds.nrps_pks.type = self.type
 
-        # generate AntismashDomain features
+        # generate domain features
         self.domain_features = generate_domain_features(cds, self.domain_hmms)
         ks_sub = iter(self.ks_subtypes)
         for domain, domain_feature in self.domain_features.items():
@@ -101,7 +107,7 @@ class NRPSPKSDomains(module_results.DetectionResults):
     def add_to_record(self, record: Record) -> None:
         for result in self.cds_results.values():
             for module in result.modules:
-                domains = [result.domain_features[component.domain] for component in module]
+                domains: List[AntismashDomain] = [result.domain_features[component.domain] for component in module]
                 mod_type = ModuleFeature.types.UNKNOWN
                 if module.is_nrps():
                     mod_type = ModuleFeature.types.NRPS
@@ -360,15 +366,15 @@ def classify_cds(domain_names: List[str], ks_domain_subtypes: List[str]) -> str:
     return classification
 
 
-def generate_domain_features(gene: CDSFeature, domains: List[HMMResult]) -> Dict[HMMResult, AntismashDomain]:
-    """ Generates AntismashDomain features for each provided HMMResult
+def generate_domain_features(gene: CDSFeature, domains: List[HMMResult]) -> Dict[HMMResult, ModularDomain]:
+    """ Generates ModularDomain features for each provided HMMResult
 
         Arguments:
             gene: the CDSFeature the domains were found in
             domains: a list of HMMResults found in the CDSFeature
 
         Returns:
-            a dictionary mapping the HMMResult used to the matching AntismashDomain
+            a dictionary mapping the HMMResult used to the matching ModularDomain
     """
     new_features = {}
     domain_counts: Dict[str, int] = defaultdict(int)
@@ -377,8 +383,8 @@ def generate_domain_features(gene: CDSFeature, domains: List[HMMResult]) -> Dict
         prot_loc = FeatureLocation(domain.query_start, domain.query_end)
 
         # set up new feature
-        new_feature = AntismashDomain(loc, tool="nrps_pks_domains", protein_location=prot_loc,
-                                      locus_tag=gene.get_name())
+        new_feature = ModularDomain(loc, protein_location=prot_loc,
+                                    locus_tag=gene.get_name())
         new_feature.domain = domain.hit_id
         new_feature.locus_tag = gene.locus_tag or gene.get_name()
         new_feature.detection = "hmmscan"
