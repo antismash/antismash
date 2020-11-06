@@ -67,3 +67,12 @@ class TestSubtyping(unittest.TestCase):
         self.register("test", AntismashDomain)
         with self.assertRaisesRegex(ValueError, "already present as a subtype"):
             self.register("test", AntismashDomain)
+
+
+class TestValues(unittest.TestCase):
+    def test_domain_passthrough(self):
+        for value in ["test", "DomainName"]:
+            domain = AntismashDomain(FeatureLocation(1, 3, 1), locus_tag="locus",
+                                     tool="test", protein_location=FeatureLocation(0, 1),
+                                     domain=value)
+            assert domain.domain == value

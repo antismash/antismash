@@ -18,9 +18,10 @@ class AntismashDomain(Domain):
     __slots__ = ["domain_subtype", "specificity"]
     FEATURE_TYPE = "aSDomain"
 
-    def __init__(self, location: Location, tool: str, protein_location: FeatureLocation, locus_tag: str) -> None:
+    def __init__(self, location: Location, tool: str, protein_location: FeatureLocation,
+                 locus_tag: str, domain: str = None) -> None:
         super().__init__(location, self.FEATURE_TYPE, protein_location, locus_tag,
-                         tool=tool, created_by_antismash=True)
+                         tool=tool, created_by_antismash=True, domain=domain)
 
     @classmethod
     def from_biopython(cls: Type[T], bio_feature: SeqFeature, feature: T = None,
