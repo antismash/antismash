@@ -145,8 +145,6 @@ def build_hits(record: Record, hmmscan_results: List, min_score: float,
         Returns:
             a list of JSON representations of hmmer hits
     """
-    logging.debug("Generating feature objects for PFAM hits")
-
     hits = []
     feature_by_id = record.get_cds_name_mapping()
 
