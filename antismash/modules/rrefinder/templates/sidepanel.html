@@ -1,0 +1,24 @@
+<div class="more-details">
+  <div class="heading">
+    <span>RRE predictions</span>
+    {{help_tooltip(tooltip, "rre-side")}}
+  </div>
+  <dl class = 'prediction-text'>
+    {% for protocluster in protoclusters %}
+      <span><strong>{{protocluster.product}} protocluster</strong> ({{protocluster.location.start}}...{{protocluster.location.end}})</span>
+      <dt></dt>
+      {% set protocluster_nr = protocluster.get_protocluster_number() %}
+      {% set protocluster_hits = results.hits_by_protocluster[protocluster_nr] %}
+      {% for locus_tag in protocluster_hits %}
+        {% set gene_hits = results.hits_by_cds[locus_tag] %}
+        <strong>{{locus_tag}}</strong> {{collapser_start(target=locus_tag, level='cds')}}
+        {% for hit in gene_hits | sort(attribute='score', reverse=True)  %}
+          <dd>RRE type: {{hit['domain']}}</dd>
+          <dd>Location: {{hit['protein_start']}} - {{hit['protein_end']}}</dd>
+          <dd>Score: {{hit['score']}}</dd>
+        {% endfor %}
+        {{collapser_end()}}<br>
+      {% endfor %}<br>
+    {% endfor %}
+    </dl>
+</div>
