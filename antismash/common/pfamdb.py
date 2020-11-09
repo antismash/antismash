@@ -102,7 +102,8 @@ def _build_mapping(database: str) -> Dict[str, str]:
         Returns:
             a dictionary mapping NAME field to ACC field
     """
-    logging.debug("Building mapping for PFAM database version %s", get_db_version_from_path(database))
+    logging.debug("Building mapping for pHMM database %s", os.path.basename(database))
+
     with open(database) as handle:
         entries = handle.read().split("\n//\n")
     mapping = {}
