@@ -1107,9 +1107,9 @@ class Parser:  # pylint: disable=too-few-public-methods
 
 def is_legal_identifier(identifier: str) -> bool:
     """ Returns true if the identifier matches the form:
-        [a-zA-Z]{[a-zA-Z0-9_-]}*
+        {[a-zA-Z0-9_-]}*[a-zA-Z]{[a-zA-Z0-9_-]}*
     """
-    if not identifier[0].isalpha():
+    if not any(i.isalpha() for i in identifier):
         return False
     for char in identifier:
         if not (char.isalpha() or char.isdigit() or char in ['_', '-']):

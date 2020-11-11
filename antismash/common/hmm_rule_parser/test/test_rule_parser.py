@@ -441,12 +441,12 @@ class RuleParserTest(unittest.TestCase):
         with self.assertRaises(rule_parser.RuleSyntaxError):
             self.parse(format_as_rule("A", 10, 10, "a.b or c"))
 
-        assert not rule_parser.is_legal_identifier("0sdf")
+        assert not rule_parser.is_legal_identifier("0123")
         with self.assertRaises(rule_parser.RuleSyntaxError):
-            self.parse(format_as_rule("A", 10, 10, "a or 0sdf"))
+            self.parse(format_as_rule("A", 10, 10, "a or 0123"))
 
         with self.assertRaises(rule_parser.RuleSyntaxError):
-            self.parse(format_as_rule("A", 10, 10, "0sdf or a"))
+            self.parse(format_as_rule("A", 10, 10, "0123 or a"))
 
         assert not rule_parser.is_legal_identifier("a!b")
         with self.assertRaises(rule_parser.RuleSyntaxError):
