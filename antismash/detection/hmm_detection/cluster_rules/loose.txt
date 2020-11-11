@@ -4,6 +4,7 @@
 # Cutoffs and neighbourhoods are given in kilobases
 
 RULE saccharide
+    CATEGORY saccharide
     COMMENT from clusterfinder
     CUTOFF 20
     NEIGHBOURHOOD 10
@@ -16,12 +17,14 @@ RULE saccharide
                           Polysacc_synt_2, RmlD_sub_bind, Wzy_C])
 
 RULE fatty_acid
+    CATEGORY other
     COMMENT from clusterfinder
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS  bt1fas or ft1fas or t2fas or fabH
 
 RULE halogenated
+    CATEGORY other
     COMMENT Halogenases are frequently involved in secondary metabolite biosynthesis
     CUTOFF 5
     NEIGHBOURHOOD 10
