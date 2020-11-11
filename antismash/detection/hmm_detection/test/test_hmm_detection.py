@@ -62,12 +62,12 @@ class HmmDetectionTest(unittest.TestCase):
                            "a", "b", "c", "d"}
 
         self.rules = rule_parser.Parser("\n".join([
-                "RULE MetaboliteA CUTOFF 10 NEIGHBOURHOOD 5 CONDITIONS modelA",
-                "RULE MetaboliteB CUTOFF 10 NEIGHBOURHOOD 5 CONDITIONS cds(modelA and modelB)",
-                "RULE MetaboliteC CUTOFF 10 NEIGHBOURHOOD 5 CONDITIONS (modelA and modelB)",
-                "RULE MetaboliteD CUTOFF 20 NEIGHBOURHOOD 5 CONDITIONS minimum(2,[modelC,modelB]) and modelA",
-                "RULE Metabolite0 CUTOFF 1 NEIGHBOURHOOD 3 CONDITIONS modelF",
-                "RULE Metabolite1 CUTOFF 1 NEIGHBOURHOOD 3 CONDITIONS modelG"]), self.test_names).rules
+                "RULE MetaboliteA CATEGORY Cat CUTOFF 10 NEIGHBOURHOOD 5 CONDITIONS modelA",
+                "RULE MetaboliteB CATEGORY Cat CUTOFF 10 NEIGHBOURHOOD 5 CONDITIONS cds(modelA and modelB)",
+                "RULE MetaboliteC CATEGORY Cat CUTOFF 10 NEIGHBOURHOOD 5 CONDITIONS (modelA and modelB)",
+                "RULE MetaboliteD CATEGORY Cat CUTOFF 20 NEIGHBOURHOOD 5 CONDITIONS minimum(2,[modelC,modelB]) and modelA",
+                "RULE Metabolite0 CATEGORY Cat CUTOFF 1 NEIGHBOURHOOD 3 CONDITIONS modelF",
+                "RULE Metabolite1 CATEGORY Cat CUTOFF 1 NEIGHBOURHOOD 3 CONDITIONS modelG"]), self.test_names).rules
         self.features = []
         for gene_id in self.feature_by_id:
             self.features.append(self.feature_by_id[gene_id])
@@ -84,8 +84,8 @@ class HmmDetectionTest(unittest.TestCase):
     def test_overlaps_but_not_contains(self):
         # should get gene2 and gene3
         rules = rule_parser.Parser("\n".join([
-                "RULE Overlap CUTOFF 25 NEIGHBOURHOOD 5 CONDITIONS modelB and modelF "
-                "RULE OverlapImpossible CUTOFF 25 NEIGHBOURHOOD 5 CONDITIONS modelA and modelF"]),
+                "RULE Overlap CATEGORY Cat CUTOFF 25 NEIGHBOURHOOD 5 CONDITIONS modelB and modelF "
+                "RULE OverlapImpossible CATEGORY Cat CUTOFF 25 NEIGHBOURHOOD 5 CONDITIONS modelA and modelF"]),
                 self.test_names).rules
         detected_types, cluster_type_hits = hmm_detection.apply_cluster_rules(self.record, self.results_by_id, rules)
         assert detected_types == {"GENE_2": {"Overlap": {"modelB"}},

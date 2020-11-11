@@ -3,6 +3,7 @@
 # Cutoffs and neighbourhoods are given in kilobases
 
 RULE NRPS-like
+    CATEGORY NRPS
     COMMENT Catches NRPS-like fragments that are not detected by the NRPS rule
     SUPERIORS NRPS
     CUTOFF 0  # since we're really looking at single CDS fragments
@@ -10,6 +11,7 @@ RULE NRPS-like
     CONDITIONS cds((PP-binding or NAD_binding_4) and (AMP-binding or A-OX))
 
 RULE PKS-like
+    CATEGORY PKS
     COMMENT Catches PKS-like fragments that are not detected by another PKS rule
     SUPERIORS T2PKS
     CUTOFF 10
@@ -17,6 +19,7 @@ RULE PKS-like
     CONDITIONS t2pks2 or ksIII
 
 RULE transAT-PKS-like
+    CATEGORY PKS
     COMMENT Marks partial transAT-PKS clusters, specifically those with an AT-docking domain,
             but no AT domain.
     SUPERIORS transAT-PKS

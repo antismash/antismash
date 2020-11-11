@@ -90,8 +90,10 @@ The grammar itself:
     NEIGHBOURHOOD_MARKER = "NEIGHBOURHOOD"
     CONDITIONS_MARKER = "CONDITIONS"
     SUPERIORS_MARKER = "SUPERIORS"
+    CATEGORY_MARKER = "CATEGORY"
 
     RULE = RULE_MARKER classification:ID
+            CATEGORY_MARKER category:ID
             [COMMENT_MARKER:COMMENTS]
             [RELATED_MARKER related_profiles:COMMA_SEPARATED_IDS]
             [SUPERIORS_MARKER superiors:COMMA_SEPARATED_IDS]
@@ -133,16 +135,19 @@ Condition examples:
 
 SUPERIORS examples:
     RULE a
+        CATEGORY c
         CUTOFF 10
         ...
 
     RULE b
+        CATEGORY c
         SUPERIORS a
         CUTOFF 20
         ...
 
 Complete examples:
     RULE t1pks
+        CATEGORY PKS
         CUTOFF 20
         NEIGHBOURHOOD 20
         CONDITIONS cds(PKS_AT and (PKS_KS or ene_KS
@@ -194,6 +199,7 @@ class TokenTypes(IntEnum):
     SUPERIORS = 21
     RELATED = 22
     TEXT = 23  # covers words that aren't valid identifiers for use in rule COMMENT fields
+    CATEGORY = 24  # assigns the rule to a category, allowing to group related rules
 
     def __repr__(self) -> str:
         return self.__str__()
@@ -239,7 +245,7 @@ class Tokeniser:  # pylint: disable=too-few-public-methods
                "CONDITIONS": TokenTypes.CONDITIONS,
                "COMMENT": TokenTypes.COMMENT, "CUTOFF": TokenTypes.CUTOFF,
                "NEIGHBOURHOOD": TokenTypes.NEIGHBOURHOOD, "SUPERIORS": TokenTypes.SUPERIORS,
-               "RELATED": TokenTypes.RELATED}
+               "RELATED": TokenTypes.RELATED, "CATEGORY": TokenTypes.CATEGORY}
 
     def __init__(self, text: str) -> None:
         self.text = text
@@ -721,6 +727,7 @@ class ScoreCondition(Conditions):
 class DetectionRule:
     """ Contains all information about a rule, i.e.
             name: the label given for the rule
+            category: the category this rule belongs to
             cutoff: the cutoff used to construct clusters (in bases)
             neighbourhood: the neighbourhood to use to include nearby CDS features (in bases)
             conditions: the conditions that potential clusters have to satisfy
@@ -728,9 +735,10 @@ class DetectionRule:
             superiors: a list of other rule names superior to this one
             related: a list of profile identifiers related to, but not required by, this rule
         """
-    def __init__(self, name: str, cutoff: int, neighbourhood: int, conditions: Conditions,
+    def __init__(self, name: str, category: str, cutoff: int, neighbourhood: int, conditions: Conditions,
                  comments: str = "", superiors: List[str] = None, related: List[str] = None) -> None:
         self.name = name
+        self.category = category
         self.cutoff = cutoff
         self.neighbourhood = neighbourhood
         self.conditions = conditions
@@ -772,8 +780,8 @@ class DetectionRule:
         # strip off outer parens if they exist
         if condition_text[0] == "(" and condition_text[-1] == ')':
             condition_text = condition_text[1:-1]
-        return "{}\t{}\t{}\t{}".format(self.name, self.cutoff // 1000,
-                                       self.neighbourhood // 1000, condition_text)
+        return "{}\t{}\t{}\t{}\t{}".format(self.name, self.category, self.cutoff // 1000,
+                                           self.neighbourhood // 1000, condition_text)
 
     def reconstruct_rule_text(self) -> str:
         """ Generate a string that can be tokenised and parsed to recreate this
@@ -786,8 +794,8 @@ class DetectionRule:
         comments = ""
         if self.comments:
             comments = "COMMENTS" + self.comments + " "
-        return "RULE {} {}CUTOFF {} NEIGHBOURHOOD {} CONDITIONS {}".format(self.name,
-                    comments, self.cutoff // 1000, self.neighbourhood // 1000, condition_text)
+        return "RULE {} CATEGORY {} {}CUTOFF {} NEIGHBOURHOOD {} CONDITIONS {}".format(self.name,
+                    self.category, comments, self.cutoff // 1000, self.neighbourhood // 1000, condition_text)
 
     def get_hit_string(self) -> str:
         """ Returns a string representation of the rule, marking how many times
@@ -862,17 +870,23 @@ class Parser:  # pylint: disable=too-few-public-methods
         return self._consume(TokenTypes.IDENTIFIER).identifier
 
     def _parse_rule(self) -> DetectionRule:
-        """ RULE = RULE_MARKER classification:ID [COMMENT_MARKER:COMMENTS]
+        """ RULE = RULE_MARKER classification:ID CATEGORY_MARKER category:ID
+                    [COMMENT_MARKER:COMMENTS]
                     CUTOFF_MARKER cutoff:INT NEIGHBOURHOOD_MARKER neighbourhood:INT
                     CONDITIONS_MARKER conditions:CONDITIONS
         """
         self._consume(TokenTypes.RULE)
         rule_name = self._consume_identifier()
+        if not self.current_token:
+            raise RuleSyntaxError("expected %s section after %s"
+                                  % (TokenTypes.CATEGORY, TokenTypes.RULE))
         comments = ""
+        self._consume(TokenTypes.CATEGORY)
+        category = self._consume_identifier()
         if not self.current_token:
             raise RuleSyntaxError("expected %s, %s, or %s sections after %s"
                                   % (TokenTypes.COMMENT, TokenTypes.SUPERIORS,
-                                     TokenTypes.CUTOFF, TokenTypes.RULE))
+                                     TokenTypes.CUTOFF, TokenTypes.CATEGORY))
         if self.current_token.type == TokenTypes.COMMENT:
             comments = self._parse_comments()
             prev = TokenTypes.COMMENT
@@ -898,7 +912,7 @@ class Parser:  # pylint: disable=too-few-public-methods
                     self.current_token.type,
                     "\n".join(self.lines[self.current_line - 5:self.current_line]),
                     " "*self.current_token.position, "^"))
-        return DetectionRule(rule_name, cutoff, neighbourhood, conditions,
+        return DetectionRule(rule_name, category, cutoff, neighbourhood, conditions,
                              comments=comments, superiors=superiors, related=related)
 
     def _parse_comments(self) -> str:

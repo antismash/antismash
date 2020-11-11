@@ -23,9 +23,9 @@ class DummyConditions(rule_parser.Conditions):
 
 class TestRedundancy(unittest.TestCase):
     def setUp(self):
-        superior = rule_parser.DetectionRule("superior", 10, 10, DummyConditions())
-        inferior = rule_parser.DetectionRule("inferior", 10, 10, DummyConditions(), superiors=["superior"])
-        irrelevant = rule_parser.DetectionRule("irrelevant", 10, 10, DummyConditions())
+        superior = rule_parser.DetectionRule("superior", "category", 10, 10, DummyConditions())
+        inferior = rule_parser.DetectionRule("inferior", "category", 10, 10, DummyConditions(), superiors=["superior"])
+        irrelevant = rule_parser.DetectionRule("irrelevant", "category", 10, 10, DummyConditions())
         self.rules_by_name = {rule.name: rule for rule in [superior, inferior, irrelevant]}
 
     def remove(self, clusters):
