@@ -224,7 +224,7 @@ class TokenTypes(IntEnum):
         """ Returns True if the token is a rule structure keyword such as
             RULE, COMMENT, CONDITIONS, etc
         """
-        return 15 <= self.value <= 21  # pylint: disable=comparison-with-callable
+        return 15 <= self.value and self.value != self.TEXT # pylint: disable=comparison-with-callable
 
 
 class Tokeniser:  # pylint: disable=too-few-public-methods
