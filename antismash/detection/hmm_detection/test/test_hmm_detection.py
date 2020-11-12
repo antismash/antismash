@@ -26,6 +26,7 @@ class HmmDetectionTest(unittest.TestCase):
         self.rules_file = path.get_full_path(__file__, "..", "cluster_rules", "strict.txt")
         self.signature_file = path.get_full_path(__file__, "..", "data", "hmmdetails.txt")
         self.signature_names = {sig.name for sig in core.get_signature_profiles()}
+        self.valid_categories = {cat.name for cat in core.get_rule_categories()}
         self.filter_file = path.get_full_path(__file__, "..", "filterhmmdetails.txt")
         self.results_by_id = {
             "GENE_1": [
@@ -61,13 +62,16 @@ class HmmDetectionTest(unittest.TestCase):
         self.test_names = {"modelA", "modelB", "modelC", "modelF", "modelG",
                            "a", "b", "c", "d"}
 
+        self.categories = {"Cat"}
+
         self.rules = rule_parser.Parser("\n".join([
                 "RULE MetaboliteA CATEGORY Cat CUTOFF 10 NEIGHBOURHOOD 5 CONDITIONS modelA",
                 "RULE MetaboliteB CATEGORY Cat CUTOFF 10 NEIGHBOURHOOD 5 CONDITIONS cds(modelA and modelB)",
                 "RULE MetaboliteC CATEGORY Cat CUTOFF 10 NEIGHBOURHOOD 5 CONDITIONS (modelA and modelB)",
                 "RULE MetaboliteD CATEGORY Cat CUTOFF 20 NEIGHBOURHOOD 5 CONDITIONS minimum(2,[modelC,modelB]) and modelA",
                 "RULE Metabolite0 CATEGORY Cat CUTOFF 1 NEIGHBOURHOOD 3 CONDITIONS modelF",
-                "RULE Metabolite1 CATEGORY Cat CUTOFF 1 NEIGHBOURHOOD 3 CONDITIONS modelG"]), self.test_names).rules
+                "RULE Metabolite1 CATEGORY Cat CUTOFF 1 NEIGHBOURHOOD 3 CONDITIONS modelG"]),
+                self.test_names, self.categories).rules
         self.features = []
         for gene_id in self.feature_by_id:
             self.features.append(self.feature_by_id[gene_id])
@@ -86,7 +90,7 @@ class HmmDetectionTest(unittest.TestCase):
         rules = rule_parser.Parser("\n".join([
                 "RULE Overlap CATEGORY Cat CUTOFF 25 NEIGHBOURHOOD 5 CONDITIONS modelB and modelF "
                 "RULE OverlapImpossible CATEGORY Cat CUTOFF 25 NEIGHBOURHOOD 5 CONDITIONS modelA and modelF"]),
-                self.test_names).rules
+                self.test_names, self.categories).rules
         detected_types, cluster_type_hits = hmm_detection.apply_cluster_rules(self.record, self.results_by_id, rules)
         assert detected_types == {"GENE_2": {"Overlap": {"modelB"}},
                                   "GENE_3": {"Overlap": {"modelF"}}}
@@ -159,7 +163,7 @@ class HmmDetectionTest(unittest.TestCase):
         assert result_regions == expected_regions
 
     def test_create_rules(self):
-        rules = hmm_detection.create_rules(self.rules_file, self.signature_names)
+        rules = hmm_detection.create_rules(self.rules_file, self.signature_names, self.valid_categories)
         assert len(rules) == open(self.rules_file).read().count("\nRULE")
         t1pks_rules = [rule for rule in rules if rule.name == "T1PKS"]
         assert len(t1pks_rules) == 1

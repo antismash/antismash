@@ -1,0 +1,30 @@
+{
+    "PKS": {
+        "description": "Polyketide",
+        "version": 1
+    },
+    "NRPS": {
+        "description": "Nonribosomal peptide",
+        "version": 1
+    },
+    "RiPP": {
+        "description": "Ribosomally synthesized and post-translationally modified peptide",
+        "version": 1
+    },
+    "terpene": {
+        "description": "Terpene",
+        "version": 1
+    },
+    "saccharide": {
+        "description": "Saccharide",
+        "version": 1
+    },
+    "alkaloid": {
+        "description": "Alkaloid",
+        "version": 1
+    },
+    "other": {
+        "description": "Other",
+        "version": 1
+    }
+}
