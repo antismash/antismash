@@ -42,9 +42,11 @@ class DetectionTest(unittest.TestCase):
                        FakeHSPHit("g", "GENE_1", 0, 10, 50, 0)]}
         self.signature_names = set(["a", "b", "c", "d", "e", "f", "g", "modelA", "modelB"])
 
-    def run_test(self, name, cutoff, neighbourhood, conditions, category="C"):
+    def run_test(self, name, cutoff, neighbourhood, conditions, category="C", valid_categories=None):
+        if valid_categories is None:
+            valid_categories = {category}
         rules = format_as_rule(name, cutoff, neighbourhood, conditions, category)
-        rules = rule_parser.Parser(rules, self.signature_names).rules
+        rules = rule_parser.Parser(rules, self.signature_names, valid_categories).rules
         for rule in rules:
             assert rule.contains_positive_condition()
 
@@ -261,8 +263,10 @@ class RuleParserTest(unittest.TestCase):
     def setUp(self):
         self.signature_names = set(["a", "b", "c", "d", "more", "other"])
 
-    def parse(self, text):
-        return rule_parser.Parser(text, self.signature_names)
+    def parse(self, text, valid_categories=None):
+        if valid_categories is None:
+            valid_categories = {"C", "category"}
+        return rule_parser.Parser(text, self.signature_names, valid_categories)
 
     def test_invalid_signature(self):
         with self.assertRaises(ValueError) as details:
@@ -310,6 +314,9 @@ class RuleParserTest(unittest.TestCase):
     def test_category(self):
         rules = self.parse("RULE name CATEGORY category CUTOFF 20 NEIGHBOURHOOD 20 CONDITIONS a").rules
         assert len(rules) == 1 and rules[0].category == "category"
+
+        with self.assertRaisesRegex(rule_parser.RuleSyntaxError, "Invalid category"):
+            rules = self.parse("RULE name CATEGORY nope CUTOFF 20 NEIGHBOURHOOD 20 CONDITIONS a").rules
 
     def test_section_comments(self):
         rules = self.parse("RULE name CATEGORY category COMMENT this is a section comment CUTOFF 20"

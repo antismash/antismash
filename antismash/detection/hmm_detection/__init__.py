@@ -21,6 +21,7 @@ from antismash.common.secmet.features import Protocluster
 from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
 from antismash.detection.hmm_detection.signatures import get_signature_profiles
+from antismash.detection.hmm_detection.categories import get_rule_categories
 
 NAME = "hmmdetection"
 SHORT_DESCRIPTION = "HMM signature detection"
@@ -78,10 +79,11 @@ def get_supported_cluster_types(strictness: str) -> List[str]:
     """ Returns a list of all cluster types for which there are rules
     """
     signature_names = {sig.name for sig in get_signature_profiles()}
+    category_names = {cat.name for cat in get_rule_categories()}
     rules: List[rule_parser.DetectionRule] = []
     for rule_file in _get_rule_files_for_strictness(strictness):
         with open(rule_file) as rulefile:
-            rules = rule_parser.Parser("".join(rulefile.readlines()), signature_names, rules).rules
+            rules = rule_parser.Parser("".join(rulefile.readlines()), signature_names, category_names, rules).rules
     clustertypes = [rule.name for rule in rules]
     return clustertypes
 
@@ -144,9 +146,10 @@ def run_on_record(record: Record, previous_results: Optional[HMMDetectionResults
     signatures = path.get_full_path(__file__, "data", "hmmdetails.txt")
     seeds = path.get_full_path(__file__, "data", "bgc_seeds.hmm")
     rules = _get_rule_files_for_strictness(strictness)
+    valid_categories = {cat.name for cat in get_rule_categories()}
     equivalences = path.get_full_path(__file__, "filterhmmdetails.txt")
-    results = detect_protoclusters_and_signatures(record, signatures, seeds, rules, equivalences,
-                                                  "rule-based-clusters")
+    results = detect_protoclusters_and_signatures(record, signatures, seeds, rules, valid_categories,
+                                                  equivalences, "rule-based-clusters")
     results.annotate_cds_features()
     return HMMDetectionResults(record.id, results, get_supported_cluster_types(strictness), strictness)
 

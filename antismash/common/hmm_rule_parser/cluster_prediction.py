@@ -289,6 +289,7 @@ def filter_result_multiple(results: List[HSP], results_by_id: Dict[str, HSP]) ->
 
 
 def create_rules(rule_file: str, signature_names: Set[str],
+                 valid_categories: Set[str],
                  existing_rules: List[rule_parser.DetectionRule] = None
                  ) -> List[rule_parser.DetectionRule]:
     """ Creates DetectionRule instances from the default rules file
@@ -296,6 +297,7 @@ def create_rules(rule_file: str, signature_names: Set[str],
         Args:
             rule_file: A path to a file containing cluster rules to use.
             signature_names: the set of all known profile/signature names
+            valid_categories: the set of all valid rule categories
             existing_rules: a list of existing rules, if any
 
         Returns:
@@ -303,7 +305,7 @@ def create_rules(rule_file: str, signature_names: Set[str],
     """
     rules = existing_rules or []
     with open(rule_file, "r") as ruledata:
-        parser = rule_parser.Parser("".join(ruledata.readlines()), signature_names, rules)
+        parser = rule_parser.Parser("".join(ruledata.readlines()), signature_names, valid_categories, rules)
     return parser.rules
 
 
@@ -365,7 +367,8 @@ def apply_cluster_rules(record: Record, results_by_id: Dict[str, List[HSP]],
 
 
 def detect_protoclusters_and_signatures(record: Record, signature_file: str, seeds_file: str,
-                                        rule_files: List[str], filter_file: str, tool: str) -> RuleDetectionResults:
+                                        rule_files: List[str], valid_categories: Set[str],
+                                        filter_file: str, tool: str) -> RuleDetectionResults:
     """ Compares all CDS features in a record with HMM signatures and generates
         Protocluster features based on those hits and the current protocluster detection
         rules.
@@ -376,6 +379,7 @@ def detect_protoclusters_and_signatures(record: Record, signature_file: str, see
                         with columns: label, description, minimum score cutoff, hmm path
             seeds_file: the file containing all HMM profiles
             rule_files: the files containing the rules to use for cluster definition
+            valid_categories: a set containing valid rule category strings
             filter_file: a file containing equivalence sets of HMMs
             tool: the name of the tool providing the HMMs (e.g. rule_based_clusters)
     """
@@ -388,7 +392,7 @@ def detect_protoclusters_and_signatures(record: Record, signature_file: str, see
     sig_by_name = {sig.name: sig for sig in get_signature_profiles(signature_file)}
     rules: List[rule_parser.DetectionRule] = []
     for rule_file in rule_files:
-        rules = create_rules(rule_file, set(sig_by_name), rules)
+        rules = create_rules(rule_file, set(sig_by_name), valid_categories, rules)
     results = []
     results_by_id: Dict[str, HSP] = {}
 

@@ -813,8 +813,10 @@ class Parser:  # pylint: disable=too-few-public-methods
         text are stored in the .rules member.
     """
     def __init__(self, text: str, signature_names: Set[str],
+                 valid_categories: Set[str],
                  existing_rules: List[DetectionRule] = None) -> None:
         self.lines = text.splitlines()
+        self.valid_categories = valid_categories
         if not existing_rules:
             existing_rules = []
         self.rules = list(existing_rules)
@@ -883,6 +885,9 @@ class Parser:  # pylint: disable=too-few-public-methods
         comments = ""
         self._consume(TokenTypes.CATEGORY)
         category = self._consume_identifier()
+        if category not in self.valid_categories:
+            valid_categories = ", ".join(self.valid_categories)
+            raise RuleSyntaxError(f"Invalid category {category}, use one of {valid_categories}")
         if not self.current_token:
             raise RuleSyntaxError("expected %s, %s, or %s sections after %s"
                                   % (TokenTypes.COMMENT, TokenTypes.SUPERIORS,
