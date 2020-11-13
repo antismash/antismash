@@ -6,7 +6,8 @@
 
 import unittest
 
-from antismash.common.secmet.features import AntismashDomain, FeatureLocation
+from antismash.common.secmet.features import AntismashDomain, Feature, FeatureLocation
+from antismash.common.secmet.features import antismash_domain
 
 
 class TestConversion(unittest.TestCase):
@@ -14,11 +15,10 @@ class TestConversion(unittest.TestCase):
         self.protein_location = FeatureLocation(0, 1)
         self.domain = AntismashDomain(FeatureLocation(1, 3, 1), locus_tag="locus",
                                       tool="test", protein_location=self.protein_location)
+        self.domain.domain_id = "test1"
 
     def test_conversion(self):
         domain = self.domain
-        domain.domain_subtype = "subtest"
-        domain.specificity = ["a", "c", "f"]
         domain.asf.add("first")
         domain.asf.add("second")
         assert domain.tool == "test"
@@ -30,8 +30,6 @@ class TestConversion(unittest.TestCase):
         assert bio[0].qualifiers["aSTool"] == ["test"]
         assert bio[0].qualifiers["tool"] == ["antismash"]
         new_domain = AntismashDomain.from_biopython(bio[0])
-        assert new_domain.domain_subtype == domain.domain_subtype == "subtest"
-        assert new_domain.specificity == domain.specificity == ["a", "c", "f"]
         assert new_domain.asf.hits == domain.asf.hits
         assert new_domain.asf.hits == ["first", "second"]
         assert new_domain.tool == domain.tool == "test"
@@ -47,3 +45,34 @@ class TestConversion(unittest.TestCase):
         bio[0].qualifiers["domain_id"][0] = self.domain.domain_id.replace(".", ". ")
         new = AntismashDomain.from_biopython(bio[0])
         assert new.domain_id == self.domain.domain_id
+
+
+class TestSubtyping(unittest.TestCase):
+    def setUp(self):
+        self.original = antismash_domain._SUBTYPE_MAPPING
+        antismash_domain._SUBTYPE_MAPPING = {}
+
+    def tearDown(self):
+        antismash_domain._SUBTYPE_MAPPING = self.original
+
+    def register(self, name, subclass):
+        antismash_domain.register_asdomain_variant(name, subclass)
+
+    def test_invalid_class(self):
+        for value in [int, Feature]:
+            with self.assertRaisesRegex(TypeError, "not a subclass"):
+                self.register("test", value)
+
+    def test_duplicate_tools(self):
+        self.register("test", AntismashDomain)
+        with self.assertRaisesRegex(ValueError, "already present as a subtype"):
+            self.register("test", AntismashDomain)
+
+
+class TestValues(unittest.TestCase):
+    def test_domain_passthrough(self):
+        for value in ["test", "DomainName"]:
+            domain = AntismashDomain(FeatureLocation(1, 3, 1), locus_tag="locus",
+                                     tool="test", protein_location=FeatureLocation(0, 1),
+                                     domain=value)
+            assert domain.domain == value

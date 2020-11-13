@@ -14,6 +14,7 @@ from antismash.config.args import ModuleArgs
 
 from .domain_drawing import generate_html, generate_js_domains, will_handle
 from .domain_identification import generate_domains, NRPSPKSDomains
+from .modular_domain import ModularDomain
 
 NAME = "nrps_pks_domains"
 SHORT_DESCRIPTION = "NRPS/PKS domain identification"
