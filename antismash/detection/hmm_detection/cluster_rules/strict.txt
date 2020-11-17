@@ -42,6 +42,14 @@ RULE hglE-KS
     NEIGHBOURHOOD 20
     CONDITIONS hglE or hglD
 
+RULE prodigiosin
+    CATEGORY PKS
+    COMMENT Serratia-type nontraditional PKS prodigiosin biosynthesis pathway
+            like BGC0000258 and BGC0000259
+    CUTOFF 20
+    NEIGHBOURHOOD 10
+    CONDITIONS PPDK_N and AMP-binding and PP-binding and PKS_KS
+
 RULE arylpolyene
     CATEGORY other
     CUTOFF 20
