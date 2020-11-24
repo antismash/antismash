@@ -283,18 +283,18 @@
     @include hydrocarbon;
 }
 
-@mixin unknown {
+.unknown {
     @include secmet(black, #f2f2f2, black);
 }
 
 .saccharide {
-    @include unknown;
+    @extend .unknown;
 }
 
 .fatty_acid {
-    @include unknown;
+    @extend .unknown;
 }
 
 .halogenated {
-    @include unknown;
+    @extend .unknown;
 }
