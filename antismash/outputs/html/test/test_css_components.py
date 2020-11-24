@@ -14,7 +14,10 @@ class TestClusterCSS(unittest.TestCase):
     def test_css_matches_rules(self):
         defined_clusters = set(name for name in hmm_detection.get_supported_cluster_types("loose"))
         available_classes = set()
-        base_classes = {"hybrid"}  # a special case used at the javascript level
+        base_classes = {
+            "hybrid",  # a special case used at the javascript level
+            "unknown",  # for regions containing only subregions
+        }
         less = path.get_full_path(__file__, "..", "css", "secmet.scss")
         with open(less) as handle:
             for line in handle.readlines():
