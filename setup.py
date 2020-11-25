@@ -20,6 +20,7 @@ install_requires = [
     'helperlibs',
     'jinja2',
     'joblib',
+    'jsonschema',
     'pysvg-py3',
     'bcbio-gff',
     'pyScss',

@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "description": "An area",
+  "required": [
+    "start",
+    "end",
+    "label"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "start": {
+      "type": "integer",
+      "description": "The start of the region within the record",
+      "minimum": 0
+    },
+    "end": {
+      "type": "integer",
+      "description": "The end of the region within the record",
+      "minimum": 1
+    },
+    "label": {
+      "type": "string",
+      "description": "The label to give the region",
+      "examples": [
+        "Polyketide",
+        "Type I PKS"
+      ],
+      "pattern": "^(.+)$",
+      "maxLength": 20
+    },
+    "details": {
+      "$ref": "details.json"
+    }
+  }
+}
