@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "description": "Details of the tool creating the record annotations",
+  "required": [
+    "name"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The name of the tool",
+      "pattern": "^(.+)$"
+    },
+    "version": {
+      "type": "string",
+      "description": "The version of the tool",
+      "pattern": "^(.+)$"
+    },
+    "description": {
+      "type": "string",
+      "description": "A simple description of the tool or it's configuration",
+      "pattern": "^(.+)$"
+    },
+    "configuration": {
+      "$ref": "file:details.json",
+      "description": "Specifics of the tool's configuration, if relevant"
+    }
+  }
+}

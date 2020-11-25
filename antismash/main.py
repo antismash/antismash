@@ -39,6 +39,7 @@ from antismash.detection import (cassis,
                                  hmm_detection,
                                  nrps_pks_domains,
                                  genefunctions,
+                                 sideloader,
                                  )
 from antismash.modules import (active_site_finder,
                                clusterblast,
@@ -80,7 +81,7 @@ def get_detection_modules() -> List[AntismashModule]:
             a list of modules
     """
     return [genefinding, hmm_detection, nrps_pks_domains, full_hmmer, cassis,  # type: ignore
-            cluster_hmmer, genefunctions]  # type: ignore
+            cluster_hmmer, genefunctions, sideloader]  # type: ignore
 
 
 def get_analysis_modules() -> List[AntismashModule]:
@@ -161,7 +162,7 @@ def run_detection(record: Record, options: ConfigType,
 
     # generate cluster predictions
     logging.info("Detecting secondary metabolite clusters")
-    for module in [hmm_detection, cassis]:
+    for module in [sideloader, hmm_detection, cassis]:
         run_module(record, cast(AntismashModule, module), options, module_results, timings)
         results = module_results.get(module.__name__)
         if results:

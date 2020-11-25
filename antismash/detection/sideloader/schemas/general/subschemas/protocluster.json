@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "description": "An area",
+  "required": [
+    "core_start",
+    "core_end",
+    "product"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "core_start": {
+      "type": "integer",
+      "description": "The start of the protocluster core within the record",
+      "minimum": 0
+    },
+    "core_end": {
+      "type": "integer",
+      "description": "The end of the protocluster core within the record",
+      "minimum": 1
+    },
+    "product": {
+      "type": "string",
+      "description": "The predicted product of the protocluster, for antiSMASH analyses to run, the product must be as antiSMASH would predict",
+      "examples": [
+        "NRPS",
+        "T2PKS"
+      ],
+      "pattern": "^(.+)$",
+      "minLength": 2,
+      "maxLength": 20
+    },
+    "neighbourhood_left": {
+        "type": "integer",
+        "description": "the area to the left of the core to include in analyses",
+        "minimum": 0,
+        "default": 0
+    },
+    "neighbourhood_right": {
+        "type": "integer",
+        "description": "the area to the right of the core to include in analyses",
+        "minimum": 0,
+        "default": 0
+    },
+    "details": {
+      "$ref": "details.json"
+    }
+  }
+}

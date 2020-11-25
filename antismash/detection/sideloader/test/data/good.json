@@ -1,0 +1,65 @@
+{
+  "tool": {
+    "name": "test tool name",
+    "version": "1.2.3",
+    "description": "test description",
+    "configuration": {
+      "setting1name": "setting1value",
+      "multisetting": [
+        "first",
+        "second"
+      ]
+    }
+  },
+  "records": [
+    {
+      "name": "HM219853.1",
+      "subregions": [
+        {
+          "start": 158,
+          "end": 2510,
+          "label": "Polyketide",
+          "details": {
+            "score": "6.5",
+            "some_option_name": "yes",
+            "some_other_detail": [
+              "first",
+              "second",
+              "etc"
+            ]
+          }
+        }
+      ],
+      "protoclusters": [
+        {
+          "core_start": 238,
+          "core_end": 4010,
+          "product": "T1PKS",
+          "neighbourhood_right": 500,
+          "details": {
+            "score": "6.5",
+            "some_option_name": "no"
+          }
+        }
+      ]
+    },
+    {
+      "name": "not-HM219853.1",
+      "subregions": [
+        {
+          "start": 1158,
+          "end": 12510,
+          "label": "unknown"
+        }
+      ],
+      "protoclusters": [
+        {
+          "core_start": 1238,
+          "core_end": 14010,
+          "product": "NRPS",
+          "neighbourhood_right": 500
+        }
+      ]
+    }
+  ]
+}
