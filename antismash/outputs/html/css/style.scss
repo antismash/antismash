@@ -1179,6 +1179,31 @@ ul.dropdown-options {
     }
 }
 
+.download-container {
+    position: relative;
+    display: block;
+    float: right;
+
+    .download-icon {
+        display: inline-block;
+        -webkit-mask: url(../images/download.svg) no-repeat center;  /* opera, chrome, and safari */
+        mask: url(../images/download.svg) no-repeat center;
+        background-color: white;
+        width: 1.3em;
+        height: 1.3em;
+        margin-top: 1px;
+        margin-right: 2px;
+        cursor: pointer;
+
+        &:hover {
+            background-color: #ddd;
+        }
+        &:active,&.active {
+            background-color: #bbb;
+        }
+    }
+}
+
 .focus-panel-content {
     margin-left: 2em;
     margin-right: 2em;
