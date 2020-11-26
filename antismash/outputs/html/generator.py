@@ -114,7 +114,7 @@ def generate_html_sections(records: List[RecordLayer], results: Dict[str, Dict[s
 Click on each domain for more information about the domain's
 accession, location, description, and any relevant Gene Ontology.
 Domains with a bold border have Gene Ontology information. """
-                section = template.render(region=region, tooltip=tooltip)
+                section = template.render(region=region, record=record, tooltip=tooltip)
                 html.add_detail_section("Pfam domains", section, "pfam-details")
                 sections.append(html)
         details[record.id] = record_details
