@@ -11,6 +11,9 @@
       <div class="region-download">
         <a href = {{ '%s.region%03d.gbk' % (record.id, region.get_region_number()) }}>Download region GenBank file</a>
       </div>
+      <div class="region-download">
+        <div class="link-like download-svg" data-tag="{{region.anchor_id}}-svg" data-filename="{{record.id}}_{{region.anchor_id}}.svg">Download region SVG</div>
+      </div>
       <div class = 'description-text'>
         {{region.description_text()}}
         {% if region.detection_rules %}
