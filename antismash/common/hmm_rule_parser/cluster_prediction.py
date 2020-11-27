@@ -80,12 +80,13 @@ class CDSResults:
 class RuleDetectionResults:
     """ A container for the all results of running the cluster prediction """
 
-    schema_version = 2
+    schema_version = 3
 
     def __init__(self, cds_by_cluster: Dict[Protocluster, List[CDSResults]],
-                 tool: str) -> None:
+                 tool: str, cdses_outside_clusters: List[CDSResults]) -> None:
         self.cds_by_cluster = cds_by_cluster
         self.tool = str(tool)
+        self.cdses_outside_clusters = cdses_outside_clusters
 
     @property
     def protoclusters(self) -> List[Protocluster]:
@@ -97,6 +98,8 @@ class RuleDetectionResults:
         for cds_results in self.cds_by_cluster.values():
             for cds_result in cds_results:
                 cds_result.annotate(self.tool)
+        for cds_result in self.cdses_outside_clusters:
+            cds_result.annotate(self.tool)
 
     def to_json(self) -> Dict[str, Any]:
         """ Constructs a JSON representation from the RuleDetectionResults instance """
@@ -105,6 +108,7 @@ class RuleDetectionResults:
             "schema_version": self.schema_version,
             "tool": self.tool,
             "cds_by_protocluster": cds_results_json,
+            "outside_protoclusters": [result.to_json() for result in self.cdses_outside_clusters],
         }
 
         for cluster, cds_results in self.cds_by_cluster.items():
@@ -126,7 +130,9 @@ class RuleDetectionResults:
             cds_results = [CDSResults.from_json(result_json, record) for result_json in json_cds_results]
             cds_by_cluster[cluster] = cds_results
 
-        return RuleDetectionResults(cds_by_cluster, json["tool"])
+        cdses_outside = [CDSResults.from_json(chunk, record) for chunk in json["outside_protoclusters"]]
+
+        return RuleDetectionResults(cds_by_cluster, json["tool"], cdses_outside)
 
 
 def remove_redundant_protoclusters(clusters: List[Protocluster],
@@ -158,7 +164,6 @@ def find_protoclusters(record: Record, cds_by_cluster_type: Dict[str, Set[str]],
                        rules_by_name: Dict[str, rule_parser.DetectionRule]) -> List[Protocluster]:
     """ Detects gene clusters based on the identified core genes """
     clusters: List[Protocluster] = []
-
     cds_feature_by_name = record.get_cds_name_mapping()
 
     for cluster_type, cds_names in cds_by_cluster_type.items():
@@ -368,7 +373,8 @@ def apply_cluster_rules(record: Record, results_by_id: Dict[str, List[HSP]],
 
 def detect_protoclusters_and_signatures(record: Record, signature_file: str, seeds_file: str,
                                         rule_files: List[str], valid_categories: Set[str],
-                                        filter_file: str, tool: str) -> RuleDetectionResults:
+                                        filter_file: str, tool: str,
+                                        annotate_existing_subregions: bool = True) -> RuleDetectionResults:
     """ Compares all CDS features in a record with HMM signatures and generates
         Protocluster features based on those hits and the current protocluster detection
         rules.
@@ -382,13 +388,15 @@ def detect_protoclusters_and_signatures(record: Record, signature_file: str, see
             valid_categories: a set containing valid rule category strings
             filter_file: a file containing equivalence sets of HMMs
             tool: the name of the tool providing the HMMs (e.g. rule_based_clusters)
+            annotate_existing_subregions: if True, subregions already present in the record
+                    will have domains annotated even if no protocluster is found
     """
     if not rule_files:
         raise ValueError("rules must be provided")
     full_fasta = fasta.get_fasta_from_record(record)
     # if there's no CDS features, don't try to do anything
     if not full_fasta:
-        return RuleDetectionResults({}, tool)
+        return RuleDetectionResults({}, tool, [])
     sig_by_name = {sig.name: sig for sig in get_signature_profiles(signature_file)}
     rules: List[rule_parser.DetectionRule] = []
     for rule_file in rule_files:
@@ -427,24 +435,42 @@ def detect_protoclusters_and_signatures(record: Record, signature_file: str, see
     # Find number of sequences on which each pHMM is based
     num_seeds_per_hmm = get_sequence_counts(signature_file)
 
-    # Save final results to record
+    # annotate everything in detected protoclusters
     rules_by_name = {rule.name: rule for rule in rules}
     clusters = find_protoclusters(record, cluster_type_hits, rules_by_name)
     strip_inferior_domains(cds_domains_by_cluster, rules_by_name)
 
+    def get_domains_for_cds(cds: CDSFeature) -> List[SecMetQualifier.Domain]:
+        domains = []
+        for hsp in results_by_id.get(cds.get_name(), []):
+            domains.append(SecMetQualifier.Domain(hsp.query_id, hsp.evalue, hsp.bitscore,
+                                                  num_seeds_per_hmm[hsp.query_id], tool))
+        return domains
+
     cds_results_by_cluster = {}
+    cdses_with_annotations = set()
     for cluster in clusters:
         cds_results = []
         for cds in record.get_cds_features_within_location(cluster.location):
-            domains = []
-            for hsp in results_by_id.get(cds.get_name(), []):
-                domains.append(SecMetQualifier.Domain(hsp.query_id, hsp.evalue, hsp.bitscore,
-                                                      num_seeds_per_hmm[hsp.query_id], tool))
+            domains = get_domains_for_cds(cds)
             if domains:
                 cds_results.append(CDSResults(cds, domains, cds_domains_by_cluster.get(cds.get_name(), {})))
+                cdses_with_annotations.add(cds)
         cds_results_by_cluster[cluster] = cds_results
 
-    return RuleDetectionResults(cds_results_by_cluster, tool)
+    # add detected profile annotations for any existing subregions, if enabled
+    cds_results_outside_clusters = []
+    if annotate_existing_subregions:
+        for subregion in record.get_subregions():
+            for cds in subregion.cds_children:
+                if cds in cdses_with_annotations:
+                    continue
+                domains = get_domains_for_cds(cds)
+                if domains:
+                    cds_results_outside_clusters.append(CDSResults(cds, domains, {}))
+                    cdses_with_annotations.add(cds)
+
+    return RuleDetectionResults(cds_results_by_cluster, tool, cds_results_outside_clusters)
 
 
 def strip_inferior_domains(cds_domains_by_cluster: Dict[str, Dict[str, Set[str]]],
