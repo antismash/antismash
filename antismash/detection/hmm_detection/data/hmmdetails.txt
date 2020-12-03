@@ -254,3 +254,6 @@ HopA1	HopA1 effector protein family	23	PF17914.hmm
 APH	Phosphotransferase enzyme family	23	PF01636.hmm
 PPDK_N	Pyruvate phosphate dikinase, AMP/ATP binding domain	20	PF01326.hmm
 TIGR02353	Non-alpha poly amino acid condensation domain	423	TIGR02353.hmm
+Aminotran_3	Aminotransferase class-III	31	PF00202.hmm
+DXP_synthase_N	1-deoxy-D-xylulose-5-phosphate synthase	21	PF13292.hmm
+Mac	Maltose acetyltransferase	22	PF12464.hmm
