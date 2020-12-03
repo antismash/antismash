@@ -410,3 +410,11 @@ RULE tropodithietic-acid
     CONDITIONS (GST_N_3 or GST_C)
                and (Acyl-CoA_dh_N or Acyl-CoA_dh_M or Acyl-CoA_dh_1)
                and TIGR02278
+
+RULE pyrrolidine
+    CATEGORY other
+    COMMENT Pyrrolidines like described in BGC0001510
+            See https://dx.doi.org/10.1073.pnas.1701361114
+    CUTOFF 10
+    NEIGHBOURHOOD 10
+    CONDITIONS Glycos_transf_1 and Alpha-amylase and Aminotran_3 and DXP_synthase_N
