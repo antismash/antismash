@@ -111,6 +111,10 @@
     @extend .NRPS;
 }
 
+.NAPAA {
+    @extend .NRPS;
+}
+
 .terpene {
     @include hydrocarbon;
 }
