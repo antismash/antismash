@@ -253,3 +253,4 @@ TfuA	TfuA-like protein	26	PF07812.hmm
 HopA1	HopA1 effector protein family	23	PF17914.hmm
 APH	Phosphotransferase enzyme family	23	PF01636.hmm
 PPDK_N	Pyruvate phosphate dikinase, AMP/ATP binding domain	20	PF01326.hmm
+TIGR02353	Non-alpha poly amino acid condensation domain	423	TIGR02353.hmm

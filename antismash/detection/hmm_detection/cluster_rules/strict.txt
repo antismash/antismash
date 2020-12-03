@@ -103,6 +103,14 @@ RULE thioamide-NRP
     CONDITIONS ATP-grasp and AMP-binding and PP-binding and
                 (DUF98 or Orn_Arg_deC_N or Orn_DAP_Arg_deC)
 
+RULE NAPAA
+    CATEGORY NRPS
+    COMMENT non-alpha poly-amino acids like e-Polylysin
+            (https://doi.org/10.1101/2020.07.24.220772)
+    CUTOFF 5
+    NEIGHBOURHOOD 15
+    CONDITIONS AMP-binding and PP-binding and TIGR02353
+
 RULE terpene
     CATEGORY terpene
     CUTOFF 20

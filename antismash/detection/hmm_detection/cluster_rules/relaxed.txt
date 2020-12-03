@@ -5,7 +5,7 @@
 RULE NRPS-like
     CATEGORY NRPS
     COMMENT Catches NRPS-like fragments that are not detected by the NRPS rule
-    SUPERIORS NRPS
+    SUPERIORS NRPS, NAPAA
     CUTOFF 0  # since we're really looking at single CDS fragments
     NEIGHBOURHOOD 20
     CONDITIONS cds((PP-binding or NAD_binding_4) and (AMP-binding or A-OX))
