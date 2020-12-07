@@ -1202,6 +1202,20 @@ ul.dropdown-options {
             background-color: #bbb;
         }
     }
+
+    .download-icon-inverse {
+        @extend .download-icon;
+        width: 1em;
+        height: 1em;
+
+        background-color: #333;
+        &:hover {
+            background-color: #777;
+        }
+        &:active,&.active {
+            background-color: #777;
+        }
+    }
 }
 
 .focus-panel-content {
