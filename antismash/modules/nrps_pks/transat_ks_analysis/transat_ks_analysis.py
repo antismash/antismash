@@ -12,13 +12,19 @@ from antismash.modules.nrps_pks.data_structures import Prediction
 
 from Bio import Phylo
 from io import StringIO
-import re, copy
+import re
+import copy
 
 _LEAF2CLADE_TBL = path.get_full_path(__file__, "data", "transPACT_leaf2clade.tsv")
-_PPLACER_MASS_CUTOFF = 0.6 ## transPACT default: 0.6; higher = more stringent
-_PPLACER_REFERENCE_PKG = path.get_full_path(__file__, "data", "transAT_KS_refpkg") ## Note: Reference package creation with the taxtastic package (install with pip):  taxit create --aln-fasta transAT_KS_ref.afa --tree-stats transAT_KS_ref.raxml.info --tree-file transAT_KS_ref.raxml.tre -P transAT_KS_refpkg -l transAT_KS
-_KS_REFERENCE_ALIGNMENT = '/'.join([_PPLACER_REFERENCE_PKG, 'transAT_KS_ref.afa'])
-_KS_REFERENCE_TREE = '/'.join([_PPLACER_REFERENCE_PKG, 'transAT_KS_ref.raxml.tre'])
+_PPLACER_MASS_CUTOFF = 0.6  # transPACT default: 0.6; higher = more stringent
+
+# Note: Reference package creation with the taxtastic package (install with pip):  taxit create --aln-fasta
+# transAT_KS_ref.afa --tree-stats transAT_KS_ref.raxml.info --tree-file transAT_KS_ref.raxml.tre -P transAT_KS_refpkg
+# -l transAT_KS
+_PPLACER_REFERENCE_PKG = path.get_full_path(__file__, "data", "transAT_KS_refpkg")
+_KS_REFERENCE_ALIGNMENT = path.get_full_path(__file__, "data", "transAT_KS_refpkg", 'transAT_KS_ref.afa')
+_KS_REFERENCE_TREE = path.get_full_path(__file__, "data", "transAT_KS_refpkg", 'transAT_KS_ref.raxml.tre')
+
 
 class KSResult:
     """ A result for a specific KS domain """
@@ -42,11 +48,11 @@ class KSResult:
         """ Serialises the instance """
         return (self.clade, self.specificity, self.mass_score)
 
-    @staticmethod
-    def from_json(json: Tuple[str, str, float]) -> "KSResult":
-        """ Deserialise an KSResult instance """
+    @classmethod
+    def from_json(cls, json: Tuple[str, str, float]) -> "KSResult":
+        """ Deserialise a KSResult instance """
         assert len(json) == 3
-        return KSResult(*json)
+        return cls(*json)
 
 
 class KSPrediction(Prediction):
@@ -83,11 +89,12 @@ class KSPrediction(Prediction):
             "predictions": {clade: pred.to_json() for clade, pred in self.predictions},
         }
 
-    @staticmethod
-    def from_json(json: Dict[str, Any]) -> "KSPrediction":
+    @classmethod
+    def from_json(cls, json: Dict[str, Any]) -> "KSPrediction":
         assert json["method"] == "transPACT_KS"
-        return KSPrediction(json["prediction"])
-    
+        return cls({specificity: KSResult.from_json(pred) for specificity, pred in json["predictions"].items()})
+
+
 def get_leaf2clade(leaf2cladetbl: str) -> [Dict[str, str], Dict[str, str]]:
     leaf2clade = {}
     clade2ann = {}

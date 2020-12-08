@@ -6,35 +6,100 @@
 
 import unittest
 
-from antismash.modules.nrps_pks.transat_ks_analysis import transat_ks_analysis
+from antismash.modules.nrps_pks.transat_ks_analysis.transat_ks_analysis import KSResult, KSPrediction, Prediction,\
+    get_leaf2clade
 
 
-class TestKScalls(unittest.TestCase):
-    query_ks = {'nrpspksdomains_ctg1_11_PKS_KS.1': 'IAIVGMGGIVPQAVDLDQFWDGLISGRSFIEELPKTHPEYDLYGKVFGDQKVWGGFIKEVDEFDASFFNISPREAEQMDPRQRLLLQLVWQTLEHAGHIPGDFSAGSMGVYIGMVGYSDYGELARYYNQNIEGHTLSGVSASIIANRISYFFDFKGPSITTDTACSSSLVGLLQAVSAIRSGQCEAALAGGINLMLSPFYHRAIQEIGILSEDGCCRTFDKAANGCVRGEGGGLLLLRPLDKALADHDTIYGIIKGSAENHGGTTNSLTAPSSEAQANLLEEAYRESMIPPSKVGYIEVHGTGTRLGDPAEINGLKEAFRKLHNQYDEPLSETVSCGLGAVKTNIGHLEPAAGVMGVMKVLLAMRHKQLPPTINFIEQNPYIEIENTPFYLVTRAQDWQSPKDDEGGMLARCAGVSSFGFGGANAHIVLEEY',
-                'nrpspksdomains_ctg1_11_PKS_KS.2': 'IAIIGLSGRYPEAENVNEFWDNLKTSKNCIREIPQERWDWKQYFDEEKGKAGKIYTKWGGFLKEVDKFDPLFFQISPRDAEQMDPQERLFLEEAYKSIEDSGYTPETLCKSRKIGVFVGVMNGTYAPQTRFFSMANRISYHLNFQGPSMAVDTACSASLTAIHLALESLYSGMSECAIAGGVNLILRPIHYMGLSAMTMLSSTNENRSFGDHADGFVDGEGVGAVVLKSLKAAIADDDHIYGILKGSVVNAGGKTNGYTVPNPNAQYELVLEALKRSGIDARAVSCIEAHGTGTVLGDPIEVSGLARAFEHYSKDRQFCTIGSVKSNIGHCESAAGIAGVTKVLLQMQQGQIVPSLHSKRLNPNIDFSNTPFVVQQELENWNRPVLKVDGQKKEYPRIAGISSFGAGGANAHVVIEEY',
-                'nrpspksdomains_ctg1_11_PKS_KS.3': 'IAIVGLSGRYPQAPDLAAYWQNLRNGKDCITEVPPDRWDWKKYYTEDRNQGGRHYSKWGGFIEDVDKFDPLFFNISPREAELIDPQERLFLEHVWMALEDAGYRGEDLQGEAGEYLGGQVGVYAGVMYGEYQLFAAEESVRGNPLSVGGSYASIANRISYVLNLHGPSMSIDTMCSSSLTALHLACQDLKLGRTNLGVAGGVNVTIHPNKYLMLSNGQFISSGGHCESFGKGGDGYIPGEGVGVALLKRLSDAQRDGDHIYGVIKGSGLNHGGKTHGYSVPNPKAQQTVISRALKESGIRPGAISYIEAHGTGTKLGDPIEITGLSKAFGSEVQRGSCFIGSAKSNIGHCESAAGIAGVTKVLLQMKYGQIVPSLHSQVLNPNIDFSQTPFVVQQELKEWFRPLLKLNGTRKEYPRIAGVSSFGAGGANAHLVIEEY',
-                'nrpspksdomains_ctg1_12_PKS_KS.1': 'IAIVGMAGKYPGAKDLEEYWKNLVGGKNSIQEVPLSRWDVNQYYDPAPSKPGKVNCKWLGLLDDIDCFDPLFFMISPAEAEEMDPQHRIFLEEGHKAFESAGYSSSGLSNKKCGVYLGIMSNEYSLLAIEAQRSMSGTSNNYAIGAARMAYYLNLKGPAIPIDTACSSSLVGTHLACQALHAGEIDMALVGGVTLYLTAESYIDMCASGMLSAEGQCKTFDDSADGFVPGEGVGAIVLKRLSEAQRNDDCILGTIIGSGINQDGKTNGITAPSVKSQIELEREIYRKYKIDPSSISYVETHGTGTKLGDPIELEALSTVFKEQTDRKNYCALGSVKSNIGHTSAAAGVASMHKALLSLKHQKLVPTLNFKKPNSHFNFDESPFYVNTELKRWESEGEKPRRVGVSSFGFSGTNAHVVIEEY',
-                'nrpspksdomains_ctg1_12_PKS_KS.2': 'IAIIGLSGRYPQAYNVEEYWNHLKTGKDCITEIPRDRWSLEGFFHEDFEEAVAQGKSYSKWGGFLEGFSEFDPLFFNISSHEAMSMDPQERLFLQTCWEVCEDGGYTREKIAIQHHGKVGVFAGITKTGFDLYGPELWKKGEPVFPHTSFSSVANRVSYLLNLKGPSMPIDTMCSSSLTAIHEACKHVDQGECELAIAGGVNLYLHPSTYRGLCAQRMLALDRQCRSFGKGGNGFVPGEGVGAVLLKRLSQALFDGDHIYGVIRGTSANHGGKTNGYTVSNPKVQAELIRETLDKTGIDARTVSYIEAHGTATELGDPIEVAGLSQAFQQDTVDTGFCALGSAKSNVGHLEAAAGMAGVTKILLQMKHKVLVPSLHAKELNPNINFSKTPFVVQQELGEWRSPFLERDGAGKEYPRIAGISSFGAGGANAHVIIEEY'}
+class TestKSResult(unittest.TestCase):
 
-    def test_transpact(self):
-        results = run_transpact_ks_analysis(query_ks)
-        
-        assert 'glycine' in results['nrpspksdomains_ctg1_11_PKS_KS.1'].predictions
-        assert results['nrpspksdomains_ctg1_11_PKS_KS.1'].predictions['glycine'][1].clade == 'Clade_30'
-        assert results['nrpspksdomains_ctg1_11_PKS_KS.1'].predictions['glycine'][1].mass_score == 1.0
+    def setUp(self) -> None:
+        self.result = KSResult("test_clade", "test_specificity", 0.0)
 
-        assert 'aMe_eDB' in results['nrpspksdomains_ctg1_11_PKS_KS.2'].predictions
-        assert results['nrpspksdomains_ctg1_11_PKS_KS.2'].predictions['aMe_eDB'][1].clade == 'Clade_47'
-        assert results['nrpspksdomains_ctg1_11_PKS_KS.2'].predictions['aMe_eDB'][1].mass_score == 1.0
-        
-        assert 'eDB' in results['nrpspksdomains_ctg1_11_PKS_KS.3'].predictions
-        assert results['nrpspksdomains_ctg1_11_PKS_KS.3'].predictions['eDB'][1].clade == 'Clade_62'
-        assert results['nrpspksdomains_ctg1_11_PKS_KS.3'].predictions['eDB'][1].mass_score == 1.0
-        
-        assert 'b_MeeDB' in results['nrpspksdomains_ctg1_12_PKS_KS.1'].predictions
-        assert results['nrpspksdomains_ctg1_12_PKS_KS.1'].predictions['b_MeeDB'][1].clade == 'Clade_82'
-        assert results['nrpspksdomains_ctg1_12_PKS_KS.1'].predictions['b_MeeDB'][1].mass_score == 1.0
-        
-        assert 'clade_not_conserved' in results['nrpspksdomains_ctg1_12_PKS_KS.2'].predictions
-        assert results['nrpspksdomains_ctg1_12_PKS_KS.2'].predictions['clade_not_conserved'][1].clade == 'NA'
-        assert results['nrpspksdomains_ctg1_12_PKS_KS.2'].predictions['clade_not_conserved'][1].mass_score == 0.0
+    def test_correct_instantiation(self):
+        assert self.result.clade == "test_clade"
+        assert self.result.specificity == "test_specificity"
+        assert self.result.mass_score == 0.0
+
+    def test_wrong_instantiation(self):
+        self.assertRaises(AssertionError, KSResult, 1, "test_specificity", 0.0)
+        self.assertRaises(AssertionError, KSResult, "test_clade", 1, 0.0)
+        self.assertRaises(AssertionError, KSResult, "test_clade", "test_specificity", 0)
+
+    def test_str(self):
+        assert str(self.result) == "KSResult(clade=test_clade, specificity=test_specificity, mass_score=0.0)"
+
+    def test_repr(self):
+        assert repr(self.result) == "KSResult(clade=test_clade, specificity=test_specificity, mass_score=0.0)"
+
+    def test_to_json(self):
+        to_json_return = self.result.to_json()
+        assert to_json_return == ("test_clade", "test_specificity", 0.0)
+
+    def test_from_json(self):
+        result = KSResult.from_json(("test_clade", "test_specificity", 0.0))
+        assert result.clade == "test_clade"
+        assert result.specificity == "test_specificity"
+        assert result.mass_score == 0.0
+
+
+class TestKSPrediction(unittest.TestCase):
+    
+    def setUp(self) -> None:
+        results = {"test_specificity1": KSResult("test_clade1", "test_specificity1", 1.0),
+                   "test_specificity2": KSResult("test_clade2", "test_specificity2", 50.0),
+                   "test_specificity3": KSResult("test_clade3", "test_specificity3", 1.0)}
+        self.prediction = KSPrediction(results)
+
+    def test_correct_instantiation(self):
+        # assert the order of predictions is as expected
+        assert isinstance(self.prediction, Prediction)
+        assert self.prediction.method == "transPACT_KS"
+
+        assert len(self.prediction.predictions) == 3
+        assert self.prediction.predictions[0][0] == "test_specificity2"
+        assert self.prediction.predictions[0][1].clade == "test_clade2"
+        assert self.prediction.predictions[0][1].specificity == "test_specificity2"
+        assert self.prediction.predictions[0][1].mass_score == 50.0
+
+        assert self.prediction.predictions[1][0] == "test_specificity1"
+        assert self.prediction.predictions[1][1].clade == "test_clade1"
+        assert self.prediction.predictions[1][1].specificity == "test_specificity1"
+        assert self.prediction.predictions[1][1].mass_score == 1.0
+
+        assert self.prediction.predictions[2][0] == "test_specificity3"
+        assert self.prediction.predictions[2][1].clade == "test_clade3"
+        assert self.prediction.predictions[2][1].specificity == "test_specificity3"
+        assert self.prediction.predictions[2][1].mass_score == 1.0
+
+    def test_get_classification(self):
+        # TODO make sure that the specificity names being returned is intended
+        empty_prediction = KSPrediction({})
+        assert empty_prediction.get_classification() == []
+        assert self.prediction.get_classification() == ["test_specificity2", "test_specificity1", "test_specificity3"]
+
+    def test_as_html(self):
+        empty_prediction = KSPrediction({})
+        assert empty_prediction.as_html() == "No matches"
+        assert self.prediction.as_html() == "<dl>\n " \
+                                            "<dt>transPACT assigned specificiy:</dt>\n" \
+                                            "<dd>test_specificity2: 50.0%</dd>\n" \
+                                            "<dd>test_specificity1: 1.0%</dd>\n" \
+                                            "<dd>test_specificity3: 1.0%</dd>\n" \
+                                            "</dl>\n"
+
+    def test_to_json(self):
+        to_json_return = self.prediction.to_json()
+        assert to_json_return == {"method": "transPACT_KS",
+                                  "predictions": {"test_specificity2": ("test_clade2", "test_specificity2", 50.0),
+                                                  "test_specificity1": ("test_clade1", "test_specificity1", 1.0),
+                                                  "test_specificity3": ("test_clade3", "test_specificity3", 1.0)}}
+
+    def test_from_json(self):
+        prediction = KSPrediction.from_json(
+            {"method": "transPACT_KS", "predictions": {"test_specificity1": ("test_clade1", "test_specificity1", 1.0)}})
+        assert prediction.method == "transPACT_KS"
+        assert len(prediction.predictions) == 1
+        assert prediction.predictions[0][0] == "test_specificity1"
+        assert prediction.predictions[0][1].clade == "test_clade1"
+        assert prediction.predictions[0][1].specificity == "test_specificity1"
+        assert prediction.predictions[0][1].mass_score == 1.0
