@@ -7,12 +7,12 @@
 import unittest
 
 from antismash.modules.nrps_pks.transat_ks_analysis.transat_ks_analysis import KSResult, KSPrediction, Prediction,\
-    get_leaf2clade
+    get_leaf2clade, _LEAF2CLADE_TBL, get_transpact_clade, transpact_tree_prediction, Phylo, StringIO, path, _PPLACER_MASS_CUTOFF
 
 
 class TestKSResult(unittest.TestCase):
 
-    def setUp(self) -> None:
+    def setUp(self):
         self.result = KSResult("test_clade", "test_specificity", 0.0)
 
     def test_correct_instantiation(self):
@@ -44,7 +44,7 @@ class TestKSResult(unittest.TestCase):
 
 class TestKSPrediction(unittest.TestCase):
     
-    def setUp(self) -> None:
+    def setUp(self):
         results = {"test_specificity1": KSResult("test_clade1", "test_specificity1", 1.0),
                    "test_specificity2": KSResult("test_clade2", "test_specificity2", 50.0),
                    "test_specificity3": KSResult("test_clade3", "test_specificity3", 1.0)}
@@ -103,3 +103,12 @@ class TestKSPrediction(unittest.TestCase):
         assert prediction.predictions[0][1].clade == "test_clade1"
         assert prediction.predictions[0][1].specificity == "test_specificity1"
         assert prediction.predictions[0][1].mass_score == 1.0
+
+
+class TestGetLeaf2Clade(unittest.TestCase):
+
+    def test_leaf2clade_output(self):
+        # test if the length of the output is as expected, more extensive testing seems unnecessary
+        fun_clades, clade2ann = get_leaf2clade(_LEAF2CLADE_TBL)
+        assert len(fun_clades) == 650
+        assert len(clade2ann) == 104
