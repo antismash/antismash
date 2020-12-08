@@ -6,8 +6,9 @@
 
 import unittest
 
-from antismash.modules.nrps_pks.transat_ks_analysis.transat_ks_analysis import KSResult, KSPrediction, Prediction,\
-    get_leaf2clade, _LEAF2CLADE_TBL, get_transpact_clade, transpact_tree_prediction, Phylo, StringIO, path, _PPLACER_MASS_CUTOFF
+from antismash.modules.nrps_pks.data_structures import Prediction
+from antismash.modules.nrps_pks.transat_ks_analysis.transat_ks_analysis import KSResult, KSPrediction, \
+    get_leaf2clade, _LEAF2CLADE_TBL
 
 
 class TestKSResult(unittest.TestCase):
