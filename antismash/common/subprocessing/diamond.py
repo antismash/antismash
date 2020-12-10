@@ -4,10 +4,13 @@
 """ A collection of functions for running diamond.
 """
 
-
+import logging
+import struct
 from typing import List, Optional
 
 from helperlibs.wrappers.io import TemporaryDirectory
+
+from antismash.common import path
 
 from .base import execute, get_config, RunResult
 
@@ -99,3 +102,105 @@ def run_diamond_version() -> str:
         raise RuntimeError(msg % get_config().executables.diamond)
     # Get rid of the "diamond version" prefix
     return version_string[16:].strip()
+
+
+def check_diamond_db_compatible(database_file: str) -> bool:
+    """ Check if the given diamond database is compatible with the installed diamond version.
+
+        Arguments:
+            database_file: the path to the database file to check
+
+        Returns:
+            True if the database file is compatible, False otherwise
+    """
+
+    with TemporaryDirectory(change=True):
+        dummy_fasta = "dummy.fa"
+        dummy_db = "dummy.dmnd"
+        with open(dummy_fasta, "w") as handle:
+            handle.write(">test\nM\n")
+        run_diamond_makedb(dummy_db, dummy_fasta)
+        compatible_format = _extract_db_format(dummy_db)
+
+    try:
+        db_format = _extract_db_format(database_file)
+    except ValueError:
+        return False
+
+    if db_format != compatible_format:
+        logging.debug(
+            "Incompatible database format for %s. Expected %s but found %s.",
+            database_file, compatible_format, db_format
+        )
+        return False
+    return True
+
+
+def _extract_db_format(database_file: str) -> int:
+    """ Extract version from a diamond database file
+
+        Arguments:
+            database_file: the path to the database file to extract the version from
+
+        Returns:
+            The database version as an integer
+    """
+    with open(database_file, 'rb') as handle:
+        chunk = handle.read(16)
+
+    if len(chunk) != 16:
+        logging.debug("Database %s appears corrupted.", database_file)
+        raise ValueError()
+
+    # The uint32 in front of the format version is the build ID, we don't care
+    # about it yet, but might need to care in future.
+
+    _, db_format = struct.unpack_from("II", chunk, offset=8)
+
+    return db_format
+
+
+def check_diamond_files(definition_file: str, fasta_file: str, db_file: str,
+                        logging_only: bool = False) -> List[str]:
+    """ Check if the database files exist in the right version.
+
+        Arguments:
+            definition_file: the path to a database metadata file
+            fasta_file: the path to a proteins fasta file
+            db_file: the path to the diamond databse file
+            logging_only: return a list of errors messages instead of raising errors
+
+        Returns:
+            a list of error strings
+    """
+    failure_messages: List[str] = []
+
+    if path.locate_file(definition_file) is None:
+        failure_messages.append("Failed to locate cluster definition file: {!r}".format(definition_file))
+
+    regen_message = ""
+
+    if path.locate_file(fasta_file) is None:
+        failure_messages.append("Failed to locate cluster proteins: {!r}".format(fasta_file))
+        if not logging_only:
+            raise FileNotFoundError(failure_messages[-1])
+    elif path.locate_file(db_file) is None:
+        regen_message = f"could not find diamond database: {db_file}"
+    elif not check_diamond_db_compatible(db_file):
+        regen_message = f"incompatible diamond database version: {db_file}"
+    elif path.is_outdated(db_file, fasta_file):
+        regen_message = f"diamond database outdated: {db_file}"
+
+    if regen_message:
+        try:
+            logging.debug("%s, regenerating", regen_message)
+            run_diamond_makedb(db_file, fasta_file)
+        except RuntimeError:
+            if not logging_only:
+                raise
+            failure_messages.append("Failed to regenerate diamond database %r" % db_file)
+
+    if failure_messages:
+        failure_messages.append("with diamond executable: {get_config().executables.diamond}")
+
+    return failure_messages

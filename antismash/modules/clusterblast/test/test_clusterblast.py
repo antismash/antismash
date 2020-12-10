@@ -580,19 +580,6 @@ class TestReferenceProteinLoading(unittest.TestCase):
         assert "clusterblast database out of date" in errors[0]
 
 
-class TestDiamondDatabaseChecks(unittest.TestCase):
-    def setUp(self):
-        self.format0_file = path.get_full_path(__file__, "data", "format0.dmnd")
-        self.format1_file = path.get_full_path(__file__, "data", "format1.dmnd")
-        self.empty = path.get_full_path(__file__, "data", "empty.dmnd")
-
-    def test_extract_db_format(self):
-        assert core._extract_db_format(self.format0_file) == 0
-        assert core._extract_db_format(self.format1_file) == 1
-        with self.assertRaises(ValueError):
-            core._extract_db_format(self.empty)
-
-
 class TestDataPreparation(unittest.TestCase):
     def tearDown(self):
         config.destroy_config()
