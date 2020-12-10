@@ -6,13 +6,13 @@
 from collections import defaultdict, OrderedDict
 import logging
 import os
-import struct
 from tempfile import NamedTemporaryFile
 from typing import Dict, Iterable, List, Set, Sequence, Tuple
 
 from helperlibs.wrappers.io import TemporaryDirectory
 
 from antismash.common import path, subprocessing, fasta, secmet
+from antismash.common.subprocessing.diamond import check_diamond_files as check_clusterblast_files
 from antismash.config import get_config
 
 from .data_structures import Subject, Query, Protein, ReferenceCluster, Score
@@ -728,104 +728,3 @@ def write_fastas_with_all_genes(regions: Iterable[secmet.Region], filename: str,
             chunk_seqs = all_seqs[i * size:]
         fasta.write_fasta(chunk_names, chunk_seqs, chunk_filename % i)
     return [chunk_filename % i for i in range(partitions)]
-
-
-def check_diamond_db_compatible(database_file: str) -> bool:
-    """ Check if the given diamond database is compatible with the installed diamond version.
-
-        Arguments:
-            database_file: the path to the database file to check
-
-        Returns:
-            True if the database file is compatible, False otherwise
-    """
-
-    with TemporaryDirectory(change=True):
-        dummy_fasta = "dummy.fa"
-        dummy_db = "dummy.dmnd"
-        with open(dummy_fasta, "w") as handle:
-            handle.write(">test\nM\n")
-        subprocessing.run_diamond_makedb(dummy_db, dummy_fasta)
-        compatible_format = _extract_db_format(dummy_db)
-
-    try:
-        db_format = _extract_db_format(database_file)
-    except ValueError:
-        return False
-
-    if db_format != compatible_format:
-        logging.debug(
-            "Incompatible database format for %s. Expected %s but found %s.",
-            database_file, compatible_format, db_format
-        )
-        return False
-    return True
-
-
-def _extract_db_format(database_file: str) -> int:
-    """ Extract version from a diamond database file
-
-        Arguments:
-            database_file: the path to the database file to extract the version from
-
-        Returns:
-            The database version as an integer
-    """
-    with open(database_file, 'rb') as handle:
-        chunk = handle.read(16)
-
-    if len(chunk) != 16:
-        logging.debug("Database %s appears corrupted.", database_file)
-        raise ValueError()
-
-    # The uint32 in front of the format version is the build ID, we don't care
-    # about it yet, but might need to care in future.
-
-    _, db_format = struct.unpack_from("II", chunk, offset=8)
-
-    return db_format
-
-
-def check_clusterblast_files(definition_file: str,
-                             fasta_file: str,
-                             db_file: str,
-                             logging_only: bool = False) -> List[str]:
-    """ Check if the clusterblast files exist in the right version.
-
-        Arguments:
-            definition_file: the path to the cluster definition TSV file
-            fasta_file: the path to the cluster proteins fasta file
-            db_file: the path to the diamond databse file
-
-        Returns:
-            A list of error strings the way `check_prereqs` does
-    """
-    failure_messages: List[str] = []
-
-    if path.locate_file(definition_file) is None:
-        failure_messages.append("Failed to locate cluster definition file: {!r}".format(definition_file))
-
-    regen_message = ""
-
-    if path.locate_file(fasta_file) is None:
-        failure_messages.append("Failed to locate cluster proteins: {!r}".format(fasta_file))
-    elif path.locate_file(db_file) is None:
-        regen_message = "could not find diamond database: %s" % db_file
-    elif not check_diamond_db_compatible(db_file):
-        regen_message = "incompatible diamond database version: %s" % db_file
-    elif path.is_outdated(db_file, fasta_file):
-        regen_message = "diamond database outdated: %s" % db_file
-
-    if regen_message:
-        try:
-            logging.debug("%s, regenerating", regen_message)
-            subprocessing.run_diamond_makedb(db_file, fasta_file)
-        except RuntimeError:
-            if not logging_only:
-                raise
-            failure_messages.append("Failed to regenerate diamond database %r" % db_file)
-
-    if failure_messages:
-        failure_messages.append("with diamond executable: %s" % get_config().executables.diamond)
-
-    return failure_messages
