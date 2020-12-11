@@ -106,7 +106,7 @@ def get_leaf2clade(leaf2cladetbl: str) -> Tuple[Dict[str, str], Dict[str, str]]:
     return(leaf2clade, clade2ann)
 
 
-def get_transpact_clade(query_name: str, tree: Bio.Phylo.Newick.Tree, funClades: Dict[str, str]) -> str:
+def get_transpact_clade(query_name: str, tree: "Bio.Phylo.Newick.Tree", funClades: Dict[str, str]) -> str:
     """
     tree: Bio.Phylo.Newick.Tree
     """
@@ -178,7 +178,7 @@ def transpact_tree_prediction(pplacer_tree: str, masscutoff: float, funClades: D
             best_clade, best_mass = c, totalmass[c]
     clade, spec, score = 'clade_not_conserved', 'NA', 0.0 ## Talk to Simon about best way to treat non-predictions...maybe 'None'?
     if best_clade != 'clade_not_conserved' and best_mass >= masscutoff:
-        clade, spec, score = best_clade, clade2ann[best_clade], round(bestmass, 2)
+        clade, spec, score = best_clade, clade2ann[best_clade], round(best_mass, 2)
     return KSPrediction({spec: KSResult(clade, spec, score)})
 
     
