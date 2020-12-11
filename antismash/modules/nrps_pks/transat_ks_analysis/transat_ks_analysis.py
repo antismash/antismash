@@ -106,7 +106,7 @@ def get_leaf2clade(leaf2cladetbl: str) -> Tuple[Dict[str, str], Dict[str, str]]:
     return(leaf2clade, clade2ann)
 
 
-def get_transpact_clade(query_name: str, tree: "Bio.Phylo.Newick.Tree", funClades: Dict[str, str]) -> str:
+def get_transpact_clade(query_name: str, tree: Any, funClades: Dict[str, str]) -> str:
     """
     tree: Bio.Phylo.Newick.Tree
     """
@@ -176,21 +176,21 @@ def transpact_tree_prediction(pplacer_tree: str, masscutoff: float, funClades: D
     for c in totalmass:
         if totalmass[c] > best_mass:
             best_clade, best_mass = c, totalmass[c]
-    clade, spec, score = 'clade_not_conserved', 'NA', 0.0 ## Talk to Simon about best way to treat non-predictions...maybe 'None'?
+    clade: str, spec: str, score: float = 'clade_not_conserved', 'NA', 0.0 ## Talk to Simon about best way to treat non-predictions...maybe 'None'?
     if best_clade != 'clade_not_conserved' and best_mass >= masscutoff:
         clade, spec, score = best_clade, clade2ann[best_clade], round(best_mass, 2)
     return KSPrediction({spec: KSResult(clade, spec, score)})
 
     
 def run_transpact_pplacer(ks_name: str, alignment: Dict[str, str], reference_pkg: str, reference_aln: str,
-                          reference_tree: str, masscutoff: float, funClades: Dict[str, str], clade2ann: Dict[str, str]) -> KSPrediction:
+                          reference_tree: str, masscutoff: float, funClades: Dict[str, str], clade2ann: Dict[str, str]) -> Prediction:
     
     pplacer_tree = subprocessing.run_pplacer(ks_name, alignment, reference_pkg, reference_aln, reference_tree)
     prediction = transpact_tree_prediction(pplacer_tree, masscutoff, funClades, clade2ann)
     return prediction
     
     
-def run_transpact_ks_analysis(domains: Dict[str, str]) -> Dict[str, KSPrediction]:
+def run_transpact_ks_analysis(domains: Dict[str, str]) -> Dict[str, Prediction]:
     """ Analyses PKS signature of KS domains
 
         Arguments:
@@ -207,6 +207,5 @@ def run_transpact_ks_analysis(domains: Dict[str, str]) -> Dict[str, KSPrediction
     for ks_name, ks_seq in domains.items():
         ## Align to reference
         alignment = subprocessing.run_muscle_single(ks_name, ks_seq, _KS_REFERENCE_ALIGNMENT)
-        results[ks_name] = run_transpact_pplacer(ks_name, alignment, _PPLACER_REFERENCE_PKG, _KS_REFERENCE_ALIGNMENT,
-                                                 _KS_REFERENCE_TREE, _PPLACER_MASS_CUTOFF, funClades, clade2ann)
+        results[ks_name] = run_transpact_pplacer(ks_name, alignment, _PPLACER_REFERENCE_PKG, _KS_REFERENCE_ALIGNMENT, _KS_REFERENCE_TREE, _PPLACER_MASS_CUTOFF, funClades, clade2ann)
     return results

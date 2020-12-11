@@ -16,8 +16,11 @@ def run_pplacer(query_name: str, alignment: Dict[str, str], reference_pkg: str, 
     query domains onto reference tree.
     """
     with NamedTemporaryFile(mode="w+", suffix='.fasta') as temp_aln:
-        names, seqs = list(map(zip(*alignment.items())))
-        write_fasta([names], [seqs], temp_aln.name)
+        names, seqs = [], []
+        for n in alignment:
+            names.append(n)
+            seqs.append(alignment[n])
+        write_fasta(names, seqs, temp_aln.name)
         with NamedTemporaryFile(mode="w+", suffix='.jplace') as temp_pplacer_jplace:
             pplacer_result = execute([get_config().executables.pplacer,
                                       "-t", reference_tree,
