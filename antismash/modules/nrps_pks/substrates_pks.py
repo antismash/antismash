@@ -40,7 +40,7 @@ def extract_ks_domains(cds_features: List[CDSFeature]) -> Dict[str, str]:
 
 
 def run_transpact_predictor_pks_ks(ks_domains: Dict[str, str]
-                                ) -> Dict[str, Prediction]:
+                                ) -> Dict[str, KSPrediction]:
     """ analyses KS domains with transPACT """
     logging.info("Predicting PKS KS domain substrate specificities with transPACT")
     transpact_results = transat_ks_analysis.run_transpact_ks_analysis(ks_domains)

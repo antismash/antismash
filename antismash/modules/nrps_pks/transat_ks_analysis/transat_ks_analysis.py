@@ -95,7 +95,7 @@ class KSPrediction(Prediction):
         return cls({specificity: KSResult.from_json(pred) for specificity, pred in json["predictions"].items()})
 
 
-def get_leaf2clade(leaf2cladetbl: str) -> List[Dict[str, str], Dict[str, str]]:
+def get_leaf2clade(leaf2cladetbl: str) -> Tuple[Dict[str, str], Dict[str, str]]:
     leaf2clade = {}
     clade2ann = {}
     with open(leaf2cladetbl) as c:
@@ -106,7 +106,7 @@ def get_leaf2clade(leaf2cladetbl: str) -> List[Dict[str, str], Dict[str, str]]:
     return(leaf2clade, clade2ann)
 
 
-def get_transpact_clade(query_name: str, tree: str, funClades: Dict[str, str]) -> str:
+def get_transpact_clade(query_name: str, tree: Bio.Phylo.Newick.Tree, funClades: Dict[str, str]) -> str:
     """
     tree: Bio.Phylo.Newick.Tree
     """
@@ -172,13 +172,13 @@ def transpact_tree_prediction(pplacer_tree: str, masscutoff: float, funClades: D
             totalmass[clade_assignment] += mass
         else:
             totalmass[clade_assignment] = mass
-    best_clade, best_mass = None, 0
+    best_clade, best_mass = None, float(0)
     for c in totalmass:
         if totalmass[c] > best_mass:
             best_clade, best_mass = c, totalmass[c]
     clade, spec, score = 'clade_not_conserved', 'NA', 0.0 ## Talk to Simon about best way to treat non-predictions...maybe 'None'?
-    if best_clade != 'clade_not_conserved' and totalmass[best_clade] >= masscutoff:
-        clade, spec, score = best_clade, clade2ann[best_clade], round(totalmass[best_clade], 2)
+    if best_clade != 'clade_not_conserved' and best_mass >= masscutoff:
+        clade, spec, score = best_clade, clade2ann[best_clade], round(bestmass, 2)
     return KSPrediction({spec: KSResult(clade, spec, score)})
 
     
