@@ -180,7 +180,9 @@ def transpact_tree_prediction(pplacer_tree: str, masscutoff: float, funClades: D
     spec: str = 'NA'
     score: float = 0.0
     if best_clade != 'clade_not_conserved' and best_mass >= masscutoff:
-        clade, spec, score = best_clade, clade2ann[best_clade], round(best_mass, 2)
+        clade = best_clade
+        spec = clade2ann[best_clade]
+        score = round(best_mass, 2)
     return KSPrediction({spec: KSResult(clade, spec, score)})
 
     
