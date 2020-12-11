@@ -95,7 +95,7 @@ class KSPrediction(Prediction):
         return cls({specificity: KSResult.from_json(pred) for specificity, pred in json["predictions"].items()})
 
 
-def get_leaf2clade(leaf2cladetbl: str) -> [Dict[str, str], Dict[str, str]]:
+def get_leaf2clade(leaf2cladetbl: str) -> List[Dict[str, str], Dict[str, str]]:
     leaf2clade = {}
     clade2ann = {}
     with open(leaf2cladetbl) as c:
@@ -106,7 +106,7 @@ def get_leaf2clade(leaf2cladetbl: str) -> [Dict[str, str], Dict[str, str]]:
     return(leaf2clade, clade2ann)
 
 
-def get_transpact_clade(query_name: str, tree, funClades: Dict[str, str]) -> str:
+def get_transpact_clade(query_name: str, tree: str, funClades: Dict[str, str]) -> str:
     """
     tree: Bio.Phylo.Newick.Tree
     """
@@ -122,12 +122,16 @@ def get_transpact_clade(query_name: str, tree, funClades: Dict[str, str]) -> str
             if re.match("^#\d+$", ln[-2]) is not None:
                 newtree.prune(leaf)
     ## Find the proper clade elder, if more than two siblings use parent, otherwise use grandparent
-    if parent is grandparent is None:
+    if parent is None:
         raise ValueError("No leaf named %s in tree terminals." % query_name)
-    if len(parent.get_terminals()) > 2:
-        elder = parent
     else:
-        elder = grandparent
+        if len(parent.get_terminals()) > 2:
+            elder = parent
+        else:
+            if grandparent is None:
+                raise ValueError("No leaf named %s in tree terminals." % query_name)
+            else:
+                elder = grandparent
     ## Count number of occurances of each clade in elder descendants
     clade_count = {}  # type: Dict[str, int]
     for leaf in elder.get_terminals():
@@ -157,7 +161,7 @@ def transpact_tree_prediction(pplacer_tree: str, masscutoff: float, funClades: D
     if len(tree_hits) == 0:
         raise ValueError("There should be a leaf with name of minimal form #'int'_M='float' in the provided tree.")
     ## Look to see when threshold is met
-    totalmass = {}
+    totalmass: Dict[str, float] = {}
     query_prefix = None
     for placement_num in tree_hits:
         if query_prefix is None:
@@ -168,7 +172,10 @@ def transpact_tree_prediction(pplacer_tree: str, masscutoff: float, funClades: D
             totalmass[clade_assignment] += mass
         else:
             totalmass[clade_assignment] = mass
-    best_clade = max(totalmass, key=totalmass.get)
+    best_clade, best_mass = None, 0
+    for c in totalmass:
+        if totalmass[c] > best_mass:
+            best_clade, best_mass = c, totalmass[c]
     clade, spec, score = 'clade_not_conserved', 'NA', 0.0 ## Talk to Simon about best way to treat non-predictions...maybe 'None'?
     if best_clade != 'clade_not_conserved' and totalmass[best_clade] >= masscutoff:
         clade, spec, score = best_clade, clade2ann[best_clade], round(totalmass[best_clade], 2)
