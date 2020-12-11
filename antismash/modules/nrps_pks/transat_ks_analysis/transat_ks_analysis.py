@@ -172,7 +172,8 @@ def transpact_tree_prediction(pplacer_tree: str, masscutoff: float, funClades: D
             totalmass[clade_assignment] += mass
         else:
             totalmass[clade_assignment] = mass
-    best_clade, best_mass = None, float(0)
+    best_clade: str = 'None'
+    best_mass: float = float(0)
     for c in totalmass:
         if totalmass[c] > best_mass:
             best_clade, best_mass = c, totalmass[c]
