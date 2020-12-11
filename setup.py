@@ -27,6 +27,7 @@ install_requires = [
     'matplotlib',
     'scipy',
     'scikit-learn >= 0.19.0',
+    'pplacer'
 ]
 
 tests_require = [
