@@ -176,7 +176,9 @@ def transpact_tree_prediction(pplacer_tree: str, masscutoff: float, funClades: D
     for c in totalmass:
         if totalmass[c] > best_mass:
             best_clade, best_mass = c, totalmass[c]
-    clade: str, spec: str, score: float = 'clade_not_conserved', 'NA', 0.0 ## Talk to Simon about best way to treat non-predictions...maybe 'None'?
+    clade: str = 'clade_not_conserved'
+    spec: str = 'NA'
+    score: float = 0.0
     if best_clade != 'clade_not_conserved' and best_mass >= masscutoff:
         clade, spec, score = best_clade, clade2ann[best_clade], round(best_mass, 2)
     return KSPrediction({spec: KSResult(clade, spec, score)})
