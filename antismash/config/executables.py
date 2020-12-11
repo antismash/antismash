@@ -56,7 +56,7 @@ def get_default_paths() -> Dict[str, str]:
     """ Builds a default set of paths, one for each
         executable in _ALTERNATE_EXECUTABLE_NAMES.
     """
-    binaries = OrderedDict()  # type: Dict[str, str]
+    binaries: Dict[str, str] = OrderedDict()
     for name, alternates in _ALTERNATE_EXECUTABLE_NAMES.items():
         if name in binaries:
             continue
@@ -75,7 +75,7 @@ def get_executable_paths(binaries_arg: str) -> Dict[str, str]:
             diamond=/full/path/to/executable,hmmpfam2=hmm2pfam
         into a Namespace, provided each binary name is in _ALTERNATE_EXECUTABLE_NAMES.
     """
-    binaries = {}  # type: Dict[str, str]
+    binaries: Dict[str, str] = {}
     for part in binaries_arg.split(","):
         if not part:
             continue

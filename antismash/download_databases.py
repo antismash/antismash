@@ -18,10 +18,6 @@ import antismash
 from antismash.common.hmmer import ensure_database_pressed
 from antismash.common.subprocessing import execute
 
-PFAM27_URL = "ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam27.0/Pfam-A.hmm.gz"
-PFAM27_ARCHIVE_CHECKSUM = "b29bc2c54db8090531df0361a781b8d7397f60ebedc0c36a16e7d45e999cc329"
-PFAM27_CHECKSUM = "ea35d7e4029b9d34eb8422ae69a230a2a5d25a52a8e207425791e8fdeb38aac8"
-
 PFAM_LATEST_VERSION = "32.0"
 PFAM_LATEST_URL = "ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam{}/Pfam-A.hmm.gz".format(
     PFAM_LATEST_VERSION
@@ -29,9 +25,9 @@ PFAM_LATEST_URL = "ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam{}/Pfam-A
 PFAM_LATEST_ARCHIVE_CHECKSUM = "33a7713c080c8f921863ee87793f36b4bce0fc05ff5fec767109a4e9ffbf9c1e"
 PFAM_LATEST_CHECKSUM = "deaf15657dc19b0e6c3d7370c4c94a505b109dde103c327862213679958b5dd3"
 
-CLUSTERBLAST_URL = "https://dl.secondarymetabolites.org/releases/clusterblast/clusterblast_20190415.tar.xz"
-CLUSTERBLAST_ARCHIVE_CHECKSUM = "160970350d2d7dd585889040518db60599b0af0c58cb08c6b64564215c5452b3"
-CLUSTERBLAST_FASTA_CHECKSUM = "e49741f7f49a5807a6430af5f288f4aad003ed4fc2c69438dadae3cf957e61f6"
+CLUSTERBLAST_URL = "https://dl.secondarymetabolites.org/releases/clusterblast/clusterblast_20201012.tar.xz"
+CLUSTERBLAST_ARCHIVE_CHECKSUM = "4c0345ba020c3f8c7cdfa5e6f0421e93b6cea30d7a5819a222ac1b38993138c8"
+CLUSTERBLAST_FASTA_CHECKSUM = "0b8ccbeed536deb20d84b6449ed04d3e81e7555c18311930f08e874d621b50b9"
 
 RESFAM_URL = "http://dantaslab.wustl.edu/resfams/Resfams.hmm.gz"
 RESFAM_ARCHIVE_CHECKSUM = "82e9325283b999b1fb1351502b2d12194561c573d9daef3e623e905c1af66fd6"
@@ -46,14 +42,14 @@ CHUNK = 128 * 1024
 class DownloadError(RuntimeError):
     """Exception to throw when downloads fail."""
 
-    pass
+    pass  # pylint: disable=unnecessary-pass
 
 
 def get_remote_filesize(url: str) -> int:
     """Get the file size of the remote file."""
     try:
         usock = request.urlopen(request.Request(url, method="HEAD"))
-        dbfilesize = usock.info().get("Content-Length", "0")  # type: ignore
+        dbfilesize = usock.info().get("Content-Length", "0")
     except urlerror.URLError:
         dbfilesize = "0"
 
@@ -84,7 +80,7 @@ def download_file(url: str, filename: str) -> str:
         raise DownloadError("ERROR: File not found on server.\nPlease check your internet connection.")
 
     # use 1 because we want to divide by the expected size, can't use 0
-    expected_size = int(req.info().get("Content-Length", "1"))  # type: ignore
+    expected_size = int(req.info().get("Content-Length", "1"))
 
     basename = os.path.basename(filename)
     dirname = os.path.dirname(filename)
@@ -313,10 +309,7 @@ def download_clusterblast(db_dir: str) -> None:
 
 def download(args: argparse.Namespace) -> None:
     """Download all the large external databases needed."""
-    # ClusterFinder is stuck to PFAM 27.0, so always grab that
-    download_pfam(args.database_dir, PFAM27_URL, "27.0", PFAM27_ARCHIVE_CHECKSUM, PFAM27_CHECKSUM)
-
-    # And also grab the latest
+    # grab the latest pfam
     download_pfam(
         args.database_dir,
         PFAM_LATEST_URL,

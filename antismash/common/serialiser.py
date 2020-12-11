@@ -10,8 +10,6 @@ import json
 import logging
 from typing import Any, Dict, IO, List, Union
 
-import Bio.Alphabet
-import Bio.Alphabet.IUPAC
 from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, Reference
 from Bio.SeqRecord import SeqRecord
@@ -58,7 +56,7 @@ class AntismashResults:
 
     def to_json(self) -> Dict[str, Any]:
         """ Constructs a JSON representation of the instance """
-        res = OrderedDict()  # type: Dict[str, Any]
+        res: Dict[str, Any] = OrderedDict()
         res["version"] = self.version
         res["input_file"] = self.input_file
         biopython = [rec.to_biopython() for rec in self.records]
@@ -94,7 +92,7 @@ def dump_records(records: List[SeqRecord], results: List[Dict[str, Union[Dict[st
     assert isinstance(results, list)
     for record, result in zip(records, results):
         json_record = record_to_json(record)
-        modules = OrderedDict()  # type: Dict[str, Dict]
+        modules: Dict[str, Dict] = OrderedDict()
         if result:
             logging.debug("Record %s has results for modules: %s", record.id,
                           ", ".join([mod.rsplit('.', 1)[-1] for mod, resultv in result.items() if resultv]))
@@ -137,7 +135,7 @@ def record_to_json(record: SeqRecord) -> Dict[str, Any]:
             res["references"].append(ref)
         return res
 
-    result = OrderedDict()  # type: Dict[str, Any]
+    result: Dict[str, Any] = OrderedDict()
     result["id"] = record.id
     result["seq"] = sequence_to_json(record.seq)
     result["features"] = list(map(feature_to_json, record.features))
@@ -179,8 +177,10 @@ def record_from_json(data: Union[str, Dict]) -> SeqRecord:
 
 def sequence_to_json(sequence: Seq) -> Dict[str, str]:
     """ Constructs a JSON object that represents a Seq sequence """
-    return {"data": str(sequence),
-            "alphabet": str(sequence.alphabet).rsplit('()')[0]}  # DNA() -> DNA
+    return {
+        "data": str(sequence),
+        "alphabet": "DNA",  # for compatibility, removable on schema version change
+    }
 
 
 def sequence_from_json(data: Union[str, Dict]) -> Seq:
@@ -188,12 +188,7 @@ def sequence_from_json(data: Union[str, Dict]) -> Seq:
     if isinstance(data, str):
         data = json.loads(data)
     assert isinstance(data, dict)
-    alphabet = data["alphabet"]
-    if "IUPAC" in alphabet:
-        alphabet_class = getattr(Bio.Alphabet.IUPAC, alphabet)
-    else:
-        alphabet_class = getattr(Bio.Alphabet, alphabet)
-    return Seq(data["data"], alphabet=alphabet_class())
+    return Seq(data["data"])
 
 
 def feature_to_json(feature: SeqFeature) -> Dict[str, Any]:

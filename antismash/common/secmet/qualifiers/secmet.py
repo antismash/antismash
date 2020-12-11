@@ -4,8 +4,7 @@
 """ Annotations for secondary metabolites """
 
 import re
-from typing import Any, Iterator, List, Sequence, Union
-from typing import Set  # comment hints  # pylint: disable=unused-import
+from typing import Any, Iterator, List, Sequence, Set, Union
 
 
 def _parse_format(fmt: str, data: str) -> Sequence[str]:
@@ -25,7 +24,7 @@ def _parse_format(fmt: str, data: str) -> Sequence[str]:
     # escape anything that might cause issues when using it as a regex later
     safe = re.escape(fmt)
     # treat (escaped) spaces as optional thanks to genbank/biopython conversions
-    safe = safe.replace("\ ", "\ ?")
+    safe = safe.replace(r"\ ", r"\ ?")
     # the simple search here would be {.*?} for a non-greedy brace pair, but
     # because python format strings use {{ and }} as literal braces, they need to be excluded
     # e.g. "{{{{{:g}}}}}".format(1e-5) == "{{1e-5}}"
@@ -103,9 +102,9 @@ class SecMetQualifier:
             return cls(str(json[0]), float(json[1]), float(json[2]), int(json[3]), str(json[4]))
 
     def __init__(self, domains: List["SecMetQualifier.Domain"] = None) -> None:
-        self._domains = []  # type: List["SecMetQualifier.Domain"]
-        self.domain_ids = []  # type: List[str]
-        self.unique_domain_ids = set()  # type: Set[str]
+        self._domains: List["SecMetQualifier.Domain"] = []
+        self.domain_ids: List[str] = []
+        self.unique_domain_ids: Set[str] = set()
         if domains is not None:
             self.add_domains(domains)
         super().__init__()

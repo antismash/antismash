@@ -4,16 +4,13 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
-import os
 import unittest
 
 from typing import Dict
 
-from Bio.Alphabet import generic_dna
 from Bio.Seq import Seq
 from Bio.SeqFeature import FeatureLocation
 
-from antismash.common import path
 from antismash.common.secmet.record import Record
 from antismash.common.test.helpers import DummyRecord, DummyPFAMDomain
 from antismash.modules.pfam2go import pfam2go
@@ -99,7 +96,7 @@ class PfamToGoTest(unittest.TestCase):
 
     def test_blank_records(self):
         blank_no_pfams = DummyRecord()
-        blank_no_ids = Record(Seq("ATGTTATGAGGGTCATAACAT", generic_dna))
+        blank_no_ids = Record(Seq("ATGTTATGAGGGTCATAACAT"))
         fake_pfam = DummyPFAMDomain(identifier="PF00000")
         blank_no_ids.add_pfam_domain(fake_pfam)
 

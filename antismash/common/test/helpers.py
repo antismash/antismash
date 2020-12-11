@@ -13,7 +13,6 @@
 
 import os
 
-from Bio.Seq import Seq
 from helperlibs.wrappers.io import TemporaryDirectory
 
 import antismash
@@ -44,12 +43,15 @@ def get_simple_options(module, args):
 
 class DummyRecord(Record):
     "class for generating a Record like data structure"
-    def __init__(self, features=None, seq='FAKESEQ', taxon='bacteria'):
+    def __init__(self, features=None, seq='AGCTACGT', taxon='bacteria',
+                 record_id=None):
         super().__init__(seq, transl_table=11 if taxon == 'bacteria' else 1)
         if features:
             for feature in features:
                 self.add_feature(feature)
         self.record_index = 0
+        if record_id is not None:
+            self.id = record_id
 
 
 class FakeHSP:

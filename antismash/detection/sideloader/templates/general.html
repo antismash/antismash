@@ -1,0 +1,62 @@
+<div class="more-details">
+    <div class="heading">
+      <span>External annotation</span>
+      {{help_tooltip(tooltip_content, "general_details")}}
+    </div>
+    <div class="prediction-text" style="padding-left:2em;padding-top:2em;">
+      <table><thead></thead>
+       <tbody>
+        <tr><td>Name</td><td>&nbsp;</td><td><strong>{{tool.name}}</strong></td></tr>
+        {% if tool.version %}
+          <tr><td>Version</td><td>&nbsp;</td><td>{{tool.version}}</td></tr>
+        {% endif %}
+        {% if tool.description %}
+          <tr><td>Description</td><td>&nbsp;</td><td>{{tool.description}}</td></tr>
+        {% endif %}
+       </tbody>
+      </table>
+
+      {% if tool.configuration %}
+      Configuration:
+      {{collapser_start("sideloader-tool", level="none")}}
+      <table>
+       <thead>
+        <tr><th>Setting</th><th></th><th>Value</th></tr>
+       </thead>
+       <tbody>
+        {% for key, value in tool.configuration.items() | sort -%}
+         <tr><td>{{key}}</td><td>&nbsp;</td><td>{{value | join(", ")}}</td></tr>
+        {%- endfor %}
+       </tbody>
+      </table>
+      {{collapser_end()}}
+      {% endif %}
+    </div>
+    {% for area in areas -%}
+    <div class="prediction-text" style="padding-left:2em;padding-top:2em;">
+      <table>
+       <thead></thead>
+       <tbody>
+        <tr><td>Type</td><td>&nbsp;</td><td>{{area.kind.capitalize()}}</td></tr>
+        <tr><td>Location</td><td>&nbsp;</td><td>{{"{:,d}".format(area.start + 1)}} - {{"{:,d}".format(area.end + 1)}}</td></tr>
+        <tr><td>Label</td><td>&nbsp;</td><td>{{area.label}}</td></tr>
+       </tbody>
+      </table>
+      {% if area.details %}
+      Additional area details:
+      {{collapser_start("sideloader-detail")}}
+      <table>
+       <thead>
+        <tr><th>Name</th><th></th><th>Value</th></tr>
+       </thead>
+       <tbody>
+        {% for key, value in area.details.items() | sort -%}
+        <tr><td>{{key}}</td><td>&nbsp;</td><td>{{value | join(", ")}}</td></tr>
+        {%- endfor %}
+       </tbody>
+      </table>
+      {{collapser_end()}}
+      {% endif %}
+    </div>
+    {%- endfor %}
+</div>

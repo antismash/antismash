@@ -1,0 +1,38 @@
+{
+  "tool": {
+    "name": "test tool name",
+    "version": "1.2.3",
+    "description": "test description",
+    "configuration": {
+      "setting1name": "setting1value"
+    }
+  },
+  "records": [
+    {
+      "name": "first_record_id",
+      "subregions": [
+        {
+          "start": 158,
+          "end": 2510,
+          "label": "Polyketide"
+          "details": {
+            "score": "6.5",
+            "some_option_name": "yes"
+          }
+        }
+      ],
+      "protoclusters": [
+        {
+          "core_start": 238,
+          "core_end": 4010,
+          "product": "T1PKS",
+          "neighbourhood_right": 500,
+          "details": {
+            "score": "6.5",
+            "some_option_name": "no"
+          }
+        }
+      ]
+    }
+  ]
+}

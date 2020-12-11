@@ -14,10 +14,9 @@
 import bisect
 from collections import Counter, defaultdict, OrderedDict
 import logging
-from typing import Any, Dict, List, Tuple, Union, cast
-from typing import Optional, Sequence, Set, Type  # comment hints # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, Sequence, Type, Tuple, Union, cast
 
-from Bio import Alphabet, SeqIO
+from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 from Bio.SeqRecord import SeqRecord
@@ -38,7 +37,7 @@ from .features import (
     Region,
     SubRegion,
 )
-from .features import CDSCollection  # comment hints, pylint: disable=unused-import
+from .features import CDSCollection
 from .features.candidate_cluster import create_candidates_from_protoclusters
 
 from .locations import (
@@ -59,7 +58,7 @@ class Record:
                  "_pfams_by_cds_name", "_modules",
                  "_candidate_clusters", "_candidate_clusters_numbering",
                  "_subregions", "_subregion_numbering",
-                 "_regions", "_region_numbering"]
+                 "_regions", "_region_numbering", "_antismash_domains_by_tool"]
 
     def __init__(self, seq: Union[Seq, str] = "", transl_table: int = 1, **kwargs: Any) -> None:
         # prevent paths from being used as a sequence
@@ -67,38 +66,40 @@ class Record:
         if isinstance(seq, str):
             seq = Seq(seq)
         self._record = SeqRecord(seq, **kwargs)
-        self.record_index = None  # type: Optional[int]
+        self.record_index: Optional[int] = None
         self.original_id = None
-        self.skip = None  # type: Optional[str] # TODO: move to yet another abstraction layer?
-        self._genes = []  # type: List[Gene]
+        self.skip: Optional[str] = None  # TODO: move to yet another abstraction layer?
+        self._genes: List[Gene] = []
 
-        self._cds_features = []  # type: List[CDSFeature]
-        self._cds_by_name = {}  # type: Dict[str, CDSFeature]
+        self._cds_features: List[CDSFeature] = []
+        self._cds_by_name: Dict[str, CDSFeature] = {}
 
-        self._cds_motifs = []  # type: List[CDSMotif]
+        self._cds_motifs: List[CDSMotif] = []
 
-        self._pfam_domains = []  # type: List[PFAMDomain]
-        self._pfams_by_cds_name = defaultdict(list)  # type: Dict[str, List[PFAMDomain]]
+        self._pfam_domains: List[PFAMDomain] = []
+        self._pfams_by_cds_name: Dict[str, List[PFAMDomain]] = defaultdict(list)
 
-        self._antismash_domains = []  # type: List[AntismashDomain]
-        self._modules = []  # type: List[Module]
+        self._antismash_domains: List[AntismashDomain] = []
+        self._antismash_domains_by_tool: Dict[str, List[AntismashDomain]] = defaultdict(list)
+
+        self._modules: List[Module] = []
 
         # includes PFAMDomains and AntismashDomains
-        self._domains_by_name = {}  # type: Dict[str, Domain]  # for use as x[domain.get_name()] = domain
+        self._domains_by_name: Dict[str, Domain] = {}  # for use as x[domain.get_name()] = domain
 
-        self._nonspecific_features = []  # type: List[Feature]
+        self._nonspecific_features: List[Feature] = []
 
-        self._protoclusters = []  # type: List[Protocluster]
-        self._protocluster_numbering = {}  # type: Dict[Protocluster, int]
+        self._protoclusters: List[Protocluster] = []
+        self._protocluster_numbering: Dict[Protocluster, int] = {}
 
-        self._candidate_clusters = []  # type: List[CandidateCluster]
-        self._candidate_clusters_numbering = {}  # type: Dict[CandidateCluster, int]
+        self._candidate_clusters: List[CandidateCluster] = []
+        self._candidate_clusters_numbering: Dict[CandidateCluster, int] = {}
 
-        self._subregions = []  # type: List[SubRegion]
-        self._subregion_numbering = {}  # type: Dict[SubRegion, int]
+        self._subregions: List[SubRegion] = []
+        self._subregion_numbering: Dict[SubRegion, int] = {}
 
-        self._regions = []  # type: List[Region]
-        self._region_numbering = {}  # type: Dict[Region, int]
+        self._regions: List[Region] = []
+        self._region_numbering: Dict[Region, int] = {}
 
         self._transl_table = int(transl_table)
 
@@ -280,8 +281,7 @@ class Record:
             if region < existing_region:
                 index = i  # before
                 break
-            else:
-                index = i + 1  # after
+            index = i + 1  # after
         self._regions.insert(index, region)
         region.parent_record = self
         # update numbering
@@ -379,12 +379,19 @@ class Record:
         """A list of secondary metabolite aSDomains present in the record"""
         return tuple(self._antismash_domains)
 
+    def get_antismash_domains_by_tool(self, tool: str) -> Tuple[AntismashDomain, ...]:
+        """A list of secondary metabolite aSDomains present in the record
+           filtered by the given tool
+        """
+        return tuple(self._antismash_domains_by_tool.get(tool, []))
+
     def clear_antismash_domains(self) -> None:
         "Remove all AntismashDomain features"
         # remove antismash domains only from the domains mapping
         for domain in self._antismash_domains:
             del self._domains_by_name[domain.get_name()]
         self._antismash_domains.clear()
+        self._antismash_domains_by_tool.clear()
 
     def get_generics(self) -> Tuple:
         """A list of secondary metabolite generics present in the record"""
@@ -445,7 +452,7 @@ class Record:
             assert isinstance(location, FeatureLocation)
             location = FeatureLocation(0, max(1, location.end))
 
-        results = []  # type: List[CDSFeature]
+        results: List[CDSFeature] = []
         # shortcut if no CDS features exist
         if not self._cds_features:
             return results
@@ -466,9 +473,11 @@ class Record:
     def to_biopython(self) -> SeqRecord:
         """Returns a Bio.SeqRecord instance of the record"""
         features = self.get_all_features()
-        bio_features = []  # type: List[SeqFeature]
+        bio_features: List[SeqFeature] = []
         for feature in sorted(features):
             bio_features.extend(feature.to_biopython())
+        if "molecule_type" not in self._record.annotations:
+            self._record.annotations["molecule_type"] = "DNA"
         return SeqRecord(self.seq, id=self._record.id, name=self._record.name,
                          description=self._record.description,
                          dbxrefs=self.dbxrefs, features=bio_features,
@@ -542,7 +551,9 @@ class Record:
         """ Add the given AntismashDomain to the record """
         assert isinstance(antismash_domain, AntismashDomain)
         assert antismash_domain.get_name()
+        assert antismash_domain.tool
         self._antismash_domains.append(antismash_domain)
+        self._antismash_domains_by_tool[antismash_domain.tool].append(antismash_domain)
         if antismash_domain.get_name() in self._domains_by_name:
             raise SecmetInvalidInputError("multiple Domain features have the same name for mapping: %s" %
                                           antismash_domain.get_name())
@@ -650,14 +661,15 @@ class Record:
         """ Constructs a new Record instance from a biopython SeqRecord,
             also replaces biopython SeqFeatures with Feature subclasses
         """
-        postponed_features = OrderedDict()  # type: Dict[str, Tuple[Type[Feature], List[SeqFeature]]]
+        postponed_features: Dict[str, Tuple[Type[Feature], List[SeqFeature]]] = OrderedDict()
         for kind in [CandidateCluster, Region, Module]:  # type: Type[Feature]
             postponed_features[kind.FEATURE_TYPE] = (kind, [])
 
         assert isinstance(seq_record, SeqRecord), type(seq_record)
-        if seq_record.seq and isinstance(seq_record.seq, Seq):
-            if isinstance(seq_record.seq.alphabet, Alphabet.ProteinAlphabet):
-                raise SecmetInvalidInputError("protein records are not supported")
+        if seq_record.annotations.get("molecule_type", "DNA") != "DNA":
+            raise SecmetInvalidInputError("protein records are not supported")
+        if seq_record.seq and not Record.is_nucleotide_sequence(seq_record.seq):
+            raise SecmetInvalidInputError("protein records are not supported")
         transl_table = 1  # standard
         if str(taxon) == "bacteria":
             transl_table = 11  # bacterial, archea, plant plastid code
@@ -787,8 +799,11 @@ class Record:
                 cds.region = region
 
         # for other collections, since they may overlap heavily, exhaustive search required
-        other_collections = [self._protoclusters, self._candidate_clusters,
-                             self._subregions]  # type: Sequence[Sequence[CDSCollection]]
+        other_collections: Sequence[Sequence[CDSCollection]] = [
+            self._protoclusters,
+            self._candidate_clusters,
+            self._subregions
+        ]
         for collections in other_collections:
             for collection in collections:
                 if cds.is_contained_by(collection):
@@ -830,17 +845,17 @@ class Record:
         string_version = str(seq)
         for invalid in "*BJOUZ":
             string_version = string_version.replace(invalid, "X")
-        seq = Seq(string_version, Alphabet.generic_protein)
 
         if "-" in str(seq):
-            seq = Seq(str(seq).replace("-", ""), Alphabet.generic_protein)
-        return seq
+            seq = Seq(str(seq).replace("-", ""))
+
+        return Seq(string_version)
 
     def get_cds_features_within_regions(self) -> List[CDSFeature]:  # pylint: disable=invalid-name
         """ Returns all CDS features in the record that are located within a
             region of interest
         """
-        features = []  # type: List[CDSFeature]
+        features: List[CDSFeature] = []
         for region in self._regions:
             features.extend(region.cds_children)
         return features
@@ -879,7 +894,7 @@ class Record:
         if not candidate_clusters and not subregions:
             return 0
 
-        areas = []  # type: List[CDSCollection]
+        areas: List[CDSCollection] = []
         areas.extend(candidate_clusters)
         areas.extend(subregions)
         areas.sort()
@@ -957,3 +972,18 @@ class Record:
         # clean up antiSMASH annotations in CDS features
         for feature in self.get_cds_features():
             feature.strip_antismash_annotations()
+
+    @staticmethod
+    def is_nucleotide_sequence(sequence: Union[Seq, str]) -> bool:
+        """ Determines if a sequence is a nucleotide sequence based on content.
+
+            Arguments:
+                sequence: the sequence to check, either a string or Bio.Seq
+
+            Returns:
+                True if more than 80% of characters are nucleotide bases
+        """
+        other = str(sequence).lower()
+        for char in "acgtn":
+            other = other.replace(char, "")
+        return len(other) < 0.2 * len(sequence)

@@ -8,7 +8,7 @@
 """
 
 from collections import defaultdict
-from typing import Dict, List, Tuple  # used in comment hints # pylint: disable=unused-import
+from typing import Dict, List, Tuple
 
 from antismash.common import secmet
 
@@ -21,7 +21,7 @@ MultiplePairing = Tuple[secmet.features.Domain, List[str]]  # pylint: disable=in
 
 def run_all_analyses(record: secmet.Record) -> List[MultiplePairing]:
     """ Runs all AFS analyses at once and returns their aggregated results """
-    hits_by_feature = defaultdict(list)  # type: Dict[secmet.features.Domain, List[str]]
+    hits_by_feature: Dict[secmet.features.Domain, List[str]] = defaultdict(list)
     for analysis in [asp_ks, asp_ks_c, asp_at, acp_type, asp_acp, asp_pksi_dh, asp_pksi_kr,
                      asp_thioesterase, pksi_er_stereo, pksi_kr_stereo, pksi_at_spec, asp_p450_oxy]:
         for feature, hit in analysis(record):
@@ -43,7 +43,7 @@ def pksi_kr_stereo(record: secmet.Record) -> List[SinglePairing]:
     positions = [149, 162, 166]
     expected = ["S", "Y", "N"]
     target_domain = "PKS_KR"
-    candidates = record.get_antismash_domains()
+    candidates = record.get_antismash_domains_by_tool("nrps_pks_domains")
 
     analyser = ActiveSiteAnalysis(target_domain, candidates, "PKSI-KR.hmm2", positions, expected)
 
@@ -74,7 +74,7 @@ def asp_ks(record: secmet.Record) -> List[SinglePairing]:
     expected = ['G', 'S', 'S', 'S']
     emissions = [0.99, 0.9, 0.81, 0.81]
     target_domain = "PKS_KS"
-    candidates = record.get_antismash_domains()
+    candidates = record.get_antismash_domains_by_tool("nrps_pks_domains")
 
     results = []
 
@@ -104,7 +104,7 @@ def asp_ks_c(record: secmet.Record) -> List[SinglePairing]:
     expected = ['E', 'G', 'T', 'G', 'T', 'G', 'D', 'E', 'K', 'G', 'G', 'K']
     emissions = [0.96, 0.92, 0.95, 0.94, 0.95, 0.96, 0.99, 0.99, 1., 0.99, 0.96, 0.93]
     target_domain = "PKS_KS"
-    candidates = record.get_antismash_domains()
+    candidates = record.get_antismash_domains_by_tool("nrps_pks_domains")
 
     results = []
 
@@ -129,7 +129,7 @@ def asp_at(record: secmet.Record) -> List[SinglePairing]:
     expected = ['G', 'H', 'G', 'E']
     emissions = [1., 1., 1., 0.94]
     target_domain = "PKS_AT"
-    candidates = record.get_antismash_domains()
+    candidates = record.get_antismash_domains_by_tool("nrps_pks_domains")
     analyser = ActiveSiteAnalysis(target_domain, candidates, "PKSI-AT.hmm2",
                                   positions, expected, emissions=emissions)
 
@@ -157,7 +157,7 @@ def acp_type(record: secmet.Record) -> List[SinglePairing]:
     expected = ['G', 'D', 'S']
     emissions = [0.97, 0.9, 0.98]
     target_domain = "ACP"
-    candidates = record.get_antismash_domains()
+    candidates = record.get_antismash_domains_by_tool("nrps_pks_domains")
     analyser = ActiveSiteAnalysis(target_domain, candidates, "PKSI-ACP.hmm2",
                                   positions, expected, emissions=emissions)
     results = []
@@ -187,7 +187,7 @@ def asp_acp(record: secmet.Record) -> List[SinglePairing]:
     expected = ['G', 'D']
     emissions = [0.97, 0.9]
     target_domain = "ACP"
-    candidates = record.get_antismash_domains()
+    candidates = record.get_antismash_domains_by_tool("nrps_pks_domains")
     analyser = ActiveSiteAnalysis(target_domain, candidates, "PKSI-ACP.hmm2",
                                   positions, expected, emissions=emissions)
 
@@ -211,7 +211,7 @@ def asp_pksi_dh(record: secmet.Record) -> List[SinglePairing]:
     expected = ['L', 'L', 'G', 'P', 'L', 'D']
     emissions = [0.9, 0.78, 0.86, 0.7, 0.85, 0.78]
     target_domain = "PKS_DH"
-    candidates = record.get_antismash_domains()
+    candidates = record.get_antismash_domains_by_tool("nrps_pks_domains")
     analyser = ActiveSiteAnalysis(target_domain, candidates, "PKSI-DH.hmm2",
                                   positions, expected, emissions=emissions)
 
@@ -243,7 +243,7 @@ def asp_pksi_kr(record: secmet.Record) -> List[SinglePairing]:
     expected = ['R', 'D', 'G', 'A', 'K', 'S']
     emissions = [0.93, 0.88, 0.93, 0.9, 0.99, 0.87]
     target_domain = "PKS_KR"
-    candidates = record.get_antismash_domains()
+    candidates = record.get_antismash_domains_by_tool("nrps_pks_domains")
     analyser = ActiveSiteAnalysis(target_domain, candidates, "PKSI-KR.hmm2",
                                   positions, expected, emissions=emissions)
 
@@ -270,7 +270,7 @@ def asp_thioesterase(record: secmet.Record) -> List[SinglePairing]:
     expected = ['G', 'G', 'G', 'A', 'D']
     emissions = [0.93, 1., 0.99, 0.9, 0.9]
     target_domain = "Thioesterase"
-    candidates = record.get_antismash_domains()
+    candidates = record.get_antismash_domains_by_tool("nrps_pks_domains")
     analyser = ActiveSiteAnalysis(target_domain, candidates, "Thioesterase.hmm2",
                                   positions, expected, emissions=emissions)
 
@@ -301,7 +301,7 @@ def pksi_er_stereo(record: secmet.Record) -> List[SinglePairing]:
     positions = [31, 135, 137, 144, 146, 227]
     expected = ['D', 'L', 'H', 'G', 'A', 'G']
     target_domain = "PKS_ER"
-    candidates = record.get_antismash_domains()
+    candidates = record.get_antismash_domains_by_tool("nrps_pks_domains")
     analyser = ActiveSiteAnalysis(target_domain, candidates, "PKSI-ER.hmm2", positions, expected)
 
     results = []
@@ -334,7 +334,7 @@ def pksi_at_spec(record: secmet.Record) -> List[SinglePairing]:
     positions = [93, 94, 95, 120, 196, 198, 199, 227, 244, 245]
     expected = ['G', 'H', 'S', 'R', 'A', 'H', 'S', 'S', 'Y', 'W']
     target_domain = "PKS_AT"
-    candidates = record.get_antismash_domains()
+    candidates = record.get_antismash_domains_by_tool("nrps_pks_domains")
     analyser = ActiveSiteAnalysis(target_domain, candidates, "PKSI-AT.hmm2", positions, expected)
 
     results = []

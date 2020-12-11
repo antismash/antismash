@@ -17,6 +17,8 @@ from antismash.config import ConfigType
 from antismash.outputs.html import js
 from antismash.custom_typing import AntismashModule
 
+from .pfam_json import gather_pfam_json
+
 
 def build_json_data(records: List[Record], results: List[Dict[str, module_results.ModuleResults]],
                     options: ConfigType) -> Tuple[List[Dict[str, Any]], List[Dict[str, Union[str, List[JSONOrf]]]]]:
@@ -57,22 +59,24 @@ def build_json_data(records: List[Record], results: List[Dict[str, module_result
 
 
 def write_regions_js(records: List[Dict[str, Any]], output_dir: str,
-                     js_domains: List[Dict[str, Any]]) -> None:
+                     js_domains: List[Dict[str, Any]], pfam_domains: Dict[str, Dict[str, Any]]) -> None:
     """ Writes out the cluster and domain JSONs to file for the javascript sections
         of code"""
+
     with open(os.path.join(output_dir, 'regions.js'), 'w') as handle:
         handle.write("var recordData = %s;\n" % json.dumps(records, indent=4))
-        regions = {"order": []}  # type: Dict[str, Any]
+        regions: Dict[str, Any] = {"order": []}
         for record in records:
             for region in record['regions']:
                 regions[region['anchor']] = region
                 regions['order'].append(region['anchor'])
         handle.write('var all_regions = %s;\n' % json.dumps(regions, indent=4))
 
-        clustered_domains = {}
-        for region in js_domains:
-            clustered_domains[region['id']] = region
-        handle.write('var details_data = %s;\n' % json.dumps(clustered_domains, indent=4))
+        details = {
+            "nrpspks": {region["id"]: region for region in js_domains},
+            "pfam": pfam_domains,
+        }
+        handle.write('var details_data = %s;\n' % json.dumps(details, indent=4))
 
 
 def generate_html_sections(records: List[RecordLayer], results: Dict[str, Dict[str, module_results.ModuleResults]],
@@ -103,6 +107,16 @@ def generate_html_sections(records: List[RecordLayer], results: Dict[str, Dict[s
                         continue
                     sections.append(handler.generate_html(region, handler_results, record, options))
             record_details[region.get_region_number()] = sections
+            if any(record.get_pfam_domains_in_cds(cds) for cds in region.cds_children):
+                html = HTMLSections("pfam-domains")
+                template = FileTemplate(path.get_full_path(__file__, "templates", "pfam_domains.html"))
+                tooltip = """Shows Pfam domains found in each gene within the region.
+Click on each domain for more information about the domain's
+accession, location, description, and any relevant Gene Ontology.
+Domains with a bold border have Gene Ontology information. """
+                section = template.render(region=region, tooltip=tooltip)
+                html.add_detail_section("Pfam domains", section, "pfam-details")
+                sections.append(html)
         details[record.id] = record_details
     return details
 
@@ -113,7 +127,8 @@ def generate_webpage(records: List[Record], results: List[Dict[str, module_resul
 
     generate_searchgtr_htmls(records, options)
     json_records, js_domains = build_json_data(records, results, options)
-    write_regions_js(json_records, options.output_dir, js_domains)
+    pfam_domains = gather_pfam_json(records)
+    write_regions_js(json_records, options.output_dir, js_domains, pfam_domains)
 
     with open(os.path.join(options.output_dir, 'index.html'), 'w') as result_file:
         template = FileTemplate(path.get_full_path(__file__, "templates", "overview.html"))
@@ -121,7 +136,7 @@ def generate_webpage(records: List[Record], results: List[Dict[str, module_resul
         options_layer = OptionsLayer(options)
         record_layers_with_regions = []
         record_layers_without_regions = []
-        results_by_record_id = {}  # type: Dict[str, Dict[str, module_results.ModuleResults]]
+        results_by_record_id: Dict[str, Dict[str, module_results.ModuleResults]] = {}
         for record, record_results in zip(records, results):
             if record.get_regions():
                 record_layers_with_regions.append(RecordLayer(record, None, options_layer))

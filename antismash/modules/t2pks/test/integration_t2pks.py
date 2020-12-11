@@ -39,7 +39,8 @@ class T2PKSTest(unittest.TestCase):
         pred = results.cluster_predictions[1]
         assert pred.starter_units == [t2pks.results.Prediction('malonamyl-CoA', 2319., 0.)]
         assert pred.malonyl_elongations == [t2pks.results.Prediction('8|9', 661.0, 1.3e-201)]
-        assert pred.product_classes == {'angucycline', 'tetracycline', 'aureolic acid', 'anthracycline', 'tetracenomycin'}
+        assert pred.product_classes == {'angucycline', 'tetracycline', 'aureolic acid',
+                                        'anthracycline', 'tetracenomycin'}
         assert set(pred.molecular_weights) == {'malonamyl-CoA_8', 'malonamyl-CoA_9'}
         self.assertAlmostEqual(pred.molecular_weights['malonamyl-CoA_8'], 654.63434)
         self.assertAlmostEqual(pred.molecular_weights['malonamyl-CoA_9'], 696.67102)

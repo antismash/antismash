@@ -154,23 +154,6 @@ class TestTrimSequence(unittest.TestCase):
         assert new.seq == self.record.seq
 
 
-class TestIsNuclSeq(unittest.TestCase):
-    def test_seq(self):
-        # > 20%
-        for seq in ["AGTC", "AGCTFC", "agtcfc", "AGTCFCT"]:
-            assert record_processing.is_nucl_seq(Seq(seq))
-        # edge case == 20% should be failure
-        assert not record_processing.is_nucl_seq(Seq("AGFTC"))
-        # and less than 20%
-        assert not record_processing.is_nucl_seq(Seq("AGFTCF"))
-
-    def test_str(self):
-        for seq in ["AGTC", "AGCTFC", "agtcfc", "AGTCFCT"]:
-            assert record_processing.is_nucl_seq(seq)
-        assert not record_processing.is_nucl_seq("AGFTC")
-        assert not record_processing.is_nucl_seq("AGFTCF")
-
-
 class TestPreprocessRecords(unittest.TestCase):
     def setUp(self):
         class DummyModule:

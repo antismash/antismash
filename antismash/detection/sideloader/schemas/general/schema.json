@@ -1,0 +1,32 @@
+{
+  "definitions": {},
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "description": "Required information for sideloading annotations into antiSMASH",
+  "required": [
+    "tool",
+    "records"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "tool": {
+        "$ref": "file:tool.json"
+    },
+    "records": {
+      "type": "array",
+      "minItems": 1,
+      "description": "The Records Schema",
+      "items": {
+        "$ref": "file:record.json"
+      }
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The time these results were created (in ISO8601 format)",
+      "examples": [
+        "2019-04-27T13:45:00+02:00"
+      ]
+    }
+  }
+}

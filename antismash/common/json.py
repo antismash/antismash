@@ -67,8 +67,8 @@ class JSONOrf(JSONBase):
         super().__init__(["id", "sequence", "domains", "modules"])
         self.sequence = feature.translation
         self.id = feature.get_name()
-        self.domains = []  # type: List[JSONDomain]
-        self.modules = []  # type: List[JSONModule]
+        self.domains: List[JSONDomain] = []
+        self.modules: List[JSONModule] = []
 
     def add_domain(self, domain: JSONDomain) -> None:
         """ Add a JSONDomain to the list of domains in this ORF """

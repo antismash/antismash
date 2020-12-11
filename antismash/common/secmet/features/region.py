@@ -5,8 +5,7 @@
 
 from collections import OrderedDict
 import os
-from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar
-from typing import Set  # used in comment hints, pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, Set, Tuple, Type, TypeVar, Union
 import warnings
 
 from Bio.SeqFeature import SeqFeature
@@ -14,9 +13,9 @@ from Bio.SeqRecord import SeqRecord
 from helperlibs.bio import seqio
 
 from .cdscollection import CDSCollection, CDSFeature
-from .protocluster import Protocluster
-from .feature import Feature
-from .subregion import SubRegion
+from .protocluster import Protocluster, SideloadedProtocluster
+from .feature import Feature, FeatureLocation
+from .subregion import SideloadedSubRegion, SubRegion
 from .candidate_cluster import CandidateCluster
 from ..locations import (
     build_location_from_others,
@@ -45,7 +44,7 @@ class Region(CDSCollection):
         if not candidate_clusters and not subregions:
             raise ValueError("A Region requires at least one child SubRegion or CandidateCluster")
 
-        children = []  # type: List[CDSCollection]
+        children: List[CDSCollection] = []
 
         if subregions is None:
             subregions = []
@@ -65,9 +64,9 @@ class Region(CDSCollection):
         self._subregions = subregions
         self._candidate_clusters = candidate_clusters
 
-        self.clusterblast = None  # type: Optional[List[str]]
-        self.knownclusterblast = None  # type: Any
-        self.subclusterblast = None  # type: Optional[List[str]]
+        self.clusterblast: Optional[List[str]] = None
+        self.knownclusterblast: Any = None
+        self.subclusterblast: Optional[List[str]] = None
 
     @property
     def subregions(self) -> Tuple[SubRegion, ...]:
@@ -86,7 +85,7 @@ class Region(CDSCollection):
         """ Returns a list of unique products collected from all contained
             CandidateClusters
         """
-        products = OrderedDict()  # type: Dict[str, None]
+        products: Dict[str, None] = OrderedDict()
         for cluster in self._candidate_clusters:
             for product in cluster.products:
                 products[product] = None
@@ -103,18 +102,11 @@ class Region(CDSCollection):
         """ Returns a list of unique detection rules collected from all
             contained CandidateClusters
         """
-        rules = OrderedDict()  # type: Dict[str, str]
+        rules: Dict[str, str] = OrderedDict()
         for cluster in self._candidate_clusters:
             for product, rule in zip(cluster.products, cluster.detection_rules):
                 rules[product] = rule
         return list(rules.values())
-
-    @property
-    def probabilities(self) -> List[float]:
-        """ Returns a list of probabilities collected from all contained
-            SubRegions that have a probability
-        """
-        return [sub.probability for sub in self._subregions if sub.probability is not None]
 
     def add_cds(self, cds: CDSFeature) -> None:
         """ Adds a CDS to the Region and all relevant child collections. Links
@@ -135,11 +127,28 @@ class Region(CDSCollection):
         """ Returns all Protoclusters contained by CandidateClusters in this region,
             without duplicating them if multiple CandidateClusters contain the same
             Protocluster
+
+            Result is sorted by location start, then by decreasing size, then by product
         """
-        clusters = set()  # type: Set[Protocluster]
+        clusters: Set[Protocluster] = set()
         for candidate_cluster in self._candidate_clusters:
             clusters.update(candidate_cluster.protoclusters)
-        return sorted(clusters)
+        return sorted(clusters, key=lambda x: (x.location.start, -len(x.location), x.product))
+
+    def get_sideloaded_areas(self) -> List[Union[SideloadedProtocluster, SideloadedSubRegion]]:
+        """ Returns all protoclusters and subregions that were created by
+            sideloaded annotations
+
+            Result is sorted by location start, then by decreasing size
+        """
+        areas: List[Union[SideloadedProtocluster, SideloadedSubRegion]] = []
+        for proto in self.get_unique_protoclusters():
+            if isinstance(proto, SideloadedProtocluster):
+                areas.append(proto)
+        for sub in self._subregions:
+            if isinstance(sub, SideloadedSubRegion):
+                areas.append(sub)
+        return sorted(areas, key=lambda x: (x.location.start, -len(x.location), x.tool))
 
     def write_to_genbank(self, filename: str = None, directory: str = None, record: SeqRecord = None) -> None:
         """ Writes a genbank file containing only the information contained
@@ -163,6 +172,9 @@ class Region(CDSCollection):
         cluster_record.annotations["taxonomy"] = record.annotations.get("taxonomy", [])
         cluster_record.annotations["data_file_division"] = record.annotations.get("data_file_division", 'UNK')
         cluster_record.annotations["comment"] = record.annotations.get("comment", '')
+        # biopython does not persist the molecule_type annotation in slices,
+        # despite it being required for output to the genbank format
+        cluster_record.annotations["molecule_type"] = record.annotations["molecule_type"]
 
         # update the antiSMASH annotation to include some cluster details
         comment_end_marker = "##antiSMASH-Data-END"
@@ -226,7 +238,6 @@ class Region(CDSCollection):
             qualifiers["region_number"] = [str(self.get_region_number())]
         qualifiers["product"] = self.products
         qualifiers["rules"] = self.detection_rules
-        qualifiers["probabilities"] = ["%.4f" % prob for prob in self.probabilities]
         qualifiers["subregion_numbers"] = [str(sub.get_subregion_number()) for sub in self._subregions]
         candidates = [str(cand.get_candidate_cluster_number()) for cand in self._candidate_clusters]
         qualifiers["candidate_cluster_numbers"] = candidates

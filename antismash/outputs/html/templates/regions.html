@@ -54,9 +54,6 @@
         {% if region.has_subregion_by_tool("cassis") %}
             {{le.static_legend('legend-border-cassis', 'cluster extent as predicted by CASSIS')}}
         {% endif %}
-        {% if region.has_subregion_by_tool("clusterfinder") %}
-            {{le.static_legend('legend-border-clusterfinder', 'cluster extent as predicted by ClusterFinder')}}
-        {% endif %}
       </div>
     </div>
     <div class="zoom-buttons">

@@ -39,7 +39,7 @@ def check_gff_suitability(gff_file: str, sequences: List[SeqRecord]) -> None:
         # file handle is automatically closed by GFF lib
         gff_data = examiner.available_limits(open(gff_file))
         # Check if at least one GFF locus appears in sequence
-        gff_ids = set([n[0] for n in gff_data['gff_id']])
+        gff_ids = set(n[0] for n in gff_data['gff_id'])
 
         if len(gff_ids) == 1 and len(sequences) == 1:
             # If both inputs only have one record, assume is the same,
@@ -72,7 +72,7 @@ def check_gff_suitability(gff_file: str, sequences: List[SeqRecord]) -> None:
             raise AntismashInputError("no CDS features in GFF3 file.")
 
         # Check CDS are childless but not parentless
-        if 'CDS' in set([n for key in examiner.parent_child_map(open(gff_file)) for n in key]):
+        if 'CDS' in set(n for key in examiner.parent_child_map(open(gff_file)) for n in key):
             logging.error('GFF3 structure is not suitable. CDS features must be childless but not parentless.')
             raise AntismashInputError('GFF3 structure is not suitable.')
 
@@ -201,10 +201,10 @@ def check_sub(feature: SeqFeature) -> List[SeqFeature]:
         appropriate SeqFeature instances from them.
     """
     new_features = []
-    locations = []  # type: List[FeatureLocation]
-    trans_locations = []  # type: List[FeatureLocation]
-    qualifiers = {}  # type: Dict[str, List[str]]
-    mismatching_qualifiers = set()  # type: Set[str]
+    locations: List[FeatureLocation] = []
+    trans_locations: List[FeatureLocation] = []
+    qualifiers: Dict[str, List[str]] = {}
+    mismatching_qualifiers: Set[str] = set()
     for sub in feature.sub_features:
         if sub.sub_features:  # If there are sub_features, go deeper
             new_features.extend(check_sub(sub))

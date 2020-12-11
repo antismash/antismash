@@ -90,8 +90,10 @@ The grammar itself:
     NEIGHBOURHOOD_MARKER = "NEIGHBOURHOOD"
     CONDITIONS_MARKER = "CONDITIONS"
     SUPERIORS_MARKER = "SUPERIORS"
+    CATEGORY_MARKER = "CATEGORY"
 
     RULE = RULE_MARKER classification:ID
+            CATEGORY_MARKER category:ID
             [COMMENT_MARKER:COMMENTS]
             [RELATED_MARKER related_profiles:COMMA_SEPARATED_IDS]
             [SUPERIORS_MARKER superiors:COMMA_SEPARATED_IDS]
@@ -133,16 +135,19 @@ Condition examples:
 
 SUPERIORS examples:
     RULE a
+        CATEGORY c
         CUTOFF 10
         ...
 
     RULE b
+        CATEGORY c
         SUPERIORS a
         CUTOFF 20
         ...
 
 Complete examples:
     RULE t1pks
+        CATEGORY PKS
         CUTOFF 20
         NEIGHBOURHOOD 20
         CONDITIONS cds(PKS_AT and (PKS_KS or ene_KS
@@ -166,7 +171,7 @@ class RuleSyntaxError(SyntaxError):
     """ Specifically for errors resulting from bad syntax in the rules being
         parsed.
     """
-    pass
+    pass  # pylint: disable=unnecessary-pass
 
 
 class TokenTypes(IntEnum):
@@ -194,6 +199,7 @@ class TokenTypes(IntEnum):
     SUPERIORS = 21
     RELATED = 22
     TEXT = 23  # covers words that aren't valid identifiers for use in rule COMMENT fields
+    CATEGORY = 24  # assigns the rule to a category, allowing to group related rules
 
     def __repr__(self) -> str:
         return self.__str__()
@@ -224,7 +230,7 @@ class TokenTypes(IntEnum):
         """ Returns True if the token is a rule structure keyword such as
             RULE, COMMENT, CONDITIONS, etc
         """
-        return 15 <= self.value <= 21
+        return 15 <= self.value and self.value != self.TEXT # pylint: disable=comparison-with-callable
 
 
 class Tokeniser:  # pylint: disable=too-few-public-methods
@@ -239,12 +245,12 @@ class Tokeniser:  # pylint: disable=too-few-public-methods
                "CONDITIONS": TokenTypes.CONDITIONS,
                "COMMENT": TokenTypes.COMMENT, "CUTOFF": TokenTypes.CUTOFF,
                "NEIGHBOURHOOD": TokenTypes.NEIGHBOURHOOD, "SUPERIORS": TokenTypes.SUPERIORS,
-               "RELATED": TokenTypes.RELATED}
+               "RELATED": TokenTypes.RELATED, "CATEGORY": TokenTypes.CATEGORY}
 
     def __init__(self, text: str) -> None:
         self.text = text
-        self.tokens = []  # type: List[Token]
-        self.current_symbol = []  # type: List[str]
+        self.tokens: List[Token] = []
+        self.current_symbol: List[str] = []
         self.tokenise()
 
     def tokenise(self) -> None:
@@ -318,7 +324,7 @@ class Token:  # pylint: disable=too-few-public-methods
             if self.type != TokenTypes.INT:
                 raise AttributeError("Token is not numeric")
             return int(self.token_text)
-        elif key == 'identifier':
+        if key == 'identifier':
             if self.type != TokenTypes.IDENTIFIER:
                 raise AttributeError("Token has no identifier")
             return self.token_text
@@ -379,7 +385,7 @@ class ConditionMet:  # pylint: disable=too-few-public-methods
                  ancillary_hits: Dict[str, Set[str]] = None) -> None:
         assert isinstance(met, bool)
         self.met = met
-        self.matches = set()  # type: Set[str]
+        self.matches: Set[str] = set()
         self.ancillary_hits = ancillary_hits or defaultdict(set)
         if isinstance(matches, ConditionMet):
             self.matches = matches.matches
@@ -414,18 +420,18 @@ class Conditions:
         # just make sure that it's empty or that we have binary ops (a OR b..)
         assert not sub_conditions or len(sub_conditions) % 2 == 1
 
-        self._operands = []  # type: List[Conditions]
+        self._operands: List[Conditions] = []
         for sub in self.sub_conditions[::2]:
             assert isinstance(sub, Conditions)
             self._operands.append(sub)
 
-        self._operators = []  # type: List[TokenTypes]
+        self._operators: List[TokenTypes] = []
         for sub in self.sub_conditions[1::2]:
             assert isinstance(sub, TokenTypes)
             assert sub in [TokenTypes.AND, TokenTypes.OR]
             self._operators.append(sub)
 
-        unique_operands = set()  # type: Set[str]
+        unique_operands: Set[str] = set()
         for operand in map(str, self.operands):
             if operand in unique_operands:
                 raise ValueError("Rule contains repeated condition: %s\nfrom rule %s"
@@ -455,9 +461,9 @@ class Conditions:
         assert all(operator == TokenTypes.OR for operator in self.operators)
         # which means a simple any() will cover us
         sub_results = [sub.get_satisfied(details, local_only) for sub in self.operands]
-        matching = set()  # type: Set[str]
+        matching: Set[str] = set()
         met = False
-        ancillary_hits = defaultdict(set)  # type: Dict[str, Set[str]]
+        ancillary_hits: Dict[str, Set[str]] = defaultdict(set)
         for sub_result in sub_results:
             matching |= sub_result.matches
             met |= sub_result.met
@@ -526,9 +532,9 @@ class AndCondition(Conditions):
 
     def is_satisfied(self, details: Details, local_only: bool = False) -> ConditionMet:
         results = [sub.get_satisfied(details, local_only) for sub in self.operands]
-        matched = set()  # type: Set[str]
+        matched: Set[str] = set()
         met = True
-        ancillary_hits = defaultdict(set)  # type: Dict[str, Set[str]]
+        ancillary_hits: Dict[str, Set[str]] = defaultdict(set)
         for result in results:
             matched |= result.matches
             met = met and result.met
@@ -567,7 +573,7 @@ class MinimumCondition(Conditions):
 
         # track other CDS hits in case the minimum is part of another condition
         # that would extend the search distance
-        other_cds_hits = defaultdict(set)  # type: Dict[str, Set[str]]
+        other_cds_hits: Dict[str, Set[str]] = defaultdict(set)
 
         # check to see if the remaining hits are in nearby CDSs
         for other_id, other_feature in details.features_by_id.items():
@@ -721,6 +727,7 @@ class ScoreCondition(Conditions):
 class DetectionRule:
     """ Contains all information about a rule, i.e.
             name: the label given for the rule
+            category: the category this rule belongs to
             cutoff: the cutoff used to construct clusters (in bases)
             neighbourhood: the neighbourhood to use to include nearby CDS features (in bases)
             conditions: the conditions that potential clusters have to satisfy
@@ -728,9 +735,10 @@ class DetectionRule:
             superiors: a list of other rule names superior to this one
             related: a list of profile identifiers related to, but not required by, this rule
         """
-    def __init__(self, name: str, cutoff: int, neighbourhood: int, conditions: Conditions,
+    def __init__(self, name: str, category: str, cutoff: int, neighbourhood: int, conditions: Conditions,
                  comments: str = "", superiors: List[str] = None, related: List[str] = None) -> None:
         self.name = name
+        self.category = category
         self.cutoff = cutoff
         self.neighbourhood = neighbourhood
         self.conditions = conditions
@@ -772,8 +780,8 @@ class DetectionRule:
         # strip off outer parens if they exist
         if condition_text[0] == "(" and condition_text[-1] == ')':
             condition_text = condition_text[1:-1]
-        return "{}\t{}\t{}\t{}".format(self.name, self.cutoff // 1000,
-                                       self.neighbourhood // 1000, condition_text)
+        return "{}\t{}\t{}\t{}\t{}".format(self.name, self.category, self.cutoff // 1000,
+                                           self.neighbourhood // 1000, condition_text)
 
     def reconstruct_rule_text(self) -> str:
         """ Generate a string that can be tokenised and parsed to recreate this
@@ -786,8 +794,8 @@ class DetectionRule:
         comments = ""
         if self.comments:
             comments = "COMMENTS" + self.comments + " "
-        return "RULE {} {}CUTOFF {} NEIGHBOURHOOD {} CONDITIONS {}".format(self.name,
-                    comments, self.cutoff // 1000, self.neighbourhood // 1000, condition_text)
+        return "RULE {} CATEGORY {} {}CUTOFF {} NEIGHBOURHOOD {} CONDITIONS {}".format(self.name,
+                    self.category, comments, self.cutoff // 1000, self.neighbourhood // 1000, condition_text)
 
     def get_hit_string(self) -> str:
         """ Returns a string representation of the rule, marking how many times
@@ -805,8 +813,10 @@ class Parser:  # pylint: disable=too-few-public-methods
         text are stored in the .rules member.
     """
     def __init__(self, text: str, signature_names: Set[str],
+                 valid_categories: Set[str],
                  existing_rules: List[DetectionRule] = None) -> None:
         self.lines = text.splitlines()
+        self.valid_categories = valid_categories
         if not existing_rules:
             existing_rules = []
         self.rules = list(existing_rules)
@@ -862,21 +872,30 @@ class Parser:  # pylint: disable=too-few-public-methods
         return self._consume(TokenTypes.IDENTIFIER).identifier
 
     def _parse_rule(self) -> DetectionRule:
-        """ RULE = RULE_MARKER classification:ID [COMMENT_MARKER:COMMENTS]
+        """ RULE = RULE_MARKER classification:ID CATEGORY_MARKER category:ID
+                    [COMMENT_MARKER:COMMENTS]
                     CUTOFF_MARKER cutoff:INT NEIGHBOURHOOD_MARKER neighbourhood:INT
                     CONDITIONS_MARKER conditions:CONDITIONS
         """
         self._consume(TokenTypes.RULE)
         rule_name = self._consume_identifier()
+        if not self.current_token:
+            raise RuleSyntaxError("expected %s section after %s"
+                                  % (TokenTypes.CATEGORY, TokenTypes.RULE))
         comments = ""
+        self._consume(TokenTypes.CATEGORY)
+        category = self._consume_identifier()
+        if category not in self.valid_categories:
+            valid_categories = ", ".join(self.valid_categories)
+            raise RuleSyntaxError(f"Invalid category {category}, use one of {valid_categories}")
         if not self.current_token:
             raise RuleSyntaxError("expected %s, %s, or %s sections after %s"
                                   % (TokenTypes.COMMENT, TokenTypes.SUPERIORS,
-                                     TokenTypes.CUTOFF, TokenTypes.RULE))
+                                     TokenTypes.CUTOFF, TokenTypes.CATEGORY))
         if self.current_token.type == TokenTypes.COMMENT:
             comments = self._parse_comments()
             prev = TokenTypes.COMMENT
-        related = []  # type: List[str]
+        related: List[str] = []
         if self.current_token.type == TokenTypes.RELATED:
             related = self._parse_related()
             prev = TokenTypes.RELATED
@@ -898,7 +917,7 @@ class Parser:  # pylint: disable=too-few-public-methods
                     self.current_token.type,
                     "\n".join(self.lines[self.current_line - 5:self.current_line]),
                     " "*self.current_token.position, "^"))
-        return DetectionRule(rule_name, cutoff, neighbourhood, conditions,
+        return DetectionRule(rule_name, category, cutoff, neighbourhood, conditions,
                              comments=comments, superiors=superiors, related=related)
 
     def _parse_comments(self) -> str:
@@ -935,7 +954,7 @@ class Parser:  # pylint: disable=too-few-public-methods
         """ CONDITION and CONDITION { and CONDITION}
             ^ lvalue being passed in
         """
-        and_conditions = [lvalue]  # type: List[Union[Conditions, TokenTypes]]
+        and_conditions: List[Union[Conditions, TokenTypes]] = [lvalue]
         and_conditions.append(self._consume(TokenTypes.AND).type)
         and_conditions.append(self._parse_single_condition(allow_cds))
         while self.current_token and self.current_token.type == TokenTypes.AND:
@@ -947,7 +966,7 @@ class Parser:  # pylint: disable=too-few-public-methods
     def _parse_conditions(self, allow_cds: bool = True, is_group: bool = False) -> ConditionList:
         """    CONDITIONS = CONDITION {BINARY_OP CONDITIONS}*;
         """
-        conditions = []  # type: List[Union[Conditions, TokenTypes]]
+        conditions: List[Union[Conditions, TokenTypes]] = []
         lvalue = self._parse_single_condition(allow_cds)
         append_lvalue = True  # capture the lvalue if it's the only thing
         while self.current_token and self.current_token.type in [TokenTypes.AND,
@@ -996,11 +1015,11 @@ class Parser:  # pylint: disable=too-few-public-methods
             raise RuleSyntaxError("Rules cannot end in not")
         if self.current_token.type == TokenTypes.GROUP_OPEN:
             return Conditions(negated, self._parse_group(allow_cds))
-        elif allow_cds and self.current_token.type == TokenTypes.MINIMUM:
+        if allow_cds and self.current_token.type == TokenTypes.MINIMUM:
             return self._parse_minimum(negated=negated)
-        elif allow_cds and self.current_token.type == TokenTypes.CDS:
+        if allow_cds and self.current_token.type == TokenTypes.CDS:
             return CDSCondition(negated, self._parse_cds())
-        elif self.current_token.type == TokenTypes.SCORE:
+        if self.current_token.type == TokenTypes.SCORE:
             return self._parse_score(negated=negated)
         return SingleCondition(negated, self._consume_identifier())
 
@@ -1107,9 +1126,9 @@ class Parser:  # pylint: disable=too-few-public-methods
 
 def is_legal_identifier(identifier: str) -> bool:
     """ Returns true if the identifier matches the form:
-        [a-zA-Z]{[a-zA-Z0-9_-]}*
+        {[a-zA-Z0-9_-]}*[a-zA-Z]{[a-zA-Z0-9_-]}*
     """
-    if not identifier[0].isalpha():
+    if not any(i.isalpha() for i in identifier):
         return False
     for char in identifier:
         if not (char.isalpha() or char.isdigit() or char in ['_', '-']):

@@ -16,10 +16,11 @@ long_description = read('README.md')
 
 install_requires = [
     'numpy',
-    'biopython >=1.71,<1.77',
+    'biopython >=1.78',
     'helperlibs',
     'jinja2',
     'joblib',
+    'jsonschema',
     'pysvg-py3',
     'bcbio-gff',
     'pyScss',
@@ -31,7 +32,8 @@ install_requires = [
 tests_require = [
     'pytest >= 3.4.0, < 5', # pytest 5 breaks compatibility with coverage
     'coverage',
-    'pylint == 1.8.4', # until pylint handles ignore lines the same way
+    'pylint == 2.6.0',
+    'mypy == 0.790',  # for consistent type checking
 ]
 
 
@@ -94,7 +96,7 @@ class PyTest(TestCommand):
 
 setup(
     name="antismash",
-    python_requires='>=3.5',
+    python_requires='>=3.7',
     version=read_version(),
     packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     package_data={

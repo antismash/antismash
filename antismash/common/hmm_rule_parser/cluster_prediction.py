@@ -80,12 +80,13 @@ class CDSResults:
 class RuleDetectionResults:
     """ A container for the all results of running the cluster prediction """
 
-    schema_version = 2
+    schema_version = 3
 
     def __init__(self, cds_by_cluster: Dict[Protocluster, List[CDSResults]],
-                 tool: str) -> None:
+                 tool: str, cdses_outside_clusters: List[CDSResults]) -> None:
         self.cds_by_cluster = cds_by_cluster
         self.tool = str(tool)
+        self.cdses_outside_clusters = cdses_outside_clusters
 
     @property
     def protoclusters(self) -> List[Protocluster]:
@@ -97,14 +98,17 @@ class RuleDetectionResults:
         for cds_results in self.cds_by_cluster.values():
             for cds_result in cds_results:
                 cds_result.annotate(self.tool)
+        for cds_result in self.cdses_outside_clusters:
+            cds_result.annotate(self.tool)
 
     def to_json(self) -> Dict[str, Any]:
         """ Constructs a JSON representation from the RuleDetectionResults instance """
-        cds_results_json = []  # type: List[Tuple[Dict[str, Any], List[Dict[str, Any]]]]
+        cds_results_json: List[Tuple[Dict[str, Any], List[Dict[str, Any]]]] = []
         json = {
             "schema_version": self.schema_version,
             "tool": self.tool,
             "cds_by_protocluster": cds_results_json,
+            "outside_protoclusters": [result.to_json() for result in self.cdses_outside_clusters],
         }
 
         for cluster, cds_results in self.cds_by_cluster.items():
@@ -126,7 +130,9 @@ class RuleDetectionResults:
             cds_results = [CDSResults.from_json(result_json, record) for result_json in json_cds_results]
             cds_by_cluster[cluster] = cds_results
 
-        return RuleDetectionResults(cds_by_cluster, json["tool"])
+        cdses_outside = [CDSResults.from_json(chunk, record) for chunk in json["outside_protoclusters"]]
+
+        return RuleDetectionResults(cds_by_cluster, json["tool"], cdses_outside)
 
 
 def remove_redundant_protoclusters(clusters: List[Protocluster],
@@ -134,7 +140,7 @@ def remove_redundant_protoclusters(clusters: List[Protocluster],
                                    ) -> List[Protocluster]:
     """ Removes clusters which have superiors covering the same (or larger) region
     """
-    clusters_by_rule = defaultdict(list)  # type: Dict[str, List[Protocluster]]
+    clusters_by_rule: Dict[str, List[Protocluster]] = defaultdict(list)
     for cluster in clusters:
         clusters_by_rule[cluster.product].append(cluster)
 
@@ -157,8 +163,7 @@ def remove_redundant_protoclusters(clusters: List[Protocluster],
 def find_protoclusters(record: Record, cds_by_cluster_type: Dict[str, Set[str]],
                        rules_by_name: Dict[str, rule_parser.DetectionRule]) -> List[Protocluster]:
     """ Detects gene clusters based on the identified core genes """
-    clusters = []  # type: List[Protocluster]
-
+    clusters: List[Protocluster] = []
     cds_feature_by_name = record.get_cds_name_mapping()
 
     for cluster_type, cds_names in cds_by_cluster_type.items():
@@ -233,14 +238,14 @@ def filter_results(results: List[HSP], results_by_id: Dict[str, List[HSP]], filt
         unknown = equivalence_group - signature_names
         if unknown:
             raise ValueError("Equivalence group contains unknown identifiers: %s" % (unknown))
-        removed_ids = set()  # type: Set[int]
+        removed_ids: Set[int] = set()
         for cds, cdsresults in results_by_id.items():
             # Check if multiple competing HMM hits are present
             hits = set(hit.query_id for hit in cdsresults)
             if len(hits & equivalence_group) < 2:
                 continue
             # Identify overlapping hits
-            overlapping_groups = []  # type: List[Set[HSP]]
+            overlapping_groups: List[Set[HSP]] = []
             for hit in cdsresults:
                 for otherhit in cdsresults:
                     if hit == otherhit or hsp_overlap_size(hit, otherhit) <= 20:
@@ -275,7 +280,7 @@ def filter_results(results: List[HSP], results_by_id: Dict[str, List[HSP]], filt
 def filter_result_multiple(results: List[HSP], results_by_id: Dict[str, HSP]) -> Tuple[List[HSP], Dict[str, HSP]]:
     """ Filter multiple results of the same model within a gene """
     for cds, hits in results_by_id.items():
-        query_scores = {}  # type: Dict[str, Tuple[int, HSP, float]]
+        query_scores: Dict[str, Tuple[int, HSP, float]] = {}
         for i, hit in enumerate(hits):
             if query_scores.get(hit.query_id, (0, 0, -1))[2] < hit.bitscore:
                 query_scores[hit.query_id] = (i, hit, hit.bitscore)
@@ -289,6 +294,7 @@ def filter_result_multiple(results: List[HSP], results_by_id: Dict[str, HSP]) ->
 
 
 def create_rules(rule_file: str, signature_names: Set[str],
+                 valid_categories: Set[str],
                  existing_rules: List[rule_parser.DetectionRule] = None
                  ) -> List[rule_parser.DetectionRule]:
     """ Creates DetectionRule instances from the default rules file
@@ -296,6 +302,7 @@ def create_rules(rule_file: str, signature_names: Set[str],
         Args:
             rule_file: A path to a file containing cluster rules to use.
             signature_names: the set of all known profile/signature names
+            valid_categories: the set of all valid rule categories
             existing_rules: a list of existing rules, if any
 
         Returns:
@@ -303,7 +310,7 @@ def create_rules(rule_file: str, signature_names: Set[str],
     """
     rules = existing_rules or []
     with open(rule_file, "r") as ruledata:
-        parser = rule_parser.Parser("".join(ruledata.readlines()), signature_names, rules)
+        parser = rule_parser.Parser("".join(ruledata.readlines()), signature_names, valid_categories, rules)
     return parser.rules
 
 
@@ -337,13 +344,13 @@ def apply_cluster_rules(record: Record, results_by_id: Dict[str, List[HSP]],
 
     cds_with_hits = sorted(results_by_id, key=lambda gene_id: record.get_cds_by_name(gene_id).location.start)
 
-    cds_domains_by_cluster_type = defaultdict(lambda: defaultdict(set))  # type: Dict[str, Dict[str, Set[str]]]
-    cluster_type_hits = defaultdict(set)  # type: Dict[str, Set[str]]
+    cds_domains_by_cluster_type: Dict[str, Dict[str, Set[str]]] = defaultdict(lambda: defaultdict(set))
+    cluster_type_hits: Dict[str, Set[str]] = defaultdict(set)
     for cds_name in cds_with_hits:
         feature = record.get_cds_by_name(cds_name)
         feature_start, feature_end = sorted([feature.location.start, feature.location.end])
         rule_texts = []
-        info_by_range = {}  # type: Dict[int, Tuple[Dict[str, CDSFeature], Dict[str, List[HSP]]]]
+        info_by_range: Dict[int, Tuple[Dict[str, CDSFeature], Dict[str, List[HSP]]]] = {}
         for rule in rules:
             if rule.cutoff not in info_by_range:
                 location = FeatureLocation(max(0, feature_start - rule.cutoff), feature_end + rule.cutoff)
@@ -365,7 +372,9 @@ def apply_cluster_rules(record: Record, results_by_id: Dict[str, List[HSP]],
 
 
 def detect_protoclusters_and_signatures(record: Record, signature_file: str, seeds_file: str,
-                                        rule_files: List[str], filter_file: str, tool: str) -> RuleDetectionResults:
+                                        rule_files: List[str], valid_categories: Set[str],
+                                        filter_file: str, tool: str,
+                                        annotate_existing_subregions: bool = True) -> RuleDetectionResults:
     """ Compares all CDS features in a record with HMM signatures and generates
         Protocluster features based on those hits and the current protocluster detection
         rules.
@@ -376,21 +385,24 @@ def detect_protoclusters_and_signatures(record: Record, signature_file: str, see
                         with columns: label, description, minimum score cutoff, hmm path
             seeds_file: the file containing all HMM profiles
             rule_files: the files containing the rules to use for cluster definition
+            valid_categories: a set containing valid rule category strings
             filter_file: a file containing equivalence sets of HMMs
-            tool: the name of the tool providing the HMMs (e.g. clusterfinder, rule_based_clusters)
+            tool: the name of the tool providing the HMMs (e.g. rule_based_clusters)
+            annotate_existing_subregions: if True, subregions already present in the record
+                    will have domains annotated even if no protocluster is found
     """
     if not rule_files:
         raise ValueError("rules must be provided")
     full_fasta = fasta.get_fasta_from_record(record)
     # if there's no CDS features, don't try to do anything
     if not full_fasta:
-        return RuleDetectionResults({}, tool)
+        return RuleDetectionResults({}, tool, [])
     sig_by_name = {sig.name: sig for sig in get_signature_profiles(signature_file)}
-    rules = []  # type: List[rule_parser.DetectionRule]
+    rules: List[rule_parser.DetectionRule] = []
     for rule_file in rule_files:
-        rules = create_rules(rule_file, set(sig_by_name), rules)
+        rules = create_rules(rule_file, set(sig_by_name), valid_categories, rules)
     results = []
-    results_by_id = {}  # type: Dict[str, HSP]
+    results_by_id: Dict[str, HSP] = {}
 
     runresults = run_hmmsearch(seeds_file, full_fasta, use_tempfile=True)
     for runresult in runresults:
@@ -423,24 +435,42 @@ def detect_protoclusters_and_signatures(record: Record, signature_file: str, see
     # Find number of sequences on which each pHMM is based
     num_seeds_per_hmm = get_sequence_counts(signature_file)
 
-    # Save final results to record
+    # annotate everything in detected protoclusters
     rules_by_name = {rule.name: rule for rule in rules}
     clusters = find_protoclusters(record, cluster_type_hits, rules_by_name)
     strip_inferior_domains(cds_domains_by_cluster, rules_by_name)
 
+    def get_domains_for_cds(cds: CDSFeature) -> List[SecMetQualifier.Domain]:
+        domains = []
+        for hsp in results_by_id.get(cds.get_name(), []):
+            domains.append(SecMetQualifier.Domain(hsp.query_id, hsp.evalue, hsp.bitscore,
+                                                  num_seeds_per_hmm[hsp.query_id], tool))
+        return domains
+
     cds_results_by_cluster = {}
+    cdses_with_annotations = set()
     for cluster in clusters:
         cds_results = []
         for cds in record.get_cds_features_within_location(cluster.location):
-            domains = []
-            for hsp in results_by_id.get(cds.get_name(), []):
-                domains.append(SecMetQualifier.Domain(hsp.query_id, hsp.evalue, hsp.bitscore,
-                                                      num_seeds_per_hmm[hsp.query_id], tool))
+            domains = get_domains_for_cds(cds)
             if domains:
                 cds_results.append(CDSResults(cds, domains, cds_domains_by_cluster.get(cds.get_name(), {})))
+                cdses_with_annotations.add(cds)
         cds_results_by_cluster[cluster] = cds_results
 
-    return RuleDetectionResults(cds_results_by_cluster, tool)
+    # add detected profile annotations for any existing subregions, if enabled
+    cds_results_outside_clusters = []
+    if annotate_existing_subregions:
+        for subregion in record.get_subregions():
+            for cds in subregion.cds_children:
+                if cds in cdses_with_annotations:
+                    continue
+                domains = get_domains_for_cds(cds)
+                if domains:
+                    cds_results_outside_clusters.append(CDSResults(cds, domains, {}))
+                    cdses_with_annotations.add(cds)
+
+    return RuleDetectionResults(cds_results_by_cluster, tool, cds_results_outside_clusters)
 
 
 def strip_inferior_domains(cds_domains_by_cluster: Dict[str, Dict[str, Set[str]]],

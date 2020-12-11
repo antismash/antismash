@@ -14,8 +14,7 @@ $feature-resistance: #bbb;
 $feature-tta-codon: #444;
 $table-background: #f1f1f1;
 $tool-cassis: wheat;
-$tool-clusterfinder: teal;
-$tool-rule-based-clusters: white;
+$kind-protoclusters: white;
 
 @mixin unselectable(){
     -webkit-user-select: none;
@@ -571,18 +570,13 @@ table.region-table {
 .cluster-core {
     stroke: black;
     stroke-width: 1px;
-    fill: $tool-rule-based-clusters;
+    fill: $kind-protoclusters;
 }
 
 .svgene-border-cassis .cluster-core {
     stroke: black;
     stroke-width: 1px;
     fill: $tool-cassis;
-}
-
-.svgene-border-clusterfinder .cluster-core {
-    stroke-width: 0px;
-    fill: $tool-clusterfinder;
 }
 
 .svgene-orf, .svgene-minimap-orf{
@@ -674,10 +668,6 @@ table.region-table {
 
 .legend-border-cassis {
     background-color: $tool-cassis;
-}
-
-.legend-border-clusterfinder {
-    background-color: $tool-clusterfinder;
 }
 
 .legend-tta-codon {
@@ -836,6 +826,53 @@ table.region-table {
 .jsdomain-other {
     stroke: rgb(147,147,147);
     fill: rgb(218,218,218);
+}
+
+.pfam-domain-domain {
+    stroke: rgb(50,50,50);
+}
+
+.pfam-domain-line {
+    @extend .jsdomain-line;
+}
+.pfam-domain-orflabel {
+    @extend .jsdomain-orflabel;
+}
+.pfam-domain-tooltip {
+    @extend .jsdomain-tooltip;
+}
+.pfam-domain-text {
+    @extend .jsdomain-text;
+}
+.pfam-domain-svg {
+    @extend .jsdomain-svg;
+}
+.pfam-domain-svg-single {
+    @extend .jsdomain-svg-single;
+}
+
+rect.pfam-type-other {
+    fill: #dadada;
+}
+
+rect.pfam-type-biosynthetic {
+    fill: #f0a1a1;
+}
+
+text.pfam-type-biosynthetic {
+    fill: #333;
+}
+
+rect.pfam-type-regulatory {
+    fill: #6cbc9c;
+}
+
+text.pfam-type-regulatory {
+    fill: #333;
+}
+
+rect.pfam-type-transport {
+    fill: #7aaaff;
 }
 
 .clusterblast-locustag {

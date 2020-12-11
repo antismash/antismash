@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar
 from Bio.SeqFeature import SeqFeature
 
 from ..cdscollection import CDSCollection
-from ..protocluster import Protocluster
+from ..protocluster import Protocluster, SideloadedProtocluster
 from ..feature import FeatureLocation, Feature
 from ...locations import combine_locations
 
@@ -90,14 +90,15 @@ class CandidateCluster(CDSCollection):
     @property
     def detection_rules(self) -> List[str]:
         """ Returns all detection rules for the child Protoluster features """
-        return [cluster.detection_rule for cluster in self._protoclusters]
+        return [cluster.detection_rule for cluster in self._protoclusters
+                if not isinstance(cluster, SideloadedProtocluster)]
 
     @property
     def products(self) -> List[str]:
         """ Returns all unique products from contained protoclusters
             in the order they are found.
         """
-        unique_products = OrderedDict()  # type: Dict[str, None]
+        unique_products: Dict[str, None] = OrderedDict()
         for cluster in self._protoclusters:
             unique_products[cluster.product] = None
         return list(unique_products)

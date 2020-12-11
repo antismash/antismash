@@ -7,19 +7,21 @@
 
 import os
 from typing import Any, Dict, Iterable, List, Optional, Tuple
-from typing import Set  # comment hints, # pylint: disable=unused-import
 
 from antismash.common import html_renderer, path
 from antismash.common.module_results import ModuleResults
-from antismash.common.secmet import CDSFeature, Feature, Record, Region, CandidateCluster, SubRegion
+from antismash.common.secmet import CDSFeature, Feature, Record, Region
 from antismash.common.secmet.qualifiers.gene_functions import GeneFunction
-from antismash.common.secmet import Protocluster  # comment hints, # pylint: disable=unused-import
+from antismash.common.secmet.qualifiers.go import GOQualifier
 from antismash.common.secmet.features.cdscollection import CDSCollection
+from antismash.common.secmet.features.protocluster import SideloadedProtocluster
+from antismash.common.secmet.features.subregion import SideloadedSubRegion
 from antismash.config import ConfigType
 from antismash.modules import clusterblast, tta
 from antismash.outputs.html.generate_html_table import generate_html_table
 
-searchgtr_links = {}  # type: Dict[str, str]  # TODO: refactor away from global
+searchgtr_links: Dict[str, str] = {}  # TODO: refactor away from global
+GO_URL = 'http://amigo.geneontology.org/amigo/term/'
 
 
 def convert_records(records: List[Record], results: List[Dict[str, ModuleResults]],
@@ -45,7 +47,7 @@ def convert_record(record: Record, options: ConfigType, result: Optional[Dict[st
 
 def fetch_tta_features(region: Region, result: Dict[str, ModuleResults]) -> List[Feature]:
     """ Returns a list of all TTA features that overlap with the region """
-    hits = []  # type: List[Feature]
+    hits: List[Feature] = []
     tta_results = result.get(tta.__name__)
     if not tta_results:
         return hits
@@ -61,7 +63,7 @@ def fetch_tta_features(region: Region, result: Dict[str, ModuleResults]) -> List
 def convert_regions(record: Record, options: ConfigType, result: Dict[str, ModuleResults]) -> List[Dict[str, Any]]:
     """Convert Region features to JSON"""
     js_regions = []
-    mibig_results = {}  # type: Dict[int, Dict[str, List[clusterblast.results.MibigEntry]]]
+    mibig_results: Dict[int, Dict[str, List[clusterblast.results.MibigEntry]]] = {}
 
     clusterblast_results = result.get(clusterblast.__name__)
     if clusterblast_results is not None:
@@ -73,13 +75,13 @@ def convert_regions(record: Record, options: ConfigType, result: Dict[str, Modul
     for region in record.get_regions():
         tta_codons = fetch_tta_features(region, result)
 
-        js_region = {}  # type: Dict[str, Any]
+        js_region: Dict[str, Any] = {}
         js_region['start'] = int(region.location.start) + 1
         js_region['end'] = int(region.location.end)
         js_region['idx'] = region.get_region_number()
         mibig_entries = mibig_results.get(js_region['idx'], {})
         js_region['orfs'] = convert_cds_features(record, region.cds_children, options, mibig_entries)
-        js_region['clusters'] = get_clusters_from_region_parts(region.candidate_clusters, region.subregions)
+        js_region['clusters'] = get_clusters_from_region(region)
         js_region['ttaCodons'] = convert_tta_codons(tta_codons, record)
         js_region['type'] = region.get_product_string()
         js_region['products'] = region.products
@@ -100,7 +102,7 @@ def convert_cds_features(record: Record, features: Iterable[CDSFeature], options
         # resistance genes have special markers, not just a colouring, so revert to OTHER
         if gene_function == GeneFunction.RESISTANCE:
             gene_function = GeneFunction.OTHER
-        mibig_hits = []  # type: List[clusterblast.results.MibigEntry]
+        mibig_hits: List[clusterblast.results.MibigEntry] = []
         mibig_hits = mibig_entries.get(feature.get_name(), [])
         description = get_description(record, feature, str(gene_function), options, mibig_hits)
         js_orfs.append({
@@ -136,7 +138,7 @@ def _find_non_overlapping_cluster_groups(collections: Iterable[CDSCollection],
         raise ValueError("padding cannot be negative")
     if not collections:
         return {}
-    groups = []  # type: List[List[CDSCollection]]
+    groups: List[List[CDSCollection]] = []
     for collection in collections:
         found_group = False
         for group in groups:
@@ -154,14 +156,10 @@ def _find_non_overlapping_cluster_groups(collections: Iterable[CDSCollection],
     return results
 
 
-def get_clusters_from_region_parts(candidate_clusters: Iterable[CandidateCluster],
-                                   subregions: Iterable[SubRegion]) -> List[Dict[str, Any]]:
+def get_clusters_from_region(region: Region) -> List[Dict[str, Any]]:
     """ Converts all Protoclusters in a collection of CandidateCluster features to JSON """
-    unique_clusters = set()  # type: Set[Protocluster]
-    for candidate_cluster in candidate_clusters:
-        unique_clusters.update(candidate_cluster.protoclusters)
     js_clusters = []
-    candidate_clusters = sorted(candidate_clusters, key=lambda x: (x.location.start, -len(x.location)))
+    candidate_clusters = sorted(region.candidate_clusters, key=lambda x: (x.location.start, -len(x.location)))
     candidate_cluster_groupings = _find_non_overlapping_cluster_groups(candidate_clusters)
     start_index = 0
     for candidate_cluster in candidate_clusters:
@@ -177,28 +175,40 @@ def get_clusters_from_region_parts(candidate_clusters: Iterable[CandidateCluster
                       "neighbouring_end": candidate_cluster.location.end,
                       "product": "CC %d: %s" % (candidate_cluster.get_candidate_cluster_number(),
                                                 candidate_cluster.kind),
-                      "isCandidateCluster": True}
+                      "kind": "candidatecluster",
+                      "prefix": ""}
         js_cluster['height'] = candidate_cluster_groupings[candidate_cluster]
         js_clusters.append(js_cluster)
 
     if candidate_cluster_groupings:
         start_index += max(candidate_cluster_groupings.values())
-    subregions = sorted(subregions, key=lambda x: (x.location.start, -len(x.location), x.tool))
-    for subregion in subregions:
+
+    for subregion in sorted(region.subregions, key=lambda x: (x.location.start, -len(x.location), x.tool)):
         start_index += 1
+        prefix = ""
+        tool = ""
+        if isinstance(subregion, SideloadedSubRegion):
+            prefix = subregion.tool + (":" if subregion.label else "")
+        else:
+            tool = subregion.tool
         js_cluster = {"start": subregion.location.start,
                       "end": subregion.location.end,
-                      "tool": subregion.tool,
+                      "tool": tool,
                       "neighbouring_start": subregion.location.start,
                       "neighbouring_end": subregion.location.end,
                       "product": subregion.label,
-                      "height": start_index}
+                      "height": start_index,
+                      "prefix": prefix,
+                      "kind": "subregion"}
         js_clusters.append(js_cluster)
 
     start_index += 2  # allow for label above
-    clusters = sorted(unique_clusters, key=lambda x: (x.location.start, -len(x.location), x.product))
+    clusters = region.get_unique_protoclusters()
     cluster_groupings = _find_non_overlapping_cluster_groups(clusters)
     for cluster in clusters:
+        prefix = ""
+        if isinstance(cluster, SideloadedProtocluster):
+            prefix = f"{cluster.tool}:"
         js_cluster = {"start": cluster.core_location.start,
                       "end": cluster.core_location.end,
                       "tool": cluster.tool,
@@ -206,7 +216,8 @@ def get_clusters_from_region_parts(candidate_clusters: Iterable[CandidateCluster
                       "neighbouring_end": cluster.location.end,
                       "product": cluster.product,
                       "height": cluster_groupings[cluster] * 2 + start_index,
-                      "isCandidateCluster": False}
+                      "kind": "protocluster",
+                      "prefix": prefix}
         js_clusters.append(js_cluster)
 
     return js_clusters
@@ -226,19 +237,35 @@ def convert_tta_codons(tta_codons: List[Feature], record: Record) -> List[Dict[s
     return js_codons
 
 
+def build_pfam2go_links(go_qualifier: Optional[GOQualifier], prefix: str = "") -> List[str]:
+    """ A helper for generating Pfam2GO HTML fragments with links and descriptions
+
+        Arguments:
+            go_qualifier: the GOQualifier to use for building the links
+            prefix: an optional string to prefix the link with
+
+        Returns:
+            a list of strings, each being an HTML formatted link prefixed by
+            the given prefix and followed by the description of the GO term
+
+    """
+    if go_qualifier is None:  # a pfam may have no matching GO terms
+        return []
+    template = "{prefix}<a class='external-link' href='{url}{go_id}' target='_blank'>{go_id}</a>: {desc}"
+    return [template.format(prefix=prefix, url=GO_URL, go_id=go_id, desc=desc)
+            for go_id, desc in go_qualifier.go_entries.items()]
+
+
 def generate_pfam2go_tooltip(record: Record, feature: CDSFeature) -> List[html_renderer.Markup]:
     """Create tooltip text for Pfam to Gene Ontologies results."""
     go_notes = []
     unique_pfams_with_gos = {}
-    go_url = 'http://amigo.geneontology.org/amigo/term/'
-    go_info_line = "{pf_id}: <a class='external-link' href='{url}{go_id}' target='_blank'>{go_id}</a>: {go_desc}"
     for pfam in record.get_pfam_domains_in_cds(feature):
         if pfam.gene_ontologies:
             pfam_id = pfam.full_identifier
             unique_pfams_with_gos[pfam_id] = pfam.gene_ontologies
     for unique_id, go_qualifier in sorted(unique_pfams_with_gos.items()):
-        for go_id, go_description in sorted(go_qualifier.go_entries.items()):
-            go_notes.append(go_info_line.format(pf_id=unique_id, url=go_url, go_id=go_id, go_desc=go_description))
+        go_notes.extend(build_pfam2go_links(go_qualifier, prefix=f"{unique_id}: "))
     return list(map(html_renderer.Markup, go_notes))
 
 

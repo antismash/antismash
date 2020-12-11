@@ -7,10 +7,9 @@
 import functools
 import logging
 import re
-from typing import Any, Callable, List, Set, Tuple, Union
+from typing import Any, Callable, List, Set, Tuple
 import warnings
 
-import Bio
 from Bio.Seq import Seq, UnknownSeq
 from Bio.SeqRecord import SeqRecord
 from helperlibs.bio import seqio
@@ -82,7 +81,7 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
     if not isinstance(minimum_length, int):
         raise TypeError("minimum_length must be an int")
 
-    records = []  # type: List[SeqRecord]
+    records: List[SeqRecord] = []
 
     for record in _strict_parse(filename):
         if minimum_length < 1 \
@@ -97,7 +96,7 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
         raise AntismashInputError("all input records smaller than minimum length (%d)" % minimum_length)
 
     for record in records:
-        if isinstance(record.seq.alphabet, Bio.Alphabet.ProteinAlphabet) or not is_nucl_seq(record.seq):
+        if not Record.is_nucleotide_sequence(record.seq):
             raise AntismashInputError("protein records are not supported: %s" % record.id)
 
     # before conversion to secmet records, trim if required
@@ -356,8 +355,6 @@ def pre_process_sequences(sequences: List[Record], options: ConfigType, genefind
             sequences = [sanitise_sequence(sequences[0])]
         else:
             sequences = parallel_function(sanitise_sequence, ([record] for record in sequences))
-        for sequence in sequences:
-            sequence.seq.alphabet = Bio.Alphabet.generic_dna
 
     for record in sequences:
         if record.skip or not record.seq:
@@ -408,12 +405,12 @@ def sanitise_sequence(record: Record) -> Record:
     for char in record.seq.upper():
         if char == "-":
             continue
-        elif char in "ACGT":
+        if char in "ACGT":
             sanitised.append(char)
             has_real_content = True
         else:
             sanitised.append("N")
-    record.seq = Seq("".join(sanitised), alphabet=record.seq.alphabet)
+    record.seq = Seq("".join(sanitised))
     if not has_real_content:
         record.skip = "contains no sequence"
     return record
@@ -434,7 +431,7 @@ def trim_sequence(record: SeqRecord, start: int, end: int) -> SeqRecord:
         raise ValueError('Specified analysis start point of %r is outside record' % start)
     if end > len(record):
         raise ValueError('Specified analysis end point of %r is outside record' % end)
-    if end > -1 and end <= start:
+    if -1 < end <= start:
         raise ValueError("Trim region start cannot be greater than or equal to end")
 
     if start < 0:
@@ -444,21 +441,6 @@ def trim_sequence(record: SeqRecord, start: int, end: int) -> SeqRecord:
     new = record[start:end]
     new.annotations = record.annotations  # preserve old annotations that biopython ignores
     return new
-
-
-def is_nucl_seq(sequence: Union[Seq, str]) -> bool:
-    """ Determines if a sequence is a nucleotide sequence based on content.
-
-        Arguments:
-            sequence: the sequence to check, either a string or Bio.Seq
-
-        Returns:
-            True if more than 80% of characters are nucleotide bases
-    """
-    other = str(sequence).lower()
-    for char in "acgtn":
-        other = other.replace(char, "")
-    return len(other) < 0.2 * len(sequence)
 
 
 def records_contain_shotgun_scaffolds(records: List[Record]) -> bool:
@@ -581,6 +563,6 @@ def generate_unique_id(prefix: str, existing_ids: Set[str], start: int = 0,
     while name in existing_ids:
         counter += 1
         name = format_string % counter
-    if max_length > 0 and len(name) > max_length:
+    if 0 < max_length < len(name):
         raise RuntimeError("Could not generate unique id for %s after %d iterations" % (prefix, counter - start))
     return name, counter

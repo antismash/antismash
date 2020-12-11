@@ -11,8 +11,7 @@ import argparse
 from collections import defaultdict
 import multiprocessing
 import os
-from typing import (Any, AnyStr, IO, List, Optional,   # pylint: disable=unused-import
-                    Dict, Set, Tuple)
+from typing import Any, AnyStr, Dict, IO, List, Optional, Set, Tuple
 
 from antismash.custom_typing import AntismashModule
 
@@ -153,8 +152,8 @@ class AntismashParser(argparse.ArgumentParser):
             values = {}
 
         outfile = open(filename, 'w')
-        dests = set()  # type: Set[str] # set of processed destinations
-        titles = defaultdict(lambda: defaultdict(list))  # type: Dict[str, Dict[str, List[str]]]
+        dests: Set[str] = set()  # set of processed destinations
+        titles: Dict[str, Dict[str, List[str]]] = defaultdict(lambda: defaultdict(list))
         for parent in sorted(self.parents, key=lambda group: group.title):
             for arg in parent.parser.get_actions():
                 titles[parent.title][parent.prefix].extend(construct_arg_text(arg, dests, values))
@@ -248,9 +247,16 @@ Options
 
 class FullPathAction(argparse.Action):  # pylint: disable=too-few-public-methods
     """ An argparse.Action to ensure provided paths are absolute. """
-    def __call__(self, parser: argparse.ArgumentParser, namespace: argparse.Namespace,  # type: ignore
-                 values: AnyStr, option_string: str = None) -> None:
-        setattr(namespace, self.dest, os.path.abspath(values))
+    def __call__(self, parser: argparse.ArgumentParser, namespace: argparse.Namespace,
+                 values: Any, option_string: str = None) -> None:
+        setattr(namespace, self.dest, os.path.abspath(str(values)))
+
+
+class MultipleFullPathAction(argparse.Action):  # pylint: disable=too-few-public-methods
+    """ An argparse.Action to ensure provided paths are absolute in a comma separated list. """
+    def __call__(self, parser: argparse.ArgumentParser, namespace: argparse.Namespace,
+                 values: Any, option_string: str = None) -> None:
+        setattr(namespace, self.dest, [os.path.abspath(value) for value in str(values).split(",")])
 
 
 class ReadableFullPathAction(FullPathAction):
@@ -259,11 +265,11 @@ class ReadableFullPathAction(FullPathAction):
                  values: AnyStr, option_string: str = None) -> None:
         path = os.path.abspath(values)
         if os.path.isdir(path):
-            raise argparse.ArgumentError(self, "%s is a directory" % values)
+            raise argparse.ArgumentError(self, "%r is a directory" % values)
         if not os.path.isfile(path):
-            raise argparse.ArgumentError(self, "%s does not exist" % values)
+            raise argparse.ArgumentError(self, "%r does not exist" % values)
         if not os.access(path, os.R_OK):
-            raise argparse.ArgumentError(self, "%s: permission denied" % values)
+            raise argparse.ArgumentError(self, "%r: permission denied" % values)
         super().__call__(parser, namespace, values, option_string)
 
 
@@ -317,7 +323,7 @@ class ModuleArgs:
         self.prefix = prefix
 
         self.skip_type_check = self.override
-        self.args = []  # type: List[argparse.Action]
+        self.args: List[argparse.Action] = []
         self.basic = basic_help
 
     def add_option(self, name: str, *args: Any, **kwargs: Any) -> None:
@@ -557,7 +563,7 @@ def advanced_options() -> ModuleArgs:
                      help="Run without FIMO (lowers accuracy of RiPP precursor predictions)")
     group.add_option('--executable-paths',
                      dest='executables',
-                     metavar="EXECUTABLE:PATH,EXECUTABLE2:PATH2,...",
+                     metavar="EXECUTABLE=PATH,EXECUTABLE2=PATH2,...",
                      action=AlternateExecutablesAction,
                      default=argparse.Namespace(**get_default_paths()),
                      help=("A comma separated list of executable name->path pairs "

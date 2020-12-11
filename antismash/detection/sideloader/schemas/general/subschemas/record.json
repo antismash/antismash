@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "description": "Annotations for areas within a single record",
+  "required": [
+    "name"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The record identifier containing the areas",
+      "pattern": "^(.+)$"
+    },
+    "subregions": {
+      "type": "array",
+      "description": "Subregions to add to the record",
+      "items": {
+        "$ref": "file:subregion.json"
+      }
+    },
+    "protoclusters": {
+      "type": "array",
+      "description": "Protoclusters to add to the record",
+      "items": {
+        "$ref": "file:protocluster.json"
+      }
+    }
+  }
+}

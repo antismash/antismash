@@ -15,6 +15,7 @@ from ..qualifiers.t2pks import T2PKSQualifier
 from ..qualifiers.gene_functions import GeneFunction
 
 T = TypeVar("T", bound="Protocluster")
+S = TypeVar("S", bound="SideloadedProtocluster")  # pylint: disable=invalid-name
 
 
 class Protocluster(CDSCollection):
@@ -42,15 +43,15 @@ class Protocluster(CDSCollection):
         self.tool = tool
 
         # core specific
-        self.core_location = core_location  # type: FeatureLocation
+        self.core_location = core_location
         self.cutoff = cutoff
-        self._definition_cdses = set()  # type: Set[CDSFeature]
+        self._definition_cdses: Set[CDSFeature] = set()
 
         # neighbourhood specific
         self.neighbourhood_range = neighbourhood_range
 
         # analysis annotations
-        self.t2pks = None  # type: Optional[T2PKSQualifier]
+        self.t2pks: Optional[T2PKSQualifier] = None
 
     def __str__(self) -> str:
         return "Protocluster(%s, product=%s)" % (self.location, self.product)
@@ -110,14 +111,19 @@ class Protocluster(CDSCollection):
         assert bio_feature.type == Protocluster.FEATURE_TYPE
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
-        # grab mandatory qualifiers and create the class
-        neighbourhood_range = int(leftovers.pop("neighbourhood")[0])
-        cutoff = int(leftovers.pop("cutoff")[0])
-        product = leftovers.pop("product")[0]
-        tool = leftovers.pop("aStool")[0]
-        rule = leftovers.pop("detection_rule")[0]
-        core_location = location_from_string(leftovers.pop("core_location")[0])
+        if leftovers.get("aStool", [""])[0].startswith("externally annotated"):
+            external = SideloadedProtocluster.from_biopython(bio_feature)
+            assert isinstance(external, cls)
+            return external
+
         if not feature:
+            # grab mandatory qualifiers and create the class
+            neighbourhood_range = int(leftovers.pop("neighbourhood")[0])
+            cutoff = int(leftovers.pop("cutoff")[0])
+            product = leftovers.pop("product")[0]
+            tool = leftovers.pop("aStool")[0]
+            rule = leftovers.pop("detection_rule")[0]
+            core_location = location_from_string(leftovers.pop("core_location")[0])
             feature = cls(core_location, bio_feature.location,
                           tool, product, cutoff, neighbourhood_range, rule)
 
@@ -132,3 +138,57 @@ class Protocluster(CDSCollection):
         assert updated is feature, "feature changed: %s -> %s" % (feature, updated)
         assert isinstance(updated, Protocluster)
         return updated
+
+
+class SideloadedProtocluster(Protocluster):
+    """ A variant of Protocluster specifically for sideloaded features
+    """
+    __slots__ = ["extra_qualifiers"]
+
+    def __init__(self, core_location: FeatureLocation, surrounding_location: FeatureLocation,
+                 tool: str, product: str, neighbourhood_range: int = 0,
+                 extra_qualifiers: Dict[str, List[str]] = None) -> None:
+        if not neighbourhood_range:
+            neighbourhood_range = max(core_location.start - surrounding_location.start,
+                                      surrounding_location.end - core_location.end)
+        super().__init__(core_location, surrounding_location, tool, product,
+                         cutoff=0, neighbourhood_range=neighbourhood_range,
+                         detection_rule="from external annotation")
+        self.extra_qualifiers = extra_qualifiers or {}
+
+    @property
+    def definition_cdses(self) -> Set[CDSFeature]:
+        # a sideloaded protocluster cannot have definition cdses
+        return set()
+
+    def to_biopython(self, qualifiers: Optional[Dict[str, List[str]]] = None) -> List[SeqFeature]:
+        features = super().to_biopython(qualifiers)
+        for feature in features:
+            feature.qualifiers["aStool"] = ["externally annotated by: %s" % self.tool]
+            if self.extra_qualifiers:
+                feature.qualifiers["external_qualifier_ids"] = list(self.extra_qualifiers)
+                feature.qualifiers.update(self.extra_qualifiers)
+        return features
+
+    @classmethod
+    def from_biopython(cls: Type[S], bio_feature: SeqFeature, feature: S = None,
+                       leftovers: Optional[Dict] = None, record: Any = None) -> S:
+        if leftovers is None:
+            leftovers = Feature.make_qualifiers_copy(bio_feature)
+        if not feature:
+            tool = leftovers.pop("aStool")[0]
+            tool = tool.split(": ", 1)[1]
+            leftovers["aStool"] = [tool]
+            core_location = location_from_string(leftovers["core_location"][0])
+            product = leftovers.pop("product")[0]
+            extra_qualifiers: Dict[str, List[str]] = {}
+            for key in leftovers.pop("external_qualifier_ids", []):
+                if key in leftovers:
+                    extra_qualifiers[key] = leftovers.pop(key)
+            neighbourhood_range = int(leftovers.pop("neighbourhood")[0])
+            feature = cls(core_location, bio_feature.location, tool,
+                          product, neighbourhood_range=neighbourhood_range,
+                          extra_qualifiers=extra_qualifiers)
+        assert isinstance(feature, cls)
+        feature = super().from_biopython(bio_feature, feature=feature, leftovers=leftovers)
+        return feature

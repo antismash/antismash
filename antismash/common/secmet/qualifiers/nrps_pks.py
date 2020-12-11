@@ -4,8 +4,7 @@
 """ Annotations for NRPS/PKS domains """
 
 import bisect
-from typing import Any, Iterator, List, Tuple
-from typing import Dict  # used in comment hints # pylint: disable=unused-import
+from typing import Any, Dict, Iterator, List, Tuple
 
 from .secmet import _parse_format
 
@@ -53,7 +52,7 @@ class NRPSPKSQualifier:
             if not feature_name:
                 raise ValueError("a Domain must belong to a feature, feature_name is required")
             self.feature_name = str(feature_name)
-            self.predictions = {}  # type: Dict[str, str] # method to prediction name
+            self.predictions: Dict[str, str] = {}  # method to prediction name
             self.subtype = str(subtype)
 
         def __lt__(self, other: "NRPSPKSQualifier.Domain") -> bool:
@@ -76,9 +75,9 @@ class NRPSPKSQualifier:
             raise ValueError("strand must be 1 or -1, not %s" % strand)
         self.strand = strand
         self.type = "uninitialised"
-        self.subtypes = []  # type: List[str]
-        self._domains = []  # type: List["NRPSPKSQualifier.Domain"]
-        self._domain_names = []  # type: List[str]
+        self.subtypes: List[str] = []
+        self._domains: List["NRPSPKSQualifier.Domain"] = []
+        self._domain_names: List[str] = []
         self.cal_counter = 0
         self.at_counter = 0
         self.kr_counter = 0

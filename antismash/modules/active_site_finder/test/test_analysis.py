@@ -13,6 +13,7 @@ from Bio import SearchIO
 from antismash.common import subprocessing
 from antismash.common import fasta, path, secmet
 from antismash.common.test.helpers import DummyAntismashDomain, DummyRecord, DummyPFAMDomain
+from antismash.detection.nrps_pks_domains.modular_domain import TOOL
 from antismash.modules import active_site_finder
 from antismash.modules.active_site_finder import analysis
 
@@ -27,7 +28,8 @@ def rebuild_domains(filename, domain_type):
     domain_fasta = fasta.read_fasta(full_path)
     domains = []
     for name, translation in domain_fasta.items():
-        domain = DummyAntismashDomain(start=1, end=100, domain_id=domain_type + name)
+        domain = DummyAntismashDomain(start=1, end=100, domain_id=domain_type + name,
+                                      tool=TOOL)
         domain.domain = domain_type
         domain.translation = translation
         domains.append(domain)

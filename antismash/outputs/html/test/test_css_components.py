@@ -14,7 +14,10 @@ class TestClusterCSS(unittest.TestCase):
     def test_css_matches_rules(self):
         defined_clusters = set(name for name in hmm_detection.get_supported_cluster_types("loose"))
         available_classes = set()
-        base_classes = {"hybrid"}  # a special case used at the javascript level
+        base_classes = {
+            "hybrid",  # a special case used at the javascript level
+            "unknown",  # for regions containing only subregions
+        }
         less = path.get_full_path(__file__, "..", "css", "secmet.scss")
         with open(less) as handle:
             for line in handle.readlines():
@@ -25,6 +28,4 @@ class TestClusterCSS(unittest.TestCase):
         assert not missing_css
         # allow for the extra base classes and hybrids
         extra_css = available_classes - defined_clusters - base_classes
-        # and clusterfinders clustertypes
-        extra_css -= {'cf_putative', 'cf_fatty_acid', 'cf_saccharide'}
         assert not extra_css

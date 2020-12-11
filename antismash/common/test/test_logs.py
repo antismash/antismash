@@ -22,7 +22,6 @@ class LogTest(unittest.TestCase):
     # grab the pytest logging capture fixture
     @pytest.fixture(autouse=True)
     def inject_fixtures(self, caplog):
-        caplog.set_level(logging.WARNING)
         self.caplog = caplog  # pylint: disable=attribute-defined-outside-init
 
     def test_debug(self):
@@ -32,6 +31,7 @@ class LogTest(unittest.TestCase):
             logging.debug("during")
         assert self.logger.getEffectiveLevel() == logging.WARNING
         logging.debug("after")
+        assert len(self.caplog.record_tuples) == 1
         for _, level, msg in self.caplog.record_tuples:
             assert level == logging.DEBUG
             assert "during" in msg
@@ -44,6 +44,7 @@ class LogTest(unittest.TestCase):
             assert self.logger.getEffectiveLevel() == logging.INFO
         logging.info("after")
         assert self.logger.getEffectiveLevel() == logging.WARNING
+        assert len(self.caplog.record_tuples) == 1
         for _, level, msg in self.caplog.record_tuples:
             assert level == logging.INFO
             assert "during" in msg

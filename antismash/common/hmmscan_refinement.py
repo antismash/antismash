@@ -155,7 +155,7 @@ def _remove_incomplete(domains: List[HMMResult], hmm_lengths: Dict[str, int],
 
 def _merge_domain_list(domains: List[HMMResult], hmm_lengths: Dict[str, int]) -> List[HMMResult]:
     """ Merges domains of the same kind if they would not be too long """
-    categories = defaultdict(list)  # type: Dict[str, List[HMMResult]]
+    categories: Dict[str, List[HMMResult]] = defaultdict(list)
     for domain in domains:
         categories[domain.hit_id].append(domain)
     remaining = []
@@ -196,7 +196,7 @@ def gather_by_query(results: List[HSP]) -> Dict[str, Set[HMMResult]]:
             a dictionary mapping query gene id to a set of HMMResults within that
             gene
     """
-    results_by_id = defaultdict(set)  # type: Dict[str, Set[HMMResult]]
+    results_by_id: Dict[str, Set[HMMResult]] = defaultdict(set)
     for result in results:
         for hsp in result.hsps:
             results_by_id[hsp.query_id].add(HMMResult(hsp.hit_id, hsp.query_start,

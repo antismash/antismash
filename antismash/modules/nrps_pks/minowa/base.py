@@ -98,7 +98,7 @@ def run_minowa(sequence_info: Dict[str, str], startpos: int, muscle_ref: str, re
     """
     positions = get_positions(positions_file, startpos)
 
-    results_by_query = {}  # type: Dict[str, Prediction]
+    results_by_query: Dict[str, Prediction] = {}
 
     for query_id, query_seq in sequence_info.items():
         muscle = subprocessing.run_muscle_single(query_id, query_seq, muscle_ref)

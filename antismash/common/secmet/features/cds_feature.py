@@ -6,12 +6,11 @@
 from collections import OrderedDict
 import logging
 from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar
-from typing import Union  # comment hints  # pylint: disable=unused-import
 
 from Bio.Data import CodonTable, IUPACData
 from Bio.SeqFeature import SeqFeature
 
-from antismash.common.secmet import features  # comment hints  # pylint:disable=unused-import
+from antismash.common.secmet import features
 from antismash.common.secmet.qualifiers import (
     GeneFunction,
     GeneFunctionAnnotations,
@@ -157,12 +156,12 @@ class CDSFeature(Feature):
         self._sec_met = SecMetQualifier()
         self._nrps_pks = NRPSPKSQualifier(self.location.strand)
 
-        self._modules = []  # type: List[Module]
-        self.motifs = []  # type: List[features.CDSMotif]
+        self._modules: List[Module] = []
+        self.motifs: List[features.CDSMotif] = []
 
         # runtime-only data
-        self.region = None  # type: Optional[features.Region]
-        self.unique_id = None  # type: Optional[str] # set only when added to a record
+        self.region: Optional[features.Region] = None
+        self.unique_id: Optional[str] = None  # set only when added to a record
 
     @property
     def gene_functions(self) -> GeneFunctionAnnotations:
@@ -304,7 +303,7 @@ class CDSFeature(Feature):
         return feature
 
     def to_biopython(self, qualifiers: Dict[str, List[str]] = None) -> SeqFeature:
-        mine = OrderedDict()  # type: Dict[str, List[str]]
+        mine: Dict[str, List[str]] = OrderedDict()
         # mandatory
         mine["translation"] = [self.translation]
         # optional

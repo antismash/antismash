@@ -8,7 +8,6 @@ from collections import defaultdict
 import unittest
 
 import Bio.SeqIO
-from Bio.Alphabet.IUPAC import IUPACProtein
 from Bio.Seq import Seq
 from Bio.SeqFeature import FeatureLocation, SeqFeature
 
@@ -78,7 +77,7 @@ class TestConversion(unittest.TestCase):
         assert isinstance(before.seq, Seq)
         Record.from_biopython(before, taxon="bacteria")
 
-        before.seq = Seq("AAAA", IUPACProtein())
+        before.annotations["molecule_type"] = "protein"
         with self.assertRaisesRegex(ValueError, "protein records are not supported"):
             Record.from_biopython(before, taxon="bacteria")
 
@@ -126,10 +125,12 @@ class TestStripping(unittest.TestCase):
 
     def test_antismash_domains(self):
         assert not self.rec.get_antismash_domains()
-        self.rec.add_antismash_domain(DummyAntismashDomain())
+        self.rec.add_antismash_domain(DummyAntismashDomain(tool="test"))
         assert self.rec.get_antismash_domains()
+        assert self.rec.get_antismash_domains_by_tool("test")
         self.rec.strip_antismash_annotations()
         assert not self.rec.get_antismash_domains()
+        assert not self.rec.get_antismash_domains_by_tool("test")
 
     def test_pfams(self):
         assert not self.rec.get_pfam_domains()
@@ -180,6 +181,19 @@ class TestStripping(unittest.TestCase):
         assert self.cds.gene_functions
         self.rec.strip_antismash_annotations()
         assert not self.cds.gene_functions
+
+    def test_antismash_domains_by_tool(self):
+        assert not self.rec.get_antismash_domains()
+        assert self.rec.get_antismash_domains_by_tool("a") == tuple()
+        assert self.rec.get_antismash_domains_by_tool("b") == tuple()
+        a = DummyAntismashDomain(tool="a")
+        b = DummyAntismashDomain(tool="b")
+        z = DummyAntismashDomain(tool="a")
+        for i in [a, b, z]:
+            self.rec.add_antismash_domain(i)
+        assert self.rec.get_antismash_domains() == (a, b, z)
+        assert self.rec.get_antismash_domains_by_tool("a") == (a, z)
+        assert self.rec.get_antismash_domains_by_tool("b") == (b,)
 
 
 class TestRecordFeatureNumbering(unittest.TestCase):
@@ -789,3 +803,20 @@ class TestCDSUniqueness(unittest.TestCase):
         cds = CDSFeature(FeatureLocation(12, 18, 1), locus_tag="test", protein_id="prot", translation="MA")
         with self.assertRaisesRegex(ValueError, "same name for mapping"):
             record.add_cds_feature(cds)
+
+
+class TestIsNuclSeq(unittest.TestCase):
+    def test_seq(self):
+        # > 20%
+        for seq in ["AGTC", "AGCTFC", "agtcfc", "AGTCFCT"]:
+            assert Record.is_nucleotide_sequence(Seq(seq))
+        # edge case == 20% should be failure
+        assert not Record.is_nucleotide_sequence(Seq("AGFTC"))
+        # and less than 20%
+        assert not Record.is_nucleotide_sequence(Seq("AGFTCF"))
+
+    def test_str(self):
+        for seq in ["AGTC", "AGCTFC", "agtcfc", "AGTCFCT"]:
+            assert Record.is_nucleotide_sequence(seq)
+        assert not Record.is_nucleotide_sequence("AGFTC")
+        assert not Record.is_nucleotide_sequence("AGFTCF")

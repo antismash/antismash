@@ -7,7 +7,7 @@
 import unittest
 
 from antismash.common.secmet import FeatureLocation
-from antismash.common.secmet.features import Protocluster
+from antismash.common.secmet.features.protocluster import Protocluster, SideloadedProtocluster
 from antismash.common.secmet.qualifiers import GeneFunction
 from antismash.common.secmet.test.helpers import DummyCDS
 
@@ -45,6 +45,34 @@ class TestProtocluster(unittest.TestCase):
         assert new.location.end == self.cluster.location.end == 76
         assert new.core_location.start == self.cluster.core_location.start == 8
         assert new.core_location.end == self.cluster.core_location.end == 71
+
+
+class TestSideloaded(unittest.TestCase):
+    def test_conversion(self):
+        core = FeatureLocation(8, 71, strand=1)
+        surrounds = FeatureLocation(3, 76, strand=1)
+        extras = {"a": ["5", "c"], "b": ["something"]}
+        source = SideloadedProtocluster(core, surrounds, "tool name", "some-product", extra_qualifiers=extras)
+
+        assert source.neighbourhood_range == 5
+
+        bio_features = source.to_biopython()
+        assert len(bio_features) == 2
+        for key, val in extras.items():
+            assert bio_features[0].qualifiers[key] == val
+
+        for regenerator in [SideloadedProtocluster, Protocluster]:
+            dest = regenerator.from_biopython(bio_features[0])
+            assert isinstance(dest, SideloadedProtocluster)
+            assert dest.extra_qualifiers == source.extra_qualifiers == extras
+            assert dest.tool == source.tool
+            assert dest.product == source.product
+            assert dest.location == source.location
+            assert dest.core_location == source.core_location
+            assert dest.neighbourhood_range == source.neighbourhood_range
+
+            for key, val in extras.items():
+                assert not dest.get_qualifier(key)
 
 
 class TestDefinitionCDS(unittest.TestCase):

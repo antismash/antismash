@@ -14,8 +14,8 @@ from helperlibs.wrappers.io import TemporaryDirectory
 from jinja2 import Markup
 
 from antismash.common import path, subprocessing
-from antismash.common.secmet import AntismashDomain
 from antismash.config import ConfigType
+from antismash.detection.nrps_pks_domains import ModularDomain
 
 from .data_structures import Prediction
 
@@ -33,7 +33,7 @@ def _build_stach_codes() -> Dict[str, Set[str]]:
         data for use in checking how good a hit it really is
     """
     data_file = path.get_full_path(__file__, "external/NRPSPredictor2/data/labeled_sigs")
-    results = defaultdict(set)  # type: Dict[str, Set[str]]
+    results: Dict[str, Set[str]] = defaultdict(set)
     with open(data_file) as handle:
         for line in handle:
             # in the form: prediction angstrom_code stach_code
@@ -75,7 +75,7 @@ class PredictorSVMResult(Prediction):
         #     9      &            &              <
         #     8      ^            &              <
         #  <= 7      ^            ^              .
-        classification = []  # type: List[str]
+        classification: List[str] = []
 
         if self.uncertain:
             if self.stachelhaus_match_count >= 8:
@@ -276,7 +276,7 @@ def extract(sequence: str, positions: List[int]) -> str:
     return "".join(seq)
 
 
-def get_34_aa_signature(domain: AntismashDomain) -> str:
+def get_34_aa_signature(domain: ModularDomain) -> str:
     """ Extract 10 / 34 AA NRPS signatures from A domains """
     assert " " not in domain.get_name()
     assert verify_good_sequence(domain.translation)
@@ -311,17 +311,17 @@ def read_output(lines: List[str]) -> Dict[str, Prediction]:
         Returns:
             a dictionary mapping each domain name to a PredictorSVMResult
     """
-    results = {}  # type: Dict[str, Prediction]
+    results: Dict[str, Prediction] = {}
     for line in lines:
         results[line.split('\t')[0]] = PredictorSVMResult.from_line(line)
     return results
 
 
-def run_nrpspredictor(a_domains: List[AntismashDomain], options: ConfigType) -> Dict[str, Prediction]:
+def run_nrpspredictor(a_domains: List[ModularDomain], options: ConfigType) -> Dict[str, Prediction]:
     """ Runs NRPSPredictor2 over the provided A domains.
 
         Arguments:
-            a_domains: a list of AntismashDomains, one for each A domain
+            a_domains: a list of ModularDomains, one for each A domain
             options: antismash options
 
         Returns:

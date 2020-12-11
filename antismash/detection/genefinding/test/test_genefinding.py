@@ -15,6 +15,16 @@ class TestCore(unittest.TestCase):
         options = Namespace()
         options.taxon = 'bacteria'
         options.genefinding_tool = "none"
+        assert not check_options(options)
+
+        options.genefinding_tool = "glimmerhmm"
+        assert check_options(options)
+
+        options.taxon = 'fungi'
+        assert not check_options(options)
+
+        options.genefinding_tool = "prodigal"
+        assert check_options(options)
 
     def test_is_enabled(self):
         options = Namespace()

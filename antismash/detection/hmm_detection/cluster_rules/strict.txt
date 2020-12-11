@@ -3,12 +3,14 @@
 # Cutoffs and neighbourhoods are given in kilobases
 
 RULE T1PKS
+    CATEGORY PKS
     COMMENT Type-I PKS
     CUTOFF 20
     NEIGHBOURHOOD 20
     CONDITIONS cds(PKS_AT and (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS))
 
 RULE T2PKS
+    CATEGORY PKS
     COMMENT Type-II PKS
     RELATED t2pks2, ksIII
     CUTOFF 20
@@ -16,12 +18,14 @@ RULE T2PKS
     CONDITIONS t2ks and t2clf
 
 RULE T3PKS
+    CATEGORY PKS
     COMMENT Type-III PKS
     CUTOFF 20
     NEIGHBOURHOOD 20
     CONDITIONS Chal_sti_synt_C or Chal_sti_synt_N
 
 RULE transAT-PKS
+    CATEGORY PKS
     CUTOFF 45  # kirromycin (CP006259) has a range of ~42kb
     NEIGHBOURHOOD 20
     CONDITIONS cds(PKS_AT and not (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS))
@@ -32,33 +36,47 @@ RULE transAT-PKS
                )
 
 RULE hglE-KS
+    CATEGORY PKS
     COMMENT heterocyst glycolipid synthase like PKS such as KC489223
     CUTOFF 20
     NEIGHBOURHOOD 20
     CONDITIONS hglE or hglD
 
+RULE prodigiosin
+    CATEGORY PKS
+    COMMENT Serratia-type nontraditional PKS prodigiosin biosynthesis pathway
+            like BGC0000258 and BGC0000259
+    CUTOFF 20
+    NEIGHBOURHOOD 10
+    CONDITIONS PPDK_N and AMP-binding and PP-binding and PKS_KS
+
 RULE arylpolyene
+    CATEGORY other
     CUTOFF 20
     NEIGHBOURHOOD 20
     CONDITIONS APE_KS1 or APE_KS2
 
 RULE resorcinol
+    CATEGORY other
     CUTOFF 20
     NEIGHBOURHOOD 20
     CONDITIONS DarB
 
 RULE ladderane
+    CATEGORY other
     CUTOFF 20
     NEIGHBOURHOOD 20
     CONDITIONS ladderane
 
 RULE PUFA
+    CATEGORY other
     COMMENT PolyUnsaturated Fatty Acid
     CUTOFF 20
     NEIGHBOURHOOD 20
     CONDITIONS PUFA_KS
 
 RULE NRPS
+    CATEGORY NRPS
     COMMENT non-ribosomal peptide synthase
     CUTOFF 20
     NEIGHBOURHOOD 20
@@ -66,6 +84,7 @@ RULE NRPS
                or (Condensation and AMP-binding)  #TODO: dubious
 
 RULE CDPS
+    CATEGORY NRPS
     COMMENT tRNA-dependent cyclodipeptide synthases like BGC0001468 aka
             bicyclomycin
     RELATED Flavoprotein, 2OG-FeII_Oxy, p450
@@ -74,6 +93,7 @@ RULE CDPS
     CONDITIONS CDPS or cycdipepsynth
 
 RULE thioamide-NRP
+    CATEGORY NRPS
     COMMENT thioamide-containing non-ribosomal peptides (https://doi.org/10.1002/anie.201807970)
     RELATED Chor_lyase
     CUTOFF 20
@@ -82,6 +102,7 @@ RULE thioamide-NRP
                 (DUF98 or Orn_Arg_deC_N or Orn_DAP_Arg_deC)
 
 RULE terpene
+    CATEGORY terpene
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS Terpene_synth or Terpene_synth_C or phytoene_synt or Lycopene_cycl
@@ -89,6 +110,7 @@ RULE terpene
                or trichodiene_synth or TRI5
 
 RULE lanthipeptide
+    CATEGORY RiPP
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS (LANC_like and (Lant_dehydr_N or Lant_dehydr_C)  # Class I
@@ -96,6 +118,7 @@ RULE lanthipeptide
                and not (YcaO or TIGR03882) # because then it'd be a thiopeptide
 
 RULE lipolanthine
+    CATEGORY RiPP
     COMMENT Lanthipeptide class containing N-terminal fatty acids such as MG673929
             See https://doi.org/10.1038/s41589-018-0068-6
     RELATED PKS_KS, AMP-binding, PP-binding
@@ -104,6 +127,7 @@ RULE lipolanthine
     CONDITIONS micKC and Flavoprotein
 
 RULE lanthidin
+    CATEGORY RiPP
     COMMENT Glycosylated lanthipeptide/linaridin hybrids like MT210103
     RELATED Flavoprotein, Glycos_transf_1, Glycos_transf_2
     CUTOFF 20
@@ -111,6 +135,7 @@ RULE lanthidin
     CONDITIONS APH and HopA1
 
 RULE bacteriocin
+    CATEGORY RiPP
     CUTOFF 20
     NEIGHBOURHOOD 5
     CONDITIONS strepbact or Antimicrobial14 or Bacteriocin_IId or BacteriocIIc_cy
@@ -122,6 +147,7 @@ RULE bacteriocin
                or TIGR03975 or DUF692 or TIGR01193
 
 RULE thiopeptide
+    CATEGORY RiPP
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS (YcaO or TIGR03882)
@@ -131,6 +157,7 @@ RULE thiopeptide
                or thiostrepton
 
 RULE TfuA-related
+    CATEGORY RiPP
     COMMENT TfuA-related RiPPs as described in https://doi.org/10.1093/nar/gkz192
             and found on JOBF01000011
     CUTOFF 20
@@ -139,21 +166,25 @@ RULE TfuA-related
                and TfuA
 
 RULE linaridin
+    CATEGORY other
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS cypemycin or cypI
 
 RULE cyanobactin
+    CATEGORY RiPP
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS cyanobactin_synth
 
 RULE glycocin
+    CATEGORY other
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS glycocin or sublancin
 
 RULE LAP
+    CATEGORY RiPP
     COMMENT Linear azol(in)e-containing peptides like goadsporin (AB205012) or
             microcin B17 (FM877811)
     RELATED TIGR04424
@@ -163,63 +194,75 @@ RULE LAP
                and (YcaO or TIGR03882)
 
 RULE lassopeptide
+    CATEGORY RiPP
     CUTOFF 10
     NEIGHBOURHOOD 10
     CONDITIONS PF13471 and Asn_synthase or micJ25 or mcjC
 
 RULE sactipeptide
+    CATEGORY RiPP
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS subtilosin or thuricin or TIGR04404 or TIGR03973
 
 RULE bottromycin
+    CATEGORY RiPP
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS botH
 
 RULE head_to_tail
+    CATEGORY RiPP
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS Subtilosin_A or skfc
 
 RULE microviridin
+    CATEGORY RiPP
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS mvd or mvnA
 
 RULE proteusin
+    CATEGORY RiPP
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS PoyD
 
 RULE blactam
+    CATEGORY other
     COMMENT beta-lactam
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS BLS or CAS or tabtoxin
 
 RULE amglyccycl
+    CATEGORY other
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS strH or strK1 or strK2 or NeoL or DOIS or ValA or SpcFG
                or SpcDK_glyc or salQ
 
 RULE aminocoumarin
+    CATEGORY other
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS novK or novJ or novI or novH or SpcDK_cou
 
 RULE siderophore
+    CATEGORY other
     CUTOFF 20
     NEIGHBOURHOOD 5
     CONDITIONS IucA_IucC
 
 RULE ectoine
+    CATEGORY other
     CUTOFF 20
     NEIGHBOURHOOD 5
     CONDITIONS ectoine_synt
 
 RULE NAGGN
+    CATEGORY other
     COMMENT N-acetylglutaminylglutamine amide cluster (Psyr_3747-Psyr_3749 in NC_007005.1)
             see https://doi.org/10.1128/AEM.00686-10
     CUTOFF 10
@@ -229,85 +272,101 @@ RULE NAGGN
                and (TIGR03106 or Peptidase_M42)               # aminopeptidase ggnC
 
 RULE butyrolactone
+    CATEGORY other
     CUTOFF 20
     NEIGHBOURHOOD 5
     CONDITIONS AfsA
 
 RULE indole
+    CATEGORY other
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS indsynth or dmat or indole_PTase
 
 RULE nucleoside
+    CATEGORY other
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS LipM or LipV or LipU or ToyB or TunD or pur6 or pur10 or nikJ or nikO or truD
 
 RULE phosphoglycolipid
+    CATEGORY other
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS MoeO5 or moeGT
 
 RULE melanin
+    CATEGORY other
     CUTOFF 20
     NEIGHBOURHOOD 5
     CONDITIONS melC
 
 RULE oligosaccharide
+    CATEGORY saccharide
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS minimum(3,[Glycos_transf_1,Glycos_transf_2,Glyco_transf_28,MGT,DUF1205])
                and minscore(MGT, 150)
 
 RULE furan
+    CATEGORY other
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS mmyO or AvrD
 
 RULE hserlactone
+    CATEGORY other
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS Autoind_synth
 
 RULE phenazine
+    CATEGORY other
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS phzB
 
 RULE phosphonate
+    CATEGORY other
     CUTOFF 20
     NEIGHBOURHOOD 20
     CONDITIONS phosphonates
 
 RULE fused
+    CATEGORY RiPP
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS pgm1 and pgm_amidino
 
 RULE other
+    CATEGORY other
     CUTOFF 20
     NEIGHBOURHOOD 20
     CONDITIONS LmbU or Neocarzinostat or fom1 or bcpB
                or frbD or mitE or vlmB or prnB or CaiA or bacilysin or orf2_PTase
 
 RULE acyl_amino_acids
+    CATEGORY other
     CUTOFF 30
     NEIGHBOURHOOD 30
     CONDITIONS NasY
 
 RULE PBDE
+    CATEGORY other
     COMMENT polybrominated diphenyl ethers (PBDEs) such as KX588877
     CUTOFF 10
     NEIGHBOURHOOD 10
     CONDITIONS FMO-like and p450 and DUF98
 
 RULE PpyS-KS
+    CATEGORY PKS
     COMMENT PPY-like specific ketosynthases (PPYSKS) such as KT373879
     CUTOFF 10
     NEIGHBOURHOOD 10
     CONDITIONS PpyS
 
 RULE betalactone
+    CATEGORY other
     COMMENT beta-lactone containing protease inhibitor such as KY249118
     RELATED RimK, Abhydrolase_6
     CUTOFF 10
@@ -315,6 +374,7 @@ RULE betalactone
     CONDITIONS HMGL-like and AMP-binding
 
 RULE RaS-RiPP
+    CATEGORY RiPP
     COMMENT streptide-like thioether-bond RiPPs such as FR875178
             See https://pubs.acs.org/doi/10.1021/jacs.8b11060 and
             https://pubs.acs.org/doi/full/10.1021/jacs.8b10266
@@ -323,6 +383,7 @@ RULE RaS-RiPP
     CONDITIONS PF04055 and TIGR01716
 
 RULE fungal-RiPP
+    CATEGORY RiPP
     COMMENT fungal RiPP with POP or UstH peptidase types and a modification
     CUTOFF 15
     NEIGHBOURHOOD 15
@@ -332,6 +393,7 @@ RULE fungal-RiPP
                DUF3328 and (Peptidase_S41 or Peptidase_S28 or pop or ustH)
 
 RULE tropodithietic-acid
+    CATEGORY other
     COMMENT tropodithietic acid like cluster as described in DOI: 10.1039/C4CC01924E
     CUTOFF 20
     NEIGHBOURHOOD 10
