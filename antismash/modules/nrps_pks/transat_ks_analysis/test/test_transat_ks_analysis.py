@@ -73,7 +73,8 @@ class TestKSPrediction(unittest.TestCase):
         assert self.prediction.predictions[2][1].mass_score == 1.0
 
     def test_get_classification(self):
-        # TODO make sure that the specificity names being returned is intended
+        # eventually will need to make sure
+        # that the specificity names being returned is intended
         empty_prediction = KSPrediction({})
         assert empty_prediction.get_classification() == []
         assert self.prediction.get_classification() == ["test_specificity2", "test_specificity1", "test_specificity3"]

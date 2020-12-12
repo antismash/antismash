@@ -209,8 +209,8 @@ def run_transpact_pplacer(ks_name: str,
     pplacer_tree = subprocessing.run_pplacer(ks_name, alignment, reference_pkg, reference_aln, reference_tree)
     prediction = transpact_tree_prediction(pplacer_tree, masscutoff, funclades, clade2ann)
     return prediction
-    
-    
+
+
 def run_transpact_ks_analysis(domains: Dict[str, str]) -> Dict[str, Prediction]:
     """ Analyses PKS signature of KS domains
 
