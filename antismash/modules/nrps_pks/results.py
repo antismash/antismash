@@ -205,7 +205,7 @@ class NRPS_PKS_Results(ModuleResults):
         predictions = self.domain_predictions[domain.feature_name]
 
         if 'transPACT' in predictions:
-            domain.predictions["transPACT KS specificity"] = predictions['transPACT'].get_classification()
+            domain.predictions["transPACT KS specificity"] = predictions['transPACT'].get_classification()[0]
 
     def _annotate_at_domain(self, domain: NRPSPKSQualifier.Domain, transat_cluster: bool) -> None:
         assert domain.name == "PKS_AT"
