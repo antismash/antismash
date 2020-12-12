@@ -78,7 +78,8 @@ class KSPrediction(Prediction):
             return Markup("No matches")
         lines = []
         for clade, pred in self.predictions:
-            lines.append("<dd>%s: %s, %.1f%%</dd>\n" % (pred.specificity, clade, pred.mass_score))
+            desc = pred.specificity+' ('+clade+')'
+            lines.append("<dd>%s: %.1f%%</dd>\n" % (desc, pred.mass_score))
         html = ((
             "<dl>\n"
             " <dt>transPACT assigned specificiy:</dt>\n"
