@@ -342,7 +342,7 @@ RULE phosphonate
     NEIGHBOURHOOD 20
     CONDITIONS phosphonates
 
-RULE fused
+RULE guanidinotides
     CATEGORY RiPP
     CUTOFF 20
     NEIGHBOURHOOD 10
