@@ -4,16 +4,18 @@
 """ transPACT analysis of KS domains """
 
 from typing import Any, Dict, List, Tuple
-
+from io import StringIO
+import re
+import copy
 from jinja2 import Markup
 
 from antismash.common import path, subprocessing
 from antismash.modules.nrps_pks.data_structures import Prediction
 
 from Bio import Phylo
-from io import StringIO
-import re
-import copy
+
+
+
 
 _LEAF2CLADE_TBL = path.get_full_path(__file__, "data", "transPACT_leaf2clade.tsv")
 _PPLACER_MASS_CUTOFF = 0.6  # transPACT default: 0.6; higher = more stringent
@@ -63,12 +65,14 @@ class KSPrediction(Prediction):
 
     def get_classification(self) -> List[str]:
         results = []  # type: List[str]
+        preds = []
         if not self.predictions:
             return results
         for clade, pred in self.predictions:
             results.append(clade)
+            preds.append(preds)
         return results
-        
+
     def as_html(self) -> Markup:
         if not self.predictions:
             return Markup("No matches")
@@ -96,17 +100,19 @@ class KSPrediction(Prediction):
 
 
 def get_leaf2clade(leaf2cladetbl: str) -> Tuple[Dict[str, str], Dict[str, str]]:
+    """ Generates the dicts to map between reference 
+    tree leaf names, clade, and verbose annotation """
     leaf2clade = {}
     clade2ann = {}
-    with open(leaf2cladetbl) as c:
-        for ln in c.read().splitlines():
+    with open(leaf2cladetbl) as cfh:
+        for ln in cfh.read().splitlines():
             ksname, clade, ann = ln.split("\t")
             leaf2clade[ksname] = clade
             clade2ann[clade] = ann.replace(' ', '_')
     return(leaf2clade, clade2ann)
 
 
-def get_transpact_clade(query_name: str, tree: Any, funClades: Dict[str, str]) -> str:
+def get_transpact_clade(query_name: str, tree: Any, funclades: Dict[str, str]) -> str:
     """
     tree: Bio.Phylo.Newick.Tree
     """
@@ -136,29 +142,33 @@ def get_transpact_clade(query_name: str, tree: Any, funClades: Dict[str, str]) -
     clade_count = {}  # type: Dict[str, int]
     for leaf in elder.get_terminals():
         if leaf.name != query_name:
-            if funClades[leaf.name] in clade_count:
-                clade_count[funClades[leaf.name]] += 1
+            if funclades[leaf.name] in clade_count:
+                clade_count[funclades[leaf.name]] += 1
             else:
-                clade_count[funClades[leaf.name]] = 1
+                clade_count[funclades[leaf.name]] = 1
     clade_assignment = 'clade_not_conserved' ## Check with simon...maybe None?
     if len(clade_count) == 1: ## clade consensus, monophyly
         clade_assignment = list(clade_count)[0]
     return clade_assignment
 
     
-def transpact_tree_prediction(pplacer_tree: str, masscutoff: float, funClades: Dict[str, str], clade2ann: Dict[str, str]) -> KSPrediction:
-
-    t = Phylo.read(StringIO(pplacer_tree), 'newick')
+def transpact_tree_prediction(pplacer_tree: str,
+                              masscutoff: float,
+                              funclades: Dict[str, str],
+                              clade2ann: Dict[str, str]) -> KSPrediction:
+    """ From a tree, calculate the max pplacer mass
+    for each monophyletic specificity """
+    tree = Phylo.read(StringIO(pplacer_tree), 'newick')
     tree_hits = {}
-    for leaf in t.get_terminals():
+    for leaf in tree.get_terminals():
         if not leaf.name:
             continue
         ln = leaf.name.split("_") ## Note: have to use leaf.name here, if use str(leaf) names are truncated if over 40 char
         if re.match("^#\d+$", ln[-2]) is not None: ## Fits pplacer format
-            n = re.sub(r"^#(\d+)$", "\g<1>", ln[-2]) ## placement number, zero indexed
-            tree_hits[n] = leaf
-            funClades[leaf.name] = 'query_seq'
-    if len(tree_hits) == 0:
+            placementn = re.sub(r"^#(\d+)$", "\g<1>", ln[-2]) ## placement number, zero indexed
+            tree_hits[placementn] = leaf
+            funclades[leaf.name] = 'query_seq'
+    if not tree_hits: ## len = 0
         raise ValueError("There should be a leaf with name of minimal form #'int'_M='float' in the provided tree.")
     ## Look to see when threshold is met
     totalmass: Dict[str, float] = {}
@@ -167,16 +177,16 @@ def transpact_tree_prediction(pplacer_tree: str, masscutoff: float, funClades: D
         if query_prefix is None:
             query_prefix = re.sub(r"^(.+)_#\d+_M=\d+?\.?\d*$", "\g<1>", tree_hits[placement_num].name)
         mass = float(re.sub(r"^.+#\d+_M=(\d+?\.?\d*)$", "\g<1>", tree_hits[placement_num].name))
-        clade_assignment = get_transpact_clade(tree_hits[placement_num].name, t, funClades)
+        clade_assignment = get_transpact_clade(tree_hits[placement_num].name, t, funclades)
         if clade_assignment in totalmass:
             totalmass[clade_assignment] += mass
         else:
             totalmass[clade_assignment] = mass
     best_clade: str = 'None'
     best_mass: float = float(0)
-    for c in totalmass:
-        if totalmass[c] > best_mass:
-            best_clade, best_mass = c, totalmass[c]
+    for cld in totalmass:
+        if totalmass[cld] > best_mass:
+            best_clade, best_mass = cld, totalmass[cld]
     clade: str = 'clade_not_conserved'
     spec: str = 'NA'
     score: float = 0.0
@@ -187,11 +197,17 @@ def transpact_tree_prediction(pplacer_tree: str, masscutoff: float, funClades: D
     return KSPrediction({spec: KSResult(clade, spec, score)})
 
     
-def run_transpact_pplacer(ks_name: str, alignment: Dict[str, str], reference_pkg: str, reference_aln: str,
-                          reference_tree: str, masscutoff: float, funClades: Dict[str, str], clade2ann: Dict[str, str]) -> Prediction:
-    
+def run_transpact_pplacer(ks_name: str,
+                          alignment: Dict[str, str],
+                          reference_pkg: str,
+                          reference_aln: str,
+                          reference_tree: str,
+                          masscutoff: float,
+                          funclades: Dict[str, str],
+                          clade2ann: Dict[str, str]) -> Prediction:
+    """ Calls pplacer and runs prediction pipeline """
     pplacer_tree = subprocessing.run_pplacer(ks_name, alignment, reference_pkg, reference_aln, reference_tree)
-    prediction = transpact_tree_prediction(pplacer_tree, masscutoff, funClades, clade2ann)
+    prediction = transpact_tree_prediction(pplacer_tree, masscutoff, funclades, clade2ann)
     return prediction
     
     
@@ -207,10 +223,17 @@ def run_transpact_ks_analysis(domains: Dict[str, str]) -> Dict[str, Prediction]:
                 a list of KSResults
     """
     ## Read clade to annotation maps from flat files
-    funClades, clade2ann = get_leaf2clade(_LEAF2CLADE_TBL)
+    funclades, clade2ann = get_leaf2clade(_LEAF2CLADE_TBL)
     results = {}
     for ks_name, ks_seq in domains.items():
         ## Align to reference
         alignment = subprocessing.run_muscle_single(ks_name, ks_seq, _KS_REFERENCE_ALIGNMENT)
-        results[ks_name] = run_transpact_pplacer(ks_name, alignment, _PPLACER_REFERENCE_PKG, _KS_REFERENCE_ALIGNMENT, _KS_REFERENCE_TREE, _PPLACER_MASS_CUTOFF, funClades, clade2ann)
+        results[ks_name] = run_transpact_pplacer(ks_name,
+                                                 alignment,
+                                                 _PPLACER_REFERENCE_PKG,
+                                                 _KS_REFERENCE_ALIGNMENT,
+                                                 _KS_REFERENCE_TREE,
+                                                 _PPLACER_MASS_CUTOFF,
+                                                 funclades,
+                                                 clade2ann)
     return results
