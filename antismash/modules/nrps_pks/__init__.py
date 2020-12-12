@@ -29,7 +29,7 @@ def check_prereqs(options: ConfigType) -> List[str]:
             hmmsearch: minowa
     """
     failure_messages = []
-    for binary_name in ["hmmsearch", "muscle", "java"]:
+    for binary_name in ["hmmsearch", "muscle", "java", "pplacer", "guppy"]:
         if binary_name not in options.executables:
             failure_messages.append("Failed to locate executable for %r" %
                                     binary_name)

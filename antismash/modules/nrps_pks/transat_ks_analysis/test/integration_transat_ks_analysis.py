@@ -124,6 +124,6 @@ class TestRunTranspactKSAnalysis(unittest.TestCase):
 
         assert 'nrpspksdomains_ctg1_12_PKS_KS.2' in results
         assert len(results['nrpspksdomains_ctg1_12_PKS_KS.2'].predictions) == 1
-        assert results['nrpspksdomains_ctg1_12_PKS_KS.2'].predictions[0][0] == 'clade_not_conserved'
-        assert results['nrpspksdomains_ctg1_12_PKS_KS.2'].predictions[0][1].clade == 'NA'
+        assert results['nrpspksdomains_ctg1_12_PKS_KS.2'].predictions[0][0] == 'NA'
+        assert results['nrpspksdomains_ctg1_12_PKS_KS.2'].predictions[0][1].clade == 'clade_not_conserved'
         assert results['nrpspksdomains_ctg1_12_PKS_KS.2'].predictions[0][1].mass_score == 0.0

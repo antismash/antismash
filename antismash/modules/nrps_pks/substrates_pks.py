@@ -26,9 +26,9 @@ def count_pks_genes(genes: List[CDSFeature]) -> int:
     return pkscount
 
 
-def extract_ks_domains(cds_features: List[CDSFeature]) -> Dict[str, str]:
+def extract_transat_ks_domains(cds_features: List[CDSFeature]) -> Dict[str, str]:
     """ Returns a dictionary mapping domain name to domain sequence
-        for each PKS_KS domain found in the record
+        for each PKS_KS of a transAT PKS domain found in the record
     """
     results = {}
     for cds in cds_features:

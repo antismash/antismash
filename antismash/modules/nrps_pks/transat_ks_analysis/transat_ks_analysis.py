@@ -60,7 +60,7 @@ class KSResult:
 class KSPrediction(Prediction):
     """ Holds the transPACT predictions for a domain"""
     def __init__(self, predictions: Dict[str, KSResult]) -> None:
-        super().__init__("transPACT_KS")
+        super().__init__("transPACT")
         self.predictions = sorted(predictions.items(), key=lambda x: (-x[1].mass_score, x[1].clade))
 
     def get_classification(self) -> List[str]:
@@ -90,13 +90,13 @@ class KSPrediction(Prediction):
 
     def to_json(self) -> Dict[str, Any]:
         return {
-            "method": "transPACT_KS",
+            "method": "transPACT",
             "predictions": {clade: pred.to_json() for clade, pred in self.predictions},
         }
 
     @classmethod
     def from_json(cls, json: Dict[str, Any]) -> "KSPrediction":
-        assert json["method"] == "transPACT_KS"
+        assert json["method"] == "transPACT"
         return cls({specificity: KSResult.from_json(pred) for specificity, pred in json["predictions"].items()})
 
 

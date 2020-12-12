@@ -18,6 +18,7 @@ from .minowa.base import MinowaPrediction
 from .nrps_predictor import PredictorSVMResult
 from .pks_names import get_short_form
 from .at_analysis.at_analysis import ATPrediction
+from .transat_ks_analysis.transat_ks_analysis import KSPrediction
 
 DOMAIN_TYPE_MAPPING = {'Condensation_DCL': 'Condensation',
                        'Condensation_LCL': 'Condensation',
@@ -69,6 +70,7 @@ def modify_substrate(module: Module, base: str = "") -> str:  # pylint: disable=
         if "PKS_ER" in domains:
             conversions = {"ccmal": "redmal", "ccmmal": "redmmal", "ccmxmal": "redmxmal", "ccemal": "redemal"}
             base = conversions.get(base, base)
+        
 
     state: List[str] = []
     for domain in module.domains:
@@ -179,6 +181,8 @@ class NRPS_PKS_Results(ModuleResults):
                     rebuilt = MinowaPrediction.from_json(prediction)
                 elif method == "signature":
                     rebuilt = ATPrediction.from_json(prediction)
+                elif method == 'transPACT':
+                    rebuilt = KSPrediction.from_json(prediction)
                 else:
                     rebuilt = SimplePrediction.from_json(prediction)
                 results.domain_predictions[domain_name][method] = rebuilt
@@ -195,6 +199,18 @@ class NRPS_PKS_Results(ModuleResults):
         assert domain.name in ["AMP-binding", "A-OX"]
         predictions = self.domain_predictions[domain.feature_name]
         domain.predictions["consensus"] = generate_nrps_consensus(predictions)
+
+    def _annotate_transat_ks_domain(self, domain: NRPSPKSQualifier.Domain, transat_cluster: bool) -> None:
+        assert transat_cluster
+        assert domain.name == "PKS_KS"
+        predictions = self.domain_predictions[domain.feature_name]
+
+        ksspec, mass = 'NA', 0.0
+        for spec, pred in predictions:
+            if pred.mass_score > mass:
+                ksspec, mass = spec, pred.mass_score
+
+        domain.predictions["transAT KS specificity"] = ksspec
 
     def _annotate_at_domain(self, domain: NRPSPKSQualifier.Domain, transat_cluster: bool) -> None:
         assert domain.name == "PKS_AT"
