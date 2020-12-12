@@ -84,9 +84,9 @@ class TestKSPrediction(unittest.TestCase):
         assert empty_prediction.as_html() == "No matches"
         assert self.prediction.as_html() == "<dl>\n " \
                                             "<dt>transPACT assigned specificiy:</dt>\n" \
-                                            "<dd>test_specificity2: 50.0%</dd>\n" \
-                                            "<dd>test_specificity1: 1.0%</dd>\n" \
-                                            "<dd>test_specificity3: 1.0%</dd>\n" \
+                                            "<dd>test_specificity2 (test_clade2): 50.0%</dd>\n" \
+                                            "<dd>test_specificity1 (test_clade1): 1.0%</dd>\n" \
+                                            "<dd>test_specificity3 (test_clade3): 1.0%</dd>\n" \
                                             "</dl>\n"
 
     def test_to_json(self):
