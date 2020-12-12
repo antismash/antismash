@@ -68,8 +68,8 @@ class KSPrediction(Prediction):
         preds = []
         if not self.predictions:
             return results
-        for clade, pred in self.predictions:
-            results.append(clade)
+        for spec, pred in self.predictions:
+            results.append(spec)
             preds.append(pred)
         return results
 
@@ -77,8 +77,8 @@ class KSPrediction(Prediction):
         if not self.predictions:
             return Markup("No matches")
         lines = []
-        for clade, pred in self.predictions:
-            desc = pred.specificity+' ('+clade+')'
+        for spec, pred in self.predictions:
+            desc = spec+' ('+pred.clade+')'
             lines.append("<dd>%s: %.1f%%</dd>\n" % (desc, pred.mass_score))
         html = ((
             "<dl>\n"
