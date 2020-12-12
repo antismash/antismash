@@ -70,7 +70,7 @@ class KSPrediction(Prediction):
             return results
         for clade, pred in self.predictions:
             results.append(clade)
-            preds.append(preds)
+            preds.append(pred)
         return results
 
     def as_html(self) -> Markup:
@@ -100,7 +100,7 @@ class KSPrediction(Prediction):
 
 
 def get_leaf2clade(leaf2cladetbl: str) -> Tuple[Dict[str, str], Dict[str, str]]:
-    """ Generates the dicts to map between reference 
+    """ Generates the dicts to map between reference
     tree leaf names, clade, and verbose annotation """
     leaf2clade = {}
     clade2ann = {}
@@ -151,7 +151,7 @@ def get_transpact_clade(query_name: str, tree: Any, funclades: Dict[str, str]) -
         clade_assignment = list(clade_count)[0]
     return clade_assignment
 
-    
+
 def transpact_tree_prediction(pplacer_tree: str,
                               masscutoff: float,
                               funclades: Dict[str, str],
@@ -163,7 +163,7 @@ def transpact_tree_prediction(pplacer_tree: str,
     for leaf in tree.get_terminals():
         if not leaf.name:
             continue
-        ln = leaf.name.split("_") ## Note: have to use leaf.name here, if use str(leaf) names are truncated if over 40 char
+        ln = leaf.name.split("_") ## name ensures not truncated
         if re.match("^#\d+$", ln[-2]) is not None: ## Fits pplacer format
             placementn = re.sub(r"^#(\d+)$", "\g<1>", ln[-2]) ## placement number, zero indexed
             tree_hits[placementn] = leaf
