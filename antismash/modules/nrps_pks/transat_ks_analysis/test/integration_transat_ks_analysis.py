@@ -1,27 +1,34 @@
+# License: GNU Affero General Public License v3 or later
+# A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
+
+# for test files, silence irrelevant and noisy pylint warnings
+# pylint: disable=no-self-use,protected-access,missing-docstring
+
 import unittest
-from Bio import Phylo
 from io import StringIO
+from Bio import Phylo
 
 from antismash.config import build_config, destroy_config
 from antismash.common import path
 from antismash.modules.nrps_pks.transat_ks_analysis.transat_ks_analysis import run_transpact_ks_analysis, \
-    get_leaf2clade, _PPLACER_MASS_CUTOFF, _LEAF2CLADE_TBL, transpact_tree_prediction, run_transpact_pplacer, \
+    get_leaf2clade, _PPLACER_MASS_CUTOFF, _LEAF2CLADE_TBL, transpact_tree_prediction,  \
     get_transpact_clade
 
 
 class TestTreePredictionMethods(unittest.TestCase):
-    # test all lose methods involved in predicting the transpact tree
+    """ test all lose methods involved in predicting the transpact tree """
 
     def setUp(self):
         self.fun_clades, self.clade2ann = get_leaf2clade(_LEAF2CLADE_TBL)
         test_tree_path = path.get_full_path(__file__, "data", "test_pplacer_tree.tre")
-        with open(test_tree_path, "r") as f:
-            self.pplacer_tree = f.read()
+        with open(test_tree_path, "r") as ffh:
+            self.pplacer_tree = ffh.read()
 
         self.non_conserved_tree = "(((A_#0_M=1.0, etnangien_EtnE1_KS5_eDB)" \
                                   "(A_#0_M=1.0, oocydin_Ddad_OocN2_KS6_aDOHbLOH)))"
 
     def test_get_transpact_clade(self):
+        """ test for transpact clade calling """
         newick_tree = Phylo.read(StringIO(self.pplacer_tree), 'newick')
 
         self.assertRaises(ValueError, get_transpact_clade, "not_present_query_name", newick_tree, self.fun_clades)
@@ -34,6 +41,7 @@ class TestTreePredictionMethods(unittest.TestCase):
         assert clade_assignment == "Clade_30"
 
     def test_transpact_tree_prediction(self):
+        """ test for transpact tree calling """
         prediction = transpact_tree_prediction(self.pplacer_tree, _PPLACER_MASS_CUTOFF, self.fun_clades, self.clade2ann)
         assert len(prediction.predictions) == 1
         assert prediction.predictions[0][0] == "glycine"
@@ -52,7 +60,7 @@ class TestTreePredictionMethods(unittest.TestCase):
 
 
 class TestRunTranspactKSAnalysis(unittest.TestCase):
-
+    """ test cases """
     def setUp(self):
         build_config([])
 
@@ -93,6 +101,7 @@ class TestRunTranspactKSAnalysis(unittest.TestCase):
         destroy_config()
 
     def test_run_transpact_ks_analysis(self):
+        """ test the pipeline """
         results = run_transpact_ks_analysis(self.query_ks)
 
         assert 'nrpspksdomains_ctg1_11_PKS_KS.2' in results
@@ -108,7 +117,7 @@ class TestRunTranspactKSAnalysis(unittest.TestCase):
         assert results['nrpspksdomains_ctg1_11_PKS_KS.3'].predictions[0][1].mass_score == 1.0
 
         assert 'nrpspksdomains_ctg1_12_PKS_KS.1' in results
-        assert len(results['nrpspksdomains_ctg1_12_PKS_KS.1'].predictions)
+        assert results['nrpspksdomains_ctg1_12_PKS_KS.1'].predictions
         assert results['nrpspksdomains_ctg1_12_PKS_KS.1'].predictions[0][0] == 'b_MeeDB'
         assert results['nrpspksdomains_ctg1_12_PKS_KS.1'].predictions[0][1].clade == 'Clade_82'
         assert results['nrpspksdomains_ctg1_12_PKS_KS.1'].predictions[0][1].mass_score == 1.0

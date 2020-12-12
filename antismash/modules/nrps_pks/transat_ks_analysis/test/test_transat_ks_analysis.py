@@ -44,7 +44,7 @@ class TestKSResult(unittest.TestCase):
 
 
 class TestKSPrediction(unittest.TestCase):
-    
+
     def setUp(self):
         results = {"test_specificity1": KSResult("test_clade1", "test_specificity1", 1.0),
                    "test_specificity2": KSResult("test_clade2", "test_specificity2", 50.0),

@@ -78,7 +78,7 @@ class KSPrediction(Prediction):
             return Markup("No matches")
         lines = []
         for clade, pred in self.predictions:
-            lines.append("<dd>%s: %.1f%%</dd>\n" % (pred.specificity, pred.mass_score))
+            lines.append("<dd>%s: %s, %.1f%%</dd>\n" % (pred.specificity, clade, pred.mass_score))
         html = ((
             "<dl>\n"
             " <dt>transPACT assigned specificiy:</dt>\n"
@@ -196,7 +196,7 @@ def transpact_tree_prediction(pplacer_tree: str,
         score = round(best_mass, 2)
     return KSPrediction({spec: KSResult(clade, spec, score)})
 
-    
+
 def run_transpact_pplacer(ks_name: str,
                           alignment: Dict[str, str],
                           reference_pkg: str,
