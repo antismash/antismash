@@ -197,7 +197,7 @@ RULE LAP
     CATEGORY RiPP
     COMMENT Linear azol(in)e-containing peptides like goadsporin (AB205012) or
             microcin B17 (FM877811)
-    RELATED TIGR04424
+    RELATED TIGR04424, TIGR01408
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS (goadsporin_like or PF00881 or TIGR03605)

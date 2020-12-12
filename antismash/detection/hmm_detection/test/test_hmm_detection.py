@@ -175,7 +175,7 @@ class HmmDetectionTest(unittest.TestCase):
 
     def test_profiles_parsing(self):
         profiles = signatures.get_signature_profiles()
-        assert len(profiles) == 287  # ensures we don't delete any by accident
+        assert len(profiles) == 288  # ensures we don't delete any by accident
 
     def test_filter(self):
         # fake HSPs all in one CDS with overlap > 20 and query_ids from the same equivalence group

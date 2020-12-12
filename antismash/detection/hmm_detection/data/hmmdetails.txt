@@ -144,6 +144,7 @@ Glyco_transf_28	Secondary metabolite-related glycosyltransferase	26	Glyco_transf
 DUF1205	Secondary metabolite-related glycosyltransferase	20	DUF1205.hmm
 Autoind_synth	Autoinducer synthetase	20	Autoind_synth.hmm
 YcaO	YcaO-like family	25	YcaO.hmm
+TIGR01408	ubiquitin-activating enzyme E1	750	TIGR01408.hmm
 PF06968	BATS family	20	PF06968.hmm
 PF04055	radical SAM superfamily	40	PF04055.hmm
 PF07366	SnoaL family	20	PF07366.hmm
