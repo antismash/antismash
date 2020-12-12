@@ -200,17 +200,12 @@ class NRPS_PKS_Results(ModuleResults):
         predictions = self.domain_predictions[domain.feature_name]
         domain.predictions["consensus"] = generate_nrps_consensus(predictions)
 
-    def _annotate_transat_ks_domain(self, domain: NRPSPKSQualifier.Domain, transat_cluster: bool) -> None:
-        assert transat_cluster
+    def _annotate_transat_ks_domain(self, domain: NRPSPKSQualifier.Domain) -> None:
         assert domain.name == "PKS_KS"
         predictions = self.domain_predictions[domain.feature_name]
 
-        ksspec, mass = 'NA', 0.0
-        for spec, pred in predictions:
-            if pred.mass_score > mass:
-                ksspec, mass = spec, pred.mass_score
-
-        domain.predictions["transAT KS specificity"] = ksspec
+        if 'transPACT' in predictions:
+            domain.predictions["transPACT KS specificity"] = predictions['transPACT'].get_classification()
 
     def _annotate_at_domain(self, domain: NRPSPKSQualifier.Domain, transat_cluster: bool) -> None:
         assert domain.name == "PKS_AT"
@@ -274,6 +269,8 @@ class NRPS_PKS_Results(ModuleResults):
                     self._annotate_cal_domain(domain)
                 elif domain.name == "PKS_KR":
                     self._annotate_kr_domain(domain)
+                elif domain.name == 'PKS_KS':
+                    self._annotate_transat_ks_domain(domain)
                 # otherwise one of many without prediction methods/relevance (PCP, Cglyc, etc)
 
                 for method, pred in domain.predictions.items():

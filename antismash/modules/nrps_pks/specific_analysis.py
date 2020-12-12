@@ -54,13 +54,7 @@ def specific_analysis(record: Record, results: NRPS_PKS_Results, options: Config
         logging.info("Predicting A domain substrate specificities with NRPSPredictor2")
         results.add_method_results("NRPSPredictor2", run_nrpspredictor(a_domains, options))
 
-    import sys
-    transat = False
-    transat_types = { 'transAT-PKS', 'transAT-PKS-like' }
-    for cand in record._candidate_clusters:
-        if len(set(cand.products).intersection(transat_types)) > 0:
-            transat = True
-    pks_results = run_pks_substr_spec_predictions(nrps_pks_genes, transat)
+    pks_results = run_pks_substr_spec_predictions(nrps_pks_genes)
     for method, method_results in pks_results.items():
         results.add_method_results(method, method_results)
     consensus_pair = calculate_consensus_prediction(nrps_pks_genes, results.domain_predictions)

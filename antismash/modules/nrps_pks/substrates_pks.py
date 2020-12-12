@@ -27,16 +27,25 @@ def count_pks_genes(genes: List[CDSFeature]) -> int:
 
 
 def extract_transat_ks_domains(cds_features: List[CDSFeature]) -> Dict[str, str]:
-    """ Returns a dictionary mapping domain name to domain sequence
-        for each PKS_KS of a transAT PKS domain found in the record
+    """ Fetches all KS ModularDomains in transAT PKS regions which are contained within the given
+        CDS features.
+
+        Arguments:
+            record: the Record containing both ModularDomains and CDSFeatures
+            cds_features: the specific CDSFeatures from which to get the KS-domains
+
+        Returns:
+            a list of ModularDomains, one for each transAT KS domain found
     """
-    results = {}
+    transat_products = { 'transAT-PKS', 'transAT-PKS-like' }
+    ks_domains = {}
     for cds in cds_features:
-        for domain in cds.nrps_pks.domains:
-            if domain.name == "PKS_KS":
-                seq = str(cds.translation)[domain.start:domain.end]
-                results[domain.feature_name] = seq
-    return results
+        if len(set(cds.region.products).intersection(transat_products)) > 0:
+            for domain in cds.nrps_pks.domains:
+                if domain.name in ["PKS_KS"]:
+                    seq = str(cds.translation)[domain.start:domain.end]
+                    ks_domains[domain.feature_name] = seq
+    return ks_domains
 
 
 def run_transpact_predictor_pks_ks(ks_domains: Dict[str, str]
