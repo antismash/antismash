@@ -177,7 +177,7 @@ def transpact_tree_prediction(pplacer_tree: str,
         if query_prefix is None:
             query_prefix = re.sub(r"^(.+)_#\d+_M=\d+?\.?\d*$", "\g<1>", tree_hits[placement_num].name)
         mass = float(re.sub(r"^.+#\d+_M=(\d+?\.?\d*)$", "\g<1>", tree_hits[placement_num].name))
-        clade_assignment = get_transpact_clade(tree_hits[placement_num].name, t, funclades)
+        clade_assignment = get_transpact_clade(tree_hits[placement_num].name, tree, funclades)
         if clade_assignment in totalmass:
             totalmass[clade_assignment] += mass
         else:

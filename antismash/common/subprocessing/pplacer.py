@@ -22,8 +22,8 @@ def run_pplacer(query_name: str,
     with NamedTemporaryFile(mode="w+", suffix='.fasta') as temp_aln:
         names, seqs = [], []
         for name in alignment:
-            names.append(n)
-            seqs.append(alignment[n])
+            names.append(name)
+            seqs.append(alignment[name])
         write_fasta(names, seqs, temp_aln.name)
         with NamedTemporaryFile(mode="w+", suffix='.jplace') as temp_pplacer_jplace:
             pplacer_result = execute([get_config().executables.pplacer,
