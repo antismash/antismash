@@ -29,6 +29,14 @@ CLUSTERBLAST_URL = "https://dl.secondarymetabolites.org/releases/clusterblast/cl
 CLUSTERBLAST_ARCHIVE_CHECKSUM = "4c0345ba020c3f8c7cdfa5e6f0421e93b6cea30d7a5819a222ac1b38993138c8"
 CLUSTERBLAST_FASTA_CHECKSUM = "0b8ccbeed536deb20d84b6449ed04d3e81e7555c18311930f08e874d621b50b9"
 
+CLUSTERCOMPARE_DBS = {
+    "mibig": {
+        "url": "https://dl.secondarymetabolites.org/releases/clustercompare/cc_mibig_20201210.tar.xz",
+        "archive": "25bc9ce7d09f8325d93c0345367def76147e0c6c4c8bd5adbd2ecc79a1827170",
+        "fasta": "3fe75f4a95823297ea14817da328000f160f15e5e78335c629812a6cc0c64dcf",
+    },
+}
+
 RESFAM_URL = "http://dantaslab.wustl.edu/resfams/Resfams.hmm.gz"
 RESFAM_ARCHIVE_CHECKSUM = "82e9325283b999b1fb1351502b2d12194561c573d9daef3e623e905c1af66fd6"
 RESFAM_LINES = 132214
@@ -307,6 +315,25 @@ def download_clusterblast(db_dir: str) -> None:
     delete_file(filename + ".xz")
 
 
+def download_clustercompare(db_dir: str, name: str, url: str, archive: str, fasta: str) -> None:
+    """Download a ClusterCompare database."""
+    archive_filename = os.path.join(db_dir, "clustercompare", url.rpartition("/")[2])
+    fasta_filename = os.path.join(db_dir, "clustercompare", name, "proteins.fasta")
+
+    if present_and_checksum_matches(fasta_filename, fasta):
+        print(f"ClusterCompare {name} FASTA file present and checked")
+        return
+
+    print(f"Downloading ClusterCompare {name} database.")
+    check_diskspace(url)
+    download_if_not_present(url, archive_filename, archive)
+    filename = unzip_file(archive_filename, lzma, lzma.LZMAError)
+    untar_file(filename)
+    assert os.path.exists(fasta_filename)
+    delete_file(filename)
+    delete_file(filename + ".xz")
+
+
 def download(args: argparse.Namespace) -> None:
     """Download all the large external databases needed."""
     # grab the latest pfam
@@ -321,6 +348,8 @@ def download(args: argparse.Namespace) -> None:
     download_resfam(args.database_dir)
 
     download_clusterblast(args.database_dir)
+    for name, details in CLUSTERCOMPARE_DBS.items():
+        download_clustercompare(args.database_dir, name, **details)
 
 
 def _main() -> None:

@@ -37,7 +37,7 @@ class TestCDSFeature(unittest.TestCase):
 
     def test_invalid_qualifier(self):
         cds = CDSFeature(FeatureLocation(1, 5, 1), locus_tag="test", translation="A")
-        for bad in ["bad", ["stuff"], {}, 1]:
+        for bad in ["bad", ["stuff"], {}, 1, None]:
             with self.assertRaisesRegex(TypeError, "can only be set to an instance of SecMetQualifier"):
                 cds.sec_met = bad
 

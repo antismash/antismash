@@ -55,6 +55,16 @@ class CDSCollection(Feature):
         # when starts are equal, sort by largest collection first
         return self.location.end > location.end
 
+
+    def __contains__(self, other: Any) -> bool:
+        """ Returns True if the given CDSFeature or CDSCollection is one of the
+            children of this collection """
+        if isinstance(other, CDSFeature):
+            return other in self._cdses
+        if isinstance(other, CDSCollection) and self._children:
+            return other in self._children
+        return False
+
     @property
     def parent_record(self) -> Any:  # again, should be Record
         """ Returns the parent Record of the collection """

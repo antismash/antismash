@@ -4,9 +4,12 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=no-self-use,protected-access,missing-docstring
 
+import unittest
 from unittest.mock import patch
 
-from antismash.common import subprocessing
+from antismash.common import path, subprocessing
+from antismash.common.subprocessing import diamond
+
 
 class DummyResult(subprocessing.RunResult):
     def __init__(self, stdout: str):
@@ -25,3 +28,16 @@ def test_diamond_makedb(mock_run_diamond):
     subprocessing.run_diamond_makedb("fake.dmnd", "fake.fasta")
     mock_run_diamond.assert_called_once_with("makedb",
         ["--db", "fake.dmnd", "--in", "fake.fasta"])
+
+
+class TestDiamondDatabaseChecks(unittest.TestCase):
+    def setUp(self):
+        self.format0_file = path.get_full_path(__file__, "data", "format0.dmnd")
+        self.format1_file = path.get_full_path(__file__, "data", "format1.dmnd")
+        self.empty = path.get_full_path(__file__, "data", "empty.dmnd")
+
+    def test_extract_db_format(self):
+        assert diamond._extract_db_format(self.format0_file) == 0
+        assert diamond._extract_db_format(self.format1_file) == 1
+        with self.assertRaises(ValueError):
+            diamond._extract_db_format(self.empty)

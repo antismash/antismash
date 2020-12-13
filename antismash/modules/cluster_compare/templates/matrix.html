@@ -1,0 +1,45 @@
+<div id="comparison-{{class_name}}-{{region.anchor_id}}-{{tag}}" class="comparison-container {{extra_class}}">
+  {% if results %}
+  <table class="cc-heat-table">
+    <tr>
+     <th>Reference</th>
+     {% for proto in region.get_unique_protoclusters() %}
+     <th><span class="cc-heat-product">{{proto.product}}</span></th>
+     {% endfor %}
+     <th>Similarity score</th>
+     <th>Type</th>
+     <th>Compound(s)</th>
+     <th>Organism</th>
+    </tr>
+    {% for ref, total in results %}
+      <tr class="cc-heat-row heat-row-{{class_name}}" data-accession="{{ref.get_identifier()}}">
+      <td>{% if url %}<a href="{{url.format(accession=ref.accession.split('.')[0], version=ref.accession.split('.')[1], start=ref.start, end=ref.end)}}" target="_new">{{ref.accession if class_name == "MIBiG" else ref.get_identifier()}}</a>{% else %} {{ref.get_identifier()}} {% endif %}</td>
+       {% for proto in region.get_unique_protoclusters() %}
+         <td></td>
+       {% endfor %}
+       <td>{{"{:.2f}".format(total)}}</td>
+       <td>{{ref.get_product_string()}}</td>
+       <td>{{ref.description}}</td>
+       <td>{{ref.organism}}</td>
+      </tr>
+       {% for ref_proto in ref.protoclusters %}
+        <tr class="cc-heat-row" data-accession="{{ref.get_identifier()}}">
+        <td>{{ref_proto.product}}</td>
+        {% for proto in region.get_unique_protoclusters() %}
+          {%- set scorer = proto_results.get(proto.get_protocluster_number(), {}).get(ref, {}).get(ref_proto) -%}
+          {% if scorer -%}
+            {%- set perc = "{:.0f}".format(scorer.final_score*100) -%}
+            {%- set colour = "rgb(0, 0, 0, {:.2f})".format(scorer.final_score) -%}
+            <td class="cc-heat-cell" title="{{scorer.table_string()}}" style="background-image: linear-gradient(to top, {{colour}}, {{colour}} {{perc}}%, white {{perc}}%)"></td>
+          {% else %}
+            <td class="cc-heat-cell" title="no hits" style="background-image: linear-gradient(to top, rgb(0, 0, 0, 0%), rgb(0, 0, 0, 0%) 0%, white 0%)"></td>
+          {% endif %}
+         {% endfor %}
+        </tr>
+       {% endfor %}
+    {% endfor %}
+   </table>
+  {% else %}
+    <div><p>No matches found.</p></div>
+  {% endif %}
+</div>

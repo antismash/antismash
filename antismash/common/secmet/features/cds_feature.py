@@ -176,7 +176,7 @@ class CDSFeature(Feature):
         return self._gene_functions.get_classification()
 
     @property
-    def sec_met(self) -> Optional[SecMetQualifier]:
+    def sec_met(self) -> SecMetQualifier:
         """ The qualifier containing secondary metabolite information for the
             CDSFeature.
         """
@@ -184,7 +184,7 @@ class CDSFeature(Feature):
 
     @sec_met.setter
     def sec_met(self, sec_met: SecMetQualifier) -> None:
-        if sec_met is not None and not isinstance(sec_met, SecMetQualifier):
+        if not isinstance(sec_met, SecMetQualifier):
             raise TypeError("CDSFeature.sec_met can only be set to an instance of SecMetQualifier")
         self._sec_met = sec_met
 

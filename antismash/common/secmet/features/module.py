@@ -196,6 +196,10 @@ class Module(Feature):
 
         if not record:
             raise ValueError("record instance required for regenerating Module instance from biopython")
+        # biopython parsing doesn't properly handle string crossing two lines due to length
+        # despite writing them in the first place
+        # so ensure that any inserted space is removed
+        domain_names = [domain.replace(" ", "") for domain in domain_names]
         try:
             domains = [record.get_domain_by_name(domain) for domain in domain_names]
         except KeyError as err:

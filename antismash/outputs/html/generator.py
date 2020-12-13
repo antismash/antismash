@@ -6,11 +6,11 @@
 import json
 import string
 import os
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from antismash.common import path, module_results
 from antismash.common.html_renderer import FileTemplate, HTMLSections, docs_link
-from antismash.common.layers import RecordLayer, OptionsLayer
+from antismash.common.layers import RecordLayer, RegionLayer, OptionsLayer
 from antismash.common.secmet import Record
 from antismash.common.json import JSONOrf
 from antismash.config import ConfigType
@@ -21,7 +21,11 @@ from .pfam_json import gather_pfam_json
 
 
 def build_json_data(records: List[Record], results: List[Dict[str, module_results.ModuleResults]],
-                    options: ConfigType) -> Tuple[List[Dict[str, Any]], List[Dict[str, Union[str, List[JSONOrf]]]]]:
+                    options: ConfigType) -> Tuple[
+                        List[Dict[str, Any]],
+                        List[Dict[str, Union[str, List[JSONOrf]]]],
+                        Dict[str, Dict[str, Dict[str, Any]]]
+                    ]:
     """ Builds JSON versions of records and domains for use in drawing SVGs with
         javascript.
 
@@ -39,13 +43,15 @@ def build_json_data(records: List[Record], results: List[Dict[str, module_result
     from antismash import get_all_modules  # TODO break circular dependency
     js_records = js.convert_records(records, results, options)
 
-    js_domains = []
+    js_domains: List[Dict[str, Union[str, List[JSONOrf]]]] = []
+    js_results = {}
 
     for i, record in enumerate(records):
         json_record = js_records[i]
         json_record['seq_id'] = "".join(char for char in json_record['seq_id'] if char in string.printable)
         for region, json_region in zip(record.get_regions(), json_record['regions']):
             handlers = find_plugins_for_cluster(get_all_modules(), json_region)
+            region_results = {}
             for handler in handlers:
                 # if there's no results for the module, don't let it try
                 if handler.__name__ not in results[i]:
@@ -54,12 +60,17 @@ def build_json_data(records: List[Record], results: List[Dict[str, module_result
                     domains_by_region = handler.generate_js_domains(region, record)
                     if domains_by_region:
                         js_domains.append(domains_by_region)
+                if hasattr(handler, "generate_javascript_data"):
+                    region_results[handler.__name__] = handler.generate_javascript_data(record, region, results[i][handler.__name__])
+            if region_results:
+                js_results[RegionLayer.build_anchor_id(region)] = region_results
 
-    return js_records, js_domains
+    return js_records, js_domains, js_results
 
 
 def write_regions_js(records: List[Dict[str, Any]], output_dir: str,
-                     js_domains: List[Dict[str, Any]], pfam_domains: Dict[str, Dict[str, Any]]) -> None:
+                     js_domains: List[Dict[str, Any]], pfam_domains: Dict[str, Dict[str, Any]],
+                     module_results: Dict[str, Dict[str, Dict[str, Any]]]) -> None:
     """ Writes out the cluster and domain JSONs to file for the javascript sections
         of code"""
 
@@ -77,6 +88,8 @@ def write_regions_js(records: List[Dict[str, Any]], output_dir: str,
             "pfam": pfam_domains,
         }
         handle.write('var details_data = %s;\n' % json.dumps(details, indent=4))
+
+        handle.write('var resultsData = %s;\n' % json.dumps(module_results, indent=4))
 
 
 def generate_html_sections(records: List[RecordLayer], results: Dict[str, Dict[str, module_results.ModuleResults]],
@@ -126,9 +139,9 @@ def generate_webpage(records: List[Record], results: List[Dict[str, module_resul
     """ Generates and writes the HTML itself """
 
     generate_searchgtr_htmls(records, options)
-    json_records, js_domains = build_json_data(records, results, options)
+    json_records, js_domains, js_results = build_json_data(records, results, options)
     pfam_domains = gather_pfam_json(records)
-    write_regions_js(json_records, options.output_dir, js_domains, pfam_domains)
+    write_regions_js(json_records, options.output_dir, js_domains, pfam_domains, js_results)
 
     with open(os.path.join(options.output_dir, 'index.html'), 'w') as result_file:
         template = FileTemplate(path.get_full_path(__file__, "templates", "overview.html"))

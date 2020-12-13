@@ -1,0 +1,49 @@
+<div id="comparison-{{class_name}}-{{region.anchor_id}}-{{tag}}" class="comparison-container {{extra_class}}">
+  {% if results %}
+  <table class="cc-heat-table">
+    <tr>
+     <th>Reference</th>
+     {% if -1 not in proto_results %}
+         {% for proto in region.get_unique_protoclusters() %}
+         <th><span class="cc-heat-product">{{proto.product}}</span></th>
+         {% endfor %}
+     {% else %}
+         <th><span class="cc-heat-product">All</span></th>
+     {% endif %}
+     <th>Similarity score</th>
+     <th>Type</th>
+     {% if results[0][0].description %}
+     <th>Compound(s)</th>
+     {% endif %}
+     {% if results[0][0].organism %}
+     <th>Organism</th>
+     {% endif %}
+    </tr>
+    {% for ref, total in results %}
+        <tr class="cc-heat-row heat-row-{{class_name}}" data-accession="{{ref.get_identifier()}}">
+      <td>{% if url %}<a href="{{url.format(accession=ref.accession.split('.')[0], version=ref.accession.split('.')[1], start=ref.start, end=ref.end)}}" target="_new">{{ref.accession if class_name == "MIBiG" else ref.get_identifier()}}</a>{% else %} {{ref.get_identifier()}} {% endif %}</td>
+        {% for proto in region.get_unique_protoclusters() %}
+         {% if proto_results.get(proto.get_protocluster_number(), {}).get(ref) %}
+          {% set score = proto_results[proto.get_protocluster_number()][ref] %}
+          {% set perc = "{:.0f}".format(score.final_score*100) %}
+          {% set colour = "rgb(0, 0, 0, {:.2f})".format(score.final_score) %}
+        <td class="cc-heat-cell" title="{{score.table_string()}}" style="background-image: linear-gradient(to top, {{colour}}, {{colour}} {{perc}}%, white {{perc}}%)"></td>
+         {% else %}
+        <td class="cc-heat-cell" title="no hits" style="background-image: linear-gradient(to top, rgb(0, 0, 0, 0%), rgb(0, 0, 0, 0%) 0%, white 0%)"></td>
+         {% endif %}
+        {% endfor %}
+        <td>{{"{:.2f}".format(total)}}</td>
+        <td>{{ref.get_product_string()}}</td>
+        {% if ref.description %}
+        <td>{{ref.description}}</td>
+        {% endif %}
+        {% if ref.organism %}
+        <td>{{ref.organism}}</td>
+        {% endif %}
+        </tr>
+    {% endfor %}
+   </table>
+  {% else %}
+    <div><p>No matches found.</p></div>
+  {% endif %}
+</div>
