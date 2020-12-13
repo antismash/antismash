@@ -41,6 +41,25 @@
   {{collapser_end()}}<br>
  {% endif %}
 
+ {% if pfam_notes %}
+ <br>
+ <span class="bold">PFAM hits:</span><br>
+ {% for note in pfam_notes %}
+  {{note}}<br>
+ {% endfor %}
+ <br>
+ {% endif %}
+
+ {% if tigr_notes %}
+ <br>
+ <span class="bold">TIGRFam hits:</span><br>
+ {% for note in tigr_notes %}
+  {{note}}<br>
+ {% endfor %}
+ <br>
+ {% endif %}
+
+
  {% if go_notes %}
   <br>
   <span class="bold"> Gene Ontology terms for PFAM domains:</span><br>
