@@ -70,7 +70,6 @@ def modify_substrate(module: Module, base: str = "") -> str:  # pylint: disable=
         if "PKS_ER" in domains:
             conversions = {"ccmal": "redmal", "ccmmal": "redmmal", "ccmxmal": "redmxmal", "ccemal": "redemal"}
             base = conversions.get(base, base)
-        
 
     state: List[str] = []
     for domain in module.domains:
