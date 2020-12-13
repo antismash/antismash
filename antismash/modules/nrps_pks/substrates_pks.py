@@ -41,8 +41,8 @@ def extract_transat_ks_domains(cds_features: List[CDSFeature]) -> Dict[str, str]
     ks_domains = {}
     for cds in cds_features:
         region = cds.region
-        if region is not None and region.products():
-            if len(set(region.products()).intersection(transat_products)) > 0:
+        if region is not None:
+            if len(set(region.products).intersection(transat_products)) > 0:
                 for domain in cds.nrps_pks.domains:
                     if domain.name in ["PKS_KS"]:
                         seq = str(cds.translation)[domain.start:domain.end]
