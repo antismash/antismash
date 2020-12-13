@@ -68,3 +68,7 @@ class AntismashModule(ModuleType):
     @staticmethod
     def generate_js_domains(region: Region, record: Record
                             ) -> Optional[Dict[str, Union[str, List[JSONOrf]]]]: ...
+
+    @staticmethod
+    def generate_javascript_data(record: Record, region: Region,
+                                 results: ModuleResults) -> Dict[str, Any]: ...

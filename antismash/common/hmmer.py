@@ -145,8 +145,6 @@ def build_hits(record: Record, hmmscan_results: List, min_score: float,
         Returns:
             a list of JSON representations of hmmer hits
     """
-    logging.debug("Generating feature objects for PFAM hits")
-
     hits = []
     feature_by_id = record.get_cds_name_mapping()
 
@@ -249,8 +247,8 @@ def remove_overlapping(hits: List[HmmerHit], cutoffs: Dict[str, float],
 
 
 def run_hmmer(record: Record, features: Iterable[CDSFeature], max_evalue: float,
-              min_score: float, database: str, tool: str, filter_overlapping: bool = True
-              ) -> HmmerResults:
+              min_score: float, database: str, tool: str, filter_overlapping: bool = True,
+              use_cut_tc: bool = True) -> HmmerResults:
     """ Build hmmer results for the given features
 
         Arguments:
@@ -260,11 +258,15 @@ def run_hmmer(record: Record, features: Iterable[CDSFeature], max_evalue: float,
             min_evalue: a minimum evalue allowed for hits (exclusive)
             database: the database to search for hits within
             tool: the name of the specific tool calling into this module
+            use_cut_tc: whether to use threshold cutoff as specified in profiles
     """
     if not os.path.exists(database):
         raise ValueError("Given database does not exist: %s" % database)
     query_sequence = fasta.get_fasta_from_features(features)
-    hmmscan_results = subprocessing.run_hmmscan(database, query_sequence, opts=["--cut_tc"])
+    opts: List[str] = []
+    if use_cut_tc:
+        opts.append('--cut_tc')
+    hmmscan_results = subprocessing.run_hmmscan(database, query_sequence, opts=opts)
     hits = build_hits(record, hmmscan_results, min_score, max_evalue, database)
     if filter_overlapping:
         results_by_cds = defaultdict(list)

@@ -1238,3 +1238,52 @@ ul.dropdown-options {
 .table-split-left {
     border-right: 5px solid $table-background;
 }
+
+.cc-heat-table {
+    empty-cells: show;
+    margin-bottom: 2em; // separates footer line and table, since highlighted rows look similar
+
+    * .cc-heat-row:hover {
+        background: #f0f0f0;
+    }
+
+    * th {
+        text-align: center;
+        vertical-align: bottom;
+        padding-bottom: 0.5em;
+    }
+    * .cc-heat-product {
+        writing-mode: sideways-lr;
+        text-orientation: mixed;
+        text-align: left;
+        cursor: pointer;
+    }
+
+    * td {
+        padding-left: 1em;
+    }
+
+    * .cc-heat-cell {
+        padding-left: 0em;
+        width: 1.5em;
+        height: 1.5em;
+
+        & span {
+            background-color: black;
+            display: block;
+        }
+    }
+}
+
+.cc-svg-locustag {
+    @extend .svgene-locustag;
+}
+
+.comparison-container {
+    display: none;
+    margin-top: 1em;
+}
+
+.comparison-container-active {
+    display: block;
+}

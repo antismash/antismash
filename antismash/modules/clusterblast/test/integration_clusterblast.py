@@ -12,7 +12,7 @@ from unittest.mock import patch
 from helperlibs.wrappers.io import TemporaryDirectory
 
 from antismash.main import get_all_modules
-from antismash.common import path, subprocessing
+from antismash.common import path
 from antismash.common.module_results import ModuleResults
 import antismash.common.test.helpers as helpers
 from antismash.config import build_config, get_config, update_config, destroy_config
@@ -223,36 +223,6 @@ class SubIntegrationTest(Base):
 
     def test_balhymicin(self):
         self.check_balhymicin(21)
-
-
-class TestDiamondDatabaseChecks(unittest.TestCase):
-    def setUp(self):
-        self.format0_file = path.get_full_path(__file__, "data", "format0.dmnd")
-        self.format1_file = path.get_full_path(__file__, "data", "format1.dmnd")
-        self.empty = path.get_full_path(__file__, "data", "empty.dmnd")
-
-        options = build_config([], isolated=True, modules=get_all_modules())
-        self.old_config = get_config().__dict__
-        self.options = update_config(options)
-
-    def tearDown(self):
-        destroy_config()
-        update_config(self.old_config)
-
-    def test_check_diamond_db_compatible(self):
-        with TemporaryDirectory(change=True):
-            dummy_fasta = "dummy.fa"
-            dummy_db = "dummy.dmnd"
-            with open(dummy_fasta, "w") as handle:
-                handle.write(">test\nM\n")
-            subprocessing.run_diamond_makedb(dummy_db, dummy_fasta)
-            compatible_format = core._extract_db_format(dummy_db)
-            assert core.check_diamond_db_compatible(dummy_db)
-
-        broken_file = self.format0_file if compatible_format > 0 else self.format1_file
-
-        assert not core.check_diamond_db_compatible(broken_file)
-        assert not core.check_diamond_db_compatible(self.empty)
 
 
 class TestDatabaseValidity(unittest.TestCase):
