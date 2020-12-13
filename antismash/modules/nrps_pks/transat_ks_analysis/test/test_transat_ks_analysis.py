@@ -54,7 +54,7 @@ class TestKSPrediction(unittest.TestCase):
     def test_correct_instantiation(self):
         # assert the order of predictions is as expected
         assert isinstance(self.prediction, Prediction)
-        assert self.prediction.method == "transPACT_KS"
+        assert self.prediction.method == "transPACT"
 
         assert len(self.prediction.predictions) == 3
         assert self.prediction.predictions[0][0] == "test_specificity2"
@@ -91,15 +91,15 @@ class TestKSPrediction(unittest.TestCase):
 
     def test_to_json(self):
         to_json_return = self.prediction.to_json()
-        assert to_json_return == {"method": "transPACT_KS",
+        assert to_json_return == {"method": "transPACT",
                                   "predictions": {"test_specificity2": ("test_clade2", "test_specificity2", 50.0),
                                                   "test_specificity1": ("test_clade1", "test_specificity1", 1.0),
                                                   "test_specificity3": ("test_clade3", "test_specificity3", 1.0)}}
 
     def test_from_json(self):
         prediction = KSPrediction.from_json(
-            {"method": "transPACT_KS", "predictions": {"test_specificity1": ("test_clade1", "test_specificity1", 1.0)}})
-        assert prediction.method == "transPACT_KS"
+            {"method": "transPACT", "predictions": {"test_specificity1": ("test_clade1", "test_specificity1", 1.0)}})
+        assert prediction.method == "transPACT"
         assert len(prediction.predictions) == 1
         assert prediction.predictions[0][0] == "test_specificity1"
         assert prediction.predictions[0][1].clade == "test_clade1"
