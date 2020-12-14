@@ -113,6 +113,21 @@ def get_leaf2clade(leaf2cladetbl: str) -> Tuple[Dict[str, str], Dict[str, str]]:
     return(leaf2clade, clade2ann)
 
 
+def choose_elder(parent: Any, grandparent: Any) -> Any:
+    """ Selects either parent or grandparent for monophyly test """
+    ## Find the proper clade elder, if more than two siblings use parent, otherwise use grandparent
+    if parent is None:
+        raise ValueError("No leaf named %s in tree terminals." % query_name)
+    else:
+        if len(parent.get_terminals()) > 2:
+            return parent
+        else:
+            if grandparent is None:
+                raise ValueError("No leaf named %s in tree terminals." % query_name)
+            else:
+                return grandparent
+
+
 def get_transpact_clade(query_name: str, tree: Any, funclades: Dict[str, str]) -> str:
     """
     tree: Bio.Phylo.Newick.Tree
@@ -128,17 +143,7 @@ def get_transpact_clade(query_name: str, tree: Any, funclades: Dict[str, str]) -
             ln = leaf.name.split("_")
             if re.match("^#\d+$", ln[-2]) is not None:
                 newtree.prune(leaf)
-    ## Find the proper clade elder, if more than two siblings use parent, otherwise use grandparent
-    if parent is None:
-        raise ValueError("No leaf named %s in tree terminals." % query_name)
-    else:
-        if len(parent.get_terminals()) > 2:
-            elder = parent
-        else:
-            if grandparent is None:
-                raise ValueError("No leaf named %s in tree terminals." % query_name)
-            else:
-                elder = grandparent
+    elder = choose_elder(parent, grandparent)
     ## Count number of occurances of each clade in elder descendants
     clade_count = {}  # type: Dict[str, int]
     for leaf in elder.get_terminals():
@@ -147,12 +152,27 @@ def get_transpact_clade(query_name: str, tree: Any, funclades: Dict[str, str]) -
                 clade_count[funclades[leaf.name]] += 1
             else:
                 clade_count[funclades[leaf.name]] = 1
-    clade_assignment = 'clade_not_conserved' ## Check with simon...maybe None?
+    clade_assignment = 'clade_not_conserved'
     if len(clade_count) == 1: ## clade consensus, monophyly
         clade_assignment = list(clade_count)[0]
     return clade_assignment
 
 
+def get_best_transpact(totalmass: Dict[str, float],
+                       masscutoff: float) -> Tuple[str, float]:
+    """ Returns clade, spec and score for a transPACT query """
+    best_clade: str = 'None'
+    best_mass: float = float(0)
+    for cld in totalmass:
+        if totalmass[cld] > best_mass:
+            best_clade, best_mass = cld, totalmass[cld]
+    clade: str = 'clade_not_conserved'
+    score: float = 0.0
+    if best_clade != 'clade_not_conserved' and best_mass >= masscutoff:
+        clade = best_clade
+        score = round(best_mass, 2)
+    return clade, score
+        
 def transpact_tree_prediction(pplacer_tree: str,
                               masscutoff: float,
                               funclades: Dict[str, str],
@@ -183,18 +203,10 @@ def transpact_tree_prediction(pplacer_tree: str,
             totalmass[clade_assignment] += mass
         else:
             totalmass[clade_assignment] = mass
-    best_clade: str = 'None'
-    best_mass: float = float(0)
-    for cld in totalmass:
-        if totalmass[cld] > best_mass:
-            best_clade, best_mass = cld, totalmass[cld]
-    clade: str = 'clade_not_conserved'
-    spec: str = 'NA'
-    score: float = 0.0
-    if best_clade != 'clade_not_conserved' and best_mass >= masscutoff:
-        clade = best_clade
-        spec = clade2ann[best_clade]
-        score = round(best_mass, 2)
+    clade, score = get_best_transpact(totalmass, masscutoff)
+    spec = 'NA'
+    if clade in clade2ann:
+        spec = clade2ann[clade]
     return KSPrediction({spec: KSResult(clade, spec, score)})
 
 
@@ -225,6 +237,7 @@ def run_transpact_ks_analysis(domains: Dict[str, str]) -> Dict[str, Prediction]:
     """
     ## Read clade to annotation maps from flat files
     funclades, clade2ann = get_leaf2clade(_LEAF2CLADE_TBL)
+
     results = {}
     for ks_name, ks_seq in domains.items():
         ## Align to reference

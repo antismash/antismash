@@ -70,7 +70,7 @@ def extract_transat_ks_domains(cds_features: List[CDSFeature]) -> Dict[str, str]
         Returns:
             a list of ModularDomains, one for each transAT KS domain found
     """
-    ks_domains = {}
+    ks_domains: Dict[str, str] = {}
     for cds in cds_features:
         for module in cds.modules:
             if not module.is_complete():
