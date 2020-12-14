@@ -117,13 +117,13 @@ def choose_elder(parent: Any, grandparent: Any) -> Any:
     """ Selects either parent or grandparent for monophyly test """
     ## Find the proper clade elder, if more than two siblings use parent, otherwise use grandparent
     if parent is None:
-        raise ValueError("No leaf named %s in tree terminals." % query_name)
+        return None
     else:
         if len(parent.get_terminals()) > 2:
             return parent
         else:
             if grandparent is None:
-                raise ValueError("No leaf named %s in tree terminals." % query_name)
+                return None
             else:
                 return grandparent
 
@@ -144,6 +144,8 @@ def get_transpact_clade(query_name: str, tree: Any, funclades: Dict[str, str]) -
             if re.match("^#\d+$", ln[-2]) is not None:
                 newtree.prune(leaf)
     elder = choose_elder(parent, grandparent)
+    if elder is None:
+        raise ValueError("No leaf named %s in tree terminals." % query_name)
     ## Count number of occurances of each clade in elder descendants
     clade_count = {}  # type: Dict[str, int]
     for leaf in elder.get_terminals():
@@ -172,7 +174,26 @@ def get_best_transpact(totalmass: Dict[str, float],
         clade = best_clade
         score = round(best_mass, 2)
     return clade, score
-        
+
+
+def get_totalmass(tree: Any,
+                  tree_hits: Dict[str, Any],
+                  funclades: Dict[str, str]) -> Dict[str, float]:
+    """ Returns the totalmass dict for each clade """
+    totalmass: Dict[str, float] = {}
+    query_prefix = None
+    for placement_num in tree_hits:
+        if query_prefix is None:
+            query_prefix = re.sub(r"^(.+)_#\d+_M=\d+?\.?\d*$", "\g<1>", tree_hits[placement_num].name)
+        mass = float(re.sub(r"^.+#\d+_M=(\d+?\.?\d*)$", "\g<1>", tree_hits[placement_num].name))
+        clade_assignment = get_transpact_clade(tree_hits[placement_num].name, tree, funclades)
+        if clade_assignment in totalmass:
+            totalmass[clade_assignment] += mass
+        else:
+            totalmass[clade_assignment] = mass
+    return totalmass
+
+
 def transpact_tree_prediction(pplacer_tree: str,
                               masscutoff: float,
                               funclades: Dict[str, str],
@@ -192,17 +213,7 @@ def transpact_tree_prediction(pplacer_tree: str,
     if not tree_hits: ## len = 0
         raise ValueError("There should be a leaf with name of minimal form #'int'_M='float' in the provided tree.")
     ## Look to see when threshold is met
-    totalmass: Dict[str, float] = {}
-    query_prefix = None
-    for placement_num in tree_hits:
-        if query_prefix is None:
-            query_prefix = re.sub(r"^(.+)_#\d+_M=\d+?\.?\d*$", "\g<1>", tree_hits[placement_num].name)
-        mass = float(re.sub(r"^.+#\d+_M=(\d+?\.?\d*)$", "\g<1>", tree_hits[placement_num].name))
-        clade_assignment = get_transpact_clade(tree_hits[placement_num].name, tree, funclades)
-        if clade_assignment in totalmass:
-            totalmass[clade_assignment] += mass
-        else:
-            totalmass[clade_assignment] = mass
+    totalmass = get_totalmass(tree, tree_hits, funclades)
     clade, score = get_best_transpact(totalmass, masscutoff)
     spec = 'NA'
     if clade in clade2ann:
@@ -212,14 +223,12 @@ def transpact_tree_prediction(pplacer_tree: str,
 
 def run_transpact_pplacer(ks_name: str,
                           alignment: Dict[str, str],
-                          reference_pkg: str,
-                          reference_aln: str,
-                          reference_tree: str,
+                          reference_tuple: Tuple[str, str, str],
                           masscutoff: float,
                           funclades: Dict[str, str],
                           clade2ann: Dict[str, str]) -> Prediction:
     """ Calls pplacer and runs prediction pipeline """
-    pplacer_tree = subprocessing.run_pplacer(ks_name, alignment, reference_pkg, reference_aln, reference_tree)
+    pplacer_tree = subprocessing.run_pplacer(ks_name, alignment, reference_tuple[0], reference_tuple[1], reference_tuple[2])
     prediction = transpact_tree_prediction(pplacer_tree, masscutoff, funclades, clade2ann)
     return prediction
 
@@ -237,16 +246,14 @@ def run_transpact_ks_analysis(domains: Dict[str, str]) -> Dict[str, Prediction]:
     """
     ## Read clade to annotation maps from flat files
     funclades, clade2ann = get_leaf2clade(_LEAF2CLADE_TBL)
-
+    reference_tuple = (_PPLACER_REFERENCE_PKG, _KS_REFERENCE_ALIGNMENT, _KS_REFERENCE_TREE)
     results = {}
     for ks_name, ks_seq in domains.items():
         ## Align to reference
         alignment = subprocessing.run_muscle_single(ks_name, ks_seq, _KS_REFERENCE_ALIGNMENT)
         results[ks_name] = run_transpact_pplacer(ks_name,
                                                  alignment,
-                                                 _PPLACER_REFERENCE_PKG,
-                                                 _KS_REFERENCE_ALIGNMENT,
-                                                 _KS_REFERENCE_TREE,
+                                                 reference_tuple,
                                                  _PPLACER_MASS_CUTOFF,
                                                  funclades,
                                                  clade2ann)
