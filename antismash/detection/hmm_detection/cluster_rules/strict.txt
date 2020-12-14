@@ -152,7 +152,7 @@ RULE bacteriocin
                or Bacteriocin_II or Bacteriocin_IIi or Lactococcin
                or Antimicrobial17 or Lactococcin_972 or Bacteriocin_IIc
                or LcnG-beta or Cloacin or Linocin_M18 or TIGR03603 or TIGR03604
-               or TIGR03651 or TIGR03678 or TIGR03693 or TIGR03798
+               or TIGR03651 or TIGR03693 or TIGR03798
                or TIGR03601 or TIGR03602 or TIGR03795 or TIGR03793
                or TIGR03975 or DUF692 or TIGR01193
 
@@ -183,9 +183,10 @@ RULE linaridin
 
 RULE cyanobactin
     CATEGORY RiPP
+    COMMENT Cyanobactins like patellamide (AY986476)
     CUTOFF 20
     NEIGHBOURHOOD 10
-    CONDITIONS cyanobactin_synth
+    CONDITIONS cyanobactin_synth or TIGR03678
 
 RULE glycocin
     CATEGORY other
