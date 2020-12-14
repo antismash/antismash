@@ -103,7 +103,7 @@ class TestRREResults(unittest.TestCase):
         assert feature.description == hit.description
         assert feature.domain == hit.domain
         assert feature.locus_tag == hit.locus_tag
-        assert feature.domain_id == '{}_{}_0001'.format(self.tool, hit.locus_tag)
+        assert feature.domain_id == '{}_{}_{}.1'.format(self.tool, hit.locus_tag, hit.domain)
         assert feature.database == self.database
         assert feature.detection == self.detection
         assert feature.score == hit.score

@@ -49,8 +49,8 @@ class RREFinderResults(ModuleResults):
 
     def convert_hits_to_features(self) -> None:
         """Convert all the hits found to features"""
-        domain_counts: Dict[str, int] = defaultdict(int)
         for locus_tag, hits in self.hits_by_cds.items():
+            domain_counts: Dict[str, int] = defaultdict(int)
             for hit in hits:
                 location = location_from_string(hit.location)
                 protein_location = FeatureLocation(hit.protein_start, hit.protein_end)
@@ -67,8 +67,7 @@ class RREFinderResults(ModuleResults):
                 rre_feature.detection = self.detection
 
                 domain_counts[hit.domain] += 1  # 1-indexed, so increment before use
-                rre_feature.domain_id = "{}_{}_{:04d}".format(self.tool, rre_feature.locus_tag,
-                                                              domain_counts[hit.domain])
+                rre_feature.domain_id = f"{self.tool}_{locus_tag}_{hit.domain}.{domain_counts[hit.domain]}"
 
                 self.features.append(rre_feature)
 
