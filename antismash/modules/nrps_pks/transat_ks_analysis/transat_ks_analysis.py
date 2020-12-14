@@ -118,14 +118,11 @@ def choose_elder(parent: Any, grandparent: Any) -> Any:
     ## Find the proper clade elder, if more than two siblings use parent, otherwise use grandparent
     if parent is None:
         return None
-    else:
-        if len(parent.get_terminals()) > 2:
-            return parent
-        else:
-            if grandparent is None:
-                return None
-            else:
-                return grandparent
+    if len(parent.get_terminals()) > 2:
+        return parent
+    if grandparent is None:
+        return None
+    return grandparent
 
 
 def get_transpact_clade(query_name: str, tree: Any, funclades: Dict[str, str]) -> str:
@@ -228,7 +225,11 @@ def run_transpact_pplacer(ks_name: str,
                           funclades: Dict[str, str],
                           clade2ann: Dict[str, str]) -> Prediction:
     """ Calls pplacer and runs prediction pipeline """
-    pplacer_tree = subprocessing.run_pplacer(ks_name, alignment, reference_tuple[0], reference_tuple[1], reference_tuple[2])
+    pplacer_tree = subprocessing.run_pplacer(ks_name,
+                                             alignment,
+                                             reference_tuple[0],
+                                             reference_tuple[1],
+                                             reference_tuple[2])
     prediction = transpact_tree_prediction(pplacer_tree, masscutoff, funclades, clade2ann)
     return prediction
 

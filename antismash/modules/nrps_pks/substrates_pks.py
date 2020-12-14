@@ -52,7 +52,6 @@ def is_transat(module: Module, cds: CDSFeature) -> bool:
 
 def get_transat_kss(module: Module, cds: CDSFeature, ks_domains: Dict[str, str]) -> Dict[str, str]:
     """ Returns updated dictionary of KS names and seqs """
-    mod_set = set(range(module.location.start, module.location.end+1))
     for cds_domain in cds.nrps_pks.domains:
         if cds_domain.name in ['PKS_KS']:
             if domain_in_module((module.location.start, module.location.end),
