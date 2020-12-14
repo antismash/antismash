@@ -27,16 +27,22 @@ def count_pks_genes(genes: List[CDSFeature]) -> int:
     return pkscount
 
 
+def domain_in_module(mod: Tuple[int, int],
+                     dom: Tuple[int, int]) -> bool:
+    """ Is a domain in a given module? """
+    mod_set = set(range(mod[0], mod[1]+1))
+    dom_set = set(range(dom[0], dom[1]+1))
+    intersect = len(mod_set.intersection(dom_set))
+    return bool(intersect > 0)
+
+
 def is_transat(module: Module, cds: CDSFeature) -> bool:
     """ Returns whether a module is transAT PKS """
     has_ks, has_at = False, False
-    mod_set = set(range(module.location.start, module.location.end+1))
     for cds_domain in cds.nrps_pks.domains:
-        d_start = cds.location.start + (cds_domain.start * 3)
-        d_end = cds.location.start + (cds_domain.end * 3)
-        cds_set = set(range(d_start, d_end+1))
-        intersect = len(mod_set.intersection(cds_set))
-        if intersect > 0:
+        if domain_in_module((module.location.start, module.location.end),
+                            (cds.location.start + (cds_domain.start * 3),
+                             cds.location.start + (cds_domain.end * 3))):
             if cds_domain.name in ['PKS_KS']:
                 has_ks = True
             if cds_domain.name in ['PKS_AT']:
@@ -49,11 +55,9 @@ def get_transat_kss(module: Module, cds: CDSFeature, ks_domains: Dict[str, str])
     mod_set = set(range(module.location.start, module.location.end+1))
     for cds_domain in cds.nrps_pks.domains:
         if cds_domain.name in ['PKS_KS']:
-            d_start = cds.location.start + (cds_domain.start * 3)
-            d_end = cds.location.start + (cds_domain.end * 3)
-            cds_set = set(range(d_start, d_end+1))
-            intersect = len(mod_set.intersection(cds_set))
-            if intersect > 0:
+            if domain_in_module((module.location.start, module.location.end),
+                                (cds.location.start + (cds_domain.start * 3),
+                                 cds.location.start + (cds_domain.end * 3))):
                 seq = str(cds.translation)[cds_domain.start:cds_domain.end]
                 ks_domains[cds_domain.feature_name] = seq
     return ks_domains
