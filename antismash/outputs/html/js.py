@@ -17,6 +17,7 @@ from antismash.common.secmet.features.cdscollection import CDSCollection
 from antismash.common.secmet.features.protocluster import SideloadedProtocluster
 from antismash.common.secmet.features.subregion import SideloadedSubRegion
 from antismash.config import ConfigType
+from antismash.detection.tigrfam.tigr_domain import TIGRDomain
 from antismash.modules import clusterblast, tta
 from antismash.outputs.html.generate_html_table import generate_html_table
 
@@ -284,6 +285,26 @@ def generate_asf_tooltip_section(record: Record, feature: CDSFeature) -> Dict[Tu
     return asf_notes
 
 
+def generate_pfam_tooltip(record: Record, feature: CDSFeature) -> List[str]:
+    """ Construct tooltip text for PFAM annotations """
+    pfam_notes = []
+    for pfam in record.get_pfam_domains_in_cds(feature):
+        pfam_notes.append(f"{pfam.full_identifier} ({pfam.description}): {pfam.protein_location}"
+                          f"(score: {pfam.score}, e-value: {pfam.evalue})")
+    return pfam_notes
+
+
+def generate_tigr_tooltip(record: Record, feature: CDSFeature) -> List[str]:
+    """ Construct tooltip text for TIGRFam annotations """
+    tigr_notes = []
+    for tigr in record.get_antismash_domains_in_cds(feature):
+        if not isinstance(tigr, TIGRDomain):
+            continue
+        tigr_notes.append(f"{tigr.identifier} ({tigr.description}): {tigr.protein_location}"
+                          f"(score: {tigr.score}, e-value: {tigr.evalue})")
+    return tigr_notes
+
+
 def get_description(record: Record, feature: CDSFeature, type_: str,
                     options: ConfigType, mibig_result: List[clusterblast.results.MibigEntry]) -> str:
     "Get the description text of a CDS feature"
@@ -327,6 +348,8 @@ def get_description(record: Record, feature: CDSFeature, type_: str,
 
     asf_notes = generate_asf_tooltip_section(record, feature)
     go_notes = generate_pfam2go_tooltip(record, feature)
+    pfam_notes = generate_pfam_tooltip(record, feature)
+    tigr_notes = generate_tigr_tooltip(record, feature)
 
     urls["searchgtr"] = searchgtr_links.get("{}_{}".format(record.id, feature.get_name()), "")
     template = html_renderer.FileTemplate(path.get_full_path(__file__, "templates", "cds_detail.html"))
@@ -335,4 +358,5 @@ def get_description(record: Record, feature: CDSFeature, type_: str,
     if isinstance(ec_number_qual, list):
         ec_numbers = ",".join(ec_number_qual)
     return template.render(feature=feature, ec_numbers=ec_numbers, go_notes=go_notes,
-                           asf_notes=asf_notes, record=record, urls=urls)
+                           asf_notes=asf_notes, pfam_notes=pfam_notes, tigr_notes=tigr_notes,
+                           record=record, urls=urls)

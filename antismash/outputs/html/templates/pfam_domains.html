@@ -2,6 +2,10 @@
     <div class="heading">
       <span>Detailed Pfam domain annotation</span>
       {{help_tooltip(tooltip, "pfam-help-tooltip")}}
+      <div class="download-container">
+        <div class="download-icon download-svg" data-tag="{{region.anchor_id}}-pfam-details-svg" data-filename="{{record.id}}_{{region.anchor_id}}_pfam.svg">
+        </div>
+      </div>
     </div>
     <div class="nrps-pks-domain-buttons">
       {{switch("Selected features only", "domains-selected-only")}}

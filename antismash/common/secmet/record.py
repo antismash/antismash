@@ -58,7 +58,8 @@ class Record:
                  "_pfams_by_cds_name", "_modules",
                  "_candidate_clusters", "_candidate_clusters_numbering",
                  "_subregions", "_subregion_numbering",
-                 "_regions", "_region_numbering", "_antismash_domains_by_tool"]
+                 "_regions", "_region_numbering", "_antismash_domains_by_tool",
+                 "_antismash_domains_by_cds_name"]
 
     def __init__(self, seq: Union[Seq, str] = "", transl_table: int = 1, **kwargs: Any) -> None:
         # prevent paths from being used as a sequence
@@ -81,6 +82,7 @@ class Record:
 
         self._antismash_domains: List[AntismashDomain] = []
         self._antismash_domains_by_tool: Dict[str, List[AntismashDomain]] = defaultdict(list)
+        self._antismash_domains_by_cds_name: Dict[str, List[AntismashDomain]] = defaultdict(list)
 
         self._modules: List[Module] = []
 
@@ -385,6 +387,18 @@ class Record:
         """
         return tuple(self._antismash_domains_by_tool.get(tool, []))
 
+    def get_antismash_domains_in_cds(self, cds: Union[str, CDSFeature]) -> Tuple[AntismashDomain, ...]:
+        """ A list of secondary metabolite aSDomains contained by a CDSFeature. Either the
+            CDS name or the CDSFeature itself can be used to specify which CDS.
+        """
+        if isinstance(cds, CDSFeature):
+            cds_name = cds.get_name()
+        elif isinstance(cds, str):
+            cds_name = cds
+        else:
+            raise TypeError("CDS must be a string or CDSFeature, not %s" % type(cds))
+        return tuple(self._antismash_domains_by_cds_name[cds_name])
+
     def clear_antismash_domains(self) -> None:
         "Remove all AntismashDomain features"
         # remove antismash domains only from the domains mapping
@@ -392,6 +406,7 @@ class Record:
             del self._domains_by_name[domain.get_name()]
         self._antismash_domains.clear()
         self._antismash_domains_by_tool.clear()
+        self._antismash_domains_by_cds_name.clear()
 
     def get_generics(self) -> Tuple:
         """A list of secondary metabolite generics present in the record"""
@@ -558,6 +573,8 @@ class Record:
             raise SecmetInvalidInputError("multiple Domain features have the same name for mapping: %s" %
                                           antismash_domain.get_name())
         self._domains_by_name[antismash_domain.get_name()] = antismash_domain
+        if antismash_domain.locus_tag:
+            self._antismash_domains_by_cds_name[antismash_domain.locus_tag].append(antismash_domain)
 
     def add_module(self, module: Module) -> None:
         """ Add the given Module to the record """

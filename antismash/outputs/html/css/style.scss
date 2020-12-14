@@ -36,7 +36,7 @@ body {
     padding: 0;
 }
 
-a, .clipboard-copy {
+a, .clipboard-copy, .link-like {
     text-decoration: none;
     background-color: rgba(225, 225, 225, 0.9);
     border-radius: 2px;
@@ -1176,6 +1176,45 @@ ul.dropdown-options {
 
     .help-tooltip {
         @extend .tooltip;
+    }
+}
+
+.download-container {
+    position: relative;
+    display: block;
+    float: right;
+
+    .download-icon {
+        display: inline-block;
+        -webkit-mask: url(../images/download.svg) no-repeat center;  /* opera, chrome, and safari */
+        mask: url(../images/download.svg) no-repeat center;
+        background-color: white;
+        width: 1.3em;
+        height: 1.3em;
+        margin-top: 1px;
+        margin-right: 2px;
+        cursor: pointer;
+
+        &:hover {
+            background-color: #ddd;
+        }
+        &:active,&.active {
+            background-color: #bbb;
+        }
+    }
+
+    .download-icon-inverse {
+        @extend .download-icon;
+        width: 1em;
+        height: 1em;
+
+        background-color: #333;
+        &:hover {
+            background-color: #777;
+        }
+        &:active,&.active {
+            background-color: #777;
+        }
     }
 }
 

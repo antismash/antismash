@@ -42,6 +42,10 @@ RESFAM_ARCHIVE_CHECKSUM = "82e9325283b999b1fb1351502b2d12194561c573d9daef3e623e9
 RESFAM_LINES = 132214
 RESFAM_SIZE = 20123005
 
+TIGRFAM_URL = "https://dl.secondarymetabolites.org/releases/tigrfam/TIGRFam.hmm.gz"
+TIGRFAM_ARCHIVE_CHECKSUM = "0747a5efa85d594cd598e67a04611328ab865e6a9401eb143fce6e93edf22bd0"
+TIGRFAM_CHECKSUM = "b905785603e1015bbe78d0235d0a6a131345bae35aaab7afbd8f7b59f7798842"
+
 LOCAL_FILE_PATH = os.path.abspath(os.path.dirname(__file__))
 
 CHUNK = 128 * 1024
@@ -297,6 +301,23 @@ def download_resfam(db_dir: str) -> None:
     ensure_database_pressed(filename)
 
 
+def download_tigrfam(db_dir: str) -> None:
+    """Download the TIGRFam database."""
+    archive_filename = os.path.join(db_dir, "tigrfam", "TIGRFam.hmm.gz")
+    filename = os.path.splitext(archive_filename)[0]
+
+    if present_and_checksum_matches(filename, TIGRFAM_CHECKSUM):
+        print("TIGRFam database present and checked")
+    else:
+        print("Downloading TIGRFam database")
+        check_diskspace(TIGRFAM_URL)
+        download_if_not_present(TIGRFAM_URL, archive_filename, TIGRFAM_ARCHIVE_CHECKSUM)
+        filename = unzip_file(archive_filename, gzip, gzip.zlib.error)  # type: ignore
+        delete_file(archive_filename)
+
+    ensure_database_pressed(filename)
+
+
 def download_clusterblast(db_dir: str) -> None:
     """Download the clusterblast database."""
     archive_filename = os.path.join(db_dir, CLUSTERBLAST_URL.rpartition("/")[2])
@@ -346,6 +367,8 @@ def download(args: argparse.Namespace) -> None:
     )
 
     download_resfam(args.database_dir)
+
+    download_tigrfam(args.database_dir)
 
     download_clusterblast(args.database_dir)
     for name, details in CLUSTERCOMPARE_DBS.items():

@@ -58,7 +58,11 @@
      <div id="single-record-tables">
      {% for record in records -%}
       <div class="record-overview-header">
-       {{record.get_from_record()}}
+        {{record.get_from_record()}}
+        <div class="download-container">
+          <div class="download-icon-inverse download-svg" data-tag="record-minimap-{{record.record_index}}" data-filename="{{record.id}}_overview.svg">
+          </div>
+        </div>
       </div>
       <div class="record-overview-details">
         <svg id="record-minimap-{{record.record_index}}" class="record-overview-svg" height="1" width="1"></svg>
