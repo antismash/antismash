@@ -343,7 +343,7 @@ class Details:
         parsing
     """
     def __init__(self, cds_name: str, feats: Dict[str, CDSFeature],
-                 results: Dict[str, HSP], cutoff: int) -> None:
+                 results: Dict[str, List[HSP]], cutoff: int) -> None:
         self.cds = cds_name  # str, name of cds that is being classified
         self.features_by_id = feats  # { id : feature }
         self.results_by_id = results  # { id : HSP list }
