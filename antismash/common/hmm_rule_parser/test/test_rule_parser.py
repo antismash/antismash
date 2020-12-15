@@ -112,8 +112,12 @@ class DetectionTest(unittest.TestCase):
         self.expect(results, ["GENE_1", "GENE_2"])
 
     def test_chained_and_a(self):
-        results = self.run_test("A", 10, 20, "a and b and not c")
-        self.expect(results, ["GENE_1"])  # 2 reaches c
+        # remove the c hit from GENE_2
+        self.results_by_id["GENE_2"] = [FakeHSPHit("a", "GENE_1", 0, 10, 50, 0)]
+        results = self.run_test("A", 25, 20, "a and b and not c")
+        # GENE_1 contains both
+        # GENE_2 contains a b, but reaches the c in GENE_3
+        self.expect(results, ["GENE_1"])
 
     def test_chained_and_b(self):
         results = self.run_test("A", 10, 20, "a and b and not cds(a and b)")
