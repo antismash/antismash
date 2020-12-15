@@ -74,7 +74,8 @@ def get_arguments() -> ModuleArgs:
                     action=SideloadAction,
                     default="",
                     help=("Sideload a single subregion in record ACCESSION from START "
-                          "to END. Positions are "))
+                          "to END. Positions are expected to be 0-indexed, "
+                          "with START inclusive and END exclusive."))
     return args
 
 
