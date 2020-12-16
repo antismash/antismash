@@ -201,8 +201,9 @@ RULE LAP
     RELATED TIGR04424, TIGR01408
     CUTOFF 20
     NEIGHBOURHOOD 10
-    CONDITIONS (goadsporin_like or PF00881 or TIGR03605)
-               and (YcaO or TIGR03882)
+    CONDITIONS ((goadsporin_like or PF00881 or TIGR03605)
+               and (YcaO or TIGR03882))
+               and not cyanobactin_synth
 
 RULE lassopeptide
     CATEGORY RiPP
