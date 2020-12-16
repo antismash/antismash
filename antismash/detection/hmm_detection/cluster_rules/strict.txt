@@ -215,19 +215,14 @@ RULE sactipeptide
     CATEGORY RiPP
     CUTOFF 20
     NEIGHBOURHOOD 10
-    CONDITIONS subtilosin or thuricin or TIGR04404 or TIGR03973
+    CONDITIONS subtilosin or thuricin or TIGR04404 or TIGR03973 or
+               Subtilosin_A or skfc
 
 RULE bottromycin
     CATEGORY RiPP
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS botH
-
-RULE head_to_tail
-    CATEGORY RiPP
-    CUTOFF 20
-    NEIGHBOURHOOD 10
-    CONDITIONS Subtilosin_A or skfc
 
 RULE microviridin
     CATEGORY RiPP
