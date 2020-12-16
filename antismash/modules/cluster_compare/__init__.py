@@ -115,6 +115,9 @@ def prepare_data(logging_only: bool = False) -> List[str]:
     options = get_config()
 
     for db in _get_all_databases(options, defaults=True):
+        # account for database directories mounted into docker containers
+        if "mounted_at_runtime" in db.path:
+            continue
         cluster_defs = os.path.join(db.path, 'data.json')
         protein_seqs = os.path.join(db.path, "proteins.fasta")
         db_file = os.path.join(db.path, "proteins.dmnd")
