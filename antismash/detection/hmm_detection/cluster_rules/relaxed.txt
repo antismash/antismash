@@ -30,7 +30,7 @@ RULE transAT-PKS-like
 RULE RRE-containing
     CATEGORY RiPP
     COMMENT RRE-element containing cluster
-    SUPERIORS bacteriocin, bottromycin, cyanobactin, fungal-RiPP, guanidinotides, head_to_tail, lanthidin,
+    SUPERIORS RiPP-like, bottromycin, cyanobactin, fungal-RiPP, guanidinotides, head_to_tail, lanthidin,
               lanthipeptide, LAP, lassopeptide, lipolanthine, microviridin, proteusin, RaS-RiPP,
               sactipeptide, thioamitides, thiopeptide
     CUTOFF 10
