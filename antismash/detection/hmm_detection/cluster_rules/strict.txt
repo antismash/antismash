@@ -144,7 +144,7 @@ RULE lanthidin
     NEIGHBOURHOOD 20
     CONDITIONS APH and HopA1
 
-RULE bacteriocin
+RULE RiPP-like
     CATEGORY RiPP
     CUTOFF 20
     NEIGHBOURHOOD 5
