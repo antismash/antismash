@@ -22,43 +22,27 @@ def count_pks_genes(genes: List[CDSFeature]) -> int:
     pkscount = 0
     for gene in genes:
         for domain in gene.nrps_pks.domains:
-            if domain.name in ["PKS_AT", "CAL_domain", "PKS_KR", "PKS_KS"]:
+            if domain.name in ["PKS_AT", "CAL_domain", "PKS_KR"]:
                 pkscount += 1
     return pkscount
 
 
-def domain_in_module(mod: Tuple[int, int],
-                     dom: Tuple[int, int]) -> bool:
-    """ Is a domain in a given module? """
-    mod_set = set(range(mod[0], mod[1]+1))
-    dom_set = set(range(dom[0], dom[1]+1))
-    intersect = len(mod_set.intersection(dom_set))
-    return bool(intersect > 0)
-
-
-def is_transat(module: Module, cds: CDSFeature) -> bool:
+def is_transat(module: Module) -> bool:
     """ Returns whether a module is transAT PKS """
     has_ks, has_at = False, False
-    for cds_domain in cds.nrps_pks.domains:
-        if domain_in_module((module.location.start, module.location.end),
-                            (cds.location.start + (cds_domain.start * 3),
-                             cds.location.start + (cds_domain.end * 3))):
-            if cds_domain.name in ['PKS_KS']:
-                has_ks = True
-            if cds_domain.name in ['PKS_AT']:
-                has_at = True
-    return bool(has_ks and not has_at)
+    for domain in module.domains:
+        if domain.domain in ['PKS_KS']:
+            has_ks = True
+        if domain.domain in ['PKS_AT']:
+            has_at = True
+    return has_ks and not has_at
 
 
 def get_transat_kss(module: Module, cds: CDSFeature, ks_domains: Dict[str, str]) -> Dict[str, str]:
     """ Returns updated dictionary of KS names and seqs """
-    for cds_domain in cds.nrps_pks.domains:
-        if cds_domain.name in ['PKS_KS']:
-            if domain_in_module((module.location.start, module.location.end),
-                                (cds.location.start + (cds_domain.start * 3),
-                                 cds.location.start + (cds_domain.end * 3))):
-                seq = str(cds.translation)[cds_domain.start:cds_domain.end]
-                ks_domains[cds_domain.feature_name] = seq
+    for domain in module.domains:
+        if domain.domain in ['PKS_KS']:
+            ks_domains[domain.get_name()] = domain.translation
     return ks_domains
 
 
@@ -78,7 +62,7 @@ def extract_transat_ks_domains(cds_features: List[CDSFeature]) -> Dict[str, str]
         for module in cds.modules:
             if not module.is_complete():
                 continue
-            if is_transat(module, cds):
+            if is_transat(module):
                 ks_domains = get_transat_kss(module, cds, ks_domains)
     return ks_domains
 

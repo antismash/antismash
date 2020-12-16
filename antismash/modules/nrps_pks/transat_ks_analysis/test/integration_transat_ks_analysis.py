@@ -11,7 +11,7 @@ from Bio import Phylo
 from antismash.config import build_config, destroy_config
 from antismash.common import path
 from antismash.modules.nrps_pks.transat_ks_analysis.transat_ks_analysis import run_transpact_ks_analysis, \
-    get_leaf2clade, _PPLACER_MASS_CUTOFF, _LEAF2CLADE_TBL, transpact_tree_prediction,  \
+    get_leaf2clade, _LEAF2CLADE_TBL, transpact_tree_prediction,  \
     get_transpact_clade
 
 
@@ -42,20 +42,20 @@ class TestTreePredictionMethods(unittest.TestCase):
 
     def test_transpact_tree_prediction(self):
         """ test for transpact tree calling """
-        prediction = transpact_tree_prediction(self.pplacer_tree, _PPLACER_MASS_CUTOFF, self.fun_clades, self.clade2ann)
+        prediction = transpact_tree_prediction(self.pplacer_tree, self.fun_clades, self.clade2ann)
         assert len(prediction.predictions) == 1
         assert prediction.predictions[0][0] == "glycine"
         assert prediction.predictions[0][1].clade == "Clade_30"
         assert prediction.predictions[0][1].mass_score == 1.0
 
-        non_prediction = transpact_tree_prediction(self.non_conserved_tree, _PPLACER_MASS_CUTOFF, self.fun_clades,
+        non_prediction = transpact_tree_prediction(self.non_conserved_tree, self.fun_clades,
                                                    self.clade2ann)
         assert len(non_prediction.predictions) == 1
         assert non_prediction.predictions[0][0] == "NA"
         assert non_prediction.predictions[0][1].clade == "clade_not_conserved"
         assert non_prediction.predictions[0][1].mass_score == 0.0
 
-        self.assertRaises(ValueError, transpact_tree_prediction, "()", _PPLACER_MASS_CUTOFF, self.fun_clades,
+        self.assertRaises(ValueError, transpact_tree_prediction, "()", self.fun_clades,
                           self.clade2ann)
 
 

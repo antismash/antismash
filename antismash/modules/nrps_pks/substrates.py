@@ -39,7 +39,6 @@ def run_pks_substr_spec_predictions(cds_features: List[CDSFeature]) -> Dict[str,
         method_results["signature"] = signature_results
         method_results["minowa_at"] = minowa_at_results
     if transat_ks_domains:
-        transat_ks_domains = extract_transat_ks_domains(cds_features)
         transpact_results = run_transpact_predictor_pks_ks(transat_ks_domains)
         method_results["transPACT"] = transpact_results
     if count_pks_genes(cds_features):
