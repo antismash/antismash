@@ -343,7 +343,7 @@ class Details:
         parsing
     """
     def __init__(self, cds_name: str, feats: Dict[str, CDSFeature],
-                 results: Dict[str, HSP], cutoff: int) -> None:
+                 results: Dict[str, List[HSP]], cutoff: int) -> None:
         self.cds = cds_name  # str, name of cds that is being classified
         self.features_by_id = feats  # { id : feature }
         self.results_by_id = results  # { id : HSP list }
@@ -660,8 +660,7 @@ class SingleCondition(Conditions):
             other_possibilities = [res.query_id for res in other_hits]
             if self.name in other_possibilities:
                 # a positive match, so we can exit early
-                if not self.negated:
-                    return ConditionMet(True)
+                return ConditionMet(not self.negated)
 
         # if negated and we failed to find anything, that's a good thing
         return ConditionMet(self.negated)

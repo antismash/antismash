@@ -43,6 +43,10 @@ def check_prereqs(options: ConfigType) -> List[str]:
         if binary_name not in options.executables:
             failure_messages.append(f"Failed to locate executable: {binary_name!r}")
 
+    # account for database directories mounted into docker containers
+    if "mounted_at_runtime" in options.database_dir:
+        return failure_messages
+
     tigr_db = os.path.join(options.database_dir, "tigrfam", "TIGRFam.hmm")
     if not path.locate_file(tigr_db):
         failure_messages.append(f"Failed to locate TIGRFam db in {os.path.join(options.database_dir, 'tigrfam')}")

@@ -49,8 +49,8 @@ class RREFinderResults(ModuleResults):
 
     def convert_hits_to_features(self) -> None:
         """Convert all the hits found to features"""
-        domain_counts: Dict[str, int] = defaultdict(int)
         for locus_tag, hits in self.hits_by_cds.items():
+            domain_counts: Dict[str, int] = defaultdict(int)
             for hit in hits:
                 location = location_from_string(hit.location)
                 protein_location = FeatureLocation(hit.protein_start, hit.protein_end)
@@ -67,8 +67,7 @@ class RREFinderResults(ModuleResults):
                 rre_feature.detection = self.detection
 
                 domain_counts[hit.domain] += 1  # 1-indexed, so increment before use
-                rre_feature.domain_id = "{}_{}_{:04d}".format(self.tool, rre_feature.locus_tag,
-                                                              domain_counts[hit.domain])
+                rre_feature.domain_id = f"{self.tool}_{locus_tag}_{hit.domain}.{domain_counts[hit.domain]}"
 
                 self.features.append(rre_feature)
 
@@ -190,16 +189,18 @@ def filter_hits(hits_by_cds: Dict[str, List[HmmerHit]], candidates_by_protoclust
                 min_length: int, bitscore_cutoff: float
                 ) -> Tuple[Dict[str, List[HmmerHit]], Dict[int, List[str]]]:
     '''Filter the hits based on the bitscore and length criteria'''
-    filtered_tags_by_protocluster: Dict[int, List[str]] = defaultdict(list)
-    filtered_hits_by_cds: Dict[str, List[HmmerHit]] = defaultdict(list)
+    filtered_hits_by_cds: Dict[str, List[HmmerHit]] = {}
+    for cds_name, hits in hits_by_cds.items():
+        trimmed_hits = [hit for hit in hits if check_hmm_hit(hit, min_length, bitscore_cutoff)]
+        if trimmed_hits:
+            filtered_hits_by_cds[cds_name] = trimmed_hits
+
+    filtered_tags_by_protocluster: Dict[int, List[str]] = {}
     for protocluster, locus_tags in candidates_by_protocluster.items():
-        for locus_tag in locus_tags:
-            for hit in hits_by_cds.get(locus_tag, []):
-                if check_hmm_hit(hit, min_length, bitscore_cutoff):
-                    filtered_hits_by_cds[locus_tag].append(hit)
-            if filtered_hits_by_cds.get(locus_tag):
-                filtered_tags_by_protocluster[protocluster].append(locus_tag)
-    return dict(filtered_hits_by_cds), dict(filtered_tags_by_protocluster)
+        trimmed = [locus for locus in locus_tags if locus in filtered_hits_by_cds]
+        if trimmed:
+            filtered_tags_by_protocluster[protocluster] = trimmed
+    return filtered_hits_by_cds, filtered_tags_by_protocluster
 
 
 def check_hmm_hit(hit: HmmerHit, min_length: int, bitscore_cutoff: float) -> bool:

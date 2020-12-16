@@ -133,7 +133,7 @@ class HmmerResults(module_results.ModuleResults):
 
 def build_hits(record: Record, hmmscan_results: List, min_score: float,
                max_evalue: float, database: str) -> List[HmmerHit]:
-    """ Builds PFAMDomains from the given hmmscan results
+    """ Builds HmmerHits from the given hmmscan results
 
         Arguments:
             record: the Record being scanned
@@ -143,7 +143,7 @@ def build_hits(record: Record, hmmscan_results: List, min_score: float,
             database: the name of the database used to find the hits
 
         Returns:
-            a list of JSON representations of hmmer hits
+            a list of HmmerHit instances
     """
     hits = []
     feature_by_id = record.get_cds_name_mapping()
