@@ -119,13 +119,44 @@ RULE terpene
                or terpene_cyclase or NapT7 or fung_ggpps or fung_ggpps2
                or trichodiene_synth or TRI5
 
-RULE lanthipeptide
+RULE lanthipeptide-class-i
     CATEGORY RiPP
+    COMMENT Class I lanthipeptide clusters like nisin (HM219853)
     CUTOFF 20
     NEIGHBOURHOOD 10
-    CONDITIONS (LANC_like and (Lant_dehydr_N or Lant_dehydr_C)  # Class I
-                   or cds(LANC_like and (Pkinase or DUF4135)))  # Classes II, III and IV
+    CONDITIONS (LANC_like and (Lant_dehydr_N or Lant_dehydr_C))
                and not (YcaO or TIGR03882) # because then it'd be a thiopeptide
+
+RULE lanthipeptide-class-ii
+    CATEGORY RiPP
+    COMMENT Clas II lanthipeptide clusters like mutacin II (U40620)
+    CUTOFF 20
+    NEIGHBOURHOOD 10
+    CONDITIONS cds(LANC_like and DUF4135)
+
+RULE lanthipeptide-class-iii
+    CATEGORY RiPP
+    COMMENT Clas III lanthipeptide clusters like labyrinthopeptin (FN178622)
+    CUTOFF 20
+    NEIGHBOURHOOD 10
+    CONDITIONS micKC
+               and not PKS_KS  # that'd be a lipolanthine
+
+RULE lanthipeptide-class-iv
+    CATEGORY RiPP
+    COMMENT Class IV lanthipeptide clusters like venezuelin (HQ328852)
+    CUTOFF 20
+    NEIGHBOURHOOD 10
+    CONDITIONS cds(LANC_like and Pkinase)
+               and not micKC  # that'd be a class III
+
+RULE lanthipeptide-class-v
+    CATEGORY RiPP
+    COMMENT Glycosylated lanthipeptide/linaridin hybrids like MT210103
+    RELATED Flavoprotein, Glycos_transf_1, Glycos_transf_2
+    CUTOFF 20
+    NEIGHBOURHOOD 20
+    CONDITIONS APH and HopA1
 
 RULE lipolanthine
     CATEGORY RiPP
@@ -135,14 +166,6 @@ RULE lipolanthine
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS micKC and Flavoprotein
-
-RULE lanthidin
-    CATEGORY RiPP
-    COMMENT Glycosylated lanthipeptide/linaridin hybrids like MT210103
-    RELATED Flavoprotein, Glycos_transf_1, Glycos_transf_2
-    CUTOFF 20
-    NEIGHBOURHOOD 20
-    CONDITIONS APH and HopA1
 
 RULE RiPP-like
     CATEGORY RiPP

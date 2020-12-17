@@ -123,11 +123,23 @@
     @include secmet(blue, #ffff77, blue);
 }
 
-.lanthipeptide {
+.lanthipeptide-class-i {
     @include lantibiotic;
 }
 
-.lanthidin {
+.lanthipeptide-class-ii {
+    @include lantibiotic;
+}
+
+.lanthipeptide-class-iii {
+    @include lantibiotic;
+}
+
+.lanthipeptide-class-iv {
+    @include lantibiotic;
+}
+
+.lanthipeptide-class-v {
     @include lantibiotic;
 }
 
