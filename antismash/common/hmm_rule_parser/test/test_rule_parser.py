@@ -273,9 +273,8 @@ class RuleParserTest(unittest.TestCase):
         return rule_parser.Parser(text, self.signature_names, valid_categories)
 
     def test_invalid_signature(self):
-        with self.assertRaises(ValueError) as details:
+        with self.assertRaisesRegex(ValueError, "without signatures: badname") as details:
             self.parse(format_as_rule("A", 10, 20, "badname or a"))
-        assert str(details.exception) == "Rules contained identifers without signatures: badname"
 
     def test_stringify(self):
         rule_lines = [format_as_rule(*args) for args in [["abc", 10, 20, "a and b or not (c and d)"],
