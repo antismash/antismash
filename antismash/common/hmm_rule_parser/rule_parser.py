@@ -677,6 +677,8 @@ class SingleCondition(Conditions):
 class ScoreCondition(Conditions):
     """ Represents the minscore() condition """
     def __init__(self, negated: bool, name: str, score: int) -> None:
+        if score < 0:
+            raise ValueError("minimum scores cannot be negative")
         self.name = name
         self.score = score
         super().__init__(negated)
