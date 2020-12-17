@@ -131,6 +131,10 @@
     @include lantibiotic;
 }
 
+.lipolanthine {
+    @include lantibiotic;
+}
+
 .RiPP-like {
     @include RiPP;
 }
@@ -196,10 +200,6 @@
 }
 
 .proteusin {
-    @include RiPP;
-}
-
-.lipolanthine {
     @include RiPP;
 }
 
