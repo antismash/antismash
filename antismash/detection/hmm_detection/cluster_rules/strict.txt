@@ -283,8 +283,17 @@ RULE ranthipeptide
                (
                 rSAM_with_SPASM and ANY_RRE
                 and not (TIGR01716 or             # avoid co-detecting RaS-RiPPs
-                         subtilosin)              # avoid co-detecting sactipeptides
+                         subtilosin or            # avoid co-detecting sactipeptides
+                         TIGR02111 or TIGR03966)  # avoid co-detecting redox-cofactor clusers
                )
+
+RULE redox-cofactor
+    CATEGORY RiPP
+    COMMENT Redox-cofactors such as PQQ (NC_021985:1458906-1494876)
+            and mycofactocin (NC_000962:781831-803332)
+    CUTOFF 20
+    NEIGHBOURHOOD 10
+    CONDITIONS rSAM_with_SPASM and (TIGR02111 or TIGR03966) and ANY_RRE
 
 RULE blactam
     CATEGORY other

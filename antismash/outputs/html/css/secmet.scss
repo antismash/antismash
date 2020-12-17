@@ -167,6 +167,10 @@
     @include RiPP;
 }
 
+.redox-cofactor {
+    @include RiPP;
+}
+
 @mixin thiolated_ripp {
     @include secmet(black, gold, black);
 }
