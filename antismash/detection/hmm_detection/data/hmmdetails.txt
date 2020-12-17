@@ -73,16 +73,12 @@ LcnG-beta	Lactococcin G-beta	78	LcnG-beta.hmm
 Subtilosin_A	Subtilosin A	68	Subtilosin_A.hmm
 Cloacin	Cloacin	27	Cloacin.hmm
 Linocin_M18	Linocin M18	25	Linocin_M18.hmm
-TIGR03603	Bacteriocin biosynthesis cyclodehydratase	150	TIGR03603.hmm
-TIGR03604	Bacteriocin biosynthesis docking scaffold	440	TIGR03604.hmm
-TIGR03605	SagB-type dehydrogenase	200	TIGR03605.hmm
 TIGR03651	Bacteriocin, circularin A/uberolysin famil	18	TIGR03651.hmm
 TIGR03678	Bacteriocin, microcyclamide/patellamide family	35	TIGR03678.hmm
 TIGR03693	Thiazole-containing bacteriocin maturation protein	400	TIGR03693.hmm
 TIGR03798	Bacteriocin propeptide	20	TIGR03798.hmm
 TIGR03882	Bacteriocin biosynthesis cyclodehydratase	150	TIGR03882.hmm
 TIGR03601	Bacteriocin, BA_2677 family	50	TIGR03601.hmm
-TIGR03602	Bacteriocin protoxin, streptolysin S family	50	TIGR03602.hmm
 TIGR03795	Ribosomal natural product, two-chain TOMM family	41	TIGR03795.hmm
 TIGR03793	NHLP leader peptide domain	51	TIGR03793.hmm
 TIGR03975	Bacteriocin maturation radical SAM protein 1	282	TIGR03975.hmm
@@ -127,6 +123,10 @@ LmbU	LmbU-like protein	50	LmbU.hmm
 mmyO	MmyO-like protein	500	mmyO.hmm
 AvrD	Pseudomonas avriulence D protein	50	PF05655.hmm
 goadsporin_like	Goadsporin-like protein	500	goadsporin_like.hmm
+TIGR03602	Bacteriocin protoxin, streptolysin S family	50	TIGR03602.hmm
+TIGR03603	Bacteriocin biosynthesis cyclodehydratase	150	TIGR03603.hmm
+TIGR03604	Bacteriocin biosynthesis docking scaffold	440	TIGR03604.hmm
+TIGR03605	SagB-type dehydrogenase	200	TIGR03605.hmm
 Neocarzinostat	Neocarzinostatin-like protein	28	Neocarzinostat.hmm
 cyanobactin_synth	Cyanobactin protease	80	cyanobactin_synth.hmm
 cycdipepsynth	Cyclodipeptide synthase	110	cycdipepsynth.hmm
