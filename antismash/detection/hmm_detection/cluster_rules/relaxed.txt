@@ -32,15 +32,7 @@ RULE RRE-containing
     COMMENT RRE-element containing cluster
     SUPERIORS RiPP-like, bottromycin, cyanobactin, fungal-RiPP, guanidinotides, lanthidin,
               lanthipeptide, LAP, lassopeptide, lipolanthine, microviridin, proteusin, RaS-RiPP,
-              sactipeptide, thioamitides, thiopeptide
+              sactipeptide, thioamitides, thiopeptide, ranthipeptide
     CUTOFF 10
     NEIGHBOURHOOD 10
-    CONDITIONS Lanthipeptide_LanB_RRE or Stand_Alone_Lasso_RRE or Lasso_Fused_RRE or Thiopeptide_F_RRE
-               or PqqD_RRE or Cyanobactin_D_RRE or Bottromycin_Methyltransferase_RRE or
-               Proteusin_Methyltransferase_RRE or Proteusin_Epimerase_RRE or
-               Heterocycloanthracin_C_RRE or Plantazolicin_C_RRE or Goadsporin_CD_RRE or
-               Cytolysin_C_RRE or NHLP_CD_RRE or Mycofactocin_RRE or Pantocin_Microcin_RRE or
-               Subtilosin_rSAM_RRE or Thurincin_rSAM_RRE or Thuricin_rSAM_RRE or
-               Other_Sactipeptide_rSAM_RRE or Streptide_RRE or Quinohemoprotein_rSAM_RRE or
-               Ranthipeptide_rSAM_RRE or Trifolitoxin_RRE or Thiaglutamate_G_RRE or Thiaglutamate_I_RRE
-               or Thiaglutamate_B_RRE or PlpY_RRE
+    CONDITIONS ANY_RRE
