@@ -21,9 +21,13 @@ antismash/modules/*/data/*.classifier.pkl
 antismash/modules/*/data/*.scaler.pkl
 antismash.egg-info/*
 **/.ropeproject/*
+.vim/*
 antismash/git_hash
 pip-delete-this-directory.txt
 pip-egg-info/*
+
+# generated during make test
+nisin/*
 
 # keep these, even in locations that are ignored
 !antismash/databases/README
