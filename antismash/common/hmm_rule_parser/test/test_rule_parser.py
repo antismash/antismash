@@ -392,8 +392,8 @@ class RuleParserTest(unittest.TestCase):
 
     def test_bad_minscore(self):
         # negative scores
-        with self.assertRaises(ValueError):
-            self.parse(format_as_rule("A", 10, 20, "minscore(e, -1)"))
+        with self.assertRaisesRegex(ValueError, "cannot be negative"):
+            self.parse(format_as_rule("A", 10, 20, "minscore(d, -1)"))
 
         # missing/invalid score syntax
         with self.assertRaises(rule_parser.RuleSyntaxError):
