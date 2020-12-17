@@ -215,7 +215,7 @@ RULE sactipeptide
     CATEGORY RiPP
     CUTOFF 20
     NEIGHBOURHOOD 10
-    CONDITIONS subtilosin or thuricin or TIGR04404 or TIGR03973 or
+    CONDITIONS subtilosin or thuricin or TIGR04404 or
                Subtilosin_A or skfc
 
 RULE bottromycin
@@ -235,6 +235,31 @@ RULE proteusin
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS PoyD
+
+DEFINE rSAM_with_SPASM AS cds(PF04055 and (TIGR04085 or SPASM))
+
+DEFINE ANY_RRE AS minimum(1,
+   [Lanthipeptide_LanB_RRE, Stand_Alone_Lasso_RRE, Lasso_Fused_RRE, Thiopeptide_F_RRE, PqqD_RRE,
+    Cyanobactin_D_RRE, Bottromycin_Methyltransferase_RRE, Proteusin_Methyltransferase_RRE,
+    Proteusin_Epimerase_RRE, Heterocycloanthracin_C_RRE, Plantazolicin_C_RRE,
+    Goadsporin_CD_RRE, Cytolysin_C_RRE, NHLP_CD_RRE, Mycofactocin_RRE,
+    Pantocin_Microcin_RRE, Subtilosin_rSAM_RRE,Thurincin_rSAM_RRE, Thuricin_rSAM_RRE,
+    Other_Sactipeptide_rSAM_RRE, Streptide_RRE, Quinohemoprotein_rSAM_RRE,
+    Ranthipeptide_rSAM_RRE, Trifolitoxin_RRE, Thiaglutamate_G_RRE,
+    Thiaglutamate_I_RRE, Thiaglutamate_B_RRE, PlpY_RRE
+   ])
+
+RULE ranthipeptide
+    CATEGORY RiPP
+    COMMENT Cys-rich peptides (aka. SCIFF: six Cys in fourty-five) like in CP001581:3481278-3502939
+    CUTOFF 20
+    NEIGHBOURHOOD 10
+    CONDITIONS TIGR03973 or SCIFF or  # precursors
+               (
+                rSAM_with_SPASM and ANY_RRE
+                and not (TIGR01716 or             # avoid co-detecting RaS-RiPPs
+                         subtilosin)              # avoid co-detecting sactipeptides
+               )
 
 RULE blactam
     CATEGORY other

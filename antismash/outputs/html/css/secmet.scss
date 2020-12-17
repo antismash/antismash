@@ -147,6 +147,10 @@
     @include RiPP;
 }
 
+.ranthipeptide {
+    @include RiPP;
+}
+
 @mixin thiolated_ripp {
     @include secmet(black, gold, black);
 }
