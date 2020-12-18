@@ -2,12 +2,14 @@
 
 # Cutoffs and neighbourhoods are given in kilobases
 
+DEFINE ANY_KS AS (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS)
+
 RULE T1PKS
     CATEGORY PKS
     COMMENT Type-I PKS
     CUTOFF 20
     NEIGHBOURHOOD 20
-    CONDITIONS cds(PKS_AT and (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS))
+    CONDITIONS cds(PKS_AT and ANY_KS)
 
 RULE T2PKS
     CATEGORY PKS
@@ -28,9 +30,9 @@ RULE transAT-PKS
     CATEGORY PKS
     CUTOFF 45  # kirromycin (CP006259) has a range of ~42kb
     NEIGHBOURHOOD 20
-    CONDITIONS cds(PKS_AT and not (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS))
+    CONDITIONS cds(PKS_AT and not ANY_KS)
                and (
-                cds(ATd and (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS))
+                cds(ATd and ANY_KS)
                 # handle CP001511 5k-30k as per https://doi.org/10.1002/ange.201709056
                 or cds(tra_KS and PP-binding)
                )
