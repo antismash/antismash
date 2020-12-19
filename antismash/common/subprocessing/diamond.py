@@ -201,6 +201,6 @@ def check_diamond_files(definition_file: str, fasta_file: str, db_file: str,
             failure_messages.append("Failed to regenerate diamond database %r" % db_file)
 
     if failure_messages:
-        failure_messages.append("with diamond executable: {get_config().executables.diamond}")
+        failure_messages.append(f"with diamond executable: {get_config().executables.diamond}")
 
     return failure_messages
