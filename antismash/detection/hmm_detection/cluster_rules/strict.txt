@@ -212,7 +212,7 @@ RULE cyanobactin
     CONDITIONS cyanobactin_synth or TIGR03678
 
 RULE glycocin
-    CATEGORY other
+    CATEGORY RiPP
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS glycocin or sublancin
