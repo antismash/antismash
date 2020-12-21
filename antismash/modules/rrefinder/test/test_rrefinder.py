@@ -243,7 +243,7 @@ class TestRREFinder(unittest.TestCase):
         cds2 = DummyCDS(start=3400, end=4700, locus_tag='b')
         cds3 = DummyCDS(start=150, end=450, locus_tag='c')
 
-        p1 = DummyProtocluster(core_start=100, core_end=2200, neighbourhood_range=100, product='lanthipeptide')
+        p1 = DummyProtocluster(core_start=100, core_end=2200, neighbourhood_range=100, product='lanthipeptide-class-i')
         p2 = DummyProtocluster(core_start=3300, core_end=4800, neighbourhood_range=100, product='thiopeptide')
 
         dc1 = DummyCandidateCluster(clusters=[p1])
