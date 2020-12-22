@@ -12,7 +12,7 @@ from Bio.SearchIO._model.hsp import HSP
 
 from antismash.common import fasta, path, serialiser
 from antismash.common.secmet import Record, Protocluster, CDSFeature, FeatureLocation
-from antismash.common.secmet.locations import location_contains_other
+from antismash.common.secmet.locations import locations_overlap
 from antismash.common.secmet.qualifiers import GeneFunction, SecMetQualifier
 from antismash.common.subprocessing import run_hmmsearch
 from antismash.common.hmm_rule_parser import rule_parser
@@ -150,7 +150,7 @@ def remove_redundant_protoclusters(clusters: List[Protocluster],
         is_redundant = False
         for superior in rules_by_name[rule_name].superiors:
             for other_cluster in clusters_by_rule.get(superior, []):
-                if location_contains_other(other_cluster.core_location, cluster.core_location):
+                if locations_overlap(other_cluster.core_location, cluster.core_location):
                     is_redundant = True
                     break
             if is_redundant:
