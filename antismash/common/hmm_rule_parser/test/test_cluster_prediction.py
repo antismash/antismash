@@ -76,8 +76,7 @@ class TestRedundancy(unittest.TestCase):
     def test_larger(self):
         clusters = [self.create_cluster("inferior", 101, 110),
                     self.create_cluster("superior", 102, 109)]
-        print("testing clusters:", clusters)
-        assert self.remove(clusters) == clusters
+        assert self.remove(clusters) == [clusters[1]]
 
     def test_neighbourhoods_dont_matter(self):
         neighbourhood = self.rules_by_name["superior"].neighbourhood
