@@ -301,6 +301,13 @@ RULE redox-cofactor
     NEIGHBOURHOOD 10
     CONDITIONS rSAM_with_SPASM and (TIGR02111 or TIGR03966) and ANY_RRE
 
+RULE epipeptide
+    CATEGORY RiPP
+    COMMENT D-amino-acid containing RiPPs such as yydF (D78193)
+    CUTOFF 20
+    NEIGHBOURHOOD 10
+    CONDITIONS TIGR04078 and yydH
+
 RULE blactam
     CATEGORY other
     COMMENT beta-lactam

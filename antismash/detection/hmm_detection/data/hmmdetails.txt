@@ -262,6 +262,8 @@ TIGR04085	radical SAM additional 4Fe4S-binding SPASM domain	27	TIGR04085.hmm
 SPASM	Iron-sulfur cluster-binding domain	21	PF13186.hmm
 TIGR02111	coenzyme PQQ biosynthesis protein C	240	TIGR02111.hmm
 TIGR03966	heme/flavin dehydrogenase, mycofactocin system	471	TIGR03966.hmm
+TIGR04078	peptide modification radical SAM enzyme, YydG family	300	TIGR04078.hmm
+yydH	Epipeptide metalloprotease yydH	400	yydH.hmm
 Lanthipeptide_LanB_RRE	RRE-containing LanB protein in a class I lanthipeptide cluster	25	RREFam001.hmm
 Stand_Alone_Lasso_RRE	Stand-alone RRE protein in a lasso peptide cluster	25	RREFam002.hmm
 Lasso_Fused_RRE	RRE-containing fused peptidase in a lasso peptide cluster	25	RREFam003.hmm
