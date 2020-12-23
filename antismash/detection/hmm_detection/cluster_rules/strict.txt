@@ -287,9 +287,10 @@ RULE ranthipeptide
     CONDITIONS TIGR03973 or SCIFF or  # precursors
                (
                 rSAM_with_SPASM and ANY_RRE
-                and not (TIGR01716 or             # avoid co-detecting RaS-RiPPs
-                         subtilosin or            # avoid co-detecting sactipeptides
-                         TIGR02111 or TIGR03966)  # avoid co-detecting redox-cofactor clusers
+                and not (TIGR01716 or              # avoid co-detecting RaS-RiPPs
+                         subtilosin or             # avoid co-detecting sactipeptides
+                         TIGR02111 or TIGR03966 or # avoid co-detecting redox-cofactor clusers
+                         YcaO or TIGR03882)        # avoid co-detecting thiopeptides
                )
 
 RULE redox-cofactor
