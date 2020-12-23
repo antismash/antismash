@@ -219,6 +219,10 @@
     @include RiPP;
 }
 
+.epipeptide {
+    @include RiPP;
+}
+
 .blactam {
     @include secmet(black, aliceblue, black);
 }
