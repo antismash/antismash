@@ -176,7 +176,7 @@ RULE RiPP-like
                or Antimicrobial17 or Lactococcin_972 or Bacteriocin_IIc
                or LcnG-beta or Cloacin or Linocin_M18
                or TIGR03651 or TIGR03693 or TIGR03798
-               or TIGR03601 or TIGR03795 or TIGR03793
+               or TIGR03601 or TIGR03795
                or TIGR03975 or DUF692 or TIGR01193
 
 RULE thiopeptide
@@ -257,9 +257,14 @@ RULE microviridin
 
 RULE proteusin
     CATEGORY RiPP
+    COMMENT Highly modified large leader peptide RiPP class containing
+            polytheonamide (JX456532.1) and landornamide (NZ_KB235904.1:469950-493649)
+            Unfortunately, there is no real class-defining enzyme, but all
+            known precursors are similar to a nitrile hydratase
     CUTOFF 20
     NEIGHBOURHOOD 10
-    CONDITIONS PoyD
+    CONDITIONS PoyD          # polytheonamide-like rSAM
+               or TIGR03793  # nitrile hydratase-like leader peptide
 
 DEFINE rSAM_with_SPASM AS cds(PF04055 and (TIGR04085 or SPASM))
 
