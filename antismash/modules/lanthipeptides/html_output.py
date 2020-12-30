@@ -15,7 +15,7 @@ from .specific_analysis import LanthiResults
 
 def will_handle(products: List[str]) -> bool:
     """ Returns True if the products provided are relevant to the module """
-    return 'lanthipeptide' in products
+    return any(map(lambda p: p.startswith("lanthipeptide"), products))
 
 
 def generate_html(region_layer: RegionLayer, results: LanthiResults,

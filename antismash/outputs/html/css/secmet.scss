@@ -111,6 +111,10 @@
     @extend .NRPS;
 }
 
+.NAPAA {
+    @extend .NRPS;
+}
+
 .terpene {
     @include hydrocarbon;
 }
@@ -119,15 +123,35 @@
     @include secmet(blue, #ffff77, blue);
 }
 
-.lanthipeptide {
+.lanthipeptide-class-i {
     @include lantibiotic;
 }
 
-.lanthidin {
+.lanthipeptide-class-ii {
     @include lantibiotic;
 }
 
-.bacteriocin {
+.lanthipeptide-class-iii {
+    @include lantibiotic;
+}
+
+.lanthipeptide-class-iv {
+    @include lantibiotic;
+}
+
+.lanthipeptide-class-v {
+    @include lantibiotic;
+}
+
+.lipolanthine {
+    @include lantibiotic;
+}
+
+.RiPP-like {
+    @include RiPP;
+}
+
+.RRE-containing {
     @include RiPP;
 }
 
@@ -136,6 +160,14 @@
 }
 
 .fungal-RiPP {
+    @include RiPP;
+}
+
+.ranthipeptide {
+    @include RiPP;
+}
+
+.redox-cofactor {
     @include RiPP;
 }
 
@@ -151,7 +183,7 @@
     @include thiolated_ripp;
 }
 
-.TfuA-related {
+.thioamitides {
     @include thiolated_ripp;
 }
 
@@ -179,19 +211,11 @@
     @include RiPP;
 }
 
-.head_to_tail {
-    @include RiPP;
-}
-
 .microviridin {
     @include RiPP;
 }
 
 .proteusin {
-    @include RiPP;
-}
-
-.lipolanthine {
     @include RiPP;
 }
 
@@ -267,7 +291,7 @@
     @include secmet(black, mediumaquamarine, black);
 }
 
-.fused {
+.guanidinotides {
     @include RiPP;
 }
 
@@ -280,6 +304,10 @@
 }
 
 .betalactone {
+    @include hydrocarbon;
+}
+
+.pyrrolidine {
     @include hydrocarbon;
 }
 

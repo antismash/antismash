@@ -90,6 +90,7 @@ _CLASS_BY_NAME = {
 def will_handle(products: List[str]) -> bool:
     """ Returns true if one or more relevant products are present """
     return bool(set(products).intersection({"NRPS", "T1PKS", "T2PKS", "transAT-PKS",
+                                            "NAPAA", "thioamide-NRP",
                                             "NRPS-like", "PKS-like"}))
 
 

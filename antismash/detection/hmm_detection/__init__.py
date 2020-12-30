@@ -81,9 +81,11 @@ def get_supported_cluster_types(strictness: str) -> List[str]:
     signature_names = {sig.name for sig in get_signature_profiles()}
     category_names = {cat.name for cat in get_rule_categories()}
     rules: List[rule_parser.DetectionRule] = []
+    aliases: Dict[str, List[rule_parser.Token]] = {}
     for rule_file in _get_rule_files_for_strictness(strictness):
         with open(rule_file) as rulefile:
-            rules = rule_parser.Parser("".join(rulefile.readlines()), signature_names, category_names, rules).rules
+            rules = rule_parser.Parser("".join(rulefile.readlines()), signature_names,
+                                       category_names, rules, aliases).rules
     clustertypes = [rule.name for rule in rules]
     return clustertypes
 

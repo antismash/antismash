@@ -73,16 +73,12 @@ LcnG-beta	Lactococcin G-beta	78	LcnG-beta.hmm
 Subtilosin_A	Subtilosin A	68	Subtilosin_A.hmm
 Cloacin	Cloacin	27	Cloacin.hmm
 Linocin_M18	Linocin M18	25	Linocin_M18.hmm
-TIGR03603	Bacteriocin biosynthesis cyclodehydratase	150	TIGR03603.hmm
-TIGR03604	Bacteriocin biosynthesis docking scaffold	440	TIGR03604.hmm
-TIGR03605	SagB-type dehydrogenase	200	TIGR03605.hmm
 TIGR03651	Bacteriocin, circularin A/uberolysin famil	18	TIGR03651.hmm
 TIGR03678	Bacteriocin, microcyclamide/patellamide family	35	TIGR03678.hmm
 TIGR03693	Thiazole-containing bacteriocin maturation protein	400	TIGR03693.hmm
 TIGR03798	Bacteriocin propeptide	20	TIGR03798.hmm
 TIGR03882	Bacteriocin biosynthesis cyclodehydratase	150	TIGR03882.hmm
 TIGR03601	Bacteriocin, BA_2677 family	50	TIGR03601.hmm
-TIGR03602	Bacteriocin protoxin, streptolysin S family	50	TIGR03602.hmm
 TIGR03795	Ribosomal natural product, two-chain TOMM family	41	TIGR03795.hmm
 TIGR03793	NHLP leader peptide domain	51	TIGR03793.hmm
 TIGR03975	Bacteriocin maturation radical SAM protein 1	282	TIGR03975.hmm
@@ -127,6 +123,10 @@ LmbU	LmbU-like protein	50	LmbU.hmm
 mmyO	MmyO-like protein	500	mmyO.hmm
 AvrD	Pseudomonas avriulence D protein	50	PF05655.hmm
 goadsporin_like	Goadsporin-like protein	500	goadsporin_like.hmm
+TIGR03602	Bacteriocin protoxin, streptolysin S family	50	TIGR03602.hmm
+TIGR03603	Bacteriocin biosynthesis cyclodehydratase	150	TIGR03603.hmm
+TIGR03604	Bacteriocin biosynthesis docking scaffold	440	TIGR03604.hmm
+TIGR03605	SagB-type dehydrogenase	200	TIGR03605.hmm
 Neocarzinostat	Neocarzinostatin-like protein	28	Neocarzinostat.hmm
 cyanobactin_synth	Cyanobactin protease	80	cyanobactin_synth.hmm
 cycdipepsynth	Cyclodipeptide synthase	110	cycdipepsynth.hmm
@@ -144,6 +144,7 @@ Glyco_transf_28	Secondary metabolite-related glycosyltransferase	26	Glyco_transf
 DUF1205	Secondary metabolite-related glycosyltransferase	20	DUF1205.hmm
 Autoind_synth	Autoinducer synthetase	20	Autoind_synth.hmm
 YcaO	YcaO-like family	25	YcaO.hmm
+TIGR01408	ubiquitin-activating enzyme E1	750	TIGR01408.hmm
 PF06968	BATS family	20	PF06968.hmm
 PF04055	radical SAM superfamily	40	PF04055.hmm
 PF07366	SnoaL family	20	PF07366.hmm
@@ -203,9 +204,7 @@ pgm_amidino	Pgm-related amidinotransferase	300	pgm_amidino.hmm
 PF00881	TOMM dehydrogenase	20	PF00881.hmm
 Abhydrolase_6	Alpha/beta hydrolase family	27	PF12697.hmm
 PF00561	Abhydrolase	20	PF00561.hmm
-PF13186	SPASM	20	PF13186.hmm
-TIGR04404	SCIFF	45	TIGR04404.hmm
-TIGR03973	SkfA	50	TIGR03973.hmm
+TIGR04404	SkfA: sporulation killing factor	45	TIGR04404.hmm
 Peptidase_S8	Subtilase family	21	PF00082.hmm
 Peptidase_M16	Insulinase (Peptidase family M16)	22	PF00675.hmm
 Peptidase_S41	Peptidase family S41	21	PF03572.hmm
@@ -253,3 +252,41 @@ TfuA	TfuA-like protein	26	PF07812.hmm
 HopA1	HopA1 effector protein family	23	PF17914.hmm
 APH	Phosphotransferase enzyme family	23	PF01636.hmm
 PPDK_N	Pyruvate phosphate dikinase, AMP/ATP binding domain	20	PF01326.hmm
+TIGR02353	Non-alpha poly amino acid condensation domain	423	TIGR02353.hmm
+Aminotran_3	Aminotransferase class-III	31	PF00202.hmm
+DXP_synthase_N	1-deoxy-D-xylulose-5-phosphate synthase	21	PF13292.hmm
+Mac	Maltose acetyltransferase	22	PF12464.hmm
+TIGR03973	SCIFF six Cys in fourty-five ranthipeptide precursor	50	TIGR03973.hmm
+SCIFF	Six-cysteine peptide SCIFF	22	PF13165.hmm
+TIGR04085	radical SAM additional 4Fe4S-binding SPASM domain	27	TIGR04085.hmm
+SPASM	Iron-sulfur cluster-binding domain	21	PF13186.hmm
+TIGR02111	coenzyme PQQ biosynthesis protein C	240	TIGR02111.hmm
+TIGR03966	heme/flavin dehydrogenase, mycofactocin system	471	TIGR03966.hmm
+Lanthipeptide_LanB_RRE	RRE-containing LanB protein in a class I lanthipeptide cluster	25	RREFam001.hmm
+Stand_Alone_Lasso_RRE	Stand-alone RRE protein in a lasso peptide cluster	25	RREFam002.hmm
+Lasso_Fused_RRE	RRE-containing fused peptidase in a lasso peptide cluster	25	RREFam003.hmm
+Thiopeptide_F_RRE	RRE-containing F protein in a thiopeptide cluster	25	RREFam004.hmm
+PqqD_RRE	RRE-containing protein in a pyrroloquinoline cluster	25	RREFam006.hmm
+Cyanobactin_D_RRE	RRE-containing D protein in a cyanobactin cluster	25	RREFam007.hmm
+Bottromycin_Methyltransferase_RRE	RRE-containing methyltransferase protein in a bottromycin cluster	25	RREFam008.hmm
+Proteusin_Methyltransferase_RRE	RRE-containing methyltransferase in a proteusin cluster	25	RREFam009.hmm
+Proteusin_Epimerase_RRE	RRE-containing epimerase in a proteusin cluster	25	RREFam010.hmm
+Heterocycloanthracin_C_RRE	RRE-containing C protein in a heterocycloanthracin LAP cluster	25	RREFam011.hmm
+Plantazolicin_C_RRE	RRE-containing discrete C protein in a plantazolicin LAP cluster	25	RREFam012.hmm
+Goadsporin_CD_RRE	RRE-containing CD fusion protein in a goadsporin cluster	25	RREFam013.hmm
+Cytolysin_C_RRE	RRE-containing discrete C protein in a SLS/cytolysin LAP cluster	25	RREFam014.hmm
+NHLP_CD_RRE	RRE-containing CD fusion protein in a NHLP/Nif11 LAP cluster	25	RREFam015.hmm
+Mycofactocin_RRE	Stand-alone RRE protein in a mycofactocin cluster	25	RREFam016.hmm
+Pantocin_Microcin_RRE	RRE-containing E1-like protein in a pantocin/microcin cluster	25	RREFam017.hmm
+Subtilosin_rSAM_RRE	RRE-containing rSAM protein in a subtilosin sactipeptide cluster	25	RREFam018.hmm
+Thurincin_rSAM_RRE	RRE-containing rSAM protein in a thurincin sactipeptide cluster	25	RREFam019.hmm
+Thuricin_rSAM_RRE	RRE-containing rSAM protein in a thuricin sactipeptide cluster	25	RREFam020.hmm
+Other_Sactipeptide_rSAM_RRE	RRE-containing rSAM protein in a sactipeptide cluster	25	RREFam021.hmm
+Streptide_RRE	RRE-containing rSAM enzyme in a streptide-like cluster	25	RREFam022.hmm
+Quinohemoprotein_rSAM_RRE	RRE-containing rSAM protein in a quinohemoprotein cluster	25	RREFam023.hmm
+Ranthipeptide_rSAM_RRE	RRE-containing rSAM protein in a ranthipeptide/SCIFF cluster	25	RREFam024.hmm
+Trifolitoxin_RRE	RRE-containing protein in a trifolitoxin cluster	25	RREFam025.hmm
+Thiaglutamate_G_RRE	RRE-peptidase fusion protein in a 3-thiaglutamate cluster	25	RREFam026.hmm
+Thiaglutamate_I_RRE	RRE-DUF fusion protein in a 3-thiaglutamate cluster	25	RREFam027.hmm
+Thiaglutamate_B_RRE	RRE-LanB fusion protein in a 3-thiaglutamate cluster	25	RREFam028.hmm
+PlpY_RRE	Discrete RRE protein in an alpha-keto beta-amino acid containing peptide cluster	25	RREFam029.hmm

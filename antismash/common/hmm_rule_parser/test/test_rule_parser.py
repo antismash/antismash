@@ -267,15 +267,14 @@ class RuleParserTest(unittest.TestCase):
     def setUp(self):
         self.signature_names = set(["a", "b", "c", "d", "more", "other"])
 
-    def parse(self, text, valid_categories=None):
+    def parse(self, text, valid_categories=None, aliases=None):
         if valid_categories is None:
             valid_categories = {"C", "category"}
-        return rule_parser.Parser(text, self.signature_names, valid_categories)
+        return rule_parser.Parser(text, self.signature_names, valid_categories, aliases)
 
     def test_invalid_signature(self):
-        with self.assertRaises(ValueError) as details:
+        with self.assertRaisesRegex(ValueError, "without signatures: badname") as details:
             self.parse(format_as_rule("A", 10, 20, "badname or a"))
-        assert str(details.exception) == "Rules contained identifers without signatures: badname"
 
     def test_stringify(self):
         rule_lines = [format_as_rule(*args) for args in [["abc", 10, 20, "a and b or not (c and d)"],
@@ -392,8 +391,8 @@ class RuleParserTest(unittest.TestCase):
 
     def test_bad_minscore(self):
         # negative scores
-        with self.assertRaises(ValueError):
-            self.parse(format_as_rule("A", 10, 20, "minscore(e, -1)"))
+        with self.assertRaisesRegex(ValueError, "cannot be negative"):
+            self.parse(format_as_rule("A", 10, 20, "minscore(d, -1)"))
 
         # missing/invalid score syntax
         with self.assertRaises(rule_parser.RuleSyntaxError):
@@ -537,6 +536,43 @@ class RuleParserTest(unittest.TestCase):
                      "not a or (not b and not (c or d))"]:
             with self.assertRaisesRegex(ValueError, "at least one positive requirement"):
                 self.parse(format_as_rule("A", 10, 10, rule))
+
+    def test_alias_simple(self):
+        text = "DEFINE alias AS b " + format_as_rule("A", 10, 10, "alias or c")
+        parsed = self.parse(text)
+        assert "alias" in parsed.aliases and "b" == parsed.aliases["alias"][0].identifier
+        assert str(parsed.rules[0].conditions) == "(b or c)"
+
+    def test_alias_nesting(self):
+        text = ("DEFINE alias1 AS (a and b) "
+                "DEFINE alias2 AS alias1 and c "
+                ) + format_as_rule("A", 10, 10, "alias2 or d")
+        parsed = self.parse(text)
+        assert len(parsed.aliases) == 2
+        assert str(parsed.rules[0].conditions) == "((a and b) and c or d)"
+
+    def test_alias_bad_syntax(self):
+        for alias in ["DEFINE", "DEFINE alias", "DEFINE alias AS", "DEFINE AS a",
+                      "DEFINE alias AS RULE", "DEFINE RULE AS a", "DEFINE 3 AS a",
+                      "DEFINE some name AS a",
+                      "DEFINE alias AS a DEFINE alias AS b"]:
+            with self.assertRaises(rule_parser.RuleSyntaxError):
+                self.parse(alias)
+
+    def test_alias_bad_names(self):
+        with self.assertRaises(rule_parser.RuleSyntaxError):
+            self.parse(f"DEFINE 3 AS a")
+        for name in ["-", "." "some-name"]:
+            with self.assertRaisesRegex(rule_parser.RuleSyntaxError, "Expected identifier but"):
+                self.parse(f"DEFINE {name} AS a")
+
+    def test_alias_name_duplications(self):
+        text = format_as_rule("A", 10, 10, "alias or c") + " DEFINE A AS b"
+        with self.assertRaisesRegex(ValueError, "duplicates an existing rule"):
+            self.parse(text)
+        text = "DEFINE a AS b"
+        with self.assertRaisesRegex(ValueError, "duplicates a signature"):
+            self.parse(text)
 
 
 class TokenTest(unittest.TestCase):
