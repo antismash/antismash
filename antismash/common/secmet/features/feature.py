@@ -292,7 +292,11 @@ class Feature:
         if leftovers:
             feature.created_by_antismash = leftovers.get("tool") == ["antismash"]
             if "codon_start" in leftovers:
-                codon_start = int(leftovers.pop("codon_start")[0]) - 1
+                try:
+                    raw_start = leftovers.pop("codon_start")
+                    codon_start = int(raw_start[0]) - 1
+                except ValueError as err:
+                    raise SecmetInvalidInputError(f"invalid codon_start qualifier: {raw_start}")
                 if not 0 <= codon_start <= 2:
                     raise SecmetInvalidInputError("invalid codon_start qualifier: %d" % (codon_start + 1))
                 feature._original_codon_start = codon_start  # very much private, so pylint: disable=protected-access

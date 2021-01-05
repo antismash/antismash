@@ -137,7 +137,7 @@ class TestFeature(unittest.TestCase):
     def test_invalid_codon_start(self):
         seqf = SeqFeature(FeatureLocation(5, AfterPosition(12), -1))
         seqf.type = "test"
-        for codon_start in ["-1", "4"]:
+        for codon_start in ["-1", "4", "NA"]:
             seqf.qualifiers["codon_start"] = [codon_start]
             with self.assertRaisesRegex(ValueError, "invalid codon_start"):
                 Feature.from_biopython(seqf)
