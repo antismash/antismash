@@ -308,6 +308,13 @@ RULE epipeptide
     NEIGHBOURHOOD 10
     CONDITIONS TIGR04078 and yydH
 
+RULE cyclic-lactone-autoinducer
+    CATEGORY RiPP
+    COMMENT agrD-like cyclic lactone autoinducer peptides (AF001782)
+    CUTOFF 20
+    NEIGHBOURHOOD 10
+    CONDITIONS TIGR04223 or AgrB
+
 RULE blactam
     CATEGORY other
     COMMENT beta-lactam
