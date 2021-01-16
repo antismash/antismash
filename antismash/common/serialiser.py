@@ -43,7 +43,11 @@ class AntismashResults:
         """
         if isinstance(handle, str):
             handle = open(handle, "r")
-        data = json.loads(handle.read())
+        try:
+            data = json.loads(handle.read())
+        except json.JSONDecodeError:
+            raise ValueError(f"Cannot load results to reuse from {handle.name}, "
+                              "is it an antiSMASH result JSON file?")
         if data.get("schema", 1) != AntismashResults.SCHEMA_VERSION:
             raise ValueError("schema mismatch in previous results: expected %s, found %s" % (
                                 AntismashResults.SCHEMA_VERSION, data.get("schema")))
