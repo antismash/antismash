@@ -21,9 +21,9 @@ from antismash.common.test.helpers import (
 )
 from antismash.common.test.test_hmmer import create_hmmer_hit as DummyHmmerHit
 from antismash.config import build_config, destroy_config, get_config, update_config
+from antismash.detection.hmm_detection import get_supported_cluster_types
 from antismash.modules.rrefinder.html_output import will_handle
 from antismash.modules.rrefinder.rrefinder import (
-    RIPP_PRODUCTS,
     RREFinderResults,
     check_hmm_hit,
     extract_rre_hits,
@@ -257,12 +257,14 @@ class TestRREFinder(unittest.TestCase):
         return DummyRecord(seq='FAKESEQ'*1000, features=[region])
 
     def test_is_ripp(self):
-        for ripp in sorted(RIPP_PRODUCTS):
+        ripp_products = get_supported_cluster_types("loose", "RiPP")
+        for ripp in sorted(ripp_products):
             assert is_ripp(ripp)
             assert not is_ripp(ripp[1:])
 
     def test_will_handle(self):
-        expected = sorted(RIPP_PRODUCTS)
+        ripp_products = get_supported_cluster_types("loose", "RiPP")
+        expected = sorted(ripp_products)
         assert will_handle(expected)
         assert not will_handle([ripp[1:] for ripp in expected])
 
