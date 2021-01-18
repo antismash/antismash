@@ -175,7 +175,7 @@ RULE RiPP-like
                or Bacteriocin_II or Bacteriocin_IIi or Lactococcin
                or Antimicrobial17 or Lactococcin_972 or Bacteriocin_IIc
                or LcnG-beta or Cloacin or Linocin_M18
-               or TIGR03651 or TIGR03693 or TIGR03798
+               or TIGR03651 or TIGR03693
                or TIGR03601 or TIGR03795
                or TIGR03975 or DUF692 or TIGR01193
 
@@ -290,6 +290,7 @@ RULE ranthipeptide
                 and not (TIGR01716 or              # avoid co-detecting RaS-RiPPs
                          subtilosin or             # avoid co-detecting sactipeptides
                          TIGR02111 or TIGR03966 or # avoid co-detecting redox-cofactor clusers
+                         TIGR04103 or              # avoid co-detecting spliceotides
                          YcaO or TIGR03882)        # avoid co-detecting thiopeptides
                )
 
@@ -314,6 +315,13 @@ RULE cyclic-lactone-autoinducer
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS TIGR04223 or AgrB
+
+RULE spliceotide
+    CATEGORY RiPP
+    COMMENT RiPPs containing plpX type spliceases (NZ_KB235920:17899-42115)
+    CUTOFF 20
+    NEIGHBOURHOOD 10
+    CONDITIONS TIGR04103 and TIGR03798
 
 RULE blactam
     CATEGORY other
