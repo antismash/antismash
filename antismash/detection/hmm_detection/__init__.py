@@ -75,7 +75,7 @@ class HMMDetectionResults(DetectionResults):
         return self.rule_results.protoclusters
 
 
-def get_supported_cluster_types(strictness: str) -> List[str]:
+def get_supported_cluster_types(strictness: str, category: Optional[str] = None) -> List[str]:
     """ Returns a list of all cluster types for which there are rules
     """
     signature_names = {sig.name for sig in get_signature_profiles()}
@@ -86,7 +86,7 @@ def get_supported_cluster_types(strictness: str) -> List[str]:
         with open(rule_file) as rulefile:
             rules = rule_parser.Parser("".join(rulefile.readlines()), signature_names,
                                        category_names, rules, aliases).rules
-    clustertypes = [rule.name for rule in rules]
+    clustertypes = [rule.name for rule in rules if category is None or rule.category == category]
     return clustertypes
 
 
