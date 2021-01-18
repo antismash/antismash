@@ -17,17 +17,9 @@ from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record
 from antismash.common.secmet.features import CDSFeature, Feature, FeatureLocation
 from antismash.common.secmet.locations import location_from_string
+from antismash.detection.hmm_detection import get_supported_cluster_types
 
 from .rre_domain import RREDomain
-
-
-RIPP_PRODUCTS = {'RiPP-like', 'bottromycin', 'cyanobactin', 'fungal-RiPP', 'guanidinotides',
-                 'lanthipeptide-class-i', 'lanthipeptide-class-ii',
-                 'lanthipeptide-class-iii', 'lanthipeptide-class-iv',
-                 'lanthipeptide-class-v',
-                 'LAP, lassopeptide', 'lipolanthine', 'microviridin', 'proteusin',
-                 'RaS-RiPP', 'sactipeptide', 'thioamitides', 'thiopeptide', 'ranthipeptide',
-                 'redox-cofactor', 'glycocin', 'RRE-containing'}
 
 
 class RREFinderResults(ModuleResults):
@@ -159,7 +151,7 @@ class RREFinderResults(ModuleResults):
 def is_ripp(product: str) -> bool:
     """ Determines which BGC products are RiPPs
     """
-    return product in RIPP_PRODUCTS
+    return product in get_supported_cluster_types("loose", "RiPP")
 
 
 def gather_rre_candidates(record: Record) -> Tuple[Dict[int, List[str]], Dict[str, CDSFeature]]:
