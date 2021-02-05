@@ -2,12 +2,14 @@
 
 # Cutoffs and neighbourhoods are given in kilobases
 
+DEFINE ANY_KS AS (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS)
+
 RULE T1PKS
     CATEGORY PKS
     COMMENT Type-I PKS
     CUTOFF 20
     NEIGHBOURHOOD 20
-    CONDITIONS cds(PKS_AT and (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS))
+    CONDITIONS cds(PKS_AT and ANY_KS)
 
 RULE T2PKS
     CATEGORY PKS
@@ -28,9 +30,9 @@ RULE transAT-PKS
     CATEGORY PKS
     CUTOFF 45  # kirromycin (CP006259) has a range of ~42kb
     NEIGHBOURHOOD 20
-    CONDITIONS cds(PKS_AT and not (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS))
+    CONDITIONS cds(PKS_AT and not ANY_KS)
                and (
-                cds(ATd and (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS))
+                cds(ATd and ANY_KS)
                 # handle CP001511 5k-30k as per https://doi.org/10.1002/ange.201709056
                 or cds(tra_KS and PP-binding)
                )
@@ -101,6 +103,14 @@ RULE thioamide-NRP
     CONDITIONS ATP-grasp and AMP-binding and PP-binding and
                 (DUF98 or Orn_Arg_deC_N or Orn_DAP_Arg_deC)
 
+RULE NAPAA
+    CATEGORY NRPS
+    COMMENT non-alpha poly-amino acids like e-Polylysin
+            (https://doi.org/10.1101/2020.07.24.220772)
+    CUTOFF 5
+    NEIGHBOURHOOD 15
+    CONDITIONS AMP-binding and PP-binding and TIGR02353
+
 RULE terpene
     CATEGORY terpene
     CUTOFF 20
@@ -109,13 +119,44 @@ RULE terpene
                or terpene_cyclase or NapT7 or fung_ggpps or fung_ggpps2
                or trichodiene_synth or TRI5
 
-RULE lanthipeptide
+RULE lanthipeptide-class-i
     CATEGORY RiPP
+    COMMENT Class I lanthipeptide clusters like nisin (HM219853)
     CUTOFF 20
     NEIGHBOURHOOD 10
-    CONDITIONS (LANC_like and (Lant_dehydr_N or Lant_dehydr_C)  # Class I
-                   or cds(LANC_like and (Pkinase or DUF4135)))  # Classes II, III and IV
+    CONDITIONS (LANC_like and (Lant_dehydr_N or Lant_dehydr_C))
                and not (YcaO or TIGR03882) # because then it'd be a thiopeptide
+
+RULE lanthipeptide-class-ii
+    CATEGORY RiPP
+    COMMENT Clas II lanthipeptide clusters like mutacin II (U40620)
+    CUTOFF 20
+    NEIGHBOURHOOD 10
+    CONDITIONS cds(LANC_like and DUF4135)
+
+RULE lanthipeptide-class-iii
+    CATEGORY RiPP
+    COMMENT Clas III lanthipeptide clusters like labyrinthopeptin (FN178622)
+    CUTOFF 20
+    NEIGHBOURHOOD 10
+    CONDITIONS micKC
+               and not PKS_KS  # that'd be a lipolanthine
+
+RULE lanthipeptide-class-iv
+    CATEGORY RiPP
+    COMMENT Class IV lanthipeptide clusters like venezuelin (HQ328852)
+    CUTOFF 20
+    NEIGHBOURHOOD 10
+    CONDITIONS cds(LANC_like and Pkinase)
+               and not micKC  # that'd be a class III
+
+RULE lanthipeptide-class-v
+    CATEGORY RiPP
+    COMMENT Glycosylated lanthipeptide/linaridin hybrids like MT210103
+    RELATED Flavoprotein, Glycos_transf_1, Glycos_transf_2
+    CUTOFF 20
+    NEIGHBOURHOOD 20
+    CONDITIONS APH and HopA1
 
 RULE lipolanthine
     CATEGORY RiPP
@@ -126,24 +167,16 @@ RULE lipolanthine
     NEIGHBOURHOOD 10
     CONDITIONS micKC and Flavoprotein
 
-RULE lanthidin
-    CATEGORY RiPP
-    COMMENT Glycosylated lanthipeptide/linaridin hybrids like MT210103
-    RELATED Flavoprotein, Glycos_transf_1, Glycos_transf_2
-    CUTOFF 20
-    NEIGHBOURHOOD 20
-    CONDITIONS APH and HopA1
-
-RULE bacteriocin
+RULE RiPP-like
     CATEGORY RiPP
     CUTOFF 20
     NEIGHBOURHOOD 5
     CONDITIONS strepbact or Antimicrobial14 or Bacteriocin_IId or BacteriocIIc_cy
                or Bacteriocin_II or Bacteriocin_IIi or Lactococcin
                or Antimicrobial17 or Lactococcin_972 or Bacteriocin_IIc
-               or LcnG-beta or Cloacin or Linocin_M18 or TIGR03603 or TIGR03604
-               or TIGR03651 or TIGR03678 or TIGR03693 or TIGR03798
-               or TIGR03601 or TIGR03602 or TIGR03795 or TIGR03793
+               or LcnG-beta or Cloacin or Linocin_M18
+               or TIGR03651 or TIGR03693 or TIGR03798
+               or TIGR03601 or TIGR03795 or TIGR03793
                or TIGR03975 or DUF692 or TIGR01193
 
 RULE thiopeptide
@@ -156,9 +189,9 @@ RULE thiopeptide
                          or PF07366 or PF06968 or PF04055)
                or thiostrepton
 
-RULE TfuA-related
+RULE thioamitides
     CATEGORY RiPP
-    COMMENT TfuA-related RiPPs as described in https://doi.org/10.1093/nar/gkz192
+    COMMENT Thioamitide RiPPs as described in https://doi.org/10.1093/nar/gkz192
             and found on JOBF01000011
     CUTOFF 20
     NEIGHBOURHOOD 10
@@ -173,12 +206,13 @@ RULE linaridin
 
 RULE cyanobactin
     CATEGORY RiPP
+    COMMENT Cyanobactins like patellamide (AY986476)
     CUTOFF 20
     NEIGHBOURHOOD 10
-    CONDITIONS cyanobactin_synth
+    CONDITIONS cyanobactin_synth or TIGR03678
 
 RULE glycocin
-    CATEGORY other
+    CATEGORY RiPP
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS glycocin or sublancin
@@ -187,11 +221,14 @@ RULE LAP
     CATEGORY RiPP
     COMMENT Linear azol(in)e-containing peptides like goadsporin (AB205012) or
             microcin B17 (FM877811)
-    RELATED TIGR04424
+    RELATED TIGR04424, TIGR01408
     CUTOFF 20
     NEIGHBOURHOOD 10
-    CONDITIONS (goadsporin_like or PF00881 or TIGR03605)
-               and (YcaO or TIGR03882)
+    CONDITIONS (((goadsporin_like or PF00881 or TIGR03605)
+               and (YcaO or TIGR03882 or TIGR03604))
+               or TIGR03603   # peptide maturase
+               or TIGR03602)  # precursor
+               and not cyanobactin_synth
 
 RULE lassopeptide
     CATEGORY RiPP
@@ -203,19 +240,14 @@ RULE sactipeptide
     CATEGORY RiPP
     CUTOFF 20
     NEIGHBOURHOOD 10
-    CONDITIONS subtilosin or thuricin or TIGR04404 or TIGR03973
+    CONDITIONS subtilosin or thuricin or TIGR04404 or
+               Subtilosin_A or skfc
 
 RULE bottromycin
     CATEGORY RiPP
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS botH
-
-RULE head_to_tail
-    CATEGORY RiPP
-    CUTOFF 20
-    NEIGHBOURHOOD 10
-    CONDITIONS Subtilosin_A or skfc
 
 RULE microviridin
     CATEGORY RiPP
@@ -228,6 +260,40 @@ RULE proteusin
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS PoyD
+
+DEFINE rSAM_with_SPASM AS cds(PF04055 and (TIGR04085 or SPASM))
+
+DEFINE ANY_RRE AS minimum(1,
+   [Lanthipeptide_LanB_RRE, Stand_Alone_Lasso_RRE, Lasso_Fused_RRE, Thiopeptide_F_RRE, PqqD_RRE,
+    Cyanobactin_D_RRE, Bottromycin_Methyltransferase_RRE, Proteusin_Methyltransferase_RRE,
+    Proteusin_Epimerase_RRE, Heterocycloanthracin_C_RRE, Plantazolicin_C_RRE,
+    Goadsporin_CD_RRE, Cytolysin_C_RRE, NHLP_CD_RRE, Mycofactocin_RRE,
+    Pantocin_Microcin_RRE, Subtilosin_rSAM_RRE,Thurincin_rSAM_RRE, Thuricin_rSAM_RRE,
+    Other_Sactipeptide_rSAM_RRE, Streptide_RRE, Quinohemoprotein_rSAM_RRE,
+    Ranthipeptide_rSAM_RRE, Trifolitoxin_RRE, Thiaglutamate_G_RRE,
+    Thiaglutamate_I_RRE, Thiaglutamate_B_RRE, PlpY_RRE
+   ])
+
+RULE ranthipeptide
+    CATEGORY RiPP
+    COMMENT Cys-rich peptides (aka. SCIFF: six Cys in fourty-five) like in CP001581:3481278-3502939
+    CUTOFF 20
+    NEIGHBOURHOOD 10
+    CONDITIONS TIGR03973 or SCIFF or  # precursors
+               (
+                rSAM_with_SPASM and ANY_RRE
+                and not (TIGR01716 or             # avoid co-detecting RaS-RiPPs
+                         subtilosin or            # avoid co-detecting sactipeptides
+                         TIGR02111 or TIGR03966)  # avoid co-detecting redox-cofactor clusers
+               )
+
+RULE redox-cofactor
+    CATEGORY RiPP
+    COMMENT Redox-cofactors such as PQQ (NC_021985:1458906-1494876)
+            and mycofactocin (NC_000962:781831-803332)
+    CUTOFF 20
+    NEIGHBOURHOOD 10
+    CONDITIONS rSAM_with_SPASM and (TIGR02111 or TIGR03966) and ANY_RRE
 
 RULE blactam
     CATEGORY other
@@ -332,7 +398,7 @@ RULE phosphonate
     NEIGHBOURHOOD 20
     CONDITIONS phosphonates
 
-RULE fused
+RULE guanidinotides
     CATEGORY RiPP
     CUTOFF 20
     NEIGHBOURHOOD 10
@@ -400,3 +466,11 @@ RULE tropodithietic-acid
     CONDITIONS (GST_N_3 or GST_C)
                and (Acyl-CoA_dh_N or Acyl-CoA_dh_M or Acyl-CoA_dh_1)
                and TIGR02278
+
+RULE pyrrolidine
+    CATEGORY other
+    COMMENT Pyrrolidines like described in BGC0001510
+            See https://dx.doi.org/10.1073.pnas.1701361114
+    CUTOFF 10
+    NEIGHBOURHOOD 10
+    CONDITIONS Glycos_transf_1 and Alpha-amylase and Aminotran_3 and DXP_synthase_N

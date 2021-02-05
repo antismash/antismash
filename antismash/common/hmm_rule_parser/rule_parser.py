@@ -61,6 +61,19 @@ not cover more than one or more of its superiors, then it will be discarded.
 A rule which is inferior to another rule cannot be superior to a third rule.
 Duplicate ids in the list will cause an error.
 
+Simple replacment aliases can be defined and used like so
+DEFINE label AS conditions
+...
+CONDITIONS a and conditions() or minimum(2, conditions)
+
+These replacements are made prior to validating a rule, so while a partial
+construct could be made to include only one parenthess of a pair, as an example,
+this kind of awkward construct is not recommended as it decreases the
+readability of a rule.
+
+Labels for these replacements may not be used as RULE identifiers or be present
+in the list of signature identifiers.
+
 Grammar hints:
     (e) -> all of
     [e] -> optional
@@ -91,6 +104,8 @@ The grammar itself:
     CONDITIONS_MARKER = "CONDITIONS"
     SUPERIORS_MARKER = "SUPERIORS"
     CATEGORY_MARKER = "CATEGORY"
+    DEFINE_MARKER = 'DEFINE'
+    AS_MARKER = 'AS'
 
     RULE = RULE_MARKER classification:ID
             CATEGORY_MARKER category:ID
@@ -116,7 +131,7 @@ The grammar itself:
     COMMA_SEPARATED_IDS = ID {COMMA ID}*;
     CDS = GROUP_OPEN [UNARY_OP] ID BINARY_OP CDS_CONDITION GROUP_CLOSE;
 
-cds(a and b) and not a and not cds(b or c))
+    ALIAS = DEFINE_MARKER label:ID AS_MARKER value:TEXT
 
 Condition examples:
     a
@@ -130,6 +145,7 @@ Condition examples:
     a or (b and c)
     (a or b) and cds(x and y)
     cds(x and (b or c))
+    cds(a and b) and not a and not cds(b or c))
     minimum(3, [a,b,c,d]) and (a or b) # 3 of a,b,c or d, with one being a or b
     minimum(3, [a,b,c,d]) and a and b # 3 of a,b,c or d, with one being a and one being b
 
@@ -160,7 +176,7 @@ from collections import defaultdict
 from enum import IntEnum
 from operator import xor  # so type hints can be bool and not int
 import string
-from typing import Any, Dict, List, Optional, Set, Type, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union
 
 from Bio.SearchIO._model.hsp import HSP
 
@@ -200,6 +216,8 @@ class TokenTypes(IntEnum):
     RELATED = 22
     TEXT = 23  # covers words that aren't valid identifiers for use in rule COMMENT fields
     CATEGORY = 24  # assigns the rule to a category, allowing to group related rules
+    DEFINE = 25
+    AS = 26
 
     def __repr__(self) -> str:
         return self.__str__()
@@ -245,7 +263,8 @@ class Tokeniser:  # pylint: disable=too-few-public-methods
                "CONDITIONS": TokenTypes.CONDITIONS,
                "COMMENT": TokenTypes.COMMENT, "CUTOFF": TokenTypes.CUTOFF,
                "NEIGHBOURHOOD": TokenTypes.NEIGHBOURHOOD, "SUPERIORS": TokenTypes.SUPERIORS,
-               "RELATED": TokenTypes.RELATED, "CATEGORY": TokenTypes.CATEGORY}
+               "RELATED": TokenTypes.RELATED, "CATEGORY": TokenTypes.CATEGORY,
+               "DEFINE": TokenTypes.DEFINE, "AS": TokenTypes.AS}
 
     def __init__(self, text: str) -> None:
         self.text = text
@@ -311,13 +330,15 @@ class Tokeniser:  # pylint: disable=too-few-public-methods
 class Token:  # pylint: disable=too-few-public-methods
     """ Keeps the token details, the text, where it is in the total text block,
         and what type it is """
-    def __init__(self, token_text: str, line_number: int, position: int) -> None:
+    def __init__(self, token_text: str, line_number: int, position: int,
+                 aliased: bool = False) -> None:
         self.token_text = token_text
         self.type = TokenTypes.classify(token_text)
         self.line_number = line_number
         self.position = int(position)
         if len(token_text) > 1:
             self.position -= len(token_text)
+        self.aliased = aliased
 
     def __getattr__(self, key: str) -> Any:
         if key == 'value':
@@ -677,6 +698,8 @@ class SingleCondition(Conditions):
 class ScoreCondition(Conditions):
     """ Represents the minscore() condition """
     def __init__(self, negated: bool, name: str, score: int) -> None:
+        if score < 0:
+            raise ValueError("minimum scores cannot be negative")
         self.name = name
         self.score = score
         super().__init__(negated)
@@ -806,6 +829,8 @@ class DetectionRule:
 # a typedef, even positions will be a Conditions instance, odd will be TokenTypes
 ConditionList = List[Union[Conditions, TokenTypes]]  # pylint: disable=invalid-name
 
+# tokens that mark the start and/or end of a RULE
+_STARTERS = [TokenTypes.RULE, TokenTypes.DEFINE]
 
 class Parser:  # pylint: disable=too-few-public-methods
     """ Responsible for parsing an entire block of text. Rules parsed from the
@@ -813,25 +838,41 @@ class Parser:  # pylint: disable=too-few-public-methods
     """
     def __init__(self, text: str, signature_names: Set[str],
                  valid_categories: Set[str],
-                 existing_rules: List[DetectionRule] = None) -> None:
-        self.lines = text.splitlines()
-        self.valid_categories = valid_categories
+                 existing_rules: List[DetectionRule] = None,
+                 existing_aliases: Dict[str, List[Token]] = None) -> None:
         if not existing_rules:
             existing_rules = []
+        self.signature_names = signature_names
         self.rules = list(existing_rules)
         self.rules_by_name = {rule.name: rule for rule in self.rules}
+        self.valid_categories = valid_categories
+        self.aliases = {} if existing_aliases is None else existing_aliases
+        # only after storing existing rules, categories, and signatures, check the aliases
+        for name, tokens in self.aliases.items():
+            self._verify_alias_name(name)
+            for token in tokens:
+                token.aliased = True
+        self.lines = text.splitlines()
         self.current_line = 1
+        self.current_position = 1
         self.current_token = None
         tokens = Tokeniser(text.expandtabs()).tokens
-        # gather all signature identifiers from condition blocks
-        identifiers = find_condition_identifiers(tokens)
         # start the iterator up for parsing
         self.tokens = iter(tokens)
+        # keep track of tokens including inserts from aliases
+        self._consumed_tokens: List[Token] = []
         try:
             self.current_token = next(self.tokens)
         except StopIteration:
             raise ValueError("No rules to parse")
-        while self.current_token and self.current_token.type == TokenTypes.RULE:
+        while self.current_token and self.current_token.type in _STARTERS:
+            if self.current_token.type == TokenTypes.DEFINE:
+                name, tokens = self._parse_alias()
+                self._verify_alias_name(name)
+                if name in self.aliases:
+                    raise ValueError(f"multiple aliases defined by the same name: {name}")
+                self.aliases[name] = tokens
+                continue
             rule = self._parse_rule()
             if rule.name in self.rules_by_name:
                 raise ValueError("Multiple rules specified for the same rule name")
@@ -843,25 +884,56 @@ class Parser:  # pylint: disable=too-few-public-methods
                                     self.lines[self.current_line - 1],
                                     " " * self.current_token.position, "^"))
         # verify gathered signature identifiers exist as signatures
-        unknown = identifiers - signature_names
+        identifiers = find_condition_identifiers(self._consumed_tokens)
+        unknown = identifiers - self.signature_names
         if unknown:
             raise ValueError("Rules contained identifers without signatures: %s" % ", ".join(sorted(list(unknown))))
+
+    def _verify_alias_name(self, name: str) -> None:
+        """ Ensures an alias name doesn't conflict in any way that could cause
+            confusion. A rule could still be defined with the name after the
+            alias is defined, however that will result in a syntax error.
+        """
+        if TokenTypes.classify(name) != TokenTypes.IDENTIFIER:
+            raise ValueError(f"invalid alias name {name}")
+        if name in self.signature_names:
+            raise ValueError(f"alias {name} duplicates a signature name")
+        if name in self.rules_by_name:
+            raise ValueError(f"alias {name} duplicates an existing rule name")
+        if name in self.valid_categories:
+            raise ValueError(f"alias {name} duplicates an existing rule category")
 
     def _consume(self, expected: TokenTypes) -> Token:
         if self.current_token is None:
             raise RuleSyntaxError("Unexpected end of rule, expected %s" % expected)
-        self.current_line = self.current_token.line_number
+        self._consumed_tokens.append(self.current_token)
+        if not self.current_token.aliased:
+            self.current_line = self.current_token.line_number
+            self.current_position = self.current_token.position
+            error_message = "Expected %s but found %s (%s)\n%s\n%s%s"
+        else:
+            error_message = "Expected %s but found %s (%s) in alias\n%s\n%s%s"
         if self.current_token.type != expected:
-            raise RuleSyntaxError("Expected %s but found %s (%s)\n%s\n%s%s" % (
+            raise RuleSyntaxError(error_message % (
                     expected, self.current_token.type, self.current_token,
                     "\n".join(self.lines[self.current_line - 5:self.current_line]),
-                    " "*self.current_token.position, "^"))
+                    " "*self.current_position, "^"))
         consumed = self.current_token
         try:
             self.current_token = next(self.tokens)
-            self.current_line = self.current_token.line_number
         except StopIteration:
             self.current_token = None
+            return consumed
+        # if the token is an alias, substitute in the aliased tokens
+        if (self.current_token.type == TokenTypes.IDENTIFIER
+            and self.current_token.identifier in self.aliases):
+            self.current_position = self.current_token.position
+            self.current_line = self.current_token.line_number
+            self.tokens = iter(self.aliases[self.current_token.identifier] + list(self.tokens))
+            self.current_token = next(self.tokens)
+        else:
+            self.current_position = self.current_token.position
+            self.current_line = self.current_token.line_number
         return consumed
 
     def _consume_int(self) -> int:
@@ -870,6 +942,26 @@ class Parser:  # pylint: disable=too-few-public-methods
     def _consume_identifier(self) -> str:
         return self._consume(TokenTypes.IDENTIFIER).identifier
 
+    def _parse_alias(self) -> Tuple[str, List[Token]]:
+        """ ALIAS = DEFINE_MARKER name:ID AS_MARKER tokens:TEXT
+            The text is not strictly accurate, as they must be other
+            valid non-text tokens.
+        """
+        self._consume(TokenTypes.DEFINE)
+        if self.current_token and self.current_token.aliased:
+            raise RuleSyntaxError("expected alias identifier but found existing alias")
+        name = self._consume_identifier()
+        self._consume(TokenTypes.AS)
+        tokens = []
+        while self.current_token and not self.current_token.type.is_a_rule_keyword():
+            if self.current_token.type == TokenTypes.TEXT:
+                raise ValueError(f"cannot use f{self.current_token} as replacement value in alias: f{name}")
+            self.current_token.aliased = True
+            tokens.append(self._consume(self.current_token.type))
+        if not tokens:
+            raise RuleSyntaxError(f"expected definition after '{str(TokenTypes.AS)}', but none found")
+        return name, tokens
+
     def _parse_rule(self) -> DetectionRule:
         """ RULE = RULE_MARKER classification:ID CATEGORY_MARKER category:ID
                     [COMMENT_MARKER:COMMENTS]
@@ -877,6 +969,8 @@ class Parser:  # pylint: disable=too-few-public-methods
                     CONDITIONS_MARKER conditions:CONDITIONS
         """
         self._consume(TokenTypes.RULE)
+        if self.current_token and self.current_token.aliased:
+            raise RuleSyntaxError("aliases cannot be used for rule identifiers")
         rule_name = self._consume_identifier()
         if not self.current_token:
             raise RuleSyntaxError("expected %s section after %s"
@@ -911,7 +1005,7 @@ class Parser:  # pylint: disable=too-few-public-methods
         neighbourhood = self._consume_int() * 1000
         self._consume(TokenTypes.CONDITIONS)
         conditions = Conditions(False, self._parse_conditions())
-        if self.current_token is not None and self.current_token.type != TokenTypes.RULE:
+        if self.current_token is not None and self.current_token.type not in _STARTERS:
             raise RuleSyntaxError("Unexpected symbol %s\n%s\n%s%s" % (
                     self.current_token.type,
                     "\n".join(self.lines[self.current_line - 5:self.current_line]),
@@ -992,7 +1086,7 @@ class Parser:  # pylint: disable=too-few-public-methods
                         self.current_token,
                         self.lines[self.current_line - 1],
                         " " * self.current_token.position))
-        elif self.current_token and self.current_token.type == TokenTypes.RULE:
+        elif self.current_token and self.current_token.type in [TokenTypes.RULE, TokenTypes.DEFINE]:
             # this rule has ended since another is beginning
             return conditions
         elif self.current_token is not None:

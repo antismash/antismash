@@ -21,9 +21,13 @@ from antismash.common.secmet.locations import location_from_string
 from .rre_domain import RREDomain
 
 
-RIPP_PRODUCTS = {'bacteriocin', 'cyanobactin', 'lanthipeptide',
-                 'lassopeptide', 'linaridin', 'thiopeptide', 'sactipeptide',
-                  'proteusin', 'glycocin', 'bottromycin', 'microcin'}
+RIPP_PRODUCTS = {'RiPP-like', 'bottromycin', 'cyanobactin', 'fungal-RiPP', 'guanidinotides',
+                 'lanthipeptide-class-i', 'lanthipeptide-class-ii',
+                 'lanthipeptide-class-iii', 'lanthipeptide-class-iv',
+                 'lanthipeptide-class-v',
+                 'LAP, lassopeptide', 'lipolanthine', 'microviridin', 'proteusin',
+                 'RaS-RiPP', 'sactipeptide', 'thioamitides', 'thiopeptide', 'ranthipeptide',
+                 'redox-cofactor', 'glycocin', 'RRE-containing'}
 
 
 class RREFinderResults(ModuleResults):

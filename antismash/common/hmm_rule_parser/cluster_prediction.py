@@ -12,7 +12,7 @@ from Bio.SearchIO._model.hsp import HSP
 
 from antismash.common import fasta, path, serialiser
 from antismash.common.secmet import Record, Protocluster, CDSFeature, FeatureLocation
-from antismash.common.secmet.locations import location_contains_other
+from antismash.common.secmet.locations import locations_overlap
 from antismash.common.secmet.qualifiers import GeneFunction, SecMetQualifier
 from antismash.common.subprocessing import run_hmmsearch
 from antismash.common.hmm_rule_parser import rule_parser
@@ -150,7 +150,7 @@ def remove_redundant_protoclusters(clusters: List[Protocluster],
         is_redundant = False
         for superior in rules_by_name[rule_name].superiors:
             for other_cluster in clusters_by_rule.get(superior, []):
-                if location_contains_other(other_cluster.core_location, cluster.core_location):
+                if locations_overlap(other_cluster.core_location, cluster.core_location):
                     is_redundant = True
                     break
             if is_redundant:
@@ -295,14 +295,18 @@ def filter_result_multiple(results: List[HSP], results_by_id: Dict[str, HSP]) ->
 
 def create_rules(rule_file: str, signature_names: Set[str],
                  valid_categories: Set[str],
-                 existing_rules: List[rule_parser.DetectionRule] = None
+                 existing_aliases: Dict[str, List[rule_parser.Token]],
+                 existing_rules: List[rule_parser.DetectionRule] = None,
                  ) -> List[rule_parser.DetectionRule]:
     """ Creates DetectionRule instances from the default rules file
+
+        Updates existing_aliases with any aliases found.
 
         Args:
             rule_file: A path to a file containing cluster rules to use.
             signature_names: the set of all known profile/signature names
             valid_categories: the set of all valid rule categories
+            existing_aliases: a dict of alias name to resulting tokens, updated with new values
             existing_rules: a list of existing rules, if any
 
         Returns:
@@ -310,7 +314,9 @@ def create_rules(rule_file: str, signature_names: Set[str],
     """
     rules = existing_rules or []
     with open(rule_file, "r") as ruledata:
-        parser = rule_parser.Parser("".join(ruledata.readlines()), signature_names, valid_categories, rules)
+        parser = rule_parser.Parser("".join(ruledata.readlines()), signature_names,
+                                    valid_categories, rules, existing_aliases=existing_aliases)
+    existing_aliases.update(parser.aliases)
     return parser.rules
 
 
@@ -399,8 +405,9 @@ def detect_protoclusters_and_signatures(record: Record, signature_file: str, see
         return RuleDetectionResults({}, tool, [])
     sig_by_name = {sig.name: sig for sig in get_signature_profiles(signature_file)}
     rules: List[rule_parser.DetectionRule] = []
+    aliases: Dict[str, List[rule_parser.Token]] = {}
     for rule_file in rule_files:
-        rules = create_rules(rule_file, set(sig_by_name), valid_categories, rules)
+        rules = create_rules(rule_file, set(sig_by_name), valid_categories, aliases, rules)
     results = []
     results_by_id: Dict[str, HSP] = {}
 

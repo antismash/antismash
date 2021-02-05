@@ -715,7 +715,7 @@ def run_specific_analysis(record: Record) -> LanthiResults:
     """
     results = LanthiResults(record.id)
     for cluster in record.get_protoclusters():
-        if cluster.product != 'lanthipeptide':
+        if not cluster.product.startswith("lanthipeptide"):
             continue
 
         # find core biosynthetic enzyme locations

@@ -246,7 +246,7 @@ def acquire_rodeo_heuristics(cluster: secmet.Protocluster, query: secmet.CDSFeat
     else:
         tabs.append(0)
     # cluster has SPASM domain (PF13186)
-    if "PF13186" in domains:
+    if "SPASM" in domains:
         score += 1
         tabs.append(1)
     else:
