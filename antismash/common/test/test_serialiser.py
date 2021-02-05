@@ -68,6 +68,11 @@ class TestResultsJSON(unittest.TestCase):
             for oldline, newline in zip(oldvalue.split('\n'), newvalue.split('\n')):
                 assert oldline == newline
 
+    def test_results_from_invalid_file_raises_error(self):
+        filename = get_path_to_nisin_genbank()
+        self.assertRaisesRegex(ValueError, "Cannot load results to reuse",
+                               serialiser.AntismashResults.from_file, filename)
+
 
 class TestFeatureSerialiser(unittest.TestCase):
     def test_simple_feature(self):
