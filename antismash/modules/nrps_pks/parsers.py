@@ -100,7 +100,7 @@ def calculate_consensus_prediction(cds_features: List[CDSFeature], results: Dict
                 the second for AT domains in trans-AT clusters
     """
     # Combine substrate specificity predictions into consensus prediction
-    cis_at: Dict[str, str] = {}  # feature name -> prediction
+    con_at: Dict[str, str] = {}  # feature name -> prediction
     trans_at: Dict[str, str] = {}  # feature name -> prediction
 
     for cds in cds_features:
@@ -116,28 +116,31 @@ def calculate_consensus_prediction(cds_features: List[CDSFeature], results: Dict
                 consensus = calculate_individual_consensus(preds)
 
                 if 'transatpks' not in cds.region.products:
-                    cis_at[domain.feature_name] = consensus
+                    con_at[domain.feature_name] = consensus
                 else:
                     trans_at[domain.feature_name] = consensus
 
+            if domain.name == "PKS_KS" and "transPACT" in predictions:
+                con_at[domain.feature_name] = predictions['transPACT'].predictions[0][0]
+                    
             if 'transatpks' in cds.region.products and domain.name == "PKS_KS":
                 # For chemical display purpose for chemicals from trans-AT PKS gene cluster
                 # mal is always assumed for trans-AT
-                cis_at[domain.feature_name] = "mal"
+                con_at[domain.feature_name] = "mal"
 
             if domain.name in ["AMP-binding", "A-OX"]:
-                cis_at[domain.feature_name] = generate_nrps_consensus(predictions)
+                con_at[domain.feature_name] = generate_nrps_consensus(predictions)
             elif domain.name == "CAL_domain":
                 preds = predictions["minowa_cal"].get_classification()
                 pred = get_short_form(preds[0])
                 assert isinstance(pred, str)
                 if pred in AVAILABLE_SMILES_PARTS:
-                    cis_at[domain.feature_name] = pred
+                    con_at[domain.feature_name] = pred
                 else:
                     logging.debug("missing %s from SMILES parts for domain %s", pred, domain.feature_name)
-                    cis_at[domain.feature_name] = "pk"
+                    con_at[domain.feature_name] = "pk"
 
-    return cis_at, trans_at
+    return con_at, trans_at
 
 
 def find_duplicate_position(domains: List[str], item: str) -> List[int]:

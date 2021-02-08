@@ -46,11 +46,12 @@ def generate_html(region_layer: RegionLayer, results: NRPS_PKS_Results,
                "To show the product, click on the expander or the candidate cluster feature drawn in the overview. "
                )
     mon_tt = ("Shows the predicted monomers for each adynelation domain and acyltransferase within genes. "
+              "Where possible, Shows the substrate specificity for each transAT "
+              "PKS ketosynthase domain as predicted by transPACT. "
               "Each gene prediction can be expanded to view detailed predictions of each domain. "
               "Each prediction can be expanded to view the predictions by tool "
               " (and, for some tools, further expanded for extra details). "
               )
-
     if not nrps_layer.has_any_polymer():
         return html
 
