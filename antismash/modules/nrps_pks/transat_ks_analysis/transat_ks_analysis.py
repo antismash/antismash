@@ -206,7 +206,7 @@ def transpact_tree_prediction(pplacer_tree: str,
     ## Look to see when threshold is met
     totalmass = get_totalmass(tree, tree_hits, funclades)
     clade, score = get_best_transpact(totalmass)
-    spec = clade2ann.get(clade, 'NA')
+    spec = clade2ann.get(clade, 'clade_not_conserved')
     return KSPrediction({spec: KSResult(clade, spec, score)})
 
 
