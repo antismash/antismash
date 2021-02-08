@@ -121,8 +121,9 @@ def calculate_consensus_prediction(cds_features: List[CDSFeature], results: Dict
                     trans_at[domain.feature_name] = consensus
 
             if domain.name == "PKS_KS" and "transPACT" in predictions:
-                con_at[domain.feature_name] = predictions['transPACT'].predictions[0][0]
-                    
+                c = predictions['transPACT'].get_classification()[0]
+                con_at[domain.feature_name] = c
+                
             if 'transatpks' in cds.region.products and domain.name == "PKS_KS":
                 # For chemical display purpose for chemicals from trans-AT PKS gene cluster
                 # mal is always assumed for trans-AT

@@ -46,9 +46,9 @@ class TestKSResult(unittest.TestCase):
 class TestKSPrediction(unittest.TestCase):
 
     def setUp(self):
-        results = {"test_specificity1": KSResult("test_clade1", "test_specificity1", 1.0),
-                   "test_specificity2": KSResult("test_clade2", "test_specificity2", 50.0),
-                   "test_specificity3": KSResult("test_clade3", "test_specificity3", 1.0)}
+        results = {"test_specificity1": KSResult("test_clade1", "test_specificity1", 0.2),
+                   "test_specificity2": KSResult("test_clade2", "test_specificity2", 0.7),
+                   "test_specificity3": KSResult("test_clade3", "test_specificity3", 0.1)}
         self.prediction = KSPrediction(results)
 
     def test_correct_instantiation(self):
@@ -60,17 +60,17 @@ class TestKSPrediction(unittest.TestCase):
         assert self.prediction.predictions[0][0] == "test_specificity2"
         assert self.prediction.predictions[0][1].clade == "test_clade2"
         assert self.prediction.predictions[0][1].specificity == "test_specificity2"
-        assert self.prediction.predictions[0][1].mass_score == 50.0
+        assert self.prediction.predictions[0][1].mass_score == 0.7
 
         assert self.prediction.predictions[1][0] == "test_specificity1"
         assert self.prediction.predictions[1][1].clade == "test_clade1"
         assert self.prediction.predictions[1][1].specificity == "test_specificity1"
-        assert self.prediction.predictions[1][1].mass_score == 1.0
+        assert self.prediction.predictions[1][1].mass_score == 0.2
 
         assert self.prediction.predictions[2][0] == "test_specificity3"
         assert self.prediction.predictions[2][1].clade == "test_clade3"
         assert self.prediction.predictions[2][1].specificity == "test_specificity3"
-        assert self.prediction.predictions[2][1].mass_score == 1.0
+        assert self.prediction.predictions[2][1].mass_score == 0.1
 
     def test_get_classification(self):
         empty_prediction = KSPrediction({})
@@ -82,27 +82,27 @@ class TestKSPrediction(unittest.TestCase):
         assert empty_prediction.as_html() == "No matches"
         assert self.prediction.as_html() == "<dl>\n " \
                                             "<dt>transPACT assigned specificiy:</dt>\n" \
-                                            "<dd>test_specificity2 (test_clade2): 50.0%</dd>\n" \
-                                            "<dd>test_specificity1 (test_clade1): 1.0%</dd>\n" \
-                                            "<dd>test_specificity3 (test_clade3): 1.0%</dd>\n" \
+                                            "<dd>test_specificity2 (test_clade2): 0.7 mass score (maximum=1.0)</dd>\n" \
+                                            "<dd>test_specificity1 (test_clade1): 0.2 mass score (maximum=1.0)</dd>\n" \
+                                            "<dd>test_specificity3 (test_clade3): 0.1 mass score (maximum=1.0)</dd>\n" \
                                             "</dl>\n"
 
     def test_to_json(self):
         to_json_return = self.prediction.to_json()
         assert to_json_return == {"method": "transPACT",
-                                  "predictions": {"test_specificity2": ("test_clade2", "test_specificity2", 50.0),
-                                                  "test_specificity1": ("test_clade1", "test_specificity1", 1.0),
-                                                  "test_specificity3": ("test_clade3", "test_specificity3", 1.0)}}
+                                  "predictions": {"test_specificity2": ("test_clade2", "test_specificity2", 0.7),
+                                                  "test_specificity1": ("test_clade1", "test_specificity1", 0.2),
+                                                  "test_specificity3": ("test_clade3", "test_specificity3", 0.1)}}
 
     def test_from_json(self):
         prediction = KSPrediction.from_json(
-            {"method": "transPACT", "predictions": {"test_specificity1": ("test_clade1", "test_specificity1", 1.0)}})
+            {"method": "transPACT", "predictions": {"test_specificity1": ("test_clade1", "test_specificity1", 0.2)}})
         assert prediction.method == "transPACT"
         assert len(prediction.predictions) == 1
         assert prediction.predictions[0][0] == "test_specificity1"
         assert prediction.predictions[0][1].clade == "test_clade1"
         assert prediction.predictions[0][1].specificity == "test_specificity1"
-        assert prediction.predictions[0][1].mass_score == 1.0
+        assert prediction.predictions[0][1].mass_score == 0.2
 
 
 class TestGetLeaf2Clade(unittest.TestCase):
