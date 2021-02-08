@@ -44,7 +44,7 @@ class TestTreePredictionMethods(unittest.TestCase):
         """ test for transpact tree calling """
         prediction = transpact_tree_prediction(self.pplacer_tree, self.fun_clades, self.clade2ann)
         assert len(prediction.predictions) == 1
-        assert prediction.predictions[0][0] == "glycine"
+        assert prediction.predictions[0][0] == "Glycine"
         assert prediction.predictions[0][1].clade == "Clade_30"
         assert prediction.predictions[0][1].mass_score == 1.0
 
@@ -106,19 +106,19 @@ class TestRunTranspactKSAnalysis(unittest.TestCase):
 
         assert 'nrpspksdomains_ctg1_11_PKS_KS.2' in results
         assert len(results['nrpspksdomains_ctg1_11_PKS_KS.2'].predictions) == 1
-        assert results['nrpspksdomains_ctg1_11_PKS_KS.2'].predictions[0][0] == 'aMe_eDB'
+        assert results['nrpspksdomains_ctg1_11_PKS_KS.2'].predictions[0][0] == 'Alpha-methyl E-configured double bonds'
         assert results['nrpspksdomains_ctg1_11_PKS_KS.2'].predictions[0][1].clade == 'Clade_47'
         assert results['nrpspksdomains_ctg1_11_PKS_KS.2'].predictions[0][1].mass_score == 1.0
 
         assert 'nrpspksdomains_ctg1_11_PKS_KS.3' in results
         assert len(results['nrpspksdomains_ctg1_11_PKS_KS.3'].predictions) == 1
-        assert results['nrpspksdomains_ctg1_11_PKS_KS.3'].predictions[0][0] == 'eDB'
+        assert results['nrpspksdomains_ctg1_11_PKS_KS.3'].predictions[0][0] == 'E-configured double bonds'
         assert results['nrpspksdomains_ctg1_11_PKS_KS.3'].predictions[0][1].clade == 'Clade_62'
         assert results['nrpspksdomains_ctg1_11_PKS_KS.3'].predictions[0][1].mass_score == 1.0
 
         assert 'nrpspksdomains_ctg1_12_PKS_KS.1' in results
         assert results['nrpspksdomains_ctg1_12_PKS_KS.1'].predictions
-        assert results['nrpspksdomains_ctg1_12_PKS_KS.1'].predictions[0][0] == 'b_MeeDB'
+        assert results['nrpspksdomains_ctg1_12_PKS_KS.1'].predictions[0][0] == 'Beta-methyl E-configured double bonds'
         assert results['nrpspksdomains_ctg1_12_PKS_KS.1'].predictions[0][1].clade == 'Clade_82'
         assert results['nrpspksdomains_ctg1_12_PKS_KS.1'].predictions[0][1].mass_score == 1.0
 
