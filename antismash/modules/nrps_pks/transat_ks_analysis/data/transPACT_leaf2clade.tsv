@@ -371,9 +371,9 @@ macrolactin_MlnF1_KS9_zD_zDB	Clade_65	Double bonds
 legioliulin_LglD2_KS2_eDB	Clade_68	Double bonds
 chivosazole_ChiE1_KS13_zDB_eDB	Clade_68	Double bonds
 chlorotonil_CtoE1_KS9_DB_DA	Clade_68	Double bonds
-rhizopodin_RizB5_KS5_bketo	Clade_67	Various
-SIA7248_SiaG2_KS9_eDB	Clade_67	Various
-rhizopodin_RizD5_KS15_bimod_bOH	Clade_67	Various
+rhizopodin_RizB5_KS5_bketo	Clade_67	clade_not_conserved
+SIA7248_SiaG2_KS9_eDB	Clade_67	clade_not_conserved
+rhizopodin_RizD5_KS15_bimod_bOH	Clade_67	clade_not_conserved
 virginiamycin_VirA4_KS4_eDB	Clade_66	Double bonds
 griseoviridin_SgvE22_KS4__eDB	Clade_66	Double bonds
 anthracimycin_AtcE_KS5_eDB	Clade_66	Double bonds
@@ -642,7 +642,7 @@ difficidin_DifG1_KS4_OH	Clade_113	Alpha-methyl beta-hydroxyl
 basiliskamides_P615_BasE2_KS3_aDMebDOH	Clade_113	Alpha-methyl beta-hydroxyl
 disorazole_DszB4_KS8_0zDB	Clade_110	Non-elongating Z-configured double bonds
 tartrolon_TrtF2_KS10_0redaDMe	Clade_109	Non-elongating alpha-methyl reduced
-bryostatin_BryX3_KS16	Clade_114	Unknown
+bryostatin_BryX3_KS16	Clade_114	clade_not_conserved
 corallopyronin_CorJ1_KS4_shDB	Clade_106	Shifted double bonds
 myxopyronin_MxnJ1_KS4_shDB	Clade_106	Shifted double bonds
 FR901464_Fr9I2_KS12_0pyran	Clade_108	Non-elongating pyran or furan
