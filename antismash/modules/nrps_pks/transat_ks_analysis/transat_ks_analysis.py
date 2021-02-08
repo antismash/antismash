@@ -107,7 +107,7 @@ def get_leaf2clade(leaf2cladetbl: str) -> Tuple[Dict[str, str], Dict[str, str]]:
         for ln in cfh.read().splitlines():
             ksname, clade, ann = ln.split("\t")
             leaf2clade[ksname] = clade
-            clade2ann[clade] = ann.replace(' ', '_')
+            clade2ann[clade] = ann
     return(leaf2clade, clade2ann)
 
 
