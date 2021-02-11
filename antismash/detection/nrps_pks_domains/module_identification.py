@@ -20,9 +20,11 @@ Non-carbon methylations are represented as either OMe or NMe, Norine mostly uses
 that form but occasionally has MeO.
 """
 
+from dataclasses import dataclass
 from typing import Any, Dict, Iterator, List, Optional
 
 from antismash.common.hmmscan_refinement import HMMResult
+from antismash.common.secmet import CDSFeature
 
 ADENYLATIONS = {
     "AMP-binding",
@@ -117,10 +119,12 @@ class Component:
         A subtype can be optionally supplied to differentiate between
         types of domains (e.g. a Trans-AT variant of a KS domain)
     """
-    def __init__(self, domain: HMMResult, subtype: str = "") -> None:
+    def __init__(self, domain: HMMResult, cds_name: str, subtype: str = "") -> None:
         self._domain = domain
         self.classification = classify(domain.hit_id)
         self.subtype = subtype
+        assert cds_name
+        self.locus = cds_name
         assert self.classification
 
     @property
@@ -196,6 +200,7 @@ class Component:
         """ Generate a JSON representation of the component """
         result: Dict[str, Any] = {
             "domain": self._domain.to_json(),
+            "locus": self.locus,
         }
         if self.subtype:
             result["subtype"] = self.subtype
@@ -206,7 +211,7 @@ class Component:
         """ Construct a component from a JSON representation """
         subtype = data.get("subtype", "")
         assert isinstance(subtype, str), subtype
-        return cls(HMMResult.from_json(data["domain"]), subtype)
+        return cls(HMMResult.from_json(data["domain"]), data["locus"], subtype)
 
 
 class Module:
@@ -240,8 +245,7 @@ class Module:
 
     def is_pks(self) -> bool:
         """ Returns True if the module is a PKS module """
-        return bool(self._starter and self._starter.is_pks_specific()
-                    or self._loader and self._loader.is_pks_specific())
+        return bool(any((comp.is_pks_specific() for comp in self._components)))
 
     def is_nrps(self) -> bool:
         """ Returns True if the module is a NRPS module """
@@ -443,12 +447,13 @@ def classify(profile_name: str) -> str:
     raise ValueError("could not classify domain: %s" % profile_name)
 
 
-def build_modules_for_cds(domains: List[HMMResult], ks_subtypes: List[str]) -> List[Module]:
+def build_modules_for_cds(domains: List[HMMResult], ks_subtypes: List[str], cds_name: str) -> List[Module]:
     """ Constructs a list of modules for a CDS based on the domains provided
 
         Arguments:
             domains: a list of HMMResults, one for each domain found
             ks_subtypes: a list of strings, one for each PKS_KS domain given in domains
+            cds_name: the name of the CDS feature the domains were found in
 
         Returns:
             a list of modules
@@ -458,13 +463,13 @@ def build_modules_for_cds(domains: List[HMMResult], ks_subtypes: List[str]) -> L
     subtypes = iter(ks_subtypes)
     sub = ""
     for domain in domains:
-        component = Component(domain)
+        component = Component(domain, cds_name)
         assert component.classification, "missing classification for %s" % domain.hit_id
         if component.classification == "KS":
             sub = next(subtypes)
         else:
             sub = ""
-        component = Component(domain, sub)
+        component = Component(domain, cds_name, sub)
         # start a new module if we have an explicit starter
         if component.is_starter() and not component.is_loader() and not modules[-1].is_empty():
             modules.append(Module())
@@ -479,3 +484,71 @@ def build_modules_for_cds(domains: List[HMMResult], ks_subtypes: List[str]) -> L
     for module in modules:
         assert not module.is_empty()
     return modules
+
+
+@dataclass
+class CDSModuleInfo:
+    """ Used for bundling relevant details together about a specific CDS and
+        modules within it
+    """
+    cds: CDSFeature
+    modules: List[Module]
+
+
+def combine_modules(current: CDSModuleInfo, previous: CDSModuleInfo) -> Optional[Module]:
+    """ Combines trailing/leading incomplete modules of sequential CDS features
+        into single modules, provided the resulting module would be valid and the
+        features are on the same strand.
+
+        This function modifies the given objects lists of modules.
+
+        Arguments:
+            current: the CDSModuleInfo instance of the earlier CDS on the sequence
+            previous: the CDSModuleInfo instance of the later CDS on the sequence
+
+        Returns:
+            the newly merged Module or None
+    """
+    # both strands must match
+    if current.cds.location.strand != previous.cds.location.strand:
+        return None
+    # and both must have modules
+    if not current.modules or not previous.modules:
+        return None
+    # ensure the two args are ordered as expected
+    if current.cds < previous.cds:
+        current, previous = previous, current
+    # the leading fragment depends on strand
+    if current.cds.location.strand == 1:
+        head = previous.modules[-1]
+        tail = current.modules[0]
+    else:
+        head = current.modules[-1]
+        tail = previous.modules[0]
+    # both modules must be incomplete
+    if head.is_complete() or tail.is_complete():
+        return None
+    # and avoid creating hybrid modules
+    if head.is_pks() and tail.is_nrps() or head.is_nrps() and tail.is_pks():
+        return None
+    module = Module()
+    for component in head:
+        module.add_component(component)
+    try:
+        for component in tail:
+            module.add_component(component)
+    except IncompatibleComponentError:
+        return None
+    # if it's still incomplete after the merge, discard it
+    if not module.is_complete():
+        return None
+
+    # finally, replace the existing leading fragment with the new full module
+    # and remove the tail fragment
+    if current.cds.location.strand == 1:
+        previous.modules[-1] = module
+        current.modules.pop(0)
+    else:
+        current.modules[-1] = module
+        previous.modules.pop(0)
+    return module

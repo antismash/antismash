@@ -55,8 +55,8 @@ class TestAnalyses(unittest.TestCase):
         two_domain_json = {'domain_hmms': [a_domain, pcp],
                            'motif_hmms': [],
                            'modules': [{"components": [
-                                           {"domain": a_domain},
-                                           {"domain": pcp},
+                                           {"domain": a_domain, "locus": "two_domains"},
+                                           {"domain": pcp, "locus": "two_domains"},
                                         ]
                                         }],
                            "ks_subtypes": [],

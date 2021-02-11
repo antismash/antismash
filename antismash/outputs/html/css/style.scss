@@ -749,6 +749,10 @@ table.region-table {
 .jsdomain-text {
     pointer-events: none;
 }
+.jsdomain-match {
+    @extend .jsdomain-text;
+    font-size: 70%;
+}
 .jsdomain-module {
     fill: rgba(200, 200, 200, 0.5);
     stroke-width: 1px;

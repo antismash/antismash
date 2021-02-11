@@ -8,7 +8,9 @@
     to describe in the sidepanel.
 """
 
-from typing import Dict, List, Union
+import itertools
+import string
+from typing import Dict, Iterator, List, Optional, Tuple, Union
 
 from antismash.common import path
 from antismash.common.html_renderer import FileTemplate, HTMLSections
@@ -150,6 +152,15 @@ def generate_js_domains(region: Region, record: Record) -> Dict[str, Union[str, 
         drawing the domains
     """
     orfs: List[JSONOrf] = []
+    match_ids: Dict[Tuple[str, ...], str] = {}
+    def match_id_generator() -> Iterator[str]:
+        """ Generates match names as A, B, .. Z, AA, AB, .. AZ, AAA, ... """
+        for size in itertools.count(start=1):
+            for i in itertools.product(string.ascii_uppercase, repeat=size):
+                yield "".join(i)
+
+    match_gen = iter(match_id_generator())
+
     for feature in region.cds_children:
         if not feature.nrps_pks:
             continue
@@ -165,8 +176,21 @@ def generate_js_domains(region: Region, record: Record) -> Dict[str, Union[str, 
                     monomer = monomer[:-2] + "?"
                 if monomer.endswith("X"):
                     monomer = monomer[:-1] + "?"
-            js_module = JSONModule(module.protein_location.start, module.protein_location.end,
-                                   module.is_complete(), module.is_iterative(), monomer)
+            multi_cds: Optional[str] = None
+            match_id: Optional[str] = None
+            protein_location = module.get_parent_protein_location(feature.get_name())
+            # adjust the postions if the module crosses two CDS features
+            if len(module.parent_cds_names) > 1:
+                if module.parent_cds_names[::feature.location.strand][0] == feature.get_name():
+                    multi_cds = "head"
+                else:
+                    multi_cds = "tail"
+                if module.parent_cds_names not in match_ids:
+                    match_ids[module.parent_cds_names] = next(match_gen)
+                match_id = match_ids[module.parent_cds_names]
+            js_module = JSONModule(protein_location.start, protein_location.end,
+                                   module.is_complete(), module.is_iterative(), monomer,
+                                   multi_cds=multi_cds, match_id=match_id)
             js_orf.add_module(js_module)
 
         orfs.append(js_orf)
