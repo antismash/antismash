@@ -4,7 +4,7 @@
 """ JSON-friendly classes explicitly for use by the javascript drawing libraries
 """
 
-from typing import Any, Dict, Iterator, List, Tuple
+from typing import Any, Iterator, List, Optional, Tuple
 
 from antismash.common.secmet.features import CDSFeature
 from antismash.common.secmet.qualifiers import NRPSPKSQualifier
@@ -52,13 +52,18 @@ class JSONDomain(JSONBase):
 
 class JSONModule(JSONBase):
     """ A JSON-serialisable object for simplifying NRPS/PKS module datatypes """
-    def __init__(self, start: int, end: int, complete: bool, iterative: bool, monomer: str) -> None:
-        super().__init__(["start", "end", "complete", "iterative", "monomer"])
+    def __init__(self, start: int, end: int, complete: bool, iterative: bool, monomer: str,
+                 multi_cds: Optional[str] = None, match_id: Optional[str] = None) -> None:
+        super().__init__(["start", "end", "complete", "iterative", "monomer", "multi_cds", "match_id"])
         self.start = start
         self.end = end
         self.complete = complete
         self.iterative = iterative
         self.monomer = monomer
+        self.multi_cds = multi_cds
+        self.match_id = match_id
+        if bool(self.multi_cds) != bool(self.match_id):
+            raise ValueError("multi_cds and match_id must both have values or both be None")
 
 
 class JSONOrf(JSONBase):
