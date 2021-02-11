@@ -21,7 +21,13 @@ from antismash.common.secmet.features import (
 )
 from antismash.common.secmet.locations import FeatureLocation
 
-from .module_identification import build_modules_for_cds, Module
+from .module_identification import (
+    build_modules_for_cds,
+    CDSModuleInfo,
+    combine_modules,
+    IncompatibleComponentError,
+    Module,
+)
 from .modular_domain import ModularDomain
 
 
@@ -91,7 +97,7 @@ class CDSResult:
 
 class NRPSPKSDomains(module_results.DetectionResults):
     """ Results tracking for NRPS and PKS domains """
-    schema_version = 2
+    schema_version = 3
 
     def __init__(self, record_id: str, cds_results: Dict[CDSFeature, CDSResult] = None) -> None:
         super().__init__(record_id)
@@ -105,9 +111,21 @@ class NRPSPKSDomains(module_results.DetectionResults):
                 "record_id": self.record_id}
 
     def add_to_record(self, record: Record) -> None:
-        for result in self.cds_results.values():
+        # track multi-CDS modules to avoid duplication
+        added_modules = set()
+        for cds, result in self.cds_results.items():
             for module in result.modules:
-                domains: List[AntismashDomain] = [result.domain_features[component.domain] for component in module]
+                if module in added_modules:
+                    continue
+                added_modules.add(module)
+                domains: List[AntismashDomain] = []
+                for component in module:
+                    if component.locus == cds.get_name():
+                        domain = result.domain_features[component.domain]
+                    else:
+                        other_cds_results = self.cds_results[record.get_cds_by_name(component.locus)]
+                        domain = other_cds_results.domain_features[component.domain]
+                    domains.append(domain)
                 mod_type = ModuleFeature.types.UNKNOWN
                 if module.is_nrps():
                     mod_type = ModuleFeature.types.NRPS
@@ -186,6 +204,7 @@ def generate_domains(record: Record) -> NRPSPKSDomains:
     cds_ks_subtypes = find_ks_domains(fasta)
     cds_motifs = find_ab_motifs(fasta)
 
+    prev: Optional[CDSModuleInfo] = None
     for cds in cds_within_regions:
         domains = cds_domains.get(cds.get_name(), [])
         motifs = cds_motifs.get(cds.get_name(), [])
@@ -193,8 +212,14 @@ def generate_domains(record: Record) -> NRPSPKSDomains:
             continue
         subtype_names = match_subtypes_to_ks_domains(domains, cds_ks_subtypes.get(cds.get_name(), []))
         domain_type = classify_cds([domain.hit_id for domain in domains], subtype_names)
-        modules = build_modules_for_cds(domains, subtype_names)
+        modules = build_modules_for_cds(domains, subtype_names, cds.get_name())
         results.cds_results[cds] = CDSResult(domains, motifs, domain_type, modules, subtype_names)
+
+        # combine modules that cross CDS boundaries, if possible and relevant
+        info = CDSModuleInfo(cds, modules)
+        if prev and prev.modules and info.modules:
+            combine_modules(info, prev)  # modifies the lists of modules linked in each CDSResult
+        prev = info
 
     for cds, cds_result in results.cds_results.items():
         cds_result.annotate_domains(record, cds)

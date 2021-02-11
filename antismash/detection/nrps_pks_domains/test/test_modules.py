@@ -9,13 +9,16 @@ import unittest
 
 from antismash.common import path
 from antismash.common.test.helpers import DummyHMMResult
+from antismash.common.secmet.test.helpers import DummyCDS
 from antismash.detection import nrps_pks_domains
 from antismash.detection.nrps_pks_domains.module_identification import (
+    CDSModuleInfo,
     CLASSIFICATIONS,
-    Component,
+    Component as Component_actual,
     Module,
-    build_modules_for_cds,
+    build_modules_for_cds as build_modules_for_cds_actual,
     classify,
+    combine_modules,
 )
 
 # chosen arbitrarily, these exist to make future profile renames easier
@@ -27,16 +30,28 @@ TRANS_AT_SUBTYPE = "Trans-AT-KS"
 CP = "ACP"
 
 
-def add_component(module, name, sub="", start=1, end=10):
-    module.add_component(Component(DummyHMMResult(name, start, end), sub))
+
+class Component(Component_actual):
+    """ a tiny wrapper to avoid always supplying a dummy CDS name """
+    def __init__(self, domain, cds_name="test_name", subtype=""):
+        super().__init__(domain, cds_name, subtype=subtype)
 
 
-def build_module(names, subtypes=None, first_in_cds=True):
+def build_modules_for_cds(domains, subtypes, cds_name="test_name"):
+    return build_modules_for_cds_actual(domains, subtypes, cds_name)
+
+
+def add_component(module, name, sub="", start=1, end=10, cds_name="test_name"):
+    assert cds_name
+    module.add_component(Component(DummyHMMResult(name, start, end), cds_name, sub))
+
+
+def build_module(names, subtypes=None, first_in_cds=True, cds_name="test_name"):
     module = Module(first_in_cds=first_in_cds)
     subs = iter(subtypes or [])
     for domain in names:
         sub = next(subs) if domain == PKS_START and subtypes else ""
-        add_component(module, domain, sub)
+        add_component(module, domain, sub, cds_name=cds_name)
     return module
 
 
@@ -71,7 +86,7 @@ class TestComponent(unittest.TestCase):
         assert component.classification == "CP"
 
         domain._hit_id = PKS_START
-        component = Component(domain, "some-subtype")
+        component = Component(domain, subtype="some-subtype")
         assert component.subtype == "some-subtype"
         assert component.classification == "KS"
 
@@ -367,3 +382,98 @@ class TestBuildModules(unittest.TestCase):
             print(modules[1]._starter, modules[1]._loader, modules[1]._carrier_protein,
                   modules[1]._starter is modules[1]._loader)
             assert not modules[1].is_complete()
+
+
+class TestMerging(unittest.TestCase):
+    def setUp(self):
+        self.nrps_head = build_module([NRPS_START, NRPS_LOAD])
+        self.nrps_tail = build_module([NRPS_LOAD, CP])
+        self.nrps_tail._first_in_cds = False
+        assert not self.nrps_tail.is_complete()
+        self.pks_head = build_module([PKS_START, PKS_LOAD])
+        self.pks_tail = build_module([PKS_LOAD, CP])
+        self.pks_tail._first_in_cds = False
+        assert not self.pks_tail.is_complete()
+        self.generic_tail = build_module([CP])
+        self.trans_at_head = build_module([PKS_START], subtypes=[TRANS_AT_SUBTYPE])
+        self.complete = build_module([PKS_START, PKS_LOAD, CP])
+
+    def build(self, early, late, strand=1, tail_strand_multiplier=1):
+        if strand == -1:
+            head = late
+            tail = early
+            second = CDSModuleInfo(DummyCDS(start=50, end=110, strand=strand), [tail])
+            first = CDSModuleInfo(DummyCDS(start=500, end=560, strand=strand * tail_strand_multiplier), [head])
+        else:
+            head = early
+            tail = late
+            first = CDSModuleInfo(DummyCDS(start=50, end=110, strand=strand), [head])
+            second = CDSModuleInfo(DummyCDS(start=500, end=560, strand=strand * tail_strand_multiplier), [tail])
+
+        first_modules = list(first.modules)
+        second_modules = list(second.modules)
+
+        if strand == -1:
+            module = combine_modules(second, first)
+        else:
+            module = combine_modules(first, second)
+
+        if not module:
+            # nothing should be changed
+            assert first_modules == first.modules
+            assert second_modules == second.modules
+        else:
+            # head is replaced
+            assert head not in first.modules
+            assert len(first_modules) == len(first.modules), (first, second)
+            assert module in first.modules
+            # tail removed
+            assert tail not in second.modules
+            # and not replaced
+            assert len(second_modules) - 1 == len(second.modules)
+
+        return module
+
+    def test_pks_nrps_combinations(self):
+        assert self.nrps_head.is_nrps() and self.pks_tail.is_pks()
+        assert not self.nrps_head.is_complete() and not self.pks_tail.is_complete()
+        assert not self.build(self.nrps_head, self.pks_tail)
+        assert not self.build(self.pks_head, self.nrps_tail)
+
+    def test_invalid_components(self):
+        assert not self.build(self.nrps_head, self.nrps_head)
+        assert not self.build(self.complete, self.nrps_head)
+        assert not self.build(self.nrps_head, self.complete)
+
+    def test_still_incomplete(self):
+        # no loaders
+        assert not self.build(build_module([NRPS_START]), self.generic_tail)
+        assert not self.build(build_module([PKS_START]), self.generic_tail)
+
+    def test_valid_merges(self):
+        for head in [self.nrps_head, self.pks_head, self.trans_at_head]:
+            module = self.build(head, self.generic_tail)
+            assert module.is_complete()
+
+    def test_strand_ordering(self):
+        # builds correctly when strands forward
+        assert self.build(self.nrps_head, self.generic_tail)
+        # but not when strands are reverse
+        assert not self.build(self.nrps_head, self.generic_tail, strand=-1)
+
+        # flipping the fragments to match should work in reverse
+        assert self.build(self.generic_tail, self.nrps_head, strand=-1)
+        # but not in forward
+        assert not self.build(self.generic_tail, self.nrps_head)
+
+    def test_strands_must_match(self):
+        # works with same strand
+        assert self.build(self.nrps_head, self.generic_tail)
+        # doesn't work with mismatching strands
+        assert not self.build(self.nrps_head, self.generic_tail, tail_strand_multiplier=-1)
+
+    def test_missing_modules(self):
+        missing_modules = CDSModuleInfo(DummyCDS(start=50, end=110), [])
+        has_modules = CDSModuleInfo(DummyCDS(start=150, end=210), [self.generic_tail])
+        assert not combine_modules(missing_modules, has_modules)
+        assert not combine_modules(has_modules, missing_modules)
