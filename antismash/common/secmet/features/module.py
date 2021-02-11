@@ -55,10 +55,11 @@ class Module(Feature):
         if not domains:
             raise ValueError("at least one domain required in module")
 
-        # if the parent CDS is on the reverse strand, the domains are in the wrong order
+        # if the parent CDSes are on the reverse strand, the domains are in the wrong order
         # so ensure they're sorted here as they appear in the translation
-        domains = sorted(domains, key=lambda x: x.protein_location.start)
-        if len(domains) >= 2 and domains[0] > domains[1]:
+        reverse = domains[0].location.strand == -1
+        domains = sorted(domains, key=lambda x: x.location.start, reverse=reverse)
+        if reverse:
             location = FeatureLocation(domains[-1].location.start, domains[0].location.end)
         else:
             location = FeatureLocation(domains[0].location.start, domains[-1].location.end)
