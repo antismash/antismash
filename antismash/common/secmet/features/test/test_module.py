@@ -182,3 +182,12 @@ class TestModule(unittest.TestCase):
             module.add_monomer("", "to")
         with self.assertRaisesRegex(ValueError, "monomer is required"):
             module.add_monomer("from", "")
+
+    def test_multi_cds_sorting(self):
+        # protein sorting in multi-CDS modules will lead to incorrect placements
+        domains = [DummyAntismashDomain(start=20, end=50, protein_start=7, protein_end=17, locus_tag="A"),
+                   DummyAntismashDomain(start=70, end=91, protein_start=3, protein_end=10, locus_tag="B")]
+        module = create_module(domains=domains)
+        alternate = create_module(domains=domains[::-1])
+        assert module.domains == alternate.domains
+        assert list(module.domains) == domains
