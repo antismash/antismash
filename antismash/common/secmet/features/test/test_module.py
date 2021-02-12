@@ -184,10 +184,39 @@ class TestModule(unittest.TestCase):
             module.add_monomer("from", "")
 
     def test_multi_cds_sorting(self):
-        # protein sorting in multi-CDS modules will lead to incorrect placements
-        domains = [DummyAntismashDomain(start=20, end=50, protein_start=7, protein_end=17, locus_tag="A"),
+        # regardless of strand, the domains should be ordered as per a module
+        forward = [DummyAntismashDomain(start=20, end=50, protein_start=7, protein_end=17, locus_tag="A"),
                    DummyAntismashDomain(start=70, end=91, protein_start=3, protein_end=10, locus_tag="B")]
+        reverse = [DummyAntismashDomain(start=70, end=91, strand=-1, protein_start=3, protein_end=10, locus_tag="A"),
+                   DummyAntismashDomain(start=20, end=50, strand=-1, protein_start=7, protein_end=17, locus_tag="B")]
+
+        for domains in [forward, reverse]:
+            module = create_module(domains=domains)
+            assert module.is_multigene_module()
+            alternate = create_module(domains=domains[::-1])
+            assert module.domains == alternate.domains
+            assert list(module.domains) == domains
+
+    def test_multi_cds_tracking(self):
+        domains = [DummyAntismashDomain(locus_tag=i) for i in "AB"]
         module = create_module(domains=domains)
-        alternate = create_module(domains=domains[::-1])
-        assert module.domains == alternate.domains
-        assert list(module.domains) == domains
+        assert module.is_multigene_module()
+        record = DummyRecord()
+        add_module_references_to_record(module, record)
+        record.add_cds_feature(DummyCDS(locus_tag="C"))
+        for cds in record.get_cds_features():
+            assert not cds.modules
+        assert not record.get_modules()
+        record.add_module(module)
+        # make sure it's not added to every CDS
+        assert not record.get_cds_by_name("C").modules
+        # but that it is added to all CDSes with a domain included
+        for i in "AB":
+            assert record.get_cds_by_name(i).modules == (module,)
+
+    def test_multi_cds_protein_location(self):
+        domains = [DummyAntismashDomain(locus_tag=i) for i in "AB"]
+        module = create_module(domains=domains)
+        assert module.is_multigene_module()
+        with self.assertRaisesRegex(ValueError, "cannot generate protein location for multi"):
+            _ = module.protein_location
