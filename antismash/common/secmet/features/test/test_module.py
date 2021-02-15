@@ -197,6 +197,12 @@ class TestModule(unittest.TestCase):
             assert module.domains == alternate.domains
             assert list(module.domains) == domains
 
+    def test_multi_cds_mismatching_strands(self):
+        domains = [DummyAntismashDomain(start=20, end=50, strand=1, protein_start=3, protein_end=10, locus_tag="A"),
+                   DummyAntismashDomain(start=70, end=91, strand=-1, protein_start=7, protein_end=17, locus_tag="B")]
+        with self.assertRaisesRegex(ValueError, "cannot be on different strands"):
+            create_module(domains)
+
     def test_multi_cds_tracking(self):
         domains = [DummyAntismashDomain(locus_tag=i) for i in "AB"]
         module = create_module(domains=domains)
