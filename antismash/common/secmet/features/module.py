@@ -55,6 +55,9 @@ class Module(Feature):
         if not domains:
             raise ValueError("at least one domain required in module")
 
+        if len({domain.location.strand for domain in domains}) != 1:
+            raise ValueError("domains within a module cannot be on different strands")
+
         # if the parent CDSes are on the reverse strand, the domains are in the wrong order
         # so ensure they're sorted here as they appear in the translation
         reverse = domains[0].location.strand == -1
