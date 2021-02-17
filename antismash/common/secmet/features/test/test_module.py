@@ -6,6 +6,7 @@
 
 import unittest
 
+from antismash.common.secmet.locations import FeatureLocation
 from antismash.common.secmet.features.module import Module, ModuleType
 from antismash.common.secmet.test.helpers import DummyCDS, DummyAntismashDomain
 from antismash.common.test.helpers import DummyRecord
@@ -221,8 +222,13 @@ class TestModule(unittest.TestCase):
             assert record.get_cds_by_name(i).modules == (module,)
 
     def test_multi_cds_protein_location(self):
-        domains = [DummyAntismashDomain(locus_tag=i) for i in "AB"]
+        domains = [DummyAntismashDomain(locus_tag=i, protein_start=n, protein_end=n+5) for n, i in enumerate("AB")]
         module = create_module(domains=domains)
         assert module.is_multigene_module()
         with self.assertRaisesRegex(ValueError, "cannot generate protein location for multi"):
             _ = module.protein_location
+
+        assert module.get_parent_protein_location("A") == FeatureLocation(0, 5)
+        assert module.get_parent_protein_location("B") == FeatureLocation(1, 6)
+        with self.assertRaisesRegex(ValueError, "has no parent"):
+            module.get_parent_protein_location("C")
