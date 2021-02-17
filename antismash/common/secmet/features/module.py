@@ -114,6 +114,13 @@ class Module(Feature):
             raise ValueError("cannot generate protein location for multi-CDS module")
         return FeatureLocation(self._domains[0].protein_location.start, self._domains[-1].protein_location.end)
 
+    def get_parent_protein_location(self, parent: str) -> FeatureLocation:
+        """ Returns the location within the specified parent for multi-CDS modules """
+        if parent not in self._parent_cds_names:
+            raise ValueError(f"module {self} has no parent named {parent}")
+        domains = [domain for domain in self._domains if domain.locus_tag == parent]
+        return FeatureLocation(domains[0].protein_location.start, domains[-1].protein_location.end)
+
     def add_monomer(self, substrate: str, monomer: str) -> None:
         """ Adds a substrate and the monomer produced by this module with that
             substrate
