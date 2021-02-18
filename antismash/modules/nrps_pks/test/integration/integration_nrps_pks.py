@@ -67,17 +67,18 @@ class IntegrationNRPSPKS(unittest.TestCase):
         assert len(cal.predictions) == 5
         assert cal.predictions[0] == ["AHBA", 167.0]
 
-        assert len(results.region_predictions[1]) == 2
+        assert len(results.region_predictions[1]) == 4
         # as does this, though it still won't use domain docking
-        pred = results.region_predictions[1][0]
+        pred = results.region_predictions[1][1]
         monomers = '(leu - D-bht - asn) + (D-hpg - D-hpg - bht) + (dhpg) + (tyr)'
         assert pred.polymer == monomers
         assert not pred.domain_docking_used
         assert pred.ordering == ['bpsA', 'bpsB', 'bpsC', 'bpsD']
 
-        pred = results.region_predictions[1][1]
-        assert pred.polymer == "(tyr)"
+        pred = results.region_predictions[1][2]
+        assert pred.polymer == "(tyr) + (dhpg)"
         assert not pred.domain_docking_used
+        assert pred.ordering == ['bpsD', 'bpsC']
 
     def test_cp002271_c19(self):
         filename = path.get_full_path(__file__, 'data', 'CP002271.1.cluster019.gbk')
