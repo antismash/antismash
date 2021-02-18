@@ -83,7 +83,6 @@ RULE NRPS
     CUTOFF 20
     NEIGHBOURHOOD 20
     CONDITIONS cds(Condensation and (AMP-binding or A-OX))
-               or (Condensation and AMP-binding)  #TODO: dubious
 
 RULE CDPS
     CATEGORY NRPS
