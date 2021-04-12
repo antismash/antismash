@@ -6,6 +6,7 @@
 import logging
 from typing import List
 
+from antismash.common.errors import AntismashInputError
 from antismash.common.secmet import Record
 from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs, ReadableFullPathAction
@@ -86,7 +87,7 @@ def run_on_record(record: Record, options: ConfigType) -> None:
         Genes will be added to the record as they are found.
     """
     if options.genefinding_tool == 'error':
-        raise ValueError("Called find_genes, but genefinding disabled")
+        raise AntismashInputError(f"Record {record.id} contains no genes and no genefinding tool specified")
 
     if options.taxon == 'fungi':
         if options.genefinding_tool == ["none"]:
