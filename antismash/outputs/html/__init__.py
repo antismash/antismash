@@ -10,8 +10,12 @@ import logging
 import os
 import shutil
 from typing import Dict, List, Optional
+import warnings
 
-import scss
+# silence warnings about nested sets (relevant for pyScss <= 1.3.7 and python >= 3.5)
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    import scss
 
 from antismash.common import path
 from antismash.common.module_results import ModuleResults
