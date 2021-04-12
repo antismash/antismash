@@ -5,7 +5,7 @@
     running antismash analyses.
 """
 
-from collections import OrderedDict
+from collections import defaultdict, OrderedDict
 import json
 import logging
 from typing import Any, Dict, IO, List, Union
@@ -18,12 +18,22 @@ from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record
 from antismash.common.secmet.locations import location_from_string
 
+# Schema version changes:
+# 1: initial state
+# 2: added field: records.areas
+
 
 class AntismashResults:
     """ A single repository of all results of an antismash run, including input
         filename, records and individual module results
     """
-    SCHEMA_VERSION = 1
+    SCHEMA_VERSION = 2
+
+    # the key must accept all the schemas in values as valid
+    # this will typically only be useful for backwards compatibility
+    COMPATIBLE_SCHEMAS = defaultdict(set, {
+        2: {1},
+    })
 
     def __init__(self, input_file: str, records: List[Record],
                  results: List[Dict[str, Union[ModuleResults, Dict[str, Any]]]],
@@ -48,7 +58,9 @@ class AntismashResults:
         except json.JSONDecodeError:
             raise ValueError(f"Cannot load results to reuse from {handle.name}, "
                               "is it an antiSMASH result JSON file?")
-        if data.get("schema", 1) != AntismashResults.SCHEMA_VERSION:
+        schema = data.get("schema", 1)
+        current = AntismashResults.SCHEMA_VERSION
+        if schema != current and schema not in AntismashResults.COMPATIBLE_SCHEMAS[current]:
             raise ValueError("schema mismatch in previous results: expected %s, found %s" % (
                                 AntismashResults.SCHEMA_VERSION, data.get("schema")))
         version = data["version"]
@@ -64,7 +76,7 @@ class AntismashResults:
         res["version"] = self.version
         res["input_file"] = self.input_file
         biopython = [rec.to_biopython() for rec in self.records]
-        res["records"] = dump_records(biopython, self.results)
+        res["records"] = dump_records(biopython, self.results, self.records)
         res["timings"] = self.timings_by_record
         res["taxon"] = self.taxon
         res["schema"] = self.SCHEMA_VERSION
@@ -87,12 +99,13 @@ class AntismashResults:
 
 
 def dump_records(records: List[SeqRecord], results: List[Dict[str, Union[Dict[str, Any], ModuleResults]]],
-                 handle: Union[str, IO] = None) -> List[Dict[str, Any]]:
+                 secmet_records: List[Record], handle: Union[str, IO] = None) -> List[Dict[str, Any]]:
     """ Converts a list of records and a list of results to a JSON object.
 
         Arguments:
             records: a list of records to convert
             results: a matching list of results to convert
+            secmet_records: a matching list of Records for easier data access
             handle: a filename or file-like object to write the resulting JSON
                     object to
 
@@ -101,8 +114,11 @@ def dump_records(records: List[SeqRecord], results: List[Dict[str, Union[Dict[st
     """
     data = []
     assert isinstance(results, list)
-    for record, result in zip(records, results):
+    for i, record in enumerate(records):
+        result = results[i]
+        secmet = secmet_records[i]
         json_record = record_to_json(record)
+        json_record["areas"] = gather_record_areas(secmet)
         modules: Dict[str, Dict] = OrderedDict()
         if result:
             logging.debug("Record %s has results for modules: %s", record.id,
@@ -132,6 +148,54 @@ def dump_records(records: List[SeqRecord], results: List[Dict[str, Union[Dict[st
         handle = open(handle, "w")
     handle.write(new_contents)
     return data
+
+
+def gather_record_areas(record: Record) -> List[Dict[str, Any]]:
+    """ Constructs a JSON friendly representation of areas in Record
+
+        Arguments:
+            record: the Record instance to gather areas from
+
+        Returns:
+            a list of JSON appropriate dictionaries, one for each region
+    """
+    regions = []
+    for region in record.get_regions():
+        region_json = {
+            "start": region.location.start,
+            "end": region.location.end,
+            "products": region.products,
+            "protoclusters": {},
+            "candidates": [],
+            "subregions": [],
+        }
+        regions.append(region_json)
+
+        protoclusters_by_obj = {proto: i for i, proto in enumerate(region.get_unique_protoclusters())}
+        for proto, i in protoclusters_by_obj.items():
+            region_json["protoclusters"][i] = {
+                "start": proto.location.start,
+                "end": proto.location.end,
+                "core_start": proto.core_location.start,
+                "core_end": proto.core_location.end,
+                "product": proto.product,
+                "tool": proto.tool,
+            }
+        for candidate in region.candidate_clusters:
+            region_json["candidates"].append({
+                "start": candidate.location.start,
+                "end": candidate.location.end,
+                "kind": str(candidate.kind),
+                "protoclusters": [protoclusters_by_obj[proto] for proto in candidate.protoclusters],
+            })
+        for subregion in region.subregions:
+            region_json["subregions"].append({
+                "start": subregion.location.start,
+                "end": subregion.location.end,
+                "label": subregion.label,
+                "tool": subregion.tool,
+            })
+    return regions
 
 
 def record_to_json(record: SeqRecord) -> Dict[str, Any]:
