@@ -81,6 +81,16 @@ class TestConversion(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "protein records are not supported"):
             Record.from_biopython(before, taxon="bacteria")
 
+    def test_dna_casing(self):
+        before = list(Bio.SeqIO.parse(get_path_to_nisin_genbank(), "genbank"))[0]
+        for molecule in ["DNA", "dna", "Dna"]:
+            before.annotations["molecule_type"] = molecule
+            Record.from_biopython(before, taxon="bacteria")
+
+            before.annotations["molecule_type"] = molecule + "x"
+            with self.assertRaisesRegex(ValueError, "records are not supported"):
+                Record.from_biopython(before, taxon="bacteria")
+
     def test_missing_locations_caught(self):
         rec = list(Bio.SeqIO.parse(get_path_to_nisin_genbank(), "genbank"))[0]
         Record.from_biopython(rec, taxon="bacteria")
