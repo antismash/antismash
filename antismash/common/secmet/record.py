@@ -684,7 +684,7 @@ class Record:
 
         assert isinstance(seq_record, SeqRecord), type(seq_record)
         molecule_type = seq_record.annotations.get("molecule_type", "DNA")
-        if not molecule_type.endswith("DNA"):
+        if not molecule_type.upper().endswith("DNA"):
             raise SecmetInvalidInputError(f"{molecule_type} records are not supported")
         if seq_record.seq and not Record.is_nucleotide_sequence(seq_record.seq):
             raise SecmetInvalidInputError("protein records are not supported")
