@@ -7,7 +7,7 @@
 import json
 import unittest
 
-from antismash.common import path
+from antismash.common import errors, path
 from antismash.detection.sideloader import general, loader
 
 GOOD_FILE = path.get_full_path(__file__, "data", "good.json")
@@ -22,7 +22,7 @@ class TestValidation(unittest.TestCase):
 
     def test_bad_json(self):
         test_file = path.get_full_path(__file__, "data", "bad.json")
-        with self.assertRaisesRegex(ValueError, "Expecting ',' delimiter"):
+        with self.assertRaisesRegex(errors.AntismashInputError, "Expecting ',' delimiter"):
             loader.load_validated_json(test_file, general._SCHEMA_FILE)
 
 
@@ -39,8 +39,8 @@ class TestSchemaValidation(unittest.TestCase):
         try:
             loader._ensure_valid(data, schema)
             return True
-        except ValueError as err:
-            assert "invalid sideload annotations" in str(err)
+        except errors.AntismashInputError as err:
+            assert "invalid sideload annotation" in str(err)
         return False
 
     def test_empty(self):

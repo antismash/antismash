@@ -9,6 +9,8 @@ from typing import Any, Dict
 
 import jsonschema
 
+from antismash.common.errors import AntismashInputError
+
 
 def _default_validator(validator_class: Any) -> Any:
     """ Extend a validator to insert defaults for missing properties before validation """
@@ -47,7 +49,10 @@ def _ensure_valid(raw_json: Dict[str, Any], schema_file: str) -> Dict[str, Any]:
         DefaultValidator(schema, resolver=resolver).validate(raw_json)
     except jsonschema.ValidationError as err:
         brief_message = str(err).splitlines()[0]
-        raise ValueError("invalid sideload annotations: %s" % brief_message)
+        path = "][".join(map(str, list(err.path)))
+        if path:
+            raise AntismashInputError(f"invalid sideload annotation for '[{path}]': {brief_message}")
+        raise AntismashInputError(f"invalid sideload annotations: {brief_message}")
     return raw_json
 
 
@@ -68,4 +73,8 @@ def load_validated_json(data_file: str, schema_file: str) -> Dict[str, Any]:
 
     """
     with open(data_file) as handle:
-        return _ensure_valid(json.load(handle), schema_file)
+        try:
+            raw = json.load(handle)
+        except ValueError as err:
+            raise AntismashInputError(f"sideloaded data is not valid JSON: {err}") from err
+        return _ensure_valid(raw, schema_file)
