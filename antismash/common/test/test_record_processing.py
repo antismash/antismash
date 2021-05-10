@@ -331,6 +331,12 @@ class TestUniqueID(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "Could not generate .*"):
             record_processing.generate_unique_id("a", existing, start=140, max_length=4)
 
+    def test_existing_format_markers(self):
+        for marker in ["%s", "{}", "{name}"]:
+            name = f"{marker}_other"
+            result, _ = record_processing.generate_unique_id(name, {name}, start=0)
+            assert result == name + "_0"
+
 
 class TestStripRecord(unittest.TestCase):
     def test_cds_motifs(self):
