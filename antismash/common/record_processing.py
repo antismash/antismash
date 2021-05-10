@@ -558,11 +558,10 @@ def generate_unique_id(prefix: str, existing_ids: Set[str], start: int = 0,
     existing_ids = set(existing_ids)
     max_length = int(max_length)
 
-    format_string = "{}_%d".format(prefix)
-    name = format_string % counter
+    name = f"{prefix}_{counter}"
     while name in existing_ids:
         counter += 1
-        name = format_string % counter
+        name = f"{prefix}_{counter}"
     if 0 < max_length < len(name):
         raise RuntimeError("Could not generate unique id for %s after %d iterations" % (prefix, counter - start))
     return name, counter
