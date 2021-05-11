@@ -16,6 +16,7 @@ Getting started
 - Make sure your git configuration includes the correct user name and email address
   you can check these by running `git config user.name` and `git config user.email`, respectively
 - You can set these by running `git config user.name "Your Name"` and `git config user.email your.name@example.com`
+- Look at the [wiki pages](https://github.com/antismash/antismash/wiki) on the repository
 
 Making changes
 --------------
