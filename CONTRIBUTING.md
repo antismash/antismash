@@ -26,7 +26,7 @@ Making changes
 - Please don't work on the `master` branch directly
 - Make commits in logical units
 - Please follow the PEP8 guidelines when writing python code
-- Make sure your code works on Python 3.5 and later versions.
+- Make sure your code works on the currently specified Python version (see [setup.py](https://github.com/antismash/antismash/blob/master/setup.py), specifically the `python_requires` value)
 - Check for unnecessary whitespace with `git diff --check`
 - Make sure you use commit messages in the proper format
 
