@@ -1,4 +1,4 @@
-# antiSMASH 5 container with a snapshot of the development tree
+# antiSMASH container with a snapshot of the development tree
 # VERSION 0.0.1
 FROM antismash/base-nonfree:latest
 LABEL maintainer="Kai Blin <kblin@biosustain.dtu.dk>"
