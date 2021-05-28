@@ -7,7 +7,7 @@
 # pylint: disable=pointless-statement,unused-argument,missing-docstring,multiple-statements
 
 from types import ModuleType
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
 from .config.args import ModuleArgs
 
@@ -21,6 +21,8 @@ from .common.secmet import Region, Record
 class ConfigType:
     """ A type for the Config._Config object to ensure the right object types are
         being passed without all the warnings about non-existant members """
+
+    def __iter__(self) -> Iterator[Tuple[str, Any]]: ...
 
     def __getattr__(self, attr: str) -> Any: ...
 
