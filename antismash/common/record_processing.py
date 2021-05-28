@@ -7,7 +7,7 @@
 import functools
 import logging
 import re
-from typing import Any, Callable, List, Set, Tuple
+from typing import Any, Dict, Callable, List, Set, Tuple
 import warnings
 
 from Bio.Seq import Seq, UnknownSeq
@@ -18,7 +18,7 @@ from antismash.common import gff_parser
 from antismash.common.errors import AntismashInputError
 from antismash.common.secmet import Record
 from antismash.common.secmet.errors import SecmetInvalidInputError
-from antismash.config import get_config, update_config, ConfigType
+from antismash.config import get_config, update_config, Config, ConfigType
 from antismash.custom_typing import AntismashModule
 
 from .subprocessing import parallel_function
@@ -214,7 +214,8 @@ def strip_record(record: SeqRecord) -> SeqRecord:
     return record
 
 
-def ensure_cds_info(genefinding: Callable[[Record, Any], None], sequence: Record) -> Record:
+def ensure_cds_info(genefinding: Callable[[Record, Any], None], sequence: Record,
+                    **kwargs: Dict[str, Any]) -> Record:
     """ Ensures the given record has CDS features with unique locus tags.
         CDS features are retrieved from GFF file or via genefinding, depending
         on antismash options.
@@ -229,9 +230,13 @@ def ensure_cds_info(genefinding: Callable[[Record, Any], None], sequence: Record
         Returns:
             the Record instance provided
     """
-    options = get_config()
     if sequence.skip:
         return sequence
+    options = get_config()
+    if len(options) == 0:  # inside a parallel function where config doesn't pickle correctly
+        new = Config(kwargs)
+        assert isinstance(new, ConfigType)
+        options = new
     if not sequence.get_cds_features():
         if not options.genefinding_gff3 and options.genefinding_tool != "none":
             logging.info("No CDS features found in record %r, running gene finding.", sequence.id)
@@ -381,7 +386,9 @@ def pre_process_sequences(sequences: List[Record], options: ConfigType, genefind
         # ensure CDS features have all relevant information
         logging.debug("Ensuring records have CDS features with all required information")
         assert hasattr(genefinding, "run_on_record")
-        partial = functools.partial(ensure_cds_info, genefinding.run_on_record)
+        genefinding_opts = {key: val for key, val in options if key.startswith("genefinding")}
+        genefinding_opts["taxon"] = options.taxon
+        partial = functools.partial(ensure_cds_info, genefinding.run_on_record, **genefinding_opts)
         sequences = parallel_function(partial, ([sequence] for sequence in sequences))
 
     if all(sequence.skip for sequence in sequences):
