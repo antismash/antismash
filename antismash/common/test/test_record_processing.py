@@ -6,6 +6,7 @@
 
 from tempfile import NamedTemporaryFile
 import unittest
+from unittest import mock
 
 from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation
@@ -163,10 +164,15 @@ class TestPreprocessRecords(unittest.TestCase):
             def get_arguments(self):
                 args = config.args.ModuleArgs("genefinding", "genefinding")
                 args.add_option("gff3", default="", type=str, help="dummy", dest="gff3")
+                args.add_option("tool", default="", type=str, help="dummy", dest="tool")
                 return args
 
-            def run_on_record(self, *_args, **_kwargs):
+            def run_on_record(self, _record, options):
+                assert options.genefinding_gff3 is not None
+                assert options.genefinding_tool is not None
+                assert options.taxon
                 self.was_run = True
+
         self.genefinding = DummyModule()
 
         options = config.build_config(["--cpus", "1"], isolated=True, modules=[self.genefinding])
@@ -289,6 +295,34 @@ class TestPreprocessRecords(unittest.TestCase):
         record.name = record.id
         self.run_on_records([record])
         assert record.id == record.name == "A" * 17
+
+    def test_mac_bad_parallel(self):
+        """ For python 3.8+ on mac, parallel behaviour of Pool() changed
+            from using fork() to spawn(), which meant that config objects
+            failed to serialise in the same way.
+            This test exists to ensure that such failures are worked around
+            for at least the record_processing portions.
+        """
+        filepath = path.get_full_path(__file__, "data", "nisin.fasta")
+        records = record_processing.parse_input_sequence(filepath)
+
+        # to mimic the parallel section not keeping config, wrap the function
+        # called in the subprocesses and destroy the config prior to the original
+        # being called
+        original = record_processing.ensure_cds_info
+
+        def wrapper(*args, **kwargs):
+            config.destroy_config()
+            assert len(self.options) == 0
+            results = original(*args, **kwargs)
+            records[0].skip = False  # prevent raising an input error so the path completes fully
+            return results
+
+        # then run the full process with the newly wrapped function
+        with mock.patch.object(record_processing, "ensure_cds_info", wraps=wrapper):
+            self.run_on_records(records)
+        # then ensure genefinding would have run normally
+        assert self.genefinding.was_run
 
 
 class TestUniqueID(unittest.TestCase):
