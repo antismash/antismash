@@ -207,17 +207,17 @@ class TokenTypes(IntEnum):
     INT = 12
     COMMA = 13
     SCORE = 14
-    RULE = 15
-    COMMENT = 17
-    CUTOFF = 18
-    NEIGHBOURHOOD = 19
-    CONDITIONS = 20
-    SUPERIORS = 21
-    RELATED = 22
-    TEXT = 23  # covers words that aren't valid identifiers for use in rule COMMENT fields
-    CATEGORY = 24  # assigns the rule to a category, allowing to group related rules
-    DEFINE = 25
-    AS = 26
+    RULE = 100
+    COMMENT = 101
+    CUTOFF = 102
+    NEIGHBOURHOOD = 103
+    CONDITIONS = 104
+    SUPERIORS = 105
+    RELATED = 106
+    TEXT = 107  # covers words that aren't valid identifiers for use in rule COMMENT fields
+    CATEGORY = 108  # assigns the rule to a category, allowing to group related rules
+    DEFINE = 109
+    AS = 110
 
     def __repr__(self) -> str:
         return self.__str__()
@@ -248,7 +248,7 @@ class TokenTypes(IntEnum):
         """ Returns True if the token is a rule structure keyword such as
             RULE, COMMENT, CONDITIONS, etc
         """
-        return self.value >= 15 and self.value != self.TEXT
+        return self.RULE <= self.value and self.value != self.TEXT
 
 
 class Tokeniser:  # pylint: disable=too-few-public-methods
