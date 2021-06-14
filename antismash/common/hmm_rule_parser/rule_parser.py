@@ -207,6 +207,7 @@ class TokenTypes(IntEnum):
     INT = 12
     COMMA = 13
     SCORE = 14
+    DOT = 15
     RULE = 100
     COMMENT = 101
     CUTOFF = 102
@@ -258,6 +259,7 @@ class Tokeniser:  # pylint: disable=too-few-public-methods
                "[": TokenTypes.LIST_OPEN, "]": TokenTypes.LIST_CLOSE,
                "and": TokenTypes.AND, "or": TokenTypes.OR,
                "not": TokenTypes.NOT, ",": TokenTypes.COMMA,
+               ".": TokenTypes.DOT,
                "minimum": TokenTypes.MINIMUM, "cds": TokenTypes.CDS,
                "minscore": TokenTypes.SCORE, "RULE": TokenTypes.RULE,
                "CONDITIONS": TokenTypes.CONDITIONS,
