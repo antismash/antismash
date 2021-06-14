@@ -5,7 +5,7 @@
 
 RULE saccharide
     CATEGORY saccharide
-    COMMENT from clusterfinder
+    DESCRIPTION Saccharide cluster definition from clusterfinder
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS minimum(2,[Alpha-amylase, Alpha-amylase_C, Bac_transf,
@@ -18,14 +18,14 @@ RULE saccharide
 
 RULE fatty_acid
     CATEGORY other
-    COMMENT from clusterfinder
+    DESCRIPTION Fatty acid definition from clusterfinder
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS  bt1fas or ft1fas or t2fas or fabH
 
 RULE halogenated
     CATEGORY other
-    COMMENT Halogenases are frequently involved in secondary metabolite biosynthesis
+    DESCRIPTION Halogenases are frequently involved in secondary metabolite biosynthesis
     CUTOFF 5
     NEIGHBOURHOOD 10
     CONDITIONS Trp_halogenase
