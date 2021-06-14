@@ -389,7 +389,7 @@ class RuleParserTest(unittest.TestCase):
 
     def test_bad_minscore(self):
         # negative scores
-        with self.assertRaisesRegex(ValueError, "cannot be negative"):
+        with self.assertRaisesRegex(rule_parser.RuleSyntaxError, "Expected int but found text"):
             self.parse(format_as_rule("A", 10, 20, "minscore(d, -1)"))
 
         # missing/invalid score syntax
@@ -447,7 +447,7 @@ class RuleParserTest(unittest.TestCase):
             self.parse(format_as_rule("A", 10, 10, "minimum(1.3 [a,b])"))
         with self.assertRaises(ValueError):
             self.parse(format_as_rule("A", 10, 10, "minimum(0, [a,b])"))
-        with self.assertRaises(ValueError):
+        with self.assertRaises(rule_parser.RuleSyntaxError):
             self.parse(format_as_rule("A", 10, 10, "minimum(-3, [a,b])"))
 
     def test_bad_identifier(self):
