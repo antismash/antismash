@@ -97,7 +97,8 @@ The grammar itself:
     OPS = BINARY_OP | UNARY_OP
 
     RULE_MARKER = "RULE"
-    COMMENT_MARKER = "COMMENT"
+    DESCRIPTION_MARKER = "DESCRIPTION"
+    EXAMPLE_MARKER = "EXAMPLE"
     RELATED_MARKER = "RELATED"
     CUTOFF_MARKER = "CUTOFF"
     NEIGHBOURHOOD_MARKER = "NEIGHBOURHOOD"
@@ -109,7 +110,8 @@ The grammar itself:
 
     RULE = RULE_MARKER classification:ID
             CATEGORY_MARKER category:ID
-            [COMMENT_MARKER:COMMENTS]
+            [DESCRIPTION_MARKER:DESCRIPTIONS]
+            [EXAMPLE_MARKER:EXAMPLE [EXAMPLE_MARKER:EXAMPLE ...]]
             [RELATED_MARKER related_profiles:COMMA_SEPARATED_IDS]
             [SUPERIORS_MARKER superiors:COMMA_SEPARATED_IDS]
             CUTOFF_MARKER cutoff:INT NEIGHBOURHOOD_MARKER neighbourhood:INT
@@ -130,6 +132,7 @@ The grammar itself:
     LIST = LIST_OPEN contents:COMMA_SEPARATED_IDS LIST_CLOSE;
     COMMA_SEPARATED_IDS = ID {COMMA ID}*;
     CDS = GROUP_OPEN [UNARY_OP] ID BINARY_OP CDS_CONDITION GROUP_CLOSE;
+    EXAMPLE = ID ID DOT INT INT-INT [compound_name:TEXT]
 
     ALIAS = DEFINE_MARKER label:ID AS_MARKER value:TEXT
 
@@ -209,16 +212,17 @@ class TokenTypes(IntEnum):
     SCORE = 14
     DOT = 15
     RULE = 100
-    COMMENT = 101
+    DESCRIPTION = 101
     CUTOFF = 102
     NEIGHBOURHOOD = 103
     CONDITIONS = 104
     SUPERIORS = 105
     RELATED = 106
-    TEXT = 107  # covers words that aren't valid identifiers for use in rule COMMENT fields
+    TEXT = 107  # covers words that aren't valid identifiers for use in rule DESCRIPTION fields
     CATEGORY = 108  # assigns the rule to a category, allowing to group related rules
     DEFINE = 109
     AS = 110
+    EXAMPLE = 111
 
     def __repr__(self) -> str:
         return self.__str__()
@@ -247,7 +251,7 @@ class TokenTypes(IntEnum):
 
     def is_a_rule_keyword(self) -> bool:
         """ Returns True if the token is a rule structure keyword such as
-            RULE, COMMENT, CONDITIONS, etc
+            RULE, DESCRIPTION, CONDITIONS, etc
         """
         return self.RULE <= self.value and self.value != self.TEXT
 
@@ -263,10 +267,10 @@ class Tokeniser:  # pylint: disable=too-few-public-methods
                "minimum": TokenTypes.MINIMUM, "cds": TokenTypes.CDS,
                "minscore": TokenTypes.SCORE, "RULE": TokenTypes.RULE,
                "CONDITIONS": TokenTypes.CONDITIONS,
-               "COMMENT": TokenTypes.COMMENT, "CUTOFF": TokenTypes.CUTOFF,
+               "DESCRIPTION": TokenTypes.DESCRIPTION, "CUTOFF": TokenTypes.CUTOFF,
                "NEIGHBOURHOOD": TokenTypes.NEIGHBOURHOOD, "SUPERIORS": TokenTypes.SUPERIORS,
                "RELATED": TokenTypes.RELATED, "CATEGORY": TokenTypes.CATEGORY,
-               "DEFINE": TokenTypes.DEFINE, "AS": TokenTypes.AS}
+               "DEFINE": TokenTypes.DEFINE, "AS": TokenTypes.AS, "EXAMPLE": TokenTypes.EXAMPLE}
 
     def __init__(self, text: str) -> None:
         self.text = text
@@ -755,12 +759,14 @@ class DetectionRule:
             cutoff: the cutoff used to construct clusters (in bases)
             neighbourhood: the neighbourhood to use to include nearby CDS features (in bases)
             conditions: the conditions that potential clusters have to satisfy
-            comments: any comments provided in the rule
+            description: a description of the rule
+            examples: a list of sequence IDs and coordinates of an example record containing cluster hits by the rule
             superiors: a list of other rule names superior to this one
             related: a list of profile identifiers related to, but not required by, this rule
         """
     def __init__(self, name: str, category: str, cutoff: int, neighbourhood: int, conditions: Conditions,
-                 comments: str = "", superiors: List[str] = None, related: List[str] = None) -> None:
+                 description: str = "", examples: List["ExampleRecord"] = None, superiors: List[str] = None,
+                 related: List[str] = None) -> None:
         self.name = name
         self.category = category
         self.cutoff = cutoff
@@ -768,7 +774,11 @@ class DetectionRule:
         self.conditions = conditions
         if not conditions.contains_positive_condition():
             raise ValueError("A rule's conditions must contain at least one positive requirement")
-        self.comments = comments
+        self.description = description
+        if examples is None:
+            examples = []
+        assert isinstance(examples, list)
+        self.examples = examples
         self.hits = 0
         if superiors is None:
             superiors = []
@@ -816,8 +826,10 @@ class DetectionRule:
         if condition_text[0] == "(" and condition_text[-1] == ')':
             condition_text = condition_text[1:-1]
         comments = ""
-        if self.comments:
-            comments = "COMMENTS" + self.comments + " "
+        if self.description:
+            comments = f"DESCRIPTION {self.description} "
+        for example in self.examples:
+            comments += f"EXAMPLE {example} "
         return "RULE {} CATEGORY {} {}CUTOFF {} NEIGHBOURHOOD {} CONDITIONS {}".format(self.name,
                     self.category, comments, self.cutoff // 1000, self.neighbourhood // 1000, condition_text)
 
@@ -826,6 +838,35 @@ class DetectionRule:
             each subsection was satisfied.
         """
         return self.conditions.get_hit_string()[3:-1]
+
+
+class ExampleRecord:
+    """ A reference to a record containing a cluster described by a rule. """
+    def __init__(self, database: str, accession: str, version: int, start: int, end: int,
+                 compound_name: Optional[str] = None) -> None:
+        if database not in ("NCBI", ):
+            raise AttributeError(f"Invalid reference database {database}")
+        self.database = database
+
+        self.accession = accession
+
+        if version < 1:
+            raise AttributeError(f"Record version must be >= 1 but is {version}")
+        self.version = version
+
+        if not 0 <= start <= end:
+            raise AttributeError(f"Invalid start {start} or end {end} values")
+
+        self.start = start
+        self.end = end
+
+        self.compound_name = compound_name
+
+    def __str__(self) -> str:
+        compound = ""
+        if self.compound_name:
+            compound = f" {self.compound_name}"
+        return f"{self.database} {self.accession}.{self.version} {self.start}-{self.end}{compound}"
 
 
 # a typedef, even positions will be a Conditions instance, odd will be TokenTypes
@@ -967,7 +1008,8 @@ class Parser:  # pylint: disable=too-few-public-methods
 
     def _parse_rule(self) -> DetectionRule:
         """ RULE = RULE_MARKER classification:ID CATEGORY_MARKER category:ID
-                    [COMMENT_MARKER:COMMENTS]
+                    [DESCRIPTION_MARKER:DESCRIPTION]
+                    [EXAMPLE_MARKER:EXAMPLE [EXAMPLE_MARKER:EXAMPLE ...]]
                     CUTOFF_MARKER cutoff:INT NEIGHBOURHOOD_MARKER neighbourhood:INT
                     CONDITIONS_MARKER conditions:CONDITIONS
         """
@@ -978,19 +1020,24 @@ class Parser:  # pylint: disable=too-few-public-methods
         if not self.current_token:
             raise RuleSyntaxError("expected %s section after %s"
                                   % (TokenTypes.CATEGORY, TokenTypes.RULE))
-        comments = ""
+        description = ""
         self._consume(TokenTypes.CATEGORY)
+        prev = TokenTypes.CATEGORY
         category = self._consume_identifier()
         if category not in self.valid_categories:
             valid_categories = ", ".join(self.valid_categories)
             raise RuleSyntaxError(f"Invalid category {category}, use one of {valid_categories}")
         if not self.current_token:
-            raise RuleSyntaxError("expected %s, %s, or %s sections after %s"
-                                  % (TokenTypes.COMMENT, TokenTypes.SUPERIORS,
-                                     TokenTypes.CUTOFF, TokenTypes.CATEGORY))
-        if self.current_token.type == TokenTypes.COMMENT:
-            comments = self._parse_comments()
-            prev = TokenTypes.COMMENT
+            raise RuleSyntaxError(f"expected {TokenTypes.DESCRIPTION}, {TokenTypes.EXAMPLE}, "
+                                  f"{TokenTypes.SUPERIORS}, or {TokenTypes.CUTOFF} sections after {TokenTypes.CATEGORY}")
+        if self.current_token.type == TokenTypes.DESCRIPTION:
+            description = self._parse_description()
+            prev = TokenTypes.DESCRIPTION
+        examples: List["ExampleRecord"] = []
+        while self.current_token.type == TokenTypes.EXAMPLE:
+            example = self._parse_example()
+            examples.append(example)
+            prev = TokenTypes.EXAMPLE
         related: List[str] = []
         if self.current_token.type == TokenTypes.RELATED:
             related = self._parse_related()
@@ -1014,23 +1061,60 @@ class Parser:  # pylint: disable=too-few-public-methods
                     "\n".join(self.lines[self.current_line - 5:self.current_line]),
                     " "*self.current_token.position, "^"))
         return DetectionRule(rule_name, category, cutoff, neighbourhood, conditions,
-                             comments=comments, superiors=superiors, related=related)
+                             description=description, examples=examples, superiors=superiors, related=related)
 
-    def _parse_comments(self) -> str:
-        """ COMMENTS = COMMENTS_MARKER comments
+    def _parse_description(self) -> str:
+        """ DESCRIPTION = DESCRIPTION_MARKER description
         """
-        comment_tokens = []
-        self._consume(TokenTypes.COMMENT)
-        err = RuleSyntaxError("Unexpected end of input in %s block" % TokenTypes.COMMENT)
+        description_tokens = []
+        self._consume(TokenTypes.DESCRIPTION)
+        err = RuleSyntaxError("Unexpected end of input in %s block" % TokenTypes.DESCRIPTION)
         if not self.current_token:
             raise err
         while not self.current_token.type.is_a_rule_keyword():
-            comment_tokens.append(self.current_token)
+            description_tokens.append(self.current_token)
             try:
                 self.current_token = next(self.tokens)
             except StopIteration:
                 raise err
-        return " ".join([token.token_text for token in comment_tokens])
+        return " ".join([token.token_text for token in description_tokens])
+
+
+    def _parse_example(self) -> "ExampleRecord":
+        """ EXAMPLE = EXAMPLE_MARKER ID ID DOT INT INT-INT [compound_name:TEXT]"""
+        self._consume(TokenTypes.EXAMPLE)
+        database = self._consume_identifier()
+        accession = self._consume_identifier()
+        self._consume(TokenTypes.DOT)
+        version = self._consume_int()
+        range_str =  self._consume(TokenTypes.TEXT).token_text
+        parts = range_str.split("-")
+        compound_name = None
+        compound_tokens = []
+        while self.current_token and not self.current_token.type.is_a_rule_keyword():
+            compound_tokens.append(self.current_token)
+            try:
+                self.current_token = next(self.tokens)
+            except StopIteration:
+                raise RuleSyntaxError(f"Unexpected end of input in {TokenTypes.EXAMPLE} block")
+        if compound_tokens:
+            compound_name = " ".join([token.token_text for token in compound_tokens])
+
+        if len(parts) != 2:
+            raise RuleSyntaxError(f"Invalid range in {TokenTypes.EXAMPLE}: {range_str}")
+
+        try:
+            start = int(parts[0])
+        except ValueError:
+            raise RuleSyntaxError(f"Invalid range start {parts[0]} in {TokenTypes.EXAMPLE}")
+
+        try:
+            end = int(parts[1])
+        except ValueError:
+            raise RuleSyntaxError(f"Invalid range end {parts[1]} in {TokenTypes.EXAMPLE}")
+
+        return ExampleRecord(database, accession, version, start, end, compound_name)
+
 
     def _parse_related(self) -> List[str]:
         """ RELATED = RELATED_MARKER related:COMMA_SEPARATED_IDS

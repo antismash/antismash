@@ -4,7 +4,7 @@
 
 RULE NRPS-like
     CATEGORY NRPS
-    COMMENT Catches NRPS-like fragments that are not detected by the NRPS rule
+    DESCRIPTION Catches NRPS-like fragments that are not detected by the NRPS rule
     SUPERIORS NRPS, NAPAA
     CUTOFF 0  # since we're really looking at single CDS fragments
     NEIGHBOURHOOD 20
@@ -12,7 +12,7 @@ RULE NRPS-like
 
 RULE PKS-like
     CATEGORY PKS
-    COMMENT Catches PKS-like fragments that are not detected by another PKS rule
+    DESCRIPTION Catches PKS-like fragments that are not detected by another PKS rule
     SUPERIORS T2PKS
     CUTOFF 10
     NEIGHBOURHOOD 20
@@ -20,7 +20,7 @@ RULE PKS-like
 
 RULE transAT-PKS-like
     CATEGORY PKS
-    COMMENT Marks partial transAT-PKS clusters, specifically those with an AT-docking domain,
+    DESCRIPTION Marks partial transAT-PKS clusters, specifically those with an AT-docking domain,
             but no AT domain.
     SUPERIORS transAT-PKS
     CUTOFF 45
@@ -29,7 +29,7 @@ RULE transAT-PKS-like
 
 RULE RRE-containing
     CATEGORY RiPP
-    COMMENT RRE-element containing cluster
+    DESCRIPTION RRE-element containing cluster
     SUPERIORS RiPP-like, bottromycin, cyanobactin, fungal-RiPP, guanidinotides,
               lanthipeptide-class-i, lanthipeptide-class-ii,
               lanthipeptide-class-iii, lanthipeptide-class-iv,
