@@ -85,7 +85,7 @@ The grammar itself:
     LIST_CLOSE = ']'
     GROUP_OPEN = '('
     GROUP_CLOSE = ')'
-    INT = [-]{[1-9]}*[0-9]
+    INT = [1-9]{[0-9]}*
     ID = [a-zA-Z]{[a-zA-Z0-9_-]}*
     TEXT = {[a-zA-Z0-9_-.]}*
     MINIMUM_LABEL = 'minimum'
@@ -236,7 +236,7 @@ class TokenTypes(IntEnum):
         """
         classification = Tokeniser.mapping.get(text)
         if classification is None:
-            if text.isdigit() or text[0] == '-' and text[1:].isdigit():
+            if text.isdigit():
                 classification = cls.INT
             elif is_legal_identifier(text):
                 classification = cls.IDENTIFIER
