@@ -394,6 +394,7 @@ def _main() -> None:
     )
 
     args = parser.parse_args()
+    antismash.config.update_config({"database_dir": args.database_dir})
     download(args)
     try:
         print("Pre-building all databases...")
