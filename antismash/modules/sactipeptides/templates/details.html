@@ -13,7 +13,7 @@
     <hr>
       <dl class="details-text">
         {% for motif in results[locus] %}
-        <dt><span class="serif">{{motif.get_name()}}</span> leader / core peptide</dt>
+        <dt><span class="serif">{{motif.get_name().rsplit("_", 1)[0]}}</span> leader / core peptide</dt>
         <dd>
           {{ motif.leader }} - {{motif.core}}
         </dd>
