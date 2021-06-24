@@ -622,8 +622,10 @@ def result_vec_to_feature(orig_feature: CDSFeature, res_vec: Lanthipeptide) -> P
             a Prepeptide instance
     """
     assert res_vec.leader is not None
-    feature = Prepeptide(orig_feature.location, "lanthipeptide", res_vec.core,
-                         orig_feature.get_name(), "lanthipeptides", res_vec.lantype, res_vec.score,
+    product = "lanthipeptide"
+    name = f"{orig_feature.get_name()}_{product}"
+    feature = Prepeptide(orig_feature.location, product, res_vec.core,
+                         name, "lanthipeptides", res_vec.lantype, res_vec.score,
                          res_vec.monoisotopic_mass, res_vec.molecular_weight,
                          res_vec.alternative_weights, res_vec.leader)
     qual = LanthiQualifier(res_vec.number_of_lan_bridges,

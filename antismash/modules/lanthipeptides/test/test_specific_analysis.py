@@ -114,7 +114,7 @@ class TestSpecificAnalysis(unittest.TestCase):
         assert motif.location.start == 0
         assert motif.location.end == 165
         assert motif.location.strand == 1
-        assert motif.locus_tag == orig_feature.locus_tag
+        assert motif.locus_tag == f"{orig_feature.locus_tag}_{motif.peptide_class}"
         assert motif.score == 42
         assert motif.detailed_information.rodeo_score == 23
         assert motif.peptide_class == "lanthipeptide"
