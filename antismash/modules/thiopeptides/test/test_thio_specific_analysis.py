@@ -145,7 +145,7 @@ class TestSpecificAnalysis(unittest.TestCase):
         assert motif.type == 'CDS_motif'
         assert motif.peptide_class == "thiopeptide"
         assert motif.peptide_subclass == "Type III"
-        assert orig_feature.locus_tag == motif.locus_tag
+        assert motif.locus_tag == f"{orig_feature.locus_tag}_{motif.peptide_class}"
         assert motif.detailed_information.rodeo_score == 51
         assert motif.score == 42
         self.assertAlmostEqual(motif.molecular_weight, 861.9, places=1)

@@ -12,7 +12,7 @@
     <hr>
     <dl class="details-text">
       {% for motif in cluster.motifs if motif.peptide_class == "thiopeptide" %}
-        <dt> {{motif.locus_tag}} leader / core peptide, putative {{motif.peptide_subclass}} </dt>
+        <dt> {{motif.locus_tag.rsplit("_", 1)[0]}} leader / core peptide, putative {{motif.peptide_subclass}} </dt>
         <dd>
           {{ motif.leader }}
           -
