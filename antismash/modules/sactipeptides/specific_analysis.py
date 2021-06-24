@@ -530,7 +530,9 @@ def determine_precursor_peptide_candidate(cluster: secmet.Protocluster, query: s
     valid, score = run_rodeo(cluster, query, leader, core, domains)
     if not valid:
         return None
-    return secmet.Prepeptide(query.location, "sactipeptide", core, query.get_name(),
+    product = "sactipeptide"
+    name = f"{query.get_name()}_{product}"
+    return secmet.Prepeptide(query.location, product, core, name,
                              tool="sactipeptides", leader=leader, score=score)
 
 
