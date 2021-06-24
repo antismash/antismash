@@ -130,11 +130,11 @@ class IntegrationLanthipeptides(unittest.TestCase):
         rec, _ = self.run_lanthi(filename, expected_snippet, expected_motifs=2)
         motifs = sorted(rec.get_cds_motifs(), key=lambda x: x.locus_tag)
 
-        assert motifs[0].locus_tag == "labA1"
+        assert motifs[0].locus_tag == "labA1_lanthipeptide"
         assert motifs[0].detailed_information.lan_bridges == 4
         self.assertAlmostEqual(motifs[0].molecular_weight, 2059.3, delta=0.5)
 
-        assert motifs[1].locus_tag == "labA2"
+        assert motifs[1].locus_tag == "labA2_lanthipeptide"
         assert motifs[1].detailed_information.lan_bridges == 4
         self.assertAlmostEqual(motifs[1].molecular_weight, 1908.1, delta=0.5)
 
@@ -161,7 +161,7 @@ class IntegrationLanthipeptides(unittest.TestCase):
         assert len(motifs) == 1
 
         assert motifs[0].peptide_subclass == "Class II"
-        assert motifs[0].locus_tag == "lasA"
+        assert motifs[0].locus_tag == "lasA_lanthipeptide"
 
     def test_multiple_biosynthetic_enzymes(self):
         # TODO: find/create an input with both class II and class III lanthipeptides
