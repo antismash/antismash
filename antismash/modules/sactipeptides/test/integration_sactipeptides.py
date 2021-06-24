@@ -33,7 +33,7 @@ class IntegrationSactipeptides(unittest.TestCase):
         prepeptide = result.motifs_by_locus["BEST7613_6887"][0]
         assert prepeptide.location.start == 9735
         assert prepeptide.location.end == 9867
-        assert prepeptide.get_name() == "BEST7613_6887"
+        assert prepeptide.get_name() == "BEST7613_6887_sactipeptide"
         assert prepeptide.leader == "MKKAVIVENK"
         assert prepeptide.core == "GCATCSIGAACLVDGPIPDFEIAGATGLFGLWG"
         self.assertAlmostEqual(prepeptide.score, 33.)
@@ -46,7 +46,7 @@ class IntegrationSactipeptides(unittest.TestCase):
         prepeptide = result.motifs_by_locus["allorf_09736_09867"][0]
         assert prepeptide.location.start == 9735
         assert prepeptide.location.end == 9867
-        assert prepeptide.get_name() == "allorf_09736_09867"
+        assert prepeptide.get_name() == "allorf_09736_09867_sactipeptide"
         assert prepeptide.leader == "MKKAVIVENK"
         assert prepeptide.core == "GCATCSIGAACLVDGPIPDFEIAGATGLFGLWG"
         self.assertAlmostEqual(prepeptide.score, 33.)
