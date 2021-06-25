@@ -681,7 +681,9 @@ def result_vec_to_motif(query: CDSFeature, result: Lassopeptide) -> Prepeptide:
     cut_mass = result.cut_mass
     cut_weight = result.cut_weight
 
-    feature = Prepeptide(query.location, "lassopeptide", core, query.get_name(), "lassopeptides",
+    product = "lassopeptide"
+    name = f"{query.get_name()}_{product}"
+    feature = Prepeptide(query.location, product, core, name, "lassopeptides",
                          peptide_subclass=result.lasso_class,
                          score=result.score, monoisotopic_mass=result.monoisotopic_mass,
                          molecular_weight=weight,
