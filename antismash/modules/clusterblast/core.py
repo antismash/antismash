@@ -497,9 +497,12 @@ def internal_homology_blast(record: secmet.Record) -> Dict[int, List[List[str]]]
     """
     with TemporaryDirectory(change=True):
         logging.info("Finding internal homologs in each gene cluster...")
-        internalhomologygroups = {}
+        internalhomologygroups: Dict[int, List[List[str]]] = {}
         for region in record.get_regions():
             region_number = region.get_region_number()
+            if not region.cds_children:
+                internalhomologygroups[region_number] = []
+                continue
             iquerycluster_names, iqueryclusterseqs = create_blast_inputs(region)
             query_filename = "internal_input.fasta"
             fasta.write_fasta(iquerycluster_names, iqueryclusterseqs, query_filename)
