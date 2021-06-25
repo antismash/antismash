@@ -117,7 +117,7 @@ class TestSpecificAnalysis(unittest.TestCase):
         vec = Lassopeptide(23, 42, 51, "HEADHEADHEAD", seq)
         vec.c_cut = "TIP"
         motif = result_vec_to_motif(orig_feature, vec)
-        assert motif.locus_tag == "FAKE0001"
+        assert motif.locus_tag == f"{orig_feature.locus_tag}_{motif.peptide_class}"
         assert motif.location == orig_feature.location
         assert motif.leader == "HEADHEADHEAD"
         assert motif.tail == "TIP"
