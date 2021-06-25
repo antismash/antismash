@@ -14,7 +14,12 @@ from helperlibs.wrappers.io import TemporaryDirectory
 from antismash import config
 from antismash.common import path
 from antismash.common.secmet import Record
-from antismash.common.secmet.test.helpers import DummyCDS, DummyRegion
+from antismash.common.secmet.test.helpers import (
+    DummyCDS,
+    DummyRegion,
+    DummySubRegion,
+)
+from antismash.common.test.helpers import DummyRecord
 from antismash.modules import clusterblast
 import antismash.modules.clusterblast.core as core
 
@@ -599,3 +604,18 @@ class TestDataPreparation(unittest.TestCase):
         with patch.object(clusterblast, "check_clusterblast_files", returns=[]) as check:
             clusterblast.check_prereqs(options)
             check.assert_called_once()
+
+
+class TestInternalBlast(unittest.TestCase):
+    def setUp(self):
+        self.record = DummyRecord(seq="A"*100)
+        self.run = clusterblast.core.internal_homology_blast
+
+    @patch.object(clusterblast.core.fasta, "write_fasta",
+                  side_effect=RuntimeError("function should not have been called"))
+    def test_empty_regions(self, mocked_fasta):
+        region = DummyRegion(subregions=[DummySubRegion()])
+        self.record.add_region(region)
+        assert not region.cds_children
+        assert self.run(self.record) == {region.get_region_number(): []}
+        assert not mocked_fasta.called
