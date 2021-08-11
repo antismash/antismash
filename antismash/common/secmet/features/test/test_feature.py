@@ -14,11 +14,9 @@ from antismash.common.secmet.features.feature import (
     Feature,
     FeatureLocation,
     SeqFeature,
-    _adjust_location_by_offset as adjust,
 )
 from antismash.common.secmet import features
 from antismash.common.secmet.locations import (
-    ExactPosition,
     BeforePosition,
     AfterPosition,
 )
@@ -172,54 +170,6 @@ class TestFeature(unittest.TestCase):
         loc = FeatureLocation(-2, 500, strand=1)
         with self.assertRaisesRegex(ValueError, "negative coordinate"):
             Feature(loc, feature_type="")
-
-
-class TestLocationAdjustment(unittest.TestCase):
-    def setUp(self):
-        # not all of these really make sense biologically, but they're all valid computationally
-        self.position_types = [ExactPosition, AfterPosition, BeforePosition, int]
-
-    def test_single_forward(self):
-        for position_type in self.position_types:
-            old = FeatureLocation(position_type(5), 12, 1)
-            for offset in range(-2, 3):
-                new = adjust(old, offset)
-                assert isinstance(new.start, position_type)
-                assert new.start == old.start + offset
-                assert new.end is old.end
-
-    def test_single_reverse(self):
-        for position_type in self.position_types:
-            old = FeatureLocation(5, position_type(12), -1)
-            for offset in range(-2, 3):
-                new = adjust(old, offset)
-                assert isinstance(new.end, position_type)
-                assert new.end == old.end + offset
-                assert new.start is old.start
-
-    def test_compound_forward(self):
-        for position_type in self.position_types:
-            old = CompoundLocation([FeatureLocation(position_type(5), 12, 1),
-                                    FeatureLocation(15, 17, 1)])
-            for offset in range(-2, 3):
-                new = adjust(old, offset)
-                assert isinstance(new.start, position_type)
-                assert new.start == old.start + offset
-                assert new.parts[0].end is old.parts[0].end
-                for old_part, new_part in zip(old.parts[1:], new.parts[1:]):
-                    assert old_part is new_part
-
-    def test_compound_reverse(self):
-        for position_type in self.position_types:
-            old = CompoundLocation([FeatureLocation(15, position_type(17), -1),
-                                    FeatureLocation(5, 12, -1)])
-            for offset in range(-2, 3):
-                new = adjust(old, offset)
-                assert isinstance(new.end, position_type)
-                assert new.end == old.end + offset
-                assert new.parts[0].start is old.parts[0].start
-                for old_part, new_part in zip(old.parts[1:], new.parts[1:]):
-                    assert old_part is new_part
 
 
 class TestSubLocation(unittest.TestCase):
