@@ -19,7 +19,12 @@ from antismash.common.secmet.qualifiers import (
 )
 
 from ..errors import SecmetInvalidInputError
-from ..locations import AfterPosition, BeforePosition, Location
+from ..locations import (
+    AfterPosition,
+    BeforePosition,
+    frameshift_location_by_qualifier,
+    Location,
+)
 from .feature import Feature
 from .module import Module
 
@@ -278,8 +283,13 @@ class CDSFeature(Feature):
             raise SecmetInvalidInputError(message) from err
 
         try:
+            # before extracting a new translation, ensure that the location used
+            # is correctly adjusted to account for a "codon_start" qualifier
+            location = bio_feature.location
+            if "codon_start" in leftovers:
+                location = frameshift_location_by_qualifier(location, leftovers["codon_start"][0])
             translation = _ensure_valid_translation(leftovers.pop("translation", [""])[0],
-                                                    bio_feature.location, transl_table, record)
+                                                    location, transl_table, record)
         except ValueError as err:
             raise SecmetInvalidInputError(str(err) + ": %s" % name) from err
 
