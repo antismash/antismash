@@ -21,6 +21,7 @@ from ..errors import SecmetInvalidInputError
 from ..locations import (
     AfterPosition,
     BeforePosition,
+    frameshift_location_by_qualifier,
     Location,
     location_contains_overlapping_exons,
 )
@@ -28,33 +29,7 @@ from ..locations import (
 T = TypeVar("T", bound="Feature")
 
 
-def _adjust_location_by_offset(location: Location, offset: int) -> Location:
-    """ Adjusts the given location to account for an offset (e.g. start_codon)
-    """
-    assert -2 <= offset <= 2, "invalid offset %d" % offset
 
-    def adjust_single_location(part: FeatureLocation) -> FeatureLocation:
-        """ only functions on FeatureLocation """
-        assert not isinstance(part, CompoundLocation)
-        start = part.start
-        end = part.end
-        if part.strand == -1:
-            end = type(end)(end + offset)
-        else:
-            start = type(start)(start + offset)
-        return FeatureLocation(start, end, part.strand)
-
-    if isinstance(location, CompoundLocation):
-        part = location.parts[0]
-        if location.strand == -1:
-            assert part.end == location.end
-        else:
-            assert part.start == location.start
-        location = CompoundLocation([adjust_single_location(part)] + location.parts[1:])
-    else:
-        location = adjust_single_location(location)
-
-    return location
 
 
 class Feature:
@@ -229,14 +204,11 @@ class Feature:
             quals["note"] = sorted(notes)
         if self.created_by_antismash:
             quals["tool"] = ["antismash"]
+        # adjust location back if neccessary
         if self._original_codon_start is not None:
-            start = int(self._original_codon_start)
-            quals["codon_start"] = [str(start + 1)]
-            # adjust location back if neccessary
-            if self.location.strand == -1:
-                start *= -1
-            if self._original_codon_start != 0:
-                feature.location = _adjust_location_by_offset(feature.location, -start)
+            start = self._original_codon_start + 1
+            quals["codon_start"] = [str(start)]
+            feature.location = frameshift_location_by_qualifier(feature.location, start, undo=True)
         # sorted here to match the behaviour of biopython
         for key, val in sorted(quals.items()):
             feature.qualifiers[key] = val
@@ -292,19 +264,10 @@ class Feature:
         if leftovers:
             feature.created_by_antismash = leftovers.get("tool") == ["antismash"]
             if "codon_start" in leftovers:
-                try:
-                    raw_start = leftovers.pop("codon_start")
-                    codon_start = int(raw_start[0]) - 1
-                except ValueError as err:
-                    raise SecmetInvalidInputError(f"invalid codon_start qualifier: {raw_start}")
-                if not 0 <= codon_start <= 2:
-                    raise SecmetInvalidInputError("invalid codon_start qualifier: %d" % (codon_start + 1))
-                feature._original_codon_start = codon_start  # very much private, so pylint: disable=protected-access
-                if feature.location.strand == -1:
-                    codon_start *= -1
-                if codon_start != 0:
-                    # adjust the location for now until converting back to biopython if required
-                    feature.location = _adjust_location_by_offset(feature.location, codon_start)
+                start = leftovers.pop("codon_start")[0]
+                # adjust the location for now until converting back to biopython if required
+                feature.location = frameshift_location_by_qualifier(feature.location, start)
+                feature._original_codon_start = int(start) - 1
 
             feature._qualifiers.update(leftovers)  # shouldn't be a public thing, so pylint: disable=protected-access
         else:

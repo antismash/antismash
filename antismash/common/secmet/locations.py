@@ -17,6 +17,8 @@ from Bio.SeqFeature import (
     UnknownPosition,
 )
 
+from .errors import SecmetInvalidInputError
+
 Location = Union[CompoundLocation, FeatureLocation]  # pylint: disable=invalid-name
 
 
@@ -396,3 +398,72 @@ def ensure_valid_locations(features: List[SeqFeature], can_be_circular: bool, se
                 continue
             if location_bridges_origin(feature.location, allow_reversing=True):
                 raise ValueError("cannot determine correct exon ordering for location: %s" % feature.location)
+
+
+def _adjust_location_by_offset(location: Location, offset: int) -> Location:
+    """ Adjusts the given location to account for an offset (e.g. start_codon)
+
+        Negative values are allowed, since that allows for adjusting back to
+        an original location.
+    """
+    if offset == 0:
+        return location
+
+    assert -2 <= offset <= 2, "invalid offset %d" % offset
+
+    def adjust_single_location(part: FeatureLocation) -> FeatureLocation:
+        """ only functions on FeatureLocation """
+        assert not isinstance(part, CompoundLocation)
+        start = part.start
+        end = part.end
+        if part.strand == -1:
+            end = type(end)(end + offset)
+        else:
+            start = type(start)(start + offset)
+        return FeatureLocation(start, end, part.strand)
+
+    if isinstance(location, CompoundLocation):
+        part = location.parts[0]
+        if location.strand == -1:
+            assert part.end == location.end
+        else:
+            assert part.start == location.start
+        location = CompoundLocation([adjust_single_location(part)] + location.parts[1:])
+    else:
+        location = adjust_single_location(location)
+
+    return location
+
+
+def frameshift_location_by_qualifier(location: Location, raw_start: Union[str, int],
+                                     undo: bool = False) -> Location:
+    """ Generates a new location to represent a frameshift of an existing location.
+        Forward strand locations will have their start coordinate lowered.
+        Reverse strand locations will have their end coordinate raised.
+
+        Arguments:
+            location: the location to shift
+            start: a 1-indexed integer or string as per the genbank "codon_start" qualifier
+            undo: whether to treat the frameshift as undoing a previous frameshift
+
+        Returns:
+            a new location instance of the same type
+    """
+    if isinstance(raw_start, str):
+        try:
+            codon_start = int(raw_start[0]) - 1
+        except ValueError:
+            raise SecmetInvalidInputError(f"invalid codon_start qualifier: {raw_start}")
+    else:
+        codon_start = raw_start - 1
+
+    if not 0 <= codon_start <= 2:
+        raise SecmetInvalidInputError("invalid codon_start qualifier: %d" % (codon_start + 1))
+
+    if location.strand == -1:
+        codon_start *= -1
+
+    if undo:
+        codon_start *= -1
+
+    return _adjust_location_by_offset(location, codon_start)
