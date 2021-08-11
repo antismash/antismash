@@ -141,6 +141,28 @@ class TestCDSBiopythonConversion(unittest.TestCase):
         with self.assertRaisesRegex(SecmetInvalidInputError, "invalid translation table"):
             CDSFeature.from_biopython(bio)
 
+    def test_translation_with_codon_start(self):
+        """ Ensures translation extraction takes place *after* location adjustment
+            for frame shifts/codon start qualifier
+        """
+        cds = CDSFeature(FeatureLocation(6, 21, 1), locus_tag="test", translation="MAGIC")
+        rec = DummyRecord(seq="xxxxxxATGGCAGGTATTTGTxxxxxx")
+        rev = DummyRecord(seq="xxxxxxACAAATACCTGCCATxxxxxx")
+        assert cds.location.extract(rec.seq).translate() == cds.translation
+
+        bio = cds.to_biopython()[0]
+        bio.qualifiers.pop("translation")
+
+        for record, strand in [(rec, 1), (rev, -1)]:
+            for shift in range(0, 3):
+                start = cds.location.start - (shift if strand == 1 else 0)
+                end = cds.location.end + (shift if strand == -1 else 0)
+                bio.qualifiers["codon_start"] = [str(shift + 1)]
+                bio.location = FeatureLocation(start, end, strand)
+                assert "translation" not in bio.qualifiers
+                new = CDSFeature.from_biopython(bio, record=record)
+                assert new.translation == cds.translation
+
 
 class TestCDSProteinLocation(unittest.TestCase):
     def setUp(self):
