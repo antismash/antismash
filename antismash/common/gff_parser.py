@@ -105,6 +105,8 @@ def get_features_from_file(handle: IO) -> Dict[str, List[SeqFeature]]:
                 new_features = [feature]
             else:
                 new_features = check_sub(feature)
+                if feature.type == "gene":
+                    features.append(feature)
                 if not new_features:
                     continue
 
@@ -120,9 +122,10 @@ def get_features_from_file(handle: IO) -> Dict[str, List[SeqFeature]]:
                     name = name_tmp
                     break
 
+            multiple_cds = len(list(filter(lambda x: x.type == "CDS", new_features))) > 1
             for i, new_feature in enumerate(new_features):
                 variant = name
-                if len(new_features) > 1:
+                if new_feature.type == "CDS" and multiple_cds:
                     variant = "{0}_{1}".format(name, i)
                 new_feature.qualifiers['gene'] = [variant]
                 if locus_tag is not None:
@@ -206,6 +209,8 @@ def check_sub(feature: SeqFeature) -> List[SeqFeature]:
     qualifiers: Dict[str, List[str]] = {}
     mismatching_qualifiers: Set[str] = set()
     for sub in feature.sub_features:
+        if sub.type != "CDS":
+            new_features.append(sub)
         if sub.sub_features:  # If there are sub_features, go deeper
             new_features.extend(check_sub(sub))
         elif sub.type == 'CDS':
@@ -224,7 +229,7 @@ def check_sub(feature: SeqFeature) -> List[SeqFeature]:
 
     # Only works in tip of the tree, when there's no new_feature built yet. If there is,
     # it means the script just came out of a check_sub and it's ready to return.
-    if not new_features:
+    if locations:
         new_loc = locations[0]
         # construct a compound location if required
         if len(locations) > 1:
