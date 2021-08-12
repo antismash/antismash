@@ -24,8 +24,24 @@ class GffParserTest(TestCase):
     def test_run(self):
         results = gff_parser.run(self.gff_file)
         first = results["CONTIG_1"]
-        assert len(first) == 1
+        assert {feat.type for feat in first} == {
+            "CDS",
+            "exon",
+            "mRNA",
+            "five_prime_UTR",
+            "gene",
+        }
+        assert len(first) == 7  # 10 features in the file, but the CDS features combine
         assert isinstance(first[0], SeqFeature)
+        assert first[0].type == "gene"
+        assert isinstance(first[6], SeqFeature)
+        assert first[6].type == "CDS"
+        # ensure the CDS components of the gene are properly combined
+        assert str(first[6].location) == "join{[1124:1291](+), [1396:1450](+), [1753:1871](+)}"
+        assert len(list(filter(lambda x: x.type == "CDS", first))) == 1
+        # and check parent linkages are correct
+        for feature in first[1:]:  # don't look at the gene if we're looking at gene references
+            assert feature.qualifiers["gene"] == first[0].qualifiers["Name"]
 
         assert "CONTIG_2" not in results
 
