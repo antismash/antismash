@@ -11,9 +11,9 @@ import sys
 from typing import Any, Dict, List, Set
 
 from helperlibs.wrappers.io import TemporaryDirectory
-from jinja2 import Markup
 
 from antismash.common import path, subprocessing
+from antismash.common.html_renderer import Markup
 from antismash.config import ConfigType
 from antismash.detection.nrps_pks_domains import ModularDomain
 
