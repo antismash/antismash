@@ -5,9 +5,8 @@
 
 from typing import Any, Dict, List, Tuple
 
-from jinja2 import Markup
-
 from antismash.common import path, subprocessing, utils, fasta
+from antismash.common.html_renderer import Markup
 from antismash.modules.nrps_pks.data_structures import Prediction
 from antismash.modules.nrps_pks.pks_names import get_long_form
 

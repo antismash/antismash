@@ -21,6 +21,7 @@ install_requires = [
     'jinja2',
     'joblib',
     'jsonschema',
+    'markupsafe >= 2.0',
     'pysvg-py3',
     'bcbio-gff',
     'pyScss',

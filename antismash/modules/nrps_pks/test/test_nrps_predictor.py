@@ -7,9 +7,9 @@
 import unittest
 from unittest.mock import patch
 
-from jinja2 import Markup
 
 from antismash.common import path, fasta, subprocessing
+from antismash.common.html_renderer import Markup
 from antismash.common.test.helpers import DummyAntismashDomain
 from antismash.modules.nrps_pks import nrps_predictor, data_structures
 

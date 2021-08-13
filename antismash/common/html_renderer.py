@@ -9,7 +9,7 @@ import os
 from typing import Any, List, Optional
 
 import jinja2 as _jinja2
-from jinja2 import Markup
+from markupsafe import Markup
 
 from antismash.config import get_config
 
