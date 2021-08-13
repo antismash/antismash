@@ -9,9 +9,8 @@ import logging
 from os import path
 from typing import Any, Dict, List, Tuple
 
-from jinja2 import Markup
-
 from antismash.common import subprocessing, utils
+from antismash.common.html_renderer import Markup
 from antismash.modules.nrps_pks.data_structures import Prediction
 
 
