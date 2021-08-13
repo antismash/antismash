@@ -5,7 +5,7 @@
 
 from typing import Any, Dict, List
 
-from jinja2 import Markup
+from antismash.common.html_renderer import Markup
 
 
 class Prediction:
