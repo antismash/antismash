@@ -89,7 +89,8 @@ class TestConfig(unittest.TestCase):
 
     def test_paths(self):
         with TemporaryDirectory(change=True) as temp_dir:
-            open("local", "w")
+            with open("local", "w"):
+                pass  # just create the file, no need for content
             options = self.core_parser.parse_args(["--reuse-results", "local"])
             assert options.reuse_results == os.path.join(temp_dir, "local")
             os.chmod("local", 0)

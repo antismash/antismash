@@ -82,12 +82,11 @@ class Config:  # since it's a glorified namespace, pylint: disable=too-few-publi
             values = namespace
         else:
             values = namespace.__dict__
-        Config.__lock.acquire()
-        if Config.__singleton is None:
-            Config.__singleton = Config._Config(values)
-        else:
-            Config.__singleton.__dict__.update(values)
-        Config.__lock.release()
+        with Config.__lock:
+            if Config.__singleton is None:
+                Config.__singleton = Config._Config(values)
+            else:
+                Config.__singleton.__dict__.update(values)
         return Config.__singleton
 
 

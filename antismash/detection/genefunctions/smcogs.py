@@ -51,7 +51,9 @@ def build_function_mapping() -> Dict[str, GeneFunction]:
         'R': GeneFunction.REGULATORY,  # 'regulatory',
     }
     annotations = {}
-    for line in open(path.get_full_path(__file__, 'data', 'cog_annotations.txt'), 'r'):
+    with open(path.get_full_path(__file__, 'data', 'cog_annotations.txt'), 'r') as handle:
+        lines = handle.readlines()
+    for line in lines:
         cog, _desc, key = line.strip().split('\t', 3)
         annotations[cog] = mapping.get(key, GeneFunction.OTHER)
 

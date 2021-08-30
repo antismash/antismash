@@ -300,11 +300,13 @@ def write_promoters_to_file(output_dir: str, prefix: str, promoters: List[Promot
         The prefix helps in having separate files for multi-record inputs with
         a singular output directory.
     """
+    # pylint: disable=consider-using-with
     # positions file
     pos_handle = open(os.path.join(output_dir, prefix + "_promoter_positions.csv"), "w")
     pos_handle.write("\t".join(["#", "promoter", "start", "end", "length"]) + "\n")
     # sequences file
     seq_handle = open(os.path.join(output_dir, prefix + "_promoter_sequences.fasta"), "w")
+    # pylint: enable=consider-using-with
 
     for i, promoter in enumerate(promoters):
         # write promoter positions to file
@@ -317,6 +319,8 @@ def write_promoters_to_file(output_dir: str, prefix: str, promoters: List[Promot
                     description="length={}bp".format(len(promoter))),
                     seq_handle,
                     "fasta")
+    pos_handle.close()
+    seq_handle.close()
 
 
 def get_anchor_promoter_index(anchor: str, promoters: List[Promoter]) -> int:

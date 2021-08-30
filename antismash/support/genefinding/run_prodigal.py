@@ -43,7 +43,9 @@ def run_prodigal(record: Record, options: ConfigType) -> None:
             logging.error("Failed to run prodigal: %r", err)
             raise RuntimeError("prodigal error: %s" % err)
         found = 0
-        for line in open(result_file, 'r'):
+        with open(result_file, "r") as handle:
+            lines = handle.readlines()
+        for line in lines:
             # skip first line
             if not line.startswith('>'):
                 continue

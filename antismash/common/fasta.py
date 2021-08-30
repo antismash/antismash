@@ -64,10 +64,9 @@ def write_fasta(names: List[str], seqs: List[str], filename: str) -> None:
         Returns:
             None
     """
-    out_file = open(filename, "w")
-    for name, seq in zip(names, seqs):
-        out_file.write(">%s\n%s\n" % (name, seq))
-    out_file.close()
+    with open(filename, "w") as out_file:
+        for name, seq in zip(names, seqs):
+            out_file.write(">%s\n%s\n" % (name, seq))
 
 
 def read_fasta(filename: str) -> Dict[str, str]:

@@ -214,12 +214,11 @@ def read_positions(filename: str, start_position: int) -> List[int]:
         Returns:
             a list of ints, one for each position found in the file
     """
-    data = open(filename, "r")
-    text = data.read().strip()
+    with open(filename, "r") as data:
+        text = data.read().strip()
     results = []
     for i in text.split("\t"):
         results.append(int(i) - start_position)
-    data.close()
     return results
 
 

@@ -507,7 +507,9 @@ def get_sequence_counts(details_file: str) -> Dict[str, int]:
     """
     result = {}
     for hmm in get_signature_profiles(details_file):
-        for line in open(path.get_full_path(details_file, hmm.hmm_file), 'r'):
+        with open(path.get_full_path(details_file, hmm.hmm_file), 'r') as handle:
+            lines = handle.readlines()
+        for line in lines:
             if line.startswith('NSEQ '):
                 result[hmm.name] = int(line[6:].strip())
                 break

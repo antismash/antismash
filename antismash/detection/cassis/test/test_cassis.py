@@ -4,7 +4,7 @@
 """Test suite for the cassis cluster detection plugin"""
 
 # for test files, silence irrelevant and noisy pylint warnings
-# pylint: disable=no-self-use,protected-access,missing-docstring
+# pylint: disable=no-self-use,protected-access,missing-docstring,consider-using-with
 
 from argparse import Namespace
 import os
