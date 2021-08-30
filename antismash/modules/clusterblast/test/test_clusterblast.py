@@ -38,8 +38,7 @@ class TestBlastParsing(unittest.TestCase):
                 return core.parse_subject(subject_line, seqlengths, seq_record)
 
     def read_sample_data(self, filename="data/diamond_output_sample.txt"):
-        data_path = os.path.join(__file__.rsplit(os.sep, 1)[0], filename)
-        with open(data_path, "r") as handle:
+        with open(path.get_full_path(__file__, filename), "r") as handle:
             return handle.read()
 
     def file_data_to_lists(self, data):
