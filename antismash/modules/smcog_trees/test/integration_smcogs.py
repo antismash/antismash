@@ -13,7 +13,7 @@ from helperlibs.wrappers.io import TemporaryDirectory
 
 import antismash
 from antismash.common import secmet
-import antismash.common.test.helpers as helpers
+from antismash.common.test import helpers
 from antismash.config import get_config, update_config, destroy_config, build_config
 from antismash.detection import genefunctions
 from antismash.main import read_data

@@ -8,7 +8,7 @@
 import logging
 from typing import Dict, Iterator, List, Tuple
 
-import antismash.common.path as path
+from antismash.common import path
 
 _STARTING_BONDS = {
     "C": 4,

@@ -12,7 +12,7 @@ import antismash
 from antismash.main import read_data
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record
-import antismash.common.test.helpers as helpers
+from antismash.common.test import helpers
 from antismash.config import get_config, update_config, destroy_config, build_config
 from antismash.modules import tta
 

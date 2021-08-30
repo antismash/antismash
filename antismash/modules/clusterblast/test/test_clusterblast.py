@@ -21,7 +21,7 @@ from antismash.common.secmet.test.helpers import (
 )
 from antismash.common.test.helpers import DummyRecord
 from antismash.modules import clusterblast
-import antismash.modules.clusterblast.core as core
+from antismash.modules.clusterblast import core
 
 
 class TestBlastParsing(unittest.TestCase):
