@@ -72,13 +72,9 @@ class HmmDetectionTest(unittest.TestCase):
                 "RULE Metabolite0 CATEGORY Cat CUTOFF 1 NEIGHBOURHOOD 3 CONDITIONS modelF",
                 "RULE Metabolite1 CATEGORY Cat CUTOFF 1 NEIGHBOURHOOD 3 CONDITIONS modelG"]),
                 self.test_names, self.categories).rules
-        self.features = []
-        for gene_id in self.feature_by_id:
-            self.features.append(self.feature_by_id[gene_id])
-        self.features.sort(key=lambda x: x.location.start)  # vital for py3 < 3.5
         self.record = Record()
         self.record._record.seq = Seq("A"*150000)
-        for feature in self.features:
+        for feature in self.feature_by_id.values():
             self.record.add_cds_feature(feature)
 
     def tearDown(self):
