@@ -15,19 +15,19 @@ def read(fname):
 long_description = read('README.md')
 
 install_requires = [
-    'numpy',
+    'numpy == 1.21.1',
     'biopython == 1.78',
-    'helperlibs',
-    'jinja2',
-    'joblib',
-    'jsonschema',
+    'helperlibs == 0.2.1',
+    'jinja2 == 3.0.1',
+    'joblib == 1.0.1',
+    'jsonschema == 3.2.0',
     'markupsafe >= 2.0',
-    'pysvg-py3',
-    'bcbio-gff',
-    'pyScss',
-    'matplotlib',
-    'scipy',
-    'scikit-learn >= 0.19.0',
+    'pysvg-py3 == 0.2.2.post3',
+    'bcbio-gff == 0.6.6',
+    'pyScss == 1.3.7',
+    'matplotlib == 3.4.2',
+    'scipy == 1.7.1',
+    'scikit-learn == 0.24.2',
 ]
 
 tests_require = [
