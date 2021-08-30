@@ -17,7 +17,6 @@ from antismash.common.secmet.locations import (
     locations_overlap,
 )
 
-from ..errors import SecmetInvalidInputError
 from ..locations import (
     AfterPosition,
     BeforePosition,

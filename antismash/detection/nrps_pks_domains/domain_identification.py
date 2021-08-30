@@ -25,7 +25,6 @@ from .module_identification import (
     build_modules_for_cds,
     CDSModuleInfo,
     combine_modules,
-    IncompatibleComponentError,
     Module,
 )
 from .modular_domain import ModularDomain
