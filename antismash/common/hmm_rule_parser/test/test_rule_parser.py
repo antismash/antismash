@@ -561,8 +561,8 @@ class RuleParserTest(unittest.TestCase):
 
     def test_alias_bad_names(self):
         with self.assertRaises(rule_parser.RuleSyntaxError):
-            self.parse(f"DEFINE 3 AS a")
-        for name in ["-", "." "some-name"]:
+            self.parse("DEFINE 3 AS a")
+        for name in ["-", ".", ""]:
             with self.assertRaisesRegex(rule_parser.RuleSyntaxError, "Expected identifier but"):
                 self.parse(f"DEFINE {name} AS a")
 
