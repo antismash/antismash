@@ -15,6 +15,7 @@ TRuleCategory = TypeVar("TRuleCategory", bound="RuleCategory")
 
 @dataclass
 class RuleCategory:
+    """A collection of information about a particular rule category"""
     name: str
     description: str
     version: int = 1
@@ -22,6 +23,7 @@ class RuleCategory:
     @classmethod
     def from_json(cls: Type[TRuleCategory], name: str,
                   entry: Dict[str, Union[str, int]]) -> TRuleCategory:
+        """Regenerates a RuleCategory instance from a JSON representation"""
 
         try:
             description: str = str(entry["description"])  # cast to make mypy happy
