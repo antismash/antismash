@@ -22,18 +22,16 @@ def load_smiles() -> Dict[str, str]:
     """Load smiles from a dictionary mapping residues to SMILES string"""
     aa_smiles: Dict[str, str] = {}
 
-    smiles_monomer = open(path.get_full_path(__file__, 'data', 'aaSMILES.txt'), 'r')
+    with open(path.get_full_path(__file__, 'data', 'aaSMILES.txt'), 'r') as handle:
+        for line in handle:
+            line = line.split("#", 1)[0].strip()
+            if not line:
+                continue
+            smiles = line.split()
+            assert len(smiles) == 2, "Invalid smiles line {!r}".format(line)
+            assert smiles[0].lower() not in aa_smiles, f"{smiles[0]} contained twice in smiles data"
+            aa_smiles[smiles[0].lower()] = smiles[1]
 
-    for line in smiles_monomer.readlines():
-        line = line.split("#", 1)[0].strip()
-        if not line:
-            continue
-        smiles = line.split()
-        assert len(smiles) == 2, "Invalid smiles line {!r}".format(line)
-        assert smiles[0].lower() not in aa_smiles, "%s contained twice in smiles data" % smiles[0]
-        aa_smiles[smiles[0].lower()] = smiles[1]
-
-    smiles_monomer.close()
     return aa_smiles
 
 

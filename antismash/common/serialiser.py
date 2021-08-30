@@ -52,7 +52,7 @@ class AntismashResults:
             in a file
         """
         if isinstance(handle, str):
-            handle = open(handle, "r")
+            handle = open(handle, "r")  # pylint: disable=consider-using-with
         try:
             data = json.loads(handle.read())
         except json.JSONDecodeError:
@@ -94,7 +94,7 @@ class AntismashResults:
             logging.error(message)
             raise TypeError(message) from error
         if isinstance(handle, str):
-            handle = open(handle, "w")
+            handle = open(handle, "w")  # pylint: disable=consider-using-with
         handle.write(converted)
 
 
@@ -145,7 +145,7 @@ def dump_records(records: List[SeqRecord], results: List[Dict[str, Union[Dict[st
         logging.error("Error converting json data: %s", data)
         raise
     if isinstance(handle, str):
-        handle = open(handle, "w")
+        handle = open(handle, "w")  # pylint: disable=consider-using-with
     handle.write(new_contents)
     return data
 

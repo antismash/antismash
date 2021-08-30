@@ -370,7 +370,8 @@ def write_profiling_results(profiler: cProfile.Profile, target: str) -> None:
     stats.print_callers(.25)
     try:
         path_to_remove = os.path.dirname(os.path.realpath(__file__)) + os.path.sep
-        open(target, "w").write(stream.getvalue().replace(path_to_remove, ""))
+        with open(target, "w") as handle:
+            handle.write(stream.getvalue().replace(path_to_remove, ""))
         logging.info("Profiling report written to %s", target)
     except IOError:
         # if can't save to file, print to terminal, but only the head

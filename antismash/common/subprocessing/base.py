@@ -82,17 +82,17 @@ def execute(commands: List[str], stdin: Optional[str] = None, stdout: Union[int,
         stdin_redir = None
         input_bytes = None
 
-    try:
-        proc = Popen(commands, stdin=stdin_redir, stdout=stdout, stderr=stderr)
-        out, err = proc.communicate(input=input_bytes, timeout=timeout)
-    except TimeoutExpired:
-        proc.kill()
-        assert isinstance(timeout, int)
-        raise RuntimeError("Child process '%s' timed out after %d seconds" % (
-                commands, timeout))
+    with Popen(commands, stdin=stdin_redir, stdout=stdout, stderr=stderr) as proc:
+        try:
+            out, err = proc.communicate(input=input_bytes, timeout=timeout)
+        except TimeoutExpired:
+            proc.kill()
+            assert isinstance(timeout, int)
+            raise RuntimeError("Child process '%s' timed out after %d seconds" % (
+                    commands, timeout))
 
-    return RunResult(commands, out, err, proc.returncode, stdout == PIPE,
-                     stderr == PIPE)
+        return RunResult(commands, out, err, proc.returncode, stdout == PIPE,
+                         stderr == PIPE)
 
 
 def parallel_function(function: Callable, args: Iterable[List[Any]],
@@ -123,18 +123,18 @@ def parallel_function(function: Callable, args: Iterable[List[Any]],
         # list() to handle generators, * to expand the list of args
         return [function(*argset) for argset in args]
 
-    pool = multiprocessing.Pool(cpus)
-    jobs = pool.starmap_async(function, args)
+    with multiprocessing.Pool(cpus) as pool:
+        jobs = pool.starmap_async(function, args)
 
-    timeouts = False
+        timeouts = False
 
-    try:
-        results = jobs.get(timeout=timeout)
-    except multiprocessing.TimeoutError:
-        timeouts = True
-    finally:
-        pool.terminate()
-        pool.join()
+        try:
+            results = jobs.get(timeout=timeout)
+        except multiprocessing.TimeoutError:
+            timeouts = True
+        finally:
+            pool.terminate()
+            pool.join()
     if timeouts:
         raise RuntimeError("Timeout in parallel function:", function)
     return results
@@ -172,22 +172,20 @@ def parallel_execute(commands: List[List[str]], cpus: Optional[int] = None,
     if not cpus:
         cpus = get_config().cpus
     assert isinstance(cpus, int)
-    pool = multiprocessing.Pool(cpus)
-    jobs = pool.map_async(runner, commands)
+    with multiprocessing.Pool(cpus) as pool:
+        jobs = pool.map_async(runner, commands)
 
-    try:
-        errors = jobs.get(timeout=timeout)
-    except multiprocessing.TimeoutError:
-        pool.terminate()
-        assert isinstance(timeout, int)
-        raise RuntimeError("One of %d child processes timed out after %d seconds" % (
-                cpus, timeout))
+        try:
+            errors = jobs.get(timeout=timeout)
+        except multiprocessing.TimeoutError:
+            pool.terminate()
+            assert isinstance(timeout, int)
+            raise RuntimeError("One of %d child processes timed out after %d seconds" % (
+                    cpus, timeout))
 
-    except KeyboardInterrupt:
-        logging.error("Interrupted by user")
-        pool.terminate()
-        raise
-
-    pool.close()
+        except KeyboardInterrupt:
+            logging.error("Interrupted by user")
+            pool.terminate()
+            raise
 
     return errors

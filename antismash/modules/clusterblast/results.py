@@ -340,7 +340,7 @@ def _write_output(filename: str, record: Record, cluster_result: RegionResult,
     ranking = cluster_result.ranking
     # Output for each hit: table of genes and locations of input cluster,
     # table of genes and locations of hit cluster, table of hits between the clusters
-    out_file = open(filename, "w")
+    out_file = open(filename, "w")  # pylint: disable=consider-using-with
     out_file.write("ClusterBlast scores for " + record.id + "\n")
     out_file.write("\nTable of genes, locations, strands and annotations of query cluster:\n")
     for i, cds in enumerate(cluster_result.region.cds_children):

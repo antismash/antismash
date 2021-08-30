@@ -39,7 +39,8 @@ class TestBlastParsing(unittest.TestCase):
 
     def read_sample_data(self, filename="data/diamond_output_sample.txt"):
         data_path = os.path.join(__file__.rsplit(os.sep, 1)[0], filename)
-        return open(data_path, "r").read()
+        with open(data_path, "r") as handle:
+            return handle.read()
 
     def file_data_to_lists(self, data):
         return [line.split("\t") for line in data.rstrip().split("\n")]
@@ -439,7 +440,8 @@ class TestInputGeneration(unittest.TestCase):
             assert files == ["test.fasta"]
             assert os.path.exists("test.fasta")
             expected = "".join(">L{0}\nS{0}\n".format(i) for i in range(len(self.regions)*3))
-            assert open("test.fasta").read() == expected
+            with open("test.fasta") as handle:
+                assert handle.read() == expected
 
     def test_single_partition(self):
         self.add_cdses_to_region([DummyCDS(1, i) for i in range(3, 6)])
@@ -448,7 +450,8 @@ class TestInputGeneration(unittest.TestCase):
             assert files == ["test.fasta"]
             assert os.path.exists("test.fasta")
             expected = "".join(">L{0}\nS{0}\n".format(i) for i in range(len(self.regions)*3))
-            assert open("test.fasta").read() == expected
+            with open("test.fasta") as handle:
+                assert handle.read() == expected
 
     def test_multiple_files(self):
         self.add_cdses_to_region([DummyCDS(1, i) for i in range(3, 6)])
@@ -461,7 +464,8 @@ class TestInputGeneration(unittest.TestCase):
                 for index in range(partitions):
                     assert os.path.exists("test%d.fasta" % index)
                     print(index, chunk_size)
-                    contents = open("test%d.fasta" % index).read()
+                    with open("test%d.fasta" % index) as handle:
+                        contents = handle.read()
                     assert contents.count(">") == chunk_size
                     expected = "".join(">L{0}\nS{0}\n".format(i + index * chunk_size) for i in range(chunk_size))
                     assert contents == expected

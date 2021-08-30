@@ -40,9 +40,9 @@ def run_blastp(target_blastp_database: str, query_sequence: str,
         command.extend(opts)
 
     if results_file is not None:
-        handle: IO[Any] = open(results_file)
+        handle: IO[Any] = open(results_file)  # pylint: disable=consider-using-with
     else:
-        handle = NamedTemporaryFile()
+        handle = NamedTemporaryFile()  # pylint: disable=consider-using-with
 
     result = execute(command, stdin=query_sequence, stdout=handle)
     if not result.successful():

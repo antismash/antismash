@@ -60,8 +60,8 @@ class DownloadError(RuntimeError):
 def get_remote_filesize(url: str) -> int:
     """Get the file size of the remote file."""
     try:
-        usock = request.urlopen(request.Request(url, method="HEAD"))
-        dbfilesize = usock.info().get("Content-Length", "0")
+        with request.urlopen(request.Request(url, method="HEAD")) as usock:
+            dbfilesize = usock.info().get("Content-Length", "0")
     except urlerror.URLError:
         dbfilesize = "0"
 
@@ -156,9 +156,8 @@ def unzip_file(filename: str, decompressor: Any, error_type: Type[Exception]) ->
 def untar_file(filename: str) -> None:
     """Extract a TAR/GZ file."""
     try:
-        tar = tarfile.open(filename)
-        tar.extractall(path=filename.rpartition(os.sep)[0])
-        tar.close()
+        with tarfile.open(filename) as tar:
+            tar.extractall(path=filename.rpartition(os.sep)[0])
     except tarfile.ReadError:
         print(
             "ERROR: Error extracting %s. Please try to extract it manually."
@@ -192,8 +191,8 @@ def present_and_line_count_matches(filename: str, lines: int) -> bool:
         return False
 
     _count = -1
-    for _count, _ in enumerate(open(filename, "r")):
-        pass
+    with open(filename, "r") as handle:
+        _count = len(handle.readlines())
     _count += 1
 
     return _count == lines

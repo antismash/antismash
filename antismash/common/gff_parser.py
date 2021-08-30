@@ -37,6 +37,7 @@ def check_gff_suitability(gff_file: str, sequences: List[SeqRecord]) -> None:
     try:
         examiner = GFF.GFFExaminer()
         # file handle is automatically closed by GFF lib
+        # pylint:disable=consider-using-with
         gff_data = examiner.available_limits(open(gff_file))
         # Check if at least one GFF locus appears in sequence
         gff_ids = set(n[0] for n in gff_data['gff_id'])
@@ -75,6 +76,7 @@ def check_gff_suitability(gff_file: str, sequences: List[SeqRecord]) -> None:
         if 'CDS' in set(n for key in examiner.parent_child_map(open(gff_file)) for n in key):
             logging.error('GFF3 structure is not suitable. CDS features must be childless but not parentless.')
             raise AntismashInputError('GFF3 structure is not suitable.')
+        # pylint:enable=consider-using-with
 
     except AssertionError as err:
         # usually the assertion "assert len(parts) >= 8, line"
