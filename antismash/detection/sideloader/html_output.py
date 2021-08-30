@@ -11,7 +11,7 @@ from antismash.common.module_results import ModuleResults
 from antismash.common.html_renderer import FileTemplate, HTMLSections
 from antismash.common.layers import RegionLayer, RecordLayer, OptionsLayer
 
-from .data_structures import SideloadedResults, Tool
+from .data_structures import SideloadedResults
 
 
 def will_handle(_products: List[str], _product_categories: Set[str]) -> bool:

@@ -273,7 +273,7 @@ class RuleParserTest(unittest.TestCase):
         return rule_parser.Parser(text, self.signature_names, valid_categories, aliases)
 
     def test_invalid_signature(self):
-        with self.assertRaisesRegex(ValueError, "without signatures: badname") as details:
+        with self.assertRaisesRegex(ValueError, "without signatures: badname"):
             self.parse(format_as_rule("A", 10, 20, "badname or a"))
 
     def test_stringify(self):

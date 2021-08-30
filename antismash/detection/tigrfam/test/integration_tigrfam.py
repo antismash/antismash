@@ -7,7 +7,7 @@
 import unittest
 
 import antismash
-from antismash.common import record_processing, pfamdb
+from antismash.common import record_processing
 from antismash.common.test import helpers
 from antismash.config import build_config, destroy_config
 from antismash.detection import tigrfam

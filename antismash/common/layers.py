@@ -10,7 +10,7 @@
 import os
 from typing import Any, List, Optional, Tuple
 
-from antismash.config import ConfigType, get_config
+from antismash.config import ConfigType
 from antismash.common.html_renderer import Markup
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record, Region
