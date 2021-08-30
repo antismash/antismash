@@ -14,7 +14,7 @@ from helperlibs.wrappers.io import TemporaryDirectory
 from antismash.main import get_all_modules
 from antismash.common import path
 from antismash.common.module_results import ModuleResults
-import antismash.common.test.helpers as helpers
+from antismash.common.test import helpers
 from antismash.common.subprocessing.diamond import run_diamond_version
 from antismash.config import build_config, get_config, update_config, destroy_config
 from antismash.modules import clusterblast
