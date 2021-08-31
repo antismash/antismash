@@ -60,6 +60,18 @@ _SUBTYPE_MAPPING: Dict[str, Type[AntismashDomain]] = {}
 
 
 def register_asdomain_variant(tool: str, subtype: Type[AntismashDomain]) -> None:
+    """ Register a subclass of AntismashDomain for the purposes of instantiating
+        and accurate regeneration. Allows modules to define their own domain types
+        without requiring all modifications to be in secmet.
+
+        Arguments:
+            tool: the name of the tool/module registering the subtype
+            subtype: the type to register
+
+        Returns:
+            None
+    """
+
     if not issubclass(subtype, AntismashDomain):
         raise TypeError(f"{subtype} is not a subclass of AntismashDomain")
     if tool in _SUBTYPE_MAPPING:
