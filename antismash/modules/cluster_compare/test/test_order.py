@@ -89,10 +89,14 @@ class TestSegmentScoring(unittest.TestCase):
         assert score(self.contiguous, 5, 10) < score(self.contiguous, 3, 10)
 
     def test_scaling(self):
-        # numbers here are arbitrary, the point is to ensure that at some point
+        # numbers here are arbitrary, the point is to ensure that
         # a tiny continguous chunk of large number of genes is worth less than
         # a split chunk of a small number of genes
-        assert True or score(self.contiguous, 50, 50) < score(self.single_split, 30, 30) < score(self.multi_split, 10, 10)
+        tiny_contiguous = score([[(1, 2, True), (2, 3, True)]], 50, 50)
+        intermediate = score([[(1, 2, True), (2, 3, True), (4, 5, True)]], 30, 30)
+        split = score([[(1, 2, True), (3, 4, True)]], 4, 4)
+        assert tiny_contiguous < intermediate
+        assert intermediate < split
 
     def test_reversals(self):
         rev = self.multi_split[:]
