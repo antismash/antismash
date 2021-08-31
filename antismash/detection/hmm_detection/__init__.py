@@ -20,11 +20,13 @@ from antismash.common.secmet.record import Record
 from antismash.common.secmet.features import Protocluster
 from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
+from antismash.detection import DetectionStage
 from antismash.detection.hmm_detection.signatures import get_signature_profiles
 from antismash.detection.hmm_detection.categories import get_rule_categories
 
 NAME = "hmmdetection"
 SHORT_DESCRIPTION = "HMM signature detection"
+DETECTION_STAGE = DetectionStage.AREA_FORMATION
 
 _STRICTNESS_LEVELS = ["strict", "relaxed", "loose"]
 

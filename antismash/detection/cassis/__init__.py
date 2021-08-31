@@ -18,6 +18,7 @@ from antismash.common.secmet import SubRegion, Feature, FeatureLocation, GeneFun
 from antismash.common.serialiser import feature_to_json, feature_from_json
 from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
+from antismash.detection import DetectionStage
 
 from .cluster_prediction import get_predictions_for_anchor, ClusterPrediction
 from .pairings import PROMOTER_RANGE
@@ -26,6 +27,7 @@ from .promoters import Promoter, CombinedPromoter, get_promoters, DuplicatePromo
 
 NAME = "cassis"
 SHORT_DESCRIPTION = "Detect secondary metabolite gene cluster (motif based)"
+DETECTION_STAGE = DetectionStage.AREA_REFINEMENT
 
 MAX_PERCENTAGE = 14.  # the maximum percentage of promoters sharing a motif
 MAX_GAP_LENGTH = 2  # the maximum gap length between islands

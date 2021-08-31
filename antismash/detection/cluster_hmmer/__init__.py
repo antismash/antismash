@@ -11,9 +11,11 @@ from antismash.common import hmmer, pfamdb
 from antismash.common.secmet import Record
 from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
+from antismash.detection import DetectionStage
 
 NAME = "cluster_hmmer"
 SHORT_DESCRIPTION = "Cluster PFAM anotation"
+DETECTION_STAGE = DetectionStage.PER_AREA
 
 MIN_SCORE = 0.
 MAX_EVALUE = 0.01

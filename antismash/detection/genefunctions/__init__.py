@@ -12,12 +12,14 @@ from antismash.common import hmmer, module_results, path
 from antismash.common.secmet import Record
 from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
+from antismash.detection import DetectionStage
 
 from .core import FunctionResults
 from .tools import run_tools
 
 NAME = "genefunctions"
 SHORT_DESCRIPTION = "Gene function annotations"
+DETECTION_STAGE = DetectionStage.PER_AREA
 
 
 class AllFunctionResults(module_results.DetectionResults):

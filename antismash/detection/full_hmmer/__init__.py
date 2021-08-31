@@ -11,9 +11,11 @@ from antismash.config import ConfigType
 from antismash.common import path, pfamdb, hmmer
 from antismash.common.secmet import Record
 from antismash.config.args import ModuleArgs
+from antismash.detection import DetectionStage
 
 NAME = "full_hmmer"
 SHORT_DESCRIPTION = "Full genome PFAM anotation"
+DETECTION_STAGE = DetectionStage.FULL_GENOME
 
 MIN_SCORE = 0.
 MAX_EVALUE = 0.01

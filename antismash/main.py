@@ -35,16 +35,7 @@ from antismash.common.module_results import ModuleResults, DetectionResults
 from antismash.common.path import get_full_path
 from antismash.common.secmet import Record
 from antismash.common import subprocessing
-from antismash.detection import (cassis,
-                                 cluster_hmmer,
-                                 full_hmmer,
-                                 genefinding,
-                                 hmm_detection,
-                                 nrps_pks_domains,
-                                 genefunctions,
-                                 sideloader,
-                                 tigrfam,
-                                 )
+from antismash.detection import DetectionStage
 from antismash.outputs import html, svg
 from antismash.support import genefinding
 from antismash.custom_typing import AntismashModule
@@ -60,7 +51,27 @@ def _gather_analysis_modules() -> List[AntismashModule]:
     return modules
 
 
+def _gather_detection_modules() -> Dict[DetectionStage, List[AntismashModule]]:
+    modules: Dict[DetectionStage, List[AntismashModule]] = {
+        DetectionStage.FULL_GENOME: [],
+        DetectionStage.AREA_FORMATION: [],
+        DetectionStage.AREA_REFINEMENT: [],
+        DetectionStage.PER_AREA: [],
+    }
+    for module_data in pkgutil.walk_packages([get_full_path(__file__, "detection")]):
+        name = f"antismash.detection.{module_data.name}"
+        module = cast(AntismashModule, importlib.import_module(name))
+        stage = getattr(module, "DETECTION_STAGE", "")
+        if not stage:
+            raise ValueError(f"detection module missing DETECTION_STAGE attribute: {name}")
+        if stage not in modules:
+            raise ValueError(f"detection module with unknown detection stage: {stage}")
+        modules[stage].append(module)
+    return modules
+
+
 _ANALYSIS_MODULES = _gather_analysis_modules()
+_DETECTION_MODULES = _gather_detection_modules()
 
 
 def get_all_modules() -> List[AntismashModule]:
@@ -88,8 +99,10 @@ def get_detection_modules() -> List[AntismashModule]:
         Returns:
             a list of modules
     """
-    return [genefinding, hmm_detection, nrps_pks_domains, full_hmmer, cassis,  # type: ignore
-            cluster_hmmer, genefunctions, sideloader, tigrfam]  # type: ignore
+    modules = []
+    for stage in _DETECTION_MODULES.values():
+        modules.extend(stage)
+    return modules
 
 
 def get_analysis_modules() -> List[AntismashModule]:
@@ -172,8 +185,8 @@ def run_detection(record: Record, options: ConfigType,
     timings: Dict[str, float] = {}
 
     # run full genome detections
-    for module in [full_hmmer]:
-        run_module(record, cast(AntismashModule, module), options, module_results, timings)
+    for module in _DETECTION_MODULES[DetectionStage.FULL_GENOME]:
+        run_module(record, module, options, module_results, timings)
         results = module_results.get(module.__name__)
         if results:
             assert isinstance(results, ModuleResults)
@@ -182,8 +195,10 @@ def run_detection(record: Record, options: ConfigType,
 
     # generate cluster predictions
     logging.info("Detecting secondary metabolite clusters")
-    for module in [sideloader, hmm_detection, cassis]:
-        run_module(record, cast(AntismashModule, module), options, module_results, timings)
+    modules = list(_DETECTION_MODULES[DetectionStage.AREA_FORMATION])
+    modules.extend(_DETECTION_MODULES[DetectionStage.AREA_REFINEMENT])
+    for module in modules:
+        run_module(record, module, options, module_results, timings)
         results = module_results.get(module.__name__)
         if results:
             assert isinstance(results, DetectionResults)
@@ -206,8 +221,8 @@ def run_detection(record: Record, options: ConfigType,
     logging.info("%d region(s) detected in record", len(record.get_regions()))
 
     # finally, run any detection limited to genes in clusters
-    for module in [nrps_pks_domains, cluster_hmmer, genefunctions, tigrfam]:
-        run_module(record, cast(AntismashModule, module), options, module_results, timings)
+    for module in _DETECTION_MODULES[DetectionStage.PER_AREA]:
+        run_module(record, module, options, module_results, timings)
         results = module_results.get(module.__name__)
         if results:
             assert isinstance(results, ModuleResults)
