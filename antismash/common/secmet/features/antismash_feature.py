@@ -105,8 +105,7 @@ class AntismashFeature(Feature):
             leftovers = Feature.make_qualifiers_copy(bio_feature)
         if not feature:
             raise SecmetInvalidInputError("AntismashFeature shouldn't be instantiated directly")
-        else:
-            assert isinstance(feature, AntismashFeature)
+        assert isinstance(feature, AntismashFeature)
 
         # semi-optional qualifiers
         if leftovers.get("tool") == ["antismash"] and not feature.tool:

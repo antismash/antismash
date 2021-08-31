@@ -248,7 +248,7 @@ class TokenTypes(IntEnum):
         """ Returns True if the token is a rule structure keyword such as
             RULE, COMMENT, CONDITIONS, etc
         """
-        return 15 <= self.value and self.value != self.TEXT # pylint: disable=comparison-with-callable
+        return self.value >= 15 and self.value != self.TEXT
 
 
 class Tokeniser:  # pylint: disable=too-few-public-methods
@@ -832,6 +832,7 @@ ConditionList = List[Union[Conditions, TokenTypes]]  # pylint: disable=invalid-n
 # tokens that mark the start and/or end of a RULE
 _STARTERS = [TokenTypes.RULE, TokenTypes.DEFINE]
 
+
 class Parser:  # pylint: disable=too-few-public-methods
     """ Responsible for parsing an entire block of text. Rules parsed from the
         text are stored in the .rules member.
@@ -926,7 +927,7 @@ class Parser:  # pylint: disable=too-few-public-methods
             return consumed
         # if the token is an alias, substitute in the aliased tokens
         if (self.current_token.type == TokenTypes.IDENTIFIER
-            and self.current_token.identifier in self.aliases):
+                and self.current_token.identifier in self.aliases):
             self.current_position = self.current_token.position
             self.current_line = self.current_token.line_number
             self.tokens = iter(self.aliases[self.current_token.identifier] + list(self.tokens))

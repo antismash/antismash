@@ -59,8 +59,8 @@ class TestConversion(unittest.TestCase):
         # ensure we haven't changed the original record or feature list
         assert id(before) != id(after)
         assert id(before.features) != id(after.features)
-        for i in range(len(before.features)):
-            assert id(before.features[i]) != id(after.features[i])
+        for i, feature in enumerate(before.features):
+            assert id(feature) != id(after.features[i])
         for bef, aft in zip(before_features, sorted(map(str, before.features))):
             assert bef == aft
 

@@ -116,8 +116,7 @@ class TestTrimSequence(unittest.TestCase):
     def trim_seq(self, start, end):
         new = record_processing.trim_sequence(self.record, start, end)
         # since func called, alter start/end for these slice checks
-        if start < 0:
-            start = 0
+        start = max(start, 0)
         if end < 0:
             end = len(self.seq)
         # check that Bio.Seq slices as expected
@@ -333,7 +332,7 @@ class TestPreprocessRecords(unittest.TestCase):
 
 class TestUniqueID(unittest.TestCase):
     def test_bad_starts(self):
-        for bad_start in ["start", None, dict(), list()]:
+        for bad_start in ["start", None, {}, []]:
             with self.assertRaises((ValueError, TypeError)):
                 record_processing.generate_unique_id("pref", [], bad_start)
 
@@ -343,7 +342,7 @@ class TestUniqueID(unittest.TestCase):
                 record_processing.generate_unique_id("pref", bad_existing, 1)
 
     def test_bad_max(self):
-        for bad_max in ["start", None, dict(), list()]:
+        for bad_max in ["start", None, {}, []]:
             with self.assertRaises((ValueError, TypeError)):
                 record_processing.generate_unique_id("pref", {}, 1, bad_max)
 
