@@ -10,9 +10,10 @@ import string
 import os
 from typing import cast, Any, Dict, List, Tuple, Union
 
-from antismash.common import path, module_results
+from antismash.common import path
 from antismash.common.html_renderer import FileTemplate, HTMLSections, docs_link
 from antismash.common.layers import RecordLayer, RegionLayer, OptionsLayer
+from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record
 from antismash.common.json import JSONOrf
 from antismash.config import ConfigType
@@ -33,7 +34,7 @@ def _get_visualisers() -> List[VisualisationModule]:
 VISUALISERS = _get_visualisers()
 
 
-def build_json_data(records: List[Record], results: List[Dict[str, module_results.ModuleResults]],
+def build_json_data(records: List[Record], results: List[Dict[str, ModuleResults]],
                     options: ConfigType) -> Tuple[
                         List[Dict[str, Any]],
                         List[Dict[str, Union[str, List[JSONOrf]]]],
@@ -113,7 +114,7 @@ def write_regions_js(records: List[Dict[str, Any]], output_dir: str,
         handle.write('var resultsData = %s;\n' % json.dumps(module_results, indent=1))
 
 
-def generate_html_sections(records: List[RecordLayer], results: Dict[str, Dict[str, module_results.ModuleResults]],
+def generate_html_sections(records: List[RecordLayer], results: Dict[str, Dict[str, ModuleResults]],
                            options: ConfigType) -> Dict[str, Dict[int, List[HTMLSections]]]:
     """ Generates a mapping of record->region->HTMLSections for each record, region and module
 
@@ -150,7 +151,7 @@ def generate_html_sections(records: List[RecordLayer], results: Dict[str, Dict[s
     return details
 
 
-def generate_webpage(records: List[Record], results: List[Dict[str, module_results.ModuleResults]],
+def generate_webpage(records: List[Record], results: List[Dict[str, ModuleResults]],
                      options: ConfigType) -> None:
     """ Generates and writes the HTML itself """
 
@@ -164,7 +165,7 @@ def generate_webpage(records: List[Record], results: List[Dict[str, module_resul
         options_layer = OptionsLayer(options)
         record_layers_with_regions = []
         record_layers_without_regions = []
-        results_by_record_id: Dict[str, Dict[str, module_results.ModuleResults]] = {}
+        results_by_record_id: Dict[str, Dict[str, ModuleResults]] = {}
         for record, record_results in zip(records, results):
             if record.get_regions():
                 record_layers_with_regions.append(RecordLayer(record, None, options_layer))
