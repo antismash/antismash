@@ -51,9 +51,7 @@ class DetectionTest(unittest.TestCase):
             assert rule.contains_positive_condition()
 
         detected_types = defaultdict(set)
-        cds_with_hits = sorted(self.results_by_id,
-                               key=lambda gene_id: self.feature_by_id[gene_id].location.start)
-        for cds in cds_with_hits:
+        for cds in sorted(self.results_by_id, key=lambda gene_id: self.feature_by_id[gene_id]):
             rule_results = []
             for rule in rules:
                 result = rule.detect(cds, self.feature_by_id, self.results_by_id)
@@ -540,7 +538,8 @@ class RuleParserTest(unittest.TestCase):
     def test_alias_simple(self):
         text = "DEFINE alias AS b " + format_as_rule("A", 10, 10, "alias or c")
         parsed = self.parse(text)
-        assert "alias" in parsed.aliases and "b" == parsed.aliases["alias"][0].identifier
+        assert "alias" in parsed.aliases
+        assert parsed.aliases["alias"][0].identifier == "b"
         assert str(parsed.rules[0].conditions) == "(b or c)"
 
     def test_alias_nesting(self):

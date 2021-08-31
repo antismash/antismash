@@ -442,8 +442,7 @@ def trim_sequence(record: SeqRecord, start: int, end: int) -> SeqRecord:
     if -1 < end <= start:
         raise ValueError("Trim region start cannot be greater than or equal to end")
 
-    if start < 0:
-        start = 0
+    start = max(start, 0)
     if end < 0:
         end = len(record)
     new = record[start:end]
