@@ -11,11 +11,13 @@ from antismash.common import hmmer, path
 from antismash.common.secmet import Record
 from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
+from antismash.detection import DetectionStage
 
 from .tigr_results import TIGRFamResults
 
 NAME = "tigrfam"
 SHORT_DESCRIPTION = "Cluster TIGRFam anotation"
+DETECTION_STAGE = DetectionStage.PER_AREA
 
 MIN_SCORE = 0.
 MAX_EVALUE = 0.01
