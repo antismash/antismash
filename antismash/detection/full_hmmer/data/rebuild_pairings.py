@@ -25,7 +25,8 @@ FOOTER = """
 }
 """
 
-def rebuild_pairings(database_filename=None, output_filename="name2pfamid.py"):
+
+def rebuild_pairings(database_filename: str = None, output_filename: str = "name2pfamid.py") -> int:
     """ (Re)builds the name mapping from the given database and writes it to the
         given output file.
 
