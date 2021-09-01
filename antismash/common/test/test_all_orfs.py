@@ -104,6 +104,7 @@ class TestOrfCounts(unittest.TestCase):
         assert sorted([orf.start for orf in result]) == starts
         assert len(result) == 4
 
+
 class TestOrfLocations(unittest.TestCase):
     def test_contained(self):
         seq = "ATG"+"X"*60+"TAG"

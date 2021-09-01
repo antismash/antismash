@@ -92,6 +92,7 @@ def distance_to_pfam(record: Record, query: Feature, hmmer_profiles: List[str]) 
     search_range = FeatureLocation(query.location.start - max_range,
                                    query.location.end + max_range)
     close_cds_features = record.get_cds_features_within_location(search_range, with_overlapping=True)
+
     def distance_between(first: Feature, second: Feature) -> int:
         """ Calculates smallest distance between two feature endpoints """
         return min([abs(first.location.start - second.location.end),

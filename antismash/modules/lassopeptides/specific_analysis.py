@@ -189,7 +189,7 @@ class Lassopeptide:
 
         return self._macrolactam
 
-    def _calculate_number_of_bridges(self)-> int:
+    def _calculate_number_of_bridges(self) -> int:
         """
         Predict the lassopeptide number of disulfide bridges
         """

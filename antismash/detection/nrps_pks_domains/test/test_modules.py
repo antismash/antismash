@@ -31,7 +31,6 @@ TRANS_AT_SUBTYPE = "Trans-AT-KS"
 CP = "ACP"
 
 
-
 class Component(Component_actual):
     """ a tiny wrapper to avoid always supplying a dummy CDS name """
     def __init__(self, domain, cds_name="test_name", subtype=""):
@@ -210,9 +209,9 @@ class TestModule(unittest.TestCase):
             assert build_module([starter]).is_starter_module(), starter
 
         for domains in [[NRPS_START, NRPS_LOAD],
-                         [PKS_START, PKS_LOAD],
-                         [CP],
-                         ]:
+                        [PKS_START, PKS_LOAD],
+                        [CP],
+                        ]:
             assert not build_module(domains).is_starter_module(), domains
 
     def test_no_monomer(self):

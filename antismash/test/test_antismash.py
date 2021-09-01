@@ -120,7 +120,6 @@ class TestAntismash(unittest.TestCase):
         assert res == expected
 
 
-
 @patch.object(logging, 'debug')
 class TestTimingsLog(unittest.TestCase):
     def test_multi_record(self, mocked_logging):

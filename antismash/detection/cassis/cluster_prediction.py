@@ -161,7 +161,6 @@ def check_cluster_predictions(cluster_predictions: List[ClusterPrediction],
         assert start_index_genes is not None
         assert end_index_genes is not None
 
-
         # find indices of first and last PROMOTER of the cluster prediction in all promoters
         start_index_promoters = None
         end_index_promoters = None

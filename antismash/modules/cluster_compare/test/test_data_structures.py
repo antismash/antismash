@@ -18,12 +18,13 @@ from antismash.modules.cluster_compare.data_structures import (
 
 class DummyReferenceCDS(ReferenceCDS):
     counter = 0
+
     def __init__(self, name=None, function="other", components=None, location=None, start=None, strand=1):
         if name is None:
             DummyReferenceCDS.counter += 1
             name = f"test_ref_{DummyReferenceCDS.counter}"
         if components is None:
-            components = {"secmet":[], "modules":[]}
+            components = {"secmet": [], "modules": []}
         if location is None:
             if start is None:
                 start = 20
@@ -54,6 +55,7 @@ class TestComponents(unittest.TestCase):
         components = Components({}, {}, {}, {})
         with self.assertRaises(AttributeError):
             components.something_invalid = "test"
+
 
 class TestHit(unittest.TestCase):
     def test_restrictions(self):

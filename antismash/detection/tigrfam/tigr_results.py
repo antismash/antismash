@@ -12,6 +12,7 @@ from antismash.common.secmet.locations import location_from_string
 
 from .tigr_domain import TIGRDomain
 
+
 class TIGRFamResults(HmmerResults):
     """ Results class for the TIGRFam detecion module, similar to HmmerResults, but not bound to PFAM"""
     def __init__(self, record_id: str, evalue: float, score: float, hits: List[HmmerHit]) -> None:

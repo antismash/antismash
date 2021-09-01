@@ -537,9 +537,10 @@ def read_data(sequence_file: Optional[str], options: ConfigType) -> serialiser.A
         raise ValueError("No sequence file or prior results to read")
 
     if sequence_file:
-        records = record_processing.parse_input_sequence(sequence_file, options.taxon,
-                                options.minlength, options.start, options.end,
-                                gff_file=options.genefinding_gff3)
+        records = record_processing.parse_input_sequence(
+            sequence_file, options.taxon, options.minlength, options.start,
+            options.end, gff_file=options.genefinding_gff3
+        )
         results = serialiser.AntismashResults(sequence_file.rsplit(os.sep, 1)[-1],
                                               records, [{} for i in records],
                                               __version__, taxon=options.taxon)
@@ -641,7 +642,7 @@ def log_module_runtimes(timings: Dict[str, Dict[str, float]]) -> None:
         Returns:
             None
     """
-    total_times:Dict[str, float] = defaultdict(lambda: 0.)
+    total_times: Dict[str, float] = defaultdict(lambda: 0.)
     for result in timings.values():
         for module, runtime in result.items():
             total_times[module] += runtime

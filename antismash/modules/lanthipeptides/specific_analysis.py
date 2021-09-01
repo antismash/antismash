@@ -182,7 +182,7 @@ class PrepeptideBase:
         return self._monoisotopic_weight
 
     @property
-    def molecular_weight(self)-> float:
+    def molecular_weight(self) -> float:
         """ Weight of the dehydrated core
         """
         if self._weight is None:

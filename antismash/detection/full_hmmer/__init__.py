@@ -55,7 +55,7 @@ def check_prereqs(options: ConfigType) -> List[str]:
     """ Ensure at least one database exists and is valid """
     failure_messages = []
     for binary_name in ['hmmscan']:
-        if not binary_name in options.executables:
+        if binary_name not in options.executables:
             failure_messages.append("Failed to locate executable: %r" % binary_name)
 
     data_dir = options.database_dir

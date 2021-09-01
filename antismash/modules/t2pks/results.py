@@ -80,7 +80,7 @@ class ProtoclusterPrediction:
     """ A prediction for a single Cluster, including starter units, elongations,
         weights and classes.
     """
-    def __init__(self, cds_predictions: Dict[str, List[CDSPrediction]], # pylint: disable=too-many-arguments
+    def __init__(self, cds_predictions: Dict[str, List[CDSPrediction]],  # pylint: disable=too-many-arguments
                  starter_units: List[Prediction],
                  malonyl_elongations: List[Prediction],
                  product_classes: Set[str],

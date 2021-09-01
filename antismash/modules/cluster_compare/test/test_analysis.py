@@ -28,6 +28,7 @@ from antismash.modules.cluster_compare.data_structures import (
     ReferenceRegion,
 )
 
+
 class DummyHit(Hit):
     def __init__(self, pid=.5, cds=None, ref_name="ref_cds_name"):
         super().__init__("ref_rec", ref_name, cds or DummyCDS(), pid, 1234., 105., 1e-8)
@@ -148,7 +149,7 @@ class TestFiltering(unittest.TestCase):
 
 class TestConversion(unittest.TestCase):
     def test_convert(self):
-        loc = FeatureLocation(5, 50 ,1)
+        loc = FeatureLocation(5, 50, 1)
         records = {}
         hits = {}
         for i in "ab":

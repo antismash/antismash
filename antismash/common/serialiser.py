@@ -57,7 +57,7 @@ class AntismashResults:
             data = json.loads(handle.read())
         except json.JSONDecodeError:
             raise ValueError(f"Cannot load results to reuse from {handle.name}, "
-                              "is it an antiSMASH result JSON file?")
+                             "is it an antiSMASH result JSON file?")
         schema = data.get("schema", 1)
         current = AntismashResults.SCHEMA_VERSION
         if schema != current and schema not in AntismashResults.COMPATIBLE_SCHEMAS[current]:

@@ -40,7 +40,7 @@ def load_single_record_annotations(annotation_files: List[str], record: Record,
             annotation files
     """
     subregions: List[SubRegionAnnotation] = []
-    protoclusters:List[ProtoclusterAnnotation] = []
+    protoclusters: List[ProtoclusterAnnotation] = []
     for annotations_file in annotation_files:
         raw = load_validated_json(annotations_file, _SCHEMA_FILE)
         tool = Tool.from_json(raw["tool"])

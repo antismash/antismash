@@ -18,7 +18,6 @@ from antismash.modules.thiopeptides.specific_analysis import (
 )
 
 
-
 class TestThiopeptide(unittest.TestCase):
     def test_init(self):
         "Test Thiopeptide instantiation"

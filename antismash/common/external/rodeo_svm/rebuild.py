@@ -8,6 +8,7 @@ import os
 
 from .svm_classify import save_classifier
 
+
 def pickle_classifier(training_set: str, prefix: str, overwrite: bool = False,
                       kernel: str = "rbf", C: float = 9.77e6, gamma: float = 1.78e-9) -> bool:
     """ Builds and saves a classifier in a pickled format, in the same directory as the training set.

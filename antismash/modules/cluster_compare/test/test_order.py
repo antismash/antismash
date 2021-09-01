@@ -30,7 +30,7 @@ class TestOrdering(unittest.TestCase):
         for i in range(5):
             ref = DummyReferenceCDS(name=f"{i}", start=i*100)
             self.refs[ref.name] = ref
-            self.cdses.append(DummyCDS(locus_tag=f"c{i}",start=i*100, end=i*109))
+            self.cdses.append(DummyCDS(locus_tag=f"c{i}", start=i*100, end=i*109))
 
     def find(self, hits, cdses=None):
         return ordering.find_segments(hits, cdses or self.cdses, self.refs)
