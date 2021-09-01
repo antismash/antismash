@@ -601,22 +601,33 @@ def check_prerequisites(modules: List[AntismashModule], options: ConfigType) -> 
         raise RuntimeError("Modules failing prerequisites")
 
 
-def list_plugins(modules: List[AntismashModule]) -> None:
-    """ Prints the name and short description of the given modules
-
-        Arguments:
-            modules: the modules to display info of
+def list_plugins() -> None:
+    """ Prints the name and short description of all registered modules
 
         Returns:
             None
     """
+
+    def print_modules(modules: List[AntismashModule], indent: int = 0) -> None:
+        max_length = max(len(mod.NAME) for mod in modules)
+        format_string = f"{' ' * indent}%-{max_length}s:  %s"
+        for module in modules:
+            print(format_string % (module.NAME, module.SHORT_DESCRIPTION))
+        print()
+
     print("Available plugins")
-    max_name = 0
-    for module in modules:
-        max_name = max(max_name, len(module.NAME))
-    format_string = " %-{}s:  %s".format(max_name)
-    for module in modules:
-        print(format_string % (module.NAME, module.SHORT_DESCRIPTION))
+    print("  Detection modules")
+    for stage, modules in _DETECTION_MODULES.items():
+        simple_stage = str(stage).split(".")[1].replace("_", " ").capitalize()
+        print(f"    {simple_stage}")
+        print_modules(modules, indent=6)
+    for title, modules in [
+        ("Analysis", get_analysis_modules()),
+        ("Output", get_output_modules()),
+        ("Support", get_support_modules()),
+    ]:
+        print(f"  {title}")
+        print_modules(modules, indent=4)
 
 
 def log_module_runtimes(timings: Dict[str, Dict[str, float]]) -> None:
@@ -666,12 +677,11 @@ def _run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
     logging.info("antiSMASH version: %s", options.version)
     _log_found_executables(options)
 
-    modules = get_all_modules()
-
     if options.list_plugins:
-        list_plugins(modules)
+        list_plugins()
         return 0
 
+    modules = get_all_modules()
     options.all_enabled_modules = list(filter(lambda x: x.is_enabled(options), modules))
 
     if options.check_prereqs_only:
