@@ -6,8 +6,7 @@
 import logging
 from typing import Any, List
 
-from antismash.detection import cassis
-
+from .config import MAX_GAP_LENGTH, VERBOSE_DEBUG
 from .motifs import Motif
 from .promoters import Promoter
 
@@ -34,7 +33,7 @@ class Island:
 
 def get_islands(anchor_promoter: int, motifs: List[Motif], promoters: List[Promoter]) -> List[Island]:
     """Find islands of binding sites (previously found by FIMO) around anchor gene to define cluster borders"""
-    assert cassis.MAX_GAP_LENGTH >= 0
+    assert MAX_GAP_LENGTH >= 0
     islands = []
     motifs = list(motifs)
     for motif in motifs:
@@ -55,7 +54,7 @@ def get_islands(anchor_promoter: int, motifs: List[Motif], promoters: List[Promo
                 i -= 1
                 continue
             # check with gaps, e.g. 1 0 1 or 1 0 0 1
-            gap_size = get_island_gap_size(i, bs_per_promoter, cassis.MAX_GAP_LENGTH, upstream=True)
+            gap_size = get_island_gap_size(i, bs_per_promoter, MAX_GAP_LENGTH, upstream=True)
             if gap_size == 0:
                 break
             start -= gap_size + 1
@@ -74,13 +73,13 @@ def get_islands(anchor_promoter: int, motifs: List[Motif], promoters: List[Promo
                 continue
 
             # check with gaps, e.g. 1 0 1 or 1 0 0 1
-            gap_size = get_island_gap_size(i, bs_per_promoter, cassis.MAX_GAP_LENGTH, upstream=False)
+            gap_size = get_island_gap_size(i, bs_per_promoter, MAX_GAP_LENGTH, upstream=False)
             if gap_size == 0:
                 break
             end += gap_size + 1
             i += gap_size + 1
 
-        if cassis.VERBOSE_DEBUG:
+        if VERBOSE_DEBUG:
             logging.debug("Island %s -- %s (motif %s)", promoters[start].get_id(),
                           promoters[end].get_id(), motif)
         islands.append(Island(promoters[start], promoters[end], motif))

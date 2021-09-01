@@ -13,8 +13,7 @@ from xml.etree import cElementTree as ElementTree
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 
-from antismash.detection import cassis
-
+from .config import MAX_PERCENTAGE, VERBOSE_DEBUG
 from .pairings import PROMOTER_RANGE, Pairing
 from .promoters import Promoter
 
@@ -70,12 +69,12 @@ def generate_motifs(meme_dir: str, anchor_promoter: int, promoters: List[Promote
         end_index = anchor_promoter + pm.plus
 
         if start_index < 0:  # anchor promoter near beginning of record --> truncate
-            if cassis.VERBOSE_DEBUG:
+            if VERBOSE_DEBUG:
                 logging.debug("Promoter set %s exceeds upstream record border", pm.pairing_string)
             start_index = 0
 
         if end_index > len(promoters) - 1:  # anchor promoter near end of record --> truncate
-            if cassis.VERBOSE_DEBUG:
+            if VERBOSE_DEBUG:
                 logging.debug("Promoter set %s exceeds downstream record border", pm.pairing_string)
             end_index = len(promoters) - 1
 
@@ -101,7 +100,7 @@ def generate_motifs(meme_dir: str, anchor_promoter: int, promoters: List[Promote
                             seq.id += "__ANCHOR"  # must be part of id, otherwise MEME woun't recognize it
                         SeqIO.write(seq, pm_handle, "fasta")
         else:
-            if cassis.VERBOSE_DEBUG:
+            if VERBOSE_DEBUG:
                 logging.debug("Duplicate promoter set %s", pm.pairing_string)
 
     return promoter_sets
@@ -125,7 +124,7 @@ def filter_meme_results(meme_dir: str, promoter_sets: List[Motif], anchor: str) 
 
         # no motif found for given e-value cutoff :-(
         if "Stopped because motif E-value > " in reason:
-            if cassis.VERBOSE_DEBUG:
+            if VERBOSE_DEBUG:
                 logging.debug("MEME: motif %s; e-value exceeds cutoff", motif.pairing_string)
 
         # motif(s) found :-)
@@ -155,10 +154,10 @@ def filter_meme_results(meme_dir: str, promoter_sets: List[Motif], anchor: str) 
                                        "binding_sites.fasta"), "w") as handle:
                     handle.write(">{}__{}\n".format(anchor, str(motif)))
                     handle.write("\n".join(motif.seqs))
-                if cassis.VERBOSE_DEBUG:
+                if VERBOSE_DEBUG:
                     logging.debug("MEME: motif %s; e-value = %s", motif, motif.score)
             else:
-                if cassis.VERBOSE_DEBUG:
+                if VERBOSE_DEBUG:
                     logging.debug("MEME: motif %s; does not occur in anchor gene promoter", motif)
 
         # unexpected reason, don't know why MEME stopped :-$
@@ -195,24 +194,24 @@ def filter_fimo_results(motifs: List[Motif], fimo_dir: str, promoters: List[Prom
         percentage = len(motif.hits) / len(promoters) * 100
         if percentage == 0.0:
             # too low
-            if cassis.VERBOSE_DEBUG:
+            if VERBOSE_DEBUG:
                 logging.debug("FIMO: motif %s; occurs in %d promoters (no hits)",
                               motif, len(motif.hits))
             continue
-        if percentage > cassis.MAX_PERCENTAGE:
+        if percentage > MAX_PERCENTAGE:
             # too high
-            if cassis.VERBOSE_DEBUG:
+            if VERBOSE_DEBUG:
                 logging.debug("FIMO: %s; occurs in %d promoters; %.2f%% of all promoters (too many)",
                               motif, len(motif.hits), percentage)
             continue
         if promoters[anchor_promoter].get_id() not in motif.hits:  # not in achor promoter
             # no site in anchor promoter
-            if cassis.VERBOSE_DEBUG:
+            if VERBOSE_DEBUG:
                 logging.debug("FIMO: motif %s; no hits in the promoter of the anchor gene", motif)
             continue
 
         # everything ok
-        if cassis.VERBOSE_DEBUG:
+        if VERBOSE_DEBUG:
             logging.debug("FIMO: motif %s; occurs in %d promoters; %.2f%% of all promoters",
                           motif, len(motif.hits), percentage)
         filtered.append(motif)

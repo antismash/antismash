@@ -9,8 +9,8 @@ from typing import Any, Dict, List, Optional
 
 from antismash.common.secmet import Record, Gene
 from antismash.config import ConfigType
-from antismash.detection import cassis
 
+from .config import VERBOSE_DEBUG
 from .islands import get_islands, Island
 from .motifs import generate_motifs, Motif, filter_meme_results, filter_fimo_results
 from .pairings import Pairing
@@ -97,7 +97,7 @@ def get_predictions_for_anchor(anchor: str, promoters: List[Promoter], record: R
     # predict motifs with MEME ("de novo")
     meme_dir = os.path.join(options.output_dir, "meme", anchor)
     motifs = generate_motifs(meme_dir, anchor_promoter_index, promoters)
-    exit_code = run_meme(meme_dir, options, cassis.VERBOSE_DEBUG)
+    exit_code = run_meme(meme_dir, options, VERBOSE_DEBUG)
     if exit_code != 0:
         logging.warning("MEME discovered a problem (exit code %d), skipping this anchor gene", exit_code)
         return []
@@ -110,7 +110,7 @@ def get_predictions_for_anchor(anchor: str, promoters: List[Promoter], record: R
 
     # search motifs with FIMO ("scanning")
     fimo_dir = os.path.join(options.output_dir, "fimo", anchor)
-    exit_code = run_fimo(meme_dir, fimo_dir, record, options, cassis.VERBOSE_DEBUG)
+    exit_code = run_fimo(meme_dir, fimo_dir, record, options, VERBOSE_DEBUG)
     if exit_code != 0:
         logging.warning("FIMO discovered a problem (exit code %d), skipping this anchor gene", exit_code)
         return []
@@ -178,7 +178,7 @@ def check_cluster_predictions(cluster_predictions: List[ClusterPrediction],
         prediction.end.promoter = promoters[end_index_promoters].get_id()
         prediction.genes = end_index_genes - start_index_genes + 1
         prediction.promoters = end_index_promoters - start_index_promoters + 1
-        if cassis.VERBOSE_DEBUG:
+        if VERBOSE_DEBUG:
             if cp == 0:
                 logging.debug("Best prediction (most abundant): %r -- %r",
                               prediction.start.gene, prediction.end.gene)
@@ -188,19 +188,19 @@ def check_cluster_predictions(cluster_predictions: List[ClusterPrediction],
 
         # warn if cluster prediction right at or next to record (~ contig) border
         if start_index_genes < 10:
-            if cassis.VERBOSE_DEBUG:
+            if VERBOSE_DEBUG:
                 logging.debug("Upstream cluster border located at or next to sequence record border,"
                               " prediction could have been truncated by record border")
             sane = False
         if end_index_genes > len(all_gene_names) - 10:
-            if cassis.VERBOSE_DEBUG:
+            if VERBOSE_DEBUG:
                 logging.debug("Downstream cluster border located at or next to sequence record border,"
                               " prediction could have been truncated by record border")
             sane = False
 
         # warn if cluster prediction too short (includes less than 3 genes)
         if prediction.genes < 3:
-            if cassis.VERBOSE_DEBUG:
+            if VERBOSE_DEBUG:
                 logging.debug("Cluster is very short (less than 3 genes). Prediction may be questionable.")
             sane = False
 
@@ -208,7 +208,7 @@ def check_cluster_predictions(cluster_predictions: List[ClusterPrediction],
         # would have been part of the cluster
         for ignored_gene in ignored_genes:
             if ignored_gene.get_name() in all_gene_names[start_index_genes: end_index_genes + 1]:
-                if cassis.VERBOSE_DEBUG:
+                if VERBOSE_DEBUG:
                     logging.debug("Gene %r is part of the predicted cluster,"
                                   " but it is overlapping with another gene and was ignored", ignored_gene)
                     logging.debug("Gene %r could have affected the cluster prediction", ignored_gene)
@@ -269,7 +269,7 @@ def create_predictions(islands: List[Island]) -> List[ClusterPrediction]:
                         start_marker = starts[start]
                         end_marker = ends[end]
                         clusters.append(ClusterPrediction(start_marker, end_marker))
-                        if cassis.VERBOSE_DEBUG:
+                        if VERBOSE_DEBUG:
                             logging.debug("Upstream border:   %s", start_marker)
                             logging.debug("Downstream border: %s", end_marker)
                             logging.debug("Total abundance %s, total score %.1e", abundance, score)

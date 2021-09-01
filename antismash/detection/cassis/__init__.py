@@ -21,6 +21,7 @@ from antismash.config.args import ModuleArgs
 from antismash.detection import DetectionStage
 
 from .cluster_prediction import get_predictions_for_anchor, ClusterPrediction
+from .config import MAX_GAP_LENGTH, MAX_PERCENTAGE
 from .pairings import PROMOTER_RANGE
 from .promoters import Promoter, CombinedPromoter, get_promoters, DuplicatePromoterError, \
                        write_promoters_to_file
@@ -28,11 +29,6 @@ from .promoters import Promoter, CombinedPromoter, get_promoters, DuplicatePromo
 NAME = "cassis"
 SHORT_DESCRIPTION = "Detect secondary metabolite gene cluster (motif based)"
 DETECTION_STAGE = DetectionStage.AREA_REFINEMENT
-
-MAX_PERCENTAGE = 14.  # the maximum percentage of promoters sharing a motif
-MAX_GAP_LENGTH = 2  # the maximum gap length between islands
-
-VERBOSE_DEBUG = False  # whether to show all debugging info or not
 
 
 class CassisResults(module_results.DetectionResults):
