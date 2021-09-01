@@ -57,7 +57,7 @@ def generate_html(region_layer: RegionLayer, results: ClusterCompareResults,
                 scores_by_proto = scores_by_proto[:DISPLAY_LIMIT]
             div = generate_div(tag, region_layer, record_layer, search_type,
                                tooltip, scores, scores_by_proto,
-                               len(divs)==0, label, db_results.url)
+                               len(divs) == 0, label, db_results.url)
             divs.append((tag, kind, div))
         template = FileTemplate(path.get_full_path(__file__, "templates", "gathered.html"))
         markup = template.render(variants=divs, class_name=label, description="Similar gene clusters",
@@ -126,7 +126,7 @@ def generate_javascript_data(_record: Record, region: Region, results: ClusterCo
                 ref_entry: Dict[str, Any] = {
                     "start": reference.start,
                     "end": reference.end,
-                    "links": [], # added to afterwards
+                    "links": [],  # added to afterwards
                     "reverse": False,  # potentially changed later
                 }
                 genes = {}

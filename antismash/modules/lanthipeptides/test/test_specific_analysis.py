@@ -37,7 +37,7 @@ class TestLanthipeptide(unittest.TestCase):
 
     def test_repr(self):
         "Test Lanthipeptide representation"
-        expected = "Lanthipeptide(..42, 17.0, 'Class-I', 'MAGICHAT', -1, " #  skip weights
+        expected = "Lanthipeptide(..42, 17.0, 'Class-I', 'MAGICHAT', -1, "  # skip weights
         assert repr(self.lant).startswith(expected)
 
     def test_core_ignore_invalid(self):

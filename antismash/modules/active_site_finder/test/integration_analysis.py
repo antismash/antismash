@@ -13,6 +13,7 @@ from antismash.common.record_processing import parse_input_sequence
 from antismash.common.test import helpers
 from antismash.modules import active_site_finder
 
+
 class TestAnalyses(unittest.TestCase):
     def setUp(self):
         # skipping clusterhmmer and the p450 potential hits for speed

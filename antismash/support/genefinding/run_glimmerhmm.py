@@ -57,7 +57,7 @@ def run_glimmerhmm(record: Record) -> None:
         record.id = orig_id
         results_text = run_external(fasta_file)
 
-    if not "CDS" in results_text:
+    if "CDS" not in results_text:
         return
 
     handle = StringIO(results_text)

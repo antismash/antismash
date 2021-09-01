@@ -21,7 +21,7 @@ class TestBridgeConversion(unittest.TestCase):
                                 FeatureLocation(18, 21, strand=1),
                                 FeatureLocation(0, 3, strand=1),
                                 FeatureLocation(6, 9, strand=1)],
-                                operator="join")
+                               operator="join")
         self.seqcds = SeqFeature(loc, type="CDS")
         self.seqgene = SeqFeature(loc, type="gene")
         self.seqrec.annotations["topology"] = "circular"
@@ -80,7 +80,6 @@ class TestBridgeConversion(unittest.TestCase):
             assert getattr(genes[1], id_name) == expected + "_LOWER"
             assert genes[1].get_name() == expected + "_LOWER"
 
-
     def test_cds_with_no_id(self):
         self.seqrec.features.append(self.seqcds)
         rec = Record.from_biopython(self.seqrec, taxon="bacteria")
@@ -115,7 +114,7 @@ class TestSingleLower(TestBridgeConversion):
         loc = CompoundLocation([FeatureLocation(12, 15, strand=1),
                                 FeatureLocation(18, 21, strand=1),
                                 FeatureLocation(0, 9, strand=1)],
-                                operator="join")
+                               operator="join")
         self.seqcds = SeqFeature(loc, type="CDS")
         self.seqgene = SeqFeature(loc, type="gene")
         self.seqrec.annotations["topology"] = "circular"
@@ -127,17 +126,18 @@ class TestSingleUpper(TestBridgeConversion):
         loc = CompoundLocation([FeatureLocation(12, 21, strand=1),
                                 FeatureLocation(0, 3, strand=1),
                                 FeatureLocation(6, 9, strand=1)],
-                                operator="join")
+                               operator="join")
         self.seqcds = SeqFeature(loc, type="CDS")
         self.seqgene = SeqFeature(loc, type="gene")
         self.seqrec.annotations["topology"] = "circular"
+
 
 class TestSingleBoth(TestBridgeConversion):
     def setUp(self):
         self.seqrec = SeqRecord(Seq("A"*21))
         loc = CompoundLocation([FeatureLocation(12, 21, strand=1),
                                 FeatureLocation(0, 9, strand=1)],
-                                operator="join")
+                               operator="join")
         self.seqcds = SeqFeature(loc, type="CDS")
         self.seqgene = SeqFeature(loc, type="gene")
         self.seqrec.annotations["topology"] = "circular"

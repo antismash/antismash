@@ -28,9 +28,6 @@ from ..locations import (
 T = TypeVar("T", bound="Feature")
 
 
-
-
-
 class Feature:
     """ The base class of any feature. Contains only a location, the label of the
         subclass, the 'notes' qualifier, and other qualifiers not tracked by any

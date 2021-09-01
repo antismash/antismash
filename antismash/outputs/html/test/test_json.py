@@ -9,6 +9,7 @@ import unittest
 from antismash.common.test.helpers import DummyProtocluster
 from antismash.outputs.html import js as jsonify
 
+
 class TestClusterPacking(unittest.TestCase):
     def check(self, clusters, expected, padding=None):
         if padding is not None:

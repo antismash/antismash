@@ -12,6 +12,7 @@ from antismash.config import build_config, destroy_config
 
 from antismash.common import subprocessing
 
+
 class DummyResult(subprocessing.RunResult):
     def __init__(self, stderr: str):
         super().__init__(["dummy"], b"", stderr.encode(), 0, True, True)
@@ -37,6 +38,7 @@ INVALID = """Hi there.
 I'm some invalid "java" output.
 I should trigger an error.
 """
+
 
 class TestJava(unittest.TestCase):
 

@@ -12,6 +12,7 @@ from antismash.outputs.html.visualisers.generic_domains import (
     PFAM_TRANSPORT as TRANSPORT,
 )
 
+
 class TestClassifications(unittest.TestCase):
     def test_biosynth_regulatory_overlap(self):
         assert not BIOSYNTHETIC.intersection(REGULATORY)

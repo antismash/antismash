@@ -102,7 +102,7 @@ class RegionToRegionScores(ScoresByProtocluster):
 
     @classmethod
     def from_json(cls, data: Dict[str, Any], record: Record,
-                          references: Dict[str, ReferenceRegion]) -> "RegionToRegionScores":
+                  references: Dict[str, ReferenceRegion]) -> "RegionToRegionScores":
         return cls([ReferenceScorer.from_json(chunk, record, references) for chunk in data["details"]])
 
 

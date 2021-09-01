@@ -22,6 +22,7 @@ DETECTION_STAGE = DetectionStage.PER_AREA
 MIN_SCORE = 0.
 MAX_EVALUE = 0.01
 
+
 def get_arguments() -> ModuleArgs:
     """ Builds the module args """
     args = ModuleArgs('TIGRFam options', 'tigrfam')

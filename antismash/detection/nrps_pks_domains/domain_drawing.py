@@ -162,6 +162,7 @@ def generate_js_domains(region: Region, record: Record) -> Dict[str, Union[str, 
     """
     orfs: List[JSONOrf] = []
     match_ids: Dict[Tuple[str, ...], str] = {}
+
     def match_id_generator() -> Iterator[str]:
         """ Generates match names as A, B, .. Z, AA, AB, .. AZ, AAA, ... """
         for size in itertools.count(start=1):

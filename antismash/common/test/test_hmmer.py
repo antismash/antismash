@@ -13,6 +13,7 @@ from antismash.common.hmmer import HmmerHit, HmmerResults, remove_overlapping
 
 from .helpers import DummyRecord
 
+
 def create_hmmer_hit(location="[500:700]", label="ref_name", locus_tag="locus",
                      domain="hit", evalue=1e-10, score=40.5, translation=None,
                      identifier="TESTID_0005", description="some description",

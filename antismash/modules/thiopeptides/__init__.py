@@ -36,6 +36,7 @@ def get_arguments() -> ModuleArgs:
     args = ModuleArgs('Advanced options', 'thio', enabled_by_default=True)
     return args
 
+
 def prepare_data(logging_only: bool = False) -> List[str]:
     """ Ensures packaged data is fully prepared
 

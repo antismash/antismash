@@ -32,7 +32,6 @@ class TestTIGRFam(unittest.TestCase):
         tigrfam.MAX_EVALUE = self._old_max_evalue
         tigrfam.MIN_SCORE = self._old_min_score
 
-
     def test_check_prereqs(self, _patched_locate, _patched_run):
         expected = []
         returned = tigrfam.check_prereqs(self.config)

@@ -171,7 +171,7 @@ class TestCreation(unittest.TestCase):
 
     def test_interleaving_order(self):
         clusters = [create_cluster(1000, 1100, 1400, 1500, "a"),
-                    create_cluster(1050, 2000, 3000, 4000, "b"), # sorts second due to neighbouring
+                    create_cluster(1050, 2000, 3000, 4000, "b"),  # sorts second due to neighbouring
                     create_cluster(1100, 1200, 1500, 1600, "c")]
         assert sorted(clusters) == clusters
         created = creator(clusters)
