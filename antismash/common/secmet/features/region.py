@@ -20,7 +20,6 @@ from .candidate_cluster import CandidateCluster
 from ..locations import (
     build_location_from_others,
     combine_locations,
-    FeatureLocation,
     location_from_string,
 )
 
