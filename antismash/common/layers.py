@@ -19,19 +19,14 @@ from antismash.custom_typing import AntismashModule
 
 class OptionsLayer:
     """ A layer for the global Config options. """
-    def __init__(self, options: ConfigType) -> None:
+    def __init__(self, options: ConfigType, modules: List[AntismashModule]) -> None:
         self.options = options
+        self.plugins = modules
 
     def __getattr__(self, attr: str) -> Any:
         if attr in self.__dict__:
             return super().__getattribute__(attr)
         return getattr(self.options, attr)
-
-    @property
-    def plugins(self) -> List[AntismashModule]:
-        """ A list of all modules """
-        from antismash.main import get_all_modules
-        return get_all_modules()
 
     def download_logfile(self) -> Optional[str]:
         """ Returns the path of the logfile, if it was created (otherwise None) """

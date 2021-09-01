@@ -35,7 +35,7 @@ VISUALISERS = _get_visualisers()
 
 
 def build_json_data(records: List[Record], results: List[Dict[str, ModuleResults]],
-                    options: ConfigType) -> Tuple[
+                    options: ConfigType, all_modules: List[AntismashModule]) -> Tuple[
                         List[Dict[str, Any]],
                         List[Dict[str, Union[str, List[JSONOrf]]]],
                         Dict[str, Dict[str, Dict[str, Any]]]
@@ -54,7 +54,6 @@ def build_json_data(records: List[Record], results: List[Dict[str, ModuleResults
                 a list of JSON-friendly dicts representing domains
     """
 
-    from antismash import get_all_modules  # TODO break circular dependency
     js_records = js.convert_records(records, results, options)
 
     js_domains: List[Dict[str, Union[str, List[JSONOrf]]]] = []
@@ -64,7 +63,7 @@ def build_json_data(records: List[Record], results: List[Dict[str, ModuleResults
         json_record = js_records[i]
         json_record['seq_id'] = "".join(char for char in json_record['seq_id'] if char in string.printable)
         for region, json_region in zip(record.get_regions(), json_record['regions']):
-            handlers = find_plugins_for_cluster(get_all_modules(), json_region)
+            handlers = find_plugins_for_cluster(all_modules, json_region)
             region_results = {}
             for handler in handlers:
                 # if there's no results for the module, don't let it try
@@ -152,17 +151,17 @@ def generate_html_sections(records: List[RecordLayer], results: Dict[str, Dict[s
 
 
 def generate_webpage(records: List[Record], results: List[Dict[str, ModuleResults]],
-                     options: ConfigType) -> None:
+                     options: ConfigType, all_modules: List[AntismashModule]) -> None:
     """ Generates and writes the HTML itself """
 
     generate_searchgtr_htmls(records, options)
-    json_records, js_domains, js_results = build_json_data(records, results, options)
+    json_records, js_domains, js_results = build_json_data(records, results, options, all_modules)
     write_regions_js(json_records, options.output_dir, js_domains, js_results)
 
     with open(os.path.join(options.output_dir, 'index.html'), 'w') as result_file:
         template = FileTemplate(path.get_full_path(__file__, "templates", "overview.html"))
 
-        options_layer = OptionsLayer(options)
+        options_layer = OptionsLayer(options, all_modules)
         record_layers_with_regions = []
         record_layers_without_regions = []
         results_by_record_id: Dict[str, Dict[str, ModuleResults]] = {}
