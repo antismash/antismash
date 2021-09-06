@@ -82,7 +82,8 @@ class DummyFeature(Feature):
 class DummyProtocluster(Protocluster):
     def __init__(self, start=None, end=None, core_start=0, core_end=1,  # pylint: disable=too-many-arguments
                  core_location=None, tool="test", product="test-product",
-                 cutoff=10, neighbourhood_range=10, high_priority_product=True):
+                 cutoff=10, neighbourhood_range=10, high_priority_product=True,
+                 product_category="TEST-CATEGORY"):
         if core_location is None:
             core_location = FeatureLocation(core_start, core_end)
         if start is None:
@@ -91,7 +92,8 @@ class DummyProtocluster(Protocluster):
             end = core_location.end + neighbourhood_range
         surrounds = FeatureLocation(start, end)
         super().__init__(core_location, surrounds, tool, product, cutoff,
-                         neighbourhood_range, high_priority_product)
+                         neighbourhood_range, high_priority_product,
+                         product_category=product_category)
 
 
 class DummyPFAMDomain(PFAMDomain):

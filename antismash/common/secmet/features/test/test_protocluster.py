@@ -16,7 +16,8 @@ def create_cluster():
     cluster = Protocluster(FeatureLocation(8, 71, strand=1),
                            FeatureLocation(3, 76, strand=1), tool="test",
                            cutoff=17, neighbourhood_range=5, product='a',
-                           detection_rule="some rule text")
+                           detection_rule="some rule text",
+                           product_category="some category")
     return cluster
 
 
@@ -40,6 +41,7 @@ class TestProtocluster(unittest.TestCase):
         assert new.location.start == self.cluster.location.start == 3
         assert new.core_location.start == self.cluster.core_location.start == 8
         assert new.detection_rule == self.cluster.detection_rule == "some rule text"
+        assert new.product_category == self.cluster.product_category == "some category"
         assert new.tool == self.cluster.tool == "test"
         assert new.location.start == self.cluster.location.start == 3
         assert new.location.end == self.cluster.location.end == 76
