@@ -27,19 +27,21 @@ class Protocluster(CDSCollection):
         protocluster to be formed, while the surrounding location includes the context.
     """
     core_seqfeature_type = "proto_core"
-    __slots__ = ["core_location", "detection_rule", "product", "tool", "cutoff",
-                 "_definition_cdses", "neighbourhood_range", "t2pks"]
+    __slots__ = ["core_location", "detection_rule", "product", "product_category",
+                 "tool", "cutoff",
+                 "_definition_cdses", "neighbourhood_range", "t2pks",]
     FEATURE_TYPE = "protocluster"  # primary type only
 
     def __init__(self, core_location: FeatureLocation, surrounding_location: FeatureLocation,
                  tool: str, product: str, cutoff: int, neighbourhood_range: int,
-                 detection_rule: str) -> None:
+                 detection_rule: str, product_category: str = "other") -> None:
         super().__init__(surrounding_location, feature_type=self.FEATURE_TYPE)
         # cluster-wide
         self.detection_rule = detection_rule
         if not product.replace("-", "").replace("_", "").isalnum() or product[0] in "-_" or product[-1] in "-_":
             raise ValueError("invalid protocluster product: %s" % product)
         self.product = product
+        self.product_category = product_category
         self.tool = tool
 
         # core specific
@@ -102,6 +104,8 @@ class Protocluster(CDSCollection):
             core_feature.qualifiers["tool"] = ["antismash"]
 
         shared_qualifiers["core_location"] = [str(self.core_location)]
+        if self.product_category:
+            shared_qualifiers["category"] = [self.product_category]
         neighbourhood_feature = super().to_biopython(shared_qualifiers)[0]
         return [neighbourhood_feature, core_feature]
 
@@ -117,6 +121,7 @@ class Protocluster(CDSCollection):
             return external
 
         if not feature:
+            category = leftovers.pop("category", [""])[0]
             # grab mandatory qualifiers and create the class
             neighbourhood_range = int(leftovers.pop("neighbourhood")[0])
             cutoff = int(leftovers.pop("cutoff")[0])
@@ -125,7 +130,7 @@ class Protocluster(CDSCollection):
             rule = leftovers.pop("detection_rule")[0]
             core_location = location_from_string(leftovers.pop("core_location")[0])
             feature = cls(core_location, bio_feature.location,
-                          tool, product, cutoff, neighbourhood_range, rule)
+                          tool, product, cutoff, neighbourhood_range, rule, product_category=category)
 
         # remove run-specific info
         leftovers.pop("protocluster_number", "")

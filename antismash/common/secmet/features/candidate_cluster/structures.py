@@ -104,6 +104,17 @@ class CandidateCluster(CDSCollection):
         return list(unique_products)
 
     @property
+    def product_categories(self) -> List[str]:
+        """ Returns a list of unique product categories collected from all contained
+            CandidateClusters
+        """
+        categories: Dict[str, None] = OrderedDict()
+        for cluster in self._protoclusters:
+            for category in cluster.product_category:
+                categories[category] = None
+        return list(categories) or ["unknown"]
+
+    @property
     def core_location(self) -> FeatureLocation:
         """ Returns a FeatureLocation covering the range of child Protocluster
             core locations
