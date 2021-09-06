@@ -188,7 +188,7 @@ def find_protoclusters(record: Record, cds_by_cluster_type: Dict[str, Set[str]],
             clusters.append(Protocluster(core_location, surrounding_location=surrounds,
                                     tool="rule-based-clusters", cutoff=cutoff,
                                     neighbourhood_range=rule.neighbourhood, product=cluster_type,
-                                    detection_rule=str(rule.conditions)))
+                                    detection_rule=str(rule.conditions), product_category=rule.category))
             core_location = cds.location
 
         # finalise the last cluster
@@ -197,7 +197,7 @@ def find_protoclusters(record: Record, cds_by_cluster_type: Dict[str, Set[str]],
         clusters.append(Protocluster(core_location, surrounding_location=surrounds,
                                 tool="rule-based-clusters", cutoff=cutoff,
                                 neighbourhood_range=rule.neighbourhood, product=cluster_type,
-                                detection_rule=str(rule.conditions)))
+                                detection_rule=str(rule.conditions), product_category=rule.category))
 
     # fit to record if outside
     for cluster in clusters:

@@ -5,7 +5,7 @@
 
 from collections import OrderedDict
 from enum import Enum, unique
-from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar
+from typing import Any, Dict, List, Optional, Set, Tuple, Type, TypeVar
 
 from Bio.SeqFeature import SeqFeature
 
@@ -104,15 +104,12 @@ class CandidateCluster(CDSCollection):
         return list(unique_products)
 
     @property
-    def product_categories(self) -> List[str]:
+    def product_categories(self) -> Set[str]:
         """ Returns a list of unique product categories collected from all contained
             CandidateClusters
         """
-        categories: Dict[str, None] = OrderedDict()
-        for cluster in self._protoclusters:
-            for category in cluster.product_category:
-                categories[category] = None
-        return list(categories) or ["unknown"]
+        categories = {clus.product_category for clus in self._protoclusters if clus.product_category}
+        return categories or {"unknown"}
 
     @property
     def core_location(self) -> FeatureLocation:

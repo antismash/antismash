@@ -130,14 +130,14 @@ class TestRegion(unittest.TestCase):
     def test_product_categories(self):
         candidates = [DummyCandidateCluster([create_protocluster(0, 10, category="A")])]
         region = Region(candidate_clusters=candidates)
-        assert region.product_categories == ["A"]
+        assert region.product_categories == {"A"}
 
         clusters = []
-        for i, cat in zip(range(2), "BA"):
+        for i, cat in zip(range(2), ["B1", "A1"]):
             clusters.append(create_protocluster(i*10, (i+1)*10, product=cat.lower(), category=cat))
         candidate = DummyCandidateCluster(clusters)
         region = Region(candidate_clusters=[candidate])
-        assert region.product_categories == ["B", "A"]
+        assert region.product_categories == {"A1", "B1"}
 
     def test_genbank(self):
         dummy_record = Record(Seq("A"*100))
