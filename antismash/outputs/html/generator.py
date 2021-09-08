@@ -75,21 +75,21 @@ def write_regions_js(records: List[Dict[str, Any]], output_dir: str,
         of code"""
 
     with open(os.path.join(output_dir, 'regions.js'), 'w') as handle:
-        handle.write("var recordData = %s;\n" % json.dumps(records, indent=4))
+        handle.write("var recordData = %s;\n" % json.dumps(records, indent=1))
         regions: Dict[str, Any] = {"order": []}
         for record in records:
             for region in record['regions']:
                 regions[region['anchor']] = region
                 regions['order'].append(region['anchor'])
-        handle.write('var all_regions = %s;\n' % json.dumps(regions, indent=4))
+        handle.write('var all_regions = %s;\n' % json.dumps(regions, indent=1))
 
         details = {
             "nrpspks": {region["id"]: region for region in js_domains},
             "pfam": pfam_domains,
         }
-        handle.write('var details_data = %s;\n' % json.dumps(details, indent=4))
+        handle.write('var details_data = %s;\n' % json.dumps(details, indent=1))
 
-        handle.write('var resultsData = %s;\n' % json.dumps(module_results, indent=4))
+        handle.write('var resultsData = %s;\n' % json.dumps(module_results, indent=1))
 
 
 def generate_html_sections(records: List[RecordLayer], results: Dict[str, Dict[str, module_results.ModuleResults]],
