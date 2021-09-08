@@ -72,6 +72,7 @@ _CLASS_BY_ABBREVIATION = {
     "KR": "mod-kr",
     "DH": "mod-dh",
     "DHt": "mod-dh",
+    "DH2": "mod-dh",
     "ER": "mod-er",
 }
 _CLASS_BY_NAME = {
