@@ -133,6 +133,7 @@ class CandidateClusterLayer:
         self.transatpks = "transatpks" in candidate_cluster.products
         self.result = result
         self.products = "-".join(candidate_cluster.products)
+        self.kind = str(candidate_cluster.kind).replace("_", " ")
 
     def __getattr__(self, attr: str) -> Any:
         if hasattr(self.result, attr):
