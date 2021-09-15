@@ -78,6 +78,7 @@ class CDSResult:
         for domain, domain_feature in self.domain_features.items():
             if domain.hit_id == "PKS_KS":
                 sub = next(ks_sub)
+                domain_feature.domain_subtype = sub
             else:
                 sub = ""
             record.add_antismash_domain(domain_feature)
