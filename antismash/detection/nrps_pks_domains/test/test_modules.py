@@ -330,14 +330,14 @@ class TestModule(unittest.TestCase):
 
     def test_adding_ignored(self):
         start = len(self.nrps._components)
-        add_component(self.nrps, "ACPS")
+        add_component(self.nrps, "NRPS-COM_Nterm")
         assert len(self.nrps._components) == start
 
     def test_unknown_component_type(self):
         component = Component(DummyHMMResult(NRPS_LOAD))
         component._domain._hit_id = "unclassifiable"
         component.classification = "unclassifiable"
-        with self.assertRaisesRegex(ValueError, "unhandled"):
+        with self.assertRaisesRegex(AssertionError, "invalid classification"):
             Module().add_component(component)
 
 
@@ -348,7 +348,7 @@ class TestBuildModules(unittest.TestCase):
 
     def test_no_empties(self):
         assert build_modules_for_cds([], []) == []
-        assert build_modules_for_cds([DummyHMMResult("ACPS")], []) == []
+        assert len(build_modules_for_cds([DummyHMMResult("ACPS")], [])) == 1
 
     def test_unclassifiable(self):
         with self.assertRaisesRegex(ValueError, "could not classify domain"):

@@ -71,7 +71,13 @@ ALTERNATE_STARTERS = {
     "CAL_domain",
     "SAT",
 }
-IGNORED = {
+NON_MODULE = {  # external to modules, but important to find
+    "NRPS-COM_Cterm",
+    "NRPS-COM_Nterm",
+    "PKS_Docking_Cterm",
+    "PKS_Docking_Nterm",
+}
+OTHER = {
     "ACPS",  # activates ACP domains, has no function without them
     "Aminotran_1_2", "Aminotran_3", "Aminotran_4", "Aminotran_5",  # no useful function yet
     "B",
@@ -81,10 +87,6 @@ IGNORED = {
     "GNAT",
     "Hal",
     "NAD_binding_4",
-    "NRPS-COM_Cterm",  # external to modules, but important for polymers
-    "NRPS-COM_Nterm",  # external to modules, but important for polymers
-    "PKS_Docking_Cterm",  # external to modules, but important for polymers
-    "PKS_Docking_Nterm",  # external to modules, but important for polymers
     "Polyketide_cyc", "Polyketide_cyc2",  # type-II PKS specific
     "PS",
     "PT",  # fungal nonreducing PKS product template domain
@@ -106,7 +108,8 @@ CLASSIFICATIONS = {
     "+":  MODIFIERS,
     "CP": CARRIER_PROTEINS,
     "!": SPECIAL,
-    "ignore": IGNORED,
+    ".": OTHER,
+    "ignore": NON_MODULE,
 }
 
 
@@ -178,7 +181,7 @@ class Component:
 
     def is_ignored(self) -> bool:
         """ Returns True if the component is ignored for the purposes of modules """
-        return self.label in IGNORED
+        return self.label in NON_MODULE
 
     def is_special(self) -> bool:
         """ Returns True if the component has a special function for specific modules """
@@ -297,13 +300,11 @@ class Module:
         elif component.is_end():
             assert not self._end
 
-        else:
-            raise IncompatibleComponentError("unhandled %s" % component)
-
     def add_component(self, component: Component) -> None:
         """ Adds the given component to the module, raising an error if it
             would be invalid
         """
+        assert component.classification in CLASSIFICATIONS, f"invalid classification: {component.classification}"
         if component.is_ignored():
             return
         try:
