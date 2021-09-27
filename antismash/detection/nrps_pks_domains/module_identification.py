@@ -42,6 +42,7 @@ CONDENSATIONS = {
     "Heterocyclization",
 }
 ENDS = {
+    "cAT",  # not a typical acyltransferase, closer to a thioesterase
     "Epimerization",
     "Thioesterase",
     "TD",
