@@ -3,10 +3,12 @@
 
 """ Responsible for creating the single web page results """
 
+import importlib
 import json
+import pkgutil
 import string
 import os
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import cast, Any, Dict, List, Tuple, Union
 
 from antismash.common import path, module_results
 from antismash.common.html_renderer import FileTemplate, HTMLSections, docs_link
@@ -15,9 +17,22 @@ from antismash.common.secmet import Record
 from antismash.common.json import JSONOrf
 from antismash.config import ConfigType
 from antismash.outputs.html import js
-from antismash.custom_typing import AntismashModule
+from antismash.custom_typing import AntismashModule, VisualisationModule
 
 from .pfam_json import gather_pfam_json
+
+
+def _get_visualisers() -> List[VisualisationModule]:
+    """ Gather all the visualisation-only submodules """
+    modules = []
+    for module_data in pkgutil.walk_packages([path.get_full_path(__file__, "visualisers")]):
+        module = importlib.import_module(f"antismash.outputs.html.visualisers.{module_data.name}")
+        assert hasattr(module, "has_enough_results"), f"bad visualisation module: {module_data.name}"
+        modules.append(cast(VisualisationModule, module))
+    return modules
+
+
+VISUALISERS = _get_visualisers()
 
 
 def build_json_data(records: List[Record], results: List[Dict[str, module_results.ModuleResults]],
@@ -61,7 +76,16 @@ def build_json_data(records: List[Record], results: List[Dict[str, module_result
                     if domains_by_region:
                         js_domains.append(domains_by_region)
                 if hasattr(handler, "generate_javascript_data"):
-                    region_results[handler.__name__] = handler.generate_javascript_data(record, region, results[i][handler.__name__])
+                    data = handler.generate_javascript_data(record, region, results[i][handler.__name__])
+                    region_results[handler.__name__] = data
+
+            for aggregator in VISUALISERS:
+                if not hasattr(aggregator, "generate_javascript_data"):
+                    continue
+                if aggregator.has_enough_results(record, region, results[i]):
+                    data = aggregator.generate_javascript_data(record, region, results[i])
+                    region_results[aggregator.__name__] = data
+
             if region_results:
                 js_results[RegionLayer.build_anchor_id(region)] = region_results
 
@@ -119,6 +143,11 @@ def generate_html_sections(records: List[RecordLayer], results: Dict[str, Dict[s
                     if handler_results is None:
                         continue
                     sections.append(handler.generate_html(region, handler_results, record, options))
+            for aggregator in VISUALISERS:
+                if not hasattr(aggregator, "generate_html"):
+                    continue
+                if aggregator.has_enough_results(record.seq_record, region.region_feature, record_result):
+                    sections.append(aggregator.generate_html(region, record_result, record, options))
             record_details[region.get_region_number()] = sections
             if any(record.get_pfam_domains_in_cds(cds) for cds in region.cds_children):
                 html = HTMLSections("pfam-domains")
@@ -188,7 +217,8 @@ def generate_webpage(records: List[Record], results: List[Dict[str, module_resul
         result_file.write(aux)
 
 
-def find_plugins_for_cluster(plugins: List[AntismashModule], cluster: Dict[str, Any]) -> List[AntismashModule]:
+def find_plugins_for_cluster(plugins: List[AntismashModule],
+                             cluster: Dict[str, Any]) -> List[AntismashModule]:
     "Find a specific plugin responsible for a given gene cluster type"
     products = cluster['products']
     handlers = []
