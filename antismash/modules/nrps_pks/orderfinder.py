@@ -147,7 +147,8 @@ def generate_substrates_order(geneorder: List[CDSFeature], consensus_predictions
 
 
 def find_first_and_last_cds(cds_features: List[CDSFeature]) -> Tuple[Optional[CDSFeature], Optional[CDSFeature]]:
-    """ Find first and last CDSFeature based on starter module and TE / TD.
+    """ Find first and last CDSFeature based on the CDS having starter or
+        finalisation modules.
 
         If multiple possibilities are found for start or end, no gene will be
         returned as such.
@@ -166,8 +167,8 @@ def find_first_and_last_cds(cds_features: List[CDSFeature]) -> Tuple[Optional[CD
 
     # find the end
     for cds in cds_features:
-        domain_names = cds.nrps_pks.domain_names
-        if "Thioesterase" in domain_names or "TD" in domain_names:
+        if cds.modules and cds.modules[-1].is_final_module():
+            # two possible ends, this really ought to be two products
             if end_cds:
                 end_cds = None
                 break
@@ -177,20 +178,19 @@ def find_first_and_last_cds(cds_features: List[CDSFeature]) -> Tuple[Optional[CD
     for cds in cds_features:
         if cds == end_cds:
             continue
-        domain_names = cds.nrps_pks.domain_names
-        if domain_names[:2] == ["PKS_AT", "ACP"]:
+        if cds.modules and cds.modules[0].is_starter_module():
             if start_cds:
                 # two possible starts, don't attempt fallbacks
                 return None, end_cds
             start_cds = cds
 
-    # if no AT-ACP start gene, try looking for KS-AT-ACP
+    # if no starter module found, try looking for KS-AT-ACP
     if not start_cds:
         for cds in cds_features:
             if cds == end_cds:
                 continue
             domain_names = cds.nrps_pks.domain_names
-            if domain_names[:3] == ["PKS_KS", "PKS_AT", "ACP"]:
+            if domain_names[:3] in [["PKS_KS", "PKS_AT", "ACP"], ["PKS_KS", "PKS_AT", "PKS_PP"]]:
                 if start_cds:
                     start_cds = None
                     break

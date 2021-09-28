@@ -7,7 +7,7 @@
 import unittest
 
 from antismash.common import secmet
-from antismash.common.test.helpers import DummyCDS
+from antismash.common.test.helpers import DummyAntismashDomain, DummyCDS
 from antismash.detection.nrps_pks_domains import domain_identification
 from antismash.modules.nrps_pks import orderfinder
 
@@ -23,6 +23,12 @@ class DummyNRPSQualfier(secmet.qualifiers.NRPSPKSQualifier):  # pylint: disable=
     @domain_names.setter
     def domain_names(self, names):
         self._domain_names = names
+
+
+class DummyModule(secmet.features.Module):
+    def __init__(self, **kwargs):
+        domains = [DummyAntismashDomain(domain_id=dom) for dom in kwargs.pop("domains")]
+        super().__init__(domains, module_type=secmet.features.module.ModuleType.PKS, **kwargs)
 
 
 class TestOrdering(unittest.TestCase):
@@ -76,60 +82,92 @@ class TestOrdering(unittest.TestCase):
             self.run_ordering_simple("a", "a")
 
     def test_finding_end_gene(self):
-        inputs = {"STAUR_3972": ['PKS_KR'],
-                  "STAUR_3982": ['PKS_KS', 'PKS_AT', 'PKS_DH2', 'PKS_KR', 'ACP', 'Thioesterase'],
-                  "STAUR_3983": ['PKS_KS', 'PKS_AT', 'PKS_DH', 'PKS_KR', 'ACP'],
-                  "STAUR_3984": ['PKS_KS', 'PKS_AT', 'PKS_DH', 'PKS_KR', 'ACP']}
+        inputs = {
+            "STAUR_3972": {
+                "domains": ['PKS_KR'],
+                "complete": False
+            },
+            "STAUR_3982": {
+                "domains": ['PKS_KS', 'PKS_AT', 'PKS_DH2', 'PKS_KR', 'ACP', 'Thioesterase'],
+                "complete": True,
+                "final": True,
+            },
+            "STAUR_3983": {
+                "domains": ['PKS_KS', 'PKS_AT', 'PKS_DH', 'PKS_KR', 'ACP'],
+                "complete": True,
+            },
+        }
         genes = {}
-        for name, domains in inputs.items():
+        for name, details in inputs.items():
             cds = DummyCDS(locus_tag=name)
+            cds.add_module(DummyModule(**details))
             cds.nrps_pks = DummyNRPSQualfier()
-            cds.nrps_pks.domain_names = domains
+            cds.nrps_pks.domain_names = details["domains"]
             genes[name] = cds
         start, end = orderfinder.find_first_and_last_cds(genes.values())
         assert not start
         assert end.get_name() == "STAUR_3982"
-        genes["STAUR_3983"].nrps_pks.domain_names.append("TD")
-        start, end = orderfinder.find_first_and_last_cds(genes.values())
-        assert not start
-        assert not end
-        genes["STAUR_3984"].nrps_pks.domain_names.append("Thiosterase")
+
+        # set up a duplicate
+        assert not genes["STAUR_3983"].modules[-1].is_final_module()
+        genes["STAUR_3983"].modules[-1]._is_final = True
+        assert genes["STAUR_3983"].modules[-1].is_final_module()
+        # make sure the duplicate causes no single CDS to be returned
         start, end = orderfinder.find_first_and_last_cds(genes.values())
         assert not start
         assert not end
 
     def test_finding_start_gene(self):
-        inputs = {"STAUR_3972": ['PKS_KR'],
-                  "STAUR_3983": ['PKS_KS', 'PKS_AT', 'PKS_DH', 'PKS_KR', 'ACP'],
-                  "STAUR_3984": ['PKS_KS', 'PKS_AT', 'PKS_DH', 'PKS_KR', 'ACP'],
-                  "STAUR_3985": ['ACP', 'PKS_KS', 'PKS_AT', 'PKS_DH', 'PKS_KR', 'ACP']}
+        inputs = {
+            "STAUR_3972": {
+                "domains": ['PKS_KR'],
+                "complete": False
+            },
+            "STAUR_3983": {
+                "domains": ['PKS_KS', 'PKS_AT', 'PKS_DH', 'PKS_KR', 'ACP'],
+                "complete": True,
+            },
+            "STAUR_3984": {
+                "domains": ['PKS_KS', 'PKS_AT', 'PKS_DH', 'PKS_KR', 'ACP'],
+                "complete": True,
+            },
+        }
         genes = {}
-        for name, domains in inputs.items():
+        for name, details in inputs.items():
             cds = DummyCDS(locus_tag=name)
+            cds.add_module(DummyModule(**details))
             cds.nrps_pks = DummyNRPSQualfier()
-            cds.nrps_pks.domain_names = domains
+            cds.nrps_pks.domain_names = details["domains"]
             genes[name] = cds
+
         # no starts
         start, end = orderfinder.find_first_and_last_cds(genes.values())
         assert not start
         assert not end
+
         # fallback start
-        genes["STAUR_3983"].nrps_pks.domain_names = ["PKS_KS", "PKS_AT", "ACP"]
-        start, end = orderfinder.find_first_and_last_cds(genes.values())
-        assert start.get_name() == "STAUR_3983"
-        assert not end
+        for carrier in ["ACP", "PKS_PP"]:
+            genes["STAUR_3983"].nrps_pks.domain_names = ["PKS_KS", "PKS_AT", carrier]
+            start, end = orderfinder.find_first_and_last_cds(genes.values())
+            assert start.get_name() == "STAUR_3983"
+            assert not end
+
         # two fallback start possibilities
         genes["STAUR_3984"].nrps_pks.domain_names = ["PKS_KS", "PKS_AT", "ACP"]
         start, end = orderfinder.find_first_and_last_cds(genes.values())
         assert not start
         assert not end
+
         # first-class start
-        genes["STAUR_3972"].nrps_pks.domain_names = ["PKS_AT", "ACP"]
+        genes["STAUR_3972"].modules[-1]._is_starter = True
+        assert genes["STAUR_3972"].modules[-1].is_starter_module()
         start, end = orderfinder.find_first_and_last_cds(genes.values())
         assert start.get_name() == "STAUR_3972"
         assert not end
+
         # two possible starts
-        genes["STAUR_3984"].nrps_pks.domain_names = ["PKS_AT", "ACP"]
+        genes["STAUR_3984"].modules[-1]._is_starter = True
+        assert genes["STAUR_3984"].modules[-1].is_starter_module()
         start, end = orderfinder.find_first_and_last_cds(genes.values())
         assert not start
         assert not end
