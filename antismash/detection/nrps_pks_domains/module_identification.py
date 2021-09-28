@@ -21,7 +21,7 @@ that form but occasionally has MeO.
 """
 
 from dataclasses import dataclass
-from typing import Any, Dict, Iterator, List, Optional
+from typing import Any, Dict, Iterator, List, Optional, Tuple
 
 from antismash.common.hmmscan_refinement import HMMResult
 from antismash.common.secmet import CDSFeature
@@ -371,6 +371,11 @@ class Module:
     def __iter__(self) -> Iterator[Component]:
         for component in self._components:
             yield component
+
+    @property
+    def components(self) -> Tuple[Component, ...]:
+        """ Returns the components of the module """
+        return tuple(self._components)
 
     @property
     def start(self) -> int:
