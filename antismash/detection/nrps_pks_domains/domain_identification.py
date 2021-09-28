@@ -223,6 +223,8 @@ def generate_domains(record: Record) -> NRPSPKSDomains:
         prev = info
 
     for cds, cds_result in results.cds_results.items():
+        # filter out modules with only a single component, they're just noise at this stage
+        cds_result.modules = list(filter(lambda mod: len(mod.components) > 1, cds_result.modules))
         cds_result.annotate_domains(record, cds)
     return results
 
