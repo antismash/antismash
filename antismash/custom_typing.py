@@ -15,3 +15,9 @@ class AntismashModule:  # pylint: disable=too-few-public-methods
     """ Intended only for type hints of antiSMASH modules, see custom_typing.pyi """
     def __init__(self) -> None:
         raise NotImplementedError("AntismashModule is a stub for typing purposes only")
+
+
+class VisualisationModule:
+    """ Intended only for type hints of visualisation output modules, see custom_typing.pyi """
+    def __init__(self) -> None:
+        raise NotImplementedError("VisualisationModule is a stub for typing purposes only")
