@@ -1295,3 +1295,72 @@ ul.dropdown-options {
 .comparison-container-active {
     display: block;
 }
+
+.bubble-legend-container {
+    transform: scale(0.7);
+    transform-origin: 0 0;
+}
+
+#bubble-legend {
+    display: grid;
+    grid-template-columns: max-content auto;
+    grid-column-gap: 1em;
+    align-items: center;
+    margin-left: 2em;
+
+    .bubble-legend-icon {
+        justify-self: center;
+    }
+}
+
+.bubble-legend-title {
+    grid-column-start: span 2;
+    font-weight: bold;
+    margin-top: 1em;
+    margin-left: 1em;
+}
+
+.bubble-tooltip {
+    width: max-content;
+    padding-left: 20px;
+    padding-right: 20px;
+    z-index: 10;
+}
+
+.bubble-domain-inactive {
+    stroke-width: 2px;
+    stroke: black;
+}
+
+.bubble-module-line {
+    stroke-width: 2px;
+    stroke: black;
+}
+
+.domain-bubble-container {
+    * .bubble-module-label {
+        .bubble-module-monomer {
+            fill: #555;
+        }
+    }
+
+    * .domain-group {
+        .text {
+            fill: black;
+            font-size: 80%;
+            @include unselectable();
+        }
+    }
+    * .bubble-gene {
+        cursor: pointer;
+        .bubble-gene-arrow {
+            fill: black;
+        }
+        text {
+            @include unselectable();
+        }
+    }
+    * .bubble-domain-inactive {
+        opacity: 60%;
+    }
+}
