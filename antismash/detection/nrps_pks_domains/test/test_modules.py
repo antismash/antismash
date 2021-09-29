@@ -477,3 +477,29 @@ class TestMerging(unittest.TestCase):
         has_modules = CDSModuleInfo(DummyCDS(start=150, end=210), [self.generic_tail])
         assert not combine_modules(missing_modules, has_modules)
         assert not combine_modules(has_modules, missing_modules)
+
+    def test_merge_trailing_kr(self):  # kirromycin/AF484556.1
+        head = CDSModuleInfo(DummyCDS(start=50, end=110), [self.trans_at_head])
+        tail = CDSModuleInfo(DummyCDS(start=150, end=210), [self.generic_tail, build_module(["PKS_KR"])])
+        new = combine_modules(head, tail)
+        assert len(tail.modules) == 0
+        assert len(head.modules) == 1
+        assert head.modules[0] is new
+        assert len(new.components) == len(self.trans_at_head.components) + len(self.generic_tail.components) + 1
+        assert new.components[-1].domain.hit_id == "PKS_KR"
+
+        # the exceptions to the "rule"
+        exceptions = [
+            [self.pks_tail, build_module(["PKS_KR"])],  # not a trans-AT
+            [self.generic_tail, build_module(["PKS_KR", CP])],  # the KR should stay with its CP
+            [self.generic_tail, self.nrps_head],  # completely unrelated next module
+        ]
+        for modules in exceptions:
+            head = CDSModuleInfo(DummyCDS(start=50, end=110), [self.trans_at_head])
+            tail = CDSModuleInfo(DummyCDS(start=150, end=210), modules)
+            last = [comp.domain.hit_id for comp in modules[-1].components]
+            new = combine_modules(head, tail)
+            assert len(tail.modules) == 1
+            assert len(head.modules) == 1
+            # the module after the merged split should be unchanged
+            assert [comp.domain.hit_id for comp in tail.modules[0].components] == last

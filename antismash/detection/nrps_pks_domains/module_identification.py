@@ -506,6 +506,10 @@ def combine_modules(current: CDSModuleInfo, previous: CDSModuleInfo) -> Optional
         into single modules, provided the resulting module would be valid and the
         features are on the same strand.
 
+        The module following the leading module of the next CDS can also be
+        merged, providing it would normally form a single module with the merged
+        module. E.g. a post-CP KR domain in trans-AT PKS modules.
+
         This function modifies the given objects lists of modules.
 
         Arguments:
@@ -522,15 +526,10 @@ def combine_modules(current: CDSModuleInfo, previous: CDSModuleInfo) -> Optional
     if not current.modules or not previous.modules:
         return None
     # ensure the two args are ordered as expected
-    if current.cds < previous.cds:
-        current, previous = previous, current
-    # the leading fragment depends on strand
-    if current.cds.location.strand == 1:
-        head = previous.modules[-1]
-        tail = current.modules[0]
-    else:
-        head = current.modules[-1]
-        tail = previous.modules[0]
+    previous, current = sorted([current, previous], key=lambda info: info.cds,
+                               reverse=current.cds.location.strand == -1)
+    head = previous.modules[-1]
+    tail = current.modules[0]
     # both modules must be incomplete
     if head.is_complete() or tail.is_complete():
         return None
@@ -551,10 +550,20 @@ def combine_modules(current: CDSModuleInfo, previous: CDSModuleInfo) -> Optional
 
     # finally, replace the existing leading fragment with the new full module
     # and remove the tail fragment
-    if current.cds.location.strand == 1:
-        previous.modules[-1] = module
+    previous.modules[-1] = module
+    current.modules.pop(0)
+
+    # since it's reached this far, check if the next module in the latter CDS
+    # might merge in too (e.g. trailing KR domain for a trans-AT PKS module that
+    # didn't originally get detected as such due to the split)
+    if not current.modules:
+        return module
+
+    next = current.modules[0]
+    # is it a KR following a split trans_AT module?
+    # e.g. AM746336 (in both kirAII and kirAV) and AF484556.1 (in LnmJ)
+    if module.is_trans_at() and len(next.components) == 1 and next.components[0].domain.hit_id == "PKS_KR":
+        module.add_component(next.components[0], [])
         current.modules.pop(0)
-    else:
-        current.modules[-1] = module
-        previous.modules.pop(0)
+
     return module
