@@ -25,6 +25,7 @@ _UNLABLED_DOMAINS = set([
     "ACP",
     "ACP_beta",
     "ACPS",
+    "LPG_synthase_C",
     "NRPS-COM_Nterm",
     "NRPS-COM_Cterm",
     "PKS_Docking_Nterm",
@@ -44,6 +45,7 @@ _ABBREVIATED_DOMAINS = {
     "Aminotran_5": "AmT",
     "AMP-binding": "A",
     "A-OX": "A-OX",
+    "Beta_elim_lyase": "SH",
     "Cglyc": "C",
     "Condensation_DCL": "C",
     "Condensation_LCL": "C",
@@ -74,6 +76,7 @@ _CLASS_BY_ABBREVIATION = {
     "DHt": "mod-dh",
     "DH2": "mod-dh",
     "ER": "mod-er",
+    "SH": "mod-sh",
 }
 _CLASS_BY_NAME = {
     "PCP": "transport",

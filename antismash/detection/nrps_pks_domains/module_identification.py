@@ -59,6 +59,8 @@ MODIFIERS = {
     "cMT",
     "nMT",
     "oMT",
+    "Beta_elim_lyase",
+    "LPG_synthase_C",
 }
 CARRIER_PROTEINS = {
     "ACP",
