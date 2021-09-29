@@ -116,6 +116,13 @@ def _get_domain_class(abbreviation: str, domain_name: str) -> str:
     return "jsdomain-%s" % res
 
 
+def get_css_class_and_abbreviation(domain_name: str) -> Tuple[str, str]:
+    """ Convert a full domain name to a pair of CSS class and abbrevation """
+    abbrevation = _get_domain_abbreviation(domain_name)
+    css_class = _get_domain_class(abbrevation, domain_name)
+    return css_class, abbrevation
+
+
 def _parse_domain(record: Record, domain: NRPSPKSQualifier.Domain,
                   feature: CDSFeature) -> JSONDomain:
     """ Convert a NRPS/PKS domain string to a dict useable by json.dumps
@@ -146,9 +153,9 @@ def _parse_domain(record: Record, domain: NRPSPKSQualifier.Domain,
                  "&amp;LINK_LOC=protein&amp;PAGE_TYPE=BlastSearch").format(domainseq)
 
     dna_sequence = feature.extract(record.seq)
-    abbreviation = _get_domain_abbreviation(domain.name)
+    css, abbreviation = get_css_class_and_abbreviation(domain.name)
     return JSONDomain(domain, predictions, napdoslink, blastlink, domainseq, dna_sequence,
-                      abbreviation, _get_domain_class(abbreviation, domain.name))
+                      abbreviation, css)
 
 
 def generate_js_domains(region: Region, record: Record) -> Dict[str, Union[str, List[JSONOrf]]]:
