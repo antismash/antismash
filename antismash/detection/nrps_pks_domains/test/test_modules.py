@@ -15,6 +15,7 @@ from antismash.detection.nrps_pks_domains.module_identification import (
     CDSModuleInfo,
     CLASSIFICATIONS,
     Component as Component_actual,
+    DOUBLE_TRANSPORTER_CASES,
     Module,
     build_modules_for_cds as build_modules_for_cds_actual,
     classify,
@@ -41,9 +42,11 @@ def build_modules_for_cds(domains, subtypes, cds_name="test_name"):
     return build_modules_for_cds_actual(domains, subtypes, cds_name)
 
 
-def add_component(module, name, sub="", start=1, end=10, cds_name="test_name"):
+def add_component(module, name, sub="", start=1, end=10, cds_name="test_name", lookaheads=None):
     assert cds_name
-    module.add_component(Component(DummyHMMResult(name, start, end), cds_name, sub))
+    if lookaheads is None:
+        lookaheads = []
+    module.add_component(Component(DummyHMMResult(name, start, end), cds_name, sub), lookaheads)
 
 
 def build_module(names, subtypes=None, first_in_cds=True, cds_name="test_name"):
@@ -259,7 +262,7 @@ class TestModule(unittest.TestCase):
     def test_pks_chaining(self):
         module = Module()
         for comp in list(self.pks)[:-1]:
-            module.add_component(comp)
+            module.add_component(comp, [])
         assert module.get_monomer("mal") == "mal"
         add_component(module, "PKS_KR")
         assert module.get_monomer("mal") == "ohmal"
@@ -338,7 +341,7 @@ class TestModule(unittest.TestCase):
         component._domain._hit_id = "unclassifiable"
         component.classification = "unclassifiable"
         with self.assertRaisesRegex(AssertionError, "invalid classification"):
-            Module().add_component(component)
+            Module().add_component(component, [])
 
 
 class TestBuildModules(unittest.TestCase):
@@ -382,6 +385,28 @@ class TestBuildModules(unittest.TestCase):
             print(modules[1]._starter, modules[1]._loader, modules[1]._carrier_protein,
                   modules[1]._starter is modules[1]._loader)
             assert not modules[1].is_complete()
+
+    def test_double_transporters(self):
+        initial_domains = [DummyHMMResult(i) for i in [PKS_START, CP, CP]]
+        for special_case in DOUBLE_TRANSPORTER_CASES:
+            tail = [DummyHMMResult(i) for i in list(special_case) + ["cMT"]]  # dummy domain to test extent
+            # when the exact domains are present, they should extend
+            domains = initial_domains + tail
+            modules = build_modules_for_cds(domains, ["Trans-AT-PKS"])
+            assert len(modules) == 2
+            assert len(modules[0].components) == len(domains) - 1
+            assert len(modules[1].components) == 1 and modules[1].components[0].domain.hit_id == "cMT"
+            # but if there's something else mixed in, they should be treated separately
+            domains = initial_domains + [DummyHMMResult("cMT")] + tail
+            assert len(build_modules_for_cds(domains, ["Trans-AT-PKS"])) == 3
+
+    def test_double_transporters_miss(self):
+         domains = [DummyHMMResult(i) for i in [PKS_START, CP, CP, NRPS_START]]
+         modules = build_modules_for_cds(domains, ["Trans-AT-PKS"])
+         # the two CP domains should be in separate modules, with the trailing NRPS a third
+         assert len(modules) == 3
+         assert len(modules[1].components) == 1
+         assert modules[1].components[0].domain.hit_id == CP
 
 
 class TestMerging(unittest.TestCase):
