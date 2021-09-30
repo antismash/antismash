@@ -19,18 +19,6 @@ from .nrps_predictor import PredictorSVMResult
 from .pks_names import get_short_form
 from .at_analysis.at_analysis import ATPrediction
 
-DOMAIN_TYPE_MAPPING = {'Condensation_DCL': 'Condensation',
-                       'Condensation_LCL': 'Condensation',
-                       'Condensation_Dual': 'Condensation',
-                       'Condensation_Starter': 'Condensation',
-                       'CXglyc': 'Condensation',
-                       'Cglyc': 'Condensation',
-                       'cMT': 'MT',
-                       'oMT': 'MT',
-                       'nMT': 'MT',
-                       'Polyketide_cyc': 'Polyketide_cyc',
-                       'Polyketide_cyc2': 'Polyketide_cyc'}
-
 
 UNKNOWN = "(unknown)"
 
@@ -262,11 +250,6 @@ class NRPS_PKS_Results(ModuleResults):
 
                 for method, pred in domain.predictions.items():
                     feature.specificity.append("%s: %s" % (method, pred))
-
-                mapping = DOMAIN_TYPE_MAPPING.get(domain.name)
-                if mapping:
-                    feature.domain_subtype = domain.name
-                    feature.domain = mapping
 
             for module in cds_feature.modules:
                 if not module.is_complete():
