@@ -1,0 +1,7 @@
+{
+    "name": "MIBiG",
+    "description": "The *Dummy* MIBiG database.",
+    "path": "$datadir",
+    "comparisons": ["RegionToRegion", "ProtoToRegion"],
+    "mode": "RiQ"
+}
