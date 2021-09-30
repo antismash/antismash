@@ -86,12 +86,10 @@ def check_options(options: ConfigType) -> List[str]:
                 except jsonschema.ValidationError as err:
                     errors.append(f"custom clustercompare database {db} is invalid: {err.message}")
                     continue
+                config = DBConfig.from_json(setup, options.database_dir)
                 valid = True
                 for filename in ["data.json", "proteins.fasta"]:
-                    full = setup["path"]
-                    if "$datadir" in full:
-                        full = setup["path"].replace("$datadir", options.database_dir)
-                    full = os.path.join(full, filename)
+                    full = os.path.join(config.path, filename)
                     if not path.locate_file(full):
                         errors.append(f"custom clustercompare database '{setup['name']}' missing data file {full}")
                         valid = False

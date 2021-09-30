@@ -1,0 +1,928 @@
+{
+ "BGC0000311.1": {
+  "regions": [
+   {
+    "products": [
+     "NRP"
+    ],
+    "protoclusters": [],
+    "cdses": {
+     "vanS": {
+      "location": "[<0:759](-)",
+      "function": "resistance",
+      "components": {
+       "secmet": [],
+       "modules": []
+      }
+     },
+     "vanR": {
+      "location": "[769:1447](-)",
+      "function": "regulatory",
+      "components": {
+       "secmet": [],
+       "modules": []
+      }
+     },
+     "vanY": {
+      "location": "[1536:2157](+)",
+      "function": "other",
+      "components": {
+       "secmet": [],
+       "modules": []
+      }
+     },
+     "bbr": {
+      "location": "[3010:3976](+)",
+      "function": "other",
+      "components": {
+       "secmet": [],
+       "modules": []
+      }
+     },
+     "pdh": {
+      "location": "[4105:4981](+)",
+      "function": "other",
+      "components": {
+       "secmet": [],
+       "modules": []
+      }
+     },
+     "abc": {
+      "location": "[5179:7135](+)",
+      "function": "transport",
+      "components": {
+       "secmet": [],
+       "modules": []
+      }
+     },
+     "bpsA": {
+      "location": "[7137:16635](+)",
+      "function": "biosynthetic",
+      "components": {
+       "secmet": [
+        "Condensation",
+        "AMP-binding",
+        "PP-binding"
+       ],
+       "modules": [
+        {
+         "domains": [
+          "AMP-binding",
+          "PCP"
+         ],
+         "type": "nrps",
+         "complete": true
+        },
+        {
+         "domains": [
+          "Condensation",
+          "AMP-binding",
+          "PCP",
+          "Epimerization",
+          "TIGR01720"
+         ],
+         "type": "nrps",
+         "complete": true
+        },
+        {
+         "domains": [
+          "Condensation",
+          "AMP-binding",
+          "PCP"
+         ],
+         "type": "nrps",
+         "complete": true
+        }
+       ]
+      }
+     },
+     "bpsB": {
+      "location": "[16634:28868](+)",
+      "function": "biosynthetic",
+      "components": {
+       "secmet": [
+        "Condensation",
+        "AMP-binding",
+        "PP-binding"
+       ],
+       "modules": [
+        {
+         "domains": [
+          "Condensation",
+          "AMP-binding",
+          "PCP",
+          "Epimerization",
+          "TIGR01720"
+         ],
+         "type": "nrps",
+         "complete": true
+        },
+        {
+         "domains": [
+          "Condensation",
+          "AMP-binding",
+          "PCP",
+          "Epimerization",
+          "TIGR01720"
+         ],
+         "type": "nrps",
+         "complete": true
+        },
+        {
+         "domains": [
+          "Condensation",
+          "AMP-binding",
+          "PCP"
+         ],
+         "type": "nrps",
+         "complete": true
+        }
+       ]
+      }
+     },
+     "bpsC": {
+      "location": "[28887:34464](+)",
+      "function": "biosynthetic",
+      "components": {
+       "secmet": [
+        "Condensation",
+        "AMP-binding",
+        "PP-binding",
+        "PF00561"
+       ],
+       "modules": [
+        {
+         "domains": [
+          "Condensation",
+          "AMP-binding",
+          "PCP",
+          "X",
+          "Thioesterase"
+         ],
+         "type": "nrps",
+         "complete": true
+        }
+       ]
+      }
+     },
+     "CAC48363.1": {
+      "location": "[34460:34670](+)",
+      "function": "biosynthetic-additional",
+      "components": {
+       "secmet": [],
+       "modules": []
+      }
+     },
+     "oxyA": {
+      "location": "[34781:35957](+)",
+      "function": "biosynthetic-additional",
+      "components": {
+       "secmet": [
+        "p450"
+       ],
+       "modules": []
+      }
+     },
+     "oxyB": {
+      "location": "[36006:37203](+)",
+      "function": "biosynthetic-additional",
+      "components": {
+       "secmet": [
+        "p450"
+       ],
+       "modules": []
+      }
+     },
+     "oxyC": {
+      "location": "[37352:38573](+)",
+      "function": "biosynthetic-additional",
+      "components": {
+       "secmet": [
+        "p450"
+       ],
+       "modules": []
+      }
+     },
+     "bhaA": {
+      "location": "[38633:40109](+)",
+      "function": "biosynthetic-additional",
+      "components": {
+       "secmet": [
+        "Trp_halogenase"
+       ],
+       "modules": []
+      }
+     },
+     "bgtfA": {
+      "location": "[40191:41382](+)",
+      "function": "biosynthetic-additional",
+      "components": {
+       "secmet": [
+        "Glyco_transf_28"
+       ],
+       "modules": []
+      }
+     },
+     "bgtfB": {
+      "location": "[41446:42676](+)",
+      "function": "biosynthetic-additional",
+      "components": {
+       "secmet": [
+        "Glyco_transf_28"
+       ],
+       "modules": []
+      }
+     },
+     "bgtfC": {
+      "location": "[42823:44053](+)",
+      "function": "biosynthetic-additional",
+      "components": {
+       "secmet": [
+        "Glyco_transf_28"
+       ],
+       "modules": []
+      }
+     },
+     "dvaC": {
+      "location": "[44086:45313](+)",
+      "function": "other",
+      "components": {
+       "secmet": [],
+       "modules": []
+      }
+     },
+     "CAC48365.1": {
+      "location": "[45408:46233](+)",
+      "function": "biosynthetic-additional",
+      "components": {
+       "secmet": [
+        "PIG-L"
+       ],
+       "modules": []
+      }
+     },
+     "bmt": {
+      "location": "[46264:47119](+)",
+      "function": "biosynthetic-additional",
+      "components": {
+       "secmet": [],
+       "modules": []
+      }
+     },
+     "pgat": {
+      "location": "[47099:48404](-)",
+      "function": "biosynthetic-additional",
+      "components": {
+       "secmet": [],
+       "modules": []
+      }
+     },
+     "bhp": {
+      "location": "[48609:49464](+)",
+      "function": "biosynthetic-additional",
+      "components": {
+       "secmet": [
+        "Abhydrolase_6",
+        "PF00561"
+       ],
+       "modules": []
+      }
+     },
+     "bpsD": {
+      "location": "[49529:51275](+)",
+      "function": "biosynthetic",
+      "components": {
+       "secmet": [
+        "AMP-binding",
+        "PP-binding"
+       ],
+       "modules": [
+        {
+         "domains": [
+          "AMP-binding",
+          "PCP"
+         ],
+         "type": "nrps",
+         "complete": true
+        }
+       ]
+      }
+     },
+     "oxyD": {
+      "location": "[51288:52479](+)",
+      "function": "biosynthetic-additional",
+      "components": {
+       "secmet": [
+        "p450"
+       ],
+       "modules": []
+      }
+     },
+     "hmaS": {
+      "location": "[52644:53715](+)",
+      "function": "other",
+      "components": {
+       "secmet": [],
+       "modules": []
+      }
+     },
+     "hmo": {
+      "location": "[53711:54788](+)",
+      "function": "other",
+      "components": {
+       "secmet": [],
+       "modules": []
+      }
+     },
+     "CAC48373.1": {
+      "location": "[54878:56237](+)",
+      "function": "transport",
+      "components": {
+       "secmet": [],
+       "modules": []
+      }
+     },
+     "dvaA": {
+      "location": "[56500:57913](+)",
+      "function": "other",
+      "components": {
+       "secmet": [],
+       "modules": []
+      }
+     },
+     "dvaE": {
+      "location": "[57914:58214](+)",
+      "function": "other",
+      "components": {
+       "secmet": [],
+       "modules": []
+      }
+     },
+     "dvaB": {
+      "location": "[58210:59320](+)",
+      "function": "biosynthetic-additional",
+      "components": {
+       "secmet": [
+        "DegT_DnrJ_EryC1"
+       ],
+       "modules": []
+      }
+     },
+     "dvaD": {
+      "location": "[59343:59961](+)",
+      "function": "biosynthetic-additional",
+      "components": {
+       "secmet": [
+        "dTDP_sugar_isom"
+       ],
+       "modules": []
+      }
+     },
+     "dpgA": {
+      "location": "[60178:61297](+)",
+      "function": "biosynthetic",
+      "components": {
+       "secmet": [
+        "Chal_sti_synt_N",
+        "Chal_sti_synt_C"
+       ],
+       "modules": []
+      }
+     },
+     "dpgB": {
+      "location": "[61293:61947](+)",
+      "function": "other",
+      "components": {
+       "secmet": [],
+       "modules": []
+      }
+     },
+     "dpgC": {
+      "location": "[61943:63248](+)",
+      "function": "biosynthetic-additional",
+      "components": {
+       "secmet": [],
+       "modules": []
+      }
+     },
+     "dpgD": {
+      "location": "[63244:64054](+)",
+      "function": "biosynthetic-additional",
+      "components": {
+       "secmet": [],
+       "modules": []
+      }
+     },
+     "ald": {
+      "location": "[64161:65259](+)",
+      "function": "other",
+      "components": {
+       "secmet": [],
+       "modules": []
+      }
+     },
+     "pks": {
+      "location": "[65377:>66669](+)",
+      "function": "biosynthetic-additional",
+      "components": {
+       "secmet": [
+        "AMP-binding"
+       ],
+       "modules": []
+      }
+     }
+    },
+    "start": 0,
+    "end": 66669,
+    "organism": "Amycolatopsis balhimycina DSM 5908",
+    "description": "balhimycin"
+   }
+  ],
+  "cds_mapping": {
+   "1": "vanS",
+   "2": "vanR",
+   "3": "vanY",
+   "4": "bbr",
+   "5": "pdh",
+   "6": "abc",
+   "7": "bpsA",
+   "8": "bpsB",
+   "9": "bpsC",
+   "10": "CAC48363.1",
+   "11": "oxyA",
+   "12": "oxyB",
+   "13": "oxyC",
+   "14": "bhaA",
+   "15": "bgtfA",
+   "16": "bgtfB",
+   "17": "bgtfC",
+   "18": "dvaC",
+   "19": "CAC48365.1",
+   "20": "bmt",
+   "21": "pgat",
+   "22": "bhp",
+   "23": "bpsD",
+   "24": "oxyD",
+   "25": "hmaS",
+   "26": "hmo",
+   "27": "CAC48373.1",
+   "28": "dvaA",
+   "29": "dvaE",
+   "30": "dvaB",
+   "31": "dvaD",
+   "32": "dpgA",
+   "33": "dpgB",
+   "34": "dpgC",
+   "35": "dpgD",
+   "36": "ald",
+   "37": "pks"
+  }
+ },
+ "BGC0000455.1": {
+  "regions": [
+   {
+    "products": [
+     "NRP"
+    ],
+    "protoclusters": [],
+    "cdses": {
+     "vanH": {
+      "location": "[0:1032](+)",
+      "function": "biosynthetic-additional",
+      "components": {
+       "secmet": [],
+       "modules": []
+      }
+     },
+     "vanA": {
+      "location": "[1033:2080](+)",
+      "function": "biosynthetic-additional",
+      "components": {
+       "secmet": [
+        "ATP-grasp"
+       ],
+       "modules": []
+      }
+     },
+     "vanX": {
+      "location": "[2069:2678](+)",
+      "function": "resistance",
+      "components": {
+       "secmet": [],
+       "modules": []
+      }
+     },
+     "vtrR": {
+      "location": "[3663:4638](+)",
+      "function": "other",
+      "components": {
+       "secmet": [],
+       "modules": []
+      }
+     },
+     "vcm1": {
+      "location": "[4783:5635](+)",
+      "function": "other",
+      "components": {
+       "secmet": [],
+       "modules": []
+      }
+     },
+     "AEI58864.1": {
+      "location": "[5594:7733](+)",
+      "function": "transport",
+      "components": {
+       "secmet": [],
+       "modules": []
+      }
+     },
+     "vcm2": {
+      "location": "[7729:17188](+)",
+      "function": "biosynthetic",
+      "components": {
+       "secmet": [
+        "Condensation",
+        "AMP-binding",
+        "PP-binding"
+       ],
+       "modules": [
+        {
+         "domains": [
+          "AMP-binding",
+          "PCP"
+         ],
+         "type": "nrps",
+         "complete": true
+        },
+        {
+         "domains": [
+          "Cglyc",
+          "AMP-binding",
+          "PCP",
+          "Epimerization"
+         ],
+         "type": "nrps",
+         "complete": true
+        },
+        {
+         "domains": [
+          "Condensation",
+          "AMP-binding",
+          "PCP"
+         ],
+         "type": "nrps",
+         "complete": true
+        }
+       ]
+      }
+     },
+     "vcm3": {
+      "location": "[17540:29693](+)",
+      "function": "biosynthetic",
+      "components": {
+       "secmet": [
+        "Condensation",
+        "AMP-binding",
+        "PP-binding"
+       ],
+       "modules": [
+        {
+         "domains": [
+          "Cglyc",
+          "AMP-binding",
+          "PCP",
+          "Epimerization"
+         ],
+         "type": "nrps",
+         "complete": true
+        },
+        {
+         "domains": [
+          "Cglyc",
+          "AMP-binding",
+          "PCP",
+          "Epimerization"
+         ],
+         "type": "nrps",
+         "complete": true
+        },
+        {
+         "domains": [
+          "Cglyc",
+          "AMP-binding",
+          "PCP"
+         ],
+         "type": "nrps",
+         "complete": true
+        }
+       ]
+      }
+     },
+     "vcm4": {
+      "location": "[29713:35290](+)",
+      "function": "biosynthetic",
+      "components": {
+       "secmet": [
+        "Condensation",
+        "AMP-binding",
+        "PP-binding",
+        "PF00561"
+       ],
+       "modules": [
+        {
+         "domains": [
+          "Cglyc",
+          "AMP-binding",
+          "PCP",
+          "Thioesterase"
+         ],
+         "type": "nrps",
+         "complete": true
+        }
+       ]
+      }
+     },
+     "vcm5": {
+      "location": "[35583:36759](+)",
+      "function": "biosynthetic-additional",
+      "components": {
+       "secmet": [
+        "p450"
+       ],
+       "modules": []
+      }
+     },
+     "vcm6": {
+      "location": "[37089:38313](+)",
+      "function": "biosynthetic-additional",
+      "components": {
+       "secmet": [
+        "p450"
+       ],
+       "modules": []
+      }
+     },
+     "vcm7": {
+      "location": "[38439:39660](+)",
+      "function": "biosynthetic-additional",
+      "components": {
+       "secmet": [
+        "p450"
+       ],
+       "modules": []
+      }
+     },
+     "vcm8": {
+      "location": "[39704:41180](+)",
+      "function": "biosynthetic-additional",
+      "components": {
+       "secmet": [
+        "Trp_halogenase"
+       ],
+       "modules": []
+      }
+     },
+     "vcm9": {
+      "location": "[41235:42462](+)",
+      "function": "biosynthetic-additional",
+      "components": {
+       "secmet": [
+        "Glyco_transf_28"
+       ],
+       "modules": []
+      }
+     },
+     "vcm10": {
+      "location": "[42514:43741](+)",
+      "function": "biosynthetic-additional",
+      "components": {
+       "secmet": [
+        "Glyco_transf_28",
+        "Glyco_tran_28_C"
+       ],
+       "modules": []
+      }
+     },
+     "vcm11": {
+      "location": "[43766:44993](+)",
+      "function": "other",
+      "components": {
+       "secmet": [],
+       "modules": []
+      }
+     },
+     "AEI58875.1": {
+      "location": "[44998:45820](+)",
+      "function": "biosynthetic-additional",
+      "components": {
+       "secmet": [
+        "PIG-L"
+       ],
+       "modules": []
+      }
+     },
+     "vcm12": {
+      "location": "[45859:46702](+)",
+      "function": "biosynthetic-additional",
+      "components": {
+       "secmet": [],
+       "modules": []
+      }
+     },
+     "vcm13": {
+      "location": "[46682:47987](-)",
+      "function": "biosynthetic-additional",
+      "components": {
+       "secmet": [],
+       "modules": []
+      }
+     },
+     "vcm14": {
+      "location": "[48217:49048](+)",
+      "function": "biosynthetic-additional",
+      "components": {
+       "secmet": [
+        "Abhydrolase_6",
+        "PF00561"
+       ],
+       "modules": []
+      }
+     },
+     "vcm15": {
+      "location": "[49098:50781](+)",
+      "function": "biosynthetic",
+      "components": {
+       "secmet": [
+        "AMP-binding",
+        "PP-binding"
+       ],
+       "modules": [
+        {
+         "domains": [
+          "AMP-binding",
+          "PCP"
+         ],
+         "type": "nrps",
+         "complete": true
+        }
+       ]
+      }
+     },
+     "vcm16": {
+      "location": "[50794:51985](+)",
+      "function": "biosynthetic-additional",
+      "components": {
+       "secmet": [
+        "p450"
+       ],
+       "modules": []
+      }
+     },
+     "vcm17": {
+      "location": "[52103:53138](+)",
+      "function": "other",
+      "components": {
+       "secmet": [],
+       "modules": []
+      }
+     },
+     "vcm18": {
+      "location": "[53134:54214](+)",
+      "function": "other",
+      "components": {
+       "secmet": [],
+       "modules": []
+      }
+     },
+     "AEI58883.1": {
+      "location": "[54430:55618](+)",
+      "function": "other",
+      "components": {
+       "secmet": [],
+       "modules": []
+      }
+     },
+     "vcm19": {
+      "location": "[55797:57204](+)",
+      "function": "other",
+      "components": {
+       "secmet": [],
+       "modules": []
+      }
+     },
+     "vcm20": {
+      "location": "[57204:58176](+)",
+      "function": "biosynthetic-additional",
+      "components": {
+       "secmet": [],
+       "modules": []
+      }
+     },
+     "vcm21": {
+      "location": "[58172:59282](+)",
+      "function": "biosynthetic-additional",
+      "components": {
+       "secmet": [
+        "DegT_DnrJ_EryC1"
+       ],
+       "modules": []
+      }
+     },
+     "vcm22": {
+      "location": "[59305:59923](+)",
+      "function": "biosynthetic-additional",
+      "components": {
+       "secmet": [
+        "dTDP_sugar_isom"
+       ],
+       "modules": []
+      }
+     },
+     "vcm23": {
+      "location": "[60010:61129](+)",
+      "function": "biosynthetic",
+      "components": {
+       "secmet": [
+        "Chal_sti_synt_N",
+        "Chal_sti_synt_C"
+       ],
+       "modules": []
+      }
+     },
+     "vcm24": {
+      "location": "[61155:61785](+)",
+      "function": "other",
+      "components": {
+       "secmet": [],
+       "modules": []
+      }
+     },
+     "vcm25": {
+      "location": "[61781:63008](+)",
+      "function": "other",
+      "components": {
+       "secmet": [],
+       "modules": []
+      }
+     },
+     "vcm26": {
+      "location": "[63004:63796](+)",
+      "function": "biosynthetic-additional",
+      "components": {
+       "secmet": [],
+       "modules": []
+      }
+     },
+     "AEI58892.1": {
+      "location": "[63967:65044](+)",
+      "function": "other",
+      "components": {
+       "secmet": [],
+       "modules": []
+      }
+     }
+    },
+    "start": 0,
+    "end": 65044,
+    "organism": "Amycolatopsis orientalis HCCB10007",
+    "description": "vancomycin"
+   }
+  ],
+  "cds_mapping": {
+   "1": "vanH",
+   "2": "vanA",
+   "3": "vanX",
+   "4": "vtrR",
+   "5": "vcm1",
+   "6": "AEI58864.1",
+   "7": "vcm2",
+   "8": "vcm3",
+   "9": "vcm4",
+   "10": "vcm5",
+   "11": "vcm6",
+   "12": "vcm7",
+   "13": "vcm8",
+   "14": "vcm9",
+   "15": "vcm10",
+   "16": "vcm11",
+   "17": "AEI58875.1",
+   "18": "vcm12",
+   "19": "vcm13",
+   "20": "vcm14",
+   "21": "vcm15",
+   "22": "vcm16",
+   "23": "vcm17",
+   "24": "vcm18",
+   "25": "AEI58883.1",
+   "26": "vcm19",
+   "27": "vcm20",
+   "28": "vcm21",
+   "29": "vcm22",
+   "30": "vcm23",
+   "31": "vcm24",
+   "32": "vcm25",
+   "33": "vcm26",
+   "34": "AEI58892.1"
+  }
+ }
+}
