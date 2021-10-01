@@ -19,8 +19,6 @@ from antismash.config import ConfigType
 from antismash.outputs.html import js
 from antismash.custom_typing import AntismashModule, VisualisationModule
 
-from .pfam_json import gather_pfam_json
-
 
 def _get_visualisers() -> List[VisualisationModule]:
     """ Gather all the visualisation-only submodules """
@@ -93,7 +91,7 @@ def build_json_data(records: List[Record], results: List[Dict[str, module_result
 
 
 def write_regions_js(records: List[Dict[str, Any]], output_dir: str,
-                     js_domains: List[Dict[str, Any]], pfam_domains: Dict[str, Dict[str, Any]],
+                     js_domains: List[Dict[str, Any]],
                      module_results: Dict[str, Dict[str, Dict[str, Any]]]) -> None:
     """ Writes out the cluster and domain JSONs to file for the javascript sections
         of code"""
@@ -109,7 +107,6 @@ def write_regions_js(records: List[Dict[str, Any]], output_dir: str,
 
         details = {
             "nrpspks": {region["id"]: region for region in js_domains},
-            "pfam": pfam_domains,
         }
         handle.write('var details_data = %s;\n' % json.dumps(details, indent=1))
 
@@ -149,16 +146,6 @@ def generate_html_sections(records: List[RecordLayer], results: Dict[str, Dict[s
                 if aggregator.has_enough_results(record.seq_record, region.region_feature, record_result):
                     sections.append(aggregator.generate_html(region, record_result, record, options))
             record_details[region.get_region_number()] = sections
-            if any(record.get_pfam_domains_in_cds(cds) for cds in region.cds_children):
-                html = HTMLSections("pfam-domains")
-                template = FileTemplate(path.get_full_path(__file__, "templates", "pfam_domains.html"))
-                tooltip = """Shows Pfam domains found in each gene within the region.
-Click on each domain for more information about the domain's
-accession, location, description, and any relevant Gene Ontology.
-Domains with a bold border have Gene Ontology information. """
-                section = template.render(region=region, record=record, tooltip=tooltip)
-                html.add_detail_section("Pfam domains", section, "pfam-details")
-                sections.append(html)
         details[record.id] = record_details
     return details
 
@@ -169,8 +156,7 @@ def generate_webpage(records: List[Record], results: List[Dict[str, module_resul
 
     generate_searchgtr_htmls(records, options)
     json_records, js_domains, js_results = build_json_data(records, results, options)
-    pfam_domains = gather_pfam_json(records)
-    write_regions_js(json_records, options.output_dir, js_domains, pfam_domains, js_results)
+    write_regions_js(json_records, options.output_dir, js_domains, js_results)
 
     with open(os.path.join(options.output_dir, 'index.html'), 'w') as result_file:
         template = FileTemplate(path.get_full_path(__file__, "templates", "overview.html"))

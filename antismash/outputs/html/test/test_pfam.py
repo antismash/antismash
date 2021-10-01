@@ -6,10 +6,10 @@
 
 import unittest
 
-from antismash.outputs.html.pfam_json import (
-    BIOSYNTHETIC,
-    REGULATORY,
-    TRANSPORT,
+from antismash.outputs.html.visualisers.generic_domains import (
+    PFAM_BIOSYNTHETIC as BIOSYNTHETIC,
+    PFAM_REGULATORY as REGULATORY,
+    PFAM_TRANSPORT as TRANSPORT,
 )
 
 class TestClassifications(unittest.TestCase):
