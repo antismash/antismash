@@ -18,12 +18,12 @@ import antismash
 from antismash.common.hmmer import ensure_database_pressed
 from antismash.common.subprocessing import execute
 
-PFAM_LATEST_VERSION = "32.0"
+PFAM_LATEST_VERSION = "34.0"
 PFAM_LATEST_URL = "ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam{}/Pfam-A.hmm.gz".format(
     PFAM_LATEST_VERSION
 )
-PFAM_LATEST_ARCHIVE_CHECKSUM = "33a7713c080c8f921863ee87793f36b4bce0fc05ff5fec767109a4e9ffbf9c1e"
-PFAM_LATEST_CHECKSUM = "deaf15657dc19b0e6c3d7370c4c94a505b109dde103c327862213679958b5dd3"
+PFAM_LATEST_ARCHIVE_CHECKSUM = "b18a98bb1f92b9afb7533fda43baac98d9c69e5b97e68592a43fc00d671ea3f6"
+PFAM_LATEST_CHECKSUM = "bfc669e58fdafad0950a52bb9020d6e23c87aa174f4f5bc4ebdac8bb9c30b634"
 
 CLUSTERBLAST_URL = "https://dl.secondarymetabolites.org/releases/clusterblast/clusterblast_20201113.tar.xz"
 CLUSTERBLAST_ARCHIVE_CHECKSUM = "bf45276f034615b0827627d16426fec2aca0464391bc41c76ccfae81049ba95a"
