@@ -102,7 +102,7 @@ def _build_mapping(database: str) -> Dict[str, str]:
         Returns:
             a dictionary mapping NAME field to ACC field
     """
-    logging.debug("Building mapping for pHMM database %s", os.path.basename(database))
+    logging.debug("Building name mapping for HMMer database %s", os.path.basename(database))
 
     with open(database) as handle:
         entries = handle.read().split("\n//\n")
@@ -124,7 +124,7 @@ def _build_cutoff_mapping(database: str) -> Dict[str, float]:
         Returns:
             a dictionary mapping ACC field to TC value
     """
-    logging.debug("Building mapping for HMMer database %s", database)
+    logging.debug("Building cutoff mapping for HMMer database %s", database)
     with open(database) as handle:
         entries = handle.read().split("\n//\n")
     mapping = {}
