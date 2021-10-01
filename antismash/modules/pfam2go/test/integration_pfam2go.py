@@ -48,7 +48,7 @@ class PfamToGoTest(unittest.TestCase):
         nisin = helpers.get_path_to_nisin_genbank()
         results = helpers.run_and_regenerate_results_for_module(nisin, pfam2go, self.options)
         #  are the expected go ids for pfams found/no wrong ids for pfams?
-        expected_pfams_and_gos_with_descs = {"PF00005": {"GO:0005524": "ATP binding", "GO:0016887": "ATPase activity"},
+        expected_pfams_and_gos_with_descs = {"PF00005": {"GO:0005524": "ATP binding"},
                                              "PF00072": {"GO:0000160": "phosphorelay signal transduction system"},
                                              "PF00486": {"GO:0003677": "DNA binding",
                                                          "GO:0000160": "phosphorelay signal transduction system",
