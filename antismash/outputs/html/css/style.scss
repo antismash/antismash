@@ -832,50 +832,50 @@ table.region-table {
     fill: rgb(218,218,218);
 }
 
-.pfam-domain-domain {
+.generic-domain-domain {
     stroke: rgb(50,50,50);
 }
 
-.pfam-domain-line {
+.generic-domain-line {
     @extend .jsdomain-line;
 }
-.pfam-domain-orflabel {
+.generic-domain-orflabel {
     @extend .jsdomain-orflabel;
 }
-.pfam-domain-tooltip {
+.generic-domain-tooltip {
     @extend .jsdomain-tooltip;
 }
-.pfam-domain-text {
+.generic-domain-text {
     @extend .jsdomain-text;
 }
-.pfam-domain-svg {
+.generic-domain-svg {
     @extend .jsdomain-svg;
 }
-.pfam-domain-svg-single {
+.generic-domain-svg-single {
     @extend .jsdomain-svg-single;
 }
 
-rect.pfam-type-other {
+rect.generic-type-other {
     fill: #dadada;
 }
 
-rect.pfam-type-biosynthetic {
+rect.generic-type-biosynthetic {
     fill: #f0a1a1;
 }
 
-text.pfam-type-biosynthetic {
+text.generic-type-biosynthetic {
     fill: #333;
 }
 
-rect.pfam-type-regulatory {
+rect.generic-type-regulatory {
     fill: #6cbc9c;
 }
 
-text.pfam-type-regulatory {
+text.generic-type-regulatory {
     fill: #333;
 }
 
-rect.pfam-type-transport {
+rect.generic-type-transport {
     fill: #7aaaff;
 }
 
