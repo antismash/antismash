@@ -15,6 +15,7 @@ from antismash.main import get_all_modules
 from antismash.common import path
 from antismash.common.module_results import ModuleResults
 import antismash.common.test.helpers as helpers
+from antismash.common.subprocessing.diamond import run_diamond_version
 from antismash.config import build_config, get_config, update_config, destroy_config
 from antismash.modules import clusterblast
 from antismash.modules.clusterblast import core, known
@@ -25,6 +26,7 @@ MOCKED_DATA = path.get_full_path(__file__, "data")
 class Base(unittest.TestCase):
     def setUp(self):
         options = build_config(self.get_args(), isolated=True, modules=get_all_modules())
+        self.diamond_version = int(run_diamond_version().split(".")[0])
         self.old_config = get_config().__dict__
         self.options = update_config(options)
 
@@ -89,16 +91,17 @@ class GeneralIntegrationTest(Base):
         return results.general, results
 
     def test_nisin(self):
-        results = self.check_nisin(2)
+        expected_hits = 2 if self.diamond_version < 2 else 3
+        results = self.check_nisin(expected_hits)
         ranking = results.region_results[0].ranking
-        assert len(ranking) == 2
+        assert len(ranking) == expected_hits
         match, score = ranking[0]
         assert match.accession == "NC_017486"
         assert match.cluster_label == "c1234-56789"
         assert score.score == 30
         assert score.hits == 11
         assert score.core_gene_hits == 2
-        assert score.blast_score == 8401.0
+        assert score.blast_score == 8401.0 if self.diamond_version < 2 else 8402.0
         assert score.synteny_score == 14
         assert score.core_bonus == 3
         assert len(score.scored_pairings) == score.hits
@@ -112,7 +115,7 @@ class GeneralIntegrationTest(Base):
         assert score.score == 24
         assert score.hits == 10
         assert score.core_gene_hits == 1
-        assert score.blast_score == 7579.0
+        assert score.blast_score == 7579.0 if self.diamond_version < 2 else 7577.0
         assert score.synteny_score == 10
         assert score.core_bonus == 3
         assert len(score.scored_pairings) == score.hits
