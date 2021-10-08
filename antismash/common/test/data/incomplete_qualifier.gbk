@@ -1,0 +1,22 @@
+LOCUS       Dummy                  15016 bp    DNA     linear   BCT 05-OCT-2011
+DEFINITION  a.
+ACCESSION   a
+VERSION     a
+KEYWORDS    .
+SOURCE      
+  ORGANISM  
+COMMENT     Missing the closing quote is detected by biopython, but it carries
+            on anyway, resulting in incorrect qualifiers and, in this particular
+            case, a failure to properly strip the feature pre-analysis as it no
+            longer has the `tool` qualifier.
+            .
+FEATURES             Location/Qualifiers
+     feature         1234..2345
+                     /monomer_pairings="tyr -
+                     /tool="antismash"
+ORIGIN
+         1 tctcttaact ccgtgtctag tttttcgttg actttccatt atgcttggat tttttattgt
+        61 ttaattccct ttttttgtat acaagctcgt attcttaaca aataattggc atatcgggtt
+       121 taaaaatact atgtgtttta aagaatctct catgagtttg acgccaataa cttagattaa
+       181 aatcaccgtc accttatttt taggcacgtt cggcagtaac cttatcaaag gtatctcagt
+//
