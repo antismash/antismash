@@ -63,6 +63,12 @@ class TestParseRecords(unittest.TestCase):
             with self.assertRaisesRegex(AntismashInputError, "no valid records found"):
                 record_processing.parse_input_sequence(temp.name)
 
+    def test_malformed_qualifiers(self):
+        filepath = path.get_full_path(__file__, "data", "incomplete_qualifier.gbk")
+        warning = "double-quote characters like \" should be escaped"
+        with self.assertRaisesRegex(AntismashInputError, warning):
+            record_processing.parse_input_sequence(filepath)
+
 
 class TestGapNotation(unittest.TestCase):
     def setUp(self):
