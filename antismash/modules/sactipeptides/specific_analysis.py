@@ -13,7 +13,6 @@ import os
 import re
 from typing import Any, Dict, Set, List, Optional, Tuple, Union
 
-from Bio.SearchIO._model.hsp import HSP
 import joblib
 
 from antismash.common import (
@@ -26,6 +25,7 @@ from antismash.common import (
     fasta,
     utils,
 )
+from antismash.common.hmmscan_refinement import HSP
 from antismash.common.secmet.qualifiers import SecMetQualifier
 from antismash.common.secmet.locations import location_from_string
 from antismash.common.signature import HmmSignature
