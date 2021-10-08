@@ -8,9 +8,8 @@ from collections import defaultdict
 import logging
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-from Bio.SearchIO._model.hsp import HSP
-
 from antismash.common import fasta, path, serialiser
+from antismash.common.hmmscan_refinement import HSP
 from antismash.common.secmet import Record, Protocluster, CDSFeature, FeatureLocation
 from antismash.common.secmet.locations import locations_overlap
 from antismash.common.secmet.qualifiers import GeneFunction, SecMetQualifier
