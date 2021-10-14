@@ -10,10 +10,12 @@
 from collections import defaultdict
 import cProfile
 from datetime import datetime
+import importlib
 from io import StringIO
 import glob
 import logging
 import os
+import pkgutil
 import pstats
 import shutil
 import time
@@ -30,6 +32,7 @@ from antismash.config import (
 )
 from antismash.common import logs, record_processing, serialiser
 from antismash.common.module_results import ModuleResults, DetectionResults
+from antismash.common.path import get_full_path
 from antismash.common.secmet import Record
 from antismash.common import subprocessing
 from antismash.detection import (cassis,
@@ -42,24 +45,21 @@ from antismash.detection import (cassis,
                                  sideloader,
                                  tigrfam,
                                  )
-from antismash.modules import (active_site_finder,
-                               clusterblast,
-                               cluster_compare,
-                               lanthipeptides,
-                               lassopeptides,
-                               nrps_pks,
-                               pfam2go,
-                               rrefinder,
-                               sactipeptides,
-                               smcog_trees,
-                               t2pks,
-                               thiopeptides,
-                               tta,
-                               )
 from antismash.outputs import html, svg
 from antismash.custom_typing import AntismashModule
 
 __version__ = "6.0.0"
+
+
+def _gather_analysis_modules() -> List[AntismashModule]:
+    modules = []
+    for module_data in pkgutil.walk_packages([get_full_path(__file__, "modules")]):
+        module = importlib.import_module(f"antismash.modules.{module_data.name}")
+        modules.append(cast(AntismashModule, module))
+    return modules
+
+
+_ANALYSIS_MODULES = _gather_analysis_modules()
 
 
 def get_all_modules() -> List[AntismashModule]:
@@ -96,10 +96,7 @@ def get_analysis_modules() -> List[AntismashModule]:
         Returns:
             a list of modules
     """
-    return [smcog_trees, tta, lanthipeptides, thiopeptides, nrps_pks, clusterblast,  # type: ignore
-            sactipeptides, lassopeptides, active_site_finder, pfam2go, t2pks, # type: ignore
-            rrefinder, cluster_compare,  # type: ignore
-           ]
+    return list(_ANALYSIS_MODULES)
 
 
 def get_output_modules() -> List[AntismashModule]:
@@ -636,10 +633,7 @@ def _run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
     logging.info("antiSMASH version: %s", options.version)
     _log_found_executables(options)
 
-    detection_modules = get_detection_modules()
-    analysis_modules = get_analysis_modules()
-    output_modules = get_output_modules()
-    modules = detection_modules + analysis_modules + output_modules
+    modules = get_all_modules()
 
     if options.list_plugins:
         list_plugins(modules)
@@ -691,7 +685,7 @@ def _run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
         # and skip analysis if detection didn't find anything
         if not record.get_regions():
             continue
-        analysis_timings = analyse_record(record, options, analysis_modules, module_results)
+        analysis_timings = analyse_record(record, options, get_analysis_modules(), module_results)
         timings.update(analysis_timings)
         results.timings_by_record[record.id] = timings
 
