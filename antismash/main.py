@@ -46,6 +46,7 @@ from antismash.detection import (cassis,
                                  tigrfam,
                                  )
 from antismash.outputs import html, svg
+from antismash.support import genefinding
 from antismash.custom_typing import AntismashModule
 
 __version__ = "6.0.0"
@@ -71,7 +72,11 @@ def get_all_modules() -> List[AntismashModule]:
         Returns:
             a list of modules
     """
-    return get_detection_modules() + get_analysis_modules() + get_output_modules()
+    all_modules = []
+    for modules in [get_detection_modules(), get_analysis_modules(),
+                    get_output_modules(), get_support_modules()]:
+        all_modules.extend(modules)
+    return list(all_modules)
 
 
 def get_detection_modules() -> List[AntismashModule]:
@@ -109,6 +114,19 @@ def get_output_modules() -> List[AntismashModule]:
             a list of modules
     """
     return [html]  # type: ignore  # a lot of casting avoided
+
+
+def get_support_modules() -> List[AntismashModule]:
+    """ Return a list of support modules
+
+        Arguments:
+            None
+
+        Returns:
+            a list of modules
+    """
+    genef = cast(AntismashModule, genefinding)
+    return [genef]
 
 
 def verify_options(options: ConfigType, modules: List[AntismashModule]) -> bool:
