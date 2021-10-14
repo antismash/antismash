@@ -9,7 +9,7 @@ from unittest import mock, TestCase
 from antismash import config
 from antismash.common import record_processing
 from antismash.common.test.helpers import get_path_to_nisin_fasta
-from antismash.detection import genefinding
+from antismash.support import genefinding
 
 
 class TestMacBug(TestCase):

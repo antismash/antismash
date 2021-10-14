@@ -11,7 +11,7 @@ from antismash.config import get_config, update_config
 from antismash.common.record_processing import parse_input_sequence, pre_process_sequences
 from antismash.common.path import get_full_path
 from antismash.common.test.helpers import get_simple_options
-from antismash.detection import genefinding
+from antismash.support import genefinding
 
 
 class TestGlimmerHMM(TestCase):

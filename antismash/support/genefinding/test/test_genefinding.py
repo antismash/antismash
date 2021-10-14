@@ -7,7 +7,7 @@
 import unittest
 from argparse import Namespace
 
-from antismash.detection.genefinding import check_options, is_enabled
+from antismash.support.genefinding import check_options, is_enabled
 
 
 class TestCore(unittest.TestCase):
