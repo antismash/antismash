@@ -190,7 +190,7 @@ Options
         """ Custom usage generator """
         if self._show_all:
             formatter = self._get_formatter()
-            formatter.add_usage(self.usage, self._actions, self._mutually_exclusive_groups)  # type: ignore
+            formatter.add_usage(self.usage, self._actions, self._mutually_exclusive_groups)
             return formatter.format_help()
         return "usage: {prog} [-h] [options ..] sequence".format(prog=self.prog) + "\n"
 

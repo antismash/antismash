@@ -24,6 +24,7 @@ class Counter:
 def convert_module(module: secmet.Module) -> Dict[str, Any]:
     domains = []
     for domain in module.domains:
+        assert domain.domain
         # don't include Condensation domain subtypes, since PKS subtypes aren't included
         if domain.domain.startswith("Condensation_"):
             domains.append("Condensation")
@@ -41,7 +42,7 @@ def convert_cds(cds: secmet.CDSFeature) -> Dict[str, Any]:
         "location": str(cds.location),
         "function": str(cds.gene_function),
         "components": {
-            "secmet": cds.sec_met.domain_ids,
+            "secmet": [] if not cds.sec_met else cds.sec_met.domain_ids,
             "modules": [convert_module(module) for module in cds.modules],
         },
     }
