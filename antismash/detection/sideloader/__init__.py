@@ -115,7 +115,7 @@ def run_on_record(record: Record, previous_results: Optional[SideloadedResults],
     if previous_results:
         return previous_results
 
-    return load_single_record_annotations(options.sideload, record.id, options.sideload_simple)
+    return load_single_record_annotations(options.sideload, record, options.sideload_simple)
 
 
 def check_prereqs(_options: ConfigType) -> List[str]:
