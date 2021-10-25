@@ -273,6 +273,15 @@ class ReadableFullPathAction(FullPathAction):
         super().__call__(parser, namespace, values, option_string)
 
 
+class SplitCommaAction(argparse.Action):
+    """ An argparse.Action to split an argument in the form of a comma separated
+        list into a list of strings.
+    """
+    def __call__(self, parser: argparse.ArgumentParser, namespace: argparse.Namespace,
+                 values: Any, option_string: str = None) -> None:
+        setattr(namespace, self.dest, str(values).split(","))
+
+
 class ModuleArgs:
     """ The vehicle for adding module specific arguments in sane groupings.
         Each module should have a unique prefix for their arguments, for clarity
