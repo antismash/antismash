@@ -113,6 +113,9 @@ class SubRegionAnnotation:
             return False
         return vars(self) == vars(other)
 
+    def __str__(self) -> str:
+        return f"Subregion({self.tool.name}, {self.start}-{self.end}, {self.label})"
+
 
 class ProtoclusterAnnotation:
     """ A class for containing arbitrary data about a sideloaded protocluster annotation """
@@ -192,6 +195,9 @@ class ProtoclusterAnnotation:
         if not isinstance(other, ProtoclusterAnnotation):
             return False
         return vars(self) == vars(other)
+
+    def __str__(self) -> str:
+        return f"Protocluster({self.tool.name}, {self.start}-{self.end}, {self.product})"
 
 
 class SideloadedResults(DetectionResults):
