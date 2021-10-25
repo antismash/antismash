@@ -41,3 +41,28 @@ class TestRegeneration(unittest.TestCase):
                 "some_option_name": ["yes"],
                 "some_other_detail": ["first", "second", "etc"]
             }
+
+
+class TestArgs(unittest.TestCase):
+    def tearDown(self):
+        destroy_config()
+
+    def test_split(self):
+        names = ["a", "b", "c"]
+        config = build_config(["--sideload-by-cds", ",".join(names)], isolated=True,
+                              modules=[sideloader])
+        assert config.sideload_cds_markers == names
+
+        # and a single
+        config = build_config(["--sideload-by-cds", "a"], isolated=True,
+                              modules=[sideloader])
+        assert config.sideload_cds_markers == ["a"]
+
+    def test_negative_padding(self):
+        config = build_config(["--sideload-size-by-cds", "-1"], isolated=True,
+                              modules=[sideloader])
+        assert sideloader.check_options(config)
+
+        config = build_config(["--sideload-size-by-cds", "1000"], isolated=True,
+                              modules=[sideloader])
+        assert not sideloader.check_options(config)

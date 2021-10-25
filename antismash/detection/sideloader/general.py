@@ -23,13 +23,17 @@ _SCHEMA_FILE = path.get_full_path(__file__, "schemas", "general", "schema.json")
 
 
 def load_single_record_annotations(annotation_files: List[str], record: Record,
-                                   manual: Optional[SideloadSimple]) -> SideloadedResults:
+                                   manual: Optional[SideloadSimple],
+                                   cds_markers: Optional[List[str]] = None,
+                                   cds_marker_padding: int = 20000) -> SideloadedResults:
     """ Loads generic subregion/protocluster annotations from JSON files.
 
         Arguments:
             annotation_file: the paths to the JSON files containing annotations
             record_id: a record id to restrict annotation generation to
             manual: an optional manually specified area
+            cds_markers: a list of CDS locus tags to manually generate subregions around
+            cds_marker_padding: the size to include, in nucleotides, on each side of any CDS marker
 
         Returns:
             a GenericAnnotations instance containing all information from the
@@ -49,10 +53,21 @@ def load_single_record_annotations(annotation_files: List[str], record: Record,
             for area in json_record.get("protoclusters", []):
                 protoclusters.append(ProtoclusterAnnotation.from_schema_json(area, tool))
 
+    tool = Tool("manual", "N/A", "command line argument", {})
     if manual and manual.accession == record.id:
-        tool = Tool("manual", "N/A", "command line argument", {})
         subregion = SubRegionAnnotation(manual.start, manual.end, "", tool, {})
         subregions.append(subregion)
+
+    if cds_markers:
+        for name in cds_markers:
+            try:
+                cds = record.get_cds_by_name(name)
+            except KeyError:
+                continue
+            start = max(cds.location.start - cds_marker_padding, 0)
+            end = min(cds.location.end + cds_marker_padding, len(record.seq))
+            subregion = SubRegionAnnotation(start, end, name, tool, {})
+            subregions.append(subregion)
 
     for area in itertools.chain(protoclusters, subregions):
         location = FeatureLocation(area.start, area.end)
