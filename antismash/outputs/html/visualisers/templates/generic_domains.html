@@ -15,7 +15,7 @@
     {% endif %}
     <div class="nrps-pks-domain-buttons">
       {{switch("Selected features only", "domains-selected-only")}}
-      {{switch("Expand to show all names", "domains-expand-full")}}
+      {{switch("Expand to show all names", "domains-expand-full", starts_on=True)}}
     </div>
     <div class="{{tool}}-details-svg" id="{{region.anchor_id}}-{{tool}}-details-svg" style="overflow: auto;"></div>
 </div>
