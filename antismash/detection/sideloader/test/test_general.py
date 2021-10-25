@@ -6,9 +6,15 @@
 
 import unittest
 
+from antismash.common.test.helpers import DummyRecord
 from antismash.detection.sideloader import general, _parse_arg
 
 from .test_loading import GOOD_FILE
+
+
+def make_record(name):
+    features = []
+    return DummyRecord(features=features, record_id=name)
 
 
 class TestSimple(unittest.TestCase):
@@ -24,10 +30,10 @@ class TestSimple(unittest.TestCase):
                 _parse_arg(bad)
 
     def test_result(self):
-        result = general.load_single_record_annotations([], "AXC", _parse_arg("AcC:1-50"))
+        result = general.load_single_record_annotations([], make_record("AXC"), _parse_arg("AcC:1-50"))
         assert not result.subregions
 
-        result = general.load_single_record_annotations([], "AcC", _parse_arg("AcC:1-50"))
+        result = general.load_single_record_annotations([], make_record("AcC"), _parse_arg("AcC:1-50"))
         assert not result.protoclusters
         assert len(result.subregions) == 1
         sub = result.subregions[0]
@@ -39,24 +45,24 @@ class TestSimple(unittest.TestCase):
 
 class TestSingleFile(unittest.TestCase):
     def test_filtering_by_record_id(self):
-        results = general.load_single_record_annotations([GOOD_FILE], "HM219853.1", None)
+        results = general.load_single_record_annotations([GOOD_FILE], make_record("HM219853.1"), None)
         assert len(results.subregions) == 1
         assert results.subregions[0].label == "Polyketide"
         assert len(results.protoclusters) == 1
         assert results.protoclusters[0].product == "T1PKS"
 
-        results = general.load_single_record_annotations([GOOD_FILE], "not-HM219853.1", None)
+        results = general.load_single_record_annotations([GOOD_FILE], make_record("not-HM219853.1"), None)
         assert len(results.subregions) == 1
         assert results.subregions[0].label == "unknown"
         assert len(results.protoclusters) == 1
         assert results.protoclusters[0].product == "NRPS"
 
-        results = general.load_single_record_annotations([GOOD_FILE], "nomatch", None)
+        results = general.load_single_record_annotations([GOOD_FILE], make_record("nomatch"), None)
         assert not results.subregions
         assert not results.protoclusters
 
     def test_multi_file(self):
-        results = general.load_single_record_annotations([GOOD_FILE, GOOD_FILE], "HM219853.1", None)
+        results = general.load_single_record_annotations([GOOD_FILE, GOOD_FILE], make_record("HM219853.1"), None)
         assert len(results.subregions) == 2
         assert len(results.protoclusters) == 2
         for sub in results.subregions:
