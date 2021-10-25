@@ -49,6 +49,22 @@ class TestSimple(unittest.TestCase):
         with self.assertRaisesRegex(AntismashInputError, "area contains no complete CDS"):
             general.load_single_record_annotations([], make_record("test"), _parse_arg("test:1-50"))
 
+    def test_cds_marker(self):
+        cdses = [DummyCDS(locus_tag="needle", start=20, end=26),
+                 DummyCDS(locus_tag="miss", start=90, end=96)]
+        record = DummyRecord(seq="A" * 100, features=cdses)
+        result = general.load_single_record_annotations([], record, None, cds_markers=["nothing"])
+        assert not result.subregions
+
+        padding = 50
+        result = general.load_single_record_annotations([], record, None, cds_markers=["needle"],
+                                                        cds_marker_padding=padding)
+        assert len(result.subregions) == 1
+        sub = result.subregions[0]
+        assert sub.tool.name == "manual"
+        assert sub.start == 0  # shouldn't be negative when padding applied
+        assert sub.end == cdses[0].location.end + padding
+
 
 class TestSingleFile(unittest.TestCase):
     def test_filtering_by_record_id(self):

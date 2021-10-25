@@ -11,7 +11,7 @@ from typing import Any, AnyStr, Dict, List, Optional
 from antismash.common.module_results import DetectionResults
 from antismash.common.secmet import Record
 from antismash.config import ConfigType
-from antismash.config.args import ModuleArgs, MultipleFullPathAction
+from antismash.config.args import ModuleArgs, MultipleFullPathAction, SplitCommaAction
 
 from .data_structures import SideloadedResults, SideloadSimple
 from .general import load_single_record_annotations
@@ -76,6 +76,19 @@ def get_arguments() -> ModuleArgs:
                     help=("Sideload a single subregion in record ACCESSION from START "
                           "to END. Positions are expected to be 0-indexed, "
                           "with START inclusive and END exclusive."))
+    args.add_option("sideload-by-cds",
+                    dest="sideload_cds_markers",
+                    metavar="LOCUS1,LOCUS2,...",
+                    action=SplitCommaAction,
+                    default=[],
+                    help="Sideload a subregion around each CDS with the given locus tags.")
+    args.add_option("sideload-size-by-cds",
+                    dest="sideload_cds_padding",
+                    metavar="NUCLEOTIDES",
+                    type=int,
+                    default=20000,
+                    help=("Additional padding, in nucleotides, of subregions to create"
+                          " for sideloaded subregions by CDS. (default: %(default)s)"))
     return args
 
 
@@ -89,14 +102,19 @@ def check_options(options: ConfigType) -> List[str]:
             errors.append("Extra annotation JSON cannot be found at '%s'" % filename)
     if len(set(options.sideload)) != len(options.sideload):
         errors.append("Sideloaded filenames contain duplicates")
-
+    if options.sideload_cds_padding < 0:
+        errors.append(f"Negative padding size given: {options.sideload_cds_padding}")
     return errors
 
 
 def is_enabled(options: ConfigType) -> bool:
     """  Uses the supplied options to determine if the module should be run
     """
-    return options.sideload or options.sideload_simple
+    return any([
+        options.sideload,
+        options.sideload_simple,
+        options.sideload_cds_markers,
+    ])
 
 
 def regenerate_previous_results(results: Dict[str, Any], record: Record,
@@ -115,7 +133,12 @@ def run_on_record(record: Record, previous_results: Optional[SideloadedResults],
     if previous_results:
         return previous_results
 
-    return load_single_record_annotations(options.sideload, record, options.sideload_simple)
+    return load_single_record_annotations(
+        options.sideload, record,
+        options.sideload_simple,
+        options.sideload_cds_markers,
+        options.sideload_cds_padding,
+    )
 
 
 def check_prereqs(_options: ConfigType) -> List[str]:
