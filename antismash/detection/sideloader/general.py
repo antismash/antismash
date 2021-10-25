@@ -3,10 +3,12 @@
 
 """ Generic sideloading """
 
+import itertools
 from typing import List, Optional
 
 from antismash.common import path
-from antismash.common.secmet import Record
+from antismash.common.errors import AntismashInputError
+from antismash.common.secmet import FeatureLocation, Record
 
 from .data_structures import (
     ProtoclusterAnnotation,
@@ -51,5 +53,10 @@ def load_single_record_annotations(annotation_files: List[str], record: Record,
         tool = Tool("manual", "N/A", "command line argument", {})
         subregion = SubRegionAnnotation(manual.start, manual.end, "", tool, {})
         subregions.append(subregion)
+
+    for area in itertools.chain(protoclusters, subregions):
+        location = FeatureLocation(area.start, area.end)
+        if not record.get_cds_features_within_location(location):
+            raise AntismashInputError(f"sideloaded area contains no complete CDS features in {record.id}: {area}")
 
     return SideloadedResults(record.id, subregions, protoclusters)

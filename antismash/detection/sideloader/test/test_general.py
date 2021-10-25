@@ -6,14 +6,17 @@
 
 import unittest
 
-from antismash.common.test.helpers import DummyRecord
+from antismash.common.errors import AntismashInputError
+from antismash.common.test.helpers import DummyCDS, DummyRecord
 from antismash.detection.sideloader import general, _parse_arg
 
 from .test_loading import GOOD_FILE
 
 
-def make_record(name):
+def make_record(name, cds_start=-1):
     features = []
+    if cds_start > -1:
+        features.append(DummyCDS(start=cds_start, end=cds_start + 3))
     return DummyRecord(features=features, record_id=name)
 
 
@@ -33,7 +36,7 @@ class TestSimple(unittest.TestCase):
         result = general.load_single_record_annotations([], make_record("AXC"), _parse_arg("AcC:1-50"))
         assert not result.subregions
 
-        result = general.load_single_record_annotations([], make_record("AcC"), _parse_arg("AcC:1-50"))
+        result = general.load_single_record_annotations([], make_record("AcC", 30), _parse_arg("AcC:1-50"))
         assert not result.protoclusters
         assert len(result.subregions) == 1
         sub = result.subregions[0]
@@ -42,16 +45,20 @@ class TestSimple(unittest.TestCase):
         assert sub.end == 50
         assert result.record_id == "AcC"
 
+    def test_empty(self):
+        with self.assertRaisesRegex(AntismashInputError, "area contains no complete CDS"):
+            general.load_single_record_annotations([], make_record("test"), _parse_arg("test:1-50"))
+
 
 class TestSingleFile(unittest.TestCase):
     def test_filtering_by_record_id(self):
-        results = general.load_single_record_annotations([GOOD_FILE], make_record("HM219853.1"), None)
+        results = general.load_single_record_annotations([GOOD_FILE], make_record("HM219853.1", 250), None)
         assert len(results.subregions) == 1
         assert results.subregions[0].label == "Polyketide"
         assert len(results.protoclusters) == 1
         assert results.protoclusters[0].product == "T1PKS"
 
-        results = general.load_single_record_annotations([GOOD_FILE], make_record("not-HM219853.1"), None)
+        results = general.load_single_record_annotations([GOOD_FILE], make_record("not-HM219853.1", 1250), None)
         assert len(results.subregions) == 1
         assert results.subregions[0].label == "unknown"
         assert len(results.protoclusters) == 1
@@ -62,7 +69,7 @@ class TestSingleFile(unittest.TestCase):
         assert not results.protoclusters
 
     def test_multi_file(self):
-        results = general.load_single_record_annotations([GOOD_FILE, GOOD_FILE], make_record("HM219853.1"), None)
+        results = general.load_single_record_annotations([GOOD_FILE, GOOD_FILE], make_record("HM219853.1", 250), None)
         assert len(results.subregions) == 2
         assert len(results.protoclusters) == 2
         for sub in results.subregions:
