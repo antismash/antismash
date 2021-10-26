@@ -217,6 +217,7 @@ def get_clusters_from_region(region: Region) -> List[Dict[str, Any]]:
                       "neighbouring_start": cluster.location.start,
                       "neighbouring_end": cluster.location.end,
                       "product": cluster.product,
+                      "category": cluster.product_category,
                       "height": cluster_groupings[cluster] * 2 + start_index,
                       "kind": "protocluster",
                       "prefix": prefix}

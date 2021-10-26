@@ -19,11 +19,7 @@
     }
 }
 
-.hybrid {
-    @include secmet(midnightblue, lightsteelblue, midnightblue);
-}
-
-@mixin PKS {
+.PKS {
     @include secmet(purple, sandybrown, purple);
 }
 
@@ -35,48 +31,12 @@
     @include secmet(white, purple);
 }
 
-@mixin RiPP {
+.RiPP {
     @include secmet(white, royalblue);
 }
 
 @mixin osmolyte {
     @include secmet(firebrick, yellowgreen, firebrick);
-}
-
-.T1PKS {
-    @include PKS;
-}
-
-.transAT-PKS {
-    @include PKS;
-}
-
-.transAT-PKS-like {
-    @extend .transAT-PKS;
-}
-
-.T2PKS {
-    @include PKS;
-}
-
-.T3PKS {
-    @include PKS;
-}
-
-.hglE-KS {
-    @include PKS;
-}
-
-.PpyS-KS {
-    @include PKS;
-}
-
-.PKS-like {
-    @include PKS;
-}
-
-.prodigiosin {
-    @include PKS;
 }
 
 .arylpolyene {
@@ -97,22 +57,6 @@
 
 .NRPS {
     @include secmet(white, seagreen);
-}
-
-.NRPS-like {
-    @extend .NRPS;
-}
-
-.CDPS {
-    @extend .NRPS;
-}
-
-.thioamide-NRP {
-    @extend .NRPS;
-}
-
-.NAPAA {
-    @extend .NRPS;
 }
 
 .terpene {
@@ -147,30 +91,6 @@
     @include lantibiotic;
 }
 
-.RiPP-like {
-    @include RiPP;
-}
-
-.RRE-containing {
-    @include RiPP;
-}
-
-.RaS-RiPP {
-    @include RiPP;
-}
-
-.fungal-RiPP {
-    @include RiPP;
-}
-
-.ranthipeptide {
-    @include RiPP;
-}
-
-.redox-cofactor {
-    @include RiPP;
-}
-
 @mixin thiolated_ripp {
     @include secmet(black, gold, black);
 }
@@ -185,50 +105,6 @@
 
 .thioamitides {
     @include thiolated_ripp;
-}
-
-.linaridin {
-    @include RiPP;
-}
-
-.cyanobactin {
-    @include RiPP;
-}
-
-.glycocin {
-    @include RiPP;
-}
-
-.lassopeptide {
-    @include RiPP;
-}
-
-.sactipeptide {
-    @include RiPP;
-}
-
-.bottromycin {
-    @include RiPP;
-}
-
-.microviridin {
-    @include RiPP;
-}
-
-.proteusin {
-    @include RiPP;
-}
-
-.epipeptide {
-    @include RiPP;
-}
-
-.cyclic-lactone-autoinducer {
-    @include RiPP;
-}
-
-.spliceotide {
-    @include RiPP;
 }
 
 .blactam {
@@ -303,10 +179,6 @@
     @include secmet(black, mediumaquamarine, black);
 }
 
-.guanidinotides {
-    @include RiPP;
-}
-
 .PBDE {
     @include hydrocarbon;
 }
@@ -337,4 +209,8 @@
 
 .halogenated {
     @extend .unknown;
+}
+
+.hybrid { // needs to remain at the bottom to override all the above
+    @include secmet(midnightblue, lightsteelblue, midnightblue);
 }

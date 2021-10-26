@@ -12,7 +12,7 @@ from antismash.detection import hmm_detection
 
 class TestClusterCSS(unittest.TestCase):
     def test_css_matches_rules(self):
-        defined_clusters = set(name for name in hmm_detection.get_supported_cluster_types("loose"))
+        rules = hmm_detection._get_rules("loose")
         available_classes = set()
         base_classes = {
             "hybrid",  # a special case used at the javascript level
@@ -24,8 +24,12 @@ class TestClusterCSS(unittest.TestCase):
                 if line.startswith('.'):
                     class_ = line[1:].split()[0]
                     available_classes.add(class_)
-        missing_css = defined_clusters - available_classes
+        missing_css = [f"{rule.name} (category: {rule.category})"
+                       for rule in rules
+                       if not available_classes.intersection({rule.name, rule.category})]
         assert not missing_css
         # allow for the extra base classes and hybrids
-        extra_css = available_classes - defined_clusters - base_classes
+        products = {rule.name for rule in rules}
+        categories = {rule.category for rule in rules}
+        extra_css = available_classes.difference(products, categories, base_classes)
         assert not extra_css

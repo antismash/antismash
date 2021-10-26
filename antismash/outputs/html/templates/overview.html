@@ -29,11 +29,7 @@
         <div style="display: flex; flex-wrap: wrap">
         {% for record in records %}
           {% for region in record.regions %}
-            {% set hybrid_text = "" %}
-            {% if region.products | length > 1 %}
-                {% set hybrid_text = "hybrid " %}
-            {% endif %}
-            <div class="regbutton {{region.get_product_string()}} {{hybrid_text}}{{region.anchor_id}}">
+            {{region_table.region_button(region, "div")}}
               <a href="#{{region.anchor_id}}">{{record.record_index}}.{{region.get_region_number()}}</a>
             </div>
           {% endfor %}
