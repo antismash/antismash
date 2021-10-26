@@ -3,7 +3,7 @@
 
 """ Handles HTML generation for the clusterblast variants """
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from antismash.common import path
 from antismash.common.html_renderer import FileTemplate, HTMLSections, Markup
@@ -17,7 +17,7 @@ from .results import ClusterCompareResults, ScoresByProtocluster
 DISPLAY_LIMIT = 10
 
 
-def will_handle(_products: List[str]) -> bool:
+def will_handle(_products: List[str], _product_categories: Set[str]) -> bool:
     """ Relevant to every region, so return True for every product """
     return True
 

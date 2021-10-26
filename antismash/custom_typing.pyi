@@ -7,7 +7,7 @@
 # pylint: disable=pointless-statement,unused-argument,missing-docstring,multiple-statements
 
 from types import ModuleType
-from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Union
 
 from .config.args import ModuleArgs
 
@@ -62,7 +62,7 @@ class AntismashModule(ModuleType):
 
     # not implemented by every module, but by most
     @staticmethod
-    def will_handle(products: List[str]) -> bool: ...
+    def will_handle(products: List[str], categories: Set[str]) -> bool: ...
 
     @staticmethod
     def generate_html(region_layer: RegionLayer, results: Optional[ModuleResults],

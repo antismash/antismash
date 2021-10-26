@@ -10,7 +10,7 @@
 
 import itertools
 import string
-from typing import Dict, Iterator, List, Optional, Tuple, Union
+from typing import Dict, Iterator, List, Optional, Set, Tuple, Union
 
 from antismash.common import path
 from antismash.common.html_renderer import FileTemplate, HTMLSections
@@ -93,11 +93,9 @@ _CLASS_BY_NAME = {
 }
 
 
-def will_handle(products: List[str]) -> bool:
-    """ Returns true if one or more relevant products are present """
-    return bool(set(products).intersection({"NRPS", "T1PKS", "T2PKS", "transAT-PKS",
-                                            "NAPAA", "thioamide-NRP",
-                                            "NRPS-like", "PKS-like"}))
+def will_handle(products: List[str], product_categories: Set[str]) -> bool:
+    """ Returns true if one or more relevant products or product categories are present """
+    return bool(product_categories.intersection({"NRPS", "PKS"}))
 
 
 def _get_domain_abbreviation(domain_name: str) -> str:

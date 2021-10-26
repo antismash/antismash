@@ -3,7 +3,7 @@
 
 """ HTML generation for the thiopeptides module """
 
-from typing import List
+from typing import List, Set
 
 from antismash.common import path
 from antismash.common.html_renderer import HTMLSections, FileTemplate
@@ -13,8 +13,8 @@ from antismash.common.secmet import Region, Prepeptide
 from .specific_analysis import ThioResults
 
 
-def will_handle(products: List[str]) -> bool:
-    """ HTML generation only occurs if this function reutrns True """
+def will_handle(products: List[str], _product_categories: Set[str]) -> bool:
+    """ Returns true if one or more relevant products or product categories are present """
     return 'thiopeptide' in products
 
 
