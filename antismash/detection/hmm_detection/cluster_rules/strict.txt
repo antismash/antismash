@@ -198,7 +198,8 @@ RULE thioamitides
                and TfuA
 
 RULE linaridin
-    CATEGORY other
+    CATEGORY RiPP
+    COMMENT Linear arid peptides like cypemycin (HQ148718) and salinipeptin (MG788286)
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS cypemycin or cypI
