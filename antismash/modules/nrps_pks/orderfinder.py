@@ -36,7 +36,7 @@ def analyse_biosynthetic_order(nrps_pks_features: List[CDSFeature],
     compound_predictions: List[CandidateClusterPrediction] = []
     # Find NRPS/PKS gene candidate_clusters
     candidate_clusters = [cluster for cluster in record.get_candidate_clusters()
-                             if will_handle(cluster.products)]
+                          if will_handle(cluster.products, cluster.product_categories)]
     if not candidate_clusters:
         return []
     # Predict biosynthetic gene order in candidate clusters using starter domains,

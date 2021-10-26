@@ -4,7 +4,7 @@
 """ Handles HTML output for sactipeptides """
 
 from collections import defaultdict
-from typing import Dict, List
+from typing import Dict, List, Set
 
 from antismash.common import path
 from antismash.common.html_renderer import HTMLSections, FileTemplate
@@ -14,8 +14,8 @@ from antismash.common.layers import RegionLayer, RecordLayer, OptionsLayer
 from .specific_analysis import SactiResults
 
 
-def will_handle(products: List[str]) -> bool:
-    """ Returns True if this module can handle the provided region products """
+def will_handle(products: List[str], _product_categories: Set[str]) -> bool:
+    """ Returns true if one or more relevant products or product categories are present """
     return 'sactipeptide' in products
 
 

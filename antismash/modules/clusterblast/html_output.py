@@ -3,7 +3,7 @@
 
 """ Handles HTML generation for the clusterblast variants """
 
-from typing import List
+from typing import List, Set
 
 from antismash.common import path
 from antismash.common.html_renderer import HTMLSections, FileTemplate, Markup
@@ -12,9 +12,8 @@ from antismash.common.layers import RegionLayer, RecordLayer, OptionsLayer
 from .results import ClusterBlastResults
 
 
-def will_handle(_products: List[str]) -> bool:
-    """ Clusterblast is relevant to every region, so return True for every
-        product """
+def will_handle(_products: List[str], _product_categories: Set[str]) -> bool:
+    """ Relevant to every region, so return True for every product """
     return True
 
 

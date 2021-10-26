@@ -55,7 +55,7 @@ def has_enough_results(_record: Record, region: Region, results: Dict[str, Modul
         Returns:
             True if an HTML section would be created
     """
-    if not nrps_pks.will_handle(region.products) or nrps_pks.__name__ not in results:
+    if not nrps_pks.will_handle(region.products, region.product_categories) or nrps_pks.__name__ not in results:
         return False
     analysis_results = results[nrps_pks.__name__]
     assert isinstance(analysis_results, AnalysisResults)

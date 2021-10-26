@@ -4,7 +4,7 @@
 """ Manages HTML construction for the Lanthipeptide module
 """
 
-from typing import List
+from typing import List, Set
 
 from antismash.common import path
 from antismash.common.html_renderer import HTMLSections, FileTemplate
@@ -13,8 +13,8 @@ from antismash.common.layers import RegionLayer, RecordLayer, OptionsLayer
 from .specific_analysis import LanthiResults
 
 
-def will_handle(products: List[str]) -> bool:
-    """ Returns True if the products provided are relevant to the module """
+def will_handle(products: List[str], _product_categories: Set[str]) -> bool:
+    """ Returns true if one or more relevant products or product categories are present """
     return any(map(lambda p: p.startswith("lanthipeptide"), products))
 
 

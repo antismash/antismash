@@ -210,7 +210,7 @@ class RegionLayer:
         for plugin in self.record.options.plugins:
             if not hasattr(plugin, 'will_handle'):
                 continue
-            if plugin.will_handle(self.products):
+            if plugin.will_handle(self.products, self.product_categories):
                 self.handlers.append(plugin)
         return self.handlers
 

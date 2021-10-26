@@ -135,7 +135,7 @@ def generate_html_sections(records: List[RecordLayer], results: Dict[str, Dict[s
         for region in record.regions:
             sections = []
             for handler in region.handlers:
-                if handler.will_handle(region.products):
+                if handler.will_handle(region.products, region.product_categories):
                     handler_results = record_result.get(handler.__name__)
                     if handler_results is None:
                         continue
@@ -207,11 +207,12 @@ def find_plugins_for_cluster(plugins: List[AntismashModule],
                              cluster: Dict[str, Any]) -> List[AntismashModule]:
     "Find a specific plugin responsible for a given gene cluster type"
     products = cluster['products']
+    categories = set(cluster['product_categories'])
     handlers = []
     for plugin in plugins:
         if not hasattr(plugin, 'will_handle'):
             continue
-        if plugin.will_handle(products):
+        if plugin.will_handle(products, categories):
             handlers.append(plugin)
     return handlers
 

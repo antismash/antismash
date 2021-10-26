@@ -263,10 +263,8 @@ class TestRREFinder(unittest.TestCase):
             assert not is_ripp(ripp[1:])
 
     def test_will_handle(self):
-        ripp_products = get_supported_cluster_types("loose", "RiPP")
-        expected = sorted(ripp_products)
-        assert will_handle(expected)
-        assert not will_handle([ripp[1:] for ripp in expected])
+        assert will_handle(["prod1", "prod2"], {"RiPP"})
+        assert not will_handle(["prod1", "prod2"], {"nRiPP"})
 
     def test_check_hmm_hit(self):
         assert check_hmm_hit(self.hit_a1, self.min_length, self.bitscore_cutoff)
