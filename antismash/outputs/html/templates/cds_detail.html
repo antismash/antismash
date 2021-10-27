@@ -43,30 +43,30 @@
 
  {% if pfam_notes %}
  <br>
- <span class="bold">PFAM hits:</span><br>
+ <span class="bold">PFAM hits:</span>{{collapser_start(feature.get_name(), level="none")}}
  {% for note in pfam_notes %}
   {{note}}<br>
  {% endfor %}
- <br>
+ {{collapser_end()}}<br>
  {% endif %}
 
  {% if tigr_notes %}
  <br>
- <span class="bold">TIGRFam hits:</span><br>
+ <span class="bold">TIGRFam hits:</span>{{collapser_start(feature.get_name(), level="none")}}
  {% for note in tigr_notes %}
   {{note}}<br>
  {% endfor %}
- <br>
+ {{collapser_end()}}<br>
  {% endif %}
 
 
  {% if go_notes %}
   <br>
-  <span class="bold"> Gene Ontology terms for PFAM domains:</span><br>
+  <span class="bold"> Gene Ontology terms for PFAM domains:</span>{{collapser_start(feature.get_name(), level="none")}}
   {% for note in go_notes %}
    {{note}}<br>
   {% endfor %}
-  <br>
+ {{collapser_end()}}<br>
  {% endif %}
 </div>
 <div class="focus-urls">

@@ -7,7 +7,7 @@
 # pylint: disable=pointless-statement,unused-argument,missing-docstring,multiple-statements
 
 from types import ModuleType
-from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Union
 
 from .config.args import ModuleArgs
 
@@ -27,6 +27,7 @@ class ConfigType:
     def __getattr__(self, attr: str) -> Any: ...
 
     def __setattr__(self, attr: str, value: Any) -> None: ...
+
 
 class AntismashModule(ModuleType):
     """ A type to prevent all the many "ModuleType has no attribute 'run_on_record'"
@@ -61,7 +62,7 @@ class AntismashModule(ModuleType):
 
     # not implemented by every module, but by most
     @staticmethod
-    def will_handle(products: List[str]) -> bool: ...
+    def will_handle(products: List[str], categories: Set[str]) -> bool: ...
 
     @staticmethod
     def generate_html(region_layer: RegionLayer, results: Optional[ModuleResults],
@@ -74,3 +75,19 @@ class AntismashModule(ModuleType):
     @staticmethod
     def generate_javascript_data(record: Record, region: Region,
                                  results: ModuleResults) -> Dict[str, Any]: ...
+
+
+class VisualisationModule(ModuleType):
+    """ Modules that are pure visualisation, doing no analysis but potentially
+        requiring results from multiple other modules
+    """
+    @staticmethod
+    def has_enough_results(record: Record, region: Region, results: Dict[str, ModuleResults]) -> bool: ...
+
+    @staticmethod
+    def generate_html(region_layer: RegionLayer, results: Dict[str, ModuleResults],
+                      record_layer: RecordLayer, options: ConfigType) -> HTMLSections: ...
+
+    @staticmethod
+    def generate_javascript_data(record: Record, region: Region,
+                                 results: Dict[str, ModuleResults]) -> Dict[str, Any]: ...

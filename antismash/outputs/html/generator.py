@@ -3,10 +3,12 @@
 
 """ Responsible for creating the single web page results """
 
+import importlib
 import json
+import pkgutil
 import string
 import os
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import cast, Any, Dict, List, Tuple, Union
 
 from antismash.common import path, module_results
 from antismash.common.html_renderer import FileTemplate, HTMLSections, docs_link
@@ -15,9 +17,20 @@ from antismash.common.secmet import Record
 from antismash.common.json import JSONOrf
 from antismash.config import ConfigType
 from antismash.outputs.html import js
-from antismash.custom_typing import AntismashModule
+from antismash.custom_typing import AntismashModule, VisualisationModule
 
-from .pfam_json import gather_pfam_json
+
+def _get_visualisers() -> List[VisualisationModule]:
+    """ Gather all the visualisation-only submodules """
+    modules = []
+    for module_data in pkgutil.walk_packages([path.get_full_path(__file__, "visualisers")]):
+        module = importlib.import_module(f"antismash.outputs.html.visualisers.{module_data.name}")
+        assert hasattr(module, "has_enough_results"), f"bad visualisation module: {module_data.name}"
+        modules.append(cast(VisualisationModule, module))
+    return modules
+
+
+VISUALISERS = _get_visualisers()
 
 
 def build_json_data(records: List[Record], results: List[Dict[str, module_results.ModuleResults]],
@@ -61,7 +74,16 @@ def build_json_data(records: List[Record], results: List[Dict[str, module_result
                     if domains_by_region:
                         js_domains.append(domains_by_region)
                 if hasattr(handler, "generate_javascript_data"):
-                    region_results[handler.__name__] = handler.generate_javascript_data(record, region, results[i][handler.__name__])
+                    data = handler.generate_javascript_data(record, region, results[i][handler.__name__])
+                    region_results[handler.__name__] = data
+
+            for aggregator in VISUALISERS:
+                if not hasattr(aggregator, "generate_javascript_data"):
+                    continue
+                if aggregator.has_enough_results(record, region, results[i]):
+                    data = aggregator.generate_javascript_data(record, region, results[i])
+                    region_results[aggregator.__name__] = data
+
             if region_results:
                 js_results[RegionLayer.build_anchor_id(region)] = region_results
 
@@ -69,27 +91,26 @@ def build_json_data(records: List[Record], results: List[Dict[str, module_result
 
 
 def write_regions_js(records: List[Dict[str, Any]], output_dir: str,
-                     js_domains: List[Dict[str, Any]], pfam_domains: Dict[str, Dict[str, Any]],
+                     js_domains: List[Dict[str, Any]],
                      module_results: Dict[str, Dict[str, Dict[str, Any]]]) -> None:
     """ Writes out the cluster and domain JSONs to file for the javascript sections
         of code"""
 
     with open(os.path.join(output_dir, 'regions.js'), 'w') as handle:
-        handle.write("var recordData = %s;\n" % json.dumps(records, indent=4))
+        handle.write("var recordData = %s;\n" % json.dumps(records, indent=1))
         regions: Dict[str, Any] = {"order": []}
         for record in records:
             for region in record['regions']:
                 regions[region['anchor']] = region
                 regions['order'].append(region['anchor'])
-        handle.write('var all_regions = %s;\n' % json.dumps(regions, indent=4))
+        handle.write('var all_regions = %s;\n' % json.dumps(regions, indent=1))
 
         details = {
             "nrpspks": {region["id"]: region for region in js_domains},
-            "pfam": pfam_domains,
         }
-        handle.write('var details_data = %s;\n' % json.dumps(details, indent=4))
+        handle.write('var details_data = %s;\n' % json.dumps(details, indent=1))
 
-        handle.write('var resultsData = %s;\n' % json.dumps(module_results, indent=4))
+        handle.write('var resultsData = %s;\n' % json.dumps(module_results, indent=1))
 
 
 def generate_html_sections(records: List[RecordLayer], results: Dict[str, Dict[str, module_results.ModuleResults]],
@@ -114,22 +135,17 @@ def generate_html_sections(records: List[RecordLayer], results: Dict[str, Dict[s
         for region in record.regions:
             sections = []
             for handler in region.handlers:
-                if handler.will_handle(region.products):
+                if handler.will_handle(region.products, region.product_categories):
                     handler_results = record_result.get(handler.__name__)
                     if handler_results is None:
                         continue
                     sections.append(handler.generate_html(region, handler_results, record, options))
+            for aggregator in VISUALISERS:
+                if not hasattr(aggregator, "generate_html"):
+                    continue
+                if aggregator.has_enough_results(record.seq_record, region.region_feature, record_result):
+                    sections.append(aggregator.generate_html(region, record_result, record, options))
             record_details[region.get_region_number()] = sections
-            if any(record.get_pfam_domains_in_cds(cds) for cds in region.cds_children):
-                html = HTMLSections("pfam-domains")
-                template = FileTemplate(path.get_full_path(__file__, "templates", "pfam_domains.html"))
-                tooltip = """Shows Pfam domains found in each gene within the region.
-Click on each domain for more information about the domain's
-accession, location, description, and any relevant Gene Ontology.
-Domains with a bold border have Gene Ontology information. """
-                section = template.render(region=region, record=record, tooltip=tooltip)
-                html.add_detail_section("Pfam domains", section, "pfam-details")
-                sections.append(html)
         details[record.id] = record_details
     return details
 
@@ -140,8 +156,7 @@ def generate_webpage(records: List[Record], results: List[Dict[str, module_resul
 
     generate_searchgtr_htmls(records, options)
     json_records, js_domains, js_results = build_json_data(records, results, options)
-    pfam_domains = gather_pfam_json(records)
-    write_regions_js(json_records, options.output_dir, js_domains, pfam_domains, js_results)
+    write_regions_js(json_records, options.output_dir, js_domains, js_results)
 
     with open(os.path.join(options.output_dir, 'index.html'), 'w') as result_file:
         template = FileTemplate(path.get_full_path(__file__, "templates", "overview.html"))
@@ -188,14 +203,16 @@ def generate_webpage(records: List[Record], results: List[Dict[str, module_resul
         result_file.write(aux)
 
 
-def find_plugins_for_cluster(plugins: List[AntismashModule], cluster: Dict[str, Any]) -> List[AntismashModule]:
+def find_plugins_for_cluster(plugins: List[AntismashModule],
+                             cluster: Dict[str, Any]) -> List[AntismashModule]:
     "Find a specific plugin responsible for a given gene cluster type"
     products = cluster['products']
+    categories = set(cluster['product_categories'])
     handlers = []
     for plugin in plugins:
         if not hasattr(plugin, 'will_handle'):
             continue
-        if plugin.will_handle(products):
+        if plugin.will_handle(products, categories):
             handlers.append(plugin)
     return handlers
 

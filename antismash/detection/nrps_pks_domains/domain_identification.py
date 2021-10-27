@@ -31,6 +31,21 @@ from .module_identification import (
 from .modular_domain import ModularDomain
 
 
+DOMAIN_TYPE_MAPPING = {
+    'Condensation_DCL': 'Condensation',
+    'Condensation_LCL': 'Condensation',
+    'Condensation_Dual': 'Condensation',
+    'Condensation_Starter': 'Condensation',
+    'CXglyc': 'Condensation',
+    'Cglyc': 'Condensation',
+    'cMT': 'MT',
+    'oMT': 'MT',
+    'nMT': 'MT',
+    'Polyketide_cyc': 'Polyketide_cyc',
+    'Polyketide_cyc2': 'Polyketide_cyc',
+}
+
+
 class CDSResult:
     """ Stores and enables reconstruction of all results for a single CDS """
     def __init__(self, domain_hmms: List[HMMResult], motif_hmms: List[HMMResult],
@@ -78,6 +93,7 @@ class CDSResult:
         for domain, domain_feature in self.domain_features.items():
             if domain.hit_id == "PKS_KS":
                 sub = next(ks_sub)
+                domain_feature.domain_subtype = sub
             else:
                 sub = ""
             record.add_antismash_domain(domain_feature)
@@ -222,6 +238,8 @@ def generate_domains(record: Record) -> NRPSPKSDomains:
         prev = info
 
     for cds, cds_result in results.cds_results.items():
+        # filter out modules with only a single component, they're just noise at this stage
+        cds_result.modules = list(filter(lambda mod: len(mod.components) > 1, cds_result.modules))
         cds_result.annotate_domains(record, cds)
     return results
 
@@ -410,7 +428,13 @@ def generate_domain_features(gene: CDSFeature, domains: List[HMMResult]) -> Dict
         # set up new feature
         new_feature = ModularDomain(loc, protein_location=prot_loc,
                                     locus_tag=gene.get_name())
-        new_feature.domain = domain.hit_id
+        name = domain.hit_id
+        mapping = DOMAIN_TYPE_MAPPING.get(name)
+        if mapping:
+            new_feature.domain_subtype = name
+            new_feature.domain = mapping
+        else:
+            new_feature.domain = name
         new_feature.locus_tag = gene.locus_tag or gene.get_name()
         new_feature.detection = "hmmscan"
         new_feature.database = "nrpspksdomains.hmm"

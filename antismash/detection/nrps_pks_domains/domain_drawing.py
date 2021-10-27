@@ -10,7 +10,7 @@
 
 import itertools
 import string
-from typing import Dict, Iterator, List, Optional, Tuple, Union
+from typing import Dict, Iterator, List, Optional, Set, Tuple, Union
 
 from antismash.common import path
 from antismash.common.html_renderer import FileTemplate, HTMLSections
@@ -25,6 +25,7 @@ _UNLABLED_DOMAINS = set([
     "ACP",
     "ACP_beta",
     "ACPS",
+    "LPG_synthase_C",
     "NRPS-COM_Nterm",
     "NRPS-COM_Cterm",
     "PKS_Docking_Nterm",
@@ -44,6 +45,7 @@ _ABBREVIATED_DOMAINS = {
     "Aminotran_5": "AmT",
     "AMP-binding": "A",
     "A-OX": "A-OX",
+    "Beta_elim_lyase": "SH",
     "Cglyc": "C",
     "Condensation_DCL": "C",
     "Condensation_LCL": "C",
@@ -72,7 +74,9 @@ _CLASS_BY_ABBREVIATION = {
     "KR": "mod-kr",
     "DH": "mod-dh",
     "DHt": "mod-dh",
+    "DH2": "mod-dh",
     "ER": "mod-er",
+    "SH": "mod-sh",
 }
 _CLASS_BY_NAME = {
     "PCP": "transport",
@@ -89,11 +93,9 @@ _CLASS_BY_NAME = {
 }
 
 
-def will_handle(products: List[str]) -> bool:
-    """ Returns true if one or more relevant products are present """
-    return bool(set(products).intersection({"NRPS", "T1PKS", "T2PKS", "transAT-PKS",
-                                            "NAPAA", "thioamide-NRP",
-                                            "NRPS-like", "PKS-like"}))
+def will_handle(products: List[str], product_categories: Set[str]) -> bool:
+    """ Returns true if one or more relevant products or product categories are present """
+    return bool(product_categories.intersection({"NRPS", "PKS"}))
 
 
 def _get_domain_abbreviation(domain_name: str) -> str:
@@ -110,6 +112,13 @@ def _get_domain_class(abbreviation: str, domain_name: str) -> str:
     else:
         res = _CLASS_BY_NAME.get(domain_name, "other")
     return "jsdomain-%s" % res
+
+
+def get_css_class_and_abbreviation(domain_name: str) -> Tuple[str, str]:
+    """ Convert a full domain name to a pair of CSS class and abbrevation """
+    abbrevation = _get_domain_abbreviation(domain_name)
+    css_class = _get_domain_class(abbrevation, domain_name)
+    return css_class, abbrevation
 
 
 def _parse_domain(record: Record, domain: NRPSPKSQualifier.Domain,
@@ -142,9 +151,9 @@ def _parse_domain(record: Record, domain: NRPSPKSQualifier.Domain,
                  "&amp;LINK_LOC=protein&amp;PAGE_TYPE=BlastSearch").format(domainseq)
 
     dna_sequence = feature.extract(record.seq)
-    abbreviation = _get_domain_abbreviation(domain.name)
+    css, abbreviation = get_css_class_and_abbreviation(domain.name)
     return JSONDomain(domain, predictions, napdoslink, blastlink, domainseq, dna_sequence,
-                      abbreviation, _get_domain_class(abbreviation, domain.name))
+                      abbreviation, css)
 
 
 def generate_js_domains(region: Region, record: Record) -> Dict[str, Union[str, List[JSONOrf]]]:

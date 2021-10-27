@@ -86,6 +86,7 @@ def convert_regions(record: Record, options: ConfigType, result: Dict[str, Modul
         js_region['ttaCodons'] = convert_tta_codons(tta_codons, record)
         js_region['type'] = region.get_product_string()
         js_region['products'] = region.products
+        js_region['product_categories'] = list(region.product_categories)
         js_region['anchor'] = "r%dc%d" % (record.record_index, region.get_region_number())
 
         js_regions.append(js_region)
@@ -216,6 +217,7 @@ def get_clusters_from_region(region: Region) -> List[Dict[str, Any]]:
                       "neighbouring_start": cluster.location.start,
                       "neighbouring_end": cluster.location.end,
                       "product": cluster.product,
+                      "category": cluster.product_category,
                       "height": cluster_groupings[cluster] * 2 + start_index,
                       "kind": "protocluster",
                       "prefix": prefix}

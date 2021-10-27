@@ -21,7 +21,7 @@ that form but occasionally has MeO.
 """
 
 from dataclasses import dataclass
-from typing import Any, Dict, Iterator, List, Optional
+from typing import Any, Dict, Iterator, List, Optional, Sequence, Tuple
 
 from antismash.common.hmmscan_refinement import HMMResult
 from antismash.common.secmet import CDSFeature
@@ -42,6 +42,7 @@ CONDENSATIONS = {
     "Heterocyclization",
 }
 ENDS = {
+    "cAT",  # not a typical acyltransferase, closer to a thioesterase
     "Epimerization",
     "Thioesterase",
     "TD",
@@ -58,6 +59,8 @@ MODIFIERS = {
     "cMT",
     "nMT",
     "oMT",
+    "Beta_elim_lyase",
+    "LPG_synthase_C",
 }
 CARRIER_PROTEINS = {
     "ACP",
@@ -70,7 +73,13 @@ ALTERNATE_STARTERS = {
     "CAL_domain",
     "SAT",
 }
-IGNORED = {
+NON_MODULE = {  # external to modules, but important to find
+    "NRPS-COM_Cterm",
+    "NRPS-COM_Nterm",
+    "PKS_Docking_Cterm",
+    "PKS_Docking_Nterm",
+}
+OTHER = {
     "ACPS",  # activates ACP domains, has no function without them
     "Aminotran_1_2", "Aminotran_3", "Aminotran_4", "Aminotran_5",  # no useful function yet
     "B",
@@ -80,19 +89,15 @@ IGNORED = {
     "GNAT",
     "Hal",
     "NAD_binding_4",
-    "NRPS-COM_Cterm",  # external to modules, but important for polymers
-    "NRPS-COM_Nterm",  # external to modules, but important for polymers
-    "PKS_Docking_Cterm",  # external to modules, but important for polymers
-    "PKS_Docking_Nterm",  # external to modules, but important for polymers
     "Polyketide_cyc", "Polyketide_cyc2",  # type-II PKS specific
     "PS",
     "PT",  # fungal nonreducing PKS product template domain
-    "TIGR01720",  # NRPS domain, between an Epimerase and the next Condensation
     "TIGR02353",  # NRPS terminal domain of unknown function
     "X",
 }
 SPECIAL = {
     "Trans-AT_docking",
+    "TIGR01720",  # NRPS domain, between an Epimerase and the next Condensation
 }
 
 CLASSIFICATIONS = {
@@ -105,7 +110,12 @@ CLASSIFICATIONS = {
     "+":  MODIFIERS,
     "CP": CARRIER_PROTEINS,
     "!": SPECIAL,
-    "ignore": IGNORED,
+    ".": OTHER,
+    "ignore": NON_MODULE,
+}
+
+DOUBLE_TRANSPORTER_CASES = {
+    ("LPG_synthase_C", "Beta_elim_lyase"),  # e.g. AF484556.1 in LmnJ, doi:10.1038/s41467-021-25798-8
 }
 
 
@@ -177,7 +187,7 @@ class Component:
 
     def is_ignored(self) -> bool:
         """ Returns True if the component is ignored for the purposes of modules """
-        return self.label in IGNORED
+        return self.label in NON_MODULE
 
     def is_special(self) -> bool:
         """ Returns True if the component has a special function for specific modules """
@@ -227,6 +237,7 @@ class Module:
         self._end: Optional[Component] = None
         self._others: List[Component] = []
         self._first_in_cds = first_in_cds
+        self._unambiguous_accept = 0  # handles lookahead acceptance
 
     def to_json(self) -> Dict[str, Any]:
         """ Generate a JSON representation of the module """
@@ -239,8 +250,9 @@ class Module:
     def from_json(cls, data: Dict[str, Any]) -> "Module":
         """ Construct a module from a JSON representation """
         module = cls(data.get("first_in_cds", True))  # default to true for backwards-compatibility
-        for value in data["components"]:
-            module.add_component(Component.from_json(value))
+        components = [Component.from_json(comp) for comp in data["components"]]
+        for i, component in enumerate(components):
+            module.add_component(component, components[i + 1:])
         return module
 
     def is_pks(self) -> bool:
@@ -260,7 +272,7 @@ class Module:
         """ Returns True if the module is an iterative variant of a PKS module """
         return bool(self._starter and self._starter.subtype == "Iterative-KS")
 
-    def ensure_suitable(self, component: Component) -> None:  # pylint: disable=too-many-branches
+    def ensure_suitable(self, component: Component, lookahead: Sequence[Component]) -> None:  # pylint: disable=too-many-branches
         """ Raises a ValueError if adding the given component would be an issue """
         if component.is_ignored() or component.is_special():
             return
@@ -291,24 +303,32 @@ class Module:
 
         elif component.is_carrier_protein():
             if self._carrier_protein:
-                raise IncompatibleComponentError("duplicate carrier protein")
+                upcoming = [comp.domain.hit_id for comp in lookahead]
+                valid = False
+                for case in DOUBLE_TRANSPORTER_CASES:
+                    if list(case) == upcoming[:len(case)]:
+                        valid = True
+                        break
+                if not valid:
+                    raise IncompatibleComponentError("duplicate carrier protein")
 
         elif component.is_end():
             assert not self._end
 
-        else:
-            raise IncompatibleComponentError("unhandled %s" % component)
-
-    def add_component(self, component: Component) -> None:
+    def add_component(self, component: Component, lookahead: Sequence[Component]) -> None:
         """ Adds the given component to the module, raising an error if it
             would be invalid
         """
+        assert component.classification in CLASSIFICATIONS, f"invalid classification: {component.classification}"
         if component.is_ignored():
             return
-        try:
-            self.ensure_suitable(component)
-        except IncompatibleComponentError as err:
-            raise IncompatibleComponentError("cannot add %s to %s: %s" % (component, self, str(err)))
+        if self._unambiguous_accept > 0:
+            self._unambiguous_accept -= 1
+        else:
+            try:
+                self.ensure_suitable(component, lookahead)
+            except IncompatibleComponentError as err:
+                raise IncompatibleComponentError("cannot add %s to %s: %s" % (component, self, str(err)))
         if component.is_starter() and not self._starter:
             assert not self._starter, self
             self._starter = component
@@ -321,8 +341,17 @@ class Module:
         elif component.is_modification():
             self._modifications.append(component)
         elif component.is_carrier_protein():
-            assert not self._carrier_protein
-            self._carrier_protein = component
+            if not self._carrier_protein:
+                self._carrier_protein = component
+            else:
+                upcoming = [comp.domain.hit_id for comp in lookahead]
+                longest = 0
+                for case in DOUBLE_TRANSPORTER_CASES:
+                    if list(case) == upcoming[:len(case)]:
+                        longest = len(case)
+                if longest > 0:
+                    self._unambiguous_accept = longest
+                    self._others.append(component)
         elif component.is_end():
             assert not self._end
             self._end = component
@@ -370,6 +399,11 @@ class Module:
     def __iter__(self) -> Iterator[Component]:
         for component in self._components:
             yield component
+
+    @property
+    def components(self) -> Tuple[Component, ...]:
+        """ Returns the components of the module """
+        return tuple(self._components)
 
     @property
     def start(self) -> int:
@@ -462,22 +496,22 @@ def build_modules_for_cds(domains: List[HMMResult], ks_subtypes: List[str], cds_
     modules = [Module(first_in_cds=True)]
     subtypes = iter(ks_subtypes)
     sub = ""
-    for domain in domains:
-        component = Component(domain, cds_name)
-        assert component.classification, "missing classification for %s" % domain.hit_id
+    components = [Component(domain, cds_name) for domain in domains]
+    for i, component in enumerate(components):
+        assert component.classification, "missing classification for %s" % component.domain.hit_id
         if component.classification == "KS":
             sub = next(subtypes)
         else:
             sub = ""
-        component = Component(domain, cds_name, sub)
+        component = Component(component.domain, cds_name, sub)
         # start a new module if we have an explicit starter
         if component.is_starter() and not component.is_loader() and not modules[-1].is_empty():
             modules.append(Module())
         try:
-            modules[-1].add_component(component)
+            modules[-1].add_component(component, components[i+1:i+3])
         except IncompatibleComponentError:
             modules.append(Module())
-            modules[-1].add_component(component)
+            modules[-1].add_component(component, [])
 
     if modules[-1].is_empty():
         modules.pop()
@@ -500,6 +534,10 @@ def combine_modules(current: CDSModuleInfo, previous: CDSModuleInfo) -> Optional
         into single modules, provided the resulting module would be valid and the
         features are on the same strand.
 
+        The module following the leading module of the next CDS can also be
+        merged, providing it would normally form a single module with the merged
+        module. E.g. a post-CP KR domain in trans-AT PKS modules.
+
         This function modifies the given objects lists of modules.
 
         Arguments:
@@ -516,15 +554,10 @@ def combine_modules(current: CDSModuleInfo, previous: CDSModuleInfo) -> Optional
     if not current.modules or not previous.modules:
         return None
     # ensure the two args are ordered as expected
-    if current.cds < previous.cds:
-        current, previous = previous, current
-    # the leading fragment depends on strand
-    if current.cds.location.strand == 1:
-        head = previous.modules[-1]
-        tail = current.modules[0]
-    else:
-        head = current.modules[-1]
-        tail = previous.modules[0]
+    previous, current = sorted([current, previous], key=lambda info: info.cds,
+                               reverse=current.cds.location.strand == -1)
+    head = previous.modules[-1]
+    tail = current.modules[0]
     # both modules must be incomplete
     if head.is_complete() or tail.is_complete():
         return None
@@ -532,11 +565,11 @@ def combine_modules(current: CDSModuleInfo, previous: CDSModuleInfo) -> Optional
     if head.is_pks() and tail.is_nrps() or head.is_nrps() and tail.is_pks():
         return None
     module = Module()
-    for component in head:
-        module.add_component(component)
+    for i, component in enumerate(head):
+        module.add_component(component, head.components[i + 1:])
     try:
-        for component in tail:
-            module.add_component(component)
+        for i, component in enumerate(tail):
+            module.add_component(component, tail.components[i + 1:])
     except IncompatibleComponentError:
         return None
     # if it's still incomplete after the merge, discard it
@@ -545,10 +578,20 @@ def combine_modules(current: CDSModuleInfo, previous: CDSModuleInfo) -> Optional
 
     # finally, replace the existing leading fragment with the new full module
     # and remove the tail fragment
-    if current.cds.location.strand == 1:
-        previous.modules[-1] = module
+    previous.modules[-1] = module
+    current.modules.pop(0)
+
+    # since it's reached this far, check if the next module in the latter CDS
+    # might merge in too (e.g. trailing KR domain for a trans-AT PKS module that
+    # didn't originally get detected as such due to the split)
+    if not current.modules:
+        return module
+
+    next = current.modules[0]
+    # is it a KR following a split trans_AT module?
+    # e.g. AM746336 (in both kirAII and kirAV) and AF484556.1 (in LnmJ)
+    if module.is_trans_at() and len(next.components) == 1 and next.components[0].domain.hit_id == "PKS_KR":
+        module.add_component(next.components[0], [])
         current.modules.pop(0)
-    else:
-        current.modules[-1] = module
-        previous.modules.pop(0)
+
     return module

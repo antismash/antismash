@@ -3,7 +3,7 @@
 
 """ Handles HTML output for the Type II PKS module """
 
-from typing import List
+from typing import List, Set
 
 from antismash.common import path
 from antismash.common.html_renderer import FileTemplate, HTMLSections, docs_link
@@ -12,8 +12,8 @@ from antismash.common.layers import RegionLayer, RecordLayer, OptionsLayer
 from .results import T2PKSResults
 
 
-def will_handle(products: List[str]) -> bool:
-    """ Returns true if one or more relevant products are present """
+def will_handle(products: List[str], _product_categories: Set[str]) -> bool:
+    """ Returns true if one or more relevant products or product categories are present """
     return "T2PKS" in products
 
 

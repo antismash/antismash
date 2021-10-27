@@ -12,18 +12,23 @@ from antismash.main import get_all_modules
 from antismash.common import path, subprocessing
 from antismash.common.secmet import Record
 from antismash.common.test import helpers
-from antismash.config import build_config, destroy_config
+from antismash.config import build_config, destroy_config, update_config
 from antismash.modules import cluster_compare
+
+
+DUMMY_MIBIG_CONFIG = path.get_full_path(__file__, "data", "dummy_mibig.json")
+DUMMY_MIBIG_LOCATION = path.get_full_path(__file__, "data", "dummy_mibig_db")
 
 
 class TestFull(unittest.TestCase):
     def setUp(self):
-        self.options = build_config(["--cc-mibig"], isolated=True, modules=get_all_modules())
+        self.options = build_config([], isolated=True, modules=get_all_modules())
 
     def tearDown(self):
         destroy_config()
 
     def test_result_conversion(self):
+        update_config({"cc_mibig": True})
         nisin = Record.from_genbank(helpers.get_path_to_nisin_with_detection())[0]
         with open(path.get_full_path(__file__, "data", "nisin.out")) as handle:
             trimmed_output = handle.read()
@@ -37,9 +42,12 @@ class TestFull(unittest.TestCase):
         assert regen_raw == raw
 
     def test_full(self):
+        update_config({"cc_custom_dbs": [DUMMY_MIBIG_CONFIG]})
         assert cluster_compare.is_enabled(self.options)
         input_path = helpers.get_path_to_balhymicin_genbank()
-        results = helpers.run_and_regenerate_results_for_module(input_path, cluster_compare, self.options)
+        config = cluster_compare.DBConfig.from_file(DUMMY_MIBIG_CONFIG, DUMMY_MIBIG_LOCATION)
+        with patch.object(cluster_compare.DBConfig, "from_json", return_value=config):
+            results = helpers.run_and_regenerate_results_for_module(input_path, cluster_compare, self.options)
 
         proto = results.by_database["MIBiG"].by_region[1]["ProtoToRegion_RiQ"]
         # ordering should be correct

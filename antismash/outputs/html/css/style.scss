@@ -827,55 +827,59 @@ table.region-table {
     stroke: rgb(10,160,76);
     fill: rgb(128,246,128);
 }
+.jsdomain-mod-sh {
+    stroke: gold;
+    fill: yellow;
+}
 .jsdomain-other {
     stroke: rgb(147,147,147);
     fill: rgb(218,218,218);
 }
 
-.pfam-domain-domain {
+.generic-domain-domain {
     stroke: rgb(50,50,50);
 }
 
-.pfam-domain-line {
+.generic-domain-line {
     @extend .jsdomain-line;
 }
-.pfam-domain-orflabel {
+.generic-domain-orflabel {
     @extend .jsdomain-orflabel;
 }
-.pfam-domain-tooltip {
+.generic-domain-tooltip {
     @extend .jsdomain-tooltip;
 }
-.pfam-domain-text {
+.generic-domain-text {
     @extend .jsdomain-text;
 }
-.pfam-domain-svg {
+.generic-domain-svg {
     @extend .jsdomain-svg;
 }
-.pfam-domain-svg-single {
+.generic-domain-svg-single {
     @extend .jsdomain-svg-single;
 }
 
-rect.pfam-type-other {
+rect.generic-type-other {
     fill: #dadada;
 }
 
-rect.pfam-type-biosynthetic {
+rect.generic-type-biosynthetic {
     fill: #f0a1a1;
 }
 
-text.pfam-type-biosynthetic {
+text.generic-type-biosynthetic {
     fill: #333;
 }
 
-rect.pfam-type-regulatory {
+rect.generic-type-regulatory {
     fill: #6cbc9c;
 }
 
-text.pfam-type-regulatory {
+text.generic-type-regulatory {
     fill: #333;
 }
 
-rect.pfam-type-transport {
+rect.generic-type-transport {
     fill: #7aaaff;
 }
 
@@ -1235,7 +1239,7 @@ ul.dropdown-options {
 
 .region-grid {
     display: grid;
-    grid-template-columns: auto 25%;
+    grid-template-columns: 75% 25%;
     grid-gap: 1px;
 }
 
@@ -1290,4 +1294,73 @@ ul.dropdown-options {
 
 .comparison-container-active {
     display: block;
+}
+
+.bubble-legend-container {
+    transform: scale(0.7);
+    transform-origin: 0 0;
+}
+
+#bubble-legend {
+    display: grid;
+    grid-template-columns: max-content auto;
+    grid-column-gap: 1em;
+    align-items: center;
+    margin-left: 2em;
+
+    .bubble-legend-icon {
+        justify-self: center;
+    }
+}
+
+.bubble-legend-title {
+    grid-column-start: span 2;
+    font-weight: bold;
+    margin-top: 1em;
+    margin-left: 1em;
+}
+
+.bubble-tooltip {
+    width: max-content;
+    padding-left: 20px;
+    padding-right: 20px;
+    z-index: 10;
+}
+
+.bubble-domain-inactive {
+    stroke-width: 2px;
+    stroke: black;
+}
+
+.bubble-module-line {
+    stroke-width: 2px;
+    stroke: black;
+}
+
+.domain-bubble-container {
+    * .bubble-module-label {
+        .bubble-module-monomer {
+            fill: #555;
+        }
+    }
+
+    * .domain-group {
+        .text {
+            fill: black;
+            font-size: 80%;
+            @include unselectable();
+        }
+    }
+    * .bubble-gene {
+        cursor: pointer;
+        .bubble-gene-arrow {
+            fill: black;
+        }
+        text {
+            @include unselectable();
+        }
+    }
+    * .bubble-domain-inactive {
+        opacity: 60%;
+    }
 }

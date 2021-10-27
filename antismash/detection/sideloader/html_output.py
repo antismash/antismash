@@ -4,7 +4,7 @@
 """ Handles HTML output for the Type II PKS module """
 
 from collections import defaultdict
-from typing import List
+from typing import List, Set
 
 from antismash.common import path
 from antismash.common.module_results import ModuleResults
@@ -14,8 +14,8 @@ from antismash.common.layers import RegionLayer, RecordLayer, OptionsLayer
 from .data_structures import SideloadedResults, Tool
 
 
-def will_handle(_products: List[str]) -> bool:
-    """ Returns true if one or more relevant products are present """
+def will_handle(_products: List[str], _product_categories: Set[str]) -> bool:
+    """ Relevant to every region, so return True for every product """
     return True
 
 

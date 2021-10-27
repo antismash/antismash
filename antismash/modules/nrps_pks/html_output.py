@@ -5,7 +5,7 @@
 
 import logging
 import re
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, Iterable, List, Optional, Set
 
 from antismash.common import path
 from antismash.common.html_renderer import HTMLSections, FileTemplate
@@ -15,11 +15,9 @@ from antismash.common.secmet import CDSFeature, Region, CandidateCluster
 from .results import NRPS_PKS_Results, CandidateClusterPrediction, UNKNOWN
 
 
-def will_handle(products: List[str]) -> bool:
-    """ Returns true if one or more relevant products are present """
-    return bool(set(products).intersection({"NRPS", "T1PKS", "T2PKS", "T3PKS", "transAT-PKS",
-                                            "NRPS-like", "PKS-like", "hglE-like", "PpyS-KS",
-                                            "transAT-PKS-like"}))
+def will_handle(_products: List[str], categories: Set[str]) -> bool:
+    """ Returns true if one or more relevant products or product categories are present """
+    return bool(categories.intersection({"NRPS", "PKS"}))
 
 
 def generate_html(region_layer: RegionLayer, results: NRPS_PKS_Results,
@@ -133,6 +131,7 @@ class CandidateClusterLayer:
         self.transatpks = "transatpks" in candidate_cluster.products
         self.result = result
         self.products = "-".join(candidate_cluster.products)
+        self.kind = str(candidate_cluster.kind).replace("_", " ")
 
     def __getattr__(self, attr: str) -> Any:
         if hasattr(self.result, attr):

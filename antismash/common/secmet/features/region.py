@@ -91,6 +91,16 @@ class Region(CDSCollection):
                 products[product] = None
         return list(products) or ["unknown"]
 
+    @property
+    def product_categories(self) -> Set[str]:
+        """ Returns a list of unique product categories collected from all contained
+            CandidateClusters
+        """
+        categories: Set[str] = set()
+        for cluster in self._candidate_clusters:
+            categories.update(cluster.product_categories)
+        return categories or {"unknown"}
+
     def get_product_string(self) -> str:
         """ Returns a string of all unique products collected from all
             contained CandidateClusters

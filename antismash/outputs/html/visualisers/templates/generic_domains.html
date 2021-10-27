@@ -1,0 +1,21 @@
+{% set tool = info.title.lower() %}
+<div class="details">
+    <div class="heading">
+      <span>Detailed {{info.title}} domain annotation</span>
+      {{help_tooltip(info.tooltip, "{{tool}}-help-tooltip")}}
+      <div class="download-container">
+        <div class="download-icon download-svg" data-tag="{{region.anchor_id}}-{{tool}}-details-svg" data-filename="{{record.id}}_{{region.anchor_id}}_{{tool}}.svg">
+        </div>
+      </div>
+    </div>
+    {% if info.intro %}
+    <div class="hmmer-intro {{tool-intro}}">
+    {{info.intro}}
+    </div>
+    {% endif %}
+    <div class="nrps-pks-domain-buttons">
+      {{switch("Selected features only", "domains-selected-only")}}
+      {{switch("Expand to show all names", "domains-expand-full", starts_on=True)}}
+    </div>
+    <div class="{{tool}}-details-svg" id="{{region.anchor_id}}-{{tool}}-details-svg" style="overflow: auto;"></div>
+</div>

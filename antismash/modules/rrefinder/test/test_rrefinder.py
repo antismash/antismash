@@ -21,7 +21,6 @@ from antismash.common.test.helpers import (
 )
 from antismash.common.test.test_hmmer import create_hmmer_hit as DummyHmmerHit
 from antismash.config import build_config, destroy_config, get_config, update_config
-from antismash.detection.hmm_detection import get_supported_cluster_types
 from antismash.modules.rrefinder.html_output import will_handle
 from antismash.modules.rrefinder.rrefinder import (
     RREFinderResults,
@@ -29,7 +28,6 @@ from antismash.modules.rrefinder.rrefinder import (
     extract_rre_hits,
     filter_hits,
     gather_rre_candidates,
-    is_ripp,
     run_rrefinder,
 )
 from antismash.modules.rrefinder.rre_domain import RREDomain, TOOL
@@ -243,8 +241,10 @@ class TestRREFinder(unittest.TestCase):
         cds2 = DummyCDS(start=3400, end=4700, locus_tag='b')
         cds3 = DummyCDS(start=150, end=450, locus_tag='c')
 
-        p1 = DummyProtocluster(core_start=100, core_end=2200, neighbourhood_range=100, product='lanthipeptide-class-i')
-        p2 = DummyProtocluster(core_start=3300, core_end=4800, neighbourhood_range=100, product='thiopeptide')
+        p1 = DummyProtocluster(core_start=100, core_end=2200, neighbourhood_range=100,
+                               product='lanthipeptide-class-i', product_category="RiPP")
+        p2 = DummyProtocluster(core_start=3300, core_end=4800, neighbourhood_range=100,
+                               product='thiopeptide', product_category="RiPP")
 
         dc1 = DummyCandidateCluster(clusters=[p1])
         dc2 = DummyCandidateCluster(clusters=[p2])
@@ -256,17 +256,9 @@ class TestRREFinder(unittest.TestCase):
         region = DummyRegion()
         return DummyRecord(seq='FAKESEQ'*1000, features=[region])
 
-    def test_is_ripp(self):
-        ripp_products = get_supported_cluster_types("loose", "RiPP")
-        for ripp in sorted(ripp_products):
-            assert is_ripp(ripp)
-            assert not is_ripp(ripp[1:])
-
     def test_will_handle(self):
-        ripp_products = get_supported_cluster_types("loose", "RiPP")
-        expected = sorted(ripp_products)
-        assert will_handle(expected)
-        assert not will_handle([ripp[1:] for ripp in expected])
+        assert will_handle(["prod1", "prod2"], {"RiPP"})
+        assert not will_handle(["prod1", "prod2"], {"nRiPP"})
 
     def test_check_hmm_hit(self):
         assert check_hmm_hit(self.hit_a1, self.min_length, self.bitscore_cutoff)

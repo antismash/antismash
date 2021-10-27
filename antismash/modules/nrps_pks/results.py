@@ -19,18 +19,6 @@ from .nrps_predictor import PredictorSVMResult
 from .pks_names import get_short_form
 from .at_analysis.at_analysis import ATPrediction
 
-DOMAIN_TYPE_MAPPING = {'Condensation_DCL': 'Condensation',
-                       'Condensation_LCL': 'Condensation',
-                       'Condensation_Dual': 'Condensation',
-                       'Condensation_Starter': 'Condensation',
-                       'CXglyc': 'Condensation',
-                       'Cglyc': 'Condensation',
-                       'cMT': 'MT',
-                       'oMT': 'MT',
-                       'nMT': 'MT',
-                       'Polyketide_cyc': 'Polyketide_cyc',
-                       'Polyketide_cyc2': 'Polyketide_cyc'}
-
 
 UNKNOWN = "(unknown)"
 
@@ -123,7 +111,7 @@ class CandidateClusterPrediction:
 
 class NRPS_PKS_Results(ModuleResults):
     """ The combined results of the nrps_pks module """
-    _schema_version = 3
+    schema_version = 3
     __slots__ = ["consensus", "consensus_transat", "region_predictions", "domain_predictions"]
 
     def __init__(self, record_id: str) -> None:
@@ -154,7 +142,7 @@ class NRPS_PKS_Results(ModuleResults):
         region_json = {}
         for region, preds in self.region_predictions.items():
             region_json[region] = [pred.to_json() for pred in preds]
-        results = {"schema_version": self._schema_version,
+        results = {"schema_version": self.schema_version,
                    "record_id": self.record_id,
                    "domain_predictions": domain_predictions,
                    "consensus": self.consensus,
@@ -166,7 +154,7 @@ class NRPS_PKS_Results(ModuleResults):
     @staticmethod
     def from_json(json: Dict[str, Any], _record: Record) -> Optional["NRPS_PKS_Results"]:
         assert "record_id" in json
-        if json.get("schema_version") != NRPS_PKS_Results._schema_version:
+        if json.get("schema_version") != NRPS_PKS_Results.schema_version:
             logging.warning("Mismatching schema version, dropping results")
             return None
         results = NRPS_PKS_Results(json["record_id"])
@@ -262,11 +250,6 @@ class NRPS_PKS_Results(ModuleResults):
 
                 for method, pred in domain.predictions.items():
                     feature.specificity.append("%s: %s" % (method, pred))
-
-                mapping = DOMAIN_TYPE_MAPPING.get(domain.name)
-                if mapping:
-                    feature.domain_subtype = domain.name
-                    feature.domain = mapping
 
             for module in cds_feature.modules:
                 if not module.is_complete():
