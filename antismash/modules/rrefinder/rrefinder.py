@@ -148,12 +148,6 @@ class RREFinderResults(ModuleResults):
         return self
 
 
-def is_ripp(product: str) -> bool:
-    """ Determines which BGC products are RiPPs
-    """
-    return product in get_supported_cluster_types("loose", "RiPP")
-
-
 def gather_rre_candidates(record: Record) -> Tuple[Dict[int, List[str]], Dict[str, CDSFeature]]:
     '''Gather all RRE candidates that need to be analyzed with hmmscan
        and all unique candidates (by CDS name) to prevent double analysis
@@ -164,7 +158,7 @@ def gather_rre_candidates(record: Record) -> Tuple[Dict[int, List[str]], Dict[st
 
     for region in record.get_regions():
         for protocluster in region.get_unique_protoclusters():
-            if is_ripp(protocluster.product):
+            if protocluster.product_category == "RiPP":
                 protocluster_number = protocluster.get_protocluster_number()
                 for cds in protocluster.cds_children:
                     cds_name = cds.get_name()
