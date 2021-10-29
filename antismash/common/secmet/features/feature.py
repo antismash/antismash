@@ -158,11 +158,13 @@ class Feature:
         assert qualifier is None
         return True
 
-    def overlaps_with(self, other: Union["Feature", Location]) -> bool:
+    def overlaps_with(self, other: Union["Feature", Location, None]) -> bool:
         """ Returns True if the given feature overlaps with this feature.
             This operation is commutative, a.overlaps_with(b) is equivalent to
             b.overlaps_with(a).
         """
+        if other is None:
+            return False
         if isinstance(other, Feature):
             location = other.location
         elif isinstance(other, (CompoundLocation, FeatureLocation)):
