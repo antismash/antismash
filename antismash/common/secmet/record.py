@@ -57,7 +57,7 @@ class Record:
                  "_protoclusters", "original_id", "_cds_motifs", "_pfam_domains",
                  "_antismash_domains", "_protocluster_numbering", "_nonspecific_features",
                  "record_index", "_genes", "_transl_table", "_domains_by_name",
-                 "_pfams_by_cds_name", "_modules",
+                 "_pfams_by_cds_name", "_genes_by_name", "_modules",
                  "_candidate_clusters", "_candidate_clusters_numbering",
                  "_subregions", "_subregion_numbering",
                  "_regions", "_region_numbering", "_antismash_domains_by_tool",
@@ -72,7 +72,9 @@ class Record:
         self.record_index: Optional[int] = None
         self.original_id = None
         self.skip: Optional[str] = None  # TODO: move to yet another abstraction layer?
+
         self._genes: List[Gene] = []
+        self._genes_by_name: Dict[str, List[Gene]] = defaultdict(list)
 
         self._cds_features: List[CDSFeature] = []
         self._cds_by_name: Dict[str, CDSFeature] = {}
@@ -327,6 +329,10 @@ class Record:
         """ Returns all Gene features (different to CDSFeatures) in the record """
         return tuple(self._genes)
 
+    def get_genes_by_name(self, name: str) -> List[Gene]:
+        """ Return the genes with a given name """
+        return list(self._genes_by_name[name])
+
     def get_cds_features(self) -> Tuple[CDSFeature, ...]:
         """A list of secondary metabolite clusters present in the record"""
         return tuple(self._cds_features)
@@ -515,6 +521,7 @@ class Record:
         """ Adds a Gene feature to the record """
         assert isinstance(gene, Gene), type(gene)
         self._genes.append(gene)
+        self._genes_by_name[gene.get_name()].append(gene)
 
     def add_cds_feature(self, cds_feature: CDSFeature) -> None:
         """ Add the given CDSFeature to the record,
@@ -535,13 +542,15 @@ class Record:
             error = SecmetInvalidInputError("multiple CDS features have the same name for mapping: %s" %
                                             cds_feature.get_name())
             # handle cases like splice variants
-            if not cds_feature.locus_tag or not cds_feature.protein_id:
+            if not cds_feature.locus_tag:
                 raise error
-            if not cds_feature.overlaps_with(self._cds_by_name[cds_feature.get_name()]):
+
+            existing = self._cds_by_name[cds_feature.get_name()]
+            if not (cds_feature.overlaps_with(existing) or
+                    any(map(cds_feature.overlaps_with, self.get_genes_by_name(cds_feature.get_name())))):
                 raise error
-            new = "%s_%s" % (cds_feature.locus_tag, cds_feature.protein_id)
-            if new in self._cds_by_name:
-                raise error
+
+            new = f"{cds_feature.locus_tag}_{location_checksum}"
             cds_feature.locus_tag = new
             assert cds_feature.get_name() not in self._cds_by_name
         self._cds_by_name[cds_feature.get_name()] = cds_feature

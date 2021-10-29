@@ -17,6 +17,7 @@ from ..features import (
     CDSFeature,
     CandidateCluster,
     Feature,
+    Gene,
     Module,
     Region,
     Protocluster,
@@ -796,7 +797,7 @@ class TestCDSUniqueness(unittest.TestCase):
 
         cds = CDSFeature(FeatureLocation(3, 9, 1), locus_tag="test", protein_id="prot", translation="MA")
         record.add_cds_feature(cds)
-        assert cds.locus_tag == "test_prot"
+        assert cds.locus_tag == "test_c6ced428"
 
         # still a duplicate
         cds = CDSFeature(FeatureLocation(3, 9, 1), locus_tag="test", protein_id="prot", translation="MA")
@@ -806,6 +807,11 @@ class TestCDSUniqueness(unittest.TestCase):
         # reverse strand, same coordinates are fine
         cds = CDSFeature(FeatureLocation(0, 6, -1), locus_tag="test_reverse", translation="MA")
         record.add_cds_feature(cds)
+
+        # no locus tag, conflicting protein_id
+        cds = CDSFeature(FeatureLocation(12, 18, 1), protein_id="test", translation="MA")
+        with self.assertRaisesRegex(ValueError, "same name for mapping"):
+            record.add_cds_feature(cds)
 
     def test_nonoverlapping_location(self):
         record = Record("A" * 100)
@@ -817,6 +823,31 @@ class TestCDSUniqueness(unittest.TestCase):
         cds = CDSFeature(FeatureLocation(12, 18, 1), locus_tag="test", protein_id="prot", translation="MA")
         with self.assertRaisesRegex(ValueError, "same name for mapping"):
             record.add_cds_feature(cds)
+
+        # Allowed special case: multiple CDS splice variants from the same gene
+        # can exist even if they don't overlap
+        gene = Gene(FeatureLocation(20, 42, 1), locus_tag="test_gene")
+        record.add_gene(gene)
+
+        splice1 = CDSFeature(FeatureLocation(20, 26, 1), locus_tag="test_gene", protein_id="splice1", translation="MA")
+        splice2 = CDSFeature(FeatureLocation(27, 33, 1), locus_tag="test_gene", protein_id="splice2", translation="MA")
+        record.add_cds_feature(splice1)
+        record.add_cds_feature(splice2)
+
+        assert splice1.locus_tag == "test_gene"
+        assert splice2.locus_tag == "test_gene_7e364f92"
+
+        with self.assertRaisesRegex(ValueError, "same location"):
+            splice1 = CDSFeature(FeatureLocation(20, 26, 1), locus_tag="test_gene", protein_id="splice1", translation="MA")
+            record.add_cds_feature(splice1)
+
+        with self.assertRaisesRegex(ValueError, "same location"):
+            splice2 = CDSFeature(FeatureLocation(27, 33, 1), locus_tag="test_gene", protein_id="splice2", translation="MA")
+            record.add_cds_feature(splice2)
+
+        splice3 = CDSFeature(FeatureLocation(36, 42, 1), locus_tag="test_gene", protein_id="splice2", translation="MA")
+        record.add_cds_feature(splice3)
+        assert splice3.locus_tag == "test_gene_85824247"
 
 
 class TestIsNuclSeq(unittest.TestCase):
