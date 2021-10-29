@@ -15,6 +15,7 @@ import bisect
 from collections import Counter, defaultdict, OrderedDict
 import logging
 from typing import Any, Dict, List, Optional, Sequence, Type, Tuple, Union, cast
+from zlib import crc32
 
 from Bio import SeqIO
 from Bio.Seq import Seq
@@ -52,6 +53,7 @@ class Record:
     """A record containing secondary metabolite clusters"""
     # slots not for space, but to stop use as a horrible global
     __slots__ = ["_record", "_seq", "skip", "_cds_features", "_cds_by_name",
+                 "_cds_by_location",
                  "_protoclusters", "original_id", "_cds_motifs", "_pfam_domains",
                  "_antismash_domains", "_protocluster_numbering", "_nonspecific_features",
                  "record_index", "_genes", "_transl_table", "_domains_by_name",
@@ -74,6 +76,7 @@ class Record:
 
         self._cds_features: List[CDSFeature] = []
         self._cds_by_name: Dict[str, CDSFeature] = {}
+        self._cds_by_location: Dict[str, CDSFeature] = {}
 
         self._cds_motifs: List[CDSMotif] = []
 
@@ -523,6 +526,11 @@ class Record:
         index = bisect.bisect_left(self._cds_features, cds_feature)
         self._cds_features.insert(index, cds_feature)
         self._link_cds_to_parent(cds_feature)
+        location_checksum = _location_checksum(cds_feature)
+        if location_checksum in self._cds_by_location:
+            raise SecmetInvalidInputError(
+                f"Multiple CDS features have the same location: {cds_feature.location}")
+        self._cds_by_location[location_checksum] = cds_feature
         if cds_feature.get_name() in self._cds_by_name:
             error = SecmetInvalidInputError("multiple CDS features have the same name for mapping: %s" %
                                             cds_feature.get_name())
@@ -1005,3 +1013,28 @@ class Record:
         for char in "acgtn":
             other = other.replace(char, "")
         return len(other) < 0.2 * len(sequence)
+
+
+def _calculate_crc32(string: str) -> str:
+    """ Calculates the crc32 checksum of an input string and returns the resulting checksum in hex.
+
+        Arguments:
+            string: The string to generate the checksum for
+
+        Returns:
+            A string containing the hexadecimal representation of the crc32 checksum
+    """
+    checksum = crc32(string.encode("utf-8"))
+    return f"{checksum:x}"
+
+
+def _location_checksum(feature: Feature) -> str:
+    """ Calculate the checksum of the given feature's location and return the resulting value in a hex string.
+
+        Arguments:
+            feature: A Feature object to generate the location checksum for
+
+        Returns:
+            A string containing the feature's location checksum in hex
+    """
+    return _calculate_crc32(str(feature.location))

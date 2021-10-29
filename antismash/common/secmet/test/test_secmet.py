@@ -791,7 +791,7 @@ class TestCDSUniqueness(unittest.TestCase):
         record = Record("A" * 100)
         cds = CDSFeature(FeatureLocation(0, 6, 1), locus_tag="test", translation="MA")
         record.add_cds_feature(cds)
-        with self.assertRaisesRegex(ValueError, "same name for mapping"):
+        with self.assertRaisesRegex(ValueError, "same location"):
             record.add_cds_feature(cds)
 
         cds = CDSFeature(FeatureLocation(3, 9, 1), locus_tag="test", protein_id="prot", translation="MA")
@@ -800,14 +800,18 @@ class TestCDSUniqueness(unittest.TestCase):
 
         # still a duplicate
         cds = CDSFeature(FeatureLocation(3, 9, 1), locus_tag="test", protein_id="prot", translation="MA")
-        with self.assertRaisesRegex(ValueError, "same name for mapping"):
+        with self.assertRaisesRegex(ValueError, "same location"):
             record.add_cds_feature(cds)
+
+        # reverse strand, same coordinates are fine
+        cds = CDSFeature(FeatureLocation(0, 6, -1), locus_tag="test_reverse", translation="MA")
+        record.add_cds_feature(cds)
 
     def test_nonoverlapping_location(self):
         record = Record("A" * 100)
         cds = CDSFeature(FeatureLocation(0, 6, 1), locus_tag="test", translation="MA")
         record.add_cds_feature(cds)
-        with self.assertRaisesRegex(ValueError, "same name for mapping"):
+        with self.assertRaisesRegex(ValueError, "same location"):
             record.add_cds_feature(cds)
 
         cds = CDSFeature(FeatureLocation(12, 18, 1), locus_tag="test", protein_id="prot", translation="MA")
