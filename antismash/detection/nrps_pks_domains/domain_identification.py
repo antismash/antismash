@@ -224,6 +224,7 @@ def generate_domains(record: Record) -> NRPSPKSDomains:
         domains = cds_domains.get(cds.get_name(), [])
         motifs = cds_motifs.get(cds.get_name(), [])
         if not (domains or motifs):
+            prev = None
             continue
         subtype_names = match_subtypes_to_ks_domains(domains, cds_ks_subtypes.get(cds.get_name(), []))
         domain_type = classify_cds([domain.hit_id for domain in domains], subtype_names)
