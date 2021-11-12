@@ -1,6 +1,6 @@
 name: Comment on pylint issue comparison
 
-on: [pull_request]
+on: [pull_request_target]
 
 jobs:
   make_issues_comment:
