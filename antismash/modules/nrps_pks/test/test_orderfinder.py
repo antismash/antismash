@@ -39,13 +39,13 @@ class TestOrdering(unittest.TestCase):
                              "e": DummyCDS(7, 8, locus_tag="e")}
         self.genes = list(self.gene_mapping.values())
 
-    def run_ordering_simple(self, start, end, gene_list=None):
+    def run_ordering_simple(self, start, end, gene_list=None, chains=None):
         start_gene = self.gene_mapping.get(start)
         end_gene = self.gene_mapping.get(end)
         if gene_list is None:
             gene_list = "abc"
         genes = [self.gene_mapping[name] for name in gene_list]
-        orders = orderfinder.find_possible_orders(genes, start_gene, end_gene)
+        orders = orderfinder.find_possible_orders(genes, start_gene, end_gene, chains or {})
         simple_orders = []
         for order in orders:
             simple_orders.append([g.locus_tag for g in order])
@@ -233,7 +233,7 @@ class TestOrdering(unittest.TestCase):
         start = None
         end = cdss["STAUR_3982"]
         # there are multiple orders of equal score, but sort for simple testing
-        possible_orders = orderfinder.find_possible_orders(list(cdss.values()), start, end)
+        possible_orders = orderfinder.find_possible_orders(list(cdss.values()), start, end, {})
         best = orderfinder.rank_biosynthetic_orders(n_terms, c_terms, possible_orders)
         best = [gene.get_name() for gene in best]
         assert best == ['STAUR_3983', 'STAUR_3972', 'STAUR_3984', 'STAUR_3985', 'STAUR_3982']
@@ -241,7 +241,43 @@ class TestOrdering(unittest.TestCase):
     def test_order_finding_size(self):
         cdss = [DummyCDS() for i in range(11)]
         with self.assertRaisesRegex(AssertionError, "input too large"):
-            orderfinder.find_possible_orders(cdss, None, None)
+            orderfinder.find_possible_orders(cdss, None, None, {})
+
+    def test_split_module(self):
+        features = {}
+        for i, name in enumerate("ABCDEF"):
+            features[name] = (DummyCDS(start=i * 10, end=i * 10 + 6, locus_tag=name))
+        # ensure empty chains cause no issues
+        singles = orderfinder.find_possible_orders(list(features.values()), None, features["E"], {})
+        assert len(singles) == 120
+
+        def check(order, names):
+            indices = [order.index(features[name]) for name in names]
+            # +1 because the slice changes the maths
+            return all(index - indices[0] - (i + 1) == 0 for i, index in enumerate(indices[1:]))
+
+        # check chains are respected
+        chains = {
+            features["A"]: features["B"],
+            features["E"]: features["F"],  # this should still be respected, even with E as the 'end'
+        }
+        chained = orderfinder.find_possible_orders(list(features.values()), None, features["E"], chains)
+        assert len(chained) == 6
+        # regardless of where A and B land, they should be consecutive and in that order
+        assert all(check(order, "AB") for order in chained)
+        # the tail of every order should be EF, since E was marked as the 'end' CDS
+        assert all(order[-2:] == [features["E"], features["F"]] for order in chained), chained
+
+        # check complex chains
+        chains = {
+            features["B"]: features["C"],
+            features["C"]: features["D"],
+            features["D"]: features["E"],
+        }
+        chained = orderfinder.find_possible_orders(list(features.values()), None, None, chains)
+        assert len(chained) == 6
+        # again, regardless of where the block is, the order within the block must be fixed
+        assert all(check(order, "BCDE") for order in chained)
 
 
 class TestEnzymeCounter(unittest.TestCase):

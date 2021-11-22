@@ -16,6 +16,25 @@ from .results import CandidateClusterPrediction, modify_substrate
 from .smiles_generator import gen_smiles_from_pksnrps
 
 
+def find_split_module_chains(cds_features: List[CDSFeature], record: Record) -> Dict[CDSFeature, CDSFeature]:
+    """ Builds a mapping of module head to module tail for each cross-CDS module
+        in the given features
+
+        Arguments:
+            cds_features: the CDS features to find cross-CDS modules in
+
+        Returns:
+            a dictionary mapping each cross-CDS module head CDS to the tail CDS
+    """
+    chains: Dict[CDSFeature, CDSFeature] = {}  # track ordering of CDS features forming a complete module
+    for cds in cds_features:
+        for module in cds.modules:
+            if len(module.parent_cds_names) > 1:
+                head, tail = module.parent_cds_names
+                chains[record.get_cds_by_name(head)] = record.get_cds_by_name(tail)
+    return chains
+
+
 def analyse_biosynthetic_order(nrps_pks_features: List[CDSFeature],
                                consensus_predictions: Dict[str, str],
                                record: Record) -> List[CandidateClusterPrediction]:
@@ -47,12 +66,15 @@ def analyse_biosynthetic_order(nrps_pks_features: List[CDSFeature],
         if not cds_in_candidate_cluster:
             continue
         pks_features, nrps_count, hybrid_count = find_candidate_cluster_modular_enzymes(cds_in_candidate_cluster)
+        pks_chains = {}
+        if not hybrid_count:
+            pks_chains = find_split_module_chains(pks_features, record)
         # If more than three PKS cds features, use dock_dom_analysis if possible to identify order
         # since this will grow as n!, an upper limit is also required
         if 3 < len(pks_features) < 11 and not nrps_count and not hybrid_count:
             logging.debug("CandidateCluster %d monomer ordering method: domain docking analysis",
                           candidate_cluster_number)
-            geneorder = perform_docking_domain_analysis(pks_features)
+            geneorder = perform_docking_domain_analysis(pks_features, pks_chains)
             docking = True
         else:
             logging.debug("CandidateCluster %d monomer ordering method: colinear", candidate_cluster_number)
@@ -168,6 +190,9 @@ def find_first_and_last_cds(cds_features: List[CDSFeature]) -> Tuple[Optional[CD
     # find the end
     for cds in cds_features:
         if cds.modules and cds.modules[-1].is_final_module():
+            # if this CDS is not the tail end, then don't use it unless it's the last CDS
+            if len(cds.modules[-1].parent_cds_names) > 1 and cds != cds_features[-1]:
+                continue
             # two possible ends, this really ought to be two products
             if end_cds:
                 end_cds = None
@@ -246,7 +271,8 @@ def extract_cterminus(data_dir: str, cds_features: List[CDSFeature], end_cds: Op
 
 
 def find_possible_orders(cds_features: List[CDSFeature], start_cds: Optional[CDSFeature],
-                         end_cds: Optional[CDSFeature]) -> List[List[CDSFeature]]:
+                         end_cds: Optional[CDSFeature], chains: Dict[CDSFeature, CDSFeature]
+                         ) -> List[List[CDSFeature]]:
     """ Finds all possible arrangements of the given cds_features. If not None, the
         start gene will always be the first in each order. Similarly, the end
         gene will always be last.
@@ -255,6 +281,7 @@ def find_possible_orders(cds_features: List[CDSFeature], start_cds: Optional[CDS
             cds_features: a list of all CDSFeatures, may include start_cds and end_cds
             start_cds: None or the CDS with which to start every arrangement
             end_cds: None or the CDS with which to end every arrangement
+            chains: a dictionary mapping cross-CDS module head CDS to tail CDS
 
         Returns:
             a list of lists, each sublist being a unique ordering of the
@@ -265,21 +292,37 @@ def find_possible_orders(cds_features: List[CDSFeature], start_cds: Optional[CDS
     assert end_cds is None or isinstance(end_cds, CDSFeature)
     if start_cds or end_cds:
         assert start_cds != end_cds, "Using same gene for start and end of ordering"
+
+    tails = {v: k for k, v in chains.items()}
+
     cds_to_order = []
     for cds in cds_features:
-        if cds in (start_cds, end_cds):
-            pass
-        else:
-            cds_to_order.append(cds)
+        # the permutations shouldn't include chained CDSes or the start or end
+        if cds in (start_cds, end_cds) or cds in tails:
+            continue
+        cds_to_order.append(cds)
+
     possible_orders = []
     start: List[CDSFeature] = []
     if start_cds:
         start = [start_cds]
     end: List[CDSFeature] = []
     if end_cds:
+        # if the end CDS is the tail end of a split module,
+        # use the beginning of that chain as the 'end CDS'
+        while end_cds in tails:
+            end_cds = tails[end_cds]
         end = [end_cds]
     for order in itertools.permutations(cds_to_order, len(cds_to_order)):
-        possible_orders.append(start + list(order) + end)
+        # expand out any subchains formed by cross-CDS modules
+        full = []
+        for cds in start + list(order) + end:
+            full.append(cds)
+            next_cds = chains.get(cds)
+            while next_cds:
+                full.append(next_cds)
+                next_cds = chains.get(next_cds)
+        possible_orders.append(full)
     # ensure the list of possible orders is itself ordered for reliability
     return sorted(possible_orders, key=lambda x: [g.location.start for g in x])
 
@@ -309,6 +352,10 @@ def rank_biosynthetic_orders(n_terminal_residues: Dict[str, str],
         score = 0
         interactions = [order[i:i + 2] for i in range(len(order) - 1)]
         for gene, next_gene in interactions:
+            # additional CDS features may be brought in if they formed part of a
+            # cross-CDS module and contained no other complete modules
+            if gene.get_name() not in c_terminal_residues or next_gene.get_name() not in n_terminal_residues:
+                continue
             res1a, res2a = tuple(c_terminal_residues[gene.get_name()])
             res1b, res2b = tuple(n_terminal_residues[next_gene.get_name()])
             for pair in [{res1a, res1b}, {res2a, res2b}]:
@@ -325,11 +372,13 @@ def rank_biosynthetic_orders(n_terminal_residues: Dict[str, str],
     return best_order
 
 
-def perform_docking_domain_analysis(cds_features: List[CDSFeature]) -> List[CDSFeature]:
+def perform_docking_domain_analysis(cds_features: List[CDSFeature], chains: Dict[CDSFeature, CDSFeature]
+                                    ) -> List[CDSFeature]:
     """ Estimates gene ordering based on docking domains of features
 
         Arguments:
             cds_features: a list of CDSFeatures to order
+            chains: a dictionary mapping cross-CDS module head CDS to tail CDS
 
         Returns:
             a list of CDSFeatures in estimated order
@@ -339,7 +388,7 @@ def perform_docking_domain_analysis(cds_features: List[CDSFeature]) -> List[CDSF
 
     n_terminal_residues = extract_nterminus(data_dir, cds_features, start_cds)
     c_terminal_residues = extract_cterminus(data_dir, cds_features, end_cds)
-    possible_orders = find_possible_orders(cds_features, start_cds, end_cds)
+    possible_orders = find_possible_orders(cds_features, start_cds, end_cds, chains)
 
     geneorder = rank_biosynthetic_orders(n_terminal_residues, c_terminal_residues, possible_orders)
     return geneorder
