@@ -15,7 +15,7 @@
     {% set classes = region.get_product_string() %}
     {% if region.products | length > 1 %}
         {% set classes = "hybrid" %}
-    {% elif region.products | length == 1 %}
+    {% elif region.products | length == 1 and region.get_unique_protoclusters() %}
         {% set classes = classes + " " + region.get_unique_protoclusters()[0].product_category %}
     {% endif %}
     <{{element_class}} class="regbutton {{classes}} {{region.anchor_id}}">
