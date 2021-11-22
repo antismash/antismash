@@ -151,56 +151,55 @@ def generate_html_sections(records: List[RecordLayer], results: Dict[str, Dict[s
 
 
 def generate_webpage(records: List[Record], results: List[Dict[str, ModuleResults]],
-                     options: ConfigType, all_modules: List[AntismashModule]) -> None:
-    """ Generates and writes the HTML itself """
+                     options: ConfigType, all_modules: List[AntismashModule]) -> str:
+    """ Generates the HTML itself """
 
     generate_searchgtr_htmls(records, options)
     json_records, js_domains, js_results = build_json_data(records, results, options, all_modules)
     write_regions_js(json_records, options.output_dir, js_domains, js_results)
 
-    with open(os.path.join(options.output_dir, 'index.html'), 'w') as result_file:
-        template = FileTemplate(path.get_full_path(__file__, "templates", "overview.html"))
+    template = FileTemplate(path.get_full_path(__file__, "templates", "overview.html"))
 
-        options_layer = OptionsLayer(options, all_modules)
-        record_layers_with_regions = []
-        record_layers_without_regions = []
-        results_by_record_id: Dict[str, Dict[str, ModuleResults]] = {}
-        for record, record_results in zip(records, results):
-            if record.get_regions():
-                record_layers_with_regions.append(RecordLayer(record, None, options_layer))
-            else:
-                record_layers_without_regions.append(RecordLayer(record, None, options_layer))
-            results_by_record_id[record.id] = record_results
+    options_layer = OptionsLayer(options, all_modules)
+    record_layers_with_regions = []
+    record_layers_without_regions = []
+    results_by_record_id: Dict[str, Dict[str, ModuleResults]] = {}
+    for record, record_results in zip(records, results):
+        if record.get_regions():
+            record_layers_with_regions.append(RecordLayer(record, None, options_layer))
+        else:
+            record_layers_without_regions.append(RecordLayer(record, None, options_layer))
+        results_by_record_id[record.id] = record_results
 
-        regions_written = sum(len(record.get_regions()) for record in records)
-        job_id = os.path.basename(options.output_dir)
-        page_title = ""
-        if options.html_title:
-            page_title = options.html_title
-        elif options.sequences:
-            page_title, _ = os.path.splitext(os.path.basename(options.sequences[0]))
-        elif options.reuse_results:
-            page_title, _ = os.path.splitext(os.path.basename(options.reuse_results))
+    regions_written = sum(len(record.get_regions()) for record in records)
+    job_id = os.path.basename(options.output_dir)
+    page_title = ""
+    if options.html_title:
+        page_title = options.html_title
+    elif options.sequences:
+        page_title, _ = os.path.splitext(os.path.basename(options.sequences[0]))
+    elif options.reuse_results:
+        page_title, _ = os.path.splitext(os.path.basename(options.reuse_results))
 
-        html_sections = generate_html_sections(record_layers_with_regions, results_by_record_id, options)
+    html_sections = generate_html_sections(record_layers_with_regions, results_by_record_id, options)
 
-        svg_tooltip = ("Shows the layout of the region, marking coding sequences and areas of interest. "
-                       "Clicking a gene will select it and show any relevant details. "
-                       "Clicking an area feature (e.g. a candidate cluster) will select all coding "
-                       "sequences within that area. Double clicking an area feature will zoom to that area. "
-                       "Multiple genes and area features can be selected by clicking them while holding the Ctrl key."
-                       )
-        doc_target = "understanding_output/#the-antismash-5-region-concept"
-        svg_tooltip += "<br>More detailed help is available %s." % docs_link("here", doc_target)
+    svg_tooltip = ("Shows the layout of the region, marking coding sequences and areas of interest. "
+                   "Clicking a gene will select it and show any relevant details. "
+                   "Clicking an area feature (e.g. a candidate cluster) will select all coding "
+                   "sequences within that area. Double clicking an area feature will zoom to that area. "
+                   "Multiple genes and area features can be selected by clicking them while holding the Ctrl key."
+                   )
+    doc_target = "understanding_output/#the-antismash-5-region-concept"
+    svg_tooltip += "<br>More detailed help is available %s." % docs_link("here", doc_target)
 
-        aux = template.render(records=record_layers_with_regions, options=options_layer,
+    content = template.render(records=record_layers_with_regions, options=options_layer,
                               version=options.version, extra_data=js_domains,
                               regions_written=regions_written, sections=html_sections,
                               results_by_record_id=results_by_record_id,
                               config=options, job_id=job_id, page_title=page_title,
                               records_without_regions=record_layers_without_regions,
                               svg_tooltip=svg_tooltip)
-        result_file.write(aux)
+    return content
 
 
 def find_plugins_for_cluster(plugins: List[AntismashModule],
