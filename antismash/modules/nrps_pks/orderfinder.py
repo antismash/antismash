@@ -71,7 +71,7 @@ def analyse_biosynthetic_order(nrps_pks_features: List[CDSFeature],
             pks_chains = find_split_module_chains(pks_features, record)
         # If more than three PKS cds features, use dock_dom_analysis if possible to identify order
         # since this will grow as n!, an upper limit is also required
-        if 3 < len(pks_features) < 11 and not nrps_count and not hybrid_count:
+        if 3 < len(pks_features) and len(pks_features) - len(pks_chains) < 11 and not nrps_count and not hybrid_count:
             logging.debug("CandidateCluster %d monomer ordering method: domain docking analysis",
                           candidate_cluster_number)
             geneorder = perform_docking_domain_analysis(pks_features, pks_chains)
@@ -290,7 +290,7 @@ def find_possible_orders(cds_features: List[CDSFeature], start_cds: Optional[CDS
             a list of lists, each sublist being a unique ordering of the
             provided CDSFeatures
     """
-    assert len(cds_features) < 11, "input too large, function is O(n!)"
+    assert len(cds_features) - len(chains) < 11, "input too large, function is O(n!)"
     assert start_cds is None or isinstance(start_cds, CDSFeature)
     assert end_cds is None or isinstance(end_cds, CDSFeature)
     if start_cds or end_cds:
