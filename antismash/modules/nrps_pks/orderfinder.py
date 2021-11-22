@@ -147,6 +147,9 @@ def generate_substrates_order(geneorder: List[CDSFeature], consensus_predictions
         for module in gene.modules:
             if not module.is_complete():
                 continue
+            # for cross-CDS modules, report the monomer only for the head CDS
+            if len(module.parent_cds_names) > 1 and module.parent_cds_names[0] != gene.get_name():
+                continue
             substrate = ""
             for domain in module.domains:
                 consensus = consensus_predictions.get(domain.get_name())
