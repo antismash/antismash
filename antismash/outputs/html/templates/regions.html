@@ -8,7 +8,7 @@
  <div class="region-grid">
   <div class = "content">
     <div class ="description-container">
-      <div class="heading"> {{record.id}} - Region {{region.get_region_number()}} - {{region.get_product_string()}} {{help_tooltip(svg_tooltip, "region_svg")}}</div>
+      <div class="heading"> {{record.get_name()}} - Region {{region.get_region_number()}} - {{region.get_product_string()}} {{help_tooltip(svg_tooltip, "region_svg")}}</div>
       <div class="region-download">
         <a href = {{ '%s.region%03d.gbk' % (record.id, region.get_region_number()) }}>Download region GenBank file</a>
       </div>
