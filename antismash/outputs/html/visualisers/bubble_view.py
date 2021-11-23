@@ -228,13 +228,26 @@ def _gen_js_data_for_candidate(record: Record, result: CandidateClusterPredictio
 
         domains = []
         for dom in module.domains:
+            # some domains may be in cross-CDS modules where the parent CDS isn't in the candidate
+            if dom.locus_tag not in cds_positions:
+                continue
             assert isinstance(dom, ModularDomain)
             inactive = dom.domain_id in inactive_domains
             profile_name = hit_by_domain_by_cds[dom.locus_tag][dom].hit_id
             domains.append(build_domain_json(profile_name, dom, inactive))
             domains_in_modules_by_cds[dom.locus_tag].add(dom)
         polymer = module.get_substrate_monomer_pairs()[0][1] if module.is_complete() else ""
-        modules.append(SimpleModule(domains, module.is_complete(), cds_positions[domains[0]["cds"]],
+
+        # if not all of the parent CDS features of this module are in the candidate, it's not complete
+        contained = list(filter(lambda parent: parent in cds_positions, module.parent_cds_names))
+        complete = module.is_complete() and len(contained) == len(module.parent_cds_names)
+
+        # if the leading CDS isn't in the candidate, use the name of the trailing CDS
+        name = domains[0]["cds"]
+        if name not in cds_positions:
+            name = domains[-1]["cds"]
+
+        modules.append(SimpleModule(domains, complete, cds_positions[name],
                                     polymer, module.is_iterative()))
 
     extras = []
