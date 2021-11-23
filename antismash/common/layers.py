@@ -105,10 +105,18 @@ class RecordLayer:
             return super().__getattribute__(attr)
         return getattr(self.seq_record, attr)
 
+    def get_name(self) -> str:
+        """ Returns the ID of a record, with any extra notation included """
+        name = self.seq_record.id
+        if self.seq_record.has_multiple_sources():
+            sources = self.seq_record.get_sources()
+            name += f" (combined with {len(sources) - 1} other{'s' if len(sources) > 2 else ''})"
+        return name
+
     def get_from_record(self) -> Markup:
         """ Returns the text to be displayed in the HTML overview page """
 
-        current_id = f"<strong>{self.seq_record.id}</strong>"
+        current_id = f"<strong>{self.get_name()}</strong>"
 
         orig_id = self.seq_record.original_id
 
