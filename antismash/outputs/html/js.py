@@ -10,7 +10,7 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from antismash.common import html_renderer, path
 from antismash.common.module_results import ModuleResults
-from antismash.common.secmet import CDSFeature, Feature, Record, Region
+from antismash.common.secmet import CDSFeature, Feature, Record, Region, Source
 from antismash.common.secmet.qualifiers.gene_functions import GeneFunction
 from antismash.common.secmet.qualifiers.go import GOQualifier
 from antismash.common.secmet.features.cdscollection import CDSCollection
@@ -80,6 +80,17 @@ def fetch_tta_features(region: Region, result: Dict[str, ModuleResults]) -> List
     return hits
 
 
+def convert_source(source: Source, region: Region) -> Dict[str, Any]:
+    """ Converts a Source feature to JSON """
+    result = {
+        "regionStart": max(0, source.location.start - region.location.start),
+        "regionEnd": min(region.location.end, source.location.end - region.location.start),
+        "recordStart": source.location.start,
+        "recordEnd": source.location.end,
+    }
+    return result
+
+
 def convert_regions(record: Record, options: ConfigType, result: Dict[str, ModuleResults]) -> List[Dict[str, Any]]:
     """Convert Region features to JSON"""
     js_regions = []
@@ -112,6 +123,10 @@ def convert_regions(record: Record, options: ConfigType, result: Dict[str, Modul
         js_region['product_categories'] = list(region.product_categories)
         js_region['cssClass'] = get_region_css(region)
         js_region['anchor'] = f"r{record.record_index}c{region.get_region_number()}"
+        if record.has_multiple_sources():
+            sources = [source for source in record.get_sources() if source.overlaps_with(region)]
+            if len(sources) > 1:
+                js_region['sources'] = [convert_source(source, region) for source in sources]
 
         js_regions.append(js_region)
 
