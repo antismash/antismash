@@ -606,6 +606,16 @@ table.region-table {
     }
 }
 
+.svgene-source-marker {
+    stroke: black;
+}
+
+.svgene-source-name {
+    @extend .serif;
+    font-size: small;
+    text-anchor: middle;
+}
+
 .legend-items, .zoom-buttons {
     display: flex;
     justify-content: center;
