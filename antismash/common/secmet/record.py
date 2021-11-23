@@ -36,6 +36,7 @@ from .features import (
     Prepeptide,
     Protocluster,
     Region,
+    Source,
     SubRegion,
 )
 from .features import CDSCollection
@@ -78,7 +79,7 @@ class Record:
                  "_subregions", "_subregion_numbering",
                  "_regions", "_region_numbering", "_antismash_domains_by_tool",
                  "_antismash_domains_by_cds_name", "_gc_content",
-                 "_cds_cache", "_cds_cache_dirty",
+                 "_cds_cache", "_cds_cache_dirty", "_sources",
                  ]
 
     def __init__(self, seq: Union[Seq, str] = "", *,
@@ -134,6 +135,8 @@ class Record:
 
         self._transl_table = int(transl_table)
         self._gc_content: float = gc_content
+
+        self._sources: List[Source] = []
 
     def __getattr__(self, attr: str) -> Any:
         # passthroughs to the original SeqRecord
@@ -484,6 +487,7 @@ class Record:
         features.extend(self.get_antismash_domains())
         features.extend(self.get_pfam_domains())
         features.extend(self.get_modules())
+        features.extend(self.get_sources())
         return features
 
     def get_cds_features_within_location(self, location: Location,
@@ -554,7 +558,8 @@ class Record:
                        self._candidate_clusters, self._cds_motifs,
                        self._pfam_domains, self._antismash_domains,
                        self._nonspecific_features,
-                       self._genes, self._regions, self._subregions]
+                       self._genes, self._regions, self._subregions,
+                       self._sources]
         return sum(map(len, cast(List[List[Feature]], collections)))
 
     def add_gene(self, gene: Gene) -> None:
@@ -669,6 +674,24 @@ class Record:
         """ Returns all Modules in the record """
         return tuple(self._modules)
 
+    def add_source(self, source: Source) -> None:
+        """ Add the given Source to the record """
+        assert isinstance(source, Source)
+
+        self._sources.append(source)
+
+    def clear_sources(self) -> None:
+        """ Removes all Sources from the record """
+        self._sources.clear()
+
+    def get_sources(self) -> Tuple[Source, ...]:
+        """ Returns all Sources in the record """
+        return tuple(self._sources)
+
+    def has_multiple_sources(self) -> bool:
+        """ Returns True if the record contains multiple Source features """
+        return len(self._sources) > 1
+
     def add_feature(self, feature: Feature) -> None:
         """ Adds a Feature or any subclass to the relevant list """
         assert isinstance(feature, Feature), type(feature)
@@ -692,6 +715,8 @@ class Record:
             self.add_antismash_domain(feature)
         elif isinstance(feature, Module):
             self.add_module(feature)
+        elif isinstance(feature, Source):
+            self.add_source(feature)
         else:
             self._nonspecific_features.append(feature)
 
@@ -736,6 +761,8 @@ class Record:
             self.add_subregion(SubRegion.from_biopython(feature, record=self))
         elif feature.type == Module.FEATURE_TYPE:
             self.add_module(Module.from_biopython(feature, record=self))
+        elif feature.type == Source.FEATURE_TYPE:
+            self.add_source(Source.from_biopython(feature, record=self))
         else:
             self.add_feature(Feature.from_biopython(feature))
 
