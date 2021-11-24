@@ -173,6 +173,15 @@ class Region(CDSCollection, AbstractRegion):
             warnings.simplefilter("ignore")
             cluster_record = record[self.location.start:self.location.end]
 
+        # find the source that starts this section of the record and insert it
+        for source in self.parent_record.get_sources():
+            if source.location.start < self.location.start < source.location.end:
+                source_bio = source.to_biopython()[0]
+                end = min(source_bio.location.end - self.location.start, len(cluster_record.seq))
+                source_bio.location = FeatureLocation(0, end)
+                cluster_record.features.insert(0, source_bio)
+                break
+
         cluster_record.annotations["date"] = record.annotations.get("date", '')
         cluster_record.annotations["source"] = record.annotations.get("source", '')
         cluster_record.annotations["organism"] = record.annotations.get("organism", '')
