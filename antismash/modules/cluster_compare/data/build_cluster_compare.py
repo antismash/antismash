@@ -120,7 +120,8 @@ def convert_all_mibig(input_dir: str, output_dir: str, accessions: List[str]) ->
                     converted = convert_record(record, fasta, skip_contig_edge=False)
                     converted["regions"][0]["products"] = mibig_data["cluster"]["biosyn_class"]
                     if mibig_data["cluster"].get("other", {}).get("subclass"):
-                        converted["regions"][0]["products"] += " (%s)" % mibig_data["cluster"]["other"]["subclass"]
+                        index = converted["regions"][0]["products"].index("Other")
+                        converted["regions"][0]["products"][index] += " (%s)" % mibig_data["cluster"]["other"]["subclass"]
                     converted["regions"][0]["organism"] = mibig_data["cluster"]["organism_name"]
                     converted["regions"][0]["description"] = ", ".join([compound["compound"] for compound in mibig_data["cluster"]["compounds"]])
                     result[record.id] = converted
