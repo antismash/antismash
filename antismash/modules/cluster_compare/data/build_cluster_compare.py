@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
+import argparse
 import glob
 import json
 import os
-import sys
 from typing import (
     Any,
     Dict,
     IO,
+    List,
 )
 
 from antismash.common import secmet
@@ -102,17 +103,19 @@ def convert_all(input_dir: str, output_dir: str) -> None:
         handle.write(json.dumps(result, indent=1))
 
 
-def convert_all_mibig(input_dir: str, output_dir: str) -> None:
-    files = [name for name in glob.glob(os.path.join(input_dir, "*", "*.gbk")) if "region" not in name]
-    assert files
+def convert_all_mibig(input_dir: str, output_dir: str, accessions: List[str]) -> None:
+    if not accessions:
+        raise ValueError("no valid MIBiG accessions, a database could not be generated")
     result = {}
     with open(os.path.join(output_dir, "proteins.fasta"), "w") as fasta:
-        for filename in files:
+        for accession in accessions:
             # get mibig data
-            with open(os.path.join(filename.split(".")[0] + ".json")) as handle:
+            json_path = os.path.join(input_dir, accession, accession + ".json")
+            with open(json_path) as handle:
                 mibig_data = json.load(handle)
+            genbank = os.path.join(input_dir, accession, "generated", accession + ".gbk")
             try:
-                for record in secmet.Record.from_genbank(filename):
+                for record in secmet.Record.from_genbank(genbank):
                     record.id = record.annotations['structured_comment']['antiSMASH-Data'].get('Original ID', record.id)
                     converted = convert_record(record, fasta, skip_contig_edge=False)
                     converted["regions"][0]["products"] = mibig_data["cluster"]["biosyn_class"]
@@ -122,28 +125,43 @@ def convert_all_mibig(input_dir: str, output_dir: str) -> None:
                     converted["regions"][0]["description"] = ", ".join([compound["compound"] for compound in mibig_data["cluster"]["compounds"]])
                     result[record.id] = converted
             except secmet.errors.SecmetInvalidInputError as err:
-                print(filename, "failed:", err, list(mibig_data))
+                print(accession, "failed:", err, list(mibig_data))
             except KeyError as err:
-                print(filename, "is invalid:", err)
+                print(accession, "is invalid:", err)
     with open(os.path.join(output_dir, "data.json"), "w") as handle:
-        handle.write(json.dumps(result, indent=1))
+        json.dump(result, handle, indent=1, sort_keys=True)
 
 
 if __name__ == "__main__":
-    mibig = "--mibig" in sys.argv
-    if mibig:
-        sys.argv.pop(sys.argv.index("--mibig"))
-    if len(sys.argv) == 2:
-        output = os.path.join(os.getcwd(), "data")
-    elif len(sys.argv) == 3:
-        output = sys.argv[2]
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "input_path",
+        type=str,
+        help=("The directory containing antiSMASH result subdirectories"
+              " (or MIBiG directories with MIBiG JSON and antiSMASH 'generated'"
+              " subdirectories)")
+    )
+    parser.add_argument(
+        "--output",
+        default="data",
+        metavar="DIR",
+        type=str,
+        help="The directory to place the resulting database files (default: %(default)s)"
+    )
+    parser.add_argument(
+        "--mibig",
+        default="",
+        metavar="ACCESSIONS_FILE",
+        type=str,
+        help="Run in MIBiG mode including the accessions in the given file",
+    )
+    args = parser.parse_args()
+
+    if not os.path.exists(args.output):
+        os.makedirs(args.output)
+    if args.mibig:
+        with open(args.mibig) as _handle:
+            convert_all_mibig(os.path.abspath(args.input_path), args.output,
+                              _handle.read().splitlines())
     else:
-        print((f"Usage: {sys.argv[0]} directory_containing_antismash_output_dirs db_output_dir --mibig\n"
-               "Outputs to a directory named 'data' if not specified"))
-        sys.exit(1)
-    if not os.path.exists(output):
-        os.makedirs(output)
-    if mibig:
-        convert_all_mibig(os.path.abspath(sys.argv[1]), output)
-    else:
-        convert_all(os.path.abspath(sys.argv[1]), output)
+        convert_all(os.path.abspath(args.input_path), args.output)
