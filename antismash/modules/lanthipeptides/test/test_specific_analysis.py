@@ -14,6 +14,7 @@ from antismash.common.test.helpers import DummyCDS, FakeHit, DummyRecord
 from antismash.modules.lanthipeptides import specific_analysis as lanthi
 from antismash.modules.lanthipeptides.specific_analysis import (
     Lanthipeptide,
+    LanthiResults,
     predict_cleavage_site,
     result_vec_to_feature,
     CleavageSiteHit,
@@ -172,3 +173,34 @@ class TestNoCores(unittest.TestCase):
                                      self.cds, "Class-II", self.domains)
         assert results is not None
         assert str(results).startswith("Lanthipeptide(..40, -6.8, 'Class-II', 'LSQGLGGC', 1, 715")
+
+
+class TestCDSDuplication(unittest.TestCase):
+    def setUp(self):
+        self.record = DummyRecord(seq="A" * 100)
+        self.cds = DummyCDS()
+
+    def test_existing(self):
+        self.record.add_cds_feature(self.cds)
+        results = LanthiResults(self.record.id)
+        results.add_cds(self.cds)
+        assert len(self.record.get_cds_features()) == 1
+        results.add_to_record(self.record)
+        assert len(self.record.get_cds_features()) == 1
+
+    def test_new(self):
+        results = LanthiResults(self.record.id)
+        results.add_cds(self.cds)
+        assert len(self.record.get_cds_features()) == 0
+        results.add_to_record(self.record)
+        assert len(self.record.get_cds_features()) == 1
+
+    def test_double_protocluster(self):
+        results = LanthiResults(self.record.id)
+        assert len(results._new_cds_features) == 0
+        results.add_cds(self.cds)
+        assert len(results._new_cds_features) == 1
+        results.add_cds(self.cds)
+        assert len(results._new_cds_features) == 1
+        results.add_cds(DummyCDS(locus_tag="different"))
+        assert len(results._new_cds_features) == 2

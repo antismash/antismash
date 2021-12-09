@@ -60,7 +60,7 @@ class LanthiResults(module_results.ModuleResults):
     def __init__(self, record_id: str) -> None:
         super().__init__(record_id)
         # keep new CDS features
-        self.new_cds_features: Set[CDSFeature] = set()
+        self._new_cds_features: Set[CDSFeature] = set()
         # keep new CDSMotifs by the gene they match to
         # e.g. self.motifs_by_locus[gene_locus] = [motif1, motif2..]
         self.motifs_by_locus: Dict[str, List[Prepeptide]] = defaultdict(list)
@@ -69,7 +69,7 @@ class LanthiResults(module_results.ModuleResults):
         self.clusters: Dict[int, Set[str]] = defaultdict(set)
 
     def to_json(self) -> Dict[str, Any]:
-        cds_features = [(str(feature.location), feature.get_name()) for feature in self.new_cds_features]
+        cds_features = [(str(feature.location), feature.get_name()) for feature in self._new_cds_features]
         motifs = {}
         for locus, locus_motifs in self.motifs_by_locus.items():
             motifs[locus] = [motif.to_json() for motif in locus_motifs]
@@ -91,12 +91,15 @@ class LanthiResults(module_results.ModuleResults):
         results.clusters = {int(key): set(val) for key, val in json["protoclusters"].items()}
         for location, name in json["new_cds_features"]:
             cds = all_orfs.create_feature_from_location(record, location_from_string(location), label=name)
-            results.new_cds_features.add(cds)
+            results.add_cds(cds)
         return results
 
     def add_to_record(self, record: Record) -> None:
-        for feature in self.new_cds_features:
-            record.add_cds_feature(feature)
+        existing = record.get_cds_name_mapping()
+        for feature in self._new_cds_features:
+            # since a precursor may be found by other RiPP modules
+            if feature.get_name() not in existing:
+                record.add_cds_feature(feature)
 
         motifs_added: Set[str] = set()
         for motifs in self.motifs_by_locus.values():
@@ -114,6 +117,14 @@ class LanthiResults(module_results.ModuleResults):
             for locus in self.clusters.get(cluster.get_protocluster_number(), []):
                 results[locus] = self.motifs_by_locus[locus]
         return results
+
+    def add_cds(self, cds: CDSFeature) -> None:
+        """ Add a newly found CDS feature that will be added to the record """
+        # if already added by another protocluster, don't double up
+        for existing in self._new_cds_features:
+            if cds.get_name() == existing.get_name():
+                return
+        self._new_cds_features.add(cds)
 
 
 class PrepeptideBase:
@@ -703,7 +714,7 @@ def run_lanthi_on_genes(record: Record, focus: CDSFeature, cluster: Protocluster
         results.clusters[cluster.get_protocluster_number()].add(focus.get_name())
         # track new CDSFeatures if found with all_orfs
         if candidate.region is None:
-            results.new_cds_features.add(candidate)
+            results.add_cds(candidate)
 
 
 def run_specific_analysis(record: Record) -> LanthiResults:
