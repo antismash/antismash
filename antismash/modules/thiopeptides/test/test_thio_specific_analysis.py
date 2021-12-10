@@ -10,9 +10,10 @@ from unittest.mock import patch
 from Bio.SeqFeature import FeatureLocation
 
 from antismash.common import subprocessing
-from antismash.common.test.helpers import DummyCDS, FakeHit
+from antismash.common.test.helpers import DummyCDS, DummyRecord, FakeHit
 from antismash.modules.thiopeptides.specific_analysis import (
     Thiopeptide,
+    ThioResults,
     predict_cleavage_site,
     result_vec_to_feature,
 )
@@ -164,3 +165,35 @@ class TestSpecificAnalysis(unittest.TestCase):
         assert not motif.tail
         assert motif.detailed_information.core_features == "Central ring: pyridine trisubstituted"
         assert motif.core == "SCTSSCTSS"
+
+
+class TestCDSDuplication(unittest.TestCase):
+    def setUp(self):
+        self.record = DummyRecord(seq="A" * 100)
+        self.cds = DummyCDS()
+
+    def test_existing(self):
+        self.record.add_cds_feature(self.cds)
+        results = ThioResults(self.record.id)
+        results.add_cds(1, self.cds)
+        assert len(self.record.get_cds_features()) == 1
+        results.add_to_record(self.record)
+        assert len(self.record.get_cds_features()) == 1
+
+    def test_new(self):
+        results = ThioResults(self.record.id)
+        results.add_cds(1, self.cds)
+        assert len(self.record.get_cds_features()) == 0
+        results.add_to_record(self.record)
+        assert len(self.record.get_cds_features()) == 1
+
+    def test_double_protocluster(self):
+        results = ThioResults(self.record.id)
+        assert len(results._cds_features[1]) == 0
+        results.add_cds(1, self.cds)
+        assert len(results._cds_features[1]) == 1
+        results.add_cds(1, self.cds)
+        assert len(results._cds_features[1]) == 1
+        assert len(results._cds_features) == 1
+        results.add_cds(2, DummyCDS(start=50, end=80, locus_tag="different"))
+        assert len(results._cds_features) == 2

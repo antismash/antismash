@@ -28,14 +28,14 @@ class ThioResults(module_results.ModuleResults):
         super().__init__(record_id)
         self.clusters_with_motifs: Set[secmet.Protocluster] = set()
         # to track CDSs found with find_all_orfs and within which clusters they were found
-        self.cds_features: Dict[int, List[secmet.CDSFeature]] = defaultdict(list)
+        self._cds_features: Dict[int, List[secmet.CDSFeature]] = defaultdict(list)
         # to track the motifs created
         self.motifs: List[secmet.Prepeptide] = []
 
     def to_json(self) -> Dict[str, Any]:
         """ Converts the results to JSON format """
         cds_features_by_cluster = {key: [(str(feature.location), feature.get_name()) for feature in features]
-                                   for key, features in self.cds_features.items()}
+                                   for key, features in self._cds_features.items()}
         protoclusters = [cluster.get_protocluster_number() for cluster in self.clusters_with_motifs]
         return {"record_id": self.record_id,
                 "schema_version": ThioResults.schema_version,
@@ -57,17 +57,29 @@ class ThioResults(module_results.ModuleResults):
         for cluster, features in json["cds_features"].items():
             for location, name in features:
                 cds = all_orfs.create_feature_from_location(record, location_from_string(location), label=name)
-                results.cds_features[cluster].append(cds)
+                results.add_cds(cluster, cds)
         return results
 
     def add_to_record(self, record: secmet.Record) -> None:
         """ Adds any relevant result constructions to the record """
-        for features in self.cds_features.values():
-            for cds in features:
-                record.add_cds_feature(cds)
+        existing = record.get_cds_name_mapping()
+        for proto_cdses in self._cds_features.values():
+            for feature in proto_cdses:
+                # since a precursor may be found by other RiPP modules
+                if feature.get_name() not in existing:
+                    record.add_cds_feature(feature)
 
         for motif in self.motifs:
             record.add_cds_motif(motif)
+
+    def add_cds(self, proto: int, cds: secmet.CDSFeature) -> None:
+        """ Add a newly found CDS feature that will be added to the record """
+        # if already added by another protocluster, don't double up
+        for proto_cdses in self._cds_features.values():
+            for existing in proto_cdses:
+                if cds.get_name() == existing.get_name():
+                    return
+        self._cds_features[proto].append(cds)
 
 
 class Thiopeptide:
@@ -611,7 +623,7 @@ def specific_analysis(record: secmet.Record) -> ThioResults:
                 result_vec.amidation = True
             new_feature = result_vec_to_feature(thio_feature, result_vec)
             if thio_feature in new_orfs:
-                results.cds_features[cluster.get_protocluster_number()].append(thio_feature)
+                results.add_cds(cluster.get_protocluster_number(), thio_feature)
             results.motifs.append(new_feature)
             results.clusters_with_motifs.add(cluster)
     logging.debug("Thiopeptides marked %d motifs", len(results.motifs))
