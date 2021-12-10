@@ -29,7 +29,7 @@
         <div style="display: flex; flex-wrap: wrap">
         {% for record in records %}
           {% for region in record.regions %}
-            {{region_table.region_button(region, "div")}}
+            {{region_table.region_button(region, "div", get_region_css(region))}}
               <a href="#{{region.anchor_id}}">{{record.record_index}}.{{region.get_region_number()}}</a>
             </div>
           {% endfor %}
@@ -62,14 +62,14 @@
       </div>
       <div class="record-overview-details">
         <svg id="record-minimap-{{record.record_index}}" class="record-overview-svg" height="1" width="1"></svg>
-        {{ region_table.single_record_table(record, multi_record, options) }}
+        {{ region_table.single_record_table(record, multi_record, options, get_region_css) }}
       </div>
      {%- endfor %}
      </div>
      {% if multi_record %}
      <div id="compact-record-table" style="display: none;">
       <div class="record-table">
-       {{ region_table.compact_records_table(records, options) }}
+       {{ region_table.compact_records_table(records, options, get_region_css) }}
       </div>
      </div>
      {% endif %}

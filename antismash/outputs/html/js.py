@@ -25,6 +25,26 @@ searchgtr_links: Dict[str, str] = {}  # TODO: refactor away from global
 GO_URL = 'http://amigo.geneontology.org/amigo/term/'
 
 
+def get_region_css(region: Region) -> str:
+    """ Collects the CSS classes for the given region and returns it as a
+        single string.
+
+        Arguments:
+            region: the region to generate CSS for
+
+        Returns:
+            a string of the CSS class(es)
+    """
+    if len(region.product_categories) > 1:
+        return "hybrid"
+    if len(region.get_unique_protoclusters()) < 1:
+        return "unknown"
+    classes = [list(region.product_categories)[0]]
+    if len(region.get_unique_protoclusters()) == 1:
+        classes.append(region.get_unique_protoclusters()[0].product)
+    return " ".join(classes)
+
+
 def convert_records(records: List[Record], results: List[Dict[str, ModuleResults]],
                     options: ConfigType) -> List[Dict[str, Any]]:
     """ Convert multiple Records to JSON """
@@ -87,6 +107,7 @@ def convert_regions(record: Record, options: ConfigType, result: Dict[str, Modul
         js_region['type'] = region.get_product_string()
         js_region['products'] = region.products
         js_region['product_categories'] = list(region.product_categories)
+        js_region['cssClass'] = get_region_css(region)
         js_region['anchor'] = "r%dc%d" % (record.record_index, region.get_region_number())
 
         js_regions.append(js_region)

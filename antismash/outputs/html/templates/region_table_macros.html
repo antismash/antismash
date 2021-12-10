@@ -11,19 +11,13 @@
  </thead>
 {%- endmacro %}
 
-{% macro region_button(region, element_class) -%}
-    {% set classes = region.get_product_string() %}
-    {% if region.products | length > 1 %}
-        {% set classes = "hybrid" %}
-    {% elif region.products | length == 1 and region.get_unique_protoclusters() %}
-        {% set classes = classes + " " + region.get_unique_protoclusters()[0].product_category %}
-    {% endif %}
-    <{{element_class}} class="regbutton {{classes}} {{region.anchor_id}}">
+{% macro region_button(region, element_class, css) -%}
+    <{{element_class}} class="regbutton {{css}} {{region.anchor_id}}">
 {%- endmacro %}
 
-{% macro region_row(region, cycle, record_index, options) -%}
+{% macro region_row(region, cycle, record_index, options, css) -%}
    <tr class="linked-row {{cycle}}" data-anchor="#{{region.anchor_id}}">
-     {{region_button(region, "td")}}
+     {{region_button(region, "td", css)}}
       <a href="#{{region.anchor_id}}">Region&nbsp{% if record_index %}{{record_index}}.{% endif %}{{region.get_region_number()}}</a>
      </td>
      <td>
@@ -52,25 +46,25 @@
    </tr>
 {%- endmacro %}
 
-{% macro single_record_table(record, multi_record, options) -%}
+{% macro single_record_table(record, multi_record, options, get_region_css) -%}
 <table class="region-table">
  {{ table_header() }}
  <tbody>
  {% for region in record.regions -%}
-  {{ region_row(region, loop.cycle('odd', 'even'), (multi_record and record.record_index) or 0, options) }}
+  {{ region_row(region, loop.cycle('odd', 'even'), (multi_record and record.record_index) or 0, options, get_region_css(region)) }}
  {% endfor %}
  </tbody>
 </table>
 {%- endmacro %}
 
-{% macro compact_records_table(records, options) -%}
+{% macro compact_records_table(records, options, get_region_css) -%}
 <table class="region-table">
  {{ table_header() }}
  <tbody>
  {% set style = cycler('odd', 'even') %}
  {% for record in records %}
   {% for region in record.regions -%}
-   {{ region_row(region, style.next(), record.record_index, options) }}
+   {{ region_row(region, style.next(), record.record_index, options, get_region_css(region)) }}
   {% endfor %}
  {% endfor %}
  </tbody>

@@ -198,7 +198,7 @@ def generate_webpage(records: List[Record], results: List[Dict[str, ModuleResult
                               results_by_record_id=results_by_record_id,
                               config=options, job_id=job_id, page_title=page_title,
                               records_without_regions=record_layers_without_regions,
-                              svg_tooltip=svg_tooltip)
+                              svg_tooltip=svg_tooltip, get_region_css=js.get_region_css)
     return content
 
 
