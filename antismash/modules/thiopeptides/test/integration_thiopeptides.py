@@ -149,8 +149,8 @@ class TestIntegration(unittest.TestCase):
         assert results
 
         # check that the extra orf was found and stored correctly
-        assert len(results.cds_features) == 1
-        additions = list(results.cds_features.values())[0]
+        assert len(results._cds_features) == 1
+        additions = list(results._cds_features.values())[0]
         assert len(additions) == 1
         assert isinstance(additions[0], secmet.features.CDSFeature)
 
