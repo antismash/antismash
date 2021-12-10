@@ -10,10 +10,11 @@ from unittest.mock import patch
 from Bio.SeqUtils.ProtParam import ProteinAnalysis
 
 from antismash.common import subprocessing
-from antismash.common.test.helpers import DummyCDS, FakeHSP
+from antismash.common.test.helpers import DummyCDS, DummyRecord, FakeHSP
 
 from antismash.modules.lassopeptides.specific_analysis import (
     Lassopeptide,
+    LassoResults,
     predict_cleavage_site,
     result_vec_to_motif,
 )
@@ -131,3 +132,34 @@ class TestSpecificAnalysis(unittest.TestCase):
         self.assertAlmostEqual(motif.molecular_weight, 4106.1, delta=1)
         self.assertAlmostEqual(motif.detailed_information.cut_mass, 3792.3, delta=1)
         self.assertAlmostEqual(motif.detailed_information.cut_weight, 3794.7, delta=1)
+
+
+class TestCDSDuplication(unittest.TestCase):
+    def setUp(self):
+        self.record = DummyRecord(seq="A" * 100)
+        self.cds = DummyCDS()
+
+    def test_existing(self):
+        self.record.add_cds_feature(self.cds)
+        results = LassoResults(self.record.id)
+        results.add_cds(self.cds)
+        assert len(self.record.get_cds_features()) == 1
+        results.add_to_record(self.record)
+        assert len(self.record.get_cds_features()) == 1
+
+    def test_new(self):
+        results = LassoResults(self.record.id)
+        results.add_cds(self.cds)
+        assert len(self.record.get_cds_features()) == 0
+        results.add_to_record(self.record)
+        assert len(self.record.get_cds_features()) == 1
+
+    def test_double_protocluster(self):
+        results = LassoResults(self.record.id)
+        assert len(results._new_cds_features) == 0
+        results.add_cds(self.cds)
+        assert len(results._new_cds_features) == 1
+        results.add_cds(self.cds)
+        assert len(results._new_cds_features) == 1
+        results.add_cds(DummyCDS(locus_tag="different"))
+        assert len(results._new_cds_features) == 2
