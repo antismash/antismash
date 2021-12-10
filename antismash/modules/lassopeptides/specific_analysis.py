@@ -34,7 +34,7 @@ class LassoResults(module_results.ModuleResults):
     def __init__(self, record_id: str) -> None:
         super().__init__(record_id)
         # keep new CDS features
-        self.new_cds_features: Set[CDSFeature] = set()
+        self._new_cds_features: Set[CDSFeature] = set()
         # keep new CDSMotifs by the gene they match to
         # e.g. self.motifs_by_locus[gene_locus] = [motif1, motif2..]
         self.motifs_by_locus: Dict[str, List[Prepeptide]] = defaultdict(list)
@@ -44,7 +44,7 @@ class LassoResults(module_results.ModuleResults):
 
     def to_json(self) -> Dict[str, Any]:
         cds_features = [(str(feature.location),
-                         feature.get_name()) for feature in self.new_cds_features]
+                         feature.get_name()) for feature in self._new_cds_features]
         motifs = {}
         for locus, locus_motifs in self.motifs_by_locus.items():
             motifs[locus] = [motif.to_json() for motif in locus_motifs]
@@ -67,16 +67,27 @@ class LassoResults(module_results.ModuleResults):
         for location, name in json["new_cds_features"]:
             loc = location_from_string(location)
             cds = all_orfs.create_feature_from_location(record, loc, label=name)
-            results.new_cds_features.add(cds)
+            results.add_cds(cds)
         return results
 
     def add_to_record(self, record: Record) -> None:
-        for feature in self.new_cds_features:
-            record.add_cds_feature(feature)
+        existing = record.get_cds_name_mapping()
+        for feature in self._new_cds_features:
+            # since a precursor may be found by other RiPP modules
+            if feature.get_name() not in existing:
+                record.add_cds_feature(feature)
 
         for motifs in self.motifs_by_locus.values():
             for motif in motifs:
                 record.add_cds_motif(motif)
+
+    def add_cds(self, cds: CDSFeature) -> None:
+        """ Add a newly found CDS feature that will be added to the record """
+        # if already added by another protocluster, don't double up
+        for existing in self._new_cds_features:
+            if cds.get_name() == existing.get_name():
+                return
+        self._new_cds_features.add(cds)
 
 
 class Lassopeptide:
@@ -723,7 +734,7 @@ def specific_analysis(record: Record) -> LassoResults:
             results.clusters[cluster.get_protocluster_number()].add(candidate.get_name())
             # track new CDSFeatures if found with all_orfs
             if candidate.region is None:
-                results.new_cds_features.add(candidate)
+                results.add_cds(candidate)
 
     logging.debug("Lassopeptide module marked %d motifs", motif_count)
     return results
