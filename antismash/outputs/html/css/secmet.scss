@@ -35,6 +35,10 @@
     @include secmet(white, royalblue);
 }
 
+.other {
+    @include secmet(lightsteelblue, midnightblue);
+}
+
 @mixin osmolyte {
     @include secmet(firebrick, yellowgreen, firebrick);
 }
@@ -181,10 +185,6 @@
 
 .PBDE {
     @include hydrocarbon;
-}
-
-.other {
-    @include secmet(lightsteelblue, midnightblue);
 }
 
 .betalactone {
