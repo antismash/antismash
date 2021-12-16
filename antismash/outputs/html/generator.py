@@ -173,13 +173,9 @@ def generate_webpage(records: List[Record], results: List[Dict[str, ModuleResult
 
     regions_written = sum(len(record.get_regions()) for record in records)
     job_id = os.path.basename(options.output_dir)
-    page_title = ""
+    page_title = options.output_basename
     if options.html_title:
         page_title = options.html_title
-    elif options.sequences:
-        page_title, _ = os.path.splitext(os.path.basename(options.sequences[0]))
-    elif options.reuse_results:
-        page_title, _ = os.path.splitext(os.path.basename(options.reuse_results))
 
     html_sections = generate_html_sections(record_layers_with_regions, results_by_record_id, options)
 
