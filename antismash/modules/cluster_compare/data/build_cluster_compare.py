@@ -39,9 +39,19 @@ def convert_module(module: secmet.Module) -> Dict[str, Any]:
 
 
 def convert_cds(cds: secmet.CDSFeature) -> Dict[str, Any]:
+    function = secmet.GeneFunction.OTHER
+    if cds.gene_function == secmet.GeneFunction.CORE:
+        function = secmet.GeneFunction.CORE
+    else:
+        annotations = cds.gene_functions.get_by_tool("smcogs")
+        if not annotations:
+            annotations = cds.gene_functions.get_by_tool("rule-based-clusters")
+        if annotations:
+            function = annotations[0].function
+
     result = {
         "location": str(cds.location),
-        "function": str(cds.gene_function),
+        "function": str(function),
         "components": {
             "secmet": [] if not cds.sec_met else cds.sec_met.domain_ids,
             "modules": [convert_module(module) for module in cds.modules],
