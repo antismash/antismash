@@ -31,9 +31,9 @@ CLUSTERBLAST_FASTA_CHECKSUM = "ea43624407ae399cd6e78bf2e6868e9ff0b9581f333645063
 
 CLUSTERCOMPARE_DBS = {
     "mibig": {
-        "url": "https://dl.secondarymetabolites.org/releases/clustercompare/cc_mibig_20201210.tar.xz",
-        "archive": "25bc9ce7d09f8325d93c0345367def76147e0c6c4c8bd5adbd2ecc79a1827170",
-        "fasta": "3fe75f4a95823297ea14817da328000f160f15e5e78335c629812a6cc0c64dcf",
+        "url": "https://dl.secondarymetabolites.org/releases/clustercompare/cc_mibig_20211216.tar.xz",
+        "archive": "47eb75862e2e11a10664a0ca5f40fed3285f96e18c48ebe19ccb46ddd0fd2c3e",
+        "fasta": "4470c429601aa5cf0b0ecd3fa785fccceaf6eaeb7f92599d835429348bd6f52b",
     },
 }
 
