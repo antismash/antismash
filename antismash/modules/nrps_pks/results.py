@@ -206,7 +206,7 @@ class NRPS_PKS_Results(ModuleResults):
     def _annotate_c_domain(self, domain: NRPSPKSQualifier.Domain) -> None:
         assert domain.name in ["Cglyc", "Condensation_DCL", "Condensation_LCL",
                                "Condensation_Starter", "Condensation_Dual",
-                               "Heterocyclization", "Epimerization"]
+                               "Heterocyclization", "Epimerization", "Condensation_sid"]
         predictions = self.domain_predictions[domain.feature_name]
 
         activity = predictions["c_activity"].get_classification()[0]
@@ -258,7 +258,7 @@ class NRPS_PKS_Results(ModuleResults):
                     self._annotate_at_domain(domain, "transatpks" in cds_feature.region.products)
                 elif domain.name in ["Cglyc", "Condensation_DCL", "Condensation_LCL",
                                      "Condensation_Starter", "Condensation_Dual",
-                                     "Heterocyclization", "Epimerization"]:
+                                     "Heterocyclization", "Epimerization", "Condensation_sid"]:
                     self._annotate_c_domain(domain)
                 elif domain.name == "CAL_domain":
                     self._annotate_cal_domain(domain)

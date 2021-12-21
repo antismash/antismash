@@ -34,7 +34,7 @@ def extract_c_domains(cds_features: list[CDSFeature]) -> list[tuple[str, str, st
         for domain in cds.nrps_pks.domains:
             if domain.name in ["Cglyc", "Condensation_DCL", "Condensation_LCL",
                                "Condensation_Starter", "Condensation_Dual",
-                               "Heterocyclization", "Epimerization"]:
+                               "Heterocyclization", "Epimerization","Condensation_sid"]:
                 seq = str(cds.translation)[domain.start:domain.end]
                 results.append((domain.feature_name, domain.name, seq))
     return results
@@ -50,6 +50,8 @@ def is_active(signature: str, c_type: str) -> str:
     if signature[1] == "H":
         return "active"
     if c_type == "Heterocyclization" and signature[0] == "D":
+        return "active"
+    if c_type == "Condensation_sid" and signature[0] == "H":
         return "active"
     return "inactive"
 
