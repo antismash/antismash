@@ -116,21 +116,22 @@ def generate_javascript_data(record: Record, region: Region, results: Dict[str, 
     assert isinstance(detection_results, DetectionResults)
 
     data: Dict[str, Any] = {}
-    inactive_kr_domains = set()
+    inactive_domains = set()
     for domain_id, predictions in nrps_pks_results.domain_predictions.items():
-        activity = predictions.get("kr_activity")
-        if not activity:
-            continue
-        if not isinstance(activity, nrps_pks.data_structures.SimplePrediction):
-            raise TypeError(f"{AnalysisResults} format is not as expected")
-        if activity.prediction == "inactive":
-            inactive_kr_domains.add(domain_id)
+        for activity_key in ["kr_activity", "c_activity"]:
+            activity = predictions.get(activity_key)
+            if not activity:
+                continue
+            if not isinstance(activity, nrps_pks.data_structures.SimplePrediction):
+                raise TypeError(f"{AnalysisResults} format is not as expected")
+            if activity.prediction == "inactive":
+                inactive_domains.add(domain_id)
     hit_by_domain_by_cds_name = {}
     for cds, cds_result in detection_results.cds_results.items():
         flipped = {v: k for k, v in cds_result.domain_features.items()}
         hit_by_domain_by_cds_name[cds.get_name()] = flipped
     for result in nrps_pks_results.region_predictions[region.get_region_number()]:
-        cand_json = _gen_js_data_for_candidate(record, result, inactive_kr_domains, hit_by_domain_by_cds_name)
+        cand_json = _gen_js_data_for_candidate(record, result, inactive_domains, hit_by_domain_by_cds_name)
         data[f"CC{result.candidate_cluster_number}"] = cand_json
     return data
 
