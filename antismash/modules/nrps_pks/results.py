@@ -203,6 +203,21 @@ class NRPS_PKS_Results(ModuleResults):
         minowa = predictions["minowa_at"].get_classification()[0]
         domain.add_prediction("Minowa", get_short_form(minowa))
 
+    def _annotate_c_domain(self, domain: NRPSPKSQualifier.Domain) -> None:
+        assert domain.name in ["Cglyc", "Condensation_DCL", "Condensation_LCL",
+                               "Condensation_Starter", "Condensation_Dual",
+                               "Heterocyclization", "Epimerization"]
+        predictions = self.domain_predictions[domain.feature_name]
+
+        activity = predictions["c_activity"].get_classification()[0]
+        if domain.name == "Epimerization":
+            domain.add_prediction("E activity", activity)
+        else:
+            domain.add_prediction("C activity", activity)
+
+        activesite = predictions["c_activesite"].get_classification()[0]
+        domain.add_prediction("Active site motif", activesite)
+
     def _annotate_cal_domain(self, domain: NRPSPKSQualifier.Domain) -> None:
         assert domain.name == "CAL_domain"
         minowa = self.domain_predictions[domain.feature_name]["minowa_cal"].get_classification()[0]
@@ -241,11 +256,15 @@ class NRPS_PKS_Results(ModuleResults):
                     self._annotate_a_domain(domain)
                 elif domain.name == "PKS_AT":
                     self._annotate_at_domain(domain, "transatpks" in cds_feature.region.products)
+                elif domain.name in ["Cglyc", "Condensation_DCL", "Condensation_LCL",
+                                     "Condensation_Starter", "Condensation_Dual",
+                                     "Heterocyclization", "Epimerization"]:
+                    self._annotate_c_domain(domain)
                 elif domain.name == "CAL_domain":
                     self._annotate_cal_domain(domain)
                 elif domain.name == "PKS_KR":
                     self._annotate_kr_domain(domain)
-                # otherwise one of many without prediction methods/relevance (PCP, Cglyc, etc)
+                # otherwise one of many without prediction methods/relevance (PCP, MT, etc)
 
                 for method, pred in domain.get_predictions().items():
                     feature.specificity.append(f"{method}: {pred}")

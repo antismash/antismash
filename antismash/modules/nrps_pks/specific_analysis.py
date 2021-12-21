@@ -12,6 +12,7 @@ from antismash.common.secmet import Record, CDSFeature, Region
 from antismash.config import ConfigType
 from antismash.detection.nrps_pks_domains import ModularDomain
 
+from .c_analysis import c_analysis
 from .orderfinder import analyse_biosynthetic_order
 from .parsers import calculate_consensus_prediction
 from .results import NRPS_PKS_Results
@@ -53,6 +54,10 @@ def specific_analysis(record: Record, results: NRPS_PKS_Results, options: Config
     if a_domains:
         logging.info("Predicting A domain substrate specificities with nrpys")
         results.add_method_results("nrpys", run_nrpys(a_domains, options))
+
+    c_results = c_analysis.run_nrps_c_predictions(nrps_pks_genes)
+    for method, method_results in c_results.items():
+        results.add_method_results(method, method_results)
 
     pks_results = run_pks_substr_spec_predictions(nrps_pks_genes)
     for method, method_results in pks_results.items():
