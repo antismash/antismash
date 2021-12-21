@@ -37,6 +37,7 @@ DOMAIN_TYPE_MAPPING = {
     'Condensation_Starter': 'Condensation',
     'CXglyc': 'Condensation',
     'Cglyc': 'Condensation',
+    'Condensation_sid': 'Condensation',
     'cMT': 'MT',
     'oMT': 'MT',
     'nMT': 'MT',
@@ -377,7 +378,7 @@ def classify_cds(domain_names: List[str], ks_domain_subtypes: List[str]) -> str:
     # which rule does it match
     pks_domains = domains.intersection({"PKS_KS", "PKS_AT"})
     nrps_domains = domains.intersection({"Condensation_LCL", "Condensation_DCL",
-                                         "Condensation_Starter", "Cglyc",
+                                         "Condensation_Starter", "Cglyc", "Condensation_sid",
                                          "Condensation_Dual", "AMP-binding"})
     if not pks_domains and not nrps_domains:
         classification = "other"

@@ -49,6 +49,7 @@ _ABBREVIATED_DOMAINS = {
     "Cglyc": "C",
     "Condensation_DCL": "C",
     "Condensation_LCL": "C",
+    "Condensation_sid": "C",
     "Condensation_Starter": "C",
     "Condensation_Dual": "C",
     "Heterocyclization": "C",
