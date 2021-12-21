@@ -61,20 +61,28 @@ class IntegrationNRPSPKS(unittest.TestCase):
         filename = helpers.get_path_to_balhymicin_genbank()
         results = helpers.run_and_regenerate_results_for_module(filename, nrps_pks, self.options,
                                                                 callback=ensure_module_lids_shown)
-        assert len(results.domain_predictions) == 9
+        assert len(results.domain_predictions) == 18
         a_domains = [("bpsA", 1), ("bpsA", 2), ("bpsA", 3),
                      ("bpsB", 1), ("bpsB", 2), ("bpsB", 3),
                      ("bpsC", 1),
                      ("bpsD", 1)]
+        c_domains = [
+            ("bpsA", 1), ("bpsA", 2),
+            ("bpsB", 1), ("bpsB", 2), ("bpsB", 3),
+            ("bpsC", 1),
+        ]
+        e_domains = [ ("bpsA", 1), ("bpsB", 1), ("bpsB", 2)]
         nrps_names = [f"nrpspksdomains_{name}_AMP-binding.{index}" for name, index in a_domains]
+        c_names = [f"nrpspksdomains_{name}_Cglyc.{index}" for name, index in c_domains]
+        e_names = [f"nrpspksdomains_{name}_Epimerization.{index}" for name, index in e_domains]
         feature_names = nrps_names + ["nrpspksdomains_pks_CAL_domain.1"]
-        assert set(results.domain_predictions) == set(feature_names)
+        assert set(results.domain_predictions) == set(feature_names + c_names + e_names)
 
         assert set(results.domain_predictions[feature_names[0]]) == {"nrpys"}
         plain_results = {}
         norine_results = {}
         for domain, methods in results.domain_predictions.items():
-            if "CAL" in domain:
+            if "CAL" in domain or "Cglyc" in domain or "Epimerization" in domain:
                 continue
             plain_results[domain] = methods["nrpys"].get_classification()
             norine_results[domain] = methods["nrpys"].get_classification(as_norine=True)
