@@ -39,6 +39,7 @@ DOMAIN_TYPE_MAPPING = {
     'Condensation_Starter': 'Condensation',
     'CXglyc': 'Condensation',
     'Cglyc': 'Condensation',
+    'Condensation_sid': 'Condensation',
     'cMT': 'MT',
     'oMT': 'MT',
     'nMT': 'MT',
