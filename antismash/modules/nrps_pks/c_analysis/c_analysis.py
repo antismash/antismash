@@ -84,8 +84,6 @@ def run_c_analysis(c_domains: List[Tuple[str, str, str]]) -> Dict[str, Dict[str,
         activity = is_active(c_signature, c_type)
         if activity == "inactive":
             msg = name + " is predicted to be inactive with " + c_signature
-            logging.debug(msg)
-            print(msg)
         activities[name] = SimplePrediction("c_activity", activity)
 
     method_results["c_activity"] = activities
