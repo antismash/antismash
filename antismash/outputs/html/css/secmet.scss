@@ -123,8 +123,16 @@
     @include secmet(black, yellowgreen, black);
 }
 
-.siderophore {
+@mixin metallophore {
     @include secmet(white, crimson, blue);
+}
+
+.siderophore {
+    @include metallophore;
+}
+
+.NRP-metallophore {
+    @include metallophore
 }
 
 .ectoine {

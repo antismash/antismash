@@ -603,3 +603,20 @@ RULE crocagin
     CUTOFF 10
     NEIGHBOURHOOD 10
     CONDITIONS PhyH and Carbam_trans_N
+
+RULE NRP-metallophore
+    CATEGORY NRPS
+    DESCRIPTION Non-ribosomal peptide metallophores
+    EXAMPLE NCBI GG657746.1 2722390-2757628 amychelin  # BGC0000300
+    EXAMPLE NCBI KC215181.1 0-36842 gobichelin         # BGC0000366
+    CUTOFF 30           # Prevents losing distant NRPS, ex: amychelin (BGC0000300)
+    NEIGHBOURHOOD 20    # Gobichelin (BGC0000366) is 20.1
+    CONDITIONS VibH_like or Cy_tandem or       # Siderophore-specific condensation domains
+               (cds(Condensation and AMP-binding) and (
+                    (IBH_Asp and not SBH_Asp) or IBH_His or TBH_Asp or       # OHHis/OHAsp, exclude syringomycins
+                    CyanoBH_Asp1 or CyanoBH_Asp2 or                          # Cyanobacterial OHAsp
+                    IPL or SalSyn or (EntA and EntC) or                      # Sal/DHB
+                    (GrbD and GrbE) or (FbnL and FbnM) or PvdO or PvdP or    # Graminine/DMAQ/PVD
+                    (Orn_monoox and not (KtzT or MetRS-like)) or             # Hydroxamate, exclude piperazates and hydrazides
+                    Lys_monoox or VbsL                                       # Lys and vicibactin hydroxamates
+               ))

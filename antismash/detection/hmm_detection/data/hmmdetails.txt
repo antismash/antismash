@@ -305,3 +305,26 @@ Thiaglutamate_G_RRE	RRE-peptidase fusion protein in a 3-thiaglutamate cluster	25
 Thiaglutamate_I_RRE	RRE-DUF fusion protein in a 3-thiaglutamate cluster	25	RREFam027.hmm
 Thiaglutamate_B_RRE	RRE-LanB fusion protein in a 3-thiaglutamate cluster	25	RREFam028.hmm
 PlpY_RRE	Discrete RRE protein in an alpha-keto beta-amino acid containing peptide cluster	25	RREFam029.hmm
+Cy_tandem	Duplicated cyclization domain found in siderophore clusters	350	Cy_tandem.hmm
+EntA	2,3-dihydro-2,3-dihydroxybenzoic acid dehydrogenase	205	EntA.hmm
+EntC	Isochorismate synthase	300	EntC.hmm
+FbnL	DMAQ biosynthesis protein found in fabrubactin cluster	40	FbnL.hmm
+FbnM	DMAQ biosynthesis protein found in fabrubactin cluster	180	FbnM.hmm
+GrbD	Graminine biosynthesis protein found in gramibactin cluster	400	GrbD.hmm
+GrbE	Graminine biosynthesis protein found in gramibactin cluster	250	GrbE.hmm
+IBH_Asp	Interface-associated aspartate beta-hydroxylase	440	IBH_Asp.hmm
+IBH_His	Interface-associated histidine beta-hydroxylase	470	IBH_His.hmm
+SBH_Asp	Syringomycin-type aspartate beta-hydroxylase not in siderophores	500	SBH_Asp.hmm
+TBH_Asp	T_E-associated aspartate beta-hydroxylase	420	TBH_Asp.hmm
+CyanoBH_Asp1	Cyanobacterial siderophore Asp beta-hydroxylase (NRPS domain)	400	CyanoBH_Asp1.hmm
+CyanoBH_Asp2	Cyanobacterial siderophore Asp beta-hydroxylase (standalone)	450	CyanoBH_Asp2.hmm
+IPL	Isopyruvate lyase	110	IPL.hmm
+Lys_monoox	Lysine N6-monooxygenase (Mycobactin-type)	300	Lys_monoox.hmm
+Orn_monoox	Ornithine N5-monooxygenase (Pyoverdine-type)	415	Orn_monoox.hmm
+KtzT	Heme-dependent piperazate synthase (10.1038/nchembio.2411) not in siderophores	200	KtzT.hmm
+MetRS-like	Methionyl-tRNA synthase-like ligase (10.1038/s41467-021-27523-x) not in siderophores	360	MetRS-like.hmm
+PvdO	Oxidoreductase in pyoverdine chromophore maturation	250	PvdO.hmm
+PvdP	Tyrosinase enzyme in pyoverdine chromophore maturation	600	PvdP.hmm
+SalSyn	Salicylate synthase	350	SalSyn.hmm
+VbsL	PLP-dependent epimerase in vicibactin biosynthesis (10.1021/ja9056008)	570	VbsL.hmm
+VibH_like	VibH-like standalone condensation domain	400	VibH_like.hmm
