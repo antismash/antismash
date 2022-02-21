@@ -295,7 +295,9 @@ class Record:
         for i in range(index, len(self._regions)):
             self._region_numbering[self._regions[i]] = i + 1  # 1-indexed
         # link any relevant CDS features
-        self._link_region_to_cds_features(region)
+        for cds in self.get_cds_features_within_location(region.location):
+            region.add_cds(cds)
+            cds.region = region
 
     def get_regions(self) -> Tuple[Region, ...]:
         """ The Region features in the record representing regions of interest """
@@ -843,23 +845,6 @@ class Record:
             for collection in collections:
                 if cds.is_contained_by(collection):
                     collection.add_cds(cds)
-
-    def _link_region_to_cds_features(self, region: Region) -> None:
-        """ connect the given cluster to every CDS feature within it's range """
-        assert isinstance(region, Region)
-        # quickly find the first cds with equal start
-        index = bisect.bisect_left(self._cds_features, region)
-        # move backwards until we find one that doesn't overlap
-        while index >= 1 and self._cds_features[index - 1].is_contained_by(region):
-            index -= 1
-        # move forwards, adding to the cluster until a cds doesn't overlap
-        while index < len(self._cds_features):
-            cds = self._cds_features[index]
-            if not cds.is_contained_by(region):
-                break
-            region.add_cds(cds)
-            cds.region = region
-            index += 1
 
     def get_aa_translation_from_location(self, location: FeatureLocation,
                                          transl_table: Union[str, int] = None) -> Seq:
