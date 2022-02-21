@@ -533,11 +533,11 @@ class Record:
         index = bisect.bisect_left(self._cds_features, cds_feature)
         self._cds_features.insert(index, cds_feature)
         self._link_cds_to_parent(cds_feature)
-        location_checksum = _location_checksum(cds_feature)
-        if location_checksum in self._cds_by_location:
+        location_key = str(cds_feature.location)
+        if location_key in self._cds_by_location:
             raise SecmetInvalidInputError(
                 f"Multiple CDS features have the same location: {cds_feature.location}")
-        self._cds_by_location[location_checksum] = cds_feature
+        self._cds_by_location[location_key] = cds_feature
         if cds_feature.get_name() in self._cds_by_name:
             error = SecmetInvalidInputError("multiple CDS features have the same name for mapping: %s" %
                                             cds_feature.get_name())
@@ -550,7 +550,7 @@ class Record:
                     any(map(cds_feature.overlaps_with, self.get_genes_by_name(cds_feature.get_name())))):
                 raise error
 
-            new = f"{cds_feature.locus_tag}_{location_checksum}"
+            new = f"{cds_feature.locus_tag}_{_location_checksum(cds_feature)}"
             cds_feature.locus_tag = new
             assert cds_feature.get_name() not in self._cds_by_name
         self._cds_by_name[cds_feature.get_name()] = cds_feature
