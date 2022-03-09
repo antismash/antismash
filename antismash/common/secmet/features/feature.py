@@ -282,3 +282,29 @@ class Feature:
         if "note" in qualifiers:
             qualifiers["note"] = qualifiers["note"].copy()
         return qualifiers
+
+
+def pop_locus_qualifier(qualifiers: Dict[str, List[str]], allow_missing: bool = True,
+                        default: Optional[str] = "(unknown)") -> Optional[str]:
+    """ Removes and returns a 'locus_tag' qualifier if present.
+
+        Arguments:
+            qualifiers: a dictionary of biopython-compatible qualifiers
+            allow_missing: if False, raises a KeyError if the qualifier is missing
+            default: the default value to use if the qualifier is missing
+
+        Returns:
+            the locus tag qualifier or the given default if the qualifier is missing
+    """
+    locus: Optional[str]
+    if allow_missing:
+        locus = qualifiers.pop("locus_tag", [""])[0]
+        if not locus:
+            locus = default
+    else:
+        locus = qualifiers.pop("locus_tag")[0]
+    if locus is None:
+        return locus
+    # handle long names having spaces inserted by biopython at linebreaks
+    locus = locus.replace(" ", "")
+    return locus

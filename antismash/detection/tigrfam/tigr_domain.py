@@ -13,6 +13,7 @@ from antismash.common.secmet.features.antismash_domain import (
     Feature,
     Location,
     generate_protein_location_from_qualifiers,
+    pop_locus_qualifier,
     register_asdomain_variant,
 )
 
@@ -78,7 +79,8 @@ class TIGRDomain(AntismashDomain):
         leftovers.pop('protein_end')
 
         description = leftovers.pop('description')[0]
-        locus_tag = leftovers.pop("locus_tag")[0]
+        locus_tag = pop_locus_qualifier(leftovers, allow_missing=False)
+        assert locus_tag
         identifier = leftovers.pop('identifier')[0]
         feature = cls(bio_feature.location, description, protein_location, identifier, locus_tag)
 

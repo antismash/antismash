@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Type, TypeVar
 from Bio.SeqFeature import SeqFeature
 
 from .domain import Domain, generate_protein_location_from_qualifiers
-from .feature import Feature, FeatureLocation, Location
+from .feature import Feature, FeatureLocation, Location, pop_locus_qualifier
 
 T = TypeVar("T", bound="AntismashDomain")
 
@@ -47,7 +47,8 @@ class AntismashDomain(Domain):
             tool = leftovers.pop("aSTool")[0]
             protein_location = generate_protein_location_from_qualifiers(leftovers, record)
             # locus tag is special, antismash versions <= 5.0 didn't require it, but > 5.0 do
-            locus_tag = leftovers.pop("locus_tag", ["(unknown)"])[0]
+            locus_tag = pop_locus_qualifier(leftovers)
+            assert locus_tag  # even if it's just the default "(unknown)"
             feature = cls(bio_feature.location, tool, protein_location, locus_tag)
 
         # for any instance, populate with the superclass info

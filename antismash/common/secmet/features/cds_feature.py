@@ -25,7 +25,7 @@ from ..locations import (
     frameshift_location_by_qualifier,
     Location,
 )
-from .feature import Feature
+from .feature import Feature, pop_locus_qualifier
 from .module import Module
 
 _VALID_TRANSLATION_CHARS = set(IUPACData.extended_protein_letters)
@@ -259,7 +259,7 @@ class CDSFeature(Feature):
 
         # semi-optional qualifiers
         protein_id = leftovers.pop("protein_id", [None])[0]
-        locus_tag = leftovers.pop("locus_tag", [None])[0]
+        locus_tag = pop_locus_qualifier(leftovers, allow_missing=True, default=None)
         gene = leftovers.pop("gene", [None])[0]
         if not (gene or protein_id or locus_tag):
             if "pseudo" in leftovers or "pseudogene" in leftovers:
