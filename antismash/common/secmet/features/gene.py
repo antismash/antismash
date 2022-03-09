@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional, Type, TypeVar
 
 from Bio.SeqFeature import SeqFeature
 
-from .feature import Feature, Location
+from .feature import Feature, Location, pop_locus_qualifier
 
 T = TypeVar("T", bound="Gene")
 
@@ -58,7 +58,7 @@ class Gene(Feature):
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
         # grab mandatory qualifiers and create the class
-        locus = leftovers.pop("locus_tag", [""])[0] or None
+        locus = pop_locus_qualifier(leftovers, allow_missing=True, default=None)
         name = leftovers.pop("gene", [""])[0] or None
         if not (locus or name):
             name = "gene%s_%s" % (bio_feature.location.start, bio_feature.location.end)

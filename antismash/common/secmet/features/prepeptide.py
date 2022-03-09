@@ -10,7 +10,7 @@ from Bio.SeqFeature import SeqFeature
 
 from ..errors import SecmetInvalidInputError
 from .cds_motif import CDSMotif
-from .feature import Feature, FeatureLocation, Location
+from .feature import Feature, FeatureLocation, Location, pop_locus_qualifier
 from ..locations import build_location_from_others, location_from_string
 from ..qualifiers.prepeptide_qualifiers import RiPPQualifier
 from ..qualifiers.prepeptide_qualifiers import rebuild_qualifier
@@ -211,12 +211,14 @@ class Prepeptide(CDSMotif):  # pylint: disable=too-many-instance-attributes
             locations.append(tail_location)
 
         location = build_location_from_others(locations)
+        locus = pop_locus_qualifier(leftovers, allow_missing=False)
+        assert locus
 
         return cls(
             location,
             leftovers.pop("peptide")[0],
             leftovers.pop("core_sequence")[0],
-            leftovers.pop("locus_tag")[0],
+            locus,
             leftovers.pop("aSTool")[0],
             leftovers.pop("predicted_class")[0],
             float(leftovers.pop("score")[0]),
