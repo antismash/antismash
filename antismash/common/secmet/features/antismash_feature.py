@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional, Type, TypeVar
 from Bio.SeqFeature import SeqFeature
 
 from ..errors import SecmetInvalidInputError
-from .feature import Feature, Location
+from .feature import Feature, Location, pop_locus_qualifier
 
 T = TypeVar("T", bound="AntismashFeature")
 
@@ -124,7 +124,7 @@ class AntismashFeature(Feature):
             # again, long ids causing linebreaks in genbanks can have spaces inserted
             feature.label = feature.label.replace(" ", "")
         if not feature.locus_tag:  # may already be populated
-            feature.locus_tag = leftovers.pop("locus_tag", [""])[0] or None
+            feature.locus_tag = pop_locus_qualifier(leftovers, allow_missing=True, default=None)
         translation = leftovers.pop("translation", [""])[0] or None
         if translation is not None:
             feature.translation = translation

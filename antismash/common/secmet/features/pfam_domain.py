@@ -12,7 +12,7 @@ from antismash.common.secmet.locations import FeatureLocation
 from antismash.common.secmet.qualifiers import GOQualifier
 
 from ..errors import SecmetInvalidInputError
-from .feature import Feature, Location
+from .feature import Feature, Location, pop_locus_qualifier
 from .domain import Domain
 
 T = TypeVar("T", bound="PFAMDomain")
@@ -94,7 +94,8 @@ class PFAMDomain(Domain):
         if name is None:
             raise SecmetInvalidInputError("PFAMDomain missing identifier")
         tool = leftovers.pop("aSTool")[0]
-        locus_tag = leftovers.pop("locus_tag", ["(unknown)"])[0]
+        locus_tag = pop_locus_qualifier(leftovers)
+        assert locus_tag
 
         feature = cls(bio_feature.location, description, FeatureLocation(p_start, p_end),
                       identifier=name, tool=tool, locus_tag=locus_tag)

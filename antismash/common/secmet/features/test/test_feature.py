@@ -13,6 +13,7 @@ from antismash.common.secmet.features.feature import (
     CompoundLocation,
     Feature,
     FeatureLocation,
+    pop_locus_qualifier as pop_locus,
     SeqFeature,
 )
 from antismash.common.secmet import features
@@ -234,3 +235,23 @@ class TestSubLocation(unittest.TestCase):
         assert self.get_sub(2, 4) == CompoundLocation([FeatureLocation(15, 18, -1),
                                                        FeatureLocation(13, 16, -1)])
         assert self.get_sub(4, 5) == FeatureLocation(10, 13, -1)
+
+
+class TestLocusPop(unittest.TestCase):
+    def test_base(self):
+        for value in ["locus", "something"]:
+            assert pop_locus({"locus_tag": [value]}) == value
+
+    def test_default(self):
+        for default in ["test", None]:
+            assert pop_locus({}, default=default) == default
+
+    def test_required(self):
+        with self.assertRaises(KeyError):
+            locus = pop_locus({}, allow_missing=False)
+        with self.assertRaises(KeyError):
+            locus = pop_locus({}, allow_missing=False, default="some value")
+
+    def test_biopython_spaces(self):
+        locus = "longnamewith space"
+        assert pop_locus({"locus_tag": [locus]}) == locus.replace(" ", "")

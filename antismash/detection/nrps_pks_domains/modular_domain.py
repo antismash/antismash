@@ -14,7 +14,8 @@ from antismash.common.secmet.features.antismash_domain import (
     FeatureLocation,
     Location,
     register_asdomain_variant,
-    generate_protein_location_from_qualifiers
+    generate_protein_location_from_qualifiers,
+    pop_locus_qualifier,
 )
 
 T = TypeVar("T", bound="ModularDomain")
@@ -54,8 +55,8 @@ class ModularDomain(AntismashDomain):
         if tool != TOOL:
             raise ValueError(f"incompatible tool type for {cls}: {tool}")
         protein_location = generate_protein_location_from_qualifiers(leftovers, record)
-        # locus tag is special, antismash versions <= 5.0 didn't require it, but > 5.0 do
-        locus_tag = leftovers.pop("locus_tag", ["(unknown)"])[0]
+        locus_tag = pop_locus_qualifier(leftovers)
+        assert locus_tag
         feature = cls(bio_feature.location, protein_location, locus_tag)
 
         # grab optional qualifiers
