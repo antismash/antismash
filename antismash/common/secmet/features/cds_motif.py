@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional, Type, TypeVar, cast
 from Bio.SeqFeature import SeqFeature
 
 from .domain import Domain, generate_protein_location_from_qualifiers
-from .feature import Feature, FeatureLocation, Location
+from .feature import Feature, FeatureLocation, Location, pop_locus_qualifier
 
 T = TypeVar("T", bound="CDSMotif")
 ExternalT = TypeVar("ExternalT", bound="ExternalCDSMotif")  # pylint: disable=invalid-name
@@ -35,7 +35,8 @@ class CDSMotif(Domain):
             if not tool:
                 return cast(T, ExternalCDSMotif.from_biopython(bio_feature, None, leftovers, record))
             protein_location = generate_protein_location_from_qualifiers(leftovers, record)
-            locus_tag = leftovers.pop("locus_tag", ["(unknown)"])[0]
+            locus_tag = pop_locus_qualifier(leftovers)
+            assert locus_tag
             feature = cls(bio_feature.location, locus_tag, protein_location, tool=tool)
 
         updated = super().from_biopython(bio_feature, feature, leftovers, record=record)
