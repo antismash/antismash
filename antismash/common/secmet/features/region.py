@@ -187,7 +187,7 @@ class Region(CDSCollection):
 
         # update the antiSMASH annotation to include some cluster details
         comment_end_marker = "##antiSMASH-Data-END"
-        cluster_comment = ("NOTE: This is a single cluster extracted from a larger record!\n"
+        cluster_comment = ("NOTE: This is a single region extracted from a larger record!\n"
                            "Orig. start  :: {start}\n"
                            "Orig. end    :: {end}\n"
                            "{end_marker}").format(start=self.location.start,
