@@ -478,6 +478,7 @@ def write_outputs(results: serialiser.AntismashResults, options: ConfigType) -> 
         with tempfile.NamedTemporaryFile(prefix="as_zip_tmp", suffix=".zip") as temp:
             shutil.make_archive(temp.name.replace(".zip", ""), "zip", root_dir=options.output_dir)
             shutil.copy(temp.name, zipfile)
+            os.chmod(zipfile, 0o644)
         assert os.path.exists(zipfile)
 
 
