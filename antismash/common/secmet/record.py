@@ -15,7 +15,7 @@ import bisect
 from collections import Counter, defaultdict, OrderedDict
 import logging
 from typing import Any, Dict, List, Optional, Sequence, Type, Tuple, Union, cast
-from zlib import crc32
+from hashlib import md5
 
 from Bio import SeqIO
 from Bio.Seq import Seq
@@ -1009,17 +1009,17 @@ class Record:
         return len(other) < 0.2 * len(sequence)
 
 
-def _calculate_crc32(string: str) -> str:
-    """ Calculates the crc32 checksum of an input string and returns the resulting checksum in hex.
+def _calculate_md5(string: str) -> str:
+    """ Calculates the md5 checksum of an input string and returns the resulting checksum in hex.
 
         Arguments:
             string: The string to generate the checksum for
 
         Returns:
-            A string containing the hexadecimal representation of the crc32 checksum
+            A string containing the hexadecimal representation of the md5 checksum
     """
-    checksum = crc32(string.encode("utf-8"))
-    return f"{checksum:x}"
+    checksum = md5(string.encode("utf-8"))
+    return checksum.hexdigest()
 
 
 def _location_checksum(feature: Feature) -> str:
@@ -1031,4 +1031,4 @@ def _location_checksum(feature: Feature) -> str:
         Returns:
             A string containing the feature's location checksum in hex
     """
-    return _calculate_crc32(str(feature.location))
+    return _calculate_md5(str(feature.location))
