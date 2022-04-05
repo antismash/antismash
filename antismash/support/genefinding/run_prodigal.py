@@ -11,6 +11,7 @@ from Bio.SeqFeature import FeatureLocation
 from helperlibs.bio import seqio
 from helperlibs.wrappers.io import TemporaryDirectory
 
+from antismash.common.fasta import write_fasta
 from antismash.common.secmet import CDSFeature, Record
 from antismash.common.subprocessing import execute
 from antismash.config import ConfigType
@@ -29,8 +30,7 @@ def run_prodigal(record: Record, options: ConfigType) -> None:
             name = "unknown"
         fasta_file = '%s.fasta' % name
         result_file = '%s.predict' % name
-        with open(fasta_file, 'w') as handle:
-            seqio.write([record.to_biopython()], handle, 'fasta')
+        write_fasta([name], [str(record.seq)], fasta_file)
 
         # run prodigal
         prodigal = [path.join(basedir, 'prodigal')]
