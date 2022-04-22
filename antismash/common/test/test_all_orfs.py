@@ -6,24 +6,29 @@
 
 import unittest
 
-from Bio.SeqFeature import BeforePosition, AfterPosition, ExactPosition, FeatureLocation
+from Bio.SeqFeature import ExactPosition, FeatureLocation
 
-from antismash.common.all_orfs import find_all_orfs, scan_orfs
+from antismash.common.all_orfs import (
+    find_all_orfs,
+    find_intergenic_areas,
+    scan_orfs,
+)
 
-from .helpers import DummyRecord
+from .helpers import DummyCDS, DummyRecord
 
 
 class TestOrfCounts(unittest.TestCase):
-    def run_both_dirs(self, expected, seq):
+    def run_both_dirs(self, expected, seq, min_length=60):
         def reverse_location(location, length):
             return location._flip(length)
 
         record = DummyRecord(seq=seq)
-        assert expected == [feat.location for feat in find_all_orfs(record)]
+        assert expected == [feat.location for feat in find_all_orfs(record, min_length=min_length)]
         record.seq = record.seq.reverse_complement()
+        print(record.seq)
 
         expected = [reverse_location(loc, len(seq)) for loc in expected[::-1]]
-        assert expected == [feat.location for feat in find_all_orfs(record)]
+        assert expected == [feat.location for feat in find_all_orfs(record, min_length=min_length)]
 
     def test_empty_sequence(self):
         self.run_both_dirs([], "")
@@ -52,12 +57,10 @@ class TestOrfCounts(unittest.TestCase):
         self.run_both_dirs(expected, "NNNATG"+"N"*60+"TAGNNN")
 
     def test_start_without_end(self):
-        expected = [FeatureLocation(ExactPosition(3), AfterPosition(9), strand=1)]
-        self.run_both_dirs(expected, "NNNATGNNN")
+        self.run_both_dirs([], "NNNATGNNN")
 
     def test_end_without_start(self):
-        expected = [FeatureLocation(BeforePosition(0), ExactPosition(6), strand=1)]
-        self.run_both_dirs(expected, "NNNTAGNNN")
+        self.run_both_dirs([], "NNNTAGNNN")
 
     def test_multiple(self):
         # start, stop, start, stop
@@ -65,11 +68,10 @@ class TestOrfCounts(unittest.TestCase):
                     FeatureLocation(ExactPosition(66), ExactPosition(132), strand=1)]
         self.run_both_dirs(expected, "ATG"+"N"*60+"TAGGTG"+"N"*60+"TGA")
         # start, stop, start
-        expected[1] = FeatureLocation(ExactPosition(66), AfterPosition(69), strand=1)
+        expected.pop()
         self.run_both_dirs(expected, "ATG"+"N"*60+"TAGGTG")
         # stop, start
-        expected = [FeatureLocation(BeforePosition(0), ExactPosition(3), strand=1),
-                    FeatureLocation(ExactPosition(3), AfterPosition(9), strand=1)]
+        expected = []
         self.run_both_dirs(expected, "TAGGTGNNN")
 
     def test_multi_start_single_stop(self):
@@ -105,6 +107,32 @@ class TestOrfCounts(unittest.TestCase):
         assert len(result) == 4
 
 
+class TestIntegenic(unittest.TestCase):
+    def test_no_cdses(self):
+        assert find_intergenic_areas(0, 120, []) == [(0, 120)]
+        assert find_intergenic_areas(20, 100, []) == [(20, 100)]
+
+    def test_min_length(self):
+        cdses = [DummyCDS(30, 36, strand=1), DummyCDS(39, 45, strand=-1)]
+        assert find_intergenic_areas(0, 60, cdses, min_length=6) == [(0, 30), (45, 60)]
+        assert find_intergenic_areas(0, 60, cdses, min_length=3) == [(0, 30), (36, 39), (45, 60)]
+        assert find_intergenic_areas(0, 60, cdses, min_length=20) == [(0, 30)]
+
+    def test_simple(self):
+        cdses = [DummyCDS(30, 36, strand=1), DummyCDS(39, 45, strand=-1)]
+        areas = find_intergenic_areas(0, 120, []) == [(0, 30), (36, 39), (45, 120)]
+
+    def test_padding(self):
+        cdses = [DummyCDS(30, 45, strand=1)]
+        areas = find_intergenic_areas(0, 60, cdses, padding=0) == [(0, 30), (45, 60)]
+        areas = find_intergenic_areas(0, 60, cdses, padding=3) == [(0, 27), (48, 60)]
+        areas = find_intergenic_areas(12, 50, cdses, padding=3) == [(12, 27), (48, 50)]
+
+    def test_overlapping_cds(self):
+        cdses = [DummyCDS(30, 42, strand=1), DummyCDS(41, 50, strand=-1)]
+        areas = find_intergenic_areas(0, 60, cdses) == [(0, 30), (50, 60)]
+
+
 class TestOrfLocations(unittest.TestCase):
     def test_contained(self):
         seq = "ATG"+"X"*60+"TAG"
@@ -127,11 +155,7 @@ class TestOrfLocations(unittest.TestCase):
                 orfs = scan_orfs(seq, 1)
             else:
                 orfs = scan_orfs(seq, 1, offset=offset)
-            assert len(orfs) == 1
-            orf = orfs[0]
-            assert isinstance(orf.start, ExactPosition)
-            assert isinstance(orf.end, AfterPosition)
-            assert orf.start == 3 + offset
+            assert not orfs
 
     def test_stop_without_start(self):
         seq = "NNNTAGNNN"
@@ -140,8 +164,4 @@ class TestOrfLocations(unittest.TestCase):
                 orfs = scan_orfs(seq, 1)
             else:
                 orfs = scan_orfs(seq, 1, offset=offset)
-            assert len(orfs) == 1
-            orf = orfs[0]
-            assert isinstance(orf.start, BeforePosition)
-            assert isinstance(orf.end, ExactPosition)
-            assert orf.end == 6 + offset
+            assert not orfs

@@ -9,82 +9,62 @@
 """
 
 
-from typing import Iterable, List, Optional
+from typing import Iterable, List, Optional, Tuple
 
-from Bio.SeqFeature import FeatureLocation, BeforePosition, AfterPosition
+from Bio.SeqFeature import FeatureLocation
 
-from antismash.common.secmet import CDSFeature, Feature, Record
+from antismash.common.secmet import CDSFeature, Record
 from antismash.common.secmet.features import CDSCollection
 
+START_CODONS = ('ATG', 'GTG', 'TTG')
+STOP_CODONS = ('TAA', 'TAG', 'TGA')
 
-def scan_orfs(seq: str, direction: int, offset: int = 0) -> List[FeatureLocation]:
+
+def scan_orfs(seq: str, direction: int, offset: int = 0, minimum_length: int = 60
+              ) -> List[FeatureLocation]:
     """ Scan for open reading frames on a given sequence.
-        Skips all ORFs with a size less than 60 bases.
+        Skips all ORFs with a size less than the given minimum nucleotides.
 
         Arguments:
             seq: the sequence to examine
             direction: the search direction to use (all ORFs will use this as the strand)
             offset: an offset to add to any location discovered
+            minimum_length: the minimum length, in nucleotides, for ORFs
 
         Returns:
             a list of FeatureLocations for each ORF, ordered by ascending position
     """
     seq = seq.upper()
-    start_codons = ('ATG', 'GTG', 'TTG')
-    stop_codons = ('TAA', 'TAG', 'TGA')
+
     matches = []
     # cache the sequence length
     seq_len = len(seq)
     for frame in [0, 1, 2]:
-        i = frame
-        last_stop = 0
-        while i < seq_len - 2:
-            if seq[i:i+3] in stop_codons and last_stop == 0:
-                # special case for unstarted stops
-                last_stop = i
-                new_orf = FeatureLocation(BeforePosition(offset), offset + i + 2 + 1, direction)
-                if direction == -1:
-                    start = AfterPosition(seq_len + offset - new_orf.start)
-                    end = seq_len + offset - new_orf.end
-                    new_orf = FeatureLocation(end, start, strand=direction)
-                matches.append(new_orf)
-            if seq[i:i+3] not in start_codons:
-                i += 3
+        start = None
+        for i in range(frame, seq_len - 2, 3):
+            codon = seq[i:i+3]
+            # use the earliest possible start
+            if start is None and codon in START_CODONS:
+                start = i
                 continue
-            # Look for the next stop codon in this frame
-            for j in range(i, seq_len - 2, 3):
-                if seq[j:j+3] in stop_codons:
-                    last_stop = j
-                    # Skip Orfs that are shorter than 20 AA / 60 bases
-                    if j - i <= 60:
-                        break  # since no ORFs will be bigger before the stop
-                    start = i
-                    end = j + 2 + 1
-                    if direction == 1:
-                        new_orf = FeatureLocation(offset + start,
-                                                  offset + end, direction)
-                    else:
-                        # reversed, so convert back to the forward positions
-                        new_orf = FeatureLocation(seq_len + offset - end,
-                                                  seq_len + offset - start, direction)
-                    matches.append(new_orf)
-                    # This was a good hit, update the last_stop cache.
-                    break
-
-            # if we found a matching stop, carry on looking for starts after this stop
-            if last_stop > i:
-                i = last_stop
-                continue
-
-            # Save orfs ending at the end of the sequence without stop codon
-            if direction == 1:
-                new_orf = FeatureLocation(i + offset, AfterPosition(seq_len + offset), direction)
-            else:
-                # reversed, so convert back to the forward positions
-                new_orf = FeatureLocation(BeforePosition(offset), offset + seq_len - i, direction)
-            matches.append(new_orf)
-            # since there are no stop codons, just stop here
-            break
+            if codon in STOP_CODONS:
+                # skip stops without a matching start
+                if start is None:
+                    continue
+                end = i + 2  # include the full codon
+                # cull genes smaller than the cutoff
+                if end - start < minimum_length:
+                    start = None
+                    continue
+                # finally, calculate the appropriate location on the record
+                if direction == 1:
+                    loc_start = start + offset
+                    loc_end = end + offset + 1
+                else:
+                    loc_start = seq_len + offset - end - 1
+                    loc_end = seq_len + offset - start
+                matches.append(FeatureLocation(loc_start, loc_end, direction))
+                start = None
     return sorted(matches, key=lambda x: min(x.start, x.end))
 
 
@@ -113,15 +93,49 @@ def create_feature_from_location(record: Record, location: FeatureLocation,
     return feature
 
 
-def find_all_orfs(record: Record, area: Optional[CDSCollection] = None) -> List[CDSFeature]:
-    """ Find all ORFs of at least 60 bases that don't overlap with existing
-        CDS features.
+def find_intergenic_areas(start: int, end: int, cds_features: Iterable[CDSFeature],
+                          min_length: int = 0, padding: int = 0) -> List[Tuple[int, int]]:
+    """ Finds intergenic areas between the given CDS features.
+
+        Arguments:
+            start: the minimum coordinate to use
+            end: the maximum coordinate to use
+            cds_features: the collection of CDS features
+                            (assumed to be ordered by at least start location)
+            min_length: the minimum length of intergenic area to keep
+            padding: the allowable overlap with existing CDS features
+
+        Returns:
+            a list of tuples, each indicating the start and end of an intergenic area
+    """
+    intergenic_areas = []
+    last = start
+    for cds in cds_features:
+        # if there's a gap of sufficient size, add it
+        if cds.location.start > last:
+            intergenic_areas.append((max(start, last - padding),
+                                     min(end, int(cds.location.start) + padding)))
+            last = int(cds.location.end)
+            continue
+        # in case of existing CDS features overlapping, update the last end position
+        if cds.location.start <= last <= cds.location.end:
+            last = int(cds.location.end)
+    if last < end:
+        intergenic_areas.append((max(start, last - padding), end))
+    return list(filter(lambda area: area[1] - area[0] >= min_length, intergenic_areas))
+
+
+def find_all_orfs(record: Record, area: Optional[CDSCollection] = None,
+                  min_length: int = 60, max_overlap: int = 10) -> List[CDSFeature]:
+    """ Find ORFs within intergenic areas of the given record or subset of the record.
 
         Can (and should) be limited to just within a specific section of the record.
 
         Arguments:
             record: the record to search
             area: the specific CDSCollection to search within, or None
+            min_length: the minimum length of ORFs to report, in nucleotides
+            max_overlap: the maximum allowable bases of overlap with existing CDS features
 
         Returns:
             a list of CDSFeatures, one for each ORF
@@ -135,31 +149,18 @@ def find_all_orfs(record: Record, area: Optional[CDSCollection] = None) -> List[
         offset = area.location.start
         existing = record.get_cds_features_within_location(area.location,
                                                            with_overlapping=True)
+    intergenic_areas = find_intergenic_areas(offset, offset + len(seq), existing,
+                                             min_length=min_length, padding=max_overlap)
 
     # Find orfs throughout the range
-    forward_matches = scan_orfs(seq, 1, offset)
-    reverse_matches = scan_orfs(seq.reverse_complement(), -1, offset)
-    locations = forward_matches + reverse_matches
+    locations = []
+    for start, end in intergenic_areas:
+        chunk = seq[start:end]
+        locations.extend(scan_orfs(chunk, 1, start))
+        locations.extend(scan_orfs(chunk.reverse_complement(), -1, start))
 
     new_features = []
-
     for location in locations:
-        if area:
-            if isinstance(location.start, (BeforePosition, AfterPosition)):
-                continue
-            if isinstance(location.end, (BeforePosition, AfterPosition)):
-                continue
-        dummy_feature = Feature(location, feature_type="dummy")
-        # skip if overlaps with existing CDSs
-        if any(dummy_feature.overlaps_with(cds) for cds in existing):
-            continue
+        new_features.append(create_feature_from_location(record, location))
 
-        feature = create_feature_from_location(record, location)
-
-        # skip if not wholly contained in the area
-        if area and not feature.is_contained_by(area):
-            continue
-
-        new_features.append(feature)
-
-    return new_features
+    return sorted(new_features)
