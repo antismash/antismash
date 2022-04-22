@@ -19,6 +19,10 @@ from antismash.common.signature import HmmSignature
 
 from .rodeo import run_rodeo
 
+# precursor size restrictions (in aminos)
+MIN_PRECURSOR_LENGTH = 40
+MAX_PRECURSOR_LENGTH = 200
+
 
 class ThioResults(module_results.ModuleResults):
     """ Results container for thiopeptides """
@@ -449,7 +453,7 @@ def determine_precursor_peptide_candidate(query: secmet.CDSFeature, domains: Set
 
     query_sequence = query.translation
     # Skip sequences not in the size range desired
-    if not 40 < len(query_sequence) < 200:
+    if not MIN_PRECURSOR_LENGTH <= len(query_sequence) <= MAX_PRECURSOR_LENGTH:
         return None
 
     # Create FASTA sequence for feature under study
@@ -539,9 +543,12 @@ def run_thiopred(query: secmet.CDSFeature, thio_type: str, domains: Set[str]) ->
 
     thresh_pep_hit = -2
     filter_out = True
+    max_score = -1e6
     for res in hmmer_res_pep:
         for hits in res:
             for seq in hits:
+                if seq.bitscore > max_score:
+                    max_score = seq.bitscore
                 if seq.bitscore > thresh_pep_hit:
                     filter_out = False
 
@@ -595,6 +602,46 @@ def result_vec_to_feature(orig_feature: secmet.CDSFeature, res_vec: Thiopeptide)
     return feature
 
 
+def find_unannotated_candidates(record: secmet.Record, protocluster: secmet.Protocluster,
+                                ) -> List[secmet.CDSFeature]:
+    """ Finds unannotated precursor candidates that are likely to pass the later
+        precursor checks
+
+        Arguments:
+            record: the Record in which to search
+            protocluster: the specific Protocluster within the record
+
+        Returns:
+            a list of CDS features that don't already exist in the record
+    """
+
+    # start with all ORFs that are at least as long as required
+    new_orfs = all_orfs.find_all_orfs(record, protocluster, min_length=MIN_PRECURSOR_LENGTH * 3)
+
+    # strip out any that don't get a hit with the precursor model, stripping as
+    # many extra start codons off as possible
+    hmm3_profile = path.get_full_path(__file__, "data", 'thiopep3.hmm')
+    hmmer_results = subprocessing.run_hmmscan(hmm3_profile, fasta.get_fasta_from_features(new_orfs))
+    results = {query_result.id: query_result.hsps for query_result in hmmer_results}
+    filtered = []
+    for orf in new_orfs:
+        hsps = results[orf.get_name()]
+        if hsps:
+            # get the best possible hit
+            hsps = sorted(hsps, key=lambda x: x.bitscore, reverse=True)
+            start = hsps[0].query_start
+            # then convert it from 1-indexed translation coordinate to 0-indexed DNA coordinate
+            start = (start - 1) * 3
+            # then trim off any excess from the ORF, in case of multiple start codons
+            new = all_orfs.get_trimmed_orf(orf, record, include=start,
+                                           min_length=MIN_PRECURSOR_LENGTH * 3,
+                                           max_length=MAX_PRECURSOR_LENGTH * 3)
+            if new:
+                filtered.append(new)
+
+    return filtered
+
+
 def specific_analysis(record: secmet.Record) -> ThioResults:
     """ Runs thiopeptide prediction over all cluster features and any extra ORFs
         that are found not overlapping with existing features
@@ -604,13 +651,10 @@ def specific_analysis(record: secmet.Record) -> ThioResults:
         if cluster.product != "thiopeptide":
             continue
 
-        # Find candidate ORFs that are not yet annotated
-        new_orfs = all_orfs.find_all_orfs(record, cluster)
-
+        new_orfs = find_unannotated_candidates(record, cluster)
         thio_features = list(cluster.cds_children) + new_orfs
         domains = get_detected_domains(cluster)
         thio_type = predict_type_from_cluster(domains)
-
         amidation = predict_amidation(domains)
 
         for thio_feature in thio_features:

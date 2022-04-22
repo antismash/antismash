@@ -126,12 +126,15 @@ class TestIntegration(unittest.TestCase):
         record_path = path.get_full_path(__file__, 'data', 'CP009369.1.gbk')
         results = helpers.run_and_regenerate_results_for_module(record_path, thiopeptides, self.config)
         assert results
-        assert len(results.motifs) == 1
+        assert len(results.motifs) == 2
         prepeptide = results.motifs[0]
+        other = results.motifs[1]
         self.assertAlmostEqual(1934.6, prepeptide.monoisotopic_mass, places=1)
         self.assertAlmostEqual(1936.0, prepeptide.molecular_weight, places=1)
         assert prepeptide.leader == "MVKSIIKARESGRFYETKYLKGGEEMKEQKELKNEEFELDVEFLDLDEVSAIPETTA"
+        assert other.leader == "LDVEFLDLDEVSAIPETTA"
         assert prepeptide.core == "SSGTSSCSASSTCGSSSCCGSC"
+        assert other.core == prepeptide.core
         assert not prepeptide.detailed_information.macrocycle
         assert prepeptide.peptide_subclass == "Type III"
         assert prepeptide.detailed_information.core_features == 'Central ring: pyridine trisubstituted'
@@ -159,5 +162,5 @@ class TestIntegration(unittest.TestCase):
         prepeptide = results.motifs[0]
         self.assertAlmostEqual(1408.6, prepeptide.monoisotopic_mass, places=1)
         self.assertAlmostEqual(1409.5, prepeptide.molecular_weight, places=1)
-        assert prepeptide.leader == "MRYMEGGENMQDIMLELYAEELPDITQYTAAGTSTLSTESSVLSASCP"
+        assert prepeptide.leader == "LPDITQYTAAGTSTLSTESSVLSASCP"
         assert prepeptide.core == "TSTASTYTSMSSVS"
