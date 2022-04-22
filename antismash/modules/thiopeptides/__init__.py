@@ -8,7 +8,7 @@
 import logging
 from typing import Any, Dict, List, Optional
 
-from antismash.common import path
+from antismash.common import hmmer, path
 from antismash.common.external.rodeo_svm.rebuild import pickle_classifier
 from antismash.common.secmet import Record
 from antismash.config import ConfigType
@@ -46,13 +46,17 @@ def prepare_data(logging_only: bool = False) -> List[str]:
         Returns:
             a list of error messages (only if logging_only is True)
     """
+    errors = []
     training_set = path.get_full_path(__file__, "data", "training_set.csv")
     try:
         pickle_classifier(training_set, prefix="thiopeptide", kernel='rbf', C=2.83e5, gamma=1e-9,
                           overwrite=not logging_only)
     except ValueError:
-        return ["failed to rebuild thiopeptide classifier"]
-    return []
+        errors.append("failed to rebuild thiopeptide classifier")
+
+    precursor_model = path.get_full_path(__file__, "data", "thiopep3.hmm")
+    errors.extend(hmmer.ensure_database_pressed(precursor_model, return_not_raise=True))
+    return errors
 
 
 def check_prereqs(options: ConfigType) -> List[str]:
