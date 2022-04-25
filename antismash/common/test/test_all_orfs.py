@@ -11,6 +11,7 @@ from Bio.SeqFeature import ExactPosition, FeatureLocation
 from antismash.common.all_orfs import (
     find_all_orfs,
     find_intergenic_areas,
+    get_trimmed_orf,
     scan_orfs,
 )
 
@@ -165,3 +166,69 @@ class TestOrfLocations(unittest.TestCase):
             else:
                 orfs = scan_orfs(seq, 1, offset=offset)
             assert not orfs
+
+
+class TestOrfTrimming(unittest.TestCase):
+    def setUp(self):
+        self.record = DummyRecord(seq="nnnATGnnnATGnnnATGnnnTGAnnnnnn")
+        self.cds = DummyCDS(3, 24, strand=1)
+
+    def test_bad_args(self):
+        with self.assertRaisesRegex(ValueError, "minimum .* cannot be greater than maximum"):
+            get_trimmed_orf(self.cds, self.record, min_length=100, max_length=99)
+
+    def test_simple(self):
+        new = get_trimmed_orf(self.cds, self.record)
+        assert new
+        assert new.location.start == 15
+        assert new.location.start >= self.cds.location.start
+        assert new.location.end == self.cds.location.end
+        assert new.location.strand == self.cds.location.strand
+        assert new.translation == "MX"
+
+    def test_includes(self):
+        for include, expected in [(4, 3), (13, 15)]:  # coordinate _within_ the CDS, new within record
+            new = get_trimmed_orf(self.cds, self.record, include=include)
+            assert new
+            assert new.location.start >= self.cds.location.start
+            start = new.location.start
+            end = new.location.end
+            print(include, f"{self.record.seq[:start]}{self.record.seq[start:end].upper()}{self.record.seq[end:]}")
+            print(new.location.extract(self.record.seq))
+            assert new.location.start == expected
+            assert new.location.end == self.cds.location.end
+            assert new.location.strand == self.cds.location.strand
+
+    def test_reverse_strand(self):
+        record = DummyRecord(seq=self.record.seq.reverse_complement())
+        cds = DummyCDS(6, 27, strand=-1)
+        new = get_trimmed_orf(cds, record)
+        assert new.location.start == cds.location.start
+        assert new.location.end == 15
+        assert new.location.strand == cds.location.strand
+
+    def test_reverse_include(self):
+        record = DummyRecord(seq=self.record.seq.reverse_complement())
+        cds = DummyCDS(6, 27, strand=-1)
+        new = get_trimmed_orf(cds, record, include=10)
+        assert new.location.start == cds.location.start
+        assert new.location.end == 21
+        assert new.location.strand == cds.location.strand
+
+    def test_label(self):
+        new = get_trimmed_orf(self.cds, self.record)
+        assert new
+        assert new.locus_tag.startswith("allorf")
+        new = get_trimmed_orf(self.cds, self.record, label="newlabel")
+        assert new.locus_tag == "newlabel"
+
+    def test_not_possible(self):
+        # no start codon within 6 bases of stop
+        assert get_trimmed_orf(self.cds, self.record, max_length=6) is None
+
+        # min length longer than CDS (i.e. no start codons available)
+        assert get_trimmed_orf(self.cds, self.record, min_length=len(self.cds.location) + 1,
+                               max_length=100) is None
+
+        # max length falls before the include coordinate
+        assert get_trimmed_orf(self.cds, self.record, include=0, max_length=6) is None
