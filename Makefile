@@ -30,7 +30,7 @@ cover: coverage
 
 combined-coverage: coverage
 	COVERAGE_FILE=$(integration_coverage) $(coverage) $(integration_flags)
-	coverage combine .coverage $(integration_coverage)
+	coverage combine -a $(integration_coverage)
 	coverage html -d cover
 	coverage report
 
