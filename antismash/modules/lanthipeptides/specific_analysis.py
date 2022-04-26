@@ -49,6 +49,9 @@ THRESH_DICT = {'Class-I': -15,
 # the maximal number of bases in each direction of a core enzyme that a
 # precursor can be defined in
 MAX_PRECURSOR_DISTANCE = 10000
+# the size limits, in aminos, of a precursor CDS
+MIN_PRECURSOR_LENGTH = 20
+MAX_PRECURSOR_LENGTH = 80
 
 
 class LanthiResults(module_results.ModuleResults):
@@ -502,8 +505,7 @@ def determine_precursor_peptide_candidate(record: Record, query: CDSFeature, dom
         only valid for Class-I lanthipeptides
     """
 
-    # Skip sequences with >200 AA
-    if len(query.translation) > 200 or len(query.translation) < 20:
+    if not MIN_PRECURSOR_LENGTH <= len(query.translation) <= MAX_PRECURSOR_LENGTH:
         return None
 
     # Create FASTA sequence for feature under study
@@ -594,7 +596,7 @@ def find_lan_a_features(area_feature: CDSCollection) -> List[CDSFeature]:
     for feature in area_feature.cds_children:
         assert feature.is_contained_by(area_feature)
 
-        if len(feature.translation) < 80:
+        if len(feature.translation) < MAX_PRECURSOR_LENGTH:
             lan_a_features.append(feature)
             continue
         if feature.sec_met and set(feature.sec_met.domain_ids).intersection(KNOWN_PRECURSOR_DOMAINS):
@@ -745,9 +747,9 @@ def run_specific_analysis(record: Record) -> LanthiResults:
 
         precursor_candidates = find_lan_a_features(cluster)
         # Find candidate ORFs that are not yet annotated
-        extra_orfs = all_orfs.find_all_orfs(record, cluster)
+        extra_orfs = all_orfs.find_all_orfs(record, cluster, min_length=MIN_PRECURSOR_LENGTH * 3)
         for orf in extra_orfs:
-            if len(orf.translation) < 80:
+            if len(orf.translation) < MAX_PRECURSOR_LENGTH:
                 precursor_candidates.append(orf)
 
         for gene in core_genes:
