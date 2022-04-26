@@ -25,6 +25,10 @@ from antismash.common.signature import HmmSignature
 CHAIN_LOWER = 1  # CnC
 CHAIN_UPPER = 6  # CnnnnnnC
 
+# the size limits, in aminos, of a precursor CDS
+MIN_PRECURSOR_LENGTH = 20
+MAX_PRECURSOR_LENGTH = 100
+
 
 class SactiResults(module_results.ModuleResults):
     """ Holds the results of sactipeptide analysis for a record
@@ -527,8 +531,7 @@ def determine_precursor_peptide_candidate(cluster: secmet.Protocluster, query: s
                                           ) -> Optional[secmet.Prepeptide]:
     """Identify precursor peptide candidates and split into two"""
 
-    # Skip sequences with >100 AA
-    if not 20 <= len(query_sequence) <= 100:
+    if not MIN_PRECURSOR_LENGTH <= len(query_sequence) <= MAX_PRECURSOR_LENGTH:
         return None
 
     end = len(query_sequence) // 4  # TODO: this seems very arbitrary
@@ -597,7 +600,7 @@ def specific_analysis(record: secmet.Record) -> SactiResults:
             continue
 
         # Find candidate ORFs that are not yet annotated
-        new_orfs = all_orfs.find_all_orfs(record, cluster)
+        new_orfs = all_orfs.find_all_orfs(record, cluster, min_length=MIN_PRECURSOR_LENGTH * 3)
         hmm_results = run_non_biosynthetic_phmms(fasta.get_fasta_from_features(new_orfs))
         annotate_orfs(new_orfs, hmm_results)
 
