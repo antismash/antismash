@@ -24,6 +24,10 @@ from antismash.config import get_config as get_global_config
 
 from .config import get_config as get_lasso_config
 
+# the size limits, in aminos, of a precursor CDS
+MIN_PRECURSOR_LENGTH = 20
+MAX_PRECURSOR_LENGTH = 100
+
 
 class LassoResults(module_results.ModuleResults):
     """ Holds the results of lassopeptide analysis for a record
@@ -617,8 +621,7 @@ def determine_precursor_peptide_candidate(record: Record, cluster: Protocluster,
                                           query: CDSFeature, query_sequence: str) -> Optional[Lassopeptide]:
     """Identify precursor peptide candidates and split into two"""
 
-    # Skip sequences with >100 AA
-    if len(query_sequence) > 100 or len(query_sequence) < 20:
+    if not MIN_PRECURSOR_LENGTH < len(query_sequence) < MAX_PRECURSOR_LENGTH:
         return None
 
     # Create FASTA sequence for feature under study
@@ -721,7 +724,7 @@ def specific_analysis(record: Record) -> LassoResults:
         precursor_candidates = list(cluster.cds_children)
 
         # Find candidate ORFs that are not yet annotated
-        extra_orfs = all_orfs.find_all_orfs(record, cluster)
+        extra_orfs = all_orfs.find_all_orfs(record, cluster, min_length=MIN_PRECURSOR_LENGTH * 3)
         precursor_candidates.extend(extra_orfs)
 
         for candidate in precursor_candidates:
