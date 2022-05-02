@@ -37,6 +37,7 @@ CONDENSATIONS = {
     "Cglyc",
     "Condensation_DCL",
     "Condensation_LCL",
+    "Condensation_sid",
     "Condensation_Starter",
     "Condensation_Dual",
     "Heterocyclization",
