@@ -8,7 +8,6 @@ import logging
 from os import path
 
 from Bio.SeqFeature import FeatureLocation
-from helperlibs.bio import seqio
 from helperlibs.wrappers.io import TemporaryDirectory
 
 from antismash.common.fasta import write_fasta

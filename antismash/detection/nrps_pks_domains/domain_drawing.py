@@ -93,7 +93,7 @@ _CLASS_BY_NAME = {
 }
 
 
-def will_handle(products: List[str], product_categories: Set[str]) -> bool:
+def will_handle(_products: List[str], product_categories: Set[str]) -> bool:
     """ Returns true if one or more relevant products or product categories are present """
     return bool(product_categories.intersection({"NRPS", "PKS"}))
 
