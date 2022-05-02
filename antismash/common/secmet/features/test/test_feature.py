@@ -248,9 +248,9 @@ class TestLocusPop(unittest.TestCase):
 
     def test_required(self):
         with self.assertRaises(KeyError):
-            locus = pop_locus({}, allow_missing=False)
+            pop_locus({}, allow_missing=False)
         with self.assertRaises(KeyError):
-            locus = pop_locus({}, allow_missing=False, default="some value")
+            pop_locus({}, allow_missing=False, default="some value")
 
     def test_biopython_spaces(self):
         locus = "longnamewith space"

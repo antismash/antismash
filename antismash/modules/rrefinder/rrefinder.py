@@ -17,7 +17,6 @@ from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record
 from antismash.common.secmet.features import CDSFeature, Feature, FeatureLocation
 from antismash.common.secmet.locations import location_from_string
-from antismash.detection.hmm_detection import get_supported_cluster_types
 
 from .rre_domain import RREDomain
 
