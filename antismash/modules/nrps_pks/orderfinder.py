@@ -30,8 +30,9 @@ def find_split_module_chains(cds_features: List[CDSFeature], record: Record) -> 
     for cds in cds_features:
         for module in cds.modules:
             if len(module.parent_cds_names) > 1:
-                head, tail = module.parent_cds_names
-                chains[record.get_cds_by_name(head)] = record.get_cds_by_name(tail)
+                parents = (record.get_cds_by_name(name) for name in module.parent_cds_names)
+                head, tail = sorted(parents, reverse=cds.location.strand == -1)
+                chains[head] = tail
     return chains
 
 
