@@ -1,7 +1,7 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
-""" Functions to find, classify, and annotate NRPS and PKS domains within CDS
+""" Functions to find and annotate NRPS and PKS domains within CDS
     features.
 """
 
@@ -48,10 +48,9 @@ DOMAIN_TYPE_MAPPING = {
 class CDSResult:
     """ Stores and enables reconstruction of all results for a single CDS """
     def __init__(self, domain_hmms: List[HMMResult], motif_hmms: List[HMMResult],
-                 feature_type: str, modules: List[Module], ks_subtypes: List[str]) -> None:
+                 modules: List[Module], ks_subtypes: List[str]) -> None:
         self.domain_hmms = domain_hmms
         self.motif_hmms = motif_hmms
-        self.type = feature_type
         self.modules = modules
         self.ks_subtypes = ks_subtypes
         self.domain_features: Dict[HMMResult, ModularDomain] = {}
@@ -65,7 +64,6 @@ class CDSResult:
             "domain_hmms": [hmm.to_json() for hmm in self.domain_hmms],
             "motif_hmms": [hmm.to_json() for hmm in self.motif_hmms],
             "modules": [module.to_json() for module in self.modules],
-            "type": self.type,
             "ks_subtypes": self.ks_subtypes,
         }
 
@@ -75,7 +73,7 @@ class CDSResult:
         domain_hmms = [HMMResult.from_json(hmm) for hmm in data["domain_hmms"]]
         motif_hmms = [HMMResult.from_json(hmm) for hmm in data["motif_hmms"]]
         modules = [Module.from_json(module) for module in data["modules"]]
-        return CDSResult(domain_hmms, motif_hmms, data["type"], modules, data["ks_subtypes"])
+        return CDSResult(domain_hmms, motif_hmms, modules, data["ks_subtypes"])
 
     def annotate_domains(self, record: Record, cds: CDSFeature) -> None:
         """ Adds domain annotations to CDSFeatures and creates ModularDomain
@@ -83,8 +81,6 @@ class CDSResult:
         """
         if not self.domain_hmms:
             return
-
-        cds.nrps_pks.type = self.type
 
         # generate domain features
         self.domain_features = generate_domain_features(cds, self.domain_hmms)
@@ -112,7 +108,7 @@ class CDSResult:
 
 class NRPSPKSDomains(module_results.DetectionResults):
     """ Results tracking for NRPS and PKS domains """
-    schema_version = 3
+    schema_version = 4
 
     def __init__(self, record_id: str, cds_results: Dict[CDSFeature, CDSResult] = None) -> None:
         super().__init__(record_id)
@@ -227,9 +223,8 @@ def generate_domains(record: Record) -> NRPSPKSDomains:
             prev = None
             continue
         subtype_names = match_subtypes_to_ks_domains(domains, cds_ks_subtypes.get(cds.get_name(), []))
-        domain_type = classify_cds([domain.hit_id for domain in domains], subtype_names)
         modules = build_modules_for_cds(domains, subtype_names, cds.get_name())
-        results.cds_results[cds] = CDSResult(domains, motifs, domain_type, modules, subtype_names)
+        results.cds_results[cds] = CDSResult(domains, motifs, modules, subtype_names)
 
         # combine modules that cross CDS boundaries, if possible and relevant
         info = CDSModuleInfo(cds, modules)
@@ -359,54 +354,6 @@ class KetosynthaseCounter:
     def iterative_is_greatest(self) -> bool:
         """ Returns true if the iterative count is strictly greater than others """
         return self.iterative > max([self.enediyne, self.trans_at, self.modular])
-
-
-def classify_cds(domain_names: List[str], ks_domain_subtypes: List[str]) -> str:
-    """ Classifies a CDS based on the type and counts of domains present.
-
-        Arguments:
-            domain_names: a list of domain names present in the CDS
-
-        Returns:
-            a string of the classification (e.g. 'NRPS-like protein')
-    """
-    # get the set of domains and count the relevant types
-    counter = KetosynthaseCounter(domain_names + ks_domain_subtypes)
-    domains = set(domain_names)
-
-    # which rule does it match
-    pks_domains = domains.intersection({"PKS_KS", "PKS_AT"})
-    nrps_domains = domains.intersection({"Condensation_LCL", "Condensation_DCL",
-                                         "Condensation_Starter", "Cglyc",
-                                         "Condensation_Dual", "AMP-binding"})
-    if not pks_domains and not nrps_domains:
-        classification = "other"
-    elif {"Cglyc", "Epimerization", "AMP-binding"}.issubset(domains) and not pks_domains:
-        classification = "Glycopeptide NRPS"
-    elif len(nrps_domains) >= 2 and "AMP-binding" in domains:
-        if pks_domains:
-            classification = "Hybrid PKS-NRPS"
-        else:
-            classification = "NRPS"
-    elif not nrps_domains:
-        if {"PKS_KS", "Trans-AT_docking"}.issubset(domains) and "PKS_AT" not in domains and counter.trans_is_greatest():
-            classification = "Type I Trans-AT PKS"
-        elif len(pks_domains) == 2:  # are both KS and AT domains present
-            if counter.iterative_is_greatest() and counter.pks < 3:
-                classification = "Type I Iterative PKS"
-            elif counter.ene_is_greatest() and counter.pks < 3:
-                classification = "Type I Enediyne PKS"
-            elif counter.modular_is_greatest() or counter.pks > 3:
-                classification = "Type I Modular PKS"
-            else:
-                classification = "PKS-like protein"
-        else:
-            classification = "PKS/NRPS-like protein"
-    elif not pks_domains:
-        classification = "NRPS-like protein"
-    else:
-        classification = "PKS/NRPS-like protein"
-    return classification
 
 
 def generate_domain_features(gene: CDSFeature, domains: List[HMMResult]) -> Dict[HMMResult, ModularDomain]:
