@@ -70,9 +70,9 @@ def analyse_biosynthetic_order(nrps_pks_features: List[CDSFeature],
         pks_chains = {}
         if not hybrid_count:
             pks_chains = find_split_module_chains(pks_features, record)
-        # If more than three PKS cds features, use dock_dom_analysis if possible to identify order
-        # since this will grow as n!, an upper limit is also required
-        if 3 < len(pks_features) and len(pks_features) - len(pks_chains) < 11 and not nrps_count and not hybrid_count:
+        # use docking domain analysis, if possible, to identify order
+        # since this will grow as n!, an upper limit is required
+        if 2 <= len(pks_features) <= 11 + len(pks_chains) and not nrps_count and not hybrid_count:
             logging.debug("CandidateCluster %d monomer ordering method: domain docking analysis",
                           candidate_cluster_number)
             geneorder = perform_docking_domain_analysis(pks_features, pks_chains)
@@ -108,11 +108,11 @@ def find_candidate_cluster_modular_enzymes(cds_features: List[CDSFeature]) -> Tu
     """
     def is_pks_module(module: Module) -> bool:
         domain_names = set(domain.domain for domain in module.domains)
-        return domain_names.intersection({"PKS_KS", "PKS_AT"})
+        return bool(domain_names.intersection({"PKS_KS", "PKS_AT"}))
 
     def is_nrps_module(module: Module) -> bool:
         domain_names = set(domain.domain for domain in module.domains)
-        return domain_names.intersection({"AMP-binding", "A-OX", "Condensation"})
+        return bool(domain_names.intersection({"AMP-binding", "A-OX", "Condensation"}))
 
     pks_features = []
     nrps_count = 0

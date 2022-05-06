@@ -39,7 +39,7 @@ from antismash.modules.nrps_pks.results import (
 )
 
 
-assert DetectionResults.schema_version == 3, "nrps_pks_domains results version mismatch, update required"
+assert DetectionResults.schema_version == 4, "nrps_pks_domains results version mismatch, update required"
 assert AnalysisResults.schema_version == 3, "nrps_pks results version mismatch, update required"
 
 

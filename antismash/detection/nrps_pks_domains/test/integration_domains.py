@@ -25,22 +25,13 @@ class TestAnalyses(unittest.TestCase):
         assert results
         assert len(results.cds_results) == 9
 
-        expected_types = {'bpsC': 'NRPS', 'pks': 'other', 'bpsD': 'NRPS-like protein',
-                          'dpgD': 'other', 'pgat': 'other', 'dpgB': 'other',
-                          'bpsA': 'Glycopeptide NRPS', 'bpsB': 'Glycopeptide NRPS', 'dpgC': 'other'}
-
         for cds, cds_result in results.cds_results.items():
             assert isinstance(cds_result, nrps_pks_domains.domain_identification.CDSResult)
             # motifs can be empty, but domains cannot be
             assert cds_result.domain_hmms
-            assert cds_result.type
             # ensure results were added as they regenerated, as it's a detection module
             assert len(cds_result.domain_hmms) == len(cds.nrps_pks.domains)
             assert len(cds_result.motif_hmms) == len(cds.motifs)
-            assert cds.nrps_pks.type == cds_result.type
-
-        found_types = {cds.get_name(): result.type for cds, result in results.cds_results.items()}
-        assert found_types == expected_types
 
     def test_add_when_regenerating(self):
         record = helpers.DummyRecord(seq="A"*3800)
@@ -60,13 +51,13 @@ class TestAnalyses(unittest.TestCase):
                                         ]
                                         }],
                            "ks_subtypes": [],
-                           'type': 'NRPS'}
+                           }
         one_domain_json = {'domain_hmms': [{'bitscore': 76.9, 'query_end': 382, 'evalue': 3.9e-24, 'hit_id': 'ECH', 'query_start': 170}],
                            'motif_hmms': [{'query_start': 18, 'evalue': 4.7e-05, 'query_end': 30, 'bitscore': 16.1, 'hit_id': 'C1_dual_004-017'},
                                           {'query_start': 38, 'evalue': 1.4e-19, 'query_end': 78, 'bitscore': 62.4, 'hit_id': 'C2_DCL_024-062'}],
                            "modules": [],  # arbitrarily none
                            "ks_subtypes": [],
-                           'type': 'other'}
+                           }
 
         json = {'cds_results': {'two_domains': two_domain_json,
                                 'one_domain': one_domain_json},
@@ -84,7 +75,6 @@ class TestAnalyses(unittest.TestCase):
         assert len(record.get_antismash_domains_by_tool("nrps_pks_domains")) == 3
 
         two_domains = record.get_cds_by_name("two_domains")
-        assert two_domains.nrps_pks.type == "NRPS"
         assert len(two_domains.nrps_pks.domains) == 2
         assert not two_domains.motifs
         modules = results.cds_results[two_domains].modules
@@ -94,7 +84,6 @@ class TestAnalyses(unittest.TestCase):
         assert not two_domains.modules  # added in add_to_record
 
         one_domain = record.get_cds_by_name("one_domain")
-        assert one_domain.nrps_pks.type == "other"
         assert len(one_domain.nrps_pks.domains) == 1
         assert len(one_domain.motifs) == 2
         assert not results.cds_results[one_domain].modules

@@ -8,7 +8,6 @@ import unittest
 
 from antismash.common import secmet
 from antismash.common.test.helpers import DummyAntismashDomain, DummyCDS
-from antismash.detection.nrps_pks_domains import domain_identification
 from antismash.modules.nrps_pks import orderfinder
 
 
@@ -27,7 +26,7 @@ class DummyNRPSQualfier(secmet.qualifiers.NRPSPKSQualifier):  # pylint: disable=
 
 class DummyModule(secmet.features.Module):
     def __init__(self, **kwargs):
-        domains = [DummyAntismashDomain(domain_id=dom) for dom in kwargs.pop("domains")]
+        domains = [DummyAntismashDomain(domain=dom) for dom in kwargs.pop("domains")]
         super().__init__(domains, module_type=secmet.features.module.ModuleType.PKS, **kwargs)
 
 
@@ -281,29 +280,22 @@ class TestOrdering(unittest.TestCase):
 
 
 class TestEnzymeCounter(unittest.TestCase):
-    def run_finder(self, names, all_domains, types=None):
+    def run_finder(self, names, modules_by_cds):
         genes = [DummyCDS(1, 2, locus_tag=name) for name in names]
         for gene in genes:
-            gene.nrps_pks = DummyNRPSQualfier()
-            gene.nrps_pks.domain_names = all_domains[gene.get_name()]
-            if not types:
-                gene.nrps_pks.type = domain_identification.classify_cds(all_domains[gene.get_name()], [])
-            else:
-                gene.nrps_pks.type = types[gene.get_name()]
+            for domains in modules_by_cds[gene.get_name()]:
+                gene.add_module(DummyModule(domains=domains, complete=True))
         results = orderfinder.find_candidate_cluster_modular_enzymes(genes)
         return ([cds.get_name() for cds in results[0]], results[1], results[2])
 
     def test_C002271_c19(self):  # pylint: disable=invalid-name
         gene_names = ['STAUR_3972', 'STAUR_3982', 'STAUR_3983', 'STAUR_3984', 'STAUR_3985']
-        gene_domains = {'STAUR_3985': ['ACP', 'PKS_KS', 'PKS_AT', 'PKS_DH', 'PKS_KR', 'ACP'],
-                        'STAUR_3984': ['PKS_KS', 'PKS_AT', 'PKS_DH', 'PKS_KR', 'ACP'],
-                        'STAUR_3983': ['PKS_KS', 'PKS_AT', 'PKS_DH', 'PKS_KR', 'ACP'],
-                        'STAUR_3982': ['PKS_KS', 'PKS_AT', 'PKS_DH2', 'PKS_KR', 'ACP', 'Thioesterase'],
-                        'STAUR_3972': ['PKS_KR']}
-        gene_types = {'STAUR_3985': 'PKS-like protein', 'STAUR_3984': 'PKS-like protein',
-                      'STAUR_3983': 'PKS-like protein', 'STAUR_3982': 'PKS-like protein',
-                      'STAUR_3972': 'other'}
-        result = self.run_finder(gene_names, gene_domains, gene_types)
+        gene_domains = {'STAUR_3985': [('ACP',), ('PKS_KS', 'PKS_AT', 'PKS_DH', 'PKS_KR', 'ACP')],
+                        'STAUR_3984': [('PKS_KS', 'PKS_AT', 'PKS_DH', 'PKS_KR', 'ACP')],
+                        'STAUR_3983': [('PKS_KS', 'PKS_AT', 'PKS_DH', 'PKS_KR', 'ACP')],
+                        'STAUR_3982': [('PKS_KS', 'PKS_AT', 'PKS_DH2', 'PKS_KR', 'ACP', 'Thioesterase')],
+                        'STAUR_3972': [('PKS_KR',)]}
+        result = self.run_finder(gene_names, gene_domains)
         expected_pks = ["STAUR_3982", "STAUR_3983", "STAUR_3984", "STAUR_3985"]
         assert result == (expected_pks, 0, 0)
 
@@ -312,20 +304,26 @@ class TestEnzymeCounter(unittest.TestCase):
 
     def test_blended(self):
         names = list("BC")
-        domains = {"B": ["PKS_AT"], "C": ["PKS_KS", "PKS_AT"]}
-        assert self.run_finder(names, domains) == (["B", "C"], 0, 0)
+        pkses = [[(f"PKS_{kind}",)] for kind in ["KS", "AT"]]
+        nrpses = [[(kind,)] for kind in ["AMP-binding", "A-OX", "Condensation"]]
+        other = [("T",)]
 
-        domains = {"B": ["AMP-binding"], "C": ["PKS_AT"]}
-        assert self.run_finder(names, domains) == (["C"], 1, 0)
+        for pks in pkses:
+            modules = {"B": pks, "C": other}
+            assert self.run_finder(names, modules) == (["B"], 0, 0)
 
-        domains = {"B": ["AMP-binding", "PKS_AT"], "C": ["PKS_AT"]}
-        assert self.run_finder(names, domains) == (["C"], 0, 0)
+        for nrps in nrpses:
+            modules = {"B": nrps, "C": pkses[-1]}
+            assert self.run_finder(names, modules) == (["C"], 1, 0)
+            modules = {"B": nrps, "C": other}
+            assert self.run_finder(names, modules) == ([], 1, 0)
 
-        domains = {"B": ["AMP-binding", "PKS_AT", "PKS_KS"], "C": ["PKS_AT"]}
-        assert self.run_finder(names, domains) == (["C"], 0, 0)
+            for pks in pkses:
+                modules = {"B": pks + nrps, "C": pks}
+                assert self.run_finder(names, modules) == (["C"], 0, 1)
 
-        domains = {"B": ["AMP-binding", "Condensation_Dual", "PKS_AT"], "C": ["PKS_AT"]}
-        assert self.run_finder(names, domains) == (["C"], 0, 1)
+                modules = {"B": pks + nrps, "C": nrps}
+                assert self.run_finder(names, modules) == ([], 1, 1)
 
-        domains = {"B": ["AMP-binding"], "C": ["PKS_AT"]}
-        assert self.run_finder(names, domains) == (["C"], 1, 0)
+                modules = {"B": nrps + pks + other, "C": pks}
+                assert self.run_finder(names, modules) == (["C"], 0, 1)
