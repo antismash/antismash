@@ -25,7 +25,8 @@ class DummyAntismashDomain(AntismashDomain):
     counter = 0
 
     def __init__(self, start=0, end=3, strand=1, location=None, domain_id=None, tool="test_tool",
-                 protein_start=0, protein_end=1, protein_location=None, locus_tag="dummyCDS"):
+                 protein_start=0, protein_end=1, protein_location=None, locus_tag="dummyCDS",
+                 domain=None):
         if location is None:
             location = FeatureLocation(start, end, strand=strand)
         if protein_location is None:
@@ -33,7 +34,7 @@ class DummyAntismashDomain(AntismashDomain):
         if not domain_id:
             domain_id = "test_asDom_%d" % DummyAntismashDomain.counter
             DummyAntismashDomain.counter += 1
-        super().__init__(location, tool, protein_location, locus_tag)
+        super().__init__(location, tool, protein_location, locus_tag, domain=domain)
         self.domain_id = domain_id
 
 
