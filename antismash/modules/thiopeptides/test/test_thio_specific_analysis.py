@@ -9,11 +9,17 @@ from unittest.mock import patch
 
 from Bio.SeqFeature import FeatureLocation
 
-from antismash.common import subprocessing
-from antismash.common.test.helpers import DummyCDS, DummyRecord, FakeHit
+from antismash.common import all_orfs, subprocessing
+from antismash.common.test.helpers import (
+    DummyCDS,
+    DummyProtocluster,
+    DummyRecord,
+    FakeHit,
+)
 from antismash.modules.thiopeptides.specific_analysis import (
     Thiopeptide,
     ThioResults,
+    find_unannotated_candidates,
     predict_cleavage_site,
     result_vec_to_feature,
 )
@@ -165,6 +171,15 @@ class TestSpecificAnalysis(unittest.TestCase):
         assert not motif.tail
         assert motif.detailed_information.core_features == "Central ring: pyridine trisubstituted"
         assert motif.core == "SCTSSCTSS"
+
+    @patch.object(all_orfs, "find_all_orfs", return_value=[])
+    @patch.object(subprocessing, "run_hmmscan", return_value=[])
+    def test_find_unannotated(self, mocked_hmmscan, mocked_all_orfs):  # inverse order of decorators
+        proto = DummyProtocluster(product="thiopeptide")
+        record = DummyRecord()
+        assert not find_unannotated_candidates(record, proto)
+        assert mocked_all_orfs.called
+        assert not mocked_hmmscan.called
 
 
 class TestCDSDuplication(unittest.TestCase):

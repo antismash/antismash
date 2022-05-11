@@ -618,6 +618,8 @@ def find_unannotated_candidates(record: secmet.Record, protocluster: secmet.Prot
     # start with all ORFs that are at least as long as required
     new_orfs = all_orfs.find_all_orfs(record, protocluster, min_length=MIN_PRECURSOR_LENGTH * 3)
 
+    if not new_orfs:
+        return []
     # strip out any that don't get a hit with the precursor model, stripping as
     # many extra start codons off as possible
     hmm3_profile = path.get_full_path(__file__, "data", 'thiopep3.hmm')
