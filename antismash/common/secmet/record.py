@@ -14,7 +14,7 @@
 import bisect
 from collections import Counter, defaultdict, OrderedDict
 import logging
-from typing import Any, Dict, List, Optional, Sequence, Type, Tuple, Union, cast
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, TypeVar, Union, cast
 from zlib import crc32
 
 from Bio import SeqIO
@@ -47,6 +47,8 @@ from .locations import (
     combine_locations,
     ensure_valid_locations,
 )
+
+T = TypeVar("T", bound="Record")
 
 
 class Record:
@@ -692,8 +694,8 @@ class Record:
         else:
             self.add_feature(Feature.from_biopython(feature))
 
-    @staticmethod
-    def from_biopython(seq_record: SeqRecord, taxon: str) -> "Record":
+    @classmethod
+    def from_biopython(cls: Type[T], seq_record: SeqRecord, taxon: str) -> T:
         """ Constructs a new Record instance from a biopython SeqRecord,
             also replaces biopython SeqFeatures with Feature subclasses
         """
@@ -710,7 +712,7 @@ class Record:
         transl_table = 1  # standard
         if str(taxon) == "bacteria":
             transl_table = 11  # bacterial, archea, plant plastid code
-        record = Record(transl_table=transl_table)
+        record = cls(transl_table=transl_table)
         record._record = seq_record  # pylint: disable=protected-access
         # because is_circular() can't be used reliably at this stage due to fasta files
         can_be_circular = taxon == "bacteria"
@@ -806,9 +808,9 @@ class Record:
                     else:
                         feature.qualifiers["gene"][0] = original_gene_name
         try:
-            for cls, features in postponed_features.values():
+            for feature_class, features in postponed_features.values():
                 for feature in features:
-                    record.add_feature(cls.from_biopython(feature, record=record))
+                    record.add_feature(feature_class.from_biopython(feature, record=record))
         except ValueError as err:
             raise SecmetInvalidInputError(str(err)) from err
         return record
