@@ -534,14 +534,10 @@ class Record:
         # ensure it has a translation
         if not cds_feature.translation:
             raise ValueError("Missing translation info for %s" % cds_feature)
-        index = bisect.bisect_left(self._cds_features, cds_feature)
-        self._cds_features.insert(index, cds_feature)
-        self._link_cds_to_parent(cds_feature)
         location_key = str(cds_feature.location)
         if location_key in self._cds_by_location:
             raise SecmetInvalidInputError(
                 f"Multiple CDS features have the same location: {cds_feature.location}")
-        self._cds_by_location[location_key] = cds_feature
         if cds_feature.get_name() in self._cds_by_name:
             error = SecmetInvalidInputError("multiple CDS features have the same name for mapping: %s" %
                                             cds_feature.get_name())
@@ -557,6 +553,12 @@ class Record:
             new = f"{cds_feature.locus_tag}_{_location_checksum(cds_feature)}"
             cds_feature.locus_tag = new
             assert cds_feature.get_name() not in self._cds_by_name
+        # only modify the record once all the checks are complete, otherwise
+        # an exception can be caught leaving the state partially modified
+        index = bisect.bisect_left(self._cds_features, cds_feature)
+        self._cds_features.insert(index, cds_feature)
+        self._link_cds_to_parent(cds_feature)
+        self._cds_by_location[location_key] = cds_feature
         self._cds_by_name[cds_feature.get_name()] = cds_feature
 
     def add_cds_motif(self, motif: Union[CDSMotif, Prepeptide]) -> None:
