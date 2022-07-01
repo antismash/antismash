@@ -50,7 +50,7 @@ def run_muscle_version() -> str:
     ]
 
     version_string = execute(command).stdout
-    if not version_string.startswith("MUSCLE"):
+    if not version_string.lower().startswith("muscle"):
         msg = "unexpected output from muscle: %s, check path"
         raise RuntimeError(msg % muscle)
     # get rid of the non-version stuff in the output
