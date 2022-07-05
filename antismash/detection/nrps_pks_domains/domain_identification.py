@@ -208,7 +208,7 @@ def generate_domains(record: Record) -> NRPSPKSDomains:
     results = NRPSPKSDomains(record.id)
 
     cds_within_regions = record.get_cds_features_within_regions()
-    assert cds_within_regions  # because every cluster should have genes
+    assert cds_within_regions, "No genes found in regions"  # because every region should have genes
 
     fasta = get_fasta_from_features(cds_within_regions)
     cds_domains = find_domains(fasta, record)
