@@ -72,7 +72,7 @@ def analyse_biosynthetic_order(nrps_pks_features: List[CDSFeature],
             pks_chains = find_split_module_chains(pks_features, record)
         # use docking domain analysis, if possible, to identify order
         # since this will grow as n!, an upper limit is required
-        if 2 <= len(pks_features) <= 11 + len(pks_chains) and not nrps_count and not hybrid_count:
+        if 2 <= len(pks_features) < 11 + len(pks_chains) and not nrps_count and not hybrid_count:
             logging.debug("CandidateCluster %d monomer ordering method: domain docking analysis",
                           candidate_cluster_number)
             geneorder = perform_docking_domain_analysis(pks_features, pks_chains)
