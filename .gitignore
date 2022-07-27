@@ -29,5 +29,8 @@ pip-egg-info/*
 # generated during make test
 nisin/*
 
+# generated during setup
+build/*
+
 # keep these, even in locations that are ignored
 !antismash/databases/README
