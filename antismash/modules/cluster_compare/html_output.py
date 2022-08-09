@@ -43,6 +43,8 @@ def generate_html(region_layer: RegionLayer, results: ClusterCompareResults,
         divs: List[Tuple[str, str, Markup]] = []
         for variant, result in sorted(variant_results.items()):
             scores = result.scores_by_region[:DISPLAY_LIMIT]
+            if not scores:
+                continue
             scores_by_proto = result.details.details
             tag = variant.replace(" ", "-")
             search_type = "row"
