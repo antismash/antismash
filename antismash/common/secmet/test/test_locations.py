@@ -22,6 +22,7 @@ from antismash.common.secmet.locations import (
     location_from_string,
     locations_overlap,
     combine_locations,
+    remove_redundant_exons,
     FeatureLocation,
     CompoundLocation,
     AfterPosition,
@@ -578,3 +579,47 @@ class TestLocationAdjustment(unittest.TestCase):
                 assert new.parts[0].start is old.parts[0].start
                 for old_part, new_part in zip(old.parts[1:], new.parts[1:]):
                     assert old_part is new_part
+
+
+class TestRemoveRedundant(unittest.TestCase):
+    def create(self, raw_parts, strand=1, operator="join"):
+        parts = [FeatureLocation(part[0], part[1], strand=strand) for part in raw_parts]
+        if len(parts) == 1:
+            return parts[0]
+        return CompoundLocation(parts, operator)
+
+    def check_ordering(self, strand=1, operator="join"):
+        parts = [(6, 9), (15, 21), (3, 12)]
+        for i in range(len(parts)):
+            old = self.create(parts[i:] + parts[:i], strand=strand, operator=operator)
+            new = remove_redundant_exons(old)
+            assert new != old
+            assert len(new.parts) == 2
+            assert new.parts == [part for part in old.parts if part.start != 6]
+
+    def test_non_compound(self):
+        old = self.create([(3, 6)])
+        new = remove_redundant_exons(old)
+        assert new == old
+
+    def test_non_redundant(self):
+        # completely separate
+        old = self.create([(3, 6), (9, 12)])
+        new = remove_redundant_exons(old)
+        assert new == old
+
+        # incomplete overlap
+        old = self.create([(3, 6), (4, 7)])
+        new = remove_redundant_exons(old)
+        assert new == old
+
+    def test_compound_to_non_compound(self):
+        old = self.create([(3, 12), (6, 9)])
+        new = remove_redundant_exons(old)
+        assert not isinstance(new, CompoundLocation)
+        assert old != new
+
+    def test_complete(self):
+        for operator in ["order", "join"]:
+            for strand in [1, -1]:
+                self.check_ordering(strand=strand, operator=operator)
