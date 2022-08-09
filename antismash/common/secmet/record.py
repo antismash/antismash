@@ -46,6 +46,7 @@ from .locations import (
     split_origin_bridging_location,
     combine_locations,
     ensure_valid_locations,
+    remove_redundant_exons,
 )
 
 T = TypeVar("T", bound="Record")
@@ -734,6 +735,10 @@ class Record:
 
             locations_adjusted = False
             name_modified = False
+
+            # prefilter some NCBI Pfam hits locations that are generated poorly
+            if can_be_circular and feature.type == "misc_feature" and location_bridges_origin(feature.location, allow_reversing=False):
+                feature.location = remove_redundant_exons(feature.location)
 
             if can_be_circular and location_bridges_origin(feature.location, allow_reversing=False):
                 locations_adjusted = True
