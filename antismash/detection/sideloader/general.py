@@ -55,7 +55,7 @@ def load_single_record_annotations(annotation_files: List[str], record: Record,
 
     tool = Tool("manual", "N/A", "command line argument", {})
     if manual and manual.accession == record.id:
-        subregion = SubRegionAnnotation(manual.start, manual.end, "", tool, {})
+        subregion = SubRegionAnnotation(manual.start, min(manual.end, len(record.seq)), "", tool, {})
         subregions.append(subregion)
 
     if cds_markers:

@@ -36,7 +36,9 @@ class TestSimple(unittest.TestCase):
         result = general.load_single_record_annotations([], make_record("AXC"), _parse_arg("AcC:1-50"))
         assert not result.subregions
 
-        result = general.load_single_record_annotations([], make_record("AcC", 30), _parse_arg("AcC:1-50"))
+        record = make_record("AcC", 30)
+        record.seq = "A" * 100
+        result = general.load_single_record_annotations([], record, _parse_arg("AcC:1-50"))
         assert not result.protoclusters
         assert len(result.subregions) == 1
         sub = result.subregions[0]
@@ -44,6 +46,14 @@ class TestSimple(unittest.TestCase):
         assert sub.start == 1
         assert sub.end == 50
         assert result.record_id == "AcC"
+
+    def test_end_overflow(self):
+        length = 50
+        features = [DummyCDS(start=10, end = 18)]
+        record = DummyRecord(seq="A"*length, record_id="A", features=features)
+        results = general.load_single_record_annotations([], record, _parse_arg(f"A:1-{length * 10}"))
+        assert len(results.subregions) == 1
+        assert results.subregions[0].end == length
 
     def test_empty(self):
         with self.assertRaisesRegex(AntismashInputError, "area contains no complete CDS"):
