@@ -467,3 +467,31 @@ def frameshift_location_by_qualifier(location: Location, raw_start: Union[str, i
         codon_start *= -1
 
     return _adjust_location_by_offset(location, codon_start)
+
+
+def remove_redundant_exons(location: Location) -> Location:
+    """ Generates a new location that with redudant exons removed.
+        Redundant exons are those that cover a location already covered by a larger exon.
+
+        Arguments:
+            location: the location to trim
+
+        Returns:
+            a new location instance, if redundant exons are found, otherwise the existing location
+    """
+    if len(location.parts) == 1:
+        return location
+
+    parts_by_size = sorted(location.parts, key=lambda part: part.end - part.start, reverse=True)
+    parts: List[FeatureLocation] = []
+    for part in parts_by_size:
+        covered = False
+        for existing in parts:
+            if location_contains_other(existing, part):
+                covered = True
+                break
+        if not covered:
+            parts.append(part)
+    if len(parts) == 1:
+        return parts[0]
+    return CompoundLocation([part for part in location.parts if part in parts], operator=location.operator)
