@@ -14,6 +14,7 @@ from antismash.common.secmet.features import FeatureLocation, CDSFeature
 from antismash.common.secmet.features.cds_feature import (
     _is_valid_translation_length,
     _translation_fits_in_record,
+    MAX_TRANSLATION_LENGTH,
 )
 from antismash.common.secmet.features.feature import CompoundLocation
 from antismash.common.secmet.locations import AfterPosition, BeforePosition
@@ -46,6 +47,14 @@ class TestCDSFeature(unittest.TestCase):
         for trans in [None, "A?", "A!", ""]:
             with self.assertRaisesRegex(ValueError, "valid translation required|invalid translation characters"):
                 CDSFeature(loc, locus_tag="test", translation=trans)
+
+    def test_max_translation_length(self):
+        loc = FeatureLocation(0, (MAX_TRANSLATION_LENGTH - 1) * 3, 1)
+        CDSFeature(loc, locus_tag="test", translation="A" * (MAX_TRANSLATION_LENGTH - 1))
+
+        loc = FeatureLocation(0, MAX_TRANSLATION_LENGTH * 3, 1)
+        with self.assertRaisesRegex(ValueError, "translation too long"):
+            CDSFeature(loc, locus_tag="test", translation="A" * MAX_TRANSLATION_LENGTH)
 
 
 class TestCDSBiopythonConversion(unittest.TestCase):

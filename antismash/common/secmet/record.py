@@ -535,6 +535,8 @@ class Record:
         # ensure it has a translation
         if not cds_feature.translation:
             raise ValueError("Missing translation info for %s" % cds_feature)
+        if len(cds_feature.translation) > 100000:
+            raise ValueError(f"Translation too large: {cds_feature} {len(cds_feature.translation)}")
         location_key = str(cds_feature.location)
         if location_key in self._cds_by_location:
             raise SecmetInvalidInputError(
