@@ -15,6 +15,7 @@ from helperlibs.wrappers.io import TemporaryDirectory
 from antismash.common import path
 from antismash.common.gff_parser import get_features_from_file
 from antismash.common.secmet import Record
+from antismash.common.secmet.features.cds_feature import MAX_TRANSLATION_LENGTH
 from antismash.common.subprocessing import execute
 
 
@@ -63,4 +64,6 @@ def run_glimmerhmm(record: Record) -> None:
     handle = StringIO(results_text)
     features = get_features_from_file(handle)["input"]
     for feature in features:
+        if len(feature.location) >= (MAX_TRANSLATION_LENGTH * 3) * .9:
+            logging.warning(f"Ignoring potential gene too long for dependencies: {len(feature.location) // 1000}kb")
         record.add_biopython_feature(feature)
