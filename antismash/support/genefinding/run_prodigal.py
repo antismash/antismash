@@ -12,6 +12,7 @@ from helperlibs.wrappers.io import TemporaryDirectory
 
 from antismash.common.fasta import write_fasta
 from antismash.common.secmet import CDSFeature, Record
+from antismash.common.secmet.features.cds_feature import MAX_TRANSLATION_LENGTH
 from antismash.common.subprocessing import execute
 from antismash.config import ConfigType
 
@@ -64,6 +65,11 @@ def run_prodigal(record: Record, options: ConfigType) -> None:
             if start > end:
                 strand = -1
                 start, end = end, start
+
+            length = end - start
+            if length > (MAX_TRANSLATION_LENGTH * 3) * .9:
+                logging.warning(f"Ignoring potential gene too long for dependencies: {length // 1000}kb")
+                continue
 
             loc = FeatureLocation(start-1, end, strand=strand)
             translation = record.get_aa_translation_from_location(loc)
