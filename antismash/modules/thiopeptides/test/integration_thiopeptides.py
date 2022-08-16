@@ -16,7 +16,7 @@ from antismash.modules import thiopeptides
 
 class TestIntegration(unittest.TestCase):
     def setUp(self):
-        self.config = build_config(["--minimal", "--enable-thiopeptides", "--cpus", "1"],
+        self.config = build_config(["--minimal", "--enable-html", "--enable-thiopeptides", "--cpus", "1"],
                                    isolated=True, modules=antismash.get_all_modules())
 
     def tearDown(self):
