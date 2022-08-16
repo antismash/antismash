@@ -16,7 +16,7 @@ from antismash.modules.sactipeptides import SactiResults
 
 class IntegrationSactipeptides(unittest.TestCase):
     def setUp(self):
-        self.options = build_config(["--minimal", "--enable-sactipeptides"],
+        self.options = build_config(["--minimal", "--enable-sactipeptides", "--enable-html"],
                                     isolated=True, modules=antismash.get_all_modules())
 
     def tearDown(self):

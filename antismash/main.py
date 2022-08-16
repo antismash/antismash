@@ -447,8 +447,9 @@ def write_outputs(results: serialiser.AntismashResults, options: ConfigType) -> 
                 record_result[module_name] = result
         module_results_per_record.append(record_result)
 
-    logging.debug("Creating results page")
-    html.write(results.records, module_results_per_record, options, get_all_modules())
+    if html.is_enabled(options):
+        logging.debug("Creating results page")
+        html.write(results.records, module_results_per_record, options, get_all_modules())
 
     logging.debug("Creating results SVGs")
     svg.write(options, module_results_per_record)

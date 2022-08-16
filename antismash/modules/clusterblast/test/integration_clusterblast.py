@@ -80,7 +80,8 @@ class Base(unittest.TestCase):
 
 class GeneralIntegrationTest(Base):
     def get_args(self):
-        return ["--cb-general", "--minimal", "--data", path.get_full_path(__file__, "data")]
+        return ["--cb-general", "--minimal", "--enable-html",
+                "--data", path.get_full_path(__file__, "data")]
 
     def get_results(self, results):
         assert isinstance(results, ModuleResults)
@@ -127,7 +128,7 @@ class GeneralIntegrationTest(Base):
 @patch.object(known, "_SHIPPED_DATA_DIR", MOCKED_DATA)
 class KnownIntegrationTest(Base):
     def get_args(self):
-        return ["--cb-knowncluster", "--minimal"]
+        return ["--cb-knowncluster", "--minimal", "--enable-html"]
 
     def get_results(self, results):
         assert isinstance(results, ModuleResults)
@@ -211,7 +212,7 @@ class KnownIntegrationTest(Base):
 
 class SubIntegrationTest(Base):
     def get_args(self):
-        return ["--cb-subcluster", "--minimal"]
+        return ["--cb-subcluster", "--minimal", "--enable-html"]
 
     def get_results(self, results):
         assert isinstance(results, ModuleResults)

@@ -37,7 +37,7 @@ class TestAntismash(unittest.TestCase):
     def check_output_files(self):
         out_dir = self.config.output_dir
         assert os.path.exists(out_dir)
-        for filename in ["nisin.json", "index.html"]:
+        for filename in ["nisin.json"]:
             assert os.path.exists(os.path.join(out_dir, filename))
 
 
@@ -48,6 +48,15 @@ class TestSkipZip(TestAntismash):
     def check_output_files(self):
         super().check_output_files()
         assert not os.path.exists(os.path.join(self.config.output_dir, "nisin.zip"))
+
+
+class TestEnableHTML(TestAntismash):
+    def get_args(self):
+        return ["--minimal", "--enable-html"]
+
+    def check_output_files(self):
+        super().check_output_files()
+        assert os.path.exists(os.path.join(self.config.output_dir, "index.html"))
 
 
 class TestProfiling(TestAntismash):
@@ -83,6 +92,9 @@ class TestLogging(TestAntismash):
 
 
 class TestResultsReuse(TestAntismash):
+    def get_args(self):
+        return ["--minimal", "--enable-html"]
+
     def test_nisin_minimal(self):
         # make sure the output directory isn't filled
         out_dir = self.config.output_dir
