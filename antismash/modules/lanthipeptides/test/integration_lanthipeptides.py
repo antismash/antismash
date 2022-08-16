@@ -18,7 +18,7 @@ import antismash.modules.lanthipeptides.config as lanthi_config
 
 class IntegrationLanthipeptides(unittest.TestCase):
     def setUp(self):
-        self.options = build_config(["--minimal", "--enable-lanthipeptides"],
+        self.options = build_config(["--minimal", "--enable-html", "--enable-lanthipeptides"],
                                     isolated=True, modules=antismash.get_all_modules())
         self.set_fimo_enabled(True)
 
@@ -172,7 +172,7 @@ class IntegrationLanthipeptides(unittest.TestCase):
 
 class IntegrationLanthipeptidesWithoutFimo(IntegrationLanthipeptides):
     def setUp(self):
-        self.options = build_config(["--minimal", "--enable-lanthipeptides"],
+        self.options = build_config(["--minimal", "--enable-html", "--enable-lanthipeptides"],
                                     isolated=True, modules=antismash.get_all_modules())
         self.set_fimo_enabled(False)
         assert lanthi_config.get_config().fimo_present is False

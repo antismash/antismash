@@ -15,8 +15,8 @@ from antismash.modules import pfam2go
 
 class PfamToGoTest(unittest.TestCase):
     def setUp(self):
-        self.options = build_config(["--clusterhmmer", "--pfam2go", "--minimal"], isolated=True,
-                                    modules=antismash.get_all_modules())
+        self.options = build_config(["--clusterhmmer", "--pfam2go", "--minimal", "--enable-html"],
+                                    isolated=True, modules=antismash.get_all_modules())
 
     def tearDown(self):
         destroy_config()

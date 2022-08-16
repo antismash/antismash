@@ -81,9 +81,9 @@ def check_options(_options: ConfigType) -> List[str]:
     return []
 
 
-def is_enabled(_options: ConfigType) -> bool:
+def is_enabled(options: ConfigType) -> bool:
     """ Is the HMTL module enabled (currently always enabled) """
-    return True  # TODO: add an arg to disable
+    return options.html_enabled or not options.minimal
 
 
 def write(records: List[Record], results: List[Dict[str, ModuleResults]],

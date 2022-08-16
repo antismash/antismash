@@ -17,7 +17,7 @@ class TestTIGRFam(unittest.TestCase):
     def setUp(self):
         self.original_min_score = tigrfam.MIN_SCORE
         self.original_max_evalue = tigrfam.MAX_EVALUE
-        self.options = build_config(["--tigrfam", "--minimal"],
+        self.options = build_config(["--tigrfam", "--minimal", "--enable-html"],
                                     isolated=True,
                                     modules=antismash.get_all_modules())
 

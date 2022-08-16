@@ -35,7 +35,7 @@ class IntegrationWithoutNRPSPKS(unittest.TestCase):
 
 class IntegrationNRPSPKS(unittest.TestCase):
     def setUp(self):
-        self.options = build_config(["--minimal", "--enable-nrps-pks"],
+        self.options = build_config(["--minimal", "--enable-nrps-pks", "--enable-html"],
                                     isolated=True, modules=antismash.get_all_modules())
 
     def tearDown(self):
