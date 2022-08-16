@@ -181,8 +181,8 @@ class ProtoclusterAnnotation:
             str(raw["product"]),
             Tool.from_json(raw["tool"]),
             _qualifier_mapping(raw.get("details", {})),
-            int(raw["neighbourhood_left"]),
-            int(raw["neighbourhood_right"]),
+            int(raw.get("neighbourhood_left", 0)),
+            int(raw.get("neighbourhood_right", 0)),
         )
 
     @classmethod
