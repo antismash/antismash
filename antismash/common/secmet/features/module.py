@@ -71,7 +71,11 @@ class Module(Feature):
         if not isinstance(module_type, ModuleType):
             raise TypeError("module_type must be a ModuleType instance, not %s" % type(module_type))
 
-        self._parent_cds_names = sorted({dom.locus_tag for dom in domains})
+        # parent CDS name order should match that of the domains provided
+        self._parent_cds_names: List[str] = []
+        for domain in domains:
+            if domain.locus_tag not in self._parent_cds_names:
+                self._parent_cds_names.append(domain.locus_tag)
         self._domains = domains
         self._substrate_monomer_pairs: List[Tuple[str, str]] = []
         self._complete = complete
