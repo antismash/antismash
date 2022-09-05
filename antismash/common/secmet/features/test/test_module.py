@@ -155,6 +155,11 @@ class TestModule(unittest.TestCase):
         module._parent_cds_names.append("more")
         assert len(module.parent_cds_names) == 2 and module.is_multigene_module()
 
+    def test_cross_gene_ordering(self):
+        domains = [DummyAntismashDomain(locus_tag="A"), DummyAntismashDomain(locus_tag="B")]
+        for doms in [domains, domains[::-1]]:
+            assert Module(doms).parent_cds_names == tuple([dom.locus_tag for dom in doms])
+
     def test_type(self):
         assert create_module().module_type == ModuleType.UNKNOWN
 
