@@ -30,7 +30,10 @@ class AntismashDomain(Domain):
             leftovers = Feature.make_qualifiers_copy(bio_feature)
         if not feature:
             # if there is an appropriate subtype and it's not yet called, call it
-            tool = leftovers["aSTool"][0]
+            try:
+                tool = leftovers["aSTool"][0]
+            except KeyError:
+                raise ValueError(f"{cls.FEATURE_TYPE} missing expected qualifier: 'aSTool'")
             if tool in _SUBTYPE_MAPPING:
                 subtype = _SUBTYPE_MAPPING[tool]
                 # this to_biopython() will call this same function again
@@ -42,12 +45,14 @@ class AntismashDomain(Domain):
                 assert isinstance(variant, cls)
                 return variant
 
-            # no tool, so process the minimum for a default domain
+            # no subtype, so process the minimum for a default domain
             # grab mandatory qualifiers and create the class
             tool = leftovers.pop("aSTool")[0]
             protein_location = generate_protein_location_from_qualifiers(leftovers, record)
             # locus tag is special, antismash versions <= 5.0 didn't require it, but > 5.0 do
-            locus_tag = pop_locus_qualifier(leftovers)
+            locus_tag = pop_locus_qualifier(leftovers, allow_missing=True)
+            if not locus_tag:
+                raise ValueError(f"{cls.FEATURE_TYPE} missing expected qualifier: 'locus_tag'")
             assert locus_tag  # even if it's just the default "(unknown)"
             feature = cls(bio_feature.location, tool, protein_location, locus_tag)
 

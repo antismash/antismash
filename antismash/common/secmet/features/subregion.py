@@ -50,12 +50,16 @@ class SubRegion(CDSCollection):
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
 
-        if leftovers["aStool"][0].startswith("externally annotated"):
+        try:
+            tool = leftovers["aStool"][0]
+        except KeyError as err:
+            raise ValueError(f"{cls.FEATURE_TYPE} missing expected qualifier: {err}")
+        if tool.startswith("externally annotated"):
             external = SideloadedSubRegion.from_biopython(bio_feature)
             assert isinstance(external, cls)
             return external
 
-        tool = leftovers.pop("aStool")[0]
+        leftovers.pop("aStool")
         label = leftovers.pop("label", [""])[0]
         if not label:
             label = leftovers.pop("anchor", [""])[0]  # backwards compatibility
