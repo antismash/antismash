@@ -156,7 +156,10 @@ class CandidateCluster(CDSCollection):
             raise ValueError("record instance required for regenerating CandidateCluster from biopython")
 
         all_protoclusters = record.get_protoclusters()
-        protocluster_numbers = [int(num) for num in leftovers.pop("protoclusters")]
+        try:
+            protocluster_numbers = [int(num) for num in leftovers.pop("protoclusters")]
+        except KeyError as err:
+            raise ValueError(f"{cls.FEATURE_TYPE} missing expected qualifier: {err}")
 
         if max(protocluster_numbers) > len(all_protoclusters):
             raise ValueError("record does not contain all expected protoclusters")

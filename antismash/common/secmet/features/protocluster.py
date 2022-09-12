@@ -123,12 +123,15 @@ class Protocluster(CDSCollection):
         if not feature:
             category = leftovers.pop("category", [""])[0]
             # grab mandatory qualifiers and create the class
-            neighbourhood_range = int(leftovers.pop("neighbourhood")[0])
-            cutoff = int(leftovers.pop("cutoff")[0])
-            product = leftovers.pop("product")[0]
-            tool = leftovers.pop("aStool")[0]
-            rule = leftovers.pop("detection_rule")[0]
-            core_location = location_from_string(leftovers.pop("core_location")[0])
+            try:
+                neighbourhood_range = int(leftovers.pop("neighbourhood")[0])
+                cutoff = int(leftovers.pop("cutoff")[0])
+                product = leftovers.pop("product")[0]
+                tool = leftovers.pop("aStool")[0]
+                rule = leftovers.pop("detection_rule")[0]
+                core_location = location_from_string(leftovers.pop("core_location")[0])
+            except KeyError as err:
+                raise ValueError(f"{cls.FEATURE_TYPE} missing expected qualifier: {err}")
             feature = cls(core_location, bio_feature.location,
                           tool, product, cutoff, neighbourhood_range, rule, product_category=category)
 
