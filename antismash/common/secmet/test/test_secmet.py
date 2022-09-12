@@ -38,7 +38,7 @@ from ..locations import (
     CompoundLocation,
 )
 from ..qualifiers import SecMetQualifier, GeneFunction
-from ..record import Record
+from ..record import ANTISMASH_SPECIFIC_TYPES, Record
 
 
 class TestConversion(unittest.TestCase):
@@ -119,6 +119,22 @@ class TestConversion(unittest.TestCase):
         sec_rec = Record.from_biopython(rec, taxon="bacteria")
         assert len(rec.features) == 1
         assert rec.features[0].location.parts == [location.parts[0], location.parts[2]]
+
+    def test_discard(self):
+        bio = list(Bio.SeqIO.parse(get_path_to_nisin_genbank(), "genbank"))[0]
+        for feature_type in ANTISMASH_SPECIFIC_TYPES:
+            bio.features = [
+                SeqFeature(FeatureLocation(10, 70, 1), type=feature_type),  # invalid
+                SeqFeature(FeatureLocation(100, 160, 1), type=CDSFeature.FEATURE_TYPE),  # valid/non-antismash
+            ]
+            # without the discard flag, this needs to raise an error
+            with self.assertRaisesRegex(SecmetInvalidInputError, "(missing expected qualifier: '[^'])|(requires at least one)"):
+                Record.from_biopython(bio, taxon="bacteria")
+            # with the discard flag, the bad antismash-specific feature should just disappear
+            rec = Record.from_biopython(bio, taxon="bacteria", discard_antismash_features=True)
+            assert len(rec.get_all_features()) == 1
+            # and that single feature had better be the CDS
+            assert len(rec.get_cds_features()) == 1
 
 
 class TestStripping(unittest.TestCase):
