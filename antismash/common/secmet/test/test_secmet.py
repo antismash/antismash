@@ -120,6 +120,11 @@ class TestConversion(unittest.TestCase):
         assert len(rec.features) == 1
         assert rec.features[0].location.parts == [location.parts[0], location.parts[2]]
 
+        features = sec_rec.get_all_features()
+        assert len(features) == 2
+        assert features[0].location.parts == [location.parts[2]]
+        assert features[1].location.parts == [location.parts[0]]
+
     def test_discard(self):
         bio = list(Bio.SeqIO.parse(get_path_to_nisin_genbank(), "genbank"))[0]
         for feature_type in ANTISMASH_SPECIFIC_TYPES:
