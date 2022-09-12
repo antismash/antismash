@@ -121,17 +121,17 @@ class TestIntegenic(unittest.TestCase):
 
     def test_simple(self):
         cdses = [DummyCDS(30, 36, strand=1), DummyCDS(39, 45, strand=-1)]
-        areas = find_intergenic_areas(0, 120, []) == [(0, 30), (36, 39), (45, 120)]
+        assert find_intergenic_areas(0, 120, cdses) == [(0, 30), (36, 39), (45, 120)]
 
     def test_padding(self):
         cdses = [DummyCDS(30, 45, strand=1)]
-        areas = find_intergenic_areas(0, 60, cdses, padding=0) == [(0, 30), (45, 60)]
-        areas = find_intergenic_areas(0, 60, cdses, padding=3) == [(0, 27), (48, 60)]
-        areas = find_intergenic_areas(12, 50, cdses, padding=3) == [(12, 27), (48, 50)]
+        assert find_intergenic_areas(0, 60, cdses, padding=0) == [(0, 30), (45, 60)]
+        assert find_intergenic_areas(0, 60, cdses, padding=3) == [(0, 33), (42, 60)]
+        assert find_intergenic_areas(12, 50, cdses, padding=3) == [(12, 33), (42, 50)]
 
     def test_overlapping_cds(self):
         cdses = [DummyCDS(30, 42, strand=1), DummyCDS(41, 50, strand=-1)]
-        areas = find_intergenic_areas(0, 60, cdses) == [(0, 30), (50, 60)]
+        assert find_intergenic_areas(0, 60, cdses) == [(0, 30), (50, 60)]
 
 
 class TestOrfLocations(unittest.TestCase):
