@@ -131,7 +131,7 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
 
     logging.debug("Converting records from biopython to secmet")
     try:
-        records = [Record.from_biopython(record, taxon) for record in records]
+        records = [Record.from_biopython(record, taxon, discard_antismash_features=True) for record in records]
     except SecmetInvalidInputError as err:
         raise AntismashInputError(str(err)) from err
 
