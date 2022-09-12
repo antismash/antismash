@@ -526,14 +526,12 @@ class ClusterSVGBuilder:
         self.query_cluster = QueryRegion(region)
         region_number = region.get_region_number()
         cluster_limit = get_config().cb_nclusters
-        self.colour_lookup = build_colour_groups(list(region.cds_children), ranking[:cluster_limit])
+        assert len(ranking) <= cluster_limit, f"{len(ranking)} <= {cluster_limit}"
+        self.colour_lookup = build_colour_groups(list(region.cds_children), ranking)
         self.hits: List[Cluster] = []
-        record_prefix = (region.parent_record.original_id or region.parent_record.id).split(".", 1)[0]
         num_added = 0
         queries = set()
         for cluster, score in ranking:
-            if prefix != "subclusterblast" and record_prefix == cluster.accession:
-                continue
             # determine overall strand direction of hits
             hit_genes = set()
             strand = determine_strand_of_cluster(region, score.scored_pairings)
@@ -546,9 +544,6 @@ class ClusterSVGBuilder:
                                                          strand, self.prefix)
             self.hits.append(svg_cluster)
             num_added += 1
-            # obey the cluster display limit from options
-            if num_added >= cluster_limit:
-                break
 
         self.max_length = self._size_of_largest_cluster()
         self._organise_strands()

@@ -12,7 +12,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from antismash.common.module_results import ModuleResults
 from antismash.common.path import changed_directory
 from antismash.common.secmet import Record, Region
-from antismash.config import ConfigType
+from antismash.config import ConfigType, get_config
 
 from .data_structures import Score, Query, Subject, ReferenceCluster, Protein, MibigEntry
 from .svg_builder import ClusterSVGBuilder
@@ -56,8 +56,18 @@ class RegionResult:
         self.region = region
         self.ranking = ranking[:get_result_limit()]  # [(ReferenceCluster, Score),...]
         self.total_hits = len(ranking)
-        self.svg_builder = ClusterSVGBuilder(region, ranking, reference_proteins, prefix)
         self.prefix = prefix
+        # for the SVG portion, limit the ranking to the display limit
+        display_limit = get_config().cb_nclusters
+        # omitting any self-hits in the display
+        display_ranking = self.ranking[:display_limit]
+        if prefix != "subclusterblast":
+            record_prefix = (region.parent_record.original_id or region.parent_record.id).split(".", 1)[0]
+            display_ranking = list(filter(lambda pair: pair[0].accession != record_prefix, display_ranking))
+            if len(display_ranking) < display_limit and len(self.ranking) - 1 > display_limit:
+                display_ranking.append(self.ranking[display_limit])
+        assert len(display_ranking) <= display_limit
+        self.svg_builder = ClusterSVGBuilder(region, display_ranking, reference_proteins, prefix)
 
     def update_cluster_descriptions(self, search_type: str) -> None:
         """ Rebuilds the cluster's result descriptions.
