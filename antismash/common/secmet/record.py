@@ -52,6 +52,16 @@ from .locations import (
 T = TypeVar("T", bound="Record")
 
 
+ANTISMASH_SPECIFIC_TYPES: List[str] = [feature_class.FEATURE_TYPE for feature_class in [  # type: ignore
+    AntismashDomain,
+    CandidateCluster,
+    Module,
+    Protocluster,
+    Region,
+    SubRegion,
+]]
+
+
 class Record:
     """A record containing secondary metabolite clusters"""
     # slots not for space, but to stop use as a horrible global
@@ -700,9 +710,14 @@ class Record:
             self.add_feature(Feature.from_biopython(feature))
 
     @classmethod
-    def from_biopython(cls: Type[T], seq_record: SeqRecord, taxon: str) -> T:
+    def from_biopython(cls: Type[T], seq_record: SeqRecord, taxon: str,
+                       discard_antismash_features: bool = False) -> T:
         """ Constructs a new Record instance from a biopython SeqRecord,
             also replaces biopython SeqFeatures with Feature subclasses
+
+            If 'discard_antismash_features' is True, then feature types that are
+            specific to antiSMASH that fail to convert will instead become generic
+            'Feature'
         """
         postponed_features: Dict[str, Tuple[Type[Feature], List[SeqFeature]]] = OrderedDict()
         for kind in [CandidateCluster, Region, Module]:  # type: Type[Feature]
@@ -779,7 +794,8 @@ class Record:
                     try:
                         record.add_biopython_feature(feature)
                     except ValueError as err:
-                        raise SecmetInvalidInputError(str(err)) from err
+                        if feature.type not in ANTISMASH_SPECIFIC_TYPES or not discard_antismash_features:
+                            raise SecmetInvalidInputError(str(err)) from err
 
                 # adjust the current feature to only be the lower section
                 if len(lower) > 1:
@@ -802,7 +818,8 @@ class Record:
                 try:
                     record.add_biopython_feature(feature)
                 except ValueError as err:
-                    raise SecmetInvalidInputError(str(err)) from err
+                    if feature.type not in ANTISMASH_SPECIFIC_TYPES or not discard_antismash_features:
+                        raise SecmetInvalidInputError(str(err)) from err
 
             # reset back to how the feature looked originally
             if locations_adjusted:
@@ -816,12 +833,16 @@ class Record:
                         feature.qualifiers.pop("gene", "")
                     else:
                         feature.qualifiers["gene"][0] = original_gene_name
-        try:
-            for feature_class, features in postponed_features.values():
-                for feature in features:
+
+        for feature_class, features in postponed_features.values():
+            for feature in features:
+                try:
                     record.add_feature(feature_class.from_biopython(feature, record=record))
-        except ValueError as err:
-            raise SecmetInvalidInputError(str(err)) from err
+                except ValueError as err:
+                    # all postponed features are antismash-specific
+                    assert feature.type in ANTISMASH_SPECIFIC_TYPES, feature.type
+                    if not discard_antismash_features:
+                        raise SecmetInvalidInputError(str(err)) from err
         return record
 
     @staticmethod
