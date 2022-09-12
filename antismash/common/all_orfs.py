@@ -174,16 +174,16 @@ def find_intergenic_areas(start: int, end: int, cds_features: Iterable[CDSFeatur
     last = start
     for cds in cds_features:
         # if there's a gap of sufficient size, add it
-        if cds.location.start > last:
-            intergenic_areas.append((max(start, last - padding),
+        if cds.location.start + padding > last:
+            intergenic_areas.append((max(start, last),
                                      min(end, int(cds.location.start) + padding)))
-            last = int(cds.location.end)
+            last = int(cds.location.end) - padding
             continue
         # in case of existing CDS features overlapping, update the last end position
         if cds.location.start <= last <= cds.location.end:
-            last = int(cds.location.end)
+            last = int(cds.location.end) - padding
     if last < end:
-        intergenic_areas.append((max(start, last - padding), end))
+        intergenic_areas.append((max(start, last), end))
     return list(filter(lambda area: area[1] - area[0] >= min_length, intergenic_areas))
 
 
