@@ -17,7 +17,7 @@ from .name_mappings import get_substrate_by_name
 from .pks_names import get_short_form
 from .smiles_generator import get_all_smiles
 
-ALLOWABLE_PREDICTION_CHARACTERS = set(string.ascii_letters + string.digits).union(set('-,():'))
+ALLOWABLE_PREDICTION_CHARACTERS = set(string.ascii_letters + string.digits).union(set('-,(): '))
 
 
 def calculate_individual_consensus(predictions: List[str]) -> str:
