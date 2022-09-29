@@ -267,6 +267,11 @@ yydH	Epipeptide metalloprotease yydH	400	yydH.hmm
 TIGR04223	cyclic lactone autoinducer peptide	19	TIGR04223.hmm
 AgrB	cyclic lactone autoinducer endopeptidase	23	PF04647.hmm
 TIGR04103	nif11-class peptide radical SAM maturase 3	725	TIGR04103.hmm
+Methyltransf_3	O-methyltransferase	22	PF01596.hmm
+DHQ_synthase	3-dehydroquinate synthase	24	PF01761.hmm
+Dala_Dala_lig_N	D-ala D-ala ligase N-terminus	34	PF01820.hmm
+Dala_Dala_lig_C	D-ala D-ala ligase C-terminus	24	PF07478.hmm
+ATP-grasp_3	ATP-grasp domain	23	PF02655.hmm
 Lanthipeptide_LanB_RRE	RRE-containing LanB protein in a class I lanthipeptide cluster	25	RREFam001.hmm
 Stand_Alone_Lasso_RRE	Stand-alone RRE protein in a lasso peptide cluster	25	RREFam002.hmm
 Lasso_Fused_RRE	RRE-containing fused peptidase in a lasso peptide cluster	25	RREFam003.hmm
