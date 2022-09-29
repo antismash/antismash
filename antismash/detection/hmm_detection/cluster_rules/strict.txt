@@ -573,3 +573,12 @@ RULE pyrrolidine
     CUTOFF 10
     NEIGHBOURHOOD 10
     CONDITIONS Glycos_transf_1 and Alpha-amylase and Aminotran_3 and DXP_synthase_N
+
+RULE crocagin
+    CATEGORY RiPP
+    DESCRIPTION Crocagin-like cluster
+    # See https://dx.doi.org/10.1002/anie.201612640
+    EXAMPLE NCBI CP012159.1 3370631-3383702 crocagin
+    CUTOFF 10
+    NEIGHBOURHOOD 10
+    CONDITIONS PhyH and Carbam_trans_N
