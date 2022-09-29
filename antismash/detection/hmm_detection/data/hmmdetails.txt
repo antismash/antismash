@@ -125,7 +125,7 @@ AvrD	Pseudomonas avriulence D protein	50	PF05655.hmm
 goadsporin_like	Goadsporin-like protein	500	goadsporin_like.hmm
 TIGR03602	Bacteriocin protoxin, streptolysin S family	50	TIGR03602.hmm
 TIGR03603	Bacteriocin biosynthesis cyclodehydratase	150	TIGR03603.hmm
-TIGR03604	Bacteriocin biosynthesis docking scaffold	440	TIGR03604.hmm
+TIGR03604	Bacteriocin biosynthesis docking scaffold	219	TIGR03604.hmm
 TIGR03605	SagB-type dehydrogenase	200	TIGR03605.hmm
 Neocarzinostat	Neocarzinostatin-like protein	28	Neocarzinostat.hmm
 cyanobactin_synth	Cyanobactin protease	80	cyanobactin_synth.hmm
