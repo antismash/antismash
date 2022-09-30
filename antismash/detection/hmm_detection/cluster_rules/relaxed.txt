@@ -61,3 +61,11 @@ RULE RRE-containing
     CUTOFF 10
     NEIGHBOURHOOD 10
     CONDITIONS ANY_RRE
+
+RULE fungal-RiPP-like
+    CATEGORY RiPP
+    DESCRIPTION fungal RiPP-like clusters
+    SUPERIORS fungal-RiPP
+    CUTOFF 20
+    NEIGHBOURHOOD 30
+    CONDITIONS DUF3328
