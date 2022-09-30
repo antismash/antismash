@@ -274,6 +274,9 @@ Dala_Dala_lig_C	D-ala D-ala ligase C-terminus	24	PF07478.hmm
 ATP-grasp_3	ATP-grasp domain	23	PF02655.hmm
 Carbam_trans_N	Carbamoyltransferase N-terminus	24	PF02543.hmm
 PhyH	Phytanoyl-CoA dioxygenase (PhyH)	20	PF05721.hmm
+ADSI-DH	3-amino-2,3-dideoxy-scyllo-inositol 1-dehydrogenase	460	adsi_dh.hmm
+ADH_N	Alcohol dehydrogenase GroES-like domain	21	PF08240.hmm
+ADH_zinc_N	Zinc-binding dehydrogenase	32	PF00107.hmm
 Lanthipeptide_LanB_RRE	RRE-containing LanB protein in a class I lanthipeptide cluster	25	RREFam001.hmm
 Stand_Alone_Lasso_RRE	Stand-alone RRE protein in a lasso peptide cluster	25	RREFam002.hmm
 Lasso_Fused_RRE	RRE-containing fused peptidase in a lasso peptide cluster	25	RREFam003.hmm
