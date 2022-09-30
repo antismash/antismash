@@ -394,13 +394,32 @@ RULE blactam
     NEIGHBOURHOOD 10
     CONDITIONS BLS or CAS or tabtoxin
 
+DEFINE DHQ_synthase_like AS (DOIS or DHQ_synthase or ValA or salQ)
+
+RULE 2dos
+    CATEGORY other
+    DESCRIPTION 2-deoxy-streptamine aminoglycoside
+    EXAMPLE NCBI AJ875019.1 1-39979 apramycin
+    EXAMPLE NCBI AJ628149.4 17857-58741 gentamycin
+    EXAMPLE NCBI AJ628642.1 7116-32528 hygromycin
+    EXAMPLE NCBI AJ845083.2 17236-47180 istamycin
+    EXAMPLE NCBI AJ582817.3 1-47050 kanamycin
+    EXAMPLE NCBI AJ629247.1 9188-39636 neomycin
+    CUTOFF 20
+    NEIGHBOURHOOD 10
+    CONDITIONS DHQ_synthase_like and DegT_DnrJ_EryC1 and
+               (LipV or ADSI-DH or cds(ADH_N and ADH_zinc_N))
+
 RULE amglyccycl
     CATEGORY other
     DESCRIPTION Aminoglycoside/aminocyclitol
+    SUPERIORS 2dos
     CUTOFF 20
     NEIGHBOURHOOD 10
-    CONDITIONS strH or strK1 or strK2 or NeoL or DOIS or ValA or SpcFG
-               or SpcDK_glyc or salQ
+    CONDITIONS DHQ_synthase_like
+               or strH or strK1 or strK2 or NeoL or SpcFG
+               or SpcDK_glyc
+
 
 RULE aminocoumarin
     CATEGORY other
