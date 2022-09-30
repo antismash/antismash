@@ -147,6 +147,8 @@ RULE terpene
                or terpene_cyclase or NapT7 or fung_ggpps or fung_ggpps2
                or trichodiene_synth or TRI5
 
+DEFINE all_YcaO AS (YcaO or TIGR03604)
+
 RULE lanthipeptide-class-i
     CATEGORY RiPP
     DESCRIPTION Class I lanthipeptide
@@ -154,7 +156,7 @@ RULE lanthipeptide-class-i
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS (LANC_like and (Lant_dehydr_N or Lant_dehydr_C))
-               and not (YcaO or TIGR03882) # because then it'd be a thiopeptide
+               and not all_YcaO # because then it'd be a thiopeptide
 
 RULE lanthipeptide-class-ii
     CATEGORY RiPP
@@ -219,7 +221,7 @@ RULE thiopeptide
     DESCRIPTION Thio-linked RiPPs
     CUTOFF 20
     NEIGHBOURHOOD 10
-    CONDITIONS (YcaO or TIGR03882)
+    CONDITIONS all_YcaO
                and ((thio_amide and (PF06968 or PF04055 or PF07366))
                          or Lant_dehydr_C or Lant_dehydr_N
                          or PF07366 or PF06968 or PF04055)
@@ -232,8 +234,7 @@ RULE thioamitides
     EXAMPLE NCBI JOBF01000011.1 155003-161953 thiovarsolin
     CUTOFF 20
     NEIGHBOURHOOD 10
-    CONDITIONS (YcaO or TIGR03882)
-               and TfuA
+    CONDITIONS all_YcaO and TfuA
 
 RULE linaridin
     CATEGORY RiPP
@@ -268,7 +269,8 @@ RULE LAP
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS (((goadsporin_like or PF00881 or TIGR03605)
-               and (YcaO or TIGR03882 or TIGR03604))
+               and all_YcaO)
+               or TIGR03882
                or TIGR03603   # peptide maturase
                or TIGR03602)  # precursor
                and not cyanobactin_synth
@@ -340,7 +342,7 @@ RULE ranthipeptide
                          subtilosin or             # avoid co-detecting sactipeptides
                          TIGR02111 or TIGR03966 or # avoid co-detecting redox-cofactor clusers
                          TIGR04103 or              # avoid co-detecting spliceotides
-                         YcaO or TIGR03882)        # avoid co-detecting thiopeptides
+                         all_YcaO)                 # avoid co-detecting thiopeptides
                )
 
 RULE redox-cofactor
