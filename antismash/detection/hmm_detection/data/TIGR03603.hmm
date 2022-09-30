@@ -1,5 +1,7 @@
-HMMER3/f [3.1b2 | February 2015]
+HMMER3/f [3.3 | Nov 2019]
 NAME  TIGR03603
+ACC   TIGR03603
+DESC  cyclo_dehy_ocin: thiazole/oxazole-forming peptide maturase, SagC family component
 LENG  319
 ALPH  amino
 RF    no
@@ -7,14 +9,17 @@ MM    no
 CONS  yes
 CS    no
 MAP   yes
-DATE  Tue Oct 26 11:31:04 2010
+DATE  Sun Apr 11 22:26:52 2010
 NSEQ  5
 EFFN  1.635742
 CKSUM 2056307344
+GA    187.65 187.65
+TC    187.65 187.65
+NC    55.20 55.20
 STATS LOCAL MSV      -11.1005  0.70080
 STATS LOCAL VITERBI  -11.8137  0.70080
 STATS LOCAL FORWARD   -5.0312  0.70080
-HMM          A        C        D        E        F        G        H        I        K        L        M        N        P        Q        R        S        T        V        W        Y   
+HMM          A        C        D        E        F        G        H        I        K        L        M        N        P        Q        R        S        T        V        W        Y
             m->m     m->i     m->d     i->m     i->i     d->m     d->d
   COMPO   2.68116  4.10986  2.90085  2.61112  3.25065  3.22431  3.80854  2.60791  2.64058  2.27138  3.56481  2.87912  3.60225  3.08315  3.09407  2.64333  2.88621  2.63263  5.00244  3.52732
           2.68618  4.42225  2.77519  2.73123  3.46354  2.40513  3.72494  3.29354  2.67741  2.69355  4.24690  2.90347  2.73739  3.18146  2.89801  2.37887  2.77519  2.98518  4.58477  3.61503
