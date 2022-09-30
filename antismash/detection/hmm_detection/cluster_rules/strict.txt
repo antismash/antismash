@@ -203,19 +203,6 @@ RULE lipolanthine
     NEIGHBOURHOOD 10
     CONDITIONS micKC and Flavoprotein
 
-RULE RiPP-like
-    CATEGORY RiPP
-    DESCRIPTION Fallback rule containing known RiPP-related profiles
-    CUTOFF 20
-    NEIGHBOURHOOD 5
-    CONDITIONS strepbact or Antimicrobial14 or Bacteriocin_IId or BacteriocIIc_cy
-               or Bacteriocin_II or Bacteriocin_IIi or Lactococcin
-               or Antimicrobial17 or Lactococcin_972 or Bacteriocin_IIc
-               or LcnG-beta or Cloacin or Linocin_M18
-               or TIGR03651 or TIGR03693
-               or TIGR03601 or TIGR03795
-               or TIGR03975 or DUF692 or TIGR01193
-
 RULE thiopeptide
     CATEGORY RiPP
     DESCRIPTION Thio-linked RiPPs
