@@ -125,9 +125,10 @@ RULE NAPAA
     DESCRIPTION non-alpha poly-amino acids
     # see (https://doi.org/10.1101/2020.07.24.220772)
     EXAMPLE NCBI NC_015859.1 135101-140457 e-Polylysin
+    RELATED PP-binding
     CUTOFF 5
     NEIGHBOURHOOD 15
-    CONDITIONS AMP-binding and PP-binding and TIGR02353
+    CONDITIONS AMP-binding and TIGR02353
 
 RULE mycosporine-like
     CATEGORY NRPS
