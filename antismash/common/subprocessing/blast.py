@@ -7,7 +7,7 @@
 from tempfile import NamedTemporaryFile
 from typing import Any, IO, List
 
-from .base import execute, get_config, SearchIO
+from .base import execute, get_config, RunResult, SearchIO
 
 
 def run_blastp(target_blastp_database: str, query_sequence: str,
@@ -70,6 +70,33 @@ def run_blastp_version() -> str:
         raise RuntimeError(msg % blastp)
     # get rid of the non-version stuff in the output
     return version_string.split('\n')[0][8:]
+
+
+def run_makeblastdb(filename: str, target: str = "", dbtype: str = "prot") -> RunResult:
+    """ Runs makeblastdb on the inputs to create a blast database, creating
+        additional files with the given target name.
+
+        Arguments:
+            filename: the input filename
+            target: the output name (including directory) for the created database
+                    (defaults to input name)
+            dbtype: the type of database (defaults to 'prot')
+
+        Returns:
+            a subprocessing.RunResult instance
+    """
+    if not target:
+        target = filename
+    command = [
+        get_config().executables.makeblastdb,
+        "-in", filename,
+        "-out", target,
+        "-dbtype", dbtype,
+    ]
+    result = execute(command)
+    if not result.successful():
+        raise RuntimeError(f"makeblastdb failed to run: {command} -> {result.stderr.splitlines()[-1]}")
+    return result
 
 
 def run_makeblastdb_version() -> str:
