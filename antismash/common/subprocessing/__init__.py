@@ -14,6 +14,7 @@ from .base import (
 from .blast import (
     run_blastp,
     run_blastp_version,
+    run_makeblastdb,
     run_makeblastdb_version,
 )
 
