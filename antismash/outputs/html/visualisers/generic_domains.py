@@ -55,7 +55,7 @@ HELP = ("Shows {title} domains found in each gene within the region. "
         )
 
 PFAM_TOOL = ToolInfo("Pfam", HELP + "Domains with a bold border have Gene Ontology information.",
-                     url="https://pfam.xfam.org/family/$ACCESSION")
+                     url="https://www.ebi.ac.uk/interpro/entry/pfam/$ACCESSION")
 TOOLS = {
     tigrfam: ToolInfo("TIGRFAM", HELP,
                       url="https://www.ncbi.nlm.nih.gov/genome/annotation_prok/evidence/$ACCESSION"),
@@ -238,7 +238,7 @@ def generate_pfam_data(record: Record, region: Region) -> List[Dict[str, Any]]:
             "go_terms": js.build_pfam2go_links(pfam.gene_ontologies),
             "html_class": f"generic-type-{colour}",
             "name": pfam.domain,
-            "accession": pfam.full_identifier,
+            "accession": pfam.identifier,  # the EBI URLs fail if including the version
             "description": pfam.description,
             "evalue": f"{pfam.evalue:g}",
             "score": f"{pfam.score:.1f}",
