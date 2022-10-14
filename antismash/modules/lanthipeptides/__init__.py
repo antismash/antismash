@@ -64,13 +64,19 @@ def prepare_data(logging_only: bool = False) -> List[str]:
         Returns:
             a list of error messages (only if logging_only is True)
     """
+    failures: List[str] = []
+    expected = ["lanthipeptide.scaler.pkl", "lanthipeptide.classifier.pkl"]
+    if all(os.path.exists(path.get_full_path(__file__, "data", filename)) for filename in expected):
+        return failures
+
+    logging.debug("missing cached SVM classifiers, rebuilding")
     training_set = path.get_full_path(__file__, "data", "training_set.csv")
     try:
         pickle_classifier(training_set, prefix="lanthipeptide", kernel='rbf', C=9.77e6, gamma=1.78e-9,
                           overwrite=not logging_only)
     except ValueError:
-        return ["failed to rebuild lanthipeptide classifier"]
-    return []
+        failures.append("failed to rebuild lanthipeptide classifier")
+    return failures
 
 
 def check_prereqs(options: ConfigType) -> List[str]:
@@ -92,10 +98,7 @@ def check_prereqs(options: ConfigType) -> List[str]:
         if hasattr(conf, slot):
             setattr(conf, slot, present)
 
-    expected = ["lassopeptide.scaler.pkl", "lassopeptide.classifier.pkl"]
-    if not all(os.path.exists(path.get_full_path(__file__, "data", filename)) for filename in expected):
-        logging.debug("missing cached SVM classifiers, rebuilding")
-        failure_messages.extend(prepare_data(logging_only=True))
+    failure_messages.extend(prepare_data(logging_only=True))
 
     return failure_messages
 
