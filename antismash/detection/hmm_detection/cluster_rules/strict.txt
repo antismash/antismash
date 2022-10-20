@@ -529,9 +529,19 @@ RULE phenazine
 RULE phosphonate
     CATEGORY other
     DESCRIPTION Phosphonate
+    # described in DOI: 10.1016/j.chembiol.2006.09.007
+    EXAMPLE NCBI EU924263.1 0-31799 fosfomycin
     CUTOFF 20
-    NEIGHBOURHOOD 20
-    CONDITIONS phosphonates
+    NEIGHBOURHOOD 5
+    CONDITIONS phosphonates and minimum(1, [
+                   phosphonates, # intentional repetition, allows for more accurate core boundaries
+                   # the remaining profiles in this "or" could move to "related" profiles,
+                   # if at some point related profiles extend protocluster boundaries
+                   2-Hacid_dh_C, Aldedh, Aminotran_1_2, Aminotran_5, AurF,
+                   CTP_transf_like, DUF4992, Fe-ADH, HMGL-like, Metallophos_2,
+                   NTP_transf_3, NTP_transf_5, PALP, PEP_mutase, TPP_enzyme_C,
+                   TPP_enzyme_N
+               ]) and not (phosphonatesHydrolase or phosphonatesMeIsocitrateLyase)
 
 RULE guanidinotides
     CATEGORY RiPP
@@ -545,7 +555,7 @@ RULE other
     DESCRIPTION Fallback category covering some secondary metabolite-related profiles
     CUTOFF 20
     NEIGHBOURHOOD 20
-    CONDITIONS LmbU or Neocarzinostat or fom1 or bcpB
+    CONDITIONS LmbU or Neocarzinostat or bcpB
                or frbD or mitE or vlmB or prnB or CaiA or bacilysin or orf2_PTase
 
 RULE acyl_amino_acids

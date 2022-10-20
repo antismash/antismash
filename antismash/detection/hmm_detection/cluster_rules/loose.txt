@@ -29,3 +29,11 @@ RULE halogenated
     CUTOFF 5
     NEIGHBOURHOOD 10
     CONDITIONS Trp_halogenase
+
+RULE phosphonate-like
+    CATEGORY other
+    DESCRIPTION Phosphonate-like
+    SUPERIORS phosphonate
+    CUTOFF 20
+    NEIGHBOURHOOD 20
+    CONDITIONS phosphonates-like

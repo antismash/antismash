@@ -130,7 +130,6 @@ TIGR03605	SagB-type dehydrogenase	200	TIGR03605.hmm
 Neocarzinostat	Neocarzinostatin-like protein	28	Neocarzinostat.hmm
 cyanobactin_synth	Cyanobactin protease	80	cyanobactin_synth.hmm
 cycdipepsynth	Cyclodipeptide synthase	110	cycdipepsynth.hmm
-fom1	Fom1-like phosphomutase	750	fom1.hmm
 bcpB	BcpB-like phosphomutase	400	bcpB.hmm
 frbD	FrbD-like phosphomutase	350	frbD.hmm
 mitE	MitE-like CoA-ligase	400	mitE.hmm
@@ -150,7 +149,25 @@ PF04055	radical SAM superfamily	40	PF04055.hmm
 PF07366	SnoaL family	20	PF07366.hmm
 thio_amide	nosA tpdK nocA berI pbtH	20	thio_amide.hmm
 phzB	Phenazine biosynthesis gene	80	phzB.hmm
-phosphonates	Phosphonate biosynthesis PEP mutase	275	phosphonates.hmm
+phosphonates-like	Phosphonate biosynthesis PEP mutase	275	phosphonates-like.hmm
+phosphonates	Phosphonate biosynthesis PEP mutase	150	phosphonates.hmm
+phosphonatesHydrolase	Phosphonopyruvate hydrolase	400	phosphonatesHydrolase.hmm
+phosphonatesMeIsocitrateLyase	Methylisocitrate Lyase	250	phosphonatesMeIsocitrateLyase.hmm
+2-Hacid_dh_C	D-isomer specific 2-hydroxyacid dehydrogenase, NAD binding domain	25	2-Hacid_dh_C.hmm
+Aldedh	Aldehyde dehydrogenase family	23	Aldedh.hmm
+Aminotran_1_2	Aminotransferase class I and II	19	Aminotran_1_2.hmm
+Aminotran_5	Aminotransferase class-V	21	Aminotran_5.hmm
+AurF	P-aminobenzoate N-oxygenase AurF	29	AurF.hmm
+CTP_transf_like	Cytidylyltransferase-like	21	CTP_transf_like.hmm
+DUF4992	Domain of unknown function	29	DUF4992.hmm
+Fe-ADH	Iron-containing alcohol dehydrogenase	26	Fe-ADH.hmm
+Metallophos_2	Calcineurin-like phosphoesterase superfamily domain	27	Metallophos_2.hmm
+NTP_transf_3	MobA-like NTP transferase domain	27	NTP_transf_3.hmm
+NTP_transf_5	Uncharacterised nucleotidyltransferase	31	NTP_transf_5.hmm
+PALP	Pyridoxal-phosphate dependent enzyme	35	PALP.hmm
+PEP_mutase	Phosphoenolpyruvate phosphomutase	31	PEP_mutase.hmm
+TPP_enzyme_C	Thiamine pyrophosphate enzyme, C-terminal TPP binding domain	21	TPP_enzyme_C.hmm
+TPP_enzyme_N	Thiamine pyrophosphate enzyme, N-terminal TPP binding domain	26	TPP_enzyme_N.hmm
 bacilysin	Bacilysin-related amino acid ligase	160	bacilysin.hmm
 subtilosin	Putative subtilosin biosynthesis enzyme ywiA	140	subtilosin.hmm
 sublancin	Sublancin prepeptide	30	sublancin.hmm
