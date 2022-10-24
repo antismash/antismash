@@ -3601,6 +3601,7 @@ HMM          A        C        D        E        F        G        H        I   
 //
 HMMER3/f [3.1b2 | February 2015]
 NAME  proofAT
+DESCRIPTION Proofreading AT domains without manlonyl transfer.
 ACCESSION AH
 LENG  282
 ALPH  amino
