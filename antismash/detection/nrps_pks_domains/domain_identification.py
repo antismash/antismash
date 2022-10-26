@@ -182,6 +182,30 @@ def get_database_path(subdir: str, filename: str) -> str:
     return os.path.join(DATABASE_PATHS[subdir], filename)
 
 
+def _strip_trailing_numbers(hit: HMMResult) -> HMMResult:
+    """ Removes the trailing numbers from the profiles that include a numeric
+        identifier for uniqueness of very similar profiles, e.g. "ST_2" and "ST_3".
+
+        Arguments:
+            hit: the input HMMResult
+
+        Returns:
+            the same hit instance, if the name would be unchanged, or a new hit
+    """
+    name = hit.hit_id
+    parts = name.rsplit("_", 1)
+    if len(parts) == 1:
+        return hit
+    if not parts[-1].isdigit():
+        return hit
+    # a little hacky, but since the instances are frozen, this is the most
+    # future-proof way to do it
+    data = hit.to_json()
+    data.pop("hit_id")  # ensures that it existed in the first place
+    data["hit_id"] = parts[0]
+    return HMMResult.from_json(data)
+
+
 def generate_domains(record: Record) -> NRPSPKSDomains:
     """ Annotates NRPS/PKS domains on CDS features. The `nrps_pks` member of
         each feature will be updated, along with creating CDSMotif features
@@ -202,6 +226,8 @@ def generate_domains(record: Record) -> NRPSPKSDomains:
     cds_domains = find_domains(fasta, record)
     cds_ks_subtypes = find_subtypes("PKS_KS", path.get_full_path(__file__, "data", "ksdomains.hmm"),
                                     cds_domains, record)
+    find_subtypes("Trans-AT-KS", os.path.join(get_database_path("transATor", "transATor.hmm")),
+                  cds_ks_subtypes, record, modifier_callback=_strip_trailing_numbers)
     cds_motifs = find_ab_motifs(fasta)
 
     prev: Optional[CDSModuleInfo] = None
