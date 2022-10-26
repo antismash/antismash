@@ -67,6 +67,10 @@ STACHELHAUS_URL = "https://dl.secondarymetabolites.org/releases/stachelhaus/1.0/
 STACHELHAUS_ARCHIVE_CHECKSUM = "d9b0a95eff34f6a817caf66c112dd3b27e8b22d4d6f2804b02ab6e7d02bbc0c1"
 STACHELHAUS_CHECKSUM = "53ba6b2f28b06ef1b24eaaf22d106aedbf986662bbecf593a303ab7741a143cf"
 
+TRANSATOR_URL = "https://dl.secondarymetabolites.org/releases/transATor/transATor_2022.12.06.tar.xz"
+TRANSATOR_ARCHIVE_CHECKSUM = "2186ec1ff20c96630ad1d85584b18861bf97efc0acd50cd7c68d2829748d8023"
+TRANSATOR_CHECKSUM = "11e8a5f1e9eb64e541778240d2aff481e17ef0edd1e5556b1d77016e25339138"
+
 LOCAL_FILE_PATH = os.path.abspath(os.path.dirname(__file__))
 
 CHUNK = 128 * 1024
@@ -370,6 +374,27 @@ def download_stachelhaus(db_dir: str) -> None:
     delete_file(filename + ".xz")
 
 
+def download_transator(db_dir: str) -> None:
+    """Download the Stachelhaus signatures file."""
+    version = TRANSATOR_URL.rsplit("_", 1)[1].split(".tar", 1)[0]  # e.g. transator_2022.11.16.tar.xz -> 2022.11.16
+    dirname = os.path.join(db_dir, "nrps_pks", "transATor", version)
+    archive_path = os.path.join(dirname, TRANSATOR_URL.rpartition("/")[-1])
+    profile_path = os.path.join(dirname, "transATor.hmm")
+
+    if present_and_checksum_matches(profile_path, TRANSATOR_CHECKSUM):
+        print("TransATor profiles present and checked")
+        return
+
+    print("Downloading TransATor profiles.")
+    check_diskspace(TRANSATOR_URL)
+    download_if_not_present(TRANSATOR_URL, archive_path, TRANSATOR_ARCHIVE_CHECKSUM)
+    tar = unzip_file(archive_path, lzma, lzma.LZMAError)
+    untar_file(tar)
+    delete_file(tar)
+    assert os.path.exists(profile_path)
+    delete_file(archive_path)
+
+
 def download(args: argparse.Namespace) -> None:
     """Download all the large external databases needed."""
     # grab the latest pfam
@@ -394,6 +419,8 @@ def download(args: argparse.Namespace) -> None:
         download_comparippson_db(args.database_dir, name, **details)
 
     download_stachelhaus(args.database_dir)
+    download_transator(args.database_dir)
+
 
 def _main() -> None:
     """ Downloads, decompresses, and compiles large databases. Also ensures

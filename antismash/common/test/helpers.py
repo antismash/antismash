@@ -28,6 +28,7 @@ from antismash.common.secmet.test.helpers import (  # for import by others, pyli
     DummyFeature,
     DummyPFAMDomain,
     DummyProtocluster,
+    DummyRegion,
 )
 from antismash.config import update_config
 from antismash.config.args import build_parser

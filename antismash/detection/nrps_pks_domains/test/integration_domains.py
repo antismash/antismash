@@ -8,6 +8,7 @@ import unittest
 
 import antismash
 from antismash.config import build_config
+from antismash.common import fasta, path
 from antismash.common.test import helpers
 from antismash.detection import nrps_pks_domains
 
@@ -91,3 +92,35 @@ class TestAnalyses(unittest.TestCase):
 
         no_hits = record.get_cds_by_name("no_hits")
         assert not no_hits.nrps_pks
+
+    def test_trans_at_subtypes(self):
+        genes = fasta.read_fasta(path.get_full_path(__file__, "data", "trans_at_subtypes.fasta"))
+        record = helpers.DummyRecord(seq="A" * (sum(map(len, genes.values())) * 4))
+        start = 1
+        for name, aminos in genes.items():
+            length = len(aminos) * 3
+            record.add_cds_feature(helpers.DummyCDS(start=start, end=start + length,
+                                                    translation=aminos, locus_tag=name))
+            start += length + 100
+        proto = helpers.DummyProtocluster(core_start=1, core_end=start - 100, product="transAT-PKS")
+        record.add_protocluster(proto)
+        candidate = helpers.DummyCandidateCluster(clusters=[proto])
+        record.add_candidate_cluster(candidate)
+        record.add_region(helpers.DummyRegion(candidate_clusters=[candidate]))
+        results = nrps_pks_domains.run_on_record(record, None, self.options)
+
+        found = {}
+        for cds, cds_result in results.cds_results.items():
+            found[cds.get_name()] = [hit.detailed_names for hit in cds_result.domain_hmms if hit.hit_id == "PKS_KS"]
+        expected = {
+            "kirAI": [
+                ["PKS_KS", "Trans-AT-KS", "ST"],
+                ["PKS_KS", "Trans-AT-KS", "beta-OH"]
+            ],
+            "kirAII": [
+                ["PKS_KS", "Trans-AT-KS", "DB"],
+                ["PKS_KS", "Trans-AT-KS"],  # this has no hit for a further subtype
+                ["PKS_KS", "Trans-AT-KS", "AA"],
+            ]
+        }
+        assert found == expected

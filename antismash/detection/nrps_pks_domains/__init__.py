@@ -9,12 +9,12 @@ from typing import Any, Dict, List, Optional
 
 from antismash.common import hmmer, path
 from antismash.common.secmet import Record
-from antismash.config import ConfigType
+from antismash.config import ConfigType, get_config
 from antismash.config.args import ModuleArgs
 from antismash.detection import DetectionStage
 
 from .domain_drawing import generate_html, generate_js_domains, will_handle
-from .domain_identification import generate_domains, NRPSPKSDomains
+from .domain_identification import generate_domains, get_database_path, NRPSPKSDomains
 from .modular_domain import ModularDomain
 
 NAME = "nrps_pks_domains"
@@ -72,6 +72,12 @@ def prepare_data(logging_only: bool = False) -> List[str]:
     failure_messages = []
     for model in ['abmotifs.hmm', 'dockingdomains.hmm', 'ksdomains.hmm', 'nrpspksdomains.hmm']:
         full_path = path.get_full_path(__file__, "data", model)
+        failure_messages.extend(hmmer.ensure_database_pressed(full_path, return_not_raise=logging_only))
+    options = get_config()
+    if "mounted_at_runtime" in options.database_dir:
+        return failure_messages
+    for subdir, filename in [("transATor", "transATor.hmm")]:
+        full_path = get_database_path(subdir, filename)
         failure_messages.extend(hmmer.ensure_database_pressed(full_path, return_not_raise=logging_only))
     return failure_messages
 

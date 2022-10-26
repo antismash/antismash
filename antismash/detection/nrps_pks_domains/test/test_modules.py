@@ -98,6 +98,7 @@ class TestComponent(unittest.TestCase):
         domain._hit_id = PKS_START
         component = Component(domain, subtype="some-subtype")
         assert component.subtype == "some-subtype"
+        assert component.subtypes == ["some-subtype"]
         assert component.classification == "KS"
 
     def test_json(self):

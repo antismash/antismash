@@ -181,6 +181,7 @@ class TestSubtypeFinding(unittest.TestCase):
 
 @patch.object(fasta, "get_fasta_from_features", return_value={})
 @patch.object(domain_identification, "find_ab_motifs", return_value={})
+@patch.object(domain_identification, "get_database_path", return_value="")
 class TestModuleMerging(unittest.TestCase):
     def setUp(self):
         self.record = DummyRecord(seq="A"*300)
@@ -197,11 +198,11 @@ class TestModuleMerging(unittest.TestCase):
         }
         self.ks_subtypes = {'head': [DummyHMMResult("Iterative-KS", start=0, end=10)]}
 
-    def test_merge(self, _patched_fasta, _patched_motifs):
+    def test_merge(self, _patched_fasta, _patched_motifs, _patched_dbs):
         cdses = self.record.get_cds_features()
         with patch.object(Record, "get_cds_features_within_regions", return_value=cdses):
             with patch.object(domain_identification, "find_domains", return_value=self.domains):
-                with patch.object(domain_identification, "find_subtypes", return_value=self.ks_subtypes):
+                with patch.object(domain_identification, "find_subtypes", side_effect=[self.ks_subtypes, []]):
                     results = domain_identification.generate_domains(self.record)
         assert results
         head = results.cds_results[self.cdses["head"]]
@@ -211,7 +212,7 @@ class TestModuleMerging(unittest.TestCase):
         module = head.modules[0]
         assert module.is_complete()  # only because it was merged
 
-    def test_interrupted_merge(self, _patched_fasta, _patched_motifs):
+    def test_interrupted_merge(self, _patched_fasta, _patched_motifs, _patched_dbs):
         # insert the interrupt CDS between the two "halves" of the potential module
         spacer_cds = DummyCDS(locus_tag="mid", start=100, end=130)
         self.record.add_cds_feature(spacer_cds)
@@ -219,7 +220,7 @@ class TestModuleMerging(unittest.TestCase):
         cdses = self.record.get_cds_features()
         with patch.object(Record, "get_cds_features_within_regions", return_value=cdses):
             with patch.object(domain_identification, "find_domains", return_value=self.domains):
-                with patch.object(domain_identification, "find_subtypes", return_value=self.ks_subtypes):
+                with patch.object(domain_identification, "find_subtypes", side_effect=[self.ks_subtypes, []]):
                     results = domain_identification.generate_domains(self.record)
         assert results
         head = results.cds_results[self.cdses["head"]]
