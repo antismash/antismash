@@ -10,6 +10,7 @@ from .secmet import _parse_format
 
 _DOMAIN_FORMAT = "Domain: {} ({:d}-{:d}). E-value: {}. Score: {}. Matches aSDomain: {}"
 _SUBTYPE_FORMAT = "subtype: {}"
+_SUBSUBTYPE_FORMAT = "subsubtype: {}"
 _TYPE_FORMAT = "type: {}"
 
 
@@ -39,10 +40,10 @@ class NRPSPKSQualifier:
             this same information
         """
         __slots__ = ["name", "label", "start", "end", "evalue", "bitscore",
-                     "predictions", "feature_name", "subtype"]
+                     "predictions", "feature_name", "subtype", "subsubtype"]
 
         def __init__(self, name: str, label: str, start: int, end: int,
-                     evalue: float, bitscore: float, feature_name: str, subtype: str = "") -> None:
+                     evalue: float, bitscore: float, feature_name: str, subtype: str = "", subsubtype: str = "") -> None:
             self.label = str(label)
             self.name = str(name)
             self.start = int(start)
@@ -54,6 +55,7 @@ class NRPSPKSQualifier:
             self.feature_name = str(feature_name)
             self.predictions: Dict[str, str] = {}  # method to prediction name
             self.subtype = str(subtype)
+            self.subsubtype = str(subsubtype)
 
         def __lt__(self, other: "NRPSPKSQualifier.Domain") -> bool:
             return (self.start, self.end) < (other.start, other.end)
@@ -67,7 +69,7 @@ class NRPSPKSQualifier:
             """ Returns the type of a domain, including subtype, if present """
             if not self.subtype:
                 return self.name
-            return "{}({})".format(self.name, self.subtype)
+            return "{}({})({})".format(self.name, self.subtype,self.subsubtype)
 
     def __init__(self, strand: int) -> None:
         super().__init__()
@@ -76,6 +78,7 @@ class NRPSPKSQualifier:
         self.strand = strand
         self.type = "uninitialised"
         self.subtypes: List[str] = []
+        self.subsubtypes: List[str] = []
         self._domains: List["NRPSPKSQualifier.Domain"] = []
         self._domain_names: List[str] = []
         self.cal_counter = 0
@@ -96,7 +99,7 @@ class NRPSPKSQualifier:
         return self._domain_names
 
     def __len__(self) -> int:
-        return len(self.subtypes) + len(self._domains)
+        return len(self.subsubtypes) + len(self.subtypes) + len(self._domains)
 
     def __iter__(self) -> Iterator[str]:
         for domain in self.domains:
@@ -106,6 +109,9 @@ class NRPSPKSQualifier:
             yield _TYPE_FORMAT.format(self.type)
         for subtype in self.subtypes:
             yield _SUBTYPE_FORMAT.format(subtype)
+        for subsubtype in self.subsubtypes:
+            yield _SUBSUBTYPE_FORMAT.format(subsubtype)
+
 
     def add_subtype(self, subtype: str) -> None:
         """ Adds a subtype to the existing list, e.g. 'Glycopeptide NRPS' or
@@ -113,9 +119,16 @@ class NRPSPKSQualifier:
         """
         assert isinstance(subtype, str)
         self.subtypes.append(subtype)
-
+        
+    def add_subsubtype(self, subsubtype: str) -> None:
+        """ Adds a subtype to the existing list, e.g. 'Glycopeptide NRPS' or
+            'NRPS-like protein'
+        """
+        assert isinstance(subsubtype, str)
+        self.subsubtypes.append(subsubtype)
+        
     # the domain type Any is only to avoid circular dependencies
-    def add_domain(self, domain: Any, feature_name: str, subtype: str = "") -> None:
+    def add_domain(self, domain: Any, feature_name: str, subtype: str = "", subsubtype: str = "") -> None:
         """ Adds a domain to the current set.
 
             Arguments:
@@ -124,6 +137,7 @@ class NRPSPKSQualifier:
                 feature_name: the name of the matching AntismashDomain feature
                               in the same record as this qualifier
                 subtype: a specific subtype of the domain type, if any
+                subsubtype: a specific subsubtype of the domain type, if any
 
             Returns:
                 None
@@ -131,6 +145,8 @@ class NRPSPKSQualifier:
         assert not isinstance(domain, str)
         if subtype:
             assert domain.hit_id == "PKS_KS", domain.hit_id
+        if subsubtype:
+            assert subtype == "Trans-AT-KS", subtype
         if domain.hit_id == "PKS_AT":
             self.at_counter += 1
             suffix = "_AT%d" % self.at_counter
@@ -152,7 +168,7 @@ class NRPSPKSQualifier:
 
         new = NRPSPKSQualifier.Domain(domain.hit_id, suffix,
                                       domain.query_start, domain.query_end,
-                                      domain.evalue, domain.bitscore, feature_name, subtype)
+                                      domain.evalue, domain.bitscore, feature_name, subtype, subsubtype)
         bisect.insort_right(self._domains, new)
         # update the domain name list
         self._domain_names = [domain.name for domain in self._domains]
@@ -164,17 +180,25 @@ class NRPSPKSQualifier:
         for qualifier in qualifiers:
             if qualifier.startswith("Domain: "):
                 parts = _parse_format(_DOMAIN_FORMAT, qualifier)
-                if parts[0].endswith(")"):
+                if ")(" in parts[0]:
+                    name, sub, subsub = parts[0].split("(", 1)
+                    subsub = subsub.rstrip(")")
+                    sub = sub.rstrip(")")
+                elif parts[0].endswith(")"):
                     name, sub = parts[0].split("(", 1)
                     sub = sub.rstrip(")")
+                    subsub=""
                 else:
                     name = parts[0]
                     sub = ""
+                    subsub=""
                 domain = _HMMResultLike(name, int(parts[1]), int(parts[2]),
                                         float(parts[3]), float(parts[4]))
-                self.add_domain(domain, parts[5], sub)
+                self.add_domain(domain, parts[5], sub, subsub)
             elif qualifier.startswith("subtype: "):
                 self.add_subtype(_parse_format(_SUBTYPE_FORMAT, qualifier)[0])
+            elif qualifier.startswith("subsubtype: "):
+                self.add_subsubtype(_parse_format(_SUBTYPE_FORMAT, qualifier)[0])
             elif qualifier.startswith("type: "):
                 self.type = _parse_format(_TYPE_FORMAT, qualifier)[0]
             else:
