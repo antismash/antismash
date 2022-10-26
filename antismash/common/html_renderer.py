@@ -6,12 +6,20 @@
 """
 
 import os
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 import jinja2 as _jinja2
 from markupsafe import Markup
 
 from antismash.config import get_config
+
+# defaults for RiPP sequence classes and substitutions
+RIPP_CLASSES = {
+    "S": "dha",
+    "T": "dhb",
+    "C": "cys",
+}
+RIPP_SUBSTITUTIONS = {key: val.title() for key, val in RIPP_CLASSES.items()}
 
 
 class HTMLSection:  # pylint: disable=too-few-public-methods
@@ -88,6 +96,51 @@ def collapser_start(target: str, level: str = "all") -> Markup:
         classes.append("expanded")
         child = child[:-1] + ' style="display:block;">'
     return Markup('<div class="%s"> </div>%s' % (" ".join(classes), child))
+
+
+def spanned_sequence(sequence: str, class_mapping: Dict[str, str],
+                     substitutions: Dict[str, str] = None) -> Markup:
+    """ Builds an HTML fragment with spans for each character, if a character is
+        present in the class mapping, the span will be given that class.
+        Substitutions for characters can also be provided in the same way.
+        Any provided substitutions will be automatically escaped for HTML.
+
+        Arguments:
+            sequence: the sequence string to build from
+            class_mapping: a dictionary mapping sequence character to HTML class
+            substitutions: a dictionary mapping sequence character to another string
+
+        Returns:
+            an HTML fragment as a Markup instance
+    """
+    substitutions = substitutions or {}
+    for class_label in class_mapping.values():
+        if not class_label.replace("-", "").isalnum():
+            raise ValueError(f"invalid character in HTML class: {class_label}")
+    spans = []
+    for char in sequence:
+        char_class = class_mapping.get(char)
+        extra = ""
+        if char_class:
+            extra = f' class="{char_class}"'
+        spans.append(f'<span{extra}>{Markup.escape(substitutions.get(char, char))}</span>')
+    return Markup("".join(spans))
+
+
+def coloured_ripp_sequence(sequence: str, dehydrate: bool = False) -> Markup:
+    """ Builds an HTML fragment with spans for each character, using a predefined
+        set of span classes and substitutions.
+
+        Arguments:
+            sequence: the sequence string to build from
+            dehydrate: whether to substitute in dehydrations (e.g. "T" -> "Dbh")
+
+        Returns:
+            an HTML fragment as a Markup instance
+    """
+    if not dehydrate:
+        return spanned_sequence(sequence, RIPP_CLASSES)
+    return spanned_sequence(sequence, RIPP_CLASSES, substitutions=RIPP_SUBSTITUTIONS)
 
 
 def collapser_end() -> Markup:
@@ -181,7 +234,9 @@ class _Template:  # pylint: disable=too-few-public-methods
         defaults = {
             "collapser_start": collapser_start,
             "collapser_end": collapser_end,
+            "coloured_ripp_sequence": coloured_ripp_sequence,
             "help_tooltip": help_tooltip,
+            "spanned_sequence": spanned_sequence,
             "switch": switch,
         }
         defaults.update(kwargs)
