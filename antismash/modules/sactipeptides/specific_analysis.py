@@ -16,10 +16,20 @@ from typing import Any, Dict, Set, List, Optional, Tuple, Union
 from Bio.SearchIO._model.hsp import HSP
 import joblib
 
-from antismash.common import utils, all_orfs, module_results, secmet, subprocessing, path, fasta
+from antismash.common import (
+    all_orfs,
+    comparippson,
+    module_results,
+    secmet,
+    subprocessing,
+    path,
+    fasta,
+    utils,
+)
 from antismash.common.secmet.qualifiers import SecMetQualifier
 from antismash.common.secmet.locations import location_from_string
 from antismash.common.signature import HmmSignature
+from antismash.config import get_config
 
 # Cys chain limits (for CnnnC style sections)
 CHAIN_LOWER = 1  # CnC
@@ -34,9 +44,9 @@ class SactiResults(module_results.ModuleResults):
     """ Holds the results of sactipeptide analysis for a record
 
     """
-    schema_version = 2
+    schema_version = 3
 
-    def __init__(self, record_id: str) -> None:
+    def __init__(self, record_id: str, comparippson_results: comparippson.MultiDBResults = None) -> None:
         super().__init__(record_id)
         # keep new CDS features
         self._new_cds_features: Set[secmet.CDSFeature] = set()
@@ -46,6 +56,7 @@ class SactiResults(module_results.ModuleResults):
         # keep clusters and which genes in them had precursor hits
         # e.g. self.clusters[cluster_number] = {gene1_locus, gene2_locus}
         self.clusters: Dict[int, Set[str]] = defaultdict(set)
+        self.comparippson_results: Optional[comparippson.MultiDBResults] = comparippson_results
 
     def to_json(self) -> Dict[str, Any]:
         cds_features = [(str(feature.location),
@@ -53,18 +64,22 @@ class SactiResults(module_results.ModuleResults):
         motifs = {}
         for locus, locus_motifs in self.motifs_by_locus.items():
             motifs[locus] = [motif.to_json() for motif in locus_motifs]
-        return {"record_id": self.record_id,
-                "schema_version": SactiResults.schema_version,
-                "motifs": motifs,
-                "new_cds_features": cds_features,
-                "protoclusters": {key: list(val) for key, val in self.clusters.items()}}
+        return {
+            "record_id": self.record_id,
+            "schema_version": SactiResults.schema_version,
+            "motifs": motifs,
+            "new_cds_features": cds_features,
+            "protoclusters": {key: list(val) for key, val in self.clusters.items()},
+            "comparippson_results": self.comparippson_results.to_json() if self.comparippson_results else None,
+        }
 
     @staticmethod
     def from_json(json: Dict[str, Any], record: secmet.Record) -> Optional["SactiResults"]:
         if json.get("schema_version") != SactiResults.schema_version:
             logging.warning("Discarding Sactipeptide results, schema version mismatch")
             return None
-        results = SactiResults(json["record_id"])
+        comp_results = comparippson.MultiDBResults.from_json(json["comparippson_results"])
+        results = SactiResults(json["record_id"], comp_results)
         for locus, motifs in json["motifs"].items():
             for motif in motifs:
                 results.motifs_by_locus[locus].append(secmet.Prepeptide.from_json(motif))
@@ -628,4 +643,10 @@ def specific_analysis(record: secmet.Record) -> SactiResults:
         verb = "is" if new_feature_hits == 1 else "are"
         logging.debug("Found %d sactipeptide motif(s) in %d feature(s), %d of which %s new",
                       motif_count, len(results.motifs_by_locus), new_feature_hits, verb)
+
+    cores = {}
+    for motifs in results.motifs_by_locus.values():
+        for motif in motifs:
+            cores[motif.get_name().rsplit("_", 1)[0]] = motif.core
+    results.comparippson_results = comparippson.compare_precursor_cores(cores, get_config())
     return results
