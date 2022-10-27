@@ -3,9 +3,9 @@
       <span>Core peptide predictions</span>
       {{help_tooltip(tooltip, "sacti-side")}}
     </div>
-{% if results | length != 0 %}
+{% if motifs_by_locus %}
   <dl class ="prediction-text">
-  {% for motifs in results.values() %}
+  {% for motifs in motifs_by_locus.values() %}
     {%- for motif in motifs -%}
     <dt><span class="serif">{{motif.get_name().rsplit("_", 1)[0]}}</span></dt>
       <dd>Putative sactipeptide</dd>
