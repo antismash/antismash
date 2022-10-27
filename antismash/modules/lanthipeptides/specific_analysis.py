@@ -14,12 +14,13 @@ import re
 from typing import Any, Dict, List, Iterable, Optional, Set
 
 from antismash.common.signature import HmmSignature
-from antismash.common import all_orfs, path, subprocessing, module_results, utils
+from antismash.common import all_orfs, comparippson, path, subprocessing, module_results, utils
 from antismash.common.fasta import get_fasta_from_features
 from antismash.common.secmet import CDSFeature, Protocluster, GeneFunction, Prepeptide, Record, Region
 from antismash.common.secmet.features import CDSCollection
 from antismash.common.secmet.locations import location_from_string
 from antismash.common.secmet.qualifiers.prepeptide_qualifiers import LanthiQualifier
+from antismash.config import get_config
 
 from .rodeo import run_rodeo
 
@@ -58,9 +59,9 @@ class LanthiResults(module_results.ModuleResults):
     """ Holds the results of lanthipeptide analysis for a record
 
     """
-    schema_version = 3
+    schema_version = 5
 
-    def __init__(self, record_id: str) -> None:
+    def __init__(self, record_id: str, *, comparippson_results: comparippson.MultiDBResults = None) -> None:
         super().__init__(record_id)
         # keep new CDS features
         self._new_cds_features: Set[CDSFeature] = set()
@@ -70,24 +71,31 @@ class LanthiResults(module_results.ModuleResults):
         # keep clusters and which genes in them had precursor hits
         # e.g. self.clusters[cluster_number] = {gene1_locus, gene2_locus}
         self.clusters: Dict[int, Set[str]] = defaultdict(set)
+        self.comparippson_results: Optional[comparippson.MultiDBResults] = comparippson_results
 
     def to_json(self) -> Dict[str, Any]:
         cds_features = [(str(feature.location), feature.get_name()) for feature in self._new_cds_features]
         motifs = {}
         for locus, locus_motifs in self.motifs_by_locus.items():
             motifs[locus] = [motif.to_json() for motif in locus_motifs]
-        return {"record_id": self.record_id,
-                "schema_version": LanthiResults.schema_version,
-                "motifs": motifs,
-                "new_cds_features": cds_features,
-                "protoclusters": {key: list(val) for key, val in self.clusters.items()}}
+        return {
+            "record_id": self.record_id,
+            "schema_version": LanthiResults.schema_version,
+            "motifs": motifs,
+            "new_cds_features": cds_features,
+            "protoclusters": {key: list(val) for key, val in self.clusters.items()},
+            "comparippson": self.comparippson_results.to_json() if self.comparippson_results else None,
+        }
 
     @staticmethod
     def from_json(json: Dict[str, Any], record: Record) -> Optional["LanthiResults"]:
         if json.get("schema_version") != LanthiResults.schema_version:
             logging.warning("Discarding Lanthipeptide results, schema version mismatch")
             return None
-        results = LanthiResults(json["record_id"])
+        comparison_results = None
+        if json.get("comparippson") is not None:
+            comparison_results = comparippson.MultiDBResults.from_json(json["comparippson"])
+        results = LanthiResults(json["record_id"], comparippson_results=comparison_results)
         for locus, motifs in json["motifs"].items():
             for motif in motifs:
                 results.motifs_by_locus[locus].append(Prepeptide.from_json(motif))
@@ -759,4 +767,10 @@ def run_specific_analysis(record: Record) -> LanthiResults:
             run_lanthi_on_genes(record, gene, cluster, neighbours, results)
 
     logging.debug("Lanthipeptide module marked %d motifs", sum(map(len, results.motifs_by_locus)))
+
+    cores = {}
+    for precursors in results.motifs_by_locus.values():
+        for precursor in precursors:
+            cores[precursor.get_name().rsplit("_", 1)[0]] = precursor.core
+    results.comparippson_results = comparippson.compare_precursor_cores(cores, get_config())
     return results

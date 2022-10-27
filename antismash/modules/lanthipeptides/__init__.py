@@ -9,7 +9,7 @@ import logging
 import os
 from typing import Any, Dict, List, Optional
 
-from antismash.common import path
+from antismash.common import comparippson, path
 from antismash.common.external.rodeo_svm.rebuild import pickle_classifier
 from antismash.common.secmet import Record
 from antismash.config import ConfigType
@@ -76,6 +76,7 @@ def prepare_data(logging_only: bool = False) -> List[str]:
                           overwrite=not logging_only)
     except ValueError:
         failures.append("failed to rebuild lanthipeptide classifier")
+    failures.extend(comparippson.prepare_data(logging_only=logging_only))
     return failures
 
 
@@ -99,6 +100,7 @@ def check_prereqs(options: ConfigType) -> List[str]:
             setattr(conf, slot, present)
 
     failure_messages.extend(prepare_data(logging_only=True))
+    failure_messages.extend(comparippson.check_prereqs(options))
 
     return failure_messages
 
