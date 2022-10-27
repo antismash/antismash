@@ -7,7 +7,7 @@
 from typing import Dict, List, Set
 
 from antismash.common import path
-from antismash.common.html_renderer import HTMLSections, FileTemplate
+from antismash.common.html_renderer import HTMLSections, FileTemplate, Markup
 from antismash.common.layers import RecordLayer, RegionLayer, OptionsLayer
 
 from .specific_analysis import LassoResults, Prepeptide
@@ -36,11 +36,16 @@ def generate_html(region_layer: RegionLayer, results: LassoResults,
             motifs_by_core[motif.core].append(motif)
         by_locus[locus] = motifs_by_core
 
-    detail_tooltip = ("Lists the possible core peptides for each biosynthetic enzyme, including the predicted class. "
-                      "Each core peptide shows the leader and core peptide sequences, separated by a dash.")
+    detail_tooltip = Markup(
+        "Lists the possible core peptides for each biosynthetic enzyme. "
+        "Each core peptide shows the leader and core peptide sequences."
+        "<br>Includes CompaRiPPson results for any available databases."
+    )
 
     template = FileTemplate(path.get_full_path(__file__, "templates", "details.html"))
-    html.add_detail_section("Lasso peptides", template.render(motifs_by_locus=by_locus, tooltip=detail_tooltip))
+    section = template.render(motifs_by_locus=by_locus, tooltip=detail_tooltip,
+                              comparippson_results=results.comparippson_results)
+    html.add_detail_section("Lasso peptides", section)
 
     side_tooltip = ("Lists the possible core peptides in the region. "
                     "Each core peptide lists the number of disulfide bridges, possible molecular weights, "
