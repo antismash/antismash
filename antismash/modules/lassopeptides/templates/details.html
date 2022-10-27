@@ -3,7 +3,7 @@
       <span>Lasso peptide predictions</span>
       {{ help_tooltip(tooltip, "lasso-body") }}
     </div>
-    <div class="details-text">
+    <div class="details-text ripp-body">
     {% if not motifs_by_locus %}
       Lassopeptides - No core peptides found.
     {% else %}
@@ -20,10 +20,10 @@
            <div class="ripp-segment-type">Leader:</div>
            <div class="ripp-segment-sequence">{{ motif.leader }}</div>
          {% endfor %}
-           <div class="ripp-segment-type">{% if motifs | length > 1%}Shared core{% else %}Core{% endif %} / macrolactam:</div>
-           <div class="ripp-segment-sequence">{{ coloured_ripp_sequence(core) }}</div>
-           <div class="ripp-segment-type">Core with dehydrations:</div>
-           <div class="ripp-segment-sequence ripp-dehydrated">{{ coloured_ripp_sequence(core, dehydrate=True) }}</div>
+           <div class="ripp-segment-type">{% if motifs | length > 1%}Shared full core{% else %}Full core{% endif %}:</div>
+           <div class="ripp-segment-sequence">{{ coloured_ripp_sequence(motifs[0].core) }}</div>
+           <div class="ripp-segment-type">Putative macrolactam:</div>
+           <div class="ripp-segment-sequence">{{ coloured_ripp_sequence(motifs[0].detailed_information.macrolactam) }}</div>
          {% for motif in motifs %}
           {% if motif.tail %}
            {% set motif_name = motif.get_name().rsplit("_", 1)[0] %}
@@ -34,10 +34,11 @@
            <div class="ripp-segment-sequence"><span class="cut">{{ motif.tail }}</span></div>
           {% endif %}
          {% endfor %}
+         {{ comparippson_results.get_html_for_query(motifs[0].get_name().rsplit("_", 1)[0]) }}
         </div>
        {% endfor %}
     {% endfor %}
-    <div class="legend">
+    <div class="ripp-legend">
       <h4> Legend: </h4>
       <div>
         <span class="dha">Dha</span>: Didehydroalanine<br>
