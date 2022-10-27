@@ -3,16 +3,16 @@
       <span>Sactipeptide predictions</span>
       {{help_tooltip(tooltip, "sacti-body")}}
     </div>
-  {% if not results %}
+  {% if not motifs_by_locus %}
     <div class="details-text">
       Sactipeptides - No core peptides found.
     </div>
   {% else %}
     <h4>Putative Sactipeptide(s)</h4>
-    {% for locus in results | sort %}
+    {% for locus in motifs_by_locus | sort %}
     <hr>
       <dl class="details-text">
-        {% for motif in results[locus] %}
+        {% for motif in motifs_by_locus[locus] %}
         <dt><span class="serif">{{motif.get_name().rsplit("_", 1)[0]}}</span> leader / core peptide</dt>
         <dd>
           {{ motif.leader }} - {{motif.core}}
