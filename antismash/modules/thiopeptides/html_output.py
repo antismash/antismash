@@ -8,7 +8,7 @@ from typing import List, Set
 from antismash.common import path
 from antismash.common.html_renderer import HTMLSections, FileTemplate
 from antismash.common.layers import RegionLayer, RecordLayer, OptionsLayer
-from antismash.common.secmet import Region, Prepeptide
+from antismash.common.secmet import Prepeptide
 
 from .specific_analysis import ThioResults
 
@@ -16,16 +16,6 @@ from .specific_analysis import ThioResults
 def will_handle(products: List[str], _product_categories: Set[str]) -> bool:
     """ Returns true if one or more relevant products or product categories are present """
     return 'thiopeptide' in products
-
-
-class ThiopeptideLayer(RegionLayer):
-    """ A wrapper of RegionLayer to allow for tracking the ThiopeptideMotifs """
-    def __init__(self, record: RecordLayer, results: ThioResults, region_feature: Region) -> None:
-        RegionLayer.__init__(self, record, region_feature)
-        self.motifs: List[Prepeptide] = []
-        for motif in results.motifs:
-            if motif.is_contained_by(self.region_feature) and isinstance(motif, Prepeptide):
-                self.motifs.append(motif)
 
 
 def generate_html(region_layer: RegionLayer, results: ThioResults,
@@ -37,14 +27,15 @@ def generate_html(region_layer: RegionLayer, results: ThioResults,
     if not results:
         return html
 
-    thio_layer = ThiopeptideLayer(record_layer, results, region_layer.region_feature)
+    motifs = results.get_motifs_for_region(region_layer.region_feature)
+
 
     detail_tooltip = ("Lists the possible core peptides for each biosynthetic enzyme, including the predicted class. "
                       "Each core peptide shows the leader and core peptide sequences, separated by a dash. "
                       "Predicted tail sequences are also shown.")
     template = FileTemplate(path.get_full_path(__file__, "templates", "details.html"))
     details = template.render(record=record_layer,
-                              cluster=thio_layer,
+                              motifs=motifs,
                               options=options_layer,
                               tooltip=detail_tooltip)
     html.add_detail_section("Thiopeptides", details)
@@ -55,7 +46,7 @@ def generate_html(region_layer: RegionLayer, results: ThioResults,
                     "If relevant, other features, such as macrocycle and amidation, will also be listed.")
     template = FileTemplate(path.get_full_path(__file__, "templates", "sidepanel.html"))
     sidepanel = template.render(record=record_layer,
-                                cluster=thio_layer,
+                                motifs=motifs,
                                 options=options_layer,
                                 tooltip=side_tooltip)
     html.add_sidepanel_section("Thiopeptides", sidepanel)

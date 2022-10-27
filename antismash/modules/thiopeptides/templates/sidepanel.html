@@ -3,9 +3,9 @@
       <span>Core peptide predictions</span>
       {{help_tooltip(tooltip, "thio-side")}}
     </div>
-  {% if cluster.motifs %}
+  {% if motifs %}
   <dl class ="prediction-text">
-  {% for motif in cluster.motifs %}
+  {% for motif in motifs %}
      <dt>{{motif.locus_tag.rsplit("_", 1)[0]}}</dt>
       <dd>Putative {{motif.peptide_subclass}}</dd>
         <dd>Cleavage pHMM score: {{'%0.2f' | format(motif.score)}}</dd>
