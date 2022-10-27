@@ -1296,6 +1296,47 @@ ul.dropdown-options {
     display: block;
 }
 
+// not the same comparison as above, this is one is RiPP-specific
+.comparippson-container {
+    display: grid;
+    grid-template-columns: 5em 20em auto;
+    .comparippson-info {
+        * .comparippson-link {
+            margin-right: 2em;
+        }
+    }
+
+    * .comparippson-extra-indicator {
+        margin-left: 1em;
+    }
+
+    * .comparippson-extra-names {
+        width: max-content;
+        border: 1px solid lightgrey;
+        border-radius: 0.5em;
+        background: #F5F5F5;
+        padding: 0.5em;
+        display: grid;
+        grid-template-columns: max-content max-content;
+        grid-column-gap: 2em;
+    }
+
+    .comparippson-alignment {
+        @extend .serif;
+        display: grid;
+        grid-template-columns: max-content max-content max-content;
+        grid-column-gap: 1em;
+        padding-bottom: 1em;
+        grid-column-start: 2;  // for the parent grid, not the children
+        grid-column-end: span 3;
+
+        .comparippson-midline {
+            @extend .serif;
+            color: gray;
+        }
+    }
+}
+
 .bubble-legend-container {
     transform: scale(0.7);
     transform-origin: 0 0;
