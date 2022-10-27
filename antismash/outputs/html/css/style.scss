@@ -1338,6 +1338,63 @@ ul.dropdown-options {
     }
 }
 
+
+.ripp-body {
+    overflow-x: scroll;
+    position: relative;
+
+    .ripp-legend {
+        position: absolute;
+        top: 0px;
+        right: 0px;
+        background: white;
+        border: 2px solid gray;
+        border-radius: 5px;
+        padding: 0.5em;
+
+        h4 {
+            margin: 0px;
+        }
+
+        div {
+            margin-left: 1em;
+        }
+    }
+
+    .ripp-motif {
+        display: grid;
+        grid-template-columns: max-content max-content auto;
+        grid-column-gap: 2em;
+        margin-bottom: 2em;
+
+        .ripp-name {
+            @extend .serif;
+            grid-column: 1;
+        }
+
+        .ripp-segment-sequence {
+            @extend .serif;
+        }
+        .ripp-dehydrated {
+            span {
+                padding-left: 0.05em;
+                padding-right: 0.05em;
+            }
+        }
+
+        .ripp-segment-type {
+            grid-column: 2;
+        }
+
+        .comparippson-details {
+            grid-column-start: 1;
+            grid-column-end: 3 span;
+            margin-left: 3em;
+        }
+
+    }
+}
+
 .bubble-legend-container {
     transform: scale(0.7);
     transform-origin: 0 0;

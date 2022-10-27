@@ -1,40 +1,34 @@
 <div class="details">
     <div class="heading">
       <span>Lanthipeptide predictions</span>
-      {{help_tooltip(tooltip, "lanthi-body")}}
+      {{ help_tooltip(tooltip, "lanthi-body") }}
     </div>
-  {% if not results %}
-    <div class="details-text">
+    <div class="details-text ripp-body">
+    {% if not results %}
       Lanthipeptides - No core peptides found.
-    </div>
-  {% else %}
-    {% for locus in results | sort %}
-      <h4>Lanthipeptide(s) for {{locus}} - Putative {{results[locus][0].peptide_subclass}}</h4>
+    {% else %}
+     {% for locus in results | sort %}
+      <h4>Lanthipeptide(s) for {{ locus }}</h4>
       <hr>
-      <dl class="details-text">
-        {% for motif in results[locus] %}
-          <dt>
-            <span class="serif">{{motif.get_name().rsplit("_", 1)[0]}}</span> leader / core peptide
-          </dt>
-          <dd>
-            {{ motif.leader }}
-            -
-            {% for aa in motif.core -%}
-              {%- if aa == 'S' -%}
-                <span class="dha">Dha</span>
-              {%- elif aa == 'T' -%}
-                <span class="dhb">Dhb</span>
-              {%- elif aa == 'C' -%}
-                <span class="cys">C</span>
-              {%- else -%}
-                {{ aa }}
-              {%- endif -%}
-          {% endfor -%}
-        {% endfor %}
-        </dd>
-      </dl>
+       {% for core, motifs in results[locus].items() %}
+        <div class="ripp-motif">
+         {% for motif in motifs %}
+          {% set motif_name = motif.get_name().rsplit("_", 1)[0] %}
+           <div class="ripp-name">
+            <span class="serif">{{ motif_name }}</span>
+           </div>
+           <div class="ripp-segment-type">Leader:</div>
+           <div class="ripp-segment-sequence">{{ motif.leader }}</div>
+         {% endfor %}
+           <div class="ripp-segment-type">{% if motifs | length > 1%}Shared core:{% else %}Core:{% endif %}</div>
+           <div class="ripp-segment-sequence">{{ coloured_ripp_sequence(core) }}</div>
+           <div class="ripp-segment-type">Core with dehydrations:</div>
+           <div class="ripp-segment-sequence ripp-dehydrated">{{ coloured_ripp_sequence(core, dehydrate=True) }}</div>
+          {{ comparippson.get_html_for_query(motifs[0].get_name().rsplit("_", 1)[0]) }}
+        </div>
+       {% endfor %}
     {% endfor %}
-    <div class="legend">
+    <div class="ripp-legend">
       <h4> Legend: </h4>
       <div>
         <span class="dha">Dha</span>: Didehydroalanine<br>
@@ -42,4 +36,5 @@
       </div>
     </div>
   {% endif %}
+   </div>
 </div>

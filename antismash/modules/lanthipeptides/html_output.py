@@ -4,10 +4,11 @@
 """ Manages HTML construction for the Lanthipeptide module
 """
 
+from collections import defaultdict
 from typing import List, Set
 
 from antismash.common import path
-from antismash.common.html_renderer import HTMLSections, FileTemplate
+from antismash.common.html_renderer import HTMLSections, FileTemplate, Markup
 from antismash.common.layers import RegionLayer, RecordLayer, OptionsLayer
 
 from .specific_analysis import LanthiResults
@@ -24,17 +25,29 @@ def generate_html(region_layer: RegionLayer, results: LanthiResults,
     """ Generates HTML output for the module """
     html = HTMLSections("lanthipeptides")
 
-    detail_tooltip = ("Lists the possible core peptides for each biosynthetic enzyme, including the predicted class. "
-                      "Each core peptide shows the leader and core peptide sequences, separated by a dash.")
+    comparison = results.comparippson_results
+    motifs_by_locus = results.get_motifs_for_region(region_layer.region_feature)
+
+    motifs_by_locus_by_core = {}
+    for locus, motifs in motifs_by_locus.items():
+        motifs_by_core = defaultdict(list)
+        for motif in motifs:
+            core = motif.core
+            motifs_by_core[core].append(motif)
+        motifs_by_locus_by_core[locus] = motifs_by_core
+
+    detail_tooltip = Markup("<br>".join([
+        "Shows the possible core peptides for each biosynthetic enzyme.",
+        "Includes CompaRiPPson results for any available databases."
+    ]))
     template = FileTemplate(path.get_full_path(__file__, "templates", "details.html"))
-    motifs = results.get_motifs_for_region(region_layer.region_feature)
-    html.add_detail_section("Lanthipeptides", template.render(results=motifs, tooltip=detail_tooltip))
+    html.add_detail_section("Lanthipeptides", template.render(results=motifs_by_locus_by_core, tooltip=detail_tooltip,
+                                                              comparippson=comparison))
 
     side_tooltip = ("Lists the possible core peptides in the region. "
                     "Each core peptide lists the number of lanthionine bridges, possible molecular weights, "
                     "and the scores for cleavage site prediction and RODEO.")
     template = FileTemplate(path.get_full_path(__file__, "templates", "sidepanel.html"))
-    motifs = results.get_motifs_for_region(region_layer.region_feature)
-    html.add_sidepanel_section("Lanthipeptides", template.render(results=motifs, tooltip=side_tooltip))
+    html.add_sidepanel_section("Lanthipeptides", template.render(results=motifs_by_locus, tooltip=side_tooltip))
 
     return html
