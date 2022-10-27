@@ -1,50 +1,49 @@
 <div class="details">
     <div class="heading">
       <span>Lasso peptide predictions</span>
-      {{help_tooltip(tooltip, "lasso-body")}}
+      {{ help_tooltip(tooltip, "lasso-body") }}
     </div>
-  {% if not results %}
     <div class="details-text">
+    {% if not motifs_by_locus %}
       Lassopeptides - No core peptides found.
-    </div>
-  {% else %}
-    {% for locus in results | sort %}
-      <h4>Lassopeptide(s) for {{locus}} - Putative {{results[locus][0].peptide_subclass}}</h4>
-    <hr>
-      <dl class="details-text">
-        {% for motif in results[locus] %}
-          <dt><span class="serif">{{motif.get_name().rsplit("_", 1)[0]}}</span> leader / core peptide / cleaved tail</dt>
-          <dd>
-            {{ motif.leader }}
-            -
-            {% for aa in motif.detailed_information.macrolactam -%}
-              {%- if aa == 'C' -%}
-                <span class="cys">C</span>
-              {%- else -%}
-                <span class ="macrolactam">{{ aa }}</span>
-              {%- endif -%}
-            {% endfor -%}
-
-            {%- for aa in (motif.core | replace (motif.detailed_information.macrolactam, '')) -%}
-              {%- if aa == 'C' -%}
-                <span class="cys">C</span>
-              {%- else -%}
-                {{ aa }}
-              {%- endif -%}
-            {% endfor -%}
-            {% if motif.tail %}
-              - <span class="cut">{{motif.tail}}</span>
-            {% endif %}
-          </dd>
-        {% endfor %}
-      </dl>
+    {% else %}
+     {% for locus in motifs_by_locus | sort %}
+      <h4>Lassopeptide(s) for {{ locus }}</h4>
+      <hr>
+       {% for core, motifs in motifs_by_locus[locus].items() %}
+        <div class="ripp-motif">
+         {% for motif in motifs %}
+          {% set motif_name = motif.get_name().rsplit("_", 1)[0] %}
+           <div class="ripp-name">
+            <span class="serif">{{ motif_name }}</span>
+           </div>
+           <div class="ripp-segment-type">Leader:</div>
+           <div class="ripp-segment-sequence">{{ motif.leader }}</div>
+         {% endfor %}
+           <div class="ripp-segment-type">{% if motifs | length > 1%}Shared core{% else %}Core{% endif %} / macrolactam:</div>
+           <div class="ripp-segment-sequence">{{ coloured_ripp_sequence(core) }}</div>
+           <div class="ripp-segment-type">Core with dehydrations:</div>
+           <div class="ripp-segment-sequence ripp-dehydrated">{{ coloured_ripp_sequence(core, dehydrate=True) }}</div>
+         {% for motif in motifs %}
+          {% if motif.tail %}
+           {% set motif_name = motif.get_name().rsplit("_", 1)[0] %}
+           <div class="ripp-name">
+            <span class="serif">{{ motif_name }}</span>
+           </div>
+           <div class="ripp-segment-type">Cleaved off residues:</div>
+           <div class="ripp-segment-sequence"><span class="cut">{{ motif.tail }}</span></div>
+          {% endif %}
+         {% endfor %}
+        </div>
+       {% endfor %}
     {% endfor %}
-  <div class="legend">
-    <h4> Legend: </h4>
-    <div>
-      <span class="macrolactam">Red</span>: Putative macrolactam<br>
-      <span class="cut">Purple</span>: Putative cleaved off residues<br>
+    <div class="legend">
+      <h4> Legend: </h4>
+      <div>
+        <span class="dha">Dha</span>: Didehydroalanine<br>
+        <span class="dhb">Dhb</span>: Didehydrobutyrine<br>
+      </div>
     </div>
-  </div>
   {% endif %}
+   </div>
 </div>
