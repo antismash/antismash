@@ -4,13 +4,13 @@
 """ Manages HTML construction for the Lassopeptide module
 """
 
-from typing import List, Set
+from typing import Dict, List, Set
 
 from antismash.common import path
 from antismash.common.html_renderer import HTMLSections, FileTemplate
 from antismash.common.layers import RecordLayer, RegionLayer, OptionsLayer
 
-from .specific_analysis import LassoResults
+from .specific_analysis import LassoResults, Prepeptide
 
 
 def will_handle(products: List[str], _product_categories: Set[str]) -> bool:
@@ -23,21 +23,29 @@ def generate_html(region_layer: RegionLayer, results: LassoResults,
     """ Generates HTML for the module """
     html = HTMLSections("lassopeptides")
 
-    motifs_in_region = {}
+    loci = []
     for locus in results.motifs_by_locus:
         if record_layer.get_cds_by_name(locus).is_contained_by(region_layer.region_feature):
-            motifs_in_region[locus] = results.motifs_by_locus[locus]
+            loci.append(locus)
+
+    by_locus: Dict[str, Dict[str, List[Prepeptide]]] = {}
+    for locus in loci:
+        motifs = results.motifs_by_locus[locus]
+        motifs_by_core: Dict[str, List[Prepeptide]] = {motif.core: [] for motif in motifs}
+        for motif in motifs:
+            motifs_by_core[motif.core].append(motif)
+        by_locus[locus] = motifs_by_core
 
     detail_tooltip = ("Lists the possible core peptides for each biosynthetic enzyme, including the predicted class. "
                       "Each core peptide shows the leader and core peptide sequences, separated by a dash.")
 
     template = FileTemplate(path.get_full_path(__file__, "templates", "details.html"))
-    html.add_detail_section("Lasso peptides", template.render(results=motifs_in_region, tooltip=detail_tooltip))
+    html.add_detail_section("Lasso peptides", template.render(motifs_by_locus=by_locus, tooltip=detail_tooltip))
 
     side_tooltip = ("Lists the possible core peptides in the region. "
                     "Each core peptide lists the number of disulfide bridges, possible molecular weights, "
                     "and the scores for cleavage site prediction and RODEO.")
     template = FileTemplate(path.get_full_path(__file__, "templates", "sidepanel.html"))
-    html.add_sidepanel_section("Lasso peptides", template.render(results=motifs_in_region, tooltip=side_tooltip))
+    html.add_sidepanel_section("Lasso peptides", template.render(motifs_by_locus=by_locus, tooltip=side_tooltip))
 
     return html
