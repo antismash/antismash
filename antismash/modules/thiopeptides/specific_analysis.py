@@ -85,6 +85,10 @@ class ThioResults(module_results.ModuleResults):
                     return
         self._cds_features[proto].append(cds)
 
+    def get_motifs_for_region(self, region: secmet.Region) -> List[secmet.Prepeptide]:
+        """ Returns all motifs contained by the given region """
+        return [motif for motif in self.motifs if motif.is_contained_by(region)]
+
 
 class Thiopeptide:
     """ Class to calculate and store thiopeptide information
