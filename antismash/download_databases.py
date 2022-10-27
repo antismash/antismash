@@ -37,6 +37,23 @@ CLUSTERCOMPARE_DBS = {
     },
 }
 
+COMPARIPPSON_DBS = {
+    "asdb": {
+        "archive_hash": "8cc339bd0d34e4c0589767ce973ba25d44ad32e7ce695f2b8be594a8fb9662e8",
+        "fasta_hash": "80bc3d570222596f67bed749479f28dff1e75a00f53ae8b07f650eb254630a9b",
+        "metadata_hash": "0e549c9dff56edf5c024dbb197638c9022254408d56f795d3ab5eb00b82ab204",
+        "url": "https://dl.secondarymetabolites.org/releases/comparippson/asdb_3.0.tar.xz",
+        "version": "3.0",
+    },
+    "mibig": {
+        "archive_hash": "ac027be0b41af074f1c08ee99ddbb936f3caa47671cf147d7e4ae925c9273265",
+        "fasta_hash": "1b129cff983d50ddd4da1f88ca0b5352d42f18beeee9a507fc698f810fcbeb2b",
+        "metadata_hash": "2ab8c95e092a83ec014aa62f96d5af169e03fa9a4c868fde76e50c1b4b999a1f",
+        "url": "https://dl.secondarymetabolites.org/releases/comparippson/mibig_3.1.tar.xz",
+        "version": "3.1",
+    },
+}
+
 RESFAM_URL = "http://dantaslab.wustl.edu/resfams/Resfams.hmm.gz"
 RESFAM_ARCHIVE_CHECKSUM = "82e9325283b999b1fb1351502b2d12194561c573d9daef3e623e905c1af66fd6"
 RESFAM_LINES = 132214
@@ -354,24 +371,51 @@ def download_clustercompare(db_dir: str, name: str, url: str, archive: str, fast
     delete_file(filename + ".xz")
 
 
+def download_comparippson_db(db_dir: str, name: str, url: str, version: str,
+                             archive_hash: str, fasta_hash: str, metadata_hash: str) -> None:
+    """Download a CompaRiPPson database."""
+    archive_filename = os.path.join(db_dir, "comparippson", name, version, url.rpartition("/")[2])
+    fasta_filename = os.path.join(db_dir, "comparippson", name, version, "cores.fa")
+    metadata_filename = os.path.join(db_dir, "comparippson", name, version, "metadata.json")
+
+    if all([
+        present_and_checksum_matches(fasta_filename, fasta_hash),
+        present_and_checksum_matches(metadata_filename, metadata_hash),
+    ]):
+        print(f"CompaRiPPson {name} {version} files present and checked")
+        return
+
+    print(f"Downloading CompaRiPPson {name} {version} database.")
+    check_diskspace(url)
+    download_if_not_present(url, archive_filename, archive_hash)
+    filename = unzip_file(archive_filename, lzma, lzma.LZMAError)
+    untar_file(filename)
+    assert os.path.exists(fasta_filename)
+    assert os.path.exists(metadata_filename)
+    delete_file(filename)
+    delete_file(filename + ".xz")
+
+
 def download(args: argparse.Namespace) -> None:
     """Download all the large external databases needed."""
     # grab the latest pfam
-    download_pfam(
-        args.database_dir,
-        PFAM_LATEST_URL,
-        PFAM_LATEST_VERSION,
-        PFAM_LATEST_ARCHIVE_CHECKSUM,
-        PFAM_LATEST_CHECKSUM,
-    )
+#    download_pfam(
+#        args.database_dir,
+#        PFAM_LATEST_URL,
+#        PFAM_LATEST_VERSION,
+#        PFAM_LATEST_ARCHIVE_CHECKSUM,
+#        PFAM_LATEST_CHECKSUM,
+#    )
 
-    download_resfam(args.database_dir)
+#    download_resfam(args.database_dir)
 
-    download_tigrfam(args.database_dir)
+#    download_tigrfam(args.database_dir)
 
-    download_clusterblast(args.database_dir)
-    for name, details in CLUSTERCOMPARE_DBS.items():
-        download_clustercompare(args.database_dir, name, **details)
+#    download_clusterblast(args.database_dir)
+#    for name, details in CLUSTERCOMPARE_DBS.items():
+#        download_clustercompare(args.database_dir, name, **details)
+    for name, details in COMPARIPPSON_DBS.items():
+        download_comparippson_db(args.database_dir, name, **details)
 
 
 def _main() -> None:
