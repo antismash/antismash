@@ -95,7 +95,7 @@ class TestIntegration(unittest.TestCase):
             # make sure the html_output section was tested
             with open(os.path.join(outdir, "index.html")) as handle:
                 content = handle.read()
-                assert "ACN52291.1 leader / core peptide, putative Type II" in content
+                assert "Leader:" in content
 
         genbank = path.get_full_path(__file__, 'data', 'thiostrepton_before_analysis.gbk')
         result = helpers.run_and_regenerate_results_for_module(genbank, thiopeptides,

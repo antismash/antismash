@@ -3,10 +3,10 @@
 
 """ HTML generation for the thiopeptides module """
 
-from typing import List, Set
+from typing import Dict, List, Set
 
 from antismash.common import path
-from antismash.common.html_renderer import HTMLSections, FileTemplate
+from antismash.common.html_renderer import HTMLSections, FileTemplate, Markup
 from antismash.common.layers import RegionLayer, RecordLayer, OptionsLayer
 from antismash.common.secmet import Prepeptide
 
@@ -28,14 +28,19 @@ def generate_html(region_layer: RegionLayer, results: ThioResults,
         return html
 
     motifs = results.get_motifs_for_region(region_layer.region_feature)
+    motif_groups: Dict[str, List[Prepeptide]] = {motif.core: [] for motif in motifs}
+    for motif in motifs:
+        motif_groups[motif.core].append(motif)
 
-
-    detail_tooltip = ("Lists the possible core peptides for each biosynthetic enzyme, including the predicted class. "
-                      "Each core peptide shows the leader and core peptide sequences, separated by a dash. "
-                      "Predicted tail sequences are also shown.")
+    detail_tooltip = Markup(
+        "Lists the possible core peptides for each biosynthetic enzyme. "
+        "Predicted tail sequences are also shown, if present. "
+        "<br>Includes CompaRiPPson results for any available databases."
+    )
     template = FileTemplate(path.get_full_path(__file__, "templates", "details.html"))
     details = template.render(record=record_layer,
-                              motifs=motifs,
+                              motif_groups=motif_groups.values(),
+                              comparippson_results=results.comparippson_results,
                               options=options_layer,
                               tooltip=detail_tooltip)
     html.add_detail_section("Thiopeptides", details)
