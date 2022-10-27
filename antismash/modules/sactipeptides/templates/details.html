@@ -1,24 +1,31 @@
 <div class="details">
     <div class="heading">
       <span>Sactipeptide predictions</span>
-      {{help_tooltip(tooltip, "sacti-body")}}
+      {{ help_tooltip(tooltip, "sacti-body") }}
     </div>
-  {% if not motifs_by_locus %}
-    <div class="details-text">
+    <div class="details-text ripp-body">
+    {% if not motifs_by_locus %}
       Sactipeptides - No core peptides found.
-    </div>
-  {% else %}
-    <h4>Putative Sactipeptide(s)</h4>
-    {% for locus in motifs_by_locus | sort %}
-    <hr>
-      <dl class="details-text">
-        {% for motif in motifs_by_locus[locus] %}
-        <dt><span class="serif">{{motif.get_name().rsplit("_", 1)[0]}}</span> leader / core peptide</dt>
-        <dd>
-          {{ motif.leader }} - {{motif.core}}
-        </dd>
-      {% endfor %}
-    </dl>
+    {% else %}
+     {% for locus in motifs_by_locus | sort %}
+      <h4>Sactipeptide(s) for {{ locus }}</h4>
+      <hr>
+       {% for core, motifs in motifs_by_locus[locus].items() %}
+        <div class="ripp-motif">
+         {% for motif in motifs %}
+          {% set motif_name = motif.get_name().rsplit("_", 1)[0] %}
+           <div class="ripp-name">
+            <span class="serif">{{ motif_name }}</span>
+           </div>
+           <div class="ripp-segment-type">Leader:</div>
+           <div class="ripp-segment-sequence">{{ motif.leader }}</div>
+         {% endfor %}
+           <div class="ripp-segment-type">{% if motifs | length > 1%}Shared core{% else %}Core{% endif %}:</div>
+           <div class="ripp-segment-sequence">{{ core }}</div>
+         {{ comparippson_results.get_html_for_query(motifs[0].get_name().rsplit("_", 1)[0], colour_subset="C") }}
+        </div>
+       {% endfor %}
     {% endfor %}
   {% endif %}
+   </div>
 </div>

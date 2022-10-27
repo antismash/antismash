@@ -7,7 +7,7 @@ from collections import defaultdict
 from typing import Dict, List, Set
 
 from antismash.common import path
-from antismash.common.html_renderer import HTMLSections, FileTemplate
+from antismash.common.html_renderer import HTMLSections, FileTemplate, Markup
 from antismash.common.secmet import Prepeptide
 from antismash.common.layers import RegionLayer, RecordLayer, OptionsLayer
 
@@ -30,12 +30,25 @@ def generate_html(region_layer: RegionLayer, results: SactiResults,
             if motif.is_contained_by(region_layer.region_feature):
                 motifs_by_locus[locus].append(motif)
 
-    detail_tooltip = ("Lists the possible core peptides for each biosynthetic enzyme, including the predicted class. "
-                      "Each core peptide shows the leader and core peptide sequences, separated by a dash.")
+    motifs_by_locus_by_core = {}
+    for locus, motifs in motifs_by_locus.items():
+        motifs_by_core = defaultdict(list)
+        for motif in motifs:
+            leader = motif.leader
+            core = motif.core
+            motifs_by_core[core].append(motif)
+        motifs_by_locus_by_core[locus] = motifs_by_core
+
+    detail_tooltip = Markup(
+        "Lists the possible core peptides for each biosynthetic enzyme. "
+        "Each core peptide shows the leader and core peptide sequences. "
+        "<br>Includes CompaRiPPson results for any available databases."
+    )
     template = FileTemplate(path.get_full_path(__file__, "templates", "details.html"))
     details = template.render(record=record_layer,
                               options=options_layer,
-                              motifs_by_locus=motifs_by_locus,
+                              motifs_by_locus=motifs_by_locus_by_core,
+                              comparippson_results=results.comparippson_results,
                               tooltip=detail_tooltip)
     html.add_detail_section("Sactipeptides", details)
 

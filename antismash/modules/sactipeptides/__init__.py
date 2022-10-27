@@ -7,7 +7,7 @@
 
 from typing import Any, Dict, List, Optional
 
-from antismash.common import path
+from antismash.common import comparippson, path
 from antismash.common.external.rodeo_svm.rebuild import pickle_classifier
 from antismash.common.secmet import Record
 from antismash.config import ConfigType
@@ -29,13 +29,15 @@ def prepare_data(logging_only: bool = False) -> List[str]:
         Returns:
             a list of error messages (only if logging_only is True)
     """
+    errors = []
     training_set = path.get_full_path(__file__, "data", "training_set.csv")
     try:
         pickle_classifier(training_set, prefix="sactipeptide", kernel='rbf', C=9.77e6, gamma=1e-9,
                           overwrite=not logging_only)
     except ValueError:
-        return ["failed to rebuild sactipeptide classifier"]
-    return []
+        errors.append("failed to rebuild sactipeptide classifier")
+    errors.extend(comparippson.prepare_data(logging_only=logging_only))
+    return errors
 
 
 def check_prereqs(options: ConfigType) -> List[str]:
@@ -46,6 +48,7 @@ def check_prereqs(options: ConfigType) -> List[str]:
             failure_messages.append("Failed to locate executable for %r" %
                                     binary_name)
     failure_messages.extend(prepare_data(logging_only=True))
+    failure_messages.extend(comparippson.check_prereqs(options))
 
     return failure_messages
 
