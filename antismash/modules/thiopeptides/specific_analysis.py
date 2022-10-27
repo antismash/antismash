@@ -12,10 +12,20 @@ import re
 import os
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-from antismash.common import all_orfs, fasta, module_results, path, secmet, subprocessing, utils
+from antismash.common import (
+    all_orfs,
+    comparippson,
+    fasta,
+    module_results,
+    path,
+    secmet,
+    subprocessing,
+    utils,
+)
 from antismash.common.secmet.qualifiers.prepeptide_qualifiers import ThioQualifier
 from antismash.common.secmet.locations import location_from_string
 from antismash.common.signature import HmmSignature
+from antismash.config import get_config
 
 from .rodeo import run_rodeo
 
@@ -28,24 +38,28 @@ class ThioResults(module_results.ModuleResults):
     """ Results container for thiopeptides """
     schema_version = 2
 
-    def __init__(self, record_id: str) -> None:
+    def __init__(self, record_id: str, comparippson_results: comparippson.MultiDBResults = None) -> None:
         super().__init__(record_id)
         self.clusters_with_motifs: Set[secmet.Protocluster] = set()
         # to track CDSs found with find_all_orfs and within which clusters they were found
         self._cds_features: Dict[int, List[secmet.CDSFeature]] = defaultdict(list)
         # to track the motifs created
         self.motifs: List[secmet.Prepeptide] = []
+        self.comparippson_results: Optional[comparippson.MultiDBResults] = comparippson_results
 
     def to_json(self) -> Dict[str, Any]:
         """ Converts the results to JSON format """
         cds_features_by_cluster = {key: [(str(feature.location), feature.get_name()) for feature in features]
                                    for key, features in self._cds_features.items()}
         protoclusters = [cluster.get_protocluster_number() for cluster in self.clusters_with_motifs]
-        return {"record_id": self.record_id,
-                "schema_version": ThioResults.schema_version,
-                "protoclusters with motifs": protoclusters,
-                "motifs": [motif.to_json() for motif in self.motifs],
-                "cds_features": cds_features_by_cluster}
+        return {
+            "record_id": self.record_id,
+            "schema_version": ThioResults.schema_version,
+            "protoclusters with motifs": protoclusters,
+            "motifs": [motif.to_json() for motif in self.motifs],
+            "cds_features": cds_features_by_cluster,
+            "comparippson": self.comparippson_results.to_json() if self.comparippson_results else None,
+        }
 
     @staticmethod
     def from_json(json: Dict, record: secmet.Record) -> Optional["ThioResults"]:
@@ -53,7 +67,9 @@ class ThioResults(module_results.ModuleResults):
         if json.get("schema_version") != ThioResults.schema_version:
             logging.warning("Discarding Thiopeptide results, schema version mismatch")
             return None
-        results = ThioResults(json["record_id"])
+        if json.get("comparippson") is not None:
+            comparison_results = comparippson.MultiDBResults.from_json(json["comparippson"])
+        results = ThioResults(json["record_id"], comparippson_results=comparison_results)
         for motif in json["motifs"]:
             results.motifs.append(secmet.Prepeptide.from_json(motif))
         for cluster in json["protoclusters with motifs"]:
@@ -677,4 +693,9 @@ def specific_analysis(record: secmet.Record) -> ThioResults:
             results.motifs.append(new_feature)
             results.clusters_with_motifs.add(cluster)
     logging.debug("Thiopeptides marked %d motifs", len(results.motifs))
+
+    cores = {}
+    for motif in results.motifs:
+        cores[motif.get_name().rsplit("_", 1)[0]] = motif.core
+    results.comparippson_results = comparippson.compare_precursor_cores(cores, get_config())
     return results

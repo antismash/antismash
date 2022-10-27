@@ -1,33 +1,51 @@
 <div class="details">
-    <div class="heading">
-      <span>Thiopeptide predictions</span>
-      {{help_tooltip(tooltip, "thio-body")}}
-    </div>
-  {% if not motifs %}
-    <div class="details-text">
-      No core peptides found.
-    </div>
-  {% else %}
-    <h4> Thiopeptide(s) </h4>
-    <hr>
-    <dl class="details-text">
-      {% for motif in motifs %}
-        <dt> {{motif.locus_tag.rsplit("_", 1)[0]}} leader / core peptide, putative {{motif.peptide_subclass}} </dt>
-        <dd>
-          {{ motif.leader }} - {{ coloured_ripp_sequence(motif.core, dehydrate=True) }}<span class="cut">{{ motif.tail }}</span>
-        </dd>
-      {% endfor %}
-    </dl>
-    <div class="legend">
-      <h4> Legend: </h4>
-        <div>
-          <span class="dha">Dha</span>: Didehydroalanine<br>
-          <span class="dhb">Dhb</span>: Didehydrobutyrine<br>
-          <span class="cut">Grey</span>: Putative cleaved off residues<br>
-          <span>Type I</span>: Featuring genes encoding indolic acid side ring (series e)<br>
-          <span>Type II</span>: Featuring the gene coding for quinaldic acid moiety formation (series a, b, and c)<br>
-          <span>Type III</span>: No genes for synthesizing L-Trp derivatives (series d)<br>
-        </div>
-    </div>
+ <div class="heading">
+   <span>Thiopeptide predictions</span>
+   {{help_tooltip(tooltip, "thio-body")}}
+ </div>
+ <div class="details-text ripp-body">
+ {% if not motif_groups %}
+  No core peptides found.
+ {% else %}
+  <h4> Thiopeptide(s) </h4>
+  <hr>
+  {% for motifs in motif_groups %}
+  <div class="ripp-motif">
+   {% set core = motifs[0].core %}
+   {% for motif in motifs %}
+    {% set motif_name = motif.get_name().rsplit("_", 1)[0] %}
+    <div class="ripp-name"><span class="serif">{{ motif_name }}</span></div>
+    <div class="ripp-segment-type">Leader:</div>
+    <div class="ripp-segment-sequence">{{ motif.leader }}</div>
+   {% endfor %}
+   <div class="ripp-segment-type">{% if motifs | length > 1%}Shared core:{% else %}Core:{% endif %}</div>
+   <div class="ripp-segment-sequence">{{ coloured_ripp_sequence(core) }}</div>
+   <div class="ripp-segment-type">Core with dehydrations:</div>
+   <div class="ripp-segment-sequence ripp-dehydrated">{{ coloured_ripp_sequence(core, dehydrate=True) }}</div>
+   {% for motif in motifs %}
+    {% if motif.tail %}
+     {% set motif_name = motif.get_name().rsplit("_", 1)[0] %}
+     <div class="ripp-name"><span class="serif">{{ motif_name }}</span></div>
+     <div class="ripp-segment-type">Cleaved off residues:</div>
+     <div class="ripp-segment-sequence"><span class="cut">{{ motif.tail }}</span></div>
     {% endif %}
+   {% endfor %}
+   {{ comparippson_results.get_html_for_query(motifs[0].get_name().rsplit("_", 1)[0]) }}
+  </div>
+  {% endfor %}
+  <div class="ripp-legend">
+   <h4>Legend:</h4>
+   <div>
+    <span class="dha">Dha</span>: Didehydroalanine<br>
+    <span class="dhb">Dhb</span>: Didehydrobutyrine<br>
+   </div>
+  </div>
+  <div>
+   <h4>Types:</h4>
+   <span>Type I</span>: Featuring genes encoding indolic acid side ring (series e)<br>
+   <span>Type II</span>: Featuring the gene coding for quinaldic acid moiety formation (series a, b, and c)<br>
+   <span>Type III</span>: No genes for synthesizing L-Trp derivatives (series d)<br>
+  </div>
+ {% endif %}
+ </div>
 </div>
