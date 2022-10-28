@@ -32,8 +32,6 @@ _VALID_TRANSLATION_CHARS = set(IUPACData.extended_protein_letters)
 T = TypeVar("T", bound="CDSFeature")
 
 
-MAX_TRANSLATION_LENGTH = 100_000
-
 def _sanitise_id_value(name: Optional[str]) -> Optional[str]:
     """ Ensures a name doesn't contain characters that will break external programs"""
     if name is None:
