@@ -33,12 +33,12 @@ CP = "ACP"
 
 class Component(Component_actual):
     """ a tiny wrapper to avoid always supplying a dummy CDS name """
-    def __init__(self, domain, cds_name="test_name", subtype=""):
-        super().__init__(domain, cds_name, subtype=subtype)
+    def __init__(self, domain, cds_name="test_name", subtype="",subsubtype=""):
+        super().__init__(domain, cds_name, subtype=subtype,subsubtype=subsubtype )
 
 
-def build_modules_for_cds(domains, subtypes, cds_name="test_name"):
-    return build_modules_for_cds_actual(domains, subtypes, cds_name)
+def build_modules_for_cds(domains, subtypes,subsubtypes, cds_name="test_name"):
+    return build_modules_for_cds_actual(domains, subtypes,subsubtypes, cds_name)
 
 
 def add_component(module, name, sub="", start=1, end=10, cds_name="test_name", lookaheads=None):
@@ -48,12 +48,14 @@ def add_component(module, name, sub="", start=1, end=10, cds_name="test_name", l
     module.add_component(Component(DummyHMMResult(name, start, end), cds_name, sub), lookaheads)
 
 
-def build_module(names, subtypes=None, first_in_cds=True, cds_name="test_name"):
+def build_module(names, subtypes=None,subsubtypes=None, first_in_cds=True, cds_name="test_name"):
     module = Module(first_in_cds=first_in_cds)
     subs = iter(subtypes or [])
+    subsubs = iter(subsubtypes or [])
     for domain in names:
         sub = next(subs) if domain == PKS_START and subtypes else ""
-        add_component(module, domain, sub, cds_name=cds_name)
+        subsub = next(subs) if domain == PKS_START and subsubtypes else ""
+        add_component(module, domain, sub,subsub, cds_name=cds_name)
     return module
 
 
@@ -85,6 +87,7 @@ class TestComponent(unittest.TestCase):
         assert component.domain == domain
         assert component.label == domain.hit_id
         assert component.subtype == ""
+        assert component.subsubtype == ""
         assert component.classification == "CP"
 
         domain._hit_id = PKS_START
