@@ -1293,15 +1293,19 @@ class Parser:  # pylint: disable=too-few-public-methods
         """
         self._consume(TokenTypes.SUPERIORS)
         superiors = self._parse_comma_separated_ids()
+        if len(superiors) != len(set(superiors)):
+            raise ValueError("A rule's superiors cannot contain duplicates")
+
+        transitive_superiors = set()
         for name in superiors:
             if name not in self.rules_by_name:
                 raise ValueError("A rule's superior must already be defined. Unknown rule name: %s" % name)
-            # this is more of a semantics error than a syntax error, but still should be checked
-            if self.rules_by_name[name].superiors:
-                raise ValueError("A rule cannot have a superior which has its own superior")
-        if len(superiors) != len(set(superiors)):
-            raise ValueError("A rule's superiors cannot contain duplicates")
-        return superiors
+            # all prior rules had to have defined superiors, so this rule can't
+            # cause any cycles with the superiors and it's safe to fetch parents
+            parent_superiors = self.rules_by_name[name].superiors
+            if parent_superiors:
+                transitive_superiors.update(parent_superiors)
+        return sorted(set(superiors).union(transitive_superiors))
 
 
 def is_legal_identifier(identifier: str) -> bool:
