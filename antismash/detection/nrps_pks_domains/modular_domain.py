@@ -25,7 +25,7 @@ TOOL = "nrps_pks_domains"
 
 class ModularDomain(AntismashDomain):
     """ A class to represent a Domain with extra specificities and type information """
-    __slots__ = ["specificity"]
+    __slots__ = ["specificity","domain_subsubtype"]
     FEATURE_TYPE = "aSDomain"
 
     def __init__(self, location: Location, protein_location: FeatureLocation, locus_tag: str) -> None:
