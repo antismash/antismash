@@ -15,7 +15,7 @@ T = TypeVar("T", bound="AntismashDomain")
 
 class AntismashDomain(Domain):
     """ A class to represent a Domain with extra specificities and type information """
-    __slots__ = ["domain_subtype", "specificity","domain_subsubtype"]
+    __slots__ = ["domain_subtype", "specificity"]
     FEATURE_TYPE = "aSDomain"
 
     def __init__(self, location: Location, tool: str, protein_location: FeatureLocation,
@@ -44,23 +44,8 @@ class AntismashDomain(Domain):
                 assert variant.type == AntismashDomain.FEATURE_TYPE
                 assert isinstance(variant, cls)
                 return variant
-            # if there is an appropriate subsubtype and it's not yet called, call it
-            try:
-                tool = leftovers["aSTool"][0]
-            except KeyError:
-                raise ValueError(f"{cls.FEATURE_TYPE} missing expected qualifier: 'aSTool'")
-            if tool in _SUBSUBTYPE_MAPPING:
-                subsubtype = _SUBSUBTYPE_MAPPING[tool]
-                # this to_biopython() will call this same function again
-                # so this path *must* return
-                variant: AntismashDomain = subsubtype.from_biopython(bio_feature, feature=None,
-                                                                  leftovers=leftovers, record=record)
-                assert isinstance(variant, AntismashDomain)
-                assert variant.type == AntismashDomain.FEATURE_TYPE
-                assert isinstance(variant, cls)
-                return variant
 
-            # no subtype or subsubtype, so process the minimum for a default domain
+            # no subtype, so process the minimum for a default domain
             # grab mandatory qualifiers and create the class
             tool = leftovers.pop("aSTool")[0]
             protein_location = generate_protein_location_from_qualifiers(leftovers, record)
@@ -78,10 +63,9 @@ class AntismashDomain(Domain):
 
 
 _SUBTYPE_MAPPING: Dict[str, Type[AntismashDomain]] = {}
-_SUBSUBTYPE_MAPPING: Dict[str, Type[AntismashDomain]] = {}
 
 
-def register_asdomain_variant(tool: str, subtype: Type[AntismashDomain], subsubtype: Type[AntismashDomain]="") -> None:
+def register_asdomain_variant(tool: str, subtype: Type[AntismashDomain]) -> None:
     """ Register a subclass of AntismashDomain for the purposes of instantiating
         and accurate regeneration. Allows modules to define their own domain types
         without requiring all modifications to be in secmet.
@@ -89,7 +73,6 @@ def register_asdomain_variant(tool: str, subtype: Type[AntismashDomain], subsubt
         Arguments:
             tool: the name of the tool/module registering the subtype
             subtype: the type to register
-            subsubtype: the type to register
 
         Returns:
             None
@@ -100,9 +83,3 @@ def register_asdomain_variant(tool: str, subtype: Type[AntismashDomain], subsubt
     if tool in _SUBTYPE_MAPPING:
         raise ValueError(f"{tool!r} is already present as a subtype ({_SUBTYPE_MAPPING[tool]})")
     _SUBTYPE_MAPPING[tool] = subtype
-    if not issubclass(subsubtype, AntismashDomain):
-        raise TypeError(f"{subtype} is not a subsubclass of AntismashDomain")
-    if tool in _SUBSUBTYPE_MAPPING:
-        raise ValueError(f"{tool!r} is already present as a subsubtype ({_SUBSUBTYPE_MAPPING[tool]})")
-    _SUBSUBTYPE_MAPPING[tool] = subsubtype
-
