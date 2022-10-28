@@ -475,6 +475,14 @@ class Conditions:
         """ All operators from the conditions in the instance """
         return self._operators
 
+    @property
+    def profiles(self) -> Set[str]:
+        """ All profiles used from the conditions in the instance """
+        used: Set[str] = set()
+        for sub in self._operands:
+            used = used.union(sub.profiles)
+        return used
+
     def are_subconditions_satisfied(self, details: Details, local_only: bool = False) -> ConditionMet:
         """ Returns whether all subconditions are satisfied.
 
@@ -622,6 +630,10 @@ class MinimumCondition(Conditions):
     def get_hit_string(self) -> str:
         return "{}*{}".format(self.hits, str(self))
 
+    @property
+    def profiles(self) -> Set[str]:
+        return self.options
+
     def __str__(self) -> str:
         return "{}minimum({}, [{}])".format("not " if self.negated else "", self.count,
                                             ", ".join(sorted(list(self.options))))
@@ -692,6 +704,10 @@ class SingleCondition(Conditions):
         # if negated and we failed to find anything, that's a good thing
         return ConditionMet(self.negated)
 
+    @property
+    def profiles(self) -> Set[str]:
+        return {self.name}
+
     def get_hit_string(self) -> str:
         if self.negated:
             return "{}*(not {})".format(self.hits, self.name)
@@ -742,6 +758,10 @@ class ScoreCondition(Conditions):
 
         # if negated and we failed to find anything, that's a good thing
         return ConditionMet(self.negated)
+
+    @property
+    def profiles(self) -> Set[str]:
+        return {self.name}
 
     def get_hit_string(self) -> str:
         if self.negated:
