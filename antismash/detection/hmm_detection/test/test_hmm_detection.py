@@ -170,8 +170,37 @@ class HmmDetectionTest(unittest.TestCase):
         assert rule.neighbourhood == 20000
 
     def test_profiles_parsing(self):
-        profiles = signatures.get_signature_profiles()
-        assert len(profiles) == 297  # ensures we don't delete any by accident
+        aliases = {}
+        strict_rules_file = path.get_full_path(__file__, "..", "cluster_rules", "strict.txt")
+        relaxed_rules_file = path.get_full_path(__file__, "..", "cluster_rules", "relaxed.txt")
+        loose_rules_file = path.get_full_path(__file__, "..", "cluster_rules", "loose.txt")
+
+        rules = hmm_detection.create_rules(strict_rules_file, self.signature_names,
+                                           self.valid_categories, aliases)
+        rules = hmm_detection.create_rules(relaxed_rules_file, self.signature_names,
+                                           self.valid_categories, aliases, rules)
+        rules = hmm_detection.create_rules(loose_rules_file, self.signature_names,
+                                           self.valid_categories, aliases, rules)
+        profiles_used = set()
+
+        with open(self.filter_file, 'r') as handle:
+            filter_lines = handle.readlines()
+        for line in filter_lines:
+            for sig in line.split(','):
+                profiles_used.add(sig.strip())
+
+        for rule in rules:
+            profiles_used = profiles_used.union(rule.conditions.profiles)
+            for related in rule.related:
+                profiles_used.add(related)
+
+        names = self.signature_names
+
+        signatures_not_in_rules = names.difference(profiles_used)
+        assert not signatures_not_in_rules, f"No rules use {signatures_not_in_rules}"
+
+        profiles_without_signature = profiles_used.difference(names)
+        assert not profiles_without_signature, f"No signature definitions for {profiles_without_signature}"
 
     def test_filter(self):
         # fake HSPs all in one CDS with overlap > 20 and query_ids from the same equivalence group

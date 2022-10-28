@@ -154,6 +154,10 @@ RULE lanthipeptide-class-i
     CATEGORY RiPP
     DESCRIPTION Class I lanthipeptide
     EXAMPLE NCBI HM219853.1 0-15016 nisin
+    RELATED Antimicr18, Gallidermin, L_biotic_A, lacticin_l, leader_d, leader_abc, leader_eh,
+            mature_ha, lacticin_mat, mature_b, mature_d, mature_ab, mature_a, TIGR03731,
+            LD_lanti_pre, strep_PEQAXS, Peptidase_S8, Peptidase_C39, PCMT, adh_short, adh_short_C2
+
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS (LANC_like and (Lant_dehydr_N or Lant_dehydr_C))
@@ -180,6 +184,7 @@ RULE lanthipeptide-class-iv
     CATEGORY RiPP
     DESCRIPTION Class IV lanthipeptide
     EXAMPLE NCBI HQ328852.1 0-5339 venezuelin
+    RELATED Peptidase_S9
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS cds(LANC_like and Pkinase)
@@ -207,6 +212,7 @@ RULE lipolanthine
 RULE thiopeptide
     CATEGORY RiPP
     DESCRIPTION Thio-linked RiPPs
+    RELATED PF00561
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS all_YcaO
@@ -266,6 +272,7 @@ RULE LAP
 RULE lassopeptide
     CATEGORY RiPP
     DESCRIPTION Lasso peptide
+    RELATED PF05402, lasso, Peptidase_M50
     CUTOFF 10
     NEIGHBOURHOOD 10
     CONDITIONS PF13471 and Asn_synthase or micJ25 or mcjC
@@ -273,6 +280,7 @@ RULE lassopeptide
 RULE sactipeptide
     CATEGORY RiPP
     DESCRIPTION Sactipeptide
+    RELATED Abi, Fer4_12, Peptidase_M16_C, Peptidase_S8, Peptidase_M16, Peptidase_S41
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS subtilosin or thuricin or TIGR04404 or
@@ -338,6 +346,7 @@ RULE redox-cofactor
     DESCRIPTION Redox-cofactors
     EXAMPLE NCBI NC_021985.1 1458905-1494876 PQQ
     EXAMPLE NCBI NC_000962.3 781830-803332 mycofactocin
+    RELATED PF05402
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS rSAM_with_SPASM and (TIGR02111 or TIGR03966) and ANY_RRE
@@ -542,6 +551,8 @@ RULE other
 RULE acyl_amino_acids
     CATEGORY other
     DESCRIPTION N-acyl amino acids
+    EXAMPLE NCBI JF429413.1 7897-20270 N-tetradecanoyl tyrosine
+    RELATED ThiF
     CUTOFF 30
     NEIGHBOURHOOD 30
     CONDITIONS NasY
@@ -579,6 +590,7 @@ RULE pyrrolidine
     DESCRIPTION Pyrrolidines
     # See https://dx.doi.org/10.1073/pnas.1701361114
     EXAMPLE NCBI KY014292.1 0-14535 anisomycin
+    RELATED Mac, adh_short
     CUTOFF 10
     NEIGHBOURHOOD 10
     CONDITIONS Glycos_transf_1 and Alpha-amylase and Aminotran_3 and DXP_synthase_N
