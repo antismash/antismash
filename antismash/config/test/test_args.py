@@ -92,7 +92,8 @@ class TestConfig(unittest.TestCase):
             with open("local", "w"):
                 pass  # just create the file, no need for content
             options = self.core_parser.parse_args(["--reuse-results", "local"])
-            assert options.reuse_results == os.path.join(temp_dir, "local")
+            without_symlinks = os.path.realpath(os.path.join(temp_dir, "local"))
+            assert os.path.realpath(options.reuse_results) == without_symlinks
             os.chmod("local", 0)
             with self.assertRaisesRegex(ValueError, "permission denied"):
                 self.core_parser.parse_args(["--reuse-results", "local"])
