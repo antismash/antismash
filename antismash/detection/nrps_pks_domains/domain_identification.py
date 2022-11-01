@@ -258,7 +258,7 @@ def generate_domains(record: Record) -> NRPSPKSDomains:
             continue
         subtype_names = match_subtypes_to_ks_domains(domains, cds_ks_subtypes.get(cds.get_name(), []))
         subsubtype_names = match_subsubtypes_to_trans_at_ks_domains(domains, cds_ks_subsubtypes.get(cds.get_name(), []))
-        modules = build_modules_for_cds(domains, subtype_names,subsubtype_names, cds.get_name())
+        modules = build_modules_for_cds(domains, subtype_names, cds.get_name(),subsubtype_names)
         results.cds_results[cds] = CDSResult(domains, motifs, modules, subtype_names, subsubtype_names)
 
         # combine modules that cross CDS boundaries, if possible and relevant
