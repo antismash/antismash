@@ -3,7 +3,7 @@ from typing import List, Tuple, Dict, Any
 from .data_structures import Prediction
 from antismash.common.html_renderer import Markup
 from antismash.detection.nrps_pks_domains import ModularDomain
-from paras.run import run_paras as paras
+from paras.run import run_paras_bulk as paras
 
 
 class ParasResult(Prediction):
@@ -58,8 +58,12 @@ class ParasResult(Prediction):
 
 def run_paras(a_domains: List[ModularDomain]) -> Dict[str, "ParasResult"]:
     results: Dict[str, ParasResult] = {}
+    sequences = []
     for domain in a_domains:
-        predictions = paras(domain.translation, threshold=0.5)
-        results[domain.domain_id] = ParasResult(predictions)
+        sequences.append(domain.translation)
+    predictions = paras(sequences, threshold=0.2)
+    for i, domain in enumerate(a_domains):
+        prediction = predictions[i]
+        results[domain.domain_id] = ParasResult(prediction)
 
     return results
