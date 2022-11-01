@@ -33,8 +33,8 @@ CP = "ACP"
 
 class Component(Component_actual):
     """ a tiny wrapper to avoid always supplying a dummy CDS name """
-    def __init__(self, domain, cds_name="test_name", subtype=""):
-        super().__init__(domain, cds_name, subtype=subtype)
+    def __init__(self, domain, cds_name="test_name", subtype="", subsubtype=""):
+        super().__init__(domain, cds_name, subtype=subtype,subsubtype=subsubtype)
 
 
 def build_modules_for_cds(domains, subtypes, cds_name="test_name"):
