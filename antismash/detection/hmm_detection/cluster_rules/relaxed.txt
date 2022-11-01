@@ -27,10 +27,31 @@ RULE transAT-PKS-like
     NEIGHBOURHOOD 20
     CONDITIONS cds(ATd and (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS) and not PKS_AT)
 
+RULE RiPP-like
+CATEGORY RiPP
+DESCRIPTION Fallback rule containing known RiPP-related profiles
+SUPERIORS bottromycin, cyanobactin, fungal-RiPP, guanidinotides,
+          lanthipeptide-class-i, lanthipeptide-class-ii,
+          lanthipeptide-class-iii, lanthipeptide-class-iv,
+          lanthipeptide-class-v,
+          LAP, lassopeptide, lipolanthine, microviridin, proteusin, RaS-RiPP,
+          sactipeptide, thioamitides, thiopeptide, ranthipeptide,
+          glycocin, redox-cofactor
+CUTOFF 20
+NEIGHBOURHOOD 5
+CONDITIONS strepbact or Antimicrobial14 or Bacteriocin_IId or BacteriocIIc_cy
+            or Bacteriocin_II or Bacteriocin_IIi or Lactococcin
+            or Antimicrobial17 or Lactococcin_972 or Bacteriocin_IIc
+            or LcnG-beta or Cloacin or Linocin_M18
+            or TIGR03651 or TIGR03693
+            or TIGR03601 or TIGR03795
+            or TIGR03975 or DUF692 or TIGR01193
+            or all_YcaO
+
 RULE RRE-containing
     CATEGORY RiPP
     DESCRIPTION RRE-element containing cluster
-    SUPERIORS RiPP-like, bottromycin, cyanobactin, fungal-RiPP, guanidinotides,
+    SUPERIORS bottromycin, cyanobactin, fungal-RiPP, guanidinotides,
               lanthipeptide-class-i, lanthipeptide-class-ii,
               lanthipeptide-class-iii, lanthipeptide-class-iv,
               lanthipeptide-class-v,
@@ -40,3 +61,11 @@ RULE RRE-containing
     CUTOFF 10
     NEIGHBOURHOOD 10
     CONDITIONS ANY_RRE
+
+RULE fungal-RiPP-like
+    CATEGORY RiPP
+    DESCRIPTION fungal RiPP-like clusters
+    SUPERIORS fungal-RiPP
+    CUTOFF 20
+    NEIGHBOURHOOD 30
+    CONDITIONS DUF3328
