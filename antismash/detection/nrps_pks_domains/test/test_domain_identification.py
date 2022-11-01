@@ -143,14 +143,16 @@ class TestModuleMerging(unittest.TestCase):
             "head": [DummyHMMResult("PKS_KS", start=0, end=10), DummyHMMResult("PKS_AT", start=20, end=30)],
             "tail": [DummyHMMResult("PKS_ER", start=0, end=10), DummyHMMResult("PP-binding", start=10, end=20)],
         }
-        self.ks_subtypes = {'head': [DummyHMMResult("Iterative-KS", start=0, end=10)]}
+        self.ks_subtypes = {'head': [DummyHMMResult("TRANS-AT-KS", start=0, end=10)]}
+        self.ks_subsubtypes = {'head': [DummyHMMResult("test_subtype", start=0, end=10)]}
 
     def test_merge(self, _patched_fasta, _patched_motifs):
         cdses = self.record.get_cds_features()
         with patch.object(Record, "get_cds_features_within_regions", return_value=cdses):
             with patch.object(domain_identification, "find_domains", return_value=self.domains):
                 with patch.object(domain_identification, "find_ks_domains", return_value=self.ks_subtypes):
-                    results = domain_identification.generate_domains(self.record)
+                    with patch.object(domain_identification, "find_trans_at_ks_domain_subtype", return_value=self.ks_subsubtypes):
+                        results = domain_identification.generate_domains(self.record)
         assert results
         head = results.cds_results[self.cdses["head"]]
         tail = results.cds_results[self.cdses["tail"]]
@@ -168,7 +170,8 @@ class TestModuleMerging(unittest.TestCase):
         with patch.object(Record, "get_cds_features_within_regions", return_value=cdses):
             with patch.object(domain_identification, "find_domains", return_value=self.domains):
                 with patch.object(domain_identification, "find_ks_domains", return_value=self.ks_subtypes):
-                    results = domain_identification.generate_domains(self.record)
+                    with patch.object(domain_identification, "find_trans_at_ks_domain_subtype", return_value=self.ks_subsubtypes):
+                        results = domain_identification.generate_domains(self.record)
         assert results
         head = results.cds_results[self.cdses["head"]]
         assert spacer_cds not in results.cds_results

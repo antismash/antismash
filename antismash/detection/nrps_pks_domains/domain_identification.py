@@ -93,12 +93,13 @@ class CDSResult:
                 sub = next(ks_sub)
                 domain_feature.domain_subtype = sub
                 if sub == "TRANS-AT-KS":
-                    subsub = next(ks_subsub)
+                    subsub = next(ks_subsub,"")
                     domain_feature.domain_subsubtype = subsub
                 else:
                     subsub = ""
             else:
                 sub = ""
+                subsub = ""
             record.add_antismash_domain(domain_feature)
             # update the CDS' NRPS_PKS qualifier
             cds.nrps_pks.add_domain(domain, domain_feature.get_name(), sub, subsub)
