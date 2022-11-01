@@ -488,7 +488,7 @@ def classify(profile_name: str) -> str:
     raise ValueError("could not classify domain: %s" % profile_name)
 
 
-def build_modules_for_cds(domains: List[HMMResult], ks_subtypes: List[str],ks_subsubtypes: List[str], cds_name: str) -> List[Module]:
+def build_modules_for_cds(domains: List[HMMResult], ks_subtypes: List[str], cds_name: str,ks_subsubtypes: List[str]=[]) -> List[Module]:
     """ Constructs a list of modules for a CDS based on the domains provided
 
         Arguments:
