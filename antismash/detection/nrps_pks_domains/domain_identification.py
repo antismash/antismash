@@ -75,7 +75,11 @@ class CDSResult:
         domain_hmms = [HMMResult.from_json(hmm) for hmm in data["domain_hmms"]]
         motif_hmms = [HMMResult.from_json(hmm) for hmm in data["motif_hmms"]]
         modules = [Module.from_json(module) for module in data["modules"]]
-        return CDSResult(domain_hmms, motif_hmms, modules, data["ks_subtypes"],data["ks_subsubtypes"])
+        if "ks_subsubtypes" in data:
+            ks_subsubtypes = data["ks_subsubtypes"]
+        else:
+            ks_subsubtypes = []
+        return CDSResult(domain_hmms, motif_hmms, modules, data["ks_subtypes"],ks_subsubtypes)
 
     def annotate_domains(self, record: Record, cds: CDSFeature) -> None:
         """ Adds domain annotations to CDSFeatures and creates ModularDomain

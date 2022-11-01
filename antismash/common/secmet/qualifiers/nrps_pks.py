@@ -181,7 +181,7 @@ class NRPSPKSQualifier:
             if qualifier.startswith("Domain: "):
                 parts = _parse_format(_DOMAIN_FORMAT, qualifier)
                 if ")(" in parts[0]:
-                    name, sub, subsub = parts[0].split("(", 1)
+                    name, sub, subsub = parts[0].split("(", 2)
                     subsub = subsub.rstrip(")")
                     sub = sub.rstrip(")")
                 elif parts[0].endswith(")"):
