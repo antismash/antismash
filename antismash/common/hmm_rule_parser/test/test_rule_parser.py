@@ -386,11 +386,22 @@ class RuleParserTest(unittest.TestCase):
             self.parse("RULE first CATEGORY category CUTOFF 20 NEIGHBOURHOOD 20 CONDITIONS a "
                        "RULE sub CATEGORY category SUPERIORS CUTOFF 20 NEIGHBOURHOOD 20 CONDITIONS c")
 
-    def test_chained_superiors(self):
-        with self.assertRaisesRegex(ValueError, "A rule cannot have a superior which has its own superior"):
-            self.parse("RULE first CATEGORY category CUTOFF 20 NEIGHBOURHOOD 20 CONDITIONS a "
-                       "RULE second CATEGORY category SUPERIORS first CUTOFF 20 NEIGHBOURHOOD 20 CONDITIONS b "
-                       "RULE sub CATEGORY category SUPERIORS second CUTOFF 20 NEIGHBOURHOOD 20 CONDITIONS c")
+    def test_same_name(self):
+        categories = {"category"}
+        aliases = None
+
+        text = (
+            "RULE first CATEGORY category CUTOFF 20 NEIGHBOURHOOD 20 CONDITIONS a "
+            "RULE second CATEGORY category CUTOFF 20 NEIGHBOURHOOD 20 CONDITIONS b "
+        )
+        # the same name in a single pass
+        with self.assertRaisesRegex(ValueError, "same rule name"):
+            rule_parser.Parser(text * 2, self.signature_names, categories, {}, aliases)
+
+        # the same name appearing in a new pass
+        rules = rule_parser.Parser(text, self.signature_names, categories, aliases).rules
+        with self.assertRaisesRegex(ValueError, "same rule name"):
+            rule_parser.Parser(text, self.signature_names, categories, rules, aliases)
 
     def test_related(self):
         rules = self.parse("RULE name CATEGORY category RELATED b, c CUTOFF 20 NEIGHBOURHOOD 20 CONDITIONS a").rules

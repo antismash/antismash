@@ -2,11 +2,11 @@ omit = --omit '*/external/*'
 coverage = coverage run $(omit) --source antismash -m pytest
 integration_flags = --override-ini=python_files=integration_*.py
 integration_coverage = .coverage_integration
-sanity_run = echo "sanity TTA run" && rm -rf nisin && ./run_antismash.py --minimal antismash/test/integration/data/nisin.gbk
+sanity_run = echo "sanity TTA run" && rm -rf nisin && antismash --minimal antismash/test/integration/data/nisin.gbk
 
 unit:
 	$(sanity_run)
-	echo "simple reuse test" && ./run_antismash.py --reuse-results nisin/nisin.json
+	echo "simple reuse test" && antismash --reuse-results nisin/nisin.json
 	pytest --durations=3 antismash
 
 integration: clean

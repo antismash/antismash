@@ -475,6 +475,14 @@ class Conditions:
         """ All operators from the conditions in the instance """
         return self._operators
 
+    @property
+    def profiles(self) -> Set[str]:
+        """ All profiles used from the conditions in the instance """
+        used: Set[str] = set()
+        for sub in self._operands:
+            used = used.union(sub.profiles)
+        return used
+
     def are_subconditions_satisfied(self, details: Details, local_only: bool = False) -> ConditionMet:
         """ Returns whether all subconditions are satisfied.
 
@@ -622,6 +630,10 @@ class MinimumCondition(Conditions):
     def get_hit_string(self) -> str:
         return "{}*{}".format(self.hits, str(self))
 
+    @property
+    def profiles(self) -> Set[str]:
+        return self.options
+
     def __str__(self) -> str:
         return "{}minimum({}, [{}])".format("not " if self.negated else "", self.count,
                                             ", ".join(sorted(list(self.options))))
@@ -692,6 +704,10 @@ class SingleCondition(Conditions):
         # if negated and we failed to find anything, that's a good thing
         return ConditionMet(self.negated)
 
+    @property
+    def profiles(self) -> Set[str]:
+        return {self.name}
+
     def get_hit_string(self) -> str:
         if self.negated:
             return "{}*(not {})".format(self.hits, self.name)
@@ -742,6 +758,10 @@ class ScoreCondition(Conditions):
 
         # if negated and we failed to find anything, that's a good thing
         return ConditionMet(self.negated)
+
+    @property
+    def profiles(self) -> Set[str]:
+        return {self.name}
 
     def get_hit_string(self) -> str:
         if self.negated:
@@ -1293,15 +1313,19 @@ class Parser:  # pylint: disable=too-few-public-methods
         """
         self._consume(TokenTypes.SUPERIORS)
         superiors = self._parse_comma_separated_ids()
+        if len(superiors) != len(set(superiors)):
+            raise ValueError("A rule's superiors cannot contain duplicates")
+
+        transitive_superiors = set()
         for name in superiors:
             if name not in self.rules_by_name:
                 raise ValueError("A rule's superior must already be defined. Unknown rule name: %s" % name)
-            # this is more of a semantics error than a syntax error, but still should be checked
-            if self.rules_by_name[name].superiors:
-                raise ValueError("A rule cannot have a superior which has its own superior")
-        if len(superiors) != len(set(superiors)):
-            raise ValueError("A rule's superiors cannot contain duplicates")
-        return superiors
+            # all prior rules had to have defined superiors, so this rule can't
+            # cause any cycles with the superiors and it's safe to fetch parents
+            parent_superiors = self.rules_by_name[name].superiors
+            if parent_superiors:
+                transitive_superiors.update(parent_superiors)
+        return sorted(set(superiors).union(transitive_superiors))
 
 
 def is_legal_identifier(identifier: str) -> bool:
