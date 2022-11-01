@@ -70,7 +70,7 @@ def prepare_data(logging_only: bool = False) -> List[str]:
             a list of error messages (only if logging_only is True)
     """
     failure_messages = []
-    for model in ['abmotifs.hmm', 'dockingdomains.hmm', 'ksdomains.hmm', 'nrpspksdomains.hmm']:
+    for model in ['abmotifs.hmm', 'dockingdomains.hmm', 'ksdomains.hmm', 'nrpspksdomains.hmm','transatksdomains.hmm','additionaldomainstransatpks.hmm']:
         full_path = path.get_full_path(__file__, "data", model)
         failure_messages.extend(hmmer.ensure_database_pressed(full_path, return_not_raise=logging_only))
     return failure_messages
