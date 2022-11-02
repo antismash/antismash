@@ -69,22 +69,29 @@ class IntegrationNRPSPKS(unittest.TestCase):
         feature_names = nrps_names + ["nrpspksdomains_pks_CAL_domain.1"]
         assert set(results.domain_predictions) == set(feature_names)
 
-        assert set(results.domain_predictions[feature_names[0]]) == {"nrpys"}
+        assert set(results.domain_predictions[feature_names[0]]) == {"nrpys", "PARAS"}
         plain_results = {}
         norine_results = {}
+        paras_results = {}
         for domain, methods in results.domain_predictions.items():
             if "CAL" in domain:
                 continue
             plain_results[domain] = methods["nrpys"].get_classification()
             norine_results[domain] = methods["nrpys"].get_classification(as_norine=True)
 
+            paras_results[domain] = methods["PARAS"].get_classification()
         expected_preds = [["Leu"], ["bOH-Tyr"], ["Asn"], ["Hpg"], ["Hpg"], ["bOH-Tyr"], ["Dhpg"], ["Tyr"], ["pk"]]
+        expected_preds_paras = [["leucine"], ["tyrosine"], ["asparagine"], ["hydroxyphenylglycine"],
+                                ["hydroxyphenylglycine"], ["tyrosine"], ["3,5-dihydroxyphenylglycine"],
+                                ["tyrosine"], ["pk"]]
         expected_norine_preds = [["Leu"], ["bOH-Tyr"], ["Asn"], ["Hpg"], ["Hpg"], ["bOH-Tyr"], ["Dhpg"], ["Tyr"]]
 
         expected = dict(zip(nrps_names, expected_preds))
         assert plain_results == expected
         expected_norine = dict(zip(nrps_names, expected_norine_preds))
         assert norine_results == expected_norine
+        expected_paras = dict(zip(nrps_names, expected_preds_paras))
+        assert paras_results == expected_paras
 
         cal = results.domain_predictions["nrpspksdomains_pks_CAL_domain.1"]["minowa_cal"]
         assert len(cal.predictions) == 5
