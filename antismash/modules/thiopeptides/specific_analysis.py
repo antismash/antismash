@@ -36,7 +36,7 @@ MAX_PRECURSOR_LENGTH = 200
 
 class ThioResults(module_results.ModuleResults):
     """ Results container for thiopeptides """
-    schema_version = 2
+    schema_version = 3
 
     def __init__(self, record_id: str, comparippson_results: comparippson.MultiDBResults = None) -> None:
         super().__init__(record_id)
@@ -69,6 +69,8 @@ class ThioResults(module_results.ModuleResults):
             return None
         if json.get("comparippson") is not None:
             comparison_results = comparippson.MultiDBResults.from_json(json["comparippson"])
+        else:
+            comparison_results = None
         results = ThioResults(json["record_id"], comparippson_results=comparison_results)
         for motif in json["motifs"]:
             results.motifs.append(secmet.Prepeptide.from_json(motif))
