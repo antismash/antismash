@@ -1,7 +1,7 @@
 [MASTER]
 ignore=external
 reports=y
-disable=bad-continuation,too-few-public-methods
+disable=too-few-public-methods
 
 [MESSAGES CONTROL]
 # raising 'from' is almost entirely false positives
