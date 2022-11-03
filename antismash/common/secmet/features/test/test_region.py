@@ -40,11 +40,11 @@ class TestRegionChildren(unittest.TestCase):
         assert self.region.candidate_clusters == (self.candidate,)
 
     def test_children_immutable(self):
-        with self.assertRaisesRegex(AttributeError, "can't set attribute"):
-            self.region.subregions = (self.candidate,)
-        with self.assertRaisesRegex(AttributeError, "can't set attribute"):
-            self.region.candidate_clusters = (self.sub,)
-        with self.assertRaisesRegex(AttributeError, "can't set attribute"):
+        with self.assertRaisesRegex(AttributeError, "(can't set attribute|has no setter)"):
+            self.region.subregions = (self.sub,)
+        with self.assertRaisesRegex(AttributeError, "(can't set attribute|has no setter)"):
+            self.region.candidate_clusters = (self.candidate,)
+        with self.assertRaisesRegex(AttributeError, "(can't set attribute|has no setter)"):
             self.region.cds_children = []
 
     def test_incorrect_args(self):
