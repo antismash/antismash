@@ -4,7 +4,7 @@
 """ Tests for CASSIS promoters. """
 
 # for test files, silence irrelevant and noisy pylint warnings
-# pylint: disable=no-self-use,protected-access,missing-docstring
+# pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
 
 import unittest
 from unittest.mock import patch
