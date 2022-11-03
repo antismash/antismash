@@ -1,0 +1,61 @@
+{% macro link(hit) -%}
+ {%- if db.url -%}
+  <a href="{{ db.build_url_for_hit(hit) }}">{{ db.build_identifier_for_hit(hit) }}</a>
+ {%- else -%} 
+  {{ db.build_identifier_for_hit(hit) }}
+ {%- endif -%}
+{%- endmacro -%}
+{% macro description(hit) -%}
+ <span class="comparippson-description">{{ db.build_description_for_hit(hit) }}</span>
+{%- endmacro %}
+{% macro segment_line(segment) -%}
+       <div class="comparippson-coordinate">{{ segment.start }}</div>
+       <div class="comparippson-sequence">{{ coloured_ripp_sequence(segment.sequence) }}</div>
+       <div class="comparippson-coordinate">{{ segment.end }}</div>
+{%- endmacro -%}
+
+{%- macro create_hit_block(hit, tail, tail_list) -%}
+    <div class="comparippson-container">
+     <span class="comparippson-similarity">{{ "%.1f" % (hit.similarity*100) }}%</span>
+     <span class="comparippson-link">{{ link(hit) }}
+     {%- if tail_list %}<span class="comparippson-extra-indicator">{{ tail }}</span>:{{ collapser_start("comparippson-extra-names", level="none") }}
+       <div class="comparippson-extra-names">
+        {%- for other in tail_list -%}
+        <span>{{ link(other) }}</span>
+        {{ description(other) }}
+        {%- endfor %}
+       </div>
+      {{ collapser_end() }}{% else %}:{% endif %}</span>
+     {{ description(hit) }}
+     <div class="comparippson-alignment">
+       {{ segment_line(hit.query) }}
+       <div class="comparippson-coordinate"></div>
+       <div class="comparippson-midline">{{ hit.get_consensus(space="\u00A0") }}</div>
+       <div class="comparippson-coordinate"></div>
+       {{ segment_line(hit.reference) }}
+     </div>
+   </div>
+{%- endmacro -%}
+
+{%- set display_limit = 3 -%}
+<div class="comparippson-details">
+  <h4>{{ db.name }} {{ db.version }} matches for {{ name }}</h4>
+  {% if not groups -%}
+    No matches found.
+  {%- else -%}
+  <div class="comparippson-block">
+    {% for hit, tail, tail_list in groups[:display_limit] -%}
+     {{ create_hit_block(hit, tail, tail_list) }}
+    {%- endfor %}
+  </div>
+  {%- if groups | length > display_limit -%}
+  <div class="comparippson-block comparippson-extension">
+   with {{ groups | length - display_limit }} more sequence matches {{ collapser_start("comparippson-worse-hits", "none") }}
+    {% for hit, tail, tail_list in groups[display_limit:] -%}
+     {{ create_hit_block(hit, tail, tail_list) }}
+    {% endfor -%}
+   {{ collapser_end() }}
+  </div>
+  {%- endif -%}
+ {%- endif %}
+</div>

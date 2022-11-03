@@ -57,7 +57,7 @@ class IntegrationLanthipeptides(unittest.TestCase):
 
     def test_nisin(self):
         "Test lanthipeptide prediction for nisin A"
-        expected_html_snippet = "nisA</span> leader / core peptide"
+        expected_html_snippet = "Leader:"
         genbank = helpers.get_path_to_nisin_genbank()
         rec, _ = self.run_lanthi(genbank, expected_html_snippet)
 
@@ -77,7 +77,7 @@ class IntegrationLanthipeptides(unittest.TestCase):
     def test_epidermin(self):
         "Test lanthipeptide prediction for epidermin"
         filename = path.get_full_path(__file__, 'data', 'epidermin.gbk')
-        expected_html_snippet = "Lanthipeptide(s) for epiB - Putative Class I"
+        expected_html_snippet = "Lanthipeptide(s) for epiB"
         rec, _ = self.run_lanthi(filename, expected_html_snippet)
 
         prepeptide = rec.get_cds_motifs()[0]
@@ -92,7 +92,7 @@ class IntegrationLanthipeptides(unittest.TestCase):
     def test_microbisporicin(self):
         "Test lanthipeptide prediction for microbisporicin"
         filename = path.get_full_path(__file__, 'data', 'microbisporicin.gbk')
-        expected_snippet = "Lanthipeptide(s) for mibB - Putative Class I"
+        expected_snippet = "Lanthipeptide(s) for mibB"
         rec, _ = self.run_lanthi(filename, expected_snippet)
 
         prepeptide = rec.get_cds_motifs()[0]
@@ -109,7 +109,7 @@ class IntegrationLanthipeptides(unittest.TestCase):
     def test_epicidin(self):
         "Test lanthipeptide prediction for epicidin 280"
         filename = path.get_full_path(__file__, 'data', 'epicidin_280.gbk')
-        expected_html_snippet = "Lanthipeptide(s) for eciB - Putative Class I"
+        expected_html_snippet = "Core:"
         _, result = self.run_lanthi(filename, expected_html_snippet)
         prepeptide = self.gather_all_motifs(result)[0]
         self.assertAlmostEqual(3115.7, prepeptide.monoisotopic_mass, delta=0.5)
@@ -126,7 +126,7 @@ class IntegrationLanthipeptides(unittest.TestCase):
     def test_labyrinthopeptin(self):
         "Test lanthipeptide prediction for labyrinthopeptin"
         filename = path.get_full_path(__file__, 'data', 'labyrinthopeptin.gbk')
-        expected_snippet = "Lanthipeptide(s) for labKC - Putative Class III"
+        expected_snippet = "Core:"
         rec, _ = self.run_lanthi(filename, expected_snippet, expected_motifs=2)
         motifs = sorted(rec.get_cds_motifs(), key=lambda x: x.locus_tag)
 
@@ -141,7 +141,7 @@ class IntegrationLanthipeptides(unittest.TestCase):
     def test_sco_cluster3(self):
         "Test lanthipeptide prediction for SCO cluster #3"
         filename = path.get_full_path(__file__, 'data', 'sco_cluster3.gbk')
-        expected_snippet = "Lanthipeptide(s) for SCO0269 - Putative Class I"
+        expected_snippet = "Core:"
         rec, _ = self.run_lanthi(filename, expected_snippet)
 
         prepeptide = rec.get_cds_motifs()[0]
@@ -152,7 +152,7 @@ class IntegrationLanthipeptides(unittest.TestCase):
     def test_lactocin_s(self):
         """Test lanthipeptide prediction for lactocin S"""
         filename = path.get_full_path(__file__, 'data', 'lactocin_s.gbk')
-        expected_snippet = "Lanthipeptide(s) for lasM - Putative Class II"
+        expected_snippet = "Core:"
         _, result = self.run_lanthi(filename, expected_snippet)
 
         assert len(result.clusters) == 1

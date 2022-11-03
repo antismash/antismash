@@ -64,6 +64,7 @@ def _gather_detection_modules() -> Dict[DetectionStage, List[AntismashModule]]:
         stage = getattr(module, "DETECTION_STAGE", "")
         if not stage:
             raise ValueError(f"detection module missing DETECTION_STAGE attribute: {name}")
+        assert isinstance(stage, DetectionStage)
         if stage not in modules:
             raise ValueError(f"detection module with unknown detection stage: {stage}")
         modules[stage].append(module)

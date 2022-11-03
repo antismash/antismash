@@ -7,8 +7,8 @@ from collections import defaultdict
 from typing import Dict, List, Set
 
 from antismash.common import path
-from antismash.common.html_renderer import HTMLSections, FileTemplate
-from antismash.common.secmet import CDSMotif, Prepeptide, Region
+from antismash.common.html_renderer import HTMLSections, FileTemplate, Markup
+from antismash.common.secmet import Prepeptide
 from antismash.common.layers import RegionLayer, RecordLayer, OptionsLayer
 
 from .specific_analysis import SactiResults
@@ -24,21 +24,31 @@ def generate_html(region_layer: RegionLayer, results: SactiResults,
     """ Generates HTML for the module """
     html = HTMLSections("sactipeptides")
 
-    motifs_in_region: Dict[str, List[CDSMotif]] = defaultdict(list)
+    motifs_by_locus: Dict[str, List[Prepeptide]] = defaultdict(list)
     for locus, motifs in results.motifs_by_locus.items():
         for motif in motifs:
             if motif.is_contained_by(region_layer.region_feature):
-                motifs_in_region[locus].append(motif)
+                motifs_by_locus[locus].append(motif)
 
-    sacti_layer = SactipeptideLayer(record_layer, region_layer.region_feature)
+    motifs_by_locus_by_core = {}
+    for locus, motifs in motifs_by_locus.items():
+        motifs_by_core = defaultdict(list)
+        for motif in motifs:
+            leader = motif.leader
+            core = motif.core
+            motifs_by_core[core].append(motif)
+        motifs_by_locus_by_core[locus] = motifs_by_core
 
-    detail_tooltip = ("Lists the possible core peptides for each biosynthetic enzyme, including the predicted class. "
-                      "Each core peptide shows the leader and core peptide sequences, separated by a dash.")
+    detail_tooltip = Markup(
+        "Lists the possible core peptides for each biosynthetic enzyme. "
+        "Each core peptide shows the leader and core peptide sequences. "
+        "<br>Includes CompaRiPPson results for any available databases."
+    )
     template = FileTemplate(path.get_full_path(__file__, "templates", "details.html"))
     details = template.render(record=record_layer,
-                              region=sacti_layer,
                               options=options_layer,
-                              results=motifs_in_region,
+                              motifs_by_locus=motifs_by_locus_by_core,
+                              comparippson_results=results.comparippson_results,
                               tooltip=detail_tooltip)
     html.add_detail_section("Sactipeptides", details)
 
@@ -46,24 +56,9 @@ def generate_html(region_layer: RegionLayer, results: SactiResults,
                     "Each core peptide lists its RODEO score and predicted core sequence.")
     template = FileTemplate(path.get_full_path(__file__, "templates", "sidepanel.html"))
     sidepanel = template.render(record=record_layer,
-                                region=sacti_layer,
                                 options=options_layer,
-                                results=motifs_in_region,
+                                motifs_by_locus=motifs_by_locus,
                                 tooltip=side_tooltip)
     html.add_sidepanel_section("Sactipeptides", sidepanel)
 
     return html
-
-
-class SactipeptideLayer(RegionLayer):
-    """ An extended RegionLayer for holding a list of LanthipeptideMotifs """
-    def __init__(self, record: RecordLayer, region_feature: Region) -> None:
-        RegionLayer.__init__(self, record, region_feature)
-        self.motifs: List[Prepeptide] = []
-        for motif in self.record.seq_record.get_cds_motifs():
-            if not isinstance(motif, Prepeptide):
-                continue
-            if not motif.is_contained_by(self.region_feature):
-                continue
-            if motif.peptide_class == "sactipeptide":
-                self.motifs.append(motif)

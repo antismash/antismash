@@ -99,3 +99,64 @@ class TestDocsLink(unittest.TestCase):
         url = self.url + target
         expected = "<a class='external-link' href='%s' target='_blank'>label</a>" % url
         assert str(result) == expected
+
+
+class TestSequences(unittest.TestCase):
+    def test_unclassed(self):
+        result = renderer.spanned_sequence("ABCD", {})
+        assert result == "".join(f"<span>{char}</span>" for char in "ABCD")
+
+    def test_classed(self):
+        result = renderer.spanned_sequence("ABA", {
+            "A": "aa",
+            "B": "bbbb",
+        })
+        a_chunk = '<span class="aa">A</span>'
+        b_chunk = '<span class="bbbb">B</span>'
+        assert result == f"{a_chunk}{b_chunk}{a_chunk}"
+
+    def test_mixed(self):
+        result = renderer.spanned_sequence("ABCD", {
+            "A": "aa",
+            "D": "some-class",
+        })
+        a_chunk = '<span class="aa">A</span>'
+        b_chunk = '<span>B</span>'
+        c_chunk = '<span>C</span>'
+        d_chunk = '<span class="some-class">D</span>'
+        assert result == f"{a_chunk}{b_chunk}{c_chunk}{d_chunk}"
+
+    def test_invalid(self):
+        for char in "<> ?!+": # indicative, not exhaustive
+            with self.assertRaisesRegex(ValueError, "invalid character in HTML class"):
+                renderer.spanned_sequence("A", {"A": f"a{char}b"})
+
+    def test_substitutions(self):
+        result = renderer.spanned_sequence("ABC", {}, substitutions={
+            "A": "123",
+            "C": "456",
+        })
+        a_chunk = '<span>123</span>'
+        b_chunk = '<span>B</span>'
+        c_chunk = '<span>456</span>'
+        assert result == f"{a_chunk}{b_chunk}{c_chunk}"
+
+    def test_ripps_dehydration(self):
+        result = renderer.coloured_ripp_sequence("TISC", dehydrate=True)
+        assert result == "".join([
+            '<span class="dhb">Dhb</span>',
+            '<span>I</span>',
+            '<span class="dha">Dha</span>',
+            '<span class="cys">Cys</span>',
+        ])
+
+    def test_ripp_clean(self):
+        result = renderer.coloured_ripp_sequence("TISC", dehydrate=False)
+        assert result == "".join([
+            '<span class="dhb">T</span>',
+            '<span>I</span>',
+            '<span class="dha">S</span>',
+            '<span class="cys">C</span>',
+        ])
+        # and that dehydration is not the default
+        assert result == renderer.coloured_ripp_sequence("TISC")

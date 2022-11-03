@@ -3,24 +3,26 @@
       <span>Core peptide predictions</span>
       {{help_tooltip(tooltip, "lasso-side")}}
     </div>
-{% if results | length != 0 %}
+{% if motifs_by_locus | length != 0 %}
   <dl class ="prediction-text">
-    {% for motifs in results.values() %}
-    {%- for motif in motifs -%}
+    {% for motifs_by_core in motifs_by_locus.values() %}
+     {%- for motifs in motifs_by_core.values() -%}
+      {%- for motif in motifs -%}
     <dt><span class="serif">{{motif.get_name().rsplit("_", 1)[0]}}</span> - {{motif.peptide_subclass}}</dt>
       <dd>Cleavage pHMM score: {{'%0.2f' | format(motif.score)}}</dd>
       <dd>RODEO score: {{motif.detailed_information.rodeo_score}}</dd>
       <dd>Monoisotopic mass: {{'%0.1f' | format(motif.detailed_information.cut_mass)}} Da</dd>
       <dd>Molecular weight: {{'%0.1f' | format(motif.detailed_information.cut_weight)}} Da</dd>
       <dd>Number of bridges: {{motif.detailed_information.num_bridges}}</dd>
-    {% if motif.tail -%}
+       {% if motif.tail -%}
     <dl>
       <dt>Weights before cleavage:</dt>
         <dd>Monoisotopic mass: {{'%0.1f' | format(motif.monoisotopic_mass)}} Da</dd>
         <dd>Molecular weight: {{'%0.1f' | format(motif.molecular_weight)}} Da</dd>
     </dl>
-    {%- endif %}
-    {%- endfor -%}
+       {%- endif %}
+      {%- endfor -%}
+     {%- endfor -%}
     {% endfor %}
   </dl>
 {% else %}

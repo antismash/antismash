@@ -54,8 +54,7 @@ def _strict_parse(filename: str) -> List[SeqRecord]:
         raise AntismashInputError(message) from err
     finally:
         # remove the new warning filters (functions in at least 3.5 and 3.6)
-        # since mypy doesn't recognise this attribute, ignore the type
-        warnings.filters = warnings.filters[len(filter_messages):]   # type: ignore
+        warnings.filters = warnings.filters[len(filter_messages):]
 
     if not records:
         raise AntismashInputError("no valid records found in file %s" % filename)

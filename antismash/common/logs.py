@@ -29,6 +29,8 @@ def changed_logging(logfile: str = None, verbose: bool = False, debug: bool = Fa
         Returns:
             None
     """
+    logger = logging.getLogger()
+    original_log_level = logger.getEffectiveLevel()
     try:
         def new_critical(*args: Any) -> None:
             """ make critical messages yellow and without the normal timestamp """
@@ -45,8 +47,6 @@ def changed_logging(logfile: str = None, verbose: bool = False, debug: bool = Fa
         log_format = '%(levelname)-8s %(asctime)s   %(message)s'
         date_format = "%d/%m %H:%M:%S"
         logging.basicConfig(format=log_format, datefmt=date_format)
-        logger = logging.getLogger()
-        original_log_level = logger.getEffectiveLevel()
         logger.setLevel(log_level)
 
         handler = None

@@ -13,6 +13,7 @@ from helperlibs.wrappers.io import TemporaryDirectory
 
 from antismash.common import path, subprocessing, fasta, secmet
 from antismash.common.subprocessing.diamond import check_diamond_files as check_clusterblast_files
+from antismash.common.subprocessing.blast import run_makeblastdb as make_blastdb
 from antismash.config import get_config
 
 from .data_structures import Subject, Query, Protein, ReferenceCluster, Score
@@ -81,26 +82,6 @@ def run_diamond_on_all_regions(regions: Sequence[secmet.Region], database: str) 
         write_fastas_with_all_genes(regions, temp_file.name)
         stdout = subprocessing.run_diamond_search(temp_file.name, database, mode="blastp", opts=extra_args)
     return stdout
-
-
-def make_blastdb(inputfile: str, db_prefix: str) -> subprocessing.RunResult:
-    """ Runs makeblastdb on the inputs to create a blast protein database
-
-        makeblastdb will create 3 files with the given prefix and the extensions:
-            .pin, .phr, .psq
-
-        Arguments:
-            inputfile: the input filename
-            db_prefix: the prefix to use for the created database
-
-        Returns:
-            a subprocessing.RunResult instance
-    """
-    command = ["makeblastdb", "-in", inputfile, "-out", db_prefix, "-dbtype", "prot"]
-    result = subprocessing.execute(command)
-    if not result.successful():
-        raise RuntimeError("makeblastdb failed to run: %s -> %s" % (command, result.stderr[-100:]))
-    return result
 
 
 def load_reference_clusters(searchtype: str) -> Dict[str, ReferenceCluster]:
