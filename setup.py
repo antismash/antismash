@@ -31,10 +31,10 @@ install_requires = [
 ]
 
 tests_require = [
-    'pytest >= 3.4.0, < 5', # pytest 5 breaks compatibility with coverage
+    'pytest >= 7.2.0, < 8',
     'coverage',
-    'pylint == 2.10.2',
-    'mypy == 0.910',  # for consistent type checking
+    'pylint == 2.15.5',
+    'mypy == 0.982',  # for consistent type checking
 ]
 
 
