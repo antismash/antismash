@@ -160,3 +160,33 @@ class TestSequences(unittest.TestCase):
         ])
         # and that dehydration is not the default
         assert result == renderer.coloured_ripp_sequence("TISC")
+
+
+class TestSwitch(unittest.TestCase):
+    def get_input_part(self, html):
+        _verify_html_tags_match(html)
+        start = html.find("<input ")
+        end = html[start:].find(">")
+        input_part = html[start + 1:start + end]
+        assert input_part
+        return input_part.strip()
+
+    def test_basic(self):
+        html = renderer.switch("Description", "some-switch-class")
+        assert '<input class="some-switch-class"' in html
+        assert "Description" in html
+
+    def test_ids(self):
+        for test_id in ["some-unique-id", "other"]:
+            html = renderer.switch("Desc", "some-class", id_attr=test_id)
+            assert f' id="{test_id}"' in self.get_input_part(html)
+
+    def test_enabled(self):
+        html = renderer.switch("Desc", "some-class", starts_on=False)
+        part = self.get_input_part(html)
+        assert not part.endswith(" checked")
+        assert "checked" not in part
+
+        html = renderer.switch("Desc", "some-class", starts_on=True)
+        part = self.get_input_part(html)
+        assert part.endswith(" checked")
