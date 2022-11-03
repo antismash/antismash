@@ -69,7 +69,7 @@ class NRPSPKSQualifier:
             """ Returns the type of a domain, including subtype, if present """
             if not self.subtype:
                 return self.name
-            return "{}({})({})".format(self.name, self.subtype,self.subsubtype)
+            return "{}({})({})".format(self.name, self.subtype, self.subsubtype)
 
     def __init__(self, strand: int) -> None:
         super().__init__()
@@ -112,13 +112,12 @@ class NRPSPKSQualifier:
         for subsubtype in self.subsubtypes:
             yield _SUBSUBTYPE_FORMAT.format(subsubtype)
 
-    
     def add_subsubtype(self, subsubtype: str) -> None:
         """ Adds a subsubtype to the existing list
         """
         assert isinstance(subsubtype, str)
         self.subsubtypes.append(subsubtype)
-        
+
     def add_subtype(self, subtype: str) -> None:
         """ Adds a subtype to the existing list, e.g. 'Glycopeptide NRPS' or
             'NRPS-like protein'
@@ -186,11 +185,11 @@ class NRPSPKSQualifier:
                 elif parts[0].endswith(")"):
                     name, sub = parts[0].split("(", 1)
                     sub = sub.rstrip(")")
-                    subsub=""
+                    subsub = ""
                 else:
                     name = parts[0]
                     sub = ""
-                    subsub=""
+                    subsub = ""
                 domain = _HMMResultLike(name, int(parts[1]), int(parts[2]),
                                         float(parts[3]), float(parts[4]))
                 self.add_domain(domain, parts[5], sub, subsub)
