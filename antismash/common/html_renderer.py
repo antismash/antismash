@@ -199,10 +199,7 @@ def switch(label: str, classname: str, id_attr: str = "", starts_on: bool = Fals
             id_attr: an optional id to specify, must be unique
             starts_on: whether the switch should be on by default
     """
-    if id_attr:
-        if not id_attr.startswith("#"):
-            id_attr = "#" + id_attr
-        id_attr = ' id="%s"' % id_attr
+    id_attr = f' id="{id_attr}"' if id_attr else ""
     check_attr = " checked" if starts_on else ""
     return Markup(('<div class="{0} switch-container"><span class="switch-desc">{1}</span>'
                    ' <label class="switch">'
