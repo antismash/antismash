@@ -103,7 +103,7 @@ class Module(Feature):
         return tuple(self._substrate_monomer_pairs)
 
     @property
-    def non_elongating(self) -> bool:
+    def is_non_elongating(self) -> bool:
         """
         Returns wether or not the module is elongating. Only relevant for Trans-AT-PKS.
         """
