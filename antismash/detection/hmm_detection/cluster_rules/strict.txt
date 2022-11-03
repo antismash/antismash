@@ -125,9 +125,19 @@ RULE NAPAA
     DESCRIPTION non-alpha poly-amino acids
     # see (https://doi.org/10.1101/2020.07.24.220772)
     EXAMPLE NCBI NC_015859.1 135101-140457 e-Polylysin
+    RELATED PP-binding
     CUTOFF 5
     NEIGHBOURHOOD 15
-    CONDITIONS AMP-binding and PP-binding and TIGR02353
+    CONDITIONS AMP-binding and TIGR02353
+
+RULE mycosporine-like
+    CATEGORY NRPS
+    DESCRIPTION mycosporine-like amino acid containing molecules
+    EXAMPLE NCBI MN401680.1 0-5063 mycosporine
+    RELATED Dala_Dala_lig_C, Dala_Dala_lig_N
+    CUTOFF 10
+    NEIGHBOURHOOD 20
+    CONDITIONS DHQ_synthase and Methyltransf_3 and ATP-grasp_3
 
 RULE terpene
     CATEGORY terpene
@@ -138,14 +148,20 @@ RULE terpene
                or terpene_cyclase or NapT7 or fung_ggpps or fung_ggpps2
                or trichodiene_synth or TRI5
 
+DEFINE all_YcaO AS (YcaO or TIGR03604)
+
 RULE lanthipeptide-class-i
     CATEGORY RiPP
     DESCRIPTION Class I lanthipeptide
     EXAMPLE NCBI HM219853.1 0-15016 nisin
+    RELATED Antimicr18, Gallidermin, L_biotic_A, lacticin_l, leader_d, leader_abc, leader_eh,
+            mature_ha, lacticin_mat, mature_b, mature_d, mature_ab, mature_a, TIGR03731,
+            LD_lanti_pre, strep_PEQAXS, Peptidase_S8, Peptidase_C39, PCMT, adh_short, adh_short_C2
+
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS (LANC_like and (Lant_dehydr_N or Lant_dehydr_C))
-               and not (YcaO or TIGR03882) # because then it'd be a thiopeptide
+               and not all_YcaO # because then it'd be a thiopeptide
 
 RULE lanthipeptide-class-ii
     CATEGORY RiPP
@@ -168,6 +184,7 @@ RULE lanthipeptide-class-iv
     CATEGORY RiPP
     DESCRIPTION Class IV lanthipeptide
     EXAMPLE NCBI HQ328852.1 0-5339 venezuelin
+    RELATED Peptidase_S9
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS cds(LANC_like and Pkinase)
@@ -192,25 +209,13 @@ RULE lipolanthine
     NEIGHBOURHOOD 10
     CONDITIONS micKC and Flavoprotein
 
-RULE RiPP-like
-    CATEGORY RiPP
-    DESCRIPTION Fallback rule containing known RiPP-related profiles
-    CUTOFF 20
-    NEIGHBOURHOOD 5
-    CONDITIONS strepbact or Antimicrobial14 or Bacteriocin_IId or BacteriocIIc_cy
-               or Bacteriocin_II or Bacteriocin_IIi or Lactococcin
-               or Antimicrobial17 or Lactococcin_972 or Bacteriocin_IIc
-               or LcnG-beta or Cloacin or Linocin_M18
-               or TIGR03651 or TIGR03693
-               or TIGR03601 or TIGR03795
-               or TIGR03975 or DUF692 or TIGR01193
-
 RULE thiopeptide
     CATEGORY RiPP
     DESCRIPTION Thio-linked RiPPs
+    RELATED PF00561
     CUTOFF 20
     NEIGHBOURHOOD 10
-    CONDITIONS (YcaO or TIGR03882)
+    CONDITIONS all_YcaO
                and ((thio_amide and (PF06968 or PF04055 or PF07366))
                          or Lant_dehydr_C or Lant_dehydr_N
                          or PF07366 or PF06968 or PF04055)
@@ -223,8 +228,7 @@ RULE thioamitides
     EXAMPLE NCBI JOBF01000011.1 155003-161953 thiovarsolin
     CUTOFF 20
     NEIGHBOURHOOD 10
-    CONDITIONS (YcaO or TIGR03882)
-               and TfuA
+    CONDITIONS all_YcaO and TfuA
 
 RULE linaridin
     CATEGORY RiPP
@@ -259,7 +263,8 @@ RULE LAP
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS (((goadsporin_like or PF00881 or TIGR03605)
-               and (YcaO or TIGR03882 or TIGR03604))
+               and all_YcaO)
+               or TIGR03882
                or TIGR03603   # peptide maturase
                or TIGR03602)  # precursor
                and not cyanobactin_synth
@@ -267,6 +272,7 @@ RULE LAP
 RULE lassopeptide
     CATEGORY RiPP
     DESCRIPTION Lasso peptide
+    RELATED PF05402, lasso, Peptidase_M50
     CUTOFF 10
     NEIGHBOURHOOD 10
     CONDITIONS PF13471 and Asn_synthase or micJ25 or mcjC
@@ -274,6 +280,7 @@ RULE lassopeptide
 RULE sactipeptide
     CATEGORY RiPP
     DESCRIPTION Sactipeptide
+    RELATED Abi, Fer4_12, Peptidase_M16_C, Peptidase_S8, Peptidase_M16, Peptidase_S41
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS subtilosin or thuricin or TIGR04404 or
@@ -331,7 +338,7 @@ RULE ranthipeptide
                          subtilosin or             # avoid co-detecting sactipeptides
                          TIGR02111 or TIGR03966 or # avoid co-detecting redox-cofactor clusers
                          TIGR04103 or              # avoid co-detecting spliceotides
-                         YcaO or TIGR03882)        # avoid co-detecting thiopeptides
+                         all_YcaO)                 # avoid co-detecting thiopeptides
                )
 
 RULE redox-cofactor
@@ -339,6 +346,7 @@ RULE redox-cofactor
     DESCRIPTION Redox-cofactors
     EXAMPLE NCBI NC_021985.1 1458905-1494876 PQQ
     EXAMPLE NCBI NC_000962.3 781830-803332 mycofactocin
+    RELATED PF05402
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS rSAM_with_SPASM and (TIGR02111 or TIGR03966) and ANY_RRE
@@ -395,13 +403,32 @@ RULE blactam
     NEIGHBOURHOOD 10
     CONDITIONS BLS or CAS or tabtoxin
 
+DEFINE DHQ_synthase_like AS (DOIS or DHQ_synthase or ValA or salQ)
+
+RULE 2dos
+    CATEGORY other
+    DESCRIPTION 2-deoxy-streptamine aminoglycoside
+    EXAMPLE NCBI AJ875019.1 1-39979 apramycin
+    EXAMPLE NCBI AJ628149.4 17857-58741 gentamycin
+    EXAMPLE NCBI AJ628642.1 7116-32528 hygromycin
+    EXAMPLE NCBI AJ845083.2 17236-47180 istamycin
+    EXAMPLE NCBI AJ582817.3 1-47050 kanamycin
+    EXAMPLE NCBI AJ629247.1 9188-39636 neomycin
+    CUTOFF 20
+    NEIGHBOURHOOD 10
+    CONDITIONS DHQ_synthase_like and DegT_DnrJ_EryC1 and
+               (LipV or ADSI-DH or cds(ADH_N and ADH_zinc_N))
+
 RULE amglyccycl
     CATEGORY other
     DESCRIPTION Aminoglycoside/aminocyclitol
+    SUPERIORS 2dos
     CUTOFF 20
     NEIGHBOURHOOD 10
-    CONDITIONS strH or strK1 or strK2 or NeoL or DOIS or ValA or SpcFG
-               or SpcDK_glyc or salQ
+    CONDITIONS DHQ_synthase_like
+               or strH or strK1 or strK2 or NeoL or SpcFG
+               or SpcDK_glyc
+
 
 RULE aminocoumarin
     CATEGORY other
@@ -524,6 +551,8 @@ RULE other
 RULE acyl_amino_acids
     CATEGORY other
     DESCRIPTION N-acyl amino acids
+    EXAMPLE NCBI JF429413.1 7897-20270 N-tetradecanoyl tyrosine
+    RELATED ThiF
     CUTOFF 30
     NEIGHBOURHOOD 30
     CONDITIONS NasY
@@ -561,6 +590,16 @@ RULE pyrrolidine
     DESCRIPTION Pyrrolidines
     # See https://dx.doi.org/10.1073/pnas.1701361114
     EXAMPLE NCBI KY014292.1 0-14535 anisomycin
+    RELATED Mac, adh_short
     CUTOFF 10
     NEIGHBOURHOOD 10
     CONDITIONS Glycos_transf_1 and Alpha-amylase and Aminotran_3 and DXP_synthase_N
+
+RULE crocagin
+    CATEGORY RiPP
+    DESCRIPTION Crocagin-like cluster
+    # See https://dx.doi.org/10.1002/anie.201612640
+    EXAMPLE NCBI CP012159.1 3370631-3383702 crocagin
+    CUTOFF 10
+    NEIGHBOURHOOD 10
+    CONDITIONS PhyH and Carbam_trans_N

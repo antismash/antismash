@@ -170,7 +170,7 @@ def find_protoclusters(record: Record, cds_by_cluster_type: Dict[str, Set[str]],
         cds_features = sorted([cds_feature_by_name[cds] for cds in cds_names])
         rule = rules_by_name[cluster_type]
         cutoff = rule.cutoff
-        core_location = cds_features[0].location
+        core_location = FeatureLocation(cds_features[0].location.start, cds_features[0].location.end)
         for cds in cds_features[1:]:
             if cds.overlaps_with(FeatureLocation(max(0, core_location.start - cutoff),
                                                  core_location.end + cutoff)):
@@ -189,7 +189,7 @@ def find_protoclusters(record: Record, cds_by_cluster_type: Dict[str, Set[str]],
                                     tool="rule-based-clusters", cutoff=cutoff,
                                     neighbourhood_range=rule.neighbourhood, product=cluster_type,
                                     detection_rule=str(rule.conditions), product_category=rule.category))
-            core_location = cds.location
+            core_location = FeatureLocation(cds.location.start, cds.location.end)
 
         # finalise the last cluster
         surrounds = FeatureLocation(max(0, core_location.start - rule.neighbourhood),

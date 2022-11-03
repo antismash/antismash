@@ -125,7 +125,7 @@ AvrD	Pseudomonas avriulence D protein	50	PF05655.hmm
 goadsporin_like	Goadsporin-like protein	500	goadsporin_like.hmm
 TIGR03602	Bacteriocin protoxin, streptolysin S family	50	TIGR03602.hmm
 TIGR03603	Bacteriocin biosynthesis cyclodehydratase	150	TIGR03603.hmm
-TIGR03604	Bacteriocin biosynthesis docking scaffold	440	TIGR03604.hmm
+TIGR03604	Bacteriocin biosynthesis docking scaffold	219	TIGR03604.hmm
 TIGR03605	SagB-type dehydrogenase	200	TIGR03605.hmm
 Neocarzinostat	Neocarzinostatin-like protein	28	Neocarzinostat.hmm
 cyanobactin_synth	Cyanobactin protease	80	cyanobactin_synth.hmm
@@ -267,6 +267,16 @@ yydH	Epipeptide metalloprotease yydH	400	yydH.hmm
 TIGR04223	cyclic lactone autoinducer peptide	19	TIGR04223.hmm
 AgrB	cyclic lactone autoinducer endopeptidase	23	PF04647.hmm
 TIGR04103	nif11-class peptide radical SAM maturase 3	725	TIGR04103.hmm
+Methyltransf_3	O-methyltransferase	22	PF01596.hmm
+DHQ_synthase	3-dehydroquinate synthase	24	PF01761.hmm
+Dala_Dala_lig_N	D-ala D-ala ligase N-terminus	34	PF01820.hmm
+Dala_Dala_lig_C	D-ala D-ala ligase C-terminus	24	PF07478.hmm
+ATP-grasp_3	ATP-grasp domain	23	PF02655.hmm
+Carbam_trans_N	Carbamoyltransferase N-terminus	24	PF02543.hmm
+PhyH	Phytanoyl-CoA dioxygenase (PhyH)	20	PF05721.hmm
+ADSI-DH	3-amino-2,3-dideoxy-scyllo-inositol 1-dehydrogenase	460	adsi_dh.hmm
+ADH_N	Alcohol dehydrogenase GroES-like domain	21	PF08240.hmm
+ADH_zinc_N	Zinc-binding dehydrogenase	32	PF00107.hmm
 Lanthipeptide_LanB_RRE	RRE-containing LanB protein in a class I lanthipeptide cluster	25	RREFam001.hmm
 Stand_Alone_Lasso_RRE	Stand-alone RRE protein in a lasso peptide cluster	25	RREFam002.hmm
 Lasso_Fused_RRE	RRE-containing fused peptidase in a lasso peptide cluster	25	RREFam003.hmm
