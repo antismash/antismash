@@ -83,7 +83,6 @@ def analyse_biosynthetic_order(nrps_pks_features: List[CDSFeature],
                                    cds_in_candidate_cluster)
             geneorder = find_colinear_order(list(with_complete))
             docking = False
-
         polymer, smiles = generate_substrates_order(geneorder, consensus_predictions)
         gene_names_in_order = [cds.get_name() for cds in geneorder]
         prediction = CandidateClusterPrediction(candidate_cluster_number, polymer,
@@ -149,6 +148,8 @@ def generate_substrates_order(geneorder: List[CDSFeature], consensus_predictions
         for module in gene.modules:
             if not module.is_complete():
                 continue
+            if module.is_non_elongating:
+                continue
             # for cross-CDS modules, report the monomer only for the head CDS
             if len(module.parent_cds_names) > 1 and module.parent_cds_names[0] != gene.get_name():
                 continue
@@ -166,7 +167,7 @@ def generate_substrates_order(geneorder: List[CDSFeature], consensus_predictions
 
         if monomers:
             monomers_by_cds.append("(%s)" % (" - ".join(monomers)))
-
+            
     polymer = " + ".join(monomers_by_cds)
     smiles = gen_smiles_from_pksnrps(components)
 
