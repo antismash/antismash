@@ -271,7 +271,7 @@ class Module:
         self._others: List[Component] = []
         self._first_in_cds = first_in_cds
         self._unambiguous_accept = 0  # handles lookahead acceptance
-        self.non_elongating = None
+        self.non_elongating = False
 
     def to_json(self) -> Dict[str, Any]:
         """ Generate a JSON representation of the module """
@@ -498,12 +498,14 @@ class Module:
             state.insert(0, "D")
         return "-".join(state)
 
-    def get_elongating(self):
+    def get_elongating(self) -> bool:
         self.non_elongating = False
         if self.is_trans_at():
-            if self._starter.subsubtype != "":
-                if TRANS_AT_KS_SUBTYPE_TO_ELONGATING[self._starter.subsubtype] == False:
-                    self.non_elongating = True
+            if self._starter:
+                if self._starter.subsubtype:
+                    if self._starter.subsubtype != "":
+                        if TRANS_AT_KS_SUBTYPE_TO_ELONGATING[self._starter.subsubtype] == False:
+                            self.non_elongating = True
         return self.non_elongating
 
 
