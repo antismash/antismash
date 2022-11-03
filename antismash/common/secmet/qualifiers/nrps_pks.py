@@ -190,8 +190,6 @@ class NRPSPKSQualifier:
                 self.add_domain(domain, parts[5], sub, subsub)
             elif qualifier.startswith("subtype: "):
                 self.add_subtype(_parse_format(_SUBTYPE_FORMAT, qualifier)[0])
-            elif qualifier.startswith("subsubtype: "):
-                self.add_subsubtype(_parse_format(_SUBTYPE_FORMAT, qualifier)[0])
             elif qualifier.startswith("type: "):
                 self.type = _parse_format(_TYPE_FORMAT, qualifier)[0]
             else:
