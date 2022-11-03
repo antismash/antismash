@@ -79,7 +79,7 @@ class CDSResult:
             ks_subsubtypes = data["ks_subsubtypes"]
         else:
             ks_subsubtypes = []
-        return CDSResult(domain_hmms, motif_hmms, modules, data["ks_subtypes"],ks_subsubtypes)
+        return CDSResult(domain_hmms, motif_hmms, modules, data["ks_subtypes"], ks_subsubtypes)
 
     def annotate_domains(self, record: Record, cds: CDSFeature) -> None:
         """ Adds domain annotations to CDSFeatures and creates ModularDomain
@@ -97,7 +97,7 @@ class CDSResult:
                 sub = next(ks_sub)
                 domain_feature.domain_subtype = sub
                 if sub == "Trans-AT-KS":
-                    subsub = next(ks_subsub,"")
+                    subsub = next(ks_subsub, "")
                     domain_feature.domain_subsubtype = subsub
                 else:
                     subsub = ""
@@ -206,6 +206,7 @@ def match_subtypes_to_ks_domains(domains: List[HMMResult], subtypes: List[HMMRes
     assert len(domains) == len(subs)
     return subs
 
+
 def match_subsubtypes_to_trans_at_ks_domains(subtypes: List[HMMResult], subsubtypes: List[HMMResult]) -> List[str]:
     """ Returns a subsubtype name for each trans AT PKS_KS domain in the domains provided.
         If no subsubtype hit overlaps with a trans AT PKS_KS domain, the subsubtype name will be the
@@ -231,6 +232,7 @@ def match_subsubtypes_to_trans_at_ks_domains(subtypes: List[HMMResult], subsubty
         subsubs.append(subsub)
     assert len(subtypes) == len(subsubs)
     return subsubs
+
 
 def generate_domains(record: Record) -> NRPSPKSDomains:
     """ Annotates NRPS/PKS domains on CDS features. The `nrps_pks` member of
@@ -263,7 +265,7 @@ def generate_domains(record: Record) -> NRPSPKSDomains:
             continue
         subtype_names = match_subtypes_to_ks_domains(domains, cds_ks_subtypes.get(cds.get_name(), []))
         subsubtype_names = match_subsubtypes_to_trans_at_ks_domains(cds_ks_subtypes.get(cds.get_name(), []), cds_ks_subsubtypes.get(cds.get_name(), []))
-        modules = build_modules_for_cds(domains, subtype_names, cds.get_name(),subsubtype_names)
+        modules = build_modules_for_cds(domains, subtype_names, cds.get_name(), subsubtype_names)
         results.cds_results[cds] = CDSResult(domains, motifs, modules, subtype_names, subsubtype_names)
 
         # combine modules that cross CDS boundaries, if possible and relevant
@@ -351,6 +353,7 @@ def find_ks_domains(fasta: str) -> Dict[str, List[HMMResult]]:
     domains = subprocessing.run_hmmscan(ks_file, fasta, opts)
     return refine_hmmscan_results(domains, lengths, neighbour_mode=True)
 
+
 def find_trans_at_ks_domain_subtype(fasta: str) -> Dict[str, List[HMMResult]]:
     """ Analyse trans-AT-PKS-KS domains to detect trans-AT-PKS-KS domain subtypes
 
@@ -365,6 +368,7 @@ def find_trans_at_ks_domain_subtype(fasta: str) -> Dict[str, List[HMMResult]]:
     lengths = utils.get_hmm_lengths(trans_at_ks_file)
     domains = subprocessing.run_hmmscan(trans_at_ks_file, fasta, opts)
     return refine_hmmscan_results(domains, lengths, neighbour_mode=True)
+
 
 class KetosynthaseCounter:
     """ Keeps track of the counts of various KS domains and simplifies
