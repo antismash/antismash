@@ -112,11 +112,6 @@ class NRPSPKSQualifier:
         for subsubtype in self.subsubtypes:
             yield _SUBSUBTYPE_FORMAT.format(subsubtype)
 
-    def add_subsubtype(self, subsubtype: str) -> None:
-        """ Adds a subsubtype to the existing list
-        """
-        assert isinstance(subsubtype, str)
-        self.subsubtypes.append(subsubtype)
 
     def add_subtype(self, subtype: str) -> None:
         """ Adds a subtype to the existing list, e.g. 'Glycopeptide NRPS' or
@@ -124,7 +119,7 @@ class NRPSPKSQualifier:
         """
         assert isinstance(subtype, str)
         self.subtypes.append(subtype)
-        
+
     # the domain type Any is only to avoid circular dependencies
     def add_domain(self, domain: Any, feature_name: str, subtype: str = "", subsubtype: str = "") -> None:
         """ Adds a domain to the current set.
