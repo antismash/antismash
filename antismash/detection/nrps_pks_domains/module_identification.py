@@ -113,6 +113,32 @@ CLASSIFICATIONS = {
     ".": OTHER,
     "ignore": NON_MODULE,
 }
+TRANS_AT_KS_SUBTYPE_TO_ELONGATING = {'NON_ELONGATING_DB': False,
+                                 'BETA_OH_KETO': True,
+                                 'NON_ELONGATING_BETA_OH': False,
+                                 'ALPHA_OH': True, 'EDB': True,
+                                 'ARST': True, 'PYR': True,
+                                 'ALPHAME_EDB': True, 'OXI': True,
+                                 'AA': True, 'ALPHAME_BETA_L_OH': True,
+                                 'NON_ELONGATING_BETA_L_OH': False,
+                                 'RED_SHDB': True, 'DB': True,
+                                 'KETO': True, 'NON_ELONGATING': False,
+                                 'BETA_D_OH': True, 'BETA_L_OH': True,
+                                 'BR': True, 'ALPHABETA_OH': True,
+                                 'UNST': True, 'ST': True,
+                                 'MEOST': True, 'ACST': True,
+                                 'ALPHAME': True, 'BETA_D_OME': True,
+                                 'NON_ELONGATING_PYR': False,
+                                 'BETA_ME': True, 'BETA_OH_EDB': True,
+                                 'NON_ELONGATING_OXA': False,
+                                 'LACST': True,
+                                 'SHDB': True, 'OUT': True,
+                                 'BETA_OH': True, 'ZDB': True,
+                                 'BETA_MEDB': True, 'TRANS_AT_PKS': True,
+                                 'OXA': True, 'ALPHAME_BETA_D_OH': True,
+                                 'ALPHAME_BETAOH': True,
+                                 'NON_ELONGATING_ALPHAME_EDB': False,
+                                 'RED': True}
 
 DOUBLE_TRANSPORTER_CASES = {
     ("LPG_synthase_C", "Beta_elim_lyase"),  # e.g. AF484556.1 in LmnJ, doi:10.1038/s41467-021-25798-8
@@ -245,6 +271,7 @@ class Module:
         self._others: List[Component] = []
         self._first_in_cds = first_in_cds
         self._unambiguous_accept = 0  # handles lookahead acceptance
+        self.non_elongating = None
 
     def to_json(self) -> Dict[str, Any]:
         """ Generate a JSON representation of the module """
@@ -470,6 +497,14 @@ class Module:
         if self._end and self._end.label == "Epimerization":
             state.insert(0, "D")
         return "-".join(state)
+
+    def get_elongating(self):
+        self.non_elongating = False
+        if self.is_trans_at():
+            if self._starter.subsubtype != "":
+                if TRANS_AT_KS_SUBTYPE_TO_ELONGATING[self._starter.subsubtype] == False:
+                    self.non_elongating = True
+        return self.non_elongating
 
 
 def classify(profile_name: str) -> str:

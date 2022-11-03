@@ -158,7 +158,8 @@ class NRPSPKSDomains(module_results.DetectionResults):
                 feature = ModuleFeature(domains, mod_type, complete=module.is_complete(),
                                         starter=module.is_starter_module(),
                                         final=module.is_termination_module(),
-                                        iterative=module.is_iterative())
+                                        iterative=module.is_iterative(),
+                                        non_elongating=module.get_elongating())
                 record.add_module(feature)
 
     @staticmethod
@@ -228,6 +229,9 @@ def match_subsubtypes_to_trans_at_ks_domains(subtypes: List[HMMResult], subsubty
         for subsubtype in subsubtypes:
             if sub.query_end >= subsubtype.query_start and subsubtype.query_end >= sub.query_start:
                 subsub = subsubtype.hit_id
+                #format substrings
+                subsub = ''.join((x for x in subsub if not x.isdigit()))
+                subsub = subsub.replace("_", "").replace("-", "_").replace("/", "_").upper()
                 break
         subsubs.append(subsub)
     assert len(subtypes) == len(subsubs)
