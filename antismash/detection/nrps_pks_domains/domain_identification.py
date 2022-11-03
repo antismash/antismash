@@ -96,7 +96,7 @@ class CDSResult:
             if domain.hit_id == "PKS_KS":
                 sub = next(ks_sub)
                 domain_feature.domain_subtype = sub
-                if sub == "TRANS-AT-KS":
+                if sub == "Trans-AT-KS":
                     subsub = next(ks_subsub,"")
                     domain_feature.domain_subsubtype = subsub
                 else:

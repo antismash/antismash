@@ -139,7 +139,6 @@ class NRPSPKSQualifier:
         if subtype:
             assert domain.hit_id == "PKS_KS", domain.hit_id
         if subsubtype:
-            print(subsubtype)
             assert subtype == "Trans-AT-KS", subtype
         if domain.hit_id == "PKS_AT":
             self.at_counter += 1
