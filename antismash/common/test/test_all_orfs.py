@@ -16,6 +16,7 @@ from antismash.common.all_orfs import (
 )
 
 from .helpers import DummyCDS, DummyRecord
+from antismash.common.secmet.test.helpers import DummySubRegion
 
 
 class TestOrfCounts(unittest.TestCase):
@@ -90,6 +91,17 @@ class TestOrfCounts(unittest.TestCase):
         seq = str(DummyRecord(seq=seq).seq.reverse_complement())
         expected = [FeatureLocation(ExactPosition(6), ExactPosition(72), strand=-1)]
         assert expected == [feat.location for feat in find_all_orfs(DummyRecord(seq=seq))]
+
+    def test_area_offsets(self):
+        seq = "".join(["C" * 10, "ATG", "N" * 60, "TAGNNNTAG", "C" * 10])
+        area = DummySubRegion(5, len(seq) - 5)
+
+        expected = [FeatureLocation(ExactPosition(10), ExactPosition(76), strand=1)]
+        assert expected == [feat.location for feat in find_all_orfs(DummyRecord(seq=seq), area=area)]
+
+        seq = str(DummyRecord(seq=seq).seq.reverse_complement())
+        expected = [FeatureLocation(ExactPosition(16), ExactPosition(82), strand=-1)]
+        assert expected == [feat.location for feat in find_all_orfs(DummyRecord(seq=seq), area=area)]
 
     def test_interleaved(self):
         expected = [FeatureLocation(ExactPosition(0), ExactPosition(72), strand=1),

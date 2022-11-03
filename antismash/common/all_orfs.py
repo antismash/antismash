@@ -205,13 +205,14 @@ def find_all_orfs(record: Record, area: Optional[CDSCollection] = None,
     # Get sequence for the range
     offset = 0
     seq = record.seq
+    offset_end = len(record.seq)
     existing: Iterable[CDSFeature] = record.get_cds_features()
     if area:
-        seq = area.extract(seq)
         offset = area.location.start
+        offset_end = area.location.end
         existing = record.get_cds_features_within_location(area.location,
                                                            with_overlapping=True)
-    intergenic_areas = find_intergenic_areas(offset, offset + len(seq), existing,
+    intergenic_areas = find_intergenic_areas(offset, offset_end, existing,
                                              min_length=min_length, padding=max_overlap)
 
     # Find orfs throughout the range
