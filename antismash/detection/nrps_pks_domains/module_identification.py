@@ -512,11 +512,12 @@ def build_modules_for_cds(domains: List[HMMResult], ks_subtypes: List[str], cds_
         if component.classification == "KS":
             sub = next(subtypes)
             if sub == "Trans-AT-KS":
-                subsub = next(subsubtypes)
+                subsub = next(subsubtypes, "")
             else:
                 subsub = ""
         else:
             sub = ""
+            subsub = ""
         component = Component(component.domain, cds_name, sub, subsub)
         # start a new module if we have an explicit starter
         if component.is_starter() and not component.is_loader() and not modules[-1].is_empty():
@@ -607,5 +608,4 @@ def combine_modules(current: CDSModuleInfo, previous: CDSModuleInfo) -> Optional
     if module.is_trans_at() and len(next.components) == 1 and next.components[0].domain.hit_id == "PKS_KR":
         module.add_component(next.components[0], [])
         current.modules.pop(0)
-
     return module

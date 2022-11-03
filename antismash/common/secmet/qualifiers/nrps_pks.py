@@ -120,13 +120,6 @@ class NRPSPKSQualifier:
         assert isinstance(subtype, str)
         self.subtypes.append(subtype)
         
-    def add_subsubtype(self, subsubtype: str) -> None:
-        """ Adds a subtype to the existing list, e.g. 'Glycopeptide NRPS' or
-            'NRPS-like protein'
-        """
-        assert isinstance(subsubtype, str)
-        self.subsubtypes.append(subsubtype)
-        
     # the domain type Any is only to avoid circular dependencies
     def add_domain(self, domain: Any, feature_name: str, subtype: str = "", subsubtype: str = "") -> None:
         """ Adds a domain to the current set.
@@ -146,6 +139,7 @@ class NRPSPKSQualifier:
         if subtype:
             assert domain.hit_id == "PKS_KS", domain.hit_id
         if subsubtype:
+            print(subsubtype)
             assert subtype == "Trans-AT-KS", subtype
         if domain.hit_id == "PKS_AT":
             self.at_counter += 1

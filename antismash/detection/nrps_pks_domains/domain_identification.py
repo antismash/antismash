@@ -206,30 +206,30 @@ def match_subtypes_to_ks_domains(domains: List[HMMResult], subtypes: List[HMMRes
     assert len(domains) == len(subs)
     return subs
 
-def match_subsubtypes_to_trans_at_ks_domains(domains: List[HMMResult], subsubtypes: List[HMMResult]) -> List[str]:
+def match_subsubtypes_to_trans_at_ks_domains(subtypes: List[HMMResult], subsubtypes: List[HMMResult]) -> List[str]:
     """ Returns a subsubtype name for each trans AT PKS_KS domain in the domains provided.
-        If no subsubtype hit overlaps with a trans AT PKS_KS domain, the subtype name will be the
+        If no subsubtype hit overlaps with a trans AT PKS_KS domain, the subsubtype name will be the
         empty string.
 
         Arguments:
-            domains: a list of HMMResults, non-trans AT PKS_KS domains will be ignored
+            subtypes: a list of HMMResults, non-trans AT PKS_KS domains will be ignored
             subsubtypes: a list of trans AT PKS_KS subsubtypes
 
         Returns:
             a list of strings, one for each PKS_KS domain
     """
-    domains = [dom for dom in domains if dom.hit_id == "Trans-AT-KS"]
-    if not domains:
+    subtypes = [sub for sub in subtypes if sub.hit_id == "Trans-AT-KS"]
+    if not subtypes:
         return []
     subsubs = []
-    for domain in domains:
+    for sub in subtypes:
         subsub = ""
         for subsubtype in subsubtypes:
-            if domain.query_end >= subsubtype.query_start and subsubtype.query_end >= domain.query_start:
+            if sub.query_end >= subsubtype.query_start and subsubtype.query_end >= sub.query_start:
                 subsub = subsubtype.hit_id
                 break
         subsubs.append(subsub)
-    assert len(domains) == len(subsubs)
+    assert len(subtypes) == len(subsubs)
     return subsubs
 
 def generate_domains(record: Record) -> NRPSPKSDomains:
@@ -262,7 +262,7 @@ def generate_domains(record: Record) -> NRPSPKSDomains:
             prev = None
             continue
         subtype_names = match_subtypes_to_ks_domains(domains, cds_ks_subtypes.get(cds.get_name(), []))
-        subsubtype_names = match_subsubtypes_to_trans_at_ks_domains(domains, cds_ks_subsubtypes.get(cds.get_name(), []))
+        subsubtype_names = match_subsubtypes_to_trans_at_ks_domains(cds_ks_subtypes.get(cds.get_name(), []), cds_ks_subsubtypes.get(cds.get_name(), []))
         modules = build_modules_for_cds(domains, subtype_names, cds.get_name(),subsubtype_names)
         results.cds_results[cds] = CDSResult(domains, motifs, modules, subtype_names, subsubtype_names)
 
