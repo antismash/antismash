@@ -127,6 +127,36 @@ class TestKSSubtypeMatching(unittest.TestCase):
         assert self.func(domains, sub_hits) == ["", "trans-AT"]
 
 
+class TestKSSubsubtypeMatching(unittest.TestCase):
+    def setUp(self):
+        self.func = domain_identification.match_subsubtypes_to_trans_at_ks_domains
+
+    def test_empty(self):
+        assert self.func([], []) == []
+
+    def test_non_trans_at_pks(self):
+        assert self.func([DummyHMMResult("Cis-AT-KS", start=1, end=40)], []) == []
+
+    def test_pks_with_hit(self):
+        assert self.func([DummyHMMResult("Trans-AT-KS", start=1, end=40)],
+                         [DummyHMMResult("db", start=1, end=38)]) == ["DB"]
+
+    def test_trans_at_pks_with_no_hit(self):
+        assert self.func([DummyHMMResult("Trans-AT-KS", start=1, end=40)],
+                         [DummyHMMResult("db", start=41, end=48)]) == [""]
+
+    def test_mixed(self):
+        sub_hits = [
+            DummyHMMResult("Trans-AT-KS", start=1, end=40),
+            DummyHMMResult("Cis-AT-KS", start=50, end=90),
+            DummyHMMResult("Trans-AT-KS", start=100, end=140),
+        ]
+        subsub_hits = [
+            DummyHMMResult("db", start=99, end=139)
+        ]
+        assert self.func(sub_hits, subsub_hits) == ["", "DB"]
+
+
 @patch.object(fasta, "get_fasta_from_features", return_value={})
 @patch.object(domain_identification, "find_ab_motifs", return_value={})
 class TestModuleMerging(unittest.TestCase):
