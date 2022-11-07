@@ -229,7 +229,7 @@ def match_subsubtypes_to_trans_at_ks_domains(subtypes: List[HMMResult], subsubty
         for subsubtype in subsubtypes:
             if sub.query_end >= subsubtype.query_start and subsubtype.query_end >= sub.query_start:
                 subsub = subsubtype.hit_id
-                #format substrings
+                #format subsubstrings to reduce redundancy
                 subsub = ''.join((x for x in subsub if not x.isdigit()))
                 subsub = subsub.replace("_", "").replace("-", "_").replace("/", "_").upper()
                 break
