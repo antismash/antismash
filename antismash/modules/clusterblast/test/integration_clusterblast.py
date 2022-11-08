@@ -26,7 +26,10 @@ MOCKED_DATA = path.get_full_path(__file__, "data")
 class Base(unittest.TestCase):
     def setUp(self):
         options = build_config(self.get_args(), isolated=True, modules=get_all_modules())
-        self.diamond_version = int(run_diamond_version().split(".")[0])
+        _major, _minor, _patch = map(int, run_diamond_version().split("."))
+        self.diamond_ver_major = _major
+        self.diamond_ver_minor = _minor
+        self.diamond_ver_patch = _patch
         self.old_config = get_config().__dict__
         self.options = update_config(options)
 
@@ -92,7 +95,7 @@ class GeneralIntegrationTest(Base):
         return results.general, results
 
     def test_nisin(self):
-        expected_hits = 2 if self.diamond_version < 2 else 3
+        expected_hits = 3 if (self.diamond_ver_major == 2 and self.diamond_ver_patch < 15) else 2
         results = self.check_nisin(expected_hits)
         ranking = results.region_results[0].ranking
         assert len(ranking) == expected_hits
@@ -102,7 +105,7 @@ class GeneralIntegrationTest(Base):
         assert score.score == 30
         assert score.hits == 11
         assert score.core_gene_hits == 2
-        assert score.blast_score == 8401.0 if self.diamond_version < 2 else 8402.0
+        assert score.blast_score == 8401.0 if self.diamond_ver_major < 2 else 8402.0
         assert score.synteny_score == 14
         assert score.core_bonus == 3
         assert len(score.scored_pairings) == score.hits
@@ -116,7 +119,7 @@ class GeneralIntegrationTest(Base):
         assert score.score == 24
         assert score.hits == 10
         assert score.core_gene_hits == 1
-        assert score.blast_score == 7579.0 if self.diamond_version < 2 else 7577.0
+        assert score.blast_score == 7579.0 if self.diamond_ver_major < 2 else 7577.0
         assert score.synteny_score == 10
         assert score.core_bonus == 3
         assert len(score.scored_pairings) == score.hits
