@@ -203,3 +203,24 @@ class TestSelectedMarker(unittest.TestCase):
 class TestWildcards(unittest.TestCase):
     def test_trivial(self):
         assert renderer.replace_with("foo") == "@!foo!@"
+
+
+class TestBlastLink(unittest.TestCase):
+    def test_static(self):
+        translation = "METMG"
+        html = renderer.build_blastp_link("locus", "link text", translation=translation)
+        assert f"QUERY={translation}&" in html
+
+    def test_wildcarded(self):
+        for name in ["LOCUS_12345", "orfA"]:
+            html = renderer.build_blastp_link(name, "link text")
+            # check all the information needed to ...
+            assert "wildcard-container" in html  # find the element
+            assert 'data-wildcard-attrs="href"' in html  # find the attribute to update
+            assert f'data-locus="{name}"' in html  # with the right ORF data
+            assert f"QUERY={renderer.replace_with('translation')}&" in html  # in the right attribute
+
+    def test_link_text(self):
+        for text in ["link description", "other desc."]:
+            html = renderer.build_blastp_link("locus", text)
+            assert html.endswith(f">{text}</a>")
