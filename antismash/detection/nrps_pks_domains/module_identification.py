@@ -134,7 +134,7 @@ TRANS_AT_KS_SUBTYPE_TO_ELONGATING = {'NON_ELONGATING_DB': False,
                                  'LACST': True,
                                  'SHDB': True, 'OUT': True,
                                  'BETA_OH': True, 'ZDB': True,
-                                 'BETA_MEDB': True, 'TRANS_AT_PKS': True,
+                                 'BETA_MEDB': True,
                                  'OXA': True, 'ALPHAME_BETA_D_OH': True,
                                  'ALPHAME_BETAOH': True,
                                  'NON_ELONGATING_ALPHAME_EDB': False,
@@ -649,5 +649,5 @@ def combine_modules(current: CDSModuleInfo, previous: CDSModuleInfo) -> Optional
     if module.is_trans_at() and len(next.components) == 1 and next.components[0].domain.hit_id == "PKS_KR":
         module.add_component(next.components[0], [])
         current.modules.pop(0)
-        
+
     return module
