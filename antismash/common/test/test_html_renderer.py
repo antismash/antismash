@@ -198,3 +198,8 @@ class TestSelectedMarker(unittest.TestCase):
             html = renderer.selected_cds_marker(name)
             assert f'data-locus="{name}"' in html  # for pulling names out of the element
             assert f'selected-marker-{name}"' in html  # for finding elements by name
+
+
+class TestWildcards(unittest.TestCase):
+    def test_trivial(self):
+        assert renderer.replace_with("foo") == "@!foo!@"
