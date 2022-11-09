@@ -112,7 +112,6 @@ class NRPSPKSQualifier:
         for subsubtype in self.subsubtypes:
             yield _SUBSUBTYPE_FORMAT.format(subsubtype)
 
-
     def add_subtype(self, subtype: str) -> None:
         """ Adds a subtype to the existing list, e.g. 'Glycopeptide NRPS' or
             'NRPS-like protein'

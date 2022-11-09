@@ -11,6 +11,7 @@ from .feature import Feature, FeatureLocation, SeqFeature
 
 T = TypeVar("T", bound="Module")
 
+
 @unique
 class ModuleType(Enum):
     """ An Enum representing the type of a Module.

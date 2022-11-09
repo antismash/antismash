@@ -31,8 +31,8 @@ from .module import Module
 _VALID_TRANSLATION_CHARS = set(IUPACData.extended_protein_letters)
 T = TypeVar("T", bound="CDSFeature")
 
-
 MAX_TRANSLATION_LENGTH = 100_000
+
 
 def _sanitise_id_value(name: Optional[str]) -> Optional[str]:
     """ Ensures a name doesn't contain characters that will break external programs"""
@@ -60,12 +60,10 @@ def _translation_fits_in_record(translation_length: int, location: Location,
                                 record_length: int) -> bool:
     """ Checks that a translation fits within a record based on the feature location
         Allows for a single ambiguous amino to overlap the edges of a record
-
         Arguments:
             translation_length: length of translation in nucleotides
             location: the Location of the feature
             record_length: the length of the record in nucleotides
-
         Returns:
             True if location and translation length fit into the given record length
     """
@@ -84,12 +82,10 @@ def _ensure_valid_translation(translation: str, location: Location, transl_table
     """ Ensures that a given translation is valid for the matching location
         and record (if given). If a record is given and a translation contains
         invalid characters, an attempt will be made to generate a valid translation.
-
         Arguments:
             translation: the existing translation, if any
             location: the location of the feature owning the translation
             record: the Record the feature belongs to, or None to skip those checks and regeneration
-
         Returns:
             a valid translation
     """
@@ -119,9 +115,9 @@ def _ensure_valid_translation(translation: str, location: Location, transl_table
             translation = record.get_aa_translation_from_location(location, transl_table)
         except CodonTable.TranslationError as err:
             raise ValueError("invalid codon: %s" % err)
-    if len(translation) >= MAX_TRANSLATION_LENGTH:
-            raise ValueError(f"translation too long for dependencies: {len(translation)}")
 
+    if len(translation) >= MAX_TRANSLATION_LENGTH:
+        raise ValueError(f"translation too long for dependencies: {len(translation)}")
 
     assert _is_valid_translation_length(translation, location)
     return translation
