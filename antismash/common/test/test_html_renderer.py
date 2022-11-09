@@ -190,3 +190,11 @@ class TestSwitch(unittest.TestCase):
         html = renderer.switch("Desc", "some-class", starts_on=True)
         part = self.get_input_part(html)
         assert part.endswith(" checked")
+
+
+class TestSelectedMarker(unittest.TestCase):
+    def test_basic(self):
+        for name in ["LOCUS_12345", "orfA"]:
+            html = renderer.selected_cds_marker(name)
+            assert f'data-locus="{name}"' in html  # for pulling names out of the element
+            assert f'selected-marker-{name}"' in html  # for finding elements by name

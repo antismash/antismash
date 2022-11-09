@@ -1463,3 +1463,26 @@ ul.dropdown-options {
         opacity: 60%;
     }
 }
+
+/* A generalised indicator for non-overview sections to show which gene is currently
+   selected. While the object should be consistently styled, the positioning options
+   can, and probably should, be overridden.
+*/
+.cds-selected-marker {
+    opacity: 0;  // always starts effectively hidden
+    height: 3px;
+    width: 3px;
+    background-color: black;
+    display: inline-block;
+    border: 1px solid black;
+    vertical-align: middle;
+
+    &.active {  // becomes visibile when the "active" class is added
+        opacity: 1;
+    }
+
+    // the remainder is relative layout and can be overridden
+    // these defaults assume that the marker is on the left of the name
+    margin: 0.1em;
+    margin-right: 0.5em;
+}

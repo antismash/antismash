@@ -172,6 +172,19 @@ def help_tooltip(text: str, name: str) -> Markup:
                    '</div>').format(unique_id, text))
 
 
+def selected_cds_marker(name: str) -> Markup:
+    """ Constructs a small marker that will be automatically displayed when the
+        CDS with the given name is selected in the gene overview.
+
+        Arguments:
+            name: the name of the CDS
+
+        Returns:
+            A Markup instance with the constructed HTML
+    """
+    return Markup(f'<span class="cds-selected-marker cds-selected-marker-{name}" data-locus="{name}"></span>')
+
+
 def docs_link(label: str, subtarget: str = "") -> Markup:
     """ Constructs a link to the documentation website specified in the antiSMASH
         config
@@ -233,6 +246,7 @@ class _Template:  # pylint: disable=too-few-public-methods
             "collapser_end": collapser_end,
             "coloured_ripp_sequence": coloured_ripp_sequence,
             "help_tooltip": help_tooltip,
+            "selected_cds_marker": selected_cds_marker,
             "spanned_sequence": spanned_sequence,
             "switch": switch,
         }
