@@ -20,6 +20,7 @@ RIPP_CLASSES = {
     "C": "cys",
 }
 RIPP_SUBSTITUTIONS = {key: val.title() for key, val in RIPP_CLASSES.items()}
+WILDCARD_TEMPLATE = "@!{0}!@"
 
 
 class HTMLSection:  # pylint: disable=too-few-public-methods
@@ -172,6 +173,20 @@ def help_tooltip(text: str, name: str) -> Markup:
                    '</div>').format(unique_id, text))
 
 
+def replace_with(key: str) -> Markup:
+    """ Creates a HTML construct where the given key will be replaced by CDS/ORF
+        data by javascript. The key provided must still be included in the
+        creation/export of JSON data.
+
+        Arguments:
+            key: the name of the attribute to fill in
+
+        Returns:
+            a Markup instance with the constructed HTML
+    """
+    return Markup(WILDCARD_TEMPLATE.format(key))
+
+
 def selected_cds_marker(name: str) -> Markup:
     """ Constructs a small marker that will be automatically displayed when the
         CDS with the given name is selected in the gene overview.
@@ -246,6 +261,7 @@ class _Template:  # pylint: disable=too-few-public-methods
             "collapser_end": collapser_end,
             "coloured_ripp_sequence": coloured_ripp_sequence,
             "help_tooltip": help_tooltip,
+            "replace_with": replace_with,
             "selected_cds_marker": selected_cds_marker,
             "spanned_sequence": spanned_sequence,
             "switch": switch,
