@@ -70,7 +70,7 @@
  {% endif %}
 </div>
 <div class="focus-urls">
- <a href="{{urls['blastp']}}" target="_new">NCBI BlastP on this gene</a><br>
+ {{build_blastp_link(feature.get_name(), "NCBI BlastP on this gene")}}<br>
  <a href="{{urls['context']}}" target="_new">View genomic context</a><br>
  {% if urls['mibig'] %}
   <a href="{{urls['mibig']}}" target="_new">MiBIG Hits</a><br>
@@ -86,6 +86,6 @@
  {% endif %}
 </div>
 <div class="focus-clipboard">
- AA sequence: <span class="clipboard-copy" data-seq="{{feature.translation}}">Copy to clipboard</span><br>
- Nucleotide sequence: <span class="clipboard-copy" data-seq="{{feature.extract(record.seq)}}">Copy to clipboard</span><br>
+ AA sequence: <span class="clipboard-copy wildcard-container" data-locus="{{feature.get_name()}}" data-wildcard-attrs="data-seq" data-seq="{{replace_with('translation')}}">Copy to clipboard</span><br>
+ Nucleotide sequence: <span class="clipboard-copy wildcard-container" data-locus="{{feature.get_name()}}" data-wildcard-attrs="data-seq" data-seq="{{replace_with('dna')}}">Copy to clipboard</span><br>
 </div>
