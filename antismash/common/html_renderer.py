@@ -71,6 +71,32 @@ def _safe_selector(name: str) -> str:
     return name.replace(":", "-").replace(".", "-")
 
 
+def build_blastp_link(locus: str, display_text: str, translation: str = None) -> Markup:
+    """ Returns a link to a BlastP search.
+
+        Arguments:
+            locus: the name of the CDS
+            translation: the translation of the CDS, if the link should be
+                         static and not filled in on demand by javascript
+
+        Returns:
+            an HTML fragment as a Markup instance
+    """
+    url = Markup(
+        "http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE=Proteins&"
+        f"PROGRAM=blastp&BLAST_PROGRAMS=blastp&QUERY={replace_with('translation')}&"
+        "LINK_LOC=protein&PAGE_TYPE=BlastSearch"
+    )
+    if translation is not None:
+        static_url = url.replace(replace_with("translation"), translation)
+        return Markup(f'<a href="{static_url}>{display_text}</a>')
+    return Markup(
+        '<a class="wildcard-container" data-wildcard-attrs="href" '
+        f'href="{url}" target="_blank" '
+        f'data-locus="{locus}">{display_text}</a>'
+    )
+
+
 def collapser_start(target: str, level: str = "all") -> Markup:
     """ Builds the start of a collapser specific to the target. Must be matched
         with a collapser_end() call.
@@ -257,6 +283,7 @@ class _Template:  # pylint: disable=too-few-public-methods
             raise ValueError("attempting to render without a template")
 
         defaults = {
+            "build_blastp_link": build_blastp_link,
             "collapser_start": collapser_start,
             "collapser_end": collapser_end,
             "coloured_ripp_sequence": coloured_ripp_sequence,
