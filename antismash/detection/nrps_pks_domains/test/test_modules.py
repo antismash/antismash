@@ -257,11 +257,11 @@ class TestModule(unittest.TestCase):
         self.pks._starter.subsubtype = TRANS_AT_SUBSUBTYPE_NON_ELONGATING
         self.pks._loader = None
         assert self.pks.is_trans_at()
-        assert self.pks.get_elongating() == True
+        assert self.pks.get_elongating() == False
         self.pks._starter.subsubtype = TRANS_AT_SUBSUBTYPE
         self.pks._loader = None
         assert self.pks.is_trans_at()
-        assert self.pks.get_elongating() == False
+        assert self.pks.get_elongating() == True
 
     def test_trailing_modifiers(self):
         error = "modification domain after carrier protein"

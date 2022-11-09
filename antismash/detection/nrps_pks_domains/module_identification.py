@@ -271,7 +271,6 @@ class Module:
         self._others: List[Component] = []
         self._first_in_cds = first_in_cds
         self._unambiguous_accept = 0  # handles lookahead acceptance
-        self.non_elongating = False
 
     def to_json(self) -> Dict[str, Any]:
         """ Generate a JSON representation of the module """
@@ -499,14 +498,19 @@ class Module:
         return "-".join(state)
 
     def get_elongating(self) -> bool:
-        self.non_elongating = False
+        """ Checks if Trans-AT-PKS KS is elongating or not
+
+            Returns:
+                a bool -> True if KS is elongating, False if it is not elongating
+        """
+        elongating = True
         if self.is_trans_at():
             if self._starter:
                 if self._starter.subsubtype:
                     if self._starter.subsubtype != "":
                         if TRANS_AT_KS_SUBTYPE_TO_ELONGATING[self._starter.subsubtype] == False:
-                            self.non_elongating = True
-        return self.non_elongating
+                            elongating = False
+        return elongating
 
 
 def classify(profile_name: str) -> str:

@@ -186,7 +186,7 @@ def generate_js_domains(region: Region, record: Record) -> Dict[str, Union[str, 
                     monomer = monomer[:-2] + "?"
                 if monomer.endswith("X"):
                     monomer = monomer[:-1] + "?"
-            if module.is_non_elongating:
+            if module.is_elongating == False:
                 monomer = "non-elong"
             multi_cds: Optional[str] = None
             match_id: Optional[str] = None

@@ -159,7 +159,7 @@ class NRPSPKSDomains(module_results.DetectionResults):
                                         starter=module.is_starter_module(),
                                         final=module.is_termination_module(),
                                         iterative=module.is_iterative(),
-                                        non_elongating=module.get_elongating())
+                                        elongating=module.get_elongating())
                 record.add_module(feature)
 
     @staticmethod

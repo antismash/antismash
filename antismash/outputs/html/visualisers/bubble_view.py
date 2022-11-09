@@ -237,7 +237,7 @@ def _gen_js_data_for_candidate(record: Record, result: CandidateClusterPredictio
             domains.append(build_domain_json(profile_name, dom, inactive))
             domains_in_modules_by_cds[dom.locus_tag].add(dom)
         polymer = module.get_substrate_monomer_pairs()[0][1] if module.is_complete() else ""
-        if module.is_non_elongating:
+        if module.is_elongating == False:
             polymer = "non-elong"
 
         # if not all of the parent CDS features of this module are in the candidate, it's not complete

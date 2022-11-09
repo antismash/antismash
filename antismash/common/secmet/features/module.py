@@ -44,13 +44,13 @@ class Module(Feature):
     """
     __slots__ = ["_parent_cds_names", "_domains", "_substrate_monomer_pairs",
                  "_complete", "_is_starter", "_is_final", "_module_type", "_is_iterative",
-                 "_is_non_elongating",]
+                 "_elongating",]
     types = ModuleType
     FEATURE_TYPE = "aSModule"
 
     def __init__(self, domains: List[AntismashDomain], module_type: ModuleType = ModuleType.UNKNOWN,
                  complete: bool = False, starter: bool = False, final: bool = False,
-                 iterative: bool = False, non_elongating: bool = False) -> None:
+                 iterative: bool = False, elongating: bool = True) -> None:
         if not domains:
             raise ValueError("at least one domain required in module")
 
@@ -82,7 +82,7 @@ class Module(Feature):
         self._is_final = final
         self._module_type = module_type
         self._is_iterative = iterative
-        self._is_non_elongating = non_elongating
+        self._elongating = elongating
 
     @property
     def domains(self) -> Tuple[AntismashDomain, ...]:
@@ -103,11 +103,11 @@ class Module(Feature):
         return tuple(self._substrate_monomer_pairs)
 
     @property
-    def is_non_elongating(self) -> bool:
+    def is_elongating(self) -> bool:
         """
-        Returns wether or not the module is elongating. Only relevant for Trans-AT-PKS.
+        Returns whether or not the module is elongating. Only relevant for Trans-AT-PKS.
         """
-        return self._is_non_elongating
+        return self._elongating
 
     @property
     def parent_cds_names(self) -> Tuple[str, ...]:
