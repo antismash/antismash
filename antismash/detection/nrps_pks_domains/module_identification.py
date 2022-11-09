@@ -649,4 +649,5 @@ def combine_modules(current: CDSModuleInfo, previous: CDSModuleInfo) -> Optional
     if module.is_trans_at() and len(next.components) == 1 and next.components[0].domain.hit_id == "PKS_KR":
         module.add_component(next.components[0], [])
         current.modules.pop(0)
+        
     return module

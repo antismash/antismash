@@ -31,8 +31,8 @@ from .module import Module
 _VALID_TRANSLATION_CHARS = set(IUPACData.extended_protein_letters)
 T = TypeVar("T", bound="CDSFeature")
 
-
 MAX_TRANSLATION_LENGTH = 100_000
+
 
 def _sanitise_id_value(name: Optional[str]) -> Optional[str]:
     """ Ensures a name doesn't contain characters that will break external programs"""
@@ -119,9 +119,9 @@ def _ensure_valid_translation(translation: str, location: Location, transl_table
             translation = record.get_aa_translation_from_location(location, transl_table)
         except CodonTable.TranslationError as err:
             raise ValueError("invalid codon: %s" % err)
-    if len(translation) >= MAX_TRANSLATION_LENGTH:
-            raise ValueError(f"translation too long for dependencies: {len(translation)}")
 
+    if len(translation) >= MAX_TRANSLATION_LENGTH:
+        raise ValueError(f"translation too long for dependencies: {len(translation)}")
 
     assert _is_valid_translation_length(translation, location)
     return translation
