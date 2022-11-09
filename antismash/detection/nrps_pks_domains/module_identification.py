@@ -507,7 +507,7 @@ class Module:
         if self.is_trans_at():
             if self._starter:
                 if self._starter.subsubtype:
-                    if self._starter.subsubtype != "":
+                    if self._starter.subsubtype != "" and self._starter.subsubtype != "unknown variant":
                         if TRANS_AT_KS_SUBTYPE_TO_ELONGATING[self._starter.subsubtype] == False:
                             elongating = False
         return elongating
@@ -553,7 +553,7 @@ def build_modules_for_cds(domains: List[HMMResult], ks_subtypes: List[str], cds_
         if component.classification == "KS":
             sub = next(subtypes)
             if sub == "Trans-AT-KS":
-                subsub = next(subsubtypes, "")
+                subsub = next(subsubtypes, "unknown variant")
             else:
                 subsub = ""
         else:

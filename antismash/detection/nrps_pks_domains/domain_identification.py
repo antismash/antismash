@@ -97,7 +97,7 @@ class CDSResult:
                 sub = next(ks_sub)
                 domain_feature.domain_subtype = sub
                 if sub == "Trans-AT-KS":
-                    subsub = next(ks_subsub, "")
+                    subsub = next(ks_subsub, "unknown variant")
                     domain_feature.domain_subsubtype = subsub
                 else:
                     subsub = ""
@@ -225,7 +225,7 @@ def match_subsubtypes_to_trans_at_ks_domains(subtypes: List[HMMResult], subsubty
         return []
     subsubs = []
     for sub in subtypes:
-        subsub = ""
+        subsub = "unknown variant"
         for subsubtype in subsubtypes:
             if sub.query_end >= subsubtype.query_start and subsubtype.query_end >= sub.query_start:
                 subsub = subsubtype.hit_id
