@@ -73,7 +73,7 @@ class IntegrationTRANSATPKS(unittest.TestCase):
         assert set(results.domain_predictions) == set(domain_names)
         assert set(results.domain_predictions[domain_names[0]]) == {"NRPSPredictor2"}
         pred = results.region_predictions[1][0]
-        monomers = '(ccmal) + (Me-ccmal - ccmal - mal) + (gly - ccmal) + (ohmal - ohmal) + (ccmal) + (Me-ccmal - mal) + (gly)'
+        monomers = '(ccmal) + (Me-ccmal - ccmal - mal) + (gly - ccmal) + (Me-ccmal - mal - ohmal - ohmal) + (ccmal) + (Me-ccmal - mal) + (gly)'
         assert pred.polymer == monomers
         results_domains = helpers.run_and_regenerate_results_for_module(filename, nrps_pks_domains, self.options)
         ks_subtypes = []
