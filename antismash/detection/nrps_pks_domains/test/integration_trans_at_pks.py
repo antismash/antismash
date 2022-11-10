@@ -83,7 +83,7 @@ class IntegrationTRANSATPKS(unittest.TestCase):
                             'Trans-AT-KS', 'Modular-KS', 'Modular-KS']
 
         ks_subsubtypes_true = ['ST', 'NON_ELONGATING_BETA_OH', 'DB', 'unknown variant',
-                               'AA', 'unknown variant', 'TRANS_AT_PKS', 'TRANS_AT_PKS', 'unknown variant',
+                               'AA', 'unknown variant', 'unknown variant', 'TRANS_AT_PKS', 'unknown variant',
                                'BETA_OH_KETO', 'NON_ELONGATING_BETA_OH', 'DB']
         ks_subsubtypes = []
         for cds, cds_result in results_domains.cds_results.items():
