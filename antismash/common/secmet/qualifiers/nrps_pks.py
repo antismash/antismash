@@ -43,7 +43,7 @@ class NRPSPKSQualifier:
                      "predictions", "feature_name", "subtype", "subsubtype"]
 
         def __init__(self, name: str, label: str, start: int, end: int,
-                     evalue: float, bitscore: float, feature_name: str, subtype: str = "", subsubtype: str = "") -> None:
+                     evalue: float, bitscore: float, feature_name: str, subtype: str = "", subsubtype=None) -> None:
             self.label = str(label)
             self.name = str(name)
             self.start = int(start)
@@ -55,7 +55,7 @@ class NRPSPKSQualifier:
             self.feature_name = str(feature_name)
             self.predictions: Dict[str, str] = {}  # method to prediction name
             self.subtype = str(subtype)
-            self.subsubtype = str(subsubtype)
+            self.subsubtype = subsubtype
 
         def __lt__(self, other: "NRPSPKSQualifier.Domain") -> bool:
             return (self.start, self.end) < (other.start, other.end)
@@ -120,7 +120,7 @@ class NRPSPKSQualifier:
         self.subtypes.append(subtype)
 
     # the domain type Any is only to avoid circular dependencies
-    def add_domain(self, domain: Any, feature_name: str, subtype: str = "", subsubtype: str = "") -> None:
+    def add_domain(self, domain: Any, feature_name: str, subtype: str = "", subsubtype=None) -> None:
         """ Adds a domain to the current set.
 
             Arguments:
@@ -134,6 +134,9 @@ class NRPSPKSQualifier:
             Returns:
                 None
         """
+        #fixing a problem that only occurs when reusing old record for testing
+        if subsubtype == "None":
+            subsubtype = None
         assert not isinstance(domain, str)
         if subtype:
             assert domain.hit_id == "PKS_KS", domain.hit_id
@@ -179,11 +182,11 @@ class NRPSPKSQualifier:
                 elif parts[0].endswith(")"):
                     name, sub = parts[0].split("(", 1)
                     sub = sub.rstrip(")")
-                    subsub = ""
+                    subsub = None
                 else:
                     name = parts[0]
                     sub = ""
-                    subsub = ""
+                    subsub = None
                 domain = _HMMResultLike(name, int(parts[1]), int(parts[2]),
                                         float(parts[3]), float(parts[4]))
                 self.add_domain(domain, parts[5], sub, subsub)

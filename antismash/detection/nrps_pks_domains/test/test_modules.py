@@ -35,7 +35,7 @@ CP = "ACP"
 
 class Component(Component_actual):
     """ a tiny wrapper to avoid always supplying a dummy CDS name """
-    def __init__(self, domain, cds_name="test_name", subtype="", subsubtype=""):
+    def __init__(self, domain, cds_name="test_name", subtype="", subsubtype=None):
         super().__init__(domain, cds_name, subtype=subtype, subsubtype=subsubtype)
 
 
@@ -43,7 +43,7 @@ def build_modules_for_cds(domains, subtypes, cds_name="test_name", subsubtypes=[
     return build_modules_for_cds_actual(domains, subtypes, cds_name, subsubtypes)
 
 
-def add_component(module, name, sub="", subsub="", start=1, end=10, cds_name="test_name", lookaheads=None):
+def add_component(module, name, sub="", subsub=None, start=1, end=10, cds_name="test_name", lookaheads=None):
     assert cds_name
     if lookaheads is None:
         lookaheads = []
@@ -56,7 +56,7 @@ def build_module(names, subtypes=None, subsubtypes=None, first_in_cds=True, cds_
     subsubs = iter(subsubtypes or [])
     for domain in names:
         sub = next(subs) if domain == PKS_START and subtypes else ""
-        subsub = next(subsubs) if domain == PKS_START and subsubtypes else ""
+        subsub = next(subsubs) if domain == PKS_START and subsubtypes else None
         add_component(module, domain, sub, subsub, cds_name=cds_name)
     return module
 

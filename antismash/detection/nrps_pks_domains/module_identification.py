@@ -157,7 +157,7 @@ class Component:
         A subsubtype can be optionally supplied to differentiate between
         subsubtypes of Trans-AT-PKS KS domains
     """
-    def __init__(self, domain: HMMResult, cds_name: str, subtype: str = "", subsubtype: str = "") -> None:
+    def __init__(self, domain: HMMResult, cds_name: str, subtype: str = "", subsubtype = None) -> None:
         self._domain = domain
         self.classification = classify(domain.hit_id)
         self.subtype = subtype
@@ -252,8 +252,7 @@ class Component:
         """ Construct a component from a JSON representation """
         subtype = data.get("subtype", "")
         assert isinstance(subtype, str), subtype
-        subsubtype = data.get("subsubtype", "")
-        assert isinstance(subsubtype, str), subsubtype
+        subsubtype = data.get("subsubtype", None)
         return cls(HMMResult.from_json(data["domain"]), data["locus"], subtype, subsubtype)
 
 
@@ -507,7 +506,7 @@ class Module:
         if self.is_trans_at():
             if self._starter:
                 if self._starter.subsubtype:
-                    if self._starter.subsubtype != "" and self._starter.subsubtype != "unknown variant":
+                    if self._starter.subsubtype != None and self._starter.subsubtype != "unknown variant":
                         if TRANS_AT_KS_SUBTYPE_TO_ELONGATING[self._starter.subsubtype] == False:
                             elongating = False
         return elongating
@@ -546,7 +545,7 @@ def build_modules_for_cds(domains: List[HMMResult], ks_subtypes: List[str], cds_
     subtypes = iter(ks_subtypes)
     subsubtypes = iter(ks_subsubtypes)
     sub = ""
-    subsub = ""
+    subsub = None
     components = [Component(domain, cds_name) for domain in domains]
     for i, component in enumerate(components):
         assert component.classification, "missing classification for %s" % component.domain.hit_id
@@ -555,10 +554,10 @@ def build_modules_for_cds(domains: List[HMMResult], ks_subtypes: List[str], cds_
             if sub == "Trans-AT-KS":
                 subsub = next(subsubtypes, "unknown variant")
             else:
-                subsub = ""
+                subsub = None
         else:
             sub = ""
-            subsub = ""
+            subsub = None
         component = Component(component.domain, cds_name, sub, subsub)
         # start a new module if we have an explicit starter
         if component.is_starter() and not component.is_loader() and not modules[-1].is_empty():

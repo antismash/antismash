@@ -100,10 +100,10 @@ class CDSResult:
                     subsub = next(ks_subsub, "unknown variant")
                     domain_feature.domain_subsubtype = subsub
                 else:
-                    subsub = ""
+                    subsub = None
             else:
                 sub = ""
-                subsub = ""
+                subsub = None
             record.add_antismash_domain(domain_feature)
             # update the CDS' NRPS_PKS qualifier
             cds.nrps_pks.add_domain(domain, domain_feature.get_name(), sub, subsub)
