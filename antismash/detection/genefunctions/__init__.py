@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional
 
 from antismash.common import hmmer, module_results, path
 from antismash.common.secmet import Record
-from antismash.config import ConfigType
+from antismash.config import ConfigType, get_config
 from antismash.config.args import ModuleArgs
 from antismash.detection import DetectionStage
 
@@ -90,8 +90,13 @@ def prepare_data(logging_only: bool = False) -> List[str]:
         Returns:
             a list of error messages (only if logging_only is True)
     """
-    database = path.get_full_path(__file__, 'data', 'smcogs.hmm')
-    return hmmer.ensure_database_pressed(database, return_not_raise=logging_only)
+    failures = []
+    for database in [
+        path.get_full_path(__file__, 'data', 'smcogs.hmm'),
+        os.path.join(get_config().database_dir, 'resfam', 'Resfams.hmm'),
+    ]:
+        failures.extend(hmmer.ensure_database_pressed(database, return_not_raise=logging_only))
+    return failures
 
 
 def check_prereqs(options: ConfigType) -> List[str]:
