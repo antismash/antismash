@@ -143,7 +143,7 @@ class TestKSSubsubtypeMatching(unittest.TestCase):
 
     def test_trans_at_pks_with_no_hit(self):
         assert self.func([DummyHMMResult("Trans-AT-KS", start=1, end=40)],
-                         [DummyHMMResult("db", start=41, end=48)]) == [""]
+                         [DummyHMMResult("db", start=41, end=48)]) == ["unknown variant"]
 
     def test_mixed(self):
         sub_hits = [
@@ -154,7 +154,7 @@ class TestKSSubsubtypeMatching(unittest.TestCase):
         subsub_hits = [
             DummyHMMResult("db", start=99, end=139)
         ]
-        assert self.func(sub_hits, subsub_hits) == ["", "DB"]
+        assert self.func(sub_hits, subsub_hits) == ["unknown variant", "DB"]
 
 
 @patch.object(fasta, "get_fasta_from_features", return_value={})
