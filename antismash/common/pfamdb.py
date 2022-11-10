@@ -9,7 +9,7 @@ import logging
 import os
 from typing import Dict, List, Optional
 
-from antismash.common import path
+from antismash.common import hmmer, path
 
 KNOWN_MAPPINGS: Dict[str, Dict[str, str]] = {}  # tracks name mappings per database
 KNOWN_CUTOFFS: Dict[str, Dict[str, float]] = {}  # tracks profile cutoffs per database
@@ -43,11 +43,12 @@ def find_latest_database_version(database_dir: str) -> str:
 def check_db(db_path: str) -> List[str]:
     "Check that all required files exist for a database"
     failure_messages = []
-    for file_name in ['Pfam-A.hmm', 'Pfam-A.hmm.h3f', 'Pfam-A.hmm.h3i',
-                      'Pfam-A.hmm.h3m', 'Pfam-A.hmm.h3p']:
-        if not path.locate_file(os.path.join(db_path, file_name)):
-            failure_messages.append("Failed to locate file: %r in %s" % (file_name, db_path))
-
+    file_name = 'Pfam-A.hmm'
+    full_path = os.path.join(db_path, file_name)
+    if not path.locate_file(full_path):
+        failure_messages.append("Failed to locate file: %r in %s" % (file_name, db_path))
+    else:
+        failure_messages.extend(hmmer.ensure_database_pressed(full_path, return_not_raise=True))
     return failure_messages
 
 
