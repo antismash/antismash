@@ -157,7 +157,7 @@ class Component:
         A subsubtype can be optionally supplied to differentiate between
         subsubtypes of Trans-AT-PKS KS domains
     """
-    def __init__(self, domain: HMMResult, cds_name: str, subtype: str = "", subsubtype = None) -> None:
+    def __init__(self, domain: HMMResult, cds_name: str, subtype: str = "", subsubtype: str = None) -> None:
         self._domain = domain
         self.classification = classify(domain.hit_id)
         self.subtype = subtype
@@ -648,5 +648,5 @@ def combine_modules(current: CDSModuleInfo, previous: CDSModuleInfo) -> Optional
     if module.is_trans_at() and len(next.components) == 1 and next.components[0].domain.hit_id == "PKS_KR":
         module.add_component(next.components[0], [])
         current.modules.pop(0)
-        
+
     return module

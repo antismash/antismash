@@ -43,7 +43,7 @@ class NRPSPKSQualifier:
                      "predictions", "feature_name", "subtype", "subsubtype"]
 
         def __init__(self, name: str, label: str, start: int, end: int,
-                     evalue: float, bitscore: float, feature_name: str, subtype: str = "", subsubtype=None) -> None:
+                     evalue: float, bitscore: float, feature_name: str, subtype: str = "", subsubtype: str = None) -> None:
             self.label = str(label)
             self.name = str(name)
             self.start = int(start)
@@ -120,7 +120,7 @@ class NRPSPKSQualifier:
         self.subtypes.append(subtype)
 
     # the domain type Any is only to avoid circular dependencies
-    def add_domain(self, domain: Any, feature_name: str, subtype: str = "", subsubtype=None) -> None:
+    def add_domain(self, domain: Any, feature_name: str, subtype: str = "", subsubtype: str = None) -> None:
         """ Adds a domain to the current set.
 
             Arguments:
