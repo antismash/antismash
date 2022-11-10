@@ -232,6 +232,8 @@ def match_subsubtypes_to_trans_at_ks_domains(subtypes: List[HMMResult], subsubty
                 #format subsubstrings to reduce redundancy
                 subsub = ''.join((x for x in subsub if not x.isdigit()))
                 subsub = subsub.replace("_", "").replace("-", "_").replace("/", "_").upper()
+                if subsub == "TRANS_AT_PKS":
+                    subsub = "unknown variant"
                 break
         subsubs.append(subsub)
     assert len(subtypes) == len(subsubs)
