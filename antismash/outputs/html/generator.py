@@ -20,6 +20,8 @@ from antismash.config import ConfigType
 from antismash.outputs.html import js
 from antismash.custom_typing import AntismashModule, VisualisationModule
 
+from .visualisers import gene_table
+
 
 def _get_visualisers() -> List[VisualisationModule]:
     """ Gather all the visualisation-only submodules """
@@ -144,7 +146,12 @@ def generate_html_sections(records: List[RecordLayer], results: Dict[str, Dict[s
                 if not hasattr(aggregator, "generate_html"):
                     continue
                 if aggregator.has_enough_results(record.seq_record, region.region_feature, record_result):
-                    sections.append(aggregator.generate_html(region, record_result, record, options))
+                    section = aggregator.generate_html(region, record_result, record, options)
+                    # as a special case, the first section of a region should always be the gene table
+                    if aggregator is gene_table:
+                        sections.insert(0, section)
+                    else:
+                        sections.append(section)
             record_details[region.get_region_number()] = sections
         details[record.id] = record_details
     return details
