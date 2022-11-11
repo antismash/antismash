@@ -135,6 +135,9 @@ def convert_cds_features(record: Record, features: Iterable[CDSFeature], options
             "locus_tag": feature.get_name(),
             "type": str(gene_function),
             "description": description,
+            "dna": str(feature.location.extract(record.seq)),
+            "translation": feature.translation,
+            "product": feature.product or "",
         })
         if feature.gene_functions.get_by_tool("resist"):  # don't add to every gene for size reasons
             js_orfs[-1]["resistance"] = True
