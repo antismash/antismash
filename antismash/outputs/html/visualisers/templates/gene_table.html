@@ -1,0 +1,43 @@
+<div class="details">
+ <div class="heading">
+   <span>Gene/CDS overview</span>
+   {{help_tooltip(tooltip, "gt-help-tooltip")}}
+ </div>
+ <div class="gt-container" id="gt-container-{{region.anchor_id}}">
+  <div class="gt-header">
+   <div class="gt-filter">
+    Filter: <input type="search" id="gt-{{region.anchor_id}}-search" class="search-field gt-search">
+   </div>
+   {{switch("Automatically zoom to filtered/selected features", "gt-zoom-toggle", id_attr="gt-" + region.anchor_id + "-toggle", starts_on=True)}}
+  </div>
+  <div class="gt-scroll-container">
+  <table class="gt" id="gt-{{region.anchor_id}}">
+   <thead>
+    <tr>
+     <th>Identifier</th>
+     <th>Product</th>
+     <th colspan="2">Length</th>
+     <th>Function</th>
+     <th colspan="2">Sequence</th>
+     <th>NCBI Blast</th>
+     <th class="gt-column-match" style="display:none">Filter details</th>{# column for details about how it hits, starts hidden #}
+    </tr>
+    <tr>
+     <th></th>
+     <th></th>
+     <th>NT</th>
+     <th>AA</th>
+     <th></th>
+     <th>NT</th>
+     <th>AA</th>
+     <th></th>
+     <th class="gt-column-match" style="display:none"></th>
+    </tr>
+   </thead>
+   <tbody>
+   </tbody>
+  </table>
+  </div>
+  <div class="gt-no-hits" style="display:none">No genes match the given filter</div>
+ </div>
+</div>

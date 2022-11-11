@@ -1,4 +1,5 @@
 @import 'secmet';
+$body-background: white;
 $medium-gray: #444;
 $light-gray: #eee;
 $light-red: orangered;
@@ -30,7 +31,7 @@ $kind-protoclusters: white;
 body {
     font-family: Helvetica, Verdana, Tahoma, Sans-Serif;
     color: #555;
-    background-color: white;
+    background-color: $body-background;
     text-align: left;
     margin: 0;
     padding: 0;
@@ -1462,6 +1463,101 @@ ul.dropdown-options {
     * .bubble-domain-inactive {
         opacity: 60%;
     }
+}
+
+// styling for the gene table visualiser
+.gt-container {
+    .gt-header {
+        display: flex;
+        justify-content: space-evenly;
+        padding: 1em;
+    }
+    .gt-no-hits {
+        display: block;
+        margin: 2em;
+        margin-left: 20%;
+    }
+    .gt-scroll-container {
+        overflow-y: scroll;
+        max-height: 350px;
+    }
+    * .gt {
+        padding: 1em;
+
+        * .row-odd {
+            background-color: #f8f8f8;
+        }
+        * .row-even {
+            background-color: #eaeaea;
+        }
+
+        thead {
+            position: sticky;
+            top: 0px;
+            background: $body-background;
+            tr {
+                width: 100%;
+                table-layout: fixed;
+            }
+            * th {
+                text-align: center;
+                padding-left: 0.5em;
+                padding-right: 0.5em;
+            }
+        }
+
+        tbody {
+            tr {
+                cursor: pointer;
+                scroll-margin-top: 3em;
+
+                td {
+                    padding-left: 0.5em;
+                    padding-right: 0.5em;
+                    cursor: pointer;
+                    &.gt-cell-link {
+                        text-align: center;
+                    }
+                    &.gt-matching-cell {
+                        border-bottom: 1px solid black;
+                        background-color: #b8d2db;
+                    }
+                    .button-like {
+                        display: block;
+                        text-align: center;
+                        margin-left: 0em;
+                    }
+                    /* the cells with hit information can have a lot of text and have a lot of verticality,
+                       so compact as much as possible while remaining readable */
+                    &.gt-cell-match {
+                        font-size: 80%;
+                        padding: 0.5em;
+                        ul {
+                            margin-top: 0em;
+                            margin-bottom: 0em;
+                            li {
+                                padding: 0em;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        * .gt-cell-numeric {
+            text-align: right;
+            margin-right: 1em;
+        }
+    }
+}
+
+.colour-square {
+    height: 1em;
+    width: 1em;
+    display: inline-block;
+    border: 1px solid black;
+    margin-right: 0.5em;
+    vertical-align: middle;
 }
 
 /* A generalised indicator for non-overview sections to show which gene is currently
