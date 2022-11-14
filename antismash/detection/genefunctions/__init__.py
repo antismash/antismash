@@ -95,6 +95,9 @@ def prepare_data(logging_only: bool = False) -> List[str]:
         path.get_full_path(__file__, 'data', 'smcogs.hmm'),
         os.path.join(get_config().database_dir, 'resfam', 'Resfams.hmm'),
     ]:
+        # account for database directories mounted into docker containers
+        if "mounted_at_runtime" in database:
+            continue
         failures.extend(hmmer.ensure_database_pressed(database, return_not_raise=logging_only))
     return failures
 
@@ -109,7 +112,7 @@ def check_prereqs(options: ConfigType) -> List[str]:
             failure_messages.append("Failed to locate file: %r" % binary_name)
 
     database = os.path.join(options.database_dir, 'resfam', 'Resfams.hmm')
-    if path.locate_file(database) is None:
+    if "mounted_at_runtime" not in database and path.locate_file(database) is None:
         failure_messages.append('Failed to locate Resfam database in %s' % database)
 
     failure_messages.extend(prepare_data(logging_only=True))
