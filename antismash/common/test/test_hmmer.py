@@ -9,7 +9,12 @@ from dataclasses import FrozenInstanceError, dataclass
 import json
 import unittest
 
-from antismash.common.hmmer import HmmerHit, HmmerResults, remove_overlapping
+from antismash.common.hmmer import (
+    ensure_database_pressed,
+    HmmerHit,
+    HmmerResults,
+    remove_overlapping,
+)
 
 from .helpers import DummyRecord
 
@@ -196,3 +201,9 @@ class TestResults(unittest.TestCase):
         assert regenerated.score == self.results.score
         assert regenerated.database == self.results.database
         assert regenerated.tool == self.results.tool
+
+
+class TestPressed(unittest.TestCase):
+    def test_caught(self):
+        with self.assertRaisesRegex(ValueError, "set to mount at runtime"):
+            ensure_database_pressed("/path/mounted_at_runtime/pfam")

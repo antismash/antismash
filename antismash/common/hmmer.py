@@ -292,6 +292,12 @@ def ensure_database_pressed(filepath: str, return_not_raise: bool = False) -> Li
     """
     components = ["{}{}".format(filepath, ext) for ext in ['.h3f', '.h3i', '.h3m', '.h3p']]
 
+    if "mounted_at_runtime" in filepath:
+        msg = f"Cannot ensure database pressed when set to mount at runtime: {filepath}"
+        if return_not_raise:
+            return [msg]
+        raise ValueError(msg)
+
     if path.is_outdated(components, filepath):
         logging.info("%s components missing or obsolete, re-pressing database", filepath)
         if "hmmpress" not in get_config().executables:
