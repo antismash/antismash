@@ -1,0 +1,24 @@
+<div class="tfbs-sidepanel">
+ <div class="heading">
+   <span>TFBS definitions</span>
+   {{ help_tooltip(tooltip, "tfbs-side") }}
+ </div>
+ <div class = 'prediction-text'>
+  <table class="tfbs-sidepanel-table">
+    <thead>
+     <tr>
+      <th>Regulator</th>
+      <th>Description</th>
+     </tr>
+    </thead>
+    <tbody>
+    {% for name, description in descriptions.items() %}
+     <tr>
+      <td><a href="https://logomotif.bioinformatics.nl/regulator/{{ name }}" target="_blank">{{ name }}</a></td>
+      <td>{{ description }}</td>
+     </tr>
+    {% endfor %}
+    </tbody>
+   </table>
+  </div>
+</div>

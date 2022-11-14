@@ -1582,3 +1582,89 @@ ul.dropdown-options {
     margin: 0.1em;
     margin-right: 0.5em;
 }
+
+.tfbs-details-container {
+    .tfbs-weak-hits {
+        padding-bottom: 1em;
+    }
+    .tfbs-section-header {
+        font-weight: bold;
+    }
+    .tfbs-hit-list {
+        display: grid;
+        grid-template-columns: max-content max-content;
+        padding-left: 2em;
+
+        .tfbs-hit-detail {
+            display: inline-block;
+            grid-column: 1;
+            padding-top: 1.5em;
+
+            span {
+                font-weight: bold;
+            }
+        }
+        .tfbs-confidence {
+            grid-column: 2;
+            margin-left: auto;
+            padding-top: 1.5em;
+        }
+        .tfbs-svg-container {
+          grid-column-start: 1;
+          grid-column-end: 3;
+
+            * .tfbs-sequence {
+                @extend .serif;
+            }
+            * .tfbs-nearby {
+                path, .tfbs-ellipsis {
+                    fill: #c6c6c6;
+                }
+                line {
+                    stroke: #c6c6c6;
+                }
+            }
+            * .tfbs-hit-text-nearby {
+                fill: #c6c6c6;
+            }
+            * .tfbs-coordinate {
+                font-size: 80%;
+            }
+            * .tfbs-line {
+                stroke: black;
+            }
+            * .tfbs-sequence-hit {
+                font-weight: bold;
+            }
+            * .tfbs-gene-label {
+                cursor: pointer;
+            }
+        }
+    }
+}
+
+.tfbs-sidepanel {
+    * .tfbs-sidepanel-table {
+        margin: 1em;
+
+        * th, * td {
+            padding: .8em 1em;
+        }
+        thead tr v{
+            font-size: 200%;
+        }
+        tbody tr {
+            border-bottom: 1px solid #ddd;
+
+            &:nth-of-type(even) {
+                background-color: #f3f3f3;
+            }
+            &:last-of-type {
+                border-bottom: 2px solid #444;
+            }
+            &:first-of-type {
+                border-top: 2px solid #444;
+            }
+        }
+    }
+}
