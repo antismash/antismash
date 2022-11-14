@@ -137,6 +137,20 @@ class TestModuleData(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "failing prereq"):
             antismash.main.check_prerequisites(get_all_modules(), options)
 
+    def test_prereqs_with_container_data(self):
+        modules = get_all_modules()
+        options = build_config(["--databases", "/some/mounted_at_runtime/path"],
+                               isolated=True, modules=modules)
+        # there should be no errors for missing databases
+        antismash.main.check_prerequisites(modules, options)
+
+    def test_prepare_module_data_with_container_data(self):
+        modules = get_all_modules()
+        options = build_config(["--databases", "/some/mounted_at_runtime/path"],
+                               isolated=True, modules=modules)
+        # there should be no errors for missing databases
+        prepare_module_data()
+
     def test_prepare_module_data(self):
         # make sure there's some to start with
         search = path.get_full_path(antismash.__file__, '**', "*.h3?")
