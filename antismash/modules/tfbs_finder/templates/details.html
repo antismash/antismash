@@ -1,0 +1,36 @@
+{%- macro hit_list(hits) -%}
+<div class="tfbs-hit-list">
+ {% for hit in hits %}
+ <div class="tfbs-hit-detail">
+  {{ hit.name }}
+  {{ collapser_start(target=hit.name, level='cds') }}
+    <span>Description</span>: {{ hit.description }}<br>
+    <span>Score</span>: {{ "%.2f" % hit.score | float }} out of {{ "%.2f" % hit.max_score }}
+  {{ collapser_end() }}
+ </div>
+ <div class="tfbs-confidence">
+  Confidence: {{ hit.confidence | string }}
+ </div>
+ <div class="tfbs-svg-container" id="tfbs-{{anchor}}-{{hit.start}}-{{hit.name}}"></div>
+{% endfor %}
+</div>
+{%- endmacro -%}
+
+<div class="details tfbs-details-container">
+  <div class="heading">
+    <span>Transcription Factor Binding Sites</span> {{ help_tooltip(tooltip, "tfbs-body") }}
+  </div>
+ {% if hits %}
+  <div class="tfbs-section-header">Binding sites found:</div>
+   {{ hit_list(hits) }}
+ {% else %}
+   <span class="tfbs-no-hits">No hits above weak threshold.</span>
+ {% endif %}
+  {% if weak_hits %}
+   <div class="tfbs-weak-hits"><span class="tfbs-section-header">{{ "Additional w" if hits else "W" }}eak hits ({{ weak_hits | length }}):</span>
+    {{ collapser_start(target='weak', level='cds') }}
+     {{ hit_list(weak_hits) }}
+    {{ collapser_end() }}
+   </div>
+  {% endif %}
+</div>
