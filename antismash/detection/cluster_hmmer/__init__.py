@@ -50,6 +50,11 @@ def check_prereqs(options: ConfigType) -> List[str]:
             failure_messages.append("Failed to locate executable: %r" % binary_name)
 
     data_dir = options.database_dir
+
+    # account for database directories mounted into docker containers
+    if "mounted_at_runtime" in data_dir:
+        return failure_messages
+
     try:
         version = pfamdb.find_latest_database_version(data_dir)
     except ValueError as err:
