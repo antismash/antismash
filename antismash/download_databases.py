@@ -399,21 +399,21 @@ def download_comparippson_db(db_dir: str, name: str, url: str, version: str,
 def download(args: argparse.Namespace) -> None:
     """Download all the large external databases needed."""
     # grab the latest pfam
-#    download_pfam(
-#        args.database_dir,
-#        PFAM_LATEST_URL,
-#        PFAM_LATEST_VERSION,
-#        PFAM_LATEST_ARCHIVE_CHECKSUM,
-#        PFAM_LATEST_CHECKSUM,
-#    )
+    download_pfam(
+        args.database_dir,
+        PFAM_LATEST_URL,
+        PFAM_LATEST_VERSION,
+        PFAM_LATEST_ARCHIVE_CHECKSUM,
+        PFAM_LATEST_CHECKSUM,
+    )
 
-#    download_resfam(args.database_dir)
+    download_resfam(args.database_dir)
 
-#    download_tigrfam(args.database_dir)
+    download_tigrfam(args.database_dir)
 
-#    download_clusterblast(args.database_dir)
-#    for name, details in CLUSTERCOMPARE_DBS.items():
-#        download_clustercompare(args.database_dir, name, **details)
+    download_clusterblast(args.database_dir)
+    for name, details in CLUSTERCOMPARE_DBS.items():
+        download_clustercompare(args.database_dir, name, **details)
     for name, details in COMPARIPPSON_DBS.items():
         download_comparippson_db(args.database_dir, name, **details)
 
