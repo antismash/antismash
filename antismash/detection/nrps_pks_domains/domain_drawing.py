@@ -150,7 +150,12 @@ def _parse_domain(record: Record, domain: NRPSPKSQualifier.Domain,
                  "&amp;QUERY={}"
                  "&amp;LINK_LOC=protein&amp;PAGE_TYPE=BlastSearch").format(domainseq)
 
-    dna_sequence = feature.extract(record.seq)
+    dna_sequence = ""
+    for as_domain in record.get_antismash_domains_in_cds(feature):
+        if as_domain.get_name() == domain.feature_name:
+            dna_sequence = as_domain.extract(record.seq)
+            break
+    assert dna_sequence
     css, abbreviation = get_css_class_and_abbreviation(domain.name)
     return JSONDomain(domain, predictions, napdoslink, blastlink, domainseq, dna_sequence,
                       abbreviation, css)
