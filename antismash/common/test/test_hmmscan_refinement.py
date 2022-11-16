@@ -66,6 +66,33 @@ class TestHMMResult(unittest.TestCase):
         second._evalue /= 10
         assert first != second
 
+    def test_containment(self):
+        outer = refinement.HMMResult("dummy_hit", 5, 20, 3e-10, 53.5)
+        # check self containment
+        assert outer.is_contained_by(outer)
+        # check right bounds
+        inner = refinement.HMMResult("dummy_hit", 10, 20, 3e-10, 53.5)
+        assert inner.is_contained_by(outer)
+        assert not outer.is_contained_by(inner)
+        # check left bounds
+        inner = refinement.HMMResult("dummy_hit", 5, 15, 3e-10, 53.5)
+        assert inner.is_contained_by(outer)
+        assert not outer.is_contained_by(inner)
+        # check completely within
+        inner = refinement.HMMResult("dummy_hit", 10, 15, 3e-10, 53.5)
+        assert inner.is_contained_by(outer)
+        assert not outer.is_contained_by(inner)
+
+    def test_overlaps(self):
+        center = refinement.HMMResult("dummy", 10, 20, 1., 1.)
+        floating = refinement.HMMResult("dummy", 1, 10, 1., 1.)
+        assert not center.overlaps_with(floating)
+        for start, end in [(5, 15), (10, 20), (15, 25)]:
+            floating = refinement.HMMResult("dummy", start, end, 1., 1.)
+            assert center.overlaps_with(floating) and floating.overlaps_with(center)
+        floating = refinement.HMMResult("dummy", 20, 30, 1., 1.)
+        assert not center.overlaps_with(floating)
+
     def test_hashability(self):
         first = refinement.HMMResult("dummy_hit", 1, 5, 3e-10, 53.5)
         second = refinement.HMMResult("dummy_hit", 1, 5, 3e-10, 53.5)
