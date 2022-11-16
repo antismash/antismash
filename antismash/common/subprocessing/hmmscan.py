@@ -40,7 +40,7 @@ def run_hmmscan(target_hmmfile: str, query_sequence: str, opts: List[str] = None
     result = execute(command, stdin=query_sequence)
     if not result.successful():
         raise RuntimeError('hmmscan returned %d: %r while scanning %r' % (
-                           result.return_code, result.stderr[-100:].replace("\n", ""),
+                           result.return_code, (result.stderr or result.stdout).splitlines()[0],
                            query_sequence[:100]))
     if results_file is not None:
         with open(results_file, 'w') as handle:
