@@ -66,6 +66,18 @@ class HMMResult:
                          min(self.evalue, other.evalue),
                          max(self.bitscore, other.bitscore))
 
+    def is_contained_by(self, other: "HMMResult") -> bool:
+        """ Returns True if this instance is contained within the provided instance """
+        if not isinstance(other, HMMResult):
+            return False
+        return other.query_start <= self.query_start < self.query_end <= other.query_end
+
+    def overlaps_with(self, other: "HMMResult") -> bool:
+        """ Returns True if this instance overlaps with the provided instance """
+        if not isinstance(other, HMMResult):
+            return False
+        return other.query_end > self.query_start and self.query_end > other.query_start
+
     def to_json(self) -> Dict[str, Union[str, int, float]]:
         """ Converts the instance into a dictionary for use in json formats """
         return {key.lstrip("_"): getattr(self, key) for key in self.__slots__}
