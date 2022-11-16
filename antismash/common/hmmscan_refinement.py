@@ -5,7 +5,7 @@
 """
 
 from collections import defaultdict
-from typing import Any, Dict, List, Set, Union
+from typing import Any, Dict, Iterable, List, Set, Tuple, Union
 
 from Bio.SearchIO import QueryResult
 from Bio.SearchIO._model.hsp import HSP
@@ -15,15 +15,18 @@ class HMMResult:
     """ A variant of HSP that allows for operations between multiple instances
         along with simplified operations e.g. len()
     """
-    __slots__ = ["_hit_id", "_query_start", "_query_end", "_evalue", "_bitscore"]
+    __slots__ = ["_hit_id", "_query_start", "_query_end", "_evalue", "_bitscore", "_internal_hits"]
 
     def __init__(self, hit_id: str, start: int, end: int, evalue: float,
-                 bitscore: float) -> None:
+                 bitscore: float, *, internal_hits: Iterable["HMMResult"] = None) -> None:
         self._hit_id = hit_id
         self._query_start = int(start)
         self._query_end = int(end)
         self._evalue = float(evalue)
         self._bitscore = float(bitscore)
+        self._internal_hits: List[HMMResult] = []
+        if internal_hits is not None:
+            self.add_internal_hits(internal_hits)
 
     @property
     def hit_id(self) -> str:
@@ -49,6 +52,31 @@ class HMMResult:
     def bitscore(self) -> float:
         """ Returns the bitscore of the hit """
         return self._bitscore
+
+    @property
+    def internal_hits(self) -> Tuple["HMMResult", ...]:
+        """ Any hits contained by this hit """
+        return tuple(self._internal_hits)
+
+    @property
+    def detailed_names(self) -> List[str]:
+        """ A list of hit ids, one for each depth of internal hit, stopping
+            at the first depth for which there are no hits or multiple hits.
+            Includes the current instance as the first element.
+        """
+        names = [self.hit_id]
+        hits = self._internal_hits
+        while len(hits) == 1:
+            names.append(hits[0].hit_id)
+            hits = hits[0]._internal_hits
+        return names
+
+    def add_internal_hits(self, hits: Iterable["HMMResult"]) -> None:
+        """ Add hits within this hit """
+        for hit in hits:
+            if not hit.overlaps_with(self):
+                raise ValueError(f"subdomain is not co-located with parent: {hit}, {self}")
+        self._internal_hits.extend(hits)
 
     def __len__(self) -> int:
         return self.query_end - self.query_start
@@ -80,20 +108,28 @@ class HMMResult:
 
     def to_json(self) -> Dict[str, Union[str, int, float]]:
         """ Converts the instance into a dictionary for use in json formats """
-        return {key.lstrip("_"): getattr(self, key) for key in self.__slots__}
+        data = {key.lstrip("_"): getattr(self, key) for key in self.__slots__}
+        internal = data.pop("internal_hits")
+        if internal:
+            data["internal_hits"] = [hit.to_json() for hit in internal]
+        return data
 
     @staticmethod
-    def from_json(data: Dict[str, Union[str, int, float]]) -> "HMMResult":
+    def from_json(data: Dict[str, Any]) -> "HMMResult":
         """ Rebuilds a HMMResult instance from a JSON representation """
+        internal_hits = [HMMResult.from_json(hit) for hit in data.get("internal_hits", [])]
         return HMMResult(str(data["hit_id"]), int(data["query_start"]), int(data["query_end"]),
-                         float(data["evalue"]), float(data["bitscore"]))
+                         float(data["evalue"]), float(data["bitscore"]), internal_hits=internal_hits)
 
     def __repr__(self) -> str:
         return str(self)
 
     def __str__(self) -> str:
-        return "HMMResult(%s, %d, %d, evalue=%g, bitscore=%g)" % (self.hit_id,
-                   self.query_start, self.query_end, self.evalue, self.bitscore)
+        subtypes = ""
+        if self.detailed_names[1:]:
+            subtypes = f", subtypes=[{', '.join(self.detailed_names[1:])}]"
+        return "HMMResult(%s, %d, %d, evalue=%g, bitscore=%g%s)" % (self.hit_id,
+                   self.query_start, self.query_end, self.evalue, self.bitscore, subtypes)
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, HMMResult):
