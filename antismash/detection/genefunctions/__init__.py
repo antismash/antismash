@@ -43,7 +43,7 @@ class AllFunctionResults(module_results.DetectionResults):
 
     @staticmethod
     def from_json(json: Dict[str, Any], record: Record) -> Optional["AllFunctionResults"]:
-        if json.get("schema_version") != FunctionResults.schema_version:
+        if json.get("schema_version") != AllFunctionResults.schema_version:
             logging.debug("Schema version mismatch, discarding %s results", NAME)
             return None
         if record.id != json.get("record_id"):
