@@ -153,8 +153,12 @@ def build_domain_json(profile_name: str, domain: ModularDomain, inactive: bool) 
 
     # then flesh out the description for tooltips
     description = profile_name
-    if domain.domain_subtype and domain.domain_subtype != profile_name:
-        description += f"({domain.domain_subtype})"
+    types = domain.subtypes
+    if types:
+        if types[0] == profile_name:
+            types = types[1:]
+        if types:
+            description += f"({')('.join(types)})"
     if inactive:
         description += " - inactive"
 
