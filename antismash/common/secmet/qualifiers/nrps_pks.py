@@ -9,7 +9,6 @@ from typing import Any, Dict, Iterator, List, Tuple
 from .secmet import _parse_format
 
 _DOMAIN_FORMAT = "Domain: {} ({:d}-{:d}). E-value: {}. Score: {}. Matches aSDomain: {}"
-_SUBTYPE_FORMAT = "subtype: {}"
 _TYPE_FORMAT = "type: {}"
 
 
@@ -75,7 +74,6 @@ class NRPSPKSQualifier:
             raise ValueError("strand must be 1 or -1, not %s" % strand)
         self.strand = strand
         self.type = "uninitialised"
-        self.subtypes: List[str] = []
         self._domains: List["NRPSPKSQualifier.Domain"] = []
         self._domain_names: List[str] = []
         self.cal_counter = 0
@@ -96,7 +94,7 @@ class NRPSPKSQualifier:
         return self._domain_names
 
     def __len__(self) -> int:
-        return len(self.subtypes) + len(self._domains)
+        return len(self._domains)
 
     def __iter__(self) -> Iterator[str]:
         for domain in self.domains:
@@ -104,15 +102,6 @@ class NRPSPKSQualifier:
                                         domain.evalue, domain.bitscore, domain.feature_name)
         if self.type != "uninitialised":
             yield _TYPE_FORMAT.format(self.type)
-        for subtype in self.subtypes:
-            yield _SUBTYPE_FORMAT.format(subtype)
-
-    def add_subtype(self, subtype: str) -> None:
-        """ Adds a subtype to the existing list, e.g. 'Glycopeptide NRPS' or
-            'NRPS-like protein'
-        """
-        assert isinstance(subtype, str)
-        self.subtypes.append(subtype)
 
     # the domain type Any is only to avoid circular dependencies
     def add_domain(self, domain: Any, feature_name: str, subtype: str = "") -> None:
@@ -173,8 +162,6 @@ class NRPSPKSQualifier:
                 domain = _HMMResultLike(name, int(parts[1]), int(parts[2]),
                                         float(parts[3]), float(parts[4]))
                 self.add_domain(domain, parts[5], sub)
-            elif qualifier.startswith("subtype: "):
-                self.add_subtype(_parse_format(_SUBTYPE_FORMAT, qualifier)[0])
             elif qualifier.startswith("type: "):
                 self.type = _parse_format(_TYPE_FORMAT, qualifier)[0]
             else:

@@ -30,8 +30,7 @@ class TestNRPSPKS(unittest.TestCase):
         qualifier = NRPSPKSQualifier(strand=1)
         for pks in ["PKS_AT", "AMP-binding"]:
             qualifier.add_domain(HMMResult(pks, 1, 1, 1, 1), "missing")
-            qualifier.add_subtype(pks + "dummy")
-        assert len(qualifier) == 4
+        assert len(qualifier) == 2
         for i in qualifier:
             assert isinstance(i, str)
 
@@ -39,7 +38,6 @@ class TestNRPSPKS(unittest.TestCase):
         qualifier = NRPSPKSQualifier(strand=1)
         for pks in ["PKS_AT", "AMP-binding"]:
             qualifier.add_domain(HMMResult(pks, 1, 1, 1, 1), "missing")
-            qualifier.add_subtype(pks + "dummy")
         qualifier.type = "some type"
 
         bio = list(qualifier)
