@@ -15,7 +15,7 @@ T = TypeVar("T", bound="AntismashDomain")
 
 class AntismashDomain(Domain):
     """ A class to represent a Domain with extra specificities and type information """
-    __slots__ = ["domain_subtype", "specificity"]
+    __slots__ = ["specificity"]
     FEATURE_TYPE = "aSDomain"
 
     def __init__(self, location: Location, tool: str, protein_location: FeatureLocation,

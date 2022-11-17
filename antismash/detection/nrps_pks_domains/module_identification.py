@@ -125,14 +125,10 @@ class IncompatibleComponentError(ValueError):
 
 
 class Component:
-    """ A component of a module, represents a single domain.
-        A subtype can be optionally supplied to differentiate between
-        types of domains (e.g. a Trans-AT variant of a KS domain)
-    """
-    def __init__(self, domain: HMMResult, cds_name: str, subtype: str = "") -> None:
+    """ A component of a module, represents a single domain. """
+    def __init__(self, domain: HMMResult, cds_name: str) -> None:
         self._domain = domain
         self.classification = classify(domain.hit_id)
-        self.subtype = subtype
         assert cds_name
         self.locus = cds_name
         assert self.classification
@@ -146,6 +142,13 @@ class Component:
     def label(self) -> str:
         """ The name of the domain the component was built from, e.g. PKS_KS """
         return self._domain.hit_id
+
+    @property
+    def subtype(self) -> Optional[str]:
+        """ The subtype of the domain, if any """
+        if len(self.domain.detailed_names) < 2:
+            return None
+        return self.domain.detailed_names[1]
 
     def is_adenylation(self) -> bool:
         """ Returns True if the component can function as an adenylation domain """
@@ -204,7 +207,7 @@ class Component:
         return self.label in ADENYLATIONS or self.label in CONDENSATIONS
 
     def __str__(self) -> str:
-        return self.classification + (("(%s)" % self.subtype) if self.subtype else "")
+        return self.classification + "".join(f"({sub})" for sub in self.domain.detailed_names[1:])
 
     def to_json(self) -> Dict[str, Any]:
         """ Generate a JSON representation of the component """
@@ -212,16 +215,12 @@ class Component:
             "domain": self._domain.to_json(),
             "locus": self.locus,
         }
-        if self.subtype:
-            result["subtype"] = self.subtype
         return result
 
     @classmethod
     def from_json(cls, data: Dict[str, Any]) -> "Component":
         """ Construct a component from a JSON representation """
-        subtype = data.get("subtype", "")
-        assert isinstance(subtype, str), subtype
-        return cls(HMMResult.from_json(data["domain"]), data["locus"], subtype)
+        return cls(HMMResult.from_json(data["domain"]), data["locus"])
 
 
 class Module:
@@ -481,12 +480,11 @@ def classify(profile_name: str) -> str:
     raise ValueError("could not classify domain: %s" % profile_name)
 
 
-def build_modules_for_cds(domains: List[HMMResult], ks_subtypes: List[str], cds_name: str) -> List[Module]:
+def build_modules_for_cds(domains: List[HMMResult], cds_name: str) -> List[Module]:
     """ Constructs a list of modules for a CDS based on the domains provided
 
         Arguments:
             domains: a list of HMMResults, one for each domain found
-            ks_subtypes: a list of strings, one for each PKS_KS domain given in domains
             cds_name: the name of the CDS feature the domains were found in
 
         Returns:
@@ -494,16 +492,10 @@ def build_modules_for_cds(domains: List[HMMResult], ks_subtypes: List[str], cds_
     """
     domains = sorted(domains, key=lambda x: x.query_start)
     modules = [Module(first_in_cds=True)]
-    subtypes = iter(ks_subtypes)
-    sub = ""
     components = [Component(domain, cds_name) for domain in domains]
     for i, component in enumerate(components):
         assert component.classification, "missing classification for %s" % component.domain.hit_id
-        if component.classification == "KS":
-            sub = next(subtypes)
-        else:
-            sub = ""
-        component = Component(component.domain, cds_name, sub)
+        component = Component(component.domain, cds_name)
         # start a new module if we have an explicit starter
         if component.is_starter() and not component.is_loader() and not modules[-1].is_empty():
             modules.append(Module())

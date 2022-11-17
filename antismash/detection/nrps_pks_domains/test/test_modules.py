@@ -33,15 +33,23 @@ CP = "ACP"
 
 class Component(Component_actual):
     """ a tiny wrapper to avoid always supplying a dummy CDS name """
-    def __init__(self, domain, cds_name="test_name", subtype=""):
-        super().__init__(domain, cds_name, subtype=subtype)
+    def __init__(self, domain, cds_name="test_name", subtype=None):
+        if subtype:
+            sub = DummyHMMResult(subtype)
+            domain.add_internal_hits([sub])
+        super().__init__(domain, cds_name)
 
 
 def build_modules_for_cds(domains, subtypes, cds_name="test_name"):
-    return build_modules_for_cds_actual(domains, subtypes, cds_name)
+    subs = iter(subtypes)
+    for domain in domains:
+        if domain.hit_id == PKS_START:
+            sub = DummyHMMResult(next(subs), domain.query_start, domain.query_end)
+            domain.add_internal_hits([sub])
+    return build_modules_for_cds_actual(domains, cds_name)
 
 
-def add_component(module, name, sub="", start=1, end=10, cds_name="test_name", lookaheads=None):
+def add_component(module, name, sub=None, start=1, end=10, cds_name="test_name", lookaheads=None):
     assert cds_name
     if lookaheads is None:
         lookaheads = []
@@ -52,7 +60,7 @@ def build_module(names, subtypes=None, first_in_cds=True, cds_name="test_name"):
     module = Module(first_in_cds=first_in_cds)
     subs = iter(subtypes or [])
     for domain in names:
-        sub = next(subs) if domain == PKS_START and subtypes else ""
+        sub = next(subs) if domain == PKS_START and subtypes else None
         add_component(module, domain, sub, cds_name=cds_name)
     return module
 
@@ -84,7 +92,7 @@ class TestComponent(unittest.TestCase):
         component = Component(domain)
         assert component.domain == domain
         assert component.label == domain.hit_id
-        assert component.subtype == ""
+        assert component.subtype is None
         assert component.classification == "CP"
 
         domain._hit_id = PKS_START
@@ -225,26 +233,26 @@ class TestModule(unittest.TestCase):
         assert self.nrps.get_monomer("ala") != "?"
 
     def test_monomer_trans_at_default(self):
-        self.pks._starter.subtype = TRANS_AT_SUBTYPE
-        self.pks._loader = None
-        assert self.pks.is_trans_at()
-        assert self.pks.get_monomer("") == "mal"
+        trans_at = build_module([PKS_START, CP], [TRANS_AT_SUBTYPE])
+        assert trans_at._starter.subtype == TRANS_AT_SUBTYPE
+        assert trans_at._loader == None
+        assert trans_at.is_trans_at()
+        assert trans_at.get_monomer("") == "mal"
 
     def test_trans_at(self):
         assert not self.pks.is_trans_at()
         assert self.pks.is_complete()
 
-        self.pks._starter.subtype = TRANS_AT_SUBTYPE
-        assert not self.pks.is_trans_at()
+        module = build_module([PKS_START, PKS_LOAD, CP], [TRANS_AT_SUBTYPE])
+        assert not module.is_trans_at()
 
-        self.pks._loader = None
-        self.pks._starter.subtype = ""
-        assert not self.pks.is_trans_at()
-        assert not self.pks.is_complete()
+        module = build_module([PKS_START, CP])
+        assert not module.is_trans_at()
+        assert not module.is_complete()
 
-        self.pks._starter.subtype = TRANS_AT_SUBTYPE
-        assert self.pks.is_trans_at()
-        assert self.pks.is_complete()
+        module = build_module([PKS_START, CP], [TRANS_AT_SUBTYPE])
+        assert module.is_trans_at()
+        assert module.is_complete()
 
     def test_trailing_modifiers(self):
         error = "modification domain after carrier protein"
@@ -296,8 +304,8 @@ class TestModule(unittest.TestCase):
         module = build_module(["PKS_KS"], ["Iterative-KS"])
         assert module.is_iterative()
 
-        for other in ["", "Trans-AT-KS", "Modular-KS"]:
-            module._starter.subtype = other
+        for other in ["Trans-AT-KS", "Modular-KS"]:
+            module = build_module(["PKS_KS"], [other])
             assert not module.is_iterative()
 
     def test_component_after_end(self):
