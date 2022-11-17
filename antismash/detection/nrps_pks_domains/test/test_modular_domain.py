@@ -23,7 +23,7 @@ class TestConversion(unittest.TestCase):
 
     def test_conversion(self):
         domain = self.domain
-        domain.domain_subtype = "subtest"
+        domain.subtypes = ["subtest", "more"]
         domain.specificity = ["a", "c", "f"]
         domain.asf.add("first")
         domain.asf.add("second")
@@ -36,7 +36,7 @@ class TestConversion(unittest.TestCase):
         assert bio[0].qualifiers["aSTool"] == ["nrps_pks_domains"]
         assert bio[0].qualifiers["tool"] == ["antismash"]
         new_domain = ModularDomain.from_biopython(bio[0])
-        assert new_domain.domain_subtype == domain.domain_subtype == "subtest"
+        assert new_domain.subtypes == domain.subtypes == ["subtest", "more"]
         assert new_domain.specificity == domain.specificity == ["a", "c", "f"]
         assert new_domain.asf.hits == domain.asf.hits
         assert new_domain.asf.hits == ["first", "second"]

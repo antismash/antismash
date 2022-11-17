@@ -106,7 +106,7 @@ class TestComponent(unittest.TestCase):
         new = Component.from_json(json.loads(json.dumps(intermediate)))
         assert new.to_json() == intermediate
         assert new.domain == component.domain
-        assert new.subtype == TRANS_AT_SUBTYPE
+        assert new.subtypes == component.subtypes
         assert new.classification == component.classification
 
     def test_condensation(self):

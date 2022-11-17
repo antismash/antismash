@@ -150,6 +150,11 @@ class Component:
             return None
         return self.domain.detailed_names[1]
 
+    @property
+    def subtypes(self) -> List[str]:
+        """ All subtypes of the domain, if any """
+        return self.domain.detailed_names[1:]
+
     def is_adenylation(self) -> bool:
         """ Returns True if the component can function as an adenylation domain """
         return self.label in ADENYLATIONS
@@ -207,7 +212,7 @@ class Component:
         return self.label in ADENYLATIONS or self.label in CONDENSATIONS
 
     def __str__(self) -> str:
-        return self.classification + "".join(f"({sub})" for sub in self.domain.detailed_names[1:])
+        return self.classification + "".join(f"({sub})" for sub in self.subtypes)
 
     def to_json(self) -> Dict[str, Any]:
         """ Generate a JSON representation of the component """
