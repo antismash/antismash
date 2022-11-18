@@ -4,12 +4,19 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
 
+import os
 import unittest
 from unittest.mock import patch
 
-from antismash.common import fasta, subprocessing, utils
+from antismash.common import fasta, path, subprocessing, utils
 from antismash.common.secmet import Record
-from antismash.common.test.helpers import DummyCDS, DummyHMMResult, DummyRecord
+from antismash.common.test.helpers import (
+    DummyCDS,
+    DummyHMMResult,
+    DummyRecord,
+    get_simple_options,
+)
+from antismash.config import destroy_config, update_config
 from antismash.detection.nrps_pks_domains import domain_identification
 
 
@@ -222,3 +229,30 @@ class TestModuleMerging(unittest.TestCase):
         assert len(tail.modules) == 1  # should *not* have merged into head
         assert not head.modules[0].is_complete()
         assert not tail.modules[0].is_complete()
+
+
+class TestDatabases(unittest.TestCase):
+    def tearDown(self):
+        domain_identification.DATABASE_PATHS.clear()
+        destroy_config()
+
+    def test_caching(self):
+        root = "/some/dummy/root"
+        options = update_config(get_simple_options(None, ['--databases', root]))
+        assert not domain_identification.DATABASE_PATHS
+        with patch.object(path, "find_latest_database_version",
+                          return_value="1.0") as patched:
+            result = domain_identification.get_database_path("some_dir", "some.file")
+            assert patched.called
+        expected_subdir = os.path.join(root, "nrps_pks", "some_dir", "1.0")
+        expected_full_path = os.path.join(expected_subdir, "some.file")
+        assert result == expected_full_path
+        assert domain_identification.DATABASE_PATHS == {"some_dir": expected_subdir}
+
+        # check that the find isn't used while we build paths for different files
+        with patch.object(path, "find_latest_database_version",
+                          return_value="bad") as patched:
+            for filename in ["some.file", "other"]:
+                result = domain_identification.get_database_path("some_dir", filename)
+                assert not patched.called
+                assert result == os.path.join(expected_subdir, filename)
