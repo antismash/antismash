@@ -7,6 +7,7 @@
 
 from collections import defaultdict
 import logging
+import os
 from typing import Any, Callable, Dict, List, Optional
 
 from antismash.common import module_results, path, subprocessing, utils
@@ -20,6 +21,7 @@ from antismash.common.secmet.features import (
     Module as ModuleFeature,
 )
 from antismash.common.secmet.locations import FeatureLocation
+from antismash.config import get_config
 
 from .module_identification import (
     build_modules_for_cds,
@@ -43,6 +45,8 @@ DOMAIN_TYPE_MAPPING = {
     'Polyketide_cyc': 'Polyketide_cyc',
     'Polyketide_cyc2': 'Polyketide_cyc',
 }
+
+DATABASE_PATHS: Dict[str, str] = {}
 
 
 class CDSResult:
@@ -154,6 +158,28 @@ class NRPSPKSDomains(module_results.DetectionResults):
             cds_results[cds] = cds_result
 
         return NRPSPKSDomains(record.id, cds_results)
+
+
+def get_database_path(subdir: str, filename: str) -> str:
+    """ Finds, and caches, the path to a specific database directory. The database
+        path is expected to be inside the main database directory in the form:
+        DATA_DIR/nrps_pks/SUBDIR/VERSION/FILENAME
+
+        Arguments:
+            subdir: the directory name with the "nrps_pks" subdirectory
+            filename: the name of a file required within a versioned subdirectory of subdir
+
+        Returns:
+            the full path to the specified file
+
+    """
+    if subdir not in DATABASE_PATHS:
+        options = get_config()
+        database_root = os.path.join(options.database_dir, "nrps_pks", subdir)
+        latest = path.find_latest_database_version(database_root, required_file_pattern=filename)
+        full_path = os.path.join(database_root, latest)
+        DATABASE_PATHS[subdir] = full_path
+    return os.path.join(DATABASE_PATHS[subdir], filename)
 
 
 def generate_domains(record: Record) -> NRPSPKSDomains:
