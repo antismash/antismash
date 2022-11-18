@@ -106,7 +106,8 @@ def is_outdated(built_files: Union[str, List[str]], source_files: Union[str, Lis
     return built_time < source_time
 
 
-def find_latest_database_version(database_dir: str, ignore_invalid: bool = False) -> str:
+def find_latest_database_version(database_dir: str, ignore_invalid: bool = False,
+                                 required_file_pattern: str = "*") -> str:
     """ Finds the most up-to-date database version in the given directory.
         Versions are expected to be in a XY.Z format, e.g. 3.0
 
@@ -114,6 +115,7 @@ def find_latest_database_version(database_dir: str, ignore_invalid: bool = False
             database_dir: the path to the database directory
             ignore_invalid: if true, files within the directory that aren't in a valid
                             format are ignored, rather than raising an error
+            required_file_pattern: a specific pattern to limit file searches with
 
         Returns:
             the latest version number as a string, e.g. "3.0"
@@ -121,6 +123,10 @@ def find_latest_database_version(database_dir: str, ignore_invalid: bool = False
     contents = glob.glob(os.path.join(database_dir, "*"))
     potentials: list[tuple[tuple[float, ...], str]] = []
     for name in contents:
+        # it has to contain at least one matching file
+        if not glob.glob(os.path.join(name, required_file_pattern)):
+            continue
+
         # only names in the form 2.0, 3.1, etc are valid
         try:
             version = os.path.basename(name)

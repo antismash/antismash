@@ -25,8 +25,8 @@ def find_latest_database_version(database_dir: str) -> str:
         Returns:
             the latest version number as a string, e.g. "27.0"
     """
-    database_dir = os.path.join(database_dir, "pfam")
-    return path.find_latest_database_version(database_dir, ignore_invalid=True)
+    return path.find_latest_database_version(os.path.join(database_dir, "pfam"),
+                                             required_file_pattern="Pfam-A.hmm")
 
 
 def check_db(db_path: str) -> List[str]:
