@@ -28,17 +28,38 @@ class TestPFAMs(unittest.TestCase):
                 pfamdb.get_db_version_from_path(path)
 
     def test_find_latest(self):
+        def create_db(dirs, create_file=True):
+            path = os.path.join(*dirs)
+            os.makedirs(path, exist_ok=True)
+
+            if create_file:
+                path = os.path.join(path, "Pfam-A.hmm")
+                with open(path, "w") as handle:
+                    pass
+
         with tempfile.TemporaryDirectory(prefix="aS.pfamdbtest") as temp_db_layout:
-            os.makedirs(os.path.join(temp_db_layout, "pfam", "30.7invalid"))
+            bad = os.path.join(temp_db_layout, "pfam", "30.7invalid")
+            os.makedirs(bad)
             os.makedirs(os.path.join(temp_db_layout, "pfam", "invalid30.7"))
             os.makedirs(os.path.join(temp_db_layout, "pfam", "irrelevant"))
 
-            with self.assertRaisesRegex(Exception, "No matching database in location " + temp_db_layout):
+            with self.assertRaisesRegex(Exception, f"No matching database in location {temp_db_layout}"):
                 pfamdb.find_latest_database_version(temp_db_layout)
 
-            os.makedirs(os.path.join(temp_db_layout, "pfam", "31.0"))
+            with open(os.path.join(bad, "Pfam-A.hmm"), "w") as handle:
+                handle.write("dummy text")
+
+            with self.assertRaisesRegex(Exception, f"Incompatible database .* {temp_db_layout}"):
+                pfamdb.find_latest_database_version(temp_db_layout)
+
+        # start with a clean temp dir since the last is poisoned
+        with tempfile.TemporaryDirectory(prefix="aS.pfamdbtest") as temp_db_layout:
+            create_db([temp_db_layout, "pfam", "31.0"], create_file=False)
+            with self.assertRaisesRegex(Exception, "No matching database in location"):
+                pfamdb.find_latest_database_version(temp_db_layout)
+            create_db([temp_db_layout, "pfam", "31.0"])
             assert pfamdb.find_latest_database_version(temp_db_layout) == "31.0"
-            os.makedirs(os.path.join(temp_db_layout, "pfam", "31.2"))
+            create_db([temp_db_layout, "pfam", "31.2"])
             assert pfamdb.find_latest_database_version(temp_db_layout) == "31.2"
-            os.makedirs(os.path.join(temp_db_layout, "pfam", "30.7"))
+            create_db([temp_db_layout, "pfam", "30.7"])
             assert pfamdb.find_latest_database_version(temp_db_layout) == "31.2"

@@ -124,6 +124,9 @@ class TestStachelhaus(unittest.TestCase):
 
     def test_check_prereqs(self):
         with tempfile.TemporaryDirectory(prefix="aS.stachelhaustest") as temp_dbdir:
-            os.makedirs(os.path.join(temp_dbdir, "nrps_pks", "stachelhaus", "1.0"))
+            dir_name = os.path.join(temp_dbdir, "nrps_pks", "stachelhaus", "1.0")
+            os.makedirs(dir_name)
+            with open(os.path.join(dir_name, "dummy.file"), "w", encoding="utf-8") as handle:
+                handle.write("dummy content")
             config = build_config(["--databases", temp_dbdir], isolated=True, modules=antismash.get_all_modules())
             assert stachelhaus.check_prereqs(config)
