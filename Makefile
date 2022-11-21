@@ -44,4 +44,7 @@ coverage:
 docker: squeakyclean
 	docker build -t antismash/antismash-dev .
 
+podman: squeakyclean
+	podman build -t antismash/antismash-dev .
+
 .PHONY:	unit integration clean squeakyclean cover coverage combined-coverage docker
