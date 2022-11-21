@@ -82,7 +82,7 @@ class CDSResult:
         for domain, domain_feature in self.domain_features.items():
             record.add_antismash_domain(domain_feature)
             # update the CDS' NRPS_PKS qualifier
-            cds.nrps_pks.add_domain(domain, domain_feature.get_name(), sub)
+            cds.nrps_pks.add_domain(domain, domain_feature.get_name())
 
         # construct CDSMotif features
         if not self.motif_hmms:
