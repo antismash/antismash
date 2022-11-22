@@ -4,6 +4,7 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
 
+import json
 import unittest
 
 from helperlibs.bio import seqio
@@ -76,13 +77,11 @@ class TestSMCOGs(unittest.TestCase):
         assert results.tool == "smcogs"
         assert results.best_hits["nisB"].hit_id == 'SMCOG1155:Lantibiotic dehydratase domain protein'
 
-        json = results.to_json()
-        assert json["best_hits"]["nisB"][0] == 'SMCOG1155:Lantibiotic dehydratase domain protein'
-
-        reconstructed = core.FunctionResults.from_json(json, self.record)
+        data = json.loads(json.dumps(results.to_json()))
+        reconstructed = core.FunctionResults.from_json(data, self.record)
         assert reconstructed.tool == "smcogs"
         assert reconstructed.best_hits["nisB"].hit_id == 'SMCOG1155:Lantibiotic dehydratase domain protein'
-        assert reconstructed.to_json() == json
+        assert reconstructed.to_json() == data
 
     def test_annotations(self):
         results = smcogs.classify(self.record.id, self.record.get_cds_features(), self.options)

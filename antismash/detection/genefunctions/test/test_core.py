@@ -4,6 +4,7 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
 
+import json
 import unittest
 
 import antismash
@@ -54,20 +55,20 @@ class SimpleResultsMixin:
     """
 
     def test_bad_record_id(self):
-        json = self.results.to_json()
+        data = json.loads(json.dumps(self.results.to_json()))
         self.record.id = "other"
-        assert self.res_class.from_json(json, self.record) is None
+        assert self.res_class.from_json(data, self.record) is None
 
-        del json["record_id"]
-        assert self.res_class.from_json(json, self.record) is None
+        del data["record_id"]
+        assert self.res_class.from_json(data, self.record) is None
 
     def test_bad_schema_version(self):
-        json = self.results.to_json()
-        json["schema_version"] += 1
-        assert self.res_class.from_json(json, self.record) is None
+        data = json.loads(json.dumps(self.results.to_json()))
+        data["schema_version"] += 1
+        assert self.res_class.from_json(data, self.record) is None
 
-        del json["schema_version"]
-        assert self.res_class.from_json(json, self.record) is None
+        del data["schema_version"]
+        assert self.res_class.from_json(data, self.record) is None
 
 
 class TestFunctionResults(unittest.TestCase, SimpleResultsMixin):
@@ -104,13 +105,13 @@ class TestFunctionResults(unittest.TestCase, SimpleResultsMixin):
                                  function_mapping=mapping)
         check_results(results)
 
-        json = results.to_json()
-        assert json["best_hits"]["cds1"][0] == hits["cds1"].hit_id
+        data = json.loads(json.dumps(results.to_json()))
 
         record = DummyRecord()
         record.id = "rec_id"
-        reconstructed = self.res_class.from_json(json, record)
+        reconstructed = self.res_class.from_json(data, record)
         check_results(reconstructed)
+        assert reconstructed.best_hits["cds1"].hit_id == hits["cds1"].hit_id
 
 
 class TestAllFunctionResults(unittest.TestCase, SimpleResultsMixin):
@@ -143,10 +144,10 @@ class TestAllFunctionResults(unittest.TestCase, SimpleResultsMixin):
         self.results.add_tool_results(tool_result)
         check_results(self.results, mapping)
 
-        json = self.results.to_json()
-        assert json["tools"]
-        reconstructed = self.res_class.from_json(json, self.record)
+        data = json.loads(json.dumps(self.results.to_json()))
+        assert data["tools"]
+        reconstructed = self.res_class.from_json(data, self.record)
         check_results(reconstructed, mapping)
 
-        reconstructed = genefunctions.regenerate_previous_results(json, self.record, None)
+        reconstructed = genefunctions.regenerate_previous_results(data, self.record, None)
         check_results(reconstructed, mapping)
