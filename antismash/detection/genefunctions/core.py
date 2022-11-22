@@ -15,7 +15,7 @@ from antismash.common.secmet.qualifiers import GeneFunction
 
 class FunctionResults(DetectionResults):
     """ A results container for results functions for a particular tool """
-    schema_version = 1
+    schema_version = 2
 
     def __init__(self, record_id: str, tool: str, best_hits: Dict[str, HMMResult],
                  function_mapping: Dict[str, GeneFunction]) -> None:
@@ -46,7 +46,7 @@ class FunctionResults(DetectionResults):
             return None
         hits = {}
         for hit, parts in json["best_hits"].items():
-            hits[hit] = HMMResult(*parts)
+            hits[hit] = HMMResult.from_json(parts)
 
         mapping = {}
         for cds_name, simple_function in json["mapping"].items():
@@ -59,8 +59,7 @@ class FunctionResults(DetectionResults):
         return {"schema_version": self.schema_version,
                 "record_id": self.record_id,
                 "tool": self.tool,
-                "best_hits": {key: [getattr(val, attr) for attr in val.__slots__]
-                              for key, val in self.best_hits.items()},
+                "best_hits": {key: val.to_json() for key, val in self.best_hits.items()},
                 "mapping": {name: str(function) for name, function in self.function_mapping.items()},
                 }
 
