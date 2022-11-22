@@ -9,6 +9,12 @@ from typing import Any, IO, List
 
 from .base import execute, get_config, RunResult, SearchIO
 
+NCBI_OVERRIDES = {
+    # NCBI tools have added usage reporting, which can add minutes to simple
+    # things like fetching the version, this disables that reporting
+    "BLAST_USAGE_REPORT": "false",
+}
+
 
 def run_blastp(target_blastp_database: str, query_sequence: str,
                opts: List[str] = None, results_file: str = None
@@ -44,7 +50,7 @@ def run_blastp(target_blastp_database: str, query_sequence: str,
     else:
         handle = NamedTemporaryFile()  # pylint: disable=consider-using-with
 
-    result = execute(command, stdin=query_sequence, stdout=handle)
+    result = execute(command, stdin=query_sequence, stdout=handle, environment_overrides=NCBI_OVERRIDES)
     if not result.successful():
         raise RuntimeError('blastp returned %d: %r while scanning %r' % (
                            result.return_code, result.stderr.replace("\n", ""),
@@ -64,7 +70,7 @@ def run_blastp_version() -> str:
         "-version",
     ]
 
-    version_string = execute(command).stdout
+    version_string = execute(command, environment_overrides=NCBI_OVERRIDES).stdout
     if not version_string.startswith("blastp: "):
         msg = "unexpected output from blastp: %s, check path"
         raise RuntimeError(msg % blastp)
@@ -93,7 +99,7 @@ def run_makeblastdb(filename: str, target: str = "", dbtype: str = "prot") -> Ru
         "-out", target,
         "-dbtype", dbtype,
     ]
-    result = execute(command)
+    result = execute(command, environment_overrides=NCBI_OVERRIDES)
     if not result.successful():
         raise RuntimeError(f"makeblastdb failed to run: {command} -> {result.stderr.splitlines()[-1]}")
     return result
@@ -107,7 +113,7 @@ def run_makeblastdb_version() -> str:
         "-version",
     ]
 
-    version_string = execute(command).stdout
+    version_string = execute(command, environment_overrides=NCBI_OVERRIDES).stdout
     if not version_string.startswith("makeblastdb: "):
         msg = "unexpected output from makeblastdb: %s, check path"
         raise RuntimeError(msg % makeblastdb)
