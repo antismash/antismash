@@ -38,7 +38,9 @@ class TestAntismash(unittest.TestCase):
     def test_help_options(self):
         for option in ["--list-plugins"]:
             options = build_config([option], isolated=False, modules=self.all_modules)
-            ret_val = main.run_antismash("", options)
+            # don't bother with executables, that's not relevant for this
+            with patch.object(main, "_log_found_executables", return_value=None):
+                ret_val = main.run_antismash("", options)
             assert ret_val == 0
 
     def test_prepare(self):
