@@ -7,6 +7,7 @@
 import os
 import time
 import unittest
+from unittest.mock import patch
 
 from helperlibs.wrappers.io import TemporaryDirectory
 
@@ -133,6 +134,30 @@ class TestExecute(unittest.TestCase):
             subprocessing.execute(["sleep", "10"], timeout=1)
         elapsed = time.time() - start
         assert elapsed < 1.5
+
+    def test_env(self):
+        class Dummy:
+            def __init__(self):
+                self.returncode = 0
+
+            def communicate(self, *_args, **_kwargs):
+                return ("stderr".encode(), "stdout".encode())
+
+            def __enter__(self, *_args, **_kwargs):
+                return Dummy()
+
+            def __exit__(self, *_args, **_kwargs):
+                pass
+
+        dummy_proc = Dummy()
+        with patch.object(subprocessing.base, "Popen", return_value=dummy_proc) as patched:
+            subprocessing.execute(["dummy"], environment_overrides={"something": "value"})
+            assert patched.call_args.kwargs["env"]["something"] == "value"
+
+            patched.reset()
+
+            subprocessing.execute(["dummy"], environment_overrides={"PATH": "/some/dummy/path"})
+            assert patched.call_args.kwargs["env"]["PATH"] == "/some/dummy/path"
 
 
 class TestParallelExecute(unittest.TestCase):
