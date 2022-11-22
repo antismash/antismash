@@ -10,7 +10,7 @@ import logging
 import os
 from subprocess import Popen, PIPE, TimeoutExpired
 import sys
-from typing import Any, Callable, Iterable, IO, List, Optional, Union
+from typing import Any, Callable, Dict, Iterable, IO, List, Optional, Union
 import warnings
 
 from antismash.config import get_config
@@ -51,7 +51,8 @@ class RunResult:
 
 
 def execute(commands: List[str], stdin: Optional[str] = None, stdout: Union[int, IO[Any], None] = PIPE,
-            stderr: Union[int, IO[Any], None] = PIPE, timeout: int = None) -> RunResult:
+            stderr: Union[int, IO[Any], None] = PIPE, timeout: int = None,
+            environment_overrides: Dict[str, str] = None) -> RunResult:
     """ Executes commands in a system-independent manner via a child process.
 
         By default, both stderr and stdout will be piped and the outputs
@@ -66,6 +67,8 @@ def execute(commands: List[str], stdin: Optional[str] = None, stdout: Union[int,
                     will be piped to that file instead of the parent process
             timeout: if provided, the child process will be terminated after
                      this many seconds
+            environment_overrides: if given, the specified environment variables
+                                   will be overriden with the supplied values
 
         Returns:
             a RunResult object containing any piped output
@@ -82,7 +85,11 @@ def execute(commands: List[str], stdin: Optional[str] = None, stdout: Union[int,
         stdin_redir = None
         input_bytes = None
 
-    with Popen(commands, stdin=stdin_redir, stdout=stdout, stderr=stderr) as proc:
+    env = os.environ.copy()
+    if environment_overrides:
+        env.update(environment_overrides)
+
+    with Popen(commands, stdin=stdin_redir, stdout=stdout, stderr=stderr, env=env) as proc:
         try:
             out, err = proc.communicate(input=input_bytes, timeout=timeout)
         except TimeoutExpired:
