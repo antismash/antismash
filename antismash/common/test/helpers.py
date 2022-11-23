@@ -112,6 +112,20 @@ def get_path_to_balhymicin_genbank():
     return os.path.join(file_path, 'test/integration/data/Y16952.gbk')
 
 
+def get_path_to_elansolid_genbank():
+    file_path = __file__
+    for _i in range(3):
+        file_path = os.path.dirname(file_path)
+    return os.path.join(file_path, 'test/integration/data/elansolidA1.gbk')
+
+
+def get_path_to_kirromycin_genbank():
+    file_path = __file__
+    for _i in range(3):
+        file_path = os.path.dirname(file_path)
+    return os.path.join(file_path, 'test/integration/data/kirromycin.gbk')
+
+
 def run_and_regenerate_results_for_module(input_file, module, options,
                                           expected_record_count=1, callback=None):
     """ Runs antismash end to end over the given file with the given options

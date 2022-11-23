@@ -25,19 +25,22 @@ TOOL = "nrps_pks_domains"
 
 class ModularDomain(AntismashDomain):
     """ A class to represent a Domain with extra specificities and type information """
-    __slots__ = ["specificity"]
+    __slots__ = ["specificity", "domain_subsubtype"]
     FEATURE_TYPE = "aSDomain"
 
     def __init__(self, location: Location, protein_location: FeatureLocation, locus_tag: str) -> None:
         super().__init__(location, protein_location=protein_location, locus_tag=locus_tag,
                          tool=TOOL)
         self.domain_subtype: Optional[str] = None
+        self.domain_subsubtype: Optional[str] = None
         self.specificity: List[str] = []
 
     def to_biopython(self, qualifiers: Dict[str, List[str]] = None) -> List[SeqFeature]:
         mine: Dict[str, List[str]] = OrderedDict()
         if self.domain_subtype:
             mine["domain_subtype"] = [self.domain_subtype]
+        if self.domain_subsubtype:
+            mine["domain_subsubtype"] = [self.domain_subsubtype]
         if self.specificity:
             mine["specificity"] = list(self.specificity)
         if qualifiers:
@@ -61,6 +64,7 @@ class ModularDomain(AntismashDomain):
 
         # grab optional qualifiers
         feature.domain_subtype = leftovers.pop("domain_subtype", [""])[0] or None
+        feature.domain_subsubtype = leftovers.pop("domain_subsubtype", [""])[0] or None
         feature.specificity = leftovers.pop("specificity", [])
 
         # grab parent optional qualifiers

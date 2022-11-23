@@ -28,32 +28,36 @@ NRPS_LOAD = "AMP-binding"
 PKS_START = "PKS_KS"
 PKS_LOAD = "PKS_AT"
 TRANS_AT_SUBTYPE = "Trans-AT-KS"
+TRANS_AT_SUBSUBTYPE = "DB"
+TRANS_AT_SUBSUBTYPE_NON_ELONGATING = "NON_ELONGATING_OXA"
 CP = "ACP"
 
 
 class Component(Component_actual):
     """ a tiny wrapper to avoid always supplying a dummy CDS name """
-    def __init__(self, domain, cds_name="test_name", subtype=""):
-        super().__init__(domain, cds_name, subtype=subtype)
+    def __init__(self, domain, cds_name="test_name", subtype="", subsubtype=None):
+        super().__init__(domain, cds_name, subtype=subtype, subsubtype=subsubtype)
 
 
-def build_modules_for_cds(domains, subtypes, cds_name="test_name"):
-    return build_modules_for_cds_actual(domains, subtypes, cds_name)
+def build_modules_for_cds(domains, subtypes, cds_name="test_name", subsubtypes=[]):
+    return build_modules_for_cds_actual(domains, subtypes, cds_name, subsubtypes)
 
 
-def add_component(module, name, sub="", start=1, end=10, cds_name="test_name", lookaheads=None):
+def add_component(module, name, sub="", subsub=None, start=1, end=10, cds_name="test_name", lookaheads=None):
     assert cds_name
     if lookaheads is None:
         lookaheads = []
-    module.add_component(Component(DummyHMMResult(name, start, end), cds_name, sub), lookaheads)
+    module.add_component(Component(DummyHMMResult(name, start, end), cds_name, sub, subsub), lookaheads)
 
 
-def build_module(names, subtypes=None, first_in_cds=True, cds_name="test_name"):
+def build_module(names, subtypes=None, subsubtypes=None, first_in_cds=True, cds_name="test_name"):
     module = Module(first_in_cds=first_in_cds)
     subs = iter(subtypes or [])
+    subsubs = iter(subsubtypes or [])
     for domain in names:
         sub = next(subs) if domain == PKS_START and subtypes else ""
-        add_component(module, domain, sub, cds_name=cds_name)
+        subsub = next(subsubs) if domain == PKS_START and subsubtypes else None
+        add_component(module, domain, sub, subsub, cds_name=cds_name)
     return module
 
 
@@ -88,17 +92,19 @@ class TestComponent(unittest.TestCase):
         assert component.classification == "CP"
 
         domain._hit_id = PKS_START
-        component = Component(domain, subtype="some-subtype")
+        component = Component(domain, subtype="some-subtype", subsubtype="some-subsubtype")
         assert component.subtype == "some-subtype"
+        assert component.subsubtype == "some-subsubtype"
         assert component.classification == "KS"
 
     def test_json(self):
-        component = Component(DummyHMMResult(PKS_START), subtype=TRANS_AT_SUBTYPE)
+        component = Component(DummyHMMResult(PKS_START), subtype=TRANS_AT_SUBTYPE, subsubtype=TRANS_AT_SUBSUBTYPE)
         intermediate = component.to_json()
         new = Component.from_json(json.loads(json.dumps(intermediate)))
         assert new.to_json() == intermediate
         assert new.domain == component.domain
         assert new.subtype == TRANS_AT_SUBTYPE
+        assert new.subsubtype == TRANS_AT_SUBSUBTYPE
         assert new.classification == component.classification
 
     def test_condensation(self):
@@ -245,6 +251,17 @@ class TestModule(unittest.TestCase):
         self.pks._starter.subtype = TRANS_AT_SUBTYPE
         assert self.pks.is_trans_at()
         assert self.pks.is_complete()
+
+    def test_trans_at_non_elongating(self):
+        self.pks._starter.subtype = TRANS_AT_SUBTYPE
+        self.pks._starter.subsubtype = TRANS_AT_SUBSUBTYPE_NON_ELONGATING
+        self.pks._loader = None
+        assert self.pks.is_trans_at()
+        assert self.pks.get_elongating() == False
+        self.pks._starter.subsubtype = TRANS_AT_SUBSUBTYPE
+        self.pks._loader = None
+        assert self.pks.is_trans_at()
+        assert self.pks.get_elongating() == True
 
     def test_trailing_modifiers(self):
         error = "modification domain after carrier protein"
@@ -400,12 +417,12 @@ class TestBuildModules(unittest.TestCase):
             assert len(build_modules_for_cds(domains, ["Trans-AT-PKS"])) == 3
 
     def test_double_transporters_miss(self):
-         domains = [DummyHMMResult(i) for i in [PKS_START, CP, CP, NRPS_START]]
-         modules = build_modules_for_cds(domains, ["Trans-AT-PKS"])
-         # the two CP domains should be in separate modules, with the trailing NRPS a third
-         assert len(modules) == 3
-         assert len(modules[1].components) == 1
-         assert modules[1].components[0].domain.hit_id == CP
+        domains = [DummyHMMResult(i) for i in [PKS_START, CP, CP, NRPS_START]]
+        modules = build_modules_for_cds(domains, ["Trans-AT-PKS"])
+        # the two CP domains should be in separate modules, with the trailing NRPS a third
+        assert len(modules) == 3
+        assert len(modules[1].components) == 1
+        assert modules[1].components[0].domain.hit_id == CP
 
 
 class TestMerging(unittest.TestCase):

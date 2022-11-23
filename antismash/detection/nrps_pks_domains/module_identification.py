@@ -113,6 +113,32 @@ CLASSIFICATIONS = {
     ".": OTHER,
     "ignore": NON_MODULE,
 }
+TRANS_AT_KS_SUBTYPE_TO_ELONGATING = {'NON_ELONGATING_DB': False,
+                                 'BETA_OH_KETO': True,
+                                 'NON_ELONGATING_BETA_OH': False,
+                                 'ALPHA_OH': True, 'EDB': True,
+                                 'ARST': True, 'PYR': True,
+                                 'ALPHAME_EDB': True, 'OXI': True,
+                                 'AA': True, 'ALPHAME_BETA_L_OH': True,
+                                 'NON_ELONGATING_BETA_L_OH': False,
+                                 'RED_SHDB': True, 'DB': True,
+                                 'KETO': True, 'NON_ELONGATING': False,
+                                 'BETA_D_OH': True, 'BETA_L_OH': True,
+                                 'BR': True, 'ALPHABETA_OH': True,
+                                 'UNST': True, 'ST': True,
+                                 'MEOST': True, 'ACST': True,
+                                 'ALPHAME': True, 'BETA_D_OME': True,
+                                 'NON_ELONGATING_PYR': False,
+                                 'BETA_ME': True, 'BETA_OH_EDB': True,
+                                 'NON_ELONGATING_OXA': False,
+                                 'LACST': True,
+                                 'SHDB': True, 'OUT': True,
+                                 'BETA_OH': True, 'ZDB': True,
+                                 'BETA_MEDB': True, 'MISCELLANEOUS': True,
+                                 'OXA': True, 'ALPHAME_BETA_D_OH': True,
+                                 'ALPHAME_BETAOH': True,
+                                 'NON_ELONGATING_ALPHAME_EDB': False,
+                                 'RED': True}
 
 DOUBLE_TRANSPORTER_CASES = {
     ("LPG_synthase_C", "Beta_elim_lyase"),  # e.g. AF484556.1 in LmnJ, doi:10.1038/s41467-021-25798-8
@@ -127,12 +153,15 @@ class IncompatibleComponentError(ValueError):
 class Component:
     """ A component of a module, represents a single domain.
         A subtype can be optionally supplied to differentiate between
-        types of domains (e.g. a Trans-AT variant of a KS domain)
+        subtypes of domains (e.g. a Trans-AT variant of a KS domain)
+        A subsubtype can be optionally supplied to differentiate between
+        subsubtypes of Trans-AT-PKS KS domains
     """
-    def __init__(self, domain: HMMResult, cds_name: str, subtype: str = "") -> None:
+    def __init__(self, domain: HMMResult, cds_name: str, subtype: str = "", subsubtype: str = None) -> None:
         self._domain = domain
         self.classification = classify(domain.hit_id)
         self.subtype = subtype
+        self.subsubtype = subsubtype
         assert cds_name
         self.locus = cds_name
         assert self.classification
@@ -204,7 +233,7 @@ class Component:
         return self.label in ADENYLATIONS or self.label in CONDENSATIONS
 
     def __str__(self) -> str:
-        return self.classification + (("(%s)" % self.subtype) if self.subtype else "")
+        return self.classification + (("(%s)" % self.subtype) if self.subtype else "") + (("(%s)" % self.subsubtype) if self.subsubtype else "")
 
     def to_json(self) -> Dict[str, Any]:
         """ Generate a JSON representation of the component """
@@ -214,6 +243,8 @@ class Component:
         }
         if self.subtype:
             result["subtype"] = self.subtype
+        if self.subsubtype:
+            result["subsubtype"] = self.subsubtype
         return result
 
     @classmethod
@@ -221,7 +252,8 @@ class Component:
         """ Construct a component from a JSON representation """
         subtype = data.get("subtype", "")
         assert isinstance(subtype, str), subtype
-        return cls(HMMResult.from_json(data["domain"]), data["locus"], subtype)
+        subsubtype = data.get("subsubtype", None)
+        return cls(HMMResult.from_json(data["domain"]), data["locus"], subtype, subsubtype)
 
 
 class Module:
@@ -464,6 +496,21 @@ class Module:
             state.insert(0, "D")
         return "-".join(state)
 
+    def get_elongating(self) -> bool:
+        """ Checks if Trans-AT-PKS KS is elongating or not
+
+            Returns:
+                a bool -> True if KS is elongating, False if it is not elongating
+        """
+        elongating = True
+        if self.is_trans_at():
+            if self._starter:
+                if self._starter.subsubtype:
+                    if self._starter.subsubtype != None and self._starter.subsubtype != "unknown variant":
+                        if TRANS_AT_KS_SUBTYPE_TO_ELONGATING[self._starter.subsubtype] == False:
+                            elongating = False
+        return elongating
+
 
 def classify(profile_name: str) -> str:
     """ Classifies a profile name, raising an exception if classification not
@@ -481,12 +528,13 @@ def classify(profile_name: str) -> str:
     raise ValueError("could not classify domain: %s" % profile_name)
 
 
-def build_modules_for_cds(domains: List[HMMResult], ks_subtypes: List[str], cds_name: str) -> List[Module]:
+def build_modules_for_cds(domains: List[HMMResult], ks_subtypes: List[str], cds_name: str, ks_subsubtypes: List[str] = []) -> List[Module]:
     """ Constructs a list of modules for a CDS based on the domains provided
 
         Arguments:
             domains: a list of HMMResults, one for each domain found
             ks_subtypes: a list of strings, one for each PKS_KS domain given in domains
+            ks_subsubtypes: a list of strings, one for each trans AT PKS_KS domain given in domains
             cds_name: the name of the CDS feature the domains were found in
 
         Returns:
@@ -495,15 +543,22 @@ def build_modules_for_cds(domains: List[HMMResult], ks_subtypes: List[str], cds_
     domains = sorted(domains, key=lambda x: x.query_start)
     modules = [Module(first_in_cds=True)]
     subtypes = iter(ks_subtypes)
+    subsubtypes = iter(ks_subsubtypes)
     sub = ""
+    subsub = None
     components = [Component(domain, cds_name) for domain in domains]
     for i, component in enumerate(components):
         assert component.classification, "missing classification for %s" % component.domain.hit_id
         if component.classification == "KS":
             sub = next(subtypes)
+            if sub == "Trans-AT-KS":
+                subsub = next(subsubtypes, "unknown variant")
+            else:
+                subsub = None
         else:
             sub = ""
-        component = Component(component.domain, cds_name, sub)
+            subsub = None
+        component = Component(component.domain, cds_name, sub, subsub)
         # start a new module if we have an explicit starter
         if component.is_starter() and not component.is_loader() and not modules[-1].is_empty():
             modules.append(Module())

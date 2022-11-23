@@ -45,13 +45,13 @@ class Module(Feature):
     """
     __slots__ = ["_parent_cds_names", "_domains", "_substrate_monomer_pairs",
                  "_complete", "_is_starter", "_is_final", "_module_type", "_is_iterative",
-                 ]
+                 "_elongating",]
     types = ModuleType
     FEATURE_TYPE = "aSModule"
 
     def __init__(self, domains: List[AntismashDomain], module_type: ModuleType = ModuleType.UNKNOWN,
                  complete: bool = False, starter: bool = False, final: bool = False,
-                 iterative: bool = False) -> None:
+                 iterative: bool = False, elongating: bool = True) -> None:
         if not domains:
             raise ValueError("at least one domain required in module")
 
@@ -83,6 +83,7 @@ class Module(Feature):
         self._is_final = final
         self._module_type = module_type
         self._is_iterative = iterative
+        self._elongating = elongating
 
     @property
     def domains(self) -> Tuple[AntismashDomain, ...]:
@@ -101,6 +102,13 @@ class Module(Feature):
             added by use of the `Module.add_monomer()` method.
         """
         return tuple(self._substrate_monomer_pairs)
+
+    @property
+    def is_elongating(self) -> bool:
+        """
+        Returns whether or not the module is elongating. Only relevant for Trans-AT-PKS.
+        """
+        return self._elongating
 
     @property
     def parent_cds_names(self) -> Tuple[str, ...]:
