@@ -24,7 +24,7 @@ from .loader import load_config_from_file
 
 from .executables import find_executable_path
 
-_USER_FILE_NAME = os.path.expanduser('~/.antismash6.cfg')
+_USER_FILE_NAME = os.path.expanduser('~/.antismash7.cfg')
 _INSTANCE_FILE_NAME = os.path.abspath(os.path.join(os.path.dirname(__file__), 'instance.cfg'))
 
 
