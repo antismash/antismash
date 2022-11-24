@@ -91,6 +91,10 @@ _CLASS_BY_NAME = {
     "Trans-AT_docking": "docking",
     "TD": "terminal",
 }
+_NAPDOS_REFERENCES = {
+    "C": "all_C_190411_273.faa",
+    "KS": "all_KS_191020_1877.faa",
+}
 
 
 def will_handle(_products: List[str], product_categories: Set[str]) -> bool:
@@ -138,13 +142,13 @@ def _parse_domain(record: Record, domain: NRPSPKSQualifier.Domain,
     # Create url_link to NaPDoS for C and KS domains
     napdoslink = ""
     domainseq = str(feature.translation)[domain.start:domain.end]
-    base = ("http://napdos.ucsd.edu/cgi-bin/process_request.cgi?"
-            "query_type=aa&amp;ref_seq_file=all_{0}_public_12062011.faa"
+    base = ("https://npdomainseeker.sdsc.edu/cgi-bin/process_request_napdos2.cgi?"
+            "query_type=aa&amp;ref_seq_file={0}"
             "&amp;Sequence=%3E{0}_domain_from_antiSMASH%0D{1}")
     if domain.name == "PKS_KS":
-        napdoslink = base.format("KS", domainseq)
+        napdoslink = base.format(_NAPDOS_REFERENCES["KS"], domainseq)
     elif "Condensation" in domain.name:
-        napdoslink = base.format("C", domainseq)
+        napdoslink = base.format(_NAPDOS_REFERENCES["C"], domainseq)
     blastlink = ("http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE=Proteins"
                  "&amp;PROGRAM=blastp&amp;BLAST_PROGRAMS=blastp"
                  "&amp;QUERY={}"
