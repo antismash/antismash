@@ -13,7 +13,7 @@ import string
 from typing import Dict, Iterator, List, Optional, Set, Tuple, Union
 
 from antismash.common import path
-from antismash.common.html_renderer import FileTemplate, HTMLSections
+from antismash.common.html_renderer import FileTemplate, HTMLSections, replace_with
 from antismash.common.json import JSONDomain, JSONOrf, JSONModule
 from antismash.common.layers import RegionLayer, RecordLayer, OptionsLayer
 from antismash.common.module_results import ModuleResults
@@ -146,13 +146,13 @@ def _parse_domain(record: Record, domain: NRPSPKSQualifier.Domain,
             "query_type=aa&amp;ref_seq_file={0}"
             "&amp;Sequence=%3E{0}_domain_from_antiSMASH%0D{1}")
     if domain.name == "PKS_KS":
-        napdoslink = base.format(_NAPDOS_REFERENCES["KS"], domainseq)
+        napdoslink = base.format(_NAPDOS_REFERENCES["KS"], replace_with("sequence"))
     elif "Condensation" in domain.name:
-        napdoslink = base.format(_NAPDOS_REFERENCES["C"], domainseq)
+        napdoslink = base.format(_NAPDOS_REFERENCES["C"], replace_with("sequence"))
     blastlink = ("http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE=Proteins"
                  "&amp;PROGRAM=blastp&amp;BLAST_PROGRAMS=blastp"
-                 "&amp;QUERY={}"
-                 "&amp;LINK_LOC=protein&amp;PAGE_TYPE=BlastSearch").format(domainseq)
+                 f"&amp;QUERY={replace_with('sequence')}"
+                 "&amp;LINK_LOC=protein&amp;PAGE_TYPE=BlastSearch")
 
     dna_sequence = ""
     for as_domain in record.get_antismash_domains_in_cds(feature):
