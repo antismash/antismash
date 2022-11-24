@@ -6,6 +6,8 @@
 
 import unittest
 
+from helperlibs.wrappers.io import TemporaryDirectory
+
 from antismash.main import get_all_modules
 from antismash.common.secmet.test.helpers import DummySubRegion
 from antismash.common.test.helpers import DummyRecord
@@ -31,4 +33,6 @@ class TestOutput(unittest.TestCase):
         update_config({"triggered_limit": False})
 
         # make sure HTML is generated without errors
-        assert generate_webpage([record], [{}], self.options, get_all_modules())
+        with TemporaryDirectory() as temp_dir:
+            update_config({"output_dir": temp_dir})
+            assert generate_webpage([record], [{}], self.options, get_all_modules())
