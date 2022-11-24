@@ -5,8 +5,10 @@
     clusters based on domains detected
 """
 
+import importlib
 import logging
 import os
+import pkgutil
 from typing import Any, Dict, List, Optional
 
 from antismash.common import hmmer, path
@@ -15,6 +17,7 @@ from antismash.common.hmm_rule_parser.cluster_prediction import (
     detect_protoclusters_and_signatures,
     RuleDetectionResults,
 )
+from antismash.common.hmm_rule_parser.structures import DynamicProfile
 from antismash.common.module_results import DetectionResults
 from antismash.common.secmet.record import Record
 from antismash.common.secmet.features import Protocluster
@@ -29,6 +32,27 @@ SHORT_DESCRIPTION = "HMM signature detection"
 DETECTION_STAGE = DetectionStage.AREA_FORMATION
 
 _STRICTNESS_LEVELS = ["strict", "relaxed", "loose"]
+
+
+def _get_dynamic_profiles() -> Dict[str, DynamicProfile]:
+    """ Gather all the dynamic profiles """
+    profiles = {}
+    for module_data in pkgutil.walk_packages([path.get_full_path(__file__, "dynamic_profiles")]):
+        module = importlib.import_module(f"antismash.detection.hmm_detection.dynamic_profiles.{module_data.name}")
+        contains_profiles = False
+        for name, profile in vars(module).items():
+            if not isinstance(profile, DynamicProfile):
+                continue
+            if profile.name in profiles:
+                raise ValueError(f"duplicate dynamic profile detected: dynamic_profiles.{module_data.name}.{name}")
+            profiles[profile.name] = profile
+            contains_profiles = True
+        if not contains_profiles:
+            raise ValueError(f"dynamic profile subpackage {module_data.name} has no DynamicProfile instances")
+    return profiles
+
+
+DYNAMIC_PROFILES = _get_dynamic_profiles()
 
 
 def _get_rule_files_for_strictness(strictness: str) -> List[str]:
@@ -79,6 +103,7 @@ class HMMDetectionResults(DetectionResults):
 
 def _get_rules(strictness: str, category: Optional[str] = None) -> List[rule_parser.DetectionRule]:
     signature_names = {sig.name for sig in get_signature_profiles()}
+    signature_names.update(set(DYNAMIC_PROFILES))
     category_names = {cat.name for cat in get_rule_categories()}
     rules: List[rule_parser.DetectionRule] = []
     aliases: Dict[str, List[rule_parser.Token]] = {}
@@ -158,7 +183,8 @@ def run_on_record(record: Record, previous_results: Optional[HMMDetectionResults
     valid_categories = {cat.name for cat in get_rule_categories()}
     equivalences = path.get_full_path(__file__, "filterhmmdetails.txt")
     results = detect_protoclusters_and_signatures(record, signatures, seeds, rules, valid_categories,
-                                                  equivalences, "rule-based-clusters")
+                                                  equivalences, "rule-based-clusters",
+                                                  dynamic_profiles=DYNAMIC_PROFILES)
     results.annotate_cds_features()
     return HMMDetectionResults(record.id, results, get_supported_cluster_types(strictness), strictness)
 

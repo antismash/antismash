@@ -15,7 +15,9 @@ from antismash.common.secmet.locations import locations_overlap
 from antismash.common.secmet.qualifiers import GeneFunction, SecMetQualifier
 from antismash.common.subprocessing import run_hmmsearch
 from antismash.common.hmm_rule_parser import rule_parser
-from antismash.common.signature import get_signature_profiles
+from antismash.common.signature import get_signature_profiles, HmmSignature, Signature
+
+from .structures import DynamicHit, DynamicProfile, HMMerHit, ProfileHit
 
 
 class CDSResults:
@@ -319,7 +321,7 @@ def create_rules(rule_file: str, signature_names: Set[str],
     return parser.rules
 
 
-def apply_cluster_rules(record: Record, results_by_id: Dict[str, List[HSP]],
+def apply_cluster_rules(record: Record, results_by_id: Dict[str, List[ProfileHit]],
                         rules: List[rule_parser.DetectionRule]
                         ) -> Tuple[Dict[str, Dict[str, Set[str]]],
                                    Dict[str, Set[str]]]:
@@ -376,41 +378,26 @@ def apply_cluster_rules(record: Record, results_by_id: Dict[str, List[HSP]],
     return cds_domains_by_cluster_type, cluster_type_hits
 
 
-def detect_protoclusters_and_signatures(record: Record, signature_file: str, seeds_file: str,
-                                        rule_files: List[str], valid_categories: Set[str],
-                                        filter_file: str, tool: str,
-                                        annotate_existing_subregions: bool = True) -> RuleDetectionResults:
-    """ Compares all CDS features in a record with HMM signatures and generates
-        Protocluster features based on those hits and the current protocluster detection
-        rules.
+def find_hmmer_hits(record: Record, sig_by_name: Dict[str, Signature],
+                    seeds_by_name: Dict[str, int], hmmer_db: str,
+                    filter_file: str) -> Dict[str, List[ProfileHit]]:
+    """ Finds hits for HMMer profiles in the given record
 
         Arguments:
             record: the record to analyse
-            signature_file: a tab separated file; each row being a single HMM reference
-                        with columns: label, description, minimum score cutoff, hmm path
-            seeds_file: the file containing all HMM profiles
-            rule_files: the files containing the rules to use for cluster definition
-            valid_categories: a set containing valid rule category strings
+            sig_by_name: a dictionary mapping profile name to Signature instance
+            seeds_by_name: a dictionary mapping profile name to number of seeds
+                    used to generate that profile
+            hmmer_db: the path to the HMMer database to find hits with
             filter_file: a file containing equivalence sets of HMMs
-            tool: the name of the tool providing the HMMs (e.g. rule_based_clusters)
-            annotate_existing_subregions: if True, subregions already present in the record
-                    will have domains annotated even if no protocluster is found
+
+        Returns:
+            a dictionary mapping CDS name to a list of ProfileHit instances found
+            in that CDS
     """
-    if not rule_files:
-        raise ValueError("rules must be provided")
-    full_fasta = fasta.get_fasta_from_record(record)
-    # if there's no CDS features, don't try to do anything
-    if not full_fasta:
-        return RuleDetectionResults({}, tool, [])
-    sig_by_name = {sig.name: sig for sig in get_signature_profiles(signature_file)}
-    rules: List[rule_parser.DetectionRule] = []
-    aliases: Dict[str, List[rule_parser.Token]] = {}
-    for rule_file in rule_files:
-        rules = create_rules(rule_file, set(sig_by_name), valid_categories, aliases, rules)
     results = []
     results_by_id: Dict[str, HSP] = {}
-
-    runresults = run_hmmsearch(seeds_file, full_fasta, use_tempfile=True)
+    runresults = run_hmmsearch(hmmer_db, fasta.get_fasta_from_record(record), use_tempfile=True)
     for runresult in runresults:
         acc = runresult.accession.split('.')[0]
         # Store result if it is above cut-off
@@ -435,11 +422,76 @@ def detect_protoclusters_and_signatures(record: Record, signature_file: str, see
     # Filter multiple results of the same model in one gene
     results, results_by_id = filter_result_multiple(results, results_by_id)
 
+    by_id: Dict[str, List[ProfileHit]] = defaultdict(list)
+    for hsp in results:
+        by_id[hsp.hit_id].append(HMMerHit.from_hsp(hsp, seeds_by_name[hsp.query_id]))
+
+    return by_id
+
+
+def detect_protoclusters_and_signatures(record: Record, signature_file: str, seeds_file: str,
+                                        rule_files: List[str], valid_categories: Set[str],
+                                        filter_file: str, tool: str,
+                                        annotate_existing_subregions: bool = True,
+                                        dynamic_profiles: Dict[str, DynamicProfile] = None
+                                        ) -> RuleDetectionResults:
+    """ Compares all CDS features in a record with HMM signatures and generates
+        Protocluster features based on those hits and the current protocluster detection
+        rules.
+
+        Arguments:
+            record: the record to analyse
+            signature_file: a tab separated file; each row being a single HMM reference
+                        with columns: label, description, minimum score cutoff, hmm path
+            seeds_file: the file containing all HMM profiles
+            rule_files: the files containing the rules to use for cluster definition
+            valid_categories: a set containing valid rule category strings
+            filter_file: a file containing equivalence sets of HMMs
+            tool: the name of the tool providing the HMMs (e.g. rule_based_clusters)
+            annotate_existing_subregions: if True, subregions already present in the record
+                    will have domains annotated even if no protocluster is found
+            dynamic_profiles: a dictionary of dynamic profiles, mapping profile name
+                    to profile
+    """
+    if not rule_files:
+        raise ValueError("rules must be provided")
+    if not dynamic_profiles:
+        dynamic_profiles = {}
+    # if there's no CDS features, don't try to do anything
+    if not record.get_cds_features():
+        return RuleDetectionResults({}, tool, [])
+
+    # defaults in case of no HMMer profiles
+    results_by_id: Dict[str, List[ProfileHit]] = {}
+    num_seeds_per_hmm: Dict[str, int] = defaultdict(int)
+
+    # get the HMMer profile info
+    sig_by_name: Dict[str, Signature] = {sig.name: sig for sig in get_signature_profiles(signature_file)}
+    # handle things relevant only when HMMer profiles are being used
+    if sig_by_name:
+        overlaps = set(sig_by_name).intersection(set(dynamic_profiles))
+        if overlaps:
+            raise ValueError(f"HMM profiles and dynamic profiles overlap: {overlaps}")
+        # find number of sequences on which each pHMM is based
+        num_seeds_per_hmm = get_sequence_counts(signature_file)
+        # get the HMMer profile results
+        results_by_id.update(find_hmmer_hits(record, sig_by_name, num_seeds_per_hmm, seeds_file, filter_file))
+    sig_by_name.update(dynamic_profiles)
+
+    rules: List[rule_parser.DetectionRule] = []
+    aliases: Dict[str, List[rule_parser.Token]] = {}
+    for rule_file in rule_files:
+        rules = create_rules(rule_file, set(sig_by_name), valid_categories, aliases, rules)
+
+    # gather dynamic hits and merge them with HMMer results
+    dynamic_results = find_dynamic_hits(record, list(dynamic_profiles.values()))
+    for name, dynamic_hits in dynamic_results.items():
+        if name not in results_by_id:
+            results_by_id[name] = []
+        results_by_id[name].extend(dynamic_hits)
+
     # Use rules to determine gene clusters
     cds_domains_by_cluster, cluster_type_hits = apply_cluster_rules(record, results_by_id, rules)
-
-    # Find number of sequences on which each pHMM is based
-    num_seeds_per_hmm = get_sequence_counts(signature_file)
 
     # annotate everything in detected protoclusters
     rules_by_name = {rule.name: rule for rule in rules}
@@ -448,9 +500,9 @@ def detect_protoclusters_and_signatures(record: Record, signature_file: str, see
 
     def get_domains_for_cds(cds: CDSFeature) -> List[SecMetQualifier.Domain]:
         domains = []
-        for hsp in results_by_id.get(cds.get_name(), []):
-            domains.append(SecMetQualifier.Domain(hsp.query_id, hsp.evalue, hsp.bitscore,
-                                                  num_seeds_per_hmm[hsp.query_id], tool))
+        for hit in results_by_id.get(cds.get_name(), []):
+            domains.append(SecMetQualifier.Domain(hit.query_id, hit.evalue, hit.bitscore,
+                                                  hit.seeds, tool))
         return domains
 
     cds_results_by_cluster = {}
@@ -506,6 +558,7 @@ def get_sequence_counts(details_file: str) -> Dict[str, int]:
     """
     result = {}
     for hmm in get_signature_profiles(details_file):
+        assert isinstance(hmm, HmmSignature)
         with open(path.get_full_path(details_file, hmm.hmm_file), 'r') as handle:
             lines = handle.readlines()
         for line in lines:
@@ -516,3 +569,20 @@ def get_sequence_counts(details_file: str) -> Dict[str, int]:
             raise ValueError("Unknown number of seeds for hmm file: %s" % details_file)
 
     return result
+
+
+def find_dynamic_hits(record: Record, dynamic_profiles: List[DynamicProfile]) -> Dict[str, List[DynamicHit]]:
+    """ Finds hits for dynamic profiles
+
+    Arguments:
+        record: the Record to search
+        dynamic_profiles: the dynamic profiles to find hits with
+
+    Returns:
+        a dictionary mapping CDS name to list of DynamicHit
+    """
+    results: Dict[str, List[DynamicHit]] = defaultdict(list)
+    for profile in dynamic_profiles:
+        for name, hits in profile.find_hits(record).items():
+            results[name].extend(hits)
+    return results
