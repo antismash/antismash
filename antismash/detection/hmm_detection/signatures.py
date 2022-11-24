@@ -8,6 +8,8 @@ from typing import List
 from antismash.common import path
 from antismash.common import signature
 
+_SIGNATURE_CACHE: List[signature.HmmSignature] = []
+
 
 def get_signature_profiles() -> List[signature.HmmSignature]:
     """ Generates the HMM signature profiles from hmmdetails.txt
@@ -15,15 +17,8 @@ def get_signature_profiles() -> List[signature.HmmSignature]:
         existing profiles
     """
     # if already called once, then just reuse the cached results
-    existing = getattr(get_signature_profiles, 'existing', None)
-    if existing is not None:
-        assert isinstance(existing, list)
-        return existing
+    if not _SIGNATURE_CACHE:
+        filename = path.get_full_path(__file__, "data", "hmmdetails.txt")
+        _SIGNATURE_CACHE.extend(signature.get_signature_profiles(filename))
 
-    # not cached yet, so generate
-    profiles = signature.get_signature_profiles(path.get_full_path(__file__, "data", "hmmdetails.txt"))
-
-    # cache this for future reuse, and silence mypy warnings because it can't handle it
-    get_signature_profiles.existing = profiles  # type: ignore
-
-    return profiles
+    return list(_SIGNATURE_CACHE)
