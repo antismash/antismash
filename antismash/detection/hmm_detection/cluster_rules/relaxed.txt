@@ -57,7 +57,7 @@ RULE RRE-containing
               lanthipeptide-class-v,
               LAP, lassopeptide, lipolanthine, microviridin, proteusin, RaS-RiPP,
               sactipeptide, thioamitides, thiopeptide, ranthipeptide,
-              glycocin, redox-cofactor
+              glycocin, redox-cofactor, RiPP-like
     CUTOFF 10
     NEIGHBOURHOOD 10
     CONDITIONS ANY_RRE
