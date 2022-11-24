@@ -4,9 +4,13 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring,consider-using-with
 
+from argparse import Namespace
 import glob
+import importlib
 import os
+import pkgutil
 import unittest
+from unittest.mock import patch
 
 from Bio.Seq import Seq
 
@@ -17,7 +21,7 @@ from antismash.common.secmet import Record
 from antismash.common.test.helpers import DummyCDS, FakeHSPHit
 from antismash.config import build_config, destroy_config
 import antismash.detection.hmm_detection as core
-from antismash.detection.hmm_detection import signatures
+from antismash.detection.hmm_detection import DynamicProfile, signatures
 
 
 class HmmDetectionTest(unittest.TestCase):
@@ -25,7 +29,7 @@ class HmmDetectionTest(unittest.TestCase):
         self.config = build_config([])
         self.rules_file = path.get_full_path(__file__, "..", "cluster_rules", "strict.txt")
         self.signature_file = path.get_full_path(__file__, "..", "data", "hmmdetails.txt")
-        self.signature_names = {sig.name for sig in core.get_signature_profiles()}
+        self.signature_names = {sig.name for sig in core.get_signature_profiles()}.union(core.DYNAMIC_PROFILES)
         self.valid_categories = {cat.name for cat in core.get_rule_categories()}
         self.filter_file = path.get_full_path(__file__, "..", "filterhmmdetails.txt")
         self.results_by_id = {
@@ -321,3 +325,29 @@ class TestSignatureFile(unittest.TestCase):
     def test_details(self):
         data_dir = path.get_full_path(os.path.dirname(__file__), 'data')
         check_hmm_signatures(os.path.join(data_dir, 'hmmdetails.txt'), data_dir)
+
+
+class TestDynamicGather(unittest.TestCase):
+    def _go(self, dummy_module):
+        with patch.object(pkgutil, "walk_packages", return_value=[Namespace(name="dummy")]):
+            with patch.object(importlib, "import_module", return_value=dummy_module):
+                return core._get_dynamic_profiles()
+
+    def test_gather(self):
+        prof_a = DynamicProfile("A", "desc a", lambda rec: {})
+        prof_b = DynamicProfile("b", "desc b", lambda rec: {})
+        dynamics = self._go(Namespace(a=prof_a, b=prof_b, c="some text"))
+        assert len(dynamics) == 2
+        assert sorted(list(dynamics)) == ["A", "b"]
+        assert dynamics["A"].name == "A"
+        assert dynamics["b"].name == "b"
+
+    def test_duplicates(self):
+        prof_a = DynamicProfile("A", "desc a", lambda rec: {})
+        prof_b = DynamicProfile("A", "desc b", lambda rec: {})
+        with self.assertRaisesRegex(ValueError, "duplicate dynamic profile"):
+            self._go(Namespace(a=prof_a, b=prof_b))
+
+    def test_empty(self):
+        with self.assertRaisesRegex(ValueError, "subpackage .* has no"):
+            self._go(Namespace(a="7"))

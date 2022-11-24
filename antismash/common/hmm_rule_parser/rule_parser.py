@@ -181,9 +181,9 @@ from operator import xor  # so type hints can be bool and not int
 import string
 from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union
 
-from Bio.SearchIO._model.hsp import HSP
-
 from antismash.common.secmet import CDSFeature, FeatureLocation
+
+from .structures import ProfileHit
 
 
 class RuleSyntaxError(SyntaxError):
@@ -370,7 +370,7 @@ class Details:
         parsing
     """
     def __init__(self, cds_name: str, feats: Dict[str, CDSFeature],
-                 results: Dict[str, List[HSP]], cutoff: int) -> None:
+                 results: Dict[str, List[ProfileHit]], cutoff: int) -> None:
         self.cds = cds_name  # str, name of cds that is being classified
         self.features_by_id = feats  # { id : feature }
         self.results_by_id = results  # { id : HSP list }
@@ -816,7 +816,7 @@ class DetectionRule:
         return self.conditions.contains_positive_condition()
 
     def detect(self, cds_name: str, feature_by_id: Dict[str, CDSFeature],
-               results_by_id: Dict[str, List[HSP]]) -> ConditionMet:
+               results_by_id: Dict[str, List[ProfileHit]]) -> ConditionMet:
         """ Returns True if a cluster can be formed around this CDS
             using this rule
         """

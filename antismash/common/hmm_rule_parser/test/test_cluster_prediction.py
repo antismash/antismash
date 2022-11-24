@@ -5,9 +5,11 @@
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring,too-many-public-methods
 
 import unittest
+from unittest.mock import patch
 
-from antismash.common.hmm_rule_parser import cluster_prediction, rule_parser
+from antismash.common.hmm_rule_parser import cluster_prediction, rule_parser, structures
 from antismash.common.secmet.features import Protocluster, FeatureLocation
+from antismash.common.test.helpers import DummyRecord, DummyCDS
 
 
 class DummyConditions(rule_parser.Conditions):
@@ -93,3 +95,57 @@ class TestRedundancy(unittest.TestCase):
             self.test_larger()
             self.test_equal()
             self.test_contained()
+
+
+class TestDynamic(unittest.TestCase):
+    def test_find_dynamic(self):
+        expected_a = {"cds_name": [structures.DynamicHit("prof_a", "cds_name")]}
+        expected_b = {"cds_name": [structures.DynamicHit("prof_b", "cds_name")]}
+        profile_a = structures.DynamicProfile("prof_a", "desc a", lambda record: expected_a)
+        profile_b = structures.DynamicProfile("prof_b", "desc b", lambda record: expected_b)
+        results = cluster_prediction.find_dynamic_hits(DummyRecord(), [profile_a, profile_b])
+        assert results["cds_name"] == expected_a["cds_name"] + expected_b["cds_name"]
+
+    @patch.object(cluster_prediction, "find_hmmer_hits", return_value={})
+    @patch.object(cluster_prediction, "get_signature_profiles", return_value={})
+    def test_full(self, _patched_find, _patched_sigs):
+        cdses = [DummyCDS(locus_tag="A", start=0, end=6), DummyCDS(locus_tag="B", start=6, end=12)]
+        record = DummyRecord(features=cdses)
+
+        # create a dummy dynamic profile
+        def find_a(rec):
+            hits = {}
+            for cds in rec.get_cds_features():
+                if cds.get_name() == "A":
+                    hits[cds.get_name()] = [structures.DynamicHit(cds.get_name(), "a_finder")]
+            return hits
+        profile = structures.DynamicProfile("a_finder", "desc", find_a)
+        # make sure the 'profile' functions as expected
+        assert cdses[0].get_name() in profile.find_hits(record)
+
+        # build a dummy rule that will search for this hit
+        condition = rule_parser.SingleCondition(False, "a_finder")
+        rule = rule_parser.DetectionRule("test-name", "Other", 5000, 5000, condition)
+        with patch.object(cluster_prediction, "create_rules", return_value=[rule]):
+            results = cluster_prediction.detect_protoclusters_and_signatures(
+                record, None, None, [None], set("Other"), None, "test_tool",
+                dynamic_profiles={profile.name: profile}
+            )
+        assert results
+        assert results.cds_by_cluster
+        assert results.protoclusters
+        proto = results.protoclusters[0]
+        assert proto.product == "test-name"
+
+        results.annotate_cds_features()
+        assert cdses[0].sec_met.domains[0].name == "a_finder"
+
+    def test_overlap_names(self):
+        record = DummyRecord(features=[DummyCDS()])
+        profile = structures.DynamicProfile("dummy", "desc", lambda record: {})
+        with patch.object(cluster_prediction, "get_signature_profiles", return_value=[profile]):
+            with self.assertRaisesRegex(ValueError, "profiles overlap"):
+                cluster_prediction.detect_protoclusters_and_signatures(
+                    record, None, None, [None], set("Other"), None, "test_tool",
+                    dynamic_profiles={profile.name: profile}
+                )
