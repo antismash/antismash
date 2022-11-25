@@ -32,18 +32,17 @@ class ParasResult(Prediction):
         return best_prediction
 
     def as_html(self) -> Markup:
+        if not self.predictions:
+            return Markup("No hits above threshold.")
+
         raw_start = (
             "\n"
-            "<dl><dt>PARAS prediction, score (0-1):</dt>\n"
-            " <dd>\n"
-            "  <dl>\n"
+            "<dl><dt>Prediction probabilities:</dt>\n"
+            " <dd><dl>\n"
         )
         core = "\n".join("  <dd></dd><dt>%s: %.2f</dt>\n" % (name, score) for score, name in self.predictions)
         raw_end = (
-            "\n"
-            "  </dl>\n"
-            " </dd>\n"
-            "</dl>\n"
+            "  </dl></dd></dl>"
         )
         return Markup("%s%s%s" % (raw_start, core, raw_end))
 
@@ -56,14 +55,16 @@ class ParasResult(Prediction):
         return ParasResult(json["predictions"])
 
 
-def run_paras(a_domains: List[ModularDomain]) -> Dict[str, "ParasResult"]:
-    results: Dict[str, ParasResult] = {}
+def run_paras(a_domains: List[ModularDomain]) -> Dict[str, Prediction]:
+    results: Dict[str, Prediction] = {}
     sequences = []
     for domain in a_domains:
         sequences.append(domain.translation)
     predictions = paras(sequences, threshold=0.2)
     for i, domain in enumerate(a_domains):
         prediction = predictions[i]
-        results[domain.domain_id] = ParasResult(prediction)
+        if domain.domain_id is not None:
+            paras_prediction = ParasResult(prediction)
+            results[domain.domain_id] = paras_prediction
 
     return results
