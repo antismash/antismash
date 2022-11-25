@@ -591,6 +591,14 @@ table.region-table {
     stroke: #000;
     stroke-width: 1px;
 }
+.svgene-binding-site {
+    line {
+        stroke: black;
+    }
+    circle {
+        fill: black;
+    }
+}
 
 .legend-items, .zoom-buttons {
     display: flex;

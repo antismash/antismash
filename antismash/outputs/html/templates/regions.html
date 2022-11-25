@@ -50,7 +50,16 @@
         {% if (options.tta_enabled or not options.minimal) and record.get_gc_content() >= options.tta_threshold %}
             {% call le.symbol_legend('legend-tta-codon', 'TTA codons') %}
                 <svg viewbox="0 0 6 6">
-                    <polyline class="svgene-tta-codon" points="3,0 0,6 6,6 3,0"></rect>
+                    <polyline class="svgene-tta-codon" points="3,0 0,6 6,6 3,0">
+                </svg>
+            {% endcall %}
+        {% endif %}
+        {% if (options.tfbs or not options.minimal) %}
+            {% call le.static_symbol_legend('legend-binding-site', 'binding site') %}
+                <svg viewbox="0 -1 8 8">
+                    <g class="svgene-binding-site">
+                    <line x1="4" y1="8" x2="4" y1="4"></line>
+                    <circle cx="4" cy="2" r="2"></line>
                 </svg>
             {% endcall %}
         {% endif %}

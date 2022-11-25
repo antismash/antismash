@@ -18,7 +18,7 @@ from antismash.common.secmet.features.protocluster import SideloadedProtocluster
 from antismash.common.secmet.features.subregion import SideloadedSubRegion
 from antismash.config import ConfigType
 from antismash.detection.tigrfam.tigr_domain import TIGRDomain
-from antismash.modules import clusterblast, tta
+from antismash.modules import clusterblast, tfbs_finder as tfbs, tta
 from antismash.outputs.html.generate_html_table import generate_html_table
 
 searchgtr_links: Dict[str, str] = {}  # TODO: refactor away from global
@@ -103,7 +103,11 @@ def convert_regions(record: Record, options: ConfigType, result: Dict[str, Modul
         mibig_entries = mibig_results.get(js_region['idx'], {})
         js_region['orfs'] = convert_cds_features(record, region.cds_children, options, mibig_entries)
         js_region['clusters'] = get_clusters_from_region(region)
-        js_region['ttaCodons'] = convert_tta_codons(tta_codons, record)
+        sites = {
+            "ttaCodons": convert_tta_codons(tta_codons, record),
+            "bindingSites": convert_binding_sites(region, result),
+        }
+        js_region['sites'] = sites
         js_region['type'] = region.get_product_string()
         js_region['products'] = region.products
         js_region['product_categories'] = list(region.product_categories)
@@ -262,6 +266,32 @@ def convert_tta_codons(tta_codons: List[Feature], record: Record) -> List[Dict[s
             'containedBy': [cds.get_name() for cds in cdses]
         })
     return js_codons
+
+
+def convert_binding_sites(region: Region, results: Dict[str, ModuleResults]) -> List[Dict[str, Any]]:
+    """ Constructs required JSON-friendly information for the javascript marking
+        binding sites in the gene overview.
+
+        Arguments:
+            region: the relevant region to generate data for
+            results: a dictionary of all module results for the region's record
+
+        Returns:
+            a list of dictionaries, one for each marker in the region
+    """
+    sites: List[Dict[str, Any]] = []
+    tfbs_results = results.get(tfbs.__name__)
+    if not tfbs_results:
+        return sites
+    assert isinstance(tfbs_results, tfbs.TFBSFinderResults)
+    confidence = tfbs.tfbs_finder.Confidence.MEDIUM
+    for hits in tfbs_results.get_hits_by_region(region.get_region_number(),
+                                                confidence=confidence, allow_better=True):
+        sites.append({
+            "loc": hits.start,
+            "len": len(hits.consensus),
+        })
+    return sites
 
 
 def build_pfam2go_links(go_qualifier: Optional[GOQualifier], prefix: str = "") -> List[str]:

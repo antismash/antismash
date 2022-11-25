@@ -18,3 +18,10 @@
       <div class="legend-label">{{description}}</div>
     </div>
 {%- endmacro %}
+
+{% macro static_symbol_legend(css_class, description) -%}
+    <div class="legend-selector-static">
+      <div class="legend-symbol">{{caller()}}</div>
+      <div class="legend-label">{{description}}</div>
+    </div>
+{%- endmacro %}
