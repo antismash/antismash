@@ -75,7 +75,9 @@ def map_as_name_to_norine(as_name: str) -> str:
                            'pip': 'Hpr',
                            'sal': 'diOH-Bz',
                            'nrp': 'X',
-                           'dpg': 'dhpg'}  # TODO: verify this one
+                           'dpg': 'dhpg'}  # TODO: different uses for the two seqs in NRPSPredictor
+                                           # Q06YZ1_m4 is 3,5-dichloro-4-hydroxyphenylglycine
+                                           # Q7WZ65_m1 is 3,5-dihydroxyphenylglycine
     return as_replacement_dict.get(as_name, as_name)
 
 
