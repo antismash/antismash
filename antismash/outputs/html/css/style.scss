@@ -1448,6 +1448,11 @@ ul.dropdown-options {
     stroke: black;
 }
 
+.bubble-module-line-non-elongating {
+    @extend .bubble-module-line;
+    stroke-dasharray: 0.5em;
+}
+
 .domain-bubble-container {
     * .bubble-module-label {
         .bubble-module-monomer {
