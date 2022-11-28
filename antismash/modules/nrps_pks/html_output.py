@@ -88,6 +88,8 @@ def filter_norine_as(monomers: List[str], be_strict: bool = False) -> List[str]:
     if be_strict:
         bad_monomers = bad_monomers.union({'nrp', 'X'})
     for monomer in monomers:
+        if monomer in bad_monomers:
+            continue
         assert '|' not in monomer, monomer
         filtered_list.append(map_as_name_to_norine(monomer))
     return filtered_list
