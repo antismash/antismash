@@ -359,6 +359,10 @@ def get_valid_areas(region: Region, start_overlap: int) -> List[Tuple[int, int]]
                 add_area(cds.location.start - start_overlap, prev_cds.location.end + start_overlap)
             continue
 
+        # otherwise, skip gaps between the ends of two genes
+        if cds.location.strand == -1 and prev_cds.location.strand == 1:
+            continue
+
         start = prev_cds.location.end
         if prev_cds.location.strand == -1:
             start -= start_overlap
