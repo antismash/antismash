@@ -6,6 +6,7 @@
 """
 
 import contextlib
+import glob
 import logging
 import os
 from typing import Generator, List, Optional, Union
@@ -103,3 +104,32 @@ def is_outdated(built_files: Union[str, List[str]], source_files: Union[str, Lis
     built_time = min(os.path.getmtime(filename) for filename in built_files)
     source_time = max(os.path.getmtime(filename) for filename in source_files)
     return built_time < source_time
+
+
+def find_latest_database_version(database_dir: str, ignore_invalid: bool = False) -> str:
+    """ Finds the most up-to-date database version in the given directory.
+        Versions are expected to be in a XY.Z format, e.g. 3.0
+
+        Arguments:
+            database_dir: the path to the database directory
+            ignore_invalid: if true, files within the directory that aren't in a valid
+                            format are ignored, rather than raising an error
+
+        Returns:
+            the latest version number as a string, e.g. "3.0"
+    """
+    contents = glob.glob(os.path.join(database_dir, "*"))
+    potentials: list[tuple[tuple[float, ...], str]] = []
+    for name in contents:
+        # only names in the form 2.0, 3.1, etc are valid
+        try:
+            version = os.path.basename(name)
+            potentials.append((tuple(map(float, version.split("."))), version))
+        except ValueError:
+            if ignore_invalid:
+                continue
+            raise ValueError(f"Incompatible database version naming: {name}")
+    if not potentials:
+        raise ValueError(f"No matching database in location {database_dir}")
+    latest = sorted(potentials)[-1]
+    return latest[1]
