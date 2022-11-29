@@ -105,7 +105,9 @@ def load_reference_clusters(searchtype: str) -> Dict[str, ReferenceCluster]:
         data_dir = os.path.join(_SHIPPED_DATA_DIR, "sub")
     elif searchtype == "knownclusterblast":
         logging.info("KnownClusterBlast: Loading gene cluster database into memory...")
-        data_dir = os.path.join(_SHIPPED_DATA_DIR, "known")
+        kcb_root = os.path.join(options.database_dir, "knownclusterblast")
+        version = path.find_latest_database_version(kcb_root)
+        data_dir = os.path.join(kcb_root, version)
 
     reference_cluster_file = os.path.join(data_dir, "clusters.txt")
     with open(reference_cluster_file, "r") as handle:
@@ -146,7 +148,9 @@ def load_reference_proteins(searchtype: str) -> Dict[str, Protein]:
         data_dir = os.path.join(_SHIPPED_DATA_DIR, "sub")
     elif searchtype == "knownclusterblast":
         logging.info("KnownClusterBlast: Loading gene cluster database proteins into memory...")
-        data_dir = os.path.join(_SHIPPED_DATA_DIR, "known")
+        kcb_root = os.path.join(options.database_dir, "knownclusterblast")
+        version = path.find_latest_database_version(kcb_root)
+        data_dir = os.path.join(kcb_root, version)
 
     protein_file = os.path.join(data_dir, "proteins.fasta")
     proteins = {}

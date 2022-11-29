@@ -29,6 +29,10 @@ CLUSTERBLAST_URL = "https://dl.secondarymetabolites.org/releases/clusterblast/cl
 CLUSTERBLAST_ARCHIVE_CHECKSUM = "bf45276f034615b0827627d16426fec2aca0464391bc41c76ccfae81049ba95a"
 CLUSTERBLAST_FASTA_CHECKSUM = "ea43624407ae399cd6e78bf2e6868e9ff0b9581f333645063212d0ef239c7f5b"
 
+KCB_URL = "https://dl.secondarymetabolites.org/releases/knownclusterblast/kcb_3.1.tar.xz"
+KCB_ARCHIVE_CHECKSUM = "7149d5742280be3bb39a2abfbccab353a980289f8563bb03544df8899d31e7b4"
+KCB_FASTA_CHECKSUM = "c956906c9c5056a330e2f6fcfff19d48bff65d6608e5befd95dee69de635c140"
+
 CLUSTERCOMPARE_DBS = {
     "mibig": {
         "url": "https://dl.secondarymetabolites.org/releases/clustercompare/cc_mibig_3.1.tar.xz",
@@ -397,6 +401,25 @@ def download_comparippson_db(db_dir: str, name: str, url: str, version: str,
     delete_file(filename + ".xz")
 
 
+def download_knownclusterblast(db_dir: str) -> None:
+    """Download the knownclusterblast database."""
+    version = KCB_URL.rsplit("_", 1)[1].split(".tar", 1)[0]  # e.g. kcb_3.1.tar.xz -> 3.1
+    archive_filename = os.path.join(db_dir, "knownclusterblast", KCB_URL.rpartition("/")[2])
+    fasta_filename = os.path.join(db_dir, "knownclusterblast", version, "proteins.fasta")
+
+    if present_and_checksum_matches(fasta_filename, KCB_FASTA_CHECKSUM):
+        print("KnownClusterBlast fasta file present and checked")
+        return
+
+    print("Downloading KnownClusterBlast database.")
+    check_diskspace(KCB_URL)
+    download_if_not_present(KCB_URL, archive_filename, KCB_ARCHIVE_CHECKSUM)
+    filename = unzip_file(archive_filename, lzma, lzma.LZMAError)
+    untar_file(filename)
+    delete_file(filename)
+    delete_file(filename + ".xz")
+
+
 def download(args: argparse.Namespace) -> None:
     """Download all the large external databases needed."""
     # grab the latest pfam
@@ -413,6 +436,8 @@ def download(args: argparse.Namespace) -> None:
     download_tigrfam(args.database_dir)
 
     download_clusterblast(args.database_dir)
+    download_knownclusterblast(args.database_dir)
+
     for name, details in CLUSTERCOMPARE_DBS.items():
         download_clustercompare(args.database_dir, name, **details)
     for name, details in COMPARIPPSON_DBS.items():
