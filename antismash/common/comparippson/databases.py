@@ -19,9 +19,10 @@ from dataclasses import dataclass, field
 import glob
 import json
 import os
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 
 from antismash.common.html_renderer import Markup
+from antismash.common.path import find_latest_database_version
 from antismash.config import ConfigType, get_config
 
 from .data_structures import Hit
@@ -136,31 +137,6 @@ class ComparippsonDatabase:
 
 
 _DATABASES: List[ComparippsonDatabase] = []
-
-
-def find_latest_database_version(database_dir: str) -> str:
-    """ Finds the most up-to-date database version in the given directory.
-        Versions are expected to be in a XY.Z format, e.g. 3.0
-
-        Arguments:
-            database_dir: the path to the database directory
-
-        Returns:
-            the latest version number as a string, e.g. "3.0"
-    """
-    contents = glob.glob(os.path.join(database_dir, "*"))
-    potentials: List[Tuple[float, str]] = []
-    for name in contents:
-        # only names in the form 2.0, 3.1, etc are valid
-        try:
-            version = os.path.basename(name)
-            potentials.append((float(version), version))
-        except ValueError:
-            raise ValueError(f"Incompatible database version naming: {name}")
-    if not potentials:
-        raise ValueError(f"No matching database in location {database_dir}")
-    latest = sorted(potentials)[-1]
-    return latest[1]
 
 
 def get_databases(options: ConfigType) -> List[ComparippsonDatabase]:
