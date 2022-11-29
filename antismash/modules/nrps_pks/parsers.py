@@ -65,6 +65,9 @@ def generate_nrps_consensus(results: Dict[str, Prediction]) -> str:
     hit_counts: Dict[str, int] = defaultdict(int)
     for method, prediction in results.items():
         assert isinstance(method, str), method
+        # TODO: remove this once PARAS gives NORINE names
+        if method == "PARAS":
+            continue
         assert isinstance(prediction, Prediction), prediction
         if len(prediction.get_classification()) == 1:
             best = prediction.get_classification()[0]

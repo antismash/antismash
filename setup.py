@@ -28,7 +28,8 @@ install_requires = [
     'matplotlib',
     'scipy',
     'scikit-learn >= 0.19.0',
-    'MOODS-python'
+    'MOODS-python',
+    'paras >= 0.0.4',
 ]
 
 tests_require = [

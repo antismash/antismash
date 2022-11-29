@@ -16,6 +16,7 @@ from .parsers import generate_nrps_consensus
 from .data_structures import Prediction, SimplePrediction
 from .minowa.base import MinowaPrediction
 from .nrps_predictor import PredictorSVMResult
+from .paras import ParasResult
 from .pks_names import get_short_form
 from .at_analysis.at_analysis import ATPrediction
 
@@ -163,6 +164,8 @@ class NRPS_PKS_Results(ModuleResults):
             for method, prediction in method_predictions.items():
                 if method == "NRPSPredictor2":
                     rebuilt: Prediction = PredictorSVMResult.from_json(prediction)
+                elif method == "PARAS":
+                    rebuilt = ParasResult.from_json(prediction)
                 elif method.startswith("minowa"):
                     rebuilt = MinowaPrediction.from_json(prediction)
                 elif method == "signature":

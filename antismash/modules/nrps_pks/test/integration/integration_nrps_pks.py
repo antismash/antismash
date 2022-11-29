@@ -53,15 +53,24 @@ class IntegrationNRPSPKS(unittest.TestCase):
         feature_names = nrps_names + ["nrpspksdomains_pks_CAL_domain.1"]
         assert set(results.domain_predictions) == set(feature_names)
 
-        assert set(results.domain_predictions[feature_names[0]]) == {"NRPSPredictor2"}
+        assert set(results.domain_predictions[feature_names[0]]) == {"NRPSPredictor2", "PARAS"}
         nrpspred2_results = {}
+        paras_results = {}
         for domain, methods in results.domain_predictions.items():
             if "CAL" in domain:
                 continue
             nrpspred2_results[domain] = methods["NRPSPredictor2"].get_classification()
-        expected_preds = [["leu"], ["bOH-Tyr"], ["asn"], ["hpg"], ["hpg"], ["bOH-Tyr"], ["dhpg"], ["tyr"], ["pk"]]
-        expected_nrps2 = dict(zip(nrps_names, expected_preds))
+            paras_results[domain] = methods["PARAS"].get_classification()
+
+        expected_nrps2_preds = [["leu"], ["bOH-Tyr"], ["asn"], ["hpg"], ["hpg"], ["bOH-Tyr"], ["dhpg"], ["tyr"], ["pk"]]
+        expected_nrps2 = dict(zip(nrps_names, expected_nrps2_preds))
         assert nrpspred2_results == expected_nrps2
+        expected_paras_preds = [
+            ["leucine"], ["tyrosine"], ["asparagine"], ["hydroxyphenylglycine"], ["hydroxyphenylglycine"], ["tyrosine"],
+            ["3,5-dihydroxyphenylglycine"], ["tyrosine"], ["pk"]
+        ]
+        expected_paras = dict(zip(nrps_names, expected_paras_preds))
+        assert paras_results == expected_paras
 
         cal = results.domain_predictions["nrpspksdomains_pks_CAL_domain.1"]["minowa_cal"]
         assert len(cal.predictions) == 5
