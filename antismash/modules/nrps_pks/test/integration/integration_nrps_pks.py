@@ -59,7 +59,7 @@ class IntegrationNRPSPKS(unittest.TestCase):
             if "CAL" in domain:
                 continue
             nrpspred2_results[domain] = methods["NRPSPredictor2"].get_classification()
-        expected_preds = [["leu"], ["bht"], ["asn"], ["hpg"], ["hpg"], ["bht"], ["dhpg"], ["tyr"], ["pk"]]
+        expected_preds = [["leu"], ["bOH-Tyr"], ["asn"], ["hpg"], ["hpg"], ["bOH-Tyr"], ["dhpg"], ["tyr"], ["pk"]]
         expected_nrps2 = dict(zip(nrps_names, expected_preds))
         assert nrpspred2_results == expected_nrps2
 
@@ -70,7 +70,7 @@ class IntegrationNRPSPKS(unittest.TestCase):
         assert len(results.region_predictions[1]) == 4
         # as does this, though it still won't use domain docking
         pred = results.region_predictions[1][1]
-        monomers = '(leu - D-bht - asn) + (D-hpg - D-hpg - bht) + (dhpg) + (tyr)'
+        monomers = '(leu - D-bOH-Tyr - asn) + (D-hpg - D-hpg - bOH-Tyr) + (dhpg) + (tyr)'
         assert pred.polymer == monomers
         assert not pred.domain_docking_used
         assert pred.ordering == ['bpsA', 'bpsB', 'bpsC', 'bpsD']

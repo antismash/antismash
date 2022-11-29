@@ -66,21 +66,6 @@ def generate_html(region_layer: RegionLayer, results: NRPS_PKS_Results,
     return html
 
 
-def map_as_name_to_norine(as_name: str) -> str:
-    """ Maps antiSMASH amino acid nomenclature to NORINE """
-
-    as_replacement_dict = {'bht': 'bOH-Tyr',
-                           'dhb': 'diOH-Bz',
-                           'iva': 'Ival',
-                           'pip': 'Hpr',
-                           'sal': 'diOH-Bz',
-                           'nrp': 'X',
-                           'dpg': 'dhpg'}  # TODO: different uses for the two seqs in NRPSPredictor
-                                           # Q06YZ1_m4 is 3,5-dichloro-4-hydroxyphenylglycine
-                                           # Q7WZ65_m1 is 3,5-dihydroxyphenylglycine
-    return as_replacement_dict.get(as_name, as_name)
-
-
 def filter_norine_as(monomers: List[str], be_strict: bool = False) -> List[str]:
     """ Remove PKS and unknown substrate predictions
         use be_strict = True to also filter nrp/X

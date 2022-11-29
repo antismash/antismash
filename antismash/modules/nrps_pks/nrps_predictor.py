@@ -66,7 +66,7 @@ class PredictorSVMResult(Prediction):
         self.stachelhaus_seq = str(stachelhaus_seq)
         self.stachelhaus_match_count = int(stachelhaus_match_count)
 
-    def get_classification(self) -> List[str]:
+    def _get_classification(self) -> List[str]:
         # comparing number of stach matches (n) to which category of SVM prediction
         # was made, and also to whether the SVM registered being outside of applicability domain
         # < = take stach, ^ = take SVM, & = take intersection of both, . = neither
@@ -111,6 +111,9 @@ class PredictorSVMResult(Prediction):
                     classification.extend(group)
                     break
         return classification
+
+    def get_classification(self) -> List[str]:
+        return list(map(map_nrpspredicor_to_norine, self._get_classification()))
 
     def as_html(self) -> Markup:
         note = ""
@@ -367,3 +370,32 @@ def run_nrpspredictor(a_domains: List[ModularDomain], options: ConfigType) -> Di
             lines = handle.read().splitlines()[1:]  # strip the header
 
     return read_output(lines)
+
+
+def map_nrpspredicor_to_norine(as_name: str) -> str:
+    """ Maps NRPSPredictor amino acid nomenclature to NORINE """
+
+    as_replacement_dict = {
+        'bht': 'bOH-Tyr',
+        'dhb': 'diOH-Bz',
+        'iva': 'Ival',
+        'pip': 'Hpr',
+        'sal': 'diOH-Bz',
+        'nrp': 'X',
+        # TODO: different uses for the two seqs in NRPSPredictor
+        # Q06YZ1_m4 is 3,5-dichloro-4-hydroxyphenylglycine
+        # Q7WZ65_m1 is 3,5-dihydroxyphenylglycine
+        'dpg': 'Cl2-Hpg',
+        'ala-b': 'bAla',
+        'b-ala': 'bAla',
+        'beta-ala': 'bAla',
+        'ala-d': 'D-Ala',
+        'allo-thr': 'aThr',
+        'hiv-d': 'D-Hiv',
+        'alle': 'aIle',  # NRPSPredictor has a typo in there
+        'alloile': 'aIle',
+        'hmp-d': 'D-Hmp',
+        '3-me-glu': '3Me-Glu',
+        'lys-b': 'bLys',
+    }
+    return as_replacement_dict.get(as_name, as_name)

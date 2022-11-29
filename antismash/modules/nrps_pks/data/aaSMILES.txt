@@ -24,43 +24,44 @@ trp NC(CC1=CNc2c1cccc2)C(=O)O # tryptophan
 tyr NC(Cc1ccc(O)cc1)C(=O)O # tyrosine
 val NC(C(C)C)C(=O)O # valine
 
+# NORINE amino acids
+3Me-Glu NC(C(C)CC(=O))C(=O)O # 3-methyl-glutamate
+bAla NCCC(=O)O # beta-alanine
+aIle NC(C(C)CC)C(=O)O # actually aIle, allo-isoleucine
+aThr CC(O)C(N)C(=O)O # allo-threonine
+diOH-Bz Oc1c(O)cccc1C(=O)O # 2,3-dihydroxy-benzoic acid
+bLys NCCCC(N)CC(=O)O # beta-lysine
+bOH-Tyr NC(C(O)c1ccc(O)cc1)C(=O)O # beta-hydroxy-tyrosine
+Cl2-Hpg NC(c1cc(Cl)c(O)c(Cl)c1)C(=O)O # 3,5-dichloro-4-hydroxy-phenylglycine
+D-Ala NC(C)C(=O)O # D-alanine
+D-Hiv OC(C(C)C)C(=O)O # D-2-hydroxyisovalerate
+D-Hmp CCC(C)C(O)C(=O)O # 2-hydroxy-3-methyl-pentanoic acid (D-hmp)
+dhpg NC(c1cc(O)cc(O)c1)C(=O)O # 3,5-dihydroxy-phenylglycine
+Hpr N1C(CCCC1)C(=O)O # pipecolic acid
+IVal NC(CC)(C)C(=O)O # isovaline
+
+
 # other NRPSPredictor predictions
-3-me-glu NC(C(C)CC(=O))C(=O)O # 3-methyl-glutamate
 4ppro N1CC(CCC)CC1C(=O)O # 4-propyl-proline
 aad NC(CCCC(=O)O)C(=O)O # 2-amino-adipic acid
 abu NC(C(C))C(=O)O # 2-amino-butyric acid
 aeo NC(CCCCCC(=O)C1OC1)C(=O)O # 2-amino-8-oxo-9,10-decanoate
-ala-b NCCC(=O)O # beta-alanine (duplicate entry of b-ala)
-ala-d NC(C)C(=O)O # D-alanine
-allo-thr CC(O)C(N)C(=O)O # allo-threonine (a.k.a. aThr)
-b-ala NCCC(=O)O # beta-alanine
-beta-ala NCCC(=O)O # beta-alanine (duplicate entry of b-ala)
 bmt NC(C(O)C(C)CC=CC)C(=O)O # 4-butenyl-4-methyl threonine
 cap NC1=NCCC(N1)C(N)C(=O)O # capreomycidine
-bht NC(C(O)c1ccc(O)cc1)C(=O)O # beta-hydroxy-tyrosine
 dab NC(CCN)C(=O)O # 2,4-diaminobutyric acid
-dhb Oc1c(O)cccc1C(=O)O # 2,3-dihydroxy-benzoic acid
-dhpg NC(c1cc(O)cc(O)c1)C(=O)O # 3,5-dihydroxy-phenyl-glycine
 dht NC(C(=O)C)C(=O)O # dehydro-threonine/2,3-dehydroaminobutyric acid
-dpg NC(c1cc(O)cc(O)c1)C(=O)O # 3,5-dihydroxy-phenyl-glycine (duplicate entry of dhpg)
 hiv OC(C(C)C)C(=O)O # 2-hydroxyisovalerate
-hiv-d OC(C(C)C)C(=O)O # D-2-hydroxyisovalerate
-hmp-d CCC(C)C(O)C(=O)O # 2-hydroxy-3-methyl-pentanoic acid (D-hmp)
 horn NC(CCCNO)C(=O)O # hydroxy ornithine
-hpg NC(c1ccc(O)cc1)C(=O)O # 4-hydroxy-phenyl-glycine
+hpg NC(c1ccc(O)cc1)C(=O)O # 4-hydroxy-phenylglycine
 hyv NC(C(CO)C)C(=O)O # 4-hydroxy-L-valine
 hyv-d OC(C(C)C)C(=O)O # 2-hydroxy-valeric acid
-iva NC(CC)(C)C(=O)O # isovaline
-lys-b NCCCC(N)CC(=O)O # beta-lysine
 orn NC(CCCN)C(=O)O # ornithine
-phg NC(c1ccccc1)C(=O)O # phenyl-glycine
-pip N1C(CCCC1)C(=O)O # pipecolic acid
-sal Oc1ccccc1C(=O)O # salicylic acid
+phg NC(c1ccccc1)C(=O)O # phenylglycine
+sal Oc1ccccc1C(=O)O # salicylic acid (not in norine yet)
 tcl NC(CC(C)C(Cl)(Cl)(Cl))C(=O)O # (4S)-5,5,5-trichloro-leucine
 vol NC(C(C)C)CO # valinol
 LDAP NC(CCCC(N)C(=O)O)C(=O)O # diaminopimelic acid
 meval NC(C(C)(C)C)C(=O)O # Me-Val
-alle NC(C(C)CC)C(=O)O # actually aIle, allo-isoleucine
 alaninol NC(C)CO
 N-(1,1-dimethyl-1-allyl)Trp NC(CC1=CN(C(C)(C)C=C)c2c1cccc2)C(=O)O
 d-lyserg CN1CC(C=C2C1CC3=CNC4=CC=CC2=C34)C(=O)O # D-lysergic acid

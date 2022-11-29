@@ -18,7 +18,7 @@ _STARTING_BONDS = {
 }
 
 
-def load_smiles() -> Dict[str, str]:
+def _load_smiles() -> Dict[str, str]:
     """Load smiles from a dictionary mapping residues to SMILES string"""
     aa_smiles: Dict[str, str] = {}
 
@@ -35,7 +35,12 @@ def load_smiles() -> Dict[str, str]:
     return aa_smiles
 
 
-_SMILES = load_smiles()
+_SMILES = _load_smiles()
+
+
+def get_all_smiles() -> Dict[str, str]:
+    """Get smiles from the cached dictionary"""
+    return _SMILES
 
 
 class Atom:

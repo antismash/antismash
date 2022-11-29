@@ -9,7 +9,7 @@ from antismash.modules.nrps_pks.smiles_generator import (
     Atom,
     Bonds,
     gen_smiles_from_pksnrps as gen_smiles,
-    load_smiles,
+    get_all_smiles,
     methylate,
 )
 
@@ -110,7 +110,7 @@ class TestBonds(unittest.TestCase):
         assert [atom.symbol for atom in bonds] == ["N", "C", "C", "O", "C", "C", "O", "O"]
 
     def test_all_smiles(self):
-        for key, val in sorted(load_smiles().items()):
+        for key, val in get_all_smiles().items():
             assert Bonds(val).to_smiles() == val, key
 
 
