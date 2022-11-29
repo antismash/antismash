@@ -14,11 +14,9 @@ from antismash.common.secmet.features import CDSFeature
 
 from .data_structures import Prediction
 from .pks_names import get_short_form
-from .smiles_generator import load_smiles
+from .smiles_generator import get_all_smiles
 
 ALLOWABLE_PREDICTION_CHARACTERS = set(string.ascii_letters + string.digits).union(set('-,()'))
-
-AVAILABLE_SMILES_PARTS = set(load_smiles())
 
 
 def calculate_individual_consensus(predictions: List[str]) -> str:
@@ -41,7 +39,7 @@ def calculate_individual_consensus(predictions: List[str]) -> str:
         smiles_equivalent = pred
         if "mmal" in pred:
             smiles_equivalent = "Me-" + pred.replace("mmal", "mal")
-        if smiles_equivalent.lower() not in AVAILABLE_SMILES_PARTS:
+        if smiles_equivalent.lower() not in get_all_smiles():
             continue
         if count > 0 and count > highest_count:
             best = pred
@@ -80,7 +78,7 @@ def generate_nrps_consensus(results: Dict[str, Prediction]) -> str:
     # if the best hit isn't tie, use that
     if best_hits and len({count for count, _ in best_hits}) == 1:
         consensus = best_hits[0][1]
-    if consensus.lower() not in AVAILABLE_SMILES_PARTS:
+    if consensus.lower() not in get_all_smiles():
         consensus = "X"
     return consensus
 
@@ -131,7 +129,7 @@ def calculate_consensus_prediction(cds_features: List[CDSFeature], results: Dict
                 preds = predictions["minowa_cal"].get_classification()
                 pred = get_short_form(preds[0])
                 assert isinstance(pred, str)
-                if pred in AVAILABLE_SMILES_PARTS:
+                if pred in get_all_smiles():
                     cis_at[domain.feature_name] = pred
                 else:
                     logging.debug("missing %s from SMILES parts for domain %s", pred, domain.feature_name)

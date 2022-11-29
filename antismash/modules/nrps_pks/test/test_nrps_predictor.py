@@ -61,7 +61,7 @@ class TestPrediction(unittest.TestCase):
         self.pred = nrps_predictor.PredictorSVMResult("L--SFDASLFEMYLLTGGDRNMYGPTEATMCATW",
                                                       "hydrophobic-aliphatic",
                                                       ['asp', 'asn', 'glu', 'gln', 'aad'],  # arbitrary
-                                                      ['val', 'leu', 'ile', 'abu', 'iva'],
+                                                      ['val', 'leu', 'ile', 'abu', 'Ival'],
                                                       "leu", ["ile"], False, "DPYHeGTLCK", 5)
 
     def test_valid(self):
@@ -71,7 +71,7 @@ class TestPrediction(unittest.TestCase):
         assert pred.angstrom_code == "L--SFDASLFEMYLLTGGDRNMYGPTEATMCATW"
         assert pred.physicochemical_class == "hydrophobic-aliphatic"
         assert pred.large_cluster_pred == ['asp', 'asn', 'glu', 'gln', 'aad']
-        assert pred.small_cluster_pred == ['val', 'leu', 'ile', 'abu', 'iva']
+        assert pred.small_cluster_pred == ['val', 'leu', 'ile', 'abu', 'Ival']
         assert pred.single_amino_pred == "leu"
         assert pred.stachelhaus_predictions == ["ile"]
         assert pred.uncertain is False
