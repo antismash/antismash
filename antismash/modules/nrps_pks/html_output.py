@@ -88,12 +88,15 @@ def filter_norine_as(monomers: List[str], be_strict: bool = False) -> List[str]:
     filtered_list = []
     bad_monomers = {'pk', UNKNOWN, 'hydrophilic', 'hydrophobic', 'mal', 'mmal'}
     if be_strict:
-        bad_monomers = bad_monomers.union({'nrp', 'X'})
+        bad_monomers = bad_monomers.union({'nrp', 'x'})
     for monomer in monomers:
+        monomer = monomer.lower()
         if monomer in bad_monomers:
             continue
         assert '|' not in monomer, monomer
-        filtered_list.append(map_as_name_to_norine(monomer))
+        if monomer != 'x' and not be_strict:
+            monomer += '*'
+        filtered_list.append(monomer)
     return filtered_list
 
 
@@ -111,19 +114,19 @@ def get_norine_url_for_specificities(specificities: List[List[str]],
         if not domain_specificity_list:
             logging.error("retrieved empty domain list for assembling per protein NORINE link string")
             raise RuntimeError("empty domain list for NORINE generation")
-        wildcard = "*"
-        separator = "|"
-        if be_strict:
-            wildcard = ""
-        # always be strict to remove X and nrp
-        chunks = filter_norine_as(domain_specificity_list, be_strict=True)
-        query = (wildcard + separator).join(chunks) + wildcard
-        if len(domain_specificity_list) > 1:
+        # always remove X for this particular URL/query
+        chunks = [chunk for chunk in domain_specificity_list if chunk != 'X']
+        chunks = filter_norine_as(chunks, be_strict=be_strict)
+        if not chunks:
+            continue
+        query = "|".join(chunks)
+        if len(chunks) > 1:
             query = "[" + query + "]"
-        # lastly, remove the Norine-forbidden x*
-        if be_strict:
-            query.replace("x*", "x")
         modules.append(query)
+
+    if not modules:
+        return None
+
     return "http://bioinfo.lifl.fr/norine/fingerPrintSearch.jsp?nrps1=" + ",".join(modules)
 
 
@@ -165,15 +168,7 @@ class CandidateClusterLayer:
         for monomers_per_protein in monomers_per_protein_list:
             monomers = monomers_per_protein[1:-1].split(" - ")
 
-            if be_strict:
-                monomers = [map_as_name_to_norine(element.lower())
-                            for element in filter_norine_as(monomers, be_strict=True)]
-            else:
-                monomers = [map_as_name_to_norine(element.lower()) + "*"
-                            for element in filter_norine_as(monomers)]
-            # Norine doesn't allow "x*" as a "relaxed" monomer, so we have to replace this with "x"
-            monomers = list(map(lambda x: "x" if x == "x*" else x, monomers))
-
+            monomers = filter_norine_as(monomers, be_strict=be_strict)
             if monomers:
                 nrpslist.append("nrps" + str(i) + "=" + ",".join(monomers))
             i += 1
@@ -218,8 +213,8 @@ class NrpspksLayer(RegionLayer):
                     continue
                 per_a_domain_predictions = set()
                 for possibilities in domain.predictions.values():
-                    for possibility in filter_norine_as(possibilities.split(","), be_strict=False):
-                        per_a_domain_predictions.add(map_as_name_to_norine(possibility))
+                    for possibility in possibilities.split(","):
+                        per_a_domain_predictions.add(possibility)
                 per_cds_predictions.append(list(per_a_domain_predictions))
 
             if not per_cds_predictions:
