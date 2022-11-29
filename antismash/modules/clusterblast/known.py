@@ -9,11 +9,11 @@ import logging
 import os
 from typing import Dict, List
 
+from antismash.common.path import find_latest_database_version
 from antismash.common.secmet import Record
-from antismash.config import ConfigType
+from antismash.config import ConfigType, get_config
 
 from .core import (
-    _SHIPPED_DATA_DIR,
     check_clusterblast_files,
     get_core_gene_ids,
     load_clusterblast_database,
@@ -26,7 +26,7 @@ from .results import RegionResult, GeneralResults, write_clusterblast_output
 from .data_structures import MibigEntry, ReferenceCluster, Protein
 
 
-def _get_datafile_path(filename: str) -> str:
+def _get_datafile_path(filename: str, config: ConfigType) -> str:
     """ A helper to construct absolute paths to files in the knownclusterblast
         data directory.
 
@@ -36,7 +36,9 @@ def _get_datafile_path(filename: str) -> str:
         Returns:
             the absolute path of the file
     """
-    return os.path.join(_SHIPPED_DATA_DIR, 'known', filename)
+    root = os.path.join(config.database_dir, "knownclusterblast")
+    version = find_latest_database_version(root)
+    return os.path.join(root, version, filename)
 
 
 def check_known_prereqs(options: ConfigType) -> List[str]:
@@ -66,10 +68,12 @@ def prepare_known_data(logging_only: bool = False) -> List[str]:
             a list of error messages, one for each failing prerequisite check
     """
     failure_messages = []
-
-    cluster_defs = _get_datafile_path('clusters.txt')
-    protein_seqs = _get_datafile_path("proteins.fasta")
-    db_file = _get_datafile_path("proteins.dmnd")
+    config = get_config()
+    if "mounted_at_runtime" in config.database_dir:
+        return []
+    cluster_defs = _get_datafile_path("clusters.txt", config)
+    protein_seqs = _get_datafile_path("proteins.fasta", config)
+    db_file = _get_datafile_path("proteins.dmnd", config)
     failure_messages.extend(check_clusterblast_files(cluster_defs, protein_seqs, db_file, logging_only=logging_only))
 
     return failure_messages
@@ -111,7 +115,7 @@ def perform_knownclusterblast(options: ConfigType, record: Record,
     logging.debug("Running DIAMOND knowncluster searches..")
     results = GeneralResults(record.id, search_type="knownclusterblast")
 
-    blastoutput = run_diamond_on_all_regions(record.get_regions(), _get_datafile_path('proteins'))
+    blastoutput = run_diamond_on_all_regions(record.get_regions(), _get_datafile_path('proteins', options))
     write_raw_clusterblastoutput(options.output_dir, blastoutput,
                                  prefix="knownclusterblast")
     clusters_by_number, _ = parse_all_clusters(blastoutput, record,

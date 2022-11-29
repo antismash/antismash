@@ -20,7 +20,9 @@ from antismash.config import build_config, get_config, update_config, destroy_co
 from antismash.modules import clusterblast
 from antismash.modules.clusterblast import core, known
 
-MOCKED_DATA = path.get_full_path(__file__, "data")
+
+def known_dir(filename, *args):
+    return path.get_full_path(__file__, "data", "known", filename)
 
 
 class Base(unittest.TestCase):
@@ -33,7 +35,8 @@ class Base(unittest.TestCase):
         self.old_config = get_config().__dict__
         self.options = update_config(options)
 
-        assert clusterblast.check_prereqs(self.options) == []
+        with patch.object(known, "_get_datafile_path", side_effect=known_dir):
+            assert clusterblast.check_prereqs(self.options) == []
         assert clusterblast.check_options(self.options) == []
         assert clusterblast.is_enabled(self.options)
 
@@ -81,6 +84,7 @@ class Base(unittest.TestCase):
         return self.run_antismash(helpers.get_path_to_balhymicin_genbank(), expected)
 
 
+@patch.object(known, "_get_datafile_path", side_effect=known_dir)
 class GeneralIntegrationTest(Base):
     def get_args(self):
         return ["--cb-general", "--minimal", "--enable-html",
@@ -94,7 +98,7 @@ class GeneralIntegrationTest(Base):
         assert results.subcluster is None
         return results.general, results
 
-    def test_nisin(self):
+    def test_nisin(self, _patched_known):
         expected_hits = 3 if (self.diamond_ver_major == 2 and self.diamond_ver_patch < 15) else 2
         results = self.check_nisin(expected_hits)
         ranking = results.region_results[0].ranking
@@ -128,7 +132,7 @@ class GeneralIntegrationTest(Base):
         assert subject.name == "CVCAS_RS03115"
 
 
-@patch.object(known, "_SHIPPED_DATA_DIR", MOCKED_DATA)
+@patch.object(known, "_get_datafile_path", side_effect=known_dir)
 class KnownIntegrationTest(Base):
     def get_args(self):
         return ["--cb-knowncluster", "--minimal", "--enable-html"]
@@ -141,7 +145,7 @@ class KnownIntegrationTest(Base):
         assert results.subcluster is None
         return results.knowncluster, results
 
-    def test_nisin(self):
+    def test_nisin(self, _patched_dir):
         # blast scores not checked due to diamond versions having different results
         results = self.check_nisin(2)
         ranking = results.region_results[0].ranking
@@ -172,7 +176,7 @@ class KnownIntegrationTest(Base):
         assert query.id == "nisA"
         assert subject.name == "AEX55166.1"
 
-    def test_balhymicin(self):
+    def test_balhymicin(self, _patched_dir):
         # blast scores and derivative values not checked due to diamond versions having different results
         results = self.check_balhymicin(2)
         ranking = results.region_results[0].ranking
@@ -199,7 +203,7 @@ class KnownIntegrationTest(Base):
         assert query.id == "vanS"
         assert subject.name == "AGS77301.1"
 
-    def test_fusariam_scirpi(self):
+    def test_fusariam_scirpi(self, _patched_dir):
         # this is a special case where it's a single CDS cluster that matches
         # against other single CDS clusters, before this test they were all
         # discarded
