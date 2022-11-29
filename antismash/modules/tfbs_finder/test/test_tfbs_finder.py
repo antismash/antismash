@@ -240,6 +240,11 @@ class TestAreaFinding(unittest.TestCase):
         self.region.add_cds(DummyCDS(start=300, end=500))
         assert get_valid_areas(self.region, 0) == [(200, 300)]
 
+    def test_gaps_between_stops(self):
+        self.region.add_cds(DummyCDS(start=0, end=180, strand=1))
+        self.region.add_cds(DummyCDS(start=210, end=500, strand=-1))
+        assert get_valid_areas(self.region, 0) == []
+
     def test_overlapping_ends(self):
         self.region.add_cds(DummyCDS(start=0, end=210, strand=1))
         self.region.add_cds(DummyCDS(start=200, end=500, strand=-1))
@@ -262,4 +267,4 @@ class TestAreaFinding(unittest.TestCase):
             self.region._cdses.clear()
             self.region.add_cds(DummyCDS(start=50, end=200, strand=1))
             self.region.add_cds(DummyCDS(start=250, end=400, strand=-1))
-            assert get_valid_areas(self.region, size) == [(0, 50 + size), (200, 250), (400 - size, 500)]
+            assert get_valid_areas(self.region, size) == [(0, 50 + size), (400 - size, 500)]
