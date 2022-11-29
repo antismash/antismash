@@ -31,9 +31,9 @@ CLUSTERBLAST_FASTA_CHECKSUM = "ea43624407ae399cd6e78bf2e6868e9ff0b9581f333645063
 
 CLUSTERCOMPARE_DBS = {
     "mibig": {
-        "url": "https://dl.secondarymetabolites.org/releases/clustercompare/cc_mibig_20211216.tar.xz",
-        "archive": "47eb75862e2e11a10664a0ca5f40fed3285f96e18c48ebe19ccb46ddd0fd2c3e",
-        "fasta": "4470c429601aa5cf0b0ecd3fa785fccceaf6eaeb7f92599d835429348bd6f52b",
+        "url": "https://dl.secondarymetabolites.org/releases/clustercompare/cc_mibig_3.1.tar.xz",
+        "archive": "1249c64edbe32be7117b642d93f218ea09396de95e5da901e4632db3de6457be",
+        "fasta": "bd4fdb5dc17f9a3c94da399928be62fc5bb1cebd29425b74059ae5aaaa47cf19",
     },
 }
 
@@ -354,8 +354,9 @@ def download_clusterblast(db_dir: str) -> None:
 
 def download_clustercompare(db_dir: str, name: str, url: str, archive: str, fasta: str) -> None:
     """Download a ClusterCompare database."""
-    archive_filename = os.path.join(db_dir, "clustercompare", url.rpartition("/")[2])
-    fasta_filename = os.path.join(db_dir, "clustercompare", name, "proteins.fasta")
+    version = url.rsplit("_", 1)[1].split(".tar", 1)[0]  # e.g. cc_mibig_3.1.tar.xz -> 3.1
+    archive_filename = os.path.join(db_dir, "clustercompare", name, url.rpartition("/")[2])
+    fasta_filename = os.path.join(db_dir, "clustercompare", name, version, "proteins.fasta")
 
     if present_and_checksum_matches(fasta_filename, fasta):
         print(f"ClusterCompare {name} FASTA file present and checked")
