@@ -2,7 +2,7 @@
     "name": "MIBiG",
     "description": "The MIBiG database.",
     "url": "https://mibig.secondarymetabolites.org/repository/{accession}/index.html#r1c1",
-    "path": "$datadir/clustercompare/mibig",
+    "path": "$datadir/clustercompare/mibig/3.1",
     "comparisons": ["RegionToRegion", "ProtoToRegion"],
     "mode": "RiQ"
 }

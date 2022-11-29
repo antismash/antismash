@@ -120,10 +120,10 @@ def convert_all_mibig(input_dir: str, output_dir: str, accessions: List[str]) ->
     with open(os.path.join(output_dir, "proteins.fasta"), "w") as fasta:
         for accession in accessions:
             # get mibig data
-            json_path = os.path.join(input_dir, accession, accession + ".json")
+            json_path = os.path.join(input_dir, accession, "annotations.json")
             with open(json_path) as handle:
                 mibig_data = json.load(handle)
-            genbank = os.path.join(input_dir, accession, "generated", accession + ".gbk")
+            genbank = os.path.join(input_dir, accession, accession + ".gbk")
             try:
                 for record in secmet.Record.from_genbank(genbank):
                     record.id = record.annotations['structured_comment']['antiSMASH-Data'].get('Original ID', record.id)
