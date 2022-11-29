@@ -33,7 +33,7 @@ class TestPFAMs(unittest.TestCase):
             os.makedirs(os.path.join(temp_db_layout, "pfam", "invalid30.7"))
             os.makedirs(os.path.join(temp_db_layout, "pfam", "irrelevant"))
 
-            with self.assertRaisesRegex(Exception, "No matching PFAM database in location " + temp_db_layout):
+            with self.assertRaisesRegex(Exception, "No matching database in location " + temp_db_layout):
                 pfamdb.find_latest_database_version(temp_db_layout)
 
             os.makedirs(os.path.join(temp_db_layout, "pfam", "31.0"))

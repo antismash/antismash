@@ -4,7 +4,6 @@
 """ Provides functions for interacting with PFAM databases,
     focusing on mapping of protein name to PFAM id """
 
-import glob
 import logging
 import os
 from typing import Dict, List, Optional
@@ -26,18 +25,8 @@ def find_latest_database_version(database_dir: str) -> str:
         Returns:
             the latest version number as a string, e.g. "27.0"
     """
-    contents = glob.glob(os.path.join(database_dir, 'pfam', "*"))
-    potentials = []
-    for name in contents:
-        # only names in the form 27.0, 31.0, etc are valid
-        try:
-            potentials.append(float(os.path.basename(name)))
-        except ValueError:
-            continue
-    if not potentials:
-        raise ValueError("No matching PFAM database in location %s" % database_dir)
-    latest = sorted(potentials)[-1]
-    return "%.1f" % latest
+    database_dir = os.path.join(database_dir, "pfam")
+    return path.find_latest_database_version(database_dir, ignore_invalid=True)
 
 
 def check_db(db_path: str) -> List[str]:
