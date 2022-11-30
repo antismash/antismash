@@ -177,9 +177,10 @@ class RegionResult:
 
 class GeneralResults(ModuleResults):
     """ A variant-agnostic results class for clusterblast variants """
-    schema_version = 1
+    schema_version = 2
 
-    def __init__(self, record_id: str, search_type: str = "clusterblast") -> None:
+    def __init__(self, record_id: str, search_type: str = "clusterblast",
+                 data_version: str = None) -> None:
         assert record_id and isinstance(record_id, str)
         assert search_type and isinstance(search_type, str)
         super().__init__(record_id)
@@ -190,6 +191,7 @@ class GeneralResults(ModuleResults):
         self.proteins_of_interest: Dict[str, Protein] = OrderedDict()
         # hold mappings of cluster number -> protein name -> mibig entries
         self.mibig_entries: Dict[int, Dict[str, List[MibigEntry]]] = {}
+        self.data_version: Optional[str] = data_version
 
     def add_region_result(self, result: RegionResult, reference_clusters: Dict[str, ReferenceCluster],
                           reference_proteins: Dict[str, Protein]) -> None:
@@ -236,6 +238,8 @@ class GeneralResults(ModuleResults):
                 "proteins": [{key: getattr(protein, key) for key in protein.__slots__}
                              for protein in self.proteins_of_interest.values()],
                 "search_type": self.search_type}
+        if self.data_version:
+            data["data_version"] = self.data_version
         if self.mibig_entries:
             entries = {}
             for cluster_number, proteins in self.mibig_entries.items():
@@ -252,11 +256,17 @@ class GeneralResults(ModuleResults):
 
     @staticmethod
     def from_json(json: Dict[str, Any], record: Record) -> "GeneralResults":
-        if json["schema_version"] != GeneralResults.schema_version:
+        current = GeneralResults.schema_version
+        # since 2 only added an optional data version, 2 and 1 are kind of compatible
+        # so if there's a mismatch of version, but it's these two, let them through
+        special_case = current == 2 and json["schema_version"] == 1
+        if json["schema_version"] != current and not special_case:
             raise ValueError("Incompatible results schema version, expected %d"
                              % GeneralResults.schema_version)
         assert record.id == json["record_id"]
-        result = GeneralResults(json["record_id"], search_type=json["search_type"])
+        data_version = json.get("data_version")
+        result = GeneralResults(json["record_id"], search_type=json["search_type"],
+                                data_version=data_version)
         for prot in json["proteins"]:
             protein = Protein(prot["name"], prot["locus_tag"], prot["location"],
                               prot["strand"], prot["annotations"])
