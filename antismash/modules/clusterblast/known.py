@@ -113,7 +113,8 @@ def perform_knownclusterblast(options: ConfigType, record: Record,
             record
     """
     logging.debug("Running DIAMOND knowncluster searches..")
-    results = GeneralResults(record.id, search_type="knownclusterblast")
+    version = find_latest_database_version(os.path.join(options.database_dir, "knownclusterblast"))
+    results = GeneralResults(record.id, search_type="knownclusterblast", data_version=version)
 
     blastoutput = run_diamond_on_all_regions(record.get_regions(), _get_datafile_path('proteins', options))
     write_raw_clusterblastoutput(options.output_dir, blastoutput,
