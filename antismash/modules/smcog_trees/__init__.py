@@ -104,7 +104,7 @@ def regenerate_previous_results(results: Dict[str, Any], record: Record, _option
 def check_prereqs(options: ConfigType) -> List[str]:
     "Check if all required applications are around"
     failure_messages = []
-    for binary_name in ['muscle', 'fasttree']:
+    for binary_name in ['fasttree']:
         if binary_name not in options.executables:
             failure_messages.append("Failed to locate file: %r" % binary_name)
 

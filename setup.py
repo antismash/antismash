@@ -15,6 +15,7 @@ def read(fname):
 long_description = read('README.md')
 
 install_requires = [
+    'brawn',
     'numpy',
     'biopython == 1.78',
     'helperlibs',

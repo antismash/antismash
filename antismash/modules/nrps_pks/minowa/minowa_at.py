@@ -8,12 +8,14 @@ from typing import Dict
 from antismash.common import path
 from antismash.modules.nrps_pks.minowa.base import run_minowa, Prediction
 
+AT_DOMAINS_PATH = path.get_full_path(__file__, "data", "AT_domains_muscle.fasta")
+
 
 def run_minowa_at(sequence_info: Dict[str, str]) -> Dict[str, Prediction]:
     """ Predicts AT domain specificities by Minowa et al. method """
     return run_minowa(sequence_info=sequence_info,
                       startpos=7,
-                      muscle_ref=path.get_full_path(__file__, "data", "AT_domains_muscle.fasta"),
+                      muscle_ref=AT_DOMAINS_PATH,
                       ref_sequence="P0AAI9_AT1",
                       positions_file=path.get_full_path(__file__, "data", "ATpositions.txt"),
                       data_dir=path.get_full_path(__file__, "data", 'AT_HMMs'),

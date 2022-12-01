@@ -6,12 +6,14 @@
 """
 
 import logging
-from os import path
+import os
 from typing import Any, Dict, List, Tuple
 
-from antismash.common import subprocessing, utils
+from antismash.common import brawn, path, subprocessing, utils
 from antismash.common.html_renderer import Markup
 from antismash.modules.nrps_pks.data_structures import Prediction
+
+DATA_DIR = path.get_full_path(__file__, "data")
 
 
 class MinowaPrediction(Prediction):
@@ -99,19 +101,19 @@ def run_minowa(sequence_info: Dict[str, str], startpos: int, muscle_ref: str, re
 
     results_by_query: Dict[str, Prediction] = {}
 
+    alignment = brawn.get_cached_alignment(muscle_ref, DATA_DIR)
     for query_id, query_seq in sequence_info.items():
-        muscle = subprocessing.run_muscle_single(query_id, query_seq, muscle_ref)
-
+        aligned, ref_aligned = brawn.get_aligned_pair(query_seq, ref_sequence, alignment)
         # count residues in ref sequence and put positions in list
         # extract positions from query sequence and create fasta formatted seq
         # to use as input for hmm searches
-        seq = utils.extract_by_reference_positions(muscle[query_id], muscle[ref_sequence], positions)
+        seq = utils.extract_by_reference_positions(aligned, ref_aligned, positions)
         fasta_format = ">%s\n%s\n" % (query_id, seq.replace("-", "X"))
 
         # then use list to extract positions from every sequence -> HMMs (one time, without any query sequence)
         hmm_scores = {}
         for hmmname in hmm_names:
-            hmm_scores[hmmname] = hmmsearch(fasta_format, path.join(data_dir, hmmname + ".hmm"))
+            hmm_scores[hmmname] = hmmsearch(fasta_format, os.path.join(data_dir, hmmname + ".hmm"))
 
         results = sorted(hmm_scores.items(), reverse=True, key=lambda x: (x[1], x[0]))
         results_by_query[query_id] = MinowaPrediction(results)

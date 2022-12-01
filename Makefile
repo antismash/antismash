@@ -21,6 +21,7 @@ clean:
 	find . -name '*.pyc' | xargs rm -f
 	find . -name '__pycache__' | xargs rm -rf
 	find . -name '*.dmnd' | grep -v test | xargs rm -f
+	find . -name '*.brawn_cache' | grep -v test | xargs rm -f
 
 squeakyclean: clean
 	find . -name "*.tar.*" -exec rm {} +

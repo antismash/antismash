@@ -5,13 +5,14 @@
 
 from typing import Any, Dict, List, Tuple
 
-from antismash.common import path, subprocessing, utils, fasta
+from antismash.common import brawn, path, utils, fasta
 from antismash.common.html_renderer import Markup
 from antismash.modules.nrps_pks.data_structures import Prediction
 from antismash.modules.nrps_pks.pks_names import get_long_form
 
 _SIGNATURE_LENGTH = 24
-_AT_DOMAINS_FILENAME = path.get_full_path(__file__, "data", "AT_domains_muscle.fasta")
+DATA_DIR = path.get_full_path(__file__, "data")
+AT_DOMAINS_PATH = path.get_full_path(__file__, "data", "AT_domains_muscle.fasta")
 _AT_POSITIONS_FILENAME = path.get_full_path(__file__, "data", "ATpositions.txt")
 _SIGNATURES_FILENAME = path.get_full_path(__file__, "data", "pks_signatures.fasta")
 _REF_SEQUENCE = "P0AAI9_AT1"
@@ -145,9 +146,9 @@ def run_at_domain_analysis(domains: Dict[str, str]) -> Dict[str, Prediction]:
     # construct the query signatures
     query_signatures = {}
     at_positions = get_at_positions(startpos=7)
+    alignment = brawn.get_cached_alignment(AT_DOMAINS_PATH, DATA_DIR)
     for name, seq in sorted(domains.items()):
-        alignments = subprocessing.run_muscle_single(name, seq, _AT_DOMAINS_FILENAME)
-        query_signatures[name] = utils.extract_by_reference_positions(alignments[name],
-                                         alignments[_REF_SEQUENCE], at_positions)
+        aligned, aligned_ref = brawn.get_aligned_pair(seq, _REF_SEQUENCE, alignment)
+        query_signatures[name] = utils.extract_by_reference_positions(aligned, aligned_ref, at_positions)
     # load reference PKS signatures and score queries against them
     return score_signatures(query_signatures, fasta.read_fasta(_SIGNATURES_FILENAME))
