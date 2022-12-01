@@ -5,15 +5,17 @@
 
 import itertools
 import logging
-import os
 from typing import Dict, List, Optional, Tuple
 
-from antismash.common import path, subprocessing, utils
+from antismash.common import brawn, path, utils
 from antismash.common.secmet import CDSFeature, Module, Record
 
 from .html_output import will_handle
 from .results import CandidateClusterPrediction, modify_substrate
 from .smiles_generator import gen_smiles_from_pksnrps
+
+C_TERMINAL_PATH = path.get_full_path(__file__, "data", "terminals", "cterm.fasta")
+N_TERMINAL_PATH = path.get_full_path(__file__, "data", "terminals", "nterm.fasta")
 
 
 def find_split_module_chains(cds_features: List[CDSFeature], record: Record) -> Dict[CDSFeature, CDSFeature]:
@@ -235,15 +237,14 @@ def extract_nterminus(data_dir: str, cds_features: List[CDSFeature], start_cds: 
     """
     n_terminal_residues = {}
     n_terminals = {}
-    nterm_file = os.path.join(data_dir, 'nterm.fasta')
     for cds in cds_features:
         if cds is not start_cds:
             seq = str(cds.translation)
             n_terminals[cds.get_name()] = seq[:50]
+    reference_name = "EryAIII_5_6_ref"
+    alignment = brawn.get_cached_alignment(N_TERMINAL_PATH, data_dir)
     for name, seq in n_terminals.items():
-        alignments = subprocessing.run_muscle_single(name, seq, nterm_file)
-        query_seq = alignments[name]
-        ref_seq = alignments["EryAIII_5_6_ref"]
+        query_seq, ref_seq = brawn.get_aligned_pair(seq, reference_name, alignment)
         n_terminal_residues[name] = utils.extract_by_reference_positions(query_seq, ref_seq, [2, 15])
     return n_terminal_residues
 
@@ -262,15 +263,14 @@ def extract_cterminus(data_dir: str, cds_features: List[CDSFeature], end_cds: Op
     """
     c_terminal_residues = {}
     c_terminals: Dict[str, str] = {}
-    cterm_file = os.path.join(data_dir, 'cterm.fasta')
     for cds in cds_features:
         if cds is not end_cds:
             seq = str(cds.translation)
             c_terminals[cds.get_name()] = seq[-100:]
+    reference_name = "EryAII_ref"
+    alignment = brawn.get_cached_alignment(C_TERMINAL_PATH, data_dir)
     for name, seq in c_terminals.items():
-        alignments = subprocessing.run_muscle_single(name, seq, cterm_file)
-        query_seq = alignments[name]
-        ref_seq = alignments["EryAII_ref"]
+        query_seq, ref_seq = brawn.get_aligned_pair(seq, reference_name, alignment)
         c_terminal_residues[name] = utils.extract_by_reference_positions(query_seq, ref_seq, [55, 64])
     return c_terminal_residues
 
@@ -389,7 +389,7 @@ def perform_docking_domain_analysis(cds_features: List[CDSFeature], chains: Dict
             a list of CDSFeatures in estimated order
     """
     start_cds, end_cds = find_first_and_last_cds(cds_features)
-    data_dir = path.get_full_path(__file__, "data", "terminals")
+    data_dir = path.get_full_path(__file__, "data")
 
     n_terminal_residues = extract_nterminus(data_dir, cds_features, start_cds)
     c_terminal_residues = extract_cterminus(data_dir, cds_features, end_cds)

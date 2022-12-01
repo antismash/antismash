@@ -1,22 +1,17 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
-
-"""
-Reads a fasta file,
-runs muscle over each sequence with KRdomains_muscle.fasta,
-does some kind of Stachelhaus-like position fetch,
-compares the generated signatures to a few string options to generate whether
-        sequence is active and what stereochemistry it is
-writes an outfile file in the tab-separated form: name, activity, stereochem
+""" Analysis of PKS KR domain stereochemistry and activity
 """
 
 from typing import Dict, Optional, Tuple
 
-from antismash.common import path, subprocessing, utils
+from antismash.common import path, utils
+from antismash.common.brawn import get_cached_alignment, get_aligned_pair
 from antismash.modules.nrps_pks.data_structures import SimplePrediction, Prediction
 
-_KR_DOMAINS_FILENAME = path.get_full_path(__file__, "data", "KRdomains_muscle.fasta")
+DATA_DIR = path.get_full_path(__file__, "data")
+KR_DOMAINS_PATH = path.get_full_path(__file__, "data", "KRdomains_muscle.fasta")
 
 
 def is_active(signature: str) -> bool:
@@ -61,17 +56,16 @@ def run_kr_analysis(queries: Dict[str, str]) -> Tuple[Dict[str, Prediction], Dic
     querysignames = []
     activity_signatures = []
     stereochem_signatures = []
+    alignment = get_cached_alignment(KR_DOMAINS_PATH, DATA_DIR)
+    reference = "MAPSI|PKS|CAM00062.1|Erythromycin_synthase_modules_1_and_2|Sacc_KR1"
     for name, seq in sorted(queries.items()):
         querysignames.append(name)
-        muscle_dict = subprocessing.run_muscle_single(name, seq, _KR_DOMAINS_FILENAME)
-
+        aligned, refseq = get_aligned_pair(seq, reference, alignment)
         positions_act = [110, 134, 147, 151]  # active site
         positions_ste = [90, 91, 92, 139, 144, 147, 149, 151]  # stereochem
 
-        refsequence = "MAPSI|PKS|CAM00062.1|Erythromycin_synthase_modules_1_and_2|Sacc_KR1"
-        refseq = muscle_dict[refsequence]
-        activity_signatures.append(utils.extract_by_reference_positions(muscle_dict[name], refseq, positions_act))
-        stereochem_signatures.append(utils.extract_by_reference_positions(muscle_dict[name], refseq, positions_ste))
+        activity_signatures.append(utils.extract_by_reference_positions(aligned, refseq, positions_act))
+        stereochem_signatures.append(utils.extract_by_reference_positions(aligned, refseq, positions_ste))
 
     # Check activity
     activity: Dict[str, Prediction] = {}

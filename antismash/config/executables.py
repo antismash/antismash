@@ -29,7 +29,7 @@ _ALTERNATE_EXECUTABLE_NAMES = {
 }
 
 _NO_KNOWN_ALTS = ["hmmsearch", "hmmpress", "hmmscan", "meme", "fimo", "glimmerhmm",
-                  "prodigal", "muscle", "java", "blastp", "makeblastdb"]
+                  "prodigal", "java", "blastp", "makeblastdb"]
 for _binary in _NO_KNOWN_ALTS:
     assert _binary not in _ALTERNATE_EXECUTABLE_NAMES, _binary
     _ALTERNATE_EXECUTABLE_NAMES[_binary] = [_binary]

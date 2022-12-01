@@ -15,6 +15,7 @@ from typing import Dict, List
 
 from Bio import Phylo
 from Bio.Phylo.NewickIO import NewickError
+import brawn
 from helperlibs.wrappers.io import TemporaryDirectory
 import matplotlib
 
@@ -59,29 +60,23 @@ def smcog_tree_analysis(cds: CDSFeature, input_number: int, smcog: str, output_d
     "run smCOG search on all gene cluster CDS features"
     gene_id = cds.get_name()
     seq = cds.translation
-    # create input.fasta file with single query sequence to be used as input for MSA
-    fasta.write_fasta([gene_id], [seq], "input" + str(input_number) + ".fasta")
-    alignment_file = alignsmcogs(smcog, input_number)
+    alignment = align_smcogs(smcog, gene_id, seq)
     # Generate trimmed alignment
-    trim_alignment(input_number, alignment_file)
+    trim_alignment(input_number, alignment)
     # Draw phylogenetic tree
     draw_tree(input_number, output_dir, gene_id)
 
 
-def alignsmcogs(smcog: str, input_number: int) -> str:
-    """ Align to multiple sequence alignment, output as fasta file """
-    reference = path.get_full_path(__file__, "data", "%s_muscle.fasta" % str(smcog).lower())
-    output_filename = "muscle%d.fasta" % input_number
-    musclecommand = ["muscle", "-quiet", "-profile", "-in1", reference,
-                     "-in2", "input" + str(input_number) + ".fasta",
-                     "-out", output_filename]
-    result = subprocessing.execute(musclecommand)
-    if result.return_code:
-        raise RuntimeError("Muscle failed to run: %s, %s" % (musclecommand, result.stderr[-100:]))
-    return output_filename
+def align_smcogs(smcog: str, name: str, sequence: str) -> Dict[str, str]:
+    """ Align to multiple sequence alignment, return as a dictionary """
+    reference_path = path.get_full_path(__file__, "data", f"{smcog.lower()}_muscle.fasta")
+    with open(reference_path, encoding="utf-8") as handle:
+        reference = brawn.Alignment.from_file(handle)
+    query = brawn.Alignment({name: sequence})
+    return brawn.combine_alignments(query, reference).to_dict()
 
 
-def trim_alignment(input_number: int, alignment_file: str) -> None:
+def trim_alignment(input_number: int, contents: dict[str, str]) -> None:
     """ remove all positions before the first and after the last position shared
         by at least a third of all sequences
     """
@@ -99,7 +94,6 @@ def trim_alignment(input_number: int, alignment_file: str) -> None:
                 return position
         return 0  # can't be earlier than the start
 
-    contents = fasta.read_fasta(alignment_file)
     # check all sequences are the same length
     sequence_length = len(list(contents.values())[0])
     for name, seq in contents.items():

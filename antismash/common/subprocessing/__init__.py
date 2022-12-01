@@ -56,11 +56,6 @@ from .memesuite import (
     run_meme_version,
 )
 
-from .muscle import (
-    run_muscle_single,
-    run_muscle_version,
-)
-
 from .prodigal import (
     run_prodigal_version,
 )

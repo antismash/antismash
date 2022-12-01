@@ -7,6 +7,7 @@ cover/
 *~
 __pycache__
 .cache
+*.brawn_cache
 .mypy_cache
 .pytest_cache
 *.css

@@ -8,12 +8,14 @@ from typing import Dict
 from antismash.common import path
 from .base import run_minowa, Prediction
 
+CAL_DOMAINS_PATH = path.get_full_path(__file__, "data", "CAL_domains_muscle.fasta")
+
 
 def run_minowa_cal(sequence_info: Dict[str, str]) -> Dict[str, Prediction]:
     """ Predicts CAL domain specificities by Minowa et al. method"""
     return run_minowa(sequence_info=sequence_info,
                       startpos=43,
-                      muscle_ref=path.get_full_path(__file__, "data", "CAL_domains_muscle.fasta"),
+                      muscle_ref=CAL_DOMAINS_PATH,
                       ref_sequence="Q54297_CAL1",
                       positions_file=path.get_full_path(__file__, "data", "CALpositions.txt"),
                       data_dir=path.get_full_path(__file__, "data", 'CAL_HMMs'),
