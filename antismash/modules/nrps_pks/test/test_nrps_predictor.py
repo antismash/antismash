@@ -8,9 +8,8 @@ import unittest
 from unittest.mock import patch
 
 
-from antismash.common import path, fasta, subprocessing
+from antismash.common import path
 from antismash.common.html_renderer import Markup
-from antismash.common.test.helpers import DummyAntismashDomain
 from antismash.modules.nrps_pks import nrps_predictor, data_structures
 
 
@@ -198,23 +197,3 @@ class TestPrediction(unittest.TestCase):
         self.pred.uncertain = True
         html = self.pred.as_html()
         assert "outside applicability" in str(html)
-
-
-class TestAngstromGeneration(unittest.TestCase):
-    def test_angstrom(self):
-        aligns = fasta.read_fasta(path.get_full_path(__file__, 'data', 'nrpspred_aligns.fasta'))
-        domain = DummyAntismashDomain(domain_id="query")
-        domain.translation = aligns[domain.domain_id].replace("-", "")
-        with patch.object(subprocessing, "run_muscle_single", return_value=aligns):
-            sig = nrps_predictor.get_34_aa_signature(domain)
-        assert sig == "L--SFDASLFEMYLLTGGDRNMYGPTEATMCATW"
-
-
-class TestHelpers(unittest.TestCase):
-    def test_good_sequence(self):
-        check = nrps_predictor.verify_good_sequence
-
-        assert check("LSFDASLFEMYLLTGGDRNMYGPTEATMCATW")
-        assert not check("!LSFD")
-        assert not check("LSFD-LL")
-        assert not check("{LS")
