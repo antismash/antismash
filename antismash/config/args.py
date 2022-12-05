@@ -580,9 +580,9 @@ def advanced_options() -> ModuleArgs:
                            "E.g. diamond=/alternate/path/to/diamond,hmmpfam2=hmm2pfam"))
     group.add_option('--allow-long-headers',
                      dest='allow_long_headers',
-                     action='store_true',
-                     default=False,
-                     help="Prevents long headers from being renamed")
+                     action=argparse.BooleanOptionalAction,
+                     default=True,
+                     help="Should sequence identifiers longer than 16 characters be allowed")
     return group
 
 

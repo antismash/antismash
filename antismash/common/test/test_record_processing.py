@@ -292,14 +292,14 @@ class TestPreprocessRecords(unittest.TestCase):
         record.id = "A" * 17
         record.name = record.id
         self.run_on_records([record])
-        assert len(record.id) <= 16
-        assert len(record.name) <= 16
+        assert record.id == record.name == "A" * 17
 
-        config.update_config({"allow_long_headers": True})
+        config.update_config({"allow_long_headers": False})
         record.id = "A" * 17
         record.name = record.id
         self.run_on_records([record])
-        assert record.id == record.name == "A" * 17
+        assert len(record.id) <= 16
+        assert len(record.name) <= 16
 
     def test_mac_bad_parallel(self):
         """ For python 3.8+ on mac, parallel behaviour of Pool() changed
