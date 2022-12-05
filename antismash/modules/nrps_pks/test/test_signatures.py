@@ -33,6 +33,7 @@ class TestAngstromGeneration(unittest.TestCase):
         hsp.aln[1].seq = profile
         hsp.aln[0].seq = query
         hsp.hit_start = 0
+        hsp.hit_id = signatures.ACTIVE_SITE_PROFILE_NAME
         hits[0].hsps = [hsp]
         with patch.object(subprocessing.hmmpfam, "run_hmmpfam2", return_value=hits) as patched:
             sig_10aa, sig_34aa = signatures.get_a_dom_signatures(domain)

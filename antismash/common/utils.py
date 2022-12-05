@@ -6,7 +6,7 @@
     antismash.common.
 """
 
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import Bio.Data.IUPACData
 from Bio.SeqUtils.ProtParam import ProteinAnalysis
@@ -47,7 +47,7 @@ class RobustProteinAnalysis(ProteinAnalysis):
         return weight
 
 
-def extract_by_reference_positions(query: str, reference: str, ref_positions: List[int]) -> str:
+def extract_by_reference_positions(query: str, reference: str, ref_positions: List[int]) -> Optional[str]:
     """ Extracts the given positions from a query alignment. The positions are
         adjusted to account for any gaps in the reference sequence.
 
@@ -58,7 +58,7 @@ def extract_by_reference_positions(query: str, reference: str, ref_positions: Li
 
         Returns:
             a string containing the sequence elements at the adjusted reference
-            positions
+            positions or None if the reference is too short for some reason
     """
     # adjust position of interest to account for gaps in the ref sequence alignment
     positions = []
@@ -69,7 +69,8 @@ def extract_by_reference_positions(query: str, reference: str, ref_positions: Li
         if position_skipping_gaps in ref_positions:
             positions.append(i)
         position_skipping_gaps += 1
-    assert len(positions) == len(ref_positions)
+    if len(positions) != len(ref_positions):
+        return None
     # extract positions from query sequence
     return "".join([query[i] for i in positions])
 

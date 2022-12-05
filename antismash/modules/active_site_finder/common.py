@@ -108,4 +108,6 @@ def get_signature(query: str, hmm: str, positions: List[int]) -> str:
     if max(positions) > len(ungapped):
         # the hit was too small and a correct signature can't be generated
         return ""
-    return utils.extract_by_reference_positions(query, hmm, [pos - 1 for pos in positions])
+    signature = utils.extract_by_reference_positions(query, hmm, [pos - 1 for pos in positions])
+    assert signature
+    return signature

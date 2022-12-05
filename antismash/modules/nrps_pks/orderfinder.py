@@ -245,7 +245,9 @@ def extract_nterminus(data_dir: str, cds_features: List[CDSFeature], start_cds: 
     alignment = brawn.get_cached_alignment(N_TERMINAL_PATH, data_dir)
     for name, seq in n_terminals.items():
         query_seq, ref_seq = brawn.get_aligned_pair(seq, reference_name, alignment)
-        n_terminal_residues[name] = utils.extract_by_reference_positions(query_seq, ref_seq, [2, 15])
+        residue = utils.extract_by_reference_positions(query_seq, ref_seq, [2, 15])
+        assert residue
+        n_terminal_residues[name] = residue
     return n_terminal_residues
 
 
@@ -271,7 +273,9 @@ def extract_cterminus(data_dir: str, cds_features: List[CDSFeature], end_cds: Op
     alignment = brawn.get_cached_alignment(C_TERMINAL_PATH, data_dir)
     for name, seq in c_terminals.items():
         query_seq, ref_seq = brawn.get_aligned_pair(seq, reference_name, alignment)
-        c_terminal_residues[name] = utils.extract_by_reference_positions(query_seq, ref_seq, [55, 64])
+        residue = utils.extract_by_reference_positions(query_seq, ref_seq, [55, 64])
+        assert residue
+        c_terminal_residues[name] = residue
     return c_terminal_residues
 
 
