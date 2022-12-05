@@ -3,7 +3,7 @@
 
 """ Provides analysis of AT domain signatures """
 
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from antismash.common import brawn, path, utils, fasta
 from antismash.common.html_renderer import Markup
@@ -100,7 +100,7 @@ def get_at_positions(startpos: int = 7) -> List[int]:
     return positions
 
 
-def score_signatures(query_signatures: Dict[str, str],
+def score_signatures(query_signatures: Dict[str, Optional[str]],
                      reference_signatures: Dict[str, str]) -> Dict[str, Prediction]:
     """ Scores PKS signature by comparing against database of signatures.
 
@@ -116,6 +116,7 @@ def score_signatures(query_signatures: Dict[str, str],
     """
     results: Dict[str, Prediction] = {}
     for key, query_sig_seq in sorted(query_signatures.items()):
+        assert query_sig_seq
         # keep a single best prediction for each monomer type
         scores: Dict[str, ATResult] = {}
         for sig_name, sig_seq in reference_signatures.items():

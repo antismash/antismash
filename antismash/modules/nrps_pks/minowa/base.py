@@ -108,6 +108,7 @@ def run_minowa(sequence_info: Dict[str, str], startpos: int, muscle_ref: str, re
         # extract positions from query sequence and create fasta formatted seq
         # to use as input for hmm searches
         seq = utils.extract_by_reference_positions(aligned, ref_aligned, positions)
+        assert seq
         fasta_format = ">%s\n%s\n" % (query_id, seq.replace("-", "X"))
 
         # then use list to extract positions from every sequence -> HMMs (one time, without any query sequence)

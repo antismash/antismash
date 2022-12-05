@@ -64,8 +64,12 @@ def run_kr_analysis(queries: Dict[str, str]) -> Tuple[Dict[str, Prediction], Dic
         positions_act = [110, 134, 147, 151]  # active site
         positions_ste = [90, 91, 92, 139, 144, 147, 149, 151]  # stereochem
 
-        activity_signatures.append(utils.extract_by_reference_positions(aligned, refseq, positions_act))
-        stereochem_signatures.append(utils.extract_by_reference_positions(aligned, refseq, positions_ste))
+        activity_sig = utils.extract_by_reference_positions(aligned, refseq, positions_act)
+        assert activity_sig
+        activity_signatures.append(activity_sig)
+        stereochem_sig = utils.extract_by_reference_positions(aligned, refseq, positions_ste)
+        assert stereochem_sig
+        stereochem_signatures.append(stereochem_sig)
 
     # Check activity
     activity: Dict[str, Prediction] = {}
