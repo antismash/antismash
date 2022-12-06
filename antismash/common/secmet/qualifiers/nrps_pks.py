@@ -106,7 +106,7 @@ class NRPSPKSQualifier:
             yield _TYPE_FORMAT.format(self.type)
 
     # the domain type Any is only to avoid circular dependencies
-    def add_domain(self, domain: Any, feature_name: str) -> None:
+    def add_domain(self, domain: Any, feature_name: str) -> Domain:
         """ Adds a domain to the current set.
 
             Arguments:
@@ -145,6 +145,7 @@ class NRPSPKSQualifier:
         bisect.insort_right(self._domains, new)
         # update the domain name list
         self._domain_names = [domain.name for domain in self._domains]
+        return new
 
     def add_from_qualifier(self, qualifiers: List[str]) -> None:
         """ Adds domains and types from a biopython-style qualifier list """
