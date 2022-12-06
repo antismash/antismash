@@ -347,11 +347,7 @@ class ReferenceScorer:
     def from_json(cls, data: Dict[str, Any], record: Record,
                   references: Dict[str, ReferenceRegion]) -> "ReferenceScorer":
         """ Regenerate a ReferenceScorer instance from a JSON representation """
-        try:
-            hits = {name: Hit.from_json(hit, record) for name, hit in data["hits"].items()}
-        except KeyError:
-            print(data)
-            raise
+        hits = {name: Hit.from_json(hit, record) for name, hit in data["hits"].items()}
         ref = references[data["ref_id"]]
         return ReferenceScorer(hits, ref, data["identity"], data["order"],
                                data["component"], Mode.from_string(data["mode"]),

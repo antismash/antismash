@@ -19,6 +19,7 @@ from .at_analysis import prepare_data as at_prepare_data
 from .kr_analysis import prepare_data as kr_prepare_data
 from .minowa import prepare_data as minowa_prepare_data
 from .orderfinder import C_TERMINAL_PATH, N_TERMINAL_PATH
+from .stachelhaus import check_prereqs as stach_check_prereqs
 
 NAME = "nrps_pks"
 
@@ -64,6 +65,7 @@ def check_prereqs(options: ConfigType) -> List[str]:
             failure_messages.append("Failed to locate executable for %r" %
                                     binary_name)
     failure_messages.extend(prepare_data(logging_only=True))
+    failure_messages.extend(stach_check_prereqs(options))
     return failure_messages
 
 
