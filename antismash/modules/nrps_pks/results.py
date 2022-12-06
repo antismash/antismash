@@ -185,7 +185,7 @@ class NRPS_PKS_Results(ModuleResults):
     def _annotate_a_domain(self, domain: NRPSPKSQualifier.Domain) -> None:
         assert domain.name in ["AMP-binding", "A-OX"]
         predictions = self.domain_predictions[domain.feature_name]
-        domain.predictions["consensus"] = generate_nrps_consensus(predictions)
+        domain.add_prediction("substrate consensus", generate_nrps_consensus(predictions))
 
     def _annotate_at_domain(self, domain: NRPSPKSQualifier.Domain, transat_cluster: bool) -> None:
         assert domain.name == "PKS_AT"
@@ -195,34 +195,34 @@ class NRPS_PKS_Results(ModuleResults):
             consensus = self.consensus_transat[domain.feature_name]
         else:
             consensus = self.consensus[domain.feature_name]
-        domain.predictions["consensus"] = consensus
+        domain.add_prediction("substrate consensus", consensus)
 
         sig = UNKNOWN
         pks_sig = predictions["signature"]
         if pks_sig and pks_sig.get_classification():
             sig = pks_sig.get_classification()[0]
-        domain.predictions["PKS signature"] = sig
+        domain.add_prediction("PKS signature", sig)
 
         minowa = predictions["minowa_at"].get_classification()[0]
-        domain.predictions["Minowa"] = get_short_form(minowa)
+        domain.add_prediction("Minowa", get_short_form(minowa))
 
     def _annotate_cal_domain(self, domain: NRPSPKSQualifier.Domain) -> None:
         assert domain.name == "CAL_domain"
         minowa = self.domain_predictions[domain.feature_name]["minowa_cal"].get_classification()[0]
-        domain.predictions["Minowa"] = get_short_form(minowa)
+        domain.add_prediction("Minowa", get_short_form(minowa))
 
     def _annotate_kr_domain(self, domain: NRPSPKSQualifier.Domain) -> None:
         assert domain.name == "PKS_KR"
         predictions = self.domain_predictions[domain.feature_name]
 
         activity = predictions["kr_activity"].get_classification()[0]
-        domain.predictions["KR activity"] = activity
+        domain.add_prediction("KR activity", activity)
 
         stereo_chem = UNKNOWN
         stereo_pred = predictions.get("kr_stereochem")
         if stereo_pred:
             stereo_chem = stereo_pred.get_classification()[0]
-        domain.predictions["KR stereochemistry"] = stereo_chem
+        domain.add_prediction("KR stereochemistry", stereo_chem)
 
     def add_to_record(self, record: Record) -> None:
         """ Save substrate specificity predictions in NRPS/PKS domain sec_met info of record
@@ -240,7 +240,6 @@ class NRPS_PKS_Results(ModuleResults):
                 feature = record.get_domain_by_name(domain.feature_name)
                 assert isinstance(feature, ModularDomain)
 
-                domain.predictions.clear()
                 if domain.name in ["AMP-binding", "A-OX"]:
                     self._annotate_a_domain(domain)
                 elif domain.name == "PKS_AT":
@@ -251,7 +250,7 @@ class NRPS_PKS_Results(ModuleResults):
                     self._annotate_kr_domain(domain)
                 # otherwise one of many without prediction methods/relevance (PCP, Cglyc, etc)
 
-                for method, pred in domain.predictions.items():
+                for method, pred in domain.get_predictions().items():
                     feature.specificity.append("%s: %s" % (method, pred))
 
             for module in cds_feature.modules:

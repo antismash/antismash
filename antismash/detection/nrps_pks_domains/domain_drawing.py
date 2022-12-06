@@ -137,7 +137,7 @@ def _parse_domain(record: Record, domain: NRPSPKSQualifier.Domain,
         Returns:
             a populated JSONDomain instance
     """
-    predictions = list(domain.predictions.items())
+    predictions = list(domain.get_predictions().items())
 
     # Create url_link to NaPDoS for C and KS domains
     napdoslink = ""
@@ -230,7 +230,7 @@ def domains_have_predictions(region: Union[Region, RegionLayer]) -> bool:
     """ Returns True if any domain in the region has a prediction made for it """
     for feature in region.cds_children:
         for domain in feature.nrps_pks.domains:
-            if "consensus" in domain.predictions:
+            if "consensus" in domain.get_predictions():
                 return True
     return False
 

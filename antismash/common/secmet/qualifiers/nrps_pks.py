@@ -39,7 +39,7 @@ class NRPSPKSQualifier:
             this same information
         """
         __slots__ = ["name", "label", "start", "end", "evalue", "bitscore",
-                     "predictions", "feature_name", "subtypes"]
+                     "_predictions", "feature_name", "subtypes"]
 
         def __init__(self, name: str, label: str, start: int, end: int,
                      evalue: float, bitscore: float, feature_name: str, subtypes: List[str] = None) -> None:
@@ -52,7 +52,7 @@ class NRPSPKSQualifier:
             if not feature_name:
                 raise ValueError("a Domain must belong to a feature, feature_name is required")
             self.feature_name = str(feature_name)
-            self.predictions: Dict[str, str] = {}  # method to prediction name
+            self._predictions: Dict[str, str] = {}  # method to prediction name
             self.subtypes: List[str] = subtypes or []
 
         def __lt__(self, other: "NRPSPKSQualifier.Domain") -> bool:
@@ -61,6 +61,14 @@ class NRPSPKSQualifier:
         def __repr__(self) -> str:
             return "NRPSPKSQualifier.Domain(%s, label=%s, start=%d, end=%d)" % (
                         self.full_type, self.label, self.start, self.end)
+
+        def get_predictions(self) -> Dict[str, str]:
+            """ Returns a dictionary mapping prediction method to prediction """
+            return dict(self._predictions)
+
+        def add_prediction(self, method: str, prediction: str) -> None:
+            """ Sets a prediction for a method to the domain """
+            self._predictions[method] = prediction
 
         @property
         def full_type(self) -> str:
