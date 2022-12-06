@@ -192,7 +192,6 @@ def pick_winning_substrate(aa10: str, aa34: str, options: list[StachSignature]) 
         return option
 
     keys_by_count = sorted(counts.items(), key=lambda x: x[1], reverse=True)
-    print(counts)
     consensus = keys_by_count[0][0]
     consensus_substrates = substrates[consensus]
     for key, count in keys_by_count[1:]:
