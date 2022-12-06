@@ -197,7 +197,7 @@ class NrpspksLayer(RegionLayer):
                 if domain.name not in ["AMP-binding", "A-OX"]:
                     continue
                 per_a_domain_predictions = set()
-                for possibilities in domain.predictions.values():
+                for possibilities in domain.get_predictions().values():
                     for possibility in possibilities.split(","):
                         per_a_domain_predictions.add(possibility)
                 per_cds_predictions.append(list(per_a_domain_predictions))
