@@ -86,7 +86,13 @@ class CDSResult:
         for domain, domain_feature in self.domain_features.items():
             record.add_antismash_domain(domain_feature)
             # update the CDS' NRPS_PKS qualifier
-            cds.nrps_pks.add_domain(domain, domain_feature.get_name())
+            qualifier_domain = cds.nrps_pks.add_domain(domain, domain_feature.get_name())
+            # add transATor prediction if relevant
+            if domain_feature.subtypes[:1] == ["Trans-AT-KS"]:
+                prediction = "(unknown)"
+                if len(domain_feature.subtypes) > 1:
+                    prediction = domain_feature.subtypes[1]
+                qualifier_domain.add_prediction("transATor", prediction)
 
         # construct CDSMotif features
         if not self.motif_hmms:
