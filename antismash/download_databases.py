@@ -67,6 +67,10 @@ TIGRFAM_URL = "https://dl.secondarymetabolites.org/releases/tigrfam/TIGRFam.hmm.
 TIGRFAM_ARCHIVE_CHECKSUM = "0747a5efa85d594cd598e67a04611328ab865e6a9401eb143fce6e93edf22bd0"
 TIGRFAM_CHECKSUM = "b905785603e1015bbe78d0235d0a6a131345bae35aaab7afbd8f7b59f7798842"
 
+STACHELHAUS_URL = "https://dl.secondarymetabolites.org/releases/stachelhaus/1.0/signatures.tsv.xz"
+STACHELHAUS_ARCHIVE_CHECKSUM = "d9b0a95eff34f6a817caf66c112dd3b27e8b22d4d6f2804b02ab6e7d02bbc0c1"
+STACHELHAUS_CHECKSUM = "53ba6b2f28b06ef1b24eaaf22d106aedbf986662bbecf593a303ab7741a143cf"
+
 LOCAL_FILE_PATH = os.path.abspath(os.path.dirname(__file__))
 
 CHUNK = 128 * 1024
@@ -420,6 +424,24 @@ def download_knownclusterblast(db_dir: str) -> None:
     delete_file(filename + ".xz")
 
 
+def download_stachelhaus(db_dir: str) -> None:
+    """Download the Stachelhaus signatures file."""
+    version, name_part = STACHELHAUS_URL.split("/")[-2:]
+    dirname = os.path.join(db_dir, "nrps_pks", "stachelhaus", version)
+    archive_filename = os.path.join(dirname, name_part)
+    signatures_filename, _ = os.path.splitext(archive_filename)
+
+    if present_and_checksum_matches(signatures_filename, STACHELHAUS_CHECKSUM):
+        print("Stachelhaus signature table file present and checked")
+        return
+
+    print("Downloading Stachelhaus signature table.")
+    check_diskspace(STACHELHAUS_URL)
+    download_if_not_present(STACHELHAUS_URL, archive_filename, STACHELHAUS_ARCHIVE_CHECKSUM)
+    filename = unzip_file(archive_filename, lzma, lzma.LZMAError)
+    delete_file(filename + ".xz")
+
+
 def download(args: argparse.Namespace) -> None:
     """Download all the large external databases needed."""
     # grab the latest pfam
@@ -443,6 +465,7 @@ def download(args: argparse.Namespace) -> None:
     for name, details in COMPARIPPSON_DBS.items():
         download_comparippson_db(args.database_dir, name, **details)
 
+    download_stachelhaus(args.database_dir)
 
 def _main() -> None:
     """ Downloads, decompresses, and compiles large databases. Also ensures

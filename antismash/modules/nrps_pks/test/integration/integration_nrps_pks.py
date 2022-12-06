@@ -53,15 +53,20 @@ class IntegrationNRPSPKS(unittest.TestCase):
         feature_names = nrps_names + ["nrpspksdomains_pks_CAL_domain.1"]
         assert set(results.domain_predictions) == set(feature_names)
 
-        assert set(results.domain_predictions[feature_names[0]]) == {"NRPSPredictor2"}
+        assert set(results.domain_predictions[feature_names[0]]) == {"NRPSPredictor2", "Stachelhaus"}
         nrpspred2_results = {}
+        stachelhaus_results = {}
         for domain, methods in results.domain_predictions.items():
             if "CAL" in domain:
                 continue
             nrpspred2_results[domain] = methods["NRPSPredictor2"].get_classification()
+            stachelhaus_results[domain] = methods["Stachelhaus"].get_classification()
         expected_preds = [["leu"], ["bOH-Tyr"], ["asn"], ["hpg"], ["hpg"], ["bOH-Tyr"], ["dhpg"], ["tyr"], ["pk"]]
+        expected_stachelhaus_preds = [["Leu"], ["bOH-Tyr"], ["Asn"], ["Hpg"], ["Hpg"], ["bOH-Tyr"], ["Dhpg"], ["Tyr"]]
         expected_nrps2 = dict(zip(nrps_names, expected_preds))
+        expected_stachelhaus = dict(zip(nrps_names, expected_stachelhaus_preds))
         assert nrpspred2_results == expected_nrps2
+        assert stachelhaus_results == expected_stachelhaus
 
         cal = results.domain_predictions["nrpspksdomains_pks_CAL_domain.1"]["minowa_cal"]
         assert len(cal.predictions) == 5
@@ -70,13 +75,13 @@ class IntegrationNRPSPKS(unittest.TestCase):
         assert len(results.region_predictions[1]) == 4
         # as does this, though it still won't use domain docking
         pred = results.region_predictions[1][1]
-        monomers = '(leu - D-bOH-Tyr - asn) + (D-hpg - D-hpg - bOH-Tyr) + (dhpg) + (tyr)'
+        monomers = '(Leu - D-bOH-Tyr - Asn) + (D-Hpg - D-Hpg - bOH-Tyr) + (Dhpg) + (Tyr)'
         assert pred.polymer == monomers
         assert not pred.domain_docking_used
         assert pred.ordering == ['bpsA', 'bpsB', 'bpsC', 'bpsD']
 
         pred = results.region_predictions[1][2]
-        assert pred.polymer == "(tyr) + (dhpg)"
+        assert pred.polymer == "(Tyr) + (Dhpg)"
         assert not pred.domain_docking_used
         assert pred.ordering == ['bpsD', 'bpsC']
 
