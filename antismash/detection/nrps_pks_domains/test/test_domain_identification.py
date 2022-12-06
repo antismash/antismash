@@ -257,3 +257,45 @@ class TestDatabases(unittest.TestCase):
                 result = domain_identification.get_database_path("some_dir", filename)
                 assert not patched.called
                 assert result == os.path.join(expected_subdir, filename)
+
+
+class TestTransatorPrediction(unittest.TestCase):
+    def setUp(self):
+        self.record = DummyRecord(seq="A"*20)
+        self.cds = DummyCDS(start=1, end=20)
+        self.record.add_cds_feature(self.cds)
+
+    def build_hit_from_types(self, types: list[str]) -> DummyHMMResult:
+        types = list(types)
+        start = 1
+        end = len(types) * 2
+        current = DummyHMMResult(types.pop(), start=start, end=end)
+        for outer in reversed(types):
+            end -= 1
+            start += 1
+            current = DummyHMMResult(outer, start=start, end=end, internal_hits=[current])
+        return current
+
+    def annotate(self, types: list[str]) -> None:
+        hit = self.build_hit_from_types(types)
+        assert hit.detailed_names == types
+        result = domain_identification.CDSResult([hit], [], [])
+        result.annotate_domains(self.record, self.cds)
+
+    def test_irrelevant(self):
+        types = ["PKS_KS", "some subtype", "innermost"]
+        self.annotate(types)
+        assert self.cds.nrps_pks.domains[0].subtypes == types[1:]
+        assert not self.cds.nrps_pks.domains[0].get_predictions()
+
+    def test_with_prediction(self):
+        types = ["PKS_KS", "Trans-AT-KS", "innermost"]
+        self.annotate(types)
+        assert self.cds.nrps_pks.domains[0].subtypes == types[1:]
+        assert self.cds.nrps_pks.domains[0].get_predictions()["transATor"] == types[-1]
+
+    def test_without_prediction(self):
+        types = ["PKS_KS", "Trans-AT-KS"]
+        self.annotate(types)
+        assert self.cds.nrps_pks.domains[0].subtypes == types[1:]
+        assert self.cds.nrps_pks.domains[0].get_predictions()["transATor"] == "(unknown)"
