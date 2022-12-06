@@ -440,9 +440,9 @@ RULE aminocoumarin
     NEIGHBOURHOOD 10
     CONDITIONS novK or novJ or novI or novH or SpcDK_cou
 
-RULE siderophore
+RULE NRPS-independent-siderophore
     CATEGORY other
-    DESCRIPTION Siderophore
+    DESCRIPTION IucA/IucC-like siderophores
     CUTOFF 20
     NEIGHBOURHOOD 5
     CONDITIONS IucA_IucC
