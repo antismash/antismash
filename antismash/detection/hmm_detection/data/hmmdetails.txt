@@ -345,3 +345,4 @@ PvdP	Tyrosinase enzyme in pyoverdine chromophore maturation	600	PvdP.hmm
 SalSyn	Salicylate synthase	350	SalSyn.hmm
 VbsL	PLP-dependent epimerase in vicibactin biosynthesis (10.1021/ja9056008)	570	VbsL.hmm
 VibH_like	VibH-like standalone condensation domain	400	VibH_like.hmm
+MbnC	Methanobactin maturation protein MbnC	150	MbnC.hmm
