@@ -641,3 +641,11 @@ RULE methanobactin
     CUTOFF 5
     NEIGHBOURHOOD 10
     CONDITIONS DUF692 and MbnC
+
+RULE opine-like-metallophore
+    CATEGORY other
+    DESCRIPTION Opine-like zincophores like staphylopine (10.1128/mSystems.00554-20)
+    EXAMPLE NCBI BA000017.4 2598076-2607334     # BGC0002487
+    CUTOFF 5
+    NEIGHBOURHOOD 10
+    CONDITIONS CntL and CntM
