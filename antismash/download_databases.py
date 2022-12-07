@@ -188,7 +188,7 @@ def untar_file(filename: str) -> None:
             f"ERROR: Error extracting {basename}. Please try to extract it manually."
         )
         return
-    print("Extraction of {basename} finished successfully.")
+    print(f"Extraction of {basename} finished successfully.")
 
 
 def delete_file(filename: str) -> None:
