@@ -1,7 +1,7 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
-"""Script to download and install Pfam and ClusterBlast databases."""
+"""Script to download antiSMASH data files not shipped with the code."""
 
 import argparse
 import gzip
