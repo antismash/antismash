@@ -117,10 +117,10 @@ class TestStachelhaus(unittest.TestCase):
         assert predictions["different_multi"].get_classification() == ["Val", "Ile"]
 
     def test_init_data(self):
+        stachelhaus.KNOWN_STACH_CODES.clear()
         assert not stachelhaus.KNOWN_STACH_CODES
         mappings = stachelhaus.init_data(self.config)
         assert mappings == stachelhaus.KNOWN_STACH_CODES
-
 
     def test_check_prereqs(self):
         with tempfile.TemporaryDirectory(prefix="aS.stachelhaustest") as temp_dbdir:
