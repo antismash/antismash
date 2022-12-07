@@ -76,8 +76,8 @@ class FakeHSPHit:
 
 
 class DummyHMMResult(HMMResult):
-    def __init__(self, label="dummy", start=1, end=10, evalue=1, bitscore=1):
-        super().__init__(label, start, end, evalue, bitscore)
+    def __init__(self, label="dummy", start=1, end=10, evalue=1, bitscore=1, internal_hits=None):
+        super().__init__(label, start, end, evalue, bitscore, internal_hits=internal_hits)
 
 
 class FakeHit:

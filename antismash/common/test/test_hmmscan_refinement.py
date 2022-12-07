@@ -4,6 +4,7 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
 
+import json
 import unittest
 import warnings
 
@@ -39,13 +40,13 @@ class TestHMMResult(unittest.TestCase):
 
     def test_json_conversion(self):
         result = refinement.HMMResult("dummy_hit", 1, 5, 3e-10, 53.5)
-        json = result.to_json()
-        assert json == {'bitscore': 53.5,
+        data = result.to_json()
+        assert data == {'bitscore': 53.5,
                         'evalue': 3e-10,
                         'hit_id': 'dummy_hit',
                         'query_end': 5,
                         'query_start': 1}
-        regenerated = refinement.HMMResult.from_json(json)
+        regenerated = refinement.HMMResult.from_json(data)
         assert regenerated.hit_id == "dummy_hit"
         assert regenerated.query_start == 1
         assert regenerated.query_end == 5
@@ -55,6 +56,8 @@ class TestHMMResult(unittest.TestCase):
     def test_str_conversion(self):
         result = refinement.HMMResult("dummy_hit", 1, 5, 3e-10, 53.5)
         assert str(result) == "HMMResult(dummy_hit, 1, 5, evalue=3e-10, bitscore=53.5)"
+        outer = refinement.HMMResult("other", 1, 5, 3e-10, 53.5, internal_hits=[result])
+        assert str(outer).endswith(", subtypes=[dummy_hit])")
 
     def test_equality(self):
         first = refinement.HMMResult("dummy_hit", 1, 5, 3e-10, 53.5)
@@ -65,6 +68,33 @@ class TestHMMResult(unittest.TestCase):
         second._hit_id = first._hit_id
         second._evalue /= 10
         assert first != second
+
+    def test_containment(self):
+        outer = refinement.HMMResult("dummy_hit", 5, 20, 3e-10, 53.5)
+        # check self containment
+        assert outer.is_contained_by(outer)
+        # check right bounds
+        inner = refinement.HMMResult("dummy_hit", 10, 20, 3e-10, 53.5)
+        assert inner.is_contained_by(outer)
+        assert not outer.is_contained_by(inner)
+        # check left bounds
+        inner = refinement.HMMResult("dummy_hit", 5, 15, 3e-10, 53.5)
+        assert inner.is_contained_by(outer)
+        assert not outer.is_contained_by(inner)
+        # check completely within
+        inner = refinement.HMMResult("dummy_hit", 10, 15, 3e-10, 53.5)
+        assert inner.is_contained_by(outer)
+        assert not outer.is_contained_by(inner)
+
+    def test_overlaps(self):
+        center = refinement.HMMResult("dummy", 10, 20, 1., 1.)
+        floating = refinement.HMMResult("dummy", 1, 10, 1., 1.)
+        assert not center.overlaps_with(floating)
+        for start, end in [(5, 15), (10, 20), (15, 25)]:
+            floating = refinement.HMMResult("dummy", start, end, 1., 1.)
+            assert center.overlaps_with(floating) and floating.overlaps_with(center)
+        floating = refinement.HMMResult("dummy", 20, 30, 1., 1.)
+        assert not center.overlaps_with(floating)
 
     def test_hashability(self):
         first = refinement.HMMResult("dummy_hit", 1, 5, 3e-10, 53.5)
@@ -80,6 +110,32 @@ class TestHMMResult(unittest.TestCase):
         used[different] = 3
 
         assert used == {first: 2, different: 3}
+
+    def test_nesting(self):
+        inner = refinement.HMMResult("in", 5, 10, 3e-10, 53.5)
+        assert inner.internal_hits == tuple()
+        mid = refinement.HMMResult("mid", 3, 12, 3e-10, 53.5, internal_hits=[inner])
+        assert mid.internal_hits == (inner,)
+        outer = refinement.HMMResult("out", 3, 15, 3e-10, 53.5, internal_hits=[mid])
+        assert outer.internal_hits == (mid,)
+        assert outer.internal_hits[0].internal_hits[0] is inner
+
+        reconstructed = refinement.HMMResult.from_json(json.loads(json.dumps(outer.to_json())))
+        assert reconstructed == outer
+        assert reconstructed.internal_hits == outer.internal_hits
+        assert reconstructed.internal_hits[0].internal_hits == mid.internal_hits
+
+        # and names check
+        assert outer.detailed_names == [outer.hit_id, mid.hit_id, inner.hit_id]
+        outer.add_internal_hits([inner])
+        assert outer.detailed_names == [outer.hit_id]
+
+    def test_nesting_additions(self):
+        inner = refinement.HMMResult("in", 5, 7, 3e-10, 53.5)
+        other = refinement.HMMResult("in", 8, 10, 3e-10, 53.5)
+        outer = refinement.HMMResult("mid", 3, 12, 3e-10, 53.5, internal_hits=[inner])
+        outer.add_internal_hits([other])
+        assert outer.internal_hits == (inner, other)
 
 
 class TestRefinement(unittest.TestCase):

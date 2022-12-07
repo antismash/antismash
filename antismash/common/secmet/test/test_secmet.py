@@ -12,6 +12,7 @@ from Bio.Seq import Seq
 from Bio.SeqFeature import FeatureLocation, SeqFeature
 
 from antismash.common.test.helpers import get_path_to_nisin_genbank
+from antismash.common.hmmscan_refinement import HMMResult
 
 from ..features import (
     CDSFeature,
@@ -212,17 +213,7 @@ class TestStripping(unittest.TestCase):
         assert self.cds.sec_met.domains == []
 
     def test_cds_nrps_pks(self):  # pylint: disable=attribute-defined-outside-init
-        class HSP:  # pylint: disable=too-few-public-methods
-            def __init__(self, attrs):
-                self.__dict__.update(attrs)
-
-        raw_domain = HSP({
-            "hit_id": "test",
-            "query_start": 1,
-            "query_end": 2,
-            "evalue": 1e-5,
-            "bitscore": 10,
-        })
+        raw_domain = HMMResult("test", 1, 2, 1e-5, 10)
         self.cds.nrps_pks.add_domain(raw_domain, "test")
         assert self.cds.nrps_pks.domains
         self.rec.strip_antismash_annotations()

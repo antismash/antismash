@@ -25,19 +25,28 @@ TOOL = "nrps_pks_domains"
 
 class ModularDomain(AntismashDomain):
     """ A class to represent a Domain with extra specificities and type information """
-    __slots__ = ["specificity"]
+    __slots__ = ["specificity", "subtypes"]
     FEATURE_TYPE = "aSDomain"
 
     def __init__(self, location: Location, protein_location: FeatureLocation, locus_tag: str) -> None:
         super().__init__(location, protein_location=protein_location, locus_tag=locus_tag,
                          tool=TOOL)
-        self.domain_subtype: Optional[str] = None
+        self.subtypes: List[str] = []
         self.specificity: List[str] = []
+
+    @property
+    def domain_subtype(self) -> Optional[str]:
+        """ The primary subtype of the domain, if any.
+            Primarily exists for backwards compatability.
+        """
+        if self.subtypes:
+            return self.subtypes[0]
+        return None
 
     def to_biopython(self, qualifiers: Dict[str, List[str]] = None) -> List[SeqFeature]:
         mine: Dict[str, List[str]] = OrderedDict()
-        if self.domain_subtype:
-            mine["domain_subtype"] = [self.domain_subtype]
+        if self.subtypes:
+            mine["domain_subtypes"] = self.subtypes
         if self.specificity:
             mine["specificity"] = list(self.specificity)
         if qualifiers:
@@ -60,7 +69,10 @@ class ModularDomain(AntismashDomain):
         feature = cls(bio_feature.location, protein_location, locus_tag)
 
         # grab optional qualifiers
-        feature.domain_subtype = leftovers.pop("domain_subtype", [""])[0] or None
+        feature.subtypes = leftovers.pop("domain_subtypes", [])
+        # just in case, try for older annotation style subtype
+        if not feature.subtypes and "domain_subtype" in leftovers:
+            feature.subtypes.append(leftovers.pop("domain_subtype")[0])
         feature.specificity = leftovers.pop("specificity", [])
 
         # grab parent optional qualifiers

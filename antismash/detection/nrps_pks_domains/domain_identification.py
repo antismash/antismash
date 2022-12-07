@@ -7,7 +7,8 @@
 
 from collections import defaultdict
 import logging
-from typing import Any, Dict, List, Optional
+import os
+from typing import Any, Callable, Dict, List, Optional
 
 from antismash.common import module_results, path, subprocessing, utils
 from antismash.common.fasta import get_fasta_from_features
@@ -20,6 +21,7 @@ from antismash.common.secmet.features import (
     Module as ModuleFeature,
 )
 from antismash.common.secmet.locations import FeatureLocation
+from antismash.config import get_config
 
 from .module_identification import (
     build_modules_for_cds,
@@ -44,19 +46,17 @@ DOMAIN_TYPE_MAPPING = {
     'Polyketide_cyc2': 'Polyketide_cyc',
 }
 
+DATABASE_PATHS: Dict[str, str] = {}
+
 
 class CDSResult:
     """ Stores and enables reconstruction of all results for a single CDS """
     def __init__(self, domain_hmms: List[HMMResult], motif_hmms: List[HMMResult],
-                 modules: List[Module], ks_subtypes: List[str]) -> None:
+                 modules: List[Module]) -> None:
         self.domain_hmms = domain_hmms
         self.motif_hmms = motif_hmms
         self.modules = modules
-        self.ks_subtypes = ks_subtypes
         self.domain_features: Dict[HMMResult, ModularDomain] = {}
-        ks_count = sum(dom.hit_id == "PKS_KS" for dom in self.domain_hmms)
-        if len(ks_subtypes) != ks_count:
-            raise ValueError("mismatching KS subtypes and PKS_KS counts: %d  %d" % (len(ks_subtypes), ks_count))
 
     def to_json(self) -> Dict[str, Any]:
         """ Create a JSON representation """
@@ -64,7 +64,6 @@ class CDSResult:
             "domain_hmms": [hmm.to_json() for hmm in self.domain_hmms],
             "motif_hmms": [hmm.to_json() for hmm in self.motif_hmms],
             "modules": [module.to_json() for module in self.modules],
-            "ks_subtypes": self.ks_subtypes,
         }
 
     @staticmethod
@@ -73,7 +72,7 @@ class CDSResult:
         domain_hmms = [HMMResult.from_json(hmm) for hmm in data["domain_hmms"]]
         motif_hmms = [HMMResult.from_json(hmm) for hmm in data["motif_hmms"]]
         modules = [Module.from_json(module) for module in data["modules"]]
-        return CDSResult(domain_hmms, motif_hmms, modules, data["ks_subtypes"])
+        return CDSResult(domain_hmms, motif_hmms, modules)
 
     def annotate_domains(self, record: Record, cds: CDSFeature) -> None:
         """ Adds domain annotations to CDSFeatures and creates ModularDomain
@@ -84,16 +83,10 @@ class CDSResult:
 
         # generate domain features
         self.domain_features = generate_domain_features(cds, self.domain_hmms)
-        ks_sub = iter(self.ks_subtypes)
         for domain, domain_feature in self.domain_features.items():
-            if domain.hit_id == "PKS_KS":
-                sub = next(ks_sub)
-                domain_feature.domain_subtype = sub
-            else:
-                sub = ""
             record.add_antismash_domain(domain_feature)
             # update the CDS' NRPS_PKS qualifier
-            cds.nrps_pks.add_domain(domain, domain_feature.get_name(), sub)
+            cds.nrps_pks.add_domain(domain, domain_feature.get_name())
 
         # construct CDSMotif features
         if not self.motif_hmms:
@@ -167,31 +160,26 @@ class NRPSPKSDomains(module_results.DetectionResults):
         return NRPSPKSDomains(record.id, cds_results)
 
 
-def match_subtypes_to_ks_domains(domains: List[HMMResult], subtypes: List[HMMResult]) -> List[str]:
-    """ Returns a subtype name for each PKS_KS domain in the domains provided.
-        If no subtype hit overlaps with a PKS_KS domain, the subtype name will be the
-        empty string.
+def get_database_path(subdir: str, filename: str) -> str:
+    """ Finds, and caches, the path to a specific database directory. The database
+        path is expected to be inside the main database directory in the form:
+        DATA_DIR/nrps_pks/SUBDIR/VERSION/FILENAME
 
         Arguments:
-            domains: a list of HMMResults, non-PKS_KS domains will be ignored
-            subtypes: a list of PKS_KS subtypes
+            subdir: the directory name with the "nrps_pks" subdirectory
+            filename: the name of a file required within a versioned subdirectory of subdir
 
         Returns:
-            a list of strings, one for each PKS_KS domain
+            the full path to the specified file
+
     """
-    domains = [dom for dom in domains if dom.hit_id == "PKS_KS"]
-    if not domains:
-        return []
-    subs = []
-    for domain in domains:
-        sub = ""
-        for subtype in subtypes:
-            if domain.query_end >= subtype.query_start and subtype.query_end >= domain.query_start:
-                sub = subtype.hit_id
-                break
-        subs.append(sub)
-    assert len(domains) == len(subs)
-    return subs
+    if subdir not in DATABASE_PATHS:
+        options = get_config()
+        database_root = os.path.join(options.database_dir, "nrps_pks", subdir)
+        latest = path.find_latest_database_version(database_root, required_file_pattern=filename)
+        full_path = os.path.join(database_root, latest)
+        DATABASE_PATHS[subdir] = full_path
+    return os.path.join(DATABASE_PATHS[subdir], filename)
 
 
 def generate_domains(record: Record) -> NRPSPKSDomains:
@@ -212,7 +200,8 @@ def generate_domains(record: Record) -> NRPSPKSDomains:
 
     fasta = get_fasta_from_features(cds_within_regions)
     cds_domains = find_domains(fasta, record)
-    cds_ks_subtypes = find_ks_domains(fasta)
+    cds_ks_subtypes = find_subtypes("PKS_KS", path.get_full_path(__file__, "data", "ksdomains.hmm"),
+                                    cds_domains, record)
     cds_motifs = find_ab_motifs(fasta)
 
     prev: Optional[CDSModuleInfo] = None
@@ -222,9 +211,8 @@ def generate_domains(record: Record) -> NRPSPKSDomains:
         if not (domains or motifs):
             prev = None
             continue
-        subtype_names = match_subtypes_to_ks_domains(domains, cds_ks_subtypes.get(cds.get_name(), []))
-        modules = build_modules_for_cds(domains, subtype_names, cds.get_name())
-        results.cds_results[cds] = CDSResult(domains, motifs, modules, subtype_names)
+        modules = build_modules_for_cds(domains, cds.get_name())
+        results.cds_results[cds] = CDSResult(domains, motifs, modules)
 
         # combine modules that cross CDS boundaries, if possible and relevant
         info = CDSModuleInfo(cds, modules)
@@ -296,20 +284,54 @@ def find_domains(fasta: str, record: Record) -> Dict[str, List[HMMResult]]:
     return filter_nonterminal_docking_domains(record, domains)
 
 
-def find_ks_domains(fasta: str) -> Dict[str, List[HMMResult]]:
-    """ Analyse KS domains & PKS/NRPS protein domain composition to detect NRPS/PKS types
+def find_subtypes(target: str, database_path: str, existing_domains: Dict[str, List[HMMResult]],
+                  record: Record, modifier_callback: Callable[[HMMResult], HMMResult] = None,
+                  options: List[str] = None) -> Dict[str, List[HMMResult]]:
+    """ Finds subtypes of the given target, with the given database, from the
+        existing hits. All newly created hits will be contained by a target hit,
+        and will be added to the target hits.
 
         Arguments:
-            fasta: a group of features in fasta format
+            target: the profile name for which subtypes are being sought
+            database_path: the path to the HMMer database to use for searching
+            existing_domains: a dictionary mapping CDS name to existing domain hits
+            record: the record containing all the features referred to
+            modifier_callback: an optional function to modify an HMMResult's values in some way
+            options: a list of command line options to pass to hmmscan, defaults to "--cut_tc"
 
         Returns:
-            a dictionary mapping feature name to a list of KS domain results for that feature
+            a dictionary mapping feature name to a list of HMMResults for that feature
     """
-    opts = ["--cut_tc"]
-    ks_file = path.get_full_path(__file__, "data", "ksdomains.hmm")
-    lengths = utils.get_hmm_lengths(ks_file)
-    domains = subprocessing.run_hmmscan(ks_file, fasta, opts)
-    return refine_hmmscan_results(domains, lengths, neighbour_mode=True)
+    relevant_features = []
+    for cds_name, hits in existing_domains.items():
+        if any(hit.hit_id == target for hit in hits):
+            relevant_features.append(record.get_cds_by_name(cds_name))
+    if not relevant_features:
+        return {}
+    if options is None:
+        options = ["--cut_tc"]
+    fasta = get_fasta_from_features(relevant_features)
+    domains = subprocessing.run_hmmscan(database_path, fasta, options)
+    if not domains:
+        return {}
+    lengths = utils.get_hmm_lengths(database_path)
+    new_domains = refine_hmmscan_results(domains, lengths, neighbour_mode=True)
+
+    results = {}
+    for cds_name, all_hits in new_domains.items():
+        filtered = []
+        relevant_domains = [hit for hit in existing_domains[cds_name] if hit.hit_id == target]
+        for domain in relevant_domains:
+            # filter to relevant hits
+            hits = [hit for hit in all_hits if hit.overlaps_with(domain)]
+            # and use the callback if it exists
+            if modifier_callback is not None:
+                hits = [modifier_callback(hit) for hit in hits]
+            domain.add_internal_hits(hits)
+            filtered.extend(hits)
+        if filtered:
+            results[cds_name] = filtered
+    return results
 
 
 class KetosynthaseCounter:
@@ -378,7 +400,7 @@ def generate_domain_features(gene: CDSFeature, domains: List[HMMResult]) -> Dict
         name = domain.hit_id
         mapping = DOMAIN_TYPE_MAPPING.get(name)
         if mapping:
-            new_feature.domain_subtype = name
+            new_feature.subtypes = [name]
             new_feature.domain = mapping
         else:
             new_feature.domain = name
@@ -395,6 +417,7 @@ def generate_domain_features(gene: CDSFeature, domains: List[HMMResult]) -> Dict
 
         new_feature.domain_id = "nrpspksdomains_" + domain_name
         new_feature.label = domain_name
+        new_feature.subtypes = domain.detailed_names[1:]
 
         new_features[domain] = new_feature
     return new_features

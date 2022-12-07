@@ -4,12 +4,19 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
 
+import os
 import unittest
 from unittest.mock import patch
 
-from antismash.common import fasta
+from antismash.common import fasta, path, subprocessing, utils
 from antismash.common.secmet import Record
-from antismash.common.test.helpers import DummyCDS, DummyHMMResult, DummyRecord
+from antismash.common.test.helpers import (
+    DummyCDS,
+    DummyHMMResult,
+    DummyRecord,
+    get_simple_options,
+)
+from antismash.config import destroy_config, update_config
 from antismash.detection.nrps_pks_domains import domain_identification
 
 
@@ -97,34 +104,79 @@ class TestKSCounter(unittest.TestCase):
             assert counter.trans_is_greatest() == (ks_name == "Trans-AT-KS")
 
 
-class TestKSSubtypeMatching(unittest.TestCase):
+@patch.object(utils, "get_hmm_lengths", return_value={})
+@patch.object(subprocessing, "run_hmmscan", return_value={})
+@patch.object(domain_identification, "refine_hmmscan_results")
+class TestSubtypeFinding(unittest.TestCase):
     def setUp(self):
-        self.func = domain_identification.match_subtypes_to_ks_domains
+        self.record = DummyRecord(seq="A" * 100)
+        self.record.add_cds_feature(DummyCDS(locus_tag="left", start=0, end=30))
+        self.record.add_cds_feature(DummyCDS(locus_tag="right", start=50, end=80))
+        self.existing_hits = {
+            "left": [
+                DummyHMMResult("a", start=0, end=4),
+                DummyHMMResult("b", start=5, end=8),
+            ],
+            "right": [
+                DummyHMMResult("b", start=0, end=4),
+                DummyHMMResult("c", start=5, end=8),
+            ]
+        }
+    def find(self, target, existing=None, callback=None):
+        if existing is None:
+            existing = self.existing_hits
+        return domain_identification.find_subtypes(target, "dummy/path", existing,
+                                                   self.record, modifier_callback=callback)
 
-    def test_empty(self):
-        assert self.func([], []) == []
+    def test_no_relevant_hits(self, refine, hmmscan, lengths):
+        result = self.find("other")
+        assert not result
+        assert not refine.called
+        assert not hmmscan.called
+        assert not lengths.called
+        for hits in self.existing_hits.values():
+            assert not any(hit.internal_hits for hit in hits)
 
-    def test_non_pks(self):
-        assert self.func([DummyHMMResult()], []) == []
+    def test_locations(self, refine, hmmscan, _lengths):
+        new_hits = {
+            "left": [
+                DummyHMMResult("b_subtype1", start=0, end=3),
+                DummyHMMResult("b_subtype2", start=6, end=7),
+            ],
+            "right": [
+                DummyHMMResult("b_subtype1", start=6, end=8),
+            ],
+        }
+        # set the mock return values
+        refine.return_value = new_hits
+        # exact value doesn't matter, as long as it's not empty
+        hmmscan.return_value = new_hits["left"]
 
-    def test_pks_with_hit(self):
-        assert self.func([DummyHMMResult("PKS_KS", start=1, end=40)],
-                         [DummyHMMResult("trans-AT", start=1, end=38)]) == ["trans-AT"]
+        results = self.find("b")
+        # only the second hit matches in "left"
+        expected_hit = new_hits["left"][1]
+        assert results == {"left": [expected_hit]}
+        assert not self.existing_hits["left"][0].internal_hits
+        assert self.existing_hits["left"][1].internal_hits == (expected_hit,)
 
-    def test_pks_with_no_hit(self):
-        assert self.func([DummyHMMResult("PKS_KS", start=1, end=40)],
-                         [DummyHMMResult("trans-AT", start=41, end=48)]) == [""]
+    def test_multiple_per_gene(self, refine, hmmscan, _lengths):
+        self.existing_hits["left"][1] = DummyHMMResult("a", start=5, end=8)
+        new_hits = {
+            "left": [
+                DummyHMMResult("a_subtype1", start=0, end=3),
+                DummyHMMResult("a_subtype1", start=6, end=7),
+            ],
+        }
+        # set the mock return values
+        refine.return_value = new_hits
+        # exact value doesn't matter, as long as it's not empty
+        hmmscan.return_value = new_hits["left"]
 
-    def test_mixed(self):
-        domains = [
-            DummyHMMResult("PKS_KS", start=1, end=40),
-            DummyHMMResult("PKS_AT", start=50, end=90),
-            DummyHMMResult("PKS_KS", start=100, end=140),
-        ]
-        sub_hits = [
-            DummyHMMResult("trans-AT", start=99, end=139)
-        ]
-        assert self.func(domains, sub_hits) == ["", "trans-AT"]
+        results = self.find("a")
+        # only the second hit matches in "left"
+        assert results == new_hits
+        for original, new_hit in zip(self.existing_hits["left"], new_hits["left"]):
+            assert original.internal_hits == (new_hit,)
 
 
 @patch.object(fasta, "get_fasta_from_features", return_value={})
@@ -149,7 +201,7 @@ class TestModuleMerging(unittest.TestCase):
         cdses = self.record.get_cds_features()
         with patch.object(Record, "get_cds_features_within_regions", return_value=cdses):
             with patch.object(domain_identification, "find_domains", return_value=self.domains):
-                with patch.object(domain_identification, "find_ks_domains", return_value=self.ks_subtypes):
+                with patch.object(domain_identification, "find_subtypes", return_value=self.ks_subtypes):
                     results = domain_identification.generate_domains(self.record)
         assert results
         head = results.cds_results[self.cdses["head"]]
@@ -167,7 +219,7 @@ class TestModuleMerging(unittest.TestCase):
         cdses = self.record.get_cds_features()
         with patch.object(Record, "get_cds_features_within_regions", return_value=cdses):
             with patch.object(domain_identification, "find_domains", return_value=self.domains):
-                with patch.object(domain_identification, "find_ks_domains", return_value=self.ks_subtypes):
+                with patch.object(domain_identification, "find_subtypes", return_value=self.ks_subtypes):
                     results = domain_identification.generate_domains(self.record)
         assert results
         head = results.cds_results[self.cdses["head"]]
@@ -177,3 +229,30 @@ class TestModuleMerging(unittest.TestCase):
         assert len(tail.modules) == 1  # should *not* have merged into head
         assert not head.modules[0].is_complete()
         assert not tail.modules[0].is_complete()
+
+
+class TestDatabases(unittest.TestCase):
+    def tearDown(self):
+        domain_identification.DATABASE_PATHS.clear()
+        destroy_config()
+
+    def test_caching(self):
+        root = "/some/dummy/root"
+        options = update_config(get_simple_options(None, ['--databases', root]))
+        assert not domain_identification.DATABASE_PATHS
+        with patch.object(path, "find_latest_database_version",
+                          return_value="1.0") as patched:
+            result = domain_identification.get_database_path("some_dir", "some.file")
+            assert patched.called
+        expected_subdir = os.path.join(root, "nrps_pks", "some_dir", "1.0")
+        expected_full_path = os.path.join(expected_subdir, "some.file")
+        assert result == expected_full_path
+        assert domain_identification.DATABASE_PATHS == {"some_dir": expected_subdir}
+
+        # check that the find isn't used while we build paths for different files
+        with patch.object(path, "find_latest_database_version",
+                          return_value="bad") as patched:
+            for filename in ["some.file", "other"]:
+                result = domain_identification.get_database_path("some_dir", filename)
+                assert not patched.called
+                assert result == os.path.join(expected_subdir, filename)
