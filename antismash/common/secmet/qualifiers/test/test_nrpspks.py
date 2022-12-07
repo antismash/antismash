@@ -36,8 +36,9 @@ class TestNRPSPKS(unittest.TestCase):
 
     def test_biopython_conversion(self):
         qualifier = NRPSPKSQualifier(strand=1)
-        for pks in ["PKS_AT", "AMP-binding"]:
-            qualifier.add_domain(HMMResult(pks, 1, 1, 1, 1), "missing")
+        for name in ["PKS_AT", "AMP-binding"]:
+            domain = qualifier.add_domain(HMMResult(name, 1, 1, 1, 1), "missing")
+            domain.subtypes = [name + "sub"]
         qualifier.type = "some type"
 
         bio = list(qualifier)
@@ -46,6 +47,9 @@ class TestNRPSPKS(unittest.TestCase):
 
         new = NRPSPKSQualifier(strand=1)
         new.add_from_qualifier(bio)
+        for old_domain, new_domain in zip(qualifier.domains, new.domains):
+            assert old_domain.name == new_domain.name
+            assert old_domain.subtypes == new_domain.subtypes
         assert list(qualifier) == list(new)
 
         for bad in [["mismatching info"], ["Domain: missing info"]]:
