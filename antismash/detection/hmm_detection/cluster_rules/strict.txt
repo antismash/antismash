@@ -633,3 +633,11 @@ RULE NRP-metallophore
                     (Orn_monoox and not (KtzT or MetRS-like)) or             # Hydroxamate, exclude piperazates and hydrazides
                     Lys_monoox or VbsL                                       # Lys and vicibactin hydroxamates
                ))
+
+RULE methanobactin
+    CATEGORY RiPP
+    DESCRIPTION Copper-chelating/transporting peptides (10.1126/science.aap9437)
+    EXAMPLE NCBI CP023737.1 1498747-1508549      # BGC0002004
+    CUTOFF 5
+    NEIGHBOURHOOD 10
+    CONDITIONS DUF692 and MbnC
