@@ -346,3 +346,5 @@ SalSyn	Salicylate synthase	350	SalSyn.hmm
 VbsL	PLP-dependent epimerase in vicibactin biosynthesis (10.1021/ja9056008)	570	VbsL.hmm
 VibH_like	VibH-like standalone condensation domain	400	VibH_like.hmm
 MbnC	Methanobactin maturation protein MbnC	150	MbnC.hmm
+CntL	NAS synthase found in opine-like zincophore clusters	100	CntL.hmm
+CntM	Staphylopine dehydrogenase found in opine-like zincophore clusters	100	CntM.hmm

@@ -139,6 +139,10 @@
     @include metallophore
 }
 
+.opine-like-metallophore {
+    @include metallophore
+}
+
 .ectoine {
     @include osmolyte;
 }
