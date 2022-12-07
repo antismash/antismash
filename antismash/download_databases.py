@@ -16,7 +16,6 @@ from urllib import request
 
 import antismash
 from antismash.common.hmmer import ensure_database_pressed
-from antismash.common.subprocessing import execute
 
 PFAM_LATEST_VERSION = "34.0"
 PFAM_LATEST_URL = f"https://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam{PFAM_LATEST_VERSION}/Pfam-A.hmm.gz"
@@ -56,10 +55,9 @@ COMPARIPPSON_DBS = {
     },
 }
 
-RESFAM_URL = "http://dantaslab.wustl.edu/resfams/Resfams.hmm.gz"
-RESFAM_ARCHIVE_CHECKSUM = "82e9325283b999b1fb1351502b2d12194561c573d9daef3e623e905c1af66fd6"
-RESFAM_LINES = 132214
-RESFAM_SIZE = 20123005
+RESFAM_URL = "https://dl.secondarymetabolites.org/releases/resfams/Resfams.hmm.gz"
+RESFAM_ARCHIVE_CHECKSUM = "ae1e4be5a4a4ef5f669d36daddb94020df0ec41c448a21c642bdeca43abed342"
+RESFAM_CHECKSUM = "780a0afdaa8c7a85d1b31367da66363c5b86ab8bc4a7288a8598f137cf55fbc0"
 
 TIGRFAM_URL = "https://dl.secondarymetabolites.org/releases/tigrfam/TIGRFam.hmm.gz"
 TIGRFAM_ARCHIVE_CHECKSUM = "0747a5efa85d594cd598e67a04611328ab865e6a9401eb143fce6e93edf22bd0"
@@ -208,28 +206,6 @@ def present_and_checksum_matches(filename: str, sha256sum: str) -> bool:
     return False
 
 
-def present_and_line_count_matches(filename: str, lines: int) -> bool:
-    """Check if a file is present and the number of lines matches."""
-    if not os.path.exists(filename):
-        return False
-
-    _count = -1
-    with open(filename, "r") as handle:
-        _count = len(handle.readlines())
-    _count += 1
-
-    return _count == lines
-
-
-def present_and_size_matches(filename: str, size: int) -> bool:
-    """Check if a file is present and the file size matches."""
-    if not os.path.exists(filename):
-        return False
-
-    read_size = os.stat(filename).st_size
-    return size == read_size
-
-
 def download_if_not_present(url: str, filename: str, sha256sum: str) -> None:
     """Download a file if it's not present or checksum doesn't match."""
     # If we are missing the archive file, go and download
@@ -265,61 +241,16 @@ def download_resfam(db_dir: str) -> None:
     """Download and sanitise the Resfam database."""
     archive_filename = os.path.join(db_dir, "resfam", "Resfams.hmm.gz")
     filename = os.path.splitext(archive_filename)[0]
-    url = RESFAM_URL
 
-    # checksum of existing not matched because it has a convert timestamp in it
-    # So check size and line count as an approximation
-    if present_and_size_matches(filename, RESFAM_SIZE) and \
-       present_and_line_count_matches(filename, RESFAM_LINES):
-        print("Resfams database present and checked")
+    if present_and_checksum_matches(filename, RESFAM_CHECKSUM):
+        print("Resfam file present and checked")
         return
 
     print("Downloading Resfam database")
-    check_diskspace(url)
-    download_if_not_present(url, archive_filename, RESFAM_ARCHIVE_CHECKSUM)
+    check_diskspace(RESFAM_URL)
+    download_if_not_present(RESFAM_URL, archive_filename, RESFAM_ARCHIVE_CHECKSUM)
     filename = unzip_file(archive_filename, gzip, gzip.zlib.error)  # type: ignore
     delete_file(filename + ".gz")
-    # remove tabs
-    converted = execute(["hmmconvert", filename])
-    print("Ensuring all cutoffs are present")
-    # add TC to those entries missing them
-    # calculated as 10% less than the minimum scoring hit in their own group
-    missing_cutoffs = {
-        "RF0174": int(374 * 0.9),
-        "RF0172": int(85 * 0.9),
-        "RF0173": int(295 * 0.9),
-        "RF0168": int(691 * 0.9),
-    }
-    with open(filename, "w") as handle:
-        lines = list(converted.stdout)
-        i = 0
-        while i < len(lines):
-            # find an accession
-            while i < len(lines) and not lines[i].startswith("ACC"):
-                handle.write(lines[i])
-                i += 1
-            # end of file with no new accession
-            if i >= len(lines):
-                break
-            # write the accession line itself
-            handle.write(lines[i])
-
-            # add the cutoffs if missing
-            acc = lines[i].split()[1]
-            if acc not in missing_cutoffs:
-                continue
-            value = missing_cutoffs[acc]
-            # an accession of interest, so add cutoffs in the same place as others
-            while not lines[i].startswith("CKSUM"):
-                handle.write(lines[i])
-                i += 1
-            # write the CKSUM line
-            handle.write(lines[i])
-            # and finally add the cutoffs
-            for cutoff in ["GA", "TC", "NC"]:
-                handle.write("%s    %d.00 %d.00\n" % (cutoff, value, value))
-            i += 1
-
     ensure_database_pressed(filename)
 
 
