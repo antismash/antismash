@@ -428,7 +428,7 @@ RULE amglyccycl
     SUPERIORS 2dos
     CUTOFF 20
     NEIGHBOURHOOD 10
-    CONDITIONS DHQ_synthase_like
+    CONDITIONS DOIS or ValA or salQ  # DHQ_synthase is too broad to use standalone
                or strH or strK1 or strK2 or NeoL or SpcFG
                or SpcDK_glyc
 
