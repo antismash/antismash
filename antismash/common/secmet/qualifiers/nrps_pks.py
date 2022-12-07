@@ -163,13 +163,12 @@ class NRPSPKSQualifier:
             if qualifier.startswith("Domain: "):
                 parts = _parse_format(_DOMAIN_FORMAT, qualifier)
                 name = parts[0]
-                subtypes = []
+                types = []
                 if "(" in name:
-                    chunks = [chunk.strip(")") for chunk in parts[0].split("(")]
-                    name = chunks[0]
-                    subtypes = chunks[1:]
+                    types = [chunk.strip(")") for chunk in parts[0].split("(")]
+                    name = types[0]
                 domain = _HMMResultLike(name, int(parts[1]), int(parts[2]),
-                                        float(parts[3]), float(parts[4]), subtypes)
+                                        float(parts[3]), float(parts[4]), types)
                 self.add_domain(domain, parts[5])
             elif qualifier.startswith("type: "):
                 self.type = _parse_format(_TYPE_FORMAT, qualifier)[0]
