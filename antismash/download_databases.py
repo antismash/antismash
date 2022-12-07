@@ -101,14 +101,14 @@ def check_diskspace(file_url: str) -> None:
     free_space = get_free_space(".")
     if free_space < dbfilesize:
         raise DownloadError(
-            "ERROR: Insufficient disk space available (required: %d, free: %d)." % (dbfilesize, free_space)
+            "ERROR: Insufficient disk space available (required: {dbfilesize}, free: {free_space})."
         )
 
 
 def download_file(url: str, filename: str) -> str:
     """Download a file."""
     try:
-        req = request.urlopen(url)
+        req = request.urlopen(url)  # pylint: disable=consider-using-with
     except urlerror.URLError:
         raise DownloadError("ERROR: File not found on server.\nPlease check your internet connection.")
 
@@ -130,9 +130,7 @@ def download_file(url: str, filename: str) -> str:
                     break
                 overall += len(chunk)
                 print(
-                    "\rDownloading {}: {:5.2f}% downloaded.".format(
-                        basename, (overall / expected_size) * 100
-                    ),
+                    f"\rDownloading {basename}: {(overall / expected_size) * 100:5.2f}% downloaded.",
                     end="",
                 )
                 handle.write(chunk)
@@ -154,6 +152,7 @@ def checksum(filename: str, chunksize: int = 2 ** 20) -> str:
 def unzip_file(filename: str, decompressor: Any, error_type: Type[Exception]) -> str:
     """Decompress a compressed file."""
     newfilename, _ = os.path.splitext(filename)
+    basename = os.path.basename(filename)
     try:
         zipfile = decompressor.open(filename, "rb")
         chunksize = 128 * 1024
@@ -168,24 +167,24 @@ def unzip_file(filename: str, decompressor: Any, error_type: Type[Exception]) ->
                     raise DownloadError("ERROR: Unzipping interrupted.")
     except error_type:
         raise RuntimeError(
-            "Error extracting %s. Please try to extract it manually." % (os.path.basename(filename))
+            f"Error extracting {basename}. Please try to extract it manually."
         )
-    print("Extraction of %s finished successfully." % (os.path.basename(filename)))
+    print(f"Extraction of {basename} finished successfully.")
     return newfilename
 
 
 def untar_file(filename: str) -> None:
     """Extract a TAR/GZ file."""
+    basename = filename.rpartition(os.sep)[2]
     try:
         with tarfile.open(filename) as tar:
             tar.extractall(path=filename.rpartition(os.sep)[0])
     except tarfile.ReadError:
         print(
-            "ERROR: Error extracting %s. Please try to extract it manually."
-            % (filename.rpartition(os.sep)[2])
+            f"ERROR: Error extracting {basename}. Please try to extract it manually."
         )
         return
-    print("Extraction of %s finished successfully." % (filename.rpartition(os.sep)[2]))
+    print("Extraction of {basename} finished successfully.")
 
 
 def delete_file(filename: str) -> None:
@@ -199,7 +198,7 @@ def delete_file(filename: str) -> None:
 def present_and_checksum_matches(filename: str, sha256sum: str) -> bool:
     """Check if a file is present and the checksum matches."""
     if os.path.exists(filename):
-        print("Creating checksum of %s" % os.path.basename(filename))
+        print(f"Creating checksum of {os.path.basename(filename)}")
         csum = checksum(filename)
         if csum == sha256sum:
             return True
@@ -212,11 +211,11 @@ def download_if_not_present(url: str, filename: str, sha256sum: str) -> None:
     if not present_and_checksum_matches(filename, sha256sum):
         download_file(url, filename)
 
-    print("Creating checksum of %s" % os.path.basename(filename))
+    print(f"Creating checksum of {os.path.basename(filename)}")
     csum = checksum(filename)
     if csum != sha256sum:
         raise DownloadError(
-            "Error downloading %s, sha256sum mismatch. Expected %s, got %s." % (filename, sha256sum, csum)
+            f"Error downloading {filename}, sha256sum mismatch. Expected {sha256sum}, got {csum}."
         )
 
 
