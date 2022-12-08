@@ -64,7 +64,7 @@ def prepare_data(logging_only: bool = False) -> List[str]:
         Returns:
             a list of error messages (only if logging_only is True)
     """
-    failures: List[str] = []
+    failures = comparippson.prepare_data(logging_only=logging_only)
     expected = ["lanthipeptide.scaler.pkl", "lanthipeptide.classifier.pkl"]
     if all(os.path.exists(path.get_full_path(__file__, "data", filename)) for filename in expected):
         return failures
@@ -75,8 +75,10 @@ def prepare_data(logging_only: bool = False) -> List[str]:
         pickle_classifier(training_set, prefix="lanthipeptide", kernel='rbf', C=9.77e6, gamma=1.78e-9,
                           overwrite=not logging_only)
     except ValueError:
-        failures.append("failed to rebuild lanthipeptide classifier")
-    failures.extend(comparippson.prepare_data(logging_only=logging_only))
+        if logging_only:
+            failures.append("failed to rebuild lanthipeptide classifier")
+        else:
+            raise
     return failures
 
 

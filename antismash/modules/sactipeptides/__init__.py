@@ -5,6 +5,7 @@
 
 """
 
+import os
 from typing import Any, Dict, List, Optional
 
 from antismash.common import comparippson, path
@@ -29,14 +30,19 @@ def prepare_data(logging_only: bool = False) -> List[str]:
         Returns:
             a list of error messages (only if logging_only is True)
     """
-    errors = []
+    errors = comparippson.prepare_data(logging_only=logging_only)
     training_set = path.get_full_path(__file__, "data", "training_set.csv")
+    expected = ["sactipeptide.scaler.pkl", "sactipeptide.classifier.pkl"]
+    if all(os.path.exists(path.get_full_path(__file__, "data", filename)) for filename in expected):
+        return errors
     try:
         pickle_classifier(training_set, prefix="sactipeptide", kernel='rbf', C=9.77e6, gamma=1e-9,
                           overwrite=not logging_only)
     except ValueError:
-        errors.append("failed to rebuild sactipeptide classifier")
-    errors.extend(comparippson.prepare_data(logging_only=logging_only))
+        if logging_only:
+            errors.append("failed to rebuild sactipeptide classifier")
+        else:
+            raise
     return errors
 
 
