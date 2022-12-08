@@ -74,9 +74,9 @@ def generate_nrps_consensus(results: Dict[str, Prediction]) -> str:
 
     consensus = "X"
     # only really care about the first two for checking if it was a tie
-    best_hits = sorted((count, name) for name, count in hit_counts.items())[:2]
-    # if the best hit isn't tie, use that
-    if best_hits and len({count for count, _ in best_hits}) == 1:
+    best_hits = sorted(((count, name) for name, count in hit_counts.items()), reverse=True)[:2]
+    # if there is only one hit or the best hit isn't tie, use it
+    if len(best_hits) == 1 or (best_hits and len({count for count, _ in best_hits}) != 1):
         consensus = best_hits[0][1]
     if consensus.lower() not in get_all_smiles():
         consensus = "X"
