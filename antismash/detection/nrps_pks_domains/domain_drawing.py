@@ -17,7 +17,7 @@ from antismash.common.html_renderer import FileTemplate, HTMLSections, replace_w
 from antismash.common.json import JSONDomain, JSONOrf, JSONModule
 from antismash.common.layers import RegionLayer, RecordLayer, OptionsLayer
 from antismash.common.module_results import ModuleResults
-from antismash.common.secmet import CDSFeature, Record, Region
+from antismash.common.secmet import CDSFeature, Module, Record, Region
 from antismash.common.secmet.qualifiers import NRPSPKSQualifier
 
 _UNLABLED_DOMAINS = set([
@@ -165,6 +165,34 @@ def _parse_domain(record: Record, domain: NRPSPKSQualifier.Domain,
                       abbreviation, css)
 
 
+def _build_module_js(module: Module, cds: CDSFeature, match_ids: dict[tuple[str, ...], str],
+                     match_gen: Iterator[str]) -> JSONModule:
+    """ Builds and returns a JSONModule isntance to match the given module """
+    monomer = ""
+    if module.monomers:
+        monomer = module.monomers[0][1]
+        if monomer.endswith("pk"):
+            monomer = monomer[:-2] + "?"
+        if monomer.endswith("X"):
+            monomer = monomer[:-1] + "?"
+    multi_cds: Optional[str] = None
+    match_id: Optional[str] = None
+    protein_location = module.get_parent_protein_location(cds.get_name())
+    # determine which CDS is the head if the module crosses two CDS features
+    if len(module.parent_cds_names) > 1:
+        if module.parent_cds_names[::cds.location.strand][0] == cds.get_name():
+            multi_cds = "head"
+        else:
+            multi_cds = "tail"
+        if module.parent_cds_names not in match_ids:
+            match_ids[module.parent_cds_names] = next(match_gen)
+        match_id = match_ids[module.parent_cds_names]
+    js_module = JSONModule(protein_location.start, protein_location.end,
+                           module.is_complete(), module.is_iterative(), monomer,
+                           multi_cds=multi_cds, match_id=match_id)
+    return js_module
+
+
 def generate_js_domains(region: Region, record: Record) -> Dict[str, Union[str, List[JSONOrf]]]:
     """ Creates a JSON-like structure for domains, used by javascript in
         drawing the domains
@@ -188,30 +216,8 @@ def generate_js_domains(region: Region, record: Record) -> Dict[str, Union[str, 
             js_orf.add_domain(_parse_domain(record, domain, feature))
 
         for module in feature.modules:
-            monomer = ""
-            if module.monomers:
-                monomer = module.monomers[0][1]
-                if monomer.endswith("pk"):
-                    monomer = monomer[:-2] + "?"
-                if monomer.endswith("X"):
-                    monomer = monomer[:-1] + "?"
-            multi_cds: Optional[str] = None
-            match_id: Optional[str] = None
-            protein_location = module.get_parent_protein_location(feature.get_name())
-            # adjust the postions if the module crosses two CDS features
-            if len(module.parent_cds_names) > 1:
-                if module.parent_cds_names[::feature.location.strand][0] == feature.get_name():
-                    multi_cds = "head"
-                else:
-                    multi_cds = "tail"
-                if module.parent_cds_names not in match_ids:
-                    match_ids[module.parent_cds_names] = next(match_gen)
-                match_id = match_ids[module.parent_cds_names]
-            js_module = JSONModule(protein_location.start, protein_location.end,
-                                   module.is_complete(), module.is_iterative(), monomer,
-                                   multi_cds=multi_cds, match_id=match_id)
+            js_module = _build_module_js(module, feature, match_ids, match_gen)
             js_orf.add_module(js_module)
-
         orfs.append(js_orf)
 
     return {'id': RegionLayer.build_anchor_id(region),
