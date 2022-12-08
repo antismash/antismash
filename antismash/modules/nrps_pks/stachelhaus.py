@@ -111,11 +111,15 @@ class StachelhausPrediction(Prediction):
         if not self.aa10:
             raise ValueError("Need to provide either a StachSignature or an original 10 AA signature")
 
-    def get_classification(self) -> list[str]:
+    def get_classification(self, as_norine: bool = False) -> list[str]:
         classification = []
         if self.signature:
             for substrate in self.signature.smiles_key.split("|"):
-                classification.append(get_substrate_by_name(substrate).norine)
+                sub = get_substrate_by_name(substrate)
+                if as_norine:
+                    classification.append(sub.norine)
+                else:
+                    classification.append(sub.short)
         return classification
 
     # TODO: Also show the aa10 sequence and all the substrate names

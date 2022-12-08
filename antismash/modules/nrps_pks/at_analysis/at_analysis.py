@@ -53,7 +53,7 @@ class ATPrediction(Prediction):
         super().__init__("ATSignature")
         self.predictions = sorted(predictions.items(), key=lambda x: (-x[1].score, x[1].name))
 
-    def get_classification(self) -> List[str]:
+    def get_classification(self, _as_norine: bool = False) -> List[str]:
         results: List[str] = []
         if not self.predictions:
             return results

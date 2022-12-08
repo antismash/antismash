@@ -3,7 +3,7 @@
 
 """ Contains data structures for the nrps_pks module """
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from antismash.common.html_renderer import Markup
 
@@ -17,9 +17,10 @@ class Prediction:
     def __init__(self, method: str) -> None:
         self.method = method
 
-    def get_classification(self) -> List[str]:
+    def get_classification(self, as_norine: bool = False) -> List[str]:
         """ Returns a list of equally likely predictions. If no prediction could
             be made, an empty list is returned.
+            The optional as_norine field forces the use of valid Norine names.
         """
         raise NotImplementedError("Prediction subclass %s "
                                   "did not implement get_classification()" % type(self))
@@ -42,11 +43,15 @@ class Prediction:
 
 class SimplePrediction(Prediction):
     """ The simplest case of a Prediction, containing a simple method"""
-    def __init__(self, method: str, prediction: str) -> None:
+    def __init__(self, method: str, prediction: str,
+                 norine_prediction: Optional[str] = None) -> None:
         super().__init__(method)
         self.prediction = prediction
+        self.norine_prediction = norine_prediction if norine_prediction else prediction
 
-    def get_classification(self) -> List[str]:
+    def get_classification(self, as_norine: bool = False) -> List[str]:
+        if as_norine:
+            return [self.norine_prediction]
         return [self.prediction]
 
     def as_html(self) -> Markup:
