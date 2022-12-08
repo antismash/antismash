@@ -5,6 +5,7 @@
 
 """
 
+import os
 import logging
 from typing import Any, Dict, List, Optional
 
@@ -46,17 +47,22 @@ def prepare_data(logging_only: bool = False) -> List[str]:
         Returns:
             a list of error messages (only if logging_only is True)
     """
-    errors = []
+    errors = comparippson.prepare_data(logging_only=logging_only)
     training_set = path.get_full_path(__file__, "data", "training_set.csv")
+    expected = ["thiopeptide.scaler.pkl", "thiopeptide.classifier.pkl"]
+    precursor_model = path.get_full_path(__file__, "data", "thiopep3.hmm")
+    errors.extend(hmmer.ensure_database_pressed(precursor_model, return_not_raise=True))
+
+    if all(os.path.exists(path.get_full_path(__file__, "data", filename)) for filename in expected):
+        return errors
     try:
         pickle_classifier(training_set, prefix="thiopeptide", kernel='rbf', C=2.83e5, gamma=1e-9,
                           overwrite=not logging_only)
     except ValueError:
-        errors.append("failed to rebuild thiopeptide classifier")
-
-    precursor_model = path.get_full_path(__file__, "data", "thiopep3.hmm")
-    errors.extend(hmmer.ensure_database_pressed(precursor_model, return_not_raise=True))
-    errors.extend(comparippson.prepare_data(logging_only=logging_only))
+        if logging_only:
+            errors.append("failed to rebuild thiopeptide classifier")
+        else:
+            raise
     return errors
 
 
