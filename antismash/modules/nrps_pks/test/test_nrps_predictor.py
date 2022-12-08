@@ -4,12 +4,12 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
 
+from io import StringIO
 import unittest
-from unittest.mock import patch
-
 
 from antismash.common import path
 from antismash.common.html_renderer import Markup
+from antismash.common.test.helpers import DummyAntismashDomain
 from antismash.modules.nrps_pks import nrps_predictor, data_structures
 
 
@@ -197,3 +197,20 @@ class TestPrediction(unittest.TestCase):
         self.pred.uncertain = True
         html = self.pred.as_html()
         assert "outside applicability" in str(html)
+
+
+class TestRunNrpspredictor(unittest.TestCase):
+    def test_write_nrpspredictor_input(self):
+        handle = StringIO()
+        domains = [
+            DummyAntismashDomain(locus_tag="A", domain_id="fine"),
+            DummyAntismashDomain(locus_tag="A", domain_id="broken")
+        ]
+        signatures = [
+            "YHCSFDLTVTATKALLGGEVNEYGPTEATVGCVE",
+            None
+        ]
+
+        expected = f"{signatures[0]}\t{domains[0].get_name()}\n"
+        nrps_predictor.write_nrpspredictor_input(domains, signatures, handle)
+        assert handle.getvalue() == expected

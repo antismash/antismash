@@ -8,7 +8,7 @@
 from collections import defaultdict
 import os
 import sys
-from typing import Any, Dict, List, Set
+from typing import Any, Dict, IO, List, Optional, Set
 
 from helperlibs.wrappers.io import TemporaryDirectory
 
@@ -246,9 +246,8 @@ def run_nrpspredictor(a_domains: List[ModularDomain], options: ConfigType) -> Di
 
     with TemporaryDirectory(change=True):
         # Get NRPSPredictor2 code predictions, output sig file for input for NRPSPredictor2 SVMs
-        with open(input_filename, "w") as handle:
-            for sig, domain in zip(signatures, a_domains):
-                handle.write("%s\t%s\n" % (sig, domain.get_name()))
+        with open(input_filename, "w", encoding="utf-8") as handle:
+            write_nrpspredictor_input(a_domains, signatures, handle)
         # Run NRPSPredictor2 SVM
         commands = ['java',
                     '-Ddatadir=%s' % data_dir,
@@ -262,10 +261,19 @@ def run_nrpspredictor(a_domains: List[ModularDomain], options: ConfigType) -> Di
         if not result.successful():
             raise RuntimeError("NRPSPredictor2 failed: %s" % result.stderr)
 
-        with open(output_filename) as handle:
+        with open(output_filename, encoding="utf-8") as handle:
             lines = handle.read().splitlines()[1:]  # strip the header
 
     return read_output(lines)
+
+
+def write_nrpspredictor_input(a_domains: list[ModularDomain], signatures: list[Optional[str]],
+                              handle: IO) -> None:
+    """ Write the NRPSPredictor input file to the handle """
+    for sig, domain in zip(signatures, a_domains):
+        if not sig:
+            continue
+        handle.write("%s\t%s\n" % (sig, domain.get_name()))
 
 
 def map_nrpspredicor_to_norine(as_name: str) -> str:
