@@ -32,7 +32,7 @@ def verify_good_sequence(sequence: str) -> bool:
     return True
 
 
-def get_a_dom_signatures(domain: ModularDomain, max_evalue: float = 0.001) \
+def get_a_dom_signatures(domain: ModularDomain, max_evalue: float = 0.1) \
         -> tuple[Optional[str], Optional[str]]:
     """ Extract 10 / 34 AA NRPS signatures from A domains """
     assert verify_good_sequence(domain.translation)

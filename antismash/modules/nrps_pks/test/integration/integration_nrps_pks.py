@@ -118,3 +118,19 @@ class IntegrationNRPSPKS(unittest.TestCase):
                             'nrpspksdomains_STAUR_3983_PKS_KR.1',
                             'nrpspksdomains_STAUR_3982_PKS_KR.1'}
         assert set(results.domain_predictions) == expected_domains
+
+    def test_get_a_dom_signatures(self):
+        filename = path.get_full_path(__file__, 'data', 'dom_signatures.txt')
+        data = []
+        for line in open(filename, 'r', encoding="utf-8"):
+            line = line.strip()
+            if not line:
+                continue
+            if line.startswith("#"):
+                continue
+            data.append(line.split("\t"))
+
+        for name, seq, aa34, aa10 in data:
+            domain = helpers.DummyAntismashDomain(locus_tag="A", domain_id=name)
+            domain._translation = seq
+            assert (aa10, aa34) == nrps_pks.signatures.get_a_dom_signatures(domain), name
