@@ -1,3 +1,9 @@
+# License: GNU Affero General Public License v3 or later
+# A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
+
+# for test files, silence irrelevant and noisy pylint warnings
+# pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
+
 import json
 import os
 import tempfile
@@ -6,7 +12,6 @@ from unittest.mock import patch
 
 import antismash
 from antismash.config import build_config
-from antismash.common import path
 from antismash.common.secmet.test.helpers import DummyAntismashDomain
 from antismash.modules.nrps_pks import stachelhaus
 from antismash.modules.nrps_pks.name_mappings import get_substrate_by_name
