@@ -180,7 +180,7 @@ def _build_module_js(module: Module, cds: CDSFeature, match_ids: dict[tuple[str,
     protein_location = module.get_parent_protein_location(cds.get_name())
     # determine which CDS is the head if the module crosses two CDS features
     if len(module.parent_cds_names) > 1:
-        if module.parent_cds_names[::cds.location.strand][0] == cds.get_name():
+        if module.parent_cds_names[0] == cds.get_name():
             multi_cds = "head"
         else:
             multi_cds = "tail"
