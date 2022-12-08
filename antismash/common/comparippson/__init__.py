@@ -11,6 +11,8 @@ from antismash.config import ConfigType, get_config
 from .analysis import compare_precursor_cores, MultiDBResults
 from .databases import get_databases
 
+_CHECKED_DATABASES: dict[str, list[str]] = {}
+
 
 def ensure_database_built(filepath: str, return_not_raise: bool = False) -> List[str]:
     """ Ensures that the given blast database exists and that the generated
@@ -54,8 +56,12 @@ def prepare_data(logging_only: bool = False) -> List[str]:
         return failure_messages
 
     for database in get_databases(config):
-        failure_messages.extend(ensure_database_built(database.get_fasta_path(config), return_not_raise=logging_only))
-
+        data_path = database.get_fasta_path(config)
+        # since this repeats for many modules, just do the check once per process
+        if data_path not in _CHECKED_DATABASES:
+            _CHECKED_DATABASES[data_path] = ensure_database_built(data_path, logging_only)
+            continue
+        failure_messages.extend(_CHECKED_DATABASES[data_path])
     return failure_messages
 
 
