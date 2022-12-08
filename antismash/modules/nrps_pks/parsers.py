@@ -13,6 +13,7 @@ from typing import Dict, List, Tuple
 from antismash.common.secmet.features import CDSFeature
 
 from .data_structures import Prediction
+from .name_mappings import get_substrate_by_name
 from .pks_names import get_short_form
 from .smiles_generator import get_all_smiles
 
@@ -67,7 +68,7 @@ def generate_nrps_consensus(results: Dict[str, Prediction]) -> str:
         assert isinstance(method, str), method
         assert isinstance(prediction, Prediction), prediction
         if len(prediction.get_classification()) == 1:
-            best = prediction.get_classification()[0]
+            best = prediction.get_classification(as_norine=True)[0]
             if not set(best).issubset(ALLOWABLE_PREDICTION_CHARACTERS):
                 raise ValueError("%s generated bad prediction string: %s" % (method, best))
             hit_counts[best] += 1
@@ -77,7 +78,7 @@ def generate_nrps_consensus(results: Dict[str, Prediction]) -> str:
     best_hits = sorted(((count, name) for name, count in hit_counts.items()), reverse=True)[:2]
     # if there is only one hit or the best hit isn't tie, use it
     if len(best_hits) == 1 or (best_hits and len({count for count, _ in best_hits}) != 1):
-        consensus = best_hits[0][1]
+        consensus = get_substrate_by_name(best_hits[0][1]).norine
     if consensus.lower() not in get_all_smiles():
         consensus = "X"
     return consensus

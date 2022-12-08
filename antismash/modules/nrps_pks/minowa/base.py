@@ -23,7 +23,7 @@ class MinowaPrediction(Prediction):
         assert results
         self.predictions = results
 
-    def get_classification(self) -> List[str]:
+    def get_classification(self, _as_norine: bool = False) -> List[str]:
         return [self.predictions[0][0]]
 
     def to_json(self) -> Dict[str, Any]:

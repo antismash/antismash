@@ -15,36 +15,42 @@ class TestNrpsConsensus(unittest.TestCase):
 
     def test_single(self):
         data = [
-            ("method_a", "Ala")
+            ("method_a", "Ala", None)
         ]
         assert "Ala" == self.go(_generate_predictions(data))
 
     def test_majority(self):
         data = [
-            ("method_a", "Ala"),
-            ("method_b", "Gly"),
-            ("method_c", "Ala"),
+            ("method_a", "Ala", None),
+            ("method_b", "Gly", None),
+            ("method_c", "Ala", None),
         ]
         assert "Ala" == self.go(_generate_predictions(data))
 
     def test_tie(self):
         data = [
-            ("method_a", "Ala"),
-            ("method_b", "Gly"),
+            ("method_a", "Ala", None),
+            ("method_b", "Gly", None),
         ]
         assert "X" == self.go(_generate_predictions(data))
 
     def test_tie_with_extra_predictions(self):
         data = [
-            ("method_a", "Ala"),
-            ("method_b", "Gly"),
-            ("method_c", "Ala"),
-            ("method_d", "Gly"),
-            ("method_e", "Tyr"),
+            ("method_a", "Ala", None),
+            ("method_b", "Gly", None),
+            ("method_c", "Ala", None),
+            ("method_d", "Gly", None),
+            ("method_e", "Tyr", None),
         ]
         assert "X" == self.go(_generate_predictions(data))
 
-def _generate_predictions(data: list[tuple[str, str]]) -> dict[str, Prediction]:
+    def test_norine_differs(self):
+        data = [
+            ("method_a", "hydrophobic-aliphatic", "X")
+        ]
+        assert "X" == self.go(_generate_predictions(data))
+
+def _generate_predictions(data: list[tuple[str, str, str]]) -> dict[str, Prediction]:
     return {
-        method: SimplePrediction(method, prediction) for method, prediction in data
+        method: SimplePrediction(method, prediction, norine) for method, prediction, norine in data
     }

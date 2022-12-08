@@ -18,6 +18,7 @@ from antismash.config import ConfigType
 from antismash.detection.nrps_pks_domains import ModularDomain
 
 from .data_structures import Prediction
+from .name_mappings import get_substrate_by_name, is_valid_norine_name
 from .signatures import get_a_dom_signatures
 
 def _build_stach_codes() -> Dict[str, Set[str]]:
@@ -104,8 +105,10 @@ class PredictorSVMResult(Prediction):
                     break
         return classification
 
-    def get_classification(self) -> List[str]:
-        return list(map(map_nrpspredicor_to_norine, self._get_classification()))
+    def get_classification(self, as_norine: bool = False) -> List[str]:
+        if as_norine:
+            return list(map(map_nrpspredicor_to_norine, self._get_classification()))
+        return self._get_classification()
 
     def as_html(self) -> Markup:
         note = ""
@@ -302,4 +305,8 @@ def map_nrpspredicor_to_norine(as_name: str) -> str:
         '3-me-glu': '3Me-Glu',
         'lys-b': 'bLys',
     }
-    return as_replacement_dict.get(as_name, as_name)
+    if as_name in as_replacement_dict:
+        return as_replacement_dict[as_name]
+    if is_valid_norine_name(as_name):
+        return get_substrate_by_name(as_name).norine
+    return "X"
