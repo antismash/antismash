@@ -107,7 +107,11 @@ class CDSCollection(Feature):
         """
         if not self._parent_record:
             raise ValueError("Cannot determine if on contig edge without parent record")
-        return self._contig_edge
+        if self._contig_edge:
+            return self._contig_edge
+        if self._children:
+            return any(child.contig_edge for child in self._children)
+        return False
 
     def add_cds(self, cds: CDSFeature) -> None:
         """ Add a CDS to the collection covered by this feature, also adds to
