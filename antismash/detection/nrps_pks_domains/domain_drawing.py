@@ -236,7 +236,7 @@ def domains_have_predictions(region: Union[Region, RegionLayer]) -> bool:
     """ Returns True if any domain in the region has a prediction made for it """
     for feature in region.cds_children:
         for domain in feature.nrps_pks.domains:
-            if "consensus" in domain.get_predictions():
+            if "substrate consensus" in domain.get_predictions():
                 return True
     return False
 
