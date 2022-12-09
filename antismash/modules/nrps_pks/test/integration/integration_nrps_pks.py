@@ -4,6 +4,7 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
 
+import os
 import unittest
 from unittest.mock import patch
 
@@ -33,6 +34,20 @@ class IntegrationWithoutNRPSPKS(unittest.TestCase):
                                              self.options)
 
 
+def ensure_module_lids_shown(output_dir: str):
+    starter = '<input class="show-module-domains" type="checkbox"'
+    shown_snippet = f"{starter}>"
+    hidden_snippet = f"{starter} checked>"
+    with open(os.path.join(output_dir, "index.html"), encoding="utf-8") as handle:
+        content = handle.read()
+        assert starter in content, f"all variants missing of {starter}"
+        shown = shown_snippet in content
+        hidden = hidden_snippet in content
+        # one of the above has to be true, if both are missing that's a big (and different) problem
+        assert not hidden, f"'{hidden_snippet}' found in HTML, lids would be hidden"
+        assert shown, f"'{shown_snippet}' missing from HTML, lids wouldn't be shown"
+
+
 class IntegrationNRPSPKS(unittest.TestCase):
     def setUp(self):
         self.options = build_config(["--minimal", "--enable-nrps-pks", "--enable-html"],
@@ -43,7 +58,8 @@ class IntegrationNRPSPKS(unittest.TestCase):
 
     def test_balhymicin(self):
         filename = helpers.get_path_to_balhymicin_genbank()
-        results = helpers.run_and_regenerate_results_for_module(filename, nrps_pks, self.options)
+        results = helpers.run_and_regenerate_results_for_module(filename, nrps_pks, self.options,
+                                                                callback=ensure_module_lids_shown)
         assert len(results.domain_predictions) == 9
         a_domains = [("bpsA", 1), ("bpsA", 2), ("bpsA", 3),
                      ("bpsB", 1), ("bpsB", 2), ("bpsB", 3),
@@ -98,7 +114,8 @@ class IntegrationNRPSPKS(unittest.TestCase):
 
     def test_cp002271_c19(self):
         filename = path.get_full_path(__file__, 'data', 'CP002271.1.cluster019.gbk')
-        results = helpers.run_and_regenerate_results_for_module(filename, nrps_pks, self.options)
+        results = helpers.run_and_regenerate_results_for_module(filename, nrps_pks, self.options,
+                                                                callback=ensure_module_lids_shown)
         # catch ordering changes along with ensuring ATResults are there
         pred = results.domain_predictions["nrpspksdomains_STAUR_3982_PKS_AT.1"]
         assert pred["signature"].predictions[0][1].score == 87.5
