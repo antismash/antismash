@@ -66,6 +66,14 @@ class Protocluster(CDSCollection):
             raise ValueError("Protocluster not in a record")
         return self._parent_record.get_protocluster_number(self)
 
+    @parent_record.setter
+    def parent_record(self, record: Any) -> None:  # again, should be Record
+        """ Sets the parent record to a secmet.Record instance """
+        start = min(self.location.start, self.core_location.start - self.cutoff)
+        end = max(self.location.end, self.core_location.end + self.cutoff)
+        self._contig_edge = start <= 0 or end >= len(record.seq)
+        super().parent_record = record
+
     @property
     def definition_cdses(self) -> Set[CDSFeature]:
         """ Returns the set of CDSFeatures responsible for the creation of this protocluster """

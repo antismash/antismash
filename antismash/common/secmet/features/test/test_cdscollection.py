@@ -7,7 +7,7 @@
 import unittest
 
 from antismash.common.secmet.features import CDSCollection, FeatureLocation
-from antismash.common.secmet.test.helpers import DummyCDS
+from antismash.common.secmet.test.helpers import DummyCDS, DummyRecord
 
 
 class TestCDSCollection(unittest.TestCase):
@@ -44,3 +44,33 @@ class TestCDSCollection(unittest.TestCase):
         cds = DummyCDS(120, 140)
         with self.assertRaisesRegex(ValueError, "not contained by"):
             collection.add_cds(cds)
+
+    def test_contig_edge_transitivity(self):
+        inner = CDSCollection(FeatureLocation(30, 40), feature_type="test")
+        mid = CDSCollection(FeatureLocation(20, 50), feature_type="test", child_collections=[inner])
+        outer = CDSCollection(FeatureLocation(10, 60), feature_type="test", child_collections=[mid])
+        collections = [inner, mid, outer]
+
+        # without a record, this breaks
+        with self.assertRaisesRegex(ValueError, "Cannot determine"):
+            outer.contig_edge
+
+        # add the record, ensure for testing that everything starts not on the edge
+        record = DummyRecord(seq="A"*70)
+        for collection in collections:
+            collection.parent_record = record
+            assert not collection.contig_edge
+
+        # set the inner to be on the edge, ensure that all parents now respect that
+        inner._contig_edge = True
+        for collection in collections:
+            assert collection.contig_edge
+
+        # reset
+        for collection in collections:
+            collection._contig_edge = False
+
+        # set the mid only to be on the edge, to be sure it doesn't apply to children
+        mid._contig_edge = True
+        assert not inner.contig_edge
+        assert mid.contig_edge and outer.contig_edge
