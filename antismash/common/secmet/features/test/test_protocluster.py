@@ -9,7 +9,7 @@ import unittest
 from antismash.common.secmet import FeatureLocation
 from antismash.common.secmet.features.protocluster import Protocluster, SideloadedProtocluster
 from antismash.common.secmet.qualifiers import GeneFunction
-from antismash.common.secmet.test.helpers import DummyCDS
+from antismash.common.secmet.test.helpers import DummyCDS, DummyRecord
 
 
 def create_cluster():
@@ -47,6 +47,39 @@ class TestProtocluster(unittest.TestCase):
         assert new.location.end == self.cluster.location.end == 76
         assert new.core_location.start == self.cluster.core_location.start == 8
         assert new.core_location.end == self.cluster.core_location.end == 71
+
+    def test_contig_edge_start(self):
+        cluster = Protocluster(FeatureLocation(20, 30, strand=1),
+                               FeatureLocation(10, 40, strand=1), tool="test",
+                               cutoff=3, neighbourhood_range=5, product='a',
+                               detection_rule="some rule text",
+                               product_category="some category")
+        # check default
+        record = DummyRecord(seq="A" * 100)
+        cluster.parent_record = record
+        assert cluster.contig_edge is False
+
+        # make the cutoff large enough to reach the edge
+        cluster.cutoff = 25
+        assert cluster.core_location.start - cluster.cutoff < 0 < cluster.location.start
+        assert cluster.contig_edge is True
+
+    def test_contig_edge_end(self):
+        cluster = Protocluster(FeatureLocation(50, 60, strand=1),
+                               FeatureLocation(40, 70, strand=1), tool="test",
+                               cutoff=3, neighbourhood_range=5, product='a',
+                               detection_rule="some rule text",
+                               product_category="some category")
+        # check default
+        record = DummyRecord(seq="A" * 80)
+        cluster.parent_record = record
+        assert cluster.contig_edge is False
+
+        # make the cutoff large enough to reach the edge
+        cluster.cutoff = 25
+        assert cluster.location.start < len(record.seq) < cluster.core_location.end + cluster.cutoff
+        assert cluster.contig_edge is True
+
 
 
 class TestSideloaded(unittest.TestCase):

@@ -66,13 +66,17 @@ class Protocluster(CDSCollection):
             raise ValueError("Protocluster not in a record")
         return self._parent_record.get_protocluster_number(self)
 
-    @parent_record.setter
-    def parent_record(self, record: Any) -> None:  # again, should be Record
-        """ Sets the parent record to a secmet.Record instance """
+    @property
+    def contig_edge(self) -> bool:
+        # always trust an explicit positive
+        if super().contig_edge:
+            return True
+        # then check, and update the stored value, if either cutoff or neighbourhood extend that far
         start = min(self.location.start, self.core_location.start - self.cutoff)
         end = max(self.location.end, self.core_location.end + self.cutoff)
-        self._contig_edge = start <= 0 or end >= len(record.seq)
-        super().parent_record = record
+        contig_edge = start < 0 or end >= len(self.parent_record.seq)
+        self._contig_edge = contig_edge
+        return contig_edge
 
     @property
     def definition_cdses(self) -> Set[CDSFeature]:
