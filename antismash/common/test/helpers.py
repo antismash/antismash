@@ -28,6 +28,7 @@ from antismash.common.secmet.test.helpers import (  # for import by others, pyli
     DummyFeature,
     DummyPFAMDomain,
     DummyProtocluster,
+    DummyRecord,
     DummyRegion,
 )
 from antismash.config import update_config
@@ -40,19 +41,6 @@ def get_simple_options(module, args):
     if module is not None:
         modules = [module]
     return build_parser(from_config_file=False, modules=modules).parse_args(args)
-
-
-class DummyRecord(Record):
-    "class for generating a Record like data structure"
-    def __init__(self, features=None, seq='AGCTACGT', taxon='bacteria',
-                 record_id=None):
-        super().__init__(seq, transl_table=11 if taxon == 'bacteria' else 1)
-        if features:
-            for feature in features:
-                self.add_feature(feature)
-        self.record_index = 0
-        if record_id is not None:
-            self.id = record_id
 
 
 class FakeHSP:

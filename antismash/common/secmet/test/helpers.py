@@ -19,6 +19,7 @@ from ..features import (
 )
 from ..features.candidate_cluster import CandidateClusterKind
 from ..locations import FeatureLocation
+from ..record import Record
 
 
 class DummyAntismashDomain(AntismashDomain):
@@ -112,6 +113,19 @@ class DummyPFAMDomain(PFAMDomain):
         super().__init__(location, description, protein_location, identifier, tool, locus_tag, domain=domain)
         self.domain_id = domain_id or "dummy_pfam_%d" % DummyPFAMDomain.counter
         DummyPFAMDomain.counter += 1
+
+
+class DummyRecord(Record):
+    "class for generating a Record like data structure"
+    def __init__(self, features=None, seq='AGCTACGT', taxon='bacteria',
+                 record_id=None):
+        super().__init__(seq, transl_table=11 if taxon == 'bacteria' else 1)
+        if features:
+            for feature in features:
+                self.add_feature(feature)
+        self.record_index = 0
+        if record_id is not None:
+            self.id = record_id
 
 
 class DummyRegion(Region):
