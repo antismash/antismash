@@ -16,6 +16,10 @@ from urllib import request
 
 import antismash
 from antismash.common.hmmer import ensure_database_pressed
+from antismash.common.html_renderer import (
+    get_antismash_js_version,
+    get_antismash_js_url,
+)
 
 PFAM_LATEST_VERSION = "34.0"
 PFAM_LATEST_URL = f"https://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam{PFAM_LATEST_VERSION}/Pfam-A.hmm.gz"
@@ -223,6 +227,13 @@ def download_if_not_present(url: str, filename: str, sha256sum: str) -> None:
         )
 
 
+def download_antismash_js(db_dir: str) -> None:
+    """ Downloads the latest relevant version of the antiSMASH javascript """
+    version = get_antismash_js_version()
+    url = get_antismash_js_url()
+    download_file(url, os.path.join(db_dir, "as-js", version, "antismash.js"))
+
+
 def download_pfam(db_dir: str, url: str, version: str, archive_checksum: str, db_checksum: str) -> None:
     """Download and compile the PFAM database."""
     archive_filename = os.path.join(db_dir, "pfam", version, "Pfam-A.hmm.gz")
@@ -396,7 +407,11 @@ def download_transator(db_dir: str) -> None:
 
 
 def download(args: argparse.Namespace) -> None:
-    """Download all the large external databases needed."""
+    """Download all the large external databases needed, along with non-python
+       components.
+    """
+    download_antismash_js(args.database_dir)
+
     # grab the latest pfam
     download_pfam(
         args.database_dir,

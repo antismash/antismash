@@ -224,3 +224,12 @@ class TestBlastLink(unittest.TestCase):
         for text in ["link description", "other desc."]:
             html = renderer.build_blastp_link("locus", text)
             assert html.endswith(f">{text}</a>")
+
+
+class TestJS(unittest.TestCase):
+    def test_version_naming(self):
+        # release candidates may exist at some point, but they shouldn't be merged
+        assert float(renderer.get_antismash_js_version())
+
+    def test_url_has_version(self):
+        assert renderer.get_antismash_js_version() in renderer.get_antismash_js_url()

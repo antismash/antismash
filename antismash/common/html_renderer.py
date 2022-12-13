@@ -13,6 +13,7 @@ from markupsafe import Markup
 
 from antismash.config import get_config
 
+_ANTISMASH_JS_VERSION = "0.13"  # major and minor only, always use the latest patch
 # defaults for RiPP sequence classes and substitutions
 RIPP_CLASSES = {
     "S": "dha",
@@ -95,6 +96,16 @@ def build_blastp_link(locus: str, display_text: str, translation: str = None) ->
         f'href="{url}" target="_blank" '
         f'data-locus="{locus}">{display_text}</a>'
     )
+
+
+def get_antismash_js_version() -> str:
+    """ Returns the version (excluding patch) of 'antismash.js' to use """
+    return _ANTISMASH_JS_VERSION
+
+
+def get_antismash_js_url() -> str:
+    """ Returns the external URL for the antiSMASH javascript """
+    return f"https://dl.secondarymetabolites.org/releases/as-js/{_ANTISMASH_JS_VERSION}/antismash.js"
 
 
 def collapser_start(target: str, level: str = "all") -> Markup:

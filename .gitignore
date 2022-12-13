@@ -21,6 +21,7 @@ antismash/detection/hmm_detection/data/bgc_seeds.hmm
 antismash/databases/*
 antismash/modules/*/data/*.classifier.pkl
 antismash/modules/*/data/*.scaler.pkl
+antismash/outputs/html/js/antismash.js
 antismash.egg-info/*
 **/.ropeproject/*
 .vim/*
