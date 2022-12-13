@@ -18,7 +18,7 @@ with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     import scss
 
-from antismash.common import path
+from antismash.common import html_renderer, path
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record
 from antismash.custom_typing import AntismashModule
@@ -103,6 +103,21 @@ def write(records: List[Record], results: List[Dict[str, ModuleResults]],
 
     copy_template_dir('css', output_dir, pattern="%s.css" % options.taxon)
     copy_template_dir('js', output_dir)
+    # if there wasn't an antismash.js in the JS dir, fall back to one in databases
+    local_path = os.path.join(output_dir, "js", "antismash.js")
+    if os.path.exists(local_path):
+        logging.debug("Results page using antismash.js from local copy: %s",
+                      path.get_full_path(__file__, "js", "antismash.js"))
+    else:
+        version = html_renderer.get_antismash_js_version()
+        data_location = os.path.join(options.database_dir, "js", version, "antismash.js")
+        if os.path.exists(data_location):
+            logging.debug("Results page using antismash.js from local copy: %s", data_location)
+            shutil.copy(data_location, os.path.join(output_dir, "js", "antismash.js"))
+    # and if it's still not there, that's fine, it'll use a web-accessible URL
+    if not os.path.exists(local_path):
+        logging.debug("Results page using antismash.js from remote host")
+
     copy_template_dir('images', output_dir)
 
     with open(os.path.join(options.output_dir, 'index.html'), 'w') as result_file:

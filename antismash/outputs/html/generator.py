@@ -11,7 +11,13 @@ import os
 from typing import cast, Any, Dict, List, Tuple, Union
 
 from antismash.common import path
-from antismash.common.html_renderer import FileTemplate, HTMLSections, docs_link
+from antismash.common.html_renderer import (
+    FileTemplate,
+    HTMLSections,
+    docs_link,
+    get_antismash_js_version,
+    get_antismash_js_url,
+)
 from antismash.common.layers import RecordLayer, RegionLayer, OptionsLayer
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record
@@ -157,6 +163,27 @@ def generate_html_sections(records: List[RecordLayer], results: Dict[str, Dict[s
     return details
 
 
+def build_antismash_js_url(options: ConfigType) -> str:
+    """ Build the URL to the javascript that will be embedded in the HTML.
+        If a local version is available, it will be copied into the output directory,
+        otherwise a full remote URL will be used.
+
+        Arguments:
+            options: the antiSMASH config
+
+        Returns:
+            a string of the URL, whether relative or absolute
+    """
+    local = path.locate_file(path.get_full_path(__file__, "js", "antismash.js"), silent=True)
+    if local:
+        return "js/antismash.js"  # generic local path after copy
+    version = get_antismash_js_version()
+    data = path.locate_file(os.path.join(options.database_dir, "as-js", version, "antismash.js"), silent=True)
+    if data:
+        return "js/antismash.js"
+    return get_antismash_js_url()
+
+
 def generate_webpage(records: List[Record], results: List[Dict[str, ModuleResults]],
                      options: ConfigType, all_modules: List[AntismashModule]) -> str:
     """ Generates the HTML itself """
@@ -195,13 +222,17 @@ def generate_webpage(records: List[Record], results: List[Dict[str, ModuleResult
     doc_target = "understanding_output/#the-antismash-5-region-concept"
     svg_tooltip += "<br>More detailed help is available %s." % docs_link("here", doc_target)
 
+    as_js_url = build_antismash_js_url(options)
+
     content = template.render(records=record_layers_with_regions, options=options_layer,
                               version=options.version, extra_data=js_domains,
                               regions_written=regions_written, sections=html_sections,
                               results_by_record_id=results_by_record_id,
                               config=options, job_id=job_id, page_title=page_title,
                               records_without_regions=record_layers_without_regions,
-                              svg_tooltip=svg_tooltip, get_region_css=js.get_region_css)
+                              svg_tooltip=svg_tooltip, get_region_css=js.get_region_css,
+                              as_js_url=as_js_url,
+                              )
     return content
 
 
