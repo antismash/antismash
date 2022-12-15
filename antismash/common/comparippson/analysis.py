@@ -124,7 +124,8 @@ class MultiDBResults(JsonConvertible):
         for db_name, hits in self.by_query[query].hits.items():
             db = self.db_by_name[db_name]
             assert isinstance(db, ComparippsonDB), type(db)
-            hits = sorted(hits, key=lambda x: (-x.match_count, x.reference.sequence))
+            hits = sorted(hits, key=lambda x: (-x.match_count, x.reference.sequence,
+                                               db.build_identifier_for_hit(x)))
             groups = []
             same = []
             current = hits[0]
