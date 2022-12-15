@@ -6,7 +6,7 @@
 from collections import defaultdict
 from typing import Dict, List, Set
 
-from antismash.common import path
+from antismash.common import comparippson, path
 from antismash.common.html_renderer import HTMLSections, FileTemplate, Markup
 from antismash.common.secmet import Prepeptide
 from antismash.common.layers import RegionLayer, RecordLayer, OptionsLayer
@@ -39,11 +39,13 @@ def generate_html(region_layer: RegionLayer, results: SactiResults,
             motifs_by_core[core].append(motif)
         motifs_by_locus_by_core[locus] = motifs_by_core
 
-    detail_tooltip = Markup(
-        "Lists the possible core peptides for each biosynthetic enzyme. "
-        "Each core peptide shows the leader and core peptide sequences. "
-        "<br>Includes CompaRiPPson results for any available databases."
-    )
+    detail_tooltip = Markup("<br>".join([
+        (
+            "Lists the possible core peptides for each biosynthetic enzyme. "
+            "Each core peptide shows the leader and core peptide sequences. "
+        ),
+        comparippson.get_tooltip_text(),
+    ]))
     template = FileTemplate(path.get_full_path(__file__, "templates", "details.html"))
     details = template.render(record=record_layer,
                               options=options_layer,

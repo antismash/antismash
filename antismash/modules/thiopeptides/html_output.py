@@ -5,7 +5,7 @@
 
 from typing import Dict, List, Set
 
-from antismash.common import path
+from antismash.common import comparippson, path
 from antismash.common.html_renderer import HTMLSections, FileTemplate, Markup
 from antismash.common.layers import RegionLayer, RecordLayer, OptionsLayer
 from antismash.common.secmet import Prepeptide
@@ -32,11 +32,13 @@ def generate_html(region_layer: RegionLayer, results: ThioResults,
     for motif in motifs:
         motif_groups[motif.core].append(motif)
 
-    detail_tooltip = Markup(
-        "Lists the possible core peptides for each biosynthetic enzyme. "
-        "Predicted tail sequences are also shown, if present. "
-        "<br>Includes CompaRiPPson results for any available databases."
-    )
+    detail_tooltip = Markup("<br>".join([
+        (
+            "Lists the possible core peptides for each biosynthetic enzyme. "
+            "Predicted tail sequences are also shown, if present. "
+        ),
+        comparippson.get_tooltip_text(),
+    ]))
     template = FileTemplate(path.get_full_path(__file__, "templates", "details.html"))
     details = template.render(record=record_layer,
                               motif_groups=motif_groups.values(),

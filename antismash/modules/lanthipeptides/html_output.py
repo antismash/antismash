@@ -7,7 +7,7 @@
 from collections import defaultdict
 from typing import List, Set
 
-from antismash.common import path
+from antismash.common import comparippson, path
 from antismash.common.html_renderer import HTMLSections, FileTemplate, Markup
 from antismash.common.layers import RegionLayer, RecordLayer, OptionsLayer
 
@@ -38,7 +38,7 @@ def generate_html(region_layer: RegionLayer, results: LanthiResults,
 
     detail_tooltip = Markup("<br>".join([
         "Shows the possible core peptides for each biosynthetic enzyme.",
-        "Includes CompaRiPPson results for any available databases."
+        comparippson.get_tooltip_text(),
     ]))
     template = FileTemplate(path.get_full_path(__file__, "templates", "details.html"))
     html.add_detail_section("Lanthipeptides", template.render(results=motifs_by_locus_by_core, tooltip=detail_tooltip,
