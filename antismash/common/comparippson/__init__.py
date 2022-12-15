@@ -6,6 +6,7 @@ import os
 from typing import List
 
 from antismash.common import path, subprocessing
+from antismash.common.html_renderer import Markup, docs_link
 from antismash.config import ConfigType, get_config
 
 from .analysis import compare_precursor_cores, MultiDBResults
@@ -86,3 +87,11 @@ def check_prereqs(options: ConfigType) -> List[str]:
     failure_messages.extend(prepare_data(logging_only=True))
 
     return failure_messages
+
+
+def get_tooltip_text() -> Markup:
+    """ Returns generalised tooltip text, including link, for CompaRiPPson """
+    return Markup(
+        "Includes CompaRiPPson results for any available databases, "
+        f"with a detailed explanation {docs_link('here', 'modules/comparippson')}."
+    )
