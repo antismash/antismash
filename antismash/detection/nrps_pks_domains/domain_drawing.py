@@ -13,7 +13,13 @@ import string
 from typing import Dict, Iterator, List, Optional, Set, Tuple, Union
 
 from antismash.common import path
-from antismash.common.html_renderer import FileTemplate, HTMLSections, replace_with
+from antismash.common.html_renderer import (
+    FileTemplate,
+    HTMLSections,
+    Markup,
+    docs_link,
+    replace_with,
+)
 from antismash.common.json import JSONDomain, JSONOrf, JSONModule
 from antismash.common.layers import RegionLayer, RecordLayer, OptionsLayer
 from antismash.common.module_results import ModuleResults
@@ -253,8 +259,17 @@ def generate_html(region_layer: RegionLayer, _results: ModuleResults,
     # hide lids by default if none have predictions (e.g. in a minimal run)
     hide_lids = not domains_have_predictions(region_layer)
 
+    tooltip = Markup(
+        f"Shows {docs_link('NRPS', 'glossary/#nrps')}- and {docs_link('PKS', 'glossary/#t1pks')}-"
+        "related domains for each feature that contains them. "
+        "Click on each domain for more information about the domain's location, "
+        "consensus monomer prediction, and other details.<br>"
+        f"A domain glossary is available {docs_link('here', 'modules/nrps_pks_domains/')}, "
+        f"and an explanation of the visualisation is available {docs_link('here', 'modules/nrps_pks_modules/')}."
+    )
+
     section = template.render(has_domain_details=has_domain_details, region=region_layer,
                               record=record_layer,
-                              docs_url=options_layer.urls.docs_baseurl, hide_lids=hide_lids)
+                              tooltip_text=tooltip, hide_lids=hide_lids)
     html.add_detail_section("NRPS/PKS domains", section)
     return html
