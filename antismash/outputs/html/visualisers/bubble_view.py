@@ -13,7 +13,12 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Set
 
 from antismash.common import path
-from antismash.common.html_renderer import HTMLSections, FileTemplate
+from antismash.common.html_renderer import (
+    HTMLSections,
+    FileTemplate,
+    Markup,
+    docs_link,
+)
 from antismash.common.layers import OptionsLayer, RecordLayer, RegionLayer
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Module, Record, Region
@@ -75,8 +80,19 @@ def generate_html(region_layer: RegionLayer, all_results: Dict[str, ModuleResult
 
     nrps_layer = NrpspksLayer(results, region_layer.region_feature, record_layer)
 
+    tooltip = Markup(
+        f"Shows module structures for each candidate cluster in {docs_link('NRPS', 'glossary/#nrps')} "
+        f"and {docs_link('PKS', 'glossary/#t1pks')} regions. "
+        "<br>"
+        "Genes are shown in predicted order, and are only present when containing at least one complete module. "
+        "<br>"
+        f"A domain glossary is available {docs_link('here', 'modules/nrps_pks_domains/')}, "
+        "and an explanation of the visualisation is available "
+        f"{docs_link('here', 'modules/nrps_pks_modules/#bubblemodule-only-drawing')}. "
+    )
     template = FileTemplate(path.get_full_path(__file__, "templates", "bubble_view.html"))
-    section = template.render(record=record_layer, region=nrps_layer, docs_url=options_layer.urls.docs_baseurl)
+    section = template.render(record=record_layer, region=nrps_layer, docs_url=options_layer.urls.docs_baseurl,
+                              tooltip_text=tooltip)
     html.add_detail_section("NRPS/PKS modules", section, "nrps-pks-bubbles")
 
     return html

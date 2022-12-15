@@ -1,9 +1,7 @@
 <div class="details">
     <div class="heading">
       <span>Module view</span>
-      {{help_tooltip("Shows module structures for each candidate in <a href='{0}glossary/#nrps' target='_blank'>NRPS</a>- and <a href='{0}glossary/#t1pks' target='_blank'>PKS</a>
-                     regions. Genes are shown in predicted order, and are only present when containing at least one complete module.
-                     A domain glossary is available <a href='{0}modules/nrps_pks_domains/' target='_blank'>here</a>.".format(docs_url), "nrps-pks-bubble-tooltip")}}
+      {{help_tooltip(tooltip_text, "nrps-pks-bubble-tooltip")}}
       <div class="download-container">
         <div class="download-icon download-svg" data-tag="{{region.anchor_id}}-domain-bubble-svg" data-filename="{{record.id}}_{{region.anchor_id}}_domain_bubbles.svg">
         </div>
