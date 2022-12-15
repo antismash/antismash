@@ -24,7 +24,7 @@ from antismash.common.secmet import Record
 from antismash.custom_typing import AntismashModule
 from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
-from antismash.outputs.html.generator import generate_webpage
+from antismash.outputs.html.generator import generate_webpage, find_local_antismash_js_path
 
 NAME = "html"
 SHORT_DESCRIPTION = "HTML output"
@@ -105,15 +105,11 @@ def write(records: List[Record], results: List[Dict[str, ModuleResults]],
     copy_template_dir('js', output_dir)
     # if there wasn't an antismash.js in the JS dir, fall back to one in databases
     local_path = os.path.join(output_dir, "js", "antismash.js")
-    if os.path.exists(local_path):
-        logging.debug("Results page using antismash.js from local copy: %s",
-                      path.get_full_path(__file__, "js", "antismash.js"))
-    else:
-        version = html_renderer.get_antismash_js_version()
-        data_location = os.path.join(options.database_dir, "js", version, "antismash.js")
-        if os.path.exists(data_location):
-            logging.debug("Results page using antismash.js from local copy: %s", data_location)
-            shutil.copy(data_location, os.path.join(output_dir, "js", "antismash.js"))
+    if not os.path.exists(local_path):
+        js_path = find_local_antismash_js_path(options)
+        if js_path:
+            logging.debug("Results page using antismash.js from local copy: %s", js_path)
+            shutil.copy(js_path, os.path.join(output_dir, "js", "antismash.js"))
     # and if it's still not there, that's fine, it'll use a web-accessible URL
     if not os.path.exists(local_path):
         logging.debug("Results page using antismash.js from remote host")

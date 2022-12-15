@@ -8,7 +8,7 @@ import json
 import pkgutil
 import string
 import os
-from typing import cast, Any, Dict, List, Tuple, Union
+from typing import cast, Any, Dict, List, Tuple, Union, Optional
 
 from antismash.common import path
 from antismash.common.html_renderer import (
@@ -163,6 +163,25 @@ def generate_html_sections(records: List[RecordLayer], results: Dict[str, Dict[s
     return details
 
 
+def find_local_antismash_js_path(options: ConfigType) -> Optional[str]:
+    """ Finds the a path to a local copy of antismash.js, if possible,
+        otherwise returns None.
+    """
+    # is a copy in the js directory?
+    js_path = path.locate_file(path.get_full_path(__file__, "js", "antismash.js"), silent=True)
+    if js_path:
+        return js_path
+
+    # is it in the databases?
+    version = get_antismash_js_version()
+    js_path = path.locate_file(os.path.join(options.database_dir, "as-js", version, "antismash.js"), silent=True)
+    if js_path:
+        return js_path
+
+    # then it doesn't exist
+    return None
+
+
 def build_antismash_js_url(options: ConfigType) -> str:
     """ Build the URL to the javascript that will be embedded in the HTML.
         If a local version is available, it will be copied into the output directory,
@@ -174,13 +193,8 @@ def build_antismash_js_url(options: ConfigType) -> str:
         Returns:
             a string of the URL, whether relative or absolute
     """
-    local = path.locate_file(path.get_full_path(__file__, "js", "antismash.js"), silent=True)
-    if local:
+    if find_local_antismash_js_path(options):
         return "js/antismash.js"  # generic local path after copy
-    version = get_antismash_js_version()
-    data = path.locate_file(os.path.join(options.database_dir, "as-js", version, "antismash.js"), silent=True)
-    if data:
-        return "js/antismash.js"
     return get_antismash_js_url()
 
 
