@@ -10,7 +10,7 @@ from typing import Any, Sequence
 from Bio.Seq import Seq
 
 from antismash.common import path
-from antismash.common.html_renderer import FileTemplate, HTMLSections, Markup
+from antismash.common.html_renderer import FileTemplate, HTMLSections, Markup, docs_link
 from antismash.common.layers import OptionsLayer, RegionLayer, RecordLayer
 from antismash.common.secmet import CDSFeature, Feature, FeatureLocation, Record, Region
 from antismash.common.secmet.locations import location_contains_other
@@ -36,7 +36,7 @@ def will_handle(_products: list[str], _categories: set[str]) -> bool:
 
 
 def generate_html(region_layer: RegionLayer, results: TFBSFinderResults,
-                  _record_layer: RecordLayer, _options_layer: OptionsLayer
+                  _record_layer: RecordLayer, options_layer: OptionsLayer
                   ) -> HTMLSections:
     """ Generates HTML output for the module """
     html = HTMLSections("tfbs-finder")
@@ -63,6 +63,8 @@ def generate_html(region_layer: RegionLayer, results: TFBSFinderResults,
         "Detailed information for Transcription Factor Binding Site hits, including "
         "surrounding genes where applicable. <br>"
         "The strand of the match is shown by an arrow underneath the match."
+        "<br>"
+        f"Detailed documentation is available {docs_link('here', 'modules/tfbs')}."
     )
     details = body.render(hits=other, weak_hits=weak, results=results,
                           tooltip=tooltip, anchor=region_layer.anchor_id)
