@@ -45,6 +45,7 @@ a, .clipboard-copy, .link-like {
     cursor: pointer;
     padding-right: 0.3em;
     padding-left: 0.3em;
+    padding-top: 0.3em;
     font-size: 95%;  /* just enough to have background between links in text */
 
     &:active {
