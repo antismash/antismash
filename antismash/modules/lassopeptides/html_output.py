@@ -6,7 +6,7 @@
 
 from typing import Dict, List, Set
 
-from antismash.common import path
+from antismash.common import comparippson, path
 from antismash.common.html_renderer import HTMLSections, FileTemplate, Markup
 from antismash.common.layers import RecordLayer, RegionLayer, OptionsLayer
 
@@ -36,11 +36,13 @@ def generate_html(region_layer: RegionLayer, results: LassoResults,
             motifs_by_core[motif.core].append(motif)
         by_locus[locus] = motifs_by_core
 
-    detail_tooltip = Markup(
-        "Lists the possible core peptides for each biosynthetic enzyme. "
-        "Each core peptide shows the leader and core peptide sequences."
-        "<br>Includes CompaRiPPson results for any available databases."
-    )
+    detail_tooltip = Markup("<br>".join([
+        (
+            "Lists the possible core peptides for each biosynthetic enzyme. "
+            "Each core peptide shows the leader and core peptide sequences. "
+        ),
+        comparippson.get_tooltip_text(),
+    ]))
 
     template = FileTemplate(path.get_full_path(__file__, "templates", "details.html"))
     section = template.render(motifs_by_locus=by_locus, tooltip=detail_tooltip,
