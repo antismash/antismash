@@ -10,6 +10,7 @@ import json
 import unittest
 from unittest.mock import patch
 
+from antismash.common import comparippson
 from antismash.common.comparippson import analysis, databases
 from antismash.common.comparippson.databases import (
     ComparippsonDatabase as Database,
@@ -295,3 +296,13 @@ class TestFiltering(unittest.TestCase):
         cores, aliases = analysis.filter_duplicates(data)
         assert cores == {"name": "CORE", "different": "DIFF"}
         assert aliases == {"another": "name"}
+
+
+class TestTooltipText(unittest.TestCase):
+    def test_tooltip(self):
+        link = "<a dummy>text</a>"
+        with patch.object(comparippson, "docs_link", return_value=link) as patched:
+            text = comparippson.get_tooltip_text()
+            patched.assert_called_once()
+        assert isinstance(link, str)
+        assert link in text
