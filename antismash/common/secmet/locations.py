@@ -107,6 +107,39 @@ def build_location_from_others(locations: Sequence[Location]) -> FeatureLocation
     return location
 
 
+def get_distance_between_locations(first: Location, second: Location, wrap_point: int = None) -> int:
+    """ Returns the shortest distance between the two given features, crossing
+        the origin if provided.
+
+        Overlapping features are considered to have zero distance.
+
+        Arguments:
+            first: the first location
+            second: the second location
+            wrap_point: the point at which locations can wrap, if given
+
+        Returns:
+            the distance between the two locations
+    """
+    if locations_overlap(first, second):
+        return 0
+    offset = 0
+    if wrap_point:
+        offset = wrap_point
+    variants = [
+        abs(first.start - second.end + offset),
+        abs(first.end - second.start + offset),
+        abs(second.start - first.end + offset),
+        abs(second.end - first.start + offset)
+    ]
+    distance = min(variants)
+    if wrap_point:
+        distance %= wrap_point
+        distance = min(distance, get_distance_between_locations(first, second))
+    assert distance >= 0
+    return distance
+
+
 def location_bridges_origin(location: Location, allow_reversing: bool = False) -> bool:
     """ Determines if a CompoundLocation would cross the origin of a record.
 
