@@ -67,6 +67,8 @@ _ABBREVIATED_DOMAINS = {
     "PKS_DH2": "DH",
     "PKS_DHt": "DHt",
     "PKS_ER": "ER",
+    "Interface": "I",
+    "IBH_Asp": "OH",
 }
 _CLASS_BY_ABBREVIATION = {
     "A": "adenylation",

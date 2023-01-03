@@ -94,6 +94,8 @@ OTHER = {
     "PT",  # fungal nonreducing PKS product template domain
     "TIGR02353",  # NRPS terminal domain of unknown function
     "X",
+    "Interface",
+    "IBH_Asp",
 }
 SPECIAL = {
     "Trans-AT_docking",
@@ -556,8 +558,8 @@ def combine_modules(current: CDSModuleInfo, previous: CDSModuleInfo) -> Optional
                                reverse=current.cds.location.strand == -1)
     head = previous.modules[-1]
     tail = current.modules[0]
-    # both modules must be incomplete
-    if head.is_complete() or tail.is_complete():
+    # both modules must be incomplete, unless the tail starts with an interface
+    if head.is_complete() or tail.is_complete() and not tail.components[0].domain.hit_id == "Interface":
         return None
     # and avoid creating hybrid modules
     if head.is_pks() and tail.is_nrps() or head.is_nrps() and tail.is_pks():
