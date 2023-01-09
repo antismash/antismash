@@ -38,7 +38,7 @@
 		<dt><strong>Product molecular weight(s):</strong></dt>
 		<dd>
 			{% for comb, weight in prediction.molecular_weights.items() | sort %}
-			{{ comb }}: {{ '%0.2f'| format(weight|float) }} Da<br>
+			{{ comb }}: {{ '%d'| format(weight|int) }} Da<br>
 			{% endfor %}
 		</dd>
 		{% endif %}
