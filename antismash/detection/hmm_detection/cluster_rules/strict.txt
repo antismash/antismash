@@ -174,7 +174,7 @@ RULE lanthipeptide-class-i
 
 RULE lanthipeptide-class-ii
     CATEGORY RiPP
-    DESCRIPTION Clas II lanthipeptide
+    DESCRIPTION Class II lanthipeptide
     EXAMPLE NCBI U40620.1 0-3480 mutacin II
     CUTOFF 20
     NEIGHBOURHOOD 10
@@ -182,7 +182,7 @@ RULE lanthipeptide-class-ii
 
 RULE lanthipeptide-class-iii
     CATEGORY RiPP
-    DESCRIPTION Clas III lanthipeptide clusters
+    DESCRIPTION Class III lanthipeptide clusters
     EXAMPLE NCBI FN178622.1 0-6400 labyrinthopeptin
     CUTOFF 20
     NEIGHBOURHOOD 10
@@ -348,7 +348,7 @@ RULE ranthipeptide
                 rSAM_with_SPASM and ANY_RRE
                 and not (TIGR01716 or              # avoid co-detecting RaS-RiPPs
                          subtilosin or             # avoid co-detecting sactipeptides
-                         TIGR02111 or TIGR03966 or # avoid co-detecting redox-cofactor clusers
+                         TIGR02111 or TIGR03966 or # avoid co-detecting redox-cofactor clusters
                          TIGR04103 or              # avoid co-detecting spliceotides
                          all_YcaO)                 # avoid co-detecting thiopeptides
                )
