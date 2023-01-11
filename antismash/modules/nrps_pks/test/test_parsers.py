@@ -8,6 +8,7 @@ import unittest
 
 from antismash.modules.nrps_pks import parsers
 from antismash.modules.nrps_pks.data_structures import Prediction, SimplePrediction
+from antismash.modules.nrps_pks.name_mappings import KNOWN_SUBSTRATES
 
 class TestNrpsConsensus(unittest.TestCase):
     def setUp(self) -> None:
@@ -49,6 +50,11 @@ class TestNrpsConsensus(unittest.TestCase):
             ("method_a", "hydrophobic-aliphatic", "X")
         ]
         assert "X" == self.go(_generate_predictions(data))
+
+    def test_valid_characters(self):
+        for substrate in KNOWN_SUBSTRATES:
+            assert set(substrate.norine).issubset(parsers.ALLOWABLE_PREDICTION_CHARACTERS)
+
 
 def _generate_predictions(data: list[tuple[str, str, str]]) -> dict[str, Prediction]:
     return {
