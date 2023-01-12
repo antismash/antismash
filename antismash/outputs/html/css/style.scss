@@ -1275,7 +1275,8 @@ ul.dropdown-options {
         padding-bottom: 0.5em;
     }
     * .cc-heat-product {
-        writing-mode: sideways-lr;
+        writing-mode: vertical-lr;
+        transform: rotate(180deg);
         text-orientation: mixed;
         text-align: left;
         cursor: pointer;
