@@ -645,24 +645,27 @@ RULE NRP-metallophore
 
 RULE methanobactin
     CATEGORY RiPP
-    DESCRIPTION Copper-chelating/transporting peptides (10.1126/science.aap9437)
-    EXAMPLE NCBI CP023737.1 1498747-1508549      # BGC0002004
+    DESCRIPTION Copper-chelating/transporting peptides
+    # see DOI: 10.1126/science.aap9437
+    EXAMPLE NCBI CP023737.1 1498747-1508549 methanobactin  # BGC0002004
     CUTOFF 5
     NEIGHBOURHOOD 10
     CONDITIONS DUF692 and MbnC
 
 RULE opine-like-metallophore
     CATEGORY other
-    DESCRIPTION Opine-like zincophores like staphylopine (10.1128/mSystems.00554-20)
-    EXAMPLE NCBI BA000017.4 2598076-2607334     # BGC0002487
+    DESCRIPTION Opine-like zincophores
+    # see DOI: 10.1128/mSystems.00554-20
+    EXAMPLE NCBI BA000017.4 2598076-2607334 staphylopine  # BGC0002487
     CUTOFF 5
     NEIGHBOURHOOD 10
     CONDITIONS CntL and CntM
 
 RULE aminopolycarboxylic-acid
     CATEGORY other
-    DESCRIPTION Aminopolycarboxylic acid metallophores (10.1039/C8MT00009C)
-    EXAMPLE NCBI OLMK01000008.1 45415-56279     # BGC0002567
+    DESCRIPTION Aminopolycarboxylic acid metallophores
+    # see DOI: 10.1039/C8MT00009C
+    EXAMPLE NCBI OLMK01000008.1 45415-56279 ethylenediaminesuccinic acid hydroxyarginine  # BGC0002567
     CUTOFF 10
     NEIGHBOURHOOD 5
     CONDITIONS AesA and AesB and AesC
