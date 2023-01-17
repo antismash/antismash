@@ -197,8 +197,9 @@ def find_first_and_last_cds(cds_features: List[CDSFeature]) -> Tuple[Optional[CD
     # find the end
     for cds in cds_features:
         if cds.modules and cds.modules[-1].is_final_module():
-            # if this CDS is not the tail end, then don't use it unless it's the last CDS
-            if len(cds.modules[-1].parent_cds_names) > 1 and cds != cds_features[-1]:
+            module = cds.modules[-1]
+            # if this CDS contains the head of a cross-CDS module, it can't be the end
+            if len(module.parent_cds_names) > 1 and cds.get_name() == module.parent_cds_names[0]:
                 continue
             # two possible ends, this really ought to be two products
             if end_cds:
