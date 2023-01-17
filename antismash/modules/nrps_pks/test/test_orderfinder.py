@@ -116,6 +116,22 @@ class TestOrdering(unittest.TestCase):
         assert not start
         assert not end
 
+    def test_cross_cds_with_terminal(self):
+        other = DummyCDS(locus_tag="other")
+        normal = DummyModule(domains=["PKS_KS", "PKS_AT", "ACP"], complete=True, final=False)
+        other.add_module(normal)
+
+        head = DummyCDS(locus_tag="head")
+        tail = DummyCDS(locus_tag="tail")
+        split = DummyModule(domains=["PKS_KS", "PKS_AT", "ACP", "Thioesterase"], complete=True, final=True)
+        for cds in [head, tail]:
+            cds.add_module(split)
+        assert split.is_final_module()
+        split._parent_cds_names = ["head", "tail"]
+        start, end = orderfinder.find_first_and_last_cds([head, tail, other])
+        assert not start
+        assert end is tail
+
     def test_finding_start_gene(self):
         inputs = {
             "STAUR_3972": {
