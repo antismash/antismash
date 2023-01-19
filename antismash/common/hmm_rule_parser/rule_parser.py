@@ -183,7 +183,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union
 
 from antismash.common.secmet import CDSFeature, FeatureLocation
 
-from .structures import ProfileHit
+from .structures import Multipliers, ProfileHit
 
 
 class RuleSyntaxError(SyntaxError):
@@ -903,9 +903,13 @@ class Parser:  # pylint: disable=too-few-public-methods
     def __init__(self, text: str, signature_names: Set[str],
                  valid_categories: Set[str],
                  existing_rules: List[DetectionRule] = None,
-                 existing_aliases: Dict[str, List[Token]] = None) -> None:
+                 existing_aliases: Dict[str, List[Token]] = None,
+                 multipliers: Multipliers = None,
+                 ) -> None:
         if not existing_rules:
             existing_rules = []
+        if multipliers is None:
+            multipliers = Multipliers()
         self.signature_names = signature_names
         self.rules = list(existing_rules)
         self.rules_by_name = {rule.name: rule for rule in self.rules}
@@ -938,6 +942,8 @@ class Parser:  # pylint: disable=too-few-public-methods
                 self.aliases[name] = tokens
                 continue
             rule = self._parse_rule()
+            rule.cutoff = int(rule.cutoff * multipliers.cutoff)
+            rule.neighbourhood = int(rule.neighbourhood * multipliers.neighbourhood)
             if rule.name in self.rules_by_name:
                 raise ValueError("Multiple rules specified for the same rule name")
             self.rules_by_name[rule.name] = rule

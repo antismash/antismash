@@ -5,6 +5,7 @@
 """
 
 from collections import defaultdict
+import dataclasses
 import logging
 from typing import Any, Dict, List, Optional, Set, Tuple
 
@@ -17,7 +18,7 @@ from antismash.common.subprocessing import run_hmmsearch
 from antismash.common.hmm_rule_parser import rule_parser
 from antismash.common.signature import get_signature_profiles, HmmSignature, Signature
 
-from .structures import DynamicHit, DynamicProfile, HMMerHit, ProfileHit
+from .structures import DynamicHit, DynamicProfile, HMMerHit, Multipliers, ProfileHit
 
 
 class CDSResults:
@@ -81,13 +82,15 @@ class CDSResults:
 class RuleDetectionResults:
     """ A container for the all results of running the cluster prediction """
 
-    schema_version = 3
+    schema_version = 4
 
     def __init__(self, cds_by_cluster: Dict[Protocluster, List[CDSResults]],
-                 tool: str, cdses_outside_clusters: List[CDSResults]) -> None:
+                 tool: str, cdses_outside_clusters: List[CDSResults],
+                 multipliers: Multipliers) -> None:
         self.cds_by_cluster = cds_by_cluster
         self.tool = str(tool)
         self.cdses_outside_clusters = cdses_outside_clusters
+        self.multipliers = multipliers
 
     @property
     def protoclusters(self) -> List[Protocluster]:
@@ -110,6 +113,7 @@ class RuleDetectionResults:
             "tool": self.tool,
             "cds_by_protocluster": cds_results_json,
             "outside_protoclusters": [result.to_json() for result in self.cdses_outside_clusters],
+            "multipliers": dataclasses.asdict(self.multipliers),
         }
 
         for cluster, cds_results in self.cds_by_cluster.items():
@@ -132,8 +136,9 @@ class RuleDetectionResults:
             cds_by_cluster[cluster] = cds_results
 
         cdses_outside = [CDSResults.from_json(chunk, record) for chunk in json["outside_protoclusters"]]
+        multipliers = Multipliers(**json["multipliers"])
 
-        return RuleDetectionResults(cds_by_cluster, json["tool"], cdses_outside)
+        return RuleDetectionResults(cds_by_cluster, json["tool"], cdses_outside, multipliers)
 
 
 def remove_redundant_protoclusters(clusters: List[Protocluster],
@@ -298,6 +303,7 @@ def create_rules(rule_file: str, signature_names: Set[str],
                  valid_categories: Set[str],
                  existing_aliases: Dict[str, List[rule_parser.Token]],
                  existing_rules: List[rule_parser.DetectionRule] = None,
+                 multipliers: Multipliers = None,
                  ) -> List[rule_parser.DetectionRule]:
     """ Creates DetectionRule instances from the default rules file
 
@@ -309,14 +315,17 @@ def create_rules(rule_file: str, signature_names: Set[str],
             valid_categories: the set of all valid rule categories
             existing_aliases: a dict of alias name to resulting tokens, updated with new values
             existing_rules: a list of existing rules, if any
+            multipliers: distance multipliers to apply to rules
 
         Returns:
             A list of DetectionRules.
     """
     rules = existing_rules or []
+    multipliers = multipliers or Multipliers()
     with open(rule_file, "r") as ruledata:
         parser = rule_parser.Parser("".join(ruledata.readlines()), signature_names,
-                                    valid_categories, rules, existing_aliases=existing_aliases)
+                                    valid_categories, rules, existing_aliases=existing_aliases,
+                                    multipliers=multipliers)
     existing_aliases.update(parser.aliases)
     return parser.rules
 
@@ -433,7 +442,8 @@ def detect_protoclusters_and_signatures(record: Record, signature_file: str, see
                                         rule_files: List[str], valid_categories: Set[str],
                                         filter_file: str, tool: str,
                                         annotate_existing_subregions: bool = True,
-                                        dynamic_profiles: Dict[str, DynamicProfile] = None
+                                        dynamic_profiles: Dict[str, DynamicProfile] = None,
+                                        multipliers: Multipliers = None,
                                         ) -> RuleDetectionResults:
     """ Compares all CDS features in a record with HMM signatures and generates
         Protocluster features based on those hits and the current protocluster detection
@@ -452,14 +462,20 @@ def detect_protoclusters_and_signatures(record: Record, signature_file: str, see
                     will have domains annotated even if no protocluster is found
             dynamic_profiles: a dictionary of dynamic profiles, mapping profile name
                     to profile
+            multipliers: distance multipliers to apply to rules
+
+        Returns:
+            an instance of RuleDetectionResults
     """
     if not rule_files:
         raise ValueError("rules must be provided")
     if not dynamic_profiles:
         dynamic_profiles = {}
+    if multipliers is None:
+        multipliers = Multipliers()
     # if there's no CDS features, don't try to do anything
     if not record.get_cds_features():
-        return RuleDetectionResults({}, tool, [])
+        return RuleDetectionResults({}, tool, [], multipliers)
 
     # defaults in case of no HMMer profiles
     results_by_id: Dict[str, List[ProfileHit]] = {}
@@ -481,7 +497,9 @@ def detect_protoclusters_and_signatures(record: Record, signature_file: str, see
     rules: List[rule_parser.DetectionRule] = []
     aliases: Dict[str, List[rule_parser.Token]] = {}
     for rule_file in rule_files:
-        rules = create_rules(rule_file, set(sig_by_name), valid_categories, aliases, rules)
+        rules = create_rules(rule_file, set(sig_by_name), valid_categories, aliases, rules,
+                             multipliers=multipliers,
+                             )
 
     # gather dynamic hits and merge them with HMMer results
     dynamic_results = find_dynamic_hits(record, list(dynamic_profiles.values()))
@@ -528,7 +546,8 @@ def detect_protoclusters_and_signatures(record: Record, signature_file: str, see
                     cds_results_outside_clusters.append(CDSResults(cds, domains, {}))
                     cdses_with_annotations.add(cds)
 
-    return RuleDetectionResults(cds_results_by_cluster, tool, cds_results_outside_clusters)
+    return RuleDetectionResults(cds_results_by_cluster, tool, cds_results_outside_clusters,
+                                multipliers)
 
 
 def strip_inferior_domains(cds_domains_by_cluster: Dict[str, Dict[str, Set[str]]],
