@@ -6,6 +6,7 @@
 
 from argparse import Namespace
 import glob
+import json
 import importlib
 import os
 import pkgutil
@@ -18,7 +19,7 @@ from antismash.common import path
 from antismash.common.hmm_rule_parser import rule_parser, cluster_prediction as hmm_detection  # TODO: redo tests
 from antismash.common.hmm_rule_parser.test.helpers import check_hmm_signatures
 from antismash.common.secmet import Record
-from antismash.common.test.helpers import DummyCDS, FakeHSPHit
+from antismash.common.test.helpers import DummyCDS, DummyRecord, FakeHSPHit
 from antismash.config import build_config, destroy_config
 import antismash.detection.hmm_detection as core
 from antismash.detection.hmm_detection import DynamicProfile, signatures
@@ -351,3 +352,78 @@ class TestDynamicGather(unittest.TestCase):
     def test_empty(self):
         with self.assertRaisesRegex(ValueError, "subpackage .* has no"):
             self._go(Namespace(a="7"))
+
+
+class TestMultipliers(unittest.TestCase):
+    def setUp(self):
+        self.record = DummyRecord()
+        self.record.add_cds_feature(DummyCDS())
+
+    def tearDown(self):
+        destroy_config()
+
+    def run_through(self, options):
+        with patch.object(core, "detect_protoclusters_and_signatures",
+                          side_effect=RuntimeError("stop here")) as patched:
+            with patch.object(core, "get_rule_categories", return_value=[]):
+                with self.assertRaisesRegex(RuntimeError, "stop here"):
+                    core.run_on_record(self.record, None, options)
+            assert patched.called_once
+            args, kwargs = patched.call_args
+        return args, kwargs
+
+    def test_bacteria_ignores_fungal_multi(self):
+        options = build_config([
+            "--taxon", "bacteria",
+            "--hmmdetection-fungal-cutoff-multiplier", "7.0",
+            "--hmmdetection-fungal-neighbourhood-multiplier", "3",
+        ], modules=[core])
+        _, used_kwargs = self.run_through(options)
+        assert used_kwargs["multipliers"] == core.Multipliers(1.0, 1.0)
+
+    def test_fungal_respects_multis(self):
+        options = build_config([
+            "--taxon", "fungi",
+            "--hmmdetection-fungal-cutoff-multiplier", "0.5",
+            "--hmmdetection-fungal-neighbourhood-multiplier", "3",
+        ], modules=[core])
+        _, used_kwargs = self.run_through(options)
+        assert used_kwargs["multipliers"] == core.Multipliers(0.5, 3.0)
+
+    def test_check_options(self):
+        options = build_config([
+            "--taxon", "fungi",
+            "--hmmdetection-fungal-cutoff-multiplier", "0",
+            "--hmmdetection-fungal-neighbourhood-multiplier", "-5",
+        ], modules=[core])
+        assert core.check_options(options) == [
+            "Invalid fungal cutoff multiplier: 0.0",
+            "Invalid fungal neighbourhood multiplier: -5.0",
+        ]
+
+    def test_reuse_changes(self):
+        options = build_config([
+            "--taxon", "fungi",
+            "--hmmdetection-fungal-cutoff-multiplier", "1",
+            "--hmmdetection-fungal-neighbourhood-multiplier", "1.5",
+        ], modules=[core])
+        results = core.run_on_record(self.record, None, options)
+        as_json = json.loads(json.dumps(results.to_json()))
+
+        regenerated = core.regenerate_previous_results(as_json, self.record, options)
+        assert regenerated.rule_results.multipliers == results.rule_results.multipliers
+
+        # ensure a changed cutoff multiplier breaks results reuse
+        new_options = build_config([
+            "--taxon", "fungi",
+            "--hmmdetection-fungal-cutoff-multiplier", "2.0",
+        ], modules=[core])
+        with self.assertRaisesRegex(RuntimeError, "cutoff multiplier .* incompatible"):
+            core.regenerate_previous_results(as_json, self.record, options)
+
+        new_options = build_config([
+            "--taxon", "fungi",
+            "--hmmdetection-fungal-neighbourhood-multiplier", "0.5",
+        ], modules=[core])
+        with self.assertRaisesRegex(RuntimeError, "neighbourhood multiplier .* incompatible"):
+            core.regenerate_previous_results(as_json, self.record, options)

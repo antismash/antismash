@@ -17,7 +17,7 @@ from antismash.common.hmm_rule_parser.cluster_prediction import (
     detect_protoclusters_and_signatures,
     RuleDetectionResults,
 )
-from antismash.common.hmm_rule_parser.structures import DynamicProfile
+from antismash.common.hmm_rule_parser.structures import DynamicProfile, Multipliers
 from antismash.common.module_results import DetectionResults
 from antismash.common.secmet.record import Record
 from antismash.common.secmet.features import Protocluster
@@ -133,6 +133,18 @@ def get_arguments() -> ModuleArgs:
                     default="relaxed",
                     help=("Defines which level of strictness to use for "
                           "HMM-based cluster detection, (default: %(default)s)."))
+    args.add_option("fungal-cutoff-multiplier",
+                    dest="fungal_cutoff_multiplier",
+                    type=float,
+                    default=1.0,
+                    help=("Sets the multiplier for rule cutoffs in fungal inputs "
+                          "(default: %(default)s)."))
+    args.add_option("fungal-neighbourhood-multiplier",
+                    dest="fungal_neighbourhood_multiplier",
+                    type=float,
+                    default=1.5,
+                    help=("Sets the multiplier for rule neighbourhoods in fungal "
+                          "inputs (default: %(default)s)."))
     return args
 
 
@@ -140,9 +152,16 @@ def check_options(options: ConfigType) -> List[str]:
     """ Checks the options to see if there are any issues before
         running any analyses
     """
+    issues = []
     if options.hmmdetection_strictness not in _STRICTNESS_LEVELS:
-        return ["Unknown strictness level: %s" % options.strictness]
-    return []
+        issues.append(f"Unknown strictness level: {options.strictness}")
+    cutoff = options.hmmdetection_fungal_cutoff_multiplier
+    if cutoff <= 0:
+        issues.append(f"Invalid fungal cutoff multiplier: {cutoff}")
+    neighbourhood = options.hmmdetection_fungal_neighbourhood_multiplier
+    if neighbourhood <= 0:
+        issues.append(f"Invalid fungal neighbourhood multiplier: {neighbourhood}")
+    return issues
 
 
 def is_enabled(_options: ConfigType) -> bool:
@@ -163,6 +182,11 @@ def regenerate_previous_results(results: Dict[str, Any], record: Record,
                         options.hmmdetection_strictness, regenerated.strictness)
     if set(regenerated.enabled_types) != set(get_supported_cluster_types(regenerated.strictness)):
         raise RuntimeError("Protocluster types supported by HMM detection have changed, all results invalid")
+    if options.taxon == "fungi":
+        if regenerated.rule_results.multipliers.cutoff != options.hmmdetection_fungal_cutoff_multiplier:
+            raise RuntimeError("Protocluster cutoff multiplier changed, previous results are incompatible")
+        if regenerated.rule_results.multipliers.neighbourhood != options.hmmdetection_fungal_neighbourhood_multiplier:
+            raise RuntimeError("Protocluster neighbourhood multiplier changed, previous results are incompatible")
     regenerated.rule_results.annotate_cds_features()
     return regenerated
 
@@ -182,9 +206,17 @@ def run_on_record(record: Record, previous_results: Optional[HMMDetectionResults
     rules = _get_rule_files_for_strictness(strictness)
     valid_categories = {cat.name for cat in get_rule_categories()}
     equivalences = path.get_full_path(__file__, "filterhmmdetails.txt")
+
+    multipliers = Multipliers()
+    if options.taxon == "fungi":
+        multipliers.cutoff = options.hmmdetection_fungal_cutoff_multiplier
+        multipliers.neighbourhood = options.hmmdetection_fungal_neighbourhood_multiplier
+
     results = detect_protoclusters_and_signatures(record, signatures, seeds, rules, valid_categories,
                                                   equivalences, "rule-based-clusters",
-                                                  dynamic_profiles=DYNAMIC_PROFILES)
+                                                  dynamic_profiles=DYNAMIC_PROFILES,
+                                                  multipliers=multipliers,
+                                                  )
     results.annotate_cds_features()
     return HMMDetectionResults(record.id, results, get_supported_cluster_types(strictness), strictness)
 
