@@ -77,7 +77,14 @@ def prepare_data(logging_only: bool = False) -> List[str]:
     if "mounted_at_runtime" in options.database_dir:
         return failure_messages
     for subdir, filename in [("transATor", "transATor.hmm")]:
-        full_path = get_database_path(subdir, filename)
+        try:
+            full_path = get_database_path(subdir, filename)
+        except ValueError as err:
+            if logging_only:
+                failure_messages.append(str(err))
+                continue
+            else:
+                raise
         failure_messages.extend(hmmer.ensure_database_pressed(full_path, return_not_raise=logging_only))
     return failure_messages
 
