@@ -53,7 +53,7 @@ class TestOrdering(unittest.TestCase):
     def run_ranking_as_genes(self, n_terms, c_terms, orders):
         genes = {name: DummyCDS(locus_tag=name) for name in orders[0]}
         gene_orders = [[genes[k] for k in order] for order in orders]
-        res = orderfinder.rank_biosynthetic_orders(n_terms, c_terms, gene_orders)
+        res = orderfinder.rank_biosynthetic_orders(n_terms, c_terms, gene_orders, {})
         return "".join(gene.locus_tag for gene in res)
 
     def test_permutations_no_start_no_end(self):
@@ -249,9 +249,19 @@ class TestOrdering(unittest.TestCase):
         end = cdss["STAUR_3982"]
         # there are multiple orders of equal score, but sort for simple testing
         possible_orders = orderfinder.find_possible_orders(list(cdss.values()), start, end, {})
-        best = orderfinder.rank_biosynthetic_orders(n_terms, c_terms, possible_orders)
+        best = orderfinder.rank_biosynthetic_orders(n_terms, c_terms, possible_orders, {})
         best = [gene.get_name() for gene in best]
         assert best == ['STAUR_3983', 'STAUR_3972', 'STAUR_3984', 'STAUR_3985', 'STAUR_3982']
+
+        # and try again with neighbours set up
+        neighbours = {
+            "STAUR_3983": "STAUR_3982",
+            "STAUR_3984": "STAUR_3983",
+            "STAUR_3985": "STAUR_3984",
+        }
+        best = orderfinder.rank_biosynthetic_orders(n_terms, c_terms, possible_orders, neighbours)
+        best = [gene.get_name() for gene in best]
+        assert best == ['STAUR_3972', 'STAUR_3985', 'STAUR_3984', 'STAUR_3983', 'STAUR_3982']
 
     def test_order_finding_size(self):
         cdss = [DummyCDS() for i in range(11)]
@@ -343,3 +353,43 @@ class TestEnzymeCounter(unittest.TestCase):
 
                 modules = {"B": nrps + pks + other, "C": pks}
                 assert self.run_finder(names, modules) == (["C"], 0, 1)
+
+
+class TestFollowers(unittest.TestCase):
+    def test_gaps(self):
+        cdses = []
+        for i, name in enumerate("ABC"):
+            cdses.append(DummyCDS(start=i*10, end=i*10+1, strand=-1 if name =="B" else 1, locus_tag=name))
+        assert orderfinder.get_follower_genes(cdses) == {}
+
+    def test_no_gaps_forward(self):
+        cdses = []
+        for i, name in enumerate("ABC"):
+            cdses.append(DummyCDS(start=i*10, end=i*10+1, strand=1, locus_tag=name))
+        assert orderfinder.get_follower_genes(cdses) == {
+            "A": "B",
+            "B": "C",
+        }
+
+    def test_no_gaps_reverse(self):
+        cdses = []
+        for i, name in enumerate("ABC"):
+            cdses.append(DummyCDS(start=i*10, end=i*10+1, strand=-1, locus_tag=name))
+        assert orderfinder.get_follower_genes(cdses) == {
+            "C": "B",
+            "B": "A",
+        }
+
+    def test_mix(self):
+        cdses = [
+            DummyCDS(strand=1, locus_tag="A"),
+            DummyCDS(strand=1, locus_tag="B"),
+            DummyCDS(strand=-1, locus_tag="C"),
+            DummyCDS(strand=-1, locus_tag="D"),
+            DummyCDS(strand=1, locus_tag="E"),
+        ]
+        assert orderfinder.get_follower_genes(cdses) == {
+            "A": "B",
+            "D": "C",
+        }
+

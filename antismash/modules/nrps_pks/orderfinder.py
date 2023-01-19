@@ -38,6 +38,33 @@ def find_split_module_chains(cds_features: List[CDSFeature], record: Record) -> 
     return chains
 
 
+def get_follower_genes(cdses: list[CDSFeature]) -> Dict[str, str]:
+    """ Returns a mapping of gene name to immediately subsequent gene name, if
+        on the same strand. If no valid follower is present for a gene, the gene
+        won't be present in the mapping.
+
+        Arguments:
+            cdses: a list of CDS features
+
+        Returns:
+            a dictionary mapping gene name to following gene name
+    """
+    neighbours = {}
+    for i, cds in enumerate(cdses):
+        if cds.location.strand == -1:
+            next_index = i - 1
+            if next_index < 0:
+                continue
+        else:
+            next_index = i + 1
+            if next_index >= len(cdses):
+                continue
+        next_cds = cdses[next_index]
+        if next_cds.location.strand == cds.location.strand:
+            neighbours[cds.get_name()] = next_cds.get_name()
+    return neighbours
+
+
 def analyse_biosynthetic_order(nrps_pks_features: List[CDSFeature],
                                consensus_predictions: Dict[str, str],
                                record: Record) -> List[CandidateClusterPrediction]:
@@ -77,7 +104,8 @@ def analyse_biosynthetic_order(nrps_pks_features: List[CDSFeature],
         if 2 <= len(pks_features) < 11 + len(pks_chains) and not nrps_count and not hybrid_count:
             logging.debug("CandidateCluster %d monomer ordering method: domain docking analysis",
                           candidate_cluster_number)
-            geneorder = perform_docking_domain_analysis(pks_features, pks_chains)
+            neighbours = get_follower_genes(cds_in_candidate_cluster)
+            geneorder = perform_docking_domain_analysis(pks_features, pks_chains, neighbours)
             docking = True
         else:
             logging.debug("CandidateCluster %d monomer ordering method: colinear", candidate_cluster_number)
@@ -339,13 +367,16 @@ def find_possible_orders(cds_features: List[CDSFeature], start_cds: Optional[CDS
 
 def rank_biosynthetic_orders(n_terminal_residues: Dict[str, str],
                              c_terminal_residues: Dict[str, str],
-                             possible_orders: List[List[CDSFeature]]) -> List[CDSFeature]:
+                             possible_orders: List[List[CDSFeature]],
+                             following_genes: Dict[str, str]) -> List[CDSFeature]:
     """ Scores each possible order according to terminal pairs of adjacent cds_features.
 
         Arguments:
             n_terminal_residues: a dictionary mapping CDSFeature to their pair of N terminal residues
             c_terminal_residues: a dictionary mapping CDSFeature to their pair of C terminal residues
             possible_orders: a list of gene orderings to evaluate
+            following_genes: a mapping of gene name to subsequent immediate neighbouring
+                             gene name if on the same strand
 
         Returns:
             the first ordering that scored highest or equal highest
@@ -362,6 +393,8 @@ def rank_biosynthetic_orders(n_terminal_residues: Dict[str, str],
         score = 0
         interactions = [order[i:i + 2] for i in range(len(order) - 1)]
         for gene, next_gene in interactions:
+            if following_genes.get(gene.get_name()) == next_gene.get_name():
+                score += 1
             # additional CDS features may be brought in if they formed part of a
             # cross-CDS module and contained no other complete modules
             if gene.get_name() not in c_terminal_residues or next_gene.get_name() not in n_terminal_residues:
@@ -382,13 +415,15 @@ def rank_biosynthetic_orders(n_terminal_residues: Dict[str, str],
     return best_order
 
 
-def perform_docking_domain_analysis(cds_features: List[CDSFeature], chains: Dict[CDSFeature, CDSFeature]
-                                    ) -> List[CDSFeature]:
+def perform_docking_domain_analysis(cds_features: List[CDSFeature], chains: Dict[CDSFeature, CDSFeature],
+                                    following_genes: dict[str, str]) -> List[CDSFeature]:
     """ Estimates gene ordering based on docking domains of features
 
         Arguments:
             cds_features: a list of CDSFeatures to order
             chains: a dictionary mapping cross-CDS module head CDS to tail CDS
+            following_genes: a mapping of gene name to subsequent immediate neighbouring
+                             gene name if on the same strand
 
         Returns:
             a list of CDSFeatures in estimated order
@@ -400,7 +435,8 @@ def perform_docking_domain_analysis(cds_features: List[CDSFeature], chains: Dict
     c_terminal_residues = extract_cterminus(data_dir, cds_features, end_cds)
     possible_orders = find_possible_orders(cds_features, start_cds, end_cds, chains)
 
-    geneorder = rank_biosynthetic_orders(n_terminal_residues, c_terminal_residues, possible_orders)
+    geneorder = rank_biosynthetic_orders(n_terminal_residues, c_terminal_residues,
+                                         possible_orders, following_genes)
     return geneorder
 
 
