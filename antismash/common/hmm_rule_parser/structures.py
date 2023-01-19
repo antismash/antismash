@@ -4,7 +4,8 @@
 """ A collection of data structures for profile hits and profiles themselves
 """
 
-from typing import Callable, Dict, List
+import dataclasses
+from typing import Any, Callable, Dict, List
 
 from antismash.common.secmet import Record
 from antismash.common.signature import Signature
@@ -58,3 +59,22 @@ class DynamicProfile(Signature):
             CDS name to a list of HSPs, one for each 'hit'
         """
         return self._callable(record)
+
+
+@dataclasses.dataclass
+class Multipliers:
+    cutoff: float = 1.0
+    neighbourhood: float = 1.0
+
+    def __post_init__(self) -> None:
+        if self.cutoff <= 0:
+            raise ValueError("cutoff multiplier must be positive")
+        if self.neighbourhood <= 0:
+            raise ValueError("neighbourhood multiplier must be positive")
+
+    def to_json(self) -> dict[str, Any]:
+        return dataclasses.asdict(self)
+
+    @classmethod
+    def from_json(cls, data: dict[str, Any]) -> "Multipliers":
+        return cls(**data)

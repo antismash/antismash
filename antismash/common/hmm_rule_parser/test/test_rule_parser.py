@@ -8,6 +8,7 @@ from collections import defaultdict
 import unittest
 
 from antismash.common.hmm_rule_parser import rule_parser
+from antismash.common.hmm_rule_parser.structures import Multipliers
 from antismash.common.test.helpers import DummyCDS, DummyRecord, FakeHSPHit
 
 
@@ -265,10 +266,12 @@ class RuleParserTest(unittest.TestCase):
     def setUp(self):
         self.signature_names = set(["a", "b", "c", "d", "more", "other"])
 
-    def parse(self, text, valid_categories=None, aliases=None):
+    def parse(self, text, valid_categories=None, aliases=None, cutoff_multi=1., neighbourhood_multi=1.):
         if valid_categories is None:
             valid_categories = {"C", "category"}
-        return rule_parser.Parser(text, self.signature_names, valid_categories, aliases)
+        multipliers = Multipliers(cutoff=cutoff_multi, neighbourhood=neighbourhood_multi)
+        return rule_parser.Parser(text, self.signature_names, valid_categories,
+                                  aliases, multipliers=multipliers)
 
     def test_invalid_signature(self):
         with self.assertRaisesRegex(ValueError, "without signatures: badname"):
@@ -303,6 +306,23 @@ class RuleParserTest(unittest.TestCase):
             self.parse("RULE A CATEGORY C CUTOFF b NEIGHBOURHOOD 10 CONDITIONS a or b")
         with self.assertRaises(rule_parser.RuleSyntaxError):
             self.parse("RULE A CUTOFF b NEIGHBOURHOOD 10 CONDITIONS a or b")
+
+    def test_multipliers(self):
+        for neighbourhood in [0.5, 1.0, 1.5]:
+            for cutoff in [0.5, 1.0, 1.5]:
+                rule = self.parse(format_as_rule("A", 10, 20, "a"),
+                                  cutoff_multi=cutoff,
+                                  neighbourhood_multi=neighbourhood
+                                  ).rules[0]
+                assert rule.cutoff == 10_000 * cutoff
+                assert rule.neighbourhood == 20_000 * neighbourhood
+
+    def test_invalid_multipliers(self):
+        for invalid in [-0.5, 0.0]:
+            with self.assertRaisesRegex(ValueError, "cutoff .* must be positive"):
+                self.parse(format_as_rule("A", 10, 20, "a"), cutoff_multi=invalid)
+            with self.assertRaisesRegex(ValueError, "neighbourhood .* must be positive"):
+                self.parse(format_as_rule("A", 10, 20, "a"), neighbourhood_multi=invalid)
 
     def test_inline_comments(self):
         rule_chunk = "RULE name CATEGORY category CUTOFF 20 NEIGHBOURHOOD 20 CONDITIONS a"
