@@ -414,14 +414,14 @@ class TestMultipliers(unittest.TestCase):
         assert regenerated.rule_results.multipliers == results.rule_results.multipliers
 
         # ensure a changed cutoff multiplier breaks results reuse
-        new_options = build_config([
+        options = build_config([
             "--taxon", "fungi",
             "--hmmdetection-fungal-cutoff-multiplier", "2.0",
         ], modules=[core])
         with self.assertRaisesRegex(RuntimeError, "cutoff multiplier .* incompatible"):
             core.regenerate_previous_results(as_json, self.record, options)
 
-        new_options = build_config([
+        options = build_config([
             "--taxon", "fungi",
             "--hmmdetection-fungal-neighbourhood-multiplier", "0.5",
         ], modules=[core])
