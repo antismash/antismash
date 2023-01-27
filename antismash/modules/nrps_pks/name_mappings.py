@@ -284,6 +284,8 @@ KNOWN_SUBSTRATES: list[SubstrateName] = [
     SubstrateName("trans-2-crotylglycine", "croGly", "X"),
     SubstrateName("tryptophan", "Trp", "Trp"),
     SubstrateName("tyrosine", "Tyr", "Tyr"),
+    SubstrateName("Unknown amino acid", "Nrp", "X"),
+    SubstrateName("Unknown ketide", "Pks", "X"),
     SubstrateName("valine", "Val", "Val"),
     SubstrateName("valinol", "Valol", "Valol"),
 ]
