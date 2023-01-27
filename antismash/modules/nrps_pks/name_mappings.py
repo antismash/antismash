@@ -289,30 +289,30 @@ KNOWN_SUBSTRATES: list[SubstrateName] = [
 ]
 
 _LONG_TO_SUBSTRATE: dict[str, SubstrateName] = {
-    sub.long: sub for sub in KNOWN_SUBSTRATES
+    sub.long.lower(): sub for sub in KNOWN_SUBSTRATES
 }
 
 _SHORT_TO_SUBSTRATE: dict[str, SubstrateName] = {
-    sub.short: sub for sub in KNOWN_SUBSTRATES
+    sub.short.lower(): sub for sub in KNOWN_SUBSTRATES
 }
 
-_LC_NORINE_TO_SUBSTRATE: dict[str, SubstrateName] = {
+_NORINE_TO_SUBSTRATE: dict[str, SubstrateName] = {
     sub.norine.lower(): sub for sub in KNOWN_SUBSTRATES
 }
 
 
 def get_substrate_by_name(name: str) -> SubstrateName:
     """ Look up a substrate by long or short name """
-    if name in _LONG_TO_SUBSTRATE:
-        return _LONG_TO_SUBSTRATE[name]
-    if name in _SHORT_TO_SUBSTRATE:
-        return _SHORT_TO_SUBSTRATE[name]
     lc_name = name.lower()
-    if lc_name in _LC_NORINE_TO_SUBSTRATE:
-        return _LC_NORINE_TO_SUBSTRATE[lc_name]
+    if lc_name in _LONG_TO_SUBSTRATE:
+        return _LONG_TO_SUBSTRATE[lc_name]
+    if lc_name in _SHORT_TO_SUBSTRATE:
+        return _SHORT_TO_SUBSTRATE[lc_name]
+    if lc_name in _NORINE_TO_SUBSTRATE:
+        return _NORINE_TO_SUBSTRATE[lc_name]
     raise ValueError(f"Substrate {name} not found")
 
 
 def is_valid_norine_name(name: str) -> bool:
     """ Check if a name is valid for Norine """
-    return name.lower() in _LC_NORINE_TO_SUBSTRATE
+    return name.lower() in _NORINE_TO_SUBSTRATE
