@@ -109,6 +109,15 @@ RULE CDPS
     NEIGHBOURHOOD 10
     CONDITIONS CDPS or cycdipepsynth
 
+RULE RCDPS
+    CATEGORY NRPS
+    DESCRIPTION fungal tRNA-dependent arginine-containing cyclodipeptide synthases
+    # as described in doi: 10.1038/s41589-022-01246-6
+    EXAMPLE NCBI NKHU02000029.1 123918-147820
+    CUTOFF 5
+    NEIGHBOURHOOD 12
+    CONDITIONS RCDPS
+
 RULE thioamide-NRP
     CATEGORY NRPS
     DESCRIPTION thioamide-containing non-ribosomal peptides
