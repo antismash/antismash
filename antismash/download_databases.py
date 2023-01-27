@@ -67,9 +67,9 @@ TIGRFAM_URL = "https://dl.secondarymetabolites.org/releases/tigrfam/TIGRFam.hmm.
 TIGRFAM_ARCHIVE_CHECKSUM = "0747a5efa85d594cd598e67a04611328ab865e6a9401eb143fce6e93edf22bd0"
 TIGRFAM_CHECKSUM = "b905785603e1015bbe78d0235d0a6a131345bae35aaab7afbd8f7b59f7798842"
 
-STACHELHAUS_URL = "https://dl.secondarymetabolites.org/releases/stachelhaus/1.0/signatures.tsv.xz"
-STACHELHAUS_ARCHIVE_CHECKSUM = "d9b0a95eff34f6a817caf66c112dd3b27e8b22d4d6f2804b02ab6e7d02bbc0c1"
-STACHELHAUS_CHECKSUM = "53ba6b2f28b06ef1b24eaaf22d106aedbf986662bbecf593a303ab7741a143cf"
+STACHELHAUS_URL = "https://dl.secondarymetabolites.org/releases/stachelhaus/1.1/signatures.tsv.xz"
+STACHELHAUS_ARCHIVE_CHECKSUM = "90ea6d56503be456f1919769821fec884aff95e7a7290b32a5d8761d3ecd9f98"
+STACHELHAUS_CHECKSUM = "eda79ad1e2c12791e70cb819721c109697295ecab5e8ba253ae658e1afb58cc5"
 
 TRANSATOR_URL = "https://dl.secondarymetabolites.org/releases/transATor/transATor_2022.12.06.tar.xz"
 TRANSATOR_ARCHIVE_CHECKSUM = "2186ec1ff20c96630ad1d85584b18861bf97efc0acd50cd7c68d2829748d8023"

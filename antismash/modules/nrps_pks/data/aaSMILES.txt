@@ -71,7 +71,7 @@ haorn NC(CCCN(O)C(=O)C)C(=O)O # L-δ-N-acetyl-δ-N-hydroxyornithine/L-Nδ-hydrox
 hasn NC(C(O)C(=O)N)C(=O)O # hydroxyasparagine
 hforn NC(CCCN(O)C(=O))C(=O)O # L-Nδ-hydroxy-Nδ-formylornithine
 s-nmethoxy-trp NC(CC1=CN(OC)c2c1cccc2)C(=O)O
-alpha-hydroxy-isocaproic-acid OC(C(O)CC(C)C)C(=O)O
+alpha-hydroxy-isocaproic-acid OC(C(O)CC(C)C)C(=O)O # 2S-Hic
 MeHOval O=C(C(C)CC)C(=O)O # 3-Methyl-2-oxovaleric acid
 2-oxo-isovaleric-acid O=C(C(C)C)C(=O)O
 aoda NC(CCCCCC(=O)CC)C(=O)O # S-2-amino-8-oxodecanoic acid

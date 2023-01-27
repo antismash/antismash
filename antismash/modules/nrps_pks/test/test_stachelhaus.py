@@ -106,7 +106,7 @@ class TestStachelhaus(unittest.TestCase):
             "multi": ["Trp", "Tyr"],
         }
         for name, expected in expected_results.items():
-            assert expected == predictions[name].get_classification()
+            assert set(expected) == set(predictions[name].get_classification())
 
         assert "none" not in predictions
 
