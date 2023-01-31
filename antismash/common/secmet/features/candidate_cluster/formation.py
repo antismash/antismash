@@ -31,8 +31,8 @@ def create_candidates_from_protoclusters(protoclusters: List[Protocluster]) -> L
     if not protoclusters:
         return []
 
-    # ensure that only one candidate cluster can be created for each specific start/end combination
-    existing: Set[Tuple[int, int]] = set()
+    # ensure that only one candidate cluster can be created for each specific combination
+    existing: set[tuple[int, int, tuple[str, ...]]] = set()
 
     def build_candidates(groups: List[List[Protocluster]], kind: CandidateClusterKind) -> List[CandidateCluster]:
         """ Creates candidates of the given kind, one for each group
@@ -41,9 +41,10 @@ def create_candidates_from_protoclusters(protoclusters: List[Protocluster]) -> L
         for group in groups:
             assert kind == CandidateClusterKind.SINGLE or len(group) > 1
             candidate = CandidateCluster(kind, sorted(group))
-            if (candidate.location.start, candidate.location.end) not in existing:
+            key = (candidate.location.start, candidate.location.end, tuple(sorted(candidate.products)))
+            if key not in existing:
                 candidates.append(candidate)
-                existing.add((candidate.location.start, candidate.location.end))
+                existing.add(key)
         return candidates
 
     unassigned = sorted(protoclusters)  # will contain any protocluster not yet in hybrid/interleaved
@@ -67,6 +68,13 @@ def create_candidates_from_protoclusters(protoclusters: List[Protocluster]) -> L
     for cluster in unassigned:
         if (cluster.location.start, cluster.location.end) not in existing:
             candidates.append(CandidateCluster(CandidateClusterKind.SINGLE, [cluster]))
+
+    # and as a sanity check, ensure all protoclusters belong to at least one candidate
+    assigned = set()
+    for candidate in candidates:
+        for proto in candidate.protoclusters:
+            assigned.add(proto)
+    assert len(assigned) == len(protoclusters), f"{len(assigned)} == {len(protoclusters)}"
 
     return sorted(candidates)  # again, reorder by location
 
