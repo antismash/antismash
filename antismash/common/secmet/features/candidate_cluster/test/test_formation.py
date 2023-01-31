@@ -189,12 +189,18 @@ class TestCreation(unittest.TestCase):
 
         created = creator([big, small])
 
-        assert len(created) == 2
+        assert len(created) == 3
         assert created[0].kind == CandidateCluster.kinds.NEIGHBOURING
         assert created[0].location == big.location
+        assert created[0].products == ["a", "b"]
 
         assert created[1].kind == CandidateCluster.kinds.SINGLE
-        assert created[1].location == small.location
+        assert created[1].location == big.location
+        assert created[1].products == ["a"]
+
+        assert created[2].kind == CandidateCluster.kinds.SINGLE
+        assert created[2].location == small.location
+        assert created[2].products == ["b"]
 
     def test_multiple_contained_in_hybrid(self):
         clusters = [
@@ -211,3 +217,28 @@ class TestCreation(unittest.TestCase):
         assert len(created) == 1
         assert created[0].kind == CandidateCluster.kinds.CHEMICAL_HYBRID
         assert created[0].protoclusters == tuple(clusters)
+
+    def test_overlap_interleave(self):
+        # mimics an edge case where an interleaved was formed due to a small overlap
+        # in two genes, and the interleaved was dropped because it had the same
+        # coordinates, despite having different products
+        clusters = [
+            create_cluster(100, 500, 800, 1000, "hybA"),
+            create_cluster(100, 500, 800, 1000, "hybB"),
+            create_cluster(700, 790, 900, 1000, "inter"),
+        ]
+        cds = create_cds(500, 800, ["hybA", "hybB"])
+        clusters[0].add_cds(cds)
+        clusters[1].add_cds(cds)
+        cds = create_cds(790, 900, ["inter"])
+        clusters[2].add_cds(cds)
+        created = creator(clusters)
+
+        assert len(created) == 2
+
+        assert created[0].kind == CandidateCluster.kinds.CHEMICAL_HYBRID
+        assert sorted(created[0].protoclusters, key=id) == sorted(tuple(clusters[:2]), key=id)
+
+        assert created[1].kind == CandidateCluster.kinds.INTERLEAVED
+        assert sorted(created[1].protoclusters, key=id) == sorted(clusters, key=id)
+        assert len(created[1].products) == 3
