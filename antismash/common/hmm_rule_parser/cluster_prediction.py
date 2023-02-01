@@ -12,7 +12,6 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 from antismash.common import fasta, path, serialiser
 from antismash.common.hmmscan_refinement import HSP
 from antismash.common.secmet import Record, Protocluster, CDSFeature, FeatureLocation
-from antismash.common.secmet.locations import locations_overlap
 from antismash.common.secmet.qualifiers import GeneFunction, SecMetQualifier
 from antismash.common.subprocessing import run_hmmsearch
 from antismash.common.hmm_rule_parser import rule_parser
@@ -142,7 +141,8 @@ class RuleDetectionResults:
 
 
 def remove_redundant_protoclusters(clusters: List[Protocluster],
-                                   rules_by_name: Dict[str, rule_parser.DetectionRule]
+                                   rules_by_name: Dict[str, rule_parser.DetectionRule],
+                                   record: Record,
                                    ) -> List[Protocluster]:
     """ Removes clusters which have superiors covering the same (or larger) region
     """
@@ -150,15 +150,24 @@ def remove_redundant_protoclusters(clusters: List[Protocluster],
     for cluster in clusters:
         clusters_by_rule[cluster.product].append(cluster)
 
+    def get_first_and_last(cluster: Protocluster) -> tuple[CDSFeature, CDSFeature]:
+        cores = record.get_cds_features_within_location(cluster.core_location)
+        return cores[0], cores[-1]
+
     trimmed_clusters = []
     for cluster in clusters:
         rule_name = cluster.product
         is_redundant = False
+        first_core_cds, last_core_cds = get_first_and_last(cluster)
         for superior in rules_by_name[rule_name].superiors:
             for other_cluster in clusters_by_rule.get(superior, []):
-                if locations_overlap(other_cluster.core_location, cluster.core_location):
-                    is_redundant = True
-                    break
+                other_first, other_last = get_first_and_last(other_cluster)
+                if other_last < first_core_cds:
+                    continue
+                if last_core_cds < other_first:
+                    continue
+                is_redundant = True
+                break
             if is_redundant:
                 break
         if not is_redundant:
@@ -212,7 +221,7 @@ def find_protoclusters(record: Record, cds_by_cluster_type: Dict[str, Set[str]],
         if contained != cluster.location:
             cluster.location = contained
 
-    clusters = remove_redundant_protoclusters(clusters, rules_by_name)
+    clusters = remove_redundant_protoclusters(clusters, rules_by_name, record)
 
     logging.debug("%d rule-based cluster(s) found in record", len(clusters))
     return clusters

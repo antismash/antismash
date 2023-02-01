@@ -25,13 +25,16 @@ class DummyConditions(rule_parser.Conditions):
 
 class TestRedundancy(unittest.TestCase):
     def setUp(self):
+        self.record = DummyRecord()
+        for cds in [DummyCDS(start=50, end=80), DummyCDS(start=110, end=140), DummyCDS(start=150, end=180)]:
+            self.record.add_cds_feature(cds)
         superior = rule_parser.DetectionRule("superior", "category", 10, 10, DummyConditions())
         inferior = rule_parser.DetectionRule("inferior", "category", 10, 10, DummyConditions(), superiors=["superior"])
         irrelevant = rule_parser.DetectionRule("irrelevant", "category", 10, 10, DummyConditions())
         self.rules_by_name = {rule.name: rule for rule in [superior, inferior, irrelevant]}
 
     def remove(self, clusters):
-        return cluster_prediction.remove_redundant_protoclusters(clusters, self.rules_by_name)
+        return cluster_prediction.remove_redundant_protoclusters(clusters, self.rules_by_name, self.record)
 
     def create_cluster(self, rule_name, start, end):
         rule = self.rules_by_name[rule_name]
@@ -42,43 +45,55 @@ class TestRedundancy(unittest.TestCase):
                             detection_rule="rule text")
 
     def test_alone(self):
-        clusters = [self.create_cluster("inferior", 101, 110)]
+        clusters = [self.create_cluster("inferior", 50, 140)]
         assert clusters == self.remove(clusters)
 
     def test_non_overlap(self):
-        clusters = [self.create_cluster("inferior", 101, 110),
-                    self.create_cluster("superior", 200, 210)]
+        clusters = [self.create_cluster("inferior", 50, 140),
+                    self.create_cluster("superior", 150, 180)]
         assert clusters == self.remove(clusters)
 
     def test_not_relevant_equal(self):
-        clusters = [self.create_cluster("inferior", 101, 110),
-                    self.create_cluster("irrelevant", 101, 110)]
+        clusters = [self.create_cluster("inferior", 50, 140),
+                    self.create_cluster("irrelevant", 50, 140)]
         assert clusters == self.remove(clusters)
 
     def test_not_relevant_contained(self):
-        clusters = [self.create_cluster("inferior", 105, 108),
-                    self.create_cluster("irrelevant", 101, 110)]
+        clusters = [self.create_cluster("inferior", 110, 140),
+                    self.create_cluster("irrelevant", 50, 180)]
         assert clusters == self.remove(clusters)
 
     def test_not_relevant_larger(self):
-        clusters = [self.create_cluster("inferior", 101, 110),
-                    self.create_cluster("irrelevant", 105, 108)]
+        clusters = [self.create_cluster("inferior", 50, 180),
+                    self.create_cluster("irrelevant", 110, 140)]
         assert clusters == self.remove(clusters)
 
     def test_contained(self):
-        clusters = [self.create_cluster("inferior", 110, 210),
-                    self.create_cluster("superior", 101, 310)]
+        clusters = [self.create_cluster("inferior", 110, 140),
+                    self.create_cluster("superior", 50, 180)]
         assert self.remove(clusters) == [clusters[1]]
 
     def test_equal(self):
-        clusters = [self.create_cluster("inferior", 101, 110),
-                    self.create_cluster("superior", 101, 110)]
+        clusters = [self.create_cluster("inferior", 110, 140),
+                    self.create_cluster("superior", 110, 140)]
         assert self.remove(clusters) == [clusters[1]]
 
     def test_larger(self):
-        clusters = [self.create_cluster("inferior", 101, 110),
-                    self.create_cluster("superior", 102, 109)]
+        clusters = [self.create_cluster("inferior", 50, 180),
+                    self.create_cluster("superior", 110, 140)]
         assert self.remove(clusters) == [clusters[1]]
+
+    def test_adjacent_with_overlap(self):
+        # no intersection of core genes at all
+        # one gene just overlaps slightly with the previous
+        existing_end = self.record.get_cds_features()[-1].location.end
+        self.record.add_cds_feature(DummyCDS(start=existing_end - 10, end=existing_end + 20))
+        clusters = [
+            self.create_cluster("superior", 0, existing_end),
+            self.create_cluster("inferior", existing_end - 10, existing_end + 20),
+        ]
+        # that adjacent cluster should not be discarded as redundant
+        assert self.remove(clusters) == clusters
 
     def test_neighbourhoods_dont_matter(self):
         neighbourhood = self.rules_by_name["superior"].neighbourhood
