@@ -52,13 +52,14 @@ class FakeHSP:
 
 class FakeHSPHit:
     "class for generating a HSP like datastructure"
-    def __init__(self, query_id, hit_id, hit_start, hit_end, bitscore, evalue):
+    def __init__(self, query_id, hit_id, hit_start=0, hit_end=10, bitscore=10, evalue=1e-10, seeds=1):
         self.query_id = query_id
         self.hit_id = hit_id
         self.hit_start = hit_start
         self.hit_end = hit_end
         self.bitscore = bitscore
         self.evalue = evalue
+        self.seeds = seeds
 
     def __repr__(self):
         return "FakeHSP({})".format(str(vars(self)))
