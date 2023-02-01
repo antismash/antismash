@@ -447,6 +447,63 @@ def find_hmmer_hits(record: Record, sig_by_name: Dict[str, Signature],
     return by_id
 
 
+def build_results(clusters: list[Protocluster], record: Record, tool: str,
+                  results_by_id: dict[str, list[HSP]],
+                  cds_domains_by_cluster: dict[str, dict[str, set[str]]],
+                  annotate_existing_subregions: bool,
+                  multipliers: Multipliers,
+                  ) -> RuleDetectionResults:
+    """ Builds a RuleDetectionResults instance from the provided details
+
+        Arguments:
+            clusters: a list of protoclusters found
+            record: the record that was analysed
+            tool: the name of the tool providing the HMMs (e.g. rule_based_clusters)
+            cds_domains_by_cluster: a mapping of CDS ID to
+                    a mapping of cluster type string to
+                        a set of domains used to determine the cluster
+            annotate_existing_subregions: if True, subregions already present in the record
+                    will have domains annotated even if no protocluster is found
+            multipliers: distance multipliers applied to the rules used
+
+        Returns:
+            the created RuleDetectionResults instance
+    """
+
+    def get_domains_for_cds(cds: CDSFeature) -> List[SecMetQualifier.Domain]:
+        domains = []
+        for hit in results_by_id.get(cds.get_name(), []):
+            domains.append(SecMetQualifier.Domain(hit.query_id, hit.evalue, hit.bitscore,
+                                                  hit.seeds, tool))
+        return domains
+
+    cds_results_by_cluster = {}
+    cdses_with_annotations = set()
+    for cluster in clusters:
+        cds_results = []
+        for cds in record.get_cds_features_within_location(cluster.location):
+            domains = get_domains_for_cds(cds)
+            if domains:
+                cds_results.append(CDSResults(cds, domains, cds_domains_by_cluster.get(cds.get_name(), {})))
+                cdses_with_annotations.add(cds)
+        cds_results_by_cluster[cluster] = cds_results
+
+    # add detected profile annotations for any existing subregions, if enabled
+    cds_results_outside_clusters = []
+    if annotate_existing_subregions:
+        for subregion in record.get_subregions():
+            for cds in subregion.cds_children:
+                if cds in cdses_with_annotations:
+                    continue
+                domains = get_domains_for_cds(cds)
+                if domains:
+                    cds_results_outside_clusters.append(CDSResults(cds, domains, {}))
+                    cdses_with_annotations.add(cds)
+
+    return RuleDetectionResults(cds_results_by_cluster, tool, cds_results_outside_clusters,
+                                multipliers)
+
+
 def detect_protoclusters_and_signatures(record: Record, signature_file: str, seeds_file: str,
                                         rule_files: List[str], valid_categories: Set[str],
                                         filter_file: str, tool: str,
@@ -525,38 +582,8 @@ def detect_protoclusters_and_signatures(record: Record, signature_file: str, see
     clusters = find_protoclusters(record, cluster_type_hits, rules_by_name)
     strip_inferior_domains(cds_domains_by_cluster, rules_by_name)
 
-    def get_domains_for_cds(cds: CDSFeature) -> List[SecMetQualifier.Domain]:
-        domains = []
-        for hit in results_by_id.get(cds.get_name(), []):
-            domains.append(SecMetQualifier.Domain(hit.query_id, hit.evalue, hit.bitscore,
-                                                  hit.seeds, tool))
-        return domains
-
-    cds_results_by_cluster = {}
-    cdses_with_annotations = set()
-    for cluster in clusters:
-        cds_results = []
-        for cds in record.get_cds_features_within_location(cluster.location):
-            domains = get_domains_for_cds(cds)
-            if domains:
-                cds_results.append(CDSResults(cds, domains, cds_domains_by_cluster.get(cds.get_name(), {})))
-                cdses_with_annotations.add(cds)
-        cds_results_by_cluster[cluster] = cds_results
-
-    # add detected profile annotations for any existing subregions, if enabled
-    cds_results_outside_clusters = []
-    if annotate_existing_subregions:
-        for subregion in record.get_subregions():
-            for cds in subregion.cds_children:
-                if cds in cdses_with_annotations:
-                    continue
-                domains = get_domains_for_cds(cds)
-                if domains:
-                    cds_results_outside_clusters.append(CDSResults(cds, domains, {}))
-                    cdses_with_annotations.add(cds)
-
-    return RuleDetectionResults(cds_results_by_cluster, tool, cds_results_outside_clusters,
-                                multipliers)
+    return build_results(clusters, record, tool, results_by_id, cds_domains_by_cluster,
+                         annotate_existing_subregions, multipliers)
 
 
 def strip_inferior_domains(cds_domains_by_cluster: Dict[str, Dict[str, Set[str]]],
