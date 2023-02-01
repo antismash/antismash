@@ -9,7 +9,9 @@ from unittest.mock import patch
 
 from antismash.common.hmm_rule_parser import cluster_prediction, rule_parser, structures
 from antismash.common.secmet.features import Protocluster, FeatureLocation
-from antismash.common.test.helpers import DummyRecord, DummyCDS
+from antismash.common.secmet.qualifiers.gene_functions import GeneFunction
+from antismash.common.secmet.test.helpers import DummyProtocluster
+from antismash.common.test.helpers import DummyRecord, DummyCDS, FakeHSPHit
 
 
 class DummyConditions(rule_parser.Conditions):
@@ -208,3 +210,40 @@ class TestMultipliers(unittest.TestCase):
             # make sure the multipliers made it all the way to rule creation
             _, actual_kwargs = patched_create.call_args
             assert actual_kwargs["multipliers"] == multipliers
+
+
+class TestDomainAnnotations(unittest.TestCase):
+    def test_inferiors_not_annotated(self):
+        cds_a = DummyCDS(start=10, end=40, locus_tag="a")
+        cds_b = DummyCDS(start=50, end=80, locus_tag="b")
+        record = DummyRecord(features=[cds_a, cds_b])
+        clusters = [DummyProtocluster(start=10, end=80, product="superior")]  # inferior cluster already discarded
+        hsps = {
+            "a": [FakeHSPHit("sup1", "a"), FakeHSPHit("inf1", "a")],
+            "b": [FakeHSPHit("inf2", "a")],
+        }
+        domains_by_cluster = {
+            "a": {
+                "superior": {"sup1"},
+                "inferior": {"inf1"},
+            },
+            "b": {
+                "inferior": {"inf2"},
+            },
+        }
+
+        results = cluster_prediction.build_results(clusters, record, "dummy_tool", hsps, domains_by_cluster,
+                                                   True, structures.Multipliers())
+        # neither gene should have function annotations yet
+        assert len(cds_a.gene_functions) == 0
+        assert len(cds_b.gene_functions) == 0
+
+        results.annotate_cds_features()
+        # now A should have the superior rule's functions as core and inferiors as additional
+        assert len(cds_a.gene_functions) == 2
+        assert cds_a.gene_functions.get_by_function(GeneFunction.CORE)
+        assert cds_a.gene_functions.get_by_function(GeneFunction.ADDITIONAL)
+        # and B should have the inferiors as additional
+        assert len(cds_b.gene_functions) == 1
+        assert not cds_b.gene_functions.get_by_function(GeneFunction.CORE)
+        assert cds_b.gene_functions.get_by_function(GeneFunction.ADDITIONAL)

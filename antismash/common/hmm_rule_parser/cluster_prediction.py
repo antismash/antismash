@@ -477,6 +477,8 @@ def build_results(clusters: list[Protocluster], record: Record, tool: str,
                                                   hit.seeds, tool))
         return domains
 
+    all_cds_results: dict[str, CDSResults] = {}
+
     cds_results_by_cluster = {}
     cdses_with_annotations = set()
     for cluster in clusters:
@@ -484,7 +486,14 @@ def build_results(clusters: list[Protocluster], record: Record, tool: str,
         for cds in record.get_cds_features_within_location(cluster.location):
             domains = get_domains_for_cds(cds)
             if domains:
-                cds_results.append(CDSResults(cds, domains, cds_domains_by_cluster.get(cds.get_name(), {})))
+                def_domains = cds_domains_by_cluster.get(cds.get_name(), {}).get(cluster.product, set())
+                cds_result = all_cds_results.get(cds.get_name())
+                if not cds_result:
+                    cds_result = CDSResults(cds, domains, {})
+                    all_cds_results[cds.get_name()] = cds_result
+                cds_result.definition_domains[cluster.product] = def_domains
+
+                cds_results.append(cds_result)
                 cdses_with_annotations.add(cds)
         cds_results_by_cluster[cluster] = cds_results
 
