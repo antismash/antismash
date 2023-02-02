@@ -3,7 +3,7 @@ name: Comment on pylint issue comparison
 on: [pull_request_target]
 
 jobs:
-  make_issues_comment:
+  lint_comparison:
     runs-on: ubuntu-latest
     steps:
     # install python
@@ -11,9 +11,9 @@ jobs:
       with:
         python-version: '3.x'
     # checkout the PR
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     # cache the pip step for speed
-    - uses: actions/cache@v2
+    - uses: actions/cache@v3
       with:
         path: ${{ env.pythonLocation }}
         key: ${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}
