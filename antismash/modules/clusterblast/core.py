@@ -12,7 +12,9 @@ from typing import Dict, Iterable, List, Set, Sequence, Tuple
 from helperlibs.wrappers.io import TemporaryDirectory
 
 from antismash.common import path, subprocessing, fasta, secmet
-from antismash.common.subprocessing.diamond import check_diamond_files as check_clusterblast_files
+from antismash.common.subprocessing.diamond import \
+    check_diamond_files as check_clusterblast_files  # used by other components # pylint: disable=unused-import
+
 from antismash.common.subprocessing.blast import run_makeblastdb as make_blastdb
 from antismash.config import get_config
 

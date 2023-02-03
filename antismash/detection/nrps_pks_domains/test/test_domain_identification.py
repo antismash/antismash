@@ -239,7 +239,7 @@ class TestDatabases(unittest.TestCase):
 
     def test_caching(self):
         root = "/some/dummy/root"
-        options = update_config(get_simple_options(None, ['--databases', root]))
+        update_config(get_simple_options(None, ['--databases', root]))
         assert not domain_identification.DATABASE_PATHS
         with patch.object(path, "find_latest_database_version",
                           return_value="1.0") as patched:

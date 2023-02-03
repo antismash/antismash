@@ -34,7 +34,6 @@ def generate_html(region_layer: RegionLayer, results: SactiResults,
     for locus, motifs in motifs_by_locus.items():
         motifs_by_core = defaultdict(list)
         for motif in motifs:
-            leader = motif.leader
             core = motif.core
             motifs_by_core[core].append(motif)
         motifs_by_locus_by_core[locus] = motifs_by_core

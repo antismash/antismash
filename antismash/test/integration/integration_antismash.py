@@ -146,8 +146,8 @@ class TestModuleData(unittest.TestCase):
 
     def test_prepare_module_data_with_container_data(self):
         modules = get_all_modules()
-        options = build_config(["--databases", "/some/mounted_at_runtime/path"],
-                               isolated=True, modules=modules)
+        build_config(["--databases", "/some/mounted_at_runtime/path"],
+                     isolated=True, modules=modules)
         # there should be no errors for missing databases
         prepare_module_data()
 

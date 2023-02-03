@@ -5,7 +5,6 @@
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring,consider-using-with
 
 from io import StringIO
-import profile
 import unittest
 
 import antismash.detection.hmm_detection.data.extract_details as core
