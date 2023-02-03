@@ -34,7 +34,7 @@ class TestPFAMs(unittest.TestCase):
 
             if create_file:
                 path = os.path.join(path, "Pfam-A.hmm")
-                with open(path, "w") as handle:
+                with open(path, "w", encoding="utf-8"):
                     pass
 
         with tempfile.TemporaryDirectory(prefix="aS.pfamdbtest") as temp_db_layout:
