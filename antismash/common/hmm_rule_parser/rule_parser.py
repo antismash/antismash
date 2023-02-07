@@ -949,15 +949,22 @@ class Parser:  # pylint: disable=too-few-public-methods
             self.rules_by_name[rule.name] = rule
             self.rules.append(rule)
         if self.current_token:
-            raise RuleSyntaxError("Expected RULE but found %s\n%s\n%s%s" % (
-                                    self.current_token.type,
-                                    self.lines[self.current_line - 1],
-                                    " " * self.current_token.position, "^"))
+            raise self._build_syntax_error(f"Expected RULE but found {self.current_token.type}")
         # verify gathered signature identifiers exist as signatures
         identifiers = find_condition_identifiers(self._consumed_tokens)
         unknown = identifiers - self.signature_names
         if unknown:
-            raise ValueError("Rules contained identifers without signatures: %s" % ", ".join(sorted(list(unknown))))
+            raise ValueError(f"Rules contained identifers without signatures: {', '.join(sorted(list(unknown)))}")
+
+    def _build_syntax_error(self, description: str, context_lines: int = 1, token: Token = None
+                            ) -> RuleSyntaxError:
+        if context_lines == 0:
+            raise RuleSyntaxError(description)
+        if not token:
+            token = self.current_token
+        indicator = f"{' ' * token.position}^" if token else ""
+        context = "\n".join(self.lines[self.current_line - context_lines:self.current_line])
+        return RuleSyntaxError(f"{description}\n{context}\n{indicator}")
 
     def _verify_alias_name(self, name: str) -> None:
         """ Ensures an alias name doesn't conflict in any way that could cause
@@ -975,19 +982,17 @@ class Parser:  # pylint: disable=too-few-public-methods
 
     def _consume(self, expected: TokenTypes) -> Token:
         if self.current_token is None:
-            raise RuleSyntaxError("Unexpected end of rule, expected %s" % expected)
+            raise RuleSyntaxError(f"Unexpected end of rule, expected {expected}")
         self._consumed_tokens.append(self.current_token)
         if not self.current_token.aliased:
             self.current_line = self.current_token.line_number
             self.current_position = self.current_token.position
-            error_message = "Expected %s but found %s (%s)\n%s\n%s%s"
+            error_message = "Expected %s but found %s (%s)"
         else:
-            error_message = "Expected %s but found %s (%s) in alias\n%s\n%s%s"
+            error_message = "Expected %s but found %s (%s) in alias"
         if self.current_token.type != expected:
-            raise RuleSyntaxError(error_message % (
-                    expected, self.current_token.type, self.current_token,
-                    "\n".join(self.lines[self.current_line - 5:self.current_line]),
-                    " "*self.current_position, "^"))
+            raise self._build_syntax_error(error_message % (expected, self.current_token.type, self.current_token),
+                                           context_lines=5)
         consumed = self.current_token
         try:
             self.current_token = next(self.tokens)
@@ -1044,8 +1049,7 @@ class Parser:  # pylint: disable=too-few-public-methods
             raise RuleSyntaxError("aliases cannot be used for rule identifiers")
         rule_name = self._consume_identifier()
         if not self.current_token:
-            raise RuleSyntaxError("expected %s section after %s"
-                                  % (TokenTypes.CATEGORY, TokenTypes.RULE))
+            raise RuleSyntaxError(f"expected {TokenTypes.CATEGORY} section after {TokenTypes.RULE}")
         description = ""
         self._consume(TokenTypes.CATEGORY)
         prev = TokenTypes.CATEGORY
@@ -1069,9 +1073,7 @@ class Parser:  # pylint: disable=too-few-public-methods
             related = self._parse_related()
             prev = TokenTypes.RELATED
         if not self.current_token:
-            raise RuleSyntaxError("expected %s or %s sections after %s"
-                                  % (TokenTypes.SUPERIORS, TokenTypes.CUTOFF,
-                                     prev))
+            raise RuleSyntaxError(f"expected {TokenTypes.SUPERIORS} or {TokenTypes.CUTOFF} sections after {prev}")
         superiors = None
         if self.current_token.type == TokenTypes.SUPERIORS:
             superiors = self._parse_superiors()
@@ -1082,10 +1084,7 @@ class Parser:  # pylint: disable=too-few-public-methods
         self._consume(TokenTypes.CONDITIONS)
         conditions = Conditions(False, self._parse_conditions())
         if self.current_token is not None and self.current_token.type not in _STARTERS:
-            raise RuleSyntaxError("Unexpected symbol %s\n%s\n%s%s" % (
-                    self.current_token.type,
-                    "\n".join(self.lines[self.current_line - 5:self.current_line]),
-                    " "*self.current_token.position, "^"))
+            raise self._build_syntax_error(f"Unexpected symbol {self.current_token.type}", context_lines=5)
         return DetectionRule(rule_name, category, cutoff, neighbourhood, conditions,
                              description=description, examples=examples, superiors=superiors, related=related)
 
@@ -1192,21 +1191,14 @@ class Parser:  # pylint: disable=too-few-public-methods
 
         if is_group:
             if self.current_token is None:
-                raise RuleSyntaxError("Unexpected end of rule, expected )\n%s" % (
-                        self.lines[self.current_line - 1]))
+                raise self._build_syntax_error("Unexpected end of rule, expected ')'")
             if self.current_token.type != TokenTypes.GROUP_CLOSE:
-                raise RuleSyntaxError("Expected the end of a group, found %s\n%s\n%s^" % (
-                        self.current_token,
-                        self.lines[self.current_line - 1],
-                        " " * self.current_token.position))
+                raise self._build_syntax_error(f"Expected the end of a group, found {self.current_token}")
         elif self.current_token and self.current_token.type in [TokenTypes.RULE, TokenTypes.DEFINE]:
             # this rule has ended since another is beginning
             return conditions
         elif self.current_token is not None:
-            raise RuleSyntaxError("Unexpected symbol, found %s\n%s\n%s^" % (
-                    self.current_token.token_text,
-                    self.lines[self.current_line - 1],
-                    " " * self.current_token.position))
+            raise self._build_syntax_error(f"Unexpected symbol, found {self.current_token.token_text}")
         return conditions
 
     def _parse_single_condition(self, allow_cds: bool) -> Conditions:
@@ -1254,13 +1246,9 @@ class Parser:  # pylint: disable=too-few-public-methods
         self._consume(TokenTypes.GROUP_OPEN)
         conditions = self._parse_conditions(allow_cds=False, is_group=True)
         if not conditions:
-            raise RuleSyntaxError("cds conditions must have contents:\n%s\n%s^" % (
-                    self.lines[self.current_line - 1],
-                    " " * cds_token.position))
+            raise self._build_syntax_error("cds conditions must have contents:", token=cds_token)
         if len(conditions) == 1 and isinstance(conditions[0], SingleCondition):
-            raise RuleSyntaxError("cds conditions must contain more than a single identifier:\n%s\n%s^" % (
-                    self.lines[self.current_line - 1],
-                    " " * cds_token.position))
+            raise self._build_syntax_error("cds conditions must contain more than a single identifier")
         self._consume(TokenTypes.GROUP_CLOSE)
         return conditions
 
@@ -1289,9 +1277,7 @@ class Parser:  # pylint: disable=too-few-public-methods
         options = self._parse_list()
         self._consume(TokenTypes.GROUP_CLOSE)
         if count < 0:
-            raise ValueError("minimum count must be greater than zero: \n%s\n%s^" % (
-                             self.lines[self.current_line - 1],
-                             " "*initial_token.position))
+            raise self._build_syntax_error("minimum count must be greater than zero")
         return MinimumCondition(negated, count, options)
 
     def _parse_list(self) -> List[str]:
@@ -1325,7 +1311,7 @@ class Parser:  # pylint: disable=too-few-public-methods
         transitive_superiors = set()
         for name in superiors:
             if name not in self.rules_by_name:
-                raise ValueError("A rule's superior must already be defined. Unknown rule name: %s" % name)
+                raise ValueError(f"A rule's superior must already be defined. Unknown rule name: {name}")
             # all prior rules had to have defined superiors, so this rule can't
             # cause any cycles with the superiors and it's safe to fetch parents
             parent_superiors = self.rules_by_name[name].superiors
