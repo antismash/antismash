@@ -195,7 +195,7 @@ def generate_substrates_order(geneorder: List[CDSFeature], consensus_predictions
             components.append((substrate, monomer, [domain.domain or "" for domain in module.domains]))
 
         if monomers:
-            monomers_by_cds.append("(%s)" % (" - ".join(monomers)))
+            monomers_by_cds.append(f"({' - '.join(monomers)})")
 
     polymer = " + ".join(monomers_by_cds)
     smiles = gen_smiles_from_pksnrps(components)

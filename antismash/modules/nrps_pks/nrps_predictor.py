@@ -120,38 +120,36 @@ class PredictorSVMResult(Prediction):
         elif self.stachelhaus_match_count > 7:
             qualifier = "moderate"
 
-        raw = ("\n"
-               "<dl><dt>SVM prediction details:</dt>\n"
-               " <dd>"
-               "  %s"
-               "  <dl>"
-               "   <dt>Predicted physicochemical class:</dt>\n"
-               "   <dd>%s</dd>\n"
-               "   <dt>Large clusters prediction:</dt>\n"
-               "   <dd>%s</dd>\n"
-               "   <dt>Small clusters prediction:</dt>\n"
-               "   <dd>%s</dd>\n"
-               "   <dt>Single AA prediction:</dt>\n"
-               "   <dd>%s</dd>\n"
-               "  </dl>\n"
-               " </dd>\n"
-               "</dl>\n"
-               "<dl><dt>Stachelhaus prediction details:</dt>\n"
-               " <dd>\n"
-               "  <dl>\n"
-               "   <dt>Stachelhaus sequence:</dt>\n"
-               "   <dd><span class=\"serif\">%s</span></dd>\n"
-               "   <dt>Nearest Stachelhaus code:</dt>\n"
-               "   <dd>%s</dd>\n"
-               "   <dt>Stachelhaus code match:</dt>\n"
-               "   <dd>%d%% (%s)</dd>\n"
-               "  </dl>\n"
-               " </dd>\n"
-               "</dl>\n" % (note, self.physicochemical_class, ", ".join(self.large_cluster_pred),
-                            ", ".join(self.small_cluster_pred), self.single_amino_pred,
-                            self.stachelhaus_seq, ", ".join(self.stachelhaus_predictions),
-                            self.stachelhaus_match_count * 10, qualifier))
-        return Markup(raw)
+        return Markup(
+            "\n"
+            "<dl><dt>SVM prediction details:</dt>\n"
+            " <dd>"
+            f"  {note}"
+            "  <dl>"
+            "   <dt>Predicted physicochemical class:</dt>\n"
+            f"   <dd>{self.physicochemical_class}</dd>\n"
+            "   <dt>Large clusters prediction:</dt>\n"
+            f"   <dd>{', '.join(self.large_cluster_pred)}</dd>\n"
+            "   <dt>Small clusters prediction:</dt>\n"
+            f"   <dd>{', '.join(self.small_cluster_pred)}</dd>\n"
+            "   <dt>Single AA prediction:</dt>\n"
+            f"   <dd>{self.single_amino_pred}</dd>\n"
+            "  </dl>\n"
+            " </dd>\n"
+            "</dl>\n"
+            "<dl><dt>Stachelhaus prediction details:</dt>\n"
+            " <dd>\n"
+            "  <dl>\n"
+            "   <dt>Stachelhaus sequence:</dt>\n"
+            f"   <dd><span class=\"serif\">{self.stachelhaus_seq}</span></dd>\n"
+            "   <dt>Nearest Stachelhaus code:</dt>\n"
+            f"   <dd>{', '.join(self.stachelhaus_predictions)}</dd>\n"
+            "   <dt>Stachelhaus code match:</dt>\n"
+            f"   <dd>{self.stachelhaus_match_count * 10}% ({qualifier})</dd>\n"
+            "  </dl>\n"
+            " </dd>\n"
+            "</dl>\n"
+        )
 
     @classmethod
     def from_line(cls, line: str) -> "PredictorSVMResult":
@@ -171,7 +169,7 @@ class PredictorSVMResult(Prediction):
         # 11: coords
         # 12: pfam-score
         if not len(parts) == 13:
-            raise ValueError("Invalid SVM result line: %s" % line)
+            raise ValueError(f"Invalid SVM result line: {line}")
         query_stach = parts[2]
         pred_from_stach = parts[7]
         best_stach_match = query_stach.lower()
@@ -253,7 +251,7 @@ def run_nrpspredictor(a_domains: List[ModularDomain], options: ConfigType) -> Di
             write_nrpspredictor_input(a_domains, signatures, handle)
         # Run NRPSPredictor2 SVM
         commands = ['java',
-                    '-Ddatadir=%s' % data_dir,
+                    f'-Ddatadir={data_dir}',
                     '-cp', classpath,
                     'org.roettig.NRPSpredictor2.NRPSpredictor2',
                     '-i', input_filename,
@@ -262,7 +260,7 @@ def run_nrpspredictor(a_domains: List[ModularDomain], options: ConfigType) -> Di
                     '-b', bacterial]
         result = subprocessing.execute(commands)
         if not result.successful():
-            raise RuntimeError("NRPSPredictor2 failed: %s" % result.stderr)
+            raise RuntimeError(f"NRPSPredictor2 failed: {result.stderr}")
 
         with open(output_filename, encoding="utf-8") as handle:
             lines = handle.read().splitlines()[1:]  # strip the header
@@ -276,7 +274,7 @@ def write_nrpspredictor_input(a_domains: list[ModularDomain], signatures: list[O
     for sig, domain in zip(signatures, a_domains):
         if not sig:
             continue
-        handle.write("%s\t%s\n" % (sig, domain.get_name()))
+        handle.write(f"{sig}\t{domain.get_name()}\n")
 
 
 def map_nrpspredicor_to_norine(as_name: str) -> str:

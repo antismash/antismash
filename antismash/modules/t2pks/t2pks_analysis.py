@@ -63,7 +63,7 @@ def run_starter_unit_blastp(cds_hmm_hits: Dict[CDSFeature, List[HMMResult]]
                 continue
             blast_database = path.get_full_path(__file__, 'data', hit.hit_id)
             blastp_results.extend(subprocessing.run_blastp(blast_database, query_sequence))
-            blastp_fasta_files.add(path.get_full_path(__file__, 'data', hit.hit_id + '.fasta'))
+            blastp_fasta_files.add(path.get_full_path(__file__, "data", f"{hit.hit_id}.fasta"))
 
     if not blastp_results:
         return {}
@@ -234,7 +234,7 @@ def predict_molecular_weight(preds_by_protein: Dict[str, List[CDSPrediction]],
         starter_weight = WEIGHTS['starter_unit'][unit]
         for elongations in elongation_names:
             for elongation in elongations.split('|'):
-                combo = "%s_%s" % (unit, elongation)
+                combo = f"{unit}_{elongation}"
                 mws[combo] = (starter_weight
                               + int(elongation) * WEIGHTS['malonyl']
                               + tailoring_mw)

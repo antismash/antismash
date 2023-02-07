@@ -101,7 +101,7 @@ def check_options(options: ConfigType) -> List[str]:
     errors = []
     for filename in options.sideload:
         if not os.path.exists(filename):
-            errors.append("Extra annotation JSON cannot be found at '%s'" % filename)
+            errors.append(f"Extra annotation JSON cannot be found at {filename!r}")
     if len(set(options.sideload)) != len(options.sideload):
         errors.append("Sideloaded filenames contain duplicates")
     if options.sideload_cds_padding < 0:

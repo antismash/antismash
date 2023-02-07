@@ -24,14 +24,14 @@ def _verify_html_tags_match(html):
             continue
         print(closing, tag)
         if closing:
-            assert stack and stack[-1] == tag, "extra </%s>" % tag
+            assert stack and stack[-1] == tag, f"extra </{tag}>"
             print("closed", stack[-1])
             stack.pop()
         else:
             stack.append(tag)
             print("opened", stack[-1])
     print(stack)
-    assert not stack, "unclosed: %s" % ", ".join(stack)
+    assert not stack, f'unclosed: {", ".join(stack)}'
 
 
 class TestHTMLMatcher(unittest.TestCase):
@@ -69,7 +69,7 @@ class TestCollapser(unittest.TestCase):
             html = str(renderer.collapser_start("dummy", level)) + str(renderer.collapser_end())
             _verify_html_tags_match(html)
             assert "collapser-target-dummy" in html
-            assert "collapser-level-%s" % level in html
+            assert f"collapser-level-{level}" in html
 
     def test_safe_classes(self):
         html = str(renderer.collapser_start("some:name.3", "all")) + str(renderer.collapser_end())
@@ -89,7 +89,7 @@ class TestDocsLink(unittest.TestCase):
     def test_no_subtarget(self):
         result = renderer.docs_link("label")
         assert isinstance(result, renderer.Markup)
-        expected = "<a class='external-link' href='%s' target='_blank'>label</a>" % self.url
+        expected = f"<a class='external-link' href='{self.url}' target='_blank'>label</a>"
         assert str(result) == expected
 
     def test_subtarget(self):
@@ -97,7 +97,7 @@ class TestDocsLink(unittest.TestCase):
         result = renderer.docs_link("label", target)
         assert isinstance(result, renderer.Markup)
         url = self.url + target
-        expected = "<a class='external-link' href='%s' target='_blank'>label</a>" % url
+        expected = f"<a class='external-link' href='{url}' target='_blank'>label</a>"
         assert str(result) == expected
 
 

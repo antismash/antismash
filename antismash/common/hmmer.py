@@ -37,7 +37,7 @@ class HmmerHit:  # pylint: disable=too-many-instance-attributes
 
     def __post_init__(self) -> None:
         if self.protein_start >= self.protein_end:
-            raise ValueError("HMMer hit has inverted start and end: %r" % self)
+            raise ValueError(f"HMMer hit has inverted start and end: {self!r}")
         if len(self.translation) != len(self):
             raise ValueError("translation length does not match protein location size")
 
@@ -106,9 +106,9 @@ class HmmerResults(module_results.ModuleResults):
     def refilter(self, max_evalue: float, min_score: float) -> "HmmerResults":
         """ Trims the results to stricter thresholds for score and E-value """
         if max_evalue > self.evalue:
-            raise ValueError("cannot refilter to a more lenient evalue: %s -> %s" % (self.evalue, max_evalue))
+            raise ValueError(f"cannot refilter to a more lenient evalue: {self.evalue} -> {max_evalue}")
         if min_score < self.score:
-            raise ValueError("cannot refilter to a more lenient score: %s -> %s" % (self.score, min_score))
+            raise ValueError(f"cannot refilter to a more lenient score: {self.score} -> {min_score}")
         self.hits = [hit for hit in self.hits if hit.score >= min_score and hit.evalue <= max_evalue]
         self.evalue = max_evalue
         self.score = min_score
@@ -127,7 +127,7 @@ class HmmerResults(module_results.ModuleResults):
                 setattr(pfam_feature, key, getattr(hit, key))
             pfam_feature.database = db_version
             pfam_feature.detection = "hmmscan"
-            pfam_feature.domain_id = "{}_{}_{:04d}".format(self.tool, pfam_feature.locus_tag, i + 1)
+            pfam_feature.domain_id = f"{self.tool}_{pfam_feature.locus_tag}_{i+1:04d}"
             record.add_pfam_domain(pfam_feature)
 
 
@@ -261,7 +261,7 @@ def run_hmmer(record: Record, features: Iterable[CDSFeature], max_evalue: float,
             use_cut_tc: whether to use threshold cutoff as specified in profiles
     """
     if not os.path.exists(database):
-        raise ValueError("Given database does not exist: %s" % database)
+        raise ValueError(f"Given database does not exist: {database}")
     query_sequence = fasta.get_fasta_from_features(features)
     opts: List[str] = []
     if use_cut_tc:
@@ -290,7 +290,7 @@ def ensure_database_pressed(filepath: str, return_not_raise: bool = False) -> Li
         Returns:
             any encountered error messages, will never be populated without return_not_raise == True
     """
-    components = ["{}{}".format(filepath, ext) for ext in ['.h3f', '.h3i', '.h3m', '.h3p']]
+    components = [f"{filepath}.{ext}" for ext in ["h3f", "h3i", "h3m", "h3p"]]
 
     if "mounted_at_runtime" in filepath:
         msg = f"Cannot ensure database pressed when set to mount at runtime: {filepath}"
@@ -301,14 +301,14 @@ def ensure_database_pressed(filepath: str, return_not_raise: bool = False) -> Li
     if path.is_outdated(components, filepath):
         logging.info("%s components missing or obsolete, re-pressing database", filepath)
         if "hmmpress" not in get_config().executables:
-            msg = "Failed to hmmpress {!r}: cannot find executable for hmmpress".format(filepath)
+            msg = f"Failed to hmmpress {filepath!r}: cannot find executable for hmmpress"
             if not return_not_raise:
                 raise RuntimeError(msg)
             return [msg]
 
         result = subprocessing.run_hmmpress(filepath)
         if not result.successful():
-            msg = "Failed to hmmpress {!r}: {}".format(filepath, result.stderr)
+            msg = f"Failed to hmmpress {filepath!r}: {result.stderr}"
             if not return_not_raise:
                 raise RuntimeError(msg)
             return [msg]

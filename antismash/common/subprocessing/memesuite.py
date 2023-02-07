@@ -24,7 +24,7 @@ def run_fimo_simple(query_motif_file: str, target_sequence: str) -> str:
     if not result.successful():
         logging.debug('FIMO returned %d: %r while searching %r', result.return_code,
                       result.stderr, query_motif_file)
-        raise RuntimeError("FIMO problem while running %s... %s" % (command, result.stderr[-100:]))
+        raise RuntimeError(f"FIMO problem while running {command}... {result.stderr[-100:]}")
     return result.stdout
 
 
@@ -38,8 +38,7 @@ def run_fimo_version() -> str:
 
     version_string = execute(command).stdout.strip()
     if not version_string:
-        msg = "unexpected output from fimo: %s, check path"
-        raise RuntimeError(msg % fimo)
+        raise RuntimeError(f"unexpected output from fimo: {fimo}, check path")
     return version_string
 
 

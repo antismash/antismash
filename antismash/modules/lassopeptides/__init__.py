@@ -55,8 +55,7 @@ def check_prereqs(options: ConfigType) -> List[str]:
         if binary_name not in options.executables:
             present = False
             if not optional:
-                failure_messages.append("Failed to locate executable for %r" %
-                                        binary_name)
+                failure_messages.append(f"Failed to locate executable for {binary_name}")
         if binary_name == "fimo":
             local_config().fimo_present = present
 

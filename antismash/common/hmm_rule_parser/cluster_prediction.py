@@ -252,7 +252,7 @@ def filter_results(results: List[HSP], results_by_id: Dict[str, List[HSP]], filt
         equivalence_group = set(line.split(","))
         unknown = equivalence_group - signature_names
         if unknown:
-            raise ValueError("Equivalence group contains unknown identifiers: %s" % (unknown))
+            raise ValueError("Equivalence group contains unknown identifiers: {unknown}")
         removed_ids: Set[int] = set()
         for cds, cdsresults in results_by_id.items():
             # Check if multiple competing HMM hits are present
@@ -425,8 +425,7 @@ def find_hmmer_hits(record: Record, sig_by_name: Dict[str, Signature],
             elif acc in sig_by_name:
                 sig = sig_by_name[acc]
             else:
-                raise ValueError('Failed to find signature for ID %s / ACC %s' % (
-                                                    hsp.query_id, acc))
+                raise ValueError(f"Failed to find signature for ID {hsp.query_id} / ACC {acc}")
             if hsp.bitscore > sig.cutoff:
                 results.append(hsp)
                 if hsp.hit_id not in results_by_id:
@@ -630,7 +629,7 @@ def get_sequence_counts(details_file: str) -> Dict[str, int]:
                 result[hmm.name] = int(line[6:].strip())
                 break
         if hmm.name not in result:
-            raise ValueError("Unknown number of seeds for hmm file: %s" % details_file)
+            raise ValueError(f"Unknown number of seeds for hmm file: {details_file}")
 
     return result
 

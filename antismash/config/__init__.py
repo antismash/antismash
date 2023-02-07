@@ -52,7 +52,7 @@ class Config:  # since it's a glorified namespace, pylint: disable=too-few-publi
         def __getattr__(self, attr: str) -> Any:
             if attr in self.__dict__:
                 return self.__dict__[attr]
-            raise AttributeError("Config has no attribute: %s" % attr)
+            raise AttributeError(f"Config has no attribute: {attr}")
 
         def __setattr__(self, attr: str, value: Any) -> None:
             # special exceptions for those arguments we must update after
@@ -141,7 +141,7 @@ def build_config(args: List[str], parser: Optional[AntismashParser] = None, isol
     with_files = []
     for filename in (_USER_FILE_NAME, _INSTANCE_FILE_NAME):
         if os.path.exists(filename):
-            with_files.append("@%s" % filename)
+            with_files.append(f"@{filename}")
     with_files.extend(args)
     result = parser.parse_args(with_files)
 

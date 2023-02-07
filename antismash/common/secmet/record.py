@@ -129,7 +129,7 @@ class Record:
             return getattr(self._record, attr)
         if attr in Record.__slots__:
             return self.__getattribute__(attr)
-        raise AttributeError("Record has no attribute '%s'" % attr)
+        raise AttributeError(f"Record has no attribute {attr!r}")
 
     def __setattr__(self, attr: str, value: Any) -> None:
         # passthroughs to the original SeqRecord
@@ -171,7 +171,7 @@ class Record:
             causes cluster-CDS pairing to be recalculated """
         assert isinstance(cluster, Protocluster), type(cluster)
         assert cluster.location.start >= 0, cluster
-        assert cluster.location.end <= len(self), "%s > %d" % (cluster, len(self))
+        assert cluster.location.end <= len(self), f"{cluster} > {len(self)}"
         index = bisect.bisect_left(self._protoclusters, cluster)
         self._protoclusters.insert(index, cluster)
         cluster.parent_record = self
@@ -209,7 +209,7 @@ class Record:
         """ Add the given CandidateCluster to the record """
         assert isinstance(cluster, CandidateCluster), type(cluster)
         assert cluster.location.start >= 0, cluster
-        assert cluster.location.end <= len(self), "%s > %d" % (cluster, len(self))
+        assert cluster.location.end <= len(self), f"{cluster} > {len(self)}"
         index = bisect.bisect_left(self._candidate_clusters, cluster)
         self._candidate_clusters.insert(index, cluster)
         cluster.parent_record = self
@@ -252,7 +252,7 @@ class Record:
         """
         assert isinstance(subregion, SubRegion), type(subregion)
         assert subregion.location.start >= 0, subregion
-        assert subregion.location.end <= len(self), "%s > %d" % (subregion, len(self))
+        assert subregion.location.end <= len(self), f"{subregion} > {len(self)}"
         index = bisect.bisect_left(self._subregions, subregion)
         self._subregions.insert(index, subregion)
         subregion.parent_record = self
@@ -292,7 +292,7 @@ class Record:
         """
         assert isinstance(region, Region), type(region)
         assert region.location.start >= 0, region
-        assert region.location.end <= len(self), "%s > %d" % (region, len(self))
+        assert region.location.end <= len(self), f"{region} > {len(self)}"
         index = 0
         for i, existing_region in enumerate(self._regions):  # TODO: fix performance
             if region.overlaps_with(existing_region):
@@ -365,7 +365,7 @@ class Record:
         try:
             return self._domains_by_name[name]
         except KeyError:
-            raise KeyError("record %s contains no domain named %s" % (self.id, name))
+            raise KeyError(f"record {self.id} contains no domain named {name}")
 
     def get_cds_motifs(self) -> Tuple[CDSMotif, ...]:
         """A list of secondary metabolite CDS_motifs present in the record"""
@@ -390,7 +390,7 @@ class Record:
         elif isinstance(cds, str):
             cds_name = cds
         else:
-            raise TypeError("CDS must be a string or CDSFeature, not %s" % type(cds))
+            raise TypeError(f"CDS must be a string or CDSFeature, not {type(cds)}")
         return tuple(self._pfams_by_cds_name[cds_name])
 
     def clear_pfam_domains(self) -> None:
@@ -420,7 +420,7 @@ class Record:
         elif isinstance(cds, str):
             cds_name = cds
         else:
-            raise TypeError("CDS must be a string or CDSFeature, not %s" % type(cds))
+            raise TypeError(f"CDS must be a string or CDSFeature, not {type(cds)}")
         return tuple(self._antismash_domains_by_cds_name[cds_name])
 
     def clear_antismash_domains(self) -> None:
@@ -440,7 +440,7 @@ class Record:
         """Returns a tuple of all generic features with a type matching label"""
         if label in ["protocluster", CandidateCluster.FEATURE_TYPE, "CDS", "CDSmotif", "subregion",
                      "region", "PFAM_domain", "aSDomain", "aSProdPred"]:
-            raise ValueError("Use the appropriate get_* type instead for %s" % label)
+            raise ValueError(f"Use the appropriate get_* type instead for {label}")
         return tuple(i for i in self.get_generics() if i.type == label)
 
     def get_all_features(self) -> List[Feature]:
@@ -544,7 +544,7 @@ class Record:
         assert isinstance(cds_feature, CDSFeature), type(cds_feature)
         # ensure it has a translation
         if not cds_feature.translation:
-            raise ValueError("Missing translation info for %s" % cds_feature)
+            raise ValueError(f"Missing translation for {cds_feature}")
         if len(cds_feature.translation) > 100000:
             raise ValueError(f"Translation too large: {cds_feature} {len(cds_feature.translation)}")
         location_key = str(cds_feature.location)
@@ -552,8 +552,9 @@ class Record:
             raise SecmetInvalidInputError(
                 f"Multiple CDS features have the same location: {cds_feature.location}")
         if cds_feature.get_name() in self._cds_by_name:
-            error = SecmetInvalidInputError("multiple CDS features have the same name for mapping: %s" %
-                                            cds_feature.get_name())
+            error = SecmetInvalidInputError(
+                f"multiple CDS features have the same name for mapping: {cds_feature.get_name()}"
+            )
             # handle cases like splice variants
             if not cds_feature.locus_tag:
                 raise error
@@ -576,12 +577,13 @@ class Record:
 
     def add_cds_motif(self, motif: Union[CDSMotif, Prepeptide]) -> None:
         """ Add the given CDSMotif to the record """
-        assert isinstance(motif, (CDSMotif, Prepeptide)), "%s, %s" % (type(motif), motif.type)
+        assert isinstance(motif, (CDSMotif, Prepeptide)), f"{type(motif)}, {motif.type}"
         self._cds_motifs.append(motif)
-        assert motif.get_name(), "motif %s has no identifiers" % motif
+        assert motif.get_name(), f"motif {motif} has no identifiers"
         if motif.get_name() in self._domains_by_name:
-            raise SecmetInvalidInputError("multiple Domain features have the same name for mapping: %s" %
-                                          motif.get_name())
+            raise SecmetInvalidInputError(
+                f"multiple Domain features have the same name for mapping: {motif.get_name()}"
+            )
         self._domains_by_name[motif.get_name()] = motif
         if isinstance(motif, Prepeptide):
             assert motif.tool is not None
@@ -592,8 +594,9 @@ class Record:
         assert pfam_domain.get_name()
         self._pfam_domains.append(pfam_domain)
         if pfam_domain.get_name() in self._domains_by_name:
-            raise SecmetInvalidInputError("multiple Domain features have the same name for mapping: %s" %
-                                          pfam_domain.get_name())
+            raise SecmetInvalidInputError(
+                f"multiple Domain features have the same name for mapping: {pfam_domain.get_name()}"
+            )
         self._domains_by_name[pfam_domain.get_name()] = pfam_domain
         if pfam_domain.locus_tag:
             self._pfams_by_cds_name[pfam_domain.locus_tag].append(pfam_domain)
@@ -606,8 +609,9 @@ class Record:
         self._antismash_domains.append(antismash_domain)
         self._antismash_domains_by_tool[antismash_domain.tool].append(antismash_domain)
         if antismash_domain.get_name() in self._domains_by_name:
-            raise SecmetInvalidInputError("multiple Domain features have the same name for mapping: %s" %
-                                          antismash_domain.get_name())
+            raise SecmetInvalidInputError(
+                f"multiple Domain features have the same name for mapping: {antismash_domain.get_name()}"
+            )
         self._domains_by_name[antismash_domain.get_name()] = antismash_domain
         if antismash_domain.locus_tag:
             self._antismash_domains_by_cds_name[antismash_domain.locus_tag].append(antismash_domain)
@@ -619,15 +623,15 @@ class Record:
         parents = set()
         for domain in module.domains:
             if domain.get_name() not in self._domains_by_name:
-                raise ValueError("domain contained in module is not contained in record: %s" % domain)
+                raise ValueError(f"domain contained in module is not contained in record: {domain}")
             if not domain.locus_tag:
-                raise ValueError("domain contained in module does not refer to a CDS: %s" % domain)
+                raise ValueError(f"domain contained in module does not refer to a CDS: {domain}")
             parents.add(domain.locus_tag)
 
         for parent in parents:
             cds = self.get_cds_by_name(parent)
             if not cds:
-                raise ValueError("domain contained in module refers to missing CDS: %s" % parent)
+                raise ValueError(f"domain contained in module refers to missing CDS: {parent}")
             cds.add_module(module)
         self._modules.append(module)
 
@@ -689,7 +693,7 @@ class Record:
             motif = CDSMotif.from_biopython(feature, record=self)
             if not motif.domain_id and not motif.created_by_antismash:
                 counter = 1
-                template = "non_aS_motif_%d_%d_{}" % (motif.location.start, motif.location.end)
+                template = f"non_aS_motif_{motif.location.start}_{motif.location.end}_{{}}"
                 while template.format(counter) in self._domains_by_name:
                     counter += 1
                 motif.domain_id = template.format(counter)
@@ -739,13 +743,13 @@ class Record:
         try:
             ensure_valid_locations(seq_record.features, can_be_circular, len(seq_record.seq))
         except ValueError as err:
-            raise SecmetInvalidInputError("%s: %s" % (seq_record.id, str(err)))
+            raise SecmetInvalidInputError(f"{seq_record.id}: {err}")
 
         for feature in seq_record.features:
             if feature.ref or feature.ref_db:
                 for ref in [feature.ref, feature.ref_db]:
                     if ref and ref != seq_record.id:
-                        raise SecmetInvalidInputError("feature references another sequence: (%s)" % feature.ref)
+                        raise SecmetInvalidInputError(f"feature references another sequence: {feature.ref}")
                 # to handle a biopython issue, set the references to None
                 feature.ref = None
                 feature.ref_db = None

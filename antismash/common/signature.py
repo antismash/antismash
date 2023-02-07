@@ -23,7 +23,7 @@ class HmmSignature(Signature):
     def __init__(self, name: str, description: str, cutoff: int, hmm_path: str) -> None:
         self.hmm_file = hmm_path
         if cutoff < 0:
-            raise ValueError("Signature cutoffs cannot be negative: %s" % cutoff)
+            raise ValueError(f"Signature cutoffs cannot be negative: {cutoff}")
         super().__init__(name, 'model', description, cutoff, self.hmm_file)
 
 

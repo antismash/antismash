@@ -28,7 +28,7 @@ def _load_smiles() -> Dict[str, str]:
             if not line:
                 continue
             smiles = line.split()
-            assert len(smiles) == 2, "Invalid smiles line {!r}".format(line)
+            assert len(smiles) == 2, f"Invalid smiles line {line!r}"
             assert smiles[0].lower() not in aa_smiles, f"{smiles[0]} contained twice in smiles data"
             aa_smiles[smiles[0].lower()] = smiles[1]
 
@@ -93,7 +93,7 @@ class Atom:
         if not self.branches:
             return "".join(smiles)
         for branch in self.branches:
-            smiles.append("(%s)" % "".join(atom.to_smiles() for atom in branch))
+            smiles.append(f"({''.join(atom.to_smiles() for atom in branch)})")
         return "".join(smiles)
 
     def flatten(self) -> List["Atom"]:
@@ -139,7 +139,7 @@ class Bonds:
                 # ring identifiers/references
                 if symbol.isdigit():
                     if not atoms or isinstance(atoms[-1], list):
-                        raise ValueError("invalid smiles: %s" % (symbol + smiles))
+                        raise ValueError(f"invalid smiles: {symbol + smiles}")
                     # if it's new, then it's a declaration
                     if symbol not in self._atoms_by_identifier:
                         atoms[-1].identifier = symbol
@@ -205,7 +205,7 @@ def methylate(smiles: str, variant: str) -> str:
             is possible
     """
     if variant not in "CNO":
-        raise ValueError("expected methylation variant of C, N, or O, not %s" % variant)
+        raise ValueError(f"expected methylation variant of C, N, or O, not {variant}")
     bonds = Bonds(smiles)
     atoms = list(bonds)
     start = 1
@@ -250,7 +250,7 @@ def gen_smiles_from_pksnrps(components: List[Tuple[str, str, List[str]]]) -> str
         smiles_chunk = _SMILES[substrate.lower()]
         for domain in domains:
             for prefix in "cno":
-                if domain == "%cMT" % prefix:
+                if domain == f"{prefix}MT":
                     smiles_chunk = methylate(smiles_chunk, prefix.upper())
         return smiles_chunk
 

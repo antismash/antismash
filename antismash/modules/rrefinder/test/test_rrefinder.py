@@ -54,8 +54,8 @@ class TestRREResults(unittest.TestCase):
 
         build_config([
             "--rre",
-            "--rre-cutoff", "%.1f" % self.bitscore_cutoff,
-            "--rre-minlength", "%i" % self.min_length,
+            "--rre-cutoff", f"{self.bitscore_cutoff:.1f}",
+            "--rre-minlength", str(self.min_length),
         ], isolated=True, modules=antismash.get_all_modules())
 
         # Here a mock so that the call to its functions can be tracked
@@ -101,7 +101,7 @@ class TestRREResults(unittest.TestCase):
         assert feature.description == hit.description
         assert feature.domain == hit.domain
         assert feature.locus_tag == hit.locus_tag
-        assert feature.domain_id == '{}_{}_{}.1'.format(self.tool, hit.locus_tag, hit.domain)
+        assert feature.domain_id == f"{self.tool}_{hit.locus_tag}_{hit.domain}.1"
         assert feature.database == self.database
         assert feature.detection == self.detection
         assert feature.score == hit.score

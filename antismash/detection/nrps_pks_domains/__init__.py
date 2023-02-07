@@ -94,8 +94,7 @@ def check_prereqs(options: ConfigType) -> List[str]:
     failure_messages = []
     for binary_name in ['hmmscan', 'hmmpress']:
         if binary_name not in options.executables:
-            failure_messages.append("Failed to locate executable for %r" %
-                                    binary_name)
+            failure_messages.append(f"Failed to locate executable for {binary_name!r}")
 
     # skip trying to press files if there's missing binaries
     if failure_messages:

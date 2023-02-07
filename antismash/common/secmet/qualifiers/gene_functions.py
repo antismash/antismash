@@ -39,7 +39,7 @@ class GeneFunction(Enum):
         for value in GeneFunction:
             if str(value) == label:
                 return value
-        raise ValueError("Unknown gene function label: %s" % label)
+        raise ValueError(f"Unknown gene function label: {label}")
 
 
 class _GeneFunctionAnnotation:  # pylint: disable=too-few-public-methods
@@ -48,7 +48,7 @@ class _GeneFunctionAnnotation:  # pylint: disable=too-few-public-methods
 
     def __init__(self, function: GeneFunction, tool: str, description: str,
                  product: Optional[str]) -> None:
-        assert isinstance(function, GeneFunction), "wrong type: %s" % type(function)
+        assert isinstance(function, GeneFunction), f"wrong type: {type(function)}"
         assert tool and len(tool.split()) == 1, tool  # no whitespace allowed in tool name
         assert description
         if function == GeneFunction.CORE and not product:
@@ -60,8 +60,8 @@ class _GeneFunctionAnnotation:  # pylint: disable=too-few-public-methods
 
     def __str__(self) -> str:
         if not self.product:
-            return "%s (%s) %s" % (self.function, self.tool, self.description)
-        return "%s (%s) %s: %s" % (self.function, self.tool, self.product, self.description)
+            return f"{self.function} ({self.tool}) {self.description}"
+        return f"{self.function} ({self.tool}) {self.product}: {self.description}"
 
     def __repr__(self) -> str:
         fmt = "GeneFunctionAnnotation(function=%r, tool='%s', product='%s', '%s')"
@@ -83,10 +83,10 @@ class _GeneFunctionAnnotation:  # pylint: disable=too-few-public-methods
             try:
                 parts = _parse_format("{} ({}) {}", text)
             except ValueError:
-                raise ValueError("cannot parse GeneFunctionAnnotation from %s" % text)
+                raise ValueError("cannot parse GeneFunctionAnnotation from {text!r}")
 
         if len(parts) not in [3, 4]:
-            raise ValueError("cannot parse GeneFunctionAnnotation from %s" % text)
+            raise ValueError(f"cannot parse GeneFunctionAnnotation from {text!r}")
 
         if len(parts) == 4:
             function, tool, product, description = parts

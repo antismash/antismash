@@ -39,9 +39,11 @@ def run_hmmscan(target_hmmfile: str, query_sequence: str, opts: List[str] = None
     command.extend([target_hmmfile, '-'])
     result = execute(command, stdin=query_sequence)
     if not result.successful():
-        raise RuntimeError('hmmscan returned %d: %r while scanning %r' % (
-                           result.return_code, (result.stderr or result.stdout).splitlines()[0],
-                           query_sequence[:100]))
+        raise RuntimeError("".join([
+            f"hmmscan returned {result.return_code}:",
+            (result.stderr or result.stdout).splitlines()[0],
+            f"while scanning {query_sequence[:100]!r}",
+        ]))
     if results_file is not None:
         with open(results_file, 'w') as handle:
             handle.write(result.stdout)
@@ -64,8 +66,7 @@ def run_hmmscan_help() -> str:
 
     help_text = execute(command).stdout
     if not help_text.startswith("# hmmscan"):
-        msg = "unexpected output from hmmscan: %s, check path"
-        raise RuntimeError(msg % hmmscan)
+        raise RuntimeError(f"unexpected output from hmmscan: {hmmscan}, check path")
 
     setattr(run_hmmscan_help, 'help_text', help_text)
     return help_text

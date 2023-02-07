@@ -40,7 +40,7 @@ class ActiveSiteAnalysis:
         self.target_domain = str(target_domain)
         self.database = path.get_full_path(__file__, 'data', database)
         if not os.path.exists(self.database):
-            raise ValueError("No database file located for: %s" % self.database)
+            raise ValueError(f"No database file located for: {self.database!r}")
         self.positions = list(map(int, positions))
         self.expected_values = list(map(str, expected_values))
         if len(expected_values) != len(positions):
@@ -54,7 +54,7 @@ class ActiveSiteAnalysis:
         self.domains_of_interest: List[secmet.features.Domain] = []
         for candidate in candidates:
             if not isinstance(candidate, secmet.features.Domain):
-                raise TypeError("Candidates must be Domains, not %s" % type(candidate))
+                raise TypeError(f"Candidates must be Domains, not {type(candidate)}")
             if candidate.domain == self.target_domain:
                 self.domains_of_interest.append(candidate)
 

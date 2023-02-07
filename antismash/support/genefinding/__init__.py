@@ -58,7 +58,7 @@ def check_prereqs(options: ConfigType) -> List[str]:
         binaries = ['glimmerhmm']
     for binary_name in binaries:
         if binary_name not in options.executables:
-            failure_messages.append("Failed to locate executable for %r" % binary_name)
+            failure_messages.append(f"Failed to locate executable for {binary_name}")
 
     return failure_messages
 
@@ -100,4 +100,4 @@ def run_on_record(record: Record, options: ConfigType) -> None:
         logging.debug("Running prodigal based genefinding")
         return run_prodigal(record, options)
 
-    raise ValueError("Unknown genefinding tool: %s" % options.genefinding_tool)
+    raise ValueError(f"Unknown genefinding tool: {options.genefinding_tool}")

@@ -428,7 +428,7 @@ def lanscout(core: str) -> Tuple[int, List[int]]:
     """ define lanthionine ring with a c-terminal Cys """
     lanlower = 2
     lanupper = 6
-    lan = '(?=([T|S].{%d,%d}C))' % (lanlower, lanupper)
+    lan = f"(?=([T|S].{{{lanlower},{lanupper}}}C))"
     sizes = []
     totrings = re.compile(lan, re.I).findall(core)
     for ring in totrings:
@@ -460,7 +460,7 @@ def identify_lanthi_motifs(leader: str, core: str) -> Dict[int, float]:
     motifs_file = path.get_full_path(__file__, "data", "lanthi_motifs_meme.txt")
     with NamedTemporaryFile() as tempfile:
         with open(tempfile.name, "w") as out_file:
-            out_file.write(">query\n%s%s" % (leader, core))
+            out_file.write(f">query\n{leader}{core}")
         fimo_output = subprocessing.run_fimo_simple(motifs_file, tempfile.name)
     fimo_scores = {}
     for line in fimo_output.splitlines():

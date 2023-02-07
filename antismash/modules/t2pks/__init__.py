@@ -65,13 +65,13 @@ def check_prereqs(options: ConfigType) -> List[str]:
     failure_messages = []
     for binary_name in ['hmmscan', "hmmpress", 'blastp']:
         if binary_name not in options.executables:
-            failure_messages.append("Failed to locate file: %r" % binary_name)
+            failure_messages.append(f"Failed to locate executable: {binary_name}")
 
     for blastdb in ['KSIII', 'AT', 'LIG']:
         for ext in ['.fasta', '.phr', '.pin', '.psq']:
             dbfile = path.get_full_path(__file__, 'data', blastdb + ext)
             if path.locate_file(dbfile) is None:
-                failure_messages.append("Failed to locate file %r" % dbfile)
+                failure_messages.append(f"Failed to locate file: {dbfile}")
 
     failure_messages.extend(prepare_data(logging_only=True))
 

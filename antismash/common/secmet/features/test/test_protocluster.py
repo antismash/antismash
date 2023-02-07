@@ -121,7 +121,7 @@ class TestDefinitionCDS(unittest.TestCase):
         assert not self.cluster.definition_cdses
 
     def add_core_function(self, cds, cluster_product=True):
-        product = self.cluster.product if cluster_product else "not%s" % self.cluster.product
+        product = self.cluster.product if cluster_product else f"not{self.cluster.product}"
         cds.gene_functions.add(GeneFunction.CORE, "test", "dummy", product)
 
     def test_no_secmet_qual_inside(self):

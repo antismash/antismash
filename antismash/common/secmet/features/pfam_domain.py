@@ -40,7 +40,7 @@ class PFAMDomain(Domain):
         super().__init__(location, self.FEATURE_TYPE, protein_location, locus_tag,
                          domain=domain, tool=tool)
         if not isinstance(description, str):
-            raise TypeError("PFAMDomain description must be a string, not %s" % type(description))
+            raise TypeError(f"PFAMDomain description must be a string, not {type(description)}")
         if not description:
             raise ValueError("PFAMDomain description cannot be empty")
         self.description = description
@@ -51,7 +51,7 @@ class PFAMDomain(Domain):
             identifier, version = identifier.split(".", maxsplit=1)
             self.version = int(version)
         if not (len(identifier) == 7 and identifier.startswith('PF') and identifier[2:].isdecimal()):
-            raise ValueError("invalid Pfam identifier: %s" % identifier)
+            raise ValueError(f"invalid Pfam identifier: {identifier}")
         self.identifier = str(identifier)
         self.gene_ontologies: Optional[GOQualifier] = None
 
@@ -62,7 +62,7 @@ class PFAMDomain(Domain):
         """
         if not self.version:
             return self.identifier
-        return "%s.%d" % (self.identifier, self.version)
+        return f"{self.identifier}.{self.version}"
 
     def to_biopython(self, qualifiers: Dict[str, List[str]] = None) -> List[SeqFeature]:
         mine: Dict[str, List[str]] = OrderedDict()

@@ -46,8 +46,7 @@ def get_version() -> str:
     version = antismash.__version__
     git_version = get_git_version()
     if git_version:
-        version += "-%s" % git_version
-
+        version += f"-{git_version}"
     return version
 
 
@@ -82,7 +81,7 @@ def main(args: List[str]) -> int:
 
     # if -V, show version text and exit
     if options.version:
-        print("antiSMASH %s" % get_version())
+        print(f"antiSMASH {get_version()}")
         return 0
 
     if len(options.sequences) > 1:
@@ -95,17 +94,17 @@ def main(args: List[str]) -> int:
     if options.sequences:
         sequence = options.sequences[0]
         if not os.path.exists(sequence):
-            parser.error("Input file does not exist: %s" % sequence)
+            parser.error(f"Input file does not exist: {sequence}")
         if not os.path.isfile(sequence):
-            parser.error("input %s is not a file" % sequence)
+            parser.error(f"input {sequence} is not a file")
     else:
         sequence = ""
 
     if options.reuse_results and not os.path.exists(options.reuse_results):
-        parser.error("Input file does not exist: %s" % options.reuse_results)
+        parser.error(f"Input file does not exist: {options.reuse_results}")
 
     if os.sep in options.output_basename:
-        parser.error("Output basename cannot contain a path separator character {}".format(os.sep))
+        parser.error(f"Output basename cannot contain a path separator character {os.sep}")
 
     options.version = get_version()
 

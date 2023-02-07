@@ -37,14 +37,14 @@ class MinowaPrediction(Prediction):
             " <dd>\n"
             "  <dl>\n"
         )
-        core = "\n".join("  <dd></dd><dt>%s: %.1f</dt>\n" % (name, score) for name, score in self.predictions)
+        core = "\n".join(f"  <dd></dd><dt>{name}: {score:.1f}</dt>\n" for name, score in self.predictions)
         raw_end = (
             "\n"
             "  </dl>\n"
             " </dd>\n"
             "</dl>\n"
         )
-        return Markup("%s%s%s" % (raw_start, core, raw_end))
+        return Markup(f"{raw_start}{core}{raw_end}")
 
     @staticmethod
     def from_json(json: Dict[str, Any]) -> "MinowaPrediction":
@@ -109,7 +109,7 @@ def run_minowa(sequence_info: Dict[str, str], startpos: int, muscle_ref: str, re
         # to use as input for hmm searches
         seq = utils.extract_by_reference_positions(aligned, ref_aligned, positions)
         assert seq
-        fasta_format = ">%s\n%s\n" % (query_id, seq.replace("-", "X"))
+        fasta_format = f">{query_id}\n{seq.replace('-', 'X')}\n"
 
         # then use list to extract positions from every sequence -> HMMs (one time, without any query sequence)
         hmm_scores = {}

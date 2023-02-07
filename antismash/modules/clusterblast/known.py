@@ -53,7 +53,7 @@ def check_known_prereqs(options: ConfigType) -> List[str]:
     failure_messages = []
     for binary_name in ['blastp', 'makeblastdb', 'diamond']:
         if binary_name not in options.executables:
-            failure_messages.append("Failed to locate file: %r" % binary_name)
+            failure_messages.append(f"Failed to locate file: {binary_name!r})")
 
     return failure_messages
 

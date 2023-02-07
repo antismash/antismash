@@ -11,7 +11,7 @@ from antismash.modules.nrps_pks.at_analysis import at_analysis
 
 class TestScoring(unittest.TestCase):
     def test_score_threshold(self):
-        ref_sigs = {"%s_%s" % (i, mon): i*24 for i, mon in zip("ABC", ["mal", "mmal", "emal"])}
+        ref_sigs = {f"{i}_{mon}": i*24 for i, mon in zip("ABC", ["mal", "mmal", "emal"])}
         query_sig = ["A"] * 24
         query_sig[3:7] = "B"
         query_sig[7:13] = "C"

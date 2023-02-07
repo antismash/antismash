@@ -46,7 +46,7 @@ def run_hmmpfam2(query_hmmfile: str, target_sequence: str, extra_args: List[str]
     if not result.successful():
         logging.debug('hmmpfam2 returned %d: %r while searching %r', result.return_code,
                       result.stderr, query_hmmfile)
-        raise RuntimeError("hmmpfam2 problem while running %s: %s" % (command, result.stderr))
+        raise RuntimeError(f"hmmpfam2 problem while running {command}: {result.stderr}")
     res_stream = StringIO(result.stdout)
     return list(SearchIO.parse(res_stream, 'hmmer2-text'))
 
@@ -61,8 +61,7 @@ def run_hmmpfam2_help() -> str:
 
     help_text = execute(command).stdout
     if not help_text.startswith("hmmpfam"):
-        msg = "unexpected output from hmmpfam2: %s, check path"
-        raise RuntimeError(msg % hmmpfam2)
+        raise RuntimeError(f"unexpected output from hmmpfam2: {hmmpfam2!r}, check path")
 
     return help_text
 

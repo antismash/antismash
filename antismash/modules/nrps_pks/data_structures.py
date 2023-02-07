@@ -22,23 +22,22 @@ class Prediction:
             be made, an empty list is returned.
             The optional as_norine field forces the use of valid Norine names.
         """
-        raise NotImplementedError("Prediction subclass %s "
-                                  "did not implement get_classification()" % type(self))
+        raise NotImplementedError(f"Prediction subclass {type(self)} did not implement get_classification()")
 
     def as_html(self) -> Markup:
         """ Returns a jinja2.Markup object containing HTML to use when representing
             this prediction in the sidepanel output.
         """
-        raise NotImplementedError("Prediction subclass %s did not implement as_html()" % type(self))
+        raise NotImplementedError(f"Prediction subclass {type(self)} did not implement as_html()")
 
     def to_json(self) -> Dict[str, Any]:
         """ Creates a JSON representation of this prediction """
-        raise NotImplementedError("Prediction subclass %s did not implement to_json()" % type(self))
+        raise NotImplementedError(f"Prediction subclass {type(self)} did not implement to_json()")
 
     @classmethod
     def from_json(cls, json: Dict[str, Any]) -> "Prediction":
         """ Creates a Prediction from a JSON representation """
-        raise NotImplementedError("Prediction subclass %s did not implement from_json()" % cls)
+        raise NotImplementedError(f"Prediction subclass {cls} did not implement from_json()")
 
 
 class SimplePrediction(Prediction):
@@ -55,7 +54,7 @@ class SimplePrediction(Prediction):
         return [self.prediction]
 
     def as_html(self) -> Markup:
-        return Markup("%s: %s" % (self.method, self.prediction))
+        return Markup(f"{self.method}: {self.prediction}")
 
     def to_json(self) -> Dict[str, Any]:
         return {"class": "SimplePrediction",

@@ -21,10 +21,10 @@ class Prediction:
         self.evalue = float(evalue)
 
     def __repr__(self) -> str:
-        return "Prediction({}, {:.1f}, {:g})".format(self.name, self.score, self.evalue)
+        return f"Prediction({self.name}, {self.score:.1f}, {self.evalue:g})"
 
     def __str__(self) -> str:
-        return "{} (Score: {:.1f}; E-value: {:g})".format(self.name, self.score, self.evalue)
+        return f"{self.name} (Score: {self.score:.1f}; E-value: {self.evalue:g})"
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, Prediction):
@@ -53,13 +53,13 @@ class CDSPrediction:
         self.evalue = evalue
 
     def __repr__(self) -> str:
-        return "CDSPrediction({}, {})".format(self.ptype, self.pfunc)
+        return f"CDSPrediction({self.ptype}, {self.pfunc})"
 
     def __str__(self) -> str:
         base = self.ptype
         if self.pfunc is not None:
-            base = '{} {}'.format(self.ptype, self.pfunc)
-        return '{} (Score: {:.1f}; E-value: {:g})'.format(base, self.bitscore, self.evalue)
+            base = f"{self.ptype} {self.pfunc}"
+        return f"{base} (Score: {self.bitscore:.1f}; E-value: {self.evalue:g})"
 
     def to_json(self) -> Tuple[str, Optional[str], float, float]:
         """ Converts a CDSPrediction into a JSON friendly format """
@@ -69,7 +69,7 @@ class CDSPrediction:
     def from_json(json: Tuple[str, Optional[str], float, float]) -> "CDSPrediction":
         """ Rebuilds a CDSPrediction from JSON """
         if len(json) != 4:
-            raise ValueError("Invalid CDSPrediction JSON: %s" % str(json))
+            raise ValueError(f"Invalid CDSPrediction JSON: {json}")
         func = None
         if json[1] is not None:
             func = str(json[1])
@@ -96,21 +96,24 @@ class ProtoclusterPrediction:
         self.end = end
 
     def __repr__(self) -> str:
-        return "ClusterPrediction(starters={}, elongations={}, classes={})".format(
-                    [unit.name for unit in self.starter_units],
-                    [elong.name for elong in self.malonyl_elongations],
-                    sorted(self.product_classes))
+        starters = [unit.name for unit in self.starter_units]
+        elongations = [elong.name for elong in self.malonyl_elongations]
+        classes = sorted(self.product_classes)
+        return f"ClusterPrediction(starters={starters}, elongations={elongations}, classes={classes})"
 
     def __str__(self) -> str:
-        string = 'Starter units: ' + str(self.starter_units)
-        string += '\nMalonyl elongations: ' + str(self.malonyl_elongations)
-        string += '\nProduct classes: ' + ','.join(sorted(self.product_classes))
-        string += '\nMolecular weights: ' + str(self.molecular_weights)
+        parts = [
+            f"Starter units: {self.starter_units}",
+            f"Malonyl elongations: {self.malonyl_elongations}",
+            f"Product classes: {','.join(sorted(self.product_classes))}",
+            f"Molecular weights: {self.molecular_weights}",
+            f"CDSs: {len(self.cds_predictions)}",
+        ]
 
-        string += '\nCDSs: {}'.format(len(self.cds_predictions))
         for cds, predictions in self.cds_predictions.items():
-            string += '\n{}\n {}'.format(cds, '\n '.join(map(str, predictions)))
-        return string
+            parts.append(str(cds))
+            parts.append(" " + ("\n ".join(map(str, predictions))))
+        return "\n".join(parts)
 
     def to_json(self) -> Dict[str, Any]:
         """ Converts a ClusterPrediction into a JSON friendly format """
@@ -150,14 +153,14 @@ class T2PKSResults(ModuleResults):
         self.cluster_predictions: Dict[int, ProtoclusterPrediction] = {}
 
     def __repr__(self) -> str:
-        return "T2PKSResults(clusters=%s)" % list(self.cluster_predictions)
+        return f"T2PKSResults(clusters={list(self.cluster_predictions)})"
 
     def __str__(self) -> str:
-        string = ''
+        parts = []
         for cluster_id, prediction in self.cluster_predictions.items():
-            string += 'Protocluster {}\n'.format(cluster_id)
-            string += str(prediction)
-        return string
+            parts.append(f"Protocluster {cluster_id}\n")
+            parts.append(str(prediction))
+        return "".join(parts)
 
     def to_json(self) -> Dict[str, Any]:
         clusters = {cluster_number: pred.to_json() for cluster_number, pred in self.cluster_predictions.items()}

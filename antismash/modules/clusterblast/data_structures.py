@@ -26,7 +26,7 @@ class ReferenceCluster:
 
     def get_name(self) -> str:
         """ Returns the name of the cluster, including cluster number """
-        return "%s_%s" % (self.accession, self.cluster_label)
+        return f"{self.accession}_{self.cluster_label}"
 
 
 class Protein:
@@ -53,13 +53,12 @@ class Protein:
 
     def __str__(self) -> str:
         if len(self.location.split("-")) != 2:
-            raise ValueError("Invalid location in Protein: %s" % self.location)
+            raise ValueError(f"Invalid location in Protein: {self.location}")
         tag = self.locus_tag
         if tag == "no_locus_tag":
             tag = self.name
         locations = self.location.replace("-", "\t")
-        return "{}\t{}\t{}\t{}\t{}\n".format(tag, self.name, locations,
-                                             self.strand, self.annotations)
+        return f"{tag}\t{self.name}\t{locations}\t{self.strand}\t{self.annotations}\n"
 
 
 class Subject:

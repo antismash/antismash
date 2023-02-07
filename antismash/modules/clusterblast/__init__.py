@@ -54,7 +54,7 @@ def get_arguments() -> ModuleArgs:
                     type=int,
                     default=10,
                     help="Number of clusters from ClusterBlast to display,"
-                         " cannot be greater than %d. (default: %%(default)s)" % get_result_limit())
+                         f" cannot be greater than {get_result_limit()}. (default: %(default)s)")
     args.add_option('min-homology-scale',
                     dest='min_homology_scale',
                     metavar="LIMIT",
@@ -76,8 +76,7 @@ def is_enabled(options: ConfigType) -> bool:
 def check_options(options: ConfigType) -> List[str]:
     """ Checks that extra options are valid """
     if options.cb_nclusters > get_result_limit():
-        return ["nclusters of %d is over limit of %d" % (
-                    options.cb_nclusters, get_result_limit())]
+        return [f"nclusters of {options.cb_nclusters} is over limit of {get_result_limit()}"]
     return []
 
 
@@ -101,7 +100,7 @@ def check_prereqs(options: ConfigType) -> List[str]:
     failure_messages = []
     for binary_name in _required_binaries:
         if binary_name not in options.executables:
-            failure_messages.append("Failed to locate file: %r" % binary_name)
+            failure_messages.append(f"Failed to locate file: {binary_name!r}")
 
     if "diamond" not in get_config().executables:
         failure_messages.append("cannot check clusterblast databases, no diamond executable present")

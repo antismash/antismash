@@ -272,7 +272,7 @@ def run_module(record: Record, module: AntismashModule, options: ConfigType,
     results = module.run_on_record(record, results, options)
     duration = time.time() - start
 
-    assert isinstance(results, ModuleResults), "%s returned %s" % (module.__name__, type(results))
+    assert isinstance(results, ModuleResults), f"{module.__name__} returned {type(results)}"
     module_results[module.__name__] = results
     timings[module.__name__] = duration
 
@@ -322,7 +322,7 @@ def prepare_output_directory(name: str, input_file: str) -> None:
 
     if os.path.exists(name):
         if not os.path.isdir(name):
-            raise RuntimeError("Output directory %s exists and is not a directory" % name)
+            raise RuntimeError("Output directory {name!r} exists and is not a directory")
         # not empty (apart from a possible input dir), and not reusing its results
         if not input_file.endswith(".json") and \
                 list(filter(_ignore_patterns, glob.glob(os.path.join(name, "*")))):
@@ -402,25 +402,22 @@ def add_antismash_comments(records: List[Tuple[Record, SeqRecord]], options: Con
         # start/end is only valid for single records, as per record_processing
         assert len(records) == 1
         end = len(records[0][0].seq) if options.end == -1 else options.end
-        shared.append((
+        shared.append(
             "NOTE: This is an extract from the original record!\n"
-            "Starting at  :: {start}\n"
-            "Ending at    :: {end}\n"
-        ).format(start=start, end=end))
+            f"Starting at  :: {start}\n"
+            f"Ending at    :: {end}\n"
+        )
     antismash_comment = (
         "##antiSMASH-Data-START##\n"
-        "Version      :: {version}\n"
-        "Run date     :: {date}\n"
+        f"Version      :: {options.version}\n"
+        f"Run date     :: {str(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))}\n"
         "%s"
         "##antiSMASH-Data-END##"
-        ).format(
-            version=options.version,
-            date=str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
-        )
+    )
     for record, bio_record in records:
         extras: List[str] = []
         if record.original_id:
-            extras.append("Original ID  :: %s\n" % record.original_id)
+            extras.append(f"Original ID  :: {record.original_id}\n")
 
         comment = antismash_comment % "".join(extras + shared)
         if 'comment' in bio_record.annotations:
@@ -553,7 +550,7 @@ def read_data(sequence_file: Optional[str], options: ConfigType) -> serialiser.A
         with open(options.reuse_results) as handle:
             contents = handle.read()
             if not contents:
-                raise ValueError("No results contained in file: %s" % options.reuse_results)
+                raise ValueError(f"No results contained in file: {options.reuse_results!r}")
         results = serialiser.AntismashResults.from_file(options.reuse_results)
         for record in results.records:
             record.strip_antismash_annotations()
@@ -772,8 +769,7 @@ def _run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
 def _log_found_executables(options: ConfigType) -> None:
     for binary, path in vars(options.executables).items():
         version = ""
-        version_getter = getattr(subprocessing, "run_{}_version".format(binary), None)
+        version_getter = getattr(subprocessing, f"run_{binary}_version", None)
         if callable(version_getter):
-            # pylint doesn't seem to understand this
-            version = " ({})".format(version_getter())  # pylint: disable=not-callable
+            version = f" ({version_getter()})"
         logging.info("%s using executable: %s%s", binary, path, version)

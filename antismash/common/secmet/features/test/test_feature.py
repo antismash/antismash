@@ -96,10 +96,10 @@ class TestFeature(unittest.TestCase):
             for start, end in [(1, 5), (3, 8), (10, 15)]:
                 feature = Feature(FeatureLocation(start, end, strand=1),
                                   feature_type=feature_type)
-                assert str(feature) == "%s([%d:%d](+))" % (feature_type, start, end)
+                assert str(feature) == f"{feature_type}([{start}:{end}](+))"
                 feature = Feature(FeatureLocation(start, end, strand=-1),
                                   feature_type=feature_type)
-                assert str(feature) == "%s([%d:%d](-))" % (feature_type, start, end)
+                assert str(feature) == f"{feature_type}([{start}:{end}](-))"
 
     def test_bridging_fails(self):
         parts = [FeatureLocation(9, 12, strand=1), FeatureLocation(0, 3, strand=1)]

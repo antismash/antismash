@@ -89,7 +89,7 @@ class SideloadedSubRegion(SubRegion):
     def to_biopython(self, qualifiers: Optional[Dict[str, List[str]]] = None) -> List[SeqFeature]:
         features = super().to_biopython(qualifiers)
         for feature in features:
-            feature.qualifiers["aStool"] = ["externally annotated by: %s" % self.tool]
+            feature.qualifiers["aStool"] = [f"externally annotated by: {self.tool}"]
             if self.extra_qualifiers:
                 feature.qualifiers["external_qualifier_ids"] = list(self.extra_qualifiers)
                 feature.qualifiers.update(self.extra_qualifiers)

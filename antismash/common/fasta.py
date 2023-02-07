@@ -28,10 +28,10 @@ def get_fasta_from_features(features: Union[Iterable[CDSFeature], Iterable[Domai
     all_fastas = []
     if not numeric_names:
         for feature in features:
-            all_fastas.append(">%s\n%s" % (feature.get_name(), feature.translation))
+            all_fastas.append(f">{feature.get_name()}\n{feature.translation}")
     else:
         for i, feature in enumerate(features):  # type: ignore # because mypy can't handle the union in enumerate
-            all_fastas.append(">%d\n%s" % (i, feature.translation))
+            all_fastas.append(f">{i}\n{feature.translation}")
     return "\n".join(all_fastas)
 
 
@@ -49,7 +49,7 @@ def get_fasta_from_record(record: Record) -> str:
     for feature in features:
         gene_id = feature.get_name()
         fasta_seq = feature.translation
-        all_fastas.append(">%s\n%s" % (gene_id, fasta_seq))
+        all_fastas.append(f">{gene_id}\n{fasta_seq}")
     return "\n".join(all_fastas)
 
 
@@ -66,7 +66,7 @@ def write_fasta(names: List[str], seqs: List[str], filename: str) -> None:
     """
     with open(filename, "w") as out_file:
         for name, seq in zip(names, seqs):
-            out_file.write(">%s\n%s\n" % (name, seq))
+            out_file.write(f">{name}\n{seq}\n")
 
 
 def read_fasta(filename: str) -> Dict[str, str]:

@@ -57,15 +57,16 @@ def prepare_data(_logging_only: bool = False) -> List[str]:
     flavours = ["bacteria", "fungi", "plants"]
 
     with path.changed_directory(path.get_full_path(__file__, "css")):
-        built_files = [os.path.abspath("%s.css" % flavour) for flavour in flavours]
+        built_files = [os.path.abspath(f"{flavour}.css") for flavour in flavours]
 
         if path.is_outdated(built_files, glob.glob("*.scss")):
             logging.info("CSS files out of date, rebuilding")
 
             for flavour in flavours:
-                target = "%s.css" % flavour
-                assert os.path.exists(flavour + ".scss"), flavour
-                result = scss.Compiler(output_style="expanded").compile(flavour + ".scss")
+                target = f"{flavour}.css"
+                source = f"{flavour}.scss"
+                assert os.path.exists(source), flavour
+                result = scss.Compiler(output_style="expanded").compile(source)
                 assert result
                 with open(target, "w") as out:
                     out.write(result)
@@ -101,7 +102,7 @@ def write(records: List[Record], results: List[Dict[str, ModuleResults]],
     """
     output_dir = options.output_dir
 
-    copy_template_dir('css', output_dir, pattern="%s.css" % options.taxon)
+    copy_template_dir('css', output_dir, pattern=f"{options.taxon}.css")
     copy_template_dir('js', output_dir)
     # if there wasn't an antismash.js in the JS dir, fall back to one in databases
     local_path = os.path.join(output_dir, "js", "antismash.js")

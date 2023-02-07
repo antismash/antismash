@@ -128,8 +128,8 @@ class HMMResult:
         subtypes = ""
         if self.detailed_names[1:]:
             subtypes = f", subtypes=[{', '.join(self.detailed_names[1:])}]"
-        return "HMMResult(%s, %d, %d, evalue=%g, bitscore=%g%s)" % (self.hit_id,
-                   self.query_start, self.query_end, self.evalue, self.bitscore, subtypes)
+        return (f"HMMResult({self.hit_id}, {self.query_start}, {self.query_end}, "
+                f"evalue={self.evalue:g}, bitscore={self.bitscore}{subtypes})")
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, HMMResult):

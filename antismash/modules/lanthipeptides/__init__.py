@@ -94,9 +94,8 @@ def check_prereqs(options: ConfigType) -> List[str]:
         if binary_name not in options.executables:
             present = False
             if not optional:
-                failure_messages.append("Failed to locate executable for %r" %
-                                        binary_name)
-        slot = '{}_present'.format(binary_name)
+                failure_messages.append(f"Failed to locate executable for {binary_name!r}")
+        slot = f"{binary_name}_present"
         conf = get_config()
         if hasattr(conf, slot):
             setattr(conf, slot, present)

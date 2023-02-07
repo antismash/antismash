@@ -13,7 +13,7 @@ class RiPPQualifier:
 
     def __init__(self, rodeo_score: int = 0) -> None:
         if not isinstance(rodeo_score, int):
-            raise TypeError("RODEO score must be an int, not %s" % type(rodeo_score))
+            raise TypeError(f"RODEO score must be an int, not {type(rodeo_score)}")
         self.rodeo_score = rodeo_score
 
     def to_biopython_qualifiers(self) -> Dict[str, List[str]]:
@@ -167,5 +167,5 @@ def rebuild_qualifier(data: Dict[str, List[str]], kind: str) -> Optional[RiPPQua
         "lassopeptide": LassoQualifier,
     }
     if kind not in classes:
-        raise ValueError("no known qualifier builder for prepeptide kind: %s" % kind)
+        raise ValueError(f"no known qualifier builder for prepeptide kind: {kind}")
     return classes[kind].from_biopython_qualifiers(data)

@@ -95,8 +95,7 @@ def execute(commands: List[str], stdin: Optional[str] = None, stdout: Union[int,
         except TimeoutExpired:
             proc.kill()
             assert isinstance(timeout, int)
-            raise RuntimeError("Child process '%s' timed out after %d seconds" % (
-                    commands, timeout))
+            raise RuntimeError(f"Child process {commands} timed out after {timeout} seconds")
 
         return RunResult(commands, out, err, proc.returncode, stdout == PIPE,
                          stderr == PIPE)
@@ -187,8 +186,7 @@ def parallel_execute(commands: List[List[str]], cpus: Optional[int] = None,
         except multiprocessing.TimeoutError:
             pool.terminate()
             assert isinstance(timeout, int)
-            raise RuntimeError("One of %d child processes timed out after %d seconds" % (
-                    cpus, timeout))
+            raise RuntimeError(f"One of {cpus} child processes timed out after {timeout} seconds")
 
         except KeyboardInterrupt:
             logging.error("Interrupted by user")

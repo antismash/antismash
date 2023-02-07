@@ -80,24 +80,24 @@ def get_executable_paths(binaries_arg: str) -> Dict[str, str]:
             continue
         subparts = part.split("=")
         if not len(subparts) == 2:
-            raise ValueError("invalid alternate executable format: %s" % part)
+            raise ValueError(f"invalid alternate executable format: {part}")
         name, path = subparts
         if not name or not path:
-            raise ValueError("invalid alternate executable format: %s" % part)
+            raise ValueError(f"invalid alternate executable format: {part}")
         if name not in _ALTERNATE_EXECUTABLE_NAMES:
-            raise ValueError("unrecognised executable name: %s" % name)
+            raise ValueError(f"unrecognised executable name: {name}")
         if os.sep in path:
             path = os.path.abspath(path)
         if os.path.isabs(path):
             if not os.path.exists(path):
-                raise ValueError("no such file: %s" % path)
+                raise ValueError(f"no such file: {path!r}")
             full_path = path
         else:
             full_path = find_executable_path(path)
             if not full_path:
-                raise ValueError("cannot find executable: %s" % path)
+                raise ValueError(f"cannot find executable: {path}")
         if full_path != binaries.get(name, full_path):
-            raise ValueError("multiple paths specified for executable: %s" % name)
+            raise ValueError(f"multiple paths specified for executable: {name}")
         assert full_path
         binaries[name] = full_path
     return binaries

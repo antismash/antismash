@@ -332,7 +332,7 @@ class Module:
             try:
                 self.ensure_suitable(component, lookahead)
             except IncompatibleComponentError as err:
-                raise IncompatibleComponentError("cannot add %s to %s: %s" % (component, self, str(err)))
+                raise IncompatibleComponentError(f"cannot add {component} to {self}: {err}")
         if component.is_starter() and not self._starter:
             assert not self._starter, self
             self._starter = component
@@ -398,7 +398,8 @@ class Module:
         return not self._components
 
     def __str__(self) -> str:
-        return "[%s]" % (",".join(str(component) for component in self._components))
+        core = ",".join(str(component) for component in self._components)
+        return f"[{core}]"
 
     def __iter__(self) -> Iterator[Component]:
         for component in self._components:
@@ -482,7 +483,7 @@ def classify(profile_name: str) -> str:
     for key, val in CLASSIFICATIONS.items():
         if profile_name in val:
             return key
-    raise ValueError("could not classify domain: %s" % profile_name)
+    raise ValueError(f"could not classify domain: {profile_name}")
 
 
 def build_modules_for_cds(domains: List[HMMResult], cds_name: str) -> List[Module]:
@@ -499,7 +500,7 @@ def build_modules_for_cds(domains: List[HMMResult], cds_name: str) -> List[Modul
     modules = [Module(first_in_cds=True)]
     components = [Component(domain, cds_name) for domain in domains]
     for i, component in enumerate(components):
-        assert component.classification, "missing classification for %s" % component.domain.hit_id
+        assert component.classification, f"missing classification for {component.domain.hit_id}"
         component = Component(component.domain, cds_name)
         # start a new module if we have an explicit starter
         if component.is_starter() and not component.is_loader() and not modules[-1].is_empty():

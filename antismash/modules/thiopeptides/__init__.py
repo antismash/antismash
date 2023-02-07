@@ -73,8 +73,7 @@ def check_prereqs(options: ConfigType) -> List[str]:
     failure_messages = []
     for binary_name in ['hmmpfam2']:
         if binary_name not in options.executables:
-            failure_messages.append("Failed to locate executable for %r" %
-                                    binary_name)
+            failure_messages.append(f"Failed to locate executable for {binary_name}")
     failure_messages.extend(prepare_data(logging_only=True))
     failure_messages.extend(comparippson.check_prereqs(options))
 

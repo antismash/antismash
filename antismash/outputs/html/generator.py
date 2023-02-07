@@ -105,20 +105,19 @@ def write_regions_js(records: List[Dict[str, Any]], output_dir: str,
         of code"""
 
     with open(os.path.join(output_dir, 'regions.js'), 'w') as handle:
-        handle.write("var recordData = %s;\n" % json.dumps(records, indent=1))
+        handle.write(f"var recordData = {json.dumps(records, indent=1)};\n")
         regions: Dict[str, Any] = {"order": []}
         for record in records:
             for region in record['regions']:
                 regions[region['anchor']] = region
                 regions['order'].append(region['anchor'])
-        handle.write('var all_regions = %s;\n' % json.dumps(regions, indent=1))
+        handle.write(f"var all_regions = {json.dumps(regions, indent=1)};\n")
 
         details = {
             "nrpspks": {region["id"]: region for region in js_domains},
         }
-        handle.write('var details_data = %s;\n' % json.dumps(details, indent=1))
-
-        handle.write('var resultsData = %s;\n' % json.dumps(module_results, indent=1))
+        handle.write(f"var details_data = {json.dumps(details, indent=1)};\n")
+        handle.write(f"var resultsData = {json.dumps(module_results, indent=1)};\n")
 
 
 def generate_html_sections(records: List[RecordLayer], results: Dict[str, Dict[str, ModuleResults]],
@@ -234,7 +233,7 @@ def generate_webpage(records: List[Record], results: List[Dict[str, ModuleResult
                    "Multiple genes and area features can be selected by clicking them while holding the Ctrl key."
                    )
     doc_target = "understanding_output/#the-antismash-5-region-concept"
-    svg_tooltip += "<br>More detailed help is available %s." % docs_link("here", doc_target)
+    svg_tooltip += f"<br>More detailed help is available {docs_link('here', doc_target)}."
 
     as_js_url = build_antismash_js_url(options)
 
@@ -295,5 +294,5 @@ def generate_searchgtr_htmls(records: List[Record], options: ConfigType) -> None
             with open(formfileloc, "w") as formfile:
                 specificformtemplate = searchgtrformtemplateparts[0].replace("GlycTr", gene_id)
                 formfile.write(specificformtemplate)
-                formfile.write("%s\n%s" % (gene_id, feature.translation))
+                formfile.write(f"{gene_id}\n{feature.translation}")
                 formfile.write(searchgtrformtemplateparts[1])

@@ -113,7 +113,7 @@ def asp_ks_c(record: secmet.Record) -> List[SinglePairing]:
 
     for alignment in analyser.get_alignments():
         value = alignment.get_signature([49, 111])  # emissions [0.95, 1.]
-        results.append((alignment.domain, "found active site histidines: %s" % (value == "HH")))
+        results.append((alignment.domain, f"found active site histidines: {value == 'HH'}"))
 
     return results
 
@@ -195,7 +195,7 @@ def asp_acp(record: secmet.Record) -> List[SinglePairing]:
 
     for alignment in analyser.get_alignments():
         value = alignment.get_signature([31])  # emission 0.98
-        results.append((alignment.domain, "found active site serine: %s" % (value == "S")))
+        results.append((alignment.domain, f"found active site serine: {value == 'S'}"))
 
     return results
 
@@ -223,7 +223,7 @@ def asp_pksi_dh(record: secmet.Record) -> List[SinglePairing]:
             continue
         value = alignment.get_signature([5, 39, 44])
         found = value == "HGP"  # emissions 1., 0.62, 097
-        results.append((alignment.domain, "catalytic triad H,G,P found: %s" % found))
+        results.append((alignment.domain, f"catalytic triad H,G,P found: {found}"))
 
     return results
 
@@ -255,7 +255,7 @@ def asp_pksi_kr(record: secmet.Record) -> List[SinglePairing]:
             continue
         value = alignment.get_signature([149, 162, 166])
         found = value == "SYN"
-        results.append((alignment.domain, "catalytic triad S,Y,N found: %s" % found))
+        results.append((alignment.domain, f"catalytic triad S,Y,N found: {found}"))
 
     return results
 
@@ -282,7 +282,7 @@ def asp_thioesterase(record: secmet.Record) -> List[SinglePairing]:
             continue
         value = alignment.get_signature([81])
         found = value == "S"
-        results.append((alignment.domain, "active site serine present: %s" % found))
+        results.append((alignment.domain, f"active site serine present: {found}"))
 
     return results
 
@@ -379,5 +379,5 @@ def asp_p450_oxy(record: secmet.Record) -> List[SinglePairing]:
             continue
         value = alignment.get_signature([407])
         found = value == "C"
-        results.append((alignment.domain, "active site cysteine present: %s" % found))
+        results.append((alignment.domain, f"active site cysteine present: {found}"))
     return results

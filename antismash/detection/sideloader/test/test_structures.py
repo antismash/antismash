@@ -31,7 +31,7 @@ class TestSub(unittest.TestCase):
         sub = structures.SubRegionAnnotation(5, 50, "label", dummy_tool(), {"a": ["first"], "b": ["and", "second"]})
         as_json = json.loads(json.dumps(sub.to_json()))  # string conversion to match real use
         regenerated = structures.SubRegionAnnotation.from_json(as_json)
-        assert sub == regenerated, "%s != %s" % (vars(sub), vars(regenerated))
+        assert sub == regenerated, f"{vars(sub)} != {vars(regenerated)}"
 
         as_json["details"] = {"a": "first", "b": ["and", "second"]}
         regenerated = structures.SubRegionAnnotation.from_json(as_json)
@@ -39,7 +39,7 @@ class TestSub(unittest.TestCase):
 
         as_json.pop("tool")
         regenerated = structures.SubRegionAnnotation.from_schema_json(as_json, dummy_tool())
-        assert sub == regenerated, "%s != %s" % (vars(sub), vars(regenerated))
+        assert sub == regenerated, f"{vars(sub)} != {vars(regenerated)}"
 
     def test_secmet_conversion(self):
         source = structures.SubRegionAnnotation(5, 50, "label", dummy_tool(), {"a": ["first"], "b": ["second"]})

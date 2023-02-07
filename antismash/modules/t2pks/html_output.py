@@ -29,12 +29,11 @@ def generate_html(region_layer: RegionLayer, results: T2PKSResults,
 
     template = FileTemplate(path.get_full_path(__file__, "templates", "sidepanel.html"))
 
-    tooltip_content = ("Predictions of starter units, elongations, product classes, "
-                       "and potential molecular weights for type II PKS clusters."
-                      )
-
-    tooltip_content += "<br>More detailed information is available %s." % docs_link("here", "modules/t2pks")
-
+    tooltip_content = (
+        "Predictions of starter units, elongations, product classes, "
+        "and potential molecular weights for type II PKS clusters."
+        f"<br>More detailed information is available {docs_link('here', 'modules/t2pks')}."
+    )
     html.add_sidepanel_section("Type II PKS", template.render(predictions=predictions,
                                                               tooltip_content=tooltip_content))
 

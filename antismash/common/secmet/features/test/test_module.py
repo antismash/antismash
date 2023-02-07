@@ -99,7 +99,7 @@ class TestModule(unittest.TestCase):
         for removed_key in ["domains", "incomplete"]:
             bio = module.to_biopython()[0]
             bio.qualifiers.pop(removed_key)
-            with self.assertRaisesRegex(ValueError, "missing .* '?%s" % removed_key):
+            with self.assertRaisesRegex(ValueError, f"missing .* '?{removed_key}"):
                 Module.from_biopython(bio, record=record)
 
         bio = module.to_biopython()[0]

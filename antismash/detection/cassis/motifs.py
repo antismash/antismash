@@ -52,7 +52,7 @@ class Motif(Pairing):
                 and self.hits == other.hits)
 
     def __repr__(self) -> str:
-        return "Motif(%s, score=%s, hits=%s)" % (self.pairing_string, self.score, self.hits)
+        return f"Motif({self.pairing_string}, score={self.score}, hits={self.hits})"
 
 
 def generate_motifs(meme_dir: str, anchor_promoter: int, promoters: List[Promoter]) -> List[Motif]:
@@ -95,7 +95,7 @@ def generate_motifs(meme_dir: str, anchor_promoter: int, promoters: List[Promote
                     for i in range(start_index, end_index + 1):
                         seq = SeqRecord(promoters[i].seq,
                                         id=promoters[i].get_id(),
-                                        description="length={}bp".format(len(promoters[i].seq)))
+                                        description=f"length={len(promoters[i].seq)}bp")
                         if i == anchor_promoter:  # mark anchor gene
                             seq.id += "__ANCHOR"  # must be part of id, otherwise MEME woun't recognize it
                         SeqIO.write(seq, pm_handle, "fasta")
@@ -152,7 +152,7 @@ def filter_meme_results(meme_dir: str, promoter_sets: List[Motif], anchor: str) 
                 # write sites to fasta file
                 with open(os.path.join(meme_dir, str(motif),
                                        "binding_sites.fasta"), "w") as handle:
-                    handle.write(">{}__{}\n".format(anchor, str(motif)))
+                    handle.write(f">{anchor}__{motif}\n")
                     handle.write("\n".join(motif.seqs))
                 if VERBOSE_DEBUG:
                     logging.debug("MEME: motif %s; e-value = %s", motif, motif.score)

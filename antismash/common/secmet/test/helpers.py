@@ -33,7 +33,7 @@ class DummyAntismashDomain(AntismashDomain):
         if protein_location is None:
             protein_location = FeatureLocation(protein_start, protein_end)
         if not domain_id:
-            domain_id = "test_asDom_%d" % DummyAntismashDomain.counter
+            domain_id = f"test_asDom_{DummyAntismashDomain.counter}"
             DummyAntismashDomain.counter += 1
         super().__init__(location, tool, protein_location, locus_tag, domain=domain)
         self.domain_id = domain_id
@@ -46,7 +46,7 @@ class DummyCDS(CDSFeature):
         if not translation:
             translation = "A"*(abs(start-end))
         if not locus_tag:
-            locus_tag = "dummy_locus_tag_%d" % DummyCDS.counter
+            locus_tag = f"dummy_locus_tag_{DummyCDS.counter}"
             DummyCDS.counter += 1
         super().__init__(FeatureLocation(start, end, strand), translation=translation,
                          locus_tag=locus_tag)
@@ -71,7 +71,7 @@ class DummyCDSMotif(CDSMotif):
             protein_location = FeatureLocation(protein_start, protein_end)
         super().__init__(FeatureLocation(start, end, strand), locus_tag, protein_location, tool)
         if not domain_id:
-            domain_id = "dummy_domain%d_%d_%d" % (DummyCDSMotif.counter, start, end)
+            domain_id = f"dummy_domain{DummyCDSMotif.counter}_{start}_{end}"
             DummyCDSMotif.counter += 1
         self.domain_id = domain_id
 
@@ -111,7 +111,7 @@ class DummyPFAMDomain(PFAMDomain):
         if protein_location is None:
             protein_location = FeatureLocation(protein_start, protein_end)
         super().__init__(location, description, protein_location, identifier, tool, locus_tag, domain=domain)
-        self.domain_id = domain_id or "dummy_pfam_%d" % DummyPFAMDomain.counter
+        self.domain_id = domain_id or f"dummy_pfam_{DummyPFAMDomain.counter}"
         DummyPFAMDomain.counter += 1
 
 

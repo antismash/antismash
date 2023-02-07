@@ -370,7 +370,7 @@ def acquire_rodeo_heuristics(cluster: secmet.Protocluster, query: secmet.CDSFeat
         tabs += [1, 0]
     # SS profile count > 1
     # is there more than one Cx..C structure in the sequence
-    cysrex = '(?=(C.{%d,%d}C))' % (CHAIN_LOWER, CHAIN_UPPER)
+    cysrex = f"(?=(C.{{{CHAIN_LOWER},{CHAIN_UPPER}}}C))"
     rex4 = re.compile(cysrex)
     if len(rex4.findall(core)) > 1:
         score += 2
@@ -394,7 +394,7 @@ def structure_analysis(seq: str) -> Tuple[int, float, float, List[int]]:
                 a list containing counts of each possible C...C size
     """
     # define Cys-gap structures with a c-terminal Cys
-    cysrex = '(?=(C.{%d,%d}C))' % (CHAIN_LOWER, CHAIN_UPPER)
+    cysrex = f"(?=(C.{{{CHAIN_LOWER},{CHAIN_UPPER}}}C))"
 
     core = str(seq)
 

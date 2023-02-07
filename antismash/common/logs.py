@@ -34,7 +34,7 @@ def changed_logging(logfile: str = None, verbose: bool = False, debug: bool = Fa
     try:
         def new_critical(*args: Any) -> None:
             """ make critical messages yellow and without the normal timestamp """
-            msg = "\033[1;33m{}\033[0m".format(args[0])
+            msg = f"\033[1;33m{args[0]}\033[0m"
             print(msg % args[1:], file=sys.stderr)
         logging.critical = new_critical  # type: ignore
 

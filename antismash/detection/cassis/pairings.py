@@ -16,7 +16,7 @@ class Pairing:
     @property
     def pairing_string(self) -> str:
         """ A string representing the range of this pairing. """
-        return "+{:02d}_-{:02d}".format(self.plus, self.minus)
+        return f"+{self.plus:02d}_-{self.minus:02d}"
 
     def __str__(self) -> str:
         return self.pairing_string

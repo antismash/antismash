@@ -34,7 +34,7 @@ class ATResult:
         return str(self)
 
     def __str__(self) -> str:
-        return "ATResult(name=%s, signature=%s, score=%.1f)" % (self.name, self.signature, self.score)
+        return f"ATResult(name={self.name}, signature={self.signature}, score={self.score:.1f})"
 
     def to_json(self) -> Tuple[str, str, float]:
         """ Serialises the instance """
@@ -69,13 +69,13 @@ class ATPrediction(Prediction):
             return Markup("No matches above 50%")
         lines = []
         for monomer, pred in self.predictions[:3]:
-            lines.append("<dd>%s: %.1f%%</dd>\n" % (get_long_form(monomer), pred.score))
-        html = ((
+            lines.append(f"<dd>{get_long_form(monomer)}: {pred.score:.1f}%</dd>\n")
+        html = (
             "<dl>\n"
             " <dt>Top 3 matches:</dt>\n"
-            "%s"
+            f"{''.join(lines)}"
             "</dl>\n"
-        ) % "".join(lines))
+        )
         return Markup(html)
 
     def to_json(self) -> Dict[str, Any]:

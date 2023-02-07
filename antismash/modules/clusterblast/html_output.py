@@ -62,6 +62,6 @@ def generate_div(region_layer: RegionLayer, record_layer: RecordLayer,
     """
     if additional is None:
         additional = {}
-    template = FileTemplate(path.get_full_path(__file__, "templates", "%s.html" % search_type))
+    template = FileTemplate(path.get_full_path(__file__, "templates", f"{search_type}.html"))
     return template.render(record=record_layer, region=region_layer, options=options_layer,
                            tooltip=tooltip, **additional)

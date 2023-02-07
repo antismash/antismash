@@ -56,7 +56,7 @@ def check_prereqs(options: ConfigType) -> List[str]:
     failure_messages = []
     for binary_name in ['hmmscan']:
         if binary_name not in options.executables:
-            failure_messages.append("Failed to locate executable: %r" % binary_name)
+            failure_messages.append(f"Failed to locate executable: {binary_name!r}")
 
     data_dir = options.database_dir
 

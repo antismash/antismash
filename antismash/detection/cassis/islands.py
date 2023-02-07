@@ -28,7 +28,7 @@ class Island:
                 and self.motif == other.motif)
 
     def __repr__(self) -> str:
-        return "Island(start=%s, end=%s, motif=%s)" % (self.start, self.end, self.motif)
+        return f"Island(start={self.start}, end={self.end}, motif={self.motif})"
 
 
 def get_islands(anchor_promoter: int, motifs: List[Motif], promoters: List[Promoter]) -> List[Island]:

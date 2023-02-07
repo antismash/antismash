@@ -32,7 +32,7 @@ class TIGRFamResults(HmmerResults):
                         "score", "translation"]:
                 setattr(tigr_feature, key, getattr(hit, key))
             tigr_feature.detection = "hmmscan"
-            tigr_feature.domain_id = "{}_{}_{:04d}".format(self.tool, tigr_feature.locus_tag, i + 1)
+            tigr_feature.domain_id = f"{self.tool}_{tigr_feature.locus_tag}_{i + 1:04d}"
             record.add_feature(tigr_feature)
 
     def refilter(self, max_evalue: float, min_score: float) -> "TIGRFamResults":

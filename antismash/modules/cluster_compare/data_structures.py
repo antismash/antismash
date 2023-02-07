@@ -143,7 +143,7 @@ class ReferenceCDS:
         }
 
     def __str__(self) -> str:
-        return "ReferenceCDS(%s, %s)" % (self.name, self.location)
+        return f"ReferenceCDS({self.name}, {self.location})"
 
     def get_minimal_json(self) -> Dict[str, Any]:
         """ Returns the minimum information required as JSON for the purposes of
@@ -188,7 +188,7 @@ class ReferenceArea:
     def set_component_data(self, data: Components) -> None:
         """ Sets the component data of the area to avoid (re)calculating when unnecessary """
         if not isinstance(data, Components):
-            raise TypeError("component data expected to be 'Components', but was '%s'" % type(data))
+            raise TypeError(f"component data expected to be 'Components', but was '{type(data)}'")
         self._components = data
 
     def to_json(self) -> Dict[str, Any]:
@@ -227,7 +227,7 @@ class ReferenceProtocluster(ReferenceArea):
         }
 
     def __str__(self) -> str:
-        return "ReferenceProtocluster(%s, %s, %s...)" % (self.start, self.end, self.product)
+        return f"ReferenceProtocluster({self.start}, {self.end}, {self.product})"
 
     def __repr__(self) -> str:
         return str(self)
@@ -270,7 +270,7 @@ class ReferenceRegion(ReferenceArea):
         return result
 
     def __repr__(self) -> str:
-        return "ReferenceRegion(%s, %s, %s, %s...)" % (self.accession, self.start, self.end, self.products)
+        return f"ReferenceRegion({self.accession}, {self.start}, {self.end}, {self.products})"
 
 
 class ReferenceRecord:
@@ -323,7 +323,7 @@ class ReferenceScorer:
         self.accession = reference.accession
         self.hits_by_gene = best_hits
         for hit in best_hits.values():
-            assert hit.reference_record == reference.accession, "%s != %s" % (hit.reference_record, reference.accession)
+            assert hit.reference_record == reference.accession, f"{hit.reference_record} != {reference.accession}"
         self.identity = identity
         self.order = order
         self.component = component
@@ -372,25 +372,19 @@ class ReferenceScorer:
         return str(self)
 
     def __str__(self) -> str:
-        return "ReferenceScorer(%s: raw_id=%.2f, order=%s, comp=%s)" % (
-            self.accession,
-            self.identity,
-            ("%.2f" % self.order) if len(self.hits_by_gene) > 1 else "N/A",
-            ("%.2f" % self.component) if self.component is not None else "N/A",
-        )
+        order = f"{self.order:.2f}" if len(self.hits_by_gene) > 1 else "N/A"
+        components = f"{self.component:.2f}" if self.component is not None else "N/A"
+        return f"ReferenceScorer({self.accession}: raw_id={self.identity:.2f}, order={order}, comp={components})"
 
     def table_string(self) -> str:
         """ Generates a string suitable for a tooltip of a particular result """
-        return "%.2f (id:%.2f, order:%s, components:%s)" % (
-            self.final_score,
-            self.identity,
-            ("%.2f" % self.order) if len(self.hits_by_gene) > 1 else "N/A",
-            ("%.2f" % self.component) if self.component is not None else "N/A",
-        )
+        order = f"{self.order:.2f}" if len(self.hits_by_gene) > 1 else "N/A"
+        components = f"{self.component:.2f}" if self.component is not None else "N/A"
+        return f"{self.final_score:.2f} (id:{self.identity:.2f}, order:{order}, components:{components})"
 
     def __lt__(self, other: Any) -> bool:
         if not isinstance(other, ReferenceScorer):
-            raise TypeError("cannot compare ReferenceScorer to %s" % type(other))
+            raise TypeError(f"cannot compare ReferenceScorer to {type(other)}")
         return self.final_score < other.final_score
 
 

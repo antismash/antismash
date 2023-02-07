@@ -34,7 +34,7 @@ class AllFunctionResults(module_results.DetectionResults):
         """ Add results for a tool, tool name must be unique and user-friendly """
         assert isinstance(results, FunctionResults), type(results)
         if results.tool in self._tools:
-            raise ValueError("Gene function results already exist for tool: %s" % results.tool)
+            raise ValueError(f"Gene function results already exist for tool: {results.tool}")
         self._tools[results.tool] = results
 
     def add_to_record(self, record: Record) -> None:
@@ -109,11 +109,11 @@ def check_prereqs(options: ConfigType) -> List[str]:
 
     for binary_name in ['hmmscan', 'hmmpress']:
         if binary_name not in options.executables:
-            failure_messages.append("Failed to locate file: %r" % binary_name)
+            failure_messages.append(f"Failed to locate file: {binary_name!r}")
 
     database = os.path.join(options.database_dir, 'resfam', 'Resfams.hmm')
     if "mounted_at_runtime" not in database and path.locate_file(database) is None:
-        failure_messages.append('Failed to locate Resfam database in %s' % database)
+        failure_messages.append(f"Failed to locate Resfam database in {database!r}")
 
     failure_messages.extend(prepare_data(logging_only=True))
 

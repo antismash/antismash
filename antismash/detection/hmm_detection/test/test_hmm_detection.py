@@ -147,7 +147,7 @@ class HmmDetectionTest(unittest.TestCase):
             self.record.add_protocluster(cluster)
         assert len(self.record.get_protoclusters()) == 7
         cluster_products = sorted([cluster.product for cluster in self.record.get_protoclusters()])
-        assert cluster_products == sorted(["Metabolite%s" % i for i in "01AABCD"])
+        assert cluster_products == sorted([f"Metabolite{i}" for i in "01AABCD"])
         self.record.create_candidate_clusters()
         assert len(self.record.get_candidate_clusters()) == 3
         self.record.create_regions()

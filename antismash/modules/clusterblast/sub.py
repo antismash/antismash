@@ -50,11 +50,11 @@ def check_sub_prereqs(options: ConfigType) -> List[str]:
     failure_messages = []
     for binary_name in _required_binaries:
         if binary_name not in options.executables:
-            failure_messages.append("Failed to locate file: %r" % binary_name)
+            failure_messages.append(f"Failed to locate file: {binary_name!r}")
 
     for file_name in _required_files:
         if path.locate_file(_get_datafile_path(file_name)) is None:
-            failure_messages.append("Failed to locate file: %r" % file_name)
+            failure_messages.append(f"Failed to locate file: {file_name!r}")
 
     return failure_messages
 
@@ -89,7 +89,7 @@ def _run_blast_helper(database: str, index: int) -> str:
         Returns:
             the name of the output file created by run_blast()
     """
-    return run_blast("input%d.fasta" % index, database)
+    return run_blast(f"input{index}.fasta", database)
 
 
 def run_clusterblast_processes(options: ConfigType) -> None:
@@ -129,7 +129,7 @@ def read_clusterblast_output(options: ConfigType) -> str:
 
     blastoutput = []
     for i in range(options.cpus):
-        with open("input%d.out" % i, "r") as handle:
+        with open(f"input{i}.out", "r", encoding="utf-8") as handle:
             output = handle.read()
         blastoutput.append(output)
     return "".join(blastoutput)

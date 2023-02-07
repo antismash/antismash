@@ -72,7 +72,7 @@ class DetectionTest(unittest.TestCase):
 
     def expect(self, results, genes_to_hit):
         expected = {gene: set("A") for gene in genes_to_hit}
-        assert results == expected, "%s != %s" % (set(results), set(expected))
+        assert results == expected, f"{set(results)} != {set(expected)}"
 
     def test_single(self):
         results = self.run_test("A", 10, 20, "a")

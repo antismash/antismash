@@ -39,7 +39,7 @@ class Protocluster(CDSCollection):
         # cluster-wide
         self.detection_rule = detection_rule
         if not product.replace("-", "").replace("_", "").isalnum() or product[0] in "-_" or product[-1] in "-_":
-            raise ValueError("invalid protocluster product: %s" % product)
+            raise ValueError(f"invalid protocluster product: {product}")
         self.product = product
         self.product_category = product_category
         self.tool = tool
@@ -56,7 +56,7 @@ class Protocluster(CDSCollection):
         self.t2pks: Optional[T2PKSQualifier] = None
 
     def __str__(self) -> str:
-        return "Protocluster(%s, product=%s)" % (self.location, self.product)
+        return f"Protocluster({self.location}, product={self.product})"
 
     def get_protocluster_number(self) -> int:
         """ Returns the protoclusters's numeric ID, only guaranteed to be consistent
@@ -155,7 +155,7 @@ class Protocluster(CDSCollection):
 
         # grab optional parent qualifiers
         updated = super().from_biopython(bio_feature, feature, leftovers, record=record)
-        assert updated is feature, "feature changed: %s -> %s" % (feature, updated)
+        assert updated is feature, f"feature changed: {feature} -> {updated}"
         assert isinstance(updated, Protocluster)
         return updated
 
@@ -184,7 +184,7 @@ class SideloadedProtocluster(Protocluster):
     def to_biopython(self, qualifiers: Optional[Dict[str, List[str]]] = None) -> List[SeqFeature]:
         features = super().to_biopython(qualifiers)
         for feature in features:
-            feature.qualifiers["aStool"] = ["externally annotated by: %s" % self.tool]
+            feature.qualifiers["aStool"] = [f"externally annotated by: {self.tool}"]
             if self.extra_qualifiers:
                 feature.qualifiers["external_qualifier_ids"] = list(self.extra_qualifiers)
                 feature.qualifiers.update(self.extra_qualifiers)

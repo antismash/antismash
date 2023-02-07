@@ -37,18 +37,18 @@ def _parse_format(fmt: str, data: str) -> Sequence[str]:
     # step 3: replace all unescaped brace pairs with a capture group
     # first do an integer-only pass
     fragment = re.escape(":d")
-    sub_search = r"(?<!\\)({%s})" % fragment
-    safe = safe.replace("{%s}" % fragment, r"([0-9]+)")
+    sub_search = fr"(?<!\\)({{{fragment}}})"
+    safe = safe.replace(f"{{{fragment}}}", r"([0-9]+)")
     # then a generic step
     sub_search = r"(?<!\\)({.*?(?<!\\)})"
     # core    "({.*?})" any brace pair and its contents
     # special "(?<!\\)" disallows any core starting or ending with an escaped brace
     # this combo allows capturing the nested parts correctly
-    regex = "^{}$".format(re.sub(sub_search, r"(.+?)", safe))
+    regex = f"^{re.sub(sub_search, r'(.+?)', safe)}$"
 
     res = re.search(regex, data)
     if res is None:
-        raise ValueError("could not match format %r to input %r" % (fmt, data))
+        raise ValueError(f"could not match format {fmt!r} to input {data!r}")
     # don't return matches, since that includes the braces, just use the groups
     return res.groups()
 

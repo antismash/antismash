@@ -43,7 +43,7 @@ class TIGRDomain(AntismashDomain):
         """
         super().__init__(location, TOOL, protein_location, locus_tag, domain=domain)
         if not isinstance(description, str):
-            raise TypeError("TIGRDomain description must be a string, not %s" % type(description))
+            raise TypeError(f"TIGRDomain description must be a string, not {type(description)}")
         if not description:
             raise ValueError("TIGRDomain description cannot be empty")
         self.description = description
@@ -52,7 +52,7 @@ class TIGRDomain(AntismashDomain):
             raise ValueError("TIGRFam identifier cannot be empty")
 
         if not (len(identifier) == 9 and identifier.startswith('TIGR') and identifier[4:].isdecimal()):
-            raise ValueError("invalid TIGRFam identifier: %s" % identifier)
+            raise ValueError(f"invalid TIGRFam identifier: {identifier}")
         self.identifier = identifier
 
     def to_biopython(self, qualifiers: Dict[str, List[str]] = None) -> List[SeqFeature]:

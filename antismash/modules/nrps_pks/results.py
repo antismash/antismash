@@ -251,7 +251,7 @@ class NRPS_PKS_Results(ModuleResults):
                 # otherwise one of many without prediction methods/relevance (PCP, Cglyc, etc)
 
                 for method, pred in domain.get_predictions().items():
-                    feature.specificity.append("%s: %s" % (method, pred))
+                    feature.specificity.append(f"{method}: {pred}")
 
             for module in cds_feature.modules:
                 if not module.is_complete():
@@ -267,6 +267,6 @@ class NRPS_PKS_Results(ModuleResults):
                     if module.module_type == module.types.PKS and "PKS_AT" not in domains:
                         substrate = "mal"
                     else:
-                        raise ValueError("missing substrate in non-transAT module: %s" % module)
+                        raise ValueError(f"missing substrate in non-transAT module: {module}")
 
                 module.add_monomer(substrate, modify_substrate(module, substrate))

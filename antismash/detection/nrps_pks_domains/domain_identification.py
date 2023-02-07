@@ -445,7 +445,7 @@ def generate_domain_features(gene: CDSFeature, domains: List[HMMResult]) -> Dict
         new_feature.translation = gene.translation[domain.query_start:domain.query_end]
 
         domain_counts[domain.hit_id] += 1  # 1-indexed, so increment before use
-        domain_name = "{}_{}.{}".format(gene.get_name(), domain.hit_id, domain_counts[domain.hit_id])
+        domain_name = f"{gene.get_name()}_{domain.hit_id}.{domain_counts[domain.hit_id]}"
 
         new_feature.domain_id = "nrpspksdomains_" + domain_name
         new_feature.label = domain_name
@@ -469,7 +469,7 @@ def generate_motif_features(feature: CDSFeature, motifs: List[HMMResult]) -> Lis
         prot_loc = FeatureLocation(motif.query_start, motif.query_end)
         new_motif = CDSMotif(loc, feature.get_name(), prot_loc, tool="nrps_pks_domains")
         new_motif.label = motif.hit_id
-        new_motif.domain_id = 'nrpspksmotif_{}_{:04d}'.format(locus_tag, i)
+        new_motif.domain_id = f"nrpspksmotif_{locus_tag}_{i:04d}"
         new_motif.evalue = motif.evalue
         new_motif.score = motif.bitscore
         new_motif.detection = "hmmscan"

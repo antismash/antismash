@@ -138,9 +138,9 @@ class RREFinderResults(ModuleResults):
     def refilter(self, min_length: int, min_score: float) -> "RREFinderResults":
         """Trims the results to stricter thresholds for score and length"""
         if min_length < self.min_length:
-            raise ValueError("cannot refilter to a more lenient length: %s -> %s" % (self.min_length, min_length))
+            raise ValueError(f"cannot refilter to a more lenient length: {self.min_length} -> {min_length}")
         if min_score < self.bitscore_cutoff:
-            raise ValueError("cannot refilter to a more lenient score: %s -> %s" % (self.bitscore_cutoff, min_score))
+            raise ValueError(f"cannot refilter to a more lenient score: {self.bitscore_cutoff} -> {min_score}")
         by_cds, by_proto = filter_hits(self.hits_by_cds, self.hits_by_protocluster, min_length, min_score)
         self.hits_by_cds = by_cds
         self.hits_by_protocluster = by_proto

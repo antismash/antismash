@@ -121,7 +121,7 @@ def _get_domain_class(abbreviation: str, domain_name: str) -> str:
         res = _CLASS_BY_ABBREVIATION.get(abbreviation, "other")
     else:
         res = _CLASS_BY_NAME.get(domain_name, "other")
-    return "jsdomain-%s" % res
+    return f"jsdomain-{res}"
 
 
 def get_css_class_and_abbreviation(domain_name: str) -> Tuple[str, str]:

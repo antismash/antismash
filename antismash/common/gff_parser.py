@@ -56,7 +56,7 @@ def check_gff_suitability(gff_file: str, sequences: List[SeqRecord]) -> None:
                 raise AntismashInputError("could not parse records from GFF3 file")
 
             if not record.features:
-                raise AntismashInputError('GFF3 record %s contains no features' % record.id)
+                raise AntismashInputError(f"GFF3 record {record.id} contains no features")
 
             coord_max = max([n.location.end.real for n in record.features])
             if coord_max > len(sequences[0]):
@@ -82,7 +82,7 @@ def check_gff_suitability(gff_file: str, sequences: List[SeqRecord]) -> None:
         # usually the assertion "assert len(parts) >= 8, line"
         # so strip the newline and improve the error message
         message = str(err).strip()
-        raise AntismashInputError("parsing GFF failed with invalid format: %r" % message) from err
+        raise AntismashInputError(f"parsing GFF failed with invalid format: {message!r}") from err
 
 
 def get_features_from_file(handle: IO) -> Dict[str, List[SeqFeature]]:
@@ -128,7 +128,7 @@ def get_features_from_file(handle: IO) -> Dict[str, List[SeqFeature]]:
             for i, new_feature in enumerate(new_features):
                 variant = name
                 if new_feature.type == "CDS" and multiple_cds:
-                    variant = "{0}_{1}".format(name, i)
+                    variant = f"{name}_{i}"
                 new_feature.qualifiers['gene'] = [variant]
                 if locus_tag is not None:
                     new_feature.qualifiers["locus_tag"] = locus_tag
