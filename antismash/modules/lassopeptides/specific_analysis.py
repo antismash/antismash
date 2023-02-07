@@ -158,10 +158,11 @@ class Lassopeptide:
         self._c_cut = str(ccut)
 
     def __repr__(self) -> str:
-        return "Lassopeptide(..%s, %s, %r, %r, %s, %s(%s), %s, %s)" % (
-                        self.end, self.score, self._lassotype,
-                        self._core, self.number_bridges, self._monoisotopic_weight,
-                        self._weight, self._macrolactam, self.c_cut)
+        return (
+            f"Lassopeptide(..{self.end}, {self.score}, {self._lassotype!r}, "
+            f"{self._core!r}, {self.number_bridges}, {self._monoisotopic_weight}({self._weight}), "
+            f"{self._macrolactam}, {self.c_cut})"
+        )
 
     def _calculate_weight(self, analysis: utils.RobustProteinAnalysis) -> float:
         """ Calculate the molecular weight/monoisotopic mass from the given input
@@ -448,7 +449,7 @@ def identify_lasso_motifs(leader: str, core: str) -> Tuple[List[int], int, Dict[
     motif_file = path.get_full_path(__file__, 'data', "lasso_motifs_meme.txt")
     with TemporaryFile() as tempfile:
         with open(tempfile.name, "w") as out_file:
-            out_file.write(">query\n%s%s" % (leader, core))
+            out_file.write(f">query\n{leader}{core}")
         fimo_output = subprocessing.run_fimo_simple(motif_file, tempfile.name)
     fimo_motifs = [int(line.partition("\t")[0])
                    for line in fimo_output.split("\n")
@@ -640,7 +641,7 @@ def determine_precursor_peptide_candidate(record: Record, cluster: Protocluster,
         return None
 
     # Create FASTA sequence for feature under study
-    lasso_a_fasta = ">%s\n%s" % (query.get_name(), query_sequence)
+    lasso_a_fasta = f">{query.get_name()}\n{query_sequence}"
 
     # Run sequence against pHMM to find the cleavage site position
     end, score = run_cleavage_site_phmm(lasso_a_fasta, 'precursor_2637.hmm', -20.00)
@@ -678,7 +679,7 @@ def run_lassopred(record: Record, cluster: Protocluster, query: CDSFeature) -> O
     thresh_c_hit = -7.5
 
     aux = result.core[(len(result.core) // 2):]
-    core_a_fasta = ">%s\n%s" % (query.get_name(), aux)
+    core_a_fasta = f">{query.get_name()}\n{aux}"
 
     profile = path.get_full_path(__file__, 'data', c_term_hmmer_profile)
     hmmer_res = subprocessing.run_hmmpfam2(profile, core_a_fasta)

@@ -225,11 +225,19 @@ class Thiopeptide:
         self._c_cut = ccut
 
     def __repr__(self) -> str:
-        return "Thiopeptide(..%s, %s, %r, %r, %s(%s), %s, %s, %s, %s)" % (
-                        self.end, self.score, self._core,
-                        self.thio_type, self._monoisotopic_weight, self._weight,
-                        self.macrocycle, self.amidation, self.mature_features,
-                        self.c_cut)
+        return (
+            "Thiopeptide("
+            f"..{self.end}, "
+            f"{self.score}, "
+            f"{self._core!r}, "
+            f"{self.thio_type!r}, "
+            f"{self._monoisotopic_weight}({self._weight}), "
+            f"{self.macrocycle}, "
+            f"{self.amidation}, "
+            f"{self.mature_features}, "
+            f"{self.c_cut}"
+            ")"
+        )
 
     def _calculate_mw(self) -> None:
         """
@@ -479,7 +487,7 @@ def determine_precursor_peptide_candidate(query: secmet.CDSFeature, domains: Set
         return None
 
     # Create FASTA sequence for feature under study
-    thio_a_fasta = ">%s\n%s" % (query.get_name(), query_sequence)
+    thio_a_fasta = f">{query.get_name()}\n{query_sequence}"
 
     # Run sequence against pHMM; if positive, parse into a vector containing START, END and SCORE
     end, score = run_cleavage_site_phmm(thio_a_fasta, 'thio_cleave.hmm', -3.00)
@@ -526,7 +534,7 @@ def find_tail(query: secmet.CDSFeature, core: str) -> str:
     thresh_c_hit = -9
 
     temp = core[-10:]
-    core_a_fasta = ">%s\n%s" % (query.get_name(), temp)
+    core_a_fasta = f">{query.get_name()}\n{temp}"
 
     c_term_profile = path.get_full_path(__file__, "data", 'thio_tail.hmm')
     c_hmmer_res = subprocessing.run_hmmpfam2(c_term_profile, core_a_fasta)
@@ -560,7 +568,7 @@ def run_thiopred(query: secmet.CDSFeature, thio_type: str, domains: Set[str]) ->
 
     # leader cleavage "validation"
     profile_pep = path.get_full_path(__file__, "data", 'thiopep2.hmm')
-    core_a_fasta = ">%s\n%s" % (query.get_name(), result.core)
+    core_a_fasta = f">{query.get_name()}\n{result.core}"
     hmmer_res_pep = subprocessing.run_hmmpfam2(profile_pep, core_a_fasta)
 
     thresh_pep_hit = -2

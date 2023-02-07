@@ -59,7 +59,7 @@ class HTMLSections:
         self.sidepanel_sections.append(HTMLSection(label, section, class_name or self.name))
 
     def __repr__(self) -> str:
-        return "HTMLSections(%s)" % (self.name)
+        return f"HTMLSections({self.name})"
 
 
 def _safe_selector(name: str) -> str:
@@ -126,14 +126,15 @@ def collapser_start(target: str, level: str = "all") -> Markup:
             HTML fragments as a Markup instance
     """
     if level not in ["all", "candidate", "protocluster", "cds", "none"]:
-        raise ValueError("unknown collapser level: %s" % level)
-    classes = ["collapser", "collapser-target-%s" % _safe_selector(target)]
-    classes.append("collapser-level-%s" % level)
+        raise ValueError(f"unknown collapser level: {level}")
+    classes = ["collapser", f"collapser-target-{_safe_selector(target)}"]
+    classes.append(f"collapser-level-{level}")
     child = '<div class="collapser-content">'
     if level == "all":
         classes.append("expanded")
         child = child[:-1] + ' style="display:block;">'
-    return Markup('<div class="%s"> </div>%s' % (" ".join(classes), child))
+    class_string = ' '.join(classes)
+    return Markup(f'<div class="{class_string}"> </div>{child}')
 
 
 def spanned_sequence(sequence: str, class_mapping: Dict[str, str],
@@ -203,11 +204,13 @@ def help_tooltip(text: str, name: str) -> Markup:
     """
     global _TOOLTIP_COUNTER  # pylint: disable=global-statement
     _TOOLTIP_COUNTER += 1
-    unique_id = "%s-help-%d" % (name, _TOOLTIP_COUNTER)
-    return Markup(('<div class="help-container">'
-                   ' <div class="help-icon" data-id="{0}"></div>'
-                   ' <span class="help-tooltip" id="{0}">{1}</span>'
-                   '</div>').format(unique_id, text))
+    unique_id = f"{name}-help-{_TOOLTIP_COUNTER}"
+    return Markup(
+        '<div class="help-container">'
+        f' <div class="help-icon" data-id="{unique_id}"></div>'
+        f' <span class="help-tooltip" id="{unique_id}">{text}</span>'
+        '</div>'
+    )
 
 
 def replace_with(key: str) -> Markup:
@@ -266,12 +269,14 @@ def switch(label: str, classname: str, id_attr: str = "", starts_on: bool = Fals
     """
     id_attr = f' id="{id_attr}"' if id_attr else ""
     check_attr = " checked" if starts_on else ""
-    return Markup(('<div class="{0} switch-container"><span class="switch-desc">{1}</span>'
-                   ' <label class="switch">'
-                   '  <input class="{0}" type="checkbox"{2}{3}>'
-                   '  <span class="slider"></span>'
-                   ' </label>'
-                   '</div>').format(classname, label, id_attr, check_attr))
+    return Markup(
+        f'<div class="{classname} switch-container"><span class="switch-desc">{label}</span>'
+        ' <label class="switch">'
+        f'  <input class="{classname}" type="checkbox"{id_attr}{check_attr}>'
+        '  <span class="slider"></span>'
+        ' </label>'
+        '</div>'
+    )
 
 
 class _Template:  # pylint: disable=too-few-public-methods

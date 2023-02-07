@@ -97,7 +97,7 @@ class TestKSCounter(unittest.TestCase):
                 if key == var_name:
                     assert val == 2
                 else:
-                    assert val == 1, "%s %s" % (ks_name, vars(counter))
+                    assert val == 1, f"{ks_name} {vars(counter)}"
             assert counter.modular_is_greatest() == (ks_name == "Modular-KS")
             assert counter.ene_is_greatest() == (ks_name == "Enediyne-KS")
             assert counter.iterative_is_greatest() == (ks_name == "Iterative-KS")

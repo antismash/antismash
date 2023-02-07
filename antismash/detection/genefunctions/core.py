@@ -31,8 +31,8 @@ class FunctionResults(DetectionResults):
         for feature_name, result in self.best_hits.items():
             function = self.function_mapping[feature_name]
             feature = record.get_cds_by_name(feature_name)
-            feature.gene_functions.add(function, self.tool, "%s (Score: %g; E-value: %g)" % (
-                                            result.hit_id, result.bitscore, result.evalue))
+            feature.gene_functions.add(function, self.tool,
+                                       f"{result.hit_id} (Score: {result.bitscore:G}; E-value: {result.evalue})")
 
     @staticmethod
     def from_json(json: Dict[str, Any], record: Record) -> Optional["FunctionResults"]:

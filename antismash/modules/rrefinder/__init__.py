@@ -75,9 +75,9 @@ def check_options(options: ConfigType) -> List[str]:
     """
     issues = []
     if options.rre_cutoff <= 0:
-        issues.append("RREFinder cutoff is negative: %s" % options.rre_cutoff)
+        issues.append(f"RREFinder cutoff is negative: {options.rre_cutoff}")
     if options.rre_min_length <= 0:
-        issues.append("RREFinder minimum length is negative: %s" % options.rre_cutoff)
+        issues.append(f"RREFinder minimum length is negative: {options.rre_cutoff}")
     return issues
 
 

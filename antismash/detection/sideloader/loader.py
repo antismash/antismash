@@ -43,7 +43,7 @@ def _ensure_valid(raw_json: Dict[str, Any], schema_file: str) -> Dict[str, Any]:
 
     # work around jsonschema breaking relative locations when subschemas reference each other
     schema_dir = os.path.dirname(schema_file)
-    resolver = jsonschema.RefResolver(base_uri='file://%s/subschemas/' % schema_dir, referrer=schema)
+    resolver = jsonschema.RefResolver(base_uri=f"file://{schema_dir}/subschemas/", referrer=schema)
 
     try:
         DefaultValidator(schema, resolver=resolver).validate(raw_json)

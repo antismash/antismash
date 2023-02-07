@@ -26,13 +26,13 @@ def ensure_database_built(filepath: str, return_not_raise: bool = False) -> List
         Returns:
             any encountered error messages, will never be populated without return_not_raise == True
     """
-    components = ["{}.{}".format(filepath, ext) for ext in ["pdb", "phr", "pin", "pot", "psq", "ptf", "pto"]]
+    components = [f"{filepath}.{ext}" for ext in ["pdb", "phr", "pin", "pot", "psq", "ptf", "pto"]]
 
     if path.is_outdated(components, filepath):
         logging.info(f"{filepath} components missing or obsolete, rebuilding database")
         result = subprocessing.run_makeblastdb(filepath)
         if not result.successful():
-            msg = "Failed to build blast database {!r}: {}".format(filepath, result.stderr)
+            msg = f"Failed to build blast database {filepath!r}: {result.stderr}"
             if not return_not_raise:
                 raise RuntimeError(msg)
             return [msg]
@@ -82,7 +82,7 @@ def check_prereqs(options: ConfigType) -> List[str]:
     failure_messages = []
     for binary_name in required_binaries:
         if binary_name not in options.executables:
-            failure_messages.append("Failed to locate file: %r" % binary_name)
+            failure_messages.append(f"Failed to locate file: {binary_name!r}")
 
     failure_messages.extend(prepare_data(logging_only=True))
 

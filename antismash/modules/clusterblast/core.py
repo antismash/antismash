@@ -59,7 +59,7 @@ def run_blast(query: str, database: str) -> str:
                "-out", out_file]
     res = subprocessing.execute(command)
     if not res.successful():
-        raise RuntimeError("blastp run failed: %s..." % res.stderr[-200:])
+        raise RuntimeError(f"blastp run failed: ...{res.stderr[-200:]!r}")
     return out_file
 
 
@@ -209,8 +209,8 @@ def create_blast_inputs(region: secmet.Region) -> Tuple[List[str], List[str]]:
             strand = "+"
         else:
             strand = "-"
-        fullname = "|".join(["input", "c%d" % region.get_region_number(),
-                             "%d-%d" % (cds.location.start, cds.location.end),
+        fullname = "|".join(["input", f"c{region.get_region_number()}",
+                             f"{cds.location.start:d}-{cds.location.end:d}",
                              strand, cds.get_name(), cds.product])
         names.append(fullname)
         seqs.append(cds.translation)
@@ -285,7 +285,7 @@ def parse_subject(line_parts: List[str], seqlengths: Dict[str, int],
         locustag = subject_parts[6]
     else:
         locustag = ""
-    genecluster = "{}_{}".format(subject_parts[0], subject_parts[1])
+    genecluster = f"{subject_parts[0]}_{subject_parts[1]}"
     start, end = subject_parts[2].split("-")[:2]
     strand = subject_parts[3]
     annotation = subject_parts[5]
@@ -516,7 +516,7 @@ def write_raw_clusterblastoutput(output_dir: str, blast_output: str, prefix: str
         Returns:
             the name of the file written
     """
-    filename = "%soutput.txt" % prefix
+    filename = f"{prefix}output.txt"
     with open(os.path.join(output_dir, filename), "w") as handle:
         handle.write(blast_output)
     return filename

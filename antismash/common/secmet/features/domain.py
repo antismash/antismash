@@ -60,13 +60,13 @@ class Domain(AntismashFeature):
         super().__init__(location, feature_type, tool=tool, created_by_antismash=created_by_antismash)
         if domain is not None:
             if not isinstance(domain, str):
-                raise TypeError("Domain must be given domain as a string, not %s" % type(domain))
+                raise TypeError(f"Domain must be given domain as a string, not {type(domain)}")
             if not domain:
                 raise ValueError("Domain cannot be an empty string")
         self.domain = domain
         self.protein_location = protein_location
         if not isinstance(protein_location, FeatureLocation):
-            raise TypeError("protein location must be a FeatureLocation, not %s" % type(protein_location))
+            raise TypeError(f"protein location must be a FeatureLocation, not {type(protein_location)}")
         if not locus_tag:
             raise ValueError("locus tag cannot be an empty string")
         self.locus_tag: str = str(locus_tag)

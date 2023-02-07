@@ -164,7 +164,7 @@ class Region(CDSCollection):
             within the Region.
         """
         if not filename:
-            filename = "%s.region%03d.gbk" % (self.parent_record.id, self.get_region_number())
+            filename = f"{self.parent_record.id}.region{self.get_region_number():03d}.gbk"
         if directory:
             filename = os.path.join(directory, filename)
 
@@ -188,11 +188,9 @@ class Region(CDSCollection):
         # update the antiSMASH annotation to include some cluster details
         comment_end_marker = "##antiSMASH-Data-END"
         cluster_comment = ("NOTE: This is a single region extracted from a larger record!\n"
-                           "Orig. start  :: {start}\n"
-                           "Orig. end    :: {end}\n"
-                           "{end_marker}").format(start=self.location.start,
-                                                  end=self.location.end,
-                                                  end_marker=comment_end_marker)
+                           "Orig. start  :: {self.location.start}\n"
+                           "Orig. end    :: {self.location.end}\n"
+                           "{comment_end_marker}")
         original = cluster_record.annotations["comment"]
         cluster_record.annotations["comment"] = original.replace(comment_end_marker, cluster_comment)
 

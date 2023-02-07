@@ -34,7 +34,7 @@ def convert_protein_position_to_dna(start: int, end: int, location: Location) ->
             an int representing the calculated DNA location
     """
     if not 0 <= start < end <= len(location) // 3:
-        raise ValueError("Protein positions %d and %d must be contained by %s" % (start, end, location))
+        raise ValueError(f"Protein positions {start} and {end} must be contained by {location}")
     if location.strand == -1:
         dna_start = location.start + len(location) - end * 3
         dna_end = location.start + len(location) - start * 3
@@ -45,8 +45,10 @@ def convert_protein_position_to_dna(start: int, end: int, location: Location) ->
     # only CompoundLocations are complicated
     if not isinstance(location, CompoundLocation):
         if not location.start <= dna_start < dna_end <= location.end:
-            raise ValueError(("Converted coordinates %d..%d "
-                              "out of bounds for location %s") % (dna_start, dna_end, location))
+            raise ValueError(
+                f"Converted coordinates {dna_start}..{dna_end} "
+                f"out of bounds for location {location}"
+            )
         return dna_start, dna_end
 
     parts = sorted(location.parts, key=lambda x: x.start)
@@ -71,8 +73,10 @@ def convert_protein_position_to_dna(start: int, end: int, location: Location) ->
     assert end_found
 
     if not location.start <= dna_start < dna_end <= location.end:
-        raise ValueError(("Converted coordinates %d..%d "
-                          "out of bounds for location %s") % (dna_start, dna_end, location))
+        raise ValueError(
+            f"Converted coordinates {dna_start}..{dna_end} "
+            f"out of bounds for location {location}"
+        )
     return dna_start, dna_end
 
 
@@ -202,10 +206,10 @@ def split_origin_bridging_location(location: CompoundLocation) -> Tuple[
         raise ValueError("Cannot separate bridged location without a valid strand")
 
     if not (lower and upper):
-        raise ValueError("Location does not bridge origin: %s" % location)
+        raise ValueError(f"Location does not bridge origin: {location}")
 
     if not _is_valid_split(lower, upper, location.strand):
-        raise ValueError("cannot determine correct ordering of bridged location: %s" % str(location))
+        raise ValueError(f"cannot determine correct ordering of bridged location: {location}")
 
     return lower, upper
 
@@ -274,11 +278,11 @@ def location_from_string(data: str) -> Location:
         elif '(' not in string:
             strand = None
         else:
-            raise ValueError("Cannot identify strand in location: %s" % string)
+            raise ValueError(f"Cannot identify strand in location: {string}")
 
         return FeatureLocation(start, end, strand=strand)
 
-    assert isinstance(data, str), "%s, %r" % (type(data), data)
+    assert isinstance(data, str), f"{type(data)}, {data!r}"
 
     if '{' not in data:
         return parse_single_location(data)
@@ -335,7 +339,7 @@ def location_contains_overlapping_exons(location: Location) -> bool:
     if isinstance(location, FeatureLocation):
         return False
     if not isinstance(location, CompoundLocation):
-        raise TypeError("expected CompoundLocation, not %s" % type(location))
+        raise TypeError(f"expected CompoundLocation, not {type(location)}")
 
     return len(set(part.end for part in location.parts)) != len(location.parts)
 
@@ -365,10 +369,10 @@ def ensure_valid_locations(features: List[SeqFeature], can_be_circular: bool, se
             raise ValueError("one or more features with missing or invalid locations")
         # features outside the sequence cause problems with motifs and translations
         if feature.location.end > sequence_length:
-            raise ValueError("feature outside record sequence: %s" % feature.location)
+            raise ValueError("feature outside record sequence: {feature.location}")
         # features with overlapping exons cause translation problems
         if location_contains_overlapping_exons(feature.location):
-            raise ValueError("location contains overlapping exons: %s" % feature.location)
+            raise ValueError(f"location contains overlapping exons: {feature.location}")
 
     # non-circular records with compound locations need to have the right part ordering
     # for translations, only really relevant for reverse strand features
@@ -397,7 +401,7 @@ def ensure_valid_locations(features: List[SeqFeature], can_be_circular: bool, se
             if not feature.location.strand:
                 continue
             if location_bridges_origin(feature.location, allow_reversing=True):
-                raise ValueError("cannot determine correct exon ordering for location: %s" % feature.location)
+                raise ValueError(f"cannot determine correct exon ordering for location: {feature.location}")
 
 
 def _adjust_location_by_offset(location: Location, offset: int) -> Location:
@@ -409,7 +413,7 @@ def _adjust_location_by_offset(location: Location, offset: int) -> Location:
     if offset == 0:
         return location
 
-    assert -2 <= offset <= 2, "invalid offset %d" % offset
+    assert -2 <= offset <= 2, f"invalid offset {offset}"
 
     def adjust_single_location(part: FeatureLocation) -> FeatureLocation:
         """ only functions on FeatureLocation """
@@ -458,7 +462,7 @@ def frameshift_location_by_qualifier(location: Location, raw_start: Union[str, i
         codon_start = raw_start - 1
 
     if not 0 <= codon_start <= 2:
-        raise SecmetInvalidInputError("invalid codon_start qualifier: %d" % (codon_start + 1))
+        raise SecmetInvalidInputError(f"invalid codon_start qualifier: {codon_start + 1}")
 
     if location.strand == -1:
         codon_start *= -1

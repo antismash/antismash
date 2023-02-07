@@ -61,8 +61,10 @@ class AntismashResults:
         schema = data.get("schema", 1)
         current = AntismashResults.SCHEMA_VERSION
         if schema != current and schema not in AntismashResults.COMPATIBLE_SCHEMAS[current]:
-            raise ValueError("schema mismatch in previous results: expected %s, found %s" % (
-                                AntismashResults.SCHEMA_VERSION, data.get("schema")))
+            raise ValueError(
+                f"schema mismatch in previous results: expected {AntismashResults.SCHEMA_VERSION}"
+                f", found {data.get('schema')}"
+            )
         version = data["version"]
         input_file = data["input_file"]
         taxon = data.get("taxon", "bacteria")
@@ -90,7 +92,7 @@ class AntismashResults:
         try:
             converted = json.dumps(self.to_json())
         except TypeError as error:
-            message = "Failed to convert JSON results: %s" % str(error)
+            message = f"Failed to convert JSON results: {error}"
             logging.error(message)
             raise TypeError(message) from error
         if isinstance(handle, str):
@@ -131,7 +133,7 @@ def dump_records(records: List[SeqRecord], results: List[Dict[str, Union[Dict[st
             if isinstance(m_results, ModuleResults):
                 modules[module] = m_results.to_json()
             else:
-                raise TypeError("Module results for module %s are of invalid type: %s" % (module, type(m_results)))
+                raise TypeError(f"Module results for module {module} are of invalid type: {type(m_results)}")
         json_record["modules"] = modules
         data.append(json_record)
 

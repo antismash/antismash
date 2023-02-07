@@ -44,7 +44,7 @@ class RREDomain(AntismashDomain):
         """
         super().__init__(location, TOOL, protein_location, locus_tag, domain=domain)
         if not isinstance(description, str):
-            raise TypeError("RRE description must be a string, not %s" % type(description))
+            raise TypeError(f"RRE description must be a string, not {type(description)}")
         if not description:
             raise ValueError("RRE description cannot be empty")
         self.description = description
@@ -57,7 +57,7 @@ class RREDomain(AntismashDomain):
         self.version = int(version)
 
         if not (len(identifier) == 9 and identifier.startswith('RREFam') and identifier[6:].isdecimal()):
-            raise ValueError("invalid RREFam identifier: %s" % identifier)
+            raise ValueError(f"invalid RREFam identifier: {identifier}")
         self.identifier = identifier
 
     @property
@@ -67,7 +67,7 @@ class RREDomain(AntismashDomain):
         """
         if not self.version:
             return self.identifier
-        return "%s.%d" % (self.identifier, self.version)
+        return f"{self.identifier}.{self.version}"
 
     def to_biopython(self, qualifiers: Dict[str, List[str]] = None) -> List[SeqFeature]:
         mine: Dict[str, List[str]] = OrderedDict()

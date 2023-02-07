@@ -32,7 +32,7 @@ class ModuleType(Enum):
         for value in ModuleType:
             if str(value) == label:
                 return value
-        raise ValueError("unknown module type: %s" % label)
+        raise ValueError(f"unknown module type: {label}")
 
 
 class Module(Feature):
@@ -69,7 +69,7 @@ class Module(Feature):
         super().__init__(location, self.FEATURE_TYPE, created_by_antismash=True)
 
         if not isinstance(module_type, ModuleType):
-            raise TypeError("module_type must be a ModuleType instance, not %s" % type(module_type))
+            raise TypeError(f"module_type must be a ModuleType instance, not {type(module_type)}")
 
         # parent CDS name order should match that of the domains provided
         self._parent_cds_names: List[str] = []
@@ -183,7 +183,7 @@ class Module(Feature):
             new["iterative"] = None
 
         if self._substrate_monomer_pairs:
-            new["monomer_pairings"] = ["%s -> %s" % (sub, mon) for sub, mon in self._substrate_monomer_pairs]
+            new["monomer_pairings"] = [f"{sub} -> {mon}" for sub, mon in self._substrate_monomer_pairs]
 
         new.update(qualifiers or {})
 
@@ -199,13 +199,13 @@ class Module(Feature):
             domain_names = leftovers.pop("domains")
             module_type = ModuleType.from_string(leftovers.pop("type")[0])
         except KeyError as err:
-            raise ValueError("module at %s missing expected qualifier: %s" % (bio_feature.location, err))
+            raise ValueError(f"module at {bio_feature.location} missing expected qualifier: {err}")
         except ValueError as err:
-            raise ValueError("module at %s %s" % (bio_feature.location, err))
+            raise ValueError(f"module at {bio_feature.location}: {err}")
 
         complete = "complete" in leftovers
         if not complete and "incomplete" not in leftovers:
-            raise ValueError("module at %s missing one of: complete, incomplete" % bio_feature.location)
+            raise ValueError(f"module at {bio_feature.location} missing one of: complete, incomplete")
         leftovers.pop("complete", "")
         leftovers.pop("incomplete", "")
 
@@ -218,8 +218,7 @@ class Module(Feature):
         try:
             domains = [record.get_domain_by_name(domain) for domain in domain_names]
         except KeyError as err:
-            raise ValueError("record does not contain domain referenced by module at %s: %s" % (
-                             bio_feature.location, err))
+            raise ValueError(f"record does not contain domain referenced by module at {bio_feature.location}: {err}")
 
         starter = "starter_module" in leftovers
         if starter:
@@ -238,14 +237,14 @@ class Module(Feature):
             try:
                 substrate, monomer = raw.split(" -> ")
             except ValueError:
-                raise ValueError("module at %s has invalid monomer pairing: %r" % (bio_feature.location, raw))
+                raise ValueError(f"module at {bio_feature.location} has invalid monomer pairing: {raw!r}")
             substrate = substrate.strip()
             monomer = monomer.strip()
             if not substrate or not monomer:
-                raise ValueError("module at %s has invalid monomer pairing: %r" % (bio_feature.location, raw))
+                raise ValueError(f"module at {bio_feature.location} has invalid monomer pairing: {raw!r}")
             module.add_monomer(substrate, monomer)
 
         return module
 
     def __repr__(self) -> str:
-        return "Module(%s, %s: %s)" % (self.location, self.module_type, [dom.domain for dom in self.domains])
+        return f"Module(self.location, {self.module_type}: {[dom.domain for dom in self.domains]}"

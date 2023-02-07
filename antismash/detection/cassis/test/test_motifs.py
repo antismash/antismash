@@ -74,7 +74,7 @@ class TestMotifs(CassisTestCore):
         anchor_promoter = 1
         promoters = []
         for i in range(1, 16):
-            promoters.append(Promoter("gene%d" % i, i * 10, i * 10 + 4))
+            promoters.append(Promoter(f"gene{i}", i * 10, i * 10 + 4))
         # need certain amount of promoters, otherwise the proportion of
         # promoters with a motif (motif frequency) will be too high --> error
         expected_motifs = [Motif(0, 3, hits={"gene1": 1, "gene2": 2})]

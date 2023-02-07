@@ -39,7 +39,7 @@ class AntismashFeature(Feature):
     def translation(self) -> str:
         """ The amino acid translation of the feature. """
         if not self._translation:
-            raise ValueError("Domain has no translation: %s" % self.domain_id)
+            raise ValueError(f"Domain has no translation: {self.domain_id}")
         return self._translation
 
     @translation.setter
@@ -81,7 +81,7 @@ class AntismashFeature(Feature):
         if self.score is not None:
             mine["score"] = [str(self.score)]
         if self.evalue is not None:
-            mine["evalue"] = [str("{:.2E}".format(self.evalue))]
+            mine["evalue"] = [f"{self.evalue:.2E}"]
         if self.locus_tag:
             mine["locus_tag"] = [self.locus_tag]
         if self._translation:

@@ -38,7 +38,7 @@ class CandidateClusterKind(Enum):
         for value in CandidateClusterKind:
             if str(value) == label:
                 return value
-        raise ValueError("unknown candidate cluster kind: %s" % label)
+        raise ValueError(f"unknown candidate cluster kind: {label}")
 
 
 class CandidateCluster(CDSCollection):
@@ -57,7 +57,7 @@ class CandidateCluster(CDSCollection):
         for protocluster in protoclusters:
             assert isinstance(protocluster, Protocluster), type(protocluster)
         if not isinstance(kind, CandidateClusterKind):
-            raise TypeError("argument 1 should be CandidateClusterKind, had %s" % type(kind))
+            raise TypeError(f"argument 1 should be CandidateClusterKind, had {type(kind)}")
         location = combine_locations(cluster.location for cluster in protoclusters)
         super().__init__(location, feature_type=CandidateCluster.FEATURE_TYPE, child_collections=protoclusters)
         self._protoclusters = protoclusters
@@ -67,7 +67,7 @@ class CandidateCluster(CDSCollection):
         self._core_location = None
 
     def __repr__(self) -> str:
-        return "CandidateCluster(%s, %s)" % (self.location, self.kind)
+        return f"CandidateCluster({self.location}, {self.kind})"
 
     def get_candidate_cluster_number(self) -> int:
         """ Returns the candidate clusters's numeric ID, only guaranteed to be consistent for

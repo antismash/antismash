@@ -21,7 +21,7 @@ class GeneOntology:  # pylint: disable=too-few-public-methods
     """A single Gene Ontology term; holds Gene Ontology ID and its human-readable description."""
     def __init__(self, _id: str, description: str) -> None:
         if not _id.startswith('GO:'):
-            raise ValueError('Invalid Gene Ontology ID: {0}'.format(_id))
+            raise ValueError(f"Invalid Gene Ontology ID: {_id}")
         self.id = _id
         assert isinstance(description, str)
         self.description = description

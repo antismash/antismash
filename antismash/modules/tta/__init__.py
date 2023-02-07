@@ -30,7 +30,7 @@ def check_options(options: ConfigType) -> List[str]:
     """
     issues = []
     if options.tta_threshold < 0 or options.tta_threshold > 1:
-        issues.append("Supplied threshold is out of range 0 to 1: %s" % options.tta_threshold)
+        issues.append(f"Supplied threshold is out of range 0 to 1: {options.tta_threshold}")
     return issues
 
 

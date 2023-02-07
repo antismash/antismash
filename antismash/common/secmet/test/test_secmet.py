@@ -392,7 +392,7 @@ class TestRecord(unittest.TestCase):
         motifs = rec.get_cds_motifs()
         assert len(motifs) == 2
         for i, motif in enumerate(motifs):
-            assert motif.domain_id == "non_aS_motif_0_6_%s" % (i + 1)
+            assert motif.domain_id == f"non_aS_motif_0_6_{i + 1}"
 
     def test_seq_types(self):
         first = Record("A" * 20)

@@ -40,7 +40,7 @@ class Promoter:
         return len(self.seq)
 
     def __str__(self) -> str:
-        return "Promoter(%r, %d, %d)" % (self.get_id(), self.start, self.end)
+        return f"Promoter({self.get_id()!r}, {self.start}, {self.end})"
 
     def __repr__(self) -> str:
         return str(self)
@@ -70,7 +70,7 @@ class CombinedPromoter(Promoter):
         self.second_gene = str(second_gene)
 
     def get_id(self) -> str:
-        return "{}+{}".format(self.gene_name, self.second_gene)
+        return f"{self.gene_name}+{self.second_gene}"
 
     def get_gene_names(self) -> List[str]:
         return super().get_gene_names() + [self.second_gene]
@@ -119,7 +119,7 @@ def get_promoters(record: Record, genes: List[Gene],
 
         downstream_inside_gene = gene_last > gene_first + downstream_tss
         if gene.location.strand not in [1, -1]:
-            raise ValueError("Gene %s has unknown strand: %s" % (gene.get_name(), gene.location.strand))
+            raise ValueError(f"Gene {gene.get_name()} has unknown strand: {gene.location.strand}")
 
         is_special_case = (gene.location.strand == -1 and len(genes) > i + 1 and genes[i+1].location.strand == 1
                            and gene_last + upstream_tss >= genes[i+1].location.start - upstream_tss)
@@ -316,7 +316,7 @@ def write_promoters_to_file(output_dir: str, prefix: str, promoters: List[Promot
 
         # write promoter sequences to file
         SeqIO.write(SeqRecord(promoter.seq, id=promoter.get_id(),
-                    description="length={}bp".format(len(promoter))),
+                    description=f"length={len(promoter)}bp"),
                     seq_handle,
                     "fasta")
     pos_handle.close()
@@ -330,4 +330,4 @@ def get_anchor_promoter_index(anchor: str, promoters: List[Promoter]) -> int:
         if anchor in promoter.get_gene_names():
             return i
 
-    raise ValueError("No promoter exists for the given anchor: %s" % anchor)
+    raise ValueError(f"No promoter exists for the given anchor: {anchor}")

@@ -102,8 +102,7 @@ def _ensure_valid_translation(translation: str, location: Location, transl_table
             translation = ""
     # ensure that the translation fits
     if not _is_valid_translation_length(translation, location):
-        raise ValueError("translation longer than location allows: %s > %s" % (
-                         len(translation) * 3, len(location)))
+        raise ValueError(f"translation longer than location allows: {len(translation) * 3} > {len(location)}")
     # if an arbitrary section of a record is used, the record can be too short for a given translation
     if record and not _translation_fits_in_record(len(translation)*3, location, len(record.seq)):
         raise ValueError("feature translation extends out of record")
@@ -118,7 +117,7 @@ def _ensure_valid_translation(translation: str, location: Location, transl_table
         try:
             translation = record.get_aa_translation_from_location(location, transl_table)
         except CodonTable.TranslationError as err:
-            raise ValueError("invalid codon: %s" % err)
+            raise ValueError(f"invalid codon: {err}")
 
     if len(translation) >= MAX_TRANSLATION_LENGTH:
         raise ValueError(f"translation too long for dependencies: {len(translation)}")
@@ -132,7 +131,7 @@ def _verify_location(location: Location) -> None:
     if location.strand not in [1, -1]:
         if len(location.parts) > 1 and location.parts[0].strand in [1, -1]:
             raise ValueError("compound locations with mixed strands are not supported")
-        raise ValueError("invalid strand: %s" % location.strand)
+        raise ValueError(f"invalid strand: {location.strand}")
 
 
 class CDSFeature(Feature):
@@ -160,7 +159,7 @@ class CDSFeature(Feature):
 
         # optional
         if not isinstance(product, str):
-            raise TypeError("product must be a string, not %s" % type(product))
+            raise TypeError(f"product must be a string, not {type(product)}")
         self.product = product
         self.transl_table = int(translation_table)
         self._sec_met = SecMetQualifier()
@@ -223,10 +222,9 @@ class CDSFeature(Feature):
             raise ValueError(f"translation too long for dependencies in {detail}")
         invalid = set(translation) - _VALID_TRANSLATION_CHARS
         if invalid:
-            raise ValueError("invalid translation characters: %s" % invalid)
+            raise ValueError(f"invalid translation characters: {invalid}")
         if not _is_valid_translation_length(translation, self.location):
-            raise ValueError("translation longer than location allows: %s > %s" % (
-                                len(translation) * 3, len(self.location)))
+            raise ValueError(f"translation longer than location allows: {len(translation) * 3} > {len(self.location)}")
         self._translation = translation  # pylint: disable=attribute-defined-outside-init
 
     @property
@@ -246,14 +244,14 @@ class CDSFeature(Feature):
         for val in [self.protein_id, self.gene, self.locus_tag]:
             if val:
                 return val
-        raise ValueError("%s altered to contain no identifiers" % self)
+        raise ValueError(f"{self} altered to contain no identifiers")
 
     def get_name(self) -> str:
         "Get the gene ID from locus_tag, gene name or protein id, in that order"
         for val in [self.locus_tag, self.gene, self.protein_id]:
             if val:
                 return val
-        raise ValueError("%s altered to contain no identifiers" % self)
+        raise ValueError(f"{self} altered to contain no identifiers")
 
     @classmethod
     def from_biopython(cls: Type[T], bio_feature: SeqFeature, feature: T = None,
@@ -282,12 +280,12 @@ class CDSFeature(Feature):
             try:
                 transl_table = int(raw_table)
             except ValueError:
-                raise SecmetInvalidInputError("invalid translation table '%s' for CDS '%s'" % (raw_table, name))
+                raise SecmetInvalidInputError(f"invalid translation table {raw_table!r} for CDS {name!r}")
 
         try:
             _verify_location(bio_feature.location)
         except Exception as err:
-            message = "invalid location for %s: %s" % (name, str(err))
+            message = f"invalid location for {name}: {err}"
             raise SecmetInvalidInputError(message) from err
 
         try:
@@ -299,7 +297,7 @@ class CDSFeature(Feature):
             translation = _ensure_valid_translation(leftovers.pop("translation", [""])[0],
                                                     location, transl_table, record)
         except ValueError as err:
-            raise SecmetInvalidInputError(str(err) + ": %s" % name) from err
+            raise SecmetInvalidInputError(f"{err}: {name}") from err
 
         feature = cls(bio_feature.location, translation, gene=gene,
                       locus_tag=locus_tag, protein_id=protein_id,
@@ -346,7 +344,7 @@ class CDSFeature(Feature):
         return str(self)
 
     def __str__(self) -> str:
-        return "CDS(%s, %s)" % (self.get_name(), self.location)
+        return f"CDS(self.get_name(), {self.location})"
 
     def strip_antismash_annotations(self) -> None:
         """ Remove all antiSMASH-specific annotations from the feature """

@@ -19,7 +19,7 @@ from antismash.modules.pfam2go import pfam2go
 def set_dummy_with_pfams(pfam_ids: Dict[str, FeatureLocation]) -> DummyRecord:
     pfam_domains = []
     for pfam_id, pfam_location in pfam_ids.items():
-        domain_id = '%s.%d.%d' % (pfam_id, pfam_location.start, pfam_location.end)
+        domain_id = f"{pfam_id}.{pfam_location.start}.{pfam_location.end}"
         pfam_domain = DummyPFAMDomain(location=pfam_location, protein_start=0, protein_end=5,
                                       identifier=pfam_id, domain_id=domain_id)
         pfam_domains.append(pfam_domain)

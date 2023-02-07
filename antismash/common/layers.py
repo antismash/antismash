@@ -66,21 +66,21 @@ class RecordLayer:
     def get_from_record(self) -> Markup:
         """ Returns the text to be displayed in the HTML overview page """
 
-        current_id = "<strong>%s</strong>" % self.seq_record.id
+        current_id = f"<strong>{self.seq_record.id}</strong>"
 
         orig_id = self.seq_record.original_id
 
         if orig_id:
             if len(orig_id) < 40:
-                current_id += " (original name was: %s)" % orig_id
+                current_id += f" (original name was: {orig_id})"
             else:
-                current_id += " (original name was: %s...)" % orig_id[:60]
+                current_id += f" (original name was: {orig_id[:60]}...)"
 
         source = self.annotations.get("source", "")
         if source:
-            source = " (%s)" % source
+            source = f" ({source})"
 
-        return Markup('%s%s' % (current_id, source))
+        return Markup(f"{current_id}{source}")
 
 
 class RegionLayer:
@@ -153,14 +153,15 @@ class RegionLayer:
     @property
     def detection_rules(self) -> List[str]:
         """ The details of rules that caused the Region to be defined """
-        return ["%s: %s" % (product, rules) for product, rules in
+        return [f"{product}: {rules}" for product, rules in
                 zip(self.region_feature.products, self.region_feature.detection_rules)]
 
     def description_text(self) -> str:
         """ returns the Region description """
-        description_text = 'Location: {:,d} - {:,d} nt. (total: {:,d} nt)'.format(
-            self.location.start + 1, self.location.end, len(self.location))
-
+        description_text = (
+            f"Location: {self.location.start + 1:,d} - {self.location.end:,d} nt."
+            f" (total: {len(self.location):,d} nt)"
+        )
         return description_text
 
     def cluster_blast_generator(self) -> List[Tuple[str, str]]:  # TODO: deduplicate
@@ -170,8 +171,7 @@ class RegionLayer:
         results = []
         for i, label in enumerate(top_hits):
             i += 1  # 1-indexed
-            svg_file = os.path.join('svg', 'clusterblast_r%dc%d_%s.svg' % (
-                            self.record.record_index, self.get_region_number(), i))
+            svg_file = os.path.join("svg", f"clusterblast_{self.build_anchor_id(self.region_feature)}_{i}.svg")
             results.append((label, svg_file))
         return results
 
@@ -182,8 +182,7 @@ class RegionLayer:
         results = []
         for i, summary in enumerate(top_hits):
             i += 1  # 1-indexed
-            svg_file = os.path.join('svg', 'knownclusterblast_r%dc%d_%s.svg' % (
-                            self.record.record_index, self.get_region_number(), i))
+            svg_file = os.path.join("svg", f"knownclusterblast_{self.build_anchor_id(self.region_feature)}_{i}.svg")
             results.append((summary.name, svg_file))
         return results
 
@@ -195,8 +194,7 @@ class RegionLayer:
         results = []
         for i, label in enumerate(top_hits):
             i += 1  # since one-indexed
-            svg_file = os.path.join('svg', 'subclusterblast_r%dc%d_%s.svg' % (
-                            self.record.record_index, self.get_region_number(), i))
+            svg_file = os.path.join("svg", f"subclusterblast_{self.build_anchor_id(self.region_feature)}_{i}.svg")
             results.append((label, svg_file))
         return results
 
@@ -236,5 +234,4 @@ class RegionLayer:
     @staticmethod
     def build_anchor_id(region: Region) -> str:
         """ Builds a consistent HTML anchor identifier for a Region """
-        return "r{}c{}".format(region.parent_record.record_index,
-                               region.get_region_number())
+        return f"r{region.parent_record.record_index}c{region.get_region_number()}"

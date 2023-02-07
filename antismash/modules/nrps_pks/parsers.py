@@ -70,7 +70,7 @@ def generate_nrps_consensus(results: Dict[str, Prediction]) -> str:
         if len(prediction.get_classification()) == 1:
             best = prediction.get_classification(as_norine=True)[0]
             if not set(best).issubset(ALLOWABLE_PREDICTION_CHARACTERS):
-                raise ValueError("%s generated bad prediction string: %s" % (method, best))
+                raise ValueError(f"{method} generated bad prediction string: {best}")
             hit_counts[best] += 1
 
     consensus = "X"
@@ -103,7 +103,7 @@ def calculate_consensus_prediction(cds_features: List[CDSFeature], results: Dict
     trans_at: Dict[str, str] = {}  # feature name -> prediction
 
     for cds in cds_features:
-        assert cds.region, "Orphaned CDS found: %s" % cds
+        assert cds.region, f"Orphaned CDS found: {cds}"
         for domain in cds.nrps_pks.domains:
             predictions = results[domain.feature_name]
             if 'OTHER' in domain.label:
@@ -181,7 +181,7 @@ def update_prediction(locus: str, preds: Dict[str, str], target: str,
     """
     assert len(lists) == len(mappings)
     for idx, target_element in enumerate(target_list):
-        key = "nrpspksdomains_{}_{}.{}".format(locus, target, idx + 1)
+        key = f"nrpspksdomains_{locus}_{target}.{idx + 1}"
         for sublist, mapping in zip(lists, mappings):
             for position in sublist:
                 if not target_element < position:

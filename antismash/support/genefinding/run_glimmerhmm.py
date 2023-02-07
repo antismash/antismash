@@ -26,7 +26,7 @@ def write_search_fasta(record: Record) -> str:
         Returns:
             the name of the file created
     """
-    filename = "{}.fasta".format(record.id)
+    filename = f"{record.id}.fasta"
     with open(filename, 'w') as handle:
         seqio.write([record.to_biopython()], handle, 'fasta')
     return filename
@@ -41,7 +41,7 @@ def run_external(fasta_filename: str) -> str:
     run_result = execute(glimmerhmm)
     if run_result.stderr.find('ERROR') > -1:
         logging.error("Failed to run GlimmerHMM: %r", run_result.stderr)
-        raise RuntimeError("Failed to run GlimmerHMM: %s" % run_result.stderr)
+        raise RuntimeError(f"Failed to run GlimmerHMM: {run_result.stderr}")
     return run_result.stdout
 
 
@@ -65,5 +65,6 @@ def run_glimmerhmm(record: Record) -> None:
     features = get_features_from_file(handle)["input"]
     for feature in features:
         if len(feature.location) >= (MAX_TRANSLATION_LENGTH * 3) * .9:
-            logging.warning(f"Ignoring potential gene too long for dependencies: {len(feature.location) // 1000}kb")
+            logging.warning("Ignoring potential gene too long for dependencies: %dkb",
+                            len(feature.location) // 1000)
         record.add_biopython_feature(feature)

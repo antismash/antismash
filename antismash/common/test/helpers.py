@@ -62,7 +62,7 @@ class FakeHSPHit:
         self.seeds = seeds
 
     def __repr__(self):
-        return "FakeHSP({})".format(str(vars(self)))
+        return f"FakeHSP({vars(self)})"
 
 
 class DummyHMMResult(HMMResult):

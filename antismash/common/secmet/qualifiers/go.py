@@ -18,7 +18,7 @@ class GOQualifier:
 
     def to_biopython(self) -> List[str]:
         """Convert GOQualifier to BioPython-style qualifier."""
-        return ["{}: {}".format(go_id, go_description) for go_id, go_description in sorted(self.go_entries.items())]
+        return [f"{go_id}: {go_description}" for go_id, go_description in sorted(self.go_entries.items())]
 
     @staticmethod
     def from_biopython(qualifier: List[str]) -> "GOQualifier":
@@ -35,7 +35,7 @@ class GOQualifier:
         for go_string in qualifier:
             go_id, separator, go_description = go_string.partition(": ")
             if not separator:
-                raise ValueError("Cannot parse qualifier: %s" % qualifier)
+                raise ValueError(f"Cannot parse qualifier: {qualifier}")
             go_entries[go_id] = go_description
         result = GOQualifier(go_entries)
         return result

@@ -130,7 +130,7 @@ def check_prereqs(options: ConfigType) -> List[str]:
     failure_messages = []
     for binary_name in ["diamond"]:
         if binary_name not in options.executables:
-            failure_messages.append("Failed to locate file: %r" % binary_name)
+            failure_messages.append(f"Failed to locate file: {binary_name!r}")
 
     if "diamond" not in get_config().executables:
         failure_messages.append("cannot check cluster_compare databases, no diamond executable present")

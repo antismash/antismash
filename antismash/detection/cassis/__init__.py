@@ -386,25 +386,25 @@ def create_subregions(anchor: str, cluster_preds: List[ClusterPrediction],
             "aStool": ["cassis"],
             "label": [anchor],
             "abundance": [cluster.start.abundance + cluster.end.abundance],
-            "motif_score": ["{:.1e}".format(cluster.start.score + cluster.end.score)],
+            "motif_score": [f"{cluster.start.score + cluster.end.score:.1e}"],
             "gene_left": [cluster.start.gene],
             "promoter_left": [cluster.start.promoter],
             "abundance_left": [cluster.start.abundance],
             "motif_left": [cluster.start.pairing_string],
-            "motif_score_left": ["{:.1e}".format(cluster.start.score)],
+            "motif_score_left": [f"{cluster.start.score:.1e}"],
             "gene_right": [cluster.end.gene],
             "promoter_right": [cluster.end.promoter],
             "abundance_right": [cluster.end.abundance],
             "motif_right": [cluster.end.pairing_string],
-            "motif_score_right": ["{:.1e}".format(cluster.end.score)],
+            "motif_score_right": [f"{cluster.end.score:.1e}"],
             "genes": [cluster.genes],
             "promoters": [cluster.promoters],
         }
 
         if i == 0:
-            new_feature.qualifiers["note"] = ["best prediction (most abundant) for anchor gene {}".format(anchor)]
+            new_feature.qualifiers["note"] = [f"best prediction (most abundant) for anchor gene {anchor}"]
         else:
-            new_feature.qualifiers["note"] = ["alternative prediction ({}) for anchor gene {}".format(i, anchor)]
+            new_feature.qualifiers["note"] = [f"alternative prediction ({i}) for anchor gene {anchor}"]
 
         new_feature = SubRegion.from_biopython(new_feature)
         subregions.append(new_feature)

@@ -130,8 +130,8 @@ class Prepeptide(CDSMotif):  # pylint: disable=too-many-instance-attributes
             leader_qualifiers = {
                 "prepeptide": ["leader"],
                 "note": [
-                    "peptide class: %s" % self.peptide_class,
-                    "predicted sequence: %s" % self.leader,
+                    "peptide class: {self.peptide_class}",
+                    f"predicted sequence: {self.leader}",
                 ],
                 "locus_tag": [self.locus_tag],
                 "aSTool": [self.tool],
@@ -153,9 +153,9 @@ class Prepeptide(CDSMotif):  # pylint: disable=too-many-instance-attributes
             "locus_tag": [self.locus_tag],
             "peptide": [self.peptide_class],
             "predicted_class": [self.peptide_subclass],
-            "score": ["{:.2f}".format(self.score)],
-            "molecular_weight": ["{:.1f}".format(self.molecular_weight)],
-            "monoisotopic_mass": ["{:.1f}".format(self.monoisotopic_mass)],
+            "score": [f"{self.score:.2f}"],
+            "molecular_weight": [f"{self.molecular_weight:.1f}"],
+            "monoisotopic_mass": [f"{self.monoisotopic_mass:.1f}"],
             "core_sequence": [self._core],
             "aSTool": [self.tool],
             "tool": ["antismash"],
@@ -171,7 +171,7 @@ class Prepeptide(CDSMotif):  # pylint: disable=too-many-instance-attributes
                 "tail_location": [str(tail_location)],
             })
         if self.alternative_weights:
-            weights = map(lambda x: "%0.1f" % x, self.alternative_weights)
+            weights = map(lambda x: f"{x:0.1f}", self.alternative_weights)
             core.qualifiers['alternative_weights'] = list(weights)
 
         features.append(core)
@@ -196,7 +196,7 @@ class Prepeptide(CDSMotif):  # pylint: disable=too-many-instance-attributes
 
         section = leftovers.pop("prepeptide", [""])[0]
         if not section:
-            raise SecmetInvalidInputError("cannot reconstruct Prepeptide from biopython feature %s" % bio_feature)
+            raise SecmetInvalidInputError(f"cannot reconstruct Prepeptide from biopython feature {bio_feature}")
         if section != "core":
             raise SecmetInvalidInputError("Prepeptide can only be reconstructed from core feature")
         alt_weights = [float(weight) for weight in leftovers.pop("alternative_weights", [])]

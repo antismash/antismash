@@ -410,8 +410,8 @@ class TestInputGeneration(unittest.TestCase):
         for _ in cluster.cds_children:
             index = self.index
             self.index += 1
-            names.append("L%d" % index)
-            seqs.append("S%d" % index)
+            names.append(f"L{index}")
+            seqs.append(f"S{index}")
         return names, seqs
 
     def add_cdses_to_region(self, cdses):
@@ -438,7 +438,7 @@ class TestInputGeneration(unittest.TestCase):
             files = core.write_fastas_with_all_genes(self.regions, "test.fasta")
             assert files == ["test.fasta"]
             assert os.path.exists("test.fasta")
-            expected = "".join(">L{0}\nS{0}\n".format(i) for i in range(len(self.regions)*3))
+            expected = "".join(f">L{i}\nS{i}\n" for i in range(len(self.regions)*3))
             with open("test.fasta") as handle:
                 assert handle.read() == expected
 
@@ -448,7 +448,7 @@ class TestInputGeneration(unittest.TestCase):
             files = core.write_fastas_with_all_genes(self.regions, "test.fasta", partitions=1)
             assert files == ["test.fasta"]
             assert os.path.exists("test.fasta")
-            expected = "".join(">L{0}\nS{0}\n".format(i) for i in range(len(self.regions)*3))
+            expected = "".join(f">L{i}\nS{i}\n" for i in range(len(self.regions)*3))
             with open("test.fasta") as handle:
                 assert handle.read() == expected
 
@@ -459,14 +459,14 @@ class TestInputGeneration(unittest.TestCase):
                 self.index = 0
                 chunk_size = (len(self.regions) * 3) // partitions
                 files = core.write_fastas_with_all_genes(self.regions, "test.fasta", partitions=partitions)
-                assert files == ["test%d.fasta" % i for i in range(partitions)]
+                assert files == [f"test{i}.fasta" for i in range(partitions)]
                 for index in range(partitions):
-                    assert os.path.exists("test%d.fasta" % index)
-                    print(index, chunk_size)
-                    with open("test%d.fasta" % index) as handle:
+                    assert os.path.exists(files[index])
+                    with open(files[index]) as handle:
                         contents = handle.read()
                     assert contents.count(">") == chunk_size
-                    expected = "".join(">L{0}\nS{0}\n".format(i + index * chunk_size) for i in range(chunk_size))
+                    positions = (i + index * chunk_size for i in range(chunk_size))
+                    expected = "".join(f">L{position}\nS{position}\n" for position in positions)
                     assert contents == expected
 
 

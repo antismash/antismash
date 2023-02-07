@@ -231,8 +231,7 @@ class CleavageSiteHit:  # pylint: disable=too-few-public-methods
         self.lantype = lantype
 
     def __repr__(self) -> str:
-        return ("CleavageSiteHit(end=%s, score=%s, lantype='%s')"
-                % (self.end, self.score, self.lantype))
+        return f"CleavageSiteHit(end={self.end}, score={self.score}, lantype={self.lantype!r})"
 
 
 class Lanthipeptide(PrepeptideBase):
@@ -517,7 +516,7 @@ def determine_precursor_peptide_candidate(record: Record, query: CDSFeature, dom
         return None
 
     # Create FASTA sequence for feature under study
-    lan_a_fasta = ">%s\n%s" % (query.get_name(), query.translation)
+    lan_a_fasta = f">{query.get_name()}\n{query.translation}"
 
     # Run sequence against pHMM; if positive, parse into a vector containing START, END and SCORE
     cleavage_result = run_cleavage_site_phmm(lan_a_fasta, hmmer_profile, THRESH_DICT[lant_class])
@@ -565,7 +564,7 @@ def run_lanthipred(record: Record, query: CDSFeature, lant_class: str,
 
     if lant_class in ("Class-II", "Class-III"):
         profile = path.get_full_path(__file__, hmmer_profiles[lant_class])
-        lan_a_fasta = ">%s\n%s" % (query.get_name(), query_sequence)
+        lan_a_fasta = f">{query.get_name()}\n{query_sequence}"
         cleavage_result = predict_cleavage_site(profile, lan_a_fasta)
 
         if cleavage_result is None:

@@ -61,7 +61,7 @@ class Gene(Feature):
         locus = pop_locus_qualifier(leftovers, allow_missing=True, default=None)
         name = leftovers.pop("gene", [""])[0] or None
         if not (locus or name):
-            name = "gene%s_%s" % (bio_feature.location.start, bio_feature.location.end)
+            name = f"gene{bio_feature.location.start}_{bio_feature.location.end}"
         feature = cls(bio_feature.location, locus_tag=locus, gene_name=name)
         super().from_biopython(bio_feature, feature=feature, leftovers=leftovers, record=record)
         return feature

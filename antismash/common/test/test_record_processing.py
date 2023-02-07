@@ -360,7 +360,7 @@ class TestUniqueID(unittest.TestCase):
                 record_processing.generate_unique_id("pref", {}, 1, bad_max)
 
     def test_generation(self):
-        existing = {"a_%d" % i for i in range(15)}
+        existing = {f"a_{i}" for i in range(15)}
         new, counter = record_processing.generate_unique_id("a", existing)
         assert len(existing) == 15 and new not in existing
         assert new == "a_15" and counter == 15
@@ -374,7 +374,7 @@ class TestUniqueID(unittest.TestCase):
         assert new == "b_0" and counter == 0
 
     def test_overlong(self):
-        existing = {"a_%d" % i for i in range(150)}
+        existing = {f"a_{i}" for i in range(150)}
         # prefix itself too long
         with self.assertRaisesRegex(RuntimeError, "Could not generate .*"):
             record_processing.generate_unique_id("aaa", existing, start=0, max_length=3)

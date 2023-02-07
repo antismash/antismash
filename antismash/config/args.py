@@ -115,10 +115,10 @@ class AntismashParser(argparse.ArgumentParser):
                 help_text = arg.help % {"default": arg.default}
             else:
                 help_text = arg.help
-            lines.append("## {}".format(help_text))
+            lines.append(f"## {help_text}")
             # add the set of possible choices, if relevant
             if arg.choices:
-                lines.append("## Possible choices: {}".format(",".join(arg.choices)))
+                lines.append(f"## Possible choices: {','.join(arg.choices)}")
             # start with default value
             value = arg.default
             # and if it was supplied, use it
@@ -135,17 +135,17 @@ class AntismashParser(argparse.ArgumentParser):
                 state = "#"
                 if value:
                     state = ""
-                lines.append("{}{}".format(state, flag))
+                lines.append(f"{state}{flag}")
             elif not value:
                 default = arg.default
                 if not default:
                     default = arg.metavar
-                lines.append("#{} {}".format(flag, default))
+                lines.append(f"#{flag} {default}")
             else:
                 default = ""
                 if value == arg.default or was_list and value.split(",") == arg.default:
                     default = "#"
-                lines.append("{}{} {}".format(default, flag, value))
+                lines.append(f"{default}{flag} {value}")
             return ["\n".join(lines)]
 
         if not values:
@@ -163,7 +163,7 @@ class AntismashParser(argparse.ArgumentParser):
 
         for title, prefixes in titles.items():
             banner = "#"*10 + "\n"
-            outfile.writelines([banner, "#\t{}\n".format(title), banner, "\n"])
+            outfile.writelines([banner, f"#\t{title}\n", banner, "\n"])
             for lines in prefixes.values():
                 outfile.write("\n".join(lines))
                 outfile.write("\n")
@@ -172,18 +172,17 @@ class AntismashParser(argparse.ArgumentParser):
 
     def format_help(self) -> str:
         """Custom help formatter"""
-        help_text = """
-########### antiSMASH {version} #############
+        help_text = f"""
+########### antiSMASH {ANTISMASH_VERSION} #############
 
-{usage}
+{self.format_usage()}
 
-{args}
+{self._get_args_text()}
 --------
 Options
 --------
-{opts}
-""".format(version=ANTISMASH_VERSION, usage=self.format_usage(),
-           args=self._get_args_text(), opts=self._get_opts_text())
+{self._get_opts_text()}
+"""
         return help_text
 
     def format_usage(self) -> str:
@@ -192,7 +191,7 @@ Options
             formatter = self._get_formatter()
             formatter.add_usage(self.usage, self._actions, self._mutually_exclusive_groups)
             return formatter.format_help()
-        return "usage: {prog} [-h] [options ..] sequence".format(prog=self.prog) + "\n"
+        return f"usage: {self.prog} [-h] [options ..] sequence\n"
 
     def _get_args_text(self) -> str:
         # fetch arg lists using formatter
@@ -265,11 +264,11 @@ class ReadableFullPathAction(FullPathAction):
                  values: AnyStr, option_string: str = None) -> None:
         path = os.path.abspath(values)
         if os.path.isdir(path):
-            raise argparse.ArgumentError(self, "%r is a directory" % values)
+            raise argparse.ArgumentError(self, f"{values!r} is a directory")
         if not os.path.isfile(path):
-            raise argparse.ArgumentError(self, "%r does not exist" % values)
+            raise argparse.ArgumentError(self, f"{values!r} does not exist")
         if not os.access(path, os.R_OK):
-            raise argparse.ArgumentError(self, "%r: permission denied" % values)
+            raise argparse.ArgumentError(self, f"{values!r}: permission denied")
         super().__call__(parser, namespace, values, option_string)
 
 
@@ -361,7 +360,7 @@ class ModuleArgs:
         self.skip_type_check = self.override
         # prevent the option name being considered destination by argparse
         if not name.startswith("-"):
-            name = "-%s%s" % ("-" if len(name) > 1 else "", name)
+            name = f"-{'-' if len(name) > 1 else ''}{name}"
         # most actions make types optional, so handle that
         if "type" not in kwargs and "action" in kwargs:
             self.skip_type_check = True
@@ -424,12 +423,12 @@ class ModuleArgs:
             if not dest:
                 dest = self.prefix
         elif not name.lstrip("-").startswith(self.prefix + "-"):
-            name = "--{}-{}".format(self.prefix, name.lstrip("-"))
+            name = f"--{self.prefix}-{name.lstrip('-')}"
 
         if not dest:
             dest = name.lstrip("--").replace("-", "_")
         elif dest != self.prefix and not dest.startswith(self.prefix + "_"):
-            dest = "{}_{}".format(self.prefix, dest)
+            dest = f"{self.prefix}_{dest}"
         if "-" in dest:
             raise ValueError("Destination for option cannot contain hyphens")
 
@@ -673,12 +672,14 @@ def specific_debugging(modules: Optional[List[AntismashModule]]) -> Optional[Mod
     errors = []
     for module in relevant_modules:
         try:
-            group.add_option('--enable-%s' % (module.NAME.replace("_", "-")),
-                             dest='%s_enabled' % (module.NAME),
+            group.add_option(f"--enable-{module.NAME.replace('_', '-')}",
+                             dest=f"{module.NAME}_enabled",
                              action='store_true',
                              default=False,
-                             help=("Enable %s (default: enabled, unless --minimal is specified)" %
-                                    module.SHORT_DESCRIPTION))
+                             help=(f"Enable {module.SHORT_DESCRIPTION}"
+                                   " (default: enabled, unless --minimal is specified)"
+                                   )
+                             )
         except AttributeError as err:
             errors.append(str(err).replace("'module' object", module.__name__))
     if errors:

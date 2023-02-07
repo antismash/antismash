@@ -20,7 +20,7 @@ class TestRRE(unittest.TestCase):
         self.locus_tag = 'locus_tag_a'
         self.identifier = 'RREFam001'
         self.version = 1
-        self.full_identifier = '%s.%d' % (self.identifier, self.version)
+        self.full_identifier = f"{self.identifier}.{self.version}"
         self.rre = RREDomain(self.location, self.description, self.protein_location,
                              self.full_identifier, self.locus_tag, self.domain)
         self.rre.domain_id = f"{self.locus_tag}_{self.identifier}_1"

@@ -57,7 +57,7 @@ def _strict_parse(filename: str) -> List[SeqRecord]:
         warnings.filters = warnings.filters[len(filter_messages):]
 
     if not records:
-        raise AntismashInputError("no valid records found in file %s" % filename)
+        raise AntismashInputError(f"no valid records found in file {filename}")
     return records
 
 
@@ -93,11 +93,11 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
 
     # if no records are left, that's a problem
     if not records:
-        raise AntismashInputError("all input records smaller than minimum length (%d)" % minimum_length)
+        raise AntismashInputError(f"all input records smaller than minimum length ({minimum_length})")
 
     for record in records:
         if not Record.is_nucleotide_sequence(record.seq):
-            raise AntismashInputError("protein records are not supported: %s" % record.id)
+            raise AntismashInputError(f"protein records are not supported: {record.id}")
 
     # before conversion to secmet records, trim if required
     if start > -1 or end > -1:
@@ -271,13 +271,13 @@ def filter_records_by_name(sequences: List[Record], target: str) -> None:
     matching_filter = 0
     for sequence in sequences:
         if sequence.id != target:
-            sequence.skip = "did not match filter: %s" % target
+            sequence.skip = f"did not match filter: {target}"
         else:
             matching_filter += 1
 
     if matching_filter == 0:
         logging.error("No sequences matched filter: %s", target)
-        raise AntismashInputError("no sequences matched filter: %s" % target)
+        raise AntismashInputError(f"no sequences matched filter: {target}")
 
     logging.info("Skipped %d sequences not matching filter: %s",
                  len(sequences) - matching_filter, target)
@@ -309,7 +309,7 @@ def filter_records_by_count(records: List[Record], maximum: int) -> bool:
         meaningful += 1
         if meaningful > maximum:
             limit_hit = True
-            record.skip = "skipping all but largest {0} meaningful records (--limit {0}) ".format(maximum)
+            record.skip = f"skipping all but largest {maximum} meaningful records (--limit) "
 
     return limit_hit
 
@@ -355,7 +355,7 @@ def pre_process_sequences(sequences: List[Record], options: ConfigType, genefind
                     record.original_id = record.id
                     record.id = generate_unique_id(record.id, all_record_ids)[0]
                 all_record_ids.add(record.id)
-            assert len(all_record_ids) == len(sequences), "%d != %d" % (len(all_record_ids), len(sequences))
+            assert len(all_record_ids) == len(sequences), f"{len(all_record_ids)} != {len(sequences)}"
         # Ensure all records have valid names
         for record in sequences:
             fix_record_name_id(record, all_record_ids, options.allow_long_headers)
@@ -377,7 +377,7 @@ def pre_process_sequences(sequences: List[Record], options: ConfigType, genefind
     logging.debug("Removing sequences smaller than %d bases", options.minlength)
     for sequence in sequences:
         if len(sequence.seq) < options.minlength:
-            sequence.skip = "smaller than minimum length (%d)" % options.minlength
+            sequence.skip = f"smaller than minimum length ({options.minlength})"
 
     # Make sure we don't waste weeks of runtime on huge records, unless requested by the user
     limit_hit = filter_records_by_count(sequences, options.limit)
@@ -438,9 +438,9 @@ def trim_sequence(record: SeqRecord, start: int, end: int) -> SeqRecord:
             A new, shortened Bio.SeqRecord instance
     """
     if start >= len(record):
-        raise ValueError('Specified analysis start point of %r is outside record' % start)
+        raise ValueError(f"Specified analysis start point of {start!r} is outside record")
     if end > len(record):
-        raise ValueError('Specified analysis end point of %r is outside record' % end)
+        raise ValueError(f"Specified analysis end point of {end!r} is outside record")
     if -1 < end <= start:
         raise ValueError("Trim region start cannot be greater than or equal to end")
 
@@ -500,7 +500,7 @@ def fix_record_name_id(record: Record, all_record_ids: Set[str],
             assert isinstance(record.record_index, int)
             contig_no = record.record_index
 
-        return "c{ctg:05d}_{origid}..".format(ctg=contig_no, origid=idstring[:7])
+        return f"c{contig_no:05d}_{idstring[:7]}.."
 
     old_id = record.id
 
@@ -572,5 +572,5 @@ def generate_unique_id(prefix: str, existing_ids: Set[str], start: int = 0,
         counter += 1
         name = f"{prefix}_{counter}"
     if 0 < max_length < len(name):
-        raise RuntimeError("Could not generate unique id for %s after %d iterations" % (prefix, counter - start))
+        raise RuntimeError(f"Could not generate unique id for {prefix} after {counter - start} iterations")
     return name, counter

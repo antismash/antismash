@@ -18,7 +18,7 @@ class TestSMCOGLoad(unittest.TestCase):
         mapping = smcogs.build_function_mapping()
         assert len(mapping) == 301
         for key, function in mapping.items():
-            assert isinstance(function, GeneFunction), "cog annotation %s has bad type" % key
+            assert isinstance(function, GeneFunction), f"cog annotation {key} has bad type"
 
 
 class TestAddingToRecord(unittest.TestCase):

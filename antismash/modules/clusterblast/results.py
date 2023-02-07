@@ -162,13 +162,13 @@ class RegionResult:
         """
         region_num = self.region.get_region_number()
         record_index = self.region.parent_record.record_index
-        filename = "{}_r{}c{}_all.svg".format(prefix, record_index, region_num)
+        filename = f"{prefix}_r{record_index}c{region_num}_all.svg"
         with open(os.path.join(svg_dir, filename), "w") as handle:
             handle.write(self.svg_builder.get_overview_contents(width=800, height=50 + 50 * len(self.svg_builder.hits)))
 
         files = []
         for i in range(len(self.svg_builder.hits)):
-            filename = "{}_r{}c{}_{}.svg".format(prefix, record_index, region_num, i + 1)  # 1-index
+            filename = f"{prefix}_r{record_index}c{region_num}_{i + 1}.svg"  # 1-indexed
             with open(os.path.join(svg_dir, filename), "w") as handle:
                 handle.write(self.svg_builder.get_pairing_contents(i, width=800, height=230))
             files.append(filename)
@@ -261,8 +261,7 @@ class GeneralResults(ModuleResults):
         # so if there's a mismatch of version, but it's these two, let them through
         special_case = current == 2 and json["schema_version"] == 1
         if json["schema_version"] != current and not special_case:
-            raise ValueError("Incompatible results schema version, expected %d"
-                             % GeneralResults.schema_version)
+            raise ValueError(f"Incompatible results schema version, expected {GeneralResults.schema_version}")
         assert record.id == json["record_id"]
         data_version = json.get("data_version")
         result = GeneralResults(json["record_id"], search_type=json["search_type"],
@@ -309,8 +308,7 @@ class ClusterBlastResults(ModuleResults):
     @staticmethod
     def from_json(json: Dict[str, Any], record: Record) -> "ClusterBlastResults":
         if json["schema_version"] != ClusterBlastResults.schema_version:
-            raise ValueError("Incompatible results schema version, expected %d"
-                             % ClusterBlastResults.schema_version)
+            raise ValueError(f"Incompatible results schema version, expected {ClusterBlastResults.schema_version}")
         results = ClusterBlastResults(json["record_id"])
         for attr in ["general", "subcluster", "knowncluster"]:
             if attr in json:
@@ -349,7 +347,7 @@ def write_clusterblast_output(options: ConfigType, record: Record,
     assert isinstance(proteins, dict)
 
     region_number = cluster_result.region.get_region_number()
-    filename = "%s_c%d.txt" % (record.id, region_number)
+    filename = f"{record.id}_c{region_number}.txt"
 
     with changed_directory(_get_output_dir(options, searchtype)):
         _write_output(filename, record, cluster_result, proteins)
@@ -373,18 +371,18 @@ def _write_output(filename: str, record: Record, cluster_result: RegionResult,
     out_file.write("\n\nSignificant hits: \n")
     for i, cluster_and_score in enumerate(ranking):
         cluster = cluster_and_score[0]
-        out_file.write("{}. {}\t{}\n".format(i + 1, cluster.accession, cluster.description))
+        out_file.write(f"{i + 1}. {cluster.accession}\t{cluster.description}\n")
 
     out_file.write("\n\nDetails:")
     for i, cluster_and_score in enumerate(ranking):
         cluster, score = cluster_and_score
         nrhits = score.hits
         out_file.write("\n\n>>\n")
-        out_file.write("{}. {}\n".format(i + 1, cluster.accession))
-        out_file.write("Source: {}\n".format(cluster.description))
-        out_file.write("Type: {}\n".format(cluster.cluster_type))
-        out_file.write("Number of proteins with BLAST hits to this cluster: %d\n" % nrhits)
-        out_file.write("Cumulative BLAST score: %d\n\n" % score.blast_score)
+        out_file.write(f"{i + 1}. {cluster.accession}\n")
+        out_file.write(f"Source: {cluster.description}\n")
+        out_file.write(f"Type: {cluster.cluster_type}\n")
+        out_file.write(f"Number of proteins with BLAST hits to this cluster: {nrhits}\n")
+        out_file.write(f"Cumulative BLAST score: {score.blast_score}\n\n")
         out_file.write("Table of genes, locations, strands and annotations of subject cluster:\n")
         for protein_name in cluster.proteins:
             protein = proteins.get(protein_name)
@@ -394,7 +392,7 @@ def _write_output(filename: str, record: Record, cluster_result: RegionResult,
                        " %identity, blast score, %coverage, e-value):\n")
         if score.scored_pairings:
             for query, subject in score.scored_pairings:
-                out_file.write("{}\t{}\n".format(query.id, subject.get_table_string()))
+                out_file.write(f"{query.id}\t{subject.get_table_string()}\n")
         else:
             out_file.write("data not found\n")
         out_file.write("\n")
@@ -408,5 +406,5 @@ def _get_output_dir(options: ConfigType, searchtype: str) -> str:
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
     if not os.path.isdir(output_dir):
-        raise RuntimeError("%s exists as a file, but required as a directory" % output_dir)
+        raise RuntimeError(f"{output_dir} exists as a file, but must be a directory")
     return output_dir

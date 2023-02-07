@@ -59,8 +59,7 @@ class NRPSPKSQualifier:
             return (self.start, self.end) < (other.start, other.end)
 
         def __repr__(self) -> str:
-            return "NRPSPKSQualifier.Domain(%s, label=%s, start=%d, end=%d)" % (
-                        self.full_type, self.label, self.start, self.end)
+            return f"NRPSPKSQualifier.Domain({self.full_type}, label={self.label}, start={self.start}, end={self.end})"
 
         def get_predictions(self) -> Dict[str, str]:
             """ Returns a dictionary mapping prediction method to prediction """
@@ -81,7 +80,7 @@ class NRPSPKSQualifier:
     def __init__(self, strand: int) -> None:
         super().__init__()
         if strand not in [1, -1]:
-            raise ValueError("strand must be 1 or -1, not %s" % strand)
+            raise ValueError(f"strand must be 1 or -1, not {strand}")
         self.strand = strand
         self.type = "uninitialised"
         self._domains: List["NRPSPKSQualifier.Domain"] = []
@@ -129,22 +128,22 @@ class NRPSPKSQualifier:
         assert not isinstance(domain, str)
         if domain.hit_id == "PKS_AT":
             self.at_counter += 1
-            suffix = "_AT%d" % self.at_counter
+            suffix = f"_AT{self.at_counter}"
         elif domain.hit_id == "PKS_KR":
             self.kr_counter += 1
-            suffix = "_KR%d" % self.kr_counter
+            suffix = f"_KR{self.kr_counter}"
         elif domain.hit_id == "CAL_domain":
             self.cal_counter += 1
-            suffix = "_CAL%d" % self.cal_counter
+            suffix = f"_CAL{self.cal_counter}"
         elif domain.hit_id in ["AMP-binding", "A-OX"]:
             self.a_counter += 1
-            suffix = "_A%d" % self.a_counter
+            suffix = f"_A{self.a_counter}"
         elif domain.hit_id == "PKS_KS":
             self.ks_counter += 1
-            suffix = "_KS%d" % self.ks_counter
+            suffix = f"_KS{self.ks_counter}"
         else:
             self.other_counter += 1
-            suffix = "_OTHER%d" % self.other_counter
+            suffix = f"_OTHER{self.other_counter}"
 
         new = NRPSPKSQualifier.Domain(domain.hit_id, suffix,
                                       domain.query_start, domain.query_end,
@@ -173,4 +172,4 @@ class NRPSPKSQualifier:
             elif qualifier.startswith("type: "):
                 self.type = _parse_format(_TYPE_FORMAT, qualifier)[0]
             else:
-                raise ValueError("unknown NRPS/PKS qualifier: %s" % qualifier)
+                raise ValueError(f"unknown NRPS/PKS qualifier: {qualifier}")

@@ -90,9 +90,9 @@ class TestPrediction(unittest.TestCase):
             stach = "X" * i + "DAFYLGMMCK"[i:]
             line = (
                 "nrpspksdomains_bpsA_AMP-binding.1	L--SFDASLFEMYLLTGGDRNMYGPTEATMCATW	"
-                "%s	hydrophobic-aliphatic	N/A	val,leu,ile,abu,iva	leu	leu	"
+                f"{stach}	hydrophobic-aliphatic	N/A	val,leu,ile,abu,iva	leu	leu	"
                 "orn,lys,arg	gly,ala	0	0:0	0.000000e+00"
-            ) % stach
+            )
             pred = nrps_predictor.PredictorSVMResult.from_line(line)
             assert pred.stachelhaus_match_count == 10 - i
 

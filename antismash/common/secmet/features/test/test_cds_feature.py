@@ -215,7 +215,7 @@ class TestCDSProteinLocation(unittest.TestCase):
         print(list(map(str, self.cds.location.parts)))
         print(list(map(str, new.parts)))
         assert len(new) == len(self.cds.location)
-        assert new == self.location, "%s != %s" % (str(new), str(self.location))
+        assert new == self.location, f"{new} != {self.location}"
         extracted = new.extract(self.magic_split)
         assert extracted == self.magic
         assert extracted.translate() == self.translation[0:5]

@@ -65,7 +65,7 @@ class IntegrationNRPSPKS(unittest.TestCase):
                      ("bpsB", 1), ("bpsB", 2), ("bpsB", 3),
                      ("bpsC", 1),
                      ("bpsD", 1)]
-        nrps_names = ['nrpspksdomains_%s_AMP-binding.%d' % a_dom for a_dom in a_domains]
+        nrps_names = [f"nrpspksdomains_{name}_AMP-binding.{index}" for name, index in a_domains]
         feature_names = nrps_names + ["nrpspksdomains_pks_CAL_domain.1"]
         assert set(results.domain_predictions) == set(feature_names)
 

@@ -319,8 +319,7 @@ class Tokeniser:  # pylint: disable=too-few-public-methods
                 self.current_symbol.append(char)
             else:
                 line_text = self.text.splitlines()[line - 1]
-                raise RuleSyntaxError("Unexpected character in rule: %s\n%s\n%s^"
-                                      % (char, line_text, " "*position))
+                raise RuleSyntaxError(f"Unexpected character in rule: {char}\n{line_text}\n{' ' * position}^")
             position += 1
             global_position += 1
         self._finalise(line, len(self.text))
@@ -359,7 +358,7 @@ class Token:  # pylint: disable=too-few-public-methods
 
     def __repr__(self) -> str:
         if self.type == TokenTypes.IDENTIFIER:
-            return "'{}'".format(self.token_text)
+            return repr(self.token_text)
         if self.type == TokenTypes.INT:
             return self.token_text
         return str(self.type)
@@ -401,7 +400,7 @@ class Details:
                        self.cutoff)
 
     def __str__(self) -> str:
-        return "Details(cds=%s, possibilities=%s)" % (self.cds, self.possibilities)
+        return f"Details(cds={self.cds}, possibilities={self.possibilities})"
 
 
 class ConditionMet:  # pylint: disable=too-few-public-methods
@@ -424,11 +423,11 @@ class ConditionMet:  # pylint: disable=too-few-public-methods
         return self.met
 
     def __str__(self) -> str:
-        return ", ".join([
-            "satisfied: %s" % self.met,
-            "with hits: %s" % self.matches or "none",
-            "and with others: %s" % self.ancillary_hits or "none",
-        ])
+        return (
+            f"satisfied: {self.met}"
+            f", with hits: {self.matches or 'none'}"
+            f" and with others: {self.ancillary_hits or 'none'}"
+        )
 
 
 class Conditions:
@@ -461,8 +460,7 @@ class Conditions:
         unique_operands: Set[str] = set()
         for operand in map(str, self.operands):
             if operand in unique_operands:
-                raise ValueError("Rule contains repeated condition: %s\nfrom rule %s"
-                                 % (operand, self))
+                raise ValueError(f"Rule contains repeated condition: {operand}\nfrom rule {self}")
             unique_operands.add(operand)
 
     @property
@@ -529,8 +527,8 @@ class Conditions:
         prefix = "not " if self.negated else ""
         if len(self.sub_conditions) == 1 \
                 and not isinstance(self.sub_conditions[0], AndCondition):
-            return "{}*({}{})".format(self.hits, prefix, self.sub_conditions[0].get_hit_string())
-        return "{}*({}{})".format(self.hits, prefix, " ".join(sub.get_hit_string() for sub in self.sub_conditions))
+            return f"{self.hits}*({prefix}{self.sub_conditions[0].get_hit_string()})"
+        return f"{self.hits}*({prefix}{' '.join(sub.get_hit_string() for sub in self.sub_conditions)})"
 
     def contains_positive_condition(self) -> bool:
         """ Returns True if at least one non-negated subcondition is satisified """
@@ -549,8 +547,8 @@ class Conditions:
         prefix = "not " if self.negated else ""
         if len(self.sub_conditions) == 1 \
                 and not isinstance(self.sub_conditions[0], AndCondition):
-            return "{}{}".format(prefix, self.sub_conditions[0])
-        return "{}({})".format(prefix, " ".join(map(str, self.sub_conditions)))
+            return f"{prefix}{self.sub_conditions[0]}"
+        return f"{prefix}({' '.join(map(str, self.sub_conditions))})"
 
 
 class AndCondition(Conditions):
@@ -578,7 +576,7 @@ class AndCondition(Conditions):
         return ConditionMet(met, matched, ancillary_hits)
 
     def get_hit_string(self) -> str:
-        return "{}*({})".format(self.hits, " and ".join(op.get_hit_string() for op in self.operands))
+        return f"{self.hits}*({' and '.join(op.get_hit_string() for op in self.operands)})"
 
     def __str__(self) -> str:
         return " and ".join(map(str, self.operands))
@@ -628,15 +626,15 @@ class MinimumCondition(Conditions):
         return ConditionMet(self.negated, hits)
 
     def get_hit_string(self) -> str:
-        return "{}*{}".format(self.hits, str(self))
+        return f"{self.hits}*{self}"
 
     @property
     def profiles(self) -> Set[str]:
         return self.options
 
     def __str__(self) -> str:
-        return "{}minimum({}, [{}])".format("not " if self.negated else "", self.count,
-                                            ", ".join(sorted(list(self.options))))
+        prefix = "not " if self.negated else ""
+        return f"{prefix}minimum({self.count}, [{', '.join(sorted(self.options))}])"
 
 
 class CDSCondition(Conditions):
@@ -664,11 +662,11 @@ class CDSCondition(Conditions):
 
     def get_hit_string(self) -> str:
         prefix = "not " if self.negated else ""
-        return "{}*({}cds({}))".format(self.hits, prefix, " ".join(sub.get_hit_string() for sub in self.sub_conditions))
+        return f"{self.hits}*({prefix}cds({' '.join(sub.get_hit_string() for sub in self.sub_conditions)}))"
 
     def __str__(self) -> str:
         prefix = "not " if self.negated else ""
-        return "{}cds({})".format(prefix, " ".join(map(str, self.sub_conditions)))
+        return f"{prefix}cds({' '.join(map(str, self.sub_conditions))})"
 
 
 class SingleCondition(Conditions):
@@ -710,11 +708,11 @@ class SingleCondition(Conditions):
 
     def get_hit_string(self) -> str:
         if self.negated:
-            return "{}*(not {})".format(self.hits, self.name)
-        return "{}*{}".format(self.hits, self.name)
+            return "{self.hits}*({self.name})"
+        return f"{self.hits}*{self.name}"
 
     def __str__(self) -> str:
-        return "{}{}".format("not " if self.negated else "", self.name)
+        return f"{'not ' if self.negated else ''}{self.name}"
 
 
 class ScoreCondition(Conditions):
@@ -765,11 +763,11 @@ class ScoreCondition(Conditions):
 
     def get_hit_string(self) -> str:
         if self.negated:
-            return "{}*({})".format(self.hits, str(self))
-        return "{}*{}".format(self.hits, str(self))
+            return "{self.hits}*({self})"
+        return f"{self.hits}*{self}"
 
     def __str__(self) -> str:
-        return "{}minscore({}, {})".format("not " if self.negated else "", self.name, self.score)
+        return f"{'not ' if self.negated else ''}minscore({self.name}, {self.score})"
 
 
 class DetectionRule:
@@ -834,8 +832,7 @@ class DetectionRule:
         # strip off outer parens if they exist
         if condition_text[0] == "(" and condition_text[-1] == ')':
             condition_text = condition_text[1:-1]
-        return "{}\t{}\t{}\t{}\t{}".format(self.name, self.category, self.cutoff // 1000,
-                                           self.neighbourhood // 1000, condition_text)
+        return f"{self.name}\t{self.category}\t{self.cutoff // 1000}\t{self.neighbourhood // 1000}\t{condition_text}"
 
     def reconstruct_rule_text(self) -> str:
         """ Generate a string that can be tokenised and parsed to recreate this
@@ -850,8 +847,14 @@ class DetectionRule:
             comments = f"DESCRIPTION {self.description} "
         for example in self.examples:
             comments += f"EXAMPLE {example} "
-        return "RULE {} CATEGORY {} {}CUTOFF {} NEIGHBOURHOOD {} CONDITIONS {}".format(self.name,
-                    self.category, comments, self.cutoff // 1000, self.neighbourhood // 1000, condition_text)
+        return (
+            f"RULE {self.name} "
+            f"CATEGORY {self.category} "
+            f"{comments}"  # no trailing space because 'comments' includes it above
+            f"CUTOFF {self.cutoff // 1000} "
+            f"NEIGHBOURHOOD {self.neighbourhood // 1000} "
+            f"CONDITIONS {condition_text}"
+        )
 
     def get_hit_string(self) -> str:
         """ Returns a string representation of the rule, marking how many times
@@ -1093,7 +1096,7 @@ class Parser:  # pylint: disable=too-few-public-methods
         """
         description_tokens = []
         self._consume(TokenTypes.DESCRIPTION)
-        err = RuleSyntaxError("Unexpected end of input in %s block" % TokenTypes.DESCRIPTION)
+        err = RuleSyntaxError(f"Unexpected end of input in {TokenTypes.DESCRIPTION} block")
         if not self.current_token:
             raise err
         while not self.current_token.type.is_a_rule_keyword():

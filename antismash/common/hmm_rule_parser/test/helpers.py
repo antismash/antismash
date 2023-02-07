@@ -21,4 +21,4 @@ def check_hmm_signatures(signature_file, hmm_dir):
             if line.startswith("NAME"):
                 name = line.split()[-1]
         assert name
-        assert name == sig.name, "%s != %s" % (name, sig.name)
+        assert name == sig.name, f"{name} != {sig.name}"

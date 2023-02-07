@@ -43,11 +43,10 @@ class ClusterMarker(Pairing):
             self.minus = int(motif.minus)
 
     def __str__(self) -> str:
-        return "gene %s; abundance %s; motif %s; score %s" % (
-                  self.gene, self.abundance, self.pairing_string, self.score)
+        return f"gene {self.gene}; abundance {self.abundance}; motif {self.pairing_string}; score {self.score}"
 
     def __repr__(self) -> str:
-        return "ClusterMarker(%s, promoter=%s)" % (str(self), self.promoter)
+        return f"ClusterMarker({self}, promoter={self.promoter})"
 
     def __eq__(self, other: Any) -> bool:
         return (isinstance(other, ClusterMarker)
@@ -65,8 +64,10 @@ class ClusterPrediction:
         self.promoters = 0
 
     def __repr__(self) -> str:
-        return "ClusterPrediction(start=%s, end=%s, gene_count=%d, promoter_count=%d)" % (
-                        self.start, self.end, self.genes, self.promoters)
+        return (
+            f"ClusterPrediction(start={self.start}, end={self.end},"
+            f" gene_count={self.genes}, promoter_count={self.promoters})"
+        )
 
     def __eq__(self, other: Any) -> bool:
         return (isinstance(other, ClusterPrediction)

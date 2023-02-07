@@ -193,7 +193,7 @@ class TestSynthetic(unittest.TestCase):
         for values in ["GGP", "HPP", "HGG", "NNN", "HGP"]:
             mocked_get.return_value = [DummyAlignment(values, {5: values[0], 39: values[1], 44: values[2]})]
             pairings = analysis.asp_pksi_dh(self.record)
-            assert pairings == [(values, "catalytic triad H,G,P found: %s" % (values == "HGP"))]
+            assert pairings == [(values, f"catalytic triad H,G,P found: {values == 'HGP'}")]
         # and an inconclusive
         mocked_match.return_value = False
         # values here don't matter
@@ -208,7 +208,7 @@ class TestSynthetic(unittest.TestCase):
         for char in string.ascii_uppercase:
             mocked_get.return_value = [DummyAlignment(char, {81: char})]
             pairings = analysis.asp_thioesterase(self.record)
-            assert pairings == [(char, "active site serine present: %s" % (char == "S"))]
+            assert pairings == [(char, f"active site serine present: {char == 'S'}")]
         # and an inconclusive
         mocked_match.return_value = False
         # values here don't matter
@@ -261,7 +261,7 @@ class TestSynthetic(unittest.TestCase):
         for char in string.ascii_uppercase:
             mocked_get.return_value = [DummyAlignment(char, {407: char})]
             pairings = analysis.asp_p450_oxy(self.record)
-            assert pairings == [(char, "active site cysteine present: %s" % (char == "C"))]
+            assert pairings == [(char, f"active site cysteine present: {char == 'C'}")]
         # and an inconclusive
         mocked_match.return_value = False
         # values here don't matter

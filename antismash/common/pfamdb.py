@@ -35,7 +35,7 @@ def check_db(db_path: str) -> List[str]:
     file_name = 'Pfam-A.hmm'
     full_path = os.path.join(db_path, file_name)
     if not path.locate_file(full_path):
-        failure_messages.append("Failed to locate file: %r in %s" % (file_name, db_path))
+        failure_messages.append(f"Failed to locate file: {file_name!r} in {db_path}")
     else:
         failure_messages.extend(hmmer.ensure_database_pressed(full_path, return_not_raise=True))
     return failure_messages

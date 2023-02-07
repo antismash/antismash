@@ -47,7 +47,7 @@ class TestOrfCounts(unittest.TestCase):
         expected = [FeatureLocation(ExactPosition(0), ExactPosition(66), strand=1)]
         for start in ('ATG', 'GTG', 'TTG'):
             for stop in ('TAA', 'TAG', 'TGA'):
-                seq = "{}{}{}".format(start, "N"*60, stop)
+                seq = f"{start}{'N'*60}{stop}"
                 self.run_both_dirs(expected, seq)
 
     def test_single_contained(self):

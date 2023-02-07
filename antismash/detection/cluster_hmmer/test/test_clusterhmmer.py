@@ -48,7 +48,7 @@ class TestClusterhmmer(unittest.TestCase):
 
     def test_check_prereqs_missing_file(self, patched_locate, _patched_run):
         patched_locate.side_effect = [None] + EXPECTED_FILES[1:]
-        expected = ["Failed to locate file: 'Pfam-A.hmm' in %s/pfam/%s" % (self.config.database_dir, self.latest_pfam)]
+        expected = [f"Failed to locate file: 'Pfam-A.hmm' in {self.config.database_dir}/pfam/{self.latest_pfam}"]
         returned = cluster_hmmer.check_prereqs(self.config)
 
         self.assertListEqual(expected, returned)

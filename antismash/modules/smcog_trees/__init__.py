@@ -55,7 +55,7 @@ class SMCOGTreeResults(ModuleResults):
         logging.debug("annotating genes with SMCOG trees: %d genes", len(self.tree_images))
         for feature in record.get_cds_features_within_regions():
             if feature.get_name() in self.tree_images:
-                feature.notes.append("smCOG tree PNG image: smcogs/%s" % self.tree_images[feature.get_name()])
+                feature.notes.append(f"smCOG tree PNG image: smcogs/{self.tree_images[feature.get_name()]}")
 
 
 def check_options(_options: ConfigType) -> List[str]:
@@ -106,7 +106,7 @@ def check_prereqs(options: ConfigType) -> List[str]:
     failure_messages = []
     for binary_name in ['fasttree']:
         if binary_name not in options.executables:
-            failure_messages.append("Failed to locate file: %r" % binary_name)
+            failure_messages.append(f"Failed to locate executable: {binary_name}")
 
     return failure_messages
 

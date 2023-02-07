@@ -41,16 +41,16 @@ class Feature:
                  created_by_antismash: bool = False) -> None:
         assert isinstance(location, (FeatureLocation, CompoundLocation)), type(location)
         if location_bridges_origin(location):
-            raise ValueError("Features that bridge the record origin cannot be directly created: %s" % location)
+            raise ValueError(f"Features that bridge the record origin cannot be directly created: {location}")
         if location_contains_overlapping_exons(location):
-            raise ValueError("location contains overlapping exons: %s" % location)
-        assert location.start <= location.end, "Feature location invalid: %s" % location
+            raise ValueError(f"location contains overlapping exons: {location}")
+        assert location.start <= location.end, f"Feature location invalid: {location}"
         if location.start < 0:
-            raise ValueError("location contains negative coordinate: %s" % location)
+            raise ValueError(f"location contains negative coordinate: {location}")
         self.location = location
         self.notes: List[str] = []
         if not 1 <= len(feature_type) < 16:  # at 16 the name merges with location in genbanks
-            raise ValueError("feature type has invalid length: '%s'" % feature_type)
+            raise ValueError(f"feature type has invalid length: {feature_type!r}")
         self.type = str(feature_type)
         self._qualifiers: Dict[str, Optional[List[str]]] = OrderedDict()
         self.created_by_antismash = bool(created_by_antismash)
@@ -98,9 +98,9 @@ class Feature:
 
         dna_start, dna_end = convert_protein_position_to_dna(start, end, self.location)
         if not dna_start < dna_end:
-            raise ValueError("Invalid protein coordinate conversion (start %d, end %d)" % (dna_start, dna_end))
+            raise ValueError(f"Invalid protein coordinate conversion (start {dna_start}, end {dna_end})")
         if dna_start not in self.location:
-            raise ValueError("Protein coordinate start %d (nucl %d) is outside feature %s" % (start, dna_start, self))
+            raise ValueError(f"Protein coordinate start {start} (nucl {dna_start}) is outside feature {self}")
         # end check is more complicated as 'in' is inclusive and end is exclusive
         end_contained = dna_end in self.location or dna_end == self.location.end
         for part in self.location.parts:
@@ -108,7 +108,7 @@ class Feature:
                 end_contained = True
                 break
         if not end_contained:
-            raise ValueError("Protein coordinate end %d (nucl %d) is outside feature %s" % (end, dna_end, self))
+            raise ValueError(f"Protein coordinate end {end} (nucl {dna_end}) is outside feature {self}")
 
         if not isinstance(self.location, CompoundLocation):
             return FeatureLocation(dna_start, dna_end, self.location.strand)
@@ -130,9 +130,11 @@ class Feature:
                 new_locations.append(location)
 
         if not new_locations:
-            raise ValueError(("Could not create compound location from"
-                              " %s and internal protein coordinates %d..%d (dna %d..%d)") % (
-                                str(self.location), start, end, dna_start, dna_end))
+            raise ValueError(
+                "Could not create compound location from"
+                f" {self.location} and internal protein coordinates {start}..{end}"
+                f" (dna {dna_start}..{dna_end})"
+            )
         if self.location.strand == -1:
             new_locations.reverse()
 
@@ -170,7 +172,7 @@ class Feature:
         elif isinstance(other, (CompoundLocation, FeatureLocation)):
             location = other
         else:
-            raise TypeError("Container must be a Feature, CompoundLocation, or FeatureLocation, not %s" % type(other))
+            raise TypeError(f"Container must be a Feature, CompoundLocation, or FeatureLocation, not {type(other)}")
         return locations_overlap(self.location, location)
 
     def is_contained_by(self, other: Union["Feature", Location]) -> bool:
@@ -181,7 +183,7 @@ class Feature:
             return location_contains_other(other.location, self.location)
         if isinstance(other, (CompoundLocation, FeatureLocation)):
             return location_contains_other(other, self.location)
-        raise TypeError("Container must be a Feature, CompoundLocation or FeatureLocation, not %s" % type(other))
+        raise TypeError(f"Container must be a Feature, CompoundLocation or FeatureLocation, not {type(other)}")
 
     def to_biopython(self, qualifiers: Dict[str, Any] = None) -> List[SeqFeature]:
         """ Converts this feature into one or more SeqFeature instances.
@@ -231,7 +233,7 @@ class Feature:
         return repr(self)
 
     def __repr__(self) -> str:
-        return "%s(%s)" % (self.type, self.location)
+        return f"{self.type}({self.location})"
 
     @classmethod
     def from_biopython(cls: Type[T], bio_feature: SeqFeature, feature: T = None,

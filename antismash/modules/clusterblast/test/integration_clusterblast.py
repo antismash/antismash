@@ -251,7 +251,7 @@ class TestDatabaseValidity(unittest.TestCase):
         proteins = core.load_reference_proteins(searchtype)
         for cluster in clusters.values():
             for protein in cluster.tags:
-                assert protein in proteins, "missing: %s" % protein
+                assert protein in proteins, f"missing: {protein}"
 
     def test_general(self):
         self._check_proteins_match_clusters("clusterblast")

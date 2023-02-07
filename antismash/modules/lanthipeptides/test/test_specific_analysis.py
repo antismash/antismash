@@ -154,7 +154,7 @@ class TestNoCores(unittest.TestCase):
         cleavage_result = CleavageSiteHit(end=48, score=-6.8, lantype="Class-II")
         with patch.object(lanthi, "predict_cleavage_site", return_value=cleavage_result):
             for part in ["I", "II"]:
-                assert run_lanthipred(None, self.cds, "Class-%s" % part, self.domains) is None
+                assert run_lanthipred(None, self.cds, f"Class-{part}", self.domains) is None
 
     def test_prediction_with_core_class1(self, _patched_rodeo):
         # the cleavage result adjusted to leave at least one amino in core

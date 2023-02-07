@@ -19,7 +19,7 @@ class TestPairings(unittest.TestCase):
         anchor_promoter = 1
         promoters = []
         for i in range(1, 7):
-            promoters.append(Promoter("gene%d" % i, i * 10, i * 10 + 4))
+            promoters.append(Promoter(f"gene{i}", i * 10, i * 10 + 4))
         # resulting in 2 different islands (this example)
         # promoter (pos): 1 2 3 4 5 6
         # binding sites:  1 2 0 0 0 0

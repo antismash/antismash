@@ -18,7 +18,7 @@ from antismash.common.secmet.test.helpers import DummyCDS
 
 
 def create_cds(start, end, products):
-    cds = DummyCDS(start, end, locus_tag="%s-%s-%s" % (start, end, "-".join(products)))
+    cds = DummyCDS(start, end, locus_tag=f"{start}-{end}-{'-'.join(products)}")
     for product in products:
         cds.gene_functions.add(GeneFunction.CORE, "test", "dummy", product)
     return cds

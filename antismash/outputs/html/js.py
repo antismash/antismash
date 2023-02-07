@@ -112,7 +112,7 @@ def convert_regions(record: Record, options: ConfigType, result: Dict[str, Modul
         js_region['products'] = region.products
         js_region['product_categories'] = list(region.product_categories)
         js_region['cssClass'] = get_region_css(region)
-        js_region['anchor'] = "r%dc%d" % (record.record_index, region.get_region_number())
+        js_region['anchor'] = f"r{record.record_index}c{region.get_region_number()}"
 
         js_regions.append(js_region)
 
@@ -203,8 +203,7 @@ def get_clusters_from_region(region: Region) -> List[Dict[str, Any]]:
                       "tool": "",
                       "neighbouring_start": candidate_cluster.location.start,
                       "neighbouring_end": candidate_cluster.location.end,
-                      "product": "CC %d: %s" % (candidate_cluster.get_candidate_cluster_number(),
-                                                candidate_cluster.kind),
+                      "product": f"CC {candidate_cluster.get_candidate_cluster_number()}: {candidate_cluster.kind}",
                       "kind": "candidatecluster",
                       "prefix": ""}
         js_cluster['height'] = candidate_cluster_groupings[candidate_cluster]
@@ -367,34 +366,33 @@ def get_description(record: Record, feature: CDSFeature, type_: str,
 
     urls = {
         "blastp": ("http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE=Proteins&"
-                   "PROGRAM=blastp&BLAST_PROGRAMS=blastp&QUERY=%s&"
-                   "LINK_LOC=protein&PAGE_TYPE=BlastSearch") % feature.translation,
+                   f"PROGRAM=blastp&BLAST_PROGRAMS=blastp&QUERY={feature.translation}&"
+                   "LINK_LOC=protein&PAGE_TYPE=BlastSearch"),
         "mibig": "",
         "transport": "",
-        "smcog_tree": ""
+        "smcog_tree": "",
+        "context": (
+            "http://www.ncbi.nlm.nih.gov/projects/sviewer/"
+            "?Db=gene&DbFrom=protein&Cmd=Link&noslider=1"
+            f"&id={record.id}"
+            f"&from={max(feature.location.start - 9999, 0)}"
+            f"&to={min(feature.location.end + 10000, len(record))}"
+        ),
     }
-
-    genomic_context_url = "http://www.ncbi.nlm.nih.gov/projects/sviewer/?" \
-                          "Db=gene&DbFrom=protein&Cmd=Link&noslider=1&"\
-                          "id=%s&from=%s&to=%s"
 
     if mibig_result:
         assert feature.region
         region_number = feature.region.get_region_number()
         mibig_homology_file = os.path.join(options.output_dir, "knownclusterblast",
-                                           "region%d" % region_number,
-                                           feature.get_accession() + '_mibig_hits.html')
+                                           f"region{region_number}",
+                                           f"{feature.get_accession()}_mibig_hits.html")
         generate_html_table(mibig_homology_file, mibig_result)
         urls["mibig"] = mibig_homology_file[len(options.output_dir) + 1:]
 
     if type_ == 'transport':
         urls["transport"] = ("http://blast.jcvi.org/er-blast/index.cgi?project=transporter;"
                              "program=blastp;database=pub/transporter.pep;"
-                             "sequence=sequence%%0A%s") % feature.translation
-
-    urls["context"] = genomic_context_url % (record.id,
-                                             max(feature.location.start - 9999, 0),
-                                             min(feature.location.end + 10000, len(record)))
+                             f"sequence=sequence%%0A{feature.translation}")
 
     if options.smcog_trees:
         for note in feature.notes:  # TODO find a better way to store image urls
@@ -407,7 +405,7 @@ def get_description(record: Record, feature: CDSFeature, type_: str,
     pfam_notes = generate_pfam_tooltip(record, feature)
     tigr_notes = generate_tigr_tooltip(record, feature)
 
-    urls["searchgtr"] = searchgtr_links.get("{}_{}".format(record.id, feature.get_name()), "")
+    urls["searchgtr"] = searchgtr_links.get(f"{record.id}_{feature.get_name()}", "")
     template = html_renderer.FileTemplate(path.get_full_path(__file__, "templates", "cds_detail.html"))
     ec_numbers = ""
     ec_number_qual = feature.get_qualifier("EC_number")

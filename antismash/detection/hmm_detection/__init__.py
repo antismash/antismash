@@ -60,7 +60,7 @@ def _get_rule_files_for_strictness(strictness: str) -> List[str]:
     assert strictness in _STRICTNESS_LEVELS, strictness
     files = []
     for level in _STRICTNESS_LEVELS[:_STRICTNESS_LEVELS.index(strictness) + 1]:
-        files.append(path.get_full_path(__file__, "cluster_rules", "%s.txt" % level))
+        files.append(path.get_full_path(__file__, "cluster_rules", f"{level}.txt"))
     return files
 
 
@@ -74,7 +74,7 @@ class HMMDetectionResults(DetectionResults):
         self.rule_results = rule_results
         self.enabled_types = enabled_types
         if strictness not in _STRICTNESS_LEVELS:
-            raise ValueError("unknown strictness level: %s" % strictness)
+            raise ValueError(f"unknown strictness level: {strictness}")
         self.strictness = strictness
 
     def to_json(self) -> Dict[str, Any]:
@@ -266,7 +266,7 @@ def prepare_data(logging_only: bool = False) -> List[str]:
         except OSError:
             if not logging_only:
                 raise
-            failure_messages.append('Failed to generate file {!r}'.format(seeds_hmm))
+            failure_messages.append(f"Failed to generate file {seeds_hmm!r}")
 
     # if regeneration failed, don't try to run hmmpress
     if failure_messages:
@@ -284,7 +284,7 @@ def check_prereqs(options: ConfigType) -> List[str]:
     failure_messages = []
     for binary_name in ["hmmsearch", "hmmpress"]:
         if binary_name not in options.executables:
-            failure_messages.append("Failed to locate executable for %r" % binary_name)
+            failure_messages.append(f"Failed to locate executable for {binary_name!r}")
 
     # no point checking the data if we can't use it
     if failure_messages:

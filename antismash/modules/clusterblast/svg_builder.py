@@ -53,7 +53,7 @@ def generate_distinct_colours(count: int) -> List[str]:
     colours = []
     for rgb in rgbs:
         red, green, blue = [str(hex(int(i*255)))[2:] for i in rgb]  # [2:] strips the 0x
-        colours.append("#%s%s%s" % (red, green, blue))
+        colours.append(f"#{red}{green}{blue}")
     assert len(colours) == count
     return colours
 
@@ -222,7 +222,7 @@ class Gene:
 
     def _get_description(self) -> str:
         """ Returns a HTML fragment describing the Gene """
-        description = ['<b>%s</b><br>%s<br>Location: %s - %s' % (self.name, self.label, self.start, self.end)]
+        description = [f"<b>{self.name}</b><br>{self.label}<br>Location: {self.start} - {self.end}"]
         format_string = ("<br><br><b>BlastP hit with %s</b><br>Percentage identity: %s<br>"
                          "Percentage coverage: %.0f<br>BLAST bit score: %s<br>E-value: %s")
         for query, subject in self.pairings:
@@ -305,7 +305,7 @@ class Cluster:
                 assert isinstance(feature, Protein), type(feature)
                 genes.append(Gene.from_protein(feature))
         else:
-            raise TypeError("No conversion from type %s to Gene" % type(genes[0]))
+            raise TypeError(f"No conversion from type {type(genes[0])} to Gene")
         self.unique_hit_count = int(hits)
         self.genes: List[Gene] = sorted(genes, key=lambda gene: gene.start)
         self.overall_strand = strand
@@ -326,19 +326,19 @@ class Cluster:
         """ Return a string representing percentage similarity to the query
             cluster
         """
-        return "%d%% of genes show similarity" % self.similarity
+        return f"{self.similarity}% of genes show similarity"
 
     @property
     def full_description(self) -> str:
         """ Returns a string formatted with accession, cluster number and
             similarity score """
         if self.prefix == "general":
-            desc = "%s (%s): %s" % (self.accession, self.ref_cluster_number, self.description)
+            desc = f"{self.accession} ({self.ref_cluster_number}): {self.description}"
         else:
-            desc = "%s_c%s: %s" % (self.accession, self.ref_cluster_number, self.description)
+            desc = f"{self.accession}_c{self.ref_cluster_number}: {self.description}"
         if len(desc) > 80:
             desc = desc[:77] + "..."
-        return "%s (%s), %s" % (desc, self.similarity_string, self.cluster_type)
+        return f"{desc} ({self.similarity_string}), {self.cluster_type}"
 
     def reverse_strand(self) -> None:
         """ Reverses the entire cluster's directionality, useful when the
@@ -355,15 +355,17 @@ class Cluster:
     def _add_label(self, group: Group, v_offset: int) -> Group:
         acc = Text(self.full_description, 5, 20 + v_offset)
         if self.prefix == "knownclusterblast":
-            desc = "%80s (%s), %s" % (self.description, self.similarity_string, self.cluster_type)
-            acc = Text('<a xlink:href="https://mibig.secondarymetabolites.org/go/'
-                       + self.accession + '/%s" target="_blank">' % self.ref_cluster_number
-                       + self.accession + '</a>: '
-                       + desc, 5, 20 + v_offset)
+            desc = f"{self.description:80} ({self.similarity_string}), {self.cluster_type}"
+            acc = Text((
+                '<a xlink:href="https://mibig.secondarymetabolites.org/go/'
+                f'{self.accession}/{self.ref_cluster_number}"'
+                ' target="_blank">'
+                f"{self.accession}</a>: {desc}"
+            ), 5, 20 + v_offset)
         elif self.prefix == "general":
             start, end = self.ref_cluster_number.split("-")
-            query = ("record=%s&start=%s&end=%s" % (self.accession, start, end)).replace("&", "&amp;")
-            acc = Text('<a xlink:href="https://antismash-db.secondarymetabolites.org/area.html?%s' % query
+            query = f"record={self.accession}&start={start}&end={end}".replace("&", "&amp;")
+            acc = Text(f'<a xlink:href="https://antismash-db.secondarymetabolites.org/area.html?{query}'
                        + '" target="_blank">'
                        + self.full_description.replace(":", "</a>:", 1), 5, 20 + v_offset)
         # Don't do any linking for subclusterblast
@@ -403,11 +405,10 @@ class Cluster:
                 label = "all_"
             else:
                 label = "h"
-            arrow.set_id("%s-%d_%s%d_%s_%s" % (prefix, self.region_number, label,
-                                               self.region_number, self.rank, i))
+            arrow.set_id(f"{prefix}-{self.region_number}_{label}{self.region_number}_{self.rank}_{i}")
             group.addElement(arrow)
             # Can be used for domains
-            group.set_id("a%s_00%s" % (self.region_number, i))
+            group.set_id(f"a{self.region_number}_00{i}")
             groups.append(group)
         return groups
 
@@ -434,7 +435,7 @@ class QueryRegion(Cluster):
     def __init__(self, region_feature: secmet.Region) -> None:
         region_number = region_feature.get_region_number()
         super().__init__(region_number, str(region_number),
-                         "%s_%d" % (region_feature.parent_record.id, region_number),
+                         f"{region_feature.parent_record.id}_{region_number}",
                          "Query sequence",
                          list(region_feature.cds_children), rank=0, cluster_type="query")
 
@@ -461,7 +462,7 @@ class QueryRegion(Cluster):
         for index, gene in enumerate(self.genes):
             arrow = gene.get_arrow_polygon(scaling=scaling, offset=offset,
                                            base=base, colour=colours.get(gene.name, "white"))
-            arrow.set_id("%s-%s_q%s_%s_%s" % (prefix, self.region_number, index, self.rank, "all"))
+            arrow.set_id(f"{prefix}-{self.region_number}_q{index}_{self.rank}_all")
             group.addElement(arrow)
         return groups
 
@@ -589,7 +590,7 @@ class ClusterSVGBuilder:
                 a string containing the SVG XML
         """
         svg = Svg(x=0, y=0, width=width, height=height)
-        viewbox = "0 0 %d %d" % (width, height)
+        viewbox = f"0 0 {width} {height}"
         svg.set_viewBox(viewbox)
         svg.set_preserveAspectRatio("none")
         scaling = (width - 20) / self.max_length  # -20 for margins
@@ -618,7 +619,7 @@ class ClusterSVGBuilder:
                 a string containing the SVG XML
         """
         svg = Svg(x=0, y=0, width=width, height=height)
-        viewbox = "0 0 %d %d" % (width, height)
+        viewbox = f"0 0 {width} {height}"
         svg.set_viewBox(viewbox)
         svg.set_preserveAspectRatio("none")
         max_length = max([len(self.query_cluster), len(self.hits[index])])

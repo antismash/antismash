@@ -97,7 +97,7 @@ def trim_alignment(input_number: int, contents: dict[str, str]) -> None:
     # check all sequences are the same length
     sequence_length = len(list(contents.values())[0])
     for name, seq in contents.items():
-        assert sequence_length == len(seq), "%s has different sequence length" % name
+        assert sequence_length == len(seq), f"{name} has different sequence length"
     # stripping ( and ) because it breaks newick tree parsing
     # and keeping only the last two fields (id and description)
     names = ["|".join(name.replace("(", "_").replace(")", "_").rsplit('|', 2)[-2:]) for name in list(contents)]
@@ -117,7 +117,7 @@ def trim_alignment(input_number: int, contents: dict[str, str]) -> None:
 
     # Shorten sequences to detected conserved regions
     seqs = [seq[first_shared_amino:last_shared_amino] for seq in seqs]
-    seed_fasta_name = "trimmed_alignment" + str(input_number) + ".fasta"
+    seed_fasta_name = f"trimmed_alignment{input_number}.fasta"
     fasta.write_fasta(names, seqs, seed_fasta_name)
 
 
@@ -128,13 +128,13 @@ def draw_tree(input_number: int, output_dir: str, tag: str) -> str:
             the filename of the image generated
     """
     matplotlib.use('Agg')
-    command = ["fasttree", "-quiet", "-fastest", "-noml", "trimmed_alignment%d.fasta" % input_number]
+    command = ["fasttree", "-quiet", "-fastest", "-noml", f"trimmed_alignment{input_number}.fasta"]
     run_result = subprocessing.execute(command)
     if not run_result.successful():
-        raise RuntimeError("Fasttree failed to run successfully:", run_result.stderr)
+        raise RuntimeError(f"Fasttree failed to run successfully: {run_result.stderr}")
 
     handle = StringIO(run_result.stdout)
-    tree_filename = os.path.join(output_dir, tag + '.png')
+    tree_filename = os.path.join(output_dir, f"{tag}.png")
     try:
         tree = Phylo.read(handle, 'newick')
     except NewickError:
@@ -156,6 +156,6 @@ def draw_tree(input_number: int, output_dir: str, tag: str) -> str:
     fig = matplotlib.pyplot.gcf()
     fig.set_size_inches(20, (tree.count_terminals() / 3))
     matplotlib.pyplot.axis('off')
-    fig.savefig(os.path.join(output_dir, tag + '.png'), bbox_inches='tight')
+    fig.savefig(tree_filename, bbox_inches='tight')
     matplotlib.pyplot.close(fig)
     return tree_filename

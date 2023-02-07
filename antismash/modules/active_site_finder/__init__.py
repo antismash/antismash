@@ -67,7 +67,7 @@ def check_prereqs(options: ConfigType) -> List[str]:
 
     for binary_name in ['hmmpfam2', 'hmmscan', 'hmmpress']:
         if binary_name not in options.executables:
-            failure_messages.append("Failed to locate file: %r" % binary_name)
+            failure_messages.append(f"Failed to locate file: {binary_name!r}")
 
     # Get all HMM profile names from XML file
     for profile in ["PKSI-KR.hmm2", "PKSI-KS_N.hmm2", "PKSI-KS_C.hmm2", "PKSI-AT.hmm2",
@@ -76,7 +76,7 @@ def check_prereqs(options: ConfigType) -> List[str]:
         full_hmm_path = path.get_full_path(__file__, "data", profile)
 
         if path.locate_file(full_hmm_path) is None:
-            failure_messages.append("Failed to locate file: %s" % profile)
+            failure_messages.append(f"Failed to locate file: {profile!r}")
             continue
 
     return failure_messages

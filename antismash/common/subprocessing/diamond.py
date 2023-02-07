@@ -42,7 +42,7 @@ def run_diamond(subcommand: str,
 
         result = execute(params)
         if not result.successful():
-            raise RuntimeError("diamond failed to run: %s -> %s" % (subcommand, result.stderr[-100:]))
+            raise RuntimeError(f"diamond failed to run: {subcommand} -> {result.stderr[-100:]}")
     return result
 
 
@@ -176,12 +176,12 @@ def check_diamond_files(definition_file: str, fasta_file: str, db_file: str,
     failure_messages: List[str] = []
 
     if path.locate_file(definition_file) is None:
-        failure_messages.append("Failed to locate cluster definition file: {!r}".format(definition_file))
+        failure_messages.append(f"Failed to locate cluster definition file: {definition_file!r}")
 
     regen_message = ""
 
     if path.locate_file(fasta_file) is None:
-        failure_messages.append("Failed to locate cluster proteins: {!r}".format(fasta_file))
+        failure_messages.append(f"Failed to locate cluster proteins: {fasta_file!r}")
         if not logging_only:
             raise FileNotFoundError(failure_messages[-1])
     elif path.locate_file(db_file) is None:
@@ -198,7 +198,7 @@ def check_diamond_files(definition_file: str, fasta_file: str, db_file: str,
         except RuntimeError:
             if not logging_only:
                 raise
-            failure_messages.append("Failed to regenerate diamond database %r" % db_file)
+            failure_messages.append(f"Failed to regenerate diamond database {db_file!r}")
 
     if failure_messages:
         failure_messages.append(f"with diamond executable: {get_config().executables.diamond}")
