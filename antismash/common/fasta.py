@@ -64,7 +64,7 @@ def write_fasta(names: List[str], seqs: List[str], filename: str) -> None:
         Returns:
             None
     """
-    with open(filename, "w") as out_file:
+    with open(filename, "w", encoding="utf-8") as out_file:
         for name, seq in zip(names, seqs):
             out_file.write(f">{name}\n{seq}\n")
 
@@ -81,7 +81,7 @@ def read_fasta(filename: str) -> Dict[str, str]:
     """
     ids = []
     sequence_info = []
-    with open(filename, "r") as fasta:
+    with open(filename, "r", encoding="utf-8") as fasta:
         current_seq: List[str] = []
         for line in fasta:
             line = line.strip()

@@ -63,7 +63,7 @@ class DBConfig:
         """ Constructs a DBConfig instance from a file containing JSON.
             Requires the current config database directory to handle replacments.
         """
-        with open(filename) as handle:
+        with open(filename, encoding="utf-8") as handle:
             raw = json.load(handle)
         return cls.from_json(raw, database_dir)
 
@@ -306,7 +306,7 @@ def load_data(filename: str) -> Dict[str, ReferenceRecord]:
 
     """
     if filename not in _LOADED_DATA:
-        with open(filename) as handle:
+        with open(filename, encoding="utf-8") as handle:
             raw = json.loads(handle.read())
         result = {}
         for accession, record in raw.items():

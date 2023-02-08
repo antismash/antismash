@@ -68,7 +68,7 @@ class LogTest(unittest.TestCase):
                 logging.debug("during")
             logging.debug("after")
 
-            with open(logfile.name) as handle:
+            with open(logfile.name, encoding="utf-8") as handle:
                 content = handle.read()
             assert "during" in content
             assert "after" not in content
@@ -80,7 +80,7 @@ class LogTest(unittest.TestCase):
                 logging.debug("debug")
             logging.info("after")
 
-            with open(logfile.name) as handle:
+            with open(logfile.name, encoding="utf-8") as handle:
                 content = handle.read()
             assert "during" in content
             assert "debug" not in content
@@ -93,7 +93,7 @@ class LogTest(unittest.TestCase):
                 logging.debug("debug")
             logging.warning("after")
 
-            with open(logfile.name) as handle:
+            with open(logfile.name, encoding="utf-8") as handle:
                 content = handle.read()
             assert "during" in content
             assert "debug" not in content
@@ -105,7 +105,7 @@ class LogTest(unittest.TestCase):
                 logging.debug("during")
             logging.debug("after")
 
-            with open(logfile.name) as handle:
+            with open(logfile.name, encoding="utf-8") as handle:
                 content = handle.read()
             assert "during" in content
             assert "after" not in content

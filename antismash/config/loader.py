@@ -25,7 +25,7 @@ def load_config_from_file() -> Namespace:
     default_file = os.path.join(_BASEDIR, _DEFAULT_NAME)
     # load generic configuration settins
     config = configparser.ConfigParser()
-    with open(default_file, 'r') as handle:
+    with open(default_file, "r", encoding="utf-8") as handle:
         config.read_file(handle)
 
     for section in config.sections():

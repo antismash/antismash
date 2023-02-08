@@ -91,7 +91,7 @@ def generate_motifs(meme_dir: str, anchor_promoter: int, promoters: List[Promote
                     os.makedirs(pm_dir)
 
                 # write promoter sequences to fasta file, in respective "plus-minus" subdir
-                with open(os.path.join(pm_dir, "promoters.fasta"), "w") as pm_handle:
+                with open(os.path.join(pm_dir, "promoters.fasta"), "w", encoding="utf-8") as pm_handle:
                     for i in range(start_index, end_index + 1):
                         seq = SeqRecord(promoters[i].seq,
                                         id=promoters[i].get_id(),
@@ -150,8 +150,8 @@ def filter_meme_results(meme_dir: str, promoter_sets: List[Motif], anchor: str) 
                                           site.findall("site/letter_ref")))
                               for site in contributing_sites]
                 # write sites to fasta file
-                with open(os.path.join(meme_dir, str(motif),
-                                       "binding_sites.fasta"), "w") as handle:
+                with open(os.path.join(meme_dir, str(motif), "binding_sites.fasta"),
+                          "w", encoding="utf-8") as handle:
                     handle.write(f">{anchor}__{motif}\n")
                     handle.write("\n".join(motif.seqs))
                 if VERBOSE_DEBUG:
@@ -175,7 +175,7 @@ def filter_fimo_results(motifs: List[Motif], fimo_dir: str, promoters: List[Prom
 
     for motif in motifs:
         assert isinstance(motif, Motif), type(motif)
-        with open(os.path.join(fimo_dir, str(motif), "fimo.txt"), "r") as handle:
+        with open(os.path.join(fimo_dir, str(motif), "fimo.txt"), "r", encoding="utf-8") as handle:
             table_reader = csv.reader(handle, delimiter="\t")
             for row in table_reader:
                 # skip comment lines
@@ -185,7 +185,7 @@ def filter_fimo_results(motifs: List[Motif], fimo_dir: str, promoters: List[Prom
                 motif.hits[seq_id] += 1
 
         # write binding sites per promoter to file
-        with open(os.path.join(fimo_dir, str(motif), "bs_per_promoter.csv"), "w") as handle:
+        with open(os.path.join(fimo_dir, str(motif), "bs_per_promoter.csv"), "w", encoding="utf-8") as handle:
             table_writer = csv.writer(handle, delimiter="\t", lineterminator="\n")
             table_writer.writerow(["#", "promoter", "binding sites"])  # table head
             for i, promoter in enumerate(promoters):

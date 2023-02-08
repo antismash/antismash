@@ -20,11 +20,11 @@ from antismash.outputs.html import js
 assert HmmerResults.schema_version == 2, "HmmerResults version mismatch, update required"
 
 # a simplified and modified version of https://github.com/Alexamk/decRiPPter/tree/master/data/domains
-with open(path.get_full_path(__file__, "data", "pfam_transport.txt")) as _handle:
+with open(path.get_full_path(__file__, "data", "pfam_transport.txt"), encoding="utf-8") as _handle:
     PFAM_TRANSPORT = set(_handle.read().splitlines())
-with open(path.get_full_path(__file__, "data", "pfam_biosynthetic.txt")) as _handle:
+with open(path.get_full_path(__file__, "data", "pfam_biosynthetic.txt"), encoding="utf-8") as _handle:
     PFAM_BIOSYNTHETIC = set(_handle.read().splitlines())
-with open(path.get_full_path(__file__, "data", "pfam_regulatory.txt")) as _handle:
+with open(path.get_full_path(__file__, "data", "pfam_regulatory.txt"), encoding="utf-8") as _handle:
     PFAM_REGULATORY = set(_handle.read().splitlines())
 
 

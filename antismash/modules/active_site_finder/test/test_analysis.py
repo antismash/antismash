@@ -19,7 +19,7 @@ from antismash.modules.active_site_finder import analysis
 
 
 def parse_hmmpfam_results(filename):
-    with open(path.get_full_path(__file__, 'data', filename)) as handle:
+    with open(path.get_full_path(__file__, 'data', filename), encoding="utf-8") as handle:
         return list(SearchIO.parse(handle, "hmmer2-text"))
 
 

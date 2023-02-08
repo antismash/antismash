@@ -50,7 +50,7 @@ def get_rule_categories() -> List[RuleCategory]:
     # not cached, generate
     categories: List[RuleCategory] = []
 
-    with open(path.get_full_path(__file__, "data", "categories.json"), 'r') as handle:
+    with open(path.get_full_path(__file__, "data", "categories.json"), "r", encoding="utf-8") as handle:
         category_json = json.load(handle)
         for name, metadata in category_json.items():
             categories.append(RuleCategory.from_json(name, metadata))

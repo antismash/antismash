@@ -40,7 +40,7 @@ def run_hmmsearch(query_hmmfile: str, target_sequence: str, use_tempfile: bool =
     with TemporaryDirectory(change=True):
         try:
             if use_tempfile:
-                with open("input.fa", 'w') as handle:
+                with open("input.fa", "w", encoding="utf-8") as handle:
                     handle.write(target_sequence)
                 command.append("input.fa")
                 run_result = execute(command)

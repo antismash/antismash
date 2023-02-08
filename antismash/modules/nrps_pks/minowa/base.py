@@ -71,7 +71,7 @@ def hmmsearch(fasta_format: str, hmm: str) -> float:
 
 def get_positions(filename: str, startpos: int) -> List[int]:
     """ Reads the signature positions from the file provided """
-    with open(filename, "r") as handle:
+    with open(filename, "r", encoding="utf-8") as handle:
         text = handle.read().strip().replace(' ', '_')
     return [int(i) - startpos for i in text.split("\t")]
 

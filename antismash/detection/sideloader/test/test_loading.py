@@ -11,7 +11,7 @@ from antismash.common import errors, path
 from antismash.detection.sideloader import general, loader
 
 GOOD_FILE = path.get_full_path(__file__, "data", "good.json")
-with open(GOOD_FILE) as _handle:
+with open(GOOD_FILE, encoding="utf-8") as _handle:
     GOOD_DATA = _handle.read()
 
 

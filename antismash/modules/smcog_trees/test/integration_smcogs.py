@@ -47,7 +47,7 @@ class Base(unittest.TestCase):
 
     def build_record(self, genbank):
         # construct a working record
-        with open(genbank) as handle:
+        with open(genbank, encoding="utf-8") as handle:
             seq_record = seqio.read(handle, "genbank")
         record = secmet.Record.from_biopython(seq_record, taxon="bacteria")
         assert record.get_protoclusters()
@@ -94,7 +94,7 @@ class TestTreeGeneration(Base):
             options = build_config(args, isolated=True, modules=antismash.get_all_modules())
             antismash.run_antismash(helpers.get_path_to_nisin_genbank(), options)
 
-            with open(os.path.join(output_dir, "nisin.json")) as res_file:
+            with open(os.path.join(output_dir, "nisin.json"), encoding="utf-8") as res_file:
                 assert "antismash.modules.smcog_trees" in res_file.read()
 
             tree_files = list(glob.glob(os.path.join(output_dir, "smcogs", "*.png")))

@@ -413,7 +413,8 @@ def run_non_biosynthetic_phmms(fasta: str) -> Dict[str, List[str]]:
         Returns:
             a dictionary mapping the hit id to a list of matching query ids
     """
-    with open(path.get_full_path(__file__, "data", "non_biosyn_hmms", "hmmdetails.txt"), "r") as handle:
+    with open(path.get_full_path(__file__, "data", "non_biosyn_hmms", "hmmdetails.txt"),
+              "r", encoding="utf-8") as handle:
         hmmdetails = [line.strip().split("\t") for line in handle if line.count("\t") == 3]
     signature_profiles = [HmmSignature(details[0], details[1], int(details[2]), details[3]) for details in hmmdetails]
     non_biosynthetic_hmms_by_id: Dict[str, List[str]] = defaultdict(list)

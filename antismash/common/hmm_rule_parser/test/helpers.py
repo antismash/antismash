@@ -17,7 +17,7 @@ def check_hmm_signatures(signature_file, hmm_dir):
         hmm_file = os.path.abspath(os.path.join(hmm_dir, sig.path))
         assert os.path.exists(hmm_file)
         name = None
-        for line in open(hmm_file):
+        for line in open(hmm_file, encoding="utf-8"):
             if line.startswith("NAME"):
                 name = line.split()[-1]
         assert name

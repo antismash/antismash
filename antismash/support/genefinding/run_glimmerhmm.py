@@ -27,7 +27,7 @@ def write_search_fasta(record: Record) -> str:
             the name of the file created
     """
     filename = f"{record.id}.fasta"
-    with open(filename, 'w') as handle:
+    with open(filename, 'w', encoding="utf-8") as handle:
         seqio.write([record.to_biopython()], handle, 'fasta')
     return filename
 

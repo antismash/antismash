@@ -448,7 +448,7 @@ def identify_lasso_motifs(leader: str, core: str) -> Tuple[List[int], int, Dict[
     """Run FIMO to identify lasso peptide-specific motifs"""
     motif_file = path.get_full_path(__file__, 'data', "lasso_motifs_meme.txt")
     with TemporaryFile() as tempfile:
-        with open(tempfile.name, "w") as out_file:
+        with open(tempfile.name, "w", encoding="utf-8") as out_file:
             out_file.write(f">query\n{leader}{core}")
         fimo_output = subprocessing.run_fimo_simple(motif_file, tempfile.name)
     fimo_motifs = [int(line.partition("\t")[0])

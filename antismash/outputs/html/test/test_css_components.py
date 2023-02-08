@@ -19,7 +19,7 @@ class TestClusterCSS(unittest.TestCase):
             "unknown",  # for regions containing only subregions
         }
         less = path.get_full_path(__file__, "..", "css", "secmet.scss")
-        with open(less) as handle:
+        with open(less, encoding="utf-8") as handle:
             for line in handle.readlines():
                 if line.startswith('.'):
                     class_ = line[1:].split()[0]

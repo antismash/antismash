@@ -459,7 +459,7 @@ def identify_lanthi_motifs(leader: str, core: str) -> Dict[int, float]:
     """Run FIMO to identify lanthipeptide-specific motifs"""
     motifs_file = path.get_full_path(__file__, "data", "lanthi_motifs_meme.txt")
     with NamedTemporaryFile() as tempfile:
-        with open(tempfile.name, "w") as out_file:
+        with open(tempfile.name, "w", encoding="utf-8") as out_file:
             out_file.write(f">query\n{leader}{core}")
         fimo_output = subprocessing.run_fimo_simple(motifs_file, tempfile.name)
     fimo_scores = {}

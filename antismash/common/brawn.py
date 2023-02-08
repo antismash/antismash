@@ -36,7 +36,7 @@ def get_cached_alignment(fasta_path: str, cache_dir: str, keep_in_memory: bool =
             with open(real_path, encoding="utf-8") as handle:
                 alignment = Alignment.from_cache_file(handle)
         except FileNotFoundError:
-            with open(fasta_path) as handle:
+            with open(fasta_path, encoding="utf-8") as handle:
                 alignment = Alignment.from_file(handle)
             with open(real_path, "w", encoding="utf-8") as handle:
                 alignment.to_cache_file(handle)

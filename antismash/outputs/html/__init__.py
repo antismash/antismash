@@ -68,7 +68,7 @@ def prepare_data(_logging_only: bool = False) -> List[str]:
                 assert os.path.exists(source), flavour
                 result = scss.Compiler(output_style="expanded").compile(source)
                 assert result
-                with open(target, "w") as out:
+                with open(target, "w", encoding="utf-8") as out:
                     out.write(result)
     return []
 
@@ -117,7 +117,7 @@ def write(records: List[Record], results: List[Dict[str, ModuleResults]],
 
     copy_template_dir('images', output_dir)
 
-    with open(os.path.join(options.output_dir, 'index.html'), 'w') as result_file:
+    with open(os.path.join(options.output_dir, "index.html"), "w", encoding="utf-8") as result_file:
         content = generate_webpage(records, results, options, all_modules)
         # strip all leading whitespace and blank lines, as they're meaningless to HTML
         content = re.sub("^( *|$)", "", content, flags=re.M)

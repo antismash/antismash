@@ -22,7 +22,7 @@ def _load_smiles() -> Dict[str, str]:
     """Load smiles from a dictionary mapping residues to SMILES string"""
     aa_smiles: Dict[str, str] = {}
 
-    with open(path.get_full_path(__file__, 'data', 'aaSMILES.txt'), 'r') as handle:
+    with open(path.get_full_path(__file__, "data", "aaSMILES.txt"), "r", encoding="utf-8") as handle:
         for line in handle:
             line = line.split("#", 1)[0].strip()
             if not line:

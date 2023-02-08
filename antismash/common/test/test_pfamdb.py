@@ -46,7 +46,7 @@ class TestPFAMs(unittest.TestCase):
             with self.assertRaisesRegex(Exception, f"No matching database in location {temp_db_layout}"):
                 pfamdb.find_latest_database_version(temp_db_layout)
 
-            with open(os.path.join(bad, "Pfam-A.hmm"), "w") as handle:
+            with open(os.path.join(bad, "Pfam-A.hmm"), "w", encoding="utf-8") as handle:
                 handle.write("dummy text")
 
             with self.assertRaisesRegex(Exception, f"Incompatible database .* {temp_db_layout}"):

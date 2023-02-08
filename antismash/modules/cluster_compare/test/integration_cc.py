@@ -30,7 +30,7 @@ class TestFull(unittest.TestCase):
     def test_result_conversion(self):
         update_config({"cc_mibig": True})
         nisin = Record.from_genbank(helpers.get_path_to_nisin_with_detection())[0]
-        with open(path.get_full_path(__file__, "data", "nisin.out")) as handle:
+        with open(path.get_full_path(__file__, "data", "nisin.out"), encoding="utf-8") as handle:
             trimmed_output = handle.read()
         with patch.object(subprocessing, "run_diamond_search", return_value=trimmed_output):
             results = cluster_compare.run_on_record(nisin, None, self.options)

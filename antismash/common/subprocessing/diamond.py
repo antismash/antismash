@@ -117,7 +117,7 @@ def check_diamond_db_compatible(database_file: str) -> bool:
     with TemporaryDirectory(change=True):
         dummy_fasta = "dummy.fa"
         dummy_db = "dummy.dmnd"
-        with open(dummy_fasta, "w") as handle:
+        with open(dummy_fasta, "w", encoding="utf-8") as handle:
             handle.write(">test\nM\n")
         run_diamond_makedb(dummy_db, dummy_fasta)
         compatible_format = _extract_db_format(dummy_db)
@@ -145,7 +145,7 @@ def _extract_db_format(database_file: str) -> int:
         Returns:
             The database version as an integer
     """
-    with open(database_file, 'rb') as handle:
+    with open(database_file, "rb") as handle:
         chunk = handle.read(16)
 
     if len(chunk) != 16:

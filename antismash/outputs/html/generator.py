@@ -104,7 +104,7 @@ def write_regions_js(records: List[Dict[str, Any]], output_dir: str,
     """ Writes out the cluster and domain JSONs to file for the javascript sections
         of code"""
 
-    with open(os.path.join(output_dir, 'regions.js'), 'w') as handle:
+    with open(os.path.join(output_dir, "regions.js"), "w", encoding="utf-8") as handle:
         handle.write(f"var recordData = {json.dumps(records, indent=1)};\n")
         regions: Dict[str, Any] = {"order": []}
         for record in records:
@@ -265,7 +265,8 @@ def find_plugins_for_cluster(plugins: List[AntismashModule],
 
 def load_searchgtr_search_form_template() -> List[str]:
     """ for SEARCHGTR HTML files, load search form template """
-    with open(path.get_full_path(__file__, "templates", "searchgtr_form.html"), "r") as handle:
+    with open(path.get_full_path(__file__, "templates", "searchgtr_form.html"),
+              "r", encoding="utf-8") as handle:
         template = handle.read().replace("\r", "\n")
     return template.split("FASTASEQUENCE")
 
@@ -291,7 +292,7 @@ def generate_searchgtr_htmls(records: List[Record], options: ConfigType) -> None
             link_loc = os.path.join("html", feature.get_name() + "_searchgtr.html")
             gene_id = feature.get_name()
             js.searchgtr_links[record.id + "_" + gene_id] = link_loc
-            with open(formfileloc, "w") as formfile:
+            with open(formfileloc, "w", encoding="utf-8") as formfile:
                 specificformtemplate = searchgtrformtemplateparts[0].replace("GlycTr", gene_id)
                 formfile.write(specificformtemplate)
                 formfile.write(f"{gene_id}\n{feature.translation}")

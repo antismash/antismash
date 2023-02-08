@@ -247,7 +247,7 @@ def hsp_overlap_size(first: HSP, second: HSP) -> int:
 def filter_results(results: List[HSP], results_by_id: Dict[str, List[HSP]], filter_file: str,
                    signature_names: Set[str]) -> Tuple[List[HSP], Dict[str, List[HSP]]]:
     """ Filter results by comparing scores of different models """
-    for line in open(filter_file, "r"):
+    for line in open(filter_file, "r", encoding="utf-8"):
         line = line.strip()
         equivalence_group = set(line.split(","))
         unknown = equivalence_group - signature_names
@@ -331,7 +331,7 @@ def create_rules(rule_file: str, signature_names: Set[str],
     """
     rules = existing_rules or []
     multipliers = multipliers or Multipliers()
-    with open(rule_file, "r") as ruledata:
+    with open(rule_file, "r", encoding="utf-8") as ruledata:
         parser = rule_parser.Parser("".join(ruledata.readlines()), signature_names,
                                     valid_categories, rules, existing_aliases=existing_aliases,
                                     multipliers=multipliers)
@@ -622,7 +622,7 @@ def get_sequence_counts(details_file: str) -> Dict[str, int]:
     result = {}
     for hmm in get_signature_profiles(details_file):
         assert isinstance(hmm, HmmSignature)
-        with open(path.get_full_path(details_file, hmm.hmm_file), 'r') as handle:
+        with open(path.get_full_path(details_file, hmm.hmm_file), "r", encoding="utf-8") as handle:
             lines = handle.readlines()
         for line in lines:
             if line.startswith('NSEQ '):

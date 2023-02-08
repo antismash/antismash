@@ -44,7 +44,7 @@ class TestResultsJSON(unittest.TestCase):
 
     def test_record_to_json_and_back(self):
         filename = get_path_to_nisin_genbank()
-        records = list(seqio.parse(open(filename), "genbank"))
+        records = list(seqio.parse(open(filename, encoding="utf-8"), "genbank"))
         records = [Record.from_biopython(rec, taxon="bacteria") for rec in records]
         rec_results = [{}, {}, {}]
         results = serialiser.AntismashResults(filename, records, rec_results, "dummy", taxon="dummytaxon")
@@ -64,8 +64,8 @@ class TestResultsJSON(unittest.TestCase):
         oldvalue = original.getvalue()
         newvalue = new.getvalue()
         with TemporaryDirectory(change=True):
-            open("old.json", "w").write(oldvalue)
-            open("new.json", "w").write(newvalue)
+            open("old.json", "w", encoding="utf-8").write(oldvalue)
+            open("new.json", "w", encoding="utf-8").write(newvalue)
             for oldline, newline in zip(oldvalue.split('\n'), newvalue.split('\n')):
                 assert oldline == newline
 

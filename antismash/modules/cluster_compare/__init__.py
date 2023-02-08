@@ -75,11 +75,11 @@ def check_options(options: ConfigType) -> List[str]:
             a list of strings describing any errors, if they exist
     """
     errors = []
-    with open(path.get_full_path(__file__, "data", "schema.json")) as handle:
+    with open(path.get_full_path(__file__, "data", "schema.json"), encoding="utf-8") as handle:
         schema = json.load(handle)
     for db in options.cc_custom_dbs:
         try:
-            with open(db) as handle:
+            with open(db, encoding="utf-8") as handle:
                 setup = json.load(handle)
                 try:
                     jsonschema.validate(instance=setup, schema=schema)

@@ -20,7 +20,7 @@ SIGNATURE_FILE = path.get_full_path(
 
 def load_sigs() -> set[str]:
     signatures: set[str] = set()
-    with open(SIGNATURE_FILE, 'r') as handle:
+    with open(SIGNATURE_FILE, "r", encoding="utf-8") as handle:
         for line in handle:
             raw_name, _ = line.split('\t', 1)
             names = raw_name.split("/")

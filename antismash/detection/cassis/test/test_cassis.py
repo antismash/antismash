@@ -103,23 +103,27 @@ class TestCassisMethods(CassisTestCore):
         cassis.write_promoters_to_file(self.options.output_dir, seq_record.name, promoters)
         # read expected files and save to string variable
         expected_sequences_file = ""
-        with open(path.get_full_path(__file__, "data", "expected_promoter_sequences.fasta")) as handle:
+        with open(path.get_full_path(__file__, "data", "expected_promoter_sequences.fasta"),
+                  encoding="utf-8") as handle:
             expected_sequences_file = handle.read()
         expected_sequences_file = convert_newline(expected_sequences_file.rstrip())
 
         expected_positions_file = ""
-        with open(path.get_full_path(__file__, "data", "expected_promoter_positions.csv")) as handle:
+        with open(path.get_full_path(__file__, "data", "expected_promoter_positions.csv"),
+                  encoding="utf-8") as handle:
             expected_positions_file = handle.read()
         expected_positions_file = convert_newline(expected_positions_file.rstrip())
 
         # read test files and save to string variable
         sequences_file = ""
-        with open(os.path.join(self.options.output_dir, seq_record.name + "_promoter_sequences.fasta")) as handle:
+        with open(os.path.join(self.options.output_dir, seq_record.name + "_promoter_sequences.fasta"),
+                  encoding="utf-8") as handle:
             sequences_file = handle.read()
         sequences_file = convert_newline(sequences_file.rstrip())
 
         positions_file = ""
-        with open(os.path.join(self.options.output_dir, seq_record.name + "_promoter_positions.csv")) as handle:
+        with open(os.path.join(self.options.output_dir, seq_record.name + "_promoter_positions.csv"),
+                  encoding="utf-8") as handle:
             positions_file = handle.read()
         positions_file = convert_newline(positions_file.rstrip())
 
