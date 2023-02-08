@@ -70,7 +70,7 @@ def main(args: List[str]) -> int:
 
     # if --help, show help texts and exit
     if set(args).intersection({"-h", "--help", "--help-showall"}):
-        parser.print_help(None, "--help-showall" in args)
+        parser.print_help(show_all="--help-showall" in args)
         return 0
 
     options = antismash.config.build_config(args, parser=parser)

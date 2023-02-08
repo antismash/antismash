@@ -143,14 +143,15 @@ class IntegrationNRPSPKS(unittest.TestCase):
                             'nrpspksdomains_STAUR_3984_PKS_KR.1',
                             'nrpspksdomains_STAUR_3985_PKS_KR.1',
                             'nrpspksdomains_STAUR_3983_PKS_KR.1',
-                            'nrpspksdomains_STAUR_3983_PKS_KR.1',
                             'nrpspksdomains_STAUR_3982_PKS_KR.1'}
         assert set(results.domain_predictions) == expected_domains
 
     def test_get_a_dom_signatures(self):
         filename = path.get_full_path(__file__, 'data', 'dom_signatures.txt')
         data = []
-        for line in open(filename, 'r', encoding="utf-8"):
+        with open(filename, "r", encoding="utf-8") as handle:
+            lines = handle.readlines()
+        for line in lines:
             line = line.strip()
             if not line:
                 continue

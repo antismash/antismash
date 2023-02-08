@@ -134,7 +134,8 @@ class TestConversion(unittest.TestCase):
                 SeqFeature(FeatureLocation(100, 160, 1), type=CDSFeature.FEATURE_TYPE),  # valid/non-antismash
             ]
             # without the discard flag, this needs to raise an error
-            with self.assertRaisesRegex(SecmetInvalidInputError, "(missing expected qualifier: '[^'])|(requires at least one)"):
+            with self.assertRaisesRegex(SecmetInvalidInputError,
+                                        "(missing expected qualifier: '[^'])|(requires at least one)"):
                 Record.from_biopython(bio, taxon="bacteria")
             # with the discard flag, the bad antismash-specific feature should just disappear
             rec = Record.from_biopython(bio, taxon="bacteria", discard_antismash_features=True)
@@ -862,8 +863,10 @@ class TestCDSUniqueness(unittest.TestCase):
         gene = Gene(FeatureLocation(20, 42, 1), locus_tag="test_gene")
         record.add_gene(gene)
 
-        splice1 = CDSFeature(FeatureLocation(20, 26, 1), locus_tag="test_gene", protein_id="splice1", translation="MA")
-        splice2 = CDSFeature(FeatureLocation(27, 33, 1), locus_tag="test_gene", protein_id="splice2", translation="MA")
+        splice1 = CDSFeature(FeatureLocation(20, 26, 1), locus_tag="test_gene",
+                             protein_id="splice1", translation="MA")
+        splice2 = CDSFeature(FeatureLocation(27, 33, 1), locus_tag="test_gene",
+                             protein_id="splice2", translation="MA")
         record.add_cds_feature(splice1)
         record.add_cds_feature(splice2)
 
@@ -871,11 +874,13 @@ class TestCDSUniqueness(unittest.TestCase):
         assert splice2.locus_tag == "test_gene_7e364f92"
 
         with self.assertRaisesRegex(ValueError, "same location"):
-            splice1 = CDSFeature(FeatureLocation(20, 26, 1), locus_tag="test_gene", protein_id="splice1", translation="MA")
+            splice1 = CDSFeature(FeatureLocation(20, 26, 1), locus_tag="test_gene",
+                                 protein_id="splice1", translation="MA")
             record.add_cds_feature(splice1)
 
         with self.assertRaisesRegex(ValueError, "same location"):
-            splice2 = CDSFeature(FeatureLocation(27, 33, 1), locus_tag="test_gene", protein_id="splice2", translation="MA")
+            splice2 = CDSFeature(FeatureLocation(27, 33, 1), locus_tag="test_gene",
+                                 protein_id="splice2", translation="MA")
             record.add_cds_feature(splice2)
 
         splice3 = CDSFeature(FeatureLocation(36, 42, 1), locus_tag="test_gene", protein_id="splice2", translation="MA")

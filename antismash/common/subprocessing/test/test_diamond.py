@@ -26,8 +26,7 @@ def test_diamond_version(mock_run_diamond):
 @patch("antismash.common.subprocessing.diamond.run_diamond", return_value=DummyResult("lots of useless text"))
 def test_diamond_makedb(mock_run_diamond):
     subprocessing.run_diamond_makedb("fake.dmnd", "fake.fasta")
-    mock_run_diamond.assert_called_once_with("makedb",
-        ["--db", "fake.dmnd", "--in", "fake.fasta"])
+    mock_run_diamond.assert_called_once_with("makedb", ["--db", "fake.dmnd", "--in", "fake.fasta"])
 
 
 class TestDiamondDatabaseChecks(unittest.TestCase):

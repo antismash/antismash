@@ -201,18 +201,18 @@ def find_protoclusters(record: Record, cds_by_cluster_type: Dict[str, Set[str]],
             real_end = max(contained.location.end for contained in surrounding_cdses)
             surrounds = FeatureLocation(real_start, real_end)
             clusters.append(Protocluster(core_location, surrounding_location=surrounds,
-                                    tool="rule-based-clusters", cutoff=cutoff,
-                                    neighbourhood_range=rule.neighbourhood, product=cluster_type,
-                                    detection_rule=str(rule.conditions), product_category=rule.category))
+                                         tool="rule-based-clusters", cutoff=cutoff,
+                                         neighbourhood_range=rule.neighbourhood, product=cluster_type,
+                                         detection_rule=str(rule.conditions), product_category=rule.category))
             core_location = FeatureLocation(cds.location.start, cds.location.end)
 
         # finalise the last cluster
         surrounds = FeatureLocation(max(0, core_location.start - rule.neighbourhood),
                                     min(core_location.end + rule.neighbourhood, len(record)))
         clusters.append(Protocluster(core_location, surrounding_location=surrounds,
-                                tool="rule-based-clusters", cutoff=cutoff,
-                                neighbourhood_range=rule.neighbourhood, product=cluster_type,
-                                detection_rule=str(rule.conditions), product_category=rule.category))
+                                     tool="rule-based-clusters", cutoff=cutoff,
+                                     neighbourhood_range=rule.neighbourhood, product=cluster_type,
+                                     detection_rule=str(rule.conditions), product_category=rule.category))
 
     # fit to record if outside
     for cluster in clusters:
@@ -247,7 +247,9 @@ def hsp_overlap_size(first: HSP, second: HSP) -> int:
 def filter_results(results: List[HSP], results_by_id: Dict[str, List[HSP]], filter_file: str,
                    signature_names: Set[str]) -> Tuple[List[HSP], Dict[str, List[HSP]]]:
     """ Filter results by comparing scores of different models """
-    for line in open(filter_file, "r", encoding="utf-8"):
+    with open(filter_file, "r", encoding="utf-8") as handle:
+        lines = handle.readlines()
+    for line in lines:
         line = line.strip()
         equivalence_group = set(line.split(","))
         unknown = equivalence_group - signature_names

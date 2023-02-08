@@ -124,7 +124,7 @@ class TestSpecificAnalysis(unittest.TestCase):
         self.assertAlmostEqual(motif.molecular_weight, 3648.6, places=1)
         self.assertAlmostEqual(motif.monoisotopic_mass, 3646.3, places=1)
         for calc, expected in zip(motif.alternative_weights,
-                        [3666.6, 3684.6, 3702.7, 3720.7, 3738.7, 3756.7, 3774.7]):
+                                  [3666.6, 3684.6, 3702.7, 3720.7, 3738.7, 3756.7, 3774.7]):
             self.assertAlmostEqual(calc, expected, places=1)
         assert motif.core == seq
         assert motif.leader == vec.leader

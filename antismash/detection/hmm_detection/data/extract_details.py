@@ -12,7 +12,7 @@ import os
 from typing import IO
 
 
-def main() -> None:
+def _main() -> None:
     parser = ArgumentParser()
     parser.add_argument("profile", type=FileType('r', encoding="utf-8"),
                         help="HMM file to extract info from")
@@ -28,10 +28,23 @@ def main() -> None:
 
 
 def run(profile: IO, name: str = "", description: str = "", cutoff: int = -1) -> str:
+    """ Extracts name, description, and cutoff from an HMM profile and returns
+        a string with the information that is compatible with the format used in
+        'hmmdetails.txt'.
+
+        Arguments:
+            profile: an open handle to the profile content
+            name: a name to use instead of any found in the profile
+            description: a description to use instead of any found in the profile
+            cutoff: a cutoff to use instead of any used in the profile
+
+        Returns:
+            a 'hmmdetails.txt'-compatible line of text
+    """
     filename = os.path.basename(profile.name)
 
     line = profile.readline().strip()
-    while line and line != '//' and not (name and description and (cutoff > -1) ):
+    while line and line != '//' and not (name and description and (cutoff > -1)):
         line = profile.readline().strip()
         if not name and line.startswith("NAME"):
             name = line.split(" ", 1)[-1].strip()
@@ -52,4 +65,4 @@ def run(profile: IO, name: str = "", description: str = "", cutoff: int = -1) ->
 
 
 if __name__ == "__main__":
-    main()
+    _main()

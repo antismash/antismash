@@ -323,7 +323,7 @@ class Thiopeptide:
         """ determines the possible alternative weights assuming one or
             more of the Ser/Thr residues aren't dehydrated
         """
-        if self._alt_weights != []:
+        if self._alt_weights:
             return self._alt_weights
 
         self._calculate_mw()
@@ -334,7 +334,7 @@ class Thiopeptide:
         """ determines the possible mature alternative weights which includes mw,
             monoisotopic mass and alternative weightss due to different hydrated residues
         """
-        if self._mature_alt_weights != []:
+        if self._mature_alt_weights:
             return self._mature_alt_weights
 
         self._calculate_mw()

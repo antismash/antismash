@@ -53,9 +53,12 @@ class TestAnalyses(unittest.TestCase):
                                         }],
                            "ks_subtypes": [],
                            }
-        one_domain_json = {'domain_hmms': [{'bitscore': 76.9, 'query_end': 382, 'evalue': 3.9e-24, 'hit_id': 'ECH', 'query_start': 170}],
-                           'motif_hmms': [{'query_start': 18, 'evalue': 4.7e-05, 'query_end': 30, 'bitscore': 16.1, 'hit_id': 'C1_dual_004-017'},
-                                          {'query_start': 38, 'evalue': 1.4e-19, 'query_end': 78, 'bitscore': 62.4, 'hit_id': 'C2_DCL_024-062'}],
+        one_domain_json = {'domain_hmms': [{'bitscore': 76.9, 'query_end': 382, 'evalue': 3.9e-24,
+                                            'hit_id': 'ECH', 'query_start': 170}],
+                           'motif_hmms': [{'query_start': 18, 'evalue': 4.7e-05, 'query_end': 30,
+                                           'bitscore': 16.1, 'hit_id': 'C1_dual_004-017'},
+                                          {'query_start': 38, 'evalue': 1.4e-19, 'query_end': 78,
+                                           'bitscore': 62.4, 'hit_id': 'C2_DCL_024-062'}],
                            "modules": [],  # arbitrarily none
                            "ks_subtypes": [],
                            }

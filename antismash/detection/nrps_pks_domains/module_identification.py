@@ -585,11 +585,12 @@ def combine_modules(current: CDSModuleInfo, previous: CDSModuleInfo) -> Optional
     if not current.modules:
         return module
 
-    next = current.modules[0]
+    next_module = current.modules[0]
     # is it a KR following a split trans_AT module?
     # e.g. AM746336 (in both kirAII and kirAV) and AF484556.1 (in LnmJ)
-    if module.is_trans_at() and len(next.components) == 1 and next.components[0].domain.hit_id == "PKS_KR":
-        module.add_component(next.components[0], [])
+    if module.is_trans_at() and len(next_module.components) == 1 \
+            and next_module.components[0].domain.hit_id == "PKS_KR":
+        module.add_component(next_module.components[0], [])
         current.modules.pop(0)
 
     return module

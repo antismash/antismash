@@ -304,4 +304,4 @@ def analyse_cluster(cluster: Protocluster, record: Record) -> ProtoclusterPredic
         weights.update(predict_molecular_weight(preds_by_protein, starter_names, elong_names))
 
     return ProtoclusterPrediction(preds_by_cds, starter_units, malonyl_elongations,
-                             product_classes, weights, cluster.location.start, cluster.location.end)
+                                  product_classes, weights, cluster.location.start, cluster.location.end)

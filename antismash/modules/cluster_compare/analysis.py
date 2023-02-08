@@ -210,7 +210,8 @@ def score_as_region(label: str, region: Region, hits_by_reference: HitsByReferen
     """
     local_hits = filter_by_query_area(region, hits_by_reference)
     ranking = score_query_area(region, local_hits, query_components[region], mode)[:MAX_RESULTS]
-    region_ranking = sorted(((scorer.reference, scorer.final_score) for scorer in ranking), key=lambda x: x[1], reverse=True)
+    region_ranking = sorted(((scorer.reference, scorer.final_score) for scorer in ranking),
+                            key=lambda x: x[1], reverse=True)
     regions = {region for region, _ in region_ranking}
     best_hits = {ref: trim_to_best_hit(hits) for ref, hits in local_hits.items() if ref in regions}
     return VariantResults(label + str(mode), region_ranking, RegionToRegionScores(ranking), best_hits)

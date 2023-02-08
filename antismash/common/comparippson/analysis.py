@@ -125,7 +125,7 @@ class MultiDBResults(JsonConvertible):
             db = self.db_by_name[db_name]
             assert isinstance(db, ComparippsonDB), type(db)
             hits = sorted(hits, key=lambda x: (-x.match_count, x.reference.sequence,
-                                               db.build_identifier_for_hit(x)))
+                                               db.build_identifier_for_hit(x)))  # pylint:disable=cell-var-from-loop
             groups = []
             same = []
             current = hits[0]
@@ -144,9 +144,11 @@ class MultiDBResults(JsonConvertible):
                 same = []
             groups.append((current, f"and {len(same)} other{'s' if len(same) > 1 else ''}" if same else "", same))
             # sort by descending similarity, descending group size, and ascending name, in that order
+            # pylint:disable=cell-var-from-loop
             groups.sort(key=lambda g: (-g[0].similarity, -len(hits), db.build_identifier_for_hit(g[0])))
             chunks.append(template.render(coloured_ripp_sequence=colour_sequence,
                                           name=display_name, db=db, groups=groups))
+            # pylint:enable=cell-var-from-loop
         return Markup("".join(chunks))
 
 

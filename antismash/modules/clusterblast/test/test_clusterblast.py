@@ -106,8 +106,8 @@ class TestBlastParsing(unittest.TestCase):
     def test_parse_all_single_cluster(self, _mocked_record, _mocked_core):
         # single cluster to test the thresholds and content
         def parse_all_wrapper(coverage_threshold, ident_threshold):
-            clusters_by_number, queries_by_number = core.parse_all_clusters(self.sample_data,
-                                Record(), coverage_threshold, ident_threshold)
+            res = core.parse_all_clusters(self.sample_data, Record(), coverage_threshold, ident_threshold)
+            clusters_by_number, queries_by_number = res
             # make sure we only found one cluster number
             self.assertEqual(len(clusters_by_number), 1)
             self.assertEqual(list(clusters_by_number), [24])

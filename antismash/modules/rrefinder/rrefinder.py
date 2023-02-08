@@ -129,9 +129,8 @@ class RREFinderResults(ModuleResults):
 
         # Refilter the hits (in case the cutoff is now more stringent)
         by_proto = {int(key): val for key, val in json['hits_by_protocluster'].items()}
-        filtered_hits_by_cds, filtered_hits_by_protocluster = filter_hits(hits_by_cds,
-                                                                        by_proto,
-                                                                        min_length, bitscore_cutoff)
+        filtered_hits_by_cds, filtered_hits_by_protocluster = filter_hits(hits_by_cds, by_proto,
+                                                                          min_length, bitscore_cutoff)
         return RREFinderResults(record.id, bitscore_cutoff, min_length,
                                 filtered_hits_by_protocluster, filtered_hits_by_cds)
 
@@ -204,7 +203,7 @@ def run_rrefinder(record: Record, bitscore_cutoff: float, min_length: int, datab
     # Gather all RRE candidates
     candidates_by_protocluster, cds_info = gather_rre_candidates(record)
     # Run hmmscan per protocluster and gather the hits
-    if cds_info == {}:
+    if not cds_info:
         filtered_hits_by_protocluster: Dict[int, List[str]] = {}
         filtered_hits_by_cds: Dict[str, List[HmmerHit]] = {}
     else:
@@ -215,6 +214,6 @@ def run_rrefinder(record: Record, bitscore_cutoff: float, min_length: int, datab
         hits_by_cds = extract_rre_hits(hmm_results)
         # Filter the hits
         filtered_hits_by_cds, filtered_hits_by_protocluster = filter_hits(hits_by_cds, candidates_by_protocluster,
-                                                                        min_length, bitscore_cutoff)
+                                                                          min_length, bitscore_cutoff)
     return RREFinderResults(record.id, bitscore_cutoff, min_length,
                             filtered_hits_by_protocluster, filtered_hits_by_cds)

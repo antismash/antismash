@@ -359,7 +359,7 @@ class TestFollowers(unittest.TestCase):
     def test_gaps(self):
         cdses = []
         for i, name in enumerate("ABC"):
-            cdses.append(DummyCDS(start=i*10, end=i*10+1, strand=-1 if name =="B" else 1, locus_tag=name))
+            cdses.append(DummyCDS(start=i*10, end=i*10+1, strand=-1 if name == "B" else 1, locus_tag=name))
         assert orderfinder.get_follower_genes(cdses) == {}
 
     def test_no_gaps_forward(self):
@@ -392,4 +392,3 @@ class TestFollowers(unittest.TestCase):
             "A": "B",
             "D": "C",
         }
-

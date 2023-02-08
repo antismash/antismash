@@ -248,7 +248,7 @@ def domains_have_predictions(region: Union[Region, RegionLayer]) -> bool:
 
 
 def generate_html(region_layer: RegionLayer, _results: ModuleResults,
-                  record_layer: RecordLayer, options_layer: OptionsLayer
+                  record_layer: RecordLayer, _options_layer: OptionsLayer
                   ) -> HTMLSections:
     """ Generate the details section of NRPS/PKS domains in the main HTML output """
     template = FileTemplate(path.get_full_path(__file__, 'templates', 'details.html'))
