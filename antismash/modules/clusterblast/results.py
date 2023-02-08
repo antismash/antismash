@@ -163,13 +163,13 @@ class RegionResult:
         region_num = self.region.get_region_number()
         record_index = self.region.parent_record.record_index
         filename = f"{prefix}_r{record_index}c{region_num}_all.svg"
-        with open(os.path.join(svg_dir, filename), "w") as handle:
+        with open(os.path.join(svg_dir, filename), "w", encoding="utf-8") as handle:
             handle.write(self.svg_builder.get_overview_contents(width=800, height=50 + 50 * len(self.svg_builder.hits)))
 
         files = []
         for i in range(len(self.svg_builder.hits)):
             filename = f"{prefix}_r{record_index}c{region_num}_{i + 1}.svg"  # 1-indexed
-            with open(os.path.join(svg_dir, filename), "w") as handle:
+            with open(os.path.join(svg_dir, filename), "w", encoding="utf-8") as handle:
                 handle.write(self.svg_builder.get_pairing_contents(i, width=800, height=230))
             files.append(filename)
         return files
@@ -358,7 +358,7 @@ def _write_output(filename: str, record: Record, cluster_result: RegionResult,
     ranking = cluster_result.ranking
     # Output for each hit: table of genes and locations of input cluster,
     # table of genes and locations of hit cluster, table of hits between the clusters
-    out_file = open(filename, "w")  # pylint: disable=consider-using-with
+    out_file = open(filename, "w", encoding="utf-8")  # pylint: disable=consider-using-with
     out_file.write("ClusterBlast scores for " + record.id + "\n")
     out_file.write("\nTable of genes, locations, strands and annotations of query cluster:\n")
     for i, cds in enumerate(cluster_result.region.cds_children):

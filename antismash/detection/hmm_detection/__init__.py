@@ -108,7 +108,7 @@ def _get_rules(strictness: str, category: Optional[str] = None) -> List[rule_par
     rules: List[rule_parser.DetectionRule] = []
     aliases: Dict[str, List[rule_parser.Token]] = {}
     for rule_file in _get_rule_files_for_strictness(strictness):
-        with open(rule_file) as rulefile:
+        with open(rule_file, encoding="utf-8") as rulefile:
             rules = rule_parser.Parser("".join(rulefile.readlines()), signature_names,
                                        category_names, rules, aliases).rules
     if category is not None:
@@ -259,9 +259,9 @@ def prepare_data(logging_only: bool = False) -> List[str]:
     if outdated:
         # try to generate file from all specified profiles in hmmdetails
         try:
-            with open(seeds_hmm, 'w') as all_hmms_handle:
+            with open(seeds_hmm, "w", encoding="utf-8") as all_hmms_handle:
                 for hmm_file in hmm_files:
-                    with open(path.get_full_path(__file__, hmm_file), 'r') as handle:
+                    with open(path.get_full_path(__file__, hmm_file), "r", encoding="utf-8") as handle:
                         all_hmms_handle.write(handle.read())
         except OSError:
             if not logging_only:

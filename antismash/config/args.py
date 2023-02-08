@@ -151,7 +151,7 @@ class AntismashParser(argparse.ArgumentParser):
         if not values:
             values = {}
 
-        outfile = open(filename, 'w')
+        outfile = open(filename, "w", encoding="utf-8")
         dests: Set[str] = set()  # set of processed destinations
         titles: Dict[str, Dict[str, List[str]]] = defaultdict(lambda: defaultdict(list))
         for parent in sorted(self.parents, key=lambda group: group.title):

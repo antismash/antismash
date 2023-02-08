@@ -129,7 +129,7 @@ def construct_mapping(mapfile: str) -> Dict[str, GeneOntologies]:
     """
     results = {}
     gene_ontology_per_pfam: Dict[str, List[GeneOntology]] = defaultdict(list)
-    with open(path.get_full_path(__file__, mapfile), 'r') as pfam_map:
+    with open(path.get_full_path(__file__, mapfile), "r", encoding="utf-8") as pfam_map:
         for line in pfam_map:
             if line.startswith('!'):
                 continue

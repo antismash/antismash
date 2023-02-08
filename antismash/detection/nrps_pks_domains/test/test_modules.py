@@ -74,7 +74,8 @@ class TestClassify(unittest.TestCase):
 
     def test_all_domains_classified(self):
         domain_names = []
-        with open(path.get_full_path(nrps_pks_domains.__file__, "data", "nrpspksdomains.hmm")) as handle:
+        with open(path.get_full_path(nrps_pks_domains.__file__, "data", "nrpspksdomains.hmm"),
+                  encoding="utf-8") as handle:
             for line in handle:
                 if line.startswith("NAME"):
                     domain_names.append(line.strip().split()[1])

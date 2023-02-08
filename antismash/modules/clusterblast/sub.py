@@ -124,7 +124,7 @@ def read_clusterblast_output(options: ConfigType) -> str:
             a string containing all blast run output
     """
     if options.cpus == 1:
-        with open("input.out") as handle:
+        with open("input.out", encoding="utf-8") as handle:
             return handle.read()
 
     blastoutput = []

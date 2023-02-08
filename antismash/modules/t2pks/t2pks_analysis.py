@@ -21,10 +21,10 @@ from antismash.common.secmet import Protocluster, CDSFeature, Record
 
 from .results import ProtoclusterPrediction, CDSPrediction, Prediction
 
-with open(path.get_full_path(__file__, "data", "weights.json"), 'r') as handle:
+with open(path.get_full_path(__file__, "data", "weights.json"), "r", encoding="utf-8") as handle:
     WEIGHTS = json.load(handle)
 
-with open(path.get_full_path(__file__, "data", "classification.json"), 'r') as handle:
+with open(path.get_full_path(__file__, "data", "classification.json"), "r", encoding="utf-8") as handle:
     CLASSIFICATIONS = json.load(handle)
 
 

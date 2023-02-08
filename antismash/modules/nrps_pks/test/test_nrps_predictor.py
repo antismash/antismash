@@ -15,7 +15,7 @@ from antismash.modules.nrps_pks import nrps_predictor, data_structures
 
 def read_file():
     output = path.get_full_path(__file__, 'data', 'nrps_pred2_Y16952.txt')
-    with open(output) as handle:
+    with open(output, encoding="utf-8") as handle:
         content = handle.read()
     assert content.startswith('#')
     assert content.count('\n') == 9

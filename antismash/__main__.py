@@ -36,7 +36,7 @@ def get_git_version(fallback_filename: Optional[str] = GIT_VERSION_FALLBACK_FILE
         pass
     if git_version == "" and fallback_filename:
         if locate_file(fallback_filename, silent=True):
-            with open(fallback_filename, 'rt') as handle:
+            with open(fallback_filename, "rt", encoding="utf-8") as handle:
                 git_version = handle.read().strip()
     return git_version
 

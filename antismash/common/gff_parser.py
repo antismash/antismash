@@ -37,8 +37,8 @@ def check_gff_suitability(gff_file: str, sequences: List[SeqRecord]) -> None:
     try:
         examiner = GFF.GFFExaminer()
         # file handle is automatically closed by GFF lib
-        # pylint:disable=consider-using-with
-        gff_data = examiner.available_limits(open(gff_file))
+        with open(gff_file, encoding="utf-8") as handle:
+            gff_data = examiner.available_limits(handle)
         # Check if at least one GFF locus appears in sequence
         gff_ids = set(n[0] for n in gff_data['gff_id'])
 
@@ -48,12 +48,12 @@ def check_gff_suitability(gff_file: str, sequences: List[SeqRecord]) -> None:
             logging.info("GFF3 and sequence have only one record. Assuming is "
                          "the same as long as coordinates are compatible.")
             limit_info = dict(gff_type=['CDS'])
-
-            record_iter = GFF.parse(open(gff_file), limit_info=limit_info)
-            try:
-                record = next(record_iter)
-            except StopIteration:
-                raise AntismashInputError("could not parse records from GFF3 file")
+            with open(gff_file, encoding="utf-8") as handle:
+                record_iter = GFF.parse(handle, limit_info=limit_info)
+                try:
+                    record = next(record_iter)
+                except StopIteration:
+                    raise AntismashInputError("could not parse records from GFF3 file")
 
             if not record.features:
                 raise AntismashInputError(f"GFF3 record {record.id} contains no features")
@@ -73,10 +73,10 @@ def check_gff_suitability(gff_file: str, sequences: List[SeqRecord]) -> None:
             raise AntismashInputError("no CDS features in GFF3 file.")
 
         # Check CDS are childless but not parentless
-        if 'CDS' in set(n for key in examiner.parent_child_map(open(gff_file)) for n in key):
-            logging.error('GFF3 structure is not suitable. CDS features must be childless but not parentless.')
-            raise AntismashInputError('GFF3 structure is not suitable.')
-        # pylint:enable=consider-using-with
+        with open(gff_file, encoding="utf-8") as handle:
+            if 'CDS' in set(n for key in examiner.parent_child_map(handle) for n in key):
+                logging.error('GFF3 structure is not suitable. CDS features must be childless but not parentless.')
+                raise AntismashInputError('GFF3 structure is not suitable.')
 
     except AssertionError as err:
         # usually the assertion "assert len(parts) >= 8, line"
@@ -147,7 +147,7 @@ def run(gff_file: str) -> Dict[str, List[SeqFeature]]:
         Returns:
             a dictionary mapping record ID to a list of SeqFeatures in that record
     """
-    with open(gff_file) as handle:
+    with open(gff_file, encoding="utf-8") as handle:
         return get_features_from_file(handle)
 
 

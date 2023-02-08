@@ -46,7 +46,7 @@ def run_blastp(target_blastp_database: str, query_sequence: str,
         command.extend(opts)
 
     if results_file is not None:
-        handle: IO[Any] = open(results_file)  # pylint: disable=consider-using-with
+        handle: IO[Any] = open(results_file, encoding="utf-8")  # pylint: disable=consider-using-with
     else:
         handle = NamedTemporaryFile()  # pylint: disable=consider-using-with
 
@@ -56,7 +56,7 @@ def run_blastp(target_blastp_database: str, query_sequence: str,
                            result.return_code, result.stderr.replace("\n", ""),
                            query_sequence[:100]))
     filename = results_file or handle.name
-    with open(filename) as read_handle:
+    with open(filename, encoding="utf-8") as read_handle:
         parsed = list(SearchIO.parse(read_handle, 'blast-tab'))
     handle.close()
     return parsed

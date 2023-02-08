@@ -38,7 +38,7 @@ DefaultValidator = _default_validator(jsonschema.Draft7Validator)
 
 def _ensure_valid(raw_json: Dict[str, Any], schema_file: str) -> Dict[str, Any]:
     """ Validate a python representation of JSON against a schema file """
-    with open(schema_file) as handle:
+    with open(schema_file, encoding="utf-8") as handle:
         schema = json.load(handle)
 
     # work around jsonschema breaking relative locations when subschemas reference each other
@@ -72,7 +72,7 @@ def load_validated_json(data_file: str, schema_file: str) -> Dict[str, Any]:
             A dictionary with the python representation of the JSON data
 
     """
-    with open(data_file) as handle:
+    with open(data_file, encoding="utf-8") as handle:
         try:
             raw = json.load(handle)
         except ValueError as err:

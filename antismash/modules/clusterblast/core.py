@@ -112,7 +112,7 @@ def load_reference_clusters(searchtype: str) -> Dict[str, ReferenceCluster]:
         data_dir = os.path.join(kcb_root, version)
 
     reference_cluster_file = os.path.join(data_dir, "clusters.txt")
-    with open(reference_cluster_file, "r") as handle:
+    with open(reference_cluster_file, "r", encoding="utf-8") as handle:
         filetext = handle.read()
     lines = [line for line in filetext.splitlines() if "\t" in line]
     clusters = {}
@@ -156,7 +156,7 @@ def load_reference_proteins(searchtype: str) -> Dict[str, Protein]:
 
     protein_file = os.path.join(data_dir, "proteins.fasta")
     proteins = {}
-    with open(protein_file, 'r') as handle:
+    with open(protein_file, "r", encoding="utf-8") as handle:
         for line in handle:
             line = line.rstrip("\n")
             if not line or line[0] != ">":
@@ -230,7 +230,7 @@ def run_internal_blastsearch(query_filename: str) -> str:
     """
     make_blastdb(query_filename, "internal_input.fasta")
     run_blast("internal_input.fasta", "internal_input.fasta")
-    with open("internal_input.out", "r") as handle:
+    with open("internal_input.out", "r", encoding="utf-8") as handle:
         blastoutput = handle.read()
     return blastoutput
 
@@ -517,7 +517,7 @@ def write_raw_clusterblastoutput(output_dir: str, blast_output: str, prefix: str
             the name of the file written
     """
     filename = f"{prefix}output.txt"
-    with open(os.path.join(output_dir, filename), "w") as handle:
+    with open(os.path.join(output_dir, filename), "w", encoding="utf-8") as handle:
         handle.write(blast_output)
     return filename
 

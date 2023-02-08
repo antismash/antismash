@@ -302,10 +302,10 @@ def write_promoters_to_file(output_dir: str, prefix: str, promoters: List[Promot
     """
     # pylint: disable=consider-using-with
     # positions file
-    pos_handle = open(os.path.join(output_dir, prefix + "_promoter_positions.csv"), "w")
+    pos_handle = open(os.path.join(output_dir, prefix + "_promoter_positions.csv"), "w", encoding="utf-8")
     pos_handle.write("\t".join(["#", "promoter", "start", "end", "length"]) + "\n")
     # sequences file
-    seq_handle = open(os.path.join(output_dir, prefix + "_promoter_sequences.fasta"), "w")
+    seq_handle = open(os.path.join(output_dir, prefix + "_promoter_sequences.fasta"), "w", encoding="utf-8")
     # pylint: enable=consider-using-with
 
     for i, promoter in enumerate(promoters):

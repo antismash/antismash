@@ -125,7 +125,7 @@ def get_hmm_lengths(hmm_file: str) -> Dict[str, int]:
             a dictionary mapping each NAME field in the file to it's LENG field
     """
     lengths = {}
-    with open(hmm_file, "r") as handle:
+    with open(hmm_file, "r", encoding="utf-8") as handle:
         contents = handle.read()
     contents = contents.replace("\r", "")
     hmms = contents.split("//")[:-1]

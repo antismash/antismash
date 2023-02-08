@@ -129,7 +129,7 @@ def prepare_data(logging_only: bool = False) -> List[str]:
     db_file = os.path.join(clusterblastdir, "proteins.dmnd")
 
     # check the DBv3 region info exists instead of single cluster numbers
-    with open(protein_seqs) as handle:
+    with open(protein_seqs, encoding="utf-8") as handle:
         sample = handle.readline()
     if "-" not in sample.split("|", 3)[1]:
         failure_messages.append("clusterblast database out of date, update with download-databases")

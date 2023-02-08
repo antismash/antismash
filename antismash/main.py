@@ -371,7 +371,7 @@ def write_profiling_results(profiler: cProfile.Profile, target: str) -> None:
     stats.print_callers(.25)
     try:
         path_to_remove = os.path.dirname(os.path.realpath(__file__)) + os.path.sep
-        with open(target, "w") as handle:
+        with open(target, "w", encoding="utf-8") as handle:
             handle.write(stream.getvalue().replace(path_to_remove, ""))
         logging.info("Profiling report written to %s", target)
     except IOError:
@@ -547,7 +547,7 @@ def read_data(sequence_file: Optional[str], options: ConfigType) -> serialiser.A
         update_config({"input_file": os.path.splitext(results.input_file)[1]})
     else:
         logging.debug("Attempting to reuse previous results in: %s", options.reuse_results)
-        with open(options.reuse_results) as handle:
+        with open(options.reuse_results, encoding="utf-8") as handle:
             contents = handle.read()
             if not contents:
                 raise ValueError(f"No results contained in file: {options.reuse_results!r}")

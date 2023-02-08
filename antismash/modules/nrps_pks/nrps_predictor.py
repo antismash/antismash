@@ -27,7 +27,7 @@ def _build_stach_codes() -> Dict[str, Set[str]]:
     """
     data_file = path.get_full_path(__file__, "external/NRPSPredictor2/data/labeled_sigs")
     results: Dict[str, Set[str]] = defaultdict(set)
-    with open(data_file) as handle:
+    with open(data_file, encoding="utf-8") as handle:
         for line in handle:
             # in the form: prediction angstrom_code stach_code
             # with the stach code's 8th character always being '-'

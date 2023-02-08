@@ -38,7 +38,7 @@ class TestBlastParsing(unittest.TestCase):
                 return core.parse_subject(subject_line, seqlengths, seq_record)
 
     def read_sample_data(self, filename="data/diamond_output_sample.txt"):
-        with open(path.get_full_path(__file__, filename), "r") as handle:
+        with open(path.get_full_path(__file__, filename), "r", encoding="utf-8") as handle:
             return handle.read()
 
     def file_data_to_lists(self, data):
@@ -439,7 +439,7 @@ class TestInputGeneration(unittest.TestCase):
             assert files == ["test.fasta"]
             assert os.path.exists("test.fasta")
             expected = "".join(f">L{i}\nS{i}\n" for i in range(len(self.regions)*3))
-            with open("test.fasta") as handle:
+            with open("test.fasta", encoding="utf-8") as handle:
                 assert handle.read() == expected
 
     def test_single_partition(self):
@@ -449,7 +449,7 @@ class TestInputGeneration(unittest.TestCase):
             assert files == ["test.fasta"]
             assert os.path.exists("test.fasta")
             expected = "".join(f">L{i}\nS{i}\n" for i in range(len(self.regions)*3))
-            with open("test.fasta") as handle:
+            with open("test.fasta", encoding="utf-8") as handle:
                 assert handle.read() == expected
 
     def test_multiple_files(self):
@@ -462,7 +462,7 @@ class TestInputGeneration(unittest.TestCase):
                 assert files == [f"test{i}.fasta" for i in range(partitions)]
                 for index in range(partitions):
                     assert os.path.exists(files[index])
-                    with open(files[index]) as handle:
+                    with open(files[index], encoding="utf-8") as handle:
                         contents = handle.read()
                     assert contents.count(">") == chunk_size
                     positions = (i + index * chunk_size for i in range(chunk_size))

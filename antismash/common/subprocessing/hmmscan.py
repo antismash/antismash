@@ -45,7 +45,7 @@ def run_hmmscan(target_hmmfile: str, query_sequence: str, opts: List[str] = None
             f"while scanning {query_sequence[:100]!r}",
         ]))
     if results_file is not None:
-        with open(results_file, 'w') as handle:
+        with open(results_file, "w", encoding="utf-8") as handle:
             handle.write(result.stdout)
 
     return list(SearchIO.parse(StringIO(result.stdout), 'hmmer3-text'))

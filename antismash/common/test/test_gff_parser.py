@@ -52,7 +52,7 @@ class GffParserTest(TestCase):
 
     def test_features_from_file(self):
         filename = path.get_full_path(__file__, 'data', 'fumigatus.cluster1.gff')
-        features = gff_parser.get_features_from_file(open(filename))["cluster0"]
+        features = gff_parser.get_features_from_file(open(filename, encoding="utf-8"))["cluster0"]
         assert len(features) == 11
         for feature in features:
             assert feature.type == 'CDS'

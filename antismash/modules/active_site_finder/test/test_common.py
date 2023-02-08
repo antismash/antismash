@@ -94,7 +94,8 @@ class TestAnalysisCore(unittest.TestCase):
             ActiveSiteAnalysis("not-p450", ("not a Domain",), "PKSI-KR.hmm2", [5, 6], ["C", "S"])
 
     def test_alignment_generation(self):
-        pregenerated = list(SearchIO.parse(open(path.get_full_path(__file__, 'data', 'KS_N.output')),
+        pregenerated = list(SearchIO.parse(open(path.get_full_path(__file__, 'data', 'KS_N.output'),
+                                                encoding="utf-8"),
                                            "hmmer2-text"))
         domains = self.generate_domains()
         analysis = ActiveSiteAnalysis("PKS_KS", domains, "PKSI-KS_N.hmm2",
@@ -106,7 +107,8 @@ class TestAnalysisCore(unittest.TestCase):
         assert [align.domain for align in alignments[:4]] == domains[:4]
 
     def test_alignment_generation_no_hits(self):
-        no_hits = list(SearchIO.parse(open(path.get_full_path(__file__, 'data', 'no_hits.output')),
+        no_hits = list(SearchIO.parse(open(path.get_full_path(__file__, 'data', 'no_hits.output'),
+                                           encoding="utf-8"),
                                       "hmmer2-text"))
         for result in no_hits:
             assert not result.hsps, "hits shouldn't exist"

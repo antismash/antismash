@@ -93,7 +93,7 @@ class TestIntegration(unittest.TestCase):
     def test_thiostrepton(self):
         def callback(outdir):
             # make sure the html_output section was tested
-            with open(os.path.join(outdir, "index.html")) as handle:
+            with open(os.path.join(outdir, "index.html"), encoding="utf-8") as handle:
                 content = handle.read()
                 assert "Leader:" in content
 

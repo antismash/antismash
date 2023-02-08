@@ -94,7 +94,7 @@ def get_at_positions(startpos: int = 7) -> List[int]:
     """ Reads a reference list of positions used in signature extraction
         from file.
     """
-    with open(_AT_POSITIONS_FILENAME, "r") as handle:
+    with open(_AT_POSITIONS_FILENAME, "r", encoding="utf-8") as handle:
         text = handle.read().strip().replace(' ', '_')
     positions = [int(pos) - startpos for pos in text.split("\t")]
     return positions

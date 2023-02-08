@@ -37,7 +37,7 @@ class TestSMCOGs(unittest.TestCase):
 
     def build_record(self, genbank):
         # construct a working record
-        with open(genbank) as handle:
+        with open(genbank, encoding="utf-8") as handle:
             seq_record = seqio.read(handle, "genbank")
         record = secmet.Record.from_biopython(seq_record, taxon="bacteria")
         assert record.get_protoclusters()

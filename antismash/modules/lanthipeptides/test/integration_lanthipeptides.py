@@ -38,7 +38,7 @@ class IntegrationLanthipeptides(unittest.TestCase):
 
     def run_lanthi(self, genbank, html_snippet, expected_motifs=1):
         def callback(output_dir):
-            with open(os.path.join(output_dir, "index.html")) as handle:
+            with open(os.path.join(output_dir, "index.html"), encoding="utf-8") as handle:
                 content = handle.read()
                 assert html_snippet in content
 

@@ -167,7 +167,7 @@ class HmmDetectionTest(unittest.TestCase):
         aliases = {}
         rules = hmm_detection.create_rules(self.rules_file, self.signature_names,
                                            self.valid_categories, aliases)
-        assert len(rules) == open(self.rules_file).read().count("\nRULE")
+        assert len(rules) == open(self.rules_file, encoding="utf-8").read().count("\nRULE")
         t1pks_rules = [rule for rule in rules if rule.name == "T1PKS"]
         assert len(t1pks_rules) == 1
         rule = t1pks_rules[0]
@@ -188,7 +188,7 @@ class HmmDetectionTest(unittest.TestCase):
                                            self.valid_categories, aliases, rules)
         profiles_used = set()
 
-        with open(self.filter_file, 'r') as handle:
+        with open(self.filter_file, "r", encoding="utf-8") as handle:
             filter_lines = handle.readlines()
         for line in filter_lines:
             for sig in line.split(','):
@@ -269,7 +269,7 @@ class HmmDetectionTest(unittest.TestCase):
     def test_equivalence_groups(self):
         group_file = path.get_full_path(os.path.dirname(__file__), "filterhmmdetails.txt")
         sets = []
-        with open(group_file) as group_lines:
+        with open(group_file, encoding="utf-8") as group_lines:
             sets = [set(line.strip().split(',')) for line in group_lines]
 
         # ensure they have at least two elements

@@ -16,12 +16,12 @@ from .test_cassis import create_fake_record, convert_newline, CassisTestCore
 def read_generated_expected_file(generated_file, expected_file):
     """Read generated and expected files and save to string variables"""
     generated_string = ""
-    with open(generated_file) as handle:
+    with open(generated_file, encoding="utf-8") as handle:
         generated_string = handle.read()
     generated_string = convert_newline(generated_string.rstrip())
 
     expected_string = ""
-    with open(path.get_full_path(__file__, "data", expected_file)) as handle:
+    with open(path.get_full_path(__file__, "data", expected_file), encoding="utf-8") as handle:
         expected_string = handle.read()
     expected_string = convert_newline(expected_string.rstrip())
 

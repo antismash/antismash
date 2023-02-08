@@ -41,7 +41,7 @@ def get_signature_profiles(detail_file: str) -> List[HmmSignature]:
     """
     bad_lines = []
     profiles = []
-    with open(detail_file, "r") as data:
+    with open(detail_file, "r", encoding="utf-8") as data:
         for line in data.read().split("\n"):
             if line.startswith("#") or not line.strip():
                 continue
