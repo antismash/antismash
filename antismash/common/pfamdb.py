@@ -8,7 +8,8 @@ import logging
 import os
 from typing import Dict, List, Optional
 
-from antismash.common import hmmer, path
+from antismash.config import get_config
+from antismash.common import path, subprocessing
 
 KNOWN_MAPPINGS: Dict[str, Dict[str, str]] = {}  # tracks name mappings per database
 KNOWN_CUTOFFS: Dict[str, Dict[str, float]] = {}  # tracks profile cutoffs per database
@@ -37,7 +38,7 @@ def check_db(db_path: str) -> List[str]:
     if not path.locate_file(full_path):
         failure_messages.append(f"Failed to locate file: {file_name!r} in {db_path}")
     else:
-        failure_messages.extend(hmmer.ensure_database_pressed(full_path, return_not_raise=True))
+        failure_messages.extend(ensure_database_pressed(full_path, return_not_raise=True))
     return failure_messages
 
 
@@ -186,3 +187,39 @@ def get_pfam_id_from_name(name: str, database: str) -> str:
         KNOWN_MAPPINGS[database] = _build_mapping(database)
 
     return KNOWN_MAPPINGS[database][name]
+
+
+def ensure_database_pressed(filepath: str, return_not_raise: bool = False) -> List[str]:
+    """ Ensures that the given HMMer database exists and that the hmmpress
+        generated files aren't out of date.
+
+        Arguments:
+            filepath: the path to the HMMer database
+            return_not_raise: whether to catch errors and return their messages as strings
+
+        Returns:
+            any encountered error messages, will never be populated without return_not_raise == True
+    """
+    components = [f"{filepath}.{ext}" for ext in ["h3f", "h3i", "h3m", "h3p"]]
+
+    if "mounted_at_runtime" in filepath:
+        msg = f"Cannot ensure database pressed when set to mount at runtime: {filepath}"
+        if return_not_raise:
+            return [msg]
+        raise ValueError(msg)
+
+    if path.is_outdated(components, filepath):
+        logging.info("%s components missing or obsolete, re-pressing database", filepath)
+        if "hmmpress" not in get_config().executables:
+            msg = f"Failed to hmmpress {filepath!r}: cannot find executable for hmmpress"
+            if not return_not_raise:
+                raise RuntimeError(msg)
+            return [msg]
+
+        result = subprocessing.run_hmmpress(filepath)
+        if not result.successful():
+            msg = f"Failed to hmmpress {filepath!r}: {result.stderr}"
+            if not return_not_raise:
+                raise RuntimeError(msg)
+            return [msg]
+    return []
