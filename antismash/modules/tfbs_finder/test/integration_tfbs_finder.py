@@ -2,7 +2,7 @@
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
 # for test files, silence irrelevant and noisy pylint warnings
-# pylint: disable=no-self-use,protected-access,missing-docstring
+# pylint: disable=protected-access,missing-docstring
 
 import unittest
 

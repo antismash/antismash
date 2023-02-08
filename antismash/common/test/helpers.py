@@ -6,7 +6,7 @@
 """
 
 # for test files, silence irrelevant and noisy pylint warnings
-# pylint: disable=no-self-use,protected-access,missing-docstring
+# pylint: disable=protected-access,missing-docstring
 
 # and some extra silencing because most of these classes are simple stubs
 # pylint: disable=too-few-public-methods

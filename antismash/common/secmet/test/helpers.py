@@ -4,7 +4,7 @@
 """ Simple constructors for complicated features to simplify testing """
 
 # for test files, silence irrelevant and noisy pylint warnings
-# pylint: disable=no-self-use,protected-access,missing-docstring
+# pylint: disable=protected-access,missing-docstring
 
 from ..features import (
     AntismashDomain,
