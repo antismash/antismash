@@ -473,17 +473,17 @@ def generate_rodeo_svm_csv(leader: str, core: str, previously_gathered_tabs: Lis
     # (Aromatics, Neg charged, Pos charged, Charged, Aliphatic, Hydroxyl)
     amino_groups = ["FWY", "DE", "RK", "RKDE", "GAVLMI", "ST"]
     for group in amino_groups:
-        columns.append(sum([precursor.count(aa) for aa in group]))
+        columns.append(sum(precursor.count(aa) for aa in group))
     # Number in leader of each amino acid
     columns += [leader.count(aa) for aa in "ARDNCQEGHILKMFPSTWYV"]
     # Number in leader of each amino acid type
     for group in amino_groups:
-        columns.append(sum([leader.count(aa) for aa in group]))
+        columns.append(sum(leader.count(aa) for aa in group))
     # Number in core of each amino acid
     columns += [core.count(aa) for aa in "ARDNCQEGHILKMFPSTWYV"]
     # Number in core of each amino acid type
     for group in amino_groups:
-        columns.append(sum([core.count(aa) for aa in group]))
+        columns.append(sum(core.count(aa) for aa in group))
     # Number of each peptidase Pfam hit (PF05193/PF00082/PF03572/PF00675/PF02517/PF02163/PF00326)
     peptidase_domains = ["PF05193", "PF00082", "PF03572", "PF00675", "PF02517", "PF02163", "PF00326"]
     for peptidase in peptidase_domains:

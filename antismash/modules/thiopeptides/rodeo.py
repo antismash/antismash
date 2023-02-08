@@ -101,7 +101,7 @@ def acquire_rodeo_heuristics(leader: str, core: str,  # pylint: disable=too-many
         tabs.append(0)
     # Leader net charge < 5
     charge_dict = {"E": -1, "D": -1, "K": 1, "R": 1}
-    leader_charge = sum([charge_dict[aa] for aa in leader if aa in charge_dict])
+    leader_charge = sum(charge_dict.get(aa, 0) for aa in leader)
     if leader_charge < 5:
         score += 2
         tabs.append(1)
@@ -126,13 +126,13 @@ def acquire_rodeo_heuristics(leader: str, core: str,  # pylint: disable=too-many
     else:
         tabs.append(0)
     # Core contains >= 2 positive residues
-    if sum([core.count(aa) for aa in "RK"]) >= 2:
+    if sum(core.count(aa) for aa in "RK") >= 2:
         score -= 1
         tabs.append(1)
     else:
         tabs.append(0)
     # Number of heterocyclizable residues to core ratio > 0.4
-    if sum([core.count(aa) for aa in "CST"]) / len(core) >= 0.4:
+    if sum(core.count(aa) for aa in "CST") / len(core) >= 0.4:
         score += 2
         tabs.append(1)
     else:
@@ -177,49 +177,24 @@ def generate_rodeo_svm_csv(leader: str, core: str, previously_gathered_tabs: Lis
     # Ratio of length of leader / length of core
     columns.append(len(core) / len(leader))
     # Ratio of heterocyclizable residues / length of core
-    columns.append(sum([core.count(aa) for aa in "CST"]) / len(core))
+    columns.append(sum(core.count(aa) for aa in "CST") / len(core))
     # Number in leader of each amino acid
     columns += [leader.count(aa) for aa in "ARDNCQEGHILKMFPSTWYV"]
-    # Aromatics in leader
-    columns.append(sum([leader.count(aa) for aa in "FWY"]))
-    # Neg charged in leader
-    columns.append(sum([leader.count(aa) for aa in "DE"]))
-    # Pos charged in leader
-    columns.append(sum([leader.count(aa) for aa in "RK"]))
-    # Charged in leader
-    columns.append(sum([leader.count(aa) for aa in "RKDE"]))
-    # Aliphatic in leader
-    columns.append(sum([leader.count(aa) for aa in "GAVLMI"]))
-    # Hydroxyl in leader
-    columns.append(sum([leader.count(aa) for aa in "ST"]))
+    # groups for aromatics, neg charged, pos charged, aliphatic, and hydroxyl
+    groups = ["FWY", "DE", "RK", "RKDE", "GAVLMI", "ST"]
+    # leader groups
+    for group in groups:
+        columns.append(sum(leader.count(aa) for aa in group))
     # Counts of AAs in core
     columns += [core.count(aa) for aa in "ARDNCQEGHILKMFPSTWYV"]
-    # Aromatics in core
-    columns.append(sum([core.count(aa) for aa in "FWY"]))
-    # Neg charged in core
-    columns.append(sum([core.count(aa) for aa in "DE"]))
-    # Pos charged in core
-    columns.append(sum([core.count(aa) for aa in "RK"]))
-    # Charged in core
-    columns.append(sum([core.count(aa) for aa in "RKDE"]))
-    # Aliphatic in core
-    columns.append(sum([core.count(aa) for aa in "GAVLMI"]))
-    # Hydroxyl in core
-    columns.append(sum([core.count(aa) for aa in "ST"]))
+    # core groups
+    for group in groups:
+        columns.append(sum(core.count(aa) for aa in group))
     # Counts of AAs in entire precursor (leader+core)
     columns += [precursor.count(aa) for aa in "ARDNCQEGHILKMFPSTWYV"]
-    # Aromatics in precursor
-    columns.append(sum([precursor.count(aa) for aa in "FWY"]))
-    # Neg charged in precursor
-    columns.append(sum([precursor.count(aa) for aa in "DE"]))
-    # Pos charged in precursor
-    columns.append(sum([precursor.count(aa) for aa in "RK"]))
-    # Charged in precursor
-    columns.append(sum([precursor.count(aa) for aa in "RKDE"]))
-    # Aliphatic in precursor
-    columns.append(sum([precursor.count(aa) for aa in "GAVLMI"]))
-    # Hydroxyl in precursor
-    columns.append(sum([precursor.count(aa) for aa in "ST"]))
+    # combined groups
+    for group in groups:
+        columns.append(sum(precursor.count(aa) for aa in group))
     return columns
 
 
