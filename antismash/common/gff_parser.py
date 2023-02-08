@@ -58,7 +58,7 @@ def check_gff_suitability(gff_file: str, sequences: List[SeqRecord]) -> None:
             if not record.features:
                 raise AntismashInputError(f"GFF3 record {record.id} contains no features")
 
-            coord_max = max([n.location.end.real for n in record.features])
+            coord_max = max(n.location.end.real for n in record.features)
             if coord_max > len(sequences[0]):
                 logging.error('GFF3 record and sequence coordinates are not compatible.')
                 raise AntismashInputError('incompatible GFF record and sequence coordinates')

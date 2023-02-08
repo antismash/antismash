@@ -405,7 +405,7 @@ def acquire_rodeo_heuristics(record: Record, cluster: Protocluster, query: CDSFe
     else:
         tabs.append(0)
     # Core has at least 2 aromatic residues	+2
-    if sum([core.count(aa) for aa in list("FWY")]) >= 2:
+    if sum(core.count(aa) for aa in "FWY") >= 2:
         score += 2
         tabs.append(1)
     else:
@@ -518,62 +518,37 @@ def generate_rodeo_svm_csv(record: Record, query: CDSFeature, leader: str, core:
     columns.append(core[:9].count("P"))
     # Estimated core charge
     charge_dict = {"E": -1, "D": -1, "K": 1, "H": 1, "R": 1}
-    columns.append(sum([charge_dict[aa] for aa in core if aa in charge_dict]))
+    columns.append(sum(charge_dict.get(aa, 0) for aa in core))
     # Estimated leader charge
-    columns.append(sum([charge_dict[aa] for aa in leader if aa in charge_dict]))
+    columns.append(sum(charge_dict.get(aa, 0) for aa in leader))
     # Estimated precursor charge
-    columns.append(sum([charge_dict[aa] for aa in leader+core if aa in charge_dict]))
+    columns.append(sum(charge_dict.get(aa, 0) for aa in leader + core))
     # Absolute value of core charge
-    columns.append(abs(sum([charge_dict[aa] for aa in core if aa in charge_dict])))
+    columns.append(abs(sum(charge_dict.get(aa, 0) for aa in core)))
     # Absolute value of leader charge
-    columns.append(abs(sum([charge_dict[aa] for aa in leader if aa in charge_dict])))
+    columns.append(abs(sum(charge_dict.get(aa, 0) for aa in leader)))
     # Absolute value of precursor charge
-    columns.append(abs(sum([charge_dict[aa] for aa in leader+core if aa in charge_dict])))
+    columns.append(abs(sum(charge_dict.get(aa, 0) for aa in leader + core)))
     # Counts of AAs in leader
     columns += [leader.count(aa) for aa in "ARDNCQEGHILKMFPSTWYV"]
-    # Aromatics in leader
-    columns.append(sum([leader.count(aa) for aa in "FWY"]))
-    # Neg charged in leader
-    columns.append(sum([leader.count(aa) for aa in "DE"]))
-    # Pos charged in leader
-    columns.append(sum([leader.count(aa) for aa in "RK"]))
-    # Charged in leader
-    columns.append(sum([leader.count(aa) for aa in "RKDE"]))
-    # Aliphatic in leader
-    columns.append(sum([leader.count(aa) for aa in "GAVLMI"]))
-    # Hydroxyl in leader
-    columns.append(sum([leader.count(aa) for aa in "ST"]))
+    # groups for aromatics, neg charged, pos charged, aliphatic, and hydroxyl
+    groups = ["FWY", "DE", "RK", "RKDE", "GAVLMI", "ST"]
+    # leader groups
+    for group in groups:
+        columns.append(sum(leader.count(aa) for aa in group))
     # Counts of AAs in core
     columns += [core.count(aa) for aa in "ARDNCQEGHILKMFPSTWYV"]
-    # Aromatics in core
-    columns.append(sum([core.count(aa) for aa in "FWY"]))
-    # Neg charged in core
-    columns.append(sum([core.count(aa) for aa in "DE"]))
-    # Pos charged in core
-    columns.append(sum([core.count(aa) for aa in "RK"]))
-    # Charged in core
-    columns.append(sum([core.count(aa) for aa in "RKDE"]))
-    # Aliphatic in core
-    columns.append(sum([core.count(aa) for aa in "GAVLMI"]))
-    # Hydroxyl in core
-    columns.append(sum([core.count(aa) for aa in "ST"]))
+    # core groups
+    for group in groups:
+        columns.append(sum(core.count(aa) for aa in group))
     # Counts (0 or 1) of amino acids within first AA position of core sequence
     columns += [core[0].count(aa) for aa in "ARDNCQEGHILKMFPSTWYV"]
     # Counts of AAs in leader+core
     precursor = leader + core
     columns += [precursor.count(aa) for aa in "ARDNCQEGHILKMFPSTWYV"]  # Temp to work with current training CSV
-    # Aromatics in precursor
-    columns.append(sum([precursor.count(aa) for aa in "FWY"]))
-    # Neg charged in precursor
-    columns.append(sum([precursor.count(aa) for aa in "DE"]))
-    # Pos charged in precursor
-    columns.append(sum([precursor.count(aa) for aa in "RK"]))
-    # Charged in precursor
-    columns.append(sum([precursor.count(aa) for aa in "RKDE"]))
-    # Aliphatic in precursor
-    columns.append(sum([precursor.count(aa) for aa in "GAVLMI"]))
-    # Hydroxyl in precursor
-    columns.append(sum([precursor.count(aa) for aa in "ST"]))
+    # combined groups
+    for group in groups:
+        columns.append(sum(precursor.count(aa) for aa in group))
     # Motifs
     columns += [1 if motif in fimo_motifs else 0 for motif in range(1, 17)]
     # Total motifs hit
@@ -581,7 +556,7 @@ def generate_rodeo_svm_csv(record: Record, query: CDSFeature, leader: str, core:
     # Motif scores
     columns += [fimo_scores[motif] if motif in fimo_motifs else 0 for motif in range(1, 17)]
     # Sum of MEME scores
-    columns.append(sum([fimo_scores[motif] if motif in fimo_motifs else 0 for motif in range(1, 17)]))
+    columns.append(sum(fimo_scores[motif] if motif in fimo_motifs else 0 for motif in range(1, 17)))
     # No Motifs?
     if not fimo_motifs:
         columns.append(1)

@@ -158,7 +158,7 @@ class TestModule(unittest.TestCase):
     def test_cross_gene_ordering(self):
         domains = [DummyAntismashDomain(locus_tag="A"), DummyAntismashDomain(locus_tag="B")]
         for doms in [domains, domains[::-1]]:
-            assert Module(doms).parent_cds_names == tuple([dom.locus_tag for dom in doms])
+            assert Module(doms).parent_cds_names == tuple(dom.locus_tag for dom in doms)
 
     def test_type(self):
         assert create_module().module_type == ModuleType.UNKNOWN

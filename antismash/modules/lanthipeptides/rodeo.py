@@ -285,14 +285,14 @@ def acquire_rodeo_heuristics(record: secmet.Record, query: secmet.CDSFeature,
     else:
         tabs.append(0)
     # Leader peptide has > 4 negatively charge motifs
-    if sum([leader.count(aa) for aa in "DE"]) > 4:
+    if sum(leader.count(aa) for aa in "DE") > 4:
         score += 1
         tabs.append(1)
     else:
         tabs.append(0)
     # Leader peptide has net negative charge
     charge_dict = {"E": -1, "D": -1, "K": 1, "R": 1}
-    if sum([charge_dict[aa] for aa in leader if aa in charge_dict]) < 0:
+    if sum(charge_dict.get(aa, 0) for aa in leader) < 0:
         score += 1
         tabs.append(1)
     else:
@@ -396,31 +396,20 @@ def generate_rodeo_svm_csv(leader: str, core: str, previously_gathered_tabs: Lis
         columns.append(fimo_scores.get(i, 0))
     # Number in leader of each amino acid
     columns += [leader.count(aa) for aa in "ARDNCQEGHILKMFPSTWYV"]
+    amino_groups = ["FWY", "DE", "RK", "RKDE", "GAVLMI", "ST"]
     # Number in leader of each amino acid type (aromatic, aliphatic, hydroxyl, basic, acidic)
-    columns.append(sum([leader.count(aa) for aa in "FWY"]))
-    columns.append(sum([leader.count(aa) for aa in "DE"]))
-    columns.append(sum([leader.count(aa) for aa in "RK"]))
-    columns.append(sum([leader.count(aa) for aa in "RKDE"]))
-    columns.append(sum([leader.count(aa) for aa in "GAVLMI"]))
-    columns.append(sum([leader.count(aa) for aa in "ST"]))
+    for group in amino_groups:
+        columns.append(sum(leader.count(aa) for aa in group))
     # Number in core of each amino acid
     columns += [core.count(aa) for aa in "ARDNCQEGHILKMFPSTWYV"]
     # Number in core of each amino acid type (aromatic, aliphatic, hydroxyl, basic, acidic)
-    columns.append(sum([core.count(aa) for aa in "FWY"]))
-    columns.append(sum([core.count(aa) for aa in "DE"]))
-    columns.append(sum([core.count(aa) for aa in "RK"]))
-    columns.append(sum([core.count(aa) for aa in "RKDE"]))
-    columns.append(sum([core.count(aa) for aa in "GAVLMI"]))
-    columns.append(sum([core.count(aa) for aa in "ST"]))
+    for group in amino_groups:
+        columns.append(sum(core.count(aa) for aa in group))
     # Number in entire precursor of each amino acid
     columns += [precursor.count(aa) for aa in "ARDNCQEGHILKMFPSTWYV"]
     # Number in entire precursor of each amino acid type (aromatic, aliphatic, hydroxyl, basic, acidic)
-    columns.append(sum([precursor.count(aa) for aa in "FWY"]))
-    columns.append(sum([precursor.count(aa) for aa in "DE"]))
-    columns.append(sum([precursor.count(aa) for aa in "RK"]))
-    columns.append(sum([precursor.count(aa) for aa in "RKDE"]))
-    columns.append(sum([precursor.count(aa) for aa in "GAVLMI"]))
-    columns.append(sum([precursor.count(aa) for aa in "ST"]))
+    for group in amino_groups:
+        columns.append(sum(precursor.count(aa) for aa in group))
     return columns
 
 
