@@ -91,7 +91,7 @@ class TestKSCounter(unittest.TestCase):
 
     def test_specific(self):
         for var_name, ks_name in zip(["trans_at", "modular", "enediyne", "iterative"],
-                            ["Trans-AT-KS", "Modular-KS", "Enediyne-KS", "Iterative-KS"]):
+                                     ["Trans-AT-KS", "Modular-KS", "Enediyne-KS", "Iterative-KS"]):
             counter = self.counter(self.one_each + [ks_name])
             for key, val in vars(counter).items():
                 if key == var_name:
@@ -122,6 +122,7 @@ class TestSubtypeFinding(unittest.TestCase):
                 DummyHMMResult("c", start=5, end=8),
             ]
         }
+
     def find(self, target, existing=None, callback=None):
         if existing is None:
             existing = self.existing_hits

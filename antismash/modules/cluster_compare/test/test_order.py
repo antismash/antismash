@@ -62,7 +62,8 @@ class TestOrdering(unittest.TestCase):
             "4": generate_hit(self.cdses[2], "4"),
         }
         segments = self.find(hits)
-        assert score(segments, len(self.cdses), len(self.refs)) == ordering.calculate_order_score(self.cdses, hits, self.refs)
+        expected = ordering.calculate_order_score(self.cdses, hits, self.refs)
+        assert score(segments, len(self.cdses), len(self.refs)) == expected
 
     def test_empty(self):
         assert ordering.calculate_order_score([], {}, None) == 0.
@@ -78,7 +79,7 @@ class TestSegmentScoring(unittest.TestCase):
     def test_single(self):
         for segments in [[[(1, 2, True)]],
                          [[(1, 2, True), (2, 3, True)]],
-                        ]:
+                         ]:
             assert score(segments, len(segments[0]), len(segments[0])) == 1.
 
     def test_comparitive(self):

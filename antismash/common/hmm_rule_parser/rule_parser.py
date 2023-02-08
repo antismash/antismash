@@ -1062,7 +1062,8 @@ class Parser:  # pylint: disable=too-few-public-methods
             raise RuleSyntaxError(f"Invalid category {category}, use one of {valid_categories}")
         if not self.current_token:
             raise RuleSyntaxError(f"expected {TokenTypes.DESCRIPTION}, {TokenTypes.EXAMPLE}, "
-                                  f"{TokenTypes.SUPERIORS}, or {TokenTypes.CUTOFF} sections after {TokenTypes.CATEGORY}")
+                                  f"{TokenTypes.SUPERIORS}, "
+                                  "or {TokenTypes.CUTOFF} sections after {TokenTypes.CATEGORY}")
         if self.current_token.type == TokenTypes.DESCRIPTION:
             description = self._parse_description()
             prev = TokenTypes.DESCRIPTION
@@ -1107,7 +1108,6 @@ class Parser:  # pylint: disable=too-few-public-methods
                 raise err
         return " ".join([token.token_text for token in description_tokens])
 
-
     def _parse_example(self) -> "ExampleRecord":
         """ EXAMPLE = EXAMPLE_MARKER ID ID DOT INT INT-INT [compound_name:TEXT]"""
         self._consume(TokenTypes.EXAMPLE)
@@ -1115,7 +1115,7 @@ class Parser:  # pylint: disable=too-few-public-methods
         accession = self._consume_identifier()
         self._consume(TokenTypes.DOT)
         version = self._consume_int()
-        range_str =  self._consume(TokenTypes.TEXT).token_text
+        range_str = self._consume(TokenTypes.TEXT).token_text
         parts = range_str.split("-")
         compound_name = None
         compound_tokens = []
@@ -1142,7 +1142,6 @@ class Parser:  # pylint: disable=too-few-public-methods
             raise RuleSyntaxError(f"Invalid range end {parts[1]} in {TokenTypes.EXAMPLE}")
 
         return ExampleRecord(database, accession, version, start, end, compound_name)
-
 
     def _parse_related(self) -> List[str]:
         """ RELATED = RELATED_MARKER related:COMMA_SEPARATED_IDS

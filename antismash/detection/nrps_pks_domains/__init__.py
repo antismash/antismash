@@ -83,8 +83,7 @@ def prepare_data(logging_only: bool = False) -> List[str]:
             if logging_only:
                 failure_messages.append(str(err))
                 continue
-            else:
-                raise
+            raise
         failure_messages.extend(hmmer.ensure_database_pressed(full_path, return_not_raise=logging_only))
     return failure_messages
 

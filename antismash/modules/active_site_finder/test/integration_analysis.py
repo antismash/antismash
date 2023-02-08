@@ -18,8 +18,8 @@ class TestAnalyses(unittest.TestCase):
     def setUp(self):
         # skipping clusterhmmer and the p450 potential hits for speed
         self.options = build_config(["--asf", "--minimal", "--enable-html"],
-                            isolated=True,
-                            modules=antismash.get_all_modules())
+                                    isolated=True,
+                                    modules=antismash.get_all_modules())
 
     def test_regeneration(self):
         datafile = helpers.get_path_to_balhymicin_genbank()

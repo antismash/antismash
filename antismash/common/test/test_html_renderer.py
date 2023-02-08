@@ -127,7 +127,7 @@ class TestSequences(unittest.TestCase):
         assert result == f"{a_chunk}{b_chunk}{c_chunk}{d_chunk}"
 
     def test_invalid(self):
-        for char in "<> ?!+": # indicative, not exhaustive
+        for char in "<> ?!+":  # indicative, not exhaustive
             with self.assertRaisesRegex(ValueError, "invalid character in HTML class"):
                 renderer.spanned_sequence("A", {"A": f"a{char}b"})
 

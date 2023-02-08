@@ -71,8 +71,9 @@ class AntismashParser(argparse.ArgumentParser):
         if basic:
             self._basic_help_groups.add(title)
         return super().add_argument_group(title, description, **kwargs)
+# pylint: enable=arguments-differ
 
-    def print_help(self, file_handle: IO = None, show_all: bool = False
+    def print_help(self, file: IO = None, show_all: bool = False
                    ) -> None:
         """ Overrides parent print_help() to be able to pass through whether all
             help should be shown or not.
@@ -85,8 +86,7 @@ class AntismashParser(argparse.ArgumentParser):
                 None
         """
         self._show_all = show_all
-        super().print_help(file_handle)
-# pylint: enable=arguments-differ
+        super().print_help(file)
 
     def write_to_config_file(self, filename: str, values: Dict[str, Any] = None) -> None:
         """ Write the default options to file in a form that can be parsed again
@@ -151,7 +151,6 @@ class AntismashParser(argparse.ArgumentParser):
         if not values:
             values = {}
 
-        outfile = open(filename, "w", encoding="utf-8")
         dests: Set[str] = set()  # set of processed destinations
         titles: Dict[str, Dict[str, List[str]]] = defaultdict(lambda: defaultdict(list))
         for parent in sorted(self.parents, key=lambda group: group.title):
@@ -161,14 +160,14 @@ class AntismashParser(argparse.ArgumentParser):
         for arg in self._actions:
             titles["Core options"]["core"].extend(construct_arg_text(arg, dests, values))
 
-        for title, prefixes in titles.items():
-            banner = "#"*10 + "\n"
-            outfile.writelines([banner, f"#\t{title}\n", banner, "\n"])
-            for lines in prefixes.values():
-                outfile.write("\n".join(lines))
-                outfile.write("\n")
-            outfile.write("\n\n")
-        outfile.close()
+        with open(filename, "w", encoding="utf-8") as outfile:
+            for title, prefixes in titles.items():
+                banner = "#"*10 + "\n"
+                outfile.writelines([banner, f"#\t{title}\n", banner, "\n"])
+                for lines in prefixes.values():
+                    outfile.write("\n".join(lines))
+                    outfile.write("\n")
+                outfile.write("\n\n")
 
     def format_help(self) -> str:
         """Custom help formatter"""

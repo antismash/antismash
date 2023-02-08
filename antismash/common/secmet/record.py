@@ -758,7 +758,8 @@ class Record:
             name_modified = False
 
             # prefilter some NCBI Pfam hits locations that are generated poorly
-            if can_be_circular and feature.type == "misc_feature" and location_bridges_origin(feature.location, allow_reversing=False):
+            if all([can_be_circular, feature.type == "misc_feature",
+                    location_bridges_origin(feature.location, allow_reversing=False)]):
                 feature.location = remove_redundant_exons(feature.location)
 
             if can_be_circular and location_bridges_origin(feature.location, allow_reversing=False):

@@ -118,7 +118,7 @@ def run_and_regenerate_results_for_module(input_file, module, options,
         assert not os.path.exists(json_filename)
         try:
             antismash.main.run_antismash(input_file, options)
-        except:
+        except Exception:
             update_config({"output_dir": orig_output})
             raise
         update_config({"output_dir": orig_output})

@@ -16,7 +16,7 @@ from antismash.modules import rrefinder
 class RREFinderIntegration(unittest.TestCase):
     def setUp(self):
         self.options = build_config(["--minimal", "--rre", "--enable-html"],
-                       isolated=True, modules=antismash.get_all_modules())
+                                    isolated=True, modules=antismash.get_all_modules())
 
     def tearDown(self):
         destroy_config()
@@ -28,7 +28,7 @@ class RREFinderIntegration(unittest.TestCase):
 
         options = build_config(["--minimal", "--enable-html", "--rre",
                                 "--rre-cutoff", "-10", "--rre-minlength", "-1"],
-                  isolated=True, modules=antismash.get_all_modules())
+                               isolated=True, modules=antismash.get_all_modules())
         issues = rrefinder.check_options(options)
         assert len(issues) == 2
         assert "RREFinder cutoff is negative" in issues[0]

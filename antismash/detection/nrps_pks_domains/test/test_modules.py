@@ -237,7 +237,7 @@ class TestModule(unittest.TestCase):
     def test_monomer_trans_at_default(self):
         trans_at = build_module([PKS_START, CP], [TRANS_AT_SUBTYPE])
         assert trans_at._starter.subtype == TRANS_AT_SUBTYPE
-        assert trans_at._loader == None
+        assert trans_at._loader is None
         assert trans_at.is_trans_at()
         assert trans_at.get_monomer("") == "mal"
 
@@ -410,12 +410,12 @@ class TestBuildModules(unittest.TestCase):
             assert len(build_modules_for_cds(domains, ["Trans-AT-PKS"])) == 3
 
     def test_double_transporters_miss(self):
-         domains = [DummyHMMResult(i) for i in [PKS_START, CP, CP, NRPS_START]]
-         modules = build_modules_for_cds(domains, ["Trans-AT-PKS"])
-         # the two CP domains should be in separate modules, with the trailing NRPS a third
-         assert len(modules) == 3
-         assert len(modules[1].components) == 1
-         assert modules[1].components[0].domain.hit_id == CP
+        domains = [DummyHMMResult(i) for i in [PKS_START, CP, CP, NRPS_START]]
+        modules = build_modules_for_cds(domains, ["Trans-AT-PKS"])
+        # the two CP domains should be in separate modules, with the trailing NRPS a third
+        assert len(modules) == 3
+        assert len(modules[1].components) == 1
+        assert modules[1].components[0].domain.hit_id == CP
 
 
 class TestMerging(unittest.TestCase):

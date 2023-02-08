@@ -70,13 +70,13 @@ class HmmDetectionTest(unittest.TestCase):
         self.categories = {"Cat"}
 
         self.rules = rule_parser.Parser("\n".join([
-                "RULE MetaboliteA CATEGORY Cat CUTOFF 10 NEIGHBOURHOOD 5 CONDITIONS modelA",
-                "RULE MetaboliteB CATEGORY Cat CUTOFF 10 NEIGHBOURHOOD 5 CONDITIONS cds(modelA and modelB)",
-                "RULE MetaboliteC CATEGORY Cat CUTOFF 10 NEIGHBOURHOOD 5 CONDITIONS (modelA and modelB)",
-                "RULE MetaboliteD CATEGORY Cat CUTOFF 20 NEIGHBOURHOOD 5 CONDITIONS minimum(2,[modelC,modelB]) and modelA",
-                "RULE Metabolite0 CATEGORY Cat CUTOFF 1 NEIGHBOURHOOD 3 CONDITIONS modelF",
-                "RULE Metabolite1 CATEGORY Cat CUTOFF 1 NEIGHBOURHOOD 3 CONDITIONS modelG"]),
-                self.test_names, self.categories).rules
+            "RULE MetaboliteA CATEGORY Cat CUTOFF 10 NEIGHBOURHOOD 5 CONDITIONS modelA",
+            "RULE MetaboliteB CATEGORY Cat CUTOFF 10 NEIGHBOURHOOD 5 CONDITIONS cds(modelA and modelB)",
+            "RULE MetaboliteC CATEGORY Cat CUTOFF 10 NEIGHBOURHOOD 5 CONDITIONS (modelA and modelB)",
+            "RULE MetaboliteD CATEGORY Cat CUTOFF 20 NEIGHBOURHOOD 5 CONDITIONS minimum(2,[modelC,modelB]) and modelA",
+            "RULE Metabolite0 CATEGORY Cat CUTOFF 1 NEIGHBOURHOOD 3 CONDITIONS modelF",
+            "RULE Metabolite1 CATEGORY Cat CUTOFF 1 NEIGHBOURHOOD 3 CONDITIONS modelG"]),
+            self.test_names, self.categories).rules
         self.record = Record()
         self.record._record.seq = Seq("A"*150000)
         for feature in self.feature_by_id.values():

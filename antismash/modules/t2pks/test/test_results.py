@@ -94,13 +94,13 @@ class TestProtoclusterPrediction(unittest.TestCase):
         classes = {"benzoisochromanequinone"}
         weights = {"acetyl_7": 451.23}
         cluster_pred = ProtoclusterPrediction(preds_by_cds,
-                                         starter_units=starters,
-                                         malonyl_elongations=elongations,
-                                         product_classes=classes,
-                                         molecular_weights=weights,
-                                         start=100,
-                                         end=2000
-                                         )
+                                              starter_units=starters,
+                                              malonyl_elongations=elongations,
+                                              product_classes=classes,
+                                              molecular_weights=weights,
+                                              start=100,
+                                              end=2000
+                                              )
         assert cluster_pred.cds_predictions == preds_by_cds
         assert cluster_pred.starter_units == starters
         assert cluster_pred.malonyl_elongations == elongations
@@ -120,11 +120,11 @@ class TestProtoclusterPrediction(unittest.TestCase):
 
 def build_dummy_cluster_prediction():
     return ProtoclusterPrediction(build_dummy_cds_predictions(),
-                             [Prediction('acetyl', 0., 0.)],
-                             [Prediction('7', 743.5, 1.2e-226)],
-                             {"benzoisochromanequinone"},
-                             {"acetyl_7": 451.23},
-                             start=0, end=1500)
+                                  [Prediction('acetyl', 0., 0.)],
+                                  [Prediction('7', 743.5, 1.2e-226)],
+                                  {"benzoisochromanequinone"},
+                                  {"acetyl_7": 451.23},
+                                  start=0, end=1500)
 
 
 class TestT2PKSResults(unittest.TestCase):

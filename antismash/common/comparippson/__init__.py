@@ -1,6 +1,14 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
+""" A module for comparing precursor cores of various RiPPs to precursors
+annotated in existing databases.
+
+Includes helper functions for building and checking distinct
+datasets, along with HTML templates for showing the results.
+"""
+
+
 import logging
 import os
 from typing import List
@@ -29,7 +37,7 @@ def ensure_database_built(filepath: str, return_not_raise: bool = False) -> List
     components = [f"{filepath}.{ext}" for ext in ["pdb", "phr", "pin", "pot", "psq", "ptf", "pto"]]
 
     if path.is_outdated(components, filepath):
-        logging.info(f"{filepath} components missing or obsolete, rebuilding database")
+        logging.info("%s components missing or obsolete, rebuilding database", filepath)
         result = subprocessing.run_makeblastdb(filepath)
         if not result.successful():
             msg = f"Failed to build blast database {filepath!r}: {result.stderr}"

@@ -49,7 +49,7 @@ class TestSimple(unittest.TestCase):
 
     def test_end_overflow(self):
         length = 50
-        features = [DummyCDS(start=10, end = 18)]
+        features = [DummyCDS(start=10, end=18)]
         record = DummyRecord(seq="A"*length, record_id="A", features=features)
         results = general.load_single_record_annotations([], record, _parse_arg(f"A:1-{length * 10}"))
         assert len(results.subregions) == 1

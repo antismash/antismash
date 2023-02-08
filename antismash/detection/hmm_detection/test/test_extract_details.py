@@ -29,6 +29,7 @@ TC    {cutoff} 12.34;
 //
 """
 
+
 def create_profile(name: str, description: str, cutoff: float = -1.0) -> StringIO:
     """Create a fake HMM profile handle"""
     if cutoff >= 0:
@@ -40,6 +41,7 @@ def create_profile(name: str, description: str, cutoff: float = -1.0) -> StringI
     handle.name = "path/to/fake.hmm"
 
     return handle
+
 
 class ExtractDetailsTest(unittest.TestCase):
     def test_all_defaults(self):

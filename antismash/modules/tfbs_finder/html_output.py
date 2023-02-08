@@ -36,7 +36,7 @@ def will_handle(_products: list[str], _categories: set[str]) -> bool:
 
 
 def generate_html(region_layer: RegionLayer, results: TFBSFinderResults,
-                  _record_layer: RecordLayer, options_layer: OptionsLayer
+                  _record_layer: RecordLayer, _options_layer: OptionsLayer
                   ) -> HTMLSections:
     """ Generates HTML output for the module """
     html = HTMLSections("tfbs-finder")

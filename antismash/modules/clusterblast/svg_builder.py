@@ -596,14 +596,14 @@ class ClusterSVGBuilder:
         scaling = (width - 20) / self.max_length  # -20 for margins
         offset = (self.max_length - len(self.query_cluster)) // 2
         for group in self.query_cluster.get_svg_groups(h_offset=offset, scaling=scaling,
-                                             colours=self.colour_lookup, overview=True,
-                                             prefix=self.prefix):
+                                                       colours=self.colour_lookup, overview=True,
+                                                       prefix=self.prefix):
             svg.addElement(group)
         for index, cluster in enumerate(self.hits):
             for group in cluster.get_svg_groups(v_offset=50 * (index + 1),
-                             h_offset=(self.max_length - len(cluster)) // 2,
-                             scaling=scaling, colours=self.colour_lookup, overview=True,
-                             prefix=self.prefix):
+                                                h_offset=(self.max_length - len(cluster)) // 2,
+                                                scaling=scaling, colours=self.colour_lookup, overview=True,
+                                                prefix=self.prefix):
                 svg.addElement(group)
         return svg.getXML()
 
@@ -626,7 +626,7 @@ class ClusterSVGBuilder:
         scaling = (width - 20) / max_length
         for i, cluster in enumerate([self.query_cluster, self.hits[index]]):
             for group in cluster.get_svg_groups(v_offset=50 * i,
-                    h_offset=(max_length - len(cluster)) // 2,
-                    scaling=scaling, colours=self.colour_lookup):
+                                                h_offset=(max_length - len(cluster)) // 2,
+                                                scaling=scaling, colours=self.colour_lookup):
                 svg.addElement(group)
         return svg.getXML()

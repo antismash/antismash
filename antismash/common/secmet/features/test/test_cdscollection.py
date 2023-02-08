@@ -53,7 +53,7 @@ class TestCDSCollection(unittest.TestCase):
 
         # without a record, this breaks
         with self.assertRaisesRegex(ValueError, "Cannot determine"):
-            outer.contig_edge
+            outer.contig_edge  # pylint: disable=pointless-statement
 
         # add the record, ensure for testing that everything starts not on the edge
         record = DummyRecord(seq="A"*70)

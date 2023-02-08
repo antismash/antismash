@@ -21,6 +21,7 @@ from .data_structures import Prediction
 from .name_mappings import get_substrate_by_name, is_valid_norine_name
 from .signatures import get_a_dom_signatures
 
+
 def _build_stach_codes() -> Dict[str, Set[str]]:
     """ Builds a mapping of Stachelhaus prediction to code from NRPSPredictor2's
         data for use in checking how good a hit it really is
@@ -198,7 +199,6 @@ class PredictorSVMResult(Prediction):
                                   json["single_amino_pred"], json["stachelhaus_predictions"],
                                   json["uncertain"], json["stachelhaus_seq"],
                                   json["stachelhaus_match_count"])
-
 
 
 def read_output(lines: List[str]) -> Dict[str, Prediction]:

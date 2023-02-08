@@ -14,9 +14,9 @@ from antismash.common.all_orfs import (
     get_trimmed_orf,
     scan_orfs,
 )
+from antismash.common.secmet.test.helpers import DummySubRegion
 
 from .helpers import DummyCDS, DummyRecord
-from antismash.common.secmet.test.helpers import DummySubRegion
 
 
 class TestOrfCounts(unittest.TestCase):

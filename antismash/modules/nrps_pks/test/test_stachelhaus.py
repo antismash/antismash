@@ -44,7 +44,6 @@ class TestStachelhausPrediction(unittest.TestCase):
         assert restored.get_classification() == []
         assert restored.aa10 == "FAKEDATAOK"
 
-
         data = json.dumps(self.prediction.to_json())
         restored = stachelhaus.StachelhausPrediction.from_json(json.loads(data))
         assert restored.get_classification() == self.prediction.get_classification()
@@ -69,7 +68,7 @@ FAKE_A_DOMAIN_SIGNATURES = (
     ("DVSAIGCVTK", "LDLIFDVSVSEMAMIVGGEINCYGPTETTVTATL"),  # should hit once, Trp
     ("DAACIGNVVK", "MWHVFDASIAEPCLITGGDYNNYGPTENTVVATW"),  # should hit two 10 AA sigs but only one 34 AA sig, Trp
     ("DAACIGNVVK", "LWHVFDASIAEPCLITGGDYNNYGPTENTVVATW"),  # shouldn't hit any 34 AA sig, but consensus Trp anyway
-    ("DFWNIGMVHK", "LALAFDFSVWEGNQIFGGEVNMYGITETTVHVSY"),  # no aa34 hits, consensus Thr with a more complicated consensus
+    ("DFWNIGMVHK", "LALAFDFSVWEGNQIFGGEVNMYGITETTVHVSY"),  # no aa34 hits, consensus Thr but complicated
     ("DVMFYTALVK", "LRQMFDVSFMECFLYTTGEINAYGPSEAHLVSAR"),  # multiple substrates in consensus results, Trp|Tyr
     (None, None),                                          # Should not break on this
 )
@@ -93,7 +92,6 @@ class TestStachelhaus(unittest.TestCase):
                 "none"]:
             self.domains.append(DummyAntismashDomain(locus_tag="A", domain_id=domain_id))
 
-
     @patch.object(stachelhaus, "get_a_dom_signatures", side_effect=FAKE_A_DOMAIN_SIGNATURES)
     def test_run_stachelhaus(self, _patched_get_a_dom_signatures):
         predictions = stachelhaus.run_stachelhaus(self.domains, self.config)
@@ -111,7 +109,8 @@ class TestStachelhaus(unittest.TestCase):
         assert "none" not in predictions
 
     @patch.object(stachelhaus, "init_data", return_value=FAKE_KNOWN_STACH_CODES)
-    @patch.object(stachelhaus, "get_a_dom_signatures", side_effect=[("FAKEDATAOK", "ILIKEDATAEVENFAKEDATADIDISAYILIKED")])
+    @patch.object(stachelhaus, "get_a_dom_signatures",
+                  side_effect=[("FAKEDATAOK", "ILIKEDATAEVENFAKEDATADIDISAYILIKED")])
     def test_run_stachelhaus_combine_consensus(self, _patched_sigs, _patched_codes):
         domains = [
             DummyAntismashDomain(locus_tag="A", domain_id="different_multi"),

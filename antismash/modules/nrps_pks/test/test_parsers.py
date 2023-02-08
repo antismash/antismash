@@ -10,6 +10,7 @@ from antismash.modules.nrps_pks import parsers
 from antismash.modules.nrps_pks.data_structures import Prediction, SimplePrediction
 from antismash.modules.nrps_pks.name_mappings import KNOWN_SUBSTRATES
 
+
 class TestNrpsConsensus(unittest.TestCase):
     def setUp(self) -> None:
         self.go = parsers.generate_nrps_consensus

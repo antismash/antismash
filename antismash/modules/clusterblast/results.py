@@ -64,7 +64,7 @@ class RegionResult:
         if prefix != "subclusterblast":
             record_prefix = (region.parent_record.original_id or region.parent_record.id).split(".", 1)[0]
             display_ranking = list(filter(lambda pair: pair[0].accession != record_prefix, display_ranking))
-            if len(display_ranking) < display_limit and len(self.ranking) - 1 > display_limit:
+            if len(display_ranking) < display_limit < len(self.ranking) - 1:
                 display_ranking.append(self.ranking[display_limit])
         assert len(display_ranking) <= display_limit
         self.svg_builder = ClusterSVGBuilder(region, display_ranking, reference_proteins, prefix)

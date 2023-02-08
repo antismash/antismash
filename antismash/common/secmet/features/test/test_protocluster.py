@@ -81,7 +81,6 @@ class TestProtocluster(unittest.TestCase):
         assert cluster.contig_edge is True
 
 
-
 class TestSideloaded(unittest.TestCase):
     def test_conversion(self):
         core = FeatureLocation(8, 71, strand=1)

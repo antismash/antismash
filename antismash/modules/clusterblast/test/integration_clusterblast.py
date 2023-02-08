@@ -21,7 +21,7 @@ from antismash.modules import clusterblast
 from antismash.modules.clusterblast import core, known
 
 
-def known_dir(filename, *args):
+def known_dir(filename, *_args):
     return path.get_full_path(__file__, "data", "known", filename)
 
 
