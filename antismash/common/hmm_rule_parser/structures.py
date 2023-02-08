@@ -63,6 +63,7 @@ class DynamicProfile(Signature):
 
 @dataclasses.dataclass
 class Multipliers:
+    """ Multipliers for use in scaling appropriate values within rules. """
     cutoff: float = 1.0
     neighbourhood: float = 1.0
 
@@ -73,8 +74,10 @@ class Multipliers:
             raise ValueError("neighbourhood multiplier must be positive")
 
     def to_json(self) -> dict[str, Any]:
+        """ Converts the instance to a JSON-friendly representation """
         return dataclasses.asdict(self)
 
     @classmethod
     def from_json(cls, data: dict[str, Any]) -> "Multipliers":
+        """ Rebuilds an instance from a JSON-friendly representation """
         return cls(**data)
