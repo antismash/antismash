@@ -60,13 +60,13 @@ class DetectionResults(ModuleResults):  # keeping abstract is deliberate, pylint
     def add_to_record(self, record: Record) -> None:
         pass
 
-    def get_predicted_protoclusters(self) -> List[Protocluster]:  # pylint: disable=no-self-use
+    def get_predicted_protoclusters(self) -> List[Protocluster]:
         """ Returns a list of Protocluster features predicted by the module.
             Should be overridden by any subclass that makes cluster predictions.
         """
         return []
 
-    def get_predicted_subregions(self) -> List[SubRegion]:  # pylint: disable=no-self-use
+    def get_predicted_subregions(self) -> List[SubRegion]:
         """ Returns a list of SubRegion features predicted by the module.
             Should be overridden by any subclass that makes region predictions.
         """
