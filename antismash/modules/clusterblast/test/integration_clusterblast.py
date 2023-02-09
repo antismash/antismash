@@ -11,14 +11,16 @@ from unittest.mock import patch
 
 from helperlibs.wrappers.io import TemporaryDirectory
 
-from antismash.main import get_all_modules
+from antismash import main
 from antismash.common import path
 from antismash.common.module_results import ModuleResults
 from antismash.common.test import helpers
 from antismash.common.subprocessing.diamond import run_diamond_version
 from antismash.config import build_config, get_config, update_config, destroy_config
+from antismash.detection import hmm_detection
 from antismash.modules import clusterblast
 from antismash.modules.clusterblast import core, known
+from antismash.outputs import html
 
 
 def known_dir(filename, *_args):
@@ -27,12 +29,13 @@ def known_dir(filename, *_args):
 
 class Base(unittest.TestCase):
     def setUp(self):
-        options = build_config(self.get_args(), isolated=True, modules=get_all_modules())
+        options = build_config(self.get_args(), isolated=True, modules=[clusterblast, html, hmm_detection])
         _major, _minor, _patch = map(int, run_diamond_version().split("."))
         self.diamond_ver_major = _major
         self.diamond_ver_minor = _minor
         self.diamond_ver_patch = _patch
         self.old_config = get_config().__dict__
+        update_config({"genefinding_gff3": ""})
         self.options = update_config(options)
 
         with patch.object(known, "_get_datafile_path", side_effect=known_dir):
@@ -68,7 +71,9 @@ class Base(unittest.TestCase):
     def run_antismash(self, filename, expected):
         with TemporaryDirectory() as output_dir:
             update_config({"output_dir": output_dir})
-            results = helpers.run_and_regenerate_results_for_module(filename, clusterblast, self.options)
+            with patch.object(main, "get_all_modules", return_value=[hmm_detection, clusterblast, html]):
+                with patch.object(main, "_get_all_enabled_modules", return_value=[hmm_detection, clusterblast, html]):
+                    results = helpers.run_and_regenerate_results_for_module(filename, clusterblast, self.options)
             update_config({"output_dir": ""})
             results, global_results = self.get_results(results)
             assert len(results.region_results) == 1
@@ -238,7 +243,7 @@ class SubIntegrationTest(Base):
 
 class TestDatabaseValidity(unittest.TestCase):
     def setUp(self):
-        options = build_config([], isolated=True, modules=get_all_modules())
+        options = build_config([], isolated=True, modules=[clusterblast])
         self.old_config = get_config().__dict__
         self.options = update_config(options)
 
