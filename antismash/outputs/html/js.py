@@ -18,7 +18,7 @@ from antismash.common.secmet.features.protocluster import SideloadedProtocluster
 from antismash.common.secmet.features.subregion import SideloadedSubRegion
 from antismash.config import ConfigType
 from antismash.detection.tigrfam.tigr_domain import TIGRDomain
-from antismash.modules import clusterblast, tfbs_finder as tfbs, tta
+from antismash.modules import clusterblast, smcog_trees, tfbs_finder as tfbs, tta
 from antismash.outputs.html.generate_html_table import generate_html_table
 
 searchgtr_links: Dict[str, str] = {}  # TODO: refactor away from global
@@ -394,7 +394,7 @@ def get_description(record: Record, feature: CDSFeature, type_: str,
                              "program=blastp;database=pub/transporter.pep;"
                              f"sequence=sequence%%0A{feature.translation}")
 
-    if options.smcog_trees:
+    if smcog_trees in options.all_enabled_modules:
         for note in feature.notes:  # TODO find a better way to store image urls
             if note.startswith('smCOG tree PNG image:'):
                 urls["smcog_tree"] = note.split(':')[-1]
