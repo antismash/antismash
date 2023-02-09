@@ -674,6 +674,10 @@ def run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
     return result
 
 
+def _get_all_enabled_modules(modules: list[AntismashModule], options: ConfigType) -> list[AntismashModule]:
+    return [module for module in modules if module.is_enabled(options)]
+
+
 def _run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
     """ The real run_antismash, assumes logging is set up around it """
     logging.info("antiSMASH version: %s", options.version)
@@ -684,7 +688,7 @@ def _run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
         return 0
 
     modules = get_all_modules()
-    options.all_enabled_modules = list(filter(lambda x: x.is_enabled(options), modules))
+    options.all_enabled_modules = _get_all_enabled_modules(modules, options)
 
     if options.check_prereqs_only:
         try:
