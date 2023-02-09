@@ -47,14 +47,14 @@
                 <rect x=0 y=2 height=4 width=8 class="svgene-resistance"></rect>
             </svg>
         {% endcall %}
-        {% if (options.tta_enabled or not options.minimal) and record.get_gc_content() >= options.tta_threshold %}
+        {% if tta_name in results and record.get_gc_content() >= options.tta_threshold %}
             {% call le.symbol_legend('legend-tta-codon', 'TTA codons') %}
                 <svg viewbox="0 0 6 6">
                     <polyline class="svgene-tta-codon" points="3,0 0,6 6,6 3,0">
                 </svg>
             {% endcall %}
         {% endif %}
-        {% if (options.tfbs or not options.minimal) %}
+        {% if tfbs_name in results %}
             {% call le.static_symbol_legend('legend-binding-site', 'binding site') %}
                 <svg viewbox="0 -1 8 8">
                     <g class="svgene-binding-site">

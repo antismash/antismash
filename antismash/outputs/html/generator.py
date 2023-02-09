@@ -23,6 +23,7 @@ from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record
 from antismash.common.json import JSONOrf
 from antismash.config import ConfigType
+from antismash.modules import tfbs_finder as tfbs, tta
 from antismash.outputs.html import js
 from antismash.custom_typing import AntismashModule, VisualisationModule
 
@@ -244,7 +245,7 @@ def generate_webpage(records: List[Record], results: List[Dict[str, ModuleResult
                               config=options, job_id=job_id, page_title=page_title,
                               records_without_regions=record_layers_without_regions,
                               svg_tooltip=svg_tooltip, get_region_css=js.get_region_css,
-                              as_js_url=as_js_url,
+                              as_js_url=as_js_url, tta_name=tta.__name__, tfbs_name=tfbs.__name__,
                               )
     return content
 
