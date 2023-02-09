@@ -252,6 +252,8 @@ def run_module(record: Record, module: AntismashModule, options: ConfigType,
         Returns:
             None
     """
+    if module not in options.all_enabled_modules:
+        return
     previous_results = module_results.pop(module.__name__, None)
     results = None
     if previous_results is not None:
