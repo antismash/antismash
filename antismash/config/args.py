@@ -611,11 +611,11 @@ def debug_options() -> ModuleArgs:
                      action='store_true',
                      default=False,
                      help="List all available sec. met. detection modules.")
-    group.add_option('--check-prereqs',
+    group.add_option('--check-prereqs', '--prepare-data',
                      dest='check_prereqs_only',
                      action='store_true',
                      default=False,
-                     help="Just check if all prerequisites are met.")
+                     help="Check if all prerequisites are met, preparing data files where possible.")
     group.add_option('--limit-to-record',
                      dest='limit_to_record',
                      default="",
