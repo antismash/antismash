@@ -535,7 +535,7 @@ def advanced_options() -> ModuleArgs:
                      dest="limit",
                      type=int,
                      default=-1,
-                     help="Only process the first <limit> records (default: %(default)s). -1 to disable")
+                     help="Only process the largest <limit> records (default: %(default)s). -1 to disable")
     group.add_option('--minlength',
                      dest="minlength",
                      type=int,

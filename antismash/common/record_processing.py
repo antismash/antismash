@@ -284,7 +284,7 @@ def filter_records_by_name(sequences: List[Record], target: str) -> None:
 
 
 def filter_records_by_count(records: List[Record], maximum: int) -> bool:
-    """ Mark all records after the first 'maximum' non-skipped records as skipped.
+    """ Mark all records after the largest 'maximum' non-skipped records as skipped.
 
         If maximum is -1, no records will be skipped due to count.
 
@@ -295,8 +295,11 @@ def filter_records_by_count(records: List[Record], maximum: int) -> bool:
     Returns:
         True if any records were marked as skipped due to hitting the limit
     """
-    if maximum == -1:
+    if maximum == -1 or maximum > len(records):
         return False
+
+    # sort by decreasing length, breaking ties by keeping existing ordering
+    records = [pair[1] for pair in sorted(enumerate(records), key=lambda x: (-len(x[1]), x[0]))]
 
     limit_hit = False
     meaningful = 0
@@ -306,7 +309,7 @@ def filter_records_by_count(records: List[Record], maximum: int) -> bool:
         meaningful += 1
         if meaningful > maximum:
             limit_hit = True
-            record.skip = "skipping all but first {0} meaningful records (--limit {0}) ".format(maximum)
+            record.skip = "skipping all but largest {0} meaningful records (--limit {0}) ".format(maximum)
 
     return limit_hit
 

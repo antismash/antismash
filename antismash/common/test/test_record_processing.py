@@ -258,7 +258,20 @@ class TestPreprocessRecords(unittest.TestCase):
         config.update_config({"limit": 1})
         record_processing.pre_process_sequences(records, self.options, self.genefinding)
         assert records[0].skip is None
-        assert records[1].skip.startswith("skipping all but first 1")
+        assert records[1].skip.startswith("skipping all but largest 1")
+        assert self.options.triggered_limit
+
+    def test_limit_uses_largest(self):
+        cds = helpers.DummyCDS(start=1, end=7)
+        records = [helpers.DummyRecord(seq="A" * i, features=[cds]) for i in [50, 10, 70]]
+        config.update_config({
+            "limit": 2,
+            "minlength": 0,
+        })
+        record_processing.pre_process_sequences(records, self.options, self.genefinding)
+        assert records[0].skip is None
+        assert records[1].skip.startswith("skipping all but largest")
+        assert records[2].skip is None
         assert self.options.triggered_limit
 
     def test_limit_to_record_partial(self):
