@@ -43,7 +43,7 @@
 
  {% if pfam_notes %}
  <br>
- <span class="bold">PFAM hits:</span>{{collapser_start(feature.get_name(), level="none")}}
+ <span class="bold">Pfam hits:</span>{{collapser_start(feature.get_name(), level="none")}}
  {% for note in pfam_notes %}
   {{note}}<br>
  {% endfor %}
@@ -62,7 +62,7 @@
 
  {% if go_notes %}
   <br>
-  <span class="bold"> Gene Ontology terms for PFAM domains:</span>{{collapser_start(feature.get_name(), level="none")}}
+  <span class="bold">Gene Ontology terms for Pfam domains:</span>{{collapser_start(feature.get_name(), level="none")}}
   {% for note in go_notes %}
    {{note}}<br>
   {% endfor %}
