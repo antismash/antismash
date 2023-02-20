@@ -21,6 +21,7 @@ import matplotlib
 
 from antismash.common import path, fasta, subprocessing
 from antismash.common.secmet import CDSFeature
+from antismash.config import get_config
 
 # silence the matplotlib noisy logging (relevant when options.debug is set)
 logging.getLogger('matplotlib').setLevel(logging.WARNING)
@@ -128,7 +129,8 @@ def draw_tree(input_number: int, output_dir: str, tag: str) -> str:
             the filename of the image generated
     """
     matplotlib.use('Agg')
-    command = ["fasttree", "-quiet", "-fastest", "-noml", f"trimmed_alignment{input_number}.fasta"]
+    command = [get_config().executables.fasttree, "-quiet", "-fastest", "-noml",
+               f"trimmed_alignment{input_number}.fasta"]
     run_result = subprocessing.execute(command)
     if not run_result.successful():
         raise RuntimeError(f"Fasttree failed to run successfully: {run_result.stderr}")
