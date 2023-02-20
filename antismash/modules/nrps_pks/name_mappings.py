@@ -312,7 +312,7 @@ def get_substrate_by_name(name: str) -> SubstrateName:
         return _SHORT_TO_SUBSTRATE[lc_name]
     if lc_name in _NORINE_TO_SUBSTRATE:
         return _NORINE_TO_SUBSTRATE[lc_name]
-    raise ValueError(f"Substrate {name} not found")
+    raise ValueError(f"Substrate {name!r} not found")
 
 
 def is_valid_norine_name(name: str) -> bool:
