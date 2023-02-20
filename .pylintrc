@@ -2,6 +2,8 @@
 ignore=external
 reports=y
 disable=too-few-public-methods
+extension-pkg-whitelist=
+    nrpys
 
 [MESSAGES CONTROL]
 # raising 'from' is almost entirely false positives

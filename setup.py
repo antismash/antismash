@@ -23,6 +23,7 @@ install_requires = [
     'joblib',
     'jsonschema',
     'markupsafe >= 2.0',
+    'nrpys',
     'pysvg-py3',
     'bcbio-gff',
     'pyScss',
