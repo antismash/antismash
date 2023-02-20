@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import Any
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, order=True)
 class SubstrateName:
     """ A mapping of substrate names using multiple naming conventions """
     long: str
