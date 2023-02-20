@@ -442,10 +442,10 @@ def _main() -> None:
         antiSMASH's module data is prepared.
     """
     # Small dance to grab the antiSMASH config for the database dir.
-    # We don't actually want to keep anything else, but we need to load all the
-    # modules to make sure we can parse the file.
+    # All the modules are required to parse the config file,
+    # and any executable paths defined should be kept.
     all_modules = antismash.get_detection_modules() + antismash.get_analysis_modules()
-    config = antismash.config.build_config(args=[], parser=None, isolated=True, modules=all_modules)
+    config = antismash.config.build_config(args=[], parser=None, isolated=False, modules=all_modules)
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
