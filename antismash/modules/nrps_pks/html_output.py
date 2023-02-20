@@ -49,11 +49,16 @@ def generate_html(region_layer: RegionLayer, results: NRPS_PKS_Results,
               " (and, for some tools, further expanded for extra details). "
               )
 
-    if not nrps_layer.has_any_polymer():
-        return html
+    template_components = []
+    # only show a polymer tab if there's polymers
+    if nrps_layer.has_any_polymer():
+        template_components.append(("products.html", "NRPS/PKS products", "nrps_pks_products", prod_tt))
 
-    for filename, name, class_name, tooltip in [("products.html", "NRPS/PKS products", "nrps_pks_products", prod_tt),
-                                                ("monomers.html", "NRPS/PKS monomers", "", mon_tt)]:
+    # always include monomers, if available
+    if features_with_domain_predictions:
+        template_components.append(("monomers.html", "NRPS/PKS monomers", "nrps_pks_monomers", mon_tt))
+
+    for filename, name, class_name, tooltip in template_components:
         template = FileTemplate(path.get_full_path(__file__, "templates", filename))
         section = template.render(record=record_layer,
                                   region=nrps_layer,
