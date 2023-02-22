@@ -69,31 +69,22 @@ class IntegrationNRPSPKS(unittest.TestCase):
         feature_names = nrps_names + ["nrpspksdomains_pks_CAL_domain.1"]
         assert set(results.domain_predictions) == set(feature_names)
 
-        assert set(results.domain_predictions[feature_names[0]]) == {"NRPSPredictor2", "Stachelhaus"}
-        nrpspred2_results = {}
-        nrpspred2_norine_results = {}
-        stachelhaus_results = {}
-        stachelhaus_norine_results = {}
+        assert set(results.domain_predictions[feature_names[0]]) == {"nrpys"}
+        plain_results = {}
+        norine_results = {}
         for domain, methods in results.domain_predictions.items():
             if "CAL" in domain:
                 continue
-            nrpspred2_results[domain] = methods["NRPSPredictor2"].get_classification()
-            nrpspred2_norine_results[domain] = methods["NRPSPredictor2"].get_classification(as_norine=True)
-            stachelhaus_results[domain] = methods["Stachelhaus"].get_classification()
-            stachelhaus_norine_results[domain] = methods["Stachelhaus"].get_classification(as_norine=True)
+            plain_results[domain] = methods["nrpys"].get_classification()
+            norine_results[domain] = methods["nrpys"].get_classification(as_norine=True)
 
-        expected_preds = [["leu"], ["bht"], ["asn"], ["hpg"], ["hpg"], ["bht"], ["dhpg"], ["tyr"], ["pk"]]
-        expected_stachelhaus_preds = [["Leu"], ["R-ohTyr"], ["Asn"], ["Hpg"], ["Hpg"], ["R-ohTyr"], ["dHpg"], ["Tyr"]]
+        expected_preds = [["Leu"], ["bOH-Tyr"], ["Asn"], ["Hpg"], ["Hpg"], ["bOH-Tyr"], ["Dhpg"], ["Tyr"], ["pk"]]
         expected_norine_preds = [["Leu"], ["bOH-Tyr"], ["Asn"], ["Hpg"], ["Hpg"], ["bOH-Tyr"], ["Dhpg"], ["Tyr"]]
 
-        expected_nrps2 = dict(zip(nrps_names, expected_preds))
-        assert nrpspred2_results == expected_nrps2
-        expected_nrps2_norine = dict(zip(nrps_names, expected_norine_preds))
-        assert nrpspred2_norine_results == expected_nrps2_norine
-        expected_stachelhaus = dict(zip(nrps_names, expected_stachelhaus_preds))
-        assert stachelhaus_results == expected_stachelhaus
-        expected_stachelhaus_norine = dict(zip(nrps_names, expected_norine_preds))
-        assert stachelhaus_norine_results == expected_stachelhaus_norine
+        expected = dict(zip(nrps_names, expected_preds))
+        assert plain_results == expected
+        expected_norine = dict(zip(nrps_names, expected_norine_preds))
+        assert norine_results == expected_norine
 
         cal = results.domain_predictions["nrpspksdomains_pks_CAL_domain.1"]["minowa_cal"]
         assert len(cal.predictions) == 5

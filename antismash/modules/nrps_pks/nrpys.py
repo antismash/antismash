@@ -64,8 +64,14 @@ def check_prereqs(options: ConfigType) -> list[str]:
         failure_messages.append(f"Failed to locate {datafile_path}")
     model_dir = _get_model_dir(options)
     if not os.path.exists(model_dir):
-        failure_messages.append(f"Falied to locate {model_dir}")
+        failure_messages.append(f"Failed to locate {model_dir}")
     return failure_messages
+
+
+def _get_norine_if_not_x(substrate: SubstrateName) -> str:
+    if substrate.norine == "X":
+        return substrate.short
+    return substrate.norine
 
 
 @dataclass
@@ -77,12 +83,12 @@ class StachelhausMatch:
     aa34_score: float
 
     def __str__(self) -> str:
-        name = " or ".join(map(lambda x: x.norine, self.substrates))
+        name = " or ".join(map(_get_norine_if_not_x, self.substrates))
         return f"{name} ({self.signature})"
 
     def html(self) -> str:
         """ Return HTML-friendly stringification """
-        name = " or ".join(map(lambda x: x.norine if x.norine != "X" else x.short, self.substrates))
+        name = " or ".join(map(_get_norine_if_not_x, self.substrates))
         return (f'<dd>{name} <span class="serif">{self.signature}</span> '
                 f'({round(self.aa34_score * 100)}% 8Å match)</dd>')
 
@@ -126,7 +132,7 @@ class SvmPrediction:
     def __str__(self) -> str:
         if self.name == "N/A":
             return self.name
-        substrates = ", ".join(map(lambda x: x.norine, self.substrates))
+        substrates = ", ".join(map(_get_norine_if_not_x, self.substrates))
         return f"{self.name} ({substrates})"
 
     @classmethod
@@ -136,61 +142,8 @@ class SvmPrediction:
             return cls("N/A", 0.0, [])
 
         pred = predictions[0]
-        substrates: list[SubstrateName] = []
 
-        if pred.name == "hydrophilic":
-            substrates = list(map(get_substrate_by_name, [
-                "Arg", "Asp", "Glu", "Asn", "Lys", "Gln",
-                "Orn", "Aad",
-            ]))
-            return cls(pred.name, pred.score, substrates)
-        if pred.name == "hydrophobic-aliphatic":
-            substrates = list(map(get_substrate_by_name, [
-                "Ala", "Gly", "Val", "Leu", "Ile", "Abu",
-                "Iva", "Ser", "Thr", "Hpg", "dHpg", "Cys",
-                "Pro", "Pip",
-            ]))
-            return cls(pred.name, pred.score, substrates)
-        if pred.name == "hydrophobic-aromatic":
-            substrates = list(map(get_substrate_by_name, [
-                "Phe", "Tyr", "2,3-dohBza", "Pgl", "R-ohTyr",
-            ]))
-            return cls(pred.name, pred.score, substrates)
-
-        for part in pred.name.split(","):
-            name = NRPSPRED_TO_AS.get(part, part)
-            substrates.append(get_substrate_by_name(name))
-
-        if pred.name == "asp,asn,glu,gln,aad":
-            name = "Aliphatic chain with H-bond donor"
-        elif pred.name == "cys":
-            name = "Polar, uncharged (aliphatic with -SH)"
-        elif pred.name == "dhb,sal":
-            name = "Hydroxy-benzoic acid derivates"
-        elif pred.name == "gly,ala,val,leu,ile,abu,iva":
-            name = "Apolar, aliphatic"
-        elif pred.name == "orn,lys,arg":
-            name = "Long positively charged side chain"
-        elif pred.name == "phe,trp,phg,tyr,bht":
-            name = "Aromatic side chain"
-        elif pred.name == "pro,pip":
-            name = "Cyclic aliphatic chain (polar NH2 group)"
-        elif pred.name == "ser,thr,dhpg,hpg":
-            name = "Aliphatic chain or phenyl group with -OH"
-        elif pred.name == "dhpg,hpg":
-            name = "Polar, uncharged (hydroxy-phenyl)"
-        elif pred.name == "gly,ala":
-            name = "Tiny, hydrophilic, transition to aliphatic"
-        elif pred.name == "orn,horn":
-            name = "Orn and hydroxy-Orn specific"
-        elif pred.name == "phe,trp":
-            name = "Unpolar aromatic ring"
-        elif pred.name == "tyr,bht":
-            name = "Polar aromatic ring"
-        elif pred.name == "val,leu,ile,abu,iva":
-            name = "Aliphatic, branched hydrophobic"
-        else:
-            name = pred.name
+        name, substrates = _resolve_name_substrates(pred)
 
         return cls(name, pred.score, substrates)
 
@@ -207,6 +160,66 @@ class SvmPrediction:
         """ Create an SvmPrediction from the JSON representation """
         substrates = [SubstrateName.from_json(d) for d in data["substrates"]]
         return cls(data["name"], data["score"], substrates)
+
+
+def _resolve_name_substrates(pred: nrpys.Prediction) -> tuple[str, list[SubstrateName]]:
+    substrates: list[SubstrateName] = []
+
+    if pred.name == "hydrophilic":
+        substrates = list(map(get_substrate_by_name, [
+            "Arg", "Asp", "Glu", "Asn", "Lys", "Gln",
+            "Orn", "Aad",
+        ]))
+        return (pred.name, substrates)
+    if pred.name == "hydrophobic-aliphatic":
+        substrates = list(map(get_substrate_by_name, [
+            "Ala", "Gly", "Val", "Leu", "Ile", "Abu",
+            "Iva", "Ser", "Thr", "Hpg", "dHpg", "Cys",
+            "Pro", "Pip",
+        ]))
+        return (pred.name, substrates)
+    if pred.name == "hydrophobic-aromatic":
+        substrates = list(map(get_substrate_by_name, [
+            "Phe", "Tyr", "2,3-dohBza", "Pgl", "R-ohTyr",
+        ]))
+        return (pred.name, substrates)
+
+    for part in pred.name.split(","):
+        name = NRPSPRED_TO_AS.get(part, part)
+        substrates.append(get_substrate_by_name(name))
+
+    if pred.name == "asp,asn,glu,gln,aad":
+        name = "Aliphatic chain with H-bond donor"
+    elif pred.name == "cys":
+        name = "Polar, uncharged (aliphatic with -SH)"
+    elif pred.name == "dhb,sal":
+        name = "Hydroxy-benzoic acid derivates"
+    elif pred.name == "gly,ala,val,leu,ile,abu,iva":
+        name = "Apolar, aliphatic"
+    elif pred.name == "orn,lys,arg":
+        name = "Long positively charged side chain"
+    elif pred.name == "phe,trp,phg,tyr,bht":
+        name = "Aromatic side chain"
+    elif pred.name == "pro,pip":
+        name = "Cyclic aliphatic chain (polar NH2 group)"
+    elif pred.name == "ser,thr,dhpg,hpg":
+        name = "Aliphatic chain or phenyl group with -OH"
+    elif pred.name == "dhpg,hpg":
+        name = "Polar, uncharged (hydroxy-phenyl)"
+    elif pred.name == "gly,ala":
+        name = "Tiny, hydrophilic, transition to aliphatic"
+    elif pred.name == "orn,horn":
+        name = "Orn and hydroxy-Orn specific"
+    elif pred.name == "phe,trp":
+        name = "Unpolar aromatic ring"
+    elif pred.name == "tyr,bht":
+        name = "Polar aromatic ring"
+    elif pred.name == "val,leu,ile,abu,iva":
+        name = "Aliphatic, branched hydrophobic"
+    else:
+        name = pred.name
+
+    return (name, substrates)
 
 
 class PredictorSVMResult(Prediction):
