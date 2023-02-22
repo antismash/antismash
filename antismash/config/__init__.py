@@ -151,6 +151,10 @@ def build_config(args: List[str], parser: Optional[AntismashParser] = None, isol
         result = parser.parse_args(args)
         result.database_dir = databases
 
+    # set a base value for the record count limit
+    default.__dict__.update({"triggered_limit": False})
+
+    # then update with all the values from config files
     default.__dict__.update(result.__dict__)
     config = Config(default)
     assert isinstance(config, ConfigType)
