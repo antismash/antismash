@@ -17,7 +17,6 @@ from .parsers import calculate_consensus_prediction
 from .results import NRPS_PKS_Results
 from .substrates import run_pks_substr_spec_predictions
 
-from .nrps_predictor import run_nrpspredictor
 from .nrpys import run_nrpys
 
 
@@ -52,8 +51,6 @@ def specific_analysis(record: Record, results: NRPS_PKS_Results, options: Config
 
     a_domains = get_a_domains_from_cds_features(record, nrps_pks_genes)
     if a_domains:
-        logging.info("Predicting A domain substrate specificities with NRPSPredictor2")
-        results.add_method_results("NRPSPredictor2", run_nrpspredictor(a_domains, options))
         logging.info("Predicting A domain substrate specificities with nrpys")
         results.add_method_results("nrpys", run_nrpys(a_domains, options))
 
