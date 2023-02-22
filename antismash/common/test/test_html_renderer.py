@@ -6,6 +6,7 @@
 
 import re
 import unittest
+from unittest.mock import patch
 
 from antismash.common import html_renderer as renderer
 from antismash.config import build_config
@@ -233,3 +234,17 @@ class TestJS(unittest.TestCase):
 
     def test_url_has_version(self):
         assert renderer.get_antismash_js_version() in renderer.get_antismash_js_url()
+
+
+def test_extra_template_paths():
+    with patch.object(renderer._jinja2, "Environment"):
+        with patch.object(renderer._jinja2, "FileSystemLoader") as mocked_loader:
+            renderer.FileTemplate("some/path/template.html")
+            mocked_loader.assert_called_once_with(["some/path"])
+        with patch.object(renderer._jinja2, "FileSystemLoader") as mocked_loader:
+            extras = [
+                "/some/abs/path",
+                "../a/rel/dir",
+            ]
+            renderer.FileTemplate("some/path/template.html", extra_paths=extras)
+            mocked_loader.assert_called_once_with(["some/path"] + extras)
