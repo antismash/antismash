@@ -37,7 +37,6 @@ class TestOutput(unittest.TestCase):
 
         # add information normally added by record processing
         record.record_index = 1
-        update_config({"triggered_limit": False})
 
         # make sure HTML is generated without errors
         with TemporaryDirectory() as temp_dir:
