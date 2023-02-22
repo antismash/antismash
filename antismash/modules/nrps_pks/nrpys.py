@@ -22,9 +22,10 @@ from .name_mappings import get_substrate_by_name, SubstrateName
 from .signatures import get_a_dom_signatures
 
 SIGNATURE_FILE_NAME = "signatures.tsv"
+MINIMUM_VERSION = "1.1"
 
 
-def _get_signature_path(config: ConfigType) -> str:
+def _get_signature_path(config: ConfigType, minimum_version: Optional[str] = None) -> str:
     """ A helper to construct the absolute path to the Stachelhaus signature file in the
         data directory.
 
@@ -36,6 +37,11 @@ def _get_signature_path(config: ConfigType) -> str:
     """
     root = os.path.join(config.database_dir, "nrps_pks", "stachelhaus")
     version = find_latest_database_version(root)
+    if minimum_version:
+        min_major, min_minor = map(int, minimum_version.split("."))
+        version_major, version_minor = map(int, version.split("."))
+        if version_major < min_major or (version_major == min_major and version_minor < min_minor):
+            return os.path.join(root, minimum_version, SIGNATURE_FILE_NAME)
     return os.path.join(root, version, SIGNATURE_FILE_NAME)
 
 
@@ -59,7 +65,7 @@ def check_prereqs(options: ConfigType) -> list[str]:
     failure_messages: list[str] = []
     if "mounted_at_runtime" in options.database_dir:  # can't prepare this one
         return failure_messages
-    datafile_path = _get_signature_path(options)
+    datafile_path = _get_signature_path(options, minimum_version=MINIMUM_VERSION)
     if not os.path.exists(datafile_path):
         failure_messages.append(f"Failed to locate {datafile_path}")
     model_dir = _get_model_dir(options)
