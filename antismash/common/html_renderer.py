@@ -6,7 +6,7 @@
 """
 
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import jinja2 as _jinja2
 from markupsafe import Markup
@@ -284,12 +284,12 @@ class _Template:  # pylint: disable=too-few-public-methods
 
         Non-functional on its own, requires self.template to be set to a jinja Template
     """
-    def __init__(self, template_dir: Optional[str] = None) -> None:
+    def __init__(self, search_path: Optional[Union[str, list[str]]] = None) -> None:
         self.template: Optional[_jinja2.Template] = None
-        if not template_dir:
+        if not search_path:
             loader = _jinja2.BaseLoader()
         else:
-            loader = _jinja2.FileSystemLoader(template_dir)
+            loader = _jinja2.FileSystemLoader(search_path)
         self.env = _jinja2.Environment(loader=loader, autoescape=True,
                                        undefined=_jinja2.StrictUndefined)
 
@@ -322,6 +322,8 @@ class StringTemplate(_Template):  # pylint: disable=too-few-public-methods
 
 class FileTemplate(_Template):  # pylint: disable=too-few-public-methods
     """ A template renderer for file templates """
-    def __init__(self, template_file: str) -> None:
-        super().__init__(os.path.dirname(template_file))
+    def __init__(self, template_file: str, extra_paths: Optional[list[str]] = None) -> None:
+        if extra_paths is None:
+            extra_paths = []
+        super().__init__(search_path=[os.path.dirname(template_file)] + extra_paths)
         self.template = self.env.get_template(os.path.basename(template_file))
