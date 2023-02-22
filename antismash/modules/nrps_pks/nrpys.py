@@ -77,12 +77,12 @@ class StachelhausMatch:
     aa34_score: float
 
     def __str__(self) -> str:
-        name = " or ".join(map(lambda x: x.short, self.substrates))
+        name = " or ".join(map(lambda x: x.norine, self.substrates))
         return f"{name} ({self.signature})"
 
     def html(self) -> str:
         """ Return HTML-friendly stringification """
-        name = " or ".join(map(lambda x: x.short, self.substrates))
+        name = " or ".join(map(lambda x: x.norine if x.norine != "X" else x.short, self.substrates))
         return (f'<dd>{name} <span class="serif">{self.signature}</span> '
                 f'({round(self.aa34_score * 100)}% 8Å match)</dd>')
 
@@ -126,7 +126,7 @@ class SvmPrediction:
     def __str__(self) -> str:
         if self.name == "N/A":
             return self.name
-        substrates = ", ".join(map(lambda x: x.short, self.substrates))
+        substrates = ", ".join(map(lambda x: x.norine, self.substrates))
         return f"{self.name} ({substrates})"
 
     @classmethod
@@ -292,7 +292,7 @@ class PredictorSVMResult(Prediction):
         def mapper(substrate: SubstrateName) -> str:
             if as_norine:
                 return substrate.norine
-            return substrate.short
+            return substrate.norine if substrate.norine != "X" else substrate.short
 
         return list(map(mapper, substrates))
 
