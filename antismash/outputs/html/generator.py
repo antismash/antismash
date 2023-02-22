@@ -29,6 +29,8 @@ from antismash.custom_typing import AntismashModule, VisualisationModule
 
 from .visualisers import gene_table
 
+TEMPLATE_PATH = path.get_full_path(__file__, "templates")
+
 
 def _get_visualisers() -> List[VisualisationModule]:
     """ Gather all the visualisation-only submodules """
@@ -206,7 +208,7 @@ def generate_webpage(records: List[Record], results: List[Dict[str, ModuleResult
     json_records, js_domains, js_results = build_json_data(records, results, options, all_modules)
     write_regions_js(json_records, options.output_dir, js_domains, js_results)
 
-    template = FileTemplate(path.get_full_path(__file__, "templates", "overview.html"))
+    template = FileTemplate(os.path.join(TEMPLATE_PATH, "overview.html"))
 
     options_layer = OptionsLayer(options, all_modules)
     record_layers_with_regions = []
@@ -266,7 +268,7 @@ def find_plugins_for_cluster(plugins: List[AntismashModule],
 
 def load_searchgtr_search_form_template() -> List[str]:
     """ for SEARCHGTR HTML files, load search form template """
-    with open(path.get_full_path(__file__, "templates", "searchgtr_form.html"),
+    with open(os.path.join(TEMPLATE_PATH, "searchgtr_form.html"),
               "r", encoding="utf-8") as handle:
         template = handle.read().replace("\r", "\n")
     return template.split("FASTASEQUENCE")
