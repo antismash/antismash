@@ -6,8 +6,10 @@
 import argparse
 import gzip
 import hashlib
+import json
 import lzma
 import os
+import pathlib
 import sys
 import tarfile
 from typing import Any, Type
@@ -70,6 +72,10 @@ TIGRFAM_CHECKSUM = "b905785603e1015bbe78d0235d0a6a131345bae35aaab7afbd8f7b59f779
 STACHELHAUS_URL = "https://dl.secondarymetabolites.org/releases/stachelhaus/1.1/signatures.tsv.xz"
 STACHELHAUS_ARCHIVE_CHECKSUM = "90ea6d56503be456f1919769821fec884aff95e7a7290b32a5d8761d3ecd9f98"
 STACHELHAUS_CHECKSUM = "eda79ad1e2c12791e70cb819721c109697295ecab5e8ba253ae658e1afb58cc5"
+
+NRPS_SVM_URL = "https://dl.secondarymetabolites.org/releases/nrps_svm/2.0/models.tar.xz"
+NRPS_SVM_ARCHIVE_CHECKSUM = "501bea0cb5048405c6bbf3e6cb05975e927117c4a080f02f452f86c0eb08c132"
+NRPS_SVM_CHECKSUMS_COLLECTION = "9e53bfd3ab4076d52fcb651831561a2bb8325eff0a7a074f8287fe0ba4e78f54"
 
 TRANSATOR_URL = "https://dl.secondarymetabolites.org/releases/transATor/transATor_2022.12.06.tar.xz"
 TRANSATOR_ARCHIVE_CHECKSUM = "2186ec1ff20c96630ad1d85584b18861bf97efc0acd50cd7c68d2829748d8023"
@@ -385,6 +391,58 @@ def download_stachelhaus(db_dir: str) -> None:
     delete_file(filename + ".xz")
 
 
+def download_nprs_svm(db_dir: str) -> bool:
+    """Download NRPS SVM models"""
+    version, name_part = NRPS_SVM_URL.split("/")[-2:]
+    dirname = pathlib.Path(db_dir) / "nrps_pks" / "svm" / version
+    archive_filename = dirname / name_part
+    checksum_file = dirname / "checksums.json"
+
+    if present_and_checksum_matches(str(checksum_file), NRPS_SVM_CHECKSUMS_COLLECTION):
+        with checksum_file.open("r", encoding="utf-8") as handle:
+            checksums: dict[str, str] = json.load(handle)
+        extras_found = False
+        for name in dirname.rglob("*.mdl"):
+            rel_name = name.relative_to(dirname)
+            if str(rel_name) not in checksums:
+                print("Please remove superfluous file", rel_name)
+                extras_found = True
+                continue
+        if extras_found:
+            print("Found superfluous files, please remove and try again.")
+            return False
+
+        needs_download = False
+        for fname, csum in checksums.items():
+            file = dirname / fname
+            if not file.is_file():
+                print("Missing file", fname)
+                needs_download = True
+                continue
+
+            if csum != checksum(str(file)):
+                print("Checksum mismatch for", fname)
+                needs_download = True
+                continue
+    else:
+        needs_download = True
+
+    if not needs_download:
+        print("NRPS SVM models present and checked.")
+        return True
+
+    print("Downloading NRPS SVM models.")
+    check_diskspace(NRPS_SVM_URL)
+    download_if_not_present(NRPS_SVM_URL, str(archive_filename), NRPS_SVM_ARCHIVE_CHECKSUM)
+    tar = unzip_file(str(archive_filename), lzma, lzma.LZMAError)
+    untar_file(tar)
+    delete_file(tar)
+    assert checksum_file.exists()
+    delete_file(str(archive_filename))
+
+    return True
+
+
 def download_transator(db_dir: str) -> None:
     """Download the Stachelhaus signatures file."""
     version = TRANSATOR_URL.rsplit("_", 1)[1].split(".tar", 1)[0]  # e.g. transator_2022.11.16.tar.xz -> 2022.11.16
@@ -406,7 +464,7 @@ def download_transator(db_dir: str) -> None:
     delete_file(archive_path)
 
 
-def download(args: argparse.Namespace) -> None:
+def download(args: argparse.Namespace) -> bool:
     """Download all the large external databases needed, along with non-python
        components.
     """
@@ -434,7 +492,10 @@ def download(args: argparse.Namespace) -> None:
         download_comparippson_db(args.database_dir, name, **details)
 
     download_stachelhaus(args.database_dir)
+    if not download_nprs_svm(args.database_dir):
+        return False
     download_transator(args.database_dir)
+    return True
 
 
 def _main() -> None:
@@ -457,7 +518,9 @@ def _main() -> None:
 
     args = parser.parse_args()
     antismash.config.update_config({"database_dir": args.database_dir})
-    download(args)
+    if not download(args):
+        print("Errors occurred while downloading, aborted.")
+        sys.exit(1)
     try:
         print("Pre-building all databases...")
         antismash.main.prepare_module_data()
