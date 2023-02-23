@@ -77,9 +77,9 @@ NRPS_SVM_URL = "https://dl.secondarymetabolites.org/releases/nrps_svm/2.0/models
 NRPS_SVM_ARCHIVE_CHECKSUM = "501bea0cb5048405c6bbf3e6cb05975e927117c4a080f02f452f86c0eb08c132"
 NRPS_SVM_CHECKSUMS_COLLECTION = "9e53bfd3ab4076d52fcb651831561a2bb8325eff0a7a074f8287fe0ba4e78f54"
 
-TRANSATOR_URL = "https://dl.secondarymetabolites.org/releases/transATor/transATor_2022.12.06.tar.xz"
-TRANSATOR_ARCHIVE_CHECKSUM = "2186ec1ff20c96630ad1d85584b18861bf97efc0acd50cd7c68d2829748d8023"
-TRANSATOR_CHECKSUM = "11e8a5f1e9eb64e541778240d2aff481e17ef0edd1e5556b1d77016e25339138"
+TRANSATOR_URL = "https://dl.secondarymetabolites.org/releases/transATor/transATor_2023.02.23.tar.xz"
+TRANSATOR_ARCHIVE_CHECKSUM = "1e6cc5ab5aa0c70e26da47097520a49be754967f330c2857895b211e7601751c"
+TRANSATOR_CHECKSUM = "6744065e91d3a1a43664420b38031ce02c4a762b3dffeed2162a1640e9acfceb"
 
 LOCAL_FILE_PATH = os.path.abspath(os.path.dirname(__file__))
 
