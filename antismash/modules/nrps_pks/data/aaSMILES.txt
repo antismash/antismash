@@ -39,27 +39,29 @@ D-Hmp CCC(C)C(O)C(=O)O # 2-hydroxy-3-methyl-pentanoic acid (D-hmp)
 dhpg NC(c1cc(O)cc(O)c1)C(=O)O # 3,5-dihydroxy-phenylglycine
 Hpr N1C(CCCC1)C(=O)O # pipecolic acid
 IVal NC(CC)(C)C(=O)O # isovaline
+OH-Orn NC(CCCNO)C(=O)O # N5-hydroxyornithine
+Fo-OH-Orn NC(CCCN(O)C=O)C(=O)O # N5-formyl-N5-hydroxyornithine
+Ac-OH-Orn NC(CCCN(O)C(=O)C)C(=O)O # L-δ-N-acetyl-δ-N-hydroxyornithine/L-Nδ-hydroxy-Nδ-acylornithine
+C10:0-NH2(2)-Ep(9)-oxo(8) NC(CCCCCC(=O)C1OC1)C(=O)O # 2-amino-8-oxo-9,10-decanoate
+Valol NC(C(C)C)CO # valinol
+Pgl NC(c1ccccc1)C(=O)O # phenylglycine
 
 
 # other NRPSPredictor predictions
-4ppro N1CC(CCC)CC1C(=O)O # 4-propyl-proline
+pPro N1CC(CCC)CC1C(=O)O # 4-propyl-proline
 aad NC(CCCC(=O)O)C(=O)O # 2-amino-adipic acid
 abu NC(C(C))C(=O)O # 2-amino-butyric acid
-aeo NC(CCCCCC(=O)C1OC1)C(=O)O # 2-amino-8-oxo-9,10-decanoate
 bmt NC(C(O)C(C)CC=CC)C(=O)O # 4-butenyl-4-methyl threonine
 cap NC1=NCCC(N1)C(N)C(=O)O # capreomycidine
 dab NC(CCN)C(=O)O # 2,4-diaminobutyric acid
 dht NC(C(=O)C)C(=O)O # dehydro-threonine/2,3-dehydroaminobutyric acid
 hiv OC(C(C)C)C(=O)O # 2-hydroxyisovalerate
-horn NC(CCCNO)C(=O)O # hydroxy ornithine
 hpg NC(c1ccc(O)cc1)C(=O)O # 4-hydroxy-phenylglycine
 hyv NC(C(CO)C)C(=O)O # 4-hydroxy-L-valine
 hyv-d OC(C(C)C)C(=O)O # 2-hydroxy-valeric acid
 orn NC(CCCN)C(=O)O # ornithine
-phg NC(c1ccccc1)C(=O)O # phenylglycine
 sal Oc1ccccc1C(=O)O # salicylic acid (not in norine yet)
 tcl NC(CC(C)C(Cl)(Cl)(Cl))C(=O)O # (4S)-5,5,5-trichloro-leucine
-vol NC(C(C)C)CO # valinol
 LDAP NC(CCCC(N)C(=O)O)C(=O)O # diaminopimelic acid
 meval NC(C(C)(C)C)C(=O)O # Me-Val
 alaninol NC(C)CO
@@ -67,9 +69,7 @@ N-(1,1-dimethyl-1-allyl)Trp NC(CC1=CN(C(C)(C)C=C)c2c1cccc2)C(=O)O
 d-lyserg CN1CC(C=C2C1CC3=CNC4=CC=CC2=C34)C(=O)O # D-lysergic acid
 ser-thr NC(C([*])O)C(=O)O # Serine or Threonine
 mephe NC(C(C)c1ccccc1)C(=O)O # Cmethyl-phenylalanine?
-haorn NC(CCCN(O)C(=O)C)C(=O)O # L-δ-N-acetyl-δ-N-hydroxyornithine/L-Nδ-hydroxy-Nδ-acylornithine
 hasn NC(C(O)C(=O)N)C(=O)O # hydroxyasparagine
-hforn NC(CCCN(O)C(=O))C(=O)O # L-Nδ-hydroxy-Nδ-formylornithine
 s-nmethoxy-trp NC(CC1=CN(OC)c2c1cccc2)C(=O)O
 alpha-hydroxy-isocaproic-acid OC(C(O)CC(C)C)C(=O)O # 2S-Hic
 MeHOval O=C(C(C)CC)C(=O)O # 3-Methyl-2-oxovaleric acid
