@@ -517,7 +517,7 @@ def determine_precursor_peptide_candidate(record: Record, query: CDSFeature, dom
         return None
 
     # Create FASTA sequence for feature under study
-    lan_a_fasta = f">{query.get_name()}\n{query.translation}"
+    lan_a_fasta = f">query\n{query.translation}"
 
     # Run sequence against pHMM; if positive, parse into a vector containing START, END and SCORE
     cleavage_result = run_cleavage_site_phmm(lan_a_fasta, hmmer_profile, THRESH_DICT[lant_class])
@@ -565,7 +565,7 @@ def run_lanthipred(record: Record, query: CDSFeature, lant_class: str,
 
     if lant_class in ("Class-II", "Class-III"):
         profile = path.get_full_path(__file__, hmmer_profiles[lant_class])
-        lan_a_fasta = f">{query.get_name()}\n{query_sequence}"
+        lan_a_fasta = f">query\n{query_sequence}"
         cleavage_result = predict_cleavage_site(profile, lan_a_fasta)
 
         if cleavage_result is None:

@@ -488,7 +488,7 @@ def determine_precursor_peptide_candidate(query: secmet.CDSFeature, domains: Set
         return None
 
     # Create FASTA sequence for feature under study
-    thio_a_fasta = f">{query.get_name()}\n{query_sequence}"
+    thio_a_fasta = f">query\n{query_sequence}"
 
     # Run sequence against pHMM; if positive, parse into a vector containing START, END and SCORE
     end, score = run_cleavage_site_phmm(thio_a_fasta, 'thio_cleave.hmm', -3.00)
@@ -517,7 +517,7 @@ def determine_precursor_peptide_candidate(query: secmet.CDSFeature, domains: Set
     return thiopeptide
 
 
-def find_tail(query: secmet.CDSFeature, core: str) -> str:
+def find_tail(core: str) -> str:
     """ Finds the tail of a prepeptide, if it exists
 
         Arguments:
@@ -535,7 +535,7 @@ def find_tail(query: secmet.CDSFeature, core: str) -> str:
     thresh_c_hit = -9
 
     temp = core[-10:]
-    core_a_fasta = f">{query.get_name()}\n{temp}"
+    core_a_fasta = f">query\n{temp}"
 
     c_term_profile = path.get_full_path(__file__, "data", 'thio_tail.hmm')
     c_hmmer_res = subprocessing.run_hmmpfam2(c_term_profile, core_a_fasta)
@@ -569,7 +569,7 @@ def run_thiopred(query: secmet.CDSFeature, thio_type: str, domains: Set[str]) ->
 
     # leader cleavage "validation"
     profile_pep = path.get_full_path(__file__, "data", 'thiopep2.hmm')
-    core_a_fasta = f">{query.get_name()}\n{result.core}"
+    core_a_fasta = f">query\n{result.core}"
     hmmer_res_pep = subprocessing.run_hmmpfam2(profile_pep, core_a_fasta)
 
     thresh_pep_hit = -2
@@ -598,7 +598,7 @@ def run_thiopred(query: secmet.CDSFeature, thio_type: str, domains: Set[str]) ->
         result.leader = result.leader + result.core[:diff]
         result.core = aux
 
-    result.c_cut = find_tail(query, result.core)
+    result.c_cut = find_tail(result.core)
 
     query.gene_functions.add(secmet.GeneFunction.ADDITIONAL, "thiopeptides",
                              "predicted thiopeptide")

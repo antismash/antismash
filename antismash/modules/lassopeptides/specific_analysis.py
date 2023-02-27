@@ -616,7 +616,7 @@ def determine_precursor_peptide_candidate(record: Record, cluster: Protocluster,
         return None
 
     # Create FASTA sequence for feature under study
-    lasso_a_fasta = f">{query.get_name()}\n{query_sequence}"
+    lasso_a_fasta = f">query\n{query_sequence}"
 
     # Run sequence against pHMM to find the cleavage site position
     end, score = run_cleavage_site_phmm(lasso_a_fasta, 'precursor_2637.hmm', -20.00)
@@ -654,7 +654,7 @@ def run_lassopred(record: Record, cluster: Protocluster, query: CDSFeature) -> O
     thresh_c_hit = -7.5
 
     aux = result.core[(len(result.core) // 2):]
-    core_a_fasta = f">{query.get_name()}\n{aux}"
+    core_a_fasta = f">query\n{aux}"
 
     profile = path.get_full_path(__file__, 'data', c_term_hmmer_profile)
     hmmer_res = subprocessing.run_hmmpfam2(profile, core_a_fasta)
