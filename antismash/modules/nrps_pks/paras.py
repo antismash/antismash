@@ -33,7 +33,7 @@ class ParasResult(Prediction):
         self.predictions = paras_predictions
         self.predictions.sort(key=lambda x: x.probability, reverse=True)
 
-    def get_classification(self) -> List[str]:
+    def get_classification(self, as_norine: bool = False) -> List[str]:
         if self.predictions and self.predictions[0].probability >= GOOD_PARAS_THRESHOLD:
             predictions = [self.predictions[0]]
             for prediction in self.predictions[1:]:
