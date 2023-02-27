@@ -39,7 +39,6 @@ class ParasResult(Prediction):
             for prediction in self.predictions[1:]:
                 if prediction.probability == predictions[0].probability:
                     predictions.append(prediction)
-            print([prediction.norine_abbreviation for prediction in predictions])
             return [prediction.norine_abbreviation for prediction in predictions]
 
         else:
