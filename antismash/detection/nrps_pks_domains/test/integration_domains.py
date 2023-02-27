@@ -123,7 +123,7 @@ class TestAnalyses(unittest.TestCase):
             "kirAII": [
                 ["PKS_KS", "Trans-AT-KS", "DB"],
                 ["PKS_KS", "Trans-AT-KS"],  # this has no hit for a further subtype
-                ["PKS_KS", "Trans-AT-KS", "AA"],
+                ["PKS_KS", "Trans-AT-KS", "beta-D-OH"],
             ]
         }
         assert found == expected
