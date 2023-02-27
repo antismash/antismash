@@ -430,6 +430,11 @@ nav {
     margin-right: 20px;
     border-radius: 5px;
     background-color: #eee;
+
+    & a,.link-like {  // special handling to make both versions look the same
+        background-color: unset;
+        line-height: 100%
+    }
 }
 
 .cluster-rules {
