@@ -22,6 +22,7 @@ class TestCyanobactinPrecursor(unittest.TestCase):
             ("two_mismatches", "MTAANIRPQQVAPVERETISTAKDQSGQVQAQTSQIWGSPVPFAGDDAE"),
             ("random_other_thing", "MAGICHATMAGICCATMAGICRAT"),
             ("too_short", "MAGIC"),
+            ("off_by_one_check", "MCKTLHDTNEGKNLTPFSSGPVR"),
             ("pv_too_early", "MPVMAGICHATMAGICCATMAGICRAT"),
             ("kk_too_late", "MAGICHATMAGICCATMAGICRATKKN")
         ]

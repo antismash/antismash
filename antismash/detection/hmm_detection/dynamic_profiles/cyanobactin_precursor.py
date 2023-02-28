@@ -55,7 +55,7 @@ def find_hits(record: Record, allowable_misses: int = ALLOWABLE_MISSES) -> Dict[
                 idx -= 12
                 if idx < 0:
                     continue
-            if idx + 15 > len(cds.translation):
+            if idx + 15 >= len(cds.translation):
                 continue
             bitscore = check_match(cds.translation, idx, allowable_misses)
             if bitscore:
