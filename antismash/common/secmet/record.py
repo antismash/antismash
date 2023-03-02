@@ -165,6 +165,16 @@ class Record:
     def __len__(self) -> int:
         return len(self._record)
 
+    def has_name(self, name: str) -> bool:
+        """ Returns True if the given name matches any of the identifiers of the
+            record
+        """
+        if name == self.id:
+            return True
+        if self.original_id is not None:
+            return name == self.original_id
+        return False
+
     # protocluster manipulation
     def add_protocluster(self, cluster: Protocluster) -> None:
         """ Add the given cluster to the record,

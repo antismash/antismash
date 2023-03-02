@@ -903,3 +903,24 @@ class TestIsNuclSeq(unittest.TestCase):
             assert Record.is_nucleotide_sequence(seq)
         assert not Record.is_nucleotide_sequence("AGFTC")
         assert not Record.is_nucleotide_sequence("AGFTCF")
+
+
+def test_naming():
+    short_name = "some_id"
+    long_name = "some_really_very_long_id_needing_truncation"
+    record = Record(Seq("AAA"))
+    assert record.original_id is None
+
+    assert not record.has_name("other")
+
+    record.id = short_name
+    assert record.original_id is None
+    assert not record.has_name(None)
+    assert not record.has_name("")
+
+    record.original_id = long_name
+    assert record.has_name(short_name)
+    assert record.has_name(long_name)
+
+    record.id = "other"
+    assert record.has_name(long_name)
