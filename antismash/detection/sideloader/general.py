@@ -46,7 +46,7 @@ def load_single_record_annotations(annotation_files: List[str], record: Record,
         tool = Tool.from_json(raw["tool"])
         for json_record in raw["records"]:
             name = json_record["name"]
-            if name != record.id:
+            if not record.has_name(name):
                 continue
             for area in json_record.get("subregions", []):
                 subregions.append(SubRegionAnnotation.from_schema_json(area, tool))
@@ -54,7 +54,7 @@ def load_single_record_annotations(annotation_files: List[str], record: Record,
                 protoclusters.append(ProtoclusterAnnotation.from_schema_json(area, tool))
 
     tool = Tool("manual", "N/A", "command line argument", {})
-    if manual and manual.accession == record.id:
+    if manual and record.has_name(manual.accession):
         subregion = SubRegionAnnotation(manual.start, min(manual.end, len(record.seq)), "", tool, {})
         subregions.append(subregion)
 

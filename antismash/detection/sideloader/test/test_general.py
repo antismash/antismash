@@ -94,6 +94,17 @@ class TestSingleFile(unittest.TestCase):
         assert not results.subregions
         assert not results.protoclusters
 
+    def test_renamed(self):
+        record = make_record("HM219853.1", 1250)
+        record.id = "HM..1"
+        results = general.load_single_record_annotations([GOOD_FILE], record, None)
+        assert not results.subregions and not results.protoclusters
+
+        # but the sideloading should still be found if the original id matches
+        record.original_id = "HM219853.1"
+        results = general.load_single_record_annotations([GOOD_FILE], record, None)
+        assert results.subregions and results.protoclusters
+
     def test_multi_file(self):
         results = general.load_single_record_annotations([GOOD_FILE, GOOD_FILE], make_record("HM219853.1", 250), None)
         assert len(results.subregions) == 2
