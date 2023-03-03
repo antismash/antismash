@@ -69,3 +69,11 @@ RULE fungal-RiPP-like
     CUTOFF 20
     NEIGHBOURHOOD 30
     CONDITIONS DUF3328
+
+RULE phosphonate-like
+    CATEGORY other
+    DESCRIPTION Phosphonate-like
+    SUPERIORS phosphonate
+    CUTOFF 20
+    NEIGHBOURHOOD 20
+    CONDITIONS phosphonates-like
