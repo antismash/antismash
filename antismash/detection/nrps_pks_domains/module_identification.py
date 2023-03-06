@@ -61,6 +61,7 @@ MODIFIERS = {
     "oMT",
     "Beta_elim_lyase",
     "LPG_synthase_C",
+    "TauD",
 }
 CARRIER_PROTEINS = {
     "ACP",
