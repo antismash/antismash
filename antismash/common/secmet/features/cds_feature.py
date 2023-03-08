@@ -344,7 +344,7 @@ class CDSFeature(Feature):
         return str(self)
 
     def __str__(self) -> str:
-        return f"CDS(self.get_name(), {self.location})"
+        return f"CDS({self.get_name()}, {self.location})"
 
     def strip_antismash_annotations(self) -> None:
         """ Remove all antiSMASH-specific annotations from the feature """
