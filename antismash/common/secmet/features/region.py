@@ -21,6 +21,7 @@ from ..locations import (
     build_location_from_others,
     combine_locations,
     location_from_string,
+    offset_location,
 )
 
 T = TypeVar("T", bound="Region")
@@ -218,8 +219,15 @@ class Region(CDSCollection):
                 feature.qualifiers["candidate_cluster_number"] = [new]
                 new_clusters = [str(int(num) - first_cluster + 1) for num in feature.qualifiers["protoclusters"]]
                 feature.qualifiers["protoclusters"] = new_clusters
-            elif feature.type in ["protocluster", "proto_core"]:
-                new = str(int(feature.qualifiers["protocluster_number"][0]) - first_cluster + 1)
+            elif feature.type in [Protocluster.FEATURE_TYPE, "proto_core"]:
+                original_number = int(feature.qualifiers["protocluster_number"][0])
+                # update core location qualifier first, if it's not the core feature
+                if feature.type == Protocluster.FEATURE_TYPE:
+                    location = self.parent_record.get_protocluster(original_number).core_location
+                    new_location = offset_location(location, -self.location.start)
+                    feature.qualifiers["core_location"] = [str(new_location)]
+                # then protocluster number
+                new = str(original_number - first_cluster + 1)
                 feature.qualifiers["protocluster_number"] = [new]
             elif feature.type == "subregion":
                 new = str(int(feature.qualifiers["subregion_number"][0]) - first_subregion + 1)
