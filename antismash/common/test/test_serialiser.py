@@ -146,3 +146,21 @@ class TestAreas(unittest.TestCase):
         bio = record.to_biopython()
         full = serialiser.dump_records([bio], [{}], [record])
         assert full[0]["areas"] == results
+
+
+def test_storing_original_ids():
+    records = [
+        DummyRecord(seq="A"*3, record_id="A"),
+        DummyRecord(seq="G"*3, record_id="B"),
+    ]
+    assert records[0].original_id is None
+    records[1].original_id = "some really long name"
+    results = serialiser.AntismashResults("dummy.gbk", records, [{}, {}], "dummy", taxon="dummytaxon")
+    json_handle = StringIO()
+    results.write_to_file(json_handle)
+    json_handle.seek(0)
+    new_results = serialiser.AntismashResults.from_file(json_handle)
+    for old, new in zip(records, new_results.records):
+        assert old.seq == new.seq  # a simple check that other data matches
+        assert old.id == new.id
+        assert old.original_id == new.original_id
