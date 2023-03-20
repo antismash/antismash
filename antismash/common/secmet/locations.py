@@ -473,6 +473,27 @@ def frameshift_location_by_qualifier(location: Location, raw_start: Union[str, i
     return _adjust_location_by_offset(location, codon_start)
 
 
+def offset_location(location: Location, offset: int) -> Location:
+    """ Creates a new location at the given offset to the original.
+        Will not loop over the origin and offsets cannot make locations negative.
+
+        Arguments:
+            location: the location to shift
+            offset: the amount to offset
+
+        Returns:
+            a new location instance
+    """
+    parts = location.parts
+    new = []
+    for part in parts:
+        assert part.start + offset >= 0
+        new.append(FeatureLocation(part.start + offset, part.end + offset, strand=part.strand))
+    if isinstance(location, CompoundLocation):
+        return CompoundLocation(new, operator=location.operator)
+    return new[0]
+
+
 def remove_redundant_exons(location: Location) -> Location:
     """ Generates a new location that with redudant exons removed.
         Redundant exons are those that cover a location already covered by a larger exon.
