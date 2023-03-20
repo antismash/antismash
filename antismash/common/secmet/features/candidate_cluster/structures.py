@@ -67,7 +67,7 @@ class CandidateCluster(CDSCollection):
         self._core_location = None
 
     def __repr__(self) -> str:
-        return f"CandidateCluster({self.location}, {self.kind})"
+        return f"CandidateCluster({self.location}, {self.kind}, {self.products})"
 
     def get_candidate_cluster_number(self) -> int:
         """ Returns the candidate clusters's numeric ID, only guaranteed to be consistent for
