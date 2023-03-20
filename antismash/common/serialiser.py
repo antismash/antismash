@@ -69,6 +69,9 @@ class AntismashResults:
         input_file = data["input_file"]
         taxon = data.get("taxon", "bacteria")
         records = [Record.from_biopython(record_from_json(rec), taxon) for rec in data["records"]]
+        for record, rec_json in zip(records, data["records"]):
+            if "original_id" in rec_json:
+                record.original_id = rec_json["original_id"]
         results = [rec["modules"] for rec in data["records"]]
         return AntismashResults(input_file, records, results, version, taxon=taxon)
 
@@ -121,6 +124,8 @@ def dump_records(records: List[SeqRecord], results: List[Dict[str, Union[Dict[st
         secmet = secmet_records[i]
         json_record = record_to_json(record)
         json_record["areas"] = gather_record_areas(secmet)
+        if secmet.original_id:
+            json_record["original_id"] = secmet.original_id
         modules: Dict[str, Dict] = OrderedDict()
         if result:
             logging.debug("Record %s has results for modules: %s", record.id,
