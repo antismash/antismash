@@ -14,7 +14,7 @@ from antismash.common.secmet import FeatureLocation, Record
 from antismash.common.secmet.features import CandidateCluster, SubRegion, Region
 from antismash.common.secmet.features.subregion import SideloadedSubRegion
 from antismash.common.secmet.features.protocluster import SideloadedProtocluster
-from antismash.common.secmet.locations import CompoundLocation
+from antismash.common.secmet.locations import CompoundLocation, offset_location
 from antismash.common.secmet.test.helpers import (
     DummyCandidateCluster,
     DummyCDS,
@@ -141,8 +141,8 @@ class TestRegion(unittest.TestCase):
 
     def test_genbank(self):
         dummy_record = Record(Seq("A"*100))
-        clusters = [create_protocluster(3, 20, "prodA"),
-                    create_protocluster(25, 41, "prodB")]
+        clusters = [DummyProtocluster(3, 20, core_start=6, core_end=12, product="prodA"),
+                    DummyProtocluster(25, 41, core_start=30, core_end=36, product="prodB")]
         for cluster in clusters:
             dummy_record.add_protocluster(cluster)
         subregion = SubRegion(FeatureLocation(35, 71), "test", 0.7)
@@ -156,7 +156,20 @@ class TestRegion(unittest.TestCase):
             region.write_to_genbank(output.name)
             bio = list(seqio.parse(output.name))
         assert len(bio) == 1
-        print(bio[0].features)
+        assert len(bio[0]) == len(region.location)  # ensure the sequence was trimmed
+
+        # check the protocluster core qualifiers shifted to match the new record start
+        bio_protoclusters = [feature for feature in bio[0].features if feature.type == "protocluster"]
+        bio_cores = [feature for feature in bio[0].features if feature.type == "proto_core"]
+        offset = -clusters[0].location.start
+        expected_locations = [offset_location(cluster.core_location, offset) for cluster in clusters]
+        for bio_p, location in zip(bio_protoclusters, expected_locations):
+            assert bio_p.qualifiers["core_location"] == [str(location)]
+        assert bio_cores
+        for core, location in zip(bio_cores, expected_locations):
+            assert core.location.start == location.start
+            assert core.location.end == location.end
+
         rec = Record.from_biopython(bio[0], taxon="bacteria")
         assert len(rec.get_regions()) == 1
         new = rec.get_region(0)
