@@ -32,20 +32,38 @@ def create_candidates_from_protoclusters(protoclusters: List[Protocluster]) -> L
         return []
 
     # ensure that only one candidate cluster can be created for each specific combination
-    existing: set[tuple[int, int, tuple[str, ...]]] = set()
+    existing: dict[tuple[int, int], CandidateCluster] = {}
+    # and allow for keeping some additional singles when handling position conflicts
+    singles: set[Protocluster] = set()
 
     def build_candidates(groups: List[List[Protocluster]], kind: CandidateClusterKind) -> List[CandidateCluster]:
         """ Creates candidates of the given kind, one for each group
         """
-        candidates = []
         for group in groups:
             assert kind == CandidateClusterKind.SINGLE or len(group) > 1
             candidate = CandidateCluster(kind, sorted(group))
-            key = (candidate.location.start, candidate.location.end, tuple(sorted(candidate.products)))
-            if key not in existing:
-                candidates.append(candidate)
-                existing.add(key)
-        return candidates
+            key = (int(candidate.location.start), int(candidate.location.end))
+            existing_candidate = existing.get(key)
+            if not existing_candidate:
+                existing[key] = candidate
+                continue
+
+            # handle duplicate locations by checking if any extra protoclusters are in this group
+            existing_clusters = set(existing_candidate.protoclusters)
+            extras = set(group).difference(existing_clusters)
+            if not extras:
+                # drop it as a completely redundant, weaker candidate
+                continue
+            # but if there's extras, promote this group to the existing kind
+            replacement = CandidateCluster(existing_candidate.kind, sorted(list(existing_clusters) + list(extras)))
+            # then replace the original
+            existing[key] = replacement
+            # and track a SINGLE for each of the extras, since they don't quite
+            # belong in the stronger candidate grouping
+            for extra in extras:
+                singles.add(extra)
+
+        return sorted(existing.values())
 
     unassigned = sorted(protoclusters)  # will contain any protocluster not yet in hybrid/interleaved
 
@@ -56,18 +74,16 @@ def create_candidates_from_protoclusters(protoclusters: List[Protocluster]) -> L
     # then any interleaved
     interleaved_groups, unassigned = _find_interleaved(unassigned, candidates)
     # unassigned won't be updated further, as anything left needs a SINGLE created anyway
-    new = build_candidates(interleaved_groups, CandidateClusterKind.INTERLEAVED)
-    candidates = sorted(candidates + new)  # since find_neighbouring requires sorted by location
+    candidates = build_candidates(interleaved_groups, CandidateClusterKind.INTERLEAVED)
 
     # then neighbouring
     neighbouring_groups = _find_neighbouring(unassigned, candidates)
-    new = build_candidates(neighbouring_groups, CandidateClusterKind.NEIGHBOURING)
-    candidates.extend(new)  # sorting postponed, since it's not critical for next step
+    candidates = build_candidates(neighbouring_groups, CandidateClusterKind.NEIGHBOURING)
 
     # finally, create singles for every protocluster not in interleaved or hybrid
-    for cluster in unassigned:
-        if (cluster.location.start, cluster.location.end) not in existing:
-            candidates.append(CandidateCluster(CandidateClusterKind.SINGLE, [cluster]))
+    unassigned.extend(singles)  # and those where kind promotion applied
+    for cluster in set(unassigned):
+        candidates.append(CandidateCluster(CandidateClusterKind.SINGLE, [cluster]))
 
     # and as a sanity check, ensure all protoclusters belong to at least one candidate
     assigned = set()
