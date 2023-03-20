@@ -234,11 +234,32 @@ class TestCreation(unittest.TestCase):
         clusters[2].add_cds(cds)
         created = creator(clusters)
 
+        assert created[0].kind == CandidateCluster.kinds.CHEMICAL_HYBRID
+        assert sorted(created[0].protoclusters, key=id) == sorted(clusters, key=id)
+
+        assert created[1].kind == CandidateCluster.kinds.SINGLE
+        assert created[1].protoclusters == (clusters[2],)
+
         assert len(created) == 2
 
-        assert created[0].kind == CandidateCluster.kinds.CHEMICAL_HYBRID
-        assert sorted(created[0].protoclusters, key=id) == sorted(tuple(clusters[:2]), key=id)
+    def test_protocluster_promotion(self):
+        # mimics a case where a neighbouring/interleaved protocluster was lost
+        # due to a small overlap in core genes, while near a contig edge
+        # and the other clusters formed a hybrid
+        contig_edge = 2300
+        clusters = [
+            create_cluster(0, 200, 800, 1000, "a"),
+            create_cluster(500, 750, 1500, contig_edge, "b"),
+            create_cluster(1750, 2100, 2200, contig_edge, "c"),  # would be neighbouring
+        ]
+        # defining genes
+        hybrid = create_cds(750, 800, ["a", "b"])
+        clusters[0].add_cds(hybrid)
+        clusters[1].add_cds(hybrid)
 
-        assert created[1].kind == CandidateCluster.kinds.INTERLEAVED
-        assert sorted(created[1].protoclusters, key=id) == sorted(clusters, key=id)
-        assert len(created[1].products) == 3
+        created = creator(clusters)
+        assert len(created) == 2, f"extras {created[2:]}"
+        assert created[0].kind == CandidateCluster.kinds.CHEMICAL_HYBRID
+        assert created[0].products == ["a", "b", "c"]
+        assert created[1].kind == CandidateCluster.kinds.SINGLE
+        assert created[1].products == ["c"]
