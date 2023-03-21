@@ -244,6 +244,8 @@ class PredictorSVMResult(Prediction):
         self.aa10 = aa10
 
         self.stachelhaus_matches = stachelhaus_matches
+        self.stachelhaus_matches.sort(key=lambda x: (x.aa10_score, x.aa34_score), reverse=True)
+
         self.stachelhaus_quality = 0.0
         if stachelhaus_matches:
             self.stachelhaus_quality = max(map(lambda x: x.aa10_score, stachelhaus_matches))
@@ -264,11 +266,18 @@ class PredictorSVMResult(Prediction):
         #  <= 7      ^            ^              .
         classification: list[SubstrateName] = []
 
+        def get_best_stach_results() -> list[SubstrateName]:
+            """Get the best Stachelhaus matches by aa10/aa34 score"""
+            preds = [self.stachelhaus_matches[0]]
+            for match in self.stachelhaus_matches[1:]:
+                if match.aa34_score == preds[0].aa34_score:
+                    preds.append(match)
+            return list(
+                itertools.chain.from_iterable(map(lambda x: x.substrates, preds)))
+
         if self.uncertain:
             if self.stachelhaus_quality >= 0.8:
-                classification.extend(
-                    itertools.chain.from_iterable(map(lambda x: x.substrates,
-                                                      self.stachelhaus_matches)))
+                classification.extend(get_best_stach_results())
             return classification
 
         def stach_intersection_with_best_group() -> set[SubstrateName]:
@@ -287,7 +296,9 @@ class PredictorSVMResult(Prediction):
         stach_preds: set[SubstrateName] = set(
             itertools.chain.from_iterable(map(lambda x: x.substrates, self.stachelhaus_matches)))
         if self.stachelhaus_quality == 1.0:
-            classification.extend(sorted(stach_preds))
+            # return the best stachelhaus match(es)
+            if self.stachelhaus_matches:
+                classification.extend(get_best_stach_results())
         elif self.single_amino.name != "N/A":
             if self.stachelhaus_quality == 0.9:
                 if self.single_amino.substrates[0] in stach_preds:
