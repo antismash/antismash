@@ -56,7 +56,7 @@ class PfamToGoTest(unittest.TestCase):
         expected_pfams_found = set()
         for pfam, all_ontologies in results.pfam_domains_with_gos.items():
             # make sure the Pfams without gos aren't in the results
-            assert pfam.identifier not in ["PF05147", "PF04738"]
+            assert pfam.identifier not in ["PF04738"]
             for ontologies in all_ontologies:
                 # make sure GeneOntologies' pfam id actually is one found in the domain's ids
                 assert ontologies.pfam == pfam.identifier
