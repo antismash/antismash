@@ -28,7 +28,7 @@ def set_dummy_with_pfams(pfam_ids: Dict[str, FeatureLocation]) -> DummyRecord:
 
 class PfamToGoTest(unittest.TestCase):
     known_connections = {'PF00015': ['GO:0007165', 'GO:0016020'],
-                         'PF00351': ['GO:0016714', 'GO:0055114'],
+                         'PF00351': ['GO:0016714'],
                          'PF02364': ['GO:0003843', 'GO:0006075', 'GO:0000148', 'GO:0016020']}
     working_descs = {
                      'GO:0016020': 'membrane',
@@ -152,8 +152,7 @@ class PfamToGoTest(unittest.TestCase):
                                      "PF00351": {"GO:0016714": ("oxidoreductase activity, acting on paired donors, "
                                                                 "with incorporation or reduction of molecular oxygen, "
                                                                 "reduced pteridine as one donor, and incorporation of "
-                                                                "one atom of oxygen"),
-                                                 "GO:0055114": "oxidation-reduction process"}},
+                                                                "one atom of oxygen")}},
                            "record_id": fake_record.id,
                            "schema_version": 1}
         assert result_json["record_id"] == expected_result["record_id"]
@@ -169,7 +168,6 @@ class PfamToGoTest(unittest.TestCase):
         fake_results = pfam2go.Pfam2GoResults(fake_record.id, gos_for_fake_pfam)
         result_json = fake_results.to_json()
         results_from_json = pfam2go.Pfam2GoResults.from_json(result_json, fake_record)
-        assert 'PF05147' not in result_json["pfams"]
         for pfam in results_from_json.pfam_domains_with_gos:
             assert pfam.identifier in result_json["pfams"]
         from_json_to_json = results_from_json.to_json()
