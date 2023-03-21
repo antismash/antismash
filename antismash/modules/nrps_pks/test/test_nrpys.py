@@ -164,6 +164,23 @@ class TestPredictorSVMResult(unittest.TestCase):
             pred.stachelhaus_quality = 0.7
             assert self.pred.get_classification() == []
 
+    def test_classification_stach_34aa_mismatch(self) -> None:
+        best = nrpys.StachelhausMatch([get_substrate_by_name("Ser")], "FAKEDATAOK", 1.0, 1.0)
+        second_best = nrpys.StachelhausMatch([get_substrate_by_name("Ala")], "FAKEDATAOK", 1.0, 0.9)
+        pred = nrpys.PredictorSVMResult(
+            "ILIKEDATAEVENFAKEDATADIDISAYILIKED", "FAKEDATAOK", [best, second_best], self.three,
+            self.large, self.small, self.single)
+        assert pred.get_classification() == ["Ser"]
+
+    def test_classification_stach_34aa_partial(self) -> None:
+        best = nrpys.StachelhausMatch([get_substrate_by_name("Ser")], "FAKEDATAOK", 1.0, 1.0)
+        second_best = nrpys.StachelhausMatch([get_substrate_by_name("Asp")], "FAKEDATAOK", 1.0, 0.9)
+        also_best = nrpys.StachelhausMatch([get_substrate_by_name("Ala")], "FAKEDATAOK", 1.0, 1.0)
+        pred = nrpys.PredictorSVMResult(
+            "ILIKEDATAEVENFAKEDATADIDISAYILIKED", "FAKEDATAOK", [second_best, best, also_best], self.three,
+            self.large, self.small, self.single)
+        assert pred.get_classification() == ["Ser", "Ala"]
+
     def test_html(self) -> None:
         self.pred.uncertain = False
         html = self.pred.as_html()
