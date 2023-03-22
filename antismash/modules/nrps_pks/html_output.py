@@ -43,7 +43,7 @@ def generate_html(region_layer: RegionLayer, results: NRPS_PKS_Results,
     prod_tt = ("Shows estimated product structure and polymer for each candidate cluster in the region. "
                "To show the product, click on the expander or the candidate cluster feature drawn in the overview. "
                )
-    mon_tt = ("Shows the predicted monomers for each adynelation domain and acyltransferase within genes. "
+    mon_tt = ("Shows the predicted monomers for each adenylation domain and acyltransferase within genes. "
               "Each gene prediction can be expanded to view detailed predictions of each domain. "
               "Each prediction can be expanded to view the predictions by tool "
               " (and, for some tools, further expanded for extra details). "

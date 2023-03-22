@@ -48,7 +48,7 @@ class TestPredictorSVMResult(unittest.TestCase):
             "ILIKEDATAEVENFAKEDATADIDISAYILIKED", "FAKEDATAOK", [self.stach], self.three,
             self.large, self.small, self.single)
 
-    def testValid(self) -> None:
+    def test_valid(self) -> None:
         pred = self.pred
 
         assert isinstance(pred, data_structures.Prediction)
@@ -58,7 +58,7 @@ class TestPredictorSVMResult(unittest.TestCase):
         assert pred.stachelhaus_quality == 1.0
         assert not pred.uncertain
 
-    def testInvalid(self) -> None:
+    def test_invalid(self) -> None:
         pred = nrpys.PredictorSVMResult(
             "ILIKEDATAEVENFAKE-----------------", "FAKEDATAOK", [self.stach], self.three,
             self.large, self.small, self.single)
@@ -164,6 +164,23 @@ class TestPredictorSVMResult(unittest.TestCase):
             pred.stachelhaus_quality = 0.7
             assert self.pred.get_classification() == []
 
+    def test_classification_stach_34aa_mismatch(self) -> None:
+        best = nrpys.StachelhausMatch([get_substrate_by_name("Ser")], "FAKEDATAOK", 1.0, 1.0)
+        second_best = nrpys.StachelhausMatch([get_substrate_by_name("Ala")], "FAKEDATAOK", 1.0, 0.9)
+        pred = nrpys.PredictorSVMResult(
+            "ILIKEDATAEVENFAKEDATADIDISAYILIKED", "FAKEDATAOK", [best, second_best], self.three,
+            self.large, self.small, self.single)
+        assert pred.get_classification() == ["Ser"]
+
+    def test_classification_stach_34aa_partial(self) -> None:
+        best = nrpys.StachelhausMatch([get_substrate_by_name("Ser")], "FAKEDATAOK", 1.0, 1.0)
+        second_best = nrpys.StachelhausMatch([get_substrate_by_name("Asp")], "FAKEDATAOK", 1.0, 0.9)
+        also_best = nrpys.StachelhausMatch([get_substrate_by_name("Ala")], "FAKEDATAOK", 1.0, 1.0)
+        pred = nrpys.PredictorSVMResult(
+            "ILIKEDATAEVENFAKEDATADIDISAYILIKED", "FAKEDATAOK", [second_best, best, also_best], self.three,
+            self.large, self.small, self.single)
+        assert pred.get_classification() == ["Ser", "Ala"]
+
     def test_html(self) -> None:
         self.pred.uncertain = False
         html = self.pred.as_html()
@@ -260,7 +277,7 @@ class TestMisc(unittest.TestCase):
 
 
     @patch("os.path.exists", side_effect=[False, False])
-    def test_check_prereqs_errors(self, exists_mock) -> None:
+    def test_check_prereqs_errors(self, _exists_mock) -> None:
         stach_path = nrpys._get_signature_path(self.config)
         db_path = nrpys._get_model_dir(self.config)
         ret = nrpys.check_prereqs(self.config)
