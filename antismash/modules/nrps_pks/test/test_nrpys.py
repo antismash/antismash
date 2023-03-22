@@ -48,7 +48,7 @@ class TestPredictorSVMResult(unittest.TestCase):
             "ILIKEDATAEVENFAKEDATADIDISAYILIKED", "FAKEDATAOK", [self.stach], self.three,
             self.large, self.small, self.single)
 
-    def testValid(self) -> None:
+    def test_valid(self) -> None:
         pred = self.pred
 
         assert isinstance(pred, data_structures.Prediction)
@@ -58,7 +58,7 @@ class TestPredictorSVMResult(unittest.TestCase):
         assert pred.stachelhaus_quality == 1.0
         assert not pred.uncertain
 
-    def testInvalid(self) -> None:
+    def test_invalid(self) -> None:
         pred = nrpys.PredictorSVMResult(
             "ILIKEDATAEVENFAKE-----------------", "FAKEDATAOK", [self.stach], self.three,
             self.large, self.small, self.single)
@@ -277,7 +277,7 @@ class TestMisc(unittest.TestCase):
 
 
     @patch("os.path.exists", side_effect=[False, False])
-    def test_check_prereqs_errors(self, exists_mock) -> None:
+    def test_check_prereqs_errors(self, _exists_mock) -> None:
         stach_path = nrpys._get_signature_path(self.config)
         db_path = nrpys._get_model_dir(self.config)
         ret = nrpys.check_prereqs(self.config)
