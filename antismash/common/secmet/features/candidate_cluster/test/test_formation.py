@@ -184,23 +184,22 @@ class TestCreation(unittest.TestCase):
         assert created[2].location == FeatureLocation(1050, 4000)
 
     def test_contained_neighbours(self):
+        # if a larger protocluster contains another entirely in its neighbourhood
+        # it shouldn't create a single which has the exact same coordinates
+        # as the neighbour
         big = create_cluster(0, 100, 130, 230, "a")
         small = create_cluster(10, 20, 30, 40, "b")
 
         created = creator([big, small])
 
-        assert len(created) == 3
+        assert len(created) == 2
         assert created[0].kind == CandidateCluster.kinds.NEIGHBOURING
         assert created[0].location == big.location
         assert created[0].products == ["a", "b"]
 
         assert created[1].kind == CandidateCluster.kinds.SINGLE
-        assert created[1].location == big.location
-        assert created[1].products == ["a"]
-
-        assert created[2].kind == CandidateCluster.kinds.SINGLE
-        assert created[2].location == small.location
-        assert created[2].products == ["b"]
+        assert created[1].location == small.location
+        assert created[1].products == ["b"]
 
     def test_multiple_contained_in_hybrid(self):
         clusters = [

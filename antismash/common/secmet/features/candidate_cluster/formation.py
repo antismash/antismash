@@ -83,6 +83,10 @@ def create_candidates_from_protoclusters(protoclusters: List[Protocluster]) -> L
     # finally, create singles for every protocluster not in interleaved or hybrid
     unassigned.extend(singles)  # and those where kind promotion applied
     for cluster in set(unassigned):
+        existing_candidate = existing.get((cluster.location.start, cluster.location.end))
+        # don't add a single if it's the same coordinates as the parent candidate
+        if existing_candidate and cluster in existing_candidate.protoclusters:
+            continue
         candidates.append(CandidateCluster(CandidateClusterKind.SINGLE, [cluster]))
 
     # and as a sanity check, ensure all protoclusters belong to at least one candidate
