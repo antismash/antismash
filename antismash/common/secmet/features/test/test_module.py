@@ -237,3 +237,12 @@ class TestModule(unittest.TestCase):
         assert module.get_parent_protein_location("B") == FeatureLocation(1, 6)
         with self.assertRaisesRegex(ValueError, "has no parent"):
             module.get_parent_protein_location("C")
+
+    def test_module_strand(self):
+        for strand in [1, -1]:
+            domains = [
+                DummyAntismashDomain(locus_tag="A", protein_start=5, protein_end=10, strand=strand),
+                DummyAntismashDomain(locus_tag="B", protein_start=15, protein_end=20, strand=strand),
+            ]
+            module = create_module(domains=domains)
+            assert module.location.strand == strand
