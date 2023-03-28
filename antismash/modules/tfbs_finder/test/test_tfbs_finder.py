@@ -8,6 +8,7 @@ import json
 import unittest
 
 from Bio.Seq import Seq
+from Bio.SeqFeature import FeatureLocation
 
 from antismash import get_all_modules
 from antismash.common.secmet.test.helpers import DummyRegion, DummySubRegion
@@ -42,7 +43,7 @@ class TestResults(unittest.TestCase):
     def setUp(self):
         self.record = DummyRecord()
         self.record.id = 'test_record'
-        self.hits_by_region = {1: [TFBSHit('Test1', 1, 'TestHit', 'T', Confidence.STRONG, 1, 10, 10)]}
+        self.hits_by_region = {1: [TFBSHit('Test1', 1, 'TestHit', 'TGA', Confidence.STRONG, 1, 10, 10)]}
 
         build_config([
             "--tfbs",
@@ -105,6 +106,15 @@ class TestResults(unittest.TestCase):
             other = DummyRecord()
             other.id = self.record.id * 2
             results.add_to_record(other)
+
+    def test_new_feature_from_hits(self):
+        data = self.create_results(hits_by_region=self.hits_by_region)
+        assert len(data.features) == 1
+        feature = data.features[0]
+        assert feature.strand == 1
+        assert feature.location == FeatureLocation(1, 4, 1)
+        assert feature.type == "misc_feature"
+        assert feature.created_by_antismash
 
 
 def make_dummy_matrix(name="name"):
