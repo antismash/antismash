@@ -21,7 +21,7 @@ from antismash.config import get_config
 from antismash.common import path
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record, Region
-from antismash.common.secmet.features import Feature
+from antismash.common.secmet.features import Feature, FeatureLocation
 
 
 PWM_PATH = path.get_full_path(__file__, 'data', 'PWMs.json')
@@ -154,6 +154,7 @@ class TFBSFinderResults(ModuleResults):
         self.start_overlap = start_overlap
         self.hits_by_region = hits_by_region
         self.features: List[Feature] = []
+        self.new_feature_from_hits()
 
     def get_hits_by_region(self, region_number: int, confidence: Confidence = None,
                            allow_better: bool = False) -> List[TFBSHit]:
@@ -190,6 +191,17 @@ class TFBSFinderResults(ModuleResults):
             "record_id": self.record_id,
             "hits_by_region": hits_by_region,
         }
+
+    def new_feature_from_hits(self) -> None:
+        """ Constructs features from all detected hits"""
+        for hits in self.hits_by_region.values():
+            for hit in hits:
+                tfbs_feature = Feature(FeatureLocation(hit.start, hit.start + len(hit.consensus), hit.strand),
+                                       feature_type="misc_feature", created_by_antismash=True)
+                tfbs_feature.notes.append(f"TFBS match to {hit.name}, {hit.description}, "
+                                          f"confidence: {hit.confidence}, "
+                                          f"score: {round(hit.score, 2)}")
+                self.features.append(tfbs_feature)
 
     def add_to_record(self, record: Record) -> None:
         """ Adds the analysis results to the record """
