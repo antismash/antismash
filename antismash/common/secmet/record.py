@@ -458,8 +458,8 @@ class Record:
             note: This is slow, if only a specific type is required, use
                   the other get_*() functions
         """
-        features = list(self.get_generics())
-        features.extend(self._genes)
+        features: list[Feature] = list(self._genes)
+        features.extend(self.get_generics())
         features.extend(self.get_protoclusters())
         features.extend(self.get_candidate_clusters())
         features.extend(self.get_subregions())
