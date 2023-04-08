@@ -22,6 +22,7 @@ from antismash.common.secmet.locations import (
     location_from_string,
     locations_overlap,
     combine_locations,
+    offset_location,
     remove_redundant_exons,
     FeatureLocation,
     CompoundLocation,
@@ -579,6 +580,35 @@ class TestLocationAdjustment(unittest.TestCase):
                 assert new.parts[0].start is old.parts[0].start
                 for old_part, new_part in zip(old.parts[1:], new.parts[1:]):
                     assert old_part is new_part
+
+
+class TestOffset(unittest.TestCase):
+    def test_simple(self):
+        for strand in [-1, None, 1]:
+            old = FeatureLocation(5, 10, strand=strand)
+            for offset in [-2, 0, 15]:
+                new = offset_location(old, offset)
+                assert new.start == old.start + offset
+                assert new.end == old.end + offset
+                assert new.strand == old.strand
+
+    def test_negative(self):
+        old = FeatureLocation(5, 10)
+        with self.assertRaises(AssertionError):
+            offset_location(old, -old.end)
+
+    def test_compound(self):
+        for strand in [-1, None, 1]:
+            parts = [FeatureLocation(5, 10, strand=strand), FeatureLocation(15, 20, strand=strand)]
+            for operator in ["join", "order"]:
+                old = CompoundLocation(parts, operator=operator)
+                for offset in [-2, 0, 15]:
+                    new = offset_location(old, offset)
+                    assert len(old.parts) == len(new.parts)
+                    assert new.start == old.start + offset
+                    assert new.end == old.end + offset
+                    assert new.strand == old.strand
+                    assert new.operator == old.operator
 
 
 class TestRemoveRedundant(unittest.TestCase):
