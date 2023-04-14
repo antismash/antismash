@@ -32,6 +32,7 @@ from antismash.modules.tfbs_finder.tfbs_finder import (
     PWM_PATH,
 )
 from antismash.modules.tfbs_finder.html_output import (
+    add_neighbouring_genes,
     generate_javascript_data,
     get_sequence_matches,
 )
@@ -221,6 +222,27 @@ class TestFinder(unittest.TestCase):
         assert data[1]['start'] == 1
         assert data[1]['score'] == 40.0
         assert data[1]['confidence'] == 'medium'
+
+    def test_contained_gene(self):
+        hit = {"start": 5, "end": 15}
+        genes = [DummyCDS(start=0, end=3), DummyCDS(start=8, end=11), DummyCDS(start=13, end=18, strand=-1)]
+        results = add_neighbouring_genes(hit, genes)
+        assert results["left"] == {
+            "location": 3,
+            "name": genes[0].get_name(),
+            "strand": 1,
+        }
+        assert results["mid"] == {
+            "location": 8,
+            "length": 3,
+            "name": genes[1].get_name(),
+            "strand": 1,
+        }
+        assert results["right"] == {
+            "location": 13,
+            "name": genes[2].get_name(),
+            "strand": -1,
+        }
 
 
 class TestAreaFinding(unittest.TestCase):
