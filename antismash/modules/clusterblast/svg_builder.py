@@ -305,7 +305,7 @@ class Cluster:
                 assert isinstance(feature, Protein), type(feature)
                 genes.append(Gene.from_protein(feature))
         else:
-            raise TypeError(f"No conversion from type {type(genes[0])} to Gene")
+            raise TypeError(f"No conversion from type {type(features[0])} to Gene")
         self.unique_hit_count = int(hits)
         self.genes: List[Gene] = sorted(genes, key=lambda gene: gene.start)
         self.overall_strand = strand
