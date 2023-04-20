@@ -6,10 +6,10 @@ Development & Funding
 
 The development of antiSMASH was started as a collaboration of the Department of
 Microbial Physiology and Groningen Bioinformatics Centre of the University of
-Groningen, the Department of Microbiology of the University of Tübingen, and the
-Department of Bioengineering and Therapeutic Sciences at the University of
-California, San Francisco.  With the move of the PIs and developers, development
-continues now at the Manchester Institute of Biotechnology, the Bioinformatics
+Groningen, the Department of Microbiology of the University of Tübingen, the Manchester
+Institute of Biotechnology, and the Department of Bioengineering and Therapeutic
+Sciences at the University of California, San Francisco.
+With the move of the PIs and developers, development continues now at the Bioinformatics
 Group at Wageningen University and The Novo Nordisk Foundation Center for
 Biosustainability in Lyngby.
 
