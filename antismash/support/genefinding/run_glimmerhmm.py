@@ -18,6 +18,8 @@ from antismash.common.secmet import Record
 from antismash.common.secmet.features.cds_feature import MAX_TRANSLATION_LENGTH
 from antismash.common.subprocessing import execute
 
+MIN_TRANSLATION_LENGTH = 10  # anything less than this isn't worth creating
+
 
 def write_search_fasta(record: Record) -> str:
     """ Constructs a FASTA representation of a record and writes it to a
@@ -67,4 +69,7 @@ def run_glimmerhmm(record: Record) -> None:
         if len(feature.location) >= (MAX_TRANSLATION_LENGTH * 3) * .9:
             logging.warning("Ignoring potential gene too long for dependencies: %dkb",
                             len(feature.location) // 1000)
+            continue
+        if len(feature.location) < MIN_TRANSLATION_LENGTH * 3:
+            continue
         record.add_biopython_feature(feature)

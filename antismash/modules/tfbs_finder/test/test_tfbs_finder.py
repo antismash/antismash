@@ -8,6 +8,7 @@ import json
 import unittest
 
 from Bio.Seq import Seq
+from Bio.SeqFeature import FeatureLocation
 
 from antismash import get_all_modules
 from antismash.common.secmet.test.helpers import DummyRegion, DummySubRegion
@@ -32,6 +33,7 @@ from antismash.modules.tfbs_finder.tfbs_finder import (
     PWM_PATH,
 )
 from antismash.modules.tfbs_finder.html_output import (
+    add_neighbouring_genes,
     generate_javascript_data,
     get_sequence_matches,
 )
@@ -41,7 +43,7 @@ class TestResults(unittest.TestCase):
     def setUp(self):
         self.record = DummyRecord()
         self.record.id = 'test_record'
-        self.hits_by_region = {1: [TFBSHit('Test1', 1, 'TestHit', 'T', Confidence.STRONG, 1, 10, 10)]}
+        self.hits_by_region = {1: [TFBSHit('Test1', 1, 'TestHit', 'TGA', Confidence.STRONG, 1, 10, 10)]}
 
         build_config([
             "--tfbs",
@@ -104,6 +106,15 @@ class TestResults(unittest.TestCase):
             other = DummyRecord()
             other.id = self.record.id * 2
             results.add_to_record(other)
+
+    def test_new_feature_from_hits(self):
+        data = self.create_results(hits_by_region=self.hits_by_region)
+        assert len(data.features) == 1
+        feature = data.features[0]
+        assert feature.strand == 1
+        assert feature.location == FeatureLocation(1, 4, 1)
+        assert feature.type == "misc_feature"
+        assert feature.created_by_antismash
 
 
 def make_dummy_matrix(name="name"):
@@ -221,6 +232,27 @@ class TestFinder(unittest.TestCase):
         assert data[1]['start'] == 1
         assert data[1]['score'] == 40.0
         assert data[1]['confidence'] == 'medium'
+
+    def test_contained_gene(self):
+        hit = {"start": 5, "end": 15}
+        genes = [DummyCDS(start=0, end=3), DummyCDS(start=8, end=11), DummyCDS(start=13, end=18, strand=-1)]
+        results = add_neighbouring_genes(hit, genes)
+        assert results["left"] == {
+            "location": 3,
+            "name": genes[0].get_name(),
+            "strand": 1,
+        }
+        assert results["mid"] == {
+            "location": 8,
+            "length": 3,
+            "name": genes[1].get_name(),
+            "strand": 1,
+        }
+        assert results["right"] == {
+            "location": 13,
+            "name": genes[2].get_name(),
+            "strand": -1,
+        }
 
 
 class TestAreaFinding(unittest.TestCase):

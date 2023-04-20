@@ -130,6 +130,25 @@ def add_neighbouring_genes(hit: dict[str, Any], genes: Sequence[CDSFeature]) -> 
             hit["right"] = None
         else:
             right = genes[index]
+            # some gene annotations can be smaller than the hit, in which case
+            # keep it as the "mid" gene and look further for the next gene
+            if right.is_contained_by(dummy):
+                hit["right"] = None  # in case there is no right
+                hit["mid"] = {
+                    "name": right.get_name(),
+                    "location": right.location.start,
+                    "length": right.location.end - right.location.start,
+                    "strand": right.location.strand,
+                }
+                # if the record is poorly annotated enough to have multiple
+                # extremely short genes, only show one and move on to the next
+                # meaningful one
+                while right.is_contained_by(dummy):
+                    index += 1
+                    # stop if there's no more genes
+                    if index >= len(genes):
+                        return hit
+                    right = genes[index]
             assert end < right.location.end
             hit["right"] = {
                 "name": right.get_name(),
