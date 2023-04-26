@@ -45,11 +45,6 @@ from .hmmsearch import (
     run_hmmsearch_version,
 )
 
-from .java import (
-    run_java_version,
-)
-
-
 from .memesuite import (
     run_fimo_simple,
     run_fimo_version,
