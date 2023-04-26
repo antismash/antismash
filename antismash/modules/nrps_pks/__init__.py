@@ -56,11 +56,10 @@ def prepare_data(logging_only: bool = False) -> List[str]:
 
 def check_prereqs(options: ConfigType) -> List[str]:
     """ Check the prerequisites.
-            java: NRPSPredictor, sandpuma
             hmmsearch: minowa
     """
     failure_messages = []
-    for binary_name in ["hmmsearch", "java"]:
+    for binary_name in ["hmmsearch"]:
         if binary_name not in options.executables:
             failure_messages.append(f"Failed to locate executable for {binary_name!r}")
     failure_messages.extend(prepare_data(logging_only=True))
