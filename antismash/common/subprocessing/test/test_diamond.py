@@ -10,10 +10,7 @@ from unittest.mock import patch
 from antismash.common import path, subprocessing
 from antismash.common.subprocessing import diamond
 
-
-class DummyResult(subprocessing.RunResult):
-    def __init__(self, stdout: str):
-        super().__init__(["dummy"], stdout.encode(), b"", 0, True, True)
+from .helpers import DummyResult
 
 
 @patch("antismash.common.subprocessing.diamond.run_diamond", return_value=DummyResult("diamond version 1.2.3"))
