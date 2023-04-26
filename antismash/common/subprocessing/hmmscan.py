@@ -10,6 +10,23 @@ from typing import List
 from .base import execute, get_config, SearchIO
 
 
+def _find_error(output: list[str]) -> str:
+    """ Returns the most descriptive line in error output from hmmscan """
+    # is there a line that explicitly starts with the error logging?
+    for i, line in enumerate(output):
+        if line.startswith("Error:"):
+            if i + 1 < len(output):
+                return f"{line.strip()} {output[i + 1].strip()}"
+            return line.strip()
+    # if not, take the first non-empty line
+    for line in output:
+        line = line.strip()
+        if line:
+            return line
+    # in the worst case, return a default
+    return "unknown error"
+
+
 def run_hmmscan(target_hmmfile: str, query_sequence: str, opts: List[str] = None,
                 results_file: str = None) -> List[SearchIO._model.query.QueryResult]:  # pylint: disable=protected-access
     """ Runs hmmscan on the inputs and return a list of QueryResults
@@ -40,9 +57,9 @@ def run_hmmscan(target_hmmfile: str, query_sequence: str, opts: List[str] = None
     result = execute(command, stdin=query_sequence)
     if not result.successful():
         raise RuntimeError("".join([
-            f"hmmscan returned {result.return_code}:",
-            (result.stderr or result.stdout).splitlines()[0],
-            f"while scanning {query_sequence[:100]!r}",
+            f"hmmscan returned {result.return_code}: ",
+            f"'{_find_error((result.stderr or result.stdout).splitlines())}'",
+            f" while scanning {query_sequence[:100]!r}...",
         ]))
     if results_file is not None:
         with open(results_file, "w", encoding="utf-8") as handle:
