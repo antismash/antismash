@@ -452,9 +452,6 @@ def identify_lanthi_motifs(leader: str, core: str) -> Dict[int, float]:
             out_file.write(f">query\n{leader}{core}")
         fimo_output = subprocessing.run_fimo_simple(motifs_file, tempfile.name)
     fimo_scores = {}
-    for line in fimo_output.splitlines():
-        parts = line.split("\t")
-        if len(parts) < 2 or not parts[0].isdigit():
-            continue
-        fimo_scores[int(parts[0])] = float(parts[5])
+    for motif in fimo_output:
+        fimo_scores[int(motif.pattern_name)] = motif.score
     return fimo_scores
