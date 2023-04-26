@@ -1,15 +1,16 @@
 """Setuptools magic to install antiSMASH."""
 import glob
 import os
-from setuptools import setup, find_packages
-from setuptools.command.test import test as TestCommand
 import subprocess
 import sys
+
+from setuptools import setup, find_packages
+from setuptools.command.test import test as TestCommand
 
 
 def read(fname):
     """Read a file from the current directory."""
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+    return open(os.path.join(os.path.dirname(__file__), fname), encoding="utf-8").read()
 
 
 long_description = read('README.md')
@@ -42,10 +43,12 @@ tests_require = [
 
 
 def read_version():
-    """Read the version fromt he appropriate place in the library."""
-    for line in open(os.path.join('antismash', 'main.py'), 'r'):
-        if line.startswith('__version__'):
-            return line.split('=')[-1].strip().strip('"')
+    """Read the version from the appropriate place in the library."""
+    with open(os.path.join('antismash', 'main.py'), 'r', encoding="utf-8") as handle:
+        for line in handle:
+            if line.startswith('__version__'):
+                return line.split('=')[-1].strip().strip('"')
+    raise ValueError("unable to find version")
 
 
 def find_data_files():
@@ -67,7 +70,7 @@ def find_data_files():
         data_files.append(pathname)
     if "HARDCODE_ANTISMASH_GIT_VERSION" in os.environ:
         version_file = os.path.join('antismash', 'git_hash')
-        with open(version_file, 'wt') as handle:
+        with open(version_file, 'wt', encoding="utf-8") as handle:
             try:
                 git_version = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'],
                                                       universal_newlines=True).strip()
@@ -89,11 +92,11 @@ class PyTest(TestCommand):
         """Test command magic."""
         TestCommand.finalize_options(self)
         self.test_args = []
-        self.test_suite = True
+        self.test_suite = True  # pylint: disable=attribute-defined-outside-init
 
     def run_tests(self):
         """Run tests."""
-        import pytest
+        import pytest  # pylint: disable=import-outside-toplevel
         errcode = pytest.main(self.test_args)
         sys.exit(errcode)
 
