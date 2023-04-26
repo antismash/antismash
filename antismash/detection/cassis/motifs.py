@@ -6,12 +6,15 @@
 from collections import defaultdict
 import csv
 import logging
+import glob
 import os
 from typing import Any, Dict, List, Optional, Set, Tuple
 from xml.etree import cElementTree as ElementTree
 
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
+
+from antismash.common.subprocessing.memesuite import read_fimo_output
 
 from .config import MAX_PERCENTAGE, VERBOSE_DEBUG
 from .pairings import PROMOTER_RANGE, Pairing
@@ -175,15 +178,11 @@ def filter_fimo_results(motifs: List[Motif], fimo_dir: str, promoters: List[Prom
 
     for motif in motifs:
         assert isinstance(motif, Motif), type(motif)
-        with open(os.path.join(fimo_dir, str(motif), "fimo.txt"), "r", encoding="utf-8") as handle:
-            table_reader = csv.reader(handle, delimiter="\t")
-            for row in table_reader:
-                # skip comment lines
-                if row[0].startswith("#"):
-                    continue
-                seq_id = row[1]
-                motif.hits[seq_id] += 1
-
+        # depending on version, the output could be .txt or .tsv
+        filename = sorted(glob.glob(os.path.join(fimo_dir, str(motif), "fimo.t??")))[0]
+        with open(filename, "r", encoding="utf-8") as handle:
+            for hit in read_fimo_output(handle.read()):
+                motif.hits[hit.sequence_name] += 1
         # write binding sites per promoter to file
         with open(os.path.join(fimo_dir, str(motif), "bs_per_promoter.csv"), "w", encoding="utf-8") as handle:
             table_writer = csv.writer(handle, delimiter="\t", lineterminator="\n")

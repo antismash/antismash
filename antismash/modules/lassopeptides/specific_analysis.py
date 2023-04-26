@@ -451,12 +451,14 @@ def identify_lasso_motifs(leader: str, core: str) -> Tuple[List[int], int, Dict[
         with open(tempfile.name, "w", encoding="utf-8") as out_file:
             out_file.write(f">query\n{leader}{core}")
         fimo_output = subprocessing.run_fimo_simple(motif_file, tempfile.name)
-    fimo_motifs = [int(line.partition("\t")[0])
-                   for line in fimo_output.split("\n")
-                   if "\t" in line and line.partition("\t")[0].isdigit()]
-    fimo_scores = {int(line.split("\t")[0]): float(line.split("\t")[5])
-                   for line in fimo_output.split("\n")
-                   if "\t" in line and line.partition("\t")[0].isdigit()}
+    fimo_scores = {}
+    fimo_motifs = []
+    for motif in fimo_output:
+        if not motif.pattern_name.isdigit():
+            continue
+        motif_id = int(motif.pattern_name)
+        fimo_motifs.append(motif_id)
+        fimo_scores[motif_id] = motif.score
     # Calculate score
     motif_score = 0
     if 2 in fimo_motifs:
