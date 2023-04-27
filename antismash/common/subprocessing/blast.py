@@ -101,7 +101,7 @@ def run_makeblastdb(filename: str, target: str = "", dbtype: str = "prot") -> Ru
     ]
     result = execute(command, environment_overrides=NCBI_OVERRIDES)
     if not result.successful():
-        raise RuntimeError(f"makeblastdb failed to run: {command} -> {result.stderr.splitlines()[-1]}")
+        raise RuntimeError(f"makeblastdb failed to run: {command} -> {result.stderr.strip().splitlines()[-1]}")
     return result
 
 
