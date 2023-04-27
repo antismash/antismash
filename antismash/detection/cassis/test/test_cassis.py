@@ -383,11 +383,11 @@ class TestVersioning(unittest.TestCase):
         self.config = Namespace()
         self.config.executables = Namespace()
 
-    def check_with_version(self, version):
+    def check_with_version(self, fimo_version, meme_version):
         self.config.executables.meme = "meme"
         self.config.executables.fimo = "fimo"
-        with patch.object(cassis.subprocessing, "run_meme_version", return_value=version):
-            with patch.object(cassis.subprocessing, "run_fimo_version", return_value=version):
+        with patch.object(cassis.subprocessing, "run_meme_version", return_value=meme_version):
+            with patch.object(cassis.subprocessing, "run_fimo_version", return_value=fimo_version):
                 return cassis.check_prereqs(self.config)
 
     def test_missing(self):
@@ -397,11 +397,18 @@ class TestVersioning(unittest.TestCase):
             assert "Failed to locate executable" in message
 
     def test_correct_version(self):
-        messages = self.check_with_version("4.11.2")
+        messages = self.check_with_version(fimo_version="4.11.2", meme_version="4.11.2")
+        messages = self.check_with_version(fimo_version="5.5.2", meme_version="4.11.2")
         assert not messages
 
     def test_incorrect_version(self):
-        messages = self.check_with_version("4.11.4")
+        fimo = "4.11.0"
+        meme = "5.5.2"
+        messages = self.check_with_version(fimo_version=fimo, meme_version=meme)
+        assert messages == [
+            "Incompatible MEME version, expected 4.11.2 but found 5.5.2",
+            "Incompatible FIMO version, expected 4.11.2 or later but found 4.11.0",
+        ]
         assert len(messages) == 2
-        for message in messages:
-            assert "expected 4.11.2 but found 4.11.4" in message
+        assert f"expected 4.11.2 but found {meme}" in messages[0]
+        assert f"expected 4.11.2 or later but found {fimo}" in messages[1]

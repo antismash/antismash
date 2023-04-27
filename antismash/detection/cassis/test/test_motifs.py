@@ -13,8 +13,22 @@ from antismash.common import path
 from antismash.detection.cassis.promoters import Promoter, CombinedPromoter
 from antismash.detection.cassis.motifs import generate_motifs, Motif, filter_meme_results, filter_fimo_results
 
-from .test_cassis import CassisTestCore
-from .test_runners import read_generated_expected_file
+from .test_cassis import CassisTestCore, convert_newline
+
+
+def read_generated_expected_file(generated_file, expected_file):
+    """Read generated and expected files and save to string variables"""
+    generated_string = ""
+    with open(generated_file, encoding="utf-8") as handle:
+        generated_string = handle.read()
+    generated_string = convert_newline(generated_string.rstrip())
+
+    expected_string = ""
+    with open(path.get_full_path(__file__, "data", expected_file), encoding="utf-8") as handle:
+        expected_string = handle.read()
+    expected_string = convert_newline(expected_string.rstrip())
+
+    return [generated_string, expected_string]
 
 
 class TestMotifs(CassisTestCore):

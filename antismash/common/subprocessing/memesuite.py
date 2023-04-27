@@ -34,7 +34,11 @@ class FIMOMotif:
             if field.type in (int, float):
                 part = field.type(part or 0)
             kwargs[field.name] = part
-        return cls(**kwargs)  # type: ignore  # this is validated above and mypy can't handle it
+        try:
+            return cls(**kwargs)  # type: ignore  # this is validated above and mypy can't handle it
+        except TypeError:
+            print(parts)
+            raise
 
     @classmethod
     def from_legacy_line(cls, line: str) -> "FIMOMotif":
