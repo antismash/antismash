@@ -8,24 +8,10 @@ import os
 from shutil import copy
 
 from antismash.common import path
+from antismash.common.subprocessing.memesuite import read_fimo_output
 from antismash.detection.cassis import runners
 
-from .test_cassis import create_fake_record, convert_newline, CassisTestCore
-
-
-def read_generated_expected_file(generated_file, expected_file):
-    """Read generated and expected files and save to string variables"""
-    generated_string = ""
-    with open(generated_file, encoding="utf-8") as handle:
-        generated_string = handle.read()
-    generated_string = convert_newline(generated_string.rstrip())
-
-    expected_string = ""
-    with open(path.get_full_path(__file__, "data", expected_file), encoding="utf-8") as handle:
-        expected_string = handle.read()
-    expected_string = convert_newline(expected_string.rstrip())
-
-    return [generated_string, expected_string]
+from .test_cassis import create_fake_record, CassisTestCore
 
 
 class TestCassisRunners(CassisTestCore):
@@ -56,8 +42,25 @@ class TestCassisRunners(CassisTestCore):
         runners.run_fimo(meme_dir, fimo_dir, seq_record, self.options, verbose=True)
 
         for subdir in fimo_subdirs:
-            fimo_result, expected_fimo_result = read_generated_expected_file(
-                                                    os.path.join(self.options.output_dir, "fimo", subdir, "fimo.txt"),
-                                                    "fake_long_fimo.txt")
+            filename_base = os.path.join(self.options.output_dir, "fimo", subdir, "fimo")
+            filename = ""
+            for extension in ["tsv", "txt"]:  # newer fimo outputs to tsv instead of txt
+                test_name = f"{filename_base}.{extension}"
+                if os.path.exists(test_name):
+                    filename = test_name
+                    break
+            assert filename, "no compatible files found"
 
-            self.assertEqual(fimo_result, expected_fimo_result)
+            with open(filename, encoding="utf-8") as handle:
+                generated_motifs = read_fimo_output(handle.read())
+
+            # purge the fields old FIMO didn't have
+            for motif in generated_motifs:
+                motif.alternate_name = ""
+
+            with open(path.get_full_path(__file__, "data", "fake_long_fimo.txt"), encoding="utf-8") as handle:
+                expected_motifs = read_fimo_output(handle.read())
+
+            assert len(generated_motifs) == len(expected_motifs)
+            for generated, expected in zip(generated_motifs, expected_motifs):
+                assert generated == expected

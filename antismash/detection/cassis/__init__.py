@@ -153,21 +153,32 @@ def check_prereqs(options: ConfigType) -> List[str]:
     """Check for prerequisites"""
     failure_messages = []
 
-    expected_memesuite_version = "4.11.2"
+    expected_memesuite_version = (4, 11, 2)
+    expected = ".".join(map(str, expected_memesuite_version))
     missing_message = "Failed to locate executable for %r"
-    incompatible_message = "Incompatible %s version, expected %s but found %s"
+    incompatible_message = "Incompatible %s version, expected %s or later but found %s"
+
+    def older_than_expected(version: str) -> bool:
+        try:
+            if tuple(map(int, version.split("."))) < expected_memesuite_version:
+                return True
+        except ValueError:
+            return True  # since it'll be the same result
+        return False
 
     if "meme" in options.executables:
         meme_version = subprocessing.run_meme_version()
-        if meme_version != expected_memesuite_version:
-            failure_messages.append(incompatible_message % ("MEME", expected_memesuite_version, meme_version))
+        # later versions of MEME are broken, e.g. 5.5.2 ignores the `-nmotifs` arg
+        if meme_version != expected:
+            failure_messages.append(f"Incompatible MEME version, expected {expected} but found {meme_version}")
     else:
         failure_messages.append(missing_message % "meme")
 
     if "fimo" in options.executables:
         fimo_version = subprocessing.run_fimo_version()
-        if fimo_version != expected_memesuite_version:
-            failure_messages.append(incompatible_message % ("FIMO", expected_memesuite_version, meme_version))
+        # FIMO changed output format after 4.11.2, but it's simple and handled in the parsers
+        if older_than_expected(fimo_version):
+            failure_messages.append(incompatible_message % ("FIMO", expected, fimo_version))
     else:
         failure_messages.append(missing_message % "fimo")
 
