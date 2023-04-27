@@ -42,7 +42,10 @@ def run_diamond(subcommand: str,
 
         result = execute(params)
         if not result.successful():
-            raise RuntimeError(f"diamond failed to run: {subcommand} -> {result.stderr[-100:]}")
+            message = f"diamond failed to run: {subcommand}"
+            if result.stderr:
+                message += f" -> {result.stderr.strip().splitlines()[-3:]}"
+            raise RuntimeError(message)
     return result
 
 
