@@ -780,7 +780,7 @@ def detect_protoclusters_and_signatures(record: Record, ruleset: Ruleset,
                                              ruleset.get_equivalence_groups()))
 
     # gather dynamic hits and merge them with HMMer results
-    dynamic_results = find_dynamic_hits(record, list(ruleset.dynamic_profiles.values()))
+    dynamic_results = find_dynamic_hits(record, list(ruleset.dynamic_profiles.values()), results_by_id)
     for name, dynamic_hits in dynamic_results.items():
         if name not in results_by_id:
             results_by_id[name] = []
@@ -813,18 +813,45 @@ def strip_inferior_domains(cds_domains_by_cluster: Dict[str, Dict[str, Set[str]]
                 domains_by_cluster.pop(product)
 
 
-def find_dynamic_hits(record: Record, dynamic_profiles: List[DynamicProfile]) -> Dict[str, List[DynamicHit]]:
+def get_sequence_counts(details_file: str) -> Dict[str, int]:
+    """ Gets the number of sequences/seeds used to generate each HMM signature
+
+        Arguments:
+            detail_file: a file containing all HMMs
+
+        Returns:
+            a dictionary mapping HMM name to the number of sequences used to
+                generate it
+    """
+    result = {}
+    for hmm in get_signature_profiles(details_file):
+        assert isinstance(hmm, HmmSignature)
+        with open(path.get_full_path(details_file, hmm.hmm_file), "r", encoding="utf-8") as handle:
+            lines = handle.readlines()
+        for line in lines:
+            if line.startswith('NSEQ '):
+                result[hmm.name] = int(line[6:].strip())
+                break
+        if hmm.name not in result:
+            raise ValueError(f"Unknown number of seeds for hmm file: {details_file}")
+
+    return result
+
+
+def find_dynamic_hits(record: Record, dynamic_profiles: List[DynamicProfile],
+                      hmmer_hits: Dict[str, List[ProfileHit]]) -> Dict[str, List[DynamicHit]]:
     """ Finds hits for dynamic profiles
 
     Arguments:
         record: the Record to search
         dynamic_profiles: the dynamic profiles to find hits with
+        hmmer_hits: existing HMMer profile hits for use in dynamic profiles
 
     Returns:
         a dictionary mapping CDS name to list of DynamicHit
     """
     results: Dict[str, List[DynamicHit]] = defaultdict(list)
     for profile in dynamic_profiles:
-        for name, hits in profile.find_hits(record).items():
+        for name, hits in profile.find_hits(record, hmmer_hits).items():
             results[name].extend(hits)
     return results
