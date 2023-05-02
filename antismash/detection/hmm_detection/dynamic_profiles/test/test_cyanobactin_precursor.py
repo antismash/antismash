@@ -38,11 +38,12 @@ class TestCyanobactinPrecursor(unittest.TestCase):
             features.append(feature)
 
         self.record = DummyRecord(features=features)
+        self.hmmer_hits = {}
 
     def test_one_mismatch(self) -> None:
-        results = cyanobactin_precursor.find_hits(self.record)
+        results = cyanobactin_precursor.find_hits(self.record, self.hmmer_hits)
         assert set(results.keys()) == {"exact_match", "one_mismatch", "exact_match_with_offset"}
 
     def test_two_mismatches(self) -> None:
-        results = cyanobactin_precursor.find_hits(self.record, 2)
+        results = cyanobactin_precursor.find_hits(self.record, self.hmmer_hits, 2)
         assert set(results.keys()) == {"exact_match", "one_mismatch", "two_mismatches", "exact_match_with_offset"}
