@@ -50,15 +50,17 @@ class DynamicHit(ProfileHit):
 class DynamicProfile(Signature):
     """ A dynamic profile based on code, rather than a HMM """
     def __init__(self, name: str, description: str,
-                 detect: Callable[[Record], Dict[str, List[DynamicHit]]]) -> None:
+                 detect: Callable[[Record, dict[str, list[ProfileHit]]], dict[str, list[DynamicHit]]],
+                 ) -> None:
         super().__init__(name, "dynamic", description, 0, __file__)
         self._callable = detect
 
-    def find_hits(self, record: Record) -> Dict[str, List[DynamicHit]]:
+    def find_hits(self, record: Record, hmmer_hits: Dict[str, List[ProfileHit]],
+                  ) -> dict[str, list[DynamicHit]]:
         """ Runs the profile over the record and return a dictionary mapping
             CDS name to a list of HSPs, one for each 'hit'
         """
-        return self._callable(record)
+        return self._callable(record, hmmer_hits)
 
 
 @dataclasses.dataclass(frozen=True)

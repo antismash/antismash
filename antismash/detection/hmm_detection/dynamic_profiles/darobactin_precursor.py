@@ -10,7 +10,11 @@ from typing import Dict, List
 import re
 
 
-from antismash.common.hmm_rule_parser.structures import DynamicHit, DynamicProfile
+from antismash.common.hmm_rule_parser.structures import (
+    DynamicHit,
+    DynamicProfile,
+    ProfileHit,
+)
 from antismash.common.secmet import Record
 
 # This is the name this profile will have in the cluster rules
@@ -22,7 +26,7 @@ ANCHOR = re.compile(r"W.W.K..")
 MIN_LEN = 10  # The final compound core is 7 AAs, 
 MAX_LEN = 80
 
-def find_hits(record: Record) -> Dict[str, List[DynamicHit]]:
+def find_hits(record: Record, hmmer_hits: dict[str, list[ProfileHit]]) -> dict[str, list[DynamicHit]]:
     """Find all CDSes where the pattern is found"""
     hits: Dict[str, List[DynamicHit]] = {}
 
