@@ -28,7 +28,7 @@ def get_arguments() -> ModuleArgs:
                              dest='clusterhmmer',
                              action='store_true',
                              default=False,
-                             help="Run a cluster-limited HMMer analysis.")
+                             help="Run a cluster-limited HMMer analysis using Pfam profiles.")
     args.add_option('pfamdb-version',
                     dest='pfamdb_version',
                     type=str,

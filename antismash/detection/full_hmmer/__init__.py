@@ -28,7 +28,7 @@ def get_arguments() -> ModuleArgs:
                              dest='fullhmmer',
                              action='store_true',
                              default=False,
-                             help="Run a whole-genome HMMer analysis.")
+                             help="Run a whole-genome HMMer analysis using Pfam profiles.")
     args.add_option('pfamdb-version',
                     dest='pfamdb_version',
                     type=str,
