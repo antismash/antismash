@@ -29,7 +29,7 @@ def generate_html(region_layer: RegionLayer, results: ClusterCompareResults,
     """
 
     html = HTMLSections("cluster-compare")
-    base_tooltip = ("Shows careas that are similar to the current region to a reference database.<br>"
+    base_tooltip = ("Shows areas that are similar to the current region to a reference database.<br>"
                     "Mouseover a score cell in the table to get a breakdown of how "
                     "the score was calculated.")
 
