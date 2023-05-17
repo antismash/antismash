@@ -164,6 +164,10 @@ class Component:
         """ Returns True if the component can function as an acyltransferase domain """
         return self.label in ACYLTRANSFERASES
 
+    def is_coa_ligase(self) -> bool:
+        """ Returns True if the component can function as a CoA-ligase"""
+        return self.label == "CAL_domain"
+
     def is_condensation(self) -> bool:
         """ Returns True if the component can function as a condensation domain """
         return self.label in CONDENSATIONS
@@ -176,11 +180,11 @@ class Component:
             ADENYLATIONS,
             ACYLTRANSFERASES,
             ALTERNATE_STARTERS
-        ))
+        )) or self.is_coa_ligase()
 
     def is_loader(self) -> bool:
         """ Returns True if the component can function as a loader domain """
-        return self.is_acyltransferase() or self.is_adenylation()
+        return self.is_acyltransferase() or self.is_adenylation() or self.is_coa_ligase()
 
     def is_modification(self) -> bool:
         """ Returns True if the component can function as a modification domain """
@@ -454,6 +458,11 @@ class Module:
 
             if any(mod.label == "PKS_ER" for mod in self._modifications):
                 conversions = {"ccmal": "redmal", "ccmmal": "redmmal", "ccmxmal": "redmxmal", "ccemal": "redemal"}
+                base = conversions.get(base, base)
+
+        if self._starter and self._starter.is_coa_ligase():
+            if any(mod.label == "PKS_KR" for mod in self._modifications):
+                conversions = {"AHBA": "ohAHBA"}
                 base = conversions.get(base, base)
 
         for mod in self._modifications:
