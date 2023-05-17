@@ -143,6 +143,15 @@ class TestModule(unittest.TestCase):
         assert new._starter.label == PKS_START
         assert not new._end
 
+    def test_cal_complete(self):
+        module = build_module(["CAL_domain", CP])
+        assert module.is_complete()
+        assert module.get_monomer("AHBA") == "AHBA"
+
+    def test_cal_modifications(self):
+        module = build_module(["CAL_domain", "PKS_KR", CP])
+        assert module.get_monomer("AHBA") == "ohAHBA"
+
     def test_methylations(self):
         pks = build_module([PKS_START, PKS_LOAD])
         # mmal is a methylated malonyl-CoA, so it should look the same
