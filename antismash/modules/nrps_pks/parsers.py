@@ -130,7 +130,7 @@ def calculate_consensus_prediction(cds_features: List[CDSFeature], results: Dict
                 preds = predictions["minowa_cal"].get_classification()
                 pred = get_short_form(preds[0])
                 assert isinstance(pred, str)
-                if pred in get_all_smiles():
+                if pred.lower() in get_all_smiles():
                     cis_at[domain.feature_name] = pred
                 else:
                     logging.debug("missing %s from SMILES parts for domain %s", pred, domain.feature_name)
