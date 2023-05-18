@@ -741,6 +741,7 @@ def _run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
         results.timings_by_record[record.id] = timings
 
     # Write results
+    logging.info("Writing results")
     json_filename = canonical_base_filename(results.input_file, options.output_dir, options)
     json_filename += ".json"
     logging.debug("Writing json results to '%s'", json_filename)
