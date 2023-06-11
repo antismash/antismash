@@ -17,7 +17,7 @@ from .helpers import DummyResult
 def test_diamond_version(mock_run_diamond):
     version = subprocessing.run_diamond_version()
     assert version == "1.2.3"
-    mock_run_diamond.assert_called_once_with("version")
+    mock_run_diamond.assert_called_once_with("version", use_default_opts=False)
 
 
 @patch("antismash.common.subprocessing.diamond.run_diamond", return_value=DummyResult("lots of useless text"))
