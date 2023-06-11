@@ -16,12 +16,14 @@ from .base import execute, get_config, RunResult
 
 
 def run_diamond(subcommand: str,
-                opts: Optional[List[str]] = None) -> RunResult:
+                opts: Optional[List[str]] = None,
+                use_default_opts: bool = True) -> RunResult:
     """ Run a diamond subcommand, possibly with further options.
 
         Arguments:
             subcommand: the diamond subcommand to run
             opts: a list of additional argument strings to pass to diamond
+            use_default_opts: use default options for diamond run (e.g. threads, tmpdir)
 
         Returns:
             RunResult of running diamond
@@ -33,9 +35,12 @@ def run_diamond(subcommand: str,
         params = [
             config.executables.diamond,
             subcommand,
+        ]
+        if use_default_opts:
+            params.extend( [
             "--threads", str(config.cpus),
             "--tmpdir", temp_dir,
-        ]
+        ])
 
         if opts:
             params.extend(opts)
@@ -99,7 +104,7 @@ def run_diamond_version() -> str:
             The numeric part of "diamond version"
     """
 
-    version_string = run_diamond("version").stdout
+    version_string = run_diamond("version", use_default_opts=False).stdout
     if not version_string.startswith("diamond version "):
         msg = "unexpected output from diamond-executable: %s, check path"
         raise RuntimeError(msg % get_config().executables.diamond)
