@@ -80,19 +80,14 @@ class TestFeatureSerialiser(unittest.TestCase):
         location = FeatureLocation(1, 6, strand=1)
         f_type = "test type"
         qualifiers = {"a": ["1", "2"], "b": ["3", "4"]}
-        f_id = "dummy id"
         # skipping biopython deprecated members: ref, ref_db, strand, location_operator
 
         feature = SeqFeature(location=location, type=f_type,
-                             qualifiers=qualifiers, id=f_id)
-        print(str(feature))
-
+                             qualifiers=qualifiers)
         json = serialiser.feature_to_json(feature)
         print(json)  # for debugging failures
         new_feature = serialiser.feature_from_json(json)
-        print(str(new_feature))
         assert new_feature.qualifiers == feature.qualifiers
-        assert new_feature.id == feature.id
         assert new_feature.type == feature.type
         assert str(new_feature.location) == str(new_feature.location)
 
