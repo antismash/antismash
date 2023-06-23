@@ -277,7 +277,6 @@ def feature_to_json(feature: SeqFeature) -> Dict[str, Any]:
     """ Creates a JSON representation of a SeqFeature """
     return {"location": str(feature.location),
             "type": feature.type,
-            "id": feature.id,
             "qualifiers": feature.qualifiers}
 
 
@@ -288,5 +287,4 @@ def feature_from_json(data: Union[str, Dict]) -> SeqFeature:
     assert isinstance(data, dict)
     return SeqFeature(location=location_from_string(data["location"]),
                       type=data["type"],
-                      id=data["id"],
                       qualifiers=data["qualifiers"])
