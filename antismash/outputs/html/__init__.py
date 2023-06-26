@@ -13,10 +13,7 @@ import shutil
 from typing import Dict, List, Optional
 import warnings
 
-# silence warnings about nested sets (relevant for pyScss <= 1.3.7 and python >= 3.5)
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    import scss
+import sass
 
 from antismash.common import html_renderer, path
 from antismash.common.module_results import ModuleResults
@@ -66,8 +63,7 @@ def prepare_data(_logging_only: bool = False) -> List[str]:
                 target = f"{flavour}.css"
                 source = f"{flavour}.scss"
                 assert os.path.exists(source), flavour
-                result = scss.Compiler(output_style="expanded").compile(source)
-                assert result
+                result = sass.compile(filename=source, output_style="compact")
                 with open(target, "w", encoding="utf-8") as out:
                     out.write(result)
     return []

@@ -27,7 +27,7 @@ install_requires = [
     'nrpys >= 0.1.1',
     'pysvg-py3',
     'bcbio-gff',
-    'pyScss',
+    'libsass >= 0.22',
     'matplotlib',
     'scipy',
     'scikit-learn >= 0.19.0',
