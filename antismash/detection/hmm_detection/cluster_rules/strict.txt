@@ -182,7 +182,7 @@ RULE lanthipeptide-class-ii
 
 RULE lanthipeptide-class-iii
     CATEGORY RiPP
-    DESCRIPTION Class III lanthipeptide clusters
+    DESCRIPTION Class III lanthipeptide
     EXAMPLE NCBI FN178622.1 0-6400 labyrinthopeptin
     CUTOFF 20
     NEIGHBOURHOOD 10
