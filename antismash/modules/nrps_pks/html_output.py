@@ -43,7 +43,7 @@ def generate_html(region_layer: RegionLayer, results: NRPS_PKS_Results,
     prod_tt = ("Shows estimated product structure and polymer for each candidate cluster in the region. "
                "To show the product, click on the expander or the candidate cluster feature drawn in the overview. "
                )
-    mon_tt = ("Shows the predicted monomers for each adenylation domain and acyltransferase within genes. "
+    mon_tt = ("Shows the predicted substrates for each adenylation domain and acyltransferase within genes. "
               "Each gene prediction can be expanded to view detailed predictions of each domain. "
               "Each prediction can be expanded to view the predictions by tool "
               " (and, for some tools, further expanded for extra details). "
@@ -56,7 +56,7 @@ def generate_html(region_layer: RegionLayer, results: NRPS_PKS_Results,
 
     # always include monomers, if available
     if features_with_domain_predictions:
-        template_components.append(("monomers.html", "NRPS/PKS monomers", "nrps_pks_monomers", mon_tt))
+        template_components.append(("monomers.html", "NRPS/PKS substrates", "nrps_pks_monomers", mon_tt))
 
     for filename, name, class_name, tooltip in template_components:
         template = FileTemplate(path.get_full_path(__file__, "templates", filename))
