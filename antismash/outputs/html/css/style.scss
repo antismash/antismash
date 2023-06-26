@@ -1072,7 +1072,7 @@ ul.dropdown-options {
     & .body-details-header,
     & .sidepanel-details-header {
         font-size: 90%;
-        background-color: rgba($antismash-main, 60%);
+        background-color: rgba($antismash-main, 0.6);
         color: white;
         margin-right: 0.1em;
         padding-left: 0.5em;
@@ -1089,7 +1089,7 @@ ul.dropdown-options {
         @include unselectable();
 
         &:hover {
-            background-color: rgba($antismash-main, 80%);
+            background-color: rgba($antismash-main, 0.8);
         }
     }
 
