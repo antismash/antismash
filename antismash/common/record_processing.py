@@ -50,6 +50,8 @@ def _strict_parse(filename: str) -> List[SeqRecord]:
         # strip the "Ignoring" part, since it's not being ignored
         if message.startswith("Ignoring invalid location"):
             message = message[9:]
+        if isinstance(err, AttributeError):
+            message = f"error within parsing library: {message}"
         logging.error('Parsing %r failed: %s', filename, message)
         raise AntismashInputError(message) from err
     finally:
