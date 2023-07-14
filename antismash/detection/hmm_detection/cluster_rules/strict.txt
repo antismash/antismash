@@ -669,3 +669,22 @@ RULE aminopolycarboxylic-acid
     CUTOFF 10
     NEIGHBOURHOOD 5
     CONDITIONS AesA and AesB and AesC
+
+RULE isocyanide
+    CATEGORY other
+    DESCRIPTION Isocyanides
+    # see DOI: 10.1093/nar/gkad573
+    EXAMPLE NCBI NC_007198.1 687200-701000 xanthocillin-X monomethylether # BGC0001990
+    RELATED DIT1_PvcA  # without the TauD it's probably not the core enzyme
+    CUTOFF 5
+    NEIGHBOURHOOD 20
+    CONDITIONS cds(TauD and DIT1_PvcA)
+
+RULE isocyanide-nrp
+    CATEGORY NRPS
+    DESCRIPTION NRP with isocyanide
+    # see DOI: 10.1128/mBio.00785-18
+    EXAMPLE NCBI CM000171.1 3584442-3651038 copper-responsive metabolite
+    CUTOFF 5
+    NEIGHBOURHOOD 25
+    CONDITIONS DIT1_PvcA and minimum(2, [AMP-binding, PP-binding, Transferase])
