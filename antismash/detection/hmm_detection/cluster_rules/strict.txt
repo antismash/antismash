@@ -66,7 +66,7 @@ RULE PpyS-KS
     CONDITIONS PpyS
 
 RULE arylpolyene
-    CATEGORY other
+    CATEGORY PKS
     DESCRIPTION Aryl polyene
     CUTOFF 20
     NEIGHBOURHOOD 20
@@ -87,7 +87,7 @@ RULE ladderane
     CONDITIONS ladderane
 
 RULE PUFA
-    CATEGORY other
+    CATEGORY PKS
     DESCRIPTION PolyUnsaturated Fatty Acid
     CUTOFF 20
     NEIGHBOURHOOD 20
