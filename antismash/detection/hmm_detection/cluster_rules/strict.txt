@@ -363,6 +363,14 @@ RULE redox-cofactor
     NEIGHBOURHOOD 10
     CONDITIONS rSAM_with_SPASM and (TIGR02111 or TIGR03966) and ANY_RRE
 
+RULE darobactin
+    CATEGORY RiPP
+    DESCRIPTION darobactin-like compounds
+    EXAMPLE NCBI NZ_WHZZ01000001.1 1236986-1243174 darobactin  # BGC0002116
+    CUTOFF 5
+    NEIGHBOURHOOD 10
+    CONDITIONS rSAM_with_SPASM and darobactin_precursor
+
 RULE epipeptide
     CATEGORY RiPP
     DESCRIPTION D-amino-acid containing RiPPs
