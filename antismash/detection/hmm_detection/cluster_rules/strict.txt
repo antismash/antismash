@@ -72,19 +72,24 @@ RULE arylpolyene
     NEIGHBOURHOOD 20
     CONDITIONS APE_KS1 or APE_KS2
 
-RULE resorcinol
-    CATEGORY other
-    DESCRIPTION Resorcinol
-    CUTOFF 20
-    NEIGHBOURHOOD 20
-    CONDITIONS DarB
-
 RULE ladderane
-    CATEGORY other
+    CATEGORY PKS
     DESCRIPTION Ladderane
-    CUTOFF 20
+    EXAMPLE NCBI NZ_CP049055.1 1873471-1881357 ladderane
+    RELATED t2fas
+    CUTOFF 5
     NEIGHBOURHOOD 20
-    CONDITIONS ladderane
+    CONDITIONS PF04055 and hr-t2pks-ksa
+
+RULE HR-T2PKS
+    CATEGORY PKS
+    DESCRIPTION Highly reducing PKS type II
+    EXAMPLE NCBI LC269948.1 0-37581 ishigamide  # BGC0001623
+    EXAMPLE NCBI JF430460.1 0-86806 skyllamycin  # BGC0000429
+    SUPERIORS arylpolyene, ladderane
+    CUTOFF 5
+    NEIGHBOURHOOD 20
+    CONDITIONS hr-t2pks-ksa and (t2fas or APE_KS2 or ketoacyl-synt)
 
 RULE PUFA
     CATEGORY PKS
@@ -92,6 +97,13 @@ RULE PUFA
     CUTOFF 20
     NEIGHBOURHOOD 20
     CONDITIONS PUFA_KS
+
+RULE resorcinol
+    CATEGORY other
+    DESCRIPTION Resorcinol
+    CUTOFF 20
+    NEIGHBOURHOOD 20
+    CONDITIONS DarB
 
 RULE NRPS
     CATEGORY NRPS
