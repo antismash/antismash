@@ -248,4 +248,4 @@ class Module(Feature):
         return module
 
     def __repr__(self) -> str:
-        return f"Module(self.location, {self.module_type}: {[dom.domain for dom in self.domains]}"
+        return f"Module({self.location}, {self.module_type}: {[dom.domain for dom in self.domains]}"
