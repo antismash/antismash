@@ -64,7 +64,8 @@ def _strict_parse(filename: str) -> List[SeqRecord]:
 
 
 def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length: int = -1,
-                         start: int = -1, end: int = -1, gff_file: str = "") -> List[Record]:
+                         start: int = -1, end: int = -1, gff_file: str = "",
+                         ignore_invalid_records: bool = False) -> List[Record]:
     """ Parse input records contained in a file
 
         Arguments:
@@ -75,6 +76,7 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
             start: a start location for trimming the sequence, or -1 to use all
             end: an end location for trimming the sequence, or -1 to use all
             gff_file: a GFF file to use for gene/CDS annotations
+            ignore_invalid_records: whether to continue past invalid records or not
 
         Returns:
             A list of secmet.Record instances, one for each record in the file
@@ -131,17 +133,24 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
         strip_record(record)
 
     logging.debug("Converting records from biopython to secmet")
-    try:
-        records = [Record.from_biopython(record, taxon, discard_antismash_features=True) for record in records]
-    except SecmetInvalidInputError as err:
-        raise AntismashInputError(str(err)) from err
+    converted_records = []
+    for record in records:
+        try:
+            converted_records.append(Record.from_biopython(record, taxon, discard_antismash_features=True))
+        except SecmetInvalidInputError as err:
+            if ignore_invalid_records:
+                logging.warning("Ignoring invalid record %r %s", record.id, err)
+            else:
+                raise AntismashInputError(str(err)) from err
+    if not converted_records:
+        raise AntismashInputError(f"no valid records found in file {filename}")
 
     # if parsable by secmet, it has a better context on what to strip, so run
     # the secmet stripping to ensure there's no surprises
-    for record in records:
+    for record in converted_records:
         record.strip_antismash_annotations()
 
-    return records
+    return converted_records
 
 
 def strip_record(record: SeqRecord) -> SeqRecord:

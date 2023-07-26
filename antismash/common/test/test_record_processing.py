@@ -69,6 +69,32 @@ class TestParseRecords(unittest.TestCase):
         with self.assertRaisesRegex(AntismashInputError, warning):
             record_processing.parse_input_sequence(filepath)
 
+    def test_partial_invalid(self):
+        # pretend there's two inputs, and that the first has an error
+        # with the ignore invalid option turned on, the valid input should still come back
+        dummy_error = record_processing.SecmetInvalidInputError("some reason")
+        dummy_inputs = [SeqRecord("ACGT", id="bad"), SeqRecord("TGCA", id="good")]
+        expected_outputs = [dummy_error, Record.from_biopython(dummy_inputs[1], taxon="bacteria")]
+        for value in [False, True]:
+            with mock.patch.object(record_processing, "_strict_parse", return_value=dummy_inputs):
+                with mock.patch.object(Record, "from_biopython", side_effect=expected_outputs):
+                    # with the option off, it should be an error
+                    if not value:
+                        with self.assertRaises(AntismashInputError):
+                            record_processing.parse_input_sequence("dummy file", ignore_invalid_records=value)
+                    else:
+                        records = record_processing.parse_input_sequence("dummy file", ignore_invalid_records=value)
+                        assert len(records) == 1
+                        assert records[0].id == dummy_inputs[1].id
+
+    def test_all_invalid_and_ignored(self):
+        dummy_error = record_processing.SecmetInvalidInputError("some reason")
+        dummy_inputs = [SeqRecord("ACGT", id="bad")]
+        with mock.patch.object(Record, "from_biopython", side_effect=dummy_error):
+            with mock.patch.object(record_processing, "_strict_parse", return_value=dummy_inputs):
+                with self.assertRaisesRegex(AntismashInputError, "no valid records"):
+                    record_processing.parse_input_sequence("dummy file", ignore_invalid_records=True)
+
 
 class TestGapNotation(unittest.TestCase):
     def setUp(self):

@@ -534,6 +534,11 @@ def advanced_options() -> ModuleArgs:
                      type=int,
                      default=-1,
                      help="Only process the largest <limit> records (default: %(default)s). -1 to disable")
+    group.add_option('--abort-on-invalid-records',
+                     dest="abort_on_invalid_records",
+                     action=argparse.BooleanOptionalAction,
+                     default=True,
+                     help="Abort runs when encountering invalid records instead of skipping them")
     group.add_option('--minlength',
                      dest="minlength",
                      type=int,
