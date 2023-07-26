@@ -233,7 +233,7 @@ class TestOrdering(unittest.TestCase):
         best = self.run_ranking_as_genes(n_terms, c_terms, possible_orders)
         assert best == "BAC"
 
-    def test_order_C002271_c19(self):  # pylint: disable=invalid-name
+    def test_order_CP002271_c19(self):  # pylint: disable=invalid-name
         cdss = {}
         for i, name in enumerate(["STAUR_3972", "STAUR_3982", "STAUR_3983",
                                   "STAUR_3984", "STAUR_3985"]):
@@ -327,7 +327,7 @@ class TestEnzymeCounter(unittest.TestCase):
         results = orderfinder.find_candidate_cluster_modular_enzymes(genes)
         return ([cds.get_name() for cds in results[0]], results[1], results[2])
 
-    def test_C002271_c19(self):  # pylint: disable=invalid-name
+    def test_CP002271_c19(self):  # pylint: disable=invalid-name
         gene_names = ['STAUR_3972', 'STAUR_3982', 'STAUR_3983', 'STAUR_3984', 'STAUR_3985']
         gene_domains = {'STAUR_3985': [('ACP',), ('PKS_KS', 'PKS_AT', 'PKS_DH', 'PKS_KR', 'ACP')],
                         'STAUR_3984': [('PKS_KS', 'PKS_AT', 'PKS_DH', 'PKS_KR', 'ACP')],
