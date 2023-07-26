@@ -28,8 +28,8 @@ def run_prodigal(record: Record, options: ConfigType) -> None:
         name = record.id.lstrip('-')
         if not name:
             name = "unknown"
-        fasta_file = f"{name}.fasta"
-        result_file = f"{name}.predict"
+        fasta_file = f"r{record.record_index}.fasta"
+        result_file = f"r{record.record_index}.predict"
         write_fasta([name], [str(record.seq)], fasta_file)
 
         # run prodigal
