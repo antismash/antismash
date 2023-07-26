@@ -333,6 +333,13 @@ def find_possible_orders(cds_features: List[CDSFeature], start_cds: Optional[CDS
 
     tails = {v: k for k, v in chains.items()}
 
+    # if the end CDS is the tail end of a split module,
+    # use the beginning of that chain as the 'end CDS'
+    if end_cds:
+        while end_cds in tails:
+            end_cds = tails[end_cds]
+        end_cds = end_cds
+
     cds_to_order = []
     for cds in cds_features:
         # the permutations shouldn't include chained CDSes or the start or end
