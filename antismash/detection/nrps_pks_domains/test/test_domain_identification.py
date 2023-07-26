@@ -14,7 +14,11 @@ from antismash.common.test.helpers import (
     DummyCDS,
     DummyHMMResult,
     DummyRecord,
+    DummyRegion,
     get_simple_options,
+)
+from antismash.common.secmet.test.helpers import (
+    DummySubRegion,
 )
 from antismash.config import destroy_config, update_config
 from antismash.detection.nrps_pks_domains import domain_identification
@@ -231,6 +235,24 @@ class TestModuleMerging(unittest.TestCase):
         assert len(tail.modules) == 1  # should *not* have merged into head
         assert not head.modules[0].is_complete()
         assert not tail.modules[0].is_complete()
+
+    def test_merging_across_regions(self, _patched_fasta, _patched_motifs, _patched_dbs):
+        # make sure the two halves are in different regions
+        for cds in self.cdses.values():
+            subregion = DummySubRegion(start=cds.location.start, end=cds.location.end)
+            self.record.add_subregion(subregion)
+            region = DummyRegion(candidate_clusters=[], subregions=[subregion])
+            self.record.add_region(region)
+            assert cds.region == region
+
+        with patch.object(domain_identification, "find_domains", return_value=self.domains):
+            with patch.object(domain_identification, "find_subtypes", side_effect=[self.ks_subtypes, []]):
+                results = domain_identification.generate_domains(self.record)
+        # the two should not have been merged
+        for cds in self.cdses.values():
+            modules = results.cds_results[cds].modules
+            assert len(modules) == 1
+            assert not modules[0].is_complete()
 
 
 class TestDatabases(unittest.TestCase):

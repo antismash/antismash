@@ -248,7 +248,7 @@ def generate_domains(record: Record) -> NRPSPKSDomains:
 
         # combine modules that cross CDS boundaries, if possible and relevant
         info = CDSModuleInfo(cds, modules)
-        if prev and prev.modules and info.modules:
+        if prev and prev.modules and info.modules and prev.cds.region == cds.region:
             combine_modules(info, prev)  # modifies the lists of modules linked in each CDSResult
         prev = info
 
