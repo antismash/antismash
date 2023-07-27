@@ -34,6 +34,7 @@ class Base(unittest.TestCase):
         self.diamond_ver_major = _major
         self.diamond_ver_minor = _minor
         self.diamond_ver_patch = _patch
+        self.diamond_version = (_major, _minor, _patch)
         self.old_config = get_config().__dict__
         update_config({"genefinding_gff3": ""})
         self.options = update_config(options)
@@ -104,7 +105,7 @@ class GeneralIntegrationTest(Base):
         return results.general, results
 
     def test_nisin(self, _patched_known):
-        expected_hits = 3 if (self.diamond_ver_major == 2 and self.diamond_ver_patch < 15) else 2
+        expected_hits = 3 if self.diamond_version < (2, 0, 15) else 2
         results = self.check_nisin(expected_hits)
         ranking = results.region_results[0].ranking
         assert len(ranking) == expected_hits
