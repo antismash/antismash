@@ -513,7 +513,7 @@ def basic_options() -> _SimpleArgs:
     """ Constructs basic options for antismash. """
     group = _SimpleArgs("Basic analysis options", basic_help=True)
 
-    group.add_option('--taxon',
+    group.add_option('-t', '--taxon',
                      dest='taxon',
                      default='bacteria',
                      choices=['bacteria', 'fungi'],
