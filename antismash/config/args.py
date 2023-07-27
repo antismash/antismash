@@ -524,6 +524,13 @@ def basic_options() -> _SimpleArgs:
                     type=int,
                     default=multiprocessing.cpu_count(),
                     help="How many CPUs to use in parallel. (default for this machine: %(default)s)")
+    group.add_option('--databases',
+                    dest='database_dir',
+                    default=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'databases'),
+                    metavar="PATH",
+                    action=FullPathAction,
+                    type=str,
+                    help="Root directory of the databases (default: %(default)s).")
     return group
 
 
@@ -582,13 +589,6 @@ def advanced_options() -> ModuleArgs:
                      type=int,
                      default=-1,
                      help="End analysis at nucleotide specified")
-    group.add_option('--databases',
-                     dest='database_dir',
-                     default=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'databases'),
-                     metavar="PATH",
-                     action=FullPathAction,
-                     type=str,
-                     help="Root directory of the databases (default: %(default)s).")
     group.add_option('--write-config-file',
                      dest='write_config_file',
                      default="",
