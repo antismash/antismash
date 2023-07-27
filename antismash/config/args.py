@@ -473,7 +473,7 @@ def build_parser(from_config_file: bool = False, modules: List[AntismashModule] 
         Returns:
             an AntismashParser instance with options for all provided modules
     """
-    parents = [basic_options(), output_options(), advanced_options(),
+    parents = [help_options(), basic_options(), output_options(), advanced_options(),
                debug_options()]
     minimal = specific_debugging(modules)
     if minimal:
@@ -491,29 +491,27 @@ def build_parser(from_config_file: bool = False, modules: List[AntismashModule] 
                         metavar='SEQUENCE',
                         nargs="*",
                         help="GenBank/EMBL/FASTA file(s) containing DNA.")
-
-    # optional non-grouped arguments
-    parser.add_argument('-h', '--help',
-                        dest='help',
-                        action='store_true',
-                        default=False,
-                        help="Show this help text.")
-    parser.add_argument('--help-showall',
-                        dest='help_showall',
-                        action='store_true',
-                        default=False,
-                        help="Show full lists of arguments on this help text.")
-    parser.add_argument('-c', '--cpus',
-                        dest='cpus',
-                        type=int,
-                        default=multiprocessing.cpu_count(),
-                        help="How many CPUs to use in parallel. (default: %(default)s)")
     return parser
 
+def help_options() -> _SimpleArgs:
+    """ Constructs help options for antismash. """
+    group = _SimpleArgs("Help options", basic_help=True)
 
-def basic_options() -> ModuleArgs:
+    group.add_option('-h', '--help',
+                    dest='help',
+                    action='store_true',
+                    default=False,
+                    help="Show basic help text.")
+    group.add_option('--help-showall',
+                    dest='help_showall',
+                    action='store_true',
+                    default=False,
+                    help="Show full list of arguments.")
+    return group
+
+def basic_options() -> _SimpleArgs:
     """ Constructs basic options for antismash. """
-    group = ModuleArgs("Basic analysis options", '', override_safeties=True, basic_help=True)
+    group = _SimpleArgs("Basic analysis options", basic_help=True)
 
     group.add_option('--taxon',
                      dest='taxon',
@@ -521,6 +519,11 @@ def basic_options() -> ModuleArgs:
                      choices=['bacteria', 'fungi'],
                      type=str,
                      help="Taxonomic classification of input sequence. (default: %(default)s)")
+    group.add_option('-c', '--cpus',
+                    dest='cpus',
+                    type=int,
+                    default=multiprocessing.cpu_count(),
+                    help="How many CPUs to use in parallel. (default for this machine: %(default)s)")
     return group
 
 
