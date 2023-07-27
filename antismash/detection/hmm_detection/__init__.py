@@ -125,7 +125,7 @@ def get_supported_cluster_types(strictness: str, category: Optional[str] = None)
 def get_arguments() -> ModuleArgs:
     """ Constructs commandline arguments and options for this module
     """
-    args = ModuleArgs('Advanced options', 'hmmdetection')
+    args = ModuleArgs('HMM detection options', 'hmmdetection')
     args.add_option('strictness',
                     dest='strictness',
                     type=str,

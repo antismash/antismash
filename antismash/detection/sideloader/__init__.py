@@ -62,7 +62,7 @@ class SideloadAction(argparse.Action):
 def get_arguments() -> ModuleArgs:
     """ Constructs commandline arguments and options for this module
     """
-    args = ModuleArgs("Advanced options", "sideload")
+    args = ModuleArgs("Sideload options", "sideload")
     args.add_option("sideload",
                     dest="sideload",
                     metavar="JSON",
