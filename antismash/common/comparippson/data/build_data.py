@@ -333,13 +333,19 @@ if __name__ == "__main__":
 
     if args.asdb:
         # having this import here avoids needing it at all for mibig mode
-        import antismash
+        # the "from" method of importing is required to work around a mypy issue
+        from antismash.modules import (
+            lanthipeptides,
+            lassopeptides,
+            sactipeptides,
+            thiopeptides,
+        )
         from antismash.common.secmet.locations import location_from_string
         RIPP_MODULES = [
-            antismash.modules.lanthipeptides,
-            antismash.modules.lassopeptides,
-            antismash.modules.sactipeptides,
-            antismash.modules.thiopeptides,
+            lanthipeptides,
+            lassopeptides,
+            sactipeptides,
+            thiopeptides,
         ]
 
     try:
