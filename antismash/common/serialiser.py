@@ -21,13 +21,14 @@ from antismash.common.secmet.locations import location_from_string
 # Schema version changes:
 # 1: initial state
 # 2: added field: records.areas
+# 3: added field to records.areas.protoclusters objects: category
 
 
 class AntismashResults:
     """ A single repository of all results of an antismash run, including input
         filename, records and individual module results
     """
-    SCHEMA_VERSION = 2
+    SCHEMA_VERSION = 3
 
     # the key must accept all the schemas in values as valid
     # this will typically only be useful for backwards compatibility
@@ -181,6 +182,7 @@ def gather_record_areas(record: Record) -> List[Dict[str, Any]]:
         protoclusters_by_obj = {proto: i for i, proto in enumerate(region.get_unique_protoclusters())}
         for proto, i in protoclusters_by_obj.items():
             region_json["protoclusters"][i] = {
+                "category": proto.product_category,
                 "start": proto.location.start,
                 "end": proto.location.end,
                 "core_start": proto.core_location.start,

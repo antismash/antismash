@@ -100,7 +100,8 @@ class TestAreas(unittest.TestCase):
 
     def test_complex(self):
         protos = [
-            helpers.DummyProtocluster(core_start=3, core_end=22, neighbourhood_range=1, product='a'),
+            helpers.DummyProtocluster(core_start=3, core_end=22, neighbourhood_range=1,
+                                      product='a', product_category="cat"),
             helpers.DummyProtocluster(core_start=33, core_end=48, neighbourhood_range=2, product='b'),
         ]
         candidates = [
@@ -123,6 +124,8 @@ class TestAreas(unittest.TestCase):
         assert res["products"] == [p.product for p in protos]
         assert res["subregions"] == []
         assert len(res["protoclusters"]) == 2
+        for real, converted in zip(protos, list(res["protoclusters"].values())):
+            assert converted["category"] == real.product_category
         assert list(res["protoclusters"]) == [0, 1]
         assert res["protoclusters"][1]["product"] == protos[1].product
         assert len(res["candidates"]) == 2
