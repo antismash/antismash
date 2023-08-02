@@ -225,6 +225,9 @@ class CDSFeature(Feature):
             raise ValueError(f"invalid translation characters: {invalid}")
         if not _is_valid_translation_length(translation, self.location):
             raise ValueError(f"translation longer than location allows: {len(translation) * 3} > {len(self.location)}")
+        # finally, any alternate start codon should be changed to methionine
+        if translation[0] != "M":
+            translation = "M" + translation[1:]
         self._translation = translation  # pylint: disable=attribute-defined-outside-init
 
     @property

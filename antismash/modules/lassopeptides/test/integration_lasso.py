@@ -75,7 +75,7 @@ class IntegrationLasso(unittest.TestCase):
         self.assertAlmostEqual(motif.detailed_information.cut_mass, 2090.8, delta=1)
         self.assertAlmostEqual(motif.detailed_information.cut_weight, 2092.4, delta=1)
         self.assertEqual(motif.detailed_information.num_bridges, 2)
-        self.assertEqual(motif.leader, "VLISTTNGQGTPMTSTDELYEAPELIEIGDYAELTR")
+        self.assertEqual(motif.leader, "MLISTTNGQGTPMTSTDELYEAPELIEIGDYAELTR")
         self.assertEqual(motif.core, "CVWGGDCTDFLGCGTAWICV")
         assert motif.detailed_information.macrolactam == "CVWGGDCTD"
         self.assertEqual(motif.tail, "")
