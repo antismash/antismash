@@ -56,11 +56,24 @@ class TestCDSFeature(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "translation too long"):
             CDSFeature(loc, locus_tag="test", translation="A" * MAX_TRANSLATION_LENGTH)
 
+    def test_methionine_starts(self):
+        """ All gene translations should start with methionine, even if using
+            an alternate start codon
+        """
+        translation = "LAGIC"
+        expected = "MAGIC"
+        # via constructor
+        cds = CDSFeature(FeatureLocation(0, 15, 1), locus_tag="test", translation=translation)
+        assert cds.translation == expected
+        # and via setting the property
+        cds.translation = translation
+        assert cds.translation == expected
+
 
 class TestCDSBiopythonConversion(unittest.TestCase):
     def setUp(self):
         self.cds = CDSFeature(FeatureLocation(0, 12, 1),
-                              translation="A"*4,
+                              translation="MAAA",
                               locus_tag="loctag",
                               gene="gene",
                               protein_id="prot_id")
@@ -77,7 +90,7 @@ class TestCDSBiopythonConversion(unittest.TestCase):
         assert bio.qualifiers["locus_tag"] == ["loctag"]
         assert bio.qualifiers["gene"] == ["gene"]
         assert bio.qualifiers["protein_id"] == ["prot_id"]
-        assert bio.qualifiers["translation"] == ["A"*4]
+        assert bio.qualifiers["translation"] == ["MAAA"]
 
         regen = CDSFeature.from_biopython(bio)
         assert regen.location == self.cds.location
