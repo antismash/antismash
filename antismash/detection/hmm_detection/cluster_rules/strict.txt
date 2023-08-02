@@ -492,8 +492,9 @@ RULE aminocoumarin
 RULE NI-siderophore
     CATEGORY other
     DESCRIPTION NRPS-independent IucA/IucC-like siderophores
+    EXAMPLE NCBI CP001096.1 2834779-2852134 rhodopetrobactin  # https://doi.org/10.1111/1462-2920.14078
     CUTOFF 20
-    NEIGHBOURHOOD 5
+    NEIGHBOURHOOD 14  # for rhodopetrobactin
     CONDITIONS IucA_IucC
 
 RULE ectoine
