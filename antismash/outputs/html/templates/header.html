@@ -19,6 +19,7 @@
         <li><a href="{{options.output_basename}}.zip">Download all results</a></li>
         {% endif %}
           <li><a href="{{options.output_basename}}.gbk">Download GenBank summary file</a></li>
+          <li><a href="{{options.output_basename}}.json">Download JSON results file</a></li>
         {% if options.logfile and options.download_logfile() != None %}
           <li><a href="{{options.download_logfile()}}">Download log file</a></li>
         {% endif %}
