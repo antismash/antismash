@@ -271,7 +271,14 @@ class Module:
 
     def is_trans_at(self) -> bool:
         """ Returns True if the module is Trans-AT variant of a PKS module """
-        return bool(self._starter and self._starter.subtype == "Trans-AT-KS" and not self._loader)
+        # since there's some alternatives, start by checking the bare minimum
+        if not (self.is_pks() and self._starter and not self._loader):
+            return False
+        # if the KS is specifically Trans-AT, that's good enough
+        if self._starter.subtype == "Trans-AT-KS":
+            return True
+        # otherwise, since the KS subtype may not be accurate enough, look for an ATd
+        return any(comp.domain.hit_id == "Trans-AT_docking" for comp in self._others)
 
     def is_iterative(self) -> bool:
         """ Returns True if the module is an iterative variant of a PKS module """
@@ -373,8 +380,8 @@ class Module:
         # otherwise, if it has the three vital parts
         if self._starter and self._loader and self._carrier_protein:
             return True
-        # lastly, if it's both transAT has no loader, then it's ok
-        return bool(not self._loader and self._starter and self._carrier_protein and self.is_trans_at())
+        # lastly, if it's transAT and has a carrier protein, it's ok
+        return bool(self.is_trans_at() and self._carrier_protein)
 
     def is_terminated(self) -> bool:
         """ Returns True if the module has a finalising domain (e.g. an epimerase) """

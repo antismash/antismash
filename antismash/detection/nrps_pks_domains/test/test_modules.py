@@ -256,6 +256,16 @@ class TestModule(unittest.TestCase):
         assert module.is_trans_at()
         assert module.is_complete()
 
+        # without matching subtype is fine if the matching docking domain is present
+        module = build_module([PKS_START, "Trans-AT_docking", CP])
+        assert module.is_trans_at()
+        assert module.is_complete()
+
+        # but the loader must still be missing
+        module = build_module([PKS_START, PKS_LOAD, "Trans-AT_docking", CP])
+        assert not module.is_trans_at()
+        assert module.is_complete()  # still complete, just a little strange
+
     def test_trailing_modifiers(self):
         error = "modification domain after carrier protein"
         # not allowed for NRPSs and PKSs
