@@ -427,3 +427,36 @@ class TestMultipliers(unittest.TestCase):
         ], modules=[core])
         with self.assertRaisesRegex(RuntimeError, "neighbourhood multiplier .* incompatible"):
             core.regenerate_previous_results(as_json, self.record, options)
+
+
+class TestCategoryParsing(unittest.TestCase):
+    def setUp(self):
+        self.data = {
+            "A": {"description": "some desc", "version": 1},
+            "B": {"description": "some other desc", "version": 1},
+        }
+
+    def test_no_parents(self):
+        cats = core.categories._parse_categories(self.data)
+        for name, value in self.data.items():
+            assert cats[name].description == value["description"]
+            assert cats[name].version == value["version"]
+            assert cats[name].name == name
+            assert cats[name].parent is None
+        assert len(cats) == len(self.data)
+
+    def test_missing_parents(self):
+        parent = "Z"
+        assert parent not in self.data  # should also be missing
+        self.data["A"]["parent"] = parent
+        with self.assertRaisesRegex(ValueError, "refers to unknown category"):
+            core.categories._parse_categories(self.data)
+
+    def test_with_parents(self):
+        self.data["A"]["parent"] = "B"
+        cats = core.categories._parse_categories(self.data)
+        for name, value in self.data.items():
+            assert cats[name].description == value["description"]
+            assert cats[name].version == value["version"]
+        assert cats["A"].parent == cats["B"]
+        assert cats["B"].parent is None
