@@ -45,7 +45,7 @@ CONDITIONS strepbact or Antimicrobial14 or Bacteriocin_IId or BacteriocIIc_cy
             or LcnG-beta or Cloacin or Linocin_M18
             or TIGR03651 or TIGR03693
             or TIGR03601 or TIGR03795
-            or TIGR03975 or TIGR01193
+            or TIGR03975 or DUF692 or TIGR01193
             or all_YcaO
 
 RULE RRE-containing
