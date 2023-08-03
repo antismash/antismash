@@ -142,6 +142,25 @@ class TestSequences(unittest.TestCase):
         c_chunk = '<span>456</span>'
         assert result == f"{a_chunk}{b_chunk}{c_chunk}"
 
+    def test_positional(self):
+        sequence = "01234"
+        positional = {1: "one", 4: "four"}
+        result = renderer.spanned_sequence(sequence, {}, positional_classes=positional)
+        for key, val in positional.items():
+            assert f"<span>{key}</span>" not in result
+            assert f'<span class="{val}">{key}</span>' in result
+        for char in sequence:
+            if int(char) not in positional:
+                assert f"<span>{char}</span>" in result
+                assert f'">{char}</span>' not in result
+
+    def test_combination_substitution_positional(self):
+        sequence = "ABC"
+        positional = {1: "pos"}
+        substitutions = {"B": "sub"}
+        result = renderer.spanned_sequence(sequence, substitutions, positional_classes=positional)
+        assert '<span class="sub pos">B</span>' in result
+
     def test_ripps_dehydration(self):
         result = renderer.coloured_ripp_sequence("TISC", dehydrate=True)
         assert result == "".join([
