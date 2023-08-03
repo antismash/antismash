@@ -8,13 +8,13 @@
 {% macro description(hit) -%}
  <span class="comparippson-description">{{ db.build_description_for_hit(hit) }}</span>
 {%- endmacro %}
-{% macro segment_line(segment) -%}
+{% macro segment_line(segment, colour_subset) -%}
        <div class="comparippson-coordinate">{{ segment.start }}</div>
-       <div class="comparippson-sequence">{{ coloured_ripp_sequence(segment.sequence) }}</div>
+       <div class="comparippson-sequence">{{ coloured_ripp_sequence(segment.sequence, colour_subset=colour_subset) }}</div>
        <div class="comparippson-coordinate">{{ segment.end }}</div>
 {%- endmacro -%}
 
-{%- macro create_hit_block(hit, tail, tail_list) -%}
+{%- macro create_hit_block(hit, tail, tail_list, colour_subset) -%}
     <div class="comparippson-container">
      <span class="comparippson-similarity">{{ "%.1f" % (hit.similarity*100) }}%</span>
      <span class="comparippson-link">{{ link(hit) }}
@@ -28,11 +28,11 @@
       {{ collapser_end() }}{% else %}:{% endif %}</span>
      {{ description(hit) }}
      <div class="comparippson-alignment">
-       {{ segment_line(hit.query) }}
+       {{ segment_line(hit.query, colour_subset) }}
        <div class="comparippson-coordinate"></div>
-       <div class="comparippson-midline">{{ hit.get_consensus(space="\u00A0") }}</div>
+       <div class="comparippson-midline">{{ hit.get_consensus_html(colour_subset=colour_subset) }}</div>
        <div class="comparippson-coordinate"></div>
-       {{ segment_line(hit.reference) }}
+       {{ segment_line(hit.reference, colour_subset) }}
      </div>
    </div>
 {%- endmacro -%}
@@ -45,14 +45,14 @@
   {%- else -%}
   <div class="comparippson-block">
     {% for hit, tail, tail_list in groups[:display_limit] -%}
-     {{ create_hit_block(hit, tail, tail_list) }}
+     {{ create_hit_block(hit, tail, tail_list, colour_subset) }}
     {%- endfor %}
   </div>
   {%- if groups | length > display_limit -%}
   <div class="comparippson-block comparippson-extension">
    with {{ groups | length - display_limit }} more sequence matches {{ collapser_start("comparippson-worse-hits", "none") }}
     {% for hit, tail, tail_list in groups[display_limit:] -%}
-     {{ create_hit_block(hit, tail, tail_list) }}
+     {{ create_hit_block(hit, tail, tail_list, colour_subset) }}
     {% endfor -%}
    {{ collapser_end() }}
   </div>

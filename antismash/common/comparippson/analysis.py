@@ -13,7 +13,6 @@ from antismash.common.html_renderer import (
     FileTemplate,
     Markup,
     RIPP_CLASSES,
-    spanned_sequence,
 )
 from antismash.common.subprocessing import execute
 from antismash.config import ConfigType
@@ -107,17 +106,13 @@ class MultiDBResults(JsonConvertible):
         if query not in self.by_query:
             return Markup("")
 
-        if colour_subset:
+        if colour_subset is not None:
             for char in colour_subset:
                 if char not in RIPP_CLASSES:
                     expected = "".join(RIPP_CLASSES)
                     raise ValueError(f"Unknown character(s) '{char}' in subset of '{expected}'")
-
-        def colour_sequence(core: str) -> Markup:
-            if colour_subset is None:
-                return spanned_sequence(core, class_mapping=RIPP_CLASSES)
-            subset = {char: RIPP_CLASSES[char] for char in colour_subset}
-            return spanned_sequence(core, class_mapping=subset)
+        else:
+            colour_subset = "".join(RIPP_CLASSES)
 
         template = FileTemplate(path.get_full_path(__file__, "templates", "generic.html"))
         chunks = []
@@ -146,7 +141,7 @@ class MultiDBResults(JsonConvertible):
             # sort by descending similarity, descending group size, and ascending name, in that order
             # pylint:disable=cell-var-from-loop
             groups.sort(key=lambda g: (-g[0].similarity, -len(hits), db.build_identifier_for_hit(g[0])))
-            chunks.append(template.render(coloured_ripp_sequence=colour_sequence,
+            chunks.append(template.render(colour_subset=colour_subset,
                                           name=display_name, db=db, groups=groups))
             # pylint:enable=cell-var-from-loop
         return Markup("".join(chunks))

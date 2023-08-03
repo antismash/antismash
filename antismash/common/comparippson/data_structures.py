@@ -7,6 +7,8 @@
 from dataclasses import dataclass
 from typing import Any, Dict, List, Type, TypeVar
 
+from antismash.common.html_renderer import coloured_ripp_sequence, Markup
+
 T = TypeVar("T", bound="JsonConvertible")
 # groups of conserved amino acids for use in generating consensus strings
 AMINO_GROUPS = {
@@ -81,6 +83,24 @@ class Hit(JsonConvertible):
             character for remaining mismatches.
         """
         return build_consensus_string(self.query.sequence, self.reference.sequence, space=space)
+
+    def get_consensus_html(self, colour_subset: str) -> Markup:
+        """ Returns the consensus string for the hit, marked up for HTML.
+
+            Arguments:
+                colour_subset: a subset of normally coloured characters to restrict to
+
+            Returns:
+                a Markup instance of the generated HTML
+        """
+        # get the normal consensus, but with invisible unicode as normal spaces will collapse in HTML
+        raw = self.get_consensus("\u00A0")
+        # find the cycle positions for which there's a close mismatch (i.e. SCT), to style them
+        matches = [q in colour_subset and r in colour_subset
+                   for q, r in zip(self.query.sequence, self.reference.sequence)]
+        almost_matches = {i: "near-match-cycle" for i, match in enumerate(matches) if match}
+        # build the marked up version with colours where relevant
+        return coloured_ripp_sequence(raw, colour_subset=colour_subset, positional_classes=almost_matches)
 
     @classmethod
     def from_simple_blast_line(cls, parts: List[str], fields: Dict[str, str]) -> "Hit":
