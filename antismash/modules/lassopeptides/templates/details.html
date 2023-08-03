@@ -1,3 +1,7 @@
+{%- set colour_subset = "C" -%}
+{%- macro coloured_sequence(sequence) -%}
+    {{coloured_ripp_sequence(sequence, colour_subset=colour_subset)}}
+{%- endmacro -%}
 <div class="details">
     <div class="heading">
       <span>Lasso peptide predictions</span>
@@ -21,9 +25,9 @@
            <div class="ripp-segment-sequence">{{ motif.leader }}</div>
          {% endfor %}
            <div class="ripp-segment-type">{% if motifs | length > 1%}Shared full core{% else %}Full core{% endif %}:</div>
-           <div class="ripp-segment-sequence">{{ coloured_ripp_sequence(motifs[0].core) }}</div>
+           <div class="ripp-segment-sequence">{{ coloured_sequence(motifs[0].core) }}</div>
            <div class="ripp-segment-type">Putative macrolactam:</div>
-           <div class="ripp-segment-sequence">{{ coloured_ripp_sequence(motifs[0].detailed_information.macrolactam) }}</div>
+           <div class="ripp-segment-sequence">{{ coloured_sequence(motifs[0].detailed_information.macrolactam) }}</div>
          {% for motif in motifs %}
           {% if motif.tail %}
            {% set motif_name = motif.get_name().rsplit("_", 1)[0] %}
@@ -34,7 +38,7 @@
            <div class="ripp-segment-sequence"><span class="cut">{{ motif.tail }}</span></div>
           {% endif %}
          {% endfor %}
-         {{ comparippson_results.get_html_for_query(motifs[0].get_name().rsplit("_", 1)[0]) }}
+         {{ comparippson_results.get_html_for_query(motifs[0].get_name().rsplit("_", 1)[0], colour_subset=colour_subset) }}
         </div>
        {% endfor %}
     {% endfor %}
