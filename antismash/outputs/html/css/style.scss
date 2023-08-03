@@ -1355,7 +1355,13 @@ ul.dropdown-options {
 
         .comparippson-midline {
             @extend .serif;
-            color: gray;
+            span {
+                opacity: 0.5;  // less important than the bracketing lines above/below
+            }
+            .near-match-cycle {
+                opacity: 1;  // undo the opacity above
+                font-weight: 600;  // matches the cys/dha/dhb weighting
+            }
         }
     }
 }
