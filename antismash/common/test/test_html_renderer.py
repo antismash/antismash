@@ -154,12 +154,12 @@ class TestSequences(unittest.TestCase):
                 assert f"<span>{char}</span>" in result
                 assert f'">{char}</span>' not in result
 
-    def test_combination_substitution_positional(self):
+    def test_combination_classes_positional(self):
         sequence = "ABC"
         positional = {1: "pos"}
-        substitutions = {"B": "sub"}
-        result = renderer.spanned_sequence(sequence, substitutions, positional_classes=positional)
-        assert '<span class="sub pos">B</span>' in result
+        mapping = {"B": "map"}
+        result = renderer.spanned_sequence(sequence, mapping, positional_classes=positional)
+        assert '<span class="map pos">B</span>' in result
 
     def test_ripps_dehydration(self):
         result = renderer.coloured_ripp_sequence("TISC", dehydrate=True)

@@ -1,3 +1,4 @@
+{%- set colour_subset = "C" -%}
 <div class="details">
     <div class="heading">
       <span>Sactipeptide predictions</span>
@@ -21,8 +22,8 @@
            <div class="ripp-segment-sequence">{{ motif.leader }}</div>
          {% endfor %}
            <div class="ripp-segment-type">{% if motifs | length > 1%}Shared core{% else %}Core{% endif %}:</div>
-           <div class="ripp-segment-sequence">{{ core }}</div>
-         {{ comparippson_results.get_html_for_query(motifs[0].get_name().rsplit("_", 1)[0], colour_subset="C") }}
+           <div class="ripp-segment-sequence">{{ coloured_ripp_sequence(core, colour_subset=colour_subset) }}</div>
+         {{ comparippson_results.get_html_for_query(motifs[0].get_name().rsplit("_", 1)[0], colour_subset=colour_subset) }}
         </div>
        {% endfor %}
     {% endfor %}
