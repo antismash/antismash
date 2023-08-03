@@ -166,20 +166,26 @@ def spanned_sequence(sequence: str, class_mapping: Dict[str, str],
     return Markup("".join(spans))
 
 
-def coloured_ripp_sequence(sequence: str, dehydrate: bool = False) -> Markup:
+def coloured_ripp_sequence(sequence: str, dehydrate: bool = False, colour_subset: str = None,
+                           ) -> Markup:
     """ Builds an HTML fragment with spans for each character, using a predefined
         set of span classes and substitutions.
 
         Arguments:
             sequence: the sequence string to build from
             dehydrate: whether to substitute in dehydrations (e.g. "T" -> "Dbh")
+            colour_subset: a subset of normally coloured RiPP characters to restrict colouring to
 
         Returns:
             an HTML fragment as a Markup instance
     """
+    if colour_subset is not None:
+        classes = {c: RIPP_CLASSES[c] for c in colour_subset}
+    else:
+        classes = RIPP_CLASSES
     if not dehydrate:
-        return spanned_sequence(sequence, RIPP_CLASSES)
-    return spanned_sequence(sequence, RIPP_CLASSES, substitutions=RIPP_SUBSTITUTIONS)
+        return spanned_sequence(sequence, classes)
+    return spanned_sequence(sequence, classes, substitutions=RIPP_SUBSTITUTIONS)
 
 
 def collapser_end() -> Markup:
