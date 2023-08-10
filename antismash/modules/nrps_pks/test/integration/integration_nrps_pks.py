@@ -11,9 +11,10 @@ from unittest.mock import patch
 from helperlibs.wrappers.io import TemporaryDirectory
 
 import antismash
-from antismash.common import path
+from antismash.common import path, secmet
 from antismash.common.test import helpers
 from antismash.config import build_config, destroy_config
+from antismash.detection import nrps_pks_domains
 from antismash.modules import nrps_pks
 
 
@@ -136,6 +137,58 @@ class IntegrationNRPSPKS(unittest.TestCase):
                             'nrpspksdomains_STAUR_3983_PKS_KR.1',
                             'nrpspksdomains_STAUR_3982_PKS_KR.1'}
         assert set(results.domain_predictions) == expected_domains
+
+    def test_substrate_methylation(self):
+        # SCO7683 from NC_003888.3
+        # contains a single module of: C-A-cMT-T-TE
+        seq = ("MNIAELLARYADEGVVLWAEDGQLRFRAPQGRLTDTHRAELRTHKEAVLRHLEAAEPALRADPDHRHEPFPLTDIQAAYLIGRTDAYAYGGVGCHAYVELA"
+               "YPDLDVDRVTSVWRQLVQRHDMLRAVIHQDGHQRVLPEVPALSVGTDDLTALPAATAEARMRHTRARLSAREAPTDQWPLFDVHVTRTDRRAVLHLSFDML"
+               "VVDHASLRILLAEFRRSYGGTALTDAPRITFRDYVLARRALADTDGHARDRAYWTERLDTLPPAPELPLAEAWQAAVDDPAEAGRVPAPGGDAVAFRRLEV"
+               "LLPAADRDRLTARAARRGLTPSTALLTAYAETVGAWSRSSRFTLNVPTVDRPALHEDIDRLVGDFTSLELLAVDLDTPATFAERTGAVGEQLLDDLAHPLF"
+               "TGSEVLAELSRRAGAPVLMPVVFTSALGAGATSEGVPPEVEYAVTRTPQVWLDCQVMHRGDTLSLSWDIREGALAHGTADAMFEAYTALVRSLSAEGEAGE"
+               "KAWDAPVRIPLPAAQAARRAAVNATEGPLPDALLHEPVLARARTTPDAIAVRTPELALSYRQLVTRATGLAQHLTASGLRPGEPVAIWMDKGWEQVVAVFG"
+               "TLMAGGAYLPVDTAQPAARRDTIIGDAGVRTVLTQSWLAELEDLPSTVSPVAVDLVGEATADLPPAARRDPDDLAYVIYTSGSTGTPKGVMISHRAALNTV"
+               "EDINRRFAVDERDRVLGIAGLGFDLSVYDLFGPLAVGATLVLPRSDLRGDPSHWAELVRDFGVTVWNSVPGQLHMLCDWLRSEPPTDDGSLRLALISGDWI"
+               "PVALPDQARELLPGLEIVSLGGATEGSIWSIAHPIGEVDTARPSIPYGKPLTNQTFAVLDRHLRPRPEWVPGELYIGGAGVALGYLGDGERTAQRFLTDLA"
+               "TGERLYRTGDLGRYLPDGTIEFLGREDAQIKIRGYRVELAEVEAAVQTHPAVAAGAVVVDDSAAGGRRLAAFVETARKDGGPAVTSRAQARTAAAEAVREA"
+               "GAAVDAARLTDFLAALDDVAVAEMTRVLAASGVFDSAAARTAEEVGTALRATPRHRHIVRRWLRALAARDRLTHRDADATYTGLRPVSAPEAERRWRRAAD"
+               "LEHEIGWSTELLTVMRTCAERLPELVCGDVGIRDLLFPGAATEAADAAYRDNLAIRHLNRAVVAALREIAAGHTGEERLRVLEVGGGVGGTTGELVPVLAE"
+               "YGVDYLFTDPSAFFLNEARERFADHAWVRYQRFDVDEDPRAQHLLPNTFDVVVCANTLHAAADADAAVGRLRELLVPGGQLVFVENTRDENLPLLVSMEFL"
+               "EVAGRTWTDVREHTGQSFLTHTQWRALLDGHEASGVTSLPDAGDALAGTGQEVFIATMKDDRHHVPVGELARTAATRLPEYMLPAVWQVVDALPRTANGKT"
+               "DRARLRSWLPRESAPVVVDEQPKDELEHSLADLWAELLAVEGVTRNDDFFDLGGDSLLVARMVGRLRERVPQAADLEWEVVLRHMLRRPTVAGLAAFLRAL"
+               "AGPEDAPAAGAVRTDPVIHLHGSRSEDEPTTVLVHAGTATIMPYRALITEIRRRSPGLAEVVGVEVPDLSGFLAAPPDGLIERMAADYARALTADGRHRFH"
+               "VVGYCLGGLIATEVARNLAESGAEVESLTVISSHSPRFRLDDELLAEYSFAVMMGIDPADLGFPDDQYRVAAAADTVLAASPGVLPDGGLAALGGEFEDVA"
+               "SRFRRLADVPRATRIARMCEAVPASAGTYEPDHMTRLFLAFRQSVFAITRYRAEPYAGDITFLRHDGAYPFPGSKDAVTAYWEELTLGDLDIVDIGGDHYS"
+               "CLSVEHAPGILKTLGELTQGAITR")
+        # set up a simple record with the required components
+        record = helpers.DummyRecord(seq="A" * (len(seq) * 3 + 2))  # allow a buffer base
+        # the CDS of interest
+        location = secmet.locations.FeatureLocation(1, len(record) - 1, 1)
+        cds = secmet.CDSFeature(location=location, locus_tag="SCO7683", translation=seq)
+        record.add_cds_feature(cds)
+        # in the relevant protocluster and region
+        protocluster = helpers.DummyProtocluster(start=0, end=len(record), product="NRPS", product_category="NRPS")
+        record.add_protocluster(protocluster)
+        candidate = helpers.DummyCandidateCluster(clusters=[protocluster])
+        record.add_candidate_cluster(candidate)
+        record.create_regions()
+        region = record.get_regions()[0]
+        assert cds in region.cds_children  # if the CDS isn't in the region, there's a problem
+        # run domain/module detection
+        domain_results = nrps_pks_domains.run_on_record(record, None, None)
+        domain_results.add_to_record(record)
+        assert len(cds.modules) == 1
+        module = cds.modules[0]
+        assert module.is_complete()
+        # now, finally, the analysis module can run
+        results = nrps_pks.run_on_record(record, None, self.options)
+        results.add_to_record(record)
+
+        # the module should show the methylation
+        assert module.get_substrate_monomer_pairs() == (("Cys", "Me-Cys"),)
+        # and the NRPS/PKS results for the candidate should have the right polymer
+        region_results = results.region_predictions[region.get_region_number()]
+        assert region_results[0].polymer == "(Me-Cys)"
 
     def test_get_a_dom_signatures(self):
         filename = path.get_full_path(__file__, 'data', 'dom_signatures.txt')

@@ -22,6 +22,7 @@ from antismash.common.secmet.features import (
 )
 from antismash.common.secmet.locations import FeatureLocation
 from antismash.config import get_config
+from antismash.detection.nrps_pks_domains.modular_domain import ModularDomain
 
 from .module_identification import (
     build_modules_for_cds,
@@ -436,6 +437,7 @@ def generate_domain_features(gene: CDSFeature, domains: List[HMMResult]) -> Dict
             new_feature.domain = mapping
         else:
             new_feature.domain = name
+            new_feature.subtypes = domain.detailed_names[1:]
         new_feature.locus_tag = gene.locus_tag or gene.get_name()
         new_feature.detection = "hmmscan"
         new_feature.database = "nrpspksdomains.hmm"
@@ -449,7 +451,6 @@ def generate_domain_features(gene: CDSFeature, domains: List[HMMResult]) -> Dict
 
         new_feature.domain_id = "nrpspksdomains_" + domain_name
         new_feature.label = domain_name
-        new_feature.subtypes = domain.detailed_names[1:]
 
         new_features[domain] = new_feature
     return new_features
