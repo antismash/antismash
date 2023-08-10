@@ -346,7 +346,6 @@ def find_possible_orders(cds_features: List[CDSFeature], start_cds: Optional[CDS
     if end_cds:
         while end_cds in tails:
             end_cds = tails[end_cds]
-        end_cds = end_cds
 
     cds_to_order = []
     for cds in cds_features:
