@@ -9,6 +9,7 @@ from typing import Dict, List, Optional, Tuple
 
 from antismash.common import brawn, path, utils
 from antismash.common.secmet import CDSFeature, Module, Record
+from antismash.detection.nrps_pks_domains.modular_domain import ModularDomain
 
 from .html_output import will_handle
 from .results import CandidateClusterPrediction, modify_substrate
@@ -192,7 +193,14 @@ def generate_substrates_order(geneorder: List[CDSFeature], consensus_predictions
             if not monomer:
                 continue
             monomers.append(monomer)
-            components.append((substrate, monomer, [domain.domain or "" for domain in module.domains]))
+            domain_names = []
+            for domain in module.domains:
+                assert isinstance(domain, ModularDomain)
+                if domain.domain == "MT" and domain.domain_subtype:
+                    domain_names.append(domain.domain_subtype)
+                    continue
+                domain_names.append(domain.domain or "")
+            components.append((substrate, monomer, domain_names))
 
         if monomers:
             monomers_by_cds.append(f"({' - '.join(monomers)})")

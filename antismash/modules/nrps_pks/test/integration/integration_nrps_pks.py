@@ -189,6 +189,7 @@ class IntegrationNRPSPKS(unittest.TestCase):
         # and the NRPS/PKS results for the candidate should have the right polymer
         region_results = results.region_predictions[region.get_region_number()]
         assert region_results[0].polymer == "(Me-Cys)"
+        assert region_results[0].smiles == "NC(C(C)S)C(=O)O"
 
     def test_get_a_dom_signatures(self):
         filename = path.get_full_path(__file__, 'data', 'dom_signatures.txt')
