@@ -254,7 +254,7 @@ def filter_results(results: List[HSP], results_by_id: Dict[str, List[HSP]], filt
         equivalence_group = set(line.split(","))
         unknown = equivalence_group - signature_names
         if unknown:
-            raise ValueError("Equivalence group contains unknown identifiers: {unknown}")
+            raise ValueError(f"Equivalence group contains unknown identifiers: {unknown}")
         removed_ids: Set[int] = set()
         for cds, cdsresults in results_by_id.items():
             # Check if multiple competing HMM hits are present
