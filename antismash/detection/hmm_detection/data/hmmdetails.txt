@@ -299,6 +299,10 @@ RCDPS	arginine-containing cyclic dipeptide synthase	500	rcdps.hmm
 DIT1_PvcA	Pyoverdine/dityrosine biosynthesis protein	27	PF05141.hmm
 TauD	Taurine catabolism dioxygenase TauD, TfdA family	27	PF02668.hmm
 Transferase	Transferase family	20	PF02458.hmm
+Fer2_4	2Fe-2S iron-sulfur cluster binding domain	22	PF13510.hmm
+Fer2_BFD	BFD-like [2Fe-2S] binding domain	23	PF04324.hmm
+Pyr_redox_2	Pyridine nucleotide-disulphide oxidoreductase	26	PF07992.hmm
+DAO	FAD dependent oxidoreductase	27	PF01266.hmm
 Lanthipeptide_LanB_RRE	RRE-containing LanB protein in a class I lanthipeptide cluster	25	RREFam001.hmm
 Stand_Alone_Lasso_RRE	Stand-alone RRE protein in a lasso peptide cluster	25	RREFam002.hmm
 Lasso_Fused_RRE	RRE-containing fused peptidase in a lasso peptide cluster	25	RREFam003.hmm
