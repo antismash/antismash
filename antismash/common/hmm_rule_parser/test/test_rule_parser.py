@@ -434,6 +434,10 @@ class RuleParserTest(unittest.TestCase):
         with self.assertRaises(rule_parser.RuleSyntaxError):
             self.parse("RULE name CATEGORY category RELATED")
 
+    def test_empty_conditions(self):
+        with self.assertRaisesRegex(rule_parser.RuleSyntaxError, "expected conditions"):
+            self.parse(format_as_rule("A", 10, 10, ""))
+
     def test_missing_group_close(self):
         with self.assertRaises(rule_parser.RuleSyntaxError):
             self.parse(format_as_rule("A", 10, 10, "(a or b"))

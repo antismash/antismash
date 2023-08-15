@@ -1174,6 +1174,8 @@ class Parser:  # pylint: disable=too-few-public-methods
         """    CONDITIONS = CONDITION {BINARY_OP CONDITIONS}*;
         """
         conditions: List[Union[Conditions, TokenTypes]] = []
+        if self.current_token is None:
+            raise self._build_syntax_error("Unexpected end of rule, expected conditions")
         lvalue = self._parse_single_condition(allow_cds)
         append_lvalue = True  # capture the lvalue if it's the only thing
         while self.current_token and self.current_token.type in [TokenTypes.AND,
