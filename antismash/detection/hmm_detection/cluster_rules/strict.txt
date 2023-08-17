@@ -383,6 +383,17 @@ RULE darobactin
     NEIGHBOURHOOD 10
     CONDITIONS rSAM_with_SPASM and darobactin_precursor
 
+RULE triceptide
+    CATEGORY RiPP
+    DESCRIPTION triceptides
+    # see DOI: 10.1021/jacs.2c00521
+    EXAMPLE NCBI NZ_CP048261.1 9207808-9228995 YxD
+    EXAMPLE NCBI NZ_CP016279.1 10116044-10137204 HAA
+    EXAMPLE NCBI NZ_CP031253.1 933021-973170 YRDxHNRHNR
+    CUTOFF 5
+    NEIGHBOURHOOD 10
+    CONDITIONS triceptide_precursor and (SAM_SPASM_FxsB or rSAM_GlyRichRpt or rSAM_XyeB or rSAM_with_SPASM)
+
 RULE epipeptide
     CATEGORY RiPP
     DESCRIPTION D-amino-acid containing RiPPs
