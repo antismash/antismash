@@ -243,13 +243,15 @@ def prepare_data(logging_only: bool = False) -> List[str]:
     # the path to the markov model
     seeds_hmm = path.get_full_path(__file__, 'data', 'bgc_seeds.hmm')
     hmm_files = [os.path.join("data", sig.hmm_file) for sig in profiles]
+    # include the listing, since tools like wget will keep modified timestamps on the HMMs
+    description_file = path.get_full_path(__file__, 'data', 'hmmdetails.txt')
     outdated = False
     if not path.locate_file(seeds_hmm):
         logging.debug("%s: %s doesn't exist, regenerating", NAME, seeds_hmm)
         outdated = True
     else:
         seeds_timestamp = os.path.getmtime(seeds_hmm)
-        for component in hmm_files:
+        for component in hmm_files + [description_file]:
             if os.path.getmtime(component) > seeds_timestamp:
                 logging.debug("%s out of date, regenerating", seeds_hmm)
                 outdated = True
