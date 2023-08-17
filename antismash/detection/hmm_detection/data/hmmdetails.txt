@@ -281,6 +281,9 @@ SPASM	Iron-sulfur cluster-binding domain	21	PF13186.hmm
 TIGR02111	coenzyme PQQ biosynthesis protein C	240	TIGR02111.hmm
 TIGR03966	heme/flavin dehydrogenase, mycofactocin system	471	TIGR03966.hmm
 TIGR04078	peptide modification radical SAM enzyme, YydG family	300	TIGR04078.hmm
+rSAM_GlyRichRpt	GRRM system radical SAM/SPASM domain protein	310	TIGR04261.hmm
+SAM_SPASM_FxsB	FxsB family radical SAM/SPASM domain protein	370	TIGR04269.hmm
+rSAM_XyeB	XyeB family radical SAM/SPASM peptide maturase	450	TIGR04496.hmm
 yydH	Epipeptide metalloprotease yydH	400	yydH.hmm
 TIGR04223	cyclic lactone autoinducer peptide	19	TIGR04223.hmm
 AgrB	cyclic lactone autoinducer endopeptidase	23	PF04647.hmm
