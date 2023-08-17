@@ -1,7 +1,11 @@
+# License: GNU Affero General Public License v3 or later
+# A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
+
+# for test files, silence irrelevant and noisy pylint warnings
+# pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring,consider-using-with
+
 import unittest
 
-from antismash.common.hmm_rule_parser.structures import DynamicHit, DynamicProfile
-from antismash.common.secmet import Record
 from antismash.common.test.helpers import DummyRecord, DummyCDS
 
 from antismash.detection.hmm_detection.dynamic_profiles import cyanobactin_precursor
