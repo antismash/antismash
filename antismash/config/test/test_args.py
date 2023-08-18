@@ -101,6 +101,17 @@ class TestConfig(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "does not exist"):
             self.core_parser.parse_args(["--reuse-results", "non-existant"])
 
+    def test_defaults_on_fetch(self):
+        config = get_config()
+        assert len(config)
+        assert config.executables
+
+    def test_defaults_on_fetch_disabled(self):
+        config = get_config(no_defaults=True)
+        assert len(config) == 0
+        with self.assertRaises(AttributeError):
+            assert config.executables
+
 
 class TestExecutableArg(unittest.TestCase):
     def setUp(self):

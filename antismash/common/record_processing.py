@@ -243,7 +243,7 @@ def ensure_cds_info(genefinding: Callable[[Record, Any], None], sequence: Record
     """
     if sequence.skip:
         return sequence
-    options = get_config()
+    options = get_config(no_defaults=True)
     if len(options) == 0:  # inside a parallel function where config doesn't pickle correctly
         new = Config(kwargs)
         assert isinstance(new, ConfigType)
