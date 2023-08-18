@@ -58,7 +58,6 @@ RELATED section of at least one rule.
 Rule can optionally specify an SUPERIORS flag with a list of other rule identifiers
 to which the current rule is considered inferior to. If an inferior rule does
 not cover more than one or more of its superiors, then it will be discarded.
-A rule which is inferior to another rule cannot be superior to a third rule.
 Duplicate ids in the list will cause an error.
 
 Simple replacment aliases can be defined and used like so
