@@ -99,9 +99,22 @@ def update_config(values: Union[Dict[str, Any], Namespace]) -> ConfigType:
     return config
 
 
-def get_config() -> ConfigType:
-    """ Returns the current config """
-    config = Config()
+def get_config(no_defaults: bool = False) -> ConfigType:
+    """ Returns the current config. If the current config is empty, a default set
+        will be created.
+
+        Arguments:
+            no_defaults: if True, no defaults will be created in the case of not
+                         yet being set
+
+        Returns:
+            the current config
+    """
+    config: Union[Config, ConfigType] = Config()  # mypy doesn't like the rest of this otherwise
+    assert isinstance(config, ConfigType)
+    # if it's completely, build a default for easier use as a library, especially for executables
+    if len(config) < 1 and not no_defaults:
+        config = build_config([])
     assert isinstance(config, ConfigType)
     return config
 
