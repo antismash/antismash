@@ -15,7 +15,7 @@ from ..qualifiers.t2pks import T2PKSQualifier
 from ..qualifiers.gene_functions import GeneFunction
 
 T = TypeVar("T", bound="Protocluster")
-S = TypeVar("S", bound="SideloadedProtocluster")  # pylint: disable=invalid-name
+S = TypeVar("S", bound="SideloadedProtocluster")
 
 
 class Protocluster(CDSCollection):

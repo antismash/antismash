@@ -28,7 +28,7 @@ def _find_error(output: list[str]) -> str:
 
 
 def run_hmmscan(target_hmmfile: str, query_sequence: str, opts: List[str] = None,
-                results_file: str = None) -> List[SearchIO._model.query.QueryResult]:  # pylint: disable=protected-access
+                results_file: str = None) -> list[SearchIO._model.query.QueryResult]:
     """ Runs hmmscan on the inputs and return a list of QueryResults
 
         Arguments:

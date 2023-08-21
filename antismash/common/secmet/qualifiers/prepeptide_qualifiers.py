@@ -33,7 +33,7 @@ class LanthiQualifier(RiPPQualifier):
     """ A qualifier for lanthipeptide-specific annotations """
     __slots__ = ["lan_bridges", "aminovinyl_group", "chlorinated", "oxygenated", "lactonated"]
 
-    def __init__(self, lan_bridges: int, rodeo_score: int,  # pylint: disable=too-many-arguments
+    def __init__(self, lan_bridges: int, rodeo_score: int,
                  aminovinyl_group: bool, chlorinated: bool, oxygenated: bool,
                  lactonated: bool) -> None:
         super().__init__(rodeo_score)
@@ -81,7 +81,7 @@ class ThioQualifier(RiPPQualifier):
     """ A qualifier for thiopeptide-specific annotations """
     __slots__ = ["amidation", "macrocycle", "core_features", "mature_weights"]
 
-    def __init__(self, rodeo_score: int, amidation: bool, macrocycle: str,  # pylint: disable=too-many-arguments
+    def __init__(self, rodeo_score: int, amidation: bool, macrocycle: str,
                  core_features: str, mature_weights: List[float]) -> None:
         super().__init__(rodeo_score)
         self.amidation = amidation
@@ -119,7 +119,7 @@ class ThioQualifier(RiPPQualifier):
 
 class LassoQualifier(RiPPQualifier):
     """ A qualifier for lassopeptide-specific annotations """
-    def __init__(self, rodeo_score: int, num_bridges: int,  # pylint: disable=too-many-arguments
+    def __init__(self, rodeo_score: int, num_bridges: int,
                  macrolactam: str, cut_mass: float, cut_weight: float) -> None:
         super().__init__(rodeo_score)
         self.num_bridges = num_bridges

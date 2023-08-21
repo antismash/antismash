@@ -747,7 +747,7 @@ class Record:
         if str(taxon) == "bacteria":
             transl_table = 11  # bacterial, archea, plant plastid code
         record = cls(transl_table=transl_table)
-        record._record = seq_record  # pylint: disable=protected-access
+        record._record = seq_record
         # because is_circular() can't be used reliably at this stage due to fasta files
         can_be_circular = taxon == "bacteria"
         try:
@@ -918,7 +918,7 @@ class Record:
 
         return Seq(string_version)
 
-    def get_cds_features_within_regions(self) -> List[CDSFeature]:  # pylint: disable=invalid-name
+    def get_cds_features_within_regions(self) -> list[CDSFeature]:
         """ Returns all CDS features in the record that are located within a
             region of interest
         """

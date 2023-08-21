@@ -144,7 +144,7 @@ class CDSCollection(Feature):
         contig_edge = leftovers.pop("contig_edge", [""])[0] == "True"
         if not feature:
             feature = cls(bio_feature.location, bio_feature.type)
-            feature._contig_edge = contig_edge  # pylint: disable=protected-access
+            feature._contig_edge = contig_edge
 
         # grab parent optional qualifiers
         super().from_biopython(bio_feature, feature=feature, leftovers=leftovers, record=record)

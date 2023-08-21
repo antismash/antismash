@@ -12,7 +12,7 @@ from .domain import Domain, generate_protein_location_from_qualifiers
 from .feature import Feature, FeatureLocation, Location, pop_locus_qualifier
 
 T = TypeVar("T", bound="CDSMotif")
-ExternalT = TypeVar("ExternalT", bound="ExternalCDSMotif")  # pylint: disable=invalid-name
+ExternalT = TypeVar("ExternalT", bound="ExternalCDSMotif")
 
 
 class CDSMotif(Domain):

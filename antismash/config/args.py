@@ -243,14 +243,14 @@ Options
         return tuple(self._actions)
 
 
-class FullPathAction(argparse.Action):  # pylint: disable=too-few-public-methods
+class FullPathAction(argparse.Action):
     """ An argparse.Action to ensure provided paths are absolute. """
     def __call__(self, parser: argparse.ArgumentParser, namespace: argparse.Namespace,
                  values: Any, option_string: str = None) -> None:
         setattr(namespace, self.dest, os.path.abspath(str(values)))
 
 
-class MultipleFullPathAction(argparse.Action):  # pylint: disable=too-few-public-methods
+class MultipleFullPathAction(argparse.Action):
     """ An argparse.Action to ensure provided paths are absolute in a comma separated list. """
     def __call__(self, parser: argparse.ArgumentParser, namespace: argparse.Namespace,
                  values: Any, option_string: str = None) -> None:
@@ -323,7 +323,7 @@ class _SimpleArgs:
             assert isinstance(default, option_type)
         self._add_argument(self.options, name, *args, **kwargs)
 
-    def _add_argument(self, group: argparse._ArgumentGroup, name: str,  # pylint: disable=protected-access
+    def _add_argument(self, group: argparse._ArgumentGroup, name: str,
                       *args: Any, **kwargs: Any) -> None:
         self.skip_type_check = self.override
         # prevent the option name being considered destination by argparse

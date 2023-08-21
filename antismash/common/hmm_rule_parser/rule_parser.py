@@ -204,7 +204,7 @@ class TokenTypes(IntEnum):
     MINIMUM = 7
     CDS = 8
     AND = 9
-    OR = 10  # pylint thinks it's too short, so pylint: disable=invalid-name
+    OR = 10
     NOT = 11
     INT = 12
     COMMA = 13
@@ -331,7 +331,7 @@ class Tokeniser:  # pylint: disable=too-few-public-methods
         self.current_symbol.clear()
 
 
-class Token:  # pylint: disable=too-few-public-methods
+class Token:
     """ Keeps the token details, the text, where it is in the total text block,
         and what type it is """
     def __init__(self, token_text: str, line_number: int, position: int,
@@ -402,7 +402,7 @@ class Details:
         return f"Details(cds={self.cds}, possibilities={self.possibilities})"
 
 
-class ConditionMet:  # pylint: disable=too-few-public-methods
+class ConditionMet:
     """ A container for tracking whether a condition was satisfied along with
         what specific subsections of the condition were matched
     """
@@ -892,7 +892,7 @@ class ExampleRecord:
 
 
 # a typedef, even positions will be a Conditions instance, odd will be TokenTypes
-ConditionList = List[Union[Conditions, TokenTypes]]  # pylint: disable=invalid-name
+ConditionList = list[Union[Conditions, TokenTypes]]
 
 # tokens that mark the start and/or end of a RULE
 _STARTERS = [TokenTypes.RULE, TokenTypes.DEFINE]

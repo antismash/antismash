@@ -31,7 +31,7 @@ class NRPSPKSQualifier:
 
         Can be used directly as a qualifier for Biopython's SeqFeature.
     """
-    class Domain:  # pylint: disable=too-few-public-methods
+    class Domain:
         """ Contains information about a NRPS/PKS domain, including predictions
             made by modules.
 

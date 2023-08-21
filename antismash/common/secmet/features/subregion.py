@@ -11,7 +11,7 @@ from .cdscollection import CDSCollection
 from .feature import FeatureLocation, Feature
 
 T = TypeVar("T", bound="SubRegion")
-S = TypeVar("S", bound="SideloadedSubRegion")  # pylint: disable=invalid-name
+S = TypeVar("S", bound="SideloadedSubRegion")
 
 
 class SubRegion(CDSCollection):
