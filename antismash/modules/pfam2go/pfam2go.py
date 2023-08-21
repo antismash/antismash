@@ -30,7 +30,7 @@ class GeneOntology:  # pylint: disable=too-few-public-methods
         return self.id
 
 
-class GeneOntologies:  # pylint: disable=too-few-public-methods
+class GeneOntologies:
     """A collection of all Gene Ontology terms (as GeneOntology objects) for a Pfam ID."""
     def __init__(self, pfam: str, gos: List[GeneOntology]) -> None:
         self.pfam = str(pfam)

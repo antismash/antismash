@@ -228,7 +228,7 @@ class CDSFeature(Feature):
         # finally, any alternate start codon should be changed to methionine
         if translation[0] != "M":
             translation = "M" + translation[1:]
-        self._translation = translation  # pylint: disable=attribute-defined-outside-init
+        self._translation = translation
 
     @property
     def modules(self) -> Tuple[Module, ...]:

@@ -16,7 +16,7 @@ from antismash.common.secmet.features import Feature, FeatureLocation
 from antismash.common.module_results import ModuleResults
 from antismash.config import ConfigType, get_config
 
-Codon = Tuple[int, int]  # keeping as a type style, so # pylint: disable=invalid-name
+Codon = Tuple[int, int]
 
 
 class TTAResults(ModuleResults):

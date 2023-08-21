@@ -19,7 +19,7 @@ from Bio.SeqFeature import (
 
 from .errors import SecmetInvalidInputError
 
-Location = Union[CompoundLocation, FeatureLocation]  # pylint: disable=invalid-name
+Location = Union[CompoundLocation, FeatureLocation]
 
 
 def convert_protein_position_to_dna(start: int, end: int, location: Location) -> Tuple[int, int]:
