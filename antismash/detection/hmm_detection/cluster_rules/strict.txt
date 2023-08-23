@@ -32,7 +32,7 @@ RULE transAT-PKS
     DESCRIPTION Trans-AT polyketide
     EXAMPLE NCBI CP006259.1 382565-499230 kirromycin
     EXAMPLE NCBI CP001511.1 5000-30000 toblerol
-    CUTOFF 45  # kirromycin (CP006259) has a range of ~42kb
+    CUTOFF 20
     NEIGHBOURHOOD 20
     CONDITIONS cds(PKS_AT and not ANY_KS)
                and (
@@ -40,6 +40,7 @@ RULE transAT-PKS
                 # handle CP001511 5k-30k as per https://doi.org/10.1002/ange.201709056
                 or cds(tra_KS and PP-binding)
                )
+    EXTENDERS cds(ANY_KS and not PKS_AT)
 
 RULE hglE-KS
     CATEGORY PKS

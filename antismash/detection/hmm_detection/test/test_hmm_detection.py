@@ -326,7 +326,7 @@ class HmmDetectionTest(unittest.TestCase):
         assert data_dir_contents == details_files
 
 
-class TestRuleDetectionExtenders(unittest.TestCase):
+class TestRuleExtenders(unittest.TestCase):
     def setUp(self):
         self.rule_name = "MetaboliteA"
         cutoff = 2000
@@ -360,9 +360,10 @@ class TestRuleDetectionExtenders(unittest.TestCase):
         self.add_hit("X1", self.extender_name)
 
     def detect(self, add_extenders):
+        # the X signature/requirement is present just to make a valid CDS condition
         rule_text = self.rule_text
         if add_extenders:
-            rule_text += f" EXTENDERS {self.extender_name}"
+            rule_text += f" EXTENDERS cds({self.extender_name} and not X)"
         rules = rule_parser.Parser(rule_text, {"A", self.extender_name}, {"Cat"}).rules
         assert len(rules) == 1
         if not add_extenders:
@@ -371,7 +372,7 @@ class TestRuleDetectionExtenders(unittest.TestCase):
             assert rules[0].extenders
 
         pkg = hmm_detection  # to avoid quite a bit of repetition below
-        sigs = [pkg.HmmSignature(name, "", 0, "") for name in ["A", self.extender_name]]
+        sigs = [pkg.HmmSignature(name, "", 0, "") for name in ["A", self.extender_name, "X"]]
         with patch.object(pkg, "get_signature_profiles", return_value=sigs):
             with patch.object(pkg, "get_sequence_counts", return_value={sig.name: 1 for sig in sigs}):
                 with patch.object(pkg, "find_hmmer_hits", return_value=self.results_by_id):
