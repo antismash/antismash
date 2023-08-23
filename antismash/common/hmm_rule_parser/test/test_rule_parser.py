@@ -632,6 +632,17 @@ class RuleParserTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "duplicates a signature"):
             self.parse(text)
 
+    def test_extenders(self):
+        text = format_as_rule("A", 10, 10, "other")
+        # extenders must be an explicit CDS condition
+        # not is fine if within a cds condition, otherwise it's no good
+        for extenders in ["a and b", "a or b", "a and not b"]:
+            rule = self.parse(f"{text} EXTENDERS cds({extenders})").rules[0]
+            assert str(rule.extenders) == f"cds({extenders})"
+
+            with self.assertRaisesRegex(rule_parser.RuleSyntaxError, "expected 'cds' after 'extenders'"):
+                _ = self.parse(f"{text} EXTENDERS {extenders}").rules[0]
+
 
 class TokenTest(unittest.TestCase):
     def test_alpha(self):

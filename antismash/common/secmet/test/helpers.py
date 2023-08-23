@@ -119,6 +119,9 @@ class DummyRecord(Record):
     "class for generating a Record like data structure"
     def __init__(self, features=None, seq='AGCTACGT', taxon='bacteria',
                  record_id=None):
+        if features:
+            max_feature_coordinate = max(feature.location.end for feature in features)
+            seq = seq * max(1, max_feature_coordinate // len(seq))
         super().__init__(seq, transl_table=11 if taxon == 'bacteria' else 1)
         if features:
             for feature in features:

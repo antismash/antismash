@@ -102,7 +102,9 @@ class HmmDetectionTest(unittest.TestCase):
         # if forming clusters by .is_contained_by(), 2 clusters will be formed
         # if finding rule hits uses .is_contained_by(), no clusters will be formed
         rules_by_name = {rule.name: rule for rule in rules}
-        clusters = hmm_detection.find_protoclusters(self.record, cluster_type_hits, rules_by_name)
+        dummy_extender_domains = {}
+        clusters = hmm_detection.find_protoclusters(self.record, cluster_type_hits, rules_by_name,
+                                                    self.results_by_id, dummy_extender_domains)
         assert len(clusters) == 1
         assert clusters[0].product == "Overlap"
         assert clusters[0].core_location.start == 30000
@@ -143,7 +145,9 @@ class HmmDetectionTest(unittest.TestCase):
                                 'Metabolite0': {'GENE_3'},
                                 'Metabolite1': {'GENE_5'}}
         rules = {rule.name: rule for rule in self.rules}
-        for cluster in hmm_detection.find_protoclusters(self.record, cds_features_by_type, rules):
+        dummy_extender_domains = {}
+        for cluster in hmm_detection.find_protoclusters(self.record, cds_features_by_type, rules,
+                                                        self.results_by_id, dummy_extender_domains):
             self.record.add_protocluster(cluster)
         assert len(self.record.get_protoclusters()) == 7
         cluster_products = sorted([cluster.product for cluster in self.record.get_protoclusters()])
@@ -320,6 +324,117 @@ class HmmDetectionTest(unittest.TestCase):
         assert not extra_files
         # finally, just to be sure
         assert data_dir_contents == details_files
+
+
+class TestRuleDetectionExtenders(unittest.TestCase):
+    def setUp(self):
+        self.rule_name = "MetaboliteA"
+        cutoff = 2000
+        self.extender_name = "B"
+        self.rule_text = "\n".join([
+            f"RULE {self.rule_name}",
+            "CATEGORY Cat",
+            f"CUTOFF {cutoff//1000}",
+            "NEIGHBOURHOOD 0",
+            f"CONDITIONS A and {self.extender_name}",
+            ])
+        # two CDSes need to be at the boundaries outside the cutoffs, the rest
+        # should be within cutoff of the next CDS
+        self.cdses = [
+            DummyCDS(locus_tag="X0", start=0, end=500),
+            DummyCDS(locus_tag="1", start=3000, end=4000),
+            DummyCDS(locus_tag="2", start=5000, end=6000),
+            DummyCDS(locus_tag="3", start=7000, end=8000),
+            DummyCDS(locus_tag="4", start=9000, end=10000),
+            DummyCDS(locus_tag="5", start=11000, end=12000),
+            DummyCDS(locus_tag="X1", start=15500, end=16000),
+        ]
+        self.potential_cores = self.cdses[1:-1]
+        assert set("12345") == {cds.get_name() for cds in self.potential_cores}
+
+        self.record = DummyRecord(features=self.cdses)
+        assert all(self.record.get_cds_by_name(cds.get_name()) for cds in self.cdses)
+        self.results_by_id = {}
+        self.add_hit("3", "A")
+        self.add_hit("X0", self.extender_name)
+        self.add_hit("X1", self.extender_name)
+
+    def detect(self, add_extenders):
+        rule_text = self.rule_text
+        if add_extenders:
+            rule_text += f" EXTENDERS {self.extender_name}"
+        rules = rule_parser.Parser(rule_text, {"A", self.extender_name}, {"Cat"}).rules
+        assert len(rules) == 1
+        if not add_extenders:
+            assert not rules[0].extenders
+        else:
+            assert rules[0].extenders
+
+        pkg = hmm_detection  # to avoid quite a bit of repetition below
+        sigs = [pkg.HmmSignature(name, "", 0, "") for name in ["A", self.extender_name]]
+        with patch.object(pkg, "get_signature_profiles", return_value=sigs):
+            with patch.object(pkg, "get_sequence_counts", return_value={sig.name: 1 for sig in sigs}):
+                with patch.object(pkg, "find_hmmer_hits", return_value=self.results_by_id):
+                    with patch.object(pkg, "create_rules", return_value=rules):
+                        return pkg.detect_protoclusters_and_signatures(
+                            self.record, "dummy_sig", "dummy_seeds", ["dummy_rules"], {"Cat"},
+                            "dummy_filter", "dummy_tool"
+                        )
+
+    def add_hit(self, cds_name, hit_name):
+        hit = FakeHSPHit(hit_name, cds_name, 0, 10, 50, 0)
+        if cds_name not in self.results_by_id:
+            self.results_by_id[cds_name] = []
+        self.results_by_id[cds_name].append(hit)
+
+    def test_no_extension(self):
+        # without extenders, 1 and 5 should be too far away from the A in the middle gene
+        for name in "1245":
+            self.add_hit(name, self.extender_name)
+        results = self.detect(add_extenders=False)
+        expected = self.potential_cores[1:-1]
+        self.check_results(expected, results)
+
+    def test_extenders_left(self):
+        # only add extra hits to the left
+        for name in [cds.get_name() for cds in self.potential_cores[:2]]:
+            self.add_hit(name, self.extender_name)
+        expected = self.potential_cores[:3]
+        results = self.detect(add_extenders=True)
+        self.check_results(expected, results)
+
+    def test_extenders_right(self):
+        # only add extra hits to the right
+        for name in [cds.get_name() for cds in self.potential_cores[3:]]:
+            self.add_hit(name, self.extender_name)
+
+        expected = self.potential_cores[2:]
+        results = self.detect(add_extenders=True)
+        self.check_results(expected, results)
+
+    def check_results(self, expected, results):
+        # the two outsider CDSes should never be in the expected set
+        assert self.cdses[0] not in expected
+        assert self.cdses[-1] not in expected
+        expected = sorted(expected)
+        # there should be one protocluster covering all cdses of interest
+        assert len(results.protoclusters) == 1
+        protocluster = results.protoclusters[0]
+        for cds in self.cdses:
+            assert cds not in expected or cds.is_contained_by(protocluster)
+        assert protocluster.location.start == expected[0].location.start
+        assert protocluster.location.end == expected[-1].location.end
+
+        # initially all gene functions should all be OTHER
+        for cds in self.cdses:
+            assert cds.gene_function == cds.gene_function.OTHER
+        results.annotate_cds_features()
+        # but once annotated, their gene functions should be CORE even if they were an extender
+        for cds in self.cdses:
+            if cds in expected:
+                assert cds.gene_function == cds.gene_function.CORE
+            else:
+                assert cds.gene_function == cds.gene_function.OTHER
 
 
 class TestSignatureFile(unittest.TestCase):
