@@ -4,14 +4,19 @@
 """ Detects specific domains and defines clusters based on domains detected
 """
 
+import bisect
 from collections import defaultdict
 import dataclasses
 import logging
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, Iterable, Iterator, List, Optional, Set, Tuple
 
 from antismash.common import fasta, path, serialiser
 from antismash.common.hmmscan_refinement import HSP
 from antismash.common.secmet import Record, Protocluster, CDSFeature, FeatureLocation
+from antismash.common.secmet.locations import (
+    location_contains_other,
+    get_distance_between_locations,
+)
 from antismash.common.secmet.qualifiers import GeneFunction, SecMetQualifier
 from antismash.common.subprocessing import run_hmmsearch
 from antismash.common.hmm_rule_parser import rule_parser
@@ -175,9 +180,93 @@ def remove_redundant_protoclusters(clusters: List[Protocluster],
     return trimmed_clusters
 
 
+def apply_extenders(clusters: list[Protocluster],
+                    rules_by_name: dict[str, rule_parser.DetectionRule],
+                    record: Record, results_by_id: dict[str, list[ProfileHit]],
+                    cds_domains_by_cluster: dict[str, dict[str, set[str]]],
+                    ) -> list[Protocluster]:
+    """ Extends the given protoclusters using the defining rule's extension
+        information, if present and possible.
+
+        Arguments:
+            clusters: the protoclusters to try extending
+            rules_by_name: a mapping of rule name to DetectionRule instance
+            record: the record the clusters belong to
+            results_by_id: a mapping of CDS name to profile hits for the full record
+            cds_domains_by_cluster: a mapping of CDS ID to
+                    a mapping of cluster type string to
+                        a set of domains used to determine the cluster
+
+        Returns:
+            a new list of extended clusters
+    """
+
+    def mark_extendable(cdses: Iterable[CDSFeature], previous: CDSFeature,
+                        rule: rule_parser.DetectionRule, core: FeatureLocation,
+                        ) -> Iterator[CDSFeature]:
+        for cds in cdses:
+            # skip over any existing cores
+            if cds.is_contained_by(core):
+                continue
+            # stop if last match is too far away from the current CDS
+            if get_distance_between_locations(cds.location, previous.location) > rule.cutoff:
+                break
+            extendable = rule.can_extend_to(cds, results_by_id.get(cds.get_name(), []))
+            if extendable:
+                previous = cds  # update the previous match for distance checking
+                cds_domains_by_cluster[cds.get_name()][rule.name].update(extendable.matches)
+                yield cds  # let the caller do what it wants with the CDS
+
+    results = []
+    cdses = record.get_cds_features()
+    for cluster in clusters:
+        core = cluster.core_location
+        rule = rules_by_name[cluster.product]
+        index = bisect.bisect_left(cdses, core)
+
+        core_cdses = record.get_cds_features_within_location(cluster.core_location)
+
+        # for each direction, the domain/result updates will be handled by the marker
+        # but since the core location updates are direction dependent, they still must be handled
+
+        for cds in mark_extendable(reversed(cdses[:index]), core_cdses[0], rule, core):
+            core = FeatureLocation(cds.location.start, core.end)
+
+        for cds in mark_extendable(cdses[index:], core_cdses[-1], rule, core):
+            core = FeatureLocation(core.start, cds.location.end)
+
+        # the new core should be at least as large as the old core
+        assert location_contains_other(core, cluster.core_location), f"{cluster.core_location} not in {core}"
+        # update locations
+        surrounds = FeatureLocation(max(0, core.start - rule.neighbourhood),
+                                    min(core.end + rule.neighbourhood, len(record)))
+        results.append(Protocluster(core, surrounding_location=surrounds,
+                                    tool="rule-based-clusters", cutoff=rule.cutoff,
+                                    neighbourhood_range=rule.neighbourhood, product=rule.name,
+                                    detection_rule=str(rule.conditions), product_category=rule.category))
+    return results
+
+
 def find_protoclusters(record: Record, cds_by_cluster_type: Dict[str, Set[str]],
-                       rules_by_name: Dict[str, rule_parser.DetectionRule]) -> List[Protocluster]:
-    """ Detects gene clusters based on the identified core genes """
+                       rules_by_name: dict[str, rule_parser.DetectionRule],
+                       results_by_id: dict[str, list[ProfileHit]],
+                       cds_domains_by_cluster: dict[str, dict[str, set[str]]],
+                       ) -> list[Protocluster]:
+    """ Detects gene clusters based on the identified core genes
+
+        Arguments:
+            record: the record to find protoclusters within
+            cds_by_cluster_type: a dictionary mapping rule name to
+                                 a set of CDS names that matched that rule
+            rules_by_name: a dictionary mapping rule names to DetectionRule instances
+            results_by_id: a dictinoary mapping CDS name to a list of profile hits for that CDS
+            cds_domains_by_cluster: a mapping of CDS ID to
+                    a mapping of cluster type string to
+                        a set of domains used to determine the cluster
+
+        Returns:
+            a list of Protocluster instances that were found
+    """
     clusters: List[Protocluster] = []
     cds_feature_by_name = record.get_cds_name_mapping()
 
@@ -220,6 +309,8 @@ def find_protoclusters(record: Record, cds_by_cluster_type: Dict[str, Set[str]],
                                     min(cluster.location.end, len(record)))
         if contained != cluster.location:
             cluster.location = contained
+
+    clusters = apply_extenders(clusters, rules_by_name, record, results_by_id, cds_domains_by_cluster)
 
     clusters = remove_redundant_protoclusters(clusters, rules_by_name, record)
 
@@ -589,7 +680,7 @@ def detect_protoclusters_and_signatures(record: Record, signature_file: str, see
 
     # annotate everything in detected protoclusters
     rules_by_name = {rule.name: rule for rule in rules}
-    clusters = find_protoclusters(record, cluster_type_hits, rules_by_name)
+    clusters = find_protoclusters(record, cluster_type_hits, rules_by_name, results_by_id, cds_domains_by_cluster)
     strip_inferior_domains(cds_domains_by_cluster, rules_by_name)
 
     return build_results(clusters, record, tool, results_by_id, cds_domains_by_cluster,
