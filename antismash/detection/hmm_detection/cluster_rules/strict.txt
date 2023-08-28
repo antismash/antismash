@@ -731,11 +731,11 @@ RULE isocyanide-nrp
     NEIGHBOURHOOD 25
     CONDITIONS DIT1_PvcA and minimum(2, [AMP-binding, PP-binding, Transferase])
 
-RULE hydroxycyanide
+RULE hydrogen-cyanide
     CATEGORY other
-    DESCRIPTION hydroxycyanide
-    # see DOI: 10.1128/jb.182.24.6940-6949.20
-    EXAMPLE NCBI AF208523.2 1-3300 hydroxycyanide
+    DESCRIPTION hydrogen cyanide
+    # see DOI: 10.1128/jb.182.24.6940-6949.2000
+    EXAMPLE NCBI AF208523.2 1-3300 hydrogen cyanide
     # and also BGC0002345 which is a different Pseudomonas
     CUTOFF 5
     NEIGHBOURHOOD 5
