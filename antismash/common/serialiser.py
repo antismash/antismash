@@ -32,8 +32,11 @@ class AntismashResults:
 
     # the key must accept all the schemas in values as valid
     # this will typically only be useful for backwards compatibility
+    # typically different schema versions will have different detection rules,
+    # so this won't really be relevant for reusing results between runs
     COMPATIBLE_SCHEMAS = defaultdict(set, {
-        2: {1},
+        2: {1},  # records.areas isn't used
+        3: {2, 1},  # a subset of records.areas changed, but still isn't used
     })
 
     def __init__(self, input_file: str, records: List[Record],
