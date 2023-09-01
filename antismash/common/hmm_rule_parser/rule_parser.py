@@ -966,7 +966,7 @@ class Parser:  # pylint: disable=too-few-public-methods
             rule.cutoff = int(rule.cutoff * multipliers.cutoff)
             rule.neighbourhood = int(rule.neighbourhood * multipliers.neighbourhood)
             if rule.name in self.rules_by_name:
-                raise ValueError("Multiple rules specified for the same rule name")
+                raise ValueError(f"Multiple rules specified for the same rule name: {rule.name}")
             self.rules_by_name[rule.name] = rule
             self.rules.append(rule)
         if self.current_token:
