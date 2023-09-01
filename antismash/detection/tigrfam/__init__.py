@@ -88,9 +88,7 @@ def run_on_record(record: Record, results: Optional[TIGRFamResults],
     if results:
         return results
 
-    features = []
-    for region in record.get_regions():
-        features.extend(list(region.cds_children))
+    features = record.get_cds_features_within_regions()
     tigr_db = os.path.join(options.database_dir, "tigrfam", "TIGRFam.hmm")
     hmmer_results = hmmer.run_hmmer(record, features, MAX_EVALUE, MIN_SCORE, tigr_db,
                                     "tigrfam", filter_overlapping=False)
