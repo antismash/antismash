@@ -8,6 +8,7 @@
 
 import os
 
+from antismash.common.hmm_rule_parser.cluster_prediction import Ruleset
 from antismash.common.signature import get_signature_profiles
 
 
@@ -23,3 +24,13 @@ def check_hmm_signatures(signature_file, hmm_dir):
                     name = line.split()[-1]
         assert name
         assert name == sig.name, f"{name} != {sig.name}"
+
+
+def create_ruleset(rules, *, categories=None, hmm_profiles=None, seeds="dummy_seeds", tool="test_tool",
+                   dynamic_profiles=None, equivalence_groups=None):
+    if categories is None:
+        categories = {rule.category for rule in rules}
+    return Ruleset(tuple(rules), hmm_profiles or {}, seeds, categories,
+                   tool=tool, dynamic_profiles=dynamic_profiles or {},
+                   equivalence_groups=equivalence_groups or set(),
+                   )

@@ -16,6 +16,7 @@ from antismash.common.hmm_rule_parser import rule_parser
 from antismash.common.hmm_rule_parser.cluster_prediction import (
     detect_protoclusters_and_signatures,
     RuleDetectionResults,
+    Ruleset,
 )
 from antismash.common.hmm_rule_parser.structures import DynamicProfile, Multipliers
 from antismash.common.module_results import DetectionResults
@@ -30,6 +31,11 @@ from antismash.detection.hmm_detection.categories import get_rule_categories
 NAME = "hmmdetection"
 SHORT_DESCRIPTION = "HMM signature detection"
 DETECTION_STAGE = DetectionStage.AREA_FORMATION
+
+SIGNATURE_FILE = path.get_full_path(__file__, "data", "hmmdetails.txt")
+HMM_FILE = path.get_full_path(__file__, "data", "bgc_seeds.hmm")
+CATEGORIES = {cat.name for cat in get_rule_categories()}
+EQUIVALENCE_GROUPS = path.get_full_path(__file__, "filterhmmdetails.txt")
 
 _STRICTNESS_LEVELS = ["strict", "relaxed", "loose"]
 
@@ -62,6 +68,29 @@ def _get_rule_files_for_strictness(strictness: str) -> List[str]:
     for level in _STRICTNESS_LEVELS[:_STRICTNESS_LEVELS.index(strictness) + 1]:
         files.append(path.get_full_path(__file__, "cluster_rules", f"{level}.txt"))
     return files
+
+
+def get_ruleset(options: ConfigType) -> Ruleset:
+    """ Builds a Ruleset instance configured to match the provided options
+
+        Arguments:
+            options: the antiSMASH config object
+
+        Returns:
+            a Ruleset instance
+    """
+    strictness = options.hmmdetection_strictness
+    multipliers = Multipliers()
+    if options.taxon == "fungi":
+        multipliers = Multipliers(
+            options.hmmdetection_fungal_cutoff_multiplier,
+            options.hmmdetection_fungal_neighbourhood_multiplier,
+        )
+
+    ruleset = Ruleset.from_files(SIGNATURE_FILE, HMM_FILE, _get_rule_files_for_strictness(strictness),
+                                 CATEGORIES, EQUIVALENCE_GROUPS, "rule-based-clusters",
+                                 dynamic_profiles=DYNAMIC_PROFILES, multipliers=multipliers)
+    return ruleset
 
 
 class HMMDetectionResults(DetectionResults):
@@ -201,24 +230,16 @@ def run_on_record(record: Record, previous_results: Optional[HMMDetectionResults
     strictness = options.hmmdetection_strictness
     logging.info("HMM detection using strictness: %s", strictness)
 
-    signatures = path.get_full_path(__file__, "data", "hmmdetails.txt")
-    seeds = path.get_full_path(__file__, "data", "bgc_seeds.hmm")
-    rules = _get_rule_files_for_strictness(strictness)
-    valid_categories = {cat.name for cat in get_rule_categories()}
-    equivalences = path.get_full_path(__file__, "filterhmmdetails.txt")
-
     multipliers = Multipliers()
     if options.taxon == "fungi":
         multipliers.cutoff = options.hmmdetection_fungal_cutoff_multiplier
         multipliers.neighbourhood = options.hmmdetection_fungal_neighbourhood_multiplier
 
-    results = detect_protoclusters_and_signatures(record, signatures, seeds, rules, valid_categories,
-                                                  equivalences, "rule-based-clusters",
-                                                  dynamic_profiles=DYNAMIC_PROFILES,
-                                                  multipliers=multipliers,
-                                                  )
+    ruleset = get_ruleset(options)
+    results = detect_protoclusters_and_signatures(record, ruleset)
     results.annotate_cds_features()
-    return HMMDetectionResults(record.id, results, get_supported_cluster_types(strictness), strictness)
+    cluster_types = list(ruleset.get_rule_names())
+    return HMMDetectionResults(record.id, results, cluster_types, strictness)
 
 
 def prepare_data(logging_only: bool = False) -> List[str]:
