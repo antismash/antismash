@@ -13,6 +13,8 @@ from antismash.common.secmet.qualifiers.gene_functions import GeneFunction
 from antismash.common.secmet.test.helpers import DummyProtocluster
 from antismash.common.test.helpers import DummyRecord, DummyCDS, FakeHSPHit
 
+from .helpers import create_ruleset
+
 
 class DummyConditions(rule_parser.Conditions):
     """ so a DetectionRule can be created without failing its internal checks """
@@ -143,11 +145,8 @@ class TestDynamic(unittest.TestCase):
         # build a dummy rule that will search for this hit
         condition = rule_parser.SingleCondition(False, "a_finder")
         rule = rule_parser.DetectionRule("test-name", "Other", 5000, 5000, condition)
-        with patch.object(cluster_prediction, "create_rules", return_value=[rule]):
-            results = cluster_prediction.detect_protoclusters_and_signatures(
-                record, None, None, [None], set("Other"), None, "test_tool",
-                dynamic_profiles={profile.name: profile}
-            )
+        ruleset = create_ruleset([rule], categories=set("Other"), dynamic_profiles={profile.name: profile})
+        results = cluster_prediction.detect_protoclusters_and_signatures(record, ruleset, "test_tool")
         assert results
         assert results.cds_by_cluster
         assert results.protoclusters
@@ -157,23 +156,13 @@ class TestDynamic(unittest.TestCase):
         results.annotate_cds_features()
         assert cdses[0].sec_met.domains[0].name == "a_finder"
 
-    def test_overlap_names(self):
-        record = DummyRecord(features=[DummyCDS()])
-        profile = structures.DynamicProfile("dummy", "desc", lambda record: {})
-        with patch.object(cluster_prediction, "get_signature_profiles", return_value=[profile]):
-            with self.assertRaisesRegex(ValueError, "profiles overlap"):
-                cluster_prediction.detect_protoclusters_and_signatures(
-                    record, None, None, [None], set("Other"), None, "test_tool",
-                    dynamic_profiles={profile.name: profile}
-                )
-
 
 class TestMultipliers(unittest.TestCase):
     def test_create_rules(self):
         text = "RULE A CATEGORY Cat CUTOFF 10 NEIGHBOURHOOD 5 CONDITIONS A"
         # with default multipliers
         with patch("builtins.open", unittest.mock.mock_open(read_data=text)):
-            rule = cluster_prediction.create_rules("dummy.file", {"A"}, {"Cat"}, {})[0]
+            rule = cluster_prediction.create_rules(["dummy.file"], {"A"}, {"Cat"})[0]
         assert rule.cutoff == 10_000
         assert rule.neighbourhood == 5_000
 
@@ -183,33 +172,12 @@ class TestMultipliers(unittest.TestCase):
             neighbourhood=0.5,
         )
         with patch("builtins.open", unittest.mock.mock_open(read_data=text)):
-            multiplied = cluster_prediction.create_rules("dummy.file", {"A"}, {"Cat"}, {},
+            multiplied = cluster_prediction.create_rules(["dummy.file"], {"A"}, {"Cat"},
                                                          multipliers=multipliers,
                                                          )[0]
         # make sure the multipliers were used
         assert multiplied.cutoff == rule.cutoff * multipliers.cutoff
         assert multiplied.neighbourhood == rule.neighbourhood * multipliers.neighbourhood
-
-    @patch.object(cluster_prediction, "get_signature_profiles", return_value={})
-    def test_multplier_propagation(self, _patched_sig):
-        record = DummyRecord()
-        record.add_cds_feature(DummyCDS())
-        args = [record, "dummy.sigs", "dummy.seeds", ["dummy.rules"], {"cat"},
-                "dummy.filter", "tool"]
-        multipliers = cluster_prediction.Multipliers(
-            cutoff=0.1,
-            neighbourhood=2.0,
-        )
-        kwargs = {
-            "multipliers": multipliers,
-        }
-        with patch.object(cluster_prediction, "create_rules",
-                          side_effect=RuntimeError("stop here")) as patched_create:
-            with self.assertRaisesRegex(RuntimeError, "stop here"):
-                cluster_prediction.detect_protoclusters_and_signatures(*args, **kwargs)
-            # make sure the multipliers made it all the way to rule creation
-            _, actual_kwargs = patched_create.call_args
-            assert actual_kwargs["multipliers"] == multipliers
 
 
 class TestDomainAnnotations(unittest.TestCase):

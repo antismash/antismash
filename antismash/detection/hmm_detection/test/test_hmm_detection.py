@@ -17,7 +17,7 @@ from Bio.Seq import Seq
 
 from antismash.common import path
 from antismash.common.hmm_rule_parser import rule_parser, cluster_prediction as hmm_detection  # TODO: redo tests
-from antismash.common.hmm_rule_parser.test.helpers import check_hmm_signatures
+from antismash.common.hmm_rule_parser.test.helpers import check_hmm_signatures, create_ruleset
 from antismash.common.secmet import Record
 from antismash.common.test.helpers import DummyCDS, DummyRecord, FakeHSPHit
 from antismash.config import build_config, destroy_config
@@ -169,7 +169,7 @@ class HmmDetectionTest(unittest.TestCase):
 
     def test_create_rules(self):
         aliases = {}
-        rules = hmm_detection.create_rules(self.rules_file, self.signature_names,
+        rules = hmm_detection.create_rules([self.rules_file], self.signature_names,
                                            self.valid_categories, aliases)
         assert len(rules) == open(self.rules_file, encoding="utf-8").read().count("\nRULE")
         t1pks_rules = [rule for rule in rules if rule.name == "T1PKS"]
@@ -179,17 +179,8 @@ class HmmDetectionTest(unittest.TestCase):
         assert rule.neighbourhood == 20000
 
     def test_profiles_parsing(self):
-        aliases = {}
-        strict_rules_file = path.get_full_path(__file__, "..", "cluster_rules", "strict.txt")
-        relaxed_rules_file = path.get_full_path(__file__, "..", "cluster_rules", "relaxed.txt")
-        loose_rules_file = path.get_full_path(__file__, "..", "cluster_rules", "loose.txt")
-
-        rules = hmm_detection.create_rules(strict_rules_file, self.signature_names,
-                                           self.valid_categories, aliases)
-        rules = hmm_detection.create_rules(relaxed_rules_file, self.signature_names,
-                                           self.valid_categories, aliases, rules)
-        rules = hmm_detection.create_rules(loose_rules_file, self.signature_names,
-                                           self.valid_categories, aliases, rules)
+        rule_files = [path.get_full_path(__file__, "..", "cluster_rules", f"{name}.txt")
+                      for name in ("strict", "relaxed", "loose")]
         profiles_used = set()
 
         with open(self.filter_file, "r", encoding="utf-8") as handle:
@@ -198,6 +189,7 @@ class HmmDetectionTest(unittest.TestCase):
             for sig in line.split(','):
                 profiles_used.add(sig.strip())
 
+        rules = hmm_detection.create_rules(rule_files, self.signature_names, self.valid_categories)
         for rule in rules:
             profiles_used = profiles_used.union(rule.conditions.profiles)
             for related in rule.related:
@@ -213,12 +205,13 @@ class HmmDetectionTest(unittest.TestCase):
 
     def test_filter(self):
         # fake HSPs all in one CDS with overlap > 20 and query_ids from the same equivalence group
+        equivalence_groups = [{"AMP-binding", "A-OX"}]
 
         # not overlapping by > 20
         first = FakeHSPHit("AMP-binding", "A", 50, 90, 0.1, None)
         second = FakeHSPHit("A-OX", "A", 70, 100, 0.5, None)
         new, by_id = hmm_detection.filter_results([first, second], {"A": [first, second]},
-                                                  self.filter_file, self.signature_names)
+                                                  equivalence_groups)
         assert new == [first, second]
         assert by_id == {"A": [first, second]}
 
@@ -226,14 +219,14 @@ class HmmDetectionTest(unittest.TestCase):
         first.hit_end = 91
         assert hmm_detection.hsp_overlap_size(first, second) == 21
         new, by_id = hmm_detection.filter_results([first, second], {"A": [first, second]},
-                                                  self.filter_file, self.signature_names)
+                                                  equivalence_groups)
         assert new == [second]
         assert by_id == {"A": [second]}
 
         # overlapping, not in same group
         second.query_id = "none"
         new, by_id = hmm_detection.filter_results([first, second], {"A": [first, second]},
-                                                  self.filter_file, self.signature_names)
+                                                  equivalence_groups)
         assert new == [first, second]
         assert by_id == {"A": [first, second]}
 
@@ -241,7 +234,7 @@ class HmmDetectionTest(unittest.TestCase):
         second.hit_id = "B"
         second.query_id = "A-OX"
         new, by_id = hmm_detection.filter_results([first, second], {"A": [first], "B": [second]},
-                                                  self.filter_file, self.signature_names)
+                                                  equivalence_groups)
         assert new == [first, second]
         assert by_id == {"A": [first], "B": [second]}
 
@@ -372,14 +365,12 @@ class TestRuleExtenders(unittest.TestCase):
             assert rules[0].extenders
 
         pkg = hmm_detection  # to avoid quite a bit of repetition below
-        sigs = [pkg.HmmSignature(name, "", 0, "") for name in ["A", self.extender_name, "X"]]
-        with patch.object(pkg, "get_signature_profiles", return_value=sigs):
-            with patch.object(pkg, "find_hmmer_hits", return_value=self.results_by_id):
-                with patch.object(pkg, "create_rules", return_value=rules):
-                    return pkg.detect_protoclusters_and_signatures(
-                        self.record, "dummy_sig", "dummy_seeds", ["dummy_rules"], {"Cat"},
-                        "dummy_filter", "dummy_tool"
-                    )
+        sigs = {name: pkg.HmmSignature(name, "", 0, "") for name in ["A", self.extender_name, "X"]}
+        ruleset = create_ruleset(rules, hmm_profiles=sigs)
+        with patch.object(pkg, "find_hmmer_hits", return_value=self.results_by_id):
+            return pkg.detect_protoclusters_and_signatures(
+                self.record, ruleset, "dummy_tool"
+            )
 
     def add_hit(self, cds_name, hit_name):
         hit = FakeHSPHit(hit_name, cds_name, 0, 10, 50, 0)
@@ -473,19 +464,24 @@ class TestMultipliers(unittest.TestCase):
     def setUp(self):
         self.record = DummyRecord()
         self.record.add_cds_feature(DummyCDS())
+        rule_text = "RULE MetaboliteA CATEGORY Cat CUTOFF 10 NEIGHBOURHOOD 5 CONDITIONS modelA"
+        self.signatures = {name: hmm_detection.HmmSignature(name, "", 0, "") for name in ["modelA"]}
+        self.rules = rule_parser.Parser(rule_text, set(self.signatures), {"Cat"}).rules
 
     def tearDown(self):
         destroy_config()
 
     def run_through(self, options):
+        ruleset = create_ruleset(self.rules, hmm_profiles=self.signatures)
         with patch.object(core, "detect_protoclusters_and_signatures",
                           side_effect=RuntimeError("stop here")) as patched:
             with patch.object(core, "get_rule_categories", return_value=[]):
                 with self.assertRaisesRegex(RuntimeError, "stop here"):
                     core.run_on_record(self.record, None, options)
             assert patched.called_once
-            args, kwargs = patched.call_args
-        return args, kwargs
+            # find the ruleset arg used, and if it doesn't exist, failing here is fine
+            ruleset = [arg for arg in patched.call_args[0] if isinstance(arg, hmm_detection.Ruleset)][0]
+        return ruleset
 
     def test_bacteria_ignores_fungal_multi(self):
         options = build_config([
@@ -493,8 +489,8 @@ class TestMultipliers(unittest.TestCase):
             "--hmmdetection-fungal-cutoff-multiplier", "7.0",
             "--hmmdetection-fungal-neighbourhood-multiplier", "3",
         ], modules=[core])
-        _, used_kwargs = self.run_through(options)
-        assert used_kwargs["multipliers"] == core.Multipliers(1.0, 1.0)
+        ruleset = self.run_through(options)
+        assert ruleset.multipliers == core.Multipliers(1.0, 1.0)
 
     def test_fungal_respects_multis(self):
         options = build_config([
@@ -502,8 +498,8 @@ class TestMultipliers(unittest.TestCase):
             "--hmmdetection-fungal-cutoff-multiplier", "0.5",
             "--hmmdetection-fungal-neighbourhood-multiplier", "3",
         ], modules=[core])
-        _, used_kwargs = self.run_through(options)
-        assert used_kwargs["multipliers"] == core.Multipliers(0.5, 3.0)
+        ruleset = self.run_through(options)
+        assert ruleset.multipliers == core.Multipliers(0.5, 3.0)
 
     def test_check_options(self):
         options = build_config([
