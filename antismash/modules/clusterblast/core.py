@@ -501,27 +501,6 @@ def internal_homology_blast(record: secmet.Record) -> Dict[int, List[List[str]]]
     return internalhomologygroups
 
 
-def write_raw_clusterblastoutput(output_dir: str, blast_output: str, prefix: str = "clusterblast") -> str:
-    """ Writes blast output to file
-
-        NOTE: the output filename will not change for different records, if
-              multiple records are in an input and the same output directory
-              is used, the file written here will be overwritten
-
-        Arguments:
-            output_dir: the path of the directory to store results
-            blast_output: the output of blast as a single string
-            search_type: the prefix of the filename to create
-
-        Returns:
-            the name of the file written
-    """
-    filename = f"{prefix}output.txt"
-    with open(os.path.join(output_dir, filename), "w", encoding="utf-8") as handle:
-        handle.write(blast_output)
-    return filename
-
-
 def parse_clusterblast_dict(queries: List[Query], clusters: Dict[str, ReferenceCluster],
                             cluster_label: str, allcoregenes: Set[str]
                             ) -> Tuple[Score, List[Tuple[int, int]], List[bool]]:
