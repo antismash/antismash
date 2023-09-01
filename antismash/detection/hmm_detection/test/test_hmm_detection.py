@@ -374,13 +374,12 @@ class TestRuleExtenders(unittest.TestCase):
         pkg = hmm_detection  # to avoid quite a bit of repetition below
         sigs = [pkg.HmmSignature(name, "", 0, "") for name in ["A", self.extender_name, "X"]]
         with patch.object(pkg, "get_signature_profiles", return_value=sigs):
-            with patch.object(pkg, "get_sequence_counts", return_value={sig.name: 1 for sig in sigs}):
-                with patch.object(pkg, "find_hmmer_hits", return_value=self.results_by_id):
-                    with patch.object(pkg, "create_rules", return_value=rules):
-                        return pkg.detect_protoclusters_and_signatures(
-                            self.record, "dummy_sig", "dummy_seeds", ["dummy_rules"], {"Cat"},
-                            "dummy_filter", "dummy_tool"
-                        )
+            with patch.object(pkg, "find_hmmer_hits", return_value=self.results_by_id):
+                with patch.object(pkg, "create_rules", return_value=rules):
+                    return pkg.detect_protoclusters_and_signatures(
+                        self.record, "dummy_sig", "dummy_seeds", ["dummy_rules"], {"Cat"},
+                        "dummy_filter", "dummy_tool"
+                    )
 
     def add_hit(self, cds_name, hit_name):
         hit = FakeHSPHit(hit_name, cds_name, 0, 10, 50, 0)

@@ -10,7 +10,7 @@ import dataclasses
 import logging
 from typing import Any, Dict, Iterable, Iterator, List, Optional, Set, Tuple
 
-from antismash.common import fasta, path, serialiser
+from antismash.common import fasta, serialiser
 from antismash.common.hmmscan_refinement import HSP
 from antismash.common.secmet import Record, Protocluster, CDSFeature, FeatureLocation
 from antismash.common.secmet.locations import (
@@ -490,15 +490,13 @@ def apply_cluster_rules(record: Record, results_by_id: Dict[str, List[ProfileHit
 
 
 def find_hmmer_hits(record: Record, sig_by_name: Dict[str, Signature],
-                    seeds_by_name: Dict[str, int], hmmer_db: str,
+                    hmmer_db: str,
                     filter_file: str) -> Dict[str, List[ProfileHit]]:
     """ Finds hits for HMMer profiles in the given record
 
         Arguments:
             record: the record to analyse
             sig_by_name: a dictionary mapping profile name to Signature instance
-            seeds_by_name: a dictionary mapping profile name to number of seeds
-                    used to generate that profile
             hmmer_db: the path to the HMMer database to find hits with
             filter_file: a file containing equivalence sets of HMMs
 
@@ -534,7 +532,7 @@ def find_hmmer_hits(record: Record, sig_by_name: Dict[str, Signature],
 
     by_id: Dict[str, List[ProfileHit]] = defaultdict(list)
     for hsp in results:
-        by_id[hsp.hit_id].append(HMMerHit.from_hsp(hsp, seeds_by_name[hsp.query_id]))
+        by_id[hsp.hit_id].append(HMMerHit.from_hsp(hsp, sig_by_name[hsp.query_id].seed_count))
 
     return by_id
 
@@ -646,7 +644,6 @@ def detect_protoclusters_and_signatures(record: Record, signature_file: str, see
 
     # defaults in case of no HMMer profiles
     results_by_id: Dict[str, List[ProfileHit]] = {}
-    num_seeds_per_hmm: Dict[str, int] = defaultdict(int)
 
     # get the HMMer profile info
     sig_by_name: Dict[str, Signature] = {sig.name: sig for sig in get_signature_profiles(signature_file)}
@@ -655,10 +652,8 @@ def detect_protoclusters_and_signatures(record: Record, signature_file: str, see
         overlaps = set(sig_by_name).intersection(set(dynamic_profiles))
         if overlaps:
             raise ValueError(f"HMM profiles and dynamic profiles overlap: {overlaps}")
-        # find number of sequences on which each pHMM is based
-        num_seeds_per_hmm = get_sequence_counts(signature_file)
         # get the HMMer profile results
-        results_by_id.update(find_hmmer_hits(record, sig_by_name, num_seeds_per_hmm, seeds_file, filter_file))
+        results_by_id.update(find_hmmer_hits(record, sig_by_name, seeds_file, filter_file))
     sig_by_name.update(dynamic_profiles)
 
     rules: List[rule_parser.DetectionRule] = []
@@ -700,31 +695,6 @@ def strip_inferior_domains(cds_domains_by_cluster: Dict[str, Dict[str, Set[str]]
             rule = rules_by_name[product]
             if set(rule.superiors).intersection(all_satisfied):
                 domains_by_cluster.pop(product)
-
-
-def get_sequence_counts(details_file: str) -> Dict[str, int]:
-    """ Gets the number of sequences/seeds used to generate each HMM signature
-
-        Arguments:
-            detail_file: a file containing all HMMs
-
-        Returns:
-            a dictionary mapping HMM name to the number of sequences used to
-                generate it
-    """
-    result = {}
-    for hmm in get_signature_profiles(details_file):
-        assert isinstance(hmm, HmmSignature)
-        with open(path.get_full_path(details_file, hmm.hmm_file), "r", encoding="utf-8") as handle:
-            lines = handle.readlines()
-        for line in lines:
-            if line.startswith('NSEQ '):
-                result[hmm.name] = int(line[6:].strip())
-                break
-        if hmm.name not in result:
-            raise ValueError(f"Unknown number of seeds for hmm file: {details_file}")
-
-    return result
 
 
 def find_dynamic_hits(record: Record, dynamic_profiles: List[DynamicProfile]) -> Dict[str, List[DynamicHit]]:
