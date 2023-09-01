@@ -20,7 +20,6 @@ from .core import (
     parse_all_clusters,
     run_diamond_on_all_regions,
     score_clusterblast_output,
-    write_raw_clusterblastoutput,
 )
 from .results import RegionResult, GeneralResults, write_clusterblast_output
 from .data_structures import MibigEntry, ReferenceCluster, Protein
@@ -117,8 +116,6 @@ def perform_knownclusterblast(options: ConfigType, record: Record,
     results = GeneralResults(record.id, search_type="knownclusterblast", data_version=version)
 
     blastoutput = run_diamond_on_all_regions(record.get_regions(), _get_datafile_path('proteins', options))
-    write_raw_clusterblastoutput(options.output_dir, blastoutput,
-                                 prefix="knownclusterblast")
     clusters_by_number, _ = parse_all_clusters(blastoutput, record,
                                                min_seq_coverage=40,
                                                min_perc_identity=45)

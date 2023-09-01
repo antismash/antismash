@@ -16,7 +16,6 @@ from .core import (
     parse_all_clusters,
     run_diamond_on_all_regions,
     score_clusterblast_output,
-    write_raw_clusterblastoutput,
 )
 from .data_structures import ReferenceCluster, Protein
 from .results import RegionResult, GeneralResults
@@ -40,8 +39,6 @@ def perform_clusterblast(options: ConfigType, record: Record,
     regions = record.get_regions()
     database = os.path.join(options.database_dir, 'clusterblast', 'proteins')
     blastoutput = run_diamond_on_all_regions(regions, database)
-
-    write_raw_clusterblastoutput(options.output_dir, blastoutput)
 
     clusters_by_number, _ = parse_all_clusters(blastoutput, record,
                                                min_seq_coverage=10,
