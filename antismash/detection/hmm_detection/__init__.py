@@ -39,6 +39,8 @@ EQUIVALENCE_GROUPS = path.get_full_path(__file__, "filterhmmdetails.txt")
 
 _STRICTNESS_LEVELS = ["strict", "relaxed", "loose"]
 
+_RULESETS: dict[tuple[str, Multipliers], Ruleset] = {}
+
 
 def _get_dynamic_profiles() -> Dict[str, DynamicProfile]:
     """ Gather all the dynamic profiles """
@@ -86,10 +88,24 @@ def get_ruleset(options: ConfigType) -> Ruleset:
             options.hmmdetection_fungal_cutoff_multiplier,
             options.hmmdetection_fungal_neighbourhood_multiplier,
         )
+    # the cache key needs to be immutable
+    key = (strictness, multipliers)
 
+    # return any existing ruleset
+    ruleset = _RULESETS.get(key)
+    if ruleset:
+        return ruleset
+
+    # otherwise make a default ruleset for the strictness
     ruleset = Ruleset.from_files(SIGNATURE_FILE, HMM_FILE, _get_rule_files_for_strictness(strictness),
                                  CATEGORIES, EQUIVALENCE_GROUPS, "rule-based-clusters",
-                                 dynamic_profiles=DYNAMIC_PROFILES, multipliers=multipliers)
+                                 dynamic_profiles=DYNAMIC_PROFILES)
+
+    ruleset = ruleset.copy_with_replacements(multipliers=multipliers)
+
+    # update the cache
+    _RULESETS[key] = ruleset
+
     return ruleset
 
 
@@ -130,7 +146,7 @@ class HMMDetectionResults(DetectionResults):
         return self.rule_results.protoclusters
 
 
-def _get_rules(strictness: str, category: Optional[str] = None) -> List[rule_parser.DetectionRule]:
+def _get_rules(strictness: str) -> list[rule_parser.DetectionRule]:
     signature_names = {sig.name for sig in get_signature_profiles()}
     signature_names.update(set(DYNAMIC_PROFILES))
     category_names = {cat.name for cat in get_rule_categories()}
@@ -140,15 +156,7 @@ def _get_rules(strictness: str, category: Optional[str] = None) -> List[rule_par
         with open(rule_file, encoding="utf-8") as rulefile:
             rules = rule_parser.Parser("".join(rulefile.readlines()), signature_names,
                                        category_names, rules, aliases).rules
-    if category is not None:
-        rules = list(filter(lambda rule: rule.category == category, rules))
     return rules
-
-
-def get_supported_cluster_types(strictness: str, category: Optional[str] = None) -> List[str]:
-    """ Returns a list of all cluster types for which there are rules
-    """
-    return [rule.name for rule in _get_rules(strictness, category=category)]
 
 
 def get_arguments() -> ModuleArgs:
@@ -190,6 +198,17 @@ def check_options(options: ConfigType) -> List[str]:
     neighbourhood = options.hmmdetection_fungal_neighbourhood_multiplier
     if neighbourhood <= 0:
         issues.append(f"Invalid fungal neighbourhood multiplier: {neighbourhood}")
+
+    # invalid multipliers will cause ruleset creation to fail for the same reasons
+    # so don't continue into testing ruleset creation
+    if issues:
+        return issues
+
+    try:
+        get_ruleset(options)
+    except ValueError as err:
+        issues.append(str(err))
+
     return issues
 
 
@@ -209,7 +228,7 @@ def regenerate_previous_results(results: Dict[str, Any], record: Record,
     if regenerated.strictness != options.hmmdetection_strictness:
         logging.warning("Ignoring hmmdetection strictness option %r, reusing %r from results",
                         options.hmmdetection_strictness, regenerated.strictness)
-    if set(regenerated.enabled_types) != set(get_supported_cluster_types(regenerated.strictness)):
+    if set(regenerated.enabled_types) != get_ruleset(options).get_rule_names():
         raise RuntimeError("Protocluster types supported by HMM detection have changed, all results invalid")
     if options.taxon == "fungi":
         if regenerated.rule_results.multipliers.cutoff != options.hmmdetection_fungal_cutoff_multiplier:
@@ -230,16 +249,11 @@ def run_on_record(record: Record, previous_results: Optional[HMMDetectionResults
     strictness = options.hmmdetection_strictness
     logging.info("HMM detection using strictness: %s", strictness)
 
-    multipliers = Multipliers()
-    if options.taxon == "fungi":
-        multipliers = Multipliers(options.hmmdetection_fungal_cutoff_multiplier,
-                                  options.hmmdetection_fungal_neighbourhood_multiplier,
-                                  )
-
     ruleset = get_ruleset(options)
+    cluster_types = list(ruleset.get_rule_names())
+
     results = detect_protoclusters_and_signatures(record, ruleset)
     results.annotate_cds_features()
-    cluster_types = list(ruleset.get_rule_names())
     return HMMDetectionResults(record.id, results, cluster_types, strictness)
 
 
