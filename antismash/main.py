@@ -561,7 +561,7 @@ def read_data(sequence_file: Optional[str], options: ConfigType) -> serialiser.A
         update_config({"input_file": os.path.splitext(results.input_file)[1]})
     else:
         logging.debug("Attempting to reuse previous results in: %s", options.reuse_results)
-        with open(options.reuse_results, encoding="utf-8") as handle:
+        with open(options.reuse_results, "rb") as handle:
             contents = handle.read()
             if not contents:
                 raise ValueError(f"No results contained in file: {options.reuse_results!r}")

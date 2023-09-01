@@ -5,9 +5,11 @@
     running antismash analyses.
 """
 
+import bz2
 from collections import defaultdict, OrderedDict
 import json
 import logging
+import os
 from typing import Any, Dict, IO, List, Union
 
 from Bio.Seq import Seq
@@ -58,7 +60,11 @@ class AntismashResults:
             in a file
         """
         if isinstance(handle, str):
-            handle = open(handle, "r", encoding="utf-8")  # pylint: disable=consider-using-with
+            _, ext = os.path.splitext(handle)
+            if ext == ".bz2":
+                handle = bz2.open(handle, "rt", encoding="utf-8")
+            else:
+                handle = open(handle, "r", encoding="utf-8")  # pylint: disable=consider-using-with
         try:
             data = json.loads(handle.read())
         except json.JSONDecodeError:
