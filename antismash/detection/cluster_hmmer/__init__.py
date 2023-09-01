@@ -108,8 +108,6 @@ def run_on_record(record: Record, results: Optional[hmmer.HmmerResults],
 
     logging.info('Running cluster PFAM search')
 
-    features = []
-    for region in record.get_regions():
-        features.extend(list(region.cds_children))
+    features = record.get_cds_features_within_regions()
     database = os.path.join(options.database_dir, 'pfam', database_version, 'Pfam-A.hmm')
     return hmmer.run_hmmer(record, features, MAX_EVALUE, MIN_SCORE, database, "clusterhmmer")
