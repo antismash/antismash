@@ -460,6 +460,79 @@ class TestDynamicGather(unittest.TestCase):
             self._go(Namespace(a="7"))
 
 
+class TestRulesetConstruction(unittest.TestCase):
+    def get_ruleset(self, names=None, categories=None):
+        if names is None:
+            names = set()
+        if categories is None:
+            categories = set()
+        args = []
+        if names:
+            args.extend(["--hmmdetection-limit-to-rule-names", ",".join(names)])
+        if categories:
+            args.extend(["--hmmdetection-limit-to-rule-categories", ",".join(categories)])
+        options = build_config(args, modules=[core])
+        assert not core.check_options(options)
+        return core.get_ruleset(options)
+
+    def test_no_restrictions(self):
+        ruleset = self.get_ruleset()
+        assert len(ruleset.rules) > 50  # it's many more, but this is fine
+
+    def test_rules(self):
+        subset = {"NRPS", "sactipeptide"}
+        ruleset = self.get_ruleset(names=subset)
+        assert len(ruleset.rules) == len(subset)
+        for rule in ruleset.rules:
+            assert rule.name in subset
+
+    def test_categories(self):
+        subset = {"terpene", "PKS"}
+        ruleset = self.get_ruleset(categories=subset)
+        assert len(ruleset.rules) > 5  # again, the exact number isn't important
+        for rule in ruleset.rules:
+            assert rule.category in subset
+
+    def test_intersection(self):
+        categories = {"NRPS"}
+        rules = {"NRPS", "sactipeptide"}
+        ruleset = self.get_ruleset(names=rules, categories=categories)
+        assert len(ruleset.rules) == 1
+        for rule in ruleset.rules:
+            assert rule.category in categories
+            assert rule.name in rules
+
+
+class TestOptions(unittest.TestCase):
+    def test_invalid_rule_names(self):
+        config = build_config([
+            "--hmmdetection-limit-to-rule-names", ",".join({"NRPS", "xyz_rule"}),
+        ], modules=[core])
+        issues = core.check_options(config)
+        assert len(issues) == 1
+        assert issues[0] == "Unknown rules in requested rule subset: {'xyz_rule'}"
+
+    def test_invalid_rule_categories(self):
+        config = build_config([
+            "--hmmdetection-limit-to-rule-categories", ",".join({"NRPS", "xyz_cat"}),
+        ], modules=[core])
+        issues = core.check_options(config)
+        assert len(issues) == 1
+        assert issues[0] == "Unknown rules in requested rule category subset: {'xyz_cat'}"
+
+    def test_combined(self):
+        config = build_config([
+            "--hmmdetection-limit-to-rule-names", ",".join({"NRPS", "xyz_rule"}),
+            "--hmmdetection-limit-to-rule-categories", ",".join({"NRPS", "xyz_cat"}),
+        ], modules=[core])
+        issues = core.check_options(config)
+        assert len(issues) == 2
+        assert set(issues) == {
+            "Unknown rules in requested rule subset: {'xyz_rule'}",
+            "Unknown rules in requested rule category subset: {'xyz_cat'}",
+        }
+
+
 class TestMultipliers(unittest.TestCase):
     def setUp(self):
         self.record = DummyRecord()

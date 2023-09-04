@@ -9,7 +9,7 @@ import importlib
 import logging
 import os
 import pkgutil
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Iterable, Optional
 
 from antismash.common import hmmer, path
 from antismash.common.hmm_rule_parser import rule_parser
@@ -23,7 +23,7 @@ from antismash.common.module_results import DetectionResults
 from antismash.common.secmet.record import Record
 from antismash.common.secmet.features import Protocluster
 from antismash.config import ConfigType
-from antismash.config.args import ModuleArgs
+from antismash.config.args import ModuleArgs, SplitCommaAction
 from antismash.detection import DetectionStage
 from antismash.detection.hmm_detection.signatures import get_signature_profiles
 from antismash.detection.hmm_detection.categories import get_rule_categories
@@ -39,7 +39,7 @@ EQUIVALENCE_GROUPS = path.get_full_path(__file__, "filterhmmdetails.txt")
 
 _STRICTNESS_LEVELS = ["strict", "relaxed", "loose"]
 
-_RULESETS: dict[tuple[str, Multipliers], Ruleset] = {}
+_RULESETS: dict[tuple[str, tuple[str, ...], tuple[str, ...], Multipliers], Ruleset] = {}
 
 
 def _get_dynamic_profiles() -> Dict[str, DynamicProfile]:
@@ -82,6 +82,8 @@ def get_ruleset(options: ConfigType) -> Ruleset:
             a Ruleset instance
     """
     strictness = options.hmmdetection_strictness
+    name_subset = set(options.hmmdetection_limit_to_rules)
+    category_subset = set(options.hmmdetection_limit_to_categories)
     multipliers = Multipliers()
     if options.taxon == "fungi":
         multipliers = Multipliers(
@@ -89,7 +91,7 @@ def get_ruleset(options: ConfigType) -> Ruleset:
             options.hmmdetection_fungal_neighbourhood_multiplier,
         )
     # the cache key needs to be immutable
-    key = (strictness, multipliers)
+    key = (strictness, tuple(name_subset), tuple(category_subset), multipliers)
 
     # return any existing ruleset
     ruleset = _RULESETS.get(key)
@@ -101,7 +103,14 @@ def get_ruleset(options: ConfigType) -> Ruleset:
                                  CATEGORIES, EQUIVALENCE_GROUPS, "rule-based-clusters",
                                  dynamic_profiles=DYNAMIC_PROFILES)
 
-    ruleset = ruleset.copy_with_replacements(multipliers=multipliers)
+    # limit the rules used, if relevant
+    rules: Iterable[rule_parser.DetectionRule] = ruleset.rules
+    if name_subset:
+        rules = filter(lambda rule: rule.name in name_subset, rules)
+    if category_subset:
+        rules = filter(lambda rule: rule.category in category_subset, rules)
+
+    ruleset = ruleset.copy_with_replacements(rules=list(rules), multipliers=multipliers)
 
     # update the cache
     _RULESETS[key] = ruleset
@@ -182,6 +191,19 @@ def get_arguments() -> ModuleArgs:
                     default=1.5,
                     help=("Sets the multiplier for rule neighbourhoods in fungal "
                           "inputs (default: %(default)s)."))
+    args.add_option("limit-to-rule-names",
+                    dest="limit_to_rules",
+                    metavar="RULE1[,RULE2,...]",
+                    action=SplitCommaAction,
+                    default=[],
+                    help="Restrict detection to the named rules (default: no limits).")
+    args.add_option("limit-to-rule-categories",
+                    dest="limit_to_categories",
+                    metavar="CATEGORY1[,CATEGORY2,...]",
+                    action=SplitCommaAction,
+                    default=[],
+                    help="Restrict detection to the given rules (default: no limits).")
+
     return args
 
 
@@ -198,6 +220,19 @@ def check_options(options: ConfigType) -> List[str]:
     neighbourhood = options.hmmdetection_fungal_neighbourhood_multiplier
     if neighbourhood <= 0:
         issues.append(f"Invalid fungal neighbourhood multiplier: {neighbourhood}")
+
+    all_rule_names = set(rule.name for rule in _get_rules(options.hmmdetection_strictness))
+
+    name_subset = set(options.hmmdetection_limit_to_rules)
+    if name_subset:
+        unknown = name_subset - all_rule_names
+        if unknown:
+            issues.append(f"Unknown rules in requested rule subset: {unknown}")
+    category_subset = set(options.hmmdetection_limit_to_categories)
+    if category_subset:
+        unknown = category_subset - CATEGORIES
+        if unknown:
+            issues.append(f"Unknown rules in requested rule category subset: {unknown}")
 
     # invalid multipliers will cause ruleset creation to fail for the same reasons
     # so don't continue into testing ruleset creation
@@ -251,6 +286,8 @@ def run_on_record(record: Record, previous_results: Optional[HMMDetectionResults
 
     ruleset = get_ruleset(options)
     cluster_types = list(ruleset.get_rule_names())
+    if options.hmmdetection_limit_to_rules or options.hmmdetection_limit_to_categories:
+        logging.info("HMM detection restricted to these rules: %s", cluster_types)
 
     results = detect_protoclusters_and_signatures(record, ruleset)
     results.annotate_cds_features()
