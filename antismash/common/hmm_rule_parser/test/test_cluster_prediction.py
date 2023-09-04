@@ -4,6 +4,7 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring,too-many-public-methods
 
+from dataclasses import FrozenInstanceError
 import unittest
 from unittest.mock import patch
 
@@ -178,6 +179,15 @@ class TestMultipliers(unittest.TestCase):
         # make sure the multipliers were used
         assert multiplied.cutoff == rule.cutoff * multipliers.cutoff
         assert multiplied.neighbourhood == rule.neighbourhood * multipliers.neighbourhood
+
+    def test_multipliers_unchangeable(self):
+        multipliers = structures.Multipliers(1, 5)
+        assert multipliers.cutoff == 1
+        assert multipliers.neighbourhood == 5
+        with self.assertRaises(FrozenInstanceError):
+            multipliers.cutoff = 1
+        with self.assertRaises(FrozenInstanceError):
+            multipliers.neighbourhood = 5
 
 
 class TestDomainAnnotations(unittest.TestCase):

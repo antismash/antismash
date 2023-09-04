@@ -232,8 +232,9 @@ def run_on_record(record: Record, previous_results: Optional[HMMDetectionResults
 
     multipliers = Multipliers()
     if options.taxon == "fungi":
-        multipliers.cutoff = options.hmmdetection_fungal_cutoff_multiplier
-        multipliers.neighbourhood = options.hmmdetection_fungal_neighbourhood_multiplier
+        multipliers = Multipliers(options.hmmdetection_fungal_cutoff_multiplier,
+                                  options.hmmdetection_fungal_neighbourhood_multiplier,
+                                  )
 
     ruleset = get_ruleset(options)
     results = detect_protoclusters_and_signatures(record, ruleset)
