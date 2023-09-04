@@ -21,6 +21,7 @@ class TestCategoryParsing(unittest.TestCase):
             "A": {"description": "some desc", "version": 1},
             "B": {"description": "some other desc", "version": 1},
         }
+        _PARSED_FILES.clear()
 
     def tearDown(self):
         _PARSED_FILES.clear()
