@@ -74,7 +74,8 @@ class Record:
                  "_candidate_clusters", "_candidate_clusters_numbering",
                  "_subregions", "_subregion_numbering",
                  "_regions", "_region_numbering", "_antismash_domains_by_tool",
-                 "_antismash_domains_by_cds_name"]
+                 "_antismash_domains_by_cds_name", "_gc_content",
+                 ]
 
     def __init__(self, seq: Union[Seq, str] = "", transl_table: int = 1, **kwargs: Any) -> None:
         # prevent paths from being used as a sequence
@@ -122,6 +123,7 @@ class Record:
         self._region_numbering: Dict[Region, int] = {}
 
         self._transl_table = int(transl_table)
+        self._gc_content: float = -1.
 
     def __getattr__(self, attr: str) -> Any:
         # passthroughs to the original SeqRecord
@@ -1015,9 +1017,11 @@ class Record:
         """ Calculate the GC content of the record's sequence """
         if not self.seq:
             raise ValueError("Cannot calculate GC content of empty sequence")
-        counter = Counter(str(self.seq))
-        gc_count = counter['G'] + counter['C'] + counter['g'] + counter['c']
-        return gc_count / len(self)
+        if self._gc_content < 0:  # not cached
+            counter = Counter(str(self.seq))
+            gc_count = counter['G'] + counter['C'] + counter['g'] + counter['c']
+            self._gc_content = gc_count / len(self)
+        return self._gc_content
 
     def strip_antismash_annotations(self) -> None:
         """ Removes all antismash features and annotations from the record """
