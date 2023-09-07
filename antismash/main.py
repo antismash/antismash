@@ -449,10 +449,20 @@ def write_outputs(results: serialiser.AntismashResults, options: ConfigType) -> 
 
     if html.is_enabled(options):
         logging.debug("Creating results page")
+        start = time.time()
         html.write(results.records, module_results_per_record, options, get_all_modules())
+        # use an average of times for html
+        duration = time.time() - start / len(results.records)
+        for val in results.timings_by_record.values():
+            val[html.__name__] = duration
 
     logging.debug("Creating results SVGs")
+    start = time.time()
     svg.write(options, module_results_per_record)
+    # again, use an average of times
+    duration = (time.time() - start) / len(results.records)
+    for val in results.timings_by_record.values():
+        val[svg.__name__] = duration
 
     # convert records to biopython
     bio_records = [record.to_biopython() for record in results.records]
