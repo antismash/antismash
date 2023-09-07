@@ -2,6 +2,7 @@
 
 {% for record in records %}
 {% set results = results_by_record_id[record.id] %}
+{% set show_tta = tta_name in results and record.get_gc_content() >= options.tta_threshold %}
 {% for region in record.regions %}
 <div class="page" id='{{region.anchor_id}}' style="display: none;">
  <div class="region-grid">
@@ -47,7 +48,7 @@
                 <rect x=0 y=2 height=4 width=8 class="svgene-resistance"></rect>
             </svg>
         {% endcall %}
-        {% if tta_name in results and record.get_gc_content() >= options.tta_threshold %}
+        {% if show_tta %}
             {% call le.symbol_legend('legend-tta-codon', 'TTA codons') %}
                 <svg viewbox="0 0 6 6">
                     <polyline class="svgene-tta-codon" points="3,0 0,6 6,6 3,0">
