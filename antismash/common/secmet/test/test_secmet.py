@@ -429,6 +429,13 @@ class TestRecord(unittest.TestCase):
             assert rec.get_gc_content() == gc_content  # value should not change
             assert not patched.called  # and the calculation shouldn't have run again
 
+    def test_gc_setting(self):
+        rec = Record("A", gc_content=0.3)
+        # the arg is trusted, even if it's wrong
+        assert rec._gc_content == 0.3
+        # and since it's already set, the getter should return it
+        assert rec.get_gc_content() == 0.3
+
 
 class TestCDSFetchByLocation(unittest.TestCase):
     def setUp(self):

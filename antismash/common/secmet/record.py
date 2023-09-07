@@ -78,7 +78,7 @@ class Record:
                  ]
 
     def __init__(self, seq: Union[Seq, str] = "", *,
-                 transl_table: int = 1,
+                 transl_table: int = 1, gc_content: float = -1.,
                  **kwargs: Any,
                  ) -> None:
         # prevent paths from being used as a sequence
@@ -126,7 +126,7 @@ class Record:
         self._region_numbering: Dict[Region, int] = {}
 
         self._transl_table = int(transl_table)
-        self._gc_content: float = -1.
+        self._gc_content: float = gc_content
 
     def __getattr__(self, attr: str) -> Any:
         # passthroughs to the original SeqRecord
