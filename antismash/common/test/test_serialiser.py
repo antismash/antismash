@@ -141,8 +141,7 @@ class TestAreas(unittest.TestCase):
         assert not res["protoclusters"]
 
         # lastly, check all this is properly embedded in the final JSON
-        bio = record.to_biopython()
-        full = serialiser.dump_records([bio], [{}], [record])
+        full = serialiser.dump_records([{}], [record])
         assert full[0]["areas"] == results
 
 

@@ -22,6 +22,7 @@ from antismash.common.secmet.locations import location_from_string
 # 1: initial state
 # 2: added field: records.areas
 # 3: added field to records.areas.protoclusters objects: category
+# 4: added field to records: gc_content
 
 
 class AntismashResults:
@@ -37,6 +38,7 @@ class AntismashResults:
     COMPATIBLE_SCHEMAS = defaultdict(set, {
         2: {1},  # records.areas isn't used
         3: {2, 1},  # a subset of records.areas changed, but still isn't used
+        4: {3, 2, 1},  # gc_content will be missing, be can always be recalculated
     })
 
     def __init__(self, input_file: str, records: List[Record],
@@ -72,7 +74,7 @@ class AntismashResults:
         version = data["version"]
         input_file = data["input_file"]
         taxon = data.get("taxon", "bacteria")
-        records = [Record.from_biopython(record_from_json(rec), taxon) for rec in data["records"]]
+        records = [record_from_json(rec, taxon) for rec in data["records"]]
         for record, rec_json in zip(records, data["records"]):
             if "original_id" in rec_json:
                 record.original_id = rec_json["original_id"]
@@ -84,8 +86,7 @@ class AntismashResults:
         res: Dict[str, Any] = OrderedDict()
         res["version"] = self.version
         res["input_file"] = self.input_file
-        biopython = [rec.to_biopython() for rec in self.records]
-        res["records"] = dump_records(biopython, self.results, self.records)
+        res["records"] = dump_records(self.results, self.records)
         res["timings"] = self.timings_by_record
         res["taxon"] = self.taxon
         res["schema"] = self.SCHEMA_VERSION
@@ -107,12 +108,11 @@ class AntismashResults:
         handle.write(converted)
 
 
-def dump_records(records: List[SeqRecord], results: List[Dict[str, Union[Dict[str, Any], ModuleResults]]],
+def dump_records(results: List[Dict[str, Union[Dict[str, Any], ModuleResults]]],
                  secmet_records: List[Record], handle: Union[str, IO] = None) -> List[Dict[str, Any]]:
     """ Converts a list of records and a list of results to a JSON object.
 
         Arguments:
-            records: a list of records to convert
             results: a matching list of results to convert
             secmet_records: a matching list of Records for easier data access
             handle: a filename or file-like object to write the resulting JSON
@@ -123,13 +123,14 @@ def dump_records(records: List[SeqRecord], results: List[Dict[str, Union[Dict[st
     """
     data = []
     assert isinstance(results, list)
-    for i, record in enumerate(records):
+    for i, secmet in enumerate(secmet_records):
         result = results[i]
-        secmet = secmet_records[i]
+        record = secmet.to_biopython()
         json_record = record_to_json(record)
         json_record["areas"] = gather_record_areas(secmet)
         if secmet.original_id:
             json_record["original_id"] = secmet.original_id
+        json_record["gc_content"] = secmet.get_gc_content()
         modules: Dict[str, Dict] = OrderedDict()
         if result:
             logging.debug("Record %s has results for modules: %s", record.id,
@@ -234,11 +235,19 @@ def record_to_json(record: SeqRecord) -> Dict[str, Any]:
     return result
 
 
-def record_from_json(data: Union[str, Dict]) -> SeqRecord:
+def record_from_json(data: Union[str, Dict], taxon: str) -> Record:
     """ Rebuilds a SeqRecord from JSON """
     if isinstance(data, str):
         data = json.loads(data)
     assert isinstance(data, dict)
+
+    # build extra optional values for records that may or may not exist in the data
+    # only being present when set
+    kwargs = {}
+
+    gc_content = data.get("gc_content")
+    if gc_content is not None:
+        kwargs["gc_content"] = gc_content
 
     def rebuild_references(annotations: Dict) -> Dict[str, List[Reference]]:
         """ Rebuilds the SeqRecord 'references' annotation from JSON """
@@ -251,8 +260,7 @@ def record_from_json(data: Union[str, Dict]) -> SeqRecord:
             refs.append(new_reference)
         annotations["references"] = refs
         return annotations
-
-    return SeqRecord(sequence_from_json(data["seq"]),
+    seqb = SeqRecord(sequence_from_json(data["seq"]),
                      id=data["id"],
                      name=data["name"],
                      description=data["description"],
@@ -260,6 +268,7 @@ def record_from_json(data: Union[str, Dict]) -> SeqRecord:
                      features=list(map(feature_from_json, data["features"])),
                      annotations=rebuild_references(data["annotations"]),
                      letter_annotations=data["letter_annotations"])
+    return Record.from_biopython(seqb, taxon, **kwargs)
 
 
 def sequence_to_json(sequence: Seq) -> Dict[str, str]:
