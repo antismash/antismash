@@ -77,7 +77,10 @@ class Record:
                  "_antismash_domains_by_cds_name", "_gc_content",
                  ]
 
-    def __init__(self, seq: Union[Seq, str] = "", transl_table: int = 1, **kwargs: Any) -> None:
+    def __init__(self, seq: Union[Seq, str] = "", *,
+                 transl_table: int = 1,
+                 **kwargs: Any,
+                 ) -> None:
         # prevent paths from being used as a sequence
         assert not set("./\\").issubset(set(seq)), "Invalid sequence provided"
         if isinstance(seq, str):
@@ -727,7 +730,7 @@ class Record:
 
     @classmethod
     def from_biopython(cls: Type[T], seq_record: SeqRecord, taxon: str,
-                       discard_antismash_features: bool = False) -> T:
+                       discard_antismash_features: bool = False, **kwargs: Any) -> T:
         """ Constructs a new Record instance from a biopython SeqRecord,
             also replaces biopython SeqFeatures with Feature subclasses
 
@@ -748,7 +751,7 @@ class Record:
         transl_table = 1  # standard
         if str(taxon) == "bacteria":
             transl_table = 11  # bacterial, archea, plant plastid code
-        record = cls(transl_table=transl_table)
+        record = cls(seq=seq_record.seq, transl_table=transl_table, **kwargs)
         record._record = seq_record
         # because is_circular() can't be used reliably at this stage due to fasta files
         can_be_circular = taxon == "bacteria"

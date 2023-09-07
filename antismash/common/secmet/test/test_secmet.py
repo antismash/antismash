@@ -77,6 +77,13 @@ class TestConversion(unittest.TestCase):
         assert type_counts["cluster"] == len(record.get_protoclusters())
         assert type_counts["aSDomain"] == len(record.get_antismash_domains())
 
+    def test_conversion_with_kwargs(self):
+        bio = Record(seq=Seq("ACGT")).to_biopython()
+        other_values = {"first": 5., "second": "value"}
+        with patch.object(record_pkg.SeqRecord, "__init__", return_value=None) as patched_bio:
+            Record.from_biopython(bio, "taxon", **other_values)
+            patched_bio.assert_called_once_with(bio.seq, **other_values)
+
     def test_protein_sequences_caught(self):
         before = list(Bio.SeqIO.parse(get_path_to_nisin_genbank(), "genbank"))[0]
 
