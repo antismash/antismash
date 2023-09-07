@@ -6,11 +6,13 @@
 
 from collections import defaultdict
 import unittest
+from unittest.mock import patch
 
 import Bio.SeqIO
 from Bio.Seq import Seq
 from Bio.SeqFeature import FeatureLocation, SeqFeature
 
+from antismash.common.secmet import record as record_pkg
 from antismash.common.test.helpers import get_path_to_nisin_genbank
 from antismash.common.hmmscan_refinement import HMMResult
 
@@ -401,6 +403,24 @@ class TestRecord(unittest.TestCase):
         second = Record(Seq("A" * 20))
         assert isinstance(second.seq, Seq)
         assert first.seq == second.seq
+
+    def test_gc_caching(self):
+        rec = Record("ATCG" * 20)
+        assert rec._gc_content == -1  # cache should not be set
+        # ensure 'Counter' is actually the mechanism for calculation, otherwise the test will be inaccurate
+        with patch.object(record_pkg, "Counter") as patched:
+            rec.get_gc_content()
+            patched.assert_called_once_with(rec.seq)
+        # since that will have cached the mock, reset it
+        rec._gc_content = -1
+        # now start the real calculation
+        gc_content = rec.get_gc_content()
+        self.assertAlmostEqual(gc_content, 0.5)
+        assert rec._gc_content == gc_content  # cache should be updated
+        # and ensure that it's cached and still the right value
+        with patch.object(record_pkg, "Counter") as patched:
+            assert rec.get_gc_content() == gc_content  # value should not change
+            assert not patched.called  # and the calculation shouldn't have run again
 
 
 class TestCDSFetchByLocation(unittest.TestCase):
