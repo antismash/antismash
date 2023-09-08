@@ -20,7 +20,7 @@ from ..features import (
     CandidateCluster,
 )
 from ..features.candidate_cluster import CandidateClusterKind
-from ..locations import FeatureLocation
+from ..locations import CompoundLocation, FeatureLocation, Location
 from ..record import Record, Seq
 
 
@@ -122,11 +122,11 @@ class DummyPFAMDomain(PFAMDomain):
 class DummyRecord(Record):
     "class for generating a Record like data structure"
     def __init__(self, features=None, seq=None, taxon='bacteria',
-                 record_id=None, *, length=None):
-        self.length = length
+                 record_id=None, *, length=None, circular=False):
         if features and seq is None:
             length = length or max(f.location.end for f in features)
-            seq = "AGCTACGT" * (length // 8 + 1)
+            seq = "AGCTACGT"
+        self.length = length
         if seq is None:
             seq = "AGCTACGT"
         if isinstance(seq, str):
@@ -138,6 +138,28 @@ class DummyRecord(Record):
         self.record_index = 0
         if record_id is not None:
             self.id = record_id
+        if circular:
+            self.make_circular()
+        # pylint doesn't recognise the superclass has a sequence
+        # so trick it into believing it exists
+        self.seq = Seq(seq)
+
+    @property
+    def features(self):
+        return self.get_all_features()
+
+    def make_circular(self, circular=True):
+        if not self._record.annotations:
+            self._record.annotations = {}
+        if circular:
+            self._record.annotations["topology"] = "circular"
+            assert self.is_circular()
+        else:
+            self._record.annotations["topology"] = "linear"
+            assert not self.is_circular()
+
+    def rotate(self, cut_point: int, padding: int = 0) -> None:
+        return rotate(self, cut_point, padding=padding)
 
     def __len__(self):  # override the length so the sequence doesn't necessarily have to exist
         return self.length or super().__len__()
@@ -170,3 +192,71 @@ class DummyCandidateCluster(CandidateCluster):
             else:
                 kind = CandidateClusterKind.INTERLEAVED
         super().__init__(kind, clusters)
+
+
+def rotate(record: Record, cut_point: int, padding: int = 0) -> None:
+    if len(record) < cut_point:
+        raise ValueError("Invalid cut location: outside record")
+    seq = record.seq  # pylint struggles with recognising this exists, so # pylint: disable=no-member
+    new_seq = seq[cut_point:] + Seq("A" * padding) + seq[:cut_point]
+    assert len(new_seq) == len(seq) + padding
+
+    for feature in record.get_all_features():
+        if feature.type == "source":
+            feature.location = FeatureLocation(
+                feature.location.start,
+                feature.location.end + padding,
+                feature.location.strand
+            )
+            continue
+        location = feature.location
+        if cut_point in location:
+            location = split_location_on_cut(location, cut_point)
+        location = shift_location(location, cut_point, padding, len(record))
+        feature.location = location
+    record._cds_features = sorted(record._cds_features)
+    record.seq = Seq(new_seq)
+    record._record.annotations["topology"] = "circular"
+
+
+def split_location_on_cut(location: Location, cut_point: int) -> CompoundLocation:
+    new_parts = []
+    for part in location.parts:
+        if cut_point not in part:
+            new_parts.append(part)
+            continue
+        new_parts.append(FeatureLocation(part.start, cut_point, part.strand))
+        new_parts.append(FeatureLocation(cut_point, part.end, part.strand))
+    return CompoundLocation(new_parts)
+
+
+def test_split():
+    assert split_location_on_cut(FeatureLocation(5, 12, -1), 7).parts == [
+        FeatureLocation(5, 7, -1), FeatureLocation(7, 12, -1)
+    ]
+    compound = CompoundLocation([FeatureLocation(5, 12, 1), FeatureLocation(15, 21, 1)])
+    assert split_location_on_cut(compound, 13) == compound
+
+# ensure the splitting function works as expected, since other tests rely on it
+# and since it won't run automatically due to file naming, manually test it here
+test_split()
+
+def shift_location(location: Location, cut_point: int, padding: int, rec_len: int) -> Location:
+    new_parts = []
+    for part in location.parts:
+        if part.start < cut_point:
+            new_parts.append(FeatureLocation(part.start + (rec_len - cut_point) + padding,
+                                             part.end + (rec_len - cut_point) + padding,
+                                             part.strand))
+        else:
+            new_parts.append(FeatureLocation(part.start - cut_point,
+                                             part.end - cut_point,
+                                             part.strand))
+    if len(new_parts) == 1:
+        return new_parts[0]
+    return CompoundLocation(new_parts)
+
+
+# ensure the shift function works as expected, since other tests rely on it
+assert shift_location(FeatureLocation(7, 8, -1), 15, 10, 20) == FeatureLocation(22, 23, -1)
+assert shift_location(FeatureLocation(16, 17, 1), 15, 10, 20) == FeatureLocation(1, 2, 1)
