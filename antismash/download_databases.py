@@ -23,10 +23,10 @@ from antismash.common.html_renderer import (
     get_antismash_js_url,
 )
 
-PFAM_LATEST_VERSION = "34.0"
+PFAM_LATEST_VERSION = "35.0"
 PFAM_LATEST_URL = f"https://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam{PFAM_LATEST_VERSION}/Pfam-A.hmm.gz"
-PFAM_LATEST_ARCHIVE_CHECKSUM = "b18a98bb1f92b9afb7533fda43baac98d9c69e5b97e68592a43fc00d671ea3f6"
-PFAM_LATEST_CHECKSUM = "bfc669e58fdafad0950a52bb9020d6e23c87aa174f4f5bc4ebdac8bb9c30b634"
+PFAM_LATEST_ARCHIVE_CHECKSUM = "48ec2d1123c84046b00279eae1fb3d5be1b578e6221453f329d16954c89d0d35"
+PFAM_LATEST_CHECKSUM = "8d3e2ffa785f91ee0e24a3994d2dcfff6f382e3cf663784a47688e7d95297fee"
 
 CLUSTERBLAST_URL = "https://dl.secondarymetabolites.org/releases/clusterblast/clusterblast_20201113.tar.xz"
 CLUSTERBLAST_ARCHIVE_CHECKSUM = "bf45276f034615b0827627d16426fec2aca0464391bc41c76ccfae81049ba95a"
