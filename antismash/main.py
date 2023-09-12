@@ -30,7 +30,7 @@ from antismash.config import (
     get_config,
     update_config,
 )
-from antismash.common import logs, record_processing, serialiser
+from antismash.common import errors, logs, record_processing, serialiser
 from antismash.common.module_results import ModuleResults, DetectionResults
 from antismash.common.path import get_full_path
 from antismash.common.secmet import Record
@@ -683,7 +683,11 @@ def run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
 
     with logs.changed_logging(logfile=options.logfile, verbose=options.verbose,
                               debug=options.debug):
-        result = _run_antismash(sequence_file, options)
+        try:
+            result = _run_antismash(sequence_file, options)
+        except errors.AntismashInputError as err:
+            logging.error(str(err))
+            raise
     return result
 
 

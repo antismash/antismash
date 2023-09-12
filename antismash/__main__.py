@@ -4,7 +4,6 @@
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 """Run the antiSMASH pipeline"""
 
-import logging
 import os
 import sys
 from typing import List, Optional
@@ -113,7 +112,7 @@ def main(args: List[str]) -> int:
     except antismash.common.errors.AntismashInputError as err:
         if not str(err):
             raise
-        logging.error(str(err))
+        print("ERROR:", str(err), file=sys.stderr)
         return 1
 
     return 0
