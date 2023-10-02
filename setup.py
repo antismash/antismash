@@ -22,7 +22,7 @@ install_requires = [
     'helperlibs',
     'jinja2',
     'joblib',
-    'jsonschema',
+    'jsonschema==4.11.0',
     'markupsafe >= 2.0',
     'nrpys >= 0.1.1',
     'pysvg-py3',
