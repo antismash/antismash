@@ -31,27 +31,32 @@ def run_diamond(subcommand: str,
     config = get_config()
     if not config.executables.diamond:
         raise RuntimeError("no available diamond executable")
-    with TemporaryDirectory() as temp_dir:
-        params = [
-            config.executables.diamond,
-            subcommand,
-        ]
-        if use_default_opts:
-            params.extend( [
-            "--threads", str(config.cpus),
-            "--tmpdir", temp_dir,
-        ])
 
-        if opts:
-            params.extend(opts)
-
-        result = execute(params)
+    def run(args: list[str]) -> RunResult:
+        result = execute(args)
         if not result.successful():
             message = f"diamond failed to run: {subcommand}"
             if result.stderr:
                 message += f" -> {result.stderr.strip().splitlines()[-3:]}"
             raise RuntimeError(message)
-    return result
+        return result
+
+    params = [
+        config.executables.diamond,
+        subcommand,
+    ]
+    if opts:
+        params.extend(opts)
+
+    if use_default_opts:
+        with TemporaryDirectory() as temp_dir:
+            params.extend([
+                "--threads", str(config.cpus),
+                "--tmpdir", temp_dir,
+            ])
+            return run(params)
+
+    return run(params)
 
 
 def run_diamond_search(query_file: str, database_file: str, mode: str = "blastp",
@@ -93,8 +98,23 @@ def run_diamond_makedb(database_file: str, sequence_file: str) -> RunResult:
         "--db", database_file,
         "--in", sequence_file,
     ]
+    # Normally specifying a temporary directory for makedb will work, but not for some versions.
+    # The bug in diamond was introduced in 2.1.0 and fixed in 2.1.7.
+    # This wouldn't be a big issue, but Debian 12/bookworm has 2.1.3
+    use_defaults = True
+    raw_version = run_diamond_version()
+    try:
+        version = tuple(int(part) for part in raw_version.split("."))
+    except ValueError:
+        # if the version isn't in the right format, assume that it's
+        # outside the versions with the bug, since those all report consistently
+        version = (0, 0, 0)
+    # if it's in the range of bugged versions, run without defaults while still specifying threads
+    if (2, 1, 0) <= version < (2, 1, 7):
+        use_defaults = False
+        args.extend(["--threads", str(get_config().cpus)])
 
-    return run_diamond("makedb", args)
+    return run_diamond("makedb", args, use_default_opts=use_defaults)
 
 
 def run_diamond_version() -> str:
