@@ -18,6 +18,7 @@ from Bio.Phylo.NewickIO import NewickError
 import brawn
 from helperlibs.wrappers.io import TemporaryDirectory
 import matplotlib
+from matplotlib import pyplot
 
 from antismash.common import path, fasta, subprocessing
 from antismash.common.secmet import CDSFeature
@@ -155,9 +156,9 @@ def draw_tree(input_number: int, output_dir: str, tag: str) -> str:
 
     Phylo.draw(tree, do_show=False, label_colors=label_colors,
                label_func=lambda node: str(node).replace("|", " "))
-    fig = matplotlib.pyplot.gcf()
+    fig = pyplot.gcf()
     fig.set_size_inches(20, (tree.count_terminals() / 3))
-    matplotlib.pyplot.axis('off')
+    pyplot.axis('off')
     fig.savefig(tree_filename, bbox_inches='tight')
-    matplotlib.pyplot.close(fig)
+    pyplot.close(fig)
     return tree_filename
