@@ -31,6 +31,7 @@ from antismash.config import (
     update_config,
 )
 from antismash.common import errors, logs, record_processing, serialiser
+from antismash.common.errors import AntismashInputError
 from antismash.common.module_results import ModuleResults, DetectionResults
 from antismash.common.path import get_full_path
 from antismash.common.secmet import Record
@@ -324,11 +325,11 @@ def prepare_output_directory(name: str, input_file: str) -> None:
 
     if os.path.exists(name):
         if not os.path.isdir(name):
-            raise RuntimeError("Output directory {name!r} exists and is not a directory")
+            raise AntismashInputError("Output directory {name!r} exists and is not a directory")
         # not empty (apart from a possible input dir), and not reusing its results
         if not input_file.endswith(".json") and \
                 list(filter(_ignore_patterns, glob.glob(os.path.join(name, "*")))):
-            raise RuntimeError("Output directory contains other files, aborting for safety")
+            raise AntismashInputError("Output directory contains other files, aborting for safety")
 
         # --reuse
         logging.debug("Removing existing region genbank files")
