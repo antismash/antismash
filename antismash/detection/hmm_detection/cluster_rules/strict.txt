@@ -511,6 +511,25 @@ RULE aminocoumarin
     NEIGHBOURHOOD 10
     CONDITIONS novK or novJ or novI or novH or SpcDK_cou
 
+RULE azoxy-crosslink
+    # https://doi.org/10.1021/acschembio.3c00632
+    CATEGORY other
+    DESCRIPTION azoxy compound formed by carboxilic cross-link
+    EXAMPLE NCBI AY116644.1 1-21500 valanimycin
+    EXAMPLE NCBI JARAKF010000001.1 1937858-1978761 azodyrecin # BGC0002805
+    CUTOFF 20
+    NEIGHBOURHOOD 10
+    CONDITIONS azdH_alignment and LPG_synthase_C and azdO and vlmB  # H A O B
+
+RULE azoxy-dimer
+    # https://doi.org/10.1021/acschembio.3c00632
+    CATEGORY other
+    DESCRIPTION azoxy compound formed by dimerisation
+    EXAMPLE NCBI NZ_LGKG01000136.1 15894-43317 azoxymycin
+    CUTOFF 20
+    NEIGHBOURHOOD 10
+    CONDITIONS AurF and Ketoacyl-synt_2 and AMP-binding  # C F J
+
 RULE NI-siderophore
     CATEGORY other
     DESCRIPTION NRPS-independent IucA/IucC-like siderophores
@@ -631,7 +650,7 @@ RULE other
     CUTOFF 20
     NEIGHBOURHOOD 20
     CONDITIONS LmbU or Neocarzinostat or bcpB
-               or frbD or mitE or vlmB or prnB or CaiA or bacilysin or orf2_PTase
+               or frbD or mitE or prnB or CaiA or bacilysin or orf2_PTase
 
 RULE acyl_amino_acids
     CATEGORY other
