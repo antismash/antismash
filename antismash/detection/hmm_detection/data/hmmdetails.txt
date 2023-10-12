@@ -377,3 +377,7 @@ delta12_cd03507	delta12 desaturase	22	delta12_cd03507.hmm
 FAAL_cd05931	FAAL	20	FAAL_cd05931.hmm
 PP-binding_2	Acyl-carrier	10	PF14573.hmm
 Thioesterase	Thioesterase domain	26	PF00975.hmm
+LPG_synthase_C	Phosphatidylglycerol lysyltransferase, C-terminal	27	PF09924.hmm
+azdH_alignment	azdH	50	azdh.hmm
+azdO	azdO/vlmO	50	azdO.hmm
+Ketoacyl-synt_2	Ketoacyl-synt_2	25	PF13723.hmm
