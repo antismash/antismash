@@ -551,14 +551,10 @@ def create_rules(rule_files: list[str], signature_names: Set[str],
                  ) -> List[rule_parser.DetectionRule]:
     """ Creates DetectionRule instances from the default rules file
 
-        Updates existing_aliases with any aliases found.
-
         Args:
             rule_files: a list of paths to files containing cluster rules
             signature_names: the set of all known profile/signature names
             valid_categories: the set of all valid rule categories
-            existing_aliases: a dict of alias name to resulting tokens, updated with new values
-            existing_rules: a list of existing rules, if any
             multipliers: distance multipliers to apply to rules
 
         Returns:
