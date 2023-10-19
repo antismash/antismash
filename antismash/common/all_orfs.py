@@ -223,9 +223,8 @@ def find_all_orfs(record: Record, area: Optional[CDSCollection] = None,
     locations = []
     for start, end in intergenic_areas:
         chunk = seq[start:end]
-        locations.extend(scan_orfs(chunk, 1, start))
-        locations.extend(scan_orfs(chunk.reverse_complement(), -1, start))
-
+        locations.extend(scan_orfs(chunk, 1, start, minimum_length=min_length))
+        locations.extend(scan_orfs(chunk.reverse_complement(), -1, start, minimum_length=min_length))
     new_features = []
     for location in locations:
         new_features.append(create_feature_from_location(record, location))
