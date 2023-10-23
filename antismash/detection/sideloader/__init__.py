@@ -20,7 +20,7 @@ from .html_output import generate_html, will_handle
 
 NAME = "sideloader"
 SHORT_DESCRIPTION = "Side-loaded annotations"
-DETECTION_STAGE = DetectionStage.AREA_FORMATION
+DETECTION_STAGE = DetectionStage.FULL_GENOME
 
 
 def _parse_arg(option: str) -> SideloadSimple:

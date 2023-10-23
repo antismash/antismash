@@ -241,3 +241,9 @@ class SideloadedResults(DetectionResults):
 
     def get_predicted_protoclusters(self) -> List[Protocluster]:
         return [proto.to_secmet() for proto in self.protoclusters]
+
+    def add_to_record(self, record: Record) -> None:
+        for subregion in self.subregions:
+            record.add_subregion(subregion.to_secmet())
+        for protocluster in self.protoclusters:
+            record.add_protocluster(protocluster.to_secmet())
