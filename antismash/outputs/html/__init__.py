@@ -5,6 +5,7 @@
 
 """
 
+import argparse
 import glob
 import logging
 import os
@@ -46,6 +47,11 @@ def get_arguments() -> ModuleArgs:
                     action='store_true',
                     default=False,
                     help="Use compact view by default for overview page.")
+    args.add_option("--html-ncbi-context",
+                    dest="html_ncbi_context",
+                    action=argparse.BooleanOptionalAction,
+                    default=False,
+                    help="Show NCBI genomic context links for genes (default: %(default)s).")
     return args
 
 

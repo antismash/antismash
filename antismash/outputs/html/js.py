@@ -413,4 +413,4 @@ def get_description(record: Record, feature: CDSFeature, type_: str,
         ec_numbers = ",".join(ec_number_qual)
     return template.render(feature=feature, ec_numbers=ec_numbers, go_notes=go_notes,
                            asf_notes=asf_notes, pfam_notes=pfam_notes, tigr_notes=tigr_notes,
-                           record=record, urls=urls)
+                           record=record, urls=urls, add_ncbi_context=options.html_ncbi_context)

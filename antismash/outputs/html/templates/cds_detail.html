@@ -71,7 +71,9 @@
 </div>
 <div class="focus-urls">
  {{build_blastp_link(feature.get_name(), "NCBI BlastP on this gene")}}<br>
+ {% if add_ncbi_context %}
  <a href="{{urls['context']}}" target="_new">View genomic context</a><br>
+ {% endif %}
  {% if urls['mibig'] %}
   <a href="{{urls['mibig']}}" target="_new">MiBIG Hits</a><br>
  {% endif %}
