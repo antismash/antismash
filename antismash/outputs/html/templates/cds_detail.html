@@ -71,6 +71,7 @@
 </div>
 <div class="focus-urls">
  {{build_blastp_link(feature.get_name(), "NCBI BlastP on this gene")}}<br>
+ <span class="asdb-linkout link-like wildcard-container" data-locus="{{feature.get_name()}}" data-wildcard-attrs="data-seq" data-seq="{{replace_with('translation')}}">Blast against antiSMASH-database</span><br>
  {% if add_ncbi_context %}
  <a href="{{urls['context']}}" target="_new">View genomic context</a><br>
  {% endif %}
