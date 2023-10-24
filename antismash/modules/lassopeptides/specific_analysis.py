@@ -710,12 +710,11 @@ def specific_analysis(record: Record) -> LassoResults:
     """
     results = LassoResults(record.id)
     motif_count = 0
+    existing_motifs: dict[str, set[str]] = defaultdict(set)
     for cluster in record.get_protoclusters():
         if cluster.product != 'lassopeptide':
             continue
-
         precursor_candidates = list(cluster.cds_children)
-
         # Find candidate ORFs that are not yet annotated
         extra_orfs = all_orfs.find_all_orfs(record, cluster, min_length=MIN_PRECURSOR_LENGTH * 3)
         precursor_candidates.extend(extra_orfs)
@@ -724,10 +723,16 @@ def specific_analysis(record: Record) -> LassoResults:
             motif = run_lassopred(record, cluster, candidate)
             if motif is None:
                 continue
+            # regardless of whether it's a duplication or not, track via protocluster
+            results.clusters[cluster.get_protocluster_number()].add(candidate.get_name())
 
+            # but if it is in multiple protoclusters, don't add it more than once
+            if motif.get_name() in existing_motifs[candidate.get_name()]:
+                continue
+
+            existing_motifs[candidate.get_name()].add(motif.get_name())
             results.motifs_by_locus[candidate.get_name()].append(motif)
             motif_count += 1
-            results.clusters[cluster.get_protocluster_number()].add(candidate.get_name())
             # track new CDSFeatures if found with all_orfs
             if candidate.region is None:
                 results.add_cds(candidate)
