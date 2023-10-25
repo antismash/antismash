@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar
 from Bio.Data import CodonTable, IUPACData
 from Bio.SeqFeature import SeqFeature
 
-from antismash.common.secmet import features
+import antismash  # for use in referring to Regions, which import this module
 from antismash.common.secmet.qualifiers import (
     GeneFunction,
     GeneFunctionAnnotations,
@@ -18,6 +18,7 @@ from antismash.common.secmet.qualifiers import (
     SecMetQualifier,
 )
 
+from .cds_motif import CDSMotif
 from ..errors import SecmetInvalidInputError
 from ..locations import (
     AfterPosition,
@@ -166,10 +167,10 @@ class CDSFeature(Feature):
         self._nrps_pks = NRPSPKSQualifier(self.location.strand)
 
         self._modules: List[Module] = []
-        self.motifs: List[features.CDSMotif] = []
+        self.motifs: List[CDSMotif] = []
 
         # runtime-only data
-        self.region: Optional[features.Region] = None
+        self.region: Optional[antismash.common.secmet.features.Region] = None
         self.unique_id: Optional[str] = None  # set only when added to a record
 
     @property

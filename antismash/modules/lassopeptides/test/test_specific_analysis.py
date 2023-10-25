@@ -10,8 +10,12 @@ from unittest.mock import patch
 from Bio.SeqUtils.ProtParam import ProteinAnalysis
 
 from antismash.common import subprocessing
+from antismash.common.secmet.test.helpers import DummyProtocluster
+from antismash.common.secmet.features import Prepeptide
+from antismash.common.secmet.locations import FeatureLocation
 from antismash.common.test.helpers import DummyCDS, DummyRecord, FakeHSP
 
+from antismash.modules.lassopeptides import specific_analysis as module
 from antismash.modules.lassopeptides.specific_analysis import (
     Lassopeptide,
     LassoResults,
@@ -163,3 +167,38 @@ class TestCDSDuplication(unittest.TestCase):
         assert len(results._new_cds_features) == 1
         results.add_cds(DummyCDS(locus_tag="different"))
         assert len(results._new_cds_features) == 2
+
+
+class TestMotifDuplication(unittest.TestCase):
+    def test_shared_neighbourhood(self):
+        record = DummyRecord(seq="A" * 120)
+        overlapping = [
+            DummyProtocluster(0, 50, core_start=10, core_end=20, product="lassopeptide"),
+            DummyProtocluster(30, 80, core_start=60, core_end=70, product="lassopeptide"),
+        ]
+        for overlap in overlapping:
+            record.add_protocluster(overlap)
+        standalone = DummyProtocluster(100, 120, core_start=105, core_end=110, product="lassopeptide")
+        record.add_protocluster(standalone)
+
+        record.add_cds_feature(DummyCDS(start=30, end=36, locus_tag="shared"))
+        record.add_cds_feature(DummyCDS(start=105, end=110, locus_tag="other"))
+        # all the protoclusters need to have those cdses, otherwise there'll be problems later
+        assert len(record.get_protoclusters()) == 3
+        for proto in record.get_protoclusters():
+            assert len(proto.cds_children) == 1, proto
+
+        prepeptide = Prepeptide(FeatureLocation(55, 58, 1), "lassopeptide", "CORE", "shared", "lassopeptides")
+        other = Prepeptide(FeatureLocation(155, 158, 1), "lassopeptide", "CORE",  "other", "lassopeptides")
+
+        with patch.object(module, "run_lassopred", side_effect=[prepeptide, prepeptide, other]):
+            with patch.object(module.all_orfs, "find_all_orfs", return_value=[]):
+                results = module.specific_analysis(record)
+        # both of the overlapping protoclusters should have references to it
+        for cluster in overlapping:
+            assert results.clusters[cluster.get_protocluster_number()] == {prepeptide.get_name()}
+        # and the non-overlapping should not
+        assert results.clusters[standalone.get_protocluster_number()] == {other.get_name()}
+        # but the motif should not duplicate by name
+        assert set(results.motifs_by_locus) == {prepeptide.get_name(), other.get_name()}
+        assert len(results.motifs_by_locus[prepeptide.get_name()]) == 1

@@ -26,6 +26,18 @@ def dummy(value=None):
     return os.getpid()
 
 
+def busy_wait():
+    """ Another function to pass to parallel_function, this time with a busy
+        wait to avoid potentially parking multiple processes on the same core
+        due to sleeping
+    """
+    start = time.time()
+    while (time.time() - start) < 1:
+        # add a little busy work so that time isn't called so often
+        assert "X" not in "A" * 100000
+    return os.getpid()
+
+
 class TestParallelPython(unittest.TestCase):
     def setUp(self):
         self.config_cpus = 2
@@ -45,14 +57,17 @@ class TestParallelPython(unittest.TestCase):
         for i in range(2, 10):
             assert dummy(i) == os.getpid()
 
+    def test_busy_wait(self):
+        assert busy_wait() == os.getpid()
+
     def test_actually_parallel(self):
-        results = subprocessing.parallel_function(dummy, [[0]]*2)
+        results = subprocessing.parallel_function(busy_wait, [[]]*2, timeout=5)
         assert len(set(results)) == self.config_cpus
         # since it uses a pool, if we try with more we'll reuse those some procs
-        results = subprocessing.parallel_function(os.getpid, [[]]*8)
+        results = subprocessing.parallel_function(busy_wait, [[]]*4, timeout=10)
         assert len(set(results)) == self.config_cpus
-        # but check it did run 8 times
-        assert len(results) == 8
+        # but check it did run the requested amount of times
+        assert len(results) == 4
 
     def test_cpu_param(self):
         results = subprocessing.parallel_function(dummy, [[]]*4, cpus=4)
