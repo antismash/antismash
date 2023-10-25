@@ -204,7 +204,6 @@ def generate_webpage(records: List[Record], results: List[Dict[str, ModuleResult
                      options: ConfigType, all_modules: List[AntismashModule]) -> str:
     """ Generates the HTML itself """
 
-    generate_searchgtr_htmls(records, options)
     json_records, js_domains, js_results = build_json_data(records, results, options, all_modules)
     write_regions_js(json_records, options.output_dir, js_domains, js_results)
 
@@ -264,39 +263,3 @@ def find_plugins_for_cluster(plugins: List[AntismashModule],
         if plugin.will_handle(products, categories):
             handlers.append(plugin)
     return handlers
-
-
-def load_searchgtr_search_form_template() -> List[str]:
-    """ for SEARCHGTR HTML files, load search form template """
-    with open(os.path.join(TEMPLATE_PATH, "searchgtr_form.html"),
-              "r", encoding="utf-8") as handle:
-        template = handle.read().replace("\r", "\n")
-    return template.split("FASTASEQUENCE")
-
-
-def generate_searchgtr_htmls(records: List[Record], options: ConfigType) -> None:
-    """ Generate lists of COGs that are glycosyltransferases or transporters """
-    gtrcoglist = ['SMCOG1045', 'SMCOG1062', 'SMCOG1102']
-    searchgtrformtemplateparts = load_searchgtr_search_form_template()
-    # TODO store somewhere sane
-    js.searchgtr_links = {}
-    for record in records:
-        for feature in record.get_cds_features():
-            smcog_functions = feature.gene_functions.get_by_tool("smcogs")
-            if not smcog_functions:
-                continue
-            smcog = smcog_functions[0].description.split(":")[0]
-            if smcog not in gtrcoglist:
-                continue
-            html_dir = os.path.join(options.output_dir, "html")
-            if not os.path.exists(html_dir):
-                os.mkdir(html_dir)
-            formfileloc = os.path.join(html_dir, feature.get_name() + "_searchgtr.html")
-            link_loc = os.path.join("html", feature.get_name() + "_searchgtr.html")
-            gene_id = feature.get_name()
-            js.searchgtr_links[record.id + "_" + gene_id] = link_loc
-            with open(formfileloc, "w", encoding="utf-8") as formfile:
-                specificformtemplate = searchgtrformtemplateparts[0].replace("GlycTr", gene_id)
-                formfile.write(specificformtemplate)
-                formfile.write(f"{gene_id}\n{feature.translation}")
-                formfile.write(searchgtrformtemplateparts[1])
