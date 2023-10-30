@@ -1,0 +1,145 @@
+{
+    "phenolic": {
+        "profiles": [
+            {
+                "name": "tyrosine-hpg",
+                "description": "Tyrosine-like substrate halogenase",
+                "profile_name": "tyrosine-like_hpg_FDH",
+                "cofactor": "flavin",
+                "family": "flavin-dependent",
+                "cutoffs": [390, 300],
+                "filename": "tyrosine-like_hpg_FDH.hmm",
+                "motifs": [
+                    {
+                        "name": "Hpg",
+                        "substrate": "Hpg",
+                        "residues": "SHCGMQ",
+                        "positions": [66, 158, 196, 200, 246, 259],
+                        "preference_order": 1,
+                        "target_positions": [6, 8]
+                    },
+                    {
+                        "name": "Tyr",
+                        "substrate": "Tyr",
+                        "residues": "GFQRLGDAGLSGVPSYGADPSGLYW",
+                        "positions": [58, 74, 89, 92, 99, 107, 149, 150, 152, 209, 215, 217, 219, 245, 267,
+                                      268, 282, 284, 289, 290, 293, 295, 305, 331, 357],
+                        "preference_order": 2,
+                        "target_positions": [6, 8]
+                    }
+                ],
+                "preference_penalty": 0.2
+            },
+            {
+                "name": "orsellinic",
+                "description": "Orsellinic acid-like or other phenolic substrate halogenase",
+                "profile_name": "cycline_orsellinic_FDH",
+                "cofactor": "flavin",
+                "family": "flavin-dependent",
+                "cutoffs": [500],
+                "filename": "cycline_orsellinic_FDH.hmm",
+                "motifs": [
+                    {
+                        "name": "cycline_orsellinic-like",
+                        "substrate": "cycline_orsellinic-like",
+                        "residues": "LGPRGGRDAGVDAGGYGFDPSG",
+                        "positions": [23, 27, 39, 40, 59, 74, 109, 113, 120, 124, 133, 165, 166, 168, 233, 284, 291, 303, 305, 306, 309, 311],
+                        "target_positions": [6, 8]
+                    }
+                ]
+            }
+        ]
+    },
+    "indolic": {
+        "profiles": [
+            {
+                "name": "Trp_5",
+                "description": "Tryptophan-5 halogenase",
+                "profile_name": "trp_5_FDH",
+                "cofactor": "flavin",
+                "family": "flavin-dependent",
+                "cutoffs": [850, 350],
+                "filename": "trp_5_FDH.hmm",
+                "motifs": [
+                    {
+                        "name": "Trp_5",
+                        "positions": [33, 35, 41, 75, 77, 78, 80, 92, 101, 128, 165, 186, 187, 195, 302,
+                                      310, 342, 350, 400, 446, 450, 452, 482],
+                        "residues": "VSILIREPGLPRGVPRAVLPGEA",
+                        "substrate": "tryptophan",
+                        "decorations": "mono",
+                        "target_positions": [5]
+                    }
+                ]
+            },
+            {
+                "name": "Trp_6_7",
+                "description": "Tryptophan-6/7 halogenase",
+                "profile_name": "trp_6_7_FDH",
+                "cofactor": "flavin",
+                "family": "flavin-dependent",
+                "cutoffs": [770],
+                "filename": "trp_6_7_FDH.hmm",
+                "motifs": [
+                    {
+                        "name": "Trp_6",
+                        "positions": [19, 37, 45, 73, 75, 90, 129, 130, 142, 157, 181, 192, 194, 219, 221,
+                                      225, 227, 237, 287, 306, 337, 339, 350, 353, 356, 411, 462, 505],
+                        "residues": "TEGCAGFDAYHDRFGNADYGLSIIAKIL",
+                        "maximum_distance": 3,
+                        "substrate": "tryptophan",
+                        "decorations": "mono",
+                        "target_positions": [6]
+                    },
+                    {
+                        "name": "Trp_7",
+                        "positions": [19, 37, 45, 73, 75, 90, 129, 130, 142, 157, 181, 192, 194, 219, 221,
+                                      225, 227, 237, 287, 306, 337, 339, 350, 353, 356, 411, 462, 505],
+                        "residues": "TEGCAGFDAYHDRFGNADYGLSIIAKIL",
+                        "minimum_distance": 5,
+                        "maximum_distance": 28,
+                        "substrate": "tryptophan",
+                        "decorations": "mono",
+                        "target_positions": [7]
+                    }
+                ]
+            }
+        ]
+    },
+    "pyrrolic": {
+        "profiles": [
+            {
+                "name": "pyrrole",
+                "description": "Pyrrole halogenase",
+                "profile_name": "pyrrole_FDH",
+                "cofactor": "flavin",
+                "family": "flavin-dependent",
+                "cutoffs": [400],
+                "filename": "pyrrole_FDH.hmm",
+                "motifs": [
+                    {
+                        "name": "mono_di",
+                        "positions": [110, 111, 318, 322, 348, 362],
+                        "residues": "DRSVFW",
+                        "decorations": "mono_di",
+                        "substrate": "pyrrole"
+                    },
+                    {
+                        "name": "unconv_mono_di",
+                        "positions": [110, 111, 318, 322, 348, 362],
+                        "residues": "YRRNFN",
+                        "decorations": "unconv_mono_di",
+                        "substrate": "pyrrole"
+                    },
+                    {
+                        "name": "tetra_mono_di",
+                        "positions": [110, 111, 318, 322, 348, 362],
+                        "residues": "RRYFFA",
+                        "decorations": "tetra",
+                        "substrate": "pyrrole"
+                    }
+                ]
+            }
+        ]
+    }
+}
