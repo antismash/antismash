@@ -18,6 +18,7 @@ __pycache__
 *.hmm.h3p
 antismash/config/instance.cfg
 antismash/detection/hmm_detection/data/bgc_seeds.hmm
+antismash/detection/genefunctions/tools/halogenases/data/FDH.hmm
 antismash/databases/*
 antismash/modules/*/data/*.classifier.pkl
 antismash/modules/*/data/*.scaler.pkl
