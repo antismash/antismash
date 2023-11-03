@@ -365,7 +365,7 @@ class Cluster:
         elif self.prefix == "general":
             start, end = self.ref_cluster_number.split("-")
             query = f"record={self.accession}&start={start}&end={end}".replace("&", "&amp;")
-            acc = Text(f'<a xlink:href="https://antismash-db.secondarymetabolites.org/area.html?{query}'
+            acc = Text(f'<a xlink:href="https://antismash-db.secondarymetabolites.org/area?{query}'
                        + '" target="_blank">'
                        + self.full_description.replace(":", "</a>:", 1), 5, 20 + v_offset)
         # Don't do any linking for subclusterblast
