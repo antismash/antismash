@@ -28,9 +28,9 @@ PFAM_LATEST_URL = f"https://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam{PFAM_
 PFAM_LATEST_ARCHIVE_CHECKSUM = "48ec2d1123c84046b00279eae1fb3d5be1b578e6221453f329d16954c89d0d35"
 PFAM_LATEST_CHECKSUM = "8d3e2ffa785f91ee0e24a3994d2dcfff6f382e3cf663784a47688e7d95297fee"
 
-CLUSTERBLAST_URL = "https://dl.secondarymetabolites.org/releases/clusterblast/clusterblast_20201113.tar.xz"
-CLUSTERBLAST_ARCHIVE_CHECKSUM = "bf45276f034615b0827627d16426fec2aca0464391bc41c76ccfae81049ba95a"
-CLUSTERBLAST_FASTA_CHECKSUM = "ea43624407ae399cd6e78bf2e6868e9ff0b9581f333645063212d0ef239c7f5b"
+CLUSTERBLAST_URL = "https://dl.secondarymetabolites.org/releases/clusterblast/clusterblast_4.0.tar.xz"
+CLUSTERBLAST_ARCHIVE_CHECKSUM = "dc90a171751472d88088e12f52446c49fe0efff437d92110072151f523eb3ee3"
+CLUSTERBLAST_FASTA_CHECKSUM = "55ea9e62dcc0c083b42f8209a48889f710e888db72d5433f4429d4a6ec1b946b"
 
 KCB_URL = "https://dl.secondarymetabolites.org/releases/knownclusterblast/kcb_3.1.tar.xz"
 KCB_ARCHIVE_CHECKSUM = "7149d5742280be3bb39a2abfbccab353a980289f8563bb03544df8899d31e7b4"
