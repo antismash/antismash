@@ -46,11 +46,11 @@ CLUSTERCOMPARE_DBS = {
 
 COMPARIPPSON_DBS = {
     "asdb": {
-        "archive_hash": "8cc339bd0d34e4c0589767ce973ba25d44ad32e7ce695f2b8be594a8fb9662e8",
-        "fasta_hash": "80bc3d570222596f67bed749479f28dff1e75a00f53ae8b07f650eb254630a9b",
-        "metadata_hash": "0e549c9dff56edf5c024dbb197638c9022254408d56f795d3ab5eb00b82ab204",
-        "url": "https://dl.secondarymetabolites.org/releases/comparippson/asdb_3.0.tar.xz",
-        "version": "3.0",
+        "archive_hash": "87796c22f5d13946222f94240e1d5896a42a7039907abce2ad858e9f83c8ac73",
+        "fasta_hash": "af2a94ec525d75ff1dc31a9d3e74ec1653a05047546ac0961eac1d350e407fbe",
+        "metadata_hash": "0235bfde62b6060d1cd790cba478228a268fea8e8fb36d582a20534cf785cd88",
+        "url": "https://dl.secondarymetabolites.org/releases/comparippson/asdb_4.0.tar.xz",
+        "version": "4.0",
     },
     "mibig": {
         "archive_hash": "ac027be0b41af074f1c08ee99ddbb936f3caa47671cf147d7e4ae925c9273265",
