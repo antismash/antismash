@@ -290,7 +290,7 @@ class Cluster:
                  description: str, features: Union[List[Protein], List[secmet.CDSFeature]], rank: int,
                  cluster_type: str, hits: int = 0, strand: int = 1, prefix: str = "general") -> None:
         self.region_number = region_number
-        self.ref_cluster_number = ref_cluster_number.lstrip('c')
+        self.ref_cluster_number = ref_cluster_number.lstrip('c').replace("<", "").replace(">", "")
         self.accession = accession
         self.description = description.replace("_", " ")
         self.cluster_type = cluster_type
