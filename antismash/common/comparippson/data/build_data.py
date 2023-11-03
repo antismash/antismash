@@ -36,7 +36,7 @@ ASDB_METADATA = Metadata(
     fields=["accession", "type", "locus", "start", "end"],
     id_format="@accession@",
     name="antiSMASH-DB",
-    url="https://antismash-db.secondarymetabolites.org/area.html?record=@accession@&start=@start@&end=@end@",
+    url="https://antismash-db.secondarymetabolites.org/area?record=@accession@&start=@start@&end=@end@",
 )
 
 
