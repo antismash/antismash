@@ -108,14 +108,12 @@ def main(args: List[str]) -> int:
     options.version = get_version()
 
     try:
-        antismash.run_antismash(sequence, options)
+        return antismash.run_antismash(sequence, options)
     except antismash.common.errors.AntismashInputError as err:
         if not str(err):
             raise
         print("ERROR:", str(err), file=sys.stderr)
         return 1
-
-    return 0
 
 
 def entrypoint() -> None:
