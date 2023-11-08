@@ -607,6 +607,9 @@ def find_lan_a_features(area_feature: CDSCollection) -> List[CDSFeature]:
         if len(feature.translation) < MAX_PRECURSOR_LENGTH:
             lan_a_features.append(feature)
             continue
+        # if it has known precursor domains, that's also of interest if it's vaguely the right size
+        if len(feature.translation) > MAX_PRECURSOR_LENGTH * 1.25:
+            continue
         if feature.sec_met and set(feature.sec_met.domain_ids).intersection(KNOWN_PRECURSOR_DOMAINS):
             lan_a_features.append(feature)
 
