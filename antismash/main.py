@@ -41,7 +41,7 @@ from antismash.outputs import html, svg
 from antismash.support import genefinding
 from antismash.custom_typing import AntismashModule
 
-__version__ = "7.dev"
+__version__ = "7.1.0"
 
 
 def _gather_analysis_modules() -> List[AntismashModule]:
