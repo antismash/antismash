@@ -16,22 +16,22 @@ def read(fname):
 long_description = read('README.md')
 
 install_requires = [
-    'brawn',
-    'numpy',
+    'brawn == 1.0.1',
+    'numpy == 1.25.0',
     'biopython == 1.78',
-    'helperlibs',
-    'jinja2',
-    'joblib',
+    'helperlibs == 0.2.1',
+    'jinja2 == 3.1.2',
+    'joblib == 1.3.2',
     'jsonschema==4.11.0',
-    'markupsafe >= 2.0',
-    'nrpys >= 0.1.1',
-    'pysvg-py3',
-    'bcbio-gff',
-    'libsass >= 0.22',
-    'matplotlib',
-    'scipy',
-    'scikit-learn >= 0.19.0',
-    'MOODS-python'
+    'markupsafe == 2.1.3',
+    'nrpys == 0.1.1',
+    'pysvg-py3 == 0.2.2.post3',
+    'bcbio-gff == 0.7.0',
+    'libsass == 0.22.0',
+    'matplotlib == 3.8.1',
+    'scipy == 1.11.3',
+    'scikit-learn == 0.19.0',
+    'MOODS-python == 1.9.4.1'
 ]
 
 tests_require = [
