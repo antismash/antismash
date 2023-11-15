@@ -395,7 +395,7 @@ RULE triceptide
     NEIGHBOURHOOD 10
     CONDITIONS triceptide_precursor and (SAM_SPASM_FxsB or rSAM_GlyRichRpt or rSAM_XyeB or rSAM_with_SPASM)
 
-RULE achaeal-RiPP
+RULE archaeal-RiPP
     CATEGORY RiPP
     DESCRIPTION archaeal-RiPP
     # see the supplemental Fig S3 of DOI: 10.1021/jacs.2c00521 where these are mentioned in passing
