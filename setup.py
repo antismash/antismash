@@ -17,7 +17,7 @@ long_description = read('README.md')
 
 install_requires = [
     'brawn == 1.0.1',
-    'numpy == 1.25.0',
+    'numpy == 1.26.2',
     'biopython == 1.78',
     'helperlibs == 0.2.1',
     'jinja2 == 3.1.2',
@@ -30,7 +30,7 @@ install_requires = [
     'libsass == 0.22.0',
     'matplotlib == 3.8.1',
     'scipy == 1.11.3',
-    'scikit-learn == 0.19.0',
+    'scikit-learn == 1.3.2',
     'MOODS-python == 1.9.4.1'
 ]
 
