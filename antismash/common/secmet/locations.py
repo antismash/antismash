@@ -280,7 +280,7 @@ def location_contains_other(outer: Location, inner: Location) -> bool:
         return all(location_contains_other(outer, part) for part in inner.parts)
     if isinstance(outer, CompoundLocation):
         return any(location_contains_other(part, inner) for part in outer.parts)
-    return inner.start in outer and inner.end - 1 in outer
+    return outer.start <= inner.start <= inner.end <= outer.end
 
 
 def location_from_string(data: str) -> Location:
