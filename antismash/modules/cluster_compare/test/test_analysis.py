@@ -9,7 +9,8 @@ import math
 import unittest
 from unittest.mock import Mock, patch
 
-from antismash.common.secmet.features.cdscollection import CDSCollection, FeatureLocation
+from antismash.common.secmet.features.cdscollection import CDSCollection
+from antismash.common.secmet.locations import FeatureLocation
 from antismash.common.test.helpers import (
     DummyCandidateCluster,
     DummyCDS,
@@ -40,8 +41,8 @@ from antismash.modules.cluster_compare.data_structures import (
 
 
 class DummyHit(Hit):
-    def __init__(self, pid=.5, cds=None, ref_name="ref_cds_name"):
-        super().__init__("ref_rec", ref_name, cds or DummyCDS(), pid, 1234., 105., 1e-8)
+    def __init__(self, pid=.5, cds=None, ref_name="ref_cds_name", ref_acc="ref_rec"):
+        super().__init__(ref_acc, ref_name, cds or DummyCDS(), pid, 1234., 105., 1e-8)
 
 
 class TestCalculations(unittest.TestCase):
