@@ -25,8 +25,8 @@ def create_cds(start, end, products):
 
 
 def create_cluster(n_start, start, end, n_end, product='a'):
-    cluster = Protocluster(FeatureLocation(start, end),
-                           FeatureLocation(n_start, n_end),
+    cluster = Protocluster(FeatureLocation(start, end, 1),
+                           FeatureLocation(n_start, n_end, 1),
                            tool="testing", product=product, cutoff=1,
                            neighbourhood_range=0, detection_rule="some rule text")
     return cluster
@@ -109,7 +109,7 @@ class TestCandidateCluster(unittest.TestCase):
                   create_cluster(30, 40, 50, 60, "b")]
         cluster = CandidateCluster(CandidateClusterKind.NEIGHBOURING, protos,
                                    smiles="dummy", polymer="dummy")
-        assert cluster.core_location == FeatureLocation(10, 50)
+        assert cluster.core_location == FeatureLocation(10, 50, 1)
 
     def test_comparison(self):
         candidate = CandidateCluster(CandidateClusterKind.NEIGHBOURING, [create_cluster(5, 10, 20, 25, "a")])
