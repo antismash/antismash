@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional, Type, TypeVar
 from Bio.SeqFeature import SeqFeature
 
 from .cdscollection import CDSCollection
-from .feature import FeatureLocation, Feature
+from .feature import Feature, FeatureLocation, Location
 
 T = TypeVar("T", bound="SubRegion")
 S = TypeVar("S", bound="SideloadedSubRegion")
@@ -21,7 +21,7 @@ class SubRegion(CDSCollection):
     __slots__ = ["tool", "label"]
     FEATURE_TYPE = "subregion"
 
-    def __init__(self, location: FeatureLocation, tool: str, label: str = "") -> None:
+    def __init__(self, location: Location, tool: str, label: str = "") -> None:
         super().__init__(location, feature_type=self.FEATURE_TYPE)
         self.tool = tool
         self.label = label  # if anchored to a gene/CDS, this is the name
