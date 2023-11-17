@@ -174,7 +174,7 @@ def _reduce_parts_to_location(parts: list[FeatureLocation], wrap_point: Optional
         ])
     # only the simple case remains, where it's not cross origin but still has multiple exons
     temp = CompoundLocation(parts)
-    return FeatureLocation(temp.start, temp.end, strand=1)
+    return FeatureLocation(temp.start, temp.end, strand=temp.strand)
 
 
 def _merge_over_origin(locations: list[Location], wrap_point: int) -> list[Location]:
@@ -274,7 +274,8 @@ def connect_locations(locations: list[Location], wrap_point: int = None) -> Loca
     if wrap_point is None:
         start = min(loc.start for loc in locations)
         end = max(loc.end for loc in locations)
-        return FeatureLocation(start, end, 1)
+        strand = locations[0].strand if all(loc.strand == locations[0].strand for loc in locations) else None
+        return FeatureLocation(start, end, strand=strand)
 
     assert wrap_point > 0
 
@@ -309,8 +310,13 @@ def connect_locations(locations: list[Location], wrap_point: int = None) -> Loca
             return pre if len(pre) > len(post) else post
         if locations_overlap(pre, post):
             result = connect_locations([pre, post])
+            assert result.strand == 1
         else:
+            # all created cross-origin locations are forward strand for clarity
+            pre.strand = 1
+            post.strand = 1
             result = CompoundLocation([pre, post])
+            assert result.strand == 1
     return result
 
 
@@ -504,7 +510,7 @@ def _is_valid_split(lower: list[FeatureLocation], upper: list[FeatureLocation], 
         return False
 
     # check that both sections cover a mutually exclusive area
-    if locations_overlap(combine_locations(lower), combine_locations(upper)):
+    if locations_overlap(connect_locations(lower), connect_locations(upper)):
         return False
 
     # check that all components in each section are correctly ordered
