@@ -15,6 +15,7 @@ from antismash.modules.lanthipeptides import specific_analysis as lanthi
 from antismash.modules.lanthipeptides.specific_analysis import (
     Lanthipeptide,
     LanthiResults,
+    find_neighbours_in_range,
     predict_cleavage_site,
     result_vec_to_feature,
     CleavageSiteHit,
@@ -204,3 +205,29 @@ class TestCDSDuplication(unittest.TestCase):
         assert len(results._new_cds_features) == 1
         results.add_cds(DummyCDS(locus_tag="different"))
         assert len(results._new_cds_features) == 2
+
+
+class TestNeighbourFinding(unittest.TestCase):
+    def setUp(self):
+        self.original_distance = lanthi.MAX_PRECURSOR_DISTANCE
+        lanthi.MAX_PRECURSOR_DISTANCE = 30
+        self.early = DummyCDS(3, 9)
+        self.late = DummyCDS(87, 90)
+        self.record = DummyRecord(seq="A" * 100, features=[self.early, self.late])
+
+    def tearDown(self):
+        lanthi.MAX_PRECURSOR_DISTANCE = self.original_distance
+
+    def test_none(self):
+        center = DummyCDS(49, 52)
+        assert not find_neighbours_in_range(center, [self.early, self.late], self.record)
+
+    def test_linear(self):
+        center = DummyCDS(77, 80)
+        assert find_neighbours_in_range(center, [self.early, self.late], self.record) == [self.late]
+
+    def test_circular(self):
+        self.record.make_circular()
+        assert self.record.is_circular()
+        center = DummyCDS(77, 80)
+        assert find_neighbours_in_range(center, [self.early, self.late], self.record) == [self.early, self.late]
