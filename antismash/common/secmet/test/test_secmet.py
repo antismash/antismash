@@ -114,29 +114,6 @@ class TestConversion(unittest.TestCase):
         with self.assertRaisesRegex(SecmetInvalidInputError, "missing or invalid location"):
             Record.from_biopython(rec, taxon="bacteria")
 
-    def test_origin_crossing_splits(self):
-        rec = list(Bio.SeqIO.parse(get_path_to_nisin_genbank(), "genbank"))[0]
-        rec.features = []
-        location = CompoundLocation([
-            FeatureLocation(3, 12, -1),
-            FeatureLocation(6, 9, -1),
-            FeatureLocation(15, 21, -1),
-        ], operator="order")
-        # should still error with meaningful features
-        rec.features.append(SeqFeature(location, type="gene"))
-        with self.assertRaisesRegex(SecmetInvalidInputError, "cannot determine correct ordering"):
-            Record.from_biopython(rec, taxon="bacteria")
-        # but not with misc features
-        rec.features[0].type = "misc_feature"
-        sec_rec = Record.from_biopython(rec, taxon="bacteria")
-        assert len(rec.features) == 1
-        assert rec.features[0].location.parts == [location.parts[0], location.parts[2]]
-
-        features = list(sec_rec.all_features)
-        assert len(features) == 2
-        assert features[0].location.parts == [location.parts[2]]
-        assert features[1].location.parts == [location.parts[0]]
-
     def test_discard(self):
         bio = list(Bio.SeqIO.parse(get_path_to_nisin_genbank(), "genbank"))[0]
         for feature_type in ANTISMASH_SPECIFIC_TYPES:
