@@ -124,6 +124,8 @@ class CandidateClusterLayer:
     """ A helper for the HTML output for a candidate_cluster """
     def __init__(self, candidate_cluster: CandidateCluster, result: CandidateClusterPrediction) -> None:
         self.location = candidate_cluster.location
+        self.start = candidate_cluster.start
+        self.end = candidate_cluster.end
         self.number = candidate_cluster.get_candidate_cluster_number()
         self.transatpks = "transatpks" in candidate_cluster.products
         self.result = result
