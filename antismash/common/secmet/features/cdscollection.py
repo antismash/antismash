@@ -10,8 +10,15 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, TypeVar, Un
 
 from Bio.SeqFeature import SeqFeature
 
-from .feature import Feature, FeatureLocation
 from .cds_feature import CDSFeature
+from .feature import Feature
+from ..locations import (
+    CompoundLocation,
+    FeatureLocation,
+    Location,
+    location_bridges_origin,
+    split_origin_bridging_location,
+)
 
 T = TypeVar("T", bound="CDSCollection")
 
@@ -44,22 +51,24 @@ class CDSCollection(Feature):
                 assert isinstance(child, CDSCollection), type(child)
                 child.parent = self
 
-    def __lt__(self, other: Union[Feature, FeatureLocation]) -> bool:
+    def __lt__(self, other: Union[Feature, Location]) -> bool:
         """ Collections differ from other Features in that start ties are
             resolved in the opposite order, from longest to shortest
         """
-        if isinstance(other, FeatureLocation):
+
+        if isinstance(other, (CompoundLocation, FeatureLocation)):
             location = other
         else:
-            assert isinstance(other, Feature)
             location = other.location
 
-        if self.location.start < location.start:
-            return True
-        if self.location.start > location.start:
-            return False
-        # when starts are equal, sort by largest collection first
-        return self.location.end > location.end
+        def get_comparator(loc: Location) -> tuple[int, int]:
+            start = loc.start
+            if location_bridges_origin(loc):
+                _, head = split_origin_bridging_location(loc)
+                start = min(part.start for part in head) - max(part.end for part in head)
+            return (start, -len(loc))
+
+        return get_comparator(self.location) < get_comparator(location)
 
     def __contains__(self, other: Any) -> bool:
         """ Returns True if the given CDSFeature or CDSCollection is one of the

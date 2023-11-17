@@ -242,11 +242,14 @@ class Feature:
             assert isinstance(other, Feature), type(other)
             location = other.location
 
-        if self.location.start < location.start:
-            return True
-        if self.location.start == location.start:
-            return self.location.end < location.end
-        return False
+        def get_comparator(loc: Location) -> tuple[int, int]:
+            start = loc.start
+            if loc.crosses_origin():
+                _, head = split_origin_bridging_location(loc)
+                start = min(part.start for part in head) - max(part.end for part in head)
+            return (start, len(loc))
+
+        return get_comparator(self.location) < get_comparator(location)
 
     def __str__(self) -> str:
         return repr(self)
