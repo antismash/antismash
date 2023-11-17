@@ -11,6 +11,18 @@ from antismash.common.secmet.test.helpers import DummyCDS, DummyRecord
 
 
 class TestCDSCollection(unittest.TestCase):
+    def test_cds_caching(self):
+        collection = CDSCollection(FeatureLocation(0, 200, 1), "dummy")
+        assert not collection.cds_children
+        collection.add_cds(DummyCDS(10, 40, strand=1))
+        original = collection.cds_children
+        assert len(original) == 1
+        assert collection.cds_children is original  # same object, since no change
+        collection.add_cds(DummyCDS(110, 140, strand=-1))
+        updated = collection.cds_children
+        assert len(updated) == 2
+        assert updated is not original
+
     def test_parent_linkage(self):
         child = CDSCollection(FeatureLocation(20, 40), feature_type="test", child_collections=[])
         assert child.parent is None
