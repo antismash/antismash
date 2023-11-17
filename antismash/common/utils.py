@@ -12,7 +12,7 @@ import Bio.Data.IUPACData
 from Bio.SeqUtils.ProtParam import ProteinAnalysis
 
 from .fasta import read_fasta
-from .secmet import Feature, FeatureLocation, Record
+from .secmet import Feature, Record
 
 
 class RobustProteinAnalysis(ProteinAnalysis):
@@ -89,17 +89,10 @@ def distance_to_pfam(record: Record, query: Feature, hmmer_profiles: List[str]) 
             or -1 if no gene matching was found
     """
     max_range = 40000
-    search_range = FeatureLocation(query.location.start - max_range,
-                                   query.location.end + max_range)
+    if record.is_circular():
+        max_range = min(max_range, len(record) // 2)
+    search_range = record.extend_location(query.location, max_range)
     close_cds_features = record.get_cds_features_within_location(search_range, with_overlapping=True)
-
-    def distance_between(first: Feature, second: Feature) -> int:
-        """ Calculates smallest distance between two feature endpoints """
-        return min([abs(first.location.start - second.location.end),
-                    abs(first.location.end - second.location.start),
-                    abs(first.location.start - second.location.start),
-                    abs(first.location.end - second.location.end)
-                    ])
 
     # For nearby CDS features, check if they have hits to the pHMM
     profiles = set(hmmer_profiles)
@@ -108,7 +101,7 @@ def distance_to_pfam(record: Record, query: Feature, hmmer_profiles: List[str]) 
         if cds.sec_met is None:
             continue
         if set(cds.sec_met.domain_ids).intersection(profiles):
-            distance = distance_between(query, cds)
+            distance = record.get_distance_between_features(query, cds)
             if closest_distance == -1 or distance < closest_distance:
                 closest_distance = distance
     return closest_distance
