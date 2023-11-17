@@ -6,7 +6,7 @@ disable=too-few-public-methods
 [MESSAGES CONTROL]
 # raising 'from' is almost entirely false positives
 disable=raise-missing-from
-fail-on=unused-variable,comparison-with-itself,self-assigning-variable
+fail-on=unused-import,unused-variable,comparison-with-itself,self-assigning-variable
 
 [TYPECHECK]
 ignored-classes=Config,TestCase,Namespace
