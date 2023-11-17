@@ -12,7 +12,9 @@ from Bio.SeqFeature import SeqFeature
 from ..cdscollection import CDSCollection
 from ..protocluster import Protocluster, SideloadedProtocluster
 from ..feature import FeatureLocation, Feature
-from ...locations import combine_locations
+from ...locations import (
+    connect_locations,
+)
 
 T = TypeVar("T", bound="CandidateCluster")
 
@@ -58,7 +60,8 @@ class CandidateCluster(CDSCollection):
             assert isinstance(protocluster, Protocluster), type(protocluster)
         if not isinstance(kind, CandidateClusterKind):
             raise TypeError(f"argument 1 should be CandidateClusterKind, had {type(kind)}")
-        location = combine_locations(cluster.location for cluster in protoclusters)
+        locations = [cluster.location for cluster in protoclusters]
+        location = connect_locations(locations)
         super().__init__(location, feature_type=CandidateCluster.FEATURE_TYPE, child_collections=protoclusters)
         self._protoclusters = protoclusters
         self._kind = kind

@@ -44,9 +44,9 @@ from .features.candidate_cluster import create_candidates_from_protoclusters
 
 from .locations import (
     Location,
-    location_bridges_origin,
+    connect_locations,
     split_origin_bridging_location,
-    combine_locations,
+    location_bridges_origin,
     locations_overlap,
     ensure_valid_locations,
     remove_redundant_exons,
@@ -1021,7 +1021,7 @@ class Record:
         regions_added = 0
         for area in areas[1:]:
             if area.overlaps_with(region_location):
-                region_location = combine_locations(area.location, region_location)
+                region_location = connect_locations([area.location, region_location])
                 if isinstance(area, CandidateCluster):
                     candidates.append(area)
                 else:

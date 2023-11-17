@@ -360,7 +360,7 @@ def _is_valid_split(lower: List[Location], upper: List[Location], strand: int) -
         return False
 
     # check that both sections cover a mutually exclusive area
-    if locations_overlap(combine_locations(lower), combine_locations(upper)):
+    if locations_overlap(connect_locations(lower), connect_locations(upper)):
         return False
 
     # check that all components in each section are correctly ordered
@@ -490,37 +490,6 @@ def location_from_string(data: str) -> Location:
 
     locations = [parse_single_location(part) for part in combined_location.split(', ')]
     return CompoundLocation(locations, operator=operator)
-
-
-def combine_locations(*locations: Iterable[Location]) -> Location:
-    """ Combines multiple FeatureLocations into a single location using the
-        minimum start and maximum end. Will not create a CompoundLocation if any
-        of the inputs are CompoundLocations.
-
-        Strand will be set to None.
-
-        Arguments:
-            locations: one or more FeatureLocation instances
-
-        Returns:
-            a new FeatureLocation that will contain all provided FeatureLocations
-    """
-    # ensure we have a list of featureLocations
-    if len(locations) == 1:
-        if isinstance(locations[0], CompoundLocation):
-            locs = locations[0].parts
-        # it's silly to combine a single location, but don't iterate over it
-        elif isinstance(locations[0], FeatureLocation):
-            locs = [locations[0]]
-        else:  # some kind of iterable, hopefully containing locations
-            locs = list(locations[0])
-    else:
-        locs = list(locations)
-
-    # build the result
-    start = min(loc.start for loc in locs)
-    end = max(loc.end for loc in locs)
-    return FeatureLocation(start, end, strand=None)
 
 
 def location_contains_overlapping_exons(location: Location) -> bool:
