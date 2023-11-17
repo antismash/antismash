@@ -113,6 +113,8 @@ class CDSCollection(Feature):
         """
         if not self._parent_record:
             raise ValueError("Cannot determine if on contig edge without parent record")
+        if self.crosses_origin():
+            return False
         if self._contig_edge:
             return self._contig_edge
         if self._children:
