@@ -13,7 +13,7 @@ from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature
 
 from antismash.common.secmet import record as record_pkg
-from antismash.common.secmet.locations import FeatureLocation
+from antismash.common.secmet.locations import FeatureLocation, connect_locations
 from antismash.common.test.helpers import get_path_to_nisin_genbank
 from antismash.common.hmmscan_refinement import HMMResult
 
@@ -952,7 +952,8 @@ class TestModuleManipulation(unittest.TestCase):
         for feature in self.cdses + self.domains:
             self.record.add_feature(feature)
 
-        self.module = Module(domains=self.domains)
+        location = connect_locations([dom.location for dom in self.domains])
+        self.module = Module(location, domains=self.domains)
 
     def test_add_biopython(self):
         bio = self.module.to_biopython()[0]

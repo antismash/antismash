@@ -27,7 +27,8 @@ class DummyNRPSQualfier(secmet.qualifiers.NRPSPKSQualifier):  # pylint: disable=
 class DummyModule(secmet.features.Module):
     def __init__(self, **kwargs):
         domains = [DummyAntismashDomain(domain=dom) for dom in kwargs.pop("domains")]
-        super().__init__(domains, module_type=secmet.features.module.ModuleType.PKS, **kwargs)
+        location = secmet.locations.connect_locations([dom.location for dom in domains])
+        super().__init__(location, domains, module_type=secmet.features.module.ModuleType.PKS, **kwargs)
 
 
 class TestOrdering(unittest.TestCase):

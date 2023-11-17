@@ -147,7 +147,8 @@ class NRPSPKSDomains(module_results.DetectionResults):
                         mod_type = ModuleFeature.types.PKS
                     elif module.is_coa_ligase():
                         mod_type = ModuleFeature.types.CAL
-                    feature = ModuleFeature(domains, module_type=mod_type,
+                    location = record.connect_locations([dom.location for dom in domains])
+                    feature = ModuleFeature(location, domains, module_type=mod_type,
                                             complete=module.is_complete(),
                                             starter=module.is_starter_module(),
                                             final=module.is_termination_module(),
