@@ -324,7 +324,8 @@ class TestBridgeDetection(unittest.TestCase):
     def test_bad_strand(self):
         pairs = [(9, 12), (0, 3)]
         assert is_bridged(build_compound(pairs, 1))
-        assert not is_bridged(build_compound(pairs, None))
+        assert is_bridged(build_compound(pairs, None))
+        assert not is_bridged(build_compound(pairs, -1))
 
     def test_not_bridged(self):
         assert not is_bridged(build_compound([(1, 6), (5, 10)], 1))
