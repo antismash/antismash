@@ -75,6 +75,7 @@ class Record:
                  "_subregions", "_subregion_numbering",
                  "_regions", "_region_numbering", "_antismash_domains_by_tool",
                  "_antismash_domains_by_cds_name", "_gc_content",
+                 "_cds_cache", "_cds_cache_dirty",
                  ]
 
     def __init__(self, seq: Union[Seq, str] = "", *,
@@ -96,6 +97,8 @@ class Record:
         self._cds_features: List[CDSFeature] = []
         self._cds_by_name: Dict[str, CDSFeature] = {}
         self._cds_by_location: Dict[str, CDSFeature] = {}
+        self._cds_cache: tuple[CDSFeature, ...] = tuple()
+        self._cds_cache_dirty: bool = False
 
         self._cds_motifs: List[CDSMotif] = []
 
@@ -365,7 +368,10 @@ class Record:
 
     def get_cds_features(self) -> Tuple[CDSFeature, ...]:
         """A list of secondary metabolite clusters present in the record"""
-        return tuple(self._cds_features)
+        if self._cds_cache_dirty or not self._cds_features:
+            self._cds_cache = tuple(self._cds_features)
+            self._cds_cache_dirty = False
+        return self._cds_cache
 
     def get_cds_name_mapping(self) -> Dict[str, CDSFeature]:
         """A dictionary mapping CDS name to CDS feature"""
@@ -585,6 +591,7 @@ class Record:
         # only modify the record once all the checks are complete, otherwise
         # an exception can be caught leaving the state partially modified
         index = bisect.bisect_left(self._cds_features, cds_feature)
+        self._cds_cache_dirty = True
         self._cds_features.insert(index, cds_feature)
         self._link_cds_to_parent(cds_feature)
         self._cds_by_location[location_key] = cds_feature
