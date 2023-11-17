@@ -402,7 +402,7 @@ def ensure_valid_locations(features: List[SeqFeature], can_be_circular: bool, se
             raise ValueError("one or more features with missing or invalid locations")
         # features outside the sequence cause problems with motifs and translations
         if feature.location.end > sequence_length:
-            raise ValueError("feature outside record sequence: {feature.location}")
+            raise ValueError(f"feature outside record sequence: {feature.location}")
         # features with overlapping exons cause translation problems
         if location_contains_overlapping_exons(feature.location):
             raise ValueError(f"location contains overlapping exons: {feature.location}")
