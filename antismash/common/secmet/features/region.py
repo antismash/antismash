@@ -19,8 +19,10 @@ from .feature import Feature, FeatureLocation
 from .subregion import SideloadedSubRegion, SubRegion
 from .candidate_cluster import CandidateCluster
 from ..locations import (
+    CompoundLocation,
     build_location_from_others,
     connect_locations,
+    location_bridges_origin,
     location_from_string,
     offset_location,
 )
@@ -59,7 +61,13 @@ class Region(CDSCollection, AbstractRegion):
             assert isinstance(cluster, CandidateCluster), type(cluster)
             children.append(cluster)
 
-        location = connect_locations([child.location for child in children])
+        locations = [child.location for child in children]
+        wrap_point: Optional[int] = None
+        if any(location_bridges_origin(loc) for loc in locations):
+            wrap_point = max(location.parts[0].end for location in locations)
+        location = connect_locations(locations, wrap_point=wrap_point)
+        if len(location.parts) > 1:
+            location = CompoundLocation(sorted(location.parts, key=lambda x: x.start, reverse=True))
 
         super().__init__(location, feature_type=self.FEATURE_TYPE, child_collections=children)
         self._subregions = subregions
@@ -134,7 +142,7 @@ class Region(CDSCollection, AbstractRegion):
             raise ValueError("Region not in a record")
         return self._parent_record.get_region_number(self)
 
-    def get_unique_protoclusters(self) -> List[Protocluster]:
+    def get_unique_protoclusters(self, record_length: int = 0) -> List[Protocluster]:
         """ Returns all Protoclusters contained by CandidateClusters in this region,
             without duplicating them if multiple CandidateClusters contain the same
             Protocluster
@@ -144,7 +152,21 @@ class Region(CDSCollection, AbstractRegion):
         clusters: Set[Protocluster] = set()
         for candidate_cluster in self._candidate_clusters:
             clusters.update(candidate_cluster.protoclusters)
-        return sorted(clusters, key=lambda x: (x.location.start, -len(x.location), x.product))
+
+        if not self.crosses_origin():
+            return sorted(clusters)
+
+        # for handling the protoclusters of a cross-origin region, the wrapping point is vital
+        record_length = self.location.parts[0].end
+
+        def reduction(collection: Protocluster) -> tuple[int, int, str]:
+            if self.crosses_origin():
+                if collection.start < record_length / 2:
+                    return (collection.start + record_length, -len(collection.location), collection.product)
+                return (collection.start, -len(collection.location), collection.product)
+            return (collection.start, -len(collection.location), collection.product)
+
+        return sorted(clusters, key=reduction)
 
     def get_sideloaded_areas(self) -> List[Union[SideloadedProtocluster, SideloadedSubRegion]]:
         """ Returns all protoclusters and subregions that were created by
