@@ -23,6 +23,7 @@ from antismash.common.secmet.locations import (
     location_contains_overlapping_exons,
     location_from_string,
     locations_overlap,
+    make_forwards,
     offset_location as _offset_location,
     remove_redundant_exons,
     FeatureLocation,
@@ -891,3 +892,36 @@ class TestDistance(unittest.TestCase):
         assert locations_overlap(self.high, self.low)
         distance = get_distance_between_locations(self.low, self.high)
         assert distance == 0 == get_distance_between_locations(self.high, self.low)
+
+
+class TestMakingStrandForwards(unittest.TestCase):
+    def setUp(self):
+        self.func = make_forwards
+
+    def test_forward_simple(self):
+        location = FeatureLocation(0, 50, 1)
+        assert self.func(location) == FeatureLocation(0, 50, 1)
+
+    def test_reverse_simple(self):
+        location = FeatureLocation(0, 50, -1)
+        assert self.func(location) == FeatureLocation(0, 50, 1)
+
+    def test_forward_compound(self):
+        parts = [FeatureLocation(0, 50, 1), FeatureLocation(60, 70, 1)]
+        location = CompoundLocation(parts)
+        assert self.func(location) == CompoundLocation([FeatureLocation(f.start, f.end, 1) for f in parts])
+
+    def test_reverse_compound(self):
+        parts = [FeatureLocation(60, 70, -1), FeatureLocation(0, 50, -1)]
+        location = CompoundLocation(parts)
+        assert self.func(location) == CompoundLocation([FeatureLocation(f.start, f.end, 1) for f in parts[::-1]])
+
+    def test_forward_cross_origin(self):
+        parts = [FeatureLocation(60, 70, 1), FeatureLocation(0, 50, 1)]
+        location = CompoundLocation(parts)
+        assert self.func(location) == CompoundLocation([FeatureLocation(f.start, f.end, 1) for f in parts])
+
+    def test_reverse_cross_origin(self):
+        parts = [FeatureLocation(0, 50, -1), FeatureLocation(60, 70, -1)]
+        location = CompoundLocation(parts)
+        assert self.func(location) == CompoundLocation([FeatureLocation(f.start, f.end, 1) for f in parts[::-1]])
