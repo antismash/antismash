@@ -124,3 +124,17 @@ class TestDistanceCalculations(unittest.TestCase):
         cds.sec_met = SecMetQualifier()
         self.record.add_cds_feature(cds)
         assert utils.distance_to_pfam(self.record, self.query, ["test"]) == -1
+
+    def test_circular(self):
+        match = self.create_cds(20, 30, ["match"])
+        irrelevant = DummyCDS(40, 60)
+        query = DummyCDS(80, 90)
+
+        record = DummyRecord(seq="A" * 100, features=[match, irrelevant])
+
+        assert not self.record.is_circular()
+        assert utils.distance_to_pfam(record, query, ["match"]) == 50
+
+        # in a circular record, the shortest path is over the origin
+        record.make_circular()
+        assert utils.distance_to_pfam(record, query, ["match"]) == 30
