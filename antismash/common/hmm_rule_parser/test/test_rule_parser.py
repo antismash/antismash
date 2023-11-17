@@ -675,3 +675,15 @@ class TokenTest(unittest.TestCase):
 
         # as a bonus, test the type converts to strings nicely for debugging
         assert str(token.type) == "not"
+
+
+class TestDetails(unittest.TestCase):
+    def test_range(self):
+        names = ["first", "second"]
+        cdses = [DummyCDS(locus_tag=name, start=i * 1000, end=i * 1000 + 100) for i, name in enumerate(names)]
+        results = {name: [] for name in names}
+        details = rule_parser.Details("first", cdses, results, cutoff=500, circular_origin=None)
+        assert not details.in_range(cdses[0].location, cdses[1].location)
+
+        details = rule_parser.Details("first", cdses, results, cutoff=500, circular_origin=1300)
+        assert details.in_range(cdses[0].location, cdses[1].location)
