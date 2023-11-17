@@ -6,16 +6,19 @@
 
 import unittest
 
-from antismash.common.secmet.locations import FeatureLocation
+from antismash.common.secmet.locations import FeatureLocation, connect_locations
 from antismash.common.secmet.features.module import Module, ModuleType
 from antismash.common.secmet.test.helpers import DummyCDS, DummyAntismashDomain
 from antismash.common.test.helpers import DummyRecord
 
 
-def create_module(domains=None, **kwargs):
+def create_module(domains=None, location=None, **kwargs):
     if domains is None:
         domains = [DummyAntismashDomain()]
-    return Module(domains, **kwargs)
+    assert domains
+    if not location:
+        location = connect_locations([domain.location for domain in domains][::domains[0].location.strand])
+    return Module(location, domains, **kwargs)
 
 
 def add_module_references_to_record(module, record):
@@ -158,7 +161,8 @@ class TestModule(unittest.TestCase):
     def test_cross_gene_ordering(self):
         domains = [DummyAntismashDomain(locus_tag="A"), DummyAntismashDomain(locus_tag="B")]
         for doms in [domains, domains[::-1]]:
-            assert Module(doms).parent_cds_names == tuple(dom.locus_tag for dom in doms)
+            location = connect_locations([dom.location for dom in doms])
+            assert Module(location, doms).parent_cds_names == tuple(dom.locus_tag for dom in doms)
 
     def test_type(self):
         assert create_module().module_type == ModuleType.UNKNOWN
@@ -172,7 +176,7 @@ class TestModule(unittest.TestCase):
 
     def test_no_domains(self):
         with self.assertRaisesRegex(ValueError, "at least one domain required"):
-            create_module(domains=[])
+            Module(location=FeatureLocation(1, 6, 1), domains=[])
 
     def test_no_random_attributes(self):
         with self.assertRaises(AttributeError):
@@ -198,10 +202,12 @@ class TestModule(unittest.TestCase):
 
         for domains in [forward, reverse]:
             module = create_module(domains=domains)
+            assert module.domains == tuple(domains)
             assert module.is_multigene_module()
+            assert module.parent_cds_names == ("A", "B")
             alternate = create_module(domains=domains[::-1])
-            assert module.domains == alternate.domains
-            assert list(module.domains) == domains
+            assert alternate.domains == tuple(domains[::-1])
+            assert alternate.parent_cds_names == ("B", "A")
 
     def test_multi_cds_mismatching_strands(self):
         domains = [DummyAntismashDomain(start=20, end=50, strand=1, protein_start=3, protein_end=10, locus_tag="A"),

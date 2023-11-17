@@ -45,8 +45,8 @@ class TestModuleJSON(unittest.TestCase):
         domains = []
         for cds in [self.head, self.tail]:
             domains.extend(self.record.get_antismash_domains_in_cds(cds))
-
-        module = Module(domains, module_type=Module.types.NRPS, complete=True)
+        location = self.record.connect_locations([cds.location for cds in self.record.get_cds_features()])
+        module = Module(location, domains, module_type=Module.types.NRPS, complete=True)
         self.record.add_module(module)
 
         # ensure it's constructed as expected

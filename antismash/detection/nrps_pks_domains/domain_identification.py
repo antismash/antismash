@@ -146,7 +146,8 @@ class NRPSPKSDomains(module_results.DetectionResults):
                         mod_type = ModuleFeature.types.NRPS
                     elif module.is_pks():
                         mod_type = ModuleFeature.types.PKS
-                    feature = ModuleFeature(domains, module_type=mod_type,
+                    location = record.connect_locations([dom.location for dom in domains])
+                    feature = ModuleFeature(location, domains, module_type=mod_type,
                                             complete=module.is_complete(),
                                             starter=module.is_starter_module(),
                                             final=module.is_termination_module(),
