@@ -141,8 +141,8 @@ class TestTFBSFinder(unittest.TestCase):
         cds1 = DummyCDS(start=0, end=13, strand=-1, locus_tag='a')
         cds2 = DummyCDS(start=23, end=25, strand=1, locus_tag='b')
         candidatecluster = DummyCandidateCluster(clusters=[protocluster])
-        hit_region = DummyRegion(candidate_clusters=[candidatecluster])
-        record = DummyRecord(seq=self.hit_sequence,
+        hit_region = DummyRegion(candidate_clusters=[candidatecluster], subregions=[])
+        record = DummyRecord(seq=f"{'A' * 15}{self.hit_sequence}{'A' * 15}",
                              features=[cds1, cds2, protocluster, hit_region])
         return record
 
@@ -182,8 +182,9 @@ class TestTFBSFinder(unittest.TestCase):
 
 class TestFinder(unittest.TestCase):
     def setUp(self):
-        self.region = DummyRegion()
-        self.hit_record = DummyRecord(seq="AATTCCGGAAT", features=[self.region])
+        self.hit_sequence = "AATTCCGGAAT"
+        self.region = DummyRegion(start=0, end=len(self.hit_sequence))
+        self.hit_record = DummyRecord(seq=self.hit_sequence, features=[self.region])
         self.region_hits = {
             1: [
                 TFBSHit('A', 1, 'TestHit', 'TT', Confidence.WEAK, 1, 40.0, 41.7),

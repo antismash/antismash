@@ -35,6 +35,7 @@ from .helpers import (
     DummyCDSMotif,
     DummyPFAMDomain,
     DummyProtocluster,
+    DummyRecord,
     DummyRegion,
     DummySubRegion,
 )
@@ -146,7 +147,7 @@ class TestStripping(unittest.TestCase):
 
     def test_candidate_clusters(self):
         assert not self.rec.get_candidate_clusters()
-        self.rec.add_candidate_cluster(DummyCandidateCluster())
+        self.rec.add_candidate_cluster(DummyCandidateCluster(start=0, end=20))
         assert self.rec.get_candidate_clusters()
         self.rec.strip_antismash_annotations()
         assert not self.rec.get_candidate_clusters()
@@ -160,7 +161,7 @@ class TestStripping(unittest.TestCase):
 
     def test_regions(self):
         assert not self.rec.get_regions()
-        self.rec.add_region(DummyRegion())
+        self.rec.add_region(DummyRegion(start=0, end=20))
         assert self.rec.get_regions()
         self.rec.strip_antismash_annotations()
         assert not self.rec.get_regions()
@@ -494,6 +495,71 @@ class TestCDSFetchByLocation(unittest.TestCase):
         loc = FeatureLocation(110, 140)
         assert self.func(loc, with_overlapping=False) == [inner]
 
+    def test_multi_part(self):
+        self.record._record.annotations = {"topology": "circular"}
+        assert self.record.is_circular()
+        print(self.record.get_cds_features())
+        location = CompoundLocation([FeatureLocation(0, 50, 1), FeatureLocation(80, 140, 1)])
+        assert self.func(location, with_overlapping=False) == list(self.record.get_cds_features())
+
+        location = CompoundLocation([FeatureLocation(0, 5, 1), FeatureLocation(80, 140, 1)])
+        assert self.func(location, with_overlapping=True) == [self.record.get_cds_features()[1]]
+
+    def test_multi_part_reverse(self):
+        self.record._record.annotations = {"topology": "circular"}
+        assert self.record.is_circular()
+        location = CompoundLocation([FeatureLocation(80, 140), FeatureLocation(0, 50)])
+        assert self.func(location, with_overlapping=False) == list(self.record.get_cds_features())[::-1]
+
+
+        location = CompoundLocation([FeatureLocation(0, 5, -1), FeatureLocation(80, 140, -1)])
+        assert self.func(location, with_overlapping=True) == [self.record.get_cds_features()[1]]
+
+    def test_cross_origin_cds(self):
+        self.record._record.annotations = {"topology": "circular"}
+        assert self.record.is_circular()
+        self.record._cds_features.clear()
+        self.record._cds_by_location.clear()
+        self.record._cds_by_name.clear()
+        cds = CDSFeature(CompoundLocation([FeatureLocation(120, 140, 1), FeatureLocation(0, 10, 1)]),
+                         locus_tag="test", translation="A")
+        self.record.add_cds_feature(cds)
+        self.record.add_cds_feature(DummyCDS(30, 40, strand=-1))
+
+        location = CompoundLocation([FeatureLocation(0, 50), FeatureLocation(80, 140)])
+        assert cds.is_contained_by(location)
+        assert self.func(location, with_overlapping=False) == list(self.record.get_cds_features())
+
+        location = CompoundLocation([FeatureLocation(80, 140), FeatureLocation(0, 50)])
+        assert self.func(location, with_overlapping=False) == list(self.record.get_cds_features())
+
+        location = CompoundLocation([FeatureLocation(0, 35), FeatureLocation(80, 140)])
+        assert self.func(location, with_overlapping=False) == [cds]
+
+    def test_multiple_cross_origin(self):
+        self.record._record.annotations = {"topology": "circular"}
+        self.record._cds_features.clear()
+        self.record._cds_by_location.clear()
+        self.record._cds_by_name.clear()
+        locations = [
+            FeatureLocation(110, 120, 1),
+            CompoundLocation([FeatureLocation(130, 140, 1), FeatureLocation(0, 7, 1)]),
+            CompoundLocation([FeatureLocation(139, 140, 1), FeatureLocation(0, 17, 1)]),
+            FeatureLocation(15, 30, 1),
+        ]
+        names = ["all_before", "mostly_before", "mostly_after", "all_after"]
+        for name, location in zip(names, locations):
+            self.record.add_cds_feature(CDSFeature(location, locus_tag=name, translation="A"))
+        assert len(self.record.get_cds_features()) == len(names)
+        # ensure the record's ordering is sorted by start location
+        expected = ["mostly_before", "mostly_after", "all_after", "all_before"]
+        assert [cds.get_name() for cds in self.record.get_cds_features()] == expected
+        # then check that fetching by cross-origin location will result in the
+        # cross-origin features being in the middle of the result
+        area = CompoundLocation([FeatureLocation(100, 140, 1), FeatureLocation(0, 40, 1)])
+        found = self.func(area)
+        assert [cds.get_name() for cds in found] == names
+
 
 class TestClusterManipulation(unittest.TestCase):
     def setUp(self):
@@ -610,6 +676,19 @@ class TestCandidateClusterManipulation(unittest.TestCase):
         candidate_cluster = self.protocluster.parent
         assert candidate_cluster.location == self.candidate_cluster.location
         assert candidate_cluster.kind == CandidateCluster.kinds.SINGLE
+
+    def test_creation_linear_args(self):
+        assert not self.record.is_circular()
+        with patch.object(record_pkg, "create_candidates_from_protoclusters") as patched:
+            self.record.create_candidate_clusters()
+            assert patched.call_args == [([self.protocluster], None)]
+
+    def test_creation_circular_args(self):
+        self.record.annotations["topology"] = "circular"
+        assert self.record.is_circular()
+        with patch.object(record_pkg, "create_candidates_from_protoclusters") as patched:
+            self.record.create_candidate_clusters()
+            assert patched.call_args == [([self.protocluster], len(self.record))]
 
     def test_add_biopython(self):
         bio = self.candidate_cluster.to_biopython()[0]
@@ -798,7 +877,9 @@ class TestRegionManipulation(unittest.TestCase):
         assert regions[1].subregions == (self.subregion,)
 
     def test_creation_overlapping(self):
-        extra_sup = CandidateCluster(CandidateCluster.kinds.SINGLE, [self.protocluster])
+        new_proto = Protocluster(FeatureLocation(8, 90), FeatureLocation(100, 120), tool="test",
+                                 cutoff=17, neighbourhood_range=5, product='a', detection_rule="a")
+        extra_sup = CandidateCluster(CandidateCluster.kinds.SINGLE, [new_proto])
         self.record.add_candidate_cluster(extra_sup)
         extra_sub = SubRegion(FeatureLocation(50, 250), tool="test")
         self.record.add_subregion(extra_sub)
@@ -806,8 +887,8 @@ class TestRegionManipulation(unittest.TestCase):
         self.record.create_regions()
         assert len(self.record.get_regions()) == 1
         region = self.record.get_regions()[0]
-        assert region.location == FeatureLocation(3, 300)
-        assert region.candidate_clusters == (extra_sup, self.candidate_cluster)
+        assert region.location == FeatureLocation(3, 300, 1)
+        assert region.candidate_clusters == (self.candidate_cluster, extra_sup)
         assert region.subregions == (extra_sub, self.subregion)
 
     def test_creation_ordering(self):
@@ -826,12 +907,12 @@ class TestRegionManipulation(unittest.TestCase):
         assert len(self.record.get_regions()) == 2
 
         region = self.record.get_regions()[0]
-        assert region.location == FeatureLocation(3, 100)
+        assert region.location == FeatureLocation(3, 100, 1)
         assert region.candidate_clusters == (self.candidate_cluster,)
         assert region.subregions == (self.subregion,)
 
         region = self.record.get_regions()[1]
-        assert region.location == FeatureLocation(800, 870)
+        assert region.location == FeatureLocation(800, 870, 1)
         assert region.candidate_clusters == (extra_sup,)
         assert region.subregions == tuple()
 

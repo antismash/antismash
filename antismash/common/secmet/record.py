@@ -922,11 +922,13 @@ class Record:
         if not self._protoclusters:
             return 0
 
-        candidate_clusters = create_candidates_from_protoclusters(self._protoclusters)
+        wrap_point = len(self) if self.is_circular() else None
+        candidate_clusters = create_candidates_from_protoclusters(self._protoclusters, wrap_point)
 
-        for candidate_cluster in sorted(candidate_clusters):
+        for candidate_cluster in candidate_clusters:
             self.add_candidate_cluster(candidate_cluster)
 
+        assert len(self._candidate_clusters) == len(candidate_clusters)
         return len(candidate_clusters)
 
     def create_regions(self, candidate_clusters: List[CandidateCluster] = None,
@@ -950,8 +952,7 @@ class Record:
         areas.extend(subregions)
         areas.sort()
 
-        region_location = FeatureLocation(max(0, areas[0].location.start),
-                                          min(areas[0].location.end, len(self)))
+        region_location = areas[0].location
 
         candidates = []
         subs = []
@@ -964,7 +965,7 @@ class Record:
         regions_added = 0
         for area in areas[1:]:
             if area.overlaps_with(region_location):
-                region_location = connect_locations([area.location, region_location])
+                region_location = connect_locations([area.location, region_location], wrap_point=len(self))
                 if isinstance(area, CandidateCluster):
                     candidates.append(area)
                 else:
