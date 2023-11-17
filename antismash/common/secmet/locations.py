@@ -663,6 +663,25 @@ def location_from_string(data: str) -> Location:
     return CompoundLocation(locations, operator=operator)
 
 
+def make_forwards(location: Location) -> Location:
+    """ Creates a copy of a location in the forward strand,
+        reordering the components if it was on the reverse strand.
+
+        Arguments:
+            location: the location to convert
+
+        Returns:
+            a new location in the forward strand
+    """
+    parts = [FeatureLocation(part.start, part.end, 1) for part in location.parts]
+    if location.strand == -1:
+        parts.reverse()
+    if len(parts) == 1:
+        return parts[0]
+    loc = CompoundLocation(parts)
+    return loc
+
+
 def location_contains_overlapping_exons(location: Union[Location, B]) -> bool:
     """ Checks for multiple exons with the same end location, meaning they use the
         same stop codon
