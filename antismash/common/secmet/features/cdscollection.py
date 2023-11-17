@@ -30,6 +30,8 @@ class CDSCollection(Feature):
     def __init__(self, location: FeatureLocation, feature_type: str,
                  child_collections: Sequence["CDSCollection"] = None) -> None:
         super().__init__(location, feature_type, created_by_antismash=True)
+        if len(location.parts) > 1 and location.strand != 1:
+            raise ValueError("CDS collections spanning the origin must be in the forward strand")
         self._parent_record: Any = None  # should be Record but will cause circular dependencies
         self._contig_edge = False
         self._cdses: Dict[CDSFeature, None] = OrderedDict()

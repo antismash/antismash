@@ -23,7 +23,6 @@ from antismash.common.secmet.locations import (
     location_contains_overlapping_exons,
     location_from_string,
     locations_overlap,
-    combine_locations,
     offset_location as _offset_location,
     remove_redundant_exons,
     FeatureLocation,
@@ -487,39 +486,6 @@ class TestLocationSerialiser(unittest.TestCase):
             location = FeatureLocation(1, 6, strand=strand)
             new_location = self.convert(location)
             assert new_location.strand == strand
-
-
-class TestCombiner(unittest.TestCase):
-    def make(self, start, end):
-        return FeatureLocation(start, end)
-
-    def test_individual(self):
-        loc = combine_locations(self.make(3, 7), self.make(5, 9))
-        assert loc.start == 3 and loc.end == 9
-        loc = combine_locations(self.make(3, 5), self.make(7, 9))
-        assert loc.start == 3 and loc.end == 9
-        loc = combine_locations(self.make(7, 9), self.make(3, 5))
-        assert loc.start == 3 and loc.end == 9
-
-        # it's silly, but since it theoretically is useful for CompoundLocation condensing
-        loc = combine_locations(self.make(0, 5))
-        assert loc.start == 0 and loc.end == 5
-        loc = combine_locations(CompoundLocation([self.make(0, 3), self.make(6, 9)]))
-        assert loc.start == 0 and loc.end == 9 and len(loc.parts) == 1
-
-    def test_list(self):
-        loc = combine_locations([self.make(i, i+1) for i in range(10, 20)])
-        assert loc.start == 10 and loc.end == 20
-
-    def test_generator(self):
-        loc = combine_locations(i for i in [self.make(i, i+1) for i in range(10, 20)])
-        assert loc.start == 10 and loc.end == 20
-
-    def test_invalid(self):
-        with self.assertRaisesRegex(TypeError, "object is not iterable"):
-            combine_locations(0)
-        with self.assertRaisesRegex(AttributeError, "has no attribute 'start'"):
-            combine_locations(0, 1)
 
 
 class TestOverlaps(unittest.TestCase):
