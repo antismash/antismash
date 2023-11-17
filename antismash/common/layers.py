@@ -165,7 +165,7 @@ class RegionLayer:
     def description_text(self) -> str:
         """ returns the Region description """
         description_text = (
-            f"Location: {self.location.start + 1:,d} - {self.location.end:,d} nt."
+            f"Location: {self.start + 1:,d} - {self.end:,d} nt."
             f" (total: {len(self.location):,d} nt)"
         )
         return description_text
