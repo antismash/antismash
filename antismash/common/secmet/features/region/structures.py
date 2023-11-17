@@ -54,8 +54,11 @@ class Region(AbstractRegion, CDSCollection):
         for cluster in candidate_clusters:
             assert isinstance(cluster, CandidateCluster), type(cluster)
             children.append(cluster)
-
-        location = connect_locations([child.location for child in children])
+        locations = [child.location for child in children]
+        wrap_point: int | None = None
+        if any(loc.crosses_origin() for loc in locations):
+            wrap_point = max(location.parts[0].end for location in locations)
+        location = connect_locations(locations, wrap_point=wrap_point)
 
         super().__init__(location, feature_type=self.FEATURE_TYPE, child_collections=children)
         self._subregions = subregions

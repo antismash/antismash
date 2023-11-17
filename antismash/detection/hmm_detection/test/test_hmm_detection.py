@@ -160,7 +160,7 @@ class HmmDetectionTest(unittest.TestCase):
         }
         assert not self.record.is_circular()
         found = self.record.get_protoclusters()
-        found_summary = set([(proto.product, int(proto.location.start), int(proto.location.end)) for proto in found])
+        found_summary = {(proto.product, int(proto.location.start), int(proto.location.end)) for proto in found}
 
         assert expected == found_summary
         assert len(expected) == len(found)
