@@ -170,21 +170,21 @@ class TestStripping(unittest.TestCase):
 
     def test_candidate_clusters(self):
         assert not self.rec.get_candidate_clusters()
-        self.rec.add_candidate_cluster(DummyCandidateCluster())
+        self.rec.add_candidate_cluster(DummyCandidateCluster(end=len(self.rec)))
         assert self.rec.get_candidate_clusters()
         self.rec.strip_antismash_annotations()
         assert not self.rec.get_candidate_clusters()
 
     def test_subregions(self):
         assert not self.rec.get_subregions()
-        self.rec.add_subregion(DummySubRegion())
+        self.rec.add_subregion(DummySubRegion(end=len(self.rec)))
         assert self.rec.get_subregions()
         self.rec.strip_antismash_annotations()
         assert not self.rec.get_subregions()
 
     def test_regions(self):
         assert not self.rec.get_regions()
-        self.rec.add_region(DummyRegion())
+        self.rec.add_region(DummyRegion(end=len(self.rec)))
         assert self.rec.get_regions()
         self.rec.strip_antismash_annotations()
         assert not self.rec.get_regions()
