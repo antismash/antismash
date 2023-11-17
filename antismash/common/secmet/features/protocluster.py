@@ -32,9 +32,14 @@ class Protocluster(CDSCollection, CoredCollectionMixin):
                  "_definition_cdses", "neighbourhood_range", "t2pks",]
     FEATURE_TYPE = "protocluster"  # primary type only
 
-    def __init__(self, core_location: FeatureLocation, surrounding_location: FeatureLocation,
+    def __init__(self, core_location: Location, surrounding_location: Location,
                  tool: str, product: str, cutoff: int, neighbourhood_range: int,
                  detection_rule: str, product_category: str = "other") -> None:
+
+        if core_location.crosses_origin() and not surrounding_location.crosses_origin():
+            raise ValueError(f"a core location ({core_location}) crossing the origin requires "
+                             f"the surrounding area ({surrounding_location}) to also cross the origin")
+        assert len(surrounding_location.parts) >= len(core_location.parts)
         super().__init__(surrounding_location, feature_type=self.FEATURE_TYPE)
         # cluster-wide
         self.detection_rule = detection_rule
@@ -94,6 +99,11 @@ class Protocluster(CDSCollection, CoredCollectionMixin):
         cores = cds.gene_functions.get_by_function(GeneFunction.CORE)
         if any(core.product == self.product for core in cores):
             self._definition_cdses.add(cds)
+
+    def core_crosses_origin(self) -> bool:
+        """ Returns True if the core of the protocluster crosses the origin.
+        """
+        return len(self.core_location.parts) > 1
 
     def to_biopython(self, qualifiers: Optional[Dict[str, List[str]]] = None) -> List[SeqFeature]:
         common = {
