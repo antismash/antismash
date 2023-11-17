@@ -123,17 +123,27 @@ def get_norine_url_for_specificities(specificities: List[List[str]],
 class CandidateClusterLayer:
     """ A helper for the HTML output for a candidate_cluster """
     def __init__(self, candidate_cluster: CandidateCluster, result: CandidateClusterPrediction) -> None:
-        self.location = candidate_cluster.location
+        self._candidate = candidate_cluster
         self.number = candidate_cluster.get_candidate_cluster_number()
         self.transatpks = "transatpks" in candidate_cluster.products
         self.result = result
-        self.products = "-".join(candidate_cluster.products)
-        self.kind = str(candidate_cluster.kind).replace("_", " ")
 
     def __getattr__(self, attr: str) -> Any:
+        if hasattr(self._candidate, attr):
+            return getattr(self._candidate, attr)
         if hasattr(self.result, attr):
             return getattr(self.result, attr)
         return super().__getattribute__(attr)
+
+    @property
+    def products(self) -> str:
+        """ A string of the protocluster types within the candidate cluster """
+        return "-".join(self._candidate.products)
+
+    @property
+    def kind(self) -> str:
+        """ A user-friendly description of the candidate cluster's type """
+        return str(self._candidate.kind).replace("_", " ")
 
     def get_warning(self) -> str:
         """ A caveat for structure prediction accuracy """
