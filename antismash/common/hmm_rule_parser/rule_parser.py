@@ -183,6 +183,7 @@ import string
 from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union
 
 from antismash.common.secmet import CDSFeature, FeatureLocation
+from antismash.common.secmet.locations import get_distance_between_locations
 
 from .structures import Multipliers, ProfileHit
 
@@ -373,12 +374,13 @@ class Details:
         parsing
     """
     def __init__(self, cds_name: str, feats: Dict[str, CDSFeature],
-                 results: Dict[str, List[ProfileHit]], cutoff: int) -> None:
+                 results: Dict[str, List[ProfileHit]], cutoff: int, circular_origin: int = None) -> None:
         self.cds = cds_name  # str, name of cds that is being classified
         self.features_by_id = feats  # { id : feature }
         self.results_by_id = results  # { id : HSP list }
         self.possibilities = set(res.query_id for res in results.get(cds_name, []))
         self.cutoff = int(cutoff)
+        self.circular_origin = circular_origin
 
     def in_range(self, cds: FeatureLocation, other: FeatureLocation) -> bool:
         """ returns True if the two Locations are within cutoff distance
@@ -386,13 +388,10 @@ class Details:
             this may be redundant if inputs are already limited, but here
             for safety
         """
-        if other.start < cds.start:
-            cds, other = other, cds
-
-        distance = min(abs(cds.end - other.start),
-                       abs(cds.end - other.end),
-                       abs(cds.start - other.start),
-                       abs(cds.start - other.end))
+        if self.circular_origin:
+            distance = get_distance_between_locations(cds, other, wrap_point=self.circular_origin)
+        else:
+            distance = get_distance_between_locations(cds, other)
         return distance < self.cutoff
 
     def just_cds(self, cds_of_interest: str) -> "Details":
@@ -401,7 +400,7 @@ class Details:
             the largest impact is Details.possibilities is updated
         """
         return Details(cds_of_interest, self.features_by_id, self.results_by_id,
-                       self.cutoff)
+                       self.cutoff, circular_origin=self.circular_origin)
 
     def __str__(self) -> str:
         return f"Details(cds={self.cds}, possibilities={self.possibilities})"
@@ -822,11 +821,11 @@ class DetectionRule:
         return self.conditions.contains_positive_condition()
 
     def detect(self, cds_name: str, feature_by_id: Dict[str, CDSFeature],
-               results_by_id: Dict[str, List[ProfileHit]]) -> ConditionMet:
+               results_by_id: Dict[str, List[ProfileHit]], circular_origin: int = None) -> ConditionMet:
         """ Returns True if a cluster can be formed around this CDS
             using this rule
         """
-        details = Details(cds_name, feature_by_id, results_by_id, self.cutoff)
+        details = Details(cds_name, feature_by_id, results_by_id, self.cutoff, circular_origin)
         results = self.conditions.get_satisfied(details)
         if results and results.matches:
             self.hits += 1
