@@ -89,14 +89,32 @@ class DummyProtocluster(Protocluster):
     def __init__(self, start=None, end=None, core_start=0, core_end=1,  # pylint: disable=too-many-arguments
                  core_location=None, tool="test", product="test-product",
                  cutoff=10, neighbourhood_range=10, high_priority_product=True,
-                 product_category="TEST-CATEGORY"):
+                 product_category="TEST-CATEGORY", record_length=None):
         if core_location is None:
-            core_location = FeatureLocation(core_start, core_end)
+            if core_start > core_end:
+                assert record_length
+                core_location = CompoundLocation([FeatureLocation(core_start, record_length),
+                                                  FeatureLocation(0, core_end)])
+            else:
+                core_location = FeatureLocation(core_start, core_end)
+        core_start = core_location.parts[0].start
+        core_end = core_location.parts[-1].end
         if start is None:
-            start = max(0, core_location.start - neighbourhood_range)
+            start = core_start - neighbourhood_range
+            if start < 0 and record_length is not None:
+                start += record_length
+            elif start < 0:
+                start = 0
         if end is None:
-            end = core_location.end + neighbourhood_range
-        surrounds = FeatureLocation(start, end)
+            end = core_end + neighbourhood_range
+            if record_length is not None and end > record_length:
+                end %= record_length
+        if start > end:
+            assert record_length
+            surrounds = CompoundLocation([FeatureLocation(start, record_length, 1),
+                                          FeatureLocation(0, end, 1)])
+        else:
+            surrounds = FeatureLocation(start, end)
         super().__init__(core_location, surrounds, tool, product, cutoff,
                          neighbourhood_range, high_priority_product,
                          product_category=product_category)
@@ -132,14 +150,14 @@ class DummyRecord(Record):
         if isinstance(seq, str):
             seq = Seq(seq)
         super().__init__(seq, transl_table=11 if taxon == 'bacteria' else 1)
+        if circular:
+            self.make_circular()
         if features:
             for feature in features:
                 self.add_feature(feature)
         self.record_index = 0
         if record_id is not None:
             self.id = record_id
-        if circular:
-            self.make_circular()
         # pylint doesn't recognise the superclass has a sequence
         # so trick it into believing it exists
         self.seq = Seq(seq)
@@ -166,32 +184,41 @@ class DummyRecord(Record):
 
 
 class DummyRegion(Region):
-    def __init__(self, candidate_clusters=None, subregions=None):
-        if candidate_clusters is None:
-            candidate_clusters = [DummyCandidateCluster()]
-        if subregions is None:
-            subregions = [DummySubRegion()]
+    def __init__(self, candidate_clusters=None, subregions=None, start=0, end=100):
+        if not candidate_clusters and not subregions:
+            if candidate_clusters is None:
+                candidate_clusters = [DummyCandidateCluster(start=start, end=end)]
+            if subregions is None:
+                subregions = [DummySubRegion(start=start, end=end)]
         super().__init__(candidate_clusters, subregions)
 
 
 class DummySubRegion(SubRegion):
     def __init__(self, start=0, end=10, location=None, tool="test",
-                 label="test_label"):
+                 label="test_label", record_length=None):
         if location is None:
-            location = FeatureLocation(start, end)
+            if record_length is not None and start > end:
+                location = CompoundLocation([
+                    FeatureLocation(start, record_length, 1),
+                    FeatureLocation(0, end, 1),
+                ])
+            else:
+                location = FeatureLocation(start, end, 1)
         super().__init__(location, label=label, tool=tool)
 
 
 class DummyCandidateCluster(CandidateCluster):
-    def __init__(self, clusters=None, kind=None):
+    def __init__(self, clusters=None, kind=None, start=0, end=100, **kwargs):
         if clusters is None:
-            clusters = [DummyProtocluster()]
+            clusters = [DummyProtocluster(start=start, end=end, record_length=kwargs.get("circular_wrap_point"))]
         if not kind:
             if len(clusters) == 1:
                 kind = CandidateClusterKind.SINGLE
             else:
                 kind = CandidateClusterKind.INTERLEAVED
-        super().__init__(kind, clusters)
+        if "circular_wrap_point" not in kwargs and any(cluster.crosses_origin() for cluster in clusters):
+            kwargs["circular_wrap_point"] = max(cluster.location.parts[0].end for cluster in clusters)
+        super().__init__(kind, clusters, **kwargs)
 
 
 def rotate(record: Record, cut_point: int, padding: int = 0) -> None:
