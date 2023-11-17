@@ -101,12 +101,6 @@ class TestFeature(unittest.TestCase):
                                   feature_type=feature_type)
                 assert str(feature) == f"{feature_type}([{start}:{end}](-))"
 
-    def test_bridging_fails(self):
-        parts = [FeatureLocation(9, 12, strand=1), FeatureLocation(0, 3, strand=1)]
-        with self.assertRaisesRegex(ValueError, "bridge the record origin"):
-            Feature(CompoundLocation(parts, operator="join"), feature_type="test")
-        Feature(CompoundLocation(parts[::-1], operator="join"), feature_type="test")
-
     def test_conversion_with_codon_start_forward(self):
         seqf = SeqFeature(FeatureLocation(BeforePosition(5), 12), 1)
         seqf.type = "test"
@@ -171,6 +165,32 @@ class TestFeature(unittest.TestCase):
         loc = FeatureLocation(-2, 500, strand=1)
         with self.assertRaisesRegex(ValueError, "negative coordinate"):
             Feature(loc, feature_type="")
+
+
+class TestSimpleCoordinates(unittest.TestCase):
+    def test_simple_location(self):
+        for strand in [1, None, -1]:
+            feature = Feature(FeatureLocation(5, 10, strand), "test")
+            assert feature.start == 5
+            assert feature.end == 10
+
+    def test_compound_location(self):
+        for strand in [1, None, -1]:
+            parts = [FeatureLocation(5, 10, strand), FeatureLocation(15, 20, strand)]
+            if strand is not None:
+                parts = parts[::strand]
+            feature = Feature(CompoundLocation(parts), "test")
+            assert feature.start == 5
+            assert feature.end == 20
+
+    def test_cross_origin_location(self):
+        for strand in [1, None, -1]:
+            parts = [FeatureLocation(80, 100, strand), FeatureLocation(5, 20, strand)]
+            if strand is not None:
+                parts = parts[::strand]
+            feature = Feature(CompoundLocation(parts), "test")
+            assert feature.start == 80
+            assert feature.end == 20
 
 
 class TestSubLocation(unittest.TestCase):
