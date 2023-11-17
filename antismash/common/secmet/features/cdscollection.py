@@ -10,7 +10,13 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, TypeVar, Un
 
 from Bio.SeqFeature import SeqFeature
 
-from .feature import Feature, FeatureLocation
+from antismash.common.secmet.locations import (
+    Location,
+    location_bridges_origin,
+    split_origin_bridging_location,
+)
+
+from .feature import Feature
 from .cds_feature import CDSFeature
 
 T = TypeVar("T", bound="CDSCollection")
@@ -27,8 +33,16 @@ class CDSCollection(Feature):
                  "_cds_cache", "_cds_cache_dirty",
                  ]
 
-    def __init__(self, location: FeatureLocation, feature_type: str,
+    def __init__(self, location: Location, feature_type: str,
                  child_collections: Sequence["CDSCollection"] = None) -> None:
+        # it's fine to have two parts if crossing the origin
+        if len(location.parts) > 1:
+            # but it must only be the two halves, more indicates a problem of some kind
+            assert len(location.parts) == 2, location
+            # and the second half must be the one that starts at the origin itself
+            if location.parts[1].start != 0:
+                raise ValueError("Collections cannot have compound locations without crossing the origin")
+        assert len(set(part.strand for part in location.parts)) == 1, f"mixed strands for collection: {location=}"
         super().__init__(location, feature_type, created_by_antismash=True)
         self._parent_record: Any = None  # should be Record but will cause circular dependencies
         self._contig_edge = False
@@ -80,6 +94,14 @@ class CDSCollection(Feature):
         """ Sets the parent record to a secmet.Record instance """
         self._parent_record = record
         self._contig_edge = self.location.start == 0 or self.location.end >= len(record.seq)
+        if self._children:
+            for child in self._children:
+                if not child.parent_record:
+                    child.parent_record = record
+            if not self.crosses_origin() and any(child.crosses_origin() for child in self._children):
+                raise ValueError(
+                    "A collection not crossing the origin cannot contain a collection that does"
+                )
 
     def get_root(self) -> "CDSCollection":
         """ Returns the highest level CDSCollection that either contains this
