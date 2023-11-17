@@ -821,6 +821,54 @@ class TestRegionManipulation(unittest.TestCase):
         assert not regions[1].candidate_clusters
         assert regions[1].subregions == (self.subregion,)
 
+    def test_circular_creation_without_cross_origin(self):
+        record = Record(Seq("A" * 100))
+        record.annotations["topology"] = "circular"
+        assert record.is_circular()
+
+        early = SubRegion(FeatureLocation(13, 26, 1), tool="test")
+        late = SubRegion(FeatureLocation(75, 97, 1), tool="test")
+        assert not early.overlaps_with(late)
+
+        for sub in [early, late]:
+            record.add_subregion(sub)
+
+        record.create_regions()
+        regions = record.get_regions()
+        assert len(regions) == 2
+        assert regions[0].location == early.location
+        assert regions[1].location == late.location
+
+    def test_circular_creation_with_cross_origin(self):
+        record = Record(Seq("A" * 100))
+        record.annotations["topology"] = "circular"
+        assert record.is_circular()
+
+        early = SubRegion(FeatureLocation(13, 26, 1), tool="test")
+        late = SubRegion(FeatureLocation(75, 97, 1), tool="test")
+        origin = SubRegion(CompoundLocation([
+            FeatureLocation(85, 100, 1),
+            FeatureLocation(0, 5, 1),
+        ]), tool="test")
+
+        assert not late.overlaps_with(early)
+        assert origin.overlaps_with(late)
+        assert not origin.overlaps_with(early)
+
+        for sub in [early, late, origin]:
+            record.add_subregion(sub)
+
+        record.create_regions()
+        regions = record.get_regions()
+        assert len(regions) == 2
+        cross_origin, other = sorted(regions, key=lambda x: x.location.start)
+
+        assert cross_origin.crosses_origin()
+        assert cross_origin.start == late.start and cross_origin.end == origin.end
+
+        assert not other.crosses_origin()
+        assert other.location == early.location
+
     def test_creation_overlapping(self):
         extra_sup = CandidateCluster(CandidateCluster.kinds.SINGLE, [self.protocluster])
         self.record.add_candidate_cluster(extra_sup)
