@@ -472,9 +472,12 @@ def location_bridges_origin(location: Location, allow_reversing: bool = False) -
     if not isinstance(location, CompoundLocation):
         return False
 
-    # invalid strands mean direction can't be determined, may need to be an error
+    # a missing strand has a little less reliability, but as long as it's ordered
+    # correctly the correct result will be found
     if location.strand not in [1, -1]:
-        return False
+        starts = [part.start for part in location.parts]
+        ordered = sorted(starts)
+        return starts != ordered
 
     def check(location: Location) -> bool:
         """ Returns True if the exon ordering is invalid for the strand """

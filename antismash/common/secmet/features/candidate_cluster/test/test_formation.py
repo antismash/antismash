@@ -525,7 +525,7 @@ class TestHelpers(unittest.TestCase):
         isolated = create_cluster(0, 5, 10, 15, "isolated")
         # a pair of sets that should be merged, separated by the origin
         shared_ab = make("shared_ab")
-        shared_ab.location = CompoundLocation([FeatureLocation(180, 200), FeatureLocation(0, 30)])
+        shared_ab.location = CompoundLocation([FeatureLocation(180, 200, 1), FeatureLocation(0, 30, 1)])
         a = create_cluster(15, 20, 40, 55, "a")  # pylint: disable=invalid-name
         b = create_cluster(170, 175, 185, 190, "b")  # pylint: disable=invalid-name
         # and an pair to merge that don't cross the origin
