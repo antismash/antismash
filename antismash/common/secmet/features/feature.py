@@ -236,17 +236,20 @@ class Feature:
 
     def __lt__(self, other: Union["Feature", FeatureLocation]) -> bool:
         """ Allows sorting Features by location without key complication """
-        if isinstance(other, FeatureLocation):
-            location = other
-        else:
-            assert isinstance(other, Feature)
-            location = other.location
 
-        if self.location.start < location.start:
-            return True
-        if self.location.start == location.start:
-            return self.location.end < location.end
-        return False
+        if isinstance(other, Feature):
+            location = other.location
+        else:
+            location = other
+
+        def get_comparator(loc: Location) -> tuple[int, int]:
+            start = loc.start
+            if location_bridges_origin(loc):
+                _, head = split_origin_bridging_location(loc)
+                start = min(part.start for part in head) - max(part.end for part in head)
+            return (start, len(loc))
+
+        return get_comparator(self.location) < get_comparator(location)
 
     def __str__(self) -> str:
         return repr(self)
