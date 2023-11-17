@@ -26,8 +26,8 @@
          {{join()}}<a class="external-link" href="{{options.urls.docs_baseurl}}glossary/#{{subtype.lower()}}" target="_blank">{{subtype}}</a>
        {%- endfor %}
      </td>
-     <td class="digits">{{"{:,d}".format(region.location.start + 1)}}</td>
-     <td class="digits table-split-left">{{"{:,d}".format(region.location.end)}}</td>
+     <td class="digits">{{"{:,d}".format(region.start + 1)}}</td>
+     <td class="digits table-split-left">{{"{:,d}".format(region.end)}}</td>
      {% if region.most_related_area.identifier -%}
       {% set similarity = region.most_related_area.similarity_percentage %}
       {% if similarity > 75 %}
