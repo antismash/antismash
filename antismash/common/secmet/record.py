@@ -62,6 +62,7 @@ from .locations import (
     location_bridges_origin,
     split_origin_bridging_location,
     combine_locations,
+    locations_overlap,
     ensure_valid_locations,
     remove_redundant_exons,
 )
@@ -1059,6 +1060,52 @@ class Record:
         regions_added += 1
 
         return regions_added
+
+    def extend_location(self, location: Location, distance: int) -> Location:
+        """ Constructs a new location which covers the given distance from the
+            given location, capped at record limits unless the record is circular,
+            in which case it wraps around.
+
+            Arguments:
+                location: the location to create an extended version of
+                distance: the distance to extend the location, applies in both directions
+
+            Returns:
+                a new location, covering the requested area(s)
+        """
+
+        parts = list(location.parts)  # the original location must not be changed
+        maximum = len(self)
+        if location.strand == -1:
+            parts.reverse()
+        start_part = parts[0]
+        if start_part.start - distance < 0 and self.is_circular():
+            parts[0] = FeatureLocation(0, start_part.end, parts[0].strand)
+            parts.insert(0, FeatureLocation(min(maximum + (start_part.start - distance), maximum),
+                                            maximum, start_part.strand))
+        else:
+            parts[0] = FeatureLocation(max(0, start_part.start - distance), start_part.end, start_part.strand)
+
+        end_part = parts[-1]
+        if end_part.end + distance > maximum and self.is_circular():
+            parts[-1] = FeatureLocation(end_part.start, maximum, end_part.strand)
+            parts.append(FeatureLocation(0, min(end_part.end + distance - maximum, maximum), end_part.strand))
+        else:
+            parts[-1] = FeatureLocation(end_part.start, min(end_part.end + distance, maximum), end_part.strand)
+
+        # if the wrap around goes so far as to overlap other parts, merge them
+        while len(parts) > 1 and locations_overlap(parts[0], parts[-1]):
+            first = parts[0]
+            second = parts[-1]
+            parts[0] = FeatureLocation(min(first.start, second.start), max(first.end, second.end),
+                                       first.strand if first.strand == second.strand else 0)
+            parts.pop()
+
+        if len(parts) == 1:
+            return parts[0]
+        if location.strand == -1:
+            parts.reverse()
+        return CompoundLocation(parts)
 
     def get_nrps_pks_cds_features(self) -> List[CDSFeature]:
         """ Returns a list of all CDS features within Clusters that contain at least
