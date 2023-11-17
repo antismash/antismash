@@ -119,6 +119,9 @@ class CDSCollection(Feature):
             return any(child.contig_edge for child in self._children)
         return False
 
+    def crosses_origin(self) -> bool:  # overriding base class, since these are much more controlled
+        return len(self.location.parts) > 1
+
     def add_cds(self, cds: CDSFeature) -> None:
         """ Add a CDS to the collection covered by this feature, also adds to
             any child collections which also contain the CDS feature
