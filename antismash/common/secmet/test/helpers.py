@@ -89,14 +89,24 @@ class DummyProtocluster(Protocluster):
     def __init__(self, start=None, end=None, core_start=0, core_end=1,  # pylint: disable=too-many-arguments
                  core_location=None, tool="test", product="test-product",
                  cutoff=10, neighbourhood_range=10, high_priority_product=True,
-                 product_category="TEST-CATEGORY"):
+                 product_category="TEST-CATEGORY", record_length=None):
         if core_location is None:
-            core_location = FeatureLocation(core_start, core_end)
+            if core_start > core_end:
+                assert record_length
+                core_location = CompoundLocation([FeatureLocation(core_start, record_length),
+                                                  FeatureLocation(0, core_end)])
+            else:
+                core_location = FeatureLocation(core_start, core_end)
         if start is None:
             start = max(0, core_location.start - neighbourhood_range)
         if end is None:
             end = core_location.end + neighbourhood_range
-        surrounds = FeatureLocation(start, end)
+        if start > end:
+            assert record_length
+            surrounds = CompoundLocation([FeatureLocation(start, record_length, 1),
+                                          FeatureLocation(0, end, 1)])
+        else:
+            surrounds = FeatureLocation(start, end)
         super().__init__(core_location, surrounds, tool, product, cutoff,
                          neighbourhood_range, high_priority_product,
                          product_category=product_category)
@@ -166,11 +176,12 @@ class DummyRecord(Record):
 
 
 class DummyRegion(Region):
-    def __init__(self, candidate_clusters=None, subregions=None):
-        if candidate_clusters is None:
-            candidate_clusters = [DummyCandidateCluster()]
-        if subregions is None:
-            subregions = [DummySubRegion()]
+    def __init__(self, candidate_clusters=None, subregions=None, start=0, end=100):
+        if not candidate_clusters and not subregions:
+            if candidate_clusters is None:
+                candidate_clusters = [DummyCandidateCluster(start=start, end=end)]
+            if subregions is None:
+                subregions = [DummySubRegion(start=start, end=end)]
         super().__init__(candidate_clusters, subregions)
 
 
@@ -183,15 +194,17 @@ class DummySubRegion(SubRegion):
 
 
 class DummyCandidateCluster(CandidateCluster):
-    def __init__(self, clusters=None, kind=None):
+    def __init__(self, clusters=None, kind=None, start=0, end=100, **kwargs):
         if clusters is None:
-            clusters = [DummyProtocluster()]
+            clusters = [DummyProtocluster(start=start, end=end)]
         if not kind:
             if len(clusters) == 1:
                 kind = CandidateClusterKind.SINGLE
             else:
                 kind = CandidateClusterKind.INTERLEAVED
-        super().__init__(kind, clusters)
+        if "circular_wrap_point" not in kwargs and any(cluster.crosses_origin() for cluster in clusters):
+            kwargs["circular_wrap_point"] = max(cluster.location.parts[0].end for cluster in clusters)
+        super().__init__(kind, clusters, **kwargs)
 
 
 def rotate(record: Record, cut_point: int, padding: int = 0) -> None:

@@ -182,8 +182,9 @@ class TestTFBSFinder(unittest.TestCase):
 
 class TestFinder(unittest.TestCase):
     def setUp(self):
-        self.region = DummyRegion()
-        self.hit_record = DummyRecord(seq="AATTCCGGAAT", features=[self.region])
+        seq = "AATTCCGGAAT"
+        self.region = DummyRegion(start=0, end=len(seq))
+        self.hit_record = DummyRecord(seq=seq, features=[self.region])
         self.region_hits = {
             1: [
                 TFBSHit('A', 1, 'TestHit', 'TT', Confidence.WEAK, 1, 40.0, 41.7),
@@ -257,7 +258,7 @@ class TestFinder(unittest.TestCase):
 
 class TestAreaFinding(unittest.TestCase):
     def setUp(self):
-        self.region = DummyRegion(subregions=[DummySubRegion(start=100, end=500)])
+        self.region = DummyRegion(subregions=[DummySubRegion(start=0, end=500)])
 
     def test_leading(self):
         self.region.add_cds(DummyCDS(start=250, end=500))
