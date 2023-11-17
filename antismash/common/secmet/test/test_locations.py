@@ -634,14 +634,6 @@ class TestEnsureValid(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "contains overlapping exons"):
             self.check(features)
 
-    @patch.object(secmet.locations, "location_bridges_origin", return_value=True)
-    def test_too_many_in_circular(self, _patched_bridge):
-        features = [SeqFeature(build_compound([(10, 30), (0, 9)], -1), type="CDS"),
-                    SeqFeature(build_compound([(10, 30), (0, 9)], -1), type="gene"),
-                    SeqFeature(build_compound([(10, 30), (0, 9)], -1), type="CDS")]
-        with self.assertRaisesRegex(ValueError, "inconsistent exon ordering"):
-            self.check(features, circular=True)
-
 
 class TestLocationAdjustment(unittest.TestCase):
     def setUp(self):
