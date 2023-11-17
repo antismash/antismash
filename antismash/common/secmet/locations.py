@@ -559,22 +559,25 @@ def split_origin_bridging_location(location: Location) -> tuple[
 
     lower: List[FeatureLocation] = []
     upper: List[FeatureLocation] = []
-    if location.strand == 1:
+    strands_used = set(part.strand for part in location.parts)
+    # no strand will be treated as forward, but mixed strands is still a problem
+    if len(strands_used) > 1:
+        raise ValueError("Cannot separate bridged location without a valid strand")
+
+    if location.strand != -1:
         for i, part in enumerate(location.parts):
             if not upper or part.start > upper[-1].start:
                 upper.append(part)
             else:
                 lower.extend(location.parts[i:])
                 break
-    elif location.strand == -1:
+    else:
         for i, part in enumerate(location.parts):
             if not lower or part.start < lower[-1].start:
                 lower.append(part)
             else:
                 upper.extend(location.parts[i:])
                 break
-    else:
-        raise ValueError("Cannot separate bridged location without a valid strand")
 
     if not (lower and upper):
         raise ValueError(f"Location does not bridge origin: {location}")
