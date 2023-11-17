@@ -17,7 +17,7 @@ from ..feature import Feature
 from ..subregion import SideloadedSubRegion, SubRegion
 from ..candidate_cluster import CandidateCluster
 from ...locations import (
-    combine_locations,
+    connect_locations,
 )
 from .helpers import RegionData, write_to_genbank
 
@@ -55,7 +55,7 @@ class Region(AbstractRegion, CDSCollection):
             assert isinstance(cluster, CandidateCluster), type(cluster)
             children.append(cluster)
 
-        location = combine_locations(child.location for child in children)
+        location = connect_locations([child.location for child in children])
 
         super().__init__(location, feature_type=self.FEATURE_TYPE, child_collections=children)
         self._subregions = subregions
