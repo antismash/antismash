@@ -228,7 +228,7 @@ def rotate(record: Record, cut_point: int, padding: int = 0) -> None:
     new_seq = seq[cut_point:] + Seq("A" * padding) + seq[:cut_point]
     assert len(new_seq) == len(seq) + padding
 
-    for feature in record.get_all_features():
+    for feature in record.all_features:
         if feature.type == "source":
             feature.location = FeatureLocation(
                 feature.location.start,
