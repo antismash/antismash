@@ -314,6 +314,17 @@ class TestRecord(unittest.TestCase):
         # ok, since ends aren't inclusive
         record.add_region(Region(subregions=[SubRegion(FeatureLocation(0, 10), "test")]))
 
+    def test_cds_caching(self):
+        record = Record("A" * 100)
+        record.add_cds_feature(DummyCDS(10, 40, strand=1))
+        original = record.get_cds_features()
+        assert len(original) == 1
+        assert record.get_cds_features() is original  # same object, since no change
+        record.add_cds_feature(DummyCDS(110, 140, strand=-1))
+        updated = record.get_cds_features()
+        assert len(updated) == 2
+        assert updated is not original
+
     def test_cds_protocluster_linkage(self):
         record = Record("A"*200)
         for start, end in [(50, 100), (10, 90), (0, 9), (150, 200)]:
