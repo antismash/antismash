@@ -1019,7 +1019,8 @@ class Record:
         if not self._protoclusters:
             return 0
 
-        candidate_clusters = create_candidates_from_protoclusters(self._protoclusters)
+        wrap_point = len(self) if self.is_circular() else None
+        candidate_clusters = create_candidates_from_protoclusters(self._protoclusters, circular_wrap_point=wrap_point)
 
         for candidate_cluster in sorted(candidate_clusters):
             self.add_candidate_cluster(candidate_cluster)
@@ -1047,42 +1048,50 @@ class Record:
         areas.extend(subregions)
         areas.sort()
 
-        region_location = FeatureLocation(max(0, areas[0].location.start),
-                                          min(areas[0].location.end, len(self)))
+        wrap_point = len(self) if self.is_circular() else None
 
-        candidates = []
-        subs = []
-        if isinstance(areas[0], CandidateCluster):
-            candidates.append(areas[0])
-        else:
-            assert isinstance(areas[0], SubRegion), type(areas[0])
-            subs.append(areas[0])
+        # find all overlapping sets
+        sections: list[tuple[Location, list[CDSCollection]]] = []
 
-        regions_added = 0
+        location: Location = areas[0].location
+        included_areas = [areas[0]]
+
         for area in areas[1:]:
-            if area.overlaps_with(region_location):
-                region_location = connect_locations([area.location, region_location])
+            if not area.overlaps_with(location):
+                sections.append((location, included_areas))
+                location = area.location
+                included_areas = [area]
+            else:
+                location = connect_locations([area.location, location], wrap_point=wrap_point)
+                included_areas.append(area)
+
+        # finalise the last, unterminated section
+        sections.append((location, included_areas))
+
+        # then handle any cases over cross-origin overlap of sections by merging first and last
+        if len(sections) > 1:
+            first_location, first_areas = sections[0]
+            last_location, last_areas = sections[-1]
+            if locations_overlap(first_location, last_location):
+                sections.pop()
+                location = connect_locations([first_location, last_location], wrap_point=wrap_point)
+                for area in last_areas:
+                    if area not in first_areas:
+                        first_areas.append(area)
+                sections[0] = (location, first_areas)
+
+        # finally, create and add a region for each section
+        regions_added = len(sections)
+        for _, areas in sections:
+            candidates = []
+            subs = []
+            for area in areas:
                 if isinstance(area, CandidateCluster):
                     candidates.append(area)
                 else:
                     assert isinstance(area, SubRegion), type(area)
                     subs.append(area)
-                continue
-            # no overlap means new region
             self.add_region(Region(candidates, subs))
-            regions_added += 1
-            region_location = area.location
-            candidates = []
-            subs = []
-            if isinstance(area, CandidateCluster):
-                candidates.append(area)
-            else:
-                assert isinstance(area, SubRegion), type(area)
-                subs.append(area)
-
-        # add the final region being built
-        self.add_region(Region(candidates, subs))
-        regions_added += 1
 
         return regions_added
 

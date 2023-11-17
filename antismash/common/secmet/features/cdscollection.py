@@ -34,8 +34,16 @@ class CDSCollection(Feature):
                  "_cds_cache", "_cds_cache_dirty",
                  ]
 
-    def __init__(self, location: FeatureLocation, feature_type: str,
+    def __init__(self, location: Location, feature_type: str,
                  child_collections: Sequence["CDSCollection"] = None) -> None:
+        # it's fine to have two parts if crossing the origin
+        if len(location.parts) > 1:
+            # but it must only be the two halves, more indicates a problem of some kind
+            assert len(location.parts) == 2, location
+            # and the second half must be the one that starts at the origin itself
+            if location.parts[1].start != 0:
+                raise ValueError("Collections cannot have compound locations without crossing the origin")
+        assert len(set(part.strand for part in location.parts)) == 1, f"mixed strands for collection: {location=}"
         super().__init__(location, feature_type, created_by_antismash=True)
         if len(location.parts) > 1 and location.strand != 1:
             raise ValueError("CDS collections spanning the origin must be in the forward strand")
@@ -89,6 +97,10 @@ class CDSCollection(Feature):
         """ Sets the parent record to a secmet.Record instance """
         self._parent_record = record
         self._contig_edge = self.location.start == 0 or self.location.end >= len(record.seq)
+        if self._children:
+            for child in self._children:
+                if not child.parent_record:
+                    child.parent_record = record
 
     def get_root(self) -> "CDSCollection":
         """ Returns the highest level CDSCollection that either contains this
