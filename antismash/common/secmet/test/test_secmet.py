@@ -35,6 +35,7 @@ from .helpers import (
     DummyCDSMotif,
     DummyPFAMDomain,
     DummyProtocluster,
+    DummyRecord,
     DummyRegion,
     DummySubRegion,
 )
@@ -970,3 +971,197 @@ def test_naming():
 
     record.id = "other"
     assert record.has_name(long_name)
+
+
+class TestExtension(unittest.TestCase):
+    def setUp(self):
+        self.record = Record("A" * 100)
+        assert not self.record.is_circular()
+
+    def set_circular(self):
+        self.record._record.annotations = {"topology": "circular"}
+        assert self.record.is_circular()
+
+    def test_simple_unbounded(self):
+        for strand in [-1, 0, 1]:
+            location = FeatureLocation(30, 50, strand)
+            for distance in [10, 15]:
+                new = self.record.extend_location(location, distance)
+                assert isinstance(new, FeatureLocation)
+                assert new.start == location.start - distance
+                assert new.end == location.end + distance
+                assert new.strand == location.strand
+                # ensure the original wasn't changed
+                assert new.parts is not location.parts
+
+    def test_simple_underflow(self):
+        location = FeatureLocation(10, 30, 1)
+        distance = 20
+        new = self.record.extend_location(location, distance)
+        assert isinstance(new, FeatureLocation)
+        assert new.start == 0
+        assert new.end == location.end + distance
+        assert new.strand == location.strand
+
+        self.set_circular()
+        assert self.record.is_circular()
+
+        new = self.record.extend_location(location, distance)
+        assert isinstance(new, CompoundLocation)
+        assert new.start == 0
+        assert new.end == len(self.record)
+        assert new.strand == location.strand
+        assert new.parts == [
+            FeatureLocation(90, new.end, 1),
+            FeatureLocation(0, location.end + distance, 1)
+        ]
+        # and ensure the original wasn't changed
+        assert new.parts is not location.parts
+
+    def test_simple_overflow(self):
+        location = FeatureLocation(60, 90, 1)
+        distance = 20
+        new = self.record.extend_location(location, distance)
+        assert isinstance(new, FeatureLocation)
+        assert new.start == location.start - distance
+        assert new.end == len(self.record)
+        assert new.strand == location.strand
+
+        self.set_circular()
+        assert self.record.is_circular()
+
+        new = self.record.extend_location(location, distance)
+        assert isinstance(new, CompoundLocation)
+        assert new.start == 0
+        assert new.end == len(self.record)
+        assert new.strand == location.strand
+        assert new.parts == [
+            FeatureLocation(location.start - distance, new.end, 1),
+            FeatureLocation(0, (location.end + distance) % len(self.record), 1)
+        ]
+
+    def test_simple_too_long(self):
+        location = FeatureLocation(40, 60, 1)
+        distance = 200  # longer than the record itself should be fine
+        new = self.record.extend_location(location, distance)
+        assert new.start == 0
+        assert new.end == 100
+
+    def test_compound_unbounded(self):
+        for strand in [-1, 0, 1]:
+            initial_parts = [
+                FeatureLocation(20, 40, strand),
+                FeatureLocation(60, 80, strand),
+            ]
+            if strand == -1:
+                location = CompoundLocation(initial_parts[::-1])
+            else:
+                location = CompoundLocation(initial_parts)
+            for distance in [10, 15]:
+                new = self.record.extend_location(location, distance)
+                assert isinstance(new, CompoundLocation)
+                assert new.start == location.start - distance
+                assert new.end == location.end + distance
+                assert new.strand == location.strand
+                assert len(new.parts) == len(location.parts)
+                parts = sorted(location.parts, key=lambda x: x.start)
+                assert parts[0].end == parts[0].end
+                assert parts[1].start == parts[1].start
+                # ensure the original wasn't changed
+                assert parts is not location.parts
+
+    def test_compound_underflow(self):
+        location = CompoundLocation([
+            FeatureLocation(10, 30, 1),
+            FeatureLocation(40, 60, 1),
+        ])
+        distance = 20
+        new = self.record.extend_location(location, distance)
+        assert isinstance(new, CompoundLocation)
+        assert new.start == 0
+        assert new.end == location.end + distance
+        assert new.strand == location.strand
+        assert new.parts is not location.parts
+        assert new.parts[0].end == location.parts[0].end
+        assert new.parts[1].start == location.parts[1].start
+
+        self.set_circular()
+        assert self.record.is_circular()
+
+        new = self.record.extend_location(location, distance)
+        assert isinstance(new, CompoundLocation)
+        assert new.start == 0
+        assert new.end == len(self.record)
+        assert new.strand == location.strand
+        assert new.parts == [
+            FeatureLocation(90, new.end, 1),
+            FeatureLocation(0, location.parts[0].end, 1),
+            FeatureLocation(location.parts[-1].start, location.end + distance, 1),
+        ]
+        assert new.parts is not location.parts
+
+    def test_compound_overflow(self):
+        location = CompoundLocation([
+            FeatureLocation(40, 60, 1),
+            FeatureLocation(70, 90, 1),
+        ])
+        distance = 20
+        new = self.record.extend_location(location, distance)
+        assert isinstance(new, CompoundLocation)
+        assert new.start == location.start - distance
+        assert new.end == len(self.record)
+        assert new.strand == location.strand
+        assert new.parts is not location.parts
+        assert new.parts[0].end == location.parts[0].end
+        assert new.parts[1].start == location.parts[1].start
+
+        self.set_circular()
+        assert self.record.is_circular()
+
+        new = self.record.extend_location(location, distance)
+        assert isinstance(new, CompoundLocation)
+        assert new.start == 0
+        assert new.end == len(self.record)
+        assert new.strand == location.strand
+        assert new.parts == [
+            FeatureLocation(20, location.parts[0].end, 1),
+            FeatureLocation(location.parts[-1].start, new.end, 1),
+            FeatureLocation(0, 10, 1),
+        ]
+        assert new.parts is not location.parts
+
+    def test_compound_too_long_linear(self):
+        location = CompoundLocation([
+            FeatureLocation(20, 30, 1),
+            FeatureLocation(40, 50, 1),
+            FeatureLocation(60, 70, 1),
+        ])
+        distance = 200  # longer than the record
+        new = self.record.extend_location(location, distance)
+        # while they should extend to both edges, they shouldn't merge because they don't wrap
+        assert new.parts[0].start == 0 and new.parts[0].end == 30
+        assert new.parts[1] == location.parts[1]
+        assert new.parts[2].start == 60 and new.parts[2].end == 100
+
+    def test_compound_too_long_circular(self):
+        location = CompoundLocation([
+            FeatureLocation(20, 30, 1),
+            FeatureLocation(40, 50, 1),
+            FeatureLocation(60, 70, 1),
+        ])
+        distance = 100  # long enough for the extension to wrap and cover the disjoint areas in the middle
+        self.set_circular()
+        new = self.record.extend_location(location, distance)
+        assert new.start == 0
+        assert new.end == 100
+        # and since it's connecting parts now, they should be joined
+        assert len(new.parts) == 1
+
+    def test_real(self):
+        record = DummyRecord(seq="A"*212)
+        location = CompoundLocation([
+            FeatureLocation(112, 212, 1),
+            FeatureLocation(0, 105, 1),
+        ])
+        result = record.extend_location(location, 100)
+        assert result == FeatureLocation(0, 212, 1)
