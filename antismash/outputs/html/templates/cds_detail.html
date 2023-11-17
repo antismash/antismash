@@ -18,8 +18,8 @@
  {%- if ec_numbers -%}
   EC-Number(s): {{ec_numbers}}<br>
  {%- endif -%}
- Location: {{ "{:,d}".format(feature.location.start + 1) }} - {{ "{:,d}".format(feature.location.end) }},
- (total: {{feature.location | length}} nt{%- if (feature.location.parts | length) > 1 -%} , excluding introns{%- endif -%} )<br>
+ Location: {{ "{:,d}".format(feature.start + 1) }} - {{ "{:,d}".format(feature.end) }},
+ (total: {{feature.location | length}} nt{%- if (feature.location.parts | length) > 1 -%}, excluding introns{%- endif -%})<br>
  <br>
  {%- for gene_function in feature.gene_functions -%}
   {{ gene_function }}<br>

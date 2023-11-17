@@ -9,6 +9,14 @@
         fill: $bg;
         stroke: $highlight;
     }
+    @at-root .cluster-bar-extension#{&} {
+        fill: $bg;
+    }
+    /* ensure the cross-origin region indicators in the overview are coloured to match */
+    @at-root path#{&} {
+        fill: $bg;
+        stroke: $highlight;
+    }
     &.active {
         border-color: $highlight;
         border-width: 2px;
