@@ -747,8 +747,6 @@ def ensure_valid_locations(features: List[SeqFeature], can_be_circular: bool, se
             standard += 1
 
     if can_be_circular:
-        if non_standard > 2:  # allowing for a cross origin CDS and its containing gene
-            raise ValueError("inconsistent exon ordering for features")
         return
 
     if standard and non_standard:
