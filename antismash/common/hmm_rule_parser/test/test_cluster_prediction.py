@@ -9,10 +9,10 @@ import unittest
 from unittest.mock import patch
 
 from antismash.common.hmm_rule_parser import cluster_prediction, rule_parser, structures
-from antismash.common.secmet.features import Protocluster, FeatureLocation
+from antismash.common.secmet.features import Protocluster
+from antismash.common.secmet.locations import CompoundLocation, FeatureLocation
 from antismash.common.secmet.qualifiers.gene_functions import GeneFunction
-from antismash.common.secmet.test.helpers import DummyProtocluster
-from antismash.common.test.helpers import DummyRecord, DummyCDS, FakeHSPHit
+from antismash.common.test.helpers import DummyRecord, DummyCDS, DummyProtocluster, FakeHSPHit
 
 from .helpers import create_ruleset
 
@@ -158,12 +158,45 @@ class TestDynamic(unittest.TestCase):
         assert cdses[0].sec_met.domains[0].name == "a_finder"
 
 
+class TestRecordContainment(unittest.TestCase):
+    def test_neighbourhood(self):
+        simple_hits = {"cds_name": [structures.DynamicHit("cds_name", "profile")]}
+        profile = structures.DynamicProfile("profile", "desc", lambda record, _: simple_hits)
+
+        cds = DummyCDS(locus_tag="cds_name", start=10, end=24)
+        record = DummyRecord(seq="A" * 30, features=[cds])
+
+        rule_text = "RULE A CATEGORY Cat CUTOFF 10 NEIGHBOURHOOD 5 CONDITIONS profile"
+        rules = rule_parser.Parser(rule_text, {"profile"}, {"Cat"}).rules
+        rules[0].neighbourhood = 8  # not KB, just bases, and enough to extend over the end
+        ruleset = create_ruleset(tuple(rules), dynamic_profiles={"profile": profile})
+
+        results = cluster_prediction.detect_protoclusters_and_signatures(record, ruleset)
+        assert results.protoclusters
+        for protocluster in results.protoclusters:
+            assert protocluster.location.start == 2
+            assert protocluster.location.end == len(record)
+            assert protocluster.core_location == cds.location
+
+        record.make_circular()
+
+        results = cluster_prediction.detect_protoclusters_and_signatures(record, ruleset)
+        assert results.protoclusters
+        for protocluster in results.protoclusters:
+            assert len(protocluster.location.parts) == 2
+            assert protocluster.location.parts[0].start == 2
+            assert protocluster.location.parts[0].end == len(record)
+            assert protocluster.location.parts[1].start == 0
+            assert protocluster.location.parts[1].end == 2
+            assert protocluster.core_location == cds.location
+
+
 class TestMultipliers(unittest.TestCase):
     def test_create_rules(self):
         text = "RULE A CATEGORY Cat CUTOFF 10 NEIGHBOURHOOD 5 CONDITIONS A"
         # with default multipliers
         with patch("builtins.open", unittest.mock.mock_open(read_data=text)):
-            rule = cluster_prediction.create_rules(["dummy.file"], {"A"}, {"Cat"})[0]
+            rule = cluster_prediction.create_rules(["dummy.file"], {"A"}, {"Cat"}, {})[0]
         assert rule.cutoff == 10_000
         assert rule.neighbourhood == 5_000
 
@@ -225,3 +258,195 @@ class TestDomainAnnotations(unittest.TestCase):
         assert len(cds_b.gene_functions) == 1
         assert not cds_b.gene_functions.get_by_function(GeneFunction.CORE)
         assert cds_b.gene_functions.get_by_function(GeneFunction.ADDITIONAL)
+
+
+class TestCircularity(unittest.TestCase):
+    def setUp(self):
+        text = (
+            "RULE A CATEGORY Cat CUTOFF 1 NEIGHBOURHOOD 1 CONDITIONS profA and profB "
+            "RULE B CATEGORY Cat CUTOFF 0 NEIGHBOURHOOD 0 CONDITIONS profC "
+        )
+        rules = rule_parser.Parser(text, {"profA", "profB", "profC"}, {"Cat"}).rules
+        self.rules = {rule.name: rule for rule in rules}
+        self.rule = rules[0]
+        self.rules["A"].neighbourhood = 100  # the sequence can then be much smaller
+        self.rules["A"].cutoff = 100
+        self.hits = {"A": {"left_core", "right_core"}, "B": {"left_distant", "right_distant"}}
+        self.find_func = cluster_prediction.find_protoclusters
+        cdses = [
+            DummyCDS(90, 93, 1, locus_tag="left_distant"),
+            DummyCDS(195, 198, 1, locus_tag="left_neighbour"),
+            DummyCDS(200, 206, 1, locus_tag="left_core"),
+            DummyCDS(212, 215, 1, locus_tag="right_core"),
+            DummyCDS(220, 223, 1, locus_tag="right_neighbour"),
+            DummyCDS(350, 356, 1, locus_tag="right_distant"),
+        ]
+        self.length = 800
+        self.cdses = {cds.locus_tag: cds for cds in cdses}
+        self.record = DummyRecord(features=list(self.cdses.values()), seq="A" * self.length, circular=True)
+
+    def check(self):
+        assert self.record.is_circular()
+        results = self.find_func(self.record, self.hits, self.rules, {}, {})
+        assert len(results) == 3
+
+        proto = [p for p in results if p.product == "A"][0]
+        print(proto, proto.core_location)
+        # the "distant" CDSes shouldn't be included
+        included = sorted(self.record.get_cds_features_within_location(proto.location))
+        expected = sorted(cds for cds in self.cdses.values() if "distant" not in cds.get_name())
+        assert included == expected
+
+        # the core location should match the core genes only
+        cores = [cds.get_name() for cds in self.record.get_cds_features_within_location(proto.core_location,
+                                                                                        with_overlapping=False)]
+        assert cores == ["left_core", "right_core"]
+        assert 1 <= len(proto.core_location.parts) <= 2
+        assert proto.core_location.parts[0].start == self.cdses["left_core"].location.parts[0].start
+        assert proto.core_location.parts[-1].end == self.cdses["right_core"].location.parts[-1].end
+
+        # the neighbourhood should match the extension of the core
+        assert str(proto.location) == str(self.record.extend_location(proto.core_location, self.rule.neighbourhood))
+
+        # the neighbourhood must have multiple parts if the core does, but may have an extra
+        assert len(proto.location.parts) >= len(proto.core_location.parts)
+
+        return proto
+
+    def test_merging_uses_first_and_last(self):
+        # unlike linear merges, the circular needs to check the first and last
+        # to see if they're close enough over the origin, but if the first and
+        # last aren't correctly selected for distance checks, then the merge
+        # will do very bad things
+        cdses = []
+        locations = [FeatureLocation(start, end, 1) for start, end in [
+            (3091, 3092), (3105, 3111), (6882, 6885), (6887, 6889)
+        ]]
+        cdses = [DummyCDS(location.start, location.end) for location in locations]
+        record = DummyRecord(seq="A", features=cdses, circular=True)
+        hits = {"A": set(cds.get_name() for cds in cdses)}
+        self.rules["A"].cutoff = 20
+        self.rules["A"].neighbourhood = 0
+        with patch.object(DummyRecord, "__len__", return_value=7663):
+            results = self.find_func(record, hits, self.rules, {}, {})
+        # both first two and last two should have been merged
+        assert len(results) == len(cdses) - 2
+        assert results[0].location == FeatureLocation(locations[0].start, locations[1].end, 1)
+        assert results[1].location == FeatureLocation(locations[2].start, locations[3].end, 1)
+
+    def test_without_crossing_origin(self):
+        proto = self.check()
+        assert len(proto.location.parts) == 1
+
+    def test_crossing_origin_between_cores(self):
+        self.record.rotate(209)
+        assert self.cdses["left_core"] > self.cdses["right_core"]
+        proto = self.check()
+        assert len(proto.core_location.parts) == 2
+        assert len(proto.location.parts) == 2
+
+    def test_left_neighbourhood_beyond_origin(self):
+        self.record.rotate(199)
+        assert self.cdses["left_neighbour"] > self.cdses["left_core"]
+        proto = self.check()
+        assert len(proto.core_location.parts) == 1
+        assert len(proto.location.parts) == 2
+
+    def test_right_neighbourhood_beyond_origin(self):
+        self.record.rotate(216)
+        assert self.cdses["left_neighbour"] > self.cdses["right_neighbour"]
+        proto = self.check()
+        assert len(proto.core_location.parts) == 1
+        assert len(proto.location.parts) == 2
+
+    def test_splitting_core_gene(self):
+        for target in ["left_core", "right_core"]:
+            location = self.cdses[target].location
+            self.record.rotate((location.start + location.end) // 2)
+            assert len(self.cdses[target].location.parts) > 1
+            proto = self.check()
+            assert len(proto.core_location.parts) == 2
+            assert len(proto.location.parts) == 2
+
+    def test_overlapping_cores_at_origin(self):
+        self.record = DummyRecord(length=7663439, circular=True)
+        cores = [
+            DummyCDS(start=7633885, end=7644192, strand=1, locus_tag="pre_origin"),
+            DummyCDS(location=CompoundLocation([
+                FeatureLocation(7644229, len(self.record), 1),
+                FeatureLocation(0, 19, 1),
+            ]), locus_tag="mostly_pre_origin"),
+            DummyCDS(location=CompoundLocation([
+                FeatureLocation(7663427, len(self.record), 1),
+                FeatureLocation(0, 9008, 1),
+            ]), locus_tag="mostly_post_origin"),
+        ]
+        self.cdses = {cds.get_name(): cds for cds in cores}
+        self.cdses["unrelated"] = DummyCDS(location=FeatureLocation(2100, 21000, 1), locus_tag="unrelated")
+        for cds in self.cdses.values():
+            self.record.add_cds_feature(cds)
+        self.hits = {"A": set(core.get_name() for core in cores)}
+        self.rules["A"].cutoff = 100
+        protos = self.find_func(self.record, self.hits, self.rules, {}, {})
+        assert len(protos) == 1
+        proto = protos[0]
+        assert proto.core_location == CompoundLocation([
+            FeatureLocation(cores[0].start, len(self.record), 1),
+            FeatureLocation(0, cores[-1].end, 1),
+        ])
+        for cds in self.cdses.values():
+            if cds.get_name() == "unrelated":
+                assert not cds.is_contained_by(proto.core_location)
+            else:
+                assert cds.is_contained_by(proto.core_location)
+
+
+class TestLocationExtension(unittest.TestCase):
+    def setUp(self):
+        self.func = cluster_prediction._extend_area_location
+        self.record = DummyRecord(seq="A" * 100)
+
+    def test_overlapping_wraparound(self):
+        expected = FeatureLocation(0, len(self.record), 1)
+        result = self.func(FeatureLocation(28, 70, 1), 40, self.record)
+        assert result == expected, f"{str(result)=} != {str(expected)=}"
+
+    def test_strands_forward(self):
+        expected = FeatureLocation(40, 70, 1)
+        result = self.func(FeatureLocation(50, 60, -1), 10, self.record)
+        assert expected == result
+
+    def test_trivial(self):
+        assert not self.record.is_circular()
+        location = FeatureLocation(50, 60, 1)
+        distance = 30
+        result = self.func(location, distance, self.record)
+        assert len(result.parts) == len(location.parts)
+        assert result.start == location.start - distance
+        assert result.end == location.end + distance
+        assert len(result) == len(location) + distance * 2
+
+    def test_non_circular_compound(self):
+        assert not self.record.is_circular()
+        parts = [
+            FeatureLocation(20, 30, 1),
+            FeatureLocation(50, 60, 1),
+        ]
+        location = CompoundLocation(parts)
+        with self.assertRaisesRegex(ValueError, "too many sub-locations"):
+            self.func(location, 10, self.record)
+
+    def test_forward_crossing(self):
+        self.record.make_circular()
+        parts = [
+            FeatureLocation(50, 100, 1),
+            FeatureLocation(0, 30, 1),
+        ]
+        location = CompoundLocation(parts)
+        distance = 5
+        result = self.func(location, distance, self.record)
+        assert len(result) == len(location) + distance * 2
+        assert result.parts[0].start == parts[0].start - distance
+        assert result.parts[0].end == parts[0].end == len(self.record)
+        assert result.parts[1].start == parts[1].start == 0
+        assert result.parts[1].end == parts[1].end + distance
