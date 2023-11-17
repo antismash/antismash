@@ -60,7 +60,6 @@ from .locations import (
     FeatureLocation,
     Location,
     connect_locations,
-    split_origin_bridging_location,
     get_distance_between_locations,
     location_bridges_origin,
     locations_overlap,
@@ -831,64 +830,10 @@ class Record:
                 feature.ref = None
                 feature.ref_db = None
 
-            locations_adjusted = False
-            name_modified = False
-
             # prefilter some NCBI Pfam hits locations that are generated poorly
             if all([can_be_circular, feature.type == "misc_feature",
                     location_bridges_origin(feature.location, allow_reversing=False)]):
                 feature.location = remove_redundant_exons(feature.location)
-
-            if can_be_circular and location_bridges_origin(feature.location, allow_reversing=False):
-                locations_adjusted = True
-                original_location = feature.location
-                try:
-                    lower, upper = split_origin_bridging_location(feature.location)
-                except ValueError as err:
-                    raise SecmetInvalidInputError(str(err)) from err
-
-                if feature.type in ['CDS', 'gene']:
-                    name_modified = True
-                    original_gene_name = feature.qualifiers.get("gene", [None])[0]
-                    gene_name = original_gene_name
-                    locus_tag = feature.qualifiers.get("locus_tag", [None])[0]
-                    # if neither exist, set the gene name as it is less precise
-                    # in meaning
-                    if not gene_name and not locus_tag:
-                        gene_name = "bridge"
-
-                # nuke any translation, since it's now out of date
-                feature.qualifiers.pop('translation', None)
-
-                # add a separate feature for the upper section
-                if len(upper) > 1:
-                    feature.location = CompoundLocation(upper, original_location.operator)
-                else:
-                    feature.location = upper[0]
-                if name_modified:
-                    if gene_name:
-                        feature.qualifiers["gene"] = [gene_name + "_UPPER"]
-                    if locus_tag:
-                        feature.qualifiers["locus_tag"] = [locus_tag + "_UPPER"]
-
-                # since CDSs need translations, skip if too small or not a CDS
-                if feature.type != "CDS" or len(feature) >= 3:
-                    try:
-                        record.add_biopython_feature(feature)
-                    except ValueError as err:
-                        if feature.type not in ANTISMASH_SPECIFIC_TYPES or not discard_antismash_features:
-                            raise SecmetInvalidInputError(str(err)) from err
-
-                # adjust the current feature to only be the lower section
-                if len(lower) > 1:
-                    feature.location = CompoundLocation(lower, original_location.operator)
-                else:
-                    feature.location = lower[0]
-                if name_modified:
-                    if gene_name:
-                        feature.qualifiers["gene"] = [gene_name + "_LOWER"]
-                    if locus_tag:
-                        feature.qualifiers["locus_tag"] = [locus_tag + "_LOWER"]
 
             if feature.type in postponed_features:
                 # again, since CDSs need translations, skip if too small or not a CDS
@@ -902,19 +847,6 @@ class Record:
                 except ValueError as err:
                     if feature.type not in ANTISMASH_SPECIFIC_TYPES or not discard_antismash_features:
                         raise SecmetInvalidInputError(str(err)) from err
-
-            # reset back to how the feature looked originally
-            if locations_adjusted:
-                feature.location = original_location
-                if name_modified:
-                    if not locus_tag:
-                        feature.qualifiers.pop("locus_tag", "")
-                    else:
-                        feature.qualifiers["locus_tag"][0] = locus_tag
-                    if not original_gene_name:
-                        feature.qualifiers.pop("gene", "")
-                    else:
-                        feature.qualifiers["gene"][0] = original_gene_name
 
         for feature_class, features in postponed_features.values():
             for feature in features:
