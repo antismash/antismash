@@ -15,9 +15,11 @@ from antismash.common.all_orfs import (
     scan_orfs,
 )
 from antismash.common.secmet.locations import (
+    CompoundLocation,
     ExactPosition,
     FeatureLocation,
 )
+from antismash.common.secmet.features import SubRegion
 from antismash.common.secmet.test.helpers import DummySubRegion
 
 from .helpers import DummyCDS, DummyRecord
@@ -100,10 +102,14 @@ class TestOrfCounts(unittest.TestCase):
         seq = "".join(["C" * 10, "ATG", "N" * 60, "TAGNNNTAG", "C" * 10])
         area = DummySubRegion(5, len(seq) - 5)
 
+        record = DummyRecord(seq=seq)
+        record.add_subregion(area)
         expected = [FeatureLocation(ExactPosition(10), ExactPosition(76), strand=1)]
         assert expected == [feat.location for feat in find_all_orfs(DummyRecord(seq=seq), area=area)]
 
         seq = str(DummyRecord(seq=seq).seq.reverse_complement())
+        record = DummyRecord(seq=seq)
+        record.add_subregion(area)
         expected = [FeatureLocation(ExactPosition(16), ExactPosition(82), strand=-1)]
         assert expected == [feat.location for feat in find_all_orfs(DummyRecord(seq=seq), area=area)]
 
@@ -122,6 +128,29 @@ class TestOrfCounts(unittest.TestCase):
         result = scan_orfs("".join(seq), direction=1)
         assert sorted([orf.start for orf in result]) == starts
         assert len(result) == 4
+
+    def test_over_origin_with_area(self):
+        gap = "N" * 3  # otherwise different frames will be involved and nothing will be found
+        seq = f"{gap * 5}ATG{gap * 7}TAG{gap * 5}"
+        record = DummyRecord(seq=seq)
+        record.rotate(20)
+        assert record.is_circular()
+        location = CompoundLocation([FeatureLocation(len(seq) - 30, len(seq), 1), FeatureLocation(0, 30, 1)])
+        area = SubRegion(location, tool="test")
+        record.add_subregion(area)
+        # check the sequence extracted in the area is legitimate on its own
+        area_seq = area.location.extract(record.seq)
+        assert area_seq == "NNNNNNNNNNNNNNNNNNNNNNNNNATGNNNNNNNNNNNNNNNNNNNNNTAGNNNNNNNN"
+        found_start = area_seq.find("ATG")
+        found_end = area_seq.find("TAG")
+        assert 0 <= found_start < found_end <= len(record)
+        assert (found_end - found_start) % 3 == 0, "not in the same frame"
+        # then check the full finding method
+        features = find_all_orfs(record, area, min_length=20)
+        assert len(features) == 1
+        expected_loc = CompoundLocation([FeatureLocation(52, 57, 1), FeatureLocation(0, 22, 1)])
+        assert features[0].location == expected_loc
+        assert features[0].get_name() == "allorf_53_22"  # starts are 1-indexed
 
 
 class TestIntegenic(unittest.TestCase):
