@@ -12,10 +12,10 @@ from Bio.Seq import Seq
 
 from antismash.common.secmet.locations import (
     convert_protein_position_to_dna,
-    location_bridges_origin,
     location_contains_other,
     location_from_biopython,
     locations_overlap,
+    split_origin_bridging_location,
 )
 
 from ..locations import (
@@ -41,8 +41,6 @@ class Feature:
     def __init__(self, location: Location, feature_type: str,
                  created_by_antismash: bool = False) -> None:
         assert isinstance(location, (FeatureLocation, CompoundLocation)), type(location)
-        if location_bridges_origin(location):
-            raise ValueError(f"Features that bridge the record origin cannot be directly created: {location}")
         if location.contains_overlapping_exons():
             raise ValueError(f"location contains overlapping exons: {location}")
         assert location.start <= location.end, f"Feature location invalid: {location}"
@@ -56,6 +54,22 @@ class Feature:
         self._qualifiers: Dict[str, Optional[List[str]]] = OrderedDict()
         self.created_by_antismash = bool(created_by_antismash)
         self._original_codon_start: Optional[int] = None
+
+    @property
+    def start(self) -> int:
+        """ The coordinate of the start of the feature.
+
+            NOTE: differs from the location.start, as that is the minimum coordinate
+        """
+        return self.location.parts[0].start if self.location.strand != -1 else self.location.parts[-1].start
+
+    @property
+    def end(self) -> int:
+        """ The coordinate of the end of the feature.
+
+            NOTE: differs from the location.end, as that is the maximum coordinate
+        """
+        return self.location.parts[-1].end if self.location.strand != -1 else self.location.parts[0].end
 
     @property
     def strand(self) -> int:
@@ -185,6 +199,10 @@ class Feature:
         if isinstance(other, (CompoundLocation, FeatureLocation)):
             return location_contains_other(other, self.location)
         raise TypeError(f"Container must be a Feature, CompoundLocation or FeatureLocation, not {type(other)}")
+
+    def crosses_origin(self) -> bool:
+        """ Returns True if the feature crosses the origin """
+        return self.location.crosses_origin()
 
     def to_biopython(self, qualifiers: Dict[str, Any] = None) -> List[SeqFeature]:
         """ Converts this feature into one or more SeqFeature instances.
