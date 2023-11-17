@@ -173,6 +173,32 @@ class TestFeature(unittest.TestCase):
             Feature(loc, feature_type="")
 
 
+class TestSimpleCoordinates(unittest.TestCase):
+    def test_simple_location(self):
+        for strand in [1, None, -1]:
+            feature = Feature(FeatureLocation(5, 10, strand), "test")
+            assert feature.start == 5
+            assert feature.end == 10
+
+    def test_compound_location(self):
+        for strand in [1, None, -1]:
+            parts = [FeatureLocation(5, 10, strand), FeatureLocation(15, 20, strand)]
+            if strand is not None:
+                parts = parts[::strand]
+            feature = Feature(CompoundLocation(parts), "test")
+            assert feature.start == 5
+            assert feature.end == 20
+
+    def test_cross_origin_location(self):
+        for strand in [1, None, -1]:
+            parts = [FeatureLocation(80, 100, strand), FeatureLocation(5, 20, strand)]
+            if strand is not None:
+                parts = parts[::strand]
+            feature = Feature(CompoundLocation(parts), "test")
+            assert feature.start == 80
+            assert feature.end == 20
+
+
 class TestSubLocation(unittest.TestCase):
     def setUp(self):
         self.feature = Feature(FeatureLocation(10, 40, 1), feature_type="test")
