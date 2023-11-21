@@ -10,7 +10,6 @@ from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar
 from Bio.Data import CodonTable, IUPACData
 from Bio.SeqFeature import SeqFeature
 
-import antismash  # for use in referring to Regions, which import this module
 from antismash.common.secmet.qualifiers import (
     GeneFunction,
     GeneFunctionAnnotations,
@@ -28,6 +27,7 @@ from ..locations import (
 )
 from .feature import Feature, pop_locus_qualifier
 from .module import Module
+from .abstract import AbstractRegion  # not the concrete class, because that's a circular dependency
 
 _VALID_TRANSLATION_CHARS = set(IUPACData.extended_protein_letters)
 T = TypeVar("T", bound="CDSFeature")
@@ -170,7 +170,7 @@ class CDSFeature(Feature):
         self.motifs: List[CDSMotif] = []
 
         # runtime-only data
-        self.region: Optional[antismash.common.secmet.features.Region] = None
+        self.region: Optional[AbstractRegion] = None
         self.unique_id: Optional[str] = None  # set only when added to a record
 
     @property
