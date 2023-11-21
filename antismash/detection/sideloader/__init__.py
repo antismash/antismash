@@ -41,8 +41,6 @@ def _parse_arg(option: str) -> SideloadSimple:
         end = int(positions[1])
     except ValueError:
         raise ValueError("positions are not numeric")
-    if start >= end:
-        raise ValueError("start must be before end")
     return SideloadSimple(parts[0], start, end)
 
 

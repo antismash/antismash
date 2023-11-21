@@ -9,7 +9,7 @@ from typing import List, Optional
 
 from antismash.common import path
 from antismash.common.errors import AntismashInputError
-from antismash.common.secmet import FeatureLocation, Record
+from antismash.common.secmet import Record
 
 from .data_structures import (
     ProtoclusterAnnotation,
@@ -42,6 +42,7 @@ def load_single_record_annotations(annotation_files: List[str], record: Record,
     """
     subregions: List[SubRegionAnnotation] = []
     protoclusters: List[ProtoclusterAnnotation] = []
+    circular_origin = len(record) if record.is_circular() else None
     for annotations_file in annotation_files:
         raw = load_validated_json(annotations_file, _SCHEMA_FILE)
         tool = Tool.from_json(raw["tool"])
@@ -51,18 +52,20 @@ def load_single_record_annotations(annotation_files: List[str], record: Record,
                 continue
             for area in json_record.get("subregions", []):
                 try:
-                    subregions.append(SubRegionAnnotation.from_schema_json(area, tool))
+                    subregions.append(SubRegionAnnotation.from_schema_json(area, tool, circular_origin=circular_origin))
                 except ValueError as err:
                     raise AntismashInputError(f"sideloaded subregion invalid: {err}")
             for area in json_record.get("protoclusters", []):
                 try:
-                    protoclusters.append(ProtoclusterAnnotation.from_schema_json(area, tool))
+                    loaded = ProtoclusterAnnotation.from_schema_json(area, tool, circular_origin=circular_origin)
+                    protoclusters.append(loaded)
                 except ValueError as err:
                     raise AntismashInputError(f"sideloaded protocluster invalid: {err}")
 
     tool = Tool("manual", "N/A", "command line argument", {})
     if manual and record.has_name(manual.accession):
-        subregion = SubRegionAnnotation(manual.start, min(manual.end, len(record.seq)), "", tool, {})
+        subregion = SubRegionAnnotation(manual.start, min(manual.end, len(record.seq)), "", tool, {},
+                                        circular_origin=circular_origin)
         subregions.append(subregion)
 
     if cds_markers:
@@ -73,16 +76,22 @@ def load_single_record_annotations(annotation_files: List[str], record: Record,
             except KeyError:
                 missing.add(name)
                 continue
-            start = max(cds.location.start - cds_marker_padding, 0)
-            end = min(cds.location.end + cds_marker_padding, len(record.seq))
-            subregion = SubRegionAnnotation(start, end, name, tool, {})
+            start = cds.start - cds_marker_padding
+            end = cds.end + cds_marker_padding
+            if record.is_circular():
+                start = (start + len(record)) % len(record)
+                end %= len(record)
+                subregion = SubRegionAnnotation(start, end, name, tool, {}, circular_origin=len(record))
+            else:
+                start = max(0, start)
+                end = min(end, len(record))
+                subregion = SubRegionAnnotation(start, end, name, tool, {})
             subregions.append(subregion)
         if missing:
             logging.warning("Features named for sideloading are not present in %s: %s", record.id, ", ".join(missing))
 
     for area in itertools.chain(protoclusters, subregions):
-        location = FeatureLocation(area.start, area.end)
-        if not record.get_cds_features_within_location(location):
+        if not record.get_cds_features_within_location(area.build_location()):
             raise AntismashInputError(f"sideloaded area contains no complete CDS features in {record.id}: {area}")
 
     return SideloadedResults(record.id, subregions, protoclusters)
