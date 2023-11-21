@@ -9,6 +9,7 @@ import unittest
 from Bio.Seq import Seq
 
 from antismash.common.errors import AntismashInputError
+from antismash.common.secmet.locations import CompoundLocation, FeatureLocation
 from antismash.common.test.helpers import DummyCDS, DummyRecord
 from antismash.detection.sideloader import general, _parse_arg
 
@@ -30,7 +31,7 @@ class TestSimple(unittest.TestCase):
         assert result.end == 500
 
     def test_bad_args(self):
-        for bad in ["a:a:1-5", ":1-5", "a:1-", "a:1-5-50", "a:", "a:1a-500", "a:50-1"]:
+        for bad in ["a:a:1-5", ":1-5", "a:1-", "a:1-5-50", "a:", "a:1a-500"]:
             with self.assertRaises(ValueError):
                 _parse_arg(bad)
 
@@ -61,7 +62,16 @@ class TestSimple(unittest.TestCase):
         with self.assertRaisesRegex(AntismashInputError, "area contains no complete CDS"):
             general.load_single_record_annotations([], make_record("test"), _parse_arg("test:1-50"))
 
-    def test_cds_marker(self):
+
+class TestCDSMarkers(unittest.TestCase):
+    def expect_single_subregion(self, results, start, end, tool="manual"):
+        assert len(results.subregions) == 1
+        sub = results.subregions[0]
+        assert sub.start == start
+        assert sub.end == end
+        assert sub.tool.name == tool
+
+    def test_simple(self):
         cdses = [DummyCDS(locus_tag="needle", start=20, end=26),
                  DummyCDS(locus_tag="miss", start=90, end=96)]
         record = DummyRecord(seq="A" * 100, features=cdses)
@@ -71,11 +81,19 @@ class TestSimple(unittest.TestCase):
         padding = 50
         result = general.load_single_record_annotations([], record, None, cds_markers=["needle"],
                                                         cds_marker_padding=padding)
-        assert len(result.subregions) == 1
-        sub = result.subregions[0]
-        assert sub.tool.name == "manual"
-        assert sub.start == 0  # shouldn't be negative when padding applied
-        assert sub.end == cdses[0].location.end + padding
+        start = 0  # shouldn't be negative when padding applied
+        self.expect_single_subregion(result, start, cdses[0].location.end + padding)
+
+    def test_cross_origin(self):
+        padding = 20
+        cds = DummyCDS(location=CompoundLocation([
+            FeatureLocation(90, 100, 1),
+            FeatureLocation(0, 20, 1),
+        ]))
+        record = DummyRecord(length=100, features=[cds], circular=True)
+        result = general.load_single_record_annotations([], record, None, cds_markers=[cds.get_name()],
+                                                        cds_marker_padding=padding)
+        self.expect_single_subregion(result, cds.start - padding, cds.end + padding)
 
 
 class TestSingleFile(unittest.TestCase):
