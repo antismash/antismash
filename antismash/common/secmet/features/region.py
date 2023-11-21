@@ -12,6 +12,7 @@ from Bio.SeqFeature import SeqFeature
 from Bio.SeqRecord import SeqRecord
 from helperlibs.bio import seqio
 
+from .abstract import AbstractRegion
 from .cdscollection import CDSCollection, CDSFeature
 from .protocluster import Protocluster, SideloadedProtocluster
 from .feature import Feature, FeatureLocation
@@ -27,7 +28,7 @@ from ..locations import (
 T = TypeVar("T", bound="Region")
 
 
-class Region(CDSCollection):
+class Region(CDSCollection, AbstractRegion):
     """ A feature that represents a region of interest made up of overlapping
         CandidateCluster features and/or SubRegion features.
 
