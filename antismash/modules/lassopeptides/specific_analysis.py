@@ -327,19 +327,19 @@ def acquire_rodeo_heuristics(record: Record, cluster: Protocluster, query: CDSFe
     distance = utils.distance_to_pfam(record, query, hmmer_profiles)
     tabs.append(distance)
     # Within 500 nucleotides of any biosynthetic protein (E, B, C)	+1
-    if distance < 500:
+    if 0 <= distance < 500:
         score += 1
         tabs.append(1)
     else:
         tabs.append(0)
     # Within 150 nucleotides of any biosynthetic protein (E, B, C)	+1
-    if distance < 150:
+    if 0 <= distance < 150:
         score += 1
         tabs.append(1)
     else:
         tabs.append(0)
     # Greater than 1000 nucleotides from every biosynthetic protein (E, B, C)	-2
-    if distance > 1000:
+    if distance > 1000 or distance == -1:
         score -= 2
         tabs.append(1)
     else:
