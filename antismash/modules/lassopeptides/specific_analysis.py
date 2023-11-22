@@ -435,8 +435,8 @@ def acquire_rodeo_heuristics(record: Record, cluster: Protocluster, query: CDSFe
     else:
         tabs.append(0)
     # cluster does not contain PF13471	-2
-    if utils.distance_to_pfam(record, query, ['PF13471']) == -1 or \
-       utils.distance_to_pfam(record, query, ['PF13471']) > 10000:
+    distance = utils.distance_to_pfam(record, query, ['PF13471'])
+    if distance == -1 or distance > 10000:
         score -= 2
     # Peptide utilizes alternate start codon	-1
     if not str(query.extract(record.seq)).startswith("ATG"):
@@ -480,24 +480,12 @@ def generate_rodeo_svm_csv(record: Record, query: CDSFeature, leader: str, core:
     # classification
     columns.append(0)
     columns += previously_gathered_tabs
-    # cluster has PF00733?
-    if utils.distance_to_pfam(record, query, ['PF00733']) == -1 or \
-       utils.distance_to_pfam(record, query, ['PF00733']) > 10000:
-        columns.append(0)
-    else:
-        columns.append(1)
-    # cluster has PF05402?
-    if utils.distance_to_pfam(record, query, ['PF05402']) == -1 or \
-       utils.distance_to_pfam(record, query, ['PF05402']) > 10000:
-        columns.append(0)
-    else:
-        columns.append(1)
-    # cluster has PF13471?
-    if utils.distance_to_pfam(record, query, ['PF13471']) == -1 or \
-       utils.distance_to_pfam(record, query, ['PF13471']) > 10000:
-        columns.append(0)
-    else:
-        columns.append(1)
+    for identifier in ["PF00733", "PF05402", "PF13471"]:
+        distance = utils.distance_to_pfam(record, query, [identifier])
+        if 0 <= distance <= 10000:
+            columns.append(1)
+        else:
+            columns.append(0)
     # Leader has LxxxxxT motif?
     if re.search('(L.....T)', leader):
         columns.append(1)
