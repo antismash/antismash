@@ -461,7 +461,10 @@ class TestDynamicGather(unittest.TestCase):
 
 
 class TestRulesetConstruction(unittest.TestCase):
-    def get_ruleset(self, names=None, categories=None):
+    def tearDown(self):
+        destroy_config()
+
+    def get_ruleset(self, names=None, categories=None, other_args=None):
         if names is None:
             names = set()
         if categories is None:
@@ -471,6 +474,9 @@ class TestRulesetConstruction(unittest.TestCase):
             args.extend(["--hmmdetection-limit-to-rule-names", ",".join(names)])
         if categories:
             args.extend(["--hmmdetection-limit-to-rule-categories", ",".join(categories)])
+        if other_args:
+            args.extend(other_args)
+        destroy_config()
         options = build_config(args, modules=[core])
         assert not core.check_options(options)
         return core.get_ruleset(options)
@@ -501,6 +507,33 @@ class TestRulesetConstruction(unittest.TestCase):
         for rule in ruleset.rules:
             assert rule.category in categories
             assert rule.name in rules
+
+    def test_multipliers_apply(self):
+        def gather_distances(rules):
+            return {rule.name: (rule.cutoff, rule.neighbourhood) for rule in rules}
+        ruleset = self.get_ruleset()
+        # get default values
+        default = gather_distances(ruleset.rules)
+        # test bacteria don't respect fungal multipliers
+        c_multi = 5
+        n_multi = 10
+        ruleset = self.get_ruleset(other_args=[
+            "--hmmdetection-fungal-cutoff-multiplier", str(c_multi),
+            "--hmmdetection-fungal-neighbourhood-multiplier", str(n_multi),
+            "--taxon", "bacteria",
+        ])
+        unmodified = gather_distances(ruleset.rules)
+        assert unmodified == default
+        # then with taxon set
+        ruleset = self.get_ruleset(other_args=[
+            "--hmmdetection-fungal-cutoff-multiplier", str(c_multi),
+            "--hmmdetection-fungal-neighbourhood-multiplier", str(n_multi),
+            "--taxon", "fungi",
+        ])
+        for rule in ruleset.rules:
+            original_cutoff, original_neighbourhood = default[rule.name]
+            assert rule.cutoff == original_cutoff * c_multi
+            assert rule.neighbourhood == original_neighbourhood * n_multi
 
 
 class TestOptions(unittest.TestCase):
