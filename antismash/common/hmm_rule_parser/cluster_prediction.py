@@ -215,6 +215,11 @@ class Ruleset:
             raise ValueError("One of 'filter_file' or 'equivalence_groups' must be provided")
         self._equivalence_groups = tuple(frozenset(group) for group in equivalence_groups)
 
+        # update ranges by provided multipliers
+        for rule in self._rules_by_name.values():
+            rule.cutoff = int(rule.cutoff * self.multipliers.cutoff)
+            rule.neighbourhood = int(rule.neighbourhood * self.multipliers.neighbourhood)
+
     @property
     def rules(self) -> tuple[rule_parser.DetectionRule, ...]:
         """ Returns the rules available within the ruleset """
