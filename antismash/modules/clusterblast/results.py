@@ -70,20 +70,6 @@ class RegionResult:
         assert len(display_ranking) <= display_limit
         self.svg_builder = ClusterSVGBuilder(region, display_ranking, reference_proteins, prefix)
 
-    def update_cluster_descriptions(self, search_type: str) -> None:
-        """ Rebuilds the cluster's result descriptions.
-            For knownclusterblast, this includes the accessions of the hits.
-        """
-        if search_type != "knownclusterblast":  # TODO clean this up
-            setattr(self.region, search_type, self.svg_builder.get_cluster_descriptions())
-            return
-        hits = []
-        for cluster in self.svg_builder.hits:
-            hits.append(KnownHitSummary(cluster.accession, cluster.description,
-                                        cluster.ref_cluster_number,
-                                        cluster.similarity, cluster.cluster_type))
-        self.region.knownclusterblast = hits
-
     def get_best_match(self) -> Optional[KnownHitSummary]:
         """ Returns the single best match from knownclusterblast hits, if any """
         if not self.ranking:
@@ -250,8 +236,7 @@ class GeneralResults(ModuleResults):
         return data
 
     def add_to_record(self, _record: Record) -> None:
-        for cluster_result in self.region_results:
-            cluster_result.update_cluster_descriptions(self.search_type)
+        pass
 
     @staticmethod
     def from_json(json: Dict[str, Any], record: Record) -> "GeneralResults":
