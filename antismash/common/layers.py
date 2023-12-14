@@ -8,7 +8,7 @@
 """
 
 import os
-from typing import Any, List, Optional, Tuple
+from typing import Any, List, Optional
 
 from antismash.config import ConfigType
 from antismash.common.html_renderer import Markup
@@ -95,16 +95,6 @@ class RegionLayer:
         self.handlers: List[AntismashModule] = []
         self.region_feature: Region = region_feature
 
-        self.cluster_blast: List[Tuple[str, str]] = []
-        self.knowncluster_blast: List[Tuple[str, str]] = []
-        self.subcluster_blast: List[Tuple[str, str]] = []
-        if self.region_feature.knownclusterblast:
-            self.knowncluster_blast = self.knowncluster_blast_generator()
-        if self.region_feature.subclusterblast:
-            self.subcluster_blast = self.subcluster_blast_generator()
-        if self.region_feature.clusterblast:
-            self.cluster_blast = self.cluster_blast_generator()
-
         self.find_plugins_for_region()
         self.has_details = self.determine_has_details()
         self.has_sidepanel = self.determine_has_sidepanel()
@@ -163,40 +153,6 @@ class RegionLayer:
             f" (total: {len(self.location):,d} nt)"
         )
         return description_text
-
-    def cluster_blast_generator(self) -> List[Tuple[str, str]]:  # TODO: deduplicate
-        """ Generates the details to use for clusterblast results """
-        assert self.region_feature.clusterblast
-        top_hits = self.region_feature.clusterblast[:self.record.options.cb_nclusters]
-        results = []
-        for i, label in enumerate(top_hits):
-            i += 1  # 1-indexed
-            svg_file = os.path.join("svg", f"clusterblast_{self.build_anchor_id(self.region_feature)}_{i}.svg")
-            results.append((label, svg_file))
-        return results
-
-    def knowncluster_blast_generator(self) -> List[Tuple[str, str]]:
-        """ Generates the details to use for knownclusterblast results """
-        assert self.region_feature.knownclusterblast
-        top_hits = self.region_feature.knownclusterblast[:self.record.options.cb_nclusters]
-        results = []
-        for i, summary in enumerate(top_hits):
-            i += 1  # 1-indexed
-            svg_file = os.path.join("svg", f"knownclusterblast_{self.build_anchor_id(self.region_feature)}_{i}.svg")
-            results.append((summary.name, svg_file))
-        return results
-
-    def subcluster_blast_generator(self) -> List[Tuple[str, str]]:
-        """ Generates the details to use for subclusterblast results """
-        assert self.region_feature.subclusterblast
-        assert self.region_feature.subclusterblast is not None, self.region_feature.location
-        top_hits = self.region_feature.subclusterblast[:self.record.options.cb_nclusters]
-        results = []
-        for i, label in enumerate(top_hits):
-            i += 1  # since one-indexed
-            svg_file = os.path.join("svg", f"subclusterblast_{self.build_anchor_id(self.region_feature)}_{i}.svg")
-            results.append((label, svg_file))
-        return results
 
     def find_plugins_for_region(self) -> List[AntismashModule]:
         "Find a specific plugin responsible for a given Region type"
