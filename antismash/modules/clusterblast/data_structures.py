@@ -60,6 +60,16 @@ class Protein:
         locations = self.location.replace("-", "\t")
         return f"{tag}\t{self.name}\t{locations}\t{self.strand}\t{self.annotations}\n"
 
+    @property
+    def start(self) -> int:
+        """ The start coordinate of the reference gene within the reference area """
+        return int(self.location.split("-")[0])
+
+    @property
+    def end(self) -> int:
+        """ The end coordinate of the reference gene within the reference area """
+        return int(self.location.split("-")[1])
+
 
 class Subject:
     """ Holds details of a subject as reported by BLAST """
