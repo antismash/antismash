@@ -83,6 +83,15 @@ class RegionResult:
                                         cluster.similarity, cluster.cluster_type))
         self.region.knownclusterblast = hits
 
+    def get_best_match(self) -> Optional[KnownHitSummary]:
+        """ Returns the single best match from knownclusterblast hits, if any """
+        if not self.ranking:
+            return None
+        reference, score = self.ranking[0]
+        return KnownHitSummary(reference.accession, reference.description,
+                               reference.cluster_label,
+                               score.similarity, reference.cluster_type)
+
     def jsonify(self) -> Dict[str, Any]:
         """ Convert the object into a simple dictionary for use in storing
             results.
