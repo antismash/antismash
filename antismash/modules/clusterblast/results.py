@@ -95,13 +95,10 @@ class RegionResult:
         """
         ranking = []
         for cluster, score in self.ranking:
-            scoring = {key: getattr(score, key) for key in score.__slots__ if key != "scored_pairings"}
+            scoring = {key.lstrip("_"): getattr(score, key) for key in score.__slots__ if key != "scored_pairings"}
             json_cluster = {key: getattr(cluster, key) for key in cluster.__slots__}
             scoring["pairings"] = [(query.entry, query.index, vars(subject))
                                    for query, subject in score.scored_pairings]
-            # add the similarity score, since it isn't held in the other data structures
-            unique_hit_count = len({subject.name for _, subject in score.scored_pairings})
-            scoring["similarity"] = int(100 * unique_hit_count / len(cluster.proteins))
             ranking.append((json_cluster, scoring))
 
         result = {"region_number": self.region.get_region_number(),
@@ -136,9 +133,7 @@ class RegionResult:
                                            cluster["cluster_type"], cluster["tags"])
             score = Score()
             pairings = details["pairings"]
-            # similarity isn't stored in memory, it's only in the JSON
-            assert not hasattr(score, "similarity")  # to make sure the above comment stays accurate
-            details.pop("similarity")
+            score.similarity = details.pop("similarity")
             for key, val in details.items():
                 if key == "pairings":
                     continue
@@ -166,24 +161,12 @@ class RegionResult:
             Returns:
                 a list of filenames created
         """
-        region_num = self.region.get_region_number()
-        record_index = self.region.parent_record.record_index
-        filename = f"{prefix}_r{record_index}c{region_num}_all.svg"
-        with open(os.path.join(svg_dir, filename), "w", encoding="utf-8") as handle:
-            handle.write(self.svg_builder.get_overview_contents(width=800, height=50 + 50 * len(self.svg_builder.hits)))
-
-        files = []
-        for i in range(len(self.svg_builder.hits)):
-            filename = f"{prefix}_r{record_index}c{region_num}_{i + 1}.svg"  # 1-indexed
-            with open(os.path.join(svg_dir, filename), "w", encoding="utf-8") as handle:
-                handle.write(self.svg_builder.get_pairing_contents(i, width=800, height=230))
-            files.append(filename)
-        return files
+        return []
 
 
 class GeneralResults(ModuleResults):
     """ A variant-agnostic results class for clusterblast variants """
-    schema_version = 3
+    schema_version = 4
 
     def __init__(self, record_id: str, search_type: str = "clusterblast",
                  data_version: str = None) -> None:
