@@ -125,7 +125,8 @@ class Query:
 class Score:
     """ A multi-part score for a cluster """
     __slots__ = ("hits", "core_gene_hits", "blast_score", "synteny_score",
-                 "core_bonus", "scored_pairings")
+                 "core_bonus", "scored_pairings", "_similarity",
+                 )
 
     def __init__(self) -> None:
         self.hits = 0
@@ -134,6 +135,20 @@ class Score:
         self.synteny_score = 0
         self.core_bonus = 0
         self.scored_pairings: List[Tuple[Query, Subject]] = []
+        self._similarity: int = -1
+
+    @property
+    def similarity(self) -> int:
+        """ The similarity of the pairing, as a percentage in the range 0 to 100 """
+        if self._similarity < 0:
+            raise ValueError("Similarity not yet set")
+        return self._similarity
+
+    @similarity.setter
+    def similarity(self, similarity: int) -> None:
+        if not 0 <= similarity <= 100:
+            raise ValueError(f"Similarity ({similarity}) out of bounds (0-1)")
+        self._similarity = similarity
 
     @property
     def score(self) -> int:
