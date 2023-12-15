@@ -10,12 +10,12 @@ import os
 from typing import Any, Dict, List, Optional, Tuple
 
 from antismash.common.module_results import ModuleResults
+from antismash.common.layers import AbstractRelatedArea
 from antismash.common.path import changed_directory
 from antismash.common.secmet import Record, Region
 from antismash.config import ConfigType, get_config
 
 from .data_structures import Score, Query, Subject, ReferenceCluster, Protein, MibigEntry
-from .svg_builder import ClusterSVGBuilder
 
 _CLUSTER_LIMIT = 50
 
@@ -25,15 +25,37 @@ def get_result_limit() -> int:
     return _CLUSTER_LIMIT
 
 
-class KnownHitSummary:
+class KnownHitSummary(AbstractRelatedArea):
     """ Stores some information about a hit from known-CB in a handy to access way """
     def __init__(self, bgc_id: str, name: str, cluster_number: str, similarity: int,
                  cluster_type: str) -> None:
-        self.bgc_id = str(bgc_id)
-        self.name = str(name)
-        self.cluster_number = cluster_number
-        self.similarity = int(similarity)
-        self.cluster_type = cluster_type
+        super().__init__()
+        self._bgc_id = bgc_id
+        self._name = name
+        self._cluster_number = cluster_number
+        self._similarity = similarity
+        self._cluster_type = cluster_type
+
+    @property
+    def identifier(self) -> str:
+        return self._bgc_id
+
+    @property
+    def description(self) -> str:
+        return self._name
+
+    @property
+    def product(self) -> str:
+        return self._cluster_type
+
+    @property
+    def similarity_percentage(self) -> int:
+        return self._similarity
+
+    @property
+    def url(self) -> str:
+        # at time of writing, knownclusterblast hits are always MIBiG
+        return f"https://mibig.secondarymetabolites.org/go/{self.identifier}"
 
 
 class RegionResult:
@@ -68,7 +90,6 @@ class RegionResult:
             if len(display_ranking) < display_limit < len(self.ranking) - 1:
                 display_ranking.append(self.ranking[display_limit])
         assert len(display_ranking) <= display_limit
-        self.svg_builder = ClusterSVGBuilder(region, display_ranking, reference_proteins, prefix)
 
     def get_best_match(self) -> Optional[KnownHitSummary]:
         """ Returns the single best match from knownclusterblast hits, if any """

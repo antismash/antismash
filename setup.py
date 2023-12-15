@@ -25,7 +25,6 @@ install_requires = [
     'jsonschema==4.11.0',
     'markupsafe >= 2.0',
     'nrpys >= 0.1.1',
-    'pysvg-py3',
     'bcbio-gff == 0.7.1',
     'libsass >= 0.22',
     'matplotlib',
