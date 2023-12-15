@@ -157,7 +157,7 @@ class Score:
     @similarity.setter
     def similarity(self, similarity: int) -> None:
         if not 0 <= similarity <= 100:
-            raise ValueError(f"Similarity ({similarity}) out of bounds (0-1)")
+            raise ValueError(f"Similarity ({similarity}) out of bounds (0-100)")
         self._similarity = similarity
 
     @property
