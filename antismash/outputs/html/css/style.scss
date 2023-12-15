@@ -747,6 +747,7 @@ table.region-table {
 }
 
 .details-svg {
+    float: clear;
     margin: 0 2%;
     margin-top: 2px;
 }
@@ -902,11 +903,35 @@ rect.generic-type-transport {
 }
 
 .clusterblast-locustag {
+    @extend .tooltip;
     @extend .serif;
-    fill: $antismash-main;
-    display: none;
     font-size: 80%;
-    position: absolute;
+    right: unset;
+    width: unset;
+}
+.clusterblast-orf-tooltip {
+    @extend .clusterblast-locustag;
+    font-family: unset;
+    font-size: 90%;
+    min-width: 10vw;
+
+    .clusterblast-tooltip-locus {
+        @extend .serif;
+        font-weight: bold;
+    }
+
+    .clusterblast-tooltip-matches {
+        display:grid;
+        grid-template-columns: 1fr 8em 8em;
+
+        .cb-tooltip-table-locus {
+            @extend .serif;
+        }
+
+        .cb-tooltip-table-numeric {
+            justify-self: end;
+        }
+    }
 }
 .clusterblast-tooltip {
     @extend .tooltip;
