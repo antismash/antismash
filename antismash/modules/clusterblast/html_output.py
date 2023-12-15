@@ -24,19 +24,19 @@ def generate_html(region_layer: RegionLayer, results: ClusterBlastResults,
     """
 
     html = HTMLSections("clusterblast")
-    region = region_layer.region_feature
 
+    region = region_layer.region_feature
     base_tooltip = ("Shows %s that are similar to the current region. Genes marked with the "
                     "same colour are interrelated. White genes have no relationship.<br>"
                     "Click on reference genes to show details of similarities to "
                     "genes within the current region.")
 
-    if options_layer.cb_general or region.clusterblast is not None:
+    if options_layer.cb_general:
         tooltip = base_tooltip % "regions from the antiSMASH database"
         tooltip += "<br>Click on an accession to open that entry in the antiSMASH database (if applicable)."
         div = generate_div(region_layer, record_layer, options_layer, "clusterblast", tooltip)
         html.add_detail_section("ClusterBlast", div, "clusterblast")
-    if options_layer.cb_knownclusters or region.knownclusterblast is not None:
+    if options_layer.cb_knownclusters:
         assert results.knowncluster and results.knowncluster.data_version, "missing MIBiG data version"
         additional = {
             "version": results.knowncluster.data_version,
@@ -46,7 +46,7 @@ def generate_html(region_layer: RegionLayer, results: ClusterBlastResults,
         div = generate_div(region_layer, record_layer, options_layer, "knownclusterblast", tooltip,
                            additional)
         html.add_detail_section("KnownClusterBlast", div, "knownclusterblast")
-    if options_layer.cb_subclusters or region.subclusterblast is not None:
+    if options_layer.cb_subclusters:
         tooltip = base_tooltip % "sub-cluster units"
         div = generate_div(region_layer, record_layer, options_layer, "subclusterblast", tooltip)
         html.add_detail_section("SubClusterBlast", div, "subclusterblast")
