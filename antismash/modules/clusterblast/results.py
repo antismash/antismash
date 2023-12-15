@@ -40,7 +40,7 @@ class RegionResult:
     """ Stores results for a specific cluster in a record, for a particular
         flavour of clusterblast.
     """
-    __slots__ = ["region", "ranking", "total_hits", "svg_builder", "prefix"]
+    __slots__ = ["region", "ranking", "total_hits", "svg_builder", "prefix", "reference_proteins"]
 
     def __init__(self, region: Region, ranking: List[Tuple[ReferenceCluster, Score]],
                  reference_proteins: Dict[str, Protein], prefix: str) -> None:
@@ -57,6 +57,7 @@ class RegionResult:
         self.ranking = ranking[:get_result_limit()]  # [(ReferenceCluster, Score),...]
         self.total_hits = len(ranking)
         self.prefix = prefix
+        self.reference_proteins = {prot.locus_tag: prot for prot in reference_proteins.values()}
         # for the SVG portion, limit the ranking to the display limit
         display_limit = get_config().cb_nclusters
         # omitting any self-hits in the display
