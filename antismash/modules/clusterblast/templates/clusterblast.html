@@ -1,26 +1,38 @@
-<div class = "clusterblast">
-    <div class="heading">
-      <span>Similar gene clusters</span>
-      {{help_tooltip(tooltip, "cb-general")}}
-    </div>
-  {% if region.cluster_blast %}
-  <div>
-    <select id= "clusterblast-{{region.anchor_id}}-select" class= "clusterblast-selector">
-      <option value="svg/clusterblast_r{{record.record_index}}c{{region.get_region_number()}}_all.svg">
-        All hits
-      </option>
-      {% for opt_text, svg_file in region.cluster_blast %}
-      <option value = "{{svg_file}}">
-        {{opt_text}}
-      </option>
-      {% endfor %}
-    </select>
-    <button id= "clusterblast-{{region.anchor_id}}-download">Download graphic</button>
-  </div>
-  <div id="clusterblast-{{region.anchor_id}}-svg"></div>
-  {% else %}
-  <div>
-    <p>No significant ClusterBlast hits found.</p>
+<div class = "{{ search_type }}">
+ <div class="heading">
+  <span>{{ title }}</span>
+  {{help_tooltip(tooltip, "cb-{{ prefix | 'general' }}")}}
+  {% if references %}
+  <div class="download-container">
+   <div class="download-icon download-svg" data-tag="{{ search_type }}-{{region.anchor_id}}-svg" data-filename="{{record.id}}_{{region.anchor_id}}_{{ search_type }}.svg">
+   </div>
   </div>
   {% endif %}
+ </div>
+ {% if references %}
+ <div>
+  <select id="{{ search_type }}-{{region.anchor_id}}-select" class="clusterblast-selector">
+   <option value="all">All hits</option>
+   {% for ref in references %}
+   <option value="{{ref.get_name()}}">{{ref.accession}}: {{ref.description}}</option>
+   {% endfor %}
+  </select>
+ </div>
+ <div id="{{ search_type }}-{{region.anchor_id}}-svg" class="details-svg"></div>
+ <div id="{{ search_type }}-{{region.anchor_id}}-orf-tooltip" class="clusterblast-orf-tooltip">
+  <span class="clusterblast-tooltip-locus"></span><br/>
+  <span class="clusterblast-tooltip-product"></span><br/>
+  Location: <span class="clusterblast-tooltip-location"></span><br/>
+  <br>
+  <div class="clusterblast-tooltip-matches" style="display:grid; grid-template-columns: 1fr 8em 8em;">
+   <div style="font-weight: bold;">Identifier</div>
+   <div class="cb-tooltip-table-numeric" style="font-weight: bold;">Identity</div>
+   <div class="cb-tooltip-table-numeric" style="font-weight: bold;">Coverage</div>
+  </div>
+ </div>
+ {% else %}
+ <div>
+  <p>No significant matches found.</p>
+ </div>
+ {% endif %}
 </div>

@@ -17,7 +17,7 @@ from .core import (
     load_clusterblast_database,
 )
 from .clusterblast import perform_clusterblast
-from .html_output import generate_html, will_handle
+from .html_output import generate_html, generate_javascript_data, will_handle
 from .known import run_knownclusterblast_on_record, check_known_prereqs, prepare_known_data
 from .results import ClusterBlastResults, get_result_limit
 from .sub import run_subclusterblast_on_record, check_sub_prereqs
