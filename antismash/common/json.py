@@ -4,10 +4,49 @@
 """ JSON-friendly classes explicitly for use by the javascript drawing libraries
 """
 
-from typing import Any, Iterator, List, Optional, Tuple
+from dataclasses import dataclass, fields
+from typing import Any, Iterator, List, Optional, Tuple, Union
 
 from antismash.common.secmet.features import CDSFeature
 from antismash.common.secmet.qualifiers import NRPSPKSQualifier
+
+
+def _convert_to_snake_case(value: str) -> str:
+    if "_" not in value:
+        return value
+    starter, tail = value.split("_", 1)
+    return "".join(starter.lower() + tail.title().replace("_", ""))
+
+
+def _convert_to_json(item: Any) -> Union[list, dict, str, int, float, bool]:
+    if isinstance(item, (str, int, float, bool)):
+        return item
+    if isinstance(item, list):
+        return [_convert_to_json(subitem) for subitem in item]
+    if isinstance(item, dict):
+        return {str(key): _convert_to_json(value) for key, value in item.items()}
+    if hasattr(item, "to_json"):
+        return item.to_json()
+    raise TypeError(f"Unhandled type in JSON conversion: {type(item)}")
+
+
+@dataclass
+class JSONDataclass:
+    """ A construct that will automatically convert any sub-dataclass into
+        a JSON-friendly dict, complete with JS style naming conventions
+    """
+    def to_json(self) -> dict[str, Any]:
+        """ Converts the instance into a JSON-friendly dictionary, changing
+            field names into snake case
+        """
+        result = {}
+        for field_info in fields(self):
+            key = field_info.name
+            value = getattr(self, key)
+            if key.startswith("_"):
+                continue
+            result[_convert_to_snake_case(key)] = _convert_to_json(value)
+        return result
 
 
 class JSONBase(dict):
