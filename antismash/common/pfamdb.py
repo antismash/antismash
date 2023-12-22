@@ -208,7 +208,7 @@ def ensure_database_pressed(filepath: str, return_not_raise: bool = False) -> Li
             return [msg]
         raise ValueError(msg)
 
-    if path.is_outdated(components, filepath):
+    if path.is_outdated(components, filepath) or any(os.path.getsize(comp) == 0 for comp in components):
         logging.info("%s components missing or obsolete, re-pressing database", filepath)
         if "hmmpress" not in get_config().executables:
             msg = f"Failed to hmmpress {filepath!r}: cannot find executable for hmmpress"
