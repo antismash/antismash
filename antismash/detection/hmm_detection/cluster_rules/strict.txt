@@ -740,3 +740,14 @@ RULE hydrogen-cyanide
     CUTOFF 5
     NEIGHBOURHOOD 5
     CONDITIONS Fer2_4 and cds(Pyr_redox_2 and Fer2_BFD) and DAO
+
+RULE hydroxytropolone
+    CATEGORY other
+    DESCRIPTION 7-hydroxytropolone-like cluster
+    # see DOIs: 10.1128/jb.00087-18  and  10.1128/jb.01756-14
+    EXAMPLE NCBI JH650757.1 85513-99428 7-hydroxytropolone
+    CUTOFF 10
+    NEIGHBOURHOOD 10
+    CONDITIONS 4HBT_2 and AMP-binding and
+               cds(Acyl-CoA_dh_N and Acyl-CoA_dh_M and Acyl-CoA_dh_1) and
+               cds(TPP_enzyme_N and TPP_enzyme_C)
