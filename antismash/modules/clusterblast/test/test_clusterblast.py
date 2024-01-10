@@ -32,10 +32,11 @@ class TestBlastParsing(unittest.TestCase):
     def parse_subject_wrapper(self, subject_line):
         seq_record = Record("dummy")
         seqlengths = {}
+        mapping = {}
         # used by core.parse_subject, but only if locus tag not in self.seqlengths
         with patch.object(core, 'get_cds_lengths', return_value={}):
             with patch.object(Record, 'get_cds_by_name', return_value=DummyCDS(1, 101)):
-                return core.parse_subject(subject_line, seqlengths, seq_record)
+                return core.parse_subject(subject_line, seqlengths, seq_record, mapping)
 
     def read_sample_data(self, filename="data/diamond_output_sample.txt"):
         with open(path.get_full_path(__file__, filename), "r", encoding="utf-8") as handle:
@@ -294,10 +295,11 @@ class TestSubjectParsing(unittest.TestCase):
         }
 
     def parse_subject_wrapper(self, subject_line):
+        mapping = {}
         # used by core.parse_subject, but only if locus tag not in self.seqlengths
         with patch.object(core, 'get_cds_lengths', returns=self.seqlengths):
             with patch.object(Record, 'get_cds_by_name', returns=DummyCDS(1, 301)):
-                return core.parse_subject(subject_line, self.seqlengths, self.seq_record)
+                return core.parse_subject(subject_line, self.seqlengths, self.seq_record, mapping)
 
     def test_all_parsing(self):
         # test known good input
@@ -622,3 +624,35 @@ class TestInternalBlast(unittest.TestCase):
         assert not region.cds_children
         assert self.run(self.record) == {region.get_region_number(): []}
         assert not mocked_fasta.called
+
+    def test_numeric_ids(self):
+        # a typical identifier
+        self.record.add_cds_feature(DummyCDS(locus_tag="LOCI_1234", start=0, end=10, translation="ABC"))
+        # a problematic identifier
+        self.record.add_cds_feature(DummyCDS(locus_tag="c00001_NODE_1_.._c00001_NODE_1_.._2",
+                                             start=20, end=30, translation="DEF"))
+        region = DummyRegion(subregions=[DummySubRegion(start=0, end=50)])
+        self.record.add_region(region)
+        assert len(region.cds_children) == 2
+        with patch.object(clusterblast.core, "run_internal_blastsearch"):
+            with patch.object(clusterblast.core.fasta, "write_fasta") as mocked_fasta:
+                with patch.object(clusterblast.core, "blastparse", side_effect=RuntimeError("stop")) as mocked_parse:
+                    try:
+                        self.run(self.record)
+                        self.fail("result parser mock was not called")
+                    except RuntimeError:
+                        pass
+                    assert mocked_fasta.called
+                    fasta_args = mocked_fasta.call_args.args
+                assert mocked_parse.called
+                parse_kwargs = mocked_parse.call_args.kwargs
+
+        # the fasta file created needs to have numeric identifiers
+        assert fasta_args[0] == ["0", "1"]
+        assert fasta_args[1] == [cds.translation for cds in region.cds_children]
+        # the parsing of the diamond results needs to map numeric back to actual identifiers
+        # including rest of fasta header per identifier for compatibility with other clusterblast types
+        assert parse_kwargs["mapping"] == {
+            "0": "input|c1|0-10|+|LOCI_1234|",
+            "1": "input|c1|20-30|+|c00001_NODE_1_.._c00001_NODE_1_.._2|",
+        }

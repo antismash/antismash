@@ -261,7 +261,7 @@ def remove_duplicate_hits(blast_lines: List[List[str]]) -> List[List[str]]:
 
 
 def parse_subject(line_parts: List[str], seqlengths: Dict[str, int],
-                  record: secmet.Record) -> Subject:
+                  record: secmet.Record, mapping: dict[str, str]) -> Subject:
     """ Parses a blast-formatted subject line and converts to Subject instance
 
         Arguments:
@@ -270,14 +270,15 @@ def parse_subject(line_parts: List[str], seqlengths: Dict[str, int],
                         percentage of hit coverage
             names: a set of CDS names to avoid collisions
             record: the Record to operate on
+            mapping: a mapping of safe fasta key to metadata
 
         Returns:
             a Subject instance
     """
     if len(line_parts) < 12:
         logging.error("Malformed blast pairing: %s", "\t".join(line_parts))
-    query = line_parts[0]
-    subject_parts = line_parts[1].split("|")
+    query = mapping.get(line_parts[0], line_parts[0])
+    subject_parts = mapping.get(line_parts[1], line_parts[1]).split("|")
     subject = subject_parts[4]
     if subject == "no_locus_tag":
         subject = subject_parts[6]
@@ -302,7 +303,8 @@ def parse_subject(line_parts: List[str], seqlengths: Dict[str, int],
                    perc_ident, blastscore, perc_coverage, evalue, locustag)
 
 
-def parse_all_clusters(blasttext: str, record: secmet.Record, min_seq_coverage: float, min_perc_identity: float
+def parse_all_clusters(blasttext: str, record: secmet.Record, min_seq_coverage: float, min_perc_identity: float,
+                       mapping: dict[str, str] = None,
                        ) -> Tuple[Dict[int, Dict[str, List[Query]]],
                                   Dict[int, Dict[str, Query]]]:
     """ Parses blast results, groups into results by cluster number
@@ -313,6 +315,7 @@ def parse_all_clusters(blasttext: str, record: secmet.Record, min_seq_coverage: 
                     backup to fetch sequence length if missing from seqlengths
             min_seq_coverage: the exclusive lower bound of sequence coverage for a match
             min_perc_identity: the exclusive lower bound of identity similarity for a match
+            mapping: a mapping of numeric name to actual locus tag
 
         Returns: a tuple of
                     a dictionary mapping record cluster number to a
@@ -321,6 +324,8 @@ def parse_all_clusters(blasttext: str, record: secmet.Record, min_seq_coverage: 
                     a dictionary mapping record cluster number to a
                         dictionary of query name to Query instance
     """
+    if mapping is None:
+        mapping = {}
     seqlengths = get_cds_lengths(record)
     queries: Dict[str, Query] = OrderedDict()
     clusters: Dict[str, List[Query]] = OrderedDict()
@@ -331,7 +336,7 @@ def parse_all_clusters(blasttext: str, record: secmet.Record, min_seq_coverage: 
 
     for tabs in blastlines:
         query = tabs[0]
-        subject = parse_subject(tabs, seqlengths, record)
+        subject = parse_subject(tabs, seqlengths, record, mapping)
 
         # only process the pairing if limits met
         if subject.perc_ident <= min_perc_identity \
@@ -368,7 +373,8 @@ def parse_all_clusters(blasttext: str, record: secmet.Record, min_seq_coverage: 
 
 
 def blastparse(blasttext: str, record: secmet.Record, min_seq_coverage: float = -1.,
-               min_perc_identity: float = -1.) -> Tuple[Dict[str, Query], Dict[str, List[Query]]]:
+               min_perc_identity: float = -1., mapping: dict[str, str] = None,
+               ) -> Tuple[Dict[str, Query], Dict[str, List[Query]]]:
     """ Parses blast output into a usable form, limiting to a single best hit
         for every query. Results can be further trimmed by minimum thresholds of
         both coverage and percent identity.
@@ -379,6 +385,7 @@ def blastparse(blasttext: str, record: secmet.Record, min_seq_coverage: float = 
                     backup to fetch sequence length if missing from seqlengths
             min_seq_coverage: the exclusive lower bound of sequence coverage for a match
             min_perc_identity: the exclusive lower bound of identity similarity for a match
+            mapping: a dict mapping numeric identifier to full FASTA header for each CDS
 
         Returns:
             a tuple of
@@ -386,6 +393,7 @@ def blastparse(blasttext: str, record: secmet.Record, min_seq_coverage: float = 
                 a dictionary mapping cluster number to
                     a list of Query instances from that cluster
     """
+    mapping = mapping or {}
     seqlengths = get_cds_lengths(record)
     queries: Dict[str, Query] = OrderedDict()
     clusters: Dict[str, List[Query]] = OrderedDict()
@@ -393,8 +401,10 @@ def blastparse(blasttext: str, record: secmet.Record, min_seq_coverage: float = 
     current_query = None
 
     for tabs in blastlines:
-        query = tabs[0]
-        subject = parse_subject(tabs, seqlengths, record)
+        if len(tabs) == 1:
+            assert tabs[0]
+        query = mapping.get(tabs[0], tabs[0])
+        subject = parse_subject(tabs, seqlengths, record, mapping)
 
         # only process the pairing if limits met
         if subject.perc_ident <= min_perc_identity \
@@ -492,10 +502,12 @@ def internal_homology_blast(record: secmet.Record) -> Dict[int, List[List[str]]]
                 continue
             iquerycluster_names, iqueryclusterseqs = create_blast_inputs(region)
             query_filename = "internal_input.fasta"
-            fasta.write_fasta(iquerycluster_names, iqueryclusterseqs, query_filename)
+            assert all(seq.strip() == seq for seq in iqueryclusterseqs)
+            fasta.write_fasta(list(map(str, range(len(iquerycluster_names)))), iqueryclusterseqs, query_filename)
             blastoutput = run_internal_blastsearch(query_filename)
+            mapping = {str(i): name for i, name in enumerate(iquerycluster_names)}
             queries, _ = blastparse(blastoutput, record, min_seq_coverage=25,
-                                    min_perc_identity=30)
+                                    min_perc_identity=30, mapping=mapping)
             groups = find_internal_orthologous_groups(queries, iquerycluster_names)
             internalhomologygroups[region_number] = groups
     return internalhomologygroups
