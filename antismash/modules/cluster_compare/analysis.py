@@ -181,9 +181,18 @@ def score_as_protoclusters(label: str, region: Region, hits_by_reference: HitsBy
     total_scores: Dict[ReferenceRegion, float] = defaultdict(float)
 
     scores: Dict[int, Dict[ReferenceRegion, ReferenceScorer]] = defaultdict(dict)
+
+    # if there's only one protocluster, don't use the more complicated equations
+    # that try to handle multiple protocluster rankings, as they will report different results
+    single_proto = len(region.get_unique_protoclusters()) == 1
+
     for protocluster in region.get_unique_protoclusters():
         for scorer in score_query_area(protocluster, local_hits, query_components[protocluster], mode):
-            total_scores[scorer.reference] += calculate_protocluster_ranking(scorer)
+            if single_proto:
+                score = scorer.final_score
+            else:
+                score = calculate_protocluster_ranking(scorer)
+            total_scores[scorer.reference] += score
             scores[protocluster.get_protocluster_number()][scorer.reference] = scorer
 
     ranking = sorted(total_scores.items(), key=lambda x: x[1], reverse=True)
