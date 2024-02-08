@@ -4,12 +4,19 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
 
+from collections import defaultdict
 import math
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from antismash.common.secmet.features.cdscollection import CDSCollection, FeatureLocation
-from antismash.common.test.helpers import DummyCDS
+from antismash.common.test.helpers import (
+    DummyCandidateCluster,
+    DummyCDS,
+    DummyProtocluster,
+    DummyRegion,
+)
+from antismash.modules.cluster_compare import analysis
 from antismash.modules.cluster_compare.analysis import (
     blast_parse,
     calculate_identity_score as ident,
@@ -18,6 +25,8 @@ from antismash.modules.cluster_compare.analysis import (
     filter_by_query_area,
     filter_by_reference_protocluster,
     Hit,
+    Mode,
+    score_as_protoclusters,
     trim_to_best_hit as trim,
     parse_hit,
 )
@@ -26,6 +35,7 @@ from antismash.modules.cluster_compare.data_structures import (
     ReferenceProtocluster,
     ReferenceRecord,
     ReferenceRegion,
+    ReferenceScorer,
 )
 
 
@@ -160,3 +170,65 @@ class TestConversion(unittest.TestCase):
         result = convert(hits, records)
         assert list(result) == [record.regions[0] for record in records.values()]
         assert result[records["a"].regions[0]] == {"CDSa": hits["a"]["1"]}
+
+
+class TestSingleProtoclusterScoring(unittest.TestCase):
+    def setUp(self):
+        self.dummy_scorers = [Mock(spec=ReferenceScorer), Mock(spec=ReferenceScorer)]
+        # ensure that all scorers will aggregate to the same reference score
+        for mock in self.dummy_scorers:
+            mock.reference = "ref_acc"
+
+    def _run(self, region, scorers):
+        query_components = defaultdict(int)  # the function using the values is mocked, it just needs getitem
+        label = "dummy"
+        mode = Mode.REFERENCE_IN_QUERY
+
+        # each call to the function returns one scorer object per reference
+        mocked_query_return_values = [[scorer] for scorer in scorers]
+
+        with patch.object(analysis, "filter_by_query_area"):
+            with patch.object(analysis, "score_query_area") as patched_area:
+                patched_area.side_effect = mocked_query_return_values
+                proto_result = score_as_protoclusters(label, region, None, query_components, mode)
+
+        proto_scores = proto_result.scores_by_region
+        # only one reference should be present, otherwise the purpose is defeated
+        assert len(proto_scores) == 1
+        return proto_scores[0]
+
+    # single protoclusters should score the same as a region, since the multi-protocluster normalisation
+    # having a different value to the region view will cause confusion
+    def test_single_same_as_region(self):
+        protocluster = DummyProtocluster(product="A")
+        protocluster.get_protocluster_number = lambda: 1
+        candidate = DummyCandidateCluster(clusters=[protocluster])
+        region = DummyRegion(candidate_clusters=[candidate])
+
+        self.dummy_scorers[0].final_score = 0.9
+        assert self._run(region, self.dummy_scorers[:1]) == ("ref_acc", 0.9)
+
+    def test_single_different_to_multi(self):
+        protocluster_scores = [0.7575, 0.4327]
+        expected_total_score = 0.5955
+        protoclusters = []
+        for i, score in enumerate(protocluster_scores):
+            protoclusters.append(DummyProtocluster(product=str(i)))
+            self.dummy_scorers[i].final_score = score
+        # can't put these in a loop, since the lambda is evaluated at time of call
+        protoclusters[0].get_protocluster_number = lambda: 1
+        protoclusters[1].get_protocluster_number = lambda: 2
+
+        candidate = DummyCandidateCluster(clusters=protoclusters)
+        region = DummyRegion(candidate_clusters=[candidate])
+
+        # not all the region calculations will be present
+        proto_results = self._run(region, self.dummy_scorers)
+
+        # the effective calculation, sans all the wrapping
+        expected_partial_scores = [calculate_protocluster_ranking(scorer) for scorer in self.dummy_scorers]
+        calculated_proto_score = sum(expected_partial_scores)
+
+        # the expected, independent calculation, and final results should all match
+        self.assertAlmostEqual(calculated_proto_score, expected_total_score, places=4)
+        self.assertAlmostEqual(proto_results[1], expected_total_score, places=4)
