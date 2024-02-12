@@ -564,8 +564,10 @@ def combine_modules(current: CDSModuleInfo, previous: CDSModuleInfo) -> Optional
                                reverse=current.cds.location.strand == -1)
     head = previous.modules[-1]
     tail = current.modules[0]
-    # both modules must be incomplete
-    if head.is_complete() or tail.is_complete():
+    # modules without a starter can be complete, so if the head is just the starter, that's valid
+    # otherwise both modules must be incomplete, or still compatible
+    invalid_tail = tail.is_complete() and not tail.is_starter_module()
+    if head.is_complete() or invalid_tail:
         return None
     # and avoid creating hybrid modules
     if head.is_pks() and tail.is_nrps() or head.is_nrps() and tail.is_pks():
