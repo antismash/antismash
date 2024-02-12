@@ -154,18 +154,18 @@ def verify_options(options: ConfigType, modules: List[AntismashModule]) -> bool:
         Returns:
             True if no problems detected, otherwise False
     """
-    errors: List[str] = []
+    errors_found: List[str] = []
     for module in modules:
         try:
             logging.debug("Checking options for %s", module.__name__)
-            errors.extend(module.check_options(options))
+            errors_found.extend(module.check_options(options))
         except ValueError as err:
-            errors.append(str(err))
-    if not errors:
+            errors_found.append(str(err))
+    if not errors_found:
         return True
 
     logging.error("Incompatible options detected:\n  %s", "\n  ".join(errors))
-    for error in errors:
+    for error in errors_found:
         print(error)  # still commandline args, so don't use logging
     return False
 
@@ -611,8 +611,8 @@ def check_prerequisites(modules: List[AntismashModule], options: ConfigType) -> 
         if res:
             errors_by_module[module.__name__] = res
     if errors_by_module:
-        for module_name, errors in errors_by_module.items():
-            for error in errors:
+        for module_name, errors_found in errors_by_module.items():
+            for error in errors_found:
                 logging.error("%s: preqrequisite failure: %s", module_name, error)
         raise RuntimeError("Modules failing prerequisites")
 
