@@ -49,9 +49,15 @@ def load_single_record_annotations(annotation_files: List[str], record: Record,
             if not record.has_name(name):
                 continue
             for area in json_record.get("subregions", []):
-                subregions.append(SubRegionAnnotation.from_schema_json(area, tool))
+                try:
+                    subregions.append(SubRegionAnnotation.from_schema_json(area, tool))
+                except ValueError as err:
+                    raise AntismashInputError(f"sideloaded subregion invalid: {err}")
             for area in json_record.get("protoclusters", []):
-                protoclusters.append(ProtoclusterAnnotation.from_schema_json(area, tool))
+                try:
+                    protoclusters.append(ProtoclusterAnnotation.from_schema_json(area, tool))
+                except ValueError as err:
+                    raise AntismashInputError(f"sideloaded protocluster invalid: {err}")
 
     tool = Tool("manual", "N/A", "command line argument", {})
     if manual and record.has_name(manual.accession):
