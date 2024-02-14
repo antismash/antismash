@@ -453,7 +453,7 @@ def write_outputs(results: serialiser.AntismashResults, options: ConfigType) -> 
         start = time.time()
         html.write(results.records, module_results_per_record, options, get_all_modules())
         # use an average of times for html
-        duration = time.time() - start / len(results.records)
+        duration = (time.time() - start) / len(results.records)
         for val in results.timings_by_record.values():
             val[html.__name__] = duration
 
