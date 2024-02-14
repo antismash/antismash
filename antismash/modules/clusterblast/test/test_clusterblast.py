@@ -637,11 +637,8 @@ class TestInternalBlast(unittest.TestCase):
         with patch.object(clusterblast.core, "run_internal_blastsearch"):
             with patch.object(clusterblast.core.fasta, "write_fasta") as mocked_fasta:
                 with patch.object(clusterblast.core, "blastparse", side_effect=RuntimeError("stop")) as mocked_parse:
-                    try:
+                    with self.assertRaisesRegex(RuntimeError, "stop"):
                         self.run(self.record)
-                        self.fail("result parser mock was not called")
-                    except RuntimeError:
-                        pass
                     assert mocked_fasta.called
                     fasta_args = mocked_fasta.call_args.args
                 assert mocked_parse.called
