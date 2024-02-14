@@ -6,6 +6,7 @@
 
 import functools
 import logging
+import os
 import re
 from typing import Any, Dict, Callable, List, Set, Tuple
 import warnings
@@ -88,6 +89,11 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
     records: List[SeqRecord] = []
 
     for record in _strict_parse(filename):
+        # in no case allow record identifiers to be longer than the filesystem's
+        # maximum file length, allowing for region numbers and extension
+        if len(record.id) > os.pathconf("/", "PC_NAME_MAX") - len(".region000.gbk"):
+            raise AntismashInputError(f"record identifier too long for file system: {record.id}")
+
         if minimum_length < 1 \
                 or len(record.seq) >= minimum_length \
                 or 'contig' in record.annotations \

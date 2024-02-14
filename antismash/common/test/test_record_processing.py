@@ -5,6 +5,7 @@
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
 
 from tempfile import NamedTemporaryFile
+import os
 import unittest
 from unittest import mock
 
@@ -16,7 +17,7 @@ from antismash import config
 from antismash.common import record_processing, path
 from antismash.common.errors import AntismashInputError
 from antismash.common.secmet import Record
-from antismash.common.secmet.test.helpers import DummyCDSMotif, DummyFeature
+from antismash.common.secmet.test.helpers import DummyCDSMotif, DummyFeature, DummyRecord
 from antismash.common.test import helpers
 
 
@@ -94,6 +95,13 @@ class TestParseRecords(unittest.TestCase):
             with mock.patch.object(record_processing, "_strict_parse", return_value=dummy_inputs):
                 with self.assertRaisesRegex(AntismashInputError, "no valid records"):
                     record_processing.parse_input_sequence("dummy file", ignore_invalid_records=True)
+
+    def test_absolute_name_limit(self):
+        record = DummyRecord()
+        record.id = "A" * os.pathconf("/", "PC_NAME_MAX")
+        with mock.patch.object(record_processing, "_strict_parse", return_value=[record]):
+            with self.assertRaisesRegex(AntismashInputError, "too long"):
+                record_processing.parse_input_sequence("dummy file")
 
 
 class TestGapNotation(unittest.TestCase):
