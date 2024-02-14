@@ -26,7 +26,7 @@ install_requires = [
     'markupsafe >= 2.0',
     'nrpys >= 0.1.1',
     'pysvg-py3',
-    'bcbio-gff',
+    'bcbio-gff == 0.7.0',  # 0.7.1 is incompatible with biopython 1.78
     'libsass >= 0.22',
     'matplotlib',
     'scipy',
