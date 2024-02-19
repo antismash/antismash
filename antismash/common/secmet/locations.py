@@ -245,11 +245,39 @@ def _merge_over_origin(locations: list[Location], wrap_point: int) -> list[Locat
     return locations
 
 
+def _is_wrapping_shorter(locations: Iterable[Location], wrap_point: int) -> bool:
+    """ Checks the given locations to see if wrapping around the given coordinate
+        is a shorter path.
+
+        Arguments:
+            locations: the locations to check
+            wrap_point: the point at which locations must wrap
+
+        Returns:
+            True if going over the wrapping point would be shorter or any single
+            location is already wrapped
+    """
+    if any(location_bridges_origin(location) for location in locations):
+        return True
+
+    locations = sorted(locations, key=lambda x: (x.start, x.end))
+    first = locations[0]
+    for second in locations[1:]:
+        if second.start - first.end > wrap_point // 2:  # wrapping is better
+            return True
+    return False
+
+
 def _split_sections_around_origin(locations: list[Location], origin: int,
                                   ) -> tuple[list[Location], list[Location]]:
     """ Separates a list of locations into pre- and post-origin portions """
     pre_chunks = []
     post_chunks = []
+
+    # before trying to split, check if it's necessary
+    if not _is_wrapping_shorter(locations, origin):
+        return (locations, [])
+
     for location in locations:
         if location_bridges_origin(location):
             lower, upper = split_origin_bridging_location(location)
