@@ -10,6 +10,7 @@ import unittest
 from unittest.mock import patch
 
 from antismash.common import secmet
+from antismash.common.secmet import locations as module
 from antismash.common.secmet.locations import (
     _adjust_location_by_offset as adjust,
     convert_protein_position_to_dna,
@@ -19,6 +20,7 @@ from antismash.common.secmet.locations import (
     get_distance_between_locations as _get_distance_between_locations,
     location_bridges_origin,
     split_origin_bridging_location as splitter,
+    _split_sections_around_origin as split_around_origin,
     location_contains_other as _location_contains_other,
     location_contains_overlapping_exons,
     location_from_string,
@@ -148,6 +150,29 @@ class TestConnectLocations(unittest.TestCase):
         assert len(result.parts) == 2
         assert result.parts[0] == FeatureLocation(331_108, 340_000, 1)
         assert result.parts[1] == FeatureLocation(0, 2247, 1)
+
+    def test_short_circularity(self):
+        locations = [
+            FeatureLocation(28415, 31286, 1),
+            FeatureLocation(33590, 36737, 1),
+        ]
+        wrap_point = 66521
+        # check without the internal splitting around origin, in case that's at fault
+        for pairing in [([], list(locations)), (list(locations), [])]:
+            with patch.object(module, "_split_sections_around_origin", return_value=pairing):
+                result = self.func(locations, wrap_point=wrap_point)
+                assert len(result.parts) == 1, str(result)
+                assert result == FeatureLocation(28415, 36737, 1)
+
+    def test_splitting_around_origin(self):
+        locations = [
+            FeatureLocation(28415, 31286, 1),
+            FeatureLocation(33590, 36737, 1),
+        ]
+        wrap_point = 66521
+        result = split_around_origin(list(locations), wrap_point)
+        assert result == (locations, [])
+
 
 class TestProteinPositionConversion(unittest.TestCase):
     def func(self, start, end, location):
