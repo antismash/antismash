@@ -337,12 +337,11 @@ class HmmDetectionTest(unittest.TestCase):
 
 class TestRuleExtenders(unittest.TestCase):
     def setUp(self):
-        self.rule_name = "MetaboliteA"
         cutoff = 2000
         self.extender_name = "B"
         self.sig_names = ["A", self.extender_name, "X"]
         self.rule_text = "\n".join([
-            f"RULE {self.rule_name}",
+            "RULE MetaboliteA",
             "CATEGORY Cat",
             f"CUTOFF {cutoff//1000}",
             "NEIGHBOURHOOD 0",
@@ -428,7 +427,7 @@ class TestRuleExtenders(unittest.TestCase):
         # change the rule text to use some different hits
         self.extender_name = "D"
         self.rule_text = "\n".join([
-            f"RULE {self.rule_name}",
+            "RULE MetaboliteA",
             "CATEGORY Cat",
             "CUTOFF 2",
             "NEIGHBOURHOOD 0",
@@ -454,7 +453,7 @@ class TestRuleExtenders(unittest.TestCase):
         # change the rule text to use some different hits
         self.extender_name = "D"
         self.rule_text = "\n".join([
-            f"RULE {self.rule_name}",
+            "RULE MetaboliteA",
             "CATEGORY Cat",
             "CUTOFF 2",
             "NEIGHBOURHOOD 0",
