@@ -6,7 +6,7 @@
 
 import logging
 from collections import defaultdict
-from typing import Any, Dict, List, Optional, Iterable
+from typing import Any, Dict, List, Optional, Iterable, Union
 
 from dataclasses import dataclass, field
 
@@ -24,12 +24,11 @@ from antismash.common import (
 NAME = "halogenases_analysis"
 SHORT_DESCRIPTION = """categorization of halogenases based on family and function"""
 
-pHMM_SIGNATURES = [
-    HmmSignature("trp_5", "Flavin-dependent halogenase, modifying the 5th position of a Trp",
-                 350, get_full_path(__file__, "data", "halogenases", "trp_5_v2.hmm")),
-    HmmSignature("trp_6_7", "Flavin-dependent halogenase, modifying the 6/7th position of a Trp",
-                 770, get_full_path(__file__, "data", "halogenases", "trp_6_7_v2.hmm"))]
+"""FX[DE]PX[]EFL"""
+CHARGED_RESIDUES = [""]
 
+FDH_PROFILES = HmmSignature("general_cut_bacterial_FDH", "Member of the Flavin-dependent halogenase family",
+                            0, get_full_path(__file__, "data", "halogenases", "FDH.hmm"))
 
 class HalogenaseHmmResult(HMMResult):
     """ Enzymes identified as a halogenase
@@ -179,7 +178,7 @@ class HalogenaseCategories:
         raise NotImplementedError()
 
     def check_for_match(self, halogenase: HalogenaseResult, hit: HalogenaseHmmResult,
-                        position: int, cutoffs: List[float], *,
+                        position: Union[int, List[int]], cutoffs: List[float], *,
                         check_residues: bool = True, sig_residues: Optional[str] = None,
                         confidence: float = 1) -> bool:
         found = False
@@ -202,19 +201,44 @@ class FlavinDependents(HalogenaseCategories):
     def __init__(self, name: str, residues: str) -> None:
         super().__init__(name, residues)
         self.family = "Flavin-dependent halogenases"
+        self.profiles = ["general", "trp_5", "trp_6_7", "pyrrole", "tyrosine-like_hpg", "cycline_orsellinic-like"]
+
+    GENERAL_FDH = {"second_motif": [206, 207, 208, 209, 210, 211],
+                   "last_motif": [280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291,
+                                  292, 293, 294, 295, 296, 297, 298, 299, 300, 301, 302, 303, 304]}
 
     TRP_5_SIGNATURE = [33, 35, 41, 75, 77, 78, 80, 92, 101, 128, 165, 186,
                        187, 195, 302, 310, 342, 350, 400, 446, 450, 452, 482]
     TRP_6_SIGNATURE = [19, 37, 45, 73, 75, 90, 129, 130, 142, 157, 181, 192, 194, 219,
                        221, 225, 227, 237, 287, 306, 337, 339, 350, 353, 356, 411, 462, 505]
+    PYRROLE_SIGNATURE = [110, 111, 318, 362]
+
+    TYROSINE_HPG_SIGNATURE = {"common": [58, 74, 89, 92, 99, 107, 149, 150, 152, 209, 215, 217, 219,
+                                         245, 267, 268, 282, 284, 289, 290, 293, 295, 305, 331, 357],
+                              "Hpg": [66, 158, 196, 200, 246, 259]}
+
+    OTHER_PHENOLIC_SIGNATURE = [23, 27, 39, 40, 59, 74, 109, 113, 120, 124, 133, 165,
+                                166, 168, 233, 284, 291, 303, 305, 306, 309, 311]
+
+    # signature residues
+    flexible_residue = ""
+    residue_group = ["I", "V"]
 
     TRP_5_SIGNATURE_RESIDUES = "VSILIREPGLPRGVPRAVLPGEA"
     TRP_6_SIGNATURE_RESIDUES = "TEGCAGFDAYHDRFGNADYGLSIIAKIL"
 
+    PYRROLE_MONO_DI_SIGNATURE_RESIDUES = "DRSVW"
+    PYRROLE_AMBIGUOUS_SIGNATURE_RESIDUES = "YRRNN"
+    PYRROLE_TETRA_SIGNATURE_RESIDUES = "RRYFA"
+
+    TYROSINE_HPG_SIGNATURE_RESIDUES = {"tyrosine-like": "GFQRLGDAGLSGVPSYGADPSGLYW",
+                                       "Hpg": "SHCGMQ"}
+
+    OTHER_PHENOLIC_SIGNATURE_RESIDUES = "LGPRGGRDAGVDAGGYGFDPSG"
+
     @staticmethod
     def get_signatures() -> List[List[int]]:
         raise NotImplementedError()
-
 
 class TryptophanSubstrate(FlavinDependents):
     def __init__(self, name: str, residues: str) -> None:
@@ -242,11 +266,74 @@ class TryptophanSubstrate(FlavinDependents):
                      ) -> Optional[dict[str, Optional[str]]]:
         residues = None
         if hit.query_id == "trp_5":
-            residues = get_residues(cds.translation, hit, [FlavinDependents.TRP_5_SIGNATURE])
+            residues = get_residues(cds.translation, hit,
+                                    [FlavinDependents.TRP_5_SIGNATURE])
         if hit.query_id == "trp_6_7":
-            residues = get_residues(cds.translation, hit, [FlavinDependents.TRP_6_SIGNATURE])
+            residues = get_residues(cds.translation, hit,
+                                    [FlavinDependents.TRP_6_SIGNATURE])
         return residues
 
+class PyrroleSubstrate(FlavinDependents):
+    def __init__(self, name: str, residues: str) -> None:
+        super().__init__(name, residues)
+        self.cutoff = 400
+        self.signature_residues = [FlavinDependents.PYRROLE_AMBIGUOUS_SIGNATURE_RESIDUES,
+                                   FlavinDependents.PYRROLE_MONO_DI_SIGNATURE_RESIDUES,
+                                   FlavinDependents.PYRROLE_TETRA_SIGNATURE_RESIDUES]
+
+    def update_match(self, halogenase: HalogenaseResult, hit: HalogenaseHmmResult) -> None:
+        if self.name == "pyrrole":
+            for possible_sig_residues in self.signature_residues:
+                self.check_for_match(halogenase, hit, 0,
+                                     cutoffs=[self.cutoff],
+                                     sig_residues=possible_sig_residues)
+            halogenase.substrate = "pyrrole"
+
+    @staticmethod
+    def get_signatures() -> List[List[int]]:
+        return [FlavinDependents.PYRROLE_SIGNATURE]
+ 
+    @staticmethod
+    def get_residues(cds: CDSFeature, hit: HalogenaseHmmResult,
+                     ) -> Optional[dict[str, Optional[str]]]:
+        residues = None
+        if hit.query_id == "pyrrole":
+            residues = get_residues(cds.translation, hit,
+                                    PyrroleSubstrate.get_signatures())
+        return residues
+
+class PhenolicSubstrate(FlavinDependents):
+    def __init__(self) -> None:
+        self.cutoff = None
+        self.tyr_hpg_residues = FlavinDependents.TYROSINE_HPG_SIGNATURE_RESIDUES
+        self.other_phenolic = FlavinDependents.OTHER_PHENOLIC_SIGNATURE
+
+    def update_match(self, halogenase: HalogenaseResult, hit: HalogenaseHmmResult) -> None:
+        if self.name == "tyrosine-like_hpg_FDH":
+            for substrate, signature in self.tyr_hpg_residues.items():
+                self.check_for_match(halogenase, hit, [6, 8],
+                                    cutoffs=[300, 390],
+                                    sig_residues=signature)
+                halogenase.substrate = substrate
+        elif self.name == "cycline_orsellinic_FDH":
+            self.check_for_match(halogenase, hit, [6, 8],
+                                    cutoffs=[500],
+                                    sig_residues=self.other_phenolic)
+            halogenase.substrate = "cycline_orsellinic"
+
+    @staticmethod
+    def get_signatures() -> List[List[int]]:
+        return [*FlavinDependents.TYROSINE_HPG_SIGNATURE.values(),
+                FlavinDependents.OTHER_PHENOLIC_SIGNATURE]
+ 
+    @staticmethod
+    def get_residues(cds: CDSFeature, hit: HalogenaseHmmResult,
+                     ) -> Optional[dict[str, Optional[str]]]:
+        residues = {}
+        for signature in PhenolicSubstrate.get_signatures():
+            if hit.query_id == "pyrrole":
+                residues get_residues(cds.translation, hit, signature)
+        return residues
 
 def run_halogenase_phmms(cluster_fasta: str) -> dict[str, list[HalogenaseHmmResult]]:
     """ Check if protein sequences hit any pHMM
