@@ -40,3 +40,7 @@ nisin/*
 !antismash/databases/README
 !.github/
 !antismash/
+# some of the ignored filetypes will be required for testing interactions with those files
+!antismash/common/subprocessing/test/data/*
+# the docker container files should always be kept
+!docker
