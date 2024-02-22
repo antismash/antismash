@@ -1,0 +1,35 @@
+name: "Check for unwanted files"
+
+on: [pull_request]
+
+jobs:
+  file_existence:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout changes
+        uses: actions/checkout@v4
+        with:
+          path: changes
+
+      - name: Checkout default branch's .gitignore
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          path: original
+          sparse-checkout: .gitignore
+
+      - name: Check for unwanted files
+        run: |
+          set +e
+          cp original/.gitignore changes/.gitignore
+          cd changes
+          ignored_files=$(git ls-files -ci --exclude-standard)
+
+          for filename in $ignored_files; do
+            echo "::error file=$filename::$filename should not be committed"
+          done
+
+          if [ ! -z "$ignored_files" ]; then
+            exit 1
+          fi
+        shell: bash
