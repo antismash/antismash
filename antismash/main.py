@@ -37,7 +37,7 @@ from antismash.common.path import get_full_path
 from antismash.common.secmet import Record
 from antismash.common import subprocessing
 from antismash.detection import DetectionStage
-from antismash.outputs import html, svg
+from antismash.outputs import html
 from antismash.support import genefinding
 from antismash.custom_typing import AntismashModule
 
@@ -456,14 +456,6 @@ def write_outputs(results: serialiser.AntismashResults, options: ConfigType) -> 
         duration = (time.time() - start) / len(results.records)
         for val in results.timings_by_record.values():
             val[html.__name__] = duration
-
-    logging.debug("Creating results SVGs")
-    start = time.time()
-    svg.write(options, module_results_per_record)
-    # again, use an average of times
-    duration = (time.time() - start) / len(results.records)
-    for val in results.timings_by_record.values():
-        val[svg.__name__] = duration
 
     # convert records to biopython
     bio_records = [record.to_biopython() for record in results.records]
