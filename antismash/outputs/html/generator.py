@@ -114,13 +114,13 @@ def write_regions_js(records: List[Dict[str, Any]], output_dir: str,
             for region in record['regions']:
                 regions[region['anchor']] = region
                 regions['order'].append(region['anchor'])
-        handle.write(f"var all_regions = {json.dumps(regions, indent=1)};\n")
+        handle.write(f"var all_regions = {json.dumps(regions)};\n")
 
         details = {
             "nrpspks": {region["id"]: region for region in js_domains},
         }
-        handle.write(f"var details_data = {json.dumps(details, indent=1)};\n")
-        handle.write(f"var resultsData = {json.dumps(module_results, indent=1)};\n")
+        handle.write(f"var details_data = {json.dumps(details)};\n")
+        handle.write(f"var resultsData = {json.dumps(module_results)};\n")
 
 
 def generate_html_sections(records: List[RecordLayer], results: Dict[str, Dict[str, ModuleResults]],
