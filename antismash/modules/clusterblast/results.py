@@ -62,7 +62,7 @@ class RegionResult:
     """ Stores results for a specific cluster in a record, for a particular
         flavour of clusterblast.
     """
-    __slots__ = ["region", "ranking", "total_hits", "svg_builder", "prefix", "reference_proteins"]
+    __slots__ = ["region", "ranking", "total_hits", "prefix", "reference_proteins"]
 
     def __init__(self, region: Region, ranking: List[Tuple[ReferenceCluster, Score]],
                  reference_proteins: Dict[str, Protein], prefix: str) -> None:
@@ -166,20 +166,6 @@ class RegionResult:
         result.total_hits = json["total_hits"]
         return result
 
-    def write_svg_files(self, svg_dir: str, prefix: str) -> List[str]:
-        """ Write all generated SVG files, one overview SVG and one for each
-            ReferenceCluster pairing. The overview SVG will have _all in
-            the filename and the individual pairings will have a counter.
-
-            Arguments:
-                svg_dir: the directory to save the files in
-                prefix: the file prefix to use (e.g. 'knownclusterblast')
-
-            Returns:
-                a list of filenames created
-        """
-        return []
-
 
 class GeneralResults(ModuleResults):
     """ A variant-agnostic results class for clusterblast variants """
@@ -229,11 +215,6 @@ class GeneralResults(ModuleResults):
             write_clusterblast_output(options, record, cluster,
                                       self.proteins_of_interest,
                                       searchtype=self.search_type)
-
-    def write_svg_files(self, svg_dir: str) -> None:
-        """ Write the SVG files for each cluster with results """
-        for cluster_result in self.region_results:
-            cluster_result.write_svg_files(svg_dir, self.search_type)
 
     def to_json(self) -> Dict[str, Any]:
         if not self.region_results:
@@ -326,12 +307,6 @@ class ClusterBlastResults(ModuleResults):
         for result in [self.general, self.subcluster, self.knowncluster]:
             if result is not None:
                 result.add_to_record(record)
-
-    def write_svg_files(self, svg_dir: str) -> None:
-        """ Write the SVG files for each clusterblast variant if it exists """
-        for result in [self.general, self.subcluster, self.knowncluster]:
-            if result:
-                result.write_svg_files(svg_dir)
 
 
 def write_clusterblast_output(options: ConfigType, record: Record,
