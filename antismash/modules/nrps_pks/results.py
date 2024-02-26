@@ -16,6 +16,7 @@ from .parsers import generate_nrps_consensus
 from .data_structures import Prediction, SimplePrediction
 from .minowa.base import MinowaPrediction
 from .nrpys import PredictorSVMResult
+from .paras import ParasResult
 from .pks_names import get_short_form
 from .at_analysis.at_analysis import ATPrediction
 
@@ -25,11 +26,9 @@ UNKNOWN = "(unknown)"
 
 def modify_substrate(module: Module, base: str = "") -> str:  # pylint: disable=too-many-branches
     """ Builds a monomer including modifications from the given base.
-
         Arguments:
             module: the Module holding the relevant domains
             base: a string of the substate (or an empty string in case of trans-AT)
-
         Returns:
             the modified substrate, or an empty string if no appropriate base was
             given
@@ -124,11 +123,9 @@ class NRPS_PKS_Results(ModuleResults):
 
     def add_method_results(self, method: str, results: Dict[str, Prediction]) -> None:
         """ Add per-domain results for a single prediction method
-
             Arguments:
                 method: the name of the method that generated the results
                 results: a dictionary mapping the domain name to a Prediction subclass
-
             Returns:
                 None
         """
@@ -163,6 +160,8 @@ class NRPS_PKS_Results(ModuleResults):
             for method, prediction in method_predictions.items():
                 if method == "nrpys":
                     rebuilt: Prediction = PredictorSVMResult.from_json(prediction)
+                elif method == "PARAS":
+                    rebuilt = ParasResult.from_json(prediction)
                 elif method.startswith("minowa"):
                     rebuilt = MinowaPrediction.from_json(prediction)
                 elif method == "signature":

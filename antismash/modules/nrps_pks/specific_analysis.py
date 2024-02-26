@@ -18,6 +18,7 @@ from .results import NRPS_PKS_Results
 from .substrates import run_pks_substr_spec_predictions
 
 from .nrpys import run_nrpys
+from .paras import run_paras
 
 
 def get_a_domains_from_cds_features(record: Record, cds_features: List[CDSFeature]) -> List[ModularDomain]:
@@ -53,6 +54,8 @@ def specific_analysis(record: Record, results: NRPS_PKS_Results, options: Config
     if a_domains:
         logging.info("Predicting A domain substrate specificities with nrpys")
         results.add_method_results("nrpys", run_nrpys(a_domains, options))
+        logging.info("Predicting A domain substrate specificities with PARAS")
+        results.add_method_results("PARAS", run_paras(a_domains))
 
     pks_results = run_pks_substr_spec_predictions(nrps_pks_genes)
     for method, method_results in pks_results.items():
