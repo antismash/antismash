@@ -50,6 +50,16 @@ RULE hglE-KS
     NEIGHBOURHOOD 20
     CONDITIONS hglE or hglD
 
+RULE polyhalogenated-pyrrole
+    CATEGORY other
+    DESCRIPTION polyhalogenated pyrrole
+    # doi:10.1073/pnas.1519695113
+    EXAMPLE NCBI KR011923.1 1-6705 tetrabromopyrrole  # BGC0001464
+    CUTOFF 10
+    NEIGHBOURHOOD 10
+    CONDITIONS Abhydrolase_6 and Trp_halogenase and (Acyl-CoA_dh_N or Acyl-CoA_dh_M or Acyl-CoA_dh_1)
+               and AMP-binding
+
 RULE prodigiosin
     CATEGORY PKS
     DESCRIPTION Serratia-type nontraditional PKS prodigiosin biosynthesis pathway
