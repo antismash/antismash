@@ -77,3 +77,4 @@ RULE phosphonate-like
     CUTOFF 20
     NEIGHBOURHOOD 20
     CONDITIONS phosphonates-like
+    
