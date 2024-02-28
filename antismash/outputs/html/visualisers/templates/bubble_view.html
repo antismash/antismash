@@ -11,7 +11,7 @@
     {% for candidate in region.candidate_clusters %}
       {% if candidate.smiles or candidate.polymer %}
         <option value="CC{{candidate.number}}">
-          Candidate {{candidate.number}} ({{candidate.location.start}} - {{candidate.location.end}}): {{candidate.kind}} {{candidate.products}}
+          Candidate {{candidate.number}} ({{candidate.start}} - {{candidate.end}}): {{candidate.kind}} {{candidate.products}}
         </option>
       {% endif %}
     {% endfor %}

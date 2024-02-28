@@ -13,6 +13,7 @@ from Bio.Seq import Seq
 from Bio.SeqFeature import FeatureLocation, SeqFeature
 
 from antismash.common.secmet import record as record_pkg
+from antismash.common.secmet.locations import connect_locations
 from antismash.common.test.helpers import get_path_to_nisin_genbank
 from antismash.common.hmmscan_refinement import HMMResult
 
@@ -34,6 +35,7 @@ from .helpers import (
     DummyCDSMotif,
     DummyPFAMDomain,
     DummyProtocluster,
+    DummyRecord,
     DummyRegion,
     DummySubRegion,
 )
@@ -112,29 +114,6 @@ class TestConversion(unittest.TestCase):
         with self.assertRaisesRegex(SecmetInvalidInputError, "missing or invalid location"):
             Record.from_biopython(rec, taxon="bacteria")
 
-    def test_origin_crossing_splits(self):
-        rec = list(Bio.SeqIO.parse(get_path_to_nisin_genbank(), "genbank"))[0]
-        rec.features = []
-        location = CompoundLocation([
-            FeatureLocation(3, 12, -1),
-            FeatureLocation(6, 9, -1),
-            FeatureLocation(15, 21, -1),
-        ], operator="order")
-        # should still error with meaningful features
-        rec.features.append(SeqFeature(location, type="gene"))
-        with self.assertRaisesRegex(SecmetInvalidInputError, "cannot determine correct ordering"):
-            Record.from_biopython(rec, taxon="bacteria")
-        # but not with misc features
-        rec.features[0].type = "misc_feature"
-        sec_rec = Record.from_biopython(rec, taxon="bacteria")
-        assert len(rec.features) == 1
-        assert rec.features[0].location.parts == [location.parts[0], location.parts[2]]
-
-        features = sec_rec.get_all_features()
-        assert len(features) == 2
-        assert features[0].location.parts == [location.parts[2]]
-        assert features[1].location.parts == [location.parts[0]]
-
     def test_discard(self):
         bio = list(Bio.SeqIO.parse(get_path_to_nisin_genbank(), "genbank"))[0]
         for feature_type in ANTISMASH_SPECIFIC_TYPES:
@@ -168,7 +147,7 @@ class TestStripping(unittest.TestCase):
 
     def test_candidate_clusters(self):
         assert not self.rec.get_candidate_clusters()
-        self.rec.add_candidate_cluster(DummyCandidateCluster())
+        self.rec.add_candidate_cluster(DummyCandidateCluster(start=0, end=20))
         assert self.rec.get_candidate_clusters()
         self.rec.strip_antismash_annotations()
         assert not self.rec.get_candidate_clusters()
@@ -182,7 +161,7 @@ class TestStripping(unittest.TestCase):
 
     def test_regions(self):
         assert not self.rec.get_regions()
-        self.rec.add_region(DummyRegion())
+        self.rec.add_region(DummyRegion(start=0, end=20))
         assert self.rec.get_regions()
         self.rec.strip_antismash_annotations()
         assert not self.rec.get_regions()
@@ -447,6 +426,28 @@ class TestRecord(unittest.TestCase):
         # and since it's already set, the getter should return it
         assert rec.get_gc_content() == 0.3
 
+    def test_distance_between_features(self):
+        record = Record("A" * 100)
+        assert not record.is_circular()
+        low = Feature(FeatureLocation(10, 20, 1), "test")
+        high = Feature(FeatureLocation(70, 80, 1), "test")
+
+        with patch.object(record_pkg, "get_distance_between_locations", return_value="dummy") as patched:
+            # make sure what's returned is the location function's result
+            assert record.get_distance_between_features(high, low) == "dummy"
+            # and make sure it's called with the right args
+            patched.assert_called_once_with(high.location, low.location)
+
+        # and check with a circular record
+        record._record.annotations = {"topology": "circular"}
+        assert record.is_circular()
+
+        with patch.object(record_pkg, "get_distance_between_locations", return_value="dummy") as patched:
+            # again, make sure what's returned is the location function's result
+            assert record.get_distance_between_features(high, low) == "dummy"
+            # and make sure that the wrap point is present
+            patched.assert_called_once_with(high.location, low.location, wrap_point=len(record))
+
 
 class TestCDSFetchByLocation(unittest.TestCase):
     def setUp(self):
@@ -493,6 +494,71 @@ class TestCDSFetchByLocation(unittest.TestCase):
         self.record.add_cds_feature(outer)
         loc = FeatureLocation(110, 140)
         assert self.func(loc, with_overlapping=False) == [inner]
+
+    def test_multi_part(self):
+        self.record._record.annotations = {"topology": "circular"}
+        assert self.record.is_circular()
+        print(self.record.get_cds_features())
+        location = CompoundLocation([FeatureLocation(0, 50, 1), FeatureLocation(80, 140, 1)])
+        assert self.func(location, with_overlapping=False) == list(self.record.get_cds_features())
+
+        location = CompoundLocation([FeatureLocation(0, 5, 1), FeatureLocation(80, 140, 1)])
+        assert self.func(location, with_overlapping=True) == [self.record.get_cds_features()[1]]
+
+    def test_multi_part_reverse(self):
+        self.record._record.annotations = {"topology": "circular"}
+        assert self.record.is_circular()
+        location = CompoundLocation([FeatureLocation(80, 140), FeatureLocation(0, 50)])
+        assert self.func(location, with_overlapping=False) == list(self.record.get_cds_features())[::-1]
+
+
+        location = CompoundLocation([FeatureLocation(0, 5, -1), FeatureLocation(80, 140, -1)])
+        assert self.func(location, with_overlapping=True) == [self.record.get_cds_features()[1]]
+
+    def test_cross_origin_cds(self):
+        self.record._record.annotations = {"topology": "circular"}
+        assert self.record.is_circular()
+        self.record._cds_features.clear()
+        self.record._cds_by_location.clear()
+        self.record._cds_by_name.clear()
+        cds = CDSFeature(CompoundLocation([FeatureLocation(120, 140, 1), FeatureLocation(0, 10, 1)]),
+                         locus_tag="test", translation="A")
+        self.record.add_cds_feature(cds)
+        self.record.add_cds_feature(DummyCDS(30, 40, strand=-1))
+
+        location = CompoundLocation([FeatureLocation(0, 50), FeatureLocation(80, 140)])
+        assert cds.is_contained_by(location)
+        assert self.func(location, with_overlapping=False) == list(self.record.get_cds_features())
+
+        location = CompoundLocation([FeatureLocation(80, 140), FeatureLocation(0, 50)])
+        assert self.func(location, with_overlapping=False) == list(self.record.get_cds_features())
+
+        location = CompoundLocation([FeatureLocation(0, 35), FeatureLocation(80, 140)])
+        assert self.func(location, with_overlapping=False) == [cds]
+
+    def test_multiple_cross_origin(self):
+        self.record._record.annotations = {"topology": "circular"}
+        self.record._cds_features.clear()
+        self.record._cds_by_location.clear()
+        self.record._cds_by_name.clear()
+        locations = [
+            FeatureLocation(110, 120, 1),
+            CompoundLocation([FeatureLocation(130, 140, 1), FeatureLocation(0, 7, 1)]),
+            CompoundLocation([FeatureLocation(139, 140, 1), FeatureLocation(0, 17, 1)]),
+            FeatureLocation(15, 30, 1),
+        ]
+        names = ["all_before", "mostly_before", "mostly_after", "all_after"]
+        for name, location in zip(names, locations):
+            self.record.add_cds_feature(CDSFeature(location, locus_tag=name, translation="A"))
+        assert len(self.record.get_cds_features()) == len(names)
+        # ensure the record's ordering is sorted by start location
+        expected = ["mostly_before", "mostly_after", "all_after", "all_before"]
+        assert [cds.get_name() for cds in self.record.get_cds_features()] == expected
+        # then check that fetching by cross-origin location will result in the
+        # cross-origin features being in the middle of the result
+        area = CompoundLocation([FeatureLocation(100, 140, 1), FeatureLocation(0, 40, 1)])
+        found = self.func(area)
+        assert [cds.get_name() for cds in found] == names
 
 
 class TestClusterManipulation(unittest.TestCase):
@@ -610,6 +676,19 @@ class TestCandidateClusterManipulation(unittest.TestCase):
         candidate_cluster = self.protocluster.parent
         assert candidate_cluster.location == self.candidate_cluster.location
         assert candidate_cluster.kind == CandidateCluster.kinds.SINGLE
+
+    def test_creation_linear_args(self):
+        assert not self.record.is_circular()
+        with patch.object(record_pkg, "create_candidates_from_protoclusters") as patched:
+            self.record.create_candidate_clusters()
+            assert patched.call_args == [([self.protocluster], None)]
+
+    def test_creation_circular_args(self):
+        self.record.annotations["topology"] = "circular"
+        assert self.record.is_circular()
+        with patch.object(record_pkg, "create_candidates_from_protoclusters") as patched:
+            self.record.create_candidate_clusters()
+            assert patched.call_args == [([self.protocluster], len(self.record))]
 
     def test_add_biopython(self):
         bio = self.candidate_cluster.to_biopython()[0]
@@ -798,7 +877,9 @@ class TestRegionManipulation(unittest.TestCase):
         assert regions[1].subregions == (self.subregion,)
 
     def test_creation_overlapping(self):
-        extra_sup = CandidateCluster(CandidateCluster.kinds.SINGLE, [self.protocluster])
+        new_proto = Protocluster(FeatureLocation(8, 90), FeatureLocation(100, 120), tool="test",
+                                 cutoff=17, neighbourhood_range=5, product='a', detection_rule="a")
+        extra_sup = CandidateCluster(CandidateCluster.kinds.SINGLE, [new_proto])
         self.record.add_candidate_cluster(extra_sup)
         extra_sub = SubRegion(FeatureLocation(50, 250), tool="test")
         self.record.add_subregion(extra_sub)
@@ -806,8 +887,8 @@ class TestRegionManipulation(unittest.TestCase):
         self.record.create_regions()
         assert len(self.record.get_regions()) == 1
         region = self.record.get_regions()[0]
-        assert region.location == FeatureLocation(3, 300)
-        assert region.candidate_clusters == (extra_sup, self.candidate_cluster)
+        assert region.location == FeatureLocation(3, 300, 1)
+        assert region.candidate_clusters == (self.candidate_cluster, extra_sup)
         assert region.subregions == (extra_sub, self.subregion)
 
     def test_creation_ordering(self):
@@ -826,12 +907,12 @@ class TestRegionManipulation(unittest.TestCase):
         assert len(self.record.get_regions()) == 2
 
         region = self.record.get_regions()[0]
-        assert region.location == FeatureLocation(3, 100)
+        assert region.location == FeatureLocation(3, 100, 1)
         assert region.candidate_clusters == (self.candidate_cluster,)
         assert region.subregions == (self.subregion,)
 
         region = self.record.get_regions()[1]
-        assert region.location == FeatureLocation(800, 870)
+        assert region.location == FeatureLocation(800, 870, 1)
         assert region.candidate_clusters == (extra_sup,)
         assert region.subregions == tuple()
 
@@ -855,7 +936,8 @@ class TestModuleManipulation(unittest.TestCase):
         for feature in self.cdses + self.domains:
             self.record.add_feature(feature)
 
-        self.module = Module(domains=self.domains)
+        location = connect_locations([dom.location for dom in self.domains])
+        self.module = Module(location, domains=self.domains)
 
     def test_add_biopython(self):
         bio = self.module.to_biopython()[0]
@@ -969,3 +1051,197 @@ def test_naming():
 
     record.id = "other"
     assert record.has_name(long_name)
+
+
+class TestExtension(unittest.TestCase):
+    def setUp(self):
+        self.record = Record("A" * 100)
+        assert not self.record.is_circular()
+
+    def set_circular(self):
+        self.record._record.annotations = {"topology": "circular"}
+        assert self.record.is_circular()
+
+    def test_simple_unbounded(self):
+        for strand in [-1, 0, 1]:
+            location = FeatureLocation(30, 50, strand)
+            for distance in [10, 15]:
+                new = self.record.extend_location(location, distance)
+                assert isinstance(new, FeatureLocation)
+                assert new.start == location.start - distance
+                assert new.end == location.end + distance
+                assert new.strand == location.strand
+                # ensure the original wasn't changed
+                assert new.parts is not location.parts
+
+    def test_simple_underflow(self):
+        location = FeatureLocation(10, 30, 1)
+        distance = 20
+        new = self.record.extend_location(location, distance)
+        assert isinstance(new, FeatureLocation)
+        assert new.start == 0
+        assert new.end == location.end + distance
+        assert new.strand == location.strand
+
+        self.set_circular()
+        assert self.record.is_circular()
+
+        new = self.record.extend_location(location, distance)
+        assert isinstance(new, CompoundLocation)
+        assert new.start == 0
+        assert new.end == len(self.record)
+        assert new.strand == location.strand
+        assert new.parts == [
+            FeatureLocation(90, new.end, 1),
+            FeatureLocation(0, location.end + distance, 1)
+        ]
+        # and ensure the original wasn't changed
+        assert new.parts is not location.parts
+
+    def test_simple_overflow(self):
+        location = FeatureLocation(60, 90, 1)
+        distance = 20
+        new = self.record.extend_location(location, distance)
+        assert isinstance(new, FeatureLocation)
+        assert new.start == location.start - distance
+        assert new.end == len(self.record)
+        assert new.strand == location.strand
+
+        self.set_circular()
+        assert self.record.is_circular()
+
+        new = self.record.extend_location(location, distance)
+        assert isinstance(new, CompoundLocation)
+        assert new.start == 0
+        assert new.end == len(self.record)
+        assert new.strand == location.strand
+        assert new.parts == [
+            FeatureLocation(location.start - distance, new.end, 1),
+            FeatureLocation(0, (location.end + distance) % len(self.record), 1)
+        ]
+
+    def test_simple_too_long(self):
+        location = FeatureLocation(40, 60, 1)
+        distance = 200  # longer than the record itself should be fine
+        new = self.record.extend_location(location, distance)
+        assert new.start == 0
+        assert new.end == 100
+
+    def test_compound_unbounded(self):
+        for strand in [-1, 0, 1]:
+            initial_parts = [
+                FeatureLocation(20, 40, strand),
+                FeatureLocation(60, 80, strand),
+            ]
+            if strand == -1:
+                location = CompoundLocation(initial_parts[::-1])
+            else:
+                location = CompoundLocation(initial_parts)
+            for distance in [10, 15]:
+                new = self.record.extend_location(location, distance)
+                assert isinstance(new, CompoundLocation)
+                assert new.start == location.start - distance
+                assert new.end == location.end + distance
+                assert new.strand == location.strand
+                assert len(new.parts) == len(location.parts)
+                parts = sorted(location.parts, key=lambda x: x.start)
+                assert parts[0].end == parts[0].end
+                assert parts[1].start == parts[1].start
+                # ensure the original wasn't changed
+                assert parts is not location.parts
+
+    def test_compound_underflow(self):
+        location = CompoundLocation([
+            FeatureLocation(10, 30, 1),
+            FeatureLocation(40, 60, 1),
+        ])
+        distance = 20
+        new = self.record.extend_location(location, distance)
+        assert isinstance(new, CompoundLocation)
+        assert new.start == 0
+        assert new.end == location.end + distance
+        assert new.strand == location.strand
+        assert new.parts is not location.parts
+        assert new.parts[0].end == location.parts[0].end
+        assert new.parts[1].start == location.parts[1].start
+
+        self.set_circular()
+        assert self.record.is_circular()
+
+        new = self.record.extend_location(location, distance)
+        assert isinstance(new, CompoundLocation)
+        assert new.start == 0
+        assert new.end == len(self.record)
+        assert new.strand == location.strand
+        assert new.parts == [
+            FeatureLocation(90, new.end, 1),
+            FeatureLocation(0, location.parts[0].end, 1),
+            FeatureLocation(location.parts[-1].start, location.end + distance, 1),
+        ]
+        assert new.parts is not location.parts
+
+    def test_compound_overflow(self):
+        location = CompoundLocation([
+            FeatureLocation(40, 60, 1),
+            FeatureLocation(70, 90, 1),
+        ])
+        distance = 20
+        new = self.record.extend_location(location, distance)
+        assert isinstance(new, CompoundLocation)
+        assert new.start == location.start - distance
+        assert new.end == len(self.record)
+        assert new.strand == location.strand
+        assert new.parts is not location.parts
+        assert new.parts[0].end == location.parts[0].end
+        assert new.parts[1].start == location.parts[1].start
+
+        self.set_circular()
+        assert self.record.is_circular()
+
+        new = self.record.extend_location(location, distance)
+        assert isinstance(new, CompoundLocation)
+        assert new.start == 0
+        assert new.end == len(self.record)
+        assert new.strand == location.strand
+        assert new.parts == [
+            FeatureLocation(20, location.parts[0].end, 1),
+            FeatureLocation(location.parts[-1].start, new.end, 1),
+            FeatureLocation(0, 10, 1),
+        ]
+        assert new.parts is not location.parts
+
+    def test_compound_too_long_linear(self):
+        location = CompoundLocation([
+            FeatureLocation(20, 30, 1),
+            FeatureLocation(40, 50, 1),
+            FeatureLocation(60, 70, 1),
+        ])
+        distance = 200  # longer than the record
+        new = self.record.extend_location(location, distance)
+        # while they should extend to both edges, they shouldn't merge because they don't wrap
+        assert new.parts[0].start == 0 and new.parts[0].end == 30
+        assert new.parts[1] == location.parts[1]
+        assert new.parts[2].start == 60 and new.parts[2].end == 100
+
+    def test_compound_too_long_circular(self):
+        location = CompoundLocation([
+            FeatureLocation(20, 30, 1),
+            FeatureLocation(40, 50, 1),
+            FeatureLocation(60, 70, 1),
+        ])
+        distance = 100  # long enough for the extension to wrap and cover the disjoint areas in the middle
+        self.set_circular()
+        new = self.record.extend_location(location, distance)
+        assert new.start == 0
+        assert new.end == 100
+        # and since it's connecting parts now, they should be joined
+        assert len(new.parts) == 1
+
+    def test_real(self):
+        record = DummyRecord(seq="A"*212)
+        location = CompoundLocation([
+            FeatureLocation(112, 212, 1),
+            FeatureLocation(0, 105, 1),
+        ])
+        result = record.extend_location(location, 100)
+        assert result == FeatureLocation(0, 212, 1)

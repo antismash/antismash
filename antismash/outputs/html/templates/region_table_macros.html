@@ -26,8 +26,8 @@
          {{join()}}<a class="external-link" href="{{options.urls.docs_baseurl}}glossary/#{{subtype.lower()}}" target="_blank">{{subtype}}</a>
        {%- endfor %}
      </td>
-     <td class="digits">{{"{:,d}".format(region.location.start + 1)}}</td>
-     <td class="digits table-split-left">{{"{:,d}".format(region.location.end)}}</td>
+     <td class="digits">{{"{:,d}".format(region.location.parts[0].start + 1)}}</td>
+     <td class="digits table-split-left">{{"{:,d}".format(region.location.parts[-1].end)}}</td>
      {% if region.bgc_id != "" -%}
       {% set similarity = region.best_knowncluster_similarity %}
       {% if similarity > 75 %}

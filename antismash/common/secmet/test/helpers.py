@@ -6,6 +6,8 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=protected-access,missing-docstring
 
+from Bio.Seq import Seq
+
 from ..features import (
     AntismashDomain,
     CDSFeature,
@@ -18,7 +20,7 @@ from ..features import (
     CandidateCluster,
 )
 from ..features.candidate_cluster import CandidateClusterKind
-from ..locations import FeatureLocation
+from ..locations import CompoundLocation, FeatureLocation, Location
 from ..record import Record
 
 
@@ -85,14 +87,24 @@ class DummyProtocluster(Protocluster):
     def __init__(self, start=None, end=None, core_start=0, core_end=1,  # pylint: disable=too-many-arguments
                  core_location=None, tool="test", product="test-product",
                  cutoff=10, neighbourhood_range=10, high_priority_product=True,
-                 product_category="TEST-CATEGORY"):
+                 product_category="TEST-CATEGORY", record_length=None):
         if core_location is None:
-            core_location = FeatureLocation(core_start, core_end)
+            if core_start > core_end:
+                assert record_length
+                core_location = CompoundLocation([FeatureLocation(core_start, record_length),
+                                                  FeatureLocation(0, core_end)])
+            else:
+                core_location = FeatureLocation(core_start, core_end)
         if start is None:
             start = max(0, core_location.start - neighbourhood_range)
         if end is None:
             end = core_location.end + neighbourhood_range
-        surrounds = FeatureLocation(start, end)
+        if start > end:
+            assert record_length
+            surrounds = CompoundLocation([FeatureLocation(start, record_length),
+                                          FeatureLocation(0, end)])
+        else:
+            surrounds = FeatureLocation(start, end)
         super().__init__(core_location, surrounds, tool, product, cutoff,
                          neighbourhood_range, high_priority_product,
                          product_category=product_category)
@@ -117,11 +129,13 @@ class DummyPFAMDomain(PFAMDomain):
 
 class DummyRecord(Record):
     "class for generating a Record like data structure"
-    def __init__(self, features=None, seq='AGCTACGT', taxon='bacteria',
-                 record_id=None):
-        if features:
-            max_feature_coordinate = max(feature.location.end for feature in features)
-            seq = seq * max(1, max_feature_coordinate // len(seq))
+    def __init__(self, features=None, seq=None, taxon='bacteria',
+                 record_id=None, circular=False):
+        if features and seq is None:
+            length = max(f.location.end for f in features)
+            seq = 'AGCTACGT' * (length // 8 + 1)
+        if seq is None:
+            seq = 'AGCTACGT'
         super().__init__(seq, transl_table=11 if taxon == 'bacteria' else 1)
         if features:
             for feature in features:
@@ -129,14 +143,56 @@ class DummyRecord(Record):
         self.record_index = 0
         if record_id is not None:
             self.id = record_id
+        if circular:
+            self.make_circular()
+        # pylint doesn't recognise the superclass has a sequence
+        # so trick it into believing it exists
+        self.seq = self.seq  # pylint: disable=access-member-before-definition
+
+    @property
+    def features(self):
+        return self.get_all_features()
+
+    def make_circular(self, circular=True):
+        if not self._record.annotations:
+            self._record.annotations = {}
+        if circular:
+            self._record.annotations["topology"] = "circular"
+            assert self.is_circular()
+        else:
+            self._record.annotations["topology"] = "linear"
+            assert not self.is_circular()
+
+    def rotate(self, cut_point: int, padding: int = 0) -> Record:
+        if len(self) < cut_point:
+            raise ValueError("Invalid cut location: outside record")
+        new_seq = self.seq[cut_point:] + Seq("A" * padding) + self.seq[:cut_point]
+        assert len(new_seq) == len(self.seq) + padding
+
+        for feature in self.features:
+            if feature.type == "source":
+                feature.location = FeatureLocation(
+                    feature.location.start,
+                    feature.location.end + padding,
+                    feature.location.strand
+                )
+                continue
+            location = feature.location
+            if cut_point in location:
+                location = split_location_on_cut(location, cut_point)
+            location = shift_location(location, cut_point, padding, len(self))
+            feature.location = location
+        self._cds_features = sorted(self._cds_features)
+        self.seq = new_seq
+        self.make_circular()
 
 
 class DummyRegion(Region):
-    def __init__(self, candidate_clusters=None, subregions=None):
+    def __init__(self, candidate_clusters=None, subregions=None, start=0, end=100):
         if candidate_clusters is None:
-            candidate_clusters = [DummyCandidateCluster()]
+            candidate_clusters = [DummyCandidateCluster(start=start, end=end)]
         if subregions is None:
-            subregions = [DummySubRegion()]
+            subregions = [DummySubRegion(start=start, end=end)]
         super().__init__(candidate_clusters, subregions)
 
 
@@ -149,12 +205,57 @@ class DummySubRegion(SubRegion):
 
 
 class DummyCandidateCluster(CandidateCluster):
-    def __init__(self, clusters=None, kind=None):
+    def __init__(self, clusters=None, kind=None, start=0, end=100, **kwargs):
         if clusters is None:
-            clusters = [DummyProtocluster()]
+            clusters = [DummyProtocluster(start=start, end=end)]
         if not kind:
             if len(clusters) == 1:
                 kind = CandidateClusterKind.SINGLE
             else:
                 kind = CandidateClusterKind.INTERLEAVED
-        super().__init__(kind, clusters)
+        if "circular_wrap_point" not in kwargs and any(cluster.crosses_origin() for cluster in clusters):
+            kwargs["circular_wrap_point"] = max(cluster.location.parts[0].end for cluster in clusters)
+        super().__init__(kind, clusters, **kwargs)
+
+
+def split_location_on_cut(location: Location, cut_point: int) -> CompoundLocation:
+    new_parts = []
+    for part in location.parts:
+        if cut_point not in part:
+            new_parts.append(part)
+            continue
+        new_parts.append(FeatureLocation(part.start, cut_point, part.strand))
+        new_parts.append(FeatureLocation(cut_point, part.end, part.strand))
+    return CompoundLocation(new_parts)
+
+
+def test_split():
+    assert split_location_on_cut(FeatureLocation(5, 12, -1), 7).parts == [
+        FeatureLocation(5, 7, -1), FeatureLocation(7, 12, -1)
+    ]
+    compound = CompoundLocation([FeatureLocation(5, 12, 1), FeatureLocation(15, 21, 1)])
+    assert split_location_on_cut(compound, 13) == compound
+
+# ensure the splitting function works as expected, since other tests rely on it
+# and since it won't run automatically due to file naming, manually test it here
+test_split()
+
+def shift_location(location: Location, cut_point: int, padding: int, rec_len: int) -> Location:
+    new_parts = []
+    for part in location.parts:
+        if part.start < cut_point:
+            new_parts.append(FeatureLocation(part.start + (rec_len - cut_point) + padding,
+                                             part.end + (rec_len - cut_point) + padding,
+                                             part.strand))
+        else:
+            new_parts.append(FeatureLocation(part.start - cut_point,
+                                             part.end - cut_point,
+                                             part.strand))
+    if len(new_parts) == 1:
+        return new_parts[0]
+    return CompoundLocation(new_parts)
+
+
+# ensure the shift function works as expected, since other tests rely on it
+assert shift_location(FeatureLocation(7, 8, -1), 15, 10, 20) == FeatureLocation(22, 23, -1)
+assert shift_location(FeatureLocation(16, 17, 1), 15, 10, 20) == FeatureLocation(1, 2, 1)

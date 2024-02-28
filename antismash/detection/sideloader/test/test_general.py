@@ -28,7 +28,7 @@ class TestSimple(unittest.TestCase):
         assert result.end == 500
 
     def test_bad_args(self):
-        for bad in ["a:a:1-5", ":1-5", "a:1-", "a:1-5-50", "a:", "a:1a-500", "a:50-1"]:
+        for bad in ["a:a:1-5", ":1-5", "a:1-", "a:1-5-50", "a:", "a:1a-500"]:
             with self.assertRaises(ValueError):
                 _parse_arg(bad)
 

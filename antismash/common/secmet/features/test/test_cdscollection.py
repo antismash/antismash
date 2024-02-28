@@ -7,6 +7,7 @@
 import unittest
 
 from antismash.common.secmet.features import CDSCollection, FeatureLocation
+from antismash.common.secmet.locations import CompoundLocation
 from antismash.common.secmet.test.helpers import DummyCDS, DummyRecord
 
 
@@ -57,6 +58,15 @@ class TestCDSCollection(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "not contained by"):
             collection.add_cds(cds)
 
+    def test_ordering(self):
+        shorter = CDSCollection(FeatureLocation(20, 40), feature_type="test", child_collections=[])
+        longer = CDSCollection(FeatureLocation(20, 50), feature_type="test", child_collections=[])
+        assert shorter > longer
+
+        cross_origin = CDSCollection(CompoundLocation([FeatureLocation(60, 80), FeatureLocation(0, 40)]),
+                                     feature_type="test", child_collections=[])
+        assert sorted([shorter, longer, cross_origin]) == [cross_origin, longer, shorter]
+
     def test_contig_edge_transitivity(self):
         inner = CDSCollection(FeatureLocation(30, 40), feature_type="test")
         mid = CDSCollection(FeatureLocation(20, 50), feature_type="test", child_collections=[inner])
@@ -86,3 +96,32 @@ class TestCDSCollection(unittest.TestCase):
         mid._contig_edge = True
         assert not inner.contig_edge
         assert mid.contig_edge and outer.contig_edge
+
+    def test_without_cross_origin(self):
+        # simple locations are fine and obviously can't cross the origin
+        area = CDSCollection(FeatureLocation(50, 70), feature_type="dummy_type")
+        assert not area.crosses_origin()
+
+        # compound locations that don't cross the origin aren't allowed
+        with self.assertRaisesRegex(ValueError, "without crossing the origin"):
+            area = CDSCollection(CompoundLocation([
+                FeatureLocation(0, 20),
+                FeatureLocation(50, 70),
+            ]), feature_type="dummy_type")
+
+    def test_cross_origin(self):
+        area = CDSCollection(CompoundLocation([
+            FeatureLocation(50, 70),
+            FeatureLocation(0, 20),
+        ]), feature_type="dummy_type")
+        area.parent_record = DummyRecord(seq="A"*70, circular=True)
+        assert area.crosses_origin()
+
+        inner = CDSCollection(CompoundLocation([
+            FeatureLocation(50, 70),
+            FeatureLocation(0, 20),
+        ]), feature_type="dummy_type")
+        outer = CDSCollection(FeatureLocation(0, 80), feature_type="test", child_collections=[inner])
+        expected = "collection not crossing the origin cannot contain a collection that does$"
+        with self.assertRaisesRegex(ValueError, expected):
+            outer.parent_record = DummyRecord(seq="A"*70, circular=True)

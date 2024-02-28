@@ -10,7 +10,13 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, TypeVar, Un
 
 from Bio.SeqFeature import SeqFeature
 
-from .feature import Feature, FeatureLocation
+from antismash.common.secmet.locations import (
+    Location,
+    location_bridges_origin,
+    split_origin_bridging_location,
+)
+
+from .feature import Feature
 from .cds_feature import CDSFeature
 
 T = TypeVar("T", bound="CDSCollection")
@@ -27,8 +33,16 @@ class CDSCollection(Feature):
                  "_cds_cache", "_cds_cache_dirty",
                  ]
 
-    def __init__(self, location: FeatureLocation, feature_type: str,
+    def __init__(self, location: Location, feature_type: str,
                  child_collections: Sequence["CDSCollection"] = None) -> None:
+        # it's fine to have two parts if crossing the origin
+        if len(location.parts) > 1:
+            # but it must only be the two halves, more indicates a problem of some kind
+            assert len(location.parts) == 2, location
+            # and the second half must be the one that starts at the origin itself
+            if location.parts[1].start != 0:
+                raise ValueError("Collections cannot have compound locations without crossing the origin")
+        assert len(set(part.strand for part in location.parts)) == 1, f"mixed strands for collection: {location=}"
         super().__init__(location, feature_type, created_by_antismash=True)
         self._parent_record: Any = None  # should be Record but will cause circular dependencies
         self._contig_edge = False
@@ -42,22 +56,24 @@ class CDSCollection(Feature):
                 assert isinstance(child, CDSCollection), type(child)
                 child.parent = self
 
-    def __lt__(self, other: Union[Feature, FeatureLocation]) -> bool:
+    def __lt__(self, other: Union[Feature, Location]) -> bool:
         """ Collections differ from other Features in that start ties are
             resolved in the opposite order, from longest to shortest
         """
-        if isinstance(other, FeatureLocation):
-            location = other
-        else:
-            assert isinstance(other, Feature)
-            location = other.location
 
-        if self.location.start < location.start:
-            return True
-        if self.location.start > location.start:
-            return False
-        # when starts are equal, sort by largest collection first
-        return self.location.end > location.end
+        if isinstance(other, Feature):
+            location = other.location
+        else:
+            location = other
+
+        def get_comparator(loc: Location) -> tuple[int, int]:
+            start = loc.start
+            if location_bridges_origin(loc):
+                _, head = split_origin_bridging_location(loc)
+                start = min(part.start for part in head) - max(part.end for part in head)
+            return (start, -len(loc))
+
+        return get_comparator(self.location) < get_comparator(location)
 
     def __contains__(self, other: Any) -> bool:
         """ Returns True if the given CDSFeature or CDSCollection is one of the
@@ -78,6 +94,14 @@ class CDSCollection(Feature):
         """ Sets the parent record to a secmet.Record instance """
         self._parent_record = record
         self._contig_edge = self.location.start == 0 or self.location.end >= len(record.seq)
+        if self._children:
+            for child in self._children:
+                if not child.parent_record:
+                    child.parent_record = record
+            if not self.crosses_origin() and any(child.crosses_origin() for child in self._children):
+                raise ValueError(
+                    "A collection not crossing the origin cannot contain a collection that does"
+                )
 
     def get_root(self) -> "CDSCollection":
         """ Returns the highest level CDSCollection that either contains this
@@ -111,11 +135,16 @@ class CDSCollection(Feature):
         """
         if not self._parent_record:
             raise ValueError("Cannot determine if on contig edge without parent record")
+        if self.crosses_origin():
+            return False
         if self._contig_edge:
             return self._contig_edge
         if self._children:
             return any(child.contig_edge for child in self._children)
         return False
+
+    def crosses_origin(self) -> bool:  # overriding base class, since these are much more controlled
+        return len(self.location.parts) > 1
 
     def add_cds(self, cds: CDSFeature) -> None:
         """ Add a CDS to the collection covered by this feature, also adds to

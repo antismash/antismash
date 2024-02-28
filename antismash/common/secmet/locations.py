@@ -4,7 +4,14 @@
 """ Helper functions for location operations """
 
 import logging
-from typing import Iterable, List, Optional, Sequence, Tuple, Union
+from typing import (
+    List,
+    Iterable,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 from Bio.SeqFeature import (
     AbstractPosition,
@@ -20,6 +27,198 @@ from Bio.SeqFeature import (
 from .errors import SecmetInvalidInputError
 
 Location = Union[CompoundLocation, FeatureLocation]
+
+
+def _reduce_parts_to_location(parts: list[FeatureLocation], wrap_point: Optional[int]) -> Location:
+    """ Reduces multiple FeatureLocations into a minimal location that may or may
+        not cross the origin
+    """
+    # if it's already reduced as much as it can be, return early
+    if len(parts) == 1:
+        return parts[0]
+    # if the locations cross the origin, then the resulting reduction has to
+    # also cross the origin
+    temp = CompoundLocation(parts)
+    if location_bridges_origin(temp):
+        if wrap_point is None:
+            raise ValueError("Cannot merge cross-origin location without a wrap point")
+        assert wrap_point > 0  # tested before this function is called, but just in case
+        lower, upper = split_origin_bridging_location(temp)
+        return CompoundLocation([
+            FeatureLocation(min(up.start for up in upper), wrap_point, 1),
+            FeatureLocation(0, max(low.end for low in lower), 1),
+        ])
+    # only the simple case remains, where it's no cross origin but still has multiple exons
+    temp = CompoundLocation(parts)
+    return FeatureLocation(temp.start, temp.end, strand=1)
+
+
+def _merge_over_origin(locations: list[Location], wrap_point: int) -> list[Location]:
+    """ Merges, where possible, locations that individually don't cross the origin,
+        but have a shorter distance over the origin
+    """
+    new_locations: list[Location] = []
+    merged: set[str] = set()
+    # first, compact those parts that can be compacted  # TODO, not sure about split with some configs
+    upper, lower = _split_sections_around_origin(locations, wrap_point)
+    if lower and upper:
+        locations = [connect_locations(upper), connect_locations(lower)]
+    elif lower:
+        locations = [connect_locations(lower)]
+    elif upper:
+        locations = [connect_locations(upper)]
+    # this loop would normally be a do-while loop, but python doesn't support that
+    # so use a boolean to require at least one run
+    has_run = False
+    while len(locations) > 1 and (merged or not has_run):
+        has_run = True
+        merged.clear()
+        new_locations.clear()
+        for i, location in enumerate(locations):
+            assert len(location.parts) == 1, location
+            for other in locations[i:]:
+                assert len(other.parts) == 1
+                # if it was already merged into a new location, it'll cause issues this iteration
+                if str(other) in merged:
+                    continue
+                # if over the origin is shorter, merge the two into a cross-origin location
+                over_origin = get_distance_between_locations(location, other, wrap_point=wrap_point)
+                standard = get_distance_between_locations(location, other)
+                if over_origin < standard:
+                    if other.start < location.start:
+                        upper = FeatureLocation(location.start, wrap_point, 1)
+                        lower = FeatureLocation(0, other.end, 1)
+                    else:
+                        upper = FeatureLocation(other.start, wrap_point, 1)
+                        lower = FeatureLocation(0, location.end, 1)
+                    location = CompoundLocation([upper, lower])
+                    merged.add(str(other))
+                    break
+            if str(location) not in merged:
+                new_locations.append(location)
+        assert len(new_locations) <= len(locations)
+        if not merged:
+            break
+        assert len(new_locations) == len(locations) - len(merged), f"{new_locations=}\n{locations=}\n{merged=}"
+        locations = list(new_locations)
+    return locations
+
+
+def _is_wrapping_shorter(locations: Iterable[Location], wrap_point: int) -> bool:
+    """ Checks the given locations to see if wrapping around the given coordinate
+        is a shorter path.
+
+        Arguments:
+            locations: the locations to check
+            wrap_point: the point at which locations must wrap
+
+        Returns:
+            True if going over the wrapping point would be shorter or any single
+            location is already wrapped
+    """
+    if any(location_bridges_origin(location) for location in locations):
+        return True
+
+    locations = sorted(locations, key=lambda x: (x.start, x.end))
+    first = locations[0]
+    for second in locations[1:]:
+        if second.start - first.end > wrap_point // 2:  # wrapping is better
+            return True
+    return False
+
+
+def _split_sections_around_origin(locations: list[Location], origin: int,
+                                  ) -> tuple[list[Location], list[Location]]:
+    """ Separates a list of locations into pre- and post-origin portions """
+    pre_chunks = []
+    post_chunks = []
+
+    # before trying to split, check if it's necessary
+    if not _is_wrapping_shorter(locations, origin):
+        return (locations, [])
+
+    for location in locations:
+        if location_bridges_origin(location):
+            lower, upper = split_origin_bridging_location(location)
+            pre_chunks.append(_reduce_parts_to_location(upper, origin))
+            post_chunks.append(_reduce_parts_to_location(lower, origin))
+        else:
+            location = FeatureLocation(location.start, location.end, 1)
+            if location.end < origin / 2:
+                post_chunks.append(location)
+            else:
+                pre_chunks.append(location)
+    return pre_chunks, post_chunks
+
+
+def connect_locations(locations: list[Location], wrap_point: int = None) -> Location:
+    """ Creates as small a location as possible that fully covers the given locations.
+        With a circular record, connections will cross the origin if smaller.
+
+        The resulting location will always be on the forward strand.
+
+        Arguments:
+            locations: the locations to connect
+            wrap_point: the record length for circular records, otherwise None
+
+        Returns:
+            a location, possibly with two parts if it crosses the origin in a circular record
+    """
+    if not locations:
+        raise ValueError("At least one location is required")
+    any_cross_origin = any(location_bridges_origin(loc) for loc in locations)
+
+    # linear records can't have cross-origin features at all, so don't try to handle it
+    if any_cross_origin and wrap_point is None:
+        raise ValueError("Connecting origin-bridging locations requires the record length")
+
+    locations = [_reduce_parts_to_location(location.parts, wrap_point) for location in locations]
+
+    # handle the simplest case first, non-circular inputs
+    if wrap_point is None:
+        start = min(loc.start for loc in locations)
+        end = max(loc.end for loc in locations)
+        return FeatureLocation(start, end, 1)
+
+    assert wrap_point > 0
+
+    # a little more setup is required in the case of circularity with no origin-crossing features,
+    # if it would be shorter to take the path over the origin between two locations
+    if not any_cross_origin:
+        locations = _merge_over_origin(locations, wrap_point=wrap_point)
+
+    # now that the locations are updated, check for any remaining/new cross-origin locations
+    any_cross_origin = any(location_bridges_origin(loc) for loc in locations)
+
+    # now that merging has happened, if there's only one location left, don't continue
+    # otherwise the recursion later on will be infinite
+    if len(locations) == 1:
+        return locations[0]
+
+    pre_chunks, post_chunks = _split_sections_around_origin(locations, wrap_point)
+
+    # then combine each chunk into a part
+    if not pre_chunks:
+        if post_chunks == locations:
+            wrap_point = None  # don't try the same process all over again with no change
+        result = connect_locations(post_chunks)
+    elif not post_chunks:
+        if pre_chunks == locations:
+            wrap_point = None  # don't try the same process all over again with no change
+        result = connect_locations(pre_chunks)
+    else:
+        pre = connect_locations(pre_chunks, wrap_point)
+        post = connect_locations(post_chunks, wrap_point)
+        assert isinstance(pre, FeatureLocation), pre
+        assert isinstance(post, FeatureLocation), post
+        # don't build compound locations if one section is fully contained in the other
+        if location_contains_other(pre, post) or location_contains_other(post, pre):
+            return pre if len(pre) > len(post) else post
+        if locations_overlap(pre, post):
+            result = connect_locations([pre, post])
+        else:
+            result = CompoundLocation([pre, post])
+    return result
 
 
 def convert_protein_position_to_dna(start: int, end: int, location: Location) -> Tuple[int, int]:
@@ -156,9 +355,12 @@ def location_bridges_origin(location: Location, allow_reversing: bool = False) -
     if not isinstance(location, CompoundLocation):
         return False
 
-    # invalid strands mean direction can't be determined, may need to be an error
+    # a missing strand has a little less reliability, but as long as it's ordered
+    # correctly the correct result will be found
     if location.strand not in [1, -1]:
-        return False
+        starts = [part.start for part in location.parts]
+        ordered = sorted(starts)
+        return starts != ordered
 
     def check(location: Location) -> bool:
         """ Returns True if the exon ordering is invalid for the strand """
@@ -196,7 +398,7 @@ def _is_valid_split(lower: List[Location], upper: List[Location], strand: int) -
         return False
 
     # check that both sections cover a mutually exclusive area
-    if locations_overlap(combine_locations(lower), combine_locations(upper)):
+    if locations_overlap(connect_locations(lower), connect_locations(upper)):
         return False
 
     # check that all components in each section are correctly ordered
@@ -221,22 +423,25 @@ def split_origin_bridging_location(location: CompoundLocation) -> Tuple[
     """
     lower: List[FeatureLocation] = []
     upper: List[FeatureLocation] = []
-    if location.strand == 1:
+    strands_used = set(part.strand for part in location.parts)
+    # no strand will be treated as forward, but mixed strands is still a problem
+    if len(strands_used) > 1:
+        raise ValueError("Cannot separate bridged location without a valid strand")
+
+    if location.strand != -1:
         for i, part in enumerate(location.parts):
             if not upper or part.start > upper[-1].start:
                 upper.append(part)
             else:
                 lower.extend(location.parts[i:])
                 break
-    elif location.strand == -1:
+    else:
         for i, part in enumerate(location.parts):
             if not lower or part.start < lower[-1].start:
                 lower.append(part)
             else:
                 upper.extend(location.parts[i:])
                 break
-    else:
-        raise ValueError("Cannot separate bridged location without a valid strand")
 
     if not (lower and upper):
         raise ValueError(f"Location does not bridge origin: {location}")
@@ -328,35 +533,23 @@ def location_from_string(data: str) -> Location:
     return CompoundLocation(locations, operator=operator)
 
 
-def combine_locations(*locations: Iterable[Location]) -> Location:
-    """ Combines multiple FeatureLocations into a single location using the
-        minimum start and maximum end. Will not create a CompoundLocation if any
-        of the inputs are CompoundLocations.
-
-        Strand will be set to None.
+def make_forwards(location: Location) -> Location:
+    """ Creates a copy of a location in the forward strand,
+        reordering the components if it was on the reverse strand.
 
         Arguments:
-            locations: one or more FeatureLocation instances
+            location: the location to convert
 
         Returns:
-            a new FeatureLocation that will contain all provided FeatureLocations
+            a new location in the forward strand
     """
-    # ensure we have a list of featureLocations
-    if len(locations) == 1:
-        if isinstance(locations[0], CompoundLocation):
-            locs = locations[0].parts
-        # it's silly to combine a single location, but don't iterate over it
-        elif isinstance(locations[0], FeatureLocation):
-            locs = [locations[0]]
-        else:  # some kind of iterable, hopefully containing locations
-            locs = list(locations[0])
-    else:
-        locs = list(locations)
-
-    # build the result
-    start = min(loc.start for loc in locs)
-    end = max(loc.end for loc in locs)
-    return FeatureLocation(start, end, strand=None)
+    parts = [FeatureLocation(part.start, part.end, 1) for part in location.parts]
+    if location.strand == -1:
+        parts.reverse()
+    if len(parts) == 1:
+        return parts[0]
+    loc = CompoundLocation(parts)
+    return loc
 
 
 def location_contains_overlapping_exons(location: Location) -> bool:
@@ -402,7 +595,7 @@ def ensure_valid_locations(features: List[SeqFeature], can_be_circular: bool, se
             raise ValueError("one or more features with missing or invalid locations")
         # features outside the sequence cause problems with motifs and translations
         if feature.location.end > sequence_length:
-            raise ValueError("feature outside record sequence: {feature.location}")
+            raise ValueError(f"feature outside record sequence: {feature.location}")
         # features with overlapping exons cause translation problems
         if location_contains_overlapping_exons(feature.location):
             raise ValueError(f"location contains overlapping exons: {feature.location}")
@@ -422,8 +615,6 @@ def ensure_valid_locations(features: List[SeqFeature], can_be_circular: bool, se
             standard += 1
 
     if can_be_circular:
-        if non_standard > 2:  # allowing for a cross origin CDS and its containing gene
-            raise ValueError("inconsistent exon ordering for features")
         return
 
     if standard and non_standard:

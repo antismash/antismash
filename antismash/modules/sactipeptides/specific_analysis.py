@@ -192,20 +192,19 @@ def acquire_rodeo_heuristics(cluster: secmet.Protocluster, query: secmet.CDSFeat
     distance = utils.distance_to_pfam(cluster.parent_record, query, hmmer_profiles)
     tabs.append(distance)
     # rSAM within 500 nt?
-    if utils.distance_to_pfam(cluster.parent_record, query, ['PF04055']) < 500:
+    if 0 <= distance < 500:
         score += 1
         tabs.append(1)
     else:
         tabs.append(0)
     # rSAM within 150 nt?
-    if utils.distance_to_pfam(cluster.parent_record, query, ['PF04055']) < 150:
+    if 0 <= distance < 150:
         score += 1
         tabs.append(1)
     else:
         tabs.append(0)
     # rSAM further than 1000 nt?
-    if utils.distance_to_pfam(cluster.parent_record, query, ['PF04055']) == -1 or \
-       utils.distance_to_pfam(cluster.parent_record, query, ['PF04055']) > 10000:
+    if distance == -1 or distance > 10000:
         score -= 2
         tabs.append(1)
     else:

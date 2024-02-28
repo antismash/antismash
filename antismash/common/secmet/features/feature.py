@@ -23,6 +23,7 @@ from ..locations import (
     frameshift_location_by_qualifier,
     Location,
     location_contains_overlapping_exons,
+    split_origin_bridging_location,
 )
 
 T = TypeVar("T", bound="Feature")
@@ -40,8 +41,6 @@ class Feature:
     def __init__(self, location: Location, feature_type: str,
                  created_by_antismash: bool = False) -> None:
         assert isinstance(location, (FeatureLocation, CompoundLocation)), type(location)
-        if location_bridges_origin(location):
-            raise ValueError(f"Features that bridge the record origin cannot be directly created: {location}")
         if location_contains_overlapping_exons(location):
             raise ValueError(f"location contains overlapping exons: {location}")
         assert location.start <= location.end, f"Feature location invalid: {location}"
@@ -55,6 +54,22 @@ class Feature:
         self._qualifiers: Dict[str, Optional[List[str]]] = OrderedDict()
         self.created_by_antismash = bool(created_by_antismash)
         self._original_codon_start: Optional[int] = None
+
+    @property
+    def start(self) -> int:
+        """ The coordinate of the start of the feature.
+
+            NOTE: differs from the location.start, as that is the minimum coordinate
+        """
+        return self.location.parts[0].start if self.location.strand != -1 else self.location.parts[-1].start
+
+    @property
+    def end(self) -> int:
+        """ The coordinate of the end of the feature.
+
+            NOTE: differs from the location.end, as that is the maximum coordinate
+        """
+        return self.location.parts[-1].end if self.location.strand != -1 else self.location.parts[0].end
 
     @property
     def strand(self) -> int:
@@ -185,6 +200,10 @@ class Feature:
             return location_contains_other(other, self.location)
         raise TypeError(f"Container must be a Feature, CompoundLocation or FeatureLocation, not {type(other)}")
 
+    def crosses_origin(self) -> bool:
+        """ Returns True if the feature crosses the origin """
+        return location_bridges_origin(self.location)
+
     def to_biopython(self, qualifiers: Dict[str, Any] = None) -> List[SeqFeature]:
         """ Converts this feature into one or more SeqFeature instances.
 
@@ -217,17 +236,20 @@ class Feature:
 
     def __lt__(self, other: Union["Feature", FeatureLocation]) -> bool:
         """ Allows sorting Features by location without key complication """
-        if isinstance(other, FeatureLocation):
-            location = other
-        else:
-            assert isinstance(other, Feature)
-            location = other.location
 
-        if self.location.start < location.start:
-            return True
-        if self.location.start == location.start:
-            return self.location.end < location.end
-        return False
+        if isinstance(other, Feature):
+            location = other.location
+        else:
+            location = other
+
+        def get_comparator(loc: Location) -> tuple[int, int]:
+            start = loc.start
+            if location_bridges_origin(loc):
+                _, head = split_origin_bridging_location(loc)
+                start = min(part.start for part in head) - max(part.end for part in head)
+            return (start, len(loc))
+
+        return get_comparator(self.location) < get_comparator(location)
 
     def __str__(self) -> str:
         return repr(self)
