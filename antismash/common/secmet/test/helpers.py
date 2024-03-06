@@ -44,13 +44,15 @@ class DummyAntismashDomain(AntismashDomain):
 class DummyCDS(CDSFeature):
     counter = 0
 
-    def __init__(self, start=0, end=7, strand=1, locus_tag=None, translation=None):
+    def __init__(self, start=0, end=7, strand=1, locus_tag=None, translation=None, location=None):
         if not translation:
             translation = "A"*(abs(start-end))
         if not locus_tag:
             locus_tag = f"dummy_locus_tag_{DummyCDS.counter}"
             DummyCDS.counter += 1
-        super().__init__(FeatureLocation(start, end, strand), translation=translation,
+        if location is None:
+            location = FeatureLocation(start, end, strand)
+        super().__init__(location, translation=translation,
                          locus_tag=locus_tag)
         assert self.get_accession() == locus_tag, self.get_accession()
 
