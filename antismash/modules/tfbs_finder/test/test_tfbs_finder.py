@@ -300,4 +300,5 @@ class TestAreaFinding(unittest.TestCase):
             self.region._cdses.clear()
             self.region.add_cds(DummyCDS(start=50, end=200, strand=1))
             self.region.add_cds(DummyCDS(start=250, end=400, strand=-1))
+            assert len(self.region.cds_children) == 2
             assert get_valid_areas(self.region, size) == [(0, 50 + size), (400 - size, 500)]
