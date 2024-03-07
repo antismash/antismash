@@ -4,10 +4,15 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
 
+from io import BytesIO
+import pickle
 import unittest
 
-from antismash.common.secmet.features import CDSCollection, FeatureLocation
-from antismash.common.secmet.locations import CompoundLocation
+from antismash.common.secmet.features.cdscollection import (
+    CDSCollection,
+    CollectionSection,
+)
+from antismash.common.secmet.locations import CompoundLocation, FeatureLocation
 from antismash.common.secmet.test.helpers import DummyCDS, DummyRecord
 
 
@@ -125,3 +130,78 @@ class TestCDSCollection(unittest.TestCase):
         expected = "collection not crossing the origin cannot contain a collection that does$"
         with self.assertRaisesRegex(ValueError, expected):
             outer.parent_record = DummyRecord(seq="A"*70, circular=True)
+
+
+class TestSectioning(unittest.TestCase):
+    def test_sectioning_default(self):
+        # defaults for a non-crossing area should be post-origin
+        area = CDSCollection(FeatureLocation(0, 20), feature_type="test")
+        assert not area.cds_children
+        cds = DummyCDS(1, 4)
+        area.add_cds(cds)
+        # only the relevant section should be changed
+        assert not area.cds_children.pre_origin
+        assert not area.cds_children.cross_origin
+        first_fetch = area.cds_children.post_origin
+        assert first_fetch == area.cds_children == (cds,)
+        # and section caching applies
+        assert area.cds_children.post_origin is first_fetch
+        # building of full list should include all sections
+        assert area.cds_children == (cds,)
+        # containment checks should work
+        assert cds in area.cds_children
+        # along with finding methods
+        assert area.cds_children.index(cds) == 0
+        with self.assertRaises(IndexError):
+            area.cds_children.index("invalid")
+
+    def test_sectioning_explicit(self):
+        area = CDSCollection(FeatureLocation(0, 20), feature_type="test")
+        assert not area.cds_children
+        cds = DummyCDS(4, 7)
+        area.add_cds(cds, CollectionSection.PRE_ORIGIN)
+        assert area.cds_children == (cds,)
+        assert area.cds_children.pre_origin == area.cds_children == (cds,)
+        assert not area.cds_children.cross_origin
+        assert not area.cds_children.post_origin
+
+    def test_cross_origin_default(self):
+        area = CDSCollection(CompoundLocation([
+            FeatureLocation(50, 60),
+            FeatureLocation(0, 20),
+        ]), feature_type="test")
+        assert not area.cds_children
+        pre = DummyCDS(51, 54)
+        cross = DummyCDS(location=CompoundLocation([
+            FeatureLocation(55, 60, 1),
+            FeatureLocation(0, 10, 1),
+        ]))
+        post = DummyCDS(1, 4)
+        area.add_cds(pre)
+        area.add_cds(cross)
+        area.add_cds(post)
+        assert area.cds_children == (pre, cross, post)
+        assert area.cds_children.pre_origin == (pre,)
+        assert area.cds_children.cross_origin == (cross,)
+        assert area.cds_children.post_origin == (post,)
+
+    def test_pickleable(self):
+        # due to the combination of caches and custom tuples,
+        # pickling can go very wrong, leading to hangs in multiprocess/multithread sections
+
+        area = CDSCollection(FeatureLocation(5, 10), feature_type="test")
+        area.add_cds(DummyCDS(6, 9))
+        assert area.cds_children  # necessary to build the caches
+
+        stream = BytesIO()
+        pickle.dump(area, stream)
+        stream.seek(0)
+        unpickled = pickle.load(stream)
+
+        # the content must be equal, but cds features equality needs to be handled separately
+        assert len(area.cds_children) == len(unpickled.cds_children) == 1
+        original_cds = area.cds_children[0]
+        new_cds = area.cds_children[0]
+        assert str(original_cds) == str(new_cds)
+        # and the two collections must not be the same object
+        assert area.cds_children is not unpickled.cds_children

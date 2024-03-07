@@ -13,7 +13,7 @@ from Bio.SeqRecord import SeqRecord
 from helperlibs.bio import seqio
 
 from .abstract import AbstractRegion
-from .cdscollection import CDSCollection, CDSFeature
+from .cdscollection import CDSCollection, CDSFeature, CollectionSection
 from .protocluster import Protocluster, SideloadedProtocluster
 from .feature import Feature, FeatureLocation
 from .subregion import SideloadedSubRegion, SubRegion
@@ -39,7 +39,9 @@ class Region(CDSCollection, AbstractRegion):
         Region features cannot overlap.
     """
     __slots__ = ["_subregions", "_candidate_clusters", "clusterblast",
-                 "knownclusterblast", "subclusterblast"]
+                 "knownclusterblast", "subclusterblast",
+                 "_pre_origin_children", "_post_origin_children",
+                 ]
     FEATURE_TYPE = "region"
 
     def __init__(self, candidate_clusters: List[CandidateCluster] = None,
@@ -127,7 +129,7 @@ class Region(CDSCollection, AbstractRegion):
                 rules[product] = rule
         return list(rules.values())
 
-    def add_cds(self, cds: CDSFeature) -> None:
+    def add_cds(self, cds: CDSFeature, _section: CollectionSection = None) -> None:
         """ Adds a CDS to the Region and all relevant child collections. Links
             the CDS back to this region
         """

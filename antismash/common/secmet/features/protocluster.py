@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional, Set, Type, TypeVar
 from Bio.SeqFeature import SeqFeature
 
 from .cds_feature import CDSFeature
-from .cdscollection import CDSCollection
+from .cdscollection import CDSCollection, CollectionSection
 from .feature import Feature, FeatureLocation
 from ..locations import CompoundLocation, location_from_string
 from ..qualifiers.t2pks import T2PKSQualifier
@@ -89,7 +89,7 @@ class Protocluster(CDSCollection):
         """ Returns the set of CDSFeatures responsible for the creation of this protocluster """
         return set(self._definition_cdses)
 
-    def add_cds(self, cds: CDSFeature) -> None:
+    def add_cds(self, cds: CDSFeature, section: CollectionSection = None) -> None:
         super().add_cds(cds)
         if not cds.is_contained_by(self.core_location):
             return
