@@ -81,6 +81,7 @@ class TestModuleJSON(unittest.TestCase):
         assert tail_json.multi_cds == "tail"
 
     def test_full_path_reverse_strand(self):
+        self.record = DummyRecord(length=25_000)
         self.tail = DummyCDS(locus_tag="tail", start=19_580, end=19_997, strand=-1)
         self.tail_hits = [DummyHMMResult("PCP", start=45, end=114)]
 
@@ -97,6 +98,7 @@ class TestModuleJSON(unittest.TestCase):
         self.check_conversion(module)
 
     def test_full_path_forward_strand(self):
+        self.record = DummyRecord(length=30_000)
         self.head = DummyCDS(locus_tag="head", start=20_000, end=22_547, strand=1)
         self.head_hits = [
             DummyHMMResult("Condensation_DCL", start=31, end=170),

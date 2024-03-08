@@ -172,12 +172,12 @@ class TestRREResults(unittest.TestCase):
     def test_add_to_incorrect_record(self):
         results = self.create_results(record_id=self.record.id)
         with self.assertRaisesRegex(ValueError, "Record to store in and record analysed don't match"):
-            other = DummyRecord()
+            other = DummyRecord(length=2000)
             other.id = self.record.id * 2
             results.add_to_record(other)
 
     def test_add_to_record(self):
-        record = DummyRecord()
+        record = DummyRecord(length=2000)
         results = self.create_results(record_id=record.id)
 
         assert not record.get_all_features()

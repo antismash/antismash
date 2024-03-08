@@ -30,7 +30,7 @@ class DummyConditions(rule_parser.Conditions):
 
 class TestRedundancy(unittest.TestCase):
     def setUp(self):
-        self.record = DummyRecord()
+        self.record = DummyRecord(length=180)
         for cds in [DummyCDS(start=50, end=80), DummyCDS(start=110, end=140), DummyCDS(start=150, end=180)]:
             self.record.add_cds_feature(cds)
         superior = rule_parser.DetectionRule("superior", "category", 10, 10, DummyConditions())
@@ -323,7 +323,7 @@ class TestCircularity(unittest.TestCase):
             (3091, 3092), (3105, 3111), (6882, 6885), (6887, 6889)
         ]]
         cdses = [DummyCDS(location.start, location.end) for location in locations]
-        record = DummyRecord(seq="A", features=cdses, circular=True)
+        record = DummyRecord(seq="A", features=cdses, circular=True, length=max(loc.end for loc in locations))
         hits = {"A": set(cds.get_name() for cds in cdses)}
         self.rules["A"].cutoff = 20
         self.rules["A"].neighbourhood = 0
