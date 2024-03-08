@@ -14,7 +14,7 @@ from unittest.mock import patch
 
 from Bio.Seq import Seq
 
-from antismash.common import path, secmet
+from antismash.common import errors, path, secmet
 from antismash.common.secmet.locations import FeatureLocation
 from antismash.common.test import helpers
 from antismash.config import build_config, destroy_config
@@ -171,6 +171,14 @@ class TestCassisMethods(CassisTestCore):
         self.assertTrue("gene4" not in os.listdir(os.path.join(self.options.output_dir, "fimo")))
         self.assertTrue("+04_-04" not in os.listdir(os.path.join(self.options.output_dir, "meme", "gene1")))
         self.assertTrue("+04_-04" not in os.listdir(os.path.join(self.options.output_dir, "fimo", "gene1")))
+
+
+    def test_circularity_rejected(self):
+        record = helpers.DummyRecord()
+        record.make_circular()
+        with patch.object(cassis, "detect", side_effect=RuntimeError("unreachable")):
+            with self.assertRaisesRegex(errors.AntismashInputError, "cannot be used on circular genomes"):
+                cassis.run_on_record(record, None, self.options)
 
 
 class TestMotifRepresentation(unittest.TestCase):
