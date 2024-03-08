@@ -14,6 +14,7 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 from Bio.SeqFeature import SeqFeature
 
 from antismash.common import module_results, subprocessing
+from antismash.common.errors import AntismashInputError
 from antismash.common.secmet import SubRegion, Feature, FeatureLocation, GeneFunction, Gene, Record
 from antismash.common.serialiser import feature_to_json, feature_from_json
 from antismash.config import ConfigType
@@ -140,6 +141,8 @@ def run_on_record(record: Record, results: CassisResults, options: ConfigType) -
             this module's results as a subclass of
                 antismash.common.module_results.ModuleResults
     """
+    if record.is_circular():
+        raise AntismashInputError("CASSIS cannot be used on circular genomes")
     if results:
         logging.debug("Cassis reusing %d cluster(s)", len(results.subregions))
     else:
