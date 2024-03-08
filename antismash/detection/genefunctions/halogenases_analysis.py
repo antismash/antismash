@@ -1,31 +1,29 @@
+# License: GNU Affero General Public License v3 or later
+# A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
+
+# for test files, silence irrelevant and noisy pylint warnings
+# pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
+
+import re
 import logging
 from collections import defaultdict
-from typing import Any, Dict, List, Optional, Iterable, Union
+from typing import List, Optional, Union
 
-from dataclasses import dataclass, field
-
-from antismash.common.path import get_full_path
-from antismash.common.hmmscan_refinement import HMMResult
 from antismash.common.secmet import Record, CDSFeature
-from antismash.common.signature import HmmSignature
 from antismash.common import (
     subprocessing,
     path,
-    fasta,
-    utils,
+    fasta
 )
 
 from antismash.detection.genefunctions import halogenases
 from antismash.detection.genefunctions.halogenases import (
-    search_signature_residues,
-    HalogenaseCategories,
     FlavinDependents,
     TryptophanSubstrate,
     PyrroleSubstrate,
     PhenolicSubstrate,
     HalogenaseHmmResult,
-    HalogenaseResult,
-    Match
+    HalogenaseResult
 )
 
 FDH_SUBGROUPS = {"trp_5_FDH": TryptophanSubstrate,
@@ -35,9 +33,30 @@ FDH_SUBGROUPS = {"trp_5_FDH": TryptophanSubstrate,
                  "tyrosine-like_hpg_FDH": PhenolicSubstrate,}
 
 def get_profile_list() -> List[str]:
-    return [profile.name for profile in halogenases.FDH_PROFILES]
+    """get the subclasses for a substrate in the FDH family"""
+    return [profile.name for profile in halogenases.SPECIFIC_FDH_PROFILES]
 
-def run_halogenase_phmms(cluster_fasta: str) -> dict[str, list[HalogenaseHmmResult]]:
+def check_conserved_motif(cds: CDSFeature, motif_positions: list[int],
+                           hmm_result: HalogenaseHmmResult,
+                           motif_pattern):
+
+    categorized = ""
+
+    siganture_residues = halogenases.search_signature_residues(cds.translation,
+                                                               motif_positions,
+                                                               hmm_result)
+    if not siganture_residues:
+        return categorized
+
+    motif = re.search(motif_pattern, siganture_residues)
+    if not motif:
+        return categorized
+    else:
+        categorized = re.search(f"{motif_pattern}", siganture_residues)[0]
+    return categorized
+
+def run_halogenase_phmms(cluster_fasta: str, profiles: list) \
+    -> dict[str, list[HalogenaseHmmResult]]:
     """ Check if protein sequences hit any pHMM
 
         Arguments:
@@ -47,15 +66,14 @@ def run_halogenase_phmms(cluster_fasta: str) -> dict[str, list[HalogenaseHmmResu
             if there is a hit, it returns the properties of that hit
     """
     halogenase_hmms_by_id: dict = defaultdict(list)
-    for sig in halogenases.FDH_PROFILES:
+    for sig in profiles:
         sig.path = path.get_full_path(f'{sig.hmm_file}/{sig.name}')
         runresults = subprocessing.run_hmmsearch(sig.path, cluster_fasta)
         for runresult in runresults:
             for hsp in runresult.hsps:
-                print(sig.path, hsp.bitscore, hsp.hit_id)
                 if hsp.bitscore > sig.cutoff:
                     hit = HalogenaseHmmResult(hsp.hit_id, hsp.bitscore,
-                                                hsp.query_id, sig.name, sig.path)
+                                              hsp.query_id, sig.name, sig.path)
                     halogenase_hmms_by_id[hsp.hit_id].append(hit)
     return halogenase_hmms_by_id
 
@@ -73,14 +91,13 @@ def check_for_fdh(cds: CDSFeature, halogenase: HalogenaseResult, hit: Halogenase
             If it doesn't meet the requirements, it doesn't make changes on the original instance.
     """
     for profile_name in get_profile_list():
-        if profile_name == "all_general_FDH":
-            continue
         if profile_name == hit.query_id:
             signature_residues = FDH_SUBGROUPS[profile_name].get_residues(cds, hit)
             specific_signature_residues = signature_residues[hit.query_id]
             if not specific_signature_residues:
                 return
-            halogenase_category = FDH_SUBGROUPS[profile_name](hit.query_id, specific_signature_residues)
+            halogenase_category = FDH_SUBGROUPS[profile_name](hit.query_id,
+                                                            specific_signature_residues)
             halogenase_category.update_match(halogenase, hit)
 
 def check_for_halogenases(cds: CDSFeature, hmm_results: list[HalogenaseHmmResult]
@@ -101,22 +118,9 @@ def check_for_halogenases(cds: CDSFeature, hmm_results: list[HalogenaseHmmResult
     halogenase_match = HalogenaseResult(cds.get_name())
     for hit in hmm_results:
         check_for_fdh(cds, halogenase_match, hit)
-
     return halogenase_match
 
-def handle_unclear_categorization(potential_enzymes: list[HalogenaseResult]):
-    cds_names = {}
-    for enzyme in potential_enzymes:
-        if enzyme.cds_name in cds_names.keys() and not cds_names[enzyme.cds_name] \
-            or not enzyme.potential_matches:
-            potential_enzymes.remove(enzyme)
-        else:
-            cds_names[enzyme.cds_name] = enzyme.potential_matches
-
-    return potential_enzymes
-
-
-def specific_analysis(record: Record) -> list[HalogenaseResult]:
+def specific_analysis(record: Record) -> Optional[list[HalogenaseResult]]:
     """ Categorization of enzyme, categorizes any halogenase in a cds in regions
 
         Arguments: record instance,
@@ -129,22 +133,39 @@ def specific_analysis(record: Record) -> list[HalogenaseResult]:
                  then the above mentioned informations are not defined,
                  and the information about the catogries is in the potential_enzymes attribute.
     """
-    potential_enzymes: list[HalogenaseResult] = []
+    potential_enzymes = []
     features = record.get_cds_features_within_regions()
     hmmsearch_fasta = fasta.get_fasta_from_features(features)
 
-    hmm_hits = run_halogenase_phmms(hmmsearch_fasta)
+    general_hmm_hits = run_halogenase_phmms(hmmsearch_fasta,
+                                    halogenases.GENERAL_FDH_PROFILES)
 
-    for protein, hits in hmm_hits.items():
-        cds = record.get_cds_by_name(protein)
-        potential_enzyme = check_for_halogenases(cds, hits)
-        if potential_enzyme:
-            potential_enzymes.append(potential_enzyme)
+    if general_hmm_hits:
+        hmm_hits = run_halogenase_phmms(hmmsearch_fasta,
+                                        halogenases.SPECIFIC_FDH_PROFILES)
+        for protein, hits in hmm_hits.items():
+            cds = record.get_cds_by_name(protein)
+            potential_enzyme = check_for_halogenases(cds, hits)
+            if potential_enzyme:
+                potential_enzyme.family = "Flavin-dependent halogenases"
+                potential_enzymes.append(potential_enzyme)
+        for enzyme in potential_enzymes:
+            enzyme.finalize_enzyme()
+    if not potential_enzymes and general_hmm_hits:
+        conserved_motifs = {}
+        for protein, hits in general_hmm_hits.items():
+            cds = record.get_cds_by_name(protein)
+            for hit in hits:
+                for motif, positions in FlavinDependents.GENERAL_FDH_MOTIFS.items():
+                    conserved_motif = check_conserved_motif(cds, positions,
+                                                hit, motif)
+                    if conserved_motif: 
+                        conserved_motifs[motif] = conserved_motif 
+             
+            potential_enzyme = FlavinDependents(protein, conserved_motifs)
+            
+            if potential_enzyme:
+                potential_enzymes.append(potential_enzyme)
 
-    for enzyme in potential_enzymes:
-        enzyme.finalize_enzyme()
-
-    cleared_results = handle_unclear_categorization(potential_enzymes)
-    print(cleared_results)
-    # print(potential_enzymes)
+    print(potential_enzymes)
     return potential_enzymes

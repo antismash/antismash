@@ -5,40 +5,62 @@
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
 
 import logging
-from collections import defaultdict
 from typing import Any, Dict, List, Optional, Iterable, Union
 
 from dataclasses import dataclass, field
 
 from antismash.common.path import get_full_path
 from antismash.common.hmmscan_refinement import HMMResult
-from antismash.common.secmet import Record, CDSFeature
+from antismash.common.secmet import CDSFeature
 from antismash.common.signature import HmmSignature
 from antismash.common import (
     subprocessing,
-    path,
-    fasta,
-    utils,
+    utils
 )
 
 NAME = "halogenases_analysis"
-SHORT_DESCRIPTION = """categorization of halogenases based on family and function"""
+SHORT_DESCRIPTION = """Categorization of halogenases based on family and function.
+                       It utilizes pHMMs with thresholds and the presence or absence of
+                       characteristic/signature residues to identify the substrate or
+                       the number of halogenation.
+                       Signature residues for the pyrrole substrate were determined by
+                       using information from an experimental study (https://doi.org/10.1073/pnas.1519695113).
+                       Signature residues for all the other substrates were extracted computationally,
+                       by looking at the positions that have the same value.
+                    """
 
 """FX[DE]PX[]EFL"""
 CHARGED_RESIDUES = [""]
 
-FDH_PROFILES = [HmmSignature("all_general_FDH", "Member of the Flavin-dependent halogenase family",
-                            100, get_full_path(__file__, "data", "halogenases", "all_general_FDH.hmm")),
-                HmmSignature("trp_5_FDH", "Member of the Flavin-dependent halogenase family",
-                            350, get_full_path(__file__, "data", "halogenases", "trp_5_FDH.hmm")),
-                HmmSignature("trp_6_7_FDH", "Member of the Flavin-dependent halogenase family",
-                            770, get_full_path(__file__, "data", "halogenases", "trp_6_7_FDH.hmm")),
-                HmmSignature("pyrrole_FDH", "Member of the Flavin-dependent halogenase family",
-                            400, get_full_path(__file__, "data", "halogenases", "pyrrole_FDH.hmm")),
-                HmmSignature("cycline_orsellinic_FDH", "Member of the Flavin-dependent halogenase family",
-                            500, get_full_path(__file__, "data", "halogenases", "cycline_orsellinic_FDH.hmm")),
-                HmmSignature("tyrosine-like_hpg_FDH", "Member of the Flavin-dependent halogenase family",
-                            300, get_full_path(__file__, "data", "halogenases", "tyrosine-like_hpg_FDH.hmm")),]
+GENERAL_FDH_PROFILES = [HmmSignature("all_general_FDH",
+                                     "Member of the Flavin-dependent halogenase family",
+                            100, get_full_path(__file__, "data",
+                                               "halogenases", "all_general_FDH.hmm")),
+                        HmmSignature("unconventional_FDH",
+                                     "Unconventional member of the Flavin-dependent halogenase family",
+                            100, get_full_path(__file__, "data",
+                                               "halogenases", "unconventional_FDH.hmm"))]
+
+SPECIFIC_FDH_PROFILES = [HmmSignature("trp_5_FDH",
+                                      "Tryptophan-5 halogenase",
+                                      350, get_full_path(__file__, "data",
+                                                       "halogenases", "trp_5_FDH.hmm")),
+                        HmmSignature("trp_6_7_FDH",
+                                     "Tryptophan-6 or 7 halogenase",
+                                     770, get_full_path(__file__, "data",
+                                                       "halogenases", "trp_6_7_FDH.hmm")),
+                        HmmSignature("pyrrole_FDH",
+                                     "Pyrrole halogenase",
+                                     400, get_full_path(__file__, "data",
+                                                        "halogenases", "pyrrole_FDH.hmm")),
+                        HmmSignature("cycline_orsellinic_FDH",
+                                     "Orsellinic acid-like or other phenolic substrate halogenase",
+                                     500, get_full_path(__file__, "data",
+                                                        "halogenases", "cycline_orsellinic_FDH.hmm")),
+                        HmmSignature("tyrosine-like_hpg_FDH",
+                                     "Tyrosine-like or Hpg substrate halogenase",
+                                     300, get_full_path(__file__, "data",
+                                                        "halogenases", "tyrosine-like_hpg_FDH.hmm"))]
 
 class HalogenaseHmmResult(HMMResult):
     """ Enzymes identified as a halogenase
@@ -68,11 +90,10 @@ class Match:
         the halogenation occurs, what is the confidence of the categorization,
         and what are the signature residues of the protein sequence"""
     profile: str
-    position: int
+    position: Optional[Union[int, str, List[int]]]
     confidence: float
     signature: Optional[str]
-    position: Optional[Union[int, str]]
-    substrate: Optional[Union[int, str]]
+    substrate: Optional[Union[int, str]] = None
 
     def to_json(self) -> dict[str, Any]:
         return vars(self)
@@ -97,7 +118,7 @@ class HalogenaseResult:
     cds_name: str
     family: str = "Halogenase"
     substrate: str = ""
-    position: Union[int, str] = None
+    position: Optional[Union[int, str, List[int]]] = None
     confidence: float = 0
     signature: Optional[str] = None
     coenzyme: bool = False
@@ -147,6 +168,8 @@ class HalogenaseResult:
             self.position = best_match.position
             self.confidence = best_match.confidence
             self.signature = best_match.signature
+            if best_match.substrate:
+                self.substrate = best_match.substrate
 
     def to_json(self) -> Dict[str, Any]:
         """ Constructs a JSON representation of this instance """
@@ -191,7 +214,7 @@ class HalogenaseCategories:
 
     def check_for_match(self, halogenase: HalogenaseResult, hit: HalogenaseHmmResult,
                         position: Union[int, List[int]], cutoffs: List[float], *,
-                        check_residues: bool = True, sig_residues: Union[str, dict] = None,
+                        check_residues: bool = True, sig_residues: Union[str, dict[str,str]] = "",
                         confidence: float = 1, targets: bool = False) -> bool:
         """in case the predefined signatures (self.signatures) is a dict,
             so there are several substrates, the searched signatures (sig_residues)
@@ -200,7 +223,6 @@ class HalogenaseCategories:
         found = False
         if hit.query_id != self.name:
             return False
-
         cutoffs.sort(reverse=True)
         modifier = 1.
         for cutoff in cutoffs:
@@ -210,33 +232,54 @@ class HalogenaseCategories:
                                                         confidence * modifier, self.residues,""))
                     return True
                 modifier = 0.5
-            else:
-                print(self.residues)
+            elif isinstance(self.residues, dict) and isinstance(sig_residues, dict):
                 for subs, sig_res in self.residues.items():
-                    if hit.bitscore >= cutoff and (sig_res == sig_residues[subs] or not check_residues):
+                    if hit.bitscore >= cutoff and (sig_res == sig_residues[subs] or
+                                                   not check_residues):
                         if not targets:
                             halogenase.add_potential_matches(Match(hit.query_id, position,
                                                                    confidence * modifier,
-                                                                   sig_res, substrate=subs))
+                                                                   sig_res, subs))
                         else:
-                            halogenase.add_potential_matches(Match(hit.query_id, position,
+                            halogenase.add_potential_matches(Match(hit.query_id, subs,
                                                                    confidence * modifier,
-                                                                   sig_res, position=subs))
+                                                                   sig_res))
                 modifier = 0.5
                 return True
+            
+            elif isinstance(self.residues, dict) and not isinstance(sig_residues, dict):
+                for subs, sig_res in self.residues.items():
+                    if hit.bitscore >= cutoff and (sig_res == sig_residues or
+                                                   not check_residues):
+                        if not targets:
+                            halogenase.add_potential_matches(Match(hit.query_id, position,
+                                                                   confidence * modifier,
+                                                                   sig_res, subs))
+                        else:
+                            halogenase.add_potential_matches(Match(hit.query_id, subs,
+                                                                   confidence * modifier,
+                                                                   sig_res))
+                modifier = 0.5
+                return True                
 
         return found
 
 
 class FlavinDependents(HalogenaseCategories):
-    def __init__(self, name: str, residues: str) -> None:
+    """ The second motif (WxWxI(P)) is responsible for preventing monooxygenating activity
+        The third motif (Fx.Px.Sx.G) lines the tunnel between the flavin binding site and the site of halogenation"""
+    def __init__(self, name: str, residues: dict[str, str]) -> None: # make conventional a property
         super().__init__(name, residues)
         self.family = "Flavin-dependent halogenases"
-        self.profiles = ["general", "trp_5", "trp_6_7", "pyrrole", "tyrosine-like_hpg", "cycline_orsellinic-like"]
+        self.profiles = ["general", "trp_5", "trp_6_7",
+                         "pyrrole", "tyrosine-like_hpg", "cycline_orsellinic-like"]
 
-    GENERAL_FDH = {"second_motif": [206, 207, 208, 209, 210, 211],
-                   "last_motif": [280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291,
-                                  292, 293, 294, 295, 296, 297, 298, 299, 300, 301, 302, 303, 304]}
+    GENERAL_FDH_MOTIFS = {"W.W.I.": [206, 207, 208, 209, 210, 211],
+                          "F.*P.*S.G": [280, 281, 282, 283, 284, 285, 286,
+                                         287, 288, 289, 290, 291, 292, 293,
+                                         294, 295, 296, 297, 298, 299, 300,
+                                         301, 302, 303, 304]
+                                         }
 
     TRP_5_SIGNATURE = [33, 35, 41, 75, 77, 78, 80, 92, 101, 128, 165, 186,
                        187, 195, 302, 310, 342, 350, 400, 446, 450, 452, 482]
@@ -245,9 +288,10 @@ class FlavinDependents(HalogenaseCategories):
 
     PYRROLE_SIGNATURE = [110, 111, 318, 322, 348, 362]
 
-    TYROSINE_HPG_SIGNATURE = {"common": [58, 74, 89, 92, 99, 107, 149, 150, 152, 209, 215, 217, 219,
-                                         245, 267, 268, 282, 284, 289, 290, 293, 295, 305, 331, 357],
-                              "Hpg": [66, 158, 196, 200, 246, 259]}
+    TYROSINE_LIKE_SIGNATURE = [58, 74, 89, 92, 99, 107, 149, 150,
+                               152, 209, 215, 217, 219, 245, 267,
+                               268, 282, 284, 289, 290, 293, 295, 305, 331, 357]
+    HPG_SIGNATURE =  [66, 158, 196, 200, 246, 259]
 
     OTHER_PHENOLIC_SIGNATURE = [23, 27, 39, 40, 59, 74, 109, 113, 120, 124, 133, 165,
                                 166, 168, 233, 284, 291, 303, 305, 306, 309, 311]
@@ -257,11 +301,11 @@ class FlavinDependents(HalogenaseCategories):
     TRP_6_SIGNATURE_RESIDUES = "TEGCAGFDAYHDRFGNADYGLSIIAKIL"
 
     PYRROLE_SIGNATURE_RESIDUES = {"mono_di":"DRSVFW",
-                                  "tetra":"YRRNFN",
-                                  "unconv_mono_di":"RRYFFA"}
+                                  "unconv_mono_di":"YRRNFN",
+                                  "tetra":"RRYFFA"}
 
-    TYROSINE_HPG_SIGNATURE_RESIDUES = {"tyrosine-like": "GFQRLGDAGLSGVPSYGADPSGLYW",
-                                       "Hpg": "SHCGMQ"}
+    TYROSINE_LIKE_SIGNATURE_RESIDUES = "GFQRLGDAGLSGVPSYGADPSGLYW"
+    HPG_SIGNATURE_RESIDUES = "SHCGMQ"
 
     OTHER_PHENOLIC_SIGNATURE_RESIDUES = "LGPRGGRDAGVDAGGYGFDPSG"
 
@@ -312,8 +356,9 @@ class PyrroleSubstrate(FlavinDependents):
         if self.name == "pyrrole_FDH":
             self.check_for_match(halogenase, hit, 0,
                                     cutoffs=[self.cutoff],
-                                    sig_residues=self.signature_residues)
-        # halogenase.substrate = "pyrrole"
+                                    sig_residues=self.signature_residues,
+                                    targets = True)
+            halogenase.substrate = "pyrrole"
 
     @staticmethod
     def get_signatures() -> List[List[int]]:
@@ -321,7 +366,7 @@ class PyrroleSubstrate(FlavinDependents):
 
     @staticmethod
     def get_residues(cds: CDSFeature, hit: HalogenaseHmmResult,
-                     ) -> Optional[dict[str, Optional[str]]]:
+                     ) -> dict[str, Optional[str]]:
         residues = None
         if hit.query_id == "pyrrole_FDH":
             residues = get_residues(cds.translation, hit,
@@ -333,14 +378,18 @@ class PhenolicSubstrate(FlavinDependents):
     def __init__(self, name: str, residues: str) -> None:
         super().__init__(name, residues)
         self.cutoff = None
-        self.tyr_hpg_residues = FlavinDependents.TYROSINE_HPG_SIGNATURE_RESIDUES
         self.other_phenolic = FlavinDependents.OTHER_PHENOLIC_SIGNATURE_RESIDUES
 
     def update_match(self, halogenase: HalogenaseResult, hit: HalogenaseHmmResult) -> None:
         if self.name == "tyrosine-like_hpg_FDH":
-            self.check_for_match(halogenase, hit, [6, 8],
+            if self.check_for_match(halogenase, hit, [6, 8],
                                 cutoffs=[300, 390],
-                                sig_residues=self.tyr_hpg_residues)
+                                sig_residues=FlavinDependents.TYROSINE_LIKE_SIGNATURE_RESIDUES):
+                halogenase.substrate = "Tyr"
+            if self.check_for_match(halogenase, hit, [6, 8],
+                                cutoffs=[300, 390],
+                                sig_residues=FlavinDependents.HPG_SIGNATURE_RESIDUES):
+                halogenase.substrate = "Hpg"
         elif self.name == "cycline_orsellinic_FDH":
             self.check_for_match(halogenase, hit, [6, 8],
                                     cutoffs=[500],
@@ -349,7 +398,8 @@ class PhenolicSubstrate(FlavinDependents):
 
     @staticmethod
     def get_signatures() -> List[List[int]]:
-        return [*FlavinDependents.TYROSINE_HPG_SIGNATURE.values(),
+        return [FlavinDependents.TYROSINE_LIKE_SIGNATURE,
+                FlavinDependents.HPG_SIGNATURE,
                 FlavinDependents.OTHER_PHENOLIC_SIGNATURE]
 
     @staticmethod
@@ -357,17 +407,19 @@ class PhenolicSubstrate(FlavinDependents):
                      ) -> Optional[dict[str, Optional[str]]]:
         residues = {}
         if hit.query_id == "tyrosine-like_hpg_FDH":
-            residues = get_residues(cds.translation, hit,
-                                    FlavinDependents.TYROSINE_HPG_SIGNATURE.values(),
-                                    ["tyrosine-like", "hpg"])
+            residues = get_residues(cds.translation, hit, [FlavinDependents.TYROSINE_LIKE_SIGNATURE,
+                                     FlavinDependents.HPG_SIGNATURE],
+                                     substrates=["Tyr", "Hpg"])
             return {"tyrosine-like_hpg_FDH": residues}
+
         elif hit.query_id == "cycline_orsellinic_FDH":
             residues = get_residues(cds.translation, hit,
                                     FlavinDependents.OTHER_PHENOLIC_SIGNATURE)
-            return residues
+        return residues
 
 def get_residues(translation: str, hmm_result: HalogenaseHmmResult,
-                 signatures: Union[list[int], list[list[int]]], substrates = []) -> dict[str, Optional[str]]:
+                 signatures: Union[list[int], list[list[int]]], substrates: list = None)\
+                 -> dict[str, Optional[str]]:
     """ Get signature residues for an enzyme from each pHMM
 
         Arguments:
@@ -389,9 +441,9 @@ def get_residues(translation: str, hmm_result: HalogenaseHmmResult,
             substrates_signatures = dict(zip(substrates,(3*signatures)))
         else:
             substrates_signatures = dict(zip(substrates,signatures))
-        print(substrates_signatures)
         for substrate, signature in substrates_signatures.items():
-            signature_residues[substrate] = search_signature_residues(translation, signature, hmm_result)
+            signature_residues[substrate] = search_signature_residues(translation,
+                                                                      signature, hmm_result)
 
     return signature_residues
 
@@ -411,7 +463,8 @@ def search_signature_residues(sequence: str, positions: list[int],
     """
     args = ["-E", str(max_evalue)]
 
-    results = subprocessing.hmmpfam.run_hmmpfam2(hmm_result.profile, f">query\n{sequence}", extra_args=args)
+    results = subprocessing.hmmpfam.run_hmmpfam2(hmm_result.profile,
+                                                 f">query\n{sequence}", extra_args=args)
     if not (results and results[0].hsps):
         logging.debug("no hits for query %s")
         return None
@@ -432,7 +485,8 @@ def search_signature_residues(sequence: str, positions: list[int],
     query = hit.aln[0].seq
     offset = hit.hit_start
 
-    sites = utils.extract_by_reference_positions(query, profile, [p - offset for p in positions if offset < p])
+    sites = utils.extract_by_reference_positions(query, profile,
+                                                 [p - offset for p in positions if offset < p])
 
     return sites
     
