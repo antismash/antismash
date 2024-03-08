@@ -132,9 +132,10 @@ class DummyPFAMDomain(PFAMDomain):
 class DummyRecord(Record):
     "class for generating a Record like data structure"
     def __init__(self, features=None, seq=None, taxon='bacteria',
-                 record_id=None, circular=False):
+                 record_id=None, circular=False, length=None):
+        self.length = length
         if features and seq is None:
-            length = max(f.location.end for f in features)
+            length = length or max(f.location.end for f in features)
             seq = 'AGCTACGT' * (length // 8 + 1)
         if seq is None:
             seq = 'AGCTACGT'
@@ -150,6 +151,9 @@ class DummyRecord(Record):
         # pylint doesn't recognise the superclass has a sequence
         # so trick it into believing it exists
         self.seq = self.seq  # pylint: disable=access-member-before-definition
+
+    def __len__(self):  # override the length so the sequence doesn't necessarily have to exist
+        return self.length or super().__len__()
 
     @property
     def features(self):
