@@ -21,7 +21,7 @@ from ..features import (
 )
 from ..features.candidate_cluster import CandidateClusterKind
 from ..locations import FeatureLocation
-from ..record import Record
+from ..record import Record, Seq
 
 
 class DummyAntismashDomain(AntismashDomain):
@@ -119,18 +119,26 @@ class DummyPFAMDomain(PFAMDomain):
 
 class DummyRecord(Record):
     "class for generating a Record like data structure"
-    def __init__(self, features=None, seq='AGCTACGT', taxon='bacteria',
-                 record_id=None):
-        if features:
-            max_feature_coordinate = max(feature.location.end for feature in features)
-            seq = seq * max(1, max_feature_coordinate // len(seq))
-        super().__init__(Seq(seq), transl_table=11 if taxon == 'bacteria' else 1)
+    def __init__(self, features=None, seq=None, taxon='bacteria',
+                 record_id=None, *, length=None):
+        self.length = length
+        if features and seq is None:
+            length = length or max(f.location.end for f in features)
+            seq = "AGCTACGT" * (length // 8 + 1)
+        if seq is None:
+            seq = "AGCTACGT"
+        if isinstance(seq, str):
+            seq = Seq(seq)
+        super().__init__(seq, transl_table=11 if taxon == 'bacteria' else 1)
         if features:
             for feature in features:
                 self.add_feature(feature)
         self.record_index = 0
         if record_id is not None:
             self.id = record_id
+
+    def __len__(self):  # override the length so the sequence doesn't necessarily have to exist
+        return self.length or super().__len__()
 
 
 class DummyRegion(Region):
