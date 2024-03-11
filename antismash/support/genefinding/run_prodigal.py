@@ -5,76 +5,45 @@
 """
 
 import logging
-from os import path
+from typing import Iterable
 
-from Bio.SeqFeature import FeatureLocation
-from helperlibs.wrappers.io import TemporaryDirectory
-
-from antismash.common.fasta import write_fasta
 from antismash.common.secmet import CDSFeature, Record
 from antismash.common.secmet.features.cds_feature import MAX_TRANSLATION_LENGTH
-from antismash.common.subprocessing import execute
-from antismash.config import ConfigType
+from antismash.common.secmet.locations import FeatureLocation, Location
+from antismash.common.subprocessing.prodigal import (
+    run_prodigal as exec_prodigal,
+    ProdigalGene,
+)
 
 
-def run_prodigal(record: Record, options: ConfigType) -> None:
+def _build_location_from_prodigal(gene: ProdigalGene) -> Location:
+    start = gene.start
+    end = gene.end
+    strand = gene.strand
+    return FeatureLocation(start, end, strand=strand)
+
+
+def _filter_genes(genes_found: Iterable[ProdigalGene]) -> Iterable[Location]:
+    for gene in genes_found:
+        length = gene.end - gene.start
+        if length > (MAX_TRANSLATION_LENGTH * 3) * .9:
+            logging.warning("Ignoring potential gene too long for dependencies: %dkb", length // 1000)
+            continue
+
+        yield _build_location_from_prodigal(gene)
+
+
+def run_prodigal(record: Record) -> None:
     """ Run progidal to annotate prokaryotic sequences
     """
-    if "basedir" in options.get('prodigal', ''):
-        basedir = options.prodigal.basedir
-    else:
-        basedir = ""
-    with TemporaryDirectory(change=True):
-        name = record.id.lstrip('-')
-        if not name:
-            name = "unknown"
-        fasta_file = f"r{record.record_index}.fasta"
-        result_file = f"r{record.record_index}.predict"
-        write_fasta([name], [str(record.seq)], fasta_file)
+    seq = str(record.seq)
+    locations = _filter_genes(exec_prodigal(seq))
+    count = 0
+    for location in locations:
+        translation = record.get_aa_translation_from_location(location)
+        feature = CDSFeature(location, locus_tag=f"ctg{record.record_index}_{count + 1}",
+                             translation=translation, translation_table=record.transl_table)
+        record.add_cds_feature(feature)
+        count += 1
 
-        # run prodigal
-        prodigal = [path.join(basedir, 'prodigal')]
-        prodigal.extend(['-i', fasta_file, '-f', 'sco', '-o', result_file])
-        if options.genefinding_tool == "prodigal-m" or len(record.seq) < 20000:
-            prodigal.extend(['-p', 'meta'])
-
-        err = execute(prodigal).stderr
-        if err.find('Error') > -1:
-            logging.error("Failed to run prodigal: %s", err)
-            raise RuntimeError(f"prodigal error: {err}")
-        found = 0
-        with open(result_file, "r", encoding="utf-8") as handle:
-            lines = handle.readlines()
-        for line in lines:
-            # skip first line
-            if not line.startswith('>'):
-                continue
-            name, start_chunk, end_chunk, prodigal_strand = line[1:].rstrip().split("_")
-
-            try:
-                start = int(start_chunk)
-                end = int(end_chunk)
-                if prodigal_strand == "+":
-                    strand = 1
-                else:
-                    strand = -1
-            except ValueError:
-                logging.error('Malformatted prodigal output line %r', line.rstrip())
-                continue
-
-            if start > end:
-                strand = -1
-                start, end = end, start
-
-            length = end - start
-            if length > (MAX_TRANSLATION_LENGTH * 3) * .9:
-                logging.warning("Ignoring potential gene too long for dependencies: %dkb", length // 1000)
-                continue
-
-            loc = FeatureLocation(start-1, end, strand=strand)
-            translation = record.get_aa_translation_from_location(loc)
-            feature = CDSFeature(loc, locus_tag=f"ctg{record.record_index}_{name}",
-                                 translation=translation, translation_table=record.transl_table)
-            record.add_cds_feature(feature)
-            found += 1
-    logging.debug("prodigal found %d CDS features", found)
+    logging.debug("prodigal found %d CDS features", count)
