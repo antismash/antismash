@@ -98,6 +98,6 @@ def run_on_record(record: Record, options: ConfigType) -> None:
 
     if options.genefinding_tool in ["prodigal", "prodigal-m"]:
         logging.debug("Running prodigal based genefinding")
-        return run_prodigal(record, options)
+        return run_prodigal(record)
 
     raise ValueError(f"Unknown genefinding tool: {options.genefinding_tool}")
