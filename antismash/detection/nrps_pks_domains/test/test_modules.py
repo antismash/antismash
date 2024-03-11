@@ -547,3 +547,13 @@ class TestMerging(unittest.TestCase):
             assert len(head.modules) == 1
             # the module after the merged split should be unchanged
             assert [comp.domain.hit_id for comp in tail.modules[0].components] == last
+
+    def test_merge_leading_ks(self):
+        head = CDSModuleInfo(DummyCDS(start=50, end=100), [build_module(["PKS_KS"])])
+        tail = CDSModuleInfo(DummyCDS(start=150, end=200), [build_module([PKS_LOAD, CP])])
+        combined = combine_modules(head, tail)
+        print(head.modules, tail.modules)
+        assert len(tail.modules) == 0
+        assert len(head.modules) == 1
+        assert head.modules[0] is combined
+        assert len(combined.components) == 3
