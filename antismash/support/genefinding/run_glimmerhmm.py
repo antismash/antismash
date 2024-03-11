@@ -13,6 +13,7 @@ from helperlibs.bio import seqio
 from helperlibs.wrappers.io import TemporaryDirectory
 
 from antismash.common import path
+from antismash.common.errors import AntismashInputError
 from antismash.common.gff_parser import get_features_from_file
 from antismash.common.secmet import Record
 from antismash.common.secmet.features.cds_feature import MAX_TRANSLATION_LENGTH
@@ -51,6 +52,8 @@ def run_glimmerhmm(record: Record) -> None:
     """ Run glimmerhmm on the record, parse the results and add all detected
         genes to the record
     """
+    if record.is_circular():
+        raise AntismashInputError("Fungal genefinding on circular records is not supported")
     with TemporaryDirectory(change=True):
         # glimmerHMM/gff_parser handles some record names poorly (e.g. leading - or only '.')
         orig_id = record.id
