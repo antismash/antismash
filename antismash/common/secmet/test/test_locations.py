@@ -690,9 +690,9 @@ class TestLocationAdjustment(unittest.TestCase):
                     assert old_part is new_part
 
 
-def offset_location(location, offset):
-    static = _offset_location(location, offset)
-    dynamic = location.clone_with_offset(offset)
+def offset_location(location, offset, **kwargs):
+    static = _offset_location(location, offset, **kwargs)
+    dynamic = location.clone_with_offset(offset, **kwargs)
     assert static == dynamic
     return static
 
@@ -724,6 +724,72 @@ class TestOffset(unittest.TestCase):
                     assert new.end == old.end + offset
                     assert new.strand == old.strand
                     assert new.operator == old.operator
+
+    def test_wrapping_starting_compound(self):
+        loc = CompoundLocation([FeatureLocation(54616, 55016, 1), FeatureLocation(0, 1403, 1)])
+        new = offset_location(loc, -41624, wrap_point=55016)
+        assert new == FeatureLocation(12992, 14795, 1)
+
+        # offsets in either direction that land on the wrapping point need to be equivalent
+        expected = FeatureLocation(0, 200, 1)
+        loc = CompoundLocation([FeatureLocation(400, 500, 1), FeatureLocation(0, 100, 1)])
+        for offset in [-400, 100]:
+            new = offset_location(loc, offset, wrap_point=500)
+            assert new == expected
+
+    def test_wrapping_full_width(self):
+        full_len = 55016
+        loc = FeatureLocation(0, full_len, 1)
+        new = offset_location(loc, - full_len // 2, wrap_point=full_len)
+        assert new == loc
+
+    def test_wrapping_simple(self):
+        loc = FeatureLocation(5, 15, 1)
+        assert offset_location(loc, 5, wrap_point=30) == FeatureLocation(10, 20, 1)
+        loc = FeatureLocation(5, 15, 1)
+        assert offset_location(loc, -20, wrap_point=30) == FeatureLocation(15, 25, 1)
+
+    def test_newly_wrapped(self):
+        loc = FeatureLocation(5, 15, 1)
+        new = offset_location(loc, 20, wrap_point=30)
+        expected = CompoundLocation([
+            FeatureLocation(25, 30, 1),
+            FeatureLocation(0, 5, 1),
+        ])
+        assert new == expected
+
+        # and with negative offset
+        new = offset_location(loc, -10, wrap_point=20)
+        expected = CompoundLocation([
+            FeatureLocation(15, 20, 1),
+            FeatureLocation(0, 5, 1),
+        ])
+        assert new == expected
+
+    def test_wrap_point(self):
+        loc = FeatureLocation(5, 10, 1)
+        for bad in [-5]:
+            with self.assertRaisesRegex(ValueError, "must be positive"):
+                offset_location(loc, 10, wrap_point=bad)
+
+    def test_offset_also_cross_origin(self):
+        # where a location already crosses the origin but the offset doesn't change that
+        old = CompoundLocation([
+            FeatureLocation(95, 100, 1),
+            FeatureLocation(0, 5, 1)
+        ])
+        new = offset_location(old, 2, wrap_point=old.end)
+        assert new.crosses_origin()
+        assert new.parts[0].start == 97
+        assert new.parts[1].end == 7
+
+    def test_zero_offset(self):
+        old = CompoundLocation([
+            FeatureLocation(95, 100, 1),
+            FeatureLocation(0, 5, 1)
+        ])
+        new = offset_location(old, 0, wrap_point=old.end)
+        assert old == new
 
 
 class TestRemoveRedundant(unittest.TestCase):

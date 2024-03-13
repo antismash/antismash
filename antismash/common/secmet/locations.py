@@ -73,17 +73,19 @@ class _LocationMixin(_Location):
         """
         return frameshift_location_by_qualifier(self, start, undo=undo)
 
-    def clone_with_offset(self: T, offset: int) -> T:
+    def clone_with_offset(self: T, offset: int, *, wrap_point: int = None) -> T:
         """ Creates a new location at the given offset to the original.
-            Will not loop over the origin and offsets cannot make locations negative.
+            Will not loop over the origin and offsets cannot make locations negative unless the
+            origin/wrapping point is provided.
 
             Arguments:
                 offset: the amount to offset
+                wrap_point: the origin/coordinate at which locations wrap around
 
             Returns:
                 a new location instance
         """
-        return offset_location(self, offset)
+        return offset_location(self, offset, wrap_point=wrap_point)
 
     def contains_overlapping_exons(self: T) -> bool:
         """ Returns True if the location contains multiple exons sharing the same stop codon """
@@ -810,25 +812,86 @@ def frameshift_location_by_qualifier(location: Location, raw_start: Union[str, i
     return _adjust_location_by_offset(location, codon_start)
 
 
-def offset_location(location: Location, offset: int) -> Location:
+def offset_location(location: Location, offset: int, *, wrap_point: int = None) -> Location:
     """ Creates a new location at the given offset to the original.
-        Will not loop over the origin and offsets cannot make locations negative.
+        Will not loop over the origin and offsets cannot make locations negative unless the
+        origin/wrapping point is provided.
 
         Arguments:
             location: the location to shift
             offset: the amount to offset
+            wrap_point: the origin/coordinate at which locations wrap around
 
         Returns:
             a new location instance
     """
-    parts = location.parts
-    new = []
+    def shifted_location() -> Location:
+        if not offset:
+            return location.clone()
+        parts = location.parts
+        new = []
+        for part in parts:
+            start = part.start + offset
+            end = part.end + offset
+            assert start < end
+            assert wrap_point is not None or start >= 0 and end > 0
+            new.append(FeatureLocation(start, end, strand=part.strand))
+        if isinstance(location, CompoundLocation):
+            return CompoundLocation(new, operator=location.operator)
+        return new[0]
+
+    # the trivial cases can be handled easily
+    if not wrap_point or not offset:
+        return shifted_location()
+
+    if wrap_point < 1:
+        raise ValueError(f"wrapping point must be positive: {wrap_point}")
+
+    # if the location covered the entire area, don't adjust it at all, since it'll be the same
+    if len(location) == wrap_point:
+        return location.clone()
+
+    # the trivial case, no wrapping required
+    if 0 < location.start + offset < location.end + offset < wrap_point:
+        return shifted_location()
+
+    # the remaining cases may either start over the origin or result in being over the origin
+    # start by just shifting everything along, splitting where required
+    parts = shifted_location().parts
+
+    new_parts = []
     for part in parts:
-        assert part.start + offset >= 0
-        new.append(FeatureLocation(part.start + offset, part.end + offset, strand=part.strand))
-    if isinstance(location, CompoundLocation):
-        return CompoundLocation(new, operator=location.operator)
-    return new[0]
+        # the shifted locations may be over the record or before the record,
+        # so adjust as necessary
+        start = (part.start + wrap_point) % wrap_point
+        end = (part.end + wrap_point) % wrap_point
+        # if the current part is still within the record, it can be used as is
+        if 0 <= start < end <= wrap_point:
+            new_parts.append(FeatureLocation(start, end, part.strand))
+            continue
+        # otherwise split the shifted part if it now crosses the origin
+        new_parts.extend([
+            FeatureLocation(start, wrap_point, part.strand),
+            FeatureLocation(0, end, part.strand),
+        ])
+    for part in new_parts:
+        assert 0 <= part.start < part.end <= wrap_point, part
+
+    # if originally cross-origin, then a merge may be required
+    previous = new_parts[0]
+    merged = [previous]
+    for part in new_parts[1:]:
+        if previous.end == part.start:
+            assert previous.strand == part.strand
+            # replace the existing one
+            merged[-1] = FeatureLocation(previous.start, part.end, part.strand)
+        else:
+            merged.append(part)
+        previous = part
+
+    assert merged
+
+    return CompoundLocation(merged) if len(merged) > 1 else merged[0]
 
 
 def remove_redundant_exons(location: Location) -> Location:
