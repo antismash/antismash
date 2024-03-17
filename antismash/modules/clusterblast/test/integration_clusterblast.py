@@ -5,7 +5,6 @@
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
 
 from copy import deepcopy
-import glob
 import os
 import unittest
 from unittest.mock import patch
@@ -62,14 +61,6 @@ class Base(unittest.TestCase):
         """
         raise NotImplementedError("get_results not overridden")
 
-    def check_svgs(self, results, expected, svg_dir):
-        # make sure no svgs created yet
-        assert not glob.glob(os.path.join(svg_dir, "*.svg"))
-        results.write_svg_files(svg_dir)
-        # check there's an svg for each result (up to the limit) + 1 combined
-        num_svgs = len(glob.glob(os.path.join(svg_dir, "*.svg")))
-        assert num_svgs == min(self.options.cb_nclusters, expected) + 1
-
     def run_antismash(self, filename, expected):
         annotated_records = []
 
@@ -85,11 +76,10 @@ class Base(unittest.TestCase):
                     results = run_and_regen(filename, clusterblast, self.options, callback=callback)
             assert annotated_records
             update_config({"output_dir": ""})
-            results, global_results = self.get_results(results)
+            results, _ = self.get_results(results)
             assert len(results.region_results) == 1
             cluster = results.region_results[0]
             assert len(cluster.ranking) == expected  # will change if database does
-            self.check_svgs(global_results, expected, output_dir)
         return annotated_records, results
 
     def check_nisin(self, expected):

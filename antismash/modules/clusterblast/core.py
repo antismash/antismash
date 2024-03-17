@@ -539,9 +539,11 @@ def parse_clusterblast_dict(queries: List[Query], clusters: Dict[str, ReferenceC
     hitpositions: List[Tuple[int, int]] = []
     hitposcorelist = []
     cluster_locii = clusters[cluster_label].tags
+    reference_hits = set()
     for query in queries:
         querynrhits = 0
         for subject in query.get_subjects_by_cluster(cluster_label):
+            reference_hits.add(subject.name)
             assert cluster_label == subject.genecluster
             if subject.name not in cluster_locii:
                 continue
@@ -559,6 +561,7 @@ def parse_clusterblast_dict(queries: List[Query], clusters: Dict[str, ReferenceC
                 result.core_gene_hits += 1
                 hit_value = True
             hitposcorelist.extend([hit_value]*querynrhits)
+    result.similarity = int(100 * len(reference_hits) / len(cluster_locii))
     return result, hitpositions, hitposcorelist
 
 

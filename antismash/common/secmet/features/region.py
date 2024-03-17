@@ -36,8 +36,8 @@ class Region(CDSCollection, AbstractRegion):
 
         Region features cannot overlap.
     """
-    __slots__ = ["_subregions", "_candidate_clusters", "clusterblast",
-                 "knownclusterblast", "subclusterblast"]
+    __slots__ = ["_subregions", "_candidate_clusters",
+                 ]
     FEATURE_TYPE = "region"
 
     def __init__(self, candidate_clusters: List[CandidateCluster] = None,
@@ -64,10 +64,6 @@ class Region(CDSCollection, AbstractRegion):
         super().__init__(location, feature_type=self.FEATURE_TYPE, child_collections=children)
         self._subregions = subregions
         self._candidate_clusters = candidate_clusters
-
-        self.clusterblast: Optional[List[str]] = None
-        self.knownclusterblast: Any = None
-        self.subclusterblast: Optional[List[str]] = None
 
     @property
     def subregions(self) -> Tuple[SubRegion, ...]:
