@@ -12,7 +12,9 @@ from Bio.SeqFeature import SeqFeature
 from ..cdscollection import CDSCollection
 from ..protocluster import Protocluster, SideloadedProtocluster
 from ..feature import FeatureLocation, Feature
-from ...locations import combine_locations
+from ...locations import (
+    combine_locations,
+)
 
 T = TypeVar("T", bound="CandidateCluster")
 
@@ -64,7 +66,7 @@ class CandidateCluster(CDSCollection):
         self._kind = kind
         self.smiles_structure = smiles
         self.polymer = polymer
-        self._core_location = None
+        self._core_location: Optional[FeatureLocation] = None
 
     def __repr__(self) -> str:
         return f"CandidateCluster({self.location}, {self.kind}, {self.products})"
