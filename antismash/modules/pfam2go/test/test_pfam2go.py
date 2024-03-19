@@ -9,8 +9,8 @@ import unittest
 from typing import Dict
 
 from Bio.Seq import Seq
-from Bio.SeqFeature import FeatureLocation
 
+from antismash.common.secmet.locations import FeatureLocation
 from antismash.common.secmet.record import Record
 from antismash.common.test.helpers import DummyRecord, DummyPFAMDomain
 from antismash.modules.pfam2go import pfam2go

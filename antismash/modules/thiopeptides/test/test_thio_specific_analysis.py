@@ -7,9 +7,9 @@
 import unittest
 from unittest.mock import patch
 
-from Bio.SeqFeature import FeatureLocation
 
 from antismash.common import all_orfs, subprocessing
+from antismash.common.secmet.locations import FeatureLocation
 from antismash.common.test.helpers import (
     DummyCDS,
     DummyProtocluster,
