@@ -42,6 +42,9 @@ from .features import CDSCollection
 from .features.candidate_cluster import create_candidates_from_protoclusters
 
 from .locations import (
+    CompoundLocation,
+    FeatureLocation,
+    Location,
     location_bridges_origin,
     split_origin_bridging_location,
     combine_locations,
@@ -482,7 +485,7 @@ class Record:
         features.extend(self.get_modules())
         return features
 
-    def get_cds_features_within_location(self, location: FeatureLocation,
+    def get_cds_features_within_location(self, location: Location,
                                          with_overlapping: bool = False) -> List[CDSFeature]:
         """ Returns all CDS features within the given location
 
@@ -494,7 +497,7 @@ class Record:
             Returns:
                 a list of CDSFeatures, ordered by earliest position in feature location
         """
-        def find_start_in_list(location: FeatureLocation, features: List[CDSFeature],
+        def find_start_in_list(location: Location, features: list[CDSFeature],
                                include_overlaps: bool) -> int:
             """ Find the earliest feature that starts before the location
                 (and ends before, if include_overlaps is True)
