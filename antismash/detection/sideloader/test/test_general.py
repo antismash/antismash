@@ -6,6 +6,8 @@
 
 import unittest
 
+from Bio.Seq import Seq
+
 from antismash.common.errors import AntismashInputError
 from antismash.common.test.helpers import DummyCDS, DummyRecord
 from antismash.detection.sideloader import general, _parse_arg
@@ -37,7 +39,7 @@ class TestSimple(unittest.TestCase):
         assert not result.subregions
 
         record = make_record("AcC", 30)
-        record.seq = "A" * 100
+        record.seq = Seq("A" * 100)
         result = general.load_single_record_annotations([], record, _parse_arg("AcC:1-50"))
         assert not result.protoclusters
         assert len(result.subregions) == 1

@@ -7,7 +7,7 @@ import logging
 from typing import Iterable, List, Optional, Sequence, Tuple, Union
 
 from Bio.SeqFeature import (
-    AbstractPosition,
+    Position,
     AfterPosition,
     BeforePosition,
     CompoundLocation,
@@ -286,7 +286,7 @@ def location_contains_other(outer: Location, inner: Location) -> bool:
 def location_from_string(data: str) -> Location:
     """ Converts a string, e.g. [<1:6](-), to a FeatureLocation or CompoundLocation
     """
-    def parse_position(string: str) -> AbstractPosition:
+    def parse_position(string: str) -> Position:
         """ Converts a positiong from a string into a Position subclass """
         if string[0] == '<':
             return BeforePosition(int(string[1:]))
