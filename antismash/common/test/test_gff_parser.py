@@ -5,19 +5,21 @@
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring,consider-using-with
 
 from unittest import TestCase
-from Bio.SeqFeature import CompoundLocation, SeqFeature
+from Bio.SeqFeature import SeqFeature
+from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
 from antismash.common import errors, gff_parser, path
+from antismash.common.secmet.locations import CompoundLocation
 
 
 class GffParserTest(TestCase):
     def setUp(self):
         self.gff_file = path.get_full_path(__file__, "data", "test_gff.gff")
         self.single_entry = False
-        contig1 = SeqRecord(seq="A"*2000)
+        contig1 = SeqRecord(seq=Seq("A"*2000))
         contig1.id = "CONTIG_1"
-        contig2 = SeqRecord(seq="A"*2000)
+        contig2 = SeqRecord(seq=Seq("A"*2000))
         contig2.id = "CONTIG_2"
         self.sequences = [contig1, contig2]
 

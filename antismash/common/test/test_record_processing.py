@@ -74,7 +74,7 @@ class TestParseRecords(unittest.TestCase):
         # pretend there's two inputs, and that the first has an error
         # with the ignore invalid option turned on, the valid input should still come back
         dummy_error = record_processing.SecmetInvalidInputError("some reason")
-        dummy_inputs = [SeqRecord("ACGT", id="bad"), SeqRecord("TGCA", id="good")]
+        dummy_inputs = [SeqRecord(Seq("ACGT"), id="bad"), SeqRecord(Seq("TGCA"), id="good")]
         expected_outputs = [dummy_error, Record.from_biopython(dummy_inputs[1], taxon="bacteria")]
         for value in [False, True]:
             with mock.patch.object(record_processing, "_strict_parse", return_value=dummy_inputs):
@@ -90,7 +90,7 @@ class TestParseRecords(unittest.TestCase):
 
     def test_all_invalid_and_ignored(self):
         dummy_error = record_processing.SecmetInvalidInputError("some reason")
-        dummy_inputs = [SeqRecord("ACGT", id="bad")]
+        dummy_inputs = [SeqRecord(Seq("ACGT"), id="bad")]
         with mock.patch.object(Record, "from_biopython", side_effect=dummy_error):
             with mock.patch.object(record_processing, "_strict_parse", return_value=dummy_inputs):
                 with self.assertRaisesRegex(AntismashInputError, "no valid records"):
@@ -274,9 +274,8 @@ class TestPreprocessRecords(unittest.TestCase):
 
     def test_shotgun(self):
         filepath = path.get_full_path(__file__, "data", "wgs.gbk")
-        records = record_processing.parse_input_sequence(filepath)
         with self.assertRaisesRegex(AntismashInputError, "incomplete whole genome shotgun records are not supported"):
-            record_processing.pre_process_sequences(records, self.options, self.genefinding)
+            record_processing.parse_input_sequence(filepath)
 
     def test_duplicate_record_ids(self):
         records = self.read_double_nisin()
