@@ -10,10 +10,9 @@ from typing import Dict, List, Optional
 
 import Bio.Data.IUPACData
 from Bio.SeqUtils.ProtParam import ProteinAnalysis
-from Bio.SeqFeature import FeatureLocation
 
 from .fasta import read_fasta
-from .secmet import Feature, Record
+from .secmet import Feature, FeatureLocation, Record
 
 
 class RobustProteinAnalysis(ProteinAnalysis):

@@ -7,14 +7,16 @@
 import unittest
 from unittest.mock import patch
 
-from Bio.SeqFeature import ExactPosition, FeatureLocation
-
 from antismash.common import all_orfs
 from antismash.common.all_orfs import (
     find_all_orfs,
     find_intergenic_areas,
     get_trimmed_orf,
     scan_orfs,
+)
+from antismash.common.secmet.locations import (
+    ExactPosition,
+    FeatureLocation,
 )
 from antismash.common.secmet.test.helpers import DummySubRegion
 
