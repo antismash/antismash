@@ -4,22 +4,168 @@
 """ Helper functions for location operations """
 
 import logging
-from typing import Iterable, List, Optional, Sequence, Tuple, Union
+from typing import (
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 from Bio.SeqFeature import (
     Position,
     AfterPosition,
     BeforePosition,
-    CompoundLocation,
+    CompoundLocation as _CompoundLocation,
     ExactPosition,
-    FeatureLocation,
+    Location as _Location,
+    SimpleLocation as _SimpleLocation,
     SeqFeature,
     UnknownPosition,
 )
 
 from .errors import SecmetInvalidInputError
 
-Location = Union[CompoundLocation, FeatureLocation]
+
+Location = Union["FeatureLocation", "CompoundLocation"]
+# a generic for 'B'iopython types while they aren't sharing a common parent class
+B = TypeVar("B", _CompoundLocation, _SimpleLocation)
+# a generic for the resulting type of the mixin and biopython classes
+T = TypeVar("T", bound=Location)
+
+
+class _LocationMixin(_Location):
+    def crosses_origin(self: T, *, allow_reversing: bool = False) -> bool:
+        """ Determines if the location would cross the origin of a record.
+
+            Arguments:
+                allow_reversing: if True, checks both possible orderings of exons
+                                 regardless of strand
+
+            Returns:
+                False if the location does not bridge the origin or if the location
+                is of indeterminate strand, otherwise True
+        """
+        return location_bridges_origin(self, allow_reversing=allow_reversing)
+
+    def clone(self: T) -> T:
+        """ Clones the location, ensuring that no mutable attributes will be shared
+            with the original.
+
+            Returns:
+                a new instance
+        """
+        raise NotImplementedError()
+
+    def clone_with_frameshift(self: T, start: Union[str, int], *, undo: bool = False) -> T:
+        """ Generates a new location to represent a frameshift of an existing location.
+            Forward strand locations will have their start coordinate lowered.
+            Reverse strand locations will have their end coordinate raised.
+
+            Arguments:
+                start: a 1-indexed integer or string as per the genbank "codon_start" qualifier
+                undo: whether to treat the frameshift as undoing a previous frameshift
+
+            Returns:
+                a new location instance of the same type
+        """
+        return frameshift_location_by_qualifier(self, start, undo=undo)
+
+    def clone_with_offset(self: T, offset: int) -> T:
+        """ Creates a new location at the given offset to the original.
+            Will not loop over the origin and offsets cannot make locations negative.
+
+            Arguments:
+                offset: the amount to offset
+
+            Returns:
+                a new location instance
+        """
+        return offset_location(self, offset)
+
+    def contains_overlapping_exons(self: T) -> bool:
+        """ Returns True if the location contains multiple exons sharing the same stop codon """
+        return location_contains_overlapping_exons(self)
+
+    def contains(self: T, other: T) -> bool:
+        """ Returns True if this location contains the given location """
+        return location_contains_other(self, other)
+
+    def convert_protein_position_to_dna(self: T, start: int, end: int) -> tuple[int, int]:
+        """ Convert a protein position to a nucleotide sequence position for use in generating
+            new FeatureLocations from existing FeatureLocations and/or CompoundLocations.
+
+            Arguments:
+                position: the position in question, must be contained by the location
+                location: the location of the related feature, for handling introns/split locations
+
+            Returns:
+                an int representing the calculated DNA location
+        """
+        return convert_protein_position_to_dna(start, end, self)
+
+    def get_distance_to(self: T, other: T, wrap_point: int = None) -> int:
+        """ Finds the shortest distance between the two given features, crossing
+            the origin if provided.
+
+            Overlapping features are considered to have zero distance.
+
+            Arguments:
+                other: the location to get a distance to
+                wrap_point: the point at which locations can wrap, if given
+
+            Returns:
+                the distance between the two locations
+        """
+        return get_distance_between_locations(self, other, wrap_point)
+
+
+class FeatureLocation(_LocationMixin, _SimpleLocation):
+    """ A wrapper of biopython's SimpleLocation (previously FeatureLocation) to add extra
+        functionality.
+    """
+    def clone(self: T) -> T:
+        return FeatureLocation(self.start, self.end, self.strand)
+
+    @classmethod
+    def from_biopython(cls: Type["FeatureLocation"], bio: _SimpleLocation) -> "FeatureLocation":
+        """ Constructs an instance from the given biopython FeatureLocation.
+
+            Arguments:
+                bio: the biopython location to convert
+        """
+        return cls(bio.start, bio.end, bio.strand)
+
+    def __contains__(self, value: Union[int, T]) -> bool:
+        if isinstance(value, int):
+            return super().__contains__(value)
+        return self.contains(value)
+
+
+SimpleLocation = FeatureLocation  # for name mapping purposes between older and newer biopython styles
+
+
+class CompoundLocation(_LocationMixin, _CompoundLocation):
+    """ A wrapper of biopython's CompoundLocation to add extra functionality.
+    """
+    def clone(self: T) -> T:
+        return CompoundLocation(self.parts.copy(), operator=self.operator)
+
+    @classmethod
+    def from_biopython(cls: Type["CompoundLocation"], bio: _CompoundLocation) -> "CompoundLocation":
+        """ Constructs an instance from the given biopython CompoundLocation.
+
+            Arguments:
+                bio: the biopython location to convert
+        """
+        return cls(bio.parts, operator=bio.operator)
+
+    def __contains__(self, value: Union[int, T]) -> bool:
+        if isinstance(value, int):
+            return super().__contains__(value)
+        return self.contains(value)
 
 
 def convert_protein_position_to_dna(start: int, end: int, location: Location) -> Tuple[int, int]:
@@ -80,7 +226,7 @@ def convert_protein_position_to_dna(start: int, end: int, location: Location) ->
     return dna_start, dna_end
 
 
-def build_location_from_others(locations: Sequence[Location]) -> FeatureLocation:
+def build_location_from_others(locations: list[Location]) -> Location:
     """ Builds a new location from non-overlapping others.
         If location boundaries are equal, they will be merged.
         If at least one provided location is a CompoundLocation or the locations
@@ -187,7 +333,23 @@ def location_bridges_origin(location: Location, allow_reversing: bool = False) -
     return False
 
 
-def _is_valid_split(lower: List[Location], upper: List[Location], strand: int) -> bool:
+def location_from_biopython(bio: B) -> Location:
+    """ Converts the given biopython location instance into a wrapped version
+        for more utility.
+
+        Arguments:
+            bio: the biopython location to convert
+
+        Returns:
+            an instance of Location, matching the type of the location provided
+    """
+    if isinstance(bio, _CompoundLocation):
+        parts = [location_from_biopython(part) for part in bio.parts]
+        return CompoundLocation(parts, bio.operator)
+    return FeatureLocation(bio.start, bio.end, bio.strand)
+
+
+def _is_valid_split(lower: list[FeatureLocation], upper: list[FeatureLocation], strand: int) -> bool:
     """ Returns True if the results of a split are valid:
         - mutually exclusive areas covered
         - each section must be ordered correctly for the strand
@@ -207,7 +369,7 @@ def _is_valid_split(lower: List[Location], upper: List[Location], strand: int) -
     return True
 
 
-def split_origin_bridging_location(location: CompoundLocation) -> Tuple[
+def split_origin_bridging_location(location: Location) -> tuple[
                                                       List[FeatureLocation], List[FeatureLocation]]:
     """ Splits a CompoundLocation into two sections.
         The first contains the low-position parts (immediately after the origin
@@ -219,6 +381,9 @@ def split_origin_bridging_location(location: CompoundLocation) -> Tuple[
         Returns:
             a tuple of lists, each list containing one or more FeatureLocations
     """
+    if isinstance(location, FeatureLocation):
+        return ([location], [])
+
     lower: List[FeatureLocation] = []
     upper: List[FeatureLocation] = []
     if location.strand == 1:
@@ -359,7 +524,7 @@ def combine_locations(*locations: Iterable[Location]) -> Location:
     return FeatureLocation(start, end, strand=None)
 
 
-def location_contains_overlapping_exons(location: Location) -> bool:
+def location_contains_overlapping_exons(location: Union[Location, B]) -> bool:
     """ Checks for multiple exons with the same end location, meaning they use the
         same stop codon
 
@@ -369,11 +534,10 @@ def location_contains_overlapping_exons(location: Location) -> bool:
         Returns:
             True if the location contains exons sharing a stop codon
     """
-    if isinstance(location, FeatureLocation):
+    if not isinstance(location, (CompoundLocation, FeatureLocation, _CompoundLocation, _SimpleLocation)):
+        raise TypeError(f"expected location type, received {type(location)}")
+    if len(location.parts) == 1:
         return False
-    if not isinstance(location, CompoundLocation):
-        raise TypeError(f"expected CompoundLocation, not {type(location)}")
-
     return len(set(part.end for part in location.parts)) != len(location.parts)
 
 
@@ -413,6 +577,9 @@ def ensure_valid_locations(features: List[SeqFeature], can_be_circular: bool, se
     standard = 0
     non_standard = 0
     for feature in features:
+        # update from biopython to internal types
+        feature.location = location_from_biopython(feature.location)
+
         if not feature.location.strand or feature.type not in ["CDS", "gene"]:
             continue
 
@@ -537,7 +704,7 @@ def remove_redundant_exons(location: Location) -> Location:
         Returns:
             a new location instance, if redundant exons are found, otherwise the existing location
     """
-    if len(location.parts) == 1:
+    if isinstance(location, FeatureLocation):
         return location
 
     parts_by_size = sorted(location.parts, key=lambda part: part.end - part.start, reverse=True)
