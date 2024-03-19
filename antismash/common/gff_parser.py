@@ -175,22 +175,22 @@ def generate_details_from_subfeature(sub_feature: SeqFeature,
     end = sub_feature.location.end.real
     if MODIFY_LOCATIONS_BY_PHASE:
         phase = int(sub_feature.qualifiers.get('phase', [0])[0])
-        if sub_feature.strand == 1:
+        if sub_feature.location.strand == 1:
             start += phase
         else:
             end -= phase
     try:
-        locations.append(FeatureLocation(start, end, strand=sub_feature.strand))
+        locations.append(FeatureLocation(start, end, strand=sub_feature.location.strand))
     except ValueError as err:
         raise AntismashInputError(str(err)) from err
     # Make sure CDSs lengths are multiple of three. Otherwise extend to next full codon.
     # This only applies for translation.
     modulus = (end - start) % 3
-    if modulus and sub_feature.strand == 1:
+    if modulus and sub_feature.location.strand == 1:
         end += 3 - modulus
-    elif modulus and sub_feature.strand == -1:
+    elif modulus and sub_feature.location.strand == -1:
         start -= 3 - modulus
-    trans_locations.append(FeatureLocation(start, end, strand=sub_feature.strand))
+    trans_locations.append(FeatureLocation(start, end, strand=sub_feature.location.strand))
     # For split features (CDSs), the final feature will have the same qualifiers as the children ONLY if
     # they're the same, i.e.: all children have the same "protein_ID" (key and value).
     for qual in sub_feature.qualifiers:

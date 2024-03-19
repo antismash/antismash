@@ -72,24 +72,24 @@ class TtaTest(unittest.TestCase):
         fw_tta, rv_tta = features[0], features[1]
         self.assertEqual(fw_tta.location.start, 3)
         self.assertEqual(fw_tta.location.end, 6)
-        self.assertEqual(fw_tta.strand, 1)
+        self.assertEqual(fw_tta.location.strand, 1)
 
         self.assertEqual(rv_tta.location.start, 15)
         self.assertEqual(rv_tta.location.end, 18)
-        self.assertEqual(rv_tta.strand, -1)
+        self.assertEqual(rv_tta.location.strand, -1)
 
     def test_feature_creation(self):
         fw_loc = FeatureLocation(210, 300, strand=1)
         fw_feature = SeqFeature(fw_loc, type='CDS')
         results = tta.tta.TTAResults('dummy', gc_content=1, threshold=0.65)
         ret = results.new_feature_from_other(fw_feature, 12)
-        self.assertEqual(ret.strand, 1)
+        self.assertEqual(ret.location.strand, 1)
         self.assertEqual(ret.location.start, 222)
         self.assertEqual(ret.location.end, 225)
 
         rv_loc = FeatureLocation(210, 300, strand=-1)
         rv_feature = SeqFeature(rv_loc, type='CDS')
         ret = results.new_feature_from_other(rv_feature, 12)
-        self.assertEqual(ret.strand, -1)
+        self.assertEqual(ret.location.strand, -1)
         self.assertEqual(ret.location.start, 285)
         self.assertEqual(ret.location.end, 288)

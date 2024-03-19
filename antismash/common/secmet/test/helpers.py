@@ -6,6 +6,8 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=protected-access,missing-docstring
 
+from Bio.Seq import Seq
+
 from ..features import (
     AntismashDomain,
     CDSFeature,
@@ -122,7 +124,7 @@ class DummyRecord(Record):
         if features:
             max_feature_coordinate = max(feature.location.end for feature in features)
             seq = seq * max(1, max_feature_coordinate // len(seq))
-        super().__init__(seq, transl_table=11 if taxon == 'bacteria' else 1)
+        super().__init__(Seq(seq), transl_table=11 if taxon == 'bacteria' else 1)
         if features:
             for feature in features:
                 self.add_feature(feature)

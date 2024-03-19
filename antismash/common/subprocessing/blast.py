@@ -4,8 +4,23 @@
 """ A collection of functions for running ncbi-blast+ commands.
 """
 
+import warnings
+
 from tempfile import NamedTemporaryFile
 from typing import Any, IO, List
+
+# handle biopython 1.80 and 1.81 always giving a deprecation warning, regardless of
+# whether the deprecated part is used
+# this issue was removed in 1.82, but 1.82 caused other problems at time of writing
+from Bio import BiopythonDeprecationWarning
+with warnings.catch_warnings(record=True) as emitted:
+    from Bio.SearchIO.BlastIO import BlastTabParser
+    # only one warning is expected
+    assert len(emitted) == 1
+    # it specifically needs to be a biopython deprecration warning
+    assert issubclass(emitted[0].category, BiopythonDeprecationWarning)
+    # and it needs to be referring to the "_legacy" section
+    assert "Bio.SearchIO._legacy' module for parsing BLAST plain text" in str(emitted[0].message), emitted[0]
 
 from .base import execute, get_config, RunResult, SearchIO
 
@@ -18,7 +33,7 @@ NCBI_OVERRIDES = {
 
 def run_blastp(target_blastp_database: str, query_sequence: str,
                opts: List[str] = None, results_file: str = None
-               ) -> List[SearchIO._model.query.QueryResult]:
+               ) -> List[SearchIO.QueryResult]:
     """ Runs blastp over a single sequence against a database and returns the
         results as parsed by Bio.SearchIO.
 
@@ -57,7 +72,7 @@ def run_blastp(target_blastp_database: str, query_sequence: str,
                            query_sequence[:100]))
     filename = results_file or handle.name
     with open(filename, encoding="utf-8") as read_handle:
-        parsed = list(SearchIO.parse(read_handle, 'blast-tab'))
+        parsed = list(BlastTabParser(read_handle))
     handle.close()
     return parsed
 

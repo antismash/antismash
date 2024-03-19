@@ -11,7 +11,7 @@ import re
 from typing import Any, Dict, Callable, List, Set, Tuple
 import warnings
 
-from Bio.Seq import Seq, UnknownSeq
+from Bio.Seq import Seq, UndefinedSequenceError
 from Bio.SeqRecord import SeqRecord
 from helperlibs.bio import seqio
 
@@ -94,11 +94,15 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
         if len(record.id) > os.pathconf("/", "PC_NAME_MAX") - len(".region000.gbk"):
             raise AntismashInputError(f"record identifier too long for file system: {record.id}")
 
-        if minimum_length < 1 \
-                or len(record.seq) >= minimum_length \
-                or 'contig' in record.annotations \
-                or 'wgs_scafld' in record.annotations \
-                or 'wgs' in record.annotations:
+        if records_contain_shotgun_scaffolds([record]):
+            raise AntismashInputError("incomplete whole genome shotgun records are not supported")
+
+        try:
+            record.seq[0]
+        except (IndexError, UndefinedSequenceError):
+            raise AntismashInputError(f"record contains no sequence information: {record.id}")
+
+        if minimum_length < 1 or len(record.seq) >= minimum_length:
             records.append(record)
 
     # if no records are left, that's a problem
@@ -479,9 +483,16 @@ def records_contain_shotgun_scaffolds(records: List[Record]) -> bool:
             True if one of the given records is a WGS or supercontig record
     """
     for record in records:
-        if isinstance(record.seq, UnknownSeq) and ('wgs_scafld' in record.annotations
-                                                   or 'wgs' in record.annotations
-                                                   or 'contig' in record.annotations):
+        defined = True
+        try:
+            record.seq[0]
+        except UndefinedSequenceError:
+            defined = False
+        if not defined and any(key in record.annotations for key in [
+            "wgs_scafld",
+            "wgs",
+            "contig",
+        ]):
             return True
     return False
 
