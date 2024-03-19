@@ -13,9 +13,9 @@ import unittest
 from unittest.mock import patch
 
 from Bio.Seq import Seq
-from Bio.SeqFeature import FeatureLocation
 
 from antismash.common import path, secmet
+from antismash.common.secmet.locations import FeatureLocation
 from antismash.common.test import helpers
 from antismash.config import build_config, destroy_config
 from antismash.detection import cassis

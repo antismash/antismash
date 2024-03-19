@@ -10,9 +10,10 @@ from unittest.mock import patch
 
 import Bio.SeqIO
 from Bio.Seq import Seq
-from Bio.SeqFeature import FeatureLocation, SeqFeature
+from Bio.SeqFeature import SeqFeature
 
 from antismash.common.secmet import record as record_pkg
+from antismash.common.secmet.locations import FeatureLocation
 from antismash.common.test.helpers import get_path_to_nisin_genbank
 from antismash.common.hmmscan_refinement import HMMResult
 

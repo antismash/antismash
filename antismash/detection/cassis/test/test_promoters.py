@@ -10,9 +10,9 @@ import unittest
 from unittest.mock import patch
 
 from Bio.Seq import Seq
-from Bio.SeqFeature import FeatureLocation
 
 from antismash.common import secmet
+from antismash.common.secmet.locations import FeatureLocation
 from antismash.common.test import helpers
 from antismash.detection.cassis.promoters import Promoter, CombinedPromoter, get_promoters, \
                 get_anchor_promoter_index, is_invalid_promoter_sequence

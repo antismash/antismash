@@ -11,10 +11,9 @@
 
 from typing import Iterable, List, Optional, Tuple
 
-from Bio.SeqFeature import FeatureLocation
-
 from antismash.common.secmet import CDSFeature, Record
 from antismash.common.secmet.features import CDSCollection
+from antismash.common.secmet.locations import FeatureLocation
 
 START_CODONS = ('ATG', 'GTG', 'TTG')
 STOP_CODONS = ('TAA', 'TAG', 'TGA')
