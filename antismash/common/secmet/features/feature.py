@@ -7,22 +7,23 @@ from collections import OrderedDict
 import logging
 from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union
 
-from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
+from Bio.SeqFeature import SeqFeature
 from Bio.Seq import Seq
 
 from antismash.common.secmet.locations import (
     convert_protein_position_to_dna,
     location_bridges_origin,
     location_contains_other,
+    location_from_biopython,
     locations_overlap,
 )
 
 from ..locations import (
     AfterPosition,
     BeforePosition,
-    frameshift_location_by_qualifier,
+    CompoundLocation,
+    FeatureLocation,
     Location,
-    location_contains_overlapping_exons,
 )
 
 T = TypeVar("T", bound="Feature")
@@ -42,7 +43,7 @@ class Feature:
         assert isinstance(location, (FeatureLocation, CompoundLocation)), type(location)
         if location_bridges_origin(location):
             raise ValueError(f"Features that bridge the record origin cannot be directly created: {location}")
-        if location_contains_overlapping_exons(location):
+        if location.contains_overlapping_exons():
             raise ValueError(f"location contains overlapping exons: {location}")
         assert location.start <= location.end, f"Feature location invalid: {location}"
         if location.start < 0:
@@ -208,7 +209,7 @@ class Feature:
         if self._original_codon_start is not None:
             start = self._original_codon_start + 1
             quals["codon_start"] = [str(start)]
-            feature.location = frameshift_location_by_qualifier(feature.location, start, undo=True)
+            feature.location = self.location.clone_with_frameshift(start, undo=True)
         # sorted here to match the behaviour of biopython
         for key, val in sorted(quals.items()):
             feature.qualifiers[key] = val
@@ -255,7 +256,7 @@ class Feature:
         """
         assert issubclass(cls, Feature)
         if feature is None:
-            feature = cls(bio_feature.location, bio_feature.type)
+            feature = cls(location_from_biopython(bio_feature.location), bio_feature.type)
             if not leftovers:
                 assert isinstance(bio_feature.qualifiers, dict)
                 leftovers = bio_feature.qualifiers.copy()
@@ -266,7 +267,7 @@ class Feature:
             if "codon_start" in leftovers:
                 start = leftovers.pop("codon_start")[0]
                 # adjust the location for now until converting back to biopython if required
-                feature.location = frameshift_location_by_qualifier(feature.location, start)
+                feature.location = feature.location.clone_with_frameshift(start)
                 feature._original_codon_start = int(start) - 1
 
             feature._qualifiers.update(leftovers)  # shouldn't be a public thing, so pylint: disable=protected-access
