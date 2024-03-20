@@ -7,12 +7,12 @@
 import logging
 from os import path
 
-from Bio.SeqFeature import FeatureLocation
 from helperlibs.wrappers.io import TemporaryDirectory
 
 from antismash.common.fasta import write_fasta
 from antismash.common.secmet import CDSFeature, Record
 from antismash.common.secmet.features.cds_feature import MAX_TRANSLATION_LENGTH
+from antismash.common.secmet.locations import FeatureLocation
 from antismash.common.subprocessing import execute
 from antismash.config import ConfigType
 

@@ -15,17 +15,19 @@ from antismash.common.secmet.locations import (
     convert_protein_position_to_dna,
     build_location_from_others,
     ensure_valid_locations,
-    get_distance_between_locations,
-    location_bridges_origin as is_bridged,
+    get_distance_between_locations as _get_distance_between_locations,
+    location_bridges_origin,
     split_origin_bridging_location as splitter,
-    location_contains_other,
-    location_contains_overlapping_exons as overlapping_exons,
+    location_contains_other as _location_contains_other,
+    location_contains_overlapping_exons,
     location_from_string,
     locations_overlap,
     combine_locations,
-    offset_location,
+    offset_location as _offset_location,
     remove_redundant_exons,
     FeatureLocation,
+    _SimpleLocation as BioSimple,
+    _CompoundLocation as BioCompound,
     CompoundLocation,
     AfterPosition,
     BeforePosition,
@@ -36,8 +38,11 @@ from antismash.common.secmet.locations import (
 
 
 class TestProteinPositionConversion(unittest.TestCase):
-    def setUp(self):
-        self.func = convert_protein_position_to_dna
+    def func(self, start, end, location):
+        static = convert_protein_position_to_dna(start, end, location)
+        dynamic = location.convert_protein_position_to_dna(start, end)
+        assert static == dynamic
+        return static
 
     def test_position_conversion_simple_forward(self):
         location = FeatureLocation(0, 15, strand=1)
@@ -168,6 +173,13 @@ def build_compound(pairs, strand, operator="join"):
     for start, end in pairs:
         parts.append(FeatureLocation(start, end, strand))
     return CompoundLocation(parts, operator=operator)
+
+
+def is_bridged(location, **kwargs):
+    static = location_bridges_origin(location, **kwargs)
+    dynamic = location.is_bridged(**kwargs)
+    assert static == dynamic
+    return static
 
 
 class TestBridgeDetection(unittest.TestCase):
@@ -436,6 +448,16 @@ class TestOverlaps(unittest.TestCase):
         assert locations_overlap(second, first)
 
 
+def location_contains_other(outer, inner):
+    static = _location_contains_other(outer, inner)
+    dynamic = outer.contains(inner)
+    assert isinstance(outer, (CompoundLocation, FeatureLocation))
+    assert isinstance(inner, (CompoundLocation, FeatureLocation))
+    builtin = inner in outer
+    assert static == dynamic == builtin
+    return static
+
+
 class TestContainsOther(unittest.TestCase):
     def test_simple_in_simple(self):
         inner = FeatureLocation(5, 10)
@@ -476,6 +498,13 @@ class TestContainsOther(unittest.TestCase):
 
         compound = build_compound([(10, 20), (20, 40), (50, 60)], strand=1)
         assert not location_contains_other(simple, compound)
+
+
+def overlapping_exons(location):
+    static = location_contains_overlapping_exons(location)
+    dynamic = location.contains_overlapping_exons()
+    assert static == dynamic
+    return static
 
 
 class TestOverlappingExons(unittest.TestCase):
@@ -583,6 +612,13 @@ class TestLocationAdjustment(unittest.TestCase):
                     assert old_part is new_part
 
 
+def offset_location(location, offset):
+    static = _offset_location(location, offset)
+    dynamic = location.clone_with_offset(offset)
+    assert static == dynamic
+    return static
+
+
 class TestOffset(unittest.TestCase):
     def test_simple(self):
         for strand in [-1, None, 1]:
@@ -654,6 +690,34 @@ class TestRemoveRedundant(unittest.TestCase):
         for operator in ["order", "join"]:
             for strand in [1, -1]:
                 self.check_ordering(strand=strand, operator=operator)
+
+
+class TestConversion(unittest.TestCase):
+    def test_convert_compound(self):
+        parts = [
+            BioSimple(1, 6, strand=1),
+            BioSimple(10, 12, strand=1),
+        ]
+        bio = BioCompound(parts)
+        location = CompoundLocation.from_biopython(bio)
+        assert isinstance(location, CompoundLocation)
+        assert not isinstance(bio, CompoundLocation)
+        assert bio == location
+
+    def test_convert_simple(self):
+        for strand in [1, -1]:
+            bio = BioSimple(1, 6, strand=strand)
+            location = FeatureLocation.from_biopython(bio)
+            assert isinstance(location, FeatureLocation)
+            assert not isinstance(bio, FeatureLocation)
+            assert bio == location
+
+
+def get_distance_between_locations(first, second, **kwargs):
+    static = _get_distance_between_locations(first, second, **kwargs)
+    dynamic = first.get_distance_to(second, **kwargs)
+    assert static == dynamic
+    return static
 
 
 class TestDistance(unittest.TestCase):
