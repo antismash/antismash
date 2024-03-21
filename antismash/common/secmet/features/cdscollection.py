@@ -65,7 +65,7 @@ class CDSCollection(Feature):
         if isinstance(other, CDSFeature):
             return other in self._cdses
         if isinstance(other, CDSCollection) and self._children:
-            return other in self._children
+            return any(other is child or other in child for child in self._children)
         return False
 
     @property
